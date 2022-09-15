@@ -92,7 +92,7 @@ add_executable(
   entity.cpp
   terms.c
   url.c
-  ftp.c
+  ftp.cpp
   mimehead.c
   news.c
   #

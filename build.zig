@@ -59,7 +59,7 @@ const W3m_SOURCES = [_][]const u8{
     "entity.cpp",
     "terms.c",
     "url.c",
-    "ftp.c",
+    "ftp.cpp",
     "mimehead.c",
     "news.c",
     //
