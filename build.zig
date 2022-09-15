@@ -64,7 +64,7 @@ const W3m_SOURCES = [_][]const u8{
     "news.c",
     //
     "func.c",
-    "cookie.c",
+    "cookie.cpp",
     "history.c",
     "backend.cpp",
     //

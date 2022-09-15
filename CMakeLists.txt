@@ -97,7 +97,7 @@ add_executable(
   news.c
   #
   func.c
-  cookie.c
+  cookie.cpp
   history.c
   backend.cpp
   #
