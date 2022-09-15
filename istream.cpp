@@ -1,11 +1,11 @@
 /* $Id: istream.c,v 1.27 2010/07/18 13:43:23 htrb Exp $ */
-extern "C" {
+
 #include "istream.h"
 #include "fm.h"
 #include "myctype.h"
 #include <openssl/x509v3.h>
 #include <signal.h>
-}
+
 
 #define uchar unsigned char
 

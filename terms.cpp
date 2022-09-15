@@ -3,7 +3,6 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
-extern "C" {
 #include "config.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -23,11 +22,9 @@ extern "C" {
 #include "terms.h"
 #include "image.h"
 #include <sys/ioctl.h>
-}
 
 static char *title_str = NULL;
 
-char *getenv(const char *);
 MySignalHandler reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG),
     error_dump(SIGNAL_ARG);
 void setlinescols(void);
@@ -172,13 +169,16 @@ extern int tgetflag(char *);
 extern char *tgetstr(char *, char **);
 extern char *tgoto(char *, int, int);
 extern int tputs(char *, int, int (*)(char));
-void clear(), wrap(), touch_line(), touch_column(int);
+}
+void clear();
+void wrap();
+void touch_line();
+void touch_column(int);
 void clrtoeol(void); /* conflicts with curs_clear(3)? */
 
 static int write1(char);
 
 static void writestr(char *s) { tputs(s, 1, write1); }
-}
 
 #define MOVE(line, column) writestr(tgoto(T_cm, column, line));
 

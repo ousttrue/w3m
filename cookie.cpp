@@ -10,7 +10,7 @@
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 
-extern "C" {
+
 #include "fm.h"
 #include "html.h"
 
@@ -18,7 +18,7 @@ extern "C" {
 #include "myctype.h"
 #include "regex.h"
 #include <time.h>
-}
+
 
 static int is_saved = 1;
 

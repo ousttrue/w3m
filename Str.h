@@ -19,6 +19,10 @@
 #include <string.h>
 #include <limits.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct _Str {
     char *ptr;
     int length;
@@ -80,4 +84,9 @@ void Strgrow(Str s);
 #define Strinsert(s,n,p)             Strinsert_charp((s),(n),(p)->ptr)
 #define Strshrinkfirst(s,n)          Strdelete((s),0,(n))
 #define Strfputs(s,f)                fwrite((s)->ptr,1,(s)->length,(f))
+
+
+#ifdef __cplusplus
+}
+#endif
 #endif				/* not GC_STR_H */

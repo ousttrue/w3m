@@ -2,7 +2,7 @@
 /*
  * HTML table
  */
-extern "C" {
+
 #include "Str.h"
 #include "fm.h"
 #include "html.h"
@@ -12,7 +12,7 @@ extern "C" {
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-}
+
 
 int symbol_width = 0;
 int symbol_width0 = 0;

@@ -1,12 +1,12 @@
 /* $Id: mailcap.c,v 1.13 2006/08/07 03:10:26 ukai Exp $ */
-extern "C" {
+
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include <errno.h>
 #include <stdio.h>
-}
+
 
 static struct mailcap DefaultMailcap[] = {
     {"image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL}, /* */

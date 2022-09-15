@@ -1,10 +1,10 @@
 /* $Id: textlist.c,v 1.6 2003/04/07 16:27:11 ukai Exp $ */
-extern "C" {
+
 #include "textlist.h"
 #include "Str.h"
 #include "indep.h"
 #include <gc.h>
-}
+
 /* General doubly linked list */
 
 ListItem *newListItem(void *s, ListItem *n, ListItem *p) {

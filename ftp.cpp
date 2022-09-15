@@ -1,5 +1,5 @@
 /* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
-extern "C" {
+
 #include <Str.h>
 #include <pwd.h>
 #include <setjmp.h>
@@ -19,7 +19,7 @@ extern "C" {
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
-}
+
 
 #ifndef HAVE_SOCKLEN_T
 typedef int socklen_t;

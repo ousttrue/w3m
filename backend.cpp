@@ -1,12 +1,12 @@
 /* $Id: backend.c,v 1.15 2010/08/08 09:53:42 htrb Exp $ */
-extern "C" {
+
 #include "fm.h"
 #include "terms.h"
 #include <gc.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
-}
+
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE

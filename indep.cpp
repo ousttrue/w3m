@@ -1,5 +1,5 @@
 /* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
-extern "C" {
+
 #include "indep.h"
 #include "Str.h"
 #include "entity.h"
@@ -11,7 +11,7 @@ extern "C" {
 #include <stdlib.h>
 #include <sys/param.h>
 #include <sys/types.h>
-}
+
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */

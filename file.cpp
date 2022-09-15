@@ -1,6 +1,6 @@
 /* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
 /* vi: set sw=4 ts=8 ai sm noet : */
-extern "C" {
+
 #include "core.h"
 #include "fm.h"
 #include "myctype.h"
@@ -21,7 +21,7 @@ extern "C" {
 #include "local.h"
 #include "parsetagx.h"
 #include "regex.h"
-}
+
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))

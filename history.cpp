@@ -1,7 +1,7 @@
 /* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
-extern "C" {
+
 #include "fm.h"
-}
+
 
 Buffer *historyBuffer(Hist *hist) {
   Str src = Strnew();

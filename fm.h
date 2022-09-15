@@ -29,8 +29,8 @@
 #include "html.h"
 #include <gc.h>
 #include "Str.h"
-#include "wc.h"
-#include "wtf.h"
+#include "libwc/wc.h"
+#include "libwc/wtf.h"
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>

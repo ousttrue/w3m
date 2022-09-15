@@ -3,6 +3,10 @@
 #define _WC_TYPES_H
 
 #include <Str.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <config.h>
 #if defined(HAVE_STDINT_H)
 # include <stdint.h>
@@ -111,4 +115,7 @@ typedef struct {
     int          shift;
 } wc_status;
 
+#ifdef __cplusplus
+}
+#endif
 #endif

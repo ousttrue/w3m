@@ -2,7 +2,7 @@
 /*
  * Initialization file etc.
  */
-extern "C" {
+
 #include "rc.h"
 #include "fm.h"
 #include "func.h"
@@ -15,7 +15,7 @@ extern "C" {
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-}
+
 
 struct param_ptr {
   char *name;

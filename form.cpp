@@ -2,7 +2,7 @@
 /*
  * HTML forms
  */
-extern "C" {
+
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
@@ -15,7 +15,7 @@ extern int max_textarea;
 extern FormSelectOption *select_option;
 extern int max_select;
 #include "menu.h"
-}
+
 
 /* *INDENT-OFF* */
 struct {

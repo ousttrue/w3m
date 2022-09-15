@@ -2,7 +2,7 @@
 /*
  * w3m menu.c
  */
-extern "C" {
+
 #include <stdio.h>
 
 #include "core.h"
@@ -11,7 +11,7 @@ extern "C" {
 #include "menu.h"
 #include "myctype.h"
 #include "regex.h"
-}
+
 
 static char **FRAME;
 static int FRAME_WIDTH;

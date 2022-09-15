@@ -1,5 +1,5 @@
 /* $Id: image.c,v 1.37 2010/12/21 10:13:55 htrb Exp $ */
-extern "C" {
+
 #include "image.h"
 #include "fm.h"
 #include <errno.h>
@@ -10,7 +10,7 @@ extern "C" {
 #ifdef HAVE_WAITPID
 #include <sys/wait.h>
 #endif
-}
+
 
 static int image_index = 0;
 

@@ -37,8 +37,7 @@ add_library(
   libwc/utf8.c
   libwc/viet.c
   libwc/wtf.c)
-target_include_directories(${TARGET_NAME} PUBLIC libwc
-                                                 ${CMAKE_CURRENT_LIST_DIR})
+target_include_directories(${TARGET_NAME} PRIVATE libwc ${CMAKE_CURRENT_LIST_DIR})
 target_compile_definitions(
   ${TARGET_NAME}
   PUBLIC HAVE_CONFIG_H
@@ -62,6 +61,7 @@ add_library(
   myctype.cpp
   hash.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC wc)
+target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 
 # w3m
 set(PERFIX $ENV{HOME}/local)
@@ -107,8 +107,7 @@ add_executable(
   tagtable.cpp
   istream.cpp
   version.c)
-target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}
-                                                  libwc)
+target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(
   ${TARGET_NAME}
   PRIVATE m

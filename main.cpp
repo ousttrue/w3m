@@ -2,15 +2,14 @@
 #define MAINPROGRAM
 #include "App.h"
 #include "Args.h"
-extern "C" {
+
 
 #include "core.h"
 #if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
 #endif
 
-int _main(int argc, char **argv);
-}
+extern "C" int _main(int argc, char **argv);
 
 Hist *LoadHist;
 Hist *SaveHist;

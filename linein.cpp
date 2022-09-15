@@ -1,5 +1,5 @@
 /* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
-extern "C" {
+
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
@@ -76,7 +76,7 @@ void (*InputKeymap[32])(unsigned char) = {
     iself,
 };
 /* *INDENT-ON* */
-}
+
 
 static int setStrType(Str str, Lineprop *prop);
 static void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);

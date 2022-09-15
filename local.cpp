@@ -1,5 +1,5 @@
 /* $Id: local.c,v 1.35 2007/05/23 15:06:05 inu Exp $ */
-extern "C" {
+
 #include "fm.h"
 #include <errno.h>
 #include <signal.h>
@@ -13,7 +13,7 @@ extern "C" {
 #endif /* HAVE_READLINK */
 #include "hash.h"
 #include "local.h"
-}
+
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1

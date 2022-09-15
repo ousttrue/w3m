@@ -8,6 +8,7 @@
     "files.associations": {
         "config.h": "c",
         "proto.h": "c",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "str.h": "c"
     },
 }

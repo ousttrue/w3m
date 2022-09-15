@@ -5,18 +5,18 @@
  * by A.ITO, December 1989
  * Revised by A.ITO, January 2002
  */
-extern "C" {
+
 #include "regex.h"
 #include "config.h"
 #include "myctype.h"
-#include "ucs.h"
-#include "wc.h"
-#include "wtf.h"
+#include "libwc/ucs.h"
+#include "libwc/wc.h"
+#include "libwc/wtf.h"
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-}
+
 
 #ifndef NULL
 #define NULL 0

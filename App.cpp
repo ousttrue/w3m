@@ -1,10 +1,10 @@
 #include "App.h"
 #include "Args.h"
 #include "core.h"
-extern "C" {
+
 #include "fm.h"
 #include "proto.h"
-}
+
 
 const auto PREC_LIMIT = 10000;
 

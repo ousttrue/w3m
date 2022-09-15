@@ -1,7 +1,4 @@
 #pragma once
-#ifdef __cplusplus
-extern "C" {
-#endif
 #include "fm.h"
 #include "libwc/ucs.h"
 #include "proto.h"
@@ -107,7 +104,3 @@ char *GetWord(Buffer *buf);
 Buffer *DownloadListBuffer(void);
 
 void addDownloadList(pid_t pid, char *url, char *save, char *lock, clen_t size);
-
-#ifdef __cplusplus
-}
-#endif

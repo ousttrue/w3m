@@ -1,5 +1,5 @@
 /* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
-extern "C" {
+
 #include "fm.h"
 #include "hash.h"
 #include "html.h"
@@ -14,7 +14,7 @@ extern "C" {
 #include <sys/wait.h>
 #endif
 #include <signal.h>
-}
+
 
 struct auth_pass {
   int bad;

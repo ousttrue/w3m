@@ -13,7 +13,7 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
-extern "C" {
+
 #include <gc.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -24,7 +24,7 @@ extern "C" {
 #endif
 #include "Str.h"
 #include "myctype.h"
-}
+
 
 #define INITIAL_STR_SIZE 32
 

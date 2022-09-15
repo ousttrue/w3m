@@ -1,8 +1,8 @@
-extern "C" {
+
 #include "core.h"
 #include "fm.h"
 #include "proto.h"
-}
+
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */
 }

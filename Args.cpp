@@ -1,7 +1,7 @@
 #include "Args.h"
-extern "C" {
+
 #include "fm.h"
-}
+
 #include <stdio.h>
 
 static void fversion(FILE *f) {
@@ -27,7 +27,7 @@ static void fversion(FILE *f) {
 }
 
 // rc.c
-extern "C" void show_params(FILE *fp);
+void show_params(FILE *fp);
 
 static int show_params_p = 0;
 static void fusage(FILE *f, int err) {

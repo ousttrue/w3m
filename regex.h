@@ -3,6 +3,7 @@
 #define STORAGE_MAX	256
 #include "libwc/wc_types.h"
 
+
 typedef struct {
     char type;
     wc_wchar_t wch;

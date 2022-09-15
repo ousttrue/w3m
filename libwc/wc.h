@@ -1,6 +1,9 @@
 
 #ifndef _WC_WC_H
 #define _WC_WC_H
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <Str.h>
 #include "wc_types.h"
@@ -74,4 +77,7 @@ extern char        *wc_ces_to_charset_desc(wc_ces ces);
 extern wc_bool      wc_check_ces(wc_ces ces);
 extern wc_ces_list *wc_get_ces_list(void);
 
+#ifdef __cplusplus
+}
+#endif
 #endif
