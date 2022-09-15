@@ -51,7 +51,7 @@ void App::run(Args &argument) {
     // no URL specified
     char *p;
     if (!isatty(0)) {
-      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
+      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)(void*))pclose);
       newbuf = openGeneralPagerBuffer(redin);
       dup2(1, 0);
     } else if (argument.load_bookmark) {

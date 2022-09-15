@@ -54,13 +54,13 @@ target_compile_definitions(
 set(TARGET_NAME indep)
 add_library(
   ${TARGET_NAME}
-  Str.c
-  indep.c
-  regex.c
-  textlist.c
-  parsetag.c
-  myctype.c
-  hash.c)
+  Str.cpp
+  indep.cpp
+  regex.cpp
+  textlist.cpp
+  parsetag.cpp
+  myctype.cpp
+  hash.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC wc)
 
 # w3m
@@ -73,40 +73,39 @@ add_executable(
   App.cpp
   core.cpp
   defun.cpp
-  file.c
-  buffer.c
-  display.c
-  etc.c
-  search.c
-  linein.c
-  table.c
-  local.c
-  form.c
-  map.c
-  frame.c
-  rc.c
-  menu.c
-  mailcap.c
-  image.c
-  symbol.c
-  entity.c
-  terms.c
-  url.c
-  ftp.c
-  mimehead.c
-  news.c
+  file.cpp
+  buffer.cpp
+  display.cpp
+  etc.cpp
+  search.cpp
+  linein.cpp
+  table.cpp
+  local.cpp
+  form.cpp
+  map.cpp
+  frame.cpp
+  rc.cpp
+  menu.cpp
+  mailcap.cpp
+  image.cpp
+  symbol.cpp
+  entity.cpp
+  terms.cpp
+  url.cpp
+  ftp.cpp
+  mimehead.cpp
   #
-  func.c
-  cookie.c
-  history.c
-  backend.c
+  func.cpp
+  cookie.cpp
+  history.cpp
+  backend.cpp
   #
-  keybind.c
-  anchor.c
-  parsetagx.c
+  keybind.cpp
+  anchor.cpp
+  parsetagx.cpp
   #
-  tagtable.c
-  istream.c
+  tagtable.cpp
+  istream.cpp
   version.c)
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}
                                                   libwc)
