@@ -1,6 +1,7 @@
 /* $Id: regex.h,v 1.6 2003/09/22 21:02:21 ukai Exp $ */
 #define REGEX_MAX	64
 #define STORAGE_MAX	256
+#include "libwc/wc_types.h"
 
 typedef struct {
     char type;

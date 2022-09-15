@@ -29,7 +29,7 @@ const W3m_SOURCES = [_][]const u8{
     //
     "Str.c",
     "indep.cpp",
-    "regex.c",
+    "regex.cpp",
     "textlist.c",
     "parsetag.cpp",
     "myctype.cpp",

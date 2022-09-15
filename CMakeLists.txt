@@ -56,7 +56,7 @@ add_library(
   ${TARGET_NAME}
   Str.c
   indep.cpp
-  regex.c
+  regex.cpp
   textlist.c
   parsetag.cpp
   myctype.cpp
