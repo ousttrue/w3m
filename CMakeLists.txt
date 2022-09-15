@@ -81,7 +81,7 @@ add_executable(
   linein.c
   table.c
   local.c
-  form.c
+  form.cpp
   map.c
   frame.c
   rc.c
