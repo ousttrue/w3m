@@ -59,7 +59,7 @@ add_library(
   regex.c
   textlist.c
   parsetag.c
-  myctype.c
+  myctype.cpp
   hash.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC wc)
 
