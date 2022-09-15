@@ -46,7 +46,7 @@ const W3m_SOURCES = [_][]const u8{
     "etc.cpp",
     "search.cpp",
     "linein.cpp",
-    "table.c",
+    "table.cpp",
     "local.cpp",
     "form.cpp",
     "map.cpp",

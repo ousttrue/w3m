@@ -79,7 +79,7 @@ add_executable(
   etc.cpp
   search.cpp
   linein.cpp
-  table.c
+  table.cpp
   local.cpp
   form.cpp
   map.cpp
