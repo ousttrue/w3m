@@ -74,7 +74,7 @@ add_executable(
   core.cpp
   defun.cpp
   file.c
-  buffer.c
+  buffer.cpp
   display.c
   etc.c
   search.c
