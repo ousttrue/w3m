@@ -61,7 +61,6 @@ const W3m_SOURCES = [_][]const u8{
     "url.cpp",
     "ftp.cpp",
     "mimehead.cpp",
-    "news.c",
     //
     "func.cpp",
     "cookie.cpp",

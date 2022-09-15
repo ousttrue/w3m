@@ -94,7 +94,6 @@ add_executable(
   url.cpp
   ftp.cpp
   mimehead.cpp
-  news.c
   #
   func.cpp
   cookie.cpp
