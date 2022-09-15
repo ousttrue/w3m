@@ -57,7 +57,7 @@ const W3m_SOURCES = [_][]const u8{
     "image.cpp",
     "symbol.cpp",
     "entity.cpp",
-    "terms.c",
+    "terms.cpp",
     "url.c",
     "ftp.cpp",
     "mimehead.cpp",

@@ -90,7 +90,7 @@ add_executable(
   image.cpp
   symbol.cpp
   entity.cpp
-  terms.c
+  terms.cpp
   url.c
   ftp.cpp
   mimehead.cpp
