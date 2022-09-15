@@ -51,7 +51,7 @@ const W3m_SOURCES = [_][]const u8{
     "form.cpp",
     "map.cpp",
     "frame.cpp",
-    "rc.c",
+    "rc.cpp",
     "menu.cpp",
     "mailcap.cpp",
     "image.cpp",

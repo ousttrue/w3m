@@ -84,7 +84,7 @@ add_executable(
   form.cpp
   map.cpp
   frame.cpp
-  rc.c
+  rc.cpp
   menu.cpp
   mailcap.cpp
   image.cpp
