@@ -34,6 +34,6 @@ z_mult_no_oflow_(size_t n, size_t size)
 	(type*)(GC_MALLOC_ATOMIC(z_mult_no_oflow_((n), sizeof(type))))
 
 #define New_Reuse(type, ptr, n) \
-	(GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
+	(type*)(GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
 
 #endif /* W3_ALLOC_H */

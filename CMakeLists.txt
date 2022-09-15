@@ -102,7 +102,7 @@ add_executable(
   backend.c
   #
   keybind.c
-  anchor.c
+  anchor.cpp
   parsetagx.c
   #
   tagtable.c
