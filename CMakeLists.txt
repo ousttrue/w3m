@@ -60,7 +60,7 @@ add_library(
   textlist.c
   parsetag.c
   myctype.c
-  hash.c)
+  hash.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC wc)
 
 # w3m
