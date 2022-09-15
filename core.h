@@ -3,8 +3,8 @@
 extern "C" {
 #endif
 #include "fm.h"
-#include "proto.h"
 #include "libwc/ucs.h"
+#include "proto.h"
 #include <setjmp.h>
 #include <signal.h>
 
@@ -34,7 +34,6 @@ extern int searchKeyNum(void);
 
 extern int check_target;
 extern int display_ok;
-extern int add_download_list;
 
 extern MySignalHandler resize_hook(SIGNAL_ARG);
 extern void resize_screen(void);
@@ -106,6 +105,8 @@ void repBuffer(Buffer *oldbuf, Buffer *buf);
 void _docCSet(wc_ces charset);
 char *GetWord(Buffer *buf);
 Buffer *DownloadListBuffer(void);
+
+void addDownloadList(pid_t pid, char *url, char *save, char *lock, clen_t size);
 
 #ifdef __cplusplus
 }

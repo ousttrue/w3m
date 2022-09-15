@@ -1,4 +1,5 @@
 #include "core.h"
+#include "App.h"
 
 Event *CurrentEvent = nullptr;
 Event *LastEvent = nullptr;
@@ -15,7 +16,7 @@ char *SearchString = nullptr;
 int (*searchRoutine)(Buffer *, char *);
 int check_target = TRUE;
 int display_ok = FALSE;
-int add_download_list = FALSE;
+
 int enable_inline_image;
 
 MySignalHandler SigAlarm(SIGNAL_ARG) {
@@ -2237,30 +2238,7 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                     clen_t size) {
-  DownloadList *d;
 
-  d = New(DownloadList);
-  d->pid = pid;
-  d->url = url;
-  if (save[0] != '/' && save[0] != '~')
-    save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-  d->save = expandPath(save);
-  d->lock = lock;
-  d->size = size;
-  d->time = time(0);
-  d->running = TRUE;
-  d->err = 0;
-  d->next = NULL;
-  d->prev = LastDL;
-  if (LastDL)
-    LastDL->next = d;
-  else
-    FirstDL = d;
-  LastDL = d;
-  add_download_list = TRUE;
-}
 
 int checkDownloadList(void) {
   DownloadList *d;
@@ -2461,3 +2439,8 @@ wc_uint32 getChar(char *p) {
   return wc_any_to_ucs(wtf_parse1((wc_uchar **)&p));
 }
 int is_wordchar(wc_uint32 c) { return wc_is_ucs_alnum(c); }
+
+void addDownloadList(pid_t pid, char *url, char *save, char *lock, clen_t size)
+{
+  App::instance().addDownloadList(pid, url, save, lock, size);
+}

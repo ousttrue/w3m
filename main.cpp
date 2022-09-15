@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "Args.h"
+#include "App.h"
 extern "C" {
 
 #include "core.h"
@@ -17,7 +18,6 @@ Hist *URLHist;
 Hist *ShellHist;
 Hist *TextHist;
 
-const auto PREC_LIMIT = 10000;
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
@@ -390,8 +390,9 @@ int _main(int argc, char **argv) {
     w3m_exit(0);
   }
 
-  if (add_download_list) {
-    add_download_list = FALSE;
+
+  if (App::instance().add_download_list) {
+    App::instance().add_download_list = false;
     CurrentTab = LastTab;
     if (!FirstTab) {
       FirstTab = LastTab = CurrentTab = newTab();
@@ -440,84 +441,5 @@ int _main(int argc, char **argv) {
   //
   // main loop
   //
-  for (;;) {
-    if (add_download_list) {
-      add_download_list = FALSE;
-      ldDL();
-    }
-    if (Currentbuf->submit) {
-      Anchor *a = Currentbuf->submit;
-      Currentbuf->submit = NULL;
-      gotoLine(Currentbuf, a->start.line);
-      Currentbuf->pos = a->start.pos;
-      _followForm(TRUE);
-      continue;
-    }
-    /* event processing */
-    if (CurrentEvent) {
-      CurrentKey = -1;
-      CurrentKeyData = NULL;
-      CurrentCmdData = (char *)CurrentEvent->data;
-      w3mFuncList[CurrentEvent->cmd].func();
-      CurrentCmdData = NULL;
-      CurrentEvent = CurrentEvent->next;
-      continue;
-    }
-    /* get keypress event */
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET) {
-        CurrentAlarm = Currentbuf->event;
-        if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          Currentbuf->event = NULL;
-          CurrentKey = -1;
-          CurrentKeyData = NULL;
-          CurrentCmdData = (char *)CurrentAlarm->data;
-          w3mFuncList[CurrentAlarm->cmd].func();
-          CurrentCmdData = NULL;
-          continue;
-        }
-      } else
-        Currentbuf->event = NULL;
-    }
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-    mySignal(SIGWINCH, resize_hook);
-    if (activeImage && displayImage && Currentbuf->img &&
-        !Currentbuf->image_loaded) {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-        loadImage(Currentbuf, IMG_FLAG_NEXT);
-      } while (sleep_till_anykey(1, 0) <= 0);
-    } else {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-      } while (sleep_till_anykey(1, 0) <= 0);
-    }
-    int c = getch();
-    if (CurrentAlarm->sec > 0) {
-      alarm(0);
-    }
-    if (IS_ASCII(c)) { /* Ascii */
-      if (('0' <= c) && (c <= '9') &&
-          (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-        prec_num = prec_num * 10 + (int)(c - '0');
-        if (prec_num > PREC_LIMIT)
-          prec_num = PREC_LIMIT;
-      } else {
-        set_buffer_environ(Currentbuf);
-        save_buffer_position(Currentbuf);
-        keyPressEventProc((int)c);
-        prec_num = 0;
-      }
-    }
-    prev_key = CurrentKey;
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-  }
+  App::instance().main_loop();
 }

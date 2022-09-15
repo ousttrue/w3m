@@ -70,6 +70,7 @@ add_executable(
   ${TARGET_NAME}
   main.cpp
   Args.cpp
+  App.cpp
   core.cpp
   defun.cpp
   file.c
