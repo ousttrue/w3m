@@ -102,31 +102,17 @@ extern void reshape(void);
 extern void chkURL(void);
 extern void chkURLBuffer(Buffer *buf);
 extern void chkWORD(void);
-#ifdef USE_NNTP
-extern void chkNMID(void);
-extern void chkNMIDBuffer(Buffer *buf);
-#else
 #define chkNMID nulcmd
-#endif
 extern void rFrame(void);
 extern void extbrz(void);
 extern void linkbrz(void);
 extern void curlno(void);
 extern void execCmd(void);
-#ifdef USE_IMAGE
 extern void dispI(void);
 extern void stopI(void);
-#else
-#define dispI nulcmd
-#define stopI nulcmd
-#endif
-#ifdef USE_ALARM
 extern void setAlarm(void);
 extern AlarmEvent *setAlarmEvent(AlarmEvent * event, int sec, short status,
 				 int cmd, void *data);
-#else
-#define setAlarm nulcmd
-#endif
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);
@@ -140,7 +126,6 @@ extern void tabR(void);
 extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
-#ifdef USE_MENU
 extern void linkMn(void);
 extern LinkList *link_menu(Buffer *buf);
 extern void accessKey(void);
@@ -148,12 +133,6 @@ extern Anchor *accesskey_menu(Buffer *buf);
 extern void listMn(void);
 extern void movlistMn(void);
 extern Anchor *list_menu(Buffer *buf);
-#else
-#define linkMn nulcmd
-#define accessKey nulcmd
-#define listMn nulcmd
-#define movlistMn nulcmd
-#endif
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
@@ -163,48 +142,25 @@ extern void cursorBottom(void);
 extern int currentLn(Buffer *buf);
 extern void tmpClearBuffer(Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
-#ifdef USE_EXTERNAL_URI_LOADER
 extern void initURIMethods();
 extern Str searchURIMethods(ParsedURL *pu);
 extern void chkExternalURIBuffer(Buffer *buf);
-#endif
 extern ParsedURL *schemeToProxy(int scheme);
-#ifdef USE_M17N
 extern wc_ces url_to_charset(const char *url, const ParsedURL *base,
 			     wc_ces doc_charset);
 extern char *url_encode(const char *url, const ParsedURL *base,
 			wc_ces doc_charset);
-#if 0
-extern char *url_decode(const char *url, const ParsedURL *base,
-			wc_ces doc_charset);
-#endif
 extern char *url_decode2(const char *url, const Buffer *buf);
-#else /* !defined(USE_M17N) */
-#define url_encode(url, base, cs) url_quote(url)
-extern char *url_decode0(const char *url);
-#if 0
-#define url_decode(url, base, cs) url_decode0(url)
-#endif
-#define url_decode2(url, buf) url_decode0(url)
-#endif /* !defined(USE_M17N) */
 extern void examineFile(char *path, URLFile *uf);
 extern char *acceptableEncoding();
 extern int dir_exist(char *path);
 extern int is_html_type(char *type);
-#ifdef USE_M17N
 extern char **get_symbol(wc_ces charset, int *width);
 extern char **set_symbol(int width);
 extern Str convertLine(URLFile *uf, Str line, int mode, wc_ces * charset,
 		       wc_ces doc_charset);
-#else
-extern char **get_symbol(void);
-extern Str convertLine0(URLFile *uf, Str line, int mode);
-#define convertLine(uf,line,mode,charset,dcharset) convertLine0(uf,line,mode)
-#endif
 extern void push_symbol(Str str, char symbol, int width, int n);
-#ifdef USE_UNICODE
 extern void update_utf8_symbol(void);
-#endif
 extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
 			       int flag, FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
@@ -221,13 +177,11 @@ extern void save_fonteffect(struct html_feed_environ *h_env,
 			    struct readbuffer *obuf);
 extern void restore_fonteffect(struct html_feed_environ *h_env,
 			       struct readbuffer *obuf);
-#ifdef USE_IMAGE
 extern void deleteImage(Buffer *buf);
 extern void getAllImage(Buffer *buf);
 extern void loadImage(Buffer *buf, int flag);
 extern ImageCache *getImage(Image * image, ParsedURL *current, int flag);
 extern int getImageSize(ImageCache * cache);
-#endif
 extern Str process_img(struct parsed_tag *tag, int width);
 extern Str process_anchor(struct parsed_tag *tag, char *tagbuf);
 extern Str process_input(struct parsed_tag *tag);
@@ -260,21 +214,8 @@ extern void completeHTMLstream(struct html_feed_environ *,
 extern void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src,
 			   int internal);
 extern Buffer *loadHTMLString(Str page);
-#ifdef USE_GOPHER
-#ifdef USE_M17N
-extern Str loadGopherDir(URLFile *uf, ParsedURL *pu, wc_ces * charset);
-extern Str loadGopherSearch(URLFile *uf, ParsedURL *pu, wc_ces * charset);
-#else
-extern Str loadGopherDir0(URLFile *uf, ParsedURL *pu);
-extern Str loadGopherSearch0(URLFile *uf, ParsedURL *pu);
-#define loadGopherDir(uf,pu,charset) loadGopherDir0(uf,pu)
-#define loadGopherSearch(uf,pu,charset) loadGopherSearch0(uf,pu)
-#endif
-#endif				/* USE_GOPHER */
 extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
-#ifdef USE_IMAGE
 extern Buffer *loadImageBuffer(URLFile *uf, Buffer *newBuf);
-#endif
 extern void saveBuffer(Buffer *buf, FILE * f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE * f, int cont);
 extern Buffer *getshell(char *cmd);
@@ -324,9 +265,7 @@ extern void fmTerm(void);
 extern void fmInit(void);
 extern void displayBuffer(Buffer *buf, int mode);
 extern void addChar(char c, Lineprop mode);
-#ifdef USE_M17N
 extern void addMChar(char *c, Lineprop mode, size_t len);
-#endif
 extern void record_err_message(char *s);
 extern Buffer *message_list_panel(void);
 extern void message(char *s, int return_x, int return_y);
@@ -334,11 +273,7 @@ extern void disp_err_message(char *s, int redraw_current);
 extern void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
 			      int mouse);
 extern void disp_message(char *s, int redraw_current);
-#ifdef USE_MOUSE
-extern void disp_message_nomouse(char *s, int redraw_current);
-#else
 #define disp_message_nomouse disp_message
-#endif
 extern void set_delayed_message(char *s);
 extern void cursorUp0(Buffer *buf, int n);
 extern void cursorUp(Buffer *buf, int n);
@@ -358,9 +293,6 @@ extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern int gethtmlcmd(char **s);
-#ifndef USE_ANSI_COLOR
-#define checkType(a,b,c) _checkType(a,b)
-#endif
 extern Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor);
 extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
 			int mode);
@@ -370,14 +302,7 @@ extern char *mydirname(char *s);
 extern int next_status(char c, int *status);
 extern int read_token(Str buf, char **instr, int *status, int pre, int append);
 extern Str correct_irrtag(int status);
-#ifdef USE_MIGEMO
-extern void init_migemo(void);
-#endif
-#ifdef USE_M17N
 extern char *conv_search_string(char *str, wc_ces f_ces);
-#else
-#define conv_search_string(str, f_ces)	str
-#endif
 extern int forwardSearch(Buffer *buf, char *str);
 extern int backwardSearch(Buffer *buf, char *str);
 extern void pcmap(void);
@@ -389,14 +314,10 @@ extern char *inputLineHistSearch(char *prompt, char *def_str, int flag,
 				 Hist *hist, int (*incfunc) (int ch, Str buf,
 							     Lineprop *prop));
 extern Str unescape_spaces(Str s);
-#ifdef USE_HISTORY
 extern Buffer *historyBuffer(Hist *hist);
 extern void loadHistory(Hist *hist);
 extern void saveHistory(Hist *hist, size_t size);
 extern void ldHist(void);
-#else				/* not USE_HISTORY */
-#define ldHist nulcmd
-#endif				/* not USE_HISTORY */
 extern double log_like(int x);
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
@@ -441,13 +362,8 @@ extern void follow_map(struct parsed_tagarg *arg);
 extern MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x,
 				int y);
 #endif
-#ifndef MENU_MAP
-extern Buffer *follow_map_panel(Buffer *buf, char *name);
-#endif
-#ifdef USE_IMAGE
 extern int getMapXY(Buffer *buf, Anchor *a, int *x, int *y);
 extern MapArea *retrieveCurrentMapArea(Buffer *buf);
-#endif
 extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 			   char *coords);
@@ -481,9 +397,7 @@ extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE ** fr, FILE ** fw);
 extern int initscr(void);
 extern void move(int line, int column);
-#ifdef USE_M17N
 extern void addmch(char *p, size_t len);
-#endif
 extern void addch(char c);
 extern void wrap(void);
 extern void touch_line(void);
@@ -496,21 +410,12 @@ extern void underlineend(void);
 extern void graphstart(void);
 extern void graphend(void);
 extern int graph_ok(void);
-#ifdef USE_COLOR
 extern void setfcolor(int color);
-#ifdef USE_BG_COLOR
 extern void setbcolor(int color);
-#endif				/* USE_BG_COLOR */
-#endif				/* USE_COLOR */
 extern void refresh(void);
 extern void clear(void);
-#ifdef USE_RAW_SCROLL
 extern void scroll(int);
 extern void rscroll(int);
-#endif
-#if 0
-extern void need_clrtoeol(void);
-#endif
 extern void clrtoeol(void);
 extern void clrtoeolx(void);
 extern void clrtobot(void);
@@ -532,9 +437,7 @@ extern void toggle_stand(void);
 extern char getch(void);
 extern void bell(void);
 extern int sleep_till_anykey(int sec, int purge);
-#ifdef USE_IMAGE
 extern void touch_cursor();
-#endif
 extern void initMimeTypes();
 extern void free_ssl_ctx();
 extern ParsedURL *baseURL(Buffer *buf);
@@ -564,25 +467,9 @@ extern char *guessContentType(char *filename);
 extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
 extern InputStream openFTPStream(ParsedURL *pu, URLFile *uf);
-#ifdef USE_M17N
 extern Str loadFTPDir(ParsedURL *pu, wc_ces * charset);
-#else
-extern Str loadFTPDir0(ParsedURL *pu);
-#define loadFTPDir(pu,charset)	loadFTPDir0(pu)
-#endif
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-#ifdef USE_NNTP
-extern InputStream openNewsStream(ParsedURL *pu);
-#ifdef USE_M17N
-extern Str loadNewsgroup(ParsedURL *pu, wc_ces * charset);
-#else
-extern Str loadNewsgroup0(ParsedURL *pu);
-#define loadNewsgroup(pu,charset) loadNewsgroup0(pu)
-#endif
-extern void closeNews(void);
-extern void disconnectNews(void);
-#endif
 extern AnchorList *putAnchor(AnchorList *al, char *url, char *target,
 			     Anchor **anchor_return, char *referer,
 			     char *title, unsigned char key, int line,
@@ -604,16 +491,10 @@ extern Anchor *searchAnchor(AnchorList *al, char *str);
 extern Anchor *searchURLLabel(Buffer *buf, char *url);
 extern void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
 extern char *reAnchor(Buffer *buf, char *re);
-#ifdef USE_NNTP
-extern char *reAnchorNews(Buffer *buf, char *re);
-extern char *reAnchorNewsheader(Buffer *buf);
-#endif				/* USE_NNTP */
 extern void addMultirowsForm(Buffer *buf, AnchorList *al);
 extern Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
 extern Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
-#ifdef USE_IMAGE
 void addMultirowsImg(Buffer *buf, AnchorList *al);
-#endif
 extern HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
 extern void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line,
 				int pos, int shift);
@@ -627,15 +508,8 @@ extern Str decodeQP(char **ww);
 extern void decodeQP_to_growbuf(struct growbuf *gb, char **ww);
 extern Str decodeU(char **ww);
 extern void decodeU_to_growbuf(struct growbuf *gb, char **ww);
-#ifdef USE_M17N
 extern Str decodeWord(char **ow, wc_ces * charset);
 extern Str decodeMIME(Str orgstr, wc_ces * charset);
-#else
-extern Str decodeWord0(char **ow);
-extern Str decodeMIME0(Str orgstr);
-#define decodeWord(ow,charset) decodeWord0(ow)
-#define decodeMIME(orgstr,charset) decodeMIME0(orgstr)
-#endif
 extern Str encodeB(char *a);
 extern int set_param_option(char *option);
 extern char *get_param_option(char *name);
@@ -674,17 +548,11 @@ extern Str myExtCommand(char *cmd, char *arg, int redirect);
 extern Str myEditor(char *cmd, char *file, int line);
 extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
-#ifdef USE_M17N
 extern char *url_unquote_conv(char *url, wc_ces charset);
-#else
-extern char *url_unquote_conv0(char *url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
-#endif
 extern char *expandName(char *name);
 extern Str tmpfname(int type, char *ext);
 extern time_t mymktime(char *timestr);
 extern void (*mySignal(int signal_number, void (*action) (int))) (int);
-#ifdef USE_COOKIE
 extern char *FQDN(char *host);
 extern Str find_cookie(ParsedURL *pu);
 extern int add_cookie(ParsedURL *pu, Str name, Str value, time_t expires,
@@ -697,47 +565,15 @@ extern void cooLst(void);
 extern Buffer *cookie_list_panel(void);
 extern void set_cookie_flag(struct parsed_tagarg *arg);
 extern int check_cookie_accept_domain(char *domain);
-#else				/* not USE_COOKIE */
-#define cooLst nulcmd
-#endif				/* not USE_COOKIE */
-#ifdef USE_M17N
 extern void docCSet(void);
 extern void defCSet(void);
 extern void change_charset(struct parsed_tagarg *arg);
-#else
-#define docCSet nulcmd
-#define defCSet nulcmd
-#endif
 
-#ifdef USE_MARK
-extern void _mark(void);
-extern void nextMk(void);
-extern void prevMk(void);
-extern void reMark(void);
-#else				/* not USE_MARK */
 #define _mark  nulcmd
 #define nextMk nulcmd
 #define prevMk nulcmd
 #define reMark nulcmd
-#endif				/* not USE_MARK */
 
-#ifdef USE_MOUSE
-extern void mouse(void);
-extern void sgrmouse(void);
-extern void mouse_init(void);
-extern void mouse_end(void);
-extern void mouse_active(void);
-extern void mouse_inactive(void);
-extern void msToggle(void);
-extern void movMs(void);
-#ifdef USE_MENU
-extern void menuMs(void);
-#else
-#define menuMs nulcmd
-#endif
-extern void tabMs(void);
-extern void closeTMs(void);
-#else				/* not USE_MOUSE */
 #define mouse nulcmd
 #define sgrmouse nulcmd
 #define msToggle nulcmd
@@ -745,16 +581,13 @@ extern void closeTMs(void);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-#endif				/* not USE_MOUSE */
 
-#ifdef USE_IMAGE
 extern void initImage(void);
 extern void termImage(void);
 extern void addImage(ImageCache * cache, int x, int y, int sx, int sy, int w,
 		     int h);
 extern void drawImage(void);
 extern void clearImage(void);
-#endif
 
 extern char *searchKeyData(void);
 
@@ -767,11 +600,7 @@ extern char *getWord(char **str);
 extern char *getQWord(char **str);
 struct regex;
 extern char *getRegexWord(const char **str, struct regex **regex_ret);
-#ifdef USE_MOUSE
-extern void initMouseAction(void);
-#endif
 
-#ifdef USE_MENU
 extern void new_menu(Menu *menu, MenuItem *item);
 extern void geom_menu(Menu *menu, int x, int y, int mselect);
 extern void draw_all_menu(Menu *menu);
@@ -799,36 +628,17 @@ extern void tabMn(void);
 extern void optionMenu(int x, int y, char **label, int *variable, int initial,
 		       void (*func) ());
 extern void initMenu(void);
-#else				/* not USE_MENU */
-#define mainMn nulcmd
-#define selMn selBuf
-#define tabMn nulcmd
-#endif				/* not USE_MENU */
 
-#ifdef USE_DICT
 extern void dictword(void);
 extern void dictwordat(void);
-#else				/* not USE_DICT */
-#define dictword nulcmd
-#define dictwordat nulcmd
-#endif				/* not USE_DICT */
-#if 0
-extern void reloadBuffer(Buffer *buf);
-#endif
 extern char *guess_save_name(Buffer *buf, char *file);
 
 extern void wrapToggle(void);
-#ifdef USE_BUFINFO
 extern void saveBufferInfo(void);
-#endif
 
 extern Str getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 
-#ifdef USE_INCLUDED_SRAND48
-void srand48(long);
-long lrand48(void);
-#endif
 
 extern Str base64_encode(const unsigned char *src, size_t len);

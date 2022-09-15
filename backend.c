@@ -75,11 +75,9 @@ print_headers(Buffer *buf, int len)
     if (buf->baseURL)
 	printf("w3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
     printf("w3m-content-type: %s\n", buf->type);
-#ifdef USE_M17N
     if (buf->document_charset)
 	printf("w3m-content-charset: %s\n",
 	       wc_ces_to_charset(buf->document_charset));
-#endif
     if (len > 0)
 	printf("w3m-content-length: %d\n", len);
 }
@@ -231,9 +229,7 @@ show(TextList *argv)
 static void
 quit(TextList *argv)
 {
-#ifdef USE_COOKIE
     save_cookies();
-#endif				/* USE_COOKIE */
     w3m_exit(0);
 }
 
@@ -295,9 +291,6 @@ backend(void)
     w3m_dump = 0;
     if (COLS == 0)
 	COLS = DEFAULT_COLS;
-#ifdef USE_MOUSE
-    use_mouse = FALSE;
-#endif				/* USE_MOUSE */
 
     if (backend_batch_commands) {
 	while ((str = popText(backend_batch_commands)))

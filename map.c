@@ -19,7 +19,6 @@ searchMapList(Buffer *buf, char *name)
     return ml;
 }
 
-#ifdef USE_IMAGE
 static int
 inMapArea(MapArea * a, int x, int y)
 {
@@ -178,7 +177,6 @@ getMapXY(Buffer *buf, Anchor *a, int *x, int *y)
 	*y = 1;
     return 1;
 }
-#endif
 
 Anchor *
 retrieveCurrentMap(Buffer *buf)
@@ -204,16 +202,13 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     ListItem *al;
     int i, selected = -1;
     int initial = 0;
-#ifdef MENU_MAP
     MapArea *a;
     char **label;
-#endif
 
     ml = searchMapList(buf, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
 	return NULL;
 
-#ifdef USE_IMAGE
     initial = searchMapArea(buf, ml, a_img);
     if (initial < 0)
 	initial = 0;
@@ -221,9 +216,7 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
 	selected = initial;
 	goto map_end;
     }
-#endif
 
-#ifdef MENU_MAP
     label = New_N(char *, ml->area->nitem + 1);
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
 	a = (MapArea *) al->ptr;
@@ -235,11 +228,8 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     label[ml->area->nitem] = NULL;
 
     optionMenu(x, y, label, &selected, initial, NULL);
-#endif
 
-#ifdef USE_IMAGE
   map_end:
-#endif
     if (selected >= 0) {
 	for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
 	    if (al->ptr && i == selected)
@@ -250,66 +240,17 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
 }
 #endif
 
-#ifndef MENU_MAP
-char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
-<BODY><H1>Image map links</H1>\
-<table>";
-
-Buffer *
-follow_map_panel(Buffer *buf, char *name)
-{
-    Str mappage;
-    MapList *ml;
-    ListItem *al;
-    MapArea *a;
-    ParsedURL pu;
-    char *p, *q;
-    Buffer *newbuf;
-
-    ml = searchMapList(buf, name);
-    if (ml == NULL)
-	return NULL;
-
-    mappage = Strnew_charp(map1);
-    for (al = ml->area->first; al != NULL; al = al->next) {
-	a = (MapArea *) al->ptr;
-	if (!a)
-	    continue;
-	parseURL2(a->url, &pu, baseURL(buf));
-	p = parsedURL2Str(&pu)->ptr;
-	q = html_quote(p);
-	if (DecodeURL)
-	    p = html_quote(url_decode2(p, buf));
-	else
-	    p = q;
-	Strcat_m_charp(mappage, "<tr valign=top><td><a href=\"", q, "\">",
-		       html_quote(*a->alt ? a->alt : mybasename(a->url)),
-		       "</a><td>", p, NULL);
-    }
-    Strcat_charp(mappage, "</table></body></html>");
-
-    newbuf = loadHTMLString(mappage);
-#ifdef USE_M17N
-    if (newbuf)
-	newbuf->document_charset = buf->document_charset;
-#endif
-    return newbuf;
-}
-#endif
 
 MapArea *
 newMapArea(char *url, char *target, char *alt, char *shape, char *coords)
 {
     MapArea *a = New(MapArea);
-#ifdef USE_IMAGE
     char *p;
     int i, max;
-#endif
 
     a->url = url;
     a->target = target;
     a->alt = alt ? alt : "";
-#ifdef USE_IMAGE
     a->shape = SHAPE_RECT;
     if (shape) {
 	if (!strcasecmp(shape, "default"))
@@ -390,7 +331,6 @@ newMapArea(char *url, char *target, char *alt, char *shape, char *coords)
 	a->center_x /= a->ncoords / 2;
 	a->center_y /= a->ncoords / 2;
     }
-#endif
     return a;
 }
 
@@ -497,13 +437,11 @@ append_frame_info(Buffer *buf, Str html, struct frameset *set, int level)
 		else
 		    p = q;
 		Strcat_m_charp(html, " ", p, "</a></pre_int><br>\n", NULL);
-#ifdef USE_SSL
 		if (frame.body->ssl_certificate)
 		    Strcat_m_charp(html,
 				   "<blockquote><h2>SSL certificate</h2><pre>\n",
 				   html_quote(frame.body->ssl_certificate),
 				   "</pre></blockquote>\n", NULL);
-#endif
 		break;
 	    case F_FRAMESET:
 		append_frame_info(buf, html, frame.set, level + 1);
@@ -526,10 +464,8 @@ page_info_panel(Buffer *buf)
     struct frameset *f_set = NULL;
     int all;
     char *p, *q;
-#ifdef USE_M17N
     wc_ces_list *list;
     char charset[16];
-#endif
     Buffer *newbuf;
 
     Strcat_charp(tmp, "<html><head>\
@@ -541,9 +477,7 @@ page_info_panel(Buffer *buf)
     all = buf->allLine;
     if (all == 0 && buf->lastLine)
 	all = buf->lastLine->linenumber;
-#ifdef USE_M17N
     Strcat_charp(tmp, "<form method=internal action=charset>");
-#endif
     p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
 		   "<tr valign=top><td nowrap>Title<td>",
@@ -554,7 +488,6 @@ page_info_panel(Buffer *buf)
 		   buf->real_type ? html_quote(buf->real_type) : "unknown",
 		   "<tr valign=top><td nowrap>Last Modified<td>",
 		   html_quote(last_modified(buf)), NULL);
-#ifdef USE_M17N
     if (buf->document_charset != InnerCharset) {
 	list = wc_get_ces_list();
 	Strcat_charp(tmp,
@@ -568,7 +501,6 @@ page_info_panel(Buffer *buf)
 	Strcat_charp(tmp, "</select>");
 	Strcat_charp(tmp, "<tr><td><td><input type=submit value=Change>");
     }
-#endif
     Strcat_m_charp(tmp,
 		   "<tr valign=top><td nowrap>Number of lines<td>",
 		   Sprintf("%d", all)->ptr,
@@ -614,9 +546,7 @@ page_info_panel(Buffer *buf)
 	    append_map_info(buf, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
-#ifdef USE_M17N
     Strcat_charp(tmp, "</form>");
-#endif
 
     append_link_info(buf, tmp, buf->linklist);
 
@@ -638,17 +568,13 @@ page_info_panel(Buffer *buf)
 	Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
 	append_frame_info(buf, tmp, f_set, 0);
     }
-#ifdef USE_SSL
     if (buf->ssl_certificate)
 	Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
 		       html_quote(buf->ssl_certificate), "</pre>\n", NULL);
-#endif
   end:
     Strcat_charp(tmp, "</body></html>");
     newbuf = loadHTMLString(tmp);
-#ifdef USE_M17N
     if (newbuf)
 	newbuf->document_charset = buf->document_charset;
-#endif
     return newbuf;
 }

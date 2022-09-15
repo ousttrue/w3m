@@ -1,8 +1,6 @@
 /* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
-#ifndef __MINGW32_VERSION
 #include <pwd.h>
-#endif
 #include "myctype.h"
 #include "html.h"
 #include "local.h"
@@ -16,10 +14,6 @@
 #endif
 #include <signal.h>
 
-#ifdef	__WATT32__
-#define	read(a,b,c)	read_s(a,b,c)
-#define	close(x)	close_s(x)
-#endif				/* __WATT32__ */
 
 struct auth_pass {
     int bad;
@@ -71,12 +65,8 @@ columnPos(Line *line, int column)
 	if (COLPOS(line, i) > column)
 	    break;
     }
-#ifdef USE_M17N
     for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--) ;
     return i;
-#else
-    return i - 1;
-#endif
 }
 
 Line *
@@ -158,7 +148,6 @@ gethtmlcmd(char **s)
     return cmd;
 }
 
-#ifdef USE_ANSI_COLOR
 static int
 parse_ansi_color(char **str, Lineprop *effect, Linecolor *color)
 {
@@ -229,7 +218,6 @@ parse_ansi_color(char **str, Lineprop *effect, Linecolor *color)
     *color = c;
     return 1;
 }
-#endif
 /* 
  * Check character type
  */
@@ -243,7 +231,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
     static Lineprop *prop_buffer = NULL;
     static int prop_size = 0;
     char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
-#ifdef USE_ANSI_COLOR
     Lineprop ceffect = PE_NORMAL;
     Linecolor cmode = 0;
     int check_color = FALSE;
@@ -251,7 +238,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
     static Linecolor *color_buffer = NULL;
     static int color_size = 0;
     char *es = NULL;
-#endif
     int do_copy = FALSE;
     int i;
     int plen = 0, clen;
@@ -264,7 +250,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 
     if (ShowEffect) {
 	bs = memchr(str, '\b', s->length);
-#ifdef USE_ANSI_COLOR
 	if (ocolor) {
 	    es = memchr(str, ESC_CODE, s->length);
 	    if (es) {
@@ -276,26 +261,19 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 		color = color_buffer;
 	    }
 	}
-#endif
 	if ((bs != NULL)
-#ifdef USE_ANSI_COLOR
 	    || (es != NULL)
-#endif
 	    ) {
 	    char *sp = str, *ep;
 	    s = Strnew_size(s->length);
 	    do_copy = TRUE;
 	    ep = bs ? (bs - 2) : endp;
-#ifdef USE_ANSI_COLOR
 	    if (es && ep > es - 2)
 		ep = es - 2;
-#endif
 	    for (; str < ep && IS_ASCII(*str); str++) {
 		*(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-#ifdef USE_ANSI_COLOR
 		if (color)
 		    *(color++) = 0;
-#endif
 	    }
 	    Strcat_charp_n(s, sp, (int)(str - sp));
 	}
@@ -309,7 +287,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 	if (prop - prop_buffer >= prop_size)
 	    break;
 	if (bs != NULL) {
-#ifdef USE_M17N
 	    if (str == bs - 2 && !strncmp(str, "__\b\b", 4)) {
 		str += 4;
 		effect = PE_UNDER;
@@ -318,7 +295,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 		continue;
 	    }
 	    else
-#endif
 	    if (str == bs - 1 && *str == '_') {
 		str += 2;
 		effect = PE_UNDER;
@@ -330,18 +306,13 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 		if (*(str + 1) == '_') {
 		    if (s->length) {
 			str += 2;
-#ifdef USE_M17N
 			for (i = 1; i <= plen; i++)
 			    *(prop - i) |= PE_UNDER;
-#else
-			*(prop - 1) |= PE_UNDER;
-#endif
 		    }
 		    else {
 			str++;
 		    }
 		}
-#ifdef USE_M17N
 		else if (!strncmp(str + 1, "\b__", 3)) {
 		    if (s->length) {
 			str += (plen == 1) ? 3 : 4;
@@ -371,10 +342,8 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 			str += 2;
 		    }
 		}
-#endif
 		else {
 		    if (s->length) {
-#ifdef USE_M17N
 			clen = get_mclen(str + 1);
 			if (plen == clen &&
 			    !strncmp(str - plen, str + 1, plen)) {
@@ -387,17 +356,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 			    prop -= plen;
 			    str++;
 			}
-#else
-			if (*(str - 1) == *(str + 1)) {
-			    *(prop - 1) |= PE_BOLD;
-			    str += 2;
-			}
-			else {
-			    Strshrink(s, 1);
-			    prop--;
-			    str++;
-			}
-#endif
 		    }
 		    else {
 			str++;
@@ -407,12 +365,9 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 		    bs = memchr(str, '\b', endp - str);
 		continue;
 	    }
-#ifdef USE_ANSI_COLOR
 	    else if (str > bs)
 		bs = memchr(str, '\b', endp - str);
-#endif
 	}
-#ifdef USE_ANSI_COLOR
 	if (es != NULL) {
 	    if (str == es) {
 		int ok = parse_ansi_color(&str, &ceffect, &cmode);
@@ -427,33 +382,26 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 	    else if (str > es)
 		es = memchr(str, ESC_CODE, endp - str);
 	}
-#endif
 
 	plen = get_mclen(str);
 	mode = get_mctype(str) | effect;
-#ifdef USE_ANSI_COLOR
 	if (color) {
 	    *(color++) = cmode;
 	    mode |= ceffect;
 	}
-#endif
 	*(prop++) = mode;
-#ifdef USE_M17N
 	if (plen > 1) {
 	    mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
 	    for (i = 1; i < plen; i++) {
 		*(prop++) = mode;
-#ifdef USE_ANSI_COLOR
 		if (color)
 		    *(color++) = cmode;
-#endif
 	    }
 	    if (do_copy)
 		Strcat_charp_n(s, (char *)str, plen);
 	    str += plen;
 	}
 	else
-#endif
 	{
 	    if (do_copy)
 		Strcat_char(s, (char)*str);
@@ -462,10 +410,8 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 	effect = PE_NORMAL;
     }
     *oprop = prop_buffer;
-#ifdef USE_ANSI_COLOR
     if (ocolor)
 	*ocolor = check_color ? color_buffer : NULL;
-#endif
     return s;
 }
 
@@ -481,13 +427,9 @@ nextColumn(int n, char *p, Lineprop *pr)
 	    return n + 2;
 	return n;
     }
-#ifdef USE_M17N
     if (*pr & PC_UNKNOWN)
 	return n + 4;
     return n + wtf_width((wc_uchar *) p);
-#else
-    return n + 1;
-#endif
 }
 
 int
@@ -511,24 +453,20 @@ calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos, int mode)
     prevl = l;
     i = 0;
     j = bpos;
-#ifdef USE_M17N
     if (pr[i] & PC_WCHAR2) {
 	for (; i < len && pr[i] & PC_WCHAR2; i++)
 	    realColumn[i] = j;
 	if (i > 0 && pr[i - 1] & PC_KANJI && WcOption.use_wide)
 	    j++;
     }
-#endif
     while (1) {
 	realColumn[i] = j;
 	if (i == len)
 	    break;
 	j = nextColumn(j, &l[i], &pr[i]);
 	i++;
-#ifdef USE_M17N
 	for (; i < len && pr[i] & PC_WCHAR2; i++)
 	    realColumn[i] = realColumn[i - 1];
-#endif
     }
     if (pos >= i)
 	return j;
@@ -545,10 +483,8 @@ columnLen(Line *line, int column)
 	if (j > column)
 	    return i;
 	i++;
-#ifdef USE_M17N
 	while (i < line->len && line->propBuf[i] & PC_WCHAR2)
 	    i++;
-#endif
     }
     return line->len;
 }
@@ -568,28 +504,6 @@ lastFileName(char *path)
     return allocStr(q, -1);
 }
 
-#ifdef USE_INCLUDED_SRAND48
-static unsigned long R1 = 0x1234abcd;
-static unsigned long R2 = 0x330e;
-#define A1 0x5deec
-#define A2 0xe66d
-#define C 0xb
-
-void
-srand48(long seed)
-{
-    R1 = (unsigned long)seed;
-    R2 = 0x330e;
-}
-
-long
-lrand48(void)
-{
-    R1 = (A1 * R1 << 16) + A1 * R2 + A2 * R1 + ((A2 * R2 + C) >> 16);
-    R2 = (A2 * R2 + C) & 0xffff;
-    return (long)(R1 >> 1);
-}
-#endif
 
 char *
 mybasename(char *s)
@@ -1313,12 +1227,8 @@ reset_signals(void)
 #ifdef SIGBUS
     mySignal(SIGBUS, SIG_DFL);	/* create core image */
 #endif				/* SIGBUS */
-#ifdef SIGCHLD
     mySignal(SIGCHLD, SIG_IGN);
-#endif
-#ifdef SIGPIPE
     mySignal(SIGPIPE, SIG_IGN);
-#endif
 }
 
 #ifndef FOPEN_MAX
@@ -1348,24 +1258,18 @@ setup_child(int child, int i, int f)
 {
     reset_signals();
     mySignal(SIGINT, SIG_IGN);
-#ifndef __MINGW32_VERSION
     if (!child)
 	SETPGRP();
-#endif /* __MINGW32_VERSION */
     /*
      * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in loadImage()
      * and corrupt image data can be cached in ~/.w3m.
      */
-#if 0
-    close_tty();
-#endif
     close_all_fds_except(i, f);
     QuietMessage = TRUE;
     fmInitialized = FALSE;
     TrapSignal = FALSE;
 }
 
-#ifndef __MINGW32_VERSION
 pid_t
 open_pipe_rw(FILE ** fr, FILE ** fw)
 {
@@ -1423,7 +1327,6 @@ open_pipe_rw(FILE ** fr, FILE ** fw)
   err0:
     return (pid_t) - 1;
 }
-#endif /* __MINGW32_VERSION */
 
 void
 myExec(char *command)
@@ -1436,22 +1339,14 @@ myExec(char *command)
 void
 mySystem(char *command, int background)
 {
-#ifndef __MINGW32_VERSION
     if (background) {
-#ifndef __EMX__
 	flush_tty();
 	if (!fork()) {
 	    setup_child(FALSE, 0, -1);
 	    myExec(command);
 	}
-#else
-	Str cmd = Strnew_charp("start /f ");
-	Strcat_charp(cmd, command);
-	system(cmd->ptr);
-#endif
     }
     else
-#endif /* __MINGW32_VERSION */
 	system(command);
 }
 
@@ -1521,13 +1416,6 @@ myEditor(char *cmd, char *file, int line)
     return tmp;
 }
 
-#ifdef __MINGW32_VERSION
-char *
-expandName(char *name)
-{
-    return getenv("HOME");
-}
-#else
 char *
 expandName(char *name)
 {
@@ -1571,7 +1459,6 @@ expandName(char *name)
   rest:
     return name;
 }
-#endif
 
 int
 is_localhost(const char *host)
@@ -1635,26 +1522,17 @@ file_to_url(char *file)
     return tmp->ptr;
 }
 
-#ifdef USE_M17N
 char *
 url_unquote_conv(char *url, wc_ces charset)
-#else
-char *
-url_unquote_conv0(char *url)
-#endif
 {
-#ifdef USE_M17N
     wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
     Str tmp;
     tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
-#ifdef USE_M17N
     if (!charset || charset == WC_CES_US_ASCII)
 	charset = SystemCharset;
     WcOption.auto_detect = WC_OPT_DETECT_ON;
     tmp = convertLine(NULL, tmp, RAW_MODE, &charset, charset);
     WcOption.auto_detect = old_auto_detect;
-#endif
     return tmp->ptr;
 }
 
@@ -1917,15 +1795,10 @@ mymktime(char *timestr)
 		     (hour * 60 * 60) + (min * 60) + sec);
 }
 
-#ifdef USE_COOKIE
 #ifdef INET6
 #include <sys/socket.h>
 #endif				/* INET6 */
-#ifndef __MINGW32_VERSION
 #include <netdb.h>
-#else
-#include <winsock.h>
-#endif
 char *
 FQDN(char *host)
 {
@@ -1990,7 +1863,6 @@ FQDN(char *host)
 #endif				/* INET6 */
 }
 
-#endif				/* USE_COOKIE */
 
 void (*mySignal(int signal_number, void (*action) (int))) (int) {
 #ifdef	SA_RESTART
