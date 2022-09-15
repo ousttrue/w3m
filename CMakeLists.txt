@@ -99,7 +99,7 @@ add_executable(
   func.c
   cookie.c
   history.c
-  backend.c
+  backend.cpp
   #
   keybind.c
   anchor.cpp
