@@ -103,7 +103,7 @@ add_executable(
   #
   keybind.cpp
   anchor.cpp
-  parsetagx.c
+  parsetagx.cpp
   #
   tagtable.c
   istream.cpp

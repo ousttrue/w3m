@@ -70,7 +70,7 @@ const W3m_SOURCES = [_][]const u8{
     //
     "keybind.cpp",
     "anchor.cpp",
-    "parsetagx.c",
+    "parsetagx.cpp",
     //
     "tagtable.c",
     "istream.cpp",
