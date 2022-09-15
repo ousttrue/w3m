@@ -58,7 +58,7 @@ add_library(
   indep.cpp
   regex.c
   textlist.c
-  parsetag.c
+  parsetag.cpp
   myctype.cpp
   hash.cpp)
 target_link_libraries(${TARGET_NAME} PUBLIC wc)
