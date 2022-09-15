@@ -371,7 +371,7 @@ void examineFile(char *path, URLFile *uf) {
         return;
       if ((fp = lessopen_stream(path))) {
         UFclose(uf);
-        uf->stream = newFileStream(fp, (void (*)())pclose);
+        uf->stream = newFileStream(fp, (void (*)(void *))pclose);
         uf->guess_type = "text/plain";
         return;
       }
@@ -6836,7 +6836,7 @@ static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(URLFile *, Buffer *),
   f = popen(cmd, "r");
   if (f == NULL)
     return NULL;
-  init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
+  init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)(void *))pclose));
   buf = loadproc(&uf, defaultbuf);
   UFclose(&uf);
   return buf;
@@ -6870,7 +6870,7 @@ Buffer *getpipe(char *cmd) {
   if (f == NULL)
     return NULL;
   buf = newBuffer(INIT_BUFFER_WIDTH);
-  buf->pagerSource = newFileStream(f, (void (*)())pclose);
+  buf->pagerSource = newFileStream(f, (void (*)(void *))pclose);
   buf->filename = cmd;
   buf->buffername =
       Sprintf("%s %s", PIPEBUFFERNAME, conv_from_system(cmd))->ptr;
@@ -7604,7 +7604,7 @@ static void uncompress_stream(URLFile *uf, char **src) {
       uf->scheme = SCM_LOCAL;
   }
   UFhalfclose(uf);
-  uf->stream = newFileStream(f1, (void (*)())fclose);
+  uf->stream = newFileStream(f1, (void (*)(void *))fclose);
 }
 
 static FILE *lessopen_stream(char *path) {

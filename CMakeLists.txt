@@ -106,7 +106,7 @@ add_executable(
   parsetagx.c
   #
   tagtable.c
-  istream.c
+  istream.cpp
   version.c)
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR}
                                                   libwc)

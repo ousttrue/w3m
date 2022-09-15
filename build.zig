@@ -73,7 +73,7 @@ const W3m_SOURCES = [_][]const u8{
     "parsetagx.c",
     //
     "tagtable.c",
-    "istream.c",
+    "istream.cpp",
     "version.c",
 };
 
