@@ -54,7 +54,7 @@ target_compile_definitions(
 set(TARGET_NAME indep)
 add_library(
   ${TARGET_NAME}
-  Str.c
+  Str.cpp
   indep.cpp
   regex.cpp
   textlist.c
