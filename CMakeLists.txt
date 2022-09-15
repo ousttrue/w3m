@@ -101,7 +101,7 @@ add_executable(
   history.cpp
   backend.cpp
   #
-  keybind.c
+  keybind.cpp
   anchor.cpp
   parsetagx.c
   #
