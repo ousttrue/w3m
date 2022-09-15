@@ -50,7 +50,7 @@ const W3m_SOURCES = [_][]const u8{
     "local.c",
     "form.cpp",
     "map.c",
-    "frame.c",
+    "frame.cpp",
     "rc.c",
     "menu.c",
     "mailcap.c",

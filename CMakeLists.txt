@@ -83,7 +83,7 @@ add_executable(
   local.c
   form.cpp
   map.c
-  frame.c
+  frame.cpp
   rc.c
   menu.c
   mailcap.c
