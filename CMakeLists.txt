@@ -82,7 +82,7 @@ add_executable(
   table.c
   local.cpp
   form.cpp
-  map.c
+  map.cpp
   frame.cpp
   rc.c
   menu.c
