@@ -57,7 +57,7 @@ add_library(
   Str.cpp
   indep.cpp
   regex.cpp
-  textlist.c
+  textlist.cpp
   parsetag.cpp
   myctype.cpp
   hash.cpp)
