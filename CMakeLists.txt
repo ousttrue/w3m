@@ -77,7 +77,7 @@ add_executable(
   buffer.cpp
   display.cpp
   etc.cpp
-  search.c
+  search.cpp
   linein.cpp
   table.c
   local.cpp
