@@ -91,7 +91,7 @@ add_executable(
   symbol.cpp
   entity.cpp
   terms.cpp
-  url.c
+  url.cpp
   ftp.cpp
   mimehead.cpp
   news.c
