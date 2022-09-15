@@ -56,7 +56,7 @@ const W3m_SOURCES = [_][]const u8{
     "mailcap.c",
     "image.c",
     "symbol.c",
-    "entity.c",
+    "entity.cpp",
     "terms.c",
     "url.c",
     "ftp.c",
