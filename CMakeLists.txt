@@ -69,6 +69,7 @@ set(TARGET_NAME w3m)
 add_executable(
   ${TARGET_NAME}
   main.cpp
+  Args.cpp
   core.cpp
   defun.cpp
   file.c

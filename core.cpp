@@ -16,6 +16,7 @@ int (*searchRoutine)(Buffer *, char *);
 int check_target = TRUE;
 int display_ok = FALSE;
 int add_download_list = FALSE;
+int enable_inline_image;
 
 MySignalHandler SigAlarm(SIGNAL_ARG) {
   char *data;

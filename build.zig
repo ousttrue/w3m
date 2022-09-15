@@ -36,6 +36,7 @@ const W3m_SOURCES = [_][]const u8{
     "hash.c",
     //
     "main.cpp",
+    "Args.cpp",
     "core.cpp",
     "defun.cpp",
     "file.c",
