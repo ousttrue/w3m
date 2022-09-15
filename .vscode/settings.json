@@ -1,5 +1,12 @@
 {
     "cmake.configureArgs": [
         "-DCMAKE_EXPORT_COMPILE_COMMANDS=1",
-    ]
+    ],
+    "files.exclude": {
+        "**/*.o": true
+    },
+    "files.associations": {
+        "config.h": "c",
+        "proto.h": "c"
+    },
 }

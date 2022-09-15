@@ -68,7 +68,9 @@ set(PERFIX $ENV{HOME}/local)
 set(TARGET_NAME w3m)
 add_executable(
   ${TARGET_NAME}
-  main.c
+  main.cpp
+  core.cpp
+  defun.cpp
   file.c
   buffer.c
   display.c
@@ -90,7 +92,6 @@ add_executable(
   url.c
   ftp.c
   mimehead.c
-  regex.c
   news.c
   #
   func.c
@@ -119,3 +120,4 @@ target_link_libraries(
           crypto
           gpm
           tinfo)
+target_compile_definitions(${TARGET_NAME} PRIVATE _main=main)

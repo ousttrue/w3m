@@ -1,0 +1,171 @@
+(echo '#define DEFUN(x,y,z) x y';\
+ sed -ne '/^DEFUN/{p;n;/^[ 	]/p;}' ./main.c ./menu.c) | gcc -E  - | \
+ awk '$1 ~ /^[_A-Za-z]/ { \
+       for (i=2;i<=NF;i++) { print $i, $1} \
+ }' > funcname.tab.tmp
+funcname.tab updated
+sort funcname.tab | gawk -f ./funcname1.awk > funcname1.h
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o main.o main.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o file.o file.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o buffer.o buffer.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o display.o display.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o etc.o etc.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o search.o search.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o linein.o linein.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o table.o table.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o local.o local.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o form.o form.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o map.o map.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o frame.o frame.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o rc.o rc.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o menu.o menu.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o mailcap.o mailcap.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o image.o image.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o symbol.o symbol.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o entity.o entity.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o terms.o terms.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o url.o url.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o ftp.o ftp.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o mimehead.o mimehead.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o regex.o regex.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o news.o news.c
+sort funcname.tab | gawk -f ./funcname0.awk > funcname.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o mktable.o mktable.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -DDUMMY -c -o dummy.o entity.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o Str.o Str.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o hash.o hash.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o myctype.o myctype.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o mktable mktable.o dummy.o Str.o hash.o myctype.o  -lm  -lnsl -ldl -lgc
+sort funcname.tab | gawk -f ./functable.awk > functable.tab
+./mktable 100 functable.tab > functable.c
+rm -f functable.tab
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o func.o func.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o cookie.o cookie.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o history.o history.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o backend.o backend.c
+sort funcname.tab | gawk -f ./funcname2.awk > funcname2.h
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o keybind.o keybind.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o anchor.o anchor.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o parsetagx.o parsetagx.c
+./mktable 100 ./tagtable.tab > tagtable.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o tagtable.o tagtable.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o istream.o istream.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o version.o version.c
+echo '/* $I''d$ */' > entity.h
+./mktable 100 ./entity.tab >> entity.h
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o indep.o indep.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o textlist.o textlist.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o parsetag.o parsetag.c
+ar rv libindep.a Str.o indep.o regex.o textlist.o parsetag.o myctype.o hash.o
+a - Str.o
+a - indep.o
+a - regex.o
+a - textlist.o
+a - parsetag.o
+a - myctype.o
+a - hash.o
+ranlib libindep.a
+(cd libwc && make CC='gcc' OPTS='')
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/libwc' に入ります
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o big5.o big5.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o ces.o ces.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o char_conv.o char_conv.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o charset.o charset.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o combining.o combining.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o conv.o conv.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o detect.o detect.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o gb18030.o gb18030.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o gbk.o gbk.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o hkscs.o hkscs.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o hz.o hz.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o iso2022.o iso2022.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o jis.o jis.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o johab.o johab.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o priv.o priv.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o putc.o putc.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o search.o search.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o sjis.o sjis.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o status.o status.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o ucs.o ucs.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o uhc.o uhc.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o utf7.o utf7.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o utf8.o utf8.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o viet.o viet.c
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DUSE_UNICODE -I. -I./.. -DHAVE_CONFIG_H   -c -o wtf.o wtf.c
+ar rv libwc.a big5.o ces.o char_conv.o charset.o combining.o conv.o detect.o gb18030.o gbk.o hkscs.o hz.o iso2022.o jis.o johab.o priv.o putc.o search.o sjis.o status.o ucs.o uhc.o utf7.o utf8.o viet.o wtf.o
+a - big5.o
+a - ces.o
+a - char_conv.o
+a - charset.o
+a - combining.o
+a - conv.o
+a - detect.o
+a - gb18030.o
+a - gbk.o
+a - hkscs.o
+a - hz.o
+a - iso2022.o
+a - jis.o
+a - johab.o
+a - priv.o
+a - putc.o
+a - search.o
+a - sjis.o
+a - status.o
+a - ucs.o
+a - uhc.o
+a - utf7.o
+a - utf8.o
+a - viet.o
+a - wtf.o
+ranlib libwc.a
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/libwc' から出ます
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o w3m main.o file.o buffer.o display.o etc.o search.o linein.o table.o local.o form.o map.o frame.o rc.o menu.o mailcap.o image.o symbol.o entity.o terms.o url.o ftp.o mimehead.o regex.o news.o func.o cookie.o history.o backend.o keybind.o anchor.o parsetagx.o tagtable.o istream.o version.o  -lm  -lnsl -ldl -L. -lindep  -lgc -L./libwc -lwc -lssl -lcrypto  -lssl -lcrypto -lgpm -ltinfo
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o w3mbookmark.o w3mbookmark.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o w3mbookmark w3mbookmark.o dummy.o  -lm  -lnsl -ldl -L. -lindep  -lgc
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"   -c -o w3mhelperpanel.o w3mhelperpanel.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o w3mhelperpanel w3mhelperpanel.o dummy.o  -lm  -lnsl -ldl -L. -lindep  -lgc
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\"  -o w3mimgdisplay.o -c ./w3mimgdisplay.c
+(cd w3mimg && make CC="gcc" OPTS="")
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/w3mimg' に入ります
+gcc  -I.. -I.. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H  -c w3mimg.c
+ar rv w3mimg.a w3mimg.o
+a - w3mimg.o
+ranlib w3mimg.a
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/w3mimg' から出ます
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o w3mimgdisplay w3mimgdisplay.o w3mimg/w3mimg.a  -lm  -lnsl -ldl 
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o inflate.o -c ./inflate.c
+gcc  -I. -I. -g -O2 -I./libwc   -DHAVE_CONFIG_H -DAUXBIN_DIR=\"/home/ousttrue/libexec/w3m\" -DCGIBIN_DIR=\"/home/ousttrue/libexec/w3m/cgi-bin\" -DHELP_DIR=\"/home/ousttrue/share/w3m\" -DETC_DIR=\"/home/ousttrue/etc\" -DCONF_DIR=\"/home/ousttrue/etc/w3m\" -DRC_DIR=\"~/.w3m\" -DLOCALEDIR=\"/home/ousttrue/share/locale\" -o inflate inflate.o  -lm  -lnsl -ldl -lz
+for dir in scripts;	\
+do	\
+	(cd $dir && make PERL='/usr/sbin/perl' MKDIR='mkdir -p' BIN_DIR='/home/ousttrue/bin' AUXBIN_DIR='/home/ousttrue/libexec/w3m' CGIBIN_DIR='/home/ousttrue/libexec/w3m/cgi-bin' HELP_DIR='/home/ousttrue/share/w3m' MAN_DIR='/home/ousttrue/share/man' ETC_DIR='/home/ousttrue/etc' CONF_DIR='/home/ousttrue/etc/w3m' RC_DIR='~/.w3m' DESTDIR='' KEYBIND_SRC='keybind.c'); \
+done
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts' に入ります
+generating w3mhelp-funcname.pl...
+done
+generating w3mhelp-funcdesc*.pl...
+done
+for subdir in multipart w3mman; \
+do \
+	(cd $subdir && make); \
+done
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/multipart' に入ります
+make[2]: 'all' に対して行うべき事はありません.
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/multipart' から出ます
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/w3mman' に入ります
+make[2]: 'all' に対して行うべき事はありません.
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/w3mman' から出ます
+for subdir in multipart w3mman; \
+do \
+	(cd $subdir && make); \
+done
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/multipart' に入ります
+make[2]: 'all' に対して行うべき事はありません.
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/multipart' から出ます
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/w3mman' に入ります
+make[2]: 'all' に対して行うべき事はありません.
+make[2]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts/w3mman' から出ます
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/scripts' から出ます
+(cd po && make)
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/po' に入ります
+make[1]: ディレクトリ '/home/ousttrue/ghq/github.com/ousttrue/w3m/po' から出ます
