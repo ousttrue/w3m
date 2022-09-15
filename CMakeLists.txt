@@ -85,7 +85,7 @@ add_executable(
   map.cpp
   frame.cpp
   rc.c
-  menu.c
+  menu.cpp
   mailcap.cpp
   image.cpp
   symbol.c
