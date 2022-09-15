@@ -93,7 +93,7 @@ add_executable(
   terms.c
   url.c
   ftp.cpp
-  mimehead.c
+  mimehead.cpp
   news.c
   #
   func.cpp
