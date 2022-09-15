@@ -14,5 +14,8 @@ public:
   bool add_download_list = false;
   void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                        clen_t size);
+  void run(class Args &argument);
+
+private:
   void main_loop();
 };

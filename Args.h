@@ -12,7 +12,9 @@ struct Args {
   bool search_header = false;
   char *default_type = nullptr;
   char *post_file = nullptr;
+  char *load_argv[16] = {0};
   int load_argc = 0;
+  int i = 0;
 
-  int parse(int argc, char **argv, char **load_argv);
+  void parse(int argc, char **argv);
 };

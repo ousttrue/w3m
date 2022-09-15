@@ -139,8 +139,8 @@ static Str make_optional_header_string(char *s) {
   return hs;
 }
 
-int Args::parse(int argc, char **argv, char **load_argv) {
-  int i = 1;
+void Args::parse(int argc, char **argv) {
+  i = 1;
   while (i < argc) {
     if (*argv[i] == '-') {
       if (!strcmp("-t", argv[i])) {
@@ -348,5 +348,4 @@ int Args::parse(int argc, char **argv, char **load_argv) {
     }
     i++;
   }
-  return i;
 }

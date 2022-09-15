@@ -1,4 +1,5 @@
 #include "App.h"
+#include "Args.h"
 #include "core.h"
 extern "C" {
 #include "fm.h"
@@ -38,6 +39,207 @@ void App::addDownloadList(pid_t pid, char *url, char *save, char *lock,
     FirstDL = d;
   LastDL = d;
   add_download_list = TRUE;
+}
+
+void App::run(Args &argument) {
+  wc_uint8 auto_detect = WcOption.auto_detect;
+
+  Str err_msg = Strnew();
+  Buffer *newbuf = NULL;
+  InputStream redin;
+  if (argument.load_argc == 0) {
+    // no URL specified
+    char *p;
+    if (!isatty(0)) {
+      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
+      newbuf = openGeneralPagerBuffer(redin);
+      dup2(1, 0);
+    } else if (argument.load_bookmark) {
+      newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
+      if (newbuf == NULL)
+        Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
+    } else if (argument.visual_start) {
+      /* FIXME: gettextize? */
+      Str s_page;
+      s_page =
+          Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
+      Strcat_charp(s_page, "<a href='http://w3m.sourceforge.net/'>");
+      Strcat_m_charp(
+          s_page, "w3m</a>!<p><p>This is w3m version ", w3m_version,
+          "<br>Written by <a href='mailto:aito@fw.ipsj.or.jp'>Akinori Ito</a>",
+          NULL);
+      newbuf = loadHTMLString(s_page);
+      if (newbuf == NULL)
+        Strcat_charp(err_msg, "w3m: Can't load string.\n");
+      else if (newbuf != NO_BUFFER)
+        newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    } else if ((p = getenv("HTTP_HOME")) != NULL ||
+               (p = getenv("WWW_HOME")) != NULL) {
+      newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
+      if (newbuf == NULL)
+        Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
+      else if (newbuf != NO_BUFFER)
+        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+    } else {
+      if (fmInitialized)
+        fmTerm();
+      usage();
+    }
+    if (newbuf == NULL) {
+      if (fmInitialized)
+        fmTerm();
+      if (err_msg->length)
+        fprintf(stderr, "%s", err_msg->ptr);
+      w3m_exit(2);
+    }
+    argument.i = -1;
+  } else {
+    argument.i = 0;
+  }
+
+  FormList *request;
+  int i=argument.i;
+  for (; i < argument.load_argc; i++) {
+    if (i >= 0) {
+      SearchHeader = argument.search_header;
+      DefaultType = argument.default_type;
+      char *url;
+
+      url = argument.load_argv[i];
+      if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
+        url = file_to_url(argument.load_argv[i]);
+      else
+        url = url_encode(conv_from_system(argument.load_argv[i]), NULL, 0);
+      if (w3m_dump == DUMP_HEAD) {
+        request = New(FormList);
+        request->method = FORM_METHOD_HEAD;
+        newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+      } else {
+        if (argument.post_file && i == 0) {
+          FILE *fp;
+          Str body;
+          if (!strcmp(argument.post_file, "-"))
+            fp = stdin;
+          else
+            fp = fopen(argument.post_file, "r");
+          if (fp == NULL) {
+            /* FIXME: gettextize? */
+            Strcat(err_msg,
+                   Sprintf("w3m: Can't open %s.\n", argument.post_file));
+            continue;
+          }
+          body = Strfgetall(fp);
+          if (fp != stdin)
+            fclose(fp);
+          request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+          request->body = body->ptr;
+          request->boundary = NULL;
+          request->length = body->length;
+        } else {
+          request = NULL;
+        }
+        newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+      }
+      if (newbuf == NULL) {
+        /* FIXME: gettextize? */
+        Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", argument.load_argv[i]));
+        continue;
+      } else if (newbuf == NO_BUFFER)
+        continue;
+      switch (newbuf->real_scheme) {
+      case SCM_MAILTO:
+        break;
+      case SCM_LOCAL:
+      case SCM_LOCAL_CGI:
+        unshiftHist(LoadHist, url);
+      default:
+        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+        break;
+      }
+    } else if (newbuf == NO_BUFFER)
+      continue;
+    if (newbuf->pagerSource ||
+        (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
+         newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
+      newbuf->search_header = argument.search_header;
+    if (CurrentTab == NULL) {
+      FirstTab = LastTab = CurrentTab = newTab();
+      nTab = 1;
+      Firstbuf = Currentbuf = newbuf;
+    } else if (argument.open_new_tab) {
+      _newT();
+      Currentbuf->nextBuffer = newbuf;
+      delBuffer(Currentbuf);
+    } else {
+      Currentbuf->nextBuffer = newbuf;
+      Currentbuf = newbuf;
+    }
+    if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
+      if (Currentbuf->frameset != NULL && RenderFrame)
+        rFrame();
+    }
+    if (w3m_dump)
+      do_dump(Currentbuf);
+    else {
+      Currentbuf = newbuf;
+      saveBufferInfo();
+    }
+  }
+  if (w3m_dump) {
+    if (err_msg->length)
+      fprintf(stderr, "%s", err_msg->ptr);
+    save_cookies();
+    w3m_exit(0);
+  }
+
+  if (App::instance().add_download_list) {
+    App::instance().add_download_list = false;
+    CurrentTab = LastTab;
+    if (!FirstTab) {
+      FirstTab = LastTab = CurrentTab = newTab();
+      nTab = 1;
+    }
+    if (!Firstbuf || Firstbuf == NO_BUFFER) {
+      Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
+      Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
+      Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
+    } else
+      Currentbuf = Firstbuf;
+    ldDL();
+  } else
+    CurrentTab = FirstTab;
+  if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
+    if (newbuf == NO_BUFFER) {
+      if (fmInitialized)
+        /* FIXME: gettextize? */
+        inputChar("Hit any key to quit w3m:");
+    }
+    if (fmInitialized)
+      fmTerm();
+    if (err_msg->length)
+      fprintf(stderr, "%s", err_msg->ptr);
+    if (newbuf == NO_BUFFER) {
+      save_cookies();
+      if (!err_msg->length)
+        w3m_exit(0);
+    }
+    w3m_exit(2);
+  }
+  if (err_msg->length)
+    disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
+
+  SearchHeader = FALSE;
+  DefaultType = NULL;
+  UseContentCharset = TRUE;
+  WcOption.auto_detect = auto_detect;
+
+  Currentbuf = Firstbuf;
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  if (argument.line_str) {
+    _goLine(argument.line_str);
+  }
+
+  main_loop();
 }
 
 void App::main_loop() {
