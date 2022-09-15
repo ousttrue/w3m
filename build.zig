@@ -28,7 +28,7 @@ const W3m_SOURCES = [_][]const u8{
     "libwc/wtf.c",
     //
     "Str.c",
-    "indep.c",
+    "indep.cpp",
     "regex.c",
     "textlist.c",
     "parsetag.c",

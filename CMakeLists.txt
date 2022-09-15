@@ -55,7 +55,7 @@ set(TARGET_NAME indep)
 add_library(
   ${TARGET_NAME}
   Str.c
-  indep.c
+  indep.cpp
   regex.c
   textlist.c
   parsetag.c
