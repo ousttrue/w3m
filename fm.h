@@ -39,19 +39,9 @@
 #define setlocale(category, locale)	/* empty */
 #endif
 
-#ifdef ENABLE_NLS
 #include <libintl.h>
 #define _(String) gettext (String)
 #define N_(String) (String)
-#else
-# undef bindtextdomain
-# define bindtextdomain(Domain, Directory)	/* empty */
-# undef textdomain
-# define textdomain(Domain)	/* empty */
-# define _(Text) Text
-# define N_(Text) Text
-# define gettext(Text) Text
-#endif
 
 #include "form.h"
 #include "frame.h"

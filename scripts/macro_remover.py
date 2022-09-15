@@ -32,6 +32,7 @@ CONTEXT = {
     'USE_BUFINFO': True,
     'USE_HISTORY': True,
     'USE_EXTERNAL_URI_LOADER': True,
+    'ENABLE_NLS': True,
     # 'HAVE_WAITPID': True,
     #
     'SIGSTOP': False,

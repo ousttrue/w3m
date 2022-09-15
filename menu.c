@@ -1370,10 +1370,8 @@ initMenu(void)
 
     if (!MainMenuEncode) {
 	MenuItem *item;
-#ifdef ENABLE_NLS
 	/* FIXME: charset that gettext(3) returns */
 	MainMenuCharset = SystemCharset;
-#endif
 	for (item = MainMenuItem; item->type != MENU_END; item++)
 	    item->label =
 		wc_conv(_(item->label), MainMenuCharset,

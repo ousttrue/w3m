@@ -758,9 +758,7 @@ show_params(FILE * fp)
     const char *t = "";
     char *cmt;
 
-#ifdef ENABLE_NLS
     OptionCharset = SystemCharset;	/* FIXME */
-#endif
 
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
@@ -1229,9 +1227,7 @@ load_option_panel(void)
     if (optionpanel_str == NULL)
 	optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
 			      html_quote(localCookie()->ptr), _(CMT_HELPER));
-#ifdef ENABLE_NLS
     OptionCharset = SystemCharset;	/* FIXME */
-#endif
     if (!OptionEncode) {
 	optionpanel_str =
 	    wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
