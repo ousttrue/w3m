@@ -80,7 +80,7 @@ add_executable(
   search.c
   linein.cpp
   table.c
-  local.c
+  local.cpp
   form.cpp
   map.c
   frame.cpp
