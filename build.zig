@@ -42,7 +42,7 @@ const W3m_SOURCES = [_][]const u8{
     "defun.cpp",
     "file.c",
     "buffer.cpp",
-    "display.c",
+    "display.cpp",
     "etc.c",
     "search.c",
     "linein.c",
