@@ -194,7 +194,6 @@ retrieveCurrentMap(Buffer *buf)
     return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
 MapArea *
 follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
 {
@@ -238,7 +237,7 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     }
     return NULL;
 }
-#endif
+
 
 
 MapArea *

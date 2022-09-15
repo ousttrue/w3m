@@ -25,11 +25,6 @@
 #include <unistd.h>
 #include "config.h"
 #include "history.h"
-
-#define MENU_SELECT
-#define MENU_MAP
-
-
 #include "ctrlcode.h"
 #include "html.h"
 #include <gc.h>
