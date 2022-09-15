@@ -87,7 +87,7 @@ add_executable(
   rc.c
   menu.c
   mailcap.c
-  image.c
+  image.cpp
   symbol.c
   entity.cpp
   terms.c
