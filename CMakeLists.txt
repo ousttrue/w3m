@@ -96,7 +96,7 @@ add_executable(
   mimehead.c
   news.c
   #
-  func.c
+  func.cpp
   cookie.cpp
   history.c
   backend.cpp

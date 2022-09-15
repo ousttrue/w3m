@@ -10,6 +10,7 @@
 #include "parsetag.h"
 #include "local.h"
 #include "regex.h"
+#include "func.h"
 #include <stdlib.h>
 #include <stddef.h>
 
