@@ -65,7 +65,7 @@ const W3m_SOURCES = [_][]const u8{
     //
     "func.cpp",
     "cookie.cpp",
-    "history.c",
+    "history.cpp",
     "backend.cpp",
     //
     "keybind.c",
