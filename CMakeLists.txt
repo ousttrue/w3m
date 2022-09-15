@@ -88,7 +88,7 @@ add_executable(
   menu.cpp
   mailcap.cpp
   image.cpp
-  symbol.c
+  symbol.cpp
   entity.cpp
   terms.c
   url.c

@@ -1,6 +1,5 @@
-
+extern "C"{
 #include "fm.h"
-
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
 #include "Symbols/eucjp.sym"
@@ -10,6 +9,7 @@
 #include "Symbols/big5.sym"
 #include "Symbols/utf8.sym"
 #include "Symbols/cp850.sym"
+}
 
 typedef struct {
     wc_ces ces;
