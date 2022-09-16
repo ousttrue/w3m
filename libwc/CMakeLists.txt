@@ -13,7 +13,7 @@ add_library(
   hkscs.cpp
   hz.cpp
   iso2022.cpp
-  jis.c
+  jis.cpp
   johab.c
   priv.c
   putc.c
