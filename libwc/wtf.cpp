@@ -1,4 +1,4 @@
-
+extern "C"{
 #include "wc.h"
 #include "wtf.h"
 #include "sjis.h"
@@ -12,6 +12,7 @@
 #include "uhc.h"
 #include "ucs.h"
 #include "utf8.h"
+}
 
 wc_uint8 WTF_WIDTH_MAP[ 0x100 ] = {
     1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,
@@ -118,7 +119,7 @@ int
 wtf_strwidth(wc_uchar *p)
 {
     int w = 0;
-    wc_uchar *q = p + strlen(p);
+    wc_uchar *q = p + strlen((const char*)p);
 
     while (p < q) {
 	w += wtf_width(p);
@@ -144,7 +145,7 @@ size_t
 wtf_len(wc_uchar *p)
 {
     wc_uchar *q = p;
-    wc_uchar *strz = p + strlen(p);
+    wc_uchar *strz = p + strlen((const char*)p);
 
     q += WTF_LEN_MAP[*q];
     while (q < strz && ! WTF_WIDTH_MAP[*q])

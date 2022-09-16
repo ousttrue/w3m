@@ -25,7 +25,7 @@ add_library(
   utf7.cpp
   utf8.cpp
   viet.cpp
-  wtf.c
+  wtf.cpp
   Str.cpp
   myctype.cpp)
 target_include_directories(${TARGET_NAME} PUBLIC ${CMAKE_CURRENT_LIST_DIR})
