@@ -3,7 +3,7 @@ add_library(
   ${TARGET_NAME}
   big5.cpp
   ces.cpp
-  char_conv.c
+  char_conv.cpp
   charset.c
   combining.c
   conv.c
