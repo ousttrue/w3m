@@ -16,7 +16,7 @@ add_library(
   jis.cpp
   johab.cpp
   priv.cpp
-  putc.c
+  putc.cpp
   search.c
   sjis.c
   status.c
