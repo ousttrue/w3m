@@ -5,7 +5,7 @@ add_library(
   ces.cpp
   char_conv.cpp
   charset.cpp
-  combining.c
+  combining.cpp
   conv.c
   detect.c
   gb18030.c
