@@ -1,9 +1,6 @@
 #ifndef _WC_UCS_H
 #define _WC_UCS_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 #define WC_C_UCS2_NBSP		0xA0
 #define WC_C_UCS2_BOM		0xFEFF
 #define WC_C_UCS2_REPLACE	0xFFFD
@@ -63,9 +60,5 @@ extern wc_uint32  wc_ucs_to_fullwidth(wc_uint32 ucs);
 extern int        wc_ucs_put_tag(char *tag);
 extern char      *wc_ucs_get_tag(int ntag);
 extern void       wtf_push_ucs(Str os, wc_uint32 ucs, wc_status *st);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

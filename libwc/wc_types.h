@@ -3,9 +3,6 @@
 #define _WC_TYPES_H
 
 #include <Str.h>
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 // #include <config.h>
 #if defined(HAVE_STDINT_H)
@@ -22,7 +19,7 @@ typedef uint32_t wc_uint32;
 #else
 typedef unsigned char  wc_uint8;
 typedef unsigned short wc_uint16;
-typedef unsigned long  wc_uint32;
+typedef unsigned int  wc_uint32;
 #endif
 
 typedef wc_uint32 wc_ccs;
@@ -115,7 +112,4 @@ typedef struct _wc_status {
     int          shift;
 } wc_status;
 
-#ifdef __cplusplus
-}
-#endif
 #endif

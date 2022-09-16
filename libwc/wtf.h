@@ -1,9 +1,6 @@
 
 #ifndef _WC_WTF_H
 #define _WC_WTF_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #define WTF_C_CS94	0x80
 #define WTF_C_CS94W	0x81
@@ -79,7 +76,4 @@ extern wc_bool    wtf_is_hangul(wc_uchar *p);
 
 extern char      *wtf_conv_fit(char *s, wc_ces ces);
 
-#ifdef __cplusplus
-}
-#endif
 #endif

@@ -1,9 +1,7 @@
-extern "C"{
 #include <string.h>
 #include "alloc.h"
 #include "wc.h"
 #include "ucs.h"
-}
 
 wc_option WcOption = {
     WC_OPT_DETECT_ON,	/* auto_detect */

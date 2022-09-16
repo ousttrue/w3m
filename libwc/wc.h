@@ -1,9 +1,6 @@
 
 #ifndef _WC_WC_H
 #define _WC_WC_H
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 #include <Str.h>
 #include "wc_types.h"
@@ -45,39 +42,31 @@ extern char *WcReplaceW;
 #define wc_conv_n_with_detect(is, n, f_ces, hint, t_ces)\
 	wc_Str_conv_with_detect(Strnew_charp_n((is), (n)), (f_ces), (hint), (t_ces))
 
-extern Str wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces);
-extern Str wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces);
-extern Str wc_Str_conv_with_detect(Str is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces);
+Str wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces);
+Str wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces);
+Str wc_Str_conv_with_detect(Str is, wc_ces *f_ces, wc_ces hint, wc_ces t_ces);
+void wc_input_init(wc_ces ces, wc_status *st);
+void wc_output_init(wc_ces ces, wc_status *st);
+void wc_push_end(Str os, wc_status *st);
+wc_bool wc_ces_has_ccs(wc_ccs ccs, wc_status *st);
+void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
+Str  wc_char_conv(char c);
+void wc_putc_init(wc_ces f_ces, wc_ces t_ces);
+void wc_putc(char *c, FILE *f);
+void wc_putc_end(FILE *f);
+void wc_putc_clear_status(void);
+void   wc_create_detect_map(wc_ces ces, wc_bool esc);
+wc_ces wc_auto_detect(char *is, size_t len, wc_ces hint);
+wc_ces       wc_guess_charset(char *charset, wc_ces orig);
+wc_ces       wc_guess_charset_short(char *charset, wc_ces orig);
+wc_ces       wc_guess_locale_charset(char *locale, wc_ces orig);
+wc_ces       wc_charset_to_ces(char *charset);
+wc_ces       wc_charset_short_to_ces(char *charset);
+wc_ces       wc_locale_to_ces(char *locale);
+wc_ces       wc_guess_8bit_charset(wc_ces orig);
+char        *wc_ces_to_charset(wc_ces ces);
+char        *wc_ces_to_charset_desc(wc_ces ces);
+wc_bool      wc_check_ces(wc_ces ces);
+wc_ces_list *wc_get_ces_list(void);
 
-extern void wc_input_init(wc_ces ces, wc_status *st);
-extern void wc_output_init(wc_ces ces, wc_status *st);
-extern void wc_push_end(Str os, wc_status *st);
-extern wc_bool wc_ces_has_ccs(wc_ccs ccs, wc_status *st);
-
-extern void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
-extern Str  wc_char_conv(char c);
-
-extern void wc_putc_init(wc_ces f_ces, wc_ces t_ces);
-extern void wc_putc(char *c, FILE *f);
-extern void wc_putc_end(FILE *f);
-extern void wc_putc_clear_status(void);
-
-extern void   wc_create_detect_map(wc_ces ces, wc_bool esc);
-extern wc_ces wc_auto_detect(char *is, size_t len, wc_ces hint);
-
-extern wc_ces       wc_guess_charset(char *charset, wc_ces orig);
-extern wc_ces       wc_guess_charset_short(char *charset, wc_ces orig);
-extern wc_ces       wc_guess_locale_charset(char *locale, wc_ces orig);
-extern wc_ces       wc_charset_to_ces(char *charset);
-extern wc_ces       wc_charset_short_to_ces(char *charset);
-extern wc_ces       wc_locale_to_ces(char *locale);
-extern wc_ces       wc_guess_8bit_charset(wc_ces orig);
-extern char        *wc_ces_to_charset(wc_ces ces);
-extern char        *wc_ces_to_charset_desc(wc_ces ces);
-extern wc_bool      wc_check_ces(wc_ces ces);
-extern wc_ces_list *wc_get_ces_list(void);
-
-#ifdef __cplusplus
-}
-#endif
 #endif

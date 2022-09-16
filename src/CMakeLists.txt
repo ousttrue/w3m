@@ -12,7 +12,10 @@ target_compile_definitions(
          CONF_DIR="${PREFIX}/etc/w3m"
          RC_DIR="~/.w3m"
          LOCALEDIR="${PREFIX}/share/locale")
+
+#
 # w3m
+#
 set(PERFIX $ENV{HOME}/local)
 set(TARGET_NAME w3m)
 add_executable(
@@ -59,12 +62,12 @@ add_executable(
 target_include_directories(${TARGET_NAME} PRIVATE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(
   ${TARGET_NAME}
-  PRIVATE m
+  PRIVATE indep
+          wc
+          m
           nsl
           dl
-          indep
           gc
-          wc
           ssl
           crypto
           gpm
