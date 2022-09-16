@@ -15,7 +15,7 @@ add_library(
   iso2022.cpp
   jis.cpp
   johab.cpp
-  priv.c
+  priv.cpp
   putc.c
   search.c
   sjis.c
