@@ -12,7 +12,7 @@ add_library(
   gbk.cpp
   hkscs.cpp
   hz.cpp
-  iso2022.c
+  iso2022.cpp
   jis.c
   johab.c
   priv.c
