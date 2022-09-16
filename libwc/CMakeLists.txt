@@ -18,7 +18,7 @@ add_library(
   priv.cpp
   putc.cpp
   search.cpp
-  sjis.c
+  sjis.cpp
   status.c
   ucs.c
   uhc.c
