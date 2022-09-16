@@ -4,7 +4,7 @@ add_library(
   big5.cpp
   ces.cpp
   char_conv.cpp
-  charset.c
+  charset.cpp
   combining.c
   conv.c
   detect.c
