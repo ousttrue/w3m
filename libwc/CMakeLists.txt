@@ -17,7 +17,7 @@ add_library(
   johab.cpp
   priv.cpp
   putc.cpp
-  search.c
+  search.cpp
   sjis.c
   status.c
   ucs.c
