@@ -14,7 +14,7 @@ add_library(
   hz.cpp
   iso2022.cpp
   jis.cpp
-  johab.c
+  johab.cpp
   priv.c
   putc.c
   search.c
