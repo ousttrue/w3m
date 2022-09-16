@@ -9,7 +9,7 @@ add_library(
   conv.cpp
   detect.cpp
   gb18030.cpp
-  gbk.c
+  gbk.cpp
   hkscs.c
   hz.c
   iso2022.c
