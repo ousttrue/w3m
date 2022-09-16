@@ -24,7 +24,7 @@ add_library(
   uhc.cpp
   utf7.cpp
   utf8.cpp
-  viet.c
+  viet.cpp
   wtf.c
   Str.cpp
   myctype.cpp)
