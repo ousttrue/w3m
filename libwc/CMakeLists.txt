@@ -8,7 +8,7 @@ add_library(
   combining.cpp
   conv.cpp
   detect.cpp
-  gb18030.c
+  gb18030.cpp
   gbk.c
   hkscs.c
   hz.c

@@ -1,10 +1,11 @@
-
+extern "C"{
 #include "wc.h"
 #include "gb18030.h"
 #include "search.h"
 #include "wtf.h"
 #include "ucs.h"
 #include "map/gb18030_ucs.map"
+}
 
 #define C0 WC_GB18030_MAP_C0
 #define GL WC_GB18030_MAP_GL
