@@ -1,7 +1,7 @@
 set(TARGET_NAME wc)
 add_library(
   ${TARGET_NAME}
-  big5.c
+  big5.cpp
   ces.c
   char_conv.c
   charset.c
