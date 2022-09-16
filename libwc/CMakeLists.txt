@@ -19,7 +19,7 @@ add_library(
   putc.cpp
   search.cpp
   sjis.cpp
-  status.c
+  status.cpp
   ucs.c
   uhc.c
   utf7.c
