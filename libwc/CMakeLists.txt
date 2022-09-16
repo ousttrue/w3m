@@ -11,7 +11,7 @@ add_library(
   gb18030.cpp
   gbk.cpp
   hkscs.cpp
-  hz.c
+  hz.cpp
   iso2022.c
   jis.c
   johab.c
