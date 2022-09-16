@@ -23,7 +23,7 @@ add_library(
   ucs.cpp
   uhc.cpp
   utf7.cpp
-  utf8.c
+  utf8.cpp
   viet.c
   wtf.c
   Str.cpp
