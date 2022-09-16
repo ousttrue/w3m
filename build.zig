@@ -1,8 +1,8 @@
 const std = @import("std");
 
 const W3m_SOURCES = [_][]const u8{
-    "libwc/big5.c",
-    "libwc/ces.c",
+    "libwc/big5.cpp",
+    "libwc/ces.cpp",
     "libwc/char_conv.c",
     "libwc/charset.c",
     "libwc/combining.c",

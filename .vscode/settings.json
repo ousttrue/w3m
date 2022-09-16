@@ -10,6 +10,7 @@
         "proto.h": "c",
         "*.tcc": "cpp",
         "str.h": "c",
-        "*.sym": "cpp"
+        "*.sym": "cpp",
+        "typeinfo": "cpp"
     },
 }

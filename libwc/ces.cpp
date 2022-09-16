@@ -1,4 +1,4 @@
-
+extern "C"{
 #include "wc.h"
 #include "iso2022.h"
 #include "sjis.h"
@@ -13,6 +13,7 @@
 #include "priv.h"
 #include "utf8.h"
 #include "utf7.h"
+}
 
 static wc_gset gset_usascii[] = {
     { WC_CCS_US_ASCII, WC_C_G0_CS94, 1 },
@@ -236,30 +237,40 @@ static wc_gset gset_raw[] = {
     { 0, 0, 0 },
 };
 
+// typedef struct {
+//     wc_ces    id;
+//     char     *name;
+//     char     *desc;
+//     wc_gset  *gset;
+//     wc_uchar *gset_ext;
+//     Str     (*conv_from)();
+//     void    (*push_to)();
+//     Str     (*char_conv)();
+// } wc_ces_info;
 #define ces_ascii(id,name,desc) \
     { WC_CES_##id, name, desc, gset_usascii, NULL, \
-	(void *)wc_conv_from_ascii, (void *)wc_push_to_iso8859, \
-	(void *)wc_char_conv_from_iso2022 }
+	wc_conv_from_ascii, wc_push_to_iso8859, \
+	wc_char_conv_from_iso2022 }
 #define ces_iso8859(id,name,desc,no) \
     { WC_CES_##id, name, desc, gset_iso8859##no, NULL, \
-	(void *)wc_conv_from_iso2022, (void *)wc_push_to_iso8859, \
-	(void *)wc_char_conv_from_iso2022 }
+	wc_conv_from_iso2022, wc_push_to_iso8859, \
+	wc_char_conv_from_iso2022 }
 #define ces_priv1(id,name,desc,ces) \
     { WC_CES_##id, name, desc, gset_##ces, NULL, \
-	(void *)wc_conv_from_priv1, (void *)wc_push_to_priv1, \
-	(void *)wc_char_conv_from_priv1 }
+	wc_conv_from_priv1, wc_push_to_priv1, \
+	wc_char_conv_from_priv1 }
 #define ces_iso2022(id,name,desc,terr) \
     { WC_CES_##id, name, desc, gset_iso2022##terr, gset_ext_iso2022##terr, \
-	(void *)wc_conv_from_iso2022, (void *)wc_push_to_iso2022, \
-	(void *)wc_char_conv_from_iso2022 }
+	wc_conv_from_iso2022, wc_push_to_iso2022, \
+	wc_char_conv_from_iso2022 }
 #define ces_euc(id,name,desc,terr) \
     { WC_CES_##id, name, desc, gset_euc##terr, NULL, \
-	(void *)wc_conv_from_iso2022, (void *)wc_push_to_euc##terr, \
-	(void *)wc_char_conv_from_iso2022 }
+	wc_conv_from_iso2022, wc_push_to_euc##terr, \
+	wc_char_conv_from_iso2022 }
 #define ces_priv2(id,name,desc,ces) \
     { WC_CES_##id, name, desc, gset_##ces, NULL, \
-	(void *)wc_conv_from_##ces, (void *)wc_push_to_##ces, \
-	(void *)wc_char_conv_from_##ces }
+	wc_conv_from_##ces, wc_push_to_##ces, \
+	wc_char_conv_from_##ces }
 
 #define gset_ext_iso2022jp2	gset_ext_iso2022jp
 #define gset_ext_iso2022jp3	gset_ext_iso2022jp
