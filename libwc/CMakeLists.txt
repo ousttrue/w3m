@@ -6,7 +6,7 @@ add_library(
   char_conv.cpp
   charset.cpp
   combining.cpp
-  conv.c
+  conv.cpp
   detect.c
   gb18030.c
   gbk.c

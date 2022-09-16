@@ -1,4 +1,4 @@
-
+extern "C"{
 #include "wc.h"
 #include "wtf.h"
 #include "iso2022.h"
@@ -6,6 +6,7 @@
 #include "ucs.h"
 #include "utf8.h"
 #include "utf7.h"
+}
 
 char *WcReplace = "?";
 char *WcReplaceW = "??";
