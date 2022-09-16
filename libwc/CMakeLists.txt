@@ -20,7 +20,7 @@ add_library(
   search.cpp
   sjis.cpp
   status.cpp
-  ucs.c
+  ucs.cpp
   uhc.c
   utf7.c
   utf8.c

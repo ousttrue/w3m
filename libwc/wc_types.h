@@ -50,7 +50,7 @@ typedef struct {
     wc_ccs       ccs;
     size_t       n;
     wc_map      *map;
-    wc_wchar_t (*conv)();
+    wc_wchar_t (*conv)(wc_ccs, wc_uint16);
 } wc_table;
 
 typedef struct {

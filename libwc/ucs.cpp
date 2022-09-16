@@ -1,5 +1,4 @@
-
-
+extern "C"{
 #include <stdlib.h>
 #include "wc.h"
 #include "ucs.h"
@@ -14,7 +13,7 @@
 #include "viet.h"
 #include "wtf.h"
 
-#include "ucs.map"
+#include "ucs_map.c"
 
 #include "map/ucs_ambwidth.map"
 #include "map/ucs_wide.map"
@@ -27,6 +26,7 @@
 #include "map/ucs_islower.map"
 #include "map/ucs_isupper.map"
 #include "map/ucs_case.map"
+}
 
 #define MAX_TAG_LEN (8 + 1 + 8)
 #define MAX_TAG_MAP 0x100
