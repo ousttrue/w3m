@@ -21,7 +21,7 @@ add_library(
   sjis.cpp
   status.cpp
   ucs.cpp
-  uhc.c
+  uhc.cpp
   utf7.c
   utf8.c
   viet.c
