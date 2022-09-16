@@ -1,6 +1,7 @@
 
 #ifndef _WC_BIG5_H
 #define _WC_BIG5_H
+#include "wc_types.h"
 
 #define WC_C_BIG5_2_BASE	(0x28 * 0x9D)
 

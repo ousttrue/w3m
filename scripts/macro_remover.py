@@ -229,7 +229,7 @@ class MacroNode:
 
 
 def main(path: pathlib.Path, debug=False):
-    if path.suffix not in ['.h', '.c']:
+    if path.suffix not in ['.h', '.c', '.sym']:
         return
 
     print(colored(str(path), 'magenta'))

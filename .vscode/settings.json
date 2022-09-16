@@ -9,6 +9,8 @@
         "config.h": "c",
         "proto.h": "c",
         "*.tcc": "cpp",
-        "str.h": "c"
+        "str.h": "c",
+        "*.sym": "cpp",
+        "typeinfo": "cpp"
     },
 }
