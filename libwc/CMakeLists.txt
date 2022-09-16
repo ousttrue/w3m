@@ -22,7 +22,7 @@ add_library(
   status.cpp
   ucs.cpp
   uhc.cpp
-  utf7.c
+  utf7.cpp
   utf8.c
   viet.c
   wtf.c
