@@ -9,9 +9,9 @@
 #include "regex.h"
 #include "config.h"
 #include "myctype.h"
-#include "libwc/ucs.h"
-#include "libwc/wc.h"
-#include "libwc/wtf.h"
+#include <ucs.h>
+#include <wc.h>
+#include <wtf.h>
 #include <gc.h>
 #include <stdio.h>
 #include <stdlib.h>

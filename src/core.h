@@ -1,6 +1,6 @@
 #pragma once
 #include "fm.h"
-#include "libwc/ucs.h"
+#include <ucs.h>
 #include "proto.h"
 #include <setjmp.h>
 #include <signal.h>
