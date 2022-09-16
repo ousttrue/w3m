@@ -10,7 +10,7 @@ add_library(
   detect.cpp
   gb18030.cpp
   gbk.cpp
-  hkscs.c
+  hkscs.cpp
   hz.c
   iso2022.c
   jis.c
