@@ -1,0 +1,38 @@
+libwc_inc = include_directories('.')
+libwc_lib = static_library(
+    'wc',
+    [
+        'big5.cpp',
+        'ces.cpp',
+        'char_conv.cpp',
+        'charset.cpp',
+        'combining.cpp',
+        'conv.cpp',
+        'detect.cpp',
+        'gb18030.cpp',
+        'gbk.cpp',
+        'hkscs.cpp',
+        'hz.cpp',
+        'iso2022.cpp',
+        'jis.cpp',
+        'johab.cpp',
+        'priv.cpp',
+        'putc.cpp',
+        'search.cpp',
+        'sjis.cpp',
+        'status.cpp',
+        'ucs.cpp',
+        'uhc.cpp',
+        'utf7.cpp',
+        'utf8.cpp',
+        'viet.cpp',
+        'wtf.cpp',
+        'Str.cpp',
+        'myctype.cpp',
+    ],
+    include_directories: libwc_inc,
+)
+libwc_dep = declare_dependency(
+    link_with: libwc_lib,
+    include_directories: libwc_inc,
+)

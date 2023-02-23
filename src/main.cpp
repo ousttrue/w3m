@@ -132,7 +132,7 @@ static void initialize() {
   }
 }
 
-int _main(int argc, char **argv) {
+int main(int argc, char **argv) {
   initialize();
   help_or_exit(argc, argv);
 
