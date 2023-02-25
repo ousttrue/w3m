@@ -3,6 +3,7 @@
 #include "App.h"
 #include "Args.h"
 
+#include <asio.hpp>
 
 #include "core.h"
 #if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)

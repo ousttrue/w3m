@@ -2,6 +2,7 @@ prefix = get_option('prefix')
 openssl_dep = dependency('openssl')
 gc_dep = dependency('bdw-gc')
 ncurses_dep = dependency('ncurses')
+asio_dep = dependency('asio')
 executable(
     'w3m',
     [
@@ -61,5 +62,11 @@ executable(
         '-DRC_DIR="~/.w3m"',
         '-DLOCALEDIR="' + prefix + '/share/locale"',
     ],
-    dependencies: [libwc_dep, openssl_dep, gc_dep, ncurses_dep],
+    dependencies: [
+        libwc_dep,
+        openssl_dep,
+        gc_dep,
+        ncurses_dep,
+        asio_dep,
+    ],
 )
