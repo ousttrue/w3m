@@ -21,6 +21,7 @@
 #include "local.h"
 #include "parsetagx.h"
 #include "regex.h"
+#include "App.h"
 
 
 #ifndef max
@@ -805,7 +806,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       if (f >= 0) {
         tmp = Strnew_charp(p);
         Strchop(tmp);
-        pushEvent(f, tmp->ptr);
+	App::instance().pushEvent(f, tmp->ptr);
       }
     }
     if (headerlist)

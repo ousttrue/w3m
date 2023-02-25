@@ -13,6 +13,14 @@
 
 const auto PREC_LIMIT = 10000;
 
+struct Event {
+  int cmd;
+  void *data;
+  Event *next;
+};
+Event *CurrentEvent = nullptr;
+Event *LastEvent = nullptr;
+
 class EventDispatcher {
 public:
   asio::io_context io_;
@@ -47,6 +55,38 @@ public:
                  std::forward<decltype(completion_handler)>(completion_handler),
                  asio::error::invalid_argument)));
   }
+
+  void pushEvent(int cmd, void *data) {
+    Event *event;
+
+    event = New(Event);
+    event->cmd = cmd;
+    event->data = data;
+    event->next = NULL;
+    if (CurrentEvent)
+      LastEvent->next = event;
+    else
+      CurrentEvent = event;
+    LastEvent = event;
+
+    auto completion_handler = [](asio::error_code) {
+      /* event processing */
+      if (CurrentEvent) {
+        CurrentKey = -1;
+        CurrentKeyData = nullptr;
+        CurrentCmdData = (char *)CurrentEvent->data;
+        w3mFuncList[CurrentEvent->cmd].func();
+        CurrentCmdData = nullptr;
+        CurrentEvent = CurrentEvent->next;
+        // continue;
+      }
+    };
+
+    asio::post(asio::bind_executor(
+        io_, std::bind(
+                 std::forward<decltype(completion_handler)>(completion_handler),
+                 asio::error::invalid_argument)));
+  }
 };
 
 App::App() : dispatcher_(new EventDispatcher) {}
@@ -63,6 +103,8 @@ void App::addDownloadList(pid_t pid, char *url, char *save, char *lock,
 
   dispatcher_->addDownloadList(pid, url, save, lock, size);
 }
+
+void App::pushEvent(int cmd, void *data) { dispatcher_->pushEvent(cmd, data); }
 
 void App::run(Args &argument) {
   wc_uint8 auto_detect = WcOption.auto_detect;
@@ -349,9 +391,6 @@ void App::main_loop() {
   Reader reader(dispatcher_->io_);
 
   for (;;) {
-    // if (add_download_list) {
-    //   add_download_list = false;
-    // }
     if (Currentbuf->submit) {
       Anchor *a = Currentbuf->submit;
       Currentbuf->submit = nullptr;
@@ -360,16 +399,7 @@ void App::main_loop() {
       _followForm(TRUE);
       continue;
     }
-    /* event processing */
-    if (CurrentEvent) {
-      CurrentKey = -1;
-      CurrentKeyData = nullptr;
-      CurrentCmdData = (char *)CurrentEvent->data;
-      w3mFuncList[CurrentEvent->cmd].func();
-      CurrentCmdData = nullptr;
-      CurrentEvent = CurrentEvent->next;
-      continue;
-    }
+
     /* get keypress event */
     if (Currentbuf->event) {
       if (Currentbuf->event->status != AL_UNSET) {

@@ -5,15 +5,6 @@
 #include <setjmp.h>
 #include <signal.h>
 
-typedef struct _Event {
-  int cmd;
-  void *data;
-  struct _Event *next;
-} Event;
-
-extern Event *CurrentEvent;
-extern Event *LastEvent;
-
 extern AlarmEvent DefaultAlarm;
 extern AlarmEvent *CurrentAlarm;
 extern MySignalHandler SigAlarm(SIGNAL_ARG);

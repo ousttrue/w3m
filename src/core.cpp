@@ -1,8 +1,6 @@
 #include "core.h"
 #include "App.h"
 
-Event *CurrentEvent = nullptr;
-Event *LastEvent = nullptr;
 JMP_BUF IntReturn;
 
 AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
@@ -780,20 +778,6 @@ void query_from_followform(Str *query, FormItemList *fi, int multipart) {
 void keyPressEventProc(int c) {
   CurrentKey = c;
   w3mFuncList[(int)GlobalKeymap[c]].func();
-}
-
-void pushEvent(int cmd, void *data) {
-  Event *event;
-
-  event = New(Event);
-  event->cmd = cmd;
-  event->data = data;
-  event->next = NULL;
-  if (CurrentEvent)
-    LastEvent->next = event;
-  else
-    CurrentEvent = event;
-  LastEvent = event;
 }
 
 void dump_source(Buffer *buf) {

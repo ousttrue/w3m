@@ -7,7 +7,6 @@
  */
 extern int main(int argc, char **argv);
 extern void nulcmd(void);
-extern void pushEvent(int cmd, void *data);
 extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void pgFore(void);
 extern void pgBack(void);
