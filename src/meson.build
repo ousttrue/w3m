@@ -3,6 +3,7 @@ openssl_dep = dependency('openssl')
 gc_dep = dependency('bdw-gc')
 ncurses_dep = dependency('ncurses')
 asio_dep = dependency('asio')
+plog_dep = dependency('plog')
 executable(
     'w3m',
     [
@@ -68,5 +69,6 @@ executable(
         gc_dep,
         ncurses_dep,
         asio_dep,
+        plog_dep,
     ],
 )

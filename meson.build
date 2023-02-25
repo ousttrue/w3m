@@ -1,8 +1,7 @@
 project(
     'w3m',
-    'c',
-    'cpp',
-    default_options: [],
+    ['c', 'cpp'],
+    default_options: ['cpp_std=c++17'],
 )
 subdir('libwc')
 subdir('src')

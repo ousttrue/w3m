@@ -1,10 +1,13 @@
+#include <asio.hpp>
+#include <plog/Log.h>
+
 #include "App.h"
 #include "Args.h"
 #include "core.h"
 
 #include "fm.h"
 #include "proto.h"
-
+#include <functional>
 
 const auto PREC_LIMIT = 10000;
 
@@ -51,7 +54,7 @@ void App::run(Args &argument) {
     // no URL specified
     char *p;
     if (!isatty(0)) {
-      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)(void*))pclose);
+      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)(void *))pclose);
       newbuf = openGeneralPagerBuffer(redin);
       dup2(1, 0);
     } else if (argument.load_bookmark) {
@@ -98,7 +101,7 @@ void App::run(Args &argument) {
   }
 
   FormList *request;
-  int i=argument.i;
+  int i = argument.i;
   for (; i < argument.load_argc; i++) {
     if (i >= 0) {
       SearchHeader = argument.search_header;
@@ -142,7 +145,8 @@ void App::run(Args &argument) {
       }
       if (newbuf == NULL) {
         /* FIXME: gettextize? */
-        Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", argument.load_argv[i]));
+        Strcat(err_msg,
+               Sprintf("w3m: Can't load %s.\n", argument.load_argv[i]));
         continue;
       } else if (newbuf == NO_BUFFER)
         continue;
@@ -242,8 +246,40 @@ void App::run(Args &argument) {
   main_loop();
 }
 
+class OnResize {
+  asio::signal_set signals_;
+
+public:
+  OnResize(asio::io_context &io) : signals_(io, SIGWINCH) {}
+
+  void async_wait() {
+
+    signals_.async_wait(std::bind(&OnResize::handler, this,
+                                  std::placeholders::_1,
+                                  std::placeholders::_2));
+  }
+
+  void handler(const asio::error_code &error, int signal_number) {
+    assert(signal_number == SIGWINCH);
+    if (error) {
+      PLOG_ERROR << error;
+    }
+    resize_hook(signal_number);
+
+    // next
+    async_wait();
+  }
+};
+
 void App::main_loop() {
+
+  asio::io_context io;
+
+  OnResize onResize(io);
+
   for (;;) {
+    io.poll();
+
     if (add_download_list) {
       add_download_list = false;
       ldDL();
@@ -288,7 +324,7 @@ void App::main_loop() {
       mySignal(SIGALRM, SigAlarm);
       alarm(CurrentAlarm->sec);
     }
-    mySignal(SIGWINCH, resize_hook);
+    // mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img &&
         !Currentbuf->image_loaded) {
       do {
