@@ -10,6 +10,7 @@
 #include "fm.h"
 #include "proto.h"
 #include <functional>
+#include <unordered_set>
 
 const auto PREC_LIMIT = 10000;
 
@@ -21,10 +22,63 @@ struct Event {
 Event *CurrentEvent = nullptr;
 Event *LastEvent = nullptr;
 
+class AlarmEvent {
+  asio::steady_timer timer;
+  int cmd;
+  void *data;
+  AlarmEvent(asio::io_context &io, std::chrono::milliseconds time)
+      : timer(io, time) {}
+
+public:
+  static void async_wait(asio::io_context &io, std::chrono::milliseconds time,
+                         int cmd, void *data) {
+    auto alarm = std::shared_ptr<AlarmEvent>(new AlarmEvent(io, time));
+    alarm->cmd = cmd;
+    alarm->data = data;
+    auto completion_handler = [alarm](asio::error_code) {
+      CurrentKey = -1;
+      CurrentKeyData = NULL;
+      CurrentCmdData = (char *)alarm->data;
+      w3mFuncList[alarm->cmd].func();
+      CurrentCmdData = NULL;
+    };
+    alarm->timer.async_wait(completion_handler);
+  }
+};
+
 class EventDispatcher {
 public:
   asio::io_context io_;
-  EventDispatcher() {}
+  asio::signal_set signals_;
+  EventDispatcher() : signals_(io_, SIGWINCH) { async_signal(); }
+  void async_signal() {
+    signals_.async_wait(std::bind(&EventDispatcher::handler, this,
+                                  std::placeholders::_1,
+                                  std::placeholders::_2));
+  }
+
+  void handler(const asio::error_code &error, int signal_number) {
+    // assert(signal_number == SIGWINCH);
+    if (error) {
+      PLOG_ERROR << error;
+    }
+
+    switch (signal_number) {
+    case SIGWINCH: {
+      setlinescols();
+      setupscreen();
+      if (CurrentTab) {
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+      }
+    } break;
+
+    default:
+      throw std::runtime_error("unknown signal");
+    }
+
+    // next
+    async_signal();
+  }
 
   void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                        clen_t size) {
@@ -105,6 +159,11 @@ void App::addDownloadList(pid_t pid, char *url, char *save, char *lock,
 }
 
 void App::pushEvent(int cmd, void *data) { dispatcher_->pushEvent(cmd, data); }
+
+void App::setAlarmEvent(int sec, AlarmEventType status, int cmd, void *data) {
+  AlarmEvent::async_wait(dispatcher_->io_,
+                         std::chrono::milliseconds(sec * 1000), cmd, data);
+}
 
 void App::run(Args &argument) {
   wc_uint8 auto_detect = WcOption.auto_detect;
@@ -309,49 +368,6 @@ void App::run(Args &argument) {
   main_loop();
 }
 
-class SignalMan {
-  asio::signal_set signals_;
-
-public:
-  SignalMan(asio::io_context &io) : signals_(io, SIGWINCH, SIGALRM) {}
-
-  void async_wait() {
-
-    signals_.async_wait(std::bind(&SignalMan::handler, this,
-                                  std::placeholders::_1,
-                                  std::placeholders::_2));
-  }
-
-  void handler(const asio::error_code &error, int signal_number) {
-    // assert(signal_number == SIGWINCH);
-    if (error) {
-      PLOG_ERROR << error;
-    }
-
-    switch (signal_number) {
-    case SIGWINCH: {
-      setlinescols();
-      setupscreen();
-      if (CurrentTab){
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-      }
-    } break;
-
-    case SIGALRM:
-      SigAlarm(signal_number);
-      break;
-
-    default:
-      throw std::runtime_error("unknown signal");
-    }
-
-    // next
-    async_wait();
-  }
-
-  void alarm(int second) { ::alarm(second); }
-};
-
 class Reader {
   asio::posix::stream_descriptor stream_in_;
   char ch_[1];
@@ -391,7 +407,6 @@ public:
 
 void App::main_loop() {
 
-  SignalMan signalMan(dispatcher_->io_);
   Reader reader(dispatcher_->io_);
 
   for (;;) {
@@ -404,39 +419,11 @@ void App::main_loop() {
       continue;
     }
 
-    /* get keypress event */
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET) {
-        CurrentAlarm = Currentbuf->event;
-        if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          Currentbuf->event = nullptr;
-          CurrentKey = -1;
-          CurrentKeyData = nullptr;
-          CurrentCmdData = (char *)CurrentAlarm->data;
-          w3mFuncList[CurrentAlarm->cmd].func();
-          CurrentCmdData = nullptr;
-          continue;
-        }
-      } else
-        Currentbuf->event = nullptr;
-    }
-
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-
-    if (CurrentAlarm->sec > 0) {
-      signalMan.alarm(CurrentAlarm->sec);
-    }
-
     if (activeImage && displayImage && Currentbuf->img &&
         !Currentbuf->image_loaded) {
       loadImage(Currentbuf, IMG_FLAG_NEXT);
     }
 
     dispatcher_->io_.poll();
-
-    if (CurrentAlarm->sec > 0) {
-      signalMan.alarm(0);
-    }
   }
 }

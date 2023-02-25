@@ -110,8 +110,6 @@ extern void execCmd(void);
 extern void dispI(void);
 extern void stopI(void);
 extern void setAlarm(void);
-extern AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status,
-                                 int cmd, void *data);
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);

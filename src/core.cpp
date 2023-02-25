@@ -3,9 +3,6 @@
 
 JMP_BUF IntReturn;
 
-AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
-AlarmEvent *CurrentAlarm = &DefaultAlarm;
-
 int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
@@ -15,35 +12,6 @@ int check_target = TRUE;
 int display_ok = FALSE;
 
 int enable_inline_image;
-
-MySignalHandler SigAlarm(SIGNAL_ARG) {
-  char *data;
-
-  if (CurrentAlarm->sec > 0) {
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-    CurrentCmdData = data = (char *)CurrentAlarm->data;
-    w3mFuncList[CurrentAlarm->cmd].func();
-    CurrentCmdData = NULL;
-    if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-      CurrentAlarm->sec = 0;
-      CurrentAlarm->status = AL_UNSET;
-    }
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET)
-        CurrentAlarm = Currentbuf->event;
-      else
-        Currentbuf->event = NULL;
-    }
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-  }
-  SIGNAL_RETURN;
-}
 
 TabBuffer *newTab(void) {
   TabBuffer *n;
@@ -1653,7 +1621,6 @@ void follow_map(struct parsed_tagarg *arg) {
   a = follow_map_menu(Currentbuf, name, an, x, y);
   if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 
-
     return;
   }
   if (*(a->url) == '#') {
@@ -1679,7 +1646,6 @@ void follow_map(struct parsed_tagarg *arg) {
   }
   cmd_loadURL(a->url, baseURL(Currentbuf),
               parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-
 }
 void anchorMn(Anchor *(*menu_func)(Buffer *), int go) {
   Anchor *a;
@@ -1998,16 +1964,6 @@ void w3m_exit(int i) {
 #endif
   exit(i);
 }
-AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status, int cmd,
-                          void *data) {
-  if (event == NULL)
-    event = New(AlarmEvent);
-  event->sec = sec;
-  event->status = status;
-  event->cmd = cmd;
-  event->data = data;
-  return event;
-}
 
 TabBuffer *numTab(int n) {
   TabBuffer *tab;
@@ -2207,7 +2163,6 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-
 
 int checkDownloadList(void) {
   DownloadList *d;
@@ -2409,7 +2364,7 @@ wc_uint32 getChar(char *p) {
 }
 int is_wordchar(wc_uint32 c) { return wc_is_ucs_alnum(c); }
 
-void addDownloadList(pid_t pid, char *url, char *save, char *lock, clen_t size)
-{
+void addDownloadList(pid_t pid, char *url, char *save, char *lock,
+                     clen_t size) {
   App::instance().addDownloadList(pid, url, save, lock, size);
 }

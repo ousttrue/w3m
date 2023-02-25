@@ -5,10 +5,6 @@
 #include <setjmp.h>
 #include <signal.h>
 
-extern AlarmEvent DefaultAlarm;
-extern AlarmEvent *CurrentAlarm;
-extern MySignalHandler SigAlarm(SIGNAL_ARG);
-
 extern JMP_BUF IntReturn;
 extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)

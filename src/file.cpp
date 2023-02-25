@@ -17,12 +17,11 @@
 #include <utime.h>
 /* foo */
 
+#include "App.h"
 #include "html.h"
 #include "local.h"
 #include "parsetagx.h"
 #include "regex.h"
-#include "App.h"
-
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -806,7 +805,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       if (f >= 0) {
         tmp = Strnew_charp(p);
         Strchop(tmp);
-	App::instance().pushEvent(f, tmp->ptr);
+        App::instance().pushEvent(f, tmp->ptr);
       }
     }
     if (headerlist)
@@ -5471,11 +5470,12 @@ static void HTMLlineproc2body(Buffer *buf, Str (*feed)(), int llimit) {
             if (tmp) {
               p = url_encode(remove_space(tmp->ptr), base,
                              buf->document_charset);
-              buf->event = setAlarmEvent(buf->event, refresh_interval,
-                                         AL_IMPLICIT_ONCE, FUNCNAME_gorURL, p);
-            } else if (refresh_interval > 0)
-              buf->event = setAlarmEvent(buf->event, refresh_interval,
-                                         AL_IMPLICIT, FUNCNAME_reload, NULL);
+              App::instance().setAlarmEvent(refresh_interval, AL_IMPLICIT_ONCE,
+                                            FUNCNAME_gorURL, p);
+            } else if (refresh_interval > 0) {
+              App::instance().setAlarmEvent(refresh_interval, AL_IMPLICIT,
+                                            FUNCNAME_reload, NULL);
+            }
           }
           break;
         case HTML_INTERNAL:

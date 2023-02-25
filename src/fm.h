@@ -456,7 +456,6 @@ typedef struct _Buffer {
     char need_reshape;
     Anchor *submit;
     struct _BufferPos *undo;
-    struct _AlarmEvent *event;
 } Buffer;
 
 typedef struct _BufferPos {
@@ -1079,18 +1078,6 @@ global TextList *backend_batch_commands init(NULL);
 int backend(void);
 extern void deleteFiles(void);
 void w3m_exit(int i);
-
-#define AL_UNSET         0
-#define AL_EXPLICIT      1
-#define AL_IMPLICIT      2
-#define AL_IMPLICIT_ONCE 3
-
-typedef struct _AlarmEvent {
-    int sec;
-    short status;
-    int cmd;
-    void *data;
-} AlarmEvent;
 
 /* 
  * Externals

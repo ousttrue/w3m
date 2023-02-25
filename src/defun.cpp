@@ -1,8 +1,8 @@
 
+#include "App.h"
 #include "core.h"
 #include "fm.h"
 #include "proto.h"
-
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */
 }
@@ -1670,12 +1670,12 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
   }
   if (cmd >= 0) {
     data = getQWord(&data);
-    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+    App::instance().setAlarmEvent(sec, AL_EXPLICIT, cmd, data);
     disp_message_nsec(
         Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, FALSE, 1,
         FALSE, TRUE);
   } else {
-    setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
+    App::instance().setAlarmEvent(0, AL_UNSET, FUNCNAME_nulcmd, NULL);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1865,9 +1865,9 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   pushBuffer(buf);
   if (replace || new_tab)
     deletePrevBuf();
-  if (reload)
-    Currentbuf->event =
-        setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT, FUNCNAME_reload, NULL);
+  if (reload){
+    App::instance().setAlarmEvent(1, AL_IMPLICIT, FUNCNAME_reload, NULL);
+  }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
