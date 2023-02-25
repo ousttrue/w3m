@@ -1,4 +1,6 @@
 #include <asio.hpp>
+#include <asio/posix/stream_descriptor.hpp>
+
 #include <plog/Log.h>
 
 #include "App.h"
@@ -285,16 +287,50 @@ public:
   void alarm(int second) { ::alarm(second); }
 };
 
+class Reader {
+  asio::posix::stream_descriptor stream_in_;
+  char ch_[1];
+
+public:
+  Reader(asio::io_context &io) : stream_in_(io, gettty()) { async_read(); }
+
+  void async_read() {
+    asio::async_read(stream_in_, asio::buffer(ch_),
+                     std::bind(&Reader::onRead, this, std::placeholders::_1,
+                               std::placeholders::_2));
+  }
+
+  void onRead(std::error_code error, std::size_t n) {
+    assert(n == 1);
+    int c = ch_[0];
+    if (IS_ASCII(c)) { /* Ascii */
+      if (('0' <= c) && (c <= '9') &&
+          (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
+        prec_num = prec_num * 10 + (int)(c - '0');
+        if (prec_num > PREC_LIMIT)
+          prec_num = PREC_LIMIT;
+      } else {
+        set_buffer_environ(Currentbuf);
+        save_buffer_position(Currentbuf);
+        keyPressEventProc((int)c);
+        prec_num = 0;
+      }
+    }
+    prev_key = CurrentKey;
+    CurrentKey = -1;
+    CurrentKeyData = nullptr;
+
+    async_read();
+  }
+};
 
 void App::main_loop() {
 
   asio::io_context io;
-
   SignalMan signalMan(io);
+  Reader reader(io);
 
   for (;;) {
-    io.poll();
-
     if (add_download_list) {
       add_download_list = false;
       ldDL();
@@ -351,25 +387,12 @@ void App::main_loop() {
           resize_screen();
       } while (sleep_till_anykey(1, 0) <= 0);
     }
-    int c = getch();
+
+    io.poll();
+
+    // int c = getch();
     if (CurrentAlarm->sec > 0) {
-      alarm(0);
+      signalMan.alarm(0);
     }
-    if (IS_ASCII(c)) { /* Ascii */
-      if (('0' <= c) && (c <= '9') &&
-          (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-        prec_num = prec_num * 10 + (int)(c - '0');
-        if (prec_num > PREC_LIMIT)
-          prec_num = PREC_LIMIT;
-      } else {
-        set_buffer_environ(Currentbuf);
-        save_buffer_position(Currentbuf);
-        keyPressEventProc((int)c);
-        prec_num = 0;
-      }
-    }
-    prev_key = CurrentKey;
-    CurrentKey = -1;
-    CurrentKeyData = nullptr;
   }
 }

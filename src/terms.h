@@ -3,6 +3,9 @@
 #define TERMS_H
 
 extern int LINES, COLS;
+
+int gettty();
+
 #if defined(__CYGWIN__)
 extern int LASTLINE;
 #endif

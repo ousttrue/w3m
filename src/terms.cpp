@@ -140,6 +140,10 @@ typedef struct scline {
 
 static TerminalMode d_ioval;
 static int tty = -1;
+int gettty()
+{
+  return tty;
+}
 static FILE *ttyf = NULL;
 
 static char bp[1024], funcstr[256];
