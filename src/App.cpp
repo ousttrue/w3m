@@ -13,7 +13,43 @@
 
 const auto PREC_LIMIT = 10000;
 
-App::App() {}
+class EventDispatcher {
+public:
+  asio::io_context io_;
+  EventDispatcher() {}
+
+  void addDownloadList(pid_t pid, char *url, char *save, char *lock,
+                       clen_t size) {
+    auto d = New(DownloadList);
+    d->pid = pid;
+    d->url = url;
+    if (save[0] != '/' && save[0] != '~')
+      save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+    d->save = expandPath(save);
+    d->lock = lock;
+    d->size = size;
+    d->time = time(0);
+    d->running = TRUE;
+    d->err = 0;
+    d->next = NULL;
+    d->prev = LastDL;
+    if (LastDL)
+      LastDL->next = d;
+    else
+      FirstDL = d;
+    LastDL = d;
+    // add_download_list = TRUE;
+
+    auto completion_handler = [](asio::error_code) { ldDL(); };
+
+    asio::post(asio::bind_executor(
+        io_, std::bind(
+                 std::forward<decltype(completion_handler)>(completion_handler),
+                 asio::error::invalid_argument)));
+  }
+};
+
+App::App() : dispatcher_(new EventDispatcher) {}
 
 App::~App() {}
 
@@ -25,25 +61,7 @@ App &App::instance() {
 void App::addDownloadList(pid_t pid, char *url, char *save, char *lock,
                           clen_t size) {
 
-  auto d = New(DownloadList);
-  d->pid = pid;
-  d->url = url;
-  if (save[0] != '/' && save[0] != '~')
-    save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-  d->save = expandPath(save);
-  d->lock = lock;
-  d->size = size;
-  d->time = time(0);
-  d->running = TRUE;
-  d->err = 0;
-  d->next = NULL;
-  d->prev = LastDL;
-  if (LastDL)
-    LastDL->next = d;
-  else
-    FirstDL = d;
-  LastDL = d;
-  add_download_list = TRUE;
+  dispatcher_->addDownloadList(pid, url, save, lock, size);
 }
 
 void App::run(Args &argument) {
@@ -198,22 +216,23 @@ void App::run(Args &argument) {
     w3m_exit(0);
   }
 
-  if (App::instance().add_download_list) {
-    App::instance().add_download_list = false;
-    CurrentTab = LastTab;
-    if (!FirstTab) {
-      FirstTab = LastTab = CurrentTab = newTab();
-      nTab = 1;
-    }
-    if (!Firstbuf || Firstbuf == NO_BUFFER) {
-      Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
-      Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
-      Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
-    } else
-      Currentbuf = Firstbuf;
-    ldDL();
-  } else
-    CurrentTab = FirstTab;
+  // if (App::instance().add_download_list) {
+  //   App::instance().add_download_list = false;
+  //   CurrentTab = LastTab;
+  //   if (!FirstTab) {
+  //     FirstTab = LastTab = CurrentTab = newTab();
+  //     nTab = 1;
+  //   }
+  //   if (!Firstbuf || Firstbuf == NO_BUFFER) {
+  //     Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
+  //     Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
+  //     Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
+  //   } else
+  //     Currentbuf = Firstbuf;
+  //   ldDL();
+  // } else
+  { CurrentTab = FirstTab; }
+
   if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
     if (newbuf == NO_BUFFER) {
       if (fmInitialized)
@@ -326,15 +345,13 @@ public:
 
 void App::main_loop() {
 
-  asio::io_context io;
-  SignalMan signalMan(io);
-  Reader reader(io);
+  SignalMan signalMan(dispatcher_->io_);
+  Reader reader(dispatcher_->io_);
 
   for (;;) {
-    if (add_download_list) {
-      add_download_list = false;
-      ldDL();
-    }
+    // if (add_download_list) {
+    //   add_download_list = false;
+    // }
     if (Currentbuf->submit) {
       Anchor *a = Currentbuf->submit;
       Currentbuf->submit = nullptr;
@@ -388,7 +405,7 @@ void App::main_loop() {
       } while (sleep_till_anykey(1, 0) <= 0);
     }
 
-    io.poll();
+    dispatcher_->io_.poll();
 
     // int c = getch();
     if (CurrentAlarm->sec > 0) {
