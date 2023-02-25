@@ -209,7 +209,6 @@ int main(int argc, char **argv) {
 
   if (!w3m_dump && !w3m_backend) {
     fmInit();
-    mySignal(SIGWINCH, resize_hook);
   } else if (w3m_halfdump && displayImage)
     activeImage = TRUE;
 

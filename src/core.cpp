@@ -6,7 +6,6 @@ JMP_BUF IntReturn;
 AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
 AlarmEvent *CurrentAlarm = &DefaultAlarm;
 
-int need_resize_screen = 0;
 int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
@@ -916,20 +915,6 @@ void repBuffer(Buffer *oldbuf, Buffer *buf) {
 MySignalHandler intTrap(SIGNAL_ARG) { /* Interrupt catcher */
   LONGJMP(IntReturn, 0);
   SIGNAL_RETURN;
-}
-
-MySignalHandler resize_hook(SIGNAL_ARG) {
-  need_resize_screen = TRUE;
-  mySignal(SIGWINCH, resize_hook);
-  SIGNAL_RETURN;
-}
-
-void resize_screen(void) {
-  need_resize_screen = FALSE;
-  setlinescols();
-  setupscreen();
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 MySignalHandler SigPipe(SIGNAL_ARG) {

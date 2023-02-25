@@ -329,9 +329,13 @@ public:
     }
 
     switch (signal_number) {
-    case SIGWINCH:
-      resize_hook(signal_number);
-      break;
+    case SIGWINCH: {
+      setlinescols();
+      setupscreen();
+      if (CurrentTab){
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+      }
+    } break;
 
     case SIGALRM:
       SigAlarm(signal_number);
@@ -416,28 +420,21 @@ void App::main_loop() {
       } else
         Currentbuf->event = nullptr;
     }
+
     if (!Currentbuf->event)
       CurrentAlarm = &DefaultAlarm;
+
     if (CurrentAlarm->sec > 0) {
       signalMan.alarm(CurrentAlarm->sec);
     }
+
     if (activeImage && displayImage && Currentbuf->img &&
         !Currentbuf->image_loaded) {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-        loadImage(Currentbuf, IMG_FLAG_NEXT);
-      } while (sleep_till_anykey(1, 0) <= 0);
-    } else {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-      } while (sleep_till_anykey(1, 0) <= 0);
+      loadImage(Currentbuf, IMG_FLAG_NEXT);
     }
 
     dispatcher_->io_.poll();
 
-    // int c = getch();
     if (CurrentAlarm->sec > 0) {
       signalMan.alarm(0);
     }

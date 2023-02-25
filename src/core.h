@@ -10,7 +10,6 @@ extern AlarmEvent *CurrentAlarm;
 extern MySignalHandler SigAlarm(SIGNAL_ARG);
 
 extern JMP_BUF IntReturn;
-extern int need_resize_screen;
 extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)
 extern int prev_key;
@@ -23,8 +22,6 @@ extern int searchKeyNum(void);
 extern int check_target;
 extern int display_ok;
 
-extern MySignalHandler resize_hook(SIGNAL_ARG);
-extern void resize_screen(void);
 extern MySignalHandler SigPipe(SIGNAL_ARG);
 extern void delBuffer(Buffer *buf);
 extern void cmd_loadfile(char *path);
