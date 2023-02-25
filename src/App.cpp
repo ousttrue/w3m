@@ -246,36 +246,51 @@ void App::run(Args &argument) {
   main_loop();
 }
 
-class OnResize {
+class SignalMan {
   asio::signal_set signals_;
 
 public:
-  OnResize(asio::io_context &io) : signals_(io, SIGWINCH) {}
+  SignalMan(asio::io_context &io) : signals_(io, SIGWINCH, SIGALRM) {}
 
   void async_wait() {
 
-    signals_.async_wait(std::bind(&OnResize::handler, this,
+    signals_.async_wait(std::bind(&SignalMan::handler, this,
                                   std::placeholders::_1,
                                   std::placeholders::_2));
   }
 
   void handler(const asio::error_code &error, int signal_number) {
-    assert(signal_number == SIGWINCH);
+    // assert(signal_number == SIGWINCH);
     if (error) {
       PLOG_ERROR << error;
     }
-    resize_hook(signal_number);
+
+    switch (signal_number) {
+    case SIGWINCH:
+      resize_hook(signal_number);
+      break;
+
+    case SIGALRM:
+      SigAlarm(signal_number);
+      break;
+
+    default:
+      throw std::runtime_error("unknown signal");
+    }
 
     // next
     async_wait();
   }
+
+  void alarm(int second) { ::alarm(second); }
 };
+
 
 void App::main_loop() {
 
   asio::io_context io;
 
-  OnResize onResize(io);
+  SignalMan signalMan(io);
 
   for (;;) {
     io.poll();
@@ -321,10 +336,8 @@ void App::main_loop() {
     if (!Currentbuf->event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
+      signalMan.alarm(CurrentAlarm->sec);
     }
-    // mySignal(SIGWINCH, resize_hook);
     if (activeImage && displayImage && Currentbuf->img &&
         !Currentbuf->image_loaded) {
       do {
