@@ -424,6 +424,6 @@ void App::main_loop() {
       loadImage(Currentbuf, IMG_FLAG_NEXT);
     }
 
-    dispatcher_->io_.poll();
+    dispatcher_->io_.run_for(std::chrono::milliseconds(1000/15));
   }
 }
