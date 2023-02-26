@@ -46,6 +46,7 @@ public:
 struct TermcapEntry
 {
     char funcstr[256];
+
     const char *T_cd = nullptr;
     const char *T_ce = nullptr;
     const char *T_kr = nullptr;
@@ -60,7 +61,12 @@ struct TermcapEntry
     const char *T_us = nullptr;
     const char *T_ue = nullptr;
     const char *T_cl = nullptr;
+
+private:
+    //! move
     const char *T_cm = nullptr;
+
+public:
     const char *T_al = nullptr;
     const char *T_sr = nullptr;
     const char *T_md = nullptr;
@@ -120,6 +126,7 @@ struct TermcapEntry
                 T_kl = getter.GETSTR("kl");
             }
         }
+
         T_cr = getter.GETSTR("cr"); /* carriage return */
         T_ta = getter.GETSTR("ta"); /* tab */
         T_sc = getter.GETSTR("sc"); /* save cursor */
@@ -168,11 +175,17 @@ struct TermcapEntry
     {
         return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c));
     }
+
+    const char *move(int line, int column)
+    {
+        return tgoto(T_cm, column, line);
+    }
 };
 TermcapEntry g_entry;
+
 void MOVE(int line, int column)
 {
-    tty::writestr(tgoto(g_entry.T_cm, column, line));
+    tty::writestr(g_entry.move(line, column));
 }
 
 static char *title_str = NULL;

@@ -133,14 +133,12 @@ int write1(char c)
     return 0;
 }
 
-extern "C"
-{
-    int tputs(char *, int, int (*)(char));
-}
-
 void writestr(const char *s)
 {
-    tputs((char *)s, 1, write1);
+    for (auto p = s; *p; ++p)
+    {
+        write1(*p);
+    }
 }
 
 #ifndef HAVE_SGTTY_H
