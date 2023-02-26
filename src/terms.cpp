@@ -157,13 +157,6 @@ void reset_tty(void)
 {
     tty::writestr(g_entry.T_op); /* turn off */
     tty::writestr(g_entry.T_me);
-    if (!Do_not_use_ti_te)
-    {
-        if (g_entry.T_te && *g_entry.T_te)
-            tty::writestr(g_entry.T_te);
-        else
-            tty::writestr(g_entry.T_cl);
-    }
     tty::writestr(g_entry.T_se); /* reset terminal */
     tty::flush();
 
@@ -287,8 +280,6 @@ int initscr(void)
 
     auto ent = get_term();
     g_entry.load(ent.c_str());
-    if (g_entry.T_ti && !Do_not_use_ti_te)
-        tty::writestr(g_entry.T_ti);
 
     LINES = COLS = 0;
     setlinescols();

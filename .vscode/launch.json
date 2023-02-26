@@ -8,7 +8,7 @@
             "name": "gdb",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/zig-out/bin/w3m",
+            "program": "${workspaceFolder}/prefix/bin/w3m",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
