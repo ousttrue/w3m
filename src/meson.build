@@ -54,6 +54,7 @@ executable(
         'hash.cpp',
         #
         'tty.cpp',
+        'termcap_entry.cpp',
     ],
     install: true,
     cpp_args: [
