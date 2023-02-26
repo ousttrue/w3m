@@ -138,9 +138,9 @@ extern "C"
     int tputs(char *, int, int (*)(char));
 }
 
-void writestr(char *s)
+void writestr(const char *s)
 {
-    tputs(s, 1, write1);
+    tputs((char *)s, 1, write1);
 }
 
 #ifndef HAVE_SGTTY_H

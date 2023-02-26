@@ -17,7 +17,7 @@ char *get_name();
 
 char getch();
 int write1(char c);
-void writestr(char *s);
+void writestr(const char *s);
 
 // mode
 void set_cc(int spec, int val);

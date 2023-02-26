@@ -5,6 +5,7 @@
 extern int LINES, COLS;
 
 void reset_tty();
+void MOVE(int line, int column);
 
 #if defined(__CYGWIN__)
 extern int LASTLINE;
