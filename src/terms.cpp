@@ -6,7 +6,6 @@
 #include "tty.h"
 #include "termcap_entry.h"
 #include "config.h"
-#include <signal.h>
 #include <stdexcept>
 #include "fm.h"
 
@@ -27,14 +26,6 @@ void MOVE(int line, int column)
 }
 
 static char *title_str = NULL;
-
-// MySignalHandler reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG),
-//     error_dump(SIGNAL_ARG);
-// void setlinescols(void);
-
-#ifndef SIGIOT
-#define SIGIOT SIGABRT
-#endif /* not SIGIOT */
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -163,46 +154,6 @@ void reset_tty(void)
     tty::reset();
 }
 
-static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval)
-{
-    reset_tty();
-    w3m_exit(rval);
-    SIGNAL_RETURN;
-}
-
-MySignalHandler reset_error_exit(SIGNAL_ARG)
-{
-    reset_exit_with_value(SIGNAL_ARGLIST, 1);
-}
-
-MySignalHandler reset_exit(SIGNAL_ARG)
-{
-    reset_exit_with_value(SIGNAL_ARGLIST, 0);
-}
-
-MySignalHandler error_dump(SIGNAL_ARG)
-{
-    mySignal(SIGIOT, SIG_DFL);
-    reset_tty();
-    abort();
-    SIGNAL_RETURN;
-}
-
-void set_signal_handler(void)
-{
-    mySignal(SIGHUP, reset_exit);
-    mySignal(SIGINT, reset_exit);
-    mySignal(SIGQUIT, reset_exit);
-    mySignal(SIGTERM, reset_exit);
-    mySignal(SIGILL, error_dump);
-    mySignal(SIGIOT, error_dump);
-    mySignal(SIGFPE, error_dump);
-#ifdef SIGBUS
-    mySignal(SIGBUS, error_dump);
-#endif /* SIGBUS */
-       /* mySignal(SIGSEGV, error_dump); */
-}
-
 extern "C"
 {
     extern int tgetnum(const char *);
@@ -276,7 +227,6 @@ void setupscreen(void)
 int initscr(void)
 {
     tty::set();
-    set_signal_handler();
 
     auto ent = get_term();
     g_entry.load(ent.c_str());

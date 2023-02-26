@@ -376,8 +376,6 @@ extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
                               char *referer, FormList *request);
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
-extern MySignalHandler reset_exit(SIGNAL_ARG);
-extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void setlinescols(void);
 extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE **fr, FILE **fw);
