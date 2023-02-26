@@ -4,26 +4,176 @@
  * revised by Akinori ITO, January 1995
  */
 #include "tty.h"
-// #include <termios.h>
 #include "config.h"
-// #include <errno.h>
-// #include <fcntl.h>
 #include <signal.h>
-// #include <stdio.h>
-// #include <string.h>
-// #include <sys/stat.h>
-// #include <sys/time.h>
-// #include <sys/types.h>
-// #include <sys/wait.h>
-// #include <unistd.h>
-// #ifdef HAVE_SYS_SELECT_H
-// #include <sys/select.h>
-// #endif
+#include <stdexcept>
 #include "fm.h"
-// #include "myctype.h"
-// #include "terms.h"
-// #include "image.h"
-// #include <sys/ioctl.h>
+
+extern "C"
+{
+    extern int tgetent(char *, const char *);
+    extern int tgetnum(const char *);
+    extern int tgetflag(const char *);
+    extern char *tgetstr(const char *, char **);
+    extern char *tgoto(const char *, int, int);
+}
+
+static std::string get_term()
+{
+    if (auto ent = getenv("TERM"))
+    {
+        return ent;
+    }
+    return {};
+}
+
+class EntryGetter
+{
+    char *pt = nullptr;
+
+public:
+    EntryGetter(char *buf)
+        : pt(buf)
+    {
+    }
+
+    char *GETSTR(const char *s)
+    {
+        return tgetstr(s, &pt);
+    }
+};
+
+struct TermcapEntry
+{
+    char funcstr[256];
+    const char *T_cd = nullptr;
+    const char *T_ce = nullptr;
+    const char *T_kr = nullptr;
+    const char *T_kl = nullptr;
+    const char *T_cr = nullptr;
+    const char *T_bt = nullptr;
+    const char *T_ta = nullptr;
+    const char *T_sc = nullptr;
+    const char *T_rc = nullptr;
+    const char *T_so = nullptr;
+    const char *T_se = nullptr;
+    const char *T_us = nullptr;
+    const char *T_ue = nullptr;
+    const char *T_cl = nullptr;
+    const char *T_cm = nullptr;
+    const char *T_al = nullptr;
+    const char *T_sr = nullptr;
+    const char *T_md = nullptr;
+    const char *T_me = nullptr;
+    const char *T_ti = nullptr;
+    const char *T_te = nullptr;
+    const char *T_nd = nullptr;
+    const char *T_as = nullptr;
+    const char *T_ae = nullptr;
+    const char *T_eA = nullptr;
+    const char *T_ac = nullptr;
+    const char *T_op = nullptr;
+
+    void load(const char *ent)
+    {
+        if (!ent)
+        {
+            // fprintf(stderr, "TERM is not set\n");
+            // reset_error_exit(SIGNAL_ARGLIST);
+            throw std::runtime_error("TERM is not set");
+        }
+
+        // char *suc;
+        // int r;
+        char bp[1024];
+        auto r = tgetent(bp, ent);
+        if (r != 1)
+        {
+            /* Can't find termcap entry */
+            // fprintf(stderr, "Can't find termcap entry %s\n", ent);
+            // reset_error_exit(SIGNAL_ARGLIST);
+            throw std::runtime_error(std::string("Can't find termcap entry {}") + ent);
+        }
+
+        EntryGetter getter(funcstr);
+
+        T_ce = getter.GETSTR("ce"); /* clear to the end of line */
+        T_cd = getter.GETSTR("cd"); /* clear to the end of display */
+        T_kr = getter.GETSTR("nd"); /* cursor right */
+        if (!T_kr)
+        {
+            T_kr = getter.GETSTR("kr");
+        }
+        if (tgetflag("bs"))
+        {
+            T_kl = "\b"; /* cursor left */
+        }
+        else
+        {
+            T_kl = getter.GETSTR("le");
+            if (!T_kl)
+            {
+                T_kl = getter.GETSTR("kb");
+            }
+            if (!T_kl)
+            {
+                T_kl = getter.GETSTR("kl");
+            }
+        }
+        T_cr = getter.GETSTR("cr"); /* carriage return */
+        T_ta = getter.GETSTR("ta"); /* tab */
+        T_sc = getter.GETSTR("sc"); /* save cursor */
+        T_rc = getter.GETSTR("rc"); /* restore cursor */
+        T_so = getter.GETSTR("so"); /* standout mode */
+        T_se = getter.GETSTR("se"); /* standout mode end */
+        T_us = getter.GETSTR("us"); /* underline mode */
+        T_ue = getter.GETSTR("ue"); /* underline mode end */
+        T_md = getter.GETSTR("md"); /* bold mode */
+        T_me = getter.GETSTR("me"); /* bold mode end */
+        T_cl = getter.GETSTR("cl"); /* clear screen */
+        T_cm = getter.GETSTR("cm"); /* cursor move */
+        T_al = getter.GETSTR("al"); /* append line */
+        T_sr = getter.GETSTR("sr"); /* scroll reverse */
+        T_ti = getter.GETSTR("ti"); /* terminal init */
+        T_te = getter.GETSTR("te"); /* terminal end */
+        T_nd = getter.GETSTR("nd"); /* move right one space */
+        T_eA = getter.GETSTR("eA"); /* enable alternative charset */
+        T_as = getter.GETSTR("as"); /* alternative (graphic) charset start */
+        T_ae = getter.GETSTR("ae"); /* alternative (graphic) charset end */
+        T_ac = getter.GETSTR("ac"); /* graphics charset pairs */
+        T_op = getter.GETSTR("op"); /* set default color pair to its original value */
+
+        setgraphchar();
+    }
+
+    char gcmap[96];
+    void setgraphchar(void)
+    {
+        for (int c = 0; c < 96; c++)
+            gcmap[c] = (char)(c + ' ');
+
+        if (!T_ac)
+            return;
+
+        auto n = strlen(T_ac);
+        for (int i = 0; i < n - 1; i += 2)
+        {
+            auto c = (unsigned)T_ac[i] - ' ';
+            if (c >= 0 && c < 96)
+                gcmap[c] = T_ac[i + 1];
+        }
+    }
+
+    char graphchar(char c)
+    {
+        return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c));
+    }
+};
+TermcapEntry g_entry;
+void MOVE(int line, int column)
+{
+    tty::writestr(tgoto(g_entry.T_cm, column, line));
+}
 
 static char *title_str = NULL;
 
@@ -113,12 +263,6 @@ typedef struct scline
     short eol;
 } Screen;
 
-static char bp[1024], funcstr[256];
-
-char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc, *T_so,
-    *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me, *T_ti, *T_te,
-    *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
-
 int LINES, COLS;
 #if defined(__CYGWIN__)
 int LASTLINE;
@@ -131,26 +275,11 @@ static Screen *ScreenElem = NULL, **ScreenImage = NULL;
 static l_prop CurrentMode = 0;
 static int graph_enabled = 0;
 
-static char gcmap[96];
-
-extern "C"
-{
-    extern int tgetent(char *, char *);
-    extern int tgetnum(char *);
-    extern int tgetflag(char *);
-    extern char *tgetstr(char *, char **);
-    extern char *tgoto(char *, int, int);
-}
 void clear();
 void wrap();
 void touch_line();
 void touch_column(int);
 void clrtoeol(void); /* conflicts with curs_clear(3)? */
-
-void MOVE(int line, int column)
-{
-    tty::writestr(tgoto(T_cm, column, line));
-}
 
 #define W3M_TERM_INFO(name, title, mouse) name, title
 
@@ -169,25 +298,22 @@ static struct w3m_term_info
     {W3M_TERM_INFO("Eterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF))},
     {W3M_TERM_INFO("mlterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF))},
     {W3M_TERM_INFO("screen", SCREEN_TITLE, 0)},
-#ifdef __CYGWIN__
-    {W3M_TERM_INFO("cygwin", CYGWIN_TITLE, (NEED_CYGWIN_ON | NEED_CYGWIN_OFF))},
-#endif
     {W3M_TERM_INFO(NULL, NULL, 0)}};
 #undef W3M_TERM_INFO
 /* *INDENT-ON * */
 
 void reset_tty(void)
 {
-    tty::writestr(T_op); /* turn off */
-    tty::writestr(T_me);
+    tty::writestr(g_entry.T_op); /* turn off */
+    tty::writestr(g_entry.T_me);
     if (!Do_not_use_ti_te)
     {
-        if (T_te && *T_te)
-            tty::writestr(T_te);
+        if (g_entry.T_te && *g_entry.T_te)
+            tty::writestr(g_entry.T_te);
         else
-            tty::writestr(T_cl);
+            tty::writestr(g_entry.T_cl);
     }
-    tty::writestr(T_se); /* reset terminal */
+    tty::writestr(g_entry.T_se); /* reset terminal */
     tty::flush();
 
     tty::reset();
@@ -218,7 +344,7 @@ MySignalHandler error_dump(SIGNAL_ARG)
     SIGNAL_RETURN;
 }
 
-void set_int(void)
+void set_signal_handler(void)
 {
     mySignal(SIGHUP, reset_exit);
     mySignal(SIGINT, reset_exit);
@@ -233,114 +359,12 @@ void set_int(void)
        /* mySignal(SIGSEGV, error_dump); */
 }
 
-static void setgraphchar(void)
-{
-    int c, i, n;
-
-    for (c = 0; c < 96; c++)
-        gcmap[c] = (char)(c + ' ');
-
-    if (!T_ac)
-        return;
-
-    n = strlen(T_ac);
-    for (i = 0; i < n - 1; i += 2)
-    {
-        c = (unsigned)T_ac[i] - ' ';
-        if (c >= 0 && c < 96)
-            gcmap[c] = T_ac[i + 1];
-    }
-}
-
-#define graphchar(c) \
-    (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
-#define GETSTR(v, s)               \
-    {                              \
-        v = pt;                    \
-        suc = tgetstr(s, &pt);     \
-        if (!suc)                  \
-            v = "";                \
-        else                       \
-            v = allocStr(suc, -1); \
-    }
-
-void getTCstr(void)
-{
-    char *ent;
-    char *suc;
-    char *pt = funcstr;
-    int r;
-
-    ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
-    if (ent == NULL)
-    {
-        fprintf(stderr, "TERM is not set\n");
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-
-    r = tgetent(bp, ent);
-    if (r != 1)
-    {
-        /* Can't find termcap entry */
-        fprintf(stderr, "Can't find termcap entry %s\n", ent);
-        reset_error_exit(SIGNAL_ARGLIST);
-    }
-
-    GETSTR(T_ce, "ce"); /* clear to the end of line */
-    GETSTR(T_cd, "cd"); /* clear to the end of display */
-    GETSTR(T_kr, "nd"); /* cursor right */
-    if (suc == NULL)
-        GETSTR(T_kr, "kr");
-    if (tgetflag("bs"))
-        T_kl = "\b"; /* cursor left */
-    else
-    {
-        GETSTR(T_kl, "le");
-        if (suc == NULL)
-            GETSTR(T_kl, "kb");
-        if (suc == NULL)
-            GETSTR(T_kl, "kl");
-    }
-    GETSTR(T_cr, "cr"); /* carriage return */
-    GETSTR(T_ta, "ta"); /* tab */
-    GETSTR(T_sc, "sc"); /* save cursor */
-    GETSTR(T_rc, "rc"); /* restore cursor */
-    GETSTR(T_so, "so"); /* standout mode */
-    GETSTR(T_se, "se"); /* standout mode end */
-    GETSTR(T_us, "us"); /* underline mode */
-    GETSTR(T_ue, "ue"); /* underline mode end */
-    GETSTR(T_md, "md"); /* bold mode */
-    GETSTR(T_me, "me"); /* bold mode end */
-    GETSTR(T_cl, "cl"); /* clear screen */
-    GETSTR(T_cm, "cm"); /* cursor move */
-    GETSTR(T_al, "al"); /* append line */
-    GETSTR(T_sr, "sr"); /* scroll reverse */
-    GETSTR(T_ti, "ti"); /* terminal init */
-    GETSTR(T_te, "te"); /* terminal end */
-    GETSTR(T_nd, "nd"); /* move right one space */
-    GETSTR(T_eA, "eA"); /* enable alternative charset */
-    GETSTR(T_as, "as"); /* alternative (graphic) charset start */
-    GETSTR(T_ae, "ae"); /* alternative (graphic) charset end */
-    GETSTR(T_ac, "ac"); /* graphics charset pairs */
-    GETSTR(T_op, "op"); /* set default color pair to its original value */
-#if defined(CYGWIN) && CYGWIN < 1
-    /* for TERM=pcansi on MS-DOS prompt. */
-    T_eA = "";
-    T_as = "";
-    T_ae = "";
-    T_ac = "";
-#endif /* CYGWIN */
-
-    LINES = COLS = 0;
-    setlinescols();
-    setgraphchar();
-}
-
 void setlinescols(void)
 {
     if (auto size = tty::get_lines_cols())
     {
-        auto [LIENS, COLS] = *size;
+        LINES = std::get<0>(*size);
+        COLS = std::get<1>(*size);
     }
 
     char *p;
@@ -403,10 +427,16 @@ void setupscreen(void)
 int initscr(void)
 {
     tty::set();
-    set_int();
-    getTCstr();
-    if (T_ti && !Do_not_use_ti_te)
-        tty::writestr(T_ti);
+    set_signal_handler();
+
+    auto ent = get_term();
+    g_entry.load(ent.c_str());
+    if (g_entry.T_ti && !Do_not_use_ti_te)
+        tty::writestr(g_entry.T_ti);
+
+    LINES = COLS = 0;
+    setlinescols();
+
     setupscreen();
     return 0;
 }
@@ -684,7 +714,7 @@ int graph_ok(void)
 {
     if (UseGraphicChar != GRAPHIC_CHAR_DEC)
         return 0;
-    return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
+    return g_entry.T_as[0] != 0 && g_entry.T_ae[0] != 0 && g_entry.T_ac[0] != 0;
 }
 
 void setfcolor(int color)
@@ -790,7 +820,7 @@ void refresh(void)
             }
             if (*dirty & (L_NEED_CE | L_CLRTOEOL))
             {
-                tty::writestr(T_ce);
+                tty::writestr(g_entry.T_ce);
                 if (col != pcol)
                     MOVE(line, col);
             }
@@ -826,10 +856,10 @@ void refresh(void)
                     (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS)))
                 {
                     if ((mode & S_COLORED) || (mode & S_BCOLORED))
-                        tty::writestr(T_op);
+                        tty::writestr(g_entry.T_op);
                     if (mode & S_GRAPHICS)
-                        tty::writestr(T_ae);
-                    tty::writestr(T_me);
+                        tty::writestr(g_entry.T_ae);
+                    tty::writestr(g_entry.T_me);
                     mode &= ~M_MEND;
                 }
                 if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol)
@@ -837,23 +867,23 @@ void refresh(void)
                         : (pr[col] & S_DIRTY))
                 {
                     if (pcol == col - 1)
-                        tty::writestr(T_nd);
+                        tty::writestr(g_entry.T_nd);
                     else if (pcol != col)
                         MOVE(line, col);
 
                     if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT))
                     {
-                        tty::writestr(T_so);
+                        tty::writestr(g_entry.T_so);
                         mode |= S_STANDOUT;
                     }
                     if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE))
                     {
-                        tty::writestr(T_us);
+                        tty::writestr(g_entry.T_us);
                         mode |= S_UNDERLINE;
                     }
                     if ((pr[col] & S_BOLD) && !(mode & S_BOLD))
                     {
-                        tty::writestr(T_md);
+                        tty::writestr(g_entry.T_md);
                         mode |= S_BOLD;
                     }
                     if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR)
@@ -874,13 +904,13 @@ void refresh(void)
                         if (!graph_enabled)
                         {
                             graph_enabled = 1;
-                            tty::writestr(T_eA);
+                            tty::writestr(g_entry.T_eA);
                         }
-                        tty::writestr(T_as);
+                        tty::writestr(g_entry.T_as);
                         mode |= S_GRAPHICS;
                     }
                     if (pr[col] & S_GRAPHICS)
-                        tty::write1(graphchar(*pc[col]));
+                        tty::write1(g_entry.graphchar(*pc[col]));
                     else if (CHMODE(pr[col]) != C_WCHAR2)
                         wc_putc(pc[col], tty::get_file());
                     pcol = col + 1;
@@ -895,13 +925,13 @@ void refresh(void)
         if (mode & M_MEND)
         {
             if (mode & (S_COLORED | S_BCOLORED))
-                tty::writestr(T_op);
+                tty::writestr(g_entry.T_op);
             if (mode & S_GRAPHICS)
             {
-                tty::writestr(T_ae);
+                tty::writestr(g_entry.T_ae);
                 wc_putc_clear_status();
             }
-            tty::writestr(T_me);
+            tty::writestr(g_entry.T_me);
             mode &= ~M_MEND;
         }
     }
@@ -914,7 +944,7 @@ void clear(void)
 {
     int i, j;
     l_prop *p;
-    tty::writestr(T_cl);
+    tty::writestr(g_entry.T_cl);
     move(0, 0);
     for (i = 0; i < LINES; i++)
     {
@@ -1002,7 +1032,7 @@ void rscroll(int n)
         }
         ScreenImage[i] = t;
     } while (k);
-    if (T_sr && *T_sr)
+    if (g_entry.T_sr && *g_entry.T_sr)
     {
         MOVE(0, 0);
         for (i = 0; i < n; i++)
@@ -1011,7 +1041,7 @@ void rscroll(int n)
             t->isdirty = 0;
             for (j = 0; j < COLS; j++)
                 t->lineprop[j] = S_EOL;
-            tty::writestr(T_sr);
+            tty::writestr(g_entry.T_sr);
         }
         move(cli, cco);
     }

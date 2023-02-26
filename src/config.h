@@ -211,12 +211,6 @@ typedef RETSIGTYPE MySignalHandler;
 #define DONT_CALL_GC_AFTER_FORK
 #endif
 
-#if defined(__DJGPP__)
-#define DEFAULT_TERM "dosansi"
-#else
-#define DEFAULT_TERM 0 /* XXX */
-#endif
-
 #if defined(__EMX__) /* use $extension? */
 #define GUNZIP_CMDNAME "gzip"
 #define BUNZIP2_CMDNAME "bzip2"
