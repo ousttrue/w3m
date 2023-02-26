@@ -52,6 +52,8 @@ executable(
         'textlist.cpp',
         'parsetag.cpp',
         'hash.cpp',
+        #
+        'tty.cpp',
     ],
     install: true,
     cpp_args: [

@@ -6,4 +6,3 @@ void put_image_osc5379(char *url, int x, int y, int w, int h, int sx, int sy,
                        int sw, int sh);
 void put_image_sixel(char *url, int x, int y, int w, int h, int sx, int sy,
                      int sw, int sh, int n_terminal_image);
-int get_pixel_per_cell(int *ppc, int *ppl);

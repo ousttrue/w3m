@@ -4,12 +4,11 @@
 
 extern int LINES, COLS;
 
-int gettty();
+void reset_tty();
 
 #if defined(__CYGWIN__)
 extern int LASTLINE;
 #endif
-
 
 #ifdef __CYGWIN__
 #if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
@@ -21,4 +20,4 @@ extern void disable_win9x_console_input(void);
 #endif
 #endif
 
-#endif				/* not TERMS_H */
+#endif /* not TERMS_H */

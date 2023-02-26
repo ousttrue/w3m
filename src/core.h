@@ -54,14 +54,16 @@ void _movD(int n);
 void _movR(int n);
 int prev_nonnull_line(Line *line);
 
-#define nextChar(s, l)                                                         \
-  do {                                                                         \
-    (s)++;                                                                     \
-  } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
-#define prevChar(s, l)                                                         \
-  do {                                                                         \
-    (s)--;                                                                     \
-  } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
+#define nextChar(s, l) \
+    do                 \
+    {                  \
+        (s)++;         \
+    } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
+#define prevChar(s, l) \
+    do                 \
+    {                  \
+        (s)--;         \
+    } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
 
 wc_uint32 getChar(char *p);
 

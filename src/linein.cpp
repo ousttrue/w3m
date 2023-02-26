@@ -1,5 +1,5 @@
 /* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
-
+#include "tty.h"
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
@@ -77,7 +77,6 @@ void (*InputKeymap[32])(unsigned char) = {
 };
 /* *INDENT-ON* */
 
-
 static int setStrType(Str str, Lineprop *prop);
 static void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
 static void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
@@ -94,848 +93,1021 @@ static int use_hist;
 static void ins_char(Str str);
 
 char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                          int (*incrfunc)(int ch, Str str, Lineprop *prop)) {
-  int opos, x, y, lpos, rpos, epos;
-  unsigned char c;
-  char *p;
-  Str tmp;
+                          int (*incrfunc)(int ch, Str str, Lineprop *prop))
+{
+    int opos, x, y, lpos, rpos, epos;
+    unsigned char c;
+    char *p;
+    Str tmp;
 
-  is_passwd = FALSE;
-  move_word = TRUE;
+    is_passwd = FALSE;
+    move_word = TRUE;
 
-  CurrentHist = hist;
-  if (hist != NULL) {
-    use_hist = TRUE;
-    strCurrentBuf = NULL;
-  } else {
-    use_hist = FALSE;
-  }
-  if (flag & IN_URL) {
-    cm_mode = CPL_ALWAYS | CPL_URL;
-  } else if (flag & IN_FILENAME) {
-    cm_mode = CPL_ALWAYS;
-  } else if (flag & IN_PASSWORD) {
-    cm_mode = CPL_NEVER;
-    is_passwd = TRUE;
-    move_word = FALSE;
-  } else if (flag & IN_COMMAND)
-    cm_mode = CPL_ON;
-  else
-    cm_mode = CPL_OFF;
-  opos = get_strwidth(prompt);
-  epos = CLEN - opos;
-  if (epos < 0)
-    epos = 0;
-  lpos = epos / 3;
-  rpos = epos * 2 / 3;
-  offset = 0;
-
-  if (def_str) {
-    strBuf = Strnew_charp(def_str);
-    CLen = CPos = setStrType(strBuf, strProp);
-  } else {
-    strBuf = Strnew();
-    CLen = CPos = 0;
-  }
-
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-  enable_win9x_console_input();
-#endif
-  i_cont = TRUE;
-  i_broken = FALSE;
-  i_quote = FALSE;
-  cm_next = FALSE;
-  cm_disp_next = -1;
-  need_redraw = FALSE;
-
-  wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
-  do {
-    x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
-    if (x - rpos > offset) {
-      y = calcPosition(strBuf->ptr, strProp, CLen, CLen, 0, CP_AUTO);
-      if (y - epos > x - rpos)
-        offset = x - rpos;
-      else if (y - epos > 0)
-        offset = y - epos;
-    } else if (x - lpos < offset) {
-      if (x - lpos > 0)
-        offset = x - lpos;
-      else
-        offset = 0;
+    CurrentHist = hist;
+    if (hist != NULL)
+    {
+        use_hist = TRUE;
+        strCurrentBuf = NULL;
     }
-    move(LASTLINE, 0);
-    addstr(prompt);
-    if (is_passwd)
-      addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
     else
-      addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
-    clrtoeolx();
-    move(LASTLINE, opos + x - offset);
-    refresh();
-
-  next_char:
-    c = getch();
-    cm_clear = TRUE;
-    cm_disp_clear = TRUE;
-    if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
-                      (c == CTRL_I || (space_autocomplete && c == ' '))) ||
-                     ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
-      if (emacs_like_lineedit && cm_next) {
-        _dcompl(0);
-        need_redraw = TRUE;
-      } else {
-        _compl(0);
-        cm_disp_next = -1;
-      }
-    } else if (!i_quote && CLen == CPos &&
-               (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
-      if (!emacs_like_lineedit) {
-        _dcompl(0);
-        need_redraw = TRUE;
-      }
-    } else if (!i_quote && c == DEL_CODE) {
-      _bs(0);
-      cm_next = FALSE;
-      cm_disp_next = -1;
-    } else if (!i_quote && c < 0x20) { /* Control code */
-      if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20)
-        (*InputKeymap[(int)c])(c);
-      if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
-        incrfunc(-1, strBuf, strProp);
-      if (cm_clear)
-        cm_next = FALSE;
-      if (cm_disp_clear)
-        cm_disp_next = -1;
-    } else {
-      tmp = wc_char_conv(c);
-      if (tmp == NULL) {
-        i_quote = TRUE;
-        goto next_char;
-      }
-      i_quote = FALSE;
-      cm_next = FALSE;
-      cm_disp_next = -1;
-      if (CLen + tmp->length > STR_LEN || !tmp->length)
-        goto next_char;
-      ins_char(tmp);
-      if (incrfunc)
-        incrfunc(-1, strBuf, strProp);
+    {
+        use_hist = FALSE;
     }
-    if (CLen && (flag & IN_CHAR))
-      break;
-  } while (i_cont);
+    if (flag & IN_URL)
+    {
+        cm_mode = CPL_ALWAYS | CPL_URL;
+    }
+    else if (flag & IN_FILENAME)
+    {
+        cm_mode = CPL_ALWAYS;
+    }
+    else if (flag & IN_PASSWORD)
+    {
+        cm_mode = CPL_NEVER;
+        is_passwd = TRUE;
+        move_word = FALSE;
+    }
+    else if (flag & IN_COMMAND)
+        cm_mode = CPL_ON;
+    else
+        cm_mode = CPL_OFF;
+    opos = get_strwidth(prompt);
+    epos = CLEN - opos;
+    if (epos < 0)
+        epos = 0;
+    lpos = epos / 3;
+    rpos = epos * 2 / 3;
+    offset = 0;
 
-  if (CurrentTab) {
-    if (need_redraw)
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
-  }
+    if (def_str)
+    {
+        strBuf = Strnew_charp(def_str);
+        CLen = CPos = setStrType(strBuf, strProp);
+    }
+    else
+    {
+        strBuf = Strnew();
+        CLen = CPos = 0;
+    }
 
 #ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-  disable_win9x_console_input();
+    enable_win9x_console_input();
+#endif
+    i_cont = TRUE;
+    i_broken = FALSE;
+    i_quote = FALSE;
+    cm_next = FALSE;
+    cm_disp_next = -1;
+    need_redraw = FALSE;
+
+    wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
+    do
+    {
+        x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
+        if (x - rpos > offset)
+        {
+            y = calcPosition(strBuf->ptr, strProp, CLen, CLen, 0, CP_AUTO);
+            if (y - epos > x - rpos)
+                offset = x - rpos;
+            else if (y - epos > 0)
+                offset = y - epos;
+        }
+        else if (x - lpos < offset)
+        {
+            if (x - lpos > 0)
+                offset = x - lpos;
+            else
+                offset = 0;
+        }
+        move(LASTLINE, 0);
+        addstr(prompt);
+        if (is_passwd)
+            addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+        else
+            addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+        clrtoeolx();
+        move(LASTLINE, opos + x - offset);
+        refresh();
+
+    next_char:
+        c = tty::getch();
+        cm_clear = TRUE;
+        cm_disp_clear = TRUE;
+        if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
+                          (c == CTRL_I || (space_autocomplete && c == ' '))) ||
+                         ((cm_mode & CPL_ON) && (c == CTRL_I))))
+        {
+            if (emacs_like_lineedit && cm_next)
+            {
+                _dcompl(0);
+                need_redraw = TRUE;
+            }
+            else
+            {
+                _compl(0);
+                cm_disp_next = -1;
+            }
+        }
+        else if (!i_quote && CLen == CPos &&
+                 (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D)
+        {
+            if (!emacs_like_lineedit)
+            {
+                _dcompl(0);
+                need_redraw = TRUE;
+            }
+        }
+        else if (!i_quote && c == DEL_CODE)
+        {
+            _bs(0);
+            cm_next = FALSE;
+            cm_disp_next = -1;
+        }
+        else if (!i_quote && c < 0x20)
+        { /* Control code */
+            if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20)
+                (*InputKeymap[(int)c])(c);
+            if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
+                incrfunc(-1, strBuf, strProp);
+            if (cm_clear)
+                cm_next = FALSE;
+            if (cm_disp_clear)
+                cm_disp_next = -1;
+        }
+        else
+        {
+            tmp = wc_char_conv(c);
+            if (tmp == NULL)
+            {
+                i_quote = TRUE;
+                goto next_char;
+            }
+            i_quote = FALSE;
+            cm_next = FALSE;
+            cm_disp_next = -1;
+            if (CLen + tmp->length > STR_LEN || !tmp->length)
+                goto next_char;
+            ins_char(tmp);
+            if (incrfunc)
+                incrfunc(-1, strBuf, strProp);
+        }
+        if (CLen && (flag & IN_CHAR))
+            break;
+    } while (i_cont);
+
+    if (CurrentTab)
+    {
+        if (need_redraw)
+            displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    }
+
+#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
+    disable_win9x_console_input();
 #endif
 
-  if (i_broken)
-    return NULL;
+    if (i_broken)
+        return NULL;
 
-  move(LASTLINE, 0);
-  refresh();
-  p = strBuf->ptr;
-  if (flag & (IN_FILENAME | IN_COMMAND)) {
-    SKIP_BLANKS(p);
-  }
-  if (use_hist && !(flag & IN_URL) && *p != '\0') {
-    char *q = lastHist(hist);
-    if (!q || strcmp(q, p))
-      pushHist(hist, p);
-  }
-  if (flag & IN_FILENAME)
-    return expandPath(p);
-  else
-    return allocStr(p, -1);
-}
-
-static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
-  int rcol = 0, ncol;
-
-  ncol = calcPosition(p, pr, len, len, 0, CP_AUTO);
-  if (ncol > offset + limit)
-    ncol = offset + limit;
-  if (offset) {
-    addChar('{', 0);
-    rcol = offset + 1;
-  }
-  for (; rcol < ncol; rcol++)
-    addChar('*', 0);
-}
-
-static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
-  int i = 0, rcol = 0, ncol, delta = 1;
-
-  if (offset) {
-    for (i = 0; i < len; i++) {
-      if (calcPosition(p, pr, len, i, 0, CP_AUTO) > offset)
-        break;
+    move(LASTLINE, 0);
+    refresh();
+    p = strBuf->ptr;
+    if (flag & (IN_FILENAME | IN_COMMAND))
+    {
+        SKIP_BLANKS(p);
     }
-    if (i >= len)
-      return;
-    while (pr[i] & PC_WCHAR2)
-      i++;
-    addChar('{', 0);
-    rcol = offset + 1;
-    ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
+    if (use_hist && !(flag & IN_URL) && *p != '\0')
+    {
+        char *q = lastHist(hist);
+        if (!q || strcmp(q, p))
+            pushHist(hist, p);
+    }
+    if (flag & IN_FILENAME)
+        return expandPath(p);
+    else
+        return allocStr(p, -1);
+}
+
+static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit)
+{
+    int rcol = 0, ncol;
+
+    ncol = calcPosition(p, pr, len, len, 0, CP_AUTO);
+    if (ncol > offset + limit)
+        ncol = offset + limit;
+    if (offset)
+    {
+        addChar('{', 0);
+        rcol = offset + 1;
+    }
     for (; rcol < ncol; rcol++)
-      addChar(' ', 0);
-  }
-  for (; i < len; i += delta) {
-    delta = wtf_len((wc_uchar *)&p[i]);
-    ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
-    if (ncol - offset > limit)
-      break;
-    if (p[i] == '\t') {
-      for (; rcol < ncol; rcol++)
-        addChar(' ', 0);
-      continue;
-    } else {
-      addMChar(&p[i], pr[i], delta);
-    }
-    rcol = ncol;
-  }
+        addChar('*', 0);
 }
 
-static void ins_char(Str str) {
-  char *p = str->ptr, *ep = p + str->length;
-  Lineprop ctype;
-  int len;
+static void addStr(char *p, Lineprop *pr, int len, int offset, int limit)
+{
+    int i = 0, rcol = 0, ncol, delta = 1;
 
-  if (CLen + str->length >= STR_LEN)
-    return;
-  while (p < ep) {
-    len = get_mclen(p);
-    ctype = get_mctype(p);
-    if (is_passwd) {
-      if (ctype & PC_CTRL)
-        ctype = PC_ASCII;
-      if (ctype & PC_UNKNOWN)
-        ctype = PC_WCHAR1;
+    if (offset)
+    {
+        for (i = 0; i < len; i++)
+        {
+            if (calcPosition(p, pr, len, i, 0, CP_AUTO) > offset)
+                break;
+        }
+        if (i >= len)
+            return;
+        while (pr[i] & PC_WCHAR2)
+            i++;
+        addChar('{', 0);
+        rcol = offset + 1;
+        ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
+        for (; rcol < ncol; rcol++)
+            addChar(' ', 0);
     }
-    insC(0);
-    strBuf->ptr[CPos] = *(p++);
-    strProp[CPos] = ctype;
-    CPos++;
-    if (--len) {
-      ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
-      while (len--) {
+    for (; i < len; i += delta)
+    {
+        delta = wtf_len((wc_uchar *)&p[i]);
+        ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
+        if (ncol - offset > limit)
+            break;
+        if (p[i] == '\t')
+        {
+            for (; rcol < ncol; rcol++)
+                addChar(' ', 0);
+            continue;
+        }
+        else
+        {
+            addMChar(&p[i], pr[i], delta);
+        }
+        rcol = ncol;
+    }
+}
+
+static void ins_char(Str str)
+{
+    char *p = str->ptr, *ep = p + str->length;
+    Lineprop ctype;
+    int len;
+
+    if (CLen + str->length >= STR_LEN)
+        return;
+    while (p < ep)
+    {
+        len = get_mclen(p);
+        ctype = get_mctype(p);
+        if (is_passwd)
+        {
+            if (ctype & PC_CTRL)
+                ctype = PC_ASCII;
+            if (ctype & PC_UNKNOWN)
+                ctype = PC_WCHAR1;
+        }
         insC(0);
         strBuf->ptr[CPos] = *(p++);
         strProp[CPos] = ctype;
         CPos++;
-      }
+        if (--len)
+        {
+            ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
+            while (len--)
+            {
+                insC(0);
+                strBuf->ptr[CPos] = *(p++);
+                strProp[CPos] = ctype;
+                CPos++;
+            }
+        }
     }
-  }
 }
 
-static void _esc(unsigned char) {
-  char c;
+static void _esc(unsigned char)
+{
+    char c;
 
-  switch (c = getch()) {
-  case '[':
-  case 'O':
-    switch (c = getch()) {
-    case 'A':
-      _prev(0);
-      break;
-    case 'B':
-      _next(0);
-      break;
-    case 'C':
-      _mvR(0);
-      break;
-    case 'D':
-      _mvL(0);
-      break;
+    switch (c = tty::getch())
+    {
+    case '[':
+    case 'O':
+        switch (c = tty::getch())
+        {
+        case 'A':
+            _prev(0);
+            break;
+        case 'B':
+            _next(0);
+            break;
+        case 'C':
+            _mvR(0);
+            break;
+        case 'D':
+            _mvL(0);
+            break;
+        }
+        break;
+    case CTRL_I:
+    case ' ':
+        if (emacs_like_lineedit)
+        {
+            _rdcompl(0);
+            cm_clear = FALSE;
+            need_redraw = TRUE;
+        }
+        else
+            _rcompl(0);
+        break;
+    case CTRL_D:
+        if (!emacs_like_lineedit)
+            _rdcompl(0);
+        need_redraw = TRUE;
+        break;
+    case 'f':
+        if (emacs_like_lineedit)
+            _mvRw(0);
+        break;
+    case 'b':
+        if (emacs_like_lineedit)
+            _mvLw(0);
+        break;
+    case CTRL_H:
+        if (emacs_like_lineedit)
+            _bsw(0);
+        break;
+    default:
+        if (wc_char_conv(ESC_CODE) == NULL && wc_char_conv(c) == NULL)
+            i_quote = TRUE;
     }
-    break;
-  case CTRL_I:
-  case ' ':
-    if (emacs_like_lineedit) {
-      _rdcompl(0);
-      cm_clear = FALSE;
-      need_redraw = TRUE;
-    } else
-      _rcompl(0);
-    break;
-  case CTRL_D:
-    if (!emacs_like_lineedit)
-      _rdcompl(0);
-    need_redraw = TRUE;
-    break;
-  case 'f':
-    if (emacs_like_lineedit)
-      _mvRw(0);
-    break;
-  case 'b':
-    if (emacs_like_lineedit)
-      _mvLw(0);
-    break;
-  case CTRL_H:
-    if (emacs_like_lineedit)
-      _bsw(0);
-    break;
-  default:
-    if (wc_char_conv(ESC_CODE) == NULL && wc_char_conv(c) == NULL)
-      i_quote = TRUE;
-  }
 }
 
-static void insC(unsigned char) {
-  int i;
+static void insC(unsigned char)
+{
+    int i;
 
-  Strinsert_char(strBuf, CPos, ' ');
-  CLen = strBuf->length;
-  for (i = CLen; i > CPos; i--) {
-    strProp[i] = strProp[i - 1];
-  }
-}
-
-static void delC(unsigned char) {
-  int i = CPos;
-  int delta = 1;
-
-  if (CLen == CPos)
-    return;
-  while (i + delta < CLen && strProp[i + delta] & PC_WCHAR2)
-    delta++;
-  for (i = CPos; i < CLen; i++) {
-    strProp[i] = strProp[i + delta];
-  }
-  Strdelete(strBuf, CPos, delta);
-  CLen -= delta;
-}
-
-static void _mvL(unsigned char) {
-  if (CPos > 0)
-    CPos--;
-  while (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-    CPos--;
-}
-
-static void _mvLw(unsigned char) {
-  int first = 1;
-  while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
-    CPos--;
-    first = 0;
-    if (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-      CPos--;
-    if (!move_word)
-      break;
-  }
-}
-
-static void _mvRw(unsigned char) {
-  int first = 1;
-  while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
-    CPos++;
-    first = 0;
-    if (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-      CPos++;
-    if (!move_word)
-      break;
-  }
-}
-
-static void _mvR(unsigned char) {
-  if (CPos < CLen)
-    CPos++;
-  while (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-    CPos++;
-}
-
-static void _bs(unsigned char) {
-  if (CPos > 0) {
-    _mvL(0);
-    delC(0);
-  }
-}
-
-static void _bsw(unsigned char) {
-  int t = 0;
-  while (CPos > 0 && !t) {
-    _mvL(0);
-    t = (move_word && terminated(strBuf->ptr[CPos - 1]));
-    delC(0);
-  }
-}
-
-static void _enter(unsigned char) { i_cont = FALSE; }
-
-static void insertself(unsigned char c) {
-  if (CLen >= STR_LEN)
-    return;
-  insC(0);
-  strBuf->ptr[CPos] = c;
-  strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
-  CPos++;
-}
-
-static void _quo(unsigned char) { i_quote = TRUE; }
-
-static void _mvB(unsigned char) { CPos = 0; }
-
-static void _mvE(unsigned char) { CPos = CLen; }
-
-static void killn(unsigned char) {
-  CLen = CPos;
-  Strtruncate(strBuf, CLen);
-}
-
-static void killb(unsigned char) {
-  while (CPos > 0)
-    _bs(0);
-}
-
-static void _inbrk(unsigned char) {
-  i_cont = FALSE;
-  i_broken = TRUE;
-}
-
-static void _compl(unsigned char) { next_compl(1); }
-
-static void _rcompl(unsigned char) { next_compl(-1); }
-
-static void _tcompl(unsigned char) {
-  if (cm_mode & CPL_OFF)
-    cm_mode = CPL_ON;
-  else if (cm_mode & CPL_ON)
-    cm_mode = CPL_OFF;
-}
-
-static void next_compl(int next) {
-  int status;
-  int b, a;
-  Str buf;
-  Str s;
-
-  if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
-    return;
-  cm_clear = FALSE;
-  if (!cm_next) {
-    if (cm_mode & CPL_ALWAYS) {
-      b = 0;
-    } else {
-      for (b = CPos - 1; b >= 0; b--) {
-        if ((strBuf->ptr[b] == ' ' || strBuf->ptr[b] == CTRL_I) &&
-            !((b > 0) && strBuf->ptr[b - 1] == '\\'))
-          break;
-      }
-      b++;
+    Strinsert_char(strBuf, CPos, ' ');
+    CLen = strBuf->length;
+    for (i = CLen; i > CPos; i--)
+    {
+        strProp[i] = strProp[i - 1];
     }
-    a = CPos;
-    CBeforeBuf = Strsubstr(strBuf, 0, b);
-    buf = Strsubstr(strBuf, b, a - b);
-    CAfterBuf = Strsubstr(strBuf, a, strBuf->length - a);
-    s = doComplete(buf, &status, next);
-  } else {
-    s = doComplete(strBuf, &status, next);
-  }
-  if (next == 0)
-    return;
+}
 
-  if (status != CPL_OK && status != CPL_MENU)
-    bell();
-  if (status == CPL_FAIL)
-    return;
+static void delC(unsigned char)
+{
+    int i = CPos;
+    int delta = 1;
 
-  strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
-  CLen = setStrType(strBuf, strProp);
-  CPos = CBeforeBuf->length + s->length;
-  if (CPos > CLen)
+    if (CLen == CPos)
+        return;
+    while (i + delta < CLen && strProp[i + delta] & PC_WCHAR2)
+        delta++;
+    for (i = CPos; i < CLen; i++)
+    {
+        strProp[i] = strProp[i + delta];
+    }
+    Strdelete(strBuf, CPos, delta);
+    CLen -= delta;
+}
+
+static void _mvL(unsigned char)
+{
+    if (CPos > 0)
+        CPos--;
+    while (CPos > 0 && strProp[CPos] & PC_WCHAR2)
+        CPos--;
+}
+
+static void _mvLw(unsigned char)
+{
+    int first = 1;
+    while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1])))
+    {
+        CPos--;
+        first = 0;
+        if (CPos > 0 && strProp[CPos] & PC_WCHAR2)
+            CPos--;
+        if (!move_word)
+            break;
+    }
+}
+
+static void _mvRw(unsigned char)
+{
+    int first = 1;
+    while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1])))
+    {
+        CPos++;
+        first = 0;
+        if (CPos < CLen && strProp[CPos] & PC_WCHAR2)
+            CPos++;
+        if (!move_word)
+            break;
+    }
+}
+
+static void _mvR(unsigned char)
+{
+    if (CPos < CLen)
+        CPos++;
+    while (CPos < CLen && strProp[CPos] & PC_WCHAR2)
+        CPos++;
+}
+
+static void _bs(unsigned char)
+{
+    if (CPos > 0)
+    {
+        _mvL(0);
+        delC(0);
+    }
+}
+
+static void _bsw(unsigned char)
+{
+    int t = 0;
+    while (CPos > 0 && !t)
+    {
+        _mvL(0);
+        t = (move_word && terminated(strBuf->ptr[CPos - 1]));
+        delC(0);
+    }
+}
+
+static void _enter(unsigned char)
+{
+    i_cont = FALSE;
+}
+
+static void insertself(unsigned char c)
+{
+    if (CLen >= STR_LEN)
+        return;
+    insC(0);
+    strBuf->ptr[CPos] = c;
+    strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
+    CPos++;
+}
+
+static void _quo(unsigned char)
+{
+    i_quote = TRUE;
+}
+
+static void _mvB(unsigned char)
+{
+    CPos = 0;
+}
+
+static void _mvE(unsigned char)
+{
     CPos = CLen;
 }
 
-static void _dcompl(unsigned char) { next_dcompl(1); }
+static void killn(unsigned char)
+{
+    CLen = CPos;
+    Strtruncate(strBuf, CLen);
+}
 
-static void _rdcompl(unsigned char) { next_dcompl(-1); }
+static void killb(unsigned char)
+{
+    while (CPos > 0)
+        _bs(0);
+}
 
-static void next_dcompl(int next) {
-  static int col, row;
-  static unsigned int len;
-  static Str d;
-  int i, j, n, y;
-  Str f;
-  char *p;
-  struct stat st;
-  int comment, nline;
+static void _inbrk(unsigned char)
+{
+    i_cont = FALSE;
+    i_broken = TRUE;
+}
 
-  if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
-    return;
-  cm_disp_clear = FALSE;
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-  if (LASTLINE >= 3) {
-    comment = TRUE;
-    nline = LASTLINE - 2;
-  } else if (LASTLINE) {
-    comment = FALSE;
-    nline = LASTLINE;
-  } else {
-    return;
-  }
+static void _compl(unsigned char)
+{
+    next_compl(1);
+}
 
-  if (cm_disp_next >= 0) {
-    if (next == 1) {
-      cm_disp_next += col * nline;
-      if (cm_disp_next >= NCFileBuf)
-        cm_disp_next = 0;
-    } else if (next == -1) {
-      cm_disp_next -= col * nline;
-      if (cm_disp_next < 0)
-        cm_disp_next = 0;
+static void _rcompl(unsigned char)
+{
+    next_compl(-1);
+}
+
+static void _tcompl(unsigned char)
+{
+    if (cm_mode & CPL_OFF)
+        cm_mode = CPL_ON;
+    else if (cm_mode & CPL_ON)
+        cm_mode = CPL_OFF;
+}
+
+static void next_compl(int next)
+{
+    int status;
+    int b, a;
+    Str buf;
+    Str s;
+
+    if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
+        return;
+    cm_clear = FALSE;
+    if (!cm_next)
+    {
+        if (cm_mode & CPL_ALWAYS)
+        {
+            b = 0;
+        }
+        else
+        {
+            for (b = CPos - 1; b >= 0; b--)
+            {
+                if ((strBuf->ptr[b] == ' ' || strBuf->ptr[b] == CTRL_I) &&
+                    !((b > 0) && strBuf->ptr[b - 1] == '\\'))
+                    break;
+            }
+            b++;
+        }
+        a = CPos;
+        CBeforeBuf = Strsubstr(strBuf, 0, b);
+        buf = Strsubstr(strBuf, b, a - b);
+        CAfterBuf = Strsubstr(strBuf, a, strBuf->length - a);
+        s = doComplete(buf, &status, next);
     }
-    row = (NCFileBuf - cm_disp_next + col - 1) / col;
-    goto disp_next;
-  }
+    else
+    {
+        s = doComplete(strBuf, &status, next);
+    }
+    if (next == 0)
+        return;
 
-  cm_next = FALSE;
-  next_compl(0);
-  if (NCFileBuf == 0)
-    return;
-  cm_disp_next = 0;
+    if (status != CPL_OK && status != CPL_MENU)
+        bell();
+    if (status == CPL_FAIL)
+        return;
 
-  d = Str_conv_to_system(Strdup(CDirBuf));
-  if (d->length > 0 && Strlastchar(d) != '/')
-    Strcat_char(d, '/');
-  if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
-    p = d->ptr;
-    if (strncmp(p, "file://localhost/", 17) == 0)
-      p = &p[16];
-    else if (strncmp(p, "file:///", 8) == 0)
-      p = &p[7];
-    else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
-      p = &p[5];
-    d = Strnew_charp(p);
-  }
+    strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
+    CLen = setStrType(strBuf, strProp);
+    CPos = CBeforeBuf->length + s->length;
+    if (CPos > CLen)
+        CPos = CLen;
+}
 
-  len = 0;
-  for (i = 0; i < NCFileBuf; i++) {
-    n = strlen(CFileBuf[i]) + 3;
-    if (len < n)
-      len = n;
-  }
-  if (len > 0 && COLS > len)
-    col = COLS / len;
-  else
-    col = 1;
-  row = (NCFileBuf + col - 1) / col;
+static void _dcompl(unsigned char)
+{
+    next_dcompl(1);
+}
+
+static void _rdcompl(unsigned char)
+{
+    next_dcompl(-1);
+}
+
+static void next_dcompl(int next)
+{
+    static int col, row;
+    static unsigned int len;
+    static Str d;
+    int i, j, n, y;
+    Str f;
+    char *p;
+    struct stat st;
+    int comment, nline;
+
+    if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
+        return;
+    cm_disp_clear = FALSE;
+    if (CurrentTab)
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    if (LASTLINE >= 3)
+    {
+        comment = TRUE;
+        nline = LASTLINE - 2;
+    }
+    else if (LASTLINE)
+    {
+        comment = FALSE;
+        nline = LASTLINE;
+    }
+    else
+    {
+        return;
+    }
+
+    if (cm_disp_next >= 0)
+    {
+        if (next == 1)
+        {
+            cm_disp_next += col * nline;
+            if (cm_disp_next >= NCFileBuf)
+                cm_disp_next = 0;
+        }
+        else if (next == -1)
+        {
+            cm_disp_next -= col * nline;
+            if (cm_disp_next < 0)
+                cm_disp_next = 0;
+        }
+        row = (NCFileBuf - cm_disp_next + col - 1) / col;
+        goto disp_next;
+    }
+
+    cm_next = FALSE;
+    next_compl(0);
+    if (NCFileBuf == 0)
+        return;
+    cm_disp_next = 0;
+
+    d = Str_conv_to_system(Strdup(CDirBuf));
+    if (d->length > 0 && Strlastchar(d) != '/')
+        Strcat_char(d, '/');
+    if (cm_mode & CPL_URL && d->ptr[0] == 'f')
+    {
+        p = d->ptr;
+        if (strncmp(p, "file://localhost/", 17) == 0)
+            p = &p[16];
+        else if (strncmp(p, "file:///", 8) == 0)
+            p = &p[7];
+        else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
+            p = &p[5];
+        d = Strnew_charp(p);
+    }
+
+    len = 0;
+    for (i = 0; i < NCFileBuf; i++)
+    {
+        n = strlen(CFileBuf[i]) + 3;
+        if (len < n)
+            len = n;
+    }
+    if (len > 0 && COLS > len)
+        col = COLS / len;
+    else
+        col = 1;
+    row = (NCFileBuf + col - 1) / col;
 
 disp_next:
-  if (comment) {
-    if (row > nline) {
-      row = nline;
-      y = 0;
-    } else
-      y = nline - row + 1;
-  } else {
-    if (row >= nline) {
-      row = nline;
-      y = 0;
-    } else
-      y = nline - row - 1;
-  }
-  if (y) {
-    move(y - 1, 0);
-    clrtoeolx();
-  }
-  if (comment) {
-    move(y, 0);
-    clrtoeolx();
-    bold();
-    /* FIXME: gettextize? */
-    addstr("----- Completion list -----");
-    boldend();
-    y++;
-  }
-  for (i = 0; i < row; i++) {
-    for (j = 0; j < col; j++) {
-      n = cm_disp_next + j * row + i;
-      if (n >= NCFileBuf)
-        break;
-      move(y, j * len);
-      clrtoeolx();
-      f = Strdup(d);
-      Strcat_charp(f, CFileBuf[n]);
-      addstr(conv_from_system(CFileBuf[n]));
-      if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-        addstr("/");
+    if (comment)
+    {
+        if (row > nline)
+        {
+            row = nline;
+            y = 0;
+        }
+        else
+            y = nline - row + 1;
     }
-    y++;
-  }
-  if (comment && y == LASTLINE - 1) {
-    move(y, 0);
-    clrtoeolx();
-    bold();
-    if (emacs_like_lineedit)
-      /* FIXME: gettextize? */
-      addstr("----- Press TAB to continue -----");
     else
-      /* FIXME: gettextize? */
-      addstr("----- Press CTRL-D to continue -----");
-    boldend();
-  }
+    {
+        if (row >= nline)
+        {
+            row = nline;
+            y = 0;
+        }
+        else
+            y = nline - row - 1;
+    }
+    if (y)
+    {
+        move(y - 1, 0);
+        clrtoeolx();
+    }
+    if (comment)
+    {
+        move(y, 0);
+        clrtoeolx();
+        bold();
+        /* FIXME: gettextize? */
+        addstr("----- Completion list -----");
+        boldend();
+        y++;
+    }
+    for (i = 0; i < row; i++)
+    {
+        for (j = 0; j < col; j++)
+        {
+            n = cm_disp_next + j * row + i;
+            if (n >= NCFileBuf)
+                break;
+            move(y, j * len);
+            clrtoeolx();
+            f = Strdup(d);
+            Strcat_charp(f, CFileBuf[n]);
+            addstr(conv_from_system(CFileBuf[n]));
+            if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
+                addstr("/");
+        }
+        y++;
+    }
+    if (comment && y == LASTLINE - 1)
+    {
+        move(y, 0);
+        clrtoeolx();
+        bold();
+        if (emacs_like_lineedit)
+            /* FIXME: gettextize? */
+            addstr("----- Press TAB to continue -----");
+        else
+            /* FIXME: gettextize? */
+            addstr("----- Press CTRL-D to continue -----");
+        boldend();
+    }
 }
 
-Str escape_spaces(Str s) {
-  Str tmp = NULL;
-  char *p;
+Str escape_spaces(Str s)
+{
+    Str tmp = NULL;
+    char *p;
 
-  if (s == NULL)
-    return s;
-  for (p = s->ptr; *p; p++) {
-    if (*p == ' ' || *p == CTRL_I) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-      Strcat_char(tmp, '\\');
+    if (s == NULL)
+        return s;
+    for (p = s->ptr; *p; p++)
+    {
+        if (*p == ' ' || *p == CTRL_I)
+        {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
+            Strcat_char(tmp, '\\');
+        }
+        if (tmp)
+            Strcat_char(tmp, *p);
     }
     if (tmp)
-      Strcat_char(tmp, *p);
-  }
-  if (tmp)
-    return tmp;
-  return s;
-}
-
-Str unescape_spaces(Str s) {
-  Str tmp = NULL;
-  char *p;
-
-  if (s == NULL)
+        return tmp;
     return s;
-  for (p = s->ptr; *p; p++) {
-    if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp;
-  return s;
 }
 
-static Str doComplete(Str ifn, int *status, int next) {
-  int fl, i;
-  char *fn, *p;
-  DIR *d;
-  Directory *dir;
-  struct stat st;
+Str unescape_spaces(Str s)
+{
+    Str tmp = NULL;
+    char *p;
 
-  if (!cm_next) {
-    NCFileBuf = 0;
-    ifn = Str_conv_to_system(ifn);
-    if (cm_mode & CPL_ON)
-      ifn = unescape_spaces(ifn);
-    CompleteBuf = Strdup(ifn);
-    while (Strlastchar(CompleteBuf) != '/' && CompleteBuf->length > 0)
-      Strshrink(CompleteBuf, 1);
-    CDirBuf = Strdup(CompleteBuf);
-    if (cm_mode & CPL_URL) {
-      if (strncmp(CompleteBuf->ptr, "file://localhost/", 17) == 0)
-        Strdelete(CompleteBuf, 0, 16);
-      else if (strncmp(CompleteBuf->ptr, "file:///", 8) == 0)
-        Strdelete(CompleteBuf, 0, 7);
-      else if (strncmp(CompleteBuf->ptr, "file:/", 6) == 0 &&
-               CompleteBuf->ptr[6] != '/')
-        Strdelete(CompleteBuf, 0, 5);
-      else {
-        CompleteBuf = Strdup(ifn);
-        *status = CPL_FAIL;
-        return Str_conv_to_system(CompleteBuf);
-      }
-    }
-    if (CompleteBuf->length == 0) {
-      Strcat_char(CompleteBuf, '.');
-    }
-    if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1) {
-      Strshrink(CompleteBuf, 1);
-    }
-    if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL) {
-      CompleteBuf = Strdup(ifn);
-      *status = CPL_FAIL;
-      if (cm_mode & CPL_ON)
-        CompleteBuf = escape_spaces(CompleteBuf);
-      return CompleteBuf;
-    }
-    fn = lastFileName(ifn->ptr);
-    fl = strlen(fn);
-    CFileName = Strnew();
-    for (;;) {
-      dir = readdir(d);
-      if (dir == NULL)
-        break;
-      if (fl == 0 && (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")))
-        continue;
-      if (!strncmp(dir->d_name, fn, fl)) { /* match */
-        NCFileBuf++;
-        CFileBuf = New_Reuse(char *, CFileBuf, NCFileBuf);
-        CFileBuf[NCFileBuf - 1] = NewAtom_N(char, strlen(dir->d_name) + 1);
-        strcpy(CFileBuf[NCFileBuf - 1], dir->d_name);
-        if (NCFileBuf == 1) {
-          CFileName = Strnew_charp(dir->d_name);
-        } else {
-          for (i = 0; CFileName->ptr[i] == dir->d_name[i]; i++)
-            ;
-          Strtruncate(CFileName, i);
+    if (s == NULL)
+        return s;
+    for (p = s->ptr; *p; p++)
+    {
+        if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I))
+        {
+            if (tmp == NULL)
+                tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
         }
-      }
+        else
+        {
+            if (tmp)
+                Strcat_char(tmp, *p);
+        }
     }
-    closedir(d);
-    if (NCFileBuf == 0) {
-      CompleteBuf = Strdup(ifn);
-      *status = CPL_FAIL;
-      if (cm_mode & CPL_ON)
+    if (tmp)
+        return tmp;
+    return s;
+}
+
+static Str doComplete(Str ifn, int *status, int next)
+{
+    int fl, i;
+    char *fn, *p;
+    DIR *d;
+    Directory *dir;
+    struct stat st;
+
+    if (!cm_next)
+    {
+        NCFileBuf = 0;
+        ifn = Str_conv_to_system(ifn);
+        if (cm_mode & CPL_ON)
+            ifn = unescape_spaces(ifn);
+        CompleteBuf = Strdup(ifn);
+        while (Strlastchar(CompleteBuf) != '/' && CompleteBuf->length > 0)
+            Strshrink(CompleteBuf, 1);
+        CDirBuf = Strdup(CompleteBuf);
+        if (cm_mode & CPL_URL)
+        {
+            if (strncmp(CompleteBuf->ptr, "file://localhost/", 17) == 0)
+                Strdelete(CompleteBuf, 0, 16);
+            else if (strncmp(CompleteBuf->ptr, "file:///", 8) == 0)
+                Strdelete(CompleteBuf, 0, 7);
+            else if (strncmp(CompleteBuf->ptr, "file:/", 6) == 0 &&
+                     CompleteBuf->ptr[6] != '/')
+                Strdelete(CompleteBuf, 0, 5);
+            else
+            {
+                CompleteBuf = Strdup(ifn);
+                *status = CPL_FAIL;
+                return Str_conv_to_system(CompleteBuf);
+            }
+        }
+        if (CompleteBuf->length == 0)
+        {
+            Strcat_char(CompleteBuf, '.');
+        }
+        if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1)
+        {
+            Strshrink(CompleteBuf, 1);
+        }
+        if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL)
+        {
+            CompleteBuf = Strdup(ifn);
+            *status = CPL_FAIL;
+            if (cm_mode & CPL_ON)
+                CompleteBuf = escape_spaces(CompleteBuf);
+            return CompleteBuf;
+        }
+        fn = lastFileName(ifn->ptr);
+        fl = strlen(fn);
+        CFileName = Strnew();
+        for (;;)
+        {
+            dir = readdir(d);
+            if (dir == NULL)
+                break;
+            if (fl == 0 && (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")))
+                continue;
+            if (!strncmp(dir->d_name, fn, fl))
+            { /* match */
+                NCFileBuf++;
+                CFileBuf = New_Reuse(char *, CFileBuf, NCFileBuf);
+                CFileBuf[NCFileBuf - 1] = NewAtom_N(char, strlen(dir->d_name) + 1);
+                strcpy(CFileBuf[NCFileBuf - 1], dir->d_name);
+                if (NCFileBuf == 1)
+                {
+                    CFileName = Strnew_charp(dir->d_name);
+                }
+                else
+                {
+                    for (i = 0; CFileName->ptr[i] == dir->d_name[i]; i++)
+                        ;
+                    Strtruncate(CFileName, i);
+                }
+            }
+        }
+        closedir(d);
+        if (NCFileBuf == 0)
+        {
+            CompleteBuf = Strdup(ifn);
+            *status = CPL_FAIL;
+            if (cm_mode & CPL_ON)
+                CompleteBuf = escape_spaces(CompleteBuf);
+            return CompleteBuf;
+        }
+        qsort(CFileBuf, NCFileBuf, sizeof(CFileBuf[0]), strCmp);
+        NCFileOffset = 0;
+        if (NCFileBuf >= 2)
+        {
+            cm_next = TRUE;
+            *status = CPL_AMBIG;
+        }
+        else
+        {
+            *status = CPL_OK;
+        }
+    }
+    else
+    {
+        CFileName = Strnew_charp(CFileBuf[NCFileOffset]);
+        NCFileOffset = (NCFileOffset + next + NCFileBuf) % NCFileBuf;
+        *status = CPL_MENU;
+    }
+    CompleteBuf = Strdup(CDirBuf);
+    if (CompleteBuf->length && Strlastchar(CompleteBuf) != '/')
+        Strcat_char(CompleteBuf, '/');
+    Strcat(CompleteBuf, CFileName);
+    if (*status != CPL_AMBIG)
+    {
+        p = CompleteBuf->ptr;
+        if (cm_mode & CPL_URL)
+        {
+            if (strncmp(p, "file://localhost/", 17) == 0)
+                p = &p[16];
+            else if (strncmp(p, "file:///", 8) == 0)
+                p = &p[7];
+            else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
+                p = &p[5];
+        }
+        if (stat(expandPath(p), &st) != -1 && S_ISDIR(st.st_mode))
+            Strcat_char(CompleteBuf, '/');
+    }
+    if (cm_mode & CPL_ON)
         CompleteBuf = escape_spaces(CompleteBuf);
-      return CompleteBuf;
-    }
-    qsort(CFileBuf, NCFileBuf, sizeof(CFileBuf[0]), strCmp);
-    NCFileOffset = 0;
-    if (NCFileBuf >= 2) {
-      cm_next = TRUE;
-      *status = CPL_AMBIG;
-    } else {
-      *status = CPL_OK;
-    }
-  } else {
-    CFileName = Strnew_charp(CFileBuf[NCFileOffset]);
-    NCFileOffset = (NCFileOffset + next + NCFileBuf) % NCFileBuf;
-    *status = CPL_MENU;
-  }
-  CompleteBuf = Strdup(CDirBuf);
-  if (CompleteBuf->length && Strlastchar(CompleteBuf) != '/')
-    Strcat_char(CompleteBuf, '/');
-  Strcat(CompleteBuf, CFileName);
-  if (*status != CPL_AMBIG) {
-    p = CompleteBuf->ptr;
-    if (cm_mode & CPL_URL) {
-      if (strncmp(p, "file://localhost/", 17) == 0)
-        p = &p[16];
-      else if (strncmp(p, "file:///", 8) == 0)
-        p = &p[7];
-      else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
-        p = &p[5];
-    }
-    if (stat(expandPath(p), &st) != -1 && S_ISDIR(st.st_mode))
-      Strcat_char(CompleteBuf, '/');
-  }
-  if (cm_mode & CPL_ON)
-    CompleteBuf = escape_spaces(CompleteBuf);
-  return Str_conv_from_system(CompleteBuf);
+    return Str_conv_from_system(CompleteBuf);
 }
 
-static void _prev(unsigned char) {
-  Hist *hist = CurrentHist;
-  char *p;
+static void _prev(unsigned char)
+{
+    Hist *hist = CurrentHist;
+    char *p;
 
-  if (!use_hist)
-    return;
-  if (strCurrentBuf) {
-    p = prevHist(hist);
-    if (p == NULL)
-      return;
-  } else {
-    p = lastHist(hist);
-    if (p == NULL)
-      return;
-    strCurrentBuf = strBuf;
-  }
-  if (DecodeURL && (cm_mode & CPL_URL))
-    p = url_decode2(p, NULL);
-  strBuf = Strnew_charp(p);
-  CLen = CPos = setStrType(strBuf, strProp);
-  offset = 0;
-}
-
-static void _next(unsigned char) {
-  Hist *hist = CurrentHist;
-  char *p;
-
-  if (!use_hist)
-    return;
-  if (strCurrentBuf == NULL)
-    return;
-  p = nextHist(hist);
-  if (p) {
+    if (!use_hist)
+        return;
+    if (strCurrentBuf)
+    {
+        p = prevHist(hist);
+        if (p == NULL)
+            return;
+    }
+    else
+    {
+        p = lastHist(hist);
+        if (p == NULL)
+            return;
+        strCurrentBuf = strBuf;
+    }
     if (DecodeURL && (cm_mode & CPL_URL))
-      p = url_decode2(p, NULL);
+        p = url_decode2(p, NULL);
     strBuf = Strnew_charp(p);
-  } else {
-    strBuf = strCurrentBuf;
-    strCurrentBuf = NULL;
-  }
-  CLen = CPos = setStrType(strBuf, strProp);
-  offset = 0;
+    CLen = CPos = setStrType(strBuf, strProp);
+    offset = 0;
 }
 
-static int setStrType(Str str, Lineprop *prop) {
-  Lineprop ctype;
-  char *p = str->ptr, *ep = p + str->length;
-  int i, len = 1;
+static void _next(unsigned char)
+{
+    Hist *hist = CurrentHist;
+    char *p;
 
-  for (i = 0; p < ep;) {
-    len = get_mclen(p);
-    if (i + len > STR_LEN)
-      break;
-    ctype = get_mctype(p);
-    if (is_passwd) {
-      if (ctype & PC_CTRL)
-        ctype = PC_ASCII;
-      if (ctype & PC_UNKNOWN)
-        ctype = PC_WCHAR1;
+    if (!use_hist)
+        return;
+    if (strCurrentBuf == NULL)
+        return;
+    p = nextHist(hist);
+    if (p)
+    {
+        if (DecodeURL && (cm_mode & CPL_URL))
+            p = url_decode2(p, NULL);
+        strBuf = Strnew_charp(p);
     }
-    prop[i++] = ctype;
-    p += len;
-    if (--len) {
-      ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
-      while (len--)
+    else
+    {
+        strBuf = strCurrentBuf;
+        strCurrentBuf = NULL;
+    }
+    CLen = CPos = setStrType(strBuf, strProp);
+    offset = 0;
+}
+
+static int setStrType(Str str, Lineprop *prop)
+{
+    Lineprop ctype;
+    char *p = str->ptr, *ep = p + str->length;
+    int i, len = 1;
+
+    for (i = 0; p < ep;)
+    {
+        len = get_mclen(p);
+        if (i + len > STR_LEN)
+            break;
+        ctype = get_mctype(p);
+        if (is_passwd)
+        {
+            if (ctype & PC_CTRL)
+                ctype = PC_ASCII;
+            if (ctype & PC_UNKNOWN)
+                ctype = PC_WCHAR1;
+        }
         prop[i++] = ctype;
+        p += len;
+        if (--len)
+        {
+            ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
+            while (len--)
+                prop[i++] = ctype;
+        }
     }
-  }
-  return i;
+    return i;
 }
 
-static int terminated(unsigned char c) {
-  int termchar[] = {'/', '&', '?', ' ', -1};
-  int *tp;
+static int terminated(unsigned char c)
+{
+    int termchar[] = {'/', '&', '?', ' ', -1};
+    int *tp;
 
-  for (tp = termchar; *tp > 0; tp++) {
-    if (c == *tp) {
-      return 1;
+    for (tp = termchar; *tp > 0; tp++)
+    {
+        if (c == *tp)
+        {
+            return 1;
+        }
     }
-  }
 
-  return 0;
+    return 0;
 }
 
-static void _editor(unsigned char) {
-  FormItemList fi;
-  char *p;
+static void _editor(unsigned char)
+{
+    FormItemList fi;
+    char *p;
 
-  if (is_passwd)
-    return;
+    if (is_passwd)
+        return;
 
-  fi.readonly = FALSE;
-  fi.value = Strdup(strBuf);
-  Strcat_char(fi.value, '\n');
+    fi.readonly = FALSE;
+    fi.value = Strdup(strBuf);
+    Strcat_char(fi.value, '\n');
 
-  input_textarea(&fi);
+    input_textarea(&fi);
 
-  strBuf = Strnew();
-  for (p = fi.value->ptr; *p; p++) {
-    if (*p == '\r' || *p == '\n')
-      continue;
-    Strcat_char(strBuf, *p);
-  }
-  CLen = CPos = setStrType(strBuf, strProp);
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    strBuf = Strnew();
+    for (p = fi.value->ptr; *p; p++)
+    {
+        if (*p == '\r' || *p == '\n')
+            continue;
+        Strcat_char(strBuf, *p);
+    }
+    CLen = CPos = setStrType(strBuf, strProp);
+    if (CurrentTab)
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
