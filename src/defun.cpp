@@ -1,4 +1,5 @@
 #include "tty.h"
+#include "term_screen.h"
 #include "App.h"
 #include "core.h"
 #include "fm.h"

@@ -55,6 +55,7 @@ executable(
         #
         'tty.cpp',
         'termcap_entry.cpp',
+        'term_screen.cpp',
     ],
     install: true,
     cpp_args: [

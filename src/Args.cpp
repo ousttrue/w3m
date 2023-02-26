@@ -1,5 +1,5 @@
 #include "Args.h"
-
+#include "term_screen.h"
 #include "fm.h"
 
 #include <stdio.h>

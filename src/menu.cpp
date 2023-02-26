@@ -2,7 +2,7 @@
 /*
  * w3m menu.c
  */
-
+#include "term_screen.h"
 #include <stdio.h>
 #include "tty.h"
 #include "core.h"

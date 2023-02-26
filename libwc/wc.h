@@ -5,19 +5,20 @@
 #include <Str.h>
 #include "wc_types.h"
 #include "ces.h"
+#include <functional>
 
 #define WC_FALSE 0
 #define WC_TRUE 1
 
-#define WC_OPT_DETECT_OFF	0
-#define WC_OPT_DETECT_ISO_2022	1
-#define WC_OPT_DETECT_ON	2
+#define WC_OPT_DETECT_OFF 0
+#define WC_OPT_DETECT_ISO_2022 1
+#define WC_OPT_DETECT_ON 2
 
-#define WC_LOCALE_JA_JP	1
-#define WC_LOCALE_ZH_CN	2
-#define WC_LOCALE_ZH_TW	3
-#define WC_LOCALE_ZH_HK	4
-#define WC_LOCALE_KO_KR	5
+#define WC_LOCALE_JA_JP 1
+#define WC_LOCALE_ZH_CN 2
+#define WC_LOCALE_ZH_TW 3
+#define WC_LOCALE_ZH_HK 4
+#define WC_LOCALE_KO_KR 5
 
 extern wc_uint8 WC_DETECT_MAP[];
 
@@ -26,21 +27,21 @@ extern wc_option WcOption;
 extern wc_locale WcLocale;
 extern char *WcReplace;
 extern char *WcReplaceW;
-#define WC_REPLACE   WcReplace
+#define WC_REPLACE WcReplace
 #define WC_REPLACE_W WcReplaceW
 
 #define wc_conv(is, f_ces, t_ces) \
-	wc_Str_conv(Strnew_charp((is)), (f_ces), (t_ces))
+    wc_Str_conv(Strnew_charp((is)), (f_ces), (t_ces))
 #define wc_conv_n(is, n, f_ces, t_ces) \
-	wc_Str_conv(Strnew_charp_n((is), (n)), (f_ces), (t_ces))
+    wc_Str_conv(Strnew_charp_n((is), (n)), (f_ces), (t_ces))
 #define wc_conv_strict(is, f_ces, t_ces) \
-	wc_Str_conv_strict(Strnew_charp((is)), (f_ces), (t_ces))
-#define wc_conv_n_strict(is, n, f_ces, t_ces)\
-	wc_Str_conv_strict(Strnew_charp_n((is), (n)), (f_ces), (t_ces))
+    wc_Str_conv_strict(Strnew_charp((is)), (f_ces), (t_ces))
+#define wc_conv_n_strict(is, n, f_ces, t_ces) \
+    wc_Str_conv_strict(Strnew_charp_n((is), (n)), (f_ces), (t_ces))
 #define wc_conv_with_detect(is, f_ces, hint, t_ces) \
-	wc_Str_conv_with_detect(Strnew_charp((is)), (f_ces), (hint), (t_ces))
-#define wc_conv_n_with_detect(is, n, f_ces, hint, t_ces)\
-	wc_Str_conv_with_detect(Strnew_charp_n((is), (n)), (f_ces), (hint), (t_ces))
+    wc_Str_conv_with_detect(Strnew_charp((is)), (f_ces), (hint), (t_ces))
+#define wc_conv_n_with_detect(is, n, f_ces, hint, t_ces) \
+    wc_Str_conv_with_detect(Strnew_charp_n((is), (n)), (f_ces), (hint), (t_ces))
 
 Str wc_Str_conv(Str is, wc_ces f_ces, wc_ces t_ces);
 Str wc_Str_conv_strict(Str is, wc_ces f_ces, wc_ces t_ces);
@@ -50,23 +51,23 @@ void wc_output_init(wc_ces ces, wc_status *st);
 void wc_push_end(Str os, wc_status *st);
 wc_bool wc_ces_has_ccs(wc_ccs ccs, wc_status *st);
 void wc_char_conv_init(wc_ces f_ces, wc_ces t_ces);
-Str  wc_char_conv(char c);
+Str wc_char_conv(char c);
 void wc_putc_init(wc_ces f_ces, wc_ces t_ces);
-void wc_putc(char *c, FILE *f);
-void wc_putc_end(FILE *f);
+void wc_putc(char *c, const std::function<void(const char *, size_t)> &write);
+void wc_putc_end(const std::function<void(const char *, size_t)> &write);
 void wc_putc_clear_status(void);
-void   wc_create_detect_map(wc_ces ces, wc_bool esc);
+void wc_create_detect_map(wc_ces ces, wc_bool esc);
 wc_ces wc_auto_detect(char *is, size_t len, wc_ces hint);
-wc_ces       wc_guess_charset(char *charset, wc_ces orig);
-wc_ces       wc_guess_charset_short(char *charset, wc_ces orig);
-wc_ces       wc_guess_locale_charset(char *locale, wc_ces orig);
-wc_ces       wc_charset_to_ces(char *charset);
-wc_ces       wc_charset_short_to_ces(char *charset);
-wc_ces       wc_locale_to_ces(char *locale);
-wc_ces       wc_guess_8bit_charset(wc_ces orig);
-char        *wc_ces_to_charset(wc_ces ces);
-char        *wc_ces_to_charset_desc(wc_ces ces);
-wc_bool      wc_check_ces(wc_ces ces);
+wc_ces wc_guess_charset(char *charset, wc_ces orig);
+wc_ces wc_guess_charset_short(char *charset, wc_ces orig);
+wc_ces wc_guess_locale_charset(char *locale, wc_ces orig);
+wc_ces wc_charset_to_ces(char *charset);
+wc_ces wc_charset_short_to_ces(char *charset);
+wc_ces wc_locale_to_ces(char *locale);
+wc_ces wc_guess_8bit_charset(wc_ces orig);
+char *wc_ces_to_charset(wc_ces ces);
+char *wc_ces_to_charset_desc(wc_ces ces);
+wc_bool wc_check_ces(wc_ces ces);
 wc_ces_list *wc_get_ces_list(void);
 
 #endif

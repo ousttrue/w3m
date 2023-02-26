@@ -1,3 +1,4 @@
+#include "term_screen.h"
 #include "tty.h"
 #include "App.h"
 #include "core.h"

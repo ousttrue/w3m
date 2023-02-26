@@ -117,7 +117,7 @@ void TermcapEntry::setgraphchar(void)
     }
 }
 
-const char *TermcapEntry::move(int line, int column)
+const char *TermcapEntry::move(int line, int column) const
 {
     return tgoto(T_cm, column, line);
 }

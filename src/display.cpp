@@ -1,5 +1,5 @@
 /* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
-
+#include "term_screen.h"
 #include "tty.h"
 #include "fm.h"
 #include <signal.h>

@@ -2,7 +2,7 @@
 /*
  * Initialization file etc.
  */
-
+#include "term_screen.h"
 #include "rc.h"
 #include "fm.h"
 #include "func.h"

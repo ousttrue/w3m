@@ -75,10 +75,10 @@ public:
     char gcmap[96];
     void setgraphchar(void);
 
-    char graphchar(char c)
+    char graphchar(char c) const
     {
         return (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c));
     }
 
-    const char *move(int line, int column);
+    const char *move(int line, int column) const;
 };

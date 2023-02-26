@@ -3,6 +3,7 @@
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
+#include "term_screen.h"
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
