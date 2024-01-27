@@ -10,10 +10,8 @@ const config: Config = {
   tagline: "w3m custom",
   favicon: "img/favicon.ico",
 
-  // Set the production url of your site here
+  // gh-pages
   url: "https://ousttrue.github.io",
-  // Set the /<baseUrl>/ pathname under which your site is served
-  // For GitHub pages deployment, it is often '/<projectName>/'
   baseUrl: "/w3m/",
 
   // GitHub pages deployment config.
@@ -65,7 +63,7 @@ const config: Config = {
         },
         { to: "/blog", label: "note", position: "left" },
         {
-          href: "https://github.com/facebook/docusaurus",
+          href: "https://github.com/ousttrue/w3m",
           label: "GitHub",
           position: "right",
         },
@@ -73,8 +71,9 @@ const config: Config = {
     },
     footer: {
       style: "dark",
-      copyright: `Copyright © ${new Date().getFullYear()
-        } ${title}, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${
+        new Date().getFullYear()
+      } ${title}, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,
