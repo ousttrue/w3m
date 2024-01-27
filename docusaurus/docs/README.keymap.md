@@ -1,25 +1,34 @@
+# w3m のキーバインドについて
 
-w3m のキーバインドについて
+```
                                                    (1999/06/30)  坂本 浩則
                                                    hsaka@mth.biglobe.ne.jp
+```
 
   ~/.w3m/keymap にキーバインドを定義できます。
   指定方法は、
 
+```
     keymap  キー  コマンド  [引数]
+```
 
   です。
   例は keymap.default や keymap.lynx を見てください。
   設定できるコマンドは README.func を見てください。
 
   複数文字からなるエスケープシーケンスは、
+
+```
     Escape 文字
     Escape [ 文字, Escape O 文字
     Escape [ 数字 ~, EScape [ 数字 数字 ~
+```
+
   のみ設定可能です。
 
   特殊文字は、
 
+```
     Ctrl     : C-, ^
     Escape   : ESC-, M-, \e, ^[
     Space    : SPC, ' '
@@ -34,10 +43,12 @@ w3m のキーバインドについて
     Right    : RIGHT, ^[[C
     Left     : LEFT, ^[[D
     ^        : \^
+```
 
   として表すことができます。
   また、端末によっては、
  
+```
     Insert  : ^[[2~
     PageUp  : ^[[5~
     PageDown: ^[[6~
@@ -52,6 +63,7 @@ w3m のキーバインドについて
     F9      : ^[[20~
     F10     : ^[[21~
     Help    : ^[[28~
+```
 
   なども使用可能かもしれません。
   (各キーのコードは Ctrl-V + キー で確認できます。)

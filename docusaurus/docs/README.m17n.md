@@ -1,183 +1,233 @@
+# 国際化/マルチリンガル化 w3m 
 
-国際化/マルチリンガル化 w3m 
+```
                                                               2003/03/08
                                                               坂本 浩則
+```
 
-はじめに
+## はじめに
 
-  w3m を国際化/マルチリンガル化しました。w3m-0.4.1 に対する拡張版を
-  以下に置いてあります。
+w3m を国際化/マルチリンガル化しました。w3m-0.4.1 に対する拡張版を
+以下に置いてあります。
 
+```
     http://www2u.biglobe.ne.jp/~hsaka/w3m/index-ja.html#m17n
                                           patch/w3m-0.4.1-m17n-20030308.tar.gz
                                           patch/README.m17n-ja
+```
 
-  まだ開発版であり、(私が日本語しか解さないため)十分なテストはできて
-  いませんが興味ある方はお試しください。
+まだ開発版であり、(私が日本語しか解さないため)十分なテストはできて
+いませんが興味ある方はお試しください。
 
-  現在のところ以下の機能があります。
+現在のところ以下の機能があります。
 
-扱える文字コード
+## 扱える文字コード
 
-  ・日本語
-      EUC-JP           - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0212
-      (EUC-JISX0213)     (JIS X 0213)
-      ISO-2022-JP      - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0212, etc.
-      ISO-2022-JP-2    - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0212,
-                         GB 2312, KS X 1001, ISO 8859-1, ISO 8859-7, etc.
-      ISO-2022-JP-3    - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0213, etc
-      Shift_JIS(CP932) - US_ASCII, JIS X 0208, JIS X 0201, CP932 の拡張文字
-      Shift_JISX0213   - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0213
-  ・中国語(簡体字)
-      EUC-CN(GB2312) - US_ASCII, GB 2312
-      ISO-2022-CN    - US_ASCII, GB 2312, CNS-11643-1,..7, etc.
-      GBK(CP936)     - US_ASCII, GB 2312, GBK
-      GB18030        - US_ASCII, GB 2312, GBK, GB18030, Unicode
-      HZ-GB-2312     - US_ASCII, GB 2312
-  ・中国語(台湾、繁体字)
-      EUC-TW        - US_ASCII, CNS 11643-1,..16
-      ISO-2022-CN   - US_ASCII, CNS-11643-1,..7, GB 2312, etc.
-      Big5(CP950)   - Big5
-      HKSCS         - Big5, HKSCS
-  ・韓国語
-      EUC-KR        - US_ASCII, KS X 1001 Wansung
-      ISO-2022-KR   - US_ASCII, KS X 1001 Wansung, etc.
-      Johab         - US_ASCII, KS X 1001 Johab
-      UHC(CP949)    - US_ASCII, KS X 1001 Wansung, UHC
-  ・ベトナム語
-      TCVN-5712 VN-1, VISCII 1.1, VPS, CP1258
-  ・タイ語
-      TIS-620 (ISO-8859-11), CP874
-  ・その他
-      US_ASCII, ISO-8859-1 〜 10, 13 〜 15,
-      KOI8-R, KOI8-U, NeXT, CP437, CP737, CP775, CP850, CP852, CP855, CP856,
-      CP857, CP860, CP861, CP862, CP863, CP864, CP865, CP866, CP869, CP1006,
-      CP1250, CP1251, CP1252, CP1253, CP1254, CP1255, CP1256, CP1257
-  ・Unicode (UCS-4)
-      UTF-8, UTF-7
+### 日本語
 
-  注意)
-    * JIS X 0201 のローマ字部分と GB 1988(中国語ASCII) は US_ASCII として
-      扱います。これは、ISO-2022(7bit) で表されていると HTML のタグ部分が
-      扱えなくなるからです。その他の US_ASCII の variant はそのままです。
-    * JIS C 6226(旧JIS) は JIS X 0208 として扱います。
-    * HZ-GB-2312 の '~\n' は対応していません。
+```
+EUC-JP           - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0212
+(EUC-JISX0213)     (JIS X 0213)
+ISO-2022-JP      - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0212, etc.
+ISO-2022-JP-2    - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0212,
+                   GB 2312, KS X 1001, ISO 8859-1, ISO 8859-7, etc.
+ISO-2022-JP-3    - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0213, etc
+Shift_JIS(CP932) - US_ASCII, JIS X 0208, JIS X 0201, CP932 の拡張文字
+Shift_JISX0213   - US_ASCII, JIS X 0208, JIS X 0201, JIS X 0213
+```
 
-表示
+### 中国語(簡体字)
 
-  多言語表示させるためには現在のところ以下の方法があります。
+```
+EUC-CN(GB2312) - US_ASCII, GB 2312
+ISO-2022-CN    - US_ASCII, GB 2312, CNS-11643-1,..7, etc.
+GBK(CP936)     - US_ASCII, GB 2312, GBK
+GB18030        - US_ASCII, GB 2312, GBK, GB18030, Unicode
+HZ-GB-2312     - US_ASCII, GB 2312
+```
 
-  (1) kterm + ISO-2022-JP/CN/KR
+### 中国語(台湾、繁体字)
 
-    * kterm は kterm-6.2.0 に対して、
-        http://www.st.rim.or.jp/~hanataka/kterm-6.2.0.ext02.patch.gz
-      の patch をあてると、JIS X 0213, CNS 11643 等が使用可能になります。
+```
+EUC-TW        - US_ASCII, CNS 11643-1,..16
+ISO-2022-CN   - US_ASCII, CNS-11643-1,..7, GB 2312, etc.
+Big5(CP950)   - Big5
+HKSCS         - Big5, HKSCS
+```
 
-    * kterm に対して -fl オプションまたは ~/.Xdefaults 等で fontList を
-      設定します
-    
-        -fl "*--16-*-jisx0213.2000-*,\
-             *--16-*-jisx0212.1990-0,\
-             *--16-*-ksc5601.1987-0,\
-             *--16-*-gb2312.1980-0,\
-             *--16-*-cns11643.1992-*,\
-             *--16-*-iso8859-*"
+### 韓国語
 
-      JIS 以外のフォントは X11 (XFree86) や Mule の配布物に幾つかありますし、
-      Linux や FreeBSD の package からも使えます。
-      JIS X 0213 のフォントは、
-        http://www.mars.sphere.ne.jp/imamura/jisx0213.html
-      にあるものが使えます。
+```
+EUC-KR        - US_ASCII, KS X 1001 Wansung
+ISO-2022-KR   - US_ASCII, KS X 1001 Wansung, etc.
+Johab         - US_ASCII, KS X 1001 Johab
+UHC(CP949)    - US_ASCII, KS X 1001 Wansung, UHC
+```
 
-    * w3m-m17n のオプション設定で表示コードを ISO-2022-JP (もしくは
-      ISO-2022-JP-2, KR, CN) にし、後述の strict_iso2022
-      (厳密な ISO-2022-JP/KR/CN を使う) を OFF にします。
+### ベトナム語
 
-  (2) xterm + UTF-8
+```
+TCVN-5712 VN-1, VISCII 1.1, VPS, CP1258
+```
 
-    * xterm は XFree86 の最新版を使います。xterm-140 以降を推奨します。
-        http://www.clark.net/pub/dickey/xterm/xterm.html
+### タイ語
 
-    * Unicode のフォントは
-        http://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html
-        http://openlab.ring.gr.jp/efont/
-      などにあります。
+```
+TIS-620 (ISO-8859-11), CP874
+```
 
-    * xterm を -u8 -wc オプション付きで使用します。
-      フォントは、
-        -fn "*-medium-*--13-*-iso10646-1" \
-        -fb "*-bold-*--13-*-iso10646-1" \
-        -fw "*-medium-*-ja-13-*-iso10646-1"
-      の様に指定します。
+### その他
 
-    * w3m-m17n のオプション設定で表示コードを UTF-8 にします。
-      後述の pre_conv (文書の読み込み時に文字コードを変換する) を
-      ON にしておく方が良いです。そうしておかない場合、
-      ISO 2022 系の多バイト文字集合(JIS)の一部を表示する場合、
-      レンダリングが崩れる可能性があります。
-  
-  (3) mlterm + ISO-2022-JP/KR/CN or UTF-8
+```
+US_ASCII, ISO-8859-1 〜 10, 13 〜 15,
+KOI8-R, KOI8-U, NeXT, CP437, CP737, CP775, CP850, CP852, CP855, CP856,
+CP857, CP860, CP861, CP862, CP863, CP864, CP865, CP866, CP869, CP1006,
+CP1250, CP1251, CP1252, CP1253, CP1254, CP1255, CP1256, CP1257
+```
 
-    * Homepage
-        http://mlterm.sourceforge.net/
+### Unicode (UCS-4)
 
-    * エンコーディングを ISO-2022-JP/KR/CN または UTF-8 にします。
+```
+UTF-8, UTF-7
+```
 
-  本当の多言語表示をさせるのは以上の方法だけですが、
-  EUC-JP の場合、中国語や ISO-8859-* を疑似的に表示させることもできます。
+### 注意
 
-    * kterm や日本語対応端末のフォントを JIS X 0213 にします。
-      # しなくてもいいのですが、かなり表現能力が落ちます。
+* JIS X 0201 のローマ字部分と GB 1988(中国語ASCII) は US_ASCII として
+  扱います。これは、ISO-2022(7bit) で表されていると HTML のタグ部分が
+  扱えなくなるからです。その他の US_ASCII の variant はそのままです。
+* JIS C 6226(旧JIS) は JIS X 0208 として扱います。
+* HZ-GB-2312 の '~\n' は対応していません。
 
-    * w3m-m17n のオプション設定で表示コードを EUC-JP にします。
-      後述の pre_conv, use_gb12345_map, use_jisx0213 を ON にします。
-      EUC-JP の SS3 (JIS X 0212) を解する端末の場合は、
-      use_jisx0212 も ON にします。
+## 表示
 
-  また、w3m-m17n は表示コードを切替えることも可能です。
-  端末がフォントを切替えられるならば文書の言語に従って表示コードと
-  フォントを切替えて使用することも可能です。
+多言語表示させるためには現在のところ以下の方法があります。
 
-コマンドラインオプション
+### (1) kterm + ISO-2022-JP/CN/KR
 
-   -I <優先文書コード>
-   -O <表示/出力コード>
+* kterm は kterm-6.2.0 に対して、
+    http://www.st.rim.or.jp/~hanataka/kterm-6.2.0.ext02.patch.gz
+  の patch をあてると、JIS X 0213, CNS 11643 等が使用可能になります。
 
-      基本的に MIME での charset としますが、以下の略号も受け付けます。
+* kterm に対して -fl オプションまたは ~/.Xdefaults 等で fontList を
+  設定します
 
-        j(p):      ISO-2022-JP
-        j(p)2:     ISO-2022-JP-2
-        j(p)3:     ISO-2022-JP-3
-        cn:        ISO-2022-CN
-        kr:        ISO-2022-KR
-        e(j):      EUC-JP
-        ec,g(b):   EUC-CN(GB2312)
-        et:        EUC-TW
-        ek:        EUC-KR
-        s(jis):    Shift-JIS
-        sjisx0213: Shift-JISX0213
-        gbk:       GBK
-        gb18030:   GB18030
-        h(z):      HZ-GB-2312
-        b(ig5):    Big5
-        hk(scs):   HKSCS
-        jo(hab):   Johab
-        uhc:       UHC
-        l?:        ISO-8859-?
-        t(is):     TIS-620(ISO-8859-11)
-        tc(vn):    TCVN-5712 VN-1
-        v(iscii):  VISCII 1.1
-        vp(s):     VPS
-        ko(i8r):   KOI8-R
-        koi8u:     KOI8-U
-        n(ext):    NeXT
-        cp???:     CP???
-        w12??:     CP12??
-        u(tf8):    UTF-8
-        u(tf)7:    UTF-7
+```
+-fl "*--16-*-jisx0213.2000-*,\
+     *--16-*-jisx0212.1990-0,\
+     *--16-*-ksc5601.1987-0,\
+     *--16-*-gb2312.1980-0,\
+     *--16-*-cns11643.1992-*,\
+     *--16-*-iso8859-*"
+```
 
-オプションパネル
+JIS 以外のフォントは X11 (XFree86) や Mule の配布物に幾つかありますし、
+Linux や FreeBSD の package からも使えます。
+JIS X 0213 のフォントは、
+  http://www.mars.sphere.ne.jp/imamura/jisx0213.html
+にあるものが使えます。
 
+* w3m-m17n のオプション設定で表示コードを ISO-2022-JP (もしくは
+  ISO-2022-JP-2, KR, CN) にし、後述の strict_iso2022
+  (厳密な ISO-2022-JP/KR/CN を使う) を OFF にします。
+
+### (2) xterm + UTF-8
+
+* xterm は XFree86 の最新版を使います。xterm-140 以降を推奨します。
+    http://www.clark.net/pub/dickey/xterm/xterm.html
+
+* Unicode のフォントは
+    http://www.cl.cam.ac.uk/~mgk25/ucs-fonts.html
+    http://openlab.ring.gr.jp/efont/
+  などにあります。
+
+* xterm を -u8 -wc オプション付きで使用します。
+  フォントは、
+
+```
+-fn "*-medium-*--13-*-iso10646-1" \
+-fb "*-bold-*--13-*-iso10646-1" \
+-fw "*-medium-*-ja-13-*-iso10646-1"
+```
+
+  の様に指定します。
+
+* w3m-m17n のオプション設定で表示コードを UTF-8 にします。
+  後述の pre_conv (文書の読み込み時に文字コードを変換する) を
+  ON にしておく方が良いです。そうしておかない場合、
+  ISO 2022 系の多バイト文字集合(JIS)の一部を表示する場合、
+  レンダリングが崩れる可能性があります。
+
+### (3) mlterm + ISO-2022-JP/KR/CN or UTF-8
+
+* Homepage
+    http://mlterm.sourceforge.net/
+
+* エンコーディングを ISO-2022-JP/KR/CN または UTF-8 にします。
+
+本当の多言語表示をさせるのは以上の方法だけですが、
+EUC-JP の場合、中国語や ISO-8859-* を疑似的に表示させることもできます。
+
+* kterm や日本語対応端末のフォントを JIS X 0213 にします。
+
+:::info
+しなくてもいいのですが、かなり表現能力が落ちます。
+:::
+
+* w3m-m17n のオプション設定で表示コードを EUC-JP にします。
+  後述の pre_conv, use_gb12345_map, use_jisx0213 を ON にします。
+  EUC-JP の SS3 (JIS X 0212) を解する端末の場合は、
+  use_jisx0212 も ON にします。
+
+また、w3m-m17n は表示コードを切替えることも可能です。
+端末がフォントを切替えられるならば文書の言語に従って表示コードと
+フォントを切替えて使用することも可能です。
+
+## コマンドラインオプション
+
+```
+-I <優先文書コード>
+-O <表示/出力コード>
+```
+
+基本的に MIME での charset としますが、以下の略号も受け付けます。
+
+```
+j(p):      ISO-2022-JP
+j(p)2:     ISO-2022-JP-2
+j(p)3:     ISO-2022-JP-3
+cn:        ISO-2022-CN
+kr:        ISO-2022-KR
+e(j):      EUC-JP
+ec,g(b):   EUC-CN(GB2312)
+et:        EUC-TW
+ek:        EUC-KR
+s(jis):    Shift-JIS
+sjisx0213: Shift-JISX0213
+gbk:       GBK
+gb18030:   GB18030
+h(z):      HZ-GB-2312
+b(ig5):    Big5
+hk(scs):   HKSCS
+jo(hab):   Johab
+uhc:       UHC
+l?:        ISO-8859-?
+t(is):     TIS-620(ISO-8859-11)
+tc(vn):    TCVN-5712 VN-1
+v(iscii):  VISCII 1.1
+vp(s):     VPS
+ko(i8r):   KOI8-R
+koi8u:     KOI8-U
+n(ext):    NeXT
+cp???:     CP???
+w12??:     CP12??
+u(tf8):    UTF-8
+u(tf)7:    UTF-7
+```
+
+## オプションパネル
+
+```
    display_charset
        表示用文字コード
    document_charset
@@ -240,79 +290,82 @@
    graphic_char
        テーブルやメニューの枠に DEC 特殊文字文字を使う(デフォルト OFF)
        OFF の場合 CJK の文字コード、UTF-8 では罫線を使う。
+```
 
-コード変換
+## コード変換
 
-  ・各コード間で特別の変換を用意しているものは、
+- 各コード間で特別の変換を用意しているものは、
+
+```
     * EUC-JP <-> ISO-2022-JP <-> Shift-JIS
     * EUC-CN <-> ISO-2022-CN <-> HZ-GB-2312
     * EUC-TW <-> ISO-2022-CN
     * EUC-KR <-> ISO-2022-KR <-> Johab (記号、Hanja のみ)
-    のみです。それ以外は Unicode を介した変換となります。
+```
 
-文書のコードの切替え
+  のみです。それ以外は Unicode を介した変換となります。
 
-   '=' で文書の情報を表示させると文書のコードを選択できる様になっています。
+## 文書のコードの切替え
 
-   また、keymap として
-     keymap C CHARSET
-     keymap M-c DEFAULT_CHARSET
-   の様に設定しておくと、C で現在の文書のコードを、M-c で標準の文書の
-   コードを変更できます。
+'=' で文書の情報を表示させると文書のコードを選択できる様になっています。
 
-一行エディタ
+また、keymap として
+  keymap C CHARSET
+  keymap M-c DEFAULT_CHARSET
+の様に設定しておくと、C で現在の文書のコードを、M-c で標準の文書の
+コードを変更できます。
 
-   8bit 文字の場合は、表示コードが 8bit コードの場合はそのコードで、
-   表示コードが 7bit コード(ISO-2022) の場合は、対応する EUC で
-   扱います。HZ での入力は対応していません。
+## 一行エディタ
 
-   ISO-2022(7bit) で入力する場合は、ISO-2022-JP 型 (G0 のみ使う)
-   しか使えません。
-   理由は、G1 〜 G3 を使うために必要な SI(\017, ^O), SO(\016, ^N)
-   SS3(ESC O, ^[O) が他に割り当てられているためです。
+8bit 文字の場合は、表示コードが 8bit コードの場合はそのコードで、
+表示コードが 7bit コード(ISO-2022) の場合は、対応する EUC で
+扱います。HZ での入力は対応していません。
 
-正規表現
+ISO-2022(7bit) で入力する場合は、ISO-2022-JP 型 (G0 のみ使う)
+しか使えません。
+理由は、G1 〜 G3 を使うために必要な SI(\017, ^O), SO(\016, ^N)
+SS3(ESC O, ^[O) が他に割り当てられているためです。
 
-   対応しています。[あ-ん] なども使用可能です。
+## 正規表現
 
-URL やファイルの文字コード
+対応しています。[あ-ん] なども使用可能です。
 
-   文書内の URL は文書の文字コード、local ファイルの文字コードは SystemCharset
-   であつかわれます。ただし、通常 % でエンコードして扱われます。
-   アクセス時は HTTP, GOPHER の場合はエンコードしたまま、その他の場合は、
-   自力で %?? をデコードして(SystemCharset に戻してから)アクセスします。
+## URL やファイルの文字コード
 
-   * コマンドライン引数では、デフォルトでは
-     scheme: がある場合ば URL (#label や ?query, % でのクォートを解釈) 
-     scheme: がない場合は全てファイル名 (#label も解釈しない)
-     としています。
-     オプション argv_is_url=1 で全て URL 扱いにすることもできます。
-   * LOAD('V') では全てファイル名として解釈します。
-   * GOTO('U') はコマンドラインと全く同じ扱いにしています。
-     current の URL も NULL にしています。
+文書内の URL は文書の文字コード、local ファイルの文字コードは SystemCharset
+であつかわれます。ただし、通常 % でエンコードして扱われます。
+アクセス時は HTTP, GOPHER の場合はエンコードしたまま、その他の場合は、
+自力で %?? をデコードして(SystemCharset に戻してから)アクセスします。
 
-既知のバグ(というか問題のある仕様)
+* コマンドライン引数では、デフォルトでは
+  scheme: がある場合ば URL (#label や ?query, % でのクォートを解釈) 
+  scheme: がない場合は全てファイル名 (#label も解釈しない)
+  としています。
+  オプション argv_is_url=1 で全て URL 扱いにすることもできます。
+* LOAD('V') では全てファイル名として解釈します。
+* GOTO('U') はコマンドラインと全く同じ扱いにしています。
+  current の URL も NULL にしています。
 
- * 日本語 L10N はしてますが、I18N(NLS) 関連は未対応です。
- * 結合文字が文字列の先頭にきた場合、レンダリングが崩れる(かもしれない)。
- * JIS X 0213 は、まだ使用例が少ないため入力時に関しては、JIS X 0208 や
-   JIS X 0212 のエスケープシーケンスが使われていても読み込む様にしている。
-   また、JIS X 0213 で包摂基準の変わった文字でも JIS X 0208 とみなす。
- * ISO 2022 での C0, C1 集合への指示は無視されます。
-   C0 は常に ACSII のコントロール文字、C1 は未定義文字となります。
- * JIS X 0208:1990 の ESC & @ は無視されます。
+## 既知のバグ(というか問題のある仕様)
 
------------------------------------
-TODO
+* 日本語 L10N はしてますが、I18N(NLS) 関連は未対応です。
+* 結合文字が文字列の先頭にきた場合、レンダリングが崩れる(かもしれない)。
+* JIS X 0213 は、まだ使用例が少ないため入力時に関しては、JIS X 0208 や
+  JIS X 0212 のエスケープシーケンスが使われていても読み込む様にしている。
+  また、JIS X 0213 で包摂基準の変わった文字でも JIS X 0208 とみなす。
+* ISO 2022 での C0, C1 集合への指示は無視されます。
+  C0 は常に ACSII のコントロール文字、C1 は未定義文字となります。
+* JIS X 0208:1990 の ESC & @ は無視されます。
 
- * NLS 対応
-   # NLS ライブラリ(gettext, catgets) を使うか、自前で処理するか？
-   # 落ち着いてからでも良いと思う。
- * #undef USE_M17N, #define LANG EN, #undef USE_UNICODE のチェック
-   # 時々やらないとまずいかな。やっぱり。
+## TODO
 
------------------------------------
-更新記録
+* NLS 対応
+  * NLS ライブラリ(gettext, catgets) を使うか、自前で処理するか？
+  * 落ち着いてからでも良いと思う。
+* #undef USE_M17N, #define LANG EN, #undef USE_UNICODE のチェック
+  * 時々やらないとまずいかな。やっぱり。
+
+## 更新記録
 
 2003/03/08	w3m-0.4.1-m17n-20030308
  * w3m-0.4.1 ベース
@@ -467,7 +520,7 @@ TODO
    に対応。
 
 2001/03/31
- * <_SYMBOL> の実装の修正。
+ * `<_SYMBOL>` の実装の修正。
  * -dump の時でも pre_conv のデフォルトは OFF。
 
 2001/03/29
@@ -480,7 +533,7 @@ TODO
    できないバグの修正。(thanks to naddy!)
  * [w3m-dev 01859] に対応。
  * Shift-JIS で 0xA0 がエラーとならないバグ修正。
- * <_SYMBOL> の実装の変更。[w3m-dev 01852] に対応。
+ * `<_SYMBOL>` の実装の変更。[w3m-dev 01852] に対応。
 
 2001/03/24	w3m-(0.2.1)-m17n-0.18
  * w3m-0.2.1 ベース
@@ -620,7 +673,7 @@ TODO
  * form 中での PC_CTRL の幅が 2 になっていたものを修正。
  * form 中での結合文字(width=0)に対処。
  * DEL の wtf_width_map が 2 になっていたバグの修正。
- * table 中に <hr> があるとレンダリングが崩れるバグの修正。(やまてさん thanks!)
+ * table 中に `<hr>` があるとレンダリングが崩れるバグの修正。(やまてさん thanks!)
  * pager モードから HTML view する場合は buf->document_charset で
    saveBuffer する様にした。
  * entity の扱いの整理。
@@ -635,7 +688,7 @@ TODO
 
 2000/12/19
  * ページャモードで \b の解析時のバグ修正。(坂根さん thanks!)
- * <ol><li> の後の空白文字が削除されないバグ修正。
+ * `<ol><li>` の後の空白文字が削除されないバグ修正。
  * Str.c 内の strncpy を bcopy へ。
  * 型のチェック(特に unsigned char と char)。(坂根さん thanks!)
  * マクロの引数を () で囲んでいなかったものの修正。
@@ -643,9 +696,9 @@ TODO
 
 2000/12/18
  * -I オプションが指定されている場合、コマンドラインのファイルまたは
-   URL の読み込みに関してはヘッダや <META> の Content-Type での
+   URL の読み込みに関してはヘッダや `<META>` の Content-Type での
    charset の指定を適用しない様に変更。
- * <META> での charset の指定がクリアされていないバグの修正。
+ * `<META>` での charset の指定がクリアされていないバグの修正。
 
 2000/12/17	w3m-(0.1.11-pre-kokb23)-m17n-0.4
  * [w3m-dev 01515], [w3m-dev 01516] に対応。
@@ -658,7 +711,7 @@ TODO
 
 2000/12/16	w3m-(0.1.11-pre-kokb22)-m17n-0.2
  * テーブルの枠が検索でおかしなマッチをする問題を修正。
-   合わせて <UL> の記号等も同じ処理に改良。
+   合わせて `<UL>` の記号等も同じ処理に改良。
  * #ifdef __EMX__ の場合に CodePage から DisplayCharset 等を設定する様
    にしてみた。(動作は未確認)
 
@@ -671,7 +724,8 @@ TODO
  * 最初の alpha リリース
  * configure に対応。
 
------------------------------------
+```
 坂本 浩則 <hsaka@mth.biglobe.ne.jp>
  http://www2u.biglobe.ne.jp/~hsaka/
+```
 

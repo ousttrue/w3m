@@ -1,13 +1,16 @@
-cygwin で w3m を使う
+# cygwin で w3m を使う
+
+```
                                                      (2003/02/17) 渡邉勝之
 						        knabe@sannet.ne.jp
+```
 
 Windows で w3m を動かすためには，Windows 上の UNIX互換環境である Cygwin が
 必要です．
 Cygwin に関する情報は http://cygwin.com/ を参照してください．
 
 
-* ビルド
+## ビルド
 
 w3m-0.2 以降から cygwin 向けの修正パッチが取り込まれたため，cygwin-1.1.4
 以降の環境であれば特に問題なくビルドできます．Net Release 前の B18, B19, 
@@ -25,8 +28,8 @@ B20あたりでもビルドできるはずですが，確認はされていま�
 にビルドできない，正常に動作しない場合には，バグ報告をする前に以下の点を
 チェックしてください．
 
-  o make veryclean してから再度 ./configure && make してみる．
-  o gcc, binutils が正常にインストールされているかを確認する．
+  - make veryclean してから再度 ./configure && make してみる．
+  - gcc, binutils が正常にインストールされているかを確認する．
       cygwin の setup.exe に問題があり，パッケージファイルのダウンロード
       に失敗しても，エラーの報告をしないで正常終了してしまうことがあるよ
       うです．その場合には再度 setup をやりなおしてください．
@@ -38,28 +41,28 @@ Win95/98/ME で Cygwin を使用する場合には，最初に cygwin1.dll を�
 る際の環境変数 CYGWIN から ntsec, ntea の記述を取り除いてください．
 
 
-* マクロ
+## マクロ
 
 config.h には，Cygwin 環境向けに以下のマクロを定義してあります．
 
-o USE_BINMODE_STREAM
-  -dump, -dump_{head,source,both,extra} 時の stdout への出力をバイナリ
+- USE_BINMODE_STREAM
+  -dump, `-dump_{head,source,both,extra}` 時の stdout への出力をバイナリ
   モードで行います．cygwin-1.3.11 以降では不要になっているはずですが，
   安全側に振っておくために残しています．
   Cygwin, EMX 環境で共通です．
 
-o SUPPORT_DOS_DRIVE_PREFIX
+- SUPPORT_DOS_DRIVE_PREFIX
   'C:', 'C:/', 'file://C:/', 'file://C|/' などのドライブレターを含むパ
   スを認識し，ファイル名として扱う機能を有効にします．
   Cygwin, EMX 環境で共通です．
 
-o SUPPORT_NETBIOS_SHARE
+- SUPPORT_NETBIOS_SHARE
   '//NETBIOSHOST/SHARE/PATH', 'file://NETBIOSHOST/SHARE/PATH' 形式の
   NETBIOS 共有資源へのアクセスを ftp: スキーマではなく file: スキーマ
   として扱う機能を有効にします．
   Cygwin 環境に特有です．
 
-o SUPPORT_WIN9X_CONSOLE_MBCS
+- SUPPORT_WIN9X_CONSOLE_MBCS
   Win9X 系の DOS プロンプトで，検索およびフォームへの一行エディタ入力
   時に日本語 IME 経由の入力をサポートします．
   ただし，Win9X 系の DOS プロンプトの実装および Cygwin の tty レイヤー
@@ -70,13 +73,13 @@ o SUPPORT_WIN9X_CONSOLE_MBCS
   LANG=JA 指定時の Cygwin 環境に特有です．
 
 
-* Native Application との連携
+## Native Application との連携
 
 Cygwin 環境でビルドした w3m から Win32 Native アプリケーションを起動する
 場合，パスの記述形式の違いによって，ファイルが見つからないなどのエラーが
 発生します．
 
-o ローカルCGI
+- ローカルCGI
 
 Cygwin 環境でビルドすると，$LIB (通常は /usr/local/lib/w3m/cgi-bin) 以下
 にインストールされるローカル CGI は cygwin の /usr/bin/perl を使うように
@@ -84,7 +87,7 @@ Cygwin 環境でビルドすると，$LIB (通常は /usr/local/lib/w3m/cgi-bin)
 用する場合，以下のようなラッパースクリプトを用意し，$LIB 以下の各スクリ
 プトを修正してください．
 
------- /usr/local/bin/winperl ------
+```sh title="/usr/local/bin/winperl"
 #!/bin/sh
 # wrapper script for Win32 Native Perl
 PERL=/cygdrive/c/Perl/bin/perl.exe
@@ -97,7 +100,8 @@ case $1 in
     ;;
 esac
 exec "$PERL" "$SCRIPT" $@
-------------------------------------
+```
+
 ※PERL= には Cygwin 環境の内部から見た Native Perl のパスを記述してくだ
   さい．cygpath ユーティリティは cygwin パッケージに入っています．
 
@@ -105,18 +109,19 @@ exec "$PERL" "$SCRIPT" $@
 トに外部コマンドを使う」を NO にすれば，ローカル CGI を使わずにディレク
 トリのブラウズを行います．
 
-o エディタ
+- エディタ
 
 w3m はテキストエリアの内容編集などに外部エディタを使用しますが，外部エデ
 ィタに Win32 Native アプリケーションを使う場合，以下のスクリプトを外部エ
 ディタに指定してください．
 
------- /usr/local/lib/w3m/winedit ------
+```sh title="/usr/local/lib/w3m/winedit"
 #!/bin/sh
 EDITOR='/cygdrive/c/Program Files/sakura/sakura.exe'
 FILE=`cygpath -a -w $1`
 exec "$EDITOR" "$FILE"
-----------------------------------------
+```
+
 ※EDITOR= には Cygwin 環境の内側から見た Native アプリケーションのパスを
   記述してください．
 
@@ -125,41 +130,41 @@ exec "$EDITOR" "$FILE"
 ておかなければ window が表示されません．
 
 
-* 既知のバグ
+## 既知のバグ
 
 以下は，Cygwin 環境で w3m を動かした場合の問題点です．
 
-o -dump, -dump-source 時に LF -> CR+LF の変換が行われることがある．
+- -dump, -dump-source 時に LF `->` CR+LF の変換が行われることがある．
 
   コンパイル時にマクロ USE_BINMODE_STREAM が define されていない可能性が
   あります．
   きちんと configure したうえでコンパイルしなおすか，環境変数 CYGWIN に 
   binmode を設定してください．
 
-o Win9X 系の DOS プロンプトで IME 経由の入力ができない．
+- Win9X 系の DOS プロンプトで IME 経由の入力ができない．
 
   環境変数 CYGWIN に 'tty' が含まれているときには，Cygwin の tty レイヤ
   の問題を回避するために IME 経由の入力を禁止しています．環境変数 CYGWIN
   から 'tty' を削除してください．
 
-o Win9X 系の DOS プロンプトで IME が ON になっているとカーソルが効かない．
+- Win9X 系の DOS プロンプトで IME が ON になっているとカーソルが効かない．
 
   Win9X の DOS プロンプトと Cygwin の tty レイヤーの実装の問題です．
   代わりに C-f, C-b, C-p, C-n を使ってください．
 
-o NT 系のコマンドプロンプトで画面制御がおかしくなる．
+- NT 系のコマンドプロンプトで画面制御がおかしくなる．
 
   「レイアウト」タブで画面バッファのサイズとウィンドウのサイズを違う値に
   してバックスクロールができるように設定していると，画面制御がおかしくな
   ることがあるようです．
 
-o DOS プロンプト，コマンドプロンプトでマウスが使えない．
+- DOS プロンプト，コマンドプロンプトでマウスが使えない．
 
   DOS プロンプト「編集オプション」/コマンドプロンプトの「オプション」で
   「簡易編集モード」が ON になっていると，マウスイベントが w3m に渡され
   ません．OFF に設定してください．
 
-o DOS プロンプト，コマンドプロンプトでマウスボタンに対する反応がおかしい．
+- DOS プロンプト，コマンドプロンプトでマウスボタンに対する反応がおかしい．
 
   cygwin-1.3.15 までの環境では，マウスの右と中央ボタンのエスケープシー
   ケンスが入れ替わっていました．これは cygwin-1.3.16-1 で修正されていま
@@ -167,18 +172,18 @@ o DOS プロンプト，コマンドプロンプトでマウスボタンに対�
   するようにしてください．
 
 
-* その他
+## その他
 
 Cygwin 環境では，DOS プロンプト/コマンドプロンプトを使うよりも，inetd を
 あげて，ローカルに TeraTerm, PuTTY などの telnet クライアント経由でログ
 インする，ないしは rxvt, cygterm を使用するほうが快適です．
 
-o rxvt:
+- rxvt:
     rxvt on Cygwin
       http://hp.vector.co.jp/authors/VA021953/rxvt/
     compiled package
       http://matsu-www.is.titech.ac.jp/~sohda/cygwin/dist/
-o cygterm:
+- cygterm:
     CygTerm - Yet another Cygwin console
       http://www.dd.iij4u.or.jp/~nsym/cygwin/cygterm/
 

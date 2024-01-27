@@ -1,8 +1,11 @@
+# passwd
+
 HTTP 認証のあるページや認証のある proxy に対して、
 ユーザ名とパスワードを設定しておくことが出来ます。
 
 passwd_file で指定したファイルに次のように書いておけばそれを見ます。
 
+```
 machine ホスト名
 port ポート番号
 path ローカルパート
@@ -10,6 +13,7 @@ realm realmの文字列
 login ユーザ名
 passwd パスワード
 proxy
+```
 
 machineではじまって次のmachineまで。
 netrcぎみですが簡単にするために一行づつ。

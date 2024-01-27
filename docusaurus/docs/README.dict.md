@@ -1,23 +1,27 @@
-w3m用英和辞典検索機能について
+# w3m用英和辞典検索機能について
 
-1. はじめに
+## はじめに
 
 'webster' コマンドなどのように辞書を引くためのコマンドをお持ちの
 場合には，w3m の中からそれを使うことができます．この機能は，
 るびきちさん(rubikitch@ruby-lang.org)によるものをもとに
 Tushar Samant (scribble at pobox.com)が修正をくわえました。
 
-2. インストール
+## インストール
 
 この機能を使うためには，コンパイルオプションを手で書きかえて
 コンパイルしなおす必要があります．configure を実行して config.h
 が生成された後，config.h を編集して
 
+```c
 #undef USE_DICT
+```
 
 を
 
+```c
 #define USE_DICT
+```
 
 に変更し，w3m をコンパイルしなおしてください．
 w3m/0.3+cvs-1.373以降は、defaultでUSE_DICTがdefineされます。
@@ -27,36 +31,40 @@ w3m/0.3+cvs-1.373以降は、defaultでUSE_DICTがdefineされます。
 
 つぎのような方法があります
 
- * もし 'webster'というコマンドがあればいかのような内容の'w3mdict'という
-   スクリプトをつくります。
+* もし 'webster'というコマンドがあればいかのような内容の'w3mdict'という
+  スクリプトをつくります。
 
-      #!/bin/sh
+```sh
+#!/bin/sh
 
-      echo Content-type: text/plain
-      echo
-      webster $QUERY_STRING
+echo Content-type: text/plain
+echo
+webster $QUERY_STRING
+```
 
-    これを lcoal CGIとしてインストールします (w3mマニュアルの local CGI
-    のセクションをみてください) そして w3mのオプションページで
-    辞書設定を設定してください。
+  これを lcoal CGIとしてインストールします (w3mマニュアルの local CGI
+  のセクションをみてください) そして w3mのオプションページで
+  辞書設定を設定してください。
 
- * もし文字列をGoogleで検索する機能がつかいたい場合、
-   以下のような local CGIスクリプトがつかえます。
+* もし文字列をGoogleで検索する機能がつかいたい場合、
+  以下のような local CGIスクリプトがつかえます。
 
-      #!/bin/sh
+```sh
+#!/bin/sh
 
-      google_q='http://google.com/search?btnG=Google&q'
+google_q='http://google.com/search?btnG=Google&q'
 
-      cat <<_END_
-      Content-type: text/plain
-      W3m-control: GOTO $google_q=$QUERY_STRING
-      W3m-control: DELETE_PREVBUF
+cat <<_END_
+Content-type: text/plain
+W3m-control: GOTO $google_q=$QUERY_STRING
+W3m-control: DELETE_PREVBUF
 
-      _END_
+_END_
+```
 
-    これのパスを辞書引きコマンドのURLとして設定してください。
+  これのパスを辞書引きコマンドのURLとして設定してください。
 
-3. 使いかた
+## 使いかた
 
 次の2つのコマンドが使えるようになります．
 

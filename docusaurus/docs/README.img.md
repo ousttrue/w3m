@@ -1,33 +1,35 @@
-w3m でインライン画像を表示
+# w3m でインライン画像を表示
 
+```
                                                          (2002/02/04)  坂本浩則
                                                         hsaka@mth.biglobe.ne.jp
                                                          (2002/10/16)  伊東宏之
                                                              ZXB01226@nifty.com
+```
 
-はじめに
+## はじめに
 
   w3m でインライン画像を表示する拡張です。
 
-機能
+## 機能
 
-  ・X11 上の端末(xterm,kterm,rxvt,...)、 Linux の framebuffer 上または
-    Windows 端末上に画像(GIF,PNG,JPEG 等)を表示します。
-  ・img タグで指定されたインライン画像を表示できます。
-    width,height 属性に応じて必要な領域を確保してレンダリングします。
-    align 属性に対応しています。
-  ・Content-type: image/* な画像ファイルを直接表示できます。
-  ・map タグに対応しています。
-    area タグの shape, coords 属性を認識し、メニュー表示から選択できます。
-  ・img タグの ismap 属性に対応しています。
-    座標値を ?<x>,<y> として URL に追加して送ります。
-  ・input タグの type=image 属性で指定されたインライン画像を表示できます。
-    座標値を <name>.x=<x>&<name>.y=<y> として送ります。
-  ・非同期に画像を読み込みます。
-  ・画像をキャッシュできます。
-  ・GdkPixbuf を利用した場合 GIF animation を表示できます。
+- X11 上の端末(xterm,kterm,rxvt,...)、 Linux の framebuffer 上または
+  Windows 端末上に画像(GIF,PNG,JPEG 等)を表示します。
+- img タグで指定されたインライン画像を表示できます。
+  width,height 属性に応じて必要な領域を確保してレンダリングします。
+  align 属性に対応しています。
+- Content-type: image/* な画像ファイルを直接表示できます。
+- map タグに対応しています。
+  area タグの shape, coords 属性を認識し、メニュー表示から選択できます。
+- img タグの ismap 属性に対応しています。
+  座標値を `?<x>,<y>` として URL に追加して送ります。
+- input タグの type=image 属性で指定されたインライン画像を表示できます。
+  座標値を `<name>.x=<x>&<name>.y=<y>` として送ります。
+- 非同期に画像を読み込みます。
+- 画像をキャッシュできます。
+- GdkPixbuf を利用した場合 GIF animation を表示できます。
 
-キー操作
+## キー操作
 
   DISPLAY_IMAGE
       画像の読込/表示を再開します。
@@ -42,17 +44,18 @@ w3m でインライン画像を表示
       keymap  t    SET_OPTION  display_image=toggle
   の様に記述して使用してください。
 
-コマンドラインオプション
+## コマンドラインオプション
 
-  -ppc <pixel>
+  `-ppc <pixel>`
       一文字あたりの幅(pixel 値)を指定します。デフォルトは自動設定。
       正しく設定されない場合は端末の font の大きさに必ず合わせてください。
-  -ppl <pixel>
+  `-ppl <pixel>`
       一行あたりの幅(pixel 値)を指定します。デフォルトは自動設定。
       正しく設定されない場合は端末の font の大きさに必ず合わせてください。
 
-オプションパネル
+## オプションパネル
 
+```
   pixel_per_char
       一文字あたりの幅(pixel 値)を指定します。デフォルトは自動設定。
       正しく設定されない場合は端末の font の大きさに必ず合わせてください。
@@ -76,8 +79,9 @@ w3m でインライン画像を表示
   imgdisplay
       インライン画像を表示するためのコマンド。デフォルトは w3mimgdisplay。
       下記の "w3mimgdisplay の設定" を参考にしてオプション設定してください。
+```
 
-必要なもの
+## 必要なもの
 
   ・X11 使用時
     * GdkPixbuf (0.16 以上推奨)
@@ -108,46 +112,51 @@ w3m でインライン画像を表示
       8bpp PACKED-PIXELS PSEUDO-COLOR framebuffer を利用できる環境
     * GdkPixbuf (0.16 以上推奨) または Imlib2 (1.0.6 以上推奨)
 
-w3mimgdisplay の設定
+## w3mimgdisplay の設定
 
   w3mimgdisplay は以下のオプションを受け付けますので端末に合わせて
   オプション設定パネルで(または -o オプションで)設定してください。
 
-  -x <offset_x>
+```
+  `-x <offset_x>`
       端末上に画像を表示する X 方向の原点。X11 で利用する場合デフォルト
       は 2 ですが、xterm や kterm ではスクロールバーの幅を計算して加え
       ようとします。(正しく出来ないかもしれません。)
       Eterm では 5 にすべきかもしれません。
       Linux framebuffer で利用する場合デフォルトは 0 です。
-  -y <offset_y>
+  `-y <offset_y>`
       端末上に画像を表示する Y 方向の原点。デフォルトは、X11 では 2、
       Linux framebuffer では 0。
       Eterm では 5 にすべきかもしれません。
-  -bg <background>
+  `-bg <background>`
       端末の背景色。デフォルトは、X11 では自動設定、Linux framebuffer 
       では #000000 (黒)。
       #RRGGBB で指定する場合は # をエスケープして設定してください。
-  -anim <n>
+  `-anim <n>`
       アニメーションで表示する最大フレーム数を指定。0 の時は制限なし。
       負の時は最後からのフレーム数と見なします。デフォルトは 100。
-  -margin <n>
+  `-margin <n>`
       画像をクリアする領域のマージンを指定します。スクロールしたとき画
       面にゴミが残ってしまう場合に指定してみてください。
       デフォルトは 0。
+```
 
   例)
+```sh
     w3m -o 'imgdisplay=w3mimgdisplay -x 5 -bg "#cccccc"'
-  
-その他
-  ・GIF animation は  w3m からの再描画要求に応じてフレームを書き換える
-    だけなので勝手に動いてはくれません。絵を動かすためには 'h', 'l' 等
-    の適当なキーを連打してください。
-  ・framebuffer 描画関係には、下記 URI のコードを利用しました。
-    http://www.sainet.or.jp/~yamasaki/download/fb-sample.tar.gz
-  ・Windows では標準コンソール、Cygwin rxvt、PuTTYで動作確認しています。
+```
+
+## その他
+
+- GIF animation は  w3m からの再描画要求に応じてフレームを書き換える
+  だけなので勝手に動いてはくれません。絵を動かすためには 'h', 'l' 等
+  の適当なキーを連打してください。
+- framebuffer 描画関係には、下記 URI のコードを利用しました。
+  http://www.sainet.or.jp/~yamasaki/download/fb-sample.tar.gz
+- Windows では標準コンソール、Cygwin rxvt、PuTTYで動作確認しています。
 
 
-更新記録
+## 更新記録
 
 2002/02/04
  * ドキュメント改訂
@@ -194,7 +203,7 @@ w3mimgdisplay の設定
 
 2001/11/05	w3m-0.2.1-inu-1.5-img-1.12
  * w3m-0.2.1-inu-1.5 ベース。
- * <area><map> が使えなくなっていたバグの修正。
+ * `<area><map>` が使えなくなっていたバグの修正。
  * kterm 上で xwnmo を使った場合に対応。
 
 2001/10/03	w3m-0.2.1-inu-1.4-img-1.11
@@ -226,7 +235,7 @@ w3mimgdisplay の設定
 2001/07/26	w3m-0.2.1-img-1.5
  * w3mimgdisplay は必要になるまで立ち上げない様にした。
  * w3mimgdisplay が落ちた時に、w3mimgdisplay を再立ち上げできる様にした。
- * <img align=middle の場合の計算間違いの修正。
+ * `<img align=middle` の場合の計算間違いの修正。
  * [w3m-dev 02118] に対応。
  * funcname.tab が間違っていたので修正。
 
@@ -257,8 +266,8 @@ w3mimgdisplay の設定
 
 2001/07/08	w3m-0.2.1-img-0.4
  * w3mimgdisplay での Window の取得や offset_x のデフォルト値の改良。
- * <img align=middle の場合の計算間違いの修正。
- * <img align=left|center|right では <div>〜</div> を使う様にしてみた。
+ * `<img align=middle` の場合の計算間違いの修正。
+ * `<img align=left|center|right` では `<div>〜</div>` を使う様にしてみた。
  * w3mimgdisplay では SIGINT を無視する様にした。
  * w3mimgsize もオプション設定できる様にした。
 
@@ -280,6 +289,7 @@ w3mimgdisplay の設定
 2001/06/19
  * MGL 版に刺激を受けて img への対応のテストを開始。
 
------------------------------------
+```
 坂本 浩則 <hsaka@mth.biglobe.ne.jp>
  http://www2u.biglobe.ne.jp/~hsaka/
+```

@@ -3,8 +3,10 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 import remarkDefList from "remark-deflist";
 
+const title = "w3mノート";
+
 const config: Config = {
-  title: "w3m改造ノート",
+  title,
   tagline: "w3m custom",
   favicon: "img/favicon.ico",
 
@@ -53,7 +55,7 @@ const config: Config = {
   themeConfig: {
     // Replace with your project's social card
     navbar: {
-      title: "w3m改造ノート",
+      title,
       items: [
         {
           type: "docSidebar",
@@ -61,7 +63,7 @@ const config: Config = {
           position: "left",
           label: "doc-jp",
         },
-        { to: "/blog", label: "Note", position: "left" },
+        { to: "/blog", label: "note", position: "left" },
         {
           href: "https://github.com/facebook/docusaurus",
           label: "GitHub",
@@ -71,9 +73,8 @@ const config: Config = {
     },
     footer: {
       style: "dark",
-      copyright: `Copyright © ${
-        new Date().getFullYear()
-      } w3m改造ノート, Inc. Built with Docusaurus.`,
+      copyright: `Copyright © ${new Date().getFullYear()
+        } ${title}, Inc. Built with Docusaurus.`,
     },
     prism: {
       theme: prismThemes.github,

@@ -1,10 +1,14 @@
+# mouse
+
 ~/.w3m/mouse の形式は、
 
+```
 menu メニューの文字列(デフォルトなし)
 lastline 最下行の文字列(デフォルト『≪↑↓』)
 button  番号  位置 関数  [引数]
+```
 
-
+```
 番号: 1…左ボタン
       2…中ボタン
       3…右ボタン
@@ -18,12 +22,14 @@ button  番号  位置 関数  [引数]
 
 <x1> : 左端のカラム位置
 <x2> : 右端のカラム位
+```
 
 です。
-互換性のために <位置> での menu は省略可能です。
+互換性のために `<位置>` での menu は省略可能です。
 
 デフォルトの設定(func.c 内)は、
 
+```
 button	1 default	MOVE_MOUSE
 button	2 default	BACK
 button	3 default	MENU_MOUSE
@@ -37,30 +43,37 @@ lastline	"≪↑↓"
 button	1 lastline 0 1	BACK
 button	1 lastline 2 3	PREV_PAGE
 button	1 lastline 4 5	NEXT_PAGE
+```
 
 と同等です。(これまでと同じはず)
 
-・例えば、
+- 例えば、
 
+```
   button  1 anchor	COMMAND		"MOVE_MOUSE; GOTO_LINK"
+```
 
   と設定するとアクティブでないアンカー上でも左クリックしただけで、
   リンク先に飛びます。(GUI ブラウザと同じ様な動作)
 
-・~/.w3m/menu で
+- ~/.w3m/menu で
 
+```
   menu Active
    func   "リンクを表示       (a)"        GOTO_LINK       "a"
    func   "新しいタブで表示   (t)"        TAB_LINK        "t"
    func   "リンクを保存       (d)"        SAVE_LINK       "d"
    func   "外部ブラウザで表示 (m)"        EXTERN_LINK     "m"
   end
+```
 
-  の様に設定しておいて、~/.w3m/mouse で
+の様に設定しておいて、~/.w3m/mouse で
 
+```
   button  3 anchor	MENU_MOUSE	Active
+```
 
-  と設定すると、アンカー上で右クリックしするとアンカー用の
-  メニューが開きます。
+と設定すると、アンカー上で右クリックしするとアンカー用の
+メニューが開きます。
 
 こんな感じで使ってみてください。
