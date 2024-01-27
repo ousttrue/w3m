@@ -1,0 +1,129 @@
+project('w3m', 'c')
+
+subdir('libwc')
+
+gc_dep = dependency('bdw-gc')
+ssl_dep = dependency('openssl')
+ncurses_dep = dependency('ncurses')
+
+cc = meson.get_compiler('c')
+m_dep = cc.find_library('m', required: false)
+
+# SHELL=/bin/bash
+PACKAGE = meson.project_name()
+# VERSION = 0.5.3
+# DOMAIN = $(PACKAGE)
+prefix = get_option('prefix')
+exec_prefix = prefix
+datarootdir = prefix + '/share'
+# bindir = ${exec_prefix}/bin
+datadir = datarootdir
+localedir = datadir + '/locale'
+# libdir = ${exec_prefix}/lib
+# includedir = ${prefix}/include
+# infodir = ${datarootdir}/info
+libexecdir = exec_prefix + '/libexec'
+# localstatedir = ${prefix}/var
+# mandir = ${datarootdir}/man
+# oldincludedir = /usr/include
+# sbindir = ${exec_prefix}/sbin
+# sharedstatedir = ${prefix}/com
+# srcdir = .
+sysconfdir = prefix + '/etc'
+# top_srcdir = .
+# top_builddir = .
+# VPATH = $(top_srcdir):.
+#
+CGIBIN_DIR = libexecdir + '/' + PACKAGE + '/cgi-bin'
+AUXBIN_DIR = libexecdir + '/' + PACKAGE
+HELP_DIR = datarootdir + '/w3m'
+RC_DIR = '~/.w3m'
+ETC_DIR = sysconfdir
+CONF_DIR = sysconfdir + '/' + PACKAGE
+
+defs = [
+    '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
+    '-DCGIBIN_DIR="' + CGIBIN_DIR + '"',
+    '-DHELP_DIR="' + HELP_DIR + '"',
+    '-DETC_DIR="' + ETC_DIR + '"',
+    '-DCONF_DIR="' + CONF_DIR + '"',
+    '-DRC_DIR="' + RC_DIR + '"',
+    '-DLOCALEDIR="' + localedir + '"',
+]
+
+# use generated config.h by configure
+
+# conf_data = configuration_data()
+# conf_data.set('DISPLAY_CHARSET', 'WC_CES_UTF_8')
+# conf_data.set('SYSTEM_CHARSET', 'WC_CES_UTF_8')
+# conf_data.set('DOCUMENT_CHARSET', 'WC_CES_UTF_8')
+# conf_data.set('W3M_LANG', 'EN')
+# conf_data.set('DEF_CAFILE', '')
+# conf_data.set('DEF_EDITOR', '/usr/bin/vi')
+# conf_data.set('DEF_MAILER', '/usr/bin/mail')
+# conf_data.set('DEF_EXT_BROWSER', '/usr/bin/firefox')
+# conf_data.set('DEF_MIGEMO_COMMAND', '')
+# conf_data.set('RETSIGTYPE', 'void')
+# conf_data.set('SIGNAL_RETURN', 'return')
+#
+# configure_file(
+#     input: 'config.h.in',
+#     output: 'config.h',
+#     configuration: conf_data,
+# )
+
+executable(
+    'w3m',
+    [
+        'keybind.c',
+        #
+        'Str.c',
+        'indep.c',
+        'regex.c',
+        'textlist.c',
+        'parsetag.c',
+        'myctype.c',
+        'hash.c',
+        #
+        'main.c',
+        'file.c',
+        'buffer.c',
+        'display.c',
+        'etc.c',
+        'search.c',
+        'linein.c',
+        'table.c',
+        'local.c',
+        'form.c',
+        'map.c',
+        'frame.c',
+        'rc.c',
+        'menu.c',
+        'mailcap.c',
+        'image.c',
+        'symbol.c',
+        'entity.c',
+        'terms.c',
+        'url.c',
+        'ftp.c',
+        'mimehead.c',
+        'regex.c',
+        'news.c',
+        'func.c',
+        'cookie.c',
+        'history.c',
+        'backend.c',
+        'util.c',
+        #
+        'anchor.c',
+        'parsetagx.c',
+        'tagtable.c',
+        'istream.c',
+        #
+        'version.c',
+    ],
+    install: true,
+    include_directories: include_directories('libwc'),
+    dependencies: [gc_dep, ssl_dep, ncurses_dep, m_dep, wc_dep],
+    c_args: defs,
+)

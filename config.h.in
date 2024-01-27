@@ -97,7 +97,7 @@
 #define MATRIX
 
 #define DEF_EDITOR "@DEF_EDITOR@"
-#define DEF_MAILER "@DEF_MAILER@
+#define DEF_MAILER "@DEF_MAILER@"
 #define DEF_EXT_BROWSER "@DEF_EXT_BROWSER@"
 
 /* fallback viewer. mailcap override these configuration */
