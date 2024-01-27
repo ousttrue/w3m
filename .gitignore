@@ -5,22 +5,22 @@ Makefile
 /config.cache
 /config.log
 /config.status
-/config.h
+# /config.h
 /config.param
-/entity.h
+# /entity.h
 /funcname.tab
-/funcname.c
-/funcname1.h
-/funcname2.h
-/functable.c
-/tagtable.c
+# /funcname.c
+# /funcname1.h
+# /funcname2.h
+# /functable.c
+# /tagtable.c
 /inflate
 /mktable
 /w3m
 /w3mbookmark
 /w3mhelperpanel
 /w3mimgdisplay
-/version.c
+# /version.c
 /w3mhelp-lynx_*.html
 /w3mhelp-w3m_*.html
 /posubst
