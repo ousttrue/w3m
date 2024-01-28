@@ -1,6 +1,6 @@
 project('w3m', 'c')
 
-subdir('libwc')
+# subdir('libwc')
 
 gc_dep = dependency('bdw-gc')
 ssl_dep = dependency('openssl')
@@ -124,6 +124,8 @@ executable(
     ],
     install: true,
     include_directories: include_directories('libwc'),
-    dependencies: [gc_dep, ssl_dep, ncurses_dep, m_dep, wc_dep],
+    dependencies: [gc_dep, ssl_dep, ncurses_dep, m_dep
+      # , wc_dep
+      ],
     c_args: defs,
 )

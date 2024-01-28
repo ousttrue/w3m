@@ -3,7 +3,6 @@
 #include "Str.h"
 #define NBSP " "
 #define UseAltEntity 1
-#undef USE_M17N
 #else				/* DUMMY */
 #include "fm.h"
 #endif				/* DUMMY */

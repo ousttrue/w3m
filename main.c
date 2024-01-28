@@ -341,9 +341,6 @@ main(int argc, char **argv)
     char *default_type = NULL;
     char *post_file = NULL;
     Str err_msg;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    char **getimage_args = NULL;
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
 	set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
     GC_INIT();
@@ -351,9 +348,6 @@ main(int argc, char **argv)
     GC_set_oom_fn(die_oom);
 #else
     GC_oom_fn = die_oom;
-#endif
-#if defined(ENABLE_NLS) || (defined(USE_M17N) && defined(HAVE_LANGINFO_CODESET))
-    setlocale(LC_ALL, "");
 #endif
 
     NO_proxy_domains = newTextList();
@@ -364,10 +358,6 @@ main(int argc, char **argv)
 
     CurrentDir = currentdir();
     CurrentPid = (int)getpid();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (argv[0] && *argv[0])
-	MyProgramName = argv[0];
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
     BookmarkFile = NULL;
     config_file = NULL;
 
@@ -637,15 +627,6 @@ main(int argc, char **argv)
 	    else if (!strcmp("-reqlog",argv[i])) {
 		w3m_reqlog=rcFile("request.log");
 	    }
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-	    else if (!strcmp("-$$getimage", argv[i])) {
-		++i;
-		getimage_args = argv + i;
-		i += 4;
-		if (i > argc)
-		    usage();
-	    }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 	    else {
 		usage();
 	    }
@@ -700,30 +681,6 @@ main(int argc, char **argv)
 
     if (w3m_backend)
 	backend();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-    if (getimage_args) {
-	char *image_url = conv_from_system(getimage_args[0]);
-	char *base_url = conv_from_system(getimage_args[1]);
-	ParsedURL base_pu;
-
-	parseURL2(base_url, &base_pu, NULL);
-	image_source = getimage_args[2];
-	newbuf = loadGeneralFile(image_url, &base_pu, NULL, 0, NULL);
-	if (!newbuf || !newbuf->real_type ||
-	    strncasecmp(newbuf->real_type, "image/", 6))
-	    unlink(getimage_args[2]);
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
-	symlink(getimage_args[2], getimage_args[3]);
-#else
-	{
-	    FILE *f = fopen(getimage_args[3], "w");
-	    if (f)
-		fclose(f);
-	}
-#endif
-	w3m_exit(0);
-    }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
     if (w3m_dump)
 	mySignal(SIGINT, SIG_IGN);
@@ -2133,22 +2090,6 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide")
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#if defined(USE_M17N) && defined(USE_UNICODE)
-#define nextChar(s, l)	do { (s)++; } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
-#define prevChar(s, l)	do { (s)--; } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-
-static wc_uint32
-getChar(char *p)
-{
-    return wc_any_to_ucs(wtf_parse1((wc_uchar **)&p));
-}
-
-static int
-is_wordchar(wc_uint32 c)
-{
-    return wc_is_ucs_alnum(c);
-}
-#else
 #define nextChar(s, l)	(s)++
 #define prevChar(s, l)	(s)--
 #define getChar(p)	((int)*(p))
@@ -2158,7 +2099,6 @@ is_wordchar(int c)
 {
     return IS_ALNUM(c);
 }
-#endif
 
 static int
 prev_nonnull_line(Line *line)
@@ -4041,49 +3981,10 @@ void
 follow_map(struct parsed_tagarg *arg)
 {
     char *name = tag_get_value(arg, "link");
-#if defined(MENU_MAP) || defined(USE_IMAGE)
-    Anchor *an;
-    MapArea *a;
-    int x, y;
-    ParsedURL p_url;
-
-    an = retrieveCurrentImg(Currentbuf);
-    x = Currentbuf->cursorX + Currentbuf->rootX;
-    y = Currentbuf->cursorY + Currentbuf->rootY;
-    a = follow_map_menu(Currentbuf, name, an, x, y);
-    if (a == NULL || a->url == NULL || *(a->url) == '\0') {
-#endif
 	Buffer *buf = follow_map_panel(Currentbuf, name);
 
 	if (buf != NULL)
 	    cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
-#if defined(MENU_MAP) || defined(USE_IMAGE)
-	return;
-    }
-    if (*(a->url) == '#') {
-	gotoLabel(a->url + 1);
-	return;
-    }
-    parseURL2(a->url, &p_url, baseURL(Currentbuf));
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    if (check_target && open_tab_blank && a->target &&
-	(!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-	Buffer *buf;
-
-	_newT();
-	buf = Currentbuf;
-	cmd_loadURL(a->url, baseURL(Currentbuf),
-		    parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-	if (buf != Currentbuf)
-	    delBuffer(buf);
-	else
-	    deleteTab(CurrentTab);
-	displayBuffer(Currentbuf, B_FORCE_REDRAW);
-	return;
-    }
-    cmd_loadURL(a->url, baseURL(Currentbuf),
-		parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-#endif
 }
 
 

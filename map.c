@@ -36,31 +36,6 @@ retrieveCurrentMap(Buffer *buf)
     return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
-MapArea *
-follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
-{
-    MapList *ml;
-    ListItem *al;
-    int i, selected = -1;
-    int initial = 0;
-
-    ml = searchMapList(buf, name);
-    if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
-	return NULL;
-
-
-
-    if (selected >= 0) {
-	for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-	    if (al->ptr && i == selected)
-		return (MapArea *) al->ptr;
-	}
-    }
-    return NULL;
-}
-#endif
-
 char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";

@@ -10,7 +10,6 @@
 #ifndef FM_H
 #define FM_H
 
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE		/* strcasestr() */
 #endif
@@ -25,10 +24,6 @@
 #include <unistd.h>
 #include "config.h"
 #include "history.h"
-
-
-#undef USE_ANSI_COLOR
-#undef USE_BG_COLOR
 
 #include "ctrlcode.h"
 #include "html.h"
@@ -802,9 +797,6 @@ global char *index_file init(NULL);
 
 global char *CurrentDir;
 global int CurrentPid;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-global char *MyProgramName init("w3m");
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 /*
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;

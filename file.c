@@ -50,10 +50,6 @@ static JMP_BUF AbortLoading;
 static struct table *tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
 
-#if defined(USE_M17N) || defined(USE_IMAGE)
-static ParsedURL *cur_baseURL = NULL;
-#endif
-
 static Str cur_title;
 static Str pre_title;
 static Str cur_select;
@@ -4685,13 +4681,6 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
 	}
 	return 1;
     case HTML_BASE:
-#if defined(USE_M17N) || defined(USE_IMAGE)
-	p = NULL;
-	if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-	    cur_baseURL = New(ParsedURL);
-	    parseURL(p, cur_baseURL, NULL);
-	}
-#endif
     case HTML_MAP:
     case HTML_N_MAP:
     case HTML_AREA:
@@ -4947,9 +4936,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
     char symbol = '\0';
     int internal = 0;
     Anchor **a_textarea = NULL;
-#if defined(USE_M17N) || defined(USE_IMAGE)
-    ParsedURL *base = baseURL(buf);
-#endif
 
     if (out_size == 0) {
 	out_size = LINELEN;
@@ -5299,9 +5285,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 			if (!buf->baseURL)
 			    buf->baseURL = New(ParsedURL);
 			parseURL2(p, buf->baseURL, &buf->currentURL);
-#if defined(USE_M17N) || defined(USE_IMAGE)
-			base = buf->baseURL;
-#endif
 		    }
 		    if (parsedtag_get_value(tag, ATTR_TARGET, &p))
 			buf->baseTarget =
@@ -6333,9 +6316,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 	htmlenv1.f = stdout;
     else
 	htmlenv1.buf = newTextLineList();
-#if defined(USE_M17N) || defined(USE_IMAGE)
-    cur_baseURL = baseURL(newBuf);
-#endif
 
     if (SETJMP(AbortLoading) != 0) {
 	HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
@@ -6367,9 +6347,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
     obuf.status = R_ST_NORMAL;
     completeHTMLstream(&htmlenv1, &obuf);
     flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
-#if defined(USE_M17N) || defined(USE_IMAGE)
-    cur_baseURL = NULL;
-#endif
     if (htmlenv1.title)
 	newBuf->buffername = htmlenv1.title;
     if (w3m_halfdump) {
