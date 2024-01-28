@@ -151,36 +151,8 @@ typedef long clen_t;
 #define HAVE_SETLOCALE 1
 #define HAVE_LANGINFO_CODESET 1
 
-#define SETPGRP_VOID 1
-#ifdef HAVE_SETPGRP
-#ifdef SETPGRP_VOID
-#define SETPGRP() setpgrp()
-#else
-#define SETPGRP() setpgrp(0,0)
-#endif
-#else /* no HAVE_SETPGRP; OS/2 EMX */
-#define SETPGRP() setpgid(0, 0)
-#endif
 #define HAVE_FLOAT_H 1
 #define HAVE_SYS_SELECT_H 1
-
-#define HAVE_SIGSETJMP 1
-
-#define RETSIGTYPE void
-typedef RETSIGTYPE MySignalHandler;
-#define SIGNAL_ARG int _dummy	/* XXX */
-#define SIGNAL_ARGLIST 0	/* XXX */
-#define SIGNAL_RETURN return
-
-#ifdef HAVE_SIGSETJMP
-# define SETJMP(env) sigsetjmp(env,1)
-# define LONGJMP(env,val) siglongjmp(env,val)
-# define JMP_BUF sigjmp_buf
-#else
-# define SETJMP(env) setjmp(env)
-# define LONGJMP(env,val) longjmp(env, val)
-# define JMP_BUF jmp_buf
-#endif
 
 #ifndef HAVE_SRAND48
 #ifdef HAVE_SRANDOM

@@ -1,8 +1,9 @@
 /* $Id: frame.c,v 1.34 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
+#include "signal_util.h"
 #include "parsetagx.h"
 #include "myctype.h"
-#include <signal.h>
+// #include <signal.h>
 #include <setjmp.h>
 
 static JMP_BUF AbortLoading;

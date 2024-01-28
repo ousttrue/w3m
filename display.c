@@ -3,6 +3,7 @@
 
 #include <signal.h>
 #include "fm.h"
+#include "signal_util.h"
 
 /* *INDENT-OFF* */
 

@@ -7,6 +7,7 @@
 #include <time.h>
 
 #include "fm.h"
+#include "signal_util.h"
 #include "html.h"
 #include "myctype.h"
 

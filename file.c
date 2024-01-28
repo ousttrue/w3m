@@ -2,6 +2,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "display.h"
 #include "fm.h"
+#include "signal_util.h"
 #include <sys/types.h>
 #include "myctype.h"
 #include <signal.h>

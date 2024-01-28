@@ -1,6 +1,7 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "signal_util.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>

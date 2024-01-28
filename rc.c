@@ -3,6 +3,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "signal_util.h"
 #include "myctype.h"
 #include "proto.h"
 #include <stdio.h>

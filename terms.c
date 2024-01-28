@@ -24,6 +24,7 @@ static char *title_str = NULL;
 static int tty;
 
 #include "fm.h"
+#include "signal_util.h"
 #include "myctype.h"
 #include "terms.h"
 

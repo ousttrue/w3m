@@ -78,6 +78,7 @@ executable(
     [
         'keybind.c',
         #
+        'signal_util.c',
         'Str.c',
         'indep.c',
         'regex.c',
