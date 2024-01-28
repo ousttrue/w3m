@@ -399,10 +399,6 @@ struct param_ptr params6[] = {
     {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files, CMT_MIMETYPES,
      NULL},
     {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP, NULL},
-#ifdef USE_EXTERNAL_URI_LOADER
-    {"urimethodmap", P_STRING, PI_TEXT, (void *)&urimethodmap_files,
-     CMT_URIMETHODMAP, NULL},
-#endif
     {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
     {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
      CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
@@ -921,9 +917,6 @@ sync_with_option(void)
     parse_cookie();
     initMailcap();
     initMimeTypes();
-#ifdef USE_EXTERNAL_URI_LOADER
-    initURIMethods();
-#endif
 #ifdef USE_MIGEMO
     init_migemo();
 #endif

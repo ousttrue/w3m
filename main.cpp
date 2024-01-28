@@ -102,9 +102,6 @@ static void fversion(FILE *f) {
           ",cookie"
           ",ssl"
           ",ssl-verify"
-#ifdef USE_EXTERNAL_URI_LOADER
-          ",external-uri-loader"
-#endif
 #ifdef USE_W3MMAILER
           ",w3mmailer"
 #endif
@@ -3350,9 +3347,6 @@ void chkURLBuffer(Buffer *buf) {
   for (i = 0; url_like_pat[i]; i++) {
     reAnchor(buf, url_like_pat[i]);
   }
-#ifdef USE_EXTERNAL_URI_LOADER
-  chkExternalURIBuffer(buf);
-#endif
   buf->check_url |= CHK_URL;
 }
 
@@ -3880,12 +3874,6 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
     return;
   }
 
-#ifdef USE_EXTERNAL_URI_LOADER
-  if (!strcasecmp(resource, "URIMETHODS")) {
-    initURIMethods();
-    return;
-  }
-#endif
 
   disp_err_message(
       Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);

@@ -21,7 +21,7 @@ CONTEXT = {
     'USE_DICT': True,
     'USE_BUFINFO': True,
     'USE_HISTORY': True,
-    # 'USE_EXTERNAL_URI_LOADER': False,
+    'USE_EXTERNAL_URI_LOADER': False,
     # # 'HAVE_WAITPID': True,
     # #
     # 'SIGSTOP': False,
@@ -236,7 +236,7 @@ class MacroNode:
 
 
 def main(path: pathlib.Path, debug=False):
-    if path.suffix not in ['.h', '.c']:
+    if path.suffix not in ['.h', '.c', '.cpp']:
         return
 
     print(colored(str(path), 'magenta'))
