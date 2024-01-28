@@ -25,9 +25,6 @@ struct vector {
     int dim;
 };
 
-typedef struct matrix *Matrix;
-typedef struct vector *Vector;
-
 /* 
  * Macros.
  */
@@ -56,14 +53,14 @@ typedef struct matrix MAT;
 typedef struct vector VEC;
 typedef int PERM;
 
-extern int LUfactor(Matrix, int *);
-extern Matrix m_inverse(Matrix, Matrix);
-extern Matrix LUinverse(Matrix, int *, Matrix);
-extern int LUsolve(Matrix, int *, Vector, Vector);
-extern int Lsolve(Matrix, Vector, Vector, double);
-extern int Usolve(Matrix, Vector, Vector, double);
-extern Matrix new_matrix(int);
-extern Vector new_vector(int);
+extern int LUfactor(matrix*, int *);
+extern matrix* m_inverse(matrix*, matrix*);
+extern matrix* LUinverse(matrix*, int *, matrix*);
+extern int LUsolve(matrix*, int *, vector*, vector*);
+extern int Lsolve(matrix*, vector*, vector*, double);
+extern int Usolve(matrix*, vector*, vector*, double);
+extern matrix* new_matrix(int);
+extern vector* new_vector(int);
 
 #define _MATRIX_H
 #endif				/* _MATRIX_H */
