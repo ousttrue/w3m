@@ -3,7 +3,6 @@
 #include "signal_util.h"
 #include "myctype.h"
 #include "istream.h"
-#include <signal.h>
 #include <openssl/x509v3.h>
 
 #define	uchar		unsigned char
@@ -183,9 +182,9 @@ ISclose(InputStream stream)
         if (stream->base.type & IST_UNCLOSE) {
             return -1;
         }
-        prevtrap = mySignal(SIGINT, SIG_IGN);
+        prevtrap = mySignalInt(mySignalGetIgn());
         stream->base.close (stream->base.handle);
-        mySignal(SIGINT, prevtrap);
+        mySignalInt(prevtrap);
     }
     xfree(stream->base.stream.buf);
     xfree(stream);

@@ -5,7 +5,6 @@
 #include "signal_util.h"
 #include <sys/types.h>
 #include "myctype.h"
-#include <signal.h>
 #include <setjmp.h>
 #if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>

@@ -8,7 +8,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-#include <signal.h>
 #include <setjmp.h>
 #include <errno.h>
 

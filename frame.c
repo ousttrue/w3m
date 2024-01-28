@@ -3,7 +3,6 @@
 #include "signal_util.h"
 #include "parsetagx.h"
 #include "myctype.h"
-// #include <signal.h>
 #include <setjmp.h>
 
 static JMP_BUF AbortLoading;

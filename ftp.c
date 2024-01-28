@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <pwd.h>
 #include <Str.h>
-#include <signal.h>
 #include <setjmp.h>
 #include <time.h>
 
@@ -44,7 +43,7 @@ static MySignalHandler
 KeyAbort(SIGNAL_ARG)
 {
     LONGJMP(AbortLoading, 1);
-    SIGNAL_RETURN;
+    SIGNAL_RETURN 0;
 }
 
 static Str

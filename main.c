@@ -3,7 +3,6 @@
 #include "fm.h"
 #include "signal_util.h"
 #include <stdio.h>
-#include <signal.h>
 #include <setjmp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
