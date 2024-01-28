@@ -323,11 +323,7 @@ extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
 extern void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
                         int width);
 extern void pushTable(struct table *, struct table *);
-extern struct form_list *newFormList(char *action, char *method, char *charset,
-                                     char *enctype, char *target, char *name,
-                                     struct form_list *_next);
-extern struct form_item_list *formList_addInput(struct form_list *fl,
-                                                struct parsed_tag *tag);
+
 extern char *form2str(FormItemList *fi);
 extern int formtype(char *typestr);
 extern void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
@@ -557,8 +553,6 @@ extern int getKey(char *s);
 extern char *getKeyData(int key);
 extern char *getWord(char **str);
 extern char *getQWord(char **str);
-struct regex;
-extern char *getRegexWord(const char **str, struct regex **regex_ret);
 
 #define mainMn nulcmd
 #define selMn selBuf

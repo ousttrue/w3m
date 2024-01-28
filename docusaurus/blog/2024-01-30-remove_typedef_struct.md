@@ -1,7 +1,7 @@
 ---
 title: typedef struct の除去
 date: 2024-01-30
-tags: [w3m, cpp]
+tags: [cpp]
 ---
 
 これからヘッダーを小分けにしていくのに、
@@ -11,11 +11,23 @@ tags: [w3m, cpp]
 typedef struct NodeTag
 {
   const char *name;
-  sturct NodeTag *next; // 👈  
+  struct NodeTag *next; // 👈  
 } Node;
 // 前方宣言
 struct Node; // これはだめ
 struct NodeTag; // こっちが必要
+
+// ならば同名にすれば？
+typedef struct Node
+{
+  const char *name;
+  struct Node *next; // 👈  
+} Node;
+// 前方宣言
+struct Node; 
+
+// 参照するときに struct が要る
+void addLink(struct Node* node, struct Node* next);
 ```
 
 ```cpp title="C++ はこれで OK"
@@ -26,6 +38,9 @@ struct Node
 };
 // 前方宣言
 struct Node; // OK
+
+// 楽
+void addLink(Node* node, Node* next);
 ```
 
 なので struct の typedef を削除します。

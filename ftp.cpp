@@ -23,7 +23,7 @@
 typedef int socklen_t;
 #endif
 
-typedef struct _FTP {
+struct FTP {
   char *host;
   int port;
   char *user;
@@ -31,9 +31,9 @@ typedef struct _FTP {
   InputStream rf;
   FILE *wf;
   FILE *data;
-} *FTP;
+};
 
-static struct _FTP current_ftp = {NULL, 0, NULL, NULL, NULL, NULL, NULL};
+static FTP current_ftp = {NULL, 0, NULL, NULL, NULL, NULL, NULL};
 
 static JMP_BUF AbortLoading;
 
@@ -42,7 +42,7 @@ static void KeyAbort(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-static Str ftp_command(FTP ftp, char *cmd, char *arg, int *status) {
+static Str ftp_command(FTP *ftp, char *cmd, char *arg, int *status) {
   Str tmp;
 
   if (!ftp->host)
@@ -87,7 +87,7 @@ static Str ftp_command(FTP ftp, char *cmd, char *arg, int *status) {
   return tmp;
 }
 
-static void ftp_close(FTP ftp) {
+static void ftp_close(FTP *ftp) {
   if (!ftp->host)
     return;
   if (ftp->rf) {
@@ -107,7 +107,7 @@ static void ftp_close(FTP ftp) {
   return;
 }
 
-static int ftp_login(FTP ftp) {
+static int ftp_login(FTP *ftp) {
   int sock, status;
   int sock_wf;
 
@@ -191,7 +191,7 @@ open_err:
   return FALSE;
 }
 
-static int ftp_pasv(FTP ftp) {
+static int ftp_pasv(FTP *ftp) {
   int status;
   int n1, n2, n3, n4, p1, p2;
   int data;
@@ -259,7 +259,7 @@ static int ftp_pasv(FTP ftp) {
   return 0;
 }
 
-static time_t ftp_modtime(FTP ftp, char *path) {
+static time_t ftp_modtime(FTP *ftp, char *path) {
   int status;
   Str tmp;
   char *p;
@@ -283,7 +283,7 @@ static time_t ftp_modtime(FTP ftp, char *path) {
   return t + (lt - gt);
 }
 
-static int ftp_quit(FTP ftp) {
+static int ftp_quit(FTP *ftp) {
   /*
    * int status;
    * ftp_command(ftp, "QUIT", NULL, &status);

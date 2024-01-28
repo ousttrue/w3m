@@ -5,15 +5,15 @@
 /* hash table */
 
 #define defhash(keytype,type,sym) \
-typedef struct HashItem_##sym { \
+struct HashItem_##sym { \
   keytype key; \
   type value; \
-  struct HashItem_##sym *next; \
-} HashItem_##sym;  \
-typedef struct Hash_##sym { \
+  HashItem_##sym *next; \
+};  \
+struct Hash_##sym { \
   int size; \
-  struct HashItem_##sym **tab; \
-} Hash_##sym; \
+  HashItem_##sym **tab; \
+}; \
 extern Hash_##sym *newHash_##sym(int size); \
 extern void putHash_##sym(Hash_##sym *t, keytype key, type value); \
 extern type getHash_##sym(Hash_##sym *t, keytype key, type failval);

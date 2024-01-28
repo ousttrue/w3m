@@ -28,10 +28,10 @@ struct {
 };
 /* *INDENT-ON* */
 
-struct form_list *newFormList(char *action, char *method, char *charset,
-                              char *enctype, char *target, char *name,
-                              struct form_list *_next) {
-  struct form_list *l;
+struct FormList *newFormList(char *action, char *method, char *charset,
+                             char *enctype, char *target, char *name,
+                             FormList *_next) {
+  FormList *l;
   Str a = Strnew_charp(action);
   int m = FORM_METHOD_GET;
   int e = FORM_ENCTYPE_URLENCODED;
@@ -49,7 +49,7 @@ struct form_list *newFormList(char *action, char *method, char *charset,
     e = FORM_ENCTYPE_MULTIPART;
   }
 
-  l = (struct form_list *)New(struct form_list);
+  l = (FormList *)New(FormList);
   l->item = l->lastitem = NULL;
   l->action = a;
   l->method = m;
@@ -64,11 +64,10 @@ struct form_list *newFormList(char *action, char *method, char *charset,
 }
 
 /*
- * add <input> element to form_list
+ * add <input> element to FormList
  */
-struct form_item_list *formList_addInput(struct form_list *fl,
-                                         struct parsed_tag *tag) {
-  struct form_item_list *item;
+FormItemList *formList_addInput(FormList *fl, struct parsed_tag *tag) {
+  FormItemList *item;
   char *p;
   int i;
 
@@ -76,7 +75,7 @@ struct form_item_list *formList_addInput(struct form_list *fl,
   if (fl == NULL)
     return NULL;
 
-  item = (struct form_item_list *)New(struct form_item_list);
+  item = (FormItemList *)New(FormItemList);
   item->type = FORM_UNKNOWN;
   item->size = -1;
   item->rows = 0;

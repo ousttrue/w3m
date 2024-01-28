@@ -72,7 +72,7 @@ Buffer *follow_map_panel(Buffer *buf, char *name) {
 }
 
 
-struct _MapArea *newMapArea(char *url, char *target, const char *alt, char *shape,
+MapArea *newMapArea(char *url, char *target, const char *alt, char *shape,
                     char *coords) {
   MapArea *a = (MapArea *)New(MapArea);
 

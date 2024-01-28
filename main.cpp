@@ -32,11 +32,11 @@ Hist *URLHist;
 Hist *ShellHist;
 Hist *TextHist;
 
-typedef struct _Event {
+struct Event {
   int cmd;
   void *data;
-  struct _Event *next;
-} Event;
+  Event *next;
+};
 static Event *CurrentEvent = NULL;
 static Event *LastEvent = NULL;
 
@@ -3834,7 +3834,7 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
 AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status, int cmd,
                           void *data) {
   if (event == NULL)
-    event = (AlarmEvent*)New(AlarmEvent);
+    event = (AlarmEvent *)New(AlarmEvent);
   event->sec = sec;
   event->status = status;
   event->cmd = cmd;
@@ -3910,7 +3910,7 @@ DEFUN(defKey, DEFINE_KEY,
 
 TabBuffer *newTab(void) {
 
-  auto n = (TabBuffer*)New(TabBuffer);
+  auto n = (TabBuffer *)New(TabBuffer);
   if (n == NULL)
     return NULL;
   n->nextTab = NULL;
@@ -4227,7 +4227,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
 void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                      clen_t size) {
 
-  auto d = (DownloadList*)New(DownloadList);
+  auto d = (DownloadList *)New(DownloadList);
   d->pid = pid;
   d->url = url;
   if (save[0] != '/' && save[0] != '~')
@@ -4459,7 +4459,7 @@ static void save_buffer_position(Buffer *buf) {
       b->cur_linenumber == CUR_LINENUMBER(buf) &&
       b->currentColumn == buf->currentColumn && b->pos == buf->pos)
     return;
-  b = (BufferPos*)New(BufferPos);
+  b = (BufferPos *)New(BufferPos);
   b->top_linenumber = TOP_LINENUMBER(buf);
   b->cur_linenumber = CUR_LINENUMBER(buf);
   b->currentColumn = buf->currentColumn;

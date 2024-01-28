@@ -115,12 +115,12 @@ typedef struct sgttyb TerminalMode;
 
 typedef unsigned short l_prop;
 
-typedef struct scline {
+struct Screen {
   char *lineimage;
   l_prop *lineprop;
   short isdirty;
   short eol;
-} Screen;
+};
 
 static TerminalMode d_ioval;
 static FILE *ttyf = NULL;
