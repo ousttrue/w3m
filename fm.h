@@ -99,9 +99,7 @@ void bzero(void *, int);
 #define SHELLBUFFERNAME	"*Shellout*"
 #define PIPEBUFFERNAME	"*stream*"
 #define CPIPEBUFFERNAME	"*stream(closed)*"
-#ifdef USE_DICT
 #define DICTBUFFERNAME "*dictionary*"
-#endif				/* USE_DICT */
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -406,17 +404,13 @@ typedef struct _Buffer {
     char *mailcap_source;
     char *header_source;
     char search_header;
-#ifdef USE_SSL
     char *ssl_certificate;
-#endif
     char image_flag;
     char image_loaded;
     char need_reshape;
     Anchor *submit;
     struct _BufferPos *undo;
-#ifdef USE_ALARM
     struct _AlarmEvent *event;
-#endif
 } Buffer;
 
 typedef struct _BufferPos {
@@ -631,7 +625,6 @@ struct html_feed_environ {
     int blank_lines;
 };
 
-#ifdef USE_COOKIE
 struct portlist {
     unsigned short port;
     struct portlist *next;
@@ -672,7 +665,6 @@ struct cookie {
 #define COO_EBADHOST	(8 | COO_OVERRIDE_OK)	/* dot in matched host name in FQDN (version 1 case 4) */
 #define COO_EPORT	(9)	/* Port match failed (version 1' case 5) */
 #define COO_EMAX	COO_EPORT
-#endif				/* USE_COOKIE */
 
 /* modes for align() */
 
@@ -764,14 +756,10 @@ extern unsigned char EscDKeymap[];
 extern FuncList w3mFuncList[];
 
 global char *HTTP_proxy init(NULL);
-#ifdef USE_SSL
 global char *HTTPS_proxy init(NULL);
-#endif				/* USE_SSL */
 global char *FTP_proxy init(NULL);
 global ParsedURL HTTP_proxy_parsed;
-#ifdef USE_SSL
 global ParsedURL HTTPS_proxy_parsed;
-#endif				/* USE_SSL */
 global ParsedURL FTP_proxy_parsed;
 global char *NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
@@ -896,10 +884,8 @@ global int squeezeBlankLine init(FALSE);
 global char *BookmarkFile init(NULL);
 global int UseExternalDirBuffer init(TRUE);
 global char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
-#ifdef USE_DICT
 global int UseDictCommand init(TRUE);
 global char *DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-#endif				/* USE_DICT */
 global int ignore_null_img_alt init(TRUE);
 #define DISPLAY_INS_DEL_SIMPLE	0
 #define DISPLAY_INS_DEL_NORMAL	1
@@ -920,9 +906,7 @@ global char *migemo_command init(DEF_MIGEMO_COMMAND);
 #endif				/* USE_MIGEMO */
 
 global struct auth_cookie *Auth_cookie init(NULL);
-#ifdef USE_COOKIE
 global struct cookie *First_cookie init(NULL);
-#endif				/* USE_COOKIE */
 
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
@@ -937,11 +921,9 @@ extern Hist *SaveHist;
 extern Hist *URLHist;
 extern Hist *ShellHist;
 extern Hist *TextHist;
-#ifdef USE_HISTORY
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
-#endif				/* USE_HISTORY */
 global int multicolList init(FALSE);
 
 #define Str_conv_from_system(x) (x)
@@ -976,7 +958,6 @@ global char *mkd_tmp_dir init(NULL);
 global char *config_file init(NULL);
 
 
-#ifdef USE_COOKIE
 global int default_use_cookie init(TRUE);
 global int use_cookie init(TRUE);
 global int show_cookie init(FALSE);
@@ -991,7 +972,6 @@ global char *cookie_avoid_wrong_number_of_dots init(NULL);
 global TextList *Cookie_reject_domains;
 global TextList *Cookie_accept_domains;
 global TextList *Cookie_avoid_wrong_number_of_dots_domains;
-#endif				/* USE_COOKIE */
 
 global int view_unseenobject init(TRUE);
 
@@ -1005,7 +985,6 @@ global int ssl_ca_default init(TRUE);
 global int ssl_path_modified init(FALSE);
 #endif				/* defined(USE_SSL) &&
 				 * defined(USE_SSL_VERIFY) */
-#ifdef USE_SSL
 global char *ssl_forbid_method init("2, 3, t, 5");
 #ifdef SSL_CTX_set_min_proto_version
 global char *ssl_min_version init(NULL);
@@ -1015,7 +994,6 @@ global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else
 global char *ssl_cipher init(NULL);
 #endif
-#endif				/* USE_SSL */
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
@@ -1041,7 +1019,6 @@ int backend(void);
 extern void deleteFiles(void);
 void w3m_exit(int i);
 
-#ifdef USE_ALARM
 #define AL_UNSET         0
 #define AL_EXPLICIT      1
 #define AL_IMPLICIT      2
@@ -1053,7 +1030,6 @@ typedef struct _AlarmEvent {
     int cmd;
     void *data;
 } AlarmEvent;
-#endif
 
 /* 
  * Externals

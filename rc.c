@@ -91,9 +91,7 @@ static int RC_table_size;
 #define CMT_MARK_COLOR   N_("Color of mark")
 #define CMT_USE_PROXY    N_("Use proxy")
 #define CMT_HTTP_PROXY   N_("URL of HTTP proxy host")
-#ifdef USE_SSL
 #define CMT_HTTPS_PROXY  N_("URL of HTTPS proxy host")
-#endif				/* USE_SSL */
 #define CMT_FTP_PROXY    N_("URL of FTP proxy host")
 #define CMT_NO_PROXY     N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR	N_("Check noproxy by network address")
@@ -148,10 +146,8 @@ static int RC_table_size;
 #define CMT_BGEXTVIEW    N_("Run external viewer in the background")
 #define CMT_EXT_DIRLIST  N_("Use external program for directory listing")
 #define CMT_DIRLIST_CMD  N_("URL of directory listing command")
-#ifdef USE_DICT
 #define CMT_USE_DICTCOMMAND  N_("Enable dictionary lookup through CGI")
 #define CMT_DICTCOMMAND  N_("URL of dictionary lookup command")
-#endif				/* USE_DICT */
 #define CMT_IGNORE_NULL_IMG_ALT	N_("Display link name for images lacking ALT")
 #define CMT_IFILE        N_("Index file for directories")
 #define CMT_RETRY_HTTP   N_("Prepend http:// to URL automatically")
@@ -163,22 +159,17 @@ static int RC_table_size;
 #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
 #define CMT_IGNORE_CASE N_("Search case-insensitively")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
-#ifdef USE_SSL
-#ifdef USE_SSL_VERIFY
 #define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
 #define CMT_SSL_KEY_FILE N_("PEM encoded private key file of client")
 #define CMT_SSL_CA_PATH N_("Path to directory for PEM encoded certificates of CAs")
 #define CMT_SSL_CA_FILE N_("File consisting of PEM encoded certificates of CAs")
 #define CMT_SSL_CA_DEFAULT N_("Use default locations for PEM encoded certificates of CAs")
-#endif				/* USE_SSL_VERIFY */
 #define CMT_SSL_FORBID_METHOD N_("List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)")
 #ifdef SSL_CTX_set_min_proto_version
 #define CMT_SSL_MIN_VERSION N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
 #endif
 #define CMT_SSL_CIPHER N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
-#endif				/* USE_SSL */
-#ifdef USE_COOKIE
 #define CMT_USECOOKIE   N_("Enable cookie processing")
 #define CMT_SHOWCOOKIE  N_("Print a message when receiving a cookie")
 #define CMT_ACCEPTCOOKIE N_("Accept cookies")
@@ -186,7 +177,6 @@ static int RC_table_size;
 #define CMT_COOKIE_REJECT_DOMAINS N_("Domains to reject cookies from")
 #define CMT_COOKIE_ACCEPT_DOMAINS N_("Domains to accept cookies from")
 #define CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS N_("Domains to avoid [wrong number of dots]")
-#endif
 #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
@@ -249,13 +239,11 @@ static struct sel_c dnsorders[] = {
 };
 #endif				/* INET6 */
 
-#ifdef USE_COOKIE
 static struct sel_c badcookiestr[] = {
     {N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard")},
     {N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask")},
     {0, NULL, NULL}
 };
-#endif				/* USE_COOKIE */
 
 static struct sel_c mailtooptionsstr[] = {
 #ifdef USE_W3MMAILER
@@ -298,12 +286,10 @@ struct param_ptr params1[] = {
      CMT_EXT_DIRLIST, NULL},
     {"dirlist_cmd", P_STRING, PI_TEXT, (void *)&DirBufferCommand,
      CMT_DIRLIST_CMD, NULL},
-#ifdef USE_DICT
     {"use_dictcommand", P_INT, PI_ONOFF, (void *)&UseDictCommand,
      CMT_USE_DICTCOMMAND, NULL},
     {"dictcommand", P_STRING, PI_TEXT, (void *)&DictCommand,
      CMT_DICTCOMMAND, NULL},
-#endif				/* USE_DICT */
     {"multicol", P_INT, PI_ONOFF, (void *)&multicolList, CMT_MULTICOL, NULL},
     {"alt_entity", P_CHARINT, PI_ONOFF, (void *)&UseAltEntity, CMT_ALT_ENTITY,
      NULL},
@@ -341,11 +327,9 @@ struct param_ptr params1[] = {
 
 struct param_ptr params3[] = {
     {"pagerline", P_NZINT, PI_TEXT, (void *)&PagerMax, CMT_PAGERLINE, NULL},
-#ifdef USE_HISTORY
     {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY, NULL},
     {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
     {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST, NULL},
-#endif				/* USE_HISTORY */
     {"confirm_qq", P_INT, PI_ONOFF, (void *)&confirm_on_quit, CMT_CONFIRM_QQ,
      NULL},
     {"close_tab_back", P_INT, PI_ONOFF, (void *)&close_tab_back,
@@ -388,10 +372,8 @@ struct param_ptr params4[] = {
      NULL},
     {"http_proxy", P_STRING, PI_TEXT, (void *)&HTTP_proxy, CMT_HTTP_PROXY,
      NULL},
-#ifdef USE_SSL
     {"https_proxy", P_STRING, PI_TEXT, (void *)&HTTPS_proxy, CMT_HTTPS_PROXY,
      NULL},
-#endif				/* USE_SSL */
     {"ftp_proxy", P_STRING, PI_TEXT, (void *)&FTP_proxy, CMT_FTP_PROXY, NULL},
     {"no_proxy", P_STRING, PI_TEXT, (void *)&NO_proxy, CMT_NO_PROXY, NULL},
     {"noproxy_netaddr", P_INT, PI_ONOFF, (void *)&NOproxy_netaddr,
@@ -448,7 +430,6 @@ struct param_ptr params6[] = {
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-#ifdef USE_SSL
 struct param_ptr params7[] = {
     {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
      CMT_SSL_FORBID_METHOD, NULL},
@@ -458,7 +439,6 @@ struct param_ptr params7[] = {
 #endif
     {"ssl_cipher", P_STRING, PI_TEXT, (void *)&ssl_cipher, CMT_SSL_CIPHER,
      NULL},
-#ifdef USE_SSL_VERIFY
     {"ssl_verify_server", P_INT, PI_ONOFF, (void *)&ssl_verify_server,
      CMT_SSL_VERIFY_SERVER, NULL},
     {"ssl_cert_file", P_SSLPATH, PI_TEXT, (void *)&ssl_cert_file,
@@ -471,12 +451,9 @@ struct param_ptr params7[] = {
      NULL},
     {"ssl_ca_default", P_INT, PI_ONOFF, (void *)&ssl_ca_default,
      CMT_SSL_CA_DEFAULT, NULL},
-#endif				/* USE_SSL_VERIFY */
     {NULL, 0, 0, NULL, NULL, NULL},
 };
-#endif				/* USE_SSL */
 
-#ifdef USE_COOKIE
 struct param_ptr params8[] = {
     {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE, NULL},
     {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie,
@@ -494,7 +471,6 @@ struct param_ptr params8[] = {
      CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
     {NULL, 0, 0, NULL, NULL, NULL},
 };
-#endif
 
 struct param_ptr params9[] = {
     {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file, CMT_PASSWDFILE,
@@ -548,12 +524,8 @@ struct param_section sections[] = {
     {N_("External Program Settings"), params6},
     {N_("Network Settings"), params9},
     {N_("Proxy Settings"), params4},
-#ifdef USE_SSL
     {N_("SSL Settings"), params7},
-#endif
-#ifdef USE_COOKIE
     {N_("Cookie Settings"), params8},
-#endif
     {NULL, NULL}
 };
 
@@ -865,17 +837,14 @@ parse_proxy(void)
 {
     if (non_null(HTTP_proxy))
 	parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
-#ifdef USE_SSL
     if (non_null(HTTPS_proxy))
 	parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
-#endif				/* USE_SSL */
     if (non_null(FTP_proxy))
 	parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
     if (non_null(NO_proxy))
 	set_no_proxy(NO_proxy);
 }
 
-#ifdef USE_COOKIE
 static void
 parse_cookie(void)
 {
@@ -887,7 +856,6 @@ parse_cookie(void)
 	Cookie_avoid_wrong_number_of_dots_domains
 	       	= make_domain_list(cookie_avoid_wrong_number_of_dots);
 }
-#endif
 
 #define do_mkdir(dir,mode) mkdir(dir,mode)
 
@@ -949,9 +917,7 @@ sync_with_option(void)
 	PagerMax = LINES;
     WrapSearch = WrapDefault;
     parse_proxy();
-#ifdef USE_COOKIE
     parse_cookie();
-#endif
     initMailcap();
     initMimeTypes();
 #ifdef USE_EXTERNAL_URI_LOADER
@@ -1265,13 +1231,6 @@ confFile(char *base)
     return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 
-#ifndef USE_HELP_CGI
-char *
-helpFile(char *base)
-{
-    return expandPath(Strnew_m_charp(w3m_help_dir(), "/", base, NULL)->ptr);
-}
-#endif
 
 /* siteconf */
 /*

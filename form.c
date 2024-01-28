@@ -21,9 +21,7 @@ struct {
 } internal_action[] = {
     {"map", follow_map}, 
     {"option", panel_set_option},
-#ifdef USE_COOKIE
     {"cookie", set_cookie_flag},
-#endif				/* USE_COOKIE */
     {"download", download_action},
     {"none", NULL},
     {NULL, NULL},

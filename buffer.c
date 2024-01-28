@@ -28,9 +28,7 @@ newBuffer(int width)
     n->clone = New(int);
     *n->clone = 1;
     n->trbyte = 0;
-#ifdef USE_SSL
     n->ssl_certificate = NULL;
-#endif
     n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
     n->need_reshape = 1;	 /* always reshape new buffers to mark URLs */
     return n;

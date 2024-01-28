@@ -110,13 +110,9 @@ extern void curlno(void);
 extern void execCmd(void);
 #define dispI nulcmd
 #define stopI nulcmd
-#ifdef USE_ALARM
 extern void setAlarm(void);
 extern AlarmEvent *setAlarmEvent(AlarmEvent * event, int sec, short status,
 				 int cmd, void *data);
-#else
-#define setAlarm nulcmd
-#endif
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);
@@ -308,9 +304,7 @@ extern char *inputLineHistSearch(char *prompt, char *def_str, int flag,
 				 Hist *hist, int (*incfunc) (int ch, Str buf,
 							     Lineprop *prop));
 extern Str unescape_spaces(Str s);
-#ifdef USE_HISTORY
 extern Buffer *historyBuffer(Hist *hist);
-#endif				/* not USE_HISTORY */
 extern double log_like(int x);
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
@@ -537,7 +531,6 @@ extern char *expandName(char *name);
 extern Str tmpfname(int type, char *ext);
 extern time_t mymktime(char *timestr);
 extern void (*mySignal(int signal_number, void (*action) (int))) (int);
-#ifdef USE_COOKIE
 extern char *FQDN(char *host);
 extern Str find_cookie(ParsedURL *pu);
 extern int add_cookie(ParsedURL *pu, Str name, Str value, time_t expires,
@@ -550,9 +543,6 @@ extern void cooLst(void);
 extern Buffer *cookie_list_panel(void);
 extern void set_cookie_flag(struct parsed_tagarg *arg);
 extern int check_cookie_accept_domain(char *domain);
-#else				/* not USE_COOKIE */
-#define cooLst nulcmd
-#endif				/* not USE_COOKIE */
 #define docCSet nulcmd
 #define defCSet nulcmd
 
@@ -593,19 +583,12 @@ extern char *getRegexWord(const char **str, struct regex **regex_ret);
 #define selMn selBuf
 #define tabMn nulcmd
 
-#ifdef USE_DICT
 extern void dictword(void);
 extern void dictwordat(void);
-#else				/* not USE_DICT */
-#define dictword nulcmd
-#define dictwordat nulcmd
-#endif				/* not USE_DICT */
 extern char *guess_save_name(Buffer *buf, char *file);
 
 extern void wrapToggle(void);
-#ifdef USE_BUFINFO
 extern void saveBufferInfo(void);
-#endif
 
 extern Str getLinkNumberStr(int correction);
 

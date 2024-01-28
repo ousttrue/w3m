@@ -37,23 +37,17 @@ typedef struct _Event {
 static Event *CurrentEvent = NULL;
 static Event *LastEvent = NULL;
 
-#ifdef USE_ALARM
 static AlarmEvent DefaultAlarm = {
     0, AL_UNSET, FUNCNAME_nulcmd, NULL
 };
 static AlarmEvent *CurrentAlarm = &DefaultAlarm;
 static MySignalHandler SigAlarm(SIGNAL_ARG);
-#endif
 
-#ifdef SIGWINCH
 static int need_resize_screen = FALSE;
 static MySignalHandler resize_hook(SIGNAL_ARG);
 static void resize_screen(void);
-#endif
 
-#ifdef SIGPIPE
 static MySignalHandler SigPipe(SIGNAL_ARG);
-#endif
 
 #ifdef USE_MARK
 static char *MarkString = NULL;
@@ -110,15 +104,9 @@ fversion(FILE * f)
 #else
 	    "lang=en"
 #endif
-#ifdef USE_COOKIE
 	    ",cookie"
-#endif
-#ifdef USE_SSL
 	    ",ssl"
-#ifdef USE_SSL_VERIFY
 	    ",ssl-verify"
-#endif
-#endif
 #ifdef USE_EXTERNAL_URI_LOADER
 	    ",external-uri-loader"
 #endif
@@ -128,9 +116,7 @@ fversion(FILE * f)
 #ifdef INET6
 	    ",ipv6"
 #endif
-#ifdef USE_ALARM
 	    ",alarm"
-#endif
 #ifdef USE_MARK
 	    ",mark"
 #endif
@@ -177,13 +163,9 @@ fusage(FILE * f, int err)
     fprintf(f, "    -4               IPv4 only (-o dns_order=4)\n");
     fprintf(f, "    -6               IPv6 only (-o dns_order=6)\n");
 #endif
-#ifdef USE_SSL
     fprintf(f, "    -insecure        use insecure SSL config options\n");
-#endif
-#ifdef USE_COOKIE
     fprintf(f,
 	    "    -cookie          use cookie (-no-cookie: don't use cookie)\n");
-#endif				/* USE_COOKIE */
     fprintf(f, "    -graph           use DEC special graphics for border of table and menu\n");
     fprintf(f, "    -no-graph        use ASCII character for border of table and menu\n");
 #if 1				/* pager requires -s */
@@ -254,7 +236,6 @@ wrap_GC_warn_proc(char *msg, GC_word arg)
 	fprintf(stderr, msg, (unsigned long)arg);
 }
 
-#ifdef SIGCHLD
 static void
 sig_chld(int signo)
 {
@@ -283,7 +264,6 @@ sig_chld(int signo)
     mySignal(SIGCHLD, sig_chld);
     return;
 }
-#endif
 
 static Str
 make_optional_header_string(char *s)
@@ -407,14 +387,12 @@ main(int argc, char **argv)
 	((p = getenv("HTTP_PROXY")) ||
 	 (p = getenv("http_proxy")) || (p = getenv("HTTP_proxy"))))
 	HTTP_proxy = p;
-#ifdef USE_SSL
     if (!non_null(HTTPS_proxy) &&
 	((p = getenv("HTTPS_PROXY")) ||
 	 (p = getenv("https_proxy")) || (p = getenv("HTTPS_proxy"))))
 	HTTPS_proxy = p;
     if (HTTPS_proxy == NULL && non_null(HTTP_proxy))
 	HTTPS_proxy = HTTP_proxy;
-#endif				/* USE_SSL */
     if (!non_null(FTP_proxy) &&
 	((p = getenv("FTP_PROXY")) ||
 	 (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
@@ -565,7 +543,6 @@ main(int argc, char **argv)
 		    argv[i]++;
 		}
 	    }
-#ifdef USE_COOKIE
 	    else if (!strcmp("-no-cookie", argv[i])) {
 		use_cookie = FALSE;
 		accept_cookie = FALSE;
@@ -574,7 +551,6 @@ main(int argc, char **argv)
 		use_cookie = TRUE;
 		accept_cookie = TRUE;
 	    }
-#endif				/* USE_COOKIE */
 #if 1				/* pager requires -s */
 	    else if (!strcmp("-s", argv[i]))
 #else
@@ -587,7 +563,6 @@ main(int argc, char **argv)
 		displayTitleTerm = getenv("TERM");
 	    else if (!strncmp("-title=", argv[i], 7))
 		displayTitleTerm = argv[i] + 7;
-#ifdef USE_SSL
 	    else if (!strcmp("-insecure", argv[i])) {
 #ifdef OPENSSL_TLS_SECURITY_LEVEL
 		set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
@@ -598,11 +573,8 @@ main(int argc, char **argv)
 		set_param_option("ssl_min_version=all");
 #endif
 		set_param_option("ssl_forbid_method=");
-#ifdef USE_SSL_VERIFY
 		set_param_option("ssl_verify_server=0");
-#endif
 	    }
-#endif				/* USE_SSL */
 	    else if (!strcmp("-o", argv[i]) ||
 		     !strcmp("-show-option", argv[i])) {
 		if (!strcmp("-show-option", argv[i]) || ++i >= argc ||
@@ -661,22 +633,13 @@ main(int argc, char **argv)
 
     if (!w3m_dump && !w3m_backend) {
 	fmInit();
-#ifdef SIGWINCH
 	mySignal(SIGWINCH, resize_hook);
-#else				/* not SIGWINCH */
-	setlinescols();
-	setupscreen();
-#endif				/* not SIGWINCH */
     }
 
     sync_with_option();
-#ifdef USE_COOKIE
     initCookie();
-#endif				/* USE_COOKIE */
-#ifdef USE_HISTORY
     if (UseHistory)
 	loadHistory(URLHist);
-#endif				/* not USE_HISTORY */
 
 
     if (w3m_backend)
@@ -684,12 +647,8 @@ main(int argc, char **argv)
 
     if (w3m_dump)
 	mySignal(SIGINT, SIG_IGN);
-#ifdef SIGCHLD
     mySignal(SIGCHLD, sig_chld);
-#endif
-#ifdef SIGPIPE
     mySignal(SIGPIPE, SigPipe);
-#endif
 
 #if (GC_VERSION_MAJOR>7) || ((GC_VERSION_MAJOR==7) && (GC_VERSION_MINOR>=2))
     orig_GC_warn_proc = GC_get_warn_proc();
@@ -855,17 +814,13 @@ main(int argc, char **argv)
 	    do_dump(Currentbuf);
 	else {
 	    Currentbuf = newbuf;
-#ifdef USE_BUFINFO
 	    saveBufferInfo();
-#endif
 	}
     }
     if (w3m_dump) {
 	if (err_msg->length)
 	    fprintf(stderr, "%s", err_msg->ptr);
-#ifdef USE_COOKIE
 	save_cookies();
-#endif				/* USE_COOKIE */
 	w3m_exit(0);
     }
 
@@ -898,9 +853,7 @@ main(int argc, char **argv)
 	if (err_msg->length)
 	    fprintf(stderr, "%s", err_msg->ptr);
 	if (newbuf == NO_BUFFER) {
-#ifdef USE_COOKIE
 	    save_cookies();
-#endif				/* USE_COOKIE */
 	    if (!err_msg->length)
 		w3m_exit(0);
 	}
@@ -941,7 +894,6 @@ main(int argc, char **argv)
 	    continue;
 	}
 	/* get keypress event */
-#ifdef USE_ALARM
 	if (Currentbuf->event) {
 	    if (Currentbuf->event->status != AL_UNSET) {
 		CurrentAlarm = Currentbuf->event;
@@ -960,30 +912,21 @@ main(int argc, char **argv)
 	}
 	if (!Currentbuf->event)
 	    CurrentAlarm = &DefaultAlarm;
-#endif
-#ifdef USE_ALARM
 	if (CurrentAlarm->sec > 0) {
 	    mySignal(SIGALRM, SigAlarm);
 	    alarm(CurrentAlarm->sec);
 	}
-#endif
-#ifdef SIGWINCH
 	mySignal(SIGWINCH, resize_hook);
-#endif
-#ifdef SIGWINCH
 	{
 	    do {
 		if (need_resize_screen)
 		    resize_screen();
 	    } while (sleep_till_anykey(1, 0) <= 0);
 	}
-#endif
 	c = getch();
-#ifdef USE_ALARM
 	if (CurrentAlarm->sec > 0) {
 	    alarm(0);
 	}
-#endif
 	if (IS_ASCII(c)) {	/* Ascii */
 	    if (('0' <= c) && (c <= '9') &&
 		(prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
@@ -1065,7 +1008,6 @@ dump_extra(Buffer *buf)
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
     if (buf->baseURL)
 	printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
-#ifdef USE_SSL
     if (buf->ssl_certificate) {
 	Str tmp = Strnew();
 	char *p;
@@ -1081,7 +1023,6 @@ dump_extra(Buffer *buf)
 	    Strcat_char(tmp, '\n');
 	printf("W3m-ssl-certificate: %s", tmp->ptr);
     }
-#endif
 }
 
 static int
@@ -1225,7 +1166,6 @@ tmpClearBuffer(Buffer *buf)
 
 static Str currentURL(void);
 
-#ifdef USE_BUFINFO
 void
 saveBufferInfo()
 {
@@ -1239,7 +1179,6 @@ saveBufferInfo()
     fprintf(fp, "%s\n", currentURL()->ptr);
     fclose(fp);
 }
-#endif
 
 static void
 pushBuffer(Buffer *buf)
@@ -1257,9 +1196,7 @@ pushBuffer(Buffer *buf)
 	buf->nextBuffer = Currentbuf;
 	Currentbuf = buf;
     }
-#ifdef USE_BUFINFO
     saveBufferInfo();
-#endif
 
 }
 
@@ -1290,7 +1227,6 @@ intTrap(SIGNAL_ARG)
     SIGNAL_RETURN;
 }
 
-#ifdef SIGWINCH
 static MySignalHandler
 resize_hook(SIGNAL_ARG)
 {
@@ -1308,9 +1244,7 @@ resize_screen(void)
     if (CurrentTab)
 	displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
-#endif				/* SIGWINCH */
 
-#ifdef SIGPIPE
 static MySignalHandler
 SigPipe(SIGNAL_ARG)
 {
@@ -1320,7 +1254,6 @@ SigPipe(SIGNAL_ARG)
     mySignal(SIGPIPE, SigPipe);
     SIGNAL_RETURN;
 }
-#endif
 
 /*
  * Command functions: These functions are called with a keystroke.
@@ -1962,7 +1895,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer")
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel")
 {
-#ifdef USE_HELP_CGI
     char *lang;
     int n;
     Str tmp;
@@ -1973,9 +1905,6 @@ DEFUN(ldhelp, HELP, "Show help panel")
 		  Str_form_quote(Strnew_charp(w3m_version))->ptr,
 		  Str_form_quote(Strnew_charp_n(lang, n))->ptr);
     cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-#else
-    cmd_loadURL(helpFile(HELP_FILE), NULL, NO_REFERER, NULL);
-#endif
 }
 
 static void
@@ -2246,13 +2175,9 @@ _quitfm(int confirm)
 
     term_title("");		/* XXX */
     fmTerm();
-#ifdef USE_COOKIE
     save_cookies();
-#endif				/* USE_COOKIE */
-#ifdef USE_HISTORY
     if (UseHistory && SaveURLHist)
 	saveHistory(URLHist, URLHistSize);
-#endif				/* USE_HISTORY */
     w3m_exit(0);
 }
 
@@ -2329,7 +2254,6 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
 	shell = "/bin/sh";
     system(shell);
 #else				/* SIGSTOP */
-#ifdef SIGTSTP
     signal(SIGTSTP, SIG_DFL);  /* just in case */
     /*
      * Note: If susp() was called from SIGTSTP handler,
@@ -2337,9 +2261,6 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background")
      * Currently not.
      */
     kill(0, SIGTSTP);  /* stop whole job, not a single process */
-#else
-    kill((pid_t) 0, SIGSTOP);
-#endif
 #endif				/* SIGSTOP */
     fmInit();
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -3999,7 +3920,6 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
     }
 }
 
-#ifdef USE_COOKIE
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list")
 {
@@ -4009,15 +3929,12 @@ DEFUN(cooLst, COOKIE, "View cookie list")
     if (buf != NULL)
 	cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
 }
-#endif				/* USE_COOKIE */
 
-#ifdef USE_HISTORY
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history")
 {
     cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
 }
-#endif				/* USE_HISTORY */
 
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target")
@@ -4664,7 +4581,6 @@ GetWord(Buffer *buf)
     return NULL;
 }
 
-#ifdef USE_DICT
 static void
 execdict(char *word)
 {
@@ -4707,7 +4623,6 @@ DEFUN(dictwordat, DICT_WORD_AT,
 {
     execdict(GetWord(Currentbuf));
 }
-#endif				/* USE_DICT */
 
 void
 set_buffer_environ(Buffer *buf)
@@ -4832,9 +4747,7 @@ w3m_exit(int i)
 #endif
     stopDownload();
     deleteFiles();
-#ifdef USE_SSL
     free_ssl_ctx();
-#endif
     disconnectFTP();
 #ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
@@ -4881,7 +4794,6 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
-#ifdef USE_ALARM
 static MySignalHandler
 SigAlarm(SIGNAL_ARG)
 {
@@ -4956,7 +4868,6 @@ setAlarmEvent(AlarmEvent * event, int sec, short status, int cmd, void *data)
     event->data = data;
     return event;
 }
-#endif
 
 DEFUN(reinit, REINIT, "Reload configuration file")
 {
@@ -4965,9 +4876,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
     if (resource == NULL) {
 	init_rc();
 	sync_with_option();
-#ifdef USE_COOKIE
 	initCookie();
-#endif
 	displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 	return;
     }
@@ -4979,12 +4888,10 @@ DEFUN(reinit, REINIT, "Reload configuration file")
 	return;
     }
 
-#ifdef USE_COOKIE
     if (!strcasecmp(resource, "COOKIE")) {
 	initCookie();
 	return;
     }
-#endif
 
     if (!strcasecmp(resource, "KEYMAP")) {
 	initKeymap(TRUE);
@@ -5580,9 +5487,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 {
     Buffer *buf;
     int replace = FALSE, new_tab = FALSE;
-#ifdef USE_ALARM
     int reload;
-#endif
 
     if (Currentbuf->bufferprop & BP_INTERNAL &&
 	!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
@@ -5599,9 +5504,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
 	}
 	return;
     }
-#ifdef USE_ALARM
     reload = checkDownloadList();
-#endif
     buf = DownloadListBuffer();
     if (!buf) {
 	displayBuffer(Currentbuf, B_NORMAL);
@@ -5619,11 +5522,9 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel")
     pushBuffer(buf);
     if (replace || new_tab)
 	deletePrevBuf();
-#ifdef USE_ALARM
     if (reload)
 	Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
 					  FUNCNAME_reload, NULL);
-#endif
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

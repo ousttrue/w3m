@@ -9,6 +9,27 @@ from termcolor import colored
 HERE = pathlib.Path(__file__).absolute().parent
 
 CONTEXT = {
+    'SIGWINCH': True,
+    'SIGPIPE': True,
+    'SIGCHLD': True,
+    'SIGTSTP': True,
+    'USE_COOKIE': True,
+    'USE_ALARM': True,
+    'USE_SSL': True,
+    'USE_SSL_VERIFY': True,
+    'USE_HELP_CGI': True,
+    'USE_DICT': True,
+    'USE_BUFINFO': True,
+    'USE_HISTORY': True,
+    # 'USE_EXTERNAL_URI_LOADER': False,
+    # # 'HAVE_WAITPID': True,
+    # #
+    # 'SIGSTOP': False,
+    # 'USE_INCLUDED_SRAND48': False,
+    # 'USE_MIGEMO': False,
+    # 'USE_W3MMAILER': False,
+    # 'USE_MARK': False,
+
     '__CYGWIN__': False,
     'SUPPORT_WIN9X_CONSOLE_MBCS': False,
     '__MINGW32_VERSION': False,
@@ -20,18 +41,11 @@ CONTEXT = {
     'USE_UNICODE': False,
     'ENABLE_NLS': False,
 
-    # 'SIGWINCH': True,
-    # 'SIGPIPE': True,
-    # 'SIGCHLD': True,
-    # 'SIGTSTP': True,
-    # 'USE_COOKIE': True,
     'USE_COLOR': False,
     'USE_ANSI_COLOR': False,
     'USE_BG_COLOR': False,
     'USE_RAW_SCROLL': False,
-    # 'USE_ALARM': True,
-    # 'USE_SSL': True,
-    # 'USE_SSL_VERIFY': True,
+
     'USE_MENU': False,
     'MENU_MAP': False,
     'MENU_SELECT': False,
@@ -39,21 +53,8 @@ CONTEXT = {
     'USE_GPM': False,
     'USE_IMAGE': False,
 
-    # 'USE_HELP_CGI': True,
-    # 'USE_DICT': True,
-    # 'USE_BUFINFO': True,
-    # 'USE_HISTORY': True,
-    # 'USE_EXTERNAL_URI_LOADER': False,
-    # # 'HAVE_WAITPID': True,
-    # #
-    # 'SIGSTOP': False,
-
     'USE_NNTP': False,
     'USE_GOPHER': False,
-    # 'USE_INCLUDED_SRAND48': False,
-    # 'USE_MIGEMO': False,
-    # 'USE_W3MMAILER': False,
-    # 'USE_MARK': False,
 }
 
 MACRO_PATTERN = re.compile(r'^#\s*(\S+)\s*(\S.*)?')

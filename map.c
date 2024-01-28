@@ -191,13 +191,11 @@ append_frame_info(Buffer *buf, Str html, struct frameset *set, int level)
 		else
 		    p = q;
 		Strcat_m_charp(html, " ", p, "</a></pre_int><br>\n", NULL);
-#ifdef USE_SSL
 		if (frame.body->ssl_certificate)
 		    Strcat_m_charp(html,
 				   "<blockquote><h2>SSL certificate</h2><pre>\n",
 				   html_quote(frame.body->ssl_certificate),
 				   "</pre></blockquote>\n", NULL);
-#endif
 		break;
 	    case F_FRAMESET:
 		append_frame_info(buf, html, frame.set, level + 1);
@@ -307,11 +305,9 @@ page_info_panel(Buffer *buf)
 	Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
 	append_frame_info(buf, tmp, f_set, 0);
     }
-#ifdef USE_SSL
     if (buf->ssl_certificate)
 	Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
 		       html_quote(buf->ssl_certificate), "</pre>\n", NULL);
-#endif
   end:
     Strcat_charp(tmp, "</body></html>");
     newbuf = loadHTMLString(tmp);

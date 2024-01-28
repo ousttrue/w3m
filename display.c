@@ -57,9 +57,7 @@ static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
     active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 
-#ifdef USE_BUFINFO
 static Buffer *save_current_buf = NULL;
-#endif
 
 static char *delayed_msg = NULL;
 
@@ -149,10 +147,8 @@ make_lastline_message(Buffer *buf)
     else
 	/* FIXME: gettextize? */
 	Strcat_charp(msg, "Viewing");
-#ifdef USE_SSL
     if (buf->ssl_certificate)
 	Strcat_charp(msg, "[SSL]");
-#endif
     Strcat_charp(msg, " <");
     Strcat_charp(msg, buf->buffername);
 
@@ -247,12 +243,10 @@ displayBuffer(Buffer *buf, int mode)
     standend();
     term_title(conv_to_system(buf->buffername));
     refresh();
-#ifdef USE_BUFINFO
     if (buf != save_current_buf) {
 	saveBufferInfo();
 	save_current_buf = buf;
     }
-#endif
     if (mode == B_FORCE_REDRAW &&  (buf->check_url & CHK_URL) ) {
 	chkURLBuffer(buf);
 	displayBuffer(buf, B_NORMAL);

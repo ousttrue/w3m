@@ -1,7 +1,6 @@
 /* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
 
-#ifdef USE_HISTORY
 /* Merge entries from their history into ours */
 static int
 mergeHistory(Hist *ours, Hist *theirs)
@@ -120,7 +119,6 @@ fail:
     disp_err_message("Can't open history", FALSE);
     return;
 }
-#endif				/* USE_HISTORY */
 
 /*
  * The following functions are used for internal stuff, we need them regardless
