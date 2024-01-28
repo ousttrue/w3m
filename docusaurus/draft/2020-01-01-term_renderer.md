@@ -1,3 +1,10 @@
+---
+title: termrenderer
+date: 2000-01-01
+tags: [w3m]
+unlisted: true
+---
+
 いったん色とかアンダーライン/太字などの装飾をすべて削除する予定。
 そうして termcap/terminfo 依存を削除する。
 

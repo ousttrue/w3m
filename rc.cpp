@@ -2,7 +2,6 @@
 /* 
  * Initialization file etc.
  */
-extern "C"{
 #include "fm.h"
 #include "signal_util.h"
 #include "myctype.h"
@@ -15,7 +14,6 @@ extern "C"{
 #include <stdlib.h>
 #include <stddef.h>
 #include "rc.h"
-}
 
 struct param_ptr {
     char *name;

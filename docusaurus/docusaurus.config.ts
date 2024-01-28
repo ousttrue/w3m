@@ -41,7 +41,9 @@ const config: Config = {
           ],
         },
         blog: {
-          showReadingTime: true,
+          showReadingTime: false,
+          postsPerPage: "ALL",
+          sortPosts: "descending",
         },
         theme: {
           customCss: "./src/css/custom.css",
@@ -62,6 +64,12 @@ const config: Config = {
           label: "doc-jp",
         },
         { to: "/blog", label: "note", position: "left" },
+        //
+        {
+          href: "https://docusaurus.io/docs",
+          label: "docusaurus-docs",
+          position: "right",
+        },
         {
           href: "https://github.com/ousttrue/w3m",
           label: "GitHub",

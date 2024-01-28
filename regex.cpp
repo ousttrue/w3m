@@ -5,8 +5,6 @@
  * by A.ITO, December 1989
  * Revised by A.ITO, January 2002
  */
-
-extern "C" {
 #ifdef REGEX_DEBUG
 #include <sys/types.h>
 #include <malloc.h>
@@ -19,7 +17,6 @@ extern "C" {
 #include "regex.h"
 #include "config.h"
 #include "myctype.h"
-}
 
 #ifndef NULL
 #define NULL	0

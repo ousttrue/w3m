@@ -1,5 +1,4 @@
 /* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
-extern "C" {
 #ifdef DUMMY
 #include "Str.h"
 #define NBSP " "
@@ -7,7 +6,6 @@ extern "C" {
 #else				/* DUMMY */
 #include "fm.h"
 #endif				/* DUMMY */
-}
 
 extern char * conv_entity(unsigned int c);
 

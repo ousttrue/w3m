@@ -1,10 +1,8 @@
 /* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
-extern "C"{
 #include "display.h"
 #include "fm.h"
 #include "file.h"
 #include "signal_util.h"
-}
 
 /* *INDENT-OFF* */
 

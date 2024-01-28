@@ -3,7 +3,6 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
-extern "C" {
 #include "config.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -63,7 +62,6 @@ typedef struct sgttyb TerminalMode;
 #define TerminalGet(fd, x) ioctl(fd, TIOCGETP, x)
 #define MODEFLAG(d) ((d).sg_flags)
 #endif /* HAVE_SGTTY_H */
-}
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -144,18 +142,19 @@ static int graph_enabled = 0;
 
 static char gcmap[96];
 
-extern "C"{
+extern "C" {
 extern int tgetent(char *, char *);
 extern int tgetnum(char *);
 extern int tgetflag(char *);
 extern char *tgetstr(char *, char **);
 extern char *tgoto(char *, int, int);
 extern int tputs(char *, int, int (*)(char));
+}
+
 void clear(void), wrap(void), touch_line(void), touch_column(int);
 void clrtoeol(void); /* conflicts with curs_clear(3)? */
 
 static int write1(char);
-}
 
 static void writestr(char *s) { tputs(s, 1, write1); }
 

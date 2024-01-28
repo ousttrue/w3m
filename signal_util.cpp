@@ -1,9 +1,7 @@
-extern "C" {
 #include "signal_util.h"
 #include <signal.h>
 #include <fcntl.h>
 #include <stdlib.h>
-}
 
 char fmInitialized = 0;
 char QuietMessage = 0;

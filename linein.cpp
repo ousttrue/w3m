@@ -1,9 +1,7 @@
 /* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
-extern "C"{
 #include "fm.h"
 #include "local.h"
 #include "myctype.h"
-}
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)

@@ -1,5 +1,4 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
-extern "C" {
 #include "fm.h"
 #include "signal_util.h"
 #include <unistd.h>
@@ -23,7 +22,6 @@ extern "C" {
 #include <openssl/crypto.h>		/* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
-}
 
 
 #ifdef INET6

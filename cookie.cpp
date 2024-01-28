@@ -8,14 +8,12 @@
  *   [RFC 2109] http://www.ics.uci.edu/pub/ietf/http/rfc2109.txt
  *   [DRAFT 12] http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
-extern "C"{
 #include "fm.h"
 #include "html.h"
 #include <time.h>
 #include "local.h"
 #include "regex.h"
 #include "myctype.h"
-}
 
 static int is_saved = 1;
 

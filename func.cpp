@@ -2,7 +2,6 @@
 /*
  * w3m func.c
  */
-extern "C" {
 #include <stdio.h>
 
 #include "fm.h"
@@ -13,7 +12,6 @@ extern "C" {
 
 #include "funcname.c"
 #include "functable.c"
-}
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv *keyData = NULL;

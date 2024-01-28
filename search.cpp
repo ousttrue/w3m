@@ -1,10 +1,8 @@
 /* $Id: search.c,v 1.31 2004/03/23 16:44:02 ukai Exp $ */
-extern"C"{
 #include "fm.h"
 #include "regex.h"
 #include <errno.h>
 #include <unistd.h>
-}
 
 static void
 set_mark(Line *l, int pos, int epos)

@@ -2,11 +2,9 @@
 /*
  * client-side image maps
  */
-extern "C" {
 #include "fm.h"
 #include "map.h"
 #include <math.h>
-}
 
 MapList *searchMapList(Buffer *buf, char *name) {
   MapList *ml;

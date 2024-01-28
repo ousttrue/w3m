@@ -1,5 +1,4 @@
 /* $Id: parsetagx.c,v 1.18 2006/06/07 03:52:03 inu Exp $ */
-extern "C" {
 #include "fm.h"
 #include "myctype.h"
 #include "indep.h"
@@ -8,7 +7,6 @@ extern "C" {
 #include "hash.h"
 
 #include "html.c"
-}
 
 /* parse HTML tag */
 

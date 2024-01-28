@@ -2,7 +2,6 @@
 /* 
  * HTML table
  */
-extern "C"{
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -12,7 +11,6 @@ extern "C"{
 #include "parsetagx.h"
 #include "Str.h"
 #include "myctype.h"
-}
 
 int symbol_width = 0;
 int symbol_width0 = 0;

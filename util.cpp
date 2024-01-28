@@ -1,10 +1,8 @@
-extern "C"{
 #include "util.h"
 #include "display.h"
 #include "terms.h"
 #include <stdio.h>
 #include <stdlib.h>
-}
 
 int
 exec_cmd(char *cmd)

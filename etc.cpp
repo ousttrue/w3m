@@ -1,5 +1,4 @@
 /* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
-extern"C"{
 #include "fm.h"
 #include "signal_util.h"
 #include <pwd.h>
@@ -14,7 +13,6 @@ extern"C"{
 #if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
 #endif
-}
 
 struct auth_pass {
   int bad;

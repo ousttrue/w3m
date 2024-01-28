@@ -2,7 +2,6 @@
 /*
  * HTML forms
  */
-extern "C" {
 #include "display.h"
 #include "fm.h"
 #include "parsetag.h"
@@ -11,7 +10,6 @@ extern "C" {
 #include "local.h"
 #include "regex.h"
 #include "util.h"
-}
 
 extern Str *textarea_str;
 extern int max_textarea;

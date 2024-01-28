@@ -1,8 +1,6 @@
-extern "C"{
 #include "fm.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
-}
 
 char **
 get_symbol(void)

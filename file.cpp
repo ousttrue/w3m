@@ -1,6 +1,5 @@
 /* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
 /* vi: set sw=4 ts=8 ai sm noet : */
-extern "C" {
 #include "file.h"
 #include "display.h"
 #include "fm.h"
@@ -18,7 +17,6 @@ extern "C" {
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
-}
 /* foo */
 
 #include "html.h"
