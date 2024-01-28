@@ -157,21 +157,13 @@ SUM:                            85           3338           1666          40898
 ## http以外のプロトコル
 
 ```
-#define USE_NNTP 1
-#define USE_GOPHER 1
+USE_NNTP
+USE_GOPHER
 ```
 
-ftp とか gopher。
-directory ビューワーとか。
+いつのまにか消していて、どれくらい減ったかわらない。
+たぶん、量的なインパクトは少ない。
 
-## frame
-
-## pager系
-
-PIPE とか open しっぱなしで維持する機能。
-ここを整理すると、`text => parse html => layout to term screen` のようにステップ毎に分離しやすくなる。
-
-## line editor / regext
-
-残したい。
+FTP も消したいのだけど、マクロ制御じゃないようだ。
+FTP は2本コネクションを張って複雑さを増やすので消すと簡単にできる。
 

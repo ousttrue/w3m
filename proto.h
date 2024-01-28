@@ -497,7 +497,6 @@ extern char *helpFile(char *base);
 extern const void *querySiteconf(const ParsedURL *query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char *dirname);
-extern void set_environ(char *var, char *value);
 extern FILE *localcgi_post(char *, char *, FormList *, char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE *openSecretFile(char *fname);

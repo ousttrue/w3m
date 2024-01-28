@@ -1,4 +1,4 @@
-project('w3m', 'c')
+project('w3m', ['c', 'cpp'])
 
 # subdir('libwc')
 
@@ -76,6 +76,8 @@ defs = [
 executable(
     'w3m',
     [
+        'main.cpp',
+        #
         'keybind.c',
         #
         'signal_util.c',
@@ -87,7 +89,6 @@ executable(
         'myctype.c',
         'hash.c',
         #
-        'main.c',
         'file.c',
         'buffer.c',
         'display.c',
@@ -123,9 +124,12 @@ executable(
         'version.c',
     ],
     install: true,
-    dependencies: [gc_dep, ssl_dep, ncurses_dep, m_dep
-      # , wc_dep
-      ],
+    dependencies: [
+        gc_dep,
+        ssl_dep,
+        ncurses_dep,
+        m_dep, # , wc_dep
+    ],
     c_args: defs,
     cpp_args: defs,
 )

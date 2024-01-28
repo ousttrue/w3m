@@ -24,7 +24,6 @@ extern char TrapSignal;
 #define JMP_BUF jmp_buf
 #endif
 
-MySignalHandler intTrap(SIGNAL_ARG);
 MySignalHandler reset_exit(SIGNAL_ARG);
 MySignalHandler error_dump(SIGNAL_ARG);
 
