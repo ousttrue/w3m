@@ -15,14 +15,36 @@ C++ ではそうはいかない。
 ## extern "C"
 
 main.c を main.cpp にするところから。
-main 関数以外を `extern "C"` で囲う。
 
-思ったより難航した。
-容易にコンパイルが通らない。
-C++ になることによって暗黙の型変換に対処する必要がある。
-`void*` を任意の型に変換してくれません。
+`#include` を `extern "C"` で囲う。
 
-## signal.h
+```c title="例"
+extern "C" {
+#define MAINPROGRAM
+#include "fm.h"
+#include "mailcap.h"
+#include "file.h"
+#include "local.h"
+#include "signal_util.h"
+#include <stdio.h>
+// …
+}
+```
+
+ビルドしてみる。
+C と C++ の仕様差でコンパイルが通らないところを修正する。
+
+- `void*` の暗黙キャストを明示する(malloc の戻り値に多発する)
+- `const char*` に対応する(文字列定数の代入で多発)
+- 引数や戻り値が違う関数ポインタが通らなくなるので修正する
+
+だいたいこれだけ。
+多いファイルも少ないファイルもある。
+
+`main.cpp` を最初にやったのだが、`main.cpp` 一番難しかったかもしれない。
+容易にコンパイルが通らなかった。
+
+### signal.h
 
 signal handler の関数ポインターの型が混乱の元なので
 きっちり局所化して隔離した。
@@ -39,7 +61,7 @@ typedef void(*MyHandlerType)(int);
 MyHandlerType MySignal(int signal, MyHandlerType handler);
 ```
 
-## const char*
+### const char*
 
 これは適当に。諦め(cast)も必要。
 

@@ -236,9 +236,9 @@ new_matrix(int n)
 {
     Matrix mat;
 
-    mat = New(struct matrix);
+    mat = (struct matrix*)New(struct matrix);
     mat->dim = n;
-    mat->me = NewAtom_N(double, n * n);
+    mat->me = (double*)NewAtom_N(double, n * n);
     return mat;
 }
 
@@ -251,8 +251,8 @@ new_vector(int n)
 {
     Vector vec;
 
-    vec = New(struct vector);
+    vec = (struct vector*)New(struct vector);
     vec->dim = n;
-    vec->ve = NewAtom_N(double, n);
+    vec->ve = (double*)NewAtom_N(double, n);
     return vec;
 }

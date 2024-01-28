@@ -2,6 +2,8 @@
 extern "C" {
 #define MAINPROGRAM
 #include "fm.h"
+#include "mailcap.h"
+#include "file.h"
 #include "local.h"
 #include "signal_util.h"
 #include <stdio.h>

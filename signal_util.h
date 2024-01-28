@@ -24,8 +24,8 @@ extern char TrapSignal;
 #define JMP_BUF jmp_buf
 #endif
 
-MySignalHandler reset_exit(SIGNAL_ARG);
-MySignalHandler error_dump(SIGNAL_ARG);
+extern void setup_child(int child, int i, int f);
+extern void myExec(const char *command);
 
 #define TRAP_ON                                                                \
   if (TrapSignal) {                                                            \

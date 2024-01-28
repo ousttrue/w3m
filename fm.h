@@ -280,7 +280,7 @@ typedef unsigned short Lineprop;
 typedef struct _MapArea {
     char *url;
     char *target;
-    char *alt;
+    const char *alt;
 } MapArea;
 
 typedef struct _MapList {
@@ -364,7 +364,7 @@ typedef struct _Buffer {
     short width;
     short height;
     char *type;
-    char *real_type;
+    const char *real_type;
     int allLine;
     short bufferprop;
     int currentColumn;
@@ -722,7 +722,7 @@ global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
-global char *DefaultType init(NULL);
+global const char *DefaultType init(NULL);
 global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
 global char PermitSaveToPipe init(FALSE);

@@ -17,6 +17,10 @@ build コマンドの引き数と config.h の内容を連動させる。
 
 https://github.com/andymass/vim-matchup
 
+:::warning
+巨大なファイル(file.c:7000行)で遅かった…
+:::
+
 また作業用に `@keyword.directive.c` に目立つ色を指定した。
 
 ## 以前使った python スクリプトを発掘

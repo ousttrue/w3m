@@ -150,7 +150,6 @@ extern char *url_decode0(const char *url);
 extern void examineFile(char *path, URLFile *uf);
 extern char *acceptableEncoding(void);
 extern int dir_exist(char *path);
-extern int is_html_type(char *type);
 extern char **get_symbol(void);
 extern Str convertLine0(URLFile *uf, Str line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
@@ -211,7 +210,7 @@ extern Buffer *openPagerBuffer(InputStream stream, Buffer *buf);
 extern Buffer *openGeneralPagerBuffer(InputStream stream);
 extern Line *getNextPage(Buffer *buf, int plen);
 extern int save2tmp(URLFile uf, char *tmpf);
-extern Buffer *doExternal(URLFile uf, char *type, Buffer *defaultbuf);
+extern Buffer *doExternal(URLFile uf, const char *type, Buffer *defaultbuf);
 extern int _doFileCopy(char *tmpf, char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
 extern int doFileMove(char *tmpf, char *defstr);
@@ -345,8 +344,6 @@ extern MapList *searchMapList(Buffer *buf, char *name);
 extern void follow_map(struct parsed_tagarg *arg);
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(Buffer *buf);
-extern MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
-                           char *coords);
 extern Buffer *page_info_panel(Buffer *buf);
 extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
 extern struct frameset *newFrameSet(struct parsed_tag *tag);
@@ -427,13 +424,8 @@ extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
                        URLOption *option, FormList *request,
                        TextList *extra_header, URLFile *ouf, HRequest *hr,
                        unsigned char *status);
-extern int mailcapMatch(struct mailcap *mcap, char *type);
-extern struct mailcap *searchMailcap(struct mailcap *table, char *type);
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
-extern struct mailcap *searchExtViewer(char *type);
-extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
-                           int *mc_stat);
 extern char *guessContentType(char *filename);
 extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
@@ -511,8 +503,6 @@ extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str uname,
 extern char *last_modified(Buffer *buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
-extern void setup_child(int child, int i, int f);
-extern void myExec(char *command);
 extern void mySystem(char *command, int background);
 extern Str myExtCommand(char *cmd, char *arg, int redirect);
 extern Str myEditor(char *cmd, char *file, int line);
