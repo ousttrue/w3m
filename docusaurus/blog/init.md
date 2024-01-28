@@ -39,9 +39,14 @@ configure と Makefile のもの
   - 文字コード utf-8 専用にして libwc を切り離す
     - 多言語化を utf-8 単言語化することでかなり単純化できる目算
   - escape sequence を削除する
-  - platform は POSIX を主。副で msvc。unix や cygwin は削除
+  - platform は POSIX に一本化。msvc との cross platform を考えているが、後で。
   - pager の PIPE api も削除
   - sixel とか画像系も削除
+  - mouse 機能
+
+- command 減らす
+  - 必要不可欠な core command を厳選したい
+  - keymap をシンプル化。複数キーや alt map などを削除してシンプルに
 
 5000行くらいに減れば手に負えるのだが…
 

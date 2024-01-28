@@ -39,13 +39,32 @@ https://github.com/andymass/vim-matchup
 
 ## cygwin系
 
+msvc で動くようにする予定。
+
 ## http以外のプロトコル
 
-## mouse操作
+ftp とか gopher。
+directory ビューワーとか。
+
+## mouse操作 / menu / imagemap
 
 ## frame
 
-## menu
-
 ## image系
+
+sixel とか。
+
+## pager系
+
+PIPE とか open しっぱなしで維持する機能。
+ここを整理すると、`text => parse html => layout to term screen` のようにステップ毎に分離しやすくなる。
+
+## option panel
+
+消してから作りなおしでいいのではないか。
+そうすると、form を GUI widget として流用している部分も削れそう。
+
+## line editor / regext
+
+残したい。
 
