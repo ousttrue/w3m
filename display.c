@@ -27,14 +27,6 @@ fmTerm(void)
 	move(LASTLINE, 0);
 	clrtoeolx();
 	refresh();
-#ifdef USE_IMAGE
-	if (activeImage)
-	    loadImage(NULL, IMG_FLAG_STOP);
-#endif
-#ifdef USE_MOUSE
-	if (use_mouse)
-	    mouse_end();
-#endif				/* USE_MOUSE */
 	reset_tty();
 	fmInitialized = FALSE;
     }
@@ -51,10 +43,6 @@ fmInit(void)
 	initscr();
 	term_raw();
 	term_noecho();
-#ifdef USE_IMAGE
-	if (displayImage)
-	    initImage();
-#endif
     }
     fmInitialized = TRUE;
 }
@@ -79,11 +67,6 @@ static void drawAnchorCursor(Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(Buffer *buf, int n);
 static Line *redrawLine(Buffer *buf, Line *l, int i);
-#ifdef USE_IMAGE
-static int image_touch = 0;
-static int draw_image_flag = FALSE;
-static Line *redrawLineImage(Buffer *buf, Line *l, int i);
-#endif
 static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
 
@@ -150,12 +133,6 @@ make_lastline_message(Buffer *buf)
     int sl = 0;
 
     if (displayLink) {
-#ifdef USE_IMAGE
-	MapArea *a = retrieveCurrentMapArea(buf);
-	if (a)
-	    s = make_lastline_link(buf, a->alt, a->url);
-	else
-#endif
 	{
 	    Anchor *a = retrieveCurrentAnchor(buf);
 	    char *p = NULL;
@@ -176,11 +153,6 @@ make_lastline_message(Buffer *buf)
 	}
     }
 
-#ifdef USE_MOUSE
-    if (use_mouse && mouse_action.lastline_str)
-	msg = Strnew_charp(mouse_action.lastline_str);
-    else
-#endif				/* not USE_MOUSE */
 	msg = Strnew();
     if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
 	int cl = buf->currentLine->real_linenumber;
@@ -256,9 +228,6 @@ displayBuffer(Buffer *buf, int mode)
 	buf->rootX = 0;
     buf->COLS = COLS - buf->rootX;
     if (nTab > 1
-#ifdef USE_MOUSE
-	|| mouse_action.menu_str
-#endif
 	) {
 	if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
 	    calcTabPos();
@@ -275,18 +244,6 @@ displayBuffer(Buffer *buf, int mode)
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
 	cline != buf->topLine || ccolumn != buf->currentColumn) {
 	{
-#ifdef USE_IMAGE
-	    if (activeImage &&
-		(mode == B_REDRAW_IMAGE ||
-		 cline != buf->topLine || ccolumn != buf->currentColumn)) {
-		if (draw_image_flag)
-		    clear();
-		clearImage();
-		loadImage(buf, IMG_FLAG_STOP);
-		image_touch++;
-		draw_image_flag = FALSE;
-	    }
-#endif
 	    redrawBuffer(buf);
 	}
 	cline = buf->topLine;
@@ -295,12 +252,6 @@ displayBuffer(Buffer *buf, int mode)
     if (buf->topLine == NULL)
 	buf->topLine = buf->firstLine;
 
-#ifdef USE_IMAGE
-    if (buf->need_reshape) {
-	displayBuffer(buf, B_FORCE_REDRAW);
-	return;
-    }
-#endif
 
     drawAnchorCursor(buf);
 
@@ -319,11 +270,6 @@ displayBuffer(Buffer *buf, int mode)
     standend();
     term_title(conv_to_system(buf->buffername));
     refresh();
-#ifdef USE_IMAGE
-    if (activeImage && displayImage && buf->img && buf->image_loaded) {
-	drawImage();
-    }
-#endif
 #ifdef USE_BUFINFO
     if (buf != save_current_buf) {
 	saveBufferInfo();
@@ -427,18 +373,11 @@ redrawNLine(Buffer *buf, int n)
     int i;
 
     if (nTab > 1
-#ifdef USE_MOUSE
-	|| mouse_action.menu_str
-#endif
 	) {
 	TabBuffer *t;
 	int l;
 
 	move(0, 0);
-#ifdef USE_MOUSE
-	if (mouse_action.menu_str)
-	    addstr(mouse_action.menu_str);
-#endif
 	clrtoeolx();
 	for (t = FirstTab; t; t = t->nextTab) {
 	    move(t->y, t->x1);
@@ -477,16 +416,6 @@ redrawNLine(Buffer *buf, int n)
 	clrtobotx();
     }
 
-#ifdef USE_IMAGE
-    if (!(activeImage && displayImage && buf->img))
-	return;
-    move(buf->cursorY + buf->rootY, buf->cursorX + buf->rootX);
-    for (i = 0, l = buf->topLine; i < buf->LINES && l; i++, l = l->next) {
-	if (i >= buf->LINES - n || i < -n)
-	    redrawLineImage(buf, l, i + buf->rootY);
-    }
-    getAllImage(buf);
-#endif
 }
 
 static Line *
@@ -613,78 +542,6 @@ redrawLine(Buffer *buf, Line *l, int i)
     return l;
 }
 
-#ifdef USE_IMAGE
-static Line *
-redrawLineImage(Buffer *buf, Line *l, int i)
-{
-    int j, pos, rcol;
-    int column = buf->currentColumn;
-    Anchor *a;
-    int x, y, sx, sy, w, h;
-
-    if (l == NULL)
-	return NULL;
-    if (l->width < 0)
-	l->width = COLPOS(l, l->len);
-    if (l->len == 0 || l->width - 1 < column)
-	return l;
-    pos = columnPos(l, column);
-    rcol = COLPOS(l, pos);
-    for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j++) {
-	if (rcol - column < 0) {
-	    rcol = COLPOS(l, pos + j + 1);
-	    continue;
-	}
-	a = retrieveAnchor(buf->img, l->linenumber, pos + j);
-	if (a && a->image && a->image->touch < image_touch) {
-	    Image *image = a->image;
-	    ImageCache *cache;
-
-	    cache = image->cache = getImage(image, baseURL(buf),
-					    buf->image_flag);
-	    if (cache) {
-		if ((image->width < 0 && cache->width > 0) ||
-		    (image->height < 0 && cache->height > 0)) {
-		    image->width = cache->width;
-		    image->height = cache->height;
-		    buf->need_reshape = TRUE;
-		}
-		x = (int)((rcol - column + buf->rootX) * pixel_per_char);
-		y = (int)(i * pixel_per_line);
-		sx = (int)((rcol - COLPOS(l, a->start.pos)) * pixel_per_char);
-		sy = (int)((l->linenumber - image->y) * pixel_per_line);
-		if (! enable_inline_image) {
-		    if (sx == 0 && x + image->xoffset >= 0)
-			x += image->xoffset;
-		    else
-			sx -= image->xoffset;
-		    if (sy == 0 && y + image->yoffset >= 0)
-			y += image->yoffset;
-		    else
-			sy -= image->yoffset;
-		}
-		if (image->width > 0)
-		    w = image->width - sx;
-		else
-		    w = (int)(8 * pixel_per_char - sx);
-		if (image->height > 0)
-		    h = image->height - sy;
-		else
-		    h = (int)(pixel_per_line - sy);
-		if (w > (int)((buf->rootX + buf->COLS) * pixel_per_char - x))
-		    w = (int)((buf->rootX + buf->COLS) * pixel_per_char - x);
-		if (h > (int)(LASTLINE * pixel_per_line - y))
-		    h = (int)(LASTLINE * pixel_per_line - y);
-		addImage(cache, x, y, sx, sy, w, h);
-		image->touch = image_touch;
-		draw_image_flag = TRUE;
-	    }
-	}
-	rcol = COLPOS(l, pos + j + 1);
-    }
-    return l;
-}
-#endif
 
 static int
 redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos)
@@ -988,15 +845,7 @@ disp_message_nsec(char *s, int redraw_current, int sec, int purge, int mouse)
     else
 	message(s, LASTLINE, 0);
     refresh();
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-	mouse_active();
-#endif
     sleep_till_anykey(sec, purge);
-#ifdef USE_MOUSE
-    if (mouse && use_mouse)
-	mouse_inactive();
-#endif
     if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
 	displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1006,13 +855,6 @@ disp_message(char *s, int redraw_current)
 {
     disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
 }
-#ifdef USE_MOUSE
-void
-disp_message_nomouse(char *s, int redraw_current)
-{
-    disp_message_nsec(s, redraw_current, 10, FALSE, FALSE);
-}
-#endif
 
 void
 set_delayed_message(char *s)

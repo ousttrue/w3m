@@ -113,13 +113,8 @@ extern void extbrz(void);
 extern void linkbrz(void);
 extern void curlno(void);
 extern void execCmd(void);
-#ifdef USE_IMAGE
-extern void dispI(void);
-extern void stopI(void);
-#else
 #define dispI nulcmd
 #define stopI nulcmd
-#endif
 #ifdef USE_ALARM
 extern void setAlarm(void);
 extern AlarmEvent *setAlarmEvent(AlarmEvent * event, int sec, short status,
@@ -140,20 +135,10 @@ extern void tabR(void);
 extern void tabL(void);
 extern void ldDL(void);
 extern void linkLst(void);
-#ifdef USE_MENU
-extern void linkMn(void);
-extern LinkList *link_menu(Buffer *buf);
-extern void accessKey(void);
-extern Anchor *accesskey_menu(Buffer *buf);
-extern void listMn(void);
-extern void movlistMn(void);
-extern Anchor *list_menu(Buffer *buf);
-#else
 #define linkMn nulcmd
 #define accessKey nulcmd
 #define listMn nulcmd
 #define movlistMn nulcmd
-#endif
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
@@ -214,13 +199,6 @@ extern void save_fonteffect(struct html_feed_environ *h_env,
 			    struct readbuffer *obuf);
 extern void restore_fonteffect(struct html_feed_environ *h_env,
 			       struct readbuffer *obuf);
-#ifdef USE_IMAGE
-extern void deleteImage(Buffer *buf);
-extern void getAllImage(Buffer *buf);
-extern void loadImage(Buffer *buf, int flag);
-extern ImageCache *getImage(Image * image, ParsedURL *current, int flag);
-extern int getImageSize(ImageCache * cache);
-#endif
 extern Str process_img(struct parsed_tag *tag, int width);
 extern Str process_anchor(struct parsed_tag *tag, char *tagbuf);
 extern Str process_input(struct parsed_tag *tag);
@@ -265,9 +243,6 @@ extern Str loadGopherSearch0(URLFile *uf, ParsedURL *pu);
 #endif
 #endif				/* USE_GOPHER */
 extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
-#ifdef USE_IMAGE
-extern Buffer *loadImageBuffer(URLFile *uf, Buffer *newBuf);
-#endif
 extern void saveBuffer(Buffer *buf, FILE * f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE * f, int cont);
 extern Buffer *getshell(char *cmd);
@@ -325,11 +300,7 @@ extern void disp_err_message(char *s, int redraw_current);
 extern void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
 			      int mouse);
 extern void disp_message(char *s, int redraw_current);
-#ifdef USE_MOUSE
-extern void disp_message_nomouse(char *s, int redraw_current);
-#else
 #define disp_message_nomouse disp_message
-#endif
 extern void set_delayed_message(char *s);
 extern void cursorUp0(Buffer *buf, int n);
 extern void cursorUp(Buffer *buf, int n);
@@ -425,13 +396,7 @@ extern void follow_map(struct parsed_tagarg *arg);
 extern MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x,
 				int y);
 #endif
-#ifndef MENU_MAP
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
-#endif
-#ifdef USE_IMAGE
-extern int getMapXY(Buffer *buf, Anchor *a, int *x, int *y);
-extern MapArea *retrieveCurrentMapArea(Buffer *buf);
-#endif
 extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 			   char *coords);
@@ -502,9 +467,6 @@ extern void flush_tty(void);
 extern void toggle_stand(void);
 extern void bell(void);
 extern int sleep_till_anykey(int sec, int purge);
-#ifdef USE_IMAGE
-extern void touch_cursor(void);
-#endif
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
 extern ParsedURL *baseURL(Buffer *buf);
@@ -581,9 +543,6 @@ extern char *reAnchorNewsheader(Buffer *buf);
 extern void addMultirowsForm(Buffer *buf, AnchorList *al);
 extern Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
 extern Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
-#ifdef USE_IMAGE
-void addMultirowsImg(Buffer *buf, AnchorList *al);
-#endif
 extern HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
 extern void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line,
 				int pos, int shift);
@@ -691,23 +650,6 @@ extern void reMark(void);
 #define reMark nulcmd
 #endif				/* not USE_MARK */
 
-#ifdef USE_MOUSE
-extern void mouse(void);
-extern void sgrmouse(void);
-extern void mouse_init(void);
-extern void mouse_end(void);
-extern void mouse_active(void);
-extern void mouse_inactive(void);
-extern void msToggle(void);
-extern void movMs(void);
-#ifdef USE_MENU
-extern void menuMs(void);
-#else
-#define menuMs nulcmd
-#endif
-extern void tabMs(void);
-extern void closeTMs(void);
-#else				/* not USE_MOUSE */
 #define mouse nulcmd
 #define sgrmouse nulcmd
 #define msToggle nulcmd
@@ -715,16 +657,7 @@ extern void closeTMs(void);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-#endif				/* not USE_MOUSE */
 
-#ifdef USE_IMAGE
-extern void initImage(void);
-extern void termImage(void);
-extern void addImage(ImageCache * cache, int x, int y, int sx, int sy, int w,
-		     int h);
-extern void drawImage(void);
-extern void clearImage(void);
-#endif
 
 extern char *searchKeyData(void);
 
@@ -737,43 +670,10 @@ extern char *getWord(char **str);
 extern char *getQWord(char **str);
 struct regex;
 extern char *getRegexWord(const char **str, struct regex **regex_ret);
-#ifdef USE_MOUSE
-extern void initMouseAction(void);
-#endif
 
-#ifdef USE_MENU
-extern void new_menu(Menu *menu, MenuItem *item);
-extern void geom_menu(Menu *menu, int x, int y, int mselect);
-extern void draw_all_menu(Menu *menu);
-extern void draw_menu(Menu *menu);
-extern void draw_menu_item(Menu *menu, int mselect);
-extern int select_menu(Menu *menu, int mselect);
-extern void goto_menu(Menu *menu, int mselect, int down);
-extern void up_menu(Menu *menu, int n);
-extern void down_menu(Menu *menu, int n);
-extern int action_menu(Menu *menu);
-extern void popup_menu(Menu *parent, Menu *menu);
-extern void guess_menu_xy(Menu *menu, int width, int *x, int *y);
-extern void new_option_menu(Menu *menu, char **label, int *variable,
-			    void (*func) ());
-
-extern int setMenuItem(MenuItem *item, char *type, char *line);
-extern int addMenuList(MenuList **list, char *id);
-extern int getMenuN(MenuList *list, char *id);
-
-extern void popupMenu(int x, int y, Menu *menu);
-extern void mainMenu(int x, int y);
-extern void mainMn(void);
-extern void selMn(void);
-extern void tabMn(void);
-extern void optionMenu(int x, int y, char **label, int *variable, int initial,
-		       void (*func) ());
-extern void initMenu(void);
-#else				/* not USE_MENU */
 #define mainMn nulcmd
 #define selMn selBuf
 #define tabMn nulcmd
-#endif				/* not USE_MENU */
 
 #ifdef USE_DICT
 extern void dictword(void);

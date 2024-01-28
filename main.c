@@ -24,15 +24,6 @@
 #include "ucs.h"
 #endif
 #endif
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif				/* USE_GPM */
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch();
-#define getch()	do_getch()
-#endif				/* defined(USE_GPM) || defined(USE_SYSMOUSE) */
-#endif
 
 #include "util.h"
 
@@ -129,21 +120,6 @@ fversion(FILE * f)
 #ifdef USE_M17N
 	    ",m17n"
 #endif
-#ifdef USE_IMAGE
-	    ",image"
-#endif
-#ifdef USE_MOUSE
-	    ",mouse"
-#ifdef USE_GPM
-	    ",gpm"
-#endif
-#ifdef USE_SYSMOUSE
-	    ",sysmouse"
-#endif
-#endif
-#ifdef USE_MENU
-	    ",menu"
-#endif
 #ifdef USE_COOKIE
 	    ",cookie"
 #endif
@@ -210,10 +186,6 @@ fusage(FILE * f, int err)
 	    "    -cols width      specify column width (used with -dump)\n");
     fprintf(f,
 	    "    -ppc count       specify the number of pixels per character (4.0...32.0)\n");
-#ifdef USE_IMAGE
-    fprintf(f,
-	    "    -ppl count       specify the number of pixels per line (4.0...64.0)\n");
-#endif
     fprintf(f, "    -dump            dump formatted page into stdout\n");
     fprintf(f,
 	    "    -dump_head       dump response of HEAD request into stdout\n");
@@ -233,9 +205,6 @@ fusage(FILE * f, int err)
 #ifdef USE_SSL
     fprintf(f, "    -insecure        use insecure SSL config options\n");
 #endif
-#ifdef USE_MOUSE
-    fprintf(f, "    -no-mouse        don't use mouse\n");
-#endif				/* USE_MOUSE */
 #ifdef USE_COOKIE
     fprintf(f,
 	    "    -cookie          use cookie (-no-cookie: don't use cookie)\n");
@@ -668,19 +637,6 @@ main(int argc, char **argv)
 		    set_pixel_per_char = TRUE;
 		}
 	    }
-#ifdef USE_IMAGE
-	    else if (!strcmp("-ppl", argv[i])) {
-		double ppc;
-		if (++i >= argc)
-		    usage();
-		ppc = atof(argv[i]);
-		if (ppc >= MINIMUM_PIXEL_PER_CHAR &&
-		    ppc <= MAXIMUM_PIXEL_PER_CHAR * 2) {
-		    pixel_per_line = ppc;
-		    set_pixel_per_line = TRUE;
-		}
-	    }
-#endif
 	    else if (!strcmp("-ri", argv[i])) {
 	        enable_inline_image = INLINE_IMG_OSC5379;
 	    }
@@ -715,11 +671,6 @@ main(int argc, char **argv)
 		    argv[i]++;
 		}
 	    }
-#ifdef USE_MOUSE
-	    else if (!strcmp("-no-mouse", argv[i])) {
-		use_mouse = FALSE;
-	    }
-#endif				/* USE_MOUSE */
 #ifdef USE_COOKIE
 	    else if (!strcmp("-no-cookie", argv[i])) {
 		use_cookie = FALSE;
@@ -832,10 +783,6 @@ main(int argc, char **argv)
 	setupscreen();
 #endif				/* not SIGWINCH */
     }
-#ifdef USE_IMAGE
-    else if (w3m_halfdump && displayImage)
-	activeImage = TRUE;
-#endif
 
     sync_with_option();
 #ifdef USE_COOKIE
@@ -1162,11 +1109,6 @@ main(int argc, char **argv)
 	if (!Currentbuf->event)
 	    CurrentAlarm = &DefaultAlarm;
 #endif
-#ifdef USE_MOUSE
-	mouse_action.in_action = FALSE;
-	if (use_mouse)
-	    mouse_active();
-#endif				/* USE_MOUSE */
 #ifdef USE_ALARM
 	if (CurrentAlarm->sec > 0) {
 	    mySignal(SIGALRM, SigAlarm);
@@ -1175,21 +1117,6 @@ main(int argc, char **argv)
 #endif
 #ifdef SIGWINCH
 	mySignal(SIGWINCH, resize_hook);
-#endif
-#ifdef USE_IMAGE
-	if (activeImage && displayImage && Currentbuf->img &&
-	    !Currentbuf->image_loaded) {
-	    do {
-#ifdef SIGWINCH
-		if (need_resize_screen)
-		    resize_screen();
-#endif
-		loadImage(Currentbuf, IMG_FLAG_NEXT);
-	    } while (sleep_till_anykey(1, 0) <= 0);
-	}
-#ifdef SIGWINCH
-	else
-#endif
 #endif
 #ifdef SIGWINCH
 	{
@@ -1205,10 +1132,6 @@ main(int argc, char **argv)
 	    alarm(0);
 	}
 #endif
-#ifdef USE_MOUSE
-	if (use_mouse)
-	    mouse_inactive();
-#endif				/* USE_MOUSE */
 	if (IS_ASCII(c)) {	/* Ascii */
 	    if (('0' <= c) && (c <= '9') &&
 		(prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
@@ -1481,9 +1404,6 @@ pushBuffer(Buffer *buf)
 {
     Buffer *b;
 
-#ifdef USE_IMAGE
-    deleteImage(Currentbuf);
-#endif
     if (clear_buffer)
 	tmpClearBuffer(Currentbuf);
     if (Firstbuf == Currentbuf) {
@@ -2500,10 +2420,6 @@ _quitfm(int confirm)
     }
 
     term_title("");		/* XXX */
-#ifdef USE_IMAGE
-    if (activeImage)
-	termImage();
-#endif
     fmTerm();
 #ifdef USE_COOKIE
     save_cookies();
@@ -2566,9 +2482,6 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel")
     for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
 	if (buf == Currentbuf)
 	    continue;
-#ifdef USE_IMAGE
-	deleteImage(buf);
-#endif
 	if (clear_buffer)
 	    tmpClearBuffer(buf);
     }
@@ -3045,31 +2958,16 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
 {
     Anchor *a;
     ParsedURL u;
-#ifdef USE_IMAGE
-    int x = 0, y = 0, map = 0;
-#endif
     char *url;
 
     if (Currentbuf->firstLine == NULL)
 	return;
 
-#ifdef USE_IMAGE
-    a = retrieveCurrentImg(Currentbuf);
-    if (a && a->image && a->image->map) {
-	_followForm(FALSE);
-	return;
-    }
-    if (a && a->image && a->image->ismap) {
-	getMapXY(Currentbuf, a, &x, &y);
-	map = 1;
-    }
-#else
     a = retrieveCurrentMap(Currentbuf);
     if (a) {
 	_followForm(FALSE);
 	return;
     }
-#endif
     a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL) {
 	_followForm(FALSE);
@@ -3090,10 +2988,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     if (handleMailto(a->url))
 	return;
     url = a->url;
-#ifdef USE_IMAGE
-    if (map)
-	url = Sprintf("%s?%d,%d", a->url, x, y)->ptr;
-#endif
 
     if (check_target && open_tab_blank && a->target &&
 	(!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
@@ -3157,11 +3051,6 @@ save_submit_formlist(FormItemList *src)
     FormItemList *srcitem;
     FormItemList *item;
     FormItemList *ret = NULL;
-#ifdef MENU_SELECT
-    FormSelectOptionItem *opt;
-    FormSelectOptionItem *curopt;
-    FormSelectOptionItem *srcopt;
-#endif				/* MENU_SELECT */
 
     if (src == NULL)
 	return NULL;
@@ -3189,27 +3078,6 @@ save_submit_formlist(FormItemList *src)
 	item->rows = srcitem->rows;
 	item->maxlength = srcitem->maxlength;
 	item->readonly = srcitem->readonly;
-#ifdef MENU_SELECT
-	opt = curopt = NULL;
-	for (srcopt = srcitem->select_option; srcopt; srcopt = srcopt->next) {
-	    if (!srcopt->checked)
-		continue;
-	    opt = New(FormSelectOptionItem);
-	    opt->value = Strdup(srcopt->value);
-	    opt->label = Strdup(srcopt->label);
-	    opt->checked = srcopt->checked;
-	    if (item->select_option == NULL) {
-		item->select_option = curopt = opt;
-	    }
-	    else {
-		curopt->next = opt;
-		curopt = curopt->next;
-	    }
-	}
-	item->select_option = opt;
-	if (srcitem->label)
-	    item->label = Strdup(srcitem->label);
-#endif				/* MENU_SELECT */
 	item->parent = list;
 	item->next = NULL;
 
@@ -3286,9 +3154,6 @@ query_from_followform(Str *query, FormItemList *fi, int multipart)
 	if (multipart) {
 	    if (f2->type == FORM_INPUT_IMAGE) {
 		int x = 0, y = 0;
-#ifdef USE_IMAGE
-		getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
 		*query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
 		Strcat_charp(*query, ".x");
 		form_write_data(body, fi->parent->boundary, (*query)->ptr,
@@ -3318,9 +3183,6 @@ query_from_followform(Str *query, FormItemList *fi, int multipart)
 	    /* not multipart */
 	    if (f2->type == FORM_INPUT_IMAGE) {
 		int x = 0, y = 0;
-#ifdef USE_IMAGE
-		getMapXY(Currentbuf, retrieveCurrentImg(Currentbuf), &x, &y);
-#endif
 		Strcat(*query,
 		       Str_form_quote(conv_form_encoding
 				      (f2->name, fi, Currentbuf)));
@@ -3472,20 +3334,6 @@ _followForm(int submit)
 	fi->checked = !fi->checked;
 	formUpdateBuffer(a, Currentbuf, fi);
 	break;
-#ifdef MENU_SELECT
-    case FORM_SELECT:
-	if (submit)
-	    goto do_submit;
-	if (!formChooseOptionByMenu(fi,
-				    Currentbuf->cursorX - Currentbuf->pos +
-				    a->start.pos + Currentbuf->rootX,
-				    Currentbuf->cursorY + Currentbuf->rootY))
-	    break;
-	formUpdateBuffer(a, Currentbuf, fi);
-	if (fi->parent->nitems == 1)
-	    goto do_submit;
-	break;
-#endif				/* MENU_SELECT */
     case FORM_INPUT_IMAGE:
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
@@ -3552,10 +3400,6 @@ _followForm(int submit)
 		f2->type != FORM_INPUT_RESET) {
 		f2->value = f2->init_value;
 		f2->checked = f2->init_checked;
-#ifdef MENU_SELECT
-		f2->label = f2->init_label;
-		f2->selected = f2->init_selected;
-#endif				/* MENU_SELECT */
 		formUpdateBuffer(a2, Currentbuf, f2);
 	    }
 	}
@@ -4351,12 +4195,10 @@ follow_map(struct parsed_tagarg *arg)
     a = follow_map_menu(Currentbuf, name, an, x, y);
     if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 #endif
-#ifndef MENU_MAP
 	Buffer *buf = follow_map_panel(Currentbuf, name);
 
 	if (buf != NULL)
 	    cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
-#endif
 #if defined(MENU_MAP) || defined(USE_IMAGE)
 	return;
     }
@@ -4386,62 +4228,6 @@ follow_map(struct parsed_tagarg *arg)
 #endif
 }
 
-#ifdef USE_MENU
-/* link menu */
-DEFUN(linkMn, LINK_MENU, "Pop up link element menu")
-{
-    LinkList *l = link_menu(Currentbuf);
-    ParsedURL p_url;
-
-    if (!l || !l->url)
-	return;
-    if (*(l->url) == '#') {
-	gotoLabel(l->url + 1);
-	return;
-    }
-    parseURL2(l->url, &p_url, baseURL(Currentbuf));
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(l->url, baseURL(Currentbuf),
-		parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
-}
-
-static void
-anchorMn(Anchor *(*menu_func) (Buffer *), int go)
-{
-    Anchor *a;
-    BufferPoint *po;
-
-    if (!Currentbuf->href || !Currentbuf->hmarklist)
-	return;
-    a = menu_func(Currentbuf);
-    if (!a || a->hseq < 0)
-	return;
-    po = &Currentbuf->hmarklist->marks[a->hseq];
-    gotoLine(Currentbuf, po->line);
-    Currentbuf->pos = po->pos;
-    arrangeCursor(Currentbuf);
-    displayBuffer(Currentbuf, B_NORMAL);
-    if (go)
-	followA();
-}
-
-/* accesskey */
-DEFUN(accessKey, ACCESSKEY, "Pop up accesskey menu")
-{
-    anchorMn(accesskey_menu, TRUE);
-}
-
-/* list menu */
-DEFUN(listMn, LIST_MENU, "Pop up menu for hyperlinks to browse to")
-{
-    anchorMn(list_menu, TRUE);
-}
-
-DEFUN(movlistMn, MOVE_LIST_MENU, "Pop up menu to navigate between hyperlinks")
-{
-    anchorMn(list_menu, FALSE);
-}
-#endif
 
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced")
@@ -5214,458 +5000,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
     disp_message(tmp->ptr, FALSE);
 }
 
-#ifdef USE_IMAGE
-DEFUN(dispI, DISPLAY_IMAGE, "Restart loading and drawing of images")
-{
-    if (!displayImage)
-	initImage();
-    if (!activeImage)
-	return;
-    displayImage = TRUE;
-    /*
-     * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
-     * return;
-     */
-    Currentbuf->image_flag = IMG_FLAG_AUTO;
-    Currentbuf->need_reshape = TRUE;
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
 
-DEFUN(stopI, STOP_IMAGE, "Stop loading and drawing of images")
-{
-    if (!activeImage)
-	return;
-    /*
-     * if (!(Currentbuf->type && is_html_type(Currentbuf->type)))
-     * return;
-     */
-    Currentbuf->image_flag = IMG_FLAG_SKIP;
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-#endif
-
-#ifdef USE_MOUSE
-
-static int
-mouse_scroll_line(void)
-{
-    if (relative_wheel_scroll)
-	return (relative_wheel_scroll_ratio * LASTLINE + 99) / 100;
-    else
-	return fixed_wheel_scroll_count;
-}
-
-static TabBuffer *
-posTab(int x, int y)
-{
-    TabBuffer *tab;
-
-    if (mouse_action.menu_str && x < mouse_action.menu_width && y == 0)
-	return NO_TABBUFFER;
-    if (y > LastTab->y)
-	return NULL;
-    for (tab = FirstTab; tab; tab = tab->nextTab) {
-	if (tab->x1 <= x && x <= tab->x2 && tab->y == y)
-	    return tab;
-    }
-    return NULL;
-}
-
-static void
-do_mouse_action(int btn, int x, int y)
-{
-    MouseActionMap *map = NULL;
-    int ny = -1;
-
-    if (nTab > 1 || mouse_action.menu_str)
-	ny = LastTab->y + 1;
-
-    switch (btn) {
-    case MOUSE_BTN1_DOWN:
-	btn = 0;
-	break;
-    case MOUSE_BTN2_DOWN:
-	btn = 1;
-	break;
-    case MOUSE_BTN3_DOWN:
-	btn = 2;
-	break;
-    default:
-	return;
-    }
-    if (y < ny) {
-	if (mouse_action.menu_str && x >= 0 && x < mouse_action.menu_width) {
-	    if (mouse_action.menu_map[btn])
-		map = &mouse_action.menu_map[btn][x];
-	}
-	else
-	    map = &mouse_action.tab_map[btn];
-    }
-    else if (y == LASTLINE) {
-	if (mouse_action.lastline_str && x >= 0 &&
-	    x < mouse_action.lastline_width) {
-	    if (mouse_action.lastline_map[btn])
-		map = &mouse_action.lastline_map[btn][x];
-	}
-    }
-    else if (y > ny) {
-	if (y == Currentbuf->cursorY + Currentbuf->rootY &&
-	    (x == Currentbuf->cursorX + Currentbuf->rootX
-#ifdef USE_M17N
-	     || (WcOption.use_wide && Currentbuf->currentLine != NULL &&
-		 (CharType(Currentbuf->currentLine->propBuf[Currentbuf->pos])
-		  == PC_KANJI1)
-		 && x == Currentbuf->cursorX + Currentbuf->rootX + 1)
-#endif
-	    )) {
-	    if (retrieveCurrentAnchor(Currentbuf) ||
-		retrieveCurrentForm(Currentbuf)) {
-		map = &mouse_action.active_map[btn];
-		if (!(map && map->func))
-		    map = &mouse_action.anchor_map[btn];
-	    }
-	}
-	else {
-	    int cx = Currentbuf->cursorX, cy = Currentbuf->cursorY;
-	    cursorXY(Currentbuf, x - Currentbuf->rootX, y - Currentbuf->rootY);
-	    if (y == Currentbuf->cursorY + Currentbuf->rootY &&
-		(x == Currentbuf->cursorX + Currentbuf->rootX
-#ifdef USE_M17N
-		 || (WcOption.use_wide && Currentbuf->currentLine != NULL &&
-		     (CharType(Currentbuf->currentLine->
-			       propBuf[Currentbuf->pos]) == PC_KANJI1)
-		     && x == Currentbuf->cursorX + Currentbuf->rootX + 1)
-#endif
-		) &&
-		(retrieveCurrentAnchor(Currentbuf) ||
-		 retrieveCurrentForm(Currentbuf)))
-		map = &mouse_action.anchor_map[btn];
-	    cursorXY(Currentbuf, cx, cy);
-	}
-    }
-    else {
-	return;
-    }
-    if (!(map && map->func))
-	map = &mouse_action.default_map[btn];
-    if (map && map->func) {
-	mouse_action.in_action = TRUE;
-	mouse_action.cursorX = x;
-	mouse_action.cursorY = y;
-	CurrentKey = -1;
-	CurrentKeyData = NULL;
-	CurrentCmdData = map->data;
-	(*map->func) ();
-	CurrentCmdData = NULL;
-    }
-}
-
-static void
-process_mouse(int btn, int x, int y)
-{
-    int delta_x, delta_y, i;
-    static int press_btn = MOUSE_BTN_RESET, press_x, press_y;
-    TabBuffer *t;
-    int ny = -1;
-
-    if (nTab > 1 || mouse_action.menu_str)
-	ny = LastTab->y + 1;
-    if (btn == MOUSE_BTN_UP) {
-	switch (press_btn) {
-	case MOUSE_BTN1_DOWN:
-	    if (press_y == y && press_x == x)
-		do_mouse_action(press_btn, x, y);
-	    else if (ny > 0 && y < ny) {
-		if (press_y < ny) {
-		    moveTab(posTab(press_x, press_y), posTab(x, y),
-			    (press_y == y) ? (press_x < x) : (press_y < y));
-		    return;
-		}
-		else if (press_x >= Currentbuf->rootX) {
-		    Buffer *buf = Currentbuf;
-		    int cx = Currentbuf->cursorX, cy = Currentbuf->cursorY;
-
-		    t = posTab(x, y);
-		    if (t == NULL)
-			return;
-		    if (t == NO_TABBUFFER)
-			t = NULL;	/* open new tab */
-		    cursorXY(Currentbuf, press_x - Currentbuf->rootX,
-			     press_y - Currentbuf->rootY);
-		    if (Currentbuf->cursorY == press_y - Currentbuf->rootY &&
-			(Currentbuf->cursorX == press_x - Currentbuf->rootX
-#ifdef USE_M17N
-			 || (WcOption.use_wide &&
-			     Currentbuf->currentLine != NULL &&
-			     (CharType(Currentbuf->currentLine->
-				       propBuf[Currentbuf->pos]) == PC_KANJI1)
-			     && Currentbuf->cursorX == press_x
-			     - Currentbuf->rootX - 1)
-#endif
-			)) {
-			displayBuffer(Currentbuf, B_NORMAL);
-			followTab(t);
-		    }
-		    if (buf == Currentbuf)
-			cursorXY(Currentbuf, cx, cy);
-		}
-		return;
-	    }
-	    else {
-		delta_x = x - press_x;
-		delta_y = y - press_y;
-
-		if (abs(delta_x) < abs(delta_y) / 3)
-		    delta_x = 0;
-		if (abs(delta_y) < abs(delta_x) / 3)
-		    delta_y = 0;
-		if (reverse_mouse) {
-		    delta_y = -delta_y;
-		    delta_x = -delta_x;
-		}
-		if (delta_y > 0) {
-		    prec_num = delta_y;
-		    ldown1();
-		}
-		else if (delta_y < 0) {
-		    prec_num = -delta_y;
-		    lup1();
-		}
-		if (delta_x > 0) {
-		    prec_num = delta_x;
-		    col1L();
-		}
-		else if (delta_x < 0) {
-		    prec_num = -delta_x;
-		    col1R();
-		}
-	    }
-	    break;
-	case MOUSE_BTN2_DOWN:
-	case MOUSE_BTN3_DOWN:
-	    if (press_y == y && press_x == x)
-		do_mouse_action(press_btn, x, y);
-	    break;
-	case MOUSE_BTN4_DOWN_RXVT:
-	    for (i = 0; i < mouse_scroll_line(); i++)
-		ldown1();
-	    break;
-	case MOUSE_BTN5_DOWN_RXVT:
-	    for (i = 0; i < mouse_scroll_line(); i++)
-		lup1();
-	    break;
-	}
-    }
-    else if (btn == MOUSE_BTN4_DOWN_XTERM) {
-	for (i = 0; i < mouse_scroll_line(); i++)
-	    ldown1();
-    }
-    else if (btn == MOUSE_BTN5_DOWN_XTERM) {
-	for (i = 0; i < mouse_scroll_line(); i++)
-	    lup1();
-    }
-
-    if (btn != MOUSE_BTN4_DOWN_RXVT || press_btn == MOUSE_BTN_RESET) {
-	press_btn = btn;
-	press_x = x;
-	press_y = y;
-    }
-    else {
-	press_btn = MOUSE_BTN_RESET;
-    }
-}
-
-DEFUN(msToggle, MOUSE_TOGGLE, "Toggle mouse support")
-{
-    if (use_mouse) {
-	use_mouse = FALSE;
-    }
-    else {
-	use_mouse = TRUE;
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(mouse, MOUSE, "mouse operation")
-{
-    int btn, x, y;
-
-    btn = (unsigned char)getch() - 32;
-    x = (unsigned char)getch() - 33;
-    if (x < 0)
-	x += 0x100;
-    y = (unsigned char)getch() - 33;
-    if (y < 0)
-	y += 0x100;
-
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
-	return;
-    process_mouse(btn, x, y);
-}
-
-DEFUN(sgrmouse, SGRMOUSE, "SGR 1006 mouse operation")
-{
-    int btn = 0, x = 0, y = 0;
-    unsigned char c;
-
-    do {
-	c = getch();
-	if (IS_DIGIT(c))
-	    btn = btn * 10 + c - '0';
-	else if (c == ';')
-	    break;
-	else
-	    return;
-    } while (1);
-
-    do {
-	c = getch();
-	if (IS_DIGIT(c))
-	    x = x * 10 + c - '0';
-	else if (c == ';')
-	    break;
-	else
-	  return;
-    } while (1);
-    if (x>0) x--;
-
-    do {
-	c = getch();
-	if (IS_DIGIT(c))
-	    y = y * 10 + c - '0';
-	else if (c == 'M')
-	    break;
-	else if (c == 'm') {
-	    btn |= 3;
-	    break;
-	} else
-    return;
-    } while (1);
-    if (y>0) y--;
-
-    if (x < 0 || x >= COLS || y < 0 || y > LASTLINE)
-	return;
-    process_mouse(btn, x, y);
-}
-
-#ifdef USE_GPM
-int
-gpm_process_mouse(Gpm_Event * event, void *data)
-{
-    int btn = MOUSE_BTN_RESET, x, y;
-    if (event->type & GPM_UP)
-	btn = MOUSE_BTN_UP;
-    else if (event->type & GPM_DOWN) {
-	switch (event->buttons) {
-	case GPM_B_LEFT:
-	    btn = MOUSE_BTN1_DOWN;
-	    break;
-	case GPM_B_MIDDLE:
-	    btn = MOUSE_BTN2_DOWN;
-	    break;
-	case GPM_B_RIGHT:
-	    btn = MOUSE_BTN3_DOWN;
-	    break;
-	}
-    }
-    else {
-	GPM_DRAWPOINTER(event);
-	return 0;
-    }
-    x = event->x;
-    y = event->y;
-    process_mouse(btn, x - 1, y - 1);
-    return 0;
-}
-#endif				/* USE_GPM */
-
-#ifdef USE_SYSMOUSE
-int
-sysm_process_mouse(int x, int y, int nbs, int obs)
-{
-    int btn;
-    int bits;
-
-    if (obs & ~nbs)
-	btn = MOUSE_BTN_UP;
-    else if (nbs & ~obs) {
-	bits = nbs & ~obs;
-	btn = bits & 0x1 ? MOUSE_BTN1_DOWN :
-	    (bits & 0x2 ? MOUSE_BTN2_DOWN :
-	     (bits & 0x4 ? MOUSE_BTN3_DOWN : 0));
-    }
-    else			/* nbs == obs */
-	return 0;
-    process_mouse(btn, x, y);
-    return 0;
-}
-#endif				/* USE_SYSMOUSE */
-
-DEFUN(movMs, MOVE_MOUSE, "Move cursor to mouse pointer")
-{
-    if (!mouse_action.in_action)
-	return;
-    if ((nTab > 1 || mouse_action.menu_str) &&
-	mouse_action.cursorY < LastTab->y + 1)
-	return;
-    else if (mouse_action.cursorX >= Currentbuf->rootX &&
-	     mouse_action.cursorY < LASTLINE) {
-	cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
-		 mouse_action.cursorY - Currentbuf->rootY);
-    }
-    displayBuffer(Currentbuf, B_NORMAL);
-}
-
-#ifdef USE_MENU
-#ifdef KANJI_SYMBOLS
-#define FRAME_WIDTH 2
-#else
-#define FRAME_WIDTH 1
-#endif
-
-DEFUN(menuMs, MENU_MOUSE, "Pop up menu at mouse pointer")
-{
-    if (!mouse_action.in_action)
-	return;
-    if ((nTab > 1 || mouse_action.menu_str) &&
-	mouse_action.cursorY < LastTab->y + 1)
-	mouse_action.cursorX -= FRAME_WIDTH + 1;
-    else if (mouse_action.cursorX >= Currentbuf->rootX &&
-	     mouse_action.cursorY < LASTLINE) {
-	cursorXY(Currentbuf, mouse_action.cursorX - Currentbuf->rootX,
-		 mouse_action.cursorY - Currentbuf->rootY);
-	displayBuffer(Currentbuf, B_NORMAL);
-    }
-    mainMn();
-}
-#endif
-
-DEFUN(tabMs, TAB_MOUSE, "Select tab by mouse action")
-{
-    TabBuffer *tab;
-
-    if (!mouse_action.in_action)
-	return;
-    tab = posTab(mouse_action.cursorX, mouse_action.cursorY);
-    if (!tab || tab == NO_TABBUFFER)
-	return;
-    CurrentTab = tab;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-DEFUN(closeTMs, CLOSE_TAB_MOUSE, "Close tab at mouse pointer")
-{
-    TabBuffer *tab;
-
-    if (!mouse_action.in_action)
-	return;
-    tab = posTab(mouse_action.cursorX, mouse_action.cursorY);
-    if (!tab || tab == NO_TABBUFFER)
-	return;
-    deleteTab(tab);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-#endif				/* USE_MOUSE */
 
 DEFUN(dispVer, VERSION, "Display the version of w3m")
 {
@@ -5947,15 +5282,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)")
 	CurrentKey = -1;
 	CurrentKeyData = NULL;
 	CurrentCmdData = *p ? p : NULL;
-#ifdef USE_MOUSE
-	if (use_mouse)
-	    mouse_inactive();
-#endif
 	w3mFuncList[cmd].func();
-#ifdef USE_MOUSE
-	if (use_mouse)
-	    mouse_active();
-#endif
 	CurrentCmdData = NULL;
     }
     displayBuffer(Currentbuf, B_NORMAL);
@@ -5971,15 +5298,7 @@ SigAlarm(SIGNAL_ARG)
 	CurrentKey = -1;
 	CurrentKeyData = NULL;
 	CurrentCmdData = data = (char *)CurrentAlarm->data;
-#ifdef USE_MOUSE
-	if (use_mouse)
-	    mouse_inactive();
-#endif
 	w3mFuncList[CurrentAlarm->cmd].func();
-#ifdef USE_MOUSE
-	if (use_mouse)
-	    mouse_active();
-#endif
 	CurrentCmdData = NULL;
 	if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
 	    CurrentAlarm->sec = 0;
@@ -6084,20 +5403,7 @@ DEFUN(reinit, REINIT, "Reload configuration file")
 	return;
     }
 
-#ifdef USE_MOUSE
-    if (!strcasecmp(resource, "MOUSE")) {
-	initMouseAction();
-	displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-	return;
-    }
-#endif
 
-#ifdef USE_MENU
-    if (!strcasecmp(resource, "MENU")) {
-	initMenu();
-	return;
-    }
-#endif
 
     if (!strcasecmp(resource, "MIMETYPES")) {
 	initMimeTypes();
@@ -6205,9 +5511,6 @@ calcTabPos(void)
     int lcol = 0, rcol = 0, col;
     int n1, n2, na, nx, ny, ix, iy;
 
-#ifdef USE_MOUSE
-    lcol = mouse_action.menu_str ? mouse_action.menu_width : 0;
-#endif
 
     if (nTab <= 0)
 	return;
@@ -6334,10 +5637,6 @@ followTab(TabBuffer * tab)
     Buffer *buf;
     Anchor *a;
 
-#ifdef USE_IMAGE
-    a = retrieveCurrentImg(Currentbuf);
-    if (!(a && a->image && a->image->map))
-#endif
 	a = retrieveCurrentAnchor(Currentbuf);
     if (a == NULL)
 	return;

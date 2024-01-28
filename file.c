@@ -68,13 +68,6 @@ static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
 static int cur_status;
-#ifdef MENU_SELECT
-/* menu based <select>  */
-FormSelectOption *select_option;
-int max_select = MAX_SELECT;
-static int n_select;
-static int cur_option_maxwidth;
-#endif				/* MENU_SELECT */
 
 static Str cur_textarea;
 Str *textarea_str;
@@ -124,9 +117,6 @@ static int form_sp = 0;
 static clen_t current_content_length;
 
 static int cur_hseq;
-#ifdef USE_IMAGE
-static int cur_iseq;
-#endif
 
 #define MAX_UL_LEVEL	9
 #define UL_SYMBOL(x)	(N_GRAPH_SYMBOL + (x))
@@ -240,9 +230,6 @@ loadSomething(URLFile *f,
     if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
 	buf->sourcefile = buf->filename;
     if (loadproc == loadHTMLBuffer
-#ifdef USE_IMAGE
-	|| loadproc == loadImageBuffer
-#endif
        )
 	buf->type = "text/html";
     else
@@ -535,41 +522,6 @@ matchattr(char *p, char *attr, int len, Str *value)
     return 0;
 }
 
-#ifdef USE_IMAGE
-#ifdef USE_XFACE
-static char *
-xface2xpm(char *xface)
-{
-    Image image;
-    ImageCache *cache;
-    FILE *f;
-    struct stat st;
-
-    SKIP_BLANKS(xface);
-    image.url = xface;
-    image.ext = ".xpm";
-    image.width = 48;
-    image.height = 48;
-    image.cache = NULL;
-    cache = getImage(&image, NULL, IMG_FLAG_AUTO);
-    if (cache->loaded & IMG_FLAG_LOADED && !stat(cache->file, &st))
-	return cache->file;
-    cache->loaded = IMG_FLAG_ERROR;
-
-    f = popen(Sprintf("%s > %s", shell_quote(auxbinFile(XFACE2XPM)),
-		      shell_quote(cache->file))->ptr, "w");
-    if (!f)
-	return NULL;
-    fputs(xface, f);
-    pclose(f);
-    if (stat(cache->file, &st) || !st.st_size)
-	return NULL;
-    cache->loaded = IMG_FLAG_LOADED | IMG_FLAG_DONT_REMOVE;
-    cache->index = 0;
-    return cache->file;
-}
-#endif
-#endif
 
 void
 readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
@@ -600,9 +552,6 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
 	http_response_code = 0;
 
     if (thru && !newBuf->header_source
-#ifdef USE_IMAGE
-	&& !image_source
-#endif
 	) {
 	tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
 	src = fopen(tmpf, "w");
@@ -660,43 +609,6 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
 			       lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
 		for (; *q && (*q == '\r' || *q == '\n'); q++) ;
 	    }
-#ifdef USE_IMAGE
-	    if (thru && activeImage && displayImage) {
-		Str src = NULL;
-		if (!strncasecmp(tmp->ptr, "X-Image-URL:", 12)) {
-		    tmpf = &tmp->ptr[12];
-		    SKIP_BLANKS(tmpf);
-		    src = Strnew_m_charp("<img src=\"", html_quote(tmpf),
-					 "\" alt=\"X-Image-URL\">", NULL);
-		}
-#ifdef USE_XFACE
-		else if (!strncasecmp(tmp->ptr, "X-Face:", 7)) {
-		    tmpf = xface2xpm(&tmp->ptr[7]);
-		    if (tmpf)
-			src = Strnew_m_charp("<img src=\"file:",
-					     html_quote(tmpf),
-					     "\" alt=\"X-Face\"",
-					     " width=48 height=48>", NULL);
-		}
-#endif
-		if (src) {
-		    URLFile f;
-		    Line *l;
-#ifdef USE_M17N
-		    wc_ces old_charset = newBuf->document_charset;
-#endif
-		    init_stream(&f, SCM_LOCAL, newStrStream(src));
-		    loadHTMLstream(&f, newBuf, NULL, TRUE);
-		    UFclose(&f);
-		    for (l = newBuf->lastLine; l && l->real_linenumber;
-			 l = l->prev)
-			l->real_linenumber = 0;
-#ifdef USE_M17N
-		    newBuf->document_charset = old_charset;
-#endif
-		}
-	    }
-#endif
 	    lineBuf2 = tmp;
 	}
 	else {
@@ -2087,10 +1999,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
   page_loaded:
     if (page) {
 	FILE *src;
-#ifdef USE_IMAGE
-	if (image_source)
-	    return NULL;
-#endif
 	tmp = tmpfname(TMPF_SRC, ".html");
 	src = fopen(tmp->ptr, "w");
 	if (src) {
@@ -2183,31 +2091,11 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	    f.compression = CMP_NOCOMPRESS;
 	}
     }
-#ifdef USE_IMAGE
-    if (image_source) {
-	Buffer *b = NULL;
-	if (IStype(f.stream) != IST_ENCODED)
-	    f.stream = newEncodedStream(f.stream, f.encoding);
-	if (save2tmp(f, image_source) == 0) {
-	    b = newBuffer(INIT_BUFFER_WIDTH);
-	    b->sourcefile = image_source;
-	    b->real_type = t;
-	}
-	UFclose(&f);
-	TRAP_OFF;
-	return b;
-    }
-#endif
 
     if (is_html_type(t))
 	proc = loadHTMLBuffer;
     else if (is_plain_text_type(t))
 	proc = loadBuffer;
-#ifdef USE_IMAGE
-    else if (activeImage && displayImage && !useExtImageViewer &&
-	     !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6))
-	proc = loadImageBuffer;
-#endif
     else if (w3m_backend) ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
 	if (!do_download && 
@@ -3236,13 +3124,7 @@ Str
 process_img(struct parsed_tag *tag, int width)
 {
     char *p, *q, *r, *r2 = NULL, *s, *t;
-#ifdef USE_IMAGE
-    int w, i, nw, ni = 1, n, w0 = -1, i0 = -1;
-    int align, xoffset, yoffset, top, bottom, ismap = 0;
-    int use_image = activeImage && displayImage;
-#else
     int w, i, nw, n;
-#endif
     int pre_int = FALSE, ext_pre_int = FALSE;
     Str tmp = Strnew();
 
@@ -3263,41 +3145,8 @@ process_img(struct parsed_tag *tag, int width)
 	    else
 		w = -1;
 	}
-#ifdef USE_IMAGE
-	if (use_image) {
-	    if (w > 0) {
-		w = (int)(w * image_scale / 100 + 0.5);
-		if (w == 0)
-		    w = 1;
-		else if (w > MAX_IMAGE_SIZE)
-		    w = MAX_IMAGE_SIZE;
-	    }
-	}
-#endif
     }
     i = -1;
-#ifdef USE_IMAGE
-    if (use_image) {
-	if (parsedtag_get_value(tag, ATTR_HEIGHT, &i)) {
-	    if (i > 0) {
-		i = (int)(i * image_scale / 100 + 0.5);
-		if (i == 0)
-		    i = 1;
-		else if (i > MAX_IMAGE_SIZE)
-		    i = MAX_IMAGE_SIZE;
-	    }
-	    else {
-		i = -1;
-	    }
-	}
-	align = -1;
-	parsedtag_get_value(tag, ATTR_ALIGN, &align);
-	ismap = 0;
-	if (parsedtag_exists(tag, ATTR_ISMAP))
-	    ismap = 1;
-    }
-    else
-#endif
 	parsedtag_get_value(tag, ATTR_HEIGHT, &i);
     r = NULL;
     parsedtag_get_value(tag, ATTR_USEMAP, &r);
@@ -3305,21 +3154,6 @@ process_img(struct parsed_tag *tag, int width)
 	ext_pre_int = TRUE;
 
     tmp = Strnew_size(128);
-#ifdef USE_IMAGE
-    if (use_image) {
-	switch (align) {
-	case ALIGN_LEFT:
-	    Strcat_charp(tmp, "<div_int align=left>");
-	    break;
-	case ALIGN_CENTER:
-	    Strcat_charp(tmp, "<div_int align=center>");
-	    break;
-	case ALIGN_RIGHT:
-	    Strcat_charp(tmp, "<div_int align=right>");
-	    break;
-	}
-    }
-#endif
     if (r) {
 	Str tmp2;
 	r2 = strchr(r, '#');
@@ -3334,47 +3168,6 @@ process_img(struct parsed_tag *tag, int width)
 			    "type=submit no_effect=true>",
 			    cur_hseq++, cur_form_id));
     }
-#ifdef USE_IMAGE
-    if (use_image) {
-	w0 = w;
-	i0 = i;
-	if (w < 0 || i < 0) {
-	    Image image;
-	    ParsedURL u;
-
-	    parseURL2(p, &u, cur_baseURL);
-	    image.url = parsedURL2Str(&u)->ptr;
-	    if (!uncompressed_file_type(u.file, &image.ext))
-		image.ext = filename_extension(u.file, TRUE);
-	    image.cache = NULL;
-	    image.width = w;
-	    image.height = i;
-
-	    image.cache = getImage(&image, cur_baseURL, IMG_FLAG_SKIP);
-	    if (image.cache && image.cache->width > 0 &&
-		image.cache->height > 0) {
-		w = w0 = image.cache->width;
-		i = i0 = image.cache->height;
-	    }
-	    if (w < 0)
-		w = 8 * pixel_per_char;
-	    if (i < 0)
-		i = pixel_per_line;
-	}
-	if (enable_inline_image) {
-	    nw = (w > 1) ? ((w - 1) / pixel_per_char_i + 1) : 1 ;
-	    ni = (i > 1) ? ((i - 1) / pixel_per_line_i + 1) : 1 ;
-	}
-	else {
-	    nw = (w > 3) ? (int)((w - 3) / pixel_per_char + 1) : 1;
-	    ni = (i > 3) ? (int)((i - 3) / pixel_per_line + 1) : 1;
-	}
-	Strcat(tmp,
-	       Sprintf("<pre_int><img_alt hseq=\"%d\" src=\"", cur_iseq++));
-	pre_int = TRUE;
-    }
-    else
-#endif
     {
 	if (w < 0)
 	    w = 12 * pixel_per_char;
@@ -3392,88 +3185,11 @@ process_img(struct parsed_tag *tag, int width)
 	Strcat_charp(tmp, html_quote(t));
 	Strcat_charp(tmp, "\"");
     }
-#ifdef USE_IMAGE
-    if (use_image) {
-	if (w0 >= 0)
-	    Strcat(tmp, Sprintf(" width=%d", w0));
-	if (i0 >= 0)
-	    Strcat(tmp, Sprintf(" height=%d", i0));
-	switch (align) {
-	case ALIGN_MIDDLE:
-	    if (!enable_inline_image) {
-		top = ni / 2;
-		bottom = top;
-		if (top * 2 == ni)
-		    yoffset = (int)(((ni + 1) * pixel_per_line - i) / 2);
-		else
-		    yoffset = (int)((ni * pixel_per_line - i) / 2);
-		break;
-	    }
-	case ALIGN_TOP:
-	    top = 0;
-	    bottom = ni - 1;
-	    yoffset = 0;
-	    break;
-	case ALIGN_BOTTOM:
-	    top = ni - 1;
-	    bottom = 0;
-	    yoffset = (int)(ni * pixel_per_line - i);
-	    break;
-	default:
-	    top = ni - 1;
-	    bottom = 0;
-	    if (ni == 1 && ni * pixel_per_line > i)
-		yoffset = 0;
-	    else {
-		yoffset = (int)(ni * pixel_per_line - i);
-		if (yoffset <= -2)
-		    yoffset++;
-	    }
-	    break;
-	}
-
-	if (enable_inline_image)
-	    xoffset = 0;
-	else
-	    xoffset = (int)((nw * pixel_per_char - w) / 2);
-
-	if (xoffset)
-	    Strcat(tmp, Sprintf(" xoffset=%d", xoffset));
-	if (yoffset)
-	    Strcat(tmp, Sprintf(" yoffset=%d", yoffset));
-	if (top)
-	    Strcat(tmp, Sprintf(" top_margin=%d", top));
-	if (bottom)
-	    Strcat(tmp, Sprintf(" bottom_margin=%d", bottom));
-	if (r) {
-	    Strcat_charp(tmp, " usemap=\"");
-	    Strcat_charp(tmp, html_quote((r2) ? r2 + 1 : r));
-	    Strcat_charp(tmp, "\"");
-	}
-	if (ismap)
-	    Strcat_charp(tmp, " ismap");
-    }
-#endif
     Strcat_charp(tmp, ">");
     if (q != NULL && *q == '\0' && ignore_null_img_alt)
 	q = NULL;
     if (q != NULL) {
 	n = get_strwidth(q);
-#ifdef USE_IMAGE
-	if (use_image) {
-	    if (n > nw) {
-		char *r;
-		for (r = q, n = 0; *r; r += get_mclen(r), n += get_mcwidth(r)) {
-		    if (n + get_mcwidth(r) > nw)
-			break;
-		}
-		Strcat_charp(tmp, html_quote(Strnew_charp_n(q, r - q)->ptr));
-	    }
-	    else
-		Strcat_charp(tmp, html_quote(q));
-	}
-	else
-#endif
 	    Strcat_charp(tmp, html_quote(q));
 	goto img_end;
     }
@@ -3532,12 +3248,6 @@ process_img(struct parsed_tag *tag, int width)
     Strcat_char(tmp, ']');
     n++;
   img_end:
-#ifdef USE_IMAGE
-    if (use_image) {
-	for (; n < nw; n++)
-	    Strcat_char(tmp, ' ');
-    }
-#endif
     Strcat_charp(tmp, "</img_alt>");
     if (pre_int && !ext_pre_int)
 	Strcat_charp(tmp, "</pre_int>");
@@ -3545,17 +3255,6 @@ process_img(struct parsed_tag *tag, int width)
 	Strcat_charp(tmp, "</input_alt>");
 	process_n_form();
     }
-#ifdef USE_IMAGE
-    if (use_image) {
-	switch (align) {
-	case ALIGN_RIGHT:
-	case ALIGN_CENTER:
-	case ALIGN_LEFT:
-	    Strcat_charp(tmp, "</div_int>");
-	    break;
-	}
-    }
-#endif
     return tmp;
 }
 
@@ -3844,26 +3543,6 @@ process_select(struct parsed_tag *tag)
     cur_select = Strnew_charp(p);
     select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
 
-#ifdef MENU_SELECT
-    if (!select_is_multiple) {
-	select_str = Strnew_charp("<pre_int>");
-	if (displayLinkNumber)
-	    Strcat(select_str, getLinkNumberStr(0));
-	Strcat(select_str, Sprintf("[<input_alt hseq=\"%d\" "
-			     "fid=\"%d\" type=select name=\"%s\" selectnumber=%d",
-			     cur_hseq++, cur_form_id, html_quote(p), n_select));
-	Strcat_charp(select_str, ">");
-	if (n_select == max_select) {
-	    max_select *= 2;
-	    select_option =
-		New_Reuse(FormSelectOption, select_option, max_select);
-	}
-	select_option[n_select].first = NULL;
-	select_option[n_select].last = NULL;
-	cur_option_maxwidth = 0;
-    }
-    else
-#endif				/* MENU_SELECT */
 	select_str = Strnew();
     cur_option = NULL;
     cur_status = R_ST_NORMAL;
@@ -3877,18 +3556,6 @@ process_n_select(void)
     if (cur_select == NULL)
 	return NULL;
     process_option();
-#ifdef MENU_SELECT
-    if (!select_is_multiple) {
-	if (select_option[n_select].first) {
-	    FormItemList sitem;
-	    chooseSelectOption(&sitem, select_option[n_select].first);
-	    Strcat(select_str, textfieldrep(sitem.label, cur_option_maxwidth));
-	}
-	Strcat_charp(select_str, "</input_alt>]</pre_int>");
-	n_select++;
-    }
-    else
-#endif				/* MENU_SELECT */
 	Strcat_charp(select_str, "<br>");
     cur_select = NULL;
     n_selectitem = 0;
@@ -3972,18 +3639,6 @@ process_option(void)
 	cur_option_value = cur_option;
     if (cur_option_label == NULL)
 	cur_option_label = cur_option;
-#ifdef MENU_SELECT
-    int len;
-    if (!select_is_multiple) {
-	len = get_Str_strwidth(cur_option_label);
-	if (len > cur_option_maxwidth)
-	    cur_option_maxwidth = len;
-	addSelectOption(&select_option[n_select],
-			cur_option_value,
-			cur_option_label, cur_option_selected);
-	return;
-    }
-#endif				/* MENU_SELECT */
     if (!select_is_multiple) {
 	begin_char = '(';
 	end_char = ')';
@@ -4998,18 +4653,6 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
     case HTML_IMG_ALT:
 	if (parsedtag_get_value(tag, ATTR_SRC, &p))
 	    obuf->img_alt = Strnew_charp(p);
-#ifdef USE_IMAGE
-	i = 0;
-	if (parsedtag_get_value(tag, ATTR_TOP_MARGIN, &i)) {
-	    if ((short)i > obuf->top_margin)
-		obuf->top_margin = (short)i;
-	}
-	i = 0;
-	if (parsedtag_get_value(tag, ATTR_BOTTOM_MARGIN, &i)) {
-	    if ((short)i > obuf->bottom_margin)
-		obuf->bottom_margin = (short)i;
-	}
-#endif
 	return 0;
     case HTML_N_IMG_ALT:
 	if (obuf->img_alt) {
@@ -5561,9 +5204,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
     char symbol = '\0';
     int internal = 0;
     Anchor **a_textarea = NULL;
-#ifdef MENU_SELECT
-    Anchor **a_select = NULL;
-#endif
 #if defined(USE_M17N) || defined(USE_IMAGE)
     ParsedURL *base = baseURL(buf);
 #endif
@@ -5584,14 +5224,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 	textarea_str = New_N(Str, max_textarea);
 	a_textarea = New_N(Anchor *, max_textarea);
     }
-#ifdef MENU_SELECT
-    n_select = -1;
-    if (!max_select) {		/* halfload */
-	max_select = MAX_SELECT;
-	select_option = New_N(FormSelectOption, max_select);
-	a_select = New_N(Anchor *, max_select);
-    }
-#endif
 
 #ifdef DEBUG
     if (w3m_debug)
@@ -5829,72 +5461,11 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 
 		case HTML_IMG_ALT:
 		    if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-#ifdef USE_IMAGE
-			int w = -1, h = -1, iseq = 0, ismap = 0;
-			int xoffset = 0, yoffset = 0, top = 0, bottom = 0;
-			parsedtag_get_value(tag, ATTR_HSEQ, &iseq);
-			parsedtag_get_value(tag, ATTR_WIDTH, &w);
-			parsedtag_get_value(tag, ATTR_HEIGHT, &h);
-			parsedtag_get_value(tag, ATTR_XOFFSET, &xoffset);
-			parsedtag_get_value(tag, ATTR_YOFFSET, &yoffset);
-			parsedtag_get_value(tag, ATTR_TOP_MARGIN, &top);
-			parsedtag_get_value(tag, ATTR_BOTTOM_MARGIN, &bottom);
-			if (parsedtag_exists(tag, ATTR_ISMAP))
-			    ismap = 1;
-			q = NULL;
-			parsedtag_get_value(tag, ATTR_USEMAP, &q);
-			if (iseq > 0) {
-			    buf->imarklist = putHmarker(buf->imarklist,
-							currentLn(buf), pos,
-							iseq - 1);
-			}
-#endif
 			s = NULL;
 			parsedtag_get_value(tag, ATTR_TITLE, &s);
 			p = url_quote_conv(remove_space(p),
 					   buf->document_charset);
 			a_img = registerImg(buf, p, s, currentLn(buf), pos);
-#ifdef USE_IMAGE
-			a_img->hseq = iseq;
-			a_img->image = NULL;
-			if (iseq > 0) {
-			    ParsedURL u;
-			    Image *image;
-
-			    parseURL2(a_img->url, &u, base);
-			    a_img->image = image = New(Image);
-			    image->url = parsedURL2Str(&u)->ptr;
-			    if (!uncompressed_file_type(u.file, &image->ext))
-				image->ext = filename_extension(u.file, TRUE);
-			    image->cache = NULL;
-			    image->width =
-				(w > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : w;
-			    image->height =
-				(h > MAX_IMAGE_SIZE) ? MAX_IMAGE_SIZE : h;
-			    image->xoffset = xoffset;
-			    image->yoffset = yoffset;
-			    image->y = currentLn(buf) - top;
-			    if (image->xoffset < 0 && pos == 0)
-				image->xoffset = 0;
-			    if (image->yoffset < 0 && image->y == 1)
-				image->yoffset = 0;
-			    image->rows = 1 + top + bottom;
-			    image->map = q;
-			    image->ismap = ismap;
-			    image->touch = 0;
-			    image->cache = getImage(image, base,
-						    IMG_FLAG_SKIP);
-			}
-			else if (iseq < 0) {
-			    BufferPoint *po = buf->imarklist->marks - iseq - 1;
-			    Anchor *a = retrieveAnchor(buf->img,
-						       po->line, po->pos);
-			    if (a) {
-				a_img->url = a->url;
-				a_img->image = a->image;
-			    }
-			}
-#endif
 		    }
 		    effect |= PE_IMAGE;
 		    break;
@@ -5911,9 +5482,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 			FormList *form;
 			int top = 0, bottom = 0;
 			int textareanumber = -1;
-#ifdef MENU_SELECT
-			int selectnumber = -1;
-#endif
 			hseq = 0;
 			form_id = -1;
 
@@ -5961,28 +5529,10 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 						       max_textarea);
 			    }
 			}
-#ifdef MENU_SELECT
-			if (a_select &&
-			    parsedtag_get_value(tag, ATTR_SELECTNUMBER,
-						&selectnumber)) {
-			    if (selectnumber >= max_select) {
-				max_select = 2 * selectnumber;
-				select_option = New_Reuse(FormSelectOption,
-							  select_option,
-							  max_select);
-				a_select = New_Reuse(Anchor *, a_select,
-						     max_select);
-			    }
-			}
-#endif
 			a_form =
 			    registerForm(buf, form, tag, currentLn(buf), pos);
 			if (a_textarea && textareanumber >= 0)
 			    a_textarea[textareanumber] = a_form;
-#ifdef MENU_SELECT
-			if (a_select && selectnumber >= 0)
-			    a_select[selectnumber] = a_form;
-#endif
 			if (a_form) {
 			    a_form->hseq = hseq - 1;
 			    a_form->y = currentLn(buf) - top;
@@ -6028,10 +5578,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 			parsedtag_get_value(tag, ATTR_ALT, &q);
 			r = NULL;
 			s = NULL;
-#ifdef USE_IMAGE
-			parsedtag_get_value(tag, ATTR_SHAPE, &r);
-			parsedtag_get_value(tag, ATTR_COORDS, &s);
-#endif
 			a = newMapArea(p, t, q, r, s);
 			pushValue(buf->maplist->area, (void *)a);
 		    }
@@ -6140,41 +5686,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 			    textarea_str[n_textarea];
 		    }
 		    break;
-#ifdef MENU_SELECT
-		case HTML_SELECT_INT:
-		    if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &n_select)
-			&& n_select >= 0 && n_select < max_select) {
-			select_option[n_select].first = NULL;
-			select_option[n_select].last = NULL;
-		    }
-		    else
-			n_select = -1;
-		    break;
-		case HTML_N_SELECT_INT:
-		    if (a_select && n_select >= 0) {
-			FormItemList *item =
-			    (FormItemList *)a_select[n_select]->url;
-			item->select_option = select_option[n_select].first;
-			chooseSelectOption(item, item->select_option);
-			item->init_selected = item->selected;
-			item->init_value = item->value;
-			item->init_label = item->label;
-		    }
-		    break;
-		case HTML_OPTION_INT:
-		    if (n_select >= 0) {
-			int selected;
-			q = "";
-			parsedtag_get_value(tag, ATTR_LABEL, &q);
-			p = q;
-			parsedtag_get_value(tag, ATTR_VALUE, &p);
-			selected = parsedtag_exists(tag, ATTR_SELECTED);
-			addSelectOption(&select_option[n_select],
-					Strnew_charp(p), Strnew_charp(q),
-					selected);
-		    }
-		    break;
-#endif
 		case HTML_TITLE_ALT:
 		    if (parsedtag_get_value(tag, ATTR_TITLE, &p))
 			buf->buffername = html_unquote(p);
@@ -6231,9 +5742,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
     buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
     if (n_textarea)
 	addMultirowsForm(buf, buf->formitem);
-#ifdef USE_IMAGE
-    addMultirowsImg(buf, buf->img);
-#endif
 }
 
 static void
@@ -7119,25 +6627,6 @@ print_internal_information(struct html_feed_environ *henv)
 			   html_quote(henv->title), "\">", NULL);
 	pushTextLine(tl, newTextLine(s, 0));
     }
-#ifdef MENU_SELECT
-    if (n_select > 0) {
-	FormSelectOptionItem *ip;
-	for (i = 0; i < n_select; i++) {
-	    s = Sprintf("<select_int selectnumber=%d>", i);
-	    pushTextLine(tl, newTextLine(s, 0));
-	    for (ip = select_option[i].first; ip; ip = ip->next) {
-		s = Sprintf("<option_int value=\"%s\" label=\"%s\"%s>",
-			    html_quote(ip->value ? ip->value->ptr :
-				       ip->label->ptr),
-			    html_quote(ip->label->ptr),
-			    ip->checked ? " selected" : "");
-		pushTextLine(tl, newTextLine(s, 0));
-	    }
-	    s = Strnew_charp("</select_int>");
-	    pushTextLine(tl, newTextLine(s, 0));
-	}
-    }
-#endif				/* MENU_SELECT */
     if (n_textarea > 0) {
 	for (i = 0; i < n_textarea; i++) {
 	    s = Sprintf("<textarea_int textareanumber=%d>", i);
@@ -7172,9 +6661,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 #endif
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
-#ifdef USE_IMAGE
-    int volatile image_flag;
-#endif
     MySignalHandler(*volatile prevtrap) (SIGNAL_ARG) = NULL;
 
 #ifdef USE_M17N
@@ -7196,26 +6682,12 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
     cur_textarea = NULL;
     max_textarea = MAX_TEXTAREA;
     textarea_str = New_N(Str, max_textarea);
-#ifdef MENU_SELECT
-    n_select = 0;
-    max_select = MAX_SELECT;
-    select_option = New_N(FormSelectOption, max_select);
-#endif				/* MENU_SELECT */
     cur_select = NULL;
     form_sp = -1;
     form_max = -1;
     forms_size = 0;
     forms = NULL;
     cur_hseq = 1;
-#ifdef USE_IMAGE
-    cur_iseq = 1;
-    if (newBuf->image_flag)
-	image_flag = newBuf->image_flag;
-    else if (activeImage && displayImage && autoImage)
-	image_flag = IMG_FLAG_AUTO;
-    else
-	image_flag = IMG_FLAG_SKIP;
-#endif
 
     if (w3m_halfload) {
 	newBuf->buffername = "---";
@@ -7223,9 +6695,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 	newBuf->document_charset = InnerCharset;
 #endif
 	max_textarea = 0;
-#ifdef MENU_SELECT
-	max_select = 0;
-#endif
 	HTMLlineproc3(newBuf, f->stream);
 	w3m_halfload = FALSE;
 	return;
@@ -7333,9 +6802,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 #ifdef USE_M17N
     if (!(newBuf->bufferprop & BP_FRAME))
 	newBuf->document_charset = charset;
-#endif
-#ifdef USE_IMAGE
-    newBuf->image_flag = image_flag;
 #endif
     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
@@ -7639,69 +7105,6 @@ loadBuffer(URLFile *uf, Buffer *volatile newBuf)
     return newBuf;
 }
 
-#ifdef USE_IMAGE
-Buffer *
-loadImageBuffer(URLFile *uf, Buffer *newBuf)
-{
-    Image image;
-    ImageCache *cache;
-    Str tmp, tmpf;
-    FILE *src = NULL;
-    URLFile f;
-    MySignalHandler(*volatile prevtrap) (SIGNAL_ARG) = NULL;
-    struct stat st;
-    const ParsedURL *pu = newBuf ? &newBuf->currentURL : NULL;
-
-    loadImage(newBuf, IMG_FLAG_STOP);
-    image.url = uf->url;
-    image.ext = uf->ext;
-    image.width = -1;
-    image.height = -1;
-    image.cache = NULL;
-    cache = getImage(&image, (ParsedURL *)pu, IMG_FLAG_AUTO);
-    if (!(pu && pu->is_nocache) && cache->loaded & IMG_FLAG_LOADED &&
-	!stat(cache->file, &st))
-	goto image_buffer;
-
-    if (IStype(uf->stream) != IST_ENCODED)
-	uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    TRAP_ON;
-    if (save2tmp(*uf, cache->file) < 0) {
-	TRAP_OFF;
-	return NULL;
-    }
-    TRAP_OFF;
-
-    cache->loaded = IMG_FLAG_LOADED;
-    cache->index = 0;
-
-  image_buffer:
-    if (newBuf == NULL)
-	newBuf = newBuffer(INIT_BUFFER_WIDTH);
-    cache->loaded |= IMG_FLAG_DONT_REMOVE;
-    if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL)
-	newBuf->sourcefile = cache->file;
-
-    tmp = Sprintf("<img src=\"%s\"><br><br>", html_quote(image.url));
-    tmpf = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmpf->ptr, "w");
-    if (src == NULL)
-        return NULL;
-    newBuf->mailcap_source = tmpf->ptr;
-
-    init_stream(&f, SCM_LOCAL, newStrStream(tmp));
-    loadHTMLstream(&f, newBuf, src, TRUE);
-    UFclose(&f);
-    if (src)
-	fclose(src);
-
-    newBuf->topLine = newBuf->firstLine;
-    newBuf->lastLine = newBuf->currentLine;
-    newBuf->currentLine = newBuf->firstLine;
-    newBuf->image_flag = IMG_FLAG_AUTO;
-    return newBuf;
-}
-#endif
 
 static Str
 conv_symbol(Line *l)
@@ -7930,13 +7333,6 @@ openGeneralPagerBuffer(InputStream stream)
 	buf = openPagerBuffer(stream, t_buf);
 	buf->type = "text/plain";
     }
-#ifdef USE_IMAGE
-    else if (activeImage && displayImage && !useExtImageViewer &&
-	     !(w3m_dump & ~DUMP_FRAME) && !strncasecmp(t, "image/", 6)) {
-	buf = loadImageBuffer(&uf, t_buf);
-	buf->type = "text/html";
-    }
-#endif
     else {
 	if (searchExtViewer(t)) {
 	    buf = doExternal(uf, t, t_buf);
@@ -8607,9 +8003,6 @@ uncompress_stream(URLFile *uf, char **src)
     uf->compression = CMP_NOCOMPRESS;
 
     if (uf->scheme != SCM_LOCAL
-#ifdef USE_IMAGE
-	&& !image_source
-#endif
 	) {
 	tmpf = tmpfname(TMPF_DFL, ext)->ptr;
     }

@@ -1,15 +1,6 @@
 /* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
 #include "fm.h"
 
-#ifdef USE_MOUSE
-#ifdef USE_GPM
-#include <gpm.h>
-#endif
-#if defined(USE_GPM) || defined(USE_SYSMOUSE)
-extern int do_getch();
-#define getch()	do_getch()
-#endif				/* USE_GPM */
-#endif				/* USE_MOUSE */
 
 char *NullLine = "";
 Lineprop NullProp[] = { 0 };
@@ -81,9 +72,6 @@ discardBuffer(Buffer *buf)
     int i;
     Buffer *b;
 
-#ifdef USE_IMAGE
-    deleteImage(buf);
-#endif
     clearBuffer(buf);
     for (i = 0; i < MAX_LB; i++) {
 	b = buf->linkBuffer[i];

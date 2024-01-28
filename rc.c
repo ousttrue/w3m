@@ -77,15 +77,6 @@ static int OptionEncode = FALSE;
 #define CMT_DISPLINEINFO N_("Display current line number")
 #define CMT_DISP_IMAGE   N_("Display inline images")
 #define CMT_PSEUDO_INLINES N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
-#ifdef USE_IMAGE
-#define CMT_AUTO_IMAGE   N_("Load inline images automatically")
-#define CMT_MAX_LOAD_IMAGE N_("Maximum processes for parallel image loading")
-#define CMT_EXT_IMAGE_VIEWER   N_("Use external image viewer")
-#define CMT_IMAGE_SCALE  N_("Scale of image (%)")
-#define CMT_IMGDISPLAY   N_("External command to display image")
-#define CMT_IMAGE_MAP_LIST N_("Use link list of image map")
-#define CMT_INLINE_IMG_PROTOCOL N_("Inline image display method")
-#endif
 #define CMT_MULTICOL     N_("Display file names in multi-column format")
 #define CMT_ALT_ENTITY   N_("Use ASCII equivalents to display entities")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
@@ -182,13 +173,6 @@ static int OptionEncode = FALSE;
 #define CMT_DEFAULT_URL  N_("Default value for open-URL command")
 #define CMT_DECODE_CTE   N_("Decode Content-Transfer-Encoding when saving")
 #define CMT_PRESERVE_TIMESTAMP N_("Preserve timestamp when saving")
-#ifdef USE_MOUSE
-#define CMT_MOUSE         N_("Enable mouse")
-#define CMT_REVERSE_MOUSE N_("Scroll in reverse direction of mouse drag")
-#define CMT_RELATIVE_WHEEL_SCROLL N_("Behavior of wheel scroll speed")
-#define CMT_RELATIVE_WHEEL_SCROLL_RATIO N_("(A only)Scroll by # (%) of screen")
-#define CMT_FIXED_WHEEL_SCROLL_COUNT N_("(B only)Scroll by # lines")
-#endif				/* USE_MOUSE */
 #define CMT_CLEAR_BUF     N_("Free memory of undisplayed buffers")
 #define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
 #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
@@ -296,13 +280,6 @@ static struct sel_c displayinsdel[] = {
     {0, NULL, NULL}
 };
 
-#ifdef USE_MOUSE
-static struct sel_c wheelmode[] = {
-    {TRUE, "1", N_("A:relative to screen height")},
-    {FALSE, "0", N_("B:fixed speed")},
-    {0, NULL, NULL}
-};
-#endif				/* MOUSE */
 
 #ifdef INET6
 static struct sel_c dnsorders[] = {
@@ -351,16 +328,6 @@ static struct sel_c graphic_char_str[] = {
     {0, NULL, NULL}
 };
 
-#ifdef USE_IMAGE
-static struct sel_c inlineimgstr[] = {
-    {N_S(INLINE_IMG_NONE), N_("external command")},
-    {N_S(INLINE_IMG_OSC5379), N_("OSC 5379 (mlterm)")},
-    {N_S(INLINE_IMG_SIXEL), N_("sixel (img2sixel)")},
-    {N_S(INLINE_IMG_ITERM2), N_("OSC 1337 (iTerm2)")},
-    {N_S(INLINE_IMG_KITTY), N_("kitty (ImageMagick)")},
-    {0, NULL, NULL}
-};
-#endif				/* USE_IMAGE */
 
 struct param_ptr params1[] = {
     {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
@@ -368,10 +335,6 @@ struct param_ptr params1[] = {
      NULL},
     {"pixel_per_char", P_PIXELS, PI_TEXT, (void *)&pixel_per_char,
      CMT_PIXEL_PER_CHAR, NULL},
-#ifdef USE_IMAGE
-    {"pixel_per_line", P_PIXELS, PI_TEXT, (void *)&pixel_per_line,
-     CMT_PIXEL_PER_LINE, NULL},
-#endif
     {"frame", P_CHARINT, PI_ONOFF, (void *)&RenderFrame, CMT_FRAME, NULL},
     {"target_self", P_CHARINT, PI_ONOFF, (void *)&TargetSelf, CMT_TSELF, NULL},
     {"open_tab_blank", P_INT, PI_ONOFF, (void *)&open_tab_blank,
@@ -417,21 +380,6 @@ struct param_ptr params1[] = {
      NULL},
     {"pseudo_inlines", P_INT, PI_ONOFF, (void *)&pseudoInlines,
      CMT_PSEUDO_INLINES, NULL},
-#ifdef USE_IMAGE
-    {"auto_image", P_INT, PI_ONOFF, (void *)&autoImage, CMT_AUTO_IMAGE, NULL},
-    {"max_load_image", P_INT, PI_TEXT, (void *)&maxLoadImage,
-     CMT_MAX_LOAD_IMAGE, NULL},
-    {"ext_image_viewer", P_INT, PI_ONOFF, (void *)&useExtImageViewer,
-     CMT_EXT_IMAGE_VIEWER, NULL},
-    {"image_scale", P_SCALE, PI_TEXT, (void *)&image_scale, CMT_IMAGE_SCALE,
-     NULL},
-    {"inline_img_protocol", P_INT, PI_SEL_C, (void *)&enable_inline_image,
-     CMT_INLINE_IMG_PROTOCOL, (void *)inlineimgstr},
-    {"imgdisplay", P_STRING, PI_TEXT, (void *)&Imgdisplay, CMT_IMGDISPLAY,
-     NULL},
-    {"image_map_list", P_INT, PI_ONOFF, (void *)&image_map_list,
-     CMT_IMAGE_MAP_LIST, NULL},
-#endif
     {"fold_line", P_INT, PI_ONOFF, (void *)&FoldLine, CMT_FOLD_LINE, NULL},
     {"show_lnum", P_INT, PI_ONOFF, (void *)&showLineNum, CMT_SHOW_NUM, NULL},
     {"show_srch_str", P_INT, PI_ONOFF, (void *)&show_srch_str,
@@ -476,19 +424,6 @@ struct param_ptr params3[] = {
     {"migemo_command", P_STRING, PI_TEXT, (void *)&migemo_command,
      CMT_MIGEMO_COMMAND, NULL},
 #endif				/* USE_MIGEMO */
-#ifdef USE_MOUSE
-    {"use_mouse", P_INT, PI_ONOFF, (void *)&use_mouse, CMT_MOUSE, NULL},
-    {"reverse_mouse", P_INT, PI_ONOFF, (void *)&reverse_mouse,
-     CMT_REVERSE_MOUSE, NULL},
-    {"relative_wheel_scroll", P_INT, PI_SEL_C, (void *)&relative_wheel_scroll,
-     CMT_RELATIVE_WHEEL_SCROLL, (void *)wheelmode},
-    {"relative_wheel_scroll_ratio", P_INT, PI_TEXT,
-     (void *)&relative_wheel_scroll_ratio,
-     CMT_RELATIVE_WHEEL_SCROLL_RATIO, NULL},
-    {"fixed_wheel_scroll_count", P_INT, PI_TEXT,
-     (void *)&fixed_wheel_scroll_count,
-     CMT_FIXED_WHEEL_SCROLL_COUNT, NULL},
-#endif				/* USE_MOUSE */
     {"clear_buffer", P_INT, PI_ONOFF, (void *)&clear_buffer, CMT_CLEAR_BUF,
      NULL},
     {"decode_cte", P_CHARINT, PI_ONOFF, (void *)&DecodeCTE, CMT_DECODE_CTE,
@@ -1182,12 +1117,7 @@ sync_with_option(void)
 #ifdef USE_MIGEMO
     init_migemo();
 #endif
-#ifdef USE_IMAGE
-    if (fmInitialized && (displayImage || enable_inline_image))
-	initImage();
-#else
     displayImage = FALSE;	/* XXX */
-#endif
     loadPasswd();
     loadPreForm();
     loadSiteconf();
@@ -1212,12 +1142,6 @@ sync_with_option(void)
 #endif
     if (fmInitialized) {
 	initKeymap(FALSE);
-#ifdef USE_MOUSE
-	initMouseAction();
-#endif				/* MOUSE */
-#ifdef USE_MENU
-	initMenu();
-#endif				/* MENU */
     }
 }
 
