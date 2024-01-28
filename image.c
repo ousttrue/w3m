@@ -238,12 +238,6 @@ drawImage(void)
 	    int sh = (i->height + i->sy % pixel_per_line_i + pixel_per_line_i - 1) /
 		      pixel_per_line_i;
 
-#if 0
-	    fprintf(stderr,"file %s x %d y %d w %d h %d sx %d sy %d sw %d sh %d (ppc %d ppl %d)\n",
-		i->cache->file,
-		x, y, w, h, sx, sy, sw, sh,
-		pixel_per_char_i, pixel_per_line_i);
-#endif
 
 
 	    if (enable_inline_image == INLINE_IMG_SIXEL) {

@@ -3,9 +3,6 @@
 #define TERMS_H
 
 extern int LINES, COLS;
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#endif
 
 #ifdef USE_MOUSE
 /* Addition:mouse event */
@@ -20,15 +17,6 @@ extern int LASTLINE;
 #define MOUSE_BTN_RESET -1
 #endif
 
-#ifdef __CYGWIN__
-#if CYGWIN_VERSION_DLL_MAJOR < 1005 && defined(USE_MOUSE)
-extern int cygwin_mouse_btn_swapped;
-#endif
-#ifdef SUPPORT_WIN9X_CONSOLE_MBCS
-extern void enable_win9x_console_input(void);
-extern void disable_win9x_console_input(void);
-#endif
-#endif
 
 #ifdef USE_IMAGE
 extern void put_image_osc5379(char *url, int x, int y, int w, int h, int sx, int sy, int sw, int sh);

@@ -9,9 +9,14 @@ from termcolor import colored
 HERE = pathlib.Path(__file__).absolute().parent
 
 CONTEXT = {
-    'USE_M17N': False,
-    'USE_UNICODE': False,
-    'ENABLE_NLS': False,
+    '__CYGWIN__': False,
+    'SUPPORT_WIN9X_CONSOLE_MBCS': False,
+    '__MINGW32_VERSION': False,
+    '__EMX__': False,
+    '__WATT32__': False,
+    # 'USE_M17N': False,
+    # 'USE_UNICODE': False,
+    # 'ENABLE_NLS': False,
     # 'SIGWINCH': True,
     # 'SIGPIPE': True,
     # 'SIGCHLD': True,
@@ -38,9 +43,6 @@ CONTEXT = {
     # 'SIGSTOP': False,
     # 'USE_MOUSE': False,
     # 'USE_GPM': False,
-    # '__MINGW32_VERSION': False,
-    # '__EMX__': False,
-    # '__WATT32__': False,
     # 'USE_NNTP': False,
     # 'USE_GOPHER': False,
     # 'USE_INCLUDED_SRAND48': False,

@@ -173,15 +173,9 @@ typedef RETSIGTYPE MySignalHandler;
 #define SIGNAL_RETURN return
 
 #ifdef HAVE_SIGSETJMP
-#ifdef __MINGW32_VERSION
-# define SETJMP(env) setjmp(env)
-# define LONGJMP(env,val) longjmp(env, val)
-# define JMP_BUF jmp_buf
-#else
 # define SETJMP(env) sigsetjmp(env,1)
 # define LONGJMP(env,val) siglongjmp(env,val)
 # define JMP_BUF sigjmp_buf
-#endif /* __MINGW32_VERSION */
 #else
 # define SETJMP(env) setjmp(env)
 # define LONGJMP(env,val) longjmp(env, val)
@@ -201,40 +195,8 @@ typedef RETSIGTYPE MySignalHandler;
 #define lstat stat
 #endif
 
-#if defined( __CYGWIN32__ ) && !defined( __CYGWIN__ )
-#define __CYGWIN__
-#endif
-
-#if defined( __CYGWIN__ ) || defined( __EMX__ )
-#define SUPPORT_DOS_DRIVE_PREFIX 1
-#endif
-
-#if defined( __CYGWIN__ )
-#define SUPPORT_NETBIOS_SHARE 1
-#define SUPPORT_WIN9X_CONSOLE_MBCS 1
-#endif
-
-#if defined(__CYGWIN__) && defined(__x86_64__)
-#define DONT_CALL_GC_AFTER_FORK
-#endif
-
-#if defined(__DJGPP__)
-#define DEFAULT_TERM	"dosansi"
-#else
 #define DEFAULT_TERM	0	/* XXX */
-#endif
 
-#if defined(__EMX__) /* use $extension? */
-#define GUNZIP_CMDNAME  "gzip"
-#define BUNZIP2_CMDNAME "bzip2"
-#define INFLATE_CMDNAME  "inflate.exe"
-#define W3MBOOKMARK_CMDNAME	"w3mbookmark.exe"
-#define W3MHELPERPANEL_CMDNAME	"w3mhelperpanel.exe"
-#define DEV_NULL_PATH	"nul"
-#define DEV_TTY_PATH	"con"
-#define CGI_EXTENSION	".cmd"
-#define USE_PATH_ENVVAR
-#else
 #define GUNZIP_CMDNAME  "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
 #define INFLATE_CMDNAME	"inflate"
@@ -243,7 +205,7 @@ typedef RETSIGTYPE MySignalHandler;
 #define DEV_NULL_PATH	"/dev/null"
 #define DEV_TTY_PATH	"/dev/tty"
 #define CGI_EXTENSION	".cgi"
-#endif
+
 #define BROTLI_CMDNAME "brotli"
 
 #define PATH_SEPARATOR	':'
@@ -252,12 +214,5 @@ typedef RETSIGTYPE MySignalHandler;
 #define INFLATE_NAME "inflate"
 #define BROTLI_NAME "brotli"
 
-#ifdef __MINGW32_VERSION
-#define SIGKILL SIGTERM
-#define S_IXGRP 0
-#define S_IXOTH 0
-#define S_IRWXG 0
-#define S_IRWXO 0
-#endif /* __MINGW32_VERSION */
 
 #endif /* CONFIG_H_SEEN */

@@ -12,9 +12,6 @@
 #include <sys/wait.h>
 #endif
 #include <time.h>
-#if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
-#include <io.h>
-#endif
 #include "display.h"
 #include "terms.h"
 #include "myctype.h"
@@ -39,11 +36,6 @@ extern int do_getch();
 
 #include "util.h"
 
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-
-WSADATA WSAData;
-#endif
 
 #define DSTR_LEN	256
 
@@ -85,11 +77,7 @@ static char *MarkString = NULL;
 static char *SearchString = NULL;
 int (*searchRoutine) (Buffer *, char *);
 
-#ifndef __MINGW32_VERSION
 JMP_BUF IntReturn;
-#else
-_JBTYPE IntReturn[_JBLEN];
-#endif /* __MINGW32_VERSION */
 
 static void delBuffer(Buffer *buf);
 static void cmd_loadfile(char *path);
@@ -286,9 +274,6 @@ fusage(FILE * f, int err)
 }
 
 #ifdef USE_M17N
-#ifdef __EMX__
-static char *getCodePage(void);
-#endif
 #endif
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
@@ -427,9 +412,6 @@ main(int argc, char **argv)
 #ifdef USE_M17N
     char *Locale = NULL;
     wc_uint8 auto_detect;
-#ifdef __EMX__
-    wc_ces CodePage;
-#endif
 #endif
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     char **getimage_args = NULL;
@@ -504,11 +486,6 @@ main(int argc, char **argv)
 	DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
 	SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
     }
-#ifdef __EMX__
-    CodePage = wc_guess_charset(getCodePage(), 0);
-    if (CodePage)
-	DisplayCharset = DocumentCharset = SystemCharset = CodePage;
-#endif
 #endif
 
     /* initializations */
@@ -843,28 +820,7 @@ main(int argc, char **argv)
 	i++;
     }
 
-#ifdef	__WATT32__
-    if (w3m_debug)
-	dbug_init();
-    sock_init();
-#endif
 
-#ifdef __MINGW32_VERSION
-    {
-      int err;
-      WORD wVerReq;
-
-      wVerReq = MAKEWORD(1, 1);
-
-      err = WSAStartup(wVerReq, &WSAData);
-      if (err != 0)
-        {
-	  fprintf(stderr, "Can't find winsock\n");
-	  return 1;
-        }
-      _fmode = _O_BINARY;
-    }
-#endif
 
     FirstTab = NULL;
     LastTab = NULL;
@@ -1432,17 +1388,10 @@ DEFUN(nulcmd, NOTHING NULL @@@, "Do nothing")
 {				/* do nothing */
 }
 
-#ifdef __EMX__
-DEFUN(pcmap, PCMAP, "pcmap")
-{
-    w3mFuncList[(int)PcKeymap[(int)getch()]].func();
-}
-#else				/* not __EMX__ */
 void
 pcmap(void)
 {
 }
-#endif
 
 static void
 escKeyProc(int c, int esc, unsigned char *map)
@@ -1743,11 +1692,6 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line")
 	return;
     offsety = Currentbuf->LINES / 2 - Currentbuf->cursorY;
     if (offsety != 0) {
-#if 0
-	Currentbuf->currentLine = lineSkip(Currentbuf,
-					   Currentbuf->currentLine, offsety,
-					   FALSE);
-#endif
 	Currentbuf->topLine =
 	    lineSkip(Currentbuf, Currentbuf->topLine, -offsety, FALSE);
 	arrangeLine(Currentbuf);
@@ -3164,14 +3108,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer")
     }
     if (handleMailto(a->url))
 	return;
-#if 0
-    else if (!strncasecmp(a->url, "news:", 5) && strchr(a->url, '@') == NULL) {
-	/* news:newsgroup is not supported */
-	/* FIXME: gettextize? */
-	disp_err_message("news:newsgroup_name is not supported", TRUE);
-	return;
-    }
-#endif				/* USE_NNTP */
     url = a->url;
 #ifdef USE_IMAGE
     if (map)
@@ -4199,14 +4135,6 @@ cmd_loadURL(char *url, ParsedURL *current, char *referer, FormList *request)
 
     if (handleMailto(url))
 	return;
-#if 0
-    if (!strncasecmp(url, "news:", 5) && strchr(url, '@') == NULL) {
-	/* news:newsgroup is not supported */
-	/* FIXME: gettextize? */
-	disp_err_message("news:newsgroup_name is not supported", TRUE);
-	return;
-    }
-#endif				/* USE_NNTP */
 
     refresh();
     buf = loadGeneralFile(url, current, referer, 0, request);
@@ -5582,14 +5510,6 @@ DEFUN(mouse, MOUSE, "mouse operation")
     int btn, x, y;
 
     btn = (unsigned char)getch() - 32;
-#if defined(__CYGWIN__) && CYGWIN_VERSION_DLL_MAJOR < 1005
-    if (cygwin_mouse_btn_swapped) {
-	if (btn == MOUSE_BTN2_DOWN)
-	    btn = MOUSE_BTN3_DOWN;
-	else if (btn == MOUSE_BTN3_DOWN)
-	    btn = MOUSE_BTN2_DOWN;
-    }
-#endif
     x = (unsigned char)getch() - 33;
     if (x < 0)
 	x += 0x100;
@@ -5616,15 +5536,6 @@ DEFUN(sgrmouse, SGRMOUSE, "SGR 1006 mouse operation")
 	else
 	    return;
     } while (1);
-
-#if defined(__CYGWIN__) && CYGWIN_VERSION_DLL_MAJOR < 1005
-    if (cygwin_mouse_btn_swapped) {
-	if (btn == MOUSE_BTN2_DOWN)
-	    btn = MOUSE_BTN3_DOWN;
-	else if (btn == MOUSE_BTN3_DOWN)
-	    btn = MOUSE_BTN2_DOWN;
-    };
-#endif
 
     do {
 	c = getch();
@@ -5977,19 +5888,6 @@ searchKeyNum(void)
     return n * PREC_NUM;
 }
 
-#ifdef __EMX__
-#ifdef USE_M17N
-static char *
-getCodePage(void)
-{
-    unsigned long CpList[8], CpSize;
-
-    if (!getenv("WINDOWID") && !DosQueryCp(sizeof(CpList), CpList, &CpSize))
-	return Sprintf("CP%d", *CpList)->ptr;
-    return NULL;
-}
-#endif
-#endif
 
 void
 deleteFiles()
@@ -6028,9 +5926,6 @@ w3m_exit(int i)
     disconnectFTP();
 #ifdef USE_NNTP
     disconnectNews();
-#endif
-#ifdef __MINGW32_VERSION
-    WSACleanup();
 #endif
 #ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
@@ -6326,11 +6221,7 @@ void
 calcTabPos(void)
 {
     TabBuffer *tab;
-#if 0
-    int lcol = 0, rcol = 2, col;
-#else
     int lcol = 0, rcol = 0, col;
-#endif
     int n1, n2, na, nx, ny, ix, iy;
 
 #ifdef USE_MOUSE
@@ -6772,9 +6663,7 @@ download_action(struct parsed_tagarg *arg)
     for (; arg; arg = arg->next) {
 	if (!strncmp(arg->arg, "stop", 4)) {
 	    pid = (pid_t) atoi(&arg->arg[4]);
-#ifndef __MINGW32_VERSION
 	    kill(pid, SIGKILL);
-#endif
 	}
 	else if (!strncmp(arg->arg, "ok", 2))
 	    pid = (pid_t) atoi(&arg->arg[2]);
@@ -6808,9 +6697,7 @@ stopDownload(void)
     for (d = FirstDL; d != NULL; d = d->next) {
 	if (!d->running)
 	    continue;
-#ifndef __MINGW32_VERSION
 	kill(d->pid, SIGKILL);
-#endif
 	unlink(d->lock);
     }
 }

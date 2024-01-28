@@ -1,24 +1,17 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
 #include "fm.h"
-#ifndef __MINGW32_VERSION
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
 
 #include <signal.h>
 #include <setjmp.h>
 #include <errno.h>
 
 #include <sys/stat.h>
-#ifdef __EMX__
-#include <io.h>			/* ?? */
-#endif				/* __EMX__ */
 
 #include "html.h"
 #include "Str.h"
@@ -32,14 +25,7 @@
 #include <openssl/err.h>
 #endif
 
-#ifdef	__WATT32__
-#define	write(a,b,c)	write_s(a,b,c)
-#endif				/* __WATT32__ */
 
-#ifdef __MINGW32_VERSION
-#define	write(a,b,c)	send(a,b,c, 0)
-#define close(fd)	closesocket(fd)
-#endif
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -777,19 +763,6 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
 	    copyParsedURL(p_url, current);
 	goto do_label;
     }
-#if defined( __EMX__ ) || defined( __CYGWIN__ )
-    if (!strncasecmp(url, "file://localhost/", 17)) {
-	p_url->scheme = SCM_LOCAL;
-	p += 17 - 1;
-	url += 17 - 1;
-    }
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-    if (IS_ALPHA(*p) && (p[1] == ':' || p[1] == '|')) {
-	p_url->scheme = SCM_LOCAL;
-	goto analyze_file;
-    }
-#endif				/* SUPPORT_DOS_DRIVE_PREFIX */
     /* search for scheme */
     p_url->scheme = getURLScheme(&p);
     if (p_url->scheme == SCM_MISSING) {
@@ -850,10 +823,6 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
     }
     /* after here, p begins with // */
     if (p_url->scheme == SCM_LOCAL) {	/* file://foo           */
-#ifdef __EMX__
-	p += 2;
-	goto analyze_file;
-#else
 	if (p[2] == '/' || p[2] == '~'
 	    /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
@@ -864,7 +833,6 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
 	    p += 2;
 	    goto analyze_file;
 	}
-#endif				/* __EMX__ */
     }
     p += 2;			/* scheme://foo         */
     /*          ^p is here  */
@@ -1186,16 +1154,6 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	 * from the current URL. */
     }
     if (pu->file) {
-#ifdef __EMX__
-	if (pu->scheme == SCM_LOCAL) {
-	    if (strncmp(pu->file, "/$LIB/", 6)) {
-		char abs[_MAX_PATH];
-
-		_abspath(abs, file_unquote(pu->file), _MAX_PATH);
-		pu->file = file_quote(cleanupName(abs));
-	    }
-	}
-#else
 	if (pu->scheme == SCM_LOCAL && pu->file[0] != '/' &&
 #ifdef SUPPORT_DOS_DRIVE_PREFIX	/* for 'drive:' */
 	    !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':') &&
@@ -1208,7 +1166,6 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	    Strcat_charp(tmp, file_unquote(pu->file));
 	    pu->file = file_quote(cleanupName(tmp->ptr));
 	}
-#endif
 	else if (pu->scheme == SCM_HTTP
 #ifdef USE_SSL
 		 || pu->scheme == SCM_HTTPS

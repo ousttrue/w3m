@@ -87,11 +87,6 @@ EFFECT_ACTIVE_START
 {
     if (useColor) {
 	if (useActiveColor) {
-#ifdef __EMX__
-	    if(!getenv("WINDOWID"))
-		setfcolor(active_color);
-	    else
-#endif
 	    {
 		EFFECT_ACTIVE_START_C;
 	    }
@@ -432,11 +427,6 @@ displayBuffer(Buffer *buf, int mode)
 		scroll(n);
 	    }
 	    else if (n < 0 && n > -buf->LINES) {
-#if 0 /* defined(__CYGWIN__) */
-		move(LASTLINE + n + 1, 0);
-		clrtoeolx();
-		refresh();
-#endif				/* defined(__CYGWIN__) */
 		rscroll(-n);
 	    }
 	    redrawNLine(buf, n);
@@ -639,10 +629,6 @@ redrawNLine(Buffer *buf, int n)
 	    if (t == CurrentTab)
 		boldend();
 	}
-#if 0
-	move(0, COLS - 2);
-	addstr(" x");
-#endif
 	move(LastTab->y + 1, 0);
 	for (i = 0; i < COLS; i++)
 	    addch('~');
