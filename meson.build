@@ -49,6 +49,7 @@ defs = [
     '-DCONF_DIR="' + CONF_DIR + '"',
     '-DRC_DIR="' + RC_DIR + '"',
     '-DLOCALEDIR="' + localedir + '"',
+    '-w',
 ]
 
 # use generated config.h by configure
@@ -123,9 +124,9 @@ executable(
         'version.c',
     ],
     install: true,
-    include_directories: include_directories('libwc'),
     dependencies: [gc_dep, ssl_dep, ncurses_dep, m_dep
       # , wc_dep
       ],
     c_args: defs,
+    cpp_args: defs,
 )
