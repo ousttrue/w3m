@@ -49,15 +49,15 @@
    native language is requested. */
 #define ENABLE_NLS 1
 
-#define USE_COLOR 1
-#define USE_ANSI_COLOR 1
-#define USE_BG_COLOR 1
+// #define USE_COLOR 1
+// #define USE_ANSI_COLOR 1
+// #define USE_BG_COLOR 1
 /* #undef USE_MIGEMO */
 #define USE_MARK
 #define USE_MOUSE 1
 /* #undef USE_GPM */
 /* #undef USE_SYSMOUSE */
-#define USE_MENU 1
+// #define USE_MENU 1
 #define USE_COOKIE 1
 #define USE_DIGEST_AUTH 1
 #define USE_SSL 1
@@ -69,7 +69,7 @@
 #define USE_NNTP 1
 #define USE_GOPHER 1
 #define USE_ALARM 1
-#define USE_IMAGE 1
+// #define USE_IMAGE 1
 /* #undef USE_W3MIMG_X11 */
 /* #undef USE_W3MIMG_FB */
 /* #undef USE_W3MIMG_WIN */
@@ -79,7 +79,7 @@
 /* #undef USE_GTK2 */
 #define X_DISPLAY_MISSING 1
 /* #undef USE_IMLIB2 */
-#define USE_XFACE 1
+// #define USE_XFACE 1
 #define USE_DICT 1
 #define USE_HISTORY 1
 /* #undef FORMAT_NICE */

@@ -45,8 +45,9 @@ CONTEXT = {
     # # 'HAVE_WAITPID': True,
     # #
     # 'SIGSTOP': False,
-    # 'USE_NNTP': False,
-    # 'USE_GOPHER': False,
+
+    'USE_NNTP': False,
+    'USE_GOPHER': False,
     # 'USE_INCLUDED_SRAND48': False,
     # 'USE_MIGEMO': False,
     # 'USE_W3MMAILER': False,

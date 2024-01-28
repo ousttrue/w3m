@@ -119,6 +119,11 @@ SUM:                           142           4404           1868          55150
 
 ## http以外のプロトコル
 
+```
+#define USE_NNTP 1
+#define USE_GOPHER 1
+```
+
 ftp とか gopher。
 directory ビューワーとか。
 
