@@ -53,9 +53,6 @@ static struct table_mode table_mode[MAX_TABLE];
 #if defined(USE_M17N) || defined(USE_IMAGE)
 static ParsedURL *cur_baseURL = NULL;
 #endif
-#ifdef USE_M17N
-static wc_ces cur_document_charset = 0;
-#endif
 
 static Str cur_title;
 static Str pre_title;
@@ -80,12 +77,6 @@ int max_textarea = MAX_TEXTAREA;
 
 static int http_response_code;
 
-#ifdef USE_M17N
-static wc_ces content_charset = 0;
-static wc_ces meta_charset = 0;
-static char *check_charset(char *p);
-static char *check_accept_charset(char *p);
-#endif
 
 #define set_prevchar(x,y,n) Strcopy_charp_n((x),(y),(n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x)," ",1)
@@ -102,9 +93,6 @@ static struct link_stack *link_stack = NULL;
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
 
-#ifdef USE_NNTP
-#define Str_news_endline(s) ((s)->ptr[0]=='.'&&((s)->ptr[1]=='\n'||(s)->ptr[1]=='\r'||(s)->ptr[1]=='\0'))
-#endif				/* USE_NNTP */
 
 #define INITIAL_FORM_SIZE 10
 static FormList **forms;
@@ -189,12 +177,6 @@ UFhalfclose(URLFile *f)
     case SCM_FTP:
 	closeFTP();
 	break;
-#ifdef USE_NNTP
-    case SCM_NEWS:
-    case SCM_NNTP:
-	closeNews();
-	break;
-#endif
     default:
 	UFclose(f);
 	break;
@@ -463,24 +445,11 @@ acceptableEncoding(void)
 /* 
  * convert line
  */
-#ifdef USE_M17N
-Str
-convertLine(URLFile *uf, Str line, int mode, wc_ces * charset,
-	    wc_ces doc_charset)
-#else
 Str
 convertLine0(URLFile *uf, Str line, int mode)
-#endif
 {
-#ifdef USE_M17N
-    line = wc_Str_conv_with_detect(line, charset, doc_charset, InnerCharset);
-#endif
     if (mode != RAW_MODE)
 	cleanup_line(line, mode);
-#ifdef USE_NNTP
-    if (uf && uf->scheme == SCM_NEWS)
-	Strchop(line);
-#endif				/* USE_NNTP */
     return line;
 }
 
@@ -534,9 +503,6 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
     Str lineBuf2 = NULL;
     Str tmp;
     TextList *headerlist;
-#ifdef USE_M17N
-    wc_ces charset = WC_CES_US_ASCII, mime_charset;
-#endif
     char *tmpf;
     FILE *src = NULL;
     Lineprop *propBuffer;
@@ -559,10 +525,6 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
 	    newBuf->header_source = tmpf;
     }
     while ((tmp = StrmyUFgets(uf)) && tmp->length) {
-#ifdef USE_NNTP
-	if (uf->scheme == SCM_NEWS && tmp->ptr[0] == '.')
-	    Strshrinkfirst(tmp, 1);
-#endif
 	if(w3m_reqlog){
 	    FILE *ff;
 	    ff = fopen(w3m_reqlog, "a");
@@ -861,19 +823,6 @@ checkContentType(Buffer *buf)
     r = Strnew();
     while (*p && *p != ';' && !IS_SPACE(*p))
 	Strcat_char(r, *p++);
-#ifdef USE_M17N
-    if ((p = strcasestr(p, "charset")) != NULL) {
-	p += 7;
-	SKIP_BLANKS(p);
-	if (*p == '=') {
-	    p++;
-	    SKIP_BLANKS(p);
-	    if (*p == '"')
-		p++;
-	    content_charset = wc_guess_charset(p, 0);
-	}
-    }
-#endif
     return r->ptr;
 }
 
@@ -1620,12 +1569,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     URLOption url_option;
     Str tmp;
     Str volatile page = NULL;
-#ifdef USE_GOPHER
-    int gopher_download = FALSE;
-#endif
-#ifdef USE_M17N
-    wc_ces charset = WC_CES_US_ASCII;
-#endif
     HRequest hr;
     ParsedURL *volatile auth_pu;
 
@@ -1656,9 +1599,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
 		&hr, &status);
     of = NULL;
-#ifdef USE_M17N
-    content_charset = 0;
-#endif
     if (f.stream == NULL) {
 	switch (f.scheme) {
 	case SCM_LOCAL:
@@ -1681,9 +1621,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 		    else {
 			page = loadLocalDir(pu.real_file);
 			t = "local:directory";
-#ifdef USE_M17N
-			charset = SystemCharset;
-#endif
 		    }
 		}
 	    }
@@ -1692,12 +1629,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	    page = loadFTPDir(&pu, &charset);
 	    t = "ftp:directory";
 	    break;
-#ifdef USE_NNTP
-	case SCM_NEWS_GROUP:
-	    page = loadNewsgroup(&pu, &charset);
-	    t = "news:group";
-	    break;
-#endif
 	case SCM_UNKNOWN:
 #ifdef USE_EXTERNAL_URI_LOADER
 	    tmp = searchURIMethods(&pu);
@@ -1748,9 +1679,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	pu.scheme == SCM_HTTPS ||
 #endif				/* USE_SSL */
 	((
-#ifdef USE_GOPHER
-	     (pu.scheme == SCM_GOPHER && non_null(GOPHER_proxy)) ||
-#endif				/* USE_GOPHER */
 	     (pu.scheme == SCM_FTP && non_null(FTP_proxy))
 	 ) && !Do_not_use_proxy && !check_no_proxy(pu.host))) {
 
@@ -1858,63 +1786,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 
 	f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
     }
-#ifdef USE_NNTP
-    else if (pu.scheme == SCM_NEWS || pu.scheme == SCM_NNTP) {
-	if (t_buf == NULL)
-	    t_buf = newBuffer(INIT_BUFFER_WIDTH);
-	readHeader(&f, t_buf, TRUE, &pu);
-	t = checkContentType(t_buf);
-	if (t == NULL)
-	    t = "text/plain";
-    }
-#endif				/* USE_NNTP */
-#ifdef USE_GOPHER
-    else if (pu.scheme == SCM_GOPHER) {
-	p = pu.file;
-	while(*p == '/')
-	    ++p;
-	switch (*p) {
-	case '0':
-	    t = "text/plain";
-	    break;
-	case '1':
-	case 'm':
-	    page = loadGopherDir(&f, &pu, &charset);
-	    t = "gopher:directory";
-	    TRAP_OFF;
-	    goto page_loaded;
-	case '7':
-	    if(pu.query != NULL) {
-		page = loadGopherDir(&f, &pu, &charset);
-		t = "gopher:directory";
-	    } else {
-		page = loadGopherSearch(&f, &pu, &charset);
-		t = "gopher:search";
-	    }
-	    TRAP_OFF;
-	    goto page_loaded;
-	case 's':
-	    t = "audio/basic";
-	    break;
-	case 'g':
-	    t = "image/gif";
-	    break;
-	case 'h':
-	    t = "text/html";
-	    break;
-	case 'I':
-	    t = guessContentType(pu.file);
-	    if(strncasecmp(t, "image/", 6) != 0) {
-		t = "image/png";
-	    }
-	    break;
-	case '5':
-	case '9':
-	    gopher_download = TRUE;
-	    break;
-	}
-    }
-#endif				/* USE_GOPHER */
     else if (pu.scheme == SCM_FTP) {
 	check_compression(path, &f);
 	if (f.compression != CMP_NOCOMPRESS) {
@@ -2007,23 +1878,11 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	    Strfputs(s, src);
 	    fclose(src);
 	}
-#ifdef USE_GOPHER
-	if (do_download || gopher_download) {
-#else
 	if (do_download) {
-#endif
 	    char *file;
 	    if (!src)
 		return NULL;
 	    file = guess_filename(pu.file);
-#ifdef USE_GOPHER
-	    if (f.scheme == SCM_GOPHER)
-		file = Sprintf("%s.html", file)->ptr;
-#endif
-#ifdef USE_NNTP
-	    if (f.scheme == SCM_NEWS_GROUP)
-		file = Sprintf("%s.html", file)->ptr;
-#endif
 	    doFileMove(tmp->ptr, file);
 	    return NO_BUFFER;
 	}
@@ -2034,9 +1893,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 	    b->real_type = t;
 	    if (src)
 		b->sourcefile = tmp->ptr;
-#ifdef USE_M17N
-	    b->document_charset = charset;
-#endif
 	}
 	return b;
     }
@@ -2048,11 +1904,7 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     current_content_length = 0;
     if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
 	current_content_length = strtoclen(p);
-#ifdef USE_GOPHER
-    if (do_download || gopher_download) {
-#else
     if (do_download) {
-#endif
 	/* download only */
 	char *file;
 	TRAP_OFF;
@@ -2099,9 +1951,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     else if (w3m_backend) ;
     else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
 	if (!do_download && 
-#ifdef USE_GOPHER
-		!gopher_download &&
-#endif
 		searchExtViewer(t) != NULL) {
 	    proc = DO_EXTERNAL;
 	}
@@ -2175,10 +2024,6 @@ loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
     }
     if (header_string)
 	header_string = NULL;
-#ifdef USE_NNTP
-    if (b && b != NO_BUFFER && (f.scheme == SCM_NNTP || f.scheme == SCM_NEWS))
-	reAnchorNewsheader(b);
-#endif
     if (b && b != NO_BUFFER)
 	preFormUpdateBuffer(b);
     TRAP_OFF;
@@ -2265,15 +2110,8 @@ is_word_char(unsigned char *ch)
 {
     Lineprop ctype = get_mctype(ch);
 
-#ifdef USE_M17N
-    if (ctype & (PC_CTRL | PC_KANJI | PC_UNKNOWN))
-	return 0;
-    if (ctype & (PC_WCHAR1 | PC_WCHAR2))
-	return 1;
-#else
     if (ctype == PC_CTRL)
 	return 0;
-#endif
 
     if (IS_ALNUM(*ch))
 	return 1;
@@ -2294,29 +2132,13 @@ is_word_char(unsigned char *ch)
     case '_':
 	return 1;
     }
-#ifdef USE_M17N
-    if (*ch == NBSP_CODE)
-	return 1;
-#else
     if (*ch == TIMES_CODE || *ch == DIVIDE_CODE || *ch == ANSP_CODE)
 	return 0;
     if (*ch >= AGRAVE_CODE || *ch == NBSP_CODE)
 	return 1;
-#endif
     return 0;
 }
 
-#ifdef USE_M17N
-static int
-is_combining_char(unsigned char *ch)
-{
-    Lineprop ctype = get_mctype(ch);
-
-    if (ctype & PC_WCHAR2)
-	return 1;
-    return 0;
-}
-#endif
 
 int
 is_boundary(unsigned char *ch1, unsigned char *ch2)
@@ -2333,10 +2155,6 @@ is_boundary(unsigned char *ch1, unsigned char *ch2)
     if (*ch2 != ' ' && is_beginning_char(ch1))
 	return 0;
 
-#ifdef USE_M17N
-    if (is_combining_char(ch2))
-	return 0;
-#endif
     if (is_word_char(ch1) && is_word_char(ch2))
 	return 0;
 
@@ -3801,33 +3619,6 @@ process_hr(struct parsed_tag *tag, int width, int indent_width)
     return tmp;
 }
 
-#ifdef USE_M17N
-static char *
-check_charset(char *p)
-{
-    return wc_guess_charset(p, 0) ? p : NULL;
-}
-
-static char *
-check_accept_charset(char *ac)
-{
-    char *s = ac, *e;
-
-    while (*s) {
-	while (*s && (IS_SPACE(*s) || *s == ','))
-	    s++;
-	if (!*s)
-	    break;
-	e = s;
-	while (*e && !(IS_SPACE(*e) || *e == ','))
-	    e++;
-	if (wc_guess_charset(Strnew_charp_n(s, e - s)->ptr, 0))
-	    return ac;
-	s = e;
-    }
-    return NULL;
-}
-#endif
 
 static Str
 process_form_int(struct parsed_tag *tag, int fid)
@@ -3840,12 +3631,6 @@ process_form_int(struct parsed_tag *tag, int fid)
     parsedtag_get_value(tag, ATTR_ACTION, &q);
     q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
     r = NULL;
-#ifdef USE_M17N
-    if (parsedtag_get_value(tag, ATTR_ACCEPT_CHARSET, &r))
-	r = check_accept_charset(r);
-    if (!r && parsedtag_get_value(tag, ATTR_CHARSET, &r))
-	r = check_charset(r);
-#endif
     s = NULL;
     parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
     tg = NULL;
@@ -3884,10 +3669,6 @@ process_form_int(struct parsed_tag *tag, int fid)
 	    Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
 	if (n)
 	    Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-#ifdef USE_M17N
-	if (r)
-	    Strcat(tmp, Sprintf(" accept-charset=\"%s\"", html_quote(r)));
-#endif
 	Strcat_charp(tmp, ">");
 	return tmp;
     }
@@ -4170,27 +3951,9 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
 	HTMLlineproc1("</b>", h_env);
 	return 1;
     case HTML_Q:
-#ifdef USE_M17N
-#ifdef USE_UNICODE
-	if (DisplayCharset != WC_CES_US_ASCII) {
-	    HTMLlineproc1((obuf->q_level & 1 ? "&lsquo;": "&ldquo;"), h_env);
-	    obuf->q_level += 1;
-	}
-	else
-#endif
-#endif
 	HTMLlineproc1("`", h_env);
 	return 1;
     case HTML_N_Q:
-#ifdef USE_M17N
-#ifdef USE_UNICODE
-	if (DisplayCharset != WC_CES_US_ASCII) {
-	    obuf->q_level -= 1;
-	    HTMLlineproc1((obuf->q_level & 1 ? "&rsquo;": "&rdquo;"), h_env);
-	}
-	else
-#endif
-#endif
 	HTMLlineproc1("'", h_env);
 	return 1;
     case HTML_FIGURE:
@@ -4898,26 +4661,6 @@ HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env)
 	p = q = r = NULL;
 	parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
 	parsedtag_get_value(tag, ATTR_CONTENT, &q);
-#ifdef USE_M17N
-	parsedtag_get_value(tag, ATTR_CHARSET, &r);
-	if (r) {
-	    /* <meta charset=""> */
-	    SKIP_BLANKS(r);
-	    meta_charset = wc_guess_charset(r, 0);
-	}
-	else
-	if (p && q && !strcasecmp(p, "Content-Type") &&
-	    (q = strcasestr(q, "charset")) != NULL) {
-	    q += 7;
-	    SKIP_BLANKS(q);
-	    if (*q == '=') {
-		q++;
-		SKIP_BLANKS(q);
-		meta_charset = wc_guess_charset(q, 0);
-	    }
-	}
-	else
-#endif
 	if (p && q && !strcasecmp(p, "refresh")) {
 	    int refresh_interval;
 	    tmp = NULL;
@@ -5207,10 +4950,6 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 #if defined(USE_M17N) || defined(USE_IMAGE)
     ParsedURL *base = baseURL(buf);
 #endif
-#ifdef USE_M17N
-    wc_ces name_charset = url_to_charset(NULL, &buf->currentURL,
-					 buf->document_charset);
-#endif
 
     if (out_size == 0) {
 	out_size = LINELEN;
@@ -5257,54 +4996,15 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 	    PSIZE;
 	    mode = get_mctype(str);
 	    if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-#ifdef USE_M17N
-		char **buf = set_symbol(symbol_width0);
-		int len;
-
-		p = buf[(int)symbol];
-		len = get_mclen(p);
-		mode = get_mctype(p);
-		PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-		if (--len) {
-		    mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
-		    while (len--) {
-			PSIZE;
-			PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-		    }
-		}
-#else
 		PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
-#endif
 		str += symbol_width;
 	    }
-#ifdef USE_M17N
-	    else if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
 	    else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
 		PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
 		str++;
 	    }
-#ifdef USE_M17N
-	    else if (mode & PC_UNKNOWN) {
-		PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
-		str += get_mclen(str);
-	    }
-#endif
 	    else if (*str != '<' && *str != '&') {
-#ifdef USE_M17N
-		int len = get_mclen(str);
-#endif
 		PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-#ifdef USE_M17N
-		if (--len) {
-		    mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
-		    while (len--) {
-			PSIZE;
-			PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-		    }
-		}
-#endif
 	    }
 	    else if (*str == '&') {
 		/* 
@@ -5314,34 +5014,12 @@ HTMLlineproc2body(Buffer *buf, Str (*feed) (), int llimit)
 		while (*p) {
 		    PSIZE;
 		    mode = get_mctype((unsigned char *)p);
-#ifdef USE_M17N
-		    if (mode == PC_CTRL || mode == PC_UNDEF) {
-#else
 		    if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-#endif
 			PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
 			p++;
 		    }
-#ifdef USE_M17N
-		    else if (mode & PC_UNKNOWN) {
-			PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
-			p += get_mclen(p);
-		    }
-#endif
 		    else {
-#ifdef USE_M17N
-			int len = get_mclen(p);
-#endif
 			PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-#ifdef USE_M17N
-			if (--len) {
-			    mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
-			    while (len--) {
-				PSIZE;
-				PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-			    }
-			}
-#endif
 		    }
 		}
 	    }
@@ -5895,9 +5573,6 @@ HTMLlineproc0(char *line, struct html_feed_environ *h_env, int internal)
     struct table *tbl = NULL;
     struct table_mode *tbl_mode = NULL;
     int tbl_width = 0;
-#ifdef USE_M17N
-    int is_hangul, prev_is_hangul = 0;
-#endif
 
 #ifdef DEBUG
     if (w3m_debug) {
@@ -6169,32 +5844,6 @@ HTMLlineproc0(char *line, struct html_feed_environ *h_env, int internal)
 		    str++;
 		}
 		else {
-#ifdef USE_M17N
-		    if (mode == PC_KANJI1)
-			is_hangul = wtf_is_hangul((wc_uchar *) str);
-		    else
-			is_hangul = 0;
-		    if (!SimplePreserveSpace && mode == PC_KANJI1 &&
-			!is_hangul && !prev_is_hangul &&
-			obuf->pos > h_env->envs[h_env->envc].indent &&
-			Strlastchar(obuf->line) == ' ') {
-			while (obuf->line->length >= 2 &&
-			       !strncmp(obuf->line->ptr + obuf->line->length -
-					2, "  ", 2)
-			       && obuf->pos >= h_env->envs[h_env->envc].indent) {
-			    Strshrink(obuf->line, 1);
-			    obuf->pos--;
-			}
-			if (obuf->line->length >= 3 &&
-			    obuf->prev_ctype == PC_KANJI1 &&
-			    Strlastchar(obuf->line) == ' ' &&
-			    obuf->pos >= h_env->envs[h_env->envc].indent) {
-			    Strshrink(obuf->line, 1);
-			    obuf->pos--;
-			}
-		    }
-		    prev_is_hangul = is_hangul;
-#endif
 		    if (*str == '&')
 			proc_escape(obuf, &str);
 		    else
@@ -6328,10 +5977,6 @@ addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color, int pos,
 	i = columnLen(l, width);
 	if (i == 0) {
 	    i++;
-#ifdef USE_M17N
-	    while (i < l->len && p[i] & PC_WCHAR2)
-		i++;
-#endif
 	}
 	l->len = i;
 	l->width = COLPOS(l, l->len);
@@ -6655,26 +6300,11 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
     clen_t linelen = 0;
     clen_t trbyte = 0;
     Str lineBuf2 = Strnew();
-#ifdef USE_M17N
-    wc_ces charset = WC_CES_US_ASCII;
-    wc_ces volatile doc_charset = DocumentCharset;
-#endif
     struct html_feed_environ htmlenv1;
     struct readbuffer obuf;
     MySignalHandler(*volatile prevtrap) (SIGNAL_ARG) = NULL;
 
-#ifdef USE_M17N
-    if (fmInitialized && graph_ok()) {
-	symbol_width = symbol_width0 = 1;
-    }
-    else {
-	symbol_width0 = 0;
-	get_symbol(DisplayCharset, &symbol_width0);
-	symbol_width = WcOption.use_wide ? symbol_width0 : 1;
-    }
-#else
     symbol_width = symbol_width0 = 1;
-#endif
 
     cur_title = NULL;
     pre_title = NULL;
@@ -6691,9 +6321,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 
     if (w3m_halfload) {
 	newBuf->buffername = "---";
-#ifdef USE_M17N
-	newBuf->document_charset = InnerCharset;
-#endif
 	max_textarea = 0;
 	HTMLlineproc3(newBuf, f->stream);
 	w3m_halfload = FALSE;
@@ -6716,34 +6343,9 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
     }
     TRAP_ON;
 
-#ifdef USE_M17N
-    if (newBuf != NULL) {
-	if (newBuf->bufferprop & BP_FRAME)
-	    charset = InnerCharset;
-	else if (newBuf->document_charset)
-	    charset = doc_charset = newBuf->document_charset;
-    }
-    if (content_charset && UseContentCharset)
-	doc_charset = content_charset;
-    else if (f->guess_type && !strcasecmp(f->guess_type, "application/xhtml+xml"))
-	doc_charset = WC_CES_UTF_8;
-    meta_charset = 0;
-#endif
     if (IStype(f->stream) != IST_ENCODED)
 	f->stream = newEncodedStream(f->stream, f->encoding);
     while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
-#ifdef USE_NNTP
-	if (f->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-	    Strshrinkfirst(lineBuf2, 1);
-	    if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' ||
-		lineBuf2->ptr[0] == '\0') {
-		/*
-		 * iseos(f->stream) = TRUE;
-		 */
-		break;
-	    }
-	}
-#endif				/* USE_NNTP */
 	if (src)
 	    Strfputs(lineBuf2, src);
 	linelen += lineBuf2->length;
@@ -6756,19 +6358,7 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
 	 * if (frame_source)
 	 * continue;
 	 */
-#ifdef USE_M17N
-	if (meta_charset) {	/* <META> */
-	    if (content_charset == 0 && UseContentCharset) {
-		doc_charset = meta_charset;
-		charset = WC_CES_US_ASCII;
-	    }
-	    meta_charset = 0;
-	}
-#endif
 	lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
-#ifdef USE_M17N
-	cur_document_charset = charset;
-#endif
 	HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
     }
     if (obuf.status != R_ST_NORMAL) {
@@ -6779,9 +6369,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
     flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
 #if defined(USE_M17N) || defined(USE_IMAGE)
     cur_baseURL = NULL;
-#endif
-#ifdef USE_M17N
-    cur_document_charset = 0;
 #endif
     if (htmlenv1.title)
 	newBuf->buffername = htmlenv1.title;
@@ -6799,10 +6386,6 @@ loadHTMLstream(URLFile *f, Buffer *newBuf, FILE * src, int internal)
   phase2:
     newBuf->trbyte = trbyte + linelen;
     TRAP_OFF;
-#ifdef USE_M17N
-    if (!(newBuf->bufferprop & BP_FRAME))
-	newBuf->document_charset = charset;
-#endif
     HTMLlineproc2(newBuf, htmlenv1.buf);
 }
 
@@ -6827,13 +6410,7 @@ loadHTMLString(Str page)
     }
     TRAP_ON;
 
-#ifdef USE_M17N
-    newBuf->document_charset = InnerCharset;
-#endif
     loadHTMLstream(&f, newBuf, NULL, TRUE);
-#ifdef USE_M17N
-    newBuf->document_charset = WC_CES_US_ASCII;
-#endif
 
     TRAP_OFF;
     UFclose(&f);
@@ -6847,166 +6424,6 @@ loadHTMLString(Str page)
     return newBuf;
 }
 
-#ifdef USE_GOPHER
-
-/* 
- * loadGopherDir: get gopher directory
- */
-#ifdef USE_M17N
-Str
-loadGopherDir(URLFile *uf, ParsedURL *pu, wc_ces * charset)
-#else
-Str
-loadGopherDir0(URLFile *uf, ParsedURL *pu)
-#endif
-{
-    Str volatile tmp;
-    Str lbuf, name, file, host, port, type;
-    char *volatile p, *volatile q;
-    int link, pre;
-    MySignalHandler(*volatile prevtrap) (SIGNAL_ARG) = NULL;
-#ifdef USE_M17N
-    wc_ces doc_charset = DocumentCharset;
-#endif
-
-    tmp = parsedURL2Str(pu);
-    p = html_quote(tmp->ptr);
-    tmp =
-	convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-		    charset, doc_charset);
-    q = html_quote(tmp->ptr);
-    tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
-			 "</title>\n</head>\n<body>\n<h1>Index of ", q,
-			 "</h1>\n<table>\n", NULL);
-
-    if (SETJMP(AbortLoading) != 0)
-	goto gopher_end;
-    TRAP_ON;
-
-    pre = 0;
-    while (1) {
-	if (!(lbuf = StrUFgets(uf)) || lbuf->length == 0)
-	    break;
-	if (lbuf->ptr[0] == '.' &&
-	    (lbuf->ptr[1] == '\n' || lbuf->ptr[1] == '\r'))
-	    break;
-	lbuf = convertLine(uf, lbuf, HTML_MODE, charset, doc_charset);
-	p = lbuf->ptr;
-	for (q = p; *q && *q != '\t'; q++) ;
-	name = Strnew_charp_n(p, q - p);
-	if (!*q)
-	    continue;
-	p = q + 1;
-	for (q = p; *q && *q != '\t'; q++) ;
-	file = Strnew_charp_n(p, q - p);
-	if (!*q)
-	    continue;
-	p = q + 1;
-	for (q = p; *q && *q != '\t'; q++) ;
-	host = Strnew_charp_n(p, q - p);
-	if (!*q)
-	    continue;
-	p = q + 1;
-	for (q = p; *q && *q != '\t' && *q != '\r' && *q != '\n'; q++) ;
-	port = Strnew_charp_n(p, q - p);
-
-	link = 1;
-	switch (name->ptr[0]) {
-	case '0':
-	    p = "[text file]";
-	    break;
-	case '1':
-	    p = "[directory]";
-	    break;
-	case '5':
-	    p = "[DOS binary]";
-	    break;
-	case '7':
-	    p = "[search]";
-	    break;
-	case 'm':
-	    p = "[message]";
-	    break;
-	case 's':
-	    p = "[sound]";
-	    break;
-	case 'g':
-	    p = "[gif]";
-	    break;
-	case 'h':
-	    p = "[HTML]";
-	    break;
-	case 'i':
-	    link = 0;
-	    break;
-	case 'I':
-	    p = "[image]";
-	    break;
-	case '9':
-	    p = "[binary]";
-	    break;
-	default:
-	    p = "[unsupported]";
-	    break;
-	}
-	type = Strsubstr(name, 0, 1);
-	q = Strnew_m_charp("gopher://", host->ptr, ":", port->ptr, "/", type->ptr, file->ptr, NULL)->ptr;
-	if(link) {
-	    if(pre) {
-		Strcat_charp(tmp, "</pre>");
-		pre = 0;
-	    }
-	    Strcat_m_charp(tmp, "<a href=\"",
-			   html_quote(url_encode(q, NULL, *charset)),
-			   "\">", p, " ", html_quote(name->ptr + 1), "</a><br>\n", NULL);
-	} else {
-	    if(!pre) {
-		Strcat_charp(tmp, "<pre>");
-		pre = 1;
-	    }
-
-	    Strcat_m_charp(tmp, html_quote(name->ptr + 1), "\n", NULL);
-	}
-    }
-
-  gopher_end:
-    TRAP_OFF;
-
-    if(pre)
-	Strcat_charp(tmp, "</pre>");
-    Strcat_charp(tmp, "</table>\n</body>\n</html>\n");
-    return tmp;
-}
-
-#ifdef USE_M17N
-Str
-loadGopherSearch(URLFile *uf, ParsedURL *pu, wc_ces * charset)
-#else
-Str
-loadGopherSearch0(URLFile *uf, ParsedURL *pu)
-#endif
-{
-    Str tmp;
-    char *volatile p, *volatile q;
-#ifdef USE_M17N
-    wc_ces doc_charset = DocumentCharset;
-#endif
-
-    tmp = parsedURL2Str(pu);
-    p = html_quote(tmp->ptr);
-    tmp =
-	convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-		    charset, doc_charset);
-    q = html_quote(tmp->ptr);
-    tmp = Strnew_m_charp("<html>\n<head>\n<base href=\"", p, "\">\n<title>", q,
-			 "</title>\n</head>\n<body>\n<h1>Search ", q,
-			 "</h1>\n<form role=\"search\">\n<div>\n"
-			 "<input type=\"search\" name=\"\">"
-			 "</div>\n</form>\n</body>", NULL);
-
-    return tmp;
-}
-#endif				/* USE_GOPHER */
 
 /* 
  * loadBuffer: read file and make new buffer
@@ -7015,10 +6432,6 @@ Buffer *
 loadBuffer(URLFile *uf, Buffer *volatile newBuf)
 {
     FILE *volatile src = NULL;
-#ifdef USE_M17N
-    wc_ces charset = WC_CES_US_ASCII;
-    wc_ces volatile doc_charset = DocumentCharset;
-#endif
     Str lineBuf2;
     volatile char pre_lbuf = '\0';
     int nlines;
@@ -7042,29 +6455,11 @@ loadBuffer(URLFile *uf, Buffer *volatile newBuf)
 	if (src)
 	    newBuf->sourcefile = tmpf->ptr;
     }
-#ifdef USE_M17N
-    if (newBuf->document_charset)
-	charset = doc_charset = newBuf->document_charset;
-    if (content_charset && UseContentCharset)
-	doc_charset = content_charset;
-#endif
 
     nlines = 0;
     if (IStype(uf->stream) != IST_ENCODED)
 	uf->stream = newEncodedStream(uf->stream, uf->encoding);
     while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
-#ifdef USE_NNTP
-	if (uf->scheme == SCM_NEWS && lineBuf2->ptr[0] == '.') {
-	    Strshrinkfirst(lineBuf2, 1);
-	    if (lineBuf2->ptr[0] == '\n' || lineBuf2->ptr[0] == '\r' ||
-		lineBuf2->ptr[0] == '\0') {
-		/*
-		 * iseos(uf->stream) = TRUE;
-		 */
-		break;
-	    }
-	}
-#endif				/* USE_NNTP */
 	if (src)
 	    Strfputs(lineBuf2, src);
 	linelen += lineBuf2->length;
@@ -7096,9 +6491,6 @@ loadBuffer(URLFile *uf, Buffer *volatile newBuf)
     newBuf->lastLine = newBuf->currentLine;
     newBuf->currentLine = newBuf->firstLine;
     newBuf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
-    newBuf->document_charset = charset;
-#endif
     if (src)
 	fclose(src);
 
@@ -7112,34 +6504,16 @@ conv_symbol(Line *l)
     Str tmp = NULL;
     char *p = l->lineBuf, *ep = p + l->len;
     Lineprop *pr = l->propBuf;
-#ifdef USE_M17N
-    int w;
-    char **symbol = NULL;
-#else
     char **symbol = get_symbol();
-#endif
 
     for (; p < ep; p++, pr++) {
 	if (*pr & PC_SYMBOL) {
-#ifdef USE_M17N
-	    char c = ((char)wtf_get_code((wc_uchar *) p) & 0x7f) - SYMBOL_BASE;
-	    int len = get_mclen(p);
-#else
 	    char c = *p - SYMBOL_BASE;
-#endif
 	    if (tmp == NULL) {
 		tmp = Strnew_size(l->len);
 		Strcopy_charp_n(tmp, l->lineBuf, p - l->lineBuf);
-#ifdef USE_M17N
-		w = (*pr & PC_KANJI) ? 2 : 1;
-		symbol = get_symbol(DisplayCharset, &w);
-#endif
 	    }
 	    Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
-#ifdef USE_M17N
-	    p += len - 1;
-	    pr += len - 1;
-#endif
 	}
 	else if (tmp != NULL)
 	    Strcat_char(tmp, *p);
@@ -7158,10 +6532,6 @@ _saveBuffer(Buffer *buf, Line *l, FILE * f, int cont)
 {
     Str tmp;
     int is_html = FALSE;
-#ifdef USE_M17N
-    int set_charset = !DisplayCharset;
-    wc_ces charset = DisplayCharset ? DisplayCharset : WC_CES_US_ASCII;
-#endif
 
     is_html = is_html_type(buf->type);
 
@@ -7178,10 +6548,6 @@ _saveBuffer(Buffer *buf, Line *l, FILE * f, int cont)
     }
     if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
 	l = getNextPage(buf, PagerMax);
-#ifdef USE_M17N
-	if (set_charset)
-	    charset = buf->document_charset;
-#endif
 	goto pager_next;
     }
 }
@@ -7258,9 +6624,6 @@ getpipe(char *cmd)
     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME,
 			      conv_from_system(cmd))->ptr;
     buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
-    buf->document_charset = WC_CES_US_ASCII;
-#endif
     return buf;
 }
 
@@ -7280,12 +6643,6 @@ openPagerBuffer(InputStream stream, Buffer *buf)
     else
 	buf->buffername = conv_from_system(buf->buffername);
     buf->bufferprop |= BP_PIPE;
-#ifdef USE_M17N
-    if (content_charset && UseContentCharset)
-	buf->document_charset = content_charset;
-    else
-	buf->document_charset = WC_CES_US_ASCII;
-#endif
     buf->currentLine = buf->firstLine;
 
     return buf;
@@ -7301,9 +6658,6 @@ openGeneralPagerBuffer(InputStream stream)
 
     init_stream(&uf, SCM_UNKNOWN, stream);
 
-#ifdef USE_M17N
-    content_charset = 0;
-#endif
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
     copyParsedURL(&t_buf->currentURL, NULL);
     t_buf->currentURL.scheme = SCM_LOCAL;
@@ -7362,11 +6716,6 @@ getNextPage(Buffer *buf, int plen)
     Str lineBuf2;
     char volatile pre_lbuf = '\0';
     URLFile uf;
-#ifdef USE_M17N
-    wc_ces charset;
-    wc_ces volatile doc_charset = DocumentCharset;
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
     int volatile squeeze_flag = FALSE;
     Lineprop *propBuffer = NULL;
 
@@ -7383,18 +6732,6 @@ getNextPage(Buffer *buf, int plen)
 	buf->currentLine = last;
     }
 
-#ifdef USE_M17N
-    charset = buf->document_charset;
-    if (buf->document_charset != WC_CES_US_ASCII)
-	doc_charset = buf->document_charset;
-    else if (UseContentCharset) {
-	content_charset = 0;
-	checkContentType(buf);
-	if (content_charset)
-	    doc_charset = content_charset;
-    }
-    WcOption.auto_detect = buf->auto_detect;
-#endif
 
     if (SETJMP(AbortLoading) != 0) {
 	goto pager_end;
@@ -7461,10 +6798,6 @@ getNextPage(Buffer *buf, int plen)
     TRAP_OFF;
 
     buf->trbyte = trbyte + linelen;
-#ifdef USE_M17N
-    buf->document_charset = charset;
-    WcOption.auto_detect = old_auto_detect;
-#endif
     buf->topLine = top;
     buf->currentLine = cur;
     if (!last)
@@ -7494,32 +6827,6 @@ save2tmp(URLFile uf, char *tmpf)
 	goto _end;
     }
     TRAP_ON;
-#ifdef USE_NNTP
-    int check = 0;
-    if (uf.scheme == SCM_NEWS) {
-	char c;
-	if (!uf.stream)
-		return -1;
-	while (c = UFgetc(&uf), !iseos(uf.stream)) {
-	    if (c == '\n') {
-		if (check == 0)
-		    check++;
-		else if (check == 3)
-		    break;
-	    }
-	    else if (c == '.' && check == 1)
-		check++;
-	    else if (c == '\r' && check == 2)
-		check++;
-	    else
-		check = 0;
-	    putc(c, ff);
-	    linelen += sizeof(c);
-	    showProgress(&linelen, &trbyte);
-	}
-    }
-    else
-#endif				/* USE_NNTP */
     {
 	int count;
 

@@ -40,14 +40,14 @@
 #define DISPLAY_CHARSET WC_CES_UTF_8
 #define SYSTEM_CHARSET WC_CES_UTF_8
 #define DOCUMENT_CHARSET WC_CES_UTF_8
-#define USE_M17N 1
-#define USE_UNICODE 1
+// #define USE_M17N 1
+// #define USE_UNICODE 1
 #define W3M_LANG EN
 #define LANG W3M_LANG
 
 /* Define to 1 if translation of program messages to the user's
    native language is requested. */
-#define ENABLE_NLS 1
+// #define ENABLE_NLS 1
 
 // #define USE_COLOR 1
 // #define USE_ANSI_COLOR 1

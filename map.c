@@ -99,10 +99,6 @@ follow_map_panel(Buffer *buf, char *name)
     Strcat_charp(mappage, "</table></body></html>");
 
     newbuf = loadHTMLString(mappage);
-#ifdef USE_M17N
-    if (newbuf)
-	newbuf->document_charset = buf->document_charset;
-#endif
     return newbuf;
 }
 
@@ -249,10 +245,6 @@ page_info_panel(Buffer *buf)
     struct frameset *f_set = NULL;
     int all;
     char *p, *q;
-#ifdef USE_M17N
-    wc_ces_list *list;
-    char charset[16];
-#endif
     Buffer *newbuf;
 
     Strcat_charp(tmp, "<html><head>\
@@ -264,9 +256,6 @@ page_info_panel(Buffer *buf)
     all = buf->allLine;
     if (all == 0 && buf->lastLine)
 	all = buf->lastLine->linenumber;
-#ifdef USE_M17N
-    Strcat_charp(tmp, "<form method=internal action=charset>");
-#endif
     p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
 		   "<tr valign=top><td nowrap>Title<td>",
@@ -277,21 +266,6 @@ page_info_panel(Buffer *buf)
 		   buf->real_type ? html_quote(buf->real_type) : "unknown",
 		   "<tr valign=top><td nowrap>Last Modified<td>",
 		   html_quote(last_modified(buf)), NULL);
-#ifdef USE_M17N
-    if (buf->document_charset != InnerCharset) {
-	list = wc_get_ces_list();
-	Strcat_charp(tmp,
-		     "<tr><td nowrap>Document Charset<td><select name=charset>");
-	for (; list->name != NULL; list++) {
-	    sprintf(charset, "%d", (unsigned int)list->id);
-	    Strcat_m_charp(tmp, "<option value=", charset,
-			   (buf->document_charset == list->id) ? " selected>"
-			   : ">", list->desc, NULL);
-	}
-	Strcat_charp(tmp, "</select>");
-	Strcat_charp(tmp, "<tr><td><td><input type=submit value=Change>");
-    }
-#endif
     Strcat_m_charp(tmp,
 		   "<tr valign=top><td nowrap>Number of lines<td>",
 		   Sprintf("%d", all)->ptr,
@@ -337,9 +311,6 @@ page_info_panel(Buffer *buf)
 	    append_map_info(buf, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
-#ifdef USE_M17N
-    Strcat_charp(tmp, "</form>");
-#endif
 
     append_link_info(buf, tmp, buf->linklist);
 
@@ -369,9 +340,5 @@ page_info_panel(Buffer *buf)
   end:
     Strcat_charp(tmp, "</body></html>");
     newbuf = loadHTMLString(tmp);
-#ifdef USE_M17N
-    if (newbuf)
-	newbuf->document_charset = buf->document_charset;
-#endif
     return newbuf;
 }

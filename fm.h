@@ -34,12 +34,7 @@
 #include "html.h"
 #include <gc.h>
 #include "Str.h"
-#ifdef USE_M17N
-#include "wc.h"
-#include "wtf.h"
-#else
 typedef int wc_ces;	/* XXX: not used */
-#endif
 
 #ifdef HAVE_LOCALE_H
 #include <locale.h>
@@ -48,11 +43,6 @@ typedef int wc_ces;	/* XXX: not used */
 #define setlocale(category, locale)	/* empty */
 #endif
 
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#define _(String) gettext (String)
-#define N_(String) (String)
-#else
 # undef bindtextdomain
 # define bindtextdomain(Domain, Directory)	/* empty */
 # undef textdomain
@@ -60,7 +50,6 @@ typedef int wc_ces;	/* XXX: not used */
 # define _(Text) Text
 # define N_(Text) Text
 # define gettext(Text) Text
-#endif
 
 #include "form.h"
 #include "frame.h"
@@ -128,20 +117,8 @@ void bzero(void *, int);
  */
 
 #define P_CHARTYPE	0x3f00
-#ifdef USE_M17N
-#define PC_ASCII	(WTF_TYPE_ASCII << 8)
-#define PC_CTRL		(WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1	(WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2	(WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI	(WTF_TYPE_WIDE << 8)
-#define PC_KANJI1	(PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2	(PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN	(WTF_TYPE_UNKNOWN << 8)
-#define PC_UNDEF	(WTF_TYPE_UNDEF << 8)
-#else
 #define PC_ASCII	0x0000
 #define PC_CTRL		0x0100
-#endif
 #define PC_SYMBOL       0x8000
 
 /* Effect ( standout/underline ) */
@@ -426,10 +403,6 @@ typedef struct _Buffer {
     int *clone;
     size_t trbyte;
     char check_url;
-#ifdef USE_M17N
-    wc_ces document_charset;
-    wc_uint8 auto_detect;
-#endif
     TextList *document_header;
     FormItemList *form_submit;
     char *savecache;
@@ -799,17 +772,11 @@ global char *HTTP_proxy init(NULL);
 #ifdef USE_SSL
 global char *HTTPS_proxy init(NULL);
 #endif				/* USE_SSL */
-#ifdef USE_GOPHER
-global char *GOPHER_proxy init(NULL);
-#endif				/* USE_GOPHER */
 global char *FTP_proxy init(NULL);
 global ParsedURL HTTP_proxy_parsed;
 #ifdef USE_SSL
 global ParsedURL HTTPS_proxy_parsed;
 #endif				/* USE_SSL */
-#ifdef USE_GOPHER
-global ParsedURL GOPHER_proxy_parsed;
-#endif				/* USE_GOPHER */
 global ParsedURL FTP_proxy_parsed;
 global char *NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
@@ -827,11 +794,6 @@ global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
-#ifdef USE_NNTP
-global char *NNTP_server init(NULL);
-global char *NNTP_mode init(NULL);
-global int MaxNewsMessage init(50);
-#endif
 
 global char *document_root init(NULL);
 global char *personal_document_root init(NULL);
@@ -990,24 +952,6 @@ global int SaveURLHist init(TRUE);
 #endif				/* USE_HISTORY */
 global int multicolList init(FALSE);
 
-#ifdef USE_M17N
-global wc_ces InnerCharset init(WC_CES_WTF);	/* Don't change */
-global wc_ces DisplayCharset init(DISPLAY_CHARSET);
-global wc_ces DocumentCharset init(DOCUMENT_CHARSET);
-global wc_ces SystemCharset init(SYSTEM_CHARSET);
-global wc_ces BookmarkCharset init(SYSTEM_CHARSET);
-global char ExtHalfdump init(FALSE);
-global char FollowLocale init(TRUE);
-global char UseContentCharset init(TRUE);
-global char SearchConv init(TRUE);
-global char SimplePreserveSpace init(FALSE);
-#define Str_conv_from_system(x) wc_Str_conv((x), SystemCharset, InnerCharset)
-#define Str_conv_to_system(x) wc_Str_conv_strict((x), InnerCharset, SystemCharset)
-#define Str_conv_to_halfdump(x) (ExtHalfdump ? wc_Str_conv((x), InnerCharset, DisplayCharset) : (x))
-#define conv_from_system(x) wc_conv((x), SystemCharset, InnerCharset)->ptr
-#define conv_to_system(x) wc_conv_strict((x), InnerCharset, SystemCharset)->ptr
-#define url_quote_conv(x,c) url_quote(wc_conv_strict((x), InnerCharset, (c))->ptr)
-#else
 #define Str_conv_from_system(x) (x)
 #define Str_conv_to_system(x) (x)
 #define Str_conv_to_halfdump(x) (x)
@@ -1016,7 +960,6 @@ global char SimplePreserveSpace init(FALSE);
 #define url_quote_conv(x,c) url_quote(x)
 #define wc_Str_conv(x,charset0,charset1) (x)
 #define wc_Str_conv_strict(x,charset0,charset1) (x)
-#endif
 global char UseAltEntity init(FALSE);
 #define GRAPHIC_CHAR_ASCII 2
 #define GRAPHIC_CHAR_DEC 1
@@ -1091,19 +1034,11 @@ global int use_lessopen init(FALSE);
 
 global char *keymap_file init(KEYMAP_FILE);
 
-#ifdef USE_M17N
-#define get_mctype(c) ((Lineprop)wtf_type((wc_uchar *)(c)) << 8)
-#define get_mclen(c) wtf_len1((wc_uchar *)(c))
-#define get_mcwidth(c) wtf_width((wc_uchar *)(c))
-#define get_strwidth(c) wtf_strwidth((wc_uchar *)(c))
-#define get_Str_strwidth(c) wtf_strwidth((wc_uchar *)((c)->ptr))
-#else
 #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
 #define get_mclen(c) 1
 #define get_mcwidth(c) 1
 #define get_strwidth(c) strlen(c)
 #define get_Str_strwidth(c) ((c)->length)
-#endif
 
 global int FollowRedirection init(10);
 

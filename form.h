@@ -43,9 +43,6 @@ typedef struct form_list {
     Str action;
     char *target;
     char *name;
-#ifdef USE_M17N
-    wc_ces charset;
-#endif
     int enctype;
     struct form_list *next;
     int nitems;

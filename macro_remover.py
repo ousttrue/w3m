@@ -15,9 +15,11 @@ CONTEXT = {
     '__EMX__': False,
     '__WATT32__': False,
     'USE_BINMODE_STREAM': False,
-    # 'USE_M17N': False,
-    # 'USE_UNICODE': False,
-    # 'ENABLE_NLS': False,
+
+    'USE_M17N': False,
+    'USE_UNICODE': False,
+    'ENABLE_NLS': False,
+
     # 'SIGWINCH': True,
     # 'SIGPIPE': True,
     # 'SIGCHLD': True,

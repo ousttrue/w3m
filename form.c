@@ -25,9 +25,6 @@ struct {
     {"cookie", set_cookie_flag},
 #endif				/* USE_COOKIE */
     {"download", download_action},
-#ifdef USE_M17N
-    { "charset", change_charset },
-#endif
     {"none", NULL},
     {NULL, NULL},
 };
@@ -41,9 +38,6 @@ newFormList(char *action, char *method, char *charset, char *enctype,
     Str a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
-#ifdef USE_M17N
-    wc_ces c = 0;
-#endif
 
     if (method == NULL || !strcasecmp(method, "get"))
 	m = FORM_METHOD_GET;
@@ -58,18 +52,11 @@ newFormList(char *action, char *method, char *charset, char *enctype,
 	e = FORM_ENCTYPE_MULTIPART;
     }
 
-#ifdef USE_M17N
-    if (charset != NULL)
-	c = wc_guess_charset(charset, 0);
-#endif
 
     l = New(struct form_list);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
-#ifdef USE_M17N
-    l->charset = c;
-#endif
     l->enctype = e;
     l->target = target;
     l->name = name;
@@ -257,10 +244,6 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
 
     for (p = *str, w = 0, pos = 0; *p && w < width;) {
 	c_type = get_mctype((unsigned char *)p);
-#ifdef USE_M17N
-	c_len = get_mclen(p);
-	c_width = get_mcwidth(p);
-#endif
 	if (c_type == PC_CTRL) {
 	    if (newline && *p == '\n')
 		break;
@@ -270,22 +253,8 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
 	    }
 	}
 	else if (password) {
-#ifdef USE_M17N
-	    if (w + c_width > width)
-		break;
-#endif
 	    w += c_width;
 	    pos += c_width;
-#ifdef USE_M17N
-	}
-	else if (c_type & PC_UNKNOWN) {
-	    w++;
-	    pos++;
-	}
-	else {
-	    if (w + c_width > width)
-		break;
-#endif
 	    w += c_width;
 	    pos += c_len;
 	}
@@ -303,10 +272,6 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
     effect = CharEffect(line->propBuf[spos]);
     for (p = *str, w = 0, pos = spos; *p && w < width;) {
 	c_type = get_mctype((unsigned char *)p);
-#ifdef USE_M17N
-	c_len = get_mclen(p);
-	c_width = get_mcwidth(p);
-#endif
 	if (c_type == PC_CTRL) {
 	    if (newline && *p == '\n')
 		break;
@@ -318,42 +283,17 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
 	    }
 	}
 	else if (password) {
-#ifdef USE_M17N
-	    if (w + c_width > width)
-		break;
-#endif
 	    for (i = 0; i < c_width; i++) {
 		buf[pos] = '*';
 		prop[pos] = effect | PC_ASCII;
 		pos++;
 		w++;
 	    }
-#ifdef USE_M17N
-	}
-	else if (c_type & PC_UNKNOWN) {
-	    buf[pos] = ' ';
-	    prop[pos] = effect | PC_ASCII;
-	    pos++;
-	    w++;
 	}
 	else {
-	    if (w + c_width > width)
-		break;
-#else
-	}
-	else {
-#endif
 	    buf[pos] = *p;
 	    prop[pos] = effect | c_type;
 	    pos++;
-#ifdef USE_M17N
-	    c_type = (c_type & ~PC_WCHAR1) | PC_WCHAR2;
-	    for (i = 1; i < c_len; i++) {
-		buf[pos] = p[i];
-		prop[pos] = effect | c_type;
-		pos++;
-	    }
-#endif
 	    w += c_width;
 	}
 	p += c_len;
@@ -498,10 +438,6 @@ textfieldrep(Str s, int width)
 	    break;
 	if (c_type == PC_CTRL)
 	    Strcat_char(n, ' ');
-#ifdef USE_M17N
-	else if (c_type & PC_UNKNOWN)
-	    Strcat_char(n, ' ');
-#endif
 	else if (s->ptr[i] == '&')
 	    Strcat_charp(n, "&amp;");
 	else if (s->ptr[i] == '<')
@@ -535,9 +471,6 @@ form_fputs_decode(Str s, FILE * f)
 	    break;
 	}
     }
-#ifdef USE_M17N
-    z = wc_Str_conv_strict(z, InnerCharset, DisplayCharset);
-#endif
     Strfputs(z, f);
 }
 
@@ -548,10 +481,6 @@ input_textarea(FormItemList *fi)
     char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
     FILE *f;
-#ifdef USE_M17N
-    wc_ces charset = DisplayCharset;
-    wc_uint8 auto_detect;
-#endif
 
     f = fopen(tmpf, "w");
     if (f == NULL) {
@@ -575,10 +504,6 @@ input_textarea(FormItemList *fi)
 	goto input_end;
     }
     fi->value = Strnew();
-#ifdef USE_M17N
-    auto_detect = WcOption.auto_detect;
-    WcOption.auto_detect = WC_OPT_DETECT_ON;
-#endif
     while (tmp = Strfgets(f), tmp->length > 0) {
 	if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
 	    /* null line with bare LF */
@@ -592,9 +517,6 @@ input_textarea(FormItemList *fi)
 	tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
 	Strcat(fi->value, tmp);
     }
-#ifdef USE_M17N
-    WcOption.auto_detect = auto_detect;
-#endif
     fclose(f);
   input_end:
     unlink(tmpf);

@@ -60,9 +60,6 @@ static int move_word;
 static Hist *CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
-#ifdef USE_M17N
-static void ins_char(Str str);
-#endif
 
 char *
 inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
@@ -71,9 +68,6 @@ inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
     int opos, x, y, lpos, rpos, epos;
     unsigned char c;
     char *p;
-#ifdef USE_M17N
-    Str tmp;
-#endif
 
     is_passwd = FALSE;
     move_word = TRUE;
@@ -125,9 +119,6 @@ inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
     cm_disp_next = -1;
     need_redraw = FALSE;
 
-#ifdef USE_M17N
-    wc_char_conv_init(wc_guess_8bit_charset(DisplayCharset), InnerCharset);
-#endif
     do {
 	x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
 	if (x - rpos > offset) {
@@ -192,23 +183,6 @@ inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
 	    if (cm_disp_clear)
 		cm_disp_next = -1;
 	}
-#ifdef USE_M17N
-	else {
-	    tmp = wc_char_conv(c);
-	    if (tmp == NULL) {
-		i_quote = TRUE;
-		goto next_char;
-	    }
-	    i_quote = FALSE;
-	    cm_next = FALSE;
-	    cm_disp_next = -1;
-	    if (CLen + tmp->length > STR_LEN || !tmp->length)
-		goto next_char;
-	    ins_char(tmp);
-	    if (incrfunc)
-		incrfunc(-1, strBuf, strProp);
-	}
-#else
 	else {
 	    i_quote = FALSE;
 	    cm_next = FALSE;
@@ -225,7 +199,6 @@ inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
 	    if (incrfunc)
 		incrfunc(-1, strBuf, strProp);
 	}
-#endif
 	if (CLen && (flag & IN_CHAR))
 	    break;
     } while (i_cont);
@@ -285,10 +258,6 @@ addStr(char *p, Lineprop *pr, int len, int offset, int limit)
 	}
 	if (i >= len)
 	    return;
-#ifdef USE_M17N
-	while (pr[i] & PC_WCHAR2)
-	    i++;
-#endif
 	addChar('{', 0);
 	rcol = offset + 1;
 	ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
@@ -296,9 +265,6 @@ addStr(char *p, Lineprop *pr, int len, int offset, int limit)
 	    addChar(' ', 0);
     }
     for (; i < len; i += delta) {
-#ifdef USE_M17N
-	delta = wtf_len((wc_uchar *) & p[i]);
-#endif
 	ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
 	if (ncol - offset > limit)
 	    break;
@@ -308,51 +274,12 @@ addStr(char *p, Lineprop *pr, int len, int offset, int limit)
 	    continue;
 	}
 	else {
-#ifdef USE_M17N
-	    addMChar(&p[i], pr[i], delta);
-#else
 	    addChar(p[i], pr[i]);
-#endif
 	}
 	rcol = ncol;
     }
 }
 
-#ifdef USE_M17N
-static void
-ins_char(Str str)
-{
-    char *p = str->ptr, *ep = p + str->length;
-    Lineprop ctype;
-    int len;
-
-    if (CLen + str->length >= STR_LEN)
-	return;
-    while (p < ep) {
-	len = get_mclen(p);
-	ctype = get_mctype(p);
-	if (is_passwd) {
-	    if (ctype & PC_CTRL)
-		ctype = PC_ASCII;
-	    if (ctype & PC_UNKNOWN)
-		ctype = PC_WCHAR1;
-	}
-	insC();
-	strBuf->ptr[CPos] = *(p++);
-	strProp[CPos] = ctype;
-	CPos++;
-	if (--len) {
-	    ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
-	    while (len--) {
-		insC();
-		strBuf->ptr[CPos] = *(p++);
-		strProp[CPos] = ctype;
-		CPos++;
-	    }
-	}
-    }
-}
-#endif
 
 static void
 _esc(void)
@@ -404,11 +331,6 @@ _esc(void)
 	if (emacs_like_lineedit)
 	    _bsw();
 	break;
-#ifdef USE_M17N
-    default:
-	if (wc_char_conv(ESC_CODE) == NULL && wc_char_conv(c) == NULL)
-	    i_quote = TRUE;
-#endif
     }
 }
 
@@ -432,10 +354,6 @@ delC(void)
 
     if (CLen == CPos)
 	return;
-#ifdef USE_M17N
-    while (i + delta < CLen && strProp[i + delta] & PC_WCHAR2)
-	delta++;
-#endif
     for (i = CPos; i < CLen; i++) {
 	strProp[i] = strProp[i + delta];
     }
@@ -448,10 +366,6 @@ _mvL(void)
 {
     if (CPos > 0)
 	CPos--;
-#ifdef USE_M17N
-    while (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-	CPos--;
-#endif
 }
 
 static void
@@ -461,10 +375,6 @@ _mvLw(void)
     while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
 	CPos--;
 	first = 0;
-#ifdef USE_M17N
-	if (CPos > 0 && strProp[CPos] & PC_WCHAR2)
-	    CPos--;
-#endif
 	if (!move_word)
 	    break;
     }
@@ -477,10 +387,6 @@ _mvRw(void)
     while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
 	CPos++;
 	first = 0;
-#ifdef USE_M17N
-	if (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-	    CPos++;
-#endif
 	if (!move_word)
 	    break;
     }
@@ -491,10 +397,6 @@ _mvR(void)
 {
     if (CPos < CLen)
 	CPos++;
-#ifdef USE_M17N
-    while (CPos < CLen && strProp[CPos] & PC_WCHAR2)
-	CPos++;
-#endif
 }
 
 static void
@@ -1008,31 +910,15 @@ setStrType(Str str, Lineprop *prop)
     int i, len = 1;
 
     for (i = 0; p < ep;) {
-#ifdef USE_M17N
-	len = get_mclen(p);
-#endif
 	if (i + len > STR_LEN)
 	    break;
 	ctype = get_mctype(p);
 	if (is_passwd) {
 	    if (ctype & PC_CTRL)
 		ctype = PC_ASCII;
-#ifdef USE_M17N
-	    if (ctype & PC_UNKNOWN)
-		ctype = PC_WCHAR1;
-#endif
 	}
 	prop[i++] = ctype;
-#ifdef USE_M17N
-	p += len;
-	if (--len) {
-	    ctype = (ctype & ~PC_WCHAR1) | PC_WCHAR2;
-	    while (len--)
-		prop[i++] = ctype;
-	}
-#else
 	p++;
-#endif
     }
     return i;
 }

@@ -17,13 +17,6 @@
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
-#ifdef USE_M17N
-#include "wc.h"
-#include "wtf.h"
-#ifdef USE_UNICODE
-#include "ucs.h"
-#endif
-#endif
 
 #include "util.h"
 
@@ -117,9 +110,6 @@ fversion(FILE * f)
 #else
 	    "lang=en"
 #endif
-#ifdef USE_M17N
-	    ",m17n"
-#endif
 #ifdef USE_COOKIE
 	    ",cookie"
 #endif
@@ -134,12 +124,6 @@ fversion(FILE * f)
 #endif
 #ifdef USE_W3MMAILER
 	    ",w3mmailer"
-#endif
-#ifdef USE_NNTP
-	    ",nntp"
-#endif
-#ifdef USE_GOPHER
-	    ",gopher"
 #endif
 #ifdef INET6
 	    ",ipv6"
@@ -165,15 +149,6 @@ fusage(FILE * f, int err)
     fprintf(f, "    -t tab           set tab width\n");
     fprintf(f, "    -r               ignore backspace effect\n");
     fprintf(f, "    -l line          # of preserved line (default 10000)\n");
-#ifdef USE_M17N
-    fprintf(f, "    -I charset       document charset\n");
-    fprintf(f, "    -O charset       display/output charset\n");
-#if 0				/* use -O{s|j|e} instead */
-    fprintf(f, "    -e               EUC-JP\n");
-    fprintf(f, "    -s               Shift_JIS\n");
-    fprintf(f, "    -j               JIS\n");
-#endif
-#endif
     fprintf(f, "    -B               load bookmark\n");
     fprintf(f, "    -bookmark file   specify bookmark file\n");
     fprintf(f, "    -T type          specify content-type\n");
@@ -232,8 +207,6 @@ fusage(FILE * f, int err)
     exit(err);
 }
 
-#ifdef USE_M17N
-#endif
 
 static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
@@ -368,10 +341,6 @@ main(int argc, char **argv)
     char *default_type = NULL;
     char *post_file = NULL;
     Str err_msg;
-#ifdef USE_M17N
-    char *Locale = NULL;
-    wc_uint8 auto_detect;
-#endif
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
     char **getimage_args = NULL;
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
@@ -385,10 +354,6 @@ main(int argc, char **argv)
 #endif
 #if defined(ENABLE_NLS) || (defined(USE_M17N) && defined(HAVE_LANGINFO_CODESET))
     setlocale(LC_ALL, "");
-#endif
-#ifdef ENABLE_NLS
-    bindtextdomain(PACKAGE, LOCALEDIR);
-    textdomain(PACKAGE);
 #endif
 
     NO_proxy_domains = newTextList();
@@ -437,15 +402,6 @@ main(int argc, char **argv)
 	}
     }
 
-#ifdef USE_M17N
-    if (non_null(Locale = getenv("LC_ALL")) ||
-	non_null(Locale = getenv("LC_CTYPE")) ||
-	non_null(Locale = getenv("LANG"))) {
-	DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
-	DocumentCharset = wc_guess_locale_charset(Locale, DocumentCharset);
-	SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
-    }
-#endif
 
     /* initializations */
     init_rc();
@@ -456,14 +412,6 @@ main(int argc, char **argv)
     TextHist = newHist();
     URLHist = newHist();
 
-#ifdef USE_M17N
-    if (FollowLocale && Locale) {
-	DisplayCharset = wc_guess_locale_charset(Locale, DisplayCharset);
-	SystemCharset = wc_guess_locale_charset(Locale, SystemCharset);
-    }
-    auto_detect = WcOption.auto_detect;
-    BookmarkCharset = DocumentCharset;
-#endif
 
     if (!non_null(HTTP_proxy) &&
 	((p = getenv("HTTP_PROXY")) ||
@@ -477,12 +425,6 @@ main(int argc, char **argv)
     if (HTTPS_proxy == NULL && non_null(HTTP_proxy))
 	HTTPS_proxy = HTTP_proxy;
 #endif				/* USE_SSL */
-#ifdef USE_GOPHER
-    if (!non_null(GOPHER_proxy) &&
-	((p = getenv("GOPHER_PROXY")) ||
-	 (p = getenv("gopher_proxy")) || (p = getenv("GOPHER_proxy"))))
-	GOPHER_proxy = p;
-#endif				/* USE_GOPHER */
     if (!non_null(FTP_proxy) &&
 	((p = getenv("FTP_PROXY")) ||
 	 (p = getenv("ftp_proxy")) || (p = getenv("FTP_proxy"))))
@@ -491,12 +433,6 @@ main(int argc, char **argv)
 	((p = getenv("NO_PROXY")) ||
 	 (p = getenv("no_proxy")) || (p = getenv("NO_proxy"))))
 	NO_proxy = p;
-#ifdef USE_NNTP
-    if (!non_null(NNTP_server) && (p = getenv("NNTPSERVER")) != NULL)
-	NNTP_server = p;
-    if (!non_null(NNTP_mode) && (p = getenv("NNTPMODE")) != NULL)
-	NNTP_mode = p;
-#endif
 
     if (!non_null(Editor) && (p = getenv("EDITOR")) != NULL)
 	Editor = p;
@@ -521,38 +457,6 @@ main(int argc, char **argv)
 		if (atoi(argv[i]) > 0)
 		    PagerMax = atoi(argv[i]);
 	    }
-#ifdef USE_M17N
-#if 0				/* use -O{s|j|e} instead */
-	    else if (!strcmp("-s", argv[i]))
-		DisplayCharset = WC_CES_SHIFT_JIS;
-	    else if (!strcmp("-j", argv[i]))
-		DisplayCharset = WC_CES_ISO_2022_JP;
-	    else if (!strcmp("-e", argv[i]))
-		DisplayCharset = WC_CES_EUC_JP;
-#endif
-	    else if (!strncmp("-I", argv[i], 2)) {
-		if (argv[i][2] != '\0')
-		    p = argv[i] + 2;
-		else {
-		    if (++i >= argc)
-			usage();
-		    p = argv[i];
-		}
-		DocumentCharset = wc_guess_charset_short(p, DocumentCharset);
-		WcOption.auto_detect = WC_OPT_DETECT_OFF;
-		UseContentCharset = FALSE;
-	    }
-	    else if (!strncmp("-O", argv[i], 2)) {
-		if (argv[i][2] != '\0')
-		    p = argv[i] + 2;
-		else {
-		    if (++i >= argc)
-			usage();
-		    p = argv[i];
-		}
-		DisplayCharset = wc_guess_charset_short(p, DisplayCharset);
-	    }
-#endif
 	    else if (!strcmp("-graph", argv[i]))
 		UseGraphicChar = GRAPHIC_CHAR_DEC;
 	    else if (!strcmp("-no-graph", argv[i]))
@@ -793,11 +697,6 @@ main(int argc, char **argv)
 	loadHistory(URLHist);
 #endif				/* not USE_HISTORY */
 
-#ifdef USE_M17N
-    /*  if (w3m_dump)
-     *    WcOption.pre_conv = WC_TRUE;
-     */
-#endif
 
     if (w3m_backend)
 	backend();
@@ -1055,10 +954,6 @@ main(int argc, char **argv)
 
     SearchHeader = FALSE;
     DefaultType = NULL;
-#ifdef USE_M17N
-    UseContentCharset = TRUE;
-    WcOption.auto_detect = auto_detect;
-#endif
 
     Currentbuf = Firstbuf;
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1202,13 +1097,7 @@ dump_head(Buffer *buf)
 	return;
     }
     for (ti = buf->document_header->first; ti; ti = ti->next) {
-#ifdef USE_M17N
-	printf("%s",
-	       wc_conv_strict(ti->ptr, InnerCharset,
-			      buf->document_charset)->ptr);
-#else
 	printf("%s", ti->ptr);
-#endif
     }
     puts("");
 }
@@ -1219,10 +1108,6 @@ dump_extra(Buffer *buf)
     printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
     if (buf->baseURL)
 	printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
-#ifdef USE_M17N
-    printf("W3m-document-charset: %s\n",
-	   wc_ces_to_charset(buf->document_charset));
-#endif
 #ifdef USE_SSL
     if (buf->ssl_certificate) {
 	Str tmp = Strnew();
@@ -3058,9 +2943,6 @@ save_submit_formlist(FormItemList *src)
     list = New(FormList);
     list->method = srclist->method;
     list->action = Strdup(srclist->action);
-#ifdef USE_M17N
-    list->charset = srclist->charset;
-#endif
     list->enctype = srclist->enctype;
     list->nitems = srclist->nitems;
     list->body = srclist->body;
@@ -3096,21 +2978,7 @@ save_submit_formlist(FormItemList *src)
     return ret;
 }
 
-#ifdef USE_M17N
-static Str
-conv_form_encoding(Str val, FormItemList *fi, Buffer *buf)
-{
-    wc_ces charset = SystemCharset;
-
-    if (fi->parent->charset)
-	charset = fi->parent->charset;
-    else if (buf->document_charset && buf->document_charset != WC_CES_US_ASCII)
-	charset = buf->document_charset;
-    return wc_Str_conv_strict(val, InnerCharset, charset);
-}
-#else
 #define conv_form_encoding(val, fi, buf) (val)
-#endif
 
 static void
 query_from_followform(Str *query, FormItemList *fi, int multipart)
@@ -4105,22 +3973,12 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks")
     FormList *request;
 
     tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s"
-#ifdef USE_M17N
-		    "&charset=%s"
-#endif
 		    ,
 		  (Str_form_quote(localCookie()))->ptr,
 		  (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
 		  (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->
 		  ptr,
-#ifdef USE_M17N
-		  (Str_form_quote(wc_conv_strict(Currentbuf->buffername,
-						 InnerCharset,
-						 BookmarkCharset)))->ptr,
-		  wc_ces_to_charset(BookmarkCharset));
-#else
 		  (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
-#endif
     request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
     request->body = tmp->ptr;
     request->length = tmp->length;
@@ -4236,9 +4094,6 @@ DEFUN(linkLst, LIST, "Show all URLs referenced")
 
     buf = link_list_panel(Currentbuf);
     if (buf != NULL) {
-#ifdef USE_M17N
-	buf->document_charset = Currentbuf->document_charset;
-#endif
 	cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
     }
 }
@@ -4357,10 +4212,6 @@ _peekURL(int only_img)
     Anchor *a;
     ParsedURL pu;
     static Str s = NULL;
-#ifdef USE_M17N
-    static Lineprop *p = NULL;
-    Lineprop *pp;
-#endif
     static int offset = 0, n;
 
     if (Currentbuf->firstLine == NULL)
@@ -4393,19 +4244,10 @@ _peekURL(int only_img)
     }
     if (DecodeURL)
 	s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
-#ifdef USE_M17N
-    s = checkType(s, &pp, NULL);
-    p = NewAtom_N(Lineprop, s->length);
-    bcopy((void *)pp, (void *)p, s->length * sizeof(Lineprop));
-#endif
   disp:
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (COLS - 1))
 	offset = (n - 1) * (COLS - 1);
-#ifdef USE_M17N
-    while (offset < s->length && p[offset] & PC_WCHAR2)
-	offset++;
-#endif
     disp_message_nomouse(&s->ptr[offset], TRUE);
 }
 
@@ -4433,10 +4275,6 @@ currentURL(void)
 DEFUN(curURL, PEEK, "Show current address")
 {
     static Str s = NULL;
-#ifdef USE_M17N
-    static Lineprop *p = NULL;
-    Lineprop *pp;
-#endif
     static int offset = 0, n;
 
     if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -4452,19 +4290,10 @@ DEFUN(curURL, PEEK, "Show current address")
 	s = currentURL();
 	if (DecodeURL)
 	    s = Strnew_charp(url_decode2(s->ptr, NULL));
-#ifdef USE_M17N
-	s = checkType(s, &pp, NULL);
-	p = NewAtom_N(Lineprop, s->length);
-	bcopy((void *)pp, (void *)p, s->length * sizeof(Lineprop));
-#endif
     }
     n = searchKeyNum();
     if (n > 1 && s->length > (n - 1) * (COLS - 1))
 	offset = (n - 1) * (COLS - 1);
-#ifdef USE_M17N
-    while (offset < s->length && p[offset] & PC_WCHAR2)
-	offset++;
-#endif
     disp_message_nomouse(&s->ptr[offset], TRUE);
 }
 /* view HTML source */
@@ -4484,27 +4313,12 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     if (Currentbuf->sourcefile == NULL) {
 	if (Currentbuf->pagerSource &&
 	    !strcasecmp(Currentbuf->type, "text/plain")) {
-#ifdef USE_M17N
-	    wc_ces old_charset;
-	    wc_bool old_fix_width_conv;
-#endif
 	    FILE *f;
 	    Str tmpf = tmpfname(TMPF_SRC, NULL);
 	    f = fopen(tmpf->ptr, "w");
 	    if (f == NULL)
 		return;
-#ifdef USE_M17N
-	    old_charset = DisplayCharset;
-	    old_fix_width_conv = WcOption.fix_width_conv;
-	    DisplayCharset = (Currentbuf->document_charset != WC_CES_US_ASCII)
-		? Currentbuf->document_charset : 0;
-	    WcOption.fix_width_conv = WC_FALSE;
-#endif
 	    saveBufferBody(Currentbuf, f, TRUE);
-#ifdef USE_M17N
-	    DisplayCharset = old_charset;
-	    WcOption.fix_width_conv = old_fix_width_conv;
-#endif
 	    fclose(f);
 	    Currentbuf->sourcefile = tmpf->ptr;
 	}
@@ -4547,9 +4361,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
     buf->sourcefile = Currentbuf->sourcefile;
     buf->header_source = Currentbuf->header_source;
     buf->search_header = Currentbuf->search_header;
-#ifdef USE_M17N
-    buf->document_charset = Currentbuf->document_charset;
-#endif
     buf->clone = Currentbuf->clone;
     (*buf->clone)++;
 
@@ -4563,9 +4374,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed")
 DEFUN(reload, RELOAD, "Load current document anew")
 {
     Buffer *buf, *fbuf = NULL, sbuf;
-#ifdef USE_M17N
-    wc_ces old_charset;
-#endif
     Str url;
     FormList *request;
     int multipart;
@@ -4638,17 +4446,9 @@ DEFUN(reload, RELOAD, "Load current document anew")
     /* FIXME: gettextize? */
     message("Reloading...", 0, 0);
     refresh();
-#ifdef USE_M17N
-    old_charset = DocumentCharset;
-    if (Currentbuf->document_charset != WC_CES_US_ASCII)
-	DocumentCharset = Currentbuf->document_charset;
-#endif
     SearchHeader = Currentbuf->search_header;
     DefaultType = Currentbuf->real_type;
     buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
-#ifdef USE_M17N
-    DocumentCharset = old_charset;
-#endif
     SearchHeader = FALSE;
     DefaultType = NULL;
 
@@ -4692,75 +4492,6 @@ DEFUN(reshape, RESHAPE, "Re-render document")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_M17N
-static void
-_docCSet(wc_ces charset)
-{
-    if (Currentbuf->bufferprop & BP_INTERNAL)
-	return;
-    if (Currentbuf->sourcefile == NULL) {
-	disp_message("Can't reload...", FALSE);
-	return;
-    }
-    Currentbuf->document_charset = charset;
-    Currentbuf->need_reshape = TRUE;
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-void
-change_charset(struct parsed_tagarg *arg)
-{
-    Buffer *buf = Currentbuf->linkBuffer[LB_N_INFO];
-    wc_ces charset;
-
-    if (buf == NULL)
-	return;
-    delBuffer(Currentbuf);
-    Currentbuf = buf;
-    if (Currentbuf->bufferprop & BP_INTERNAL)
-	return;
-    charset = Currentbuf->document_charset;
-    for (; arg; arg = arg->next) {
-	if (!strcmp(arg->arg, "charset"))
-	    charset = atoi(arg->value);
-    }
-    _docCSet(charset);
-}
-
-DEFUN(docCSet, CHARSET, "Change the character encoding for the current document")
-{
-    char *cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
-    if (cs == NULL || *cs == '\0')
-	/* FIXME: gettextize? */
-	cs = inputStr("Document charset: ",
-		      wc_ces_to_charset(Currentbuf->document_charset));
-    charset = wc_guess_charset_short(cs, 0);
-    if (charset == 0) {
-	displayBuffer(Currentbuf, B_NORMAL);
-	return;
-    }
-    _docCSet(charset);
-}
-
-DEFUN(defCSet, DEFAULT_CHARSET, "Change the default character encoding")
-{
-    char *cs;
-    wc_ces charset;
-
-    cs = searchKeyData();
-    if (cs == NULL || *cs == '\0')
-	/* FIXME: gettextize? */
-	cs = inputStr("Default document charset: ",
-		      wc_ces_to_charset(DocumentCharset));
-    charset = wc_guess_charset_short(cs, 0);
-    if (charset != 0)
-	DocumentCharset = charset;
-    displayBuffer(Currentbuf, B_NORMAL);
-}
-#endif
 
 /* mark URL-like patterns as anchors */
 void
@@ -4769,14 +4500,7 @@ chkURLBuffer(Buffer *buf)
     static char *url_like_pat[] = {
 	"https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
 	"file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-#ifdef USE_GOPHER
-	"gopher://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
-#endif				/* USE_GOPHER */
 	"ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifdef USE_NNTP
-	"news:[^<> 	][^<> 	]*",
-	"nntp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./_]*",
-#endif				/* USE_NNTP */
 #ifndef USE_W3MMAILER		/* see also chkExternalURIBuffer() */
 	"mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
 #endif
@@ -4813,28 +4537,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink")
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_NNTP
-/* mark Message-ID-like patterns as NEWS anchors */
-void
-chkNMIDBuffer(Buffer *buf)
-{
-    static char *url_like_pat[] = {
-	"<[!-;=?-~]+@[a-zA-Z0-9\\.\\-_]+>",
-	NULL,
-    };
-    int i;
-    for (i = 0; url_like_pat[i]; i++) {
-	reAnchorNews(buf, url_like_pat[i]);
-    }
-    buf->check_url |= CHK_NMID;
-}
-
-DEFUN(chkNMID, MARK_MID, "Turn Message-ID-like strings into hyperlinks")
-{
-    chkNMIDBuffer(Currentbuf);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-#endif				/* USE_NNTP */
 
 /* render frames */
 DEFUN(rFrame, FRAME, "Toggle rendering HTML frames")
@@ -4992,10 +4694,6 @@ DEFUN(curlno, LINE_INFO, "Display current position in document")
 	tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
 		      (int)((double)cur * 100.0 / (double)(all ? all : 1)
 			    + 0.5), col, len);
-#ifdef USE_M17N
-    Strcat_charp(tmp, "  ");
-    Strcat_charp(tmp, wc_ces_to_charset_desc(Currentbuf->document_charset));
-#endif
 
     disp_message(tmp->ptr, FALSE);
 }
@@ -5126,9 +4824,6 @@ set_buffer_environ(Buffer *buf)
 	set_environ("W3M_TITLE", buf->buffername);
 	set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
 	set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
-#ifdef USE_M17N
-	set_environ("W3M_CHARSET", wc_ces_to_charset(buf->document_charset));
-#endif
     }
     l = buf->currentLine;
     if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
@@ -5240,9 +4935,6 @@ w3m_exit(int i)
     free_ssl_ctx();
 #endif
     disconnectFTP();
-#ifdef USE_NNTP
-    disconnectNews();
-#endif
 #ifdef HAVE_MKDTEMP
     if (mkd_tmp_dir)
 	if (rmdir(mkd_tmp_dir) != 0) {

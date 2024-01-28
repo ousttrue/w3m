@@ -31,9 +31,6 @@ newBuffer(int width)
 #ifdef USE_SSL
     n->ssl_certificate = NULL;
 #endif
-#ifdef USE_M17N
-    n->auto_detect = WcOption.auto_detect;
-#endif
     n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
     n->need_reshape = 1;	 /* always reshape new buffers to mark URLs */
     return n;
@@ -467,9 +464,6 @@ reshapeBuffer(Buffer *buf)
 {
     URLFile f;
     Buffer sbuf;
-#ifdef USE_M17N
-    wc_uint8 old_auto_detect = WcOption.auto_detect;
-#endif
 
     if (!buf->need_reshape)
 	return;
@@ -516,19 +510,11 @@ reshapeBuffer(Buffer *buf)
 	    readHeader(&f, buf, TRUE, NULL);
     }
 
-#ifdef USE_M17N
-    WcOption.auto_detect = WC_OPT_DETECT_OFF;
-    UseContentCharset = FALSE;
-#endif
     if (is_html_type(buf->type))
 	loadHTMLBuffer(&f, buf);
     else
 	loadBuffer(&f, buf);
     UFclose(&f);
-#ifdef USE_M17N
-    WcOption.auto_detect = old_auto_detect;
-    UseContentCharset = TRUE;
-#endif
 
     buf->height = LASTLINE + 1;
     if (buf->firstLine && sbuf.firstLine) {
@@ -560,12 +546,6 @@ reshapeBuffer(Buffer *buf)
     }
     if (buf->check_url & CHK_URL)
 	chkURLBuffer(buf);
-#ifdef USE_NNTP
-    if (buf->check_url & CHK_NMID)
-	chkNMIDBuffer(buf);
-    if (buf->real_scheme == SCM_NNTP || buf->real_scheme == SCM_NEWS)
-	reAnchorNewsheader(buf);
-#endif
     formResetBuffer(buf, sbuf.formitem);
 }
 

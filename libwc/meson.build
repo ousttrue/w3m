@@ -30,7 +30,6 @@ wc_lib = static_library(
     ],
     include_directories: include_directories('..'),
     c_args: [
-        '-DUSE_UNICODE',
         '-DHAVE_CONFIG_H',
     ],
 )

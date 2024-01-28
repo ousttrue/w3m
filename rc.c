@@ -44,18 +44,11 @@ static int RC_table_size;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 #define P_SSLPATH  5
 #endif
-#ifdef USE_M17N
-#define P_CODE     7
-#endif
 #define P_PIXELS   8
 #define P_NZINT    9
 #define P_SCALE    10
 
 /* FIXME: gettextize here */
-#ifdef USE_M17N
-static wc_ces OptionCharset = WC_CES_US_ASCII;	/* FIXME: charset of source code */
-static int OptionEncode = FALSE;
-#endif
 
 #define CMT_HELPER	 N_("External Viewer Setup")
 #define CMT_TABSTOP      N_("Tab width in characters")
@@ -101,18 +94,10 @@ static int OptionEncode = FALSE;
 #ifdef USE_SSL
 #define CMT_HTTPS_PROXY  N_("URL of HTTPS proxy host")
 #endif				/* USE_SSL */
-#ifdef USE_GOPHER
-#define CMT_GOPHER_PROXY N_("URL of GOPHER proxy host")
-#endif				/* USE_GOPHER */
 #define CMT_FTP_PROXY    N_("URL of FTP proxy host")
 #define CMT_NO_PROXY     N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR	N_("Check noproxy by network address")
 #define CMT_NO_CACHE     N_("Disable cache")
-#ifdef USE_NNTP
-#define CMT_NNTP_SERVER  N_("News server")
-#define CMT_NNTP_MODE    N_("Mode of news server")
-#define CMT_MAX_NEWS     N_("Number of news messages")
-#endif
 #define CMT_DNS_ORDER	N_("Order of name resolution")
 #define CMT_DROOT       N_("Directory corresponding to / (document root)")
 #define CMT_PDROOT      N_("Directory corresponding to /~user")
@@ -211,40 +196,12 @@ static int OptionEncode = FALSE;
 #define CMT_MIGEMO_COMMAND N_("Migemo command")
 #endif				/* USE_MIGEMO */
 
-#ifdef USE_M17N
-#define CMT_DISPLAY_CHARSET  N_("Display charset")
-#define CMT_DOCUMENT_CHARSET N_("Default document charset")
-#define CMT_AUTO_DETECT      N_("Automatic charset detection when loading")
-#define CMT_SYSTEM_CHARSET   N_("System charset")
-#define CMT_FOLLOW_LOCALE    N_("System charset follows locale(LC_CTYPE)")
-#define CMT_EXT_HALFDUMP     N_("Output halfdump with display charset")
-#define CMT_USE_WIDE         N_("Use multi-column characters")
-#define CMT_USE_COMBINING    N_("Use combining characters")
-#define CMT_EAST_ASIAN_WIDTH N_("Use double width for some Unicode characters")
-#define CMT_USE_LANGUAGE_TAG N_("Use Unicode language tags")
-#define CMT_UCS_CONV         N_("Charset conversion using Unicode map")
-#define CMT_PRE_CONV         N_("Charset conversion when loading")
-#define CMT_SEARCH_CONV      N_("Adjust search string for document charset")
-#define CMT_FIX_WIDTH_CONV   N_("Fix character width when converting")
-#define CMT_USE_GB12345_MAP  N_("Use GB 12345 Unicode map instead of GB 2312's")
-#define CMT_USE_JISX0201     N_("Use JIS X 0201 Roman for ISO-2022-JP")
-#define CMT_USE_JISC6226     N_("Use JIS C 6226:1978 for ISO-2022-JP")
-#define CMT_USE_JISX0201K    N_("Use JIS X 0201 Katakana")
-#define CMT_USE_JISX0212     N_("Use JIS X 0212:1990 (Supplemental Kanji)")
-#define CMT_USE_JISX0213     N_("Use JIS X 0213:2000 (2000JIS)")
-#define CMT_STRICT_ISO2022   N_("Strict ISO-2022-JP/KR/CN")
-#define CMT_GB18030_AS_UCS   N_("Treat 4 bytes char. of GB18030 as Unicode")
-#define CMT_SIMPLE_PRESERVE_SPACE N_("Simple Preserve space")
-#endif
 
 #define CMT_KEYMAP_FILE N_("keymap file")
 
 #define PI_TEXT    0
 #define PI_ONOFF   1
 #define PI_SEL_C   2
-#ifdef USE_M17N
-#define PI_CODE    3
-#endif
 
 struct sel_c {
     int value;
@@ -309,17 +266,6 @@ static struct sel_c mailtooptionsstr[] = {
     {0, NULL, NULL}
 };
 
-#ifdef USE_M17N
-static wc_ces_list *display_charset_str = NULL;
-static wc_ces_list *document_charset_str = NULL;
-static wc_ces_list *system_charset_str = NULL;
-static struct sel_c auto_detect_str[] = {
-    {N_S(WC_OPT_DETECT_OFF), N_("OFF")},
-    {N_S(WC_OPT_DETECT_ISO_2022), N_("Only ISO 2022")},
-    {N_S(WC_OPT_DETECT_ON), N_("ON")},
-    {0, NULL, NULL}
-};
-#endif
 
 static struct sel_c graphic_char_str[] = {
     {N_S(GRAPHIC_CHAR_ASCII), N_("ASCII")},
@@ -446,10 +392,6 @@ struct param_ptr params4[] = {
     {"https_proxy", P_STRING, PI_TEXT, (void *)&HTTPS_proxy, CMT_HTTPS_PROXY,
      NULL},
 #endif				/* USE_SSL */
-#ifdef USE_GOPHER
-    {"gopher_proxy", P_STRING, PI_TEXT, (void *)&GOPHER_proxy,
-     CMT_GOPHER_PROXY, NULL},
-#endif				/* USE_GOPHER */
     {"ftp_proxy", P_STRING, PI_TEXT, (void *)&FTP_proxy, CMT_FTP_PROXY, NULL},
     {"no_proxy", P_STRING, PI_TEXT, (void *)&NO_proxy, CMT_NO_PROXY, NULL},
     {"noproxy_netaddr", P_INT, PI_ONOFF, (void *)&NOproxy_netaddr,
@@ -595,72 +537,9 @@ struct param_ptr params9[] = {
     {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
      (void *)dnsorders},
 #endif				/* INET6 */
-#ifdef USE_NNTP
-    {"nntpserver", P_STRING, PI_TEXT, (void *)&NNTP_server, CMT_NNTP_SERVER,
-     NULL},
-    {"nntpmode", P_STRING, PI_TEXT, (void *)&NNTP_mode, CMT_NNTP_MODE, NULL},
-    {"max_news", P_INT, PI_TEXT, (void *)&MaxNewsMessage, CMT_MAX_NEWS, NULL},
-#endif
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-#ifdef USE_M17N
-struct param_ptr params10[] = {
-    {"display_charset", P_CODE, PI_CODE, (void *)&DisplayCharset,
-     CMT_DISPLAY_CHARSET, (void *)&display_charset_str},
-    {"document_charset", P_CODE, PI_CODE, (void *)&DocumentCharset,
-     CMT_DOCUMENT_CHARSET, (void *)&document_charset_str},
-    {"auto_detect", P_CHARINT, PI_SEL_C, (void *)&WcOption.auto_detect,
-     CMT_AUTO_DETECT, (void *)auto_detect_str},
-    {"system_charset", P_CODE, PI_CODE, (void *)&SystemCharset,
-     CMT_SYSTEM_CHARSET, (void *)&system_charset_str},
-    {"follow_locale", P_CHARINT, PI_ONOFF, (void *)&FollowLocale,
-     CMT_FOLLOW_LOCALE, NULL},
-    {"ext_halfdump", P_CHARINT, PI_ONOFF, (void *)&ExtHalfdump,
-     CMT_EXT_HALFDUMP, NULL},
-    {"use_wide", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_wide, CMT_USE_WIDE,
-     NULL},
-    {"use_combining", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_combining,
-     CMT_USE_COMBINING, NULL},
-#ifdef USE_UNICODE
-    {"east_asian_width", P_CHARINT, PI_ONOFF,
-     (void *)&WcOption.east_asian_width, CMT_EAST_ASIAN_WIDTH, NULL},
-    {"use_language_tag", P_CHARINT, PI_ONOFF,
-     (void *)&WcOption.use_language_tag, CMT_USE_LANGUAGE_TAG, NULL},
-    {"ucs_conv", P_CHARINT, PI_ONOFF, (void *)&WcOption.ucs_conv, CMT_UCS_CONV,
-     NULL},
-#endif
-    {"pre_conv", P_CHARINT, PI_ONOFF, (void *)&WcOption.pre_conv, CMT_PRE_CONV,
-     NULL},
-    {"search_conv", P_CHARINT, PI_ONOFF, (void *)&SearchConv, CMT_SEARCH_CONV,
-     NULL},
-    {"fix_width_conv", P_CHARINT, PI_ONOFF, (void *)&WcOption.fix_width_conv,
-     CMT_FIX_WIDTH_CONV, NULL},
-#ifdef USE_UNICODE
-    {"use_gb12345_map", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_gb12345_map,
-     CMT_USE_GB12345_MAP, NULL},
-#endif
-    {"use_jisx0201", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_jisx0201,
-     CMT_USE_JISX0201, NULL},
-    {"use_jisc6226", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_jisc6226,
-     CMT_USE_JISC6226, NULL},
-    {"use_jisx0201k", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_jisx0201k,
-     CMT_USE_JISX0201K, NULL},
-    {"use_jisx0212", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_jisx0212,
-     CMT_USE_JISX0212, NULL},
-    {"use_jisx0213", P_CHARINT, PI_ONOFF, (void *)&WcOption.use_jisx0213,
-     CMT_USE_JISX0213, NULL},
-    {"strict_iso2022", P_CHARINT, PI_ONOFF, (void *)&WcOption.strict_iso2022,
-     CMT_STRICT_ISO2022, NULL},
-#ifdef USE_UNICODE
-    {"gb18030_as_ucs", P_CHARINT, PI_ONOFF, (void *)&WcOption.gb18030_as_ucs,
-     CMT_GB18030_AS_UCS, NULL},
-#endif
-    {"simple_preserve_space", P_CHARINT, PI_ONOFF, (void *)&SimplePreserveSpace,
-     CMT_SIMPLE_PRESERVE_SPACE, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
-};
-#endif
 
 struct param_section sections[] = {
     {N_("Display Settings"), params1},
@@ -674,9 +553,6 @@ struct param_section sections[] = {
 #endif
 #ifdef USE_COOKIE
     {N_("Cookie Settings"), params8},
-#endif
-#ifdef USE_M17N
-    {N_("Charset Settings"), params10},
 #endif
     {NULL, NULL}
 };
@@ -781,21 +657,9 @@ show_params(FILE * fp)
     const char *t = "";
     char *cmt;
 
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
-    OptionCharset = SystemCharset;	/* FIXME */
-#endif
-#endif
 
     fputs("\nconfiguration parameters\n", fp);
     for (j = 0; sections[j].name != NULL; j++) {
-#ifdef USE_M17N
-	if (!OptionEncode)
-	    cmt =
-		wc_conv(_(sections[j].name), OptionCharset,
-			InnerCharset)->ptr;
-	else
-#endif
 	    cmt = sections[j].name;
 	fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
 	i = 0;
@@ -819,11 +683,6 @@ show_params(FILE * fp)
 		t = "path";
 		break;
 #endif
-#ifdef USE_M17N
-	    case P_CODE:
-		t = "charset";
-		break;
-#endif
 	    case P_PIXELS:
 		t = "number";
 		break;
@@ -831,12 +690,6 @@ show_params(FILE * fp)
 		t = "percent";
 		break;
 	    }
-#ifdef USE_M17N
-	    if (!OptionEncode)
-		cmt = wc_conv(_(sections[j].params[i].comment),
-			      OptionCharset, InnerCharset)->ptr;
-	    else
-#endif
 		cmt = sections[j].params[i].comment;
 	    l = 30 - (strlen(sections[j].params[i].name) + strlen(t));
 	    if (l < 0)
@@ -919,12 +772,6 @@ set_param(char *name, char *value)
 	else
 	    *(char **)p->varptr = NULL;
 	ssl_path_modified = 1;
-	break;
-#endif
-#ifdef USE_M17N
-    case P_CODE:
-	*(wc_ces *) p->varptr =
-	    wc_guess_charset_short(value, *(wc_ces *) p->varptr);
 	break;
 #endif
     case P_PIXELS:
@@ -1022,10 +869,6 @@ parse_proxy(void)
     if (non_null(HTTPS_proxy))
 	parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
 #endif				/* USE_SSL */
-#ifdef USE_GOPHER
-    if (non_null(GOPHER_proxy))
-	parseURL(GOPHER_proxy, &GOPHER_proxy_parsed, NULL);
-#endif
     if (non_null(FTP_proxy))
 	parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
     if (non_null(NO_proxy))
@@ -1134,12 +977,6 @@ sync_with_option(void)
 	AcceptEncoding = acceptableEncoding();
     if (AcceptMedia == NULL || *AcceptMedia == '\0')
 	AcceptMedia = acceptableMimeTypes();
-#ifdef USE_UNICODE
-    update_utf8_symbol();
-#endif
-#ifdef USE_M17N
-    wtf_init(DocumentCharset, DisplayCharset);
-#endif
     if (fmInitialized) {
 	initKeymap(FALSE);
     }
@@ -1165,11 +1002,6 @@ init_rc(void)
     if (i > 1 && rc_dir[i - 1] == '/')
 	rc_dir[i - 1] = '\0';
 
-#ifdef USE_M17N
-    display_charset_str = wc_get_ces_list();
-    document_charset_str = display_charset_str;
-    system_charset_str = display_charset_str;
-#endif
 
     tmp_dir = rc_dir;
 
@@ -1268,10 +1100,6 @@ to_str(struct param_ptr *p)
 {
     switch (p->type) {
     case P_INT:
-#ifdef USE_M17N
-    case P_CODE:
-	return Sprintf("%d", (int)(*(wc_ces *) p->varptr));
-#endif
     case P_NZINT:
 	return Sprintf("%d", *(int *)p->varptr);
     case P_SHORT:
@@ -1300,9 +1128,6 @@ load_option_panel(void)
     Str src;
     struct param_ptr *p;
     struct sel_c *s;
-#ifdef USE_M17N
-    wc_ces_list *c;
-#endif
     int x, i;
     Str tmp;
     Buffer *buf;
@@ -1310,34 +1135,6 @@ load_option_panel(void)
     if (optionpanel_str == NULL)
 	optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
 			      html_quote(localCookie()->ptr), _(CMT_HELPER));
-#ifdef USE_M17N
-#ifdef ENABLE_NLS
-    OptionCharset = SystemCharset;	/* FIXME */
-#endif
-    if (!OptionEncode) {
-	optionpanel_str =
-	    wc_Str_conv(optionpanel_str, OptionCharset, InnerCharset);
-	for (i = 0; sections[i].name != NULL; i++) {
-	    sections[i].name =
-		wc_conv(_(sections[i].name), OptionCharset,
-			InnerCharset)->ptr;
-	    for (p = sections[i].params; p->name; p++) {
-		p->comment =
-		    wc_conv(_(p->comment), OptionCharset,
-			    InnerCharset)->ptr;
-		if (p->inputtype == PI_SEL_C
-			) {
-		    for (s = (struct sel_c *)p->select; s->text != NULL; s++) {
-			s->text =
-			    wc_conv(_(s->text), OptionCharset,
-				    InnerCharset)->ptr;
-		    }
-		}
-	    }
-	}
-	OptionEncode = TRUE;
-    }
-#endif
     src = Strdup(optionpanel_str);
 
     Strcat_charp(src, "<table><tr><td>");
@@ -1380,21 +1177,6 @@ load_option_panel(void)
 		}
 		Strcat_charp(src, "</select>");
 		break;
-#ifdef USE_M17N
-	    case PI_CODE:
-		tmp = to_str(p);
-		Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-		for (c = *(wc_ces_list **) p->select; c->desc != NULL; c++) {
-		    Strcat_charp(src, "<option value=");
-		    Strcat(src, Sprintf("%s\n", c->name));
-		    if (c->id == atoi(tmp->ptr))
-			Strcat_charp(src, " selected");
-		    Strcat_char(src, '>');
-		    Strcat_charp(src, c->desc);
-		}
-		Strcat_charp(src, "</select>");
-		break;
-#endif
 	    }
 	    Strcat_charp(src, "</td></tr>\n");
 	    p++;
@@ -1405,10 +1187,6 @@ load_option_panel(void)
     }
     Strcat_charp(src, "</table></form></body></html>");
     buf = loadHTMLString(src);
-#ifdef USE_M17N
-    if (buf)
-	buf->document_charset = OptionCharset;
-#endif
     return buf;
 }
 
@@ -1516,9 +1294,6 @@ struct siteconf_rec {
 
     char *substitute_url;
     char *user_agent;
-#ifdef USE_M17N
-    wc_ces url_charset;
-#endif
     int no_referer_from;
     int no_referer_to;
 };
@@ -1543,9 +1318,6 @@ newSiteconfRec(void)
 
     ent->substitute_url = NULL;
     ent->user_agent = NULL;
-#ifdef USE_M17N
-    ent->url_charset = 0;
-#endif
     return ent;
 }
 
@@ -1625,14 +1397,6 @@ loadSiteconf(void)
 	    ent->user_agent = getQWord(&p);
 	    SCONF_SET(ent, SCONF_USER_AGENT);
 	}
-#ifdef USE_M17N
-	else if (strcmp(s, "url_charset") == 0) {
-	    char *charset = getWord(&p);
-	    ent->url_charset = (charset && *charset) ?
-		wc_charset_to_ces(charset) : 0;
-	    SCONF_SET(ent, SCONF_URL_CHARSET);
-	}
-#endif /* USE_M17N */
 	else if (strcmp(s, "no_referer_from") == 0) {
 	    ent->no_referer_from = str_to_bool(getWord(&p), 0);
 	    SCONF_SET(ent, SCONF_NO_REFERER_FROM);
@@ -1709,10 +1473,6 @@ url_found:
 	    return ent->user_agent;
 	}
 	return NULL;
-#ifdef USE_M17N
-    case SCONF_URL_CHARSET:
-	return &ent->url_charset;
-#endif
     case SCONF_NO_REFERER_FROM:
 	return &ent->no_referer_from;
     case SCONF_NO_REFERER_TO:
