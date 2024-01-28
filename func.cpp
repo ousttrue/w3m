@@ -113,7 +113,7 @@ void setKeymap(char *p, int lineno, int verbose) {
 static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   int fd;
   struct stat kstat;
-  Str line;
+  Str* line;
   char *p, *s, *emsg;
   int lineno;
   int verbose = 1;
@@ -335,7 +335,7 @@ char *getWord(char **str) {
 }
 
 char *getQWord(char **str) {
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
   char *p;
   int in_q = 0, in_dq = 0, esc = 0;
 

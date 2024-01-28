@@ -429,7 +429,7 @@ char *cleanupName(char *name) {
 char *expandPath(char *name) {
   char *p;
   struct passwd *passent, *getpwnam(const char *);
-  Str extpath = NULL;
+  Str *extpath = NULL;
 
   if (name == NULL)
     return NULL;
@@ -586,7 +586,7 @@ int non_null(char *s) {
   return FALSE;
 }
 
-void cleanup_line(Str s, int mode) {
+void cleanup_line(Str *s, int mode) {
   if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
       s->ptr[s->length - 1] == '\n') {
     Strshrink(s, 2);
@@ -669,7 +669,7 @@ int getescapechar(char **str) {
 
 char *getescapecmd(char **s) {
   char *save = *s;
-  Str tmp;
+  Str *tmp;
   int ch = getescapechar(s);
 
   if (ch >= 0)
@@ -684,7 +684,7 @@ char *getescapecmd(char **s) {
 }
 
 char *html_quote(const char *str) {
-  Str tmp = NULL;
+  Str *tmp = NULL;
   for (auto p = str; *p; p++) {
     auto q = html_quote_char(*p);
     if (q) {
@@ -702,7 +702,7 @@ char *html_quote(const char *str) {
 }
 
 char *html_unquote(char *str) {
-  Str tmp = NULL;
+  Str *tmp = NULL;
   char *p, *q;
 
   for (p = str; *p;) {
@@ -732,7 +732,7 @@ static auto xdigit = "0123456789ABCDEF";
        : -1)
 
 char *url_quote(char *str) {
-  Str tmp = NULL;
+  Str *tmp = NULL;
   char *p;
 
   for (p = str; *p; p++) {
@@ -753,7 +753,7 @@ char *url_quote(char *str) {
 }
 
 char *file_quote(char *str) {
-  Str tmp = NULL;
+  Str *tmp = NULL;
   char *p;
   char buf[4];
 
@@ -774,7 +774,7 @@ char *file_quote(char *str) {
 }
 
 char *file_unquote(char *str) {
-  Str tmp = NULL;
+  Str *tmp = NULL;
   char *p, *q;
   int c;
 
@@ -800,8 +800,8 @@ char *file_unquote(char *str) {
   return str;
 }
 
-Str Str_form_quote(Str x) {
-  Str tmp = NULL;
+Str *Str_form_quote(Str *x) {
+  Str *tmp = NULL;
   char *p = x->ptr, *ep = x->ptr + x->length;
   char buf[4];
 
@@ -825,8 +825,8 @@ Str Str_form_quote(Str x) {
   return x;
 }
 
-Str Str_url_unquote(Str x, int is_form, int safe) {
-  Str tmp = NULL;
+Str *Str_url_unquote(Str *x, int is_form, int safe) {
+  Str *tmp = NULL;
   char *p = x->ptr, *ep = x->ptr + x->length, *q;
   int c;
 
@@ -858,7 +858,7 @@ Str Str_url_unquote(Str x, int is_form, int safe) {
 }
 
 char *shell_quote(char *str) {
-  Str tmp = NULL;
+  Str *tmp = NULL;
   char *p;
 
   for (p = str; *p; p++) {
@@ -919,13 +919,13 @@ void growbuf_clear(struct growbuf *gb) {
   gb->area_size = 0;
 }
 
-Str growbuf_to_Str(struct growbuf *gb) {
-  Str s;
+Str *growbuf_to_Str(struct growbuf *gb) {
+  Str *s;
 
   if (gb->free_proc == &w3m_GC_free) {
     growbuf_reserve(gb, gb->length + 1);
     gb->ptr[gb->length] = '\0';
-    s = (Str)New(struct _Str);
+    s = (Str *)New(Str);
     s->ptr = gb->ptr;
     s->length = gb->length;
     s->area_size = gb->area_size;

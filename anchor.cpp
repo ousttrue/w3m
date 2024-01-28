@@ -165,7 +165,7 @@ Anchor *searchURLLabel(Buffer *buf, char *url) {
 
 static Anchor *_put_anchor_all(Buffer *buf, char *p1, char *p2, int line,
                                int pos) {
-  Str tmp;
+  Str *tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
   return registerHref(buf,
@@ -482,7 +482,7 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
 char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
   int hseq, i;
   Line *l;
-  Str tmp = NULL;
+  Str *tmp = NULL;
   char *p, *ep;
 
   if (!a || a->hseq < 0)
@@ -524,7 +524,7 @@ Buffer *link_list_panel(Buffer *buf) {
   const char *t;
   ParsedURL pu;
   /* FIXME: gettextize? */
-  Str tmp = Strnew_charp("<title>Link List</title>\
+  Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
   if (buf->bufferprop & BP_INTERNAL ||

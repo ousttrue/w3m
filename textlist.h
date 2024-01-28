@@ -53,7 +53,7 @@ struct TextList {
 /* Line text list */
 
 struct TextLine {
-  Str line;
+  Str* line;
   int pos;
 };
 
@@ -69,8 +69,8 @@ struct TextLineList {
   int nitem;
 };
 
-extern TextLine *newTextLine(Str line, int pos);
-extern void appendTextLine(TextLineList *tl, Str line, int pos);
+extern TextLine *newTextLine(Str* line, int pos);
+extern void appendTextLine(TextLineList *tl, Str* line, int pos);
 #define newTextLineList() ((TextLineList *)newGeneralList())
 #define pushTextLine(tl, lbuf) pushValue((GeneralList *)(tl), (void *)(lbuf))
 #define popTextLine(tl) ((TextLine *)popValue((GeneralList *)(tl)))

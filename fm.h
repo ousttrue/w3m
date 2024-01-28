@@ -295,7 +295,7 @@ struct MapArea {
 };
 
 struct MapList {
-  Str name;
+  Str *name;
   GeneralList *area;
   MapList *next;
 };
@@ -512,7 +512,9 @@ struct input_alt_attr {
   int hseq;
   int fid;
   int in;
-  Str type, name, value;
+  Str *type;
+  Str *name;
+  Str *value;
 };
 
 struct Breakpoint {
@@ -521,7 +523,7 @@ struct Breakpoint {
   int tlen;
   long flag;
   Anchor anchor;
-  Str img_alt;
+  Str *img_alt;
   struct input_alt_attr input_alt;
   char fontstat[FONTSTAT_SIZE];
   short nobr_level;
@@ -532,10 +534,10 @@ struct Breakpoint {
 };
 
 struct readbuffer {
-  Str line;
+  Str *line;
   Lineprop cprop;
   short pos;
-  Str prevchar;
+  Str *prevchar;
   long flag;
   long flag_stack[RB_STACK_SIZE];
   int flag_sp;
@@ -545,7 +547,7 @@ struct readbuffer {
   short table_level;
   short nobr_level;
   Anchor anchor;
-  Str img_alt;
+  Str *img_alt;
   struct input_alt_attr input_alt;
   char fontstat[FONTSTAT_SIZE];
   char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
@@ -649,7 +651,7 @@ struct html_feed_environ {
   struct readbuffer *obuf;
   TextLineList *buf;
   FILE *f;
-  Str tagbuf;
+  Str *tagbuf;
   int limit;
   int maxlimit;
   struct environment *envs;
@@ -667,13 +669,13 @@ struct portlist {
 
 struct cookie {
   ParsedURL url;
-  Str name;
-  Str value;
+  Str *name;
+  Str *value;
   time_t expires;
-  Str path;
-  Str domain;
-  Str comment;
-  Str commentURL;
+  Str *path;
+  Str *domain;
+  Str *comment;
+  Str *commentURL;
   struct portlist *portl;
   char version;
   char flag;
@@ -846,7 +848,7 @@ global int w3m_debug;
 global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
 global int w3m_halfload init(FALSE);
-global Str header_string init(NULL);
+global Str *header_string init(NULL);
 global int override_content_type init(FALSE);
 global int override_user_agent init(FALSE);
 

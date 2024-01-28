@@ -17,12 +17,12 @@
 struct auth_pass {
   int bad;
   int is_proxy;
-  Str host;
+  Str* host;
   int port;
-  /*    Str file; */
-  Str realm;
-  Str uname;
-  Str pwd;
+  /*    Str* file; */
+  Str* realm;
+  Str* uname;
+  Str* pwd;
   struct auth_pass *next;
 };
 
@@ -143,7 +143,7 @@ int gethtmlcmd(char **s) {
  * Check character type
  */
 
-Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor) {
+Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor) {
   Lineprop mode;
   Lineprop effect = PE_NORMAL;
   Lineprop *prop;
@@ -496,7 +496,7 @@ int next_status(char c, int *status) {
   return 0;
 }
 
-int read_token(Str buf, char **instr, int *status, int pre, int append) {
+int read_token(Str* buf, char **instr, int *status, int pre, int append) {
   char *p;
   int prev_status;
 
@@ -586,9 +586,9 @@ proc_end:
   return 1;
 }
 
-Str correct_irrtag(int status) {
+Str* correct_irrtag(int status) {
   char c;
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
 
   while (status != R_ST_NORMAL) {
     switch (status) {
@@ -675,7 +675,7 @@ static struct auth_pass *find_auth_pass_entry(char *host, int port, char *realm,
   return NULL;
 }
 
-int find_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname, Str *pwd,
+int find_auth_user_passwd(ParsedURL *pu, char *realm, Str* *uname, Str* *pwd,
                           int is_proxy) {
   struct auth_pass *ent;
 
@@ -693,7 +693,7 @@ int find_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname, Str *pwd,
   return 0;
 }
 
-void add_auth_user_passwd(ParsedURL *pu, char *realm, Str uname, Str pwd,
+void add_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pwd,
                           int is_proxy) {
   struct auth_pass ent;
   memset(&ent, 0, sizeof(ent));
@@ -707,7 +707,7 @@ void add_auth_user_passwd(ParsedURL *pu, char *realm, Str uname, Str pwd,
   add_auth_pass_entry(&ent, 0, 1);
 }
 
-void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str uname, Str pwd,
+void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pwd,
                                  int is_proxy) {
   struct auth_pass *ent;
   ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
@@ -730,8 +730,8 @@ void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str uname, Str pwd,
  * password <passwd>
  */
 
-static Str next_token(Str arg) {
-  Str narg = NULL;
+static Str* next_token(Str* arg) {
+  Str* narg = NULL;
   char *p, *q;
   if (arg == NULL || arg->length == 0)
     return NULL;
@@ -749,11 +749,11 @@ static Str next_token(Str arg) {
 
 static void parsePasswd(FILE *fp, int netrc) {
   struct auth_pass ent;
-  Str line = NULL;
+  Str* line = NULL;
 
   bzero(&ent, sizeof(struct auth_pass));
   while (1) {
-    Str arg = NULL;
+    Str* arg = NULL;
     char *p;
 
     if (line == NULL || line->length == 0)
@@ -906,8 +906,8 @@ static char roman_num5[] = {
     '*',
 };
 
-static Str romanNum2(int l, int n) {
-  Str s = Strnew();
+static Str* romanNum2(int l, int n) {
+  Str* s = Strnew();
 
   switch (n) {
   case 1:
@@ -936,8 +936,8 @@ static Str romanNum2(int l, int n) {
   return s;
 }
 
-Str romanNumeral(int n) {
-  Str r = Strnew();
+Str* romanNumeral(int n) {
+  Str* r = Strnew();
 
   if (n <= 0)
     return r;
@@ -953,8 +953,8 @@ Str romanNumeral(int n) {
   return r;
 }
 
-Str romanAlphabet(int n) {
-  Str r = Strnew();
+Str* romanAlphabet(int n) {
+  Str* r = Strnew();
   int l;
   char buf[14];
 
@@ -1043,8 +1043,8 @@ void mySystem(char *command, int background) {
     system(command);
 }
 
-Str myExtCommand(char *cmd, char *arg, int redirect) {
-  Str tmp = NULL;
+Str* myExtCommand(char *cmd, char *arg, int redirect) {
+  Str* tmp = NULL;
   char *p;
   int set_arg = FALSE;
 
@@ -1069,8 +1069,8 @@ Str myExtCommand(char *cmd, char *arg, int redirect) {
   return tmp;
 }
 
-Str myEditor(char *cmd, char *file, int line) {
-  Str tmp = NULL;
+Str* myEditor(char *cmd, char *file, int line) {
+  Str* tmp = NULL;
   char *p;
   int set_file = FALSE, set_line = FALSE;
 
@@ -1105,7 +1105,7 @@ Str myEditor(char *cmd, char *file, int line) {
 char *expandName(char *name) {
   char *p;
   struct passwd *passent, *getpwnam(const char *);
-  Str extpath = NULL;
+  Str* extpath = NULL;
 
   if (name == NULL)
     return NULL;
@@ -1148,7 +1148,7 @@ int is_localhost(const char *host) {
 }
 
 char *file_to_url(char *file) {
-  Str tmp;
+  Str* tmp;
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
   char *drive = NULL;
 #endif
@@ -1198,7 +1198,7 @@ char *file_to_url(char *file) {
 }
 
 char *url_unquote_conv0(char *url) {
-  Str tmp;
+  Str* tmp;
   tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
   return tmp->ptr;
 }
@@ -1208,8 +1208,8 @@ static char *tmpf_base[MAX_TMPF_TYPE] = {
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str tmpfname(int type, char *ext) {
-  Str tmpf;
+Str* tmpfname(int type, char *ext) {
+  Str* tmpf;
   char *dir;
 
   switch (type) {
@@ -1235,7 +1235,7 @@ static char *monthtbl[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static int get_day(char **s) {
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
   int day;
   char *ss = *s;
 
@@ -1255,7 +1255,7 @@ static int get_day(char **s) {
 }
 
 static int get_month(char **s) {
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
   int mon;
   char *ss = *s;
 
@@ -1282,7 +1282,7 @@ static int get_month(char **s) {
 }
 
 static int get_year(char **s) {
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
   int year;
   char *ss = *s;
 
@@ -1307,7 +1307,7 @@ static int get_year(char **s) {
 }
 
 static int get_time(char **s, int *hour, int *min, int *sec) {
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
   char *ss = *s;
 
   if (!**s)
@@ -1346,7 +1346,7 @@ static int get_time(char **s, int *hour, int *min, int *sec) {
 }
 
 static int get_zone(char **s, int *z_hour, int *z_min) {
-  Str tmp = Strnew();
+  Str* tmp = Strnew();
   int zone;
   char *ss = *s;
 
@@ -1524,8 +1524,8 @@ char *FQDN(char *host) {
 static char Base64Table[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-Str base64_encode(const char *src, size_t len) {
-  Str dest;
+Str* base64_encode(const char *src, size_t len) {
+  Str* dest;
   const unsigned char *in, *endw, *s;
   unsigned long j;
   size_t k;

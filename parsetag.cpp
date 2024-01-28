@@ -27,8 +27,8 @@ tag_exists(struct parsed_tagarg *t, char *arg)
 struct parsed_tagarg *
 cgistr2tagarg(char *cgistr)
 {
-    Str tag;
-    Str value;
+    Str* tag;
+    Str* value;
     struct parsed_tagarg *t0, *t;
 
     t = t0 = NULL;

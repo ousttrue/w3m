@@ -60,7 +60,7 @@ struct file_stream {
 
 struct str_stream {
   struct stream_buffer stream;
-  Str handle;
+  Str *handle;
   char type;
   char iseos;
   ReadFunc read;
@@ -103,24 +103,24 @@ typedef union input_stream *InputStream;
 
 extern InputStream newInputStream(int des);
 extern InputStream newFileStream(FILE *f, void (*closep)());
-extern InputStream newStrStream(Str s);
+extern InputStream newStrStream(Str *s);
 extern InputStream newSSLStream(SSL *ssl, int sock);
 extern InputStream newEncodedStream(InputStream is, char encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);
-extern Str StrISgets2(InputStream stream, char crnl);
+extern Str *StrISgets2(InputStream stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, FALSE)
 #define StrmyISgets(stream) StrISgets2(stream, TRUE)
 void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl);
 #ifdef unused
-extern int ISread(InputStream stream, Str buf, int count);
+extern int ISread(InputStream stream, Str *buf, int count);
 #endif
 int ISread_n(InputStream stream, char *dst, int bufsize);
 extern int ISfileno(InputStream stream);
 extern int ISeos(InputStream stream);
 extern void ssl_accept_this_site(char *hostname);
-extern Str ssl_get_certificate(SSL *ssl, char *hostname);
+extern Str *ssl_get_certificate(SSL *ssl, char *hostname);
 
 #define IST_BASIC 0
 #define IST_FILE 1

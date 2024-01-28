@@ -136,7 +136,7 @@ loadMimeTypes(char *filename)
     FILE *f;
     char *d, *type;
     int i, n;
-    Str tmp;
+    Str* tmp;
     struct table2 *mtypes;
 
     f = fopen(expandPath(filename), "r");
@@ -426,7 +426,7 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
     SSL_set_tlsext_host_name(handle,hostname);
 #endif				/* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) */
     if (SSL_connect(handle) > 0) {
-	Str serv_cert = ssl_get_certificate(handle, hostname);
+	Str* serv_cert = ssl_get_certificate(handle, hostname);
 	if (serv_cert) {
 	    *p_cert = serv_cert->ptr;
 	    return handle;
@@ -552,7 +552,7 @@ openSocket(char *const hostname,
 	hints.ai_family = *af;
 	hints.ai_socktype = SOCK_STREAM;
 	if (remoteport_num != 0) {
-	    Str portbuf = Sprintf("%d", remoteport_num);
+	    Str* portbuf = Sprintf("%d", remoteport_num);
 	    error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
 	}
 	else {
@@ -692,7 +692,7 @@ openSocket(char *const hostname,
 static char *
 copyPath(char *orgpath, int length, int option)
 {
-    Str tmp = Strnew();
+    Str* tmp = Strnew();
     char ch;
     while ((ch = *orgpath) != 0 && length != 0) {
 	if (option & COPYPATH_LOWERCASE)
@@ -722,7 +722,7 @@ void
 parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
 {
     char *p, *q, *qq;
-    Str tmp;
+    Str* tmp;
 
     url = url_quote(url);	/* quote 0x01-0x20, 0x7F-0xFF */
 
@@ -982,7 +982,7 @@ void
 parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 {
     char *p;
-    Str tmp;
+    Str* tmp;
     int relative_uri = FALSE;
 
     parseURL(url, pu, current);
@@ -1022,7 +1022,7 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
     if (pu->scheme == SCM_LOCAL) {
 	char *q = expandName(file_unquote(pu->file));
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-	Str drive;
+	Str* drive;
 	if (IS_ALPHA(q[0]) && q[1] == ':') {
 	    drive = Strnew_charp_n(q, 2);
 	    Strcat_charp(drive, file_quote(q+2));
@@ -1114,7 +1114,7 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	if (pu->scheme == SCM_LOCAL) {
 #ifdef SUPPORT_NETBIOS_SHARE
 	    if (pu->host && !is_localhost(pu->host)) {
-		Str tmp = Strnew_charp("//");
+		Str* tmp = Strnew_charp("//");
 		Strcat_m_charp(tmp, pu->host,
 			       cleanupName(file_unquote(pu->file)), NULL);
 		pu->real_file = tmp->ptr;
@@ -1126,10 +1126,10 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
     }
 }
 
-static Str
+static Str*
 _parsedURL2Str(ParsedURL *pu, int pass, int user, int label)
 {
-    Str tmp;
+    Str* tmp;
     static char *scheme_str[] = {
 	"http", "gopher", "ftp", "ftp", "file", "file", "exec", "nntp", "nntp",
 	"news", "news", "data", "mailto",
@@ -1211,16 +1211,16 @@ _parsedURL2Str(ParsedURL *pu, int pass, int user, int label)
     return tmp;
 }
 
-Str
+Str*
 parsedURL2Str(ParsedURL *pu)
 {
     return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
 }
 
-static Str
+static Str*
 parsedURL2RefererOriginStr(ParsedURL *pu)
 {
-    Str s;
+    Str* s;
     char *f = pu->file, *q = pu->query;
 
     pu->file = NULL;
@@ -1232,7 +1232,7 @@ parsedURL2RefererOriginStr(ParsedURL *pu)
     return s;
 }
 
-Str
+Str*
 parsedURL2RefererStr(ParsedURL *pu)
 {
     return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
@@ -1276,7 +1276,7 @@ schemeNumToName(int scheme)
 static char *
 otherinfo(ParsedURL *target, ParsedURL *current, char *referer)
 {
-    Str s = Strnew();
+    Str* s = Strnew();
     const int *no_referer_ptr;
     int no_referer;
     const char* url_user_agent = query_SCONF_USER_AGENT(target);
@@ -1347,7 +1347,7 @@ otherinfo(ParsedURL *target, ParsedURL *current, char *referer)
     return s->ptr;
 }
 
-Str
+Str*
 HTTPrequestMethod(HRequest *hr)
 {
     switch (hr->command) {
@@ -1366,10 +1366,10 @@ HTTPrequestMethod(HRequest *hr)
     return NULL;
 }
 
-Str
+Str*
 HTTPrequestURI(ParsedURL *pu, HRequest *hr)
 {
-    Str tmp = Strnew();
+    Str* tmp = Strnew();
     if (hr->command == HR_COMMAND_CONNECT) {
 	Strcat_charp(tmp, pu->host);
 	Strcat(tmp, Sprintf(":%d", pu->port));
@@ -1386,12 +1386,12 @@ HTTPrequestURI(ParsedURL *pu, HRequest *hr)
     return tmp;
 }
 
-static Str
+static Str*
 HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr, TextList *extra)
 {
-    Str tmp;
+    Str* tmp;
     TextListItem *i;
-    Str cookie;
+    Str* cookie;
     tmp = HTTPrequestMethod(hr);
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
@@ -1479,7 +1479,7 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 	URLOption *option, FormList *request, TextList *extra_header,
 	URLFile *ouf, HRequest *hr, unsigned char *status)
 {
-    Str tmp;
+    Str* tmp;
     int sock, scheme;
     char *p, *q, *u;
     URLFile uf;
@@ -1507,7 +1507,7 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
     if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
 	if (pu->label != NULL) {
 	    /* #hogege is not a label but a filename */
-	    Str tmp2 = Strnew_charp("#");
+	    Str* tmp2 = Strnew_charp("#");
 	    Strcat_charp(tmp2, pu->label);
 	    pu->file = tmp2->ptr;
 	    pu->real_file = cleanupName(file_unquote(pu->file));
@@ -1833,7 +1833,7 @@ TextList *
 make_domain_list(char *domain_list)
 {
     char *p;
-    Str tmp;
+    Str* tmp;
     TextList *domains = NULL;
 
     p = domain_list;

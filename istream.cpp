@@ -20,7 +20,7 @@ static int basic_read(int *handle, char *buf, int len);
 static void file_close(struct io_file_handle *handle);
 static int file_read(struct io_file_handle *handle, char *buf, int len);
 
-static int str_read(Str handle, char *buf, int len);
+static int str_read(Str* handle, char *buf, int len);
 
 static void ssl_close(struct ssl_handle *handle);
 static int ssl_read(struct ssl_handle *handle, char *buf, int len);
@@ -69,7 +69,7 @@ static void init_base_stream(BaseStream base, int bufsize) {
   init_buffer(base, NULL, bufsize);
 }
 
-static void init_str_stream(BaseStream base, Str s) {
+static void init_str_stream(BaseStream base, Str* s) {
   init_buffer(base, s->ptr, s->length);
 }
 
@@ -105,7 +105,7 @@ InputStream newFileStream(FILE *f, void (*closep)()) {
   return stream;
 }
 
-InputStream newStrStream(Str s) {
+InputStream newStrStream(Str* s) {
   InputStream stream;
   if (s == NULL)
     return NULL;
@@ -190,7 +190,7 @@ int ISundogetc(InputStream stream) {
   return -1;
 }
 
-Str StrISgets2(InputStream stream, char crnl) {
+Str* StrISgets2(InputStream stream, char crnl) {
   struct growbuf gb;
 
   if (stream == NULL)
@@ -237,7 +237,7 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl) {
 }
 
 #ifdef unused
-int ISread(InputStream stream, Str buf, int count) {
+int ISread(InputStream stream, Str* buf, int count) {
   int len;
 
   if (count + 1 > buf->area_size) {
@@ -299,7 +299,7 @@ int ISeos(InputStream stream) {
   return base->iseos;
 }
 
-static Str accept_this_site;
+static Str* accept_this_site;
 
 void ssl_accept_this_site(char *hostname) {
   if (hostname)
@@ -336,9 +336,9 @@ static int ssl_match_cert_ident(char *ident, int ilen, char *hostname) {
   return *hostname == '\0';
 }
 
-static Str ssl_check_cert_ident(X509 *x, char *hostname) {
+static Str* ssl_check_cert_ident(X509 *x, char *hostname) {
   int i;
-  Str ret = NULL;
+  Str* ret = NULL;
   int match_ident = FALSE;
   /*
    * All we need to do here is check that the CN matches.
@@ -360,7 +360,7 @@ static Str ssl_check_cert_ident(X509 *x, char *hostname) {
     if (alt) {
       int n;
       GENERAL_NAME *gn;
-      Str seen_dnsname = NULL;
+      Str* seen_dnsname = NULL;
 
       n = sk_GENERAL_NAME_num(alt);
       for (i = 0; i < n; i++) {
@@ -439,16 +439,16 @@ static Str ssl_check_cert_ident(X509 *x, char *hostname) {
   return ret;
 }
 
-Str ssl_get_certificate(SSL *ssl, char *hostname) {
+Str* ssl_get_certificate(SSL *ssl, char *hostname) {
   BIO *bp;
   X509 *x;
   X509_NAME *xn;
   char *p;
   int len;
-  Str s;
+  Str* s;
   char buf[2048];
-  Str amsg = NULL;
-  Str emsg;
+  Str* amsg = NULL;
+  Str* emsg;
   char *ans;
 
   if (ssl == NULL)
@@ -514,7 +514,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
-      Str ep = Strdup(emsg);
+      Str* ep = Strdup(emsg);
       if (ep->length > COLS - 16)
         Strshrink(ep, ep->length - (COLS - 16));
       Strcat_charp(ep, ": accept? (y/n)");
@@ -580,7 +580,7 @@ static int file_read(struct io_file_handle *handle, char *buf, int len) {
   return fread(buf, 1, len, handle->f);
 }
 
-static int str_read(Str handle, char *buf, int len) { return 0; }
+static int str_read(Str* handle, char *buf, int len) { return 0; }
 
 static void ssl_close(struct ssl_handle *handle) {
   close(handle->sock);

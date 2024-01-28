@@ -11,7 +11,7 @@
 #include "regex.h"
 #include "util.h"
 
-extern Str *textarea_str;
+extern Str **textarea_str;
 extern int max_textarea;
 
 /* *INDENT-OFF* */
@@ -32,7 +32,7 @@ struct FormList *newFormList(char *action, char *method, char *charset,
                              char *enctype, char *target, char *name,
                              FormList *_next) {
   FormList *l;
-  Str a = Strnew_charp(action);
+  Str *a = Strnew_charp(action);
   int m = FORM_METHOD_GET;
   int e = FORM_ENCTYPE_URLENCODED;
 
@@ -134,7 +134,7 @@ static char *_formtypetbl[] = {
 static char *_formmethodtbl[] = {"GET", "POST", "INTERNAL", "HEAD"};
 
 char *form2str(FormItemList *fi) {
-  Str tmp = Strnew();
+  Str *tmp = Strnew();
 
   if (fi->type != FORM_SELECT && fi->type != FORM_TEXTAREA)
     Strcat_charp(tmp, "input type=");
@@ -393,9 +393,9 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
   arrangeLine(buf);
 }
 
-Str textfieldrep(Str s, int width) {
+Str *textfieldrep(Str *s, int width) {
   Lineprop c_type;
-  Str n = Strnew_size(width + 2);
+  Str *n = Strnew_size(width + 2);
   int i, j, k, c_len;
 
   j = 0;
@@ -424,9 +424,9 @@ Str textfieldrep(Str s, int width) {
   return n;
 }
 
-static void form_fputs_decode(Str s, FILE *f) {
+static void form_fputs_decode(Str *s, FILE *f) {
   char *p;
-  Str z = Strnew();
+  Str *z = Strnew();
 
   for (p = s->ptr; *p;) {
     switch (*p) {
@@ -445,7 +445,7 @@ static void form_fputs_decode(Str s, FILE *f) {
 
 void input_textarea(FormItemList *fi) {
   char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  Str tmp;
+  Str *tmp;
   FILE *f;
 
   f = fopen(tmpf, "w");
@@ -617,7 +617,8 @@ static struct pre_form_item *add_pre_form_item(struct pre_form *pf,
 
 void loadPreForm(void) {
   FILE *fp;
-  Str line = NULL, textarea = NULL;
+  Str *line = NULL;
+  Str *textarea = NULL;
   struct pre_form *pf = NULL;
   struct pre_form_item *pi = NULL;
   int type = -1;
@@ -728,7 +729,7 @@ void preFormUpdateBuffer(Buffer *buf) {
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      Str url = parsedURL2Str(&buf->currentURL);
+      Str *url = parsedURL2Str(&buf->currentURL);
       if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
         continue;
     } else if (pf->url) {

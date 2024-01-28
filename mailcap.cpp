@@ -55,7 +55,7 @@ struct mailcap *searchMailcap(struct mailcap *table, const char *type) {
     i = mailcapMatch(table, type);
     if (i > level) {
       if (table->test) {
-        Str command = unquote_mailcap(table->test, type, NULL, NULL, NULL);
+        Str *command = unquote_mailcap(table->test, type, NULL, NULL, NULL);
         if (system(command->ptr) != 0)
           continue;
       }
@@ -66,7 +66,7 @@ struct mailcap *searchMailcap(struct mailcap *table, const char *type) {
   return mcap;
 }
 
-static int matchMailcapAttr(char *p, char *attr, size_t len, Str *value) {
+static int matchMailcapAttr(char *p, char *attr, size_t len, Str **value) {
   int quoted;
   char *q = NULL;
 
@@ -106,7 +106,7 @@ static int extractMailcapEntry(char *mcap_entry, struct mailcap *mcap) {
   int j, k;
   char *p;
   int quoted;
-  Str tmp;
+  Str *tmp;
 
   bzero(mcap, sizeof(struct mailcap));
   p = mcap_entry;
@@ -167,7 +167,7 @@ static int extractMailcapEntry(char *mcap_entry, struct mailcap *mcap) {
 static struct mailcap *loadMailcap(char *filename) {
   FILE *f;
   int i, n;
-  Str tmp;
+  Str *tmp;
   struct mailcap *mcap;
 
   f = fopen(expandPath(filename), "r");
@@ -218,7 +218,7 @@ void initMailcap(void) {
 }
 
 char *acceptableMimeTypes(void) {
-  static Str types = NULL;
+  static Str *types = NULL;
   TextList *l;
   Hash_si *mhash;
   char *p;
@@ -284,8 +284,8 @@ no_user_mailcap:
 #define MCF_SQUOTED (1 << 0)
 #define MCF_DQUOTED (1 << 1)
 
-static Str quote_mailcap(const char *s, int flag) {
-  Str d;
+static Str *quote_mailcap(const char *s, int flag) {
+  Str *d;
 
   d = Strnew();
 
@@ -321,9 +321,9 @@ end:
   return d;
 }
 
-static Str unquote_mailcap_loop(char *qstr, const char *type, char *name, char *attr,
-                                int *mc_stat, int flag0) {
-  Str str, tmp, test, then;
+static Str *unquote_mailcap_loop(char *qstr, const char *type, char *name,
+                                 char *attr, int *mc_stat, int flag0) {
+  Str *str, *tmp, *test, *then;
   char *p;
   int status = MC_NORMAL, prev_status = MC_NORMAL, sp = 0, flag;
 
@@ -428,7 +428,7 @@ static Str unquote_mailcap_loop(char *qstr, const char *type, char *name, char *
   return str;
 }
 
-Str unquote_mailcap(char *qstr, const char *type, char *name, char *attr,
-                    int *mc_stat) {
+Str *unquote_mailcap(char *qstr, const char *type, char *name, char *attr,
+                     int *mc_stat) {
   return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
 }

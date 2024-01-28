@@ -397,7 +397,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
       int i = c + r * f->col;
       char *p = "";
       int status = R_ST_NORMAL;
-      Str tok = Strnew();
+      Str* tok = Strnew();
       int pre_mode = 0;
       int end_tag = 0;
 
@@ -469,7 +469,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
         d_target = TargetSelf ? s_target : t_target;
         t_stack = 0;
         if (frame.body->type && !strcasecmp(frame.body->type, "text/plain")) {
-          Str tmp;
+          Str* tmp;
           fprintf(f1, "<pre>\n");
           while ((tmp = StrmyUFgets(&f2)) && tmp->length) {
             tmp = convertLine(NULL, tmp, HTML_MODE, &charset, doc_charset);
@@ -486,7 +486,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
 
           do {
             if (*p == '\0') {
-              Str tmp = StrmyUFgets(&f2);
+              Str* tmp = StrmyUFgets(&f2);
               if (!tmp || tmp->length == 0)
                 break;
               tmp = convertLine(NULL, tmp, HTML_MODE, &charset, doc_charset);
@@ -591,7 +591,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
               if (parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &q) &&
                   !strcasecmp(q, "refresh")) {
                 if (parsedtag_get_value(tag, ATTR_CONTENT, &q)) {
-                  Str s_tmp = NULL;
+                  Str* s_tmp = NULL;
                   int refresh_interval = getMetaRefreshParam(q, &s_tmp);
                   if (s_tmp) {
                     q = html_quote(s_tmp->ptr);
@@ -767,7 +767,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
 }
 
 Buffer *renderFrame(Buffer *Cbuf, int force_reload) {
-  Str tmp;
+  Str* tmp;
   FILE *f;
   Buffer *buf;
   int flag;

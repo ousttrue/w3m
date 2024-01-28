@@ -17,7 +17,7 @@ mergeHistory(Hist *ours, Hist *theirs)
 Buffer *
 historyBuffer(Hist *hist)
 {
-    Str src = Strnew();
+    Str* src = Strnew();
     HistItem *item;
     char *p, *q;
 
@@ -47,7 +47,7 @@ int
 loadHistory(Hist *hist)
 {
     FILE *f;
-    Str line;
+    Str* line;
     struct stat st;
 
     if (hist == NULL)

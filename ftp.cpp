@@ -42,8 +42,8 @@ static void KeyAbort(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-static Str ftp_command(FTP *ftp, char *cmd, char *arg, int *status) {
-  Str tmp;
+static Str* ftp_command(FTP *ftp, char *cmd, char *arg, int *status) {
+  Str* tmp;
 
   if (!ftp->host)
     return NULL;
@@ -126,7 +126,7 @@ static int ftp_login(FTP *ftp) {
       socklen_t socknamelen = sizeof(sockname);
 
       if (!getsockname(sock, (struct sockaddr *)&sockname, &socknamelen)) {
-        Str tmp = Strnew_charp(ftp->pass);
+        Str* tmp = Strnew_charp(ftp->pass);
 #ifdef INET6
         char hostbuf[NI_MAXHOST];
 
@@ -196,7 +196,7 @@ static int ftp_pasv(FTP *ftp) {
   int n1, n2, n3, n4, p1, p2;
   int data;
   char *p;
-  Str tmp;
+  Str* tmp;
   int family;
 #ifdef INET6
   struct sockaddr_storage sockaddr;
@@ -261,7 +261,7 @@ static int ftp_pasv(FTP *ftp) {
 
 static time_t ftp_modtime(FTP *ftp, char *path) {
   int status;
-  Str tmp;
+  Str* tmp;
   char *p;
   struct tm tm;
   time_t t, lt, gt;
@@ -320,12 +320,12 @@ static void closeFTPdata(FILE *f) {
 void closeFTP(void) { ftp_close(&current_ftp); }
 
 InputStream openFTPStream(ParsedURL *pu, URLFile *uf) {
-  Str tmp;
+  Str* tmp;
   int status;
   char *user = NULL;
   char *pass = NULL;
-  Str uname = NULL;
-  Str pwd = NULL;
+  Str* uname = NULL;
+  Str* pwd = NULL;
   int add_auth_cookie_flag = FALSE;
   char *realpathname = NULL;
 
@@ -422,9 +422,9 @@ ftp_dir:
   return NULL;
 }
 
-Str loadFTPDir0(ParsedURL *pu) {
-  Str FTPDIRtmp;
-  Str tmp;
+Str* loadFTPDir0(ParsedURL *pu) {
+  Str* FTPDIRtmp;
+  Str* tmp;
   int status;
   volatile int sv_type;
   char *realpathname, *fn, *q;
@@ -606,7 +606,7 @@ void disconnectFTP(void) { ftp_quit(&current_ftp); }
       goto done;                                                               \
   }
 
-static Str size_int2str(clen_t);
+static Str* size_int2str(clen_t);
 
 static int ex_ftpdir_name_size_date(char *line, char **name, char **link,
                                     char **date, char **sizep) {
@@ -691,8 +691,8 @@ done:
   return (ftype);
 }
 
-static Str size_int2str(clen_t size) {
-  Str size_str;
+static Str* size_int2str(clen_t size) {
+  Str* size_str;
   int unit;
   double dtmp;
   char *size_format, *unit_str;

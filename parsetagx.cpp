@@ -146,7 +146,7 @@ struct parsed_tag *parse_tag(char **s, int internal) {
   /* Parse tag arguments */
   SKIP_BLANKS(q);
   while (1) {
-    Str value = NULL, value_tmp = NULL;
+    Str *value = NULL, *value_tmp = NULL;
     if (*q == '>' || *q == '\0')
       goto done_parse_tag;
     p = attrname;
@@ -274,11 +274,11 @@ int parsedtag_get_value(struct parsed_tag *tag, int id, void *value) {
   return toValFunc[AttrMAP[id].vtype](tag->value[i], (int *)value);
 }
 
-Str parsedtag2str(struct parsed_tag *tag) {
+Str *parsedtag2str(struct parsed_tag *tag) {
   int i;
   int tag_id = tag->tagid;
   int nattr = TagMAP[tag_id].max_attribute;
-  Str tagstr = Strnew();
+  Str *tagstr = Strnew();
   Strcat_char(tagstr, '<');
   Strcat_charp(tagstr, TagMAP[tag_id].name);
   for (i = 0; i < nattr; i++) {

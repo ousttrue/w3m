@@ -48,3 +48,20 @@ void addLink(Node* node, Node* next);
 なので struct の typedef を削除します。
 ほぼ単純作業です。
 
+## ついでにポインタ型typedefもやめる
+
+```c title="例"
+typedef struct _Str {
+    char *ptr;
+    int length;
+    int area_size;
+} *Str;
+```
+
+わずかに記述量を節約できるのだけど、
+前方宣言で疎結合に変えるときに引っかかるのでやめます。
+
+```c
+Str a, b; // ささる注意
+```
+

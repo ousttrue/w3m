@@ -40,7 +40,7 @@ struct FormList {
   FormItemList *item;
   FormItemList *lastitem;
   int method;
-  Str action;
+  Str *action;
   char *target;
   char *name;
   int enctype;
@@ -53,8 +53,9 @@ struct FormList {
 
 struct FormItemList {
   int type;
-  Str name;
-  Str value, init_value;
+  Str *name;
+  Str *value;
+  Str *init_value;
   int checked, init_checked;
   int accept;
   int size;

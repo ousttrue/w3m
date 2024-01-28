@@ -63,14 +63,14 @@ extern int strcasemstr(char *str, char *srch[], char **ret_ptr);
 int strmatchlen(const char *s1, const char *s2, int maxlen);
 extern char *remove_space(char *str);
 extern int non_null(char *s);
-extern void cleanup_line(Str s, int mode);
+extern void cleanup_line(Str* s, int mode);
 extern char *html_quote(const char *str);
 extern char *html_unquote(char *str);
 extern char *file_quote(char *str);
 extern char *file_unquote(char *str);
 extern char *url_quote(char *str);
-extern Str Str_url_unquote(Str x, int is_form, int safe);
-extern Str Str_form_quote(Str x);
+extern Str* Str_url_unquote(Str* x, int is_form, int safe);
+extern Str* Str_form_quote(Str* x);
 #define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
 extern char *shell_quote(char *str);
 #define xmalloc(s) xrealloc(NULL, s)
@@ -81,7 +81,7 @@ extern void w3m_GC_free(void *ptr);
 extern void growbuf_init(struct growbuf *gb);
 extern void growbuf_init_without_GC(struct growbuf *gb);
 extern void growbuf_clear(struct growbuf *gb);
-extern Str growbuf_to_Str(struct growbuf *gb);
+extern Str* growbuf_to_Str(struct growbuf *gb);
 extern void growbuf_reserve(struct growbuf *gb, int leastarea);
 extern void growbuf_append(struct growbuf *gb, const unsigned char *src, int len);
 #define GROWBUF_ADD_CHAR(gb,ch) ((((gb)->length>=(gb)->area_size)?growbuf_reserve(gb,(gb)->length+1):(void)0),(void)((gb)->ptr[(gb)->length++] = (ch)))

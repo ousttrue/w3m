@@ -248,9 +248,9 @@ static void sig_chld(int signo) {
   return;
 }
 
-static Str make_optional_header_string(char *s) {
+static Str *make_optional_header_string(char *s) {
   char *p;
-  Str hs;
+  Str *hs;
 
   if (strchr(s, '\n') || strchr(s, '\r'))
     return NULL;
@@ -335,7 +335,7 @@ static void dump_extra(Buffer *buf) {
   if (buf->baseURL)
     printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
   if (buf->ssl_certificate) {
-    Str tmp = Strnew();
+    Str *tmp = Strnew();
     char *p;
     for (p = buf->ssl_certificate; *p; p++) {
       Strcat_char(tmp, *p);
@@ -479,7 +479,7 @@ void tmpClearBuffer(Buffer *buf) {
   }
 }
 
-static Str currentURL(void);
+static Str *currentURL(void);
 
 void saveBufferInfo() {
   FILE *fp;
@@ -719,7 +719,7 @@ static void disp_srchresult(int result, const char *prompt, char *str) {
     disp_message(Sprintf("%s%s", prompt, str)->ptr, TRUE);
 }
 
-static int dispincsrch(int ch, Str buf, Lineprop *prop) {
+static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   static Buffer sbuf;
   char *str;
   int do_next_search = FALSE;
@@ -1132,7 +1132,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 DEFUN(ldhelp, HELP, "Show help panel") {
   char *lang;
   int n;
-  Str tmp;
+  Str *tmp;
 
   lang = AcceptLang;
   n = strcspn(lang, ";, \t");
@@ -1529,7 +1529,7 @@ static int cur_real_linenumber(Buffer *buf) {
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
   char *fn = Currentbuf->filename;
-  Str cmd;
+  Str *cmd;
 
   if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
       (Currentbuf->type == NULL &&
@@ -1823,7 +1823,7 @@ static void gotoLabel(char *label) {
 }
 
 static int handleMailto(char *url) {
-  Str to;
+  Str *to;
   char *pos;
 
   if (strncasecmp(url, "mailto:", 7))
@@ -1988,7 +1988,8 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
 
 #define conv_form_encoding(val, fi, buf) (val)
 
-static void query_from_followform(Str *query, FormItemList *fi, int multipart) {
+static void query_from_followform(Str **query, FormItemList *fi,
+                                  int multipart) {
   FormItemList *f2;
   FILE *body = NULL;
 
@@ -2099,7 +2100,7 @@ static void _followForm(int submit) {
   Anchor *a, *a2;
   char *p;
   FormItemList *fi, *f2;
-  Str tmp, tmp2;
+  Str *tmp, *tmp2;
   int multipart = 0, i;
 
   if (Currentbuf->firstLine == NULL)
@@ -2893,7 +2894,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
 
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
-  Str tmp;
+  Str *tmp;
   FormList *request;
 
   tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
@@ -3071,7 +3072,7 @@ static void _peekURL(int only_img) {
 
   Anchor *a;
   ParsedURL pu;
-  static Str s = NULL;
+  static Str *s = NULL;
   static int offset = 0, n;
 
   if (Currentbuf->firstLine == NULL)
@@ -3116,14 +3117,14 @@ DEFUN(peekURL, PEEK_LINK, "Show target address") { _peekURL(0); }
 DEFUN(peekIMG, PEEK_IMG, "Show image address") { _peekURL(1); }
 
 /* show current URL */
-static Str currentURL(void) {
+static Str *currentURL(void) {
   if (Currentbuf->bufferprop & BP_INTERNAL)
     return Strnew_size(0);
   return parsedURL2Str(&Currentbuf->currentURL);
 }
 
 DEFUN(curURL, PEEK, "Show current address") {
-  static Str s = NULL;
+  static Str *s = NULL;
   static int offset = 0, n;
 
   if (Currentbuf->bufferprop & BP_INTERNAL)
@@ -3161,7 +3162,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     if (Currentbuf->pagerSource &&
         !strcasecmp(Currentbuf->type, "text/plain")) {
       FILE *f;
-      Str tmpf = tmpfname(TMPF_SRC, NULL);
+      Str *tmpf = tmpfname(TMPF_SRC, NULL);
       f = fopen(tmpf->ptr, "w");
       if (f == NULL)
         return;
@@ -3215,7 +3216,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew") {
   Buffer *buf, *fbuf = NULL, sbuf;
-  Str url;
+  Str *url;
   FormList *request;
   int multipart;
 
@@ -3269,7 +3270,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     request = Currentbuf->form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
-      Str query;
+      Str *query;
       struct stat st;
       multipart = 1;
       query_from_followform(&query, Currentbuf->form_submit, multipart);
@@ -3399,7 +3400,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
 
 /* spawn external browser */
 static void invoke_browser(char *url) {
-  Str cmd;
+  Str *cmd;
   char *browser = NULL;
   int bg = 0, len;
 
@@ -3494,7 +3495,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document") {
   Line *l = Currentbuf->currentLine;
-  Str tmp;
+  Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
   if (l != NULL) {
@@ -3707,7 +3708,7 @@ void deleteFiles() {
     unlink(f);
     if (enable_inline_image == INLINE_IMG_SIXEL &&
         strcmp(f + strlen(f) - 4, ".gif") == 0) {
-      Str firstframe = Strnew_charp(f);
+      Str *firstframe = Strnew_charp(f);
       Strcat_charp(firstframe, "-1");
       unlink(firstframe->ptr);
     }
@@ -3873,7 +3874,6 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
     initMimeTypes();
     return;
   }
-
 
   disp_err_message(
       Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, FALSE);
@@ -4250,7 +4250,7 @@ int checkDownloadList(void) {
 }
 
 static char *convert_size3(clen_t size) {
-  Str tmp = Strnew();
+  Str *tmp = Strnew();
   int n;
 
   do {
@@ -4263,7 +4263,7 @@ static char *convert_size3(clen_t size) {
 
 static Buffer *DownloadListBuffer(void) {
   DownloadList *d;
-  Str src = NULL;
+  Str *src = NULL;
   struct stat st;
   time_t cur_time;
   int duration, rate, eta;
@@ -4547,7 +4547,7 @@ int main(int argc, char **argv) {
   char search_header = FALSE;
   char *default_type = NULL;
   char *post_file = NULL;
-  Str err_msg;
+  Str *err_msg;
   if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
   GC_INIT();
@@ -4669,7 +4669,7 @@ int main(int argc, char **argv) {
           usage();
         BookmarkFile = argv[i];
         if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
-          Str tmp = Strnew_charp(CurrentDir);
+          Str *tmp = Strnew_charp(CurrentDir);
           if (Strlastchar(tmp) != '/')
             Strcat_char(tmp, '/');
           Strcat_charp(tmp, BookmarkFile);
@@ -4740,7 +4740,7 @@ int main(int argc, char **argv) {
           usage();
         post_file = argv[i];
       } else if (!strcmp("-header", argv[i])) {
-        Str hs;
+        Str *hs;
         if (++i >= argc)
           usage();
         if ((hs = make_optional_header_string(argv[i])) != NULL) {
@@ -4868,7 +4868,7 @@ int main(int argc, char **argv) {
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
     } else if (visual_start) {
       /* FIXME: gettextize? */
-      Str s_page;
+      Str *s_page;
       s_page =
           Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
       Strcat_charp(s_page, "<a href='http://w3m.sourceforge.net/'>");
@@ -4924,7 +4924,7 @@ int main(int argc, char **argv) {
       } else {
         if (post_file && i == 0) {
           FILE *fp;
-          Str body;
+          Str *body;
           if (!strcmp(post_file, "-"))
             fp = stdin;
           else

@@ -9,7 +9,7 @@ get_symbol(void)
 }
 
 void
-push_symbol(Str str, char symbol, int width, int n)
+push_symbol(Str* str, char symbol, int width, int n)
 {
     char buf[2], *p;
     int i;

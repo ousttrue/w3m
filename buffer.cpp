@@ -181,7 +181,7 @@ nthBuffer(Buffer *firstbuf, int n)
 static void
 writeBufferName(Buffer *buf, int n)
 {
-    Str msg;
+    Str* msg;
     int all;
 
     all = buf->allLine;
@@ -570,7 +570,7 @@ prevBuffer(Buffer *first, Buffer *buf)
 int
 writeBufferCache(Buffer *buf)
 {
-    Str tmp;
+    Str* tmp;
     FILE *cache = NULL;
     Line *l;
 
