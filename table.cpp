@@ -1036,7 +1036,7 @@ static double recalc_width(double old, double swidth, int cwidth, double sxx,
   return old;
 }
 
-static int check_compressible_cell(struct table *t, MAT *minv, double *newwidth,
+static int check_compressible_cell(struct table *t, matrix *minv, double *newwidth,
                                    double *swidth, short *cwidth,
                                    double totalwidth, double *Sxx, int icol,
                                    int icell, double sxx, int corr) {
@@ -1126,7 +1126,7 @@ _end:
 }
 
 #define MAX_ITERATION 10
-static int check_table_width(struct table *t, double *newwidth, MAT *minv,
+static int check_table_width(struct table *t, double *newwidth, matrix *minv,
                              int itr) {
   int i, j, k, m, bcol, ecol;
   int corr = 0;
@@ -1597,8 +1597,8 @@ void renderTable(struct table *t, int max_width,
   short new_tabwidth[MAXCOL] = {0};
 #ifdef MATRIX
   int itr;
-  VEC *newwidth;
-  MAT *mat, *minv;
+  vector *newwidth;
+  matrix *mat, *minv;
   PERM *pivot;
 #endif /* MATRIX */
   int width;

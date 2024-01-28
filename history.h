@@ -12,12 +12,12 @@ typedef ListItem HistItem;
 
 typedef GeneralList HistList;
 
-typedef struct {
-    HistList *list;
-    HistItem *current;
-    Hash_sv *hash;
-    long long mtime;
-} Hist;
+struct Hist {
+  HistList *list;
+  HistItem *current;
+  Hash_sv *hash;
+  long long mtime;
+};
 
 extern Hist *newHist(void);
 extern Hist *copyHist(Hist *hist);
@@ -33,4 +33,4 @@ extern int loadHistory(Hist *hist);
 extern void saveHistory(Hist *hist, size_t size);
 extern void ldHist(void);
 
-#endif				/* HISTORY_H */
+#endif /* HISTORY_H */

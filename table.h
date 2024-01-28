@@ -108,8 +108,8 @@ struct table {
   /* use for counting skipped spaces */
   struct table_linfo linfo;
 #ifdef MATRIX
-  MAT *matrix;
-  VEC *vector;
+  ::matrix *matrix;
+  ::vector *vector;
 #endif /* MATRIX */
   int sloppy_width;
 };

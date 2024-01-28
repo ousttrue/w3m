@@ -408,7 +408,7 @@ struct Buffer {
   short rootY;
   short COLS;
   short LINES;
-  InputStream pagerSource;
+  input_stream *pagerSource;
   AnchorList *href;
   AnchorList *name;
   AnchorList *img;

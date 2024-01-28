@@ -49,8 +49,6 @@ struct vector {
 #define m_get(r,c) (new_matrix(r))
 #define v_get(n) (new_vector(n))
 #define px_get(n) (New_N(int,n))
-typedef struct matrix MAT;
-typedef struct vector VEC;
 typedef int PERM;
 
 extern int LUfactor(matrix*, int *);

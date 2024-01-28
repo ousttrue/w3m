@@ -146,15 +146,15 @@ extern void examineFile(char *path, URLFile *uf);
 extern char *acceptableEncoding(void);
 extern int dir_exist(char *path);
 extern char **get_symbol(void);
-extern Str* convertLine0(URLFile *uf, Str* line, int mode);
+extern Str *convertLine0(URLFile *uf, Str *line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
-extern void push_symbol(Str* str, char symbol, int width, int n);
+extern void push_symbol(Str *str, char symbol, int width, int n);
 extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
                                int flag, FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
-extern void push_render_image(Str* str, int width, int limit,
+extern void push_render_image(Str *str, int width, int limit,
                               struct html_feed_environ *h_env);
 extern void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
                       int indent, int force, int width);
@@ -166,21 +166,21 @@ extern void save_fonteffect(struct html_feed_environ *h_env,
                             struct readbuffer *obuf);
 extern void restore_fonteffect(struct html_feed_environ *h_env,
                                struct readbuffer *obuf);
-extern Str* process_img(struct parsed_tag *tag, int width);
-extern Str* process_anchor(struct parsed_tag *tag, char *tagbuf);
-extern Str* process_input(struct parsed_tag *tag);
-extern Str* process_button(struct parsed_tag *tag);
-extern Str* process_n_button(void);
-extern Str* process_select(struct parsed_tag *tag);
-extern Str* process_n_select(void);
+extern Str *process_img(struct parsed_tag *tag, int width);
+extern Str *process_anchor(struct parsed_tag *tag, char *tagbuf);
+extern Str *process_input(struct parsed_tag *tag);
+extern Str *process_button(struct parsed_tag *tag);
+extern Str *process_n_button(void);
+extern Str *process_select(struct parsed_tag *tag);
+extern Str *process_n_select(void);
 extern void feed_select(char *str);
 extern void process_option(void);
-extern Str* process_textarea(struct parsed_tag *tag, int width);
-extern Str* process_n_textarea(void);
+extern Str *process_textarea(struct parsed_tag *tag, int width);
+extern Str *process_n_textarea(void);
 extern void feed_textarea(char *str);
-extern Str* process_form(struct parsed_tag *tag);
-extern Str* process_n_form(void);
-extern int getMetaRefreshParam(char *q, Str* *refresh_uri);
+extern Str *process_form(struct parsed_tag *tag);
+extern Str *process_n_form(void);
+extern int getMetaRefreshParam(char *q, Str **refresh_uri);
 extern int HTMLtagproc1(struct parsed_tag *tag,
                         struct html_feed_environ *h_env);
 extern void HTMLlineproc2(Buffer *buf, TextLineList *tl);
@@ -195,14 +195,14 @@ extern void init_henv(struct html_feed_environ *, struct readbuffer *,
                       struct environment *, int, TextLineList *, int, int);
 extern void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
 extern void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
-extern Buffer *loadHTMLString(Str* page);
+extern Buffer *loadHTMLString(Str *page);
 extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
 extern void saveBuffer(Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
 extern Buffer *getshell(char *cmd);
 extern Buffer *getpipe(char *cmd);
-extern Buffer *openPagerBuffer(InputStream stream, Buffer *buf);
-extern Buffer *openGeneralPagerBuffer(InputStream stream);
+extern Buffer *openPagerBuffer(input_stream *stream, Buffer *buf);
+extern Buffer *openGeneralPagerBuffer(input_stream *stream);
 extern Line *getNextPage(Buffer *buf, int plen);
 extern int save2tmp(URLFile uf, char *tmpf);
 extern Buffer *doExternal(URLFile uf, const char *type, Buffer *defaultbuf);
@@ -211,10 +211,10 @@ extern int _doFileCopy(char *tmpf, char *defstr, int download);
 extern int doFileMove(char *tmpf, char *defstr);
 extern int doFileSave(URLFile uf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
-extern int checkSaveFile(InputStream stream, char *path);
+extern int checkSaveFile(input_stream *stream, char *path);
 extern int checkOverWrite(char *path);
 extern char *inputAnswer(char *prompt);
-extern int matchattr(char *p, char *attr, int len, Str* *value);
+extern int matchattr(char *p, char *attr, int len, Str **value);
 extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);
 extern TabBuffer *newTab(void);
@@ -272,15 +272,15 @@ extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern int gethtmlcmd(char **s);
 #define checkType(a, b, c) _checkType(a, b)
-extern Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor);
+extern Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor);
 extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
                         int mode);
 extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
 extern char *mydirname(char *s);
 extern int next_status(char c, int *status);
-extern int read_token(Str* buf, char **instr, int *status, int pre, int append);
-extern Str* correct_irrtag(int status);
+extern int read_token(Str *buf, char **instr, int *status, int pre, int append);
+extern Str *correct_irrtag(int status);
 #ifdef USE_MIGEMO
 extern void init_migemo(void);
 #endif
@@ -294,16 +294,16 @@ extern void escdmap(char c);
 extern void multimap(void);
 extern char *
 inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                    int (*incfunc)(int ch, Str* buf, Lineprop *prop));
-extern Str* unescape_spaces(Str* s);
+                    int (*incfunc)(int ch, Str *buf, Lineprop *prop));
+extern Str *unescape_spaces(Str *s);
 extern Buffer *historyBuffer(Hist *hist);
 extern double log_like(int x);
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
 extern int visible_length(char *str);
 extern void align(TextLine *lbuf, int width, int mode);
-extern void print_item(struct table *t, int row, int col, int width, Str* buf);
-extern void print_sep(struct table *t, int row, int type, int maxcol, Str* buf);
+extern void print_item(struct table *t, int row, int col, int width, Str *buf);
+extern void print_sep(struct table *t, int row, int type, int maxcol, Str *buf);
 extern void do_refill(struct table *tbl, int row, int col, int maxlimit);
 extern void initRenderTable(void);
 extern void renderTable(struct table *t, int max_width,
@@ -315,7 +315,7 @@ extern void check_rowcol(struct table *tbl, struct table_mode *mode);
 extern int minimum_length(char *line);
 extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
                       int width, int internal);
-extern void feed_table1(struct table *tbl, Str* tok, struct table_mode *mode,
+extern void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
                         int width);
 extern void pushTable(struct table *, struct table *);
 
@@ -325,7 +325,7 @@ extern void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
 extern void formResetBuffer(Buffer *buf, AnchorList *formitem);
 extern void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form);
 extern void preFormUpdateBuffer(Buffer *buf);
-extern Str* textfieldrep(Str* s, int width);
+extern Str *textfieldrep(Str *s, int width);
 extern void input_textarea(FormItemList *fi);
 extern void do_internal(char *action, char *data);
 extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
@@ -405,12 +405,12 @@ extern int openSocket(char *hostname, char *remoteport_name,
 extern void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
 extern void copyParsedURL(ParsedURL *p, const ParsedURL *q);
 extern void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
-extern Str* parsedURL2Str(ParsedURL *pu);
-extern Str* parsedURL2RefererStr(ParsedURL *pu);
+extern Str *parsedURL2Str(ParsedURL *pu);
+extern Str *parsedURL2RefererStr(ParsedURL *pu);
 extern int getURLScheme(char **url);
-extern void init_stream(URLFile *uf, int scheme, InputStream stream);
-Str* HTTPrequestMethod(HRequest *hr);
-Str* HTTPrequestURI(ParsedURL *pu, HRequest *hr);
+extern void init_stream(URLFile *uf, int scheme, input_stream* stream);
+Str *HTTPrequestMethod(HRequest *hr);
+Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);
 extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
                        URLOption *option, FormList *request,
                        TextList *extra_header, URLFile *ouf, HRequest *hr,
@@ -420,8 +420,8 @@ extern char *acceptableMimeTypes(void);
 extern char *guessContentType(char *filename);
 extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
-extern InputStream openFTPStream(ParsedURL *pu, URLFile *uf);
-extern Str* loadFTPDir0(ParsedURL *pu);
+extern input_stream* openFTPStream(ParsedURL *pu, URLFile *uf);
+extern Str *loadFTPDir0(ParsedURL *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
@@ -453,15 +453,15 @@ extern void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line,
 extern char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
 extern Buffer *link_list_panel(Buffer *buf);
 
-extern Str* decodeB(char **ww);
+extern Str *decodeB(char **ww);
 extern void decodeB_to_growbuf(struct growbuf *gb, char **ww);
-extern Str* decodeQ(char **ww);
-extern Str* decodeQP(char **ww);
+extern Str *decodeQ(char **ww);
+extern Str *decodeQP(char **ww);
 extern void decodeQP_to_growbuf(struct growbuf *gb, char **ww);
-extern Str* decodeU(char **ww);
+extern Str *decodeU(char **ww);
 extern void decodeU_to_growbuf(struct growbuf *gb, char **ww);
-extern Str* decodeWord0(char **ow);
-extern Str* decodeMIME0(Str* orgstr);
+extern Str *decodeWord0(char **ow);
+extern Str *decodeMIME0(Str *orgstr);
 #define decodeWord(ow, charset) decodeWord0(ow)
 #define decodeMIME(orgstr, charset) decodeMIME0(orgstr)
 extern int set_param_option(char *option);
@@ -478,37 +478,37 @@ extern char *auxbinFile(char *base);
 extern char *libFile(char *base);
 extern char *helpFile(char *base);
 extern const void *querySiteconf(const ParsedURL *query_pu, int field);
-extern Str* localCookie(void);
-extern Str* loadLocalDir(char *dirname);
+extern Str *localCookie(void);
+extern Str *loadLocalDir(char *dirname);
 extern FILE *localcgi_post(char *, char *, FormList *, char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(ParsedURL *pu, char *realm, Str* *uname,
-                                 Str* *pwd, int is_proxy);
-extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pwd,
-                                 int is_proxy);
-extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname,
-                                        Str* pwd, int is_proxy);
+extern int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname,
+                                 Str **pwd, int is_proxy);
+extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
+                                 Str *pwd, int is_proxy);
+extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
+                                        Str *pwd, int is_proxy);
 extern char *last_modified(Buffer *buf);
-extern Str* romanNumeral(int n);
-extern Str* romanAlphabet(int n);
+extern Str *romanNumeral(int n);
+extern Str *romanAlphabet(int n);
 extern void mySystem(char *command, int background);
-extern Str* myExtCommand(char *cmd, char *arg, int redirect);
-extern Str* myEditor(char *cmd, char *file, int line);
+extern Str *myExtCommand(char *cmd, char *arg, int redirect);
+extern Str *myEditor(char *cmd, char *file, int line);
 extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 extern char *expandName(char *name);
-extern Str* tmpfname(int type, char *ext);
+extern Str *tmpfname(int type, char *ext);
 extern time_t mymktime(char *timestr);
 extern char *FQDN(char *host);
-extern Str* find_cookie(ParsedURL *pu);
-extern int add_cookie(ParsedURL *pu, Str* name, Str* value, time_t expires,
-                      Str* domain, Str* path, int flag, Str* comment, int version,
-                      Str* port, Str* commentURL);
+extern Str *find_cookie(ParsedURL *pu);
+extern int add_cookie(ParsedURL *pu, Str *name, Str *value, time_t expires,
+                      Str *domain, Str *path, int flag, Str *comment,
+                      int version, Str *port, Str *commentURL);
 extern void save_cookies(void);
 extern void load_cookies(void);
 extern void initCookie(void);
@@ -560,7 +560,7 @@ extern char *guess_save_name(Buffer *buf, char *file);
 extern void wrapToggle(void);
 extern void saveBufferInfo(void);
 
-extern Str* getLinkNumberStr(int correction);
+extern Str *getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 
@@ -569,4 +569,4 @@ void srand48(long);
 long lrand48(void);
 #endif
 
-extern Str* base64_encode(const char *src, size_t len);
+extern Str *base64_encode(const char *src, size_t len);

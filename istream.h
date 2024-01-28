@@ -16,8 +16,6 @@ struct stream_buffer {
   int size, cur, next;
 };
 
-typedef struct stream_buffer *StreamBuffer;
-
 typedef int (*ReadFunc)(void *userpointer, unsigned char *buffer, int size);
 typedef void (*CloseFunc)(void *userpointer);
 
@@ -93,32 +91,24 @@ union input_stream {
   struct encoded_stream ens;
 };
 
-typedef struct base_stream *BaseStream;
-typedef struct file_stream *FileStream;
-typedef struct str_stream *StrStream;
-typedef struct ssl_stream *SSLStream;
-typedef struct encoded_stream *EncodedStrStream;
-
-typedef union input_stream *InputStream;
-
-extern InputStream newInputStream(int des);
-extern InputStream newFileStream(FILE *f, void (*closep)());
-extern InputStream newStrStream(Str *s);
-extern InputStream newSSLStream(SSL *ssl, int sock);
-extern InputStream newEncodedStream(InputStream is, char encoding);
-extern int ISclose(InputStream stream);
-extern int ISgetc(InputStream stream);
-extern int ISundogetc(InputStream stream);
-extern Str *StrISgets2(InputStream stream, char crnl);
+extern input_stream* newInputStream(int des);
+extern input_stream* newFileStream(FILE *f, void (*closep)());
+extern input_stream* newStrStream(Str *s);
+extern input_stream* newSSLStream(SSL *ssl, int sock);
+extern input_stream* newEncodedStream(input_stream* is, char encoding);
+extern int ISclose(input_stream* stream);
+extern int ISgetc(input_stream* stream);
+extern int ISundogetc(input_stream* stream);
+extern Str *StrISgets2(input_stream* stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, FALSE)
 #define StrmyISgets(stream) StrISgets2(stream, TRUE)
-void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl);
+void ISgets_to_growbuf(input_stream* stream, struct growbuf *gb, char crnl);
 #ifdef unused
-extern int ISread(InputStream stream, Str *buf, int count);
+extern int ISread(input_stream* stream, Str *buf, int count);
 #endif
-int ISread_n(InputStream stream, char *dst, int bufsize);
-extern int ISfileno(InputStream stream);
-extern int ISeos(InputStream stream);
+int ISread_n(input_stream* stream, char *dst, int bufsize);
+extern int ISfileno(input_stream* stream);
+extern int ISeos(input_stream* stream);
 extern void ssl_accept_this_site(char *hostname);
 extern Str *ssl_get_certificate(SSL *ssl, char *hostname);
 

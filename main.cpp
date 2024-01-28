@@ -4536,7 +4536,7 @@ int main(int argc, char **argv) {
   Buffer *newbuf = NULL;
   char *p;
   int c, i;
-  InputStream redin;
+  input_stream* redin;
   char *line_str = NULL;
   char **load_argv;
   FormList *request;

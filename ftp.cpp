@@ -28,7 +28,7 @@ struct FTP {
   int port;
   char *user;
   char *pass;
-  InputStream rf;
+  input_stream* rf;
   FILE *wf;
   FILE *data;
 };
@@ -319,7 +319,7 @@ static void closeFTPdata(FILE *f) {
 
 void closeFTP(void) { ftp_close(&current_ftp); }
 
-InputStream openFTPStream(ParsedURL *pu, URLFile *uf) {
+input_stream* openFTPStream(ParsedURL *pu, URLFile *uf) {
   Str* tmp;
   int status;
   char *user = NULL;

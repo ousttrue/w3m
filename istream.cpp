@@ -30,7 +30,7 @@ static void ens_close(struct ens_handle *handle);
 
 static void memchop(char *p, int *len);
 
-static void do_update(BaseStream base) {
+static void do_update(base_stream* base) {
   int len;
   base->stream.cur = base->stream.next = 0;
   len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
@@ -40,7 +40,7 @@ static void do_update(BaseStream base) {
     base->stream.next += len;
 }
 
-static int buffer_read(StreamBuffer sb, char *obuf, int count) {
+static int buffer_read(stream_buffer* sb, char *obuf, int count) {
   int len = sb->next - sb->cur;
   if (len > 0) {
     if (len > count)
@@ -51,8 +51,8 @@ static int buffer_read(StreamBuffer sb, char *obuf, int count) {
   return len;
 }
 
-static void init_buffer(BaseStream base, char *buf, int bufsize) {
-  StreamBuffer sb = &base->stream;
+static void init_buffer(base_stream* base, char *buf, int bufsize) {
+  stream_buffer* sb = &base->stream;
   sb->size = bufsize;
   sb->cur = 0;
   sb->buf = NewWithoutGC_N(uchar, bufsize);
@@ -65,16 +65,16 @@ static void init_buffer(BaseStream base, char *buf, int bufsize) {
   base->iseos = FALSE;
 }
 
-static void init_base_stream(BaseStream base, int bufsize) {
+static void init_base_stream(base_stream* base, int bufsize) {
   init_buffer(base, NULL, bufsize);
 }
 
-static void init_str_stream(BaseStream base, Str* s) {
+static void init_str_stream(base_stream* base, Str* s) {
   init_buffer(base, s->ptr, s->length);
 }
 
-InputStream newInputStream(int des) {
-  InputStream stream;
+input_stream* newInputStream(int des) {
+  input_stream* stream;
   if (des < 0)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -87,8 +87,8 @@ InputStream newInputStream(int des) {
   return stream;
 }
 
-InputStream newFileStream(FILE *f, void (*closep)()) {
-  InputStream stream;
+input_stream* newFileStream(FILE *f, void (*closep)()) {
+  input_stream* stream;
   if (f == NULL)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -105,8 +105,8 @@ InputStream newFileStream(FILE *f, void (*closep)()) {
   return stream;
 }
 
-InputStream newStrStream(Str* s) {
-  InputStream stream;
+input_stream* newStrStream(Str* s) {
+  input_stream* stream;
   if (s == NULL)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -118,8 +118,8 @@ InputStream newStrStream(Str* s) {
   return stream;
 }
 
-InputStream newSSLStream(SSL *ssl, int sock) {
-  InputStream stream;
+input_stream* newSSLStream(SSL *ssl, int sock) {
+  input_stream* stream;
   if (sock < 0)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -133,8 +133,8 @@ InputStream newSSLStream(SSL *ssl, int sock) {
   return stream;
 }
 
-InputStream newEncodedStream(InputStream is, char encoding) {
-  InputStream stream;
+input_stream* newEncodedStream(input_stream* is, char encoding) {
+  input_stream* stream;
   if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
                      encoding != ENC_UUENCODE))
     return is;
@@ -151,7 +151,7 @@ InputStream newEncodedStream(InputStream is, char encoding) {
   return stream;
 }
 
-int ISclose(InputStream stream) {
+int ISclose(input_stream* stream) {
   MySignalHandler prevtrap = {};
   if (stream == NULL)
     return -1;
@@ -168,8 +168,8 @@ int ISclose(InputStream stream) {
   return 0;
 }
 
-int ISgetc(InputStream stream) {
-  BaseStream base;
+int ISgetc(input_stream* stream) {
+  base_stream* base;
   if (stream == NULL)
     return '\0';
   base = &stream->base;
@@ -178,8 +178,8 @@ int ISgetc(InputStream stream) {
   return POP_CHAR(base);
 }
 
-int ISundogetc(InputStream stream) {
-  StreamBuffer sb;
+int ISundogetc(input_stream* stream) {
+  stream_buffer* sb;
   if (stream == NULL)
     return -1;
   sb = &stream->base.stream;
@@ -190,7 +190,7 @@ int ISundogetc(InputStream stream) {
   return -1;
 }
 
-Str* StrISgets2(InputStream stream, char crnl) {
+Str* StrISgets2(input_stream* stream, char crnl) {
   struct growbuf gb;
 
   if (stream == NULL)
@@ -200,9 +200,9 @@ Str* StrISgets2(InputStream stream, char crnl) {
   return growbuf_to_Str(&gb);
 }
 
-void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl) {
-  BaseStream base = &stream->base;
-  StreamBuffer sb = &base->stream;
+void ISgets_to_growbuf(input_stream* stream, struct growbuf *gb, char crnl) {
+  base_stream* base = &stream->base;
+  stream_buffer* sb = &base->stream;
   int i;
 
   gb->length = 0;
@@ -237,7 +237,7 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl) {
 }
 
 #ifdef unused
-int ISread(InputStream stream, Str* buf, int count) {
+int ISread(input_stream* stream, Str* buf, int count) {
   int len;
 
   if (count + 1 > buf->area_size) {
@@ -254,9 +254,9 @@ int ISread(InputStream stream, Str* buf, int count) {
 }
 #endif
 
-int ISread_n(InputStream stream, char *dst, int count) {
+int ISread_n(input_stream* stream, char *dst, int count) {
   int len, l;
-  BaseStream base;
+  base_stream* base;
 
   if (stream == NULL || count <= 0)
     return -1;
@@ -275,7 +275,7 @@ int ISread_n(InputStream stream, char *dst, int count) {
   return len;
 }
 
-int ISfileno(InputStream stream) {
+int ISfileno(input_stream* stream) {
   if (stream == NULL)
     return -1;
   switch (IStype(stream) & ~IST_UNCLOSE) {
@@ -292,8 +292,8 @@ int ISfileno(InputStream stream) {
   }
 }
 
-int ISeos(InputStream stream) {
-  BaseStream base = &stream->base;
+int ISeos(input_stream* stream) {
+  base_stream* base = &stream->base;
   if (!base->iseos && MUST_BE_UPDATED(base))
     do_update(base);
   return base->iseos;
