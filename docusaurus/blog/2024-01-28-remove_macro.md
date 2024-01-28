@@ -6,6 +6,8 @@ tags: [減量]
 
 `#ifdef` を確定しながらコードを減らしていく。
 
+<!-- truncate -->
+
 ## config.h に注意
 
 build コマンドの引き数と config.h の内容を連動させる。

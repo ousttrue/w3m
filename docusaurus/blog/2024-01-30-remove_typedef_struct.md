@@ -7,6 +7,8 @@ tags: [cpp]
 これからヘッダーを小分けにしていくのに、
 前方宣言を使いたいのだけどその時に typedef に配慮が必要です。
 
+<!-- truncate -->
+
 ```c title="C の typedef struct"
 typedef struct NodeTag
 {

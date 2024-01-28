@@ -1568,15 +1568,6 @@ load_doc : {
     }
     if (t_buf == NULL)
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
-#if 0 /* USE_SSL */
-	if (IStype(f.stream) == IST_SSL) {
-	    Str s = ssl_get_certificate(f.stream, pu.host);
-	    if (s == NULL)
-		return NULL;
-	    else
-		t_buf->ssl_certificate = s->ptr;
-	}
-#endif
     readHeader(&f, t_buf, FALSE, &pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
