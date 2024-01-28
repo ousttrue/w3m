@@ -132,12 +132,6 @@ fversion(FILE * f)
 #ifdef USE_IMAGE
 	    ",image"
 #endif
-#ifdef USE_COLOR
-	    ",color"
-#ifdef USE_ANSI_COLOR
-	    ",ansi-color"
-#endif
-#endif
 #ifdef USE_MOUSE
 	    ",mouse"
 #ifdef USE_GPM
@@ -209,10 +203,6 @@ fusage(FILE * f, int err)
     fprintf(f, "    -T type          specify content-type\n");
     fprintf(f, "    -m               internet message mode\n");
     fprintf(f, "    -v               visual startup mode\n");
-#ifdef USE_COLOR
-    fprintf(f, "    -M               monochrome display\n");
-    fprintf(f, "    -H               use high-intensity colors\n");
-#endif				/* USE_COLOR */
     fprintf(f,
 	    "    -N               open URL of command line on each new tab\n");
     fprintf(f, "    -F               automatically render frames\n");
@@ -609,12 +599,6 @@ main(int argc, char **argv)
 		visual_start = TRUE;
 	    else if (!strcmp("-N", argv[i]))
 		open_new_tab = TRUE;
-#ifdef USE_COLOR
-	    else if (!strcmp("-M", argv[i]))
-		useColor = FALSE;
-	    else if (!strcmp("-H", argv[i]))
-		highIntensityColors = TRUE;
-#endif				/* USE_COLOR */
 	    else if (!strcmp("-B", argv[i]))
 		load_bookmark = TRUE;
 	    else if (!strcmp("-bookmark", argv[i])) {
@@ -839,9 +823,6 @@ main(int argc, char **argv)
 	    COLS = DEFAULT_COLS;
     }
 
-#ifdef USE_BINMODE_STREAM
-    setmode(fileno(stdout), O_BINARY);
-#endif
     if (!w3m_dump && !w3m_backend) {
 	fmInit();
 #ifdef SIGWINCH

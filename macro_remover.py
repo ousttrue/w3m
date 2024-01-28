@@ -14,6 +14,7 @@ CONTEXT = {
     '__MINGW32_VERSION': False,
     '__EMX__': False,
     '__WATT32__': False,
+    'USE_BINMODE_STREAM': False,
     # 'USE_M17N': False,
     # 'USE_UNICODE': False,
     # 'ENABLE_NLS': False,
@@ -22,10 +23,10 @@ CONTEXT = {
     # 'SIGCHLD': True,
     # 'SIGTSTP': True,
     # 'USE_COOKIE': True,
-    # 'USE_COLOR': False,
-    # 'USE_ANSI_COLOR': False,
-    # 'USE_BG_COLOR': False,
-    # 'USE_RAW_SCROLL': False,
+    'USE_COLOR': False,
+    'USE_ANSI_COLOR': False,
+    'USE_BG_COLOR': False,
+    'USE_RAW_SCROLL': False,
     # 'USE_ALARM': True,
     # 'USE_SSL': True,
     # 'USE_SSL_VERIFY': True,
@@ -49,7 +50,6 @@ CONTEXT = {
     # 'USE_MIGEMO': False,
     # 'USE_W3MMAILER': False,
     # 'USE_MARK': False,
-    # 'USE_BINMODE_STREAM': False,
 }
 
 MACRO_PATTERN = re.compile(r'^#\s*(\S+)\s*(\S.*)?')

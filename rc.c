@@ -44,9 +44,6 @@ static int RC_table_size;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 #define P_SSLPATH  5
 #endif
-#ifdef USE_COLOR
-#define P_COLOR    6
-#endif
 #ifdef USE_M17N
 #define P_CODE     7
 #endif
@@ -271,20 +268,6 @@ struct sel_c {
     char *text;
 };
 
-#ifdef USE_COLOR
-static struct sel_c colorstr[] = {
-    {0, "black", N_("black")},
-    {1, "red", N_("red")},
-    {2, "green", N_("green")},
-    {3, "yellow", N_("yellow")},
-    {4, "blue", N_("blue")},
-    {5, "magenta", N_("magenta")},
-    {6, "cyan", N_("cyan")},
-    {7, "white", N_("white")},
-    {8, "terminal", N_("terminal")},
-    {0, NULL, NULL}
-};
-#endif				/* USE_COLOR */
 
 #if 1				/* ANSI-C ? */
 #define N_STR(x)	#x
@@ -460,35 +443,6 @@ struct param_ptr params1[] = {
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-#ifdef USE_COLOR
-struct param_ptr params2[] = {
-    {"color", P_INT, PI_ONOFF, (void *)&useColor, CMT_COLOR, NULL},
-    {"high-intensity", P_INT, PI_ONOFF, (void *)&highIntensityColors, CMT_HINTENSITY_COLOR, NULL},
-    {"basic_color", P_COLOR, PI_SEL_C, (void *)&basic_color, CMT_B_COLOR,
-     (void *)colorstr},
-    {"anchor_color", P_COLOR, PI_SEL_C, (void *)&anchor_color, CMT_A_COLOR,
-     (void *)colorstr},
-    {"image_color", P_COLOR, PI_SEL_C, (void *)&image_color, CMT_I_COLOR,
-     (void *)colorstr},
-    {"form_color", P_COLOR, PI_SEL_C, (void *)&form_color, CMT_F_COLOR,
-     (void *)colorstr},
-#ifdef USE_BG_COLOR
-    {"mark_color", P_COLOR, PI_SEL_C, (void *)&mark_color, CMT_MARK_COLOR,
-     (void *)colorstr},
-    {"bg_color", P_COLOR, PI_SEL_C, (void *)&bg_color, CMT_BG_COLOR,
-     (void *)colorstr},
-#endif				/* USE_BG_COLOR */
-    {"active_style", P_INT, PI_ONOFF, (void *)&useActiveColor,
-     CMT_ACTIVE_STYLE, NULL},
-    {"active_color", P_COLOR, PI_SEL_C, (void *)&active_color, CMT_C_COLOR,
-     (void *)colorstr},
-    {"visited_anchor", P_INT, PI_ONOFF, (void *)&useVisitedColor,
-     CMT_VISITED_ANCHOR, NULL},
-    {"visited_color", P_COLOR, PI_SEL_C, (void *)&visited_color, CMT_V_COLOR,
-     (void *)colorstr},
-    {NULL, 0, 0, NULL, NULL, NULL},
-};
-#endif				/* USE_COLOR */
 
 
 struct param_ptr params3[] = {
@@ -775,9 +729,6 @@ struct param_ptr params10[] = {
 
 struct param_section sections[] = {
     {N_("Display Settings"), params1},
-#ifdef USE_COLOR
-    {N_("Color Settings"), params2},
-#endif				/* USE_COLOR */
     {N_("Miscellaneous Settings"), params3},
     {N_("Directory Settings"), params5},
     {N_("External Program Settings"), params6},
@@ -933,11 +884,6 @@ show_params(FILE * fp)
 		t = "path";
 		break;
 #endif
-#ifdef USE_COLOR
-	    case P_COLOR:
-		t = "color";
-		break;
-#endif
 #ifdef USE_M17N
 	    case P_CODE:
 		t = "charset";
@@ -995,47 +941,6 @@ str_to_bool(char *value, int old)
     return 1;
 }
 
-#ifdef USE_COLOR
-static int
-str_to_color(char *value)
-{
-    if (value == NULL)
-	return 8;		/* terminal */
-    switch (TOLOWER(*value)) {
-    case '0':
-	return 0;		/* black */
-    case '1':
-    case 'r':
-	return 1;		/* red */
-    case '2':
-    case 'g':
-	return 2;		/* green */
-    case '3':
-    case 'y':
-	return 3;		/* yellow */
-    case '4':
-	return 4;		/* blue */
-    case '5':
-    case 'm':
-	return 5;		/* magenta */
-    case '6':
-    case 'c':
-	return 6;		/* cyan */
-    case '7':
-    case 'w':
-	return 7;		/* white */
-    case '8':
-    case 't':
-	return 8;		/* terminal */
-    case 'b':
-	if (!strncasecmp(value, "blu", 3))
-	    return 4;		/* blue */
-	else
-	    return 0;		/* black */
-    }
-    return 8;			/* terminal */
-}
-#endif
 
 static int
 set_param(char *name, char *value)
@@ -1079,11 +984,6 @@ set_param(char *name, char *value)
 	else
 	    *(char **)p->varptr = NULL;
 	ssl_path_modified = 1;
-	break;
-#endif
-#ifdef USE_COLOR
-    case P_COLOR:
-	*(int *)p->varptr = str_to_color(value);
 	break;
 #endif
 #ifdef USE_M17N
@@ -1444,9 +1344,6 @@ to_str(struct param_ptr *p)
 {
     switch (p->type) {
     case P_INT:
-#ifdef USE_COLOR
-    case P_COLOR:
-#endif
 #ifdef USE_M17N
     case P_CODE:
 	return Sprintf("%d", (int)(*(wc_ces *) p->varptr));
@@ -1505,9 +1402,6 @@ load_option_panel(void)
 		    wc_conv(_(p->comment), OptionCharset,
 			    InnerCharset)->ptr;
 		if (p->inputtype == PI_SEL_C
-#ifdef USE_COLOR
-			&& p->select != colorstr
-#endif
 			) {
 		    for (s = (struct sel_c *)p->select; s->text != NULL; s++) {
 			s->text =
@@ -1517,11 +1411,6 @@ load_option_panel(void)
 		}
 	    }
 	}
-#ifdef USE_COLOR
-	for (s = colorstr; s->text; s++)
-	    s->text = wc_conv(_(s->text), OptionCharset,
-			      InnerCharset)->ptr;
-#endif
 	OptionEncode = TRUE;
     }
 #endif

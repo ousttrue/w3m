@@ -152,78 +152,6 @@ gethtmlcmd(char **s)
     return cmd;
 }
 
-#ifdef USE_ANSI_COLOR
-static int
-parse_ansi_color(char **str, Lineprop *effect, Linecolor *color)
-{
-    char *p = *str, *q;
-    Lineprop e = *effect;
-    Linecolor c = *color;
-    int i;
-
-    if (*p != ESC_CODE || *(p + 1) != '[')
-	return 0;
-    p += 2;
-    for (q = p; IS_DIGIT(*q) || *q == ';'; q++) ;
-    if (*q != 'm')
-	return 0;
-    *str = q + 1;
-    while (1) {
-	if (*p == 'm') {
-	    e = PE_NORMAL;
-	    c = 0;
-	    break;
-	}
-	if (IS_DIGIT(*p)) {
-	    q = p;
-	    for (p++; IS_DIGIT(*p); p++) ;
-	    i = atoi(allocStr(q, p - q));
-	    switch (i) {
-	    case 0:
-		e = PE_NORMAL;
-		c = 0;
-		break;
-	    case 1:
-	    case 5:
-		e = PE_BOLD;
-		break;
-	    case 4:
-		e = PE_UNDER;
-		break;
-	    case 7:
-		e = PE_STAND;
-		break;
-	    case 100:		/* for EWS4800 kterm */
-		c = 0;
-		break;
-	    case 39:
-		c &= 0xf0;
-		break;
-	    case 49:
-		c &= 0x0f;
-		break;
-	    default:
-		if (i >= 30 && i <= 37)
-		    c = (c & 0xf0) | (i - 30) | 0x08;
-		else if (i >= 40 && i <= 47)
-		    c = (c & 0x0f) | ((i - 40) << 4) | 0x80;
-		break;
-	    }
-	    if (*p == 'm')
-		break;
-	}
-	else {
-	    e = PE_NORMAL;
-	    c = 0;
-	    break;
-	}
-	p++;			/* *p == ';' */
-    }
-    *effect = e;
-    *color = c;
-    return 1;
-}
-#endif
 /* 
  * Check character type
  */
@@ -237,15 +165,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
     static Lineprop *prop_buffer = NULL;
     static int prop_size = 0;
     char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
-#ifdef USE_ANSI_COLOR
-    Lineprop ceffect = PE_NORMAL;
-    Linecolor cmode = 0;
-    int check_color = FALSE;
-    Linecolor *color = NULL;
-    static Linecolor *color_buffer = NULL;
-    static int color_size = 0;
-    char *es = NULL;
-#endif
     int do_copy = FALSE;
 #ifdef USE_M17N
     int i;
@@ -270,23 +189,7 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 
     if (ShowEffect) {
 	bs = memchr(str, '\b', s->length);
-#ifdef USE_ANSI_COLOR
-	if (ocolor) {
-	    es = memchr(str, ESC_CODE, s->length);
-	    if (es) {
-		if (color_size < s->length) {
-		    color_size = (s->length > LINELEN) ? s->length : LINELEN;
-		    color_buffer = New_Reuse(Linecolor, color_buffer,
-					     color_size);
-		}
-		color = color_buffer;
-	    }
-	}
-#endif
 	if ((bs != NULL)
-#ifdef USE_ANSI_COLOR
-	    || (es != NULL)
-#endif
 	    ) {
 	    char *sp = str, *ep;
 	    s = Strnew_size(s->length);
@@ -294,16 +197,8 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 	    ep = endp;
 	    if (bs && ep > bs - 2)
 		ep = bs - 2;
-#ifdef USE_ANSI_COLOR
-	    if (es && ep > es - 2)
-		ep = es - 2;
-#endif
 	    for (; str < ep && IS_ASCII(*str); str++) {
 		*(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-#ifdef USE_ANSI_COLOR
-		if (color)
-		    *(color++) = 0;
-#endif
 #ifdef USE_M17N
 		*(plens++) = plen = 1;
 #endif
@@ -314,10 +209,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
     if (!do_copy) {
 	for (; str < endp && IS_ASCII(*str); str++) {
 	    *(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-#ifdef USE_ANSI_COLOR
-	    if (color)
-		*(color++) = 0;
-#endif
 #ifdef USE_M17N
 	    *(plens++) = plen = 1;
 #endif
@@ -383,10 +274,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 			else {
 			    Strshrink(s, plen);
 			    prop -= plen;
-#ifdef USE_ANSI_COLOR
-			    if (color)
-				color -= plen;
-#endif
 			    if (plens == plens_buffer)
 				plen = 0;
 			    else
@@ -412,10 +299,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 			else {
 			    Strshrink(s, plen);
 			    prop -= plen;
-#ifdef USE_ANSI_COLOR
-			    if (color)
-				color -= plen;
-#endif
 			    if (plens == plens_buffer)
 				plen = 0;
 			    else
@@ -430,10 +313,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 			else {
 			    Strshrink(s, 1);
 			    prop--;
-#ifdef USE_ANSI_COLOR
-			    if (color)
-				color--;
-#endif
 			    str++;
 			}
 #endif
@@ -446,35 +325,9 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 		    bs = memchr(str, '\b', endp - str);
 		continue;
 	    }
-#ifdef USE_ANSI_COLOR
-	    else if (str > bs)
-		bs = memchr(str, '\b', endp - str);
-#endif
 	}
-#ifdef USE_ANSI_COLOR
-	if (es != NULL) {
-	    if (str == es) {
-		int ok = parse_ansi_color(&str, &ceffect, &cmode);
-		if (str < endp)
-		    es = memchr(str, ESC_CODE, endp - str);
-		if (ok) {
-		    if (cmode)
-			check_color = TRUE;
-		    continue;
-		}
-	    }
-	    else if (str > es)
-		es = memchr(str, ESC_CODE, endp - str);
-	}
-#endif
 
 	mode = get_mctype(str) | effect;
-#ifdef USE_ANSI_COLOR
-	if (color) {
-	    *(color++) = cmode;
-	    mode |= ceffect;
-	}
-#endif
 	*(prop++) = mode;
 #ifdef USE_M17N
 	plen = get_mclen(str);
@@ -485,10 +338,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 	    mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
 	    for (i = 1; i < plen; i++) {
 		*(prop++) = mode;
-#ifdef USE_ANSI_COLOR
-		if (color)
-		    *(color++) = cmode;
-#endif
 	    }
 	    if (do_copy)
 		Strcat_charp_n(s, (char *)str, plen);
@@ -504,10 +353,6 @@ checkType(Str s, Lineprop **oprop, Linecolor **ocolor)
 	effect = PE_NORMAL;
     }
     *oprop = prop_buffer;
-#ifdef USE_ANSI_COLOR
-    if (ocolor)
-	*ocolor = check_color ? color_buffer : NULL;
-#endif
     return s;
 }
 

@@ -40,9 +40,7 @@ static FILE *lessopen_stream(char *path);
 static Buffer *loadcmdout(char *cmd,
 			  Buffer *(*loadproc) (URLFile *, Buffer *),
 			  Buffer *defaultbuf);
-#ifndef USE_ANSI_COLOR
 #define addnewline(a,b,c,d,e,f,g) _addnewline(a,b,c,e,f,g)
-#endif
 static void addnewline(Buffer *buf, char *line, Lineprop *prop,
 		       Linecolor *color, int pos, int width, int nlines);
 static void addLink(Buffer *buf, struct parsed_tag *tag);
@@ -6754,9 +6752,7 @@ HTMLlineproc0(char *line, struct html_feed_environ *h_env, int internal)
 extern char *NullLine;
 extern Lineprop NullProp[];
 
-#ifndef USE_ANSI_COLOR
 #define addnewline2(a,b,c,d,e,f) _addnewline2(a,b,c,e,f)
-#endif
 static void
 addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color, int pos,
 	    int nlines)
@@ -6766,9 +6762,6 @@ addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color, int pos,
     l->next = NULL;
     l->lineBuf = line;
     l->propBuf = prop;
-#ifdef USE_ANSI_COLOR
-    l->colorBuf = color;
-#endif
     l->len = pos;
     l->width = -1;
     l->size = pos;
@@ -6803,9 +6796,6 @@ addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color, int pos,
 {
     char *s;
     Lineprop *p;
-#ifdef USE_ANSI_COLOR
-    Linecolor *c;
-#endif
     Line *l;
     int i, bpos, bwidth;
 
@@ -6818,15 +6808,6 @@ addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color, int pos,
 	s = NullLine;
 	p = NullProp;
     }
-#ifdef USE_ANSI_COLOR
-    if (pos > 0 && color) {
-	c = NewAtom_N(Linecolor, pos);
-	bcopy((void *)color, (void *)c, pos * sizeof(Linecolor));
-    }
-    else {
-	c = NULL;
-    }
-#endif
     addnewline2(buf, s, p, c, pos, nlines);
     if (pos <= 0 || width <= 0)
 	return;
@@ -6852,10 +6833,6 @@ addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color, int pos,
 	bwidth += l->width;
 	s += i;
 	p += i;
-#ifdef USE_ANSI_COLOR
-	if (c)
-	    c += i;
-#endif
 	pos -= i;
 	addnewline2(buf, s, p, c, pos, nlines);
     }
@@ -7582,9 +7559,6 @@ loadBuffer(URLFile *uf, Buffer *volatile newBuf)
     Str tmpf;
     clen_t linelen = 0, trbyte = 0;
     Lineprop *propBuffer = NULL;
-#ifdef USE_ANSI_COLOR
-    Linecolor *colorBuffer = NULL;
-#endif
     MySignalHandler(*volatile prevtrap) (SIGNAL_ARG) = NULL;
 
     if (newBuf == NULL)
@@ -8000,9 +7974,6 @@ getNextPage(Buffer *buf, int plen)
     int volatile squeeze_flag = FALSE;
     Lineprop *propBuffer = NULL;
 
-#ifdef USE_ANSI_COLOR
-    Linecolor *colorBuffer = NULL;
-#endif
     MySignalHandler(*volatile prevtrap) (SIGNAL_ARG) = NULL;
 
     if (buf->pagerSource == NULL)

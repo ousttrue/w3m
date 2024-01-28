@@ -5,138 +5,6 @@
 #include "fm.h"
 
 /* *INDENT-OFF* */
-#ifdef USE_COLOR
-
-#define EFFECT_ANCHOR_START       effect_anchor_start()
-#define EFFECT_ANCHOR_END         effect_anchor_end()
-#define EFFECT_IMAGE_START        effect_image_start()
-#define EFFECT_IMAGE_END          effect_image_end()
-#define EFFECT_FORM_START         effect_form_start()
-#define EFFECT_FORM_END           effect_form_end()
-#define EFFECT_ACTIVE_START	  effect_active_start()
-#define EFFECT_ACTIVE_END	  effect_active_end()
-#define EFFECT_VISITED_START      effect_visited_start()
-#define EFFECT_VISITED_END        effect_visited_end()
-#define EFFECT_MARK_START         effect_mark_start()
-#define EFFECT_MARK_END           effect_mark_end()
-
-/*-
- * color: 
- *     0  black 
- *     1  red 
- *     2  green 
- *     3  yellow
- *     4  blue 
- *     5  magenta 
- *     6  cyan 
- *     7  white 
- */
-
-#define EFFECT_ANCHOR_START_C       setfcolor(anchor_color)
-#define EFFECT_IMAGE_START_C        setfcolor(image_color)
-#define EFFECT_FORM_START_C         setfcolor(form_color)
-#define EFFECT_ACTIVE_START_C      (setfcolor(active_color), underline())
-#define EFFECT_VISITED_START_C      setfcolor(visited_color)
-#ifdef USE_BG_COLOR
-#define EFFECT_MARK_START_C         setbcolor(mark_color)
-#else
-#define EFFECT_MARK_START_C         standout()
-#endif
-
-#define EFFECT_IMAGE_END_C          setfcolor(basic_color)
-#define EFFECT_ANCHOR_END_C         setfcolor(basic_color)
-#define EFFECT_FORM_END_C           setfcolor(basic_color)
-#define EFFECT_ACTIVE_END_C        (setfcolor(basic_color), underlineend())
-#define EFFECT_VISITED_END_C        setfcolor(basic_color)
-#ifdef USE_BG_COLOR
-#define EFFECT_MARK_END_C           setbcolor(bg_color)
-#else
-#define EFFECT_MARK_END_C           standend()
-#endif
-
-#define EFFECT_ANCHOR_START_M       underline()
-#define EFFECT_ANCHOR_END_M         underlineend()
-#define EFFECT_IMAGE_START_M        standout()
-#define EFFECT_IMAGE_END_M          standend()
-#define EFFECT_FORM_START_M         standout()
-#define EFFECT_FORM_END_M           standend()
-#define EFFECT_ACTIVE_START_NC      underline()
-#define EFFECT_ACTIVE_END_NC        underlineend()
-#define EFFECT_ACTIVE_START_M       bold()
-#define EFFECT_ACTIVE_END_M         boldend()
-#define EFFECT_VISITED_START_M /**/
-#define EFFECT_VISITED_END_M /**/
-#define EFFECT_MARK_START_M         standout()
-#define EFFECT_MARK_END_M           standend()
-#define define_effect(name_start,name_end,color_start,color_end,mono_start,mono_end) \
-static void name_start { if (useColor) { color_start; } else { mono_start; }}\
-static void name_end { if (useColor) { color_end; } else { mono_end; }}
-
-define_effect(EFFECT_ANCHOR_START, EFFECT_ANCHOR_END, EFFECT_ANCHOR_START_C,
-	      EFFECT_ANCHOR_END_C, EFFECT_ANCHOR_START_M, EFFECT_ANCHOR_END_M)
-define_effect(EFFECT_IMAGE_START, EFFECT_IMAGE_END, EFFECT_IMAGE_START_C,
-	      EFFECT_IMAGE_END_C, EFFECT_IMAGE_START_M, EFFECT_IMAGE_END_M)
-define_effect(EFFECT_FORM_START, EFFECT_FORM_END, EFFECT_FORM_START_C,
-	      EFFECT_FORM_END_C, EFFECT_FORM_START_M, EFFECT_FORM_END_M)
-define_effect(EFFECT_MARK_START, EFFECT_MARK_END, EFFECT_MARK_START_C,
-	      EFFECT_MARK_END_C, EFFECT_MARK_START_M, EFFECT_MARK_END_M)
-
-/*****************/
-static void
-EFFECT_ACTIVE_START
-{
-    if (useColor) {
-	if (useActiveColor) {
-	    {
-		EFFECT_ACTIVE_START_C;
-	    }
-	} else {
-	    EFFECT_ACTIVE_START_NC;
-	}
-    } else {
-	EFFECT_ACTIVE_START_M;
-    }
-}
-
-static void
-EFFECT_ACTIVE_END
-{
-    if (useColor) {
-	if (useActiveColor) {
-	    EFFECT_ACTIVE_END_C;
-	} else {
-	    EFFECT_ACTIVE_END_NC;
-	}
-    } else {
-	EFFECT_ACTIVE_END_M;
-    }
-}
-
-static void
-EFFECT_VISITED_START
-{
-    if (useVisitedColor) {
-	if (useColor) {
-	    EFFECT_VISITED_START_C;
-	} else {
-	    EFFECT_VISITED_START_M;
-	}
-    }
-}
-
-static void
-EFFECT_VISITED_END
-{
-    if (useVisitedColor) {
-	if (useColor) {
-	    EFFECT_VISITED_END_C;
-	} else {
-	    EFFECT_VISITED_END_M;
-	}
-    }
-}
-
-#else				/* not USE_COLOR */
 
 #define EFFECT_ANCHOR_START       underline()
 #define EFFECT_ANCHOR_END         underlineend()
@@ -150,7 +18,6 @@ EFFECT_VISITED_END
 #define EFFECT_VISITED_END /**/
 #define EFFECT_MARK_START         standout()
 #define EFFECT_MARK_END           standend()
-#endif				/* not USE_COLOR */
 /* *INDENT-ON* */
 
 void
@@ -201,9 +68,6 @@ static int ccolumn = -1;
 static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
     active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-#ifdef USE_ANSI_COLOR
-static Linecolor color_mode = 0;
-#endif
 
 #ifdef USE_BUFINFO
 static Buffer *save_current_buf = NULL;
@@ -222,9 +86,6 @@ static Line *redrawLineImage(Buffer *buf, Line *l, int i);
 #endif
 static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
-#ifdef USE_ANSI_COLOR
-static void do_color(Linecolor c);
-#endif
 
 static Str
 make_lastline_link(Buffer *buf, char *title, char *url)
@@ -413,26 +274,6 @@ displayBuffer(Buffer *buf, int mode)
     }
     if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
 	cline != buf->topLine || ccolumn != buf->currentColumn) {
-#ifdef USE_RAW_SCROLL
-	if (
-#ifdef USE_IMAGE
-	       !(activeImage && displayImage && draw_image_flag) &&
-#endif
-	       mode == B_SCROLL && cline && buf->currentColumn == ccolumn) {
-	    int n = buf->topLine->linenumber - cline->linenumber;
-	    if (n > 0 && n < buf->LINES) {
-		move(LASTLINE, 0);
-		clrtoeolx();
-		refresh();
-		scroll(n);
-	    }
-	    else if (n < 0 && n > -buf->LINES) {
-		rscroll(-n);
-	    }
-	    redrawNLine(buf, n);
-	}
-	else
-#endif
 	{
 #ifdef USE_IMAGE
 	    if (activeImage &&
@@ -585,14 +426,6 @@ redrawNLine(Buffer *buf, int n)
     Line *l;
     int i;
 
-#ifdef USE_COLOR
-    if (useColor) {
-	EFFECT_ANCHOR_END_C;
-#ifdef USE_BG_COLOR
-	setbcolor(bg_color);
-#endif				/* USE_BG_COLOR */
-    }
-#endif				/* USE_COLOR */
     if (nTab > 1
 #ifdef USE_MOUSE
 	|| mouse_action.menu_str
@@ -663,14 +496,6 @@ redrawLine(Buffer *buf, Line *l, int i)
     int column = buf->currentColumn;
     char *p;
     Lineprop *pr;
-#ifdef USE_ANSI_COLOR
-    Linecolor *pc;
-#endif
-#ifdef USE_COLOR
-    Anchor *a;
-    ParsedURL url;
-    int k, vpos = -1;
-#endif
 
     if (l == NULL) {
 	if (buf->pagerSource) {
@@ -711,38 +536,15 @@ redrawLine(Buffer *buf, Line *l, int i)
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
     pr = &(l->propBuf[pos]);
-#ifdef USE_ANSI_COLOR
-    if (useColor && l->colorBuf)
-	pc = &(l->colorBuf[pos]);
-    else
-	pc = NULL;
-#endif
     rcol = COLPOS(l, pos);
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-#ifdef USE_COLOR
-	if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-	    a = retrieveAnchor(buf->href, l->linenumber, pos + j);
-	    if (a) {
-		parseURL2(a->url, &url, baseURL(buf));
-		if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
-		    for (k = a->start.pos; k < a->end.pos; k++)
-			pr[k - pos] |= PE_VISITED;
-		}
-		vpos = a->end.pos;
-	    }
-	}
-#endif
 #ifdef USE_M17N
 	delta = wtf_len((wc_uchar *) & p[j]);
 #endif
 	ncol = COLPOS(l, pos + j + delta);
 	if (ncol - column > buf->COLS)
 	    break;
-#ifdef USE_ANSI_COLOR
-	if (pc)
-	    do_color(pc[j]);
-#endif
 	if (rcol < column) {
 	    for (rcol = column; rcol < ncol; rcol++)
 		addChar(' ', 0);
@@ -806,10 +608,6 @@ redrawLine(Buffer *buf, Line *l, int i)
 	graph_mode = FALSE;
 	graphend();
     }
-#ifdef USE_ANSI_COLOR
-    if (color_mode)
-	do_color(0);
-#endif
     if (rcol - column < buf->COLS)
 	clrtoeolx();
     return l;
@@ -895,55 +693,24 @@ redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos)
     int column = buf->currentColumn;
     char *p;
     Lineprop *pr;
-#ifdef USE_ANSI_COLOR
-    Linecolor *pc;
-#endif
     int bcol, ecol;
-#ifdef USE_COLOR
-    Anchor *a;
-    ParsedURL url;
-    int k, vpos = -1;
-#endif
 
     if (l == NULL)
 	return 0;
     pos = columnPos(l, column);
     p = &(l->lineBuf[pos]);
     pr = &(l->propBuf[pos]);
-#ifdef USE_ANSI_COLOR
-    if (useColor && l->colorBuf)
-	pc = &(l->colorBuf[pos]);
-    else
-	pc = NULL;
-#endif
     rcol = COLPOS(l, pos);
     bcol = bpos - pos;
     ecol = epos - pos;
 
     for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
-#ifdef USE_COLOR
-	if (useVisitedColor && vpos <= pos + j && !(pr[j] & PE_VISITED)) {
-	    a = retrieveAnchor(buf->href, l->linenumber, pos + j);
-	    if (a) {
-		parseURL2(a->url, &url, baseURL(buf));
-		if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
-		    for (k = a->start.pos; k < a->end.pos; k++)
-			pr[k - pos] |= PE_VISITED;
-		}
-		vpos = a->end.pos;
-	    }
-	}
-#endif
 #ifdef USE_M17N
 	delta = wtf_len((wc_uchar *) & p[j]);
 #endif
 	ncol = COLPOS(l, pos + j + delta);
 	if (ncol - column > buf->COLS)
 	    break;
-#ifdef USE_ANSI_COLOR
-	if (pc)
-	    do_color(pc[j]);
-#endif
 	if (j >= bcol && j < ecol) {
 	    if (rcol < column) {
 		move(i, buf->rootX);
@@ -1010,10 +777,6 @@ redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos)
 	graph_mode = FALSE;
 	graphend();
     }
-#ifdef USE_ANSI_COLOR
-    if (color_mode)
-	do_color(0);
-#endif
     return rcol - column;
 }
 
@@ -1065,23 +828,6 @@ do_effects(Lineprop m)
     do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
 }
 
-#ifdef USE_ANSI_COLOR
-static void
-do_color(Linecolor c)
-{
-    if (c & 0x8)
-	setfcolor(c & 0x7);
-    else if (color_mode & 0x8)
-	setfcolor(basic_color);
-#ifdef USE_BG_COLOR
-    if (c & 0x80)
-	setbcolor((c >> 4) & 0x7);
-    else if (color_mode & 0x80)
-	setbcolor(bg_color);
-#endif
-    color_mode = c;
-}
-#endif
 
 #ifdef USE_M17N
 void

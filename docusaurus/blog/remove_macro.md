@@ -58,13 +58,12 @@ SUM:                           142           4973           2064          62586
 ## cygwin?系
 
 ```
-'__CYGWIN__': False,
-'SUPPORT_WIN9X_CONSOLE_MBCS': False,
-'__DJGPP__': False,
-'__MINGW32_VERSION': False,
-'__EMX__': False,
-'__WATT32__': False,
-
+__CYGWIN__
+SUPPORT_WIN9X_CONSOLE_MBCS
+__DJGPP__
+__MINGW32_VERSION
+__EMX__
+__WATT32__
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
@@ -80,20 +79,31 @@ SUM:                           142           4911           2010          61554
 ## Term系
 
 ```
+USE_COLOR
+USE_ANSI_COLOR
+USE_BG_COLOR
+USE_RAW_SCROLL
+-------------------------------------------------------------------------------
+Language                     files          blank        comment           code
+-------------------------------------------------------------------------------
+C                               88           4282           1801          53297
+C/C++ Header                    54            593            196           7267
+-------------------------------------------------------------------------------
+SUM:                           142           4875           1997          60564
+-------------------------------------------------------------------------------
 ```
+
+1000 行くらい減ったような。
+白黒になった。underline, reverse などはまだ健在。
+
+## mouse / menu / imagemap / image(sixelなど)
 
 ## http以外のプロトコル
 
 ftp とか gopher。
 directory ビューワーとか。
 
-## mouse操作 / menu / imagemap
-
 ## frame
-
-## image系
-
-sixel とか。
 
 ## pager系
 

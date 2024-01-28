@@ -31,10 +31,8 @@
 #define MENU_MAP
 #endif				/* USE_MENU */
 
-#ifndef USE_COLOR
 #undef USE_ANSI_COLOR
 #undef USE_BG_COLOR
-#endif
 
 #include "ctrlcode.h"
 #include "html.h"
@@ -320,9 +318,6 @@ extern int REV_LB[];
  */
 
 typedef unsigned short Lineprop;
-#ifdef USE_ANSI_COLOR
-typedef unsigned char Linecolor;
-#endif
 
 typedef struct _MapArea {
     char *url;
@@ -346,9 +341,6 @@ typedef struct _MapList {
 typedef struct _Line {
     char *lineBuf;
     Lineprop *propBuf;
-#ifdef USE_ANSI_COLOR
-    Linecolor *colorBuf;
-#endif
     struct _Line *next;
     struct _Line *prev;
     int len;
@@ -941,22 +933,6 @@ global Str header_string init(NULL);
 global int override_content_type init(FALSE);
 global int override_user_agent init(FALSE);
 
-#ifdef USE_COLOR
-global int useColor init(TRUE);
-global int highIntensityColors init(FALSE);
-global int basic_color init(8);	/* don't change */
-global int anchor_color init(4);	/* blue  */
-global int image_color init(2);	/* green */
-global int form_color init(1);	/* red   */
-#ifdef USE_BG_COLOR
-global int bg_color init(8);	/* don't change */
-global int mark_color init(6);	/* cyan */
-#endif				/* USE_BG_COLOR */
-global int useActiveColor init(FALSE);
-global int active_color init(6);	/* cyan */
-global int useVisitedColor init(FALSE);
-global int visited_color init(5);	/* magenta  */
-#endif				/* USE_COLOR */
 global int confirm_on_quit init(TRUE);
 #ifdef USE_MARK
 global int use_mark init(FALSE);

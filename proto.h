@@ -349,9 +349,7 @@ extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern int gethtmlcmd(char **s);
-#ifndef USE_ANSI_COLOR
 #define checkType(a,b,c) _checkType(a,b)
-#endif
 extern Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor);
 extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
 			int mode);
@@ -482,18 +480,8 @@ extern void underlineend(void);
 extern void graphstart(void);
 extern void graphend(void);
 extern int graph_ok(void);
-#ifdef USE_COLOR
-extern void setfcolor(int color);
-#ifdef USE_BG_COLOR
-extern void setbcolor(int color);
-#endif				/* USE_BG_COLOR */
-#endif				/* USE_COLOR */
 extern void refresh(void);
 extern void clear(void);
-#ifdef USE_RAW_SCROLL
-extern void scroll(int);
-extern void rscroll(int);
-#endif
 extern void clrtoeol(void);
 extern void clrtoeolx(void);
 extern void clrtobot(void);

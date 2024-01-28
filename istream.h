@@ -152,9 +152,5 @@ extern Str ssl_get_certificate(SSL * ssl, char *hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 #endif
 
-#ifdef USE_BINMODE_STREAM
-#define openIS(path) newInputStream(open((path),O_RDONLY|O_BINARY))
-#else
 #define openIS(path) newInputStream(open((path),O_RDONLY))
-#endif				/* USE_BINMODE_STREAM */
 #endif
