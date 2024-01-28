@@ -1,4 +1,11 @@
-project('w3m', ['c', 'cpp'])
+project(
+    'w3m',
+    ['c', 'cpp'],
+    version: '0.5.3',
+    default_options: [
+        'cpp_std=c++20',
+    ],
+)
 
 # subdir('libwc')
 
