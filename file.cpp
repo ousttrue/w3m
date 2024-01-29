@@ -2,6 +2,7 @@
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
 #include "readbuffer.h"
+#include "cookie.h"
 #include "anchor.h"
 #include "display.h"
 #include "fm.h"

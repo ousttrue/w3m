@@ -154,46 +154,16 @@ extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
                                int flag, FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
-extern void push_render_image(Str *str, int width, int limit,
-                              struct html_feed_environ *h_env);
-extern void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
-                      int indent, int force, int width);
-extern void do_blankline(struct html_feed_environ *h_env,
-                         struct readbuffer *obuf, int indent, int indent_incr,
-                         int width);
-extern void purgeline(struct html_feed_environ *h_env);
-extern void save_fonteffect(struct html_feed_environ *h_env,
-                            struct readbuffer *obuf);
-extern void restore_fonteffect(struct html_feed_environ *h_env,
-                               struct readbuffer *obuf);
-extern Str *process_img(struct parsed_tag *tag, int width);
-extern Str *process_anchor(struct parsed_tag *tag, char *tagbuf);
-extern Str *process_input(struct parsed_tag *tag);
-extern Str *process_button(struct parsed_tag *tag);
-extern Str *process_n_button(void);
-extern Str *process_select(struct parsed_tag *tag);
-extern Str *process_n_select(void);
-extern void feed_select(char *str);
-extern void process_option(void);
-extern Str *process_textarea(struct parsed_tag *tag, int width);
-extern Str *process_n_textarea(void);
-extern void feed_textarea(char *str);
-extern Str *process_form(struct parsed_tag *tag);
-extern Str *process_n_form(void);
-extern int getMetaRefreshParam(char *q, Str **refresh_uri);
-extern int HTMLtagproc1(struct parsed_tag *tag,
-                        struct html_feed_environ *h_env);
+
+
 extern void HTMLlineproc2(Buffer *buf, TextLineList *tl);
-extern void HTMLlineproc0(char *istr, struct html_feed_environ *h_env,
-                          int internal);
+
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 extern Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
 extern char *convert_size(clen_t size, int usefloat);
 extern char *convert_size2(clen_t size1, clen_t size2, int usefloat);
 extern void showProgress(clen_t *linelen, clen_t *trbyte);
-extern void init_henv(struct html_feed_environ *, struct readbuffer *,
-                      struct environment *, int, TextLineList *, int, int);
-extern void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
+
 extern void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
 extern Buffer *loadHTMLString(Str *page);
 extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
@@ -224,7 +194,6 @@ extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                             clen_t size);
 extern void stopDownload(void);
 extern int checkDownloadList(void);
-extern void download_action(struct parsed_tagarg *arg);
 extern Buffer *newBuffer(int width);
 extern Buffer *nullBuffer(void);
 extern void clearBuffer(Buffer *buf);
@@ -332,7 +301,6 @@ extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
 extern void form_write_from_file(FILE *f, char *boundary, char *name,
                                  char *filename, char *file);
 extern MapList *searchMapList(Buffer *buf, char *name);
-extern void follow_map(struct parsed_tagarg *arg);
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
@@ -425,9 +393,7 @@ extern Str *loadFTPDir0(ParsedURL *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-extern AnchorList *putAnchor(AnchorList *al, char *url, char *target,
-                             Anchor **anchor_return, char *referer, char *title,
-                             unsigned char key, int line, int pos);
+
 extern Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
                             char *title, unsigned char key, int line, int pos);
 extern Anchor *registerName(Buffer *buf, char *url, int line, int pos);
@@ -435,21 +401,17 @@ extern Anchor *registerImg(Buffer *buf, char *url, char *title, int line,
                            int pos);
 extern Anchor *registerForm(Buffer *buf, FormList *flist,
                             struct parsed_tag *tag, int line, int pos);
-extern int onAnchor(Anchor *a, int line, int pos);
-extern Anchor *retrieveAnchor(AnchorList *al, int line, int pos);
+
+
+
 extern Anchor *retrieveCurrentAnchor(Buffer *buf);
 extern Anchor *retrieveCurrentImg(Buffer *buf);
 extern Anchor *retrieveCurrentForm(Buffer *buf);
-extern Anchor *searchAnchor(AnchorList *al, char *str);
 extern Anchor *searchURLLabel(Buffer *buf, char *url);
 extern void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
 extern char *reAnchor(Buffer *buf, char *re);
 extern void addMultirowsForm(Buffer *buf, AnchorList *al);
-extern Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
-extern Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
-extern HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line,
-                                int pos, int shift);
+
 extern char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
 extern Buffer *link_list_panel(Buffer *buf);
 
@@ -469,7 +431,6 @@ extern char *get_param_option(char *name);
 extern void init_rc(void);
 extern void init_tmp(void);
 extern Buffer *load_option_panel(void);
-extern void panel_set_option(struct parsed_tagarg *);
 extern void sync_with_option(void);
 extern char *rcFile(char *base);
 extern char *etcFile(char *base);
@@ -514,7 +475,6 @@ extern void load_cookies(void);
 extern void initCookie(void);
 extern void cooLst(void);
 extern Buffer *cookie_list_panel(void);
-extern void set_cookie_flag(struct parsed_tagarg *arg);
 extern int check_cookie_accept_domain(char *domain);
 #define docCSet nulcmd
 #define defCSet nulcmd

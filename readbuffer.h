@@ -60,3 +60,34 @@ struct readbuffer {
   short top_margin;
   short bottom_margin;
 };
+
+struct TextLineList;
+struct html_feed_environ {
+  struct readbuffer *obuf;
+  TextLineList *buf;
+  FILE *f;
+  Str *tagbuf;
+  int limit;
+  int maxlimit;
+  struct environment *envs;
+  int nenv;
+  int envc;
+  int envc_real;
+  char *title;
+  int blank_lines;
+};
+
+void flushline(html_feed_environ *h_env, readbuffer *obuf, int indent,
+               int force, int width);
+void do_blankline(html_feed_environ *h_env, readbuffer *obuf, int indent,
+                  int indent_incr, int width);
+void purgeline(html_feed_environ *h_env);
+void save_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
+void restore_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
+void push_render_image(Str *str, int width, int limit,
+                       html_feed_environ *h_env);
+int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
+void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
+void init_henv(struct html_feed_environ *, struct readbuffer *,
+               struct environment *, int, TextLineList *, int, int);
+void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);

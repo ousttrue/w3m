@@ -1,13 +1,15 @@
-/* $Id: parsetag.h,v 1.2 2001/11/20 17:49:23 ukai Exp $ */
-#ifndef PARSETAG_H
-#define PARSETAG_H
+#pragma once
+
 struct parsed_tagarg {
-    char *arg;
-    char *value;
-    struct parsed_tagarg *next;
+  char *arg;
+  char *value;
+  parsed_tagarg *next;
 };
 
-extern char *tag_get_value(struct parsed_tagarg *t, char *arg);
-extern int tag_exists(struct parsed_tagarg *t, char *arg);
-extern struct parsed_tagarg *cgistr2tagarg(char *cgistr);
-#endif				/* not PARSETAG_H */
+char *tag_get_value(parsed_tagarg *t, char *arg);
+int tag_exists(parsed_tagarg *t, char *arg);
+parsed_tagarg *cgistr2tagarg(char *cgistr);
+void download_action(struct parsed_tagarg *arg);
+void follow_map(struct parsed_tagarg *arg);
+void panel_set_option(struct parsed_tagarg *);
+void set_cookie_flag(struct parsed_tagarg *arg);

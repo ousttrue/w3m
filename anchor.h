@@ -33,3 +33,15 @@ struct HmarkerList {
   int markmax;
   int prevhseq;
 };
+
+AnchorList *putAnchor(AnchorList *al, char *url, char *target,
+                      Anchor **anchor_return, char *referer, char *title,
+                      unsigned char key, int line, int pos);
+int onAnchor(Anchor *a, int line, int pos);
+Anchor *retrieveAnchor(AnchorList *al, int line, int pos);
+Anchor *searchAnchor(AnchorList *al, char *str);
+Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
+Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
+HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
+void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line, int pos,
+                         int shift);
