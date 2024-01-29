@@ -2,6 +2,7 @@
 /*
  * HTML table
  */
+#include "readbuffer.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>

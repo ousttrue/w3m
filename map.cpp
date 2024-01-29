@@ -3,6 +3,7 @@
  * client-side image maps
  */
 #include "fm.h"
+#include "anchor.h"
 #include "map.h"
 #include <math.h>
 
