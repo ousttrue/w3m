@@ -4,6 +4,8 @@
  * revised by Akinori ITO, January 1995
  */
 #include "config.h"
+#include "proto.h"
+#include "indep.h"
 #include "ctrlcode.h"
 #include <errno.h>
 #include <fcntl.h>
@@ -14,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdlib.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
@@ -80,7 +83,7 @@ typedef struct sgttyb TerminalMode;
 #define C_ASCII 0x00
 #define C_CTRL 0xc0
 
-#define CHMODE(c) ((c)&C_WHICHCHAR)
+#define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 #define SETCH(var, ch, len) ((var) = (ch))
 
@@ -102,7 +105,7 @@ typedef struct sgttyb TerminalMode;
 
 #define S_DIRTY 0x20
 
-#define SETPROP(var, prop) (var = (((var)&S_DIRTY) | prop))
+#define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 
 /* Line status */
 #define L_DIRTY 0x01
@@ -110,9 +113,9 @@ typedef struct sgttyb TerminalMode;
 #define L_NEED_CE 0x04
 #define L_CLRTOEOL 0x08
 
-#define ISDIRTY(d) ((d)&L_DIRTY)
-#define ISUNUSED(d) ((d)&L_UNUSED)
-#define NEED_CE(d) ((d)&L_NEED_CE)
+#define ISDIRTY(d) ((d) & L_DIRTY)
+#define ISUNUSED(d) ((d) & L_UNUSED)
+#define NEED_CE(d) ((d) & L_NEED_CE)
 
 typedef unsigned short l_prop;
 

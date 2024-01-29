@@ -1,7 +1,14 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "ftp.h"
+#include "proto.h"
+#include "indep.h"
+#include "buffer.h"
+#include "cookie.h"
+#include "downloadlist.h"
 #include "funcname1.h"
+#include "istream.h"
 #include "func.h"
 #include "parsetag.h"
 #include "frame.h"
@@ -12,6 +19,13 @@
 #include "file.h"
 #include "local.h"
 #include "signal_util.h"
+#include "display.h"
+#include "terms.h"
+#include "myctype.h"
+#include "regex.h"
+#include "rc.h"
+#include "util.h"
+#include "proto.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -23,15 +37,20 @@
 #include <sys/wait.h>
 #endif
 #include <time.h>
-#include "display.h"
-#include "terms.h"
-#include "myctype.h"
-#include "regex.h"
-#include "rc.h"
-
-#include "util.h"
+#include <stdlib.h>
+#include <gc.h>
 
 #define DSTR_LEN 256
+
+struct BufferPos {
+  long top_linenumber;
+  long cur_linenumber;
+  int currentColumn;
+  int pos;
+  int bpos;
+  BufferPos *next;
+  BufferPos *prev;
+};
 
 Hist *LoadHist;
 Hist *SaveHist;
@@ -77,7 +96,6 @@ static void do_dump(Buffer *);
 int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
-static int add_download_list = FALSE;
 
 void set_buffer_environ(Buffer *);
 static void save_buffer_position(Buffer *buf);
@@ -4219,43 +4237,6 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
   moveTab(CurrentTab, tab ? tab : FirstTab, FALSE);
 }
 
-void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                     long long size) {
-
-  auto d = (DownloadList *)New(DownloadList);
-  d->pid = pid;
-  d->url = url;
-  if (save[0] != '/' && save[0] != '~')
-    save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-  d->save = expandPath(save);
-  d->lock = lock;
-  d->size = size;
-  d->time = time(0);
-  d->running = TRUE;
-  d->err = 0;
-  d->next = NULL;
-  d->prev = LastDL;
-  if (LastDL)
-    LastDL->next = d;
-  else
-    FirstDL = d;
-  LastDL = d;
-  add_download_list = TRUE;
-}
-
-int checkDownloadList(void) {
-  DownloadList *d;
-  struct stat st;
-
-  if (!FirstDL)
-    return FALSE;
-  for (d = FirstDL; d != NULL; d = d->next) {
-    if (d->running && !lstat(d->lock, &st))
-      return TRUE;
-  }
-  return FALSE;
-}
-
 static char *convert_size3(long long size) {
   Str *tmp = Strnew();
   int n;
@@ -4543,7 +4524,7 @@ int main(int argc, char **argv) {
   Buffer *newbuf = NULL;
   char *p;
   int c, i;
-  input_stream* redin;
+  input_stream *redin;
   char *line_str = NULL;
   char **load_argv;
   FormList *request;
@@ -5013,8 +4994,7 @@ int main(int argc, char **argv) {
     w3m_exit(0);
   }
 
-  if (add_download_list) {
-    add_download_list = FALSE;
+  if (popAddDownloadList()) {
     CurrentTab = LastTab;
     if (!FirstTab) {
       FirstTab = LastTab = CurrentTab = newTab();
@@ -5058,8 +5038,7 @@ int main(int argc, char **argv) {
     _goLine(line_str);
   }
   for (;;) {
-    if (add_download_list) {
-      add_download_list = FALSE;
+    if (popAddDownloadList()) {
       ldDL();
     }
     if (Currentbuf->submit) {

@@ -123,6 +123,7 @@ executable(
         'istream.cpp',
         'version.cpp',
         'utf8.cpp',
+        'downloadlist.cpp',
     ],
     install: true,
     dependencies: [

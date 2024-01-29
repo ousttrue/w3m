@@ -1,14 +1,23 @@
-/* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
+#include "buffer.h"
 #include "fm.h"
+#include "terms.h"
 #include "html.h"
 #include "form.h"
 #include "anchor.h"
 #include "ctrlcode.h"
 #include "file.h"
+#include "line.h"
+#include "indep.h"
+#include "istream.h"
+#include "proto.h"
 #include <unistd.h>
 
-char *NullLine = "";
+const char *NullLine = "";
 Lineprop NullProp[] = {0};
+
+int REV_LB[MAX_LB] = {
+    LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
+};
 
 /*
  * Buffer creation

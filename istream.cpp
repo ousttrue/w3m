@@ -4,6 +4,7 @@
 #include "signal_util.h"
 #include "myctype.h"
 #include "istream.h"
+#include "proto.h"
 #include <openssl/x509v3.h>
 #include <fcntl.h>
 #include <unistd.h>

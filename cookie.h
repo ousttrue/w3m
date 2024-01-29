@@ -50,3 +50,15 @@ struct cookie {
    COO_OVERRIDE_OK)   /* dot in matched host name in FQDN (version 1 case 4) */
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
+
+extern char *FQDN(char *host);
+extern Str *find_cookie(ParsedURL *pu);
+extern int add_cookie(ParsedURL *pu, Str *name, Str *value, time_t expires,
+                      Str *domain, Str *path, int flag, Str *comment,
+                      int version, Str *port, Str *commentURL);
+extern void save_cookies(void);
+extern void load_cookies(void);
+extern void initCookie(void);
+extern void cooLst(void);
+extern int check_cookie_accept_domain(char *domain);
+

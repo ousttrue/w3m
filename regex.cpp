@@ -16,9 +16,10 @@
 #include <gc.h>
 #include "config.h"
 #include "regex.h"
-#include "config.h"
 #include "myctype.h"
 #include "fm.h"
+#include "proto.h"
+#include "indep.h"
 
 #ifndef NULL
 #define NULL 0
@@ -42,7 +43,7 @@
 
 #define RE_MODE(x) ((x)->mode & RE_MATCHMODE)
 #define RE_SET_MODE(x, v)                                                      \
-  ((x)->mode = (((x)->mode & ~RE_MATCHMODE) | ((v)&RE_MATCHMODE)))
+  ((x)->mode = (((x)->mode & ~RE_MATCHMODE) | ((v) & RE_MATCHMODE)))
 
 #ifdef REGEX_DEBUG
 void debugre(regexchar *);

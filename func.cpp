@@ -2,18 +2,22 @@
 /*
  * w3m func.c
  */
-#include <stdio.h>
-
 #include "fm.h"
 #include "ctrlcode.h"
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
 #include "rc.h"
+#include "buffer.h"
 #include "history.h"
-
+#include "indep.h"
+#include "proto.h"
+#include "cookie.h"
 #include "funcname.c"
 #include "functable.c"
+
+#include <stdio.h>
+#include <sys/stat.h>
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv *keyData = NULL;

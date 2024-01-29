@@ -12,14 +12,6 @@
 #define FALSE 0
 #endif				/* FALSE */
 
-struct growbuf {
-    char *ptr;
-    int length;
-    int area_size;
-    void *(*realloc_proc) (void *, size_t);
-    void (*free_proc) (void *);
-};
-
 #define RAW_MODE	0
 #define PAGER_MODE	1
 #define HTML_MODE	2

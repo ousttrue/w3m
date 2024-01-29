@@ -1,8 +1,7 @@
-/* $Id: istream.h,v 1.12 2003/10/20 16:41:56 ukai Exp $ */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
+#pragma once
 
 #include "indep.h"
+#include "mimehead.h"
 #include <stdio.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
@@ -91,24 +90,24 @@ union input_stream {
   struct encoded_stream ens;
 };
 
-extern input_stream* newInputStream(int des);
-extern input_stream* newFileStream(FILE *f, void (*closep)());
-extern input_stream* newStrStream(Str *s);
-extern input_stream* newSSLStream(SSL *ssl, int sock);
-extern input_stream* newEncodedStream(input_stream* is, char encoding);
-extern int ISclose(input_stream* stream);
-extern int ISgetc(input_stream* stream);
-extern int ISundogetc(input_stream* stream);
-extern Str *StrISgets2(input_stream* stream, char crnl);
+extern input_stream *newInputStream(int des);
+extern input_stream *newFileStream(FILE *f, void (*closep)());
+extern input_stream *newStrStream(Str *s);
+extern input_stream *newSSLStream(SSL *ssl, int sock);
+extern input_stream *newEncodedStream(input_stream *is, char encoding);
+extern int ISclose(input_stream *stream);
+extern int ISgetc(input_stream *stream);
+extern int ISundogetc(input_stream *stream);
+extern Str *StrISgets2(input_stream *stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, FALSE)
 #define StrmyISgets(stream) StrISgets2(stream, TRUE)
-void ISgets_to_growbuf(input_stream* stream, struct growbuf *gb, char crnl);
+void ISgets_to_growbuf(input_stream *stream, struct growbuf *gb, char crnl);
 #ifdef unused
-extern int ISread(input_stream* stream, Str *buf, int count);
+extern int ISread(input_stream *stream, Str *buf, int count);
 #endif
-int ISread_n(input_stream* stream, char *dst, int bufsize);
-extern int ISfileno(input_stream* stream);
-extern int ISeos(input_stream* stream);
+int ISread_n(input_stream *stream, char *dst, int bufsize);
+extern int ISfileno(input_stream *stream);
+extern int ISeos(input_stream *stream);
 extern void ssl_accept_this_site(char *hostname);
 extern Str *ssl_get_certificate(SSL *ssl, char *hostname);
 
@@ -130,4 +129,13 @@ extern Str *ssl_get_certificate(SSL *ssl, char *hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-#endif
+
+#define StrUFgets(f) StrISgets((f)->stream)
+#define StrmyUFgets(f) StrmyISgets((f)->stream)
+#define UFgetc(f) ISgetc((f)->stream)
+#define UFundogetc(f) ISundogetc((f)->stream)
+#define UFclose(f)                                                             \
+  if (ISclose((f)->stream) == 0) {                                             \
+    (f)->stream = NULL;                                                        \
+  }
+#define UFfileno(f) ISfileno((f)->stream)

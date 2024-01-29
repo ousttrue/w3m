@@ -1,9 +1,15 @@
 /* $Id: backend.c,v 1.15 2010/08/08 09:53:42 htrb Exp $ */
 #include "fm.h"
+#include "cookie.h"
+#include "line.h"
+#include "url.h"
+#include "indep.h"
 #include "form.h"
+#include "buffer.h"
 #include "textlist.h"
 #include "terms.h"
 #include "file.h"
+#include "proto.h"
 #include <gc.h>
 #include <stdio.h>
 #include <string.h>

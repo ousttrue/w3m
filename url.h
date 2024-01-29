@@ -17,6 +17,7 @@
 #define SCM_MAILTO 12
 #define SCM_HTTPS 13
 
+struct Str;
 struct ParsedURL {
   int scheme;
   char *user;
@@ -32,3 +33,11 @@ struct ParsedURL {
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
+void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
+void copyParsedURL(ParsedURL *p, const ParsedURL *q);
+void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
+Str *parsedURL2Str(ParsedURL *pu);
+Str *parsedURL2RefererStr(ParsedURL *pu);
+int getURLScheme(char **url);
+
+extern char *ssl_min_version;

@@ -5,6 +5,7 @@
 #include "fm.h"
 #include "signal_util.h"
 #include "myctype.h"
+#include "indep.h"
 #include "proto.h"
 #include <stdio.h>
 #include <errno.h>
@@ -16,6 +17,7 @@
 #include <stddef.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
 
 #define _(Text) Text
 #define N_(Text) Text
@@ -1181,9 +1183,9 @@ struct siteconf_rec {
   int no_referer_from;
   int no_referer_to;
 };
-#define SCONF_TEST(ent, f) ((ent)->mask[(f) >> 3] & (1U << ((f)&7)))
-#define SCONF_SET(ent, f) ((ent)->mask[(f) >> 3] |= (1U << ((f)&7)))
-#define SCONF_CLEAR(ent, f) ((ent)->mask[(f) >> 3] &= ~(1U << ((f)&7)))
+#define SCONF_TEST(ent, f) ((ent)->mask[(f) >> 3] & (1U << ((f) & 7)))
+#define SCONF_SET(ent, f) ((ent)->mask[(f) >> 3] |= (1U << ((f) & 7)))
+#define SCONF_CLEAR(ent, f) ((ent)->mask[(f) >> 3] &= ~(1U << ((f) & 7)))
 
 static struct siteconf_rec *siteconf_head = NULL;
 static struct siteconf_rec *newSiteconfRec(void);

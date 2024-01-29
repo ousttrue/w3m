@@ -1,11 +1,14 @@
 #include "anchor.h"
 #include "textlist.h"
+#include "line.h"
+#include "buffer.h"
 #include "form.h"
 #include "map.h"
 #include "fm.h"
 #include "indep.h"
 #include "myctype.h"
 #include "regex.h"
+#include "proto.h"
 
 #define FIRST_ANCHOR_SIZE 30
 

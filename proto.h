@@ -6,6 +6,7 @@
  *   Created: Wed Feb 10 12:47:03 1999
  */
 #include <stdio.h>
+#include "line.h"
 
 extern int main(int argc, char **argv);
 extern void nulcmd(void);
@@ -101,6 +102,7 @@ extern void vwSrc(void);
 extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
+struct Buffer;
 extern void chkURLBuffer(Buffer *buf);
 extern void chkWORD(void);
 #define chkNMID nulcmd
@@ -112,6 +114,7 @@ extern void execCmd(void);
 #define dispI nulcmd
 #define stopI nulcmd
 extern void setAlarm(void);
+struct AlarmEvent;
 extern AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status,
                                  int cmd, void *data);
 extern void reinit(void);
@@ -157,8 +160,7 @@ extern Str *convertLine0(URLFile *uf, Str *line, int mode);
   convertLine0(uf, line, mode)
 extern void push_symbol(Str *str, char symbol, int width, int n);
 struct FormList;
-extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
-                               int flag, FormList *request);
+
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 
@@ -167,9 +169,9 @@ extern void HTMLlineproc2(Buffer *buf, TextLineList *tl);
 
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 extern Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
-extern char *convert_size(long long  size, int usefloat);
-extern char *convert_size2(long long  size1, long long  size2, int usefloat);
-extern void showProgress(long long  *linelen, long long  *trbyte);
+extern char *convert_size(long long size, int usefloat);
+extern char *convert_size2(long long size1, long long size2, int usefloat);
+extern void showProgress(long long *linelen, long long *trbyte);
 
 extern void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
 extern Buffer *loadHTMLString(Str *page);
@@ -178,8 +180,10 @@ extern void saveBuffer(Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
 extern Buffer *getshell(char *cmd);
 extern Buffer *getpipe(char *cmd);
+union input_stream;
 extern Buffer *openPagerBuffer(input_stream *stream, Buffer *buf);
 extern Buffer *openGeneralPagerBuffer(input_stream *stream);
+struct Line;
 extern Line *getNextPage(Buffer *buf, int plen);
 extern int save2tmp(URLFile uf, char *tmpf);
 extern Buffer *doExternal(URLFile uf, const char *type, Buffer *defaultbuf);
@@ -194,13 +198,11 @@ extern char *inputAnswer(char *prompt);
 extern int matchattr(char *p, char *attr, int len, Str **value);
 extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);
+struct TabBuffer;
 extern TabBuffer *newTab(void);
 extern void calcTabPos(void);
 extern TabBuffer *deleteTab(TabBuffer *tab);
-extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                            long long  size);
-extern void stopDownload(void);
-extern int checkDownloadList(void);
+
 extern Buffer *newBuffer(int width);
 extern Buffer *nullBuffer(void);
 extern void clearBuffer(Buffer *buf);
@@ -247,10 +249,8 @@ extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern int gethtmlcmd(char **s);
-#define checkType(a, b, c) _checkType(a, b)
-extern Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor);
-extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
-                        int mode);
+
+
 extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
 extern char *mydirname(char *s);
@@ -268,6 +268,7 @@ extern void escmap(void);
 extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
+struct Hist;
 extern char *
 inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
                     int (*incfunc)(int ch, Str *buf, Lineprop *prop));
@@ -275,9 +276,10 @@ extern Str *unescape_spaces(Str *s);
 extern Buffer *historyBuffer(Hist *hist);
 extern double log_like(int x);
 
-
+struct MapList;
 extern MapList *searchMapList(Buffer *buf, char *name);
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
+struct Anchor;
 extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
 extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
@@ -304,7 +306,6 @@ extern void set_int(void);
 extern void getTCstr(void);
 extern void setlinescols(void);
 extern void setupscreen(void);
-extern pid_t open_pipe_rw(FILE **fr, FILE **fw);
 extern int initscr(void);
 extern void move(int line, int column);
 extern void addch(char c);
@@ -343,17 +344,13 @@ extern void bell(void);
 extern int sleep_till_anykey(int sec, int purge);
 extern void initMimeTypes(void);
 extern void free_ssl_ctx(void);
-extern ParsedURL *baseURL(Buffer *buf);
+
 extern int openSocket(char *hostname, char *remoteport_name,
                       unsigned short remoteport_num);
-extern void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
-extern void copyParsedURL(ParsedURL *p, const ParsedURL *q);
-extern void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
-extern Str *parsedURL2Str(ParsedURL *pu);
-extern Str *parsedURL2RefererStr(ParsedURL *pu);
-extern int getURLScheme(char **url);
+extern ParsedURL *baseURL(Buffer *buf);
+
 union input_stream;
-extern void init_stream(URLFile *uf, int scheme, input_stream* stream);
+extern void init_stream(URLFile *uf, int scheme, input_stream *stream);
 struct HRequest;
 Str *HTTPrequestMethod(HRequest *hr);
 Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);
@@ -368,11 +365,7 @@ extern char *acceptableMimeTypes(void);
 extern char *guessContentType(char *filename);
 extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
-extern input_stream* openFTPStream(ParsedURL *pu, URLFile *uf);
-extern Str *loadFTPDir0(ParsedURL *pu);
-#define loadFTPDir(pu, charset) loadFTPDir0(pu)
-extern void closeFTP(void);
-extern void disconnectFTP(void);
+
 
 struct Anchor;
 extern Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
@@ -383,30 +376,18 @@ extern Anchor *registerImg(Buffer *buf, char *url, char *title, int line,
 extern Anchor *registerForm(Buffer *buf, FormList *flist,
                             struct parsed_tag *tag, int line, int pos);
 
-
-
 extern Anchor *retrieveCurrentAnchor(Buffer *buf);
 extern Anchor *retrieveCurrentImg(Buffer *buf);
 extern Anchor *retrieveCurrentForm(Buffer *buf);
 extern Anchor *searchURLLabel(Buffer *buf, char *url);
 extern void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
 extern char *reAnchor(Buffer *buf, char *re);
+struct AnchorList;
 extern void addMultirowsForm(Buffer *buf, AnchorList *al);
 
 extern char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
 extern Buffer *link_list_panel(Buffer *buf);
 
-extern Str *decodeB(char **ww);
-extern void decodeB_to_growbuf(struct growbuf *gb, char **ww);
-extern Str *decodeQ(char **ww);
-extern Str *decodeQP(char **ww);
-extern void decodeQP_to_growbuf(struct growbuf *gb, char **ww);
-extern Str *decodeU(char **ww);
-extern void decodeU_to_growbuf(struct growbuf *gb, char **ww);
-extern Str *decodeWord0(char **ow);
-extern Str *decodeMIME0(Str *orgstr);
-#define decodeWord(ow, charset) decodeWord0(ow)
-#define decodeMIME(orgstr, charset) decodeMIME0(orgstr)
 extern int set_param_option(char *option);
 extern char *get_param_option(char *name);
 extern void init_rc(void);
@@ -445,18 +426,9 @@ extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 extern char *expandName(char *name);
 extern Str *tmpfname(int type, char *ext);
-extern time_t mymktime(char *timestr);
-extern char *FQDN(char *host);
-extern Str *find_cookie(ParsedURL *pu);
-extern int add_cookie(ParsedURL *pu, Str *name, Str *value, time_t expires,
-                      Str *domain, Str *path, int flag, Str *comment,
-                      int version, Str *port, Str *commentURL);
-extern void save_cookies(void);
-extern void load_cookies(void);
-extern void initCookie(void);
-extern void cooLst(void);
+
 extern Buffer *cookie_list_panel(void);
-extern int check_cookie_accept_domain(char *domain);
+
 #define docCSet nulcmd
 #define defCSet nulcmd
 

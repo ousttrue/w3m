@@ -1,11 +1,13 @@
-/* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
 #include "display.h"
+#include "buffer.h"
 #include "textlist.h"
 #include "ctrlcode.h"
 #include "anchor.h"
 #include "fm.h"
 #include "file.h"
 #include "signal_util.h"
+#include "proto.h"
+#include "indep.h"
 #include <math.h>
 
 /* *INDENT-OFF* */

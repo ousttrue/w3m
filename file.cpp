@@ -1,6 +1,12 @@
 /* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
+#include "ftp.h"
+#include "downloadlist.h"
+#include "etc.h"
+#include "proto.h"
+#include "buffer.h"
+#include "istream.h"
 #include "textlist.h"
 #include "funcname1.h"
 #include "frame.h"
@@ -1467,7 +1473,7 @@ Buffer *loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 
   checkRedirection(NULL);
 
-load_doc : {
+load_doc: {
   const char *sc_redirect;
   parseURL2(tpath, &pu, current);
   sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);

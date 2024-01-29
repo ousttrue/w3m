@@ -1,10 +1,14 @@
 /* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
 #include "fm.h"
+#include "buffer.h"
+#include "terms.h"
+#include "proto.h"
 #include "form.h"
 #include "ctrlcode.h"
 #include "local.h"
 #include "myctype.h"
 #include "history.h"
+#include "indep.h"
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)

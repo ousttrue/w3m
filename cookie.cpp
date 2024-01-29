@@ -16,6 +16,8 @@
 #include "local.h"
 #include "regex.h"
 #include "myctype.h"
+#include "indep.h"
+#include "proto.h"
 
 static int is_saved = 1;
 

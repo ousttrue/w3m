@@ -12,9 +12,6 @@
 #include "config.h"
 #include "url.h"
 
-#include "terms.h"
-#include "istream.h"
-
 #ifdef MAINPROGRAM
 #define global
 #define init(x) = (x)
@@ -94,7 +91,6 @@
 #define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
 #define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
 
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
 /* Flags for displayBuffer() */
 #define B_NORMAL 0
@@ -112,28 +108,10 @@
 #define BP_REDIRECTED 0x20
 #define BP_CLOSE 0x40
 
-/* Link Buffer */
-#define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
-
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2
 #define SR_WRAPPED 0x4
-
-#ifdef MAINPROGRAM
-int REV_LB[MAX_LB] = {
-    LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
-};
-#else  /* not MAINPROGRAM */
-extern int REV_LB[];
-#endif /* not MAINPROGRAM */
 
 /* mark URL, Message-ID */
 #define CHK_URL 1
@@ -197,8 +175,8 @@ extern int REV_LB[];
  * Macros.
  */
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
+#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, nullptr)
+#define inputLine(p, d, f) inputLineHist(p, d, f, nullptr)
 #define inputStr(p, d) inputLine(p, d, IN_STRING)
 #define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
 #define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
@@ -238,23 +216,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef unsigned short Lineprop;
-
-struct Line {
-  char *lineBuf;
-  Lineprop *propBuf;
-  Line *next;
-  Line *prev;
-  int len;
-  int width;
-  long linenumber;      /* on buffer */
-  long real_linenumber; /* on file */
-  unsigned short usrflags;
-  int size;
-  int bpos;
-  int bwidth;
-};
-
 #define NO_REFERER ((char *)-1)
 
 #define LINK_TYPE_NONE 0
@@ -268,16 +229,6 @@ struct LinkList {
   LinkList *next;
 };
 
-struct BufferPos {
-  long top_linenumber;
-  long cur_linenumber;
-  int currentColumn;
-  int pos;
-  int bpos;
-  BufferPos *next;
-  BufferPos *prev;
-};
-
 #define AL_UNSET 0
 #define AL_EXPLICIT 1
 #define AL_IMPLICIT 2
@@ -289,98 +240,6 @@ struct AlarmEvent {
   int cmd;
   void *data;
 };
-
-struct FormList;
-struct Anchor;
-struct AnchorList;
-struct HmarkerList;
-struct FormItemList;
-struct MapList;
-struct TextList;
-struct Buffer {
-  char *filename;
-  char *buffername;
-  Line *firstLine;
-  Line *topLine;
-  Line *currentLine;
-  Line *lastLine;
-  Buffer *nextBuffer;
-  Buffer *linkBuffer[MAX_LB];
-  short width;
-  short height;
-  char *type;
-  const char *real_type;
-  int allLine;
-  short bufferprop;
-  int currentColumn;
-  short cursorX;
-  short cursorY;
-  int pos;
-  int visualpos;
-  short rootX;
-  short rootY;
-  short COLS;
-  short LINES;
-  input_stream *pagerSource;
-  AnchorList *href;
-  AnchorList *name;
-  AnchorList *img;
-  AnchorList *formitem;
-  LinkList *linklist;
-  FormList *formlist;
-  MapList *maplist;
-  HmarkerList *hmarklist;
-  HmarkerList *imarklist;
-  ParsedURL currentURL;
-  ParsedURL *baseURL;
-  char *baseTarget;
-  int real_scheme;
-  char *sourcefile;
-  struct frameset *frameset;
-  struct frameset_queue *frameQ;
-  int *clone;
-  size_t trbyte;
-  char check_url;
-  TextList *document_header;
-  FormItemList *form_submit;
-  char *savecache;
-  char *edit;
-  struct mailcap *mailcap;
-  char *mailcap_source;
-  char *header_source;
-  char search_header;
-  char *ssl_certificate;
-  char image_flag;
-  char image_loaded;
-  char need_reshape;
-  Anchor *submit;
-  BufferPos *undo;
-  AlarmEvent *event;
-};
-
-struct TabBuffer {
-  TabBuffer *nextTab;
-  TabBuffer *prevTab;
-  Buffer *currentBuffer;
-  Buffer *firstBuffer;
-  short x1;
-  short x2;
-  short y;
-};
-
-struct DownloadList {
-  pid_t pid;
-  char *url;
-  char *save;
-  char *lock;
-  long long size;
-  time_t time;
-  int running;
-  int err;
-  DownloadList *next;
-  DownloadList *prev;
-};
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
 
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \
   {                                                                            \
@@ -419,55 +278,6 @@ struct DownloadList {
 #define in_ins fontstat[4]
 #define in_stand fontstat[5]
 
-#define RB_PRE 0x01
-#define RB_SCRIPT 0x02
-#define RB_STYLE 0x04
-#define RB_PLAIN 0x08
-#define RB_LEFT 0x10
-#define RB_CENTER 0x20
-#define RB_RIGHT 0x40
-#define RB_ALIGN (RB_LEFT | RB_CENTER | RB_RIGHT)
-#define RB_NOBR 0x80
-#define RB_P 0x100
-#define RB_PRE_INT 0x200
-#define RB_IN_DT 0x400
-#define RB_INTXTA 0x800
-#define RB_INSELECT 0x1000
-#define RB_IGNORE_P 0x2000
-#define RB_TITLE 0x4000
-#define RB_NFLUSHED 0x8000
-#define RB_NOFRAMES 0x10000
-#define RB_INTABLE 0x20000
-#define RB_PREMODE                                                             \
-  (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA)
-#define RB_SPECIAL                                                             \
-  (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR)
-#define RB_PLAIN_PRE 0x40000
-
-#ifdef FORMAT_NICE
-#define RB_FILL 0x80000
-#endif /* FORMAT_NICE */
-#define RB_DEL 0x100000
-#define RB_S 0x200000
-#define RB_HTML5 0x400000
-
-#define RB_GET_ALIGN(obuf) ((obuf)->flag & RB_ALIGN)
-#define RB_SET_ALIGN(obuf, align)                                              \
-  do {                                                                         \
-    (obuf)->flag &= ~RB_ALIGN;                                                 \
-    (obuf)->flag |= (align);                                                   \
-  } while (0)
-#define RB_SAVE_FLAG(obuf)                                                     \
-  {                                                                            \
-    if ((obuf)->flag_sp < RB_STACK_SIZE)                                       \
-      (obuf)->flag_stack[(obuf)->flag_sp++] = RB_GET_ALIGN(obuf);              \
-  }
-#define RB_RESTORE_FLAG(obuf)                                                  \
-  {                                                                            \
-    if ((obuf)->flag_sp > 0)                                                   \
-      RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]);               \
-  }
-
 /* state of token scanning finite state machine */
 #define R_ST_NORMAL 0  /* normal */
 #define R_ST_TAG0 1    /* within tag, just after < */
@@ -494,12 +304,6 @@ struct DownloadList {
   (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' ||              \
    p[1] == '\0' || p[1] == '_')
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-#define RG_FRAME 2
-#define RG_FRAME_SRC 4
-
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0
@@ -513,6 +317,7 @@ struct DownloadList {
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
+struct FormList;
 struct HRequest {
   char command;
   char flag;
@@ -556,7 +361,7 @@ global int ShowEffect init(TRUE);
 global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
-global const char *DefaultType init(NULL);
+global const char *DefaultType init(nullptr);
 global char RenderFrame init(FALSE);
 global char TargetSelf init(FALSE);
 global char PermitSaveToPipe init(FALSE);
@@ -566,20 +371,20 @@ global char PreserveTimestamp init(TRUE);
 global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
-global char *HostName init(NULL);
+global char *HostName init(nullptr);
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 
-global char *HTTP_proxy init(NULL);
-global char *HTTPS_proxy init(NULL);
-global char *FTP_proxy init(NULL);
+global char *HTTP_proxy init(nullptr);
+global char *HTTPS_proxy init(nullptr);
+global char *FTP_proxy init(nullptr);
 global ParsedURL HTTP_proxy_parsed;
 global ParsedURL HTTPS_proxy_parsed;
 global ParsedURL FTP_proxy_parsed;
-global char *NO_proxy init(NULL);
+global char *NO_proxy init(nullptr);
 global int NOproxy_netaddr init(TRUE);
 #ifdef INET6
 #define DNS_ORDER_UNSPEC 0
@@ -590,16 +395,17 @@ global int NOproxy_netaddr init(TRUE);
 global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
 #endif                                  /* INET6 */
+struct TextList;
 global TextList *NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
 
-global char *document_root init(NULL);
-global char *personal_document_root init(NULL);
-global char *cgi_bin init(NULL);
-global char *index_file init(NULL);
+global char *document_root init(nullptr);
+global char *personal_document_root init(nullptr);
+global char *cgi_bin init(nullptr);
+global char *index_file init(nullptr);
 
 global char *CurrentDir;
 global int CurrentPid;
@@ -607,6 +413,7 @@ global int CurrentPid;
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;
  */
+struct TabBuffer;
 global TabBuffer *CurrentTab;
 global TabBuffer *FirstTab;
 global TabBuffer *LastTab;
@@ -618,8 +425,9 @@ global int TabCols init(10);
 #define NO_TABBUFFER ((TabBuffer *)1)
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
-global DownloadList *FirstDL init(NULL);
-global DownloadList *LastDL init(NULL);
+struct DownloadList;
+global DownloadList *FirstDL init(nullptr);
+global DownloadList *LastDL init(nullptr);
 global int CurrentKey;
 global char *CurrentKeyData;
 global char *CurrentCmdData;
@@ -637,7 +445,8 @@ global int w3m_debug;
 global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
 global int w3m_halfload init(FALSE);
-global Str *header_string init(NULL);
+struct Str;
+global Str *header_string init(nullptr);
 global int override_content_type init(FALSE);
 global int override_user_agent init(FALSE);
 
@@ -650,7 +459,7 @@ global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global char *displayTitleTerm init(NULL);
+global char *displayTitleTerm init(nullptr);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);
@@ -662,7 +471,7 @@ global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
 global int pseudoInlines init(TRUE);
 global char *Editor init(DEF_EDITOR);
 #ifdef USE_W3MMAILER
-global char *Mailer init(NULL);
+global char *Mailer init(nullptr);
 #else
 global char *Mailer init(DEF_MAILER);
 #endif
@@ -673,33 +482,33 @@ global char *Mailer init(DEF_MAILER);
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
 global char *ExtBrowser init(DEF_EXT_BROWSER);
-global char *ExtBrowser2 init(NULL);
-global char *ExtBrowser3 init(NULL);
-global char *ExtBrowser4 init(NULL);
-global char *ExtBrowser5 init(NULL);
-global char *ExtBrowser6 init(NULL);
-global char *ExtBrowser7 init(NULL);
-global char *ExtBrowser8 init(NULL);
-global char *ExtBrowser9 init(NULL);
+global char *ExtBrowser2 init(nullptr);
+global char *ExtBrowser3 init(nullptr);
+global char *ExtBrowser4 init(nullptr);
+global char *ExtBrowser5 init(nullptr);
+global char *ExtBrowser6 init(nullptr);
+global char *ExtBrowser7 init(nullptr);
+global char *ExtBrowser8 init(nullptr);
+global char *ExtBrowser9 init(nullptr);
 global int BackgroundExtViewer init(TRUE);
 global int disable_secret_security_check init(FALSE);
 global char *passwd_file init(PASSWD_FILE);
 global char *pre_form_file init(PRE_FORM_FILE);
 global char *siteconf_file init(SITECONF_FILE);
-global char *ftppasswd init(NULL);
+global char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);
-global char *UserAgent init(NULL);
+global char *UserAgent init(nullptr);
 global int NoSendReferer init(FALSE);
 global int CrossOriginReferer init(TRUE);
-global char *AcceptLang init(NULL);
-global char *AcceptEncoding init(NULL);
-global char *AcceptMedia init(NULL);
+global char *AcceptLang init(nullptr);
+global char *AcceptEncoding init(nullptr);
+global char *AcceptMedia init(nullptr);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
-global char *BookmarkFile init(NULL);
+global char *BookmarkFile init(nullptr);
 global int UseExternalDirBuffer init(TRUE);
 global char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
@@ -723,8 +532,8 @@ global int migemo_active init(0);
 global char *migemo_command init(DEF_MIGEMO_COMMAND);
 #endif /* USE_MIGEMO */
 
-global struct auth_cookie *Auth_cookie init(NULL);
-global struct cookie *First_cookie init(NULL);
+global struct auth_cookie *Auth_cookie init(nullptr);
+global struct cookie *First_cookie init(nullptr);
 
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
@@ -765,13 +574,13 @@ extern int symbol_width0;
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 #define SYMBOL_BASE 0x20
 global int no_rc_dir init(FALSE);
-global char *rc_dir init(NULL);
+global char *rc_dir init(nullptr);
 global char *tmp_dir;
-global char *param_tmp_dir init(NULL);
+global char *param_tmp_dir init(nullptr);
 #ifdef HAVE_MKDTEMP
-global char *mkd_tmp_dir init(NULL);
+global char *mkd_tmp_dir init(nullptr);
 #endif
-global char *config_file init(NULL);
+global char *config_file init(nullptr);
 
 global int default_use_cookie init(TRUE);
 global int use_cookie init(TRUE);
@@ -781,9 +590,9 @@ global int accept_cookie init(TRUE);
 #define ACCEPT_BAD_COOKIE_ACCEPT 1
 #define ACCEPT_BAD_COOKIE_ASK 2
 global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
-global char *cookie_reject_domains init(NULL);
-global char *cookie_accept_domains init(NULL);
-global char *cookie_avoid_wrong_number_of_dots init(NULL);
+global char *cookie_reject_domains init(nullptr);
+global char *cookie_accept_domains init(nullptr);
+global char *cookie_avoid_wrong_number_of_dots init(nullptr);
 global TextList *Cookie_reject_domains;
 global TextList *Cookie_accept_domains;
 global TextList *Cookie_avoid_wrong_number_of_dots_domains;
@@ -792,22 +601,19 @@ global int view_unseenobject init(TRUE);
 
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 global int ssl_verify_server init(TRUE);
-global char *ssl_cert_file init(NULL);
-global char *ssl_key_file init(NULL);
-global char *ssl_ca_path init(NULL);
+global char *ssl_cert_file init(nullptr);
+global char *ssl_key_file init(nullptr);
+global char *ssl_ca_path init(nullptr);
 global char *ssl_ca_file init(DEF_CAFILE);
 global int ssl_ca_default init(TRUE);
 global int ssl_path_modified init(FALSE);
 #endif /* defined(USE_SSL) &&                                                  \
         * defined(USE_SSL_VERIFY) */
 global char *ssl_forbid_method init("2, 3, t, 5");
-#ifdef SSL_CTX_set_min_proto_version
-global char *ssl_min_version init(NULL);
-#endif
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else
-global char *ssl_cipher init(NULL);
+global char *ssl_cipher init(nullptr);
 #endif
 
 global int is_redisplay init(FALSE);
@@ -830,15 +636,9 @@ global int FollowRedirection init(10);
 global int w3m_backend init(FALSE);
 struct TextLineList;
 global TextLineList *backend_halfdump_buf;
-global TextList *backend_batch_commands init(NULL);
+global TextList *backend_batch_commands init(nullptr);
 int backend(void);
 extern void deleteFiles(void);
 void w3m_exit(int i);
-
-/*
- * Externals
- */
-
-#include "proto.h"
 
 #endif /* not FM_H */

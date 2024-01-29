@@ -1,5 +1,6 @@
-/* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
+#include "line.h"
 #include "fm.h"
+#include "buffer.h"
 #include "signal_util.h"
 #include <pwd.h>
 #include "myctype.h"
@@ -7,6 +8,8 @@
 #include "local.h"
 #include "hash.h"
 #include "textlist.h"
+#include "proto.h"
+#include "indep.h"
 
 #include <fcntl.h>
 #include <sys/types.h>

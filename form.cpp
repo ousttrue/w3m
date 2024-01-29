@@ -3,7 +3,9 @@
  * HTML forms
  */
 #include "form.h"
+#include "line.h"
 #include "display.h"
+#include "buffer.h"
 #include "anchor.h"
 #include "fm.h"
 #include "parsetag.h"
@@ -11,7 +13,9 @@
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
+#include "proto.h"
 #include "util.h"
+#include "indep.h"
 #include <unistd.h>
 
 extern Str **textarea_str;
