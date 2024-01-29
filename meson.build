@@ -122,6 +122,7 @@ executable(
         'tagtable.cpp',
         'istream.cpp',
         'version.cpp',
+        'utf8.cpp',
     ],
     install: true,
     dependencies: [
