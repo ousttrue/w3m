@@ -5,6 +5,7 @@
 #include "rc.h"
 #include "cookie.h"
 #include "w3m.h"
+#include "tmpfile.h"
 #include "httprequest.h"
 #include "fm.h"
 #include "url.h"
@@ -22,6 +23,10 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+
+#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
+
+char *rc_dir = nullptr;
 
 #define _(Text) Text
 #define N_(Text) Text

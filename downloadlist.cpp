@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "w3m.h"
 #include "fm.h"
 #include "indep.h"
 #include <sys/stat.h>

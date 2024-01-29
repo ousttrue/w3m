@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "linklist.h"
 #include "httprequest.h"
 #include "textlist.h"
 #include "line.h"

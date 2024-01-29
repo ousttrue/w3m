@@ -1,4 +1,5 @@
 #include "frame.h"
+#include "tmpfile.h"
 #include "buffer.h"
 #include "readbuffer.h"
 #include "fm.h"

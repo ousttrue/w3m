@@ -1,5 +1,6 @@
 /* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
 #include "history.h"
+#include "tmpfile.h"
 #include "fm.h"
 #include "buffer.h"
 #include "indep.h"

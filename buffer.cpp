@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "fm.h"
+#include "tmpfile.h"
 #include "terms.h"
 #include "html.h"
 #include "form.h"

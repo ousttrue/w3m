@@ -5,6 +5,7 @@
 #include "Str.h"
 #include "parsetagx.h"
 #include "hash.h"
+#include "table.h"
 
 #include "html.c"
 

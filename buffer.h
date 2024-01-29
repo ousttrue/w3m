@@ -2,6 +2,12 @@
 #include "url.h"
 #include <stddef.h>
 
+#define NO_BUFFER ((Buffer *)1)
+
+#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
+#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
+#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
+
 /* Buffer Property */
 #define BP_NORMAL 0x0
 #define BP_PIPE 0x1
@@ -97,6 +103,30 @@ struct Buffer {
   BufferPos *undo;
   AlarmEvent *event;
 };
+
+#define COPY_BUFROOT(dstbuf, srcbuf)                                           \
+  {                                                                            \
+    (dstbuf)->rootX = (srcbuf)->rootX;                                         \
+    (dstbuf)->rootY = (srcbuf)->rootY;                                         \
+    (dstbuf)->COLS = (srcbuf)->COLS;                                           \
+    (dstbuf)->LINES = (srcbuf)->LINES;                                         \
+  }
+
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
+  {                                                                            \
+    (dstbuf)->topLine = (srcbuf)->topLine;                                     \
+    (dstbuf)->currentLine = (srcbuf)->currentLine;                             \
+    (dstbuf)->pos = (srcbuf)->pos;                                             \
+    (dstbuf)->cursorX = (srcbuf)->cursorX;                                     \
+    (dstbuf)->cursorY = (srcbuf)->cursorY;                                     \
+    (dstbuf)->visualpos = (srcbuf)->visualpos;                                 \
+    (dstbuf)->currentColumn = (srcbuf)->currentColumn;                         \
+  }
+#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
+#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
+#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
+#define CUR_LINENUMBER(buf)                                                    \
+  ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
 struct TabBuffer {
   TabBuffer *nextTab;

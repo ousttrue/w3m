@@ -55,125 +55,6 @@
 #endif
 
 /*
- * Types.
- */
-
-
-#define LINK_TYPE_NONE 0
-#define LINK_TYPE_REL 1
-#define LINK_TYPE_REV 2
-struct LinkList {
-  char *url;
-  char *title; /* Next, Contents, ... */
-  char *ctype; /* Content-Type */
-  char type;   /* Rel, Rev */
-  LinkList *next;
-};
-
-#define AL_UNSET 0
-#define AL_EXPLICIT 1
-#define AL_IMPLICIT 2
-#define AL_IMPLICIT_ONCE 3
-
-struct AlarmEvent {
-  int sec;
-  short status;
-  int cmd;
-  void *data;
-};
-
-#define COPY_BUFROOT(dstbuf, srcbuf)                                           \
-  {                                                                            \
-    (dstbuf)->rootX = (srcbuf)->rootX;                                         \
-    (dstbuf)->rootY = (srcbuf)->rootY;                                         \
-    (dstbuf)->COLS = (srcbuf)->COLS;                                           \
-    (dstbuf)->LINES = (srcbuf)->LINES;                                         \
-  }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
-  {                                                                            \
-    (dstbuf)->topLine = (srcbuf)->topLine;                                     \
-    (dstbuf)->currentLine = (srcbuf)->currentLine;                             \
-    (dstbuf)->pos = (srcbuf)->pos;                                             \
-    (dstbuf)->cursorX = (srcbuf)->cursorX;                                     \
-    (dstbuf)->cursorY = (srcbuf)->cursorY;                                     \
-    (dstbuf)->visualpos = (srcbuf)->visualpos;                                 \
-    (dstbuf)->currentColumn = (srcbuf)->currentColumn;                         \
-  }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf)                                                    \
-  ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
-
-#define NO_BUFFER ((Buffer *)1)
-
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
-#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
-#define in_bold fontstat[0]
-#define in_under fontstat[1]
-#define in_italic fontstat[2]
-#define in_strike fontstat[3]
-#define in_ins fontstat[4]
-#define in_stand fontstat[5]
-
-/* state of token scanning finite state machine */
-#define R_ST_NORMAL 0  /* normal */
-#define R_ST_TAG0 1    /* within tag, just after < */
-#define R_ST_TAG 2     /* within tag */
-#define R_ST_QUOTE 3   /* within single quote */
-#define R_ST_DQUOTE 4  /* within double quote */
-#define R_ST_EQL 5     /* = */
-#define R_ST_AMP 6     /* within ampersand quote */
-#define R_ST_EOL 7     /* end of file */
-#define R_ST_CMNT1 8   /* <!  */
-#define R_ST_CMNT2 9   /* <!- */
-#define R_ST_CMNT 10   /* within comment */
-#define R_ST_NCMNT1 11 /* comment - */
-#define R_ST_NCMNT2 12 /* comment -- */
-#define R_ST_NCMNT3 13 /* comment -- space */
-#define R_ST_IRRTAG 14 /* within irregular tag */
-#define R_ST_VALUE 15  /* within tag attribule value */
-
-#define ST_IS_REAL_TAG(s)                                                      \
-  ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
-
-/* is this '<' really means the beginning of a tag? */
-#define REALLY_THE_BEGINNING_OF_A_TAG(p)                                       \
-  (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' ||              \
-   p[1] == '\0' || p[1] == '_')
-
-/* modes for align() */
-
-#define ALIGN_CENTER 0
-#define ALIGN_LEFT 1
-#define ALIGN_RIGHT 2
-#define ALIGN_MIDDLE 4
-#define ALIGN_TOP 5
-#define ALIGN_BOTTOM 6
-
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
-
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
-
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
-
-/*
  * Globals.
  */
 
@@ -228,8 +109,6 @@ global char *personal_document_root init(nullptr);
 global char *cgi_bin init(nullptr);
 global char *index_file init(nullptr);
 
-global char *CurrentDir;
-global int CurrentPid;
 /*
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;
@@ -349,8 +228,6 @@ global struct cookie *First_cookie init(nullptr);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
-global TextList *fileToDelete;
-
 struct Hist;
 extern Hist *LoadHist;
 extern Hist *SaveHist;
@@ -384,9 +261,9 @@ extern int symbol_width0;
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 #define SYMBOL_BASE 0x20
+
 global int no_rc_dir init(FALSE);
-global char *rc_dir init(nullptr);
-global char *tmp_dir;
+
 global char *param_tmp_dir init(nullptr);
 #ifdef HAVE_MKDTEMP
 global char *mkd_tmp_dir init(nullptr);

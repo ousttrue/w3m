@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "linklist.h"
 #include "textlist.h"
 #include "fm.h"
 #include "frame.h"

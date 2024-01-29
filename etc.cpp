@@ -1,4 +1,6 @@
 #include "line.h"
+#include "readbuffer.h"
+#include "w3m.h"
 #include "fm.h"
 #include "buffer.h"
 #include "signal_util.h"
@@ -1205,34 +1207,6 @@ char *url_unquote_conv0(char *url) {
   Str* tmp;
   tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
   return tmp->ptr;
-}
-
-static char *tmpf_base[MAX_TMPF_TYPE] = {
-    "tmp", "src", "frame", "cache", "cookie", "hist",
-};
-static unsigned int tmpf_seq[MAX_TMPF_TYPE];
-
-Str* tmpfname(int type, char *ext) {
-  Str* tmpf;
-  char *dir;
-
-  switch (type) {
-  case TMPF_HIST:
-    dir = rc_dir;
-    break;
-  case TMPF_DFL:
-  case TMPF_COOKIE:
-  case TMPF_SRC:
-  case TMPF_FRAME:
-  case TMPF_CACHE:
-  default:
-    dir = tmp_dir;
-  }
-
-  tmpf = Sprintf("%s/w3m%s%d-%d%s", dir, tmpf_base[type], CurrentPid,
-                 tmpf_seq[type]++, (ext) ? ext : "");
-  pushText(fileToDelete, tmpf->ptr);
-  return tmpf;
 }
 
 static char *monthtbl[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",

@@ -1,6 +1,7 @@
-/* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
+#include "tmpfile.h"
+#include "alarm.h"
+#include "linklist.h"
 #include "httprequest.h"
 #include "rc.h"
 #include "linein.h"

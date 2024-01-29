@@ -421,7 +421,6 @@ extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 extern char *expandName(char *name);
-extern Str *tmpfname(int type, char *ext);
 
 extern Buffer *cookie_list_panel(void);
 

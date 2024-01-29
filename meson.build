@@ -83,7 +83,9 @@ defs = [
 executable(
     'w3m',
     [
+        'w3m.cpp',
         'main.cpp',
+        'tmpfile.cpp',
         'keybind.cpp',
         'signal_util.cpp',
         'Str.cpp',

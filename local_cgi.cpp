@@ -1,5 +1,6 @@
 #include "local_cgi.h"
 #include "w3m.h"
+#include "tmpfile.h"
 #include "fm.h"
 #include "httprequest.h"
 #include "etc.h"

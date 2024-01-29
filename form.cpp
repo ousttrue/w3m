@@ -1,8 +1,8 @@
-/* $Id: form.c,v 1.35 2010/07/18 13:48:48 htrb Exp $ */
 /*
  * HTML forms
  */
 #include "form.h"
+#include "tmpfile.h"
 #include "line.h"
 #include "display.h"
 #include "buffer.h"

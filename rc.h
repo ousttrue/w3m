@@ -1,6 +1,8 @@
 #pragma once
 #include <stdio.h>
 
+extern char *rc_dir;
+
 struct ParsedURL;
 void show_params(FILE *fp);
 int str_to_bool(char *value, int old);
