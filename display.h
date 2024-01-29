@@ -1,7 +1,16 @@
-#ifndef W3M_DISPLAY_H
-#define W3M_DISPLAY_H
+#pragma once
+
+struct Buffer;
+
+enum DisplayFlag {
+  B_NORMAL,
+  B_FORCE_REDRAW,
+  B_REDRAW,
+  B_SCROLL,
+  B_REDRAW_IMAGE,
+};
+
+void displayBuffer(Buffer *buf, DisplayFlag mode);
 
 void fmInit(void);
 void fmTerm(void);
-
-#endif

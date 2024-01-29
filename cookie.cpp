@@ -12,12 +12,24 @@
 #include "parsetag.h"
 #include "fm.h"
 #include "html.h"
-#include <time.h>
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
 #include "indep.h"
 #include "proto.h"
+#include <time.h>
+
+int default_use_cookie = TRUE;
+int use_cookie = TRUE;
+int show_cookie = FALSE;
+int accept_cookie = TRUE;
+int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
+char *cookie_reject_domains = nullptr;
+char *cookie_accept_domains = nullptr;
+char *cookie_avoid_wrong_number_of_dots = nullptr;
+TextList *Cookie_reject_domains;
+TextList *Cookie_accept_domains;
+TextList *Cookie_avoid_wrong_number_of_dots_domains;
 
 static int is_saved = 1;
 

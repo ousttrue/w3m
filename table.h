@@ -29,6 +29,8 @@
 
 typedef unsigned short table_attr;
 
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
+
 /* flag */
 #define TBL_IN_ROW 1
 #define TBL_EXPAND_OK 2

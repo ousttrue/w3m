@@ -1,4 +1,6 @@
 #include "ftp.h"
+#include "url.h"
+#include "linein.h"
 #include "Str.h"
 #include "html.h"
 #include "fm.h"

@@ -1,6 +1,9 @@
 /* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
+#include "httprequest.h"
+#include "rc.h"
+#include "linein.h"
 #include "ftp.h"
 #include "downloadlist.h"
 #include "etc.h"
@@ -36,8 +39,11 @@
 
 #include "html.h"
 #include "parsetagx.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "regex.h"
+
+#define REAL_WIDTH(w, limit)                                                   \
+  (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))

@@ -220,7 +220,7 @@ extern void copyBuffer(Buffer *a, Buffer *b);
 extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
 extern int writeBufferCache(Buffer *buf);
 extern int readBufferCache(Buffer *buf);
-extern void displayBuffer(Buffer *buf, int mode);
+
 extern void addChar(char c, Lineprop mode);
 extern void record_err_message(char *s);
 extern Buffer *message_list_panel(void);
@@ -269,9 +269,6 @@ extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
 struct Hist;
-extern char *
-inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                    int (*incfunc)(int ch, Str *buf, Lineprop *prop));
 extern Str *unescape_spaces(Str *s);
 extern Buffer *historyBuffer(Hist *hist);
 extern double log_like(int x);
@@ -400,7 +397,6 @@ extern char *confFile(char *base);
 extern char *auxbinFile(char *base);
 extern char *libFile(char *base);
 extern char *helpFile(char *base);
-extern const void *querySiteconf(const ParsedURL *query_pu, int field);
 extern Str *localCookie(void);
 extern Str *loadLocalDir(char *dirname);
 extern FILE *localcgi_post(char *, char *, FormList *, char *);

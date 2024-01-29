@@ -48,6 +48,11 @@ struct Line {
   int bpos;
   int bwidth;
 };
+
+/* Flags for calcPosition() */
+#define CP_AUTO 0
+#define CP_FORCE 1
+
 #define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
 #define checkType(a, b, c) _checkType(a, b)

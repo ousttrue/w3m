@@ -2,6 +2,22 @@
 #include "url.h"
 #include <time.h>
 
+extern int default_use_cookie;
+extern int use_cookie;
+extern int show_cookie;
+extern int accept_cookie;
+#define ACCEPT_BAD_COOKIE_DISCARD 0
+#define ACCEPT_BAD_COOKIE_ACCEPT 1
+#define ACCEPT_BAD_COOKIE_ASK 2
+extern int accept_bad_cookie;
+extern char *cookie_reject_domains;
+extern char *cookie_accept_domains;
+extern char *cookie_avoid_wrong_number_of_dots;
+struct TextList;
+extern TextList *Cookie_reject_domains;
+extern TextList *Cookie_accept_domains;
+extern TextList *Cookie_avoid_wrong_number_of_dots_domains;
+
 struct portlist {
   unsigned short port;
   struct portlist *next;
@@ -61,4 +77,3 @@ extern void load_cookies(void);
 extern void initCookie(void);
 extern void cooLst(void);
 extern int check_cookie_accept_domain(char *domain);
-

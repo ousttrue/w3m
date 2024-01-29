@@ -1,11 +1,12 @@
-/* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
+#include "linein.h"
 #include "fm.h"
+#include "display.h"
 #include "buffer.h"
 #include "terms.h"
 #include "proto.h"
 #include "form.h"
 #include "ctrlcode.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "myctype.h"
 #include "history.h"
 #include "indep.h"
@@ -13,14 +14,14 @@
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
 
-static Str* strBuf;
+static Str *strBuf;
 static Lineprop strProp[STR_LEN];
 
-static Str* CompleteBuf;
-static Str* CFileName;
-static Str* CBeforeBuf;
-static Str* CAfterBuf;
-static Str* CDirBuf;
+static Str *CompleteBuf;
+static Str *CFileName;
+static Str *CBeforeBuf;
+static Str *CAfterBuf;
+static Str *CDirBuf;
 static char **CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
@@ -36,7 +37,7 @@ static int terminated(unsigned char c);
 
 static void next_compl(int next);
 static void next_dcompl(int next);
-static Str* doComplete(Str* ifn, int *status, int next);
+static Str *doComplete(Str *ifn, int *status, int next);
 
 /* *INDENT-OFF* */
 void (*InputKeymap[32])() = {
@@ -79,7 +80,7 @@ void (*InputKeymap[32])() = {
 };
 /* *INDENT-ON* */
 
-static int setStrType(Str* str, Lineprop *prop);
+static int setStrType(Str *str, Lineprop *prop);
 static void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
 static void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
 
@@ -90,15 +91,15 @@ static int need_redraw, is_passwd;
 static int move_word;
 
 static Hist *CurrentHist;
-static Str* strCurrentBuf;
+static Str *strCurrentBuf;
 static int use_hist;
 
 extern char *
 inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                    int (*incfunc)(int ch, Str* buf, Lineprop *prop));
+                    int (*incfunc)(int ch, Str *buf, Lineprop *prop));
 
 char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                          int (*incrfunc)(int ch, Str* str, Lineprop *prop)) {
+                          int (*incrfunc)(int ch, Str *str, Lineprop *prop)) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
@@ -462,8 +463,8 @@ static void _tcompl(void) {
 static void next_compl(int next) {
   int status;
   int b, a;
-  Str* buf;
-  Str* s;
+  Str *buf;
+  Str *s;
 
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
@@ -509,9 +510,9 @@ static void _rdcompl(void) { next_dcompl(-1); }
 static void next_dcompl(int next) {
   static int col, row;
   static unsigned int len;
-  static Str* d;
+  static Str *d;
   int i, j, n, y;
-  Str* f;
+  Str *f;
   char *p;
   struct stat st;
   int comment, nline;
@@ -633,8 +634,8 @@ disp_next:
   }
 }
 
-static Str* escape_spaces(Str* s) {
-  Str* tmp = NULL;
+static Str *escape_spaces(Str *s) {
+  Str *tmp = NULL;
   char *p;
 
   if (s == NULL)
@@ -653,8 +654,8 @@ static Str* escape_spaces(Str* s) {
   return s;
 }
 
-Str* unescape_spaces(Str* s) {
-  Str* tmp = NULL;
+Str *unescape_spaces(Str *s) {
+  Str *tmp = NULL;
   char *p;
 
   if (s == NULL)
@@ -673,7 +674,7 @@ Str* unescape_spaces(Str* s) {
   return s;
 }
 
-static Str* doComplete(Str* ifn, int *status, int next) {
+static Str *doComplete(Str *ifn, int *status, int next) {
   int fl, i;
   char *fn, *p;
   DIR *d;
@@ -827,7 +828,7 @@ static void _next(void) {
   offset = 0;
 }
 
-static int setStrType(Str* str, Lineprop *prop) {
+static int setStrType(Str *str, Lineprop *prop) {
   Lineprop ctype;
   char *p = str->ptr, *ep = p + str->length;
   int i, len = 1;

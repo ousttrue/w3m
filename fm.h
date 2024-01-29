@@ -10,7 +10,6 @@
 #define FM_H
 
 #include "config.h"
-#include "url.h"
 
 #ifdef MAINPROGRAM
 #define global
@@ -56,167 +55,9 @@
 #endif
 
 /*
- * Line Property
- */
-
-#define P_CHARTYPE 0x3f00
-#define PC_ASCII 0x0000
-#define PC_CTRL 0x0100
-#define PC_SYMBOL 0x8000
-
-/* Effect ( standout/underline ) */
-#define P_EFFECT 0x40ff
-#define PE_NORMAL 0x00
-#define PE_MARK 0x01
-#define PE_UNDER 0x02
-#define PE_STAND 0x04
-#define PE_BOLD 0x08
-#define PE_ANCHOR 0x10
-#define PE_EMPH 0x08
-#define PE_IMAGE 0x20
-#define PE_FORM 0x40
-#define PE_ACTIVE 0x80
-#define PE_VISITED 0x4000
-
-/* Extra effect */
-#define PE_EX_ITALIC 0x01
-#define PE_EX_INSERT 0x02
-#define PE_EX_STRIKE 0x04
-
-#define PE_EX_ITALIC_E PE_UNDER
-#define PE_EX_INSERT_E PE_UNDER
-#define PE_EX_STRIKE_E PE_STAND
-
-#define CharType(c) ((c) & P_CHARTYPE)
-#define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
-#define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
-
-
-/* Flags for displayBuffer() */
-#define B_NORMAL 0
-#define B_FORCE_REDRAW 1
-#define B_REDRAW 2
-#define B_SCROLL 3
-#define B_REDRAW_IMAGE 4
-
-/* Buffer Property */
-#define BP_NORMAL 0x0
-#define BP_PIPE 0x1
-#define BP_FRAME 0x2
-#define BP_INTERNAL 0x8
-#define BP_NO_URL 0x10
-#define BP_REDIRECTED 0x20
-#define BP_CLOSE 0x40
-
-/* Search Result */
-#define SR_FOUND 0x1
-#define SR_NOTFOUND 0x2
-#define SR_WRAPPED 0x4
-
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-/* Flags for calcPosition() */
-#define CP_AUTO 0
-#define CP_FORCE 1
-
-/* Completion status. */
-#define CPL_OK 0
-#define CPL_AMBIG 1
-#define CPL_FAIL 2
-#define CPL_MENU 3
-
-#define CPL_NEVER 0x0
-#define CPL_OFF 0x1
-#define CPL_ON 0x2
-#define CPL_ALWAYS 0x4
-#define CPL_URL 0x8
-
-/* Flags for inputLine() */
-#define IN_STRING 0x10
-#define IN_FILENAME 0x20
-#define IN_PASSWORD 0x40
-#define IN_COMMAND 0x80
-#define IN_URL 0x100
-#define IN_CHAR 0x200
-
-#define IMG_FLAG_SKIP 1
-#define IMG_FLAG_AUTO 2
-
-#define IMG_FLAG_START 0
-#define IMG_FLAG_STOP 1
-#define IMG_FLAG_NEXT 2
-
-#define IMG_FLAG_UNLOADED 0
-#define IMG_FLAG_LOADED 1
-#define IMG_FLAG_ERROR 2
-#define IMG_FLAG_DONT_REMOVE 4
-
-#define SCONF_RESERVED 0
-#define SCONF_SUBSTITUTE_URL 1
-#define SCONF_URL_CHARSET 2
-#define SCONF_NO_REFERER_FROM 3
-#define SCONF_NO_REFERER_TO 4
-#define SCONF_USER_AGENT 5
-#define SCONF_N_FIELD 6
-#define query_SCONF_SUBSTITUTE_URL(pu)                                         \
-  ((const char *)querySiteconf(pu, SCONF_SUBSTITUTE_URL))
-#define query_SCONF_USER_AGENT(pu)                                             \
-  ((const char *)querySiteconf(pu, SCONF_USER_AGENT))
-#define query_SCONF_URL_CHARSET(pu)                                            \
-  ((const wc_ces *)querySiteconf(pu, SCONF_URL_CHARSET))
-#define query_SCONF_NO_REFERER_FROM(pu)                                        \
-  ((const int *)querySiteconf(pu, SCONF_NO_REFERER_FROM))
-#define query_SCONF_NO_REFERER_TO(pu)                                          \
-  ((const int *)querySiteconf(pu, SCONF_NO_REFERER_TO))
-
-/*
- * Macros.
- */
-
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, nullptr)
-#define inputLine(p, d, f) inputLineHist(p, d, f, nullptr)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
-
-#define SKIP_BLANKS(p)                                                         \
-  {                                                                            \
-    while (*(p) && IS_SPACE(*(p)))                                             \
-      (p)++;                                                                   \
-  }
-#define SKIP_NON_BLANKS(p)                                                     \
-  {                                                                            \
-    while (*(p) && !IS_SPACE(*(p)))                                            \
-      (p)++;                                                                   \
-  }
-#define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
-#define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
-
-#define bpcmp(a, b)                                                            \
-  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
-#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
-#define REAL_WIDTH(w, limit)                                                   \
-  (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
-#define EOL(l) (&(l)->ptr[(l)->length])
-#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
-
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
-
-/*
  * Types.
  */
 
-#define NO_REFERER ((char *)-1)
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -317,22 +158,6 @@ struct AlarmEvent {
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-struct FormList;
-struct HRequest {
-  char command;
-  char flag;
-  char *referer;
-  FormList *request;
-};
-
-#define HR_COMMAND_GET 0
-#define HR_COMMAND_POST 1
-#define HR_COMMAND_CONNECT 2
-#define HR_COMMAND_HEAD 3
-
-#define HR_FLAG_LOCAL 1
-#define HR_FLAG_PROXY 2
-
 #define HTST_UNKNOWN 255
 #define HTST_MISSING 254
 #define HTST_NORMAL 0
@@ -381,9 +206,6 @@ extern unsigned char EscDKeymap[];
 global char *HTTP_proxy init(nullptr);
 global char *HTTPS_proxy init(nullptr);
 global char *FTP_proxy init(nullptr);
-global ParsedURL HTTP_proxy_parsed;
-global ParsedURL HTTPS_proxy_parsed;
-global ParsedURL FTP_proxy_parsed;
 global char *NO_proxy init(nullptr);
 global int NOproxy_netaddr init(TRUE);
 #ifdef INET6
@@ -397,7 +219,6 @@ extern int ai_family_order_table[7][3]; /* XXX */
 #endif                                  /* INET6 */
 struct TextList;
 global TextList *NO_proxy_domains;
-global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
@@ -432,7 +253,6 @@ global int CurrentKey;
 global char *CurrentKeyData;
 global char *CurrentCmdData;
 global char *w3m_reqlog;
-extern char *w3m_version;
 extern int enable_inline_image;
 
 #define DUMP_BUFFER 0x01
@@ -445,10 +265,6 @@ global int w3m_debug;
 global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
 global int w3m_halfload init(FALSE);
-struct Str;
-global Str *header_string init(nullptr);
-global int override_content_type init(FALSE);
-global int override_user_agent init(FALSE);
 
 global int confirm_on_quit init(TRUE);
 #ifdef USE_MARK
@@ -498,12 +314,7 @@ global char *siteconf_file init(SITECONF_FILE);
 global char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(TRUE);
 global int do_download init(FALSE);
-global char *UserAgent init(nullptr);
-global int NoSendReferer init(FALSE);
-global int CrossOriginReferer init(TRUE);
-global char *AcceptLang init(nullptr);
-global char *AcceptEncoding init(nullptr);
-global char *AcceptMedia init(nullptr);
+
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);
@@ -582,20 +393,6 @@ global char *mkd_tmp_dir init(nullptr);
 #endif
 global char *config_file init(nullptr);
 
-global int default_use_cookie init(TRUE);
-global int use_cookie init(TRUE);
-global int show_cookie init(FALSE);
-global int accept_cookie init(TRUE);
-#define ACCEPT_BAD_COOKIE_DISCARD 0
-#define ACCEPT_BAD_COOKIE_ACCEPT 1
-#define ACCEPT_BAD_COOKIE_ASK 2
-global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
-global char *cookie_reject_domains init(nullptr);
-global char *cookie_accept_domains init(nullptr);
-global char *cookie_avoid_wrong_number_of_dots init(nullptr);
-global TextList *Cookie_reject_domains;
-global TextList *Cookie_accept_domains;
-global TextList *Cookie_avoid_wrong_number_of_dots_domains;
 
 global int view_unseenobject init(TRUE);
 

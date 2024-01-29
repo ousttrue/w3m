@@ -1,5 +1,6 @@
 /* $Id: backend.c,v 1.15 2010/08/08 09:53:42 htrb Exp $ */
 #include "fm.h"
+#include "httprequest.h"
 #include "cookie.h"
 #include "line.h"
 #include "url.h"

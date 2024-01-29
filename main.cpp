@@ -1,6 +1,10 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "w3m.h"
+#include "httprequest.h"
+#include "linein.h"
+#include "search.h"
 #include "ftp.h"
 #include "proto.h"
 #include "indep.h"
@@ -17,7 +21,7 @@
 #include "anchor.h"
 #include "mailcap.h"
 #include "file.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "signal_util.h"
 #include "display.h"
 #include "terms.h"
@@ -41,6 +45,12 @@
 #include <gc.h>
 
 #define DSTR_LEN 256
+
+#define INLINE_IMG_NONE 0
+#define INLINE_IMG_OSC5379 1
+#define INLINE_IMG_SIXEL 2
+#define INLINE_IMG_ITERM2 3
+#define INLINE_IMG_KITTY 4
 
 struct BufferPos {
   long top_linenumber;
@@ -575,7 +585,7 @@ static void SigPipe(SIGNAL_ARG) {
  * Command functions: These functions are called with a keystroke.
  */
 
-static void nscroll(int n, int mode) {
+static void nscroll(int n, DisplayFlag mode) {
   Buffer *buf = Currentbuf;
   Line *top = buf->topLine, *cur = buf->currentLine;
   int lnum, tlnum, llnum, diff_n;

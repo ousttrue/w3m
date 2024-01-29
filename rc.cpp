@@ -2,17 +2,21 @@
 /*
  * Initialization file etc.
  */
+#include "rc.h"
+#include "cookie.h"
+#include "w3m.h"
+#include "httprequest.h"
 #include "fm.h"
+#include "url.h"
 #include "signal_util.h"
 #include "myctype.h"
 #include "indep.h"
 #include "proto.h"
+#include "parsetag.h"
+#include "local_cgi.h"
+#include "regex.h"
 #include <stdio.h>
 #include <errno.h>
-#include "parsetag.h"
-#include "local.h"
-#include "regex.h"
-#include "rc.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <fcntl.h>

@@ -1,5 +1,7 @@
-/* $Id: local.c,v 1.35 2007/05/23 15:06:05 inu Exp $ */
+#include "local_cgi.h"
+#include "w3m.h"
 #include "fm.h"
+#include "httprequest.h"
 #include "etc.h"
 #include "form.h"
 #include "signal_util.h"
@@ -13,7 +15,6 @@
 #ifdef HAVE_READLINK
 #include <unistd.h>
 #endif /* HAVE_READLINK */
-#include "local.h"
 #include "hash.h"
 #include "indep.h"
 #include <time.h>

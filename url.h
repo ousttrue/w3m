@@ -17,6 +17,24 @@
 #define SCM_MAILTO 12
 #define SCM_HTTPS 13
 
+/* XXX: note html.h SCM_ */
+inline int DefaultPort[] = {
+    80,  /* http */
+    70,  /* gopher */
+    21,  /* ftp */
+    21,  /* ftpdir */
+    0,   /* local - not defined */
+    0,   /* local-CGI - not defined? */
+    0,   /* exec - not defined? */
+    119, /* nntp */
+    119, /* nntp group */
+    119, /* news */
+    119, /* news group */
+    0,   /* data - not defined */
+    0,   /* mailto - not defined */
+    443, /* https */
+};
+
 struct Str;
 struct ParsedURL {
   int scheme;
@@ -31,6 +49,10 @@ struct ParsedURL {
   int is_nocache;
 };
 
+extern ParsedURL HTTP_proxy_parsed;
+extern ParsedURL HTTPS_proxy_parsed;
+extern ParsedURL FTP_proxy_parsed;
+
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
 void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
@@ -39,5 +61,6 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
 Str *parsedURL2Str(ParsedURL *pu);
 Str *parsedURL2RefererStr(ParsedURL *pu);
 int getURLScheme(char **url);
+Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
 
 extern char *ssl_min_version;

@@ -5,7 +5,7 @@
 #include <pwd.h>
 #include "myctype.h"
 #include "html.h"
-#include "local.h"
+#include "local_cgi.h"
 #include "hash.h"
 #include "textlist.h"
 #include "proto.h"

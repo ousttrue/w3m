@@ -163,7 +163,7 @@ static Str *make_lastline_message(Buffer *buf) {
   return msg;
 }
 
-void displayBuffer(Buffer *buf, int mode) {
+void displayBuffer(Buffer *buf, DisplayFlag mode) {
   Str *msg;
   int ny = 0;
 
@@ -209,7 +209,9 @@ void displayBuffer(Buffer *buf, int mode) {
   }
   if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
       cline != buf->topLine || ccolumn != buf->currentColumn) {
-    { redrawBuffer(buf); }
+    {
+      redrawBuffer(buf);
+    }
     cline = buf->topLine;
     ccolumn = buf->currentColumn;
   }

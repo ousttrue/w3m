@@ -100,7 +100,7 @@ executable(
         'search.cpp',
         'linein.cpp',
         'table.cpp',
-        'local.cpp',
+        'local_cgi.cpp',
         'form.cpp',
         'map.cpp',
         'frame.cpp',
@@ -124,6 +124,7 @@ executable(
         'version.cpp',
         'utf8.cpp',
         'downloadlist.cpp',
+        'httprequest.cpp',
     ],
     install: true,
     dependencies: [

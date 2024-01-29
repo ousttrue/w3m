@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "httprequest.h"
 #include "textlist.h"
 #include "line.h"
 #include "buffer.h"
@@ -9,6 +10,9 @@
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"
+
+#define bpcmp(a, b)                                                            \
+  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
 #define FIRST_ANCHOR_SIZE 30
 
