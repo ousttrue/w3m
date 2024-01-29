@@ -117,11 +117,7 @@
 #define HAVE_STDINT_H 1
 #define HAVE_INTTYPES_H 1
 #define SIZEOF_LONG_LONG 8
-#if SIZEOF_LONG_LONG > 0
-typedef long long clen_t;
-#else
-typedef long clen_t;
-#endif
+
 #define HAVE_STRTOLL 1
 /* #undef HAVE_STROQ */
 #define HAVE_ATOLL 1

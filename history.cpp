@@ -1,4 +1,5 @@
 /* $Id: history.c,v 1.11 2003/09/26 17:59:51 ukai Exp $ */
+#include "history.h"
 #include "fm.h"
 
 /* Merge entries from their history into ours */

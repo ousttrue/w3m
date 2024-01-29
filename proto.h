@@ -5,6 +5,8 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
+#include <stdio.h>
+
 extern int main(int argc, char **argv);
 extern void nulcmd(void);
 extern void pushEvent(int cmd, void *data);
@@ -135,34 +137,39 @@ extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
+struct Buffer;
 extern int currentLn(Buffer *buf);
 extern void tmpClearBuffer(Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
+struct ParsedURL;
 extern ParsedURL *schemeToProxy(int scheme);
 #define url_encode(url, base, cs) url_quote(url)
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
+struct URLFile;
 extern void examineFile(char *path, URLFile *uf);
 extern char *acceptableEncoding(void);
 extern int dir_exist(char *path);
 extern char **get_symbol(void);
+struct Str;
 extern Str *convertLine0(URLFile *uf, Str *line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
 extern void push_symbol(Str *str, char symbol, int width, int n);
+struct FormList;
 extern Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
                                int flag, FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 
-
+struct TextLineList;
 extern void HTMLlineproc2(Buffer *buf, TextLineList *tl);
 
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
 extern Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
-extern char *convert_size(clen_t size, int usefloat);
-extern char *convert_size2(clen_t size1, clen_t size2, int usefloat);
-extern void showProgress(clen_t *linelen, clen_t *trbyte);
+extern char *convert_size(long long  size, int usefloat);
+extern char *convert_size2(long long  size1, long long  size2, int usefloat);
+extern void showProgress(long long  *linelen, long long  *trbyte);
 
 extern void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
 extern Buffer *loadHTMLString(Str *page);
@@ -191,7 +198,7 @@ extern TabBuffer *newTab(void);
 extern void calcTabPos(void);
 extern TabBuffer *deleteTab(TabBuffer *tab);
 extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                            clen_t size);
+                            long long  size);
 extern void stopDownload(void);
 extern int checkDownloadList(void);
 extern Buffer *newBuffer(int width);
@@ -267,39 +274,8 @@ inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
 extern Str *unescape_spaces(Str *s);
 extern Buffer *historyBuffer(Hist *hist);
 extern double log_like(int x);
-extern struct table *newTable(void);
-extern void pushdata(struct table *t, int row, int col, char *data);
-extern int visible_length(char *str);
-extern void align(TextLine *lbuf, int width, int mode);
-extern void print_item(struct table *t, int row, int col, int width, Str *buf);
-extern void print_sep(struct table *t, int row, int type, int maxcol, Str *buf);
-extern void do_refill(struct table *tbl, int row, int col, int maxlimit);
-extern void initRenderTable(void);
-extern void renderTable(struct table *t, int max_width,
-                        struct html_feed_environ *h_env);
-extern struct table *begin_table(int border, int spacing, int padding,
-                                 int vspace);
-extern void end_table(struct table *tbl);
-extern void check_rowcol(struct table *tbl, struct table_mode *mode);
-extern int minimum_length(char *line);
-extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
-                      int width, int internal);
-extern void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
-                        int width);
-extern void pushTable(struct table *, struct table *);
 
-extern char *form2str(FormItemList *fi);
-extern int formtype(char *typestr);
-extern void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
-extern void formResetBuffer(Buffer *buf, AnchorList *formitem);
-extern void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form);
-extern void preFormUpdateBuffer(Buffer *buf);
-extern Str *textfieldrep(Str *s, int width);
-extern void input_textarea(FormItemList *fi);
-extern void do_internal(char *action, char *data);
-extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
-extern void form_write_from_file(FILE *f, char *boundary, char *name,
-                                 char *filename, char *file);
+
 extern MapList *searchMapList(Buffer *buf, char *name);
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(Buffer *buf);
@@ -376,9 +352,13 @@ extern void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
 extern Str *parsedURL2Str(ParsedURL *pu);
 extern Str *parsedURL2RefererStr(ParsedURL *pu);
 extern int getURLScheme(char **url);
+union input_stream;
 extern void init_stream(URLFile *uf, int scheme, input_stream* stream);
+struct HRequest;
 Str *HTTPrequestMethod(HRequest *hr);
 Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);
+struct URLOption;
+struct TextList;
 extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
                        URLOption *option, FormList *request,
                        TextList *extra_header, URLFile *ouf, HRequest *hr,
@@ -394,6 +374,7 @@ extern Str *loadFTPDir0(ParsedURL *pu);
 extern void closeFTP(void);
 extern void disconnectFTP(void);
 
+struct Anchor;
 extern Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
                             char *title, unsigned char key, int line, int pos);
 extern Anchor *registerName(Buffer *buf, char *url, int line, int pos);

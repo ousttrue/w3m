@@ -23,23 +23,6 @@ struct cmdtable {
   int cmd;
 };
 
-struct mailcap {
-  char *type;
-  char *viewer;
-  int flags;
-  char *test;
-  char *nametemplate;
-  char *edit;
-};
-
-#define MAILCAP_NEEDSTERMINAL 0x01
-#define MAILCAP_COPIOUSOUTPUT 0x02
-#define MAILCAP_HTMLOUTPUT 0x04
-
-#define MCSTAT_REPNAME 0x01
-#define MCSTAT_REPTYPE 0x02
-#define MCSTAT_REPPARAM 0x04
-
 struct table2 {
   char *item1;
   char *item2;
@@ -386,22 +369,5 @@ struct environment {
 #define MAX_INDENT_LEVEL 10
 
 #define INDENT_INCR IndentIncr
-
-#define SCM_UNKNOWN 255
-#define SCM_MISSING 254
-#define SCM_HTTP 0
-#define SCM_GOPHER 1
-#define SCM_FTP 2
-#define SCM_FTPDIR 3
-#define SCM_LOCAL 4
-#define SCM_LOCAL_CGI 5
-#define SCM_EXEC 6
-#define SCM_NNTP 7
-#define SCM_NNTP_GROUP 8
-#define SCM_NEWS 9
-#define SCM_NEWS_GROUP 10
-#define SCM_DATA 11
-#define SCM_MAILTO 12
-#define SCM_HTTPS 13
 
 #endif /* _HTML_H */

@@ -6,6 +6,7 @@
 #include "html.h"
 #include "local.h"
 #include "hash.h"
+#include "textlist.h"
 
 #include <fcntl.h>
 #include <sys/types.h>

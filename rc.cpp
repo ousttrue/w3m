@@ -11,9 +11,14 @@
 #include "parsetag.h"
 #include "local.h"
 #include "regex.h"
+#include "rc.h"
 #include <stdlib.h>
 #include <stddef.h>
-#include "rc.h"
+#include <fcntl.h>
+#include <unistd.h>
+
+#define _(Text) Text
+#define N_(Text) Text
 
 struct param_ptr {
   char *name;

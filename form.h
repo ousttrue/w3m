@@ -69,3 +69,19 @@ struct FormItemList {
 FormList *newFormList(char *action, char *method, char *charset, char *enctype,
                       char *target, char *name, FormList *_next);
 struct FormItemList *formList_addInput(FormList *fl, struct parsed_tag *tag);
+
+struct Buffer;
+struct Anchor;
+struct AnchorList;
+char *form2str(FormItemList *fi);
+int formtype(char *typestr);
+void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
+void formResetBuffer(Buffer *buf, AnchorList *formitem);
+void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form);
+void preFormUpdateBuffer(Buffer *buf);
+Str *textfieldrep(Str *s, int width);
+void input_textarea(FormItemList *fi);
+void do_internal(char *action, char *data);
+void form_write_data(FILE *f, char *boundary, char *name, char *value);
+void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
+                          char *file);

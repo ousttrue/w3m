@@ -1,4 +1,7 @@
 #include "anchor.h"
+#include "textlist.h"
+#include "form.h"
+#include "map.h"
 #include "fm.h"
 #include "indep.h"
 #include "myctype.h"

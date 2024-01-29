@@ -2,6 +2,7 @@
 /*
  * HTML forms
  */
+#include "form.h"
 #include "display.h"
 #include "anchor.h"
 #include "fm.h"
@@ -11,6 +12,7 @@
 #include "local.h"
 #include "regex.h"
 #include "util.h"
+#include <unistd.h>
 
 extern Str **textarea_str;
 extern int max_textarea;

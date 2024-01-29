@@ -1,6 +1,12 @@
 /* $Id: main.c,v 1.270 2010/08/24 10:11:51 htrb Exp $ */
 #define MAINPROGRAM
 #include "fm.h"
+#include "funcname1.h"
+#include "func.h"
+#include "parsetag.h"
+#include "frame.h"
+#include "form.h"
+#include "history.h"
 #include "anchor.h"
 #include "mailcap.h"
 #include "file.h"
@@ -4214,7 +4220,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
 }
 
 void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                     clen_t size) {
+                     long long size) {
 
   auto d = (DownloadList *)New(DownloadList);
   d->pid = pid;
@@ -4250,7 +4256,7 @@ int checkDownloadList(void) {
   return FALSE;
 }
 
-static char *convert_size3(clen_t size) {
+static char *convert_size3(long long size) {
   Str *tmp = Strnew();
   int n;
 

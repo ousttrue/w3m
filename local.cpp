@@ -1,5 +1,6 @@
 /* $Id: local.c,v 1.35 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
+#include "form.h"
 #include "signal_util.h"
 #include <string.h>
 #include <stdio.h>

@@ -21,5 +21,6 @@ struct FuncList {
   char *id;
   void (*func)();
 };
+extern FuncList w3mFuncList[];
 
 #endif /* not FUNC_H */

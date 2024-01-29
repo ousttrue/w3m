@@ -17,7 +17,7 @@ struct cookie {
   Str *domain;
   Str *comment;
   Str *commentURL;
-  struct portlist *portl;
+  portlist *portl;
   char version;
   char flag;
   struct cookie *next;

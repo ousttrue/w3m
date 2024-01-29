@@ -4,6 +4,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "config.h"
+#include "ctrlcode.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>

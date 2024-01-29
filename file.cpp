@@ -1,11 +1,17 @@
 /* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "file.h"
+#include "textlist.h"
+#include "funcname1.h"
+#include "frame.h"
+#include "form.h"
+#include "ctrlcode.h"
 #include "readbuffer.h"
 #include "cookie.h"
 #include "anchor.h"
 #include "display.h"
 #include "fm.h"
+#include "table.h"
 #include "mailcap.h"
 #include "map.h"
 #include "signal_util.h"
@@ -101,7 +107,7 @@ static int forms_size = 0;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 static int form_sp = 0;
 
-static clen_t current_content_length;
+static long long current_content_length;
 
 static int cur_hseq;
 
@@ -241,12 +247,6 @@ int dir_exist(char *path) {
   if (stat(path, &stbuf) == -1)
     return 0;
   return IS_DIRECTORY(stbuf.st_mode);
-}
-
-static int is_dump_text_type(const char *type) {
-  struct mailcap *mcap;
-  return (type && (mcap = searchExtViewer(type)) &&
-          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
 }
 
 static int is_text_type(const char *type) {
@@ -5616,7 +5616,7 @@ Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf) {
 static char *_size_unit[] = {"b",  "kb", "Mb", "Gb", "Tb", "Pb",
                              "Eb", "Zb", "Bb", "Yb", NULL};
 
-char *convert_size(clen_t size, int usefloat) {
+char *convert_size(long long size, int usefloat) {
   float csize;
   int sizepos = 0;
   char **sizes = _size_unit;
@@ -5631,7 +5631,7 @@ char *convert_size(clen_t size, int usefloat) {
       ->ptr;
 }
 
-char *convert_size2(clen_t size1, clen_t size2, int usefloat) {
+char *convert_size2(long long size1, long long size2, int usefloat) {
   char **sizes = _size_unit;
   float csize, factor = 1;
   int sizepos = 0;
@@ -5647,7 +5647,7 @@ char *convert_size2(clen_t size1, clen_t size2, int usefloat) {
       ->ptr;
 }
 
-void showProgress(clen_t *linelen, clen_t *trbyte) {
+void showProgress(long long *linelen, long long *trbyte) {
   int i, j, rate, duration, eta, pos;
   static time_t last_time, start_time;
   time_t cur_time;
@@ -5870,8 +5870,8 @@ static void print_internal_information(struct html_feed_environ *henv) {
 
 void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
-  clen_t linelen = 0;
-  clen_t trbyte = 0;
+  long long linelen = 0;
+  long long trbyte = 0;
   Str *lineBuf2 = Strnew();
   struct html_feed_environ htmlenv1;
   struct readbuffer obuf;
@@ -5999,7 +5999,7 @@ Buffer *loadBuffer(URLFile *uf, Buffer *volatile newBuf) {
   volatile char pre_lbuf = '\0';
   int nlines;
   Str *tmpf;
-  clen_t linelen = 0, trbyte = 0;
+  long long linelen = 0, trbyte = 0;
   Lineprop *propBuffer = NULL;
   MySignalHandler prevtrap = NULL;
 
@@ -6249,7 +6249,7 @@ Line *getNextPage(Buffer *buf, int plen) {
                  *volatile cur = buf->currentLine;
   int i;
   int volatile nlines = 0;
-  clen_t linelen = 0, trbyte = buf->trbyte;
+  long long linelen = 0, trbyte = buf->trbyte;
   Str *lineBuf2;
   char volatile pre_lbuf = '\0';
   URLFile uf;
@@ -6343,7 +6343,7 @@ pager_end:
 
 int save2tmp(URLFile uf, char *tmpf) {
   FILE *ff;
-  clen_t linelen = 0, trbyte = 0;
+  long long linelen = 0, trbyte = 0;
   MySignalHandler prevtrap = NULL;
   static JMP_BUF env_bak;
   volatile int retval = 0;
@@ -6478,7 +6478,7 @@ static int _MoveFile(char *path1, char *path2) {
   input_stream *f1;
   FILE *f2;
   int is_pipe;
-  clen_t linelen = 0, trbyte = 0;
+  long long linelen = 0, trbyte = 0;
   char *buf = NULL;
   int count;
 
@@ -6522,7 +6522,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   FILE *f;
 #endif
   struct stat st;
-  clen_t size = 0;
+  long long size = 0;
   int is_pipe = FALSE;
 
   if (fmInitialized) {

@@ -1,4 +1,3 @@
-/* $Id: fm.h,v 1.149 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * w3m: WWW wo Miru utility
  *
@@ -10,57 +9,11 @@
 #ifndef FM_H
 #define FM_H
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* strcasestr() */
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <limits.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
 #include "config.h"
-#include "history.h"
+#include "url.h"
 
-#include "ctrlcode.h"
-#include "html.h"
-#include <gc.h>
-#include "Str.h"
-typedef int wc_ces; /* XXX: not used */
-
-#ifdef HAVE_LOCALE_H
-#include <locale.h>
-#endif
-#if !HAVE_SETLOCALE
-#define setlocale(category, locale) /* empty */
-#endif
-
-#undef bindtextdomain
-#define bindtextdomain(Domain, Directory) /* empty */
-#undef textdomain
-#define textdomain(Domain) /* empty */
-#define _(Text) Text
-#define N_(Text) Text
-#define gettext(Text) Text
-
-#include "form.h"
-#include "frame.h"
-#include "parsetag.h"
-#include "parsetagx.h"
-#include "func.h"
-#include "menu.h"
-#include "textlist.h"
-#include "funcname1.h"
 #include "terms.h"
 #include "istream.h"
-
-#ifndef HAVE_BCOPY
-void bcopy(const void *, void *, int);
-void bzero(void *, int);
-#endif /* HAVE_BCOPY */
 
 #ifdef MAINPROGRAM
 #define global
@@ -222,7 +175,6 @@ extern int REV_LB[];
 #define IMG_FLAG_ERROR 2
 #define IMG_FLAG_DONT_REMOVE 4
 
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 #define SCONF_RESERVED 0
 #define SCONF_SUBSTITUTE_URL 1
 #define SCONF_URL_CHARSET 2
@@ -288,18 +240,6 @@ extern int REV_LB[];
 
 typedef unsigned short Lineprop;
 
-struct MapArea {
-  char *url;
-  char *target;
-  const char *alt;
-};
-
-struct MapList {
-  Str *name;
-  GeneralList *area;
-  MapList *next;
-};
-
 struct Line {
   char *lineBuf;
   Lineprop *propBuf;
@@ -350,9 +290,13 @@ struct AlarmEvent {
   void *data;
 };
 
+struct FormList;
 struct Anchor;
 struct AnchorList;
 struct HmarkerList;
+struct FormItemList;
+struct MapList;
+struct TextList;
 struct Buffer {
   char *filename;
   char *buffername;
@@ -429,7 +373,7 @@ struct DownloadList {
   char *url;
   char *save;
   char *lock;
-  clen_t size;
+  long long size;
   time_t time;
   int running;
   int err;
@@ -628,7 +572,6 @@ extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
-extern FuncList w3mFuncList[];
 
 global char *HTTP_proxy init(NULL);
 global char *HTTPS_proxy init(NULL);
@@ -788,6 +731,7 @@ global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList *fileToDelete;
 
+struct Hist;
 extern Hist *LoadHist;
 extern Hist *SaveHist;
 extern Hist *URLHist;
@@ -884,6 +828,7 @@ global char *keymap_file init(KEYMAP_FILE);
 global int FollowRedirection init(10);
 
 global int w3m_backend init(FALSE);
+struct TextLineList;
 global TextLineList *backend_halfdump_buf;
 global TextList *backend_batch_commands init(NULL);
 int backend(void);
@@ -894,7 +839,6 @@ void w3m_exit(int i);
  * Externals
  */
 
-#include "table.h"
 #include "proto.h"
 
 #endif /* not FM_H */

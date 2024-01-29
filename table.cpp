@@ -3,11 +3,13 @@
  * HTML table
  */
 #include "readbuffer.h"
+#include "textlist.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
 #include "fm.h"
+#include "table.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "Str.h"
