@@ -3,6 +3,7 @@
 
 extern char *rc_dir;
 extern int multicolList;
+extern int DecodeURL;
 
 struct ParsedURL;
 void show_params(FILE *fp);

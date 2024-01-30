@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "rc.h"
 #include "textlist.h"
 #include "linklist.h"
 #include "fm.h"
@@ -14,6 +15,15 @@
 #include "istream.h"
 #include "proto.h"
 #include <unistd.h>
+
+TabBuffer *CurrentTab;
+TabBuffer *FirstTab;
+TabBuffer *LastTab;
+bool open_tab_blank = false;
+bool open_tab_dl_list = false;
+bool close_tab_back = false;
+int nTab;
+int TabCols = 10;
 
 const char *NullLine = "";
 Lineprop NullProp[] = {0};

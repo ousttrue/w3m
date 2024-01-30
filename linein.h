@@ -21,6 +21,9 @@
 #define IN_URL 0x100
 #define IN_CHAR 0x200
 
+extern bool space_autocomplete;
+extern bool emacs_like_lineedit;
+
 struct Hist;
 struct Str;
 char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,

@@ -1,5 +1,6 @@
 #include "linein.h"
-#include "fm.h"
+#include "rc.h"
+#include "utf8.h"
 #include "display.h"
 #include "buffer.h"
 #include "terms.h"
@@ -10,6 +11,9 @@
 #include "myctype.h"
 #include "history.h"
 #include "indep.h"
+
+bool space_autocomplete = false;
+bool emacs_like_lineedit = false;
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)

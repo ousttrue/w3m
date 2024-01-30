@@ -1,4 +1,6 @@
 #include "display.h"
+#include "rc.h"
+#include "utf8.h"
 #include "terms.h"
 #include "buffer.h"
 #include "textlist.h"

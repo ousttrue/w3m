@@ -135,4 +135,21 @@ struct TabBuffer {
   short y;
 };
 
+/*
+ * global Buffer *Currentbuf;
+ * global Buffer *Firstbuf;
+ */
+#define NO_TABBUFFER ((TabBuffer *)1)
+#define Currentbuf (CurrentTab->currentBuffer)
+#define Firstbuf (CurrentTab->firstBuffer)
+
+extern TabBuffer *CurrentTab;
+extern TabBuffer *FirstTab;
+extern TabBuffer *LastTab;
+extern bool open_tab_blank;
+extern bool open_tab_dl_list;
+extern bool close_tab_back;
+extern int nTab;
+extern int TabCols;
+
 extern int REV_LB[];

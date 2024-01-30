@@ -104,22 +104,7 @@ global int Do_not_use_ti_te init(FALSE);
 global char *personal_document_root init(nullptr);
 global char *index_file init(nullptr);
 
-/*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
- */
-struct TabBuffer;
-global TabBuffer *CurrentTab;
-global TabBuffer *FirstTab;
-global TabBuffer *LastTab;
-global int open_tab_blank init(FALSE);
-global int open_tab_dl_list init(FALSE);
-global int close_tab_back init(FALSE);
-global int nTab;
-global int TabCols init(10);
-#define NO_TABBUFFER ((TabBuffer *)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)
+
 struct DownloadList;
 global DownloadList *FirstDL init(nullptr);
 global DownloadList *LastDL init(nullptr);
@@ -142,8 +127,6 @@ global int w3m_dump init(0);
 global int w3m_halfload init(FALSE);
 
 global int confirm_on_quit init(TRUE);
-global int emacs_like_lineedit init(FALSE);
-global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
@@ -151,7 +134,6 @@ global char *displayTitleTerm init(nullptr);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);
-global int DecodeURL init(FALSE);
 global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
@@ -274,12 +256,6 @@ global int set_pixel_per_char init(FALSE);
 global int use_lessopen init(FALSE);
 
 global char *keymap_file init(KEYMAP_FILE);
-
-#define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-#define get_mclen(c) 1
-#define get_mcwidth(c) 1
-#define get_strwidth(c) strlen(c)
-#define get_Str_strwidth(c) ((c)->length)
 
 global int FollowRedirection init(10);
 

@@ -1,8 +1,9 @@
-/* $Id: rc.c,v 1.116 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * Initialization file etc.
  */
 #include "rc.h"
+#include "buffer.h"
+#include "linein.h"
 #include "terms.h"
 #include "cookie.h"
 #include "w3m.h"
@@ -29,6 +30,7 @@
 
 char *rc_dir = nullptr;
 int multicolList = FALSE;
+int DecodeURL = FALSE;
 
 #define _(Text) Text
 #define N_(Text) Text
