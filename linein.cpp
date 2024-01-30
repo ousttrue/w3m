@@ -552,7 +552,7 @@ static void next_dcompl(int next) {
     return;
   cm_disp_next = 0;
 
-  d = Str_conv_to_system(Strdup(CDirBuf));
+  d = Strdup(CDirBuf);
   if (d->length > 0 && Strlastchar(d) != '/')
     Strcat_char(d, '/');
   if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
@@ -614,7 +614,7 @@ disp_next:
       clrtoeolx();
       f = Strdup(d);
       Strcat_charp(f, CFileBuf[n]);
-      addstr(conv_from_system(CFileBuf[n]));
+      addstr(CFileBuf[n]);
       if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
         addstr("/");
     }
@@ -683,7 +683,6 @@ static Str *doComplete(Str *ifn, int *status, int next) {
 
   if (!cm_next) {
     NCFileBuf = 0;
-    ifn = Str_conv_to_system(ifn);
     if (cm_mode & CPL_ON)
       ifn = unescape_spaces(ifn);
     CompleteBuf = Strdup(ifn);
@@ -701,7 +700,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
       else {
         CompleteBuf = Strdup(ifn);
         *status = CPL_FAIL;
-        return Str_conv_to_system(CompleteBuf);
+        return CompleteBuf;
       }
     }
     if (CompleteBuf->length == 0) {
@@ -781,7 +780,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
   }
   if (cm_mode & CPL_ON)
     CompleteBuf = escape_spaces(CompleteBuf);
-  return Str_conv_from_system(CompleteBuf);
+  return CompleteBuf;
 }
 
 static void _prev(void) {

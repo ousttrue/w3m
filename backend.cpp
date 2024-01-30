@@ -97,7 +97,6 @@ static void internal_get(char *url, int flag, FormList *request) {
       Str *first, *last;
       int len = 0;
       for (p = backend_halfdump_buf->first; p; p = p->next) {
-        p->ptr->line = Str_conv_to_halfdump(p->ptr->line);
         len += p->ptr->line->length + 1;
       }
       first = Strnew_charp("<pre>\n");

@@ -1,4 +1,5 @@
 #include "display.h"
+#include "terms.h"
 #include "buffer.h"
 #include "textlist.h"
 #include "ctrlcode.h"
@@ -233,7 +234,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   standout();
   message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
   standend();
-  term_title(conv_to_system(buf->buffername));
+  term_title(buf->buffername);
   refresh();
   if (buf != save_current_buf) {
     saveBufferInfo();
@@ -705,7 +706,7 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
   if (QuietMessage)
     return;
   if (!fmInitialized) {
-    fprintf(stderr, "%s\n", conv_to_system(s));
+    fprintf(stderr, "%s\n", s);
     return;
   }
   if (CurrentTab != NULL && Currentbuf != NULL)

@@ -3,6 +3,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "terms.h"
 #include "cookie.h"
 #include "w3m.h"
 #include "tmpfile.h"
@@ -27,6 +28,7 @@
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 char *rc_dir = nullptr;
+int multicolList = FALSE;
 
 #define _(Text) Text
 #define N_(Text) Text
@@ -209,7 +211,6 @@ static int RC_table_size;
 #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
-
 
 #define CMT_KEYMAP_FILE N_("keymap file")
 
@@ -601,7 +602,7 @@ void show_params(FILE *fp) {
   fputs("\nconfiguration parameters\n", fp);
   for (j = 0; sections[j].name != NULL; j++) {
     cmt = sections[j].name;
-    fprintf(fp, "  section[%d]: %s\n", j, conv_to_system(cmt));
+    fprintf(fp, "  section[%d]: %s\n", j, cmt);
     i = 0;
     while (sections[j].params[i].name) {
       switch (sections[j].params[i].type) {
@@ -634,7 +635,7 @@ void show_params(FILE *fp) {
       if (l < 0)
         l = 1;
       fprintf(fp, "    -o %s=<%s>%*s%s\n", sections[j].params[i].name, t, l,
-              " ", conv_to_system(cmt));
+              " ", cmt);
       i++;
     }
   }
@@ -1014,7 +1015,7 @@ static Str *to_str(struct param_ptr *p) {
   case P_SSLPATH:
 #endif
     /*  SystemCharset -> InnerCharset */
-    return Strnew_charp(conv_from_system(*(char **)p->varptr));
+    return Strnew_charp(*(char **)p->varptr);
   case P_PIXELS:
   case P_SCALE:
     return Sprintf("%g", *(double *)p->varptr);
@@ -1099,7 +1100,7 @@ void panel_set_option(struct parsed_tagarg *arg) {
   while (arg) {
     /*  InnerCharset -> SystemCharset */
     if (arg->value) {
-      p = conv_to_system(arg->value);
+      p = arg->value;
       if (set_param(arg->arg, p)) {
         tmp = Sprintf("%s %s\n", arg->arg, p);
         Strcat(tmp, s);

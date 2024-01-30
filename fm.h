@@ -58,8 +58,6 @@
  * Globals.
  */
 
-extern int LINES, COLS;
-#define LASTLINE (LINES - 1)
 
 global int Tabstop init(8);
 global int IndentIncr init(4);
@@ -77,7 +75,6 @@ global char PreserveTimestamp init(TRUE);
 global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
-global char *HostName init(nullptr);
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
@@ -104,9 +101,7 @@ global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
 global int Do_not_use_ti_te init(FALSE);
 
-global char *document_root init(nullptr);
 global char *personal_document_root init(nullptr);
-global char *cgi_bin init(nullptr);
 global char *index_file init(nullptr);
 
 /*
@@ -223,13 +218,8 @@ extern Hist *TextHist;
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);
-global int multicolList init(FALSE);
 
-#define Str_conv_from_system(x) (x)
-#define Str_conv_to_system(x) (x)
-#define Str_conv_to_halfdump(x) (x)
-#define conv_from_system(x) (x)
-#define conv_to_system(x) (x)
+
 #define url_quote_conv(x, c) url_quote(x)
 #define wc_Str_conv(x, charset0, charset1) (x)
 #define wc_Str_conv_strict(x, charset0, charset1) (x)

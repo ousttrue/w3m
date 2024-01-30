@@ -994,8 +994,6 @@ DEFUN(pipeBuf, PIPE_BUF,
     /* FIXME: gettextize? */
     cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
   }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -1015,8 +1013,7 @@ DEFUN(pipeBuf, PIPE_BUF,
     return;
   } else {
     buf->filename = cmd;
-    buf->buffername =
-        Sprintf("%s %s", PIPEBUFFERNAME, conv_from_system(cmd))->ptr;
+    buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, cmd)->ptr;
     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
     if (buf->type == NULL)
       buf->type = "text/plain";
@@ -1036,8 +1033,6 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
   }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -1066,8 +1061,6 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -1099,8 +1092,6 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
   if (cmd != NULL && *cmd != '\0') {
     fmTerm();
     printf("\n");
@@ -1123,8 +1114,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
     /* FIXME: gettextize? */
     fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
   }
-  if (fn != NULL)
-    fn = conv_to_system(fn);
   if (fn == NULL || *fn == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -1152,7 +1141,7 @@ static void cmd_loadfile(char *fn) {
   buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
-    char *emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+    char *emsg = Sprintf("%s not found", fn)->ptr;
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
@@ -1900,7 +1889,7 @@ static void query_from_followform(Str **query, FormItemList *fi,
           form_write_from_file(
               body, fi->parent->boundary,
               conv_form_encoding(f2->name, fi, Currentbuf)->ptr, (*query)->ptr,
-              Str_conv_to_system(f2->value)->ptr);
+              f2->value->ptr);
         else
           form_write_data(body, fi->parent->boundary,
                           conv_form_encoding(f2->name, fi, Currentbuf)->ptr,
@@ -2587,7 +2576,7 @@ static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
   buf = loadGeneralFile(url, current, referer, 0, request);
   if (buf == NULL) {
     /* FIXME: gettextize? */
-    char *emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+    char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
@@ -2823,14 +2812,13 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
       return;
     }
   }
-  file = conv_to_system(qfile ? qfile : file);
+  file = qfile ? qfile : file;
   if (*file == '|') {
     is_pipe = TRUE;
     f = popen(file + 1, "w");
   } else {
     if (qfile) {
       file = unescape_spaces(Strnew_charp(qfile))->ptr;
-      file = conv_to_system(file);
     }
     file = expandPath(file);
     if (checkOverWrite(file) < 0) {
@@ -2842,7 +2830,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
   }
   if (f == NULL) {
     /* FIXME: gettextize? */
-    char *emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
+    char *emsg = Sprintf("Can't open %s", file)->ptr;
     disp_err_message(emsg, TRUE);
     return;
   }
@@ -2863,8 +2851,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   PermitSaveToPipe = TRUE;
   if (Currentbuf->real_scheme == SCM_LOCAL)
-    file = conv_from_system(
-        guess_save_name(NULL, Currentbuf->currentURL.real_file));
+    file = guess_save_name(NULL, Currentbuf->currentURL.real_file);
   else
     file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
   doFileCopy(Currentbuf->sourcefile, file);
@@ -3185,11 +3172,7 @@ static void invoke_browser(char *url) {
     }
     if (browser == NULL || *browser == '\0') {
       browser = inputStr("Browse command: ", NULL);
-      if (browser != NULL)
-        browser = conv_to_system(browser);
     }
-  } else {
-    browser = conv_to_system(browser);
   }
   if (browser == NULL || *browser == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -3329,7 +3312,7 @@ static void execdict(char *word) {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  w = conv_to_system(word);
+  w = word;
   if (*w == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -3988,7 +3971,7 @@ static Buffer *DownloadListBuffer(void) {
       d->running = FALSE;
     Strcat_charp(src, "<pre>\n");
     Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url),
-                        html_quote(conv_from_system(d->save))));
+                        html_quote(d->save)));
     duration = cur_time - d->time;
     if (!stat(d->save, &st)) {
       size = st.st_size;
@@ -4620,7 +4603,7 @@ int main(int argc, char **argv) {
       retry_as_local_file:
         url = file_to_url(load_argv[i]);
       else
-        url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
+        url = url_encode(load_argv[i], NULL, 0);
       if (w3m_dump == DUMP_HEAD) {
         request = (FormList *)New(FormList);
         request->method = FORM_METHOD_HEAD;

@@ -2,6 +2,7 @@
 #include <stdio.h>
 
 extern char *rc_dir;
+extern int multicolList;
 
 struct ParsedURL;
 void show_params(FILE *fp);

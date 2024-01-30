@@ -1,10 +1,10 @@
-/* $Id: istream.c,v 1.27 2010/07/18 13:43:23 htrb Exp $ */
+#include "istream.h"
 #include "fm.h"
 #include "html.h"
 #include "signal_util.h"
 #include "myctype.h"
-#include "istream.h"
 #include "proto.h"
+#include "terms.h"
 #include <openssl/x509v3.h>
 #include <fcntl.h>
 #include <unistd.h>

@@ -1,7 +1,9 @@
 #include "local_cgi.h"
+#include "terms.h"
+#include "rc.h"
+#include "indep.h"
 #include "w3m.h"
 #include "tmpfile.h"
-#include "fm.h"
 #include "httprequest.h"
 #include "etc.h"
 #include "form.h"
@@ -19,6 +21,8 @@
 #include "hash.h"
 #include "indep.h"
 #include <time.h>
+
+char *cgi_bin = nullptr;
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
@@ -77,7 +81,7 @@ Str *loadLocalDir(char *dname) {
   dirname = Strnew_charp(dname);
   if (Strlastchar(dirname) != '/')
     Strcat_char(dirname, '/');
-  qdir = html_quote(Str_conv_from_system(dirname)->ptr);
+  qdir = html_quote(dirname->ptr);
   /* FIXME: gettextize? */
   tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
                        html_quote(file_quote(dirname->ptr)),
@@ -141,7 +145,7 @@ Str *loadLocalDir(char *dname) {
     Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
-    Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(p)), NULL);
+    Strcat_m_charp(tmp, "\">", html_quote(p), NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, "</A>");
@@ -157,7 +161,7 @@ Str *loadLocalDir(char *dname) {
       if (S_ISLNK(lst.st_mode)) {
         if ((l = readlink(fbuf->ptr, lbuf, sizeof(lbuf) - 1)) > 0) {
           lbuf[l] = '\0';
-          Strcat_m_charp(tmp, " -> ", html_quote(conv_from_system(lbuf)), NULL);
+          Strcat_m_charp(tmp, " -> ", html_quote(lbuf), NULL);
           if (S_ISDIR(st.st_mode))
             Strcat_char(tmp, '/');
         }

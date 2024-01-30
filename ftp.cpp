@@ -378,7 +378,6 @@ input_stream *openFTPStream(ParsedURL *pu, URLFile *uf) {
       if (fmInitialized) {
         term_raw();
         pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-        pwd = Str_conv_to_system(pwd);
         term_cbreak();
       } else {
         pwd = Strnew_charp((char *)getpass("Password: "));
