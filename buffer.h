@@ -1,5 +1,6 @@
 #pragma once
 #include "url.h"
+#include "line.h"
 #include <stddef.h>
 
 #define NO_BUFFER ((Buffer *)1)
@@ -100,6 +101,10 @@ struct Buffer {
   BufferPos *undo;
   AlarmEvent *event;
 };
+
+#define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
+void addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
+                int pos, int width, int nlines);
 
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \
   {                                                                            \

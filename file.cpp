@@ -63,9 +63,8 @@ static void uncompress_stream(URLFile *uf, char **src);
 static FILE *lessopen_stream(char *path);
 static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(URLFile *, Buffer *),
                           Buffer *defaultbuf);
-#define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
-static void addnewline(Buffer *buf, char *line, Lineprop *prop,
-                       Linecolor *color, int pos, int width, int nlines);
+
+
 static void addLink(Buffer *buf, struct parsed_tag *tag);
 
 static JMP_BUF AbortLoading;
@@ -5463,83 +5462,7 @@ table_start:
   }
 }
 
-extern char *NullLine;
 extern Lineprop NullProp[];
-
-#define addnewline2(a, b, c, d, e, f) _addnewline2(a, b, c, e, f)
-static void addnewline2(Buffer *buf, char *line, Lineprop *prop,
-                        Linecolor *color, int pos, int nlines) {
-  Line *l;
-  l = (Line *)New(Line);
-  l->next = NULL;
-  l->lineBuf = line;
-  l->propBuf = prop;
-  l->len = pos;
-  l->width = -1;
-  l->size = pos;
-  l->bpos = 0;
-  l->bwidth = 0;
-  l->prev = buf->currentLine;
-  if (buf->currentLine) {
-    l->next = buf->currentLine->next;
-    buf->currentLine->next = l;
-  } else
-    l->next = NULL;
-  if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
-    buf->lastLine = l;
-  buf->currentLine = l;
-  if (buf->firstLine == NULL)
-    buf->firstLine = l;
-  l->linenumber = ++buf->allLine;
-  if (nlines < 0) {
-    /*     l->real_linenumber = l->linenumber;     */
-    l->real_linenumber = 0;
-  } else {
-    l->real_linenumber = nlines;
-  }
-  l = NULL;
-}
-
-static void addnewline(Buffer *buf, char *line, Lineprop *prop,
-                       Linecolor *color, int pos, int width, int nlines) {
-  char *s;
-  Lineprop *p;
-  Line *l;
-  int i, bpos, bwidth;
-
-  if (pos > 0) {
-    s = allocStr(line, pos);
-    p = (Lineprop *)NewAtom_N(Lineprop, pos);
-    bcopy((void *)prop, (void *)p, pos * sizeof(Lineprop));
-  } else {
-    s = NullLine;
-    p = NullProp;
-  }
-  addnewline2(buf, s, p, c, pos, nlines);
-  if (pos <= 0 || width <= 0)
-    return;
-  bpos = 0;
-  bwidth = 0;
-  while (1) {
-    l = buf->currentLine;
-    l->bpos = bpos;
-    l->bwidth = bwidth;
-    i = columnLen(l, width);
-    if (i == 0) {
-      i++;
-    }
-    l->len = i;
-    l->width = COLPOS(l, l->len);
-    if (pos <= i)
-      return;
-    bpos += l->len;
-    bwidth += l->width;
-    s += i;
-    p += i;
-    pos -= i;
-    addnewline2(buf, s, p, c, pos, nlines);
-  }
-}
 
 /*
  * loadHTMLBuffer: read file and make new buffer
