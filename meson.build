@@ -110,7 +110,6 @@ executable(
         'entity.cpp',
         'terms.cpp',
         'url.cpp',
-        'ftp.cpp',
         'mimehead.cpp',
         'func.cpp',
         'cookie.cpp',

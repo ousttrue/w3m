@@ -6,7 +6,6 @@
 #include "httprequest.h"
 #include "linein.h"
 #include "search.h"
-#include "ftp.h"
 #include "proto.h"
 #include "indep.h"
 #include "buffer.h"
@@ -3448,7 +3447,6 @@ void w3m_exit(int i) {
   stopDownload();
   deleteFiles();
   free_ssl_ctx();
-  disconnectFTP();
 #ifdef HAVE_MKDTEMP
   if (mkd_tmp_dir)
     if (rmdir(mkd_tmp_dir) != 0) {

@@ -6,7 +6,6 @@
 #include "httprequest.h"
 #include "rc.h"
 #include "linein.h"
-#include "ftp.h"
 #include "downloadlist.h"
 #include "etc.h"
 #include "proto.h"
@@ -210,7 +209,7 @@ static void KeyAbort(SIGNAL_ARG) {
 static void UFhalfclose(URLFile *f) {
   switch (f->scheme) {
   case SCM_FTP:
-    closeFTP();
+    // closeFTP();
     break;
   default:
     UFclose(f);
@@ -1520,8 +1519,8 @@ load_doc: {
       }
     } break;
     case SCM_FTPDIR:
-      page = loadFTPDir(&pu, &charset);
-      t = "ftp:directory";
+      // page = loadFTPDir(&pu, &charset);
+      // t = "ftp:directory";
       break;
     case SCM_UNKNOWN:
       /* FIXME: gettextize? */

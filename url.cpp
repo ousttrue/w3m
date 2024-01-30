@@ -2,7 +2,6 @@
 #include "fm.h"
 #include "w3m.h"
 #include "httprequest.h"
-#include "ftp.h"
 #include "rc.h"
 #include "file.h"
 #include "cookie.h"
@@ -1294,24 +1293,24 @@ retry:
     return uf;
   case SCM_FTP:
   case SCM_FTPDIR:
-    if (pu->file == NULL)
-      pu->file = allocStr("/", -1);
-    if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL &&
-        !check_no_proxy(pu->host)) {
-      hr->flag |= HR_FLAG_PROXY;
-      sock = openSocket(FTP_proxy_parsed.host,
-                        schemeNumToName(FTP_proxy_parsed.scheme),
-                        FTP_proxy_parsed.port);
-      if (sock < 0)
-        return uf;
-      uf.scheme = SCM_HTTP;
-      tmp = HTTPrequest(pu, current, hr, extra_header);
-      write(sock, tmp->ptr, tmp->length);
-    } else {
-      uf.stream = openFTPStream(pu, &uf);
-      uf.scheme = pu->scheme;
-      return uf;
-    }
+    // if (pu->file == NULL)
+    //   pu->file = allocStr("/", -1);
+    // if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL &&
+    //     !check_no_proxy(pu->host)) {
+    //   hr->flag |= HR_FLAG_PROXY;
+    //   sock = openSocket(FTP_proxy_parsed.host,
+    //                     schemeNumToName(FTP_proxy_parsed.scheme),
+    //                     FTP_proxy_parsed.port);
+    //   if (sock < 0)
+    //     return uf;
+    //   uf.scheme = SCM_HTTP;
+    //   tmp = HTTPrequest(pu, current, hr, extra_header);
+    //   write(sock, tmp->ptr, tmp->length);
+    // } else {
+    //   uf.stream = openFTPStream(pu, &uf);
+    //   uf.scheme = pu->scheme;
+    //   return uf;
+    // }
     break;
   case SCM_HTTP:
   case SCM_HTTPS:
