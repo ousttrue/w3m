@@ -1,7 +1,7 @@
-/* $Id: mailcap.c,v 1.13 2006/08/07 03:10:26 ukai Exp $ */
+#include "mailcap.h"
+#include "url.h"
 #include "fm.h"
 #include "textlist.h"
-#include "mailcap.h"
 #include "myctype.h"
 #include "parsetag.h"
 #include "local_cgi.h"

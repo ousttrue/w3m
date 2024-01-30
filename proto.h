@@ -355,7 +355,6 @@ extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
 extern char *guessContentType(char *filename);
-extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
 
 

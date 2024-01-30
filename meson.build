@@ -114,7 +114,6 @@ executable(
         'func.cpp',
         'cookie.cpp',
         'history.cpp',
-        'backend.cpp',
         'util.cpp',
         'anchor.cpp',
         'parsetagx.cpp',

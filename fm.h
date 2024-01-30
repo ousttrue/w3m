@@ -25,7 +25,6 @@
  * Constants.
  */
 #define LINELEN 256          /* Initial line length */
-#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 #define MAXIMUM_COLS 1024
 #define DEFAULT_COLS 80
@@ -62,7 +61,6 @@
 global int Tabstop init(8);
 global int IndentIncr init(4);
 global int ShowEffect init(TRUE);
-global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
 global const char *DefaultType init(nullptr);
@@ -72,46 +70,20 @@ global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
-global char ArgvIsURL init(TRUE);
 global char MetaRefresh init(FALSE);
-global char LocalhostOnly init(FALSE);
 
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 
-global char *HTTP_proxy init(nullptr);
-global char *HTTPS_proxy init(nullptr);
-global char *FTP_proxy init(nullptr);
-global char *NO_proxy init(nullptr);
-global int NOproxy_netaddr init(TRUE);
-#ifdef INET6
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
-global int DNS_order init(DNS_ORDER_UNSPEC);
-extern int ai_family_order_table[7][3]; /* XXX */
-#endif                                  /* INET6 */
-struct TextList;
-global TextList *NO_proxy_domains;
-global char use_proxy init(TRUE);
-#define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(FALSE);
 
 global char *personal_document_root init(nullptr);
-global char *index_file init(nullptr);
 
 
-struct DownloadList;
-global DownloadList *FirstDL init(nullptr);
-global DownloadList *LastDL init(nullptr);
 global int CurrentKey;
 global char *CurrentKeyData;
 global char *CurrentCmdData;
-global char *w3m_reqlog;
 extern int enable_inline_image;
 
 #define DUMP_BUFFER 0x01
@@ -130,11 +102,9 @@ global int confirm_on_quit init(TRUE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global char *displayTitleTerm init(nullptr);
 global int displayLink init(FALSE);
 global int displayLinkNumber init(FALSE);
 global int displayLineInfo init(FALSE);
-global int retryAsHttp init(TRUE);
 global int showLineNum init(FALSE);
 global int show_srch_str init(TRUE);
 global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
@@ -182,34 +152,19 @@ global int FoldLine init(FALSE);
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
-global int MarkAllPages init(FALSE);
 
 
 global struct auth_cookie *Auth_cookie init(nullptr);
 global struct cookie *First_cookie init(nullptr);
 
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
-global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-
-struct Hist;
-extern Hist *LoadHist;
-extern Hist *SaveHist;
-extern Hist *URLHist;
-extern Hist *ShellHist;
-extern Hist *TextHist;
-global int UseHistory init(TRUE);
-global int URLHistSize init(100);
-global int SaveURLHist init(TRUE);
 
 
 #define url_quote_conv(x, c) url_quote(x)
 #define wc_Str_conv(x, charset0, charset1) (x)
 #define wc_Str_conv_strict(x, charset0, charset1) (x)
 global char UseAltEntity init(FALSE);
-#define GRAPHIC_CHAR_ASCII 2
-#define GRAPHIC_CHAR_DEC 1
-#define GRAPHIC_CHAR_CHARSET 0
-global char UseGraphicChar init(GRAPHIC_CHAR_CHARSET);
+
 global char DisplayBorders init(FALSE);
 global char DisableCenter init(FALSE);
 extern char *graph_symbol[];
@@ -231,22 +186,6 @@ global char *config_file init(nullptr);
 
 global int view_unseenobject init(TRUE);
 
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-global int ssl_verify_server init(TRUE);
-global char *ssl_cert_file init(nullptr);
-global char *ssl_key_file init(nullptr);
-global char *ssl_ca_path init(nullptr);
-global char *ssl_ca_file init(DEF_CAFILE);
-global int ssl_ca_default init(TRUE);
-global int ssl_path_modified init(FALSE);
-#endif /* defined(USE_SSL) &&                                                  \
-        * defined(USE_SSL_VERIFY) */
-global char *ssl_forbid_method init("2, 3, t, 5");
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
-#else
-global char *ssl_cipher init(nullptr);
-#endif
 
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
@@ -262,9 +201,9 @@ global int FollowRedirection init(10);
 global int w3m_backend init(FALSE);
 struct TextLineList;
 global TextLineList *backend_halfdump_buf;
+struct TextList;
 global TextList *backend_batch_commands init(nullptr);
 int backend(void);
 extern void deleteFiles(void);
-void w3m_exit(int i);
 
 #endif /* not FM_H */

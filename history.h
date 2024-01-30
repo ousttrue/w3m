@@ -1,6 +1,4 @@
-/* $Id: history.h,v 1.5 2002/01/26 17:24:01 ukai Exp $ */
-#ifndef HISTORY_H
-#define HISTORY_H
+#pragma once
 
 #include "textlist.h"
 #include "hash.h"
@@ -18,19 +16,24 @@ struct Hist {
   Hash_sv *hash;
   long long mtime;
 };
+extern Hist *LoadHist;
+extern Hist *SaveHist;
+extern Hist *URLHist;
+extern Hist *ShellHist;
+extern Hist *TextHist;
+extern int UseHistory;
+extern int URLHistSize;
+extern int SaveURLHist;
 
-extern Hist *newHist(void);
-extern Hist *copyHist(Hist *hist);
-extern HistItem *unshiftHist(Hist *hist, char *ptr);
-extern HistItem *pushHist(Hist *hist, char *ptr);
-extern HistItem *pushHashHist(Hist *hist, char *ptr);
-extern HistItem *getHashHist(Hist *hist, char *ptr);
-extern char *lastHist(Hist *hist);
-extern char *nextHist(Hist *hist);
-extern char *prevHist(Hist *hist);
-
-extern int loadHistory(Hist *hist);
-extern void saveHistory(Hist *hist, size_t size);
-extern void ldHist(void);
-
-#endif /* HISTORY_H */
+Hist *newHist(void);
+Hist *copyHist(Hist *hist);
+HistItem *unshiftHist(Hist *hist, char *ptr);
+HistItem *pushHist(Hist *hist, char *ptr);
+HistItem *pushHashHist(Hist *hist, char *ptr);
+HistItem *getHashHist(Hist *hist, char *ptr);
+char *lastHist(Hist *hist);
+char *nextHist(Hist *hist);
+char *prevHist(Hist *hist);
+int loadHistory(Hist *hist);
+void saveHistory(Hist *hist, size_t size);
+void ldHist(void);

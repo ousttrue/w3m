@@ -1,10 +1,11 @@
 #include "downloadlist.h"
 #include "w3m.h"
-#include "fm.h"
 #include "indep.h"
 #include <sys/stat.h>
 
 static bool add_download_list = FALSE;
+DownloadList *FirstDL = nullptr;
+DownloadList *LastDL = nullptr;
 
 bool popAddDownloadList() {
   auto ret = add_download_list;

@@ -29,8 +29,7 @@
 #define SITECONF_FILE	RC_DIR "/siteconf"
 #define USER_MAILCAP	RC_DIR "/mailcap"
 #define SYS_MAILCAP	CONF_DIR "/mailcap"
-#define USER_MIMETYPES	"~/.mime.types"
-#define SYS_MIMETYPES	ETC_DIR "/mime.types"
+
 #define USER_URIMETHODMAP	RC_DIR "/urimethodmap"
 #define SYS_URIMETHODMAP	CONF_DIR "/urimethodmap"
 
@@ -60,8 +59,6 @@
 // #define USE_MENU 1
 #define USE_COOKIE 1
 #define USE_DIGEST_AUTH 1
-#define USE_SSL 1
-#define USE_SSL_VERIFY 1
 #define DEF_CAFILE ""
 #define USE_HELP_CGI 1
 #define USE_EXTERNAL_URI_LOADER 1
@@ -85,7 +82,6 @@
 /* #undef FORMAT_NICE */
 #define ID_EXT
 /* #undef CLEAR_BUF */
-#define INET6 1
 #define HAVE_SOCKLEN_T 1
 /* #undef HAVE_OLD_SS_FAMILY */
 /* #undef USE_EGD */

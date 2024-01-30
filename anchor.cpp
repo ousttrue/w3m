@@ -7,11 +7,15 @@
 #include "line.h"
 #include "buffer.h"
 #include "form.h"
-#include "fm.h"
 #include "indep.h"
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"
+
+bool MarkAllPages = false;
+
+#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
+int PagerMax = PAGER_MAX_LINE;
 
 #define bpcmp(a, b)                                                            \
   (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))

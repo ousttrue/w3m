@@ -9,3 +9,5 @@ struct TextList;
 extern TextList *fileToDelete;
 
 extern char *document_root;
+
+void w3m_exit(int i);

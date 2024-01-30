@@ -8,6 +8,10 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+int UseHistory = TRUE;
+int URLHistSize = 100;
+int SaveURLHist = TRUE;
+
 /* Merge entries from their history into ours */
 static int mergeHistory(Hist *ours, Hist *theirs) {
   HistItem *item;

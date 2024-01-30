@@ -1,5 +1,8 @@
 #pragma once
 
+extern bool MarkAllPages;
+extern int PagerMax;
+
 struct BufferPoint {
   int line;
   int pos;

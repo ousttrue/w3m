@@ -1,4 +1,6 @@
 #include "file.h"
+#include "history.h"
+#include "url.h"
 #include "terms.h"
 #include "tmpfile.h"
 #include "alarm.h"
@@ -1559,7 +1561,7 @@ load_doc: {
     header_string = NULL;
   TRAP_ON;
   if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS ||
-      (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy &&
+      (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
        !check_no_proxy(pu.host))) {
 
     if (fmInitialized) {

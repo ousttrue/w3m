@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+extern bool ssl_verify_server;
+
 struct stream_buffer {
   unsigned char *buf;
   int size, cur, next;

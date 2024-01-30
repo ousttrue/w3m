@@ -575,7 +575,7 @@ char *remove_space(char *str) {
   return p;
 }
 
-int non_null(char *s) {
+int non_null(const char *s) {
   if (s == NULL)
     return FALSE;
   while (*s) {

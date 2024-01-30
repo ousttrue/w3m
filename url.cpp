@@ -1,6 +1,7 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
-#include "fm.h"
 #include "w3m.h"
+#include "indep.h"
+#include "config.h"
 #include "httprequest.h"
 #include "rc.h"
 #include "file.h"
@@ -25,6 +26,45 @@
 #include <setjmp.h>
 #include <errno.h>
 #include <sys/stat.h>
+
+bool ArgvIsURL = true;
+bool LocalhostOnly = false;
+bool retryAsHttp = true;
+char *index_file = nullptr;
+
+char *HTTP_proxy = nullptr;
+char *HTTPS_proxy = nullptr;
+char *FTP_proxy = nullptr;
+char *NO_proxy = nullptr;
+int NOproxy_netaddr = true;
+bool use_proxy = true;
+char *w3m_reqlog;
+TextList *NO_proxy_domains;
+
+const char *ssl_forbid_method = "2, 3, t, 5";
+int ssl_path_modified = FALSE;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
+const char *ssl_cipher "DEFAULT:!LOW:!RC4:!EXP";
+#else
+const char *ssl_cipher = nullptr;
+#endif
+#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+const char *ssl_cert_file = nullptr;
+const char *ssl_key_file = nullptr;
+const char *ssl_ca_path = nullptr;
+const char *ssl_ca_file = DEF_CAFILE;
+bool ssl_ca_default = true;
+#endif
+
+int DNS_order = DNS_ORDER_UNSPEC;
+
+#define USER_MIMETYPES "~/.mime.types"
+#ifndef ETC_DIR
+#define ETC_DIR "/etc"
+#endif
+#define SYS_MIMETYPES ETC_DIR "/mime.types"
+
+const char *mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
 
 ParsedURL HTTP_proxy_parsed;
 ParsedURL HTTPS_proxy_parsed;
@@ -263,7 +303,7 @@ static int str_to_ssl_version(const char *name) {
 
 static SSL *openSSLHandle(int sock, char *hostname, char **p_cert) {
   SSL *handle = NULL;
-  static char *old_ssl_forbid_method = NULL;
+  static const char *old_ssl_forbid_method = NULL;
   static int old_ssl_verify_server = -1;
 
   if (old_ssl_forbid_method != ssl_forbid_method &&
@@ -354,9 +394,9 @@ static SSL *openSSLHandle(int sock, char *hostname, char **p_cert) {
       int ng = 1;
       if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file,
                                        SSL_FILETYPE_PEM) > 0) {
-        char *key_file = (ssl_key_file == NULL || *ssl_key_file == '\0')
-                             ? ssl_cert_file
-                             : ssl_key_file;
+        const char *key_file = (ssl_key_file == NULL || *ssl_key_file == '\0')
+                                   ? ssl_cert_file
+                                   : ssl_key_file;
         if (SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM) >
             0)
           if (SSL_CTX_check_private_key(ssl_ctx))
@@ -368,7 +408,7 @@ static SSL *openSSLHandle(int sock, char *hostname, char **p_cert) {
       }
     }
     if (ssl_verify_server) {
-      char *file = NULL, *path = NULL;
+      const char *file = NULL, *path = NULL;
       if (ssl_ca_file && *ssl_ca_file != '\0')
         file = ssl_ca_file;
       if (ssl_ca_path && *ssl_ca_path != '\0')
@@ -1322,7 +1362,7 @@ retry:
       hr->command = HR_COMMAND_HEAD;
     if (((pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
-        !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+        use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
       if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
         sock = ssl_socket_of(ouf->stream);
@@ -1507,12 +1547,11 @@ no_user_mimetypes:
   return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-TextList *make_domain_list(char *domain_list) {
-  char *p;
+TextList *make_domain_list(const char *domain_list) {
   Str *tmp;
   TextList *domains = NULL;
 
-  p = domain_list;
+  auto p = domain_list;
   tmp = Strnew_size(64);
   while (*p) {
     while (*p && IS_SPACE(*p))

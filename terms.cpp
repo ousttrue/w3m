@@ -4,9 +4,13 @@
  * revised by Akinori ITO, January 1995
  */
 #include "config.h"
+#include "w3m.h"
 #include "proto.h"
 #include "indep.h"
 #include "ctrlcode.h"
+#include "signal_util.h"
+#include "myctype.h"
+#include "terms.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -23,13 +27,11 @@
 #include <sys/ioctl.h>
 
 static char *title_str = NULL;
-
 static int tty = -1;
 
-#include "fm.h"
-#include "signal_util.h"
-#include "myctype.h"
-#include "terms.h"
+bool Do_not_use_ti_te = false;
+char *displayTitleTerm = nullptr;
+char UseGraphicChar =GRAPHIC_CHAR_CHARSET;
 
 char *getenv(const char *);
 // MySignalHandler reset_exit(SIGNAL_ARG), , error_dump(SIGNAL_ARG);

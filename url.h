@@ -17,6 +17,48 @@
 #define SCM_MAILTO 12
 #define SCM_HTTPS 13
 
+extern bool ArgvIsURL;
+extern bool LocalhostOnly;
+extern bool retryAsHttp;
+extern char *HTTP_proxy;
+extern char *HTTPS_proxy;
+extern char *FTP_proxy;
+extern char *NO_proxy;
+extern int NOproxy_netaddr;
+extern bool use_proxy;
+// #define Do_not_use_proxy (!use_proxy)
+extern char *w3m_reqlog;
+extern char *index_file;
+struct TextList;
+extern TextList *NO_proxy_domains;
+
+#define INET6 1
+#ifdef INET6
+#define DNS_ORDER_UNSPEC 0
+#define DNS_ORDER_INET_INET6 1
+#define DNS_ORDER_INET6_INET 2
+#define DNS_ORDER_INET_ONLY 4
+#define DNS_ORDER_INET6_ONLY 6
+extern int ai_family_order_table[7][3]; /* XXX */
+#endif                                  /* INET6 */
+
+extern const char *mimetypes_files;
+extern const char *ssl_forbid_method;
+extern int ssl_path_modified;
+extern const char *ssl_cipher;
+
+#define USE_SSL 1
+#define USE_SSL_VERIFY 1
+#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
+extern const char *ssl_cert_file;
+extern const char *ssl_key_file;
+extern const char *ssl_ca_path;
+extern const char *ssl_ca_file;
+extern bool ssl_ca_default;
+#endif
+
+extern int DNS_order;
+
 /* XXX: note html.h SCM_ */
 inline int DefaultPort[] = {
     80,  /* http */
@@ -64,3 +106,6 @@ int getURLScheme(char **url);
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
 
 extern char *ssl_min_version;
+
+struct TextList;
+extern TextList *make_domain_list(const char *domain_list);
