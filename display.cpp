@@ -1,4 +1,5 @@
 #include "display.h"
+#include "readbuffer.h"
 #include "rc.h"
 #include "utf8.h"
 #include "terms.h"

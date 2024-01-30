@@ -1,4 +1,7 @@
 #pragma once
+#include "config.h"
+#include <signal.h>
+#include <setjmp.h>
 
 #define HAVE_SIGSETJMP 1
 

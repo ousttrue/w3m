@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "tmpfile.h"
+#include "readbuffer.h"
 #include "alarm.h"
 #include "w3m.h"
 #include "httprequest.h"
@@ -30,8 +31,6 @@
 #include "util.h"
 #include "proto.h"
 #include <stdio.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -341,36 +340,12 @@ static void dump_head(Buffer *buf) {
   TextListItem *ti;
 
   if (buf->document_header == NULL) {
-    if (w3m_dump & DUMP_EXTRA)
-      printf("\n");
     return;
   }
   for (ti = buf->document_header->first; ti; ti = ti->next) {
     printf("%s", ti->ptr);
   }
   puts("");
-}
-
-static void dump_extra(Buffer *buf) {
-  printf("W3m-current-url: %s\n", parsedURL2Str(&buf->currentURL)->ptr);
-  if (buf->baseURL)
-    printf("W3m-base-url: %s\n", parsedURL2Str(buf->baseURL)->ptr);
-  if (buf->ssl_certificate) {
-    Str *tmp = Strnew();
-    char *p;
-    for (p = buf->ssl_certificate; *p; p++) {
-      Strcat_char(tmp, *p);
-      if (*p == '\n') {
-        for (; *(p + 1) == '\n'; p++)
-          ;
-        if (*(p + 1))
-          Strcat_char(tmp, '\t');
-      }
-    }
-    if (Strlastchar(tmp) != '\n')
-      Strcat_char(tmp, '\n');
-    printf("W3m-ssl-certificate: %s", tmp->ptr);
-  }
 }
 
 static int cmp_anchor_hseq(const void *a, const void *b) {
@@ -390,33 +365,7 @@ static void do_dump(Buffer *buf) {
     mySignal(SIGINT, prevtrap);
     return;
   }
-  if (w3m_dump & DUMP_EXTRA)
-    dump_extra(buf);
-  if (w3m_dump & DUMP_HEAD)
-    dump_head(buf);
-  if (w3m_dump & DUMP_SOURCE)
-    dump_source(buf);
-  if (w3m_dump == DUMP_BUFFER) {
-    int i;
-    saveBuffer(buf, stdout, FALSE);
-    if (displayLinkNumber && buf->href) {
-      int nanchor = buf->href->nanchor;
-      printf("\nReferences:\n\n");
-      auto in_order = (Anchor **)New_N(Anchor *, buf->href->nanchor);
-      for (i = 0; i < nanchor; i++)
-        in_order[i] = buf->href->anchors + i;
-      qsort(in_order, nanchor, sizeof(Anchor *), cmp_anchor_hseq);
-      for (i = 0; i < nanchor; i++) {
-        ParsedURL pu;
-        char *url;
-        if (in_order[i]->slave)
-          continue;
-        parseURL2(in_order[i]->url, &pu, baseURL(buf));
-        url = url_decode2(parsedURL2Str(&pu)->ptr, Currentbuf);
-        printf("[%d] %s\n", in_order[i]->hseq + 1, url);
-      }
-    }
-  }
+
   mySignal(SIGINT, prevtrap);
 }
 
@@ -504,9 +453,6 @@ static Str *currentURL(void);
 
 void saveBufferInfo() {
   FILE *fp;
-
-  if (w3m_dump)
-    return;
   if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
     return;
   }
@@ -4367,22 +4313,6 @@ int main(int argc, char **argv) {
           WrapDefault = FALSE;
         else
           WrapDefault = TRUE;
-      } else if (!strcmp("-dump", argv[i]))
-        w3m_dump = DUMP_BUFFER;
-      else if (!strcmp("-dump_source", argv[i]))
-        w3m_dump = DUMP_SOURCE;
-      else if (!strcmp("-dump_head", argv[i]))
-        w3m_dump = DUMP_HEAD;
-      else if (!strcmp("-dump_both", argv[i]))
-        w3m_dump = (DUMP_HEAD | DUMP_SOURCE);
-      else if (!strcmp("-dump_extra", argv[i]))
-        w3m_dump = (DUMP_HEAD | DUMP_SOURCE | DUMP_EXTRA);
-      else if (!strcmp("-halfdump", argv[i]))
-        w3m_dump = DUMP_HALFDUMP;
-      else if (!strcmp("-halfload", argv[i])) {
-        w3m_dump = 0;
-        w3m_halfload = TRUE;
-        DefaultType = default_type = "text/html";
       } else if (!strcmp("-backend", argv[i])) {
         w3m_backend = TRUE;
       } else if (!strcmp("-backend_batch", argv[i])) {
@@ -4483,8 +4413,6 @@ int main(int argc, char **argv) {
         }
       } else if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i])) {
         /* do nothing */
-      } else if (!strcmp("-debug", argv[i])) {
-        w3m_debug = TRUE;
       } else if (!strcmp("-reqlog", argv[i])) {
         w3m_reqlog = rcFile("request.log");
       } else {
@@ -4506,16 +4434,7 @@ int main(int argc, char **argv) {
   if (BookmarkFile == NULL)
     BookmarkFile = rcFile(BOOKMARK);
 
-  if (!isatty(1) && !w3m_dump) {
-    /* redirected output */
-    w3m_dump = DUMP_BUFFER;
-  }
-  if (w3m_dump) {
-    if (COLS == 0)
-      COLS = DEFAULT_COLS;
-  }
-
-  if (!w3m_dump && !w3m_backend) {
+  if (!w3m_backend) {
     fmInit();
     mySignal(SIGWINCH, resize_hook);
   }
@@ -4528,8 +4447,6 @@ int main(int argc, char **argv) {
   if (w3m_backend)
     backend();
 
-  if (w3m_dump)
-    mySignal(SIGINT, SIG_IGN);
   mySignal(SIGCHLD, sig_chld);
   mySignal(SIGPIPE, SigPipe);
 
@@ -4602,11 +4519,7 @@ int main(int argc, char **argv) {
         url = file_to_url(load_argv[i]);
       else
         url = url_quote(load_argv[i]);
-      if (w3m_dump == DUMP_HEAD) {
-        request = (FormList *)New(FormList);
-        request->method = FORM_METHOD_HEAD;
-        newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
-      } else {
+      {
         if (post_file && i == 0) {
           FILE *fp;
           Str *body;
@@ -4673,18 +4586,10 @@ int main(int argc, char **argv) {
       Currentbuf->nextBuffer = newbuf;
       Currentbuf = newbuf;
     }
-    if (w3m_dump)
-      do_dump(Currentbuf);
-    else {
+    {
       Currentbuf = newbuf;
       saveBufferInfo();
     }
-  }
-  if (w3m_dump) {
-    if (err_msg->length)
-      fprintf(stderr, "%s", err_msg->ptr);
-    save_cookies();
-    w3m_exit(0);
   }
 
   if (popAddDownloadList()) {

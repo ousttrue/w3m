@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "Str.h"
+#include "readbuffer.h"
 #include "ctrlcode.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

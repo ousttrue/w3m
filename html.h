@@ -358,6 +358,5 @@ struct environment {
 #define MAX_ENV_LEVEL 20
 #define MAX_INDENT_LEVEL 10
 
-#define INDENT_INCR IndentIncr
 
 #endif /* _HTML_H */

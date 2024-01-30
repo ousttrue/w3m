@@ -155,25 +155,16 @@ extern char *acceptableEncoding(void);
 extern int dir_exist(char *path);
 extern char **get_symbol(void);
 struct Str;
-extern Str *convertLine0(URLFile *uf, Str *line, int mode);
-#define convertLine(uf, line, mode, charset, dcharset)                         \
-  convertLine0(uf, line, mode)
+
 extern void push_symbol(Str *str, char symbol, int width, int n);
 struct FormList;
 
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 
-struct TextLineList;
-extern void HTMLlineproc2(Buffer *buf, TextLineList *tl);
-
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
 extern char *convert_size(long long size, int usefloat);
 extern char *convert_size2(long long size1, long long size2, int usefloat);
-extern void showProgress(long long *linelen, long long *trbyte);
 
-extern void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
 extern Buffer *loadHTMLString(Str *page);
 extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
 extern void saveBuffer(Buffer *buf, FILE *f, int cont);
@@ -224,7 +215,6 @@ extern int readBufferCache(Buffer *buf);
 extern void addChar(char c, Lineprop mode);
 extern void record_err_message(char *s);
 extern Buffer *message_list_panel(void);
-extern void message(char *s, int return_x, int return_y);
 extern void disp_err_message(char *s, int redraw_current);
 extern void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
                               int mouse);
@@ -248,7 +238,6 @@ extern int columnPos(Line *line, int column);
 extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
-extern int gethtmlcmd(char **s);
 
 
 extern char *lastFileName(char *path);
@@ -286,53 +275,6 @@ extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
                               char *referer, FormList *request);
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
-extern int set_tty(void);
-extern void set_cc(int spec, int val);
-extern void close_tty(void);
-extern char *ttyname_tty(void);
-extern void reset_tty(void);
-extern void set_int(void);
-extern void getTCstr(void);
-extern void setlinescols(void);
-extern void setupscreen(void);
-extern int initscr(void);
-extern void move(int line, int column);
-extern void addch(char c);
-extern void wrap(void);
-extern void touch_line(void);
-extern void standout(void);
-extern void standend(void);
-extern void bold(void);
-extern void boldend(void);
-extern void underline(void);
-extern void underlineend(void);
-extern void graphstart(void);
-extern void graphend(void);
-extern int graph_ok(void);
-extern void refresh(void);
-extern void clear(void);
-extern void clrtoeol(void);
-extern void clrtoeolx(void);
-extern void clrtobot(void);
-extern void clrtobotx(void);
-extern void no_clrtoeol(void);
-extern void addstr(char *s);
-extern void addnstr(char *s, int n);
-extern void addnstr_sup(char *s, int n);
-extern void crmode(void);
-extern void nocrmode(void);
-extern void term_echo(void);
-extern void term_noecho(void);
-extern void term_raw(void);
-extern void term_cooked(void);
-extern void term_cbreak(void);
-extern void term_title(char *s);
-extern void flush_tty(void);
-extern void toggle_stand(void);
-extern void bell(void);
-extern int sleep_till_anykey(int sec, int purge);
-extern void initMimeTypes(void);
-extern void free_ssl_ctx(void);
 
 extern int openSocket(char *hostname, char *remoteport_name,
                       unsigned short remoteport_num);
@@ -451,7 +393,6 @@ extern char *guess_save_name(Buffer *buf, char *file);
 extern void wrapToggle(void);
 extern void saveBufferInfo(void);
 
-extern Str *getLinkNumberStr(int correction);
 
 extern void dispVer(void);
 

@@ -16,6 +16,11 @@
 #include <string.h>
 #include <sys/types.h>
 
+bool w3m_backend = false;
+
+struct TextLineList;
+TextLineList *backend_halfdump_buf;
+
 char *HostName = nullptr;
 char *CurrentDir;
 int CurrentPid;
@@ -260,7 +265,6 @@ static void call_command_function(char *str) {
 int backend(void) {
   char *str;
 
-  w3m_dump = 0;
   if (COLS == 0)
     COLS = DEFAULT_COLS;
 

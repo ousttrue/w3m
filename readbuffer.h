@@ -2,6 +2,31 @@
 #include "utf8.h"
 #include "anchor.h"
 
+#define N_GRAPH_SYMBOL 32
+#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
+#define SYMBOL_BASE 0x20
+
+extern bool pseudoInlines;
+extern bool ignore_null_img_alt;
+#define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
+#define MINIMUM_PIXEL_PER_CHAR 4.0
+#define MAXIMUM_PIXEL_PER_CHAR 32.0
+extern double pixel_per_char;
+extern int pixel_per_char_i;
+extern int displayLinkNumber;
+extern bool DisableCenter;
+extern bool showLineNum;
+extern int Tabstop;
+extern int IndentIncr;
+#define INDENT_INCR IndentIncr
+extern bool DisplayBorders;
+#define DISPLAY_INS_DEL_SIMPLE 0
+#define DISPLAY_INS_DEL_NORMAL 1
+#define DISPLAY_INS_DEL_FONTIFY 2
+extern int displayInsDel;
+extern bool view_unseenobject;
+extern bool MetaRefresh;
+
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10
 #define FONT_STACK_SIZE 5
@@ -179,3 +204,14 @@ Str *romanAlphabet(int n);
 // extern int next_status(char c, int *status);
 int next_status(char c, int *status);
 int read_token(Str *buf, char **instr, int *status, int pre, int append);
+
+struct URLFile;
+struct Buffer;
+void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
+Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
+
+Str *convertLine0(URLFile *uf, Str *line, int mode);
+#define convertLine(uf, line, mode, charset, dcharset)                         \
+  convertLine0(uf, line, mode)
+
+Str *getLinkNumberStr(int correction);

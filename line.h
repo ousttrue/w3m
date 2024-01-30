@@ -1,5 +1,7 @@
 #pragma once
 
+#define LINELEN 256 /* Initial line length */
+
 typedef unsigned short Lineprop;
 
 #define P_CHARTYPE 0x3f00

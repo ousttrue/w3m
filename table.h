@@ -1,5 +1,11 @@
 #pragma once
+#include "config.h"
 #include "line.h"
+
+#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
+
+extern int symbol_width;
+extern int symbol_width0;
 
 #define ALIGN_CENTER 0
 #define ALIGN_LEFT 1

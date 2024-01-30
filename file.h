@@ -11,3 +11,6 @@ struct FormList;
 
 Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer, int flag,
                         FormList *request);
+
+void showProgress(long long *linelen, long long *trbyte,
+                  long long current_content_length);

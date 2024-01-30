@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "readbuffer.h"
 #include "utf8.h"
 #include "tmpfile.h"
 #include "line.h"

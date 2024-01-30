@@ -1,4 +1,5 @@
 #include "search.h"
+#include "display.h"
 #include "fm.h"
 #include "buffer.h"
 #include "regex.h"

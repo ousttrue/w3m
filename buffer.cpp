@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "display.h"
+#include "readbuffer.h"
 #include "rc.h"
 #include "textlist.h"
 #include "linklist.h"

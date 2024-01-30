@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "readbuffer.h"
 #include "history.h"
 #include "url.h"
 #include "istream.h"

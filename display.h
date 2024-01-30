@@ -14,3 +14,5 @@ void displayBuffer(Buffer *buf, DisplayFlag mode);
 
 void fmInit(void);
 void fmTerm(void);
+
+void message(char *s, int return_x, int return_y);
