@@ -3,6 +3,7 @@
 #include <string_view>
 #include <string>
 #include <string.h>
+#include <tuple>
 
 #ifdef __clang__
 typedef unsigned char char8_t;
@@ -57,6 +58,42 @@ struct Utf8 {
     return std::string_view((const char *)begin(),
                             std::distance(begin(), end()));
   }
+
+  std::tuple<char32_t, int> codepoint() const {
+    if (b0 == 0) {
+      return {-1, 0};
+    }
+    if (b0 >= 0 && b0 <= 127) {
+      // ascii
+      return {b0, 1};
+    }
+    if (b1 == 0) {
+      return {-1, 0};
+    }
+    if (b0 >= 192 && b0 <= 223) {
+      return {(b0 - 192) * 64 + (b1 - 128), 2};
+    }
+    if (b0 == 0xed && (b1 & 0xa0) == 0xa0) {
+      return {-1, 0}; // code points, 0xd800 to 0xdfff
+    }
+    if (b2 == 0) {
+      return {-1, 0};
+    }
+    if (b0 >= 224 && b0 <= 239) {
+      return {(b0 - 224) * 4096 + (b1 - 128) * 64 + (b2 - 128), 3};
+    }
+    if (b3 == 0) {
+      return {-1, 0};
+    }
+    if (b0 >= 240 && b0 <= 247) {
+      return {(b0 - 240) * 262144 + (b1 - 128) * 4096 + (b2 - 128) * 64 +
+                  (b3 - 128),
+              4};
+    }
+    return {-1, 0};
+  }
+
+  int cols() const;
 
   bool operator==(const Utf8 &rhs) const { return view() == rhs.view(); }
   bool operator!=(const Utf8 &rhs) const { return !(*this == rhs); }

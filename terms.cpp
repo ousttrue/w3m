@@ -510,36 +510,22 @@ static int need_redraw(const Utf8 &c1, l_prop pr1, const Utf8 &c2, l_prop pr2) {
 
 const Utf8 SPACE = {' ', 0, 0, 0};
 
-void addch(char c) { addmch({c, 0, 0, 0}); }
+void addch(char c) { addmch({(char8_t)c, 0, 0, 0}); }
 
 void addmch(const Utf8 &utf8) {
-  l_prop *pr;
-  int dest, i;
-  // static Str *tmp = NULL;
-  Utf8 *p;
-  // char c = *pc;
-  // TODO:
-  // int width = wtf_width((uint8_t *)pc);
-  int width = 1;
-
-  // if (tmp == NULL)
-  //   tmp = Strnew();
-  // Strcopy_charp_n(tmp, pc, len);
-  // pc = tmp->ptr;
-
   if (CurColumn == COLS)
     wrap();
   if (CurColumn >= COLS)
     return;
-  p = ScreenImage[CurLine]->lineimage;
-  pr = ScreenImage[CurLine]->lineprop;
+  auto p = ScreenImage[CurLine]->lineimage;
+  auto pr = ScreenImage[CurLine]->lineprop;
 
   if (pr[CurColumn] & S_EOL) {
     if (utf8 == SPACE && !(CurrentMode & M_SPACE)) {
       CurColumn++;
       return;
     }
-    for (i = CurColumn; i >= 0 && (pr[i] & S_EOL); i--) {
+    for (int i = CurColumn; i >= 0 && (pr[i] & S_EOL); i--) {
       SETCH(p[i], SPACE, 1);
       SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
     }
@@ -555,9 +541,10 @@ void addmch(const Utf8 &utf8) {
   else
     return;
 
+  int width = utf8.cols();
   /* Required to erase bold or underlined character for some * terminal
    * emulators. */
-  i = CurColumn + width - 1;
+  int i = CurColumn + width - 1;
   if (i < COLS &&
       (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], utf8, CurrentMode)) ||
        ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
@@ -619,7 +606,7 @@ void addmch(const Utf8 &utf8) {
     }
     CurColumn += width;
   } else if (c == '\t') {
-    dest = (CurColumn + tab_step) / tab_step * tab_step;
+    auto dest = (CurColumn + tab_step) / tab_step * tab_step;
     if (dest >= COLS) {
       wrap();
       touch_line();
