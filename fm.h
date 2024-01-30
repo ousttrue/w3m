@@ -146,9 +146,6 @@ global int w3m_dump init(0);
 global int w3m_halfload init(FALSE);
 
 global int confirm_on_quit init(TRUE);
-#ifdef USE_MARK
-global int use_mark init(FALSE);
-#endif
 global int emacs_like_lineedit init(FALSE);
 global int space_autocomplete init(FALSE);
 global int vi_prec_num init(FALSE);
@@ -165,14 +162,7 @@ global int show_srch_str init(TRUE);
 global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
 global int pseudoInlines init(TRUE);
 global char *Editor init(DEF_EDITOR);
-#ifdef USE_W3MMAILER
-global char *Mailer init(nullptr);
-#else
 global char *Mailer init(DEF_MAILER);
-#endif
-#ifdef USE_W3MMAILER
-#define MAILTO_OPTIONS_USE_W3MMAILER 0
-#endif
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
@@ -216,11 +206,6 @@ global int FoldLine init(FALSE);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(FALSE);
 
-#ifdef USE_MIGEMO
-global int use_migemo init(FALSE);
-global int migemo_active init(0);
-global char *migemo_command init(DEF_MIGEMO_COMMAND);
-#endif /* USE_MIGEMO */
 
 global struct auth_cookie *Auth_cookie init(nullptr);
 global struct cookie *First_cookie init(nullptr);

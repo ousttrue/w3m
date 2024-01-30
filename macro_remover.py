@@ -26,9 +26,10 @@ CONTEXT = {
     # #
     # 'SIGSTOP': False,
     # 'USE_INCLUDED_SRAND48': False,
-    # 'USE_MIGEMO': False,
-    # 'USE_W3MMAILER': False,
-    # 'USE_MARK': False,
+
+    'USE_MIGEMO': False,
+    'USE_W3MMAILER': False,
+    'USE_MARK': False,
 
     '__CYGWIN__': False,
     'SUPPORT_WIN9X_CONSOLE_MBCS': False,

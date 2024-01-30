@@ -83,9 +83,6 @@ static AlarmEvent *CurrentAlarm = &DefaultAlarm;
 static int need_resize_screen = FALSE;
 static void resize_screen(void);
 
-#ifdef USE_MARK
-static char *MarkString = NULL;
-#endif
 static char *SearchString = NULL;
 int (*searchRoutine)(Buffer *, char *);
 
@@ -138,19 +135,10 @@ static void fversion(FILE *f) {
           ",cookie"
           ",ssl"
           ",ssl-verify"
-#ifdef USE_W3MMAILER
-          ",w3mmailer"
-#endif
 #ifdef INET6
           ",ipv6"
 #endif
           ",alarm"
-#ifdef USE_MARK
-          ",mark"
-#endif
-#ifdef USE_MIGEMO
-          ",migemo"
-#endif
   );
 }
 
@@ -575,9 +563,6 @@ static void resize_screen(void) {
 }
 
 static void SigPipe(SIGNAL_ARG) {
-#ifdef USE_MIGEMO
-  init_migemo();
-#endif
   mySignal(SIGPIPE, SigPipe);
   SIGNAL_RETURN;
 }
@@ -776,11 +761,6 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     do_next_search = TRUE;
     break;
 
-#ifdef USE_MIGEMO
-  case 034:
-    migemo_active = -migemo_active;
-    goto done;
-#endif
 
   default:
     if (ch >= 0)
@@ -811,15 +791,6 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   clear_mark(Currentbuf->currentLine);
-#ifdef USE_MIGEMO
-done:
-  while (*str++ != '\0') {
-    if (migemo_active > 0)
-      *prop++ |= PE_UNDER;
-    else
-      *prop++ &= ~PE_UNDER;
-  }
-#endif
   return -1;
 }
 
@@ -1607,123 +1578,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-#ifdef USE_MARK
-
-/* Set / unset mark */
-DEFUN(_mark, MARK, "Set/unset mark") {
-  Line *l;
-  if (!use_mark)
-    return;
-  if (Currentbuf->firstLine == NULL)
-    return;
-  l = Currentbuf->currentLine;
-  l->propBuf[Currentbuf->pos] ^= PE_MARK;
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-/* Go to next mark */
-DEFUN(nextMk, NEXT_MARK, "Go to the next mark") {
-  Line *l;
-  int i;
-
-  if (!use_mark)
-    return;
-  if (Currentbuf->firstLine == NULL)
-    return;
-  i = Currentbuf->pos + 1;
-  l = Currentbuf->currentLine;
-  if (i >= l->len) {
-    i = 0;
-    l = l->next;
-  }
-  while (l != NULL) {
-    for (; i < l->len; i++) {
-      if (l->propBuf[i] & PE_MARK) {
-        Currentbuf->currentLine = l;
-        Currentbuf->pos = i;
-        arrangeCursor(Currentbuf);
-        displayBuffer(Currentbuf, B_NORMAL);
-        return;
-      }
-    }
-    l = l->next;
-    i = 0;
-  }
-  /* FIXME: gettextize? */
-  disp_message("No mark exist after here", TRUE);
-}
-
-/* Go to previous mark */
-DEFUN(prevMk, PREV_MARK, "Go to the previous mark") {
-  Line *l;
-  int i;
-
-  if (!use_mark)
-    return;
-  if (Currentbuf->firstLine == NULL)
-    return;
-  i = Currentbuf->pos - 1;
-  l = Currentbuf->currentLine;
-  if (i < 0) {
-    l = l->prev;
-    if (l != NULL)
-      i = l->len - 1;
-  }
-  while (l != NULL) {
-    for (; i >= 0; i--) {
-      if (l->propBuf[i] & PE_MARK) {
-        Currentbuf->currentLine = l;
-        Currentbuf->pos = i;
-        arrangeCursor(Currentbuf);
-        displayBuffer(Currentbuf, B_NORMAL);
-        return;
-      }
-    }
-    l = l->prev;
-    if (l != NULL)
-      i = l->len - 1;
-  }
-  /* FIXME: gettextize? */
-  disp_message("No mark exist before here", TRUE);
-}
-
-/* Mark place to which the regular expression matches */
-DEFUN(reMark, REG_MARK, "Mark all occurences of a pattern") {
-  Line *l;
-  char *str;
-  char *p, *p1, *p2;
-
-  if (!use_mark)
-    return;
-  str = searchKeyData();
-  if (str == NULL || *str == '\0') {
-    str = inputStrHist("(Mark)Regexp: ", MarkString, TextHist);
-    if (str == NULL || *str == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
-      return;
-    }
-  }
-  str = conv_search_string(str, DisplayCharset);
-  if ((str = regexCompile(str, 1)) != NULL) {
-    disp_message(str, TRUE);
-    return;
-  }
-  MarkString = str;
-  for (l = Currentbuf->firstLine; l != NULL; l = l->next) {
-    p = l->lineBuf;
-    for (;;) {
-      if (regexMatch(p, &l->lineBuf[l->len] - p, p == l->lineBuf) == 1) {
-        matchedPosition(&p1, &p2);
-        l->propBuf[p1 - l->lineBuf] |= PE_MARK;
-        p = p2;
-      } else
-        break;
-    }
-  }
-
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-#endif /* USE_MARK */
 
 static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
   pushBuffer(buf);
@@ -1864,16 +1718,11 @@ static int handleMailto(char *url) {
 
   if (strncasecmp(url, "mailto:", 7))
     return 0;
-#ifdef USE_W3MMAILER
-  if (!non_null(Mailer) || MailtoOptions == MAILTO_OPTIONS_USE_W3MMAILER)
-    return 0;
-#else
   if (!non_null(Mailer)) {
     /* FIXME: gettextize? */
     disp_err_message("no mailer is specified", TRUE);
     return 1;
   }
-#endif
 
   /* invoke external mailer */
   if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
@@ -3752,9 +3601,6 @@ void deleteFiles() {
 }
 
 void w3m_exit(int i) {
-#ifdef USE_MIGEMO
-  init_migemo(); /* close pipe to migemo */
-#endif
   stopDownload();
   deleteFiles();
   free_ssl_ctx();
