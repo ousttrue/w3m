@@ -1,5 +1,6 @@
 /* $Id: parsetagx.c,v 1.18 2006/06/07 03:52:03 inu Exp $ */
 #include "fm.h"
+#include "htmlcommand.h"
 #include "myctype.h"
 #include "indep.h"
 #include "Str.h"
@@ -103,7 +104,7 @@ extern Hash_si tagtable;
 
 struct parsed_tag *parse_tag(char **s, int internal) {
   struct parsed_tag *tag = NULL;
-  int tag_id;
+  HtmlCommand tag_id;
   char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
   char *p, *q;
   int i, attr_id = 0, nattr;
@@ -125,7 +126,7 @@ struct parsed_tag *parse_tag(char **s, int internal) {
   while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
     q++;
 
-  tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
+  tag_id = (HtmlCommand)getHash_si(&tagtable, tagname, HTML_UNKNOWN);
 
   if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
     goto skip_parse_tagarg;

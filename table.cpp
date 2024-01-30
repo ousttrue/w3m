@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "readbuffer.h"
+#include "htmlcommand.h"
 #include "terms.h"
 #include "textlist.h"
 #include <sys/types.h>
@@ -656,7 +657,7 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
   TextListItem *l;
   struct readbuffer obuf;
   struct html_feed_environ h_env;
-  struct environment envs[MAX_ENV_LEVEL];
+  environment envs[MAX_ENV_LEVEL];
   int colspan, icell;
 
   if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)

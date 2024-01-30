@@ -2162,7 +2162,7 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
   struct environment *envs = h_env->envs;
   Str *tmp;
   int hseq;
-  int cmd;
+  HtmlCommand cmd;
 #ifdef ID_EXT
   char *id = NULL;
 #endif /* ID_EXT */
