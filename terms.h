@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include "utf8.h"
 
 extern int LINES, COLS;
 #define LASTLINE (LINES - 1)
@@ -25,7 +26,7 @@ void setupscreen(void);
 int initscr(void);
 void move(int line, int column);
 void addch(char c);
-void addmch(char *pc, size_t len);
+void addmch(const Utf8 &utf8);
 void wrap(void);
 void touch_line(void);
 void standout(void);

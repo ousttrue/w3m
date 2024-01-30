@@ -89,9 +89,7 @@ typedef struct sgttyb TerminalMode;
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#define SETCH(var, ch, len)                                                    \
-  ((var) = (char *)New_Reuse(char, (var), (len) + 1),                          \
-   strncpy((var), (ch), (len + 1)))
+#define SETCH(var, ch, len) ((var) = (ch))
 
 /* Charactor Color */
 #define COL_FCOLOR 0xf00
@@ -126,7 +124,7 @@ typedef struct sgttyb TerminalMode;
 typedef unsigned short l_prop;
 
 struct Screen {
-  char **lineimage;
+  Utf8 *lineimage;
   l_prop *lineprop;
   short isdirty;
   short eol;
@@ -448,7 +446,7 @@ void setupscreen(void) {
   if (COLS + 1 > max_COLS) {
     max_COLS = COLS + 1;
     for (i = 0; i < max_LINES; i++) {
-      ScreenElem[i].lineimage = (char **)New_N(char *, max_COLS);
+      ScreenElem[i].lineimage = (Utf8 *)New_N(Utf8, max_COLS);
       bzero((void *)ScreenElem[i].lineimage, max_COLS * sizeof(char *));
       ScreenElem[i].lineprop = (l_prop *)New_N(l_prop, max_COLS);
     }
@@ -496,10 +494,10 @@ void move(int line, int column) {
 
 #define M_SPACE (S_SCREENPROP | S_COLORED | S_GRAPHICS)
 
-static int need_redraw(char *c1, l_prop pr1, char *c2, l_prop pr2) {
-  if (!c1 || !c2 || strcmp(c1, c2))
+static int need_redraw(const Utf8 &c1, l_prop pr1, const Utf8 &c2, l_prop pr2) {
+  if (c1 != c2)
     return 1;
-  if (*c1 == ' ')
+  if (c1 == Utf8{' '})
     return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
 
   if ((pr1 ^ pr2) & ~S_DIRTY)
@@ -510,24 +508,24 @@ static int need_redraw(char *c1, l_prop pr1, char *c2, l_prop pr2) {
 
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
-#define SPACE " "
+const Utf8 SPACE = {' ', 0, 0, 0};
 
-void addch(char c) { addmch(&c, 1); }
+void addch(char c) { addmch({c, 0, 0, 0}); }
 
-void addmch(char *pc, size_t len) {
+void addmch(const Utf8 &utf8) {
   l_prop *pr;
   int dest, i;
-  static Str *tmp = NULL;
-  char **p;
-  char c = *pc;
+  // static Str *tmp = NULL;
+  Utf8 *p;
+  // char c = *pc;
   // TODO:
   // int width = wtf_width((uint8_t *)pc);
   int width = 1;
 
-  if (tmp == NULL)
-    tmp = Strnew();
-  Strcopy_charp_n(tmp, pc, len);
-  pc = tmp->ptr;
+  // if (tmp == NULL)
+  //   tmp = Strnew();
+  // Strcopy_charp_n(tmp, pc, len);
+  // pc = tmp->ptr;
 
   if (CurColumn == COLS)
     wrap();
@@ -537,7 +535,7 @@ void addmch(char *pc, size_t len) {
   pr = ScreenImage[CurLine]->lineprop;
 
   if (pr[CurColumn] & S_EOL) {
-    if (c == ' ' && !(CurrentMode & M_SPACE)) {
+    if (utf8 == SPACE && !(CurrentMode & M_SPACE)) {
       CurColumn++;
       return;
     }
@@ -547,9 +545,10 @@ void addmch(char *pc, size_t len) {
     }
   }
 
+  auto c = utf8.b0;
   if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
     SETCHMODE(CurrentMode, C_CTRL);
-  else if (len > 1)
+  else if (utf8.view().size() > 1)
     SETCHMODE(CurrentMode, C_WCHAR1);
   else if (!IS_CNTRL(c))
     SETCHMODE(CurrentMode, C_ASCII);
@@ -560,7 +559,7 @@ void addmch(char *pc, size_t len) {
    * emulators. */
   i = CurColumn + width - 1;
   if (i < COLS &&
-      (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], pc, CurrentMode)) ||
+      (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], utf8, CurrentMode)) ||
        ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
     touch_line();
     i++;
@@ -601,8 +600,8 @@ void addmch(char *pc, size_t len) {
     }
   }
   if (CHMODE(CurrentMode) != C_CTRL) {
-    if (need_redraw(p[CurColumn], pr[CurColumn], pc, CurrentMode)) {
-      SETCH(p[CurColumn], pc, len);
+    if (need_redraw(p[CurColumn], pr[CurColumn], utf8, CurrentMode)) {
+      SETCH(p[CurColumn], utf8, len);
       SETPROP(pr[CurColumn], CurrentMode);
       touch_line();
       touch_column(CurColumn);
@@ -717,7 +716,7 @@ void refresh(void) {
   int line, col, pcol;
   int pline = CurLine;
   int moved = RF_NEED_TO_MOVE;
-  char **pc;
+  Utf8 *pc;
   l_prop *pr, mode = 0;
   l_prop color = COL_FTERM;
   short *dirty;
@@ -832,12 +831,11 @@ void refresh(void) {
             writestr(T_as);
             mode |= S_GRAPHICS;
           }
-          if (pr[col] & S_GRAPHICS)
-            write1(graphchar(*pc[col]));
-          else if (CHMODE(pr[col]) != C_WCHAR2) {
-            // TODO:
-            write1(pc[col][0]);
-            // wc_putc(pc[col], ttyf);
+          if (pr[col] & S_GRAPHICS) {
+            write1(graphchar(pc[col].b0));
+          } else if (CHMODE(pr[col]) != C_WCHAR2) {
+            auto view = pc[col].view();
+            fwrite(view.begin(), view.size(), 1, ttyf);
           }
           pcol = col + 1;
         }
