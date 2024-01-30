@@ -173,3 +173,9 @@ void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
+
+Str *romanNumeral(int n);
+Str *romanAlphabet(int n);
+// extern int next_status(char c, int *status);
+int next_status(char c, int *status);
+int read_token(Str *buf, char **instr, int *status, int pre, int append);

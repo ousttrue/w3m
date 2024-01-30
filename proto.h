@@ -254,9 +254,6 @@ extern int gethtmlcmd(char **s);
 extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
 extern char *mydirname(char *s);
-extern int next_status(char c, int *status);
-extern int read_token(Str *buf, char **instr, int *status, int pre, int append);
-extern Str *correct_irrtag(int status);
 #define conv_search_string(str, f_ces) str
 extern int forwardSearch(Buffer *buf, char *str);
 extern int backwardSearch(Buffer *buf, char *str);
@@ -405,8 +402,7 @@ extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
 extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
                                         Str *pwd, int is_proxy);
 extern char *last_modified(Buffer *buf);
-extern Str *romanNumeral(int n);
-extern Str *romanAlphabet(int n);
+
 extern void mySystem(char *command, int background);
 extern Str *myExtCommand(char *cmd, char *arg, int redirect);
 extern Str *myEditor(char *cmd, char *file, int line);

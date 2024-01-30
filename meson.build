@@ -86,6 +86,7 @@ executable(
         'w3m.cpp',
         'main.cpp',
         'tmpfile.cpp',
+        'readbuffer.cpp',
         'keybind.cpp',
         'signal_util.cpp',
         'Str.cpp',
