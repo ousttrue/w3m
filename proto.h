@@ -146,7 +146,7 @@ extern void tmpClearBuffer(Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
 struct ParsedURL;
 extern ParsedURL *schemeToProxy(int scheme);
-#define url_encode(url, base, cs) url_quote(url)
+
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
 struct URLFile;

@@ -1583,7 +1583,7 @@ load_doc: {
       /* 302: Found */
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
-      tpath = url_encode(p, NULL, 0);
+      tpath = url_quote(p);
       request = NULL;
       UFclose(&f);
       current = (ParsedURL *)New(ParsedURL);
@@ -1680,7 +1680,7 @@ load_doc: {
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
-      tpath = url_encode(remove_space(p), NULL, 0);
+      tpath = url_quote(remove_space(p));
       request = NULL;
       UFclose(&f);
       add_auth_cookie_flag = 0;
@@ -2716,7 +2716,7 @@ Str *process_img(struct parsed_tag *tag, int width) {
 
   if (!parsedtag_get_value(tag, ATTR_SRC, &p))
     return tmp;
-  p = url_encode(remove_space(p), cur_baseURL, cur_document_charset);
+  p = url_quote(remove_space(p));
   q = NULL;
   parsedtag_get_value(tag, ATTR_ALT, &q);
   if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))
@@ -3367,7 +3367,7 @@ static Str *process_form_int(struct parsed_tag *tag, int fid) {
   parsedtag_get_value(tag, ATTR_METHOD, &p);
   q = "!CURRENT_URL!";
   parsedtag_get_value(tag, ATTR_ACTION, &q);
-  q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
+  q = url_quote(remove_space(q));
   r = NULL;
   s = NULL;
   parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
@@ -4738,11 +4738,11 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             registerName(buf, id, currentLn(buf), pos);
           }
           if (parsedtag_get_value(tag, ATTR_HREF, &p))
-            p = url_encode(remove_space(p), base, buf->document_charset);
+            p = url_quote(remove_space(p));
           if (parsedtag_get_value(tag, ATTR_TARGET, &q))
             q = url_quote_conv(q, buf->document_charset);
           if (parsedtag_get_value(tag, ATTR_REFERER, &r))
-            r = url_encode(r, base, buf->document_charset);
+            r = url_quote(r);
           parsedtag_get_value(tag, ATTR_TITLE, &s);
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
@@ -4919,7 +4919,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           break;
         case HTML_BASE:
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            p = url_encode(remove_space(p), NULL, buf->document_charset);
+            p = url_quote(remove_space(p));
             if (!buf->baseURL)
               buf->baseURL = (ParsedURL *)New(ParsedURL);
             parseURL2(p, buf->baseURL, &buf->currentURL);
@@ -4935,8 +4935,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             Str *tmp = NULL;
             int refresh_interval = getMetaRefreshParam(q, &tmp);
             if (tmp) {
-              p = url_encode(remove_space(tmp->ptr), base,
-                             buf->document_charset);
+              p = url_quote(remove_space(tmp->ptr));
               buf->event = setAlarmEvent(buf->event, refresh_interval,
                                          AL_IMPLICIT_ONCE, FUNCNAME_gorURL, p);
             } else if (refresh_interval > 0)
@@ -5018,7 +5017,7 @@ static void addLink(Buffer *buf, struct parsed_tag *tag) {
 
   parsedtag_get_value(tag, ATTR_HREF, &href);
   if (href)
-    href = url_encode(remove_space(href), baseURL(buf), buf->document_charset);
+    href = url_quote(remove_space(href));
   parsedtag_get_value(tag, ATTR_TITLE, &title);
   parsedtag_get_value(tag, ATTR_TYPE, &ctype);
   parsedtag_get_value(tag, ATTR_REL, &rel);
