@@ -16,7 +16,6 @@
 #include "istream.h"
 #include "func.h"
 #include "parsetag.h"
-#include "frame.h"
 #include "form.h"
 #include "history.h"
 #include "anchor.h"
@@ -138,8 +137,7 @@ static void fversion(FILE *f) {
 #ifdef INET6
           ",ipv6"
 #endif
-          ",alarm"
-  );
+          ",alarm");
 }
 
 static void fusage(FILE *f, int err) {
@@ -761,7 +759,6 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     do_next_search = TRUE;
     break;
 
-
   default:
     if (ch >= 0)
       return ch; /* use InputKeymap */
@@ -1159,8 +1156,6 @@ static void cmd_loadfile(char *fn) {
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
-    if (RenderFrame && Currentbuf->frameset != NULL)
-      rFrame();
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1542,8 +1537,8 @@ DEFUN(editBf, EDIT, "Edit local source") {
       (Currentbuf->type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
       Currentbuf->real_scheme != SCM_LOCAL ||
-      !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
-      Currentbuf->bufferprop & BP_FRAME) {         /* Frame */
+      !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
+  ) {
     disp_err_message("Can't edit other than local file", TRUE);
     return;
   }
@@ -1578,11 +1573,8 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-
 static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
   pushBuffer(buf);
-  if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
-    rFrame();
   return buf;
 }
 
@@ -1626,9 +1618,8 @@ static Buffer *loadLink(char *url, char *target, char *referer,
 
   if (target == NULL || /* no target specified (that means this page is not a
                            frame page) */
-      !strcmp(target, "_top") || /* this link is specified to be opened as an
-                                    indivisual * page */
-      !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
+      !strcmp(target, "_top") /* this link is specified to be opened as an
+                                 indivisual * page */
   ) {
     return loadNormalBuf(buf, TRUE);
   }
@@ -1638,30 +1629,10 @@ static Buffer *loadLink(char *url, char *target, char *referer,
     return loadNormalBuf(buf, TRUE);
   }
 
-  f_element = search_frame(nfbuf->frameset, target);
-  if (f_element == NULL) {
-    /* specified target doesn't exist in this frameset */
-    return loadNormalBuf(buf, TRUE);
-  }
-
-  /* frame page */
-
-  /* stack current frameset */
-  pushFrameTree(&(nfbuf->frameQ), copyFrameSet(nfbuf->frameset), Currentbuf);
-  /* delete frame view buffer */
-  delBuffer(Currentbuf);
-  Currentbuf = nfbuf;
-  /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
-  resetFrameElement(f_element, buf, referer, request);
-  discardBuffer(buf);
-  rFrame();
   {
     Anchor *al = NULL;
     char *label = pu.label;
 
-    if (label && f_element->element->attr == F_BODY) {
-      al = searchAnchor(f_element->body->nameList, label);
-    }
     if (!al) {
       label = Strnew_m_charp("_", target, NULL)->ptr;
       al = searchURLLabel(Currentbuf, label);
@@ -2572,21 +2543,6 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer") {
 }
 
 static int checkBackBuffer(Buffer *buf) {
-  Buffer *fbuf = buf->linkBuffer[LB_N_FRAME];
-
-  if (fbuf) {
-    if (fbuf->frameQ)
-      return TRUE; /* Currentbuf has stacked frames */
-    /* when no frames stacked and next is frame source, try next's
-     * nextBuffer */
-    if (RenderFrame && fbuf == buf->nextBuffer) {
-      if (fbuf->nextBuffer != NULL)
-        return TRUE;
-      else
-        return FALSE;
-    }
-  }
-
   if (buf->nextBuffer)
     return TRUE;
 
@@ -2610,33 +2566,6 @@ DEFUN(backBf, BACK,
 
   delBuffer(Currentbuf);
 
-  if (buf) {
-    if (buf->frameQ) {
-      struct frameset *fs;
-      long linenumber = buf->frameQ->linenumber;
-      long top = buf->frameQ->top_linenumber;
-      int pos = buf->frameQ->pos;
-      int currentColumn = buf->frameQ->currentColumn;
-      AnchorList *formitem = buf->frameQ->formitem;
-
-      fs = popFrameTree(&(buf->frameQ));
-      deleteFrameSet(buf->frameset);
-      buf->frameset = fs;
-
-      if (buf == Currentbuf) {
-        rFrame();
-        Currentbuf->topLine =
-            lineSkip(Currentbuf, Currentbuf->firstLine, top - 1, FALSE);
-        gotoLine(Currentbuf, linenumber);
-        Currentbuf->pos = pos;
-        Currentbuf->currentColumn = currentColumn;
-        arrangeCursor(Currentbuf);
-        formResetBuffer(Currentbuf, formitem);
-      }
-    } else if (RenderFrame && buf == Currentbuf) {
-      delBuffer(Currentbuf);
-    }
-  }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -2662,8 +2591,6 @@ static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
-    if (RenderFrame && Currentbuf->frameset != NULL)
-      rFrame();
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -3035,7 +2962,7 @@ DEFUN(curURL, PEEK, "Show current address") {
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   Buffer *buf;
 
-  if (Currentbuf->type == NULL || Currentbuf->bufferprop & BP_FRAME)
+  if (Currentbuf->type == NULL)
     return;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL ||
       (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
@@ -3100,7 +3027,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew") {
-  Buffer *buf, *fbuf = NULL, sbuf;
+  Buffer *buf, sbuf;
   Str *url;
   FormList *request;
   int multipart;
@@ -3122,34 +3049,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
   copyBuffer(&sbuf, Currentbuf);
-  if (Currentbuf->bufferprop & BP_FRAME &&
-      (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
-    if (fmInitialized) {
-      message("Rendering frame", 0, 0);
-      refresh();
-    }
-    if (!(buf = renderFrame(fbuf, 1))) {
-      displayBuffer(Currentbuf, B_NORMAL);
-      return;
-    }
-    if (fbuf->linkBuffer[LB_FRAME]) {
-      if (buf->sourcefile && fbuf->linkBuffer[LB_FRAME]->sourcefile &&
-          !strcmp(buf->sourcefile, fbuf->linkBuffer[LB_FRAME]->sourcefile))
-        fbuf->linkBuffer[LB_FRAME]->sourcefile = NULL;
-      delBuffer(fbuf->linkBuffer[LB_FRAME]);
-    }
-    fbuf->linkBuffer[LB_FRAME] = buf;
-    buf->linkBuffer[LB_N_FRAME] = fbuf;
-    pushBuffer(buf);
-    Currentbuf = buf;
-    if (Currentbuf->firstLine) {
-      COPY_BUFROOT(Currentbuf, &sbuf);
-      restorePosition(Currentbuf, &sbuf);
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    return;
-  } else if (Currentbuf->frameset != NULL)
-    fbuf = Currentbuf->linkBuffer[LB_FRAME];
+
   multipart = 0;
   if (Currentbuf->form_submit) {
     request = Currentbuf->form_submit->parent;
@@ -3185,8 +3085,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if (fbuf != NULL)
-    Firstbuf = deleteBuffer(Firstbuf, fbuf);
   repBuffer(Currentbuf, buf);
   if ((buf->type != NULL) && (sbuf.type != NULL) &&
       ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) ||
@@ -3252,36 +3150,7 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
 }
 
 /* render frames */
-DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
-  Buffer *buf;
-
-  if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
-    Currentbuf = buf;
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  if (Currentbuf->frameset == NULL) {
-    if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
-      Currentbuf = buf;
-      displayBuffer(Currentbuf, B_NORMAL);
-    }
-    return;
-  }
-  if (fmInitialized) {
-    message("Rendering frame", 0, 0);
-    refresh();
-  }
-  buf = renderFrame(Currentbuf, 0);
-  if (buf == NULL) {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  buf->linkBuffer[LB_N_FRAME] = Currentbuf;
-  Currentbuf->linkBuffer[LB_FRAME] = buf;
-  pushBuffer(buf);
-  if (fmInitialized && display_ok)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
+DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {}
 
 /* spawn external browser */
 static void invoke_browser(char *url) {
@@ -4520,9 +4389,7 @@ int main(int argc, char **argv) {
           Strcat_charp(tmp, BookmarkFile);
           BookmarkFile = cleanupName(tmp->ptr);
         }
-      } else if (!strcmp("-F", argv[i]))
-        RenderFrame = TRUE;
-      else if (!strcmp("-W", argv[i])) {
+      } else if (!strcmp("-W", argv[i])) {
         if (WrapDefault)
           WrapDefault = FALSE;
         else
@@ -4832,10 +4699,6 @@ int main(int argc, char **argv) {
     } else {
       Currentbuf->nextBuffer = newbuf;
       Currentbuf = newbuf;
-    }
-    if (!w3m_dump || w3m_dump == DUMP_BUFFER) {
-      if (Currentbuf->frameset != NULL && RenderFrame)
-        rFrame();
     }
     if (w3m_dump)
       do_dump(Currentbuf);

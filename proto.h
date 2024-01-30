@@ -278,8 +278,6 @@ extern Anchor *retrieveCurrentMap(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
 extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
 extern struct frameset *newFrameSet(struct parsed_tag *tag);
-extern void addFrameSetElement(struct frameset *f,
-                               union frameset_element element);
 extern void deleteFrame(struct frame_body *b);
 extern void deleteFrameSet(struct frameset *f);
 extern void deleteFrameSetElement(union frameset_element e);

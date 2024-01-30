@@ -105,7 +105,6 @@ executable(
         'local_cgi.cpp',
         'form.cpp',
         'map.cpp',
-        'frame.cpp',
         'rc.cpp',
         'mailcap.cpp',
         'symbol.cpp',

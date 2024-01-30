@@ -279,7 +279,6 @@ struct param_ptr params1[] = {
      NULL},
     {"pixel_per_char", P_PIXELS, PI_TEXT, (void *)&pixel_per_char,
      CMT_PIXEL_PER_CHAR, NULL},
-    {"frame", P_CHARINT, PI_ONOFF, (void *)&RenderFrame, CMT_FRAME, NULL},
     {"target_self", P_CHARINT, PI_ONOFF, (void *)&TargetSelf, CMT_TSELF, NULL},
     {"open_tab_blank", P_INT, PI_ONOFF, (void *)&open_tab_blank,
      CMT_OPEN_TAB_BLANK, NULL},

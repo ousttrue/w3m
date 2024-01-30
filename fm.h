@@ -68,7 +68,7 @@ global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(FALSE);
 global const char *DefaultType init(nullptr);
-global char RenderFrame init(FALSE);
+
 global char TargetSelf init(FALSE);
 global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
@@ -140,6 +140,7 @@ extern int enable_inline_image;
 #define DUMP_EXTRA 0x08
 #define DUMP_HALFDUMP 0x10
 #define DUMP_FRAME 0x20
+
 global int w3m_debug;
 global int w3m_dump init(0);
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
