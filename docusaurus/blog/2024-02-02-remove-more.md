@@ -6,6 +6,8 @@ tags: [減量]
 
 さらに減量
 
+<!-- truncate -->
+
 ```sh
 > cloc --exclude-dir=docusaurus "--match-f=\.(c|h|cpp)$" .
      112 text files.
