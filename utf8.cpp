@@ -81,60 +81,62 @@ int Utf8::cols() const {
 
 #define is_utf8_lead_byte(c) (((c) & 0xC0) != 0x80)
 
-// // byte位置の属性
-// Lineprop get_mctype(unsigned char c) {
-//   if (c <= 0x7F) {
-//     if (!IS_CNTRL(c)) {
-//       return PC_ASCII;
-//     }
-//   }
-//
-//   // TODO
-//   return PC_CTRL;
-// }
-//
-// // 1文字のbytelength
-// int get_mclen(const char8_t *c) {
-//   auto [codepoint, bytes] = utf8_to_codepoint(c);
-//   if (bytes == 0) {
-//     // fall back ISO-8859-1
-//     return 1;
-//   }
-//   return bytes;
-// }
-//
-// // 1文字のculmun幅
-// int get_mcwidth(const char8_t *c) {
-//   auto [codepoint, bytes] = utf8_to_codepoint(c);
-//   if (bytes == 0) {
-//     // fall back ISO-8859-1
-//     return 1;
-//   }
-//   auto w = codepoint_to_width(codepoint);
-// }
-//
-// int get_strwidth(const char8_t *c) {
-//   int width = 0;
-//   while (*c) {
-//     auto [codepoint, bytes] = utf8_to_codepoint(c);
-//     width += codepoint_to_width(codepoint);
-//     if (bytes == 0) {
-//       break;
-//     }
-//     c += bytes;
-//   }
-//   return width;
-// }
-//
-// int get_Str_strwidth(Str *c) {
-//   int width = 0;
-//   for (int i = 0; i < c->length;) {
-//     auto [codepoint, bytes] = utf8_to_codepoint((const char8_t *)c->ptr + i);
-//     if (bytes == 0) {
-//       break;
-//     }
-//     width += codepoint_to_width(codepoint);
-//     i += bytes;
-//   }
-//   return width;
-// }
+// byte位置の属性
+Lineprop get_mctype(const char *_c) {
+  auto c = *_c;
+  if (c <= 0x7F) {
+    if (!IS_CNTRL(c)) {
+      return PC_ASCII;
+    }
+  }
+
+  // TODO
+  return PC_CTRL;
+}
+
+// 1文字のbytelength
+int get_mclen(const char *c) {
+  auto [codepoint, bytes] = Utf8::from((const char8_t *)c).codepoint();
+  if (bytes == 0) {
+    // fall back ISO-8859-1
+    return 1;
+  }
+  return bytes;
+}
+
+// 1文字のculmun幅
+int get_mcwidth(const char *c) {
+  auto [codepoint, bytes] = Utf8::from((const char8_t *)c).codepoint();
+  if (bytes == 0) {
+    // fall back ISO-8859-1
+    return 1;
+  }
+  return codepoint_to_width(codepoint);
+}
+
+int get_strwidth(const char *c) {
+  int width = 0;
+  while (*c) {
+    auto [codepoint, bytes] = Utf8::from((const char8_t *)c).codepoint();
+    width += codepoint_to_width(codepoint);
+    if (bytes == 0) {
+      break;
+    }
+    c += bytes;
+  }
+  return width;
+}
+
+int get_Str_strwidth(Str *c) {
+  int width = 0;
+  for (int i = 0; i < c->length;) {
+    auto [codepoint, bytes] =
+        Utf8::from((const char8_t *)c->ptr + i).codepoint();
+    if (bytes == 0) {
+      break;
+    }
+    width += codepoint_to_width(codepoint);
+    i += bytes;
+  }
+  return width;
+}

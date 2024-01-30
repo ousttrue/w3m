@@ -220,7 +220,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
         goto next_char;
       insC();
       strBuf->ptr[CPos] = c;
-      if (!is_passwd && get_mctype(&c) == PC_CTRL)
+      if (!is_passwd && get_mctype((const char *)&c) == PC_CTRL)
         strProp[CPos] = PC_CTRL;
       else
         strProp[CPos] = PC_ASCII;

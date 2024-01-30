@@ -212,7 +212,6 @@ extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
 extern int writeBufferCache(Buffer *buf);
 extern int readBufferCache(Buffer *buf);
 
-extern void addChar(char c, Lineprop mode);
 extern void record_err_message(char *s);
 extern Buffer *message_list_panel(void);
 extern void disp_err_message(char *s, int redraw_current);
@@ -238,7 +237,6 @@ extern int columnPos(Line *line, int column);
 extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
-
 
 extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
@@ -295,7 +293,6 @@ extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
 extern char *guessContentType(char *filename);
 extern int check_no_proxy(char *domain);
-
 
 struct Anchor;
 extern Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
@@ -392,7 +389,6 @@ extern char *guess_save_name(Buffer *buf, char *file);
 
 extern void wrapToggle(void);
 extern void saveBufferInfo(void);
-
 
 extern void dispVer(void);
 

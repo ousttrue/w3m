@@ -4,6 +4,7 @@
 #include <string>
 #include <string.h>
 #include <tuple>
+#include <assert.h>
 
 #ifdef __clang__
 typedef unsigned char char8_t;
@@ -11,32 +12,67 @@ typedef unsigned char char8_t;
 
 std::string codepoint_to_utf8(char32_t codepoint);
 
-// Lineprop get_mctype(unsigned char c);
-//
-// // 1文字のbytelength
-// int get_mclen(const char8_t *c);
-//
-// // 1文字のculmun幅
-// int get_mcwidth(const char8_t *c);
-//
-// // 文字列のcolumn幅
-// int get_strwidth(const char8_t *c);
-//
-// // 文字列のcolumn幅
-// int get_Str_strwidth(struct Str *c);
+Lineprop get_mctype(const char *c);
+
+// 1文字のbytelength
+int get_mclen(const char *c);
+
+// 1文字のculmun幅
+int get_mcwidth(const char *c);
+
+// 文字列のcolumn幅
+int get_strwidth(const char *c);
+
+// 文字列のcolumn幅
+int get_Str_strwidth(struct Str *c);
 
 // TODO: for utf-8 or ISO-8859-1
-#define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-#define get_mclen(c) 1
-#define get_mcwidth(c) 1
-#define get_strwidth(c) strlen(c)
-#define get_Str_strwidth(c) ((c)->length)
+// #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
+// #define get_mclen(c) 1
+// #define get_mcwidth(c) 1
+// #define get_strwidth(c) strlen(c)
+// #define get_Str_strwidth(c) ((c)->length)
 
 struct Utf8 {
   char8_t b0 = 0;
   char8_t b1 = 0;
   char8_t b2 = 0;
   char8_t b3 = 0;
+
+  static Utf8 from(const char8_t *p) {
+    Utf8 utf8{};
+    if (*p) {
+      utf8.b0 = *(p++);
+    }
+    if (*p) {
+      utf8.b1 = *(p++);
+    }
+    if (*p) {
+      utf8.b2 = *(p++);
+    }
+    if (*p) {
+      utf8.b3 = *(p++);
+    }
+    return utf8;
+  }
+
+  static Utf8 from(const char8_t *p, size_t n) {
+    assert(n >= 1 && n <= 4);
+    Utf8 utf8{};
+    if (*p && n >= 1) {
+      utf8.b0 = *(p++);
+    }
+    if (*p && n >= 2) {
+      utf8.b1 = *(p++);
+    }
+    if (*p && n >= 3) {
+      utf8.b2 = *(p++);
+    }
+    if (*p && n >= 4) {
+      utf8.b3 = *(p++);
+    }
+    return utf8;
+  }
 
   const char8_t *begin() const { return &b0; }
 

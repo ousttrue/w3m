@@ -5,8 +5,27 @@
 typedef unsigned short Lineprop;
 
 #define P_CHARTYPE 0x3f00
-#define PC_ASCII 0x0000
-#define PC_CTRL 0x0100
+
+#define WTF_TYPE_ASCII 0x0
+#define WTF_TYPE_CTRL 0x1
+#define WTF_TYPE_WCHAR1 0x2
+#define WTF_TYPE_WCHAR2 0x4
+#define WTF_TYPE_WIDE 0x8
+#define WTF_TYPE_UNKNOWN 0x10
+#define WTF_TYPE_UNDEF 0x20
+#define WTF_TYPE_WCHAR1W (WTF_TYPE_WCHAR1 | WTF_TYPE_WIDE)
+#define WTF_TYPE_WCHAR2W (WTF_TYPE_WCHAR2 | WTF_TYPE_WIDE)
+
+#define PC_ASCII (WTF_TYPE_ASCII << 8)
+#define PC_CTRL (WTF_TYPE_CTRL << 8)
+#define PC_WCHAR1 (WTF_TYPE_WCHAR1 << 8)
+#define PC_WCHAR2 (WTF_TYPE_WCHAR2 << 8)
+#define PC_KANJI (WTF_TYPE_WIDE << 8)
+#define PC_KANJI1 (PC_WCHAR1 | PC_KANJI)
+#define PC_KANJI2 (PC_WCHAR2 | PC_KANJI)
+#define PC_UNKNOWN (WTF_TYPE_UNKNOWN << 8)
+#define PC_UNDEF (WTF_TYPE_UNDEF << 8)
+
 #define PC_SYMBOL 0x8000
 
 /* Effect ( standout/underline ) */

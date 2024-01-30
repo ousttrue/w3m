@@ -421,6 +421,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   rcol = COLPOS(l, pos);
 
   for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    delta = get_mclen(&p[j]);
     ncol = COLPOS(l, pos + j + delta);
     if (ncol - column > buf->COLS)
       break;
@@ -433,7 +434,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
       for (; rcol < ncol; rcol++)
         addChar(' ', 0);
     } else {
-      addChar(p[j], pr[j]);
+      addMChar(&p[j], pr[j], delta);
     }
     rcol = ncol;
   }
@@ -504,6 +505,7 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
   ecol = epos - pos;
 
   for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    delta = get_mclen(&p[j]);
     ncol = COLPOS(l, pos + j + delta);
     if (ncol - column > buf->COLS)
       break;
@@ -519,7 +521,7 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
         for (; rcol < ncol; rcol++)
           addChar(' ', 0);
       } else
-        addChar(p[j], pr[j]);
+        addMChar(&p[j], pr[j], delta);
     }
     rcol = ncol;
   }
@@ -617,21 +619,30 @@ static void do_effects(Lineprop m) {
   do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
 }
 
-void addChar(char c, Lineprop mode) {
+void addMChar(char *p, Lineprop mode, size_t len) {
   Lineprop m = CharEffect(mode);
+  char c = *p;
+
+  if (mode & PC_WCHAR2)
+    return;
   do_effects(m);
   if (mode & PC_SYMBOL) {
     char **symbol;
-    c -= SYMBOL_BASE;
+    int w = (mode & PC_KANJI) ? 2 : 1;
+
+    // c = ((char)wtf_get_code((wc_uchar *)p) & 0x7f) - SYMBOL_BASE;
     if (graph_ok() && c < N_GRAPH_SYMBOL) {
       if (!graph_mode) {
         graphstart();
         graph_mode = TRUE;
       }
-      addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+      if (w == 2)
+        addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+      else
+        addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
     } else {
       symbol = get_symbol();
-      addch(*symbol[(unsigned char)c % N_SYMBOL]);
+      addstr(symbol[(unsigned char)c % N_SYMBOL]);
     }
   } else if (mode & PC_CTRL) {
     switch (c) {
@@ -651,11 +662,17 @@ void addChar(char c, Lineprop mode) {
       addch(c + '@');
       break;
     }
-  } else if (0x80 <= (unsigned char)c && (unsigned char)c <= NBSP_CODE)
-    addch(' ');
-  else
-    addch(c);
+  } else if (mode & PC_UNKNOWN) {
+    // char buf[5];
+    // sprintf(buf, "[%.2X]", (unsigned char)wtf_get_code((wc_uchar *)p) |
+    // 0x80); addstr(buf);
+    addstr("[xx]");
+  } else {
+    addmch(Utf8::from((const char8_t *)p, len));
+  }
 }
+
+void addChar(char c, Lineprop mode) { addMChar(&c, mode, 1); }
 
 static GeneralList *message_list = NULL;
 

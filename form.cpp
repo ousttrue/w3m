@@ -231,7 +231,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   Lineprop c_type, effect, *prop;
 
   for (p = *str, w = 0, pos = 0; *p && w < width;) {
-    c_type = get_mctype((unsigned char *)p);
+    c_type = get_mctype(p);
     if (c_type == PC_CTRL) {
       if (newline && *p == '\n')
         break;
@@ -258,7 +258,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
 
   effect = CharEffect(line->propBuf[spos]);
   for (p = *str, w = 0, pos = spos; *p && w < width;) {
-    c_type = get_mctype((unsigned char *)p);
+    c_type = get_mctype(p);
     if (c_type == PC_CTRL) {
       if (newline && *p == '\n')
         break;
@@ -408,7 +408,7 @@ Str *textfieldrep(Str *s, int width) {
 
   j = 0;
   for (i = 0; i < s->length; i += c_len) {
-    c_type = get_mctype((unsigned char *)&s->ptr[i]);
+    c_type = get_mctype(&s->ptr[i]);
     c_len = get_mclen(&s->ptr[i]);
     if (s->ptr[i] == '\r')
       continue;

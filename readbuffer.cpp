@@ -484,7 +484,7 @@ static int is_beginning_char(unsigned char *ch) {
 }
 
 static int is_word_char(unsigned char *ch) {
-  Lineprop ctype = get_mctype(ch);
+  Lineprop ctype = get_mctype((const char *)ch);
 
   if (ctype == PC_CTRL)
     return 0;
@@ -3798,7 +3798,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         p = getescapecmd(&str);
         while (*p) {
           PSIZE;
-          mode = get_mctype((unsigned char *)p);
+          mode = get_mctype(p);
           if (mode == PC_CTRL || IS_INTSPACE(*str)) {
             PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
             p++;
