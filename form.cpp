@@ -23,10 +23,9 @@ extern int max_textarea;
 
 /* *INDENT-OFF* */
 struct {
-  char *action;
+  const char *action;
   void (*rout)(struct parsed_tagarg *);
 } internal_action[] = {
-    {"map", follow_map},
     {"option", panel_set_option},
     {"cookie", set_cookie_flag},
     {"download", download_action},

@@ -5,7 +5,6 @@
 #include "line.h"
 #include "buffer.h"
 #include "form.h"
-#include "map.h"
 #include "fm.h"
 #include "indep.h"
 #include "myctype.h"
@@ -619,31 +618,31 @@ Buffer *link_list_panel(Buffer *buf) {
       fi = fi->parent->item;
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
           !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-        MapList *ml = searchMapList(buf, fi->value->ptr);
-        ListItem *mi;
-        MapArea *m;
-        if (!ml)
-          continue;
-        Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
-        for (mi = ml->area->first; mi != NULL; mi = mi->next) {
-          m = (MapArea *)mi->ptr;
-          if (!m)
-            continue;
-          parseURL2(m->url, &pu, baseURL(buf));
-          p = parsedURL2Str(&pu)->ptr;
-          u = html_quote(p);
-          if (DecodeURL)
-            p = html_quote(url_decode2(p, buf));
-          else
-            p = u;
-          if (m->alt && *m->alt)
-            t = html_quote(m->alt);
-          else
-            t = html_quote(url_decode2(m->url, buf));
-          Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
-                         "\n", NULL);
-        }
-        Strcat_charp(tmp, "</ol>\n");
+        // MapList *ml = searchMapList(buf, fi->value->ptr);
+        // ListItem *mi;
+        // MapArea *m;
+        // if (!ml)
+        //   continue;
+        // Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
+        // for (mi = ml->area->first; mi != NULL; mi = mi->next) {
+        //   m = (MapArea *)mi->ptr;
+        //   if (!m)
+        //     continue;
+        //   parseURL2(m->url, &pu, baseURL(buf));
+        //   p = parsedURL2Str(&pu)->ptr;
+        //   u = html_quote(p);
+        //   if (DecodeURL)
+        //     p = html_quote(url_decode2(p, buf));
+        //   else
+        //     p = u;
+        //   if (m->alt && *m->alt)
+        //     t = html_quote(m->alt);
+        //   else
+        //     t = html_quote(url_decode2(m->url, buf));
+        //   Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
+        //                  "\n", NULL);
+        // }
+        // Strcat_charp(tmp, "</ol>\n");
       }
     }
     Strcat_charp(tmp, "</ol>\n");

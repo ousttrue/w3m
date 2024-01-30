@@ -22,7 +22,6 @@
 #include "fm.h"
 #include "table.h"
 #include "mailcap.h"
-#include "map.h"
 #include "signal_util.h"
 #include <sys/types.h>
 #include "myctype.h"
@@ -4877,32 +4876,32 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           a_form = NULL;
           break;
         case HTML_MAP:
-          if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-            MapList *m = (MapList *)New(MapList);
-            m->name = Strnew_charp(p);
-            m->area = newGeneralList();
-            m->next = buf->maplist;
-            buf->maplist = m;
-          }
+          // if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
+          //   MapList *m = (MapList *)New(MapList);
+          //   m->name = Strnew_charp(p);
+          //   m->area = newGeneralList();
+          //   m->next = buf->maplist;
+          //   buf->maplist = m;
+          // }
           break;
         case HTML_N_MAP:
           /* nothing to do */
           break;
         case HTML_AREA:
-          if (buf->maplist == NULL) /* outside of <map>..</map> */
-            break;
-          if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            MapArea *a;
-            p = url_encode(remove_space(p), base, buf->document_charset);
-            t = NULL;
-            parsedtag_get_value(tag, ATTR_TARGET, &t);
-            q = "";
-            parsedtag_get_value(tag, ATTR_ALT, &q);
-            r = NULL;
-            s = NULL;
-            a = newMapArea(p, t, q, r, s);
-            pushValue(buf->maplist->area, (void *)a);
-          }
+          // if (buf->maplist == NULL) /* outside of <map>..</map> */
+          //   break;
+          // if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
+          //   MapArea *a;
+          //   p = url_encode(remove_space(p), base, buf->document_charset);
+          //   t = NULL;
+          //   parsedtag_get_value(tag, ATTR_TARGET, &t);
+          //   q = "";
+          //   parsedtag_get_value(tag, ATTR_ALT, &q);
+          //   r = NULL;
+          //   s = NULL;
+          //   a = newMapArea(p, t, q, r, s);
+          //   pushValue(buf->maplist->area, (void *)a);
+          // }
           break;
         case HTML_FRAMESET:
           // frameset_sp++;

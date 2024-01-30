@@ -1719,11 +1719,11 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   if (Currentbuf->firstLine == NULL)
     return;
 
-  a = retrieveCurrentMap(Currentbuf);
-  if (a) {
-    _followForm(FALSE);
-    return;
-  }
+  // a = retrieveCurrentMap(Currentbuf);
+  // if (a) {
+  //   _followForm(FALSE);
+  //   return;
+  // }
   a = retrieveCurrentAnchor(Currentbuf);
   if (a == NULL) {
     _followForm(FALSE);
@@ -2765,14 +2765,6 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
     delBuffer(buf);
   buf = page_info_panel(Currentbuf);
   cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
-}
-
-void follow_map(struct parsed_tagarg *arg) {
-  char *name = tag_get_value(arg, "link");
-  Buffer *buf = follow_map_panel(Currentbuf, name);
-
-  if (buf != NULL)
-    cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
 }
 
 /* link,anchor,image list */

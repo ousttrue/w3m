@@ -303,8 +303,6 @@ static void drawAnchorCursor(Buffer *buf) {
     return;
 
   an = retrieveCurrentAnchor(buf);
-  if (!an)
-    an = retrieveCurrentMap(buf);
   if (an)
     hseq = an->hseq;
   else
