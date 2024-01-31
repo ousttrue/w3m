@@ -232,6 +232,8 @@ void refresh(FILE *ttyf) {
       }
       pline = line;
       pcol = col;
+
+      term_move(line, col);
       for (; col < COLS;) {
         if (pr[col] & S_EOL)
           break;
@@ -246,18 +248,18 @@ void refresh(FILE *ttyf) {
          * avoid the scroll, I prohibit to draw character on
          * (COLS-1,LINES-1).
          */
-        if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) ||
-            (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) ||
-            (!(pr[col] & S_BOLD) && (mode & S_BOLD)) ||
-            (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
-            (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-          if ((mode & S_COLORED))
-            term_writestr(_entry.T_op);
-          if (mode & S_GRAPHICS)
-            term_writestr(_entry.T_ae);
-          term_writestr(_entry.T_me);
-          mode &= ~M_MEND;
-        }
+        // if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) ||
+        //     (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) ||
+        //     (!(pr[col] & S_BOLD) && (mode & S_BOLD)) ||
+        //     (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
+        //     (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
+        //   if ((mode & S_COLORED))
+        //     term_writestr(_entry.T_op);
+        //   if (mode & S_GRAPHICS)
+        //     term_writestr(_entry.T_ae);
+        //   term_writestr(_entry.T_me);
+        //   mode &= ~M_MEND;
+        // }
 
         // if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol)
         //         ? need_redraw(pc[col], pr[col], SPACE, 0)

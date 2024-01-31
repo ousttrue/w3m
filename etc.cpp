@@ -70,7 +70,10 @@ int columnPos(Line *line, int column) {
     if (COLPOS(line, i) > column)
       break;
   }
-  return i - 1;
+
+  for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--)
+    ;
+  return i;
 }
 
 Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
