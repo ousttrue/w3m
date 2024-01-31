@@ -13,8 +13,6 @@ MySignalHandler mySignal(int signal_number, MySignalHandler action);
 MySignalHandler mySignalInt(MySignalHandler action);
 MySignalHandler mySignalGetIgn();
 
-extern char fmInitialized;
-extern char QuietMessage;
 extern char TrapSignal;
 
 #ifdef HAVE_SIGSETJMP

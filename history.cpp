@@ -1,5 +1,7 @@
 #include "history.h"
+#include "readbuffer.h"
 #include "rc.h"
+#include "message.h"
 #include "tmpfile.h"
 #include "fm.h"
 #include "buffer.h"

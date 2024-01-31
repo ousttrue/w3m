@@ -1,6 +1,7 @@
 #include "istream.h"
 #include "html.h"
 #include "signal_util.h"
+#include "message.h"
 #include "myctype.h"
 #include "proto.h"
 #include "terms.h"

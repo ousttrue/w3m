@@ -79,7 +79,6 @@ global int confirm_on_quit init(TRUE);
 global int vi_prec_num init(FALSE);
 global int label_topline init(FALSE);
 global int nextpage_topline init(FALSE);
-global int displayLink init(FALSE);
 global int displayLineInfo init(FALSE);
 global int show_srch_str init(TRUE);
 global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */

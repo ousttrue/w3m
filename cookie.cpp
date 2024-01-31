@@ -8,6 +8,7 @@
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 #include "cookie.h"
+#include "readbuffer.h"
 #include "textlist.h"
 #include "parsetag.h"
 #include "fm.h"

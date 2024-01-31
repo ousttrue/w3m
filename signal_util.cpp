@@ -1,10 +1,9 @@
 #include "signal_util.h"
+#include "w3m.h"
 #include <signal.h>
 #include <fcntl.h>
 #include <stdlib.h>
 
-char fmInitialized = 0;
-char QuietMessage = 0;
 char TrapSignal = 1;
 
 static void reset_signals(void) {
@@ -67,8 +66,8 @@ void setup_child(int child, int i, int f) {
    * loadImage() and corrupt image data can be cached in ~/.w3m.
    */
   close_all_fds_except(i, f);
-  QuietMessage = 1;
-  fmInitialized = 0;
+  QuietMessage = true;
+  fmInitialized = false;
   TrapSignal = 0;
 }
 

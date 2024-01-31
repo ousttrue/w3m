@@ -1,4 +1,6 @@
 #include "display.h"
+#include "message.h"
+#include "w3m.h"
 #include "readbuffer.h"
 #include "screen.h"
 #include "rc.h"
@@ -14,6 +16,8 @@
 #include "proto.h"
 #include "indep.h"
 #include <math.h>
+
+bool displayLink =false;
 
 /* *INDENT-OFF* */
 
@@ -65,7 +69,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 
 static Buffer *save_current_buf = NULL;
 
-static char *delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
@@ -230,11 +233,9 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
     /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
   }
-  if (delayed_msg != NULL) {
-    disp_message(delayed_msg, FALSE);
-    delayed_msg = NULL;
-    refresh(term_io());
-  }
+
+  refresh_message();
+
   standout();
   message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
   standend();
@@ -674,78 +675,6 @@ void addMChar(char *p, Lineprop mode, size_t len) {
 }
 
 void addChar(char c, Lineprop mode) { addMChar(&c, mode, 1); }
-
-static GeneralList *message_list = NULL;
-
-void record_err_message(char *s) {
-  if (fmInitialized) {
-    if (!message_list)
-      message_list = newGeneralList();
-    if (message_list->nitem >= LINES)
-      popValue(message_list);
-    pushValue(message_list, allocStr(s, -1));
-  }
-}
-
-/*
- * List of error messages
- */
-Buffer *message_list_panel(void) {
-  Str *tmp = Strnew_size(LINES * COLS);
-  ListItem *p;
-
-  /* FIXME: gettextize? */
-  Strcat_charp(tmp,
-               "<html><head><title>List of error messages</title></head><body>"
-               "<h1>List of error messages</h1><table cellpadding=0>\n");
-  if (message_list)
-    for (p = message_list->last; p; p = p->prev)
-      Strcat_m_charp(tmp, "<tr><td><pre>", html_quote((char *)p->ptr),
-                     "</pre></td></tr>\n", NULL);
-  else
-    Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
-  Strcat_charp(tmp, "</table></body></html>");
-  return loadHTMLString(tmp);
-}
-
-void message(char *s, int return_x, int return_y) {
-  if (!fmInitialized)
-    return;
-  move(LASTLINE, 0);
-  addnstr(s, COLS - 1);
-  clrtoeolx();
-  move(return_y, return_x);
-}
-
-void disp_err_message(char *s, int redraw_current) {
-  record_err_message(s);
-  disp_message(s, redraw_current);
-}
-
-void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
-                       int mouse) {
-  if (QuietMessage)
-    return;
-  if (!fmInitialized) {
-    fprintf(stderr, "%s\n", s);
-    return;
-  }
-  if (CurrentTab != NULL && Currentbuf != NULL)
-    message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
-  else
-    message(s, LASTLINE, 0);
-  refresh(term_io());
-  sleep_till_anykey(sec, purge);
-  if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
-    displayBuffer(Currentbuf, B_NORMAL);
-}
-
-void disp_message(char *s, int redraw_current) {
-  disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
-}
-
-void set_delayed_message(char *s) { delayed_msg = allocStr(s, -1); }
 
 void cursorUp0(Buffer *buf, int n) {
   if (buf->cursorY > 0)

@@ -2,6 +2,8 @@
 #include "line.h"
 #include <stddef.h>
 
+extern bool displayLink;
+
 struct Buffer;
 
 enum DisplayFlag {
@@ -16,8 +18,6 @@ void displayBuffer(Buffer *buf, DisplayFlag mode);
 
 void fmInit(void);
 void fmTerm(void);
-
-void message(char *s, int return_x, int return_y);
 
 void addChar(char c, Lineprop mode);
 void addMChar(char *p, Lineprop mode, size_t len);

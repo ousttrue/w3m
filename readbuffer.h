@@ -210,6 +210,7 @@ struct URLFile;
 struct Buffer;
 void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
 Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
+Buffer *loadHTMLString(Str *page);
 
 Str *convertLine0(URLFile *uf, Str *line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \

@@ -1,4 +1,5 @@
 #include "search.h"
+#include "message.h"
 #include "display.h"
 #include "fm.h"
 #include "buffer.h"
@@ -12,14 +13,13 @@ static void set_mark(Line *l, int pos, int epos) {
     l->propBuf[pos] |= PE_MARK;
 }
 
-
 int forwardSearch(Buffer *buf, char *str) {
   char *p, *first, *last;
   Line *l, *begin;
   int wrapped = FALSE;
   int pos;
 
-      if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+  if ((p = regexCompile(str, IgnoreCase)) != NULL) {
     message(p, 0, 0);
     return SR_NOTFOUND;
   }
@@ -95,7 +95,7 @@ int backwardSearch(Buffer *buf, char *str) {
   int wrapped = FALSE;
   int pos;
 
-      if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+  if ((p = regexCompile(str, IgnoreCase)) != NULL) {
     message(p, 0, 0);
     return SR_NOTFOUND;
   }

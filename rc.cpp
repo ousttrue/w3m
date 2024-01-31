@@ -2,6 +2,8 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "message.h"
+#include "display.h"
 #include "readbuffer.h"
 #include "history.h"
 #include "url.h"

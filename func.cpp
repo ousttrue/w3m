@@ -3,6 +3,7 @@
  * w3m func.c
  */
 #include "fm.h"
+#include "message.h"
 #include "ctrlcode.h"
 #include "func.h"
 #include "myctype.h"

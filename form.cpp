@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "message.h"
 #include "readbuffer.h"
 #include "html.h"
 #include "utf8.h"

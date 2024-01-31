@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "message.h"
 #include "screen.h"
 #include "tmpfile.h"
 #include "readbuffer.h"
@@ -2844,7 +2845,7 @@ disp:
   n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS - 1))
     offset = (n - 1) * (COLS - 1);
-  disp_message_nomouse(&s->ptr[offset], TRUE);
+  disp_message(&s->ptr[offset], TRUE);
 }
 
 /* peek URL */
@@ -2880,7 +2881,7 @@ DEFUN(curURL, PEEK, "Show current address") {
   n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS - 1))
     offset = (n - 1) * (COLS - 1);
-  disp_message_nomouse(&s->ptr[offset], TRUE);
+  disp_message(&s->ptr[offset], TRUE);
 }
 /* view HTML source */
 

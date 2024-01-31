@@ -1,4 +1,5 @@
 #include "file.h"
+#include "message.h"
 #include "screen.h"
 #include "history.h"
 #include "w3m.h"

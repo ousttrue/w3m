@@ -165,7 +165,6 @@ extern int is_blank_line(char *line, int indent);
 extern char *convert_size(long long size, int usefloat);
 extern char *convert_size2(long long size1, long long size2, int usefloat);
 
-extern Buffer *loadHTMLString(Str *page);
 extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
 extern void saveBuffer(Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
@@ -212,14 +211,6 @@ extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
 extern int writeBufferCache(Buffer *buf);
 extern int readBufferCache(Buffer *buf);
 
-extern void record_err_message(char *s);
-extern Buffer *message_list_panel(void);
-extern void disp_err_message(char *s, int redraw_current);
-extern void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
-                              int mouse);
-extern void disp_message(char *s, int redraw_current);
-#define disp_message_nomouse disp_message
-extern void set_delayed_message(char *s);
 extern void cursorUp0(Buffer *buf, int n);
 extern void cursorUp(Buffer *buf, int n);
 extern void cursorDown0(Buffer *buf, int n);

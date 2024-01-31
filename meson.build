@@ -125,6 +125,7 @@ executable(
         'downloadlist.cpp',
         'httprequest.cpp',
         'screen.cpp',
+        'message.cpp',
     ],
     install: true,
     dependencies: [

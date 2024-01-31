@@ -1,4 +1,5 @@
 #include "line.h"
+#include "message.h"
 #include "screen.h"
 #include "terms.h"
 #include "display.h"

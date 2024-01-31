@@ -24,5 +24,9 @@ char *inputLineHistSearch(const char *prompt, char *def_str, int flag, Hist *his
                           int (*incfunc)(int ch, Str *buf, Lineprop *prop));
 ```
 
-class 化して stack に push するのがよいかも。
-モーダルダイアログのような振舞いにしたい。
+これを返り値じゃなくて返り値を使うコールバック引数に変えればよいのだけど、
+分岐の中で使っている場合に書き換えが難しい。
+あと、普通に使っているところが多い。
+どうやって書き変えるか…
+
+とりあえず、分岐が合流しないようにすることで少し楽にできそうか。
