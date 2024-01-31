@@ -123,18 +123,18 @@ void clrtobot(void) { clrtobot_eol(clrtoeol); }
 
 void clrtobotx(void) { clrtobot_eol(clrtoeolx); }
 
-void addstr(char *s) {
+void addstr(const char *s) {
   while (*s != '\0')
     addch(*(s++));
 }
 
-void addnstr(char *s, int n) {
+void addnstr(const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++)
     addch(*(s++));
 }
 
-void addnstr_sup(char *s, int n) {
+void addnstr_sup(const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++)
     addch(*(s++));

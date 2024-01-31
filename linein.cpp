@@ -13,6 +13,18 @@
 #include "history.h"
 #include "indep.h"
 
+/* Completion status. */
+#define CPL_OK 0
+#define CPL_AMBIG 1
+#define CPL_FAIL 2
+#define CPL_MENU 3
+
+#define CPL_NEVER 0x0
+#define CPL_OFF 0x1
+#define CPL_ON 0x2
+#define CPL_ALWAYS 0x4
+#define CPL_URL 0x8
+
 bool space_autocomplete = false;
 bool emacs_like_lineedit = false;
 
@@ -99,12 +111,8 @@ static Hist *CurrentHist;
 static Str *strCurrentBuf;
 static int use_hist;
 
-extern char *
-inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                    int (*incfunc)(int ch, Str *buf, Lineprop *prop));
-
-char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
-                          int (*incrfunc)(int ch, Str *str, Lineprop *prop)) {
+char *inputLineHistSearch(const char *prompt, const char *def_str,
+                          InputFlags flag, Hist *hist, IncFunc incrfunc) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;

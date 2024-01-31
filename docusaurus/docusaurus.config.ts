@@ -42,6 +42,7 @@ const config: Config = {
         },
         blog: {
           showReadingTime: false,
+          blogSidebarCount: "ALL",
           postsPerPage: "ALL",
           sortPosts: "descending",
         },
