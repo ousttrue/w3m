@@ -11,6 +11,7 @@ typedef unsigned char char8_t;
 #endif
 
 std::string codepoint_to_utf8(char32_t codepoint);
+int codepoint_to_width(char32_t wc);
 
 Lineprop get_mctype(const char *c);
 
@@ -40,7 +41,7 @@ struct Utf8 {
   char8_t b3 = 0;
 
   static Utf8 from(const char8_t *p) {
-    Utf8 utf8{};
+    Utf8 utf8{0};
     if (*p) {
       utf8.b0 = *(p++);
     }

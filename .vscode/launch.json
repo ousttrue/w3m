@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/w3m",
             "args": [
-                "http://www.google.com"                
+                "http://www.yahoo.co.jp"                
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
