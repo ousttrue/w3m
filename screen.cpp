@@ -183,7 +183,6 @@ void refresh(FILE *ttyf) {
   l_prop color = COL_FTERM;
   LineDirtyFlags *dirty;
 
-  // wc_putc_init(InnerCharset, DisplayCharset);
   for (line = 0; line <= LASTLINE; line++) {
     dirty = &ScreenImage[line]->isdirty;
     if (*dirty & L_DIRTY) {
@@ -233,7 +232,7 @@ void refresh(FILE *ttyf) {
       }
       pline = line;
       pcol = col;
-      for (; col < COLS; col++) {
+      for (; col < COLS;) {
         if (pr[col] & S_EOL)
           break;
 
@@ -259,9 +258,11 @@ void refresh(FILE *ttyf) {
           term_writestr(_entry.T_me);
           mode &= ~M_MEND;
         }
-        if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol)
-                ? need_redraw(pc[col], pr[col], SPACE, 0)
-                : (pr[col] & S_DIRTY)) {
+
+        // if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol)
+        //         ? need_redraw(pc[col], pr[col], SPACE, 0)
+        //         : (pr[col] & S_DIRTY))
+        {
           if (pcol == col - 1)
             term_writestr(_entry.T_nd);
           else if (pcol != col)
@@ -285,7 +286,6 @@ void refresh(FILE *ttyf) {
           //   writestr(color_seq(color));
           // }
           if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-            // wc_putc_end(ttyf);
             if (!graph_enabled) {
               graph_enabled = 1;
               term_writestr(_entry.T_eA);
@@ -295,13 +295,18 @@ void refresh(FILE *ttyf) {
           }
           if (pr[col] & S_GRAPHICS) {
             term_write1(term_graphchar(pc[col].b0));
-          } else if (CHMODE(pr[col]) != C_WCHAR2) {
-            auto view = pc[col].view();
+            pcol = col = col + 1;
+          } else {
+            assert(CHMODE(pr[col]) != C_WCHAR2);
+            auto utf8 = pc[col];
+            auto view = utf8.view();
+            auto width = utf8.width();
             fwrite(view.begin(), view.size(), 1, ttyf);
+            pcol = col = col + width;
           }
-          pcol = col + 1;
         }
-      }
+      } // cols
+
       if (col == COLS)
         moved = RF_NEED_TO_MOVE;
       for (; col < COLS && !(pr[col] & S_EOL); col++)
@@ -313,13 +318,11 @@ void refresh(FILE *ttyf) {
         term_writestr(_entry.T_op);
       if (mode & S_GRAPHICS) {
         term_writestr(_entry.T_ae);
-        // wc_putc_clear_status();
       }
       term_writestr(_entry.T_me);
       mode &= ~M_MEND;
     }
   }
-  // wc_putc_end(ttyf);
   term_move(CurLine, CurColumn);
   flush_tty();
 }

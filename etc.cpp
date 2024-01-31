@@ -15,6 +15,7 @@
 #include "textlist.h"
 #include "proto.h"
 #include "indep.h"
+#include <vector>
 
 #include <fcntl.h>
 #include <sys/types.h>
@@ -26,12 +27,12 @@
 struct auth_pass {
   int bad;
   int is_proxy;
-  Str* host;
+  Str *host;
   int port;
   /*    Str* file; */
-  Str* realm;
-  Str* uname;
-  Str* pwd;
+  Str *realm;
+  Str *uname;
+  Str *pwd;
   struct auth_pass *next;
 };
 
@@ -110,13 +111,11 @@ Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
   return l;
 }
 
-
-
 /*
  * Check character type
  */
 
-Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor) {
+Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor) {
   Lineprop mode;
   Lineprop effect = PE_NORMAL;
   Lineprop *prop;
@@ -127,12 +126,12 @@ Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor) {
 
   if (prop_size < s->length) {
     prop_size = (s->length > LINELEN) ? s->length : LINELEN;
-    prop_buffer = (Lineprop*)New_Reuse(Lineprop, prop_buffer, prop_size);
+    prop_buffer = (Lineprop *)New_Reuse(Lineprop, prop_buffer, prop_size);
   }
   prop = prop_buffer;
 
   if (ShowEffect) {
-    bs = (char*)memchr(str, '\b', s->length);
+    bs = (char *)memchr(str, '\b', s->length);
     if ((bs != NULL)) {
       char *sp = str, *ep;
       s = Strnew_size(s->length);
@@ -160,7 +159,7 @@ Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor) {
         str += 2;
         effect = PE_UNDER;
         if (str < endp)
-          bs = (char*)memchr(str, '\b', endp - str);
+          bs = (char *)memchr(str, '\b', endp - str);
         continue;
       } else if (str == bs) {
         if (*(str + 1) == '_') {
@@ -185,7 +184,7 @@ Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor) {
           }
         }
         if (str < endp)
-          bs = (char*)memchr(str, '\b', endp - str);
+          bs = (char *)memchr(str, '\b', endp - str);
         continue;
       }
     }
@@ -203,58 +202,73 @@ Str* checkType(Str* s, Lineprop **oprop, Linecolor **ocolor) {
   return s;
 }
 
-static int nextColumn(int n, char *p, Lineprop *pr) {
-  if (*pr & PC_CTRL) {
-    if (*p == '\t')
-      return (n + Tabstop) / Tabstop * Tabstop;
-    else if (*p == '\n')
-      return n + 1;
-    else if (*p != '\r')
-      return n + 2;
-    return n;
-  }
-  return n + 1;
-}
+// static int nextColumn(int n, char *p, Lineprop *pr) {
+//   if (*pr & PC_CTRL) {
+//     if (*p == '\t')
+//       return (n + Tabstop) / Tabstop * Tabstop;
+//     else if (*p == '\n')
+//       return n + 1;
+//     else if (*p != '\r')
+//       return n + 2;
+//     return n;
+//   } else {
+//     auto utf8 = Utf8::from((const char8_t *)p);
+//     return n + utf8.width();
+//   }
+// }
 
 int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos, int mode) {
-  static int *realColumn = NULL;
-  static int size = 0;
-  static char *prevl = NULL;
-  int i, j;
-
   if (l == NULL || len == 0 || pos < 0)
     return bpos;
+
+  static std::vector<int> realColumn;
+  static char *prevl = NULL;
   if (l == prevl && mode == CP_AUTO) {
     if (pos <= len)
       return realColumn[pos];
   }
-  if (size < len + 1) {
-    size = (len + 1 > LINELEN) ? (len + 1) : LINELEN;
-    realColumn = (int*)New_N(int, size);
-  }
+
+  realColumn.clear();
   prevl = l;
-  i = 0;
-  j = bpos;
-  while (1) {
-    realColumn[i] = j;
-    if (i == len)
-      break;
-    j = nextColumn(j, &l[i], &pr[i]);
-    i++;
+  int i = 0;
+  int j = bpos;
+  for (; i < len;) {
+    if (pr[i] & PC_CTRL) {
+      realColumn.push_back(j);
+      if (l[i] == '\t')
+        j += Tabstop - (j % Tabstop);
+      else if (l[i] == '\n')
+        j += 1;
+      else if (l[i] != '\r')
+        j += 2;
+      ++i;
+    } else {
+      auto utf8 = Utf8::from((const char8_t *)&l[i]);
+      auto [cp, bytes] = utf8.codepoint();
+      for (int k = 0; k < bytes; ++k) {
+        realColumn.push_back(j);
+        ++i;
+      }
+      j += utf8.width();
+    }
   }
-  if (pos >= i)
-    return j;
-  return realColumn[pos];
+  realColumn.push_back(j);
+  if (pos < realColumn.size()) {
+    return realColumn[pos];
+  }
+  return j;
 }
 
 int columnLen(Line *line, int column) {
-  int i, j;
-
-  for (i = 0, j = 0; i < line->len;) {
-    j = nextColumn(j, &line->lineBuf[i], &line->propBuf[i]);
+  int j = 0;
+  for (auto i = 0; i < line->len;) {
+    auto j = calcPosition(&line->lineBuf[i], &line->propBuf[i], line->len, i, 0,
+                          CP_AUTO);
     if (j > column)
       return i;
-    i++;
+    auto utf8 = Utf8::from((const char8_t *)&line->lineBuf[i]);
+    auto [cp, bytes] = utf8.codepoint();
+    i += bytes;
   }
   return line->len;
 }
@@ -343,7 +357,7 @@ static void add_auth_pass_entry(const struct auth_pass *ent, int netrc,
                                 int override) {
   if ((ent->host || netrc) /* netrc accept default (host == NULL) */
       && (ent->is_proxy || ent->realm || netrc) && ent->uname && ent->pwd) {
-    struct auth_pass *newent = (struct auth_pass*)New(struct auth_pass);
+    struct auth_pass *newent = (struct auth_pass *)New(struct auth_pass);
     memcpy(newent, ent, sizeof(struct auth_pass));
     if (override) {
       newent->next = passwords;
@@ -378,7 +392,7 @@ static struct auth_pass *find_auth_pass_entry(char *host, int port, char *realm,
   return NULL;
 }
 
-int find_auth_user_passwd(ParsedURL *pu, char *realm, Str* *uname, Str* *pwd,
+int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname, Str **pwd,
                           int is_proxy) {
   struct auth_pass *ent;
 
@@ -396,7 +410,7 @@ int find_auth_user_passwd(ParsedURL *pu, char *realm, Str* *uname, Str* *pwd,
   return 0;
 }
 
-void add_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pwd,
+void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname, Str *pwd,
                           int is_proxy) {
   struct auth_pass ent;
   memset(&ent, 0, sizeof(ent));
@@ -410,8 +424,8 @@ void add_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pwd,
   add_auth_pass_entry(&ent, 0, 1);
 }
 
-void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pwd,
-                                 int is_proxy) {
+void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
+                                 Str *pwd, int is_proxy) {
   struct auth_pass *ent;
   ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
   if (ent) {
@@ -433,8 +447,8 @@ void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str* uname, Str* pw
  * password <passwd>
  */
 
-static Str* next_token(Str* arg) {
-  Str* narg = NULL;
+static Str *next_token(Str *arg) {
+  Str *narg = NULL;
   char *p, *q;
   if (arg == NULL || arg->length == 0)
     return NULL;
@@ -452,11 +466,11 @@ static Str* next_token(Str* arg) {
 
 static void parsePasswd(FILE *fp, int netrc) {
   struct auth_pass ent;
-  Str* line = NULL;
+  Str *line = NULL;
 
   bzero(&ent, sizeof(struct auth_pass));
   while (1) {
-    Str* arg = NULL;
+    Str *arg = NULL;
     char *p;
 
     if (line == NULL || line->length == 0)
@@ -599,8 +613,6 @@ char *last_modified(Buffer *buf) {
   return "unknown";
 }
 
-
-
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
@@ -671,8 +683,8 @@ void mySystem(char *command, int background) {
     system(command);
 }
 
-Str* myExtCommand(char *cmd, char *arg, int redirect) {
-  Str* tmp = NULL;
+Str *myExtCommand(char *cmd, char *arg, int redirect) {
+  Str *tmp = NULL;
   char *p;
   int set_arg = FALSE;
 
@@ -697,8 +709,8 @@ Str* myExtCommand(char *cmd, char *arg, int redirect) {
   return tmp;
 }
 
-Str* myEditor(char *cmd, char *file, int line) {
-  Str* tmp = NULL;
+Str *myEditor(char *cmd, char *file, int line) {
+  Str *tmp = NULL;
   char *p;
   int set_file = FALSE, set_line = FALSE;
 
@@ -733,7 +745,7 @@ Str* myEditor(char *cmd, char *file, int line) {
 char *expandName(char *name) {
   char *p;
   struct passwd *passent, *getpwnam(const char *);
-  Str* extpath = NULL;
+  Str *extpath = NULL;
 
   if (name == NULL)
     return NULL;
@@ -776,7 +788,7 @@ int is_localhost(const char *host) {
 }
 
 char *file_to_url(char *file) {
-  Str* tmp;
+  Str *tmp;
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
   char *drive = NULL;
 #endif
@@ -826,7 +838,7 @@ char *file_to_url(char *file) {
 }
 
 char *url_unquote_conv0(char *url) {
-  Str* tmp;
+  Str *tmp;
   tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
   return tmp->ptr;
 }
@@ -835,7 +847,7 @@ static char *monthtbl[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static int get_day(char **s) {
-  Str* tmp = Strnew();
+  Str *tmp = Strnew();
   int day;
   char *ss = *s;
 
@@ -855,7 +867,7 @@ static int get_day(char **s) {
 }
 
 static int get_month(char **s) {
-  Str* tmp = Strnew();
+  Str *tmp = Strnew();
   int mon;
   char *ss = *s;
 
@@ -882,7 +894,7 @@ static int get_month(char **s) {
 }
 
 static int get_year(char **s) {
-  Str* tmp = Strnew();
+  Str *tmp = Strnew();
   int year;
   char *ss = *s;
 
@@ -907,7 +919,7 @@ static int get_year(char **s) {
 }
 
 static int get_time(char **s, int *hour, int *min, int *sec) {
-  Str* tmp = Strnew();
+  Str *tmp = Strnew();
   char *ss = *s;
 
   if (!**s)
@@ -946,7 +958,7 @@ static int get_time(char **s, int *hour, int *min, int *sec) {
 }
 
 static int get_zone(char **s, int *z_hour, int *z_min) {
-  Str* tmp = Strnew();
+  Str *tmp = Strnew();
   int zone;
   char *ss = *s;
 
@@ -1124,8 +1136,8 @@ char *FQDN(char *host) {
 static char Base64Table[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-Str* base64_encode(const char *src, size_t len) {
-  Str* dest;
+Str *base64_encode(const char *src, size_t len) {
+  Str *dest;
   const unsigned char *in, *endw, *s;
   unsigned long j;
   size_t k;
