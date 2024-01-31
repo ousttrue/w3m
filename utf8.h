@@ -96,6 +96,11 @@ struct Utf8 {
                             std::distance(begin(), end()));
   }
 
+  int width() const {
+    auto [cp, bytes] = codepoint();
+    return codepoint_to_width(cp);
+  }
+
   std::tuple<char32_t, int> codepoint() const {
     if (b0 == 0) {
       return {-1, 0};

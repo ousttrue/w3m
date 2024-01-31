@@ -124,6 +124,7 @@ executable(
         'utf8.cpp',
         'downloadlist.cpp',
         'httprequest.cpp',
+        'screen.cpp',
     ],
     install: true,
     dependencies: [

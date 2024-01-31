@@ -1,5 +1,6 @@
 #include "display.h"
 #include "readbuffer.h"
+#include "screen.h"
 #include "rc.h"
 #include "utf8.h"
 #include "terms.h"
@@ -34,7 +35,7 @@ void fmTerm(void) {
   if (fmInitialized) {
     move(LASTLINE, 0);
     clrtoeolx();
-    refresh();
+    refresh(term_io());
     reset_tty();
     fmInitialized = FALSE;
   }
@@ -232,13 +233,13 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   if (delayed_msg != NULL) {
     disp_message(delayed_msg, FALSE);
     delayed_msg = NULL;
-    refresh();
+    refresh(term_io());
   }
   standout();
   message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
   standend();
   term_title(buf->buffername);
-  refresh();
+  refresh(term_io());
   if (buf != save_current_buf) {
     saveBufferInfo();
     save_current_buf = buf;
@@ -734,7 +735,7 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
             Currentbuf->cursorY + Currentbuf->rootY);
   else
     message(s, LASTLINE, 0);
-  refresh();
+  refresh(term_io());
   sleep_till_anykey(sec, purge);
   if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
     displayBuffer(Currentbuf, B_NORMAL);

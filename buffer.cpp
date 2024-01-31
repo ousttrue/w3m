@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "screen.h"
 #include "display.h"
 #include "readbuffer.h"
 #include "rc.h"
@@ -334,7 +335,7 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
   /*
    * move(LASTLINE, COLS - 1); */
   move(c, 0);
-  refresh();
+  refresh(term_io());
   return buf->nextBuffer;
 }
 
@@ -438,7 +439,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
      * move(LASTLINE, COLS - 1);
      */
     move(spoint, 0);
-    refresh();
+    refresh(term_io());
   }
 }
 

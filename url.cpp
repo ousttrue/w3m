@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "screen.h"
 #include "display.h"
 #include "terms.h"
 #include "indep.h"
@@ -519,7 +520,7 @@ int openSocket(char *const hostname, char *remoteport_name,
   if (fmInitialized) {
     /* FIXME: gettextize? */
     message(Sprintf("Opening socket...")->ptr, 0, 0);
-    refresh();
+    refresh(term_io());
   }
   if (SETJMP(AbortLoading) != 0) {
 #ifdef SOCK_DEBUG

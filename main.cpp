@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "screen.h"
 #include "tmpfile.h"
 #include "readbuffer.h"
 #include "alarm.h"
@@ -500,7 +501,7 @@ static void resize_hook(SIGNAL_ARG) {
 static void resize_screen(void) {
   need_resize_screen = FALSE;
   setlinescols();
-  setupscreen();
+  setupscreen(term_entry());
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1368,7 +1369,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 #endif /* not SIGSTOP */
   move(LASTLINE, 0);
   clrtoeolx();
-  refresh();
+  refresh(term_io());
   fmTerm();
 #ifndef SIGSTOP
   shell = getenv("SHELL");
@@ -1521,7 +1522,7 @@ static Buffer *loadLink(char *url, char *target, char *referer,
   const int *no_referer_ptr;
 
   message(Sprintf("loading %s", url)->ptr, 0, 0);
-  refresh();
+  refresh(term_io());
 
   no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
   base = baseURL(Currentbuf);
@@ -1717,7 +1718,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     return;
   /* FIXME: gettextize? */
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-  refresh();
+  refresh(term_io());
   buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
@@ -2517,7 +2518,7 @@ static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
   if (handleMailto(url))
     return;
 
-  refresh();
+  refresh(term_io());
   buf = loadGeneralFile(url, current, referer, 0, request);
   if (buf == NULL) {
     /* FIXME: gettextize? */
@@ -2992,7 +2993,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   url = parsedURL2Str(&Currentbuf->currentURL);
   /* FIXME: gettextize? */
   message("Reloading...", 0, 0);
-  refresh();
+  refresh(term_io());
   SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
   buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);

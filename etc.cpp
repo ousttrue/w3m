@@ -1,4 +1,5 @@
 #include "line.h"
+#include "screen.h"
 #include "terms.h"
 #include "display.h"
 #include "readbuffer.h"
@@ -547,7 +548,7 @@ FILE *openSecretFile(char *fname) {
   else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
     if (fmInitialized) {
       message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-      refresh();
+      refresh(term_io());
     } else {
       fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
       fputc('\n', stderr);

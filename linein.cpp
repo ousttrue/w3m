@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "screen.h"
 #include "rc.h"
 #include "utf8.h"
 #include "display.h"
@@ -175,7 +176,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
       addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
     clrtoeolx();
     move(LASTLINE, opos + x - offset);
-    refresh();
+    refresh(term_io());
 
   next_char:
     c = getch();
@@ -241,7 +242,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
     return NULL;
 
   move(LASTLINE, 0);
-  refresh();
+  refresh(term_io());
   p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
