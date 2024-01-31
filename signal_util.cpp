@@ -66,7 +66,7 @@ void setup_child(int child, int i, int f) {
    * loadImage() and corrupt image data can be cached in ~/.w3m.
    */
   close_all_fds_except(i, f);
-  QuietMessage = true;
+  IsForkChild = true;
   fmInitialized = false;
   TrapSignal = 0;
 }

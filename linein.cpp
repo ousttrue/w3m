@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "w3m.h"
 #include "screen.h"
 #include "rc.h"
 #include "utf8.h"
@@ -894,4 +895,18 @@ static void _editor(void) {
   CLen = CPos = setStrType(strBuf, strProp);
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+const char *inputAnswer(const char *prompt) {
+  if (IsForkChild)
+    return "n";
+
+  if (!fmInitialized) {
+    printf("%s", prompt);
+    fflush(stdout);
+    return Strfgets(stdin)->ptr;
+  }
+
+  term_raw();
+  return inputChar(prompt);
 }

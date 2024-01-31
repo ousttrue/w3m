@@ -52,15 +52,12 @@ static void KeyAbort(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif /* not max */
 #ifndef min
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #endif /* not min */
-
-
 
 static char *guess_filename(char *file);
 static int _MoveFile(char *path1, char *path2);
@@ -1273,7 +1270,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
       find_auth_user_passwd(pu, realm, (Str **)uname, (Str **)pwd, proxy)) {
     /* found username & password in passwd file */;
   } else {
-    if (QuietMessage)
+    if (IsForkChild)
       return;
     /* input username and password */
     sleep(2);
@@ -2555,39 +2552,21 @@ int checkSaveFile(input_stream *stream, char *path2) {
 
 int checkOverWrite(char *path) {
   struct stat st;
-  char *ans;
-
   if (stat(path, &st) < 0)
     return 0;
-  /* FIXME: gettextize? */
-  ans = inputAnswer("File exists. Overwrite? (y/n)");
+
+  auto ans = inputAnswer("File exists. Overwrite? (y/n)");
   if (ans && TOLOWER(*ans) == 'y')
     return 0;
   else
     return -1;
 }
 
-char *inputAnswer(char *prompt) {
-  char *ans;
-
-  if (QuietMessage)
-    return "n";
-  if (fmInitialized) {
-    term_raw();
-    ans = inputChar(prompt);
-  } else {
-    printf("%s", prompt);
-    fflush(stdout);
-    ans = Strfgets(stdin)->ptr;
-  }
-  return ans;
-}
-
 static void uncompress_stream(URLFile *uf, char **src) {
   pid_t pid1;
   FILE *f1;
-  char *expand_cmd = GUNZIP_CMDNAME;
-  char *expand_name = GUNZIP_NAME;
+  const char *expand_cmd = GUNZIP_CMDNAME;
+  const char *expand_name = GUNZIP_NAME;
   char *tmpf = NULL;
   char *ext = NULL;
   struct compression_decoder *d;

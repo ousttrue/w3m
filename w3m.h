@@ -1,7 +1,7 @@
 #pragma once
 
 extern bool fmInitialized;
-extern bool QuietMessage;
+extern bool IsForkChild;
 extern char *w3m_version;
 extern bool w3m_backend;
 struct TextLineList;

@@ -17,7 +17,7 @@
 #include <sys/types.h>
 
 bool fmInitialized = 0;
-bool QuietMessage = 0;
+bool IsForkChild = 0;
 bool w3m_backend = false;
 
 struct TextLineList;

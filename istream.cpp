@@ -1,4 +1,5 @@
 #include "istream.h"
+#include "linein.h"
 #include "html.h"
 #include "signal_util.h"
 #include "message.h"
@@ -455,7 +456,7 @@ Str *ssl_get_certificate(SSL *ssl, char *hostname) {
   char buf[2048];
   Str *amsg = NULL;
   Str *emsg;
-  char *ans;
+  const char *ans;
 
   if (ssl == NULL)
     return NULL;
