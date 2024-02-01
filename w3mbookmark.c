@@ -108,7 +108,7 @@ create_new_bookmark(char *bmark, char *section, char *title, char *url,
 }
 
 static int
-insert_bookmark(char *bmark, struct parsed_tagarg *data)
+insert_bookmark(char *bmark, struct key_value *data)
 {
     char *url, *title, *section;
     FILE *f;
@@ -187,7 +187,7 @@ main(void)
     char *p;
     int length;
     Str qs = NULL;
-    struct parsed_tagarg *cgiarg;
+    struct key_value *cgiarg;
     char *mode;
     char *bmark;
     char *url;

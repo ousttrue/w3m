@@ -1,10 +1,8 @@
-/* $Id: parsetag.c,v 1.4 2001/11/20 17:49:23 ukai Exp $ */
-#include "myctype.h"
+#include "keyvalue.h"
 #include "indep.h"
 #include "Str.h"
-#include "parsetag.h"
 
-char *tag_get_value(struct parsed_tagarg *t, char *arg) {
+const char *tag_get_value(struct keyvalue *t, const char *arg) {
   for (; t; t = t->next) {
     if (!strcasecmp(t->arg, arg))
       return t->value;
@@ -12,7 +10,7 @@ char *tag_get_value(struct parsed_tagarg *t, char *arg) {
   return NULL;
 }
 
-int tag_exists(struct parsed_tagarg *t, char *arg) {
+int tag_exists(struct keyvalue *t, const char *arg) {
   for (; t; t = t->next) {
     if (!strcasecmp(t->arg, arg))
       return 1;
@@ -20,17 +18,15 @@ int tag_exists(struct parsed_tagarg *t, char *arg) {
   return 0;
 }
 
-struct parsed_tagarg *cgistr2tagarg(char *cgistr) {
-  Str *tag;
-  Str *value;
-  struct parsed_tagarg *t0, *t;
+struct keyvalue *cgistr2tagarg(const char *cgistr) {
+  keyvalue *t0 = 0;
+  keyvalue *t = 0;
 
-  t = t0 = NULL;
   do {
-    t = (parsed_tagarg *)New(struct parsed_tagarg);
+    t = (keyvalue *)New(struct keyvalue);
     t->next = t0;
     t0 = t;
-    tag = Strnew();
+    auto tag = Strnew();
     while (*cgistr && *cgistr != '=' && *cgistr != '&')
       Strcat_char(tag, *cgistr++);
     t->arg = Str_form_unquote(tag)->ptr;
@@ -39,12 +35,13 @@ struct parsed_tagarg *cgistr2tagarg(char *cgistr) {
       return t;
     else if (*cgistr == '=') {
       cgistr++;
-      value = Strnew();
+      auto value = Strnew();
       while (*cgistr && *cgistr != '&')
         Strcat_char(value, *cgistr++);
       t->value = Str_form_unquote(value)->ptr;
     } else if (*cgistr == '&')
       cgistr++;
   } while (*cgistr);
+
   return t;
 }

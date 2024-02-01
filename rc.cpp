@@ -29,7 +29,7 @@
 #include "myctype.h"
 #include "indep.h"
 #include "proto.h"
-#include "parsetag.h"
+#include "keyvalue.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include <stdio.h>
@@ -1104,9 +1104,9 @@ Buffer *load_option_panel(void) {
   return buf;
 }
 
-void panel_set_option(struct parsed_tagarg *arg) {
+void panel_set_option(keyvalue *arg) {
   FILE *f = NULL;
-  char *p;
+  const char *p;
   Str *s = Strnew(), *tmp;
 
   if (config_file == NULL) {

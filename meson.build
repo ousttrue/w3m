@@ -93,7 +93,7 @@ executable(
         'indep.cpp',
         'regex.cpp',
         'textlist.cpp',
-        'parsetag.cpp',
+        'keyvalue.cpp',
         'myctype.cpp',
         'hash.cpp',
         'file.cpp',

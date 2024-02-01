@@ -24,7 +24,7 @@
 #include "funcname1.h"
 #include "istream.h"
 #include "func.h"
-#include "parsetag.h"
+#include "keyvalue.h"
 #include "form.h"
 #include "history.h"
 #include "anchor.h"
@@ -3756,7 +3756,7 @@ static Buffer *DownloadListBuffer(void) {
   return loadHTMLString(src);
 }
 
-void download_action(struct parsed_tagarg *arg) {
+void download_action(struct keyvalue *arg) {
   DownloadList *d;
   pid_t pid;
 

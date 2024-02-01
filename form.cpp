@@ -14,7 +14,7 @@
 #include "buffer.h"
 #include "anchor.h"
 #include "fm.h"
-#include "parsetag.h"
+#include "keyvalue.h"
 #include "parsetagx.h"
 #include "myctype.h"
 #include "local_cgi.h"
@@ -30,7 +30,7 @@ extern int max_textarea;
 /* *INDENT-OFF* */
 struct {
   const char *action;
-  void (*rout)(struct parsed_tagarg *);
+  void (*rout)(struct keyvalue *);
 } internal_action[] = {
     {"option", panel_set_option},
     {"cookie", set_cookie_flag},

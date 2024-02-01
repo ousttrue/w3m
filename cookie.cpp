@@ -16,7 +16,7 @@
 #include "httprequest.h"
 #include "readbuffer.h"
 #include "textlist.h"
-#include "parsetag.h"
+#include "keyvalue.h"
 #include "fm.h"
 #include "local_cgi.h"
 #include "regex.h"
@@ -735,7 +735,7 @@ Buffer *cookie_list_panel(void) {
   return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct parsed_tagarg *arg) {
+void set_cookie_flag(struct keyvalue *arg) {
   int n, v;
   struct cookie *p;
 
