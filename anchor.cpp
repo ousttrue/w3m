@@ -4,7 +4,6 @@
 #include "terms.h"
 #include "linklist.h"
 #include "httprequest.h"
-#include "textlist.h"
 #include "line.h"
 #include "buffer.h"
 #include "form.h"
@@ -410,17 +409,14 @@ Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y) {
 
 void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
                          int shift) {
-  Anchor *a;
-  size_t b, e, s = 0;
-  int cmp;
-
   if (al == NULL || al->nanchor == 0)
     return;
 
-  s = al->nanchor / 2;
+  auto s = al->nanchor / 2;
+  size_t b, e;
   for (b = 0, e = al->nanchor - 1; b <= e; s = (b + e + 1) / 2) {
-    a = &al->anchors[s];
-    cmp = onAnchor(a, line, pos);
+    auto a = &al->anchors[s];
+    auto cmp = onAnchor(a, line, pos);
     if (cmp == 0)
       break;
     else if (cmp > 0)
@@ -431,7 +427,7 @@ void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
       e = s - 1;
   }
   for (; s < al->nanchor; s++) {
-    a = &al->anchors[s];
+    auto a = &al->anchors[s];
     if (a->start.line > line)
       break;
     if (a->start.pos > pos) {

@@ -251,6 +251,7 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
 
   if (i_broken) {
     onInput(NULL);
+    return;
   }
 
   move(LASTLINE, 0);
@@ -590,7 +591,7 @@ static void next_dcompl(int next) {
     if (len < n)
       len = n;
   }
-  if (len > 0 && COLS > len)
+  if (len > 0 && COLS > static_cast<int>(len))
     col = COLS / len;
   else
     col = 1;
@@ -898,20 +899,23 @@ static void _editor(void) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-// inline const char *inputChar(const char *p) {
-//   return inputLine(p, "", IN_CHAR);
-// }
+inline void inputChar(const char *p, const OnInput &onInput) {
+  inputLine(p, "", IN_CHAR, onInput);
+}
 
-// const char *inputAnswer(const char *prompt) {
-//   if (IsForkChild)
-//     return "n";
-//
-//   if (!fmInitialized) {
-//     printf("%s", prompt);
-//     fflush(stdout);
-//     return Strfgets(stdin)->ptr;
-//   }
-//
-//   term_raw();
-//   return inputChar(prompt);
-// }
+void inputAnswer(const char *prompt, const OnInput &onInput) {
+  if (IsForkChild) {
+    onInput("n");
+    return;
+  }
+
+  if (!fmInitialized) {
+    printf("%s", prompt);
+    fflush(stdout);
+    onInput(Strfgets(stdin)->ptr);
+    return;
+  }
+
+  term_raw();
+  inputChar(prompt, onInput);
+}

@@ -22,9 +22,6 @@ static int file_read(struct io_file_handle *handle, char *buf, int len);
 
 static int str_read(Str *handle, char *buf, int len);
 
-static void ssl_close(struct ssl_handle *handle);
-static int ssl_read(struct ssl_handle *handle, char *buf, int len);
-
 static int ens_read(struct ens_handle *handle, char *buf, int len);
 static void ens_close(struct ens_handle *handle);
 

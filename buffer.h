@@ -103,7 +103,7 @@ struct Buffer {
 };
 
 #define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
-void addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
+void addnewline(Buffer *buf, const char *line, Lineprop *prop, Linecolor *color,
                 int pos, int width, int nlines);
 
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \

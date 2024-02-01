@@ -820,7 +820,7 @@ void addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
 
 // extern char *NullLine;
 
-void addnewline(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
+void addnewline(Buffer *buf, const char *line, Lineprop *prop, Linecolor *color,
                 int pos, int width, int nlines) {
   char *s;
   Lineprop *p;

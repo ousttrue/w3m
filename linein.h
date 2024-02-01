@@ -23,30 +23,34 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
                          InputFlags flag, Hist *hist, IncFunc incFunc,
                          const OnInput &onInput);
 
-// inline const char *inputLineHist(const char *p, const char *d, InputFlags f,
-//                                  Hist *h) {
-//   return inputLineHistSearch(p, d, f, h, nullptr);
-// }
+inline void inputLineHist(const char *p, const char *d, InputFlags f, Hist *h,
+                          const OnInput &onInput) {
+  inputLineHistSearch(p, d, f, h, nullptr, onInput);
+}
 
-// inline const char *inputLine(const char *p, const char *d, InputFlags f) {
-//   return inputLineHist(p, d, f, nullptr);
-// }
+inline void inputLine(const char *p, const char *d, InputFlags f,
+                      const OnInput &onInput) {
+  inputLineHist(p, d, f, nullptr, onInput);
+}
 
-// inline const char *inputStr(const char *p, const char *d) {
-//   return inputLine(p, d, IN_STRING);
-// }
+inline void inputStr(const char *p, const char *d, const OnInput &onInput) {
+  inputLine(p, d, IN_STRING, onInput);
+}
 
 // TODO:
-// inline const char *inputStrHist(const char *p, const char *d, Hist *h) {
-//   return inputLineHist(p, d, IN_STRING, h);
-// }
+inline void inputStrHist(const char *p, const char *d, Hist *h,
+                         const OnInput &onInput) {
+  inputLineHist(p, d, IN_STRING, h, onInput);
+}
 
-// inline const char *inputFilename(const char *p, const char *d) {
-//   return inputLine(p, d, IN_FILENAME);
-// }
+inline void inputFilename(const char *p, const char *d,
+                          const OnInput &onInput) {
+  inputLine(p, d, IN_FILENAME, onInput);
+}
 
-// inline char *inputFilenameHist(const char *p, const char *d, Hist *h) {
-//   return inputLineHist(p, d, IN_FILENAME, h);
-// }
+inline void inputFilenameHist(const char *p, const char *d, Hist *h,
+                              const OnInput &onInput) {
+  inputLineHist(p, d, IN_FILENAME, h, onInput);
+}
 
-// const char *inputAnswer(const char *prompt);
+void inputAnswer(const char *prompt, const OnInput &onInput);

@@ -151,7 +151,6 @@ Str *convertLine0(UrlStream *uf, Str *line, int mode) {
 
 void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
   char *p, *q;
-  char *emsg;
   char c;
   Str *lineBuf2 = NULL;
   Str *tmp;
@@ -499,7 +498,7 @@ static char *extract_auth_param(char *q, struct auth_param *auth) {
   return q;
 }
 
-static Str *get_auth_param(struct auth_param *auth, char *name) {
+static Str *get_auth_param(struct auth_param *auth, const char *name) {
   struct auth_param *ap;
   for (ap = auth; ap->name != NULL; ap++) {
     if (strcasecmp(name, ap->name) == 0)
@@ -545,7 +544,7 @@ static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw,
  */
 
 static Str *digest_hex(unsigned char *p) {
-  char *h = "0123456789abcdef";
+  auto h = "0123456789abcdef";
   Str *tmp = Strnew_size(MD5_DIGEST_LENGTH * 2 + 1);
   int i;
   for (i = 0; i < MD5_DIGEST_LENGTH; i++, p++) {
@@ -878,7 +877,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
       //   return;
       *uname = Strnew_charp(pp);
       // if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
-      //                     IN_PASSWORD)) == NULL) 
+      //                     IN_PASSWORD)) == NULL)
       {
         *uname = NULL;
         return;
