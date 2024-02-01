@@ -1887,8 +1887,8 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   if (fmInitialized) {
     p = searchKeyData();
     if (p == NULL || *p == '\0') {
-      q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
-                        SaveHist);
+      // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
+      //                   SaveHist);
       if (q == NULL || *q == '\0')
         return FALSE;
       p = q;

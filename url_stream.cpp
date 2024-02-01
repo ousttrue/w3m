@@ -513,9 +513,8 @@ int doFileSave(UrlStream *uf, const char *defstr) {
   if (fmInitialized) {
     p = searchKeyData();
     if (p == NULL || *p == '\0') {
-      /* FIXME: gettextize? */
-      p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
-                        SaveHist);
+      // p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
+      //                   SaveHist);
       if (p == NULL || *p == '\0')
         return -1;
     }

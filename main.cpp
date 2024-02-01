@@ -899,8 +899,7 @@ DEFUN(pipeBuf, PIPE_BUF,
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
-    /* FIXME: gettextize? */
-    cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
+    // cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
   }
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -909,7 +908,6 @@ DEFUN(pipeBuf, PIPE_BUF,
   tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
   f = fopen(tmpf, "w");
   if (f == NULL) {
-    /* FIXME: gettextize? */
     disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
     return;
   }
@@ -940,7 +938,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
+    // cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
   }
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -968,7 +966,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
+    // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -999,7 +997,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
+    // cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd != NULL && *cmd != '\0') {
     fmTerm();
@@ -2514,7 +2512,7 @@ static void goURL0(const char *prompt, int relative) {
       else
         pushHist(hist, a_url);
     }
-    url = inputLineHist(prompt, url, IN_URL, hist);
+    // url = inputLineHist(prompt, url, IN_URL, hist);
     if (url != NULL)
       SKIP_BLANKS(url);
   }
@@ -2705,7 +2703,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   file = searchKeyData();
   if (file == NULL || *file == '\0') {
-    qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+    // qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
     if (qfile == NULL || *qfile == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
