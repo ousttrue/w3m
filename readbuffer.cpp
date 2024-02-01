@@ -727,24 +727,24 @@ static int sloppy_parse_line(char **str) {
 
 #define MAX_CMD_LEN 128
 
-int gethtmlcmd(char **s) {
+int gethtmlcmd(const char **s) {
   extern Hash_si tagtable;
   char cmdstr[MAX_CMD_LEN];
-  char *p = cmdstr;
-  char *save = *s;
+  const char *p = cmdstr;
+  const char *save = *s;
   int cmd;
 
   (*s)++;
   /* first character */
   if (IS_ALNUM(**s) || **s == '_' || **s == '/') {
-    *(p++) = TOLOWER(**s);
+    *(char *)(p++) = TOLOWER(**s);
     (*s)++;
   } else
     return HTML_UNKNOWN;
   if (p[-1] == '/')
     SKIP_BLANKS(*s);
   while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
-    *(p++) = TOLOWER(**s);
+    *(char *)(p++) = TOLOWER(**s);
     (*s)++;
   }
   if (p - cmdstr == MAX_CMD_LEN) {
@@ -752,7 +752,7 @@ int gethtmlcmd(char **s) {
     *s = save + 1;
     return HTML_UNKNOWN;
   }
-  *p = '\0';
+  *(char *)p = '\0';
 
   /* hash search */
   cmd = getHash_si(&tagtable, cmdstr, HTML_UNKNOWN);
@@ -776,7 +776,7 @@ static void passthrough(struct readbuffer *obuf, char *str, int back) {
   while (*str) {
     str_bak = str;
     if (sloppy_parse_line(&str)) {
-      char *q = str_bak;
+      const char *q = str_bak;
       cmd = gethtmlcmd(&q);
       if (back) {
         struct link_stack *p;

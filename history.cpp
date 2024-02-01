@@ -19,8 +19,8 @@ static int mergeHistory(Hist *ours, Hist *theirs) {
   HistItem *item;
 
   for (item = theirs->list->first; item; item = item->next)
-    if (!getHashHist(ours, (char *)item->ptr))
-      pushHist(ours, (char *)item->ptr);
+    if (!getHashHist(ours, (const char *)item->ptr))
+      pushHist(ours, (const char *)item->ptr);
 
   return 0;
 }
@@ -36,9 +36,9 @@ Buffer *historyBuffer(Hist *hist) {
   Strcat_charp(src, "<ol>\n");
   if (hist && hist->list) {
     for (item = hist->list->last; item; item = item->prev) {
-      q = html_quote((char *)item->ptr);
+      q = html_quote((const char *)item->ptr);
       if (DecodeURL)
-        p = html_quote(url_decode2((char *)item->ptr, NULL));
+        p = html_quote(url_decode2((const char *)item->ptr, NULL));
       else
         p = q;
       Strcat_charp(src, "<li><a href=\"");
@@ -86,7 +86,7 @@ void saveHistory(Hist *hist, size_t size) {
   Hist *fhist;
   HistItem *item;
   const char *histf;
-  char *tmpf;
+  const char *tmpf;
   int rename_ret;
   struct stat st;
 
@@ -111,7 +111,7 @@ void saveHistory(Hist *hist, size_t size) {
        item = item->next)
     size++;
   for (; item; item = item->next)
-    fprintf(f, "%s\n", (char *)item->ptr);
+    fprintf(f, "%s\n", (const char *)item->ptr);
   if (fclose(f) == EOF)
     goto fail;
   rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
@@ -146,11 +146,11 @@ Hist *copyHist(Hist *hist) {
     return NULL;
   _new = newHist();
   for (item = hist->list->first; item; item = item->next)
-    pushHist(_new, (char *)item->ptr);
+    pushHist(_new, (const char *)item->ptr);
   return _new;
 }
 
-HistItem *unshiftHist(Hist *hist, char *ptr) {
+HistItem *unshiftHist(Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -166,7 +166,7 @@ HistItem *unshiftHist(Hist *hist, char *ptr) {
   return item;
 }
 
-HistItem *pushHist(Hist *hist, char *ptr) {
+HistItem *pushHist(Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -184,7 +184,7 @@ HistItem *pushHist(Hist *hist, char *ptr) {
 
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
-HistItem *pushHashHist(Hist *hist, char *ptr) {
+HistItem *pushHashHist(Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -206,7 +206,7 @@ HistItem *pushHashHist(Hist *hist, char *ptr) {
   return item;
 }
 
-HistItem *getHashHist(Hist *hist, char *ptr) {
+HistItem *getHashHist(Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL)
@@ -214,22 +214,22 @@ HistItem *getHashHist(Hist *hist, char *ptr) {
   if (hist->hash == NULL) {
     hist->hash = newHash_sv(HIST_HASH_SIZE);
     for (item = hist->list->first; item; item = item->next)
-      putHash_sv(hist->hash, (char *)item->ptr, (void *)item);
+      putHash_sv(hist->hash, (const char *)item->ptr, (void *)item);
   }
   return (HistItem *)getHash_sv(hist->hash, ptr, NULL);
 }
 
-char *lastHist(Hist *hist) {
+const char *lastHist(Hist *hist) {
   if (hist == NULL || hist->list == NULL)
     return NULL;
   if (hist->list->last) {
     hist->current = hist->list->last;
-    return (char *)hist->current->ptr;
+    return (const char *)hist->current->ptr;
   }
   return NULL;
 }
 
-char *nextHist(Hist *hist) {
+const char *nextHist(Hist *hist) {
   if (hist == NULL || hist->list == NULL)
     return NULL;
   if (hist->current && hist->current->next) {
@@ -239,7 +239,7 @@ char *nextHist(Hist *hist) {
   return NULL;
 }
 
-char *prevHist(Hist *hist) {
+const char *prevHist(Hist *hist) {
   if (hist == NULL || hist->list == NULL)
     return NULL;
   if (hist->current && hist->current->prev) {

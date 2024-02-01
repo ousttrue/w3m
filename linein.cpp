@@ -257,7 +257,7 @@ char *inputLineHistSearch(const char *prompt, const char *def_str,
     SKIP_BLANKS(p);
   }
   if (use_hist && !(flag & IN_URL) && *p != '\0') {
-    char *q = lastHist(hist);
+    const char *q = lastHist(hist);
     if (!q || strcmp(q, p))
       pushHist(hist, p);
   }
@@ -799,7 +799,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
 
 static void _prev(void) {
   Hist *hist = CurrentHist;
-  char *p;
+  const char *p;
 
   if (!use_hist)
     return;
@@ -822,7 +822,7 @@ static void _prev(void) {
 
 static void _next(void) {
   Hist *hist = CurrentHist;
-  char *p;
+  const char *p;
 
   if (!use_hist)
     return;
