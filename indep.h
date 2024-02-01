@@ -33,7 +33,6 @@ extern long long strtoclen(const char *s);
 extern const char *conv_entity(unsigned int ch);
 extern int getescapechar(const char **s);
 extern const char *getescapecmd(const char **s);
-extern char *allocStr(const char *s, int len);
 extern int strCmp(const void *s1, const void *s2);
 extern char *currentdir(void);
 extern const char *cleanupName(const char *name);
@@ -62,10 +61,12 @@ extern Str *Str_url_unquote(Str *x, int is_form, int safe);
 extern Str *Str_form_quote(Str *x);
 #define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
 extern const char *shell_quote(const char *str);
+
 #define xmalloc(s) xrealloc(NULL, s)
 extern void *xrealloc(void *ptr, size_t size);
 extern void xfree(void *ptr);
 extern void *w3m_GC_realloc_atomic(void *ptr, size_t size);
+
 extern void w3m_GC_free(void *ptr);
 extern void growbuf_init(struct growbuf *gb);
 extern void growbuf_init_without_GC(struct growbuf *gb);

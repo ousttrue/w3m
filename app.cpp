@@ -12,7 +12,7 @@
 #include "screen.h"
 #include "display.h"
 #include "alloc.h"
-#include "indep.h"
+#include "Str.h"
 #include <signal.h>
 
 int CurrentKey;

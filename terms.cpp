@@ -7,7 +7,7 @@
 #include "screen.h"
 #include "w3m.h"
 #include "proto.h"
-#include "indep.h"
+#include "Str.h"
 #include "ctrlcode.h"
 #include "signal_util.h"
 #include "myctype.h"

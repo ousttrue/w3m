@@ -14,13 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-// #include "config.h"
 #include "regex.h"
 #include "myctype.h"
 #include "func.h"
-// #include "fm.h"
 #include "proto.h"
-#include "indep.h"
+#include "Str.h"
 
 #ifndef NULL
 #define NULL 0

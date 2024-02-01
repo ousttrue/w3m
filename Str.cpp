@@ -19,6 +19,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include "Str.h"
+#include "alloc.h"
 #include "myctype.h"
 
 #define INITIAL_STR_SIZE 32
@@ -33,11 +34,30 @@
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
 
-Str* Strnew() {
-  Str* x = (Str*)GC_MALLOC(sizeof(Str));
+char *allocStr(const char *s, int len) {
+  char *ptr;
+
+  if (s == NULL)
+    return NULL;
+  if (len < 0)
+    len = strlen(s);
+  if (len < 0 || len >= STR_SIZE_MAX)
+    len = STR_SIZE_MAX - 1;
+  ptr = (char *)NewAtom_N(char, len + 1);
+  if (ptr == NULL) {
+    fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
+    exit(-1);
+  }
+  bcopy(s, ptr, len);
+  ptr[len] = '\0';
+  return ptr;
+}
+
+Str *Strnew() {
+  Str *x = (Str *)GC_MALLOC(sizeof(Str));
   if (x == NULL)
     exit(1);
-  x->ptr = (char*)GC_MALLOC_ATOMIC(INITIAL_STR_SIZE);
+  x->ptr = (char *)GC_MALLOC_ATOMIC(INITIAL_STR_SIZE);
   if (x->ptr == NULL)
     exit(1);
   x->ptr[0] = '\0';
@@ -46,15 +66,15 @@ Str* Strnew() {
   return x;
 }
 
-Str* Strnew_size(int n) {
-  Str* x = (Str*)GC_MALLOC(sizeof(Str));
+Str *Strnew_size(int n) {
+  Str *x = (Str *)GC_MALLOC(sizeof(Str));
   if (x == NULL)
     exit(1);
   if (n < 0 || n >= STR_SIZE_MAX)
     n = STR_SIZE_MAX - 1;
   else if (n + 1 < INITIAL_STR_SIZE)
     n = INITIAL_STR_SIZE - 1;
-  x->ptr = (char*)GC_MALLOC_ATOMIC(n + 1);
+  x->ptr = (char *)GC_MALLOC_ATOMIC(n + 1);
   if (x->ptr == NULL)
     exit(1);
   x->ptr[0] = '\0';
@@ -63,13 +83,13 @@ Str* Strnew_size(int n) {
   return x;
 }
 
-Str* Strnew_charp(const char *p) {
-  Str* x;
+Str *Strnew_charp(const char *p) {
+  Str *x;
   int n, len;
 
   if (p == NULL)
     return Strnew();
-  x = (Str*)GC_MALLOC(sizeof(Str));
+  x = (Str *)GC_MALLOC(sizeof(Str));
   if (x == NULL)
     exit(1);
   n = strlen(p) + 1;
@@ -78,7 +98,7 @@ Str* Strnew_charp(const char *p) {
   len = n - 1;
   if (n < INITIAL_STR_SIZE)
     n = INITIAL_STR_SIZE;
-  x->ptr = (char*)GC_MALLOC_ATOMIC(n);
+  x->ptr = (char *)GC_MALLOC_ATOMIC(n);
   if (x->ptr == NULL)
     exit(1);
   x->area_size = n;
@@ -88,9 +108,9 @@ Str* Strnew_charp(const char *p) {
   return x;
 }
 
-Str* Strnew_m_charp(const char *p, ...) {
+Str *Strnew_m_charp(const char *p, ...) {
   va_list ap;
-  Str* r = Strnew();
+  Str *r = Strnew();
 
   va_start(ap, p);
   while (p != NULL) {
@@ -101,13 +121,13 @@ Str* Strnew_m_charp(const char *p, ...) {
   return r;
 }
 
-Str* Strnew_charp_n(const char *p, int n) {
-  Str* x;
+Str *Strnew_charp_n(const char *p, int n) {
+  Str *x;
   int len;
 
   if (p == NULL)
     return Strnew_size(n);
-  x = (Str*)GC_MALLOC(sizeof(Str));
+  x = (Str *)GC_MALLOC(sizeof(Str));
   if (x == NULL)
     exit(1);
   if (n < 0 || n >= STR_SIZE_MAX)
@@ -115,7 +135,7 @@ Str* Strnew_charp_n(const char *p, int n) {
   len = n;
   if (n + 1 < INITIAL_STR_SIZE)
     n = INITIAL_STR_SIZE - 1;
-  x->ptr = (char*)GC_MALLOC_ATOMIC(n + 1);
+  x->ptr = (char *)GC_MALLOC_ATOMIC(n + 1);
   if (x->ptr == NULL)
     exit(1);
   x->area_size = n + 1;
@@ -125,28 +145,28 @@ Str* Strnew_charp_n(const char *p, int n) {
   return x;
 }
 
-Str* Strdup(Str* s) {
-  Str* n = Strnew_size(s->length);
+Str *Strdup(Str *s) {
+  Str *n = Strnew_size(s->length);
   STR_LENGTH_CHECK(s);
   Strcopy(n, s);
   return n;
 }
 
-void Strclear(Str* s) {
+void Strclear(Str *s) {
   s->length = 0;
   s->ptr[0] = '\0';
 }
 
-void Strfree(Str* x) {
+void Strfree(Str *x) {
   GC_free(x->ptr);
   GC_free(x);
 }
 
-void Strcopy(Str* x, Str* y) {
+void Strcopy(Str *x, Str *y) {
   STR_LENGTH_CHECK(x);
   STR_LENGTH_CHECK(y);
   if (x->area_size < y->length + 1) {
-    x->ptr = (char*)GC_REALLOC(x->ptr, y->length + 1);
+    x->ptr = (char *)GC_REALLOC(x->ptr, y->length + 1);
     if (x->ptr == NULL)
       exit(1);
     x->area_size = y->length + 1;
@@ -155,7 +175,7 @@ void Strcopy(Str* x, Str* y) {
   x->length = y->length;
 }
 
-void Strcopy_charp(Str* x, const char *y) {
+void Strcopy_charp(Str *x, const char *y) {
   int len;
 
   STR_LENGTH_CHECK(x);
@@ -168,7 +188,7 @@ void Strcopy_charp(Str* x, const char *y) {
   if (len < 0 || len >= STR_SIZE_MAX)
     len = STR_SIZE_MAX - 1;
   if (x->area_size < len + 1) {
-    x->ptr = (char*)GC_REALLOC(x->ptr, len + 1);
+    x->ptr = (char *)GC_REALLOC(x->ptr, len + 1);
     if (x->ptr == NULL)
       exit(1);
     x->area_size = len + 1;
@@ -178,7 +198,7 @@ void Strcopy_charp(Str* x, const char *y) {
   x->length = len;
 }
 
-void Strcopy_charp_n(Str* x, const char *y, int n) {
+void Strcopy_charp_n(Str *x, const char *y, int n) {
   int len = n;
 
   STR_LENGTH_CHECK(x);
@@ -190,7 +210,7 @@ void Strcopy_charp_n(Str* x, const char *y, int n) {
   if (len < 0 || len >= STR_SIZE_MAX)
     len = STR_SIZE_MAX - 1;
   if (x->area_size < len + 1) {
-    x->ptr = (char*)GC_REALLOC(x->ptr, len + 1);
+    x->ptr = (char *)GC_REALLOC(x->ptr, len + 1);
     if (x->ptr == NULL)
       exit(1);
     x->area_size = len + 1;
@@ -200,7 +220,7 @@ void Strcopy_charp_n(Str* x, const char *y, int n) {
   x->length = len;
 }
 
-void Strcat_charp_n(Str* x, const char *y, int n) {
+void Strcat_charp_n(Str *x, const char *y, int n) {
   int newlen;
 
   STR_LENGTH_CHECK(x);
@@ -219,7 +239,7 @@ void Strcat_charp_n(Str* x, const char *y, int n) {
     newlen += newlen / 2;
     if (newlen <= 0 || newlen > STR_SIZE_MAX)
       newlen = STR_SIZE_MAX;
-    x->ptr = (char*)GC_REALLOC(x->ptr, newlen);
+    x->ptr = (char *)GC_REALLOC(x->ptr, newlen);
     if (x->ptr == NULL)
       exit(1);
     x->area_size = newlen;
@@ -229,18 +249,18 @@ void Strcat_charp_n(Str* x, const char *y, int n) {
   x->ptr[x->length] = '\0';
 }
 
-void Strcat(Str* x, Str* y) {
+void Strcat(Str *x, Str *y) {
   STR_LENGTH_CHECK(y);
   Strcat_charp_n(x, y->ptr, y->length);
 }
 
-void Strcat_charp(Str* x, const char *y) {
+void Strcat_charp(Str *x, const char *y) {
   if (y == NULL)
     return;
   Strcat_charp_n(x, y, strlen(y));
 }
 
-void Strcat_m_charp(Str* x, ...) {
+void Strcat_m_charp(Str *x, ...) {
   va_list ap;
   char *p;
 
@@ -250,7 +270,7 @@ void Strcat_m_charp(Str* x, ...) {
   va_end(ap);
 }
 
-void Strgrow(Str* x) {
+void Strgrow(Str *x) {
   int newlen, addlen;
 
   if (x->area_size < 8192)
@@ -266,7 +286,7 @@ void Strgrow(Str* x) {
       x->length = newlen - 2;
   }
   if (x->area_size < newlen) {
-    x->ptr = (char*)GC_REALLOC(x->ptr, newlen);
+    x->ptr = (char *)GC_REALLOC(x->ptr, newlen);
     if (x->ptr == NULL)
       exit(1);
     x->area_size = newlen;
@@ -274,8 +294,8 @@ void Strgrow(Str* x) {
   x->ptr[x->length] = '\0';
 }
 
-Str* Strsubstr(Str* s, int beg, int len) {
-  Str* new_s;
+Str *Strsubstr(Str *s, int beg, int len) {
+  Str *new_s;
   int i;
 
   STR_LENGTH_CHECK(s);
@@ -287,21 +307,21 @@ Str* Strsubstr(Str* s, int beg, int len) {
   return new_s;
 }
 
-void Strlower(Str* s) {
+void Strlower(Str *s) {
   int i;
   STR_LENGTH_CHECK(s);
   for (i = 0; i < s->length; i++)
     s->ptr[i] = TOLOWER(s->ptr[i]);
 }
 
-void Strupper(Str* s) {
+void Strupper(Str *s) {
   int i;
   STR_LENGTH_CHECK(s);
   for (i = 0; i < s->length; i++)
     s->ptr[i] = TOUPPER(s->ptr[i]);
 }
 
-void Strchop(Str* s) {
+void Strchop(Str *s) {
   STR_LENGTH_CHECK(s);
   while (s->length > 0 &&
          (s->ptr[s->length - 1] == '\n' || s->ptr[s->length - 1] == '\r')) {
@@ -310,7 +330,7 @@ void Strchop(Str* s) {
   s->ptr[s->length] = '\0';
 }
 
-void Strinsert_char(Str* s, int pos, char c) {
+void Strinsert_char(Str *s, int pos, char c) {
   int i;
   STR_LENGTH_CHECK(s);
   if (pos < 0 || s->length < pos)
@@ -325,13 +345,13 @@ void Strinsert_char(Str* s, int pos, char c) {
   s->ptr[pos] = c;
 }
 
-void Strinsert_charp(Str* s, int pos, const char *p) {
+void Strinsert_charp(Str *s, int pos, const char *p) {
   STR_LENGTH_CHECK(s);
   while (*p)
     Strinsert_char(s, pos++, *(p++));
 }
 
-void Strdelete(Str* s, int pos, int n) {
+void Strdelete(Str *s, int pos, int n) {
   int i;
   STR_LENGTH_CHECK(s);
   if (pos < 0 || s->length < pos)
@@ -349,7 +369,7 @@ void Strdelete(Str* s, int pos, int n) {
   s->length = i;
 }
 
-void Strtruncate(Str* s, int pos) {
+void Strtruncate(Str *s, int pos) {
   STR_LENGTH_CHECK(s);
   if (pos < 0 || s->length < pos)
     return;
@@ -357,7 +377,7 @@ void Strtruncate(Str* s, int pos) {
   s->length = pos;
 }
 
-void Strshrink(Str* s, int n) {
+void Strshrink(Str *s, int n) {
   STR_LENGTH_CHECK(s);
   if (n >= s->length) {
     s->length = 0;
@@ -368,7 +388,7 @@ void Strshrink(Str* s, int n) {
   }
 }
 
-void Strremovefirstspaces(Str* s) {
+void Strremovefirstspaces(Str *s) {
   int i;
 
   STR_LENGTH_CHECK(s);
@@ -379,7 +399,7 @@ void Strremovefirstspaces(Str* s) {
   Strdelete(s, 0, i);
 }
 
-void Strremovetrailingspaces(Str* s) {
+void Strremovetrailingspaces(Str *s) {
   int i;
 
   STR_LENGTH_CHECK(s);
@@ -389,8 +409,8 @@ void Strremovetrailingspaces(Str* s) {
   s->ptr[i + 1] = '\0';
 }
 
-Str* Stralign_left(Str* s, int width) {
-  Str* n;
+Str *Stralign_left(Str *s, int width) {
+  Str *n;
   int i;
 
   STR_LENGTH_CHECK(s);
@@ -403,8 +423,8 @@ Str* Stralign_left(Str* s, int width) {
   return n;
 }
 
-Str* Stralign_right(Str* s, int width) {
-  Str* n;
+Str *Stralign_right(Str *s, int width) {
+  Str *n;
   int i;
 
   STR_LENGTH_CHECK(s);
@@ -417,8 +437,8 @@ Str* Stralign_right(Str* s, int width) {
   return n;
 }
 
-Str* Stralign_center(Str* s, int width) {
-  Str* n;
+Str *Stralign_center(Str *s, int width) {
+  Str *n;
   int i, w;
 
   STR_LENGTH_CHECK(s);
@@ -438,11 +458,11 @@ Str* Stralign_center(Str* s, int width) {
 #define SP_PREC 1
 #define SP_PREC2 2
 
-Str* Sprintf(const char *fmt, ...) {
+Str *Sprintf(const char *fmt, ...) {
   int len = 0;
   int status = SP_NORMAL;
   int p = 0;
-  Str* s;
+  Str *s;
   va_list ap;
 
   va_start(ap, fmt);
@@ -533,8 +553,8 @@ Str* Sprintf(const char *fmt, ...) {
   return s;
 }
 
-Str* Strfgets(FILE *f) {
-  Str* s = Strnew();
+Str *Strfgets(FILE *f) {
+  Str *s = Strnew();
   int c;
   while ((c = fgetc(f)) != EOF) {
     Strcat_char(s, c);
@@ -544,8 +564,8 @@ Str* Strfgets(FILE *f) {
   return s;
 }
 
-Str* Strfgetall(FILE *f) {
-  Str* s = Strnew();
+Str *Strfgetall(FILE *f) {
+  Str *s = Strnew();
   int c;
   while ((c = fgetc(f)) != EOF) {
     Strcat_char(s, c);

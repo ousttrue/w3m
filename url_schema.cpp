@@ -1,7 +1,7 @@
 #include "url_schema.h"
 #include "myctype.h"
 #include <string.h>
-#include "indep.h"
+#include "Str.h"
 
 struct cmdtable {
   const char *cmdname;

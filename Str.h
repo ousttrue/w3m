@@ -19,6 +19,8 @@
 #include <string.h>
 #include <limits.h>
 
+char *allocStr(const char *s, int len);
+
 struct Str {
   char *ptr;
   int length;
