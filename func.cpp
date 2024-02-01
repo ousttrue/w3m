@@ -14,7 +14,6 @@
 #include "indep.h"
 #include "proto.h"
 #include "cookie.h"
-#include "funcname.c"
 #include "functable.c"
 
 #include <stdio.h>

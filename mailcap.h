@@ -9,8 +9,8 @@
 #define MCSTAT_REPPARAM 0x04
 
 struct mailcap {
-  char *type;
-  char *viewer;
+  const char *type;
+  const char *viewer;
   int flags;
   char *test;
   char *nametemplate;

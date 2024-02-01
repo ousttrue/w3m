@@ -5,14 +5,12 @@
 #include "fm.h"
 #include "textlist.h"
 #include "myctype.h"
-#include "parsetag.h"
 #include "local_cgi.h"
 #include "hash.h"
 #include "indep.h"
 #include "proto.h"
 #include <cstdlib>
 #include <stdio.h>
-#include <errno.h>
 
 static struct mailcap DefaultMailcap[] = {
     {"image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL}, /* */
@@ -23,7 +21,7 @@ static TextList *mailcap_list;
 static struct mailcap **UserMailcap;
 
 static int mailcapMatch(struct mailcap *mcap, const char *type) {
-  char *cap = mcap->type, *p;
+  const char *cap = mcap->type, *p;
   int level;
   for (p = cap; *p != '/'; p++) {
     if (TOLOWER(*p) != TOLOWER(*type))
@@ -73,9 +71,10 @@ struct mailcap *searchMailcap(struct mailcap *table, const char *type) {
   return mcap;
 }
 
-static int matchMailcapAttr(char *p, char *attr, size_t len, Str **value) {
+static int matchMailcapAttr(const char *p, const char *attr, size_t len,
+                            Str **value) {
   int quoted;
-  char *q = NULL;
+  const char *q = NULL;
 
   if (strncasecmp(p, attr, len) == 0) {
     p += len;
@@ -228,7 +227,7 @@ char *acceptableMimeTypes(void) {
   static Str *types = NULL;
   TextList *l;
   Hash_si *mhash;
-  char *p;
+  const char *p;
   int i;
 
   if (types != NULL)

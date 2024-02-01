@@ -132,6 +132,7 @@ executable(
         'url_stream.cpp',
         'compression.cpp',
         'mytime.cpp',
+        'funcname.cpp',
     ],
     install: true,
     dependencies: [
