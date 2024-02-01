@@ -11,6 +11,7 @@
 #include "terms.h"
 #include "screen.h"
 #include "display.h"
+#include "alloc.h"
 #include "indep.h"
 #include <signal.h>
 
@@ -21,6 +22,21 @@ int prec_num = 0;
 int prev_key = -1;
 bool on_target = true;
 #define PREC_LIMIT 10000
+
+const char *searchKeyData(void) {
+  const char *data = NULL;
+  if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
+    data = CurrentKeyData;
+  else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
+    data = CurrentCmdData;
+  else if (CurrentKey >= 0)
+    data = getKeyData(CurrentKey);
+  CurrentKeyData = NULL;
+  CurrentCmdData = NULL;
+  if (data == NULL || *data == '\0')
+    return NULL;
+  return allocStr(data, -1);
+}
 
 struct Event {
   int cmd;

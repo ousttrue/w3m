@@ -1,5 +1,6 @@
 #include "keyvalue.h"
 #include "indep.h"
+#include "alloc.h"
 #include "Str.h"
 
 const char *tag_get_value(struct keyvalue *t, const char *arg) {

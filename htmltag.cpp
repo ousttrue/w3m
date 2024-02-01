@@ -6,7 +6,7 @@
 #include "Str.h"
 #include "hash.h"
 #include "table.h"
-
+#include "alloc.h"
 #include "html.c"
 
 /* parse HTML tag */

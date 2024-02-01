@@ -8,6 +8,7 @@
 #include "etc.h"
 #include "form.h"
 #include "signal_util.h"
+#include "alloc.h"
 #include "proto.h"
 #include <string.h>
 #include <stdio.h>

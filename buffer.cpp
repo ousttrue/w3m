@@ -1,5 +1,6 @@
 #include "buffer.h"
 #include "local_cgi.h"
+#include "alloc.h"
 #include "etc.h"
 #include "url_stream.h"
 #include "message.h"

@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "alloc.h"
 #include "bufferpos.h"
 #include "app.h"
 #include "etc.h"
@@ -1291,7 +1292,7 @@ static void _goLine(const char *l) {
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
 
-  char *str = searchKeyData();
+  auto str = searchKeyData();
   if (prec_num)
     _goLine("^");
   else if (str)
@@ -3142,27 +3143,10 @@ DEFUN(dictwordat, DICT_WORD_AT,
   execdict(GetWord(Currentbuf));
 }
 
-char *searchKeyData(void) {
-  char *data = NULL;
-
-  if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
-    data = CurrentKeyData;
-  else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
-    data = CurrentCmdData;
-  else if (CurrentKey >= 0)
-    data = getKeyData(CurrentKey);
-  CurrentKeyData = NULL;
-  CurrentCmdData = NULL;
-  if (data == NULL || *data == '\0')
-    return NULL;
-  return allocStr(data, -1);
-}
-
 static int searchKeyNum(void) {
-  char *d;
-  int n = 1;
 
-  d = searchKeyData();
+  auto d = searchKeyData();
+  int n = 1;
   if (d != NULL)
     n = atoi(d);
   return n * PREC_NUM;
@@ -3224,11 +3208,11 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
       data++;
       continue;
     }
-    p = getWord((char **)&data);
+    p = getWord(&data);
     cmd = getFuncList((char *)p);
     if (cmd < 0)
       break;
-    p = getQWord((char **)&data);
+    p = getQWord(&data);
     CurrentKey = -1;
     CurrentKeyData = NULL;
     CurrentCmdData = *p ? (char *)p : NULL;
@@ -3252,12 +3236,12 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
     }
   }
   if (*data != '\0') {
-    sec = atoi(getWord((char **)&data));
+    sec = atoi(getWord(&data));
     if (sec > 0)
-      cmd = getFuncList(getWord((char **)&data));
+      cmd = getFuncList(getWord(&data));
   }
   if (cmd >= 0) {
-    data = getQWord((char **)&data);
+    data = getQWord(&data);
     setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, (void *)data);
     disp_message_nsec(
         Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, FALSE, 1,
@@ -3280,7 +3264,7 @@ AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status, int cmd,
 }
 
 DEFUN(reinit, REINIT, "Reload configuration file") {
-  char *resource = searchKeyData();
+  auto resource = searchKeyData();
 
   if (resource == NULL) {
     init_rc();

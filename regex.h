@@ -38,4 +38,4 @@ int regexMatch(const char *str, int len, int firstp);
 
 void matchedPosition(const char **first, const char **last);
 
-char *getRegexWord(const char **str, Regex **regex_ret);
+const char *getRegexWord(const char **str, Regex **regex_ret);

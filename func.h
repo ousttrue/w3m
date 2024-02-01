@@ -1,14 +1,4 @@
-/* $Id: func.h,v 1.4 2002/12/03 16:01:33 ukai Exp $ */
-/*
- * w3m func.h
- */
-
-#ifndef FUNC_H
-#define FUNC_H
-
-#include "textlist.h"
-#include "hash.h"
-
+#pragma once
 #define KEY_HASH_SIZE 127
 
 #define K_ESC 0x100
@@ -22,10 +12,15 @@ struct FuncList {
   void (*func)();
 };
 extern FuncList w3mFuncList[];
-extern char *searchKeyData(void);
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 
-#endif /* not FUNC_H */
+extern int getFuncList(const char *id);
+extern int getKey(const char *s);
+extern const char *getKeyData(int key);
+extern const char *getWord(const char **str);
+extern const char *getQWord(const char **str);
+extern void setKeymap(const char *p, int lineno, int verbose);
+extern void initKeymap(int force);

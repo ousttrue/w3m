@@ -1,6 +1,6 @@
 #include "screen.h"
 #include "terms.h"
-#include "indep.h"
+#include "alloc.h"
 #include "myctype.h"
 #include "termentry.h"
 

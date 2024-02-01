@@ -280,13 +280,6 @@ extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-extern void setKeymap(char *p, int lineno, int verbose);
-extern void initKeymap(int force);
-extern int getFuncList(char *id);
-extern int getKey(char *s);
-extern char *getKeyData(int key);
-extern char *getWord(char **str);
-extern char *getQWord(char **str);
 
 #define mainMn nulcmd
 #define selMn selBuf

@@ -1,10 +1,11 @@
 #include "downloadlist.h"
 #include "etc.h"
 #include "w3m.h"
-#include "indep.h"
+#include "alloc.h"
+#include "Str.h"
 #include <sys/stat.h>
 
-static bool add_download_list = FALSE;
+static bool add_download_list = false;
 DownloadList *FirstDL = nullptr;
 DownloadList *LastDL = nullptr;
 
@@ -26,7 +27,7 @@ void addDownloadList(pid_t pid, const char *url, const char *save,
   d->lock = lock;
   d->size = size;
   d->time = time(0);
-  d->running = TRUE;
+  d->running = true;
   d->err = 0;
   d->next = NULL;
   d->prev = LastDL;
@@ -35,7 +36,7 @@ void addDownloadList(pid_t pid, const char *url, const char *save,
   else
     FirstDL = d;
   LastDL = d;
-  add_download_list = TRUE;
+  add_download_list = true;
 }
 
 int checkDownloadList() {
@@ -43,10 +44,10 @@ int checkDownloadList() {
   struct stat st;
 
   if (!FirstDL)
-    return FALSE;
+    return false;
   for (d = FirstDL; d != NULL; d = d->next) {
     if (d->running && !lstat(d->lock, &st))
-      return TRUE;
+      return true;
   }
-  return FALSE;
+  return false;
 }

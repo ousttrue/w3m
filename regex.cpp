@@ -14,10 +14,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
-#include "config.h"
+// #include "config.h"
 #include "regex.h"
 #include "myctype.h"
-#include "fm.h"
+#include "func.h"
+// #include "fm.h"
 #include "proto.h"
 #include "indep.h"
 
@@ -743,8 +744,8 @@ int main(int argc, char **argv) {
  *
  * XXX: Actually this is unrelated to func.c.
  */
-char *getRegexWord(const char **str, Regex **regex_ret) {
-  char *word = NULL;
+const char *getRegexWord(const char **str, Regex **regex_ret) {
+  const char *word = NULL;
   const char *p, *headp, *bodyp, *tailp;
   char delimiter;
   int esc;
@@ -799,16 +800,16 @@ char *getRegexWord(const char **str, Regex **regex_ret) {
   /* Compile */
   if (regex_ret) {
     if (*tailp == delimiter)
-      word[tailp - headp] = 0;
+      ((char *)word)[tailp - headp] = 0;
     *regex_ret = newRegex(word + (bodyp - headp), igncase, NULL, NULL);
     if (*tailp == delimiter)
-      word[tailp - headp] = delimiter;
+      ((char *)word)[tailp - headp] = delimiter;
   }
   goto last;
 
 not_regex:
   p = headp;
-  word = getQWord((char **)&p);
+  word = getQWord(&p);
   if (regex_ret)
     *regex_ret = NULL;
 

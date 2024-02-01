@@ -2,10 +2,12 @@
  * HTML forms
  */
 #include "form.h"
+#include "func.h"
 #include "etc.h"
 #include "mimetypes.h"
 #include "message.h"
 #include "readbuffer.h"
+#include "alloc.h"
 #include "html.h"
 #include "utf8.h"
 #include "tmpfile.h"
@@ -587,10 +589,9 @@ static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
   return _new;
 }
 
-static struct pre_form_item *add_pre_form_item(struct pre_form *pf,
-                                               struct pre_form_item *prev,
-                                               int type, char *name,
-                                               char *value, char *checked) {
+static struct pre_form_item *
+add_pre_form_item(struct pre_form *pf, struct pre_form_item *prev, int type,
+                  const char *name, const char *value, const char *checked) {
   struct pre_form_item *_new;
 
   if (!pf)
@@ -635,14 +636,14 @@ void loadPreForm(void) {
   struct pre_form *pf = NULL;
   struct pre_form_item *pi = NULL;
   int type = -1;
-  char *name = NULL;
+  const char *name = NULL;
 
   PreForm = NULL;
   fp = openSecretFile(pre_form_file);
   if (fp == NULL)
     return;
   while (1) {
-    char *p, *s, *arg;
+    const char *p, *s, *arg;
     Regex *re_arg;
 
     line = Strfgets(fp);

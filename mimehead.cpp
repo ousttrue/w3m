@@ -5,6 +5,7 @@
 #include "mimehead.h"
 #include <sys/types.h>
 #include "fm.h"
+#include "alloc.h"
 #include "myctype.h"
 #include "Str.h"
 #include "indep.h"

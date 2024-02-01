@@ -11,11 +11,12 @@
 #include "rc.h"
 #include "buffer.h"
 #include "history.h"
-#include "indep.h"
+#include "alloc.h"
 #include "proto.h"
 #include "cookie.h"
 #include "functable.c"
-
+// #include "textlist.h"
+// #include "hash.h"
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -25,19 +26,17 @@ static char keymap_initialized = FALSE;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(char *p, int lineno, int verbose) {
+void setKeymap(const char *p, int lineno, int verbose) {
   unsigned char *map = NULL;
-  char *s, *emsg;
+  const char *s, *emsg;
   int c, f;
 
   s = getQWord(&p);
   c = getKey(s);
   if (c < 0) { /* error */
     if (lineno > 0)
-      /* FIXME: gettextize? */
       emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
     else
-      /* FIXME: gettextize? */
       emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
     record_err_message(emsg);
     if (verbose)
@@ -119,8 +118,8 @@ void setKeymap(char *p, int lineno, int verbose) {
 static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   int fd;
   struct stat kstat;
-  Str* line;
-  char *p, *s, *emsg;
+  Str *line;
+  const char *p, *s, *emsg;
   int lineno;
   int verbose = 1;
 
@@ -176,16 +175,16 @@ void initKeymap(int force) {
   keymap_initialized = TRUE;
 }
 
-int getFuncList(char *id) { return getHash_si(&functable, id, -1); }
+int getFuncList(const char *id) { return getHash_si(&functable, id, -1); }
 
-char *getKeyData(int key) {
+const char *getKeyData(int key) {
   if (keyData == NULL)
     return NULL;
   return (char *)getHash_iv(keyData, key, NULL);
 }
 
-static int getKey2(char **str) {
-  char *s = *str;
+static int getKey2(const char **str) {
+  const char *s = *str;
   int c, esc = 0, ctrl = 0;
 
   if (s == NULL || *s == '\0')
@@ -311,7 +310,7 @@ static int getKey2(char **str) {
     return -1;
 }
 
-int getKey(char *s) {
+int getKey(const char *s) {
   int c, c2;
 
   c = getKey2(&s);
@@ -328,8 +327,8 @@ int getKey(char *s) {
   return c;
 }
 
-char *getWord(char **str) {
-  char *p, *s;
+const char *getWord(const char **str) {
+  const char *p, *s;
 
   p = *str;
   SKIP_BLANKS(p);
@@ -339,9 +338,9 @@ char *getWord(char **str) {
   return Strnew_charp_n(s, p - s)->ptr;
 }
 
-char *getQWord(char **str) {
-  Str* tmp = Strnew();
-  char *p;
+const char *getQWord(const char **str) {
+  Str *tmp = Strnew();
+  const char *p;
   int in_q = 0, in_dq = 0, esc = 0;
 
   p = *str;

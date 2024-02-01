@@ -7,6 +7,7 @@
 #include "buffer.h"
 #include "indep.h"
 #include "proto.h"
+#include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
 

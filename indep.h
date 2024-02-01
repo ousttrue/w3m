@@ -1,9 +1,6 @@
-/* $Id: indep.h,v 1.16 2003/09/22 21:02:19 ukai Exp $ */
-#ifndef INDEP_H
-#define INDEP_H
-#include "alloc.h"
-#include "Str.h"
+#pragma once
 #include "config.h"
+#include <stddef.h>
 
 #ifndef TRUE
 #define TRUE 1
@@ -54,6 +51,7 @@ extern int strcasemstr(char *str, char *srch[], char **ret_ptr);
 int strmatchlen(const char *s1, const char *s2, int maxlen);
 extern const char *remove_space(const char *str);
 extern int non_null(const char *s);
+struct Str;
 extern void cleanup_line(Str *s, int mode);
 extern const char *html_quote(const char *str);
 extern const char *html_unquote(const char *str);
@@ -86,10 +84,3 @@ extern char *w3m_lib_dir(void);
 extern char *w3m_etc_dir(void);
 extern char *w3m_conf_dir(void);
 extern char *w3m_help_dir(void);
-
-#define NewWithoutGC(type) ((type *)xmalloc(sizeof(type)))
-#define NewWithoutGC_N(type, n) ((type *)xmalloc((n) * sizeof(type)))
-#define NewWithoutGC_Reuse(type, ptr, n)                                       \
-  ((type *)xrealloc(ptr, (n) * sizeof(type)))
-
-#endif /* INDEP_H */

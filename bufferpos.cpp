@@ -1,7 +1,7 @@
 #include "bufferpos.h"
 #include "buffer.h"
 #include "display.h"
-#include "indep.h"
+#include "alloc.h"
 
 void save_buffer_position(Buffer *buf) {
   BufferPos *b = buf->undo;

@@ -5,6 +5,7 @@
 #include "config.h"
 #include "myctype.h"
 #include "istream.h"
+#include "alloc.h"
 #include <unistd.h>
 
 #include <openssl/bio.h>

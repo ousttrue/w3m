@@ -12,3 +12,4 @@ extern bool on_target;
 
 void mainLoop();
 void resize_hook(int);
+const char *searchKeyData();

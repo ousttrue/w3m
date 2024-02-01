@@ -18,6 +18,7 @@
 #include "istream.h"
 #include "htmltag.h"
 #include "proto.h"
+#include "alloc.h"
 #include "alarm.h"
 #include "funcname1.h"
 #include "tmpfile.h"

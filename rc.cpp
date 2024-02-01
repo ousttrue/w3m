@@ -2,7 +2,9 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "func.h"
 #include "etc.h"
+#include "alloc.h"
 #include "config.h"
 #include "mimetypes.h"
 #include "compression.h"
@@ -908,7 +910,7 @@ void sync_with_option(void) {
   if (AcceptMedia == NULL || *AcceptMedia == '\0')
     AcceptMedia = acceptableMimeTypes();
   if (fmInitialized) {
-    initKeymap(FALSE);
+    initKeymap(false);
   }
 }
 
@@ -1173,13 +1175,13 @@ const char *confFile(const char *base) {
 
 struct siteconf_rec {
   struct siteconf_rec *next;
-  char *url;
+  const char *url;
   Regex *re_url;
   int url_exact;
   unsigned char mask[(SCONF_N_FIELD + 7) >> 3];
 
-  char *substitute_url;
-  char *user_agent;
+  const char *substitute_url;
+  const char *user_agent;
   int no_referer_from;
   int no_referer_to;
 };
@@ -1220,7 +1222,7 @@ static void loadSiteconf(void) {
   if (fp == NULL)
     return;
   while (line = Strfgets(fp), line->length > 0) {
-    char *p, *s;
+    const char *p, *s;
 
     Strchop(line);
     p = line->ptr;
@@ -1231,7 +1233,7 @@ static void loadSiteconf(void) {
 
     /* The "url" begins a new record. */
     if (strcmp(s, "url") == 0) {
-      char *url, *opt;
+      const char *url, *opt;
       struct siteconf_rec *newent;
 
       /* First, register the current record. */
@@ -1243,7 +1245,7 @@ static void loadSiteconf(void) {
 
       /* Second, create a new record. */
       newent = newSiteconfRec();
-      url = getRegexWord((const char **)&p, &newent->re_url);
+      url = getRegexWord(&p, &newent->re_url);
       opt = getWord(&p);
       SKIP_BLANKS(p);
       if (!newent->re_url) {

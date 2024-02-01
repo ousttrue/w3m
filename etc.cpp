@@ -9,14 +9,14 @@
 #include "fm.h"
 #include "buffer.h"
 #include "signal_util.h"
-#include <pwd.h>
 #include "myctype.h"
 #include "local_cgi.h"
 #include "textlist.h"
 #include "proto.h"
 #include "indep.h"
+#include "alloc.h"
 #include <vector>
-
+#include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
