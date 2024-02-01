@@ -13,15 +13,15 @@ bool popAddDownloadList() {
   return ret;
 }
 
-void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                     long long size) {
+void addDownloadList(pid_t pid, const char *url, const char *save,
+                     const char *lock, long long size) {
 
   auto d = (DownloadList *)New(DownloadList);
   d->pid = pid;
   d->url = url;
   if (save[0] != '/' && save[0] != '~')
     save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-  d->save = expandPath(save);
+  d->save = expandPath((char *)save);
   d->lock = lock;
   d->size = size;
   d->time = time(0);
@@ -37,7 +37,7 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
   add_download_list = TRUE;
 }
 
-int checkDownloadList(void) {
+int checkDownloadList() {
   DownloadList *d;
   struct stat st;
 

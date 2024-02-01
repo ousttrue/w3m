@@ -10,9 +10,9 @@
 struct UrlStream;
 void check_compression(const char *path, UrlStream *uf);
 const char *uncompressed_file_type(const char *path, const char **ext);
-void uncompress_stream(UrlStream *uf, char **src);
+void uncompress_stream(UrlStream *uf, const char **src);
 char *acceptableEncoding(void);
 struct Str;
 void process_compression(Str *lineBuf2, UrlStream *uf);
 const char *compress_application_type(int compression);
-char *filename_extension(char *patch, int is_url);
+const char *filename_extension(const char *patch, int is_url);

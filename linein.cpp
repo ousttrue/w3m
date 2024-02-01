@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "etc.h"
 #include "w3m.h"
 #include "screen.h"
 #include "rc.h"
@@ -112,8 +113,8 @@ static Hist *CurrentHist;
 static Str *strCurrentBuf;
 static int use_hist;
 
-char *inputLineHistSearch(const char *prompt, const char *def_str,
-                          InputFlags flag, Hist *hist, IncFunc incrfunc) {
+const char *inputLineHistSearch(const char *prompt, const char *def_str,
+                                InputFlags flag, Hist *hist, IncFunc incrfunc) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
@@ -690,7 +691,7 @@ Str *unescape_spaces(Str *s) {
 
 static Str *doComplete(Str *ifn, int *status, int next) {
   int fl, i;
-  char *fn, *p;
+  const char *fn, *p;
   DIR *d;
   Directory *dir;
   struct stat st;
@@ -789,7 +790,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
       else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
         p = &p[5];
     }
-    if (stat(expandPath(p), &st) != -1 && S_ISDIR(st.st_mode))
+    if (stat(expandPath((char *)p), &st) != -1 && S_ISDIR(st.st_mode))
       Strcat_char(CompleteBuf, '/');
   }
   if (cm_mode & CPL_ON)
@@ -897,7 +898,9 @@ static void _editor(void) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-inline char *inputChar(const char *p) { return inputLine(p, "", IN_CHAR); }
+inline const char *inputChar(const char *p) {
+  return inputLine(p, "", IN_CHAR);
+}
 
 const char *inputAnswer(const char *prompt) {
   if (IsForkChild)

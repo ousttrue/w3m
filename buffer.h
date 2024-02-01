@@ -44,8 +44,8 @@ struct LinkList;
 struct BufferPos;
 struct AlarmEvent;
 struct Buffer {
-  char *filename;
-  char *buffername;
+  const char *filename;
+  const char *buffername;
   Line *firstLine;
   Line *topLine;
   Line *currentLine;
@@ -81,7 +81,7 @@ struct Buffer {
   ParsedURL *baseURL;
   char *baseTarget;
   UrlSchema real_schema;
-  char *sourcefile;
+  const char *sourcefile;
   int *clone;
   size_t trbyte;
   char check_url;

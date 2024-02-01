@@ -57,7 +57,7 @@ Str *localCookie() {
   return Local_cookie;
 }
 
-Str *loadLocalDir(char *dname) {
+Str *loadLocalDir(const char *dname) {
   Str *tmp;
   DIR *d;
   Directory *dir;
@@ -178,7 +178,7 @@ Str *loadLocalDir(char *dname) {
   return tmp;
 }
 
-static int check_local_cgi(char *file, int status) {
+static int check_local_cgi(const char *file, int status) {
   struct stat st;
 
   if (status != CGIFN_LIBDIR && status != CGIFN_CGIBIN)
@@ -243,7 +243,8 @@ void set_environ(const char *var, const char *value) {
 #endif /* not HAVE_SETENV */
 }
 
-static void set_cgi_environ(char *name, char *fn, char *req_uri) {
+static void set_cgi_environ(const char *name, const char *fn,
+                            const char *req_uri) {
   set_environ("SERVER_SOFTWARE", w3m_version);
   set_environ("SERVER_PROTOCOL", "HTTP/1.0");
   set_environ("SERVER_NAME", "localhost");
@@ -257,13 +258,13 @@ static void set_cgi_environ(char *name, char *fn, char *req_uri) {
   set_environ("REQUEST_URI", req_uri);
 }
 
-static Str *checkPath(char *fn, char *path) {
-  char *p;
+static Str *checkPath(const char *fn, const char *path) {
+  const char *p;
   Str *tmp;
   struct stat st;
   while (*path) {
     p = strchr(path, ':');
-    tmp = Strnew_charp(expandPath(p ? allocStr(path, p - path) : path));
+    tmp = Strnew_charp(expandPath(p ? allocStr(path, p - path) : (char *)path));
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, fn);
@@ -278,7 +279,8 @@ static Str *checkPath(char *fn, char *path) {
   return NULL;
 }
 
-static int cgi_filename(char *uri, char **fn, char **name, char **path_info) {
+static int cgi_filename(const char *uri, const char **fn, const char **name,
+                        const char **path_info) {
   Str *tmp;
   int offset;
 
@@ -323,15 +325,16 @@ static int cgi_filename(char *uri, char **fn, char **name, char **path_info) {
   return CGIFN_LIBDIR;
 }
 
-FILE *localcgi_post(char *uri, char *qstr, FormList *request, char *referer) {
+FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
+                    const char *referer) {
   FILE *fr = NULL, *fw = NULL;
   int status;
   pid_t pid;
-  char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
+  const char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
 #ifdef HAVE_CHDIR
-  char *cgi_dir;
+  const char *cgi_dir;
 #endif
-  char *cgi_basename;
+  const char *cgi_basename;
 
   status = cgi_filename(uri, &file, &name, &path_info);
   if (check_local_cgi(file, status) < 0)

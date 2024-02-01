@@ -277,8 +277,8 @@ int columnLen(Line *line, int column) {
   return line->len;
 }
 
-char *lastFileName(char *path) {
-  char *p, *q;
+const char *lastFileName(const char *path) {
+  const char *p, *q;
 
   p = q = path;
   while (*p != '\0') {
@@ -309,8 +309,8 @@ long lrand48(void) {
 }
 #endif
 
-char *mybasename(char *s) {
-  char *p = s;
+const char *mybasename(const char *s) {
+  const char *p = s;
   while (*p)
     p++;
   while (s <= p && *p != '/')
@@ -322,8 +322,8 @@ char *mybasename(char *s) {
   return allocStr(p, -1);
 }
 
-char *mydirname(char *s) {
-  char *p = s;
+const char *mydirname(const char *s) {
+  const char *p = s;
   while (*p)
     p++;
   if (s != p)
@@ -1070,8 +1070,6 @@ time_t mymktime(char *timestr) {
   min -= z_min;
   return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
-
-
 
 static char Base64Table[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

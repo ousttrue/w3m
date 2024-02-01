@@ -124,7 +124,6 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   char *p, *s, *emsg;
   int lineno;
   int verbose = 1;
-  extern int str_to_bool(char *value, int old);
 
   if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) ||
       (!force && kstat.st_mtime == current->st_mtime &&

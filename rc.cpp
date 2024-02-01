@@ -574,7 +574,7 @@ static void create_option_search_table() {
   }
 }
 
-static struct param_ptr *search_param(char *name) {
+static struct param_ptr *search_param(const char *name) {
   size_t b, e, i;
   int cmp;
   int len = strlen(name);
@@ -655,7 +655,7 @@ void show_params(FILE *fp) {
   }
 }
 
-int str_to_bool(char *value, int old) {
+int str_to_bool(const char *value, int old) {
   if (value == NULL)
     return 1;
   switch (TOLOWER(*value)) {
@@ -680,7 +680,7 @@ int str_to_bool(char *value, int old) {
   return 1;
 }
 
-static int set_param(char *name, char *value) {
+static int set_param(const char *name, const char *value) {
   struct param_ptr *p;
   double ppc;
 
@@ -714,7 +714,7 @@ static int set_param(char *name, char *value) {
     *(char *)p->varptr = value[0];
     break;
   case P_STRING:
-    *(char **)p->varptr = value;
+    *(const char **)p->varptr = value;
     break;
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
   case P_SSLPATH:
@@ -739,9 +739,9 @@ static int set_param(char *name, char *value) {
   return 1;
 }
 
-int set_param_option(char *option) {
+int set_param_option(const char *option) {
   Str *tmp = Strnew();
-  char *p = option, *q;
+  const char *p = option, *q;
 
   while (*p && !IS_SPACE(*p) && *p != '=')
     Strcat_char(tmp, *p++);
@@ -771,7 +771,7 @@ option_assigned:
   return 1;
 }
 
-char *get_param_option(char *name) {
+const char *get_param_option(const char *name) {
   struct param_ptr *p;
 
   p = search_param(name);

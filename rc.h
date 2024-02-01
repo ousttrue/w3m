@@ -7,7 +7,7 @@ extern int DecodeURL;
 
 struct ParsedURL;
 void show_params(FILE *fp);
-int str_to_bool(char *value, int old);
+int str_to_bool(const char *value, int old);
 const void *querySiteconf(const ParsedURL *query_pu, int field);
 
 #define SCONF_RESERVED 0
@@ -34,3 +34,9 @@ char *confFile(char *base);
 char *auxbinFile(char *base);
 char *libFile(char *base);
 char *helpFile(char *base);
+int set_param_option(const char *option);
+const char *get_param_option(const char *name);
+void init_rc(void);
+void init_tmp(void);
+
+

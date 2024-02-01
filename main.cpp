@@ -113,7 +113,7 @@ void set_buffer_environ(Buffer *);
 static void save_buffer_position(Buffer *buf);
 
 static void _followForm(int);
-static void _goLine(char *);
+static void _goLine(const char *);
 static void _newT(void);
 static void followTab(TabBuffer *tab);
 static void moveTab(TabBuffer *t, TabBuffer *t2, int right);
@@ -744,13 +744,13 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
 }
 
 static void isrch(int (*func)(Buffer *, const char *), const char *prompt) {
-  char *str;
   Buffer sbuf;
   SAVE_BUFPOSITION(&sbuf);
   dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
   searchRoutine = func;
-  str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+  auto str =
+      inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
   if (str == NULL) {
     RESTORE_BUFPOSITION(&sbuf);
   }
@@ -912,8 +912,8 @@ DEFUN(col1L, LEFT, "Shift screen one column left") {
 }
 
 DEFUN(setEnv, SETENV, "Set environment variable") {
-  char *env;
-  char *var, *value;
+  const char *env;
+  const char *var, *value;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   env = searchKeyData();
@@ -937,7 +937,7 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
 DEFUN(pipeBuf, PIPE_BUF,
       "Pipe current buffer through a shell command and display output") {
   Buffer *buf;
-  char *cmd, *tmpf;
+  const char *cmd, *tmpf;
   FILE *f;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -959,12 +959,13 @@ DEFUN(pipeBuf, PIPE_BUF,
   }
   saveBuffer(Currentbuf, f, TRUE);
   fclose(f);
-  buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
+  buf =
+      getpipe(myExtCommand((char *)cmd, shell_quote((char *)tmpf), TRUE)->ptr);
   if (buf == NULL) {
     disp_message("Execution failed", TRUE);
     return;
   } else {
-    buf->filename = cmd;
+    buf->filename = (char *)cmd;
     buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, cmd)->ptr;
     buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
     if (buf->type == NULL)
@@ -978,7 +979,7 @@ DEFUN(pipeBuf, PIPE_BUF,
 /* Execute shell command and read output ac pipe. */
 DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {
   Buffer *buf;
-  char *cmd;
+  const char *cmd;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
@@ -1006,7 +1007,7 @@ DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   Buffer *buf;
   MySignalHandler prevtrap = {};
-  char *cmd;
+  const char *cmd;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
@@ -1037,7 +1038,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
 
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
-  char *cmd;
+  const char *cmd;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   cmd = searchKeyData();
@@ -1394,7 +1395,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 }
 
 /* Go to specified line */
-static void _goLine(char *l) {
+static void _goLine(const char *l) {
   if (l == NULL || *l == '\0' || Currentbuf->currentLine == NULL) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
@@ -1422,7 +1423,6 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
   else if (str)
     _goLine(str);
   else
-    /* FIXME: gettextize? */
     _goLine(inputStr("Goto line: ", ""));
 }
 
@@ -1469,7 +1469,7 @@ static int cur_real_linenumber(Buffer *buf) {
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
-  char *fn = Currentbuf->filename;
+  auto fn = Currentbuf->filename;
   Str *cmd;
 
   if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
@@ -1482,10 +1482,11 @@ DEFUN(editBf, EDIT, "Edit local source") {
     return;
   }
   if (Currentbuf->edit)
-    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
+    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, (char *)fn,
                           checkHeader(Currentbuf, "Content-Type:"), NULL);
   else
-    cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
+    cmd = myEditor(Editor, shell_quote((char *)fn),
+                   cur_real_linenumber(Currentbuf));
   exec_cmd(cmd->ptr);
 
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1893,7 +1894,7 @@ void followForm(void) { _followForm(FALSE); }
 
 static void _followForm(int submit) {
   Anchor *a, *a2;
-  char *p;
+  const char *p;
   FormItemList *fi, *f2;
   Str *tmp, *tmp2;
   int multipart = 0, i;
@@ -2534,7 +2535,7 @@ static void cmd_loadURL(const char *url, ParsedURL *current,
 
 /* go to specified URL */
 static void goURL0(char *prompt, int relative) {
-  char *url, *referer;
+  const char *url, *referer;
   ParsedURL p_url, *current;
   Buffer *cur_buf = Currentbuf;
   const int *no_referer_ptr;
@@ -2575,11 +2576,11 @@ static void goURL0(char *prompt, int relative) {
       referer = NO_REFERER;
     else
       referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    url = url_quote(url);
+    url = url_quote((char *)url);
   } else {
     current = NULL;
     referer = NULL;
-    url = url_quote(url);
+    url = url_quote((char *)url);
   }
   if (url == NULL || *url == '\0') {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2589,7 +2590,7 @@ static void goURL0(char *prompt, int relative) {
     gotoLabel(url + 1);
     return;
   }
-  parseURL2(url, &p_url, current);
+  parseURL2((char *)url, &p_url, current);
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
   cmd_loadURL(url, current, referer, NULL);
   if (Currentbuf != cur_buf) /* success */
@@ -2664,13 +2665,13 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
 
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option") {
-  char *opt;
+  const char *opt;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   opt = searchKeyData();
   if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
     if (opt != NULL && *opt != '\0') {
-      char *v = get_param_option(opt);
+      auto v = get_param_option(opt);
       opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
     }
     opt = inputStrHist("Set option: ", opt, TextHist);
@@ -2746,14 +2747,13 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image") {
 
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
-  char *qfile = NULL, *file;
+  const char *qfile = NULL, *file;
   FILE *f;
   int is_pipe;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   file = searchKeyData();
   if (file == NULL || *file == '\0') {
-    /* FIXME: gettextize? */
     qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
     if (qfile == NULL || *qfile == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
@@ -2768,7 +2768,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
     if (qfile) {
       file = unescape_spaces(Strnew_charp(qfile))->ptr;
     }
-    file = expandPath(file);
+    file = expandPath((char *)file);
     // if (checkOverWrite(file) < 0) {
     if (false) {
       displayBuffer(Currentbuf, B_NORMAL);
@@ -2800,7 +2800,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   PermitSaveToPipe = TRUE;
   if (Currentbuf->real_schema == SCM_LOCAL)
-    file = guess_save_name(NULL, Currentbuf->currentURL.real_file);
+    file = guess_save_name(NULL, (char *)Currentbuf->currentURL.real_file);
   else
     file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
   doFileCopy(Currentbuf->sourcefile, file);
@@ -3083,7 +3083,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {}
 /* spawn external browser */
 static void invoke_browser(char *url) {
   Str *cmd;
-  char *browser = NULL;
+  const char *browser = NULL;
   int bg = 0, len;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -3133,7 +3133,7 @@ static void invoke_browser(char *url) {
     browser = allocStr(browser, len - 2);
     bg = 1;
   }
-  cmd = myExtCommand(browser, shell_quote(url), FALSE);
+  cmd = myExtCommand((char *)browser, shell_quote(url), FALSE);
   Strremovetrailingspaces(cmd);
   fmTerm();
   mySystem(cmd->ptr, bg);
@@ -3253,8 +3253,8 @@ static char *GetWord(Buffer *buf) {
   return NULL;
 }
 
-static void execdict(char *word) {
-  char *w, *dictcmd;
+static void execdict(const char *word) {
+  const char *w, *dictcmd;
   Buffer *buf;
 
   if (!UseDictCommand || word == NULL || *word == '\0') {
@@ -3408,7 +3408,7 @@ void w3m_exit(int i) {
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
-  char *data, *p;
+  const char *data, *p;
   int cmd;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -3427,14 +3427,14 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
       data++;
       continue;
     }
-    p = getWord(&data);
-    cmd = getFuncList(p);
+    p = getWord((char **)&data);
+    cmd = getFuncList((char *)p);
     if (cmd < 0)
       break;
-    p = getQWord(&data);
+    p = getQWord((char **)&data);
     CurrentKey = -1;
     CurrentKeyData = NULL;
-    CurrentCmdData = *p ? p : NULL;
+    CurrentCmdData = *p ? (char *)p : NULL;
     w3mFuncList[cmd].func();
     CurrentCmdData = NULL;
   }
@@ -3471,7 +3471,7 @@ static void SigAlarm(SIGNAL_ARG) {
 }
 
 DEFUN(setAlarm, ALARM, "Set alarm") {
-  char *data;
+  const char *data;
   int sec = 0, cmd = -1;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -3484,13 +3484,13 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
     }
   }
   if (*data != '\0') {
-    sec = atoi(getWord(&data));
+    sec = atoi(getWord((char**)&data));
     if (sec > 0)
-      cmd = getFuncList(getWord(&data));
+      cmd = getFuncList(getWord((char**)&data));
   }
   if (cmd >= 0) {
-    data = getQWord(&data);
-    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
+    data = getQWord((char**)&data);
+    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, (void*)data);
     disp_message_nsec(
         Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, FALSE, 1,
         FALSE, TRUE);
@@ -3555,7 +3555,7 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
 
 DEFUN(defKey, DEFINE_KEY,
       "Define a binding between a key stroke combination and a command") {
-  char *data;
+  const char *data;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   data = searchKeyData();

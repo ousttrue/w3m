@@ -163,8 +163,6 @@ struct UrlStream;
 extern Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
 extern void saveBuffer(Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
-extern Buffer *getshell(char *cmd);
-extern Buffer *getpipe(char *cmd);
 union input_stream;
 extern Buffer *openPagerBuffer(input_stream *stream, Buffer *buf);
 extern Buffer *openGeneralPagerBuffer(input_stream *stream);
@@ -172,11 +170,7 @@ struct Line;
 extern Line *getNextPage(Buffer *buf, int plen);
 
 extern Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf);
-extern int _doFileCopy(char *tmpf, char *defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
-extern int doFileMove(char *tmpf, char *defstr);
-extern int checkCopyFile(char *path1, char *path2);
-extern int checkSaveFile(input_stream *stream, char *path);
+
 struct ParsedURL;
 extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);
@@ -221,9 +215,6 @@ extern int columnLen(Line *line, int column);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 
-extern char *lastFileName(char *path);
-extern char *mybasename(char *s);
-extern char *mydirname(char *s);
 #define conv_search_string(str, f_ces) str
 extern void pcmap(void);
 extern void escmap(void);
@@ -266,14 +257,9 @@ struct TextList;
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
 
-extern int set_param_option(char *option);
-extern char *get_param_option(char *name);
-extern void init_rc(void);
-extern void init_tmp(void);
 extern Buffer *load_option_panel(void);
 extern void sync_with_option(void);
 
-extern Str *loadLocalDir(char *dirname);
 
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);

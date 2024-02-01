@@ -37,7 +37,7 @@ struct ParsedURL {
   const char *host;
   int port;
   char *file;
-  char *real_file;
+  const char *real_file;
   char *query;
   char *label;
   int is_nocache;

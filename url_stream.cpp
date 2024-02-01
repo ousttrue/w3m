@@ -78,7 +78,7 @@ static void add_index_file(ParsedURL *pu, UrlStream *uf) {
   }
 }
 
-static int dir_exist(char *path) {
+static int dir_exist(const char *path) {
   struct stat stbuf;
 
   if (path == NULL || *path == '\0')
@@ -485,7 +485,7 @@ _end:
   return retval;
 }
 
-static int checkSaveFile(input_stream *stream, char *path2) {
+int checkSaveFile(input_stream *stream, const char *path2) {
   struct stat st1, st2;
   int des = ISfileno(stream);
 
@@ -502,10 +502,10 @@ static int checkSaveFile(input_stream *stream, char *path2) {
 int doFileSave(UrlStream *uf, const char *defstr) {
   Str *msg;
   Str *filen;
-  char *p, *q;
+  const char *p, *q;
   pid_t pid;
   char *lock;
-  char *tmpf = NULL;
+  const char *tmpf = NULL;
 #if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
   FILE *f;
 #endif
@@ -569,10 +569,10 @@ int doFileSave(UrlStream *uf, const char *defstr) {
     }
     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
       ;
-    *(p + 1) = '\0';
+    *(char *)(p + 1) = '\0';
     if (*q == '\0')
       return -1;
-    p = expandPath(q);
+    p = expandPath((char *)q);
     if (!couldWrite(p))
       return -1;
     if (checkSaveFile(uf->stream, p) < 0) {

@@ -17,23 +17,23 @@ enum InputFlags {
 struct Hist;
 struct Str;
 using IncFunc = int (*)(int ch, Str *buf, Lineprop *prop);
-char *inputLineHistSearch(const char *prompt, const char *def_str,
-                          InputFlags flag, Hist *hist, IncFunc incFunc);
+const char *inputLineHistSearch(const char *prompt, const char *def_str,
+                                InputFlags flag, Hist *hist, IncFunc incFunc);
 
-inline char *inputLineHist(const char *p, const char *d, InputFlags f,
-                           Hist *h) {
+inline const char *inputLineHist(const char *p, const char *d, InputFlags f,
+                                 Hist *h) {
   return inputLineHistSearch(p, d, f, h, nullptr);
 }
-inline char *inputLine(const char *p, const char *d, InputFlags f) {
+inline const char *inputLine(const char *p, const char *d, InputFlags f) {
   return inputLineHist(p, d, f, nullptr);
 }
-inline char *inputStr(const char *p, const char *d) {
+inline const char *inputStr(const char *p, const char *d) {
   return inputLine(p, d, IN_STRING);
 }
-inline char *inputStrHist(const char *p, const char *d, Hist *h) {
+inline const char *inputStrHist(const char *p, const char *d, Hist *h) {
   return inputLineHist(p, d, IN_STRING, h);
 }
-inline char *inputFilename(const char *p, const char *d) {
+inline const char *inputFilename(const char *p, const char *d) {
   return inputLine(p, d, IN_FILENAME);
 }
 

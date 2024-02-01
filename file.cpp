@@ -66,7 +66,7 @@ static void KeyAbort(SIGNAL_ARG) {
 #define min(a, b) ((a) > (b) ? (b) : (a))
 #endif /* not min */
 
-static char *guess_filename(char *file);
+static const char *guess_filename(const char *file);
 static int _MoveFile(char *path1, char *path2);
 static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
                           Buffer *defaultbuf);
@@ -127,7 +127,7 @@ int is_html_type(const char *type) {
                    strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-int setModtime(char *path, time_t modtime) {
+int setModtime(const char *path, time_t modtime) {
   struct utimbuf t;
   struct stat st;
 
@@ -871,7 +871,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
     /* input username and password */
     sleep(2);
     if (fmInitialized) {
-      char *pp;
+      const char *pp;
       term_raw();
       if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
           NULL)
@@ -1269,10 +1269,9 @@ page_loaded:
       fclose(src);
     }
     if (do_download) {
-      char *file;
       if (!src)
         return NULL;
-      file = guess_filename(pu.file);
+      auto file = guess_filename(pu.file);
       doFileMove(tmp->ptr, file);
       return NO_BUFFER;
     }
@@ -1304,7 +1303,7 @@ page_loaded:
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file, &st))
         f.modtime = st.st_mtime;
-      file = guess_save_name(NULL, pu.real_file);
+      file = guess_save_name(NULL, (char *)pu.real_file);
     } else
       file = guess_save_name(t_buf, pu.file);
     if (doFileSave(&f, file) == 0)
@@ -1341,7 +1340,8 @@ page_loaded:
       TRAP_OFF;
       if (pu.schema == SCM_LOCAL) {
         UFclose(&f);
-        _doFileCopy(pu.real_file, guess_save_name(NULL, pu.real_file), TRUE);
+        _doFileCopy(pu.real_file, guess_save_name(NULL, (char *)pu.real_file),
+                    TRUE);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
@@ -1547,10 +1547,10 @@ static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
 /*
  * getshell: execute shell command and get the result into a buffer
  */
-Buffer *getshell(char *cmd) {
+Buffer *getshell(const char *cmd) {
   Buffer *buf;
 
-  buf = loadcmdout(cmd, loadBuffer, NULL);
+  buf = loadcmdout((char *)cmd, loadBuffer, NULL);
   if (buf == NULL)
     return NULL;
   buf->filename = cmd;
@@ -1561,7 +1561,7 @@ Buffer *getshell(char *cmd) {
 /*
  * getpipe: execute shell command and connect pipe to the buffer
  */
-Buffer *getpipe(char *cmd) {
+Buffer *getpipe(const char *cmd) {
   FILE *f, *popen(const char *, const char *);
   Buffer *buf;
 
@@ -1800,14 +1800,14 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
     buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->type = "text/html";
-      buf->mailcap_source = buf->sourcefile;
+      buf->mailcap_source = (char *)buf->sourcefile;
       buf->sourcefile = (char *)src;
     }
   } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
     buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->type = "text/plain";
-      buf->mailcap_source = buf->sourcefile;
+      buf->mailcap_source = (char *)buf->sourcefile;
       buf->sourcefile = (char *)src;
     }
   } else {
@@ -1832,7 +1832,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   return buf;
 }
 
-static int _MoveFile(char *path1, char *path2) {
+static int _MoveFile(const char *path1, const char *path2) {
   input_stream *f1;
   FILE *f2;
   int is_pipe;
@@ -1870,10 +1870,10 @@ static int _MoveFile(char *path1, char *path2) {
   return 0;
 }
 
-int _doFileCopy(char *tmpf, char *defstr, int download) {
+int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   Str *msg;
   Str *filen;
-  char *p, *q = NULL;
+  const char *p, *q = NULL;
   pid_t pid;
   char *lock;
 #if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
@@ -1886,7 +1886,6 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   if (fmInitialized) {
     p = searchKeyData();
     if (p == NULL || *p == '\0') {
-      /* FIXME: gettextize? */
       q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
                         SaveHist);
       if (q == NULL || *q == '\0')
@@ -1899,19 +1898,17 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
       if (q) {
         p = unescape_spaces(Strnew_charp(q))->ptr;
       }
-      p = expandPath(p);
+      p = expandPath((char *)p);
       if (!couldWrite(p))
         return -1;
     }
     if (checkCopyFile(tmpf, p) < 0) {
-      /* FIXME: gettextize? */
       msg = Sprintf("Can't copy. %s and %s are identical.", tmpf, p);
       disp_err_message(msg->ptr, FALSE);
       return -1;
     }
     if (!download) {
       if (_MoveFile(tmpf, p) < 0) {
-        /* FIXME: gettextize? */
         msg = Sprintf("Can't save to %s", p);
         disp_err_message(msg->ptr, FALSE);
       }
@@ -1941,7 +1938,6 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   } else {
     q = searchKeyData();
     if (q == NULL || *q == '\0') {
-      /* FIXME: gettextize? */
       printf("(Download)Save file to: ");
       fflush(stdout);
       filen = Strfgets(stdin);
@@ -1951,24 +1947,22 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
     }
     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
       ;
-    *(p + 1) = '\0';
+    *(char *)(p + 1) = '\0';
     if (*q == '\0')
       return -1;
     p = q;
     if (*p == '|' && PermitSaveToPipe)
       is_pipe = TRUE;
     else {
-      p = expandPath(p);
+      p = expandPath((char *)p);
       if (!couldWrite(p))
         return -1;
     }
     if (checkCopyFile(tmpf, p) < 0) {
-      /* FIXME: gettextize? */
       printf("Can't copy. %s and %s are identical.", tmpf, p);
       return -1;
     }
     if (_MoveFile(tmpf, p) < 0) {
-      /* FIXME: gettextize? */
       printf("Can't save to %s\n", p);
       return -1;
     }
@@ -1978,13 +1972,13 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   return 0;
 }
 
-int doFileMove(char *tmpf, char *defstr) {
+int doFileMove(const char *tmpf, const char *defstr) {
   int ret = doFileCopy(tmpf, defstr);
   unlink(tmpf);
   return ret;
 }
 
-int checkCopyFile(char *path1, char *path2) {
+int checkCopyFile(const char *path1, const char *path2) {
   struct stat st1, st2;
 
   if (*path2 == '|' && PermitSaveToPipe)
@@ -2010,8 +2004,8 @@ bool couldWrite(const char *path) {
   return false;
 }
 
-static char *guess_filename(char *file) {
-  char *p = NULL, *s;
+static const char *guess_filename(const char *file) {
+  const char *p = NULL, *s;
 
   if (file != NULL)
     p = mybasename(file);
@@ -2022,7 +2016,7 @@ static char *guess_filename(char *file) {
     p++;
   while (*p != '\0') {
     if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-      *p = '\0';
+      *(char *)p = '\0';
       break;
     }
     p++;
@@ -2045,7 +2039,7 @@ char *guess_save_name(Buffer *buf, char *path) {
              matchattr(q, "name", 4, &name))
       path = name->ptr;
   }
-  return guess_filename(path);
+  return (char *)guess_filename(path);
 }
 
 void showProgress(long long *linelen, long long *trbyte,

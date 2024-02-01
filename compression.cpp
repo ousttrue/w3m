@@ -134,7 +134,7 @@ const char *uncompressed_file_type(const char *path, const char **ext) {
   return t0;
 }
 
-void uncompress_stream(UrlStream *uf, char **src) {
+void uncompress_stream(UrlStream *uf, const char **src) {
   pid_t pid1;
   FILE *f1;
   const char *expand_cmd = GUNZIP_CMDNAME;
@@ -317,8 +317,8 @@ void check_compression(const char *path, UrlStream *uf) {
   }
 }
 
-char *filename_extension(char *path, int is_url) {
-  char *last_dot = "", *p = path;
+const char *filename_extension(const char *path, int is_url) {
+  const char *last_dot = "", *p = path;
   int i;
 
   if (path == NULL)
