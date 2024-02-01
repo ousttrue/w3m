@@ -5,10 +5,7 @@
  *
  * You can use,copy,modify and distribute this program without any permission.
  */
-
-#ifndef FM_H
-#define FM_H
-
+#pragma once
 #include "config.h"
 
 #ifdef MAINPROGRAM
@@ -150,11 +147,4 @@ global int use_lessopen init(FALSE);
 
 global char *keymap_file init(KEYMAP_FILE);
 
-global int FollowRedirection init(10);
 
-struct TextList;
-global TextList *backend_batch_commands init(nullptr);
-int backend(void);
-extern void deleteFiles(void);
-
-#endif /* not FM_H */

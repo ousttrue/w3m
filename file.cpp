@@ -46,6 +46,8 @@
 #include "local_cgi.h"
 #include "regex.h"
 
+int FollowRedirection = 10;
+
 static JMP_BUF AbortLoading;
 static void KeyAbort(SIGNAL_ARG) {
   LONGJMP(AbortLoading, 1);

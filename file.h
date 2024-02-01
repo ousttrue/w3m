@@ -1,6 +1,7 @@
 #pragma once
 
 int is_html_type(const char *type);
+extern int FollowRedirection;
 
 struct Buffer;
 struct ParsedURL;

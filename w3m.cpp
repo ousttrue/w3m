@@ -22,6 +22,7 @@ bool w3m_backend = false;
 
 struct TextLineList;
 TextLineList *backend_halfdump_buf;
+TextList *backend_batch_commands = nullptr;
 
 char *HostName = nullptr;
 char *CurrentDir;
