@@ -30,12 +30,15 @@ inline const char *inputLine(const char *p, const char *d, InputFlags f) {
 inline const char *inputStr(const char *p, const char *d) {
   return inputLine(p, d, IN_STRING);
 }
-inline const char *inputStrHist(const char *p, const char *d, Hist *h) {
-  return inputLineHist(p, d, IN_STRING, h);
-}
-inline const char *inputFilename(const char *p, const char *d) {
-  return inputLine(p, d, IN_FILENAME);
-}
+
+// TODO:
+// inline const char *inputStrHist(const char *p, const char *d, Hist *h) {
+//   return inputLineHist(p, d, IN_STRING, h);
+// }
+
+// inline const char *inputFilename(const char *p, const char *d) {
+//   return inputLine(p, d, IN_FILENAME);
+// }
 
 // inline char *inputFilenameHist(const char *p, const char *d, Hist *h) {
 //   return inputLineHist(p, d, IN_FILENAME, h);

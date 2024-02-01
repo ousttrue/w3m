@@ -103,8 +103,6 @@ void show_params(FILE *fp);
 
 static char *getCurWord(Buffer *buf, int *spos, int *epos);
 
-static int display_ok = FALSE;
-static void do_dump(Buffer *);
 int prec_num = 0;
 int prev_key = -1;
 int on_target = 1;
@@ -217,7 +215,7 @@ static void wrap_GC_warn_proc(char *msg, GC_word arg) {
     } msg_ring[GC_WARN_KEEP_MAX];
     /* *INDENT-ON* */
     static int i = 0;
-    static int n = 0;
+    static size_t n = 0;
     static int lock = 0;
     int j;
 
@@ -329,51 +327,9 @@ void pushEvent(int cmd, void *data) {
   LastEvent = event;
 }
 
-static void dump_source(Buffer *buf) {
-  FILE *f;
-  int c;
-  if (buf->sourcefile == NULL)
-    return;
-  f = fopen(buf->sourcefile, "r");
-  if (f == NULL)
-    return;
-  while ((c = fgetc(f)) != EOF) {
-    putchar(c);
-  }
-  fclose(f);
-}
-
-static void dump_head(Buffer *buf) {
-  TextListItem *ti;
-
-  if (buf->document_header == NULL) {
-    return;
-  }
-  for (ti = buf->document_header->first; ti; ti = ti->next) {
-    printf("%s", ti->ptr);
-  }
-  puts("");
-}
-
-static int cmp_anchor_hseq(const void *a, const void *b) {
-  return (*((const Anchor **)a))->hseq - (*((const Anchor **)b))->hseq;
-}
-
 static void intTrap(SIGNAL_ARG) { /* Interrupt catcher */
   LONGJMP(IntReturn, 0);
   SIGNAL_RETURN;
-}
-
-static void do_dump(Buffer *buf) {
-  MySignalHandler prevtrap = NULL;
-
-  prevtrap = mySignal(SIGINT, intTrap);
-  if (SETJMP(IntReturn) != 0) {
-    mySignal(SIGINT, prevtrap);
-    return;
-  }
-
-  mySignal(SIGINT, prevtrap);
 }
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */
@@ -657,7 +613,7 @@ static void clear_mark(Line *l) {
 /* search by regular expression */
 static int srchcore(const char *str, int (*func)(Buffer *, const char *)) {
   MySignalHandler prevtrap = {};
-  volatile int i, result = SR_NOTFOUND;
+  int i, result = SR_NOTFOUND;
 
   if (str != NULL && str != SearchString)
     SearchString = str;
@@ -765,7 +721,7 @@ static void srch(int (*func)(Buffer *, const char *), const char *prompt) {
 
   str = searchKeyData();
   if (str == NULL || *str == '\0') {
-    str = inputStrHist(prompt, NULL, TextHist);
+    // str = inputStrHist(prompt, NULL, TextHist);
     if (str != NULL && *str == '\0')
       str = SearchString;
     if (str == NULL) {
@@ -920,7 +876,7 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
   if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
     if (env != NULL && *env != '\0')
       env = Sprintf("%s=", env)->ptr;
-    env = inputStrHist("Set environ: ", env, TextHist);
+    // env = inputStrHist("Set environ: ", env, TextHist);
     if (env == NULL || *env == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -1522,7 +1478,7 @@ static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
 static Buffer *loadLink(const char *url, const char *target,
                         const char *referer, FormList *request) {
   Buffer *buf, *nfbuf;
-  union frameset_element *f_element = NULL;
+  // union frameset_element *f_element = NULL;
   int flag = 0;
   ParsedURL *base, pu;
   const int *no_referer_ptr;
@@ -1912,10 +1868,8 @@ static void _followForm(int submit) {
     if (submit)
       goto do_submit;
     if (fi->readonly)
-      /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-    /* FIXME: gettextize? */
-    p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+    // p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
@@ -2494,7 +2448,7 @@ static int checkBackBuffer(Buffer *buf) {
 /* delete current buffer and back to the previous buffer */
 DEFUN(backBf, BACK,
       "Close current buffer and return to the one below in stack") {
-  Buffer *buf = Currentbuf->linkBuffer[LB_N_FRAME];
+  // Buffer *buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
   if (!checkBackBuffer(Currentbuf)) {
     if (close_tab_back && nTab >= 1) {
@@ -2675,7 +2629,7 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
       auto v = get_param_option(opt);
       opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
     }
-    opt = inputStrHist("Set option: ", opt, TextHist);
+    // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == NULL || *opt == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -3040,7 +2994,7 @@ DEFUN(reshape, RESHAPE, "Re-render document") {
 
 /* mark URL-like patterns as anchors */
 void chkURLBuffer(Buffer *buf) {
-  static char *url_like_pat[] = {
+  static const char *url_like_pat[] = {
       "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
       "=\\-]",
       "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
@@ -3415,7 +3369,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   data = searchKeyData();
   if (data == NULL || *data == '\0') {
-    data = inputStrHist("command [; ...]: ", "", TextHist);
+    // data = inputStrHist("command [; ...]: ", "", TextHist);
     if (data == NULL) {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -3478,7 +3432,7 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   data = searchKeyData();
   if (data == NULL || *data == '\0') {
-    data = inputStrHist("(Alarm)sec command: ", "", TextHist);
+    // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == NULL) {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -3561,7 +3515,7 @@ DEFUN(defKey, DEFINE_KEY,
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   data = searchKeyData();
   if (data == NULL || *data == '\0') {
-    data = inputStrHist("Key definition: ", "", TextHist);
+    // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == NULL || *data == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -3792,7 +3746,7 @@ DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
   followTab(prec_num ? numTab(PREC_NUM) : NULL);
 }
 
-static void tabURL0(TabBuffer *tab, char *prompt, int relative) {
+static void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
   Buffer *buf;
 
   if (tab == CurrentTab) {

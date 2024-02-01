@@ -7,7 +7,7 @@ struct DownloadList {
   const char *url;
   const char *save;
   const char *lock;
-  long long size;
+  size_t size;
   time_t time;
   int running;
   int err;
