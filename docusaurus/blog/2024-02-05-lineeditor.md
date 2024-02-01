@@ -29,4 +29,38 @@ char *inputLineHistSearch(const char *prompt, char *def_str, int flag, Hist *his
 あと、普通に使っているところが多い。
 どうやって書き変えるか…
 
-とりあえず、分岐が合流しないようにすることで少し楽にできそうか。
+## c++20 の coroutine 案
+
+やろうかと思ったのだけど、
+compiler によって挙動が違ってはまるので中止。
+最初に gcc で開発して、あとで msvc でコンパイルできるようにする
+予定なので両方で動くようにするのに苦労するような気がした。
+
+## callback で地道にやる案
+
+分岐の無い一本道のプログラムなら問題ないのだけど、
+分岐と多段が組み合わさるとつらいことがわかった。
+例えば、user 名と password で2回入力が発生するような例。
+
+## lua の coroutine でやる案
+
+w3m のすべてのアクションはキーボード入力のコールバック起点なので、
+コールバックが lua のスクリプトになっていて、
+mainloop が隠蔽されていれば素直に実装できる。
+ぜんぶ置きかえるのは量的につらいのですよね。
+
+## 実際には
+
+callback で地道にやる案で、
+form の text 入力など動作に必要な最小限だけやる。
+そのあとで、lua 案を推進する予定。
+入力をコメントアウトして停止させていく作業中。
+少くしてから、callback 方式に API を変更してみる。
+
+```cpp
+using OnInput = std::function<void(const char*input)>;
+void inputLineHistSearch(const char *prompt, char *def_str, int flag, Hist *hist,
+                          int (*incfunc)(int ch, Str *buf, Lineprop *prop), const OnInput &onInput);
+// 続きの処理をコールバックで渡す。
+// 返り値は無くなる。
+```

@@ -54,7 +54,7 @@ struct Buffer {
   Buffer *linkBuffer[MAX_LB];
   short width;
   short height;
-  char *type;
+  const char *type;
   const char *real_type;
   int allLine;
   short bufferprop;
@@ -79,7 +79,7 @@ struct Buffer {
   HmarkerList *imarklist;
   ParsedURL currentURL;
   ParsedURL *baseURL;
-  char *baseTarget;
+  const char *baseTarget;
   UrlSchema real_schema;
   const char *sourcefile;
   int *clone;
@@ -87,13 +87,13 @@ struct Buffer {
   char check_url;
   TextList *document_header;
   FormItemList *form_submit;
-  char *savecache;
-  char *edit;
+  const char *savecache;
+  const char *edit;
   struct mailcap *mailcap;
-  char *mailcap_source;
-  char *header_source;
+  const char *mailcap_source;
+  const char *header_source;
   char search_header;
-  char *ssl_certificate;
+  const char *ssl_certificate;
   char image_flag;
   char image_loaded;
   char need_reshape;

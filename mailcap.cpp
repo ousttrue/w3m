@@ -328,10 +328,11 @@ end:
   return d;
 }
 
-static Str *unquote_mailcap_loop(char *qstr, const char *type, char *name,
-                                 char *attr, int *mc_stat, int flag0) {
+static Str *unquote_mailcap_loop(const char *qstr, const char *type,
+                                 const char *name, const char *attr,
+                                 int *mc_stat, int flag0) {
   Str *str, *tmp, *test, *then;
-  char *p;
+  const char *p;
   int status = MC_NORMAL, prev_status = MC_NORMAL, sp = 0, flag;
 
   if (mc_stat)
@@ -417,7 +418,7 @@ static Str *unquote_mailcap_loop(char *qstr, const char *type, char *name,
           break;
         }
       } else if (*p == '}') {
-        char *q;
+        const char *q;
         if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL &&
             (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
             matchattr(q, tmp->ptr, tmp->length, &tmp)) {
@@ -435,7 +436,7 @@ static Str *unquote_mailcap_loop(char *qstr, const char *type, char *name,
   return str;
 }
 
-Str *unquote_mailcap(char *qstr, const char *type, char *name, char *attr,
-                     int *mc_stat) {
+Str *unquote_mailcap(const char *qstr, const char *type, const char *name,
+                     const char *attr, int *mc_stat) {
   return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
 }

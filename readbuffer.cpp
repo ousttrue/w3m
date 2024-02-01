@@ -17,7 +17,6 @@
 #include "terms.h"
 #include "istream.h"
 #include "parsetagx.h"
-// #include "fm.h"
 #include "proto.h"
 #include "alarm.h"
 #include "funcname1.h"
@@ -622,7 +621,7 @@ static void append_tags(struct readbuffer *obuf) {
     set_breakpoint(obuf, obuf->line->length - len);
 }
 
-static void push_tag(struct readbuffer *obuf, char *cmdname, int cmd) {
+static void push_tag(struct readbuffer *obuf, const char *cmdname, int cmd) {
   obuf->tag_stack[obuf->tag_sp] = (struct cmdtable *)New(struct cmdtable);
   obuf->tag_stack[obuf->tag_sp]->cmdname = allocStr(cmdname, -1);
   obuf->tag_stack[obuf->tag_sp]->cmd = cmd;
@@ -2168,7 +2167,7 @@ int getMetaRefreshParam(const char *q, Str **refresh_uri) {
 }
 
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
-  char *p, *q, *r;
+  const char *p, *q, *r;
   int i, w, x, y, z, count, width;
   struct readbuffer *obuf = h_env->obuf;
   struct environment *envs = h_env->envs;
@@ -2188,6 +2187,9 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
     case HTML_PRE_INT:
     case HTML_N_PRE_INT:
       return 1;
+
+    default:
+      break;
     }
   }
 
@@ -2620,6 +2622,9 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
       break;
     case HTML_PLAINTEXT:
       obuf->end_tag = MAX_HTMLTAG;
+      break;
+
+    default:
       break;
     }
     return 1;
@@ -3198,17 +3203,16 @@ static void addLink(Buffer *buf, struct parsed_tag *tag) {
     buf->linklist = l;
 }
 
-static input_stream *_file_lp2;
-
-static Str *file_feed(void) {
-  Str *s;
-  s = StrISgets(_file_lp2);
-  if (s && s->length == 0) {
-    ISclose(_file_lp2);
-    return NULL;
-  }
-  return s;
-}
+// static input_stream *_file_lp2;
+// static Str *file_feed(void) {
+//   Str *s;
+//   s = StrISgets(_file_lp2);
+//   if (s && s->length == 0) {
+//     ISclose(_file_lp2);
+//     return NULL;
+//   }
+//   return s;
+// }
 
 static void proc_escape(struct readbuffer *obuf, const char **str_return) {
   const char *str = *str_return, *estr;
@@ -4116,6 +4120,9 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         case HTML_N_SYMBOL:
           effect &= ~PC_SYMBOL;
           break;
+
+        default:
+          break;
         }
 #ifdef ID_EXT
         id = NULL;
@@ -4152,10 +4159,10 @@ void HTMLlineproc2(Buffer *buf, TextLineList *tl) {
   HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-static void HTMLlineproc3(Buffer *buf, input_stream *stream) {
-  _file_lp2 = stream;
-  HTMLlineproc2body(buf, file_feed, -1);
-}
+// static void HTMLlineproc3(Buffer *buf, input_stream *stream) {
+//   _file_lp2 = stream;
+//   HTMLlineproc2body(buf, file_feed, -1);
+// }
 
 void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];

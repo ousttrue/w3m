@@ -56,7 +56,7 @@ defs = [
     '-DCONF_DIR="' + CONF_DIR + '"',
     '-DRC_DIR="' + RC_DIR + '"',
     '-DLOCALEDIR="' + localedir + '"',
-    '-w',
+    # '-w',
 ]
 
 # use generated config.h by configure
