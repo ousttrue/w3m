@@ -64,12 +64,6 @@ int ai_family_order_table[7][3] = {
 
 static JMP_BUF AbortLoading;
 
-/* #define HTTP_DEFAULT_FILE    "/index.html" */
-
-#ifndef HTTP_DEFAULT_FILE
-#define HTTP_DEFAULT_FILE "/"
-#endif /* not HTTP_DEFAULT_FILE */
-
 #ifdef SOCK_DEBUG
 #include <stdarg.h>
 
@@ -85,20 +79,6 @@ static void sock_log(char *message, ...) {
 }
 
 #endif
-
-static char *DefaultFile(int schema) {
-  switch (schema) {
-  case SCM_HTTP:
-  case SCM_HTTPS:
-    return allocStr(HTTP_DEFAULT_FILE, -1);
-  case SCM_LOCAL:
-  case SCM_LOCAL_CGI:
-  case SCM_FTP:
-  case SCM_FTPDIR:
-    return allocStr("/", -1);
-  }
-  return NULL;
-}
 
 static void KeyAbort(SIGNAL_ARG) {
   LONGJMP(AbortLoading, 1);
@@ -327,7 +307,7 @@ static const char *copyPath(const char *orgpath, int length, int option) {
   return tmp->ptr;
 }
 
-void parseURL(char *url, ParsedURL *p_url, ParsedURL *current) {
+void parseURL(const char *url, ParsedURL *p_url, ParsedURL *current) {
   const char *p, *q, *qq;
   Str *tmp;
 
@@ -573,7 +553,7 @@ void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
   p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
+void parseURL2(const char *url, ParsedURL *pu, ParsedURL *current) {
   const char *p;
   Str *tmp;
   int relative_uri = FALSE;

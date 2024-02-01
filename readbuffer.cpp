@@ -327,14 +327,14 @@ int next_status(char c, int *status) {
   return 0;
 }
 
-int read_token(Str *buf, char **instr, int *status, int pre, int append) {
-  char *p;
-  int prev_status;
-
+int read_token(Str *buf, const char **instr, int *status, int pre, int append) {
   if (!append)
     Strclear(buf);
   if (**instr == '\0')
     return 0;
+
+  int prev_status;
+  const char *p;
   for (p = *instr; *p; p++) {
     /* Drop Unicode soft hyphen */
     if (*(unsigned char *)p == 0210 && *(unsigned char *)(p + 1) == 0200 &&
@@ -631,8 +631,8 @@ static void push_tag(struct readbuffer *obuf, char *cmdname, int cmd) {
     append_tags(obuf);
 }
 
-static void push_nchars(struct readbuffer *obuf, int width, char *str, int len,
-                        Lineprop mode) {
+static void push_nchars(struct readbuffer *obuf, int width, const char *str,
+                        int len, Lineprop mode) {
   append_tags(obuf);
   Strcat_charp_n(obuf->line, str, len);
   obuf->pos += width;
@@ -649,7 +649,8 @@ static void push_nchars(struct readbuffer *obuf, int width, char *str, int len,
 #define push_str(obuf, width, str, mode)                                       \
   push_nchars(obuf, width, str->ptr, str->length, mode)
 
-static void check_breakpoint(struct readbuffer *obuf, int pre_mode, char *ch) {
+static void check_breakpoint(struct readbuffer *obuf, int pre_mode,
+                             const char *ch) {
   int tlen, len = obuf->line->length;
 
   append_tags(obuf);
@@ -687,7 +688,7 @@ static void push_spaces(struct readbuffer *obuf, int pre_mode, int width) {
 }
 
 static void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
-                       char **str, Lineprop mode) {
+                       const char **str, Lineprop mode) {
   check_breakpoint(obuf, pre_mode, *str);
   obuf->pos += width;
   Strcat_charp_n(obuf->line, *str, get_mclen(*str));
@@ -1283,7 +1284,7 @@ static Str *process_n_title(struct parsed_tag *tag) {
   return tmp;
 }
 
-static void feed_title(char *str) {
+static void feed_title(const char *str) {
   if (pre_title)
     return;
   if (!cur_title)
@@ -1300,7 +1301,7 @@ static void feed_title(char *str) {
 }
 
 Str *process_img(struct parsed_tag *tag, int width) {
-  char *p, *q, *r, *r2 = NULL, *s, *t;
+  const char *p, *q, *r, *r2 = NULL, *s, *t;
   int w, i, nw, n;
   int pre_int = FALSE, ext_pre_int = FALSE;
   Str *tmp = Strnew();
@@ -1437,7 +1438,7 @@ img_end:
   return tmp;
 }
 
-Str *process_anchor(struct parsed_tag *tag, char *tagbuf) {
+Str *process_anchor(struct parsed_tag *tag, const char *tagbuf) {
   if (parsedtag_need_reconstruct(tag)) {
     parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
     return parsedtag2str(tag);
@@ -1450,13 +1451,13 @@ Str *process_anchor(struct parsed_tag *tag, char *tagbuf) {
 
 Str *process_input(struct parsed_tag *tag) {
   int i = 20, v, x, y, z, iw, ih, size = 20;
-  char *q, *p, *r, *p2, *s;
+  const char *q, *p, *r, *p2, *s;
   Str *tmp = NULL;
-  char *qq = "";
+  auto qq = "";
   int qlen = 0;
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    auto s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, TRUE));
   }
   if (tmp == NULL)
@@ -1635,11 +1636,11 @@ Str *process_input(struct parsed_tag *tag) {
 
 Str *process_button(struct parsed_tag *tag) {
   Str *tmp = NULL;
-  char *p, *q, *r, *qq = "";
+  const char *p, *q, *r, *qq = "";
   int v;
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    auto s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, TRUE));
   }
   if (tmp == NULL)
@@ -1699,14 +1700,13 @@ Str *process_n_button(void) {
 
 Str *process_select(struct parsed_tag *tag) {
   Str *tmp = NULL;
-  char *p;
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    auto s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, TRUE));
   }
 
-  p = "";
+  auto p = "";
   parsedtag_get_value(tag, ATTR_NAME, &p);
   cur_select = Strnew_charp(p);
   select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
@@ -1728,11 +1728,11 @@ Str *process_n_select(void) {
   return select_str;
 }
 
-void feed_select(char *str) {
+void feed_select(const char *str) {
   Str *tmp = Strnew();
   int prev_status = cur_status;
   static int prev_spaces = -1;
-  char *p;
+  const char *p;
 
   if (cur_select == NULL)
     return;
@@ -1821,12 +1821,12 @@ void process_option(void) {
 
 Str *process_textarea(struct parsed_tag *tag, int width) {
   Str *tmp = NULL;
-  char *p;
+  const char *p;
 #define TEXTAREA_ATTR_COL_MAX 4096
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    auto s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, TRUE));
   }
 
@@ -1891,7 +1891,7 @@ Str *process_n_textarea(void) {
   return tmp;
 }
 
-void feed_textarea(char *str) {
+void feed_textarea(const char *str) {
   if (cur_textarea == NULL)
     return;
   if (ignore_nl_textarea) {
@@ -1952,7 +1952,7 @@ static Str *process_hr(struct parsed_tag *tag, int width, int indent_width) {
 }
 
 static Str *process_form_int(struct parsed_tag *tag, int fid) {
-  char *p, *q, *r, *s, *tg, *n;
+  const char *p, *q, *r, *s, *tg, *n;
 
   p = "get";
   parsedtag_get_value(tag, ATTR_METHOD, &p);
@@ -2126,9 +2126,9 @@ static int ul_type(struct parsed_tag *tag, int default_type) {
   return default_type;
 }
 
-int getMetaRefreshParam(char *q, Str **refresh_uri) {
+int getMetaRefreshParam(const char *q, Str **refresh_uri) {
   int refresh_interval;
-  char *r;
+  const char *r;
   Str *s_tmp = NULL;
 
   if (q == NULL || refresh_uri == NULL)
@@ -3158,7 +3158,8 @@ static int ex_efct(int ex) {
 }
 
 static void addLink(Buffer *buf, struct parsed_tag *tag) {
-  char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
+  const char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL,
+             *rev = NULL;
   char type = LINK_TYPE_NONE;
   LinkList *l;
 
@@ -3209,8 +3210,8 @@ static Str *file_feed(void) {
   return s;
 }
 
-static void proc_escape(struct readbuffer *obuf, char **str_return) {
-  char *str = *str_return, *estr;
+static void proc_escape(struct readbuffer *obuf, const char **str_return) {
+  const char *str = *str_return, *estr;
   int ech = getescapechar(str_return);
   int width, n_add = *str_return - str;
   Lineprop mode = PC_ASCII;
@@ -3269,7 +3270,8 @@ static int table_width(struct html_feed_environ *h_env, int table_level) {
 }
 
 /* HTML processing first pass */
-void HTMLlineproc0(char *line, struct html_feed_environ *h_env, int internal) {
+void HTMLlineproc0(const char *line, struct html_feed_environ *h_env,
+                   int internal) {
   Lineprop mode;
   int cmd;
   struct readbuffer *obuf = h_env->obuf;
@@ -3304,7 +3306,7 @@ table_start:
   }
 
   while (*line != '\0') {
-    char *str, *p;
+    const char *str, *p;
     int is_tag = FALSE;
     int pre_mode =
         (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
@@ -3486,7 +3488,7 @@ table_start:
       if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
         char ch = *str;
         if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
-          char *p = str;
+          const char *p = str;
           int ech = getescapechar(&p);
           if (ech == '\n' || ech == '\r') {
             ch = '\n';
@@ -3736,17 +3738,17 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
   static Lineprop *outp = NULL;
   static int out_size = 0;
   Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
-  char *p, *q, *r, *s, *t, *str;
+  const char *p, *q, *r, *s, *t, *str;
   Lineprop mode, effect, ex_effect;
   int pos;
   int nlines;
 #ifdef DEBUG
   FILE *debug = NULL;
 #endif
-  char *id = NULL;
+  const char *id = NULL;
   int hseq, form_id;
   Str *line;
-  char *endp;
+  const char *endp;
   char symbol = '\0';
   int internal = 0;
   Anchor **a_textarea = NULL;
@@ -4060,7 +4062,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             parseURL2(p, buf->baseURL, &buf->currentURL);
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-            buf->baseTarget = url_quote_conv(p, buf->document_charset);
+            buf->baseTarget = (char *)url_quote_conv(p, buf->document_charset);
           break;
         case HTML_META:
           p = q = NULL;
@@ -4071,8 +4073,9 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             int refresh_interval = getMetaRefreshParam(q, &tmp);
             if (tmp) {
               p = url_quote(remove_space(tmp->ptr));
-              buf->event = setAlarmEvent(buf->event, refresh_interval,
-                                         AL_IMPLICIT_ONCE, FUNCNAME_gorURL, p);
+              buf->event =
+                  setAlarmEvent(buf->event, refresh_interval, AL_IMPLICIT_ONCE,
+                                FUNCNAME_gorURL, (void *)p);
             } else if (refresh_interval > 0)
               buf->event = setAlarmEvent(buf->event, refresh_interval,
                                          AL_IMPLICIT, FUNCNAME_reload, NULL);

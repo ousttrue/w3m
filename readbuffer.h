@@ -186,7 +186,7 @@ struct html_feed_environ {
   int nenv;
   int envc;
   int envc_real;
-  char *title;
+  const char *title;
   int blank_lines;
 };
 
@@ -200,7 +200,7 @@ void restore_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void push_render_image(Str *str, int width, int limit,
                        html_feed_environ *h_env);
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
-void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
+void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env, int internal);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
@@ -209,7 +209,7 @@ Str *romanNumeral(int n);
 Str *romanAlphabet(int n);
 // extern int next_status(char c, int *status);
 int next_status(char c, int *status);
-int read_token(Str *buf, char **instr, int *status, int pre, int append);
+int read_token(Str *buf, const char **instr, int *status, int pre, int append);
 
 struct UrlStream;
 struct Buffer;

@@ -167,8 +167,8 @@ struct table_mode {
 
 struct TextLine;
 extern struct table *newTable(void);
-extern void pushdata(struct table *t, int row, int col, char *data);
-extern int visible_length(char *str);
+extern void pushdata(struct table *t, int row, int col, const char *data);
+extern int visible_length(const char *str);
 extern void align(TextLine *lbuf, int width, int mode);
 extern void print_item(struct table *t, int row, int col, int width, Str *buf);
 extern void print_sep(struct table *t, int row, int type, int maxcol, Str *buf);
@@ -182,8 +182,8 @@ extern struct table *begin_table(int border, int spacing, int padding,
 extern void end_table(struct table *tbl);
 extern void check_rowcol(struct table *tbl, struct table_mode *mode);
 extern int minimum_length(char *line);
-extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
-                      int width, int internal);
+extern int feed_table(struct table *tbl, const char *line,
+                      struct table_mode *mode, int width, int internal);
 extern void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
                         int width);
 extern void pushTable(struct table *, struct table *);

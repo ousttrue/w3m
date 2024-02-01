@@ -46,7 +46,7 @@ inline int getDefaultPort(UrlSchema schema) {
   };
   return DefaultPort[schema];
 }
-
+const char *DefaultFile(UrlSchema schema) ;
 UrlSchema parseUrlSchema(const char **url);
 const char *schemaNumToName(UrlSchema schema);
 

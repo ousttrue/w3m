@@ -38,8 +38,8 @@ struct ParsedURL {
   int port;
   const char *file;
   const char *real_file;
-  char *query;
-  char *label;
+  const char *query;
+  const char *label;
   int is_nocache;
 };
 
@@ -49,9 +49,9 @@ extern ParsedURL FTP_proxy_parsed;
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->schema == SCM_UNKNOWN && !(pu)->file)
 
-void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
+void parseURL(const char *url, ParsedURL *p_url, ParsedURL *current);
 void copyParsedURL(ParsedURL *p, const ParsedURL *q);
-void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
+void parseURL2(const char *url, ParsedURL *pu, ParsedURL *current);
 Str *parsedURL2Str(ParsedURL *pu);
 Str *parsedURL2RefererStr(ParsedURL *pu);
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
@@ -61,7 +61,5 @@ int check_no_proxy(const char *domain);
 int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);
 
-
 struct ParsedURL;
 ParsedURL *schemaToProxy(UrlSchema schema);
-

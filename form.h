@@ -41,8 +41,8 @@ struct FormList {
   FormItemList *lastitem;
   int method;
   Str *action;
-  char *target;
-  char *name;
+  const char *target;
+  const char *name;
   int enctype;
   FormList *next;
   int nitems;
@@ -66,15 +66,16 @@ struct FormItemList {
   FormItemList *next;
 };
 
-FormList *newFormList(char *action, char *method, char *charset, char *enctype,
-                      char *target, char *name, FormList *_next);
+FormList *newFormList(const char *action, const char *method,
+                      const char *charset, const char *enctype,
+                      const char *target, const char *name, FormList *_next);
 struct FormItemList *formList_addInput(FormList *fl, struct parsed_tag *tag);
 
 struct Buffer;
 struct Anchor;
 struct AnchorList;
 char *form2str(FormItemList *fi);
-int formtype(char *typestr);
+int formtype(const char *typestr);
 void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
 void formResetBuffer(Buffer *buf, AnchorList *formitem);
 void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form);

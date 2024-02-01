@@ -526,8 +526,8 @@ int strmatchlen(const char *s1, const char *s2, int maxlen) {
   return i;
 }
 
-char *remove_space(char *str) {
-  char *p, *q;
+const char *remove_space(const char *str) {
+  const char *p, *q;
 
   for (p = str; *p && IS_SPACE(*p); p++)
     ;
@@ -569,9 +569,9 @@ void cleanup_line(Str *s, int mode) {
   }
 }
 
-int getescapechar(char **str) {
+int getescapechar(const char **str) {
   int dummy = -1;
-  char *p = *str, *q;
+  const char *p = *str, *q;
   int strict_entity = TRUE;
 
   if (*p == '&')
@@ -632,8 +632,8 @@ int getescapechar(char **str) {
   return getHash_si(&entity, q, -1);
 }
 
-char *getescapecmd(char **s) {
-  char *save = *s;
+const char *getescapecmd(const char **s) {
+  const char *save = *s;
   Str *tmp;
   int ch = getescapechar(s);
 
@@ -666,9 +666,9 @@ char *html_quote(const char *str) {
   return Strnew_charp(str)->ptr;
 }
 
-char *html_unquote(char *str) {
+const char *html_unquote(const char *str) {
   Str *tmp = NULL;
-  char *p, *q;
+  const char *p, *q;
 
   for (p = str; *p;) {
     if (*p == '&') {
@@ -696,11 +696,9 @@ static auto xdigit = "0123456789ABCDEF";
           (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1]))    \
        : -1)
 
-char *url_quote(char *str) {
+const char *url_quote(const char *str) {
   Str *tmp = NULL;
-  char *p;
-
-  for (p = str; *p; p++) {
+  for (auto p = str; *p; p++) {
     if (is_url_quote(*p)) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(str, (int)(p - str));

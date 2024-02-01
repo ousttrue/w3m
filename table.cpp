@@ -363,7 +363,7 @@ static void check_row(struct table *t, int row) {
   }
 }
 
-void pushdata(struct table *t, int row, int col, char *data) {
+void pushdata(struct table *t, int row, int col, const char *data) {
   check_row(t, row);
   if (t->tabdata[row][col] == NULL)
     t->tabdata[row][col] = newGeneralList();
@@ -371,7 +371,7 @@ void pushdata(struct table *t, int row, int col, char *data) {
   pushText(t->tabdata[row][col], data ? data : "");
 }
 
-static void suspend_or_pushdata(struct table *tbl, char *line) {
+static void suspend_or_pushdata(struct table *tbl, const char *line) {
   if (tbl->flag & TBL_IN_COL)
     pushdata(tbl, tbl->row, tbl->col, line);
   else {
@@ -384,12 +384,12 @@ static void suspend_or_pushdata(struct table *tbl, char *line) {
 #define PUSH_TAG(str, n) Strcat_char(tagbuf, *str), (void)n
 
 int visible_length_offset = 0;
-int visible_length(char *str) {
+int visible_length(const char *str) {
   int len = 0, n, max_len = 0;
   int status = R_ST_NORMAL;
   int prev_status = status;
   Str *tagbuf = Strnew();
-  char *t, *r2;
+  const char *t, *r2;
   int amp_len = 0;
 
   while (*str) {
@@ -447,7 +447,7 @@ int visible_length(char *str) {
   return len > max_len ? len : max_len;
 }
 
-static int visible_length_plain(char *str) {
+static int visible_length_plain(const char *str) {
   int len = 0, max_len = 0;
 
   while (*str) {
@@ -469,12 +469,12 @@ static int visible_length_plain(char *str) {
   return len > max_len ? len : max_len;
 }
 
-static int maximum_visible_length(char *str, int offset) {
+static int maximum_visible_length(const char *str, int offset) {
   visible_length_offset = offset;
   return visible_length(str);
 }
 
-static int maximum_visible_length_plain(char *str, int offset) {
+static int maximum_visible_length_plain(const char *str, int offset) {
   visible_length_offset = offset;
   return visible_length_plain(str);
 }
@@ -676,7 +676,7 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
   for (l = orgdata->first; l != NULL; l = l->next) {
     if (TAG_IS(l->ptr, "<table_alt", 10)) {
       int id = -1;
-      char *p = l->ptr;
+      const char *p = l->ptr;
       struct parsed_tag *tag;
       if ((tag = parse_tag(&p, TRUE)) != NULL)
         parsedtag_get_value(tag, ATTR_TID, &id);
@@ -1042,10 +1042,11 @@ static double recalc_width(double old, double swidth, int cwidth, double sxx,
   return old;
 }
 
-static int check_compressible_cell(struct table *t, matrix *minv, double *newwidth,
-                                   double *swidth, short *cwidth,
-                                   double totalwidth, double *Sxx, int icol,
-                                   int icell, double sxx, int corr) {
+static int check_compressible_cell(struct table *t, matrix *minv,
+                                   double *newwidth, double *swidth,
+                                   short *cwidth, double totalwidth,
+                                   double *Sxx, int icol, int icell, double sxx,
+                                   int corr) {
   struct table_cell *cell = &t->cell;
   int i, j, k, m, bcol, ecol, span;
   double delta, owidth;
@@ -2114,8 +2115,8 @@ void check_rowcol(struct table *tbl, struct table_mode *mode) {
   tbl->flag |= TBL_IN_COL;
 }
 
-static int skip_space(struct table *t, char *line, struct table_linfo *linfo,
-                      int checkminimum) {
+static int skip_space(struct table *t, const char *line,
+                      struct table_linfo *linfo, int checkminimum) {
   int skip = 0, s = linfo->prev_spaces;
   Lineprop ctype, prev_ctype = linfo->prev_ctype;
   Str *prevchar = linfo->prevchar;
@@ -2129,7 +2130,7 @@ static int skip_space(struct table *t, char *line, struct table_linfo *linfo,
   }
 
   while (*line) {
-    char *save = line, *c = line;
+    const char *save = line, *c = line;
     int ec, len, wlen, plen;
     ctype = get_mctype(line);
     len = get_mcwidth(line);
@@ -2184,7 +2185,7 @@ static int skip_space(struct table *t, char *line, struct table_linfo *linfo,
   return skip;
 }
 
-static void feed_table_inline_tag(struct table *tbl, char *line,
+static void feed_table_inline_tag(struct table *tbl, const char *line,
                                   struct table_mode *mode, int width) {
   check_rowcol(tbl, mode);
   pushdata(tbl, tbl->row, tbl->col, line);
@@ -2195,7 +2196,7 @@ static void feed_table_inline_tag(struct table *tbl, char *line,
   }
 }
 
-static void feed_table_block_tag(struct table *tbl, char *line,
+static void feed_table_block_tag(struct table *tbl, const char *line,
                                  struct table_mode *mode, int indent, int cmd) {
   int offset;
   if (mode->indent_level <= 0 && indent == -1)
@@ -2287,7 +2288,7 @@ static void table_close_anchor0(struct table *tbl, struct table_mode *mode) {
 
 #define ATTR_ROWSPAN_MAX 32766
 
-static int feed_table_tag(struct table *tbl, char *line,
+static int feed_table_tag(struct table *tbl, const char *line,
                           struct table_mode *mode, int width,
                           struct parsed_tag *tag) {
   int cmd;
@@ -2977,10 +2978,10 @@ static int feed_table_tag(struct table *tbl, char *line,
   return TAG_ACTION_NONE;
 }
 
-int feed_table(struct table *tbl, char *line, struct table_mode *mode,
+int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
                int width, int internal) {
   int i;
-  char *p;
+  const char *p;
   Str *tmp;
   struct table_linfo *linfo = &tbl->linfo;
 
@@ -3033,7 +3034,7 @@ int feed_table(struct table *tbl, char *line, struct table_mode *mode,
       strchr(line, '&') != NULL) {
     tmp = Strnew();
     for (p = line; *p;) {
-      char *q, *r;
+      const char *q, *r;
       if (*p == '&') {
         if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) ||
             !strncasecmp(p, "&lt;", 4)) {
@@ -3139,13 +3140,13 @@ void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
                  int width) {
   Str *tokbuf;
   int status;
-  char *line;
   if (!tok)
     return;
   tokbuf = Strnew();
   status = R_ST_NORMAL;
-  line = tok->ptr;
-  while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
+  auto line = tok->ptr;
+  while (read_token(tokbuf, (const char **)&line, &status,
+                    mode->pre_mode & TBLM_PREMODE, 0))
     feed_table(tbl, tokbuf->ptr, mode, width, TRUE);
 }
 

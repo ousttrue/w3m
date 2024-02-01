@@ -1545,7 +1545,7 @@ static Buffer *loadLink(const char *url, const char *target,
     return NULL;
   }
 
-  parseURL2((char *)url, &pu, base);
+  parseURL2(url, &pu, base);
   pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
   if (buf == NO_BUFFER) {
@@ -1572,7 +1572,7 @@ static Buffer *loadLink(const char *url, const char *target,
 
   {
     Anchor *al = NULL;
-    char *label = pu.label;
+    auto label = pu.label;
 
     if (!al) {
       label = Strnew_m_charp("_", target, NULL)->ptr;
@@ -1674,7 +1674,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     gotoLabel(a->url + 1);
     return;
   }
-  parseURL2((char *)a->url, &u, baseURL(Currentbuf));
+  parseURL2(a->url, &u, baseURL(Currentbuf));
   if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
     /* index within this buffer */
     if (u.label) {
@@ -2211,7 +2211,7 @@ static void _nextA(int visited) {
           an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
         hseq++;
         if (visited == TRUE && an) {
-          parseURL2((char *)an->url, &url, baseURL(Currentbuf));
+          parseURL2(an->url, &url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -2535,7 +2535,7 @@ static void cmd_loadURL(const char *url, ParsedURL *current,
 }
 
 /* go to specified URL */
-static void goURL0(char *prompt, int relative) {
+static void goURL0(const char *prompt, int relative) {
   const char *url, *referer;
   ParsedURL p_url, *current;
   Buffer *cur_buf = Currentbuf;
@@ -2603,7 +2603,7 @@ DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
 }
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
-  char *url;
+  const char *url;
   if ((url = getenv("HTTP_HOME")) != NULL ||
       (url = getenv("WWW_HOME")) != NULL) {
     ParsedURL p_url;

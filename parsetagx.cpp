@@ -102,11 +102,11 @@ static int toVAlign(char *oval, int *valign) {
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct parsed_tag *parse_tag(char **s, int internal) {
+struct parsed_tag *parse_tag(const char **s, int internal) {
   struct parsed_tag *tag = NULL;
   HtmlCommand tag_id;
   char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
-  char *p, *q;
+  const char *p, *q;
   int i, attr_id = 0, nattr;
 
   /* Parse tag name */
@@ -114,15 +114,15 @@ struct parsed_tag *parse_tag(char **s, int internal) {
   q = (*s) + 1;
   p = tagname;
   if (*q == '/') {
-    *(p++) = *(q++);
+    *(char *)(p++) = *(q++);
     SKIP_BLANKS(q);
   }
   while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') &&
          *q != '>' && p - tagname < MAX_TAG_LEN - 1) {
-    *(p++) = TOLOWER(*q);
+    *(char *)(p++) = TOLOWER(*q);
     q++;
   }
-  *p = '\0';
+  *(char *)p = '\0';
   while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
     q++;
 
@@ -154,10 +154,10 @@ struct parsed_tag *parse_tag(char **s, int internal) {
     p = attrname;
     while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>' &&
            p - attrname < MAX_TAG_LEN - 1) {
-      *(p++) = TOLOWER(*q);
+      *(char *)(p++) = TOLOWER(*q);
       q++;
     }
-    *p = '\0';
+    *(char *)p = '\0';
     while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
       q++;
     SKIP_BLANKS(q);
@@ -235,7 +235,7 @@ struct parsed_tag *parse_tag(char **s, int internal) {
       }
       tag->attrid[i] = attr_id;
       if (value)
-        tag->value[i] = html_unquote(value->ptr);
+        tag->value[i] = (char *)html_unquote(value->ptr);
       else
         tag->value[i] = NULL;
     } else {

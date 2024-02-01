@@ -1,6 +1,7 @@
 #include "url_schema.h"
 #include "myctype.h"
 #include <string.h>
+#include "indep.h"
 
 struct cmdtable {
   const char *cmdname;
@@ -52,4 +53,24 @@ UrlSchema parseUrlSchema(const char **url) {
     }
   }
   return schema;
+}
+
+/* #define HTTP_DEFAULT_FILE    "/index.html" */
+
+#ifndef HTTP_DEFAULT_FILE
+#define HTTP_DEFAULT_FILE "/"
+#endif /* not HTTP_DEFAULT_FILE */
+
+const char *DefaultFile(UrlSchema schema) {
+  switch (schema) {
+  case SCM_HTTP:
+  case SCM_HTTPS:
+    return allocStr(HTTP_DEFAULT_FILE, -1);
+  case SCM_LOCAL:
+  case SCM_LOCAL_CGI:
+  case SCM_FTP:
+  case SCM_FTPDIR:
+    return allocStr("/", -1);
+  }
+  return NULL;
 }
