@@ -1055,13 +1055,10 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
 
 /* Load file */
 DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
-  char *fn;
-
-  fn = searchKeyData();
-  if (fn == NULL || *fn == '\0') {
-    /* FIXME: gettextize? */
-    fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
-  }
+  auto fn = searchKeyData();
+  // if (fn == NULL || *fn == '\0') {
+  //   fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
+  // }
   if (fn == NULL || *fn == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -1923,17 +1920,18 @@ static void _followForm(int submit) {
   case FORM_INPUT_FILE:
     if (submit)
       goto do_submit;
+
     if (fi->readonly)
-      /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
-    /* FIXME: gettextize? */
-    p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL, NULL);
-    if (p == NULL || fi->readonly)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, Currentbuf, fi);
-    if (fi->accept || fi->parent->nitems == 1)
-      goto do_submit;
+
+    // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+    // if (p == NULL || fi->readonly)
+    //   break;
+    //
+    // fi->value = Strnew_charp(p);
+    // formUpdateBuffer(a, Currentbuf, fi);
+    // if (fi->accept || fi->parent->nitems == 1)
+    //   goto do_submit;
     break;
   case FORM_INPUT_PASSWORD:
     if (submit)

@@ -36,8 +36,9 @@ inline char *inputStrHist(const char *p, const char *d, Hist *h) {
 inline char *inputFilename(const char *p, const char *d) {
   return inputLine(p, d, IN_FILENAME);
 }
-inline char *inputFilenameHist(const char *p, const char *d, Hist *h) {
-  return inputLineHist(p, d, IN_FILENAME, h);
-}
+
+// inline char *inputFilenameHist(const char *p, const char *d, Hist *h) {
+//   return inputLineHist(p, d, IN_FILENAME, h);
+// }
 
 // const char *inputAnswer(const char *prompt);
