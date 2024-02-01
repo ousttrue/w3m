@@ -303,13 +303,6 @@ extern void init_rc(void);
 extern void init_tmp(void);
 extern Buffer *load_option_panel(void);
 extern void sync_with_option(void);
-extern char *rcFile(char *base);
-extern char *etcFile(char *base);
-extern char *confFile(char *base);
-extern char *auxbinFile(char *base);
-extern char *libFile(char *base);
-extern char *helpFile(char *base);
-extern Str *localCookie(void);
 extern Str *loadLocalDir(char *dirname);
 extern FILE *localcgi_post(char *, char *, FormList *, char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
@@ -333,7 +326,6 @@ extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 extern char *expandName(char *name);
 
-extern Buffer *cookie_list_panel(void);
 
 #define docCSet nulcmd
 #define defCSet nulcmd

@@ -40,7 +40,7 @@ char *FTP_proxy = nullptr;
 char *NO_proxy = nullptr;
 int NOproxy_netaddr = true;
 bool use_proxy = true;
-char *w3m_reqlog;
+const char *w3m_reqlog;
 TextList *NO_proxy_domains;
 
 int DNS_order = DNS_ORDER_UNSPEC;

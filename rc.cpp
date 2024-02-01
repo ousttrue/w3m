@@ -716,7 +716,7 @@ static int set_param(char *name, char *value) {
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
   case P_SSLPATH:
     if (value != NULL && value[0] != '\0')
-      *(char **)p->varptr = rcFile(value);
+      *(const char **)p->varptr = rcFile(value);
     else
       *(char **)p->varptr = NULL;
     ssl_path_modified = 1;
@@ -1128,13 +1128,13 @@ void panel_set_option(struct parsed_tagarg *arg) {
   backBf();
 }
 
-char *rcFile(char *base) {
+const char *rcFile(const char *base) {
   if (base && (base[0] == '/' ||
                (base[0] == '.' &&
                 (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) ||
                (base[0] == '~' && base[1] == '/')))
     /* /file, ./file, ../file, ~/file */
-    return expandPath(base);
+    return expandPath((char *)base);
   return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
 }
 

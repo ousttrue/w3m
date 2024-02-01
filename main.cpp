@@ -90,8 +90,8 @@ JMP_BUF IntReturn;
 
 static void delBuffer(Buffer *buf);
 static void cmd_loadfile(char *path);
-static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
-                        FormList *request);
+static void cmd_loadURL(const char *url, ParsedURL *current,
+                        const char *referer, FormList *request);
 static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 int show_params_p = 0;
@@ -807,7 +807,8 @@ DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward") {
 static void srch_nxtprv(int reverse) {
   int result;
   /* *INDENT-OFF* */
-  static int (*routine[2])(Buffer *, const char *) = {forwardSearch, backwardSearch};
+  static int (*routine[2])(Buffer *, const char *) = {forwardSearch,
+                                                      backwardSearch};
   /* *INDENT-ON* */
 
   if (searchRoutine == NULL) {
@@ -2511,17 +2512,14 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
     delBuffer(buf);
 }
 
-static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
-                        FormList *request) {
-  Buffer *buf;
-
-  if (handleMailto(url))
+static void cmd_loadURL(const char *url, ParsedURL *current,
+                        const char *referer, FormList *request) {
+  if (handleMailto((char *)url))
     return;
 
   refresh(term_io());
-  buf = loadGeneralFile(url, current, referer, 0, request);
+  auto buf = loadGeneralFile(url, current, referer, 0, request);
   if (buf == NULL) {
-    /* FIXME: gettextize? */
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {

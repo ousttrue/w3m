@@ -21,7 +21,6 @@
 #define KEYMAP_FILE  "keymap"
 #define MENU_FILE    "menu"
 #define MOUSE_FILE   "mouse"
-#define COOKIE_FILE  "cookie"
 #define HISTORY_FILE "history"
 
 #define PASSWD_FILE	RC_DIR "/passwd"

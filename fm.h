@@ -107,7 +107,7 @@ global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
 global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
-global char *BookmarkFile init(nullptr);
+global const char *BookmarkFile init(nullptr);
 global int UseExternalDirBuffer init(TRUE);
 global char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
@@ -137,7 +137,7 @@ global char *param_tmp_dir init(nullptr);
 #ifdef HAVE_MKDTEMP
 global char *mkd_tmp_dir init(nullptr);
 #endif
-global char *config_file init(nullptr);
+global const char *config_file init(nullptr);
 
 
 global int is_redisplay init(FALSE);

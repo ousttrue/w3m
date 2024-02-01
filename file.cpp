@@ -1219,31 +1219,31 @@ static long long current_content_length;
  * loadGeneralFile: load file to buffer
  */
 #define DO_EXTERNAL ((Buffer * (*)(URLFile *, Buffer *)) doExternal)
-Buffer *loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
-                        int flag, FormList *volatile request) {
-  URLFile f, *volatile of = NULL;
+Buffer *loadGeneralFile(const char *path, ParsedURL *current,
+                        const char *referer, int flag, FormList *request) {
+  URLFile f, *of = NULL;
   ParsedURL pu;
   Buffer *b = NULL;
-  Buffer *(*volatile proc)(URLFile *, Buffer *) = loadBuffer;
-  char *volatile tpath;
-  const char *volatile t = "text/plain";
+  Buffer *(*proc)(URLFile *, Buffer *) = loadBuffer;
+  const char *tpath;
+  const char *t = "text/plain";
   char *p = NULL;
-  const char *volatile real_type = NULL;
-  Buffer *volatile t_buf = NULL;
-  int volatile searchHeader = SearchHeader;
-  int volatile searchHeader_through = TRUE;
+  const char *real_type = NULL;
+  Buffer *t_buf = NULL;
+  int searchHeader = SearchHeader;
+  int searchHeader_through = TRUE;
   MySignalHandler prevtrap = NULL;
   TextList *extra_header = newTextList();
   Str *uname = NULL;
   Str *pwd = NULL;
   Str *realm = NULL;
-  int volatile add_auth_cookie_flag;
+  int add_auth_cookie_flag;
   unsigned char status = HTST_NORMAL;
   URLOption url_option;
   Str *tmp;
   Str *page = NULL;
   HRequest hr;
-  ParsedURL *volatile auth_pu;
+  ParsedURL *auth_pu;
 
   tpath = path;
   prevtrap = NULL;
@@ -1253,7 +1253,7 @@ Buffer *loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 
 load_doc: {
   const char *sc_redirect;
-  parseURL2(tpath, &pu, current);
+  parseURL2((char *)tpath, &pu, current);
   sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
   if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
     tpath = (char *)sc_redirect;
@@ -1266,9 +1266,9 @@ load_doc: {
   }
 }
   TRAP_OFF;
-  url_option.referer = referer;
+  url_option.referer = (char*)referer;
   url_option.flag = flag;
-  f = openURL(tpath, &pu, current, &url_option, request, extra_header, of, &hr,
+  f = openURL((char*)tpath, &pu, current, &url_option, request, extra_header, of, &hr,
               &status);
   of = NULL;
   if (f.stream == NULL) {
@@ -1428,7 +1428,7 @@ load_doc: {
 
     f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
   } else if (pu.scheme == SCM_FTP) {
-    check_compression(path, &f);
+    check_compression((char*)path, &f);
     if (f.compression != CMP_NOCOMPRESS) {
       char *t1 = uncompressed_file_type(pu.file, NULL);
       real_type = f.guess_type;
@@ -1652,10 +1652,10 @@ extern Lineprop NullProp[];
 /*
  * loadBuffer: read file and make new buffer
  */
-Buffer *loadBuffer(URLFile *uf, Buffer *volatile newBuf) {
-  FILE *volatile src = NULL;
+Buffer *loadBuffer(URLFile *uf, Buffer *newBuf) {
+  FILE *src = NULL;
   Str *lineBuf2;
-  volatile char pre_lbuf = '\0';
+  char pre_lbuf = '\0';
   int nlines;
   Str *tmpf;
   long long linelen = 0, trbyte = 0;
@@ -1893,15 +1893,14 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
 }
 
 Line *getNextPage(Buffer *buf, int plen) {
-  Line *volatile top = buf->topLine, *volatile last = buf->lastLine,
-                 *volatile cur = buf->currentLine;
+  Line *top = buf->topLine, *last = buf->lastLine, *cur = buf->currentLine;
   int i;
-  int volatile nlines = 0;
+  int nlines = 0;
   long long linelen = 0, trbyte = buf->trbyte;
   Str *lineBuf2;
-  char volatile pre_lbuf = '\0';
+  char pre_lbuf = '\0';
   URLFile uf;
-  int volatile squeeze_flag = FALSE;
+  int squeeze_flag = FALSE;
   Lineprop *propBuffer = NULL;
 
   MySignalHandler prevtrap = NULL;
@@ -1992,8 +1991,8 @@ int save2tmp(URLFile uf, char *tmpf) {
   long long linelen = 0, trbyte = 0;
   MySignalHandler prevtrap = NULL;
   static JMP_BUF env_bak;
-  volatile int retval = 0;
-  char *volatile buf = NULL;
+  int retval = 0;
+  char *buf = NULL;
 
   ff = fopen(tmpf, "wb");
   if (ff == NULL) {

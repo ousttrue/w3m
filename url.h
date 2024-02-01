@@ -27,7 +27,7 @@ extern char *NO_proxy;
 extern int NOproxy_netaddr;
 extern bool use_proxy;
 // #define Do_not_use_proxy (!use_proxy)
-extern char *w3m_reqlog;
+extern const char *w3m_reqlog;
 extern char *index_file;
 struct TextList;
 extern TextList *NO_proxy_domains;

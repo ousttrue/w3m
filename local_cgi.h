@@ -38,4 +38,6 @@ extern char *cgi_bin;
 #endif /* not S_ISLNK */
 #endif /* not HAVE_READLINK */
 
-extern void set_environ(const char *var, const char *value);
+void set_environ(const char *var, const char *value);
+struct Str;
+Str *localCookie(void);

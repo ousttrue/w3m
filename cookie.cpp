@@ -8,6 +8,7 @@
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 #include "cookie.h"
+#include "rc.h"
 #include "w3m.h"
 #include "terms.h"
 #include "etc.h"
@@ -25,19 +26,46 @@
 #include "proto.h"
 #include <time.h>
 
+#define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
+/* version 0 refers to the original cookie_spec.html */
+/* version 1 refers to RFC 2109 */
+/* version 1' refers to the Internet draft to obsolete RFC 2109 */
+#define COO_EINTERNAL                                                          \
+  (1) /* unknown error; probably forgot to convert "return 1" in cookie.c */
+#define COO_ETAIL (2 | COO_OVERRIDE_OK) /* tail match failed (version 0) */
+#define COO_ESPECIAL (3) /* special domain check failed (version 0) */
+#define COO_EPATH (4)    /* Path attribute mismatch (version 1 case 1) */
+#define COO_ENODOT                                                             \
+  (5 | COO_OVERRIDE_OK) /* no embedded dots in Domain (version 1 case 2.1) */
+#define COO_ENOTV1DOM                                                          \
+  (6 | COO_OVERRIDE_OK) /* Domain does not start with a dot (version 1         \
+                           case 2.2) */
+#define COO_EDOM                                                               \
+  (7 | COO_OVERRIDE_OK) /* domain-match failed (version 1 case 3) */
+#define COO_EBADHOST                                                           \
+  (8 |                                                                         \
+   COO_OVERRIDE_OK)   /* dot in matched host name in FQDN (version 1 case 4) */
+#define COO_EPORT (9) /* Port match failed (version 1' case 5) */
+#define COO_EMAX COO_EPORT
+
+struct portlist {
+  unsigned short port;
+  struct portlist *next;
+};
+
 int default_use_cookie = TRUE;
 int use_cookie = TRUE;
 int show_cookie = FALSE;
 int accept_cookie = TRUE;
 int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
-char *cookie_reject_domains = nullptr;
-char *cookie_accept_domains = nullptr;
-char *cookie_avoid_wrong_number_of_dots = nullptr;
+const char *cookie_reject_domains = nullptr;
+const char *cookie_accept_domains = nullptr;
+const char *cookie_avoid_wrong_number_of_dots = nullptr;
 TextList *Cookie_reject_domains;
 TextList *Cookie_accept_domains;
 TextList *Cookie_avoid_wrong_number_of_dots_domains;
 
-static int is_saved = 1;
+static bool is_saved = 1;
 
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
@@ -45,7 +73,7 @@ static int is_saved = 1;
 #include <sys/socket.h>
 #endif /* INET6 */
 #include <netdb.h>
-const char *FQDN(const char *host) {
+static const char *FQDN(const char *host) {
   const char *p;
 #ifndef INET6
   struct hostent *entry;
@@ -107,6 +135,7 @@ const char *FQDN(const char *host) {
   return NULL;
 #endif /* INET6 */
 }
+
 static unsigned int total_dot_number(const char *p, const char *ep,
                                      unsigned int max_count) {
   unsigned int count = 0;
@@ -335,8 +364,8 @@ static int check_avoid_wrong_number_of_dots_domain(Str *domain) {
 }
 
 int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
-               Str *domain, Str *path, int flag, Str *comment, int version,
-               Str *port, Str *commentURL) {
+               Str *domain, Str *path, CookieFlags flag, Str *comment,
+               int version, Str *port, Str *commentURL) {
   struct cookie *p;
   const char *domainname = (version == 0) ? FQDN(pu->host) : pu->host;
   Str *odomain = domain;
@@ -424,10 +453,11 @@ int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
 
   p = get_cookie_info(domain, path, name);
   if (!p) {
-    p = (struct cookie *)New(struct cookie);
-    p->flag = 0;
-    if (default_use_cookie)
-      p->flag |= COO_USE;
+    p = (cookie *)New(struct cookie);
+    p->flag = {};
+    if (default_use_cookie) {
+      p->flag = (CookieFlags)(p->flag | COO_USE);
+    }
     p->next = First_cookie;
     First_cookie = p;
   }
@@ -444,21 +474,24 @@ int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
   p->commentURL = commentURL;
 
   if (flag & COO_SECURE)
-    p->flag |= COO_SECURE;
+    p->flag = (CookieFlags)(p->flag | COO_SECURE);
   else
-    p->flag &= ~COO_SECURE;
+    p->flag = (CookieFlags)(p->flag & ~COO_SECURE);
+
   if (odomain)
-    p->flag |= COO_DOMAIN;
+    p->flag = (CookieFlags)(p->flag | COO_DOMAIN);
   else
-    p->flag &= ~COO_DOMAIN;
+    p->flag = (CookieFlags)(p->flag & ~COO_DOMAIN);
+
   if (opath)
-    p->flag |= COO_PATH;
+    p->flag = (CookieFlags)(p->flag | COO_PATH);
   else
-    p->flag &= ~COO_PATH;
+    p->flag = (CookieFlags)(p->flag & ~COO_PATH);
+
   if (flag & COO_DISCARD || p->expires == (time_t)-1) {
-    p->flag |= COO_DISCARD;
+    p->flag = (CookieFlags)(p->flag | COO_DISCARD);
   } else {
-    p->flag &= ~COO_DISCARD;
+    p->flag = (CookieFlags)(p->flag & ~COO_DISCARD);
     is_saved = 0;
   }
 
@@ -478,9 +511,10 @@ static struct cookie *nth_cookie(int n) {
 
 #define str2charp(str) ((str) ? (str)->ptr : "")
 
+#define COOKIE_FILE "cookie"
 void save_cookies(void) {
   struct cookie *p;
-  char *cookie_file;
+  const char *cookie_file;
   FILE *fp;
 
   check_expired_cookies();
@@ -538,7 +572,7 @@ void load_cookies(void) {
     str = line->ptr;
     cookie = (struct cookie *)New(struct cookie);
     cookie->next = NULL;
-    cookie->flag = 0;
+    cookie->flag = {};
     cookie->version = 0;
     cookie->expires = (time_t)-1;
     cookie->comment = NULL;
@@ -562,7 +596,7 @@ void load_cookies(void) {
     cookie->path = readcol(&str);
     if (!*str)
       break;
-    cookie->flag = atoi(readcol(&str)->ptr);
+    cookie->flag = (CookieFlags)atoi(readcol(&str)->ptr);
     if (!*str)
       break;
     cookie->version = atoi(readcol(&str)->ptr);
@@ -711,9 +745,9 @@ void set_cookie_flag(struct parsed_tagarg *arg) {
       v = atoi(arg->value);
       if ((p = nth_cookie(n)) != NULL) {
         if (v && !(p->flag & COO_USE))
-          p->flag |= COO_USE;
+          p->flag = (CookieFlags)(p->flag | COO_USE);
         else if (!v && p->flag & COO_USE)
-          p->flag &= ~COO_USE;
+          p->flag = (CookieFlags)(p->flag & ~COO_USE);
         if (!(p->flag & COO_DISCARD))
           is_saved = 0;
       }
@@ -753,9 +787,17 @@ const char *violations[COO_EMAX] = {
     "RFC XXXX 4.3.2 rule 5"};
 
 void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
-  Str *name = Strnew(), *value = Strnew(), *domain = NULL, *path = NULL,
-      *comment = NULL, *commentURL = NULL, *port = NULL, *tmp2;
-  int version, quoted, flag = 0;
+  Str *name = Strnew();
+  Str *value = Strnew();
+  Str *domain = NULL;
+  Str *path = NULL;
+  Str *comment = NULL;
+  Str *commentURL = NULL;
+  Str *port = NULL;
+  Str *tmp2;
+  int version;
+  int quoted;
+  CookieFlags flag = {};
   time_t expires = (time_t)-1;
 
   const char *q = {};
@@ -767,9 +809,11 @@ void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
     p = lineBuf2->ptr + 11;
     version = 0;
   }
+
 #ifdef DEBUG
   fprintf(stderr, "Set-Cookie: [%s]\n", p);
 #endif /* DEBUG */
+
   SKIP_BLANKS(p);
   while (*p != '=' && !IS_ENDT(*p))
     Strcat_char(name, *(p++));
@@ -803,7 +847,7 @@ void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
     } else if (matchattr(p, "path", 4, &tmp2)) {
       path = tmp2;
     } else if (matchattr(p, "secure", 6, NULL)) {
-      flag |= COO_SECURE;
+      flag = (CookieFlags)(flag | COO_SECURE);
     } else if (matchattr(p, "comment", 7, &tmp2)) {
       comment = tmp2;
     } else if (matchattr(p, "version", 7, &tmp2)) {
@@ -816,7 +860,7 @@ void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
       commentURL = tmp2;
     } else if (matchattr(p, "discard", 7, NULL)) {
       /* version 1, Set-Cookie2 */
-      flag |= COO_DISCARD;
+      flag = (CookieFlags)(flag | COO_DISCARD);
     }
     quoted = 0;
     while (!IS_ENDL(*p) && (quoted || *p != ';')) {
@@ -854,8 +898,8 @@ void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
 
       if (ans == NULL || TOLOWER(*ans) != 'y' ||
           (err = add_cookie(pu, name, value, expires, domain, path,
-                            flag | COO_OVERRIDE, comment, version, port,
-                            commentURL))) {
+                            (CookieFlags)(flag | COO_OVERRIDE), comment,
+                            version, port, commentURL))) {
         err = (err & ~COO_OVERRIDE_OK) - 1;
         const char *emsg;
         if (err >= 0 && err < COO_EMAX)

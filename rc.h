@@ -27,3 +27,10 @@ const void *querySiteconf(const ParsedURL *query_pu, int field);
   ((const int *)querySiteconf(pu, SCONF_NO_REFERER_FROM))
 #define query_SCONF_NO_REFERER_TO(pu)                                          \
   ((const int *)querySiteconf(pu, SCONF_NO_REFERER_TO))
+
+const char *rcFile(const char *base);
+char *etcFile(char *base);
+char *confFile(char *base);
+char *auxbinFile(char *base);
+char *libFile(char *base);
+char *helpFile(char *base);

@@ -85,7 +85,7 @@ void saveHistory(Hist *hist, size_t size) {
   FILE *f;
   Hist *fhist;
   HistItem *item;
-  char *histf;
+  const char *histf;
   char *tmpf;
   int rename_ret;
   struct stat st;
