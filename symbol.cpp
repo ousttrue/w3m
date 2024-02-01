@@ -1,28 +1,21 @@
-#include "fm.h"
 #include "Str.h"
 #include "readbuffer.h"
 #include "ctrlcode.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
 
-char **
-get_symbol(void)
-{
-    return alt_symbol;
-}
+const char **get_symbol(void) { return alt_symbol; }
 
-void
-push_symbol(Str* str, char symbol, int width, int n)
-{
-    char buf[2], *p;
-    int i;
+void push_symbol(Str *str, char symbol, int width, int n) {
+  char buf[2];
 
-	p = alt_symbol[(unsigned char)symbol % N_SYMBOL];
-    for (i = 0; i < 2 && *p; i++, p++)
-	buf[i] = (*p == ' ') ? (char)NBSP_CODE : *p;
+  auto p = alt_symbol[(unsigned char)symbol % N_SYMBOL];
+  int i = 0;
+  for (; i < 2 && *p; i++, p++)
+    buf[i] = (*p == ' ') ? (char)NBSP_CODE : *p;
 
-    Strcat(str, Sprintf("<_SYMBOL TYPE=%d>", symbol));
-    for (; n > 0; n--)
-	Strcat_charp_n(str, buf, i);
-    Strcat_charp(str, "</_SYMBOL>");
+  Strcat(str, Sprintf("<_SYMBOL TYPE=%d>", symbol));
+  for (; n > 0; n--)
+    Strcat_charp_n(str, buf, i);
+  Strcat_charp(str, "</_SYMBOL>");
 }

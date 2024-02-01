@@ -27,7 +27,7 @@
 #endif
 #include <sys/ioctl.h>
 
-static char *title_str = NULL;
+static const char *title_str = NULL;
 static int tty = -1;
 
 bool Do_not_use_ti_te = false;
@@ -120,8 +120,8 @@ static char SCREEN_TITLE[] = "\033k%s\033\134";
 
 /* *INDENT-OFF* */
 static struct w3m_term_info {
-  char *term;
-  char *title_str;
+  const char *term;
+  const char *title_str;
 } w3m_term_info_list[] = {
     {W3M_TERM_INFO("xterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF))},
     {W3M_TERM_INFO("kterm", XTERM_TITLE, (NEED_XTERM_ON | NEED_XTERM_OFF))},
@@ -134,8 +134,7 @@ static struct w3m_term_info {
 /* *INDENT-ON * */
 
 int set_tty(void) {
-  char *ttyn;
-
+  const char *ttyn;
   if (isatty(0)) /* stdin */
     ttyn = ttyname(0);
   else
@@ -405,7 +404,7 @@ int graph_ok(void) {
   return _entry.T_as[0] != 0 && _entry.T_ae[0] != 0 && _entry.T_ac[0] != 0;
 }
 
-static char *color_seq(int colmode) {
+static const char *color_seq(int colmode) {
   static char seqbuf[32];
   sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + 30);
   return seqbuf;

@@ -258,14 +258,13 @@ int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos, int mode) {
     }
   }
   realColumn.push_back(j);
-  if (pos < realColumn.size()) {
+  if (pos < static_cast<int>(realColumn.size())) {
     return realColumn[pos];
   }
   return j;
 }
 
 int columnLen(Line *line, int column) {
-  int j = 0;
   for (auto i = 0; i < line->len;) {
     auto j = calcPosition(&line->lineBuf[i], &line->propBuf[i], line->len, i, 0,
                           CP_AUTO);
@@ -600,7 +599,7 @@ void loadPasswd(void) {
 }
 
 /* get last modified time */
-char *last_modified(Buffer *buf) {
+const char *last_modified(Buffer *buf) {
   TextListItem *ti;
   struct stat st;
 
@@ -678,7 +677,7 @@ err0:
   return (pid_t)-1;
 }
 
-void mySystem(char *command, int background) {
+void mySystem(const char *command, int background) {
   if (background) {
     flush_tty();
     if (!fork()) {
@@ -689,9 +688,9 @@ void mySystem(char *command, int background) {
     system(command);
 }
 
-Str *myExtCommand(char *cmd, char *arg, int redirect) {
+Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
   Str *tmp = NULL;
-  char *p;
+  const char *p;
   int set_arg = FALSE;
 
   for (p = cmd; *p; p++) {
@@ -715,12 +714,11 @@ Str *myExtCommand(char *cmd, char *arg, int redirect) {
   return tmp;
 }
 
-Str *myEditor(char *cmd, char *file, int line) {
+Str *myEditor(const char *cmd, const char *file, int line) {
   Str *tmp = NULL;
-  char *p;
   int set_file = FALSE, set_line = FALSE;
 
-  for (p = cmd; *p; p++) {
+  for (auto p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_file) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
@@ -876,48 +874,38 @@ const char *file_to_url(const char *file) {
   return tmp->ptr;
 }
 
-char *url_unquote_conv0(char *url) {
+const char *url_unquote_conv0(const char *url) {
   Str *tmp;
   tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
   return tmp->ptr;
 }
 
-
-
-
-
-static char Base64Table[] =
+static auto Base64Table =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-Str *base64_encode(const char *src, size_t len) {
-  Str *dest;
-  const unsigned char *in, *endw, *s;
-  unsigned long j;
-  size_t k;
+Str *base64_encode(const char *src, int len) {
 
-  s = (unsigned char *)src;
-
-  k = len;
+  auto k = len;
   if (k % 3)
     k += 3 - (k % 3);
-
   k = k / 3 * 4;
 
   if (!len || k + 1 < len)
     return Strnew();
 
-  dest = Strnew_size(k);
+  auto dest = Strnew_size(k);
   if (dest->area_size <= k) {
     Strfree(dest);
     return Strnew();
   }
 
-  in = s;
+  auto s = (unsigned char *)src;
+  auto in = s;
 
-  endw = s + len - 2;
+  auto endw = s + len - 2;
 
   while (in < endw) {
-    j = *in++;
+    auto j = *in++;
     j = j << 8 | *in++;
     j = j << 8 | *in++;
 
@@ -928,7 +916,7 @@ Str *base64_encode(const char *src, size_t len) {
   }
 
   if (s + len - in) {
-    j = *in++;
+    auto j = *in++;
     if (s + len - in) {
       j = j << 8 | *in++;
       j = j << 8;

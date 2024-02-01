@@ -1,4 +1,5 @@
 #pragma once
+#include <stddef.h>
 
 #define LINELEN 256 /* Initial line length */
 

@@ -28,9 +28,8 @@ static int mergeHistory(Hist *ours, Hist *theirs) {
 Buffer *historyBuffer(Hist *hist) {
   Str *src = Strnew();
   HistItem *item;
-  char *p, *q;
+  const char *p, *q;
 
-  /* FIXME: gettextize? */
   Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
   Strcat_charp(src, "<body>\n<h1>History Page</h1>\n<hr>\n");
   Strcat_charp(src, "<ol>\n");
@@ -81,7 +80,7 @@ int loadHistory(Hist *hist) {
   return 0;
 }
 
-void saveHistory(Hist *hist, size_t size) {
+void saveHistory(Hist *hist, int size) {
   FILE *f;
   Hist *fhist;
   HistItem *item;

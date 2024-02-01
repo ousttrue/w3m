@@ -279,7 +279,7 @@ unsigned char QUOTE_MAP[0x100] = {
     16,
 };
 
-char *HTML_QUOTE_MAP[] = {
+const char *HTML_QUOTE_MAP[] = {
     NULL, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", NULL, NULL,
 };
 
@@ -372,12 +372,10 @@ char *currentdir() {
   return path;
 }
 
-char *cleanupName(char *name) {
-  char *buf, *p, *q;
-
-  buf = allocStr(name, -1);
-  p = buf;
-  q = name;
+const char *cleanupName(const char *name) {
+  auto buf = allocStr(name, -1);
+  auto p = buf;
+  auto q = name;
   while (*q != '\0') {
     if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
       if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
@@ -648,7 +646,7 @@ const char *getescapecmd(const char **s) {
   return tmp->ptr;
 }
 
-char *html_quote(const char *str) {
+const char *html_quote(const char *str) {
   Str *tmp = NULL;
   for (auto p = str; *p; p++) {
     auto q = html_quote_char(*p);
@@ -715,9 +713,9 @@ const char *url_quote(const char *str) {
   return str;
 }
 
-char *file_quote(char *str) {
+const char *file_quote(const char *str) {
   Str *tmp = NULL;
-  char *p;
+  const char *p;
   char buf[4];
 
   for (p = str; *p; p++) {
@@ -736,9 +734,9 @@ char *file_quote(char *str) {
   return str;
 }
 
-char *file_unquote(char *str) {
+const char *file_unquote(const char *str) {
   Str *tmp = NULL;
-  char *p, *q;
+  const char *p, *q;
   int c;
 
   for (p = str; *p;) {
@@ -820,9 +818,9 @@ Str *Str_url_unquote(Str *x, int is_form, int safe) {
   return x;
 }
 
-char *shell_quote(char *str) {
+const char *shell_quote(const char *str) {
   Str *tmp = NULL;
-  char *p;
+  const char *p;
 
   for (p = str; *p; p++) {
     if (is_shell_unsafe(*p)) {

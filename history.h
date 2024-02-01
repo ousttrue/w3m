@@ -35,7 +35,7 @@ const char *lastHist(Hist *hist);
 const char *nextHist(Hist *hist);
 const char *prevHist(Hist *hist);
 int loadHistory(Hist *hist);
-void saveHistory(Hist *hist, size_t size);
+void saveHistory(Hist *hist, int size);
 void ldHist(void);
 struct Buffer;
 Buffer *historyBuffer(Hist *hist);

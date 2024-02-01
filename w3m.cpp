@@ -36,9 +36,9 @@ bool do_download = false;
 #ifdef HAVE_READLINE
 #include <readline/readline.h>
 #else  /* ! HAVE_READLINE */
-static char *readline(char *);
+static char *readline(const char *);
 #endif /* ! HAVE_READLINE */
-static TextList *split(char *);
+static TextList *split(const char *);
 
 /* Prototype declaration of command functions */
 static void get(TextList *);
@@ -285,7 +285,7 @@ int backend(void) {
 
 /* Dummy function of readline(). */
 #ifndef HAVE_READLINE
-static char *readline(char *prompt) {
+static char *readline(const char *prompt) {
   Str *s;
   fputs(prompt, stdout);
   fflush(stdout);
@@ -298,7 +298,7 @@ static char *readline(char *prompt) {
 #endif /* ! HAVE_READLINE */
 
 /* Splits a string into a list of tokens and returns that list. */
-static TextList *split(char *p) {
+static TextList *split(const char *p) {
   int in_double_quote = FALSE, in_single_quote = FALSE;
   Str *s = Strnew();
   TextList *tp = newTextList();

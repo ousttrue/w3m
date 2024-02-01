@@ -539,7 +539,7 @@ Buffer *link_list_panel(Buffer *buf) {
   Anchor *a;
   FormItemList *fi;
   int i;
-  char *u, *p;
+  const char *u, *p;
   const char *t;
   ParsedURL pu;
   /* FIXME: gettextize? */

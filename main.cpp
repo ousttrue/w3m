@@ -892,12 +892,8 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
 
 DEFUN(pipeBuf, PIPE_BUF,
       "Pipe current buffer through a shell command and display output") {
-  Buffer *buf;
-  const char *cmd, *tmpf;
-  FILE *f;
-
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
+  auto cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
     // cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
   }
@@ -905,16 +901,15 @@ DEFUN(pipeBuf, PIPE_BUF,
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  f = fopen(tmpf, "w");
+  auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+  auto f = fopen(tmpf, "w");
   if (f == NULL) {
     disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
     return;
   }
   saveBuffer(Currentbuf, f, TRUE);
   fclose(f);
-  buf =
-      getpipe(myExtCommand((char *)cmd, shell_quote((char *)tmpf), TRUE)->ptr);
+  auto buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
   if (buf == NULL) {
     disp_message("Execution failed", TRUE);
     return;
@@ -1027,15 +1022,12 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel") {
-  char *lang;
-  int n;
-  Str *tmp;
-
-  lang = AcceptLang;
-  n = strcspn(lang, ";, \t");
-  tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
-                Str_form_quote(Strnew_charp(w3m_version))->ptr,
-                Str_form_quote(Strnew_charp_n(lang, n))->ptr);
+  auto lang = AcceptLang;
+  auto n = strcspn(lang, ";, \t");
+  auto tmp =
+      Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+              Str_form_quote(Strnew_charp(w3m_version))->ptr,
+              Str_form_quote(Strnew_charp_n(lang, n))->ptr);
   cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
@@ -1376,7 +1368,7 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
     _goLine("^");
   else if (str)
     _goLine(str);
-  else{
+  else {
     // _goLine(inputStr("Goto line: ", ""));
   }
 }
@@ -1425,7 +1417,6 @@ static int cur_real_linenumber(Buffer *buf) {
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
   auto fn = Currentbuf->filename;
-  Str *cmd;
 
   if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
       (Currentbuf->type == NULL &&
@@ -1436,6 +1427,8 @@ DEFUN(editBf, EDIT, "Edit local source") {
     disp_err_message("Can't edit other than local file", TRUE);
     return;
   }
+
+  Str *cmd;
   if (Currentbuf->edit)
     cmd =
         unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, (char *)fn,
@@ -1451,13 +1444,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
 /* Run editor on the current screen */
 DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
-  char *tmpf;
-  FILE *f;
-
-  tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  f = fopen(tmpf, "w");
+  auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+  auto f = fopen(tmpf, "w");
   if (f == NULL) {
-    /* FIXME: gettextize? */
     disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
     return;
   }
@@ -1899,7 +1888,8 @@ static void _followForm(int submit) {
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
       break;
     }
-    // p = inputLine("Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
+    // p = inputLine("Password:", fi->value ? fi->value->ptr : NULL,
+    // IN_PASSWORD);
     if (p == NULL)
       break;
     fi->value = Strnew_charp(p);

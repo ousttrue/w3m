@@ -1090,7 +1090,7 @@ void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
       Strcat_charp(tmp, html_quote(obuf->anchor.title));
     }
     if (obuf->anchor.accesskey) {
-      char *c = html_quote_char(obuf->anchor.accesskey);
+      auto c = html_quote_char(obuf->anchor.accesskey);
       Strcat_charp(tmp, "\" ACCESSKEY=\"");
       if (c)
         Strcat_charp(tmp, c);
@@ -3522,7 +3522,7 @@ table_start:
                    0);
           str++;
         } else if (obuf->flag & RB_PLAIN) {
-          char *p = html_quote_char(*str);
+          auto p = html_quote_char(*str);
           if (p) {
             push_charp(obuf, 1, p, PC_ASCII);
             str++;

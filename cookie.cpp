@@ -635,7 +635,8 @@ Buffer *cookie_list_panel(void) {
                           "<p><form method=internal action=cookie>");
   struct cookie *p;
   int i;
-  char *tmp, tmp2[80];
+  const char *tmp;
+  char tmp2[80];
 
   if (!use_cookie || !First_cookie)
     return NULL;

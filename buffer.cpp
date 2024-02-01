@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "etc.h"
 #include "url_stream.h"
 #include "message.h"
 #include "screen.h"
@@ -574,8 +575,9 @@ int writeBufferCache(Buffer *buf) {
         fwrite1(l->bwidth, cache))
       goto _error;
     if (l->bpos == 0) {
-      if (fwrite(l->lineBuf, 1, l->size, cache) < l->size ||
-          fwrite(l->propBuf, sizeof(Lineprop), l->size, cache) < l->size)
+      if (static_cast<int>(fwrite(l->lineBuf, 1, l->size, cache)) < l->size ||
+          static_cast<int>(
+              fwrite(l->propBuf, sizeof(Lineprop), l->size, cache)) < l->size)
         goto _error;
     }
   }
@@ -652,7 +654,7 @@ int readBufferCache(Buffer *buf) {
 static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   LinkList *l;
   ParsedURL pu;
-  char *url;
+  const char *url;
 
   if (!link)
     return;
@@ -693,7 +695,7 @@ Buffer *page_info_panel(Buffer *buf) {
   TextListItem *ti;
   struct frameset *f_set = NULL;
   int all;
-  char *p, *q;
+  const char *p, *q;
   Buffer *newbuf;
 
   Strcat_charp(tmp, "<html><head>\

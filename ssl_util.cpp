@@ -164,7 +164,7 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
 #else
           const unsigned char *sn = ASN1_STRING_get0_data(gn->d.ia5);
 #endif
-          int sl = ASN1_STRING_length(gn->d.ia5);
+          auto sl = ASN1_STRING_length(gn->d.ia5);
 
           /*
            * sn is a pointer to internal data and not guaranteed to
@@ -198,7 +198,6 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
       if (i < n) /* Found a match */
         match_ident = TRUE;
       else if (seen_dnsname)
-        /* FIXME: gettextize? */
         ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
                       seen_dnsname->ptr);
     }
@@ -207,25 +206,21 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
   if (match_ident == FALSE && ret == NULL) {
     X509_NAME *xn;
     char buf[2048];
-    int slen;
 
     xn = X509_get_subject_name(x);
 
-    slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
+    auto slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
     if (slen == -1)
-      /* FIXME: gettextize? */
       ret = Strnew_charp("Unable to get common name from peer cert");
     else if (slen != strlen(buf) ||
              !ssl_match_cert_ident(buf, strlen(buf), hostname)) {
       /* replace \0 to make full string visible to user */
       if (slen != strlen(buf)) {
-        int i;
-        for (i = 0; i < slen; ++i) {
+        for (auto i = 0; i < slen; ++i) {
           if (!buf[i])
             buf[i] = '!';
         }
       }
-      /* FIXME: gettextize? */
       ret = Sprintf("Bad cert ident %s from %s", buf, hostname);
     }
   }
@@ -568,5 +563,3 @@ input_stream *newSSLStream(SSL *ssl, int sock) {
   stream->ssl.close = (CloseFunc)ssl_close;
   return stream;
 }
-
-

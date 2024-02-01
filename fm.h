@@ -79,12 +79,12 @@ global int displayLineInfo init(FALSE);
 global int show_srch_str init(TRUE);
 global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
 
-global char *Editor init(DEF_EDITOR);
-global char *Mailer init(DEF_MAILER);
+global const char *Editor init(DEF_EDITOR);
+global const char *Mailer init(DEF_MAILER);
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
-global char *ExtBrowser init(DEF_EXT_BROWSER);
+global const char *ExtBrowser init(DEF_EXT_BROWSER);
 global char *ExtBrowser2 init(nullptr);
 global char *ExtBrowser3 init(nullptr);
 global char *ExtBrowser4 init(nullptr);
@@ -95,10 +95,10 @@ global char *ExtBrowser8 init(nullptr);
 global char *ExtBrowser9 init(nullptr);
 global int BackgroundExtViewer init(TRUE);
 global int disable_secret_security_check init(FALSE);
-global char *passwd_file init(PASSWD_FILE);
-global char *pre_form_file init(PRE_FORM_FILE);
-global char *siteconf_file init(SITECONF_FILE);
-global char *ftppasswd init(nullptr);
+global const char *passwd_file init(PASSWD_FILE);
+global const char *pre_form_file init(PRE_FORM_FILE);
+global const char *siteconf_file init(SITECONF_FILE);
+global const char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(TRUE);
 
 global int WrapDefault init(FALSE);
@@ -107,9 +107,9 @@ global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
 global const char *BookmarkFile init(nullptr);
 global int UseExternalDirBuffer init(TRUE);
-global char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
+global const char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(TRUE);
-global char *DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
+global const char *DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
 global int FoldTextarea init(FALSE);
 global int FoldLine init(FALSE);
 #define DEFAULT_URL_EMPTY 0
@@ -120,14 +120,14 @@ global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global struct auth_cookie *Auth_cookie init(nullptr);
 global struct cookie *First_cookie init(nullptr);
 
-global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
+global const char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 
 #define wc_Str_conv(x, charset0, charset1) (x)
 #define wc_Str_conv_strict(x, charset0, charset1) (x)
 global char UseAltEntity init(FALSE);
 
-extern char *graph_symbol[];
-extern char *graph2_symbol[];
+extern const char *graph_symbol[];
+extern const char *graph2_symbol[];
 
 global int no_rc_dir init(FALSE);
 
@@ -137,11 +137,8 @@ global const char *mkd_tmp_dir init(nullptr);
 #endif
 global const char *config_file init(nullptr);
 
-
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
 global int set_pixel_per_char init(FALSE);
 
-global char *keymap_file init(KEYMAP_FILE);
-
-
+global const char *keymap_file init(KEYMAP_FILE);

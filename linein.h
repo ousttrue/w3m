@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include <functional>
 
 extern bool space_autocomplete;
 extern bool emacs_like_lineedit;
@@ -17,8 +18,10 @@ enum InputFlags {
 struct Hist;
 struct Str;
 using IncFunc = int (*)(int ch, Str *buf, Lineprop *prop);
-// const char *inputLineHistSearch(const char *prompt, const char *def_str,
-//                                 InputFlags flag, Hist *hist, IncFunc incFunc);
+using OnInput = std::function<void(const char *input)>;
+void inputLineHistSearch(const char *prompt, const char *def_str,
+                         InputFlags flag, Hist *hist, IncFunc incFunc,
+                         const OnInput &onInput);
 
 // inline const char *inputLineHist(const char *p, const char *d, InputFlags f,
 //                                  Hist *h) {

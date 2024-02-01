@@ -683,7 +683,7 @@ void parseURL2(const char *url, ParsedURL *pu, ParsedURL *current) {
         pu->real_file = tmp->ptr;
       } else
 #endif
-        pu->real_file = cleanupName(file_unquote((char *)pu->file));
+        pu->real_file = cleanupName(file_unquote(pu->file));
     }
   }
 }
@@ -899,16 +899,17 @@ ParsedURL *schemaToProxy(UrlSchema schema) {
   case SCM_FTP:
     pu = &FTP_proxy_parsed;
     break;
-#ifdef DEBUG
   default:
+#ifdef DEBUG
     abort();
 #endif
+    break;
   }
   return pu;
 }
 
-char *url_decode0(const char *url) {
+const char *url_decode0(const char *url) {
   if (!DecodeURL)
-    return (char *)url;
-  return url_unquote_conv((char *)url, 0);
+    return url;
+  return url_unquote_conv(url, 0);
 }

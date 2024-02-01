@@ -71,6 +71,8 @@ const char *DefaultFile(UrlSchema schema) {
   case SCM_FTP:
   case SCM_FTPDIR:
     return allocStr("/", -1);
+  default:
+    break;
   }
   return NULL;
 }

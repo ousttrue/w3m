@@ -21,7 +21,7 @@ struct TextList;
 
 extern bool override_user_agent;
 extern char *UserAgent;
-extern char *AcceptLang;
+extern const char *AcceptLang;
 extern char *AcceptEncoding;
 extern char *AcceptMedia;
 extern bool NoCache;

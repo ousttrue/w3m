@@ -63,3 +63,5 @@ int openSocket(const char *hostname, const char *remoteport_name,
 
 struct ParsedURL;
 ParsedURL *schemaToProxy(UrlSchema schema);
+const char *url_decode0(const char *url);
+#define url_decode2(url, buf) url_decode0(url)

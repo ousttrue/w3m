@@ -29,14 +29,12 @@ const void *querySiteconf(const ParsedURL *query_pu, int field);
   ((const int *)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
 const char *rcFile(const char *base);
-char *etcFile(char *base);
-char *confFile(char *base);
-char *auxbinFile(char *base);
-char *libFile(char *base);
-char *helpFile(char *base);
+const char *etcFile(const char *base);
+const char *confFile(const char *base);
+const char *auxbinFile(const char *base);
+const char *libFile(const char *base);
+const char *helpFile(const char *base);
 int set_param_option(const char *option);
 const char *get_param_option(const char *name);
-void init_rc(void);
-void init_tmp(void);
-
-
+void init_rc();
+void init_tmp();

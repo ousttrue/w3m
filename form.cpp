@@ -140,11 +140,11 @@ FormItemList *formList_addInput(FormList *fl, struct parsed_tag *tag) {
   return item;
 }
 
-static char *_formtypetbl[] = {
+static const char *_formtypetbl[] = {
     "text",  "password", "checkbox", "radio",  "submit", "reset", "hidden",
     "image", "select",   "textarea", "button", "file",   NULL};
 
-static char *_formmethodtbl[] = {"GET", "POST", "INTERNAL", "HEAD"};
+static const char *_formmethodtbl[] = {"GET", "POST", "INTERNAL", "HEAD"};
 
 char *form2str(FormItemList *fi) {
   Str *tmp = Strnew();
@@ -547,25 +547,26 @@ write_end:
 
 struct pre_form_item {
   int type;
-  char *name;
-  char *value;
+  const char *name;
+  const char *value;
   int checked;
   struct pre_form_item *next;
 };
 
 struct pre_form {
-  char *url;
+  const char *url;
   Regex *re_url;
-  char *name;
-  char *action;
+  const char *name;
+  const char *action;
   struct pre_form_item *item;
   struct pre_form *next;
 };
 
 static struct pre_form *PreForm = NULL;
 
-static struct pre_form *add_pre_form(struct pre_form *prev, char *url,
-                                     Regex *re_url, char *name, char *action) {
+static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
+                                     Regex *re_url, const char *name,
+                                     const char *action) {
   ParsedURL pu;
   struct pre_form *_new;
 

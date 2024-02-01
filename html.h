@@ -77,7 +77,7 @@
 /* HTML Tag Information Table */
 
 struct TagInfo {
-  char *name;
+  const char *name;
   unsigned char *accept_attribute;
   unsigned char max_attribute;
   unsigned char flag;
@@ -89,7 +89,7 @@ struct TagInfo {
 /* HTML Tag Attribute Information Table */
 
 struct TagAttrInfo {
-  char *name;
+  const char *name;
   unsigned char vtype;
   unsigned char flag;
 };

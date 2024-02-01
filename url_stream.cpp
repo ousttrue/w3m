@@ -55,7 +55,7 @@ void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream) {
 
 /* add index_file if exists */
 static void add_index_file(ParsedURL *pu, UrlStream *uf) {
-  char *p, *q;
+  const char *p, *q;
   TextList *index_file_list = NULL;
   TextListItem *ti;
 
@@ -465,10 +465,9 @@ int save2tmp(UrlStream *uf, const char *tmpf) {
   TRAP_ON;
   {
     int count;
-
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
     while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
-      if (fwrite(buf, 1, count, ff) != count) {
+      if (static_cast<int>(fwrite(buf, 1, count, ff)) != count) {
         retval = -2;
         goto _end;
       }

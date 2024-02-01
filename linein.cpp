@@ -113,8 +113,9 @@ static Hist *CurrentHist;
 static Str *strCurrentBuf;
 static int use_hist;
 
-const char *inputLineHistSearch(const char *prompt, const char *def_str,
-                                InputFlags flag, Hist *hist, IncFunc incrfunc) {
+void inputLineHistSearch(const char *prompt, const char *def_str,
+                         InputFlags flag, Hist *hist, IncFunc incrfunc,
+                         const OnInput &onInput) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
@@ -248,8 +249,9 @@ const char *inputLineHistSearch(const char *prompt, const char *def_str,
       displayBuffer(Currentbuf, B_FORCE_REDRAW);
   }
 
-  if (i_broken)
-    return NULL;
+  if (i_broken) {
+    onInput(NULL);
+  }
 
   move(LASTLINE, 0);
   refresh(term_io());
@@ -262,10 +264,11 @@ const char *inputLineHistSearch(const char *prompt, const char *def_str,
     if (!q || strcmp(q, p))
       pushHist(hist, p);
   }
-  if (flag & IN_FILENAME)
-    return expandPath(p);
-  else
-    return allocStr(p, -1);
+  if (flag & IN_FILENAME) {
+    onInput(expandPath(p));
+  } else {
+    onInput(allocStr(p, -1));
+  }
 }
 
 static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
@@ -526,7 +529,7 @@ static void next_dcompl(int next) {
   static int col, row;
   static unsigned int len;
   static Str *d;
-  int i, j, n, y;
+  int i, j, y;
   Str *f;
   char *p;
   struct stat st;
@@ -583,7 +586,7 @@ static void next_dcompl(int next) {
 
   len = 0;
   for (i = 0; i < NCFileBuf; i++) {
-    n = strlen(CFileBuf[i]) + 3;
+    auto n = strlen(CFileBuf[i]) + 3;
     if (len < n)
       len = n;
   }
@@ -615,14 +618,13 @@ disp_next:
     move(y, 0);
     clrtoeolx();
     bold();
-    /* FIXME: gettextize? */
     addstr("----- Completion list -----");
     boldend();
     y++;
   }
   for (i = 0; i < row; i++) {
     for (j = 0; j < col; j++) {
-      n = cm_disp_next + j * row + i;
+      auto n = cm_disp_next + j * row + i;
       if (n >= NCFileBuf)
         break;
       move(y, j * len);
@@ -640,10 +642,8 @@ disp_next:
     clrtoeolx();
     bold();
     if (emacs_like_lineedit)
-      /* FIXME: gettextize? */
       addstr("----- Press TAB to continue -----");
     else
-      /* FIXME: gettextize? */
       addstr("----- Press CTRL-D to continue -----");
     boldend();
   }

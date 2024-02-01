@@ -193,9 +193,9 @@ void uncompress_stream(UrlStream *uf, const char **src) {
       if (tmpf)
         f = fopen(tmpf, "wb");
       while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
-        if (fwrite(buf, 1, count, stdout) != count)
+        if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
           break;
-        if (f && fwrite(buf, 1, count, f) != count)
+        if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
           break;
       }
       UFclose(uf);

@@ -10,7 +10,7 @@
 
 bool override_user_agent = false;
 char *UserAgent = nullptr;
-char *AcceptLang = nullptr;
+const char *AcceptLang = nullptr;
 char *AcceptEncoding = nullptr;
 char *AcceptMedia = nullptr;
 bool NoCache = false;

@@ -63,7 +63,7 @@ Str *loadLocalDir(const char *dname) {
   Directory *dir;
   struct stat st;
   char **flist;
-  char *p, *qdir;
+  const char *p, *qdir;
   Str *fbuf = Strnew();
 #ifdef HAVE_LSTAT
   struct stat lst;

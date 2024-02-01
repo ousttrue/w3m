@@ -54,16 +54,16 @@ int DecodeURL = FALSE;
 #define N_(Text) Text
 
 struct param_ptr {
-  char *name;
+  const char *name;
   int type;
   int inputtype;
   void *varptr;
-  char *comment;
+  const char *comment;
   void *select;
 };
 
 struct param_section {
-  char *name;
+  const char *name;
   struct param_ptr *params;
 };
 
@@ -240,8 +240,8 @@ static int RC_table_size;
 
 struct sel_c {
   int value;
-  char *cvalue;
-  char *text;
+  const char *cvalue;
+  const char *text;
 };
 
 #if 1 /* ANSI-C ? */
@@ -538,7 +538,7 @@ static int compare_table(struct rc_search_table *a, struct rc_search_table *b) {
 static void create_option_search_table() {
   int i, j, k;
   int diff1, diff2;
-  char *p, *q;
+  const char *p, *q;
 
   /* count table size */
   RC_table_size = 0;
@@ -617,7 +617,7 @@ static struct param_ptr *search_param(const char *name) {
 void show_params(FILE *fp) {
   int i, j, l;
   const char *t = "";
-  char *cmt;
+  const char *cmt;
 
   fputs("\nconfiguration parameters\n", fp);
   for (j = 0; sections[j].name != NULL; j++) {
@@ -1147,25 +1147,16 @@ const char *rcFile(const char *base) {
   return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
 }
 
-char *auxbinFile(char *base) {
-  return (char *)expandPath(
-      Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
+const char *auxbinFile(const char *base) {
+  return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
-#if 0 /* not used */
-char *
-libFile(char *base)
-{
-    return expandPath(Strnew_m_charp(w3m_lib_dir(), "/", base, NULL)->ptr);
-}
-#endif
-
-char *etcFile(char *base) {
-  return (char*)expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
+const char *etcFile(const char *base) {
+  return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
 }
 
-char *confFile(char *base) {
-  return (char*)expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
+const char *confFile(const char *base) {
+  return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 
 /* siteconf */
@@ -1223,7 +1214,7 @@ static void loadSiteconf(void) {
   siteconf_head = NULL;
   if (!siteconf_file)
     return;
-  if ((efname = (char*)expandPath(siteconf_file)) == NULL)
+  if ((efname = (char *)expandPath(siteconf_file)) == NULL)
     return;
   fp = fopen(efname, "r");
   if (fp == NULL)

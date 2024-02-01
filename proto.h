@@ -144,8 +144,6 @@ struct Buffer;
 extern int currentLn(Buffer *buf);
 extern void tmpClearBuffer(Buffer *buf);
 
-extern char *url_decode0(const char *url);
-#define url_decode2(url, buf) url_decode0(url)
 
 extern char **get_symbol(void);
 struct Str;
@@ -260,7 +258,6 @@ extern char *acceptableMimeTypes(void);
 extern Buffer *load_option_panel(void);
 extern void sync_with_option(void);
 
-
 extern void loadPasswd(void);
 extern void loadPreForm(void);
 extern int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname,
@@ -269,14 +266,6 @@ extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
                                         Str *pwd, int is_proxy);
-extern char *last_modified(Buffer *buf);
-
-extern void mySystem(char *command, int background);
-extern Str *myExtCommand(char *cmd, char *arg, int redirect);
-extern Str *myEditor(char *cmd, char *file, int line);
-extern char *url_unquote_conv0(char *url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
-
 
 #define docCSet nulcmd
 #define defCSet nulcmd
@@ -293,7 +282,6 @@ extern char *url_unquote_conv0(char *url);
 #define menuMs nulcmd
 #define tabMs nulcmd
 #define closeTMs nulcmd
-
 
 extern void setKeymap(char *p, int lineno, int verbose);
 extern void initKeymap(int force);
@@ -320,4 +308,3 @@ void srand48(long);
 long lrand48(void);
 #endif
 
-extern Str *base64_encode(const char *src, size_t len);
