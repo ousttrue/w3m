@@ -243,8 +243,10 @@ extern double log_like(int x);
 struct MapList;
 extern MapList *searchMapList(Buffer *buf, char *name);
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
+
 struct Anchor;
 extern Anchor *retrieveCurrentMap(Buffer *buf);
+
 extern Buffer *page_info_panel(Buffer *buf);
 extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
 extern struct frameset *newFrameSet(struct parsed_tag *tag);
@@ -276,26 +278,6 @@ extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
 extern char *guessContentType(char *filename);
-
-struct Anchor;
-extern Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
-                            char *title, unsigned char key, int line, int pos);
-extern Anchor *registerName(Buffer *buf, char *url, int line, int pos);
-extern Anchor *registerImg(Buffer *buf, char *url, char *title, int line,
-                           int pos);
-extern Anchor *registerForm(Buffer *buf, FormList *flist,
-                            struct parsed_tag *tag, int line, int pos);
-
-extern Anchor *retrieveCurrentAnchor(Buffer *buf);
-extern Anchor *retrieveCurrentImg(Buffer *buf);
-extern Anchor *retrieveCurrentForm(Buffer *buf);
-extern Anchor *searchURLLabel(Buffer *buf, char *url);
-extern void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
-struct AnchorList;
-extern void addMultirowsForm(Buffer *buf, AnchorList *al);
-
-extern char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
-extern Buffer *link_list_panel(Buffer *buf);
 
 extern int set_param_option(char *option);
 extern char *get_param_option(char *name);

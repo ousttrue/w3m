@@ -720,7 +720,7 @@ Buffer *page_info_panel(Buffer *buf) {
 
   a = retrieveCurrentAnchor(buf);
   if (a != NULL) {
-    parseURL2(a->url, &pu, baseURL(buf));
+    parseURL2((char*)a->url, &pu, baseURL(buf));
     p = parsedURL2Str(&pu)->ptr;
     q = html_quote(p);
     if (DecodeURL)
@@ -733,7 +733,7 @@ Buffer *page_info_panel(Buffer *buf) {
   }
   a = retrieveCurrentImg(buf);
   if (a != NULL) {
-    parseURL2(a->url, &pu, baseURL(buf));
+    parseURL2((char*)a->url, &pu, baseURL(buf));
     p = parsedURL2Str(&pu)->ptr;
     q = html_quote(p);
     if (DecodeURL)

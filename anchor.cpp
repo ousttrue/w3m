@@ -23,9 +23,9 @@ int PagerMax = PAGER_MAX_LINE;
 
 #define FIRST_ANCHOR_SIZE 30
 
-AnchorList *putAnchor(AnchorList *al, char *url, char *target,
-                      Anchor **anchor_return, char *referer, char *title,
-                      unsigned char key, int line, int pos) {
+AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
+                      Anchor **anchor_return, const char *referer,
+                      const char *title, unsigned char key, int line, int pos) {
   int n, i, j;
   Anchor *a;
   BufferPoint bp = {0};
@@ -72,21 +72,23 @@ AnchorList *putAnchor(AnchorList *al, char *url, char *target,
   return al;
 }
 
-Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
-                     char *title, unsigned char key, int line, int pos) {
+Anchor *registerHref(Buffer *buf, const char *url, const char *target,
+                     const char *referer, const char *title, unsigned char key,
+                     int line, int pos) {
   Anchor *a;
   buf->href =
       putAnchor(buf->href, url, target, &a, referer, title, key, line, pos);
   return a;
 }
 
-Anchor *registerName(Buffer *buf, char *url, int line, int pos) {
+Anchor *registerName(Buffer *buf, const char *url, int line, int pos) {
   Anchor *a;
   buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
   return a;
 }
 
-Anchor *registerImg(Buffer *buf, char *url, char *title, int line, int pos) {
+Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
+                    int pos) {
   Anchor *a;
   buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
@@ -100,8 +102,8 @@ Anchor *registerForm(Buffer *buf, FormList *flist, struct parsed_tag *tag,
   fi = formList_addInput(flist, tag);
   if (fi == NULL)
     return NULL;
-  buf->formitem = putAnchor(buf->formitem, (char *)fi, flist->target, &a, NULL,
-                            NULL, '\0', line, pos);
+  buf->formitem = putAnchor(buf->formitem, (const char *)fi, flist->target, &a,
+                            NULL, NULL, '\0', line, pos);
   return a;
 }
 
@@ -161,7 +163,7 @@ Anchor *retrieveCurrentForm(Buffer *buf) {
   return retrieveAnchor(buf->formitem, buf->currentLine->linenumber, buf->pos);
 }
 
-Anchor *searchAnchor(AnchorList *al, char *str) {
+Anchor *searchAnchor(AnchorList *al, const char *str) {
   int i;
   Anchor *a;
   if (al == NULL)
@@ -176,7 +178,7 @@ Anchor *searchAnchor(AnchorList *al, char *str) {
   return NULL;
 }
 
-Anchor *searchURLLabel(Buffer *buf, char *url) {
+Anchor *searchURLLabel(Buffer *buf, const char *url) {
   return searchAnchor(buf->name, url);
 }
 
@@ -305,8 +307,8 @@ void reAnchorWord(Buffer *buf, Line *l, int spos, int epos) {
 /* search regexp and register them as anchors */
 /* returns error message if any               */
 static const char *reAnchorAny(Buffer *buf, const char *re,
-                         Anchor *(*anchorproc)(Buffer *, const char *,
-                                               const char *, int, int)) {
+                               Anchor *(*anchorproc)(Buffer *, const char *,
+                                                     const char *, int, int)) {
   Line *l;
   const char *p = NULL, *p1, *p2;
 
@@ -496,7 +498,7 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
   }
 }
 
-char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
+const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
   int hseq, i;
   Line *l;
   Str *tmp = NULL;
@@ -583,7 +585,7 @@ Buffer *link_list_panel(Buffer *buf) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      parseURL2(a->url, &pu, baseURL(buf));
+      parseURL2((char *)a->url, &pu, baseURL(buf));
       p = parsedURL2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -605,7 +607,7 @@ Buffer *link_list_panel(Buffer *buf) {
       a = &al->anchors[i];
       if (a->slave)
         continue;
-      parseURL2(a->url, &pu, baseURL(buf));
+      parseURL2((char *)a->url, &pu, baseURL(buf));
       p = parsedURL2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)

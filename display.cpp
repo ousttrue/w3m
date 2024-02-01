@@ -17,7 +17,7 @@
 #include "indep.h"
 #include <math.h>
 
-bool displayLink =false;
+bool displayLink = false;
 
 /* *INDENT-OFF* */
 
@@ -69,7 +69,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 
 static Buffer *save_current_buf = NULL;
 
-
 static void drawAnchorCursor(Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(Buffer *buf, int n);
@@ -77,18 +76,19 @@ static Line *redrawLine(Buffer *buf, Line *l, int i);
 static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
 
-static Str *make_lastline_link(Buffer *buf, char *title, char *url) {
+static Str *make_lastline_link(Buffer *buf, const char *title,
+                               const char *url) {
   Str *s = NULL;
   Str *u;
   ParsedURL pu;
-  char *p;
+  const char *p;
   int l = COLS - 1, i;
 
   if (title && *title) {
     s = Strnew_m_charp("[", title, "]", NULL);
     for (p = s->ptr; *p; p++) {
       if (IS_CNTRL(*p) || IS_SPACE(*p))
-        *p = ' ';
+        *(char *)p = ' ';
     }
     if (url)
       Strcat_charp(s, " ");
@@ -98,7 +98,7 @@ static Str *make_lastline_link(Buffer *buf, char *title, char *url) {
   }
   if (!url)
     return s;
-  parseURL2(url, &pu, baseURL(buf));
+  parseURL2((char *)url, &pu, baseURL(buf));
   u = parsedURL2Str(&pu);
   if (DecodeURL)
     u = Strnew_charp(url_decode2(u->ptr, buf));
@@ -126,7 +126,7 @@ static Str *make_lastline_message(Buffer *buf) {
   if (displayLink) {
     {
       Anchor *a = retrieveCurrentAnchor(buf);
-      char *p = NULL;
+      const char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
