@@ -490,7 +490,7 @@ void term_cbreak(void) {
   term_noecho();
 }
 
-void term_title(char *s) {
+void term_title(const char *s) {
   if (!fmInitialized)
     return;
   if (title_str != NULL) {

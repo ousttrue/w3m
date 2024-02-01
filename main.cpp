@@ -1289,21 +1289,22 @@ end:
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-static void _quitfm(int confirm) {
-  char *ans = "y";
+static void _quitfm(bool confirm) {
+  const char *ans = "y";
+  // if (checkDownloadList()) {
+  //   ans = inputChar("Download process retains. "
+  //                   "Do you want to exit w3m? (y/n)");
+  // } else if (confirm) {
+  //   ans = inputChar("Do you want to exit w3m? (y/n)");
+  // }
 
-  if (checkDownloadList())
-    /* FIXME: gettextize? */
-    ans = inputChar("Download process retains. "
-                    "Do you want to exit w3m? (y/n)");
-  else if (confirm)
-    /* FIXME: gettextize? */
-    ans = inputChar("Do you want to exit w3m? (y/n)");
   if (!(ans && TOLOWER(*ans) == 'y')) {
+    // cancel
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
 
+  // exit
   term_title(""); /* XXX */
   fmTerm();
   save_cookies();
@@ -4613,9 +4614,9 @@ int main(int argc, char **argv) {
     CurrentTab = FirstTab;
   if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
     if (newbuf == NO_BUFFER) {
-      if (fmInitialized)
-        /* FIXME: gettextize? */
-        inputChar("Hit any key to quit w3m:");
+      if (fmInitialized) {
+        // inputChar("Hit any key to quit w3m:");
+      }
     }
     if (fmInitialized)
       fmTerm();

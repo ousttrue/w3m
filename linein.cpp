@@ -897,6 +897,8 @@ static void _editor(void) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
+inline char *inputChar(const char *p) { return inputLine(p, "", IN_CHAR); }
+
 const char *inputAnswer(const char *prompt) {
   if (IsForkChild)
     return "n";
