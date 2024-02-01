@@ -126,6 +126,7 @@ executable(
         'httprequest.cpp',
         'screen.cpp',
         'message.cpp',
+        'ssl_util.cpp',
     ],
     install: true,
     dependencies: [

@@ -43,19 +43,6 @@ extern int ai_family_order_table[7][3]; /* XXX */
 #endif                                  /* INET6 */
 
 extern const char *mimetypes_files;
-extern const char *ssl_forbid_method;
-extern int ssl_path_modified;
-extern const char *ssl_cipher;
-
-#define USE_SSL 1
-#define USE_SSL_VERIFY 1
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-extern const char *ssl_cert_file;
-extern const char *ssl_key_file;
-extern const char *ssl_ca_path;
-extern const char *ssl_ca_file;
-extern bool ssl_ca_default;
-#endif
 
 extern int DNS_order;
 
@@ -104,8 +91,6 @@ Str *parsedURL2Str(ParsedURL *pu);
 Str *parsedURL2RefererStr(ParsedURL *pu);
 int getURLScheme(char **url);
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
-
-extern char *ssl_min_version;
 
 struct TextList;
 extern TextList *make_domain_list(const char *domain_list);

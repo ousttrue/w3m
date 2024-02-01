@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "ssl_util.h"
 #include "message.h"
 #include "screen.h"
 #include "tmpfile.h"

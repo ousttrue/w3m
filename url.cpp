@@ -1,10 +1,10 @@
 #include "w3m.h"
 #include "message.h"
+#include "ssl_util.h"
 #include "screen.h"
 #include "display.h"
 #include "terms.h"
 #include "indep.h"
-#include "config.h"
 #include "httprequest.h"
 #include "rc.h"
 #include "file.h"
@@ -27,7 +27,6 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <setjmp.h>
-#include <errno.h>
 #include <sys/stat.h>
 
 bool ArgvIsURL = true;
@@ -44,21 +43,6 @@ bool use_proxy = true;
 char *w3m_reqlog;
 TextList *NO_proxy_domains;
 
-const char *ssl_forbid_method = "2, 3, t, 5";
-int ssl_path_modified = FALSE;
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-const char *ssl_cipher "DEFAULT:!LOW:!RC4:!EXP";
-#else
-const char *ssl_cipher = nullptr;
-#endif
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-const char *ssl_cert_file = nullptr;
-const char *ssl_key_file = nullptr;
-const char *ssl_ca_path = nullptr;
-const char *ssl_ca_file = DEF_CAFILE;
-bool ssl_ca_default = true;
-#endif
-
 int DNS_order = DNS_ORDER_UNSPEC;
 
 #define USER_MIMETYPES "~/.mime.types"
@@ -72,15 +56,6 @@ const char *mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
 ParsedURL HTTP_proxy_parsed;
 ParsedURL HTTPS_proxy_parsed;
 ParsedURL FTP_proxy_parsed;
-
-#ifndef SSLEAY_VERSION_NUMBER
-#include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
-#endif
-#include <openssl/err.h>
-
-#ifdef SSL_CTX_set_min_proto_version
-char *ssl_min_version = NULL;
-#endif
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -235,241 +210,6 @@ static char *DefaultFile(int scheme) {
 static void KeyAbort(SIGNAL_ARG) {
   LONGJMP(AbortLoading, 1);
   SIGNAL_RETURN;
-}
-
-SSL_CTX *ssl_ctx = NULL;
-
-void free_ssl_ctx(void) {
-  if (ssl_ctx != NULL)
-    SSL_CTX_free(ssl_ctx);
-  ssl_ctx = NULL;
-  ssl_accept_this_site(NULL);
-}
-
-#if SSLEAY_VERSION_NUMBER >= 0x00905100
-#include <openssl/rand.h>
-static void init_PRNG(void) {
-  char buffer[256];
-  const char *file;
-  long l;
-  if (RAND_status())
-    return;
-  if ((file = RAND_file_name(buffer, sizeof(buffer)))) {
-#ifdef USE_EGD
-    if (RAND_egd(file) > 0)
-      return;
-#endif
-    RAND_load_file(file, -1);
-  }
-  if (RAND_status())
-    goto seeded;
-  srand48((long)time(NULL));
-  while (!RAND_status()) {
-    l = lrand48();
-    RAND_seed((unsigned char *)&l, sizeof(long));
-  }
-seeded:
-  if (file)
-    RAND_write_file(file);
-}
-#endif /* SSLEAY_VERSION_NUMBER >= 0x00905100 */
-
-#ifdef SSL_CTX_set_min_proto_version
-static int str_to_ssl_version(const char *name) {
-  if (!strcasecmp(name, "all"))
-    return 0;
-  if (!strcasecmp(name, "none"))
-    return 0;
-#ifdef TLS1_3_VERSION
-  if (!strcasecmp(name, "TLSv1.3"))
-    return TLS1_3_VERSION;
-#endif
-#ifdef TLS1_2_VERSION
-  if (!strcasecmp(name, "TLSv1.2"))
-    return TLS1_2_VERSION;
-#endif
-#ifdef TLS1_1_VERSION
-  if (!strcasecmp(name, "TLSv1.1"))
-    return TLS1_1_VERSION;
-#endif
-  if (!strcasecmp(name, "TLSv1.0"))
-    return TLS1_VERSION;
-  if (!strcasecmp(name, "TLSv1"))
-    return TLS1_VERSION;
-  if (!strcasecmp(name, "SSLv3.0"))
-    return SSL3_VERSION;
-  if (!strcasecmp(name, "SSLv3"))
-    return SSL3_VERSION;
-  return -1;
-}
-#endif /* SSL_CTX_set_min_proto_version */
-
-static SSL *openSSLHandle(int sock, char *hostname, char **p_cert) {
-  SSL *handle = NULL;
-  static const char *old_ssl_forbid_method = NULL;
-  static int old_ssl_verify_server = -1;
-
-  if (old_ssl_forbid_method != ssl_forbid_method &&
-      (!old_ssl_forbid_method || !ssl_forbid_method ||
-       strcmp(old_ssl_forbid_method, ssl_forbid_method))) {
-    old_ssl_forbid_method = ssl_forbid_method;
-    ssl_path_modified = 1;
-  }
-  if (old_ssl_verify_server != ssl_verify_server) {
-    old_ssl_verify_server = ssl_verify_server;
-    ssl_path_modified = 1;
-  }
-  if (ssl_path_modified) {
-    free_ssl_ctx();
-    ssl_path_modified = 0;
-  }
-  if (ssl_ctx == NULL) {
-    int option;
-#if OPENSSL_VERSION_NUMBER < 0x0800
-    ssl_ctx = SSL_CTX_new();
-    X509_set_default_verify_paths(ssl_ctx->cert);
-#else /* SSLEAY_VERSION_NUMBER >= 0x0800 */
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-    SSLeay_add_ssl_algorithms();
-    SSL_load_error_strings();
-#else
-    OPENSSL_init_ssl(0, NULL);
-#endif
-    if (!(ssl_ctx = SSL_CTX_new(SSLv23_client_method())))
-      goto eend;
-#ifdef SSL_CTX_set_min_proto_version
-    if (ssl_min_version && *ssl_min_version != '\0') {
-      int sslver;
-      sslver = str_to_ssl_version(ssl_min_version);
-      if (sslver < 0 || !SSL_CTX_set_min_proto_version(ssl_ctx, sslver)) {
-        free_ssl_ctx();
-        goto eend;
-      }
-    }
-#endif
-    if (ssl_cipher && *ssl_cipher != '\0')
-      if (!SSL_CTX_set_cipher_list(ssl_ctx, ssl_cipher)) {
-        free_ssl_ctx();
-        goto eend;
-      }
-    option = SSL_OP_ALL;
-    if (ssl_forbid_method) {
-      if (strchr(ssl_forbid_method, '2'))
-        option |= SSL_OP_NO_SSLv2;
-      if (strchr(ssl_forbid_method, '3'))
-        option |= SSL_OP_NO_SSLv3;
-      if (strchr(ssl_forbid_method, 't'))
-        option |= SSL_OP_NO_TLSv1;
-      if (strchr(ssl_forbid_method, 'T'))
-        option |= SSL_OP_NO_TLSv1;
-      if (strchr(ssl_forbid_method, '4'))
-        option |= SSL_OP_NO_TLSv1;
-#ifdef SSL_OP_NO_TLSv1_1
-      if (strchr(ssl_forbid_method, '5'))
-        option |= SSL_OP_NO_TLSv1_1;
-#endif
-#ifdef SSL_OP_NO_TLSv1_2
-      if (strchr(ssl_forbid_method, '6'))
-        option |= SSL_OP_NO_TLSv1_2;
-#endif
-#ifdef SSL_OP_NO_TLSv1_3
-      if (strchr(ssl_forbid_method, '7'))
-        option |= SSL_OP_NO_TLSv1_3;
-#endif
-    }
-#ifdef SSL_OP_NO_COMPRESSION
-    option |= SSL_OP_NO_COMPRESSION;
-#endif
-    SSL_CTX_set_options(ssl_ctx, option);
-
-#ifdef SSL_MODE_RELEASE_BUFFERS
-    SSL_CTX_set_mode(ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
-#endif
-
-    /* derived from openssl-0.9.5/apps/s_{client,cb}.c */
-#if 1 /* use SSL_get_verify_result() to verify cert */
-    SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
-#else
-    SSL_CTX_set_verify(
-        ssl_ctx, ssl_verify_server ? SSL_VERIFY_PEER : SSL_VERIFY_NONE, NULL);
-#endif
-    if (ssl_cert_file != NULL && *ssl_cert_file != '\0') {
-      int ng = 1;
-      if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file,
-                                       SSL_FILETYPE_PEM) > 0) {
-        const char *key_file = (ssl_key_file == NULL || *ssl_key_file == '\0')
-                                   ? ssl_cert_file
-                                   : ssl_key_file;
-        if (SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM) >
-            0)
-          if (SSL_CTX_check_private_key(ssl_ctx))
-            ng = 0;
-      }
-      if (ng) {
-        free_ssl_ctx();
-        goto eend;
-      }
-    }
-    if (ssl_verify_server) {
-      const char *file = NULL, *path = NULL;
-      if (ssl_ca_file && *ssl_ca_file != '\0')
-        file = ssl_ca_file;
-      if (ssl_ca_path && *ssl_ca_path != '\0')
-        path = ssl_ca_path;
-      if ((file || path) &&
-          !SSL_CTX_load_verify_locations(ssl_ctx, file, path)) {
-        free_ssl_ctx();
-        goto eend;
-      }
-      if (ssl_ca_default)
-        SSL_CTX_set_default_verify_paths(ssl_ctx);
-    }
-#endif /* SSLEAY_VERSION_NUMBER >= 0x0800 */
-  }
-  handle = SSL_new(ssl_ctx);
-  SSL_set_fd(handle, sock);
-#if SSLEAY_VERSION_NUMBER >= 0x00905100
-  init_PRNG();
-#endif /* SSLEAY_VERSION_NUMBER >= 0x00905100 */
-#if (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT)
-  SSL_set_tlsext_host_name(handle, hostname);
-#endif /* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) \
-        */
-  if (SSL_connect(handle) > 0) {
-    Str *serv_cert = ssl_get_certificate(handle, hostname);
-    if (serv_cert) {
-      *p_cert = serv_cert->ptr;
-      return handle;
-    }
-    close(sock);
-    SSL_free(handle);
-    return NULL;
-  }
-eend:
-  close(sock);
-  if (handle)
-    SSL_free(handle);
-  /* FIXME: gettextize? */
-  disp_err_message(
-      Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
-              ERR_error_string(ERR_get_error(), NULL))
-          ->ptr,
-      FALSE);
-  return NULL;
-}
-
-static void SSL_write_from_file(SSL *ssl, char *file) {
-  FILE *fd;
-  int c;
-  char buf[1];
-  fd = fopen(file, "r");
-  if (fd != NULL) {
-    while ((c = fgetc(fd)) != EOF) {
-      buf[0] = c;
-      SSL_write(ssl, buf, 1);
-    }
-    fclose(fd);
-  }
 }
 
 static void write_from_file(int sock, char *file) {

@@ -3,14 +3,10 @@
 #include "indep.h"
 #include "mimehead.h"
 #include <stdio.h>
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-
-extern bool ssl_verify_server;
+#include <openssl/types.h>
 
 struct stream_buffer {
   unsigned char *buf;
@@ -110,8 +106,6 @@ extern int ISread(input_stream *stream, Str *buf, int count);
 int ISread_n(input_stream *stream, char *dst, int bufsize);
 extern int ISfileno(input_stream *stream);
 extern int ISeos(input_stream *stream);
-extern void ssl_accept_this_site(char *hostname);
-extern Str *ssl_get_certificate(SSL *ssl, char *hostname);
 
 #define IST_BASIC 0
 #define IST_FILE 1
