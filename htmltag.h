@@ -1,4 +1,3 @@
-/* $Id: parsetagx.h,v 1.4 2001/11/24 02:01:26 ukai Exp $ */
 #pragma once
 #include "htmlcommand.h"
 

@@ -12,7 +12,7 @@
 #include "fm.h"
 #include "table.h"
 #include "html.h"
-#include "parsetagx.h"
+#include "htmltag.h"
 #include "Str.h"
 #include "myctype.h"
 #include "indep.h"

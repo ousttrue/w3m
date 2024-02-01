@@ -48,7 +48,7 @@
 /* foo */
 
 #include "html.h"
-#include "parsetagx.h"
+#include "htmltag.h"
 #include "local_cgi.h"
 #include "regex.h"
 

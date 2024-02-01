@@ -16,7 +16,7 @@
 #include "buffer.h"
 #include "terms.h"
 #include "istream.h"
-#include "parsetagx.h"
+#include "htmltag.h"
 #include "proto.h"
 #include "alarm.h"
 #include "funcname1.h"

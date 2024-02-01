@@ -117,7 +117,7 @@ executable(
         'history.cpp',
         'util.cpp',
         'anchor.cpp',
-        'parsetagx.cpp',
+        'htmltag.cpp',
         'tagtable.cpp',
         'istream.cpp',
         'version.cpp',
