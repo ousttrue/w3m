@@ -1,12 +1,7 @@
 #pragma once
 
-#include "indep.h"
 #include "mimehead.h"
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <openssl/types.h>
 
 #define ENC_7BIT 0
 #define ENC_BASE64 1
@@ -24,11 +19,6 @@ typedef void (*CloseFunc)(void *userpointer);
 struct io_file_handle {
   FILE *f;
   CloseFunc close;
-};
-
-struct ssl_handle {
-  SSL *ssl;
-  int sock;
 };
 
 union input_stream;
@@ -93,10 +83,11 @@ union input_stream {
   struct encoded_stream ens;
 };
 
+void init_base_stream(base_stream *base, int bufsize);
+
 extern input_stream *newInputStream(int des);
 extern input_stream *newFileStream(FILE *f, void (*closep)());
 extern input_stream *newStrStream(Str *s);
-extern input_stream *newSSLStream(SSL *ssl, int sock);
 extern input_stream *newEncodedStream(input_stream *is, char encoding);
 extern int ISclose(input_stream *stream);
 extern int ISgetc(input_stream *stream);

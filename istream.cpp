@@ -1,15 +1,14 @@
 #include "istream.h"
+#include "Str.h"
 #include "linein.h"
-#include "html.h"
+#include "ssl_util.h"
 #include "signal_util.h"
 #include "proto.h"
+#include "indep.h"
 #include <fcntl.h>
 #include <unistd.h>
 
-#define uchar unsigned char
-
 #define STREAM_BUF_SIZE 8192
-#define SSL_BUF_SIZE 1536
 
 #define MUST_BE_UPDATED(bs) ((bs)->stream.cur == (bs)->stream.next)
 
@@ -36,7 +35,7 @@ static void do_update(base_stream *base) {
   base->stream.cur = base->stream.next = 0;
   len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
   if (len <= 0)
-    base->iseos = TRUE;
+    base->iseos = true;
   else
     base->stream.next += len;
 }
@@ -56,17 +55,17 @@ static void init_buffer(base_stream *base, char *buf, int bufsize) {
   stream_buffer *sb = &base->stream;
   sb->size = bufsize;
   sb->cur = 0;
-  sb->buf = NewWithoutGC_N(uchar, bufsize);
+  sb->buf = (unsigned char *)NewWithoutGC_N(unsigned char, bufsize);
   if (buf) {
     memcpy(sb->buf, buf, bufsize);
     sb->next = bufsize;
   } else {
     sb->next = 0;
   }
-  base->iseos = FALSE;
+  base->iseos = false;
 }
 
-static void init_base_stream(base_stream *base, int bufsize) {
+void init_base_stream(base_stream *base, int bufsize) {
   init_buffer(base, NULL, bufsize);
 }
 
@@ -116,21 +115,6 @@ input_stream *newStrStream(Str *s) {
   stream->str.handle = NULL;
   stream->str.read = (ReadFunc)str_read;
   stream->str.close = NULL;
-  return stream;
-}
-
-input_stream *newSSLStream(SSL *ssl, int sock) {
-  input_stream *stream;
-  if (sock < 0)
-    return NULL;
-  stream = NewWithoutGC(union input_stream);
-  init_base_stream(&stream->base, SSL_BUF_SIZE);
-  stream->ssl.type = IST_SSL;
-  stream->ssl.handle = NewWithoutGC(struct ssl_handle);
-  stream->ssl.handle->ssl = ssl;
-  stream->ssl.handle->sock = sock;
-  stream->ssl.read = (ReadFunc)ssl_read;
-  stream->ssl.close = (CloseFunc)ssl_close;
   return stream;
 }
 
@@ -321,35 +305,6 @@ static int file_read(struct io_file_handle *handle, char *buf, int len) {
 }
 
 static int str_read(Str *handle, char *buf, int len) { return 0; }
-
-static void ssl_close(struct ssl_handle *handle) {
-  close(handle->sock);
-  if (handle->ssl)
-    SSL_free(handle->ssl);
-  xfree(handle);
-}
-
-static int ssl_read(struct ssl_handle *handle, char *buf, int len) {
-  int status;
-  if (handle->ssl) {
-    for (;;) {
-      status = SSL_read(handle->ssl, buf, len);
-      if (status > 0)
-        break;
-      switch (SSL_get_error(handle->ssl, status)) {
-      case SSL_ERROR_WANT_READ:
-      case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see
-                                    SSL_get_error(3) */
-        continue;
-      default:
-        break;
-      }
-      break;
-    }
-  } else
-    status = read(handle->sock, buf, len);
-  return status;
-}
 
 static void ens_close(struct ens_handle *handle) {
   ISclose(handle->is);

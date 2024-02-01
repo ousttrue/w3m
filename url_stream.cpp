@@ -1,4 +1,6 @@
 #include "url_stream.h"
+#include "istream.h"
+#include "indep.h"
 #include "myctype.h"
 #include "downloadlist.h"
 #include "fm.h"
@@ -23,6 +25,7 @@
 #include "linein.h"
 #include <string.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 bool PermitSaveToPipe = false;
 

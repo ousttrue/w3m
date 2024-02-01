@@ -1,11 +1,4 @@
 #pragma once
-#include "config.h"
-#include "url_schema.h"
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
-
-#include <time.h>
 
 /* Tag attribute */
 

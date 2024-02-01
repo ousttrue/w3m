@@ -1,5 +1,6 @@
 #include "file.h"
 #include "func.h"
+#include "indep.h"
 #include "compression.h"
 #include "url_stream.h"
 #include "message.h"
