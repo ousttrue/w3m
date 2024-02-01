@@ -133,7 +133,7 @@ global int no_rc_dir init(FALSE);
 
 global char *param_tmp_dir init(nullptr);
 #ifdef HAVE_MKDTEMP
-global char *mkd_tmp_dir init(nullptr);
+global const char *mkd_tmp_dir init(nullptr);
 #endif
 global const char *config_file init(nullptr);
 

@@ -5,7 +5,7 @@
 #include "textlist.h"
 #include "indep.h"
 
-char *tmp_dir;
+const char *tmp_dir;
 
 static const char *tmpf_base[MAX_TMPF_TYPE] = {
     "tmp", "src", "frame", "cache", "cookie", "hist",
@@ -13,7 +13,7 @@ static const char *tmpf_base[MAX_TMPF_TYPE] = {
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
 Str *tmpfname(int type, const char *ext) {
-  char *dir;
+  const char *dir;
   switch (type) {
   case TMPF_HIST:
     dir = rc_dir;

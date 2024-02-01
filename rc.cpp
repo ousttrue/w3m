@@ -2,6 +2,8 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "etc.h"
+#include "config.h"
 #include "mimetypes.h"
 #include "compression.h"
 #include "url_stream.h"
@@ -38,9 +40,13 @@
 #include <unistd.h>
 #include <string.h>
 
+#ifndef RC_DIR
+#define RC_DIR "~/.w3m"
+#endif
+
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
-char *rc_dir = nullptr;
+const char *rc_dir = nullptr;
 int multicolList = FALSE;
 int DecodeURL = FALSE;
 
@@ -922,7 +928,7 @@ void init_rc(void) {
 
   i = strlen(rc_dir);
   if (i > 1 && rc_dir[i - 1] == '/')
-    rc_dir[i - 1] = '\0';
+    ((char *)rc_dir)[i - 1] = '\0';
 
   tmp_dir = rc_dir;
 
@@ -975,7 +981,7 @@ void init_tmp(void) {
   tmp_dir = expandPath(tmp_dir);
   i = strlen(tmp_dir);
   if (i > 1 && tmp_dir[i - 1] == '/')
-    tmp_dir[i - 1] = '\0';
+    ((char *)tmp_dir)[i - 1] = '\0';
   if (do_recursive_mkdir(tmp_dir) == -1)
     goto tmp_dir_err;
   return;
@@ -1142,7 +1148,8 @@ const char *rcFile(const char *base) {
 }
 
 char *auxbinFile(char *base) {
-  return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
+  return (char *)expandPath(
+      Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
 #if 0 /* not used */
@@ -1154,11 +1161,11 @@ libFile(char *base)
 #endif
 
 char *etcFile(char *base) {
-  return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
+  return (char*)expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
 }
 
 char *confFile(char *base) {
-  return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
+  return (char*)expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 
 /* siteconf */
@@ -1216,7 +1223,7 @@ static void loadSiteconf(void) {
   siteconf_head = NULL;
   if (!siteconf_file)
     return;
-  if ((efname = expandPath(siteconf_file)) == NULL)
+  if ((efname = (char*)expandPath(siteconf_file)) == NULL)
     return;
   fp = fopen(efname, "r");
   if (fp == NULL)

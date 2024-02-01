@@ -1482,8 +1482,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
     return;
   }
   if (Currentbuf->edit)
-    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, (char *)fn,
-                          checkHeader(Currentbuf, "Content-Type:"), NULL);
+    cmd =
+        unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, (char *)fn,
+                        (char *)checkHeader(Currentbuf, "Content-Type:"), NULL);
   else
     cmd = myEditor(Editor, shell_quote((char *)fn),
                    cur_real_linenumber(Currentbuf));
@@ -2793,7 +2794,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
-  char *file;
+  const char *file;
 
   if (Currentbuf->sourcefile == NULL)
     return;
@@ -3484,13 +3485,13 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
     }
   }
   if (*data != '\0') {
-    sec = atoi(getWord((char**)&data));
+    sec = atoi(getWord((char **)&data));
     if (sec > 0)
-      cmd = getFuncList(getWord((char**)&data));
+      cmd = getFuncList(getWord((char **)&data));
   }
   if (cmd >= 0) {
-    data = getQWord((char**)&data);
-    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, (void*)data);
+    data = getQWord((char **)&data);
+    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, (void *)data);
     disp_message_nsec(
         Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, FALSE, 1,
         FALSE, TRUE);

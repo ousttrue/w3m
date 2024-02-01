@@ -36,7 +36,7 @@ struct ParsedURL {
   const char *pass;
   const char *host;
   int port;
-  char *file;
+  const char *file;
   const char *real_file;
   char *query;
   char *label;

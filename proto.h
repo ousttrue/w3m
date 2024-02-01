@@ -173,7 +173,7 @@ extern Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf);
 
 struct ParsedURL;
 extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu);
-extern char *checkHeader(Buffer *buf, char *field);
+
 struct TabBuffer;
 extern TabBuffer *newTab(void);
 extern void calcTabPos(void);
@@ -261,7 +261,6 @@ extern Buffer *load_option_panel(void);
 extern void sync_with_option(void);
 
 
-extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
 extern int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname,
@@ -277,7 +276,6 @@ extern Str *myExtCommand(char *cmd, char *arg, int redirect);
 extern Str *myEditor(char *cmd, char *file, int line);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
-extern char *expandName(char *name);
 
 
 #define docCSet nulcmd
@@ -311,7 +309,6 @@ extern char *getQWord(char **str);
 
 extern void dictword(void);
 extern void dictwordat(void);
-extern char *guess_save_name(Buffer *buf, char *file);
 
 extern void wrapToggle(void);
 extern void saveBufferInfo(void);

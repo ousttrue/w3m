@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "etc.h"
 #include "w3m.h"
 #include "indep.h"
 #include <sys/stat.h>
@@ -21,7 +22,7 @@ void addDownloadList(pid_t pid, const char *url, const char *save,
   d->url = url;
   if (save[0] != '/' && save[0] != '~')
     save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
-  d->save = expandPath((char *)save);
+  d->save = expandPath(save);
   d->lock = lock;
   d->size = size;
   d->time = time(0);

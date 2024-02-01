@@ -28,3 +28,6 @@ int doFileMove(const char *tmpf, const char *defstr);
 int checkCopyFile(const char *path1, const char *path2);
 union input_stream;
 int checkSaveFile(input_stream *stream, const char *path);
+const char *guess_save_name(Buffer *buf, const char *file);
+const char *checkHeader(Buffer *buf, const char *field);
+

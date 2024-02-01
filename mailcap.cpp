@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "etc.h"
 #include "httprequest.h"
 #include "url.h"
 #include "fm.h"
@@ -170,7 +171,7 @@ static int extractMailcapEntry(char *mcap_entry, struct mailcap *mcap) {
   return 1;
 }
 
-static struct mailcap *loadMailcap(char *filename) {
+static struct mailcap *loadMailcap(const char *filename) {
   FILE *f;
   int i, n;
   Str *tmp;

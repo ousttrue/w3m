@@ -1,4 +1,5 @@
 #include "file.h"
+#include "mytime.h"
 #include "func.h"
 #include "indep.h"
 #include "compression.h"
@@ -284,7 +285,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
     fclose(src);
 }
 
-char *checkHeader(Buffer *buf, char *field) {
+const char *checkHeader(Buffer *buf, const char *field) {
   int len;
   TextListItem *i;
   char *p;
@@ -302,9 +303,8 @@ char *checkHeader(Buffer *buf, char *field) {
 }
 
 static char *checkContentType(Buffer *buf) {
-  char *p;
   Str *r;
-  p = checkHeader(buf, "Content-Type:");
+  auto p = checkHeader(buf, "Content-Type:");
   if (p == NULL)
     return NULL;
   r = Strnew();
@@ -981,7 +981,7 @@ Buffer *loadGeneralFile(const char *path, ParsedURL *current,
   Buffer *(*proc)(UrlStream *, Buffer *) = loadBuffer;
   const char *tpath;
   const char *t = "text/plain";
-  char *p = NULL;
+  const char *p = NULL;
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
   int searchHeader = SearchHeader;
@@ -1109,7 +1109,7 @@ load_doc: {
       /* 302: Found */
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
-      tpath = url_quote(p);
+      tpath = url_quote((char *)p);
       request = NULL;
       UFclose(&f);
       current = (ParsedURL *)New(ParsedURL);
@@ -1206,7 +1206,7 @@ load_doc: {
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
-      tpath = url_quote(remove_space(p));
+      tpath = url_quote(remove_space((char *)p));
       request = NULL;
       UFclose(&f);
       add_auth_cookie_flag = 0;
@@ -2024,10 +2024,10 @@ static const char *guess_filename(const char *file) {
   return s;
 }
 
-char *guess_save_name(Buffer *buf, char *path) {
+const char *guess_save_name(Buffer *buf, const char *path) {
   if (buf && buf->document_header) {
     Str *name = NULL;
-    char *p, *q;
+    const char *p, *q;
     if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
         (q = strcasestr(p, "filename")) != NULL &&
         (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&

@@ -574,7 +574,7 @@ void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
 }
 
 void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
-  char *p;
+  const char *p;
   Str *tmp;
   int relative_uri = FALSE;
 
@@ -611,7 +611,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
     return;
   }
   if (pu->schema == SCM_LOCAL) {
-    char *q = expandName(file_unquote(pu->file));
+    auto q = expandName(file_unquote((char *)pu->file));
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
     Str *drive;
     if (IS_ALPHA(q[0]) && q[1] == ':') {
@@ -620,7 +620,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
       pu->file = drive->ptr;
     } else
 #endif
-      pu->file = file_quote(q);
+      pu->file = file_quote((char *)q);
   }
 
   if (current &&
@@ -672,7 +672,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
       tmp = Strnew_charp(CurrentDir);
       if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
-      Strcat_charp(tmp, file_unquote(pu->file));
+      Strcat_charp(tmp, file_unquote((char *)pu->file));
       pu->file = file_quote(cleanupName(tmp->ptr));
     } else if (pu->schema == SCM_HTTP || pu->schema == SCM_HTTPS) {
       if (relative_uri) {
@@ -683,7 +683,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
          * elements like `//', `..' or `.' in the pu->file. It is
          * server's responsibility to canonicalize such path.
          */
-        pu->file = cleanupName(pu->file);
+        pu->file = cleanupName((char *)pu->file);
       }
     } else if (pu->file[0] == '/') {
       /*
@@ -692,7 +692,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
        * In both case, there must be no side effect with
        * cleanupName(). (I hope so...)
        */
-      pu->file = cleanupName(pu->file);
+      pu->file = cleanupName((char *)pu->file);
     }
     if (pu->schema == SCM_LOCAL) {
 #ifdef SUPPORT_NETBIOS_SHARE
@@ -703,14 +703,14 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
         pu->real_file = tmp->ptr;
       } else
 #endif
-        pu->real_file = cleanupName(file_unquote(pu->file));
+        pu->real_file = cleanupName(file_unquote((char *)pu->file));
     }
   }
 }
 
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
   Str *tmp;
-  static char *schema_str[] = {
+  static const char *schema_str[] = {
       "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
       "nntp", "nntp",   "news", "news", "data", "mailto", "https",
   };
@@ -906,8 +906,6 @@ end:
   TRAP_OFF;
   return ret;
 }
-
-
 
 ParsedURL *schemaToProxy(UrlSchema schema) {
   ParsedURL *pu = NULL; /* for gcc */

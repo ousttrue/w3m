@@ -135,7 +135,7 @@ retry:
       Str *tmp2 = Strnew_charp("#");
       Strcat_charp(tmp2, pu->label);
       pu->file = tmp2->ptr;
-      pu->real_file = cleanupName(file_unquote(pu->file));
+      pu->real_file = cleanupName(file_unquote((char *)pu->file));
       pu->label = NULL;
     } else {
       /* given URL must be null string */

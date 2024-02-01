@@ -8,7 +8,7 @@
 #define TMPF_HIST 5
 #define MAX_TMPF_TYPE 6
 
-extern char *tmp_dir;
+extern const char *tmp_dir;
 
 struct Str;
 Str *tmpfname(int type, const char *ext);

@@ -1,7 +1,7 @@
 #pragma once
 #include <stdio.h>
 
-extern char *rc_dir;
+extern const char *rc_dir;
 extern int multicolList;
 extern int DecodeURL;
 

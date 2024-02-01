@@ -1,4 +1,5 @@
 #include "mimetypes.h"
+#include "etc.h"
 #include "textlist.h"
 #include "indep.h"
 
