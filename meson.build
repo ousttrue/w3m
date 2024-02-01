@@ -145,4 +145,5 @@ executable(
     ],
     c_args: defs,
     cpp_args: defs,
+    link_args: ['-lgccpp'],
 )

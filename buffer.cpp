@@ -613,11 +613,9 @@ int readBufferCache(Buffer *buf) {
   while (!feof(cache)) {
     lnum++;
     prevl = l;
-    l = (Line *)New(Line);
-    l->prev = prevl;
-    if (prevl)
-      prevl->next = l;
-    else
+
+    l = new Line(lnum, prevl);
+    if (!prevl)
       buf->firstLine = l;
     l->linenumber = lnum;
     if (lnum == clnum)
@@ -789,8 +787,7 @@ end:
 
 void addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
                  int pos, int nlines) {
-  Line *l;
-  l = (Line *)New(Line);
+  auto l = new Line(++buf->allLine, buf->currentLine);
   l->next = NULL;
   l->lineBuf = line;
   l->propBuf = prop;
@@ -799,18 +796,12 @@ void addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
   l->size = pos;
   l->bpos = 0;
   l->bwidth = 0;
-  l->prev = buf->currentLine;
-  if (buf->currentLine) {
-    l->next = buf->currentLine->next;
-    buf->currentLine->next = l;
-  } else
-    l->next = NULL;
+
   if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
     buf->lastLine = l;
   buf->currentLine = l;
   if (buf->firstLine == NULL)
     buf->firstLine = l;
-  l->linenumber = ++buf->allLine;
   if (nlines < 0) {
     /*     l->real_linenumber = l->linenumber;     */
     l->real_linenumber = 0;
@@ -925,7 +916,6 @@ char *GetWord(Buffer *buf) {
   }
   return NULL;
 }
-
 
 char *getCurWord(Buffer *buf, int *spos, int *epos) {
   Line *l = buf->currentLine;

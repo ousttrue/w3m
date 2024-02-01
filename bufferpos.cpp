@@ -27,13 +27,14 @@ void save_buffer_position(Buffer *buf) {
 
 void resetPos(BufferPos *b) {
   Buffer buf;
-  Line top, cur;
 
-  top.linenumber = b->top_linenumber;
-  cur.linenumber = b->cur_linenumber;
-  cur.bpos = b->bpos;
-  buf.topLine = &top;
-  buf.currentLine = &cur;
+  auto top = new Line(b->top_linenumber);
+  buf.topLine = top;
+
+  auto cur = new Line(b->cur_linenumber);
+  cur->bpos = b->bpos;
+
+  buf.currentLine = cur;
   buf.pos = b->pos;
   buf.currentColumn = b->currentColumn;
   restorePosition(Currentbuf, &buf);
