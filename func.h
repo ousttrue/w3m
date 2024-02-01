@@ -23,5 +23,9 @@ struct FuncList {
 };
 extern FuncList w3mFuncList[];
 extern char *searchKeyData(void);
+extern unsigned char GlobalKeymap[];
+extern unsigned char EscKeymap[];
+extern unsigned char EscBKeymap[];
+extern unsigned char EscDKeymap[];
 
 #endif /* not FUNC_H */

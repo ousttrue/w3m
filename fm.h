@@ -59,16 +59,8 @@ global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
 
-extern unsigned char GlobalKeymap[];
-extern unsigned char EscKeymap[];
-extern unsigned char EscBKeymap[];
-extern unsigned char EscDKeymap[];
-
 global char *personal_document_root init(nullptr);
 
-global int CurrentKey;
-global char *CurrentKeyData;
-global char *CurrentCmdData;
 extern int enable_inline_image;
 
 global int confirm_on_quit init(TRUE);

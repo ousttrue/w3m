@@ -133,6 +133,8 @@ executable(
         'compression.cpp',
         'mytime.cpp',
         'funcname.cpp',
+        'app.cpp',
+        'bufferpos.cpp',
     ],
     install: true,
     dependencies: [

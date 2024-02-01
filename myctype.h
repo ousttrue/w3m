@@ -42,3 +42,5 @@ extern unsigned char MYCTYPE_DIGITMAP[];
   }
 #define IS_ENDL(c) ((c) == '\0' || (c) == '\r' || (c) == '\n')
 #define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
+
+inline int is_wordchar(int c) { return IS_ALNUM(c); }

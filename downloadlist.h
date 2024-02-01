@@ -25,3 +25,5 @@ void stopDownload(void);
 int checkDownloadList(void);
 
 bool popAddDownloadList();
+
+void ldDL();

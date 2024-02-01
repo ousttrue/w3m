@@ -2,6 +2,7 @@
 #include "proto.h"
 #include "cookie.h"
 #include "history.h"
+#include "downloadlist.h"
 
 FuncList w3mFuncList[] = {
     /*0*/ {"@@@", nulcmd},

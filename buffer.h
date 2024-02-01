@@ -158,3 +158,14 @@ extern int nTab;
 extern int TabCols;
 
 extern int REV_LB[];
+
+void gotoLine(Buffer *buf, int n);
+void _followForm(int submit);
+void set_buffer_environ(Buffer *buf);
+char *GetWord(Buffer *buf);
+char *getCurWord(Buffer *buf, int *spos, int *epos);
+
+#define nextChar(s, l) (s)++
+#define prevChar(s, l) (s)--
+#define getChar(p) ((int)*(p))
+

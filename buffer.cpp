@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "local_cgi.h"
 #include "etc.h"
 #include "url_stream.h"
 #include "message.h"
@@ -859,4 +860,97 @@ void addnewline(Buffer *buf, const char *line, Lineprop *prop, Linecolor *color,
     pos -= i;
     addnewline2(buf, s, p, c, pos, nlines);
   }
+}
+
+void set_buffer_environ(Buffer *buf) {
+  static Buffer *prev_buf = NULL;
+  static Line *prev_line = NULL;
+  static int prev_pos = -1;
+  Line *l;
+
+  if (buf == NULL)
+    return;
+  if (buf != prev_buf) {
+    set_environ("W3M_SOURCEFILE", buf->sourcefile);
+    set_environ("W3M_FILENAME", buf->filename);
+    set_environ("W3M_TITLE", buf->buffername);
+    set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
+    set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
+  }
+  l = buf->currentLine;
+  if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
+    Anchor *a;
+    ParsedURL pu;
+    char *s = GetWord(buf);
+    set_environ("W3M_CURRENT_WORD", s ? s : "");
+    a = retrieveCurrentAnchor(buf);
+    if (a) {
+      parseURL2((char *)a->url, &pu, baseURL(buf));
+      set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
+    } else
+      set_environ("W3M_CURRENT_LINK", "");
+    a = retrieveCurrentImg(buf);
+    if (a) {
+      parseURL2((char *)a->url, &pu, baseURL(buf));
+      set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
+    } else
+      set_environ("W3M_CURRENT_IMG", "");
+    a = retrieveCurrentForm(buf);
+    if (a)
+      set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
+    else
+      set_environ("W3M_CURRENT_FORM", "");
+    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
+    set_environ("W3M_CURRENT_COLUMN",
+                Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
+  } else if (!l) {
+    set_environ("W3M_CURRENT_WORD", "");
+    set_environ("W3M_CURRENT_LINK", "");
+    set_environ("W3M_CURRENT_IMG", "");
+    set_environ("W3M_CURRENT_FORM", "");
+    set_environ("W3M_CURRENT_LINE", "0");
+    set_environ("W3M_CURRENT_COLUMN", "0");
+  }
+  prev_buf = buf;
+  prev_line = l;
+  prev_pos = buf->pos;
+}
+
+char *GetWord(Buffer *buf) {
+  int b, e;
+  char *p;
+  if ((p = getCurWord(buf, &b, &e)) != NULL) {
+    return Strnew_charp_n(p, e - b)->ptr;
+  }
+  return NULL;
+}
+
+
+char *getCurWord(Buffer *buf, int *spos, int *epos) {
+  Line *l = buf->currentLine;
+  int b;
+
+  *spos = 0;
+  *epos = 0;
+  if (l == NULL)
+    return NULL;
+  auto p = l->lineBuf;
+  auto e = buf->pos;
+  while (e > 0 && !is_wordchar(getChar(&p[e])))
+    prevChar(e, l);
+  if (!is_wordchar(getChar(&p[e])))
+    return NULL;
+  b = e;
+  while (b > 0) {
+    int tmp = b;
+    prevChar(tmp, l);
+    if (!is_wordchar(getChar(&p[tmp])))
+      break;
+    b = tmp;
+  }
+  while (e < l->len && is_wordchar(getChar(&p[e])))
+    nextChar(e, l);
+  *spos = b;
+  *epos = e;
+  return &p[b];
 }

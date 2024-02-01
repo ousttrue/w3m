@@ -20,8 +20,13 @@ libuv に乗るように event driven 型に改造を試みます。
 await に置きかえるような改造をしたい。
 
 ```c title="linein.c"
-char *inputLineHistSearch(const char *prompt, char *def_str, int flag, Hist *hist,
-                          int (*incfunc)(int ch, Str *buf, Lineprop *prop));
+char *inputLineHistSearch(
+  const char *prompt, 
+  char *def_str, 
+  int flag, 
+  Hist *hist,
+  int (*incfunc)(int ch, Str *buf, Lineprop *prop)
+);
 ```
 
 これを返り値じゃなくて返り値を使うコールバック引数に変えればよいのだけど、
@@ -59,11 +64,21 @@ form の text 入力など動作に必要な最小限だけやる。
 
 ```cpp
 using OnInput = std::function<void(const char*input)>;
-void inputLineHistSearch(const char *prompt, char *def_str, int flag, Hist *hist,
-                          int (*incfunc)(int ch, Str *buf, Lineprop *prop), const OnInput &onInput);
+void inputLineHistSearch(
+  const char *prompt, 
+  char *def_str, 
+  int flag, 
+  Hist *hist,
+  int (*incfunc)(int ch, Str *buf, Lineprop *prop), 
+  const OnInput &onInput // 👈
+);
 // 続きの処理をコールバックで渡す。
 // 返り値は無くなる。
+// 継続渡しなのでは(よくわかっていない)
 ```
+
+手作業で継続に変換するときに、
+簡単なときと難しいときがある。
 
 ## 書き換えて text input 動いた
 
@@ -73,4 +88,3 @@ linein が有効になったタイミングで LineInput dispatcher を stack �
 入力をオーバーライドする。
 context menu や ダイアログの入力がオーバーライドすることが可能な設計。
 menu は削除して消えていますが。
-

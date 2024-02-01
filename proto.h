@@ -128,7 +128,6 @@ extern void tabURL(void);
 extern void tabrURL(void);
 extern void tabR(void);
 extern void tabL(void);
-extern void ldDL(void);
 extern void linkLst(void);
 #define linkMn nulcmd
 #define accessKey nulcmd
@@ -186,7 +185,6 @@ extern Buffer *deleteBuffer(Buffer *first, Buffer *delbuf);
 extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
 extern Buffer *nthBuffer(Buffer *firstbuf, int n);
 extern void gotoRealLine(Buffer *buf, int n);
-extern void gotoLine(Buffer *buf, int n);
 extern Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf,
                             char *selectchar);
 extern void reshapeBuffer(Buffer *buf);
@@ -206,7 +204,6 @@ extern void cursorHome(Buffer *buf);
 extern void arrangeCursor(Buffer *buf);
 extern void arrangeLine(Buffer *buf);
 extern void cursorXY(Buffer *buf, int x, int y);
-extern void restorePosition(Buffer *buf, Buffer *orig);
 extern int columnSkip(Buffer *buf, int offset);
 extern int columnPos(Line *line, int column);
 extern int columnLen(Line *line, int column);

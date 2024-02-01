@@ -11,3 +11,4 @@ struct AlarmEvent {
   int cmd;
   void *data;
 };
+extern AlarmEvent DefaultAlarm;

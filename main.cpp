@@ -1,5 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "bufferpos.h"
+#include "app.h"
 #include "etc.h"
 #include "mimetypes.h"
 #include "url_schema.h"
@@ -57,35 +59,11 @@
 #define INLINE_IMG_ITERM2 3
 #define INLINE_IMG_KITTY 4
 
-struct BufferPos {
-  long top_linenumber;
-  long cur_linenumber;
-  int currentColumn;
-  int pos;
-  int bpos;
-  BufferPos *next;
-  BufferPos *prev;
-};
-
 Hist *LoadHist;
 Hist *SaveHist;
 Hist *URLHist;
 Hist *ShellHist;
 Hist *TextHist;
-
-struct Event {
-  int cmd;
-  void *data;
-  Event *next;
-};
-static Event *CurrentEvent = NULL;
-static Event *LastEvent = NULL;
-
-static AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
-static AlarmEvent *CurrentAlarm = &DefaultAlarm;
-
-static int need_resize_screen = FALSE;
-static void resize_screen(void);
 
 static const char *SearchString = NULL;
 int (*searchRoutine)(Buffer *, const char *);
@@ -97,20 +75,9 @@ static void cmd_loadfile(const char *path);
 static void cmd_loadURL(const char *url, ParsedURL *current,
                         const char *referer, FormList *request);
 static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
-static void keyPressEventProc(int c);
 int show_params_p = 0;
 void show_params(FILE *fp);
 
-static char *getCurWord(Buffer *buf, int *spos, int *epos);
-
-int prec_num = 0;
-int prev_key = -1;
-int on_target = 1;
-
-void set_buffer_environ(Buffer *);
-static void save_buffer_position(Buffer *buf);
-
-static void _followForm(int);
 static void _goLine(const char *);
 static void _newT(void);
 static void followTab(TabBuffer *tab);
@@ -118,8 +85,6 @@ static void moveTab(TabBuffer *t, TabBuffer *t2, int right);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = TRUE;
-#define PREC_NUM (prec_num ? prec_num : 1)
-#define PREC_LIMIT 10000
 static int searchKeyNum(void);
 
 #define help() fusage(stdout, 0)
@@ -309,24 +274,6 @@ static void *die_oom(size_t bytes) {
   return NULL;
 }
 
-static void keyPressEventProc(int c) {
-  CurrentKey = c;
-  w3mFuncList[(int)GlobalKeymap[c]].func();
-}
-
-void pushEvent(int cmd, void *data) {
-
-  auto event = (Event *)New(Event);
-  event->cmd = cmd;
-  event->data = data;
-  event->next = NULL;
-  if (CurrentEvent)
-    LastEvent->next = event;
-  else
-    CurrentEvent = event;
-  LastEvent = event;
-}
-
 static void intTrap(SIGNAL_ARG) { /* Interrupt catcher */
   LONGJMP(IntReturn, 0);
   SIGNAL_RETURN;
@@ -452,20 +399,6 @@ static void delBuffer(Buffer *buf) {
 static void repBuffer(Buffer *oldbuf, Buffer *buf) {
   Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
   Currentbuf = buf;
-}
-
-static void resize_hook(SIGNAL_ARG) {
-  need_resize_screen = TRUE;
-  mySignal(SIGWINCH, resize_hook);
-  SIGNAL_RETURN;
-}
-
-static void resize_screen(void) {
-  need_resize_screen = FALSE;
-  setlinescols();
-  setupscreen(term_entry());
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 static void SigPipe(SIGNAL_ARG) {
@@ -1108,11 +1041,6 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide") {
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#define nextChar(s, l) (s)++
-#define prevChar(s, l) (s)--
-#define getChar(p) ((int)*(p))
-
-static int is_wordchar(int c) { return IS_ALNUM(c); }
 
 static int prev_nonnull_line(Line *line) {
   Line *l;
@@ -1892,7 +1820,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static void _followForm(int submit) {
+void _followForm(int submit) {
   if (Currentbuf->firstLine == NULL)
     return;
 
@@ -3176,46 +3104,6 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
   }
 }
 
-static char *getCurWord(Buffer *buf, int *spos, int *epos) {
-  char *p;
-  Line *l = buf->currentLine;
-  int b, e;
-
-  *spos = 0;
-  *epos = 0;
-  if (l == NULL)
-    return NULL;
-  p = l->lineBuf;
-  e = buf->pos;
-  while (e > 0 && !is_wordchar(getChar(&p[e])))
-    prevChar(e, l);
-  if (!is_wordchar(getChar(&p[e])))
-    return NULL;
-  b = e;
-  while (b > 0) {
-    int tmp = b;
-    prevChar(tmp, l);
-    if (!is_wordchar(getChar(&p[tmp])))
-      break;
-    b = tmp;
-  }
-  while (e < l->len && is_wordchar(getChar(&p[e])))
-    nextChar(e, l);
-  *spos = b;
-  *epos = e;
-  return &p[b];
-}
-
-static char *GetWord(Buffer *buf) {
-  int b, e;
-  char *p;
-
-  if ((p = getCurWord(buf, &b, &e)) != NULL) {
-    return Strnew_charp_n(p, e - b)->ptr;
-  }
-  return NULL;
-}
-
 static void execdict(const char *word) {
   const char *w, *dictcmd;
   Buffer *buf;
@@ -3252,60 +3140,6 @@ DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
 DEFUN(dictwordat, DICT_WORD_AT,
       "Execute dictionary command for word at cursor") {
   execdict(GetWord(Currentbuf));
-}
-
-void set_buffer_environ(Buffer *buf) {
-  static Buffer *prev_buf = NULL;
-  static Line *prev_line = NULL;
-  static int prev_pos = -1;
-  Line *l;
-
-  if (buf == NULL)
-    return;
-  if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->sourcefile);
-    set_environ("W3M_FILENAME", buf->filename);
-    set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-    set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
-  }
-  l = buf->currentLine;
-  if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-    Anchor *a;
-    ParsedURL pu;
-    char *s = GetWord(buf);
-    set_environ("W3M_CURRENT_WORD", s ? s : "");
-    a = retrieveCurrentAnchor(buf);
-    if (a) {
-      parseURL2((char *)a->url, &pu, baseURL(buf));
-      set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
-    } else
-      set_environ("W3M_CURRENT_LINK", "");
-    a = retrieveCurrentImg(buf);
-    if (a) {
-      parseURL2((char *)a->url, &pu, baseURL(buf));
-      set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
-    } else
-      set_environ("W3M_CURRENT_IMG", "");
-    a = retrieveCurrentForm(buf);
-    if (a)
-      set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
-    else
-      set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-    set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
-  } else if (!l) {
-    set_environ("W3M_CURRENT_WORD", "");
-    set_environ("W3M_CURRENT_LINK", "");
-    set_environ("W3M_CURRENT_IMG", "");
-    set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", "0");
-    set_environ("W3M_CURRENT_COLUMN", "0");
-  }
-  prev_buf = buf;
-  prev_line = l;
-  prev_pos = buf->pos;
 }
 
 char *searchKeyData(void) {
@@ -3402,35 +3236,6 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
     CurrentCmdData = NULL;
   }
   displayBuffer(Currentbuf, B_NORMAL);
-}
-
-static void SigAlarm(SIGNAL_ARG) {
-  char *data;
-
-  if (CurrentAlarm->sec > 0) {
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-    CurrentCmdData = data = (char *)CurrentAlarm->data;
-    w3mFuncList[CurrentAlarm->cmd].func();
-    CurrentCmdData = NULL;
-    if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-      CurrentAlarm->sec = 0;
-      CurrentAlarm->status = AL_UNSET;
-    }
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET)
-        CurrentAlarm = Currentbuf->event;
-      else
-        Currentbuf->event = NULL;
-    }
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-  }
-  SIGNAL_RETURN;
 }
 
 DEFUN(setAlarm, ALARM, "Set alarm") {
@@ -4038,44 +3843,6 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static void save_buffer_position(Buffer *buf) {
-  BufferPos *b = buf->undo;
-
-  if (!buf->firstLine)
-    return;
-  if (b && b->top_linenumber == TOP_LINENUMBER(buf) &&
-      b->cur_linenumber == CUR_LINENUMBER(buf) &&
-      b->currentColumn == buf->currentColumn && b->pos == buf->pos)
-    return;
-  b = (BufferPos *)New(BufferPos);
-  b->top_linenumber = TOP_LINENUMBER(buf);
-  b->cur_linenumber = CUR_LINENUMBER(buf);
-  b->currentColumn = buf->currentColumn;
-  b->pos = buf->pos;
-  b->bpos = buf->currentLine ? buf->currentLine->bpos : 0;
-  b->next = NULL;
-  b->prev = buf->undo;
-  if (buf->undo)
-    buf->undo->next = b;
-  buf->undo = b;
-}
-
-static void resetPos(BufferPos *b) {
-  Buffer buf;
-  Line top, cur;
-
-  top.linenumber = b->top_linenumber;
-  cur.linenumber = b->cur_linenumber;
-  cur.bpos = b->bpos;
-  buf.topLine = &top;
-  buf.currentLine = &cur;
-  buf.pos = b->pos;
-  buf.currentColumn = b->currentColumn;
-  restorePosition(Currentbuf, &buf);
-  Currentbuf->undo = b;
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
   BufferPos *b = Currentbuf->undo;
   int i;
@@ -4601,76 +4368,6 @@ int main(int argc, char **argv) {
   if (line_str) {
     _goLine(line_str);
   }
-  for (;;) {
-    if (popAddDownloadList()) {
-      ldDL();
-    }
-    if (Currentbuf->submit) {
-      Anchor *a = Currentbuf->submit;
-      Currentbuf->submit = NULL;
-      gotoLine(Currentbuf, a->start.line);
-      Currentbuf->pos = a->start.pos;
-      _followForm(TRUE);
-      continue;
-    }
-    /* event processing */
-    if (CurrentEvent) {
-      CurrentKey = -1;
-      CurrentKeyData = NULL;
-      CurrentCmdData = (char *)CurrentEvent->data;
-      w3mFuncList[CurrentEvent->cmd].func();
-      CurrentCmdData = NULL;
-      CurrentEvent = CurrentEvent->next;
-      continue;
-    }
-    /* get keypress event */
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET) {
-        CurrentAlarm = Currentbuf->event;
-        if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          Currentbuf->event = NULL;
-          CurrentKey = -1;
-          CurrentKeyData = NULL;
-          CurrentCmdData = (char *)CurrentAlarm->data;
-          w3mFuncList[CurrentAlarm->cmd].func();
-          CurrentCmdData = NULL;
-          continue;
-        }
-      } else
-        Currentbuf->event = NULL;
-    }
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-    mySignal(SIGWINCH, resize_hook);
-    {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-      } while (sleep_till_anykey(1, 0) <= 0);
-    }
-    c = getch();
-    if (CurrentAlarm->sec > 0) {
-      alarm(0);
-    }
-    if (IS_ASCII(c)) { /* Ascii */
-      if (('0' <= c) && (c <= '9') &&
-          (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-        prec_num = prec_num * 10 + (int)(c - '0');
-        if (prec_num > PREC_LIMIT)
-          prec_num = PREC_LIMIT;
-      } else {
-        set_buffer_environ(Currentbuf);
-        save_buffer_position(Currentbuf);
-        keyPressEventProc((int)c);
-        prec_num = 0;
-      }
-    }
-    prev_key = CurrentKey;
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-  }
+
+  mainLoop();
 }
