@@ -129,6 +129,8 @@ executable(
         'ssl_util.cpp',
         'mimetypes.cpp',
         'url_schema.cpp',
+        'url_stream.cpp',
+        'compression.cpp',
     ],
     install: true,
     dependencies: [

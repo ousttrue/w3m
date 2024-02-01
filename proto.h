@@ -143,14 +143,10 @@ extern void cursorBottom(void);
 struct Buffer;
 extern int currentLn(Buffer *buf);
 extern void tmpClearBuffer(Buffer *buf);
-extern char *filename_extension(char *patch, int is_url);
 
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
-struct URLFile;
-extern void examineFile(char *path, URLFile *uf);
-extern char *acceptableEncoding(void);
-extern int dir_exist(char *path);
+
 extern char **get_symbol(void);
 struct Str;
 
@@ -163,7 +159,8 @@ extern int is_blank_line(char *line, int indent);
 extern char *convert_size(long long size, int usefloat);
 extern char *convert_size2(long long size1, long long size2, int usefloat);
 
-extern Buffer *loadBuffer(URLFile *uf, Buffer *newBuf);
+struct UrlStream;
+extern Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
 extern void saveBuffer(Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
 extern Buffer *getshell(char *cmd);
@@ -173,16 +170,15 @@ extern Buffer *openPagerBuffer(input_stream *stream, Buffer *buf);
 extern Buffer *openGeneralPagerBuffer(input_stream *stream);
 struct Line;
 extern Line *getNextPage(Buffer *buf, int plen);
-extern int save2tmp(URLFile uf, char *tmpf);
-extern Buffer *doExternal(URLFile uf, const char *type, Buffer *defaultbuf);
+
+extern Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf);
 extern int _doFileCopy(char *tmpf, char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
 extern int doFileMove(char *tmpf, char *defstr);
-extern int doFileSave(URLFile uf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(input_stream *stream, char *path);
 struct ParsedURL;
-extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
+extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);
 struct TabBuffer;
 extern TabBuffer *newTab(void);
@@ -266,10 +262,7 @@ Str *HTTPrequestMethod(HRequest *hr);
 Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);
 struct URLOption;
 struct TextList;
-extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
-                       URLOption *option, FormList *request,
-                       TextList *extra_header, URLFile *ouf, HRequest *hr,
-                       unsigned char *status);
+
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
 
@@ -279,9 +272,9 @@ extern void init_rc(void);
 extern void init_tmp(void);
 extern Buffer *load_option_panel(void);
 extern void sync_with_option(void);
+
 extern Str *loadLocalDir(char *dirname);
-extern FILE *localcgi_post(char *, char *, FormList *, char *);
-#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
+
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
@@ -296,8 +289,6 @@ extern char *last_modified(Buffer *buf);
 extern void mySystem(char *command, int background);
 extern Str *myExtCommand(char *cmd, char *arg, int redirect);
 extern Str *myEditor(char *cmd, char *file, int line);
-extern int is_localhost(const char *host);
-extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 extern char *expandName(char *name);
@@ -319,7 +310,6 @@ extern char *expandName(char *name);
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-extern char *searchKeyData(void);
 
 extern void setKeymap(char *p, int lineno, int verbose);
 extern void initKeymap(int force);

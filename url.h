@@ -12,7 +12,6 @@ extern int NOproxy_netaddr;
 extern bool use_proxy;
 // #define Do_not_use_proxy (!use_proxy)
 extern const char *w3m_reqlog;
-extern char *index_file;
 struct TextList;
 extern TextList *NO_proxy_domains;
 
@@ -62,9 +61,7 @@ int check_no_proxy(const char *domain);
 int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);
 
-union input_stream;
-struct URLFile;
-extern void init_stream(URLFile *uf, UrlSchema schema, input_stream *stream);
 
 struct ParsedURL;
-extern ParsedURL *schemaToProxy(UrlSchema schema);
+ParsedURL *schemaToProxy(UrlSchema schema);
+

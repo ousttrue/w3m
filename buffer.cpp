@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "url_stream.h"
 #include "message.h"
 #include "screen.h"
 #include "display.h"
@@ -9,7 +10,6 @@
 #include "fm.h"
 #include "tmpfile.h"
 #include "terms.h"
-#include "html.h"
 #include "form.h"
 #include "anchor.h"
 #include "ctrlcode.h"
@@ -448,7 +448,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
  * Reshape HTML buffer
  */
 void reshapeBuffer(Buffer *buf) {
-  URLFile f;
+  UrlStream f;
   Buffer sbuf;
 
   if (!buf->need_reshape)
@@ -479,7 +479,7 @@ void reshapeBuffer(Buffer *buf) {
   if (buf->header_source) {
     if (buf->currentURL.schema != SCM_LOCAL || buf->mailcap_source ||
         !strcmp(buf->currentURL.file, "-")) {
-      URLFile h;
+      UrlStream h;
       init_stream(&h, SCM_LOCAL, NULL);
       examineFile(buf->header_source, &h);
       if (h.stream) {
@@ -720,7 +720,7 @@ Buffer *page_info_panel(Buffer *buf) {
 
   a = retrieveCurrentAnchor(buf);
   if (a != NULL) {
-    parseURL2((char*)a->url, &pu, baseURL(buf));
+    parseURL2((char *)a->url, &pu, baseURL(buf));
     p = parsedURL2Str(&pu)->ptr;
     q = html_quote(p);
     if (DecodeURL)
@@ -733,7 +733,7 @@ Buffer *page_info_panel(Buffer *buf) {
   }
   a = retrieveCurrentImg(buf);
   if (a != NULL) {
-    parseURL2((char*)a->url, &pu, baseURL(buf));
+    parseURL2((char *)a->url, &pu, baseURL(buf));
     p = parsedURL2Str(&pu)->ptr;
     q = html_quote(p);
     if (DecodeURL)

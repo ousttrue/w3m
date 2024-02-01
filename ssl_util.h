@@ -15,6 +15,6 @@ extern bool ssl_ca_default;
 extern bool ssl_verify_server;
 extern char *ssl_min_version;
 
-SSL *openSSLHandle(int sock, const char *hostname, char **p_cert);
+SSL *openSSLHandle(int sock, const char *hostname, const char **p_cert);
 void free_ssl_ctx();
 void SSL_write_from_file(SSL *ssl, const char *file);

@@ -351,7 +351,7 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
   return s;
 }
 
-SSL *openSSLHandle(int sock, const char *hostname, char **p_cert) {
+SSL *openSSLHandle(int sock, const char *hostname, const char **p_cert) {
   SSL *handle = nullptr;
   static const char *old_ssl_forbid_method = nullptr;
   static int old_ssl_verify_server = -1;

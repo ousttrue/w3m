@@ -1,4 +1,5 @@
 #pragma once
+#include <stdio.h>
 
 #include <sys/types.h>
 #ifdef HAVE_DIRENT_H
@@ -19,7 +20,6 @@ extern char *cgi_bin;
 #define S_IFREG 0100000
 #endif /* not S_IFREG */
 
-#define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
 #define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
 
 #ifndef S_ISDIR
@@ -41,3 +41,6 @@ extern char *cgi_bin;
 void set_environ(const char *var, const char *value);
 struct Str;
 Str *localCookie(void);
+struct FormList;
+FILE *localcgi_post(char *, char *, FormList *, char *);
+#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))

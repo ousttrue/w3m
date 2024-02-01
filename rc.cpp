@@ -3,6 +3,8 @@
  */
 #include "rc.h"
 #include "mimetypes.h"
+#include "compression.h"
+#include "url_stream.h"
 #include "ssl_util.h"
 #include "file.h"
 #include "message.h"

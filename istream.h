@@ -8,6 +8,11 @@
 #include <fcntl.h>
 #include <openssl/types.h>
 
+#define ENC_7BIT 0
+#define ENC_BASE64 1
+#define ENC_QUOTE 2
+#define ENC_UUENCODE 3
+
 struct stream_buffer {
   unsigned char *buf;
   int size, cur, next;

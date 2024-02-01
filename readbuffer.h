@@ -211,13 +211,13 @@ Str *romanAlphabet(int n);
 int next_status(char c, int *status);
 int read_token(Str *buf, char **instr, int *status, int pre, int append);
 
-struct URLFile;
+struct UrlStream;
 struct Buffer;
-void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal);
-Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
+void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal);
+Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf);
 Buffer *loadHTMLString(Str *page);
 
-Str *convertLine0(URLFile *uf, Str *line, int mode);
+Str *convertLine0(UrlStream *uf, Str *line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
 

@@ -30,6 +30,7 @@ int CurrentPid;
 TextList *fileToDelete;
 
 char *document_root = nullptr;
+bool do_download = false;
 
 /* Prototype declaration of internal functions */
 #ifdef HAVE_READLINE

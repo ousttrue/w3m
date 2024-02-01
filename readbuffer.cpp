@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "url_stream.h"
 #include "w3m.h"
 #include "hash.h"
 #include "linklist.h"
@@ -4153,7 +4154,7 @@ static void HTMLlineproc3(Buffer *buf, input_stream *stream) {
   HTMLlineproc2body(buf, file_feed, -1);
 }
 
-void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
+void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   long long linelen = 0;
   long long trbyte = 0;
@@ -4225,7 +4226,7 @@ phase2:
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
-Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf) {
+Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
   FILE *src = NULL;
   Str *tmp;
 
@@ -4365,13 +4366,12 @@ void completeHTMLstream(struct html_feed_environ *h_env,
  * loadHTMLString: read string and make new buffer
  */
 Buffer *loadHTMLString(Str *page) {
-  URLFile f;
   MySignalHandler prevtrap = NULL;
-  Buffer *newBuf;
 
+  UrlStream f;
   init_stream(&f, SCM_LOCAL, newStrStream(page));
 
-  newBuf = newBuffer(INIT_BUFFER_WIDTH);
+  auto newBuf = newBuffer(INIT_BUFFER_WIDTH);
   if (SETJMP(AbortLoading) != 0) {
     TRAP_OFF;
     discardBuffer(newBuf);

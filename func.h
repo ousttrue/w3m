@@ -22,5 +22,6 @@ struct FuncList {
   void (*func)();
 };
 extern FuncList w3mFuncList[];
+extern char *searchKeyData(void);
 
 #endif /* not FUNC_H */

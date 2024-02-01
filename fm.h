@@ -55,7 +55,6 @@ global char SearchHeader init(FALSE);
 global const char *DefaultType init(nullptr);
 
 global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
 global char DecodeCTE init(FALSE);
 global char AutoUncompress init(FALSE);
 global char PreserveTimestamp init(TRUE);
@@ -101,7 +100,6 @@ global char *pre_form_file init(PRE_FORM_FILE);
 global char *siteconf_file init(SITECONF_FILE);
 global char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(TRUE);
-global int do_download init(FALSE);
 
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
@@ -143,7 +141,6 @@ global const char *config_file init(nullptr);
 global int is_redisplay init(FALSE);
 global int clear_buffer init(TRUE);
 global int set_pixel_per_char init(FALSE);
-global int use_lessopen init(FALSE);
 
 global char *keymap_file init(KEYMAP_FILE);
 

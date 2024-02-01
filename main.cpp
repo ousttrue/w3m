@@ -1,7 +1,9 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "etc.h"
 #include "mimetypes.h"
 #include "url_schema.h"
+#include "url_stream.h"
 #include "ssl_util.h"
 #include "message.h"
 #include "screen.h"
@@ -91,7 +93,7 @@ int (*searchRoutine)(Buffer *, const char *);
 JMP_BUF IntReturn;
 
 static void delBuffer(Buffer *buf);
-static void cmd_loadfile(char *path);
+static void cmd_loadfile(const char *path);
 static void cmd_loadURL(const char *url, ParsedURL *current,
                         const char *referer, FormList *request);
 static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
@@ -1082,10 +1084,10 @@ DEFUN(ldhelp, HELP, "Show help panel") {
   cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
-static void cmd_loadfile(char *fn) {
-  Buffer *buf;
+static void cmd_loadfile(const char *fn) {
 
-  buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+  auto buf =
+      loadGeneralFile(file_to_url((char *)fn), NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
     char *emsg = Sprintf("%s not found", fn)->ptr;

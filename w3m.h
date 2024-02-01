@@ -16,6 +16,7 @@ struct TextList;
 extern TextList *fileToDelete;
 
 extern char *document_root;
+extern bool do_download;
 
 int backend(void);
 void w3m_exit(int i);
