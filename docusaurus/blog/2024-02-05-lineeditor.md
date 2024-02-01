@@ -64,3 +64,13 @@ void inputLineHistSearch(const char *prompt, char *def_str, int flag, Hist *hist
 // 続きの処理をコールバックで渡す。
 // 返り値は無くなる。
 ```
+
+## 書き換えて text input 動いた
+
+動いた。次は getch loop の dispather を stack に積み上げる改造。
+default では素の main loop の keymap が動作して、
+linein が有効になったタイミングで LineInput dispatcher を stack に push して、
+入力をオーバーライドする。
+context menu や ダイアログの入力がオーバーライドすることが可能な設計。
+menu は削除して消えていますが。
+
