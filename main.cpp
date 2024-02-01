@@ -705,11 +705,11 @@ static void isrch(int (*func)(Buffer *, const char *), const char *prompt) {
   dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
   searchRoutine = func;
-  auto str =
-      inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
-  if (str == NULL) {
-    RESTORE_BUFPOSITION(&sbuf);
-  }
+  // auto str =
+  //     inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+  // if (str == NULL) {
+  //   RESTORE_BUFPOSITION(&sbuf);
+  // }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
