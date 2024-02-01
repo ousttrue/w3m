@@ -143,7 +143,6 @@ struct Buffer;
 extern int currentLn(Buffer *buf);
 extern void tmpClearBuffer(Buffer *buf);
 
-
 extern char **get_symbol(void);
 struct Str;
 
@@ -227,8 +226,9 @@ struct Anchor;
 extern Anchor *retrieveCurrentMap(Buffer *buf);
 
 extern Buffer *page_info_panel(Buffer *buf);
-extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
-extern struct frameset *newFrameSet(struct parsed_tag *tag);
+struct HtmlTag;
+extern struct frame_body *newFrame(HtmlTag *tag, Buffer *buf);
+extern struct frameset *newFrameSet(HtmlTag *tag);
 extern void deleteFrame(struct frame_body *b);
 extern void deleteFrameSet(struct frameset *f);
 extern void deleteFrameSetElement(union frameset_element e);
@@ -304,4 +304,3 @@ extern void dispVer(void);
 void srand48(long);
 long lrand48(void);
 #endif
-

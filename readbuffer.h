@@ -199,8 +199,9 @@ void save_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void restore_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void push_render_image(Str *str, int width, int limit,
                        html_feed_environ *h_env);
-int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
-void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env, int internal);
+int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
+void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
+                   int internal);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);

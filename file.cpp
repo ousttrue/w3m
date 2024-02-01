@@ -72,7 +72,7 @@ static int _MoveFile(char *path1, char *path2);
 static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
                           Buffer *defaultbuf);
 
-static void addLink(Buffer *buf, struct parsed_tag *tag);
+static void addLink(Buffer *buf, struct HtmlTag *tag);
 
 static int http_response_code;
 

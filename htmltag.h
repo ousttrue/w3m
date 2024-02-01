@@ -3,7 +3,7 @@
 
 /* Parsed Tag structure */
 
-struct parsed_tag {
+struct HtmlTag {
   HtmlCommand tagid;
   unsigned char *attrid;
   char **value;
@@ -21,25 +21,23 @@ struct parsed_tag {
 #define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
 
 struct Str;
-extern struct parsed_tag *parse_tag(const char **s, int internal);
-extern int parsedtag_get_value(struct parsed_tag *tag, int id, void *value);
-extern int parsedtag_set_value(struct parsed_tag *tag, int id, char *value);
-extern Str *parsedtag2str(struct parsed_tag *tag);
+HtmlTag *parse_tag(const char **s, int internal);
+int parsedtag_get_value(HtmlTag *tag, int id, void *value);
+int parsedtag_set_value(HtmlTag *tag, int id, char *value);
+Str *parsedtag2str(HtmlTag *tag);
 
-extern Str *process_img(struct parsed_tag *tag, int width);
-extern Str *process_anchor(struct parsed_tag *tag, const char *tagbuf);
-extern Str *process_input(struct parsed_tag *tag);
-extern Str *process_button(struct parsed_tag *tag);
-extern Str *process_n_button(void);
-extern Str *process_select(struct parsed_tag *tag);
-extern Str *process_n_select(void);
-extern void feed_select(const char *str);
-extern void process_option(void);
-extern Str *process_textarea(struct parsed_tag *tag, int width);
-extern Str *process_n_textarea(void);
-extern void feed_textarea(const char *str);
-extern Str *process_form(struct parsed_tag *tag);
-extern Str *process_n_form(void);
-extern int getMetaRefreshParam(const char *q, Str **refresh_uri);
-
-
+Str *process_img(HtmlTag *tag, int width);
+Str *process_anchor(HtmlTag *tag, const char *tagbuf);
+Str *process_input(HtmlTag *tag);
+Str *process_button(HtmlTag *tag);
+Str *process_n_button(void);
+Str *process_select(HtmlTag *tag);
+Str *process_n_select(void);
+void feed_select(const char *str);
+void process_option(void);
+Str *process_textarea(HtmlTag *tag, int width);
+Str *process_n_textarea(void);
+void feed_textarea(const char *str);
+Str *process_form(HtmlTag *tag);
+Str *process_n_form(void);
+int getMetaRefreshParam(const char *q, Str **refresh_uri);

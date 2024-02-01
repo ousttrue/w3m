@@ -93,7 +93,7 @@ Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
   return a;
 }
 
-Anchor *registerForm(Buffer *buf, FormList *flist, struct parsed_tag *tag,
+Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag,
                      int line, int pos) {
   Anchor *a;
   FormItemList *fi;

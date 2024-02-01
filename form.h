@@ -69,7 +69,8 @@ struct FormItemList {
 FormList *newFormList(const char *action, const char *method,
                       const char *charset, const char *enctype,
                       const char *target, const char *name, FormList *_next);
-struct FormItemList *formList_addInput(FormList *fl, struct parsed_tag *tag);
+struct HtmlTag;
+struct FormItemList *formList_addInput(FormList *fl, HtmlTag *tag);
 
 struct Buffer;
 struct Anchor;

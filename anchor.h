@@ -57,7 +57,8 @@ Anchor *registerName(Buffer *buf, const char *url, int line, int pos);
 Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
                     int pos);
 struct FormList;
-Anchor *registerForm(Buffer *buf, FormList *flist, struct parsed_tag *tag,
+struct HtmlTag;
+Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag,
                      int line, int pos);
 
 Anchor *retrieveCurrentAnchor(Buffer *buf);
