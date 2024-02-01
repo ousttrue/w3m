@@ -24,12 +24,14 @@ inline const char *inputLineHist(const char *p, const char *d, InputFlags f,
                                  Hist *h) {
   return inputLineHistSearch(p, d, f, h, nullptr);
 }
-inline const char *inputLine(const char *p, const char *d, InputFlags f) {
-  return inputLineHist(p, d, f, nullptr);
-}
-inline const char *inputStr(const char *p, const char *d) {
-  return inputLine(p, d, IN_STRING);
-}
+
+// inline const char *inputLine(const char *p, const char *d, InputFlags f) {
+//   return inputLineHist(p, d, f, nullptr);
+// }
+
+// inline const char *inputStr(const char *p, const char *d) {
+//   return inputLine(p, d, IN_STRING);
+// }
 
 // TODO:
 // inline const char *inputStrHist(const char *p, const char *d, Hist *h) {

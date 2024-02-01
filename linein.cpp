@@ -898,20 +898,20 @@ static void _editor(void) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-inline const char *inputChar(const char *p) {
-  return inputLine(p, "", IN_CHAR);
-}
+// inline const char *inputChar(const char *p) {
+//   return inputLine(p, "", IN_CHAR);
+// }
 
-const char *inputAnswer(const char *prompt) {
-  if (IsForkChild)
-    return "n";
-
-  if (!fmInitialized) {
-    printf("%s", prompt);
-    fflush(stdout);
-    return Strfgets(stdin)->ptr;
-  }
-
-  term_raw();
-  return inputChar(prompt);
-}
+// const char *inputAnswer(const char *prompt) {
+//   if (IsForkChild)
+//     return "n";
+//
+//   if (!fmInitialized) {
+//     printf("%s", prompt);
+//     fflush(stdout);
+//     return Strfgets(stdin)->ptr;
+//   }
+//
+//   term_raw();
+//   return inputChar(prompt);
+// }

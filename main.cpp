@@ -1378,8 +1378,9 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
     _goLine("^");
   else if (str)
     _goLine(str);
-  else
-    _goLine(inputStr("Goto line: ", ""));
+  else{
+    // _goLine(inputStr("Goto line: ", ""));
+  }
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line") { _goLine("^"); }
@@ -1897,12 +1898,10 @@ static void _followForm(int submit) {
     if (submit)
       goto do_submit;
     if (fi->readonly) {
-      /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
       break;
     }
-    /* FIXME: gettextize? */
-    p = inputLine("Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
+    // p = inputLine("Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
     if (p == NULL)
       break;
     fi->value = Strnew_charp(p);
@@ -1914,7 +1913,6 @@ static void _followForm(int submit) {
     if (submit)
       goto do_submit;
     if (fi->readonly)
-      /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
     input_textarea(fi);
     formUpdateBuffer(a, Currentbuf, fi);
@@ -1923,7 +1921,6 @@ static void _followForm(int submit) {
     if (submit)
       goto do_submit;
     if (fi->readonly) {
-      /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
       break;
     }
@@ -1933,7 +1930,6 @@ static void _followForm(int submit) {
     if (submit)
       goto do_submit;
     if (fi->readonly) {
-      /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
       break;
     }
@@ -3075,7 +3071,7 @@ static void invoke_browser(char *url) {
       break;
     }
     if (browser == NULL || *browser == '\0') {
-      browser = inputStr("Browse command: ", NULL);
+      // browser = inputStr("Browse command: ", NULL);
     }
   }
   if (browser == NULL || *browser == '\0') {
@@ -3238,7 +3234,7 @@ static void execdict(const char *word) {
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
-  execdict(inputStr("(dictionary)!", ""));
+  // execdict(inputStr("(dictionary)!", ""));
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,

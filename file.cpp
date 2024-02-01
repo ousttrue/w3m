@@ -873,12 +873,13 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
     if (fmInitialized) {
       const char *pp;
       term_raw();
-      if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
-          NULL)
-        return;
+      // if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
+      //     NULL)
+      //   return;
       *uname = Strnew_charp(pp);
-      if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
-                          IN_PASSWORD)) == NULL) {
+      // if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
+      //                     IN_PASSWORD)) == NULL) 
+      {
         *uname = NULL;
         return;
       }
