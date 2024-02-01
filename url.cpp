@@ -240,14 +240,14 @@ ParsedURL *baseURL(Buffer *buf) {
     return &buf->currentURL;
 }
 
-int openSocket(char *const hostname, char *remoteport_name,
+int openSocket(const char *const hostname, const char *remoteport_name,
                unsigned short remoteport_num) {
   volatile int sock = -1;
 #ifdef INET6
   int *af;
   struct addrinfo hints, *res0, *res;
   int error;
-  char *hname;
+  const char *hname;
 #else  /* not INET6 */
   struct sockaddr_in hostaddr;
   struct hostent *entry;
@@ -284,7 +284,7 @@ int openSocket(char *const hostname, char *remoteport_name,
   hname = hostname;
   if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
     hname = allocStr(hostname + 1, -1);
-    hname[strlen(hname) - 1] = '\0';
+    ((char *)hname)[strlen(hname) - 1] = '\0';
     if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
       goto error;
   }
@@ -1315,7 +1315,7 @@ TextList *make_domain_list(const char *domain_list) {
   return domains;
 }
 
-static int domain_match(char *pat, char *domain) {
+static int domain_match(const char *pat, const char *domain) {
   if (domain == NULL)
     return 0;
   if (*pat == '.')
@@ -1330,7 +1330,7 @@ static int domain_match(char *pat, char *domain) {
   }
 }
 
-int check_no_proxy(char *domain) {
+int check_no_proxy(const char *domain) {
   TextListItem *tl;
   volatile int ret = 0;
   MySignalHandler prevtrap = NULL;

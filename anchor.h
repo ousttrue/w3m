@@ -48,3 +48,5 @@ Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
 HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
 void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line, int pos,
                          int shift);
+struct Buffer;
+const char *reAnchor(Buffer *buf, const char *re);

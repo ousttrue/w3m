@@ -83,8 +83,8 @@ static AlarmEvent *CurrentAlarm = &DefaultAlarm;
 static int need_resize_screen = FALSE;
 static void resize_screen(void);
 
-static char *SearchString = NULL;
-int (*searchRoutine)(Buffer *, char *);
+static const char *SearchString = NULL;
+int (*searchRoutine)(Buffer *, const char *);
 
 JMP_BUF IntReturn;
 
@@ -651,7 +651,7 @@ static void clear_mark(Line *l) {
 }
 
 /* search by regular expression */
-static int srchcore(char *volatile str, int (*func)(Buffer *, char *)) {
+static int srchcore(const char *str, int (*func)(Buffer *, const char *)) {
   MySignalHandler prevtrap = {};
   volatile int i, result = SR_NOTFOUND;
 
@@ -675,7 +675,7 @@ static int srchcore(char *volatile str, int (*func)(Buffer *, char *)) {
   return result;
 }
 
-static void disp_srchresult(int result, const char *prompt, char *str) {
+static void disp_srchresult(int result, const char *prompt, const char *str) {
   if (str == NULL)
     str = "";
   if (result & SR_NOTFOUND)
@@ -739,7 +739,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   return -1;
 }
 
-static void isrch(int (*func)(Buffer *, char *), char *prompt) {
+static void isrch(int (*func)(Buffer *, const char *), const char *prompt) {
   char *str;
   Buffer sbuf;
   SAVE_BUFPOSITION(&sbuf);
@@ -753,8 +753,8 @@ static void isrch(int (*func)(Buffer *, char *), char *prompt) {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static void srch(int (*func)(Buffer *, char *), char *prompt) {
-  char *str;
+static void srch(int (*func)(Buffer *, const char *), const char *prompt) {
+  const char *str;
   int result;
   int disp = FALSE;
   int pos;
@@ -807,11 +807,10 @@ DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward") {
 static void srch_nxtprv(int reverse) {
   int result;
   /* *INDENT-OFF* */
-  static int (*routine[2])(Buffer *, char *) = {forwardSearch, backwardSearch};
+  static int (*routine[2])(Buffer *, const char *) = {forwardSearch, backwardSearch};
   /* *INDENT-ON* */
 
   if (searchRoutine == NULL) {
-    /* FIXME: gettextize? */
     disp_message("No previous regular expression", TRUE);
     return;
   }
@@ -1924,8 +1923,8 @@ static void _followForm(int submit) {
     if (fi->readonly)
       disp_message_nsec("Read only field!", FALSE, 1, TRUE, FALSE);
 
-    // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL, NULL);
-    // if (p == NULL || fi->readonly)
+    // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL,
+    // NULL); if (p == NULL || fi->readonly)
     //   break;
     //
     // fi->value = Strnew_charp(p);

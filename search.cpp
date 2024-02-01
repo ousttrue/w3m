@@ -13,8 +13,8 @@ static void set_mark(Line *l, int pos, int epos) {
     l->propBuf[pos] |= PE_MARK;
 }
 
-int forwardSearch(Buffer *buf, char *str) {
-  char *p, *first, *last;
+int forwardSearch(Buffer *buf, const char *str) {
+  const char *p, *first, *last;
   Line *l, *begin;
   int wrapped = FALSE;
   int pos;
@@ -89,8 +89,8 @@ int forwardSearch(Buffer *buf, char *str) {
   return SR_NOTFOUND;
 }
 
-int backwardSearch(Buffer *buf, char *str) {
-  char *p, *q, *found, *found_last, *first, *last;
+int backwardSearch(Buffer *buf, const char *str) {
+  const char *p, *q, *found, *found_last, *first, *last;
   Line *l, *begin;
   int wrapped = FALSE;
   int pos;

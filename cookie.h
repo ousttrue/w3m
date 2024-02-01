@@ -67,7 +67,6 @@ struct cookie {
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
 
-extern char *FQDN(char *host);
 extern Str *find_cookie(ParsedURL *pu);
 extern int add_cookie(const ParsedURL *pu, Str *name, Str *value,
                       time_t expires, Str *domain, Str *path, int flag,
@@ -76,6 +75,6 @@ extern void save_cookies(void);
 extern void load_cookies(void);
 extern void initCookie(void);
 extern void cooLst(void);
-extern int check_cookie_accept_domain(char *domain);
+extern int check_cookie_accept_domain(const char *domain);
 
 void process_http_cookie(const ParsedURL *pu, Str *lineBuf2);

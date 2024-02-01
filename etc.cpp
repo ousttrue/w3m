@@ -382,8 +382,9 @@ static void add_auth_pass_entry(const struct auth_pass *ent, int netrc,
   /* ignore invalid entries */
 }
 
-static struct auth_pass *find_auth_pass_entry(char *host, int port, char *realm,
-                                              char *uname, int is_proxy) {
+static struct auth_pass *find_auth_pass_entry(const char *host, int port,
+                                              const char *realm,
+                                              const char *uname, int is_proxy) {
   struct auth_pass *ent;
   for (ent = passwords; ent != NULL; ent = ent->next) {
     if (ent->is_proxy == is_proxy && (ent->bad != TRUE) &&
@@ -1070,72 +1071,7 @@ time_t mymktime(char *timestr) {
   return (time_t)((day * 60 * 60 * 24) + (hour * 60 * 60) + (min * 60) + sec);
 }
 
-#ifdef INET6
-#include <sys/socket.h>
-#endif /* INET6 */
-#include <netdb.h>
-char *FQDN(char *host) {
-  char *p;
-#ifndef INET6
-  struct hostent *entry;
-#else  /* INET6 */
-  int *af;
-#endif /* INET6 */
 
-  if (host == NULL)
-    return NULL;
-
-  if (strcasecmp(host, "localhost") == 0)
-    return host;
-
-  for (p = host; *p && *p != '.'; p++)
-    ;
-
-  if (*p == '.')
-    return host;
-
-#ifndef INET6
-  if (!(entry = gethostbyname(host)))
-    return NULL;
-
-  return allocStr(entry->h_name, -1);
-#else  /* INET6 */
-  for (af = ai_family_order_table[DNS_order];; af++) {
-    int error;
-    struct addrinfo hints;
-    struct addrinfo *res, *res0;
-    char *namebuf;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_flags = AI_CANONNAME;
-    hints.ai_family = *af;
-    hints.ai_socktype = SOCK_STREAM;
-    error = getaddrinfo(host, NULL, &hints, &res0);
-    if (error) {
-      if (*af == PF_UNSPEC) {
-        /* all done */
-        break;
-      }
-      /* try next address family */
-      continue;
-    }
-    for (res = res0; res != NULL; res = res->ai_next) {
-      if (res->ai_canonname) {
-        /* found */
-        namebuf = strdup(res->ai_canonname);
-        freeaddrinfo(res0);
-        return namebuf;
-      }
-    }
-    freeaddrinfo(res0);
-    if (*af == PF_UNSPEC) {
-      break;
-    }
-  }
-  /* all failed */
-  return NULL;
-#endif /* INET6 */
-}
 
 static char Base64Table[] =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

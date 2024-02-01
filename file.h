@@ -17,3 +17,4 @@ void showProgress(long long *linelen, long long *trbyte,
                   long long current_content_length);
 
 bool couldWrite(const char *path);
+

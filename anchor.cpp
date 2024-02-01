@@ -180,8 +180,8 @@ Anchor *searchURLLabel(Buffer *buf, char *url) {
   return searchAnchor(buf->name, url);
 }
 
-static Anchor *_put_anchor_all(Buffer *buf, char *p1, char *p2, int line,
-                               int pos) {
+static Anchor *_put_anchor_all(Buffer *buf, const char *p1, const char *p2,
+                               int line, int pos) {
   Str *tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
@@ -256,9 +256,10 @@ static void reseq_anchor(Buffer *buf) {
   reseq_anchor0(buf->formitem, seqmap);
 }
 
-static char *reAnchorPos(Buffer *buf, Line *l, char *p1, char *p2,
-                         Anchor *(*anchorproc)(Buffer *, char *, char *, int,
-                                               int)) {
+static const char *reAnchorPos(Buffer *buf, Line *l, const char *p1,
+                               const char *p2,
+                               Anchor *(*anchorproc)(Buffer *, const char *,
+                                                     const char *, int, int)) {
   Anchor *a;
   int spos, epos;
   int i, hseq = -2;
@@ -303,11 +304,11 @@ void reAnchorWord(Buffer *buf, Line *l, int spos, int epos) {
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static char *reAnchorAny(Buffer *buf, char *re,
-                         Anchor *(*anchorproc)(Buffer *, char *, char *, int,
-                                               int)) {
+static const char *reAnchorAny(Buffer *buf, const char *re,
+                         Anchor *(*anchorproc)(Buffer *, const char *,
+                                               const char *, int, int)) {
   Line *l;
-  char *p = NULL, *p1, *p2;
+  const char *p = NULL, *p1, *p2;
 
   if (re == NULL || *re == '\0') {
     return NULL;
@@ -337,7 +338,7 @@ static char *reAnchorAny(Buffer *buf, char *re,
   return NULL;
 }
 
-char *reAnchor(Buffer *buf, char *re) {
+const char *reAnchor(Buffer *buf, const char *re) {
   return reAnchorAny(buf, re, _put_anchor_all);
 }
 

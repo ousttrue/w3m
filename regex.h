@@ -19,23 +19,23 @@ struct regexchar {
 struct Regex {
   regexchar re[REGEX_MAX];
   longchar storage[STORAGE_MAX];
-  char *position;
-  char *lposition;
+  const char *position;
+  const char *lposition;
   Regex *alt_regex;
 };
 
-Regex *newRegex(char *ex, int igncase, Regex *regex, char **error_msg);
+Regex *newRegex(const char *ex, int igncase, Regex *regex,
+                const char **error_msg);
 
-int RegexMatch(Regex *re, char *str, int len, int firstp);
+int RegexMatch(Regex *re, const char *str, int len, int firstp);
 
-void MatchedPosition(Regex *re, char **first, char **last);
+void MatchedPosition(Regex *re, const char **first, const char **last);
 
 /* backward compatibility */
-char *regexCompile(char *ex, int igncase);
+const char *regexCompile(const char *ex, int igncase);
 
-int regexMatch(char *str, int len, int firstp);
+int regexMatch(const char *str, int len, int firstp);
 
-void matchedPosition(char **first, char **last);
+void matchedPosition(const char **first, const char **last);
 
 char *getRegexWord(const char **str, Regex **regex_ret);
-

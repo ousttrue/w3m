@@ -67,9 +67,9 @@ inline int DefaultPort[] = {
 struct Str;
 struct ParsedURL {
   int scheme;
-  char *user;
-  char *pass;
-  char *host;
+  const char *user;
+  const char *pass;
+  const char *host;
   int port;
   char *file;
   char *real_file;
@@ -93,4 +93,7 @@ int getURLScheme(char **url);
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
 
 struct TextList;
-extern TextList *make_domain_list(const char *domain_list);
+TextList *make_domain_list(const char *domain_list);
+int check_no_proxy(const char *domain);
+int openSocket(const char *hostname, const char *remoteport_name,
+               unsigned short remoteport_num);

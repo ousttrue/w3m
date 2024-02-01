@@ -230,8 +230,6 @@ extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
 extern char *mydirname(char *s);
 #define conv_search_string(str, f_ces) str
-extern int forwardSearch(Buffer *buf, char *str);
-extern int backwardSearch(Buffer *buf, char *str);
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
@@ -262,8 +260,6 @@ extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
 
-extern int openSocket(char *hostname, char *remoteport_name,
-                      unsigned short remoteport_num);
 extern ParsedURL *baseURL(Buffer *buf);
 
 union input_stream;
@@ -280,7 +276,6 @@ extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
 extern char *guessContentType(char *filename);
-extern int check_no_proxy(char *domain);
 
 struct Anchor;
 extern Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
@@ -296,7 +291,6 @@ extern Anchor *retrieveCurrentImg(Buffer *buf);
 extern Anchor *retrieveCurrentForm(Buffer *buf);
 extern Anchor *searchURLLabel(Buffer *buf, char *url);
 extern void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
-extern char *reAnchor(Buffer *buf, char *re);
 struct AnchorList;
 extern void addMultirowsForm(Buffer *buf, AnchorList *al);
 

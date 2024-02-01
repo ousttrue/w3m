@@ -65,7 +65,7 @@ int verbose;
 #define RE_WHICH_RANGE 3
 #define RE_TYPE_SYMBOL 4
 
-static longchar set_longchar(char *str) {
+static longchar set_longchar(const char *str) {
   unsigned char *p = (unsigned char *)str;
   longchar r = {};
 
@@ -78,7 +78,8 @@ static Regex DefaultRegex;
 #define CompiledRegex DefaultRegex.re
 #define Cstorage DefaultRegex.storage
 
-static int regmatch(regexchar *, char *, char *, int, char **);
+static int regmatch(regexchar *, const char *, const char *, int,
+                    const char **);
 static int regmatch1(regexchar *, longchar *);
 static int matchWhich(longchar *, longchar *, int);
 static int match_longchar(longchar *, longchar *, int);
@@ -87,15 +88,15 @@ static int match_range_longchar(longchar *, longchar *, longchar *, int);
 /*
  * regexCompile: compile regular expression
  */
-char *regexCompile(char *ex, int igncase) {
-  char *msg;
+const char *regexCompile(const char *ex, int igncase) {
+  const char *msg;
   newRegex(ex, igncase, &DefaultRegex, &msg);
   return msg;
 }
 
-static Regex *newRegex0(char **ex, int igncase, Regex *regex, char **msg,
-                        int level) {
-  char *p;
+static Regex *newRegex0(const char **ex, int igncase, Regex *regex,
+                        const char **msg, int level) {
+  const char *p;
   longchar *r;
   regexchar *re;
   int m;
@@ -243,20 +244,20 @@ static Regex *newRegex0(char **ex, int igncase, Regex *regex, char **msg,
   return regex;
 }
 
-Regex *newRegex(char *ex, int igncase, Regex *regex, char **msg) {
+Regex *newRegex(const char *ex, int igncase, Regex *regex, const char **msg) {
   return newRegex0(&ex, igncase, regex, msg, 0);
 }
 
 /*
  * regexMatch: match regular expression
  */
-int regexMatch(char *str, int len, int firstp) {
+int regexMatch(const char *str, int len, int firstp) {
   return RegexMatch(&DefaultRegex, str, len, firstp);
 }
 
-int RegexMatch(Regex *re, char *str, int len, int firstp) {
-  char *p, *ep;
-  char *lpos;
+int RegexMatch(Regex *re, const char *str, int len, int firstp) {
+  const char *p, *ep;
+  const char *lpos;
   Regex *r;
 
   if (str == NULL)
@@ -292,12 +293,12 @@ int RegexMatch(Regex *re, char *str, int len, int firstp) {
 /*
  * matchedPosition: last matched position
  */
-void MatchedPosition(Regex *re, char **first, char **last) {
+void MatchedPosition(Regex *re, const char **first, const char **last) {
   *first = re->position;
   *last = re->lposition;
 }
 
-void matchedPosition(char **first, char **last) {
+void matchedPosition(const char **first, const char **last) {
   *first = DefaultRegex.position;
   *last = DefaultRegex.lposition;
 }
@@ -309,12 +310,12 @@ void matchedPosition(char **first, char **last) {
 struct MatchingContext1 {
   int label;
   regexchar *re;
-  char *lastpos;
-  char *str;
+  const char *lastpos;
+  const char *str;
   int iter_limit;
   int n_any;
   int firstp;
-  char *end_p;
+  const char *end_p;
   Regex *sub_regex;
   struct MatchingContext1 *sub_ctx;
   struct MatchingContext2 *ctx2;
@@ -323,10 +324,10 @@ struct MatchingContext1 {
 struct MatchingContext2 {
   int label;
   Regex *regex;
-  char *lastpos;
+  const char *lastpos;
   struct MatchingContext1 *ctx;
   struct MatchingContext2 *ctx2;
-  char *str;
+  const char *str;
   int n_any;
   int firstp;
 };
@@ -336,12 +337,12 @@ struct MatchingContext2 {
   return (retval);                                                             \
   label##lnum:
 
-static int regmatch_iter(struct MatchingContext1 *, regexchar *, char *, char *,
-                         int);
+static int regmatch_iter(struct MatchingContext1 *, regexchar *, const char *,
+                         const char *, int);
 
 static int regmatch_sub_anytime(struct MatchingContext2 *c, Regex *regex,
-                                regexchar *pat2, char *str, char *end_p,
-                                int iter_limit, int firstp) {
+                                regexchar *pat2, const char *str,
+                                const char *end_p, int iter_limit, int firstp) {
   switch (c->label) {
   case 1:
     goto label1;
@@ -388,8 +389,8 @@ static int regmatch_sub_anytime(struct MatchingContext2 *c, Regex *regex,
   return 0;
 }
 
-static int regmatch_iter(struct MatchingContext1 *c, regexchar *re, char *str,
-                         char *end_p, int firstp) {
+static int regmatch_iter(struct MatchingContext1 *c, regexchar *re,
+                         const char *str, const char *end_p, int firstp) {
   switch (c->label) {
   case 1:
     goto label1;
@@ -525,8 +526,8 @@ static int regmatch_iter(struct MatchingContext1 *c, regexchar *re, char *str,
   return 0;
 }
 
-static int regmatch(regexchar *re, char *str, char *end_p, int firstp,
-                    char **lastpos) {
+static int regmatch(regexchar *re, const char *str, const char *end_p,
+                    int firstp, const char **lastpos) {
   struct MatchingContext1 contx;
 
   *lastpos = NULL;

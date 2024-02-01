@@ -1295,7 +1295,7 @@ static void loadSiteconf(void) {
 const void *querySiteconf(const ParsedURL *query_pu, int field) {
   const struct siteconf_rec *ent;
   Str *u;
-  char *firstp, *lastp;
+  const char *firstp, *lastp;
 
   if (field < 0 || field >= SCONF_N_FIELD)
     return NULL;
