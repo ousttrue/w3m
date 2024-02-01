@@ -69,11 +69,13 @@ struct cookie {
 
 extern char *FQDN(char *host);
 extern Str *find_cookie(ParsedURL *pu);
-extern int add_cookie(ParsedURL *pu, Str *name, Str *value, time_t expires,
-                      Str *domain, Str *path, int flag, Str *comment,
-                      int version, Str *port, Str *commentURL);
+extern int add_cookie(const ParsedURL *pu, Str *name, Str *value,
+                      time_t expires, Str *domain, Str *path, int flag,
+                      Str *comment, int version, Str *port, Str *commentURL);
 extern void save_cookies(void);
 extern void load_cookies(void);
 extern void initCookie(void);
 extern void cooLst(void);
 extern int check_cookie_accept_domain(char *domain);
+
+void process_http_cookie(const ParsedURL *pu, Str *lineBuf2);

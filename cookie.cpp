@@ -8,6 +8,11 @@
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 #include "cookie.h"
+#include "w3m.h"
+#include "terms.h"
+#include "etc.h"
+#include "message.h"
+#include "httprequest.h"
 #include "readbuffer.h"
 #include "textlist.h"
 #include "parsetag.h"
@@ -263,7 +268,7 @@ static int check_avoid_wrong_number_of_dots_domain(Str *domain) {
   }
 }
 
-int add_cookie(ParsedURL *pu, Str *name, Str *value, time_t expires,
+int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, int flag, Str *comment, int version,
                Str *port, Str *commentURL) {
   struct cookie *p;
@@ -671,4 +676,137 @@ int check_cookie_accept_domain(char *domain) {
     }
   }
   return 1;
+}
+
+/* This array should be somewhere else */
+const char *violations[COO_EMAX] = {
+    "internal error",          "tail match failed",
+    "wrong number of dots",    "RFC 2109 4.3.2 rule 1",
+    "RFC 2109 4.3.2 rule 2.1", "RFC 2109 4.3.2 rule 2.2",
+    "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
+    "RFC XXXX 4.3.2 rule 5"};
+
+void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
+  Str *name = Strnew(), *value = Strnew(), *domain = NULL, *path = NULL,
+      *comment = NULL, *commentURL = NULL, *port = NULL, *tmp2;
+  int version, quoted, flag = 0;
+  time_t expires = (time_t)-1;
+
+  const char *q = {};
+  const char *p = {};
+  if (lineBuf2->ptr[10] == '2') {
+    p = lineBuf2->ptr + 12;
+    version = 1;
+  } else {
+    p = lineBuf2->ptr + 11;
+    version = 0;
+  }
+#ifdef DEBUG
+  fprintf(stderr, "Set-Cookie: [%s]\n", p);
+#endif /* DEBUG */
+  SKIP_BLANKS(p);
+  while (*p != '=' && !IS_ENDT(*p))
+    Strcat_char(name, *(p++));
+  Strremovetrailingspaces(name);
+  if (*p == '=') {
+    p++;
+    SKIP_BLANKS(p);
+    quoted = 0;
+    while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+      if (!IS_SPACE(*p))
+        q = p;
+      if (*p == '"')
+        quoted = (quoted) ? 0 : 1;
+      Strcat_char(value, *(p++));
+    }
+    if (q)
+      Strshrink(value, p - q - 1);
+  }
+  while (*p == ';') {
+    p++;
+    SKIP_BLANKS(p);
+    if (matchattr(p, "expires", 7, &tmp2)) {
+      /* version 0 */
+      expires = mymktime(tmp2->ptr);
+    } else if (matchattr(p, "max-age", 7, &tmp2)) {
+      /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2
+       */
+      expires = time(NULL) + atol(tmp2->ptr);
+    } else if (matchattr(p, "domain", 6, &tmp2)) {
+      domain = tmp2;
+    } else if (matchattr(p, "path", 4, &tmp2)) {
+      path = tmp2;
+    } else if (matchattr(p, "secure", 6, NULL)) {
+      flag |= COO_SECURE;
+    } else if (matchattr(p, "comment", 7, &tmp2)) {
+      comment = tmp2;
+    } else if (matchattr(p, "version", 7, &tmp2)) {
+      version = atoi(tmp2->ptr);
+    } else if (matchattr(p, "port", 4, &tmp2)) {
+      /* version 1, Set-Cookie2 */
+      port = tmp2;
+    } else if (matchattr(p, "commentURL", 10, &tmp2)) {
+      /* version 1, Set-Cookie2 */
+      commentURL = tmp2;
+    } else if (matchattr(p, "discard", 7, NULL)) {
+      /* version 1, Set-Cookie2 */
+      flag |= COO_DISCARD;
+    }
+    quoted = 0;
+    while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+      if (*p == '"')
+        quoted = (quoted) ? 0 : 1;
+      p++;
+    }
+  }
+  if (pu && name->length > 0) {
+    int err;
+    if (show_cookie) {
+      if (flag & COO_SECURE)
+        disp_message_nsec("Received a secured cookie", FALSE, 1, TRUE, FALSE);
+      else
+        disp_message_nsec(
+            Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
+            FALSE, 1, TRUE, FALSE);
+    }
+    err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
+                     version, port, commentURL);
+    if (err) {
+      const char *ans =
+          (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
+      if (fmInitialized && (err & COO_OVERRIDE_OK) &&
+          accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+        Str *msg =
+            Sprintf("Accept bad cookie from %s for %s?", pu->host,
+                    ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
+        if (msg->length > COLS - 10)
+          Strshrink(msg, msg->length - (COLS - 10));
+        Strcat_charp(msg, " (y/n)");
+        // ans = inputAnswer(msg->ptr);
+        ans = "y";
+      }
+
+      if (ans == NULL || TOLOWER(*ans) != 'y' ||
+          (err = add_cookie(pu, name, value, expires, domain, path,
+                            flag | COO_OVERRIDE, comment, version, port,
+                            commentURL))) {
+        err = (err & ~COO_OVERRIDE_OK) - 1;
+        const char *emsg;
+        if (err >= 0 && err < COO_EMAX)
+          emsg = Sprintf("This cookie was rejected "
+                         "to prevent security violation. [%s]",
+                         violations[err])
+                     ->ptr;
+        else
+          emsg = "This cookie was rejected to prevent security violation.";
+        record_err_message(emsg);
+        if (show_cookie)
+          disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+      } else if (show_cookie)
+        disp_message_nsec(
+            Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)
+                ->ptr,
+            FALSE, 1, TRUE, FALSE);
+    }
+  }
 }

@@ -6,6 +6,7 @@
 #include "rc.h"
 #include "cookie.h"
 #include "form.h"
+#include "myctype.h"
 
 bool override_user_agent = false;
 char *UserAgent = nullptr;
@@ -197,4 +198,38 @@ Str *HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr,
   fprintf(stderr, "HTTPrequest: [ %s ]\n\n", tmp->ptr);
 #endif /* DEBUG */
   return tmp;
+}
+
+bool matchattr(const char *p, const char *attr, int len, Str **value) {
+  int quoted;
+  const char *q = NULL;
+  if (strncasecmp(p, attr, len) == 0) {
+    p += len;
+    SKIP_BLANKS(p);
+    if (value) {
+      *value = Strnew();
+      if (*p == '=') {
+        p++;
+        SKIP_BLANKS(p);
+        quoted = 0;
+        while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+          if (!IS_SPACE(*p))
+            q = p;
+          if (*p == '"')
+            quoted = (quoted) ? 0 : 1;
+          else
+            Strcat_char(*value, *p);
+          p++;
+        }
+        if (q)
+          Strshrink(*value, p - q - 1);
+      }
+      return 1;
+    } else {
+      if (IS_ENDT(*p)) {
+        return 1;
+      }
+    }
+  }
+  return 0;
 }

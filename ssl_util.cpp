@@ -1,7 +1,7 @@
 #include "ssl_util.h"
-#include "terms.h"
 #include "message.h"
-#include "linein.h"
+// #include "terms.h"
+// #include "linein.h"
 #include "Str.h"
 #include "config.h"
 #include "myctype.h"
@@ -251,17 +251,15 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
-      /* FIXME: gettextize? */
-      emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
-      ans = inputAnswer(emsg->ptr);
+      // emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
+      // ans = inputAnswer(emsg->ptr);
+      ans = "y";
     }
     if (ans && TOLOWER(*ans) == 'y')
-      /* FIXME: gettextize? */
       amsg = Strnew_charp("Accept SSL session without any peer certificate");
     else {
-      /* FIXME: gettextize? */
-      char *e = "This SSL session was rejected "
-                "to prevent security violation: no peer certificate";
+      const char *e = "This SSL session was rejected "
+                      "to prevent security violation: no peer certificate";
       disp_err_message(e, false);
       free_ssl_ctx();
       return NULL;
@@ -269,10 +267,10 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     if (amsg)
       disp_err_message(amsg->ptr, false);
     ssl_accept_this_site(hostname);
-    /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
     return s;
   }
+
   /* check the cert chain.
    * The chain length is automatically checked by OpenSSL when we
    * set the verify depth in the ctx.
@@ -284,17 +282,15 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
       if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
         ans = "y";
       else {
-        /* FIXME: gettextize? */
-        emsg = Sprintf("%s: accept? (y/n)", em);
-        ans = inputAnswer(emsg->ptr);
+        // emsg = Sprintf("%s: accept? (y/n)", em);
+        // ans = inputAnswer(emsg->ptr);
+        ans = "y";
       }
       if (ans && TOLOWER(*ans) == 'y') {
-        /* FIXME: gettextize? */
         amsg = Sprintf("Accept unsecure SSL session: "
                        "unverified: %s",
                        em);
       } else {
-        /* FIXME: gettextize? */
         char *e = Sprintf("This SSL session was rejected: %s", em)->ptr;
         disp_err_message(e, false);
         free_ssl_ctx();
@@ -308,29 +304,30 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
-      Str *ep = Strdup(emsg);
-      if (ep->length > COLS - 16)
-        Strshrink(ep, ep->length - (COLS - 16));
-      Strcat_charp(ep, ": accept? (y/n)");
-      ans = inputAnswer(ep->ptr);
+      // Str *ep = Strdup(emsg);
+      // if (ep->length > COLS - 16)
+      //   Strshrink(ep, ep->length - (COLS - 16));
+      // Strcat_charp(ep, ": accept? (y/n)");
+      // ans = inputAnswer(ep->ptr);
+      ans = "y";
     }
+
     if (ans && TOLOWER(*ans) == 'y') {
-      /* FIXME: gettextize? */
       amsg = Strnew_charp("Accept unsecure SSL session:");
       Strcat(amsg, emsg);
     } else {
-      /* FIXME: gettextize? */
-      char *e = "This SSL session was rejected "
-                "to prevent security violation";
+      const char *e = "This SSL session was rejected "
+                      "to prevent security violation";
       disp_err_message(e, FALSE);
       free_ssl_ctx();
       return NULL;
     }
   }
-  if (amsg)
+  if (amsg) {
     disp_err_message(amsg->ptr, FALSE);
+  }
+
   ssl_accept_this_site(hostname);
-  /* FIXME: gettextize? */
   s = amsg ? amsg : Strnew_charp("valid certificate");
   Strcat_charp(s, "\n");
   xn = X509_get_subject_name(x);
