@@ -64,6 +64,11 @@ inline int DefaultPort[] = {
     443, /* https */
 };
 
+struct cmdtable {
+  const char *cmdname;
+  int cmd;
+};
+
 struct Str;
 struct ParsedURL {
   int scheme;
@@ -89,11 +94,10 @@ void copyParsedURL(ParsedURL *p, const ParsedURL *q);
 void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
 Str *parsedURL2Str(ParsedURL *pu);
 Str *parsedURL2RefererStr(ParsedURL *pu);
-int getURLScheme(char **url);
+int getURLScheme(const char **url);
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
 
 struct TextList;
-TextList *make_domain_list(const char *domain_list);
 int check_no_proxy(const char *domain);
 int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);

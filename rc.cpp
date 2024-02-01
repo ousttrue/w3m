@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "mimetypes.h"
 #include "ssl_util.h"
 #include "file.h"
 #include "message.h"

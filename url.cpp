@@ -45,14 +45,6 @@ TextList *NO_proxy_domains;
 
 int DNS_order = DNS_ORDER_UNSPEC;
 
-#define USER_MIMETYPES "~/.mime.types"
-#ifndef ETC_DIR
-#define ETC_DIR "/etc"
-#endif
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
-
-const char *mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
-
 ParsedURL HTTP_proxy_parsed;
 ParsedURL HTTPS_proxy_parsed;
 ParsedURL FTP_proxy_parsed;
@@ -89,20 +81,8 @@ struct cmdtable schemetable[] = {
     {NULL, SCM_UNKNOWN},
 };
 
-static struct table2 DefaultGuess[] = {
-    {"html", "text/html"},         {"htm", "text/html"},
-    {"shtml", "text/html"},        {"xhtml", "application/xhtml+xml"},
-    {"gif", "image/gif"},          {"jpeg", "image/jpeg"},
-    {"jpg", "image/jpeg"},         {"png", "image/png"},
-    {"xbm", "image/xbm"},          {"au", "audio/basic"},
-    {"gz", "application/x-gzip"},  {"Z", "application/x-compress"},
-    {"bz2", "application/x-bzip"}, {"tar", "application/x-tar"},
-    {"zip", "application/x-zip"},  {"lha", "application/x-lha"},
-    {"lzh", "application/x-lha"},  {"ps", "application/postscript"},
-    {"pdf", "application/pdf"},    {NULL, NULL}};
-
 static void add_index_file(ParsedURL *pu, URLFile *uf);
-static char *schemeNumToName(int scheme);
+static const char *schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -125,73 +105,6 @@ static void sock_log(char *message, ...) {
 }
 
 #endif
-
-static TextList *mimetypes_list;
-static struct table2 **UserMimeTypes;
-
-static struct table2 *loadMimeTypes(char *filename) {
-  FILE *f;
-  char *d, *type;
-  int i, n;
-  Str *tmp;
-  struct table2 *mtypes;
-
-  f = fopen(expandPath(filename), "r");
-  if (f == NULL)
-    return NULL;
-  n = 0;
-  while (tmp = Strfgets(f), tmp->length > 0) {
-    d = tmp->ptr;
-    if (d[0] != '#') {
-      d = strtok(d, " \t\n\r");
-      if (d != NULL) {
-        d = strtok(NULL, " \t\n\r");
-        for (i = 0; d != NULL; i++)
-          d = strtok(NULL, " \t\n\r");
-        n += i;
-      }
-    }
-  }
-  fseek(f, 0, 0);
-  mtypes = (struct table2 *)New_N(struct table2, n + 1);
-  i = 0;
-  while (tmp = Strfgets(f), tmp->length > 0) {
-    d = tmp->ptr;
-    if (d[0] == '#')
-      continue;
-    type = strtok(d, " \t\n\r");
-    if (type == NULL)
-      continue;
-    while (1) {
-      d = strtok(NULL, " \t\n\r");
-      if (d == NULL)
-        break;
-      mtypes[i].item1 = Strnew_charp(d)->ptr;
-      mtypes[i].item2 = Strnew_charp(type)->ptr;
-      i++;
-    }
-  }
-  mtypes[i].item1 = NULL;
-  mtypes[i].item2 = NULL;
-  fclose(f);
-  return mtypes;
-}
-
-void initMimeTypes(void) {
-  int i;
-  TextListItem *tl;
-
-  if (non_null(mimetypes_files))
-    mimetypes_list = make_domain_list(mimetypes_files);
-  else
-    mimetypes_list = NULL;
-  if (mimetypes_list == NULL)
-    return;
-  UserMimeTypes =
-      (struct table2 **)New_N(struct table2 *, mimetypes_list->nitem);
-  for (i = 0, tl = mimetypes_list->first; tl; i++, tl = tl->next)
-    UserMimeTypes[i] = loadMimeTypes(tl->ptr);
-}
 
 static char *DefaultFile(int scheme) {
   switch (scheme) {
@@ -422,7 +335,7 @@ error:
 #define COPYPATH_SPC_MASK 3
 #define COPYPATH_LOWERCASE 4
 
-static char *copyPath(char *orgpath, int length, int option) {
+static const char *copyPath(const char *orgpath, int length, int option) {
   Str *tmp = Strnew();
   char ch;
   while ((ch = *orgpath) != 0 && length != 0) {
@@ -449,7 +362,7 @@ static char *copyPath(char *orgpath, int length, int option) {
 }
 
 void parseURL(char *url, ParsedURL *p_url, ParsedURL *current) {
-  char *p, *q, *qq;
+  const char *p, *q, *qq;
   Str *tmp;
 
   url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
@@ -628,7 +541,7 @@ analyze_file:
     goto do_query;
   }
   {
-    char *cgi = strchr(p, '?');
+    auto cgi = strchr(p, '?');
   again:
     while (*p && *p != '#' && p != cgi)
       p++;
@@ -657,9 +570,9 @@ analyze_file:
       }
     }
     if (p_url->scheme == SCM_LOCAL || p_url->scheme == SCM_MISSING)
-      p_url->file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+      p_url->file = (char *)copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     else
-      p_url->file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+      p_url->file = (char *)copyPath(q, p - q, COPYPATH_SPC_IGNORE);
   }
 
 do_query:
@@ -667,7 +580,7 @@ do_query:
     q = ++p;
     while (*p && *p != '#')
       p++;
-    p_url->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+    p_url->query = (char *)copyPath(q, p - q, COPYPATH_SPC_ALLOW);
   }
 do_label:
   if (p_url->scheme == SCM_MISSING) {
@@ -918,8 +831,8 @@ Str *parsedURL2RefererStr(ParsedURL *pu) {
   return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-int getURLScheme(char **url) {
-  char *p = *url, *q;
+int getURLScheme(const char **url) {
+  const char *p = *url, *q;
   int i;
   int scheme = SCM_MISSING;
 
@@ -939,7 +852,7 @@ int getURLScheme(char **url) {
   return scheme;
 }
 
-static char *schemeNumToName(int scheme) {
+static const char *schemeNumToName(int scheme) {
   int i;
 
   for (i = 0; schemetable[i].cmdname != NULL; i++) {
@@ -967,7 +880,7 @@ URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current, URLOption *option,
                 HRequest *hr, unsigned char *status) {
   Str *tmp;
   int sock, scheme;
-  char *p, *q, *u;
+  const char *p, *q, *u;
   URLFile uf;
   HRequest hr0;
   SSL *sslh = NULL;
@@ -988,7 +901,7 @@ URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current, URLOption *option,
   else
     u = url;
 retry:
-  parseURL2(u, pu, current);
+  parseURL2((char *)u, pu, current);
   if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
     if (pu->label != NULL) {
       /* #hogege is not a label but a filename */
@@ -1049,19 +962,19 @@ retry:
           Strcat_char(tmp, '/');
         Strcat_charp(tmp, pu->file);
         p = cleanupName(tmp->ptr);
-        q = cleanupName(file_unquote(p));
-        if (dir_exist(q)) {
-          pu->file = p;
-          pu->real_file = q;
+        q = cleanupName(file_unquote((char *)p));
+        if (dir_exist((char *)q)) {
+          pu->file = (char *)p;
+          pu->real_file = (char *)q;
           add_index_file(pu, &uf);
           if (uf.stream == NULL) {
             return uf;
           }
         } else {
-          examineFile(q, &uf);
+          examineFile((char *)q, &uf);
           if (uf.stream) {
-            pu->file = p;
-            pu->real_file = q;
+            pu->file = (char *)p;
+            pu->real_file = (char *)q;
           }
         }
       }
@@ -1206,11 +1119,11 @@ retry:
     q = strchr(p, ',');
     if (q == NULL)
       return uf;
-    *q++ = '\0';
+    *(char *)q++ = '\0';
     tmp = Strnew_charp(q);
     q = strrchr(p, ';');
     if (q != NULL && !strcmp(q, ";base64")) {
-      *q = '\0';
+      *(char*)q = '\0';
       uf.encoding = ENC_BASE64;
     } else
       tmp = Str_url_unquote(tmp, FALSE, FALSE);
@@ -1248,71 +1161,6 @@ static void add_index_file(ParsedURL *pu, URLFile *uf) {
       return;
     }
   }
-}
-
-static char *guessContentTypeFromTable(struct table2 *table, char *filename) {
-  struct table2 *t;
-  char *p;
-  if (table == NULL)
-    return NULL;
-  p = &filename[strlen(filename) - 1];
-  while (filename < p && *p != '.')
-    p--;
-  if (p == filename)
-    return NULL;
-  p++;
-  for (t = table; t->item1; t++) {
-    if (!strcmp(p, t->item1))
-      return t->item2;
-  }
-  for (t = table; t->item1; t++) {
-    if (!strcasecmp(p, t->item1))
-      return t->item2;
-  }
-  return NULL;
-}
-
-char *guessContentType(char *filename) {
-  char *ret;
-  int i;
-
-  if (filename == NULL)
-    return NULL;
-  if (mimetypes_list == NULL)
-    goto no_user_mimetypes;
-
-  for (i = 0; i < mimetypes_list->nitem; i++) {
-    if ((ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) != NULL)
-      return ret;
-  }
-
-no_user_mimetypes:
-  return guessContentTypeFromTable(DefaultGuess, filename);
-}
-
-TextList *make_domain_list(const char *domain_list) {
-  Str *tmp;
-  TextList *domains = NULL;
-
-  auto p = domain_list;
-  tmp = Strnew_size(64);
-  while (*p) {
-    while (*p && IS_SPACE(*p))
-      p++;
-    Strclear(tmp);
-    while (*p && !IS_SPACE(*p) && *p != ',')
-      Strcat_char(tmp, *p++);
-    if (tmp->length > 0) {
-      if (domains == NULL)
-        domains = newTextList();
-      pushText(domains, tmp->ptr);
-    }
-    while (*p && IS_SPACE(*p))
-      p++;
-    if (*p == ',')
-      p++;
-  }
-  return domains;
 }
 
 static int domain_match(const char *pat, const char *domain) {

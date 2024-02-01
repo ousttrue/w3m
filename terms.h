@@ -43,4 +43,3 @@ void term_title(const char *s);
 void flush_tty(void);
 void bell(void);
 int sleep_till_anykey(int sec, int purge);
-void initMimeTypes(void);

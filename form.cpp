@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "mimetypes.h"
 #include "message.h"
 #include "readbuffer.h"
 #include "html.h"
@@ -520,12 +521,11 @@ void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
   FILE *fd;
   struct stat st;
   int c;
-  char *type;
 
   fprintf(f, "--%s\r\n", boundary);
   fprintf(f, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n",
           name, mybasename(filename));
-  type = guessContentType(file);
+  auto type = guessContentType(file);
   fprintf(f, "Content-Type: %s\r\n\r\n",
           type ? type : "application/octet-stream");
 

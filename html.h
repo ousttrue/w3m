@@ -8,16 +8,6 @@
 
 #include <time.h>
 
-struct cmdtable {
-  char *cmdname;
-  int cmd;
-};
-
-struct table2 {
-  char *item1;
-  char *item2;
-};
-
 struct URLOption {
   char *referer;
   int flag;

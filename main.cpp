@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "mimetypes.h"
 #include "ssl_util.h"
 #include "message.h"
 #include "screen.h"
@@ -2205,7 +2206,7 @@ static void _nextA(int visited) {
           an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
         hseq++;
         if (visited == TRUE && an) {
-          parseURL2((char*)an->url, &url, baseURL(Currentbuf));
+          parseURL2((char *)an->url, &url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -2224,7 +2225,7 @@ static void _nextA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == TRUE) {
-        parseURL2((char*)an->url, &url, baseURL(Currentbuf));
+        parseURL2((char *)an->url, &url, baseURL(Currentbuf));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -2285,7 +2286,7 @@ static void _prevA(int visited) {
           an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
         hseq--;
         if (visited == TRUE && an) {
-          parseURL2((char*)an->url, &url, baseURL(Currentbuf));
+          parseURL2((char *)an->url, &url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -2304,7 +2305,7 @@ static void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == TRUE && an) {
-        parseURL2((char*)an->url, &url, baseURL(Currentbuf));
+        parseURL2((char *)an->url, &url, baseURL(Currentbuf));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -2551,7 +2552,7 @@ static void goURL0(char *prompt, int relative) {
     a = retrieveCurrentAnchor(Currentbuf);
     if (a) {
       char *a_url;
-      parseURL2((char*)a->url, &p_url, current);
+      parseURL2((char *)a->url, &p_url, current);
       a_url = parsedURL2Str(&p_url)->ptr;
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode2(a_url, Currentbuf);
@@ -2834,7 +2835,7 @@ static void _peekURL(int only_img) {
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == NULL) {
-    parseURL2((char*)a->url, &pu, baseURL(Currentbuf));
+    parseURL2((char *)a->url, &pu, baseURL(Currentbuf));
     s = parsedURL2Str(&pu);
   }
   if (DecodeURL)
@@ -3162,7 +3163,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
   a = retrieveCurrentAnchor(Currentbuf);
   if (a == NULL)
     return;
-  parseURL2((char*)a->url, &pu, baseURL(Currentbuf));
+  parseURL2((char *)a->url, &pu, baseURL(Currentbuf));
   invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 
@@ -3310,13 +3311,13 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     a = retrieveCurrentAnchor(buf);
     if (a) {
-      parseURL2((char*)a->url, &pu, baseURL(buf));
+      parseURL2((char *)a->url, &pu, baseURL(buf));
       set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf);
     if (a) {
-      parseURL2((char*)a->url, &pu, baseURL(buf));
+      parseURL2((char *)a->url, &pu, baseURL(buf));
       set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");
@@ -4171,7 +4172,7 @@ int main(int argc, char **argv) {
   int c, i;
   input_stream *redin;
   char *line_str = NULL;
-  char **load_argv;
+  const char **load_argv;
   FormList *request;
   int load_argc = 0;
   int load_bookmark = FALSE;
@@ -4194,7 +4195,7 @@ int main(int argc, char **argv) {
   NO_proxy_domains = newTextList();
   fileToDelete = newTextList();
 
-  load_argv = (char **)New_N(char *, argc - 1);
+  load_argv = (const char **)New_N(char *, argc - 1);
   load_argc = 0;
 
   CurrentDir = currentdir();
@@ -4510,15 +4511,14 @@ int main(int argc, char **argv) {
     if (i >= 0) {
       SearchHeader = search_header;
       DefaultType = default_type;
-      char *url;
       int retry = 0;
 
-      url = load_argv[i];
+      auto url = load_argv[i];
       if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
       retry_as_local_file:
-        url = file_to_url(load_argv[i]);
+        url = file_to_url((char *)load_argv[i]);
       else
-        url = url_quote(load_argv[i]);
+        url = url_quote((char *)load_argv[i]);
       {
         if (post_file && i == 0) {
           FILE *fp;

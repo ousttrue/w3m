@@ -127,6 +127,7 @@ executable(
         'screen.cpp',
         'message.cpp',
         'ssl_util.cpp',
+        'mimetypes.cpp',
     ],
     install: true,
     dependencies: [

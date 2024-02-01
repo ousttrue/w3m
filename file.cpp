@@ -1,5 +1,6 @@
 #include "file.h"
 #include "message.h"
+#include "mimetypes.h"
 #include "screen.h"
 #include "history.h"
 #include "w3m.h"
@@ -238,10 +239,9 @@ static char *compress_application_type(int compression) {
   return NULL;
 }
 
-static char *uncompressed_file_type(char *path, char **ext) {
+static const char *uncompressed_file_type(char *path, char **ext) {
   int len, slen;
   Str *fn;
-  char *t0;
   struct compression_decoder *d;
 
   if (path == NULL)
@@ -263,7 +263,7 @@ static char *uncompressed_file_type(char *path, char **ext) {
   Strshrink(fn, slen);
   if (ext)
     *ext = filename_extension(fn->ptr, 0);
-  t0 = guessContentType(fn->ptr);
+  auto t0 = guessContentType(fn->ptr);
   if (t0 == NULL)
     t0 = "text/plain";
   return t0;
@@ -309,7 +309,7 @@ void examineFile(char *path, URLFile *uf) {
     check_compression(path, uf);
     if (uf->compression != CMP_NOCOMPRESS) {
       char *ext = uf->ext;
-      char *t0 = uncompressed_file_type(path, &ext);
+      auto t0 = uncompressed_file_type(path, &ext);
       uf->guess_type = t0;
       uf->ext = ext;
       uncompress_stream(uf, NULL);
@@ -1430,7 +1430,7 @@ load_doc: {
   } else if (pu.scheme == SCM_FTP) {
     check_compression((char*)path, &f);
     if (f.compression != CMP_NOCOMPRESS) {
-      char *t1 = uncompressed_file_type(pu.file, NULL);
+      auto t1 = uncompressed_file_type(pu.file, NULL);
       real_type = f.guess_type;
       if (t1)
         t = t1;

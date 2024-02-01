@@ -275,7 +275,6 @@ extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
                        unsigned char *status);
 extern void initMailcap(void);
 extern char *acceptableMimeTypes(void);
-extern char *guessContentType(char *filename);
 
 extern int set_param_option(char *option);
 extern char *get_param_option(char *name);
