@@ -87,8 +87,9 @@ static char *otherinfo(ParsedURL *target, ParsedURL *current, char *referer) {
   if (target->host) {
     Strcat_charp(s, "Host: ");
     Strcat_charp(s, target->host);
-    if (target->port != DefaultPort[target->scheme])
+    if (target->port != getDefaultPort(target->schema)) {
       Strcat(s, Sprintf(":%d", target->port));
+    }
     Strcat_charp(s, "\r\n");
   }
   if (target->is_nocache || NoCache) {
@@ -105,15 +106,15 @@ static char *otherinfo(ParsedURL *target, ParsedURL *current, char *referer) {
     if (CrossOriginReferer && current && current->host &&
         (!target || !target->host ||
          strcasecmp(current->host, target->host) != 0 ||
-         current->port != target->port || current->scheme != target->scheme))
+         current->port != target->port || current->schema != target->schema))
       cross_origin = true;
-    if (current && current->scheme == SCM_HTTPS &&
-        target->scheme != SCM_HTTPS) {
+    if (current && current->schema == SCM_HTTPS &&
+        target->schema != SCM_HTTPS) {
       /* Don't send Referer: if https:// -> http:// */
-    } else if (referer == NULL && current && current->scheme != SCM_LOCAL &&
-               current->scheme != SCM_LOCAL_CGI &&
-               current->scheme != SCM_DATA &&
-               (current->scheme != SCM_FTP ||
+    } else if (referer == NULL && current && current->schema != SCM_LOCAL &&
+               current->schema != SCM_LOCAL_CGI &&
+               current->schema != SCM_DATA &&
+               (current->schema != SCM_FTP ||
                 (current->user == NULL && current->pass == NULL))) {
       Strcat_charp(s, "Referer: ");
       if (cross_origin)
@@ -155,7 +156,7 @@ Str *HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr,
       }
       if (strncasecmp(i->ptr, "Proxy-Authorization:",
                       sizeof("Proxy-Authorization:") - 1) == 0) {
-        if (pu->scheme == SCM_HTTPS && hr->command != HR_COMMAND_CONNECT)
+        if (pu->schema == SCM_HTTPS && hr->command != HR_COMMAND_CONNECT)
           continue;
       }
       Strcat_charp(tmp, i->ptr);

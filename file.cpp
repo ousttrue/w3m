@@ -137,7 +137,7 @@ static struct compression_decoder {
 #define SAVE_BUF_SIZE 1536
 
 static void UFhalfclose(URLFile *f) {
-  switch (f->scheme) {
+  switch (f->schema) {
   case SCM_FTP:
     // closeFTP();
     break;
@@ -168,9 +168,9 @@ static Buffer *loadSomething(URLFile *f,
     if (buf->buffername == NULL && buf->filename != NULL)
       buf->buffername = lastFileName(buf->filename);
   }
-  if (buf->currentURL.scheme == SCM_UNKNOWN)
-    buf->currentURL.scheme = f->scheme;
-  if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
+  if (buf->currentURL.schema == SCM_UNKNOWN)
+    buf->currentURL.schema = f->schema;
+  if (f->schema == SCM_LOCAL && buf->sourcefile == NULL)
     buf->sourcefile = buf->filename;
   if (loadproc == loadHTMLBuffer)
     buf->type = "text/html";
@@ -392,7 +392,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
   Lineprop *propBuffer;
 
   headerlist = newBuf->document_header = newTextList();
-  if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS)
+  if (uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS)
     http_response_code = -1;
   else
     http_response_code = 0;
@@ -451,7 +451,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       lineBuf2 = tmp;
     }
 
-    if ((uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS) &&
+    if ((uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS) &&
         http_response_code == -1) {
       p = lineBuf2->ptr;
       while (*p && !IS_SPACE(*p))
@@ -503,7 +503,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       process_http_cookie(pu, lineBuf2);
 
     } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
-               uf->scheme == SCM_LOCAL_CGI) {
+               uf->schema == SCM_LOCAL_CGI) {
       Str *funcname = Strnew();
       int f;
 
@@ -566,7 +566,7 @@ struct auth_param {
 
 struct http_auth {
   int pri;
-  char *scheme;
+  char *schema;
   struct auth_param *param;
   Str *(*cred)(struct http_auth *ha, Str *uname, Str *pw, ParsedURL *pu,
                HRequest *hr, FormList *request);
@@ -1035,9 +1035,9 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
       for (p = i->ptr + len; p != NULL && *p != '\0';) {
         SKIP_BLANKS(p);
         p0 = p;
-        for (ha = &www_auth[0]; ha->scheme != NULL; ha++) {
-          slen = strlen(ha->scheme);
-          if (strncasecmp(p, ha->scheme, slen) == 0) {
+        for (ha = &www_auth[0]; ha->schema != NULL; ha++) {
+          slen = strlen(ha->schema);
+          if (strncasecmp(p, ha->schema, slen) == 0) {
             p += slen;
             SKIP_BLANKS(p);
             if (hauth->pri < ha->pri) {
@@ -1063,7 +1063,7 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
       }
     }
   }
-  return hauth->scheme ? hauth : NULL;
+  return hauth->schema ? hauth : NULL;
 }
 
 static void getAuthCookie(struct http_auth *hauth, char *auth_header,
@@ -1171,7 +1171,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
 }
 
 static int same_url_p(ParsedURL *pu1, ParsedURL *pu2) {
-  return (pu1->scheme == pu2->scheme && pu1->port == pu2->port &&
+  return (pu1->schema == pu2->schema && pu1->port == pu2->port &&
           (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1) &&
           (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
@@ -1272,7 +1272,7 @@ load_doc: {
               &status);
   of = NULL;
   if (f.stream == NULL) {
-    switch (f.scheme) {
+    switch (f.schema) {
     case SCM_LOCAL: {
       struct stat st;
       if (stat(pu.real_file, &st) < 0)
@@ -1332,8 +1332,8 @@ load_doc: {
   if (header_string)
     header_string = NULL;
   TRAP_ON;
-  if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS ||
-      (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
+  if (pu.schema == SCM_HTTP || pu.schema == SCM_HTTPS ||
+      (((pu.schema == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
        !check_no_proxy(pu.host))) {
 
     if (fmInitialized) {
@@ -1404,7 +1404,7 @@ load_doc: {
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:") != NULL &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = schemeToProxy(pu.scheme);
+        auth_pu = schemaToProxy(pu.schema);
         getAuthCookie(&hauth, "Proxy-Authorization:", extra_header, auth_pu,
                       &hr, request, &uname, &pwd);
         if (uname == NULL) {
@@ -1427,7 +1427,7 @@ load_doc: {
     }
 
     f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-  } else if (pu.scheme == SCM_FTP) {
+  } else if (pu.schema == SCM_FTP) {
     check_compression((char*)path, &f);
     if (f.compression != CMP_NOCOMPRESS) {
       auto t1 = uncompressed_file_type(pu.file, NULL);
@@ -1442,7 +1442,7 @@ load_doc: {
         real_type = "text/plain";
       t = real_type;
     }
-  } else if (pu.scheme == SCM_DATA) {
+  } else if (pu.schema == SCM_DATA) {
     t = f.guess_type;
   } else if (searchHeader) {
     searchHeader = SearchHeader = FALSE;
@@ -1525,7 +1525,7 @@ page_loaded:
     b = loadHTMLString(page);
     if (b) {
       copyParsedURL(&b->currentURL, &pu);
-      b->real_scheme = pu.scheme;
+      b->real_schema = pu.schema;
       b->real_type = t;
       if (src)
         b->sourcefile = tmp->ptr;
@@ -1546,7 +1546,7 @@ page_loaded:
     TRAP_OFF;
     if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
       f.stream = newEncodedStream(f.stream, f.encoding);
-    if (pu.scheme == SCM_LOCAL) {
+    if (pu.schema == SCM_LOCAL) {
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file, &st))
         f.modtime = st.st_mtime;
@@ -1585,7 +1585,7 @@ page_loaded:
       proc = DO_EXTERNAL;
     } else {
       TRAP_OFF;
-      if (pu.scheme == SCM_LOCAL) {
+      if (pu.schema == SCM_LOCAL) {
         UFclose(&f);
         _doFileCopy(pu.real_file, guess_save_name(NULL, pu.real_file), TRUE);
       } else {
@@ -1611,7 +1611,7 @@ page_loaded:
   }
   UFclose(&f);
   if (b && b != NO_BUFFER) {
-    b->real_scheme = f.scheme;
+    b->real_schema = f.schema;
     b->real_type = real_type;
     if (w3m_backend)
       b->type = allocStr(t, -1);
@@ -1671,7 +1671,7 @@ Buffer *loadBuffer(URLFile *uf, Buffer *newBuf) {
   TRAP_ON;
 
   if (newBuf->sourcefile == NULL &&
-      (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
+      (uf->schema != SCM_LOCAL || newBuf->mailcap)) {
     tmpf = tmpfname(TMPF_SRC, NULL);
     src = fopen(tmpf->ptr, "w");
     if (src)
@@ -1851,7 +1851,7 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
 
   t_buf = newBuffer(INIT_BUFFER_WIDTH);
   copyParsedURL(&t_buf->currentURL, NULL);
-  t_buf->currentURL.scheme = SCM_LOCAL;
+  t_buf->currentURL.schema = SCM_LOCAL;
   t_buf->currentURL.file = "-";
   if (SearchHeader) {
     readHeader(&uf, t_buf, TRUE, NULL);
@@ -2433,7 +2433,7 @@ static void uncompress_stream(URLFile *uf, char **src) {
   }
   uf->compression = CMP_NOCOMPRESS;
 
-  if (uf->scheme != SCM_LOCAL) {
+  if (uf->schema != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_DFL, ext)->ptr;
   }
 
@@ -2488,7 +2488,7 @@ static void uncompress_stream(URLFile *uf, char **src) {
     if (src)
       *src = tmpf;
     else
-      uf->scheme = SCM_LOCAL;
+      uf->schema = SCM_LOCAL;
   }
   UFhalfclose(uf);
   uf->stream = newFileStream(f1, (void (*)())fclose);

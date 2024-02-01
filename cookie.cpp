@@ -275,7 +275,7 @@ static int match_cookie(ParsedURL *pu, struct cookie *cookie,
     return 0;
   if (strncmp(cookie->path->ptr, pu->file, cookie->path->length) != 0)
     return 0;
-  if (cookie->flag & COO_SECURE && pu->scheme != SCM_HTTPS)
+  if (cookie->flag & COO_SECURE && pu->schema != SCM_HTTPS)
     return 0;
   if (cookie->portl && !port_match(cookie->portl, pu->port))
     return 0;

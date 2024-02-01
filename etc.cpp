@@ -354,7 +354,7 @@ char *strerror(int errno) {
  * 5.1.2 of RFC2616 ) of the server being accessed, defines the protection
  * space. These realms allow the protected resources on a server to be
  * partitioned into a set of protection spaces, each with its own
- * authentication scheme and/or authorization database.
+ * authentication schema and/or authorization database.
  *
  */
 static void add_auth_pass_entry(const struct auth_pass *ent, int netrc,
@@ -610,7 +610,7 @@ char *last_modified(Buffer *buf) {
       }
     }
     return "unknown";
-  } else if (buf->currentURL.scheme == SCM_LOCAL) {
+  } else if (buf->currentURL.schema == SCM_LOCAL) {
     if (stat(buf->currentURL.file, &st) < 0)
       return "unknown";
     return ctime(&st.st_mtime);

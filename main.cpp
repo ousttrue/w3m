@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "mimetypes.h"
+#include "url_schema.h"
 #include "ssl_util.h"
 #include "message.h"
 #include "screen.h"
@@ -1472,7 +1473,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
       (Currentbuf->type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
-      Currentbuf->real_scheme != SCM_LOCAL ||
+      Currentbuf->real_schema != SCM_LOCAL ||
       !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", TRUE);
@@ -1528,8 +1529,8 @@ static Buffer *loadLink(const char *url, const char *target,
   no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
   base = baseURL(Currentbuf);
   if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
-      base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
-      base->scheme == SCM_DATA)
+      base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
+      base->schema == SCM_DATA)
     referer = NO_REFERER;
   if (referer == NULL)
     referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
@@ -2567,8 +2568,8 @@ static void goURL0(char *prompt, int relative) {
     no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
     current = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || current == NULL ||
-        current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
-        current->scheme == SCM_DATA)
+        current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
+        current->schema == SCM_DATA)
       referer = NO_REFERER;
     else
       referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
@@ -2796,7 +2797,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
     return;
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   PermitSaveToPipe = TRUE;
-  if (Currentbuf->real_scheme == SCM_LOCAL)
+  if (Currentbuf->real_schema == SCM_LOCAL)
     file = guess_save_name(NULL, Currentbuf->currentURL.real_file);
   else
     file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
@@ -2936,7 +2937,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     return;
   }
   buf->currentURL = Currentbuf->currentURL;
-  buf->real_scheme = Currentbuf->real_scheme;
+  buf->real_schema = Currentbuf->real_schema;
   buf->filename = Currentbuf->filename;
   buf->sourcefile = Currentbuf->sourcefile;
   buf->header_source = Currentbuf->header_source;
@@ -2966,7 +2967,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     disp_err_message("Can't reload...", TRUE);
     return;
   }
-  if (Currentbuf->currentURL.scheme == SCM_LOCAL &&
+  if (Currentbuf->currentURL.schema == SCM_LOCAL &&
       !strcmp(Currentbuf->currentURL.file, "-")) {
     /* file is std input */
     /* FIXME: gettextize? */
@@ -3144,7 +3145,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
     disp_err_message("Can't browse...", TRUE);
     return;
   }
-  if (Currentbuf->currentURL.scheme == SCM_LOCAL &&
+  if (Currentbuf->currentURL.schema == SCM_LOCAL &&
       !strcmp(Currentbuf->currentURL.file, "-")) {
     /* file is std input */
     /* FIXME: gettextize? */
@@ -4514,7 +4515,7 @@ int main(int argc, char **argv) {
       int retry = 0;
 
       auto url = load_argv[i];
-      if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
+      if (parseUrlSchema(&url) == SCM_MISSING && !ArgvIsURL)
       retry_as_local_file:
         url = file_to_url((char *)load_argv[i]);
       else
@@ -4554,7 +4555,7 @@ int main(int argc, char **argv) {
         continue;
       } else if (newbuf == NO_BUFFER)
         continue;
-      switch (newbuf->real_scheme) {
+      switch (newbuf->real_schema) {
       case SCM_MAILTO:
         break;
       case SCM_LOCAL:
@@ -4567,7 +4568,7 @@ int main(int argc, char **argv) {
     } else if (newbuf == NO_BUFFER)
       continue;
     if (newbuf->pagerSource ||
-        (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
+        (newbuf->real_schema == SCM_LOCAL && newbuf->header_source &&
          newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
       newbuf->search_header = search_header;
     if (CurrentTab == NULL) {

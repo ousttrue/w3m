@@ -4232,7 +4232,7 @@ Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf) {
   if (newBuf == NULL)
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
   if (newBuf->sourcefile == NULL &&
-      (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
+      (f->schema != SCM_LOCAL || newBuf->mailcap)) {
     tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");
     if (src)

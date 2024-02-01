@@ -80,7 +80,7 @@ struct Buffer {
   ParsedURL currentURL;
   ParsedURL *baseURL;
   char *baseTarget;
-  int real_scheme;
+  UrlSchema real_schema;
   char *sourcefile;
   int *clone;
   size_t trbyte;

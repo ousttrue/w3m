@@ -142,6 +142,11 @@ struct Breakpoint {
   short bottom_margin;
 };
 
+struct cmdtable {
+  const char *cmdname;
+  int cmd;
+};
+
 struct readbuffer {
   Str *line;
   Lineprop cprop;

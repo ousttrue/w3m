@@ -1,7 +1,6 @@
-/* $Id: html.h,v 1.31 2010/08/14 01:29:40 htrb Exp $ */
-#ifndef _HTML_H
-#define _HTML_H
+#pragma once
 #include "config.h"
+#include "url_schema.h"
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>
@@ -15,7 +14,7 @@ struct URLOption {
 
 union input_stream;
 struct URLFile {
-  unsigned char scheme;
+  UrlSchema schema;
   char is_cgi;
   char encoding;
   union input_stream *stream;
@@ -39,7 +38,6 @@ struct URLFile {
 #define ENC_BASE64 1
 #define ENC_QUOTE 2
 #define ENC_UUENCODE 3
-
 
 /* Tag attribute */
 
@@ -160,6 +158,3 @@ extern TagAttrInfo AttrMAP[];
 
 #define MAX_ENV_LEVEL 20
 #define MAX_INDENT_LEVEL 10
-
-
-#endif /* _HTML_H */

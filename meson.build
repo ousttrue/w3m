@@ -128,6 +128,7 @@ executable(
         'message.cpp',
         'ssl_util.cpp',
         'mimetypes.cpp',
+        'url_schema.cpp',
     ],
     install: true,
     dependencies: [

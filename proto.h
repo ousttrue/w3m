@@ -144,8 +144,6 @@ struct Buffer;
 extern int currentLn(Buffer *buf);
 extern void tmpClearBuffer(Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
-struct ParsedURL;
-extern ParsedURL *schemeToProxy(int scheme);
 
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
@@ -183,6 +181,7 @@ extern int doFileMove(char *tmpf, char *defstr);
 extern int doFileSave(URLFile uf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(input_stream *stream, char *path);
+struct ParsedURL;
 extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);
 struct TabBuffer;
@@ -262,8 +261,6 @@ extern union frameset_element *search_frame(struct frameset *fset, char *name);
 
 extern ParsedURL *baseURL(Buffer *buf);
 
-union input_stream;
-extern void init_stream(URLFile *uf, int scheme, input_stream *stream);
 struct HRequest;
 Str *HTTPrequestMethod(HRequest *hr);
 Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);

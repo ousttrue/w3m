@@ -49,7 +49,7 @@ Buffer *newBuffer(int width) {
   n->width = width;
   n->COLS = COLS;
   n->LINES = LASTLINE;
-  n->currentURL.scheme = SCM_UNKNOWN;
+  n->currentURL.schema = SCM_UNKNOWN;
   n->baseURL = NULL;
   n->baseTarget = NULL;
   n->buffername = "";
@@ -198,7 +198,7 @@ static void writeBufferName(Buffer *buf, int n) {
   /* FIXME: gettextize? */
   msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
   if (buf->filename != NULL) {
-    switch (buf->currentURL.scheme) {
+    switch (buf->currentURL.schema) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
       if (strcmp(buf->currentURL.file, "-")) {
@@ -477,7 +477,7 @@ void reshapeBuffer(Buffer *buf) {
     buf->imarklist->nmark = 0;
 
   if (buf->header_source) {
-    if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source ||
+    if (buf->currentURL.schema != SCM_LOCAL || buf->mailcap_source ||
         !strcmp(buf->currentURL.file, "-")) {
       URLFile h;
       init_stream(&h, SCM_LOCAL, NULL);

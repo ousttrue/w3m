@@ -64,25 +64,7 @@ int ai_family_order_table[7][3] = {
 
 static JMP_BUF AbortLoading;
 
-struct cmdtable schemetable[] = {
-    {"http", SCM_HTTP},
-    {"gopher", SCM_GOPHER},
-    {"ftp", SCM_FTP},
-    {"local", SCM_LOCAL},
-    {"file", SCM_LOCAL},
-    /*  {"exec", SCM_EXEC}, */
-    {"nntp", SCM_NNTP},
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    {"news", SCM_NEWS},
-    /*  {"news", SCM_NEWS_GROUP}, */
-    {"data", SCM_DATA},
-    {"mailto", SCM_MAILTO},
-    {"https", SCM_HTTPS},
-    {NULL, SCM_UNKNOWN},
-};
-
 static void add_index_file(ParsedURL *pu, URLFile *uf);
-static const char *schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -106,8 +88,8 @@ static void sock_log(char *message, ...) {
 
 #endif
 
-static char *DefaultFile(int scheme) {
-  switch (scheme) {
+static char *DefaultFile(int schema) {
+  switch (schema) {
   case SCM_HTTP:
   case SCM_HTTPS:
     return allocStr(HTTP_DEFAULT_FILE, -1);
@@ -369,7 +351,7 @@ void parseURL(char *url, ParsedURL *p_url, ParsedURL *current) {
 
   p = url;
   copyParsedURL(p_url, NULL);
-  p_url->scheme = SCM_MISSING;
+  p_url->schema = SCM_MISSING;
 
   /* RFC1808: Relative Uniform Resource Locators
    * 4.  Resolving Relative URLs
@@ -379,55 +361,52 @@ void parseURL(char *url, ParsedURL *p_url, ParsedURL *current) {
       copyParsedURL(p_url, current);
     goto do_label;
   }
-  /* search for scheme */
-  p_url->scheme = getURLScheme(&p);
-  if (p_url->scheme == SCM_MISSING) {
-    /* scheme part is not found in the url. This means either
+  /* search for schema */
+  p_url->schema = parseUrlSchema(&p);
+  if (p_url->schema == SCM_MISSING) {
+    /* schema part is not found in the url. This means either
      * (a) the url is relative to the current or (b) the url
-     * denotes a filename (therefore the scheme is SCM_LOCAL).
+     * denotes a filename (therefore the schema is SCM_LOCAL).
      */
     if (current) {
-      switch (current->scheme) {
+      switch (current->schema) {
       case SCM_LOCAL:
       case SCM_LOCAL_CGI:
-        p_url->scheme = SCM_LOCAL;
+        p_url->schema = SCM_LOCAL;
         break;
       case SCM_FTP:
       case SCM_FTPDIR:
-        p_url->scheme = SCM_FTP;
+        p_url->schema = SCM_FTP;
         break;
       default:
-        p_url->scheme = current->scheme;
+        p_url->schema = current->schema;
         break;
       }
     } else
-      p_url->scheme = SCM_LOCAL;
+      p_url->schema = SCM_LOCAL;
     p = url;
     if (!strncmp(p, "//", 2)) {
       /* URL begins with // */
-      /* it means that 'scheme:' is abbreviated */
+      /* it means that 'schema:' is abbreviated */
       p += 2;
       goto analyze_url;
     }
     /* the url doesn't begin with '//' */
     goto analyze_file;
   }
-  /* scheme part has been found */
-  if (p_url->scheme == SCM_UNKNOWN) {
+  /* schema part has been found */
+  if (p_url->schema == SCM_UNKNOWN) {
     p_url->file = allocStr(url, -1);
     return;
   }
   /* get host and port */
-  if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
+  if (p[0] != '/' || p[1] != '/') { /* schema:foo or schema:/foo */
     p_url->host = NULL;
-    if (p_url->scheme != SCM_UNKNOWN)
-      p_url->port = DefaultPort[p_url->scheme];
-    else
-      p_url->port = 0;
+    p_url->port = getDefaultPort(p_url->schema);
     goto analyze_file;
   }
   /* after here, p begins with // */
-  if (p_url->scheme == SCM_LOCAL) { /* file://foo           */
+  if (p_url->schema == SCM_LOCAL) { /* file://foo           */
     if (p[2] == '/' || p[2] == '~'
     /* <A HREF="file:///foo">file:///foo</A>  or <A
      * HREF="file://~user">file://~user</A> */
@@ -440,7 +419,7 @@ void parseURL(char *url, ParsedURL *p_url, ParsedURL *current) {
       goto analyze_file;
     }
   }
-  p += 2; /* scheme://foo         */
+  p += 2; /* schema://foo         */
   /*          ^p is here  */
 analyze_url:
   q = p;
@@ -457,21 +436,21 @@ analyze_url:
     p++;
   switch (*p) {
   case ':':
-    /* scheme://user:pass@host or
-     * scheme://host:port
+    /* schema://user:pass@host or
+     * schema://host:port
      */
     qq = q;
     q = ++p;
     while (*p && strchr("@/?#", *p) == NULL)
       p++;
     if (*p == '@') {
-      /* scheme://user:pass@...       */
+      /* schema://user:pass@...       */
       p_url->user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
       p_url->pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
       p++;
       goto analyze_url;
     }
-    /* scheme://host:port/ */
+    /* schema://host:port/ */
     p_url->host =
         copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
     tmp = Strnew_charp_n(q, p - q);
@@ -479,25 +458,22 @@ analyze_url:
     /* *p is one of ['\0', '/', '?', '#'] */
     break;
   case '@':
-    /* scheme://user@...            */
+    /* schema://user@...            */
     p_url->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
     p++;
     goto analyze_url;
   case '\0':
-    /* scheme://host                */
+    /* schema://host                */
   case '/':
   case '?':
   case '#':
     p_url->host = copyPath(q, p - q, COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
-    if (p_url->scheme != SCM_UNKNOWN)
-      p_url->port = DefaultPort[p_url->scheme];
-    else
-      p_url->port = 0;
+    p_url->port = getDefaultPort(p_url->schema);
     break;
   }
 analyze_file:
 #ifndef SUPPORT_NETBIOS_SHARE
-  if (p_url->scheme == SCM_LOCAL && p_url->user == NULL &&
+  if (p_url->schema == SCM_LOCAL && p_url->user == NULL &&
       p_url->host != NULL && *p_url->host != '\0' &&
       !is_localhost(p_url->host)) {
     /*
@@ -509,9 +485,9 @@ analyze_file:
      * name; It is CYGWIN system call who interprets that.
      */
 
-    p_url->scheme = SCM_FTP; /* ftp://host/... */
+    p_url->schema = SCM_FTP; /* ftp://host/... */
     if (p_url->port == 0)
-      p_url->port = DefaultPort[SCM_FTP];
+      p_url->port = getDefaultPort(SCM_FTP);
   }
 #endif
   if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
@@ -519,7 +495,7 @@ analyze_file:
     goto do_query;
   }
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-  if (p_url->scheme == SCM_LOCAL) {
+  if (p_url->schema == SCM_LOCAL) {
     q = p;
     if (*q == '/')
       q++;
@@ -536,8 +512,8 @@ analyze_file:
   q = p;
   if (*p == '/')
     p++;
-  if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
-    p_url->file = DefaultFile(p_url->scheme);
+  if (*p == '\0' || *p == '#' || *p == '?') { /* schema://host[:port]/ */
+    p_url->file = DefaultFile(p_url->schema);
     goto do_query;
   }
   {
@@ -545,11 +521,11 @@ analyze_file:
   again:
     while (*p && *p != '#' && p != cgi)
       p++;
-    if (*p == '#' && p_url->scheme == SCM_LOCAL) {
+    if (*p == '#' && p_url->schema == SCM_LOCAL) {
       /*
        * According to RFC2396, # means the beginning of
        * URI-reference, and # should be escaped.  But,
-       * if the scheme is SCM_LOCAL, the special
+       * if the schema is SCM_LOCAL, the special
        * treatment will apply to # for convinience.
        */
       if (p > q && *(p - 1) == '/' && (cgi == NULL || p < cgi)) {
@@ -569,7 +545,7 @@ analyze_file:
         p++;
       }
     }
-    if (p_url->scheme == SCM_LOCAL || p_url->scheme == SCM_MISSING)
+    if (p_url->schema == SCM_LOCAL || p_url->schema == SCM_MISSING)
       p_url->file = (char *)copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     else
       p_url->file = (char *)copyPath(q, p - q, COPYPATH_SPC_IGNORE);
@@ -583,8 +559,8 @@ do_query:
     p_url->query = (char *)copyPath(q, p - q, COPYPATH_SPC_ALLOW);
   }
 do_label:
-  if (p_url->scheme == SCM_MISSING) {
-    p_url->scheme = SCM_LOCAL;
+  if (p_url->schema == SCM_MISSING) {
+    p_url->schema = SCM_LOCAL;
     p_url->file = allocStr(p, -1);
     p_url->label = NULL;
   } else if (*p == '#')
@@ -598,10 +574,10 @@ do_label:
 void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
   if (q == NULL) {
     memset(p, 0, sizeof(ParsedURL));
-    p->scheme = SCM_UNKNOWN;
+    p->schema = SCM_UNKNOWN;
     return;
   }
-  p->scheme = q->scheme;
+  p->schema = q->schema;
   p->port = q->port;
   p->is_nocache = q->is_nocache;
   p->user = ALLOC_STR(q->user);
@@ -619,30 +595,30 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
   int relative_uri = FALSE;
 
   parseURL(url, pu, current);
-  if (pu->scheme == SCM_MAILTO)
+  if (pu->schema == SCM_MAILTO)
     return;
-  if (pu->scheme == SCM_DATA)
+  if (pu->schema == SCM_DATA)
     return;
-  if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
+  if (pu->schema == SCM_NEWS || pu->schema == SCM_NEWS_GROUP) {
     if (pu->file && !strchr(pu->file, '@') &&
         (!(p = strchr(pu->file, '/')) || strchr(p + 1, '-') ||
          *(p + 1) == '\0'))
-      pu->scheme = SCM_NEWS_GROUP;
+      pu->schema = SCM_NEWS_GROUP;
     else
-      pu->scheme = SCM_NEWS;
+      pu->schema = SCM_NEWS;
     return;
   }
-  if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NNTP_GROUP) {
+  if (pu->schema == SCM_NNTP || pu->schema == SCM_NNTP_GROUP) {
     if (pu->file && *pu->file == '/')
       pu->file = allocStr(pu->file + 1, -1);
     if (pu->file && !strchr(pu->file, '@') &&
         (!(p = strchr(pu->file, '/')) || strchr(p + 1, '-') ||
          *(p + 1) == '\0'))
-      pu->scheme = SCM_NNTP_GROUP;
+      pu->schema = SCM_NNTP_GROUP;
     else
-      pu->scheme = SCM_NNTP;
+      pu->schema = SCM_NNTP;
     if (current &&
-        (current->scheme == SCM_NNTP || current->scheme == SCM_NNTP_GROUP)) {
+        (current->schema == SCM_NNTP || current->schema == SCM_NNTP_GROUP)) {
       if (pu->host == NULL) {
         pu->host = current->host;
         pu->port = current->port;
@@ -650,7 +626,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
     }
     return;
   }
-  if (pu->scheme == SCM_LOCAL) {
+  if (pu->schema == SCM_LOCAL) {
     char *q = expandName(file_unquote(pu->file));
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
     Str *drive;
@@ -664,9 +640,9 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
   }
 
   if (current &&
-      (pu->scheme == current->scheme ||
-       (pu->scheme == SCM_FTP && current->scheme == SCM_FTPDIR) ||
-       (pu->scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI)) &&
+      (pu->schema == current->schema ||
+       (pu->schema == SCM_FTP && current->schema == SCM_FTPDIR) ||
+       (pu->schema == SCM_LOCAL && current->schema == SCM_LOCAL_CGI)) &&
       pu->host == NULL) {
     /* Copy omitted element from the current URL */
     pu->user = current->user;
@@ -676,7 +652,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
     if (pu->file && *pu->file) {
       if (pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-          && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0]) &&
+          && !(pu->schema == SCM_LOCAL && IS_ALPHA(pu->file[0]) &&
                pu->file[1] == ':')
 #endif
       ) {
@@ -694,7 +670,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
           relative_uri = TRUE;
         }
       }
-    } else { /* scheme:[?query][#label] */
+    } else { /* schema:[?query][#label] */
       pu->file = current->file;
       if (!pu->query)
         pu->query = current->query;
@@ -703,7 +679,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
      * from the current URL. */
   }
   if (pu->file) {
-    if (pu->scheme == SCM_LOCAL && pu->file[0] != '/' &&
+    if (pu->schema == SCM_LOCAL && pu->file[0] != '/' &&
 #ifdef SUPPORT_DOS_DRIVE_PREFIX /* for 'drive:' */
         !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':') &&
 #endif
@@ -714,7 +690,7 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
         Strcat_char(tmp, '/');
       Strcat_charp(tmp, file_unquote(pu->file));
       pu->file = file_quote(cleanupName(tmp->ptr));
-    } else if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS) {
+    } else if (pu->schema == SCM_HTTP || pu->schema == SCM_HTTPS) {
       if (relative_uri) {
         /* In this case, pu->file is created by [process 1] above.
          * pu->file may contain relative path (for example,
@@ -728,13 +704,13 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
     } else if (pu->file[0] == '/') {
       /*
        * this happens on the following conditions:
-       * (1) ftp scheme (2) local, looks like absolute path.
+       * (1) ftp schema (2) local, looks like absolute path.
        * In both case, there must be no side effect with
        * cleanupName(). (I hope so...)
        */
       pu->file = cleanupName(pu->file);
     }
-    if (pu->scheme == SCM_LOCAL) {
+    if (pu->schema == SCM_LOCAL) {
 #ifdef SUPPORT_NETBIOS_SHARE
       if (pu->host && !is_localhost(pu->host)) {
         Str *tmp = Strnew_charp("//");
@@ -750,21 +726,21 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
 
 Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
   Str *tmp;
-  static char *scheme_str[] = {
+  static char *schema_str[] = {
       "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
       "nntp", "nntp",   "news", "news", "data", "mailto", "https",
   };
 
-  if (pu->scheme == SCM_MISSING) {
+  if (pu->schema == SCM_MISSING) {
     return Strnew_charp("???");
-  } else if (pu->scheme == SCM_UNKNOWN) {
+  } else if (pu->schema == SCM_UNKNOWN) {
     return Strnew_charp(pu->file);
   }
   if (pu->host == NULL && pu->file == NULL && label && pu->label != NULL) {
     /* local label */
     return Sprintf("#%s", pu->label);
   }
-  if (pu->scheme == SCM_LOCAL && !strcmp(pu->file, "-")) {
+  if (pu->schema == SCM_LOCAL && !strcmp(pu->file, "-")) {
     tmp = Strnew_charp("-");
     if (label && pu->label) {
       Strcat_char(tmp, '#');
@@ -772,9 +748,9 @@ Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
     }
     return tmp;
   }
-  tmp = Strnew_charp(scheme_str[pu->scheme]);
+  tmp = Strnew_charp(schema_str[pu->schema]);
   Strcat_char(tmp, ':');
-  if (pu->scheme == SCM_MAILTO) {
+  if (pu->schema == SCM_MAILTO) {
     Strcat_charp(tmp, pu->file);
     if (pu->query) {
       Strcat_char(tmp, '?');
@@ -782,7 +758,7 @@ Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
     }
     return tmp;
   }
-  if (pu->scheme == SCM_DATA) {
+  if (pu->schema == SCM_DATA) {
     Strcat_charp(tmp, pu->file);
     return tmp;
   }
@@ -797,7 +773,7 @@ Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
   }
   if (pu->host) {
     Strcat_charp(tmp, pu->host);
-    if (pu->port != DefaultPort[pu->scheme]) {
+    if (pu->port != getDefaultPort(pu->schema)) {
       Strcat_char(tmp, ':');
       Strcat(tmp, Sprintf("%d", pu->port));
     }
@@ -810,7 +786,7 @@ Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
             )))
     Strcat_char(tmp, '/');
   Strcat_charp(tmp, pu->file);
-  if (pu->scheme == SCM_FTPDIR && Strlastchar(tmp) != '/')
+  if (pu->schema == SCM_FTPDIR && Strlastchar(tmp) != '/')
     Strcat_char(tmp, '/');
   if (pu->query) {
     Strcat_char(tmp, '?');
@@ -831,41 +807,12 @@ Str *parsedURL2RefererStr(ParsedURL *pu) {
   return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
-int getURLScheme(const char **url) {
-  const char *p = *url, *q;
-  int i;
-  int scheme = SCM_MISSING;
 
-  while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
-    p++;
-  if (*p == ':') { /* scheme found */
-    scheme = SCM_UNKNOWN;
-    for (i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
-      int len = strlen(q);
-      if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-        scheme = schemetable[i].cmd;
-        *url = p + 1;
-        break;
-      }
-    }
-  }
-  return scheme;
-}
 
-static const char *schemeNumToName(int scheme) {
-  int i;
-
-  for (i = 0; schemetable[i].cmdname != NULL; i++) {
-    if (schemetable[i].cmd == scheme)
-      return schemetable[i].cmdname;
-  }
-  return NULL;
-}
-
-void init_stream(URLFile *uf, int scheme, input_stream *stream) {
+void init_stream(URLFile *uf, UrlSchema schema, input_stream *stream) {
   memset(uf, 0, sizeof(URLFile));
   uf->stream = stream;
-  uf->scheme = scheme;
+  uf->schema = schema;
   uf->encoding = ENC_7BIT;
   uf->is_cgi = FALSE;
   uf->compression = CMP_NOCOMPRESS;
@@ -879,7 +826,7 @@ URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current, URLOption *option,
                 FormList *request, TextList *extra_header, URLFile *ouf,
                 HRequest *hr, unsigned char *status) {
   Str *tmp;
-  int sock, scheme;
+  int sock;
   const char *p, *q, *u;
   URLFile uf;
   HRequest hr0;
@@ -895,14 +842,14 @@ URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current, URLOption *option,
   }
 
   u = url;
-  scheme = getURLScheme(&u);
-  if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
+  auto schema = parseUrlSchema(&u);
+  if (current == NULL && schema == SCM_MISSING && !ArgvIsURL)
     u = file_to_url(url); /* force to local file */
   else
     u = url;
 retry:
   parseURL2((char *)u, pu, current);
-  if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
+  if (pu->schema == SCM_LOCAL && pu->file == NULL) {
     if (pu->label != NULL) {
       /* #hogege is not a label but a filename */
       Str *tmp2 = Strnew_charp("#");
@@ -922,7 +869,7 @@ retry:
   if (LocalhostOnly && pu->host && !is_localhost(pu->host))
     pu->host = NULL;
 
-  uf.scheme = pu->scheme;
+  uf.schema = pu->schema;
   uf.url = parsedURL2Str(pu)->ptr;
   pu->is_nocache = (option->flag & RG_NOCACHE);
   uf.ext = filename_extension(pu->file, 1);
@@ -932,7 +879,7 @@ retry:
   hr->referer = option->referer;
   hr->request = request;
 
-  switch (pu->scheme) {
+  switch (pu->schema) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     if (request && request->body)
@@ -947,7 +894,7 @@ retry:
                         (void (*)())fclose);
     if (uf.stream) {
       uf.is_cgi = TRUE;
-      uf.scheme = pu->scheme = SCM_LOCAL_CGI;
+      uf.schema = pu->schema = SCM_LOCAL_CGI;
       return uf;
     }
     examineFile(pu->real_file, &uf);
@@ -980,7 +927,7 @@ retry:
       }
     }
     if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-      if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+      if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
         /* retry it as "http://" */
         u = Strnew_m_charp("http://", url, NULL)->ptr;
         goto retry;
@@ -995,16 +942,16 @@ retry:
     //     !check_no_proxy(pu->host)) {
     //   hr->flag |= HR_FLAG_PROXY;
     //   sock = openSocket(FTP_proxy_parsed.host,
-    //                     schemeNumToName(FTP_proxy_parsed.scheme),
+    //                     schemaNumToName(FTP_proxy_parsed.schema),
     //                     FTP_proxy_parsed.port);
     //   if (sock < 0)
     //     return uf;
-    //   uf.scheme = SCM_HTTP;
+    //   uf.schema = SCM_HTTP;
     //   tmp = HTTPrequest(pu, current, hr, extra_header);
     //   write(sock, tmp->ptr, tmp->length);
     // } else {
     //   uf.stream = openFTPStream(pu, &uf);
-    //   uf.scheme = pu->scheme;
+    //   uf.schema = pu->schema;
     //   return uf;
     // }
     break;
@@ -1016,24 +963,24 @@ retry:
       hr->command = HR_COMMAND_POST;
     if (request && request->method == FORM_METHOD_HEAD)
       hr->command = HR_COMMAND_HEAD;
-    if (((pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
+    if (((pu->schema == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
         use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
-      if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
+      if (pu->schema == SCM_HTTPS && *status == HTST_CONNECT) {
         sock = ssl_socket_of(ouf->stream);
         if (!(sslh = openSSLHandle(sock, pu->host, &uf.ssl_certificate))) {
           *status = HTST_MISSING;
           return uf;
         }
-      } else if (pu->scheme == SCM_HTTPS) {
+      } else if (pu->schema == SCM_HTTPS) {
         sock = openSocket(HTTPS_proxy_parsed.host,
-                          schemeNumToName(HTTPS_proxy_parsed.scheme),
+                          schemaNumToName(HTTPS_proxy_parsed.schema),
                           HTTPS_proxy_parsed.port);
         sslh = NULL;
       } else {
         sock = openSocket(HTTP_proxy_parsed.host,
-                          schemeNumToName(HTTP_proxy_parsed.scheme),
+                          schemaNumToName(HTTP_proxy_parsed.schema),
                           HTTP_proxy_parsed.port);
         sslh = NULL;
       }
@@ -1043,7 +990,7 @@ retry:
 #endif
         return uf;
       }
-      if (pu->scheme == SCM_HTTPS) {
+      if (pu->schema == SCM_HTTPS) {
         if (*status == HTST_NORMAL) {
           hr->command = HR_COMMAND_CONNECT;
           tmp = HTTPrequest(pu, current, hr, extra_header);
@@ -1058,12 +1005,12 @@ retry:
         *status = HTST_NORMAL;
       }
     } else {
-      sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
+      sock = openSocket(pu->host, schemaNumToName(pu->schema), pu->port);
       if (sock < 0) {
         *status = HTST_MISSING;
         return uf;
       }
-      if (pu->scheme == SCM_HTTPS) {
+      if (pu->schema == SCM_HTTPS) {
         if (!(sslh = openSSLHandle(sock, pu->host, &uf.ssl_certificate))) {
           *status = HTST_MISSING;
           return uf;
@@ -1073,7 +1020,7 @@ retry:
       tmp = HTTPrequest(pu, current, hr, extra_header);
       *status = HTST_NORMAL;
     }
-    if (pu->scheme == SCM_HTTPS) {
+    if (pu->schema == SCM_HTTPS) {
       uf.stream = newSSLStream(sslh, sock);
       if (sslh)
         SSL_write(sslh, tmp->ptr, tmp->length);
@@ -1123,7 +1070,7 @@ retry:
     tmp = Strnew_charp(q);
     q = strrchr(p, ';');
     if (q != NULL && !strcmp(q, ";base64")) {
-      *(char*)q = '\0';
+      *(char *)q = '\0';
       uf.encoding = ENC_BASE64;
     } else
       tmp = Str_url_unquote(tmp, FALSE, FALSE);
@@ -1303,9 +1250,9 @@ char *filename_extension(char *path, int is_url) {
     return last_dot;
 }
 
-ParsedURL *schemeToProxy(int scheme) {
+ParsedURL *schemaToProxy(UrlSchema schema) {
   ParsedURL *pu = NULL; /* for gcc */
-  switch (scheme) {
+  switch (schema) {
   case SCM_HTTP:
     pu = &HTTP_proxy_parsed;
     break;
@@ -1328,3 +1275,4 @@ char *url_decode0(const char *url) {
     return (char *)url;
   return url_unquote_conv((char *)url, 0);
 }
+
