@@ -41,4 +41,4 @@ inline char *inputFilenameHist(const char *p, const char *d, Hist *h) {
 }
 inline char *inputChar(const char *p) { return inputLine(p, "", IN_CHAR); }
 
-const char *inputAnswer(const char *prompt);
+// const char *inputAnswer(const char *prompt);

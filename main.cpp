@@ -2769,7 +2769,8 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
       file = unescape_spaces(Strnew_charp(qfile))->ptr;
     }
     file = expandPath(file);
-    if (checkOverWrite(file) < 0) {
+    // if (checkOverWrite(file) < 0) {
+    if (false) {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
     }

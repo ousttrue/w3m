@@ -2186,7 +2186,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
         p = unescape_spaces(Strnew_charp(q))->ptr;
       }
       p = expandPath(p);
-      if (checkOverWrite(p) < 0)
+      if (!couldWrite(p))
         return -1;
     }
     if (checkCopyFile(tmpf, p) < 0) {
@@ -2245,7 +2245,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
       is_pipe = TRUE;
     else {
       p = expandPath(p);
-      if (checkOverWrite(p) < 0)
+      if (!couldWrite(p))
         return -1;
     }
     if (checkCopyFile(tmpf, p) < 0) {
@@ -2290,7 +2290,7 @@ int doFileSave(URLFile uf, char *defstr) {
       if (p == NULL || *p == '\0')
         return -1;
     }
-    if (checkOverWrite(p) < 0)
+    if (!couldWrite(p))
       return -1;
     if (checkSaveFile(uf.stream, p) < 0) {
       /* FIXME: gettextize? */
@@ -2343,7 +2343,7 @@ int doFileSave(URLFile uf, char *defstr) {
     if (*q == '\0')
       return -1;
     p = expandPath(q);
-    if (checkOverWrite(p) < 0)
+    if (!couldWrite(p))
       return -1;
     if (checkSaveFile(uf.stream, p) < 0) {
       /* FIXME: gettextize? */
@@ -2391,16 +2391,19 @@ int checkSaveFile(input_stream *stream, char *path2) {
   return 0;
 }
 
-int checkOverWrite(char *path) {
+bool couldWrite(const char *path) {
   struct stat st;
-  if (stat(path, &st) < 0)
-    return 0;
+  if (stat(path, &st) < 0) {
+    // not exists
+    return true;
+  }
 
-  auto ans = inputAnswer("File exists. Overwrite? (y/n)");
-  if (ans && TOLOWER(*ans) == 'y')
-    return 0;
-  else
-    return -1;
+  // auto ans = inputAnswer("File exists. Overwrite? (y/n)");
+  // if (ans && TOLOWER(*ans) == 'y'){
+  //   return true;
+  // }
+
+  return false;
 }
 
 static void uncompress_stream(URLFile *uf, char **src) {

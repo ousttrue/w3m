@@ -183,7 +183,6 @@ extern int doFileMove(char *tmpf, char *defstr);
 extern int doFileSave(URLFile uf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(input_stream *stream, char *path);
-extern int checkOverWrite(char *path);
 extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);
 struct TabBuffer;
