@@ -13,8 +13,6 @@
 #include "textlist.h"
 #include "proto.h"
 #include "indep.h"
-#include "alloc.h"
-#include <vector>
 #include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -32,10 +30,9 @@ int columnSkip(Buffer *buf, int offset) {
 
   maxColumn = 0;
   for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
-    if (l->width < 0)
-      l->width = l->bytePosToColumn(l->len);
-    if (l->width - 1 > maxColumn)
-      maxColumn = l->width - 1;
+    if (l->width() - 1 > maxColumn) {
+      maxColumn = l->width() - 1;
+    }
   }
   maxColumn -= buf->COLS - 1;
   if (column < maxColumn)

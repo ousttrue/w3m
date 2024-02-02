@@ -738,14 +738,13 @@ void addnewline(Buffer *buf, const char *line, Lineprop *prop, int byteLen,
         i++;
       }
       l->len = i;
-      l->width = l->bytePosToColumn(l->len);
       if (byteLen <= i) {
         return;
       }
       byteLen -= i;
 
       bpos += l->len;
-      bwidth += l->width;
+      bwidth += l->width();
       s += i;
       p += i;
 

@@ -392,9 +392,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
     addstr(tmp);
   }
   move(i, buf->rootX);
-  if (l->width < 0)
-    l->width = l->bytePosToColumn(l->len);
-  if (l->len == 0 || l->width - 1 < column) {
+  if (l->len == 0 || l->width() - 1 < column) {
     clrtoeolx();
     return l;
   }
@@ -710,7 +708,7 @@ void cursorDown(Buffer *buf, int n) {
   }
   cursorDown0(buf, n);
   while (buf->currentLine->next && buf->currentLine->next->bpos &&
-         buf->currentLine->bwidth + buf->currentLine->width <
+         buf->currentLine->bwidth + buf->currentLine->width() <
              buf->currentColumn + buf->visualpos)
     cursorDown0(buf, n);
 }
@@ -831,7 +829,8 @@ void arrangeCursor(Buffer *buf) {
   /* Arrange cursor */
   buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
   buf->visualpos = buf->currentLine->bwidth +
-                   buf->currentLine->bytePosToColumn(buf->pos) - buf->currentColumn;
+                   buf->currentLine->bytePosToColumn(buf->pos) -
+                   buf->currentColumn;
   buf->cursorX = buf->visualpos - buf->currentLine->bwidth;
 #ifdef DISPLAY_DEBUG
   fprintf(

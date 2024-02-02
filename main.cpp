@@ -425,12 +425,12 @@ static void nscroll(int n, DisplayFlag mode) {
       cursorDown(buf, 1);
     else {
       while (buf->currentLine->next && buf->currentLine->next->bpos &&
-             buf->currentLine->bwidth + buf->currentLine->width <
+             buf->currentLine->bwidth + buf->currentLine->width() <
                  buf->currentColumn + buf->visualpos)
         cursorDown0(buf, 1);
     }
   } else {
-    if (buf->currentLine->bwidth + buf->currentLine->width <
+    if (buf->currentLine->bwidth + buf->currentLine->width() <
         buf->currentColumn + buf->visualpos)
       cursorUp(buf, 1);
     else {
@@ -2993,9 +2993,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
     col = l->bwidth + Currentbuf->currentColumn + Currentbuf->cursorX + 1;
     while (l->next && l->next->bpos)
       l = l->next;
-    if (l->width < 0)
-      l->width = l->bytePosToColumn(l->len);
-    len = l->bwidth + l->width;
+    len = l->bwidth + l->width();
   }
   if (Currentbuf->lastLine)
     all = Currentbuf->lastLine->real_linenumber;
