@@ -16,6 +16,7 @@
 #include <sys/types.h>
 
 #define DEFAULT_COLS 80
+#define SITECONF_FILE RC_DIR "/siteconf"
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"

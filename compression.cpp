@@ -9,14 +9,12 @@
 #include "istream.h"
 #include "textlist.h"
 #include "alloc.h"
+#include "indep.h"
 #include <stdio.h>
 #include <stdlib.h>
-// #include <unistd.h>
-// #include <sys/types.h>
 #include <sys/stat.h>
-// #include <fcntl.h>
-// #include <stdlib.h>
-#include "indep.h"
+
+#define PATH_SEPARATOR	':'
 
 #define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"

@@ -51,6 +51,8 @@
 #include <stdlib.h>
 #include <gc.h>
 
+#define HELP_CGI "w3mhelp"
+
 // #define HOST_NAME_MAX 255
 #define MAXIMUM_COLS 1024
 #define DICTBUFFERNAME "*dictionary*"

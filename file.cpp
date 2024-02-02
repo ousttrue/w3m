@@ -55,6 +55,7 @@ bool SearchHeader = false;
 int FollowRedirection = 10;
 const char *DefaultType = nullptr;
 bool DecodeCTE = false;
+#define DEF_SAVE_FILE "index.html"
 
 static JMP_BUF AbortLoading;
 static void KeyAbort(SIGNAL_ARG) {

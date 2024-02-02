@@ -1,53 +1,10 @@
-/* config.h.  Generated from config.h.in by configure.  */
-#ifndef CONFIG_H_SEEN
-#define CONFIG_H_SEEN
+#pragma once
 /*
  * Configuration for w3m
  */
 #define JA 0
 #define EN 1
 
-/* Name of package */
-#define PACKAGE "w3m"
-
-#define HELP_FILE "w3mhelp-w3m_en.html"
-#define HELP_CGI     "w3mhelp"
-#define W3MCONFIG    "w3mconfig"
-#define IMGDISPLAY   "w3mimgdisplay"
-#define XFACE2XPM    "xface2xpm"
-
-#define BOOKMARK     "bookmark.html"
-#define CONFIG_FILE  "config"
-#define MENU_FILE    "menu"
-#define MOUSE_FILE   "mouse"
-#define HISTORY_FILE "history"
-
-#define PASSWD_FILE	RC_DIR "/passwd"
-#define SITECONF_FILE	RC_DIR "/siteconf"
-
-
-#define USER_URIMETHODMAP	RC_DIR "/urimethodmap"
-#define SYS_URIMETHODMAP	CONF_DIR "/urimethodmap"
-
-#define DEF_SAVE_FILE "index.html"
-
-/* User Configuration */
-#define DISPLAY_CHARSET WC_CES_UTF_8
-#define SYSTEM_CHARSET WC_CES_UTF_8
-#define DOCUMENT_CHARSET WC_CES_UTF_8
-// #define USE_M17N 1
-// #define USE_UNICODE 1
-#define W3M_LANG EN
-#define LANG W3M_LANG
-
-/* Define to 1 if translation of program messages to the user's
-   native language is requested. */
-// #define ENABLE_NLS 1
-
-// #define USE_COLOR 1
-// #define USE_ANSI_COLOR 1
-// #define USE_BG_COLOR 1
-/* #undef USE_MIGEMO */
 #define USE_MARK
 #define USE_MOUSE 1
 /* #undef USE_GPM */
@@ -94,8 +51,8 @@
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 
 /* fallback viewer. mailcap override these configuration */
-#define DEF_IMAGE_VIEWER	"display"
-#define DEF_AUDIO_PLAYER	"showaudio"
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
 
 /* for USE_MIGEMO */
 #define DEF_MIGEMO_COMMAND ""
@@ -155,16 +112,8 @@
 #define lstat stat
 #endif
 
-#define DEFAULT_TERM	0	/* XXX */
+#define DEFAULT_TERM 0 /* XXX */
 
-#define W3MBOOKMARK_CMDNAME	"w3mbookmark"
-#define W3MHELPERPANEL_CMDNAME	"w3mhelperpanel"
-#define DEV_NULL_PATH	"/dev/null"
-#define DEV_TTY_PATH	"/dev/tty"
-#define CGI_EXTENSION	".cgi"
-
-
-#define PATH_SEPARATOR	':'
-
-
-#endif /* CONFIG_H_SEEN */
+#define W3MBOOKMARK_CMDNAME "w3mbookmark"
+#define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
+#define DEV_NULL_PATH "/dev/null"

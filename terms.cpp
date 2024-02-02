@@ -27,6 +27,7 @@
 #endif
 #include <sys/ioctl.h>
 
+#define DEV_TTY_PATH	"/dev/tty"
 static const char *title_str = NULL;
 static int tty = -1;
 

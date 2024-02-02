@@ -47,6 +47,9 @@
 #define RC_DIR "~/.w3m"
 #endif
 
+#define W3MCONFIG "w3mconfig"
+#define CONFIG_FILE "config"
+
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 bool TargetSelf = false;

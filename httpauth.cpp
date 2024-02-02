@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
+#define PASSWD_FILE RC_DIR "/passwd"
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"
 #endif

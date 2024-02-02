@@ -1,6 +1,8 @@
 #pragma once
 
 #define KEYMAP_FILE  "keymap"
+#define CGI_EXTENSION	".cgi"
+#define BOOKMARK "bookmark.html"
 
 #define MAILTO_OPTIONS_IGNORE 1
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
