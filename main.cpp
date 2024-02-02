@@ -52,6 +52,7 @@
 #include <gc.h>
 
 #define HELP_CGI "w3mhelp"
+#define W3MBOOKMARK_CMDNAME "w3mbookmark"
 
 // #define HOST_NAME_MAX 255
 #define MAXIMUM_COLS 1024

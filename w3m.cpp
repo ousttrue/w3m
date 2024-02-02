@@ -17,6 +17,10 @@
 
 #define DEFAULT_COLS 80
 #define SITECONF_FILE RC_DIR "/siteconf"
+#define DEF_EDITOR "/usr/bin/vi"
+#define DEF_MAILER "/usr/bin/mail"
+#define DEF_EXT_BROWSER "/usr/bin/firefox"
+
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"

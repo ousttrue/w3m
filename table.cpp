@@ -3271,7 +3271,7 @@ static void correct_table_matrix4(struct table *t, int col, int cspan,
 
 static void set_table_matrix0(struct table *t, int maxwidth) {
   size_t size = t->maxcol + 1;
-  int i, j, k, bcol, ecol;
+  int j, k, bcol, ecol;
   int width;
   double w0, w1, w, s, b;
 #ifdef __GNUC__
@@ -3284,7 +3284,7 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
   struct table_cell *cell = &t->cell;
 
   w0 = 0.;
-  for (i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     we[i] = weight(t->tabwidth[i]);
     w0 += we[i];
   }
@@ -3292,7 +3292,7 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
     w0 = 1.;
 
   if (cell->necell == 0) {
-    for (i = 0; i < size; i++) {
+    for (size_t i = 0; i < size; i++) {
       s = we[i] / w0;
       b = sigma_td_nw((int)(s * maxwidth));
       correct_table_matrix2(t, i, 1, s, b);
@@ -3308,11 +3308,11 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
     ecol = bcol + cell->colspan[j];
     width = cell->width[j] - (cell->colspan[j] - 1) * t->cellspacing;
     w1 = 0.;
-    for (i = bcol; i < ecol; i++) {
+    for (size_t i = bcol; i < ecol; i++) {
       w1 += t->tabwidth[i] + 0.1;
       expand[i]++;
     }
-    for (i = bcol; i < ecol; i++) {
+    for (size_t i = bcol; i < ecol; i++) {
       w = weight(width * (t->tabwidth[i] + 0.1) / w1);
       if (w > we[i])
         we[i] = w;
@@ -3321,7 +3321,7 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
 
   w0 = 0.;
   w1 = 0.;
-  for (i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     w0 += we[i];
     if (expand[i] == 0)
       w1 += we[i];
@@ -3339,7 +3339,7 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
     correct_table_matrix4(t, bcol, cell->colspan[j], expand, s, b);
   }
 
-  for (i = 0; i < size; i++) {
+  for (size_t i = 0; i < size; i++) {
     if (expand[i] == 0) {
       s = we[i] / max(w1, 1.);
       b = sigma_td_nw((int)(s * maxwidth));

@@ -8,6 +8,7 @@
 #include "alloc.h"
 #include <unistd.h>
 
+#define DEF_CAFILE ""
 #include <openssl/bio.h>
 #include <openssl/x509.h>
 #include <openssl/ssl.h>

@@ -49,6 +49,8 @@
 
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
+#define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
+#define DEF_IMAGE_VIEWER "display"
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 

@@ -23,6 +23,7 @@
 #include "indep.h"
 #include <time.h>
 
+#define DEV_NULL_PATH "/dev/null"
 char *cgi_bin = nullptr;
 
 #define CGIFN_NORMAL 0
