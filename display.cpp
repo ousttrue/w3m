@@ -177,7 +177,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
 
   if (!buf)
     return;
-  if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
+  if (!buf->topLine && buf->readBufferCache()) { /* clear_buffer */
     mode = B_FORCE_REDRAW;
   }
 

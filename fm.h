@@ -6,6 +6,7 @@
  * You can use,copy,modify and distribute this program without any permission.
  */
 #pragma once
+#include <memory>
 #include "config.h"
 
 #ifdef MAINPROGRAM

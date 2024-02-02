@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 #include "url.h"
 #include "line.h"
 #include <gc_cpp.h>
@@ -11,12 +12,14 @@
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
 /* Buffer Property */
-#define BP_NORMAL 0x0
-#define BP_PIPE 0x1
-#define BP_INTERNAL 0x8
-#define BP_NO_URL 0x10
-#define BP_REDIRECTED 0x20
-#define BP_CLOSE 0x40
+enum BufferFlags : unsigned short {
+  BP_NORMAL = 0x0,
+  BP_PIPE = 0x1,
+  BP_INTERNAL = 0x8,
+  BP_NO_URL = 0x10,
+  BP_REDIRECTED = 0x20,
+  BP_CLOSE = 0x40,
+};
 
 /* mark URL, Message-ID */
 #define CHK_URL 1
@@ -45,67 +48,75 @@ struct LinkList;
 struct BufferPos;
 struct AlarmEvent;
 
+struct Clone {
+  int count = 1;
+};
 struct Buffer : public gc_cleanup {
-  const char *filename;
-  const char *buffername;
-  Line *firstLine;
-  Line *topLine;
-  Line *currentLine;
-  Line *lastLine;
-  Buffer *nextBuffer;
-  Buffer *linkBuffer[MAX_LB];
-  short width;
-  short height;
-  const char *type;
-  const char *real_type;
-  int allLine;
-  short bufferprop;
-  int currentColumn;
-  short cursorX;
-  short cursorY;
-  int pos;
-  int visualpos;
-  short rootX;
-  short rootY;
-  short COLS;
-  short LINES;
-  AnchorList *href;
-  AnchorList *name;
-  AnchorList *img;
-  AnchorList *formitem;
-  LinkList *linklist;
-  FormList *formlist;
-  MapList *maplist;
-  HmarkerList *hmarklist;
-  HmarkerList *imarklist;
-  ParsedURL currentURL;
-  ParsedURL *baseURL;
-  const char *baseTarget;
-  UrlSchema real_schema;
-  const char *sourcefile;
-  int *clone;
-  size_t trbyte;
-  char check_url;
-  TextList *document_header;
-  FormItemList *form_submit;
-  const char *savecache;
-  const char *edit;
-  struct mailcap *mailcap;
-  const char *mailcap_source;
-  const char *header_source;
-  char search_header;
-  const char *ssl_certificate;
-  char image_flag;
-  char image_loaded;
-  char need_reshape;
-  Anchor *submit;
-  BufferPos *undo;
-  AlarmEvent *event;
+  const char *filename = nullptr;
+  const char *buffername = "";
+  Line *firstLine = nullptr;
+  Line *topLine = nullptr;
+  Line *currentLine = nullptr;
+  Line *lastLine = nullptr;
+  Buffer *nextBuffer = nullptr;
+  std::array<Buffer *, MAX_LB> linkBuffer = {0};
+  short width = 0;
+  short height = 0;
+  const char *type = nullptr;
+  const char *real_type = nullptr;
+  int allLine = 0;
+  BufferFlags bufferprop = BP_NORMAL;
+  int currentColumn = 0;
+  short cursorX = 0;
+  short cursorY = 0;
+  int pos = 0;
+  int visualpos = 0;
+  short rootX = 0;
+  short rootY = 0;
+  short COLS = 0;
+  short LINES = 0;
+  AnchorList *href = nullptr;
+  AnchorList *name = nullptr;
+  AnchorList *img = nullptr;
+  AnchorList *formitem = nullptr;
+  LinkList *linklist = nullptr;
+  FormList *formlist = nullptr;
+  MapList *maplist = nullptr;
+  HmarkerList *hmarklist = nullptr;
+  HmarkerList *imarklist = nullptr;
+  ParsedURL currentURL = {.schema = SCM_UNKNOWN};
+  ParsedURL *baseURL = nullptr;
+  const char *baseTarget = nullptr;
+  UrlSchema real_schema = {};
+  const char *sourcefile = nullptr;
+  std::shared_ptr<Clone> clone;
+
+  size_t trbyte = 0;
+  char check_url = 0;
+  TextList *document_header = nullptr;
+  FormItemList *form_submit = nullptr;
+  const char *savecache = nullptr;
+  const char *edit = nullptr;
+  struct mailcap *mailcap = nullptr;
+  const char *mailcap_source = nullptr;
+  const char *header_source = nullptr;
+  char search_header = 0;
+  const char *ssl_certificate = nullptr;
+  char image_flag = 0;
+  char image_loaded = 0;
+
+  // always reshape new buffers to mark URLs
+  bool need_reshape = true;
+  Anchor *submit = nullptr;
+  BufferPos *undo = nullptr;
+  AlarmEvent *event = nullptr;
 
   Buffer(int width);
   ~Buffer();
-  Buffer(const Buffer &) = delete;
-  Buffer &operator=(const Buffer &) = delete;
+  Buffer(const Buffer &src) { *this = src; }
+  Buffer &operator=(const Buffer &src);
+
+  bool readBufferCache();
 };
 
 #define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)

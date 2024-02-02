@@ -187,7 +187,6 @@ extern void reshapeBuffer(Buffer *buf);
 extern void copyBuffer(Buffer *a, Buffer *b);
 extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
 extern int writeBufferCache(Buffer *buf);
-extern int readBufferCache(Buffer *buf);
 
 extern void cursorUp0(Buffer *buf, int n);
 extern void cursorUp(Buffer *buf, int n);

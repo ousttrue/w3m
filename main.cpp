@@ -839,11 +839,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   mySignal(SIGINT, prevtrap);
   term_raw();
   if (buf == NULL) {
-    /* FIXME: gettextize? */
     disp_message("Execution failed", TRUE);
     return;
   } else {
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+    buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | BP_NO_URL);
     if (buf->type == NULL)
       buf->type = "text/plain";
     pushBuffer(buf);
@@ -864,7 +863,6 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
     fmTerm();
     printf("\n");
     (void)!system(cmd); /* We do not care about the exit code here! */
-    /* FIXME: gettextize? */
     printf("\n[Hit any key]");
     fflush(stdout);
     fmInit();
@@ -1399,7 +1397,6 @@ static void gotoLabel(const char *label) {
 
   al = searchURLLabel(Currentbuf, label);
   if (al == NULL) {
-    /* FIXME: gettextize? */
     disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
     return;
   }
@@ -1409,7 +1406,7 @@ static void gotoLabel(const char *label) {
     buf->linkBuffer[i] = NULL;
   buf->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
-  (*buf->clone)++;
+  buf->clone->count++;
   pushBuffer(buf);
   gotoLine(Currentbuf, al->start.line);
   if (label_topline)
@@ -2464,7 +2461,7 @@ static void cmd_loadBuffer(Buffer *buf, int prop, int linkid) {
   if (buf == NULL) {
     disp_err_message("Can't load string", FALSE);
   } else if (buf != NO_BUFFER) {
-    buf->bufferprop |= (BP_INTERNAL | prop);
+    buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | prop);
     if (!(buf->bufferprop & BP_NO_URL))
       copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
     if (linkid != LB_NOLINK) {
@@ -2772,7 +2769,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->header_source = Currentbuf->header_source;
   buf->search_header = Currentbuf->search_header;
   buf->clone = Currentbuf->clone;
-  (*buf->clone)++;
+  buf->clone->count++;
 
   buf->need_reshape = TRUE;
   reshapeBuffer(buf);
@@ -3275,7 +3272,7 @@ static void _newT(void) {
   buf->nextBuffer = NULL;
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
-  (*buf->clone)++;
+  buf->clone->count++;
   tag->firstBuffer = tag->currentBuffer = buf;
 
   tag->nextTab = CurrentTab->nextTab;
@@ -3737,7 +3734,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+  buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | BP_NO_URL);
   if (replace) {
     COPY_BUFROOT(buf, Currentbuf);
     restorePosition(buf, Currentbuf);
@@ -4128,7 +4125,8 @@ int main(int argc, char **argv) {
       if (newbuf == NULL)
         Strcat_charp(err_msg, "w3m: Can't load string.\n");
       else if (newbuf != NO_BUFFER)
-        newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+        newbuf->bufferprop =
+            (BufferFlags)(newbuf->bufferprop | BP_INTERNAL | BP_NO_URL);
     } else if ((p = getenv("HTTP_HOME")) != NULL ||
                (p = getenv("WWW_HOME")) != NULL) {
       newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
@@ -4244,7 +4242,7 @@ int main(int argc, char **argv) {
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {
       Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH);
-      Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
+      Currentbuf->bufferprop = (BufferFlags)(BP_INTERNAL | BP_NO_URL);
       Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
     } else
       Currentbuf = Firstbuf;

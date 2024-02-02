@@ -467,7 +467,6 @@ load_doc: {
 
     if (fmInitialized) {
       term_cbreak();
-      /* FIXME: gettextize? */
       message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0,
               0);
       refresh(term_io());
@@ -490,7 +489,8 @@ load_doc: {
       current = (ParsedURL *)New(ParsedURL);
       copyParsedURL(current, &pu);
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
-      t_buf->bufferprop |= BP_REDIRECTED;
+      t_buf->bufferprop =
+          static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);
       status = HTST_NORMAL;
       goto load_doc;
     }
@@ -588,7 +588,7 @@ load_doc: {
       current = (ParsedURL *)New(ParsedURL);
       copyParsedURL(current, &pu);
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
-      t_buf->bufferprop |= BP_REDIRECTED;
+      t_buf->bufferprop = (BufferFlags)(t_buf->bufferprop | BP_REDIRECTED);
       status = HTST_NORMAL;
       goto load_doc;
     }
@@ -937,7 +937,7 @@ Buffer *openPagerBuffer(Buffer *buf) {
   buf->buffername = getenv("MAN_PN");
   if (buf->buffername == NULL)
     buf->buffername = PIPEBUFFERNAME;
-  buf->bufferprop |= BP_PIPE;
+  buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_PIPE);
   buf->currentLine = buf->firstLine;
 
   return buf;

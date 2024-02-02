@@ -42,20 +42,70 @@ int REV_LB[MAX_LB] = {
 Buffer::Buffer(int width) : width(width) {
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
-  this->currentURL.schema = SCM_UNKNOWN;
-  this->baseURL = NULL;
-  this->baseTarget = NULL;
-  this->buffername = "";
-  this->bufferprop = BP_NORMAL;
-  this->clone = (int *)New(int);
-  *this->clone = 1;
-  this->trbyte = 0;
-  this->ssl_certificate = NULL;
+  this->clone = std::make_shared<Clone>();
   this->check_url = MarkAllPages; /* use default from -o mark_all_pages */
-  this->need_reshape = 1;         /* always reshape new buffers to mark URLs */
 }
 
 Buffer::~Buffer() {}
+
+Buffer &Buffer::operator=(const Buffer &src) {
+  this->filename = src.filename;
+  this->buffername = src.buffername;
+  this->firstLine = src.firstLine;
+  this->topLine = src.topLine;
+  this->currentLine = src.currentLine;
+  this->lastLine = src.lastLine;
+  this->nextBuffer = src.nextBuffer;
+  this->linkBuffer = src.linkBuffer;
+  this->width = src.width;
+  this->height = src.height;
+  this->type = src.type;
+  this->real_type = src.real_type;
+  this->allLine = src.allLine;
+  this->bufferprop = src.bufferprop;
+  this->currentColumn = src.currentColumn;
+  this->cursorX = src.cursorX;
+  this->cursorY = src.cursorY;
+  this->pos = src.pos;
+  this->visualpos = src.visualpos;
+  this->rootX = src.rootX;
+  this->rootY = src.rootY;
+  this->COLS = src.COLS;
+  this->LINES = src.LINES;
+  this->href = src.href;
+  this->name = src.name;
+  this->img = src.img;
+  this->formitem = src.formitem;
+  this->linklist = src.linklist;
+  this->formlist = src.formlist;
+  this->maplist = src.maplist;
+  this->hmarklist = src.hmarklist;
+  this->imarklist = src.imarklist;
+  this->currentURL = src.currentURL;
+  this->baseURL = src.baseURL;
+  this->baseTarget = src.baseTarget;
+  this->real_schema = src.real_schema;
+  this->sourcefile = src.sourcefile;
+  this->clone = src.clone;
+  this->trbyte = src.trbyte;
+  this->check_url = src.check_url;
+  this->document_header = src.document_header;
+  this->form_submit = src.form_submit;
+  this->savecache = src.savecache;
+  this->edit = src.edit;
+  this->mailcap = src.mailcap;
+  this->mailcap_source = src.mailcap_source;
+  this->header_source = src.header_source;
+  this->search_header = src.search_header;
+  this->ssl_certificate = src.ssl_certificate;
+  this->image_flag = src.image_flag;
+  this->image_loaded = src.image_loaded;
+  this->need_reshape = src.need_reshape;
+  this->submit = src.submit;
+  this->undo = src.undo;
+  this->event = src.event;
+  return *this;
+}
 
 /*
  * Create null buffer
@@ -91,7 +141,7 @@ void discardBuffer(Buffer *buf) {
   }
   if (buf->savecache)
     unlink(buf->savecache);
-  if (--(*buf->clone))
+  if (--buf->clone->count)
     return;
   if (buf->sourcefile &&
       (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
@@ -508,8 +558,9 @@ void reshapeBuffer(Buffer *buf) {
 
 /* shallow copy */
 void copyBuffer(Buffer *a, Buffer *b) {
-  readBufferCache(b);
-  bcopy((void *)b, (void *)a, sizeof(Buffer));
+  b->readBufferCache();
+  *a = *b;
+  // bcopy((void *)b, (void *)a, sizeof(Buffer));
 }
 
 Buffer *prevBuffer(Buffer *first, Buffer *buf) {
@@ -568,34 +619,35 @@ _error1:
   return -1;
 }
 
-int readBufferCache(Buffer *buf) {
-  FILE *cache;
-  Line *l = NULL, *prevl = NULL, *basel = NULL;
-  long lnum = 0, clnum, tlnum;
-
-  if (buf->savecache == NULL)
-    return -1;
-
-  cache = fopen(buf->savecache, "r");
-  if (cache == NULL || fread1(clnum, cache) || fread1(tlnum, cache)) {
-    if (cache != NULL)
-      fclose(cache);
-    buf->savecache = NULL;
-    return -1;
+bool Buffer::readBufferCache() {
+  if (!this->savecache) {
+    return false;
   }
 
+  auto cache = fopen(this->savecache, "r");
+  int clnum, tlnum;
+  if (cache == NULL || fread1(clnum, cache) || fread1(tlnum, cache)) {
+    if (cache) {
+      fclose(cache);
+    }
+    this->savecache = NULL;
+    return false;
+  }
+
+  Line *l = NULL, *prevl = NULL, *basel = NULL;
+  long lnum = 0;
   while (!feof(cache)) {
     lnum++;
     prevl = l;
 
     l = new Line(lnum, prevl);
     if (!prevl)
-      buf->firstLine = l;
+      this->firstLine = l;
     l->linenumber = lnum;
     if (lnum == clnum)
-      buf->currentLine = l;
+      this->currentLine = l;
     if (lnum == tlnum)
-      buf->topLine = l;
+      this->topLine = l;
     if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) ||
         fread1(l->width, cache) || fread1(l->len, cache) ||
         fread1(l->size, cache) || fread1(l->bpos, cache) ||
@@ -611,17 +663,20 @@ int readBufferCache(Buffer *buf) {
     } else if (basel) {
       l->lineBuf = basel->lineBuf + l->bpos;
       l->propBuf = basel->propBuf + l->bpos;
-    } else
-      break;
+    }
+
+    break;
   }
+
   if (prevl) {
-    buf->lastLine = prevl;
-    buf->lastLine->next = NULL;
+    this->lastLine = prevl;
+    this->lastLine->next = NULL;
   }
+
   fclose(cache);
-  unlink(buf->savecache);
-  buf->savecache = NULL;
-  return 0;
+  unlink(this->savecache);
+  this->savecache = NULL;
+  return true;
 }
 
 /* append links */
