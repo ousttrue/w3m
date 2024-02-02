@@ -3,7 +3,6 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
-#include "config.h"
 #include "screen.h"
 #include "w3m.h"
 #include "proto.h"

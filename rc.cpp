@@ -6,7 +6,6 @@
 #include "func.h"
 #include "etc.h"
 #include "alloc.h"
-#include "config.h"
 #include "mimetypes.h"
 #include "compression.h"
 #include "url_stream.h"

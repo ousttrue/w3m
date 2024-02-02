@@ -2,7 +2,6 @@
 #include "message.h"
 #include "indep.h"
 #include "Str.h"
-#include "config.h"
 #include "myctype.h"
 #include "istream.h"
 #include "alloc.h"

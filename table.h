@@ -1,5 +1,4 @@
 #pragma once
-#include "config.h"
 #include "line.h"
 
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
