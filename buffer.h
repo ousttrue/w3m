@@ -131,8 +131,8 @@ struct Buffer : public gc_cleanup {
                   int realLinenum);
 };
 
-void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,
-                int width, int nlines);
+// void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,
+//                 int width, int nlines);
 
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \
   {                                                                            \

@@ -20,7 +20,6 @@
 #include "indep.h"
 #include "istream.h"
 #include "proto.h"
-#include "alloc.h"
 #include <unistd.h>
 
 TabBuffer *CurrentTab;
@@ -31,9 +30,6 @@ bool open_tab_dl_list = false;
 bool close_tab_back = false;
 int nTab;
 int TabCols = 10;
-
-const char *NullLine = "";
-Lineprop NullProp[] = {0};
 
 int REV_LB[MAX_LB] = {
     LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
@@ -698,19 +694,8 @@ end:
 
 void Buffer::addnewline(const char *line, Lineprop *prop, int byteLen,
                         int breakWidth, int realLinenum) {
-  char *s;
-  Lineprop *p;
-  if (byteLen > 0) {
-    s = allocStr(line, byteLen);
-    p = (Lineprop *)NewAtom_N(Lineprop, byteLen);
-    bcopy((void *)prop, (void *)p, byteLen * sizeof(Lineprop));
-  } else {
-    s = (char *)NullLine;
-    p = NullProp;
-  }
-
   {
-    auto l = new Line(++this->allLine, this->currentLine, s, p, byteLen,
+    auto l = new Line(++this->allLine, this->currentLine, line, prop, byteLen,
                       realLinenum);
     this->pushLine(l);
   }

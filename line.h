@@ -35,7 +35,9 @@ public:
   int bwidth = 0;
 
   Line(int n, Line *prevl = nullptr);
-  Line(int linenumber, Line *prevl, char *line, Lineprop *prop, int byteLen,
+  // Line(int linenumber, Line *prevl, char *line, Lineprop *prop, int byteLen,
+  //      int realLinenumber);
+  Line(int linenumber, Line *prevl, const char *line, Lineprop *prop, int byteLen,
        int realLinenumber);
   ~Line() {}
 
