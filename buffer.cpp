@@ -93,8 +93,6 @@ void discardBuffer(Buffer *buf) {
     unlink(buf->savecache);
   if (--(*buf->clone))
     return;
-  if (buf->pagerSource)
-    ISclose(buf->pagerSource);
   if (buf->sourcefile &&
       (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
   }
@@ -219,14 +217,8 @@ void gotoLine(Buffer *buf, int n) {
 
   if (l == NULL)
     return;
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    if (buf->lastLine->linenumber < n)
-      getNextPage(buf, n - buf->lastLine->linenumber);
-    while ((buf->lastLine->linenumber < n) && (getNextPage(buf, 1) != NULL))
-      ;
-  }
+
   if (l->linenumber > n) {
-    /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->linenumber);
     set_delayed_message(msg);
     buf->topLine = buf->currentLine = l;
@@ -234,7 +226,6 @@ void gotoLine(Buffer *buf, int n) {
   }
   if (buf->lastLine->linenumber < n) {
     l = buf->lastLine;
-    /* FIXME: gettextize? */
     sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
     set_delayed_message(msg);
     buf->currentLine = l;
@@ -261,15 +252,8 @@ void gotoRealLine(Buffer *buf, int n) {
 
   if (l == NULL)
     return;
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    if (buf->lastLine->real_linenumber < n)
-      getNextPage(buf, n - buf->lastLine->real_linenumber);
-    while ((buf->lastLine->real_linenumber < n) &&
-           (getNextPage(buf, 1) != NULL))
-      ;
-  }
+
   if (l->real_linenumber > n) {
-    /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->real_linenumber);
     set_delayed_message(msg);
     buf->topLine = buf->currentLine = l;
@@ -277,7 +261,6 @@ void gotoRealLine(Buffer *buf, int n) {
   }
   if (buf->lastLine->real_linenumber < n) {
     l = buf->lastLine;
-    /* FIXME: gettextize? */
     sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
     set_delayed_message(msg);
     buf->currentLine = l;
@@ -453,7 +436,8 @@ void reshapeBuffer(Buffer *buf) {
   if (f.stream == NULL)
     return;
 
-  auto sbuf = new Buffer(0);;
+  auto sbuf = new Buffer(0);
+  ;
   copyBuffer(sbuf, buf);
   clearBuffer(buf);
 

@@ -351,15 +351,6 @@ DEFUN(multimap, MULTIMAP, "multimap") {
   }
 }
 
-void tmpClearBuffer(Buffer *buf) {
-  if (buf->pagerSource == NULL && writeBufferCache(buf) == 0) {
-    buf->firstLine = NULL;
-    buf->topLine = NULL;
-    buf->currentLine = NULL;
-    buf->lastLine = NULL;
-  }
-}
-
 static Str *currentURL(void);
 
 void saveBufferInfo() {
@@ -374,8 +365,6 @@ void saveBufferInfo() {
 static void pushBuffer(Buffer *buf) {
   Buffer *b;
 
-  if (clear_buffer)
-    tmpClearBuffer(Currentbuf);
   if (Firstbuf == Currentbuf) {
     buf->nextBuffer = Firstbuf;
     Firstbuf = Currentbuf = buf;
@@ -1176,12 +1165,6 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
     }
   } while (!ok);
 
-  for (buf = Firstbuf; buf != NULL; buf = buf->nextBuffer) {
-    if (buf == Currentbuf)
-      continue;
-    if (clear_buffer)
-      tmpClearBuffer(buf);
-  }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -1290,7 +1273,7 @@ static int cur_real_linenumber(Buffer *buf) {
 DEFUN(editBf, EDIT, "Edit local source") {
   auto fn = Currentbuf->filename;
 
-  if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
+  if (fn == NULL || /* Behaving as a pager */
       (Currentbuf->type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
       Currentbuf->real_schema != SCM_LOCAL ||
@@ -2755,19 +2738,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     return;
   }
   if (Currentbuf->sourcefile == NULL) {
-    if (Currentbuf->pagerSource &&
-        !strcasecmp(Currentbuf->type, "text/plain")) {
-      FILE *f;
-      Str *tmpf = tmpfname(TMPF_SRC, NULL);
-      f = fopen(tmpf->ptr, "w");
-      if (f == NULL)
-        return;
-      saveBufferBody(Currentbuf, f, TRUE);
-      fclose(f);
-      Currentbuf->sourcefile = tmpf->ptr;
-    } else {
-      return;
-    }
+    return;
   }
 
   buf = new Buffer(INIT_BUFFER_WIDTH);
@@ -3041,12 +3012,9 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
   }
   if (Currentbuf->lastLine)
     all = Currentbuf->lastLine->real_linenumber;
-  if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
-    tmp = Sprintf("line %d col %d/%d", cur, col, len);
-  else
-    tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-                  (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5),
-                  col, len);
+  tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+                (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
+                len);
 
   disp_message(tmp->ptr, FALSE);
 }
@@ -3058,11 +3026,9 @@ DEFUN(dispVer, VERSION, "Display the version of w3m") {
 DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
   if (WrapSearch) {
     WrapSearch = FALSE;
-    /* FIXME: gettextize? */
     disp_message("Wrap search off", TRUE);
   } else {
     WrapSearch = TRUE;
-    /* FIXME: gettextize? */
     disp_message("Wrap search on", TRUE);
   }
 }
@@ -4245,8 +4211,7 @@ int main(int argc, char **argv) {
       }
     } else if (newbuf == NO_BUFFER)
       continue;
-    if (newbuf->pagerSource ||
-        (newbuf->real_schema == SCM_LOCAL && newbuf->header_source &&
+    if ((newbuf->real_schema == SCM_LOCAL && newbuf->header_source &&
          newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
       newbuf->search_header = search_header;
     if (CurrentTab == NULL) {

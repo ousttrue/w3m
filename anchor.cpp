@@ -310,8 +310,9 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
        l != NULL &&
        (MarkAllPages || l->linenumber < buf->topLine->linenumber + LASTLINE);
        l = l->next) {
-    if (p && l->bpos)
-      goto next_line;
+    if (p && l->bpos) {
+      continue;
+    }
     p = l->lineBuf;
     for (;;) {
       if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
@@ -320,10 +321,6 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
       } else
         break;
     }
-  next_line:
-    if (MarkAllPages && l->next == NULL && buf->pagerSource &&
-        !(buf->bufferprop & BP_CLOSE))
-      getNextPage(buf, PagerMax);
   }
   return NULL;
 }

@@ -50,17 +50,7 @@ int forwardSearch(Buffer *buf, const char *str) {
   }
   for (l = l->next;; l = l->next) {
     if (l == NULL) {
-      if (buf->pagerSource) {
-        l = getNextPage(buf, 1);
-        if (l == NULL) {
-          if (WrapSearch && !wrapped) {
-            l = buf->firstLine;
-            wrapped = TRUE;
-          } else {
-            break;
-          }
-        }
-      } else if (WrapSearch) {
+      if (WrapSearch) {
         l = buf->firstLine;
         wrapped = TRUE;
       } else {

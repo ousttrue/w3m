@@ -69,7 +69,6 @@ struct Buffer : public gc_cleanup {
   short rootY;
   short COLS;
   short LINES;
-  input_stream *pagerSource;
   AnchorList *href;
   AnchorList *name;
   AnchorList *img;

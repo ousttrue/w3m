@@ -78,17 +78,6 @@ Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
   int i, n;
   Line *l = line;
 
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    n = line->linenumber + offset + buf->LINES;
-    if (buf->lastLine->linenumber < n)
-      getNextPage(buf, n - buf->lastLine->linenumber);
-    while ((last || (buf->lastLine->linenumber < n)) &&
-           (getNextPage(buf, 1) != NULL))
-      ;
-    if (last)
-      l = buf->lastLine;
-  }
-
   if (offset == 0)
     return l;
   if (offset > 0)
@@ -611,5 +600,3 @@ const char *url_unquote_conv0(const char *url) {
   tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
   return tmp->ptr;
 }
-
-

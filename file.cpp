@@ -58,11 +58,8 @@ static void KeyAbort(SIGNAL_ARG) {
 }
 
 static const char *guess_filename(const char *file);
-// static int _MoveFile(char *path1, char *path2);
 static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
                           Buffer *defaultbuf);
-
-// static void addLink(Buffer *buf, struct HtmlTag *tag);
 
 static int http_response_code;
 
@@ -871,13 +868,11 @@ static Str *conv_symbol(Line *l) {
  * saveBuffer: write buffer to file
  */
 static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
-  Str *tmp;
-  int is_html = FALSE;
 
-  is_html = is_html_type(buf->type);
+  auto is_html = is_html_type(buf->type);
 
-pager_next:
   for (; l != NULL; l = l->next) {
+    Str *tmp;
     if (is_html)
       tmp = conv_symbol(l);
     else
@@ -886,10 +881,6 @@ pager_next:
     Strfputs(tmp, f);
     if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
       putc('\n', f);
-  }
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    l = getNextPage(buf, PagerMax);
-    goto pager_next;
   }
 }
 
@@ -939,11 +930,10 @@ Buffer *getshell(const char *cmd) {
 /*
  * Open pager buffer
  */
-Buffer *openPagerBuffer(input_stream *stream, Buffer *buf) {
+Buffer *openPagerBuffer(Buffer *buf) {
 
   if (buf == NULL)
     buf = new Buffer(INIT_BUFFER_WIDTH);
-  buf->pagerSource = stream;
   buf->buffername = getenv("MAN_PN");
   if (buf->buffername == NULL)
     buf->buffername = PIPEBUFFERNAME;
@@ -985,7 +975,7 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
   } else if (is_plain_text_type(t)) {
     if (IStype(stream) != IST_ENCODED)
       stream = newEncodedStream(stream, uf.encoding);
-    buf = openPagerBuffer(stream, t_buf);
+    buf = openPagerBuffer(t_buf);
     buf->type = "text/plain";
   } else {
     if (searchExtViewer(t)) {
@@ -996,7 +986,7 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
     } else { /* unknown type is regarded as text/plain */
       if (IStype(stream) != IST_ENCODED)
         stream = newEncodedStream(stream, uf.encoding);
-      buf = openPagerBuffer(stream, t_buf);
+      buf = openPagerBuffer(t_buf);
       buf->type = "text/plain";
     }
   }
@@ -1017,85 +1007,7 @@ Line *getNextPage(Buffer *buf, int plen) {
 
   MySignalHandler prevtrap = NULL;
 
-  if (buf->pagerSource == NULL)
-    return NULL;
-
-  if (last != NULL) {
-    nlines = last->real_linenumber;
-    pre_lbuf = *(last->lineBuf);
-    if (pre_lbuf == '\0')
-      pre_lbuf = '\n';
-    buf->currentLine = last;
-  }
-
-  if (SETJMP(AbortLoading) != 0) {
-    goto pager_end;
-  }
-  TRAP_ON;
-
-  init_stream(&uf, SCM_UNKNOWN, NULL);
-  for (i = 0; i < plen; i++) {
-    if (!(lineBuf2 = StrmyISgets(buf->pagerSource)))
-      return NULL;
-    if (lineBuf2->length == 0) {
-      /* Assume that `cmd == buf->filename' */
-      if (buf->filename)
-        buf->buffername = Sprintf("%s %s", CPIPEBUFFERNAME, buf->filename)->ptr;
-      else if (getenv("MAN_PN") == NULL)
-        buf->buffername = CPIPEBUFFERNAME;
-      buf->bufferprop |= BP_CLOSE;
-      break;
-    }
-    linelen += lineBuf2->length;
-    showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
-    if (squeezeBlankLine) {
-      squeeze_flag = FALSE;
-      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-        ++nlines;
-        --i;
-        squeeze_flag = TRUE;
-        continue;
-      }
-      pre_lbuf = lineBuf2->ptr[0];
-    }
-    ++nlines;
-    Strchop(lineBuf2);
-    lineBuf2 = checkType(lineBuf2, &propBuffer, &colorBuffer);
-    addnewline(buf, lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length,
-               FOLD_BUFFER_WIDTH, nlines);
-    if (!top) {
-      top = buf->firstLine;
-      cur = top;
-    }
-    if (buf->lastLine->real_linenumber - buf->firstLine->real_linenumber >=
-        PagerMax) {
-      Line *l = buf->firstLine;
-      do {
-        if (top == l)
-          top = l->next;
-        if (cur == l)
-          cur = l->next;
-        if (last == l)
-          last = NULL;
-        l = l->next;
-      } while (l && l->bpos);
-      buf->firstLine = l;
-      if (l)
-        buf->firstLine->prev = NULL;
-    }
-  }
-pager_end:
-  TRAP_OFF;
-
-  buf->trbyte = trbyte + linelen;
-  buf->topLine = top;
-  buf->currentLine = cur;
-  if (!last)
-    last = buf->firstLine;
-  else if (last && (last->next || !squeeze_flag))
-    last = last->next;
-  return last;
+  return NULL;
 }
 
 Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {

@@ -379,12 +379,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   Lineprop *pr;
 
   if (l == NULL) {
-    if (buf->pagerSource) {
-      l = getNextPage(buf, buf->LINES + buf->rootY - i);
-      if (l == NULL)
-        return NULL;
-    } else
-      return NULL;
+    return NULL;
   }
   move(i, 0);
   if (showLineNum) {

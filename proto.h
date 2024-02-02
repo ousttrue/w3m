@@ -141,7 +141,6 @@ extern void cursorBottom(void);
 
 struct Buffer;
 extern int currentLn(Buffer *buf);
-extern void tmpClearBuffer(Buffer *buf);
 
 extern char **get_symbol(void);
 struct Str;
@@ -160,7 +159,6 @@ extern Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
 extern void saveBuffer(Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
 union input_stream;
-extern Buffer *openPagerBuffer(input_stream *stream, Buffer *buf);
 extern Buffer *openGeneralPagerBuffer(input_stream *stream);
 struct Line;
 extern Line *getNextPage(Buffer *buf, int plen);
