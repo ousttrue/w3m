@@ -22,7 +22,6 @@
 #include <sys/wait.h>
 #define HAVE_STRERROR 1
 
-bool ShowEffect = true;
 char *personal_document_root = nullptr;
 
 int columnSkip(Buffer *buf, int offset) {
@@ -88,97 +87,6 @@ Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
   return l;
 }
 
-/*
- * Check character type
- */
-
-Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor) {
-  Lineprop mode;
-  Lineprop effect = PE_NORMAL;
-  Lineprop *prop;
-  static Lineprop *prop_buffer = NULL;
-  static int prop_size = 0;
-  char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
-  int do_copy = FALSE;
-
-  if (prop_size < s->length) {
-    prop_size = (s->length > LINELEN) ? s->length : LINELEN;
-    prop_buffer = (Lineprop *)New_Reuse(Lineprop, prop_buffer, prop_size);
-  }
-  prop = prop_buffer;
-
-  if (ShowEffect) {
-    bs = (char *)memchr(str, '\b', s->length);
-    if ((bs != NULL)) {
-      char *sp = str, *ep;
-      s = Strnew_size(s->length);
-      do_copy = TRUE;
-      ep = endp;
-      if (bs && ep > bs - 2)
-        ep = bs - 2;
-      for (; str < ep && IS_ASCII(*str); str++) {
-        *(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-      }
-      Strcat_charp_n(s, sp, (int)(str - sp));
-    }
-  }
-  if (!do_copy) {
-    for (; str < endp && IS_ASCII(*str); str++) {
-      *(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
-    }
-  }
-
-  while (str < endp) {
-    if (prop - prop_buffer >= prop_size)
-      break;
-    if (bs != NULL) {
-      if (str == bs - 1 && *str == '_') {
-        str += 2;
-        effect = PE_UNDER;
-        if (str < endp)
-          bs = (char *)memchr(str, '\b', endp - str);
-        continue;
-      } else if (str == bs) {
-        if (*(str + 1) == '_') {
-          if (s->length) {
-            str += 2;
-            *(prop - 1) |= PE_UNDER;
-          } else {
-            str++;
-          }
-        } else {
-          if (s->length) {
-            if (*(str - 1) == *(str + 1)) {
-              *(prop - 1) |= PE_BOLD;
-              str += 2;
-            } else {
-              Strshrink(s, 1);
-              prop--;
-              str++;
-            }
-          } else {
-            str++;
-          }
-        }
-        if (str < endp)
-          bs = (char *)memchr(str, '\b', endp - str);
-        continue;
-      }
-    }
-
-    mode = get_mctype(str) | effect;
-    *(prop++) = mode;
-    {
-      if (do_copy)
-        Strcat_char(s, (char)*str);
-      str++;
-    }
-    effect = PE_NORMAL;
-  }
-  *oprop = prop_buffer;
-  return s;
-}
-
 // static int nextColumn(int n, char *p, Lineprop *pr) {
 //   if (*pr & PC_CTRL) {
 //     if (*p == '\t')
@@ -196,8 +104,8 @@ Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor) {
 
 int columnLen(Line *line, int column) {
   for (auto i = 0; i < line->len;) {
-    auto j = bytePosToColumn(&line->lineBuf[i], &line->propBuf[i], line->len, i, 0,
-                          false);
+    auto j = bytePosToColumn(&line->lineBuf[i], &line->propBuf[i], line->len, i,
+                             0, false);
     if (j > column)
       return i;
     auto utf8 = Utf8::from((const char8_t *)&line->lineBuf[i]);

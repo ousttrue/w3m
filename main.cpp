@@ -109,7 +109,6 @@ static void fversion(FILE *f) {
 
 static void fusage(FILE *f, int err) {
   fversion(f);
-  /* FIXME: gettextize? */
   fprintf(f, "usage: w3m [options] [URL or filename]\noptions:\n");
   fprintf(f, "    -t tab           set tab width\n");
   fprintf(f, "    -r               ignore backspace effect\n");
@@ -3900,9 +3899,7 @@ int main(int argc, char **argv) {
           usage();
         if (atoi(argv[i]) > 0)
           Tabstop = atoi(argv[i]);
-      } else if (!strcmp("-r", argv[i]))
-        ShowEffect = FALSE;
-      else if (!strcmp("-l", argv[i])) {
+      } else if (!strcmp("-l", argv[i])) {
         if (++i >= argc)
           usage();
         if (atoi(argv[i]) > 0)

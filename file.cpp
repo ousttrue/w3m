@@ -199,7 +199,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       for (p = lineBuf2->ptr; *p; p = q) {
         for (q = p; *q && *q != '\r' && *q != '\n'; q++)
           ;
-        lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer, NULL);
+        lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
         Strcat(tmp, lineBuf2);
         if (thru)
           addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
@@ -831,7 +831,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     }
     ++nlines;
     Strchop(lineBuf2);
-    lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
+    lineBuf2 = checkType(lineBuf2, &propBuffer);
     addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
                FOLD_BUFFER_WIDTH, nlines);
   }
