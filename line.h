@@ -6,7 +6,7 @@
 
 typedef unsigned short Lineprop;
 
-#define P_CHARTYPE 0x3f00
+// #define P_CHARTYPE 0x3f00
 
 #define WTF_TYPE_ASCII 0x0
 #define WTF_TYPE_CTRL 0x1
@@ -28,34 +28,33 @@ typedef unsigned short Lineprop;
 #define PC_UNKNOWN (WTF_TYPE_UNKNOWN << 8)
 #define PC_UNDEF (WTF_TYPE_UNDEF << 8)
 
-#define PC_SYMBOL 0x8000
+enum LinePropFlags : unsigned short {
+  PC_SYMBOL = 0x8000,
 
-/* Effect ( standout/underline ) */
-#define P_EFFECT 0x40ff
-#define PE_NORMAL 0x00
-#define PE_MARK 0x01
-#define PE_UNDER 0x02
-#define PE_STAND 0x04
-#define PE_BOLD 0x08
-#define PE_ANCHOR 0x10
-#define PE_EMPH 0x08
-#define PE_IMAGE 0x20
-#define PE_FORM 0x40
-#define PE_ACTIVE 0x80
-#define PE_VISITED 0x4000
+  /* Effect ( standout/underline ) */
+  P_EFFECT = 0x40ff,
+  PE_NORMAL = 0x00,
+  PE_MARK = 0x01,
+  PE_UNDER = 0x02,
+  PE_STAND = 0x04,
+  PE_BOLD = 0x08,
+  PE_ANCHOR = 0x10,
+  PE_EMPH = 0x08,
+  PE_IMAGE = 0x20,
+  PE_FORM = 0x40,
+  PE_ACTIVE = 0x80,
+  PE_VISITED = 0x4000,
 
-/* Extra effect */
-#define PE_EX_ITALIC 0x01
-#define PE_EX_INSERT 0x02
-#define PE_EX_STRIKE 0x04
+  /* Extra effect */
+  PE_EX_ITALIC = 0x01,
+  PE_EX_INSERT = 0x02,
+  PE_EX_STRIKE = 0x04,
+  PE_EX_ITALIC_E = PE_UNDER,
+  PE_EX_INSERT_E = PE_UNDER,
+  PE_EX_STRIKE_E = PE_STAND,
+};
 
-#define PE_EX_ITALIC_E PE_UNDER
-#define PE_EX_INSERT_E PE_UNDER
-#define PE_EX_STRIKE_E PE_STAND
-
-#define CharType(c) ((c) & P_CHARTYPE)
-#define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
-#define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
+inline Lineprop CharEffect(Lineprop c) { return c & (P_EFFECT | PC_SYMBOL); }
 
 struct Line : public gc_cleanup {
   long linenumber; /* on buffer */

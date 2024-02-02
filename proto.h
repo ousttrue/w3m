@@ -161,7 +161,6 @@ extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
 union input_stream;
 extern Buffer *openGeneralPagerBuffer(input_stream *stream);
 struct Line;
-extern Line *getNextPage(Buffer *buf, int plen);
 
 extern Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf);
 

@@ -3,7 +3,6 @@
 #include <stddef.h>
 
 extern bool displayLink;
-extern bool enable_inline_image;
 
 struct Buffer;
 

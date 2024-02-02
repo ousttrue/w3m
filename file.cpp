@@ -999,22 +999,6 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
   return buf;
 }
 
-Line *getNextPage(Buffer *buf, int plen) {
-  Line *top = buf->topLine, *last = buf->lastLine, *cur = buf->currentLine;
-  int i;
-  int nlines = 0;
-  long long linelen = 0, trbyte = buf->trbyte;
-  Str *lineBuf2;
-  char pre_lbuf = '\0';
-  UrlStream uf;
-  int squeeze_flag = FALSE;
-  Lineprop *propBuffer = NULL;
-
-  MySignalHandler prevtrap = NULL;
-
-  return NULL;
-}
-
 Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   Str *tmpf, *command;
   struct mailcap *mcap;

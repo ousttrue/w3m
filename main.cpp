@@ -58,12 +58,6 @@
 
 #define DSTR_LEN 256
 
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
-
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
 
 Hist *LoadHist;
@@ -3087,12 +3081,6 @@ void deleteFiles() {
   }
   while ((f = popText(fileToDelete)) != NULL) {
     unlink(f);
-    if (enable_inline_image == INLINE_IMG_SIXEL &&
-        strcmp(f + strlen(f) - 4, ".gif") == 0) {
-      Str *firstframe = Strnew_charp(f);
-      Strcat_charp(firstframe, "-1");
-      unlink(firstframe->ptr);
-    }
   }
 }
 
@@ -3976,10 +3964,6 @@ int main(int argc, char **argv) {
           pixel_per_char = ppc;
           set_pixel_per_char = TRUE;
         }
-      } else if (!strcmp("-ri", argv[i])) {
-        enable_inline_image = INLINE_IMG_OSC5379;
-      } else if (!strcmp("-sixel", argv[i])) {
-        enable_inline_image = INLINE_IMG_SIXEL;
       } else if (!strcmp("-num", argv[i]))
         showLineNum = TRUE;
       else if (!strcmp("-no-proxy", argv[i]))

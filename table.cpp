@@ -3272,7 +3272,7 @@ static void correct_table_matrix4(struct table *t, int col, int cspan,
 
 static void set_table_matrix0(struct table *t, int maxwidth) {
   size_t size = t->maxcol + 1;
-  int j, k, bcol, ecol;
+  int j, k, bcol;
   int width;
   double w0, w1, w, s, b;
 #ifdef __GNUC__
@@ -3306,7 +3306,7 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
   for (k = 0; k < cell->necell; k++) {
     j = cell->eindex[k];
     bcol = cell->col[j];
-    ecol = bcol + cell->colspan[j];
+    size_t ecol = bcol + cell->colspan[j];
     width = cell->width[j] - (cell->colspan[j] - 1) * t->cellspacing;
     w1 = 0.;
     for (size_t i = bcol; i < ecol; i++) {

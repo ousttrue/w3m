@@ -76,16 +76,14 @@ Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
 }
 
 Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
-  int i, n;
   Line *l = line;
-
   if (offset == 0)
     return l;
   if (offset > 0)
-    for (i = 0; i < offset && l->next != NULL; i++, l = l->next)
+    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
       ;
   else
-    for (i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
       ;
   return l;
 }

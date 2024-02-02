@@ -18,7 +18,6 @@
 #include <math.h>
 
 bool displayLink = false;
-bool enable_inline_image = false;
 
 /* *INDENT-OFF* */
 
@@ -268,12 +267,6 @@ static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
       int start_pos = an->start.pos;
       int end_pos = an->end.pos;
       for (int i = an->start.pos; i < an->end.pos; i++) {
-        if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
-          if (start_pos == i)
-            start_pos = i + 1;
-          else if (end_pos == an->end.pos)
-            end_pos = i - 1;
-        }
         if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
           if (active)
             l->propBuf[i] |= PE_ACTIVE;
