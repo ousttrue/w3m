@@ -849,8 +849,9 @@ _end:
 
 static Str *conv_symbol(Line *l) {
   Str *tmp = NULL;
-  char *p = l->lineBuf, *ep = p + l->len;
-  Lineprop *pr = l->propBuf;
+  char *p = l->lineBuf.data();
+  char *ep = p + l->len;
+  Lineprop *pr = l->propBuf.data();
   char **symbol = get_symbol();
 
   for (; p < ep; p++, pr++) {
@@ -858,7 +859,7 @@ static Str *conv_symbol(Line *l) {
       char c = *p - SYMBOL_BASE;
       if (tmp == NULL) {
         tmp = Strnew_size(l->len);
-        Strcopy_charp_n(tmp, l->lineBuf, p - l->lineBuf);
+        Strcopy_charp_n(tmp, l->lineBuf.data(), p - l->lineBuf.data());
       }
       Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
     } else if (tmp != NULL)
@@ -867,7 +868,7 @@ static Str *conv_symbol(Line *l) {
   if (tmp)
     return tmp;
   else
-    return Strnew_charp_n(l->lineBuf, l->len);
+    return Strnew_charp_n(l->lineBuf.data(), l->len);
 }
 
 /*
@@ -882,7 +883,7 @@ static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
     if (is_html)
       tmp = conv_symbol(l);
     else
-      tmp = Strnew_charp_n(l->lineBuf, l->len);
+      tmp = Strnew_charp_n(l->lineBuf.data(), l->len);
     Strfputs(tmp, f);
     if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
       putc('\n', f);

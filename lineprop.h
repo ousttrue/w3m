@@ -53,7 +53,7 @@ enum LinePropFlags : unsigned short {
 inline Lineprop CharEffect(Lineprop c) { return c & (P_EFFECT | PC_SYMBOL); }
 
 // byte pos to column
-int bytePosToColumn(const char *l, Lineprop *pr, int len, int pos, int bpos,
+int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpos,
                     bool forceCalc);
 
 struct Str;

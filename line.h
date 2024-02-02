@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <gc_cpp.h>
+#include <vector>
 #include "lineprop.h"
 
 #define LINELEN 256 /* Initial line length */
@@ -11,9 +12,8 @@ struct Line : public gc_cleanup {
   Line *next = nullptr;
   Line *prev = nullptr;
 
-  char *lineBuf = {};
-  Lineprop *propBuf = 0;
-  int size = 0;
+  std::vector<char> lineBuf;
+  std::vector<Lineprop> propBuf;
 
 private:
   // column width. cache
@@ -27,6 +27,20 @@ public:
     return this->_width;
   }
 
+  size_t size() const { return lineBuf.size() - 1; }
+
+  void assign(const char *buf, const Lineprop *prop, int byteLen) {
+    lineBuf.reserve(byteLen + 1);
+    propBuf.reserve(byteLen + 1);
+    if (byteLen > 0) {
+      lineBuf.assign(buf, buf + byteLen);
+      propBuf.assign(prop, prop + byteLen);
+    }
+    lineBuf.push_back(0);
+    propBuf.push_back(0);
+    this->len = byteLen;
+  }
+
   // line break
   int len = 0;
   // bpos += l->len;
@@ -37,8 +51,8 @@ public:
   Line(int n, Line *prevl = nullptr);
   // Line(int linenumber, Line *prevl, char *line, Lineprop *prop, int byteLen,
   //      int realLinenumber);
-  Line(int linenumber, Line *prevl, const char *line, Lineprop *prop, int byteLen,
-       int realLinenumber);
+  Line(int linenumber, Line *prevl, const char *line, Lineprop *prop,
+       int byteLen, int realLinenumber);
   ~Line() {}
 
   Line(const Line &) = delete;

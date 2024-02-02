@@ -1,6 +1,4 @@
 #include "line.h"
-#include "Str.h"
-#include "alloc.h"
 #include "lineprop.h"
 
 Line::Line(int n, Line *prevl) : linenumber(n), prev(prevl) {
@@ -9,24 +7,15 @@ Line::Line(int n, Line *prevl) : linenumber(n), prev(prevl) {
   }
 }
 
-const char *NullLine = "";
-Lineprop NullProp[] = {0};
-
-Line::Line(int linenumber, Line *prevl, const char *line, Lineprop *prop,
+Line::Line(int linenumber, Line *prevl, const char *buf, Lineprop *prop,
            int byteLen, int realLinenumber)
-    : linenumber(linenumber), prev(prevl), size(byteLen), len(byteLen) {
+    : linenumber(linenumber), prev(prevl), lineBuf(byteLen + 1),
+      propBuf(byteLen + 1), len(byteLen) {
   if (prev) {
     prev->next = this;
   }
 
-  if (byteLen > 0) {
-    lineBuf = allocStr(line, byteLen);
-    propBuf = (Lineprop *)NewAtom_N(Lineprop, byteLen);
-    bcopy((void *)prop, (void *)propBuf, byteLen * sizeof(Lineprop));
-  } else {
-    lineBuf = (char *)NullLine;
-    propBuf = NullProp;
-  }
+  assign(buf, prop, byteLen);
 
   if (realLinenumber < 0) {
     real_linenumber = 0;
@@ -36,7 +25,7 @@ Line::Line(int linenumber, Line *prevl, const char *line, Lineprop *prop,
 }
 
 int Line::bytePosToColumn(int pos) const {
-  return ::bytePosToColumn(lineBuf, propBuf, len, pos, 0, false);
+  return ::bytePosToColumn(lineBuf.data(), propBuf.data(), len, pos, 0, false);
 }
 
 Line *Line::breakLine(int breakWidth) {
@@ -44,7 +33,7 @@ Line *Line::breakLine(int breakWidth) {
   if (i == 0) {
     i++;
   }
-  if (size <= i) {
+  if (size() <= i) {
     return {};
   }
   this->len = i;
@@ -52,10 +41,8 @@ Line *Line::breakLine(int breakWidth) {
   this->bwidth = prev->bwidth + this->width(true);
 
   auto l = new Line(linenumber + 1, this);
-  l->lineBuf = this->lineBuf + i;
-  l->propBuf = this->propBuf + i;
-  l->size = this->size - i;
-  l->len = this->len - i;
+  l->assign(this->lineBuf.data() + i, this->propBuf.data() + i,
+            this->size() - i);
   l->real_linenumber = this->real_linenumber;
   return l;
 }

@@ -256,8 +256,8 @@ static const char *reAnchorPos(Buffer *buf, Line *l, const char *p1,
   int i;
   int hseq = -2;
 
-  spos = p1 - l->lineBuf;
-  epos = p2 - l->lineBuf;
+  spos = p1 - l->lineBuf.data();
+  epos = p2 - l->lineBuf.data();
   for (i = spos; i < epos; i++) {
     if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
       return p2;
@@ -315,9 +315,9 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
     if (p && l->bpos) {
       continue;
     }
-    p = l->lineBuf;
+    p = l->lineBuf.data();
     for (;;) {
-      if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
+      if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) == 1) {
         matchedPosition(&p1, &p2);
         p = reAnchorPos(buf, l, p1, p2, anchorproc);
       } else
@@ -468,7 +468,7 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
-      if (pos < 1 || a->end.pos >= l->size)
+      if (pos < 1 || a->end.pos >= l->size())
         continue;
       l->lineBuf[pos - 1] = '[';
       l->lineBuf[a->end.pos] = ']';
@@ -498,8 +498,8 @@ const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
     }
     if (!l)
       break;
-    p = l->lineBuf + a->start.pos;
-    ep = l->lineBuf + a->end.pos;
+    p = l->lineBuf.data() + a->start.pos;
+    ep = l->lineBuf.data() + a->end.pos;
     for (; p < ep && IS_SPACE(*p); p++)
       ;
     if (p == ep)

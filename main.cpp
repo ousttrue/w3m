@@ -519,7 +519,7 @@ static void clear_mark(Line *l) {
   int pos;
   if (!l)
     return;
-  for (pos = 0; pos < l->size; pos++)
+  for (pos = 0; pos < l->size(); pos++)
     l->propBuf[pos] &= ~PE_MARK;
 }
 
@@ -995,7 +995,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
 
     while (1) {
       l = Currentbuf->currentLine;
-      lb = l->lineBuf;
+      lb = l->lineBuf.data();
       while (Currentbuf->pos > 0) {
         int tmp = Currentbuf->pos;
         prevChar(tmp, l);
@@ -1014,7 +1014,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
     }
 
     l = Currentbuf->currentLine;
-    lb = l->lineBuf;
+    lb = l->lineBuf.data();
     while (Currentbuf->pos > 0) {
       int tmp = Currentbuf->pos;
       prevChar(tmp, l);
@@ -1060,7 +1060,7 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
       goto end;
 
     l = Currentbuf->currentLine;
-    lb = l->lineBuf;
+    lb = l->lineBuf.data();
     while (Currentbuf->pos < l->len &&
            is_wordchar(getChar(&lb[Currentbuf->pos])))
       nextChar(Currentbuf->pos, l);
@@ -1078,7 +1078,7 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
       }
       Currentbuf->pos = 0;
       l = Currentbuf->currentLine;
-      lb = l->lineBuf;
+      lb = l->lineBuf.data();
     }
   }
 end:

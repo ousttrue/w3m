@@ -9,7 +9,7 @@
 #include <unistd.h>
 
 static void set_mark(Line *l, int pos, int epos) {
-  for (; pos < epos && pos < l->size; pos++)
+  for (; pos < epos && pos < l->size(); pos++)
     l->propBuf[pos] |= PE_MARK;
 }
 
@@ -34,9 +34,10 @@ int forwardSearch(Buffer *buf, const char *str) {
       l = l->prev;
   }
   begin = l;
-  if (pos < l->size && regexMatch(&l->lineBuf[pos], l->size - pos, 0) == 1) {
+  if (pos < l->size() &&
+      regexMatch(&l->lineBuf[pos], l->size() - pos, 0) == 1) {
     matchedPosition(&first, &last);
-    pos = first - l->lineBuf;
+    pos = first - l->lineBuf.data();
     while (pos >= l->len && l->next && l->next->bpos) {
       pos -= l->len;
       l = l->next;
@@ -59,9 +60,9 @@ int forwardSearch(Buffer *buf, const char *str) {
     }
     if (l->bpos)
       continue;
-    if (regexMatch(l->lineBuf, l->size, 1) == 1) {
+    if (regexMatch(l->lineBuf.data(), l->size(), 1) == 1) {
       matchedPosition(&first, &last);
-      pos = first - l->lineBuf;
+      pos = first - l->lineBuf.data();
       while (pos >= l->len && l->next && l->next->bpos) {
         pos -= l->len;
         l = l->next;
@@ -105,21 +106,22 @@ int backwardSearch(Buffer *buf, const char *str) {
     p = &l->lineBuf[pos];
     found = NULL;
     found_last = NULL;
-    q = l->lineBuf;
-    while (regexMatch(q, &l->lineBuf[l->size] - q, q == l->lineBuf) == 1) {
+    q = l->lineBuf.data();
+    while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) ==
+           1) {
       matchedPosition(&first, &last);
       if (first <= p) {
         found = first;
         found_last = last;
       }
-      if (q - l->lineBuf >= l->size)
+      if (q - l->lineBuf.data() >= l->size())
         break;
       q++;
       if (q > p)
         break;
     }
     if (found) {
-      pos = found - l->lineBuf;
+      pos = found - l->lineBuf.data();
       while (pos >= l->len && l->next && l->next->bpos) {
         pos -= l->len;
         l = l->next;
@@ -143,17 +145,17 @@ int backwardSearch(Buffer *buf, const char *str) {
     }
     found = NULL;
     found_last = NULL;
-    q = l->lineBuf;
-    while (regexMatch(q, &l->lineBuf[l->size] - q, q == l->lineBuf) == 1) {
+    q = l->lineBuf.data();
+    while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) == 1) {
       matchedPosition(&first, &last);
       found = first;
       found_last = last;
-      if (q - l->lineBuf >= l->size)
+      if (q - l->lineBuf.data() >= l->size())
         break;
       q++;
     }
     if (found) {
-      pos = found - l->lineBuf;
+      pos = found - l->lineBuf.data();
       while (pos >= l->len && l->next && l->next->bpos) {
         pos -= l->len;
         l = l->next;

@@ -5,7 +5,7 @@
 #include "alloc.h"
 #include <vector>
 
-int bytePosToColumn(const char *l, Lineprop *pr, int len, int pos, int bpos,
+int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpos,
                     bool forceCalc) {
   if (!l || len == 0 || pos < 0)
     return bpos;

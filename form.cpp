@@ -258,8 +258,8 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   buf = (char *)New_N(char, len + 1);
   buf[len] = '\0';
   prop = (Lineprop *)New_N(Lineprop, len);
-  bcopy((void *)line->lineBuf, (void *)buf, spos * sizeof(char));
-  bcopy((void *)line->propBuf, (void *)prop, spos * sizeof(Lineprop));
+  bcopy((void *)line->lineBuf.data(), (void *)buf, spos * sizeof(char));
+  bcopy((void *)line->propBuf.data(), (void *)prop, spos * sizeof(Lineprop));
 
   effect = CharEffect(line->propBuf[spos]);
   for (p = *str, w = 0, pos = spos; *p && w < width;) {
@@ -309,10 +309,8 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
         (line->len - epos) * sizeof(char));
   bcopy((void *)&line->propBuf[epos], (void *)&prop[pos],
         (line->len - epos) * sizeof(Lineprop));
-  line->lineBuf = buf;
-  line->propBuf = prop;
-  line->len = len;
-  line->size = len;
+
+  line->assign(buf, prop, len);
 
   return pos;
 }
@@ -387,8 +385,8 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
       if (a->start.line != a->end.line || spos > epos || epos >= l->len ||
           spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
         break;
-      pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col, rows > 1,
-                             form->type == FORM_INPUT_PASSWORD);
+      pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
+                             rows > 1, form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
         shiftAnchorPosition(buf->href, buf->hmarklist, a->start.line, spos,
                             pos - epos);
