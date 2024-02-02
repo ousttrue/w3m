@@ -253,13 +253,9 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
 
 static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
                               int prevhseq, int tline, int eline, int active) {
-  int i, j;
-  Line *l;
-  Anchor *an;
-
-  l = buf->topLine;
-  for (j = 0; j < al->size(); j++) {
-    an = &al->anchors[j];
+  auto l = buf->topLine;
+  for (size_t j = 0; j < al->size(); j++) {
+    auto an = &al->anchors[j];
     if (an->start.line < tline)
       continue;
     if (an->start.line >= eline)
@@ -273,7 +269,7 @@ static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
     if (hseq >= 0 && an->hseq == hseq) {
       int start_pos = an->start.pos;
       int end_pos = an->end.pos;
-      for (i = an->start.pos; i < an->end.pos; i++) {
+      for (int i = an->start.pos; i < an->end.pos; i++) {
         if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
           if (start_pos == i)
             start_pos = i + 1;

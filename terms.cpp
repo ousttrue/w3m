@@ -404,12 +404,6 @@ int graph_ok(void) {
   return _entry.T_as[0] != 0 && _entry.T_ae[0] != 0 && _entry.T_ac[0] != 0;
 }
 
-static const char *color_seq(int colmode) {
-  static char seqbuf[32];
-  sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + 30);
-  return seqbuf;
-}
-
 void crmode(void)
 #ifndef HAVE_SGTTY_H
 {

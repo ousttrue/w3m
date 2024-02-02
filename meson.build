@@ -135,6 +135,7 @@ executable(
         'funcname.cpp',
         'app.cpp',
         'bufferpos.cpp',
+        'httpauth.cpp',
     ],
     install: true,
     dependencies: [

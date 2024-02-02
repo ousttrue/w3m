@@ -19,4 +19,3 @@ const char *url_unquote_conv0(const char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 struct Buffer;
 const char *last_modified(Buffer *buf);
-Str *base64_encode(const char *src, int len);

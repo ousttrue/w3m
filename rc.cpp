@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "httpauth.h"
 #include "func.h"
 #include "etc.h"
 #include "alloc.h"

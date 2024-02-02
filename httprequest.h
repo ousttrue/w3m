@@ -40,5 +40,7 @@ struct HRequest {
 
 Str *HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr,
                  TextList *extra);
+Str *HTTPrequestMethod(HRequest *hr);
+Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);
 
 bool matchattr(const char *pconst, const char *attr, int len, Str **value);

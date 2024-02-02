@@ -86,8 +86,6 @@ global char *ExtBrowser7 init(nullptr);
 global char *ExtBrowser8 init(nullptr);
 global char *ExtBrowser9 init(nullptr);
 global int BackgroundExtViewer init(TRUE);
-global int disable_secret_security_check init(FALSE);
-global const char *passwd_file init(PASSWD_FILE);
 global const char *pre_form_file init(PRE_FORM_FILE);
 global const char *siteconf_file init(SITECONF_FILE);
 global const char *ftppasswd init(nullptr);

@@ -242,9 +242,6 @@ extern union frameset_element *search_frame(struct frameset *fset, char *name);
 
 extern ParsedURL *baseURL(Buffer *buf);
 
-struct HRequest;
-Str *HTTPrequestMethod(HRequest *hr);
-Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr);
 struct URLOption;
 struct TextList;
 
@@ -256,12 +253,8 @@ extern void sync_with_option(void);
 
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname,
-                                 Str **pwd, int is_proxy);
 extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
-                                        Str *pwd, int is_proxy);
 
 #define docCSet nulcmd
 #define defCSet nulcmd

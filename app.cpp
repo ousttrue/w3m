@@ -168,7 +168,7 @@ void mainLoop() {
     }
     if (IS_ASCII(c)) { /* Ascii */
       if (('0' <= c) && (c <= '9') &&
-          (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
+          (prec_num || (GlobalKeymap[(int)c] == FUNCNAME_nulcmd))) {
         prec_num = prec_num * 10 + (int)(c - '0');
         if (prec_num > PREC_LIMIT)
           prec_num = PREC_LIMIT;
