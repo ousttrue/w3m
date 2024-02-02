@@ -58,11 +58,11 @@ static void KeyAbort(SIGNAL_ARG) {
 }
 
 static const char *guess_filename(const char *file);
-static int _MoveFile(char *path1, char *path2);
+// static int _MoveFile(char *path1, char *path2);
 static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
                           Buffer *defaultbuf);
 
-static void addLink(Buffer *buf, struct HtmlTag *tag);
+// static void addLink(Buffer *buf, struct HtmlTag *tag);
 
 static int http_response_code;
 
@@ -933,26 +933,6 @@ Buffer *getshell(const char *cmd) {
     return NULL;
   buf->filename = cmd;
   buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
-  return buf;
-}
-
-/*
- * getpipe: execute shell command and connect pipe to the buffer
- */
-Buffer *getpipe(const char *cmd) {
-  FILE *f, *popen(const char *, const char *);
-  Buffer *buf;
-
-  if (cmd == NULL || *cmd == '\0')
-    return NULL;
-  f = popen(cmd, "r");
-  if (f == NULL)
-    return NULL;
-  buf = new Buffer(INIT_BUFFER_WIDTH);
-  buf->pagerSource = newFileStream(f, (void (*)())pclose);
-  buf->filename = cmd;
-  buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, cmd)->ptr;
-  buf->bufferprop |= BP_PIPE;
   return buf;
 }
 

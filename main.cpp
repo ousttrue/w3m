@@ -824,66 +824,10 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
 }
 
 DEFUN(pipeBuf, PIPE_BUF,
-      "Pipe current buffer through a shell command and display output") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  auto cmd = searchKeyData();
-  if (cmd == NULL || *cmd == '\0') {
-    // cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
-  }
-  if (cmd == NULL || *cmd == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  auto f = fopen(tmpf, "w");
-  if (f == NULL) {
-    disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
-    return;
-  }
-  saveBuffer(Currentbuf, f, TRUE);
-  fclose(f);
-  auto buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
-  if (buf == NULL) {
-    disp_message("Execution failed", TRUE);
-    return;
-  } else {
-    buf->filename = (char *)cmd;
-    buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, cmd)->ptr;
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (buf->type == NULL)
-      buf->type = "text/plain";
-    buf->currentURL.file = "-";
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
+      "Pipe current buffer through a shell command and display output") {}
 
 /* Execute shell command and read output ac pipe. */
-DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {
-  Buffer *buf;
-  const char *cmd;
-
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
-  if (cmd == NULL || *cmd == '\0') {
-    // cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
-  }
-  if (cmd == NULL || *cmd == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  buf = getpipe(cmd);
-  if (buf == NULL) {
-    disp_message("Execution failed", TRUE);
-    return;
-  } else {
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (buf->type == NULL)
-      buf->type = "text/plain";
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
+DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {}
 
 /* Execute shell command and load entire output to buffer */
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {

@@ -450,7 +450,7 @@ void examineFile(const char *path, UrlStream *uf) {
 int save2tmp(UrlStream *uf, const char *tmpf) {
   FILE *ff;
   long long linelen = 0;
-  long long trbyte = 0;
+  // long long trbyte = 0;
   MySignalHandler prevtrap = NULL;
   static JMP_BUF env_bak;
   int retval = 0;

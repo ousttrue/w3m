@@ -19,7 +19,6 @@ void showProgress(long long *linelen, long long *trbyte,
 bool couldWrite(const char *path);
 
 int setModtime(const char *path, time_t modtime);
-Buffer *getpipe(const char *cmd);
 Buffer *getshell(const char *cmd);
 
 int _doFileCopy(const char *tmpf, const char *defstr, int download);
