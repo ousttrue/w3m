@@ -48,7 +48,9 @@ AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
     }
   }
 
-  al->anchors.push_back({});
+  while (i >= al->anchors.size()) {
+    al->anchors.push_back({});
+  }
   auto a = &al->anchors[i];
   a->url = url;
   a->target = target;
