@@ -1,5 +1,4 @@
 #define MAINPROGRAM
-#include "fm.h"
 #include "alloc.h"
 #include "bufferpos.h"
 #include "app.h"
@@ -52,6 +51,10 @@
 #include <stdlib.h>
 #include <gc.h>
 
+// #define HOST_NAME_MAX 255
+#define MAXIMUM_COLS 1024
+#define DICTBUFFERNAME "*dictionary*"
+
 #define DSTR_LEN 256
 
 #define INLINE_IMG_NONE 0
@@ -59,6 +62,8 @@
 #define INLINE_IMG_SIXEL 2
 #define INLINE_IMG_ITERM2 3
 #define INLINE_IMG_KITTY 4
+
+#define DEFUN(funcname, macroname, docstring) void funcname(void)
 
 Hist *LoadHist;
 Hist *SaveHist;

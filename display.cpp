@@ -1,4 +1,5 @@
 #include "display.h"
+#include "symbol.h"
 #include "message.h"
 #include "w3m.h"
 #include "readbuffer.h"
@@ -10,7 +11,6 @@
 #include "textlist.h"
 #include "ctrlcode.h"
 #include "anchor.h"
-#include "fm.h"
 #include "file.h"
 #include "signal_util.h"
 #include "proto.h"

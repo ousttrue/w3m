@@ -4,7 +4,6 @@
 #include "indep.h"
 #include "myctype.h"
 #include "downloadlist.h"
-#include "fm.h"
 #include "alloc.h"
 #include "tmpfile.h"
 #include "message.h"

@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "w3m.h"
 #include "func.h"
 #include "etc.h"
 #include "mimetypes.h"
@@ -15,7 +16,6 @@
 #include "display.h"
 #include "buffer.h"
 #include "anchor.h"
-#include "fm.h"
 #include "keyvalue.h"
 #include "htmltag.h"
 #include "myctype.h"

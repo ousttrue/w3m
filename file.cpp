@@ -31,7 +31,6 @@
 #include "cookie.h"
 #include "anchor.h"
 #include "display.h"
-#include "fm.h"
 #include "table.h"
 #include "mailcap.h"
 #include "signal_util.h"
@@ -48,6 +47,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <utime.h>
+
+#define SHELLBUFFERNAME "*Shellout*"
+#define PIPEBUFFERNAME "*stream*"
 
 bool SearchHeader = false;
 int FollowRedirection = 10;
@@ -642,7 +644,7 @@ page_loaded:
     src = fopen(tmp->ptr, "w");
     if (src) {
       Str *s;
-      s = wc_Str_conv_strict(page, InnerCharset, charset);
+      s = page;
       Strfputs(s, src);
       fclose(src);
     }
@@ -880,7 +882,6 @@ static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
       tmp = conv_symbol(l);
     else
       tmp = Strnew_charp_n(l->lineBuf, l->len);
-    tmp = wc_Str_conv(tmp, InnerCharset, charset);
     Strfputs(tmp, f);
     if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
       putc('\n', f);

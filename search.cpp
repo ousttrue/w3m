@@ -1,7 +1,7 @@
 #include "search.h"
+#include "w3m.h"
 #include "message.h"
 #include "display.h"
-#include "fm.h"
 #include "buffer.h"
 #include "regex.h"
 #include "proto.h"
@@ -16,7 +16,7 @@ static void set_mark(Line *l, int pos, int epos) {
 int forwardSearch(Buffer *buf, const char *str) {
   const char *p, *first, *last;
   Line *l, *begin;
-  int wrapped = FALSE;
+  int wrapped = false;
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -52,7 +52,7 @@ int forwardSearch(Buffer *buf, const char *str) {
     if (l == NULL) {
       if (WrapSearch) {
         l = buf->firstLine;
-        wrapped = TRUE;
+        wrapped = true;
       } else {
         break;
       }
@@ -82,7 +82,7 @@ int forwardSearch(Buffer *buf, const char *str) {
 int backwardSearch(Buffer *buf, const char *str) {
   const char *p, *q, *found, *found_last, *first, *last;
   Line *l, *begin;
-  int wrapped = FALSE;
+  int wrapped = false;
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -136,7 +136,7 @@ int backwardSearch(Buffer *buf, const char *str) {
     if (l == NULL) {
       if (WrapSearch) {
         l = buf->lastLine;
-        wrapped = TRUE;
+        wrapped = true;
       } else {
         break;
       }

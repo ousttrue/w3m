@@ -2,7 +2,7 @@
 /*
  * w3m func.c
  */
-#include "fm.h"
+#include "w3m.h"
 #include "message.h"
 #include "ctrlcode.h"
 #include "func.h"
@@ -22,7 +22,7 @@
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv *keyData = NULL;
-static char keymap_initialized = FALSE;
+static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
@@ -40,7 +40,7 @@ void setKeymap(const char *p, int lineno, int verbose) {
       emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
     record_err_message(emsg);
     if (verbose)
-      disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+      disp_message_nsec(emsg, false, 1, true, false);
     return;
   }
   s = getWord(&p);
@@ -54,7 +54,7 @@ void setKeymap(const char *p, int lineno, int verbose) {
       emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
     record_err_message(emsg);
     if (verbose)
-      disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+      disp_message_nsec(emsg, false, 1, true, false);
     return;
   }
   if (c & K_MULTI) {
@@ -153,7 +153,7 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
       emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
       record_err_message(emsg);
       if (verbose)
-        disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+        disp_message_nsec(emsg, false, 1, true, false);
       continue;
     }
     setKeymap(p, lineno, verbose);
@@ -172,7 +172,7 @@ void initKeymap(int force) {
     interpret_keymap(kf, &current_keymap_file, force || !keymap_initialized);
     fclose(kf);
   }
-  keymap_initialized = TRUE;
+  keymap_initialized = true;
 }
 
 int getFuncList(const char *id) { return getHash_si(&functable, id, -1); }

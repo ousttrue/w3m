@@ -1,5 +1,4 @@
 #include "w3m.h"
-#include "fm.h"
 #include "httprequest.h"
 #include "cookie.h"
 #include "line.h"
@@ -16,9 +15,64 @@
 #include <string.h>
 #include <sys/types.h>
 
+#define DEFAULT_COLS 80
+
+#ifndef RC_DIR
+#define RC_DIR "~/.w3m"
+#endif
+#define PRE_FORM_FILE RC_DIR "/pre_form"
+
 bool fmInitialized = 0;
 bool IsForkChild = 0;
 bool w3m_backend = false;
+bool confirm_on_quit = true;
+
+int vi_prec_num = FALSE;
+int label_topline = FALSE;
+int nextpage_topline = FALSE;
+int displayLineInfo = FALSE;
+int show_srch_str = TRUE;
+int displayImage = FALSE;
+const char *Editor = DEF_EDITOR;
+const char *Mailer = DEF_MAILER;
+int MailtoOptions = MAILTO_OPTIONS_IGNORE;
+const char *ExtBrowser = DEF_EXT_BROWSER;
+char *ExtBrowser2 = nullptr;
+char *ExtBrowser3 = nullptr;
+char *ExtBrowser4 = nullptr;
+char *ExtBrowser5 = nullptr;
+char *ExtBrowser6 = nullptr;
+char *ExtBrowser7 = nullptr;
+char *ExtBrowser8 = nullptr;
+char *ExtBrowser9 = nullptr;
+int BackgroundExtViewer = TRUE;
+const char *pre_form_file = PRE_FORM_FILE;
+const char *siteconf_file = SITECONF_FILE;
+const char *ftppasswd = nullptr;
+int ftppass_hostnamegen = TRUE;
+int WrapDefault = FALSE;
+int IgnoreCase = TRUE;
+int WrapSearch = FALSE;
+int squeezeBlankLine = FALSE;
+const char *BookmarkFile = nullptr;
+int UseExternalDirBuffer = TRUE;
+const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
+int UseDictCommand = TRUE;
+const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
+int FoldTextarea = FALSE;
+int FoldLine = FALSE;
+int DefaultURLString = DEFAULT_URL_CURRENT;
+struct auth_cookie *Auth_cookie = nullptr;
+struct cookie *First_cookie = nullptr;
+char UseAltEntity = FALSE;
+int no_rc_dir = FALSE;
+char *param_tmp_dir = nullptr;
+const char *mkd_tmp_dir = nullptr;
+const char *config_file = nullptr;
+int is_redisplay = FALSE;
+int clear_buffer = TRUE;
+int set_pixel_per_char = FALSE;
+const char *keymap_file = KEYMAP_FILE;
 
 struct TextLineList;
 TextLineList *backend_halfdump_buf;

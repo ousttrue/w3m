@@ -1,12 +1,12 @@
 /* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
 #include "utf8.h"
 #include "ctrlcode.h"
+#include "w3m.h"
 #include "Str.h"
 #ifdef DUMMY
 #define NBSP " "
 #define UseAltEntity 1
 #else /* DUMMY */
-#include "fm.h"
 #endif /* DUMMY */
 
 /* *INDENT-OFF* */

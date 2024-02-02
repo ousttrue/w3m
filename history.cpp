@@ -3,7 +3,6 @@
 #include "rc.h"
 #include "message.h"
 #include "tmpfile.h"
-#include "fm.h"
 #include "buffer.h"
 #include "indep.h"
 #include "proto.h"

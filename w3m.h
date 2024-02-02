@@ -1,5 +1,14 @@
 #pragma once
 
+#define KEYMAP_FILE  "keymap"
+
+#define MAILTO_OPTIONS_IGNORE 1
+#define MAILTO_OPTIONS_USE_MAILTO_URL 2
+#define DEFAULT_URL_EMPTY 0
+#define DEFAULT_URL_CURRENT 1
+#define DEFAULT_URL_LINK 2
+
+extern bool confirm_on_quit;
 extern bool fmInitialized;
 extern bool IsForkChild;
 extern char *w3m_version;
@@ -17,6 +26,53 @@ extern TextList *fileToDelete;
 
 extern char *document_root;
 extern bool do_download;
+
+extern int vi_prec_num;
+extern int label_topline;
+extern int nextpage_topline;
+extern int displayLineInfo;
+extern int show_srch_str;
+extern int displayImage;
+extern const char *Editor;
+extern const char *Mailer;
+extern int MailtoOptions;
+extern const char *ExtBrowser;
+extern char *ExtBrowser2;
+extern char *ExtBrowser3;
+extern char *ExtBrowser4;
+extern char *ExtBrowser5;
+extern char *ExtBrowser6;
+extern char *ExtBrowser7;
+extern char *ExtBrowser8;
+extern char *ExtBrowser9;
+extern int BackgroundExtViewer;
+extern const char *pre_form_file;
+extern const char *siteconf_file;
+extern const char *ftppasswd;
+extern int ftppass_hostnamegen;
+extern int WrapDefault;
+extern int IgnoreCase;
+extern int WrapSearch;
+extern int squeezeBlankLine;
+extern const char *BookmarkFile;
+extern int UseExternalDirBuffer;
+extern const char *DirBufferCommand;
+extern int UseDictCommand;
+extern const char *DictCommand;
+extern int FoldTextarea;
+extern int FoldLine;
+extern int DefaultURLString;
+extern struct auth_cookie *Auth_cookie;
+extern struct cookie *First_cookie;
+extern char UseAltEntity;
+extern int no_rc_dir;
+extern char *param_tmp_dir;
+extern const char *mkd_tmp_dir;
+extern const char *config_file;
+extern int is_redisplay;
+extern int clear_buffer;
+extern int set_pixel_per_char;
+extern const char *keymap_file;
 
 int backend(void);
 void w3m_exit(int i);

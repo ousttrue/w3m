@@ -18,7 +18,6 @@
 #include "readbuffer.h"
 #include "textlist.h"
 #include "keyvalue.h"
-#include "fm.h"
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"

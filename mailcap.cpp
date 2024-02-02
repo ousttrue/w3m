@@ -2,7 +2,6 @@
 #include "etc.h"
 #include "httprequest.h"
 #include "url.h"
-#include "fm.h"
 #include "textlist.h"
 #include "myctype.h"
 #include "local_cgi.h"
@@ -20,6 +19,16 @@ static struct mailcap DefaultMailcap[] = {
 
 static TextList *mailcap_list;
 static struct mailcap **UserMailcap;
+
+#ifndef RC_DIR
+#define RC_DIR "~/.w3m"
+#endif
+#ifndef CONF_DIR
+#define CONF_DIR RC_DIR
+#endif
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
+const char *mailcap_files = USER_MAILCAP ", " SYS_MAILCAP;
 
 static int mailcapMatch(struct mailcap *mcap, const char *type) {
   const char *cap = mcap->type, *p;

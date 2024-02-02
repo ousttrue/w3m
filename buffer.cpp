@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "w3m.h"
 #include "local_cgi.h"
 #include "etc.h"
 #include "url_stream.h"
@@ -9,7 +10,6 @@
 #include "rc.h"
 #include "textlist.h"
 #include "linklist.h"
-#include "fm.h"
 #include "tmpfile.h"
 #include "terms.h"
 #include "form.h"

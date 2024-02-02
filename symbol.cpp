@@ -1,3 +1,4 @@
+#include "symbol.h"
 #include "Str.h"
 #include "readbuffer.h"
 #include "ctrlcode.h"

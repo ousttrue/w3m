@@ -26,7 +26,6 @@
 #include "w3m.h"
 #include "tmpfile.h"
 #include "httprequest.h"
-#include "fm.h"
 #include "url.h"
 #include "signal_util.h"
 #include "myctype.h"
@@ -35,6 +34,7 @@
 #include "keyvalue.h"
 #include "local_cgi.h"
 #include "regex.h"
+#include "mailcap.h"
 #include <stdio.h>
 #include <errno.h>
 #include <stdlib.h>

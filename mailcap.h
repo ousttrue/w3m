@@ -1,5 +1,7 @@
 #pragma once
 
+extern const char *mailcap_files;
+
 #define MAILCAP_NEEDSTERMINAL 0x01
 #define MAILCAP_COPIOUSOUTPUT 0x02
 #define MAILCAP_HTMLOUTPUT 0x04
