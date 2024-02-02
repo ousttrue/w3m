@@ -696,10 +696,7 @@ end:
   return newbuf;
 }
 
-#define addnewline2(a, b, c, d, e, f) _addnewline2(a, b, c, e, f)
-
-void addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
-                 int pos, int nlines) {
+void addnewline2(Buffer *buf, char *line, Lineprop *prop, int pos, int nlines) {
   auto l = new Line(++buf->allLine, buf->currentLine);
   l->next = NULL;
   l->lineBuf = line;
@@ -726,8 +723,8 @@ void addnewline2(Buffer *buf, char *line, Lineprop *prop, Linecolor *color,
 
 // extern char *NullLine;
 
-void addnewline(Buffer *buf, const char *line, Lineprop *prop, Linecolor *color,
-                int pos, int width, int nlines) {
+void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,
+                int width, int nlines) {
   char *s;
   Lineprop *p;
   Line *l;
@@ -741,7 +738,7 @@ void addnewline(Buffer *buf, const char *line, Lineprop *prop, Linecolor *color,
     s = (char *)NullLine;
     p = NullProp;
   }
-  addnewline2(buf, s, p, c, pos, nlines);
+  addnewline2(buf, s, p, pos, nlines);
   if (pos <= 0 || width <= 0)
     return;
   bpos = 0;
@@ -763,7 +760,7 @@ void addnewline(Buffer *buf, const char *line, Lineprop *prop, Linecolor *color,
     s += i;
     p += i;
     pos -= i;
-    addnewline2(buf, s, p, c, pos, nlines);
+    addnewline2(buf, s, p, pos, nlines);
   }
 }
 
