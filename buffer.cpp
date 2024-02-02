@@ -696,71 +696,70 @@ end:
   return newbuf;
 }
 
-void addnewline2(Buffer *buf, char *line, Lineprop *prop, int pos, int nlines) {
-  auto l = new Line(++buf->allLine, buf->currentLine);
-  l->next = NULL;
-  l->lineBuf = line;
-  l->propBuf = prop;
-  l->len = pos;
-  l->width = -1;
-  l->size = pos;
-  l->bpos = 0;
-  l->bwidth = 0;
-
-  if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
-    buf->lastLine = l;
-  buf->currentLine = l;
-  if (buf->firstLine == NULL)
-    buf->firstLine = l;
-  if (nlines < 0) {
-    /*     l->real_linenumber = l->linenumber;     */
-    l->real_linenumber = 0;
-  } else {
-    l->real_linenumber = nlines;
-  }
-  l = NULL;
-}
-
-// extern char *NullLine;
-
-void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,
-                int width, int nlines) {
+void addnewline(Buffer *buf, const char *line, Lineprop *prop, int byteLen,
+                int breakWidth, int realLinenum) {
   char *s;
   Lineprop *p;
-  Line *l;
-  int i, bpos, bwidth;
-
-  if (pos > 0) {
-    s = allocStr(line, pos);
-    p = (Lineprop *)NewAtom_N(Lineprop, pos);
-    bcopy((void *)prop, (void *)p, pos * sizeof(Lineprop));
+  if (byteLen > 0) {
+    s = allocStr(line, byteLen);
+    p = (Lineprop *)NewAtom_N(Lineprop, byteLen);
+    bcopy((void *)prop, (void *)p, byteLen * sizeof(Lineprop));
   } else {
     s = (char *)NullLine;
     p = NullProp;
   }
-  addnewline2(buf, s, p, pos, nlines);
-  if (pos <= 0 || width <= 0)
-    return;
-  bpos = 0;
-  bwidth = 0;
-  while (1) {
-    l = buf->currentLine;
-    l->bpos = bpos;
-    l->bwidth = bwidth;
-    i = columnLen(l, width);
-    if (i == 0) {
-      i++;
+
+  {
+    auto l =
+        new Line(++buf->allLine, buf->currentLine, s, p, byteLen, realLinenum);
+    if (!buf->lastLine || buf->lastLine == buf->currentLine) {
+      buf->lastLine = l;
     }
-    l->len = i;
-    l->width = l->bytePosToColumn(l->len);
-    if (pos <= i)
-      return;
-    bpos += l->len;
-    bwidth += l->width;
-    s += i;
-    p += i;
-    pos -= i;
-    addnewline2(buf, s, p, pos, nlines);
+    buf->currentLine = l;
+    if (!buf->firstLine) {
+      buf->firstLine = l;
+    }
+  }
+
+  if (byteLen <= 0 || breakWidth <= 0) {
+    return;
+  }
+
+  {
+    int bpos = 0;
+    int bwidth = 0;
+    while (1) {
+
+      auto l = buf->currentLine;
+      l->bpos = bpos;
+      l->bwidth = bwidth;
+      int i = columnLen(l, breakWidth);
+      if (i == 0) {
+        i++;
+      }
+      l->len = i;
+      l->width = l->bytePosToColumn(l->len);
+      if (byteLen <= i) {
+        return;
+      }
+      byteLen -= i;
+
+      bpos += l->len;
+      bwidth += l->width;
+      s += i;
+      p += i;
+
+      {
+        auto b = new Line(buf->allLine, l, s, p, byteLen, realLinenum);
+        if (!buf->lastLine || buf->lastLine == buf->currentLine) {
+          buf->lastLine = b;
+        }
+        buf->currentLine = b;
+        if (!buf->firstLine) {
+          buf->firstLine = b;
+        }
+      }
+    }
   }
 }
 
