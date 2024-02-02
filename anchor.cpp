@@ -451,8 +451,8 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
       if (!ls)
         continue;
     }
-    col = COLPOS(ls, a_form.start.pos);
-    ecol = COLPOS(ls, a_form.end.pos);
+    col = ls->bytePosToColumn(a_form.start.pos);
+    ecol = ls->bytePosToColumn(a_form.end.pos);
     for (j = 0; l && j < a_form.rows; l = l->next, j++) {
       pos = columnPos(l, col);
       if (j == 0) {

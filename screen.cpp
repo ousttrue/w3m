@@ -180,7 +180,6 @@ void refresh(FILE *ttyf) {
   int moved = RF_NEED_TO_MOVE;
   Utf8 *pc;
   l_prop *pr, mode = 0;
-  l_prop color = COL_FTERM;
   LineDirtyFlags *dirty;
 
   for (line = 0; line <= LASTLINE; line++) {

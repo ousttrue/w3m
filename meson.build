@@ -137,6 +137,7 @@ executable(
         'bufferpos.cpp',
         'httpauth.cpp',
         'line.cpp',
+        'lineprop.cpp',
     ],
     install: true,
     dependencies: [

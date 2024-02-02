@@ -33,9 +33,9 @@ Utf8Bytes detectByte(char8_t c) {
     return Utf8Bytes::Lead3;
   } else if (c <= 0xF4) {
     // 1111 0...
-  } else {
-    return Utf8Bytes::Invalid;
   }
+
+  return Utf8Bytes::Invalid;
 }
 
 std::string codepoint_to_utf8(char32_t codepoint) {

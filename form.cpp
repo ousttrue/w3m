@@ -372,7 +372,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
         break;
     }
     rows = form->rows ? form->rows : 1;
-    col = COLPOS(l, a->start.pos);
+    col = l->bytePosToColumn(a->start.pos);
     for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
       if (l == NULL)
         break;
@@ -385,9 +385,9 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
         epos = a->end.pos;
       }
       if (a->start.line != a->end.line || spos > epos || epos >= l->len ||
-          spos < 0 || epos < 0 || COLPOS(l, epos) < col)
+          spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
         break;
-      pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col, rows > 1,
+      pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col, rows > 1,
                              form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
         shiftAnchorPosition(buf->href, buf->hmarklist, a->start.line, spos,

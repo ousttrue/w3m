@@ -752,7 +752,7 @@ void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,
       i++;
     }
     l->len = i;
-    l->width = COLPOS(l, l->len);
+    l->width = l->bytePosToColumn(l->len);
     if (pos <= i)
       return;
     bpos += l->len;

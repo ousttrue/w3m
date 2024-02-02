@@ -2995,7 +2995,7 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
     while (l->next && l->next->bpos)
       l = l->next;
     if (l->width < 0)
-      l->width = COLPOS(l, l->len);
+      l->width = l->bytePosToColumn(l->len);
     len = l->bwidth + l->width;
   }
   if (Currentbuf->lastLine)

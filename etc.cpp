@@ -34,7 +34,7 @@ int columnSkip(Buffer *buf, int offset) {
   maxColumn = 0;
   for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
     if (l->width < 0)
-      l->width = COLPOS(l, l->len);
+      l->width = l->bytePosToColumn(l->len);
     if (l->width - 1 > maxColumn)
       maxColumn = l->width - 1;
   }
@@ -54,7 +54,7 @@ int columnPos(Line *line, int column) {
   int i;
 
   for (i = 1; i < line->len; i++) {
-    if (COLPOS(line, i) > column)
+    if (line->bytePosToColumn(i) > column)
       break;
   }
 
@@ -196,7 +196,7 @@ Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor) {
 
 int columnLen(Line *line, int column) {
   for (auto i = 0; i < line->len;) {
-    auto j = calcPosition(&line->lineBuf[i], &line->propBuf[i], line->len, i, 0,
+    auto j = bytePosToColumn(&line->lineBuf[i], &line->propBuf[i], line->len, i, 0,
                           false);
     if (j > column)
       return i;

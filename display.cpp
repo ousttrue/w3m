@@ -393,7 +393,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   }
   move(i, buf->rootX);
   if (l->width < 0)
-    l->width = COLPOS(l, l->len);
+    l->width = l->bytePosToColumn(l->len);
   if (l->len == 0 || l->width - 1 < column) {
     clrtoeolx();
     return l;
@@ -402,11 +402,11 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   pos = columnPos(l, column);
   p = &(l->lineBuf[pos]);
   pr = &(l->propBuf[pos]);
-  rcol = COLPOS(l, pos);
+  rcol = l->bytePosToColumn(pos);
 
   for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
     delta = get_mclen(&p[j]);
-    ncol = COLPOS(l, pos + j + delta);
+    ncol = l->bytePosToColumn(pos + j + delta);
     if (ncol - column > buf->COLS)
       break;
     if (rcol < column) {
@@ -484,13 +484,13 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
   pos = columnPos(l, column);
   p = &(l->lineBuf[pos]);
   pr = &(l->propBuf[pos]);
-  rcol = COLPOS(l, pos);
+  rcol = l->bytePosToColumn(pos);
   bcol = bpos - pos;
   ecol = epos - pos;
 
   for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
     delta = get_mclen(&p[j]);
-    ncol = COLPOS(l, pos + j + delta);
+    ncol = l->bytePosToColumn(pos + j + delta);
     if (ncol - column > buf->COLS)
       break;
     if (j >= bcol && j < ecol) {
@@ -746,10 +746,10 @@ void cursorRight(Buffer *buf, int n) {
   } else {
     buf->pos = l->len - 1;
   }
-  cpos = COLPOS(l, buf->pos);
+  cpos = l->bytePosToColumn(buf->pos);
   buf->visualpos = l->bwidth + cpos - buf->currentColumn;
   delta = 1;
-  vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
+  vpos2 = l->bytePosToColumn(buf->pos + delta) - buf->currentColumn - 1;
   if (vpos2 >= buf->COLS && n) {
     columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
     buf->visualpos = l->bwidth + cpos - buf->currentColumn;
@@ -773,7 +773,7 @@ void cursorLeft(Buffer *buf, int n) {
     return;
   } else
     buf->pos = 0;
-  cpos = COLPOS(l, buf->pos);
+  cpos = l->bytePosToColumn(buf->pos);
   buf->visualpos = l->bwidth + cpos - buf->currentColumn;
   if (buf->visualpos - l->bwidth < 0 && n) {
     columnSkip(buf, -n + buf->visualpos - l->bwidth -
@@ -821,8 +821,8 @@ void arrangeCursor(Buffer *buf) {
     buf->pos = 0;
   else if (buf->pos >= buf->currentLine->len)
     buf->pos = buf->currentLine->len - 1;
-  col = COLPOS(buf->currentLine, buf->pos);
-  col2 = COLPOS(buf->currentLine, buf->pos + delta);
+  col = buf->currentLine->bytePosToColumn(buf->pos);
+  col2 = buf->currentLine->bytePosToColumn(buf->pos + delta);
   if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
     buf->currentColumn = 0;
     if (col2 > buf->COLS)
@@ -831,7 +831,7 @@ void arrangeCursor(Buffer *buf) {
   /* Arrange cursor */
   buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
   buf->visualpos = buf->currentLine->bwidth +
-                   COLPOS(buf->currentLine, buf->pos) - buf->currentColumn;
+                   buf->currentLine->bytePosToColumn(buf->pos) - buf->currentColumn;
   buf->cursorX = buf->visualpos - buf->currentLine->bwidth;
 #ifdef DISPLAY_DEBUG
   fprintf(
@@ -850,7 +850,7 @@ void arrangeLine(Buffer *buf) {
   buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
   i = columnPos(buf->currentLine,
                 buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
-  cpos = COLPOS(buf->currentLine, i) - buf->currentColumn;
+  cpos = buf->currentLine->bytePosToColumn(i) - buf->currentColumn;
   if (cpos >= 0) {
     buf->cursorX = cpos;
     buf->pos = i;
