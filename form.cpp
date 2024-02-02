@@ -179,7 +179,7 @@ void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
   Anchor *a2;
   FormItemList *f2;
 
-  for (i = 0; i < buf->formitem->nanchor; i++) {
+  for (i = 0; i < buf->formitem->size(); i++) {
     a2 = &buf->formitem->anchors[i];
     f2 = (FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
@@ -199,7 +199,7 @@ void formResetBuffer(Buffer *buf, AnchorList *formitem) {
 
   if (buf == NULL || buf->formitem == NULL || formitem == NULL)
     return;
-  for (i = 0; i < buf->formitem->nanchor && i < formitem->nanchor; i++) {
+  for (i = 0; i < buf->formitem->size() && i < formitem->size(); i++) {
     a = &buf->formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
@@ -751,7 +751,7 @@ void preFormUpdateBuffer(Buffer *buf) {
         continue;
     } else
       continue;
-    for (i = 0; i < buf->formitem->nanchor; i++) {
+    for (i = 0; i < buf->formitem->size(); i++) {
       a = &buf->formitem->anchors[i];
       fi = (FormItemList *)a->url;
       fl = fi->parent;

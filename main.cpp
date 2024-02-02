@@ -1932,7 +1932,7 @@ void _followForm(int submit) {
     break;
 
   case FORM_INPUT_RESET:
-    for (int i = 0; i < Currentbuf->formitem->nanchor; i++) {
+    for (int i = 0; i < Currentbuf->formitem->size(); i++) {
       auto a2 = &Currentbuf->formitem->anchors[i];
       auto f2 = (FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&

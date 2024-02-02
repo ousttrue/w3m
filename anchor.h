@@ -1,5 +1,6 @@
 #pragma once
 #include <gc_cpp.h>
+#include <vector>
 
 extern bool MarkAllPages;
 extern int PagerMax;
@@ -25,9 +26,8 @@ struct Anchor {
 };
 
 struct AnchorList : public gc_cleanup {
-  Anchor *anchors = nullptr;
-  int nanchor = 0;
-  int anchormax = 0;
+  std::vector<Anchor> anchors;
+  size_t size() const { return anchors.size(); }
 
   AnchorList() {}
   ~AnchorList() {}
