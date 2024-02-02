@@ -202,8 +202,8 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
         lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
         Strcat(tmp, lineBuf2);
         if (thru)
-          addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
-                     FOLD_BUFFER_WIDTH, -1);
+          newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
+                             FOLD_BUFFER_WIDTH, -1);
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
       }
@@ -270,7 +270,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
     lineBuf2 = NULL;
   }
   if (thru)
-    addnewline(newBuf, "", propBuffer, 0, -1, -1);
+    newBuf->addnewline("", propBuffer, 0, -1, -1);
   if (src)
     fclose(src);
 }
@@ -832,8 +832,8 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     ++nlines;
     Strchop(lineBuf2);
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
-               FOLD_BUFFER_WIDTH, nlines);
+    newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
+                       FOLD_BUFFER_WIDTH, nlines);
   }
 _end:
   TRAP_OFF;

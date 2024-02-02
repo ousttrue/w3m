@@ -116,6 +116,19 @@ struct Buffer : public gc_cleanup {
 
   // shallow copy
   Buffer &operator=(const Buffer &src);
+
+  void pushLine(Line *l) {
+    if (!this->lastLine || this->lastLine == this->currentLine) {
+      this->lastLine = l;
+    }
+    this->currentLine = l;
+    if (!this->firstLine) {
+      this->firstLine = l;
+    }
+  }
+
+  void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,
+                  int realLinenum);
 };
 
 void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,

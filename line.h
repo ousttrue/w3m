@@ -44,4 +44,9 @@ public:
 
   // byte pos to column
   int bytePosToColumn(int pos) const;
+
+  Line *breakLine(int breakWidth);
 };
+
+int columnPos(Line *line, int column);
+int columnLen(Line *line, int column);

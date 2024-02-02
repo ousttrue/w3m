@@ -696,8 +696,8 @@ end:
   return newbuf;
 }
 
-void addnewline(Buffer *buf, const char *line, Lineprop *prop, int byteLen,
-                int breakWidth, int realLinenum) {
+void Buffer::addnewline(const char *line, Lineprop *prop, int byteLen,
+                        int breakWidth, int realLinenum) {
   char *s;
   Lineprop *p;
   if (byteLen > 0) {
@@ -710,55 +710,17 @@ void addnewline(Buffer *buf, const char *line, Lineprop *prop, int byteLen,
   }
 
   {
-    auto l =
-        new Line(++buf->allLine, buf->currentLine, s, p, byteLen, realLinenum);
-    if (!buf->lastLine || buf->lastLine == buf->currentLine) {
-      buf->lastLine = l;
-    }
-    buf->currentLine = l;
-    if (!buf->firstLine) {
-      buf->firstLine = l;
-    }
+    auto l = new Line(++this->allLine, this->currentLine, s, p, byteLen,
+                      realLinenum);
+    this->pushLine(l);
   }
 
   if (byteLen <= 0 || breakWidth <= 0) {
     return;
   }
 
-  {
-    int bpos = 0;
-    int bwidth = 0;
-    while (1) {
-
-      auto l = buf->currentLine;
-      l->bpos = bpos;
-      l->bwidth = bwidth;
-      int i = columnLen(l, breakWidth);
-      if (i == 0) {
-        i++;
-      }
-      l->len = i;
-      if (byteLen <= i) {
-        return;
-      }
-      byteLen -= i;
-
-      bpos += l->len;
-      bwidth += l->width();
-      s += i;
-      p += i;
-
-      {
-        auto b = new Line(buf->allLine, l, s, p, byteLen, realLinenum);
-        if (!buf->lastLine || buf->lastLine == buf->currentLine) {
-          buf->lastLine = b;
-        }
-        buf->currentLine = b;
-        if (!buf->firstLine) {
-          buf->firstLine = b;
-        }
-      }
-    }
+  while (auto l = this->currentLine->breakLine(breakWidth)) {
+    this->pushLine(l);
   }
 }
 
