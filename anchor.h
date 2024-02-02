@@ -1,4 +1,5 @@
 #pragma once
+#include <gc_cpp.h>
 
 extern bool MarkAllPages;
 extern int PagerMax;
@@ -23,11 +24,20 @@ struct Anchor {
   short rows;
 };
 
-struct AnchorList {
-  Anchor *anchors;
-  int nanchor;
-  int anchormax;
-  int acache;
+struct AnchorList : public gc_cleanup {
+  Anchor *anchors = nullptr;
+  int nanchor = 0;
+  int anchormax = 0;
+
+  AnchorList() {}
+  ~AnchorList() {}
+  AnchorList(const AnchorList &) = delete;
+  AnchorList &operator=(const AnchorList &) = delete;
+
+  Anchor *retrieveAnchor(int line, int pos);
+
+private:
+  int acache = -1;
 };
 
 struct HmarkerList {
@@ -41,7 +51,6 @@ AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
                       Anchor **anchor_return, const char *referer,
                       const char *title, unsigned char key, int line, int pos);
 int onAnchor(Anchor *a, int line, int pos);
-Anchor *retrieveAnchor(AnchorList *al, int line, int pos);
 Anchor *searchAnchor(AnchorList *al, const char *str);
 Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
 Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
@@ -58,8 +67,8 @@ Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
                     int pos);
 struct FormList;
 struct HtmlTag;
-Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag,
-                     int line, int pos);
+Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag, int line,
+                     int pos);
 
 Anchor *retrieveCurrentAnchor(Buffer *buf);
 Anchor *retrieveCurrentImg(Buffer *buf);

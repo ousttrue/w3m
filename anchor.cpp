@@ -26,15 +26,10 @@ int PagerMax = PAGER_MAX_LINE;
 AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
                       Anchor **anchor_return, const char *referer,
                       const char *title, unsigned char key, int line, int pos) {
-  int n, i, j;
-  Anchor *a;
-  BufferPoint bp = {0};
   if (al == NULL) {
-    al = (AnchorList *)New(AnchorList);
-    al->anchors = NULL;
-    al->nanchor = al->anchormax = 0;
-    al->acache = -1;
+    al = new AnchorList;
   }
+
   if (al->anchormax == 0) {
     /* first time; allocate anchor buffer */
     al->anchors = (Anchor *)New_N(Anchor, FIRST_ANCHOR_SIZE);
@@ -44,19 +39,26 @@ AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
     al->anchormax *= 2;
     al->anchors = (Anchor *)New_Reuse(Anchor, al->anchors, al->anchormax);
   }
+
+  BufferPoint bp = {0};
   bp.line = line;
   bp.pos = pos;
-  n = al->nanchor;
+
+  int n = al->nanchor;
+  int i;
   if (!n || bpcmp(al->anchors[n - 1].start, bp) < 0)
     i = n;
-  else
+  else {
     for (i = 0; i < n; i++) {
       if (bpcmp(al->anchors[i].start, bp) >= 0) {
-        for (j = n; j > i; j--)
+        for (int j = n; j > i; j--)
           al->anchors[j] = al->anchors[j - 1];
         break;
       }
     }
+  }
+
+  Anchor *a;
   a = &al->anchors[i];
   a->url = url;
   a->target = target;
@@ -94,8 +96,8 @@ Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
   return a;
 }
 
-Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag,
-                     int line, int pos) {
+Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag, int line,
+                     int pos) {
   Anchor *a;
   FormItemList *fi;
 
@@ -119,48 +121,48 @@ int onAnchor(Anchor *a, int line, int pos) {
   return 0;
 }
 
-Anchor *retrieveAnchor(AnchorList *al, int line, int pos) {
+Anchor *AnchorList::retrieveAnchor(int line, int pos) {
+
+  if (this->nanchor == 0)
+    return NULL;
+
+  if (this->acache < 0 || this->acache >= this->nanchor)
+    this->acache = 0;
+
   Anchor *a;
   size_t b, e;
   int cmp;
-
-  if (al == NULL || al->nanchor == 0)
-    return NULL;
-
-  if (al->acache < 0 || al->acache >= al->nanchor)
-    al->acache = 0;
-
-  for (b = 0, e = al->nanchor - 1; b <= e; al->acache = (b + e) / 2) {
-    a = &al->anchors[al->acache];
+  for (b = 0, e = this->nanchor - 1; b <= e; this->acache = (b + e) / 2) {
+    a = &this->anchors[this->acache];
     cmp = onAnchor(a, line, pos);
     if (cmp == 0)
       return a;
     else if (cmp > 0)
-      b = al->acache + 1;
-    else if (al->acache == 0)
+      b = this->acache + 1;
+    else if (this->acache == 0)
       return NULL;
     else
-      e = al->acache - 1;
+      e = this->acache - 1;
   }
   return NULL;
 }
 
 Anchor *retrieveCurrentAnchor(Buffer *buf) {
-  if (buf->currentLine == NULL)
+  if (!buf->currentLine || !buf->href)
     return NULL;
-  return retrieveAnchor(buf->href, buf->currentLine->linenumber, buf->pos);
+  return buf->href->retrieveAnchor(buf->currentLine->linenumber, buf->pos);
 }
 
 Anchor *retrieveCurrentImg(Buffer *buf) {
-  if (buf->currentLine == NULL)
+  if (!buf->currentLine || !buf->img)
     return NULL;
-  return retrieveAnchor(buf->img, buf->currentLine->linenumber, buf->pos);
+  return buf->img->retrieveAnchor(buf->currentLine->linenumber, buf->pos);
 }
 
 Anchor *retrieveCurrentForm(Buffer *buf) {
-  if (buf->currentLine == NULL)
+  if (!buf->currentLine || !buf->formitem)
     return NULL;
-  return retrieveAnchor(buf->formitem, buf->currentLine->linenumber, buf->pos);
+  return buf->formitem->retrieveAnchor(buf->currentLine->linenumber, buf->pos);
 }
 
 Anchor *searchAnchor(AnchorList *al, const char *str) {
@@ -617,7 +619,10 @@ Buffer *link_list_panel(Buffer *buf) {
         t = html_quote(url_decode2(a->url, buf));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
-      a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
+      if (!buf->formitem) {
+        continue;
+      }
+      a = buf->formitem->retrieveAnchor(a->start.line, a->start.pos);
       if (!a)
         continue;
       fi = (FormItemList *)a->url;

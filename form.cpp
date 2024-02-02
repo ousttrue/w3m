@@ -378,9 +378,9 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
     for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
       if (l == NULL)
         break;
-      if (rows > 1) {
+      if (rows > 1 && buf->formitem) {
         pos = columnPos(l, col);
-        a = retrieveAnchor(buf->formitem, l->linenumber, pos);
+        a = buf->formitem->retrieveAnchor(l->linenumber, pos);
         if (a == NULL)
           break;
         spos = a->start.pos;

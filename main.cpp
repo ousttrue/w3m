@@ -1971,9 +1971,12 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
     if (hseq >= hl->nmark)
       return;
     po = hl->marks + hseq;
-    an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-    if (an == NULL)
-      an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+    if (Currentbuf->href) {
+      an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+    }
+    if (an == NULL && Currentbuf->formitem) {
+      an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+    }
     hseq++;
   } while (an == NULL);
 
@@ -2005,9 +2008,12 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
     if (hseq < 0)
       return;
     po = hl->marks + hseq;
-    an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-    if (an == NULL)
-      an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+    if (Currentbuf->href) {
+      an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+    }
+    if (an == NULL && Currentbuf->formitem) {
+      an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+    }
     hseq--;
   } while (an == NULL);
 
@@ -2033,9 +2039,12 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
     return;
 
   po = hl->marks + n - 1;
-  an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-  if (an == NULL)
-    an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+  if (Currentbuf->href) {
+    an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+  }
+  if (an == NULL && Currentbuf->formitem) {
+    an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+  }
   if (an == NULL)
     return;
 
@@ -2097,9 +2106,12 @@ static void _nextA(int visited) {
           goto _end;
         }
         po = &hl->marks[hseq];
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-        if (visited != TRUE && an == NULL)
-          an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+        if (Currentbuf->href) {
+          an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+        }
+        if (visited != TRUE && an == NULL && Currentbuf->formitem) {
+          an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+        }
         hseq++;
         if (visited == TRUE && an) {
           parseURL2(an->url, &url, baseURL(Currentbuf));
@@ -2177,9 +2189,12 @@ static void _prevA(int visited) {
           goto _end;
         }
         po = hl->marks + hseq;
-        an = retrieveAnchor(Currentbuf->href, po->line, po->pos);
-        if (visited != TRUE && an == NULL)
-          an = retrieveAnchor(Currentbuf->formitem, po->line, po->pos);
+        if (Currentbuf->href) {
+          an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+        }
+        if (visited != TRUE && an == NULL && Currentbuf->formitem) {
+          an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+        }
         hseq--;
         if (visited == TRUE && an) {
           parseURL2((char *)an->url, &url, baseURL(Currentbuf));
@@ -2247,9 +2262,12 @@ static void nextX(int d, int dy) {
     an = NULL;
     while (1) {
       for (; x >= 0 && x < l->len; x += d) {
-        an = retrieveAnchor(Currentbuf->href, y, x);
-        if (!an)
-          an = retrieveAnchor(Currentbuf->formitem, y, x);
+        if (Currentbuf->href) {
+          an = Currentbuf->href->retrieveAnchor(y, x);
+        }
+        if (!an && Currentbuf->formitem) {
+          an = Currentbuf->formitem->retrieveAnchor(y, x);
+        }
         if (an) {
           pan = an;
           break;
@@ -2300,9 +2318,12 @@ static void nextY(int d) {
       hseq = abs(an->hseq);
     an = NULL;
     for (; y >= 0 && y <= Currentbuf->lastLine->linenumber; y += d) {
-      an = retrieveAnchor(Currentbuf->href, y, x);
-      if (!an)
-        an = retrieveAnchor(Currentbuf->formitem, y, x);
+      if (Currentbuf->href) {
+        an = Currentbuf->href->retrieveAnchor(y, x);
+      }
+      if (!an && Currentbuf->formitem) {
+        an = Currentbuf->formitem->retrieveAnchor(y, x);
+      }
       if (an && hseq != abs(an->hseq)) {
         pan = an;
         break;
@@ -3886,7 +3907,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
 int main(int argc, char **argv) {
   Buffer *newbuf = NULL;
   char *p;
-  int c, i;
+  int i;
   input_stream *redin;
   char *line_str = NULL;
   const char **load_argv;
@@ -3936,11 +3957,11 @@ int main(int argc, char **argv) {
   for (i = 1; i < argc; i++) {
     if (*argv[i] == '-') {
       if (!strcmp("-config", argv[i])) {
-        argv[i] = "-dummy";
+        argv[i] = (char *)"-dummy";
         if (++i >= argc)
           usage();
         config_file = argv[i];
-        argv[i] = "-dummy";
+        argv[i] = (char *)"-dummy";
       } else if (!strcmp("-h", argv[i]) || !strcmp("-help", argv[i]))
         help();
       else if (!strcmp("-V", argv[i]) || !strcmp("-version", argv[i])) {
