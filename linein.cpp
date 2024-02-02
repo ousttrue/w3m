@@ -167,9 +167,9 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
   need_redraw = false;
 
   do {
-    x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
+    x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, true);
     if (x - rpos > offset) {
-      y = calcPosition(strBuf->ptr, strProp, CLen, CLen, 0, CP_AUTO);
+      y = calcPosition(strBuf->ptr, strProp, CLen, CLen, 0, false);
       if (y - epos > x - rpos)
         offset = x - rpos;
       else if (y - epos > 0)
@@ -274,7 +274,7 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
 }
 
 static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
-  auto ncol = calcPosition(p, pr, len, len, 0, CP_AUTO);
+  auto ncol = calcPosition(p, pr, len, len, 0, false);
   if (ncol > offset + limit) {
     ncol = offset + limit;
   }
@@ -292,19 +292,19 @@ static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
 
   if (offset) {
     for (i = 0; i < len; i++) {
-      if (calcPosition(p, pr, len, i, 0, CP_AUTO) > offset)
+      if (calcPosition(p, pr, len, i, 0, false) > offset)
         break;
     }
     if (i >= len)
       return;
     addChar('{', 0);
     rcol = offset + 1;
-    ncol = calcPosition(p, pr, len, i, 0, CP_AUTO);
+    ncol = calcPosition(p, pr, len, i, 0, false);
     for (; rcol < ncol; rcol++)
       addChar(' ', 0);
   }
   for (; i < len; i += delta) {
-    ncol = calcPosition(p, pr, len, i + delta, 0, CP_AUTO);
+    ncol = calcPosition(p, pr, len, i + delta, 0, false);
     if (ncol - offset > limit)
       break;
     if (p[i] == '\t') {

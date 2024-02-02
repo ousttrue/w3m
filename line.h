@@ -85,13 +85,10 @@ struct Line : public gc_cleanup {
   Line &operator=(const Line &) = delete;
 };
 
-/* Flags for calcPosition() */
-#define CP_AUTO 0
-#define CP_FORCE 1
-
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
+#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, false)
 
 #define checkType(a, b, c) _checkType(a, b)
 struct Str;
 Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor);
-int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos, int mode);
+int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
+                 bool forceCalc);

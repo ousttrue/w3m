@@ -194,52 +194,10 @@ Str *checkType(Str *s, Lineprop **oprop, Linecolor **ocolor) {
 //   }
 // }
 
-int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos, int mode) {
-  if (l == NULL || len == 0 || pos < 0)
-    return bpos;
-
-  static std::vector<int> realColumn;
-  static char *prevl = NULL;
-  if (l == prevl && mode == CP_AUTO) {
-    if (pos <= len)
-      return realColumn[pos];
-  }
-
-  realColumn.clear();
-  prevl = l;
-  int i = 0;
-  int j = bpos;
-  for (; i < len;) {
-    if (pr[i] & PC_CTRL) {
-      realColumn.push_back(j);
-      if (l[i] == '\t')
-        j += Tabstop - (j % Tabstop);
-      else if (l[i] == '\n')
-        j += 1;
-      else if (l[i] != '\r')
-        j += 2;
-      ++i;
-    } else {
-      auto utf8 = Utf8::from((const char8_t *)&l[i]);
-      auto [cp, bytes] = utf8.codepoint();
-      for (int k = 0; k < bytes; ++k) {
-        realColumn.push_back(j);
-        ++i;
-      }
-      j += utf8.width();
-    }
-  }
-  realColumn.push_back(j);
-  if (pos < static_cast<int>(realColumn.size())) {
-    return realColumn[pos];
-  }
-  return j;
-}
-
 int columnLen(Line *line, int column) {
   for (auto i = 0; i < line->len;) {
     auto j = calcPosition(&line->lineBuf[i], &line->propBuf[i], line->len, i, 0,
-                          CP_AUTO);
+                          false);
     if (j > column)
       return i;
     auto utf8 = Utf8::from((const char8_t *)&line->lineBuf[i]);
