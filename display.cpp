@@ -18,6 +18,7 @@
 #include <math.h>
 
 bool displayLink = false;
+bool enable_inline_image = false;
 
 /* *INDENT-OFF* */
 

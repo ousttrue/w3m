@@ -91,8 +91,6 @@ static int searchKeyNum(void);
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
 
-int enable_inline_image;
-
 static void fversion(FILE *f) {
   fprintf(f, "w3m version %s, options %s\n", w3m_version,
 #if LANG == JA

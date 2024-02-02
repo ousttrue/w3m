@@ -49,9 +49,10 @@
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
+bool TargetSelf = false;
 const char *rc_dir = nullptr;
-int multicolList = FALSE;
-int DecodeURL = FALSE;
+bool multicolList = false;
+bool DecodeURL = false;
 
 #define _(Text) Text
 #define N_(Text) Text

@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 extern const char *rc_dir;
-extern int multicolList;
-extern int DecodeURL;
+extern bool multicolList;
+extern bool DecodeURL;
 
 struct ParsedURL;
 void show_params(FILE *fp);

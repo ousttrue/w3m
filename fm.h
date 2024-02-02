@@ -50,19 +50,6 @@
  * Globals.
  */
 
-global int ShowEffect init(TRUE);
-
-global char SearchHeader init(FALSE);
-global const char *DefaultType init(nullptr);
-
-global char TargetSelf init(FALSE);
-global char DecodeCTE init(FALSE);
-global char AutoUncompress init(FALSE);
-global char PreserveTimestamp init(TRUE);
-
-global char *personal_document_root init(nullptr);
-
-extern int enable_inline_image;
 
 global int confirm_on_quit init(TRUE);
 global int vi_prec_num init(FALSE);

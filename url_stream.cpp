@@ -30,6 +30,8 @@
 #include <fcntl.h>
 
 bool PermitSaveToPipe = false;
+bool AutoUncompress = false;
+bool PreserveTimestamp = true;
 
 static JMP_BUF AbortLoading;
 static void KeyAbort(SIGNAL_ARG) {

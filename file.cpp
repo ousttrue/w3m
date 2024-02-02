@@ -49,7 +49,10 @@
 #include <fcntl.h>
 #include <utime.h>
 
+bool SearchHeader = false;
 int FollowRedirection = 10;
+const char *DefaultType = nullptr;
+bool DecodeCTE = false;
 
 static JMP_BUF AbortLoading;
 static void KeyAbort(SIGNAL_ARG) {

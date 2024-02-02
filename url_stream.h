@@ -7,6 +7,8 @@
 extern char *index_file;
 extern bool use_lessopen;
 extern bool PermitSaveToPipe;
+extern bool AutoUncompress;
+extern bool PreserveTimestamp;
 
 struct URLOption {
   char *referer;

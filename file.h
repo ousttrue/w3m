@@ -2,7 +2,11 @@
 #include <time.h>
 
 int is_html_type(const char *type);
+
+extern bool SearchHeader;
 extern int FollowRedirection;
+extern const char *DefaultType;
+extern bool DecodeCTE;
 
 struct Buffer;
 struct ParsedURL;

@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
+extern bool ShowEffect;
+extern char *personal_document_root;
+
 pid_t open_pipe_rw(FILE **fr, FILE **fw);
 const char *file_to_url(const char *file);
 int is_localhost(const char *host);

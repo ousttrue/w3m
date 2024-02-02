@@ -24,6 +24,9 @@
 #include <sys/wait.h>
 #endif
 
+bool ShowEffect = true;
+char *personal_document_root = nullptr;
+
 int columnSkip(Buffer *buf, int offset) {
   int i, maxColumn;
   int column = buf->currentColumn + offset;
