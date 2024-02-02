@@ -1398,7 +1398,7 @@ static void gotoLabel(const char *label) {
     return;
   }
   buf = new Buffer(Currentbuf->width);
-  copyBuffer(buf, Currentbuf);
+  *buf = *Currentbuf;
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
   buf->currentURL.label = allocStr(label, -1);
@@ -2797,7 +2797,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
   auto sbuf = new Buffer(0);
-  copyBuffer(sbuf, Currentbuf);
+  *sbuf = *Currentbuf;
 
   multipart = 0;
   if (Currentbuf->form_submit) {
@@ -3263,7 +3263,7 @@ static void _newT(void) {
     return;
 
   buf = new Buffer(Currentbuf->width);
-  copyBuffer(buf, Currentbuf);
+  *buf = *Currentbuf;
   buf->nextBuffer = NULL;
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;

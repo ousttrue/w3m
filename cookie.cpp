@@ -649,10 +649,11 @@ Buffer *cookie_list_panel(void) {
       strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&p->expires));
 #else  /* not HAVE_STRFTIME */
       struct tm *gmt;
-      static char *dow[] = {"Sun ", "Mon ", "Tue ", "Wed ",
-                            "Thu ", "Fri ", "Sat "};
-      static char *month[] = {"Jan ", "Feb ", "Mar ", "Apr ", "May ", "Jun ",
-                              "Jul ", "Aug ", "Sep ", "Oct ", "Nov ", "Dec "};
+      static const char *dow[] = {"Sun ", "Mon ", "Tue ", "Wed ",
+                                  "Thu ", "Fri ", "Sat "};
+      static const char *month[] = {"Jan ", "Feb ", "Mar ", "Apr ",
+                                    "May ", "Jun ", "Jul ", "Aug ",
+                                    "Sep ", "Oct ", "Nov ", "Dec "};
       gmt = gmtime(&p->expires);
       strcpy(tmp2, dow[gmt->tm_wday]);
       sprintf(&tmp2[4], "%02d ", gmt->tm_mday);

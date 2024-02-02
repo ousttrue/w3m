@@ -323,7 +323,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
   Line *l;
 
   auto save = new Buffer(0);
-  copyBuffer(save, buf);
+  *save = *buf;
   gotoLine(buf, a->start.line);
   switch (form->type) {
   case FORM_TEXTAREA:
@@ -402,7 +402,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
     }
     break;
   }
-  copyBuffer(buf, save);
+  *buf = *save;
   arrangeLine(buf);
 }
 

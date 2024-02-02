@@ -91,7 +91,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->check_url = src.check_url;
   this->document_header = src.document_header;
   this->form_submit = src.form_submit;
-  this->savecache = src.savecache;
   this->edit = src.edit;
   this->mailcap = src.mailcap;
   this->mailcap_source = src.mailcap_source;
@@ -139,8 +138,6 @@ void discardBuffer(Buffer *buf) {
       continue;
     b->linkBuffer[REV_LB[i]] = NULL;
   }
-  if (buf->savecache)
-    unlink(buf->savecache);
   if (--buf->clone->count)
     return;
   if (buf->sourcefile &&
@@ -487,8 +484,7 @@ void reshapeBuffer(Buffer *buf) {
     return;
 
   auto sbuf = new Buffer(0);
-  ;
-  copyBuffer(sbuf, buf);
+  *sbuf = *buf;
   clearBuffer(buf);
 
   buf->href = NULL;
@@ -556,13 +552,6 @@ void reshapeBuffer(Buffer *buf) {
   formResetBuffer(buf, sbuf->formitem);
 }
 
-/* shallow copy */
-void copyBuffer(Buffer *a, Buffer *b) {
-  b->readBufferCache();
-  *a = *b;
-  // bcopy((void *)b, (void *)a, sizeof(Buffer));
-}
-
 Buffer *prevBuffer(Buffer *first, Buffer *buf) {
   Buffer *b;
 
@@ -573,111 +562,6 @@ Buffer *prevBuffer(Buffer *first, Buffer *buf) {
 
 #define fwrite1(d, f) (fwrite(&d, sizeof(d), 1, f) == 0)
 #define fread1(d, f) (fread(&d, sizeof(d), 1, f) == 0)
-
-int writeBufferCache(Buffer *buf) {
-  Str *tmp;
-  FILE *cache = NULL;
-  Line *l;
-
-  if (buf->savecache)
-    return -1;
-
-  if (buf->firstLine == NULL)
-    goto _error1;
-
-  tmp = tmpfname(TMPF_CACHE, NULL);
-  buf->savecache = tmp->ptr;
-  cache = fopen(buf->savecache, "w");
-  if (!cache)
-    goto _error1;
-
-  if (fwrite1(buf->currentLine->linenumber, cache) ||
-      fwrite1(buf->topLine->linenumber, cache))
-    goto _error;
-
-  for (l = buf->firstLine; l; l = l->next) {
-    if (fwrite1(l->real_linenumber, cache) || fwrite1(l->usrflags, cache) ||
-        fwrite1(l->width, cache) || fwrite1(l->len, cache) ||
-        fwrite1(l->size, cache) || fwrite1(l->bpos, cache) ||
-        fwrite1(l->bwidth, cache))
-      goto _error;
-    if (l->bpos == 0) {
-      if (static_cast<int>(fwrite(l->lineBuf, 1, l->size, cache)) < l->size ||
-          static_cast<int>(
-              fwrite(l->propBuf, sizeof(Lineprop), l->size, cache)) < l->size)
-        goto _error;
-    }
-  }
-
-  fclose(cache);
-  return 0;
-_error:
-  fclose(cache);
-  unlink(buf->savecache);
-_error1:
-  buf->savecache = NULL;
-  return -1;
-}
-
-bool Buffer::readBufferCache() {
-  if (!this->savecache) {
-    return false;
-  }
-
-  auto cache = fopen(this->savecache, "r");
-  int clnum, tlnum;
-  if (cache == NULL || fread1(clnum, cache) || fread1(tlnum, cache)) {
-    if (cache) {
-      fclose(cache);
-    }
-    this->savecache = NULL;
-    return false;
-  }
-
-  Line *l = NULL, *prevl = NULL, *basel = NULL;
-  long lnum = 0;
-  while (!feof(cache)) {
-    lnum++;
-    prevl = l;
-
-    l = new Line(lnum, prevl);
-    if (!prevl)
-      this->firstLine = l;
-    l->linenumber = lnum;
-    if (lnum == clnum)
-      this->currentLine = l;
-    if (lnum == tlnum)
-      this->topLine = l;
-    if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) ||
-        fread1(l->width, cache) || fread1(l->len, cache) ||
-        fread1(l->size, cache) || fread1(l->bpos, cache) ||
-        fread1(l->bwidth, cache))
-      break;
-    if (l->bpos == 0) {
-      basel = l;
-      l->lineBuf = (char *)NewAtom_N(char, l->size + 1);
-      fread(l->lineBuf, 1, l->size, cache);
-      l->lineBuf[l->size] = '\0';
-      l->propBuf = (Lineprop *)NewAtom_N(Lineprop, l->size);
-      fread(l->propBuf, sizeof(Lineprop), l->size, cache);
-    } else if (basel) {
-      l->lineBuf = basel->lineBuf + l->bpos;
-      l->propBuf = basel->propBuf + l->bpos;
-    }
-
-    break;
-  }
-
-  if (prevl) {
-    this->lastLine = prevl;
-    this->lastLine->next = NULL;
-  }
-
-  fclose(cache);
-  unlink(this->savecache);
-  this->savecache = NULL;
-  return true;
-}
 
 /* append links */
 static void append_link_info(Buffer *buf, Str *html, LinkList *link) {

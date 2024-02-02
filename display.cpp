@@ -178,9 +178,6 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
 
   if (!buf)
     return;
-  if (!buf->topLine && buf->readBufferCache()) { /* clear_buffer */
-    mode = B_FORCE_REDRAW;
-  }
 
   if (buf->width == 0)
     buf->width = INIT_BUFFER_WIDTH;

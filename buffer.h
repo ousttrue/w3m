@@ -95,7 +95,6 @@ struct Buffer : public gc_cleanup {
   char check_url = 0;
   TextList *document_header = nullptr;
   FormItemList *form_submit = nullptr;
-  const char *savecache = nullptr;
   const char *edit = nullptr;
   struct mailcap *mailcap = nullptr;
   const char *mailcap_source = nullptr;
@@ -114,9 +113,9 @@ struct Buffer : public gc_cleanup {
   Buffer(int width);
   ~Buffer();
   Buffer(const Buffer &src) { *this = src; }
-  Buffer &operator=(const Buffer &src);
 
-  bool readBufferCache();
+  // shallow copy
+  Buffer &operator=(const Buffer &src);
 };
 
 #define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
