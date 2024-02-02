@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #define DEF_AUDIO_PLAYER "showaudio"
+#define DEF_IMAGE_VIEWER "display"
 
 static struct mailcap DefaultMailcap[] = {
     {"image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL}, /* */

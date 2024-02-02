@@ -27,6 +27,7 @@
 #endif
 #include <sys/ioctl.h>
 
+#define HAVE_SYS_SELECT_H 1
 #define HAVE_TERMIOS_H 1
 #define DEFAULT_TERM 0 /* XXX */
 

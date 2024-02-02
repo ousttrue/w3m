@@ -44,9 +44,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
 #include <sys/wait.h>
-#endif
 #include <time.h>
 #include <stdlib.h>
 #include <gc.h>
@@ -222,14 +220,7 @@ static void sig_chld(int signo) {
   int p_stat;
   pid_t pid;
 
-#ifdef HAVE_WAITPID
-  while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0)
-#elif HAVE_WAIT3
-  while ((pid = wait3(&p_stat, WNOHANG, NULL)) > 0)
-#else
-  if ((pid = wait(&p_stat)) > 0)
-#endif
-  {
+  while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
     DownloadList *d;
 
     if (WIFEXITED(p_stat)) {
@@ -3109,13 +3100,11 @@ void w3m_exit(int i) {
   stopDownload();
   deleteFiles();
   free_ssl_ctx();
-#ifdef HAVE_MKDTEMP
   if (mkd_tmp_dir)
     if (rmdir(mkd_tmp_dir) != 0) {
       fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
       exit(1);
     }
-#endif
   exit(i);
 }
 

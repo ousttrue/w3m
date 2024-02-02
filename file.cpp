@@ -1042,7 +1042,6 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
     command = tmp;
   }
 
-#ifdef HAVE_SETPGRP
   if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
       !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
     flush_tty();
@@ -1054,9 +1053,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
       myExec(command->ptr);
     }
     return NO_BUFFER;
-  } else
-#endif
-  {
+  } else {
     if (save2tmp(&uf, tmpf->ptr) < 0) {
       return NULL;
     }
@@ -1151,9 +1148,6 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   const char *p, *q = NULL;
   pid_t pid;
   char *lock;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-  FILE *f;
-#endif
   struct stat st;
   long long size = 0;
   int is_pipe = FALSE;
@@ -1190,13 +1184,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       return -1;
     }
     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
     symlink(p, lock);
-#else
-    f = fopen(lock, "w");
-    if (f)
-      fclose(f);
-#endif
     flush_tty();
     pid = fork();
     if (!pid) {

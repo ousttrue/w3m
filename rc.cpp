@@ -47,10 +47,10 @@
 #define RC_DIR "~/.w3m"
 #endif
 
+#define HAVE_FACCESSAT 1
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
-#define DEF_IMAGE_VIEWER "display"
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
@@ -996,23 +996,19 @@ void init_tmp(void) {
   return;
 
 tmp_dir_err:
-#ifdef HAVE_MKDTEMP
   if (mkd_tmp_dir) {
     tmp_dir = mkd_tmp_dir;
     return;
   }
-#endif
   if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') &&
       ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') &&
       ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
     tmp_dir = "/tmp";
-#ifdef HAVE_MKDTEMP
   tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
   if (tmp_dir)
     mkd_tmp_dir = tmp_dir;
   else
     tmp_dir = rc_dir;
-#endif
   return;
 }
 

@@ -10,6 +10,9 @@
 #include <gc.h>
 #include "myctype.h"
 #include "entity.h"
+#define HAVE_GETWD 1
+#define HAVE_GETCWD 1
+#define HAVE_BCOPY 1
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */

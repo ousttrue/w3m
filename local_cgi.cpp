@@ -10,25 +10,29 @@
 #include "signal_util.h"
 #include "alloc.h"
 #include "proto.h"
+#include "hash.h"
+#include "indep.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <errno.h>
-#ifdef HAVE_READLINK
 #include <unistd.h>
-#endif /* HAVE_READLINK */
-#include "hash.h"
-#include "indep.h"
 #include <time.h>
-
+#define HAVE_DIRENT_H 1
 #define DEV_NULL_PATH "/dev/null"
+#define HAVE_LSTAT 1
+
 char *cgi_bin = nullptr;
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
 #define CGIFN_CGIBIN 2
+#define HAVE_CHDIR 1
+#define HAVE_PUTENV 1
+#define HAVE_SETENV 1
+#define HAVE_READLINK 1
 
 static Str *Local_cookie = NULL;
 static char *Local_cookie_file = NULL;

@@ -509,9 +509,6 @@ int doFileSave(UrlStream *uf, const char *defstr) {
   pid_t pid;
   char *lock;
   const char *tmpf = NULL;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-  FILE *f;
-#endif
 
   if (fmInitialized) {
     p = searchKeyData();
@@ -524,19 +521,13 @@ int doFileSave(UrlStream *uf, const char *defstr) {
     if (!couldWrite(p))
       return -1;
     if (checkSaveFile(uf->stream, p) < 0) {
-      /* FIXME: gettextize? */
       msg = Sprintf("Can't save. Load file and %s are identical.", p);
       disp_err_message(msg->ptr, FALSE);
       return -1;
     }
     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
     symlink(p, lock);
-#else
-    f = fopen(lock, "w");
-    if (f)
-      fclose(f);
-#endif
+
     flush_tty();
     pid = fork();
     if (!pid) {

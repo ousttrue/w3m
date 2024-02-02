@@ -33,6 +33,7 @@
 ***************************************************************************/
 
 #include "config.h"
+#define HAVE_FLOAT_H 1
 #include "matrix.h"
 #include "alloc.h"
 

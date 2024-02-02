@@ -22,6 +22,7 @@ extern int symbol_width0;
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */
 
+#define MATRIX
 #ifdef MATRIX
 #ifdef MESCHACH
 #include <matrix2.h>
@@ -88,6 +89,7 @@ struct table_linfo {
   short length;
 };
 
+#define ID_EXT
 struct GeneralList;
 struct TextList;
 struct table {

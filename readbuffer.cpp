@@ -25,6 +25,7 @@
 #include <math.h>
 #include <algorithm>
 
+#define ENABLE_REMOVE_TRAILINGSPACES
 #define url_quote_conv(x, c) url_quote(x)
 
 bool pseudoInlines = true;

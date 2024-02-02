@@ -8,6 +8,11 @@
 #ifndef FALSE
 #define FALSE 0
 #endif /* FALSE */
+#define HAVE_STRCHR 1
+#define HAVE_STRCASESTR 1
+#define HAVE_STRCASECMP 1
+#define HAVE_ATOLL 1
+#define HAVE_STRTOLL 1
 
 #define RAW_MODE 0
 #define PAGER_MODE 1
