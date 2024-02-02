@@ -175,7 +175,6 @@ extern TabBuffer *newTab(void);
 extern void calcTabPos(void);
 extern TabBuffer *deleteTab(TabBuffer *tab);
 
-extern Buffer *newBuffer(int width);
 extern Buffer *nullBuffer(void);
 extern void clearBuffer(Buffer *buf);
 extern void discardBuffer(Buffer *buf);

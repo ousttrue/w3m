@@ -175,11 +175,10 @@ int formtype(const char *typestr) {
 }
 
 void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
-  int i;
   Anchor *a2;
   FormItemList *f2;
 
-  for (i = 0; i < buf->formitem->size(); i++) {
+  for (size_t i = 0; i < buf->formitem->size(); i++) {
     a2 = &buf->formitem->anchors[i];
     f2 = (FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
@@ -193,13 +192,12 @@ void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
 }
 
 void formResetBuffer(Buffer *buf, AnchorList *formitem) {
-  int i;
   Anchor *a;
   FormItemList *f1, *f2;
 
   if (buf == NULL || buf->formitem == NULL || formitem == NULL)
     return;
-  for (i = 0; i < buf->formitem->size() && i < formitem->size(); i++) {
+  for (size_t i = 0; i < buf->formitem->size() && i < formitem->size(); i++) {
     a = &buf->formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
@@ -320,12 +318,12 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
 }
 
 void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
-  Buffer save;
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   Line *l;
 
-  copyBuffer(&save, buf);
+  auto save = new Buffer(0);
+  copyBuffer(save, buf);
   gotoLine(buf, a->start.line);
   switch (form->type) {
   case FORM_TEXTAREA:
@@ -404,7 +402,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
     }
     break;
   }
-  copyBuffer(buf, &save);
+  copyBuffer(buf, save);
   arrangeLine(buf);
 }
 
@@ -733,7 +731,6 @@ void loadPreForm(void) {
 void preFormUpdateBuffer(Buffer *buf) {
   struct pre_form *pf;
   struct pre_form_item *pi;
-  int i;
   Anchor *a;
   FormList *fl;
   FormItemList *fi;
@@ -751,7 +748,7 @@ void preFormUpdateBuffer(Buffer *buf) {
         continue;
     } else
       continue;
-    for (i = 0; i < buf->formitem->size(); i++) {
+    for (size_t i = 0; i < buf->formitem->size(); i++) {
       a = &buf->formitem->anchors[i];
       fi = (FormItemList *)a->url;
       fl = fi->parent;

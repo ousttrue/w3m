@@ -581,16 +581,15 @@ static void disp_srchresult(int result, const char *prompt, const char *str) {
 }
 
 static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
-  static Buffer sbuf;
-  char *str;
-  int do_next_search = FALSE;
+  bool do_next_search = false;
 
+  static Buffer *sbuf = new Buffer(0);
   if (ch == 0 && buf == NULL) {
-    SAVE_BUFPOSITION(&sbuf); /* search starting point */
+    SAVE_BUFPOSITION(sbuf); /* search starting point */
     return -1;
   }
 
-  str = buf->ptr;
+  auto str = buf->ptr;
   switch (ch) {
   case 022: /* C-r */
     searchRoutine = backwardSearch;
@@ -610,11 +609,11 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     if (*str) {
       if (searchRoutine == forwardSearch)
         Currentbuf->pos += 1;
-      SAVE_BUFPOSITION(&sbuf);
+      SAVE_BUFPOSITION(sbuf);
       if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
         Currentbuf->pos -= 1;
-        SAVE_BUFPOSITION(&sbuf);
+        SAVE_BUFPOSITION(sbuf);
       }
       arrangeCursor(Currentbuf);
       displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -623,7 +622,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     } else
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
-    RESTORE_BUFPOSITION(&sbuf);
+    RESTORE_BUFPOSITION(sbuf);
     arrangeCursor(Currentbuf);
     srchcore(str, searchRoutine);
     arrangeCursor(Currentbuf);
@@ -634,8 +633,8 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
 }
 
 static void isrch(int (*func)(Buffer *, const char *), const char *prompt) {
-  Buffer sbuf;
-  SAVE_BUFPOSITION(&sbuf);
+  auto sbuf = new Buffer(0);
+  SAVE_BUFPOSITION(sbuf);
   dispincsrch(0, NULL, NULL); /* initialize incremental search state */
 
   searchRoutine = func;
@@ -1477,7 +1476,7 @@ static void gotoLabel(const char *label) {
     disp_message(Sprintf("%s is not found", label)->ptr, TRUE);
     return;
   }
-  buf = newBuffer(Currentbuf->width);
+  buf = new Buffer(Currentbuf->width);
   copyBuffer(buf, Currentbuf);
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
@@ -1932,7 +1931,7 @@ void _followForm(int submit) {
     break;
 
   case FORM_INPUT_RESET:
-    for (int i = 0; i < Currentbuf->formitem->size(); i++) {
+    for (size_t i = 0; i < Currentbuf->formitem->size(); i++) {
       auto a2 = &Currentbuf->formitem->anchors[i];
       auto f2 = (FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
@@ -2827,7 +2826,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     }
   }
 
-  buf = newBuffer(INIT_BUFFER_WIDTH);
+  buf = new Buffer(INIT_BUFFER_WIDTH);
 
   if (is_html_type(Currentbuf->type)) {
     buf->type = "text/plain";
@@ -2868,7 +2867,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew") {
-  Buffer *buf, sbuf;
   Str *url;
   FormList *request;
   int multipart;
@@ -2889,7 +2887,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     disp_err_message("Can't reload stdin", TRUE);
     return;
   }
-  copyBuffer(&sbuf, Currentbuf);
+  auto sbuf = new Buffer(0);
+  copyBuffer(sbuf, Currentbuf);
 
   multipart = 0;
   if (Currentbuf->form_submit) {
@@ -2907,19 +2906,17 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     request = NULL;
   }
   url = parsedURL2Str(&Currentbuf->currentURL);
-  /* FIXME: gettextize? */
   message("Reloading...", 0, 0);
   refresh(term_io());
   SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
-  buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
+  auto buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
   SearchHeader = FALSE;
   DefaultType = NULL;
 
   if (multipart)
     unlink(request->body);
   if (buf == NULL) {
-    /* FIXME: gettextize? */
     disp_err_message("Can't reload...", TRUE);
     return;
   } else if (buf == NO_BUFFER) {
@@ -2927,18 +2924,18 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
   repBuffer(Currentbuf, buf);
-  if ((buf->type != NULL) && (sbuf.type != NULL) &&
-      ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf.type)) ||
-       (is_html_type(buf->type) && !strcasecmp(sbuf.type, "text/plain")))) {
+  if ((buf->type != NULL) && (sbuf->type != NULL) &&
+      ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf->type)) ||
+       (is_html_type(buf->type) && !strcasecmp(sbuf->type, "text/plain")))) {
     vwSrc();
     if (Currentbuf != buf)
       Firstbuf = deleteBuffer(Firstbuf, buf);
   }
-  Currentbuf->search_header = sbuf.search_header;
-  Currentbuf->form_submit = sbuf.form_submit;
+  Currentbuf->search_header = sbuf->search_header;
+  Currentbuf->form_submit = sbuf->form_submit;
   if (Currentbuf->firstLine) {
-    COPY_BUFROOT(Currentbuf, &sbuf);
-    restorePosition(Currentbuf, &sbuf);
+    COPY_BUFROOT(Currentbuf, sbuf);
+    restorePosition(Currentbuf, sbuf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -3363,7 +3360,7 @@ static void _newT(void) {
   if (!tag)
     return;
 
-  buf = newBuffer(Currentbuf->width);
+  buf = new Buffer(Currentbuf->width);
   copyBuffer(buf, Currentbuf);
   buf->nextBuffer = NULL;
   for (i = 0; i < MAX_LB; i++)
@@ -4337,7 +4334,7 @@ int main(int argc, char **argv) {
       nTab = 1;
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {
-      Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
+      Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH);
       Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
       Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
     } else

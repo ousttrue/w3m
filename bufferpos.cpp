@@ -26,18 +26,17 @@ void save_buffer_position(Buffer *buf) {
 }
 
 void resetPos(BufferPos *b) {
-  Buffer buf;
-
+  auto buf = new Buffer(0);
   auto top = new Line(b->top_linenumber);
-  buf.topLine = top;
+  buf->topLine = top;
 
   auto cur = new Line(b->cur_linenumber);
   cur->bpos = b->bpos;
 
-  buf.currentLine = cur;
-  buf.pos = b->pos;
-  buf.currentColumn = b->currentColumn;
-  restorePosition(Currentbuf, &buf);
+  buf->currentLine = cur;
+  buf->pos = b->pos;
+  buf->currentColumn = b->currentColumn;
+  restorePosition(Currentbuf, buf);
   Currentbuf->undo = b;
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

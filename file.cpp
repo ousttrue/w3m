@@ -1100,7 +1100,7 @@ load_doc: {
       refresh(term_io());
     }
     if (t_buf == NULL)
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH);
     readHeader(&f, t_buf, FALSE, &pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
@@ -1116,7 +1116,7 @@ load_doc: {
       UFclose(&f);
       current = (ParsedURL *)New(ParsedURL);
       copyParsedURL(current, &pu);
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
       goto load_doc;
@@ -1203,7 +1203,7 @@ load_doc: {
   } else if (searchHeader) {
     searchHeader = SearchHeader = FALSE;
     if (t_buf == NULL)
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH);
     readHeader(&f, t_buf, searchHeader_through, &pu);
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
@@ -1214,7 +1214,7 @@ load_doc: {
       add_auth_cookie_flag = 0;
       current = (ParsedURL *)New(ParsedURL);
       copyParsedURL(current, &pu);
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
       goto load_doc;
@@ -1320,7 +1320,7 @@ page_loaded:
   } else if (f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(t) || searchExtViewer(t))) {
       if (t_buf == NULL)
-        t_buf = newBuffer(INIT_BUFFER_WIDTH);
+        t_buf = new Buffer(INIT_BUFFER_WIDTH);
       uncompress_stream(&f, &t_buf->sourcefile);
       uncompressed_file_type(pu.file, &f.ext);
     } else {
@@ -1356,7 +1356,7 @@ page_loaded:
     }
   }
   if (t_buf == NULL)
-    t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    t_buf = new Buffer(INIT_BUFFER_WIDTH);
   copyParsedURL(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
@@ -1419,7 +1419,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   MySignalHandler prevtrap = NULL;
 
   if (newBuf == NULL)
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    newBuf = new Buffer(INIT_BUFFER_WIDTH);
 
   if (SETJMP(AbortLoading) != 0) {
     goto _end;
@@ -1572,7 +1572,7 @@ Buffer *getpipe(const char *cmd) {
   f = popen(cmd, "r");
   if (f == NULL)
     return NULL;
-  buf = newBuffer(INIT_BUFFER_WIDTH);
+  buf = new Buffer(INIT_BUFFER_WIDTH);
   buf->pagerSource = newFileStream(f, (void (*)())pclose);
   buf->filename = cmd;
   buf->buffername = Sprintf("%s %s", PIPEBUFFERNAME, cmd)->ptr;
@@ -1586,7 +1586,7 @@ Buffer *getpipe(const char *cmd) {
 Buffer *openPagerBuffer(input_stream *stream, Buffer *buf) {
 
   if (buf == NULL)
-    buf = newBuffer(INIT_BUFFER_WIDTH);
+    buf = new Buffer(INIT_BUFFER_WIDTH);
   buf->pagerSource = stream;
   buf->buffername = getenv("MAN_PN");
   if (buf->buffername == NULL)
@@ -1605,7 +1605,7 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
 
   init_stream(&uf, SCM_UNKNOWN, stream);
 
-  t_buf = newBuffer(INIT_BUFFER_WIDTH);
+  t_buf = new Buffer(INIT_BUFFER_WIDTH);
   copyParsedURL(&t_buf->currentURL, NULL);
   t_buf->currentURL.schema = SCM_LOCAL;
   t_buf->currentURL.file = "-";
@@ -1790,7 +1790,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   }
   if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
     if (defaultbuf == NULL)
-      defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
+      defaultbuf = new Buffer(INIT_BUFFER_WIDTH);
     if (defaultbuf->sourcefile)
       src = defaultbuf->sourcefile;
     else

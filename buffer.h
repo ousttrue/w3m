@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
 #include "line.h"
+#include <gc_cpp.h>
 #include <stddef.h>
 
 #define NO_BUFFER ((Buffer *)1)
@@ -43,7 +44,8 @@ struct Line;
 struct LinkList;
 struct BufferPos;
 struct AlarmEvent;
-struct Buffer {
+
+struct Buffer : public gc_cleanup {
   const char *filename;
   const char *buffername;
   Line *firstLine;
@@ -100,6 +102,11 @@ struct Buffer {
   Anchor *submit;
   BufferPos *undo;
   AlarmEvent *event;
+
+  Buffer(int width);
+  ~Buffer();
+  Buffer(const Buffer &) = delete;
+  Buffer &operator=(const Buffer &) = delete;
 };
 
 #define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
@@ -168,4 +175,3 @@ char *getCurWord(Buffer *buf, int *spos, int *epos);
 #define nextChar(s, l) (s)++
 #define prevChar(s, l) (s)--
 #define getChar(p) ((int)*(p))
-

@@ -1,6 +1,5 @@
 #include "buffer.h"
 #include "local_cgi.h"
-#include "alloc.h"
 #include "etc.h"
 #include "url_stream.h"
 #include "message.h"
@@ -21,6 +20,7 @@
 #include "indep.h"
 #include "istream.h"
 #include "proto.h"
+#include "alloc.h"
 #include <unistd.h>
 
 TabBuffer *CurrentTab;
@@ -39,40 +39,29 @@ int REV_LB[MAX_LB] = {
     LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
 };
 
-/*
- * Buffer creation
- */
-Buffer *newBuffer(int width) {
-  Buffer *n;
-
-  n = (Buffer *)New(Buffer);
-  if (n == NULL)
-    exit(3);
-  bzero((void *)n, sizeof(Buffer));
-  n->width = width;
-  n->COLS = COLS;
-  n->LINES = LASTLINE;
-  n->currentURL.schema = SCM_UNKNOWN;
-  n->baseURL = NULL;
-  n->baseTarget = NULL;
-  n->buffername = "";
-  n->bufferprop = BP_NORMAL;
-  n->clone = (int *)New(int);
-  *n->clone = 1;
-  n->trbyte = 0;
-  n->ssl_certificate = NULL;
-  n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
-  n->need_reshape = 1;         /* always reshape new buffers to mark URLs */
-  return n;
+Buffer::Buffer(int width) : width(width) {
+  this->COLS = ::COLS;
+  this->LINES = LASTLINE;
+  this->currentURL.schema = SCM_UNKNOWN;
+  this->baseURL = NULL;
+  this->baseTarget = NULL;
+  this->buffername = "";
+  this->bufferprop = BP_NORMAL;
+  this->clone = (int *)New(int);
+  *this->clone = 1;
+  this->trbyte = 0;
+  this->ssl_certificate = NULL;
+  this->check_url = MarkAllPages; /* use default from -o mark_all_pages */
+  this->need_reshape = 1;         /* always reshape new buffers to mark URLs */
 }
+
+Buffer::~Buffer() {}
 
 /*
  * Create null buffer
  */
 Buffer *nullBuffer(void) {
-  Buffer *b;
-
-  b = newBuffer(COLS);
+  auto b = new Buffer(COLS);
   b->buffername = "*Null*";
   return b;
 }
@@ -452,7 +441,6 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
  */
 void reshapeBuffer(Buffer *buf) {
   UrlStream f;
-  Buffer sbuf;
 
   if (!buf->need_reshape)
     return;
@@ -464,7 +452,9 @@ void reshapeBuffer(Buffer *buf) {
   examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile, &f);
   if (f.stream == NULL)
     return;
-  copyBuffer(&sbuf, buf);
+
+  auto sbuf = new Buffer(0);;
+  copyBuffer(sbuf, buf);
   clearBuffer(buf);
 
   buf->href = NULL;
@@ -500,11 +490,11 @@ void reshapeBuffer(Buffer *buf) {
   UFclose(&f);
 
   buf->height = LASTLINE + 1;
-  if (buf->firstLine && sbuf.firstLine) {
-    Line *cur = sbuf.currentLine;
+  if (buf->firstLine && sbuf->firstLine) {
+    Line *cur = sbuf->currentLine;
     int n;
 
-    buf->pos = sbuf.pos + cur->bpos;
+    buf->pos = sbuf->pos + cur->bpos;
     while (cur->bpos && cur->prev)
       cur = cur->prev;
     if (cur->real_linenumber > 0)
@@ -512,7 +502,7 @@ void reshapeBuffer(Buffer *buf) {
     else
       gotoLine(buf, cur->linenumber);
     n = (buf->currentLine->linenumber - buf->topLine->linenumber) -
-        (cur->linenumber - sbuf.topLine->linenumber);
+        (cur->linenumber - sbuf->topLine->linenumber);
     if (n) {
       buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
       if (cur->real_linenumber > 0)
@@ -524,12 +514,12 @@ void reshapeBuffer(Buffer *buf) {
     if (FoldLine && !is_html_type(buf->type))
       buf->currentColumn = 0;
     else
-      buf->currentColumn = sbuf.currentColumn;
+      buf->currentColumn = sbuf->currentColumn;
     arrangeCursor(buf);
   }
   if (buf->check_url & CHK_URL)
     chkURLBuffer(buf);
-  formResetBuffer(buf, sbuf.formitem);
+  formResetBuffer(buf, sbuf->formitem);
 }
 
 /* shallow copy */
