@@ -1534,7 +1534,7 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   srclist = src->parent;
   list = (FormList *)New(FormList);
   list->method = srclist->method;
-  list->action = Strdup(srclist->action);
+  list->action = srclist->action->Strdup();
   list->enctype = srclist->enctype;
   list->nitems = srclist->nitems;
   list->body = srclist->body;
@@ -1544,8 +1544,8 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
     item = (FormItemList *)New(FormItemList);
     item->type = srcitem->type;
-    item->name = Strdup(srcitem->name);
-    item->value = Strdup(srcitem->value);
+    item->name = srcitem->name->Strdup();
+    item->value = srcitem->value->Strdup();
     item->checked = srcitem->checked;
     item->accept = srcitem->accept;
     item->size = srcitem->size;
@@ -1612,11 +1612,11 @@ static void query_from_followform(Str **query, FormItemList *fi,
     if (multipart) {
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
-        *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
+        *query = conv_form_encoding(f2->name, fi, Currentbuf)->Strdup();
         Strcat_charp(*query, ".x");
         form_write_data(body, fi->parent->boundary, (*query)->ptr,
                         Sprintf("%d", x)->ptr);
-        *query = Strdup(conv_form_encoding(f2->name, fi, Currentbuf));
+        *query = conv_form_encoding(f2->name, fi, Currentbuf)->Strdup();
         Strcat_charp(*query, ".y");
         form_write_data(body, fi->parent->boundary, (*query)->ptr,
                         Sprintf("%d", y)->ptr);
@@ -1685,7 +1685,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
                     fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
   query_from_followform(&tmp, fi, multipart);
 
-  auto tmp2 = Strdup(fi->parent->action);
+  auto tmp2 = fi->parent->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
     tmp2 = Url2Str(&Currentbuf->currentURL);

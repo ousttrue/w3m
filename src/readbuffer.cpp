@@ -3333,7 +3333,7 @@ table_start:
       }
       if (h_env->tagbuf->length == 0)
         continue;
-      str = Strdup(h_env->tagbuf)->ptr;
+      str = h_env->tagbuf->Strdup()->ptr;
       if (*str == '<') {
         if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
           is_tag = TRUE;

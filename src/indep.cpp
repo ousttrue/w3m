@@ -4,6 +4,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
+#include <string.h>
 #include "indep.h"
 #include "Str.h"
 #include "alloc.h"

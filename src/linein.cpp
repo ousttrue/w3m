@@ -572,7 +572,7 @@ static void next_dcompl(int next) {
     return;
   cm_disp_next = 0;
 
-  d = Strdup(CDirBuf);
+  d = CDirBuf->Strdup();
   if (d->length > 0 && Strlastchar(d) != '/')
     Strcat_char(d, '/');
   if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
@@ -631,7 +631,7 @@ disp_next:
         break;
       move(y, j * len);
       clrtoeolx();
-      f = Strdup(d);
+      f = d->Strdup();
       Strcat_charp(f, CFileBuf[n]);
       addstr(CFileBuf[n]);
       if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
@@ -702,10 +702,10 @@ static Str *doComplete(Str *ifn, int *status, int next) {
     NCFileBuf = 0;
     if (cm_mode & CPL_ON)
       ifn = unescape_spaces(ifn);
-    CompleteBuf = Strdup(ifn);
+    CompleteBuf = ifn->Strdup();
     while (Strlastchar(CompleteBuf) != '/' && CompleteBuf->length > 0)
       Strshrink(CompleteBuf, 1);
-    CDirBuf = Strdup(CompleteBuf);
+    CDirBuf = CompleteBuf->Strdup();
     if (cm_mode & CPL_URL) {
       if (strncmp(CompleteBuf->ptr, "file://localhost/", 17) == 0)
         Strdelete(CompleteBuf, 0, 16);
@@ -715,7 +715,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
                CompleteBuf->ptr[6] != '/')
         Strdelete(CompleteBuf, 0, 5);
       else {
-        CompleteBuf = Strdup(ifn);
+        CompleteBuf = ifn->Strdup();
         *status = CPL_FAIL;
         return CompleteBuf;
       }
@@ -727,7 +727,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
       Strshrink(CompleteBuf, 1);
     }
     if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL) {
-      CompleteBuf = Strdup(ifn);
+      CompleteBuf = ifn->Strdup();
       *status = CPL_FAIL;
       if (cm_mode & CPL_ON)
         CompleteBuf = escape_spaces(CompleteBuf);
@@ -759,7 +759,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
     }
     closedir(d);
     if (NCFileBuf == 0) {
-      CompleteBuf = Strdup(ifn);
+      CompleteBuf = ifn->Strdup();
       *status = CPL_FAIL;
       if (cm_mode & CPL_ON)
         CompleteBuf = escape_spaces(CompleteBuf);
@@ -778,7 +778,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
     NCFileOffset = (NCFileOffset + next + NCFileBuf) % NCFileBuf;
     *status = CPL_MENU;
   }
-  CompleteBuf = Strdup(CDirBuf);
+  CompleteBuf = CDirBuf->Strdup();
   if (CompleteBuf->length && Strlastchar(CompleteBuf) != '/')
     Strcat_char(CompleteBuf, '/');
   Strcat(CompleteBuf, CFileName);
@@ -884,7 +884,7 @@ static void _editor(void) {
     return;
 
   fi.readonly = false;
-  fi.value = Strdup(strBuf);
+  fi.value = strBuf->Strdup();
   Strcat_char(fi.value, '\n');
 
   input_textarea(&fi);

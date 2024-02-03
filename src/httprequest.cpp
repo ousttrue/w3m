@@ -7,6 +7,7 @@
 #include "cookie.h"
 #include "form.h"
 #include "myctype.h"
+#include <string.h>
 
 bool override_user_agent = false;
 char *UserAgent = nullptr;

@@ -16,7 +16,6 @@
 #ifndef GC_STR_H
 #define GC_STR_H
 #include <stdio.h>
-#include <string.h>
 #include <limits.h>
 
 char *allocStr(const char *s, int len);
@@ -25,17 +24,18 @@ struct Str {
   char *ptr;
   int length;
   int area_size;
+
+  Str *Strdup() const;
 };
 
-Str *Strnew(void);
+Str *Strnew();
 Str *Strnew_size(int);
 Str *Strnew_charp(const char *);
 Str *Strnew_charp_n(const char *, int);
 Str *Strnew_m_charp(const char *, ...);
-Str *Strdup(Str *);
 void Strclear(Str *);
 void Strfree(Str *);
-void Strcopy(Str *, Str *);
+void Strcopy(Str *, const Str *);
 void Strcopy_charp(Str *, const char *);
 void Strcopy_charp_n(Str *, const char *, int);
 void Strcat_charp_n(Str *, const char *, int);

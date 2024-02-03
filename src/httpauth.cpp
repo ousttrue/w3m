@@ -268,7 +268,7 @@ Str *base64_encode(const char *src, int len) {
 
 static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw,
                           Url *pu, HRequest *hr, FormList *request) {
-  Str *s = Strdup(uname);
+  Str *s = uname->Strdup();
   Strcat_char(s, ':');
   Strcat(s, pw);
   return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr,

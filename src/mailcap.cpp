@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include <string.h>
 #include "etc.h"
 #include "httprequest.h"
 #include "url.h"

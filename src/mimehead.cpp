@@ -4,6 +4,7 @@
  */
 #include "mimehead.h"
 #include <sys/types.h>
+#include <string.h>
 #include "alloc.h"
 #include "myctype.h"
 #include "Str.h"

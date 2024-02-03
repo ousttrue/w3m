@@ -120,7 +120,7 @@ void appendTextLine(TextLineList *tl, Str *line, int pos) {
   TextLine *lbuf;
 
   if (tl->last == NULL) {
-    pushTextLine(tl, newTextLine(Strdup(line), pos));
+    pushTextLine(tl, newTextLine(line->Strdup(), pos));
   } else {
     lbuf = tl->last->ptr;
     if (lbuf->line)

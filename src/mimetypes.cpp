@@ -3,6 +3,7 @@
 #include "textlist.h"
 #include "alloc.h"
 #include "indep.h"
+#include <string.h>
 
 #define USER_MIMETYPES "~/.mime.types"
 #ifndef ETC_DIR

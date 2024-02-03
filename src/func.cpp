@@ -3,6 +3,7 @@
  * w3m func.c
  */
 #include "w3m.h"
+#include <string.h>
 #include "message.h"
 #include "ctrlcode.h"
 #include "func.h"

@@ -2,6 +2,7 @@
 #include "myctype.h"
 #include "Str.h"
 #include <stdlib.h>
+#include <string.h>
 
 static const char *monthtbl[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};

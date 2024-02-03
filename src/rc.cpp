@@ -1061,7 +1061,7 @@ Buffer *load_option_panel(void) {
   if (optionpanel_str == NULL)
     optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
                               html_quote(localCookie()->ptr), _(CMT_HELPER));
-  src = Strdup(optionpanel_str);
+  src = optionpanel_str->Strdup();
 
   Strcat_charp(src, "<table><tr><td>");
   for (i = 0; sections[i].name != NULL; i++) {

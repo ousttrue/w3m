@@ -145,10 +145,10 @@ Str *Strnew_charp_n(const char *p, int n) {
   return x;
 }
 
-Str *Strdup(Str *s) {
-  Str *n = Strnew_size(s->length);
-  STR_LENGTH_CHECK(s);
-  Strcopy(n, s);
+Str *Str::Strdup() const {
+  Str *n = Strnew_size(this->length);
+  STR_LENGTH_CHECK(this);
+  Strcopy(n, this);
   return n;
 }
 
@@ -162,7 +162,7 @@ void Strfree(Str *x) {
   GC_free(x);
 }
 
-void Strcopy(Str *x, Str *y) {
+void Strcopy(Str *x, const Str *y) {
   STR_LENGTH_CHECK(x);
   STR_LENGTH_CHECK(y);
   if (x->area_size < y->length + 1) {
@@ -415,7 +415,7 @@ Str *Stralign_left(Str *s, int width) {
 
   STR_LENGTH_CHECK(s);
   if (s->length >= width)
-    return Strdup(s);
+    return s->Strdup();
   n = Strnew_size(width);
   Strcopy(n, s);
   for (i = s->length; i < width; i++)
@@ -429,7 +429,7 @@ Str *Stralign_right(Str *s, int width) {
 
   STR_LENGTH_CHECK(s);
   if (s->length >= width)
-    return Strdup(s);
+    return s->Strdup();
   n = Strnew_size(width);
   for (i = s->length; i < width; i++)
     Strcat_char(n, ' ');
@@ -443,7 +443,7 @@ Str *Stralign_center(Str *s, int width) {
 
   STR_LENGTH_CHECK(s);
   if (s->length >= width)
-    return Strdup(s);
+    return s->Strdup();
   n = Strnew_size(width);
   w = (width - s->length) / 2;
   for (i = 0; i < w; i++)
