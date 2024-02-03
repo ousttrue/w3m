@@ -21,12 +21,12 @@
 #define DEF_MAILER "/usr/bin/mail"
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 
-
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"
 #endif
 #define PRE_FORM_FILE RC_DIR "/pre_form"
 
+const char *w3m_reqlog = {};
 bool fmInitialized = 0;
 bool IsForkChild = 0;
 bool w3m_backend = false;

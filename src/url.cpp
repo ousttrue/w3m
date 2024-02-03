@@ -536,26 +536,7 @@ Str *Url2Str(const Url *pu) { return _Url2Str(pu, false, true, true); }
 
 Str *Url2RefererStr(const Url *pu) { return _Url2Str(pu, false, false, false); }
 
-Url *schemaToProxy(UrlSchema schema) {
-  Url *pu = nullptr; /* for gcc */
-  switch (schema) {
-  case SCM_HTTP:
-    pu = &HTTP_proxy_parsed;
-    break;
-  case SCM_HTTPS:
-    pu = &HTTPS_proxy_parsed;
-    break;
-  case SCM_FTP:
-    pu = &FTP_proxy_parsed;
-    break;
-  default:
-#ifdef DEBUG
-    abort();
-#endif
-    break;
-  }
-  return pu;
-}
+
 
 const char *url_decode0(const char *url) {
   if (!DecodeURL)

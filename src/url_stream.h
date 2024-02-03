@@ -1,6 +1,7 @@
 #pragma once
 #include <time.h>
 #include "url_schema.h"
+#include "url.h"
 
 #define SAVE_BUF_SIZE 1536
 
@@ -9,6 +10,22 @@ extern bool use_lessopen;
 extern bool PermitSaveToPipe;
 extern bool AutoUncompress;
 extern bool PreserveTimestamp;
+
+extern bool ArgvIsURL;
+extern bool LocalhostOnly;
+extern bool retryAsHttp;
+extern char *HTTP_proxy;
+extern char *HTTPS_proxy;
+extern char *FTP_proxy;
+extern char *NO_proxy;
+extern int NOproxy_netaddr;
+extern bool use_proxy;
+// #define Do_not_use_proxy (!use_proxy)
+struct TextList;
+extern TextList *NO_proxy_domains;
+extern Url HTTP_proxy_parsed;
+extern Url HTTPS_proxy_parsed;
+extern Url FTP_proxy_parsed;
 
 struct URLOption {
   char *referer;
@@ -47,4 +64,4 @@ int check_no_proxy(const char *domain);
 int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);
 
-
+Url *schemaToProxy(UrlSchema schema);

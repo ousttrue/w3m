@@ -45,7 +45,6 @@ char *FTP_proxy = nullptr;
 char *NO_proxy = nullptr;
 int NOproxy_netaddr = true;
 bool use_proxy = true;
-const char *w3m_reqlog;
 TextList *NO_proxy_domains;
 
 Url HTTP_proxy_parsed;
@@ -948,4 +947,25 @@ int openSocket(const char *const hostname, const char *remoteport_name,
 error:
   TRAP_OFF;
   return -1;
+}
+
+Url *schemaToProxy(UrlSchema schema) {
+  Url *pu = nullptr; /* for gcc */
+  switch (schema) {
+  case SCM_HTTP:
+    pu = &HTTP_proxy_parsed;
+    break;
+  case SCM_HTTPS:
+    pu = &HTTPS_proxy_parsed;
+    break;
+  case SCM_FTP:
+    pu = &FTP_proxy_parsed;
+    break;
+  default:
+#ifdef DEBUG
+    abort();
+#endif
+    break;
+  }
+  return pu;
 }

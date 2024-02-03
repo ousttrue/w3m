@@ -10,6 +10,7 @@
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
 
+extern const char *w3m_reqlog;
 extern bool confirm_on_quit;
 extern bool fmInitialized;
 extern bool IsForkChild;
