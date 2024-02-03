@@ -95,6 +95,7 @@ int MailcapEntry::match(const char *type) const {
   type++;
 
   int level;
+  using enum MailcapFlags;
   if (this->flags & MAILCAP_HTMLOUTPUT)
     level = 1;
   else

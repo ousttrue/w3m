@@ -10,7 +10,6 @@
 
 extern int main(int argc, char **argv);
 extern void nulcmd(void);
-extern void pushEvent(int cmd, void *data);
 extern void pgFore(void);
 extern void pgBack(void);
 extern void hpgFore(void);
@@ -142,30 +141,16 @@ extern void cursorBottom(void);
 struct Buffer;
 extern int currentLn(Buffer *buf);
 
-extern char **get_symbol(void);
-struct Str;
-
-extern void push_symbol(Str *str, char symbol, int width, int n);
-struct FormList;
-
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 
-extern char *convert_size(long long size, int usefloat);
-extern char *convert_size2(long long size1, long long size2, int usefloat);
-
 struct UrlStream;
 extern Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
-extern void saveBuffer(Buffer *buf, FILE *f, int cont);
-extern void saveBufferBody(Buffer *buf, FILE *f, int cont);
 union input_stream;
 extern Buffer *openGeneralPagerBuffer(input_stream *stream);
 struct Line;
 
 extern Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf);
-
-struct Url;
-extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu);
 
 struct TabBuffer;
 extern TabBuffer *newTab(void);
@@ -174,7 +159,6 @@ extern TabBuffer *deleteTab(TabBuffer *tab);
 
 extern Buffer *nullBuffer(void);
 extern void clearBuffer(Buffer *buf);
-extern void discardBuffer(Buffer *buf);
 extern Buffer *namedBuffer(Buffer *first, char *name);
 extern Buffer *deleteBuffer(Buffer *first, Buffer *delbuf);
 extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
@@ -206,7 +190,6 @@ extern void escmap(void);
 extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
-extern Str *unescape_spaces(Str *s);
 extern double log_like(int x);
 
 struct MapList;
@@ -227,11 +210,13 @@ extern struct frameset *copyFrameSet(struct frameset *of);
 extern void pushFrameTree(struct frameset_queue **fqpp, struct frameset *fs,
                           Buffer *buf);
 extern struct frameset *popFrameTree(struct frameset_queue **fqpp);
+struct FormList;
 extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
                               char *referer, FormList *request);
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
 
+struct Url;
 extern Url *baseURL(Buffer *buf);
 
 struct URLOption;

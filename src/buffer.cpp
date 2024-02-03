@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "loadproc.h"
 #include "w3m.h"
 #include "local_cgi.h"
 #include "etc.h"
@@ -15,7 +16,6 @@
 #include "form.h"
 #include "anchor.h"
 #include "ctrlcode.h"
-#include "file.h"
 #include "line.h"
 #include "indep.h"
 #include "istream.h"

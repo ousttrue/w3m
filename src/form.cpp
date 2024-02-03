@@ -26,6 +26,7 @@
 #include "util.h"
 #include "indep.h"
 #include <unistd.h>
+#include <sys/stat.h>
 
 extern Str **textarea_str;
 extern int max_textarea;

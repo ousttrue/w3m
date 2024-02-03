@@ -2,6 +2,8 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "loadproc.h"
+#include "loaddirectory.h"
 #include "authpass.h"
 #include "httpauth.h"
 #include "func.h"
@@ -11,7 +13,6 @@
 #include "compression.h"
 #include "url_stream.h"
 #include "ssl_util.h"
-#include "file.h"
 #include "message.h"
 #include "display.h"
 #include "readbuffer.h"
@@ -42,6 +43,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <sys/stat.h>
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"
@@ -58,7 +60,6 @@ int DNS_order = DNS_ORDER_UNSPEC;
 
 bool TargetSelf = false;
 const char *rc_dir = nullptr;
-bool multicolList = false;
 bool DecodeURL = false;
 
 #define _(Text) Text
@@ -845,7 +846,8 @@ static void parse_cookie(void) {
 #define do_mkdir(dir, mode) mkdir(dir, mode)
 
 static int do_recursive_mkdir(const char *dir) {
-  char *ch, *dircpy, tmp;
+  const char *ch, *dircpy;
+  char tmp;
   struct stat st;
 
   if (*dir == '\0')
@@ -859,7 +861,7 @@ static int do_recursive_mkdir(const char *dir) {
     }
 
     tmp = *ch;
-    *ch = '\0';
+    *(char *)ch = '\0';
 
     if (stat(dircpy, &st) < 0) {
       if (errno != ENOENT) { /* no directory */
@@ -878,7 +880,7 @@ static int do_recursive_mkdir(const char *dir) {
       return -1;
     }
 
-    *ch = tmp;
+    *(char *)ch = tmp;
 
   } while (*ch++ != '\0');
 #ifdef HAVE_FACCESSAT

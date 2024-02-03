@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "readbuffer.h"
+#include "symbol.h"
 #include "htmlcommand.h"
 #include "terms.h"
 #include "textlist.h"

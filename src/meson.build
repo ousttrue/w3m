@@ -80,7 +80,6 @@ executable(
         'keyvalue.cpp',
         'myctype.cpp',
         'hash.cpp',
-        'file.cpp',
         'buffer.cpp',
         'display.cpp',
         'etc.cpp',
@@ -124,6 +123,8 @@ executable(
         'matchattr.cpp',
         'authpass.cpp',
         'auth_digest.cpp',
+        'loadproc.cpp',
+        'loaddirectory.cpp',
     ],
     install: true,
     dependencies: [

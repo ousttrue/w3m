@@ -15,6 +15,11 @@
 #include "myctype.h"
 #include "history.h"
 #include "indep.h"
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/dir.h>
+typedef struct direct Directory;
 
 /* Completion status. */
 #define CPL_OK 0

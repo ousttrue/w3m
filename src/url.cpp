@@ -8,7 +8,6 @@
 #include "indep.h"
 #include "httprequest.h"
 #include "rc.h"
-#include "file.h"
 #include "cookie.h"
 #include "buffer.h"
 #include "indep.h"
@@ -546,32 +545,4 @@ bool Url::same_url_p(const Url *pu2) const {
       (this->file ? pu2->file ? !strcmp(this->file, pu2->file) : 0 : 1));
 }
 
-bool checkRedirection(const Url *pu) {
-  static std::vector<Url> redirectins;
 
-  if (pu == nullptr) {
-    // clear
-    redirectins.clear();
-    return true;
-  }
-
-  if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
-    auto tmp = Sprintf("Number of redirections exceeded %d at %s",
-                       FollowRedirection, pu->to_Str().c_str());
-    disp_err_message(tmp->ptr, false);
-    return false;
-  }
-
-  for (auto &url : redirectins) {
-    if (pu->same_url_p(&url)) {
-      // same url found !
-      auto tmp = Sprintf("Redirection loop detected (%s)", pu->to_Str().c_str());
-      disp_err_message(tmp->ptr, false);
-      return false;
-    }
-  }
-
-  redirectins.push_back(*pu);
-
-  return true;
-}

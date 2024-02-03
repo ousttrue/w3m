@@ -15,7 +15,7 @@ enum MailcapStat {
   MCSTAT_REPTYPE = 0x02,
   MCSTAT_REPPARAM = 0x04,
 };
-ENUM_OP_INSTANCE(MailcapStat);
+// ENUM_OP_INSTANCE(MailcapStat);
 
 struct MailcapEntry {
   const char *type = 0;
@@ -34,8 +34,4 @@ Str *unquote_mailcap(const char *qstr, const char *type, const char *name,
                      const char *attr, MailcapStat *mc_stat);
 MailcapEntry *searchExtViewer(const char *type);
 
-inline int is_dump_text_type(const char *type) {
-  struct MailcapEntry *mcap;
-  return (type && (mcap = searchExtViewer(type)) &&
-          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
-}
+

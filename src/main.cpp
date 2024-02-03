@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "alloc.h"
+#include "loadproc.h"
 #include "bufferpos.h"
 #include "app.h"
 #include "etc.h"
@@ -29,7 +30,6 @@
 #include "history.h"
 #include "anchor.h"
 #include "mailcap.h"
-#include "file.h"
 #include "local_cgi.h"
 #include "signal_util.h"
 #include "display.h"
@@ -887,8 +887,8 @@ DEFUN(ldhelp, HELP, "Show help panel") {
 
 static void cmd_loadfile(const char *fn) {
 
-  auto buf = loadGeneralFile(file_to_url((char *)fn), {},
-                             {.referer = NO_REFERER});
+  auto buf =
+      loadGeneralFile(file_to_url((char *)fn), {}, {.referer = NO_REFERER});
   if (buf == nullptr) {
     char *emsg = Sprintf("%s not found", fn)->ptr;
     disp_err_message(emsg, false);
@@ -3792,7 +3792,7 @@ int main(int argc, char **argv) {
   Buffer *newbuf = nullptr;
   char *p;
   int i;
-  input_stream *redin;
+  // input_stream *redin;
   char *line_str = nullptr;
   const char **load_argv;
   FormList *request;
@@ -4077,11 +4077,7 @@ int main(int argc, char **argv) {
   err_msg = Strnew();
   if (load_argc == 0) {
     /* no URL specified */
-    if (!isatty(0)) {
-      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
-      newbuf = openGeneralPagerBuffer(redin);
-      dup2(1, 0);
-    } else if (load_bookmark) {
+    if (load_bookmark) {
       newbuf = loadGeneralFile(BookmarkFile, nullptr, {.referer = NO_REFERER});
       if (newbuf == nullptr)
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");

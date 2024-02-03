@@ -54,3 +54,5 @@ inline void inputFilenameHist(const char *p, const char *d, Hist *h,
 }
 
 void inputAnswer(const char *prompt, const OnInput &onInput);
+
+Str *unescape_spaces(Str *s);

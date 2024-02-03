@@ -25,6 +25,7 @@
 #include "indep.h"
 #include "proto.h"
 #include <time.h>
+#include <sys/stat.h>
 
 #define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
 /* version 0 refers to the original cookie_spec.html */

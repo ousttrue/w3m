@@ -197,3 +197,5 @@ char *getCurWord(Buffer *buf, int *spos, int *epos);
 #define nextChar(s, l) (s)++
 #define prevChar(s, l) (s)--
 #define getChar(p) ((int)*(p))
+
+extern void discardBuffer(Buffer *buf);

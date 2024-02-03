@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "symbol.h"
 #include "url_stream.h"
 #include "w3m.h"
 #include "hash.h"
@@ -4403,3 +4404,19 @@ Buffer *loadHTMLString(Str *page) {
     formResetBuffer(newBuf, newBuf->formitem);
   return newBuf;
 }
+
+Str *convertLine0(UrlStream *uf, Str *line, int mode) {
+  if (mode != RAW_MODE)
+    cleanup_line(line, mode);
+  return line;
+}
+
+int currentLn(Buffer *buf) {
+  if (buf->currentLine)
+    /*     return buf->currentLine->real_linenumber + 1;      */
+    return buf->currentLine->linenumber + 1;
+  else
+    return 1;
+}
+
+

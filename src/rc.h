@@ -2,7 +2,6 @@
 #include <stdio.h>
 
 extern const char *rc_dir;
-extern bool multicolList;
 extern bool DecodeURL;
 
 struct Url;

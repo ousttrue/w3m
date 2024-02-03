@@ -93,8 +93,8 @@ extern int ISclose(input_stream *stream);
 extern int ISgetc(input_stream *stream);
 extern int ISundogetc(input_stream *stream);
 extern Str *StrISgets2(input_stream *stream, char crnl);
-#define StrISgets(stream) StrISgets2(stream, FALSE)
-#define StrmyISgets(stream) StrISgets2(stream, TRUE)
+#define StrISgets(stream) StrISgets2(stream, false)
+#define StrmyISgets(stream) StrISgets2(stream, true)
 void ISgets_to_growbuf(input_stream *stream, struct growbuf *gb, char crnl);
 #ifdef unused
 extern int ISread(input_stream *stream, Str *buf, int count);

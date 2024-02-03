@@ -1,63 +1,53 @@
-#include "file.h"
-#include "authpass.h"
-#include "matchattr.h"
-#include "app.h"
-#include "httpauth.h"
-#include "mytime.h"
-#include "func.h"
-#include "alloc.h"
-#include "indep.h"
-#include "compression.h"
-#include "url_stream.h"
-#include "message.h"
-#include "mimetypes.h"
-#include "screen.h"
-#include "history.h"
-#include "w3m.h"
-#include "url.h"
-#include "terms.h"
-#include "tmpfile.h"
-#include "httprequest.h"
-#include "rc.h"
-#include "linein.h"
-#include "downloadlist.h"
-#include "etc.h"
-#include "proto.h"
-#include "buffer.h"
-#include "istream.h"
-#include "textlist.h"
-#include "funcname1.h"
+#include "loadproc.h"
+#include "symbol.h"
 #include "form.h"
-#include "ctrlcode.h"
-#include "readbuffer.h"
+#include "proto.h"
+#include "downloadlist.h"
+#include "istream.h"
+#include "linein.h"
+#include "mytime.h"
+#include "authpass.h"
+#include "httpauth.h"
+#include "auth_digest.h"
+#include "mimetypes.h"
+#include "app.h"
+#include "func.h"
 #include "cookie.h"
-#include "anchor.h"
+#include "compression.h"
 #include "display.h"
-#include "table.h"
-#include "mailcap.h"
-#include "signal_util.h"
+#include "screen.h"
+#include "loaddirectory.h"
+#include "url.h"
+#include "alloc.h"
+#include "rc.h"
+#include "httprequest.h"
+#include "display.h"
+#include "matchattr.h"
 #include "myctype.h"
-#include "html.h"
-#include "htmltag.h"
-#include "local_cgi.h"
-#include "regex.h"
-#include <sys/types.h>
-#include <setjmp.h>
-#include <sys/wait.h>
-#include <stdio.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include "mailcap.h"
+#include "etc.h"
+#include "textlist.h"
+#include "indep.h"
+#include "message.h"
+#include "Str.h"
+#include "istream.h"
+#include "w3m.h"
+#include "tmpfile.h"
+#include "url_stream.h"
+#include "readbuffer.h"
+#include "line.h"
+#include "terms.h"
+#include "signal_util.h"
+#include "buffer.h"
 #include <utime.h>
-
-#define SHELLBUFFERNAME "*Shellout*"
-#define PIPEBUFFERNAME "*stream*"
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
 bool SearchHeader = false;
-int FollowRedirection = 10;
 const char *DefaultType = nullptr;
+int FollowRedirection = 10;
 bool DecodeCTE = false;
-#define DEF_SAVE_FILE "index.html"
 
 static JMP_BUF AbortLoading;
 static void KeyAbort(SIGNAL_ARG) {
@@ -65,18 +55,160 @@ static void KeyAbort(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-static const char *guess_filename(const char *file);
-static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
-                          Buffer *defaultbuf);
+static long long current_content_length;
 
-static int http_response_code;
+static int is_text_type(const char *type) {
+  return (type == NULL || type[0] == '\0' ||
+          strncasecmp(type, "text/", 5) == 0 ||
+          (strncasecmp(type, "application/", 12) == 0 &&
+           strstr(type, "xhtml") != NULL) ||
+          strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+}
 
-int currentLn(Buffer *buf) {
-  if (buf->currentLine)
-    /*     return buf->currentLine->real_linenumber + 1;      */
-    return buf->currentLine->linenumber + 1;
-  else
-    return 1;
+static int is_dump_text_type(const char *type) {
+  struct MailcapEntry *mcap;
+  return (type && (mcap = searchExtViewer(type)) &&
+          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
+}
+
+static int is_plain_text_type(const char *type) {
+  return ((type && strcasecmp(type, "text/plain") == 0) ||
+          (is_text_type(type) && !is_dump_text_type(type)));
+}
+
+int is_html_type(const char *type) {
+  return (type && (strcasecmp(type, "text/html") == 0 ||
+                   strcasecmp(type, "application/xhtml+xml") == 0));
+}
+
+/*
+ * loadBuffer: read file and make new buffer
+ */
+Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
+  FILE *src = NULL;
+  Str *lineBuf2;
+  char pre_lbuf = '\0';
+  int nlines;
+  Str *tmpf;
+  long long linelen = 0, trbyte = 0;
+  Lineprop *propBuffer = NULL;
+  MySignalHandler prevtrap = NULL;
+
+  if (newBuf == NULL)
+    newBuf = new Buffer(INIT_BUFFER_WIDTH);
+
+  if (SETJMP(AbortLoading) != 0) {
+    goto _end;
+  }
+  TRAP_ON;
+
+  if (newBuf->sourcefile == NULL &&
+      (uf->schema != SCM_LOCAL || newBuf->mailcap)) {
+    tmpf = tmpfname(TMPF_SRC, NULL);
+    src = fopen(tmpf->ptr, "w");
+    if (src)
+      newBuf->sourcefile = tmpf->ptr;
+  }
+
+  nlines = 0;
+  if (IStype(uf->stream) != IST_ENCODED)
+    uf->stream = newEncodedStream(uf->stream, uf->encoding);
+  while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
+    if (src)
+      Strfputs(lineBuf2, src);
+    linelen += lineBuf2->length;
+    showProgress(&linelen, &trbyte, current_content_length);
+    lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+    if (squeezeBlankLine) {
+      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
+        ++nlines;
+        continue;
+      }
+      pre_lbuf = lineBuf2->ptr[0];
+    }
+    ++nlines;
+    Strchop(lineBuf2);
+    lineBuf2 = checkType(lineBuf2, &propBuffer);
+    newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
+                       FOLD_BUFFER_WIDTH, nlines);
+  }
+_end:
+  TRAP_OFF;
+  newBuf->topLine = newBuf->firstLine;
+  newBuf->lastLine = newBuf->currentLine;
+  newBuf->currentLine = newBuf->firstLine;
+  newBuf->trbyte = trbyte + linelen;
+  if (src)
+    fclose(src);
+
+  return newBuf;
+}
+
+const char *checkHeader(Buffer *buf, const char *field) {
+  int len;
+  TextListItem *i;
+  char *p;
+
+  if (buf == NULL || field == NULL || buf->document_header == NULL)
+    return NULL;
+  len = strlen(field);
+  for (i = buf->document_header->first; i != NULL; i = i->next) {
+    if (!strncasecmp(i->ptr, field, len)) {
+      p = i->ptr + len;
+      return remove_space(p);
+    }
+  }
+  return NULL;
+}
+
+#define DEF_SAVE_FILE "index.html"
+static const char *guess_filename(const char *file) {
+  const char *p = NULL, *s;
+
+  if (file != NULL)
+    p = mybasename(file);
+  if (p == NULL || *p == '\0')
+    return DEF_SAVE_FILE;
+  s = p;
+  if (*p == '#')
+    p++;
+  while (*p != '\0') {
+    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+      *(char *)p = '\0';
+      break;
+    }
+    p++;
+  }
+  return s;
+}
+
+const char *guess_save_name(Buffer *buf, const char *path) {
+  if (buf && buf->document_header) {
+    Str *name = NULL;
+    const char *p, *q;
+    if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
+        (q = strcasestr(p, "filename")) != NULL &&
+        (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+        matchattr(q, "filename", 8, &name))
+      path = name->ptr;
+    else if ((p = checkHeader(buf, "Content-Type:")) != NULL &&
+             (q = strcasestr(p, "name")) != NULL &&
+             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+             matchattr(q, "name", 4, &name))
+      path = name->ptr;
+  }
+  return (char *)guess_filename(path);
+}
+
+static char *checkContentType(Buffer *buf) {
+  Str *r;
+  auto p = checkHeader(buf, "Content-Type:");
+  if (p == NULL)
+    return NULL;
+  r = Strnew();
+  while (*p && *p != ';' && !IS_SPACE(*p))
+    Strcat_char(r, *p++);
+  return r->ptr;
 }
 
 static Buffer *loadSomething(UrlStream *f,
@@ -103,45 +235,126 @@ static Buffer *loadSomething(UrlStream *f,
   return buf;
 }
 
-static int is_text_type(const char *type) {
-  return (type == NULL || type[0] == '\0' ||
-          strncasecmp(type, "text/", 5) == 0 ||
-          (strncasecmp(type, "application/", 12) == 0 &&
-           strstr(type, "xhtml") != NULL) ||
-          strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
+                          Buffer *defaultbuf) {
+  FILE *f, *popen(const char *, const char *);
+  Buffer *buf;
+  UrlStream uf;
+
+  if (cmd == NULL || *cmd == '\0')
+    return NULL;
+  f = popen(cmd, "r");
+  if (f == NULL)
+    return NULL;
+  init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
+  buf = loadproc(&uf, defaultbuf);
+  UFclose(&uf);
+  return buf;
 }
 
-static int is_plain_text_type(const char *type) {
-  return ((type && strcasecmp(type, "text/plain") == 0) ||
-          (is_text_type(type) && !is_dump_text_type(type)));
+#define SHELLBUFFERNAME "*Shellout*"
+Buffer *getshell(const char *cmd) {
+  Buffer *buf;
+
+  buf = loadcmdout((char *)cmd, loadBuffer, NULL);
+  if (buf == NULL)
+    return NULL;
+  buf->filename = cmd;
+  buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
+  return buf;
 }
 
-int is_html_type(const char *type) {
-  return (type && (strcasecmp(type, "text/html") == 0 ||
-                   strcasecmp(type, "application/xhtml+xml") == 0));
+Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
+  Str *tmpf, *command;
+  struct MailcapEntry *mcap;
+  MailcapStat mc_stat;
+  Buffer *buf = NULL;
+  const char *header, *src = NULL, *ext = uf.ext;
+
+  if (!(mcap = searchExtViewer(type)))
+    return NULL;
+
+  if (mcap->nametemplate) {
+    tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
+    if (tmpf->ptr[0] == '.')
+      ext = tmpf->ptr;
+  }
+  tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
+
+  if (IStype(uf.stream) != IST_ENCODED)
+    uf.stream = newEncodedStream(uf.stream, uf.encoding);
+  header = checkHeader(defaultbuf, "Content-Type:");
+  command =
+      unquote_mailcap(mcap->viewer, type, tmpf->ptr, (char *)header, &mc_stat);
+  if (!(mc_stat & MCSTAT_REPNAME)) {
+    Str *tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
+    command = tmp;
+  }
+
+  if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
+      !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
+    flush_tty();
+    if (!fork()) {
+      setup_child(FALSE, 0, UFfileno(&uf));
+      if (save2tmp(&uf, tmpf->ptr) < 0)
+        exit(1);
+      UFclose(&uf);
+      myExec(command->ptr);
+    }
+    return NO_BUFFER;
+  } else {
+    if (save2tmp(&uf, tmpf->ptr) < 0) {
+      return NULL;
+    }
+  }
+  if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
+    if (defaultbuf == NULL)
+      defaultbuf = new Buffer(INIT_BUFFER_WIDTH);
+    if (defaultbuf->sourcefile)
+      src = defaultbuf->sourcefile;
+    else
+      src = tmpf->ptr;
+    defaultbuf->sourcefile = NULL;
+    defaultbuf->mailcap = mcap;
+  }
+  if (mcap->flags & MAILCAP_HTMLOUTPUT) {
+    buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
+    if (buf && buf != NO_BUFFER) {
+      buf->type = "text/html";
+      buf->mailcap_source = (char *)buf->sourcefile;
+      buf->sourcefile = (char *)src;
+    }
+  } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
+    buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
+    if (buf && buf != NO_BUFFER) {
+      buf->type = "text/plain";
+      buf->mailcap_source = (char *)buf->sourcefile;
+      buf->sourcefile = (char *)src;
+    }
+  } else {
+    if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
+      fmTerm();
+      mySystem(command->ptr, 0);
+      fmInit();
+      if (CurrentTab && Currentbuf)
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    } else {
+      mySystem(command->ptr, 1);
+    }
+    buf = NO_BUFFER;
+  }
+  if (buf && buf != NO_BUFFER) {
+    if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
+        buf->filename)
+      buf->buffername = lastFileName(buf->filename);
+    buf->edit = mcap->edit;
+    buf->mailcap = mcap;
+  }
+  return buf;
 }
+#define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
 
-int setModtime(const char *path, time_t modtime) {
-  struct utimbuf t;
-  struct stat st;
-
-  if (stat(path, &st) == 0)
-    t.actime = st.st_atime;
-  else
-    t.actime = time(NULL);
-  t.modtime = modtime;
-  return utime(path, &t);
-}
-
-/*
- * convert line
- */
-Str *convertLine0(UrlStream *uf, Str *line, int mode) {
-  if (mode != RAW_MODE)
-    cleanup_line(line, mode);
-  return line;
-}
-
+static int http_response_code;
 void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
   char *p, *q;
   char c;
@@ -277,40 +490,159 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
     fclose(src);
 }
 
-const char *checkHeader(Buffer *buf, const char *field) {
-  int len;
-  TextListItem *i;
-  char *p;
+static int _MoveFile(const char *path1, const char *path2) {
+  input_stream *f1;
+  FILE *f2;
+  int is_pipe;
+  long long linelen = 0, trbyte = 0;
+  char *buf = NULL;
+  int count;
 
-  if (buf == NULL || field == NULL || buf->document_header == NULL)
-    return NULL;
-  len = strlen(field);
-  for (i = buf->document_header->first; i != NULL; i = i->next) {
-    if (!strncasecmp(i->ptr, field, len)) {
-      p = i->ptr + len;
-      return remove_space(p);
-    }
+  f1 = openIS(path1);
+  if (f1 == NULL)
+    return -1;
+  if (*path2 == '|' && PermitSaveToPipe) {
+    is_pipe = TRUE;
+    f2 = popen(path2 + 1, "w");
+  } else {
+    is_pipe = FALSE;
+    f2 = fopen(path2, "wb");
   }
-  return NULL;
+  if (f2 == NULL) {
+    ISclose(f1);
+    return -1;
+  }
+
+  auto current_content_length = 0;
+  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+    fwrite(buf, 1, count, f2);
+    linelen += count;
+    showProgress(&linelen, &trbyte, current_content_length);
+  }
+
+  xfree(buf);
+  ISclose(f1);
+  if (is_pipe)
+    pclose(f2);
+  else
+    fclose(f2);
+  return 0;
 }
 
-static char *checkContentType(Buffer *buf) {
-  Str *r;
-  auto p = checkHeader(buf, "Content-Type:");
-  if (p == NULL)
-    return NULL;
-  r = Strnew();
-  while (*p && *p != ';' && !IS_SPACE(*p))
-    Strcat_char(r, *p++);
-  return r->ptr;
+int checkCopyFile(const char *path1, const char *path2) {
+  struct stat st1, st2;
+
+  if (*path2 == '|' && PermitSaveToPipe)
+    return 0;
+  if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
+    if (st1.st_ino == st2.st_ino)
+      return -1;
+  return 0;
 }
 
-static long long current_content_length;
+int _doFileCopy(const char *tmpf, const char *defstr, int download) {
+  Str *msg;
+  Str *filen;
+  const char *p, *q = NULL;
+  pid_t pid;
+  char *lock;
+  struct stat st;
+  long long size = 0;
+  int is_pipe = FALSE;
+
+  if (fmInitialized) {
+    p = searchKeyData();
+    if (p == NULL || *p == '\0') {
+      // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
+      //                   SaveHist);
+      if (q == NULL || *q == '\0')
+        return FALSE;
+      p = q;
+    }
+    if (*p == '|' && PermitSaveToPipe)
+      is_pipe = TRUE;
+    else {
+      if (q) {
+        p = unescape_spaces(Strnew_charp(q))->ptr;
+      }
+      p = expandPath((char *)p);
+      if (!couldWrite(p))
+        return -1;
+    }
+    if (checkCopyFile(tmpf, p) < 0) {
+      msg = Sprintf("Can't copy. %s and %s are identical.", tmpf, p);
+      disp_err_message(msg->ptr, FALSE);
+      return -1;
+    }
+    if (!download) {
+      if (_MoveFile(tmpf, p) < 0) {
+        msg = Sprintf("Can't save to %s", p);
+        disp_err_message(msg->ptr, FALSE);
+      }
+      return -1;
+    }
+    lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+    symlink(p, lock);
+    flush_tty();
+    pid = fork();
+    if (!pid) {
+      setup_child(FALSE, 0, -1);
+      if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe &&
+          !stat(tmpf, &st))
+        setModtime(p, st.st_mtime);
+      unlink(lock);
+      exit(0);
+    }
+    if (!stat(tmpf, &st))
+      size = st.st_size;
+    addDownloadList(pid, tmpf, p, lock, size);
+  } else {
+    q = searchKeyData();
+    if (q == NULL || *q == '\0') {
+      printf("(Download)Save file to: ");
+      fflush(stdout);
+      filen = Strfgets(stdin);
+      if (filen->length == 0)
+        return -1;
+      q = filen->ptr;
+    }
+    for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
+      ;
+    *(char *)(p + 1) = '\0';
+    if (*q == '\0')
+      return -1;
+    p = q;
+    if (*p == '|' && PermitSaveToPipe)
+      is_pipe = TRUE;
+    else {
+      p = expandPath((char *)p);
+      if (!couldWrite(p))
+        return -1;
+    }
+    if (checkCopyFile(tmpf, p) < 0) {
+      printf("Can't copy. %s and %s are identical.", tmpf, p);
+      return -1;
+    }
+    if (_MoveFile(tmpf, p) < 0) {
+      printf("Can't save to %s\n", p);
+      return -1;
+    }
+    if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
+      setModtime(p, st.st_mtime);
+  }
+  return 0;
+}
+
+int doFileMove(const char *tmpf, const char *defstr) {
+  int ret = doFileCopy(tmpf, defstr);
+  unlink(tmpf);
+  return ret;
+}
 
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
 
 Buffer *loadGeneralFile(const char *path, Url *current,
                         const HttpOption &option, FormList *request) {
@@ -735,101 +1067,51 @@ page_loaded:
   return b;
 }
 
-#define TAG_IS(s, tag, len)                                                    \
-  (strncasecmp(s, tag, len) == 0 && (s[len] == '>' || IS_SPACE((int)s[len])))
+bool checkRedirection(const Url *pu) {
+  static std::vector<Url> redirectins;
 
-extern Lineprop NullProp[];
-
-/*
- * loadBuffer: read file and make new buffer
- */
-Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
-  FILE *src = NULL;
-  Str *lineBuf2;
-  char pre_lbuf = '\0';
-  int nlines;
-  Str *tmpf;
-  long long linelen = 0, trbyte = 0;
-  Lineprop *propBuffer = NULL;
-  MySignalHandler prevtrap = NULL;
-
-  if (newBuf == NULL)
-    newBuf = new Buffer(INIT_BUFFER_WIDTH);
-
-  if (SETJMP(AbortLoading) != 0) {
-    goto _end;
-  }
-  TRAP_ON;
-
-  if (newBuf->sourcefile == NULL &&
-      (uf->schema != SCM_LOCAL || newBuf->mailcap)) {
-    tmpf = tmpfname(TMPF_SRC, NULL);
-    src = fopen(tmpf->ptr, "w");
-    if (src)
-      newBuf->sourcefile = tmpf->ptr;
+  if (pu == nullptr) {
+    // clear
+    redirectins.clear();
+    return true;
   }
 
-  nlines = 0;
-  if (IStype(uf->stream) != IST_ENCODED)
-    uf->stream = newEncodedStream(uf->stream, uf->encoding);
-  while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
-    if (src)
-      Strfputs(lineBuf2, src);
-    linelen += lineBuf2->length;
-    showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
-    if (squeezeBlankLine) {
-      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-        ++nlines;
-        continue;
-      }
-      pre_lbuf = lineBuf2->ptr[0];
+  if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
+    auto tmp = Sprintf("Number of redirections exceeded %d at %s",
+                       FollowRedirection, pu->to_Str().c_str());
+    disp_err_message(tmp->ptr, false);
+    return false;
+  }
+
+  for (auto &url : redirectins) {
+    if (pu->same_url_p(&url)) {
+      // same url found !
+      auto tmp =
+          Sprintf("Redirection loop detected (%s)", pu->to_Str().c_str());
+      disp_err_message(tmp->ptr, false);
+      return false;
     }
-    ++nlines;
-    Strchop(lineBuf2);
-    lineBuf2 = checkType(lineBuf2, &propBuffer);
-    newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                       FOLD_BUFFER_WIDTH, nlines);
   }
-_end:
-  TRAP_OFF;
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
-  newBuf->trbyte = trbyte + linelen;
-  if (src)
-    fclose(src);
 
-  return newBuf;
+  redirectins.push_back(*pu);
+
+  return true;
 }
 
-static Str *conv_symbol(Line *l) {
-  Str *tmp = NULL;
-  char *p = l->lineBuf.data();
-  char *ep = p + l->len;
-  Lineprop *pr = l->propBuf.data();
-  char **symbol = get_symbol();
+#define PIPEBUFFERNAME "*stream*"
 
-  for (; p < ep; p++, pr++) {
-    if (*pr & PC_SYMBOL) {
-      char c = *p - SYMBOL_BASE;
-      if (tmp == NULL) {
-        tmp = Strnew_size(l->len);
-        Strcopy_charp_n(tmp, l->lineBuf.data(), p - l->lineBuf.data());
-      }
-      Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
-    } else if (tmp != NULL)
-      Strcat_char(tmp, *p);
-  }
-  if (tmp)
-    return tmp;
+int setModtime(const char *path, time_t modtime) {
+  struct utimbuf t;
+  struct stat st;
+
+  if (stat(path, &st) == 0)
+    t.actime = st.st_atime;
   else
-    return Strnew_charp_n(l->lineBuf.data(), l->len);
+    t.actime = time(NULL);
+  t.modtime = modtime;
+  return utime(path, &t);
 }
 
-/*
- * saveBuffer: write buffer to file
- */
 static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
 
   auto is_html = is_html_type(buf->type);
@@ -850,349 +1132,6 @@ void saveBuffer(Buffer *buf, FILE *f, int cont) {
   _saveBuffer(buf, buf->firstLine, f, cont);
 }
 
-void saveBufferBody(Buffer *buf, FILE *f, int cont) {
-  Line *l = buf->firstLine;
-
-  while (l != NULL && l->real_linenumber == 0)
-    l = l->next;
-  _saveBuffer(buf, l, f, cont);
-}
-
-static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
-                          Buffer *defaultbuf) {
-  FILE *f, *popen(const char *, const char *);
-  Buffer *buf;
-  UrlStream uf;
-
-  if (cmd == NULL || *cmd == '\0')
-    return NULL;
-  f = popen(cmd, "r");
-  if (f == NULL)
-    return NULL;
-  init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
-  buf = loadproc(&uf, defaultbuf);
-  UFclose(&uf);
-  return buf;
-}
-
-/*
- * getshell: execute shell command and get the result into a buffer
- */
-Buffer *getshell(const char *cmd) {
-  Buffer *buf;
-
-  buf = loadcmdout((char *)cmd, loadBuffer, NULL);
-  if (buf == NULL)
-    return NULL;
-  buf->filename = cmd;
-  buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
-  return buf;
-}
-
-/*
- * Open pager buffer
- */
-Buffer *openPagerBuffer(Buffer *buf) {
-
-  if (buf == NULL)
-    buf = new Buffer(INIT_BUFFER_WIDTH);
-  buf->buffername = getenv("MAN_PN");
-  if (buf->buffername == NULL)
-    buf->buffername = PIPEBUFFERNAME;
-  buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_PIPE);
-  buf->currentLine = buf->firstLine;
-
-  return buf;
-}
-
-Buffer *openGeneralPagerBuffer(input_stream *stream) {
-  Buffer *buf;
-  const char *t = "text/plain";
-  Buffer *t_buf = NULL;
-  UrlStream uf;
-
-  init_stream(&uf, SCM_UNKNOWN, stream);
-
-  t_buf = new Buffer(INIT_BUFFER_WIDTH);
-  t_buf->currentURL = {};
-  t_buf->currentURL.schema = SCM_LOCAL;
-  t_buf->currentURL.file = "-";
-  if (SearchHeader) {
-    readHeader(&uf, t_buf, TRUE, NULL);
-    t = checkContentType(t_buf);
-    if (t == NULL)
-      t = "text/plain";
-    if (t_buf) {
-      t_buf->topLine = t_buf->firstLine;
-      t_buf->currentLine = t_buf->lastLine;
-    }
-    SearchHeader = FALSE;
-  } else if (DefaultType) {
-    t = DefaultType;
-    DefaultType = NULL;
-  }
-  if (is_html_type(t)) {
-    buf = loadHTMLBuffer(&uf, t_buf);
-    buf->type = "text/html";
-  } else if (is_plain_text_type(t)) {
-    if (IStype(stream) != IST_ENCODED)
-      stream = newEncodedStream(stream, uf.encoding);
-    buf = openPagerBuffer(t_buf);
-    buf->type = "text/plain";
-  } else {
-    if (searchExtViewer(t)) {
-      buf = doExternal(uf, t, t_buf);
-      UFclose(&uf);
-      if (buf == NULL || buf == NO_BUFFER)
-        return buf;
-    } else { /* unknown type is regarded as text/plain */
-      if (IStype(stream) != IST_ENCODED)
-        stream = newEncodedStream(stream, uf.encoding);
-      buf = openPagerBuffer(t_buf);
-      buf->type = "text/plain";
-    }
-  }
-  buf->real_type = t;
-  return buf;
-}
-
-Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
-  Str *tmpf, *command;
-  struct MailcapEntry *mcap;
-  MailcapStat mc_stat;
-  Buffer *buf = NULL;
-  const char *header, *src = NULL, *ext = uf.ext;
-
-  if (!(mcap = searchExtViewer(type)))
-    return NULL;
-
-  if (mcap->nametemplate) {
-    tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
-    if (tmpf->ptr[0] == '.')
-      ext = tmpf->ptr;
-  }
-  tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
-
-  if (IStype(uf.stream) != IST_ENCODED)
-    uf.stream = newEncodedStream(uf.stream, uf.encoding);
-  header = checkHeader(defaultbuf, "Content-Type:");
-  command =
-      unquote_mailcap(mcap->viewer, type, tmpf->ptr, (char *)header, &mc_stat);
-  if (!(mc_stat & MCSTAT_REPNAME)) {
-    Str *tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
-    command = tmp;
-  }
-
-  if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
-      !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-    flush_tty();
-    if (!fork()) {
-      setup_child(FALSE, 0, UFfileno(&uf));
-      if (save2tmp(&uf, tmpf->ptr) < 0)
-        exit(1);
-      UFclose(&uf);
-      myExec(command->ptr);
-    }
-    return NO_BUFFER;
-  } else {
-    if (save2tmp(&uf, tmpf->ptr) < 0) {
-      return NULL;
-    }
-  }
-  if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
-    if (defaultbuf == NULL)
-      defaultbuf = new Buffer(INIT_BUFFER_WIDTH);
-    if (defaultbuf->sourcefile)
-      src = defaultbuf->sourcefile;
-    else
-      src = tmpf->ptr;
-    defaultbuf->sourcefile = NULL;
-    defaultbuf->mailcap = mcap;
-  }
-  if (mcap->flags & MAILCAP_HTMLOUTPUT) {
-    buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
-    if (buf && buf != NO_BUFFER) {
-      buf->type = "text/html";
-      buf->mailcap_source = (char *)buf->sourcefile;
-      buf->sourcefile = (char *)src;
-    }
-  } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
-    buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
-    if (buf && buf != NO_BUFFER) {
-      buf->type = "text/plain";
-      buf->mailcap_source = (char *)buf->sourcefile;
-      buf->sourcefile = (char *)src;
-    }
-  } else {
-    if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-      fmTerm();
-      mySystem(command->ptr, 0);
-      fmInit();
-      if (CurrentTab && Currentbuf)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    } else {
-      mySystem(command->ptr, 1);
-    }
-    buf = NO_BUFFER;
-  }
-  if (buf && buf != NO_BUFFER) {
-    if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
-        buf->filename)
-      buf->buffername = lastFileName(buf->filename);
-    buf->edit = mcap->edit;
-    buf->mailcap = mcap;
-  }
-  return buf;
-}
-
-static int _MoveFile(const char *path1, const char *path2) {
-  input_stream *f1;
-  FILE *f2;
-  int is_pipe;
-  long long linelen = 0, trbyte = 0;
-  char *buf = NULL;
-  int count;
-
-  f1 = openIS(path1);
-  if (f1 == NULL)
-    return -1;
-  if (*path2 == '|' && PermitSaveToPipe) {
-    is_pipe = TRUE;
-    f2 = popen(path2 + 1, "w");
-  } else {
-    is_pipe = FALSE;
-    f2 = fopen(path2, "wb");
-  }
-  if (f2 == NULL) {
-    ISclose(f1);
-    return -1;
-  }
-  current_content_length = 0;
-  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
-    fwrite(buf, 1, count, f2);
-    linelen += count;
-    showProgress(&linelen, &trbyte, current_content_length);
-  }
-  xfree(buf);
-  ISclose(f1);
-  if (is_pipe)
-    pclose(f2);
-  else
-    fclose(f2);
-  return 0;
-}
-
-int _doFileCopy(const char *tmpf, const char *defstr, int download) {
-  Str *msg;
-  Str *filen;
-  const char *p, *q = NULL;
-  pid_t pid;
-  char *lock;
-  struct stat st;
-  long long size = 0;
-  int is_pipe = FALSE;
-
-  if (fmInitialized) {
-    p = searchKeyData();
-    if (p == NULL || *p == '\0') {
-      // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
-      //                   SaveHist);
-      if (q == NULL || *q == '\0')
-        return FALSE;
-      p = q;
-    }
-    if (*p == '|' && PermitSaveToPipe)
-      is_pipe = TRUE;
-    else {
-      if (q) {
-        p = unescape_spaces(Strnew_charp(q))->ptr;
-      }
-      p = expandPath((char *)p);
-      if (!couldWrite(p))
-        return -1;
-    }
-    if (checkCopyFile(tmpf, p) < 0) {
-      msg = Sprintf("Can't copy. %s and %s are identical.", tmpf, p);
-      disp_err_message(msg->ptr, FALSE);
-      return -1;
-    }
-    if (!download) {
-      if (_MoveFile(tmpf, p) < 0) {
-        msg = Sprintf("Can't save to %s", p);
-        disp_err_message(msg->ptr, FALSE);
-      }
-      return -1;
-    }
-    lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-    symlink(p, lock);
-    flush_tty();
-    pid = fork();
-    if (!pid) {
-      setup_child(FALSE, 0, -1);
-      if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe &&
-          !stat(tmpf, &st))
-        setModtime(p, st.st_mtime);
-      unlink(lock);
-      exit(0);
-    }
-    if (!stat(tmpf, &st))
-      size = st.st_size;
-    addDownloadList(pid, tmpf, p, lock, size);
-  } else {
-    q = searchKeyData();
-    if (q == NULL || *q == '\0') {
-      printf("(Download)Save file to: ");
-      fflush(stdout);
-      filen = Strfgets(stdin);
-      if (filen->length == 0)
-        return -1;
-      q = filen->ptr;
-    }
-    for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
-      ;
-    *(char *)(p + 1) = '\0';
-    if (*q == '\0')
-      return -1;
-    p = q;
-    if (*p == '|' && PermitSaveToPipe)
-      is_pipe = TRUE;
-    else {
-      p = expandPath((char *)p);
-      if (!couldWrite(p))
-        return -1;
-    }
-    if (checkCopyFile(tmpf, p) < 0) {
-      printf("Can't copy. %s and %s are identical.", tmpf, p);
-      return -1;
-    }
-    if (_MoveFile(tmpf, p) < 0) {
-      printf("Can't save to %s\n", p);
-      return -1;
-    }
-    if (PreserveTimestamp && !is_pipe && !stat(tmpf, &st))
-      setModtime(p, st.st_mtime);
-  }
-  return 0;
-}
-
-int doFileMove(const char *tmpf, const char *defstr) {
-  int ret = doFileCopy(tmpf, defstr);
-  unlink(tmpf);
-  return ret;
-}
-
-int checkCopyFile(const char *path1, const char *path2) {
-  struct stat st1, st2;
-
-  if (*path2 == '|' && PermitSaveToPipe)
-    return 0;
-  if ((stat(path1, &st1) == 0) && (stat(path2, &st2) == 0))
-    if (st1.st_ino == st2.st_ino)
-      return -1;
-  return 0;
-}
-
 bool couldWrite(const char *path) {
   struct stat st;
   if (stat(path, &st) < 0) {
@@ -1206,122 +1145,4 @@ bool couldWrite(const char *path) {
   // }
 
   return false;
-}
-
-static const char *guess_filename(const char *file) {
-  const char *p = NULL, *s;
-
-  if (file != NULL)
-    p = mybasename(file);
-  if (p == NULL || *p == '\0')
-    return DEF_SAVE_FILE;
-  s = p;
-  if (*p == '#')
-    p++;
-  while (*p != '\0') {
-    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-      *(char *)p = '\0';
-      break;
-    }
-    p++;
-  }
-  return s;
-}
-
-const char *guess_save_name(Buffer *buf, const char *path) {
-  if (buf && buf->document_header) {
-    Str *name = NULL;
-    const char *p, *q;
-    if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
-        (q = strcasestr(p, "filename")) != NULL &&
-        (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        matchattr(q, "filename", 8, &name))
-      path = name->ptr;
-    else if ((p = checkHeader(buf, "Content-Type:")) != NULL &&
-             (q = strcasestr(p, "name")) != NULL &&
-             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             matchattr(q, "name", 4, &name))
-      path = name->ptr;
-  }
-  return (char *)guess_filename(path);
-}
-
-void showProgress(long long *linelen, long long *trbyte,
-                  long long current_content_length) {
-  int i, j, rate, duration, eta, pos;
-  static time_t last_time, start_time;
-  time_t cur_time;
-  Str *messages;
-  char *fmtrbyte, *fmrate;
-
-  if (!fmInitialized)
-    return;
-
-  if (*linelen < 1024)
-    return;
-  if (current_content_length > 0) {
-    double ratio;
-    cur_time = time(0);
-    if (*trbyte == 0) {
-      move(LASTLINE, 0);
-      clrtoeolx();
-      start_time = cur_time;
-    }
-    *trbyte += *linelen;
-    *linelen = 0;
-    if (cur_time == last_time)
-      return;
-    last_time = cur_time;
-    move(LASTLINE, 0);
-    ratio = 100.0 * (*trbyte) / current_content_length;
-    fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
-    duration = cur_time - start_time;
-    if (duration) {
-      rate = *trbyte / duration;
-      fmrate = convert_size(rate, 1);
-      eta = rate ? (current_content_length - *trbyte) / rate : -1;
-      messages = Sprintf("%11s %3.0f%% "
-                         "%7s/s "
-                         "eta %02d:%02d:%02d     ",
-                         fmtrbyte, ratio, fmrate, eta / (60 * 60),
-                         (eta / 60) % 60, eta % 60);
-    } else {
-      messages =
-          Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
-    }
-    addstr(messages->ptr);
-    pos = 42;
-    i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-    move(LASTLINE, pos);
-    standout();
-    addch(' ');
-    for (j = pos + 1; j <= i; j++)
-      addch('|');
-    standend();
-    /* no_clrtoeol(); */
-    refresh(term_io());
-  } else {
-    cur_time = time(0);
-    if (*trbyte == 0) {
-      move(LASTLINE, 0);
-      clrtoeolx();
-      start_time = cur_time;
-    }
-    *trbyte += *linelen;
-    *linelen = 0;
-    if (cur_time == last_time)
-      return;
-    last_time = cur_time;
-    move(LASTLINE, 0);
-    fmtrbyte = convert_size(*trbyte, 1);
-    duration = cur_time - start_time;
-    if (duration) {
-      fmrate = convert_size(*trbyte / duration, 1);
-      messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
-    } else {
-      messages = Sprintf("%7s loaded", fmtrbyte);
-    }
-    message(messages->ptr, 0, 0);
-    refresh(term_io());
-  }
 }

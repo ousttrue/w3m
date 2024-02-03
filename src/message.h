@@ -12,3 +12,10 @@ void disp_message(const char *s, int redraw_current);
 void set_delayed_message(const char *s);
 
 void refresh_message();
+
+void showProgress(long long *linelen, long long *trbyte,
+                  long long current_content_length);
+
+char *convert_size(long long size, int usefloat);
+char *convert_size2(long long size1, long long size2, int usefloat);
+

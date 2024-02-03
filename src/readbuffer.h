@@ -5,7 +5,6 @@
 
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
 
 extern bool pseudoInlines;
 extern bool ignore_null_img_alt;

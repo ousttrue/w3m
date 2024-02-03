@@ -2,14 +2,6 @@
 #include <stdio.h>
 
 #include <sys/types.h>
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
-typedef struct dirent Directory;
-#else /* not HAVE_DIRENT_H */
-#include <sys/dir.h>
-typedef struct direct Directory;
-#endif /* not HAVE_DIRENT_H */
-#include <sys/stat.h>
 
 extern char *cgi_bin;
 
@@ -44,4 +36,3 @@ Str *localCookie(void);
 struct FormList;
 FILE *localcgi_post(const char *, const char *, FormList *, const char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
-Str *loadLocalDir(const char *dirname);

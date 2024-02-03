@@ -1,4 +1,5 @@
 #include "display.h"
+#include "loadproc.h"
 #include "symbol.h"
 #include "message.h"
 #include "w3m.h"
@@ -11,7 +12,6 @@
 #include "textlist.h"
 #include "ctrlcode.h"
 #include "anchor.h"
-#include "file.h"
 #include "signal_util.h"
 #include "proto.h"
 #include "indep.h"
@@ -609,7 +609,7 @@ void addMChar(char *p, Lineprop mode, size_t len) {
     return;
   do_effects(m);
   if (mode & PC_SYMBOL) {
-    char **symbol;
+    const char **symbol;
     int w = (mode & PC_KANJI) ? 2 : 1;
 
     // c = ((char)wtf_get_code((wc_uchar *)p) & 0x7f) - SYMBOL_BASE;

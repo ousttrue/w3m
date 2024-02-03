@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "buffer.h"
 #include "line.h"
 #include "message.h"
 #include "screen.h"
@@ -18,6 +19,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #define HAVE_STRERROR 1
 
 char *personal_document_root = nullptr;

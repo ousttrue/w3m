@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "httprequest.h"
+#include "loadproc.h"
 #include "cookie.h"
 #include "line.h"
 #include "url.h"
@@ -8,7 +9,6 @@
 #include "buffer.h"
 #include "textlist.h"
 #include "terms.h"
-#include "file.h"
 #include "proto.h"
 #include <gc.h>
 #include <stdio.h>
