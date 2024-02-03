@@ -42,6 +42,7 @@ const sidebars: SidebarsConfig = {
         "Bonus/README",
       ],
     },
+    "refs",
   ],
 };
 

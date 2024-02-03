@@ -52,7 +52,17 @@ struct AlarmEvent;
 struct Clone {
   int count = 1;
 };
+
 struct Buffer : public gc_cleanup {
+  Url currentURL = {.schema = SCM_UNKNOWN};
+  std::optional<Url> baseURL;
+  const char *type = nullptr;
+  const char *real_type = nullptr;
+  TextList *document_header = nullptr;
+
+  const char *header_source = nullptr;
+  char search_header = 0;
+
   const char *filename = nullptr;
   const char *buffername = "";
   Line *firstLine = nullptr;
@@ -63,8 +73,6 @@ struct Buffer : public gc_cleanup {
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
   short width = 0;
   short height = 0;
-  const char *type = nullptr;
-  const char *real_type = nullptr;
   int allLine = 0;
   BufferFlags bufferprop = BP_NORMAL;
   int currentColumn = 0;
@@ -85,8 +93,6 @@ struct Buffer : public gc_cleanup {
   MapList *maplist = nullptr;
   HmarkerList *hmarklist = nullptr;
   HmarkerList *imarklist = nullptr;
-  Url currentURL = {.schema = SCM_UNKNOWN};
-  std::optional<Url> baseURL;
   const char *baseTarget = nullptr;
   UrlSchema real_schema = {};
   const char *sourcefile = nullptr;
@@ -94,13 +100,10 @@ struct Buffer : public gc_cleanup {
 
   size_t trbyte = 0;
   char check_url = 0;
-  TextList *document_header = nullptr;
   FormItemList *form_submit = nullptr;
   const char *edit = nullptr;
   struct MailcapEntry *mailcap = nullptr;
   const char *mailcap_source = nullptr;
-  const char *header_source = nullptr;
-  char search_header = 0;
   const char *ssl_certificate = nullptr;
   char image_flag = 0;
   char image_loaded = 0;
