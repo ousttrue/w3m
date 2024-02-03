@@ -123,6 +123,7 @@ executable(
         'lineprop.cpp',
         'matchattr.cpp',
         'authpass.cpp',
+        'auth_digest.cpp',
     ],
     install: true,
     dependencies: [
