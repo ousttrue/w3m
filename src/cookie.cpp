@@ -593,7 +593,7 @@ void load_cookies(void) {
     cookie->comment = NULL;
     cookie->portl = NULL;
     cookie->commentURL = NULL;
-    parseURL(readcol(&str)->ptr, &cookie->url, NULL);
+    cookie->url = Url::parse(readcol(&str)->ptr);
     if (!*str)
       break;
     cookie->name = readcol(&str);
