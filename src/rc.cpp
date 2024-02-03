@@ -46,6 +46,8 @@
 #define RC_DIR "~/.w3m"
 #endif
 
+int DNS_order = DNS_ORDER_UNSPEC;
+
 #define HAVE_FACCESSAT 1
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"

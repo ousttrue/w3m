@@ -43,3 +43,8 @@ void examineFile(const char *path, UrlStream *uf);
 int save2tmp(UrlStream *uf, const char *tmpf);
 int doFileSave(UrlStream *uf, const char *defstr);
 void UFhalfclose(UrlStream *f);
+int check_no_proxy(const char *domain);
+int openSocket(const char *hostname, const char *remoteport_name,
+               unsigned short remoteport_num);
+
+

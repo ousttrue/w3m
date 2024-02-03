@@ -28,6 +28,17 @@ const void *querySiteconf(const Url *query_pu, int field);
 #define query_SCONF_NO_REFERER_TO(pu)                                          \
   ((const int *)querySiteconf(pu, SCONF_NO_REFERER_TO))
 
+#define INET6 1
+#ifdef INET6
+#define DNS_ORDER_UNSPEC 0
+#define DNS_ORDER_INET_INET6 1
+#define DNS_ORDER_INET6_INET 2
+#define DNS_ORDER_INET_ONLY 4
+#define DNS_ORDER_INET6_ONLY 6
+extern int ai_family_order_table[7][3]; /* XXX */
+#endif                                  /* INET6 */
+extern int DNS_order;
+
 const char *rcFile(const char *base);
 const char *etcFile(const char *base);
 const char *confFile(const char *base);

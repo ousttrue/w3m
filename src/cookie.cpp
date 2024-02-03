@@ -148,7 +148,22 @@ static unsigned int total_dot_number(const char *p, const char *ep,
   return count;
 }
 
-static const char *domain_match(const char *host, const char *domain) {
+// static int domain_match(const char *pat, const char *domain) {
+//   if (domain == NULL)
+//     return 0;
+//   if (*pat == '.')
+//     pat++;
+//   for (;;) {
+//     if (!strcasecmp(pat, domain))
+//       return 1;
+//     domain = strchr(domain, '.');
+//     if (domain == NULL)
+//       return 0;
+//     domain++;
+//   }
+// }
+
+const char *domain_match(const char *host, const char *domain) {
   int m0, m1;
 
   /* [RFC 2109] s. 2, "domain-match", case 1

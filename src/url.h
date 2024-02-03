@@ -15,19 +15,8 @@ extern const char *w3m_reqlog;
 struct TextList;
 extern TextList *NO_proxy_domains;
 
-#define INET6 1
-#ifdef INET6
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
-extern int ai_family_order_table[7][3]; /* XXX */
-#endif                                  /* INET6 */
-
 extern const char *mimetypes_files;
 
-extern int DNS_order;
 
 struct Str;
 struct Url {
@@ -55,11 +44,6 @@ void parseURL2(const char *url, Url *pu, Url *current);
 Str *Url2Str(Url *pu);
 Str *Url2RefererStr(Url *pu);
 Str *_Url2Str(Url *pu, int pass, int user, int label);
-
-struct TextList;
-int check_no_proxy(const char *domain);
-int openSocket(const char *hostname, const char *remoteport_name,
-               unsigned short remoteport_num);
 
 struct Url;
 Url *schemaToProxy(UrlSchema schema);
