@@ -307,7 +307,7 @@ UrlStream openURL(char *url, Url *pu, Url *current,
   else
     u = url;
 retry:
-  parseURL2((char *)u, pu, current);
+  *pu = Url::parse2(u, current);
   if (pu->schema == SCM_LOCAL && pu->file == NULL) {
     if (pu->label != NULL) {
       /* #hogege is not a label but a filename */

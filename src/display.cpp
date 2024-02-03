@@ -98,7 +98,7 @@ static Str *make_lastline_link(Buffer *buf, const char *title,
   }
   if (!url)
     return s;
-  parseURL2((char *)url, &pu, baseURL(buf));
+  pu = Url::parse2(url, baseURL(buf));
   u = Url2Str(&pu);
   if (DecodeURL)
     u = Strnew_charp(url_decode0(u->ptr));

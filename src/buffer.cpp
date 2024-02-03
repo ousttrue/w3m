@@ -571,7 +571,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
   for (l = link; l; l = l->next) {
     if (l->url) {
-      parseURL2(l->url, &pu, baseURL(buf));
+      pu = Url::parse2(l->url, baseURL(buf));
       url = html_quote(Url2Str(&pu)->ptr);
     } else
       url = "(empty)";
@@ -632,8 +632,8 @@ Buffer *page_info_panel(Buffer *buf) {
                    Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
 
     a = retrieveCurrentAnchor(buf);
-    if (a != NULL) {
-      parseURL2((char *)a->url, &pu, baseURL(buf));
+    if (a) {
+      pu = Url::parse2(a->url, baseURL(buf));
       p = Url2Str(&pu)->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -646,7 +646,7 @@ Buffer *page_info_panel(Buffer *buf) {
     }
     a = retrieveCurrentImg(buf);
     if (a != NULL) {
-      parseURL2((char *)a->url, &pu, baseURL(buf));
+      pu = Url::parse2(a->url, baseURL(buf));
       p = Url2Str(&pu)->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -736,13 +736,13 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     a = retrieveCurrentAnchor(buf);
     if (a) {
-      parseURL2((char *)a->url, &pu, baseURL(buf));
+      pu = Url::parse2(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_LINK", Url2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf);
     if (a) {
-      parseURL2((char *)a->url, &pu, baseURL(buf));
+      pu = Url::parse2(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_IMG", Url2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");

@@ -344,9 +344,8 @@ Buffer *loadGeneralFile(const char *path, Url *current, const char *referer,
   checkRedirection(NULL);
 
 load_doc: {
-  const char *sc_redirect;
-  parseURL2((char *)tpath, &pu, current);
-  sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+  pu = Url::parse2(tpath, current);
+  auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
   if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
     tpath = (char *)sc_redirect;
     request = NULL;

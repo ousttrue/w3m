@@ -1333,7 +1333,7 @@ static Buffer *loadLink(const char *url, const char *target,
     return nullptr;
   }
 
-  parseURL2(url, &pu, base);
+  pu = Url::parse2(url, base);
   pushHashHist(URLHist, Url2Str(&pu)->ptr);
 
   if (buf == NO_BUFFER) {
@@ -1461,7 +1461,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     gotoLabel(a->url + 1);
     return;
   }
-  parseURL2(a->url, &u, baseURL(Currentbuf));
+  u = Url::parse2(a->url, baseURL(Currentbuf));
   if (Strcmp(Url2Str(&u), Url2Str(&Currentbuf->currentURL)) == 0) {
     /* index within this buffer */
     if (u.label) {
@@ -2028,7 +2028,7 @@ static void _nextA(int visited) {
         }
         hseq++;
         if (visited == true && an) {
-          parseURL2(an->url, &url, baseURL(Currentbuf));
+          url = Url::parse2(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
             goto _end;
           }
@@ -2047,7 +2047,7 @@ static void _nextA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true) {
-        parseURL2((char *)an->url, &url, baseURL(Currentbuf));
+        url = Url::parse2(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
           goto _end;
         }
@@ -2111,7 +2111,7 @@ static void _prevA(int visited) {
         }
         hseq--;
         if (visited == true && an) {
-          parseURL2((char *)an->url, &url, baseURL(Currentbuf));
+          url = Url::parse2(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
             goto _end;
           }
@@ -2130,7 +2130,7 @@ static void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true && an) {
-        parseURL2((char *)an->url, &url, baseURL(Currentbuf));
+        url = Url::parse2(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
           goto _end;
         }
@@ -2383,7 +2383,7 @@ static void goURL0(const char *prompt, int relative) {
     a = retrieveCurrentAnchor(Currentbuf);
     if (a) {
       char *a_url;
-      parseURL2((char *)a->url, &p_url, current);
+      p_url = Url::parse2(a->url, current);
       a_url = Url2Str(&p_url)->ptr;
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url);
@@ -2417,7 +2417,7 @@ static void goURL0(const char *prompt, int relative) {
     gotoLabel(url + 1);
     return;
   }
-  parseURL2((char *)url, &p_url, current);
+  p_url = Url::parse2(url, current);
   pushHashHist(URLHist, Url2Str(&p_url)->ptr);
   cmd_loadURL(url, current, referer, nullptr);
   if (Currentbuf != cur_buf) /* success */
@@ -2436,7 +2436,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     Buffer *cur_buf = Currentbuf;
     SKIP_BLANKS(url);
     url = url_quote(url);
-    parseURL2(url, &p_url, nullptr);
+    p_url = Url::parse2(url);
     pushHashHist(URLHist, Url2Str(&p_url)->ptr);
     cmd_loadURL(url, nullptr, nullptr, nullptr);
     if (Currentbuf != cur_buf) /* success */
@@ -2667,7 +2667,7 @@ static void _peekURL(int only_img) {
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    parseURL2((char *)a->url, &pu, baseURL(Currentbuf));
+    pu = Url::parse2(a->url, baseURL(Currentbuf));
     s = Url2Str(&pu);
   }
   if (DecodeURL)
@@ -2974,15 +2974,12 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
-  Anchor *a;
-  Url pu;
-
   if (Currentbuf->firstLine == nullptr)
     return;
-  a = retrieveCurrentAnchor(Currentbuf);
+  auto a = retrieveCurrentAnchor(Currentbuf);
   if (a == nullptr)
     return;
-  parseURL2((char *)a->url, &pu, baseURL(Currentbuf));
+  auto pu = Url::parse2(a->url, baseURL(Currentbuf));
   invoke_browser(Url2Str(&pu)->ptr);
 }
 

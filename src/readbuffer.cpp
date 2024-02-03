@@ -4063,9 +4063,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         case HTML_BASE:
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             p = url_quote(remove_space(p));
-            if (!buf->baseURL)
-              buf->baseURL = (Url *)New(Url);
-            parseURL2(p, buf->baseURL, &buf->currentURL);
+            buf->baseURL = Url::parse2(p, &buf->currentURL);
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
             buf->baseTarget = (char *)url_quote_conv(p, buf->document_charset);

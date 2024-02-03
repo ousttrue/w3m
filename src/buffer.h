@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <optional>
 #include "url.h"
 #include "line.h"
 #include <gc_cpp.h>
@@ -85,7 +86,7 @@ struct Buffer : public gc_cleanup {
   HmarkerList *hmarklist = nullptr;
   HmarkerList *imarklist = nullptr;
   Url currentURL = {.schema = SCM_UNKNOWN};
-  Url *baseURL = nullptr;
+  std::optional<Url> baseURL;
   const char *baseTarget = nullptr;
   UrlSchema real_schema = {};
   const char *sourcefile = nullptr;

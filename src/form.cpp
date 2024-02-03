@@ -574,7 +574,7 @@ static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
   else
     _new = PreForm = (struct pre_form *)New(struct pre_form);
   if (url && !re_url) {
-    parseURL2(url, &pu, NULL);
+    pu = Url::parse2(url);
     _new->url = Url2Str(&pu)->ptr;
   } else
     _new->url = url;
