@@ -83,19 +83,18 @@ Str *Strnew_size(int n) {
   return x;
 }
 
-Str *Strnew_charp(const char *p) {
-  Str *x;
-  int n, len;
-
-  if (p == NULL)
+Str *Strnew(std::string_view p) {
+  if (p.empty()) {
     return Strnew();
-  x = (Str *)GC_MALLOC(sizeof(Str));
+  }
+
+  auto x = (Str *)GC_MALLOC(sizeof(Str));
   if (x == NULL)
     exit(1);
-  n = strlen(p) + 1;
+  auto n = p.size() + 1;
   if (n <= 0 || n > STR_SIZE_MAX)
     n = STR_SIZE_MAX;
-  len = n - 1;
+  auto len = n - 1;
   if (n < INITIAL_STR_SIZE)
     n = INITIAL_STR_SIZE;
   x->ptr = (char *)GC_MALLOC_ATOMIC(n);
@@ -103,7 +102,7 @@ Str *Strnew_charp(const char *p) {
     exit(1);
   x->area_size = n;
   x->length = len;
-  bcopy((void *)p, (void *)x->ptr, len);
+  bcopy(p.data(), x->ptr, len);
   x->ptr[x->length] = '\0';
   return x;
 }

@@ -243,10 +243,7 @@ extern char *acceptableMimeTypes(void);
 extern Buffer *load_option_panel(void);
 extern void sync_with_option(void);
 
-extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern void add_auth_user_passwd(Url *pu, char *realm, Str *uname,
-                                 Str *pwd, int is_proxy);
 
 #define docCSet nulcmd
 #define defCSet nulcmd

@@ -122,6 +122,7 @@ executable(
         'line.cpp',
         'lineprop.cpp',
         'matchattr.cpp',
+        'authpass.cpp',
     ],
     install: true,
     dependencies: [

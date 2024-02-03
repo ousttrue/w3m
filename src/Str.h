@@ -30,7 +30,14 @@ struct Str {
 
 Str *Strnew();
 Str *Strnew_size(int);
-Str *Strnew_charp(const char *);
+Str *Strnew(std::string_view);
+inline Str *Strnew_charp(const char *p) {
+  if (p) {
+    return Strnew(std::string_view(p));
+  } else {
+    return Strnew();
+  }
+}
 Str *Strnew_charp_n(const char *, int);
 Str *Strnew_m_charp(const char *, ...);
 void Strclear(Str *);

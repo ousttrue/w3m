@@ -1,8 +1,5 @@
 #pragma once
 
-extern const char *passwd_file;
-extern bool disable_secret_security_check;
-
 struct Str;
 struct auth_param {
   const char *name;

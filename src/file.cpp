@@ -1,4 +1,5 @@
 #include "file.h"
+#include "authpass.h"
 #include "matchattr.h"
 #include "app.h"
 #include "httpauth.h"

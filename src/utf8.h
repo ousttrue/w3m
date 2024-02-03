@@ -6,10 +6,6 @@
 #include <tuple>
 #include <assert.h>
 
-#ifdef __clang__
-typedef unsigned char char8_t;
-#endif
-
 std::string codepoint_to_utf8(char32_t codepoint);
 int codepoint_to_width(char32_t wc);
 
