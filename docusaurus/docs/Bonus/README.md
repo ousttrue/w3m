@@ -1,4 +1,4 @@
-2ch.cgi
+## 2ch.cgi
 
   [w3m-dev 03635] 2ch.cgi
   2ch の dat を直読みする local CGI です。
@@ -9,7 +9,7 @@
   読んだ dat は ~/.w3m2ch/ 以下に保存します。
   書き込みはできません。
 
-smb.cgi
+## smb.cgi
 
   [w3m-dev 03634] smb.cgi
   SMB にアクセスする local CGI です。
@@ -26,11 +26,11 @@ smb.cgi
   どちらにせよ、あまり良い事ではないので SMB(CIFS)プロトコルを
   喋る版を希望。
 
-google.cgi
+## google.cgi
 
   [w3m-dev 03625] keymap key SEARCH string
 
-html2latex
+## html2latex
 
   HTMLの文書をLaTeX に変換します．Rubyスクリプトです．不完全です．
   ある程度の役には立つかもしれません．
@@ -43,7 +43,7 @@ html2latex
 
     makeref のための部品取りです :-)
 
-makeref
+## makeref
 
   HTMLの文書を読み，アンカーに番号を振ります．番号を振った文書を
   標準出力に書き出し，最後にその一覧を出力します．Ruby スクリプトです．
@@ -62,7 +62,7 @@ makeref
 
     半角カナ(JIS X-0201カナ)に対応していません．
 
-htmldump
+## htmldump
 
   URL からHTML文書を読み，アンカーに番号を振って整形し，標準出力に
   書き出します．

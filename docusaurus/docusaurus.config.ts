@@ -60,9 +60,9 @@ const config: Config = {
       items: [
         {
           type: "docSidebar",
-          sidebarId: "tutorialSidebar",
+          sidebarId: "sidebar",
           position: "left",
-          label: "doc-jp",
+          label: "docs",
         },
         { to: "/blog", label: "note", position: "left" },
         //
