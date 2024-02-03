@@ -267,7 +267,7 @@ Str *base64_encode(const char *src, int len) {
 }
 
 static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw,
-                          ParsedURL *pu, HRequest *hr, FormList *request) {
+                          Url *pu, HRequest *hr, FormList *request) {
   Str *s = Strdup(uname);
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -320,7 +320,7 @@ enum {
 };
 
 static Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw,
-                           ParsedURL *pu, HRequest *hr, FormList *request) {
+                           Url *pu, HRequest *hr, FormList *request) {
   Str *tmp, *a1buf, *a2buf, *rd, *s;
   unsigned char md5[MD5_DIGEST_LENGTH + 1];
   Str *uri = HTTPrequestURI(pu, hr);
@@ -623,7 +623,7 @@ static void add_auth_pass_entry(const struct auth_pass *ent, int netrc,
   /* ignore invalid entries */
 }
 
-void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname, Str *pwd,
+void add_auth_user_passwd(Url *pu, char *realm, Str *uname, Str *pwd,
                           int is_proxy) {
   struct auth_pass ent;
   memset(&ent, 0, sizeof(ent));
@@ -752,7 +752,7 @@ static struct auth_pass *find_auth_pass_entry(const char *host, int port,
   return NULL;
 }
 
-void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
+void invalidate_auth_user_passwd(Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy) {
   auto ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
   if (ent) {
@@ -761,7 +761,7 @@ void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
   return;
 }
 
-int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname, Str **pwd,
+int find_auth_user_passwd(Url *pu, char *realm, Str **uname, Str **pwd,
                           int is_proxy) {
   struct auth_pass *ent;
 
@@ -780,7 +780,7 @@ int find_auth_user_passwd(ParsedURL *pu, char *realm, Str **uname, Str **pwd,
 }
 
 void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   TextList *extra_header, ParsedURL *pu, HRequest *hr,
+                   TextList *extra_header, Url *pu, HRequest *hr,
                    FormList *request, Str **uname, Str **pwd) {
   Str *ss = NULL;
   Str *tmp;

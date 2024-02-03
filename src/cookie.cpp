@@ -265,7 +265,7 @@ static Str *make_cookie(struct cookie *cookie) {
   return tmp;
 }
 
-static int match_cookie(ParsedURL *pu, struct cookie *cookie,
+static int match_cookie(Url *pu, struct cookie *cookie,
                         const char *domainname) {
   if (!domainname)
     return 0;
@@ -293,7 +293,7 @@ static struct cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
   return NULL;
 }
 
-Str *find_cookie(ParsedURL *pu) {
+Str *find_cookie(Url *pu) {
   Str *tmp;
   struct cookie *p, *p1, *fco = NULL;
   int version = 0;
@@ -362,7 +362,7 @@ static int check_avoid_wrong_number_of_dots_domain(Str *domain) {
   }
 }
 
-int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
+int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, CookieFlags flag, Str *comment,
                int version, Str *port, Str *commentURL) {
   struct cookie *p;
@@ -461,7 +461,7 @@ int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
     First_cookie = p;
   }
 
-  copyParsedURL(&p->url, pu);
+  copyUrl(&p->url, pu);
   p->name = name;
   p->value = value;
   p->expires = expires;
@@ -529,7 +529,7 @@ void save_cookies(void) {
     if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
       continue;
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
-            parsedURL2Str(&p->url)->ptr, p->name->ptr, p->value->ptr,
+            Url2Str(&p->url)->ptr, p->name->ptr, p->value->ptr,
             (long)p->expires, p->domain->ptr, p->path->ptr, p->flag, p->version,
             str2charp(p->comment),
             (p->portl) ? portlist2str(p->portl)->ptr : "",
@@ -643,7 +643,7 @@ Buffer *cookie_list_panel(void) {
 
   Strcat_charp(src, "<ol>");
   for (p = First_cookie, i = 0; p; p = p->next, i++) {
-    tmp = html_quote(parsedURL2Str(&p->url)->ptr);
+    tmp = html_quote(Url2Str(&p->url)->ptr);
     if (p->expires != (time_t)-1) {
 #ifdef HAVE_STRFTIME
       strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&p->expires));
@@ -787,7 +787,7 @@ const char *violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"};
 
-void process_http_cookie(const ParsedURL *pu, Str *lineBuf2) {
+void process_http_cookie(const Url *pu, Str *lineBuf2) {
   Str *name = Strnew();
   Str *value = Strnew();
   Str *domain = NULL;

@@ -36,7 +36,7 @@ Str *HTTPrequestMethod(HRequest *hr) {
   return NULL;
 }
 
-Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr) {
+Str *HTTPrequestURI(Url *pu, HRequest *hr) {
   Str *tmp = Strnew();
   if (hr->command == HR_COMMAND_CONNECT) {
     Strcat_charp(tmp, pu->host);
@@ -48,22 +48,22 @@ Str *HTTPrequestURI(ParsedURL *pu, HRequest *hr) {
       Strcat_charp(tmp, pu->query);
     }
   } else
-    Strcat(tmp, _parsedURL2Str(pu, true, true, false));
+    Strcat(tmp, _Url2Str(pu, true, true, false));
   return tmp;
 }
 
-static Str *parsedURL2RefererOriginStr(ParsedURL *pu) {
+static Str *Url2RefererOriginStr(Url *pu) {
   auto f = pu->file;
   auto q = pu->query;
   pu->file = NULL;
   pu->query = NULL;
-  auto s = _parsedURL2Str(pu, false, false, false);
+  auto s = _Url2Str(pu, false, false, false);
   pu->file = f;
   pu->query = q;
   return s;
 }
 
-static char *otherinfo(ParsedURL *target, ParsedURL *current, char *referer) {
+static char *otherinfo(Url *target, Url *current, char *referer) {
   Str *s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -118,14 +118,14 @@ static char *otherinfo(ParsedURL *target, ParsedURL *current, char *referer) {
                 (current->user == NULL && current->pass == NULL))) {
       Strcat_charp(s, "Referer: ");
       if (cross_origin)
-        Strcat(s, parsedURL2RefererOriginStr(current));
+        Strcat(s, Url2RefererOriginStr(current));
       else
-        Strcat(s, parsedURL2RefererStr(current));
+        Strcat(s, Url2RefererStr(current));
       Strcat_charp(s, "\r\n");
     } else if (referer != NULL && referer != NO_REFERER) {
       Strcat_charp(s, "Referer: ");
       if (cross_origin)
-        Strcat(s, parsedURL2RefererOriginStr(current));
+        Strcat(s, Url2RefererOriginStr(current));
       else
         Strcat_charp(s, referer);
       Strcat_charp(s, "\r\n");
@@ -134,7 +134,7 @@ static char *otherinfo(ParsedURL *target, ParsedURL *current, char *referer) {
   return s->ptr;
 }
 
-Str *HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr,
+Str *HTTPrequest(Url *pu, Url *current, HRequest *hr,
                  TextList *extra) {
   Str *tmp;
   TextListItem *i;

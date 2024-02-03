@@ -2156,7 +2156,7 @@ From: Yamate Keiichirou <yamate@ebina.hitachi.co.jp>
 
         * html.h, url.c, file.c, menu.c, frame.c: オブジェクトの捕まえ
         方 (retrieve schemeだろうか)の流れを、char *url -> parse?URL()
-        -> parsedURL.scheme -> openURL() -> URLFile.scheme ->
+        -> Url.scheme -> openURL() -> URLFile.scheme ->
         loadGeneralFile() -> Buffer.real_scheme と仮定して、openURL()
         にてurlがlocal_cgiだったときにはURLFile.schemeにSCM_LOCAL_CGI
         をいれて、cache file付きで返すように変更。つまり、frameでディ
@@ -3048,7 +3048,7 @@ local CGI を試してみました。
 ・ソースファイルが消去される(discardBuffer)
 ・ヘッダ部分を読みにいかない(loadGeneralFile, openURL)
 ・セグメントエラーで落ちる(loadGeneralFile)
-・現 URL が :///filename とおかしくなる(parsedURL2Str)
+・現 URL が :///filename とおかしくなる(Url2Str)
 と、かなりバグってましたT_T
 修正の方針は、scheme を SCM_LOCALCGI に設定するのを止めて、
 (SCM_LOCAL のままにしておいて) is_cgi フラグを使う様にしています。

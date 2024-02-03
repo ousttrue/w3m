@@ -244,7 +244,7 @@ static void writeBufferName(Buffer *buf, int n) {
       break;
     default:
       Strcat_char(msg, ' ');
-      Strcat(msg, parsedURL2Str(&buf->currentURL));
+      Strcat(msg, Url2Str(&buf->currentURL));
       break;
     }
   }
@@ -562,7 +562,7 @@ Buffer *prevBuffer(Buffer *first, Buffer *buf) {
 /* append links */
 static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   LinkList *l;
-  ParsedURL pu;
+  Url pu;
   const char *url;
 
   if (!link)
@@ -572,7 +572,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   for (l = link; l; l = l->next) {
     if (l->url) {
       parseURL2(l->url, &pu, baseURL(buf));
-      url = html_quote(parsedURL2Str(&pu)->ptr);
+      url = html_quote(Url2Str(&pu)->ptr);
     } else
       url = "(empty)";
     Strcat_m_charp(html, "<tr valign=top><td><a href=\"", url, "\">",
@@ -600,7 +600,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
 Buffer *page_info_panel(Buffer *buf) {
   Str *tmp = Strnew_size(1024);
   Anchor *a;
-  ParsedURL pu;
+  Url pu;
   TextListItem *ti;
   struct frameset *f_set = NULL;
   int all;
@@ -616,7 +616,7 @@ Buffer *page_info_panel(Buffer *buf) {
   all = buf->allLine;
   if (all == 0 && buf->lastLine)
     all = buf->lastLine->linenumber;
-  p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+  p = url_decode2(Url2Str(&buf->currentURL)->ptr, NULL);
   Strcat_m_charp(
       tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
       html_quote(buf->buffername), "<tr valign=top><td nowrap>Current URL<td>",
@@ -632,7 +632,7 @@ Buffer *page_info_panel(Buffer *buf) {
   a = retrieveCurrentAnchor(buf);
   if (a != NULL) {
     parseURL2((char *)a->url, &pu, baseURL(buf));
-    p = parsedURL2Str(&pu)->ptr;
+    p = Url2Str(&pu)->ptr;
     q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode2(p, buf));
@@ -645,7 +645,7 @@ Buffer *page_info_panel(Buffer *buf) {
   a = retrieveCurrentImg(buf);
   if (a != NULL) {
     parseURL2((char *)a->url, &pu, baseURL(buf));
-    p = parsedURL2Str(&pu)->ptr;
+    p = Url2Str(&pu)->ptr;
     q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode2(p, buf));
@@ -721,25 +721,25 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_SOURCEFILE", buf->sourcefile);
     set_environ("W3M_FILENAME", buf->filename);
     set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
+    set_environ("W3M_URL", Url2Str(&buf->currentURL)->ptr);
     set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
   }
   l = buf->currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
     Anchor *a;
-    ParsedURL pu;
+    Url pu;
     char *s = GetWord(buf);
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     a = retrieveCurrentAnchor(buf);
     if (a) {
       parseURL2((char *)a->url, &pu, baseURL(buf));
-      set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
+      set_environ("W3M_CURRENT_LINK", Url2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf);
     if (a) {
       parseURL2((char *)a->url, &pu, baseURL(buf));
-      set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
+      set_environ("W3M_CURRENT_IMG", Url2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");
     a = retrieveCurrentForm(buf);

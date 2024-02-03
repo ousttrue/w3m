@@ -30,11 +30,11 @@ struct UrlStream {
   time_t modtime;
 };
 
-struct ParsedURL;
+struct Url;
 struct FormList;
 struct TextList;
 struct HRequest;
-UrlStream openURL(char *url, ParsedURL *pu, ParsedURL *current,
+UrlStream openURL(char *url, Url *pu, Url *current,
                   URLOption *option, FormList *request, TextList *extra_header,
                   UrlStream *ouf, HRequest *hr, unsigned char *status);
 

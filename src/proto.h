@@ -164,8 +164,8 @@ struct Line;
 
 extern Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf);
 
-struct ParsedURL;
-extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu);
+struct Url;
+extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu);
 
 struct TabBuffer;
 extern TabBuffer *newTab(void);
@@ -232,7 +232,7 @@ extern void resetFrameElement(union frameset_element *f_element, Buffer *buf,
 extern Buffer *renderFrame(Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
 
-extern ParsedURL *baseURL(Buffer *buf);
+extern Url *baseURL(Buffer *buf);
 
 struct URLOption;
 struct TextList;
@@ -245,7 +245,7 @@ extern void sync_with_option(void);
 
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
+extern void add_auth_user_passwd(Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 
 #define docCSet nulcmd

@@ -30,7 +30,7 @@ extern const char *mimetypes_files;
 extern int DNS_order;
 
 struct Str;
-struct ParsedURL {
+struct Url {
   UrlSchema schema;
   const char *user;
   const char *pass;
@@ -43,25 +43,25 @@ struct ParsedURL {
   int is_nocache;
 };
 
-extern ParsedURL HTTP_proxy_parsed;
-extern ParsedURL HTTPS_proxy_parsed;
-extern ParsedURL FTP_proxy_parsed;
+extern Url HTTP_proxy_parsed;
+extern Url HTTPS_proxy_parsed;
+extern Url FTP_proxy_parsed;
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->schema == SCM_UNKNOWN && !(pu)->file)
 
-void parseURL(const char *url, ParsedURL *p_url, ParsedURL *current);
-void copyParsedURL(ParsedURL *p, const ParsedURL *q);
-void parseURL2(const char *url, ParsedURL *pu, ParsedURL *current);
-Str *parsedURL2Str(ParsedURL *pu);
-Str *parsedURL2RefererStr(ParsedURL *pu);
-Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label);
+void parseURL(const char *url, Url *p_url, Url *current);
+void copyUrl(Url *p, const Url *q);
+void parseURL2(const char *url, Url *pu, Url *current);
+Str *Url2Str(Url *pu);
+Str *Url2RefererStr(Url *pu);
+Str *_Url2Str(Url *pu, int pass, int user, int label);
 
 struct TextList;
 int check_no_proxy(const char *domain);
 int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);
 
-struct ParsedURL;
-ParsedURL *schemaToProxy(UrlSchema schema);
+struct Url;
+Url *schemaToProxy(UrlSchema schema);
 const char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)

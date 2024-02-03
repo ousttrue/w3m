@@ -565,7 +565,7 @@ static struct pre_form *PreForm = NULL;
 static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
                                      Regex *re_url, const char *name,
                                      const char *action) {
-  ParsedURL pu;
+  Url pu;
   struct pre_form *_new;
 
   if (prev)
@@ -574,7 +574,7 @@ static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
     _new = PreForm = (struct pre_form *)New(struct pre_form);
   if (url && !re_url) {
     parseURL2(url, &pu, NULL);
-    _new->url = parsedURL2Str(&pu)->ptr;
+    _new->url = Url2Str(&pu)->ptr;
   } else
     _new->url = url;
   _new->re_url = re_url;
@@ -738,11 +738,11 @@ void preFormUpdateBuffer(Buffer *buf) {
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      Str *url = parsedURL2Str(&buf->currentURL);
+      Str *url = Url2Str(&buf->currentURL);
       if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
         continue;
     } else if (pf->url) {
-      if (Strcmp_charp(parsedURL2Str(&buf->currentURL), pf->url))
+      if (Strcmp_charp(Url2Str(&buf->currentURL), pf->url))
         continue;
     } else
       continue;

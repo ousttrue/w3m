@@ -45,9 +45,9 @@ TextList *NO_proxy_domains;
 
 int DNS_order = DNS_ORDER_UNSPEC;
 
-ParsedURL HTTP_proxy_parsed;
-ParsedURL HTTPS_proxy_parsed;
-ParsedURL FTP_proxy_parsed;
+Url HTTP_proxy_parsed;
+Url HTTPS_proxy_parsed;
+Url FTP_proxy_parsed;
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -85,7 +85,7 @@ static void KeyAbort(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-ParsedURL *baseURL(Buffer *buf) {
+Url *baseURL(Buffer *buf) {
   if (buf->bufferprop & BP_NO_URL) {
     /* no URL is defined for the buffer */
     return NULL;
@@ -307,14 +307,14 @@ static const char *copyPath(const char *orgpath, int length, int option) {
   return tmp->ptr;
 }
 
-void parseURL(const char *url, ParsedURL *p_url, ParsedURL *current) {
+void parseURL(const char *url, Url *p_url, Url *current) {
   const char *p, *q, *qq;
   Str *tmp;
 
   url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
 
   p = url;
-  copyParsedURL(p_url, NULL);
+  copyUrl(p_url, NULL);
   p_url->schema = SCM_MISSING;
 
   /* RFC1808: Relative Uniform Resource Locators
@@ -322,7 +322,7 @@ void parseURL(const char *url, ParsedURL *p_url, ParsedURL *current) {
    */
   if (*url == '\0' || *url == '#') {
     if (current)
-      copyParsedURL(p_url, current);
+      copyUrl(p_url, current);
     goto do_label;
   }
   /* search for schema */
@@ -535,9 +535,9 @@ do_label:
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
 
-void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
+void copyUrl(Url *p, const Url *q) {
   if (q == NULL) {
-    memset(p, 0, sizeof(ParsedURL));
+    memset(p, 0, sizeof(Url));
     p->schema = SCM_UNKNOWN;
     return;
   }
@@ -553,7 +553,7 @@ void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
   p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(const char *url, ParsedURL *pu, ParsedURL *current) {
+void parseURL2(const char *url, Url *pu, Url *current) {
   const char *p;
   Str *tmp;
   int relative_uri = FALSE;
@@ -688,7 +688,7 @@ void parseURL2(const char *url, ParsedURL *pu, ParsedURL *current) {
   }
 }
 
-Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
+Str *_Url2Str(Url *pu, int pass, int user, int label) {
   Str *tmp;
   static const char *schema_str[] = {
       "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
@@ -763,12 +763,12 @@ Str *_parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
   return tmp;
 }
 
-Str *parsedURL2Str(ParsedURL *pu) {
-  return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
+Str *Url2Str(Url *pu) {
+  return _Url2Str(pu, FALSE, TRUE, TRUE);
 }
 
-Str *parsedURL2RefererStr(ParsedURL *pu) {
-  return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+Str *Url2RefererStr(Url *pu) {
+  return _Url2Str(pu, FALSE, FALSE, FALSE);
 }
 
 static int domain_match(const char *pat, const char *domain) {
@@ -887,8 +887,8 @@ end:
   return ret;
 }
 
-ParsedURL *schemaToProxy(UrlSchema schema) {
-  ParsedURL *pu = NULL; /* for gcc */
+Url *schemaToProxy(UrlSchema schema) {
+  Url *pu = NULL; /* for gcc */
   switch (schema) {
   case SCM_HTTP:
     pu = &HTTP_proxy_parsed;

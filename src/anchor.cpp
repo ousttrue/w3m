@@ -521,7 +521,7 @@ Buffer *link_list_panel(Buffer *buf) {
   FormItemList *fi;
   const char *u, *p;
   const char *t;
-  ParsedURL pu;
+  Url pu;
   /* FIXME: gettextize? */
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
@@ -536,7 +536,7 @@ Buffer *link_list_panel(Buffer *buf) {
     for (l = buf->linklist; l; l = l->next) {
       if (l->url) {
         parseURL2(l->url, &pu, baseURL(buf));
-        p = parsedURL2Str(&pu)->ptr;
+        p = Url2Str(&pu)->ptr;
         u = html_quote(p);
         if (DecodeURL)
           p = html_quote(url_decode2(p, buf));
@@ -566,7 +566,7 @@ Buffer *link_list_panel(Buffer *buf) {
       if (a->hseq < 0 || a->slave)
         continue;
       parseURL2((char *)a->url, &pu, baseURL(buf));
-      p = parsedURL2Str(&pu)->ptr;
+      p = Url2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode2(p, buf));
@@ -588,7 +588,7 @@ Buffer *link_list_panel(Buffer *buf) {
       if (a->slave)
         continue;
       parseURL2((char *)a->url, &pu, baseURL(buf));
-      p = parsedURL2Str(&pu)->ptr;
+      p = Url2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode2(p, buf));
@@ -621,7 +621,7 @@ Buffer *link_list_panel(Buffer *buf) {
         //   if (!m)
         //     continue;
         //   parseURL2(m->url, &pu, baseURL(buf));
-        //   p = parsedURL2Str(&pu)->ptr;
+        //   p = Url2Str(&pu)->ptr;
         //   u = html_quote(p);
         //   if (DecodeURL)
         //     p = html_quote(url_decode2(p, buf));

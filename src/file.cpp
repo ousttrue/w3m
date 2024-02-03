@@ -140,7 +140,7 @@ Str *convertLine0(UrlStream *uf, Str *line, int mode) {
   return line;
 }
 
-void readHeader(UrlStream *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
+void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
   char *p, *q;
   char c;
   Str *lineBuf2 = NULL;
@@ -303,14 +303,14 @@ static char *checkContentType(Buffer *buf) {
   return r->ptr;
 }
 
-static int same_url_p(ParsedURL *pu1, ParsedURL *pu2) {
+static int same_url_p(Url *pu1, Url *pu2) {
   return (pu1->schema == pu2->schema && pu1->port == pu2->port &&
           (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1) &&
           (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
 
-static int checkRedirection(ParsedURL *pu) {
-  static ParsedURL *puv = NULL;
+static int checkRedirection(Url *pu) {
+  static Url *puv = NULL;
   static int nredir = 0;
   static int nredir_size = 0;
   Str *tmp;
@@ -324,7 +324,7 @@ static int checkRedirection(ParsedURL *pu) {
   if (nredir >= FollowRedirection) {
     /* FIXME: gettextize? */
     tmp = Sprintf("Number of redirections exceeded %d at %s", FollowRedirection,
-                  parsedURL2Str(pu)->ptr);
+                  Url2Str(pu)->ptr);
     disp_err_message(tmp->ptr, FALSE);
     return FALSE;
   } else if (nredir_size > 0 &&
@@ -332,16 +332,16 @@ static int checkRedirection(ParsedURL *pu) {
               (!(nredir % 2) &&
                same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
     /* FIXME: gettextize? */
-    tmp = Sprintf("Redirection loop detected (%s)", parsedURL2Str(pu)->ptr);
+    tmp = Sprintf("Redirection loop detected (%s)", Url2Str(pu)->ptr);
     disp_err_message(tmp->ptr, FALSE);
     return FALSE;
   }
   if (!puv) {
     nredir_size = FollowRedirection / 2 + 1;
-    puv = (ParsedURL *)New_N(ParsedURL, nredir_size);
-    memset(puv, 0, sizeof(ParsedURL) * nredir_size);
+    puv = (Url *)New_N(Url, nredir_size);
+    memset(puv, 0, sizeof(Url) * nredir_size);
   }
-  copyParsedURL(&puv[nredir % nredir_size], pu);
+  copyUrl(&puv[nredir % nredir_size], pu);
   nredir++;
   return TRUE;
 }
@@ -352,10 +352,10 @@ static long long current_content_length;
  * loadGeneralFile: load file to buffer
  */
 #define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
-Buffer *loadGeneralFile(const char *path, ParsedURL *current,
+Buffer *loadGeneralFile(const char *path, Url *current,
                         const char *referer, int flag, FormList *request) {
   UrlStream f, *of = NULL;
-  ParsedURL pu;
+  Url pu;
   Buffer *b = NULL;
   Buffer *(*proc)(UrlStream *, Buffer *) = loadBuffer;
   const char *tpath;
@@ -376,7 +376,7 @@ Buffer *loadGeneralFile(const char *path, ParsedURL *current,
   Str *tmp;
   Str *page = NULL;
   HRequest hr;
-  ParsedURL *auth_pu;
+  Url *auth_pu;
 
   tpath = path;
   prevtrap = NULL;
@@ -392,7 +392,7 @@ load_doc: {
     tpath = (char *)sc_redirect;
     request = NULL;
     add_auth_cookie_flag = 0;
-    current = (ParsedURL *)New(ParsedURL);
+    current = (Url *)New(Url);
     *current = pu;
     status = HTST_NORMAL;
     goto load_doc;
@@ -415,7 +415,7 @@ load_doc: {
           Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
           b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0, NULL);
           if (b != NULL && b != NO_BUFFER) {
-            copyParsedURL(&b->currentURL, &pu);
+            copyUrl(&b->currentURL, &pu);
             b->filename = b->currentURL.real_file;
           }
           return b;
@@ -430,7 +430,7 @@ load_doc: {
       // t = "ftp:directory";
       break;
     case SCM_UNKNOWN:
-      disp_err_message(Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr,
+      disp_err_message(Sprintf("Unknown URI: %s", Url2Str(&pu)->ptr)->ptr,
                        FALSE);
       break;
 
@@ -492,8 +492,8 @@ load_doc: {
       tpath = url_quote((char *)p);
       request = NULL;
       UFclose(&f);
-      current = (ParsedURL *)New(ParsedURL);
-      copyParsedURL(current, &pu);
+      current = (Url *)New(Url);
+      copyUrl(current, &pu);
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop =
           static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);
@@ -591,8 +591,8 @@ load_doc: {
       request = NULL;
       UFclose(&f);
       add_auth_cookie_flag = 0;
-      current = (ParsedURL *)New(ParsedURL);
-      copyParsedURL(current, &pu);
+      current = (Url *)New(Url);
+      copyUrl(current, &pu);
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop = (BufferFlags)(t_buf->bufferprop | BP_REDIRECTED);
       status = HTST_NORMAL;
@@ -658,7 +658,7 @@ page_loaded:
     }
     b = loadHTMLString(page);
     if (b) {
-      copyParsedURL(&b->currentURL, &pu);
+      copyUrl(&b->currentURL, &pu);
       b->real_schema = pu.schema;
       b->real_type = t;
       if (src)
@@ -736,7 +736,7 @@ page_loaded:
   }
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH);
-  copyParsedURL(&t_buf->currentURL, &pu);
+  copyUrl(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
   if (proc == DO_EXTERNAL) {
@@ -958,7 +958,7 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
   init_stream(&uf, SCM_UNKNOWN, stream);
 
   t_buf = new Buffer(INIT_BUFFER_WIDTH);
-  copyParsedURL(&t_buf->currentURL, NULL);
+  copyUrl(&t_buf->currentURL, NULL);
   t_buf->currentURL.schema = SCM_LOCAL;
   t_buf->currentURL.file = "-";
   if (SearchHeader) {

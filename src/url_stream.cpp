@@ -57,7 +57,7 @@ void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream) {
 }
 
 /* add index_file if exists */
-static void add_index_file(ParsedURL *pu, UrlStream *uf) {
+static void add_index_file(Url *pu, UrlStream *uf) {
   const char *p, *q;
   TextList *index_file_list = NULL;
   TextListItem *ti;
@@ -105,7 +105,7 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-UrlStream openURL(char *url, ParsedURL *pu, ParsedURL *current,
+UrlStream openURL(char *url, Url *pu, Url *current,
                   URLOption *option, FormList *request, TextList *extra_header,
                   UrlStream *ouf, HRequest *hr, unsigned char *status) {
   Str *tmp;
@@ -153,7 +153,7 @@ retry:
     pu->host = NULL;
 
   uf.schema = pu->schema;
-  uf.url = parsedURL2Str(pu)->ptr;
+  uf.url = Url2Str(pu)->ptr;
   pu->is_nocache = (option->flag & RG_NOCACHE);
   uf.ext = filename_extension(pu->file, 1);
 

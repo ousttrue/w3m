@@ -26,7 +26,7 @@ ftp を事前にカットしているのでシンプルになっています。
 (2本のストリームを扱う ftp は専用のインターフェースを余分に持っている)
 
 - input_stream
-- ParsedURL
+- Url
 - HRequest
 - compression 関連
 - http auth 関連

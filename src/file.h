@@ -9,12 +9,12 @@ extern const char *DefaultType;
 extern bool DecodeCTE;
 
 struct Buffer;
-struct ParsedURL;
+struct Url;
 struct FormList;
 
 #define RG_NOCACHE 1
 
-Buffer *loadGeneralFile(const char *path, ParsedURL *current,
+Buffer *loadGeneralFile(const char *path, Url *current,
                         const char *referer, int flag, FormList *request);
 
 void showProgress(long long *linelen, long long *trbyte,

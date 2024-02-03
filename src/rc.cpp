@@ -1251,11 +1251,11 @@ static void loadSiteconf(void) {
       opt = getWord(&p);
       SKIP_BLANKS(p);
       if (!newent->re_url) {
-        ParsedURL pu;
+        Url pu;
         if (!url || !*url)
           continue;
         parseURL2(url, &pu, NULL);
-        newent->url = parsedURL2Str(&pu)->ptr;
+        newent->url = Url2Str(&pu)->ptr;
       }
       /* If we have an extra or unknown option, ignore this record
        * for future extensions. */
@@ -1297,7 +1297,7 @@ static void loadSiteconf(void) {
   fclose(fp);
 }
 
-const void *querySiteconf(const ParsedURL *query_pu, int field) {
+const void *querySiteconf(const Url *query_pu, int field) {
   const struct siteconf_rec *ent;
   Str *u;
   const char *firstp, *lastp;
@@ -1306,7 +1306,7 @@ const void *querySiteconf(const ParsedURL *query_pu, int field) {
     return NULL;
   if (!query_pu || IS_EMPTY_PARSED_URL(query_pu))
     return NULL;
-  u = parsedURL2Str((ParsedURL *)query_pu);
+  u = Url2Str((Url *)query_pu);
   if (u->length == 0)
     return NULL;
 

@@ -4064,7 +4064,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             p = url_quote(remove_space(p));
             if (!buf->baseURL)
-              buf->baseURL = (ParsedURL *)New(ParsedURL);
+              buf->baseURL = (Url *)New(Url);
             parseURL2(p, buf->baseURL, &buf->currentURL);
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))

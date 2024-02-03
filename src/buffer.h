@@ -84,8 +84,8 @@ struct Buffer : public gc_cleanup {
   MapList *maplist = nullptr;
   HmarkerList *hmarklist = nullptr;
   HmarkerList *imarklist = nullptr;
-  ParsedURL currentURL = {.schema = SCM_UNKNOWN};
-  ParsedURL *baseURL = nullptr;
+  Url currentURL = {.schema = SCM_UNKNOWN};
+  Url *baseURL = nullptr;
   const char *baseTarget = nullptr;
   UrlSchema real_schema = {};
   const char *sourcefile = nullptr;

@@ -73,7 +73,7 @@ JMP_BUF IntReturn;
 
 static void delBuffer(Buffer *buf);
 static void cmd_loadfile(const char *path);
-static void cmd_loadURL(const char *url, ParsedURL *current,
+static void cmd_loadURL(const char *url, Url *current,
                         const char *referer, FormList *request);
 static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
 int show_params_p = 0;
@@ -1311,7 +1311,7 @@ static Buffer *loadLink(const char *url, const char *target,
   Buffer *buf, *nfbuf;
   // union frameset_element *f_element = NULL;
   int flag = 0;
-  ParsedURL *base, pu;
+  Url *base, pu;
   const int *no_referer_ptr;
 
   message(Sprintf("loading %s", url)->ptr, 0, 0);
@@ -1324,7 +1324,7 @@ static Buffer *loadLink(const char *url, const char *target,
       base->schema == SCM_DATA)
     referer = NO_REFERER;
   if (referer == NULL)
-    referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
+    referer = Url2RefererStr(&Currentbuf->currentURL)->ptr;
   buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
   if (buf == NULL) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -1333,7 +1333,7 @@ static Buffer *loadLink(const char *url, const char *target,
   }
 
   parseURL2(url, &pu, base);
-  pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
+  pushHashHist(URLHist, Url2Str(&pu)->ptr);
 
   if (buf == NO_BUFFER) {
     return NULL;
@@ -1395,7 +1395,7 @@ static void gotoLabel(const char *label) {
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
   buf->currentURL.label = allocStr(label, -1);
-  pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
+  pushHashHist(URLHist, Url2Str(&buf->currentURL)->ptr);
   buf->clone->count++;
   pushBuffer(buf);
   gotoLine(Currentbuf, al->start.line);
@@ -1440,7 +1440,7 @@ static int handleMailto(const char *url) {
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   Anchor *a;
-  ParsedURL u;
+  Url u;
   const char *url;
 
   if (Currentbuf->firstLine == NULL)
@@ -1461,7 +1461,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     return;
   }
   parseURL2(a->url, &u, baseURL(Currentbuf));
-  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
+  if (Strcmp(Url2Str(&u), Url2Str(&Currentbuf->currentURL)) == 0) {
     /* index within this buffer */
     if (u.label) {
       gotoLabel(u.label);
@@ -1688,7 +1688,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
   auto tmp2 = Strdup(fi->parent->action);
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
-    tmp2 = parsedURL2Str(&Currentbuf->currentURL);
+    tmp2 = Url2Str(&Currentbuf->currentURL);
     char *p;
     if ((p = strchr(tmp2->ptr, '?')) != NULL)
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -1989,7 +1989,7 @@ static void _nextA(int visited) {
   BufferPoint *po;
   Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
-  ParsedURL url;
+  Url url;
 
   if (Currentbuf->firstLine == NULL)
     return;
@@ -2028,7 +2028,7 @@ static void _nextA(int visited) {
         hseq++;
         if (visited == TRUE && an) {
           parseURL2(an->url, &url, baseURL(Currentbuf));
-          if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+          if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
             goto _end;
           }
         }
@@ -2047,7 +2047,7 @@ static void _nextA(int visited) {
       y = an->start.line;
       if (visited == TRUE) {
         parseURL2((char *)an->url, &url, baseURL(Currentbuf));
-        if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+        if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
           goto _end;
         }
       }
@@ -2072,7 +2072,7 @@ static void _prevA(int visited) {
   BufferPoint *po;
   Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
-  ParsedURL url;
+  Url url;
 
   if (Currentbuf->firstLine == NULL)
     return;
@@ -2111,7 +2111,7 @@ static void _prevA(int visited) {
         hseq--;
         if (visited == TRUE && an) {
           parseURL2((char *)an->url, &url, baseURL(Currentbuf));
-          if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+          if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
             goto _end;
           }
         }
@@ -2130,7 +2130,7 @@ static void _prevA(int visited) {
       y = an->start.line;
       if (visited == TRUE && an) {
         parseURL2((char *)an->url, &url, baseURL(Currentbuf));
-        if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
+        if (getHashHist(URLHist, Url2Str(&url)->ptr)) {
           goto _end;
         }
       }
@@ -2343,7 +2343,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
     delBuffer(buf);
 }
 
-static void cmd_loadURL(const char *url, ParsedURL *current,
+static void cmd_loadURL(const char *url, Url *current,
                         const char *referer, FormList *request) {
   if (handleMailto((char *)url))
     return;
@@ -2362,7 +2362,7 @@ static void cmd_loadURL(const char *url, ParsedURL *current,
 /* go to specified URL */
 static void goURL0(const char *prompt, int relative) {
   const char *url, *referer;
-  ParsedURL p_url, *current;
+  Url p_url, *current;
   Buffer *cur_buf = Currentbuf;
   const int *no_referer_ptr;
 
@@ -2373,7 +2373,7 @@ static void goURL0(const char *prompt, int relative) {
 
     current = baseURL(Currentbuf);
     if (current) {
-      char *c_url = parsedURL2Str(current)->ptr;
+      char *c_url = Url2Str(current)->ptr;
       if (DefaultURLString == DEFAULT_URL_CURRENT)
         url = url_decode2(c_url, NULL);
       else
@@ -2383,7 +2383,7 @@ static void goURL0(const char *prompt, int relative) {
     if (a) {
       char *a_url;
       parseURL2((char *)a->url, &p_url, current);
-      a_url = parsedURL2Str(&p_url)->ptr;
+      a_url = Url2Str(&p_url)->ptr;
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode2(a_url, Currentbuf);
       else
@@ -2401,7 +2401,7 @@ static void goURL0(const char *prompt, int relative) {
         current->schema == SCM_DATA)
       referer = NO_REFERER;
     else
-      referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
+      referer = Url2RefererStr(&Currentbuf->currentURL)->ptr;
     url = url_quote((char *)url);
   } else {
     current = NULL;
@@ -2417,10 +2417,10 @@ static void goURL0(const char *prompt, int relative) {
     return;
   }
   parseURL2((char *)url, &p_url, current);
-  pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+  pushHashHist(URLHist, Url2Str(&p_url)->ptr);
   cmd_loadURL(url, current, referer, NULL);
   if (Currentbuf != cur_buf) /* success */
-    pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+    pushHashHist(URLHist, Url2Str(&Currentbuf->currentURL)->ptr);
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
@@ -2431,15 +2431,15 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
   const char *url;
   if ((url = getenv("HTTP_HOME")) != NULL ||
       (url = getenv("WWW_HOME")) != NULL) {
-    ParsedURL p_url;
+    Url p_url;
     Buffer *cur_buf = Currentbuf;
     SKIP_BLANKS(url);
     url = url_quote(url);
     parseURL2(url, &p_url, NULL);
-    pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
+    pushHashHist(URLHist, Url2Str(&p_url)->ptr);
     cmd_loadURL(url, NULL, NULL, NULL);
     if (Currentbuf != cur_buf) /* success */
-      pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+      pushHashHist(URLHist, Url2Str(&Currentbuf->currentURL)->ptr);
   }
 }
 
@@ -2453,7 +2453,7 @@ static void cmd_loadBuffer(Buffer *buf, int prop, int linkid) {
   } else if (buf != NO_BUFFER) {
     buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | prop);
     if (!(buf->bufferprop & BP_NO_URL))
-      copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
+      copyUrl(&buf->currentURL, &Currentbuf->currentURL);
     if (linkid != LB_NOLINK) {
       buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;
@@ -2476,7 +2476,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
                 (Str_form_quote(localCookie()))->ptr,
                 (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-                (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
+                (Str_form_quote(Url2Str(&Currentbuf->currentURL)))->ptr,
                 (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
   request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
   request->body = tmp->ptr;
@@ -2637,7 +2637,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
 static void _peekURL(int only_img) {
 
   Anchor *a;
-  ParsedURL pu;
+  Url pu;
   static Str *s = NULL;
   static int offset = 0, n;
 
@@ -2665,7 +2665,7 @@ static void _peekURL(int only_img) {
   }
   if (s == NULL) {
     parseURL2((char *)a->url, &pu, baseURL(Currentbuf));
-    s = parsedURL2Str(&pu);
+    s = Url2Str(&pu);
   }
   if (DecodeURL)
     s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
@@ -2686,7 +2686,7 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address") { _peekURL(1); }
 static Str *currentURL(void) {
   if (Currentbuf->bufferprop & BP_INTERNAL)
     return Strnew_size(0);
-  return parsedURL2Str(&Currentbuf->currentURL);
+  return Url2Str(&Currentbuf->currentURL);
 }
 
 DEFUN(curURL, PEEK, "Show current address") {
@@ -2807,7 +2807,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   } else {
     request = NULL;
   }
-  url = parsedURL2Str(&Currentbuf->currentURL);
+  url = Url2Str(&Currentbuf->currentURL);
   message("Reloading...", 0, 0);
   refresh(term_io());
   SearchHeader = Currentbuf->search_header;
@@ -2966,12 +2966,12 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
     disp_err_message("Can't browse stdin", TRUE);
     return;
   }
-  invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
+  invoke_browser(Url2Str(&Currentbuf->currentURL)->ptr);
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
   Anchor *a;
-  ParsedURL pu;
+  Url pu;
 
   if (Currentbuf->firstLine == NULL)
     return;
@@ -2979,7 +2979,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
   if (a == NULL)
     return;
   parseURL2((char *)a->url, &pu, baseURL(Currentbuf));
-  invoke_browser(parsedURL2Str(&pu)->ptr);
+  invoke_browser(Url2Str(&pu)->ptr);
 }
 
 /* show current line number and number of lines in the entire document */
@@ -4107,7 +4107,7 @@ int main(int argc, char **argv) {
       if (newbuf == NULL)
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
       else if (newbuf != NO_BUFFER)
-        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+        pushHashHist(URLHist, Url2Str(&newbuf->currentURL)->ptr);
     } else {
       if (fmInitialized)
         fmTerm();
@@ -4178,7 +4178,7 @@ int main(int argc, char **argv) {
       case SCM_LOCAL_CGI:
         unshiftHist(LoadHist, url);
       default:
-        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+        pushHashHist(URLHist, Url2Str(&newbuf->currentURL)->ptr);
         break;
       }
     } else if (newbuf == NO_BUFFER)

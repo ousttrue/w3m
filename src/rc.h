@@ -5,10 +5,10 @@ extern const char *rc_dir;
 extern bool multicolList;
 extern bool DecodeURL;
 
-struct ParsedURL;
+struct Url;
 void show_params(FILE *fp);
 int str_to_bool(const char *value, int old);
-const void *querySiteconf(const ParsedURL *query_pu, int field);
+const void *querySiteconf(const Url *query_pu, int field);
 
 #define SCONF_RESERVED 0
 #define SCONF_SUBSTITUTE_URL 1

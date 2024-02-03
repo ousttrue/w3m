@@ -2870,7 +2870,7 @@
 			check uf
 		(readHeader): always convertLine
 		(loadGeneralFile): rewrite
-		(loadGopherDir): return Str, args change to ParsedURL and code
+		(loadGopherDir): return Str, args change to Url and code
 				rewrite
 		(saveBuffer): always conv_str
 		(_doFileCopy): close_all_fds
@@ -3119,7 +3119,7 @@
 		(parseURL): scheme copied from current
 		(parseURL2): SCM_DATA
 			check SCM_FTP, SCM_FTPDIR
-		(_parsedURL2Str): add data in scheme_str
+		(_Url2Str): add data in scheme_str
 			handle SCM_DATA
 			SCM_FTPDIR
 		(openURL): file_unquote
@@ -3157,7 +3157,7 @@
 	* proto.h (reAnchorNewsheader): added
 	* url.c (DefaultPort): add 119 for nntp group
 		(parseURL2): rewrite to support nntp:,news: extension
-		(_parsedURL2Str): add for SCM_NNTP_GROUP
+		(_Url2Str): add for SCM_NNTP_GROUP
 		(openURL): rewrite to support nntp:,news: extension
 
 2002-12-28  Fumitoshi UKAI  <ukai@debian.or.jp>
@@ -3209,7 +3209,7 @@
 		(params9): add nntpserver, nntpmode, max_news
 	* url.c (DefaultPort): add 119 for news group
 		(parseURL2): news:..@... is SCM_NEWS_GROUP
-		(_parsedURL2Str): add news for SCM_NEWS_GROUP
+		(_Url2Str): add news for SCM_NEWS_GROUP
 		(openURL): cleanup SCM_NEWS
 			add SCM_NEWS_GROUP
 	* news.c: added
@@ -5275,8 +5275,8 @@
 2002-10-31  Fumitoshi UKAI  <ukai@debian.or.jp>
 
 	* [w3m-dev 03359] support for http://user:pass@www.url.com
-	* etc.c (find_auth_user_passwd): use ParsedURL for args
-		use user and passwd if these are defined in ParsedURL
+	* etc.c (find_auth_user_passwd): use Url for args
+		use user and passwd if these are defined in Url
 	* file.c (getAuthCookie): change find_auth_user_passwd()
 	* proto.h (find_auth_user_passwd): change prototype
 	* NOTE: http://user:pass@www.url.com is NOT RECOMMENDED
@@ -5500,7 +5500,7 @@
 	* [w3m-dev 03319] mailto
 	* main.c (followA): mailto
 	* main.c (cmd_loadURL): mailto
-	* url.c (_parsedURL2Str): mailto: query
+	* url.c (_Url2Str): mailto: query
 
 2002-09-25  AIDA Shinra <aida-s@jcom.home.ne.jp>
 
@@ -7093,7 +7093,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 	* main.c (MAIN): add $HTTP_HOME or $WWW_HOME to history 
 	* main.c (MAIN): add history even if it is local file or local cgi
 	* main.c (goURL0): change args, def_url -> current
-	* main.c (goURL0): delete ParsedURL *b_url
+	* main.c (goURL0): delete Url *b_url
 	* main.c (goURL0): add Buffer *cur_buf
 	* main.c (goURL0): if current is supplied, use its URL as default
 	* main.c (goURL0): add URL to history if loadURL succeeded
@@ -7384,7 +7384,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 	* main.c (cmd_loadURL): ifndef USE_W3MMAILER
 	* url.c (schemetable): ifndef USE_W3MMAILER, mailto: become SCM_UNKNOWN
 	* url.c (parseURL2): ifndef USE_W3MMAILER
-	* url.c (_parsedURL2Str): ifndef USE_W3MMAILER
+	* url.c (_Url2Str): ifndef USE_W3MMAILER
 	* url.c (default_urimethods): added
 	* url.c (searchURIMethods): check default_urimethods
 	* scripts/Makefile: add w3mmail.cgi
@@ -7420,7 +7420,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 	* rc.c (params6): add urimethodmap
 	* rc.c (sync_with_option): add initURIMethods()
 	* url.c (parseURL): if SCM_UNKNOWN, url is saved in pu->file
-	* url.c (_parsedURL2Str): if SCM_UNKNOWN, url is in pu->file
+	* url.c (_Url2Str): if SCM_UNKNOWN, url is in pu->file
 	* url.c (urimethods): added
 	* url.c (loadURIMethods): added
 	* url.c (initURIMethods): added
@@ -7429,7 +7429,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 2002-01-13  Fumitoshi UKAI  <ukai@debian.or.jp>
 
 	* [w3m-dev 02828]
-	* url.c (_parsedURL2Str): add '/' at the end when scheme is SCM_FTPDIR
+	* url.c (_Url2Str): add '/' at the end when scheme is SCM_FTPDIR
 
 2002-01-12  Fumitoshi UKAI  <ukai@debian.or.jp>
 

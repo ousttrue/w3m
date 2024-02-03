@@ -29,7 +29,7 @@ enum CookieFlags {
   COO_OVERRIDE = 32, /* user chose to override security checks */
 };
 struct cookie {
-  ParsedURL url;
+  Url url;
   Str *name;
   Str *value;
   time_t expires;
@@ -43,8 +43,8 @@ struct cookie {
   struct cookie *next;
 };
 
-Str *find_cookie(ParsedURL *pu);
-int add_cookie(const ParsedURL *pu, Str *name, Str *value, time_t expires,
+Str *find_cookie(Url *pu);
+int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, CookieFlags flag, Str *comment,
                int version, Str *port, Str *commentURL);
 void save_cookies();
@@ -53,6 +53,6 @@ void initCookie();
 void cooLst();
 int check_cookie_accept_domain(const char *domain);
 
-void process_http_cookie(const ParsedURL *pu, Str *lineBuf2);
+void process_http_cookie(const Url *pu, Str *lineBuf2);
 struct Buffer;
 Buffer *cookie_list_panel();
