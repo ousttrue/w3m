@@ -1,5 +1,4 @@
 #pragma once
-#include <optional>
 #include "url_schema.h"
 
 struct Str;
@@ -23,20 +22,14 @@ struct Url {
   // void copyUrl(Url *p, const Url *q);
   bool same_url_p(const Url *pu2) const;
 
-  Str *to_Str() const;
-};
+  Str *to_Str(bool pass, bool user, bool label) const;
+  Str *to_Str() const { return to_Str(false, true, true); }
+  Str *to_RefererStr() const { return to_Str(false, false, false); }
 
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->schema == SCM_UNKNOWN && !(pu)->file)
-
-inline Str *Url2Str(const std::optional<Url> &pu) {
-  if (pu) {
-    return pu->to_Str();
-  } else {
-    return {};
+  bool IS_EMPTY_PARSED_URL() const {
+    return (this->schema == SCM_UNKNOWN && !this->file);
   }
-}
-Str *Url2RefererStr(const Url *pu);
-Str *_Url2Str(const Url *pu, int pass, int user, int label);
+};
 
 const char *url_decode0(const char *url);
 

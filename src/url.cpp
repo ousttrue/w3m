@@ -50,7 +50,7 @@ Url *baseURL(Buffer *buf) {
   if (buf->baseURL) {
     /* <BASE> tag is defined in the document */
     return &*buf->baseURL;
-  } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+  } else if (buf->currentURL.IS_EMPTY_PARSED_URL())
     return nullptr;
   else
     return &buf->currentURL;
@@ -456,85 +456,82 @@ Url Url::parse2(const char *src, const Url *current) {
   return url;
 }
 
-Str *_Url2Str(const Url *pu, int pass, int user, int label) {
+Str *Url::to_Str(bool pass, bool user, bool label) const {
   Str *tmp;
   static const char *schema_str[] = {
       "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
       "nntp", "nntp",   "news", "news", "data", "mailto", "https",
   };
 
-  if (pu->schema == SCM_MISSING) {
+  if (this->schema == SCM_MISSING) {
     return Strnew_charp("???");
-  } else if (pu->schema == SCM_UNKNOWN) {
-    return Strnew_charp(pu->file);
+  } else if (this->schema == SCM_UNKNOWN) {
+    return Strnew_charp(this->file);
   }
-  if (pu->host == nullptr && pu->file == nullptr && label &&
-      pu->label != nullptr) {
+  if (this->host == nullptr && this->file == nullptr && label &&
+      this->label != nullptr) {
     /* local label */
-    return Sprintf("#%s", pu->label);
+    return Sprintf("#%s", this->label);
   }
-  if (pu->schema == SCM_LOCAL && !strcmp(pu->file, "-")) {
+  if (this->schema == SCM_LOCAL && !strcmp(this->file, "-")) {
     tmp = Strnew_charp("-");
-    if (label && pu->label) {
+    if (label && this->label) {
       Strcat_char(tmp, '#');
-      Strcat_charp(tmp, pu->label);
+      Strcat_charp(tmp, this->label);
     }
     return tmp;
   }
-  tmp = Strnew_charp(schema_str[pu->schema]);
+  tmp = Strnew_charp(schema_str[this->schema]);
   Strcat_char(tmp, ':');
-  if (pu->schema == SCM_MAILTO) {
-    Strcat_charp(tmp, pu->file);
-    if (pu->query) {
+  if (this->schema == SCM_MAILTO) {
+    Strcat_charp(tmp, this->file);
+    if (this->query) {
       Strcat_char(tmp, '?');
-      Strcat_charp(tmp, pu->query);
+      Strcat_charp(tmp, this->query);
     }
     return tmp;
   }
-  if (pu->schema == SCM_DATA) {
-    Strcat_charp(tmp, pu->file);
+  if (this->schema == SCM_DATA) {
+    Strcat_charp(tmp, this->file);
     return tmp;
   }
   { Strcat_charp(tmp, "//"); }
-  if (user && pu->user) {
-    Strcat_charp(tmp, pu->user);
-    if (pass && pu->pass) {
+  if (user && this->user) {
+    Strcat_charp(tmp, this->user);
+    if (pass && this->pass) {
       Strcat_char(tmp, ':');
-      Strcat_charp(tmp, pu->pass);
+      Strcat_charp(tmp, this->pass);
     }
     Strcat_char(tmp, '@');
   }
-  if (pu->host) {
-    Strcat_charp(tmp, pu->host);
-    if (pu->port != getDefaultPort(pu->schema)) {
+  if (this->host) {
+    Strcat_charp(tmp, this->host);
+    if (this->port != getDefaultPort(this->schema)) {
       Strcat_char(tmp, ':');
-      Strcat(tmp, Sprintf("%d", pu->port));
+      Strcat(tmp, Sprintf("%d", this->port));
     }
   }
-  if ((pu->file == nullptr ||
-       (pu->file[0] != '/'
+  if ((this->file == nullptr ||
+       (this->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-        && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == nullptr)
+        && !(IS_ALPHA(this->file[0]) && this->file[1] == ':' &&
+             this->host == nullptr)
 #endif
             )))
     Strcat_char(tmp, '/');
-  Strcat_charp(tmp, pu->file);
-  if (pu->schema == SCM_FTPDIR && Strlastchar(tmp) != '/')
+  Strcat_charp(tmp, this->file);
+  if (this->schema == SCM_FTPDIR && Strlastchar(tmp) != '/')
     Strcat_char(tmp, '/');
-  if (pu->query) {
+  if (this->query) {
     Strcat_char(tmp, '?');
-    Strcat_charp(tmp, pu->query);
+    Strcat_charp(tmp, this->query);
   }
-  if (label && pu->label) {
+  if (label && this->label) {
     Strcat_char(tmp, '#');
-    Strcat_charp(tmp, pu->label);
+    Strcat_charp(tmp, this->label);
   }
   return tmp;
 }
-
-Str *Url::to_Str() const { return _Url2Str(this, false, true, true); }
-
-Str *Url2RefererStr(const Url *pu) { return _Url2Str(pu, false, false, false); }
 
 const char *url_decode0(const char *url) {
   if (!DecodeURL)

@@ -1307,7 +1307,7 @@ const void *querySiteconf(const Url *query_pu, int field) {
 
   if (field < 0 || field >= SCONF_N_FIELD)
     return NULL;
-  if (!query_pu || IS_EMPTY_PARSED_URL(query_pu))
+  if (!query_pu || query_pu->IS_EMPTY_PARSED_URL())
     return NULL;
   u = query_pu->to_Str();
   if (u->length == 0)

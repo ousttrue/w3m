@@ -1325,7 +1325,7 @@ static Buffer *loadLink(const char *url, const char *target,
       base->schema == SCM_DATA)
     referer = NO_REFERER;
   if (referer == nullptr)
-    referer = Url2RefererStr(&Currentbuf->currentURL)->ptr;
+    referer = Currentbuf->currentURL.to_RefererStr()->ptr;
   buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
   if (buf == nullptr) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -2402,7 +2402,7 @@ static void goURL0(const char *prompt, int relative) {
         current->schema == SCM_DATA)
       referer = NO_REFERER;
     else
-      referer = Url2RefererStr(&Currentbuf->currentURL)->ptr;
+      referer = Currentbuf->currentURL.to_RefererStr()->ptr;
     url = url_quote((char *)url);
   } else {
     current = nullptr;

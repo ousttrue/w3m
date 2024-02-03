@@ -49,7 +49,7 @@ Str *HTTPrequestURI(Url *pu, HRequest *hr) {
       Strcat_charp(tmp, pu->query);
     }
   } else
-    Strcat(tmp, _Url2Str(pu, true, true, false));
+    Strcat(tmp, pu->to_Str(true, true, false));
   return tmp;
 }
 
@@ -58,7 +58,7 @@ static Str *Url2RefererOriginStr(Url *pu) {
   auto q = pu->query;
   pu->file = NULL;
   pu->query = NULL;
-  auto s = _Url2Str(pu, false, false, false);
+  auto s = pu->to_Str(false, false, false);
   pu->file = f;
   pu->query = q;
   return s;
@@ -121,7 +121,7 @@ static char *otherinfo(Url *target, Url *current, char *referer) {
       if (cross_origin)
         Strcat(s, Url2RefererOriginStr(current));
       else
-        Strcat(s, Url2RefererStr(current));
+        Strcat(s, current->to_RefererStr());
       Strcat_charp(s, "\r\n");
     } else if (referer != NULL && referer != NO_REFERER) {
       Strcat_charp(s, "Referer: ");
@@ -135,8 +135,7 @@ static char *otherinfo(Url *target, Url *current, char *referer) {
   return s->ptr;
 }
 
-Str *HTTPrequest(Url *pu, Url *current, HRequest *hr,
-                 TextList *extra) {
+Str *HTTPrequest(Url *pu, Url *current, HRequest *hr, TextList *extra) {
   Str *tmp;
   TextListItem *i;
   Str *cookie;
@@ -201,4 +200,3 @@ Str *HTTPrequest(Url *pu, Url *current, HRequest *hr,
 #endif /* DEBUG */
   return tmp;
 }
-
