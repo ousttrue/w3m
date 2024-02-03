@@ -13,10 +13,10 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
-#ifndef GC_STR_H
-#define GC_STR_H
+#pragma once
 #include <stdio.h>
 #include <limits.h>
+#include <string_view>
 
 char *allocStr(const char *s, int len);
 
@@ -40,7 +40,12 @@ void Strcopy_charp(Str *, const char *);
 void Strcopy_charp_n(Str *, const char *, int);
 void Strcat_charp_n(Str *, const char *, int);
 void Strcat(Str *, Str *);
-void Strcat_charp(Str *, const char *);
+void Strcat(Str *, std::string_view);
+inline void Strcat_charp(Str *s, const char *p) {
+  if (p) {
+    Strcat(s, std::string_view(p));
+  }
+}
 void Strcat_m_charp(Str *, ...);
 Str *Strsubstr(Str *, int, int);
 void Strinsert_char(Str *, int, char);
@@ -86,4 +91,3 @@ void Strgrow(Str *s);
 #define Strinsert(s, n, p) Strinsert_charp((s), (n), (p)->ptr)
 #define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
 #define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
-#endif /* not GC_STR_H */

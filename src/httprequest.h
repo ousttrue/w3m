@@ -43,4 +43,3 @@ Str *HTTPrequest(Url *pu, Url *current, HRequest *hr,
 Str *HTTPrequestMethod(HRequest *hr);
 Str *HTTPrequestURI(Url *pu, HRequest *hr);
 
-bool matchattr(const char *pconst, const char *attr, int len, Str **value);

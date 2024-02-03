@@ -96,7 +96,7 @@ struct Buffer : public gc_cleanup {
   TextList *document_header = nullptr;
   FormItemList *form_submit = nullptr;
   const char *edit = nullptr;
-  struct mailcap *mailcap = nullptr;
+  struct MailcapEntry *mailcap = nullptr;
   const char *mailcap_source = nullptr;
   const char *header_source = nullptr;
   char search_header = 0;

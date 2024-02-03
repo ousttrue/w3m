@@ -1,4 +1,5 @@
 #include "file.h"
+#include "matchattr.h"
 #include "app.h"
 #include "httpauth.h"
 #include "mytime.h"
@@ -1002,8 +1003,8 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
 
 Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   Str *tmpf, *command;
-  struct mailcap *mcap;
-  int mc_stat;
+  struct MailcapEntry *mcap;
+  MailcapStat mc_stat;
   Buffer *buf = NULL;
   const char *header, *src = NULL, *ext = uf.ext;
 

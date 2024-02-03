@@ -254,10 +254,11 @@ void Strcat(Str *x, Str *y) {
   Strcat_charp_n(x, y->ptr, y->length);
 }
 
-void Strcat_charp(Str *x, const char *y) {
-  if (y == NULL)
+void Strcat(Str *x, std::string_view y) {
+  if (y.empty()) {
     return;
-  Strcat_charp_n(x, y, strlen(y));
+  }
+  Strcat_charp_n(x, y.data(), y.size());
 }
 
 void Strcat_m_charp(Str *x, ...) {

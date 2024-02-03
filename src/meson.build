@@ -121,6 +121,7 @@ executable(
         'httpauth.cpp',
         'line.cpp',
         'lineprop.cpp',
+        'matchattr.cpp',
     ],
     install: true,
     dependencies: [

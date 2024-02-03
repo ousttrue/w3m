@@ -8,6 +8,7 @@
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 #include "cookie.h"
+#include "matchattr.h"
 #include "rc.h"
 #include "w3m.h"
 #include "terms.h"
