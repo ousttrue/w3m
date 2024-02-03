@@ -317,7 +317,8 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
     }
     p = l->lineBuf.data();
     for (;;) {
-      if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) == 1) {
+      if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) ==
+          1) {
         matchedPosition(&p1, &p2);
         p = reAnchorPos(buf, l, p1, p2, anchorproc);
       } else
@@ -456,7 +457,7 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
     col = ls->bytePosToColumn(a_form.start.pos);
     ecol = ls->bytePosToColumn(a_form.end.pos);
     for (j = 0; l && j < a_form.rows; l = l->next, j++) {
-      pos = columnPos(l, col);
+      pos = l->columnPos(col);
       if (j == 0) {
         buf->hmarklist->marks[a_form.hseq].line = l->linenumber;
         buf->hmarklist->marks[a_form.hseq].pos = pos;

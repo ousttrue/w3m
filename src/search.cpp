@@ -5,19 +5,12 @@
 #include "buffer.h"
 #include "regex.h"
 #include "proto.h"
-#include <errno.h>
 #include <unistd.h>
-
-static void set_mark(Line *l, int pos, int epos) {
-  for (; pos < epos && pos < l->size(); pos++)
-    l->propBuf[pos] |= PE_MARK;
-}
 
 int forwardSearch(Buffer *buf, const char *str) {
   const char *p, *first, *last;
   Line *l, *begin;
   int wrapped = false;
-  int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
     message(p, 0, 0);
@@ -27,7 +20,8 @@ int forwardSearch(Buffer *buf, const char *str) {
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = buf->pos;
+
+  auto pos = buf->pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -46,7 +40,7 @@ int forwardSearch(Buffer *buf, const char *str) {
     if (l != buf->currentLine)
       gotoLine(buf, l->linenumber);
     arrangeCursor(buf);
-    set_mark(l, pos, pos + last - first);
+    l->set_mark(pos, pos + last - first);
     return SR_FOUND;
   }
   for (l = l->next;; l = l->next) {
@@ -71,7 +65,7 @@ int forwardSearch(Buffer *buf, const char *str) {
       buf->currentLine = l;
       gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
-      set_mark(l, pos, pos + last - first);
+      l->set_mark(pos, pos + last - first);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
     if (wrapped && l == begin) /* no match */
@@ -130,7 +124,7 @@ int backwardSearch(Buffer *buf, const char *str) {
       if (l != buf->currentLine)
         gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
-      set_mark(l, pos, pos + found_last - found);
+      l->set_mark(pos, pos + found_last - found);
       return SR_FOUND;
     }
   }
@@ -146,7 +140,8 @@ int backwardSearch(Buffer *buf, const char *str) {
     found = NULL;
     found_last = NULL;
     q = l->lineBuf.data();
-    while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) == 1) {
+    while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) ==
+           1) {
       matchedPosition(&first, &last);
       found = first;
       found_last = last;
@@ -163,7 +158,7 @@ int backwardSearch(Buffer *buf, const char *str) {
       buf->pos = pos;
       gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
-      set_mark(l, pos, pos + found_last - found);
+      l->set_mark(pos, pos + found_last - found);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
     if (wrapped && l == begin) /* no match */

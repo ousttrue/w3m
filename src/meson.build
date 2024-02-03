@@ -1,3 +1,5 @@
+subdir('istream')
+
 # SHELL=/bin/bash
 PACKAGE = meson.project_name()
 # VERSION = 0.5.3
@@ -110,7 +112,6 @@ executable(
         'message.cpp',
         'ssl_util.cpp',
         'mimetypes.cpp',
-        'url_schema.cpp',
         'url_stream.cpp',
         'compression.cpp',
         'mytime.cpp',
@@ -127,6 +128,7 @@ executable(
         ssl_dep,
         ncurses_dep,
         m_dep, # , wc_dep
+        istream_dep,
     ],
     c_args: defs,
     cpp_args: defs,

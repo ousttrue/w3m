@@ -397,7 +397,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
     return l;
   }
   /* need_clrtoeol(); */
-  pos = columnPos(l, column);
+  pos = l->columnPos(column);
   p = &(l->lineBuf[pos]);
   pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
@@ -479,7 +479,7 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
 
   if (l == NULL)
     return 0;
-  pos = columnPos(l, column);
+  pos = l->columnPos(column);
   p = &(l->lineBuf[pos]);
   pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
@@ -847,8 +847,8 @@ void arrangeLine(Buffer *buf) {
   if (buf->firstLine == NULL)
     return;
   buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-  i = columnPos(buf->currentLine,
-                buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
+  i = buf->currentLine->columnPos(buf->currentColumn + buf->visualpos -
+                                  buf->currentLine->bwidth);
   cpos = buf->currentLine->bytePosToColumn(i) - buf->currentColumn;
   if (cpos >= 0) {
     buf->cursorX = cpos;

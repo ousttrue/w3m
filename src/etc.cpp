@@ -46,19 +46,6 @@ int columnSkip(Buffer *buf, int offset) {
   return 1;
 }
 
-int columnPos(Line *line, int column) {
-  int i;
-
-  for (i = 1; i < line->len; i++) {
-    if (line->bytePosToColumn(i) > column)
-      break;
-  }
-
-  for (i--; i > 0 && line->propBuf[i] & PC_WCHAR2; i--)
-    ;
-  return i;
-}
-
 Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
   int i;
   Line *l;
@@ -82,34 +69,6 @@ Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
     for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
       ;
   return l;
-}
-
-// static int nextColumn(int n, char *p, Lineprop *pr) {
-//   if (*pr & PC_CTRL) {
-//     if (*p == '\t')
-//       return (n + Tabstop) / Tabstop * Tabstop;
-//     else if (*p == '\n')
-//       return n + 1;
-//     else if (*p != '\r')
-//       return n + 2;
-//     return n;
-//   } else {
-//     auto utf8 = Utf8::from((const char8_t *)p);
-//     return n + utf8.width();
-//   }
-// }
-
-int columnLen(Line *line, int column) {
-  for (auto i = 0; i < line->len;) {
-    auto j = bytePosToColumn(&line->lineBuf[i], &line->propBuf[i], line->len, i,
-                             0, false);
-    if (j > column)
-      return i;
-    auto utf8 = Utf8::from((const char8_t *)&line->lineBuf[i]);
-    auto [cp, bytes] = utf8.codepoint();
-    i += bytes;
-  }
-  return line->len;
 }
 
 const char *lastFileName(const char *path) {

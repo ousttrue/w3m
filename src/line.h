@@ -27,7 +27,7 @@ public:
     return this->_width;
   }
 
-  size_t size() const { return lineBuf.size() - 1; }
+  int size() const { return lineBuf.size() - 1; }
 
   void assign(const char *buf, const Lineprop *prop, int byteLen) {
     lineBuf.reserve(byteLen + 1);
@@ -61,8 +61,17 @@ public:
   // byte pos to column
   int bytePosToColumn(int pos) const;
 
-  Line *breakLine(int breakWidth);
-};
+  // column to byte pos
+  int columnPos(int col) const;
 
-int columnPos(Line *line, int column);
-int columnLen(Line *line, int column);
+  // column required byteLen
+  int columnLen(int col) const;
+
+  Line *breakLine(int breakWidth);
+
+  void set_mark(int pos, int epos) {
+    for (; pos < epos && pos < this->size(); pos++) {
+      this->propBuf[pos] |= PE_MARK;
+    }
+  }
+};

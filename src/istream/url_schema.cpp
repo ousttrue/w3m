@@ -1,7 +1,6 @@
 #include "url_schema.h"
-#include "myctype.h"
 #include <string.h>
-#include "Str.h"
+#include <cctype>
 
 struct cmdtable {
   const char *cmdname;
@@ -39,7 +38,7 @@ UrlSchema parseUrlSchema(const char **url) {
   auto schema = SCM_MISSING;
 
   const char *p = *url, *q;
-  while (*p && (IS_ALNUM(*p) || *p == '.' || *p == '+' || *p == '-'))
+  while (*p && (std::isalnum(*p) || *p == '.' || *p == '+' || *p == '-'))
     p++;
   if (*p == ':') { /* schema found */
     schema = SCM_UNKNOWN;
@@ -65,12 +64,12 @@ const char *DefaultFile(UrlSchema schema) {
   switch (schema) {
   case SCM_HTTP:
   case SCM_HTTPS:
-    return allocStr(HTTP_DEFAULT_FILE, -1);
+    return HTTP_DEFAULT_FILE;
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
   case SCM_FTP:
   case SCM_FTPDIR:
-    return allocStr("/", -1);
+    return "/";
   default:
     break;
   }
