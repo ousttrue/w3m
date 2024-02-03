@@ -2,21 +2,21 @@
 #include <assert.h>
 
 enum UrlSchema {
-  SCM_HTTP = 0,
-  SCM_GOPHER = 1,
-  SCM_FTP = 2,
-  SCM_FTPDIR = 3,
-  SCM_LOCAL = 4,
-  SCM_LOCAL_CGI = 5,
-  SCM_EXEC = 6,
-  SCM_NNTP = 7,
-  SCM_NNTP_GROUP = 8,
-  SCM_NEWS = 9,
-  SCM_NEWS_GROUP = 10,
-  SCM_DATA = 11,
-  SCM_MAILTO = 12,
-  SCM_HTTPS = 13,
-  SCM_UNKNOWN = 255,
+  SCM_UNKNOWN,
+  SCM_HTTP,
+  SCM_GOPHER,
+  SCM_FTP,
+  SCM_FTPDIR,
+  SCM_LOCAL,
+  SCM_LOCAL_CGI,
+  SCM_EXEC,
+  SCM_NNTP,
+  SCM_NNTP_GROUP,
+  SCM_NEWS,
+  SCM_NEWS_GROUP,
+  SCM_DATA,
+  SCM_MAILTO,
+  SCM_HTTPS,
   SCM_MISSING = 254,
 };
 
@@ -29,6 +29,7 @@ inline int getDefaultPort(UrlSchema schema) {
     return -1;
   }
   static int DefaultPort[] = {
+      0,   /* unknown */
       80,  /* http */
       70,  /* gopher */
       21,  /* ftp */
@@ -46,7 +47,6 @@ inline int getDefaultPort(UrlSchema schema) {
   };
   return DefaultPort[schema];
 }
-const char *DefaultFile(UrlSchema schema) ;
+const char *DefaultFile(UrlSchema schema);
 UrlSchema parseUrlSchema(const char **url);
 const char *schemaNumToName(UrlSchema schema);
-

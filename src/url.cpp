@@ -21,26 +21,40 @@
 #include "Str.h"
 #include "myctype.h"
 #include "regex.h"
+#include <vector>
 
 bool ArgvIsURL = true;
 bool LocalhostOnly = false;
 bool retryAsHttp = true;
 
+#define ALLOC_STR(s) ((s) == nullptr ? nullptr : allocStr(s, -1))
+Url &Url::operator=(const Url &src) {
+  this->schema = src.schema;
+  this->port = src.port;
+  this->is_nocache = src.is_nocache;
+  this->user = ALLOC_STR(src.user);
+  this->pass = ALLOC_STR(src.pass);
+  this->host = ALLOC_STR(src.host);
+  this->file = ALLOC_STR(src.file);
+  this->real_file = ALLOC_STR(src.real_file);
+  this->label = ALLOC_STR(src.label);
+  this->query = ALLOC_STR(src.query);
+  return *this;
+}
+
 Url *baseURL(Buffer *buf) {
   if (buf->bufferprop & BP_NO_URL) {
     /* no URL is defined for the buffer */
-    return NULL;
+    return nullptr;
   }
-  if (buf->baseURL != NULL) {
+  if (buf->baseURL != nullptr) {
     /* <BASE> tag is defined in the document */
     return buf->baseURL;
   } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
-    return NULL;
+    return nullptr;
   else
     return &buf->currentURL;
 }
-
-
 
 #define COPYPATH_SPC_ALLOW 0
 #define COPYPATH_SPC_IGNORE 1
@@ -74,22 +88,23 @@ static const char *copyPath(const char *orgpath, int length, int option) {
   return tmp->ptr;
 }
 
-void parseURL(const char *url, Url *p_url, Url *current) {
+void parseURL(const char *url, Url *p_url, const Url *current) {
   const char *p, *q, *qq;
   Str *tmp;
 
   url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
 
   p = url;
-  copyUrl(p_url, NULL);
+  *p_url = {};
   p_url->schema = SCM_MISSING;
 
   /* RFC1808: Relative Uniform Resource Locators
    * 4.  Resolving Relative URLs
    */
   if (*url == '\0' || *url == '#') {
-    if (current)
-      copyUrl(p_url, current);
+    if (current) {
+      *p_url = *current;
+    }
     goto do_label;
   }
   /* search for schema */
@@ -132,7 +147,7 @@ void parseURL(const char *url, Url *p_url, Url *current) {
   }
   /* get host and port */
   if (p[0] != '/' || p[1] != '/') { /* schema:foo or schema:/foo */
-    p_url->host = NULL;
+    p_url->host = nullptr;
     p_url->port = getDefaultPort(p_url->schema);
     goto analyze_file;
   }
@@ -159,11 +174,11 @@ analyze_url:
     p++;
     while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
       p++;
-    if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
+    if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == nullptr))
       p = q;
   }
 #endif
-  while (*p && strchr(":/@?#", *p) == NULL)
+  while (*p && strchr(":/@?#", *p) == nullptr)
     p++;
   switch (*p) {
   case ':':
@@ -172,7 +187,7 @@ analyze_url:
      */
     qq = q;
     q = ++p;
-    while (*p && strchr("@/?#", *p) == NULL)
+    while (*p && strchr("@/?#", *p) == nullptr)
       p++;
     if (*p == '@') {
       /* schema://user:pass@...       */
@@ -204,8 +219,8 @@ analyze_url:
   }
 analyze_file:
 #ifndef SUPPORT_NETBIOS_SHARE
-  if (p_url->schema == SCM_LOCAL && p_url->user == NULL &&
-      p_url->host != NULL && *p_url->host != '\0' &&
+  if (p_url->schema == SCM_LOCAL && p_url->user == nullptr &&
+      p_url->host != nullptr && *p_url->host != '\0' &&
       !is_localhost(p_url->host)) {
     /*
      * In the environments other than CYGWIN, a URL like
@@ -221,7 +236,7 @@ analyze_file:
       p_url->port = getDefaultPort(SCM_FTP);
   }
 #endif
-  if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == NULL) {
+  if ((*p == '\0' || *p == '#' || *p == '?') && p_url->host == nullptr) {
     p_url->file = "";
     goto do_query;
   }
@@ -259,7 +274,7 @@ analyze_file:
        * if the schema is SCM_LOCAL, the special
        * treatment will apply to # for convinience.
        */
-      if (p > q && *(p - 1) == '/' && (cgi == NULL || p < cgi)) {
+      if (p > q && *(p - 1) == '/' && (cgi == nullptr || p < cgi)) {
         /*
          * # comes as the first character of the file name
          * that means, # is not a label but a part of the file
@@ -293,37 +308,17 @@ do_label:
   if (p_url->schema == SCM_MISSING) {
     p_url->schema = SCM_LOCAL;
     p_url->file = allocStr(p, -1);
-    p_url->label = NULL;
+    p_url->label = nullptr;
   } else if (*p == '#')
     p_url->label = allocStr(p + 1, -1);
   else
-    p_url->label = NULL;
+    p_url->label = nullptr;
 }
 
-#define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
-
-void copyUrl(Url *p, const Url *q) {
-  if (q == NULL) {
-    memset(p, 0, sizeof(Url));
-    p->schema = SCM_UNKNOWN;
-    return;
-  }
-  p->schema = q->schema;
-  p->port = q->port;
-  p->is_nocache = q->is_nocache;
-  p->user = ALLOC_STR(q->user);
-  p->pass = ALLOC_STR(q->pass);
-  p->host = ALLOC_STR(q->host);
-  p->file = ALLOC_STR(q->file);
-  p->real_file = ALLOC_STR(q->real_file);
-  p->label = ALLOC_STR(q->label);
-  p->query = ALLOC_STR(q->query);
-}
-
-void parseURL2(const char *url, Url *pu, Url *current) {
+void parseURL2(const char *url, Url *pu, const Url *current) {
   const char *p;
   Str *tmp;
-  int relative_uri = FALSE;
+  int relative_uri = false;
 
   parseURL(url, pu, current);
   if (pu->schema == SCM_MAILTO)
@@ -350,7 +345,7 @@ void parseURL2(const char *url, Url *pu, Url *current) {
       pu->schema = SCM_NNTP;
     if (current &&
         (current->schema == SCM_NNTP || current->schema == SCM_NNTP_GROUP)) {
-      if (pu->host == NULL) {
+      if (pu->host == nullptr) {
         pu->host = current->host;
         pu->port = current->port;
       }
@@ -374,7 +369,7 @@ void parseURL2(const char *url, Url *pu, Url *current) {
       (pu->schema == current->schema ||
        (pu->schema == SCM_FTP && current->schema == SCM_FTPDIR) ||
        (pu->schema == SCM_LOCAL && current->schema == SCM_LOCAL_CGI)) &&
-      pu->host == NULL) {
+      pu->host == nullptr) {
     /* Copy omitted element from the current URL */
     pu->user = current->user;
     pu->pass = current->pass;
@@ -398,7 +393,7 @@ void parseURL2(const char *url, Url *pu, Url *current) {
           }
           Strcat_charp(tmp, p);
           pu->file = tmp->ptr;
-          relative_uri = TRUE;
+          relative_uri = true;
         }
       }
     } else { /* schema:[?query][#label] */
@@ -446,7 +441,7 @@ void parseURL2(const char *url, Url *pu, Url *current) {
       if (pu->host && !is_localhost(pu->host)) {
         Str *tmp = Strnew_charp("//");
         Strcat_m_charp(tmp, pu->host, cleanupName(file_unquote(pu->file)),
-                       NULL);
+                       nullptr);
         pu->real_file = tmp->ptr;
       } else
 #endif
@@ -455,7 +450,7 @@ void parseURL2(const char *url, Url *pu, Url *current) {
   }
 }
 
-Str *_Url2Str(Url *pu, int pass, int user, int label) {
+Str *_Url2Str(const Url *pu, int pass, int user, int label) {
   Str *tmp;
   static const char *schema_str[] = {
       "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
@@ -467,7 +462,8 @@ Str *_Url2Str(Url *pu, int pass, int user, int label) {
   } else if (pu->schema == SCM_UNKNOWN) {
     return Strnew_charp(pu->file);
   }
-  if (pu->host == NULL && pu->file == NULL && label && pu->label != NULL) {
+  if (pu->host == nullptr && pu->file == nullptr && label &&
+      pu->label != nullptr) {
     /* local label */
     return Sprintf("#%s", pu->label);
   }
@@ -509,10 +505,10 @@ Str *_Url2Str(Url *pu, int pass, int user, int label) {
       Strcat(tmp, Sprintf("%d", pu->port));
     }
   }
-  if ((pu->file == NULL ||
+  if ((pu->file == nullptr ||
        (pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
-        && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == NULL)
+        && !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':' && pu->host == nullptr)
 #endif
             )))
     Strcat_char(tmp, '/');
@@ -530,16 +526,12 @@ Str *_Url2Str(Url *pu, int pass, int user, int label) {
   return tmp;
 }
 
-Str *Url2Str(Url *pu) {
-  return _Url2Str(pu, FALSE, TRUE, TRUE);
-}
+Str *Url2Str(const Url *pu) { return _Url2Str(pu, false, true, true); }
 
-Str *Url2RefererStr(Url *pu) {
-  return _Url2Str(pu, FALSE, FALSE, FALSE);
-}
+Str *Url2RefererStr(const Url *pu) { return _Url2Str(pu, false, false, false); }
 
 Url *schemaToProxy(UrlSchema schema) {
-  Url *pu = NULL; /* for gcc */
+  Url *pu = nullptr; /* for gcc */
   switch (schema) {
   case SCM_HTTP:
     pu = &HTTP_proxy_parsed;
@@ -563,4 +555,48 @@ const char *url_decode0(const char *url) {
   if (!DecodeURL)
     return url;
   return url_unquote_conv(url, 0);
+}
+
+bool Url::same_url_p(const Url *pu2) const {
+  return (
+      this->schema == pu2->schema && this->port == pu2->port &&
+      (this->host ? pu2->host ? !strcasecmp(this->host, pu2->host) : 0 : 1) &&
+      (this->file ? pu2->file ? !strcmp(this->file, pu2->file) : 0 : 1));
+}
+
+bool checkRedirection(const Url *pu) {
+  static std::vector<Url> redirectins;
+
+  if (pu == nullptr) {
+    // clear
+    redirectins.clear();
+    return true;
+  }
+
+  if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
+    auto tmp = Sprintf("Number of redirections exceeded %d at %s",
+                       FollowRedirection, Url2Str(pu)->ptr);
+    disp_err_message(tmp->ptr, false);
+    return false;
+  }
+
+  for (auto &url : redirectins) {
+    if (pu->same_url_p(&url)) {
+      // same url found !
+      auto tmp = Sprintf("Redirection loop detected (%s)", Url2Str(pu)->ptr);
+      disp_err_message(tmp->ptr, false);
+      return false;
+    }
+  }
+
+  redirectins.push_back(*pu);
+
+  // if (!puv) {
+  //   nredir_size = FollowRedirection / 2 + 1;
+  //   puv = (Url *)New_N(Url, nredir_size);
+  //   memset(puv, 0, sizeof(Url) * nredir_size);
+  // }
+  // copyUrl(&puv[nredir % nredir_size], pu);
+  // nredir++;
+  return true;
 }

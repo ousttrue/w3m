@@ -477,7 +477,7 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
     First_cookie = p;
   }
 
-  copyUrl(&p->url, pu);
+  p->url = *pu;
   p->name = name;
   p->value = value;
   p->expires = expires;

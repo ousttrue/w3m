@@ -305,57 +305,14 @@ static char *checkContentType(Buffer *buf) {
   return r->ptr;
 }
 
-static int same_url_p(Url *pu1, Url *pu2) {
-  return (pu1->schema == pu2->schema && pu1->port == pu2->port &&
-          (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1) &&
-          (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
-}
-
-static int checkRedirection(Url *pu) {
-  static Url *puv = NULL;
-  static int nredir = 0;
-  static int nredir_size = 0;
-  Str *tmp;
-
-  if (pu == NULL) {
-    nredir = 0;
-    nredir_size = 0;
-    puv = NULL;
-    return TRUE;
-  }
-  if (nredir >= FollowRedirection) {
-    /* FIXME: gettextize? */
-    tmp = Sprintf("Number of redirections exceeded %d at %s", FollowRedirection,
-                  Url2Str(pu)->ptr);
-    disp_err_message(tmp->ptr, FALSE);
-    return FALSE;
-  } else if (nredir_size > 0 &&
-             (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) ||
-              (!(nredir % 2) &&
-               same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
-    /* FIXME: gettextize? */
-    tmp = Sprintf("Redirection loop detected (%s)", Url2Str(pu)->ptr);
-    disp_err_message(tmp->ptr, FALSE);
-    return FALSE;
-  }
-  if (!puv) {
-    nredir_size = FollowRedirection / 2 + 1;
-    puv = (Url *)New_N(Url, nredir_size);
-    memset(puv, 0, sizeof(Url) * nredir_size);
-  }
-  copyUrl(&puv[nredir % nredir_size], pu);
-  nredir++;
-  return TRUE;
-}
-
 static long long current_content_length;
 
 /*
  * loadGeneralFile: load file to buffer
  */
 #define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
-Buffer *loadGeneralFile(const char *path, Url *current,
-                        const char *referer, int flag, FormList *request) {
+Buffer *loadGeneralFile(const char *path, Url *current, const char *referer,
+                        int flag, FormList *request) {
   UrlStream f, *of = NULL;
   Url pu;
   Buffer *b = NULL;
@@ -417,7 +374,7 @@ load_doc: {
           Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
           b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0, NULL);
           if (b != NULL && b != NO_BUFFER) {
-            copyUrl(&b->currentURL, &pu);
+            b->currentURL = pu;
             b->filename = b->currentURL.real_file;
           }
           return b;
@@ -495,7 +452,7 @@ load_doc: {
       request = NULL;
       UFclose(&f);
       current = (Url *)New(Url);
-      copyUrl(current, &pu);
+      *current = pu;
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop =
           static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);
@@ -594,7 +551,7 @@ load_doc: {
       UFclose(&f);
       add_auth_cookie_flag = 0;
       current = (Url *)New(Url);
-      copyUrl(current, &pu);
+      *current = pu;
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop = (BufferFlags)(t_buf->bufferprop | BP_REDIRECTED);
       status = HTST_NORMAL;
@@ -660,7 +617,7 @@ page_loaded:
     }
     b = loadHTMLString(page);
     if (b) {
-      copyUrl(&b->currentURL, &pu);
+      b->currentURL = pu;
       b->real_schema = pu.schema;
       b->real_type = t;
       if (src)
@@ -738,7 +695,7 @@ page_loaded:
   }
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH);
-  copyUrl(&t_buf->currentURL, &pu);
+  t_buf->currentURL = pu;
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
   if (proc == DO_EXTERNAL) {
@@ -960,7 +917,7 @@ Buffer *openGeneralPagerBuffer(input_stream *stream) {
   init_stream(&uf, SCM_UNKNOWN, stream);
 
   t_buf = new Buffer(INIT_BUFFER_WIDTH);
-  copyUrl(&t_buf->currentURL, NULL);
+  t_buf->currentURL = {};
   t_buf->currentURL.schema = SCM_LOCAL;
   t_buf->currentURL.file = "-";
   if (SearchHeader) {

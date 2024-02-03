@@ -34,8 +34,8 @@ AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
   bp.line = line;
   bp.pos = pos;
 
-  int n = al->size();
-  int i;
+  size_t n = al->size();
+  size_t i;
   if (!n || bpcmp(al->anchors[n - 1].start, bp) < 0) {
     i = n;
   } else {
