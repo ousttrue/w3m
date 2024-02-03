@@ -38,7 +38,7 @@ Buffer *historyBuffer(Hist *hist) {
     for (item = hist->list->last; item; item = item->prev) {
       q = html_quote((const char *)item->ptr);
       if (DecodeURL)
-        p = html_quote(url_decode2((const char *)item->ptr, NULL));
+        p = html_quote(url_decode0((const char *)item->ptr));
       else
         p = q;
       Strcat_charp(src, "<li><a href=\"");

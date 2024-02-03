@@ -101,7 +101,7 @@ static Str *make_lastline_link(Buffer *buf, const char *title,
   parseURL2((char *)url, &pu, baseURL(buf));
   u = Url2Str(&pu);
   if (DecodeURL)
-    u = Strnew_charp(url_decode2(u->ptr, buf));
+    u = Strnew_charp(url_decode0(u->ptr));
   if (l <= 4 || l >= get_Str_strwidth(u)) {
     if (!s)
       return u;

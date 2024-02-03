@@ -393,7 +393,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     /* input username and password */
     sleep(2);
     if (fmInitialized) {
-      const char *pp;
+      const char *pp = {};
       term_raw();
       // if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
       //     NULL)
@@ -401,6 +401,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
       *uname = Strnew_charp(pp);
       // if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
       //                     IN_PASSWORD)) == NULL)
+      if(!pp)
       {
         *uname = NULL;
         return;

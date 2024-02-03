@@ -2376,7 +2376,7 @@ static void goURL0(const char *prompt, int relative) {
     if (current) {
       char *c_url = Url2Str(current)->ptr;
       if (DefaultURLString == DEFAULT_URL_CURRENT)
-        url = url_decode2(c_url, nullptr);
+        url = url_decode0(c_url);
       else
         pushHist(hist, c_url);
     }
@@ -2386,7 +2386,7 @@ static void goURL0(const char *prompt, int relative) {
       parseURL2((char *)a->url, &p_url, current);
       a_url = Url2Str(&p_url)->ptr;
       if (DefaultURLString == DEFAULT_URL_LINK)
-        url = url_decode2(a_url, Currentbuf);
+        url = url_decode0(a_url);
       else
         pushHist(hist, a_url);
     }
@@ -2671,7 +2671,7 @@ static void _peekURL(int only_img) {
     s = Url2Str(&pu);
   }
   if (DecodeURL)
-    s = Strnew_charp(url_decode2(s->ptr, Currentbuf));
+    s = Strnew_charp(url_decode0(s->ptr));
 disp:
   n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS - 1))
@@ -2707,7 +2707,7 @@ DEFUN(curURL, PEEK, "Show current address") {
     offset = 0;
     s = currentURL();
     if (DecodeURL)
-      s = Strnew_charp(url_decode2(s->ptr, nullptr));
+      s = Strnew_charp(url_decode0(s->ptr));
   }
   n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS - 1))

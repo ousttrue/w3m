@@ -585,7 +585,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
     if (!l->url)
       url = "(empty)";
     else
-      url = html_quote(url_decode2(l->url, buf));
+      url = html_quote(url_decode0(l->url));
     Strcat_m_charp(html, "<td>", url, NULL);
     if (l->ctype)
       Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
@@ -611,82 +611,86 @@ Buffer *page_info_panel(Buffer *buf) {
 <title>Information about current page</title>\
 </head><body>\
 <h1>Information about current page</h1>\n");
-  if (buf == NULL)
-    goto end;
-  all = buf->allLine;
-  if (all == 0 && buf->lastLine)
-    all = buf->lastLine->linenumber;
-  p = url_decode2(Url2Str(&buf->currentURL)->ptr, NULL);
-  Strcat_m_charp(
-      tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-      html_quote(buf->buffername), "<tr valign=top><td nowrap>Current URL<td>",
-      html_quote(p), "<tr valign=top><td nowrap>Document Type<td>",
-      buf->real_type ? html_quote(buf->real_type) : "unknown",
-      "<tr valign=top><td nowrap>Last Modified<td>",
-      html_quote(last_modified(buf)), NULL);
-  Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
-                 Sprintf("%d", all)->ptr,
-                 "<tr valign=top><td nowrap>Transferred bytes<td>",
-                 Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
 
-  a = retrieveCurrentAnchor(buf);
-  if (a != NULL) {
-    parseURL2((char *)a->url, &pu, baseURL(buf));
-    p = Url2Str(&pu)->ptr;
-    q = html_quote(p);
-    if (DecodeURL)
-      p = html_quote(url_decode2(p, buf));
-    else
-      p = q;
-    Strcat_m_charp(
-        tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"", q,
-        "\">", p, "</a>", NULL);
-  }
-  a = retrieveCurrentImg(buf);
-  if (a != NULL) {
-    parseURL2((char *)a->url, &pu, baseURL(buf));
-    p = Url2Str(&pu)->ptr;
-    q = html_quote(p);
-    if (DecodeURL)
-      p = html_quote(url_decode2(p, buf));
-    else
-      p = q;
-    Strcat_m_charp(
-        tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"", q,
-        "\">", p, "</a>", NULL);
-  }
-  a = retrieveCurrentForm(buf);
-  if (a != NULL) {
-    FormItemList *fi = (FormItemList *)a->url;
-    p = form2str(fi);
-    p = html_quote(url_decode2(p, buf));
-    Strcat_m_charp(
-        tmp, "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
-        p, NULL);
-    // if (fi->parent->method == FORM_METHOD_INTERNAL &&
-    //     !Strcmp_charp(fi->parent->action, "map"))
-    //   append_map_info(buf, tmp, fi->parent->item);
-  }
-  Strcat_charp(tmp, "</table>\n");
+  if (buf == NULL) {
 
-  append_link_info(buf, tmp, buf->linklist);
+    all = buf->allLine;
+    if (all == 0 && buf->lastLine)
+      all = buf->lastLine->linenumber;
+    p = url_decode0(Url2Str(&buf->currentURL)->ptr);
+    Strcat_m_charp(tmp, "<table cellpadding=0>",
+                   "<tr valign=top><td nowrap>Title<td>",
+                   html_quote(buf->buffername),
+                   "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
+                   "<tr valign=top><td nowrap>Document Type<td>",
+                   buf->real_type ? html_quote(buf->real_type) : "unknown",
+                   "<tr valign=top><td nowrap>Last Modified<td>",
+                   html_quote(last_modified(buf)), NULL);
+    Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
+                   Sprintf("%d", all)->ptr,
+                   "<tr valign=top><td nowrap>Transferred bytes<td>",
+                   Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
 
-  if (buf->document_header != NULL) {
-    Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-    for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
-      Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
-                     NULL);
-    Strcat_charp(tmp, "</pre>\n");
+    a = retrieveCurrentAnchor(buf);
+    if (a != NULL) {
+      parseURL2((char *)a->url, &pu, baseURL(buf));
+      p = Url2Str(&pu)->ptr;
+      q = html_quote(p);
+      if (DecodeURL)
+        p = html_quote(url_decode0(p));
+      else
+        p = q;
+      Strcat_m_charp(
+          tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
+          q, "\">", p, "</a>", NULL);
+    }
+    a = retrieveCurrentImg(buf);
+    if (a != NULL) {
+      parseURL2((char *)a->url, &pu, baseURL(buf));
+      p = Url2Str(&pu)->ptr;
+      q = html_quote(p);
+      if (DecodeURL)
+        p = html_quote(url_decode0(p));
+      else
+        p = q;
+      Strcat_m_charp(
+          tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
+          q, "\">", p, "</a>", NULL);
+    }
+    a = retrieveCurrentForm(buf);
+    if (a != NULL) {
+      FormItemList *fi = (FormItemList *)a->url;
+      p = form2str(fi);
+      p = html_quote(url_decode0(p));
+      Strcat_m_charp(
+          tmp,
+          "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>", p,
+          NULL);
+      // if (fi->parent->method == FORM_METHOD_INTERNAL &&
+      //     !Strcmp_charp(fi->parent->action, "map"))
+      //   append_map_info(buf, tmp, fi->parent->item);
+    }
+    Strcat_charp(tmp, "</table>\n");
+
+    append_link_info(buf, tmp, buf->linklist);
+
+    if (buf->document_header != NULL) {
+      Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
+      for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+        Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
+                       NULL);
+      Strcat_charp(tmp, "</pre>\n");
+    }
+
+    if (f_set) {
+      Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
+      // append_frame_info(buf, tmp, f_set, 0);
+    }
+    if (buf->ssl_certificate)
+      Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
+                     html_quote(buf->ssl_certificate), "</pre>\n", NULL);
   }
 
-  if (f_set) {
-    Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
-    // append_frame_info(buf, tmp, f_set, 0);
-  }
-  if (buf->ssl_certificate)
-    Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-                   html_quote(buf->ssl_certificate), "</pre>\n", NULL);
-end:
   Strcat_charp(tmp, "</body></html>");
   newbuf = loadHTMLString(tmp);
   return newbuf;

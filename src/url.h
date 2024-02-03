@@ -47,10 +47,7 @@ void parseURL2(const char *url, Url *pu, const Url *current);
 Str *Url2Str(const Url *pu);
 Str *Url2RefererStr(const Url *pu);
 Str *_Url2Str(const Url *pu, int pass, int user, int label);
-
-struct Url;
 Url *schemaToProxy(UrlSchema schema);
 const char *url_decode0(const char *url);
-#define url_decode2(url, buf) url_decode0(url)
 
 bool checkRedirection(const Url *pu);

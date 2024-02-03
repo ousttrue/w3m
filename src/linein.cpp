@@ -817,7 +817,7 @@ static void _prev(void) {
     strCurrentBuf = strBuf;
   }
   if (DecodeURL && (cm_mode & CPL_URL))
-    p = url_decode2(p, NULL);
+    p = url_decode0(p);
   strBuf = Strnew_charp(p);
   CLen = CPos = setStrType(strBuf, strProp);
   offset = 0;
@@ -834,7 +834,7 @@ static void _next(void) {
   p = nextHist(hist);
   if (p) {
     if (DecodeURL && (cm_mode & CPL_URL))
-      p = url_decode2(p, NULL);
+      p = url_decode0(p);
     strBuf = Strnew_charp(p);
   } else {
     strBuf = strCurrentBuf;

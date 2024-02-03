@@ -41,7 +41,7 @@ AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
   } else {
     for (i = 0; i < n; i++) {
       if (bpcmp(al->anchors[i].start, bp) >= 0) {
-        for (int j = n; j > i; j--)
+        for (size_t j = n; j > i; j--)
           al->anchors[j] = al->anchors[j - 1];
         break;
       }
@@ -522,7 +522,6 @@ Buffer *link_list_panel(Buffer *buf) {
   const char *u, *p;
   const char *t;
   Url pu;
-  /* FIXME: gettextize? */
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
@@ -539,7 +538,7 @@ Buffer *link_list_panel(Buffer *buf) {
         p = Url2Str(&pu)->ptr;
         u = html_quote(p);
         if (DecodeURL)
-          p = html_quote(url_decode2(p, buf));
+          p = html_quote(url_decode0(p));
         else
           p = u;
       } else
@@ -569,7 +568,7 @@ Buffer *link_list_panel(Buffer *buf) {
       p = Url2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
-        p = html_quote(url_decode2(p, buf));
+        p = html_quote(url_decode0(p));
       else
         p = u;
       t = getAnchorText(buf, al, a);
@@ -591,13 +590,13 @@ Buffer *link_list_panel(Buffer *buf) {
       p = Url2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
-        p = html_quote(url_decode2(p, buf));
+        p = html_quote(url_decode0(p));
       else
         p = u;
       if (a->title && *a->title)
         t = html_quote(a->title);
       else
-        t = html_quote(url_decode2(a->url, buf));
+        t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
       if (!buf->formitem) {
