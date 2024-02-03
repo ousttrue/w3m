@@ -887,10 +887,9 @@ DEFUN(ldhelp, HELP, "Show help panel") {
 
 static void cmd_loadfile(const char *fn) {
 
-  auto buf =
-      loadGeneralFile(file_to_url((char *)fn), nullptr, NO_REFERER, 0, nullptr);
+  auto buf = loadGeneralFile(file_to_url((char *)fn), {},
+                             {.referer = NO_REFERER});
   if (buf == nullptr) {
-    /* FIXME: gettextize? */
     char *emsg = Sprintf("%s not found", fn)->ptr;
     disp_err_message(emsg, false);
   } else if (buf != NO_BUFFER) {
@@ -1311,7 +1310,6 @@ static Buffer *loadLink(const char *url, const char *target,
                         const char *referer, FormList *request) {
   Buffer *buf, *nfbuf;
   // union frameset_element *f_element = nullptr;
-  int flag = 0;
   Url *base, pu;
   const int *no_referer_ptr;
 
@@ -1326,7 +1324,8 @@ static Buffer *loadLink(const char *url, const char *target,
     referer = NO_REFERER;
   if (referer == nullptr)
     referer = Strnew(Currentbuf->currentURL.to_RefererStr())->ptr;
-  buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
+  buf =
+      loadGeneralFile(url, baseURL(Currentbuf), {.referer = referer}, request);
   if (buf == nullptr) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
@@ -1512,7 +1511,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   /* FIXME: gettextize? */
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   refresh(term_io());
-  buf = loadGeneralFile(a->url, baseURL(Currentbuf), nullptr, 0, nullptr);
+  buf = loadGeneralFile(a->url, baseURL(Currentbuf), {});
   if (buf == nullptr) {
     /* FIXME: gettextize? */
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -2350,7 +2349,7 @@ static void cmd_loadURL(const char *url, Url *current, const char *referer,
     return;
 
   refresh(term_io());
-  auto buf = loadGeneralFile(url, current, referer, 0, request);
+  auto buf = loadGeneralFile(url, current, {.referer = referer}, request);
   if (buf == nullptr) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
@@ -2814,8 +2813,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   refresh(term_io());
   SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
-  auto buf =
-      loadGeneralFile(url->ptr, nullptr, NO_REFERER, RG_NOCACHE, request);
+  auto buf = loadGeneralFile(
+      url->ptr, nullptr, {.referer = NO_REFERER, .no_cache = true}, request);
   SearchHeader = false;
   DefaultType = nullptr;
 
@@ -3033,7 +3032,7 @@ static void execdict(const char *word) {
   }
   dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  buf = loadGeneralFile(dictcmd, nullptr, NO_REFERER, 0, nullptr);
+  buf = loadGeneralFile(dictcmd, nullptr, {.referer = NO_REFERER});
   if (buf == nullptr) {
     disp_message("Execution failed", true);
     return;
@@ -4083,7 +4082,7 @@ int main(int argc, char **argv) {
       newbuf = openGeneralPagerBuffer(redin);
       dup2(1, 0);
     } else if (load_bookmark) {
-      newbuf = loadGeneralFile(BookmarkFile, nullptr, NO_REFERER, 0, nullptr);
+      newbuf = loadGeneralFile(BookmarkFile, nullptr, {.referer = NO_REFERER});
       if (newbuf == nullptr)
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
     } else if (visual_start) {
@@ -4104,7 +4103,7 @@ int main(int argc, char **argv) {
             (BufferFlags)(newbuf->bufferprop | BP_INTERNAL | BP_NO_URL);
     } else if ((p = getenv("HTTP_HOME")) != nullptr ||
                (p = getenv("WWW_HOME")) != nullptr) {
-      newbuf = loadGeneralFile(p, nullptr, NO_REFERER, 0, nullptr);
+      newbuf = loadGeneralFile(p, nullptr, {.referer = NO_REFERER});
       if (newbuf == nullptr)
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
       else if (newbuf != NO_BUFFER)
@@ -4146,7 +4145,6 @@ int main(int argc, char **argv) {
           else
             fp = fopen(post_file, "r");
           if (fp == nullptr) {
-            /* FIXME: gettextize? */
             Strcat(err_msg, Sprintf("w3m: Can't open %s.\n", post_file));
             continue;
           }
@@ -4161,14 +4159,14 @@ int main(int argc, char **argv) {
         } else {
           request = nullptr;
         }
-        newbuf = loadGeneralFile(url, nullptr, NO_REFERER, 0, request);
+        newbuf =
+            loadGeneralFile(url, nullptr, {.referer = NO_REFERER}, request);
       }
       if (newbuf == nullptr) {
         if (ArgvIsURL && !retry) {
           retry = 1;
           goto retry_as_local_file;
         }
-        /* FIXME: gettextize? */
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", load_argv[i]));
         continue;
       } else if (newbuf == NO_BUFFER)

@@ -1,5 +1,6 @@
 #include "local_cgi.h"
 #include "terms.h"
+#include "http_option.h"
 #include "rc.h"
 #include "indep.h"
 #include "w3m.h"

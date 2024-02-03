@@ -1,5 +1,6 @@
 #pragma once
 #include <time.h>
+#include "http_option.h"
 
 int is_html_type(const char *type);
 
@@ -12,10 +13,8 @@ struct Buffer;
 struct Url;
 struct FormList;
 
-#define RG_NOCACHE 1
-
 Buffer *loadGeneralFile(const char *path, Url *current,
-                        const char *referer, int flag, FormList *request);
+                        const HttpOption &option, FormList *request = {});
 
 void showProgress(long long *linelen, long long *trbyte,
                   long long current_content_length);
@@ -33,4 +32,3 @@ union input_stream;
 int checkSaveFile(input_stream *stream, const char *path);
 const char *guess_save_name(Buffer *buf, const char *file);
 const char *checkHeader(Buffer *buf, const char *field);
-

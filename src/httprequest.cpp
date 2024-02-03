@@ -1,4 +1,5 @@
 #include "httprequest.h"
+#include "http_option.h"
 #include "w3m.h"
 #include "Str.h"
 #include "url.h"
@@ -21,7 +22,7 @@ bool override_content_type = false;
 Str *header_string = nullptr;
 
 Str *HTTPrequestMethod(HRequest *hr) {
-  switch (hr->command) {
+  switch (hr->method) {
   case HR_COMMAND_CONNECT:
     return Strnew_charp("CONNECT");
   case HR_COMMAND_POST:
@@ -39,7 +40,7 @@ Str *HTTPrequestMethod(HRequest *hr) {
 
 Str *HTTPrequestURI(Url *pu, HRequest *hr) {
   Str *tmp = Strnew();
-  if (hr->command == HR_COMMAND_CONNECT) {
+  if (hr->method == HR_COMMAND_CONNECT) {
     Strcat_charp(tmp, pu->host);
     Strcat(tmp, Sprintf(":%d", pu->port));
   } else if (hr->flag & HR_FLAG_LOCAL) {
@@ -64,7 +65,7 @@ static std::string Url2RefererOriginStr(Url *pu) {
   return s;
 }
 
-static char *otherinfo(Url *target, Url *current, char *referer) {
+static char *otherinfo(Url *target, Url *current, const char *referer) {
   Str *s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -151,18 +152,18 @@ Str *HTTPrequest(Url *pu, Url *current, HRequest *hr, TextList *extra) {
     for (i = extra->first; i != NULL; i = i->next) {
       if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
           0) {
-        if (hr->command == HR_COMMAND_CONNECT)
+        if (hr->method == HR_COMMAND_CONNECT)
           continue;
       }
       if (strncasecmp(i->ptr, "Proxy-Authorization:",
                       sizeof("Proxy-Authorization:") - 1) == 0) {
-        if (pu->schema == SCM_HTTPS && hr->command != HR_COMMAND_CONNECT)
+        if (pu->schema == SCM_HTTPS && hr->method != HR_COMMAND_CONNECT)
           continue;
       }
       Strcat_charp(tmp, i->ptr);
     }
 
-  if (hr->command != HR_COMMAND_CONNECT && use_cookie &&
+  if (hr->method != HR_COMMAND_CONNECT && use_cookie &&
       (cookie = find_cookie(pu))) {
     Strcat_charp(tmp, "Cookie: ");
     Strcat(tmp, cookie);
@@ -171,7 +172,7 @@ Str *HTTPrequest(Url *pu, Url *current, HRequest *hr, TextList *extra) {
     if (cookie->ptr[0] != '$')
       Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
   }
-  if (hr->command == HR_COMMAND_POST) {
+  if (hr->method == HR_COMMAND_POST) {
     if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
       Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
       Strcat_charp(tmp, hr->request->boundary);

@@ -311,8 +311,9 @@ static long long current_content_length;
  * loadGeneralFile: load file to buffer
  */
 #define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
-Buffer *loadGeneralFile(const char *path, Url *current, const char *referer,
-                        int flag, FormList *request) {
+
+Buffer *loadGeneralFile(const char *path, Url *current,
+                        const HttpOption &option, FormList *request) {
   UrlStream f, *of = NULL;
   Url pu;
   Buffer *b = NULL;
@@ -331,7 +332,6 @@ Buffer *loadGeneralFile(const char *path, Url *current, const char *referer,
   Str *realm = NULL;
   int add_auth_cookie_flag;
   unsigned char status = HTST_NORMAL;
-  URLOption url_option;
   Str *tmp;
   Str *page = NULL;
   HRequest hr;
@@ -357,10 +357,8 @@ load_doc: {
   }
 }
   TRAP_OFF;
-  url_option.referer = (char *)referer;
-  url_option.flag = flag;
-  f = openURL((char *)tpath, &pu, current, &url_option, request, extra_header,
-              of, &hr, &status);
+  f = openURL(tpath, &pu, current, option, request, extra_header, of, &hr,
+              &status);
   of = NULL;
   if (f.stream == NULL) {
     switch (f.schema) {
@@ -371,7 +369,7 @@ load_doc: {
       if (S_ISDIR(st.st_mode)) {
         if (UseExternalDirBuffer) {
           Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
-          b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0, NULL);
+          b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
           if (b != NULL && b != NO_BUFFER) {
             b->currentURL = pu;
             b->filename = b->currentURL.real_file;

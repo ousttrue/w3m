@@ -1,5 +1,6 @@
 #include "anchor.h"
 #include "readbuffer.h"
+#include "http_option.h"
 #include "rc.h"
 #include "terms.h"
 #include "linklist.h"

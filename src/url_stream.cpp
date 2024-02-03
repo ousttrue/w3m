@@ -278,9 +278,10 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-UrlStream openURL(char *url, Url *pu, Url *current, URLOption *option,
-                  FormList *request, TextList *extra_header, UrlStream *ouf,
-                  HRequest *hr, unsigned char *status) {
+UrlStream openURL(const char *url, Url *pu, Url *current,
+                  const HttpOption &option, FormList *request,
+                  TextList *extra_header, UrlStream *ouf, HRequest *hr,
+                  unsigned char *status) {
   Str *tmp;
   int sock;
   const char *p, *q, *u;
@@ -327,12 +328,12 @@ retry:
 
   uf.schema = pu->schema;
   uf.url = Strnew(pu->to_Str())->ptr;
-  pu->is_nocache = (option->flag & RG_NOCACHE);
+  pu->is_nocache = (option.no_cache);
   uf.ext = filename_extension(pu->file, 1);
 
-  hr->command = HR_COMMAND_GET;
-  hr->flag = 0;
-  hr->referer = option->referer;
+  hr->method = HR_COMMAND_GET;
+  hr->flag = {};
+  hr->referer = option.referer;
   hr->request = request;
 
   switch (pu->schema) {
@@ -341,12 +342,12 @@ retry:
     if (request && request->body)
       /* local CGI: POST */
       uf.stream = newFileStream(
-          localcgi_post(pu->real_file, pu->query, request, option->referer),
+          localcgi_post(pu->real_file, pu->query, request, option.referer),
           (void (*)())fclose);
     else
       /* lodal CGI: GET */
       uf.stream =
-          newFileStream(localcgi_get(pu->real_file, pu->query, option->referer),
+          newFileStream(localcgi_get(pu->real_file, pu->query, option.referer),
                         (void (*)())fclose);
     if (uf.stream) {
       uf.is_cgi = TRUE;
@@ -416,13 +417,13 @@ retry:
     if (pu->file == NULL)
       pu->file = allocStr("/", -1);
     if (request && request->method == FORM_METHOD_POST && request->body)
-      hr->command = HR_COMMAND_POST;
+      hr->method = HR_COMMAND_POST;
     if (request && request->method == FORM_METHOD_HEAD)
-      hr->command = HR_COMMAND_HEAD;
+      hr->method = HR_COMMAND_HEAD;
     if (((pu->schema == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
         use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
-      hr->flag |= HR_FLAG_PROXY;
+      hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_PROXY);
       if (pu->schema == SCM_HTTPS && *status == HTST_CONNECT) {
         sock = ssl_socket_of(ouf->stream);
         if (!(sslh = openSSLHandle(sock, pu->host, &uf.ssl_certificate))) {
@@ -448,11 +449,11 @@ retry:
       }
       if (pu->schema == SCM_HTTPS) {
         if (*status == HTST_NORMAL) {
-          hr->command = HR_COMMAND_CONNECT;
+          hr->method = HR_COMMAND_CONNECT;
           tmp = HTTPrequest(pu, current, hr, extra_header);
           *status = HTST_CONNECT;
         } else {
-          hr->flag |= HR_FLAG_LOCAL;
+          hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_LOCAL);
           tmp = HTTPrequest(pu, current, hr, extra_header);
           *status = HTST_NORMAL;
         }
@@ -472,7 +473,7 @@ retry:
           return uf;
         }
       }
-      hr->flag |= HR_FLAG_LOCAL;
+      hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_LOCAL);
       tmp = HTTPrequest(pu, current, hr, extra_header);
       *status = HTST_NORMAL;
     }
@@ -493,7 +494,7 @@ retry:
         fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
         fclose(ff);
       }
-      if (hr->command == HR_COMMAND_POST &&
+      if (hr->method == HR_COMMAND_POST &&
           request->enctype == FORM_ENCTYPE_MULTIPART) {
         if (sslh)
           SSL_write_from_file(sslh, request->body);
@@ -510,7 +511,7 @@ retry:
         fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
         fclose(ff);
       }
-      if (hr->command == HR_COMMAND_POST &&
+      if (hr->method == HR_COMMAND_POST &&
           request->enctype == FORM_ENCTYPE_MULTIPART)
         write_from_file(sock, request->body);
     }
