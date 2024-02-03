@@ -22,14 +22,15 @@ struct Url {
   Url &operator=(const Url &src);
   // void copyUrl(Url *p, const Url *q);
   bool same_url_p(const Url *pu2) const;
+
+  Str *to_Str() const;
 };
 
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->schema == SCM_UNKNOWN && !(pu)->file)
 
-Str *Url2Str(const Url *pu);
 inline Str *Url2Str(const std::optional<Url> &pu) {
   if (pu) {
-    return Url2Str(&*pu);
+    return pu->to_Str();
   } else {
     return {};
   }

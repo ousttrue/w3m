@@ -388,7 +388,7 @@ load_doc: {
       // t = "ftp:directory";
       break;
     case SCM_UNKNOWN:
-      disp_err_message(Sprintf("Unknown URI: %s", Url2Str(&pu)->ptr)->ptr,
+      disp_err_message(Sprintf("Unknown URI: %s", pu.to_Str()->ptr)->ptr,
                        FALSE);
       break;
 

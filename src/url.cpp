@@ -532,11 +532,9 @@ Str *_Url2Str(const Url *pu, int pass, int user, int label) {
   return tmp;
 }
 
-Str *Url2Str(const Url *pu) { return _Url2Str(pu, false, true, true); }
+Str *Url::to_Str() const { return _Url2Str(this, false, true, true); }
 
 Str *Url2RefererStr(const Url *pu) { return _Url2Str(pu, false, false, false); }
-
-
 
 const char *url_decode0(const char *url) {
   if (!DecodeURL)
@@ -562,7 +560,7 @@ bool checkRedirection(const Url *pu) {
 
   if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
     auto tmp = Sprintf("Number of redirections exceeded %d at %s",
-                       FollowRedirection, Url2Str(pu)->ptr);
+                       FollowRedirection, pu->to_Str()->ptr);
     disp_err_message(tmp->ptr, false);
     return false;
   }
@@ -570,7 +568,7 @@ bool checkRedirection(const Url *pu) {
   for (auto &url : redirectins) {
     if (pu->same_url_p(&url)) {
       // same url found !
-      auto tmp = Sprintf("Redirection loop detected (%s)", Url2Str(pu)->ptr);
+      auto tmp = Sprintf("Redirection loop detected (%s)", pu->to_Str()->ptr);
       disp_err_message(tmp->ptr, false);
       return false;
     }

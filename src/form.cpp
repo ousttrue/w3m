@@ -575,7 +575,7 @@ static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
     _new = PreForm = (struct pre_form *)New(struct pre_form);
   if (url && !re_url) {
     pu = Url::parse2(url);
-    _new->url = Url2Str(&pu)->ptr;
+    _new->url = pu.to_Str()->ptr;
   } else
     _new->url = url;
   _new->re_url = re_url;
@@ -739,11 +739,11 @@ void preFormUpdateBuffer(Buffer *buf) {
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      Str *url = Url2Str(&buf->currentURL);
+      Str *url = buf->currentURL.to_Str();
       if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
         continue;
     } else if (pf->url) {
-      if (Strcmp_charp(Url2Str(&buf->currentURL), pf->url))
+      if (Strcmp_charp(buf->currentURL.to_Str(), pf->url))
         continue;
     } else
       continue;

@@ -51,7 +51,6 @@ Url HTTP_proxy_parsed;
 Url HTTPS_proxy_parsed;
 Url FTP_proxy_parsed;
 
-
 #ifdef SOCK_DEBUG
 #include <stdarg.h>
 
@@ -67,7 +66,6 @@ static void sock_log(char *message, ...) {
 }
 
 #endif
-
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -280,9 +278,9 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-UrlStream openURL(char *url, Url *pu, Url *current,
-                  URLOption *option, FormList *request, TextList *extra_header,
-                  UrlStream *ouf, HRequest *hr, unsigned char *status) {
+UrlStream openURL(char *url, Url *pu, Url *current, URLOption *option,
+                  FormList *request, TextList *extra_header, UrlStream *ouf,
+                  HRequest *hr, unsigned char *status) {
   Str *tmp;
   int sock;
   const char *p, *q, *u;
@@ -328,7 +326,7 @@ retry:
     pu->host = NULL;
 
   uf.schema = pu->schema;
-  uf.url = Url2Str(pu)->ptr;
+  uf.url = pu->to_Str()->ptr;
   pu->is_nocache = (option->flag & RG_NOCACHE);
   uf.ext = filename_extension(pu->file, 1);
 
