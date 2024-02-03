@@ -85,7 +85,10 @@ void Strgrow(Str *s);
           (x)->ptr[(x)->length++] = (y), (x)->ptr[(x)->length] = 0))
 #define Strcatc(x, y) ((x)->ptr[(x)->length++] = (y))
 #define Strnulterm(x) ((x)->ptr[(x)->length] = 0)
-#define Strcmp(x, y) strcmp((x)->ptr, (y)->ptr)
+
+int Strcmp(const std::string &x, const char *y);
+int Strcmp(const Str *x, const Str *y);
+
 #define Strcmp_charp(x, y) strcmp((x)->ptr, (y))
 #define Strncmp(x, y, n) strncmp((x)->ptr, (y)->ptr, (n))
 #define Strncmp_charp(x, y, n) strncmp((x)->ptr, (y), (n))

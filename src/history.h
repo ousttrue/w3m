@@ -1,7 +1,7 @@
 #pragma once
-
 #include "textlist.h"
 #include "hash.h"
+#include <string_view>
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
@@ -28,7 +28,7 @@ extern int SaveURLHist;
 Hist *newHist(void);
 Hist *copyHist(Hist *hist);
 HistItem *unshiftHist(Hist *hist, const char *ptr);
-HistItem *pushHist(Hist *hist, const char *ptr);
+HistItem *pushHist(Hist *hist, std::string_view ptr);
 HistItem *pushHashHist(Hist *hist, const char *ptr);
 HistItem *getHashHist(Hist *hist, const char *ptr);
 const char *lastHist(Hist *hist);

@@ -535,7 +535,7 @@ Buffer *link_list_panel(Buffer *buf) {
     for (l = buf->linklist; l; l = l->next) {
       if (l->url) {
         pu = Url::parse(l->url, baseURL(buf));
-        p = pu.to_Str()->ptr;
+        p = Strnew(pu.to_Str())->ptr;
         u = html_quote(p);
         if (DecodeURL)
           p = html_quote(url_decode0(p));
@@ -565,7 +565,7 @@ Buffer *link_list_panel(Buffer *buf) {
       if (a->hseq < 0 || a->slave)
         continue;
       pu = Url::parse2(a->url, baseURL(buf));
-      p = pu.to_Str()->ptr;
+      p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));
@@ -587,7 +587,7 @@ Buffer *link_list_panel(Buffer *buf) {
       if (a->slave)
         continue;
       pu = Url::parse2(a->url, baseURL(buf));
-      p = pu.to_Str()->ptr;
+      p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));

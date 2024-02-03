@@ -165,7 +165,7 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
 #else
           const unsigned char *sn = ASN1_STRING_get0_data(gn->d.ia5);
 #endif
-          auto sl = ASN1_STRING_length(gn->d.ia5);
+          auto sl = static_cast<size_t>(ASN1_STRING_length(gn->d.ia5));
 
           /*
            * sn is a pointer to internal data and not guaranteed to
@@ -182,8 +182,7 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
             seen_dnsname = Strnew();
           /* replace \0 to make full string visible to user */
           if (sl != strlen(asn)) {
-            int i;
-            for (i = 0; i < sl; ++i) {
+            for (size_t i = 0; i < sl; ++i) {
               if (!asn[i])
                 asn[i] = '!';
             }
@@ -213,10 +212,10 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
     auto slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
     if (slen == -1)
       ret = Strnew_charp("Unable to get common name from peer cert");
-    else if (slen != strlen(buf) ||
+    else if (static_cast<size_t>(slen) != strlen(buf) ||
              !ssl_match_cert_ident(buf, strlen(buf), hostname)) {
       /* replace \0 to make full string visible to user */
-      if (slen != strlen(buf)) {
+      if (static_cast<size_t>(slen) != strlen(buf)) {
         for (auto i = 0; i < slen; ++i) {
           if (!buf[i])
             buf[i] = '!';

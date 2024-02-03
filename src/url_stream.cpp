@@ -326,7 +326,7 @@ retry:
     pu->host = NULL;
 
   uf.schema = pu->schema;
-  uf.url = pu->to_Str()->ptr;
+  uf.url = Strnew(pu->to_Str())->ptr;
   pu->is_nocache = (option->flag & RG_NOCACHE);
   uf.ext = filename_extension(pu->file, 1);
 

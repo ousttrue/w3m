@@ -13,14 +13,15 @@
  * limited to warranty of fitness of purpose, or merchantability, or
  * results obtained from use of this software.
  */
+#include "Str.h"
+#include "alloc.h"
+#include "myctype.h"
 #include <stdio.h>
+#include <string>
 #include <stdlib.h>
 #include <gc.h>
 #include <stdarg.h>
 #include <string.h>
-#include "Str.h"
-#include "alloc.h"
-#include "myctype.h"
 
 #define INITIAL_STR_SIZE 32
 
@@ -33,6 +34,9 @@
 #else /* not STR_DEBUG */
 #define STR_LENGTH_CHECK(x)
 #endif /* not STR_DEBUG */
+
+int Strcmp(const std::string &x, const char *y) { return strcmp(x.c_str(), y); }
+int Strcmp(const Str *x, const Str *y) { return strcmp((x)->ptr, (y)->ptr); }
 
 char *allocStr(const char *s, int len) {
   char *ptr;

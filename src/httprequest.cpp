@@ -53,7 +53,7 @@ Str *HTTPrequestURI(Url *pu, HRequest *hr) {
   return tmp;
 }
 
-static Str *Url2RefererOriginStr(Url *pu) {
+static std::string Url2RefererOriginStr(Url *pu) {
   auto f = pu->file;
   auto q = pu->query;
   pu->file = NULL;

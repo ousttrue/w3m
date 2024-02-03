@@ -1258,7 +1258,7 @@ static void loadSiteconf(void) {
         if (!url || !*url)
           continue;
         pu = Url::parse2(url);
-        newent->url = pu.to_Str()->ptr;
+        newent->url = Strnew(pu.to_Str())->ptr;
       }
       /* If we have an extra or unknown option, ignore this record
        * for future extensions. */
@@ -1302,14 +1302,13 @@ static void loadSiteconf(void) {
 
 const void *querySiteconf(const Url *query_pu, int field) {
   const struct siteconf_rec *ent;
-  Str *u;
   const char *firstp, *lastp;
 
   if (field < 0 || field >= SCONF_N_FIELD)
     return NULL;
   if (!query_pu || query_pu->IS_EMPTY_PARSED_URL())
     return NULL;
-  u = query_pu->to_Str();
+  auto u = Strnew(query_pu->to_Str());
   if (u->length == 0)
     return NULL;
 

@@ -151,9 +151,9 @@ static void print_headers(Buffer *buf, int len) {
     for (tp = buf->document_header->first; tp; tp = tp->next)
       printf("%s\n", tp->ptr);
   }
-  printf("w3m-current-url: %s\n", buf->currentURL.to_Str()->ptr);
+  printf("w3m-current-url: %s\n", buf->currentURL.to_Str().c_str());
   if (buf->baseURL)
-    printf("w3m-base-url: %s\n", buf->baseURL->to_Str()->ptr);
+    printf("w3m-base-url: %s\n", buf->baseURL->to_Str().c_str());
   printf("w3m-content-type: %s\n", buf->type);
   if (len > 0)
     printf("w3m-content-length: %d\n", len);

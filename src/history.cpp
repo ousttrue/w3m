@@ -166,12 +166,12 @@ HistItem *unshiftHist(Hist *hist, const char *ptr) {
   return item;
 }
 
-HistItem *pushHist(Hist *hist, const char *ptr) {
+HistItem *pushHist(Hist *hist, std::string_view ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
     return NULL;
-  item = (HistItem *)newListItem((void *)allocStr(ptr, -1), NULL,
+  item = (HistItem *)newListItem((void *)allocStr(ptr.data(), ptr.size()), NULL,
                                  (ListItem *)hist->list->last);
   if (hist->list->last)
     hist->list->last->next = item;

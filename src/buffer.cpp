@@ -572,7 +572,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   for (l = link; l; l = l->next) {
     if (l->url) {
       pu = Url::parse2(l->url, baseURL(buf));
-      url = html_quote(pu.to_Str()->ptr);
+      url = html_quote(pu.to_Str().c_str());
     } else
       url = "(empty)";
     Strcat_m_charp(html, "<tr valign=top><td><a href=\"", url, "\">",
@@ -617,7 +617,7 @@ Buffer *page_info_panel(Buffer *buf) {
     all = buf->allLine;
     if (all == 0 && buf->lastLine)
       all = buf->lastLine->linenumber;
-    p = url_decode0(buf->currentURL.to_Str()->ptr);
+    p = url_decode0(buf->currentURL.to_Str().c_str());
     Strcat_m_charp(tmp, "<table cellpadding=0>",
                    "<tr valign=top><td nowrap>Title<td>",
                    html_quote(buf->buffername),
@@ -634,7 +634,7 @@ Buffer *page_info_panel(Buffer *buf) {
     a = retrieveCurrentAnchor(buf);
     if (a) {
       pu = Url::parse2(a->url, baseURL(buf));
-      p = pu.to_Str()->ptr;
+      p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));
@@ -647,7 +647,7 @@ Buffer *page_info_panel(Buffer *buf) {
     a = retrieveCurrentImg(buf);
     if (a != NULL) {
       pu = Url::parse2(a->url, baseURL(buf));
-      p = pu.to_Str()->ptr;
+      p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));
@@ -725,7 +725,7 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_SOURCEFILE", buf->sourcefile);
     set_environ("W3M_FILENAME", buf->filename);
     set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", buf->currentURL.to_Str()->ptr);
+    set_environ("W3M_URL", buf->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
   }
   l = buf->currentLine;
@@ -737,13 +737,13 @@ void set_buffer_environ(Buffer *buf) {
     a = retrieveCurrentAnchor(buf);
     if (a) {
       pu = Url::parse2(a->url, baseURL(buf));
-      set_environ("W3M_CURRENT_LINK", pu.to_Str()->ptr);
+      set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf);
     if (a) {
       pu = Url::parse2(a->url, baseURL(buf));
-      set_environ("W3M_CURRENT_IMG", pu.to_Str()->ptr);
+      set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_IMG", "");
     a = retrieveCurrentForm(buf);

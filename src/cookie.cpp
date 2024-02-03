@@ -545,7 +545,7 @@ void save_cookies(void) {
     if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
       continue;
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
-            p->url.to_Str()->ptr, p->name->ptr, p->value->ptr, (long)p->expires,
+            p->url.to_Str().c_str(), p->name->ptr, p->value->ptr, (long)p->expires,
             p->domain->ptr, p->path->ptr, p->flag, p->version,
             str2charp(p->comment),
             (p->portl) ? portlist2str(p->portl)->ptr : "",
@@ -659,7 +659,7 @@ Buffer *cookie_list_panel(void) {
 
   Strcat_charp(src, "<ol>");
   for (p = First_cookie, i = 0; p; p = p->next, i++) {
-    tmp = html_quote(p->url.to_Str()->ptr);
+    tmp = html_quote(p->url.to_Str().c_str());
     if (p->expires != (time_t)-1) {
 #ifdef HAVE_STRFTIME
       strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&p->expires));

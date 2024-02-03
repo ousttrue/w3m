@@ -456,7 +456,7 @@ Url Url::parse2(const char *src, const Url *current) {
   return url;
 }
 
-Str *Url::to_Str(bool pass, bool user, bool label) const {
+std::string Url::to_Str(bool pass, bool user, bool label) const {
   Str *tmp;
   static const char *schema_str[] = {
       "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
@@ -464,14 +464,14 @@ Str *Url::to_Str(bool pass, bool user, bool label) const {
   };
 
   if (this->schema == SCM_MISSING) {
-    return Strnew_charp("???");
+    return "???";
   } else if (this->schema == SCM_UNKNOWN) {
-    return Strnew_charp(this->file);
+    return this->file ? this->file : "";
   }
   if (this->host == nullptr && this->file == nullptr && label &&
       this->label != nullptr) {
     /* local label */
-    return Sprintf("#%s", this->label);
+    return Sprintf("#%s", this->label)->ptr;
   }
   if (this->schema == SCM_LOCAL && !strcmp(this->file, "-")) {
     tmp = Strnew_charp("-");
@@ -479,7 +479,7 @@ Str *Url::to_Str(bool pass, bool user, bool label) const {
       Strcat_char(tmp, '#');
       Strcat_charp(tmp, this->label);
     }
-    return tmp;
+    return tmp->ptr;
   }
   tmp = Strnew_charp(schema_str[this->schema]);
   Strcat_char(tmp, ':');
@@ -489,11 +489,11 @@ Str *Url::to_Str(bool pass, bool user, bool label) const {
       Strcat_char(tmp, '?');
       Strcat_charp(tmp, this->query);
     }
-    return tmp;
+    return tmp->ptr;
   }
   if (this->schema == SCM_DATA) {
     Strcat_charp(tmp, this->file);
-    return tmp;
+    return tmp->ptr;
   }
   { Strcat_charp(tmp, "//"); }
   if (user && this->user) {
@@ -530,7 +530,7 @@ Str *Url::to_Str(bool pass, bool user, bool label) const {
     Strcat_char(tmp, '#');
     Strcat_charp(tmp, this->label);
   }
-  return tmp;
+  return tmp->ptr;
 }
 
 const char *url_decode0(const char *url) {
@@ -557,7 +557,7 @@ bool checkRedirection(const Url *pu) {
 
   if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
     auto tmp = Sprintf("Number of redirections exceeded %d at %s",
-                       FollowRedirection, pu->to_Str()->ptr);
+                       FollowRedirection, pu->to_Str().c_str());
     disp_err_message(tmp->ptr, false);
     return false;
   }
@@ -565,7 +565,7 @@ bool checkRedirection(const Url *pu) {
   for (auto &url : redirectins) {
     if (pu->same_url_p(&url)) {
       // same url found !
-      auto tmp = Sprintf("Redirection loop detected (%s)", pu->to_Str()->ptr);
+      auto tmp = Sprintf("Redirection loop detected (%s)", pu->to_Str().c_str());
       disp_err_message(tmp->ptr, false);
       return false;
     }
@@ -573,12 +573,5 @@ bool checkRedirection(const Url *pu) {
 
   redirectins.push_back(*pu);
 
-  // if (!puv) {
-  //   nredir_size = FollowRedirection / 2 + 1;
-  //   puv = (Url *)New_N(Url, nredir_size);
-  //   memset(puv, 0, sizeof(Url) * nredir_size);
-  // }
-  // copyUrl(&puv[nredir % nredir_size], pu);
-  // nredir++;
   return true;
 }
