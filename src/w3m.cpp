@@ -49,7 +49,6 @@ const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 int UseDictCommand = true;
 const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 int FoldTextarea = false;
-int FoldLine = false;
 int DefaultURLString = DEFAULT_URL_CURRENT;
 struct auth_cookie *Auth_cookie = nullptr;
 struct cookie *First_cookie = nullptr;

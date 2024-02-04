@@ -1,5 +1,4 @@
 #pragma once
-#include <stddef.h>
 #include <gc_cpp.h>
 #include <vector>
 #include "lineprop.h"

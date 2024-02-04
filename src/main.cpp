@@ -2784,7 +2784,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     return;
   }
 
-  buf = new Buffer(INIT_BUFFER_WIDTH);
+  buf = new Buffer(INIT_BUFFER_WIDTH());
 
   if (is_html_type(Currentbuf->type)) {
     buf->type = "text/plain";
@@ -2928,7 +2928,7 @@ void chkURLBuffer(Buffer *buf) {
   for (i = 0; url_like_pat[i]; i++) {
     reAnchor(buf, url_like_pat[i]);
   }
-  buf->check_url |= CHK_URL;
+  buf->check_url = true;
 }
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
@@ -4252,7 +4252,7 @@ int main(int argc, char **argv) {
       nTab = 1;
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {
-      Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH);
+      Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH());
       Currentbuf->bufferprop = (BufferFlags)(BP_INTERNAL | BP_NO_URL);
       Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
     } else

@@ -36,7 +36,6 @@ double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 int pixel_per_char_i = DEFAULT_PIXEL_PER_CHAR;
 int displayLinkNumber = false;
 bool DisableCenter = false;
-bool showLineNum = false;
 int Tabstop = 8;
 int IndentIncr = 4;
 bool DisplayBorders = false;
@@ -4204,7 +4203,7 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
   Str *tmp;
 
   if (newBuf == NULL)
-    newBuf = new Buffer(INIT_BUFFER_WIDTH);
+    newBuf = new Buffer(INIT_BUFFER_WIDTH());
   if (newBuf->sourcefile == NULL &&
       (f->schema != SCM_LOCAL || newBuf->mailcap)) {
     tmp = tmpfname(TMPF_SRC, ".html");
@@ -4344,7 +4343,7 @@ Buffer *loadHTMLString(Str *page) {
   UrlStream f;
   init_stream(&f, SCM_LOCAL, newStrStream(page));
 
-  auto newBuf = new Buffer(INIT_BUFFER_WIDTH);
+  auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
   if (SETJMP(AbortLoading) != 0) {
     TRAP_OFF;
     discardBuffer(newBuf);

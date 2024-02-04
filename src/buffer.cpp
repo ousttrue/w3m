@@ -38,7 +38,8 @@ Buffer::Buffer(int width) : width(width) {
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
   this->clone = std::make_shared<Clone>();
-  this->check_url = MarkAllPages; /* use default from -o mark_all_pages */
+  // use default from -o mark_all_pages
+  this->check_url = MarkAllPages;
 }
 
 Buffer::~Buffer() {}
@@ -470,7 +471,7 @@ void reshapeBuffer(Buffer *buf) {
   if (!buf->need_reshape)
     return;
   buf->need_reshape = false;
-  buf->width = INIT_BUFFER_WIDTH;
+  buf->width = INIT_BUFFER_WIDTH();
   if (buf->sourcefile == NULL)
     return;
   init_stream(&f, SCM_LOCAL, NULL);
@@ -542,8 +543,9 @@ void reshapeBuffer(Buffer *buf) {
       buf->currentColumn = sbuf->currentColumn;
     arrangeCursor(buf);
   }
-  if (buf->check_url & CHK_URL)
+  if (buf->check_url) {
     chkURLBuffer(buf);
+  }
   formResetBuffer(buf, sbuf->formitem);
 }
 

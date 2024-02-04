@@ -1,10 +1,13 @@
 #pragma once
-#include "line.h"
+#include "lineprop.h"
 #include <stddef.h>
 
 extern bool displayLink;
-
-struct Buffer;
+extern bool showLineNum;
+int _INIT_BUFFER_WIDTH();
+int INIT_BUFFER_WIDTH();
+extern bool FoldLine;
+int FOLD_BUFFER_WIDTH();
 
 enum DisplayFlag {
   B_NORMAL,
@@ -14,6 +17,7 @@ enum DisplayFlag {
   B_REDRAW_IMAGE,
 };
 
+struct Buffer;
 void displayBuffer(Buffer *buf, DisplayFlag mode);
 
 void fmInit(void);

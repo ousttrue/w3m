@@ -96,7 +96,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   MySignalHandler prevtrap = NULL;
 
   if (newBuf == NULL)
-    newBuf = new Buffer(INIT_BUFFER_WIDTH);
+    newBuf = new Buffer(INIT_BUFFER_WIDTH());
 
   if (SETJMP(AbortLoading) != 0) {
     goto _end;
@@ -131,7 +131,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     Strchop(lineBuf2);
     lineBuf2 = checkType(lineBuf2, &propBuffer);
     newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                       FOLD_BUFFER_WIDTH, nlines);
+                       FOLD_BUFFER_WIDTH(), nlines);
   }
 _end:
   TRAP_OFF;
@@ -310,7 +310,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   }
   if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
     if (defaultbuf == NULL)
-      defaultbuf = new Buffer(INIT_BUFFER_WIDTH);
+      defaultbuf = new Buffer(INIT_BUFFER_WIDTH());
     if (defaultbuf->sourcefile)
       src = defaultbuf->sourcefile;
     else
@@ -419,7 +419,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
         Strcat(tmp, lineBuf2);
         if (thru)
           newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                             FOLD_BUFFER_WIDTH, -1);
+                             FOLD_BUFFER_WIDTH(), -1);
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
       }
@@ -781,7 +781,7 @@ load_doc: {
       refresh(term_io());
     }
     if (t_buf == NULL)
-      t_buf = new Buffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH());
     readHeader(&f, t_buf, false, &pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
@@ -797,7 +797,7 @@ load_doc: {
       UFclose(&f);
       current = (Url *)New(Url);
       *current = pu;
-      t_buf = new Buffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->bufferprop =
           static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);
       status = HTST_NORMAL;
@@ -885,7 +885,7 @@ load_doc: {
   } else if (searchHeader) {
     searchHeader = SearchHeader = false;
     if (t_buf == NULL)
-      t_buf = new Buffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH());
     readHeader(&f, t_buf, searchHeader_through, &pu);
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
@@ -896,7 +896,7 @@ load_doc: {
       add_auth_cookie_flag = 0;
       current = (Url *)New(Url);
       *current = pu;
-      t_buf = new Buffer(INIT_BUFFER_WIDTH);
+      t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->bufferprop = (BufferFlags)(t_buf->bufferprop | BP_REDIRECTED);
       status = HTST_NORMAL;
       goto load_doc;
@@ -1002,7 +1002,7 @@ page_loaded:
   } else if (f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(t) || searchExtViewer(t))) {
       if (t_buf == NULL)
-        t_buf = new Buffer(INIT_BUFFER_WIDTH);
+        t_buf = new Buffer(INIT_BUFFER_WIDTH());
       uncompress_stream(&f, &t_buf->sourcefile);
       uncompressed_file_type(pu.file, &f.ext);
     } else {
@@ -1036,7 +1036,7 @@ page_loaded:
     }
   }
   if (t_buf == NULL)
-    t_buf = new Buffer(INIT_BUFFER_WIDTH);
+    t_buf = new Buffer(INIT_BUFFER_WIDTH());
   t_buf->currentURL = pu;
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;

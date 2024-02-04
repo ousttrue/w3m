@@ -58,7 +58,6 @@ extern const char *DirBufferCommand;
 extern int UseDictCommand;
 extern const char *DictCommand;
 extern int FoldTextarea;
-extern int FoldLine;
 extern int DefaultURLString;
 extern struct auth_cookie *Auth_cookie;
 extern struct cookie *First_cookie;

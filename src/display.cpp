@@ -17,6 +17,13 @@
 #include <math.h>
 
 bool displayLink = false;
+bool showLineNum = false;
+bool FoldLine = false;
+int _INIT_BUFFER_WIDTH() { return (COLS - (showLineNum ? 6 : 1)); }
+int INIT_BUFFER_WIDTH() {
+  return ((_INIT_BUFFER_WIDTH() > 0) ? _INIT_BUFFER_WIDTH() : 0);
+}
+int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH() + 1) : -1); }
 
 /* *INDENT-OFF* */
 
@@ -178,10 +185,10 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
     return;
 
   if (buf->width == 0)
-    buf->width = INIT_BUFFER_WIDTH;
+    buf->width = INIT_BUFFER_WIDTH();
   if (buf->height == 0)
     buf->height = LASTLINE + 1;
-  if ((buf->width != INIT_BUFFER_WIDTH &&
+  if ((buf->width != INIT_BUFFER_WIDTH() &&
        (is_html_type(buf->type) || FoldLine)) ||
       buf->need_reshape) {
     buf->need_reshape = true;
@@ -226,7 +233,6 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
 
   msg = make_lastline_message(buf);
   if (buf->firstLine == NULL) {
-    /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
   }
 
@@ -241,7 +247,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
     saveBufferInfo();
     save_current_buf = buf;
   }
-  if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
+  if (mode == B_FORCE_REDRAW && buf->check_url) {
     chkURLBuffer(buf);
     displayBuffer(buf, B_NORMAL);
   }

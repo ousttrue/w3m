@@ -1,16 +1,12 @@
 #pragma once
-#include <memory>
-#include <optional>
 #include "url.h"
 #include "line.h"
+#include <memory>
+#include <optional>
 #include <gc_cpp.h>
 #include <stddef.h>
 
 #define NO_BUFFER ((Buffer *)1)
-
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
-#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
 /* Buffer Property */
 enum BufferFlags : unsigned short {
@@ -21,10 +17,6 @@ enum BufferFlags : unsigned short {
   BP_REDIRECTED = 0x20,
   BP_CLOSE = 0x40,
 };
-
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
 
 /* Link Buffer */
 #define LB_NOLINK -1
@@ -99,7 +91,7 @@ struct Buffer : public gc_cleanup {
   std::shared_ptr<Clone> clone;
 
   size_t trbyte = 0;
-  char check_url = 0;
+  bool check_url = false;
   FormItemList *form_submit = nullptr;
   const char *edit = nullptr;
   struct MailcapEntry *mailcap = nullptr;
