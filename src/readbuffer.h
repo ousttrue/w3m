@@ -222,9 +222,7 @@ enum CleanupMode {
   HTML_MODE = 2,
   HEADER_MODE = 3,
 };
-Str *convertLine0(UrlStream *uf, Str *line, CleanupMode mode);
-#define convertLine(uf, line, mode, charset, dcharset)                         \
-  convertLine0(uf, line, mode)
+Str *convertLine0(Str *line, CleanupMode mode);
 
 Str *getLinkNumberStr(int correction);
 void cleanup_line(Str *s, CleanupMode mode);

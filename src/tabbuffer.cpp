@@ -116,16 +116,25 @@ TabBuffer *deleteTab(TabBuffer *tab) {
  * deleteBuffer: delete buffer
  */
 void TabBuffer::deleteBuffer(Buffer *delbuf) {
+  if(!delbuf){
+    return;
+  }
+
+  if (Currentbuf == delbuf) {
+    Currentbuf = delbuf->nextBuffer;
+  }
+
   if (firstBuffer == delbuf && firstBuffer->nextBuffer != nullptr) {
     auto buf = firstBuffer->nextBuffer;
     discardBuffer(firstBuffer);
     firstBuffer = buf;
-    return;
-  }
-
-  if (auto buf = prevBuffer(firstBuffer, delbuf)) {
+  } else if (auto buf = prevBuffer(firstBuffer, delbuf)) {
     auto b = buf->nextBuffer;
     buf->nextBuffer = b->nextBuffer;
     discardBuffer(b);
+  }
+
+  if (!Currentbuf) {
+    Currentbuf = Firstbuf;
   }
 }

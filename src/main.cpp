@@ -128,7 +128,6 @@ int (*searchRoutine)(Buffer *, const char *);
 
 JMP_BUF IntReturn;
 
-static void delBuffer(Buffer *buf);
 static void cmd_loadfile(const char *path);
 static void cmd_loadURL(const char *url, Url *current, const char *referer,
                         FormList *request);
@@ -421,16 +420,6 @@ static void pushBuffer(Buffer *buf) {
     Currentbuf = buf;
   }
   saveBufferInfo();
-}
-
-static void delBuffer(Buffer *buf) {
-  if (buf == nullptr)
-    return;
-  if (Currentbuf == buf)
-    Currentbuf = buf->nextBuffer;
-  CurrentTab->deleteBuffer(buf);
-  if (!Currentbuf)
-    Currentbuf = Firstbuf;
 }
 
 static void repBuffer(Buffer *oldbuf, Buffer *buf) {
@@ -1193,7 +1182,7 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
       ok = true;
       break;
     case 'D':
-      delBuffer(buf);
+      CurrentTab->deleteBuffer(buf);
       if (Firstbuf == nullptr) {
         /* No more buffer */
         Firstbuf = nullBuffer();
@@ -1536,7 +1525,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     buf = Currentbuf;
     loadLink(url, a->target, a->referer, nullptr);
     if (buf != Currentbuf)
-      delBuffer(buf);
+      CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2387,7 +2376,7 @@ DEFUN(backBf, BACK,
     return;
   }
 
-  delBuffer(Currentbuf);
+  CurrentTab->deleteBuffer(Currentbuf);
 
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -2395,8 +2384,9 @@ DEFUN(backBf, BACK,
 DEFUN(deletePrevBuf, DELETE_PREVBUF,
       "Delete previous buffer (mainly for local CGI-scripts)") {
   Buffer *buf = Currentbuf->nextBuffer;
-  if (buf)
-    delBuffer(buf);
+  if (buf) {
+    CurrentTab->deleteBuffer(buf);
+  }
 }
 
 static void cmd_loadURL(const char *url, Url *current, const char *referer,
@@ -2583,8 +2573,9 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if ((buf = Currentbuf->linkBuffer[LB_INFO]) != nullptr)
-    delBuffer(buf);
+  if ((buf = Currentbuf->linkBuffer[LB_INFO]) != nullptr) {
+    CurrentTab->deleteBuffer(buf);
+  }
   buf = page_info_panel(Currentbuf);
   cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
 }
@@ -3376,7 +3367,7 @@ static void followTab(TabBuffer *tab) {
   check_target = true;
   if (tab == nullptr) {
     if (buf != Currentbuf)
-      delBuffer(buf);
+      CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
   } else if (buf != Currentbuf) {
@@ -3413,7 +3404,7 @@ static void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
   goURL0(prompt, relative);
   if (tab == nullptr) {
     if (buf != Currentbuf)
-      delBuffer(buf);
+      CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
   } else if (buf != Currentbuf) {
@@ -3657,7 +3648,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
         if (nTab > 1)
           deleteTab(CurrentTab);
       } else
-        delBuffer(Currentbuf);
+        CurrentTab->deleteBuffer(Currentbuf);
       displayBuffer(Currentbuf, B_FORCE_REDRAW);
     }
     return;
@@ -4125,7 +4116,7 @@ int main(int argc, char **argv) {
     } else if (open_new_tab) {
       _newT();
       Currentbuf->nextBuffer = newbuf;
-      delBuffer(Currentbuf);
+      CurrentTab->deleteBuffer(Currentbuf);
     } else {
       Currentbuf->nextBuffer = newbuf;
       Currentbuf = newbuf;

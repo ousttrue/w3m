@@ -120,7 +120,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
     showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+    lineBuf2 = convertLine0(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
         ++nlines;
@@ -401,9 +401,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
         /* header line is continued */
         continue;
       lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-      lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
-                             mime_charset ? &mime_charset : &charset,
-                             mime_charset ? mime_charset : DocumentCharset);
+      lineBuf2 = convertLine0(lineBuf2, RAW_MODE);
       /* separated with line and stored */
       tmp = Strnew_size(lineBuf2->length);
       for (p = lineBuf2->ptr; *p; p = q) {

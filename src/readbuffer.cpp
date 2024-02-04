@@ -4178,7 +4178,7 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
      * if (frame_source)
      * continue;
      */
-    lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
+    lineBuf2 = convertLine0(lineBuf2, HTML_MODE);
     HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
   }
   if (obuf.status != R_ST_NORMAL) {
@@ -4366,7 +4366,7 @@ Buffer *loadHTMLString(Str *page) {
   return newBuf;
 }
 
-Str *convertLine0(UrlStream *uf, Str *line, CleanupMode mode) {
+Str *convertLine0(Str *line, CleanupMode mode) {
   if (mode != RAW_MODE)
     cleanup_line(line, mode);
   return line;
