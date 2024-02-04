@@ -92,7 +92,6 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   char pre_lbuf = '\0';
   int nlines;
   Str *tmpf;
-  long long linelen = 0, trbyte = 0;
   Lineprop *propBuffer = NULL;
   MySignalHandler prevtrap = NULL;
 
@@ -115,12 +114,15 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   nlines = 0;
   if (IStype(uf->stream) != IST_ENCODED)
     uf->stream = newEncodedStream(uf->stream, uf->encoding);
+
+  // long long linelen = 0;
+  // long long trbyte = 0;
   while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
     if (src)
       Strfputs(lineBuf2, src);
-    linelen += lineBuf2->length;
-    showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine0(lineBuf2, PAGER_MODE);
+    // linelen += lineBuf2->length;
+    // showProgress(&linelen, &trbyte, current_content_length);
+    cleanup_line(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
         ++nlines;
@@ -139,7 +141,7 @@ _end:
   newBuf->topLine = newBuf->firstLine;
   newBuf->lastLine = newBuf->currentLine;
   newBuf->currentLine = newBuf->firstLine;
-  newBuf->trbyte = trbyte + linelen;
+  // newBuf->trbyte = trbyte + linelen;
   if (src)
     fclose(src);
 
@@ -401,7 +403,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
         /* header line is continued */
         continue;
       lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-      lineBuf2 = convertLine0(lineBuf2, RAW_MODE);
+      cleanup_line(lineBuf2, RAW_MODE);
       /* separated with line and stored */
       tmp = Strnew_size(lineBuf2->length);
       for (p = lineBuf2->ptr; *p; p = q) {

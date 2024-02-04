@@ -4178,7 +4178,7 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
      * if (frame_source)
      * continue;
      */
-    lineBuf2 = convertLine0(lineBuf2, HTML_MODE);
+    cleanup_line(lineBuf2, HTML_MODE);
     HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
   }
   if (obuf.status != R_ST_NORMAL) {
@@ -4366,12 +4366,6 @@ Buffer *loadHTMLString(Str *page) {
   return newBuf;
 }
 
-Str *convertLine0(Str *line, CleanupMode mode) {
-  if (mode != RAW_MODE)
-    cleanup_line(line, mode);
-  return line;
-}
-
 int currentLn(Buffer *buf) {
   if (buf->currentLine)
     /*     return buf->currentLine->real_linenumber + 1;      */
@@ -4381,19 +4375,25 @@ int currentLn(Buffer *buf) {
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {
+  if (mode == RAW_MODE) {
+    return;
+  }
+
   if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
       s->ptr[s->length - 1] == '\n') {
     Strshrink(s, 2);
     Strcat_char(s, '\n');
-  } else if (Strlastchar(s) == '\r')
+  } else if (Strlastchar(s) == '\r') {
     s->ptr[s->length - 1] = '\n';
-  else if (Strlastchar(s) != '\n')
+  } else if (Strlastchar(s) != '\n') {
     Strcat_char(s, '\n');
+  }
+
   if (mode != PAGER_MODE) {
-    int i;
-    for (i = 0; i < s->length; i++) {
-      if (s->ptr[i] == '\0')
+    for (int i = 0; i < s->length; i++) {
+      if (s->ptr[i] == '\0') {
         s->ptr[i] = ' ';
+      }
     }
   }
 }

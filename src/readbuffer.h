@@ -222,10 +222,9 @@ enum CleanupMode {
   HTML_MODE = 2,
   HEADER_MODE = 3,
 };
-Str *convertLine0(Str *line, CleanupMode mode);
+void cleanup_line(Str *s, CleanupMode mode);
 
 Str *getLinkNumberStr(int correction);
-void cleanup_line(Str *s, CleanupMode mode);
 const char *remove_space(const char *str);
 struct Buffer;
 extern int currentLn(Buffer *buf);

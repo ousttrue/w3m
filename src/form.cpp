@@ -491,7 +491,7 @@ void input_textarea(FormItemList *fi) {
       Strshrink(tmp, 1);
       Strcat_charp(tmp, "\r\n");
     }
-    tmp = convertLine0(tmp, RAW_MODE);
+    cleanup_line(tmp, RAW_MODE);
     Strcat(fi->value, tmp);
   }
   fclose(f);
