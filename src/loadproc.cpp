@@ -667,7 +667,7 @@ Buffer *loadGeneralFile(const char *path, Url *current,
   unsigned char status = HTST_NORMAL;
   Str *tmp;
   Str *page = NULL;
-  HRequest hr;
+  HttpRequest hr;
   Url *auth_pu;
 
   tpath = path;

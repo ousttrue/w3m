@@ -37,13 +37,13 @@ enum HttpRequestFlags  {
 };
 // ENUM_OP_INSTANCE(HttpRequestFlags);
 
-struct HRequest {
+struct HttpRequest {
   HttpMethod method;
   HttpRequestFlags flag = {};
   const char *referer;
   FormList *request;
 };
 
-Str *HTTPrequest(Url *pu, Url *current, HRequest *hr, TextList *extra);
-Str *HTTPrequestMethod(HRequest *hr);
-Str *HTTPrequestURI(Url *pu, HRequest *hr);
+Str *HTTPrequest(Url *pu, Url *current, HttpRequest *hr, TextList *extra);
+Str *HTTPrequestMethod(HttpRequest *hr);
+Str *HTTPrequestURI(Url *pu, HttpRequest *hr);

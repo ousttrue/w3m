@@ -253,7 +253,7 @@ static Str *base64_encode(const char *src, int len) {
 }
 
 static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw, Url *pu,
-                          HRequest *hr, FormList *request) {
+                          HttpRequest *hr, FormList *request) {
   Str *s = uname->Strdup();
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -344,7 +344,7 @@ http_auth *findAuthentication(http_auth *hauth, Buffer *buf,
 }
 
 void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   TextList *extra_header, Url *pu, HRequest *hr,
+                   TextList *extra_header, Url *pu, HttpRequest *hr,
                    FormList *request, Str **uname, Str **pwd) {
   Str *ss = NULL;
   Str *tmp;

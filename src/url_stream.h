@@ -45,11 +45,11 @@ struct UrlStream {
 struct Url;
 struct FormList;
 struct TextList;
-struct HRequest;
+struct HttpRequest;
 struct HttpOption;
 UrlStream openURL(const char *url, Url *pu, Url *current, const HttpOption &option,
                   FormList *request, TextList *extra_header, UrlStream *ouf,
-                  HRequest *hr, unsigned char *status);
+                  HttpRequest *hr, unsigned char *status);
 
 void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream);
 void examineFile(const char *path, UrlStream *uf);

@@ -280,13 +280,13 @@ static void write_from_file(int sock, char *file) {
 
 UrlStream openURL(const char *url, Url *pu, Url *current,
                   const HttpOption &option, FormList *request,
-                  TextList *extra_header, UrlStream *ouf, HRequest *hr,
+                  TextList *extra_header, UrlStream *ouf, HttpRequest *hr,
                   unsigned char *status) {
   Str *tmp;
   int sock;
   const char *p, *q, *u;
   UrlStream uf;
-  HRequest hr0;
+  HttpRequest hr0;
   SSL *sslh = NULL;
 
   if (hr == NULL)

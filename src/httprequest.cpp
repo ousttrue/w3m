@@ -21,7 +21,7 @@ bool CrossOriginReferer = true;
 bool override_content_type = false;
 Str *header_string = nullptr;
 
-Str *HTTPrequestMethod(HRequest *hr) {
+Str *HTTPrequestMethod(HttpRequest *hr) {
   switch (hr->method) {
   case HR_COMMAND_CONNECT:
     return Strnew_charp("CONNECT");
@@ -38,7 +38,7 @@ Str *HTTPrequestMethod(HRequest *hr) {
   return NULL;
 }
 
-Str *HTTPrequestURI(Url *pu, HRequest *hr) {
+Str *HTTPrequestURI(Url *pu, HttpRequest *hr) {
   Str *tmp = Strnew();
   if (hr->method == HR_COMMAND_CONNECT) {
     Strcat_charp(tmp, pu->host);
@@ -136,7 +136,7 @@ static char *otherinfo(Url *target, Url *current, const char *referer) {
   return s->ptr;
 }
 
-Str *HTTPrequest(Url *pu, Url *current, HRequest *hr, TextList *extra) {
+Str *HTTPrequest(Url *pu, Url *current, HttpRequest *hr, TextList *extra) {
   Str *tmp;
   TextListItem *i;
   Str *cookie;
