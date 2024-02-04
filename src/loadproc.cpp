@@ -355,13 +355,12 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
 #define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
 
 static int http_response_code;
-void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
+void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
   char *p, *q;
   char c;
   Str *lineBuf2 = NULL;
   Str *tmp;
   TextList *headerlist;
-  char *tmpf;
   FILE *src = NULL;
   Lineprop *propBuffer;
 
@@ -371,12 +370,6 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
   else
     http_response_code = 0;
 
-  if (thru && !newBuf->header_source) {
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    src = fopen(tmpf, "w");
-    if (src)
-      newBuf->header_source = tmpf;
-  }
   while ((tmp = StrmyUFgets(uf)) && tmp->length) {
     if (w3m_reqlog) {
       FILE *ff;
@@ -416,9 +409,6 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
           ;
         lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
         Strcat(tmp, lineBuf2);
-        if (thru)
-          newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                             FOLD_BUFFER_WIDTH(), -1);
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
       }
@@ -484,8 +474,6 @@ void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu) {
     Strfree(lineBuf2);
     lineBuf2 = NULL;
   }
-  if (thru)
-    newBuf->addnewline("", propBuffer, 0, -1, -1);
   if (src)
     fclose(src);
 }
@@ -774,7 +762,7 @@ load_doc: {
     }
     if (t_buf == NULL)
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
-    readHeader(&f, t_buf, false, &pu);
+    readHeader(&f, t_buf, &pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&

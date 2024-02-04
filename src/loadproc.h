@@ -21,7 +21,7 @@ const char *checkHeader(Buffer *buf, const char *field);
 const char *guess_save_name(Buffer *buf, const char *file);
 Buffer *getshell(const char *cmd);
 struct Url;
-extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu);
+extern void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu);
 int _doFileCopy(const char *tmpf, const char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
 int is_html_type(const char *type);

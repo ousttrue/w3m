@@ -86,7 +86,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->edit = src.edit;
   this->mailcap = src.mailcap;
   this->mailcap_source = src.mailcap_source;
-  this->header_source = src.header_source;
   this->ssl_certificate = src.ssl_certificate;
   this->image_flag = src.image_flag;
   this->image_loaded = src.image_loaded;
@@ -134,8 +133,6 @@ void discardBuffer(Buffer *buf) {
   if (buf->sourcefile &&
       (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
   }
-  if (buf->header_source)
-    unlink(buf->header_source);
   if (buf->mailcap_source)
     unlink(buf->mailcap_source);
 }
@@ -489,19 +486,6 @@ void reshapeBuffer(Buffer *buf) {
     buf->hmarklist->nmark = 0;
   if (buf->imarklist)
     buf->imarklist->nmark = 0;
-
-  if (buf->header_source) {
-    if (buf->currentURL.schema != SCM_LOCAL || buf->mailcap_source ||
-        !strcmp(buf->currentURL.file, "-")) {
-      UrlStream h;
-      init_stream(&h, SCM_LOCAL, NULL);
-      examineFile(buf->header_source, &h);
-      if (h.stream) {
-        readHeader(&h, buf, true, NULL);
-        UFclose(&h);
-      }
-    } 
-  }
 
   if (is_html_type(buf->type))
     loadHTMLBuffer(&f, buf);

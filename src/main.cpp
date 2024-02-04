@@ -2811,7 +2811,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->real_schema = Currentbuf->real_schema;
   buf->filename = Currentbuf->filename;
   buf->sourcefile = Currentbuf->sourcefile;
-  buf->header_source = Currentbuf->header_source;
   buf->clone = Currentbuf->clone;
   buf->clone->count++;
 

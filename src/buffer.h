@@ -54,7 +54,6 @@ struct Buffer : public gc_cleanup {
   const char *real_type = nullptr;
   TextList *document_header = nullptr;
 
-  const char *header_source = nullptr;
 
   const char *filename = nullptr;
   const char *buffername = "";
