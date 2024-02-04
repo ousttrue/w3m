@@ -22,9 +22,17 @@ iconv か icu を検討。
 いつの間にか…。
 なおすべし。
 
+## PEEK_URL
+
+indexずれ
+
+- [x] schema_str ?
+
 ## local-cgi
 
-$LIB
+なおった？
+
+- [x] $LIB
 
 ## linein 復旧
 

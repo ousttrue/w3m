@@ -457,10 +457,6 @@ Url Url::parse2(const char *src, const Url *current) {
 
 std::string Url::to_Str(bool pass, bool user, bool label) const {
   Str *tmp;
-  static const char *schema_str[] = {
-      "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
-      "nntp", "nntp",   "news", "news", "data", "mailto", "https",
-  };
 
   if (this->schema == SCM_MISSING) {
     return "???";

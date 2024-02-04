@@ -19,6 +19,10 @@ enum UrlSchema {
   SCM_HTTPS,
   SCM_MISSING = 254,
 };
+inline const char *schema_str[] = {
+    "",     "http", "gopher", "ftp",  "ftp",  "file",   "file",  "exec",
+    "nntp", "nntp", "news",   "news", "data", "mailto", "https",
+};
 
 inline int getDefaultPort(UrlSchema schema) {
   if (schema == SCM_UNKNOWN) {
