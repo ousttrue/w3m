@@ -50,7 +50,8 @@ struct UrlStream {
   void openFile(const char *path);
 
   void openLocalCgi(Url *pu, Url *current, const HttpOption &option,
-                    FormList *request);
+                    FormList *request, TextList *extra_header, UrlStream *ouf,
+                    HttpRequest *hr, unsigned char *status);
 
 private:
   void add_index_file(Url *pu);

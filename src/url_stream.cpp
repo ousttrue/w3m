@@ -279,7 +279,9 @@ static void write_from_file(int sock, char *file) {
 }
 
 void UrlStream::openLocalCgi(Url *pu, Url *current, const HttpOption &option,
-                             FormList *request) {
+                             FormList *request, TextList *extra_header,
+                             UrlStream *ouf, HttpRequest *hr,
+                             unsigned char *status) {
   if (request && request->body)
     /* local CGI: POST */
     this->stream = newFileStream(
@@ -327,15 +329,15 @@ void UrlStream::openLocalCgi(Url *pu, Url *current, const HttpOption &option,
     }
   }
 
-  assert(false);
-  // TODO:
-  // if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
-  //   if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
-  //     /* retry it as "http://" */
-  //     u = Strnew_m_charp("http://", url, nullptr)->ptr;
-  //     goto retry;
-  //   }
-  // }
+  if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
+    auto u = url;
+    auto schema = parseUrlSchema(&u);
+    if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
+      /* retry it as "http://" */
+      u = Strnew_m_charp("http://", url, nullptr)->ptr;
+      openURL(u, pu, current, option, request, extra_header, ouf, hr, status);
+    }
+  }
 }
 
 UrlStream openURL(const char *url, Url *pu, Url *current,
@@ -402,7 +404,8 @@ UrlStream openURL(const char *url, Url *pu, Url *current,
   switch (pu->schema) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    uf.openLocalCgi(pu, current, option, request);
+    uf.openLocalCgi(pu, current, option, request, extra_header, ouf, hr,
+                    status);
     return uf;
 
   case SCM_FTP:

@@ -24,7 +24,7 @@ iconv か icu を検討。
 
 ## local-cgi
 
-addbookmark とか
+$LIB
 
 ## linein 復旧
 
