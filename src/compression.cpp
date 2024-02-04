@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <string.h>
 
-#define PATH_SEPARATOR	':'
+#define PATH_SEPARATOR ':'
 
 #define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
@@ -169,7 +169,7 @@ void uncompress_stream(UrlStream *uf, const char **src) {
   /* child1 -- stdout|f1=uf -> parent */
   pid1 = open_pipe_rw(&f1, NULL);
   if (pid1 < 0) {
-    UFclose(uf);
+    uf->close();
     return;
   }
   if (pid1 == 0) {
@@ -180,7 +180,7 @@ void uncompress_stream(UrlStream *uf, const char **src) {
     /* uf -> child2 -- stdout|stdin -> child1 */
     pid2 = open_pipe_rw(&f2, NULL);
     if (pid2 < 0) {
-      UFclose(uf);
+      uf->close();
       exit(1);
     }
     if (pid2 == 0) {
@@ -189,7 +189,7 @@ void uncompress_stream(UrlStream *uf, const char **src) {
       int count;
       FILE *f = NULL;
 
-      setup_child(true, 2, UFfileno(uf));
+      setup_child(true, 2, uf->fileno());
       if (tmpf)
         f = fopen(tmpf, "wb");
       while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
@@ -198,7 +198,7 @@ void uncompress_stream(UrlStream *uf, const char **src) {
         if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
           break;
       }
-      UFclose(uf);
+      uf->close();
       if (f)
         fclose(f);
       xfree(buf);
@@ -219,7 +219,7 @@ void uncompress_stream(UrlStream *uf, const char **src) {
     else
       uf->schema = SCM_LOCAL;
   }
-  UFhalfclose(uf);
+  uf->close();
   uf->stream = newFileStream(f1, (void (*)())fclose);
 }
 

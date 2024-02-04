@@ -106,7 +106,7 @@ Buffer *nullBuffer(void) {
  * clearBuffer: clear buffer content
  */
 void clearBuffer(Buffer *buf) {
-  buf->firstLine = buf->topLine = buf->currentLine = buf->lastLine = NULL;
+  buf->firstLine = buf->topLine = buf->currentLine = buf->lastLine = nullptr;
   buf->allLine = 0;
 }
 
@@ -121,9 +121,9 @@ void discardBuffer(Buffer *buf) {
   clearBuffer(buf);
   for (i = 0; i < MAX_LB; i++) {
     b = buf->linkBuffer[i];
-    if (b == NULL)
+    if (b == nullptr)
       continue;
-    b->linkBuffer[i] = NULL;
+    b->linkBuffer[i] = nullptr;
   }
   if (--buf->clone->count)
     return;
@@ -143,12 +143,12 @@ Buffer *namedBuffer(Buffer *first, char *name) {
   if (!strcmp(first->buffername, name)) {
     return first;
   }
-  for (buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
+  for (buf = first; buf->nextBuffer != nullptr; buf = buf->nextBuffer) {
     if (!strcmp(buf->nextBuffer->buffername, name)) {
       return buf->nextBuffer;
     }
   }
-  return NULL;
+  return nullptr;
 }
 
 /*
@@ -157,12 +157,12 @@ Buffer *namedBuffer(Buffer *first, char *name) {
 Buffer *deleteBuffer(Buffer *first, Buffer *delbuf) {
   Buffer *buf, *b;
 
-  if (first == delbuf && first->nextBuffer != NULL) {
+  if (first == delbuf && first->nextBuffer != nullptr) {
     buf = first->nextBuffer;
     discardBuffer(first);
     return buf;
   }
-  if ((buf = prevBuffer(first, delbuf)) != NULL) {
+  if ((buf = prevBuffer(first, delbuf)) != nullptr) {
     b = buf->nextBuffer;
     buf->nextBuffer = b->nextBuffer;
     discardBuffer(b);
@@ -176,7 +176,7 @@ Buffer *deleteBuffer(Buffer *first, Buffer *delbuf) {
 Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf) {
   Buffer *buf;
 
-  if (delbuf == NULL) {
+  if (delbuf == nullptr) {
     newbuf->nextBuffer = first;
     return newbuf;
   }
@@ -202,8 +202,8 @@ Buffer *nthBuffer(Buffer *firstbuf, int n) {
   if (n < 0)
     return firstbuf;
   for (i = 0; i < n; i++) {
-    if (buf == NULL)
-      return NULL;
+    if (buf == nullptr)
+      return nullptr;
     buf = buf->nextBuffer;
   }
   return buf;
@@ -214,12 +214,12 @@ static void writeBufferName(Buffer *buf, int n) {
   int all;
 
   all = buf->allLine;
-  if (all == 0 && buf->lastLine != NULL)
+  if (all == 0 && buf->lastLine != nullptr)
     all = buf->lastLine->linenumber;
   move(n, 0);
   /* FIXME: gettextize? */
   msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-  if (buf->info->filename != NULL) {
+  if (buf->info->filename != nullptr) {
     switch (buf->info->currentURL.schema) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
@@ -247,7 +247,7 @@ void gotoLine(Buffer *buf, int n) {
   char msg[36];
   Line *l = buf->firstLine;
 
-  if (l == NULL)
+  if (l == nullptr)
     return;
 
   if (l->linenumber > n) {
@@ -264,7 +264,7 @@ void gotoLine(Buffer *buf, int n) {
     buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), false);
     return;
   }
-  for (; l != NULL; l = l->next) {
+  for (; l != nullptr; l = l->next) {
     if (l->linenumber >= n) {
       buf->currentLine = l;
       if (n < buf->topLine->linenumber ||
@@ -282,7 +282,7 @@ void gotoRealLine(Buffer *buf, int n) {
   char msg[36];
   Line *l = buf->firstLine;
 
-  if (l == NULL)
+  if (l == nullptr)
     return;
 
   if (l->real_linenumber > n) {
@@ -299,7 +299,7 @@ void gotoRealLine(Buffer *buf, int n) {
     buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), false);
     return;
   }
-  for (; l != NULL; l = l->next) {
+  for (; l != nullptr; l = l->next) {
     if (l->real_linenumber >= n) {
       buf->currentLine = l;
       if (n < buf->topLine->real_linenumber ||
@@ -329,7 +329,7 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
       toggle_stand();
     } else
       clrtoeolx();
-    if (buf->nextBuffer == NULL) {
+    if (buf->nextBuffer == nullptr) {
       move(i + 1, 0);
       clrtobotx();
       break;
@@ -359,7 +359,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
   char c;
 
   i = cpoint = 0;
-  for (buf = firstbuf; buf != NULL; buf = buf->nextBuffer) {
+  for (buf = firstbuf; buf != nullptr; buf = buf->nextBuffer) {
     if (buf == currentbuf)
       cpoint = i;
     i++;
@@ -398,7 +398,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
     case CTRL_N:
     case 'j':
       if (spoint < sclimit - 1) {
-        if (currentbuf->nextBuffer == NULL)
+        if (currentbuf->nextBuffer == nullptr)
           continue;
         writeBufferName(currentbuf, spoint);
         currentbuf = currentbuf->nextBuffer;
@@ -455,30 +455,30 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
  * Reshape HTML buffer
  */
 void reshapeBuffer(Buffer *buf) {
-  UrlStream f;
 
   if (!buf->need_reshape)
     return;
   buf->need_reshape = false;
   buf->width = INIT_BUFFER_WIDTH();
-  if (buf->sourcefile == NULL)
+  if (buf->sourcefile == nullptr)
     return;
-  init_stream(&f, SCM_LOCAL, NULL);
+
+  UrlStream f(SCM_LOCAL);
   f.openFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
-  if (f.stream == NULL)
+  if (f.stream == nullptr)
     return;
 
   auto sbuf = new Buffer(0);
   *sbuf = *buf;
   clearBuffer(buf);
 
-  buf->href = NULL;
-  buf->name = NULL;
-  buf->img = NULL;
-  buf->formitem = NULL;
-  buf->formlist = NULL;
-  buf->linklist = NULL;
-  buf->maplist = NULL;
+  buf->href = nullptr;
+  buf->name = nullptr;
+  buf->img = nullptr;
+  buf->formitem = nullptr;
+  buf->formlist = nullptr;
+  buf->linklist = nullptr;
+  buf->maplist = nullptr;
   if (buf->hmarklist)
     buf->hmarklist->nmark = 0;
   if (buf->imarklist)
@@ -488,7 +488,7 @@ void reshapeBuffer(Buffer *buf) {
     loadHTMLBuffer(&f, buf);
   else
     loadBuffer(&f, buf);
-  UFclose(&f);
+  f.close();
 
   buf->height = LASTLINE + 1;
   if (buf->firstLine && sbuf->firstLine) {
@@ -527,7 +527,7 @@ void reshapeBuffer(Buffer *buf) {
 Buffer *prevBuffer(Buffer *first, Buffer *buf) {
   Buffer *b;
 
-  for (b = first; b != NULL && b->nextBuffer != buf; b = b->nextBuffer)
+  for (b = first; b != nullptr && b->nextBuffer != buf; b = b->nextBuffer)
     ;
   return b;
 }
@@ -553,7 +553,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
       url = "(empty)";
     Strcat_m_charp(html, "<tr valign=top><td><a href=\"", url, "\">",
                    l->title ? html_quote(l->title) : "(empty)", "</a><td>",
-                   NULL);
+                   nullptr);
     if (l->type == LINK_TYPE_REL)
       Strcat_charp(html, "[Rel]");
     else if (l->type == LINK_TYPE_REV)
@@ -562,9 +562,9 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
       url = "(empty)";
     else
       url = html_quote(url_decode0(l->url));
-    Strcat_m_charp(html, "<td>", url, NULL);
+    Strcat_m_charp(html, "<td>", url, nullptr);
     if (l->ctype)
-      Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
+      Strcat_m_charp(html, " (", html_quote(l->ctype), ")", nullptr);
     Strcat_charp(html, "\n");
   }
   Strcat_charp(html, "</table>\n");
@@ -578,7 +578,7 @@ Buffer *page_info_panel(Buffer *buf) {
   Anchor *a;
   Url pu;
   TextListItem *ti;
-  struct frameset *f_set = NULL;
+  struct frameset *f_set = nullptr;
   int all;
   const char *p, *q;
   Buffer *newbuf;
@@ -588,7 +588,7 @@ Buffer *page_info_panel(Buffer *buf) {
 </head><body>\
 <h1>Information about current page</h1>\n");
 
-  if (buf == NULL) {
+  if (buf == nullptr) {
 
     all = buf->allLine;
     if (all == 0 && buf->lastLine)
@@ -601,11 +601,11 @@ Buffer *page_info_panel(Buffer *buf) {
         "<tr valign=top><td nowrap>Document Type<td>",
         buf->info->real_type ? html_quote(buf->info->real_type) : "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
-        html_quote(last_modified(buf)), NULL);
+        html_quote(last_modified(buf)), nullptr);
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                    Sprintf("%d", all)->ptr,
                    "<tr valign=top><td nowrap>Transferred bytes<td>",
-                   Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
+                   Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, nullptr);
 
     a = retrieveCurrentAnchor(buf);
     if (a) {
@@ -618,10 +618,10 @@ Buffer *page_info_panel(Buffer *buf) {
         p = q;
       Strcat_m_charp(
           tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
-          q, "\">", p, "</a>", NULL);
+          q, "\">", p, "</a>", nullptr);
     }
     a = retrieveCurrentImg(buf);
-    if (a != NULL) {
+    if (a != nullptr) {
       pu = Url::parse2(a->url, baseURL(buf));
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
@@ -631,17 +631,17 @@ Buffer *page_info_panel(Buffer *buf) {
         p = q;
       Strcat_m_charp(
           tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
-          q, "\">", p, "</a>", NULL);
+          q, "\">", p, "</a>", nullptr);
     }
     a = retrieveCurrentForm(buf);
-    if (a != NULL) {
+    if (a != nullptr) {
       FormItemList *fi = (FormItemList *)a->url;
       p = form2str(fi);
       p = html_quote(url_decode0(p));
       Strcat_m_charp(
           tmp,
           "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>", p,
-          NULL);
+          nullptr);
       // if (fi->parent->method == FORM_METHOD_INTERNAL &&
       //     !Strcmp_charp(fi->parent->action, "map"))
       //   append_map_info(buf, tmp, fi->parent->item);
@@ -650,11 +650,11 @@ Buffer *page_info_panel(Buffer *buf) {
 
     append_link_info(buf, tmp, buf->linklist);
 
-    if (buf->info->document_header != NULL) {
+    if (buf->info->document_header != nullptr) {
       Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-      for (ti = buf->info->document_header->first; ti != NULL; ti = ti->next)
+      for (ti = buf->info->document_header->first; ti != nullptr; ti = ti->next)
         Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
-                       NULL);
+                       nullptr);
       Strcat_charp(tmp, "</pre>\n");
     }
 
@@ -664,7 +664,7 @@ Buffer *page_info_panel(Buffer *buf) {
     }
     if (buf->ssl_certificate)
       Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-                     html_quote(buf->ssl_certificate), "</pre>\n", NULL);
+                     html_quote(buf->ssl_certificate), "</pre>\n", nullptr);
   }
 
   Strcat_charp(tmp, "</body></html>");
@@ -690,12 +690,12 @@ void Buffer::addnewline(const char *line, Lineprop *prop, int byteLen,
 }
 
 void set_buffer_environ(Buffer *buf) {
-  static Buffer *prev_buf = NULL;
-  static Line *prev_line = NULL;
+  static Buffer *prev_buf = nullptr;
+  static Line *prev_line = nullptr;
   static int prev_pos = -1;
   Line *l;
 
-  if (buf == NULL)
+  if (buf == nullptr)
     return;
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->sourcefile);
@@ -747,10 +747,10 @@ void set_buffer_environ(Buffer *buf) {
 char *GetWord(Buffer *buf) {
   int b, e;
   char *p;
-  if ((p = getCurWord(buf, &b, &e)) != NULL) {
+  if ((p = getCurWord(buf, &b, &e)) != nullptr) {
     return Strnew_charp_n(p, e - b)->ptr;
   }
-  return NULL;
+  return nullptr;
 }
 
 char *getCurWord(Buffer *buf, int *spos, int *epos) {
@@ -759,14 +759,14 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
 
   *spos = 0;
   *epos = 0;
-  if (l == NULL)
-    return NULL;
+  if (l == nullptr)
+    return nullptr;
   auto p = l->lineBuf;
   auto e = buf->pos;
   while (e > 0 && !is_wordchar(getChar(&p[e])))
     prevChar(e, l);
   if (!is_wordchar(getChar(&p[e])))
-    return NULL;
+    return nullptr;
   b = e;
   while (b > 0) {
     int tmp = b;

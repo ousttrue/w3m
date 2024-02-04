@@ -240,16 +240,16 @@ static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
                           Buffer *defaultbuf) {
   FILE *f, *popen(const char *, const char *);
   Buffer *buf;
-  UrlStream uf;
 
   if (cmd == NULL || *cmd == '\0')
     return NULL;
   f = popen(cmd, "r");
   if (f == NULL)
     return NULL;
-  init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
+
+  UrlStream uf(SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
   buf = loadproc(&uf, defaultbuf);
-  UFclose(&uf);
+  uf.close();
   return buf;
 }
 
@@ -296,15 +296,15 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
       !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
     flush_tty();
     if (!fork()) {
-      setup_child(false, 0, UFfileno(&uf));
-      if (save2tmp(&uf, tmpf->ptr) < 0)
+      setup_child(false, 0, uf.fileno());
+      if (uf.save2tmp(tmpf->ptr) < 0)
         exit(1);
-      UFclose(&uf);
+      uf.close();
       myExec(command->ptr);
     }
     return NO_BUFFER;
   } else {
-    if (save2tmp(&uf, tmpf->ptr) < 0) {
+    if (uf.save2tmp(tmpf->ptr) < 0) {
       return NULL;
     }
   }
@@ -394,8 +394,8 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
       } else {
         lineBuf2 = tmp;
       }
-      c = UFgetc(uf);
-      UFundogetc(uf);
+      c = uf->getc();
+      uf->undogetc();
       if (c == ' ' || c == '\t')
         /* header line is continued */
         continue;
@@ -677,8 +677,7 @@ Buffer *loadGeneralFile(const char *path, Url *current,
 load_doc:
   pu = Url::parse2(tpath, current);
 
-  UrlStream f;
-  init_stream(&f, SCM_MISSING, nullptr);
+  UrlStream f(SCM_MISSING);
   // if (ouf) {
   //   uf = *ouf;
   // } else {
@@ -728,7 +727,7 @@ load_doc:
 
   if (status == HTST_MISSING) {
     TRAP_OFF;
-    UFclose(&f);
+    f.close();
     return NULL;
   }
 
@@ -738,7 +737,7 @@ load_doc:
     TRAP_OFF;
     if (b)
       discardBuffer(b);
-    UFclose(&f);
+    f.close();
     return NULL;
   }
 
@@ -770,7 +769,7 @@ load_doc:
       /* 307: Temporary Redirect (HTTP/1.1) */
       tpath = url_quote((char *)p);
       request = NULL;
-      UFclose(&f);
+      f.close();
       current = (Url *)New(Url);
       *current = pu;
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
@@ -806,7 +805,7 @@ load_doc:
           TRAP_OFF;
           goto page_loaded;
         }
-        UFclose(&f);
+        f.close();
         add_auth_cookie_flag = 1;
         status = HTST_NORMAL;
         goto load_doc;
@@ -826,7 +825,7 @@ load_doc:
           TRAP_OFF;
           goto page_loaded;
         }
-        UFclose(&f);
+        f.close();
         add_auth_cookie_flag = 1;
         status = HTST_NORMAL;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
@@ -922,10 +921,8 @@ page_loaded:
       file = guess_save_name(NULL, (char *)pu.real_file);
     } else
       file = guess_save_name(t_buf, pu.file);
-    if (doFileSave(&f, file) == 0)
-      UFhalfclose(&f);
-    else
-      UFclose(&f);
+    f.doFileSave(file);
+    f.close();
     return NO_BUFFER;
   }
 
@@ -953,16 +950,14 @@ page_loaded:
     } else {
       TRAP_OFF;
       if (pu.schema == SCM_LOCAL) {
-        UFclose(&f);
+        f.close();
         _doFileCopy(pu.real_file, guess_save_name(NULL, (char *)pu.real_file),
                     true);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
-        if (doFileSave(&f, guess_save_name(t_buf, pu.file)) == 0)
-          UFhalfclose(&f);
-        else
-          UFclose(&f);
+        f.doFileSave(guess_save_name(t_buf, pu.file));
+        f.close();
       }
       return NO_BUFFER;
     }
@@ -977,7 +972,7 @@ page_loaded:
   } else {
     b = loadSomething(&f, proc, t_buf);
   }
-  UFclose(&f);
+  f.close();
   if (b && b != NO_BUFFER) {
     b->real_schema = f.schema;
     b->info->real_type = real_type;

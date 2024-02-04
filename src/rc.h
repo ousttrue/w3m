@@ -1,8 +1,21 @@
 #pragma once
 #include <stdio.h>
+#include "url_schema.h"
+#include "url.h"
 
 extern const char *rc_dir;
 extern bool DecodeURL;
+extern char *HTTP_proxy;
+extern char *HTTPS_proxy;
+extern char *FTP_proxy;
+extern char *NO_proxy;
+extern int NOproxy_netaddr;
+extern bool use_proxy;
+struct TextList;
+extern TextList *NO_proxy_domains;
+extern Url HTTP_proxy_parsed;
+extern Url HTTPS_proxy_parsed;
+extern Url FTP_proxy_parsed;
 
 struct Url;
 void show_params(FILE *fp);
@@ -37,3 +50,5 @@ const char *w3m_help_dir();
 void sync_with_option(void);
 struct Buffer;
 Buffer *load_option_panel(void);
+int check_no_proxy(const char *domain);
+Url *schemaToProxy(UrlSchema schema);

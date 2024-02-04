@@ -4341,14 +4341,13 @@ void completeHTMLstream(struct html_feed_environ *h_env,
 Buffer *loadHTMLString(Str *page) {
   MySignalHandler prevtrap = NULL;
 
-  UrlStream f;
-  init_stream(&f, SCM_LOCAL, newStrStream(page));
+  UrlStream f(SCM_LOCAL, newStrStream(page));
 
   auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
   if (SETJMP(AbortLoading) != 0) {
     TRAP_OFF;
     discardBuffer(newBuf);
-    UFclose(&f);
+    f.close();
     return NULL;
   }
   TRAP_ON;
@@ -4356,7 +4355,7 @@ Buffer *loadHTMLString(Str *page) {
   loadHTMLstream(&f, newBuf, NULL, true);
 
   TRAP_OFF;
-  UFclose(&f);
+  f.close();
   newBuf->topLine = newBuf->firstLine;
   newBuf->lastLine = newBuf->currentLine;
   newBuf->currentLine = newBuf->firstLine;

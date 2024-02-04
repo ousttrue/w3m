@@ -216,19 +216,6 @@ bool use_lessopen = false;
 
 #define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
 
-void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream) {
-  memset(uf, 0, sizeof(UrlStream));
-  uf->stream = stream;
-  uf->schema = schema;
-  uf->encoding = ENC_7BIT;
-  uf->is_cgi = false;
-  uf->compression = CMP_NOCOMPRESS;
-  uf->content_encoding = CMP_NOCOMPRESS;
-  uf->guess_type = nullptr;
-  uf->ext = nullptr;
-  uf->modtime = -1;
-}
-
 /* add index_file if exists */
 void UrlStream::add_index_file(Url *pu) {
   TextList *index_file_list = nullptr;
@@ -339,6 +326,181 @@ void UrlStream::openLocalCgi(Url *pu, Url *current, const HttpOption &option,
   }
 }
 
+static int openSocket(const char *const hostname, const char *remoteport_name,
+                      unsigned short remoteport_num) {
+  volatile int sock = -1;
+#ifdef INET6
+  int *af;
+  struct addrinfo hints, *res0, *res;
+  int error;
+  const char *hname;
+#else  /* not INET6 */
+  struct sockaddr_in hostaddr;
+  struct hostent *entry;
+  struct protoent *proto;
+  unsigned short s_port;
+  int a1, a2, a3, a4;
+  unsigned long adr;
+#endif /* not INET6 */
+  MySignalHandler prevtrap = nullptr;
+
+  if (fmInitialized) {
+    /* FIXME: gettextize? */
+    message(Sprintf("Opening socket...")->ptr, 0, 0);
+    refresh(term_io());
+  }
+  if (SETJMP(AbortLoading) != 0) {
+#ifdef SOCK_DEBUG
+    sock_log("openSocket() failed. reason: user abort\n");
+#endif
+    if (sock >= 0)
+      close(sock);
+    goto error;
+  }
+  TRAP_ON;
+  if (hostname == nullptr) {
+#ifdef SOCK_DEBUG
+    sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
+#endif
+    goto error;
+  }
+
+#ifdef INET6
+  /* rfc2732 compliance */
+  hname = hostname;
+  if (hname != nullptr && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
+    hname = allocStr(hostname + 1, -1);
+    ((char *)hname)[strlen(hname) - 1] = '\0';
+    if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
+      goto error;
+  }
+  for (af = ai_family_order_table[DNS_order];; af++) {
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = *af;
+    hints.ai_socktype = SOCK_STREAM;
+    if (remoteport_num != 0) {
+      Str *portbuf = Sprintf("%d", remoteport_num);
+      error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
+    } else {
+      error = -1;
+    }
+    if (error && remoteport_name && remoteport_name[0] != '\0') {
+      /* try default port */
+      error = getaddrinfo(hname, remoteport_name, &hints, &res0);
+    }
+    if (error) {
+      if (*af == PF_UNSPEC) {
+        goto error;
+      }
+      /* try next ai family */
+      continue;
+    }
+    sock = -1;
+    for (res = res0; res; res = res->ai_next) {
+      sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+      if (sock < 0) {
+        continue;
+      }
+      if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
+        close(sock);
+        sock = -1;
+        continue;
+      }
+      break;
+    }
+    if (sock < 0) {
+      freeaddrinfo(res0);
+      if (*af == PF_UNSPEC) {
+        goto error;
+      }
+      /* try next ai family */
+      continue;
+    }
+    freeaddrinfo(res0);
+    break;
+  }
+#else /* not INET6 */
+  s_port = htons(remoteport_num);
+  bzero((char *)&hostaddr, sizeof(struct sockaddr_in));
+  if ((proto = getprotobyname("tcp")) == nullptr) {
+    /* protocol number of TCP is 6 */
+    proto = New(struct protoent);
+    proto->p_proto = 6;
+  }
+  if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
+#ifdef SOCK_DEBUG
+    sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
+#endif
+    goto error;
+  }
+  regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
+  if (regexMatch(hostname, -1, 1)) {
+    sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
+    adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
+    bcopy((void *)&adr, (void *)&hostaddr.sin_addr, sizeof(long));
+    hostaddr.sin_family = AF_INET;
+    hostaddr.sin_port = s_port;
+    if (fmInitialized) {
+      message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+      refresh();
+    }
+    if (connect(sock, (struct sockaddr *)&hostaddr,
+                sizeof(struct sockaddr_in)) < 0) {
+#ifdef SOCK_DEBUG
+      sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
+#endif
+      goto error;
+    }
+  } else {
+    char **h_addr_list;
+    int result = -1;
+    if (fmInitialized) {
+      message(Sprintf("Performing hostname lookup on %s", hostname)->ptr, 0, 0);
+      refresh();
+    }
+    if ((entry = gethostbyname(hostname)) == nullptr) {
+#ifdef SOCK_DEBUG
+      sock_log("openSocket: gethostbyname() failed. reason: %s\n",
+               strerror(errno));
+#endif
+      goto error;
+    }
+    hostaddr.sin_family = AF_INET;
+    hostaddr.sin_port = s_port;
+    for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
+      bcopy((void *)h_addr_list[0], (void *)&hostaddr.sin_addr,
+            entry->h_length);
+#ifdef SOCK_DEBUG
+      adr = ntohl(*(long *)&hostaddr.sin_addr);
+      sock_log("openSocket: connecting %d.%d.%d.%d\n", (adr >> 24) & 0xff,
+               (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
+#endif
+      if (fmInitialized) {
+        message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
+        refresh();
+      }
+      if ((result = connect(sock, (struct sockaddr *)&hostaddr,
+                            sizeof(struct sockaddr_in))) == 0) {
+        break;
+      }
+#ifdef SOCK_DEBUG
+      else {
+        sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
+      }
+#endif
+    }
+    if (result < 0) {
+      goto error;
+    }
+  }
+#endif /* not INET6 */
+
+  TRAP_OFF;
+  return sock;
+error:
+  TRAP_OFF;
+  return -1;
+}
 StreamStatus UrlStream::openHttp(const char *url, Url *pu, Url *current,
                                  const HttpOption &option, FormList *request,
                                  TextList *extra_header, HttpRequest *hr) {
@@ -596,6 +758,12 @@ static FILE *lessopen_stream(const char *path) {
   return fp;
 }
 
+void UrlStream::close() {
+  if (ISclose(this->stream) == 0) {
+    this->stream = NULL;
+  }
+}
+
 void UrlStream::openFile(const char *path) {
   struct stat stbuf;
 
@@ -616,7 +784,7 @@ void UrlStream::openFile(const char *path) {
       if (is_html_type(this->guess_type))
         return;
       if ((fp = lessopen_stream(path))) {
-        UFclose(this);
+        this->close();
         this->stream = newFileStream(fp, (void (*)())pclose);
         this->guess_type = "text/plain";
         return;
@@ -634,7 +802,7 @@ void UrlStream::openFile(const char *path) {
   }
 }
 
-int save2tmp(UrlStream *uf, const char *tmpf) {
+int UrlStream::save2tmp(const char *tmpf) const {
   FILE *ff;
   long long linelen = 0;
   // long long trbyte = 0;
@@ -656,7 +824,7 @@ int save2tmp(UrlStream *uf, const char *tmpf) {
   {
     int count;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+    while ((count = ISread_n(this->stream, buf, SAVE_BUF_SIZE)) > 0) {
       if (static_cast<int>(fwrite(buf, 1, count, ff)) != count) {
         retval = -2;
         goto _end;
@@ -688,7 +856,7 @@ int checkSaveFile(input_stream *stream, const char *path2) {
   return 0;
 }
 
-int doFileSave(UrlStream *uf, const char *defstr) {
+int UrlStream::doFileSave(const char *defstr) {
   Str *msg;
   Str *filen;
   const char *p, *q;
@@ -706,7 +874,7 @@ int doFileSave(UrlStream *uf, const char *defstr) {
     }
     if (!couldWrite(p))
       return -1;
-    if (checkSaveFile(uf->stream, p) < 0) {
+    if (checkSaveFile(this->stream, p) < 0) {
       msg = Sprintf("Can't save. Load file and %s are identical.", p);
       disp_err_message(msg->ptr, false);
       return -1;
@@ -718,27 +886,25 @@ int doFileSave(UrlStream *uf, const char *defstr) {
     pid = fork();
     if (!pid) {
       int err;
-      if ((uf->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-        uncompress_stream(uf, &tmpf);
+      if ((this->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+        uncompress_stream(this, &tmpf);
         if (tmpf)
           unlink(tmpf);
       }
-      setup_child(false, 0, UFfileno(uf));
-      err = save2tmp(uf, p);
-      if (err == 0 && PreserveTimestamp && uf->modtime != -1)
-        setModtime(p, uf->modtime);
-      UFclose(uf);
+      setup_child(false, 0, this->fileno());
+      err = this->save2tmp(p);
+      if (err == 0 && PreserveTimestamp && this->modtime != -1)
+        setModtime(p, this->modtime);
+      this->close();
       unlink(lock);
       if (err != 0)
         exit(-err);
       exit(0);
     }
-    addDownloadList(pid, (char *)uf->url, p, lock,
-                    0 /*current_content_length*/);
+    addDownloadList(pid, this->url, p, lock, 0 /*current_content_length*/);
   } else {
     q = searchKeyData();
     if (q == nullptr || *q == '\0') {
-      /* FIXME: gettextize? */
       printf("(Download)Save file to: ");
       fflush(stdout);
       filen = Strfgets(stdin);
@@ -754,210 +920,23 @@ int doFileSave(UrlStream *uf, const char *defstr) {
     p = expandPath((char *)q);
     if (!couldWrite(p))
       return -1;
-    if (checkSaveFile(uf->stream, p) < 0) {
+    if (checkSaveFile(this->stream, p) < 0) {
       printf("Can't save. Load file and %s are identical.", p);
       return -1;
     }
-    if (uf->content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-      uncompress_stream(uf, &tmpf);
+    if (this->content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
+      uncompress_stream(this, &tmpf);
       if (tmpf)
         unlink(tmpf);
     }
-    if (save2tmp(uf, p) < 0) {
+    if (this->save2tmp(p) < 0) {
       printf("Can't save to %s\n", p);
       return -1;
     }
-    if (PreserveTimestamp && uf->modtime != -1)
-      setModtime(p, uf->modtime);
+    if (PreserveTimestamp && this->modtime != -1)
+      setModtime(p, this->modtime);
   }
   return 0;
-}
-
-void UFhalfclose(UrlStream *f) {
-  switch (f->schema) {
-  case SCM_FTP:
-    // closeFTP();
-    break;
-  default:
-    UFclose(f);
-    break;
-  }
-}
-
-int openSocket(const char *const hostname, const char *remoteport_name,
-               unsigned short remoteport_num) {
-  volatile int sock = -1;
-#ifdef INET6
-  int *af;
-  struct addrinfo hints, *res0, *res;
-  int error;
-  const char *hname;
-#else  /* not INET6 */
-  struct sockaddr_in hostaddr;
-  struct hostent *entry;
-  struct protoent *proto;
-  unsigned short s_port;
-  int a1, a2, a3, a4;
-  unsigned long adr;
-#endif /* not INET6 */
-  MySignalHandler prevtrap = nullptr;
-
-  if (fmInitialized) {
-    /* FIXME: gettextize? */
-    message(Sprintf("Opening socket...")->ptr, 0, 0);
-    refresh(term_io());
-  }
-  if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: user abort\n");
-#endif
-    if (sock >= 0)
-      close(sock);
-    goto error;
-  }
-  TRAP_ON;
-  if (hostname == nullptr) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
-#endif
-    goto error;
-  }
-
-#ifdef INET6
-  /* rfc2732 compliance */
-  hname = hostname;
-  if (hname != nullptr && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
-    hname = allocStr(hostname + 1, -1);
-    ((char *)hname)[strlen(hname) - 1] = '\0';
-    if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
-      goto error;
-  }
-  for (af = ai_family_order_table[DNS_order];; af++) {
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = *af;
-    hints.ai_socktype = SOCK_STREAM;
-    if (remoteport_num != 0) {
-      Str *portbuf = Sprintf("%d", remoteport_num);
-      error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
-    } else {
-      error = -1;
-    }
-    if (error && remoteport_name && remoteport_name[0] != '\0') {
-      /* try default port */
-      error = getaddrinfo(hname, remoteport_name, &hints, &res0);
-    }
-    if (error) {
-      if (*af == PF_UNSPEC) {
-        goto error;
-      }
-      /* try next ai family */
-      continue;
-    }
-    sock = -1;
-    for (res = res0; res; res = res->ai_next) {
-      sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-      if (sock < 0) {
-        continue;
-      }
-      if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-        close(sock);
-        sock = -1;
-        continue;
-      }
-      break;
-    }
-    if (sock < 0) {
-      freeaddrinfo(res0);
-      if (*af == PF_UNSPEC) {
-        goto error;
-      }
-      /* try next ai family */
-      continue;
-    }
-    freeaddrinfo(res0);
-    break;
-  }
-#else /* not INET6 */
-  s_port = htons(remoteport_num);
-  bzero((char *)&hostaddr, sizeof(struct sockaddr_in));
-  if ((proto = getprotobyname("tcp")) == nullptr) {
-    /* protocol number of TCP is 6 */
-    proto = New(struct protoent);
-    proto->p_proto = 6;
-  }
-  if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
-    goto error;
-  }
-  regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-  if (regexMatch(hostname, -1, 1)) {
-    sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-    adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-    bcopy((void *)&adr, (void *)&hostaddr.sin_addr, sizeof(long));
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    if (fmInitialized) {
-      message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-      refresh();
-    }
-    if (connect(sock, (struct sockaddr *)&hostaddr,
-                sizeof(struct sockaddr_in)) < 0) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-#endif
-      goto error;
-    }
-  } else {
-    char **h_addr_list;
-    int result = -1;
-    if (fmInitialized) {
-      message(Sprintf("Performing hostname lookup on %s", hostname)->ptr, 0, 0);
-      refresh();
-    }
-    if ((entry = gethostbyname(hostname)) == nullptr) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-               strerror(errno));
-#endif
-      goto error;
-    }
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-      bcopy((void *)h_addr_list[0], (void *)&hostaddr.sin_addr,
-            entry->h_length);
-#ifdef SOCK_DEBUG
-      adr = ntohl(*(long *)&hostaddr.sin_addr);
-      sock_log("openSocket: connecting %d.%d.%d.%d\n", (adr >> 24) & 0xff,
-               (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
-      if (fmInitialized) {
-        message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-        refresh();
-      }
-      if ((result = connect(sock, (struct sockaddr *)&hostaddr,
-                            sizeof(struct sockaddr_in))) == 0) {
-        break;
-      }
-#ifdef SOCK_DEBUG
-      else {
-        sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-      }
-#endif
-    }
-    if (result < 0) {
-      goto error;
-    }
-  }
-#endif /* not INET6 */
-
-  TRAP_OFF;
-  return sock;
-error:
-  TRAP_OFF;
-  return -1;
 }
 
 Url *schemaToProxy(UrlSchema schema) {
@@ -980,3 +959,7 @@ Url *schemaToProxy(UrlSchema schema) {
   }
   return pu;
 }
+
+uint8_t UrlStream::getc() const { return ISgetc(this->stream); }
+void UrlStream::undogetc() { ISundogetc(this->stream); }
+int UrlStream::fileno() const { return ISfileno(this->stream); }
