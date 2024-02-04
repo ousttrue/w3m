@@ -202,3 +202,37 @@ char *getCurWord(Buffer *buf, int *spos, int *epos);
 #define getChar(p) ((int)*(p))
 
 extern void discardBuffer(Buffer *buf);
+extern Url *baseURL(Buffer *buf);
+extern Buffer *page_info_panel(Buffer *buf);
+struct TabBuffer;
+extern TabBuffer *newTab(void);
+extern void calcTabPos(void);
+extern TabBuffer *deleteTab(TabBuffer *tab);
+
+extern Buffer *nullBuffer(void);
+extern void clearBuffer(Buffer *buf);
+extern Buffer *namedBuffer(Buffer *first, char *name);
+extern Buffer *deleteBuffer(Buffer *first, Buffer *delbuf);
+extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
+extern Buffer *nthBuffer(Buffer *firstbuf, int n);
+extern void gotoRealLine(Buffer *buf, int n);
+extern Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf,
+                            char *selectchar);
+extern void reshapeBuffer(Buffer *buf);
+extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
+
+extern void cursorUp0(Buffer *buf, int n);
+extern void cursorUp(Buffer *buf, int n);
+extern void cursorDown0(Buffer *buf, int n);
+extern void cursorDown(Buffer *buf, int n);
+extern void cursorUpDown(Buffer *buf, int n);
+extern void cursorRight(Buffer *buf, int n);
+extern void cursorLeft(Buffer *buf, int n);
+extern void cursorHome(Buffer *buf);
+extern void arrangeCursor(Buffer *buf);
+extern void arrangeLine(Buffer *buf);
+extern void cursorXY(Buffer *buf, int x, int y);
+extern int columnSkip(Buffer *buf, int offset);
+extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
+extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
+extern void chkURLBuffer(Buffer *buf);

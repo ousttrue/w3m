@@ -87,3 +87,4 @@ void do_internal(char *action, char *data);
 void form_write_data(FILE *f, char *boundary, char *name, char *value);
 void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
                           char *file);
+void loadPreForm(void);

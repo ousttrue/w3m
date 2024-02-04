@@ -230,3 +230,6 @@ Str *convertLine0(UrlStream *uf, Str *line, CleanupMode mode);
 Str *getLinkNumberStr(int correction);
 void cleanup_line(Str *s, CleanupMode mode);
 const char *remove_space(const char *str);
+struct Buffer;
+extern int currentLn(Buffer *buf);
+extern int is_boundary(unsigned char *, unsigned char *);

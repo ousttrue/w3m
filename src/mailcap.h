@@ -33,5 +33,5 @@ struct Str;
 Str *unquote_mailcap(const char *qstr, const char *type, const char *name,
                      const char *attr, MailcapStat *mc_stat);
 MailcapEntry *searchExtViewer(const char *type);
-
-
+void initMailcap();
+char *acceptableMimeTypes();

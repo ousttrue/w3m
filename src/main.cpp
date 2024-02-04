@@ -588,7 +588,7 @@ static int srchcore(const char *str, int (*func)(Buffer *, const char *)) {
   if (SearchString == nullptr || *SearchString == '\0')
     return SR_NOTFOUND;
 
-  str = conv_search_string(SearchString, DisplayCharset);
+  str = SearchString;
   prevtrap = mySignal(SIGINT, intTrap);
   crmode();
   if (SETJMP(IntReturn) == 0) {

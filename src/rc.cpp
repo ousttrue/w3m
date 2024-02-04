@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "form.h"
 #include "loadproc.h"
 #include "loaddirectory.h"
 #include "authpass.h"

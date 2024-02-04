@@ -53,3 +53,6 @@ char *w3m_lib_dir();
 char *w3m_etc_dir();
 char *w3m_conf_dir();
 char *w3m_help_dir();
+void sync_with_option(void);
+struct Buffer;
+Buffer *load_option_panel(void);
