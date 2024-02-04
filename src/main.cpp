@@ -1,5 +1,6 @@
 #include "alloc.h"
 #include "quote.h"
+#include "contentinfo.h"
 #include "loadproc.h"
 #include "bufferpos.h"
 #include "app.h"
@@ -888,8 +889,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     return;
   } else {
     buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | BP_NO_URL);
-    if (buf->type == nullptr)
-      buf->type = "text/plain";
+    if (buf->info->type == nullptr)
+      buf->info->type = "text/plain";
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1313,13 +1314,13 @@ static int cur_real_linenumber(Buffer *buf) {
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
-  auto fn = Currentbuf->filename;
+  auto fn = Currentbuf->info->filename;
 
   if (fn == nullptr || /* Behaving as a pager */
-      (Currentbuf->type == nullptr &&
+      (Currentbuf->info->type == nullptr &&
        Currentbuf->edit == nullptr) || /* Reading shell */
       Currentbuf->real_schema != SCM_LOCAL ||
-      !strcmp(Currentbuf->currentURL.file, "-") /* file is std input  */
+      !strcmp(Currentbuf->info->currentURL.file, "-") /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", true);
     return;
@@ -1327,7 +1328,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
   Str *cmd;
   if (Currentbuf->edit) {
-    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, (char *)fn,
+    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->info->real_type, (char *)fn,
                           (char *)checkHeader(Currentbuf, "Content-Type:"),
                           nullptr);
   } else {
@@ -1371,14 +1372,14 @@ static Buffer *loadLink(const char *url, const char *target,
   message(Sprintf("loading %s", url)->ptr, 0, 0);
   refresh(term_io());
 
-  no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+  no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->info->currentURL);
   base = baseURL(Currentbuf);
   if ((no_referer_ptr && *no_referer_ptr) || base == nullptr ||
       base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
       base->schema == SCM_DATA)
     referer = NO_REFERER;
   if (referer == nullptr)
-    referer = Strnew(Currentbuf->currentURL.to_RefererStr())->ptr;
+    referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
   buf =
       loadGeneralFile(url, baseURL(Currentbuf), {.referer = referer}, request);
   if (buf == nullptr) {
@@ -1449,8 +1450,8 @@ static void gotoLabel(const char *label) {
   *buf = *Currentbuf;
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
-  buf->currentURL.label = allocStr(label, -1);
-  pushHashHist(URLHist, buf->currentURL.to_Str().c_str());
+  buf->info->currentURL.label = allocStr(label, -1);
+  pushHashHist(URLHist, buf->info->currentURL.to_Str().c_str());
   buf->clone->count++;
   pushBuffer(buf);
   gotoLine(Currentbuf, al->start.line);
@@ -1472,7 +1473,6 @@ static int handleMailto(const char *url) {
   if (strncasecmp(url, "mailto:", 7))
     return 0;
   if (!non_null(Mailer)) {
-    /* FIXME: gettextize? */
     disp_err_message("no mailer is specified", true);
     return 1;
   }
@@ -1516,7 +1516,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     return;
   }
   u = Url::parse2(a->url, baseURL(Currentbuf));
-  if (u.to_Str() == Currentbuf->currentURL.to_Str()) {
+  if (u.to_Str() == Currentbuf->info->currentURL.to_Str()) {
     /* index within this buffer */
     if (u.label) {
       gotoLabel(u.label);
@@ -1743,7 +1743,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
   auto tmp2 = fi->parent->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
-    tmp2 = Strnew(Currentbuf->currentURL.to_Str());
+    tmp2 = Strnew(Currentbuf->info->currentURL.to_Str());
     char *p;
     if ((p = strchr(tmp2->ptr, '?')) != nullptr)
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -2448,14 +2448,14 @@ static void goURL0(const char *prompt, int relative) {
       SKIP_BLANKS(url);
   }
   if (relative) {
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->info->currentURL);
     current = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || current == nullptr ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)
       referer = NO_REFERER;
     else
-      referer = Strnew(Currentbuf->currentURL.to_RefererStr())->ptr;
+      referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
     url = url_quote((char *)url);
   } else {
     current = nullptr;
@@ -2474,7 +2474,7 @@ static void goURL0(const char *prompt, int relative) {
   pushHashHist(URLHist, p_url.to_Str().c_str());
   cmd_loadURL(url, current, referer, nullptr);
   if (Currentbuf != cur_buf) /* success */
-    pushHashHist(URLHist, Currentbuf->currentURL.to_Str().c_str());
+    pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
@@ -2493,7 +2493,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     pushHashHist(URLHist, p_url.to_Str().c_str());
     cmd_loadURL(url, nullptr, nullptr, nullptr);
     if (Currentbuf != cur_buf) /* success */
-      pushHashHist(URLHist, Currentbuf->currentURL.to_Str().c_str());
+      pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
   }
 }
 
@@ -2507,7 +2507,7 @@ static void cmd_loadBuffer(Buffer *buf, int prop, int linkid) {
   } else if (buf != NO_BUFFER) {
     buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | prop);
     if (!(buf->bufferprop & BP_NO_URL))
-      buf->currentURL = Currentbuf->currentURL;
+      buf->info->currentURL = Currentbuf->info->currentURL;
     if (linkid != LB_NOLINK) {
       buf->linkBuffer[linkid] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;
@@ -2530,7 +2530,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
                 (Str_form_quote(localCookie()))->ptr,
                 (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-                (Str_form_quote(Strnew(Currentbuf->currentURL.to_Str())))->ptr,
+                (Str_form_quote(Strnew(Currentbuf->info->currentURL.to_Str())))->ptr,
                 (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
   request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
@@ -2682,9 +2682,9 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
   if (Currentbuf->real_schema == SCM_LOCAL)
-    file = guess_save_name(nullptr, (char *)Currentbuf->currentURL.real_file);
+    file = guess_save_name(nullptr, (char *)Currentbuf->info->currentURL.real_file);
   else
-    file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
+    file = guess_save_name(Currentbuf, Currentbuf->info->currentURL.file);
   doFileCopy(Currentbuf->sourcefile, file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2742,7 +2742,7 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address") { _peekURL(1); }
 static Str *currentURL(void) {
   if (Currentbuf->bufferprop & BP_INTERNAL)
     return Strnew_size(0);
-  return Strnew(Currentbuf->currentURL.to_Str());
+  return Strnew(Currentbuf->info->currentURL.to_Str());
 }
 
 DEFUN(curURL, PEEK, "Show current address") {
@@ -2772,7 +2772,7 @@ DEFUN(curURL, PEEK, "Show current address") {
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   Buffer *buf;
 
-  if (Currentbuf->type == nullptr)
+  if (Currentbuf->info->type == nullptr)
     return;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
     Currentbuf = buf;
@@ -2785,31 +2785,31 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   buf = new Buffer(INIT_BUFFER_WIDTH());
 
-  if (is_html_type(Currentbuf->type)) {
-    buf->type = "text/plain";
-    if (Currentbuf->real_type && is_html_type(Currentbuf->real_type))
-      buf->real_type = "text/plain";
+  if (is_html_type(Currentbuf->info->type)) {
+    buf->info->type = "text/plain";
+    if (Currentbuf->info->real_type && is_html_type(Currentbuf->info->real_type))
+      buf->info->real_type = "text/plain";
     else
-      buf->real_type = Currentbuf->real_type;
+      buf->info->real_type = Currentbuf->info->real_type;
     buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
-  } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
-    buf->type = "text/html";
-    if (Currentbuf->real_type &&
-        !strcasecmp(Currentbuf->real_type, "text/plain"))
-      buf->real_type = "text/html";
+  } else if (!strcasecmp(Currentbuf->info->type, "text/plain")) {
+    buf->info->type = "text/html";
+    if (Currentbuf->info->real_type &&
+        !strcasecmp(Currentbuf->info->real_type, "text/plain"))
+      buf->info->real_type = "text/html";
     else
-      buf->real_type = Currentbuf->real_type;
+      buf->info->real_type = Currentbuf->info->real_type;
     buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else {
     return;
   }
-  buf->currentURL = Currentbuf->currentURL;
+  buf->info->currentURL = Currentbuf->info->currentURL;
   buf->real_schema = Currentbuf->real_schema;
-  buf->filename = Currentbuf->filename;
+  buf->info->filename = Currentbuf->info->filename;
   buf->sourcefile = Currentbuf->sourcefile;
   buf->clone = Currentbuf->clone;
   buf->clone->count++;
@@ -2835,8 +2835,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     disp_err_message("Can't reload...", true);
     return;
   }
-  if (Currentbuf->currentURL.schema == SCM_LOCAL &&
-      !strcmp(Currentbuf->currentURL.file, "-")) {
+  if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
+      !strcmp(Currentbuf->info->currentURL.file, "-")) {
     /* file is std input */
     /* FIXME: gettextize? */
     disp_err_message("Can't reload stdin", true);
@@ -2860,10 +2860,10 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   } else {
     request = nullptr;
   }
-  url = Strnew(Currentbuf->currentURL.to_Str());
+  url = Strnew(Currentbuf->info->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
-  DefaultType = Currentbuf->real_type;
+  DefaultType = Currentbuf->info->real_type;
   auto buf = loadGeneralFile(
       url->ptr, nullptr, {.referer = NO_REFERER, .no_cache = true}, request);
   DefaultType = nullptr;
@@ -2878,9 +2878,9 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
   repBuffer(Currentbuf, buf);
-  if ((buf->type != nullptr) && (sbuf->type != nullptr) &&
-      ((!strcasecmp(buf->type, "text/plain") && is_html_type(sbuf->type)) ||
-       (is_html_type(buf->type) && !strcasecmp(sbuf->type, "text/plain")))) {
+  if ((buf->info->type != nullptr) && (sbuf->info->type != nullptr) &&
+      ((!strcasecmp(buf->info->type, "text/plain") && is_html_type(sbuf->info->type)) ||
+       (is_html_type(buf->info->type) && !strcasecmp(sbuf->info->type, "text/plain")))) {
     vwSrc();
     if (Currentbuf != buf)
       Firstbuf = deleteBuffer(Firstbuf, buf);
@@ -3006,18 +3006,16 @@ static void invoke_browser(const char *url) {
 
 DEFUN(extbrz, EXTERN, "Display using an external browser") {
   if (Currentbuf->bufferprop & BP_INTERNAL) {
-    /* FIXME: gettextize? */
     disp_err_message("Can't browse...", true);
     return;
   }
-  if (Currentbuf->currentURL.schema == SCM_LOCAL &&
-      !strcmp(Currentbuf->currentURL.file, "-")) {
+  if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
+      !strcmp(Currentbuf->info->currentURL.file, "-")) {
     /* file is std input */
-    /* FIXME: gettextize? */
     disp_err_message("Can't browse stdin", true);
     return;
   }
-  invoke_browser(Currentbuf->currentURL.to_Str().c_str());
+  invoke_browser(Currentbuf->info->currentURL.to_Str().c_str());
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
@@ -3086,10 +3084,10 @@ static void execdict(const char *word) {
     disp_message("Execution failed", true);
     return;
   } else if (buf != NO_BUFFER) {
-    buf->filename = w;
+    buf->info->filename = w;
     buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    if (buf->type == nullptr)
-      buf->type = "text/plain";
+    if (buf->info->type == nullptr)
+      buf->info->type = "text/plain";
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -4114,7 +4112,6 @@ int main(int argc, char **argv) {
       if (newbuf == nullptr)
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
     } else if (visual_start) {
-      /* FIXME: gettextize? */
       Str *s_page;
       s_page =
           Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
@@ -4135,7 +4132,7 @@ int main(int argc, char **argv) {
       if (newbuf == nullptr)
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
       else if (newbuf != NO_BUFFER)
-        pushHashHist(URLHist, newbuf->currentURL.to_Str().c_str());
+        pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
     } else {
       if (fmInitialized)
         fmTerm();
@@ -4205,7 +4202,7 @@ int main(int argc, char **argv) {
       case SCM_LOCAL_CGI:
         unshiftHist(LoadHist, url);
       default:
-        pushHashHist(URLHist, newbuf->currentURL.to_Str().c_str());
+        pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
         break;
       }
     } else if (newbuf == NO_BUFFER)

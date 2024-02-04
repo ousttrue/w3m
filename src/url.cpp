@@ -1,5 +1,6 @@
 #include "w3m.h"
 #include "quote.h"
+#include "contentinfo.h"
 #include "etc.h"
 #include "message.h"
 #include "ssl_util.h"
@@ -45,13 +46,13 @@ Url *baseURL(Buffer *buf) {
     /* no URL is defined for the buffer */
     return nullptr;
   }
-  if (buf->baseURL) {
+  if (buf->info->baseURL) {
     /* <BASE> tag is defined in the document */
-    return &*buf->baseURL;
-  } else if (buf->currentURL.IS_EMPTY_PARSED_URL())
+    return &*buf->info->baseURL;
+  } else if (buf->info->currentURL.IS_EMPTY_PARSED_URL())
     return nullptr;
   else
-    return &buf->currentURL;
+    return &buf->info->currentURL;
 }
 
 #define COPYPATH_SPC_ALLOW 0

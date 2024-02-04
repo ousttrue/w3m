@@ -1,5 +1,6 @@
 #include "readbuffer.h"
 #include "quote.h"
+#include "contentinfo.h"
 #include "symbol.h"
 #include "url_stream.h"
 #include "w3m.h"
@@ -4031,7 +4032,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         case HTML_BASE:
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             p = url_quote(remove_space(p));
-            buf->baseURL = Url::parse2(p, &buf->currentURL);
+            buf->info->baseURL = Url::parse2(p, &buf->info->currentURL);
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
             buf->baseTarget = (char *)url_quote_conv(p, buf->document_charset);
@@ -4359,8 +4360,8 @@ Buffer *loadHTMLString(Str *page) {
   newBuf->topLine = newBuf->firstLine;
   newBuf->lastLine = newBuf->currentLine;
   newBuf->currentLine = newBuf->firstLine;
-  newBuf->type = "text/html";
-  newBuf->real_type = newBuf->type;
+  newBuf->info->type = "text/html";
+  newBuf->info->real_type = newBuf->info->type;
   if (n_textarea)
     formResetBuffer(newBuf, newBuf->formitem);
   return newBuf;

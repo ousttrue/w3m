@@ -42,20 +42,14 @@ struct Line;
 struct LinkList;
 struct BufferPos;
 struct AlarmEvent;
+struct ContentInfo;
 
 struct Clone {
   int count = 1;
 };
 
 struct Buffer : public gc_cleanup {
-  Url currentURL = {.schema = SCM_UNKNOWN};
-  std::optional<Url> baseURL;
-  const char *type = nullptr;
-  const char *real_type = nullptr;
-  TextList *document_header = nullptr;
-
-
-  const char *filename = nullptr;
+  std::shared_ptr<ContentInfo> info;
   const char *buffername = "";
   Line *firstLine = nullptr;
   Line *topLine = nullptr;

@@ -1,5 +1,6 @@
 #include "display.h"
 #include "loadproc.h"
+#include "contentinfo.h"
 #include "symbol.h"
 #include "message.h"
 #include "w3m.h"
@@ -189,7 +190,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   if (buf->height == 0)
     buf->height = LASTLINE + 1;
   if ((buf->width != INIT_BUFFER_WIDTH() &&
-       (is_html_type(buf->type) || FoldLine)) ||
+       (is_html_type(buf->info->type) || FoldLine)) ||
       buf->need_reshape) {
     buf->need_reshape = true;
     reshapeBuffer(buf);

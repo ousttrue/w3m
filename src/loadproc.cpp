@@ -1,6 +1,7 @@
 #include "loadproc.h"
 #include "quote.h"
 #include "symbol.h"
+#include "contentinfo.h"
 #include "form.h"
 #include "proto.h"
 #include "downloadlist.h"
@@ -149,10 +150,10 @@ const char *checkHeader(Buffer *buf, const char *field) {
   TextListItem *i;
   char *p;
 
-  if (buf == NULL || field == NULL || buf->document_header == NULL)
+  if (buf == NULL || field == NULL || buf->info->document_header == NULL)
     return NULL;
   len = strlen(field);
-  for (i = buf->document_header->first; i != NULL; i = i->next) {
+  for (i = buf->info->document_header->first; i != NULL; i = i->next) {
     if (!strncasecmp(i->ptr, field, len)) {
       p = i->ptr + len;
       return remove_space(p);
@@ -183,7 +184,7 @@ static const char *guess_filename(const char *file) {
 }
 
 const char *guess_save_name(Buffer *buf, const char *path) {
-  if (buf && buf->document_header) {
+  if (buf && buf->info->document_header) {
     Str *name = NULL;
     const char *p, *q;
     if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
@@ -221,17 +222,17 @@ static Buffer *loadSomething(UrlStream *f,
 
   if (buf->buffername == NULL || buf->buffername[0] == '\0') {
     buf->buffername = checkHeader(buf, "Subject:");
-    if (buf->buffername == NULL && buf->filename != NULL)
-      buf->buffername = lastFileName(buf->filename);
+    if (buf->buffername == NULL && buf->info->filename != NULL)
+      buf->buffername = lastFileName(buf->info->filename);
   }
-  if (buf->currentURL.schema == SCM_UNKNOWN)
-    buf->currentURL.schema = f->schema;
+  if (buf->info->currentURL.schema == SCM_UNKNOWN)
+    buf->info->currentURL.schema = f->schema;
   if (f->schema == SCM_LOCAL && buf->sourcefile == NULL)
-    buf->sourcefile = buf->filename;
+    buf->sourcefile = buf->info->filename;
   if (loadproc == loadHTMLBuffer)
-    buf->type = "text/html";
+    buf->info->type = "text/html";
   else
-    buf->type = "text/plain";
+    buf->info->type = "text/plain";
   return buf;
 }
 
@@ -259,7 +260,7 @@ Buffer *getshell(const char *cmd) {
   buf = loadcmdout((char *)cmd, loadBuffer, NULL);
   if (buf == NULL)
     return NULL;
-  buf->filename = cmd;
+  buf->info->filename = cmd;
   buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }
@@ -320,14 +321,14 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   if (mcap->flags & MAILCAP_HTMLOUTPUT) {
     buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
-      buf->type = "text/html";
+      buf->info->type = "text/html";
       buf->mailcap_source = (char *)buf->sourcefile;
       buf->sourcefile = (char *)src;
     }
   } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
     buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
-      buf->type = "text/plain";
+      buf->info->type = "text/plain";
       buf->mailcap_source = (char *)buf->sourcefile;
       buf->sourcefile = (char *)src;
     }
@@ -345,8 +346,8 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   }
   if (buf && buf != NO_BUFFER) {
     if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
-        buf->filename)
-      buf->buffername = lastFileName(buf->filename);
+        buf->info->filename)
+      buf->buffername = lastFileName(buf->info->filename);
     buf->edit = mcap->edit;
     buf->mailcap = mcap;
   }
@@ -364,7 +365,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
   FILE *src = NULL;
   Lineprop *propBuffer;
 
-  headerlist = newBuf->document_header = newTextList();
+  headerlist = newBuf->info->document_header = newTextList();
   if (uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS)
     http_response_code = -1;
   else
@@ -703,8 +704,8 @@ load_doc: {
           Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
           b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
           if (b != NULL && b != NO_BUFFER) {
-            b->currentURL = pu;
-            b->filename = b->currentURL.real_file;
+            b->info->currentURL = pu;
+            b->info->filename = b->info->currentURL.real_file;
           }
           return b;
         } else {
@@ -898,9 +899,9 @@ page_loaded:
     }
     b = loadHTMLString(page);
     if (b) {
-      b->currentURL = pu;
+      b->info->currentURL = pu;
       b->real_schema = pu.schema;
-      b->real_type = t;
+      b->info->real_type = t;
       if (src)
         b->sourcefile = tmp->ptr;
     }
@@ -974,8 +975,8 @@ page_loaded:
   }
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
-  t_buf->currentURL = pu;
-  t_buf->filename = pu.real_file ? pu.real_file : pu.file;
+  t_buf->info->currentURL = pu;
+  t_buf->info->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
   if (proc == DO_EXTERNAL) {
     b = doExternal(f, t, t_buf);
@@ -985,7 +986,7 @@ page_loaded:
   UFclose(&f);
   if (b && b != NO_BUFFER) {
     b->real_schema = f.schema;
-    b->real_type = real_type;
+    b->info->real_type = real_type;
     if (pu.label) {
       if (proc == loadHTMLBuffer) {
         Anchor *a;
@@ -1062,7 +1063,7 @@ int setModtime(const char *path, time_t modtime) {
 
 static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
 
-  auto is_html = is_html_type(buf->type);
+  auto is_html = is_html_type(buf->info->type);
 
   for (; l != NULL; l = l->next) {
     Str *tmp;

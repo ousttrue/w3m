@@ -1,5 +1,6 @@
 #include "httpauth.h"
 #include "authpass.h"
+#include "contentinfo.h"
 #include "httprequest.h"
 #include "auth_digest.h"
 #include "form.h"
@@ -306,7 +307,7 @@ http_auth *findAuthentication(http_auth *hauth, Buffer *buf,
   const char *p0, *p;
 
   bzero(hauth, sizeof(struct http_auth));
-  for (i = buf->document_header->first; i != nullptr; i = i->next) {
+  for (i = buf->info->document_header->first; i != nullptr; i = i->next) {
     if (strncasecmp(i->ptr, auth_field, len) == 0) {
       for (p = i->ptr + len; p != nullptr && *p != '\0';) {
         SKIP_BLANKS(p);

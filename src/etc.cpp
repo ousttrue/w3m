@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "line.h"
 #include "message.h"
+#include "contentinfo.h"
 #include "screen.h"
 #include "terms.h"
 #include "display.h"
@@ -146,15 +147,15 @@ const char *last_modified(Buffer *buf) {
   TextListItem *ti;
   struct stat st;
 
-  if (buf->document_header) {
-    for (ti = buf->document_header->first; ti; ti = ti->next) {
+  if (buf->info->document_header) {
+    for (ti = buf->info->document_header->first; ti; ti = ti->next) {
       if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
         return ti->ptr + 15;
       }
     }
     return "unknown";
-  } else if (buf->currentURL.schema == SCM_LOCAL) {
-    if (stat(buf->currentURL.file, &st) < 0)
+  } else if (buf->info->currentURL.schema == SCM_LOCAL) {
+    if (stat(buf->info->currentURL.file, &st) < 0)
       return "unknown";
     return ctime(&st.st_mtime);
   }

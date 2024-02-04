@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "contentinfo.h"
 #include "loadproc.h"
 #include "w3m.h"
 #include "local_cgi.h"
@@ -31,6 +32,7 @@ int nTab;
 int TabCols = 10;
 
 Buffer::Buffer(int width) : width(width) {
+  this->info = std::make_shared<ContentInfo>();
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
   this->clone = std::make_shared<Clone>();
@@ -41,7 +43,7 @@ Buffer::Buffer(int width) : width(width) {
 Buffer::~Buffer() {}
 
 Buffer &Buffer::operator=(const Buffer &src) {
-  this->filename = src.filename;
+  this->info = src.info;
   this->buffername = src.buffername;
   this->firstLine = src.firstLine;
   this->topLine = src.topLine;
@@ -51,8 +53,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->linkBuffer = src.linkBuffer;
   this->width = src.width;
   this->height = src.height;
-  this->type = src.type;
-  this->real_type = src.real_type;
   this->allLine = src.allLine;
   this->bufferprop = src.bufferprop;
   this->currentColumn = src.currentColumn;
@@ -73,15 +73,12 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->maplist = src.maplist;
   this->hmarklist = src.hmarklist;
   this->imarklist = src.imarklist;
-  this->currentURL = src.currentURL;
-  this->baseURL = src.baseURL;
   this->baseTarget = src.baseTarget;
   this->real_schema = src.real_schema;
   this->sourcefile = src.sourcefile;
   this->clone = src.clone;
   this->trbyte = src.trbyte;
   this->check_url = src.check_url;
-  this->document_header = src.document_header;
   this->form_submit = src.form_submit;
   this->edit = src.edit;
   this->mailcap = src.mailcap;
@@ -130,8 +127,8 @@ void discardBuffer(Buffer *buf) {
   }
   if (--buf->clone->count)
     return;
-  if (buf->sourcefile &&
-      (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
+  if (buf->sourcefile && (!buf->info->real_type ||
+                          strncasecmp(buf->info->real_type, "image/", 6))) {
   }
   if (buf->mailcap_source)
     unlink(buf->mailcap_source);
@@ -222,13 +219,13 @@ static void writeBufferName(Buffer *buf, int n) {
   move(n, 0);
   /* FIXME: gettextize? */
   msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-  if (buf->filename != NULL) {
-    switch (buf->currentURL.schema) {
+  if (buf->info->filename != NULL) {
+    switch (buf->info->currentURL.schema) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
-      if (strcmp(buf->currentURL.file, "-")) {
+      if (strcmp(buf->info->currentURL.file, "-")) {
         Strcat_char(msg, ' ');
-        Strcat_charp(msg, buf->currentURL.real_file);
+        Strcat_charp(msg, buf->info->currentURL.real_file);
       }
       break;
     case SCM_UNKNOWN:
@@ -236,7 +233,7 @@ static void writeBufferName(Buffer *buf, int n) {
       break;
     default:
       Strcat_char(msg, ' ');
-      Strcat(msg, buf->currentURL.to_Str());
+      Strcat(msg, buf->info->currentURL.to_Str());
       break;
     }
   }
@@ -487,7 +484,7 @@ void reshapeBuffer(Buffer *buf) {
   if (buf->imarklist)
     buf->imarklist->nmark = 0;
 
-  if (is_html_type(buf->type))
+  if (is_html_type(buf->info->type))
     loadHTMLBuffer(&f, buf);
   else
     loadBuffer(&f, buf);
@@ -515,7 +512,7 @@ void reshapeBuffer(Buffer *buf) {
         gotoLine(buf, cur->linenumber);
     }
     buf->pos -= buf->currentLine->bpos;
-    if (FoldLine && !is_html_type(buf->type))
+    if (FoldLine && !is_html_type(buf->info->type))
       buf->currentColumn = 0;
     else
       buf->currentColumn = sbuf->currentColumn;
@@ -596,15 +593,15 @@ Buffer *page_info_panel(Buffer *buf) {
     all = buf->allLine;
     if (all == 0 && buf->lastLine)
       all = buf->lastLine->linenumber;
-    p = url_decode0(buf->currentURL.to_Str().c_str());
-    Strcat_m_charp(tmp, "<table cellpadding=0>",
-                   "<tr valign=top><td nowrap>Title<td>",
-                   html_quote(buf->buffername),
-                   "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
-                   "<tr valign=top><td nowrap>Document Type<td>",
-                   buf->real_type ? html_quote(buf->real_type) : "unknown",
-                   "<tr valign=top><td nowrap>Last Modified<td>",
-                   html_quote(last_modified(buf)), NULL);
+    p = url_decode0(buf->info->currentURL.to_Str().c_str());
+    Strcat_m_charp(
+        tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
+        html_quote(buf->buffername),
+        "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
+        "<tr valign=top><td nowrap>Document Type<td>",
+        buf->info->real_type ? html_quote(buf->info->real_type) : "unknown",
+        "<tr valign=top><td nowrap>Last Modified<td>",
+        html_quote(last_modified(buf)), NULL);
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                    Sprintf("%d", all)->ptr,
                    "<tr valign=top><td nowrap>Transferred bytes<td>",
@@ -653,9 +650,9 @@ Buffer *page_info_panel(Buffer *buf) {
 
     append_link_info(buf, tmp, buf->linklist);
 
-    if (buf->document_header != NULL) {
+    if (buf->info->document_header != NULL) {
       Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-      for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+      for (ti = buf->info->document_header->first; ti != NULL; ti = ti->next)
         Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
                        NULL);
       Strcat_charp(tmp, "</pre>\n");
@@ -702,10 +699,11 @@ void set_buffer_environ(Buffer *buf) {
     return;
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->sourcefile);
-    set_environ("W3M_FILENAME", buf->filename);
+    set_environ("W3M_FILENAME", buf->info->filename);
     set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", buf->currentURL.to_Str().c_str());
-    set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
+    set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
+    set_environ("W3M_TYPE",
+                buf->info->real_type ? buf->info->real_type : "unknown");
   }
   l = buf->currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
