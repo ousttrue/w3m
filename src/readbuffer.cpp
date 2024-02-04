@@ -3683,39 +3683,6 @@ char *convert_size2(long long size1, long long size2, int usefloat) {
       ->ptr;
 }
 
-static void print_internal_information(struct html_feed_environ *henv) {
-  int i;
-  Str *s;
-  TextLineList *tl = newTextLineList();
-
-  s = Strnew_charp("<internal>");
-  pushTextLine(tl, newTextLine(s, 0));
-  if (henv->title) {
-    s = Strnew_m_charp("<title_alt title=\"", html_quote(henv->title), "\">",
-                       NULL);
-    pushTextLine(tl, newTextLine(s, 0));
-  }
-  if (n_textarea > 0) {
-    for (i = 0; i < n_textarea; i++) {
-      s = Sprintf("<textarea_int textareanumber=%d>", i);
-      pushTextLine(tl, newTextLine(s, 0));
-      s = Strnew_charp(html_quote(textarea_str[i]->ptr));
-      Strcat_charp(s, "</textarea_int>");
-      pushTextLine(tl, newTextLine(s, 0));
-    }
-  }
-  s = Strnew_charp("</internal>");
-  pushTextLine(tl, newTextLine(s, 0));
-
-  if (henv->buf)
-    appendTextLineList(henv->buf, tl);
-  else if (henv->f) {
-    TextLineListItem *p;
-    for (p = tl->first; p; p = p->next)
-      fprintf(henv->f, "%s\n", p->ptr->line->ptr);
-  }
-}
-
 static TextLineListItem *_tl_lp2;
 
 static Str *textlist_feed(void) {
@@ -4223,12 +4190,6 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   if (htmlenv1.title)
     newBuf->buffername = htmlenv1.title;
 
-  if (w3m_backend) {
-    TRAP_OFF;
-    print_internal_information(&htmlenv1);
-    backend_halfdump_buf = htmlenv1.buf;
-    return;
-  }
 phase2:
   newBuf->trbyte = trbyte + linelen;
   TRAP_OFF;

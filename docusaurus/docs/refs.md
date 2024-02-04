@@ -13,3 +13,10 @@
 
 - [w3m の urimethodmap - 兼雑記](https://shinh.hatenablog.com/entry/20061122/1164121288)
 
+## backend
+
+emacs 向けの描画モード？
+
+- http://emacs-w3m.namazu.org/ml/msg01308.html
+
+

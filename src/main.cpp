@@ -3989,15 +3989,6 @@ int main(int argc, char **argv) {
           WrapDefault = false;
         else
           WrapDefault = true;
-      } else if (!strcmp("-backend", argv[i])) {
-        w3m_backend = true;
-      } else if (!strcmp("-backend_batch", argv[i])) {
-        w3m_backend = true;
-        if (++i >= argc)
-          usage();
-        if (!backend_batch_commands)
-          backend_batch_commands = newTextList();
-        pushText(backend_batch_commands, argv[i]);
       } else if (!strcmp("-cols", argv[i])) {
         if (++i >= argc)
           usage();
@@ -4106,18 +4097,13 @@ int main(int argc, char **argv) {
   if (BookmarkFile == nullptr)
     BookmarkFile = rcFile(BOOKMARK);
 
-  if (!w3m_backend) {
-    fmInit();
-    mySignal(SIGWINCH, resize_hook);
-  }
+  fmInit();
+  mySignal(SIGWINCH, resize_hook);
 
   sync_with_option();
   initCookie();
   if (UseHistory)
     loadHistory(URLHist);
-
-  if (w3m_backend)
-    backend();
 
   mySignal(SIGCHLD, sig_chld);
   mySignal(SIGPIPE, SigPipe);

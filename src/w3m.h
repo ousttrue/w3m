@@ -15,11 +15,6 @@ extern bool confirm_on_quit;
 extern bool fmInitialized;
 extern bool IsForkChild;
 extern char *w3m_version;
-extern bool w3m_backend;
-struct TextLineList;
-extern TextLineList *backend_halfdump_buf;
-struct TextList;
-extern TextList *backend_batch_commands;
 
 extern char *HostName;
 extern char *CurrentDir;
@@ -77,5 +72,4 @@ extern int clear_buffer;
 extern int set_pixel_per_char;
 extern const char *keymap_file;
 
-int backend(void);
 void w3m_exit(int i);
