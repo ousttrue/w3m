@@ -51,6 +51,10 @@ static char **CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
 
+static int strCmp(const void *s1, const void *s2) {
+  return strcmp(*(const char **)s1, *(const char **)s2);
+}
+
 static void insertself(char c), _mvR(void), _mvL(void), _mvRw(void),
     _mvLw(void), delC(void), insC(void), _mvB(void), _mvE(void), _enter(void),
     _quo(void), _bs(void), _bsw(void), killn(void), killb(void), _inbrk(void),

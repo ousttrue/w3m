@@ -1,4 +1,6 @@
 #include "loaddirectory.h"
+#include "anchor.h"
+#include "url.h"
 #include "terms.h"
 #include "Str.h"
 #include "etc.h"
@@ -11,6 +13,10 @@ typedef struct direct Directory;
 #include <string.h>
 
 bool multicolList = false;
+
+static int strCmp(const void *s1, const void *s2) {
+  return strcmp(*(const char **)s1, *(const char **)s2);
+}
 
 Str *loadLocalDir(const char *dname) {
   Str *tmp;
@@ -37,7 +43,6 @@ Str *loadLocalDir(const char *dname) {
   if (Strlastchar(dirname) != '/')
     Strcat_char(dirname, '/');
   qdir = html_quote(dirname->ptr);
-  /* FIXME: gettextize? */
   tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
                        html_quote(file_quote(dirname->ptr)),
                        "\">\n<TITLE>Directory list of ", qdir,

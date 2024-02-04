@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "entity.h"
 #include "readbuffer.h"
 #include "http_option.h"
 #include "rc.h"
@@ -641,4 +642,123 @@ Buffer *link_list_panel(Buffer *buf) {
   }
 
   return loadHTMLString(tmp);
+}
+
+const char *html_quote(const char *str) {
+  Str *tmp = NULL;
+  for (auto p = str; *p; p++) {
+    auto q = html_quote_char(*p);
+    if (q) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      Strcat_charp(tmp, q);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp->ptr;
+  return Strnew_charp(str)->ptr;
+}
+
+const char *html_unquote(const char *str) {
+  Str *tmp = NULL;
+  const char *p, *q;
+
+  for (p = str; *p;) {
+    if (*p == '&') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      q = getescapecmd(&p);
+      Strcat_charp(tmp, q);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+      p++;
+    }
+  }
+
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}
+
+const char *getescapecmd(const char **s) {
+  const char *save = *s;
+  Str *tmp;
+  int ch = getescapechar(s);
+
+  if (ch >= 0)
+    return conv_entity(ch);
+
+  if (*save != '&')
+    tmp = Strnew_charp("&");
+  else
+    tmp = Strnew();
+  Strcat_charp_n(tmp, save, *s - save);
+  return tmp->ptr;
+}
+
+int getescapechar(const char **str) {
+  int dummy = -1;
+  const char *p = *str, *q;
+  int strict_entity = true;
+
+  if (*p == '&')
+    p++;
+  if (*p == '#') {
+    p++;
+    if (*p == 'x' || *p == 'X') {
+      p++;
+      if (!IS_XDIGIT(*p)) {
+        *str = p;
+        return -1;
+      }
+      for (dummy = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++)
+        dummy = dummy * 0x10 + GET_MYCDIGIT(*p);
+      if (*p == ';')
+        p++;
+      *str = p;
+      return dummy;
+    } else {
+      if (!IS_DIGIT(*p)) {
+        *str = p;
+        return -1;
+      }
+      for (dummy = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++)
+        dummy = dummy * 10 + GET_MYCDIGIT(*p);
+      if (*p == ';')
+        p++;
+      *str = p;
+      return dummy;
+    }
+  }
+  if (!IS_ALPHA(*p)) {
+    *str = p;
+    return -1;
+  }
+  q = p;
+  for (p++; IS_ALNUM(*p); p++)
+    ;
+  q = allocStr(q, p - q);
+  if (strcasestr("lt gt amp quot apos nbsp", q) && *p != '=') {
+    /* a character entity MUST be terminated with ";". However,
+     * there's MANY web pages which uses &lt , &gt or something
+     * like them as &lt;, &gt;, etc. Therefore, we treat the most
+     * popular character entities (including &#xxxx;) without
+     * the last ";" as character entities. If the trailing character
+     * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
+     * are not regarded as character entities.
+     */
+    strict_entity = false;
+  }
+  if (*p == ';')
+    p++;
+  else if (strict_entity) {
+    *str = p;
+    return -1;
+  }
+  *str = p;
+  return getHash_si(&entity, q, -1);
 }

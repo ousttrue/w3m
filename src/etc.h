@@ -16,7 +16,7 @@ void mySystem(const char *command, int background);
 struct Str;
 Str *myExtCommand(const char *cmd, const char *arg, int redirect);
 Str *myEditor(const char *cmd, const char *file, int line);
-const char *url_unquote_conv0(const char *url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
 struct Buffer;
 const char *last_modified(Buffer *buf);
+
+

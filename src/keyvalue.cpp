@@ -1,5 +1,5 @@
 #include "keyvalue.h"
-#include "indep.h"
+#include "url_stream.h"
 #include "alloc.h"
 #include "Str.h"
 #include <string.h>

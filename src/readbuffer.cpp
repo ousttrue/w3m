@@ -4419,4 +4419,34 @@ int currentLn(Buffer *buf) {
     return 1;
 }
 
+void cleanup_line(Str *s, int mode) {
+  if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
+      s->ptr[s->length - 1] == '\n') {
+    Strshrink(s, 2);
+    Strcat_char(s, '\n');
+  } else if (Strlastchar(s) == '\r')
+    s->ptr[s->length - 1] = '\n';
+  else if (Strlastchar(s) != '\n')
+    Strcat_char(s, '\n');
+  if (mode != PAGER_MODE) {
+    int i;
+    for (i = 0; i < s->length; i++) {
+      if (s->ptr[i] == '\0')
+        s->ptr[i] = ' ';
+    }
+  }
+}
 
+const char *remove_space(const char *str) {
+  const char *p, *q;
+
+  for (p = str; *p && IS_SPACE(*p); p++)
+    ;
+  for (q = p; *q; q++)
+    ;
+  for (; q > p && IS_SPACE(*(q - 1)); q--)
+    ;
+  if (*q != '\0')
+    return Strnew_charp_n(p, q - p)->ptr;
+  return p;
+}

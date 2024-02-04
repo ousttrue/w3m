@@ -66,6 +66,62 @@ Hist *URLHist;
 Hist *ShellHist;
 Hist *TextHist;
 
+#define HAVE_GETCWD 1
+char *currentdir() {
+  char *path;
+#ifdef HAVE_GETCWD
+#ifdef MAXPATHLEN
+  path = (char *)NewAtom_N(char, MAXPATHLEN);
+  getcwd(path, MAXPATHLEN);
+#else
+  path = getcwd(NULL, 0);
+#endif
+#else /* not HAVE_GETCWD */
+#ifdef HAVE_GETWD
+  path = NewAtom_N(char, 1024);
+  getwd(path);
+#else  /* not HAVE_GETWD */
+  FILE *f;
+  char *p;
+  path = (char *)NewAtom_N(char, 1024);
+  f = popen("pwd", "r");
+  fgets(path, 1024, f);
+  pclose(f);
+  for (p = path; *p; p++)
+    if (*p == '\n') {
+      *p = '\0';
+      break;
+    }
+#endif /* not HAVE_GETWD */
+#endif /* not HAVE_GETCWD */
+  return path;
+}
+
+Str *Str_form_quote(Str *x) {
+  Str *tmp = NULL;
+  char *p = x->ptr, *ep = x->ptr + x->length;
+  char buf[4];
+
+  for (; p < ep; p++) {
+    if (*p == ' ') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, '+');
+    } else if (is_url_unsafe(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      sprintf(buf, "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp;
+  return x;
+}
+
 static const char *SearchString = nullptr;
 int (*searchRoutine)(Buffer *, const char *);
 

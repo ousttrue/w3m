@@ -81,3 +81,9 @@ void addMultirowsForm(Buffer *buf, AnchorList *al);
 
 const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
 Buffer *link_list_panel(Buffer *buf);
+
+const char *html_quote(const char *str);
+const char *html_unquote(const char *str);
+int getescapechar(const char **s);
+const char *getescapecmd(const char **s);
+

@@ -1,4 +1,5 @@
 #include "htmltag.h"
+#include "anchor.h"
 #include "htmlcommand.h"
 #include "myctype.h"
 #include "indep.h"

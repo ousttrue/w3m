@@ -125,6 +125,7 @@ executable(
         'auth_digest.cpp',
         'loadproc.cpp',
         'loaddirectory.cpp',
+        'alloc.cpp',
     ],
     install: true,
     dependencies: [

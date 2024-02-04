@@ -1146,3 +1146,23 @@ bool couldWrite(const char *path) {
 
   return false;
 }
+
+const char *shell_quote(const char *str) {
+  Str *tmp = NULL;
+  const char *p;
+
+  for (p = str; *p; p++) {
+    if (is_shell_unsafe(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      Strcat_char(tmp, '\\');
+      Strcat_char(tmp, *p);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}

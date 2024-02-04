@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "anchor.h"
 #include "httprequest.h"
 #include "loadproc.h"
 #include "cookie.h"

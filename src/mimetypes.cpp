@@ -1,8 +1,8 @@
 #include "mimetypes.h"
+#include "myctype.h"
 #include "etc.h"
 #include "textlist.h"
 #include "alloc.h"
-#include "indep.h"
 #include <string.h>
 
 #define USER_MIMETYPES "~/.mime.types"

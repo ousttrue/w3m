@@ -27,23 +27,4 @@ extern const char *HTML_QUOTE_MAP[];
 
 extern long long strtoclen(const char *s);
 extern const char *conv_entity(unsigned int ch);
-extern int getescapechar(const char **s);
-extern const char *getescapecmd(const char **s);
-extern int strCmp(const void *s1, const void *s2);
-extern char *currentdir(void);
-extern const char *cleanupName(const char *name);
-extern int strcasemstr(char *str, char *srch[], char **ret_ptr);
-int strmatchlen(const char *s1, const char *s2, int maxlen);
-extern const char *remove_space(const char *str);
-extern int non_null(const char *s);
-struct Str;
-extern void cleanup_line(Str *s, int mode);
-extern const char *html_quote(const char *str);
-extern const char *html_unquote(const char *str);
-extern const char *file_quote(const char *str);
-extern const char *file_unquote(const char *str);
-extern const char *url_quote(const char *str);
-extern Str *Str_url_unquote(Str *x, int is_form, int safe);
-extern Str *Str_form_quote(Str *x);
-#define Str_form_unquote(x) Str_url_unquote((x), true, false)
-extern const char *shell_quote(const char *str);
+

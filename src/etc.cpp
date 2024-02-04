@@ -418,8 +418,3 @@ const char *file_to_url(const char *file) {
   return tmp->ptr;
 }
 
-const char *url_unquote_conv0(const char *url) {
-  Str *tmp;
-  tmp = Str_url_unquote(Strnew_charp(url), false, true);
-  return tmp->ptr;
-}

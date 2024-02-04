@@ -44,3 +44,5 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 #define IS_ENDT(c) (IS_ENDL(c) || (c) == ';')
 
 inline int is_wordchar(int c) { return IS_ALNUM(c); }
+
+int non_null(const char *s);

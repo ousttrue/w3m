@@ -222,3 +222,5 @@ Str *convertLine0(UrlStream *uf, Str *line, int mode);
   convertLine0(uf, line, mode)
 
 Str *getLinkNumberStr(int correction);
+void cleanup_line(Str *s, int mode);
+const char *remove_space(const char *str);

@@ -61,3 +61,4 @@ int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);
 
 Url *schemaToProxy(UrlSchema schema);
+

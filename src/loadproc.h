@@ -29,3 +29,5 @@ int is_html_type(const char *type);
 void saveBuffer(Buffer *buf, FILE *f, int cont);
 bool couldWrite(const char *path);
 int setModtime(const char *path, time_t modtime);
+const char *shell_quote(const char *str);
+
