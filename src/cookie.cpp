@@ -281,18 +281,18 @@ static Str *make_cookie(struct cookie *cookie) {
   return tmp;
 }
 
-static int match_cookie(Url *pu, struct cookie *cookie,
+static int match_cookie(const Url &pu, struct cookie *cookie,
                         const char *domainname) {
   if (!domainname)
     return 0;
 
   if (!domain_match(domainname, cookie->domain->ptr))
     return 0;
-  if (strncmp(cookie->path->ptr, pu->file, cookie->path->length) != 0)
+  if (strncmp(cookie->path->ptr, pu.file, cookie->path->length) != 0)
     return 0;
-  if (cookie->flag & COO_SECURE && pu->schema != SCM_HTTPS)
+  if (cookie->flag & COO_SECURE && pu.schema != SCM_HTTPS)
     return 0;
-  if (cookie->portl && !port_match(cookie->portl, pu->port))
+  if (cookie->portl && !port_match(cookie->portl, pu.port))
     return 0;
 
   return 1;
@@ -309,16 +309,16 @@ static struct cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
   return NULL;
 }
 
-Str *find_cookie(Url *pu) {
+Str *find_cookie(const Url &pu) {
   Str *tmp;
   struct cookie *p, *p1, *fco = NULL;
   int version = 0;
   const char *fq_domainname, *domainname;
 
-  fq_domainname = FQDN(pu->host);
+  fq_domainname = FQDN(pu.host);
   check_expired_cookies();
   for (p = First_cookie; p; p = p->next) {
-    domainname = (p->version == 0) ? fq_domainname : pu->host;
+    domainname = (p->version == 0) ? fq_domainname : pu.host;
     if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
       for (p1 = fco; p1 && Strcasecmp(p1->name, p->name); p1 = p1->next)
         ;
@@ -545,8 +545,8 @@ void save_cookies(void) {
     if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
       continue;
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
-            p->url.to_Str().c_str(), p->name->ptr, p->value->ptr, (long)p->expires,
-            p->domain->ptr, p->path->ptr, p->flag, p->version,
+            p->url.to_Str().c_str(), p->name->ptr, p->value->ptr,
+            (long)p->expires, p->domain->ptr, p->path->ptr, p->flag, p->version,
             str2charp(p->comment),
             (p->portl) ? portlist2str(p->portl)->ptr : "",
             str2charp(p->commentURL));

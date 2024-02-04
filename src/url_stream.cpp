@@ -384,15 +384,15 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu, Url *current,
     if (pu->schema == SCM_HTTPS) {
       if (status == HTST_NORMAL) {
         hr->method = HR_COMMAND_CONNECT;
-        tmp = HTTPrequest(pu, current, hr, extra_header);
+        tmp = hr->to_Str(*pu, current, extra_header);
         status = HTST_CONNECT;
       } else {
-        hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_LOCAL);
-        tmp = HTTPrequest(pu, current, hr, extra_header);
+        hr->flag |= HR_FLAG_LOCAL;
+        tmp = hr->to_Str(*pu, current, extra_header);
         status = HTST_NORMAL;
       }
     } else {
-      tmp = HTTPrequest(pu, current, hr, extra_header);
+      tmp = hr->to_Str(*pu, current, extra_header);
       status = HTST_NORMAL;
     }
   } else {
@@ -405,8 +405,8 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu, Url *current,
         return HTST_MISSING;
       }
     }
-    hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_LOCAL);
-    tmp = HTTPrequest(pu, current, hr, extra_header);
+    hr->flag |= HR_FLAG_LOCAL;
+    tmp = hr->to_Str(*pu, current, extra_header);
     status = HTST_NORMAL;
   }
   if (pu->schema == SCM_HTTPS) {

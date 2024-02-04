@@ -455,6 +455,13 @@ Url Url::parse2(const char *src, const Url *current) {
   return url;
 }
 
+std::string Url::RefererOriginStr() const {
+  Url u = *this;
+  u.file = nullptr;
+  u.query = nullptr;
+  return u.to_Str(false, false, false);
+}
+
 std::string Url::to_Str(bool pass, bool user, bool label) const {
   Str *tmp;
 

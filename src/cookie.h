@@ -44,7 +44,7 @@ struct cookie {
 };
 
 const char *domain_match(const char *host, const char *domain);
-Str *find_cookie(Url *pu);
+Str *find_cookie(const Url &pu);
 int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, CookieFlags flag, Str *comment,
                int version, Str *port, Str *commentURL);

@@ -26,6 +26,7 @@ struct Url {
   std::string to_Str(bool pass, bool user, bool label) const;
   std::string to_Str() const { return to_Str(false, true, true); }
   std::string to_RefererStr() const { return to_Str(false, false, false); }
+  std::string RefererOriginStr() const;
 
   bool IS_EMPTY_PARSED_URL() const {
     return (this->schema == SCM_UNKNOWN && !this->file);
