@@ -48,3 +48,8 @@ int set_param_option(const char *option);
 const char *get_param_option(const char *name);
 void init_rc();
 void init_tmp();
+char *w3m_auxbin_dir();
+char *w3m_lib_dir();
+char *w3m_etc_dir();
+char *w3m_conf_dir();
+char *w3m_help_dir();

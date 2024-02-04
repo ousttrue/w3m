@@ -823,47 +823,6 @@ const char *shell_quote(const char *str) {
   return str;
 }
 
-void *xrealloc(void *ptr, size_t size) {
-  void *newptr = realloc(ptr, size);
-  if (newptr == NULL) {
-    fprintf(stderr, "Out of memory\n");
-    exit(-1);
-  }
-  return newptr;
-}
-
 /* Define this as a separate function in case the free() has
  * an incompatible prototype. */
 void xfree(void *ptr) { free(ptr); }
-
-void *w3m_GC_realloc_atomic(void *ptr, size_t size) {
-  return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
-}
-
-void w3m_GC_free(void *ptr) { GC_FREE(ptr); }
-
-static char *w3m_dir(const char *name, char *dft) {
-#ifdef USE_PATH_ENVVAR
-  char *value = getenv(name);
-  return value ? value : dft;
-#else
-  return dft;
-#endif
-}
-
-char *w3m_auxbin_dir(void) { return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR); }
-
-char *w3m_lib_dir(void) {
-  /* FIXME: use W3M_CGIBIN_DIR? */
-  return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR);
-}
-
-char *w3m_etc_dir(void) { return w3m_dir("W3M_ETC_DIR", ETC_DIR); }
-
-char *w3m_conf_dir(void) { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }
-
-char *w3m_help_dir(void) { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

@@ -20,6 +20,8 @@
 
 #define BAD_BASE64 255
 
+void w3m_GC_free(void *ptr) { GC_FREE(ptr); }
+
 static unsigned char c2e(char x) {
   if ('A' <= x && x <= 'Z')
     return (x) - 'A';
@@ -295,6 +297,10 @@ Str *decodeMIME0(Str *orgstr) {
   if (cnv == NULL)
     return orgstr;
   return cnv;
+}
+
+static void *w3m_GC_realloc_atomic(void *ptr, size_t size) {
+  return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
 }
 
 void growbuf_init(struct growbuf *gb) {
