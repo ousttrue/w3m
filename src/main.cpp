@@ -2509,7 +2509,7 @@ static void cmd_loadBuffer(Buffer *buf, int prop, int linkid) {
     if (!(buf->bufferprop & BP_NO_URL))
       buf->currentURL = Currentbuf->currentURL;
     if (linkid != LB_NOLINK) {
-      buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
+      buf->linkBuffer[linkid] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;
     }
     pushBuffer(buf);
@@ -2774,8 +2774,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   if (Currentbuf->type == nullptr)
     return;
-  if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != nullptr ||
-      (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != nullptr) {
+  if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
     Currentbuf = buf;
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -2793,7 +2792,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     else
       buf->real_type = Currentbuf->real_type;
     buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
-    buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
+    buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
     buf->type = "text/html";
@@ -2804,7 +2803,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
       buf->real_type = Currentbuf->real_type;
     buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
-    Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
+    Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else {
     return;
   }

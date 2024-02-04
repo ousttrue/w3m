@@ -30,10 +30,6 @@ bool close_tab_back = false;
 int nTab;
 int TabCols = 10;
 
-int REV_LB[MAX_LB] = {
-    LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
-};
-
 Buffer::Buffer(int width) : width(width) {
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
@@ -132,7 +128,7 @@ void discardBuffer(Buffer *buf) {
     b = buf->linkBuffer[i];
     if (b == NULL)
       continue;
-    b->linkBuffer[REV_LB[i]] = NULL;
+    b->linkBuffer[i] = NULL;
   }
   if (--buf->clone->count)
     return;

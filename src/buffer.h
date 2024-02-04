@@ -19,14 +19,16 @@ enum BufferFlags : unsigned short {
 };
 
 /* Link Buffer */
-#define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
+enum LinkBuffer {
+  LB_FRAME = 0 /* rFrame() */,
+  LB_N_FRAME = 1,
+  LB_INFO = 2 /* pginfo() */,
+  LB_N_INFO = 3,
+  LB_SOURCE = 4 /* vwSrc() */,
+  // LB_N_SOURCE = LB_SOURCE,
+  MAX_LB = 5,
+  LB_NOLINK = -1,
+};
 
 struct FormList;
 struct Anchor;
@@ -180,8 +182,6 @@ extern bool open_tab_dl_list;
 extern bool close_tab_back;
 extern int nTab;
 extern int TabCols;
-
-extern int REV_LB[];
 
 void gotoLine(Buffer *buf, int n);
 void _followForm(int submit);
