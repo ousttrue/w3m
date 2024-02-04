@@ -28,6 +28,12 @@ extern Url HTTPS_proxy_parsed;
 extern Url FTP_proxy_parsed;
 
 union input_stream;
+struct Url;
+struct FormList;
+struct TextList;
+struct HttpRequest;
+struct HttpOption;
+
 struct UrlStream {
   UrlSchema schema;
   char is_cgi;
@@ -40,19 +46,22 @@ struct UrlStream {
   const char *ssl_certificate;
   const char *url;
   time_t modtime;
+
+  void openFile(const char *path);
+
+  void openLocalCgi(Url *pu, Url *current, const HttpOption &option,
+                    FormList *request);
+
+private:
+  void add_index_file(Url *pu);
 };
 
-struct Url;
-struct FormList;
-struct TextList;
-struct HttpRequest;
-struct HttpOption;
-UrlStream openURL(const char *url, Url *pu, Url *current, const HttpOption &option,
-                  FormList *request, TextList *extra_header, UrlStream *ouf,
-                  HttpRequest *hr, unsigned char *status);
+UrlStream openURL(const char *url, Url *pu, Url *current,
+                  const HttpOption &option, FormList *request,
+                  TextList *extra_header, UrlStream *ouf, HttpRequest *hr,
+                  unsigned char *status);
 
 void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream);
-void examineFile(const char *path, UrlStream *uf);
 int save2tmp(UrlStream *uf, const char *tmpf);
 int doFileSave(UrlStream *uf, const char *defstr);
 void UFhalfclose(UrlStream *f);
@@ -61,4 +70,3 @@ int openSocket(const char *hostname, const char *remoteport_name,
                unsigned short remoteport_num);
 
 Url *schemaToProxy(UrlSchema schema);
-

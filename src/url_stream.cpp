@@ -58,7 +58,7 @@ static void sock_log(char *message, ...) {
   FILE *f = fopen("zzzsocklog", "a");
   va_list va;
 
-  if (f == NULL)
+  if (f == nullptr)
     return;
   va_start(va, message);
   vfprintf(f, message, va);
@@ -81,7 +81,7 @@ int ai_family_order_table[7][3] = {
 #endif /* INET6 */
 
 static int domain_match(const char *pat, const char *domain) {
-  if (domain == NULL)
+  if (domain == nullptr)
     return 0;
   if (*pat == '.')
     pat++;
@@ -89,7 +89,7 @@ static int domain_match(const char *pat, const char *domain) {
     if (!strcasecmp(pat, domain))
       return 1;
     domain = strchr(domain, '.');
-    if (domain == NULL)
+    if (domain == nullptr)
       return 0;
     domain++;
   }
@@ -104,12 +104,12 @@ static void KeyAbort(SIGNAL_ARG) {
 int check_no_proxy(const char *domain) {
   TextListItem *tl;
   volatile int ret = 0;
-  MySignalHandler prevtrap = NULL;
+  MySignalHandler prevtrap = nullptr;
 
-  if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 ||
-      domain == NULL)
+  if (NO_proxy_domains == nullptr || NO_proxy_domains->nitem == 0 ||
+      domain == nullptr)
     return 0;
-  for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+  for (tl = NO_proxy_domains->first; tl != nullptr; tl = tl->next) {
     if (domain_match(tl->ptr, domain))
       return 1;
   }
@@ -143,7 +143,7 @@ int check_no_proxy(const char *domain) {
         sprintf(buf, ".%d", h_addr_list[0][n]);
         strcat(addr, buf);
       }
-      for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+      for (tl = NO_proxy_domains->first; tl != nullptr; tl = tl->next) {
         if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
           ret = 1;
           goto end;
@@ -160,7 +160,7 @@ int check_no_proxy(const char *domain) {
     for (af = ai_family_order_table[DNS_order];; af++) {
       memset(&hints, 0, sizeof(hints));
       hints.ai_family = *af;
-      error = getaddrinfo(domain, NULL, &hints, &res0);
+      error = getaddrinfo(domain, nullptr, &hints, &res0);
       if (error) {
         if (*af == PF_UNSPEC) {
           break;
@@ -168,7 +168,7 @@ int check_no_proxy(const char *domain) {
         /* try next */
         continue;
       }
-      for (res = res0; res != NULL; res = res->ai_next) {
+      for (res = res0; res != nullptr; res = res->ai_next) {
         switch (res->ai_family) {
         case AF_INET:
           inet_ntop(AF_INET, &((struct sockaddr_in *)res->ai_addr)->sin_addr,
@@ -182,7 +182,7 @@ int check_no_proxy(const char *domain) {
           /* unknown */
           continue;
         }
-        for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+        for (tl = NO_proxy_domains->first; tl != nullptr; tl = tl->next) {
           if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
             freeaddrinfo(res0);
             ret = 1;
@@ -224,29 +224,29 @@ void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream) {
   uf->is_cgi = false;
   uf->compression = CMP_NOCOMPRESS;
   uf->content_encoding = CMP_NOCOMPRESS;
-  uf->guess_type = NULL;
-  uf->ext = NULL;
+  uf->guess_type = nullptr;
+  uf->ext = nullptr;
   uf->modtime = -1;
 }
 
 /* add index_file if exists */
-static void add_index_file(Url *pu, UrlStream *uf) {
-  const char *p, *q;
-  TextList *index_file_list = NULL;
-  TextListItem *ti;
-
-  if (non_null(index_file))
+void UrlStream::add_index_file(Url *pu) {
+  TextList *index_file_list = nullptr;
+  if (non_null(index_file)) {
     index_file_list = make_domain_list(index_file);
-  if (index_file_list == NULL) {
-    uf->stream = NULL;
+  }
+  if (!index_file_list) {
+    this->stream = nullptr;
     return;
   }
-  for (ti = index_file_list->first; ti; ti = ti->next) {
-    p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
+
+  for (auto ti = index_file_list->first; ti; ti = ti->next) {
+    const char *p =
+        Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), nullptr)->ptr;
     p = cleanupName(p);
-    q = cleanupName(file_unquote(p));
-    examineFile(q, uf);
-    if (uf->stream != NULL) {
+    auto q = cleanupName(file_unquote(p));
+    this->openFile(q);
+    if (this->stream) {
       pu->file = p;
       pu->real_file = q;
       return;
@@ -257,7 +257,7 @@ static void add_index_file(Url *pu, UrlStream *uf) {
 static int dir_exist(const char *path) {
   struct stat stbuf;
 
-  if (path == NULL || *path == '\0')
+  if (path == nullptr || *path == '\0')
     return 0;
   if (stat(path, &stbuf) == -1)
     return 0;
@@ -269,7 +269,7 @@ static void write_from_file(int sock, char *file) {
   int c;
   char buf[1];
   fd = fopen(file, "r");
-  if (fd != NULL) {
+  if (fd != nullptr) {
     while ((c = fgetc(fd)) != EOF) {
       buf[0] = c;
       write(sock, buf, 1);
@@ -278,42 +278,100 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
+void UrlStream::openLocalCgi(Url *pu, Url *current, const HttpOption &option,
+                             FormList *request) {
+  if (request && request->body)
+    /* local CGI: POST */
+    this->stream = newFileStream(
+        localcgi_post(pu->real_file, pu->query, request, option.referer),
+        (void (*)())fclose);
+  else
+    /* lodal CGI: GET */
+    this->stream =
+        newFileStream(localcgi_get(pu->real_file, pu->query, option.referer),
+                      (void (*)())fclose);
+  if (this->stream) {
+    this->is_cgi = true;
+    this->schema = pu->schema = SCM_LOCAL_CGI;
+    return;
+  }
+
+  this->openFile(pu->real_file);
+  if (this->stream == nullptr) {
+    if (dir_exist(pu->real_file)) {
+      add_index_file(pu);
+      if (!this->stream) {
+        return;
+      }
+    } else if (document_root != nullptr) {
+      auto tmp = Strnew_charp(document_root);
+      if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
+        Strcat_char(tmp, '/');
+      Strcat_charp(tmp, pu->file);
+      auto p = cleanupName(tmp->ptr);
+      auto q = cleanupName(file_unquote(p));
+      if (dir_exist(q)) {
+        pu->file = p;
+        pu->real_file = (char *)q;
+        add_index_file(pu);
+        if (!this->stream) {
+          return;
+        }
+      } else {
+        this->openFile(q);
+        if (this->stream) {
+          pu->file = p;
+          pu->real_file = (char *)q;
+        }
+      }
+    }
+  }
+
+  assert(false);
+  // TODO:
+  // if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
+  //   if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
+  //     /* retry it as "http://" */
+  //     u = Strnew_m_charp("http://", url, nullptr)->ptr;
+  //     goto retry;
+  //   }
+  // }
+}
+
 UrlStream openURL(const char *url, Url *pu, Url *current,
                   const HttpOption &option, FormList *request,
                   TextList *extra_header, UrlStream *ouf, HttpRequest *hr,
                   unsigned char *status) {
-  Str *tmp;
-  int sock;
-  const char *p, *q, *u;
-  UrlStream uf;
   HttpRequest hr0;
-  SSL *sslh = NULL;
-
-  if (hr == NULL)
+  if (hr == nullptr)
     hr = &hr0;
 
+  UrlStream uf;
   if (ouf) {
     uf = *ouf;
   } else {
-    init_stream(&uf, SCM_MISSING, NULL);
+    init_stream(&uf, SCM_MISSING, nullptr);
   }
 
-  u = url;
+  auto u = url;
   auto schema = parseUrlSchema(&u);
-  if (current == NULL && schema == SCM_MISSING && !ArgvIsURL)
+  if (current == nullptr && schema == SCM_MISSING && !ArgvIsURL) {
     u = file_to_url(url); /* force to local file */
-  else
+  } else {
     u = url;
-retry:
+  }
+
+  // retry:
+
   *pu = Url::parse2(u, current);
-  if (pu->schema == SCM_LOCAL && pu->file == NULL) {
-    if (pu->label != NULL) {
+  if (pu->schema == SCM_LOCAL && pu->file == nullptr) {
+    if (pu->label != nullptr) {
       /* #hogege is not a label but a filename */
       Str *tmp2 = Strnew_charp("#");
       Strcat_charp(tmp2, pu->label);
       pu->file = tmp2->ptr;
       pu->real_file = cleanupName(file_unquote((char *)pu->file));
-      pu->label = NULL;
+      pu->label = nullptr;
     } else {
       /* given URL must be null string */
 #ifdef SOCK_DEBUG
@@ -324,7 +382,7 @@ retry:
   }
 
   if (LocalhostOnly && pu->host && !is_localhost(pu->host))
-    pu->host = NULL;
+    pu->host = nullptr;
 
   uf.schema = pu->schema;
   uf.url = Strnew(pu->to_Str())->ptr;
@@ -336,66 +394,22 @@ retry:
   hr->referer = option.referer;
   hr->request = request;
 
+  Str *tmp;
+  int sock;
+  const char *p, *q;
+  SSL *sslh = nullptr;
+
   switch (pu->schema) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    if (request && request->body)
-      /* local CGI: POST */
-      uf.stream = newFileStream(
-          localcgi_post(pu->real_file, pu->query, request, option.referer),
-          (void (*)())fclose);
-    else
-      /* lodal CGI: GET */
-      uf.stream =
-          newFileStream(localcgi_get(pu->real_file, pu->query, option.referer),
-                        (void (*)())fclose);
-    if (uf.stream) {
-      uf.is_cgi = true;
-      uf.schema = pu->schema = SCM_LOCAL_CGI;
-      return uf;
-    }
-    examineFile(pu->real_file, &uf);
-    if (uf.stream == NULL) {
-      if (dir_exist(pu->real_file)) {
-        add_index_file(pu, &uf);
-        if (uf.stream == NULL)
-          return uf;
-      } else if (document_root != NULL) {
-        tmp = Strnew_charp(document_root);
-        if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
-          Strcat_char(tmp, '/');
-        Strcat_charp(tmp, pu->file);
-        p = cleanupName(tmp->ptr);
-        q = cleanupName(file_unquote((char *)p));
-        if (dir_exist((char *)q)) {
-          pu->file = (char *)p;
-          pu->real_file = (char *)q;
-          add_index_file(pu, &uf);
-          if (uf.stream == NULL) {
-            return uf;
-          }
-        } else {
-          examineFile((char *)q, &uf);
-          if (uf.stream) {
-            pu->file = (char *)p;
-            pu->real_file = (char *)q;
-          }
-        }
-      }
-    }
-    if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-      if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
-        /* retry it as "http://" */
-        u = Strnew_m_charp("http://", url, NULL)->ptr;
-        goto retry;
-      }
-    }
+    uf.openLocalCgi(pu, current, option, request);
     return uf;
+
   case SCM_FTP:
   case SCM_FTPDIR:
-    // if (pu->file == NULL)
+    // if (pu->file == nullptr)
     //   pu->file = allocStr("/", -1);
-    // if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL &&
+    // if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != nullptr &&
     //     !check_no_proxy(pu->host)) {
     //   hr->flag |= HR_FLAG_PROXY;
     //   sock = openSocket(FTP_proxy_parsed.host,
@@ -412,9 +426,10 @@ retry:
     //   return uf;
     // }
     break;
+
   case SCM_HTTP:
   case SCM_HTTPS:
-    if (pu->file == NULL)
+    if (pu->file == nullptr)
       pu->file = allocStr("/", -1);
     if (request && request->method == FORM_METHOD_POST && request->body)
       hr->method = HR_COMMAND_POST;
@@ -422,7 +437,7 @@ retry:
       hr->method = HR_COMMAND_HEAD;
     if (((pu->schema == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
-        use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+        use_proxy && pu->host != nullptr && !check_no_proxy(pu->host)) {
       hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_PROXY);
       if (pu->schema == SCM_HTTPS && *status == HTST_CONNECT) {
         sock = ssl_socket_of(ouf->stream);
@@ -434,12 +449,12 @@ retry:
         sock = openSocket(HTTPS_proxy_parsed.host,
                           schemaNumToName(HTTPS_proxy_parsed.schema),
                           HTTPS_proxy_parsed.port);
-        sslh = NULL;
+        sslh = nullptr;
       } else {
         sock = openSocket(HTTP_proxy_parsed.host,
                           schemaNumToName(HTTP_proxy_parsed.schema),
                           HTTP_proxy_parsed.port);
-        sslh = NULL;
+        sslh = nullptr;
       }
       if (sock < 0) {
 #ifdef SOCK_DEBUG
@@ -485,7 +500,7 @@ retry:
         write(sock, tmp->ptr, tmp->length);
       if (w3m_reqlog) {
         FILE *ff = fopen(w3m_reqlog, "a");
-        if (ff == NULL)
+        if (ff == nullptr)
           return uf;
         if (sslh)
           fputs("HTTPS: request via SSL\n", ff);
@@ -506,7 +521,7 @@ retry:
       write(sock, tmp->ptr, tmp->length);
       if (w3m_reqlog) {
         FILE *ff = fopen(w3m_reqlog, "a");
-        if (ff == NULL)
+        if (ff == nullptr)
           return uf;
         fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
         fclose(ff);
@@ -517,16 +532,16 @@ retry:
     }
     break;
   case SCM_DATA:
-    if (pu->file == NULL)
+    if (pu->file == nullptr)
       return uf;
     p = Strnew_charp(pu->file)->ptr;
     q = strchr(p, ',');
-    if (q == NULL)
+    if (q == nullptr)
       return uf;
     *(char *)q++ = '\0';
     tmp = Strnew_charp(q);
     q = strrchr(p, ';');
-    if (q != NULL && !strcmp(q, ";base64")) {
+    if (q != nullptr && !strcmp(q, ";base64")) {
       *(char *)q = '\0';
       uf.encoding = ENC_BASE64;
     } else
@@ -545,11 +560,11 @@ retry:
 static FILE *lessopen_stream(const char *path) {
 
   auto lessopen = getenv("LESSOPEN");
-  if (lessopen == NULL || lessopen[0] == '\0')
-    return NULL;
+  if (lessopen == nullptr || lessopen[0] == '\0')
+    return nullptr;
 
   if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
-    return NULL;
+    return nullptr;
 
   /* pipe mode */
   ++lessopen;
@@ -562,61 +577,62 @@ static FILE *lessopen_stream(const char *path) {
         f++;
       else if (*++f == 's') {
         if (n)
-          return NULL;
+          return nullptr;
         n++;
       } else
-        return NULL;
+        return nullptr;
     }
   }
   if (!n)
-    return NULL;
+    return nullptr;
 
   auto tmpf = Sprintf(lessopen, shell_quote((char *)path));
   auto fp = popen(tmpf->ptr, "r");
-  if (fp == NULL) {
-    return NULL;
+  if (fp == nullptr) {
+    return nullptr;
   }
   auto c = getc(fp);
   if (c == EOF) {
     pclose(fp);
-    return NULL;
+    return nullptr;
   }
   ungetc(c, fp);
   return fp;
 }
 
-void examineFile(const char *path, UrlStream *uf) {
+void UrlStream::openFile(const char *path) {
   struct stat stbuf;
 
-  uf->guess_type = NULL;
-  if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 ||
+  this->guess_type = nullptr;
+  if (path == nullptr || *path == '\0' || stat(path, &stbuf) == -1 ||
       NOT_REGULAR(stbuf.st_mode)) {
-    uf->stream = NULL;
+    this->stream = nullptr;
     return;
   }
-  uf->stream = openIS(path);
+
+  this->stream = openIS(path);
   if (!do_download) {
-    if (use_lessopen && getenv("LESSOPEN") != NULL) {
+    if (use_lessopen && getenv("LESSOPEN") != nullptr) {
       FILE *fp;
-      uf->guess_type = guessContentType(path);
-      if (uf->guess_type == NULL)
-        uf->guess_type = "text/plain";
-      if (is_html_type(uf->guess_type))
+      this->guess_type = guessContentType(path);
+      if (this->guess_type == nullptr)
+        this->guess_type = "text/plain";
+      if (is_html_type(this->guess_type))
         return;
       if ((fp = lessopen_stream(path))) {
-        UFclose(uf);
-        uf->stream = newFileStream(fp, (void (*)())pclose);
-        uf->guess_type = "text/plain";
+        UFclose(this);
+        this->stream = newFileStream(fp, (void (*)())pclose);
+        this->guess_type = "text/plain";
         return;
       }
     }
-    check_compression(path, uf);
-    if (uf->compression != CMP_NOCOMPRESS) {
-      auto ext = uf->ext;
+    check_compression(path, this);
+    if (this->compression != CMP_NOCOMPRESS) {
+      auto ext = this->ext;
       auto t0 = uncompressed_file_type(path, &ext);
-      uf->guess_type = t0;
-      uf->ext = ext;
-      uncompress_stream(uf, NULL);
+      this->guess_type = t0;
+      this->ext = ext;
+      uncompress_stream(this, nullptr);
       return;
     }
   }
@@ -626,13 +642,13 @@ int save2tmp(UrlStream *uf, const char *tmpf) {
   FILE *ff;
   long long linelen = 0;
   // long long trbyte = 0;
-  MySignalHandler prevtrap = NULL;
+  MySignalHandler prevtrap = nullptr;
   static JMP_BUF env_bak;
   int retval = 0;
-  char *buf = NULL;
+  char *buf = nullptr;
 
   ff = fopen(tmpf, "wb");
-  if (ff == NULL) {
+  if (ff == nullptr) {
     /* fclose(f); */
     return -1;
   }
@@ -682,14 +698,14 @@ int doFileSave(UrlStream *uf, const char *defstr) {
   const char *p, *q;
   pid_t pid;
   char *lock;
-  const char *tmpf = NULL;
+  const char *tmpf = nullptr;
 
   if (fmInitialized) {
     p = searchKeyData();
-    if (p == NULL || *p == '\0') {
+    if (p == nullptr || *p == '\0') {
       // p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
       //                   SaveHist);
-      if (p == NULL || *p == '\0')
+      if (p == nullptr || *p == '\0')
         return -1;
     }
     if (!couldWrite(p))
@@ -725,7 +741,7 @@ int doFileSave(UrlStream *uf, const char *defstr) {
                     0 /*current_content_length*/);
   } else {
     q = searchKeyData();
-    if (q == NULL || *q == '\0') {
+    if (q == nullptr || *q == '\0') {
       /* FIXME: gettextize? */
       printf("(Download)Save file to: ");
       fflush(stdout);
@@ -788,7 +804,7 @@ int openSocket(const char *const hostname, const char *remoteport_name,
   int a1, a2, a3, a4;
   unsigned long adr;
 #endif /* not INET6 */
-  MySignalHandler prevtrap = NULL;
+  MySignalHandler prevtrap = nullptr;
 
   if (fmInitialized) {
     /* FIXME: gettextize? */
@@ -804,7 +820,7 @@ int openSocket(const char *const hostname, const char *remoteport_name,
     goto error;
   }
   TRAP_ON;
-  if (hostname == NULL) {
+  if (hostname == nullptr) {
 #ifdef SOCK_DEBUG
     sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
 #endif
@@ -814,7 +830,7 @@ int openSocket(const char *const hostname, const char *remoteport_name,
 #ifdef INET6
   /* rfc2732 compliance */
   hname = hostname;
-  if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
+  if (hname != nullptr && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
     hname = allocStr(hostname + 1, -1);
     ((char *)hname)[strlen(hname) - 1] = '\0';
     if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
@@ -868,7 +884,7 @@ int openSocket(const char *const hostname, const char *remoteport_name,
 #else /* not INET6 */
   s_port = htons(remoteport_num);
   bzero((char *)&hostaddr, sizeof(struct sockaddr_in));
-  if ((proto = getprotobyname("tcp")) == NULL) {
+  if ((proto = getprotobyname("tcp")) == nullptr) {
     /* protocol number of TCP is 6 */
     proto = New(struct protoent);
     proto->p_proto = 6;
@@ -904,7 +920,7 @@ int openSocket(const char *const hostname, const char *remoteport_name,
       message(Sprintf("Performing hostname lookup on %s", hostname)->ptr, 0, 0);
       refresh();
     }
-    if ((entry = gethostbyname(hostname)) == NULL) {
+    if ((entry = gethostbyname(hostname)) == nullptr) {
 #ifdef SOCK_DEBUG
       sock_log("openSocket: gethostbyname() failed. reason: %s\n",
                strerror(errno));
@@ -968,4 +984,3 @@ Url *schemaToProxy(UrlSchema schema) {
   }
   return pu;
 }
-

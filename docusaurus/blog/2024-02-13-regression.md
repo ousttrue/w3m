@@ -22,6 +22,10 @@ iconv か icu を検討。
 いつの間にか…。
 なおすべし。
 
+## local-cgi
+
+addbookmark とか
+
 ## linein 復旧
 
 mainloop の改修後に復旧。

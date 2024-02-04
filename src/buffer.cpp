@@ -464,7 +464,7 @@ void reshapeBuffer(Buffer *buf) {
   if (buf->sourcefile == NULL)
     return;
   init_stream(&f, SCM_LOCAL, NULL);
-  examineFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile, &f);
+  f.openFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
   if (f.stream == NULL)
     return;
 
