@@ -45,7 +45,6 @@
 #include <fcntl.h>
 #define HAVE_ATOLL 1
 
-bool SearchHeader = false;
 const char *DefaultType = nullptr;
 int FollowRedirection = 10;
 bool DecodeCTE = false;
@@ -670,8 +669,6 @@ Buffer *loadGeneralFile(const char *path, Url *current,
   const char *p = NULL;
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
-  int searchHeader = SearchHeader;
-  int searchHeader_through = true;
   MySignalHandler prevtrap = NULL;
   TextList *extra_header = newTextList();
   Str *uname = NULL;
@@ -762,11 +759,6 @@ load_doc: {
   }
 
   b = NULL;
-  if (f.is_cgi) {
-    /* local CGI */
-    searchHeader = true;
-    searchHeader_through = false;
-  }
   if (header_string)
     header_string = NULL;
   TRAP_ON;
@@ -882,49 +874,6 @@ load_doc: {
     }
   } else if (pu.schema == SCM_DATA) {
     t = f.guess_type;
-  } else if (searchHeader) {
-    searchHeader = SearchHeader = false;
-    if (t_buf == NULL)
-      t_buf = new Buffer(INIT_BUFFER_WIDTH());
-    readHeader(&f, t_buf, searchHeader_through, &pu);
-    if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
-        checkRedirection(&pu)) {
-      /* document moved */
-      tpath = url_quote(remove_space((char *)p));
-      request = NULL;
-      UFclose(&f);
-      add_auth_cookie_flag = 0;
-      current = (Url *)New(Url);
-      *current = pu;
-      t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      t_buf->bufferprop = (BufferFlags)(t_buf->bufferprop | BP_REDIRECTED);
-      status = HTST_NORMAL;
-      goto load_doc;
-    }
-#ifdef AUTH_DEBUG
-    if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL) {
-      /* Authentication needed */
-      struct http_auth hauth;
-      if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
-          (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = &pu;
-        getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, &hr,
-                      request, &uname, &pwd);
-        if (uname == NULL) {
-          /* abort */
-          TRAP_OFF;
-          goto page_loaded;
-        }
-        UFclose(&f);
-        add_auth_cookie_flag = 1;
-        status = HTST_NORMAL;
-        goto load_doc;
-      }
-    }
-#endif /* defined(AUTH_DEBUG) */
-    t = checkContentType(t_buf);
-    if (t == NULL)
-      t = "text/plain";
   } else if (DefaultType) {
     t = DefaultType;
     DefaultType = NULL;

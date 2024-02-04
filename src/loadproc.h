@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <time.h>
 
-extern bool SearchHeader;
 extern const char *DefaultType;
 extern int FollowRedirection;
 extern bool DecodeCTE;

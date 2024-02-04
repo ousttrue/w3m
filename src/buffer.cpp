@@ -87,7 +87,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->mailcap = src.mailcap;
   this->mailcap_source = src.mailcap_source;
   this->header_source = src.header_source;
-  this->search_header = src.search_header;
   this->ssl_certificate = src.ssl_certificate;
   this->image_flag = src.image_flag;
   this->image_loaded = src.image_loaded;
@@ -501,8 +500,7 @@ void reshapeBuffer(Buffer *buf) {
         readHeader(&h, buf, true, NULL);
         UFclose(&h);
       }
-    } else if (buf->search_header) /* -m option */
-      readHeader(&f, buf, true, NULL);
+    } 
   }
 
   if (is_html_type(buf->type))

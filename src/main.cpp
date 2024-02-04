@@ -2812,7 +2812,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->filename = Currentbuf->filename;
   buf->sourcefile = Currentbuf->sourcefile;
   buf->header_source = Currentbuf->header_source;
-  buf->search_header = Currentbuf->search_header;
   buf->clone = Currentbuf->clone;
   buf->clone->count++;
 
@@ -2865,11 +2864,9 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   url = Strnew(Currentbuf->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
-  SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
   auto buf = loadGeneralFile(
       url->ptr, nullptr, {.referer = NO_REFERER, .no_cache = true}, request);
-  SearchHeader = false;
   DefaultType = nullptr;
 
   if (multipart)
@@ -2889,7 +2886,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     if (Currentbuf != buf)
       Firstbuf = deleteBuffer(Firstbuf, buf);
   }
-  Currentbuf->search_header = sbuf->search_header;
   Currentbuf->form_submit = sbuf->form_submit;
   if (Currentbuf->firstLine) {
     COPY_BUFROOT(Currentbuf, sbuf);
@@ -3854,7 +3850,6 @@ int main(int argc, char **argv) {
   int load_bookmark = false;
   int visual_start = false;
   int open_new_tab = false;
-  char search_header = false;
   char *default_type = nullptr;
   char *post_file = nullptr;
   Str *err_msg;
@@ -3964,8 +3959,6 @@ int main(int argc, char **argv) {
         if (++i >= argc)
           usage();
         DefaultType = default_type = argv[i];
-      } else if (!strcmp("-m", argv[i])) {
-        SearchHeader = (search_header = true);
       } else if (!strcmp("-v", argv[i]))
         visual_start = true;
       else if (!strcmp("-N", argv[i]))
@@ -4162,7 +4155,6 @@ int main(int argc, char **argv) {
   }
   for (; i < load_argc; i++) {
     if (i >= 0) {
-      SearchHeader = search_header;
       DefaultType = default_type;
       int retry = 0;
 
@@ -4219,9 +4211,6 @@ int main(int argc, char **argv) {
       }
     } else if (newbuf == NO_BUFFER)
       continue;
-    if ((newbuf->real_schema == SCM_LOCAL && newbuf->header_source &&
-         newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
-      newbuf->search_header = search_header;
     if (CurrentTab == nullptr) {
       FirstTab = LastTab = CurrentTab = newTab();
       if (!FirstTab) {
@@ -4279,7 +4268,6 @@ int main(int argc, char **argv) {
   if (err_msg->length)
     disp_message_nsec(err_msg->ptr, false, 1, true, false);
 
-  SearchHeader = false;
   DefaultType = nullptr;
 
   Currentbuf = Firstbuf;
