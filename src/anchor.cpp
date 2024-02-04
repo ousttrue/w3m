@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "quote.h"
 #include "entity.h"
 #include "readbuffer.h"
 #include "http_option.h"
@@ -9,7 +10,6 @@
 #include "line.h"
 #include "buffer.h"
 #include "form.h"
-#include "indep.h"
 #include "myctype.h"
 #include "regex.h"
 #include "proto.h"

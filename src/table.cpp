@@ -15,7 +15,7 @@
 #include "htmltag.h"
 #include "Str.h"
 #include "myctype.h"
-#include "indep.h"
+#include "entity.h"
 #include "proto.h"
 
 int symbol_width = 0;

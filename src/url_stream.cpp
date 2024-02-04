@@ -6,7 +6,6 @@
 #include "alloc.h"
 #include "screen.h"
 #include "istream.h"
-#include "indep.h"
 #include "myctype.h"
 #include "downloadlist.h"
 #include "alloc.h"

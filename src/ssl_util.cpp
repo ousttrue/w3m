@@ -1,6 +1,5 @@
 #include "ssl_util.h"
 #include "message.h"
-#include "indep.h"
 #include "Str.h"
 #include "myctype.h"
 #include "istream.h"

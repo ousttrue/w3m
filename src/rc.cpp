@@ -30,7 +30,6 @@
 #include "url.h"
 #include "signal_util.h"
 #include "myctype.h"
-#include "indep.h"
 #include "proto.h"
 #include "keyvalue.h"
 #include "local_cgi.h"

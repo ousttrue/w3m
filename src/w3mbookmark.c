@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "Str.h"
-#include "indep.h"
 #include "textlist.h"
 #include "parsetag.h"
 

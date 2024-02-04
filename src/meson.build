@@ -74,7 +74,6 @@ executable(
         'keybind.cpp',
         'signal_util.cpp',
         'Str.cpp',
-        'indep.cpp',
         'regex.cpp',
         'textlist.cpp',
         'keyvalue.cpp',
@@ -126,6 +125,7 @@ executable(
         'loadproc.cpp',
         'loaddirectory.cpp',
         'alloc.cpp',
+        'quote.cpp',
     ],
     install: true,
     dependencies: [

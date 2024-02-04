@@ -217,10 +217,16 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal);
 Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf);
 Buffer *loadHTMLString(Str *page);
 
-Str *convertLine0(UrlStream *uf, Str *line, int mode);
+enum CleanupMode {
+  RAW_MODE = 0,
+  PAGER_MODE = 1,
+  HTML_MODE = 2,
+  HEADER_MODE = 3,
+};
+Str *convertLine0(UrlStream *uf, Str *line, CleanupMode mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
 
 Str *getLinkNumberStr(int correction);
-void cleanup_line(Str *s, int mode);
+void cleanup_line(Str *s, CleanupMode mode);
 const char *remove_space(const char *str);

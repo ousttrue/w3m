@@ -14,7 +14,6 @@
 #include "anchor.h"
 #include "signal_util.h"
 #include "proto.h"
-#include "indep.h"
 #include <math.h>
 
 bool displayLink = false;

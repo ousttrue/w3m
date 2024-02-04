@@ -9,7 +9,6 @@
 #include "istream.h"
 #include "textlist.h"
 #include "alloc.h"
-#include "indep.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

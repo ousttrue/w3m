@@ -6,7 +6,6 @@
 #include "myctype.h"
 #include "local_cgi.h"
 #include "hash.h"
-#include "indep.h"
 #include "proto.h"
 #include <string.h>
 #include <cstdlib>

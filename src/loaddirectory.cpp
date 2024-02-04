@@ -4,7 +4,6 @@
 #include "terms.h"
 #include "Str.h"
 #include "etc.h"
-#include "indep.h"
 #include "alloc.h"
 
 #include <sys/dir.h>

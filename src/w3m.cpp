@@ -5,7 +5,6 @@
 #include "cookie.h"
 #include "line.h"
 #include "url.h"
-#include "indep.h"
 #include "form.h"
 #include "buffer.h"
 #include "textlist.h"

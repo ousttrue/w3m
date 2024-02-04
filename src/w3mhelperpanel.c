@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "Str.h"
-#include "indep.h"
 #include "textlist.h"
 #include "parsetag.h"
 #include "myctype.h"

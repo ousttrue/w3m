@@ -22,7 +22,6 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
-#include "indep.h"
 #include "proto.h"
 #include <time.h>
 #include <sys/stat.h>

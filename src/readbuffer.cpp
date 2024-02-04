@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "quote.h"
 #include "symbol.h"
 #include "url_stream.h"
 #include "w3m.h"
@@ -12,7 +13,6 @@
 #include "html.h"
 #include "signal_util.h"
 #include "form.h"
-#include "indep.h"
 #include "textlist.h"
 #include "buffer.h"
 #include "terms.h"
@@ -22,6 +22,7 @@
 #include "alloc.h"
 #include "alarm.h"
 #include "funcname1.h"
+#include "entity.h"
 #include "tmpfile.h"
 #include <math.h>
 #include <algorithm>
@@ -4405,7 +4406,7 @@ Buffer *loadHTMLString(Str *page) {
   return newBuf;
 }
 
-Str *convertLine0(UrlStream *uf, Str *line, int mode) {
+Str *convertLine0(UrlStream *uf, Str *line, CleanupMode mode) {
   if (mode != RAW_MODE)
     cleanup_line(line, mode);
   return line;
@@ -4419,7 +4420,7 @@ int currentLn(Buffer *buf) {
     return 1;
 }
 
-void cleanup_line(Str *s, int mode) {
+void cleanup_line(Str *s, CleanupMode mode) {
   if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
       s->ptr[s->length - 1] == '\n') {
     Strshrink(s, 2);

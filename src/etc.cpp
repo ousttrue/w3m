@@ -13,7 +13,6 @@
 #include "local_cgi.h"
 #include "textlist.h"
 #include "proto.h"
-#include "indep.h"
 #include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>

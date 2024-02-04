@@ -4,7 +4,6 @@
 #include "w3m.h"
 #include "terms.h"
 #include "screen.h"
-#include "indep.h"
 #include "textlist.h"
 #include "readbuffer.h"
 

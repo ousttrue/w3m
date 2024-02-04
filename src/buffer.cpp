@@ -17,7 +17,6 @@
 #include "anchor.h"
 #include "ctrlcode.h"
 #include "line.h"
-#include "indep.h"
 #include "istream.h"
 #include "proto.h"
 #include <unistd.h>

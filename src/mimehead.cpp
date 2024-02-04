@@ -8,7 +8,6 @@
 #include "alloc.h"
 #include "myctype.h"
 #include "Str.h"
-#include "indep.h"
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18

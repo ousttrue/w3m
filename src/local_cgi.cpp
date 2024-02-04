@@ -2,7 +2,6 @@
 #include "terms.h"
 #include "http_option.h"
 #include "rc.h"
-#include "indep.h"
 #include "w3m.h"
 #include "tmpfile.h"
 #include "httprequest.h"
@@ -12,7 +11,6 @@
 #include "alloc.h"
 #include "proto.h"
 #include "hash.h"
-#include "indep.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

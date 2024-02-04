@@ -4,7 +4,6 @@
 #include "message.h"
 #include "tmpfile.h"
 #include "buffer.h"
-#include "indep.h"
 #include "proto.h"
 #include "alloc.h"
 #include <stdio.h>

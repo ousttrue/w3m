@@ -24,7 +24,6 @@
 #include "regex.h"
 #include "proto.h"
 #include "util.h"
-#include "indep.h"
 #include <unistd.h>
 #include <sys/stat.h>
 

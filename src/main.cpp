@@ -1,5 +1,5 @@
-#define MAINPROGRAM
 #include "alloc.h"
+#include "quote.h"
 #include "loadproc.h"
 #include "bufferpos.h"
 #include "app.h"
@@ -18,7 +18,6 @@
 #include "linein.h"
 #include "search.h"
 #include "proto.h"
-#include "indep.h"
 #include "buffer.h"
 #include "cookie.h"
 #include "downloadlist.h"

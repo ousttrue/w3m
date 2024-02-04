@@ -3,7 +3,6 @@
 #include "rc.h"
 #include "w3m.h"
 #include "textlist.h"
-#include "indep.h"
 
 const char *tmp_dir;
 

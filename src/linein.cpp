@@ -14,7 +14,6 @@
 #include "local_cgi.h"
 #include "myctype.h"
 #include "history.h"
-#include "indep.h"
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>

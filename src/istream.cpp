@@ -4,7 +4,6 @@
 #include "ssl_util.h"
 #include "signal_util.h"
 #include "proto.h"
-#include "indep.h"
 #include "alloc.h"
 #include <fcntl.h>
 #include <unistd.h>
