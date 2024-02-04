@@ -1,4 +1,5 @@
 #include "loadproc.h"
+#include "tabbuffer.h"
 #include "quote.h"
 #include "symbol.h"
 #include "contentinfo.h"

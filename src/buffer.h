@@ -2,7 +2,6 @@
 #include "url.h"
 #include "line.h"
 #include <memory>
-#include <optional>
 #include <gc_cpp.h>
 #include <stddef.h>
 
@@ -148,32 +147,6 @@ struct Buffer : public gc_cleanup {
 #define CUR_LINENUMBER(buf)                                                    \
   ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-struct TabBuffer {
-  TabBuffer *nextTab;
-  TabBuffer *prevTab;
-  Buffer *currentBuffer;
-  Buffer *firstBuffer;
-  short x1;
-  short x2;
-  short y;
-};
-
-/*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
- */
-#define NO_TABBUFFER ((TabBuffer *)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)
-
-extern TabBuffer *CurrentTab;
-extern TabBuffer *FirstTab;
-extern TabBuffer *LastTab;
-extern bool open_tab_blank;
-extern bool open_tab_dl_list;
-extern bool close_tab_back;
-extern int nTab;
-extern int TabCols;
 
 void gotoLine(Buffer *buf, int n);
 void _followForm(int submit);
@@ -188,15 +161,10 @@ char *getCurWord(Buffer *buf, int *spos, int *epos);
 extern void discardBuffer(Buffer *buf);
 extern Url *baseURL(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
-struct TabBuffer;
-extern TabBuffer *newTab(void);
-extern void calcTabPos(void);
-extern TabBuffer *deleteTab(TabBuffer *tab);
 
 extern Buffer *nullBuffer(void);
 extern void clearBuffer(Buffer *buf);
 extern Buffer *namedBuffer(Buffer *first, char *name);
-extern Buffer *deleteBuffer(Buffer *first, Buffer *delbuf);
 extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
 extern Buffer *nthBuffer(Buffer *firstbuf, int n);
 extern void gotoRealLine(Buffer *buf, int n);

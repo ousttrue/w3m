@@ -1,5 +1,6 @@
 #include "app.h"
 #include "downloadlist.h"
+#include "tabbuffer.h"
 #include "bufferpos.h"
 #include "buffer.h"
 #include "anchor.h"

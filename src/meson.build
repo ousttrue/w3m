@@ -126,6 +126,7 @@ executable(
         'loaddirectory.cpp',
         'alloc.cpp',
         'quote.cpp',
+        'tabbuffer.cpp',
     ],
     install: true,
     dependencies: [

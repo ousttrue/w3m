@@ -2,6 +2,7 @@
 #include "buffer.h"
 #include "display.h"
 #include "alloc.h"
+#include "tabbuffer.h"
 
 void save_buffer_position(Buffer *buf) {
   BufferPos *b = buf->undo;

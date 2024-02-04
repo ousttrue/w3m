@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "tabbuffer.h"
 #include "form.h"
 #include "loadproc.h"
 #include "loaddirectory.h"

@@ -22,15 +22,6 @@
 #include "proto.h"
 #include <unistd.h>
 
-TabBuffer *CurrentTab;
-TabBuffer *FirstTab;
-TabBuffer *LastTab;
-bool open_tab_blank = false;
-bool open_tab_dl_list = false;
-bool close_tab_back = false;
-int nTab;
-int TabCols = 10;
-
 Buffer::Buffer(int width) : width(width) {
   this->info = std::make_shared<ContentInfo>();
   this->COLS = ::COLS;
@@ -149,25 +140,6 @@ Buffer *namedBuffer(Buffer *first, char *name) {
     }
   }
   return nullptr;
-}
-
-/*
- * deleteBuffer: delete buffer
- */
-Buffer *deleteBuffer(Buffer *first, Buffer *delbuf) {
-  Buffer *buf, *b;
-
-  if (first == delbuf && first->nextBuffer != nullptr) {
-    buf = first->nextBuffer;
-    discardBuffer(first);
-    return buf;
-  }
-  if ((buf = prevBuffer(first, delbuf)) != nullptr) {
-    b = buf->nextBuffer;
-    buf->nextBuffer = b->nextBuffer;
-    discardBuffer(b);
-  }
-  return first;
 }
 
 /*

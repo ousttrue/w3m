@@ -1,5 +1,6 @@
 #include "message.h"
 #include "display.h"
+#include "tabbuffer.h"
 #include "buffer.h"
 #include "w3m.h"
 #include "terms.h"

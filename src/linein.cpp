@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "tabbuffer.h"
 #include "etc.h"
 #include "w3m.h"
 #include "alloc.h"

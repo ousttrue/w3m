@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "tabbuffer.h"
 #include "quote.h"
 #include "contentinfo.h"
 #include "loadproc.h"
@@ -427,7 +428,7 @@ static void delBuffer(Buffer *buf) {
     return;
   if (Currentbuf == buf)
     Currentbuf = buf->nextBuffer;
-  Firstbuf = deleteBuffer(Firstbuf, buf);
+  CurrentTab->deleteBuffer(buf);
   if (!Currentbuf)
     Currentbuf = Firstbuf;
 }
@@ -1328,9 +1329,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
   Str *cmd;
   if (Currentbuf->edit) {
-    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->info->real_type, (char *)fn,
-                          (char *)checkHeader(Currentbuf, "Content-Type:"),
-                          nullptr);
+    cmd = unquote_mailcap(
+        Currentbuf->edit, Currentbuf->info->real_type, (char *)fn,
+        (char *)checkHeader(Currentbuf, "Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote((char *)fn),
                    cur_real_linenumber(Currentbuf));
@@ -2527,11 +2528,12 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   Str *tmp;
   FormList *request;
 
-  tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
-                (Str_form_quote(localCookie()))->ptr,
-                (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-                (Str_form_quote(Strnew(Currentbuf->info->currentURL.to_Str())))->ptr,
-                (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
+  tmp = Sprintf(
+      "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
+      (Str_form_quote(localCookie()))->ptr,
+      (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
+      (Str_form_quote(Strnew(Currentbuf->info->currentURL.to_Str())))->ptr,
+      (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
   request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
@@ -2682,7 +2684,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
   if (Currentbuf->real_schema == SCM_LOCAL)
-    file = guess_save_name(nullptr, (char *)Currentbuf->info->currentURL.real_file);
+    file = guess_save_name(nullptr,
+                           (char *)Currentbuf->info->currentURL.real_file);
   else
     file = guess_save_name(Currentbuf, Currentbuf->info->currentURL.file);
   doFileCopy(Currentbuf->sourcefile, file);
@@ -2787,7 +2790,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   if (is_html_type(Currentbuf->info->type)) {
     buf->info->type = "text/plain";
-    if (Currentbuf->info->real_type && is_html_type(Currentbuf->info->real_type))
+    if (Currentbuf->info->real_type &&
+        is_html_type(Currentbuf->info->real_type))
       buf->info->real_type = "text/plain";
     else
       buf->info->real_type = Currentbuf->info->real_type;
@@ -2879,11 +2883,14 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   }
   repBuffer(Currentbuf, buf);
   if ((buf->info->type != nullptr) && (sbuf->info->type != nullptr) &&
-      ((!strcasecmp(buf->info->type, "text/plain") && is_html_type(sbuf->info->type)) ||
-       (is_html_type(buf->info->type) && !strcasecmp(sbuf->info->type, "text/plain")))) {
+      ((!strcasecmp(buf->info->type, "text/plain") &&
+        is_html_type(sbuf->info->type)) ||
+       (is_html_type(buf->info->type) &&
+        !strcasecmp(sbuf->info->type, "text/plain")))) {
     vwSrc();
-    if (Currentbuf != buf)
-      Firstbuf = deleteBuffer(Firstbuf, buf);
+    if (Currentbuf != buf) {
+      CurrentTab->deleteBuffer(buf);
+    }
   }
   Currentbuf->form_submit = sbuf->form_submit;
   if (Currentbuf->firstLine) {
@@ -3273,17 +3280,6 @@ DEFUN(defKey, DEFINE_KEY,
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-TabBuffer *newTab(void) {
-
-  auto n = (TabBuffer *)New(TabBuffer);
-  if (n == nullptr)
-    return nullptr;
-  n->nextTab = nullptr;
-  n->currentBuffer = nullptr;
-  n->firstBuffer = nullptr;
-  return n;
-}
-
 static void _newT(void) {
   TabBuffer *tag;
   Buffer *buf;
@@ -3315,95 +3311,6 @@ static void _newT(void) {
 DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
   _newT();
   displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
-
-static TabBuffer *numTab(int n) {
-  TabBuffer *tab;
-  int i;
-
-  if (n == 0)
-    return CurrentTab;
-  if (n == 1)
-    return FirstTab;
-  if (nTab <= 1)
-    return nullptr;
-  for (tab = FirstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
-    ;
-  return tab;
-}
-
-void calcTabPos(void) {
-  TabBuffer *tab;
-  int lcol = 0, rcol = 0, col;
-  int n1, n2, na, nx, ny, ix, iy;
-
-  if (nTab <= 0)
-    return;
-  n1 = (COLS - rcol - lcol) / TabCols;
-  if (n1 >= nTab) {
-    n2 = 1;
-    ny = 1;
-  } else {
-    if (n1 < 0)
-      n1 = 0;
-    n2 = COLS / TabCols;
-    if (n2 == 0)
-      n2 = 1;
-    ny = (nTab - n1 - 1) / n2 + 2;
-  }
-  na = n1 + n2 * (ny - 1);
-  n1 -= (na - nTab) / ny;
-  if (n1 < 0)
-    n1 = 0;
-  na = n1 + n2 * (ny - 1);
-  tab = FirstTab;
-  for (iy = 0; iy < ny && tab; iy++) {
-    if (iy == 0) {
-      nx = n1;
-      col = COLS - rcol - lcol;
-    } else {
-      nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
-      col = COLS;
-    }
-    for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
-      tab->x1 = col * ix / nx;
-      tab->x2 = col * (ix + 1) / nx - 1;
-      tab->y = iy;
-      if (iy == 0) {
-        tab->x1 += lcol;
-        tab->x2 += lcol;
-      }
-    }
-  }
-}
-
-TabBuffer *deleteTab(TabBuffer *tab) {
-  Buffer *buf, *next;
-
-  if (nTab <= 1)
-    return FirstTab;
-  if (tab->prevTab) {
-    if (tab->nextTab)
-      tab->nextTab->prevTab = tab->prevTab;
-    else
-      LastTab = tab->prevTab;
-    tab->prevTab->nextTab = tab->nextTab;
-    if (tab == CurrentTab)
-      CurrentTab = tab->prevTab;
-  } else { /* tab == FirstTab */
-    tab->nextTab->prevTab = nullptr;
-    FirstTab = tab->nextTab;
-    if (tab == CurrentTab)
-      CurrentTab = tab->nextTab;
-  }
-  nTab--;
-  buf = tab->firstBuffer;
-  while (buf && buf != NO_BUFFER) {
-    next = buf->nextBuffer;
-    discardBuffer(buf);
-    buf = next;
-  }
-  return FirstTab;
 }
 
 DEFUN(closeT, CLOSE_TAB, "Close tab") {
