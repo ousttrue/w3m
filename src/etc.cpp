@@ -225,7 +225,7 @@ void mySystem(const char *command, int background) {
   if (background) {
     flush_tty();
     if (!fork()) {
-      setup_child(FALSE, 0, -1);
+      setup_child(false, 0, -1);
       myExec(command);
     }
   } else
@@ -235,14 +235,14 @@ void mySystem(const char *command, int background) {
 Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
   Str *tmp = NULL;
   const char *p;
-  int set_arg = FALSE;
+  int set_arg = false;
 
   for (p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_arg) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
       Strcat_charp(tmp, arg);
-      set_arg = TRUE;
+      set_arg = true;
       p++;
     } else {
       if (tmp)
@@ -260,20 +260,20 @@ Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
 
 Str *myEditor(const char *cmd, const char *file, int line) {
   Str *tmp = NULL;
-  int set_file = FALSE, set_line = FALSE;
+  int set_file = false, set_line = false;
 
   for (auto p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_file) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
       Strcat_charp(tmp, file);
-      set_file = TRUE;
+      set_file = true;
       p++;
     } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
       Strcat(tmp, Sprintf("%d", line));
-      set_line = TRUE;
+      set_line = true;
       p++;
     } else {
       if (tmp)
@@ -364,8 +364,8 @@ rest:
 int is_localhost(const char *host) {
   if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") ||
       (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
-    return TRUE;
-  return FALSE;
+    return true;
+  return false;
 }
 
 const char *file_to_url(const char *file) {
@@ -420,6 +420,6 @@ const char *file_to_url(const char *file) {
 
 const char *url_unquote_conv0(const char *url) {
   Str *tmp;
-  tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+  tmp = Str_url_unquote(Strnew_charp(url), false, true);
   return tmp->ptr;
 }

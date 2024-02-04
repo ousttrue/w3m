@@ -525,13 +525,13 @@ const char *remove_space(const char *str) {
 
 int non_null(const char *s) {
   if (s == NULL)
-    return FALSE;
+    return false;
   while (*s) {
     if (!IS_SPACE(*s))
-      return TRUE;
+      return true;
     s++;
   }
-  return FALSE;
+  return false;
 }
 
 void cleanup_line(Str *s, int mode) {
@@ -555,7 +555,7 @@ void cleanup_line(Str *s, int mode) {
 int getescapechar(const char **str) {
   int dummy = -1;
   const char *p = *str, *q;
-  int strict_entity = TRUE;
+  int strict_entity = true;
 
   if (*p == '&')
     p++;
@@ -603,7 +603,7 @@ int getescapechar(const char **str) {
      * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
      * are not regarded as character entities.
      */
-    strict_entity = FALSE;
+    strict_entity = false;
   }
   if (*p == ';')
     p++;

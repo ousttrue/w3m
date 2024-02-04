@@ -250,7 +250,7 @@ int ISread_n(input_stream *stream, char *dst, int count) {
   if (MUST_BE_UPDATED(base)) {
     l = (*base->read)(base->handle, (unsigned char *)&dst[len], count - len);
     if (l <= 0) {
-      base->iseos = TRUE;
+      base->iseos = true;
     } else {
       len += l;
     }
@@ -315,14 +315,14 @@ static int ens_read(struct ens_handle *handle, char *buf, int len) {
     char *p;
     struct growbuf gbtmp;
 
-    ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+    ISgets_to_growbuf(handle->is, &handle->gb, true);
     if (handle->gb.length == 0)
       return 0;
     if (handle->encoding == ENC_BASE64)
       memchop(handle->gb.ptr, &handle->gb.length);
     else if (handle->encoding == ENC_UUENCODE) {
       if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-        ISgets_to_growbuf(handle->is, &handle->gb, TRUE);
+        ISgets_to_growbuf(handle->is, &handle->gb, true);
       memchop(handle->gb.ptr, &handle->gb.length);
     }
     growbuf_init_without_GC(&gbtmp);

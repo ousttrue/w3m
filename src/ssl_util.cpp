@@ -114,7 +114,7 @@ static int ssl_match_cert_ident(const char *ident, int ilen,
 
   /* Is this an exact match? */
   if ((ilen == hlen) && strncasecmp(ident, hostname, hlen) == 0)
-    return TRUE;
+    return true;
 
   for (i = 0; i < ilen; i++) {
     if (ident[i] == '*' && ident[i + 1] == '.') {
@@ -124,7 +124,7 @@ static int ssl_match_cert_ident(const char *ident, int ilen,
       i++;
     } else {
       if (ident[i] != *hostname++)
-        return FALSE;
+        return false;
     }
   }
   return *hostname == '\0';
@@ -196,14 +196,14 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
       X509V3_EXT_get(ex);
       sk_GENERAL_NAME_free(alt);
       if (i < n) /* Found a match */
-        match_ident = TRUE;
+        match_ident = true;
       else if (seen_dnsname)
         ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
                       seen_dnsname->ptr);
     }
   }
 
-  if (match_ident == FALSE && ret == NULL) {
+  if (match_ident == false && ret == NULL) {
     X509_NAME *xn;
     char buf[2048];
 
@@ -312,13 +312,13 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     } else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation";
-      disp_err_message(e, FALSE);
+      disp_err_message(e, false);
       free_ssl_ctx();
       return NULL;
     }
   }
   if (amsg) {
-    disp_err_message(amsg->ptr, FALSE);
+    disp_err_message(amsg->ptr, false);
   }
 
   ssl_accept_this_site(hostname);
@@ -495,7 +495,7 @@ eend:
       Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
               ERR_error_string(ERR_get_error(), NULL))
           ->ptr,
-      FALSE);
+      false);
   return NULL;
 }
 void free_ssl_ctx() {

@@ -54,10 +54,10 @@ struct portlist {
   struct portlist *next;
 };
 
-int default_use_cookie = TRUE;
-int use_cookie = TRUE;
-int show_cookie = FALSE;
-int accept_cookie = TRUE;
+int default_use_cookie = true;
+int use_cookie = true;
+int show_cookie = false;
+int accept_cookie = true;
 int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
 const char *cookie_reject_domains = nullptr;
 const char *cookie_accept_domains = nullptr;
@@ -359,23 +359,23 @@ Str *find_cookie(Url *pu) {
 
 static int check_avoid_wrong_number_of_dots_domain(Str *domain) {
   TextListItem *tl;
-  int avoid_wrong_number_of_dots_domain = FALSE;
+  int avoid_wrong_number_of_dots_domain = false;
 
   if (Cookie_avoid_wrong_number_of_dots_domains &&
       Cookie_avoid_wrong_number_of_dots_domains->nitem > 0) {
     for (tl = Cookie_avoid_wrong_number_of_dots_domains->first; tl != NULL;
          tl = tl->next) {
       if (domain_match(domain->ptr, tl->ptr)) {
-        avoid_wrong_number_of_dots_domain = TRUE;
+        avoid_wrong_number_of_dots_domain = true;
         break;
       }
     }
   }
 
-  if (avoid_wrong_number_of_dots_domain == TRUE) {
-    return TRUE;
+  if (avoid_wrong_number_of_dots_domain == true) {
+    return true;
   } else {
-    return FALSE;
+    return false;
   }
 }
 
@@ -891,11 +891,11 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
     int err;
     if (show_cookie) {
       if (flag & COO_SECURE)
-        disp_message_nsec("Received a secured cookie", FALSE, 1, TRUE, FALSE);
+        disp_message_nsec("Received a secured cookie", false, 1, true, false);
       else
         disp_message_nsec(
             Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
-            FALSE, 1, TRUE, FALSE);
+            false, 1, true, false);
     }
     err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
                      version, port, commentURL);
@@ -929,12 +929,12 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
           emsg = "This cookie was rejected to prevent security violation.";
         record_err_message(emsg);
         if (show_cookie)
-          disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+          disp_message_nsec(emsg, false, 1, true, false);
       } else if (show_cookie)
         disp_message_nsec(
             Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)
                 ->ptr,
-            FALSE, 1, TRUE, FALSE);
+            false, 1, true, false);
     }
   }
 }

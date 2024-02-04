@@ -58,7 +58,7 @@ AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
   a->referer = referer;
   a->title = title;
   a->accesskey = key;
-  a->slave = FALSE;
+  a->slave = false;
   a->start = bp;
   a->end = bp;
   if (anchor_return)

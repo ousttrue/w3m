@@ -222,7 +222,7 @@ void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream) {
   uf->stream = stream;
   uf->schema = schema;
   uf->encoding = ENC_7BIT;
-  uf->is_cgi = FALSE;
+  uf->is_cgi = false;
   uf->compression = CMP_NOCOMPRESS;
   uf->content_encoding = CMP_NOCOMPRESS;
   uf->guess_type = NULL;
@@ -351,7 +351,7 @@ retry:
           newFileStream(localcgi_get(pu->real_file, pu->query, option.referer),
                         (void (*)())fclose);
     if (uf.stream) {
-      uf.is_cgi = TRUE;
+      uf.is_cgi = true;
       uf.schema = pu->schema = SCM_LOCAL_CGI;
       return uf;
     }
@@ -531,7 +531,7 @@ retry:
       *(char *)q = '\0';
       uf.encoding = ENC_BASE64;
     } else
-      tmp = Str_url_unquote(tmp, FALSE, FALSE);
+      tmp = Str_url_unquote(tmp, false, false);
     uf.stream = newStrStream(tmp);
     uf.guess_type = (*p != '\0') ? p : "text/plain";
     return uf;
@@ -697,7 +697,7 @@ int doFileSave(UrlStream *uf, const char *defstr) {
       return -1;
     if (checkSaveFile(uf->stream, p) < 0) {
       msg = Sprintf("Can't save. Load file and %s are identical.", p);
-      disp_err_message(msg->ptr, FALSE);
+      disp_err_message(msg->ptr, false);
       return -1;
     }
     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
@@ -712,7 +712,7 @@ int doFileSave(UrlStream *uf, const char *defstr) {
         if (tmpf)
           unlink(tmpf);
       }
-      setup_child(FALSE, 0, UFfileno(uf));
+      setup_child(false, 0, UFfileno(uf));
       err = save2tmp(uf, p);
       if (err == 0 && PreserveTimestamp && uf->modtime != -1)
         setModtime(p, uf->modtime);

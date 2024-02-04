@@ -77,14 +77,14 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
 }
 
 void disp_message(const char *s, int redraw_current) {
-  disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
+  disp_message_nsec(s, redraw_current, 10, false, true);
 }
 
 void set_delayed_message(const char *s) { delayed_msg = allocStr(s, -1); }
 
 void refresh_message() {
   if (delayed_msg != NULL) {
-    disp_message(delayed_msg, FALSE);
+    disp_message(delayed_msg, false);
     delayed_msg = NULL;
     refresh(term_io());
   }

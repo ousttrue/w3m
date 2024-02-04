@@ -295,7 +295,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
       !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
     flush_tty();
     if (!fork()) {
-      setup_child(FALSE, 0, UFfileno(&uf));
+      setup_child(false, 0, UFfileno(&uf));
       if (save2tmp(&uf, tmpf->ptr) < 0)
         exit(1);
       UFclose(&uf);
@@ -502,10 +502,10 @@ static int _MoveFile(const char *path1, const char *path2) {
   if (f1 == NULL)
     return -1;
   if (*path2 == '|' && PermitSaveToPipe) {
-    is_pipe = TRUE;
+    is_pipe = true;
     f2 = popen(path2 + 1, "w");
   } else {
-    is_pipe = FALSE;
+    is_pipe = false;
     f2 = fopen(path2, "wb");
   }
   if (f2 == NULL) {
@@ -549,7 +549,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   char *lock;
   struct stat st;
   long long size = 0;
-  int is_pipe = FALSE;
+  int is_pipe = false;
 
   if (fmInitialized) {
     p = searchKeyData();
@@ -557,11 +557,11 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
       //                   SaveHist);
       if (q == NULL || *q == '\0')
-        return FALSE;
+        return false;
       p = q;
     }
     if (*p == '|' && PermitSaveToPipe)
-      is_pipe = TRUE;
+      is_pipe = true;
     else {
       if (q) {
         p = unescape_spaces(Strnew_charp(q))->ptr;
@@ -572,13 +572,13 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     }
     if (checkCopyFile(tmpf, p) < 0) {
       msg = Sprintf("Can't copy. %s and %s are identical.", tmpf, p);
-      disp_err_message(msg->ptr, FALSE);
+      disp_err_message(msg->ptr, false);
       return -1;
     }
     if (!download) {
       if (_MoveFile(tmpf, p) < 0) {
         msg = Sprintf("Can't save to %s", p);
-        disp_err_message(msg->ptr, FALSE);
+        disp_err_message(msg->ptr, false);
       }
       return -1;
     }
@@ -587,7 +587,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     flush_tty();
     pid = fork();
     if (!pid) {
-      setup_child(FALSE, 0, -1);
+      setup_child(false, 0, -1);
       if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe &&
           !stat(tmpf, &st))
         setModtime(p, st.st_mtime);
@@ -614,7 +614,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       return -1;
     p = q;
     if (*p == '|' && PermitSaveToPipe)
-      is_pipe = TRUE;
+      is_pipe = true;
     else {
       p = expandPath((char *)p);
       if (!couldWrite(p))
@@ -656,7 +656,7 @@ Buffer *loadGeneralFile(const char *path, Url *current,
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
   int searchHeader = SearchHeader;
-  int searchHeader_through = TRUE;
+  int searchHeader_through = true;
   MySignalHandler prevtrap = NULL;
   TextList *extra_header = newTextList();
   Str *uname = NULL;
@@ -719,7 +719,7 @@ load_doc: {
       break;
     case SCM_UNKNOWN:
       disp_err_message(Sprintf("Unknown URI: %s", pu.to_Str().c_str())->ptr,
-                       FALSE);
+                       false);
       break;
 
     default:
@@ -749,8 +749,8 @@ load_doc: {
   b = NULL;
   if (f.is_cgi) {
     /* local CGI */
-    searchHeader = TRUE;
-    searchHeader_through = FALSE;
+    searchHeader = true;
+    searchHeader_through = false;
   }
   if (header_string)
     header_string = NULL;
@@ -767,7 +767,7 @@ load_doc: {
     }
     if (t_buf == NULL)
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
-    readHeader(&f, t_buf, FALSE, &pu);
+    readHeader(&f, t_buf, false, &pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&
@@ -868,7 +868,7 @@ load_doc: {
   } else if (pu.schema == SCM_DATA) {
     t = f.guess_type;
   } else if (searchHeader) {
-    searchHeader = SearchHeader = FALSE;
+    searchHeader = SearchHeader = false;
     if (t_buf == NULL)
       t_buf = new Buffer(INIT_BUFFER_WIDTH);
     readHeader(&f, t_buf, searchHeader_through, &pu);
@@ -1010,7 +1010,7 @@ page_loaded:
       if (pu.schema == SCM_LOCAL) {
         UFclose(&f);
         _doFileCopy(pu.real_file, guess_save_name(NULL, (char *)pu.real_file),
-                    TRUE);
+                    true);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
@@ -1047,7 +1047,7 @@ page_loaded:
           if (label_topline)
             b->topLine = lineSkip(
                 b, b->topLine,
-                b->currentLine->linenumber - b->topLine->linenumber, FALSE);
+                b->currentLine->linenumber - b->topLine->linenumber, false);
           b->pos = a->start.pos;
           arrangeCursor(b);
         }

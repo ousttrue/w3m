@@ -679,7 +679,7 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
       int id = -1;
       const char *p = l->ptr;
       struct HtmlTag *tag;
-      if ((tag = parse_tag(&p, TRUE)) != NULL)
+      if ((tag = parse_tag(&p, true)) != NULL)
         parsedtag_get_value(tag, ATTR_TID, &id);
       if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
         int alignment;
@@ -1585,7 +1585,7 @@ static void make_caption(struct table *t, struct html_feed_environ *h_env) {
   init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(), limit,
             h_env->envs[h_env->envc].indent);
   HTMLlineproc1("<center>", &henv);
-  HTMLlineproc0(t->caption->ptr, &henv, FALSE);
+  HTMLlineproc0(t->caption->ptr, &henv, false);
   HTMLlineproc1("</center>", &henv);
 
   if (t->total_width < henv.maxlimit)
@@ -1593,7 +1593,7 @@ static void make_caption(struct table *t, struct html_feed_environ *h_env) {
   limit = h_env->limit;
   h_env->limit = t->total_width;
   HTMLlineproc1("<center>", h_env);
-  HTMLlineproc0(t->caption->ptr, h_env, FALSE);
+  HTMLlineproc0(t->caption->ptr, h_env, false);
   HTMLlineproc1("</center>", h_env);
   h_env->limit = limit;
 }
@@ -3105,7 +3105,7 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
     /* <pre> mode or something like it */
     check_rowcol(tbl, mode);
     while (*line) {
-      int nl = FALSE;
+      int nl = false;
       if ((p = strchr(line, '\r')) || (p = strchr(line, '\n'))) {
         if (*p == '\r' && p[1] == '\n')
           p++;
@@ -3118,7 +3118,7 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
           p = line;
           line = "";
         }
-        nl = TRUE;
+        nl = true;
       } else {
         p = line;
         line = "";
@@ -3148,7 +3148,7 @@ void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
   auto line = tok->ptr;
   while (read_token(tokbuf, (const char **)&line, &status,
                     mode->pre_mode & TBLM_PREMODE, 0))
-    feed_table(tbl, tokbuf->ptr, mode, width, TRUE);
+    feed_table(tbl, tokbuf->ptr, mode, width, true);
 }
 
 void pushTable(struct table *tbl, struct table *tbl1) {

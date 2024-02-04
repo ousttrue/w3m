@@ -11,9 +11,9 @@
 #include <sys/stat.h>
 
 #define HISTORY_FILE "history"
-int UseHistory = TRUE;
+int UseHistory = true;
 int URLHistSize = 100;
-int SaveURLHist = TRUE;
+int SaveURLHist = true;
 
 /* Merge entries from their history into ours */
 static int mergeHistory(Hist *ours, Hist *theirs) {
@@ -99,7 +99,7 @@ void saveHistory(Hist *hist, int size) {
   if (hist->mtime != (long long)st.st_mtime) {
     fhist = newHist();
     if (loadHistory(fhist) || mergeHistory(fhist, hist))
-      disp_err_message("Can't merge history", FALSE);
+      disp_err_message("Can't merge history", false);
     else
       hist = fhist;
   }
@@ -121,7 +121,7 @@ void saveHistory(Hist *hist, int size) {
   return;
 
 fail:
-  disp_err_message("Can't open history", FALSE);
+  disp_err_message("Can't open history", false);
   return;
 }
 

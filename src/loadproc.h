@@ -24,7 +24,7 @@ Buffer *getshell(const char *cmd);
 struct Url;
 extern void readHeader(UrlStream *uf, Buffer *newBuf, int thru, Url *pu);
 int _doFileCopy(const char *tmpf, const char *defstr, int download);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
+#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
 int is_html_type(const char *type);
 void saveBuffer(Buffer *buf, FILE *f, int cont);
 bool couldWrite(const char *path);

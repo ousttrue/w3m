@@ -32,12 +32,12 @@ bool IsForkChild = 0;
 bool w3m_backend = false;
 bool confirm_on_quit = true;
 
-int vi_prec_num = FALSE;
-int label_topline = FALSE;
-int nextpage_topline = FALSE;
-int displayLineInfo = FALSE;
-int show_srch_str = TRUE;
-int displayImage = FALSE;
+int vi_prec_num = false;
+int label_topline = false;
+int nextpage_topline = false;
+int displayLineInfo = false;
+int show_srch_str = true;
+int displayImage = false;
 const char *Editor = DEF_EDITOR;
 const char *Mailer = DEF_MAILER;
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
@@ -50,33 +50,33 @@ char *ExtBrowser6 = nullptr;
 char *ExtBrowser7 = nullptr;
 char *ExtBrowser8 = nullptr;
 char *ExtBrowser9 = nullptr;
-int BackgroundExtViewer = TRUE;
+int BackgroundExtViewer = true;
 const char *pre_form_file = PRE_FORM_FILE;
 const char *siteconf_file = SITECONF_FILE;
 const char *ftppasswd = nullptr;
-int ftppass_hostnamegen = TRUE;
-int WrapDefault = FALSE;
-int IgnoreCase = TRUE;
-int WrapSearch = FALSE;
-int squeezeBlankLine = FALSE;
+int ftppass_hostnamegen = true;
+int WrapDefault = false;
+int IgnoreCase = true;
+int WrapSearch = false;
+int squeezeBlankLine = false;
 const char *BookmarkFile = nullptr;
-int UseExternalDirBuffer = TRUE;
+int UseExternalDirBuffer = true;
 const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
-int UseDictCommand = TRUE;
+int UseDictCommand = true;
 const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
-int FoldTextarea = FALSE;
-int FoldLine = FALSE;
+int FoldTextarea = false;
+int FoldLine = false;
 int DefaultURLString = DEFAULT_URL_CURRENT;
 struct auth_cookie *Auth_cookie = nullptr;
 struct cookie *First_cookie = nullptr;
-char UseAltEntity = FALSE;
-int no_rc_dir = FALSE;
+char UseAltEntity = false;
+int no_rc_dir = false;
 char *param_tmp_dir = nullptr;
 const char *mkd_tmp_dir = nullptr;
 const char *config_file = nullptr;
-int is_redisplay = FALSE;
-int clear_buffer = TRUE;
-int set_pixel_per_char = FALSE;
+int is_redisplay = false;
+int clear_buffer = true;
+int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
 
 struct TextLineList;
@@ -165,7 +165,7 @@ static void internal_get(char *url, int flag, FormList *request) {
   backend_halfdump_buf = NULL;
   do_download = flag;
   buf = loadGeneralFile(url, {}, {NO_REFERER, 0}, request);
-  do_download = FALSE;
+  do_download = false;
   if (buf != NULL && buf != NO_BUFFER) {
     if (is_html_type(buf->type) && backend_halfdump_buf) {
       TextLineListItem *p;
@@ -194,7 +194,7 @@ static void internal_get(char *url, int flag, FormList *request) {
         }
         print_headers(buf, len);
         printf("\n");
-        saveBuffer(buf, stdout, TRUE);
+        saveBuffer(buf, stdout, true);
       } else {
         print_headers(buf, 0);
       }
@@ -205,11 +205,11 @@ static void internal_get(char *url, int flag, FormList *request) {
 /* Command: get */
 static void get(TextList *argv) {
   char *p, *url = NULL;
-  int flag = FALSE;
+  int flag = false;
 
   while ((p = popText(argv))) {
     if (!strcasecmp(p, "-download_only"))
-      flag = TRUE;
+      flag = true;
     else
       url = p;
   }
@@ -223,11 +223,11 @@ static void post(TextList *argv) {
   FormList *request;
   char *p, *target = NULL, *charset = NULL, *enctype = NULL, *body = NULL,
            *boundary = NULL, *url = NULL;
-  int flag = FALSE, length = 0;
+  int flag = false, length = 0;
 
   while ((p = popText(argv))) {
     if (!strcasecmp(p, "-download_only"))
-      flag = TRUE;
+      flag = true;
     else if (!strcasecmp(p, "-target"))
       target = popText(argv);
     else if (!strcasecmp(p, "-charset"))
@@ -358,7 +358,7 @@ static char *readline(const char *prompt) {
 
 /* Splits a string into a list of tokens and returns that list. */
 static TextList *split(const char *p) {
-  int in_double_quote = FALSE, in_single_quote = FALSE;
+  int in_double_quote = false, in_single_quote = false;
   Str *s = Strnew();
   TextList *tp = newTextList();
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "line.h"
 
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
+#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
 
 extern int symbol_width;
 extern int symbol_width0;

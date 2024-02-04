@@ -272,7 +272,7 @@ void gotoLine(Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
     set_delayed_message(msg);
     buf->currentLine = l;
-    buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), FALSE);
+    buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
@@ -280,7 +280,7 @@ void gotoLine(Buffer *buf, int n) {
       buf->currentLine = l;
       if (n < buf->topLine->linenumber ||
           buf->topLine->linenumber + buf->LINES <= n)
-        buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+        buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
       break;
     }
   }
@@ -307,7 +307,7 @@ void gotoRealLine(Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
     set_delayed_message(msg);
     buf->currentLine = l;
-    buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), FALSE);
+    buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
@@ -315,7 +315,7 @@ void gotoRealLine(Buffer *buf, int n) {
       buf->currentLine = l;
       if (n < buf->topLine->real_linenumber ||
           buf->topLine->real_linenumber + buf->LINES <= n)
-        buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, FALSE);
+        buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
       break;
     }
   }
@@ -470,7 +470,7 @@ void reshapeBuffer(Buffer *buf) {
 
   if (!buf->need_reshape)
     return;
-  buf->need_reshape = FALSE;
+  buf->need_reshape = false;
   buf->width = INIT_BUFFER_WIDTH;
   if (buf->sourcefile == NULL)
     return;
@@ -502,11 +502,11 @@ void reshapeBuffer(Buffer *buf) {
       init_stream(&h, SCM_LOCAL, NULL);
       examineFile(buf->header_source, &h);
       if (h.stream) {
-        readHeader(&h, buf, TRUE, NULL);
+        readHeader(&h, buf, true, NULL);
         UFclose(&h);
       }
     } else if (buf->search_header) /* -m option */
-      readHeader(&f, buf, TRUE, NULL);
+      readHeader(&f, buf, true, NULL);
   }
 
   if (is_html_type(buf->type))
@@ -530,7 +530,7 @@ void reshapeBuffer(Buffer *buf) {
     n = (buf->currentLine->linenumber - buf->topLine->linenumber) -
         (cur->linenumber - sbuf->topLine->linenumber);
     if (n) {
-      buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+      buf->topLine = lineSkip(buf, buf->topLine, n, false);
       if (cur->real_linenumber > 0)
         gotoRealLine(buf, cur->real_linenumber);
       else
