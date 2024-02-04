@@ -6,11 +6,6 @@ struct Str;
 struct Url;
 struct TextList;
 
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
 extern bool override_user_agent;
 extern char *UserAgent;
 extern const char *AcceptLang;

@@ -34,6 +34,13 @@ struct TextList;
 struct HttpRequest;
 struct HttpOption;
 
+enum StreamStatus {
+  HTST_UNKNOWN = 255,
+  HTST_MISSING = 254,
+  HTST_NORMAL = 0,
+  HTST_CONNECT = 1,
+};
+
 struct UrlStream {
   UrlSchema schema;
   char is_cgi;
@@ -49,18 +56,22 @@ struct UrlStream {
 
   void openFile(const char *path);
 
+  StreamStatus openURL(const char *url, Url *pu, Url *current,
+                       const HttpOption &option, FormList *request,
+                       TextList *extra_header, HttpRequest *hr);
+
+private:
+  StreamStatus openHttp(const char *url, Url *pu, Url *current,
+                        const HttpOption &option, FormList *request,
+                        TextList *extra_header, HttpRequest *hr);
   void openLocalCgi(Url *pu, Url *current, const HttpOption &option,
-                    FormList *request, TextList *extra_header, UrlStream *ouf,
-                    HttpRequest *hr, unsigned char *status);
+                    FormList *request, TextList *extra_header, HttpRequest *hr);
+
+  void openData(Url *pu);
 
 private:
   void add_index_file(Url *pu);
 };
-
-UrlStream openURL(const char *url, Url *pu, Url *current,
-                  const HttpOption &option, FormList *request,
-                  TextList *extra_header, UrlStream *ouf, HttpRequest *hr,
-                  unsigned char *status);
 
 void init_stream(UrlStream *uf, UrlSchema schema, input_stream *stream);
 int save2tmp(UrlStream *uf, const char *tmpf);

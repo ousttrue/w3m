@@ -649,7 +649,6 @@ static long long strtoclen(const char *s) {
 
 Buffer *loadGeneralFile(const char *path, Url *current,
                         const HttpOption &option, FormList *request) {
-  UrlStream f, *of = NULL;
   Url pu;
   Buffer *b = NULL;
   Buffer *(*proc)(UrlStream *, Buffer *) = loadBuffer;
@@ -664,7 +663,6 @@ Buffer *loadGeneralFile(const char *path, Url *current,
   Str *pwd = NULL;
   Str *realm = NULL;
   int add_auth_cookie_flag;
-  unsigned char status = HTST_NORMAL;
   Str *tmp;
   Str *page = NULL;
   HttpRequest hr;
@@ -676,13 +674,20 @@ Buffer *loadGeneralFile(const char *path, Url *current,
 
   checkRedirection(NULL);
 
-load_doc: 
+load_doc:
   pu = Url::parse2(tpath, current);
 
+  UrlStream f;
+  init_stream(&f, SCM_MISSING, nullptr);
+  // if (ouf) {
+  //   uf = *ouf;
+  // } else {
+  // }
+
   TRAP_OFF;
-  f = openURL(tpath, &pu, current, option, request, extra_header, of, &hr,
-              &status);
-  of = NULL;
+  auto status =
+      f.openURL(tpath, &pu, current, option, request, extra_header, &hr);
+
   if (f.stream == NULL) {
     switch (f.schema) {
     case SCM_LOCAL: {
@@ -831,7 +836,6 @@ load_doc:
     /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
     if (status == HTST_CONNECT) {
-      of = &f;
       goto load_doc;
     }
 
