@@ -676,19 +676,9 @@ Buffer *loadGeneralFile(const char *path, Url *current,
 
   checkRedirection(NULL);
 
-load_doc: {
+load_doc: 
   pu = Url::parse2(tpath, current);
-  auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-  if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
-    tpath = (char *)sc_redirect;
-    request = NULL;
-    add_auth_cookie_flag = 0;
-    current = (Url *)New(Url);
-    *current = pu;
-    status = HTST_NORMAL;
-    goto load_doc;
-  }
-}
+
   TRAP_OFF;
   f = openURL(tpath, &pu, current, option, request, extra_header, of, &hr,
               &status);

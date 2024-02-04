@@ -69,7 +69,7 @@ static char *otherinfo(Url *target, Url *current, const char *referer) {
   Str *s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
-  const char *url_user_agent = query_SCONF_USER_AGENT(target);
+  const char *url_user_agent = nullptr;
 
   if (!override_user_agent) {
     Strcat_charp(s, "User-Agent: ");
@@ -99,9 +99,9 @@ static char *otherinfo(Url *target, Url *current, const char *referer) {
     Strcat_charp(s, "Cache-control: no-cache\r\n");
   }
   no_referer = NoSendReferer;
-  no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
+  no_referer_ptr = nullptr;
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
-  no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
+  no_referer_ptr = nullptr;
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
   if (!no_referer) {
     int cross_origin = false;

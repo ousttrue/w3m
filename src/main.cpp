@@ -1372,7 +1372,7 @@ static Buffer *loadLink(const char *url, const char *target,
   message(Sprintf("loading %s", url)->ptr, 0, 0);
   refresh(term_io());
 
-  no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->info->currentURL);
+  no_referer_ptr = nullptr;
   base = baseURL(Currentbuf);
   if ((no_referer_ptr && *no_referer_ptr) || base == nullptr ||
       base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
@@ -2448,7 +2448,7 @@ static void goURL0(const char *prompt, int relative) {
       SKIP_BLANKS(url);
   }
   if (relative) {
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->info->currentURL);
+    no_referer_ptr = nullptr;
     current = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || current == nullptr ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
