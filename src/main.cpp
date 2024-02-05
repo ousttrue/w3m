@@ -744,7 +744,6 @@ int main(int argc, char **argv) {
   GC_oom_fn = die_oom;
 #endif
 
-  NO_proxy_domains = newTextList();
   fileToDelete = newTextList();
 
   load_argv = (const char **)New_N(char *, argc - 1);
@@ -793,25 +792,6 @@ int main(int argc, char **argv) {
   ShellHist = newHist();
   TextHist = newHist();
   URLHist = newHist();
-
-  if (!non_null(HTTP_proxy) &&
-      ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) ||
-       (p = getenv("HTTP_proxy"))))
-    HTTP_proxy = p;
-  if (!non_null(HTTPS_proxy) &&
-      ((p = getenv("HTTPS_PROXY")) || (p = getenv("https_proxy")) ||
-       (p = getenv("HTTPS_proxy"))))
-    HTTPS_proxy = p;
-  if (HTTPS_proxy == nullptr && non_null(HTTP_proxy))
-    HTTPS_proxy = HTTP_proxy;
-  if (!non_null(FTP_proxy) &&
-      ((p = getenv("FTP_PROXY")) || (p = getenv("ftp_proxy")) ||
-       (p = getenv("FTP_proxy"))))
-    FTP_proxy = p;
-  if (!non_null(NO_proxy) &&
-      ((p = getenv("NO_PROXY")) || (p = getenv("no_proxy")) ||
-       (p = getenv("NO_proxy"))))
-    NO_proxy = p;
 
   if (!non_null(Editor) && (p = getenv("EDITOR")) != nullptr)
     Editor = p;
@@ -878,15 +858,11 @@ int main(int argc, char **argv) {
           pixel_per_char = ppc;
           set_pixel_per_char = true;
         }
-      } else if (!strcmp("-num", argv[i]))
+      } else if (!strcmp("-num", argv[i])) {
         showLineNum = true;
-      else if (!strcmp("-no-proxy", argv[i]))
-        use_proxy = false;
-#ifdef INET6
-      else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
+      } else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i])) {
         set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
-      else if (!strcmp("-post", argv[i])) {
+      } else if (!strcmp("-post", argv[i])) {
         if (++i >= argc)
           usage();
         post_file = argv[i];

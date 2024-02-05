@@ -39,18 +39,6 @@
 #include <setjmp.h>
 #include <sys/stat.h>
 
-char *HTTP_proxy = nullptr;
-char *HTTPS_proxy = nullptr;
-char *FTP_proxy = nullptr;
-char *NO_proxy = nullptr;
-int NOproxy_netaddr = true;
-bool use_proxy = true;
-TextList *NO_proxy_domains;
-
-Url HTTP_proxy_parsed;
-Url HTTPS_proxy_parsed;
-Url FTP_proxy_parsed;
-
 #ifdef SOCK_DEBUG
 #include <stdarg.h>
 
@@ -101,106 +89,6 @@ static void KeyAbort(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-int check_no_proxy(const char *domain) {
-  TextListItem *tl;
-  volatile int ret = 0;
-  MySignalHandler prevtrap = nullptr;
-
-  if (NO_proxy_domains == nullptr || NO_proxy_domains->nitem == 0 ||
-      domain == nullptr)
-    return 0;
-  for (tl = NO_proxy_domains->first; tl != nullptr; tl = tl->next) {
-    if (domain_match(tl->ptr, domain))
-      return 1;
-  }
-  if (!NOproxy_netaddr) {
-    return 0;
-  }
-  /*
-   * to check noproxy by network addr
-   */
-  if (SETJMP(AbortLoading) != 0) {
-    ret = 0;
-    goto end;
-  }
-  TRAP_ON;
-  {
-#ifndef INET6
-    struct hostent *he;
-    int n;
-    unsigned char **h_addr_list;
-    char addr[4 * 16], buf[5];
-
-    he = gethostbyname(domain);
-    if (!he) {
-      ret = 0;
-      goto end;
-    }
-    for (h_addr_list = (unsigned char **)he->h_addr_list; *h_addr_list;
-         h_addr_list++) {
-      sprintf(addr, "%d", h_addr_list[0][0]);
-      for (n = 1; n < he->h_length; n++) {
-        sprintf(buf, ".%d", h_addr_list[0][n]);
-        strcat(addr, buf);
-      }
-      for (tl = NO_proxy_domains->first; tl != nullptr; tl = tl->next) {
-        if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
-          ret = 1;
-          goto end;
-        }
-      }
-    }
-#else  /* INET6 */
-    int error;
-    struct addrinfo hints;
-    struct addrinfo *res, *res0;
-    char addr[4 * 16];
-    int *af;
-
-    for (af = ai_family_order_table[DNS_order];; af++) {
-      memset(&hints, 0, sizeof(hints));
-      hints.ai_family = *af;
-      error = getaddrinfo(domain, nullptr, &hints, &res0);
-      if (error) {
-        if (*af == PF_UNSPEC) {
-          break;
-        }
-        /* try next */
-        continue;
-      }
-      for (res = res0; res != nullptr; res = res->ai_next) {
-        switch (res->ai_family) {
-        case AF_INET:
-          inet_ntop(AF_INET, &((struct sockaddr_in *)res->ai_addr)->sin_addr,
-                    addr, sizeof(addr));
-          break;
-        case AF_INET6:
-          inet_ntop(AF_INET6, &((struct sockaddr_in6 *)res->ai_addr)->sin6_addr,
-                    addr, sizeof(addr));
-          break;
-        default:
-          /* unknown */
-          continue;
-        }
-        for (tl = NO_proxy_domains->first; tl != nullptr; tl = tl->next) {
-          if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
-            freeaddrinfo(res0);
-            ret = 1;
-            goto end;
-          }
-        }
-      }
-      freeaddrinfo(res0);
-      if (*af == PF_UNSPEC) {
-        break;
-      }
-    }
-#endif /* INET6 */
-  }
-end:
-  TRAP_OFF;
-  return ret;
-}
 bool PermitSaveToPipe = false;
 bool AutoUncompress = false;
 bool PreserveTimestamp = true;
@@ -517,47 +405,8 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu, Url *current,
   if (request && request->method == FORM_METHOD_HEAD) {
     hr->method = HR_COMMAND_HEAD;
   }
-  if (((pu->schema == SCM_HTTPS) ? non_null(HTTPS_proxy)
-                                 : non_null(HTTP_proxy)) &&
-      use_proxy && pu->host != nullptr && !check_no_proxy(pu->host)) {
-    hr->flag = (HttpRequestFlags)(hr->flag | HR_FLAG_PROXY);
-    if (pu->schema == SCM_HTTPS && status == HTST_CONNECT) {
-      sock = ssl_socket_of(stream);
-      if (!(sslh = openSSLHandle(sock, pu->host, &this->ssl_certificate))) {
-        return HTST_MISSING;
-      }
-    } else if (pu->schema == SCM_HTTPS) {
-      sock = openSocket(HTTPS_proxy_parsed.host,
-                        schemaNumToName(HTTPS_proxy_parsed.schema),
-                        HTTPS_proxy_parsed.port);
-      sslh = nullptr;
-    } else {
-      sock = openSocket(HTTP_proxy_parsed.host,
-                        schemaNumToName(HTTP_proxy_parsed.schema),
-                        HTTP_proxy_parsed.port);
-      sslh = nullptr;
-    }
-    if (sock < 0) {
-#ifdef SOCK_DEBUG
-      sock_log("Can't open socket\n");
-#endif
-      return status;
-    }
-    if (pu->schema == SCM_HTTPS) {
-      if (status == HTST_NORMAL) {
-        hr->method = HR_COMMAND_CONNECT;
-        tmp = hr->to_Str(*pu, current, extra_header);
-        status = HTST_CONNECT;
-      } else {
-        hr->flag |= HR_FLAG_LOCAL;
-        tmp = hr->to_Str(*pu, current, extra_header);
-        status = HTST_NORMAL;
-      }
-    } else {
-      tmp = hr->to_Str(*pu, current, extra_header);
-      status = HTST_NORMAL;
-    }
-  } else {
+
+  {
     sock = openSocket(pu->host, schemaNumToName(pu->schema), pu->port);
     if (sock < 0) {
       return HTST_MISSING;

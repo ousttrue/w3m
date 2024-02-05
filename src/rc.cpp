@@ -399,17 +399,7 @@ struct param_ptr params3[] = {
 };
 
 struct param_ptr params4[] = {
-    {"use_proxy", P_CHARINT, PI_ONOFF, (void *)&use_proxy, CMT_USE_PROXY, NULL},
-    {"http_proxy", P_STRING, PI_TEXT, (void *)&HTTP_proxy, CMT_HTTP_PROXY,
-     NULL},
-    {"https_proxy", P_STRING, PI_TEXT, (void *)&HTTPS_proxy, CMT_HTTPS_PROXY,
-     NULL},
-    {"ftp_proxy", P_STRING, PI_TEXT, (void *)&FTP_proxy, CMT_FTP_PROXY, NULL},
-    {"no_proxy", P_STRING, PI_TEXT, (void *)&NO_proxy, CMT_NO_PROXY, NULL},
-    {"noproxy_netaddr", P_INT, PI_ONOFF, (void *)&NOproxy_netaddr,
-     CMT_NOPROXY_NETADDR, NULL},
     {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE, NULL},
-
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
@@ -823,17 +813,6 @@ static void interpret_rc(FILE *f) {
   }
 }
 
-static void parse_proxy(void) {
-  if (non_null(HTTP_proxy))
-    HTTP_proxy_parsed = Url::parse(HTTP_proxy);
-  if (non_null(HTTPS_proxy))
-    HTTPS_proxy_parsed = Url::parse(HTTPS_proxy);
-  if (non_null(FTP_proxy))
-    FTP_proxy_parsed = Url::parse(FTP_proxy);
-  if (non_null(NO_proxy))
-    set_no_proxy(NO_proxy);
-}
-
 static void parse_cookie(void) {
   if (non_null(cookie_reject_domains))
     Cookie_reject_domains = make_domain_list(cookie_reject_domains);
@@ -898,7 +877,6 @@ void sync_with_option(void) {
   if (PagerMax < LINES)
     PagerMax = LINES;
   WrapSearch = WrapDefault;
-  parse_proxy();
   parse_cookie();
   initMailcap();
   initMimeTypes();

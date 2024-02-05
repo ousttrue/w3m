@@ -746,9 +746,7 @@ load_doc:
   if (header_string)
     header_string = NULL;
   TRAP_ON;
-  if (pu.schema == SCM_HTTP || pu.schema == SCM_HTTPS ||
-      (((pu.schema == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
-       !check_no_proxy(pu.host))) {
+  if (pu.schema == SCM_HTTP || pu.schema == SCM_HTTPS) {
 
     if (fmInitialized) {
       term_cbreak();
