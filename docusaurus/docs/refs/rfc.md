@@ -2,19 +2,21 @@
 
 ## RFC2617
 
-### 3.2.3 Authentication-Info
+- [RFC 2617 - HTTP Authentication: Basic and Digest Access Authentication ](https://datatracker.ietf.org/doc/html/rfc2617)
 
 ## RFC2109
 
-### s. 2, "domain-match", case 1
+References for version 1 cookie
 
-## cookie
+- [RFC 2109 - HTTP State Management Mechanism ](https://datatracker.ietf.org/doc/html/rfc2109)
 
-### References for version 0 cookie
+## DRAFT 12
 
-* [NETACAPE cookie spec](http://www.netscape.com/newsref/std/cookie_spec.htm)l
+* http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
 
-### References for version 1 cookie
+### NETACAPE cookie spec
 
-* [RFC 2109](http://www.ics.uci.edu/pub/ietf/http/rfc2109.txt)
-* [DRAFT 12](http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt)
+References for version 0 cookie
+
+* http://www.netscape.com/newsref/std/cookie_spec.html
+
