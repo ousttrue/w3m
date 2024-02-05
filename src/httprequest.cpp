@@ -38,7 +38,7 @@ Str *HttpRequest::getRequestURI(const Url &url) const {
   return tmp;
 }
 
-static char *otherinfo(const Url &target, const Url *current,
+static char *otherinfo(const Url &target, std::optional<Url> current,
                        const char *referer) {
   Str *s = Strnew();
   const int *no_referer_ptr;
@@ -106,7 +106,7 @@ static char *otherinfo(const Url &target, const Url *current,
   return s->ptr;
 }
 
-Str *HttpRequest::to_Str(const Url &pu, const Url *current,
+Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current,
                          TextList *extra) const {
 
   auto tmp = Strnew(this->getMehodString());
@@ -114,7 +114,7 @@ Str *HttpRequest::to_Str(const Url &pu, const Url *current,
   Strcat_charp(tmp, this->getRequestURI(pu)->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
   if (this->referer == NO_REFERER) {
-    Strcat_charp(tmp, otherinfo(pu, nullptr, nullptr));
+    Strcat_charp(tmp, otherinfo(pu, {}, nullptr));
   } else {
     Strcat_charp(tmp, otherinfo(pu, current, this->referer));
   }

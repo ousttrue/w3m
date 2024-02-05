@@ -789,7 +789,7 @@ void execdict(const char *word) {
   }
   dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  buf = loadGeneralFile(dictcmd, nullptr, {.referer = NO_REFERER});
+  buf = loadGeneralFile(dictcmd, {}, {.referer = NO_REFERER});
   if (buf == nullptr) {
     disp_message("Execution failed", true);
     return;

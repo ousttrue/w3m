@@ -247,8 +247,8 @@ int handleMailto(const char *url) {
   return 1;
 }
 
-void cmd_loadURL(const char *url, Url *current, const char *referer,
-                        FormList *request) {
+void cmd_loadURL(const char *url, std::optional<Url> current,
+                 const char *referer, FormList *request) {
   if (handleMailto((char *)url))
     return;
 
@@ -266,11 +266,12 @@ void cmd_loadURL(const char *url, Url *current, const char *referer,
 /* go to specified URL */
 void goURL0(const char *prompt, int relative) {
   const char *url, *referer;
-  Url p_url, *current;
+  Url p_url;
   Buffer *cur_buf = Currentbuf;
   const int *no_referer_ptr;
 
   url = searchKeyData();
+  std::optional<Url> current;
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
     Anchor *a;
@@ -299,7 +300,7 @@ void goURL0(const char *prompt, int relative) {
   if (relative) {
     no_referer_ptr = nullptr;
     current = baseURL(Currentbuf);
-    if ((no_referer_ptr && *no_referer_ptr) || current == nullptr ||
+    if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)
       referer = NO_REFERER;
@@ -307,7 +308,7 @@ void goURL0(const char *prompt, int relative) {
       referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
     url = url_quote((char *)url);
   } else {
-    current = nullptr;
+    current = {};
     referer = nullptr;
     url = url_quote((char *)url);
   }
@@ -458,5 +459,3 @@ Str *currentURL(void) {
     return Strnew_size(0);
   return Strnew(Currentbuf->info->currentURL.to_Str());
 }
-
-

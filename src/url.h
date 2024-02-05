@@ -1,6 +1,7 @@
 #pragma once
 #include "url_schema.h"
 #include <string>
+#include <optional>
 
 struct Str;
 struct Url {
@@ -15,8 +16,8 @@ struct Url {
   const char *label = {};
   int is_nocache = {};
 
-  static Url parse(const char *url, const Url *current = {});
-  static Url parse2(const char *url, const Url *current = {});
+  static Url parse(const char *url, std::optional<Url> current = {});
+  static Url parse2(const char *url, std::optional<Url> current = {});
 
   // Url(const Url &src) { *this = src; }
   Url &operator=(const Url &src);

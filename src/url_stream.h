@@ -49,7 +49,7 @@ struct UrlStream {
 
   void openFile(const char *path);
 
-  StreamStatus openURL(const char *url, Url *pu, Url *current,
+  StreamStatus openURL(const char *url, Url *pu, std::optional<Url> current,
                        const HttpOption &option, FormList *request,
                        TextList *extra_header, HttpRequest *hr);
 
@@ -61,11 +61,12 @@ struct UrlStream {
   int fileno() const;
 
 private:
-  StreamStatus openHttp(const char *url, Url *pu, Url *current,
+  StreamStatus openHttp(const char *url, Url *pu, std::optional<Url> current,
                         const HttpOption &option, FormList *request,
                         TextList *extra_header, HttpRequest *hr);
-  void openLocalCgi(Url *pu, Url *current, const HttpOption &option,
-                    FormList *request, TextList *extra_header, HttpRequest *hr);
+  void openLocalCgi(Url *pu, std::optional<Url> current,
+                    const HttpOption &option, FormList *request,
+                    TextList *extra_header, HttpRequest *hr);
   void openData(Url *pu);
   void add_index_file(Url *pu);
 };

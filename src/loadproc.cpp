@@ -648,8 +648,8 @@ static long long strtoclen(const char *s) {
  * loadGeneralFile: load file to buffer
  */
 
-Buffer *loadGeneralFile(const char *path, Url *current,
-                        const HttpOption &option, FormList *request) {
+Buffer *loadGeneralFile(const char *path, std::optional<Url> current, const HttpOption &option,
+                        FormList *request) {
   Url pu;
   Buffer *b = NULL;
   Buffer *(*proc)(UrlStream *, Buffer *) = loadBuffer;
@@ -766,8 +766,7 @@ load_doc:
       tpath = url_quote((char *)p);
       request = NULL;
       f.close();
-      current = (Url *)New(Url);
-      *current = pu;
+      current = pu;
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->bufferprop =
           static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);

@@ -2,6 +2,7 @@
 #include "http_option.h"
 #include <stdio.h>
 #include <time.h>
+#include <optional>
 
 extern const char *DefaultType;
 extern int FollowRedirection;
@@ -14,7 +15,7 @@ struct UrlStream;
 
 using LoadProc = Buffer *(*)(UrlStream *, Buffer *);
 
-Buffer *loadGeneralFile(const char *path, Url *current,
+Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request = {});
 
 const char *checkHeader(Buffer *buf, const char *field);
@@ -33,5 +34,5 @@ struct UrlStream;
 Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
 void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
 void cmd_loadfile(const char *fn);
-void cmd_loadURL(const char *url, Url *current, const char *referer,
-                 FormList *request);
+void cmd_loadURL(const char *url, std::optional<Url> current,
+                 const char *referer, FormList *request);

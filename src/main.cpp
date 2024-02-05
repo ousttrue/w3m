@@ -300,15 +300,15 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
                  FormList *request) {
   Buffer *buf, *nfbuf;
   // union frameset_element *f_element = nullptr;
-  Url *base, pu;
+  Url pu;
   const int *no_referer_ptr;
 
   message(Sprintf("loading %s", url)->ptr, 0, 0);
   refresh(term_io());
 
   no_referer_ptr = nullptr;
-  base = baseURL(Currentbuf);
-  if ((no_referer_ptr && *no_referer_ptr) || base == nullptr ||
+  auto base = baseURL(Currentbuf);
+  if ((no_referer_ptr && *no_referer_ptr) || !base ||
       base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
       base->schema == SCM_DATA)
     referer = NO_REFERER;
@@ -968,7 +968,7 @@ int main(int argc, char **argv) {
   if (load_argc == 0) {
     /* no URL specified */
     if (load_bookmark) {
-      newbuf = loadGeneralFile(BookmarkFile, nullptr, {.referer = NO_REFERER});
+      newbuf = loadGeneralFile(BookmarkFile, {}, {.referer = NO_REFERER});
       if (newbuf == nullptr)
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
     } else if (visual_start) {
@@ -988,7 +988,7 @@ int main(int argc, char **argv) {
             (BufferFlags)(newbuf->bufferprop | BP_INTERNAL | BP_NO_URL);
     } else if ((p = getenv("HTTP_HOME")) != nullptr ||
                (p = getenv("WWW_HOME")) != nullptr) {
-      newbuf = loadGeneralFile(p, nullptr, {.referer = NO_REFERER});
+      newbuf = loadGeneralFile(p, {}, {.referer = NO_REFERER});
       if (newbuf == nullptr)
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
       else if (newbuf != NO_BUFFER)
@@ -1043,8 +1043,7 @@ int main(int argc, char **argv) {
         } else {
           request = nullptr;
         }
-        newbuf =
-            loadGeneralFile(url, nullptr, {.referer = NO_REFERER}, request);
+        newbuf = loadGeneralFile(url, {}, {.referer = NO_REFERER}, request);
       }
       if (newbuf == nullptr) {
         if (ArgvIsURL && !retry) {

@@ -326,7 +326,7 @@ DEFUN(ldhelp, HELP, "Show help panel") {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  cmd_loadURL(tmp->ptr, nullptr, NO_REFERER, nullptr);
+  cmd_loadURL(tmp->ptr, {}, NO_REFERER, nullptr);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left") { _movL(Currentbuf->COLS / 2); }
@@ -895,7 +895,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     url = url_quote(url);
     p_url = Url::parse2(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
-    cmd_loadURL(url, nullptr, nullptr, nullptr);
+    cmd_loadURL(url, {}, nullptr, nullptr);
     if (Currentbuf != cur_buf) /* success */
       pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
   }
@@ -907,7 +907,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address") {
 
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
-  cmd_loadURL(BookmarkFile, nullptr, NO_REFERER, nullptr);
+  cmd_loadURL(BookmarkFile, {}, NO_REFERER, nullptr);
 }
 
 /* Add current to bookmark */
@@ -925,8 +925,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
   request->length = tmp->length;
-  cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, nullptr, NO_REFERER,
-              request);
+  cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, NO_REFERER, request);
 }
 
 /* option setting */
@@ -1208,7 +1207,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   refresh(term_io());
   DefaultType = Currentbuf->info->real_type;
   auto buf = loadGeneralFile(
-      url->ptr, nullptr, {.referer = NO_REFERER, .no_cache = true}, request);
+      url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
   DefaultType = nullptr;
 
   if (multipart)

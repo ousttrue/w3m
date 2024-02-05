@@ -4,6 +4,7 @@
 #include <memory>
 #include <gc_cpp.h>
 #include <stddef.h>
+#include <optional>
 
 #define NO_BUFFER ((Buffer *)1)
 
@@ -158,7 +159,7 @@ char *getCurWord(Buffer *buf, int *spos, int *epos);
 #define getChar(p) ((int)*(p))
 
 extern void discardBuffer(Buffer *buf);
-extern Url *baseURL(Buffer *buf);
+extern std::optional<Url> baseURL(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
 
 extern Buffer *nullBuffer(void);

@@ -1,6 +1,7 @@
 #pragma once
 #include "enum_template.h"
 #include <string>
+#include <optional>
 
 struct Str;
 struct Url;
@@ -51,5 +52,5 @@ struct HttpRequest {
   FormList *request = {};
 
   Str *getRequestURI(const Url &url) const;
-  Str *to_Str(const Url &pu, const Url *current, TextList *extra) const;
+  Str *to_Str(const Url &pu, std::optional<Url> current, TextList *extra) const;
 };

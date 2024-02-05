@@ -41,18 +41,19 @@ Url &Url::operator=(const Url &src) {
   return *this;
 }
 
-Url *baseURL(Buffer *buf) {
+std::optional<Url> baseURL(Buffer *buf) {
   if (buf->bufferprop & BP_NO_URL) {
     /* no URL is defined for the buffer */
-    return nullptr;
+    return {};
   }
   if (buf->info->baseURL) {
     /* <BASE> tag is defined in the document */
-    return &*buf->info->baseURL;
-  } else if (buf->info->currentURL.IS_EMPTY_PARSED_URL())
-    return nullptr;
-  else
-    return &buf->info->currentURL;
+    return *buf->info->baseURL;
+  } else if (buf->info->currentURL.IS_EMPTY_PARSED_URL()) {
+    return {};
+  } else {
+    return buf->info->currentURL;
+  }
 }
 
 #define COPYPATH_SPC_ALLOW 0
@@ -87,7 +88,7 @@ static const char *copyPath(const char *orgpath, int length, int option) {
   return tmp->ptr;
 }
 
-Url Url::parse(const char *src, const Url *current) {
+Url Url::parse(const char *src, std::optional<Url> current) {
   // quote 0x01-0x20, 0x7F-0xFF
   src = url_quote(src);
   auto p = src;
@@ -303,7 +304,7 @@ do_label:
   return url;
 }
 
-Url Url::parse2(const char *src, const Url *current) {
+Url Url::parse2(const char *src, std::optional<Url> current) {
   auto url = Url::parse(src, current);
   if (url.schema == SCM_DATA) {
     return url;

@@ -138,9 +138,9 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-void UrlStream::openLocalCgi(Url *pu, Url *current, const HttpOption &option,
-                             FormList *request, TextList *extra_header,
-                             HttpRequest *hr) {
+void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
+                             const HttpOption &option, FormList *request,
+                             TextList *extra_header, HttpRequest *hr) {
   if (request && request->body)
     /* local CGI: POST */
     this->stream = newFileStream(
@@ -374,7 +374,9 @@ error:
   TRAP_OFF;
   return -1;
 }
-StreamStatus UrlStream::openHttp(const char *url, Url *pu, Url *current,
+
+StreamStatus UrlStream::openHttp(const char *url, Url *pu,
+                                 std::optional<Url> current,
                                  const HttpOption &option, FormList *request,
                                  TextList *extra_header, HttpRequest *hr) {
   StreamStatus status = HTST_NORMAL;
@@ -472,7 +474,8 @@ void UrlStream::openData(Url *pu) {
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 
-StreamStatus UrlStream::openURL(const char *url, Url *pu, Url *current,
+StreamStatus UrlStream::openURL(const char *url, Url *pu,
+                                std::optional<Url> current,
                                 const HttpOption &option, FormList *request,
                                 TextList *extra_header, HttpRequest *hr) {
   HttpRequest hr0;
@@ -481,7 +484,7 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu, Url *current,
 
   auto u = url;
   auto current_schema = parseUrlSchema(&u);
-  if (current == nullptr && current_schema == SCM_MISSING && !ArgvIsURL) {
+  if (!current && current_schema == SCM_MISSING && !ArgvIsURL) {
     u = file_to_url(url); /* force to local file */
   } else {
     u = url;
