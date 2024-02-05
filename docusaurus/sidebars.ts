@@ -34,15 +34,17 @@ const sidebars: SidebarsConfig = {
     {
       type: "category",
       label: "bonus",
-      link: {
-        type: "doc",
-        id: "Bonus/markdown",
-      },
       items: [
         "Bonus/README",
       ],
     },
-    "refs",
+    {
+      type: "category",
+      label: "資料集",
+      items: [
+        "refs/links",
+      ],
+    },
   ],
 };
 

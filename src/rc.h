@@ -51,4 +51,3 @@ void sync_with_option(void);
 struct Buffer;
 Buffer *load_option_panel(void);
 int check_no_proxy(const char *domain);
-Url *schemaToProxy(UrlSchema schema);

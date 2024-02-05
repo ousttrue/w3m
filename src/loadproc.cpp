@@ -812,28 +812,6 @@ load_doc:
         goto load_doc;
       }
     }
-    if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL &&
-        http_response_code == 407) {
-      /* Authentication needed */
-      struct http_auth hauth;
-      if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:") != NULL &&
-          (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = schemaToProxy(pu.schema);
-        getAuthCookie(&hauth, "Proxy-Authorization:", extra_header, auth_pu,
-                      &hr, request, &uname, &pwd);
-        if (uname == NULL) {
-          /* abort */
-          TRAP_OFF;
-          goto page_loaded;
-        }
-        f.close();
-        add_auth_cookie_flag = 1;
-        status = HTST_NORMAL;
-        add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
-        goto load_doc;
-      }
-    }
-    /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
     if (status == HTST_CONNECT) {
       goto load_doc;

@@ -17,6 +17,15 @@ tags: [cpp]
 
 iconv か icu を検討。
 
+## 微妙に不安定
+
+gdb の有無で生死が変わったりする。
+memory 系の問題がある。
+とりあえず GC メモリーの直接操作を減らしていくしか。
+文字列以外の GC は、他の方法で代替できる。
+というか `std::shared_ptr` で十分だし、
+Buffer などの struct 開放とともに destructor で開放された方が都合がよい。
+
 ## pageinfo が出ない
 
 いつの間にか…。

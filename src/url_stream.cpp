@@ -940,27 +940,6 @@ int UrlStream::doFileSave(const char *defstr) {
   return 0;
 }
 
-Url *schemaToProxy(UrlSchema schema) {
-  Url *pu = nullptr; /* for gcc */
-  switch (schema) {
-  case SCM_HTTP:
-    pu = &HTTP_proxy_parsed;
-    break;
-  case SCM_HTTPS:
-    pu = &HTTPS_proxy_parsed;
-    break;
-  case SCM_FTP:
-    pu = &FTP_proxy_parsed;
-    break;
-  default:
-#ifdef DEBUG
-    abort();
-#endif
-    break;
-  }
-  return pu;
-}
-
 uint8_t UrlStream::getc() const { return ISgetc(this->stream); }
 void UrlStream::undogetc() { ISundogetc(this->stream); }
 int UrlStream::fileno() const { return ISfileno(this->stream); }
