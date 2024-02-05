@@ -6,8 +6,8 @@
 struct Str;
 struct Url {
   UrlSchema schema = {};
-  const char *user = {};
-  const char *pass = {};
+  std::string user = {};
+  std::string pass = {};
   const char *host = {};
   int port = {};
   const char *file = {};

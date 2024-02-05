@@ -324,8 +324,8 @@ Str *find_cookie(const Url &pu) {
         ;
       if (p1)
         continue;
-      p1 = (struct cookie *)New(struct cookie);
-      bcopy(p, p1, sizeof(struct cookie));
+      p1 = new cookie;
+      *p1 = *p;
       p1->next = fco;
       fco = p1;
       if (p1->version > version)
@@ -468,7 +468,7 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
 
   p = get_cookie_info(domain, path, name);
   if (!p) {
-    p = (cookie *)New(struct cookie);
+    p = new cookie;
     p->flag = {};
     if (default_use_cookie) {
       p->flag = (CookieFlags)(p->flag | COO_USE);
@@ -565,7 +565,6 @@ static Str *readcol(char **p) {
 }
 
 void load_cookies(void) {
-  struct cookie *cookie, *p;
   FILE *fp;
   Str *line;
   char *str;
@@ -573,19 +572,21 @@ void load_cookies(void) {
   if (!(fp = fopen(rcFile(COOKIE_FILE), "r")))
     return;
 
+  cookie *p;
   if (First_cookie) {
     for (p = First_cookie; p->next; p = p->next)
       ;
   } else {
     p = NULL;
   }
+
   for (;;) {
     line = Strfgets(fp);
 
     if (line->length == 0)
       break;
     str = line->ptr;
-    cookie = (struct cookie *)New(struct cookie);
+    auto cookie = new struct cookie;
     cookie->next = NULL;
     cookie->flag = {};
     cookie->version = 0;

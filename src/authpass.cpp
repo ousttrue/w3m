@@ -174,14 +174,14 @@ static void parsePasswd(FILE *fp, int netrc) {
 
 static struct auth_pass *find_auth_pass_entry(const char *host, int port,
                                               const char *realm,
-                                              const char *uname,
+                                              std::string_view uname,
                                               bool is_proxy) {
   struct auth_pass *ent;
   for (ent = passwords; ent != NULL; ent = ent->next) {
     if (ent->is_proxy == is_proxy && (ent->bad != true) &&
         (!ent->host || !Strcasecmp_charp(ent->host, host)) &&
         (!ent->port || ent->port == port) &&
-        (!ent->uname || !uname || !Strcmp_charp(ent->uname, uname)) &&
+        (!ent->uname || uname.empty() || uname == ent->uname->ptr) &&
         (!ent->realm || !realm || !Strcmp_charp(ent->realm, realm)))
       return ent;
   }
@@ -201,9 +201,9 @@ int find_auth_user_passwd(Url *pu, const char *realm, Str **uname, Str **pwd,
                           bool is_proxy) {
   struct auth_pass *ent;
 
-  if (pu->user && pu->pass) {
-    *uname = Strnew_charp(pu->user);
-    *pwd = Strnew_charp(pu->pass);
+  if (pu->user.size() && pu->pass.size()) {
+    *uname = Strnew(pu->user);
+    *pwd = Strnew(pu->pass);
     return 1;
   }
   ent = find_auth_pass_entry(pu->host, pu->port, realm, pu->user, is_proxy);

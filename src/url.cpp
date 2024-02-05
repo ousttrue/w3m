@@ -31,8 +31,8 @@ Url &Url::operator=(const Url &src) {
   this->schema = src.schema;
   this->port = src.port;
   this->is_nocache = src.is_nocache;
-  this->user = ALLOC_STR(src.user);
-  this->pass = ALLOC_STR(src.pass);
+  this->user = src.user;
+  this->pass = src.pass;
   this->host = ALLOC_STR(src.host);
   this->file = ALLOC_STR(src.file);
   this->real_file = ALLOC_STR(src.real_file);
@@ -438,11 +438,11 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
     return tmp->ptr;
   }
   { Strcat_charp(tmp, "//"); }
-  if (user && this->user) {
-    Strcat_charp(tmp, this->user);
-    if (pass && this->pass) {
+  if (user && this->user.size()) {
+    Strcat_charp(tmp, this->user.c_str());
+    if (pass && this->pass.size()) {
       Strcat_char(tmp, ':');
-      Strcat_charp(tmp, this->pass);
+      Strcat_charp(tmp, this->pass.c_str());
     }
     Strcat_char(tmp, '@');
   }

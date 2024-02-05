@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
 #include <time.h>
+#include <gc_cpp.h>
 
 extern int default_use_cookie;
 extern int use_cookie;
@@ -28,19 +29,20 @@ enum CookieFlags {
   COO_DISCARD = 16,
   COO_OVERRIDE = 32, /* user chose to override security checks */
 };
-struct cookie {
-  Url url;
-  Str *name;
-  Str *value;
-  time_t expires;
-  Str *path;
-  Str *domain;
-  Str *comment;
-  Str *commentURL;
-  struct portlist *portl;
-  char version;
-  CookieFlags flag;
-  struct cookie *next;
+
+struct cookie : public gc_cleanup {
+  Url url = {};
+  Str *name = {};
+  Str *value = {};
+  time_t expires = {};
+  Str *path = {};
+  Str *domain = {};
+  Str *comment = {};
+  Str *commentURL = {};
+  struct portlist *portl = {};
+  char version = {};
+  CookieFlags flag = {};
+  cookie *next = {};
 };
 
 const char *domain_match(const char *host, const char *domain);
