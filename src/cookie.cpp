@@ -251,7 +251,7 @@ static int port_match(struct portlist *first, int port) {
 }
 
 static void check_expired_cookies(void) {
-  struct cookie *p, *p1;
+  struct Cookie *p, *p1;
   time_t now = time(NULL);
 
   if (!First_cookie)
@@ -274,14 +274,7 @@ static void check_expired_cookies(void) {
   }
 }
 
-static Str *make_cookie(struct cookie *cookie) {
-  Str *tmp = cookie->name->Strdup();
-  Strcat_char(tmp, '=');
-  Strcat(tmp, cookie->value);
-  return tmp;
-}
-
-static int match_cookie(const Url &pu, struct cookie *cookie,
+static int match_cookie(const Url &pu, struct Cookie *cookie,
                         const char *domainname) {
   if (!domainname)
     return 0;
@@ -298,12 +291,12 @@ static int match_cookie(const Url &pu, struct cookie *cookie,
   return 1;
 }
 
-static struct cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
-  struct cookie *p;
+static struct Cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
+  struct Cookie *p;
 
   for (p = First_cookie; p; p = p->next) {
     if (Strcasecmp(p->domain, domain) == 0 && Strcmp(p->path, path) == 0 &&
-        Strcasecmp(p->name, name) == 0)
+        p->name == name->ptr)
       return p;
   }
   return NULL;
@@ -311,7 +304,7 @@ static struct cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
 
 Str *find_cookie(const Url &pu) {
   Str *tmp;
-  struct cookie *p, *p1, *fco = NULL;
+  struct Cookie *p, *p1, *fco = NULL;
   int version = 0;
   const char *fq_domainname, *domainname;
 
@@ -320,11 +313,11 @@ Str *find_cookie(const Url &pu) {
   for (p = First_cookie; p; p = p->next) {
     domainname = (p->version == 0) ? fq_domainname : pu.host;
     if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
-      for (p1 = fco; p1 && Strcasecmp(p1->name, p->name); p1 = p1->next)
+      for (p1 = fco; p1 && p1->name != p->name; p1 = p1->next)
         ;
       if (p1)
         continue;
-      p1 = new cookie;
+      p1 = new Cookie;
       *p1 = *p;
       p1->next = fco;
       fco = p1;
@@ -340,10 +333,10 @@ Str *find_cookie(const Url &pu) {
   if (version > 0)
     Strcat(tmp, Sprintf("$Version=\"%d\"; ", version));
 
-  Strcat(tmp, make_cookie(fco));
+  Strcat(tmp, fco->make_cookie());
   for (p1 = fco->next; p1; p1 = p1->next) {
     Strcat_charp(tmp, "; ");
-    Strcat(tmp, make_cookie(p1));
+    Strcat(tmp, p1->make_cookie());
     if (version > 0) {
       if (p1->flag & COO_PATH)
         Strcat(tmp, Sprintf("; $Path=\"%s\"", p1->path->ptr));
@@ -381,7 +374,7 @@ static int check_avoid_wrong_number_of_dots_domain(Str *domain) {
 int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, CookieFlags flag, Str *comment,
                int version, Str *port, Str *commentURL) {
-  struct cookie *p;
+  struct Cookie *p;
   const char *domainname = (version == 0) ? FQDN(pu->host) : pu->host;
   Str *odomain = domain;
   Str *opath = path;
@@ -468,7 +461,7 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
 
   p = get_cookie_info(domain, path, name);
   if (!p) {
-    p = new cookie;
+    p = new Cookie;
     p->flag = {};
     if (default_use_cookie) {
       p->flag = (CookieFlags)(p->flag | COO_USE);
@@ -478,8 +471,8 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
   }
 
   p->url = *pu;
-  p->name = name;
-  p->value = value;
+  p->name = name->ptr;
+  p->value = value->ptr;
   p->expires = expires;
   p->domain = domain;
   p->path = path;
@@ -514,8 +507,8 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
   return 0;
 }
 
-static struct cookie *nth_cookie(int n) {
-  struct cookie *p;
+static struct Cookie *nth_cookie(int n) {
+  struct Cookie *p;
   int i;
   for (p = First_cookie, i = 0; p; p = p->next, i++) {
     if (i == n)
@@ -528,7 +521,7 @@ static struct cookie *nth_cookie(int n) {
 
 #define COOKIE_FILE "cookie"
 void save_cookies(void) {
-  struct cookie *p;
+  struct Cookie *p;
   const char *cookie_file;
   FILE *fp;
 
@@ -545,7 +538,7 @@ void save_cookies(void) {
     if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
       continue;
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
-            p->url.to_Str().c_str(), p->name->ptr, p->value->ptr,
+            p->url.to_Str().c_str(), p->name.c_str(), p->value.c_str(),
             (long)p->expires, p->domain->ptr, p->path->ptr, p->flag, p->version,
             str2charp(p->comment),
             (p->portl) ? portlist2str(p->portl)->ptr : "",
@@ -572,7 +565,7 @@ void load_cookies(void) {
   if (!(fp = fopen(rcFile(COOKIE_FILE), "r")))
     return;
 
-  cookie *p;
+  Cookie *p;
   if (First_cookie) {
     for (p = First_cookie; p->next; p = p->next)
       ;
@@ -586,7 +579,7 @@ void load_cookies(void) {
     if (line->length == 0)
       break;
     str = line->ptr;
-    auto cookie = new struct cookie;
+    auto cookie = new struct Cookie;
     cookie->next = NULL;
     cookie->flag = {};
     cookie->version = 0;
@@ -597,10 +590,10 @@ void load_cookies(void) {
     cookie->url = Url::parse(readcol(&str)->ptr);
     if (!*str)
       break;
-    cookie->name = readcol(&str);
+    cookie->name = readcol(&str)->ptr;
     if (!*str)
       break;
-    cookie->value = readcol(&str);
+    cookie->value = readcol(&str)->ptr;
     if (!*str)
       break;
     cookie->expires = (time_t)atol(readcol(&str)->ptr);
@@ -650,7 +643,7 @@ Buffer *cookie_list_panel(void) {
   Str *src = Strnew_charp("<html><head><title>Cookies</title></head>"
                           "<body><center><b>Cookies</b></center>"
                           "<p><form method=internal action=cookie>");
-  struct cookie *p;
+  struct Cookie *p;
   int i;
   const char *tmp;
   char tmp2[80];
@@ -694,7 +687,7 @@ Buffer *cookie_list_panel(void) {
     Strcat_charp(src, "<table cellpadding=0>");
     if (!(p->flag & COO_SECURE)) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Cookie:</b></td><td>");
-      Strcat_charp(src, html_quote(make_cookie(p)->ptr));
+      Strcat_charp(src, html_quote(p->make_cookie().c_str()));
       Strcat_charp(src, "</td></tr>");
     }
     if (p->comment) {
@@ -755,7 +748,7 @@ Buffer *cookie_list_panel(void) {
 
 void set_cookie_flag(struct keyvalue *arg) {
   int n, v;
-  struct cookie *p;
+  struct Cookie *p;
 
   while (arg) {
     if (arg->arg && *arg->arg && arg->value && *arg->value) {

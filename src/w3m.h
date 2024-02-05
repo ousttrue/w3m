@@ -60,7 +60,7 @@ extern const char *DictCommand;
 extern int FoldTextarea;
 extern int DefaultURLString;
 extern struct auth_cookie *Auth_cookie;
-extern struct cookie *First_cookie;
+extern struct Cookie *First_cookie;
 extern char UseAltEntity;
 extern int no_rc_dir;
 extern char *param_tmp_dir;

@@ -2,6 +2,7 @@
 #include "url.h"
 #include <time.h>
 #include <gc_cpp.h>
+#include <string>
 
 extern int default_use_cookie;
 extern int use_cookie;
@@ -30,10 +31,10 @@ enum CookieFlags {
   COO_OVERRIDE = 32, /* user chose to override security checks */
 };
 
-struct cookie : public gc_cleanup {
+struct Cookie : public gc_cleanup {
   Url url = {};
-  Str *name = {};
-  Str *value = {};
+  std::string name;
+  std::string value;
   time_t expires = {};
   Str *path = {};
   Str *domain = {};
@@ -42,7 +43,9 @@ struct cookie : public gc_cleanup {
   struct portlist *portl = {};
   char version = {};
   CookieFlags flag = {};
-  cookie *next = {};
+  Cookie *next = {};
+
+  std::string make_cookie() const { return name + '=' + value; }
 };
 
 const char *domain_match(const char *host, const char *domain);
