@@ -1,7 +1,7 @@
 #pragma once
 
-#define KEYMAP_FILE  "keymap"
-#define CGI_EXTENSION	".cgi"
+#define KEYMAP_FILE "keymap"
+#define CGI_EXTENSION ".cgi"
 #define BOOKMARK "bookmark.html"
 
 #define MAILTO_OPTIONS_IGNORE 1
@@ -72,3 +72,4 @@ extern int set_pixel_per_char;
 extern const char *keymap_file;
 
 void w3m_exit(int i);
+void _quitfm(bool confirm);

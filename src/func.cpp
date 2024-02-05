@@ -3,7 +3,7 @@
  * w3m func.c
  */
 #include "w3m.h"
-#include <string.h>
+#include "app.h"
 #include "message.h"
 #include "ctrlcode.h"
 #include "func.h"
@@ -20,12 +20,40 @@
 // #include "hash.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
 
 #define KEYDATA_HASH_SIZE 16
 static Hash_iv *keyData = NULL;
 static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
+
+void escKeyProc(int c, int esc, unsigned char *map) {
+  if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
+    unsigned char **mmap;
+    mmap = (unsigned char **)getKeyData(MULTI_KEY(CurrentKey));
+    if (!mmap)
+      return;
+    switch (esc) {
+    case K_ESCD:
+      map = mmap[3];
+      break;
+    case K_ESCB:
+      map = mmap[2];
+      break;
+    case K_ESC:
+      map = mmap[1];
+      break;
+    default:
+      map = mmap[0];
+      break;
+    }
+    esc |= (CurrentKey & ~0xFFFF);
+  }
+  CurrentKey = esc | c;
+  if (map)
+    w3mFuncList[(int)map[c]].func();
+}
 
 void setKeymap(const char *p, int lineno, int verbose) {
   unsigned char *map = NULL;
@@ -386,5 +414,3 @@ const char *getQWord(const char **str) {
   *str = p;
   return tmp->ptr;
 }
-
-

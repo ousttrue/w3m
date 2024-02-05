@@ -147,7 +147,6 @@ struct Buffer : public gc_cleanup {
 #define CUR_LINENUMBER(buf)                                                    \
   ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-
 void gotoLine(Buffer *buf, int n);
 void _followForm(int submit);
 void set_buffer_environ(Buffer *buf);
@@ -188,3 +187,25 @@ extern int columnSkip(Buffer *buf, int offset);
 extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern void chkURLBuffer(Buffer *buf);
+void isrch(int (*func)(Buffer *, const char *), const char *prompt);
+void srch(int (*func)(Buffer *, const char *), const char *prompt);
+void srch_nxtprv(int reverse);
+void shiftvisualpos(Buffer *buf, int shift);
+void execdict(const char *word);
+void invoke_browser(const char *url);
+void _peekURL(int only_img);
+int checkBackBuffer(Buffer *buf);
+void nextY(int d);
+void nextX(int d, int dy);
+void _prevA(int visited);
+void _nextA(int visited);
+int cur_real_linenumber(Buffer *buf);
+void _movL(int n);
+void _movD(int n);
+void _movU(int n);
+void _movR(int n);
+int prev_nonnull_line(Line *line);
+int next_nonnull_line(Line *line);
+void repBuffer(Buffer *oldbuf, Buffer *buf);
+void _goLine(const char *l);
+void query_from_followform(Str **query, FormItemList *fi, int multipart);

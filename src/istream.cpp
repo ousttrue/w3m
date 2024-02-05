@@ -115,7 +115,7 @@ input_stream *newStrStream(Str *s) {
   return stream;
 }
 
-input_stream *newEncodedStream(input_stream *is, char encoding) {
+input_stream *newEncodedStream(input_stream *is, EncodingType encoding) {
   input_stream *stream;
   if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
                      encoding != ENC_UUENCODE))

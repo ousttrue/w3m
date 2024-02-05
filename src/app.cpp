@@ -1,4 +1,5 @@
 #include "app.h"
+#include "w3m.h"
 #include "downloadlist.h"
 #include "tabbuffer.h"
 #include "bufferpos.h"
@@ -184,4 +185,13 @@ void mainLoop() {
     CurrentKey = -1;
     CurrentKeyData = NULL;
   }
+}
+
+int searchKeyNum(void) {
+
+  auto d = searchKeyData();
+  int n = 1;
+  if (d != nullptr)
+    n = atoi(d);
+  return n * PREC_NUM;
 }

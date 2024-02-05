@@ -31,3 +31,7 @@ int setModtime(const char *path, time_t modtime);
 const char *shell_quote(const char *str);
 struct UrlStream;
 Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
+void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
+void cmd_loadfile(const char *fn);
+void cmd_loadURL(const char *url, Url *current, const char *referer,
+                 FormList *request);

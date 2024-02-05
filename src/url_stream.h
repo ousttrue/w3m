@@ -1,5 +1,6 @@
 #pragma once
 #include <time.h>
+#include "encoding.h"
 #include "url_schema.h"
 #include "istream.h"
 #include "compression.h"
@@ -34,7 +35,7 @@ struct UrlStream {
   const char *url = {};
   UrlSchema schema = {};
   bool is_cgi = false;
-  char encoding = ENC_7BIT;
+  EncodingType encoding = ENC_7BIT;
   input_stream *stream = {};
   const char *ext = {};
   int compression = CMP_NOCOMPRESS;

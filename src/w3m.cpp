@@ -1,9 +1,14 @@
 #include "w3m.h"
+#include "history.h"
+#include "terms.h"
+#include "display.h"
+#include "tabbuffer.h"
 #include "httprequest.h"
 #include "cookie.h"
 #include "buffer.h"
 #include "textlist.h"
 #include "proto.h"
+#include "myctype.h"
 
 #define DEFAULT_COLS 80
 #define SITECONF_FILE RC_DIR "/siteconf"
@@ -67,3 +72,27 @@ int CurrentPid = {};
 TextList *fileToDelete = nullptr;
 char *document_root = nullptr;
 bool do_download = false;
+
+void _quitfm(bool confirm) {
+  const char *ans = "y";
+  // if (checkDownloadList()) {
+  //   ans = inputChar("Download process retains. "
+  //                   "Do you want to exit w3m? (y/n)");
+  // } else if (confirm) {
+  //   ans = inputChar("Do you want to exit w3m? (y/n)");
+  // }
+
+  if (!(ans && TOLOWER(*ans) == 'y')) {
+    // cancel
+    displayBuffer(Currentbuf, B_NORMAL);
+    return;
+  }
+
+  // exit
+  term_title(""); /* XXX */
+  fmTerm();
+  save_cookies();
+  if (UseHistory && SaveURLHist)
+    saveHistory(URLHist, URLHistSize);
+  w3m_exit(0);
+}

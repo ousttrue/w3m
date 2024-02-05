@@ -8,3 +8,5 @@
 struct Buffer;
 int forwardSearch(Buffer *buf, const char *str);
 int backwardSearch(Buffer *buf, const char *str);
+
+int srchcore(const char *str, int (*func)(Buffer *, const char *));

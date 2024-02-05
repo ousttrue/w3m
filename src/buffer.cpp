@@ -1,4 +1,11 @@
 #include "buffer.h"
+#include "history.h"
+#include "quote.h"
+#include "app.h"
+#include "search.h"
+#include "signal_util.h"
+#include "search.h"
+#include "tabbuffer.h"
 #include "contentinfo.h"
 #include "loadproc.h"
 #include "w3m.h"
@@ -752,4 +759,643 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
   *spos = b;
   *epos = e;
   return &p[b];
+}
+
+void shiftvisualpos(Buffer *buf, int shift) {
+  Line *l = buf->currentLine;
+  buf->visualpos -= shift;
+  if (buf->visualpos - l->bwidth >= buf->COLS)
+    buf->visualpos = l->bwidth + buf->COLS - 1;
+  else if (buf->visualpos - l->bwidth < 0)
+    buf->visualpos = l->bwidth;
+  arrangeLine(buf);
+  if (buf->visualpos - l->bwidth == -shift && buf->cursorX == 0)
+    buf->visualpos = l->bwidth;
+}
+
+#define DICTBUFFERNAME "*dictionary*"
+void execdict(const char *word) {
+  const char *w, *dictcmd;
+  Buffer *buf;
+
+  if (!UseDictCommand || word == nullptr || *word == '\0') {
+    displayBuffer(Currentbuf, B_NORMAL);
+    return;
+  }
+  w = word;
+  if (*w == '\0') {
+    displayBuffer(Currentbuf, B_NORMAL);
+    return;
+  }
+  dictcmd =
+      Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
+  buf = loadGeneralFile(dictcmd, nullptr, {.referer = NO_REFERER});
+  if (buf == nullptr) {
+    disp_message("Execution failed", true);
+    return;
+  } else if (buf != NO_BUFFER) {
+    buf->info->filename = w;
+    buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+    if (buf->info->type == nullptr)
+      buf->info->type = "text/plain";
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+/* spawn external browser */
+void invoke_browser(const char *url) {
+  Str *cmd;
+  const char *browser = nullptr;
+  int bg = 0, len;
+
+  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
+  browser = searchKeyData();
+  if (browser == nullptr || *browser == '\0') {
+    switch (prec_num) {
+    case 0:
+    case 1:
+      browser = ExtBrowser;
+      break;
+    case 2:
+      browser = ExtBrowser2;
+      break;
+    case 3:
+      browser = ExtBrowser3;
+      break;
+    case 4:
+      browser = ExtBrowser4;
+      break;
+    case 5:
+      browser = ExtBrowser5;
+      break;
+    case 6:
+      browser = ExtBrowser6;
+      break;
+    case 7:
+      browser = ExtBrowser7;
+      break;
+    case 8:
+      browser = ExtBrowser8;
+      break;
+    case 9:
+      browser = ExtBrowser9;
+      break;
+    }
+    if (browser == nullptr || *browser == '\0') {
+      // browser = inputStr("Browse command: ", nullptr);
+    }
+  }
+  if (browser == nullptr || *browser == '\0') {
+    displayBuffer(Currentbuf, B_NORMAL);
+    return;
+  }
+
+  if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' &&
+      browser[len - 2] != '\\') {
+    browser = allocStr(browser, len - 2);
+    bg = 1;
+  }
+  cmd = myExtCommand((char *)browser, shell_quote(url), false);
+  Strremovetrailingspaces(cmd);
+  fmTerm();
+  mySystem(cmd->ptr, bg);
+  fmInit();
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+void _peekURL(int only_img) {
+
+  Anchor *a;
+  Url pu;
+  static Str *s = nullptr;
+  static int offset = 0, n;
+
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  if (CurrentKey == prev_key && s != nullptr) {
+    if (s->length - offset >= COLS)
+      offset++;
+    else if (s->length <= offset) /* bug ? */
+      offset = 0;
+    goto disp;
+  } else {
+    offset = 0;
+  }
+  s = nullptr;
+  a = (only_img ? nullptr : retrieveCurrentAnchor(Currentbuf));
+  if (a == nullptr) {
+    a = (only_img ? nullptr : retrieveCurrentForm(Currentbuf));
+    if (a == nullptr) {
+      a = retrieveCurrentImg(Currentbuf);
+      if (a == nullptr)
+        return;
+    } else
+      s = Strnew_charp(form2str((FormItemList *)a->url));
+  }
+  if (s == nullptr) {
+    pu = Url::parse2(a->url, baseURL(Currentbuf));
+    s = Strnew(pu.to_Str());
+  }
+  if (DecodeURL)
+    s = Strnew_charp(url_decode0(s->ptr));
+disp:
+  n = searchKeyNum();
+  if (n > 1 && s->length > (n - 1) * (COLS - 1))
+    offset = (n - 1) * (COLS - 1);
+  disp_message(&s->ptr[offset], true);
+}
+int checkBackBuffer(Buffer *buf) {
+  if (buf->nextBuffer)
+    return true;
+
+  return false;
+}
+
+/* go to the next downward/upward anchor */
+void nextY(int d) {
+  HmarkerList *hl = Currentbuf->hmarklist;
+  Anchor *an, *pan;
+  int i, x, y, n = searchKeyNum();
+  int hseq;
+
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  an = retrieveCurrentAnchor(Currentbuf);
+  if (an == nullptr)
+    an = retrieveCurrentForm(Currentbuf);
+
+  x = Currentbuf->pos;
+  y = Currentbuf->currentLine->linenumber + d;
+  pan = nullptr;
+  hseq = -1;
+  for (i = 0; i < n; i++) {
+    if (an)
+      hseq = abs(an->hseq);
+    an = nullptr;
+    for (; y >= 0 && y <= Currentbuf->lastLine->linenumber; y += d) {
+      if (Currentbuf->href) {
+        an = Currentbuf->href->retrieveAnchor(y, x);
+      }
+      if (!an && Currentbuf->formitem) {
+        an = Currentbuf->formitem->retrieveAnchor(y, x);
+      }
+      if (an && hseq != abs(an->hseq)) {
+        pan = an;
+        break;
+      }
+    }
+    if (!an)
+      break;
+  }
+
+  if (pan == nullptr)
+    return;
+  gotoLine(Currentbuf, pan->start.line);
+  arrangeLine(Currentbuf);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* go to the next left/right anchor */
+void nextX(int d, int dy) {
+  HmarkerList *hl = Currentbuf->hmarklist;
+  Anchor *an, *pan;
+  Line *l;
+  int i, x, y, n = searchKeyNum();
+
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  an = retrieveCurrentAnchor(Currentbuf);
+  if (an == nullptr)
+    an = retrieveCurrentForm(Currentbuf);
+
+  l = Currentbuf->currentLine;
+  x = Currentbuf->pos;
+  y = l->linenumber;
+  pan = nullptr;
+  for (i = 0; i < n; i++) {
+    if (an)
+      x = (d > 0) ? an->end.pos : an->start.pos - 1;
+    an = nullptr;
+    while (1) {
+      for (; x >= 0 && x < l->len; x += d) {
+        if (Currentbuf->href) {
+          an = Currentbuf->href->retrieveAnchor(y, x);
+        }
+        if (!an && Currentbuf->formitem) {
+          an = Currentbuf->formitem->retrieveAnchor(y, x);
+        }
+        if (an) {
+          pan = an;
+          break;
+        }
+      }
+      if (!dy || an)
+        break;
+      l = (dy > 0) ? l->next : l->prev;
+      if (!l)
+        break;
+      x = (d > 0) ? 0 : l->len - 1;
+      y = l->linenumber;
+    }
+    if (!an)
+      break;
+  }
+
+  if (pan == nullptr)
+    return;
+  gotoLine(Currentbuf, y);
+  Currentbuf->pos = pan->start.pos;
+  arrangeCursor(Currentbuf);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* go to the previous anchor */
+void _prevA(int visited) {
+  HmarkerList *hl = Currentbuf->hmarklist;
+  BufferPoint *po;
+  Anchor *an, *pan;
+  int i, x, y, n = searchKeyNum();
+  Url url;
+
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  an = retrieveCurrentAnchor(Currentbuf);
+  if (visited != true && an == nullptr)
+    an = retrieveCurrentForm(Currentbuf);
+
+  y = Currentbuf->currentLine->linenumber;
+  x = Currentbuf->pos;
+
+  if (visited == true) {
+    n = hl->nmark;
+  }
+
+  for (i = 0; i < n; i++) {
+    pan = an;
+    if (an && an->hseq >= 0) {
+      int hseq = an->hseq - 1;
+      do {
+        if (hseq < 0) {
+          if (visited == true)
+            return;
+          an = pan;
+          goto _end;
+        }
+        po = hl->marks + hseq;
+        if (Currentbuf->href) {
+          an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+        }
+        if (visited != true && an == nullptr && Currentbuf->formitem) {
+          an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+        }
+        hseq--;
+        if (visited == true && an) {
+          url = Url::parse2(an->url, baseURL(Currentbuf));
+          if (getHashHist(URLHist, url.to_Str().c_str())) {
+            goto _end;
+          }
+        }
+      } while (an == nullptr || an == pan);
+    } else {
+      an = closest_prev_anchor(Currentbuf->href, nullptr, x, y);
+      if (visited != true)
+        an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
+      if (an == nullptr) {
+        if (visited == true)
+          return;
+        an = pan;
+        break;
+      }
+      x = an->start.pos;
+      y = an->start.line;
+      if (visited == true && an) {
+        url = Url::parse2(an->url, baseURL(Currentbuf));
+        if (getHashHist(URLHist, url.to_Str().c_str())) {
+          goto _end;
+        }
+      }
+    }
+  }
+  if (visited == true)
+    return;
+
+_end:
+  if (an == nullptr || an->hseq < 0)
+    return;
+  po = hl->marks + an->hseq;
+  gotoLine(Currentbuf, po->line);
+  Currentbuf->pos = po->pos;
+  arrangeCursor(Currentbuf);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* go to the next [visited] anchor */
+void _nextA(int visited) {
+  HmarkerList *hl = Currentbuf->hmarklist;
+  BufferPoint *po;
+  Anchor *an, *pan;
+  int i, x, y, n = searchKeyNum();
+  Url url;
+
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  an = retrieveCurrentAnchor(Currentbuf);
+  if (visited != true && an == nullptr)
+    an = retrieveCurrentForm(Currentbuf);
+
+  y = Currentbuf->currentLine->linenumber;
+  x = Currentbuf->pos;
+
+  if (visited == true) {
+    n = hl->nmark;
+  }
+
+  for (i = 0; i < n; i++) {
+    pan = an;
+    if (an && an->hseq >= 0) {
+      int hseq = an->hseq + 1;
+      do {
+        if (hseq >= hl->nmark) {
+          if (visited == true)
+            return;
+          an = pan;
+          goto _end;
+        }
+        po = &hl->marks[hseq];
+        if (Currentbuf->href) {
+          an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+        }
+        if (visited != true && an == nullptr && Currentbuf->formitem) {
+          an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+        }
+        hseq++;
+        if (visited == true && an) {
+          url = Url::parse2(an->url, baseURL(Currentbuf));
+          if (getHashHist(URLHist, url.to_Str().c_str())) {
+            goto _end;
+          }
+        }
+      } while (an == nullptr || an == pan);
+    } else {
+      an = closest_next_anchor(Currentbuf->href, nullptr, x, y);
+      if (visited != true)
+        an = closest_next_anchor(Currentbuf->formitem, an, x, y);
+      if (an == nullptr) {
+        if (visited == true)
+          return;
+        an = pan;
+        break;
+      }
+      x = an->start.pos;
+      y = an->start.line;
+      if (visited == true) {
+        url = Url::parse2(an->url, baseURL(Currentbuf));
+        if (getHashHist(URLHist, url.to_Str().c_str())) {
+          goto _end;
+        }
+      }
+    }
+  }
+  if (visited == true)
+    return;
+
+_end:
+  if (an == nullptr || an->hseq < 0)
+    return;
+  po = &hl->marks[an->hseq];
+  gotoLine(Currentbuf, po->line);
+  Currentbuf->pos = po->pos;
+  arrangeCursor(Currentbuf);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+int cur_real_linenumber(Buffer *buf) {
+  Line *l, *cur = buf->currentLine;
+  int n;
+
+  if (!cur)
+    return 1;
+  n = cur->real_linenumber ? cur->real_linenumber : 1;
+  for (l = buf->firstLine; l && l != cur && l->real_linenumber == 0;
+       l = l->next) { /* header */
+    if (l->bpos == 0)
+      n++;
+  }
+  return n;
+}
+
+/* Move cursor left */
+void _movL(int n) {
+  int i, m = searchKeyNum();
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  for (i = 0; i < m; i++)
+    cursorLeft(Currentbuf, n);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* Move cursor downward */
+void _movD(int n) {
+  int i, m = searchKeyNum();
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  for (i = 0; i < m; i++)
+    cursorDown(Currentbuf, n);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* move cursor upward */
+void _movU(int n) {
+  int i, m = searchKeyNum();
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  for (i = 0; i < m; i++)
+    cursorUp(Currentbuf, n);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* Move cursor right */
+void _movR(int n) {
+  int i, m = searchKeyNum();
+  if (Currentbuf->firstLine == nullptr)
+    return;
+  for (i = 0; i < m; i++)
+    cursorRight(Currentbuf, n);
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
+/* movLW, movRW */
+/*
+ * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
+ * 1999 09:29:56 +0900
+ */
+
+int prev_nonnull_line(Line *line) {
+  Line *l;
+
+  for (l = line; l != nullptr && l->len == 0; l = l->prev)
+    ;
+  if (l == nullptr || l->len == 0)
+    return -1;
+
+  Currentbuf->currentLine = l;
+  if (l != line)
+    Currentbuf->pos = Currentbuf->currentLine->len;
+  return 0;
+}
+
+int next_nonnull_line(Line *line) {
+  Line *l;
+
+  for (l = line; l != nullptr && l->len == 0; l = l->next)
+    ;
+
+  if (l == nullptr || l->len == 0)
+    return -1;
+
+  Currentbuf->currentLine = l;
+  if (l != line)
+    Currentbuf->pos = 0;
+  return 0;
+}
+
+void repBuffer(Buffer *oldbuf, Buffer *buf) {
+  Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
+  Currentbuf = buf;
+}
+
+/* Go to specified line */
+void _goLine(const char *l) {
+  if (l == nullptr || *l == '\0' || Currentbuf->currentLine == nullptr) {
+    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    return;
+  }
+  Currentbuf->pos = 0;
+  if (((*l == '^') || (*l == '$')) && prec_num) {
+    gotoRealLine(Currentbuf, prec_num);
+  } else if (*l == '^') {
+    Currentbuf->topLine = Currentbuf->currentLine = Currentbuf->firstLine;
+  } else if (*l == '$') {
+    Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->lastLine,
+                                   -(Currentbuf->LINES + 1) / 2, true);
+    Currentbuf->currentLine = Currentbuf->lastLine;
+  } else
+    gotoRealLine(Currentbuf, atoi(l));
+  arrangeCursor(Currentbuf);
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+#define conv_form_encoding(val, fi, buf) (val)
+void query_from_followform(Str **query, FormItemList *fi, int multipart) {
+  FormItemList *f2;
+  FILE *body = nullptr;
+
+  if (multipart) {
+    *query = tmpfname(TMPF_DFL, nullptr);
+    body = fopen((*query)->ptr, "w");
+    if (body == nullptr) {
+      return;
+    }
+    fi->parent->body = (*query)->ptr;
+    fi->parent->boundary =
+        Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
+                fi->parent, fi->parent->body, fi->parent->boundary)
+            ->ptr;
+  }
+  *query = Strnew();
+  for (f2 = fi->parent->item; f2; f2 = f2->next) {
+    if (f2->name == nullptr)
+      continue;
+    /* <ISINDEX> is translated into single text form */
+    if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
+      continue;
+    switch (f2->type) {
+    case FORM_INPUT_RESET:
+      /* do nothing */
+      continue;
+    case FORM_INPUT_SUBMIT:
+    case FORM_INPUT_IMAGE:
+      if (f2 != fi || f2->value == nullptr)
+        continue;
+      break;
+    case FORM_INPUT_RADIO:
+    case FORM_INPUT_CHECKBOX:
+      if (!f2->checked)
+        continue;
+    }
+    if (multipart) {
+      if (f2->type == FORM_INPUT_IMAGE) {
+        int x = 0, y = 0;
+        *query = conv_form_encoding(f2->name, fi, Currentbuf)->Strdup();
+        Strcat_charp(*query, ".x");
+        form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                        Sprintf("%d", x)->ptr);
+        *query = conv_form_encoding(f2->name, fi, Currentbuf)->Strdup();
+        Strcat_charp(*query, ".y");
+        form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                        Sprintf("%d", y)->ptr);
+      } else if (f2->name && f2->name->length > 0 && f2->value != nullptr) {
+        /* not IMAGE */
+        *query = conv_form_encoding(f2->value, fi, Currentbuf);
+        if (f2->type == FORM_INPUT_FILE)
+          form_write_from_file(
+              body, fi->parent->boundary,
+              conv_form_encoding(f2->name, fi, Currentbuf)->ptr, (*query)->ptr,
+              f2->value->ptr);
+        else
+          form_write_data(body, fi->parent->boundary,
+                          conv_form_encoding(f2->name, fi, Currentbuf)->ptr,
+                          (*query)->ptr);
+      }
+    } else {
+      /* not multipart */
+      if (f2->type == FORM_INPUT_IMAGE) {
+        int x = 0, y = 0;
+        Strcat(*query,
+               Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
+        Strcat(*query, Sprintf(".x=%d&", x));
+        Strcat(*query,
+               Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
+        Strcat(*query, Sprintf(".y=%d", y));
+      } else {
+        /* not IMAGE */
+        if (f2->name && f2->name->length > 0) {
+          Strcat(*query,
+                 Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
+          Strcat_char(*query, '=');
+        }
+        if (f2->value != nullptr) {
+          if (fi->parent->method == FORM_METHOD_INTERNAL)
+            Strcat(*query, Str_form_quote(f2->value));
+          else {
+            Strcat(*query, Str_form_quote(
+                               conv_form_encoding(f2->value, fi, Currentbuf)));
+          }
+        }
+      }
+      if (f2->next)
+        Strcat_char(*query, '&');
+    }
+  }
+  if (multipart) {
+    fprintf(body, "--%s--\r\n", fi->parent->boundary);
+    fclose(body);
+  } else {
+    /* remove trailing & */
+    while (Strlastchar(*query) == '&')
+      Strshrink(*query, 1);
+  }
 }

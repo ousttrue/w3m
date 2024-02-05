@@ -631,8 +631,9 @@ void UrlStream::openData(Url *pu) {
   if (q != nullptr && !strcmp(q, ";base64")) {
     *(char *)q = '\0';
     this->encoding = ENC_BASE64;
-  } else
+  } else {
     tmp = Str_url_unquote(tmp, false, false);
+  }
   this->stream = newStrStream(tmp);
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }

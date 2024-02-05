@@ -23,7 +23,7 @@ void addDownloadList(pid_t pid, const char *url, const char *save,
                      const char *lock, long long size);
 void stopDownload(void);
 int checkDownloadList(void);
-
 bool popAddDownloadList();
-
 void ldDL();
+struct Buffer;
+Buffer *DownloadListBuffer(void);

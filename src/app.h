@@ -14,3 +14,4 @@ extern void pushEvent(int cmd, void *data);
 void mainLoop();
 void resize_hook(int);
 const char *searchKeyData();
+int searchKeyNum(void);

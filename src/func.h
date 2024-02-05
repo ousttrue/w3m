@@ -24,3 +24,4 @@ extern const char *getWord(const char **str);
 extern const char *getQWord(const char **str);
 extern void setKeymap(const char *p, int lineno, int verbose);
 extern void initKeymap(int force);
+void escKeyProc(int c, int esc, unsigned char *map);

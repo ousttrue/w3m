@@ -1,12 +1,7 @@
 #pragma once
-
 #include "mimehead.h"
+#include "encoding.h"
 #include <stdio.h>
-
-#define ENC_7BIT 0
-#define ENC_BASE64 1
-#define ENC_QUOTE 2
-#define ENC_UUENCODE 3
 
 struct stream_buffer {
   unsigned char *buf;
@@ -27,7 +22,7 @@ struct ens_handle {
   union input_stream *is;
   struct growbuf gb;
   int pos;
-  char encoding;
+  EncodingType encoding;
 };
 
 struct base_stream {
@@ -88,7 +83,7 @@ void init_base_stream(base_stream *base, int bufsize);
 extern input_stream *newInputStream(int des);
 extern input_stream *newFileStream(FILE *f, void (*closep)());
 extern input_stream *newStrStream(Str *s);
-extern input_stream *newEncodedStream(input_stream *is, char encoding);
+extern input_stream *newEncodedStream(input_stream *is, EncodingType encoding);
 extern int ISclose(input_stream *stream);
 extern int ISgetc(input_stream *stream);
 extern int ISundogetc(input_stream *stream);

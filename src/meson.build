@@ -127,6 +127,7 @@ executable(
         'alloc.cpp',
         'quote.cpp',
         'tabbuffer.cpp',
+        'proc.cpp',
     ],
     install: true,
     dependencies: [

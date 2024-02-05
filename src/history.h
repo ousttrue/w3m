@@ -39,3 +39,6 @@ void saveHistory(Hist *hist, int size);
 void ldHist(void);
 struct Buffer;
 Buffer *historyBuffer(Hist *hist);
+struct FormList;
+Buffer *loadLink(const char *url, const char *target, const char *referer,
+                 FormList *request);

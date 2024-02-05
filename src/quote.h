@@ -15,3 +15,5 @@ extern unsigned char QUOTE_MAP[];
 #define is_url_unsafe(c) (GET_QUOTE_TYPE(c) & URL_UNSAFE_MASK)
 #define html_quote_char(c) HTML_QUOTE_MAP[(int)is_html_quote(c)]
 
+struct Str;
+Str *Str_form_quote(Str *x);

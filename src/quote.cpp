@@ -1,4 +1,5 @@
 #include "quote.h"
+#include "Str.h"
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
@@ -271,3 +272,28 @@ unsigned char QUOTE_MAP[0x100] = {
 const char *HTML_QUOTE_MAP[] = {
     nullptr, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", nullptr, nullptr,
 };
+
+Str *Str_form_quote(Str *x) {
+  Str *tmp = {};
+  char *p = x->ptr, *ep = x->ptr + x->length;
+  char buf[4];
+
+  for (; p < ep; p++) {
+    if (*p == ' ') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, '+');
+    } else if (is_url_unsafe(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      sprintf(buf, "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp;
+  return x;
+}

@@ -150,5 +150,4 @@ extern void multimap(void);
 extern void dictword(void);
 extern void dictwordat(void);
 extern void wrapToggle(void);
-extern void saveBufferInfo(void);
 extern void dispVer(void);

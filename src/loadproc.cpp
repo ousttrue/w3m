@@ -1105,3 +1105,32 @@ const char *shell_quote(const char *str) {
     return tmp->ptr;
   return str;
 }
+
+void cmd_loadBuffer(Buffer *buf, int prop, int linkid) {
+  if (buf == nullptr) {
+    disp_err_message("Can't load string", false);
+  } else if (buf != NO_BUFFER) {
+    buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | prop);
+    if (!(buf->bufferprop & BP_NO_URL))
+      buf->info->currentURL = Currentbuf->info->currentURL;
+    if (linkid != LB_NOLINK) {
+      buf->linkBuffer[linkid] = Currentbuf;
+      Currentbuf->linkBuffer[linkid] = buf;
+    }
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+void cmd_loadfile(const char *fn) {
+
+  auto buf =
+      loadGeneralFile(file_to_url((char *)fn), {}, {.referer = NO_REFERER});
+  if (buf == nullptr) {
+    char *emsg = Sprintf("%s not found", fn)->ptr;
+    disp_err_message(emsg, false);
+  } else if (buf != NO_BUFFER) {
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_NORMAL);
+}
