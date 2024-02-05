@@ -4,24 +4,14 @@
 enum UrlSchema {
   SCM_UNKNOWN,
   SCM_HTTP,
-  SCM_GOPHER,
-  SCM_FTP,
-  SCM_FTPDIR,
   SCM_LOCAL,
   SCM_LOCAL_CGI,
-  SCM_EXEC,
-  SCM_NNTP,
-  SCM_NNTP_GROUP,
-  SCM_NEWS,
-  SCM_NEWS_GROUP,
   SCM_DATA,
-  SCM_MAILTO,
   SCM_HTTPS,
   SCM_MISSING = 254,
 };
 inline const char *schema_str[] = {
-    "",     "http", "gopher", "ftp",  "ftp",  "file",   "file",  "exec",
-    "nntp", "nntp", "news",   "news", "data", "mailto", "https",
+    "", "http", "file", "file", "data", "https",
 };
 
 inline int getDefaultPort(UrlSchema schema) {

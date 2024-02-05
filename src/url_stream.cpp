@@ -68,21 +68,6 @@ int ai_family_order_table[7][3] = {
 };
 #endif /* INET6 */
 
-static int domain_match(const char *pat, const char *domain) {
-  if (domain == nullptr)
-    return 0;
-  if (*pat == '.')
-    pat++;
-  for (;;) {
-    if (!strcasecmp(pat, domain))
-      return 1;
-    domain = strchr(domain, '.');
-    if (domain == nullptr)
-      return 0;
-    domain++;
-  }
-}
-
 static JMP_BUF AbortLoading;
 static void KeyAbort(SIGNAL_ARG) {
   LONGJMP(AbortLoading, 1);
@@ -539,12 +524,6 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu, Url *current,
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     this->openLocalCgi(pu, current, option, request, extra_header, hr);
-    return HTST_NORMAL;
-
-  case SCM_FTP:
-  case SCM_FTPDIR:
-    // removed
-    assert(false);
     return HTST_NORMAL;
 
   case SCM_HTTP:

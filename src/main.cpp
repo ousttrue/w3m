@@ -1056,8 +1056,6 @@ int main(int argc, char **argv) {
       } else if (newbuf == NO_BUFFER)
         continue;
       switch (newbuf->real_schema) {
-      case SCM_MAILTO:
-        break;
       case SCM_LOCAL:
       case SCM_LOCAL_CGI:
         unshiftHist(LoadHist, url);

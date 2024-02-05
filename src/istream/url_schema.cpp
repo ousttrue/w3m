@@ -8,20 +8,8 @@ struct cmdtable {
 };
 
 struct cmdtable schematable[] = {
-    {"http", SCM_HTTP},
-    {"gopher", SCM_GOPHER},
-    {"ftp", SCM_FTP},
-    {"local", SCM_LOCAL},
-    {"file", SCM_LOCAL},
-    /*  {"exec", SCM_EXEC}, */
-    {"nntp", SCM_NNTP},
-    /*  {"nntp", SCM_NNTP_GROUP}, */
-    {"news", SCM_NEWS},
-    /*  {"news", SCM_NEWS_GROUP}, */
-    {"data", SCM_DATA},
-    {"mailto", SCM_MAILTO},
-    {"https", SCM_HTTPS},
-    {nullptr, SCM_UNKNOWN},
+    {"http", SCM_HTTP}, {"local", SCM_LOCAL}, {"file", SCM_LOCAL},
+    {"data", SCM_DATA}, {"https", SCM_HTTPS}, {nullptr, SCM_UNKNOWN},
 };
 
 const char *schemaNumToName(UrlSchema schema) {
@@ -67,8 +55,6 @@ const char *DefaultFile(UrlSchema schema) {
     return HTTP_DEFAULT_FILE;
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-  case SCM_FTP:
-  case SCM_FTPDIR:
     return "/";
   default:
     break;

@@ -87,9 +87,7 @@ static char *otherinfo(const Url &target, const Url *current,
       /* Don't send Referer: if https:// -> http:// */
     } else if (referer == nullptr && current && current->schema != SCM_LOCAL &&
                current->schema != SCM_LOCAL_CGI &&
-               current->schema != SCM_DATA &&
-               (current->schema != SCM_FTP ||
-                (current->user == nullptr && current->pass == nullptr))) {
+               current->schema != SCM_DATA) {
       Strcat_charp(s, "Referer: ");
       if (cross_origin)
         Strcat(s, current->RefererOriginStr());

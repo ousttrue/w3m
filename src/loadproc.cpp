@@ -709,10 +709,7 @@ load_doc:
         }
       }
     } break;
-    case SCM_FTPDIR:
-      // page = loadFTPDir(&pu, &charset);
-      // t = "ftp:directory";
-      break;
+
     case SCM_UNKNOWN:
       disp_err_message(Sprintf("Unknown URI: %s", pu.to_Str().c_str())->ptr,
                        false);
@@ -816,21 +813,6 @@ load_doc:
     }
 
     f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
-  } else if (pu.schema == SCM_FTP) {
-    check_compression((char *)path, &f);
-    if (f.compression != CMP_NOCOMPRESS) {
-      auto t1 = uncompressed_file_type(pu.file, NULL);
-      real_type = f.guess_type;
-      if (t1)
-        t = t1;
-      else
-        t = real_type;
-    } else {
-      real_type = guessContentType(pu.file);
-      if (real_type == NULL)
-        real_type = "text/plain";
-      t = real_type;
-    }
   } else if (pu.schema == SCM_DATA) {
     t = f.guess_type;
   } else if (DefaultType) {

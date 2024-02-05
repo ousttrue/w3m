@@ -119,10 +119,7 @@ Url Url::parse(const char *src, const Url *current) {
       case SCM_LOCAL_CGI:
         url.schema = SCM_LOCAL;
         break;
-      case SCM_FTP:
-      case SCM_FTPDIR:
-        url.schema = SCM_FTP;
-        break;
+
       default:
         url.schema = current->schema;
         break;
@@ -223,27 +220,12 @@ analyze_url:
     break;
   }
 analyze_file:
-#ifndef SUPPORT_NETBIOS_SHARE
-  if (url.schema == SCM_LOCAL && url.user == nullptr && url.host != nullptr &&
-      *url.host != '\0' && !is_localhost(url.host)) {
-    /*
-     * In the environments other than CYGWIN, a URL like
-     * file://host/file is regarded as ftp://host/file.
-     * On the other hand, file://host/file on CYGWIN is
-     * regarded as local access to the file //host/file.
-     * `host' is a netbios-hostname, drive, or any other
-     * name; It is CYGWIN system call who interprets that.
-     */
 
-    url.schema = SCM_FTP; /* ftp://host/... */
-    if (url.port == 0)
-      url.port = getDefaultPort(SCM_FTP);
-  }
-#endif
   if ((*p == '\0' || *p == '#' || *p == '?') && url.host == nullptr) {
     url.file = "";
     goto do_query;
   }
+
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
   if (url.schema == SCM_LOCAL) {
     q = p;
@@ -323,41 +305,7 @@ do_label:
 
 Url Url::parse2(const char *src, const Url *current) {
   auto url = Url::parse(src, current);
-  if (url.schema == SCM_MAILTO) {
-    return url;
-  }
   if (url.schema == SCM_DATA) {
-    return url;
-  }
-
-  if (url.schema == SCM_NEWS || url.schema == SCM_NEWS_GROUP) {
-    const char *p;
-    if (url.file && !strchr(url.file, '@') &&
-        (!(p = strchr(url.file, '/')) || strchr(p + 1, '-') ||
-         *(p + 1) == '\0'))
-      url.schema = SCM_NEWS_GROUP;
-    else
-      url.schema = SCM_NEWS;
-    return url;
-  }
-
-  if (url.schema == SCM_NNTP || url.schema == SCM_NNTP_GROUP) {
-    if (url.file && *url.file == '/')
-      url.file = allocStr(url.file + 1, -1);
-    const char *p;
-    if (url.file && !strchr(url.file, '@') &&
-        (!(p = strchr(url.file, '/')) || strchr(p + 1, '-') ||
-         *(p + 1) == '\0'))
-      url.schema = SCM_NNTP_GROUP;
-    else
-      url.schema = SCM_NNTP;
-    if (current &&
-        (current->schema == SCM_NNTP || current->schema == SCM_NNTP_GROUP)) {
-      if (url.host == nullptr) {
-        url.host = current->host;
-        url.port = current->port;
-      }
-    }
     return url;
   }
 
@@ -376,7 +324,6 @@ Url Url::parse2(const char *src, const Url *current) {
   int relative_uri = false;
   if (current &&
       (url.schema == current->schema ||
-       (url.schema == SCM_FTP && current->schema == SCM_FTPDIR) ||
        (url.schema == SCM_LOCAL && current->schema == SCM_LOCAL_CGI)) &&
       url.host == nullptr) {
     /* Copy omitted element from the current URL */
@@ -485,14 +432,6 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
   }
   tmp = Strnew_charp(schema_str[this->schema]);
   Strcat_char(tmp, ':');
-  if (this->schema == SCM_MAILTO) {
-    Strcat_charp(tmp, this->file);
-    if (this->query) {
-      Strcat_char(tmp, '?');
-      Strcat_charp(tmp, this->query);
-    }
-    return tmp->ptr;
-  }
   if (this->schema == SCM_DATA) {
     Strcat_charp(tmp, this->file);
     return tmp->ptr;
@@ -522,8 +461,6 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
             )))
     Strcat_char(tmp, '/');
   Strcat_charp(tmp, this->file);
-  if (this->schema == SCM_FTPDIR && Strlastchar(tmp) != '/')
-    Strcat_char(tmp, '/');
   if (this->query) {
     Strcat_char(tmp, '?');
     Strcat_charp(tmp, this->query);
