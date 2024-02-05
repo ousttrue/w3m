@@ -1,5 +1,6 @@
 #pragma once
 #include "url.h"
+#include "Str.h"
 #include <time.h>
 #include <gc_cpp.h>
 #include <string>
@@ -31,13 +32,16 @@ enum CookieFlags {
   COO_OVERRIDE = 32, /* user chose to override security checks */
 };
 
+const char *domain_match(const char *host, const char *domain);
+int port_match(struct portlist *first, int port);
+
 struct Cookie : public gc_cleanup {
   Url url = {};
   std::string name;
   std::string value;
   time_t expires = {};
-  Str *path = {};
-  Str *domain = {};
+  std::string path;
+  std::string domain;
   Str *comment = {};
   Str *commentURL = {};
   struct portlist *portl = {};
@@ -46,9 +50,24 @@ struct Cookie : public gc_cleanup {
   Cookie *next = {};
 
   std::string make_cookie() const { return name + '=' + value; }
+
+  bool match_cookie(const Url &pu, const char *domainname) const {
+    if (!domainname) {
+      return 0;
+    }
+    if (!domain_match(domainname, this->domain.c_str()))
+      return 0;
+    if (this->path != pu.file)
+      return 0;
+    if (this->flag & COO_SECURE && pu.schema != SCM_HTTPS)
+      return 0;
+    if (this->portl && !port_match(this->portl, pu.port))
+      return 0;
+
+    return 1;
+  }
 };
 
-const char *domain_match(const char *host, const char *domain);
 Str *find_cookie(const Url &pu);
 int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, CookieFlags flag, Str *comment,

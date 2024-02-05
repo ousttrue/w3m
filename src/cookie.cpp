@@ -240,7 +240,7 @@ static Str *portlist2str(struct portlist *first) {
   return tmp;
 }
 
-static int port_match(struct portlist *first, int port) {
+int port_match(struct portlist *first, int port) {
   struct portlist *pl;
 
   for (pl = first; pl; pl = pl->next) {
@@ -274,32 +274,13 @@ static void check_expired_cookies(void) {
   }
 }
 
-static int match_cookie(const Url &pu, struct Cookie *cookie,
-                        const char *domainname) {
-  if (!domainname)
-    return 0;
-
-  if (!domain_match(domainname, cookie->domain->ptr))
-    return 0;
-  if (strncmp(cookie->path->ptr, pu.file, cookie->path->length) != 0)
-    return 0;
-  if (cookie->flag & COO_SECURE && pu.schema != SCM_HTTPS)
-    return 0;
-  if (cookie->portl && !port_match(cookie->portl, pu.port))
-    return 0;
-
-  return 1;
-}
-
 static struct Cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
-  struct Cookie *p;
-
-  for (p = First_cookie; p; p = p->next) {
-    if (Strcasecmp(p->domain, domain) == 0 && Strcmp(p->path, path) == 0 &&
+  for (auto p = First_cookie; p; p = p->next) {
+    if (p->domain == domain->ptr && p->path == path->ptr &&
         p->name == name->ptr)
       return p;
   }
-  return NULL;
+  return {};
 }
 
 Str *find_cookie(const Url &pu) {
@@ -312,7 +293,7 @@ Str *find_cookie(const Url &pu) {
   check_expired_cookies();
   for (p = First_cookie; p; p = p->next) {
     domainname = (p->version == 0) ? fq_domainname : pu.host;
-    if (p->flag & COO_USE && match_cookie(pu, p, domainname)) {
+    if (p->flag & COO_USE && p->match_cookie(pu, domainname)) {
       for (p1 = fco; p1 && p1->name != p->name; p1 = p1->next)
         ;
       if (p1)
@@ -339,9 +320,9 @@ Str *find_cookie(const Url &pu) {
     Strcat(tmp, p1->make_cookie());
     if (version > 0) {
       if (p1->flag & COO_PATH)
-        Strcat(tmp, Sprintf("; $Path=\"%s\"", p1->path->ptr));
+        Strcat(tmp, Sprintf("; $Path=\"%s\"", p1->path.c_str()));
       if (p1->flag & COO_DOMAIN)
-        Strcat(tmp, Sprintf("; $Domain=\"%s\"", p1->domain->ptr));
+        Strcat(tmp, Sprintf("; $Domain=\"%s\"", p1->domain.c_str()));
       if (p1->portl)
         Strcat(tmp, Sprintf("; $Port=\"%s\"", portlist2str(p1->portl)->ptr));
     }
@@ -474,8 +455,8 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
   p->name = name->ptr;
   p->value = value->ptr;
   p->expires = expires;
-  p->domain = domain;
-  p->path = path;
+  p->domain = domain->ptr;
+  p->path = path->ptr;
   p->comment = comment;
   p->version = version;
   p->portl = portlist;
@@ -539,8 +520,8 @@ void save_cookies(void) {
       continue;
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
             p->url.to_Str().c_str(), p->name.c_str(), p->value.c_str(),
-            (long)p->expires, p->domain->ptr, p->path->ptr, p->flag, p->version,
-            str2charp(p->comment),
+            (long)p->expires, p->domain.c_str(), p->path.c_str(), p->flag,
+            p->version, str2charp(p->comment),
             (p->portl) ? portlist2str(p->portl)->ptr : "",
             str2charp(p->commentURL));
   }
@@ -599,10 +580,10 @@ void load_cookies(void) {
     cookie->expires = (time_t)atol(readcol(&str)->ptr);
     if (!*str)
       break;
-    cookie->domain = readcol(&str);
+    cookie->domain = readcol(&str)->ptr;
     if (!*str)
       break;
-    cookie->path = readcol(&str);
+    cookie->path = readcol(&str)->ptr;
     if (!*str)
       break;
     cookie->flag = (CookieFlags)atoi(readcol(&str)->ptr);
@@ -714,14 +695,14 @@ Buffer *cookie_list_panel(void) {
     Strcat_charp(src, "<tr><td width=\"80\"><b>Version:</b></td><td>");
     Strcat_charp(src, Sprintf("%d", p->version)->ptr);
     Strcat_charp(src, "</td></tr><tr><td>");
-    if (p->domain) {
+    if (p->domain.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Domain:</b></td><td>");
-      Strcat_charp(src, html_quote(p->domain->ptr));
+      Strcat_charp(src, html_quote(p->domain.c_str()));
       Strcat_charp(src, "</td></tr>");
     }
-    if (p->path) {
+    if (p->path.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Path:</b></td><td>");
-      Strcat_charp(src, html_quote(p->path->ptr));
+      Strcat_charp(src, html_quote(p->path.c_str()));
       Strcat_charp(src, "</td></tr>");
     }
     if (p->portl) {
