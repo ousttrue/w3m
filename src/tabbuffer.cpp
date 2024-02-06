@@ -1,4 +1,5 @@
 #include "tabbuffer.h"
+#include "url_quote.h"
 #include "url_stream.h"
 #include "proto.h"
 #include "rc.h"
@@ -287,7 +288,7 @@ void goURL0(const char *prompt, int relative) {
     }
     a = retrieveCurrentAnchor(Currentbuf);
     if (a) {
-      p_url = Url::parse2(a->url, current);
+      p_url = urlParse(a->url, current);
       auto a_url = p_url.to_Str();
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url.c_str());
@@ -307,11 +308,11 @@ void goURL0(const char *prompt, int relative) {
       referer = NO_REFERER;
     else
       referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
-    url = url_quote((char *)url);
+    url = Strnew(url_quote(url))->ptr;
   } else {
     current = {};
     referer = nullptr;
-    url = url_quote((char *)url);
+    url = Strnew(url_quote(url))->ptr;
   }
   if (url == nullptr || *url == '\0') {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -321,7 +322,7 @@ void goURL0(const char *prompt, int relative) {
     gotoLabel(url + 1);
     return;
   }
-  p_url = Url::parse2(url, current);
+  p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
   cmd_loadURL(url, current, referer, nullptr);
   if (Currentbuf != cur_buf) /* success */

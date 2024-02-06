@@ -1,4 +1,6 @@
 #include "anchor.h"
+#include "url_quote.h"
+#include "w3m.h"
 #include "url_stream.h"
 #include "quote.h"
 #include "entity.h"
@@ -182,7 +184,7 @@ static Anchor *_put_anchor_all(Buffer *buf, const char *p1, const char *p2,
   Str *tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
-  return registerHref(buf, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0',
+  return registerHref(buf, url_quote(tmp->ptr).c_str(), NULL, NO_REFERER, NULL, '\0',
                       line, pos);
 }
 
@@ -567,7 +569,7 @@ Buffer *link_list_panel(Buffer *buf) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      pu = Url::parse2(a->url, baseURL(buf));
+      pu = urlParse(a->url, baseURL(buf));
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -589,7 +591,7 @@ Buffer *link_list_panel(Buffer *buf) {
       a = &al->anchors[i];
       if (a->slave)
         continue;
-      pu = Url::parse2(a->url, baseURL(buf));
+      pu = urlParse(a->url, baseURL(buf));
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)

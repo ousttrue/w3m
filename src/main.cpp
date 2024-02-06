@@ -1,4 +1,5 @@
 #include "alloc.h"
+#include "url_quote.h"
 #include "tabbuffer.h"
 #include "quote.h"
 #include "contentinfo.h"
@@ -322,7 +323,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
     return nullptr;
   }
 
-  pu = Url::parse2(url, base);
+  pu = urlParse(url, base);
   pushHashHist(URLHist, pu.to_Str().c_str());
 
   if (buf == NO_BUFFER) {
@@ -1019,7 +1020,7 @@ int main(int argc, char **argv) {
       retry_as_local_file:
         url = file_to_url((char *)load_argv[i]);
       else
-        url = url_quote((char *)load_argv[i]);
+        url = Strnew(url_quote(load_argv[i]))->ptr;
       {
         if (post_file && i == 0) {
           FILE *fp;

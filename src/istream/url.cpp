@@ -1,6 +1,5 @@
-#include "w3m.h"
-#include "url_stream.h"
-#include "etc.h"
+#include "url.h"
+#include "url_quote.h"
 #include "myctype.h"
 #include "enum_template.h"
 #include <string.h>
@@ -42,9 +41,10 @@ static std::string copyPath(const char *orgpath, int length,
   return ss.str();
 }
 
-Url Url::parse(const char *src, std::optional<Url> current) {
+Url Url::parse(const char *__src, std::optional<Url> current) {
   // quote 0x01-0x20, 0x7F-0xFF
-  src = url_quote(src);
+  auto _src = url_quote(__src);
+  auto src = _src.c_str();
   auto p = src;
   const char *q = {};
   const char *qq = {};
@@ -239,106 +239,6 @@ do_label:
   else
     url.label = {};
 
-  return url;
-}
-
-Url Url::parse2(const char *src, std::optional<Url> current) {
-  auto url = Url::parse(src, current);
-  if (url.schema == SCM_DATA) {
-    return url;
-  }
-
-  if (url.schema == SCM_LOCAL) {
-    auto q = expandName(file_unquote(url.file.c_str()));
-    if (IS_ALPHA(q[0]) && q[1] == ':') {
-      std::string drive(q, q + 2);
-      drive += file_quote(q + 2);
-      url.file = drive;
-    } else {
-      url.file = file_quote(q);
-    }
-  }
-
-  int relative_uri = false;
-  if (current &&
-      (url.schema == current->schema ||
-       (url.schema == SCM_LOCAL && current->schema == SCM_LOCAL_CGI)) &&
-      url.host.empty()) {
-    /* Copy omitted element from the current URL */
-    url.user = current->user;
-    url.pass = current->pass;
-    url.host = current->host;
-    url.port = current->port;
-    if (url.file.size()) {
-      if (url.file[0] != '/' &&
-          !(url.schema == SCM_LOCAL && IS_ALPHA(url.file[0]) &&
-            url.file[1] == ':')) {
-        /* file is relative [process 1] */
-        auto p = url.file;
-        if (current->file.size()) {
-          std::string tmp = current->file;
-          while (tmp.size()) {
-            if (tmp.back() == '/') {
-              break;
-            }
-            tmp.pop_back();
-          }
-          tmp += p;
-          url.file = tmp;
-          relative_uri = true;
-        }
-      }
-    } else { /* schema:[?query][#label] */
-      url.file = current->file;
-      if (url.query.empty()) {
-        url.query = current->query;
-      }
-    }
-    /* comment: query part need not to be completed
-     * from the current URL. */
-  }
-
-  if (url.file.size()) {
-    if (url.schema == SCM_LOCAL && url.file[0] != '/' &&
-        !(IS_ALPHA(url.file[0]) && url.file[1] == ':') && url.file != "-") {
-      /* local file, relative path */
-      std::string tmp = CurrentDir;
-      if (tmp.back() != '/') {
-        tmp += '/';
-      }
-      tmp += file_unquote(url.file.c_str());
-      url.file = file_quote(cleanupName(tmp.c_str()));
-    } else if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS) {
-      if (relative_uri) {
-        /* In this case, url.file is created by [process 1] above.
-         * url.file may contain relative path (for example,
-         * "/foo/../bar/./baz.html"), cleanupName() must be applied.
-         * When the entire abs_path is given, it still may contain
-         * elements like `//', `..' or `.' in the url.file. It is
-         * server's responsibility to canonicalize such path.
-         */
-        url.file = cleanupName(url.file.c_str());
-      }
-    } else if (url.file[0] == '/') {
-      /*
-       * this happens on the following conditions:
-       * (1) ftp schema (2) local, looks like absolute path.
-       * In both case, there must be no side effect with
-       * cleanupName(). (I hope so...)
-       */
-      url.file = cleanupName(url.file.c_str());
-    }
-    if (url.schema == SCM_LOCAL) {
-      if (url.host.size() && !is_localhost(url.host.c_str())) {
-        std::string tmp("//");
-        tmp += url.host;
-        tmp += cleanupName(file_unquote(url.file.c_str()));
-        url.real_file = tmp;
-      } else {
-        url.real_file = cleanupName(file_unquote(url.file.c_str()));
-      }
-    }
-  }
   return url;
 }
 

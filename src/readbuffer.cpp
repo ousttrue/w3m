@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "url_quote.h"
 #include "quote.h"
 #include "contentinfo.h"
 #include "symbol.h"
@@ -29,7 +30,7 @@
 #include <algorithm>
 
 #define ENABLE_REMOVE_TRAILINGSPACES
-#define url_quote_conv(x, c) url_quote(x)
+#define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
@@ -1311,7 +1312,7 @@ Str *process_img(struct HtmlTag *tag, int width) {
 
   if (!parsedtag_get_value(tag, ATTR_SRC, &p))
     return tmp;
-  p = url_quote(remove_space(p));
+  p = Strnew(url_quote(remove_space(p)))->ptr;
   q = NULL;
   parsedtag_get_value(tag, ATTR_ALT, &q);
   if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))
@@ -1961,7 +1962,7 @@ static Str *process_form_int(struct HtmlTag *tag, int fid) {
   parsedtag_get_value(tag, ATTR_METHOD, &p);
   q = "!CURRENT_URL!";
   parsedtag_get_value(tag, ATTR_ACTION, &q);
-  q = url_quote(remove_space(q));
+  q = Strnew(url_quote(remove_space(q)))->ptr;
   r = NULL;
   s = NULL;
   parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
@@ -3174,7 +3175,7 @@ static void addLink(Buffer *buf, struct HtmlTag *tag) {
 
   parsedtag_get_value(tag, ATTR_HREF, &href);
   if (href)
-    href = url_quote(remove_space(href));
+    href = Strnew(url_quote(remove_space(href)))->ptr;
   parsedtag_get_value(tag, ATTR_TITLE, &title);
   parsedtag_get_value(tag, ATTR_TYPE, &ctype);
   parsedtag_get_value(tag, ATTR_REL, &rel);
@@ -3850,11 +3851,11 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             registerName(buf, id, currentLn(buf), pos);
           }
           if (parsedtag_get_value(tag, ATTR_HREF, &p))
-            p = url_quote(remove_space(p));
+            p = Strnew(url_quote(remove_space(p)))->ptr;
           if (parsedtag_get_value(tag, ATTR_TARGET, &q))
             q = url_quote_conv(q, buf->document_charset);
           if (parsedtag_get_value(tag, ATTR_REFERER, &r))
-            r = url_quote(r);
+            r = Strnew(url_quote(r))->ptr;
           parsedtag_get_value(tag, ATTR_TITLE, &s);
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
@@ -4031,8 +4032,8 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           break;
         case HTML_BASE:
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            p = url_quote(remove_space(p));
-            buf->info->baseURL = Url::parse2(p, buf->info->currentURL);
+            p = Strnew(url_quote(remove_space(p)))->ptr;
+            buf->info->baseURL = urlParse(p, buf->info->currentURL);
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
             buf->baseTarget = (char *)url_quote_conv(p, buf->document_charset);
@@ -4045,7 +4046,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             Str *tmp = NULL;
             int refresh_interval = getMetaRefreshParam(q, &tmp);
             if (tmp) {
-              p = url_quote(remove_space(tmp->ptr));
+              p = Strnew(url_quote(remove_space(tmp->ptr)))->ptr;
               buf->event =
                   setAlarmEvent(buf->event, refresh_interval, AL_IMPLICIT_ONCE,
                                 FUNCNAME_gorURL, (void *)p);

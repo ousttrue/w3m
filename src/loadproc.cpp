@@ -1,4 +1,5 @@
 #include "loadproc.h"
+#include "url_quote.h"
 #include "tabbuffer.h"
 #include "quote.h"
 #include "symbol.h"
@@ -714,7 +715,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   checkRedirection(NULL);
 
 load_doc:
-  pu = Url::parse2(tpath, current);
+  pu = urlParse(tpath, current);
 
   UrlStream f(SCM_MISSING);
   // if (ouf) {
@@ -802,7 +803,7 @@ load_doc:
       /* 302: Found */
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
-      tpath = url_quote((char *)p);
+      tpath = Strnew(url_quote(p))->ptr;
       request = NULL;
       f.close();
       current = pu;

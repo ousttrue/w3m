@@ -530,7 +530,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
   for (l = link; l; l = l->next) {
     if (l->url) {
-      pu = Url::parse2(l->url, baseURL(buf));
+      pu = urlParse(l->url, baseURL(buf));
       url = html_quote(pu.to_Str().c_str());
     } else
       url = "(empty)";
@@ -592,7 +592,7 @@ Buffer *page_info_panel(Buffer *buf) {
 
     a = retrieveCurrentAnchor(buf);
     if (a) {
-      pu = Url::parse2(a->url, baseURL(buf));
+      pu = urlParse(a->url, baseURL(buf));
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -605,7 +605,7 @@ Buffer *page_info_panel(Buffer *buf) {
     }
     a = retrieveCurrentImg(buf);
     if (a != nullptr) {
-      pu = Url::parse2(a->url, baseURL(buf));
+      pu = urlParse(a->url, baseURL(buf));
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -696,13 +696,13 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     a = retrieveCurrentAnchor(buf);
     if (a) {
-      pu = Url::parse2(a->url, baseURL(buf));
+      pu = urlParse(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf);
     if (a) {
-      pu = Url::parse2(a->url, baseURL(buf));
+      pu = urlParse(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_IMG", "");
@@ -898,7 +898,7 @@ void _peekURL(int only_img) {
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    pu = Url::parse2(a->url, baseURL(Currentbuf));
+    pu = urlParse(a->url, baseURL(Currentbuf));
     s = Strnew(pu.to_Str());
   }
   if (DecodeURL)
@@ -1064,7 +1064,7 @@ void _prevA(int visited) {
         }
         hseq--;
         if (visited == true && an) {
-          url = Url::parse2(an->url, baseURL(Currentbuf));
+          url = urlParse(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, url.to_Str().c_str())) {
             goto _end;
           }
@@ -1083,7 +1083,7 @@ void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true && an) {
-        url = Url::parse2(an->url, baseURL(Currentbuf));
+        url = urlParse(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, url.to_Str().c_str())) {
           goto _end;
         }
@@ -1147,7 +1147,7 @@ void _nextA(int visited) {
         }
         hseq++;
         if (visited == true && an) {
-          url = Url::parse2(an->url, baseURL(Currentbuf));
+          url = urlParse(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, url.to_Str().c_str())) {
             goto _end;
           }
@@ -1166,7 +1166,7 @@ void _nextA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true) {
-        url = Url::parse2(an->url, baseURL(Currentbuf));
+        url = urlParse(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, url.to_Str().c_str())) {
           goto _end;
         }

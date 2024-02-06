@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "url_quote.h"
 #include "search.h"
 #include "bufferpos.h"
 #include "mimetypes.h"
@@ -618,7 +619,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     gotoLabel(a->url + 1);
     return;
   }
-  u = Url::parse2(a->url, baseURL(Currentbuf));
+  u = urlParse(a->url, baseURL(Currentbuf));
   if (u.to_Str() == Currentbuf->info->currentURL.to_Str()) {
     /* index within this buffer */
     if (u.label.size()) {
@@ -890,8 +891,8 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     Url p_url;
     Buffer *cur_buf = Currentbuf;
     SKIP_BLANKS(url);
-    url = url_quote(url);
-    p_url = Url::parse2(url);
+    url = Strnew(url_quote(url))->ptr;
+    p_url = urlParse(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
     cmd_loadURL(url, {}, nullptr, nullptr);
     if (Currentbuf != cur_buf) /* success */
@@ -1281,7 +1282,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
   auto a = retrieveCurrentAnchor(Currentbuf);
   if (a == nullptr)
     return;
-  auto pu = Url::parse2(a->url, baseURL(Currentbuf));
+  auto pu = urlParse(a->url, baseURL(Currentbuf));
   invoke_browser(pu.to_Str().c_str());
 }
 

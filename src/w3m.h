@@ -1,4 +1,6 @@
 #pragma once
+#include "url.h"
+#include <optional>
 
 #define KEYMAP_FILE "keymap"
 #define CGI_EXTENSION ".cgi"
@@ -73,3 +75,5 @@ extern const char *keymap_file;
 
 void w3m_exit(int i);
 void _quitfm(bool confirm);
+
+Url urlParse(const char *url, std::optional<Url> current = {});

@@ -1,4 +1,5 @@
 #include "history.h"
+#include "url_quote.h"
 #include "url_stream.h"
 #include "readbuffer.h"
 #include "rc.h"

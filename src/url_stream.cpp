@@ -499,7 +499,7 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
 
   // retry:
 
-  *pu = Url::parse2(u, current);
+  *pu = urlParse(u, current);
   if (pu->schema == SCM_LOCAL && pu->file.empty()) {
     if (pu->label.size()) {
       /* #hogege is not a label but a filename */
@@ -782,26 +782,6 @@ int UrlStream::doFileSave(const char *defstr) {
 uint8_t UrlStream::getc() const { return ISgetc(this->stream); }
 void UrlStream::undogetc() { ISundogetc(this->stream); }
 int UrlStream::fileno() const { return ISfileno(this->stream); }
-static auto xdigit = "0123456789ABCDEF";
-
-const char *url_quote(const char *str) {
-  Str *tmp = NULL;
-  for (auto p = str; *p; p++) {
-    if (is_url_quote(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      Strcat_char(tmp, '%');
-      Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
-      Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
 
 static char url_unquote_char(const char **pstr) {
   return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))

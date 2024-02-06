@@ -16,7 +16,6 @@ struct Url {
   bool is_nocache = false;
 
   static Url parse(const char *url, std::optional<Url> current = {});
-  static Url parse2(const char *url, std::optional<Url> current = {});
 
   Url &operator=(const Url &src) {
     this->schema = src.schema;
