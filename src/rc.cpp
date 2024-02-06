@@ -61,7 +61,6 @@ int DNS_order = DNS_ORDER_UNSPEC;
 
 bool TargetSelf = false;
 const char *rc_dir = nullptr;
-bool DecodeURL = false;
 
 #define _(Text) Text
 #define N_(Text) Text

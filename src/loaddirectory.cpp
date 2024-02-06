@@ -1,4 +1,5 @@
 #include "loaddirectory.h"
+#include "url_stream.h"
 #include "anchor.h"
 #include "url.h"
 #include "terms.h"

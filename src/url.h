@@ -18,32 +18,31 @@ struct Url {
   static Url parse(const char *url, std::optional<Url> current = {});
   static Url parse2(const char *url, std::optional<Url> current = {});
 
-  // Url(const Url &src) { *this = src; }
-  Url &operator=(const Url &src);
-  // void copyUrl(Url *p, const Url *q);
-  bool same_url_p(const Url *pu2) const;
+  Url &operator=(const Url &src) {
+    this->schema = src.schema;
+    this->port = src.port;
+    this->is_nocache = src.is_nocache;
+    this->user = src.user;
+    this->pass = src.pass;
+    this->host = src.host;
+    this->file = src.file;
+    this->real_file = src.real_file;
+    this->label = src.label;
+    this->query = src.query;
+    return *this;
+  }
 
   std::string to_Str(bool pass, bool user, bool label) const;
   std::string to_Str() const { return to_Str(false, true, true); }
   std::string to_RefererStr() const { return to_Str(false, false, false); }
-  std::string RefererOriginStr() const;
+  std::string RefererOriginStr() const {
+    Url u = *this;
+    u.file = {};
+    u.query = {};
+    return u.to_Str(false, false, false);
+  }
 
   bool IS_EMPTY_PARSED_URL() const {
     return (this->schema == SCM_UNKNOWN && this->file.empty());
   }
 };
-
-bool checkRedirection(const Url *pu);
-char url_unquote_char(const char **pstr);
-
-struct Str;
-const char *url_quote(const char *str);
-const char *url_decode0(const char *url);
-Str *Str_url_unquote(Str *x, int is_form, int safe);
-inline Str *Str_form_unquote(Str *x) { return Str_url_unquote(x, true, false); }
-const char *url_unquote_conv0(const char *url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
-
-const char *file_quote(const char *str);
-const char *file_unquote(const char *str);
-const char *cleanupName(const char *name);

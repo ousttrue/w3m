@@ -6,6 +6,8 @@
 #include "compression.h"
 #include "url.h"
 
+extern bool DecodeURL;
+
 #define SAVE_BUF_SIZE 1536
 
 extern char *index_file;
@@ -71,3 +73,12 @@ private:
   void openData(Url *pu);
   void add_index_file(Url *pu);
 };
+
+Str *Str_url_unquote(Str *x, int is_form, int safe);
+inline Str *Str_form_unquote(Str *x) { return Str_url_unquote(x, true, false); }
+
+const char *url_quote(const char *str);
+const char *url_decode0(const char *url);
+const char *file_quote(const char *str);
+const char *file_unquote(const char *str);
+const char *cleanupName(const char *name);

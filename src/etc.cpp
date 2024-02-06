@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "url_stream.h"
 #include "buffer.h"
 #include "line.h"
 #include "message.h"

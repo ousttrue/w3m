@@ -1,90 +1,45 @@
 #include "w3m.h"
-#include "quote.h"
-#include "contentinfo.h"
+#include "url_stream.h"
 #include "etc.h"
-#include "message.h"
-#include "ssl_util.h"
-#include "screen.h"
-#include "display.h"
-#include "terms.h"
-#include "httprequest.h"
-#include "rc.h"
-#include "cookie.h"
-#include "buffer.h"
-#include "textlist.h"
-#include "istream.h"
-#include "form.h"
-#include "signal_util.h"
-#include "proto.h"
-#include "html.h"
-#include "Str.h"
 #include "myctype.h"
-#include "regex.h"
-#include <vector>
+#include "enum_template.h"
+#include <string.h>
+#include <sstream>
 
-bool ArgvIsURL = true;
-bool LocalhostOnly = false;
-bool retryAsHttp = true;
-
-Url &Url::operator=(const Url &src) {
-  this->schema = src.schema;
-  this->port = src.port;
-  this->is_nocache = src.is_nocache;
-  this->user = src.user;
-  this->pass = src.pass;
-  this->host = src.host;
-  this->file = src.file;
-  this->real_file = src.real_file;
-  this->label = src.label;
-  this->query = src.query;
-  return *this;
-}
-
-std::optional<Url> baseURL(Buffer *buf) {
-  if (buf->bufferprop & BP_NO_URL) {
-    /* no URL is defined for the buffer */
-    return {};
-  }
-  if (buf->info->baseURL) {
-    /* <BASE> tag is defined in the document */
-    return *buf->info->baseURL;
-  } else if (buf->info->currentURL.IS_EMPTY_PARSED_URL()) {
-    return {};
-  } else {
-    return buf->info->currentURL;
-  }
-}
-
-#define COPYPATH_SPC_ALLOW 0
-#define COPYPATH_SPC_IGNORE 1
-#define COPYPATH_SPC_REPLACE 2
-#define COPYPATH_SPC_MASK 3
-#define COPYPATH_LOWERCASE 4
-
-static const char *copyPath(const char *orgpath, int length, int option) {
-  Str *tmp = Strnew();
+enum CopyPathOption {
+  COPYPATH_SPC_ALLOW = 0,
+  COPYPATH_SPC_IGNORE = 1,
+  COPYPATH_SPC_REPLACE = 2,
+};
+ENUM_OP_INSTANCE(CopyPathOption);
+static std::string copyPath(const char *orgpath, int length,
+                            CopyPathOption option,
+                            bool COPYPATH_LOWERCASE = false) {
+  std::stringstream ss;
   char ch;
   while ((ch = *orgpath) != 0 && length != 0) {
-    if (option & COPYPATH_LOWERCASE)
+    if (COPYPATH_LOWERCASE) {
       ch = TOLOWER(ch);
+    }
     if (IS_SPACE(ch)) {
-      switch (option & COPYPATH_SPC_MASK) {
+      switch (option) {
       case COPYPATH_SPC_ALLOW:
-        Strcat_char(tmp, ch);
+        ss << ch;
         break;
       case COPYPATH_SPC_IGNORE:
         /* do nothing */
         break;
       case COPYPATH_SPC_REPLACE:
-        Strcat_charp(tmp, "%20");
+        ss << "%20";
         break;
       }
-    } else
-      Strcat_char(tmp, ch);
+    } else {
+      ss << ch;
+    }
     orgpath++;
     length--;
   }
-  return tmp->ptr;
+  return ss.str();
 }
 
 Url Url::parse(const char *src, std::optional<Url> current) {
@@ -139,7 +94,7 @@ Url Url::parse(const char *src, std::optional<Url> current) {
 
   /* schema part has been found */
   if (url.schema == SCM_UNKNOWN) {
-    url.file = allocStr(src, -1);
+    url.file = src;
     return url;
   }
 
@@ -197,11 +152,10 @@ analyze_url:
       goto analyze_url;
     }
     /* schema://host:port/ */
-    url.host =
-        copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+    url.host = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE, true);
     {
-      auto tmp = Strnew_charp_n(q, p - q);
-      url.port = atoi(tmp->ptr);
+      std::string tmp(q, q + (p - q));
+      url.port = atoi(tmp.c_str());
     }
     /* *p is one of ['\0', '/', '?', '#'] */
     break;
@@ -215,7 +169,7 @@ analyze_url:
   case '/':
   case '?':
   case '#':
-    url.host = copyPath(q, p - q, COPYPATH_SPC_IGNORE | COPYPATH_LOWERCASE);
+    url.host = copyPath(q, p - q, COPYPATH_SPC_IGNORE, true);
     url.port = getDefaultPort(url.schema);
     break;
   }
@@ -225,21 +179,6 @@ analyze_file:
     url.file = "";
     goto do_query;
   }
-
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-  if (url.schema == SCM_LOCAL) {
-    q = p;
-    if (*q == '/')
-      q++;
-    if (IS_ALPHA(q[0]) && (q[1] == ':' || q[1] == '|')) {
-      if (q[1] == '|') {
-        p = allocStr(q, -1);
-        p[1] = ':';
-      } else
-        p = q;
-    }
-  }
-#endif
 
   q = p;
   if (*p == '/')
@@ -278,9 +217,9 @@ analyze_file:
       }
     }
     if (url.schema == SCM_LOCAL || url.schema == SCM_MISSING)
-      url.file = (char *)copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+      url.file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     else
-      url.file = (char *)copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+      url.file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
   }
 
 do_query:
@@ -288,15 +227,15 @@ do_query:
     q = ++p;
     while (*p && *p != '#')
       p++;
-    url.query = (char *)copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+    url.query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
   }
 do_label:
   if (url.schema == SCM_MISSING) {
     url.schema = SCM_LOCAL;
-    url.file = allocStr(p, -1);
+    url.file = p;
     url.label = {};
   } else if (*p == '#')
-    url.label = allocStr(p + 1, -1);
+    url.label = p + 1;
   else
     url.label = {};
 
@@ -311,13 +250,12 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
 
   if (url.schema == SCM_LOCAL) {
     auto q = expandName(file_unquote(url.file.c_str()));
-    Str *drive;
     if (IS_ALPHA(q[0]) && q[1] == ':') {
-      drive = Strnew_charp_n(q, 2);
-      Strcat_charp(drive, file_quote(q + 2));
-      url.file = drive->ptr;
+      std::string drive(q, q + 2);
+      drive += file_quote(q + 2);
+      url.file = drive;
     } else {
-      url.file = file_quote((char *)q);
+      url.file = file_quote(q);
     }
   }
 
@@ -338,14 +276,15 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
         /* file is relative [process 1] */
         auto p = url.file;
         if (current->file.size()) {
-          auto tmp = Strnew(current->file);
-          while (tmp->length > 0) {
-            if (Strlastchar(tmp) == '/')
+          std::string tmp = current->file;
+          while (tmp.size()) {
+            if (tmp.back() == '/') {
               break;
-            Strshrink(tmp, 1);
+            }
+            tmp.pop_back();
           }
-          Strcat(tmp, p);
-          url.file = tmp->ptr;
+          tmp += p;
+          url.file = tmp;
           relative_uri = true;
         }
       }
@@ -363,11 +302,12 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
     if (url.schema == SCM_LOCAL && url.file[0] != '/' &&
         !(IS_ALPHA(url.file[0]) && url.file[1] == ':') && url.file != "-") {
       /* local file, relative path */
-      auto tmp = Strnew_charp(CurrentDir);
-      if (Strlastchar(tmp) != '/')
-        Strcat_char(tmp, '/');
-      Strcat_charp(tmp, file_unquote(url.file.c_str()));
-      url.file = file_quote(cleanupName(tmp->ptr));
+      std::string tmp = CurrentDir;
+      if (tmp.back() != '/') {
+        tmp += '/';
+      }
+      tmp += file_unquote(url.file.c_str());
+      url.file = file_quote(cleanupName(tmp.c_str()));
     } else if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS) {
       if (relative_uri) {
         /* In this case, url.file is created by [process 1] above.
@@ -390,10 +330,10 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
     }
     if (url.schema == SCM_LOCAL) {
       if (url.host.size() && !is_localhost(url.host.c_str())) {
-        Str *tmp = Strnew_charp("//");
-        Strcat_m_charp(tmp, url.host.c_str(),
-                       cleanupName(file_unquote(url.file.c_str())), nullptr);
-        url.real_file = tmp->ptr;
+        std::string tmp("//");
+        tmp += url.host;
+        tmp += cleanupName(file_unquote(url.file.c_str()));
+        url.real_file = tmp;
       } else {
         url.real_file = cleanupName(file_unquote(url.file.c_str()));
       }
@@ -402,251 +342,74 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
   return url;
 }
 
-std::string Url::RefererOriginStr() const {
-  Url u = *this;
-  u.file = {};
-  u.query = {};
-  return u.to_Str(false, false, false);
-}
-
 std::string Url::to_Str(bool pass, bool user, bool label) const {
-  Str *tmp;
 
   if (this->schema == SCM_MISSING) {
     return "???";
-  } else if (this->schema == SCM_UNKNOWN) {
+  }
+
+  if (this->schema == SCM_UNKNOWN) {
     return this->file.size() ? this->file : "";
   }
+
   if (this->host.empty() && this->file.empty() && label && this->label.size()) {
     /* local label */
-    return Sprintf("#%s", this->label.c_str())->ptr;
+    return std::string("#") + this->label;
   }
+
   if (this->schema == SCM_LOCAL && this->file == "-") {
-    tmp = Strnew_charp("-");
+    std::string tmp("-");
     if (label && this->label.size()) {
-      Strcat_char(tmp, '#');
-      Strcat(tmp, this->label);
+      tmp += '#';
+      tmp += this->label;
     }
-    return tmp->ptr;
-  }
-  tmp = Strnew_charp(schema_str[this->schema]);
-  Strcat_char(tmp, ':');
-  if (this->schema == SCM_DATA) {
-    Strcat(tmp, this->file);
-    return tmp->ptr;
-  }
-  { Strcat_charp(tmp, "//"); }
-  if (user && this->user.size()) {
-    Strcat_charp(tmp, this->user.c_str());
-    if (pass && this->pass.size()) {
-      Strcat_char(tmp, ':');
-      Strcat_charp(tmp, this->pass.c_str());
-    }
-    Strcat_char(tmp, '@');
-  }
-  if (this->host.size()) {
-    Strcat(tmp, this->host);
-    if (this->port != getDefaultPort(this->schema)) {
-      Strcat_char(tmp, ':');
-      Strcat(tmp, Sprintf("%d", this->port));
-    }
-  }
-  if ((this->file.empty() ||
-       (this->file[0] != '/'
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-        && !(IS_ALPHA(this->file[0]) && this->file[1] == ':' &&
-             this->host == nullptr)
-#endif
-            )))
-    Strcat_char(tmp, '/');
-  Strcat(tmp, this->file);
-  if (this->query.size()) {
-    Strcat_char(tmp, '?');
-    Strcat(tmp, this->query);
-  }
-  if (label && this->label.size()) {
-    Strcat_char(tmp, '#');
-    Strcat(tmp, this->label);
-  }
-  return tmp->ptr;
-}
-
-bool Url::same_url_p(const Url *pu2) const {
-  return (
-      this->schema == pu2->schema && this->port == pu2->port &&
-      (this->host.size() ? pu2->host.size() ? this->host == pu2->host : 0
-                         : 1) &&
-      (this->file.size() ? pu2->file.size() ? this->file == pu2->file : 0 : 1));
-}
-
-static auto xdigit = "0123456789ABCDEF";
-
-char url_unquote_char(const char **pstr) {
-  return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))
-              ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) |
-                                   GET_MYCDIGIT((*(pstr))[-1]))
-              : -1);
-}
-
-const char *url_quote(const char *str) {
-  Str *tmp = NULL;
-  for (auto p = str; *p; p++) {
-    if (is_url_quote(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      Strcat_char(tmp, '%');
-      Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
-      Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
-
-Str *Str_url_unquote(Str *x, int is_form, int safe) {
-  Str *tmp = NULL;
-  const char *p = x->ptr, *ep = x->ptr + x->length, *q;
-  int c;
-
-  for (; p < ep;) {
-    if (is_form && *p == '+') {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-      Strcat_char(tmp, ' ');
-      p++;
-      continue;
-    } else if (*p == '%') {
-      q = p;
-      c = url_unquote_char(&q);
-      if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
-        if (tmp == NULL)
-          tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-        Strcat_char(tmp, (char)c);
-        p = q;
-        continue;
-      }
-    }
-    if (tmp)
-      Strcat_char(tmp, *p);
-    p++;
-  }
-  if (tmp)
     return tmp;
-  return x;
-}
-
-const char *url_unquote_conv0(const char *url) {
-  Str *tmp;
-  tmp = Str_url_unquote(Strnew_charp(url), false, true);
-  return tmp->ptr;
-}
-
-const char *url_decode0(const char *url) {
-  if (!DecodeURL)
-    return url;
-  return url_unquote_conv(url, 0);
-}
-
-const char *file_quote(const char *str) {
-  Str *tmp = NULL;
-  const char *p;
-  char buf[4];
-
-  for (p = str; *p; p++) {
-    if (is_file_quote(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      sprintf(buf, "%%%02X", (unsigned char)*p);
-      Strcat_charp(tmp, buf);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
   }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
 
-const char *file_unquote(const char *str) {
-  Str *tmp = NULL;
-  const char *p, *q;
-  int c;
+  {
+    std::stringstream tmp;
+    tmp << schema_str[this->schema];
+    tmp << ':';
+    if (this->schema == SCM_DATA) {
+      tmp << this->file;
+      return tmp.str();
+    }
 
-  for (p = str; *p;) {
-    if (*p == '%') {
-      q = p;
-      c = url_unquote_char(&q);
-      if (c >= 0) {
-        if (tmp == NULL)
-          tmp = Strnew_charp_n(str, (int)(p - str));
-        if (c != '\0' && c != '\n' && c != '\r')
-          Strcat_char(tmp, (char)c);
-        p = q;
-        continue;
+    tmp << "//";
+    if (user && this->user.size()) {
+      tmp << this->user;
+      if (pass && this->pass.size()) {
+        tmp << ':';
+        tmp << this->pass;
+      }
+      tmp << '@';
+    }
+    if (this->host.size()) {
+      tmp << this->host;
+      if (this->port != getDefaultPort(this->schema)) {
+        tmp << ':';
+        tmp << this->port;
       }
     }
-    if (tmp)
-      Strcat_char(tmp, *p);
-    p++;
-  }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
 
-const char *cleanupName(const char *name) {
-  auto buf = allocStr(name, -1);
-  auto p = buf;
-  auto q = name;
-  while (*q != '\0') {
-    if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
-      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-        /* ../../       */
-        p += 3;
-        q += 3;
-      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-        /* ../../../    */
-        p += 3;
-        q += 3;
-      } else {
-        while (p != buf && *--p != '/')
-          ; /* ->foo/FOO */
-        *p = '\0';
-        q += 3;
-        strcat(buf, q);
-      }
-    } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
-      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-        /* ../..        */
-      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-        /* ../../..     */
-      } else {
-        while (p != buf && *--p != '/')
-          ; /* ->foo/ */
-        *++p = '\0';
-      }
-      break;
-    } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
-      *p = '\0';                            /* -> foo/bar           */
-      q += 2;
-      strcat(buf, q);
-    } else if (strcmp(p, "/.") == 0) { /* foo/. */
-      *++p = '\0';                     /* -> foo/              */
-      break;
-    } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
-      /* -> foo/bar           */
-      *p = '\0';
-      q++;
-      strcat(buf, q);
-    } else {
-      p++;
-      q++;
+    if ((this->file.empty() ||
+         (this->file[0] != '/'
+#ifdef SUPPORT_DOS_DRIVE_PREFIX
+          && !(IS_ALPHA(this->file[0]) && this->file[1] == ':' &&
+               this->host == nullptr)
+#endif
+              ))) {
+      tmp << '/';
     }
+    tmp << this->file;
+    if (this->query.size()) {
+      tmp << '?';
+      tmp << this->query;
+    }
+    if (label && this->label.size()) {
+      tmp << '#';
+      tmp << this->label;
+    }
+    return tmp.str();
   }
-  return buf;
 }

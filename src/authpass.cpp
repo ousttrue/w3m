@@ -190,7 +190,8 @@ static struct auth_pass *find_auth_pass_entry(const char *host, int port,
 
 void invalidate_auth_user_passwd(Url *pu, const char *realm, Str *uname,
                                  Str *pwd, bool is_proxy) {
-  auto ent = find_auth_pass_entry(pu->host.c_str(), pu->port, realm, NULL, is_proxy);
+  auto ent =
+      find_auth_pass_entry(pu->host.c_str(), pu->port, realm, {}, is_proxy);
   if (ent) {
     ent->bad = true;
   }
@@ -206,7 +207,8 @@ int find_auth_user_passwd(Url *pu, const char *realm, Str **uname, Str **pwd,
     *pwd = Strnew(pu->pass);
     return 1;
   }
-  ent = find_auth_pass_entry(pu->host.c_str(), pu->port, realm, pu->user, is_proxy);
+  ent = find_auth_pass_entry(pu->host.c_str(), pu->port, realm, pu->user,
+                             is_proxy);
   if (ent) {
     *uname = ent->uname;
     *pwd = ent->pwd;

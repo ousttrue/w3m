@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "quote.h"
 #include "loadproc.h"
 #include "http_option.h"
 #include "rc.h"
@@ -39,9 +40,13 @@
 #include <setjmp.h>
 #include <sys/stat.h>
 
+bool DecodeURL = false;
+bool ArgvIsURL = true;
+bool LocalhostOnly = false;
+bool retryAsHttp = true;
+
 #ifdef SOCK_DEBUG
 #include <stdarg.h>
-
 static void sock_log(char *message, ...) {
   FILE *f = fopen("zzzsocklog", "a");
   va_list va;
@@ -52,7 +57,6 @@ static void sock_log(char *message, ...) {
   vfprintf(f, message, va);
   fclose(f);
 }
-
 #endif
 
 #ifdef INET6
@@ -778,3 +782,174 @@ int UrlStream::doFileSave(const char *defstr) {
 uint8_t UrlStream::getc() const { return ISgetc(this->stream); }
 void UrlStream::undogetc() { ISundogetc(this->stream); }
 int UrlStream::fileno() const { return ISfileno(this->stream); }
+static auto xdigit = "0123456789ABCDEF";
+
+const char *url_quote(const char *str) {
+  Str *tmp = NULL;
+  for (auto p = str; *p; p++) {
+    if (is_url_quote(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      Strcat_char(tmp, '%');
+      Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
+      Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}
+
+static char url_unquote_char(const char **pstr) {
+  return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))
+              ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) |
+                                   GET_MYCDIGIT((*(pstr))[-1]))
+              : -1);
+}
+
+Str *Str_url_unquote(Str *x, int is_form, int safe) {
+  Str *tmp = NULL;
+  const char *p = x->ptr, *ep = x->ptr + x->length, *q;
+  int c;
+
+  for (; p < ep;) {
+    if (is_form && *p == '+') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, ' ');
+      p++;
+      continue;
+    } else if (*p == '%') {
+      q = p;
+      c = url_unquote_char(&q);
+      if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
+        if (tmp == NULL)
+          tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+        Strcat_char(tmp, (char)c);
+        p = q;
+        continue;
+      }
+    }
+    if (tmp)
+      Strcat_char(tmp, *p);
+    p++;
+  }
+  if (tmp)
+    return tmp;
+  return x;
+}
+
+const char *url_unquote_conv0(const char *url) {
+  Str *tmp;
+  tmp = Str_url_unquote(Strnew_charp(url), false, true);
+  return tmp->ptr;
+}
+
+const char *url_decode0(const char *url) {
+  if (!DecodeURL)
+    return url;
+  return url_unquote_conv0(url);
+}
+
+const char *file_quote(const char *str) {
+  Str *tmp = NULL;
+  const char *p;
+  char buf[4];
+
+  for (p = str; *p; p++) {
+    if (is_file_quote(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      sprintf(buf, "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}
+
+const char *file_unquote(const char *str) {
+  Str *tmp = NULL;
+  const char *p, *q;
+  int c;
+
+  for (p = str; *p;) {
+    if (*p == '%') {
+      q = p;
+      c = url_unquote_char(&q);
+      if (c >= 0) {
+        if (tmp == NULL)
+          tmp = Strnew_charp_n(str, (int)(p - str));
+        if (c != '\0' && c != '\n' && c != '\r')
+          Strcat_char(tmp, (char)c);
+        p = q;
+        continue;
+      }
+    }
+    if (tmp)
+      Strcat_char(tmp, *p);
+    p++;
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}
+
+const char *cleanupName(const char *name) {
+  auto buf = allocStr(name, -1);
+  auto p = buf;
+  auto q = name;
+  while (*q != '\0') {
+    if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
+      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+        /* ../../       */
+        p += 3;
+        q += 3;
+      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+        /* ../../../    */
+        p += 3;
+        q += 3;
+      } else {
+        while (p != buf && *--p != '/')
+          ; /* ->foo/FOO */
+        *p = '\0';
+        q += 3;
+        strcat(buf, q);
+      }
+    } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
+      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+        /* ../..        */
+      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+        /* ../../..     */
+      } else {
+        while (p != buf && *--p != '/')
+          ; /* ->foo/ */
+        *++p = '\0';
+      }
+      break;
+    } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
+      *p = '\0';                            /* -> foo/bar           */
+      q += 2;
+      strcat(buf, q);
+    } else if (strcmp(p, "/.") == 0) { /* foo/. */
+      *++p = '\0';                     /* -> foo/              */
+      break;
+    } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
+      /* -> foo/bar           */
+      *p = '\0';
+      q++;
+      strcat(buf, q);
+    } else {
+      p++;
+      q++;
+    }
+  }
+  return buf;
+}

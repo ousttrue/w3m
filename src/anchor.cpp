@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "url_stream.h"
 #include "quote.h"
 #include "entity.h"
 #include "readbuffer.h"

@@ -644,6 +644,44 @@ static long long strtoclen(const char *s) {
 #endif
 }
 
+static bool same_url_p(const Url &pu1, const Url &pu2) {
+  return (pu1.schema == pu2.schema && pu1.port == pu2.port &&
+          (pu1.host.size() ? pu2.host.size() ? pu1.host == pu2.host : false
+                           : true) &&
+          (pu1.file.size() ? pu2.file.size() ? pu1.file == pu2.file : false
+                           : true));
+}
+
+static bool checkRedirection(const Url *pu) {
+  static std::vector<Url> redirectins;
+
+  if (pu == nullptr) {
+    // clear
+    redirectins.clear();
+    return true;
+  }
+
+  if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
+    auto tmp = Sprintf("Number of redirections exceeded %d at %s",
+                       FollowRedirection, pu->to_Str().c_str());
+    disp_err_message(tmp->ptr, false);
+    return false;
+  }
+
+  for (auto &url : redirectins) {
+    if (same_url_p(*pu, url)) {
+      // same url found !
+      auto tmp =
+          Sprintf("Redirection loop detected (%s)", pu->to_Str().c_str());
+      disp_err_message(tmp->ptr, false);
+      return false;
+    }
+  }
+
+  redirectins.push_back(*pu);
+
+  return true;
+}
 /*
  * loadGeneralFile: load file to buffer
  */
@@ -963,37 +1001,6 @@ page_loaded:
     preFormUpdateBuffer(b);
   TRAP_OFF;
   return b;
-}
-
-bool checkRedirection(const Url *pu) {
-  static std::vector<Url> redirectins;
-
-  if (pu == nullptr) {
-    // clear
-    redirectins.clear();
-    return true;
-  }
-
-  if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
-    auto tmp = Sprintf("Number of redirections exceeded %d at %s",
-                       FollowRedirection, pu->to_Str().c_str());
-    disp_err_message(tmp->ptr, false);
-    return false;
-  }
-
-  for (auto &url : redirectins) {
-    if (pu->same_url_p(&url)) {
-      // same url found !
-      auto tmp =
-          Sprintf("Redirection loop detected (%s)", pu->to_Str().c_str());
-      disp_err_message(tmp->ptr, false);
-      return false;
-    }
-  }
-
-  redirectins.push_back(*pu);
-
-  return true;
 }
 
 #define PIPEBUFFERNAME "*stream*"

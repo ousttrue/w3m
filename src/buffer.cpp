@@ -1402,3 +1402,18 @@ void query_from_followform(Str **query, FormItemList *fi, int multipart) {
       Strshrink(*query, 1);
   }
 }
+
+std::optional<Url> baseURL(Buffer *buf) {
+  if (buf->bufferprop & BP_NO_URL) {
+    /* no URL is defined for the buffer */
+    return {};
+  }
+  if (buf->info->baseURL) {
+    /* <BASE> tag is defined in the document */
+    return *buf->info->baseURL;
+  } else if (buf->info->currentURL.IS_EMPTY_PARSED_URL()) {
+    return {};
+  } else {
+    return buf->info->currentURL;
+  }
+}

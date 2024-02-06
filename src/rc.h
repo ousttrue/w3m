@@ -4,7 +4,6 @@
 #include "url.h"
 
 extern const char *rc_dir;
-extern bool DecodeURL;
 
 struct Url;
 void show_params(FILE *fp);

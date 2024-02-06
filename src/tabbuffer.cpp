@@ -1,4 +1,5 @@
 #include "tabbuffer.h"
+#include "url_stream.h"
 #include "proto.h"
 #include "rc.h"
 #include "screen.h"
