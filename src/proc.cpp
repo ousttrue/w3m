@@ -560,7 +560,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
       (Currentbuf->info->type == nullptr &&
        Currentbuf->edit == nullptr) || /* Reading shell */
       Currentbuf->real_schema != SCM_LOCAL ||
-      !strcmp(Currentbuf->info->currentURL.file, "-") /* file is std input  */
+      Currentbuf->info->currentURL.file == "-" /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", true);
     return;
@@ -568,12 +568,10 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
   Str *cmd;
   if (Currentbuf->edit) {
-    cmd = unquote_mailcap(
-        Currentbuf->edit, Currentbuf->info->real_type, (char *)fn,
-        (char *)checkHeader(Currentbuf, "Content-Type:"), nullptr);
+    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->info->real_type, fn,
+                          checkHeader(Currentbuf, "Content-Type:"), nullptr);
   } else {
-    cmd = myEditor(Editor, shell_quote((char *)fn),
-                   cur_real_linenumber(Currentbuf));
+    cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
   }
   exec_cmd(cmd->ptr);
 
@@ -1074,7 +1072,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
     file = guess_save_name(nullptr,
                            (char *)Currentbuf->info->currentURL.real_file);
   else
-    file = guess_save_name(Currentbuf, Currentbuf->info->currentURL.file);
+    file =
+        guess_save_name(Currentbuf, Currentbuf->info->currentURL.file.c_str());
   doFileCopy(Currentbuf->sourcefile, file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
@@ -1173,14 +1172,12 @@ DEFUN(reload, RELOAD, "Load current document anew") {
       ldDL();
       return;
     }
-    /* FIXME: gettextize? */
     disp_err_message("Can't reload...", true);
     return;
   }
   if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
-      !strcmp(Currentbuf->info->currentURL.file, "-")) {
+      Currentbuf->info->currentURL.file == "-") {
     /* file is std input */
-    /* FIXME: gettextize? */
     disp_err_message("Can't reload stdin", true);
     return;
   }
@@ -1269,7 +1266,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
     return;
   }
   if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
-      !strcmp(Currentbuf->info->currentURL.file, "-")) {
+      Currentbuf->info->currentURL.file == "-") {
     /* file is std input */
     disp_err_message("Can't browse stdin", true);
     return;

@@ -102,7 +102,7 @@ void UrlStream::add_index_file(Url *pu) {
 
   for (auto ti = index_file_list->first; ti; ti = ti->next) {
     const char *p =
-        Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), nullptr)->ptr;
+        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti->ptr), nullptr)->ptr;
     p = cleanupName(p);
     auto q = cleanupName(file_unquote(p));
     this->openFile(q);
@@ -168,7 +168,7 @@ void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
       auto tmp = Strnew_charp(document_root);
       if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
         Strcat_char(tmp, '/');
-      Strcat_charp(tmp, pu->file);
+      Strcat(tmp, pu->file);
       auto p = cleanupName(tmp->ptr);
       auto q = cleanupName(file_unquote(p));
       if (dir_exist(q)) {
@@ -383,7 +383,7 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu,
   int sock = -1;
   SSL *sslh = nullptr;
   Str *tmp = nullptr;
-  if (pu->file == nullptr) {
+  if (pu->file.empty()) {
     pu->file = allocStr("/", -1);
   }
   if (request && request->method == FORM_METHOD_POST && request->body) {
@@ -394,12 +394,13 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu,
   }
 
   {
-    sock = openSocket(pu->host, schemaNumToName(pu->schema), pu->port);
+    sock = openSocket(pu->host.c_str(), schemaNumToName(pu->schema), pu->port);
     if (sock < 0) {
       return HTST_MISSING;
     }
     if (pu->schema == SCM_HTTPS) {
-      if (!(sslh = openSSLHandle(sock, pu->host, &this->ssl_certificate))) {
+      if (!(sslh = openSSLHandle(sock, pu->host.c_str(),
+                                 &this->ssl_certificate))) {
         return HTST_MISSING;
       }
     }
@@ -451,11 +452,11 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu,
 }
 
 void UrlStream::openData(Url *pu) {
-  if (pu->file == nullptr) {
+  if (pu->file.empty()) {
     return;
   }
 
-  auto p = Strnew_charp(pu->file)->ptr;
+  auto p = Strnew(pu->file)->ptr;
   auto q = strchr(p, ',');
   if (q == nullptr) {
     return;
@@ -493,13 +494,13 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
   // retry:
 
   *pu = Url::parse2(u, current);
-  if (pu->schema == SCM_LOCAL && !pu->file) {
+  if (pu->schema == SCM_LOCAL && pu->file.empty()) {
     if (pu->label) {
       /* #hogege is not a label but a filename */
       Str *tmp2 = Strnew_charp("#");
       Strcat_charp(tmp2, pu->label);
       pu->file = tmp2->ptr;
-      pu->real_file = cleanupName(file_unquote((char *)pu->file));
+      pu->real_file = cleanupName(file_unquote(pu->file.c_str()));
       pu->label = nullptr;
     } else {
       /* given URL must be null string */
@@ -510,13 +511,13 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
     }
   }
 
-  if (LocalhostOnly && pu->host && !is_localhost(pu->host))
+  if (LocalhostOnly && pu->host.size() && !is_localhost(pu->host.c_str()))
     pu->host = nullptr;
 
   this->schema = pu->schema;
   this->url = Strnew(pu->to_Str())->ptr;
   pu->is_nocache = (option.no_cache);
-  this->ext = filename_extension(pu->file, 1);
+  this->ext = filename_extension(pu->file.c_str(), 1);
 
   hr->method = HR_COMMAND_GET;
   hr->flag = {};

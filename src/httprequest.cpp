@@ -24,10 +24,10 @@ Str *header_string = nullptr;
 Str *HttpRequest::getRequestURI(const Url &url) const {
   Str *tmp = Strnew();
   if (this->method == HR_COMMAND_CONNECT) {
-    Strcat_charp(tmp, url.host);
+    Strcat(tmp, url.host);
     Strcat(tmp, Sprintf(":%d", url.port));
   } else if (this->flag & HR_FLAG_LOCAL) {
-    Strcat_charp(tmp, url.file);
+    Strcat(tmp, url.file);
     if (url.query) {
       Strcat_char(tmp, '?');
       Strcat_charp(tmp, url.query);
@@ -60,9 +60,9 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding, "\r\n", nullptr);
   Strcat_m_charp(s, "Accept-Language: ", AcceptLang, "\r\n", nullptr);
 
-  if (target.host) {
+  if (target.host.size()) {
     Strcat_charp(s, "Host: ");
-    Strcat_charp(s, target.host);
+    Strcat(s, target.host);
     if (target.port != getDefaultPort(target.schema)) {
       Strcat(s, Sprintf(":%d", target.port));
     }
@@ -79,8 +79,8 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
   if (!no_referer) {
     int cross_origin = false;
-    if (CrossOriginReferer && current && current->host &&
-        (!target.host || strcasecmp(current->host, target.host) != 0 ||
+    if (CrossOriginReferer && current && current->host.size() &&
+        (target.host.empty() || current->host != target.host ||
          current->port != target.port || current->schema != target.schema))
       cross_origin = true;
     if (current && current->schema == SCM_HTTPS && target.schema != SCM_HTTPS) {

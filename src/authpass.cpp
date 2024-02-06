@@ -64,7 +64,7 @@ void add_auth_user_passwd(Url *pu, const char *realm, Str *uname, Str *pwd,
                           bool is_proxy) {
   auth_pass ent{
       .is_proxy = is_proxy,
-      .host = Strnew_charp(pu->host),
+      .host = Strnew(pu->host),
       .port = pu->port,
       .realm = Strnew_charp(realm),
       .uname = uname,
@@ -190,7 +190,7 @@ static struct auth_pass *find_auth_pass_entry(const char *host, int port,
 
 void invalidate_auth_user_passwd(Url *pu, const char *realm, Str *uname,
                                  Str *pwd, bool is_proxy) {
-  auto ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
+  auto ent = find_auth_pass_entry(pu->host.c_str(), pu->port, realm, NULL, is_proxy);
   if (ent) {
     ent->bad = true;
   }
@@ -206,7 +206,7 @@ int find_auth_user_passwd(Url *pu, const char *realm, Str **uname, Str **pwd,
     *pwd = Strnew(pu->pass);
     return 1;
   }
-  ent = find_auth_pass_entry(pu->host, pu->port, realm, pu->user, is_proxy);
+  ent = find_auth_pass_entry(pu->host.c_str(), pu->port, realm, pu->user, is_proxy);
   if (ent) {
     *uname = ent->uname;
     *pwd = ent->pwd;

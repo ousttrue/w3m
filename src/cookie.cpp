@@ -289,10 +289,10 @@ Str *find_cookie(const Url &pu) {
   int version = 0;
   const char *fq_domainname, *domainname;
 
-  fq_domainname = FQDN(pu.host);
+  fq_domainname = FQDN(pu.host.c_str());
   check_expired_cookies();
   for (p = First_cookie; p; p = p->next) {
-    domainname = (p->version == 0) ? fq_domainname : pu.host;
+    domainname = (p->version == 0) ? fq_domainname : pu.host.c_str();
     if (p->flag & COO_USE && p->match_cookie(pu, domainname)) {
       for (p1 = fco; p1 && p1->name != p->name; p1 = p1->next)
         ;
@@ -356,7 +356,7 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
                Str *domain, Str *path, CookieFlags flag, Str *comment,
                int version, Str *port, Str *commentURL) {
   struct Cookie *p;
-  const char *domainname = (version == 0) ? FQDN(pu->host) : pu->host;
+  std::string domainname = (version == 0) ? FQDN(pu->host.c_str()) : pu->host;
   Str *odomain = domain;
   Str *opath = path;
   struct portlist *portlist = NULL;
@@ -379,8 +379,9 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
     fprintf(stderr, "port: [%s]\n", port->ptr);
 #endif /* DEBUG */
   /* [RFC 2109] s. 4.3.2 case 2; but this (no request-host) shouldn't happen */
-  if (!domainname)
+  if (domainname.empty()) {
     return COO_ENODOT;
+  }
 
   if (domain) {
     const char *dp;
@@ -390,8 +391,7 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
      * I think that this rule has almost the same effect as the
      * tail match of [NETSCAPE].
      */
-    if (domain->ptr[0] != '.' &&
-        (version > 0 || strcasecmp(domainname, domain->ptr) != 0))
+    if (domain->ptr[0] != '.' && (version > 0 || domainname != domain->ptr))
       domain = Sprintf(".%s", domain->ptr);
 
     if (version == 0) {
@@ -411,16 +411,16 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
     }
 
     /* [RFC 2109] s. 4.3.2 case 3 */
-    if (!(dp = domain_match(domainname, domain->ptr)))
+    if (!(dp = domain_match(domainname.c_str(), domain->ptr)))
       COOKIE_ERROR(COO_EDOM);
     /* [RFC 2409] s. 4.3.2 case 4 */
     /* Invariant: dp contains matched domain */
-    if (version > 0 && !contain_no_dots(domainname, dp))
+    if (version > 0 && !contain_no_dots(domainname.c_str(), dp))
       COOKIE_ERROR(COO_EBADHOST);
   }
   if (path) {
     /* [RFC 2109] s. 4.3.2 case 1 */
-    if (version > 0 && strncmp(path->ptr, pu->file, path->length) != 0)
+    if (version > 0 && !pu->file.starts_with(path->ptr))
       COOKIE_ERROR(COO_EPATH);
   }
   if (port) {
@@ -431,9 +431,9 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
   }
 
   if (!domain)
-    domain = Strnew_charp(domainname);
+    domain = Strnew(domainname);
   if (!path) {
-    path = Strnew_charp(pu->file);
+    path = Strnew(pu->file);
     while (path->length > 0 && Strlastchar(path) != '/')
       Strshrink(path, 1);
     if (Strlastchar(path) == '/')

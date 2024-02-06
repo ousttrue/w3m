@@ -448,7 +448,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
       process_compression(lineBuf2, uf);
 
     } else if (use_cookie && accept_cookie && pu &&
-               check_cookie_accept_domain(pu->host) &&
+               check_cookie_accept_domain(pu->host.c_str()) &&
                (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||
                 !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
 
@@ -648,8 +648,8 @@ static long long strtoclen(const char *s) {
  * loadGeneralFile: load file to buffer
  */
 
-Buffer *loadGeneralFile(const char *path, std::optional<Url> current, const HttpOption &option,
-                        FormList *request) {
+Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
+                        const HttpOption &option, FormList *request) {
   Url pu;
   Buffer *b = NULL;
   Buffer *(*proc)(UrlStream *, Buffer *) = loadBuffer;
@@ -774,10 +774,10 @@ load_doc:
       goto load_doc;
     }
     t = checkContentType(t_buf);
-    if (t == NULL && pu.file != NULL) {
+    if (t == NULL && pu.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
-        t = guessContentType(pu.file);
+        t = guessContentType(pu.file.c_str());
     }
     if (t == NULL)
       t = "text/plain";
@@ -818,7 +818,7 @@ load_doc:
     t = DefaultType;
     DefaultType = NULL;
   } else {
-    t = guessContentType(pu.file);
+    t = guessContentType(pu.file.c_str());
     if (t == NULL)
       t = "text/plain";
     real_type = t;
@@ -844,7 +844,7 @@ page_loaded:
     if (do_download) {
       if (!src)
         return NULL;
-      auto file = guess_filename(pu.file);
+      auto file = guess_filename(pu.file.c_str());
       doFileMove(tmp->ptr, file);
       return NO_BUFFER;
     }
@@ -876,9 +876,9 @@ page_loaded:
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file, &st))
         f.modtime = st.st_mtime;
-      file = guess_save_name(NULL, (char *)pu.real_file);
+      file = guess_save_name(NULL, pu.real_file);
     } else
-      file = guess_save_name(t_buf, pu.file);
+      file = guess_save_name(t_buf, pu.file.c_str());
     f.doFileSave(file);
     f.close();
     return NO_BUFFER;
@@ -891,7 +891,7 @@ page_loaded:
       if (t_buf == NULL)
         t_buf = new Buffer(INIT_BUFFER_WIDTH());
       uncompress_stream(&f, &t_buf->sourcefile);
-      uncompressed_file_type(pu.file, &f.ext);
+      uncompressed_file_type(pu.file.c_str(), &f.ext);
     } else {
       t = compress_application_type(f.compression);
       f.compression = CMP_NOCOMPRESS;
@@ -914,7 +914,7 @@ page_loaded:
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
-        f.doFileSave(guess_save_name(t_buf, pu.file));
+        f.doFileSave(guess_save_name(t_buf, pu.file.c_str()));
         f.close();
       }
       return NO_BUFFER;
@@ -923,7 +923,7 @@ page_loaded:
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
   t_buf->info->currentURL = pu;
-  t_buf->info->filename = pu.real_file ? pu.real_file : pu.file;
+  t_buf->info->filename = pu.real_file ? pu.real_file : Strnew(pu.file)->ptr;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
   if (proc == DO_EXTERNAL) {
     b = doExternal(f, t, t_buf);

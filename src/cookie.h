@@ -57,7 +57,7 @@ struct Cookie : public gc_cleanup {
     }
     if (!domain_match(domainname, this->domain.c_str()))
       return 0;
-    if (this->path != pu.file)
+    if (!pu.file.starts_with(this->path))
       return 0;
     if (this->flag & COO_SECURE && pu.schema != SCM_HTTPS)
       return 0;

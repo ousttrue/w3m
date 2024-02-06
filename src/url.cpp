@@ -33,8 +33,8 @@ Url &Url::operator=(const Url &src) {
   this->is_nocache = src.is_nocache;
   this->user = src.user;
   this->pass = src.pass;
-  this->host = ALLOC_STR(src.host);
-  this->file = ALLOC_STR(src.file);
+  this->host = src.host;
+  this->file = src.file;
   this->real_file = ALLOC_STR(src.real_file);
   this->label = ALLOC_STR(src.label);
   this->query = ALLOC_STR(src.query);
@@ -222,7 +222,7 @@ analyze_url:
   }
 analyze_file:
 
-  if ((*p == '\0' || *p == '#' || *p == '?') && url.host == nullptr) {
+  if ((*p == '\0' || *p == '#' || *p == '?') && url.host.empty()) {
     url.file = "";
     goto do_query;
   }
@@ -311,7 +311,7 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
   }
 
   if (url.schema == SCM_LOCAL) {
-    auto q = expandName(file_unquote((char *)url.file));
+    auto q = expandName(file_unquote(url.file.c_str()));
     Str *drive;
     if (IS_ALPHA(q[0]) && q[1] == ':') {
       drive = Strnew_charp_n(q, 2);
@@ -326,26 +326,26 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
   if (current &&
       (url.schema == current->schema ||
        (url.schema == SCM_LOCAL && current->schema == SCM_LOCAL_CGI)) &&
-      url.host == nullptr) {
+      url.host.empty()) {
     /* Copy omitted element from the current URL */
     url.user = current->user;
     url.pass = current->pass;
     url.host = current->host;
     url.port = current->port;
-    if (url.file && *url.file) {
+    if (url.file.size()) {
       if (url.file[0] != '/' &&
           !(url.schema == SCM_LOCAL && IS_ALPHA(url.file[0]) &&
             url.file[1] == ':')) {
         /* file is relative [process 1] */
         auto p = url.file;
-        if (current->file) {
-          auto tmp = Strnew_charp(current->file);
+        if (current->file.size()) {
+          auto tmp = Strnew(current->file);
           while (tmp->length > 0) {
             if (Strlastchar(tmp) == '/')
               break;
             Strshrink(tmp, 1);
           }
-          Strcat_charp(tmp, p);
+          Strcat(tmp, p);
           url.file = tmp->ptr;
           relative_uri = true;
         }
@@ -359,15 +359,14 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
      * from the current URL. */
   }
 
-  if (url.file) {
+  if (url.file.size()) {
     if (url.schema == SCM_LOCAL && url.file[0] != '/' &&
-        !(IS_ALPHA(url.file[0]) && url.file[1] == ':') &&
-        strcmp(url.file, "-")) {
+        !(IS_ALPHA(url.file[0]) && url.file[1] == ':') && url.file != "-") {
       /* local file, relative path */
       auto tmp = Strnew_charp(CurrentDir);
       if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
-      Strcat_charp(tmp, file_unquote((char *)url.file));
+      Strcat_charp(tmp, file_unquote(url.file.c_str()));
       url.file = file_quote(cleanupName(tmp->ptr));
     } else if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS) {
       if (relative_uri) {
@@ -378,7 +377,7 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
          * elements like `//', `..' or `.' in the url.file. It is
          * server's responsibility to canonicalize such path.
          */
-        url.file = cleanupName((char *)url.file);
+        url.file = cleanupName(url.file.c_str());
       }
     } else if (url.file[0] == '/') {
       /*
@@ -387,16 +386,16 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
        * In both case, there must be no side effect with
        * cleanupName(). (I hope so...)
        */
-      url.file = cleanupName((char *)url.file);
+      url.file = cleanupName(url.file.c_str());
     }
     if (url.schema == SCM_LOCAL) {
-      if (url.host && !is_localhost(url.host)) {
+      if (url.host.size() && !is_localhost(url.host.c_str())) {
         Str *tmp = Strnew_charp("//");
-        Strcat_m_charp(tmp, url.host, cleanupName(file_unquote(url.file)),
-                       nullptr);
+        Strcat_m_charp(tmp, url.host.c_str(),
+                       cleanupName(file_unquote(url.file.c_str())), nullptr);
         url.real_file = tmp->ptr;
       } else {
-        url.real_file = cleanupName(file_unquote(url.file));
+        url.real_file = cleanupName(file_unquote(url.file.c_str()));
       }
     }
   }
@@ -416,14 +415,14 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
   if (this->schema == SCM_MISSING) {
     return "???";
   } else if (this->schema == SCM_UNKNOWN) {
-    return this->file ? this->file : "";
+    return this->file.size() ? this->file : "";
   }
-  if (this->host == nullptr && this->file == nullptr && label &&
+  if (this->host.empty() && this->file.empty() && label &&
       this->label != nullptr) {
     /* local label */
     return Sprintf("#%s", this->label)->ptr;
   }
-  if (this->schema == SCM_LOCAL && !strcmp(this->file, "-")) {
+  if (this->schema == SCM_LOCAL && this->file == "-") {
     tmp = Strnew_charp("-");
     if (label && this->label) {
       Strcat_char(tmp, '#');
@@ -434,7 +433,7 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
   tmp = Strnew_charp(schema_str[this->schema]);
   Strcat_char(tmp, ':');
   if (this->schema == SCM_DATA) {
-    Strcat_charp(tmp, this->file);
+    Strcat(tmp, this->file);
     return tmp->ptr;
   }
   { Strcat_charp(tmp, "//"); }
@@ -446,14 +445,14 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
     }
     Strcat_char(tmp, '@');
   }
-  if (this->host) {
-    Strcat_charp(tmp, this->host);
+  if (this->host.size()) {
+    Strcat(tmp, this->host);
     if (this->port != getDefaultPort(this->schema)) {
       Strcat_char(tmp, ':');
       Strcat(tmp, Sprintf("%d", this->port));
     }
   }
-  if ((this->file == nullptr ||
+  if ((this->file.empty() ||
        (this->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
         && !(IS_ALPHA(this->file[0]) && this->file[1] == ':' &&
@@ -461,7 +460,7 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
 #endif
             )))
     Strcat_char(tmp, '/');
-  Strcat_charp(tmp, this->file);
+  Strcat(tmp, this->file);
   if (this->query) {
     Strcat_char(tmp, '?');
     Strcat_charp(tmp, this->query);
@@ -476,8 +475,9 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
 bool Url::same_url_p(const Url *pu2) const {
   return (
       this->schema == pu2->schema && this->port == pu2->port &&
-      (this->host ? pu2->host ? !strcasecmp(this->host, pu2->host) : 0 : 1) &&
-      (this->file ? pu2->file ? !strcmp(this->file, pu2->file) : 0 : 1));
+      (this->host.size() ? pu2->host.size() ? this->host == pu2->host : 0
+                         : 1) &&
+      (this->file.size() ? pu2->file.size() ? this->file == pu2->file : 0 : 1));
 }
 
 static auto xdigit = "0123456789ABCDEF";

@@ -155,7 +155,7 @@ const char *last_modified(Buffer *buf) {
     }
     return "unknown";
   } else if (buf->info->currentURL.schema == SCM_LOCAL) {
-    if (stat(buf->info->currentURL.file, &st) < 0)
+    if (stat(buf->info->currentURL.file.c_str(), &st) < 0)
       return "unknown";
     return ctime(&st.st_mtime);
   }

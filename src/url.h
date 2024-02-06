@@ -5,12 +5,12 @@
 
 struct Str;
 struct Url {
-  UrlSchema schema = {};
-  std::string user = {};
-  std::string pass = {};
-  const char *host = {};
-  int port = {};
-  const char *file = {};
+  UrlSchema schema = SCM_UNKNOWN;
+  std::string user;
+  std::string pass;
+  std::string host;
+  int port = 0;
+  std::string file;
   const char *real_file = {};
   const char *query = {};
   const char *label = {};
@@ -30,7 +30,7 @@ struct Url {
   std::string RefererOriginStr() const;
 
   bool IS_EMPTY_PARSED_URL() const {
-    return (this->schema == SCM_UNKNOWN && !this->file);
+    return (this->schema == SCM_UNKNOWN && this->file.empty());
   }
 };
 

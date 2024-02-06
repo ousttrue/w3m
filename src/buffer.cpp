@@ -202,7 +202,7 @@ static void writeBufferName(Buffer *buf, int n) {
     switch (buf->info->currentURL.schema) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
-      if (strcmp(buf->info->currentURL.file, "-")) {
+      if (buf->info->currentURL.file != "-") {
         Strcat_char(msg, ' ');
         Strcat_charp(msg, buf->info->currentURL.real_file);
       }
