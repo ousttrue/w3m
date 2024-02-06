@@ -1,6 +1,8 @@
 istream_lib = static_library(
     'istream',
     [
+        'myctype.cpp',
+        'quote.cpp',
         'url_schema.cpp',
     ],
 )

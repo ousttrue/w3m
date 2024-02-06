@@ -434,19 +434,20 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
  * Reshape HTML buffer
  */
 void reshapeBuffer(Buffer *buf) {
-  if (!buf->need_reshape){
+  if (!buf->need_reshape) {
     return;
   }
   buf->need_reshape = false;
 
   buf->width = INIT_BUFFER_WIDTH();
-  if (buf->sourcefile.empty()){
+  if (buf->sourcefile.empty()) {
     return;
   }
 
   UrlStream f(SCM_LOCAL);
-  f.openFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile.c_str());
-  if (f.stream == nullptr){
+  f.openFile(buf->mailcap_source ? buf->mailcap_source
+                                 : buf->sourcefile.c_str());
+  if (f.stream == nullptr) {
     return;
   }
 
@@ -1416,4 +1417,29 @@ std::optional<Url> baseURL(Buffer *buf) {
   } else {
     return buf->info->currentURL;
   }
+}
+
+Str *Str_form_quote(Str *x) {
+  Str *tmp = {};
+  char *p = x->ptr, *ep = x->ptr + x->length;
+  char buf[4];
+
+  for (; p < ep; p++) {
+    if (*p == ' ') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, '+');
+    } else if (is_url_unsafe(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      sprintf(buf, "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp;
+  return x;
 }
