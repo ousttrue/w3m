@@ -2,6 +2,7 @@
 #include "mimehead.h"
 #include "encoding.h"
 #include <stdio.h>
+#include <openssl/types.h>
 
 struct stream_buffer {
   unsigned char *buf;
@@ -101,6 +102,13 @@ union input_stream {
 
   input_stream *newEncodedStream(EncodingType encoding);
 };
+
+struct ssl_handle {
+  SSL *ssl;
+  int sock;
+};
+union input_stream;
+input_stream *newSSLStream(SSL *ssl, int sock);
 
 void init_base_stream(base_stream *base, int bufsize);
 

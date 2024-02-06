@@ -2,7 +2,6 @@
 #include "message.h"
 #include "Str.h"
 #include "myctype.h"
-#include "istream.h"
 #include "alloc.h"
 #include <unistd.h>
 
@@ -516,49 +515,4 @@ void SSL_write_from_file(SSL *ssl, const char *file) {
     }
     fclose(fd);
   }
-}
-
-static void ssl_close(struct ssl_handle *handle) {
-  close(handle->sock);
-  if (handle->ssl)
-    SSL_free(handle->ssl);
-  xfree(handle);
-}
-
-static int ssl_read(struct ssl_handle *handle, char *buf, int len) {
-  int status;
-  if (handle->ssl) {
-    for (;;) {
-      status = SSL_read(handle->ssl, buf, len);
-      if (status > 0)
-        break;
-      switch (SSL_get_error(handle->ssl, status)) {
-      case SSL_ERROR_WANT_READ:
-      case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see
-                                    SSL_get_error(3) */
-        continue;
-      default:
-        break;
-      }
-      break;
-    }
-  } else
-    status = read(handle->sock, buf, len);
-  return status;
-}
-
-#define SSL_BUF_SIZE 1536
-input_stream *newSSLStream(SSL *ssl, int sock) {
-  input_stream *stream;
-  if (sock < 0)
-    return NULL;
-  stream = NewWithoutGC(union input_stream);
-  init_base_stream(&stream->base, SSL_BUF_SIZE);
-  stream->ssl.type = IST_SSL;
-  stream->ssl.handle = NewWithoutGC(struct ssl_handle);
-  stream->ssl.handle->ssl = ssl;
-  stream->ssl.handle->sock = sock;
-  stream->ssl.read = (ReadFunc)ssl_read;
-  stream->ssl.close = (CloseFunc)ssl_close;
-  return stream;
 }

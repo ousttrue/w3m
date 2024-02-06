@@ -18,11 +18,3 @@ extern char *ssl_min_version;
 SSL *openSSLHandle(int sock, const char *hostname, const char **p_cert);
 void free_ssl_ctx();
 void SSL_write_from_file(SSL *ssl, const char *file);
-
-struct ssl_handle {
-  SSL *ssl;
-  int sock;
-};
-union input_stream;
-input_stream *newSSLStream(SSL *ssl, int sock);
-
