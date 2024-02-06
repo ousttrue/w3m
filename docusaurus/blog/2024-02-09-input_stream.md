@@ -12,7 +12,7 @@ tags: [cpp]
 
 ```c
 union input_stream {
-  struct base_stream base; // socket
+  struct base_stream base; // file descriptor | socket
   struct file_stream file; // local file
   struct str_stream str; // memory bytes
   struct ssl_stream ssl; // ssl
@@ -33,4 +33,47 @@ ftp を事前にカットしているのでシンプルになっています。
 - ssl 関連
 
 IO も asio か libuv への置き換えを視野に入れているが、まだどれにするかを決めていない。
+
+## union input_stream から abstract base class へ
+
+```cpp
+class input_stream {
+protected:
+  input_stream(int bufsize);
+  virtual ~input_stream();
+};
+
+class base_stream : public input_stream {
+public:
+  base_stream(int des);
+};
+
+class file_stream : public input_stream {
+public:
+  file_stream(FILE *f);
+};
+
+class str_stream : public input_stream {
+public:
+  str_stream(Str *s);
+};
+
+class ssl_stream : public input_stream {
+public:
+  ssl_stream(SSL *ssl, int sock);
+};
+
+class encoded_stream : public input_stream {
+public:
+  encoded_stream(input_stream *is, EncodingType encoding);
+};
+
+```
+
+union を利用した擬似的なポリモーフィズムを、
+c++ の継承を利用したシンプルなポリモーフィズムへと作り替える。
+union で最後に束ねていたところが、
+base class で基底に変わるのは面白い。
+
+
 
