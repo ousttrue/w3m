@@ -1062,19 +1062,20 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
-  const char *file;
 
-  if (Currentbuf->sourcefile == nullptr)
+  if (Currentbuf->sourcefile.empty())
     return;
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
+
+  const char *file;
   if (Currentbuf->real_schema == SCM_LOCAL)
     file = guess_save_name(nullptr,
-                           (char *)Currentbuf->info->currentURL.real_file);
+                           Currentbuf->info->currentURL.real_file.c_str());
   else
     file =
         guess_save_name(Currentbuf, Currentbuf->info->currentURL.file.c_str());
-  doFileCopy(Currentbuf->sourcefile, file);
+  doFileCopy(Currentbuf->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1119,7 +1120,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if (Currentbuf->sourcefile == nullptr) {
+  if (Currentbuf->sourcefile.empty()) {
     return;
   }
 

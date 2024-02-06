@@ -81,7 +81,7 @@ struct Buffer : public gc_cleanup {
   HmarkerList *imarklist = nullptr;
   const char *baseTarget = nullptr;
   UrlSchema real_schema = {};
-  const char *sourcefile = nullptr;
+  std::string sourcefile;
   std::shared_ptr<Clone> clone;
 
   size_t trbyte = 0;

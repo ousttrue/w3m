@@ -134,7 +134,7 @@ const char *uncompressed_file_type(const char *path, const char **ext) {
   return t0;
 }
 
-void uncompress_stream(UrlStream *uf, const char **src) {
+std::string UrlStream::uncompress_stream() {
   pid_t pid1;
   FILE *f1;
   const char *expand_cmd = GUNZIP_CMDNAME;
@@ -144,12 +144,12 @@ void uncompress_stream(UrlStream *uf, const char **src) {
   struct compression_decoder *d;
   int use_d_arg = 0;
 
-  if (IStype(uf->stream) != IST_ENCODED) {
-    uf->stream = newEncodedStream(uf->stream, uf->encoding);
-    uf->encoding = ENC_7BIT;
+  if (IStype(this->stream) != IST_ENCODED) {
+    this->stream = newEncodedStream(this->stream, this->encoding);
+    this->encoding = ENC_7BIT;
   }
   for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (uf->compression == d->type) {
+    if (this->compression == d->type) {
       if (d->auxbin_p)
         expand_cmd = auxbinFile((char *)d->cmd);
       else
@@ -160,17 +160,17 @@ void uncompress_stream(UrlStream *uf, const char **src) {
       break;
     }
   }
-  uf->compression = CMP_NOCOMPRESS;
+  this->compression = CMP_NOCOMPRESS;
 
-  if (uf->schema != SCM_LOCAL) {
+  if (this->schema != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_DFL, ext)->ptr;
   }
 
   /* child1 -- stdout|f1=uf -> parent */
   pid1 = open_pipe_rw(&f1, NULL);
   if (pid1 < 0) {
-    uf->close();
-    return;
+    this->close();
+    return {};
   }
   if (pid1 == 0) {
     /* child */
@@ -180,7 +180,7 @@ void uncompress_stream(UrlStream *uf, const char **src) {
     /* uf -> child2 -- stdout|stdin -> child1 */
     pid2 = open_pipe_rw(&f2, NULL);
     if (pid2 < 0) {
-      uf->close();
+      this->close();
       exit(1);
     }
     if (pid2 == 0) {
@@ -189,16 +189,16 @@ void uncompress_stream(UrlStream *uf, const char **src) {
       int count;
       FILE *f = NULL;
 
-      setup_child(true, 2, uf->fileno());
+      setup_child(true, 2, this->fileno());
       if (tmpf)
         f = fopen(tmpf, "wb");
-      while ((count = ISread_n(uf->stream, buf, SAVE_BUF_SIZE)) > 0) {
+      while ((count = ISread_n(this->stream, buf, SAVE_BUF_SIZE)) > 0) {
         if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
           break;
         if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
           break;
       }
-      uf->close();
+      this->close();
       if (f)
         fclose(f);
       xfree(buf);
@@ -213,14 +213,14 @@ void uncompress_stream(UrlStream *uf, const char **src) {
       execlp(expand_cmd, expand_name, NULL);
     exit(1);
   }
+  this->close();
+  this->stream = newFileStream(f1, (void (*)())fclose);
   if (tmpf) {
-    if (src)
-      *src = tmpf;
-    else
-      uf->schema = SCM_LOCAL;
+    this->schema = SCM_LOCAL;
+    return tmpf;
+  } else {
+    return {};
   }
-  uf->close();
-  uf->stream = newFileStream(f1, (void (*)())fclose);
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)

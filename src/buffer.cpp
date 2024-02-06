@@ -125,8 +125,9 @@ void discardBuffer(Buffer *buf) {
   }
   if (--buf->clone->count)
     return;
-  if (buf->sourcefile && (!buf->info->real_type ||
-                          strncasecmp(buf->info->real_type, "image/", 6))) {
+  if (buf->sourcefile.size() &&
+      (!buf->info->real_type ||
+       strncasecmp(buf->info->real_type, "image/", 6))) {
   }
   if (buf->mailcap_source)
     unlink(buf->mailcap_source);
@@ -196,7 +197,6 @@ static void writeBufferName(Buffer *buf, int n) {
   if (all == 0 && buf->lastLine != nullptr)
     all = buf->lastLine->linenumber;
   move(n, 0);
-  /* FIXME: gettextize? */
   msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
   if (buf->info->filename != nullptr) {
     switch (buf->info->currentURL.schema) {
@@ -204,7 +204,7 @@ static void writeBufferName(Buffer *buf, int n) {
     case SCM_LOCAL_CGI:
       if (buf->info->currentURL.file != "-") {
         Strcat_char(msg, ' ');
-        Strcat_charp(msg, buf->info->currentURL.real_file);
+        Strcat(msg, buf->info->currentURL.real_file);
       }
       break;
     case SCM_UNKNOWN:
@@ -434,18 +434,21 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
  * Reshape HTML buffer
  */
 void reshapeBuffer(Buffer *buf) {
-
-  if (!buf->need_reshape)
+  if (!buf->need_reshape){
     return;
+  }
   buf->need_reshape = false;
+
   buf->width = INIT_BUFFER_WIDTH();
-  if (buf->sourcefile == nullptr)
+  if (buf->sourcefile.empty()){
     return;
+  }
 
   UrlStream f(SCM_LOCAL);
-  f.openFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile);
-  if (f.stream == nullptr)
+  f.openFile(buf->mailcap_source ? buf->mailcap_source : buf->sourcefile.c_str());
+  if (f.stream == nullptr){
     return;
+  }
 
   auto sbuf = new Buffer(0);
   *sbuf = *buf;
@@ -677,7 +680,7 @@ void set_buffer_environ(Buffer *buf) {
   if (buf == nullptr)
     return;
   if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->sourcefile);
+    set_environ("W3M_SOURCEFILE", buf->sourcefile.c_str());
     set_environ("W3M_FILENAME", buf->info->filename);
     set_environ("W3M_TITLE", buf->buffername);
     set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());

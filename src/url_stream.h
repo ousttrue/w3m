@@ -59,6 +59,7 @@ struct UrlStream {
   uint8_t getc() const;
   void undogetc();
   int fileno() const;
+  std::string uncompress_stream();
 
 private:
   StreamStatus openHttp(const char *url, Url *pu, std::optional<Url> current,

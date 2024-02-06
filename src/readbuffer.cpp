@@ -4205,7 +4205,7 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
 
   if (newBuf == NULL)
     newBuf = new Buffer(INIT_BUFFER_WIDTH());
-  if (newBuf->sourcefile == NULL &&
+  if (newBuf->sourcefile.empty() &&
       (f->schema != SCM_LOCAL || newBuf->mailcap)) {
     tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");

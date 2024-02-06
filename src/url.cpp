@@ -35,7 +35,7 @@ Url &Url::operator=(const Url &src) {
   this->pass = src.pass;
   this->host = src.host;
   this->file = src.file;
-  this->real_file = ALLOC_STR(src.real_file);
+  this->real_file = src.real_file;
   this->label = ALLOC_STR(src.label);
   this->query = ALLOC_STR(src.query);
   return *this;
@@ -404,7 +404,7 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
 
 std::string Url::RefererOriginStr() const {
   Url u = *this;
-  u.file = nullptr;
+  u.file = {};
   u.query = nullptr;
   return u.to_Str(false, false, false);
 }

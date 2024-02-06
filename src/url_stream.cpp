@@ -102,7 +102,8 @@ void UrlStream::add_index_file(Url *pu) {
 
   for (auto ti = index_file_list->first; ti; ti = ti->next) {
     const char *p =
-        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti->ptr), nullptr)->ptr;
+        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti->ptr), nullptr)
+            ->ptr;
     p = cleanupName(p);
     auto q = cleanupName(file_unquote(p));
     this->openFile(q);
@@ -143,23 +144,23 @@ void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
                              TextList *extra_header, HttpRequest *hr) {
   if (request && request->body)
     /* local CGI: POST */
-    this->stream = newFileStream(
-        localcgi_post(pu->real_file, pu->query, request, option.referer),
-        (void (*)())fclose);
+    this->stream = newFileStream(localcgi_post(pu->real_file.c_str(), pu->query,
+                                               request, option.referer),
+                                 (void (*)())fclose);
   else
     /* lodal CGI: GET */
-    this->stream =
-        newFileStream(localcgi_get(pu->real_file, pu->query, option.referer),
-                      (void (*)())fclose);
+    this->stream = newFileStream(
+        localcgi_get(pu->real_file.c_str(), pu->query, option.referer),
+        (void (*)())fclose);
   if (this->stream) {
     this->is_cgi = true;
     this->schema = pu->schema = SCM_LOCAL_CGI;
     return;
   }
 
-  this->openFile(pu->real_file);
+  this->openFile(pu->real_file.c_str());
   if (this->stream == nullptr) {
-    if (dir_exist(pu->real_file)) {
+    if (dir_exist(pu->real_file.c_str())) {
       add_index_file(pu);
       if (!this->stream) {
         return;
@@ -629,7 +630,7 @@ void UrlStream::openFile(const char *path) {
       auto t0 = uncompressed_file_type(path, &ext);
       this->guess_type = t0;
       this->ext = ext;
-      uncompress_stream(this, nullptr);
+      this->uncompress_stream();
       return;
     }
   }
@@ -695,7 +696,6 @@ int UrlStream::doFileSave(const char *defstr) {
   const char *p, *q;
   pid_t pid;
   char *lock;
-  const char *tmpf = nullptr;
 
   if (fmInitialized) {
     p = searchKeyData();
@@ -720,9 +720,10 @@ int UrlStream::doFileSave(const char *defstr) {
     if (!pid) {
       int err;
       if ((this->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-        uncompress_stream(this, &tmpf);
-        if (tmpf)
-          unlink(tmpf);
+        auto tmpf = this->uncompress_stream();
+        if (tmpf.size()) {
+          unlink(tmpf.c_str());
+        }
       }
       setup_child(false, 0, this->fileno());
       err = this->save2tmp(p);
@@ -758,9 +759,10 @@ int UrlStream::doFileSave(const char *defstr) {
       return -1;
     }
     if (this->content_encoding != CMP_NOCOMPRESS && AutoUncompress) {
-      uncompress_stream(this, &tmpf);
-      if (tmpf)
-        unlink(tmpf);
+      auto tmpf = this->uncompress_stream();
+      if (tmpf.size()) {
+        unlink(tmpf.c_str());
+      }
     }
     if (this->save2tmp(p) < 0) {
       printf("Can't save to %s\n", p);

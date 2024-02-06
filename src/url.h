@@ -11,7 +11,7 @@ struct Url {
   std::string host;
   int port = 0;
   std::string file;
-  const char *real_file = {};
+  std::string real_file;
   const char *query = {};
   const char *label = {};
   int is_nocache = {};

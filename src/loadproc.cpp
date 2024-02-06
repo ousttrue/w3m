@@ -103,7 +103,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   }
   TRAP_ON;
 
-  if (newBuf->sourcefile == NULL &&
+  if (newBuf->sourcefile.empty() &&
       (uf->schema != SCM_LOCAL || newBuf->mailcap)) {
     tmpf = tmpfname(TMPF_SRC, NULL);
     src = fopen(tmpf->ptr, "w");
@@ -230,7 +230,7 @@ static Buffer *loadSomething(UrlStream *f,
   }
   if (buf->info->currentURL.schema == SCM_UNKNOWN)
     buf->info->currentURL.schema = f->schema;
-  if (f->schema == SCM_LOCAL && buf->sourcefile == NULL)
+  if (f->schema == SCM_LOCAL && buf->sourcefile.empty())
     buf->sourcefile = buf->info->filename;
   if (loadproc == loadHTMLBuffer)
     buf->info->type = "text/html";
@@ -314,25 +314,25 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
     if (defaultbuf == NULL)
       defaultbuf = new Buffer(INIT_BUFFER_WIDTH());
-    if (defaultbuf->sourcefile)
-      src = defaultbuf->sourcefile;
+    if (defaultbuf->sourcefile.size())
+      src = Strnew(defaultbuf->sourcefile)->ptr;
     else
       src = tmpf->ptr;
-    defaultbuf->sourcefile = NULL;
+    defaultbuf->sourcefile = {};
     defaultbuf->mailcap = mcap;
   }
   if (mcap->flags & MAILCAP_HTMLOUTPUT) {
     buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->info->type = "text/html";
-      buf->mailcap_source = (char *)buf->sourcefile;
+      buf->mailcap_source = Strnew(buf->sourcefile)->ptr;
       buf->sourcefile = (char *)src;
     }
   } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
     buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->info->type = "text/plain";
-      buf->mailcap_source = (char *)buf->sourcefile;
+      buf->mailcap_source = Strnew(buf->sourcefile)->ptr;
       buf->sourcefile = (char *)src;
     }
   } else {
@@ -692,19 +692,19 @@ load_doc:
     switch (f.schema) {
     case SCM_LOCAL: {
       struct stat st;
-      if (stat(pu.real_file, &st) < 0)
+      if (stat(pu.real_file.c_str(), &st) < 0)
         return NULL;
       if (S_ISDIR(st.st_mode)) {
         if (UseExternalDirBuffer) {
-          Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
+          Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
           b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
           if (b != NULL && b != NO_BUFFER) {
             b->info->currentURL = pu;
-            b->info->filename = b->info->currentURL.real_file;
+            b->info->filename = Strnew(b->info->currentURL.real_file)->ptr;
           }
           return b;
         } else {
-          page = loadLocalDir(pu.real_file);
+          page = loadLocalDir(pu.real_file.c_str());
           t = "local:directory";
         }
       }
@@ -874,9 +874,9 @@ page_loaded:
       f.stream = newEncodedStream(f.stream, f.encoding);
     if (pu.schema == SCM_LOCAL) {
       struct stat st;
-      if (PreserveTimestamp && !stat(pu.real_file, &st))
+      if (PreserveTimestamp && !stat(pu.real_file.c_str(), &st))
         f.modtime = st.st_mtime;
-      file = guess_save_name(NULL, pu.real_file);
+      file = guess_save_name(NULL, pu.real_file.c_str());
     } else
       file = guess_save_name(t_buf, pu.file.c_str());
     f.doFileSave(file);
@@ -885,12 +885,12 @@ page_loaded:
   }
 
   if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    uncompress_stream(&f, &pu.real_file);
+    pu.real_file = f.uncompress_stream();
   } else if (f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(t) || searchExtViewer(t))) {
       if (t_buf == NULL)
         t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      uncompress_stream(&f, &t_buf->sourcefile);
+      t_buf->sourcefile = f.uncompress_stream();
       uncompressed_file_type(pu.file.c_str(), &f.ext);
     } else {
       t = compress_application_type(f.compression);
@@ -909,7 +909,7 @@ page_loaded:
       TRAP_OFF;
       if (pu.schema == SCM_LOCAL) {
         f.close();
-        _doFileCopy(pu.real_file, guess_save_name(NULL, (char *)pu.real_file),
+        _doFileCopy(pu.real_file.c_str(), guess_save_name(NULL, pu.real_file.c_str()),
                     true);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
@@ -923,7 +923,7 @@ page_loaded:
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
   t_buf->info->currentURL = pu;
-  t_buf->info->filename = pu.real_file ? pu.real_file : Strnew(pu.file)->ptr;
+  t_buf->info->filename = pu.real_file.size() ? Strnew(pu.real_file)->ptr : Strnew(pu.file)->ptr;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
   if (proc == DO_EXTERNAL) {
     b = doExternal(f, t, t_buf);
