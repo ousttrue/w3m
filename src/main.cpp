@@ -353,7 +353,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
 
     if (!al) {
       label = Strnew_m_charp("_", target, nullptr)->ptr;
-      al = searchURLLabel(Currentbuf, label);
+      al = searchURLLabel(Currentbuf, label.c_str());
     }
     if (al) {
       gotoLine(Currentbuf, al->start.line);

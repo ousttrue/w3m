@@ -26,7 +26,6 @@ bool ArgvIsURL = true;
 bool LocalhostOnly = false;
 bool retryAsHttp = true;
 
-#define ALLOC_STR(s) ((s) == nullptr ? nullptr : allocStr(s, -1))
 Url &Url::operator=(const Url &src) {
   this->schema = src.schema;
   this->port = src.port;
@@ -36,8 +35,8 @@ Url &Url::operator=(const Url &src) {
   this->host = src.host;
   this->file = src.file;
   this->real_file = src.real_file;
-  this->label = ALLOC_STR(src.label);
-  this->query = ALLOC_STR(src.query);
+  this->label = src.label;
+  this->query = src.query;
   return *this;
 }
 
@@ -295,11 +294,11 @@ do_label:
   if (url.schema == SCM_MISSING) {
     url.schema = SCM_LOCAL;
     url.file = allocStr(p, -1);
-    url.label = nullptr;
+    url.label = {};
   } else if (*p == '#')
     url.label = allocStr(p + 1, -1);
   else
-    url.label = nullptr;
+    url.label = {};
 
   return url;
 }
@@ -352,8 +351,9 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
       }
     } else { /* schema:[?query][#label] */
       url.file = current->file;
-      if (!url.query)
+      if (url.query.empty()) {
         url.query = current->query;
+      }
     }
     /* comment: query part need not to be completed
      * from the current URL. */
@@ -405,7 +405,7 @@ Url Url::parse2(const char *src, std::optional<Url> current) {
 std::string Url::RefererOriginStr() const {
   Url u = *this;
   u.file = {};
-  u.query = nullptr;
+  u.query = {};
   return u.to_Str(false, false, false);
 }
 
@@ -417,16 +417,15 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
   } else if (this->schema == SCM_UNKNOWN) {
     return this->file.size() ? this->file : "";
   }
-  if (this->host.empty() && this->file.empty() && label &&
-      this->label != nullptr) {
+  if (this->host.empty() && this->file.empty() && label && this->label.size()) {
     /* local label */
-    return Sprintf("#%s", this->label)->ptr;
+    return Sprintf("#%s", this->label.c_str())->ptr;
   }
   if (this->schema == SCM_LOCAL && this->file == "-") {
     tmp = Strnew_charp("-");
-    if (label && this->label) {
+    if (label && this->label.size()) {
       Strcat_char(tmp, '#');
-      Strcat_charp(tmp, this->label);
+      Strcat(tmp, this->label);
     }
     return tmp->ptr;
   }
@@ -461,13 +460,13 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
             )))
     Strcat_char(tmp, '/');
   Strcat(tmp, this->file);
-  if (this->query) {
+  if (this->query.size()) {
     Strcat_char(tmp, '?');
-    Strcat_charp(tmp, this->query);
+    Strcat(tmp, this->query);
   }
-  if (label && this->label) {
+  if (label && this->label.size()) {
     Strcat_char(tmp, '#');
-    Strcat_charp(tmp, this->label);
+    Strcat(tmp, this->label);
   }
   return tmp->ptr;
 }

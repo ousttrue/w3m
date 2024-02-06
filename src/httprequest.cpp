@@ -28,9 +28,9 @@ Str *HttpRequest::getRequestURI(const Url &url) const {
     Strcat(tmp, Sprintf(":%d", url.port));
   } else if (this->flag & HR_FLAG_LOCAL) {
     Strcat(tmp, url.file);
-    if (url.query) {
+    if (url.query.size()) {
       Strcat_char(tmp, '?');
-      Strcat_charp(tmp, url.query);
+      Strcat(tmp, url.query);
     }
   } else {
     Strcat(tmp, url.to_Str(true, true, false));

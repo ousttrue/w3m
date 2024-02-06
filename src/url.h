@@ -3,7 +3,6 @@
 #include <string>
 #include <optional>
 
-struct Str;
 struct Url {
   UrlSchema schema = SCM_UNKNOWN;
   std::string user;
@@ -12,9 +11,9 @@ struct Url {
   int port = 0;
   std::string file;
   std::string real_file;
-  const char *query = {};
-  const char *label = {};
-  int is_nocache = {};
+  std::string query;
+  std::string label;
+  bool is_nocache = false;
 
   static Url parse(const char *url, std::optional<Url> current = {});
   static Url parse2(const char *url, std::optional<Url> current = {});
@@ -36,6 +35,8 @@ struct Url {
 
 bool checkRedirection(const Url *pu);
 char url_unquote_char(const char **pstr);
+
+struct Str;
 const char *url_quote(const char *str);
 const char *url_decode0(const char *url);
 Str *Str_url_unquote(Str *x, int is_form, int safe);

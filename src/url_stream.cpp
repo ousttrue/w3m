@@ -144,13 +144,14 @@ void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
                              TextList *extra_header, HttpRequest *hr) {
   if (request && request->body)
     /* local CGI: POST */
-    this->stream = newFileStream(localcgi_post(pu->real_file.c_str(), pu->query,
-                                               request, option.referer),
-                                 (void (*)())fclose);
+    this->stream =
+        newFileStream(localcgi_post(pu->real_file.c_str(), pu->query.c_str(),
+                                    request, option.referer),
+                      (void (*)())fclose);
   else
     /* lodal CGI: GET */
     this->stream = newFileStream(
-        localcgi_get(pu->real_file.c_str(), pu->query, option.referer),
+        localcgi_get(pu->real_file.c_str(), pu->query.c_str(), option.referer),
         (void (*)())fclose);
   if (this->stream) {
     this->is_cgi = true;
@@ -496,10 +497,10 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
 
   *pu = Url::parse2(u, current);
   if (pu->schema == SCM_LOCAL && pu->file.empty()) {
-    if (pu->label) {
+    if (pu->label.size()) {
       /* #hogege is not a label but a filename */
-      Str *tmp2 = Strnew_charp("#");
-      Strcat_charp(tmp2, pu->label);
+      auto tmp2 = Strnew_charp("#");
+      Strcat(tmp2, pu->label);
       pu->file = tmp2->ptr;
       pu->real_file = cleanupName(file_unquote(pu->file.c_str()));
       pu->label = nullptr;

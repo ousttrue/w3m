@@ -621,8 +621,8 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   u = Url::parse2(a->url, baseURL(Currentbuf));
   if (u.to_Str() == Currentbuf->info->currentURL.to_Str()) {
     /* index within this buffer */
-    if (u.label) {
-      gotoLabel(u.label);
+    if (u.label.size()) {
+      gotoLabel(u.label.c_str());
       return;
     }
   }

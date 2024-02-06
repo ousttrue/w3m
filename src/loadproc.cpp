@@ -696,7 +696,8 @@ load_doc:
         return NULL;
       if (S_ISDIR(st.st_mode)) {
         if (UseExternalDirBuffer) {
-          Str *cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
+          Str *cmd =
+              Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
           b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
           if (b != NULL && b != NO_BUFFER) {
             b->info->currentURL = pu;
@@ -909,8 +910,8 @@ page_loaded:
       TRAP_OFF;
       if (pu.schema == SCM_LOCAL) {
         f.close();
-        _doFileCopy(pu.real_file.c_str(), guess_save_name(NULL, pu.real_file.c_str()),
-                    true);
+        _doFileCopy(pu.real_file.c_str(),
+                    guess_save_name(NULL, pu.real_file.c_str()), true);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
@@ -923,7 +924,8 @@ page_loaded:
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
   t_buf->info->currentURL = pu;
-  t_buf->info->filename = pu.real_file.size() ? Strnew(pu.real_file)->ptr : Strnew(pu.file)->ptr;
+  t_buf->info->filename =
+      pu.real_file.size() ? Strnew(pu.real_file)->ptr : Strnew(pu.file)->ptr;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
   if (proc == DO_EXTERNAL) {
     b = doExternal(f, t, t_buf);
@@ -934,10 +936,10 @@ page_loaded:
   if (b && b != NO_BUFFER) {
     b->real_schema = f.schema;
     b->info->real_type = real_type;
-    if (pu.label) {
+    if (pu.label.size()) {
       if (proc == loadHTMLBuffer) {
         Anchor *a;
-        a = searchURLLabel(b, pu.label);
+        a = searchURLLabel(b, pu.label.c_str());
         if (a != NULL) {
           gotoLine(b, a->start.line);
           if (label_topline)
@@ -948,7 +950,7 @@ page_loaded:
           arrangeCursor(b);
         }
       } else { /* plain text */
-        int l = atoi(pu.label);
+        int l = atoi(pu.label.c_str());
         gotoRealLine(b, l);
         b->pos = 0;
         arrangeCursor(b);
