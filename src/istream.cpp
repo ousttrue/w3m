@@ -115,16 +115,17 @@ input_stream *newStrStream(Str *s) {
   return stream;
 }
 
-input_stream *newEncodedStream(input_stream *is, EncodingType encoding) {
-  input_stream *stream;
-  if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
-                     encoding != ENC_UUENCODE))
-    return is;
-  stream = NewWithoutGC(union input_stream);
+input_stream *input_stream::newEncodedStream(EncodingType encoding) {
+  if ((encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
+       encoding != ENC_UUENCODE)) {
+    return this;
+  }
+
+  auto stream = NewWithoutGC(union input_stream);
   init_base_stream(&stream->base, STREAM_BUF_SIZE);
   stream->ens.type = IST_ENCODED;
   stream->ens.handle = NewWithoutGC(struct ens_handle);
-  stream->ens.handle->is = is;
+  stream->ens.handle->is = this;
   stream->ens.handle->pos = 0;
   stream->ens.handle->encoding = encoding;
   growbuf_init_without_GC(&stream->ens.handle->gb);
@@ -133,38 +134,27 @@ input_stream *newEncodedStream(input_stream *is, EncodingType encoding) {
   return stream;
 }
 
-int ISclose(input_stream *stream) {
+int input_stream::ISclose() {
   MySignalHandler prevtrap = {};
-  if (stream == NULL)
-    return -1;
-  if (stream->base.close != NULL) {
-    if (stream->base.type & IST_UNCLOSE) {
-      return -1;
-    }
+  if (this->base.close != NULL) {
     prevtrap = mySignalInt(mySignalGetIgn());
-    stream->base.close(stream->base.handle);
+    this->base.close(this->base.handle);
     mySignalInt(prevtrap);
   }
-  xfree(stream->base.stream.buf);
-  xfree(stream);
+  xfree(this->base.stream.buf);
+  xfree(this);
   return 0;
 }
 
-int ISgetc(input_stream *stream) {
-  base_stream *base;
-  if (stream == NULL)
-    return '\0';
-  base = &stream->base;
+int input_stream::ISgetc() {
+  auto base = &this->base;
   if (!base->iseos && MUST_BE_UPDATED(base))
     do_update(base);
   return POP_CHAR(base);
 }
 
-int ISundogetc(input_stream *stream) {
-  stream_buffer *sb;
-  if (stream == NULL)
-    return -1;
-  sb = &stream->base.stream;
+int input_stream::ISundogetc() {
+  auto sb = &base.stream;
   if (sb->cur > 0) {
     sb->cur--;
     return 0;
@@ -172,18 +162,15 @@ int ISundogetc(input_stream *stream) {
   return -1;
 }
 
-Str *StrISgets2(input_stream *stream, char crnl) {
+Str *input_stream::StrISgets2(bool crnl) {
   struct growbuf gb;
-
-  if (stream == NULL)
-    return NULL;
   growbuf_init(&gb);
-  ISgets_to_growbuf(stream, &gb, crnl);
+  this->ISgets_to_growbuf(&gb, crnl);
   return growbuf_to_Str(&gb);
 }
 
-void ISgets_to_growbuf(input_stream *stream, struct growbuf *gb, char crnl) {
-  base_stream *base = &stream->base;
+void input_stream::ISgets_to_growbuf(struct growbuf *gb, char crnl) {
+  base_stream *base = &this->base;
   stream_buffer *sb = &base->stream;
   int i;
 
@@ -236,18 +223,20 @@ int ISread(input_stream *stream, Str *buf, int count) {
 }
 #endif
 
-int ISread_n(input_stream *stream, char *dst, int count) {
-  int len, l;
-  base_stream *base;
-
-  if (stream == NULL || count <= 0)
+int input_stream::ISread_n(char *dst, int count) {
+  if (count <= 0) {
     return -1;
-  if ((base = &stream->base)->iseos)
-    return 0;
+  }
 
-  len = buffer_read(&base->stream, dst, count);
+  base_stream *base;
+  if ((base = &this->base)->iseos) {
+    return 0;
+  }
+
+  auto len = buffer_read(&base->stream, dst, count);
   if (MUST_BE_UPDATED(base)) {
-    l = (*base->read)(base->handle, (unsigned char *)&dst[len], count - len);
+    auto l =
+        (*base->read)(base->handle, (unsigned char *)&dst[len], count - len);
     if (l <= 0) {
       base->iseos = true;
     } else {
@@ -257,18 +246,16 @@ int ISread_n(input_stream *stream, char *dst, int count) {
   return len;
 }
 
-int ISfileno(input_stream *stream) {
-  if (stream == NULL)
-    return -1;
-  switch (IStype(stream) & ~IST_UNCLOSE) {
+int input_stream::ISfileno() const {
+  switch (this->IStype()) {
   case IST_BASIC:
-    return *(int *)stream->base.handle;
+    return *(int *)this->base.handle;
   case IST_FILE:
-    return fileno(stream->file.handle->f);
+    return fileno(this->file.handle->f);
   case IST_SSL:
-    return stream->ssl.handle->sock;
+    return this->ssl.handle->sock;
   case IST_ENCODED:
-    return ISfileno(stream->ens.handle->is);
+    return this->ens.handle->is->ISfileno();
   default:
     return -1;
   }
@@ -304,28 +291,29 @@ static int file_read(struct io_file_handle *handle, char *buf, int len) {
 static int str_read(Str *handle, char *buf, int len) { return 0; }
 
 static void ens_close(struct ens_handle *handle) {
-  ISclose(handle->is);
+  handle->is->ISclose();
   growbuf_clear(&handle->gb);
   xfree(handle);
 }
 
 static int ens_read(struct ens_handle *handle, char *buf, int len) {
   if (handle->pos == handle->gb.length) {
-    char *p;
-    struct growbuf gbtmp;
-
-    ISgets_to_growbuf(handle->is, &handle->gb, true);
-    if (handle->gb.length == 0)
+    handle->is->ISgets_to_growbuf(&handle->gb, true);
+    if (handle->gb.length == 0) {
       return 0;
-    if (handle->encoding == ENC_BASE64)
+    }
+    if (handle->encoding == ENC_BASE64) {
       memchop(handle->gb.ptr, &handle->gb.length);
-    else if (handle->encoding == ENC_UUENCODE) {
-      if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-        ISgets_to_growbuf(handle->is, &handle->gb, true);
+    } else if (handle->encoding == ENC_UUENCODE) {
+      if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5)) {
+        handle->is->ISgets_to_growbuf(&handle->gb, true);
+      }
       memchop(handle->gb.ptr, &handle->gb.length);
     }
+
+    struct growbuf gbtmp;
     growbuf_init_without_GC(&gbtmp);
-    p = handle->gb.ptr;
+    auto p = handle->gb.ptr;
     if (handle->encoding == ENC_QUOTE)
       decodeQP_to_growbuf(&gbtmp, &p);
     else if (handle->encoding == ENC_BASE64)
@@ -357,3 +345,7 @@ static void memchop(char *p, int *len) {
   *len = q - p;
   return;
 }
+
+input_stream *openIS(const char *path) {
+  return newInputStream(open(path, O_RDONLY));
+};

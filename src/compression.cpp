@@ -144,8 +144,8 @@ std::string UrlStream::uncompress_stream() {
   struct compression_decoder *d;
   int use_d_arg = 0;
 
-  if (IStype(this->stream) != IST_ENCODED) {
-    this->stream = newEncodedStream(this->stream, this->encoding);
+  if (this->stream->IStype() != IST_ENCODED) {
+    this->stream = this->stream->newEncodedStream(this->encoding);
     this->encoding = ENC_7BIT;
   }
   for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
@@ -192,7 +192,7 @@ std::string UrlStream::uncompress_stream() {
       setup_child(true, 2, this->fileno());
       if (tmpf)
         f = fopen(tmpf, "wb");
-      while ((count = ISread_n(this->stream, buf, SAVE_BUF_SIZE)) > 0) {
+      while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
         if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
           break;
         if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)

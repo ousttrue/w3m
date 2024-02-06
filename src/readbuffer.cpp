@@ -4168,9 +4168,10 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   }
   TRAP_ON;
 
-  if (IStype(f->stream) != IST_ENCODED)
-    f->stream = newEncodedStream(f->stream, f->encoding);
-  while ((lineBuf2 = StrmyUFgets(f)) && lineBuf2->length) {
+  if (f->stream->IStype() != IST_ENCODED) {
+    f->stream = f->stream->newEncodedStream(f->encoding);
+  }
+  while ((lineBuf2 = f->StrmyUFgets()) && lineBuf2->length) {
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;

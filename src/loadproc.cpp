@@ -113,12 +113,13 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   }
 
   nlines = 0;
-  if (IStype(uf->stream) != IST_ENCODED)
-    uf->stream = newEncodedStream(uf->stream, uf->encoding);
+  if (uf->stream->IStype() != IST_ENCODED) {
+    uf->stream = uf->stream->newEncodedStream(uf->encoding);
+  }
 
   // long long linelen = 0;
   // long long trbyte = 0;
-  while ((lineBuf2 = StrmyISgets(uf->stream)) && lineBuf2->length) {
+  while ((lineBuf2 = uf->stream->StrmyISgets()) && lineBuf2->length) {
     if (src)
       Strfputs(lineBuf2, src);
     // linelen += lineBuf2->length;
@@ -286,8 +287,9 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   }
   tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
 
-  if (IStype(uf.stream) != IST_ENCODED)
-    uf.stream = newEncodedStream(uf.stream, uf.encoding);
+  if (uf.stream->IStype() != IST_ENCODED) {
+    uf.stream = uf.stream->newEncodedStream(uf.encoding);
+  }
   header = checkHeader(defaultbuf, "Content-Type:");
   command =
       unquote_mailcap(mcap->viewer, type, tmpf->ptr, (char *)header, &mc_stat);
@@ -375,7 +377,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
   else
     http_response_code = 0;
 
-  while ((tmp = StrmyUFgets(uf)) && tmp->length) {
+  while ((tmp = uf->StrmyUFgets()) && tmp->length) {
     if (w3m_reqlog) {
       FILE *ff;
       ff = fopen(w3m_reqlog, "a");
@@ -500,20 +502,20 @@ static int _MoveFile(const char *path1, const char *path2) {
     f2 = fopen(path2, "wb");
   }
   if (f2 == NULL) {
-    ISclose(f1);
+    f1->ISclose();
     return -1;
   }
 
   auto current_content_length = 0;
   buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+  while ((count = f1->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
     fwrite(buf, 1, count, f2);
     linelen += count;
     showProgress(&linelen, &trbyte, current_content_length);
   }
 
   xfree(buf);
-  ISclose(f1);
+  f1->ISclose();
   if (is_pipe)
     pclose(f2);
   else
@@ -910,8 +912,9 @@ page_loaded:
     /* download only */
     const char *file;
     TRAP_OFF;
-    if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-      f.stream = newEncodedStream(f.stream, f.encoding);
+    if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
+      f.stream = f.stream->newEncodedStream(f.encoding);
+    }
     if (pu.schema == SCM_LOCAL) {
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file.c_str(), &st))
@@ -952,8 +955,9 @@ page_loaded:
         _doFileCopy(pu.real_file.c_str(),
                     guess_save_name(NULL, pu.real_file.c_str()), true);
       } else {
-        if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-          f.stream = newEncodedStream(f.stream, f.encoding);
+        if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
+          f.stream = f.stream->newEncodedStream(f.encoding);
+        }
         f.doFileSave(guess_save_name(t_buf, pu.file.c_str()));
         f.close();
       }

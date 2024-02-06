@@ -598,7 +598,7 @@ static FILE *lessopen_stream(const char *path) {
 }
 
 void UrlStream::close() {
-  if (ISclose(this->stream) == 0) {
+  if (this->stream->ISclose() == 0) {
     this->stream = NULL;
   }
 }
@@ -663,7 +663,7 @@ int UrlStream::save2tmp(const char *tmpf) const {
   {
     int count;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(this->stream, buf, SAVE_BUF_SIZE)) > 0) {
+    while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
       if (static_cast<int>(fwrite(buf, 1, count, ff)) != count) {
         retval = -2;
         goto _end;
@@ -682,13 +682,14 @@ _end:
 }
 
 int checkSaveFile(input_stream *stream, const char *path2) {
-  struct stat st1, st2;
-  int des = ISfileno(stream);
-
+  int des = stream->ISfileno();
   if (des < 0)
     return 0;
+
   if (*path2 == '|' && PermitSaveToPipe)
     return 0;
+
+  struct stat st1, st2;
   if ((fstat(des, &st1) == 0) && (stat(path2, &st2) == 0))
     if (st1.st_ino == st2.st_ino)
       return -1;
@@ -779,9 +780,14 @@ int UrlStream::doFileSave(const char *defstr) {
   return 0;
 }
 
-uint8_t UrlStream::getc() const { return ISgetc(this->stream); }
-void UrlStream::undogetc() { ISundogetc(this->stream); }
-int UrlStream::fileno() const { return ISfileno(this->stream); }
+uint8_t UrlStream::getc() const {
+  if (stream == NULL) {
+    return '\0';
+  }
+  return this->stream->ISgetc();
+}
+void UrlStream::undogetc() { this->stream->ISundogetc(); }
+int UrlStream::fileno() const { return this->stream->ISfileno(); }
 
 static char url_unquote_char(const char **pstr) {
   return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))
@@ -933,3 +939,6 @@ const char *cleanupName(const char *name) {
   }
   return buf;
 }
+
+Str *UrlStream::StrUFgets() { return stream->StrISgets(); }
+Str *UrlStream::StrmyUFgets() { return stream->StrmyISgets(); }
