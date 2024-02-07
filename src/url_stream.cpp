@@ -478,7 +478,7 @@ void UrlStream::openData(Url *pu) {
   } else {
     tmp = Str_url_unquote(tmp, false, false);
   }
-  this->stream = newStrStream(tmp);
+  this->stream = newStrStream(tmp->ptr);
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 
@@ -683,7 +683,7 @@ _end:
 }
 
 static int checkSaveFile(const std::shared_ptr<input_stream> &stream,
-                  const char *path2) {
+                         const char *path2) {
   int des = stream->ISfileno();
   if (des < 0)
     return 0;
@@ -942,5 +942,5 @@ const char *cleanupName(const char *name) {
   return buf;
 }
 
-Str *UrlStream::StrUFgets() { return stream->StrISgets(); }
-Str *UrlStream::StrmyUFgets() { return stream->StrmyISgets(); }
+std::string UrlStream::StrUFgets() { return stream->StrISgets(); }
+std::string UrlStream::StrmyUFgets() { return stream->StrmyISgets(); }

@@ -90,20 +90,19 @@ int is_html_type(const char *type) {
  */
 Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   FILE *src = NULL;
-  Str *lineBuf2;
   char pre_lbuf = '\0';
   int nlines;
   Str *tmpf;
   Lineprop *propBuffer = NULL;
-  MySignalHandler prevtrap = NULL;
+  // MySignalHandler prevtrap = NULL;
 
   if (newBuf == NULL)
     newBuf = new Buffer(INIT_BUFFER_WIDTH());
 
-  if (SETJMP(AbortLoading) != 0) {
-    goto _end;
-  }
-  TRAP_ON;
+  // if (SETJMP(AbortLoading) != 0) {
+  //   goto _end;
+  // }
+  // TRAP_ON;
 
   if (newBuf->sourcefile.empty() &&
       (uf->schema != SCM_LOCAL || newBuf->mailcap)) {
@@ -120,9 +119,15 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
 
   // long long linelen = 0;
   // long long trbyte = 0;
-  while ((lineBuf2 = uf->stream->StrmyISgets()) && lineBuf2->length) {
-    if (src)
+  while (true) {
+    auto _lineBuf2 = uf->stream->StrmyISgets(); //&& lineBuf2->length
+    if (_lineBuf2.empty()) {
+      break;
+    }
+    auto lineBuf2 = Strnew(_lineBuf2);
+    if (src) {
       Strfputs(lineBuf2, src);
+    }
     // linelen += lineBuf2->length;
     // showProgress(&linelen, &trbyte, current_content_length);
     cleanup_line(lineBuf2, PAGER_MODE);
@@ -139,8 +144,8 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
                        FOLD_BUFFER_WIDTH(), nlines);
   }
-_end:
-  TRAP_OFF;
+  // _end:
+  // TRAP_OFF;
   newBuf->topLine = newBuf->firstLine;
   newBuf->lastLine = newBuf->currentLine;
   newBuf->currentLine = newBuf->firstLine;
@@ -367,7 +372,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
   char *p, *q;
   char c;
   Str *lineBuf2 = NULL;
-  Str *tmp;
+
   TextList *headerlist;
   FILE *src = NULL;
   Lineprop *propBuffer;
@@ -378,7 +383,12 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
   else
     http_response_code = 0;
 
-  while ((tmp = uf->StrmyUFgets()) && tmp->length) {
+  while (true) {
+    auto _tmp = uf->StrmyUFgets();
+    if (_tmp.empty()) {
+      break;
+    }
+    auto tmp = Strnew(_tmp);
     if (w3m_reqlog) {
       FILE *ff;
       ff = fopen(w3m_reqlog, "a");

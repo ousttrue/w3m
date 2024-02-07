@@ -76,13 +76,13 @@ struct str_stream {
   int read(unsigned char *buf, int len) { return 0; }
 };
 
-std::shared_ptr<input_stream> newStrStream(Str *s) {
-  if (s == NULL) {
-    return NULL;
+std::shared_ptr<input_stream> newStrStream(std::string_view s) {
+  if (s.empty()) {
+    return {};
   }
   auto p = new str_stream();
-  return std::make_shared<input_stream>(IST_STR, p, s->length,
-                                        (const unsigned char *)s->ptr);
+  return std::make_shared<input_stream>(IST_STR, p, s.size(),
+                                        (const unsigned char *)s.data());
 }
 
 struct ssl_stream {
@@ -280,11 +280,11 @@ int input_stream::ISundogetc() {
   return -1;
 }
 
-Str *input_stream::StrISgets2(bool crnl) {
+std::string input_stream::StrISgets2(bool crnl) {
   struct growbuf gb;
   growbuf_init(&gb);
   this->ISgets_to_growbuf(&gb, crnl);
-  return growbuf_to_Str(&gb);
+  return growbuf_to_Str(&gb)->ptr;
 }
 
 void input_stream::ISgets_to_growbuf(struct growbuf *gb, char crnl) {

@@ -4122,7 +4122,6 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   long long linelen = 0;
   long long trbyte = 0;
-  Str *lineBuf2 = Strnew();
   struct html_feed_environ htmlenv1;
   struct readbuffer obuf;
   MySignalHandler prevtrap = NULL;
@@ -4155,7 +4154,13 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   if (f->stream->IStype() != IST_ENCODED) {
     f->stream = newEncodedStream(f->stream, f->encoding);
   }
-  while ((lineBuf2 = f->StrmyUFgets()) && lineBuf2->length) {
+  while (true) {
+    auto _lineBuf2 = f->StrmyUFgets();
+    if (_lineBuf2.empty()) {
+      break;
+    }
+    auto lineBuf2 = Strnew(_lineBuf2);
+
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
@@ -4327,7 +4332,7 @@ void completeHTMLstream(struct html_feed_environ *h_env,
 Buffer *loadHTMLString(Str *page) {
   MySignalHandler prevtrap = NULL;
 
-  UrlStream f(SCM_LOCAL, newStrStream(page));
+  UrlStream f(SCM_LOCAL, newStrStream(page->ptr));
 
   auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
   if (SETJMP(AbortLoading) != 0) {
