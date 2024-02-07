@@ -1,4 +1,4 @@
-subdir('istream')
+subdir('input')
 
 # SHELL=/bin/bash
 PACKAGE = meson.project_name()
