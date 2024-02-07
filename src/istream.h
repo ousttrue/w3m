@@ -7,30 +7,18 @@
 #include <string>
 #include <string_view>
 
-struct stream_buffer {
-  unsigned char *buf;
-  int size;
-  int cur = 0;
-  int next;
-  stream_buffer(int bufsize, const unsigned char *buf = nullptr);
-};
-
+struct stream_buffer;
 class input_stream {
   StreamType _type = {};
   void *_stream;
-  stream_buffer _buffer;
+  std::shared_ptr<stream_buffer> _buffer;
   bool _iseos = false;
 
 public:
   input_stream(StreamType type, void *stream, int bufsize,
-               const unsigned char *data = nullptr)
-      : _type(type), _stream(stream), _buffer(bufsize, data) {}
-  bool MUST_BE_UPDATED() const;
-  void do_update();
-  char POP_CHAR();
+               const unsigned char *data = nullptr);
 
   StreamType IStype() const { return _type; }
-  int read(unsigned char *buf, int size);
   int ISfileno() const;
   int ISread_n(char *dst, int bufsize);
   void ISgets_to_growbuf(struct growbuf *gb, char crnl);
@@ -40,6 +28,9 @@ public:
   int ISundogetc();
   int ISgetc();
   int ISclose();
+
+private:
+  int read(unsigned char *buf, int size);
 };
 
 std::shared_ptr<input_stream> newInputStream(int des);

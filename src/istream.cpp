@@ -2,15 +2,35 @@
 #include "Str.h"
 #include "linein.h"
 #include "mimehead.h"
-#include "ssl_util.h"
 #include "signal_util.h"
-// #include "proto.h"
 #include "alloc.h"
+#include <functional>
+#include <openssl/ssl.h>
 #include <stdio.h>
 #include <fcntl.h>
-// #include <unistd.h>
+#include <string.h>
 
 #define STREAM_BUF_SIZE 8192
+
+struct stream_buffer {
+  unsigned char *buf;
+  int size;
+  int cur = 0;
+  int next;
+  stream_buffer(int bufsize, const unsigned char *buf = nullptr);
+
+  bool MUST_BE_UPDATED() const { return this->cur == this->next; }
+  int do_update(const std::function<int(unsigned char *buf, int)> &reader) {
+    this->cur = this->next = 0;
+    int len = reader(this->buf, this->size);
+    if (len <= 0) {
+    } else {
+      this->next += len;
+    }
+    return len;
+  }
+  char POP_CHAR() { return this->buf[this->cur++]; }
+};
 
 stream_buffer::stream_buffer(int bufsize, const unsigned char *data)
     : size(bufsize) {
@@ -22,6 +42,10 @@ stream_buffer::stream_buffer(int bufsize, const unsigned char *data)
     this->next = 0;
   }
 }
+
+input_stream::input_stream(StreamType type, void *stream, int bufsize,
+                           const unsigned char *data)
+    : _type(type), _stream(stream), _buffer(new stream_buffer(bufsize, data)) {}
 
 //
 // constructor
@@ -207,16 +231,6 @@ newEncodedStream(const std::shared_ptr<input_stream> &is,
   return std::make_shared<input_stream>(IST_ENCODED, p, STREAM_BUF_SIZE);
 }
 
-void input_stream::do_update() {
-  this->_buffer.cur = this->_buffer.next = 0;
-  int len = this->read(this->_buffer.buf, this->_buffer.size);
-  if (len <= 0) {
-    this->_iseos = true;
-  } else {
-    this->_buffer.next += len;
-  }
-}
-
 int input_stream::read(unsigned char *buf, int size) {
   switch (this->IStype()) {
   case IST_BASIC:
@@ -254,27 +268,24 @@ int input_stream::ISclose() {
   return 0;
 }
 
-bool input_stream::MUST_BE_UPDATED() const {
-  return this->_buffer.cur == this->_buffer.next;
-}
-
-char input_stream::POP_CHAR() {
+int input_stream::ISgetc() {
+  if (!this->_iseos && this->_buffer->MUST_BE_UPDATED()) {
+    if (this->_buffer->do_update(std::bind(&input_stream::read, this,
+                                           std::placeholders::_1,
+                                           std::placeholders::_2)) <= 0) {
+      this->_iseos = true;
+    }
+  }
   if (this->_iseos) {
     return '\0';
+  } else {
+    return this->_buffer->POP_CHAR();
   }
-  return this->_buffer.buf[this->_buffer.cur++];
-}
-
-int input_stream::ISgetc() {
-  if (!this->_iseos && this->MUST_BE_UPDATED()) {
-    this->do_update();
-  }
-  return this->POP_CHAR();
 }
 
 int input_stream::ISundogetc() {
-  if (this->_buffer.cur > 0) {
-    this->_buffer.cur--;
+  if (this->_buffer->cur > 0) {
+    this->_buffer->cur--;
     return 0;
   }
   return -1;
@@ -290,28 +301,32 @@ std::string input_stream::StrISgets2(bool crnl) {
 void input_stream::ISgets_to_growbuf(struct growbuf *gb, char crnl) {
   gb->length = 0;
   while (!this->_iseos) {
-    if (this->MUST_BE_UPDATED()) {
-      this->do_update();
+    if (this->_buffer->MUST_BE_UPDATED()) {
+      if (this->_buffer->do_update(std::bind(&input_stream::read, this,
+                                             std::placeholders::_1,
+                                             std::placeholders::_2)) <= 0) {
+        this->_iseos = true;
+      }
       continue;
     }
     if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
-      if (this->_buffer.buf[this->_buffer.cur] == '\n') {
+      if (this->_buffer->buf[this->_buffer->cur] == '\n') {
         GROWBUF_ADD_CHAR(gb, '\n');
-        ++this->_buffer.cur;
+        ++this->_buffer->cur;
       }
       break;
     }
     int i;
-    for (i = this->_buffer.cur; i < this->_buffer.next; ++i) {
-      if (this->_buffer.buf[i] == '\n' ||
-          (crnl && this->_buffer.buf[i] == '\r')) {
+    for (i = this->_buffer->cur; i < this->_buffer->next; ++i) {
+      if (this->_buffer->buf[i] == '\n' ||
+          (crnl && this->_buffer->buf[i] == '\r')) {
         ++i;
         break;
       }
     }
-    growbuf_append(gb, &this->_buffer.buf[this->_buffer.cur],
-                   i - this->_buffer.cur);
-    this->_buffer.cur = i;
+    growbuf_append(gb, &this->_buffer->buf[this->_buffer->cur],
+                   i - this->_buffer->cur);
+    this->_buffer->cur = i;
     if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
       break;
   }
@@ -340,8 +355,8 @@ int input_stream::ISread_n(char *dst, int count) {
     return 0;
   }
 
-  auto len = buffer_read(&this->_buffer, dst, count);
-  if (this->MUST_BE_UPDATED()) {
+  auto len = buffer_read(this->_buffer.get(), dst, count);
+  if (this->_buffer->MUST_BE_UPDATED()) {
     auto l = this->read((unsigned char *)&dst[len], count - len);
     if (l <= 0) {
       this->_iseos = true;
