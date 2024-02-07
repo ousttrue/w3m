@@ -4154,8 +4154,9 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   if (f->stream->IStype() != IST_ENCODED) {
     f->stream = newEncodedStream(f->stream, f->encoding);
   }
+
   while (true) {
-    auto _lineBuf2 = f->StrmyUFgets();
+    auto _lineBuf2 = f->stream->StrmyISgets();
     if (_lineBuf2.empty()) {
       break;
     }
@@ -4338,7 +4339,6 @@ Buffer *loadHTMLString(Str *page) {
   if (SETJMP(AbortLoading) != 0) {
     TRAP_OFF;
     discardBuffer(newBuf);
-    f.close();
     return NULL;
   }
   TRAP_ON;
@@ -4346,7 +4346,6 @@ Buffer *loadHTMLString(Str *page) {
   loadHTMLstream(&f, newBuf, NULL, true);
 
   TRAP_OFF;
-  f.close();
   newBuf->topLine = newBuf->firstLine;
   newBuf->lastLine = newBuf->currentLine;
   newBuf->currentLine = newBuf->firstLine;

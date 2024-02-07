@@ -169,7 +169,6 @@ std::string UrlStream::uncompress_stream() {
   /* child1 -- stdout|f1=uf -> parent */
   pid1 = open_pipe_rw(&f1, NULL);
   if (pid1 < 0) {
-    this->close();
     return {};
   }
   if (pid1 == 0) {
@@ -180,7 +179,6 @@ std::string UrlStream::uncompress_stream() {
     /* uf -> child2 -- stdout|stdin -> child1 */
     pid2 = open_pipe_rw(&f2, NULL);
     if (pid2 < 0) {
-      this->close();
       exit(1);
     }
     if (pid2 == 0) {
@@ -189,7 +187,9 @@ std::string UrlStream::uncompress_stream() {
       int count;
       FILE *f = NULL;
 
-      setup_child(true, 2, this->fileno());
+      // int UrlStream::fileno() const { return this->stream->ISfileno(); }
+
+      setup_child(true, 2, this->stream->ISfileno());
       if (tmpf)
         f = fopen(tmpf, "wb");
       while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
@@ -198,7 +198,6 @@ std::string UrlStream::uncompress_stream() {
         if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
           break;
       }
-      this->close();
       if (f)
         fclose(f);
       xfree(buf);
@@ -213,7 +212,6 @@ std::string UrlStream::uncompress_stream() {
       execlp(expand_cmd, expand_name, NULL);
     exit(1);
   }
-  this->close();
   this->stream = newFileStream(f1, fclose);
   if (tmpf) {
     this->schema = SCM_LOCAL;

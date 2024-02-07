@@ -48,16 +48,8 @@ struct UrlStream {
   openURL(const char *url, Url *pu, std::optional<Url> current,
           const HttpOption &option, FormList *request, TextList *extra_header);
 
-  int save2tmp(const char *tmpf) const;
   int doFileSave(const char *defstr);
-  void close();
-  uint8_t getc() const;
-  void undogetc();
-  int fileno() const;
   std::string uncompress_stream();
-
-  std::string StrUFgets();
-  std::string StrmyUFgets();
 
 private:
   void openHttp(const std::shared_ptr<HttpRequest> &hr, const char *url,
@@ -72,6 +64,8 @@ private:
 
 Str *Str_url_unquote(Str *x, int is_form, int safe);
 inline Str *Str_form_unquote(Str *x) { return Str_url_unquote(x, true, false); }
+
+int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf);
 
 const char *url_decode0(const char *url);
 const char *file_quote(const char *str);

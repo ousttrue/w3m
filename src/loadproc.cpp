@@ -260,7 +260,6 @@ static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
 
   UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
   buf = loadproc(&uf, defaultbuf);
-  uf.close();
   return buf;
 }
 
@@ -308,15 +307,14 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
       !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
     flush_tty();
     if (!fork()) {
-      setup_child(false, 0, uf.fileno());
-      if (uf.save2tmp(tmpf->ptr) < 0)
+      setup_child(false, 0, uf.stream->ISfileno());
+      if (save2tmp(uf.stream, tmpf->ptr) < 0)
         exit(1);
-      uf.close();
       myExec(command->ptr);
     }
     return NO_BUFFER;
   } else {
-    if (uf.save2tmp(tmpf->ptr) < 0) {
+    if (save2tmp(uf.stream, tmpf->ptr) < 0) {
       return NULL;
     }
   }
@@ -384,7 +382,7 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
     http_response_code = 0;
 
   while (true) {
-    auto _tmp = uf->StrmyUFgets();
+    auto _tmp = uf->stream->StrmyISgets();
     if (_tmp.empty()) {
       break;
     }
@@ -411,8 +409,10 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
       } else {
         lineBuf2 = tmp;
       }
-      c = uf->getc();
-      uf->undogetc();
+
+      c = uf->stream ? uf->stream->ISgetc() : '\0';
+
+      uf->stream->ISundogetc();
       if (c == ' ' || c == '\t')
         /* header line is continued */
         continue;
@@ -771,7 +771,6 @@ load_doc:
 
   if (hr && hr->status == HTST_MISSING) {
     TRAP_OFF;
-    f.close();
     return NULL;
   }
 
@@ -781,7 +780,6 @@ load_doc:
     TRAP_OFF;
     if (b)
       discardBuffer(b);
-    f.close();
     return NULL;
   }
 
@@ -811,7 +809,6 @@ load_doc:
       /* 307: Temporary Redirect (HTTP/1.1) */
       tpath = Strnew(url_quote(p))->ptr;
       request = NULL;
-      f.close();
       current = pu;
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->bufferprop =
@@ -846,7 +843,6 @@ load_doc:
           TRAP_OFF;
           goto page_loaded;
         }
-        f.close();
         add_auth_cookie_flag = 1;
         // status = HTST_NORMAL;
         goto load_doc;
@@ -927,7 +923,6 @@ page_loaded:
     } else
       file = guess_save_name(t_buf, pu.file.c_str());
     f.doFileSave(file);
-    f.close();
     return NO_BUFFER;
   }
 
@@ -955,7 +950,6 @@ page_loaded:
     } else {
       TRAP_OFF;
       if (pu.schema == SCM_LOCAL) {
-        f.close();
         _doFileCopy(pu.real_file.c_str(),
                     guess_save_name(NULL, pu.real_file.c_str()), true);
       } else {
@@ -963,7 +957,6 @@ page_loaded:
           f.stream = newEncodedStream(f.stream, f.encoding);
         }
         f.doFileSave(guess_save_name(t_buf, pu.file.c_str()));
-        f.close();
       }
       return NO_BUFFER;
     }
@@ -979,7 +972,6 @@ page_loaded:
   } else {
     b = loadSomething(&f, proc, t_buf);
   }
-  f.close();
   if (b && b != NO_BUFFER) {
     b->real_schema = f.schema;
     b->info->real_type = real_type;

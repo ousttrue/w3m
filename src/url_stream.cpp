@@ -599,24 +599,31 @@ static FILE *lessopen_stream(const char *path) {
   return fp;
 }
 
-void UrlStream::close() {
-  this->stream->close();
-  this->stream = NULL;
+static bool exists(const char *path) {
+  if (path == nullptr || *path == '\0') {
+    return false;
+  }
+  struct stat stbuf;
+  if (stat(path, &stbuf) == -1) {
+    return false;
+  }
+  if (NOT_REGULAR(stbuf.st_mode)) {
+    return false;
+  }
+  return true;
 }
 
 void UrlStream::openFile(const char *path) {
-  struct stat stbuf;
 
   this->guess_type = nullptr;
-  if (path == nullptr || *path == '\0' || stat(path, &stbuf) == -1 ||
-      NOT_REGULAR(stbuf.st_mode)) {
-    this->stream = nullptr;
+  this->stream = nullptr;
+  if (!exists(path)) {
     return;
   }
 
   this->stream = openIS(path);
   if (!do_download) {
-    if (use_lessopen && getenv("LESSOPEN") != nullptr) {
+    if (use_lessopen && getenv("LESSOPEN")) {
       FILE *fp;
       this->guess_type = guessContentType(path);
       if (this->guess_type == nullptr)
@@ -624,7 +631,6 @@ void UrlStream::openFile(const char *path) {
       if (is_html_type(this->guess_type))
         return;
       if ((fp = lessopen_stream(path))) {
-        this->close();
         this->stream = newFileStream(fp, pclose);
         this->guess_type = "text/plain";
         return;
@@ -642,21 +648,21 @@ void UrlStream::openFile(const char *path) {
   }
 }
 
-int UrlStream::save2tmp(const char *tmpf) const {
-  FILE *ff;
+int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf) {
+
   long long linelen = 0;
-  // long long trbyte = 0;
-  MySignalHandler prevtrap = nullptr;
-  static JMP_BUF env_bak;
   int retval = 0;
   char *buf = nullptr;
 
-  ff = fopen(tmpf, "wb");
-  if (ff == nullptr) {
+  auto ff = fopen(tmpf, "wb");
+  if (!ff) {
     /* fclose(f); */
     return -1;
   }
+
+  static JMP_BUF env_bak;
   bcopy(AbortLoading, env_bak, sizeof(JMP_BUF));
+  MySignalHandler prevtrap = nullptr;
   if (SETJMP(AbortLoading) != 0) {
     goto _end;
   }
@@ -664,7 +670,7 @@ int UrlStream::save2tmp(const char *tmpf) const {
   {
     int count;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
+    while ((count = stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
       if (static_cast<int>(fwrite(buf, 1, count, ff)) != count) {
         retval = -2;
         goto _end;
@@ -699,14 +705,8 @@ static int checkSaveFile(const std::shared_ptr<input_stream> &stream,
 }
 
 int UrlStream::doFileSave(const char *defstr) {
-  Str *msg;
-  Str *filen;
-  const char *p, *q;
-  pid_t pid;
-  char *lock;
-
   if (fmInitialized) {
-    p = searchKeyData();
+    auto p = searchKeyData();
     if (p == nullptr || *p == '\0') {
       // p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
       //                   SaveHist);
@@ -716,15 +716,15 @@ int UrlStream::doFileSave(const char *defstr) {
     if (!couldWrite(p))
       return -1;
     if (checkSaveFile(this->stream, p) < 0) {
-      msg = Sprintf("Can't save. Load file and %s are identical.", p);
+      auto msg = Sprintf("Can't save. Load file and %s are identical.", p);
       disp_err_message(msg->ptr, false);
       return -1;
     }
-    lock = tmpfname(TMPF_DFL, ".lock")->ptr;
+    auto lock = tmpfname(TMPF_DFL, ".lock")->ptr;
     symlink(p, lock);
 
     flush_tty();
-    pid = fork();
+    auto pid = fork();
     if (!pid) {
       int err;
       if ((this->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
@@ -733,11 +733,10 @@ int UrlStream::doFileSave(const char *defstr) {
           unlink(tmpf.c_str());
         }
       }
-      setup_child(false, 0, this->fileno());
-      err = this->save2tmp(p);
+      setup_child(false, 0, this->stream->ISfileno());
+      err = save2tmp(this->stream, p);
       if (err == 0 && PreserveTimestamp && this->modtime != -1)
         setModtime(p, this->modtime);
-      this->close();
       unlink(lock);
       if (err != 0)
         exit(-err);
@@ -745,15 +744,16 @@ int UrlStream::doFileSave(const char *defstr) {
     }
     addDownloadList(pid, this->url, p, lock, 0 /*current_content_length*/);
   } else {
-    q = searchKeyData();
+    auto q = searchKeyData();
     if (q == nullptr || *q == '\0') {
       printf("(Download)Save file to: ");
       fflush(stdout);
-      filen = Strfgets(stdin);
+      auto filen = Strfgets(stdin);
       if (filen->length == 0)
         return -1;
       q = filen->ptr;
     }
+    const char *p;
     for (p = q + strlen(q) - 1; IS_SPACE(*p); p--)
       ;
     *(char *)(p + 1) = '\0';
@@ -772,7 +772,7 @@ int UrlStream::doFileSave(const char *defstr) {
         unlink(tmpf.c_str());
       }
     }
-    if (this->save2tmp(p) < 0) {
+    if (save2tmp(this->stream, p) < 0) {
       printf("Can't save to %s\n", p);
       return -1;
     }
@@ -781,15 +781,6 @@ int UrlStream::doFileSave(const char *defstr) {
   }
   return 0;
 }
-
-uint8_t UrlStream::getc() const {
-  if (stream == NULL) {
-    return '\0';
-  }
-  return this->stream->ISgetc();
-}
-void UrlStream::undogetc() { this->stream->ISundogetc(); }
-int UrlStream::fileno() const { return this->stream->ISfileno(); }
 
 static char url_unquote_char(const char **pstr) {
   return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))
@@ -941,6 +932,3 @@ const char *cleanupName(const char *name) {
   }
   return buf;
 }
-
-std::string UrlStream::StrUFgets() { return stream->StrISgets(); }
-std::string UrlStream::StrmyUFgets() { return stream->StrmyISgets(); }

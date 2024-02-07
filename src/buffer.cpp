@@ -471,7 +471,6 @@ void reshapeBuffer(Buffer *buf) {
     loadHTMLBuffer(&f, buf);
   else
     loadBuffer(&f, buf);
-  f.close();
 
   buf->height = LASTLINE + 1;
   if (buf->firstLine && sbuf->firstLine) {
