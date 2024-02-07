@@ -43,5 +43,6 @@ Makefile
 /prefix/
 
 /subprojects/*
+!/subprojects/packagefiles
 !/subprojects/gtest.wrap
-
+!/subprojects/nkf.wrap

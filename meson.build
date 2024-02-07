@@ -10,6 +10,7 @@ project(
 gc_dep = dependency('bdw-gc')
 ssl_dep = dependency('openssl')
 ncurses_dep = dependency('ncurses')
+nkf_dep = dependency('nkf')
 
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required: false)

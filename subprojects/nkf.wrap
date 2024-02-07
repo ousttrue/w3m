@@ -1,0 +1,8 @@
+[wrap-git]
+url = https://github.com/nurse/nkf.git
+revision = v2_1_5
+depth = 1
+patch_directory = nkf
+
+[provide]
+nkf = nkf_dep

@@ -133,6 +133,7 @@ executable(
         ncurses_dep,
         m_dep, # , wc_dep
         istream_dep,
+        nkf_dep,
     ],
     c_args: defs,
     cpp_args: defs,
