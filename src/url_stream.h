@@ -19,7 +19,7 @@ extern bool ArgvIsURL;
 extern bool LocalhostOnly;
 extern bool retryAsHttp;
 
-union input_stream;
+class input_stream;
 struct Url;
 struct FormList;
 struct TextList;
@@ -38,7 +38,7 @@ struct UrlStream {
   UrlSchema schema = {};
   bool is_cgi = false;
   EncodingType encoding = ENC_7BIT;
-  input_stream *stream = {};
+  std::shared_ptr<input_stream> stream;
   const char *ext = {};
   int compression = CMP_NOCOMPRESS;
   int content_encoding = CMP_NOCOMPRESS;
@@ -46,7 +46,7 @@ struct UrlStream {
   const char *ssl_certificate = {};
   time_t modtime = -1;
 
-  UrlStream(UrlSchema schema, input_stream *stream = {})
+  UrlStream(UrlSchema schema, const std::shared_ptr<input_stream> &stream = {})
       : schema(schema), stream(stream) {}
 
   void openFile(const char *path);

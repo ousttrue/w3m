@@ -724,7 +724,6 @@ int main(int argc, char **argv) {
   Buffer *newbuf = nullptr;
   char *p;
   int i;
-  // input_stream *redin;
   char *line_str = nullptr;
   const char **load_argv;
   FormList *request;

@@ -37,7 +37,7 @@ struct HmarkerList;
 struct FormItemList;
 struct MapList;
 struct TextList;
-union input_stream;
+class input_stream;
 struct Line;
 struct LinkList;
 struct BufferPos;

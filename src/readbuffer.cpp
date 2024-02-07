@@ -3208,17 +3208,6 @@ static void addLink(Buffer *buf, struct HtmlTag *tag) {
     buf->linklist = l;
 }
 
-// static input_stream *_file_lp2;
-// static Str *file_feed(void) {
-//   Str *s;
-//   s = StrISgets(_file_lp2);
-//   if (s && s->length == 0) {
-//     ISclose(_file_lp2);
-//     return NULL;
-//   }
-//   return s;
-// }
-
 static void proc_escape(struct readbuffer *obuf, const char **str_return) {
   const char *str = *str_return, *estr;
   int ech = getescapechar(str_return);
@@ -4129,11 +4118,6 @@ void HTMLlineproc2(Buffer *buf, TextLineList *tl) {
   HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-// static void HTMLlineproc3(Buffer *buf, input_stream *stream) {
-//   _file_lp2 = stream;
-//   HTMLlineproc2body(buf, file_feed, -1);
-// }
-
 void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   long long linelen = 0;
@@ -4169,7 +4153,7 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   TRAP_ON;
 
   if (f->stream->IStype() != IST_ENCODED) {
-    f->stream = f->stream->newEncodedStream(f->encoding);
+    f->stream = newEncodedStream(f->stream, f->encoding);
   }
   while ((lineBuf2 = f->StrmyUFgets()) && lineBuf2->length) {
     if (src)

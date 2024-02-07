@@ -1,4 +1,5 @@
 #include "loadproc.h"
+#include "mimehead.h"
 #include "url_quote.h"
 #include "tabbuffer.h"
 #include "quote.h"
@@ -114,7 +115,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
 
   nlines = 0;
   if (uf->stream->IStype() != IST_ENCODED) {
-    uf->stream = uf->stream->newEncodedStream(uf->encoding);
+    uf->stream = newEncodedStream(uf->stream, uf->encoding);
   }
 
   // long long linelen = 0;
@@ -252,7 +253,7 @@ static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
   if (f == NULL)
     return NULL;
 
-  UrlStream uf(SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
+  UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
   buf = loadproc(&uf, defaultbuf);
   uf.close();
   return buf;
@@ -288,7 +289,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
 
   if (uf.stream->IStype() != IST_ENCODED) {
-    uf.stream = uf.stream->newEncodedStream(uf.encoding);
+    uf.stream = newEncodedStream(uf.stream, uf.encoding);
   }
   header = checkHeader(defaultbuf, "Content-Type:");
   command =
@@ -484,14 +485,13 @@ void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
 }
 
 static int _MoveFile(const char *path1, const char *path2) {
-  input_stream *f1;
   FILE *f2;
   int is_pipe;
   long long linelen = 0, trbyte = 0;
   char *buf = NULL;
   int count;
 
-  f1 = openIS(path1);
+  auto f1 = openIS(path1);
   if (f1 == NULL)
     return -1;
   if (*path2 == '|' && PermitSaveToPipe) {
@@ -913,7 +913,7 @@ page_loaded:
     const char *file;
     TRAP_OFF;
     if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
-      f.stream = f.stream->newEncodedStream(f.encoding);
+      f.stream = newEncodedStream(f.stream, f.encoding);
     }
     if (pu.schema == SCM_LOCAL) {
       struct stat st;
@@ -956,7 +956,7 @@ page_loaded:
                     guess_save_name(NULL, pu.real_file.c_str()), true);
       } else {
         if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
-          f.stream = f.stream->newEncodedStream(f.encoding);
+          f.stream = newEncodedStream(f.stream, f.encoding);
         }
         f.doFileSave(guess_save_name(t_buf, pu.file.c_str()));
         f.close();

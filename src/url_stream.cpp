@@ -146,17 +146,18 @@ static void write_from_file(int sock, char *file) {
 void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
                              const HttpOption &option, FormList *request,
                              TextList *extra_header, HttpRequest *hr) {
-  if (request && request->body)
+  if (request && request->body) {
     /* local CGI: POST */
     this->stream =
         newFileStream(localcgi_post(pu->real_file.c_str(), pu->query.c_str(),
                                     request, option.referer),
-                      (void (*)())fclose);
-  else
+                      fclose);
+  } else {
     /* lodal CGI: GET */
     this->stream = newFileStream(
         localcgi_get(pu->real_file.c_str(), pu->query.c_str(), option.referer),
-        (void (*)())fclose);
+        fclose);
+  }
   if (this->stream) {
     this->is_cgi = true;
     this->schema = pu->schema = SCM_LOCAL_CGI;
@@ -624,7 +625,7 @@ void UrlStream::openFile(const char *path) {
         return;
       if ((fp = lessopen_stream(path))) {
         this->close();
-        this->stream = newFileStream(fp, (void (*)())pclose);
+        this->stream = newFileStream(fp, pclose);
         this->guess_type = "text/plain";
         return;
       }
@@ -681,7 +682,8 @@ _end:
   return retval;
 }
 
-int checkSaveFile(input_stream *stream, const char *path2) {
+static int checkSaveFile(const std::shared_ptr<input_stream> &stream,
+                  const char *path2) {
   int des = stream->ISfileno();
   if (des < 0)
     return 0;

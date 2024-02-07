@@ -145,7 +145,7 @@ std::string UrlStream::uncompress_stream() {
   int use_d_arg = 0;
 
   if (this->stream->IStype() != IST_ENCODED) {
-    this->stream = this->stream->newEncodedStream(this->encoding);
+    this->stream = newEncodedStream(this->stream, this->encoding);
     this->encoding = ENC_7BIT;
   }
   for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
@@ -214,7 +214,7 @@ std::string UrlStream::uncompress_stream() {
     exit(1);
   }
   this->close();
-  this->stream = newFileStream(f1, (void (*)())fclose);
+  this->stream = newFileStream(f1, fclose);
   if (tmpf) {
     this->schema = SCM_LOCAL;
     return tmpf;
