@@ -39,6 +39,13 @@ enum HttpRequestFlags {
 };
 ENUM_OP_INSTANCE(HttpRequestFlags);
 
+#define NO_REFERER ((const char *)-1)
+
+struct HttpOption {
+  const char *referer = {};
+  bool no_cache = {};
+};
+
 struct HttpRequest {
   HttpStreamStatus status = {};
   HttpMethod method = {};
@@ -56,11 +63,11 @@ struct HttpRequest {
     }
   }
   HttpRequestFlags flag = {};
-  const char *referer = {};
+  HttpOption option = {};
   FormList *request = {};
 
-  HttpRequest(const char *referer, FormList *request)
-      : referer(referer), request(request) {}
+  HttpRequest(const HttpOption option, FormList *request)
+      : option(option), request(request) {}
 
   Str *getRequestURI(const Url &url) const;
   Str *to_Str(const Url &pu, std::optional<Url> current, TextList *extra) const;

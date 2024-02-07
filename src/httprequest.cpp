@@ -39,7 +39,7 @@ Str *HttpRequest::getRequestURI(const Url &url) const {
 }
 
 static char *otherinfo(const Url &target, std::optional<Url> current,
-                       const char *referer) {
+                       const char *referer, bool no_cache) {
   Str *s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -68,7 +68,7 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
     }
     Strcat_charp(s, "\r\n");
   }
-  if (target.is_nocache || NoCache) {
+  if (no_cache || NoCache) {
     Strcat_charp(s, "Pragma: no-cache\r\n");
     Strcat_charp(s, "Cache-control: no-cache\r\n");
   }
@@ -113,10 +113,11 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current,
   Strcat_charp(tmp, " ");
   Strcat_charp(tmp, this->getRequestURI(pu)->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
-  if (this->referer == NO_REFERER) {
-    Strcat_charp(tmp, otherinfo(pu, {}, nullptr));
+  if (this->option.referer == NO_REFERER) {
+    Strcat_charp(tmp, otherinfo(pu, {}, {}, this->option.no_cache));
   } else {
-    Strcat_charp(tmp, otherinfo(pu, current, this->referer));
+    Strcat_charp(tmp, otherinfo(pu, current, this->option.referer,
+                                this->option.no_cache));
   }
   if (extra) {
     for (auto i = extra->first; i != nullptr; i = i->next) {

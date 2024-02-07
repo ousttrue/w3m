@@ -493,7 +493,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
   }
 
   // retry:
-  auto hr = std::make_shared<HttpRequest>(option.referer, request);
+  auto hr = std::make_shared<HttpRequest>(option, request);
 
   *pu = urlParse(u, current);
   if (pu->schema == SCM_LOCAL && pu->file.empty()) {
@@ -519,7 +519,6 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
 
   this->schema = pu->schema;
   this->url = Strnew(pu->to_Str())->ptr;
-  pu->is_nocache = (option.no_cache);
   this->ext = filename_extension(pu->file.c_str(), 1);
 
   switch (pu->schema) {
