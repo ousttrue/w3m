@@ -512,7 +512,7 @@ static int _MoveFile(const char *path1, const char *path2) {
     f2 = fopen(path2, "wb");
   }
   if (f2 == NULL) {
-    f1->ISclose();
+    f1->close();
     return -1;
   }
 
@@ -525,7 +525,7 @@ static int _MoveFile(const char *path1, const char *path2) {
   }
 
   xfree(buf);
-  f1->ISclose();
+  f1->close();
   if (is_pipe)
     pclose(f2);
   else

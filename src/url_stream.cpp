@@ -599,9 +599,8 @@ static FILE *lessopen_stream(const char *path) {
 }
 
 void UrlStream::close() {
-  if (this->stream->ISclose() == 0) {
-    this->stream = NULL;
-  }
+  this->stream->close();
+  this->stream = NULL;
 }
 
 void UrlStream::openFile(const char *path) {

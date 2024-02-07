@@ -1,14 +1,11 @@
 #include "istream.h"
 #include "Str.h"
-#include "linein.h"
 #include "mimehead.h"
-#include "signal_util.h"
 #include "alloc.h"
 #include <functional>
 #include <openssl/ssl.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <string.h>
 
 #define STREAM_BUF_SIZE 8192
 
@@ -17,8 +14,15 @@ struct stream_buffer {
   int size;
   int cur = 0;
   int next;
-  stream_buffer(int bufsize, const unsigned char *buf = nullptr);
-
+  stream_buffer(int bufsize, const unsigned char *data) : size(bufsize) {
+    this->buf = (unsigned char *)NewWithoutGC_N(unsigned char, bufsize);
+    if (data) {
+      memcpy(this->buf, data, bufsize);
+      this->next = bufsize;
+    } else {
+      this->next = 0;
+    }
+  }
   bool MUST_BE_UPDATED() const { return this->cur == this->next; }
   int do_update(const std::function<int(unsigned char *buf, int)> &reader) {
     this->cur = this->next = 0;
@@ -32,88 +36,90 @@ struct stream_buffer {
   char POP_CHAR() { return this->buf[this->cur++]; }
 };
 
-stream_buffer::stream_buffer(int bufsize, const unsigned char *data)
-    : size(bufsize) {
-  this->buf = (unsigned char *)NewWithoutGC_N(unsigned char, bufsize);
-  if (data) {
-    memcpy(this->buf, data, bufsize);
-    this->next = bufsize;
-  } else {
-    this->next = 0;
-  }
-}
+input_stream::input_stream(int bufsize, const unsigned char *data)
+    : _buffer(new stream_buffer(bufsize, data)) {}
 
-input_stream::input_stream(StreamType type, void *stream, int bufsize,
-                           const unsigned char *data)
-    : _type(type), _stream(stream), _buffer(new stream_buffer(bufsize, data)) {}
+input_stream::~input_stream() { delete _buffer; }
 
 //
 // constructor
 //
-struct base_stream {
+struct base_stream : public input_stream {
   int _des;
-  base_stream(int des) : _des(des) {}
-  void close() {
+  base_stream(int des) : input_stream(STREAM_BUF_SIZE), _des(des) {}
+  StreamType IStype() const override { return IST_BASIC; }
+  int ISfileno() const override { return _des; }
+  void close() override {
     if (_des >= 0) {
       ::close(_des);
       _des = -1;
     }
   }
-  int read(unsigned char *buf, int len) { return ::read(_des, buf, len); }
+  int read(unsigned char *buf, int len) override {
+    return ::read(_des, buf, len);
+  }
 };
 
 std::shared_ptr<input_stream> newInputStream(int des) {
   if (des < 0) {
-    return NULL;
+    return {};
   }
-  auto p = new base_stream(des);
-  return std::make_shared<input_stream>(IST_BASIC, p, STREAM_BUF_SIZE);
+  return std::make_shared<base_stream>(des);
 }
 
-struct file_stream {
+struct file_stream : public input_stream {
   FILE *_file;
   FileClose _close;
-  file_stream(FILE *file, FileClose close) : _file(file), _close(close) {}
-  void close() {
+  file_stream(FILE *file, FileClose close)
+      : input_stream(STREAM_BUF_SIZE), _file(file), _close(close) {}
+  StreamType IStype() const override { return IST_FILE; }
+  int ISfileno() const override { return fileno(_file); }
+  void close() override {
     if (_file) {
       this->_close(_file);
       _file = {};
     }
   }
-  int read(unsigned char *buf, int len) { return fread(buf, 1, len, _file); }
+  int read(unsigned char *buf, int len) override {
+    return fread(buf, 1, len, _file);
+  }
 };
 
 std::shared_ptr<input_stream> newFileStream(FILE *f, FileClose closep) {
-  if (f == NULL) {
-    return NULL;
+  if (!f) {
+    return {};
   }
-  auto p = new file_stream(f, closep ? closep : fclose);
-  return std::make_shared<input_stream>(IST_FILE, p, STREAM_BUF_SIZE);
+  return std::make_shared<file_stream>(f, closep ? closep : fclose);
 }
 
 std::shared_ptr<input_stream> openIS(const char *path) {
   return newInputStream(open(path, O_RDONLY));
 };
 
-struct str_stream {
-  void close() {}
-  int read(unsigned char *buf, int len) { return 0; }
+struct str_stream : public input_stream {
+  str_stream(std::string_view s)
+      : input_stream(s.size(), (const unsigned char *)s.data()) {}
+  StreamType IStype() const override { return IST_STR; }
+  int ISfileno() const override { return -1; }
+  void close() override {}
+  int read(unsigned char *buf, int len) override { return 0; }
 };
 
 std::shared_ptr<input_stream> newStrStream(std::string_view s) {
   if (s.empty()) {
     return {};
   }
-  auto p = new str_stream();
-  return std::make_shared<input_stream>(IST_STR, p, s.size(),
-                                        (const unsigned char *)s.data());
+  return std::make_shared<str_stream>(s);
 }
 
-struct ssl_stream {
+struct ssl_stream : public input_stream {
   SSL *_ssl;
   int _sock;
-  ssl_stream(SSL *ssl, int sock) : _ssl(ssl), _sock(sock) {}
-  void close() {
+  ssl_stream(SSL *ssl, int sock)
+      : input_stream(STREAM_BUF_SIZE), _ssl(ssl), _sock(sock) {}
+  StreamType IStype() const override { return IST_SSL; }
+  int ISfileno() const override { return _sock; }
+  void close() override {
     if (this->_sock) {
       ::close(this->_sock);
       this->_sock = 0;
@@ -123,7 +129,7 @@ struct ssl_stream {
       this->_ssl = {};
     }
   }
-  int read(unsigned char *buf, int len) {
+  int read(unsigned char *buf, int len) override {
     int status;
     if (this->_ssl) {
       for (;;) {
@@ -150,10 +156,9 @@ struct ssl_stream {
 #define SSL_BUF_SIZE 1536
 std::shared_ptr<input_stream> newSSLStream(SSL *ssl, int sock) {
   if (sock < 0) {
-    return NULL;
+    return {};
   }
-  auto p = new ssl_stream(ssl, sock);
-  return std::make_shared<input_stream>(IST_SSL, p, SSL_BUF_SIZE);
+  return std::make_shared<ssl_stream>(ssl, sock);
 }
 
 static void memchop(char *p, int *len) {
@@ -168,21 +173,23 @@ static void memchop(char *p, int *len) {
   return;
 }
 
-struct encoded_stream {
+struct encoded_stream : public input_stream {
   std::shared_ptr<input_stream> is;
   struct growbuf gb;
   int pos = 0;
   EncodingType encoding;
 
   encoded_stream(const std::shared_ptr<input_stream> &is, EncodingType encoding)
-      : is(is), encoding(encoding) {
+      : input_stream(STREAM_BUF_SIZE), is(is), encoding(encoding) {
     growbuf_init_without_GC(&this->gb);
   }
-  void close() {
-    this->is->ISclose();
+  StreamType IStype() const override { return IST_ENCODED; }
+  int ISfileno() const override { return is->ISfileno(); }
+  void close() override {
+    this->is->close();
     growbuf_clear(&this->gb);
   }
-  int read(unsigned char *buf, int len) {
+  int read(unsigned char *buf, int len) override {
     if (this->pos == this->gb.length) {
       this->is->ISgets_to_growbuf(&this->gb, true);
       if (this->gb.length == 0) {
@@ -227,45 +234,7 @@ newEncodedStream(const std::shared_ptr<input_stream> &is,
        encoding != ENC_UUENCODE)) {
     return is;
   }
-  auto p = new encoded_stream(is, encoding);
-  return std::make_shared<input_stream>(IST_ENCODED, p, STREAM_BUF_SIZE);
-}
-
-int input_stream::read(unsigned char *buf, int size) {
-  switch (this->IStype()) {
-  case IST_BASIC:
-    return ((base_stream *)this->_stream)->read(buf, size);
-  case IST_FILE:
-    return ((file_stream *)this->_stream)->read(buf, size);
-  case IST_SSL:
-    return ((ssl_stream *)this->_stream)->read(buf, size);
-  case IST_ENCODED:
-    return ((encoded_stream *)this->_stream)->read(buf, size);
-  default:
-    return 0;
-  }
-}
-
-int input_stream::ISclose() {
-  auto prevtrap = mySignalInt(mySignalGetIgn());
-  switch (this->IStype()) {
-  case IST_BASIC:
-    ((base_stream *)this->_stream)->close();
-    break;
-  case IST_FILE:
-    ((file_stream *)this->_stream)->close();
-    break;
-  case IST_SSL:
-    ((ssl_stream *)this->_stream)->close();
-    break;
-  case IST_ENCODED:
-    ((encoded_stream *)this->_stream)->close();
-    break;
-  default:
-    break;
-  }
-  mySignalInt(prevtrap);
-  return 0;
+  return std::make_shared<encoded_stream>(is, encoding);
 }
 
 int input_stream::ISgetc() {
@@ -355,7 +324,7 @@ int input_stream::ISread_n(char *dst, int count) {
     return 0;
   }
 
-  auto len = buffer_read(this->_buffer.get(), dst, count);
+  auto len = buffer_read(this->_buffer, dst, count);
   if (this->_buffer->MUST_BE_UPDATED()) {
     auto l = this->read((unsigned char *)&dst[len], count - len);
     if (l <= 0) {
@@ -365,19 +334,4 @@ int input_stream::ISread_n(char *dst, int count) {
     }
   }
   return len;
-}
-
-int input_stream::ISfileno() const {
-  switch (this->IStype()) {
-  case IST_BASIC:
-    return ((base_stream *)this->_stream)->_des;
-  case IST_FILE:
-    return fileno(((file_stream *)this->_stream)->_file);
-  case IST_SSL:
-    return ((ssl_stream *)this->_stream)->_sock;
-  case IST_ENCODED:
-    return ((encoded_stream *)this->_stream)->is->ISfileno();
-  default:
-    return -1;
-  }
 }

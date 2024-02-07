@@ -9,17 +9,21 @@
 
 struct stream_buffer;
 class input_stream {
-  StreamType _type = {};
-  void *_stream;
-  std::shared_ptr<stream_buffer> _buffer;
+  stream_buffer *_buffer;
   bool _iseos = false;
 
-public:
-  input_stream(StreamType type, void *stream, int bufsize,
-               const unsigned char *data = nullptr);
+protected:
+  input_stream(int bufsize, const unsigned char *data = nullptr);
 
-  StreamType IStype() const { return _type; }
-  int ISfileno() const;
+public:
+  virtual ~input_stream();
+  input_stream(const input_stream &) = delete;
+  input_stream &operator=(const input_stream &) = delete;
+  virtual int read(unsigned char *buf, int size) = 0;
+  virtual void close() = 0;
+  virtual StreamType IStype() const = 0;
+  virtual int ISfileno() const = 0;
+
   int ISread_n(char *dst, int bufsize);
   void ISgets_to_growbuf(struct growbuf *gb, char crnl);
   std::string StrISgets2(bool crnl);
@@ -27,10 +31,6 @@ public:
   std::string StrmyISgets() { return StrISgets2(true); }
   int ISundogetc();
   int ISgetc();
-  int ISclose();
-
-private:
-  int read(unsigned char *buf, int size);
 };
 
 std::shared_ptr<input_stream> newInputStream(int des);
