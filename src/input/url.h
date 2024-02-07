@@ -13,14 +13,12 @@ struct Url {
   std::string real_file;
   std::string query;
   std::string label;
-  // bool is_nocache = false;
 
   static Url parse(const char *url, std::optional<Url> current = {});
 
   Url &operator=(const Url &src) {
     this->schema = src.schema;
     this->port = src.port;
-    // this->is_nocache = src.is_nocache;
     this->user = src.user;
     this->pass = src.pass;
     this->host = src.host;

@@ -1,5 +1,4 @@
 #include "httprequest.h"
-#include "http_option.h"
 #include "w3m.h"
 #include "Str.h"
 #include "url.h"

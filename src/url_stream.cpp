@@ -1,7 +1,6 @@
 #include "url_stream.h"
 #include "quote.h"
 #include "loadproc.h"
-#include "http_option.h"
 #include "rc.h"
 #include "app.h"
 #include "alloc.h"
