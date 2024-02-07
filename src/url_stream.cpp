@@ -143,9 +143,10 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
+void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr, Url *pu,
+                             std::optional<Url> current,
                              const HttpOption &option, FormList *request,
-                             TextList *extra_header, HttpRequest *hr) {
+                             TextList *extra_header) {
   if (request && request->body) {
     /* local CGI: POST */
     this->stream =
@@ -158,6 +159,7 @@ void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
         localcgi_get(pu->real_file.c_str(), pu->query.c_str(), option.referer),
         fclose);
   }
+
   if (this->stream) {
     this->is_cgi = true;
     this->schema = pu->schema = SCM_LOCAL_CGI;
@@ -192,16 +194,6 @@ void UrlStream::openLocalCgi(Url *pu, std::optional<Url> current,
           pu->real_file = (char *)q;
         }
       }
-    }
-  }
-
-  if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
-    auto u = url;
-    auto schema = parseUrlSchema(&u);
-    if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
-      /* retry it as "http://" */
-      u = Strnew_m_charp("http://", url, nullptr)->ptr;
-      openURL(u, pu, current, option, request, extra_header, hr);
     }
   }
 }
@@ -382,11 +374,11 @@ error:
   return -1;
 }
 
-StreamStatus UrlStream::openHttp(const char *url, Url *pu,
-                                 std::optional<Url> current,
-                                 const HttpOption &option, FormList *request,
-                                 TextList *extra_header, HttpRequest *hr) {
-  StreamStatus status = HTST_NORMAL;
+void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
+                         const char *url, Url *pu, std::optional<Url> current,
+                         const HttpOption &option, FormList *request,
+                         TextList *extra_header) {
+  hr->status = HTST_NORMAL;
   int sock = -1;
   SSL *sslh = nullptr;
   Str *tmp = nullptr;
@@ -403,17 +395,19 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu,
   {
     sock = openSocket(pu->host.c_str(), schemaNumToName(pu->schema), pu->port);
     if (sock < 0) {
-      return HTST_MISSING;
+      hr->status = HTST_MISSING;
+      return;
     }
     if (pu->schema == SCM_HTTPS) {
       if (!(sslh = openSSLHandle(sock, pu->host.c_str(),
                                  &this->ssl_certificate))) {
-        return HTST_MISSING;
+        hr->status = HTST_MISSING;
+        return;
       }
     }
     hr->flag |= HR_FLAG_LOCAL;
     tmp = hr->to_Str(*pu, current, extra_header);
-    status = HTST_NORMAL;
+    hr->status = HTST_NORMAL;
   }
   if (pu->schema == SCM_HTTPS) {
     this->stream = newSSLStream(sslh, sock);
@@ -423,8 +417,9 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu,
       write(sock, tmp->ptr, tmp->length);
     if (w3m_reqlog) {
       FILE *ff = fopen(w3m_reqlog, "a");
-      if (ff == nullptr)
-        return status;
+      if (ff == nullptr) {
+        return;
+      }
       if (sslh)
         fputs("HTTPS: request via SSL\n", ff);
       else
@@ -439,23 +434,25 @@ StreamStatus UrlStream::openHttp(const char *url, Url *pu,
       else
         write_from_file(sock, request->body);
     }
-    return status;
+    return;
   } else {
     write(sock, tmp->ptr, tmp->length);
     if (w3m_reqlog) {
       FILE *ff = fopen(w3m_reqlog, "a");
-      if (ff == nullptr)
-        return status;
+      if (ff == nullptr) {
+        return;
+      }
       fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
       fclose(ff);
     }
     if (hr->method == HR_COMMAND_POST &&
-        request->enctype == FORM_ENCTYPE_MULTIPART)
+        request->enctype == FORM_ENCTYPE_MULTIPART) {
       write_from_file(sock, request->body);
+    }
   }
 
   this->stream = newInputStream(sock);
-  return status;
+  return;
 }
 
 void UrlStream::openData(Url *pu) {
@@ -482,14 +479,11 @@ void UrlStream::openData(Url *pu) {
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 
-StreamStatus UrlStream::openURL(const char *url, Url *pu,
-                                std::optional<Url> current,
-                                const HttpOption &option, FormList *request,
-                                TextList *extra_header, HttpRequest *hr) {
-  HttpRequest hr0;
-  if (hr == nullptr)
-    hr = &hr0;
-
+std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
+                                                std::optional<Url> current,
+                                                const HttpOption &option,
+                                                FormList *request,
+                                                TextList *extra_header) {
   auto u = url;
   auto current_schema = parseUrlSchema(&u);
   if (!current && current_schema == SCM_MISSING && !ArgvIsURL) {
@@ -499,6 +493,7 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
   }
 
   // retry:
+  auto hr = std::make_shared<HttpRequest>(option.referer, request);
 
   *pu = urlParse(u, current);
   if (pu->schema == SCM_LOCAL && pu->file.empty()) {
@@ -514,7 +509,8 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
 #ifdef SOCK_DEBUG
       sock_log("given URL must be null string\n");
 #endif
-      return HTST_NORMAL;
+      hr->status = HTST_NORMAL;
+      return hr;
     }
   }
 
@@ -526,33 +522,40 @@ StreamStatus UrlStream::openURL(const char *url, Url *pu,
   pu->is_nocache = (option.no_cache);
   this->ext = filename_extension(pu->file.c_str(), 1);
 
-  hr->method = HR_COMMAND_GET;
-  hr->flag = {};
-  hr->referer = option.referer;
-  hr->request = request;
-
   switch (pu->schema) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    this->openLocalCgi(pu, current, option, request, extra_header, hr);
-    return HTST_NORMAL;
+    this->openLocalCgi(hr, pu, current, option, request, extra_header);
+    if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
+      auto u = url;
+      auto schema = parseUrlSchema(&u);
+      if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
+        /* retry it as "http://" */
+        u = Strnew_m_charp("http://", url, nullptr)->ptr;
+        return openURL(u, pu, current, option, request, extra_header);
+      }
+    }
+    hr->status = HTST_NORMAL;
+    break;
 
   case SCM_HTTP:
   case SCM_HTTPS:
-    return openHttp(url, pu, current, option, request, extra_header, hr);
+    openHttp(hr, url, pu, current, option, request, extra_header);
+    break;
 
   case SCM_DATA:
     openData(pu);
-    return HTST_NORMAL;
+    hr->status = HTST_NORMAL;
+    break;
 
   case SCM_UNKNOWN:
   default:
-    return HTST_NORMAL;
+    hr->status = HTST_NORMAL;
+    break;
   }
 
   // not reach here
-  assert(false);
-  return HTST_UNKNOWN;
+  return hr;
 }
 
 static FILE *lessopen_stream(const char *path) {

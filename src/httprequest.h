@@ -19,6 +19,13 @@ extern bool CrossOriginReferer;
 extern bool override_content_type;
 extern Str *header_string;
 
+enum HttpStreamStatus {
+  HTST_UNKNOWN = 255,
+  HTST_MISSING = 254,
+  HTST_NORMAL = 0,
+  HTST_CONNECT = 1,
+};
+
 enum HttpMethod {
   HR_COMMAND_GET = 0,
   HR_COMMAND_POST = 1,
@@ -33,6 +40,7 @@ enum HttpRequestFlags {
 ENUM_OP_INSTANCE(HttpRequestFlags);
 
 struct HttpRequest {
+  HttpStreamStatus status = {};
   HttpMethod method = {};
   std::string getMehodString() const {
     switch (method) {
@@ -50,6 +58,9 @@ struct HttpRequest {
   HttpRequestFlags flag = {};
   const char *referer = {};
   FormList *request = {};
+
+  HttpRequest(const char *referer, FormList *request)
+      : referer(referer), request(request) {}
 
   Str *getRequestURI(const Url &url) const;
   Str *to_Str(const Url &pu, std::optional<Url> current, TextList *extra) const;

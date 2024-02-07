@@ -717,7 +717,6 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   int add_auth_cookie_flag;
   Str *tmp;
   Str *page = NULL;
-  HttpRequest hr;
   Url *auth_pu;
 
   tpath = path;
@@ -730,14 +729,9 @@ load_doc:
   pu = urlParse(tpath, current);
 
   UrlStream f(SCM_MISSING);
-  // if (ouf) {
-  //   uf = *ouf;
-  // } else {
-  // }
 
   TRAP_OFF;
-  auto status =
-      f.openURL(tpath, &pu, current, option, request, extra_header, &hr);
+  auto hr = f.openURL(tpath, &pu, current, option, request, extra_header);
 
   if (f.stream == NULL) {
     switch (f.schema) {
@@ -775,7 +769,7 @@ load_doc:
     return NULL;
   }
 
-  if (status == HTST_MISSING) {
+  if (hr && hr->status == HTST_MISSING) {
     TRAP_OFF;
     f.close();
     return NULL;
@@ -822,7 +816,7 @@ load_doc:
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->bufferprop =
           static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);
-      status = HTST_NORMAL;
+      // status = HTST_NORMAL;
       goto load_doc;
     }
     t = checkContentType(t_buf);
@@ -845,7 +839,7 @@ load_doc:
       if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
         auth_pu = &pu;
-        getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, &hr,
+        getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, hr.get(),
                       request, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
@@ -854,12 +848,12 @@ load_doc:
         }
         f.close();
         add_auth_cookie_flag = 1;
-        status = HTST_NORMAL;
+        // status = HTST_NORMAL;
         goto load_doc;
       }
     }
 
-    if (status == HTST_CONNECT) {
+    if (hr && hr->status == HTST_CONNECT) {
       goto load_doc;
     }
 

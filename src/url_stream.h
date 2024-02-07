@@ -26,13 +26,6 @@ struct TextList;
 struct HttpRequest;
 struct HttpOption;
 
-enum StreamStatus {
-  HTST_UNKNOWN = 255,
-  HTST_MISSING = 254,
-  HTST_NORMAL = 0,
-  HTST_CONNECT = 1,
-};
-
 struct UrlStream {
   const char *url = {};
   UrlSchema schema = {};
@@ -51,9 +44,9 @@ struct UrlStream {
 
   void openFile(const char *path);
 
-  StreamStatus openURL(const char *url, Url *pu, std::optional<Url> current,
-                       const HttpOption &option, FormList *request,
-                       TextList *extra_header, HttpRequest *hr);
+  std::shared_ptr<HttpRequest>
+  openURL(const char *url, Url *pu, std::optional<Url> current,
+          const HttpOption &option, FormList *request, TextList *extra_header);
 
   int save2tmp(const char *tmpf) const;
   int doFileSave(const char *defstr);
@@ -67,12 +60,12 @@ struct UrlStream {
   std::string StrmyUFgets();
 
 private:
-  StreamStatus openHttp(const char *url, Url *pu, std::optional<Url> current,
-                        const HttpOption &option, FormList *request,
-                        TextList *extra_header, HttpRequest *hr);
-  void openLocalCgi(Url *pu, std::optional<Url> current,
-                    const HttpOption &option, FormList *request,
-                    TextList *extra_header, HttpRequest *hr);
+  void openHttp(const std::shared_ptr<HttpRequest> &hr, const char *url,
+                Url *pu, std::optional<Url> current, const HttpOption &option,
+                FormList *request, TextList *extra_header);
+  void openLocalCgi(const std::shared_ptr<HttpRequest> &hr, Url *pu,
+                    std::optional<Url> current, const HttpOption &option,
+                    FormList *request, TextList *extra_header);
   void openData(Url *pu);
   void add_index_file(Url *pu);
 };
