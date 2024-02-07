@@ -1,23 +1,22 @@
 #include "istream.h"
 #include "Str.h"
 #include "mimehead.h"
-#include "alloc.h"
 #include <functional>
 #include <openssl/ssl.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <vector>
 
 #define STREAM_BUF_SIZE 8192
 
 struct stream_buffer {
-  unsigned char *buf;
-  int size;
+  std::vector<unsigned char> buf;
   int cur = 0;
-  int next;
-  stream_buffer(int bufsize, const unsigned char *data) : size(bufsize) {
-    this->buf = (unsigned char *)NewWithoutGC_N(unsigned char, bufsize);
+  int next = 0;
+  stream_buffer(int bufsize, const unsigned char *data) : buf(bufsize) {
+    this->buf.resize(bufsize);
     if (data) {
-      memcpy(this->buf, data, bufsize);
+      this->buf.assign(data, data + bufsize);
       this->next = bufsize;
     } else {
       this->next = 0;
@@ -26,7 +25,7 @@ struct stream_buffer {
   bool MUST_BE_UPDATED() const { return this->cur == this->next; }
   int do_update(const std::function<int(unsigned char *buf, int)> &reader) {
     this->cur = this->next = 0;
-    int len = reader(this->buf, this->size);
+    int len = reader(this->buf.data(), this->buf.size());
     if (len <= 0) {
     } else {
       this->next += len;

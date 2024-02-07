@@ -221,8 +221,8 @@ void initMailcap(void) {
   //     (struct MailcapEntry **)New_N(struct MailcapEntry *,
   //     mailcap_list->nitem);
   for (auto tl = mailcap_list->first; tl; tl = tl->next) {
+    UserMailcap.push_back({});
     if (auto f = fopen(expandPath(tl->ptr), "r")) {
-      UserMailcap.push_back({});
       UserMailcap.back().load(f);
       fclose(f);
     }
