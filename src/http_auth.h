@@ -19,8 +19,8 @@ struct http_auth {
   HttpAuthFunc cred;
 };
 
-struct Buffer;
-http_auth *findAuthentication(http_auth *hauth, Buffer *buf,
+struct HttpResponse;
+http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
                               const char *auth_field);
 Str *get_auth_param(auth_param *auth, const char *name);
 Str *qstr_unquote(Str *s);

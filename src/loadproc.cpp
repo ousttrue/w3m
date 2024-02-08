@@ -407,17 +407,12 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   const char *p = NULL;
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
-  // MySignalHandler prevtrap = NULL;
-  Str *uname = NULL;
-  Str *pwd = NULL;
-  Str *realm = NULL;
-  int add_auth_cookie_flag;
+
   Str *tmp;
   Str *page = NULL;
 
   tpath = path;
   // prevtrap = NULL;
-  add_auth_cookie_flag = 0;
 
 load_doc:
   pu = urlParse(tpath, current);
@@ -427,41 +422,42 @@ load_doc:
   // TRAP_OFF;
   auto hr = f.openURL(tpath, &pu, current, option, request);
 
-  if (f.stream == NULL) {
-    switch (f.schema) {
-    case SCM_LOCAL: {
-      struct stat st;
-      if (stat(pu.real_file.c_str(), &st) < 0)
-        return NULL;
-      if (S_ISDIR(st.st_mode)) {
-        if (UseExternalDirBuffer) {
-          Str *cmd =
-              Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
-          auto b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
-          if (b != NULL && b != NO_BUFFER) {
-            b->info->currentURL = pu;
-            b->info->filename = Strnew(b->info->currentURL.real_file)->ptr;
-          }
-          return b;
-        } else {
-          page = loadLocalDir(pu.real_file.c_str());
-          t = "local:directory";
-        }
-      }
-    } break;
-
-    case SCM_UNKNOWN:
-      disp_err_message(Sprintf("Unknown URI: %s", pu.to_Str().c_str())->ptr,
-                       false);
-      break;
-
-    default:
-      break;
-    }
-    if (page && page->length > 0)
-      goto page_loaded;
-    return NULL;
-  }
+  // Directory Open ?
+  // if (f.stream == NULL) {
+  //   switch (f.schema) {
+  //   case SCM_LOCAL: {
+  //     struct stat st;
+  //     if (stat(pu.real_file.c_str(), &st) < 0)
+  //       return NULL;
+  //     if (S_ISDIR(st.st_mode)) {
+  //       if (UseExternalDirBuffer) {
+  //         Str *cmd =
+  //             Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
+  //         auto b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
+  //         if (b != NULL && b != NO_BUFFER) {
+  //           b->info->currentURL = pu;
+  //           b->info->filename = Strnew(b->info->currentURL.real_file)->ptr;
+  //         }
+  //         return b;
+  //       } else {
+  //         page = loadLocalDir(pu.real_file.c_str());
+  //         t = "local:directory";
+  //       }
+  //     }
+  //   } break;
+  //
+  //   case SCM_UNKNOWN:
+  //     disp_err_message(Sprintf("Unknown URI: %s", pu.to_Str().c_str())->ptr,
+  //                      false);
+  //     break;
+  //
+  //   default:
+  //     break;
+  //   }
+  //   if (page && page->length > 0)
+  //     goto page_loaded;
+  //   return NULL;
+  // }
 
   if (hr && hr->status == HTST_MISSING) {
     // TRAP_OFF;
@@ -485,13 +481,13 @@ load_doc:
   // TRAP_ON;
   if (pu.schema == SCM_HTTP || pu.schema == SCM_HTTPS) {
 
-    if (fmInitialized) {
-      term_cbreak();
-      message(
-          Sprintf("%s contacted. Waiting for reply...", pu.host.c_str())->ptr,
-          0, 0);
-      refresh(term_io());
-    }
+    // if (fmInitialized) {
+    //   term_cbreak();
+    //   message(
+    //       Sprintf("%s contacted. Waiting for reply...", pu.host.c_str())->ptr,
+    //       0, 0);
+    //   refresh(term_io());
+    // }
     if (t_buf == NULL)
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
     auto http_response_code = t_buf->info->readHeader(&f, pu);
@@ -511,33 +507,31 @@ load_doc:
       // status = HTST_NORMAL;
       goto load_doc;
     }
+
     t = checkContentType(t_buf);
     if (t == NULL && pu.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
         t = guessContentType(pu.file.c_str());
     }
-    if (t == NULL)
+    if (t == NULL) {
       t = "text/plain";
-    if (add_auth_cookie_flag && realm && uname && pwd) {
-      /* If authorization is required and passed */
-      add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd, 0);
-      add_auth_cookie_flag = 0;
     }
-    if ((p = t_buf->info->getHeader("WWW-Authenticate:")) != NULL &&
+    hr->add_auth_cookie(pu);
+    if ((p = t_buf->info->getHeader("WWW-Authenticate:")) &&
         http_response_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
-      if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
-          (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        getAuthCookie(&hauth, "Authorization:", pu, hr.get(),
-                      request, &uname, &pwd);
-        if (uname == NULL) {
+      if (findAuthentication(&hauth, *t_buf->info, "WWW-Authenticate:") &&
+          (hr->realm = get_auth_param(hauth.param, "realm"))) {
+        getAuthCookie(&hauth, "Authorization:", pu, hr.get(), request,
+                      &hr->uname, &hr->pwd);
+        if (hr->uname == NULL) {
           /* abort */
           // TRAP_OFF;
           goto page_loaded;
         }
-        add_auth_cookie_flag = 1;
+        hr->add_auth_cookie_flag = true;
         // status = HTST_NORMAL;
         goto load_doc;
       }

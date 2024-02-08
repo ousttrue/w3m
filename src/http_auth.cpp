@@ -252,8 +252,8 @@ static Str *base64_encode(const char *src, int len) {
   return dest;
 }
 
-static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
-                          HttpRequest *hr, FormList *request) {
+static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw,
+                          const Url &pu, HttpRequest *hr, FormList *request) {
   Str *s = uname->Strdup();
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -299,7 +299,7 @@ struct http_auth www_auth[] = {
         nullptr,
     }};
 
-http_auth *findAuthentication(http_auth *hauth, Buffer *buf,
+http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
                               const char *auth_field) {
   struct http_auth *ha;
   int len = strlen(auth_field), slen;
@@ -307,7 +307,7 @@ http_auth *findAuthentication(http_auth *hauth, Buffer *buf,
   const char *p0, *p;
 
   bzero(hauth, sizeof(struct http_auth));
-  for (i = buf->info->document_header->first; i != nullptr; i = i->next) {
+  for (i = res.document_header->first; i != nullptr; i = i->next) {
     if (strncasecmp(i->ptr, auth_field, len) == 0) {
       for (p = i->ptr + len; p != nullptr && *p != '\0';) {
         SKIP_BLANKS(p);

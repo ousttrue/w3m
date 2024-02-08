@@ -17,7 +17,7 @@ struct auth_pass {
   auth_pass *next = {};
 };
 
-void add_auth_user_passwd(Url *pu, const char *realm, Str *uname, Str *pwd,
+void add_auth_user_passwd(const Url &pu, const char *realm, Str *uname, Str *pwd,
                           bool is_proxy);
 
 void invalidate_auth_user_passwd(const Url &pu, const char *realm, Str *uname,

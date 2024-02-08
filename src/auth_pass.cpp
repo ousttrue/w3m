@@ -60,12 +60,12 @@ static void add_auth_pass_entry(const auth_pass &ent, int netrc, int override) {
   /* ignore invalid entries */
 }
 
-void add_auth_user_passwd(Url *pu, const char *realm, Str *uname, Str *pwd,
-                          bool is_proxy) {
+void add_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
+                          Str *pwd, bool is_proxy) {
   auth_pass ent{
       .is_proxy = is_proxy,
-      .host = Strnew(pu->host),
-      .port = pu->port,
+      .host = Strnew(pu.host),
+      .port = pu.port,
       .realm = Strnew_charp(realm),
       .uname = uname,
       .pwd = pwd,

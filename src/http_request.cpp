@@ -6,6 +6,8 @@
 #include "rc.h"
 #include "cookie.h"
 #include "form.h"
+#include "http_auth.h"
+#include "auth_pass.h"
 #include "myctype.h"
 #include <string.h>
 
@@ -171,4 +173,13 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
   fprintf(stderr, "HTTPrequest: [ %s ]\n\n", tmp->ptr);
 #endif /* DEBUG */
   return tmp;
+}
+
+void HttpRequest::add_auth_cookie(const Url &pu) {
+  if (this->add_auth_cookie_flag && this->realm && this->uname && this->pwd) {
+    /* If authorization is required and passed */
+    add_auth_user_passwd(pu, qstr_unquote(this->realm)->ptr, this->uname,
+                         this->pwd, 0);
+    this->add_auth_cookie_flag = false;
+  }
 }

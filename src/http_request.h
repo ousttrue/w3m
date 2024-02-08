@@ -65,6 +65,12 @@ struct HttpRequest {
   HttpRequestFlags flag = {};
   HttpOption option = {};
   FormList *request = {};
+
+  Str *uname = NULL;
+  Str *pwd = NULL;
+  Str *realm = NULL;
+  bool add_auth_cookie_flag = false;
+
   TextList *extra_headers = {};
 
   HttpRequest(const HttpOption option, FormList *request)
@@ -72,4 +78,5 @@ struct HttpRequest {
 
   Str *getRequestURI(const Url &url) const;
   Str *to_Str(const Url &pu, std::optional<Url> current) const;
+  void add_auth_cookie(const Url &pu);
 };
