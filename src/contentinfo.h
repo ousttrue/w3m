@@ -1,6 +1,9 @@
 #pragma once
 #include "url.h"
 #include "optional"
+#include <vector>
+
+extern int FollowRedirection;
 
 struct TextList;
 struct ContentInfo {
@@ -12,6 +15,8 @@ struct ContentInfo {
   TextList *document_header = nullptr;
   const char *filename = nullptr;
   std::string sourcefile;
+  std::vector<Url> redirectins;
 
   ~ContentInfo();
+  bool checkRedirection(const Url &pu);
 };

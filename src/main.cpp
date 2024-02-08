@@ -465,7 +465,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
       unlink(fi->parent->body);
     }
     if (buf &&
-        !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+        !(buf->info->redirectins.size() > 1)) { /* buf must be Currentbuf */
       /* BP_REDIRECTED means that the buffer is obtained through
        * Location: header. In this case, buf->form_submit must not be set
        * because the page is not loaded by POST method but GET method.
@@ -474,8 +474,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
     }
   } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
               (!Strcmp_charp(fi->parent->action, "map") ||
-               !Strcmp_charp(fi->parent->action, "none"))) ||
-             Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
+               !Strcmp_charp(fi->parent->action, "none")))) { /* internal */
     do_internal(tmp2->ptr, tmp->ptr);
   } else {
     disp_err_message("Can't send form because of illegal method.", false);
@@ -983,9 +982,6 @@ int main(int argc, char **argv) {
       newbuf = loadHTMLString(s_page);
       if (newbuf == nullptr)
         Strcat_charp(err_msg, "w3m: Can't load string.\n");
-      else if (newbuf != NO_BUFFER)
-        newbuf->bufferprop =
-            (BufferFlags)(newbuf->bufferprop | BP_INTERNAL | BP_NO_URL);
     } else if ((p = getenv("HTTP_HOME")) != nullptr ||
                (p = getenv("WWW_HOME")) != nullptr) {
       newbuf = loadGeneralFile(p, {}, {.referer = NO_REFERER});
@@ -1094,7 +1090,6 @@ int main(int argc, char **argv) {
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {
       Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH());
-      Currentbuf->bufferprop = (BufferFlags)(BP_INTERNAL | BP_NO_URL);
       Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
     } else
       Currentbuf = Firstbuf;

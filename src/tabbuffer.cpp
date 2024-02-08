@@ -456,7 +456,5 @@ void followTab(TabBuffer *tab) {
 
 /* show current URL */
 Str *currentURL(void) {
-  if (Currentbuf->bufferprop & BP_INTERNAL)
-    return Strnew_size(0);
   return Strnew(Currentbuf->info->currentURL.to_Str());
 }

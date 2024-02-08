@@ -4204,7 +4204,7 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
       newBuf->info->sourcefile = tmp->ptr;
   }
 
-  loadHTMLstream(f, newBuf, src, newBuf->bufferprop);
+  loadHTMLstream(f, newBuf, src, false/*newBuf->bufferprop*/);
 
   newBuf->topLine = newBuf->firstLine;
   newBuf->lastLine = newBuf->currentLine;

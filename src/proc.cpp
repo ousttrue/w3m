@@ -274,7 +274,6 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     disp_message("Execution failed", true);
     return;
   } else {
-    buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | BP_NO_URL);
     if (buf->info->type == nullptr)
       buf->info->type = "text/plain";
     pushBuffer(buf);
@@ -929,7 +928,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
 
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
-  cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+  cmd_loadBuffer(load_option_panel(), LB_NOLINK);
 }
 
 /* set an option */
@@ -956,7 +955,7 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
 
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages") {
-  cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+  cmd_loadBuffer(message_list_panel(), LB_NOLINK);
 }
 
 /* page info */
@@ -972,7 +971,7 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
     CurrentTab->deleteBuffer(buf);
   }
   buf = page_info_panel(Currentbuf);
-  cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
+  cmd_loadBuffer(buf, LB_INFO);
 }
 
 /* link,anchor,image list */
@@ -981,7 +980,7 @@ DEFUN(linkLst, LIST, "Show all URLs referenced") {
 
   buf = link_list_panel(Currentbuf);
   if (buf != nullptr) {
-    cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
+    cmd_loadBuffer(buf, LB_NOLINK);
   }
 }
 
@@ -991,12 +990,12 @@ DEFUN(cooLst, COOKIE, "View cookie list") {
 
   buf = cookie_list_panel();
   if (buf != nullptr)
-    cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
+    cmd_loadBuffer(buf, LB_NOLINK);
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history") {
-  cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
+  cmd_loadBuffer(historyBuffer(URLHist), LB_NOLINK);
 }
 
 /* download HREF link */
@@ -1092,8 +1091,6 @@ DEFUN(curURL, PEEK, "Show current address") {
   static Str *s = nullptr;
   static int offset = 0, n;
 
-  if (Currentbuf->bufferprop & BP_INTERNAL)
-    return;
   if (CurrentKey == prev_key && s != nullptr) {
     if (s->length - offset >= COLS)
       offset++;
@@ -1170,14 +1167,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   FormList *request;
   int multipart;
 
-  if (Currentbuf->bufferprop & BP_INTERNAL) {
-    if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
-      ldDL();
-      return;
-    }
-    disp_err_message("Can't reload...", true);
-    return;
-  }
   if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
       Currentbuf->info->currentURL.file == "-") {
     /* file is std input */
@@ -1264,10 +1253,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
 DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {}
 
 DEFUN(extbrz, EXTERN, "Display using an external browser") {
-  if (Currentbuf->bufferprop & BP_INTERNAL) {
-    disp_err_message("Can't browse...", true);
-    return;
-  }
   if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
       Currentbuf->info->currentURL.file == "-") {
     /* file is std input */
@@ -1540,9 +1525,6 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   int replace = false, new_tab = false;
   int reload;
 
-  if (Currentbuf->bufferprop & BP_INTERNAL &&
-      !strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE))
-    replace = true;
   if (!FirstDL) {
     if (replace) {
       if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == nullptr) {
@@ -1560,7 +1542,6 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | BP_NO_URL);
   if (replace) {
     COPY_BUFROOT(buf, Currentbuf);
     restorePosition(buf, Currentbuf);

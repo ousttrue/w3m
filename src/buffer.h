@@ -8,16 +8,6 @@
 
 #define NO_BUFFER ((Buffer *)1)
 
-/* Buffer Property */
-enum BufferFlags : unsigned short {
-  BP_NORMAL = 0x0,
-  BP_PIPE = 0x1,
-  BP_INTERNAL = 0x8,
-  BP_NO_URL = 0x10,
-  BP_REDIRECTED = 0x20,
-  BP_CLOSE = 0x40,
-};
-
 /* Link Buffer */
 enum LinkBuffer {
   LB_FRAME = 0 /* rFrame() */,
@@ -59,7 +49,6 @@ struct Buffer : public gc_cleanup {
   short width = 0;
   short height = 0;
   int allLine = 0;
-  BufferFlags bufferprop = BP_NORMAL;
   int currentColumn = 0;
   short cursorX = 0;
   short cursorY = 0;

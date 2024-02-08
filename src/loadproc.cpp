@@ -50,14 +50,7 @@
 #define HAVE_ATOLL 1
 
 const char *DefaultType = nullptr;
-int FollowRedirection = 10;
 bool DecodeCTE = false;
-
-static JMP_BUF AbortLoading;
-static void KeyAbort(SIGNAL_ARG) {
-  LONGJMP(AbortLoading, 1);
-  SIGNAL_RETURN;
-}
 
 static long long current_content_length;
 
@@ -587,44 +580,6 @@ static long long strtoclen(const char *s) {
 #endif
 }
 
-static bool same_url_p(const Url &pu1, const Url &pu2) {
-  return (pu1.schema == pu2.schema && pu1.port == pu2.port &&
-          (pu1.host.size() ? pu2.host.size() ? pu1.host == pu2.host : false
-                           : true) &&
-          (pu1.file.size() ? pu2.file.size() ? pu1.file == pu2.file : false
-                           : true));
-}
-
-static bool checkRedirection(const Url *pu) {
-  static std::vector<Url> redirectins;
-
-  if (pu == nullptr) {
-    // clear
-    redirectins.clear();
-    return true;
-  }
-
-  if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
-    auto tmp = Sprintf("Number of redirections exceeded %d at %s",
-                       FollowRedirection, pu->to_Str().c_str());
-    disp_err_message(tmp->ptr, false);
-    return false;
-  }
-
-  for (auto &url : redirectins) {
-    if (same_url_p(*pu, url)) {
-      // same url found !
-      auto tmp =
-          Sprintf("Redirection loop detected (%s)", pu->to_Str().c_str());
-      disp_err_message(tmp->ptr, false);
-      return false;
-    }
-  }
-
-  redirectins.push_back(*pu);
-
-  return true;
-}
 /*
  * loadGeneralFile: load file to buffer
  */
@@ -650,8 +605,6 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   tpath = path;
   // prevtrap = NULL;
   add_auth_cookie_flag = 0;
-
-  checkRedirection(NULL);
 
 load_doc:
   pu = urlParse(tpath, current);
@@ -732,7 +685,7 @@ load_doc:
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&
-        checkRedirection(&pu)) {
+        t_buf->info->checkRedirection(pu)) {
       /* document moved */
       /* 301: Moved Permanently */
       /* 302: Found */
@@ -742,8 +695,6 @@ load_doc:
       request = NULL;
       current = pu;
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      t_buf->bufferprop =
-          static_cast<BufferFlags>(t_buf->bufferprop | BP_REDIRECTED);
       // status = HTST_NORMAL;
       goto load_doc;
     }
@@ -963,13 +914,11 @@ const char *shell_quote(const char *str) {
   return str;
 }
 
-void cmd_loadBuffer(Buffer *buf, int prop, int linkid) {
+void cmd_loadBuffer(Buffer *buf, int linkid) {
   if (buf == nullptr) {
     disp_err_message("Can't load string", false);
   } else if (buf != NO_BUFFER) {
-    buf->bufferprop = (BufferFlags)(buf->bufferprop | BP_INTERNAL | prop);
-    if (!(buf->bufferprop & BP_NO_URL))
-      buf->info->currentURL = Currentbuf->info->currentURL;
+    buf->info->currentURL = Currentbuf->info->currentURL;
     if (linkid != LB_NOLINK) {
       buf->linkBuffer[linkid] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;

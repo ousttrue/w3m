@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "tabbuffer.h"
+#include "contentinfo.h"
 #include "form.h"
 #include "loadproc.h"
 #include "loaddirectory.h"
