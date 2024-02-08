@@ -4197,12 +4197,12 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
 
   if (newBuf == NULL)
     newBuf = new Buffer(INIT_BUFFER_WIDTH());
-  if (newBuf->sourcefile.empty() &&
-      (f->schema != SCM_LOCAL || newBuf->mailcap)) {
+  if (newBuf->info->sourcefile.empty() &&
+      (f->schema != SCM_LOCAL || newBuf->info->mailcap)) {
     tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");
     if (src)
-      newBuf->sourcefile = tmp->ptr;
+      newBuf->info->sourcefile = tmp->ptr;
   }
 
   loadHTMLstream(f, newBuf, src, newBuf->bufferprop);

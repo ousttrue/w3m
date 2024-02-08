@@ -125,6 +125,7 @@ executable(
         'alloc.cpp',
         'tabbuffer.cpp',
         'proc.cpp',
+        'contentinfo.cpp',
     ],
     install: true,
     dependencies: [

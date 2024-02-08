@@ -560,7 +560,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   if (fn == nullptr || /* Behaving as a pager */
       (Currentbuf->info->type == nullptr &&
        Currentbuf->edit == nullptr) || /* Reading shell */
-      Currentbuf->real_schema != SCM_LOCAL ||
+      Currentbuf->info->real_schema != SCM_LOCAL ||
       Currentbuf->info->currentURL.file == "-" /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", true);
@@ -1064,19 +1064,20 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
 
-  if (Currentbuf->sourcefile.empty())
+  if (Currentbuf->info->sourcefile.empty()) {
     return;
+  }
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
 
   const char *file;
-  if (Currentbuf->real_schema == SCM_LOCAL)
+  if (Currentbuf->info->real_schema == SCM_LOCAL)
     file = guess_save_name(nullptr,
                            Currentbuf->info->currentURL.real_file.c_str());
   else
     file =
         guess_save_name(Currentbuf, Currentbuf->info->currentURL.file.c_str());
-  doFileCopy(Currentbuf->sourcefile.c_str(), file);
+  doFileCopy(Currentbuf->info->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1121,7 +1122,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if (Currentbuf->sourcefile.empty()) {
+  if (Currentbuf->info->sourcefile.empty()) {
     return;
   }
 
@@ -1151,9 +1152,9 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     return;
   }
   buf->info->currentURL = Currentbuf->info->currentURL;
-  buf->real_schema = Currentbuf->real_schema;
+  buf->info->real_schema = Currentbuf->info->real_schema;
   buf->info->filename = Currentbuf->info->filename;
-  buf->sourcefile = Currentbuf->sourcefile;
+  buf->info->sourcefile = Currentbuf->info->sourcefile;
   buf->clone = Currentbuf->clone;
   buf->clone->count++;
 

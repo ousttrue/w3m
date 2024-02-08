@@ -104,12 +104,12 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   // }
   // TRAP_ON;
 
-  if (newBuf->sourcefile.empty() &&
-      (uf->schema != SCM_LOCAL || newBuf->mailcap)) {
+  if (newBuf->info->sourcefile.empty() &&
+      (uf->schema != SCM_LOCAL || newBuf->info->mailcap)) {
     tmpf = tmpfname(TMPF_SRC, NULL);
     src = fopen(tmpf->ptr, "w");
     if (src)
-      newBuf->sourcefile = tmpf->ptr;
+      newBuf->info->sourcefile = tmpf->ptr;
   }
 
   nlines = 0;
@@ -238,8 +238,8 @@ static Buffer *loadSomething(UrlStream *f,
   }
   if (buf->info->currentURL.schema == SCM_UNKNOWN)
     buf->info->currentURL.schema = f->schema;
-  if (f->schema == SCM_LOCAL && buf->sourcefile.empty())
-    buf->sourcefile = buf->info->filename;
+  if (f->schema == SCM_LOCAL && buf->info->sourcefile.empty())
+    buf->info->sourcefile = buf->info->filename;
   if (loadproc == loadHTMLBuffer)
     buf->info->type = "text/html";
   else
@@ -321,26 +321,26 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
   if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
     if (defaultbuf == NULL)
       defaultbuf = new Buffer(INIT_BUFFER_WIDTH());
-    if (defaultbuf->sourcefile.size())
-      src = Strnew(defaultbuf->sourcefile)->ptr;
+    if (defaultbuf->info->sourcefile.size())
+      src = Strnew(defaultbuf->info->sourcefile)->ptr;
     else
       src = tmpf->ptr;
-    defaultbuf->sourcefile = {};
-    defaultbuf->mailcap = mcap;
+    defaultbuf->info->sourcefile = {};
+    defaultbuf->info->mailcap = mcap;
   }
   if (mcap->flags & MAILCAP_HTMLOUTPUT) {
     buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->info->type = "text/html";
-      buf->mailcap_source = Strnew(buf->sourcefile)->ptr;
-      buf->sourcefile = (char *)src;
+      buf->info->mailcap_source = Strnew(buf->info->sourcefile)->ptr;
+      buf->info->sourcefile = src;
     }
   } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
     buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->info->type = "text/plain";
-      buf->mailcap_source = Strnew(buf->sourcefile)->ptr;
-      buf->sourcefile = (char *)src;
+      buf->info->mailcap_source = Strnew(buf->info->sourcefile)->ptr;
+      buf->info->sourcefile = src;
     }
   } else {
     if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
@@ -359,7 +359,7 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
         buf->info->filename)
       buf->buffername = lastFileName(buf->info->filename);
     buf->edit = mcap->edit;
-    buf->mailcap = mcap;
+    buf->info->mailcap = mcap;
   }
   return buf;
 }
@@ -893,10 +893,11 @@ page_loaded:
     b = loadHTMLString(page);
     if (b) {
       b->info->currentURL = pu;
-      b->real_schema = pu.schema;
+      b->info->real_schema = pu.schema;
       b->info->real_type = t;
-      if (src)
-        b->sourcefile = tmp->ptr;
+      if (src) {
+        b->info->sourcefile = tmp->ptr;
+      }
     }
     return b;
   }
@@ -932,7 +933,7 @@ page_loaded:
     if ((is_text_type(t) || searchExtViewer(t))) {
       if (t_buf == NULL)
         t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      t_buf->sourcefile = f.uncompress_stream();
+      t_buf->info->sourcefile = f.uncompress_stream();
       uncompressed_file_type(pu.file.c_str(), &f.ext);
     } else {
       t = compress_application_type(f.compression);
@@ -973,7 +974,7 @@ page_loaded:
     b = loadSomething(&f, proc, t_buf);
   }
   if (b && b != NO_BUFFER) {
-    b->real_schema = f.schema;
+    b->info->real_schema = f.schema;
     b->info->real_type = real_type;
     if (pu.label.size()) {
       if (proc == loadHTMLBuffer) {

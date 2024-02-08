@@ -79,16 +79,12 @@ struct Buffer : public gc_cleanup {
   HmarkerList *hmarklist = nullptr;
   HmarkerList *imarklist = nullptr;
   const char *baseTarget = nullptr;
-  UrlSchema real_schema = {};
-  std::string sourcefile;
   std::shared_ptr<Clone> clone;
 
   size_t trbyte = 0;
   bool check_url = false;
   FormItemList *form_submit = nullptr;
   const char *edit = nullptr;
-  struct MailcapEntry *mailcap = nullptr;
-  const char *mailcap_source = nullptr;
   const char *ssl_certificate = nullptr;
   char image_flag = 0;
   char image_loaded = 0;
