@@ -385,6 +385,103 @@ static long long strtoclen(const char *s) {
 #endif
 }
 
+static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
+                           Buffer *t_buf, UrlStream &f, Str *page,
+                           const char *t, const char *real_type) {
+  if (page) {
+    FILE *src;
+    auto tmp = tmpfname(TMPF_SRC, ".html");
+    src = fopen(tmp->ptr, "w");
+    if (src) {
+      Str *s;
+      s = page;
+      Strfputs(s, src);
+      fclose(src);
+    }
+    if (do_download) {
+      if (!src)
+        return NULL;
+      auto file = guess_filename(hr->url.file.c_str());
+      doFileMove(tmp->ptr, file);
+      return NO_BUFFER;
+    }
+    auto b = loadHTMLString(page);
+    if (b) {
+      b->info->currentURL = hr->url;
+      b->info->real_schema = hr->url.schema;
+      b->info->real_type = t;
+      if (src) {
+        b->info->sourcefile = tmp->ptr;
+      }
+    }
+    return b;
+  }
+
+  if (!real_type) {
+    real_type = t;
+  }
+
+  current_content_length = 0;
+  const char *p;
+  if ((p = t_buf->info->getHeader("Content-Length:"))) {
+    current_content_length = strtoclen(p);
+  }
+  if (do_download) {
+    /* download only */
+    const char *file;
+    // TRAP_OFF;
+    if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
+      f.stream = newEncodedStream(f.stream, f.encoding);
+    }
+    if (hr->url.schema == SCM_LOCAL) {
+      struct stat st;
+      if (PreserveTimestamp && !stat(hr->url.real_file.c_str(), &st))
+        f.modtime = st.st_mtime;
+      file = guess_filename(hr->url.real_file.c_str());
+    } else {
+      file = t_buf->info->guess_save_name(hr->url.file.c_str());
+    }
+    f.doFileSave(file);
+    return NO_BUFFER;
+  }
+
+  if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+    hr->url.real_file = f.uncompress_stream();
+  } else if (f.compression != CMP_NOCOMPRESS) {
+    if ((is_text_type(t))) {
+      if (t_buf == NULL)
+        t_buf = new Buffer(INIT_BUFFER_WIDTH());
+      t_buf->info->sourcefile = f.uncompress_stream();
+      uncompressed_file_type(hr->url.file.c_str(), &f.ext);
+    } else {
+      t = compress_application_type(f.compression);
+      f.compression = CMP_NOCOMPRESS;
+    }
+  }
+
+  auto proc = LoadProc::Buffer;
+  if (is_html_type(t)) {
+    proc = LoadProc::Html;
+  } else {
+    proc = LoadProc::Buffer;
+  }
+  if (t_buf == NULL)
+    t_buf = new Buffer(INIT_BUFFER_WIDTH());
+  t_buf->info->currentURL = hr->url;
+  t_buf->info->filename = hr->url.real_file.size()
+                              ? Strnew(hr->url.real_file)->ptr
+                              : Strnew(hr->url.file)->ptr;
+  t_buf->ssl_certificate = (char *)f.ssl_certificate;
+
+  auto b = loadSomething(&f, proc, t_buf, hr->url, real_type);
+  // if (header_string)
+  //   header_string = NULL;
+  if (b && b != NO_BUFFER)
+    preFormUpdateBuffer(b);
+  // TRAP_OFF;
+  return b;
+}
+
 /*
  * loadGeneralFile: load file to buffer
  */
@@ -395,7 +492,6 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   const char *p = NULL;
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
-
   Str *page = NULL;
 
   auto tpath = path;
@@ -442,7 +538,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   //     break;
   //   }
   //   if (page && page->length > 0)
-  //     goto page_loaded;
+  //     return page_loaded();
   //   return NULL;
   // }
 
@@ -516,7 +612,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
         if (hr->uname == NULL) {
           /* abort */
           // TRAP_OFF;
-          goto page_loaded;
+          return page_loaded(hr, t_buf, f, page, t, real_type);
         }
         hr->add_auth_cookie_flag = true;
         // status = HTST_NORMAL;
@@ -548,98 +644,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
    *      to support default utf8 encoding for XHTML here? */
   f.guess_type = t;
 
-page_loaded:
-  if (page) {
-    FILE *src;
-    auto tmp = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmp->ptr, "w");
-    if (src) {
-      Str *s;
-      s = page;
-      Strfputs(s, src);
-      fclose(src);
-    }
-    if (do_download) {
-      if (!src)
-        return NULL;
-      auto file = guess_filename(hr->url.file.c_str());
-      doFileMove(tmp->ptr, file);
-      return NO_BUFFER;
-    }
-    auto b = loadHTMLString(page);
-    if (b) {
-      b->info->currentURL = hr->url;
-      b->info->real_schema = hr->url.schema;
-      b->info->real_type = t;
-      if (src) {
-        b->info->sourcefile = tmp->ptr;
-      }
-    }
-    return b;
-  }
-
-  if (!real_type) {
-    real_type = t;
-  }
-
-  current_content_length = 0;
-  if ((p = t_buf->info->getHeader("Content-Length:"))) {
-    current_content_length = strtoclen(p);
-  }
-  if (do_download) {
-    /* download only */
-    const char *file;
-    // TRAP_OFF;
-    if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
-      f.stream = newEncodedStream(f.stream, f.encoding);
-    }
-    if (hr->url.schema == SCM_LOCAL) {
-      struct stat st;
-      if (PreserveTimestamp && !stat(hr->url.real_file.c_str(), &st))
-        f.modtime = st.st_mtime;
-      file = guess_filename(hr->url.real_file.c_str());
-    } else {
-      file = t_buf->info->guess_save_name(hr->url.file.c_str());
-    }
-    f.doFileSave(file);
-    return NO_BUFFER;
-  }
-
-  if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    hr->url.real_file = f.uncompress_stream();
-  } else if (f.compression != CMP_NOCOMPRESS) {
-    if ((is_text_type(t))) {
-      if (t_buf == NULL)
-        t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      t_buf->info->sourcefile = f.uncompress_stream();
-      uncompressed_file_type(hr->url.file.c_str(), &f.ext);
-    } else {
-      t = compress_application_type(f.compression);
-      f.compression = CMP_NOCOMPRESS;
-    }
-  }
-
-  auto proc = LoadProc::Buffer;
-  if (is_html_type(t)) {
-    proc = LoadProc::Html;
-  } else {
-    proc = LoadProc::Buffer;
-  }
-  if (t_buf == NULL)
-    t_buf = new Buffer(INIT_BUFFER_WIDTH());
-  t_buf->info->currentURL = hr->url;
-  t_buf->info->filename = hr->url.real_file.size()
-                              ? Strnew(hr->url.real_file)->ptr
-                              : Strnew(hr->url.file)->ptr;
-  t_buf->ssl_certificate = (char *)f.ssl_certificate;
-
-  auto b = loadSomething(&f, proc, t_buf, hr->url, real_type);
-  // if (header_string)
-  //   header_string = NULL;
-  if (b && b != NO_BUFFER)
-    preFormUpdateBuffer(b);
-  // TRAP_OFF;
-  return b;
+  return page_loaded(hr, t_buf, f, page, t, real_type);
 }
 
 #define PIPEBUFFERNAME "*stream*"
