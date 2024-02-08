@@ -4197,8 +4197,7 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
 
   if (newBuf == NULL)
     newBuf = new Buffer(INIT_BUFFER_WIDTH());
-  if (newBuf->info->sourcefile.empty() &&
-      (f->schema != SCM_LOCAL || newBuf->info->mailcap)) {
+  if (newBuf->info->sourcefile.empty() && f->schema != SCM_LOCAL) {
     tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");
     if (src)

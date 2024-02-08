@@ -104,8 +104,7 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   // }
   // TRAP_ON;
 
-  if (newBuf->info->sourcefile.empty() &&
-      (uf->schema != SCM_LOCAL || newBuf->info->mailcap)) {
+  if (newBuf->info->sourcefile.empty() && uf->schema != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_SRC, NULL);
     src = fopen(tmpf->ptr, "w");
     if (src)
@@ -326,20 +325,17 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
     else
       src = tmpf->ptr;
     defaultbuf->info->sourcefile = {};
-    defaultbuf->info->mailcap = mcap;
   }
   if (mcap->flags & MAILCAP_HTMLOUTPUT) {
     buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->info->type = "text/html";
-      buf->info->mailcap_source = Strnew(buf->info->sourcefile)->ptr;
       buf->info->sourcefile = src;
     }
   } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
     buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
     if (buf && buf != NO_BUFFER) {
       buf->info->type = "text/plain";
-      buf->info->mailcap_source = Strnew(buf->info->sourcefile)->ptr;
       buf->info->sourcefile = src;
     }
   } else {
@@ -359,7 +355,6 @@ Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
         buf->info->filename)
       buf->buffername = lastFileName(buf->info->filename);
     buf->edit = mcap->edit;
-    buf->info->mailcap = mcap;
   }
   return buf;
 }

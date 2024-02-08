@@ -433,8 +433,7 @@ void reshapeBuffer(Buffer *buf) {
   }
 
   UrlStream f(SCM_LOCAL);
-  f.openFile(buf->info->mailcap_source ? buf->info->mailcap_source
-                                       : buf->info->sourcefile.c_str());
+  f.openFile(buf->info->sourcefile.c_str());
   if (f.stream == nullptr) {
     return;
   }

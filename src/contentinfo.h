@@ -12,8 +12,6 @@ struct ContentInfo {
   TextList *document_header = nullptr;
   const char *filename = nullptr;
   std::string sourcefile;
-  struct MailcapEntry *mailcap = nullptr;
-  const char *mailcap_source = nullptr;
 
   ~ContentInfo();
 };
