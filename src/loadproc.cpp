@@ -1,41 +1,22 @@
 #include "loadproc.h"
-#include "http_response.h"
-#include "mimehead.h"
 #include "url_quote.h"
 #include "tabbuffer.h"
 #include "quote.h"
 #include "symbol.h"
 #include "http_response.h"
 #include "form.h"
-#include "proto.h"
 #include "downloadlist.h"
-#include "istream.h"
 #include "linein.h"
 #include "mytime.h"
-#include "auth_pass.h"
 #include "http_auth.h"
-#include "auth_digest.h"
 #include "mimetypes.h"
 #include "app.h"
-#include "func.h"
-#include "cookie.h"
-#include "compression.h"
 #include "display.h"
-#include "screen.h"
-#include "loaddirectory.h"
-#include "url.h"
 #include "alloc.h"
-#include "rc.h"
-#include "http_request.h"
-#include "display.h"
-#include "matchattr.h"
 #include "myctype.h"
-#include "mailcap.h"
 #include "etc.h"
-#include "textlist.h"
 #include "message.h"
 #include "Str.h"
-#include "istream.h"
 #include "w3m.h"
 #include "tmpfile.h"
 #include "url_stream.h"
@@ -46,8 +27,7 @@
 #include "buffer.h"
 #include <utime.h>
 #include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <string.h>
 #define HAVE_ATOLL 1
 
 const char *DefaultType = nullptr;
@@ -386,36 +366,37 @@ static long long strtoclen(const char *s) {
 }
 
 static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
-                           Buffer *t_buf, UrlStream &f, Str *page,
+                           Buffer *t_buf, UrlStream &f,
+                           // Str *page,
                            const char *t, const char *real_type) {
-  if (page) {
-    FILE *src;
-    auto tmp = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmp->ptr, "w");
-    if (src) {
-      Str *s;
-      s = page;
-      Strfputs(s, src);
-      fclose(src);
-    }
-    if (do_download) {
-      if (!src)
-        return NULL;
-      auto file = guess_filename(hr->url.file.c_str());
-      doFileMove(tmp->ptr, file);
-      return NO_BUFFER;
-    }
-    auto b = loadHTMLString(page);
-    if (b) {
-      b->info->currentURL = hr->url;
-      b->info->real_schema = hr->url.schema;
-      b->info->real_type = t;
-      if (src) {
-        b->info->sourcefile = tmp->ptr;
-      }
-    }
-    return b;
-  }
+  // if (page) {
+  //   FILE *src;
+  //   auto tmp = tmpfname(TMPF_SRC, ".html");
+  //   src = fopen(tmp->ptr, "w");
+  //   if (src) {
+  //     Str *s;
+  //     s = page;
+  //     Strfputs(s, src);
+  //     fclose(src);
+  //   }
+  //   if (do_download) {
+  //     if (!src)
+  //       return NULL;
+  //     auto file = guess_filename(hr->url.file.c_str());
+  //     doFileMove(tmp->ptr, file);
+  //     return NO_BUFFER;
+  //   }
+  //   auto b = loadHTMLString(page);
+  //   if (b) {
+  //     b->info->currentURL = hr->url;
+  //     b->info->real_schema = hr->url.schema;
+  //     b->info->real_type = t;
+  //     if (src) {
+  //       b->info->sourcefile = tmp->ptr;
+  //     }
+  //   }
+  //   return b;
+  // }
 
   if (!real_type) {
     real_type = t;
@@ -485,24 +466,12 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
 /*
  * loadGeneralFile: load file to buffer
  */
-
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request) {
-  const char *t = "text/plain";
-  const char *p = NULL;
-  const char *real_type = NULL;
-  Buffer *t_buf = NULL;
-  Str *page = NULL;
-
-  auto tpath = path;
-  // prevtrap = NULL;
-
-  // pu = urlParse(tpath, current);
-
   UrlStream f(SCM_MISSING);
 
   // TRAP_OFF;
-  auto hr = f.openURL(tpath, current, option, request);
+  auto hr = f.openURL(path, current, option, request);
 
   // Directory Open ?
   // if (f.stream == NULL) {
@@ -562,6 +531,9 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   // }
 
   // TRAP_ON;
+  const char *t = "text/plain";
+  const char *real_type = NULL;
+  auto t_buf = new Buffer(INIT_BUFFER_WIDTH());
   if (hr->url.schema == SCM_HTTP || hr->url.schema == SCM_HTTPS) {
 
     // if (fmInitialized) {
@@ -571,9 +543,8 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
-    if (t_buf == NULL)
-      t_buf = new Buffer(INIT_BUFFER_WIDTH());
     auto http_response_code = t_buf->info->readHeader(&f, hr->url);
+    const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = t_buf->info->getHeader("Location:")) != NULL &&
@@ -583,12 +554,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
       /* 302: Found */
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
-      tpath = Strnew(url_quote(p))->ptr;
-      request = NULL;
-      current = hr->url;
-      // t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      // status = HTST_NORMAL;
-      return loadGeneralFile(tpath, current, option, request);
+      return loadGeneralFile(Strnew(url_quote(p))->ptr, hr->url, option, {});
     }
 
     t = t_buf->info->checkContentType();
@@ -612,16 +578,16 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
         if (hr->uname == NULL) {
           /* abort */
           // TRAP_OFF;
-          return page_loaded(hr, t_buf, f, page, t, real_type);
+          return page_loaded(hr, t_buf, f, t, {});
         }
         hr->add_auth_cookie_flag = true;
         // status = HTST_NORMAL;
-        return loadGeneralFile(tpath, current, option, request);
+        return loadGeneralFile(path, current, option, request);
       }
     }
 
     if (hr && hr->status == HTST_CONNECT) {
-      return loadGeneralFile(tpath, current, option, request);
+      return loadGeneralFile(path, current, option, request);
     }
 
     f.modtime = mymktime(t_buf->info->getHeader("Last-Modified:"));
@@ -644,7 +610,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
    *      to support default utf8 encoding for XHTML here? */
   f.guess_type = t;
 
-  return page_loaded(hr, t_buf, f, page, t, real_type);
+  return page_loaded(hr, t_buf, f, t, real_type);
 }
 
 #define PIPEBUFFERNAME "*stream*"
