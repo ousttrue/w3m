@@ -50,7 +50,7 @@ static Str *digest_hex(unsigned char *p) {
   return tmp;
 }
 
-Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, Url *pu,
+Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
                     HttpRequest *hr, FormList *request) {
   Str *algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
   Str *nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
@@ -127,7 +127,7 @@ Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, Url *pu,
   }
 
   /* A2 = Method ":" digest-uri-value */
-  auto uri = hr->getRequestURI(*pu);
+  auto uri = hr->getRequestURI(pu);
   tmp = Strnew_m_charp(hr->getMehodString().c_str(), ":", uri->ptr, nullptr);
   if (qop_i == QOP_AUTH_INT) {
     /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */

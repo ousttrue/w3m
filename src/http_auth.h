@@ -10,7 +10,8 @@ struct HttpRequest;
 struct FormList;
 struct Url;
 using HttpAuthFunc = Str *(*)(struct http_auth *ha, Str *uname, Str *pw,
-                              Url *pu, HttpRequest *hr, FormList *request);
+                              const Url &pu, HttpRequest *hr,
+                              FormList *request);
 struct http_auth {
   int pri;
   const char *schema;
@@ -25,5 +26,5 @@ Str *get_auth_param(auth_param *auth, const char *name);
 Str *qstr_unquote(Str *s);
 struct TextList;
 void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   TextList *extra_header, Url *pu, HttpRequest *hr,
-                   FormList *request, Str **uname, Str **pwd);
+                   const Url &pu, HttpRequest *hr, FormList *request,
+                   Str **uname, Str **pwd);

@@ -1,4 +1,4 @@
-#include "authpass.h"
+#include "auth_pass.h"
 #include "screen.h"
 #include "w3m.h"
 #include "etc.h"
@@ -188,27 +188,27 @@ static struct auth_pass *find_auth_pass_entry(const char *host, int port,
   return NULL;
 }
 
-void invalidate_auth_user_passwd(Url *pu, const char *realm, Str *uname,
+void invalidate_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
                                  Str *pwd, bool is_proxy) {
   auto ent =
-      find_auth_pass_entry(pu->host.c_str(), pu->port, realm, {}, is_proxy);
+      find_auth_pass_entry(pu.host.c_str(), pu.port, realm, {}, is_proxy);
   if (ent) {
     ent->bad = true;
   }
   return;
 }
 
-int find_auth_user_passwd(Url *pu, const char *realm, Str **uname, Str **pwd,
-                          bool is_proxy) {
+int find_auth_user_passwd(const Url &pu, const char *realm, Str **uname,
+                          Str **pwd, bool is_proxy) {
   struct auth_pass *ent;
 
-  if (pu->user.size() && pu->pass.size()) {
-    *uname = Strnew(pu->user);
-    *pwd = Strnew(pu->pass);
+  if (pu.user.size() && pu.pass.size()) {
+    *uname = Strnew(pu.user);
+    *pwd = Strnew(pu.pass);
     return 1;
   }
-  ent = find_auth_pass_entry(pu->host.c_str(), pu->port, realm, pu->user,
-                             is_proxy);
+  ent =
+      find_auth_pass_entry(pu.host.c_str(), pu.port, realm, pu.user, is_proxy);
   if (ent) {
     *uname = ent->uname;
     *pwd = ent->pwd;

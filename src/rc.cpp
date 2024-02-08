@@ -7,7 +7,7 @@
 #include "form.h"
 #include "loadproc.h"
 #include "loaddirectory.h"
-#include "authpass.h"
+#include "auth_pass.h"
 #include "http_auth.h"
 #include "func.h"
 #include "etc.h"

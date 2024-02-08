@@ -119,7 +119,7 @@ executable(
         'line.cpp',
         'lineprop.cpp',
         'matchattr.cpp',
-        'authpass.cpp',
+        'auth_pass.cpp',
         'auth_digest.cpp',
         'loadproc.cpp',
         'loaddirectory.cpp',

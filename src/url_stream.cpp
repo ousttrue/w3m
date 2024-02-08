@@ -143,8 +143,7 @@ static void write_from_file(int sock, char *file) {
 
 void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr, Url *pu,
                              std::optional<Url> current,
-                             const HttpOption &option, FormList *request,
-                             TextList *extra_header) {
+                             const HttpOption &option, FormList *request) {
   if (request && request->body) {
     /* local CGI: POST */
     this->stream =
@@ -374,8 +373,7 @@ error:
 
 void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
                          const char *url, Url *pu, std::optional<Url> current,
-                         const HttpOption &option, FormList *request,
-                         TextList *extra_header) {
+                         const HttpOption &option, FormList *request) {
   hr->status = HTST_NORMAL;
   int sock = -1;
   SSL *sslh = nullptr;
@@ -404,7 +402,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       }
     }
     hr->flag |= HR_FLAG_LOCAL;
-    tmp = hr->to_Str(*pu, current, extra_header);
+    tmp = hr->to_Str(*pu, current);
     hr->status = HTST_NORMAL;
   }
   if (pu->schema == SCM_HTTPS) {
@@ -480,8 +478,7 @@ void UrlStream::openData(Url *pu) {
 std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
                                                 std::optional<Url> current,
                                                 const HttpOption &option,
-                                                FormList *request,
-                                                TextList *extra_header) {
+                                                FormList *request) {
   auto u = url;
   auto current_schema = parseUrlSchema(&u);
   if (!current && current_schema == SCM_MISSING && !ArgvIsURL) {
@@ -522,14 +519,14 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
   switch (pu->schema) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    this->openLocalCgi(hr, pu, current, option, request, extra_header);
+    this->openLocalCgi(hr, pu, current, option, request);
     if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
       auto u = url;
       auto schema = parseUrlSchema(&u);
       if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
         /* retry it as "http://" */
         u = Strnew_m_charp("http://", url, nullptr)->ptr;
-        return openURL(u, pu, current, option, request, extra_header);
+        return openURL(u, pu, current, option, request);
       }
     }
     hr->status = HTST_NORMAL;
@@ -537,7 +534,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
 
   case SCM_HTTP:
   case SCM_HTTPS:
-    openHttp(hr, url, pu, current, option, request, extra_header);
+    openHttp(hr, url, pu, current, option, request);
     break;
 
   case SCM_DATA:

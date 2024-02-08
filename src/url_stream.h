@@ -43,9 +43,10 @@ struct UrlStream {
 
   void openFile(const char *path);
 
-  std::shared_ptr<HttpRequest>
-  openURL(const char *url, Url *pu, std::optional<Url> current,
-          const HttpOption &option, FormList *request, TextList *extra_header);
+  std::shared_ptr<HttpRequest> openURL(const char *url, Url *pu,
+                                       std::optional<Url> current,
+                                       const HttpOption &option,
+                                       FormList *request);
 
   int doFileSave(const char *defstr);
   std::string uncompress_stream();
@@ -53,10 +54,10 @@ struct UrlStream {
 private:
   void openHttp(const std::shared_ptr<HttpRequest> &hr, const char *url,
                 Url *pu, std::optional<Url> current, const HttpOption &option,
-                FormList *request, TextList *extra_header);
+                FormList *request);
   void openLocalCgi(const std::shared_ptr<HttpRequest> &hr, Url *pu,
                     std::optional<Url> current, const HttpOption &option,
-                    FormList *request, TextList *extra_header);
+                    FormList *request);
   void openData(Url *pu);
   void add_index_file(Url *pu);
 };

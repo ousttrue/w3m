@@ -105,8 +105,7 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   return s->ptr;
 }
 
-Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current,
-                         TextList *extra) const {
+Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
 
   auto tmp = Strnew(this->getMehodString());
   Strcat_charp(tmp, " ");
@@ -118,8 +117,8 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current,
     Strcat_charp(tmp, otherinfo(pu, current, this->option.referer,
                                 this->option.no_cache));
   }
-  if (extra) {
-    for (auto i = extra->first; i != nullptr; i = i->next) {
+  if (extra_headers) {
+    for (auto i = extra_headers->first; i != nullptr; i = i->next) {
       if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
           0) {
         if (this->method == HR_COMMAND_CONNECT)

@@ -3,7 +3,7 @@
  */
 #include "form.h"
 #include "http_response.h"
-#include "authpass.h"
+#include "auth_pass.h"
 #include "w3m.h"
 #include "func.h"
 #include "etc.h"

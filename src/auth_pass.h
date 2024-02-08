@@ -20,9 +20,9 @@ struct auth_pass {
 void add_auth_user_passwd(Url *pu, const char *realm, Str *uname, Str *pwd,
                           bool is_proxy);
 
-void invalidate_auth_user_passwd(Url *pu, const char *realm, Str *uname,
+void invalidate_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
                                  Str *pwd, bool is_proxy);
-int find_auth_user_passwd(Url *pu, const char *realm, Str **uname, Str **pwd,
+int find_auth_user_passwd(const Url &pu, const char *realm, Str **uname, Str **pwd,
                           bool is_proxy);
 void loadPasswd();
 

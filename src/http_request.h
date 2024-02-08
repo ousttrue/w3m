@@ -65,10 +65,11 @@ struct HttpRequest {
   HttpRequestFlags flag = {};
   HttpOption option = {};
   FormList *request = {};
+  TextList *extra_headers = {};
 
   HttpRequest(const HttpOption option, FormList *request)
       : option(option), request(request) {}
 
   Str *getRequestURI(const Url &url) const;
-  Str *to_Str(const Url &pu, std::optional<Url> current, TextList *extra) const;
+  Str *to_Str(const Url &pu, std::optional<Url> current) const;
 };

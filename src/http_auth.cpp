@@ -1,5 +1,5 @@
 #include "http_auth.h"
-#include "authpass.h"
+#include "auth_pass.h"
 #include "http_response.h"
 #include "http_request.h"
 #include "auth_digest.h"
@@ -252,7 +252,7 @@ static Str *base64_encode(const char *src, int len) {
   return dest;
 }
 
-static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw, Url *pu,
+static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
                           HttpRequest *hr, FormList *request) {
   Str *s = uname->Strdup();
   Strcat_char(s, ':');
@@ -344,30 +344,28 @@ http_auth *findAuthentication(http_auth *hauth, Buffer *buf,
 }
 
 void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   TextList *extra_header, Url *pu, HttpRequest *hr,
-                   FormList *request, Str **uname, Str **pwd) {
-  Str *ss = NULL;
-  Str *tmp;
-  TextListItem *i;
-  int a_found;
-  int auth_header_len = strlen(auth_header);
+                   const Url &pu, HttpRequest *hr, FormList *request,
+                   Str **uname, Str **pwd) {
   char *realm = NULL;
-  int proxy;
-
-  if (hauth)
+  if (hauth) {
     realm = qstr_unquote(get_auth_param(hauth->param, "realm"))->ptr;
-
-  if (!realm)
+  }
+  if (!realm) {
     return;
+  }
 
-  a_found = false;
-  for (i = extra_header->first; i != NULL; i = i->next) {
+  auto a_found = false;
+  int auth_header_len = strlen(auth_header);
+  TextListItem *i;
+  for (i = hr->extra_headers->first; i != NULL; i = i->next) {
     if (!strncasecmp(i->ptr, auth_header, auth_header_len)) {
       a_found = true;
       break;
     }
   }
-  proxy = !strncasecmp("Proxy-Authorization:", auth_header, auth_header_len);
+
+  auto proxy =
+      !strncasecmp("Proxy-Authorization:", auth_header, auth_header_len);
   if (a_found) {
     /* This means that *-Authenticate: header is received after
      * Authorization: header is sent to the server.
@@ -379,7 +377,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
       fprintf(stderr, "Wrong username or password\n");
     sleep(1);
     /* delete Authenticate: header from extra_header */
-    delText(extra_header, i);
+    delText(hr->extra_headers, i);
     invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
   }
   *uname = NULL;
@@ -434,11 +432,11 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
 #endif
     }
   }
-  ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
+  auto ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
   if (ss) {
-    tmp = Strnew_charp(auth_header);
+    auto tmp = Strnew_charp(auth_header);
     Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
-    pushText(extra_header, tmp->ptr);
+    pushText(hr->extra_headers, tmp->ptr);
   } else {
     *uname = NULL;
     *pwd = NULL;

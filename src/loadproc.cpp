@@ -12,7 +12,7 @@
 #include "istream.h"
 #include "linein.h"
 #include "mytime.h"
-#include "authpass.h"
+#include "auth_pass.h"
 #include "http_auth.h"
 #include "auth_digest.h"
 #include "mimetypes.h"
@@ -408,14 +408,12 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
   // MySignalHandler prevtrap = NULL;
-  TextList *extra_header = newTextList();
   Str *uname = NULL;
   Str *pwd = NULL;
   Str *realm = NULL;
   int add_auth_cookie_flag;
   Str *tmp;
   Str *page = NULL;
-  Url *auth_pu;
 
   tpath = path;
   // prevtrap = NULL;
@@ -427,7 +425,7 @@ load_doc:
   UrlStream f(SCM_MISSING);
 
   // TRAP_OFF;
-  auto hr = f.openURL(tpath, &pu, current, option, request, extra_header);
+  auto hr = f.openURL(tpath, &pu, current, option, request);
 
   if (f.stream == NULL) {
     switch (f.schema) {
@@ -532,8 +530,7 @@ load_doc:
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = &pu;
-        getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, hr.get(),
+        getAuthCookie(&hauth, "Authorization:", pu, hr.get(),
                       request, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
