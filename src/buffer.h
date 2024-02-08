@@ -31,14 +31,14 @@ struct Line;
 struct LinkList;
 struct BufferPos;
 struct AlarmEvent;
-struct ContentInfo;
+struct HttpResponse;
 
 struct Clone {
   int count = 1;
 };
 
 struct Buffer : public gc_cleanup {
-  std::shared_ptr<ContentInfo> info;
+  std::shared_ptr<HttpResponse> info;
   const char *buffername = "";
   Line *firstLine = nullptr;
   Line *topLine = nullptr;

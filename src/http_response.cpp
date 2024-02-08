@@ -17,7 +17,7 @@
 
 int FollowRedirection = 10;
 
-ContentInfo::~ContentInfo() {
+HttpResponse::~HttpResponse() {
   if (this->sourcefile.size() &&
       (!this->real_type || strncasecmp(this->real_type, "image/", 6))) {
   }
@@ -31,7 +31,7 @@ static bool same_url_p(const Url &pu1, const Url &pu2) {
                            : true));
 }
 
-bool ContentInfo::checkRedirection(const Url &pu) {
+bool HttpResponse::checkRedirection(const Url &pu) {
 
   if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
     auto tmp = Sprintf("Number of redirections exceeded %d at %s",
@@ -54,7 +54,7 @@ bool ContentInfo::checkRedirection(const Url &pu) {
   return true;
 }
 
-int ContentInfo::readHeader(UrlStream *uf, const Url &pu) {
+int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
   char *p, *q;
   char c;
   Str *lineBuf2 = NULL;

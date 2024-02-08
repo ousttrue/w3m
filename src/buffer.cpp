@@ -30,7 +30,7 @@
 #include <unistd.h>
 
 Buffer::Buffer(int width) : width(width) {
-  this->info = std::make_shared<ContentInfo>();
+  this->info = std::make_shared<HttpResponse>();
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
   this->clone = std::make_shared<Clone>();

@@ -6,7 +6,7 @@
 extern int FollowRedirection;
 
 struct TextList;
-struct ContentInfo {
+struct HttpResponse {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
@@ -18,7 +18,8 @@ struct ContentInfo {
   std::string sourcefile;
   std::vector<Url> redirectins;
 
-  ~ContentInfo();
+  ~HttpResponse();
   bool checkRedirection(const Url &pu);
   int readHeader(struct UrlStream *uf, const Url &pu);
+  const char *getHeader(const char *field) const;
 };
