@@ -15,6 +15,7 @@
 #include "func.h"
 #include <strings.h>
 #include <unistd.h>
+#include <assert.h>
 
 int FollowRedirection = 10;
 
@@ -55,20 +56,16 @@ bool HttpResponse::checkRedirection(const Url &pu) {
   return true;
 }
 
-int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
-  char *p, *q;
-  char c;
-  Str *lineBuf2 = NULL;
-
-  // TextList *headerlist;
-  FILE *src = NULL;
+int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
 
   this->document_header = newTextList();
-  if (uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS)
+  if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS)
     http_response_code = -1;
   else
     http_response_code = 0;
 
+  FILE *src = NULL;
+  Str *lineBuf2 = NULL;
   while (true) {
     auto _tmp = uf->stream->StrmyISgets();
     if (_tmp.empty()) {
@@ -98,7 +95,7 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
         lineBuf2 = tmp;
       }
 
-      c = uf->stream ? uf->stream->ISgetc() : '\0';
+      auto c = uf->stream ? uf->stream->ISgetc() : '\0';
 
       uf->stream->ISundogetc();
       if (c == ' ' || c == '\t')
@@ -108,6 +105,7 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
       cleanup_line(lineBuf2, RAW_MODE);
       /* separated with line and stored */
       tmp = Strnew_size(lineBuf2->length);
+      char *p, *q;
       for (p = lineBuf2->ptr; *p; p = q) {
         for (q = p; *q && *q != '\r' && *q != '\n'; q++)
           ;
@@ -120,9 +118,9 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
       lineBuf2 = tmp;
     }
 
-    if ((uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS) &&
+    if ((url.schema == SCM_HTTP || url.schema == SCM_HTTPS) &&
         http_response_code == -1) {
-      p = lineBuf2->ptr;
+      auto p = lineBuf2->ptr;
       while (*p && !IS_SPACE(*p))
         p++;
       while (*p && IS_SPACE(*p))
@@ -134,7 +132,7 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
       }
     }
     if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-      p = lineBuf2->ptr + 26;
+      auto p = lineBuf2->ptr + 26;
       while (IS_SPACE(*p))
         p++;
       if (!strncasecmp(p, "base64", 6))
@@ -147,22 +145,20 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
       else
         uf->encoding = ENC_7BIT;
     } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-
       process_compression(lineBuf2, uf);
-
     } else if (use_cookie && accept_cookie &&
-               check_cookie_accept_domain(pu.host.c_str()) &&
+               check_cookie_accept_domain(url.host.c_str()) &&
                (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||
                 !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
 
-      process_http_cookie(&pu, lineBuf2);
+      process_http_cookie(&url, lineBuf2);
 
     } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
-               uf->schema == SCM_LOCAL_CGI) {
+               url.schema == SCM_LOCAL_CGI) {
       Str *funcname = Strnew();
       int f;
 
-      p = lineBuf2->ptr + 12;
+      auto p = lineBuf2->ptr + 12;
       SKIP_BLANKS(p);
       while (*p && !IS_SPACE(*p))
         Strcat_char(funcname, *(p++));

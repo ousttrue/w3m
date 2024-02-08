@@ -141,54 +141,54 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr, Url *pu,
-                             std::optional<Url> current,
+void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
                              const HttpOption &option, FormList *request) {
   if (request && request->body) {
     /* local CGI: POST */
-    this->stream =
-        newFileStream(localcgi_post(pu->real_file.c_str(), pu->query.c_str(),
-                                    request, option.referer),
-                      fclose);
+    this->stream = newFileStream(localcgi_post(hr->url.real_file.c_str(),
+                                               hr->url.query.c_str(), request,
+                                               option.referer),
+                                 fclose);
   } else {
     /* lodal CGI: GET */
-    this->stream = newFileStream(
-        localcgi_get(pu->real_file.c_str(), pu->query.c_str(), option.referer),
-        fclose);
+    this->stream =
+        newFileStream(localcgi_get(hr->url.real_file.c_str(),
+                                   hr->url.query.c_str(), option.referer),
+                      fclose);
   }
 
   if (this->stream) {
     this->is_cgi = true;
-    this->schema = pu->schema = SCM_LOCAL_CGI;
+    // this->schema = pu->schema = SCM_LOCAL_CGI;
     return;
   }
 
-  this->openFile(pu->real_file.c_str());
+  this->openFile(hr->url.real_file.c_str());
   if (this->stream == nullptr) {
-    if (dir_exist(pu->real_file.c_str())) {
-      add_index_file(pu);
+    if (dir_exist(hr->url.real_file.c_str())) {
+      add_index_file(&hr->url);
       if (!this->stream) {
         return;
       }
     } else if (document_root != nullptr) {
       auto tmp = Strnew_charp(document_root);
-      if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
+      if (Strlastchar(tmp) != '/' && hr->url.file[0] != '/')
         Strcat_char(tmp, '/');
-      Strcat(tmp, pu->file);
+      Strcat(tmp, hr->url.file);
       auto p = cleanupName(tmp->ptr);
       auto q = cleanupName(file_unquote(p));
       if (dir_exist(q)) {
-        pu->file = p;
-        pu->real_file = (char *)q;
-        add_index_file(pu);
+        hr->url.file = p;
+        hr->url.real_file = (char *)q;
+        add_index_file(&hr->url);
         if (!this->stream) {
           return;
         }
       } else {
         this->openFile(q);
         if (this->stream) {
-          pu->file = p;
-          pu->real_file = (char *)q;
+          hr->url.file = p;
+          hr->url.real_file = (char *)q;
         }
       }
     }
@@ -214,7 +214,6 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   MySignalHandler prevtrap = nullptr;
 
   if (fmInitialized) {
-    /* FIXME: gettextize? */
     message(Sprintf("Opening socket...")->ptr, 0, 0);
     refresh(term_io());
   }
@@ -372,14 +371,14 @@ error:
 }
 
 void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
-                         const char *url, Url *pu, std::optional<Url> current,
+
                          const HttpOption &option, FormList *request) {
   hr->status = HTST_NORMAL;
   int sock = -1;
   SSL *sslh = nullptr;
   Str *tmp = nullptr;
-  if (pu->file.empty()) {
-    pu->file = allocStr("/", -1);
+  if (hr->url.file.empty()) {
+    hr->url.file = "/";
   }
   if (request && request->method == FORM_METHOD_POST && request->body) {
     hr->method = HttpMethod::POST;
@@ -389,13 +388,14 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
   }
 
   {
-    sock = openSocket(pu->host.c_str(), schemaNumToName(pu->schema), pu->port);
+    sock = openSocket(hr->url.host.c_str(), schemaNumToName(hr->url.schema),
+                      hr->url.port);
     if (sock < 0) {
       hr->status = HTST_MISSING;
       return;
     }
-    if (pu->schema == SCM_HTTPS) {
-      if (!(sslh = openSSLHandle(sock, pu->host.c_str(),
+    if (hr->url.schema == SCM_HTTPS) {
+      if (!(sslh = openSSLHandle(sock, hr->url.host.c_str(),
                                  &this->ssl_certificate))) {
         hr->status = HTST_MISSING;
         return;
@@ -405,7 +405,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     tmp = hr->to_Str();
     hr->status = HTST_NORMAL;
   }
-  if (pu->schema == SCM_HTTPS) {
+  if (hr->url.schema == SCM_HTTPS) {
     this->stream = newSSLStream(sslh, sock);
     if (sslh)
       SSL_write(sslh, tmp->ptr, tmp->length);
@@ -451,12 +451,12 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
   return;
 }
 
-void UrlStream::openData(Url *pu) {
-  if (pu->file.empty()) {
+void UrlStream::openData(const Url &url) {
+  if (url.file.empty()) {
     return;
   }
 
-  auto p = Strnew(pu->file)->ptr;
+  auto p = Strnew(url.file)->ptr;
   auto q = strchr(p, ',');
   if (q == nullptr) {
     return;
@@ -475,70 +475,69 @@ void UrlStream::openData(Url *pu) {
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 
-std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
+std::shared_ptr<HttpRequest> UrlStream::openURL(const char *path,
                                                 std::optional<Url> current,
                                                 const HttpOption &option,
                                                 FormList *request) {
-  auto u = url;
-  auto current_schema = parseUrlSchema(&u);
-  if (!current && current_schema == SCM_MISSING && !ArgvIsURL) {
-    u = file_to_url(url); /* force to local file */
-  } else {
-    u = url;
-  }
+  // auto u = path;
+  // auto current_schema = parseUrlSchema(&u);
+  // if (!current && current_schema == SCM_MISSING && !ArgvIsURL) {
+  //   u = file_to_url(url); /* force to local file */
+  // } else {
+  //   u = url;
+  // }
 
-  // retry:
-  *pu = urlParse(u, current);
-
-  auto hr = std::make_shared<HttpRequest>(*pu, current, option, request);
-  if (pu->schema == SCM_LOCAL && pu->file.empty()) {
-    if (pu->label.size()) {
+  auto url = urlParse(path, current);
+  if (url.schema == SCM_LOCAL && url.file.empty()) {
+    if (url.label.size()) {
       /* #hogege is not a label but a filename */
       auto tmp2 = Strnew_charp("#");
-      Strcat(tmp2, pu->label);
-      pu->file = tmp2->ptr;
-      pu->real_file = cleanupName(file_unquote(pu->file.c_str()));
-      pu->label = nullptr;
+      Strcat(tmp2, url.label);
+      url.file = tmp2->ptr;
+      url.real_file = cleanupName(file_unquote(url.file.c_str()));
+      url.label = nullptr;
     } else {
       /* given URL must be null string */
 #ifdef SOCK_DEBUG
       sock_log("given URL must be null string\n");
 #endif
-      hr->status = HTST_NORMAL;
-      return hr;
+      // hr->status = HTST_NORMAL;
+      return std::make_shared<HttpRequest>(url, current, option, request);
     }
   }
 
-  if (LocalhostOnly && pu->host.size() && !is_localhost(pu->host.c_str()))
-    pu->host = nullptr;
+  if (LocalhostOnly && url.host.size() && !is_localhost(url.host.c_str())) {
+    url.host = nullptr;
+  }
+  auto hr = std::make_shared<HttpRequest>(url, current, option, request);
 
-  this->schema = pu->schema;
-  this->url = Strnew(pu->to_Str())->ptr;
-  this->ext = filename_extension(pu->file.c_str(), 1);
+  // this->schema = pu->schema;
+  // this->url = Strnew(pu->to_Str())->ptr;
+  // this->ext = filename_extension(pu->file.c_str(), 1);
 
-  switch (pu->schema) {
+  switch (hr->url.schema) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    this->openLocalCgi(hr, pu, current, option, request);
-    if (this->stream == nullptr && retryAsHttp && url[0] != '/') {
-      auto u = url;
-      auto schema = parseUrlSchema(&u);
-      if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
-        /* retry it as "http://" */
-        u = Strnew_m_charp("http://", url, nullptr)->ptr;
-        return openURL(u, pu, current, option, request);
-      }
+    this->openLocalCgi(hr, option, request);
+    if (!this->stream && retryAsHttp && path[0] != '/') {
+      // auto u = url;
+      // auto schema = parseUrlSchema(&u);
+      // if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
+      //   /* retry it as "http://" */
+      //   u = Strnew_m_charp("http://", url, nullptr)->ptr;
+      //   return openURL(u, pu, current, option, request);
+      // }
     }
     hr->status = HTST_NORMAL;
     break;
 
   case SCM_HTTP:
   case SCM_HTTPS:
-    openHttp(hr, url, pu, current, option, request);
+    openHttp(hr, option, request);
     break;
 
   case SCM_DATA:
-    openData(pu);
+    openData(hr->url);
     hr->status = HTST_NORMAL;
     break;
 

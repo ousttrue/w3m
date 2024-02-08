@@ -2,10 +2,12 @@
 #include "url.h"
 #include "optional"
 #include <vector>
+#include <memory>
 
 extern int FollowRedirection;
 
 struct TextList;
+struct input_stream;
 struct HttpResponse {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};

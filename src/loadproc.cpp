@@ -391,26 +391,22 @@ static long long strtoclen(const char *s) {
 
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request) {
-  Url pu;
-  const char *tpath;
   const char *t = "text/plain";
   const char *p = NULL;
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
 
-  Str *tmp;
   Str *page = NULL;
 
-  tpath = path;
+  auto tpath = path;
   // prevtrap = NULL;
 
-load_doc:
-  pu = urlParse(tpath, current);
+  // pu = urlParse(tpath, current);
 
   UrlStream f(SCM_MISSING);
 
   // TRAP_OFF;
-  auto hr = f.openURL(tpath, &pu, current, option, request);
+  auto hr = f.openURL(tpath, current, option, request);
 
   // Directory Open ?
   // if (f.stream == NULL) {
@@ -470,22 +466,22 @@ load_doc:
   // }
 
   // TRAP_ON;
-  if (pu.schema == SCM_HTTP || pu.schema == SCM_HTTPS) {
+  if (hr->url.schema == SCM_HTTP || hr->url.schema == SCM_HTTPS) {
 
     // if (fmInitialized) {
     //   term_cbreak();
     //   message(
     //       Sprintf("%s contacted. Waiting for reply...",
-    //       pu.host.c_str())->ptr, 0, 0);
+    //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
     if (t_buf == NULL)
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
-    auto http_response_code = t_buf->info->readHeader(&f, pu);
+    auto http_response_code = t_buf->info->readHeader(&f, hr->url);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = t_buf->info->getHeader("Location:")) != NULL &&
-        t_buf->info->checkRedirection(pu)) {
+        t_buf->info->checkRedirection(hr->url)) {
       /* document moved */
       /* 301: Moved Permanently */
       /* 302: Found */
@@ -493,17 +489,17 @@ load_doc:
       /* 307: Temporary Redirect (HTTP/1.1) */
       tpath = Strnew(url_quote(p))->ptr;
       request = NULL;
-      current = pu;
-      t_buf = new Buffer(INIT_BUFFER_WIDTH());
+      current = hr->url;
+      // t_buf = new Buffer(INIT_BUFFER_WIDTH());
       // status = HTST_NORMAL;
-      goto load_doc;
+      return loadGeneralFile(tpath, current, option, request);
     }
 
     t = t_buf->info->checkContentType();
-    if (t == NULL && pu.file.size()) {
+    if (t == NULL && hr->url.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
-        t = guessContentType(pu.file.c_str());
+        t = guessContentType(hr->url.file.c_str());
     }
     if (t == NULL) {
       t = "text/plain";
@@ -515,7 +511,7 @@ load_doc:
       struct http_auth hauth;
       if (findAuthentication(&hauth, *t_buf->info, "WWW-Authenticate:") &&
           (hr->realm = get_auth_param(hauth.param, "realm"))) {
-        getAuthCookie(&hauth, "Authorization:", pu, hr.get(), request,
+        getAuthCookie(&hauth, "Authorization:", hr->url, hr.get(), request,
                       &hr->uname, &hr->pwd);
         if (hr->uname == NULL) {
           /* abort */
@@ -524,24 +520,25 @@ load_doc:
         }
         hr->add_auth_cookie_flag = true;
         // status = HTST_NORMAL;
-        goto load_doc;
+        return loadGeneralFile(tpath, current, option, request);
       }
     }
 
     if (hr && hr->status == HTST_CONNECT) {
-      goto load_doc;
+      return loadGeneralFile(tpath, current, option, request);
     }
 
     f.modtime = mymktime(t_buf->info->getHeader("Last-Modified:"));
-  } else if (pu.schema == SCM_DATA) {
+  } else if (hr->url.schema == SCM_DATA) {
     t = f.guess_type;
   } else if (DefaultType) {
     t = DefaultType;
     DefaultType = NULL;
   } else {
-    t = guessContentType(pu.file.c_str());
-    if (t == NULL)
+    t = guessContentType(hr->url.file.c_str());
+    if (!t) {
       t = "text/plain";
+    }
     real_type = t;
     if (f.guess_type)
       t = f.guess_type;
@@ -554,7 +551,7 @@ load_doc:
 page_loaded:
   if (page) {
     FILE *src;
-    tmp = tmpfname(TMPF_SRC, ".html");
+    auto tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");
     if (src) {
       Str *s;
@@ -565,14 +562,14 @@ page_loaded:
     if (do_download) {
       if (!src)
         return NULL;
-      auto file = guess_filename(pu.file.c_str());
+      auto file = guess_filename(hr->url.file.c_str());
       doFileMove(tmp->ptr, file);
       return NO_BUFFER;
     }
     auto b = loadHTMLString(page);
     if (b) {
-      b->info->currentURL = pu;
-      b->info->real_schema = pu.schema;
+      b->info->currentURL = hr->url;
+      b->info->real_schema = hr->url.schema;
       b->info->real_type = t;
       if (src) {
         b->info->sourcefile = tmp->ptr;
@@ -596,26 +593,26 @@ page_loaded:
     if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
       f.stream = newEncodedStream(f.stream, f.encoding);
     }
-    if (pu.schema == SCM_LOCAL) {
+    if (hr->url.schema == SCM_LOCAL) {
       struct stat st;
-      if (PreserveTimestamp && !stat(pu.real_file.c_str(), &st))
+      if (PreserveTimestamp && !stat(hr->url.real_file.c_str(), &st))
         f.modtime = st.st_mtime;
-      file = guess_filename(pu.real_file.c_str());
+      file = guess_filename(hr->url.real_file.c_str());
     } else {
-      file = t_buf->info->guess_save_name(pu.file.c_str());
+      file = t_buf->info->guess_save_name(hr->url.file.c_str());
     }
     f.doFileSave(file);
     return NO_BUFFER;
   }
 
   if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    pu.real_file = f.uncompress_stream();
+    hr->url.real_file = f.uncompress_stream();
   } else if (f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(t))) {
       if (t_buf == NULL)
         t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->info->sourcefile = f.uncompress_stream();
-      uncompressed_file_type(pu.file.c_str(), &f.ext);
+      uncompressed_file_type(hr->url.file.c_str(), &f.ext);
     } else {
       t = compress_application_type(f.compression);
       f.compression = CMP_NOCOMPRESS;
@@ -630,12 +627,13 @@ page_loaded:
   }
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
-  t_buf->info->currentURL = pu;
-  t_buf->info->filename =
-      pu.real_file.size() ? Strnew(pu.real_file)->ptr : Strnew(pu.file)->ptr;
+  t_buf->info->currentURL = hr->url;
+  t_buf->info->filename = hr->url.real_file.size()
+                              ? Strnew(hr->url.real_file)->ptr
+                              : Strnew(hr->url.file)->ptr;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
 
-  auto b = loadSomething(&f, proc, t_buf, pu, real_type);
+  auto b = loadSomething(&f, proc, t_buf, hr->url, real_type);
   // if (header_string)
   //   header_string = NULL;
   if (b && b != NO_BUFFER)
