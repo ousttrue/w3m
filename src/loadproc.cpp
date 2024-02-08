@@ -508,7 +508,7 @@ load_doc:
     if (t == NULL) {
       t = "text/plain";
     }
-    hr->add_auth_cookie(pu);
+    hr->add_auth_cookie();
     if ((p = t_buf->info->getHeader("WWW-Authenticate:")) &&
         http_response_code == 401) {
       /* Authentication needed */

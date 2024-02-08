@@ -22,7 +22,7 @@ bool CrossOriginReferer = true;
 bool override_content_type = false;
 Str *header_string = nullptr;
 
-Str *HttpRequest::getRequestURI(const Url &url) const {
+Str *HttpRequest::getRequestURI() const {
   Str *tmp = Strnew();
   if (this->method == HttpMethod::CONNECT) {
     Strcat(tmp, url.host);
@@ -82,8 +82,9 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
     int cross_origin = false;
     if (CrossOriginReferer && current && current->host.size() &&
         (target.host.empty() || current->host != target.host ||
-         current->port != target.port || current->schema != target.schema))
+         current->port != target.port || current->schema != target.schema)){
       cross_origin = true;
+    }
     if (current && current->schema == SCM_HTTPS && target.schema != SCM_HTTPS) {
       /* Don't send Referer: if https:// -> http:// */
     } else if (referer == nullptr && current && current->schema != SCM_LOCAL &&
@@ -107,16 +108,16 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   return s->ptr;
 }
 
-Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
+Str *HttpRequest::to_Str() const {
 
   auto tmp = Strnew(to_str(this->method));
   Strcat_charp(tmp, " ");
-  Strcat_charp(tmp, this->getRequestURI(pu)->ptr);
+  Strcat_charp(tmp, this->getRequestURI()->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
   if (this->option.referer == NO_REFERER) {
-    Strcat_charp(tmp, otherinfo(pu, {}, {}, this->option.no_cache));
+    Strcat_charp(tmp, otherinfo(url, {}, {}, this->option.no_cache));
   } else {
-    Strcat_charp(tmp, otherinfo(pu, current, this->option.referer,
+    Strcat_charp(tmp, otherinfo(url, current, this->option.referer,
                                 this->option.no_cache));
   }
   if (extra_headers) {
@@ -128,7 +129,7 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
       }
       if (strncasecmp(i->ptr, "Proxy-Authorization:",
                       sizeof("Proxy-Authorization:") - 1) == 0) {
-        if (pu.schema == SCM_HTTPS && this->method != HttpMethod::CONNECT)
+        if (url.schema == SCM_HTTPS && this->method != HttpMethod::CONNECT)
           continue;
       }
       Strcat_charp(tmp, i->ptr);
@@ -137,7 +138,7 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
 
   Str *cookie = {};
   if (this->method != HttpMethod::CONNECT && use_cookie &&
-      (cookie = find_cookie(pu))) {
+      (cookie = find_cookie(url))) {
     Strcat_charp(tmp, "Cookie: ");
     Strcat(tmp, cookie);
     Strcat_charp(tmp, "\r\n");
@@ -175,10 +176,10 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
   return tmp;
 }
 
-void HttpRequest::add_auth_cookie(const Url &pu) {
+void HttpRequest::add_auth_cookie() {
   if (this->add_auth_cookie_flag && this->realm && this->uname && this->pwd) {
     /* If authorization is required and passed */
-    add_auth_user_passwd(pu, qstr_unquote(this->realm)->ptr, this->uname,
+    add_auth_user_passwd(url, qstr_unquote(this->realm)->ptr, this->uname,
                          this->pwd, 0);
     this->add_auth_cookie_flag = false;
   }

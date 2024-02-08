@@ -127,7 +127,7 @@ Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
   }
 
   /* A2 = Method ":" digest-uri-value */
-  auto uri = hr->getRequestURI(pu);
+  auto uri = hr->getRequestURI();
   tmp = Strnew_m_charp(to_str(hr->method).c_str(), ":", uri->ptr, nullptr);
   if (qop_i == QOP_AUTH_INT) {
     /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */

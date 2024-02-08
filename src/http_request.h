@@ -1,4 +1,5 @@
 #pragma once
+#include "url.h"
 #include "enum_template.h"
 #include <string>
 #include <optional>
@@ -20,10 +21,10 @@ extern bool override_content_type;
 extern Str *header_string;
 
 enum HttpStreamStatus {
-  HTST_UNKNOWN = 255,
-  HTST_MISSING = 254,
   HTST_NORMAL = 0,
   HTST_CONNECT = 1,
+  HTST_MISSING = 254,
+  HTST_UNKNOWN = 255,
 };
 
 enum class HttpMethod {
@@ -60,6 +61,8 @@ struct HttpOption {
 };
 
 struct HttpRequest {
+  Url url;
+  std::optional<Url> current;
   HttpStreamStatus status = {};
   HttpMethod method = {};
   HttpRequestFlags flag = {};
@@ -73,10 +76,10 @@ struct HttpRequest {
 
   TextList *extra_headers = {};
 
-  HttpRequest(const HttpOption option, FormList *request)
-      : option(option), request(request) {}
-
-  Str *getRequestURI(const Url &url) const;
-  Str *to_Str(const Url &pu, std::optional<Url> current) const;
-  void add_auth_cookie(const Url &pu);
+  HttpRequest(const Url &url, std::optional<Url> &current,
+              const HttpOption option, FormList *request)
+      : url(url), current(current), option(option), request(request) {}
+  Str *getRequestURI() const;
+  Str *to_Str() const;
+  void add_auth_cookie();
 };

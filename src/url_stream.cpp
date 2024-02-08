@@ -402,7 +402,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       }
     }
     hr->flag |= HR_FLAG_LOCAL;
-    tmp = hr->to_Str(*pu, current);
+    tmp = hr->to_Str();
     hr->status = HTST_NORMAL;
   }
   if (pu->schema == SCM_HTTPS) {
@@ -488,9 +488,9 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
   }
 
   // retry:
-  auto hr = std::make_shared<HttpRequest>(option, request);
-
   *pu = urlParse(u, current);
+
+  auto hr = std::make_shared<HttpRequest>(*pu, current, option, request);
   if (pu->schema == SCM_LOCAL && pu->file.empty()) {
     if (pu->label.size()) {
       /* #hogege is not a label but a filename */
