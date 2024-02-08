@@ -200,6 +200,18 @@ const char *HttpResponse::getHeader(const char *field) const {
   return NULL;
 }
 
+const char *HttpResponse::checkContentType() const {
+  auto p = this->getHeader("Content-Type:");
+  if (p == NULL) {
+    return NULL;
+  }
+
+  auto r = Strnew();
+  while (*p && *p != ';' && !IS_SPACE(*p))
+    Strcat_char(r, *p++);
+  return r->ptr;
+}
+
 const char *mybasename(const char *s) {
   const char *p = s;
   while (*p)

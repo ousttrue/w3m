@@ -22,6 +22,7 @@ struct HttpResponse {
   bool checkRedirection(const Url &pu);
   int readHeader(struct UrlStream *uf, const Url &pu);
   const char *getHeader(const char *field) const;
+  const char *checkContentType() const;
   const char *guess_save_name(const char *file) const;
 };
 

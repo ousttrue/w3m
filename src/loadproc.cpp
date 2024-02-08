@@ -138,16 +138,6 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   return newBuf;
 }
 
-static char *checkContentType(Buffer *buf) {
-  auto p = buf->info->getHeader("Content-Type:");
-  if (p == NULL)
-    return NULL;
-  auto r = Strnew();
-  while (*p && *p != ';' && !IS_SPACE(*p))
-    Strcat_char(r, *p++);
-  return r->ptr;
-}
-
 enum class LoadProc {
   Html,
   Buffer,
@@ -432,7 +422,8 @@ load_doc:
   //     if (S_ISDIR(st.st_mode)) {
   //       if (UseExternalDirBuffer) {
   //         Str *cmd =
-  //             Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
+  //             Sprintf("%s?dir=%s#current", DirBufferCommand,
+  //             pu.file.c_str());
   //         auto b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
   //         if (b != NULL && b != NO_BUFFER) {
   //           b->info->currentURL = pu;
@@ -484,8 +475,8 @@ load_doc:
     // if (fmInitialized) {
     //   term_cbreak();
     //   message(
-    //       Sprintf("%s contacted. Waiting for reply...", pu.host.c_str())->ptr,
-    //       0, 0);
+    //       Sprintf("%s contacted. Waiting for reply...",
+    //       pu.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
     if (t_buf == NULL)
@@ -508,7 +499,7 @@ load_doc:
       goto load_doc;
     }
 
-    t = checkContentType(t_buf);
+    t = t_buf->info->checkContentType();
     if (t == NULL && pu.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
