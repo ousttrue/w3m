@@ -382,10 +382,10 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     pu->file = allocStr("/", -1);
   }
   if (request && request->method == FORM_METHOD_POST && request->body) {
-    hr->method = HR_COMMAND_POST;
+    hr->method = HttpMethod::POST;
   }
   if (request && request->method == FORM_METHOD_HEAD) {
-    hr->method = HR_COMMAND_HEAD;
+    hr->method = HttpMethod::HEAD;
   }
 
   {
@@ -423,7 +423,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
       fclose(ff);
     }
-    if (hr->method == HR_COMMAND_POST &&
+    if (hr->method == HttpMethod::POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       if (sslh)
         SSL_write_from_file(sslh, request->body);
@@ -441,7 +441,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
       fclose(ff);
     }
-    if (hr->method == HR_COMMAND_POST &&
+    if (hr->method == HttpMethod::POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       write_from_file(sock, request->body);
     }

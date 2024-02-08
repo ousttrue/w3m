@@ -26,12 +26,25 @@ enum HttpStreamStatus {
   HTST_CONNECT = 1,
 };
 
-enum HttpMethod {
-  HR_COMMAND_GET = 0,
-  HR_COMMAND_POST = 1,
-  HR_COMMAND_CONNECT = 2,
-  HR_COMMAND_HEAD = 3,
+enum class HttpMethod {
+  GET = 0,
+  POST = 1,
+  CONNECT = 2,
+  HEAD = 3,
 };
+inline std::string to_str(HttpMethod method) {
+  switch (method) {
+  case HttpMethod::CONNECT:
+    return "CONNECT";
+  case HttpMethod::POST:
+    return "POST";
+  case HttpMethod::HEAD:
+    return "HEAD";
+  case HttpMethod::GET:
+  default:
+    return "GET";
+  }
+}
 
 enum HttpRequestFlags {
   HR_FLAG_LOCAL = 1,
@@ -49,19 +62,6 @@ struct HttpOption {
 struct HttpRequest {
   HttpStreamStatus status = {};
   HttpMethod method = {};
-  std::string getMehodString() const {
-    switch (method) {
-    case HR_COMMAND_CONNECT:
-      return "CONNECT";
-    case HR_COMMAND_POST:
-      return "POST";
-    case HR_COMMAND_HEAD:
-      return "HEAD";
-    case HR_COMMAND_GET:
-    default:
-      return "GET";
-    }
-  }
   HttpRequestFlags flag = {};
   HttpOption option = {};
   FormList *request = {};

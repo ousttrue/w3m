@@ -24,7 +24,7 @@ Str *header_string = nullptr;
 
 Str *HttpRequest::getRequestURI(const Url &url) const {
   Str *tmp = Strnew();
-  if (this->method == HR_COMMAND_CONNECT) {
+  if (this->method == HttpMethod::CONNECT) {
     Strcat(tmp, url.host);
     Strcat(tmp, Sprintf(":%d", url.port));
   } else if (this->flag & HR_FLAG_LOCAL) {
@@ -109,7 +109,7 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
 
 Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
 
-  auto tmp = Strnew(this->getMehodString());
+  auto tmp = Strnew(to_str(this->method));
   Strcat_charp(tmp, " ");
   Strcat_charp(tmp, this->getRequestURI(pu)->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
@@ -123,12 +123,12 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
     for (auto i = extra_headers->first; i != nullptr; i = i->next) {
       if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
           0) {
-        if (this->method == HR_COMMAND_CONNECT)
+        if (this->method == HttpMethod::CONNECT)
           continue;
       }
       if (strncasecmp(i->ptr, "Proxy-Authorization:",
                       sizeof("Proxy-Authorization:") - 1) == 0) {
-        if (pu.schema == SCM_HTTPS && this->method != HR_COMMAND_CONNECT)
+        if (pu.schema == SCM_HTTPS && this->method != HttpMethod::CONNECT)
           continue;
       }
       Strcat_charp(tmp, i->ptr);
@@ -136,7 +136,7 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
   }
 
   Str *cookie = {};
-  if (this->method != HR_COMMAND_CONNECT && use_cookie &&
+  if (this->method != HttpMethod::CONNECT && use_cookie &&
       (cookie = find_cookie(pu))) {
     Strcat_charp(tmp, "Cookie: ");
     Strcat(tmp, cookie);
@@ -145,7 +145,7 @@ Str *HttpRequest::to_Str(const Url &pu, std::optional<Url> current) const {
     if (cookie->ptr[0] != '$')
       Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
   }
-  if (this->method == HR_COMMAND_POST) {
+  if (this->method == HttpMethod::POST) {
     if (this->request->enctype == FORM_ENCTYPE_MULTIPART) {
       Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
       Strcat_charp(tmp, this->request->boundary);
