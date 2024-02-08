@@ -432,8 +432,6 @@ struct param_ptr params6[] = {
     {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9, NULL},
     {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
      CMT_BGEXTVIEW, NULL},
-    {"use_lessopen", P_INT, PI_ONOFF, (void *)&use_lessopen, CMT_USE_LESSOPEN,
-     NULL},
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 

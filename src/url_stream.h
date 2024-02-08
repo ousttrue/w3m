@@ -11,7 +11,6 @@ extern bool DecodeURL;
 #define SAVE_BUF_SIZE 1536
 
 extern char *index_file;
-extern bool use_lessopen;
 extern bool PermitSaveToPipe;
 extern bool AutoUncompress;
 extern bool PreserveTimestamp;

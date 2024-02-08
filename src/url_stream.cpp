@@ -88,7 +88,6 @@ bool PreserveTimestamp = true;
 // }
 
 char *index_file = nullptr;
-bool use_lessopen = false;
 
 #define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
 
@@ -556,49 +555,6 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *url, Url *pu,
   return hr;
 }
 
-static FILE *lessopen_stream(const char *path) {
-
-  auto lessopen = getenv("LESSOPEN");
-  if (lessopen == nullptr || lessopen[0] == '\0')
-    return nullptr;
-
-  if (lessopen[0] != '|') /* filename mode, not supported m(__)m */
-    return nullptr;
-
-  /* pipe mode */
-  ++lessopen;
-
-  /* LESSOPEN must contain one conversion specifier for strings ('%s'). */
-  int n = 0;
-  for (const char *f = lessopen; *f; f++) {
-    if (*f == '%') {
-      if (f[1] == '%') /* Literal % */
-        f++;
-      else if (*++f == 's') {
-        if (n)
-          return nullptr;
-        n++;
-      } else
-        return nullptr;
-    }
-  }
-  if (!n)
-    return nullptr;
-
-  auto tmpf = Sprintf(lessopen, shell_quote((char *)path));
-  auto fp = popen(tmpf->ptr, "r");
-  if (fp == nullptr) {
-    return nullptr;
-  }
-  auto c = getc(fp);
-  if (c == EOF) {
-    pclose(fp);
-    return nullptr;
-  }
-  ungetc(c, fp);
-  return fp;
-}
-
 static bool exists(const char *path) {
   if (path == nullptr || *path == '\0') {
     return false;
@@ -623,19 +579,6 @@ void UrlStream::openFile(const char *path) {
 
   this->stream = openIS(path);
   if (!do_download) {
-    if (use_lessopen && getenv("LESSOPEN")) {
-      FILE *fp;
-      this->guess_type = guessContentType(path);
-      if (this->guess_type == nullptr)
-        this->guess_type = "text/plain";
-      if (is_html_type(this->guess_type))
-        return;
-      if ((fp = lessopen_stream(path))) {
-        this->stream = newFileStream(fp, pclose);
-        this->guess_type = "text/plain";
-        return;
-      }
-    }
     check_compression(path, this);
     if (this->compression != CMP_NOCOMPRESS) {
       auto ext = this->ext;
