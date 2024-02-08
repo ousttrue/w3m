@@ -1,4 +1,5 @@
 #include "loadproc.h"
+#include "http_response.h"
 #include "mimehead.h"
 #include "url_quote.h"
 #include "tabbuffer.h"
@@ -135,45 +136,6 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     fclose(src);
 
   return newBuf;
-}
-
-#define DEF_SAVE_FILE "index.html"
-static const char *guess_filename(const char *file) {
-  const char *p = NULL, *s;
-
-  if (file != NULL)
-    p = mybasename(file);
-  if (p == NULL || *p == '\0')
-    return DEF_SAVE_FILE;
-  s = p;
-  if (*p == '#')
-    p++;
-  while (*p != '\0') {
-    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-      *(char *)p = '\0';
-      break;
-    }
-    p++;
-  }
-  return s;
-}
-
-const char *guess_save_name(Buffer *buf, const char *path) {
-  if (buf && buf->info->document_header) {
-    Str *name = NULL;
-    const char *p, *q;
-    if ((p = buf->info->getHeader("Content-Disposition:")) != NULL &&
-        (q = strcasestr(p, "filename")) != NULL &&
-        (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        matchattr(q, "filename", 8, &name))
-      path = name->ptr;
-    else if ((p = buf->info->getHeader("Content-Type:")) != NULL &&
-             (q = strcasestr(p, "name")) != NULL &&
-             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             matchattr(q, "name", 4, &name))
-      path = name->ptr;
-  }
-  return (char *)guess_filename(path);
 }
 
 static char *checkContentType(Buffer *buf) {
@@ -642,7 +604,7 @@ page_loaded:
   }
 
   current_content_length = 0;
-  if ((p = t_buf->info->getHeader("Content-Length:"))){
+  if ((p = t_buf->info->getHeader("Content-Length:"))) {
     current_content_length = strtoclen(p);
   }
   if (do_download) {
@@ -656,9 +618,10 @@ page_loaded:
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file.c_str(), &st))
         f.modtime = st.st_mtime;
-      file = guess_save_name(NULL, pu.real_file.c_str());
-    } else
-      file = guess_save_name(t_buf, pu.file.c_str());
+      file = guess_filename(pu.real_file.c_str());
+    } else {
+      file = t_buf->info->guess_save_name(pu.file.c_str());
+    }
     f.doFileSave(file);
     return NO_BUFFER;
   }

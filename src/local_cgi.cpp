@@ -1,4 +1,5 @@
 #include "local_cgi.h"
+#include "http_response.h"
 #include "terms.h"
 #include "rc.h"
 #include "w3m.h"

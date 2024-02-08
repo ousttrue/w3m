@@ -106,19 +106,6 @@ long lrand48(void) {
 }
 #endif
 
-const char *mybasename(const char *s) {
-  const char *p = s;
-  while (*p)
-    p++;
-  while (s <= p && *p != '/')
-    p--;
-  if (*p == '/')
-    p++;
-  else
-    p = s;
-  return allocStr(p, -1);
-}
-
 const char *mydirname(const char *s) {
   const char *p = s;
   while (*p)

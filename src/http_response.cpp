@@ -1,4 +1,5 @@
 #include "http_response.h"
+#include "matchattr.h"
 #include "app.h"
 #include "screen.h"
 #include "cookie.h"
@@ -197,4 +198,56 @@ const char *HttpResponse::getHeader(const char *field) const {
     }
   }
   return NULL;
+}
+
+const char *mybasename(const char *s) {
+  const char *p = s;
+  while (*p)
+    p++;
+  while (s <= p && *p != '/')
+    p--;
+  if (*p == '/')
+    p++;
+  else
+    p = s;
+  return allocStr(p, -1);
+}
+
+#define DEF_SAVE_FILE "index.html"
+const char *guess_filename(const char *file) {
+  const char *p = NULL, *s;
+
+  if (file != NULL)
+    p = mybasename(file);
+  if (p == NULL || *p == '\0')
+    return DEF_SAVE_FILE;
+  s = p;
+  if (*p == '#')
+    p++;
+  while (*p != '\0') {
+    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+      *(char *)p = '\0';
+      break;
+    }
+    p++;
+  }
+  return s;
+}
+
+const char *HttpResponse::guess_save_name(const char *path) const {
+  if (this->document_header) {
+    Str *name = NULL;
+    const char *p, *q;
+    if ((p = this->getHeader("Content-Disposition:")) != NULL &&
+        (q = strcasestr(p, "filename")) != NULL &&
+        (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+        matchattr(q, "filename", 8, &name))
+      path = name->ptr;
+    else if ((p = this->getHeader("Content-Type:")) != NULL &&
+             (q = strcasestr(p, "name")) != NULL &&
+             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+             matchattr(q, "name", 4, &name))
+      path = name->ptr;
+  }
+  return guess_filename(path);
 }

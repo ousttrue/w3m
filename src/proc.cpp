@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "http_response.h"
 #include "url_quote.h"
 #include "search.h"
 #include "bufferpos.h"
@@ -1063,7 +1064,6 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
-
   if (Currentbuf->info->sourcefile.empty()) {
     return;
   }
@@ -1071,12 +1071,12 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   PermitSaveToPipe = true;
 
   const char *file;
-  if (Currentbuf->info->real_schema == SCM_LOCAL)
-    file = guess_save_name(nullptr,
-                           Currentbuf->info->currentURL.real_file.c_str());
-  else
-    file =
-        guess_save_name(Currentbuf, Currentbuf->info->currentURL.file.c_str());
+  if (Currentbuf->info->real_schema == SCM_LOCAL) {
+    file = guess_filename(Currentbuf->info->currentURL.real_file.c_str());
+  } else {
+    file = Currentbuf->info->guess_save_name(
+        Currentbuf->info->currentURL.file.c_str());
+  }
   doFileCopy(Currentbuf->info->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
