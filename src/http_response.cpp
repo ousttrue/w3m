@@ -183,3 +183,18 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &pu) {
 
   return http_response_code;
 }
+
+const char *HttpResponse::getHeader(const char *field) const {
+  if (field == NULL || this->document_header == NULL) {
+    return NULL;
+  }
+
+  auto len = strlen(field);
+  for (auto i = this->document_header->first; i != NULL; i = i->next) {
+    if (!strncasecmp(i->ptr, field, len)) {
+      auto p = i->ptr + len;
+      return remove_space(p);
+    }
+  }
+  return NULL;
+}

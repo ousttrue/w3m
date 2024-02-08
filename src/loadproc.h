@@ -15,7 +15,6 @@ struct UrlStream;
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request = {});
 
-const char *checkHeader(Buffer *buf, const char *field);
 const char *guess_save_name(Buffer *buf, const char *file);
 Buffer *getshell(const char *cmd);
 struct Url;

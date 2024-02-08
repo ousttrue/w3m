@@ -137,23 +137,6 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   return newBuf;
 }
 
-const char *checkHeader(Buffer *buf, const char *field) {
-  int len;
-  TextListItem *i;
-  char *p;
-
-  if (buf == NULL || field == NULL || buf->info->document_header == NULL)
-    return NULL;
-  len = strlen(field);
-  for (i = buf->info->document_header->first; i != NULL; i = i->next) {
-    if (!strncasecmp(i->ptr, field, len)) {
-      p = i->ptr + len;
-      return remove_space(p);
-    }
-  }
-  return NULL;
-}
-
 #define DEF_SAVE_FILE "index.html"
 static const char *guess_filename(const char *file) {
   const char *p = NULL, *s;
@@ -179,12 +162,12 @@ const char *guess_save_name(Buffer *buf, const char *path) {
   if (buf && buf->info->document_header) {
     Str *name = NULL;
     const char *p, *q;
-    if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
+    if ((p = buf->info->getHeader("Content-Disposition:")) != NULL &&
         (q = strcasestr(p, "filename")) != NULL &&
         (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
         matchattr(q, "filename", 8, &name))
       path = name->ptr;
-    else if ((p = checkHeader(buf, "Content-Type:")) != NULL &&
+    else if ((p = buf->info->getHeader("Content-Type:")) != NULL &&
              (q = strcasestr(p, "name")) != NULL &&
              (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
              matchattr(q, "name", 4, &name))
@@ -194,11 +177,10 @@ const char *guess_save_name(Buffer *buf, const char *path) {
 }
 
 static char *checkContentType(Buffer *buf) {
-  Str *r;
-  auto p = checkHeader(buf, "Content-Type:");
+  auto p = buf->info->getHeader("Content-Type:");
   if (p == NULL)
     return NULL;
-  r = Strnew();
+  auto r = Strnew();
   while (*p && *p != ';' && !IS_SPACE(*p))
     Strcat_char(r, *p++);
   return r->ptr;
@@ -252,7 +234,7 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
   }
 
   if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-    buf->buffername = checkHeader(buf, "Subject:");
+    buf->buffername = buf->info->getHeader("Subject:");
     if (buf->buffername == NULL && buf->info->filename != NULL)
       buf->buffername = lastFileName(buf->info->filename);
   }
@@ -555,7 +537,7 @@ load_doc:
     auto http_response_code = t_buf->info->readHeader(&f, pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
-        (p = checkHeader(t_buf, "Location:")) != NULL &&
+        (p = t_buf->info->getHeader("Location:")) != NULL &&
         t_buf->info->checkRedirection(pu)) {
       /* document moved */
       /* 301: Moved Permanently */
@@ -582,7 +564,7 @@ load_doc:
       add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd, 0);
       add_auth_cookie_flag = 0;
     }
-    if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL &&
+    if ((p = t_buf->info->getHeader("WWW-Authenticate:")) != NULL &&
         http_response_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
@@ -606,7 +588,7 @@ load_doc:
       goto load_doc;
     }
 
-    f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
+    f.modtime = mymktime(t_buf->info->getHeader("Last-Modified:"));
   } else if (pu.schema == SCM_DATA) {
     t = f.guess_type;
   } else if (DefaultType) {
@@ -660,8 +642,9 @@ page_loaded:
   }
 
   current_content_length = 0;
-  if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
+  if ((p = t_buf->info->getHeader("Content-Length:"))){
     current_content_length = strtoclen(p);
+  }
   if (do_download) {
     /* download only */
     const char *file;

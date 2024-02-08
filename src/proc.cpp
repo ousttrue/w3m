@@ -568,8 +568,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
   Str *cmd;
   if (Currentbuf->edit) {
-    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->info->real_type, fn,
-                          checkHeader(Currentbuf, "Content-Type:"), nullptr);
+    cmd =
+        unquote_mailcap(Currentbuf->edit, Currentbuf->info->real_type, fn,
+                        Currentbuf->info->getHeader("Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
   }
