@@ -6,7 +6,7 @@
 #include "terms.h"
 #include "display.h"
 #include "tabbuffer.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "cookie.h"
 #include "buffer.h"
 #include "textlist.h"

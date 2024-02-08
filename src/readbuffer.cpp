@@ -1,7 +1,7 @@
 #include "readbuffer.h"
 #include "url_quote.h"
 #include "quote.h"
-#include "contentinfo.h"
+#include "http_response.h"
 #include "symbol.h"
 #include "url_stream.h"
 #include "w3m.h"

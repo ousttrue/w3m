@@ -7,6 +7,7 @@ extern int FollowRedirection;
 
 struct TextList;
 struct ContentInfo {
+  int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
   const char *type = nullptr;
@@ -19,4 +20,5 @@ struct ContentInfo {
 
   ~ContentInfo();
   bool checkRedirection(const Url &pu);
+  int readHeader(struct UrlStream *uf, const Url &pu);
 };

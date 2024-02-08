@@ -2,7 +2,7 @@
  * HTML forms
  */
 #include "form.h"
-#include "contentinfo.h"
+#include "http_response.h"
 #include "authpass.h"
 #include "w3m.h"
 #include "func.h"

@@ -8,7 +8,7 @@
 #include "rc.h"
 #include "terms.h"
 #include "linklist.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "line.h"
 #include "buffer.h"
 #include "form.h"

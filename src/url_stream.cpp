@@ -23,7 +23,7 @@
 #include "url.h"
 #include "w3m.h"
 #include "istream.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "textlist.h"
 #include "func.h"
 #include "linein.h"

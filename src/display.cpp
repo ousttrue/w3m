@@ -2,7 +2,7 @@
 #include "url_stream.h"
 #include "tabbuffer.h"
 #include "loadproc.h"
-#include "contentinfo.h"
+#include "http_response.h"
 #include "symbol.h"
 #include "message.h"
 #include "w3m.h"

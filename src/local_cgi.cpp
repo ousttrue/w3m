@@ -3,7 +3,7 @@
 #include "rc.h"
 #include "w3m.h"
 #include "tmpfile.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "etc.h"
 #include "form.h"
 #include "signal_util.h"

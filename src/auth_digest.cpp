@@ -1,7 +1,7 @@
 #include "auth_digest.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "form.h"
-#include "httpauth.h"
+#include "http_auth.h"
 #include "Str.h"
 #include "myctype.h"
 #include <stdlib.h>

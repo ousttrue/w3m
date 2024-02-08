@@ -4,7 +4,7 @@
 #include "tabbuffer.h"
 #include "quote.h"
 #include "symbol.h"
-#include "contentinfo.h"
+#include "http_response.h"
 #include "form.h"
 #include "proto.h"
 #include "downloadlist.h"
@@ -12,7 +12,7 @@
 #include "linein.h"
 #include "mytime.h"
 #include "authpass.h"
-#include "httpauth.h"
+#include "http_auth.h"
 #include "auth_digest.h"
 #include "mimetypes.h"
 #include "app.h"
@@ -25,7 +25,7 @@
 #include "url.h"
 #include "alloc.h"
 #include "rc.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "display.h"
 #include "matchattr.h"
 #include "myctype.h"
@@ -286,135 +286,6 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
     }
   }
   return buf;
-}
-
-static int http_response_code;
-void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
-  char *p, *q;
-  char c;
-  Str *lineBuf2 = NULL;
-
-  TextList *headerlist;
-  FILE *src = NULL;
-  Lineprop *propBuffer;
-
-  headerlist = newBuf->info->document_header = newTextList();
-  if (uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS)
-    http_response_code = -1;
-  else
-    http_response_code = 0;
-
-  while (true) {
-    auto _tmp = uf->stream->StrmyISgets();
-    if (_tmp.empty()) {
-      break;
-    }
-    auto tmp = Strnew(_tmp);
-    if (w3m_reqlog) {
-      FILE *ff;
-      ff = fopen(w3m_reqlog, "a");
-      if (ff) {
-        Strfputs(tmp, ff);
-        fclose(ff);
-      }
-    }
-    if (src)
-      Strfputs(tmp, src);
-    cleanup_line(tmp, HEADER_MODE);
-    if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
-      if (!lineBuf2)
-        /* there is no header */
-        break;
-      /* last header */
-    } else {
-      if (lineBuf2) {
-        Strcat(lineBuf2, tmp);
-      } else {
-        lineBuf2 = tmp;
-      }
-
-      c = uf->stream ? uf->stream->ISgetc() : '\0';
-
-      uf->stream->ISundogetc();
-      if (c == ' ' || c == '\t')
-        /* header line is continued */
-        continue;
-      lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-      cleanup_line(lineBuf2, RAW_MODE);
-      /* separated with line and stored */
-      tmp = Strnew_size(lineBuf2->length);
-      for (p = lineBuf2->ptr; *p; p = q) {
-        for (q = p; *q && *q != '\r' && *q != '\n'; q++)
-          ;
-        lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
-        Strcat(tmp, lineBuf2);
-        for (; *q && (*q == '\r' || *q == '\n'); q++)
-          ;
-      }
-      lineBuf2 = tmp;
-    }
-
-    if ((uf->schema == SCM_HTTP || uf->schema == SCM_HTTPS) &&
-        http_response_code == -1) {
-      p = lineBuf2->ptr;
-      while (*p && !IS_SPACE(*p))
-        p++;
-      while (*p && IS_SPACE(*p))
-        p++;
-      http_response_code = atoi(p);
-      if (fmInitialized) {
-        message(lineBuf2->ptr, 0, 0);
-        refresh(term_io());
-      }
-    }
-    if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-      p = lineBuf2->ptr + 26;
-      while (IS_SPACE(*p))
-        p++;
-      if (!strncasecmp(p, "base64", 6))
-        uf->encoding = ENC_BASE64;
-      else if (!strncasecmp(p, "quoted-printable", 16))
-        uf->encoding = ENC_QUOTE;
-      else if (!strncasecmp(p, "uuencode", 8) ||
-               !strncasecmp(p, "x-uuencode", 10))
-        uf->encoding = ENC_UUENCODE;
-      else
-        uf->encoding = ENC_7BIT;
-    } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-
-      process_compression(lineBuf2, uf);
-
-    } else if (use_cookie && accept_cookie && pu &&
-               check_cookie_accept_domain(pu->host.c_str()) &&
-               (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||
-                !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
-
-      process_http_cookie(pu, lineBuf2);
-
-    } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
-               uf->schema == SCM_LOCAL_CGI) {
-      Str *funcname = Strnew();
-      int f;
-
-      p = lineBuf2->ptr + 12;
-      SKIP_BLANKS(p);
-      while (*p && !IS_SPACE(*p))
-        Strcat_char(funcname, *(p++));
-      SKIP_BLANKS(p);
-      f = getFuncList(funcname->ptr);
-      if (f >= 0) {
-        tmp = Strnew_charp(p);
-        Strchop(tmp);
-        pushEvent(f, tmp->ptr);
-      }
-    }
-    if (headerlist)
-      pushText(headerlist, lineBuf2->ptr);
-    Strfree(lineBuf2);
-    lineBuf2 = NULL;
-  }
-  if (src)
-    fclose(src);
 }
 
 static int _MoveFile(const char *path1, const char *path2) {
@@ -681,7 +552,7 @@ load_doc:
     }
     if (t_buf == NULL)
       t_buf = new Buffer(INIT_BUFFER_WIDTH());
-    readHeader(&f, t_buf, &pu);
+    auto http_response_code = t_buf->info->readHeader(&f, pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&

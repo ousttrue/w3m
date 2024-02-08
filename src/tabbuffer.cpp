@@ -9,7 +9,7 @@
 #include "etc.h"
 #include "message.h"
 #include "buffer.h"
-#include "contentinfo.h"
+#include "http_response.h"
 #include "myctype.h"
 #include "anchor.h"
 #include "w3m.h"

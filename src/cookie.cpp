@@ -15,7 +15,7 @@
 #include "alloc.h"
 #include "mytime.h"
 #include "message.h"
-#include "httprequest.h"
+#include "http_request.h"
 #include "readbuffer.h"
 #include "textlist.h"
 #include "keyvalue.h"

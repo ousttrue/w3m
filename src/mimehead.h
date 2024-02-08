@@ -30,5 +30,3 @@ Str *decodeU(char **ww);
 void decodeU_to_growbuf(struct growbuf *gb, char **ww);
 Str *decodeWord0(char **ow);
 Str *decodeMIME0(Str *orgstr);
-#define decodeWord(ow, charset) decodeWord0(ow)
-#define decodeMIME(orgstr, charset) decodeMIME0(orgstr)

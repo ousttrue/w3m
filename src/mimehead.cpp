@@ -265,7 +265,7 @@ Str *decodeMIME0(Str *orgstr) {
       }
     nextEncodeWord:
       p = org;
-      Strcat(cnv, decodeWord(&org, charset));
+      Strcat(cnv, decodeWord0(&org));
       if (org == p) { /* Convert failure */
         Strcat_charp(cnv, org);
         return cnv;

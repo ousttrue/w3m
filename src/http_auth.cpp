@@ -1,7 +1,7 @@
-#include "httpauth.h"
+#include "http_auth.h"
 #include "authpass.h"
-#include "contentinfo.h"
-#include "httprequest.h"
+#include "http_response.h"
+#include "http_request.h"
 #include "auth_digest.h"
 #include "form.h"
 #include "screen.h"
@@ -402,8 +402,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
       *uname = Strnew_charp(pp);
       // if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
       //                     IN_PASSWORD)) == NULL)
-      if(!pp)
-      {
+      if (!pp) {
         *uname = NULL;
         return;
       }

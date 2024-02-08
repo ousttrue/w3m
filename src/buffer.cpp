@@ -6,7 +6,7 @@
 #include "signal_util.h"
 #include "search.h"
 #include "tabbuffer.h"
-#include "contentinfo.h"
+#include "http_response.h"
 #include "loadproc.h"
 #include "w3m.h"
 #include "local_cgi.h"
