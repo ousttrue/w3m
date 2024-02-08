@@ -69,17 +69,6 @@ static int is_text_type(const char *type) {
           strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
 }
 
-static int is_dump_text_type(const char *type) {
-  struct MailcapEntry *mcap;
-  return (type && (mcap = searchExtViewer(type)) &&
-          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
-}
-
-static int is_plain_text_type(const char *type) {
-  return ((type && strcasecmp(type, "text/plain") == 0) ||
-          (is_text_type(type) && !is_dump_text_type(type)));
-}
-
 int is_html_type(const char *type) {
   return (type && (strcasecmp(type, "text/html") == 0 ||
                    strcasecmp(type, "application/xhtml+xml") == 0));
@@ -222,29 +211,10 @@ static char *checkContentType(Buffer *buf) {
   return r->ptr;
 }
 
-static Buffer *loadSomething(UrlStream *f,
-                             Buffer *(*loadproc)(UrlStream *, Buffer *),
-                             Buffer *defaultbuf) {
-  Buffer *buf;
-
-  if ((buf = loadproc(f, defaultbuf)) == NULL)
-    return NULL;
-
-  if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-    buf->buffername = checkHeader(buf, "Subject:");
-    if (buf->buffername == NULL && buf->info->filename != NULL)
-      buf->buffername = lastFileName(buf->info->filename);
-  }
-  if (buf->info->currentURL.schema == SCM_UNKNOWN)
-    buf->info->currentURL.schema = f->schema;
-  if (f->schema == SCM_LOCAL && buf->info->sourcefile.empty())
-    buf->info->sourcefile = buf->info->filename;
-  if (loadproc == loadHTMLBuffer)
-    buf->info->type = "text/html";
-  else
-    buf->info->type = "text/plain";
-  return buf;
-}
+enum class LoadProc {
+  Html,
+  Buffer,
+};
 
 static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
                           Buffer *defaultbuf) {
@@ -274,91 +244,56 @@ Buffer *getshell(const char *cmd) {
   return buf;
 }
 
-Buffer *doExternal(UrlStream uf, const char *type, Buffer *defaultbuf) {
-  Str *tmpf, *command;
-  struct MailcapEntry *mcap;
-  MailcapStat mc_stat;
-  Buffer *buf = NULL;
-  const char *header, *src = NULL, *ext = uf.ext;
-
-  if (!(mcap = searchExtViewer(type)))
-    return NULL;
-
-  if (mcap->nametemplate) {
-    tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
-    if (tmpf->ptr[0] == '.')
-      ext = tmpf->ptr;
-  }
-  tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
-
-  if (uf.stream->IStype() != IST_ENCODED) {
-    uf.stream = newEncodedStream(uf.stream, uf.encoding);
-  }
-  header = checkHeader(defaultbuf, "Content-Type:");
-  command =
-      unquote_mailcap(mcap->viewer, type, tmpf->ptr, (char *)header, &mc_stat);
-  if (!(mc_stat & MCSTAT_REPNAME)) {
-    Str *tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
-    command = tmp;
+static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
+                             const Url &pu, const char *real_type) {
+  Buffer *buf = nullptr;
+  switch (loadproc) {
+  case LoadProc::Html:
+    buf = loadHTMLBuffer(f, src);
+    buf->info->type = "text/html";
+    break;
+  case LoadProc::Buffer:
+    buf = loadBuffer(f, src);
+    buf->info->type = "text/plain";
+    break;
   }
 
-  if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
-      !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-    flush_tty();
-    if (!fork()) {
-      setup_child(false, 0, uf.stream->ISfileno());
-      if (save2tmp(uf.stream, tmpf->ptr) < 0)
-        exit(1);
-      myExec(command->ptr);
-    }
-    return NO_BUFFER;
-  } else {
-    if (save2tmp(uf.stream, tmpf->ptr) < 0) {
-      return NULL;
-    }
-  }
-  if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
-    if (defaultbuf == NULL)
-      defaultbuf = new Buffer(INIT_BUFFER_WIDTH());
-    if (defaultbuf->info->sourcefile.size())
-      src = Strnew(defaultbuf->info->sourcefile)->ptr;
-    else
-      src = tmpf->ptr;
-    defaultbuf->info->sourcefile = {};
-  }
-  if (mcap->flags & MAILCAP_HTMLOUTPUT) {
-    buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
-    if (buf && buf != NO_BUFFER) {
-      buf->info->type = "text/html";
-      buf->info->sourcefile = src;
-    }
-  } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
-    buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
-    if (buf && buf != NO_BUFFER) {
-      buf->info->type = "text/plain";
-      buf->info->sourcefile = src;
-    }
-  } else {
-    if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-      fmTerm();
-      mySystem(command->ptr, 0);
-      fmInit();
-      if (CurrentTab && Currentbuf)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    } else {
-      mySystem(command->ptr, 1);
-    }
-    buf = NO_BUFFER;
-  }
-  if (buf && buf != NO_BUFFER) {
-    if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
-        buf->info->filename)
+  if (buf->buffername == NULL || buf->buffername[0] == '\0') {
+    buf->buffername = checkHeader(buf, "Subject:");
+    if (buf->buffername == NULL && buf->info->filename != NULL)
       buf->buffername = lastFileName(buf->info->filename);
-    buf->edit = mcap->edit;
+  }
+  if (buf->info->currentURL.schema == SCM_UNKNOWN)
+    buf->info->currentURL.schema = f->schema;
+  if (f->schema == SCM_LOCAL && buf->info->sourcefile.empty())
+    buf->info->sourcefile = buf->info->filename;
+
+  if (buf && buf != NO_BUFFER) {
+    buf->info->real_schema = f->schema;
+    buf->info->real_type = real_type;
+    if (pu.label.size()) {
+      if (loadproc == LoadProc::Html) {
+        Anchor *a;
+        a = searchURLLabel(buf, pu.label.c_str());
+        if (a != NULL) {
+          gotoLine(buf, a->start.line);
+          if (label_topline)
+            buf->topLine = lineSkip(
+                buf, buf->topLine,
+                buf->currentLine->linenumber - buf->topLine->linenumber, false);
+          buf->pos = a->start.pos;
+          arrangeCursor(buf);
+        }
+      } else { /* plain text */
+        int l = atoi(pu.label.c_str());
+        gotoRealLine(buf, l);
+        buf->pos = 0;
+        arrangeCursor(buf);
+      }
+    }
   }
   return buf;
 }
-#define DO_EXTERNAL ((Buffer * (*)(UrlStream *, Buffer *)) doExternal)
 
 static int http_response_code;
 void readHeader(UrlStream *uf, Buffer *newBuf, Url *pu) {
@@ -697,14 +632,12 @@ static bool checkRedirection(const Url *pu) {
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request) {
   Url pu;
-  Buffer *b = NULL;
-  Buffer *(*proc)(UrlStream *, Buffer *) = loadBuffer;
   const char *tpath;
   const char *t = "text/plain";
   const char *p = NULL;
   const char *real_type = NULL;
   Buffer *t_buf = NULL;
-  MySignalHandler prevtrap = NULL;
+  // MySignalHandler prevtrap = NULL;
   TextList *extra_header = newTextList();
   Str *uname = NULL;
   Str *pwd = NULL;
@@ -715,7 +648,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   Url *auth_pu;
 
   tpath = path;
-  prevtrap = NULL;
+  // prevtrap = NULL;
   add_auth_cookie_flag = 0;
 
   checkRedirection(NULL);
@@ -725,7 +658,7 @@ load_doc:
 
   UrlStream f(SCM_MISSING);
 
-  TRAP_OFF;
+  // TRAP_OFF;
   auto hr = f.openURL(tpath, &pu, current, option, request, extra_header);
 
   if (f.stream == NULL) {
@@ -738,7 +671,7 @@ load_doc:
         if (UseExternalDirBuffer) {
           Str *cmd =
               Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file.c_str());
-          b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
+          auto b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
           if (b != NULL && b != NO_BUFFER) {
             b->info->currentURL = pu;
             b->info->filename = Strnew(b->info->currentURL.real_file)->ptr;
@@ -765,29 +698,32 @@ load_doc:
   }
 
   if (hr && hr->status == HTST_MISSING) {
-    TRAP_OFF;
+    // TRAP_OFF;
     return NULL;
   }
 
   /* openURL() succeeded */
-  if (SETJMP(AbortLoading) != 0) {
-    /* transfer interrupted */
-    TRAP_OFF;
-    if (b)
-      discardBuffer(b);
-    return NULL;
-  }
+  // if (SETJMP(AbortLoading) != 0) {
+  //   /* transfer interrupted */
+  //   TRAP_OFF;
+  //   if (b)
+  //     discardBuffer(b);
+  //   return NULL;
+  // }
 
-  b = NULL;
-  if (header_string)
-    header_string = NULL;
-  TRAP_ON;
+  // b = NULL;
+  // if (header_string){
+  //   header_string = NULL;
+  // }
+
+  // TRAP_ON;
   if (pu.schema == SCM_HTTP || pu.schema == SCM_HTTPS) {
 
     if (fmInitialized) {
       term_cbreak();
-      message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0,
-              0);
+      message(
+          Sprintf("%s contacted. Waiting for reply...", pu.host.c_str())->ptr,
+          0, 0);
       refresh(term_io());
     }
     if (t_buf == NULL)
@@ -835,7 +771,7 @@ load_doc:
                       request, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
-          TRAP_OFF;
+          // TRAP_OFF;
           goto page_loaded;
         }
         add_auth_cookie_flag = 1;
@@ -885,7 +821,7 @@ page_loaded:
       doFileMove(tmp->ptr, file);
       return NO_BUFFER;
     }
-    b = loadHTMLString(page);
+    auto b = loadHTMLString(page);
     if (b) {
       b->info->currentURL = pu;
       b->info->real_schema = pu.schema;
@@ -897,9 +833,9 @@ page_loaded:
     return b;
   }
 
-  if (real_type == NULL)
+  if (!real_type) {
     real_type = t;
-  proc = loadBuffer;
+  }
 
   current_content_length = 0;
   if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
@@ -907,7 +843,7 @@ page_loaded:
   if (do_download) {
     /* download only */
     const char *file;
-    TRAP_OFF;
+    // TRAP_OFF;
     if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
       f.stream = newEncodedStream(f.stream, f.encoding);
     }
@@ -925,7 +861,7 @@ page_loaded:
   if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
     pu.real_file = f.uncompress_stream();
   } else if (f.compression != CMP_NOCOMPRESS) {
-    if ((is_text_type(t) || searchExtViewer(t))) {
+    if ((is_text_type(t))) {
       if (t_buf == NULL)
         t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->info->sourcefile = f.uncompress_stream();
@@ -936,26 +872,11 @@ page_loaded:
     }
   }
 
-  if (is_html_type(t))
-    proc = loadHTMLBuffer;
-  else if (is_plain_text_type(t))
-    proc = loadBuffer;
-  else if (is_dump_text_type(t)) {
-    if (!do_download && searchExtViewer(t) != NULL) {
-      proc = DO_EXTERNAL;
-    } else {
-      TRAP_OFF;
-      if (pu.schema == SCM_LOCAL) {
-        _doFileCopy(pu.real_file.c_str(),
-                    guess_save_name(NULL, pu.real_file.c_str()), true);
-      } else {
-        if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
-          f.stream = newEncodedStream(f.stream, f.encoding);
-        }
-        f.doFileSave(guess_save_name(t_buf, pu.file.c_str()));
-      }
-      return NO_BUFFER;
-    }
+  auto proc = LoadProc::Buffer;
+  if (is_html_type(t)) {
+    proc = LoadProc::Html;
+  } else {
+    proc = LoadProc::Buffer;
   }
   if (t_buf == NULL)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
@@ -963,40 +884,13 @@ page_loaded:
   t_buf->info->filename =
       pu.real_file.size() ? Strnew(pu.real_file)->ptr : Strnew(pu.file)->ptr;
   t_buf->ssl_certificate = (char *)f.ssl_certificate;
-  if (proc == DO_EXTERNAL) {
-    b = doExternal(f, t, t_buf);
-  } else {
-    b = loadSomething(&f, proc, t_buf);
-  }
-  if (b && b != NO_BUFFER) {
-    b->info->real_schema = f.schema;
-    b->info->real_type = real_type;
-    if (pu.label.size()) {
-      if (proc == loadHTMLBuffer) {
-        Anchor *a;
-        a = searchURLLabel(b, pu.label.c_str());
-        if (a != NULL) {
-          gotoLine(b, a->start.line);
-          if (label_topline)
-            b->topLine = lineSkip(
-                b, b->topLine,
-                b->currentLine->linenumber - b->topLine->linenumber, false);
-          b->pos = a->start.pos;
-          arrangeCursor(b);
-        }
-      } else { /* plain text */
-        int l = atoi(pu.label.c_str());
-        gotoRealLine(b, l);
-        b->pos = 0;
-        arrangeCursor(b);
-      }
-    }
-  }
-  if (header_string)
-    header_string = NULL;
+
+  auto b = loadSomething(&f, proc, t_buf, pu, real_type);
+  // if (header_string)
+  //   header_string = NULL;
   if (b && b != NO_BUFFER)
     preFormUpdateBuffer(b);
-  TRAP_OFF;
+  // TRAP_OFF;
   return b;
 }
 

@@ -13,8 +13,6 @@ struct Url;
 struct FormList;
 struct UrlStream;
 
-using LoadProc = Buffer *(*)(UrlStream *, Buffer *);
-
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request = {});
 
