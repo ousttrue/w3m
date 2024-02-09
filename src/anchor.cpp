@@ -73,8 +73,8 @@ Anchor *registerHref(Buffer *buf, const char *url, const char *target,
                      const char *referer, const char *title, unsigned char key,
                      int line, int pos) {
   Anchor *a;
-  buf->href =
-      putAnchor(buf->href, url, target, &a, referer, title, key, line, pos);
+  buf->layout.href =
+      putAnchor(buf->layout.href, url, target, &a, referer, title, key, line, pos);
   return a;
 }
 
@@ -143,9 +143,9 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
 }
 
 Anchor *retrieveCurrentAnchor(Buffer *buf) {
-  if (!buf->layout.currentLine || !buf->href)
+  if (!buf->layout.currentLine || !buf->layout.href)
     return NULL;
-  return buf->href->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
+  return buf->layout.href->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *retrieveCurrentImg(Buffer *buf) {
@@ -201,13 +201,13 @@ static void reseq_anchor0(AnchorList *al, short *seqmap) {
 
 /* renumber anchor */
 static void reseq_anchor(Buffer *buf) {
-  if (!buf->href)
+  if (!buf->layout.href)
     return;
 
   int nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
   int n = nmark;
-  for (size_t i = 0; i < buf->href->size(); i++) {
-    auto a = &buf->href->anchors[i];
+  for (size_t i = 0; i < buf->layout.href->size(); i++) {
+    auto a = &buf->layout.href->anchors[i];
     if (a->hseq == -2) {
       n++;
     }
@@ -223,12 +223,12 @@ static void reseq_anchor(Buffer *buf) {
 
   n = nmark;
   HmarkerList *ml = NULL;
-  for (size_t i = 0; i < buf->href->size(); i++) {
-    auto a = &buf->href->anchors[i];
+  for (size_t i = 0; i < buf->layout.href->size(); i++) {
+    auto a = &buf->layout.href->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
       auto a1 =
-          closest_next_anchor(buf->href, NULL, a->start.pos, a->start.line);
+          closest_next_anchor(buf->layout.href, NULL, a->start.pos, a->start.line);
       a1 = closest_next_anchor(buf->formitem, a1, a->start.pos, a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
@@ -247,7 +247,7 @@ static void reseq_anchor(Buffer *buf) {
   }
   buf->hmarklist = ml;
 
-  reseq_anchor0(buf->href, seqmap.data());
+  reseq_anchor0(buf->layout.href, seqmap.data());
   reseq_anchor0(buf->formitem, seqmap.data());
 }
 
@@ -556,9 +556,9 @@ Buffer *link_list_panel(Buffer *buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->href) {
+  if (buf->layout.href) {
     Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-    al = buf->href;
+    al = buf->layout.href;
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)

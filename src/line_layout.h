@@ -93,4 +93,9 @@ struct LineLayout {
     this->visualpos = srcbuf.visualpos;
     this->currentColumn = srcbuf.currentColumn;
   }
+
+  //
+  // Anchors
+  //
+  struct AnchorList *href = nullptr;
 };

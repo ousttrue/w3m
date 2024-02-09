@@ -43,7 +43,7 @@ struct Buffer : public gc_cleanup {
   LineLayout layout = {};
   Buffer *nextBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
-  AnchorList *href = nullptr;
+
   AnchorList *name = nullptr;
   AnchorList *img = nullptr;
   AnchorList *formitem = nullptr;

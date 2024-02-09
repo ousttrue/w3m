@@ -708,8 +708,8 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
     if (hseq >= hl->nmark)
       return;
     po = hl->marks + hseq;
-    if (Currentbuf->href) {
-      an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+    if (Currentbuf->layout.href) {
+      an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
     }
     if (an == nullptr && Currentbuf->formitem) {
       an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
@@ -745,8 +745,8 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
     if (hseq < 0)
       return;
     po = hl->marks + hseq;
-    if (Currentbuf->href) {
-      an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+    if (Currentbuf->layout.href) {
+      an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
     }
     if (an == nullptr && Currentbuf->formitem) {
       an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
@@ -776,8 +776,8 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   auto po = hl->marks + n - 1;
 
   Anchor *an = nullptr;
-  if (Currentbuf->href) {
-    an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+  if (Currentbuf->layout.href) {
+    an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
   }
   if (an == nullptr && Currentbuf->formitem) {
     an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);

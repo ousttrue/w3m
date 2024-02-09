@@ -391,7 +391,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
                              rows > 1, form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(buf->href, buf->hmarklist, a->start.line, spos,
+        shiftAnchorPosition(buf->layout.href, buf->hmarklist, a->start.line, spos,
                             pos - epos);
         shiftAnchorPosition(buf->name, buf->hmarklist, a->start.line, spos,
                             pos - epos);

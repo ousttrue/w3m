@@ -45,7 +45,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->layout = src.layout;
   this->nextBuffer = src.nextBuffer;
   this->linkBuffer = src.linkBuffer;
-  this->href = src.href;
   this->name = src.name;
   this->img = src.img;
   this->formitem = src.formitem;
@@ -382,7 +381,7 @@ void reshapeBuffer(Buffer *buf) {
   *sbuf = *buf;
   buf->layout.clearBuffer();
 
-  buf->href = nullptr;
+  buf->layout.href = nullptr;
   buf->name = nullptr;
   buf->img = nullptr;
   buf->formitem = nullptr;
@@ -856,8 +855,8 @@ void nextY(int d) {
       hseq = abs(an->hseq);
     an = nullptr;
     for (; y >= 0 && y <= Currentbuf->layout.lastLine->linenumber; y += d) {
-      if (Currentbuf->href) {
-        an = Currentbuf->href->retrieveAnchor(y, x);
+      if (Currentbuf->layout.href) {
+        an = Currentbuf->layout.href->retrieveAnchor(y, x);
       }
       if (!an && Currentbuf->formitem) {
         an = Currentbuf->formitem->retrieveAnchor(y, x);
@@ -904,8 +903,8 @@ void nextX(int d, int dy) {
     an = nullptr;
     while (1) {
       for (; x >= 0 && x < l->len; x += d) {
-        if (Currentbuf->href) {
-          an = Currentbuf->href->retrieveAnchor(y, x);
+        if (Currentbuf->layout.href) {
+          an = Currentbuf->layout.href->retrieveAnchor(y, x);
         }
         if (!an && Currentbuf->formitem) {
           an = Currentbuf->formitem->retrieveAnchor(y, x);
@@ -971,8 +970,8 @@ void _prevA(int visited) {
           goto _end;
         }
         po = hl->marks + hseq;
-        if (Currentbuf->href) {
-          an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+        if (Currentbuf->layout.href) {
+          an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
         }
         if (visited != true && an == nullptr && Currentbuf->formitem) {
           an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
@@ -986,7 +985,7 @@ void _prevA(int visited) {
         }
       } while (an == nullptr || an == pan);
     } else {
-      an = closest_prev_anchor(Currentbuf->href, nullptr, x, y);
+      an = closest_prev_anchor(Currentbuf->layout.href, nullptr, x, y);
       if (visited != true)
         an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
       if (an == nullptr) {
@@ -1054,8 +1053,8 @@ void _nextA(int visited) {
           goto _end;
         }
         po = &hl->marks[hseq];
-        if (Currentbuf->href) {
-          an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
+        if (Currentbuf->layout.href) {
+          an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
         }
         if (visited != true && an == nullptr && Currentbuf->formitem) {
           an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
@@ -1069,7 +1068,7 @@ void _nextA(int visited) {
         }
       } while (an == nullptr || an == pan);
     } else {
-      an = closest_next_anchor(Currentbuf->href, nullptr, x, y);
+      an = closest_next_anchor(Currentbuf->layout.href, nullptr, x, y);
       if (visited != true)
         an = closest_next_anchor(Currentbuf->formitem, an, x, y);
       if (an == nullptr) {
