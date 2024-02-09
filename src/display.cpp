@@ -899,8 +899,9 @@ void cursorXY(Buffer *buf, int x, int y) {
 }
 
 void restorePosition(Buffer *buf, Buffer *orig) {
-  buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1, false);
-  gotoLine(buf, CUR_LINENUMBER(orig));
+  buf->topLine =
+      lineSkip(buf, buf->firstLine, orig->TOP_LINENUMBER() - 1, false);
+  gotoLine(buf, orig->CUR_LINENUMBER());
   buf->pos = orig->pos;
   if (buf->currentLine && orig->currentLine)
     buf->pos += orig->currentLine->bpos - buf->currentLine->bpos;

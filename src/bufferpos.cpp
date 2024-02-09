@@ -9,13 +9,13 @@ void save_buffer_position(Buffer *buf) {
 
   if (!buf->firstLine)
     return;
-  if (b && b->top_linenumber == TOP_LINENUMBER(buf) &&
-      b->cur_linenumber == CUR_LINENUMBER(buf) &&
+  if (b && b->top_linenumber == buf->TOP_LINENUMBER() &&
+      b->cur_linenumber == buf->CUR_LINENUMBER() &&
       b->currentColumn == buf->currentColumn && b->pos == buf->pos)
     return;
   b = (BufferPos *)New(BufferPos);
-  b->top_linenumber = TOP_LINENUMBER(buf);
-  b->cur_linenumber = CUR_LINENUMBER(buf);
+  b->top_linenumber = buf->TOP_LINENUMBER();
+  b->cur_linenumber = buf->CUR_LINENUMBER();
   b->currentColumn = buf->currentColumn;
   b->pos = buf->pos;
   b->bpos = buf->currentLine ? buf->currentLine->bpos : 0;

@@ -455,6 +455,7 @@ void followTab(TabBuffer *tab) {
 }
 
 /* show current URL */
-Str *currentURL(void) {
-  return Strnew(Currentbuf->info->currentURL.to_Str());
-}
+Str *currentURL(void) { return Strnew(Currentbuf->info->currentURL.to_Str()); }
+
+void SAVE_BUFPOSITION(Buffer *sbufp) { COPY_BUFPOSITION(sbufp, Currentbuf); }
+void RESTORE_BUFPOSITION(Buffer *sbufp) { COPY_BUFPOSITION(Currentbuf, sbufp); }

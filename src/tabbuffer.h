@@ -16,6 +16,8 @@ struct TabBuffer {
 extern TabBuffer *CurrentTab;
 #define Currentbuf (CurrentTab->currentBuffer)
 #define Firstbuf (CurrentTab->firstBuffer)
+void SAVE_BUFPOSITION(Buffer *sbufp);
+void RESTORE_BUFPOSITION(Buffer *sbufp);
 
 extern TabBuffer *FirstTab;
 extern TabBuffer *LastTab;

@@ -91,6 +91,11 @@ struct Buffer : public gc_cleanup {
   // shallow copy
   Buffer &operator=(const Buffer &src);
 
+  int TOP_LINENUMBER() const { return topLine ? topLine->linenumber : 1; }
+  int CUR_LINENUMBER() const {
+    return currentLine ? currentLine->linenumber : 1;
+  }
+
   void pushLine(Line *l) {
     if (!this->lastLine || this->lastLine == this->currentLine) {
       this->lastLine = l;
@@ -105,32 +110,22 @@ struct Buffer : public gc_cleanup {
                   int realLinenum);
 };
 
-// void addnewline(Buffer *buf, const char *line, Lineprop *prop, int pos,
-//                 int width, int nlines);
+inline void COPY_BUFROOT(Buffer *dstbuf, Buffer *srcbuf) {
+  (dstbuf)->rootX = (srcbuf)->rootX;
+  (dstbuf)->rootY = (srcbuf)->rootY;
+  (dstbuf)->COLS = (srcbuf)->COLS;
+  (dstbuf)->LINES = (srcbuf)->LINES;
+}
 
-#define COPY_BUFROOT(dstbuf, srcbuf)                                           \
-  {                                                                            \
-    (dstbuf)->rootX = (srcbuf)->rootX;                                         \
-    (dstbuf)->rootY = (srcbuf)->rootY;                                         \
-    (dstbuf)->COLS = (srcbuf)->COLS;                                           \
-    (dstbuf)->LINES = (srcbuf)->LINES;                                         \
-  }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
-  {                                                                            \
-    (dstbuf)->topLine = (srcbuf)->topLine;                                     \
-    (dstbuf)->currentLine = (srcbuf)->currentLine;                             \
-    (dstbuf)->pos = (srcbuf)->pos;                                             \
-    (dstbuf)->cursorX = (srcbuf)->cursorX;                                     \
-    (dstbuf)->cursorY = (srcbuf)->cursorY;                                     \
-    (dstbuf)->visualpos = (srcbuf)->visualpos;                                 \
-    (dstbuf)->currentColumn = (srcbuf)->currentColumn;                         \
-  }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf)                                                    \
-  ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
+inline void COPY_BUFPOSITION(Buffer *dstbuf, Buffer *srcbuf) {
+  (dstbuf)->topLine = (srcbuf)->topLine;
+  (dstbuf)->currentLine = (srcbuf)->currentLine;
+  (dstbuf)->pos = (srcbuf)->pos;
+  (dstbuf)->cursorX = (srcbuf)->cursorX;
+  (dstbuf)->cursorY = (srcbuf)->cursorY;
+  (dstbuf)->visualpos = (srcbuf)->visualpos;
+  (dstbuf)->currentColumn = (srcbuf)->currentColumn;
+}
 
 void gotoLine(Buffer *buf, int n);
 void _followForm(int submit);
