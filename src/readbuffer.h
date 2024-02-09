@@ -197,6 +197,7 @@ void save_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void restore_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void push_render_image(Str *str, int width, int limit,
                        html_feed_environ *h_env);
+struct HtmlTag;
 int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
                    int internal);

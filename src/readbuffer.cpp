@@ -4038,12 +4038,13 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             int refresh_interval = getMetaRefreshParam(q, &tmp);
             if (tmp) {
               p = Strnew(url_quote(remove_space(tmp->ptr)))->ptr;
-              buf->event =
-                  setAlarmEvent(buf->event, refresh_interval, AL_IMPLICIT_ONCE,
-                                FUNCNAME_gorURL, (void *)p);
+              buf->layout.event =
+                  setAlarmEvent(buf->layout.event, refresh_interval,
+                                AL_IMPLICIT_ONCE, FUNCNAME_gorURL, (void *)p);
             } else if (refresh_interval > 0)
-              buf->event = setAlarmEvent(buf->event, refresh_interval,
-                                         AL_IMPLICIT, FUNCNAME_reload, NULL);
+              buf->layout.event =
+                  setAlarmEvent(buf->layout.event, refresh_interval,
+                                AL_IMPLICIT, FUNCNAME_reload, NULL);
           }
           break;
         case HTML_INTERNAL:
@@ -4071,7 +4072,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           break;
         case HTML_TITLE_ALT:
           if (parsedtag_get_value(tag, ATTR_TITLE, &p))
-            buf->buffername = html_unquote(p);
+            buf->layout.title = html_unquote(p);
           break;
         case HTML_SYMBOL:
           effect |= PC_SYMBOL;
@@ -4185,7 +4186,7 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   completeHTMLstream(&htmlenv1, &obuf);
   flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
   if (htmlenv1.title)
-    newBuf->buffername = htmlenv1.title;
+    newBuf->layout.title = htmlenv1.title;
 
 phase2:
   newBuf->info->trbyte = trbyte + linelen;

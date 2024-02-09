@@ -147,7 +147,7 @@ Buffer *getshell(const char *cmd) {
   if (buf == NULL)
     return NULL;
   buf->info->filename = cmd;
-  buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
+  buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }
 
@@ -165,10 +165,10 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
     break;
   }
 
-  if (buf->buffername.empty() || buf->buffername[0] == '\0') {
-    buf->buffername = buf->info->getHeader("Subject:");
-    if (buf->buffername.empty() && buf->info->filename != NULL)
-      buf->buffername = lastFileName(buf->info->filename);
+  if (buf->layout.title.empty() || buf->layout.title[0] == '\0') {
+    buf->layout.title = buf->info->getHeader("Subject:");
+    if (buf->layout.title.empty() && buf->info->filename != NULL)
+      buf->layout.title = lastFileName(buf->info->filename);
   }
   if (buf->info->currentURL.schema == SCM_UNKNOWN)
     buf->info->currentURL.schema = f->schema;
@@ -183,7 +183,7 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
         Anchor *a;
         a = searchURLLabel(buf, pu.label.c_str());
         if (a != NULL) {
-          buf->layout.gotoLine( a->start.line);
+          buf->layout.gotoLine(a->start.line);
           if (label_topline)
             buf->layout.topLine =
                 buf->layout.lineSkip(buf->layout.topLine,

@@ -930,7 +930,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
       (Str_form_quote(localCookie()))->ptr,
       (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
       (Str_form_quote(Strnew(Currentbuf->info->currentURL.to_Str())))->ptr,
-      (Str_form_quote(Strnew(Currentbuf->buffername)))->ptr);
+      (Str_form_quote(Strnew(Currentbuf->layout.title)))->ptr);
   request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
@@ -1143,8 +1143,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
       buf->info->real_type = "text/plain";
     else
       buf->info->real_type = Currentbuf->info->real_type;
-    buf->buffername =
-        Sprintf("source of %s", Currentbuf->buffername.c_str())->ptr;
+    buf->layout.title =
+        Sprintf("source of %s", Currentbuf->layout.title.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else if (!strcasecmp(Currentbuf->info->type, "text/plain")) {
@@ -1154,8 +1154,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
       buf->info->real_type = "text/html";
     else
       buf->info->real_type = Currentbuf->info->real_type;
-    buf->buffername =
-        Sprintf("HTML view of %s", Currentbuf->buffername.c_str())->ptr;
+    buf->layout.title =
+        Sprintf("HTML view of %s", Currentbuf->layout.title.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else {
@@ -1568,8 +1568,8 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   if (replace || new_tab)
     deletePrevBuf();
   if (reload)
-    Currentbuf->event = setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT,
-                                      FUNCNAME_reload, nullptr);
+    Currentbuf->layout.event = setAlarmEvent(
+        Currentbuf->layout.event, 1, AL_IMPLICIT, FUNCNAME_reload, nullptr);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

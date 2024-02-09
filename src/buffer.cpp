@@ -41,21 +41,11 @@ Buffer::~Buffer() {}
 
 Buffer &Buffer::operator=(const Buffer &src) {
   this->info = src.info;
-  this->buffername = src.buffername;
   this->layout = src.layout;
   this->nextBuffer = src.nextBuffer;
   this->linkBuffer = src.linkBuffer;
-  this->layout.name = src.layout.name;
-  this->layout.img = src.layout.img;
-  this->layout.formitem = src.layout.formitem;
-  this->layout.linklist = src.layout.linklist;
-  this->layout.formlist = src.layout.formlist;
-  this->layout.maplist = src.layout.maplist;
-  this->layout.hmarklist = src.layout.hmarklist;
-  this->layout.imarklist = src.layout.imarklist;
   this->clone = src.clone;
   this->check_url = src.check_url;
-  this->event = src.event;
   return *this;
 }
 
@@ -64,7 +54,7 @@ Buffer &Buffer::operator=(const Buffer &src) {
  */
 Buffer *nullBuffer(void) {
   auto b = new Buffer(COLS);
-  b->buffername = "*Null*";
+  b->layout.title = "*Null*";
   return b;
 }
 
@@ -131,7 +121,7 @@ static void writeBufferName(Buffer *buf, int n) {
   }
 
   move(n, 0);
-  auto msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+  auto msg = Sprintf("<%s> [%d lines]", buf->layout.title.c_str(), all);
   if (buf->info->filename != nullptr) {
     switch (buf->info->currentURL.schema) {
     case SCM_LOCAL:
@@ -482,7 +472,7 @@ Buffer *page_info_panel(Buffer *buf) {
     p = url_decode0(buf->info->currentURL.to_Str().c_str());
     Strcat_m_charp(
         tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->buffername.c_str()),
+        html_quote(buf->layout.title.c_str()),
         "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
         buf->info->real_type ? html_quote(buf->info->real_type) : "unknown",
@@ -491,7 +481,8 @@ Buffer *page_info_panel(Buffer *buf) {
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                    Sprintf("%d", all)->ptr,
                    "<tr valign=top><td nowrap>Transferred bytes<td>",
-                   Sprintf("%lu", (unsigned long)buf->info->trbyte)->ptr, nullptr);
+                   Sprintf("%lu", (unsigned long)buf->info->trbyte)->ptr,
+                   nullptr);
 
     a = retrieveCurrentAnchor(buf);
     if (a) {
@@ -570,7 +561,7 @@ void set_buffer_environ(Buffer *buf) {
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->info->sourcefile.c_str());
     set_environ("W3M_FILENAME", buf->info->filename);
-    set_environ("W3M_TITLE", buf->buffername.c_str());
+    set_environ("W3M_TITLE", buf->layout.title.c_str());
     set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",
                 buf->info->real_type ? buf->info->real_type : "unknown");
@@ -688,7 +679,7 @@ void execdict(const char *word) {
     return;
   } else if (buf != NO_BUFFER) {
     buf->info->filename = w;
-    buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+    buf->layout.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
     if (buf->info->type == nullptr)
       buf->info->type = "text/plain";
     pushBuffer(buf);

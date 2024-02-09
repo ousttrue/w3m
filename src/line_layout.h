@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include <string>
 
 extern int nextpage_topline;
 
@@ -9,6 +10,7 @@ struct HtmlTag;
 struct LineLayout {
   LineLayout();
 
+  std::string title;
   // always reshape new buffers to mark URLs
   bool need_reshape = true;
 
@@ -127,4 +129,9 @@ struct LineLayout {
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
   Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
   void addMultirowsForm(AnchorList *al);
+
+  //
+  // Event
+  //
+  struct AlarmEvent *event = nullptr;
 };

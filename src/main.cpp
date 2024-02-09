@@ -1091,7 +1091,7 @@ int main(int argc, char **argv) {
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {
       Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH());
-      Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
+      Currentbuf->layout.title = DOWNLOAD_LIST_TITLE;
     } else
       Currentbuf = Firstbuf;
     ldDL();

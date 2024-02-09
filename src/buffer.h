@@ -38,14 +38,12 @@ struct Clone {
 };
 
 struct Buffer : public gc_cleanup {
-  std::string buffername;
   std::shared_ptr<HttpResponse> info;
   LineLayout layout = {};
   Buffer *nextBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
   std::shared_ptr<Clone> clone;
   bool check_url = false;
-  AlarmEvent *event = nullptr;
 
   Buffer(int width);
   ~Buffer();

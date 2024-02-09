@@ -167,7 +167,7 @@ static Str *make_lastline_message(Buffer *buf) {
     Strcat_charp(msg, "[SSL]");
   }
   Strcat_charp(msg, " <");
-  Strcat(msg, buf->buffername);
+  Strcat(msg, buf->layout.title);
 
   if (s) {
     int l = COLS - 3 - sl;
@@ -248,7 +248,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   standout();
   message(msg->ptr, buf->layout.AbsCursorX(), buf->layout.AbsCursorY());
   standend();
-  term_title(buf->buffername.c_str());
+  term_title(buf->layout.title.c_str());
   refresh(term_io());
   if (buf != save_current_buf) {
     saveBufferInfo();
@@ -321,7 +321,8 @@ static void drawAnchorCursor(Buffer *buf) {
     drawAnchorCursor0(buf, buf->layout.href, hseq, -1, tline, eline, 0);
   }
   if (buf->layout.formitem) {
-    drawAnchorCursor0(buf, buf->layout.formitem, hseq, prevhseq, tline, eline, 1);
+    drawAnchorCursor0(buf, buf->layout.formitem, hseq, prevhseq, tline, eline,
+                      1);
     drawAnchorCursor0(buf, buf->layout.formitem, hseq, -1, tline, eline, 0);
   }
   buf->layout.hmarklist->prevhseq = hseq;
@@ -342,14 +343,15 @@ static void redrawNLine(Buffer *buf, int n) {
       if (t == CurrentTab)
         bold();
       addch('[');
-      l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername.c_str());
+      l = t->x2 - t->x1 - 1 -
+          get_strwidth(t->currentBuffer->layout.title.c_str());
       if (l < 0)
         l = 0;
       if (l / 2 > 0)
         addnstr_sup(" ", l / 2);
       if (t == CurrentTab)
         EFFECT_ACTIVE_START;
-      addnstr(t->currentBuffer->buffername.c_str(), t->x2 - t->x1 - l);
+      addnstr(t->currentBuffer->layout.title.c_str(), t->x2 - t->x1 - l);
       if (t == CurrentTab)
         EFFECT_ACTIVE_END;
       if ((l + 1) / 2 > 0)

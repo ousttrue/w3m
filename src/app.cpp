@@ -74,13 +74,13 @@ static void SigAlarm(SIGNAL_ARG) {
       CurrentAlarm->sec = 0;
       CurrentAlarm->status = AL_UNSET;
     }
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET)
-        CurrentAlarm = Currentbuf->event;
+    if (Currentbuf->layout.event) {
+      if (Currentbuf->layout.event->status != AL_UNSET)
+        CurrentAlarm = Currentbuf->layout.event;
       else
-        Currentbuf->event = NULL;
+        Currentbuf->layout.event = NULL;
     }
-    if (!Currentbuf->event)
+    if (!Currentbuf->layout.event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
       mySignal(SIGALRM, SigAlarm);
@@ -136,11 +136,11 @@ void mainLoop() {
     }
 
     // get keypress event
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET) {
-        CurrentAlarm = Currentbuf->event;
+    if (Currentbuf->layout.event) {
+      if (Currentbuf->layout.event->status != AL_UNSET) {
+        CurrentAlarm = Currentbuf->layout.event;
         if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          Currentbuf->event = NULL;
+          Currentbuf->layout.event = NULL;
           CurrentKey = -1;
           CurrentKeyData = NULL;
           CurrentCmdData = (char *)CurrentAlarm->data;
@@ -149,9 +149,9 @@ void mainLoop() {
           continue;
         }
       } else
-        Currentbuf->event = NULL;
+        Currentbuf->layout.event = NULL;
     }
-    if (!Currentbuf->event)
+    if (!Currentbuf->layout.event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
       mySignal(SIGALRM, SigAlarm);

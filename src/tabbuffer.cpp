@@ -469,16 +469,13 @@ void RESTORE_BUFPOSITION(Buffer *sbufp) {
  * namedBuffer: Select buffer which have specified name
  */
 Buffer *namedBuffer(Buffer *first, char *name) {
-  if (first->buffername == name) {
+  if (first->layout.title == name) {
     return first;
   }
   for (auto buf = first; buf->nextBuffer != nullptr; buf = buf->nextBuffer) {
-    if (buf->nextBuffer->buffername == name) {
+    if (buf->nextBuffer->layout.title == name) {
       return buf->nextBuffer;
     }
   }
   return nullptr;
 }
-
-
-
