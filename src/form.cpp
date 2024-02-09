@@ -324,7 +324,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
 
   auto save = new Buffer(0);
   *save = *buf;
-  gotoLine(buf, a->start.line);
+  buf->layout.gotoLine(a->start.line);
   switch (form->type) {
   case FORM_TEXTAREA:
   case FORM_INPUT_TEXT:
@@ -342,7 +342,8 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
   switch (form->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
-    if (buf->layout.currentLine == NULL || spos >= buf->layout.currentLine->len || spos < 0)
+    if (buf->layout.currentLine == NULL ||
+        spos >= buf->layout.currentLine->len || spos < 0)
       break;
     if (form->checked)
       buf->layout.currentLine->lineBuf[spos] = '*';
@@ -403,7 +404,7 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
     break;
   }
   *buf = *save;
-  arrangeLine(buf);
+  buf->layout.arrangeLine();
 }
 
 Str *textfieldrep(Str *s, int width) {

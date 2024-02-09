@@ -210,7 +210,7 @@ void gotoLabel(const char *label) {
   pushHashHist(URLHist, buf->info->currentURL.to_Str().c_str());
   buf->clone->count++;
   pushBuffer(buf);
-  gotoLine(Currentbuf, al->start.line);
+  Currentbuf->layout.gotoLine(al->start.line);
   if (label_topline)
     Currentbuf->layout.topLine =
         Currentbuf->layout.lineSkip(Currentbuf->layout.topLine,
@@ -218,7 +218,7 @@ void gotoLabel(const char *label) {
                                         Currentbuf->layout.topLine->linenumber,
                                     false);
   Currentbuf->layout.pos = al->start.pos;
-  arrangeCursor(Currentbuf);
+  Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   return;
 }

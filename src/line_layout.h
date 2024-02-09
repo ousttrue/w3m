@@ -39,6 +39,18 @@ struct LineLayout {
     }
   }
   Line *lineSkip(Line *line, int offset, int last);
+  void arrangeLine();
+  void cursorUpDown(int n);
+  void gotoLine(int n);
+  void cursorUp0(int n);
+  void cursorUp(int n);
+  void cursorDown0(int n);
+  void cursorDown(int n);
+
+  int columnSkip(int offset);
+  void arrangeCursor();
+  void cursorRight(int n);
+  void cursorLeft(int n);
 
   //
   // viewport

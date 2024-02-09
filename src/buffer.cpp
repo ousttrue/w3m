@@ -182,43 +182,6 @@ static void writeBufferName(Buffer *buf, int n) {
 }
 
 /*
- * gotoLine: go to line number
- */
-void gotoLine(Buffer *buf, int n) {
-  char msg[36];
-  Line *l = buf->layout.firstLine;
-
-  if (l == nullptr)
-    return;
-
-  if (l->linenumber > n) {
-    sprintf(msg, "First line is #%ld", l->linenumber);
-    set_delayed_message(msg);
-    buf->layout.topLine = buf->layout.currentLine = l;
-    return;
-  }
-  if (buf->layout.lastLine->linenumber < n) {
-    l = buf->layout.lastLine;
-    sprintf(msg, "Last line is #%ld", buf->layout.lastLine->linenumber);
-    set_delayed_message(msg);
-    buf->layout.currentLine = l;
-    buf->layout.topLine = buf->layout.lineSkip(buf->layout.currentLine,
-                                               -(buf->layout.LINES - 1), false);
-    return;
-  }
-  for (; l != nullptr; l = l->next) {
-    if (l->linenumber >= n) {
-      buf->layout.currentLine = l;
-      if (n < buf->layout.topLine->linenumber ||
-          buf->layout.topLine->linenumber + buf->layout.LINES <= n)
-        buf->layout.topLine =
-            buf->layout.lineSkip(l, -(buf->layout.LINES + 1) / 2, false);
-      break;
-    }
-  }
-}
-
-/*
  * gotoRealLine: go to real line number
  */
 void gotoRealLine(Buffer *buf, int n) {
@@ -445,26 +408,29 @@ void reshapeBuffer(Buffer *buf) {
     buf->layout.pos = sbuf->layout.pos + cur->bpos;
     while (cur->bpos && cur->prev)
       cur = cur->prev;
-    if (cur->real_linenumber > 0)
+    if (cur->real_linenumber > 0) {
       gotoRealLine(buf, cur->real_linenumber);
-    else
-      gotoLine(buf, cur->linenumber);
+    } else {
+      buf->layout.gotoLine(cur->linenumber);
+    }
     n = (buf->layout.currentLine->linenumber -
          buf->layout.topLine->linenumber) -
         (cur->linenumber - sbuf->layout.topLine->linenumber);
     if (n) {
       buf->layout.topLine = buf->layout.lineSkip(buf->layout.topLine, n, false);
-      if (cur->real_linenumber > 0)
+      if (cur->real_linenumber > 0) {
         gotoRealLine(buf, cur->real_linenumber);
-      else
-        gotoLine(buf, cur->linenumber);
+      } else {
+        buf->layout.gotoLine(cur->linenumber);
+      }
     }
     buf->layout.pos -= buf->layout.currentLine->bpos;
-    if (FoldLine && !is_html_type(buf->info->type))
+    if (FoldLine && !is_html_type(buf->info->type)) {
       buf->layout.currentColumn = 0;
-    else
+    } else {
       buf->layout.currentColumn = sbuf->layout.currentColumn;
-    arrangeCursor(buf);
+    }
+    buf->layout.arrangeCursor();
   }
   if (buf->check_url) {
     chkURLBuffer(buf);
@@ -722,7 +688,7 @@ void shiftvisualpos(Buffer *buf, int shift) {
     buf->layout.visualpos = l->bwidth + buf->layout.COLS - 1;
   else if (buf->layout.visualpos - l->bwidth < 0)
     buf->layout.visualpos = l->bwidth;
-  arrangeLine(buf);
+  buf->layout.arrangeLine();
   if (buf->layout.visualpos - l->bwidth == -shift && buf->layout.cursorX == 0)
     buf->layout.visualpos = l->bwidth;
 }
@@ -908,8 +874,8 @@ void nextY(int d) {
 
   if (pan == nullptr)
     return;
-  gotoLine(Currentbuf, pan->start.line);
-  arrangeLine(Currentbuf);
+  Currentbuf->layout.gotoLine(pan->start.line);
+  Currentbuf->layout.arrangeLine();
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -964,9 +930,9 @@ void nextX(int d, int dy) {
 
   if (pan == nullptr)
     return;
-  gotoLine(Currentbuf, y);
+  Currentbuf->layout.gotoLine(y);
   Currentbuf->layout.pos = pan->start.pos;
-  arrangeCursor(Currentbuf);
+  Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1047,9 +1013,9 @@ _end:
   if (an == nullptr || an->hseq < 0)
     return;
   po = hl->marks + an->hseq;
-  gotoLine(Currentbuf, po->line);
+  Currentbuf->layout.gotoLine(po->line);
   Currentbuf->layout.pos = po->pos;
-  arrangeCursor(Currentbuf);
+  Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1130,9 +1096,9 @@ _end:
   if (an == nullptr || an->hseq < 0)
     return;
   po = &hl->marks[an->hseq];
-  gotoLine(Currentbuf, po->line);
+  Currentbuf->layout.gotoLine(po->line);
   Currentbuf->layout.pos = po->pos;
-  arrangeCursor(Currentbuf);
+  Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1156,28 +1122,33 @@ void _movL(int n) {
   int i, m = searchKeyNum();
   if (Currentbuf->layout.firstLine == nullptr)
     return;
-  for (i = 0; i < m; i++)
-    cursorLeft(Currentbuf, n);
+  for (i = 0; i < m; i++) {
+    Currentbuf->layout.cursorLeft(n);
+  }
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Move cursor downward */
 void _movD(int n) {
   int i, m = searchKeyNum();
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr) {
     return;
-  for (i = 0; i < m; i++)
-    cursorDown(Currentbuf, n);
+  }
+  for (i = 0; i < m; i++) {
+    Currentbuf->layout.cursorDown(n);
+  }
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* move cursor upward */
 void _movU(int n) {
   int i, m = searchKeyNum();
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr) {
     return;
-  for (i = 0; i < m; i++)
-    cursorUp(Currentbuf, n);
+  }
+  for (i = 0; i < m; i++) {
+    Currentbuf->layout.cursorUp(n);
+  }
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1186,8 +1157,9 @@ void _movR(int n) {
   int i, m = searchKeyNum();
   if (Currentbuf->layout.firstLine == nullptr)
     return;
-  for (i = 0; i < m; i++)
-    cursorRight(Currentbuf, n);
+  for (i = 0; i < m; i++){
+    Currentbuf->layout.cursorRight( n);
+  }
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1249,7 +1221,7 @@ void _goLine(const char *l) {
     Currentbuf->layout.currentLine = Currentbuf->layout.lastLine;
   } else
     gotoRealLine(Currentbuf, atoi(l));
-  arrangeCursor(Currentbuf);
+  Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

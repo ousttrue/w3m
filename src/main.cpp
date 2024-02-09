@@ -357,7 +357,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
       al = searchURLLabel(Currentbuf, label.c_str());
     }
     if (al) {
-      gotoLine(Currentbuf, al->start.line);
+      Currentbuf->layout.gotoLine( al->start.line);
       if (label_topline)
         Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
             Currentbuf->layout.topLine,
@@ -365,7 +365,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
                 Currentbuf->layout.topLine->linenumber,
             false);
       Currentbuf->layout.pos = al->start.pos;
-      arrangeCursor(Currentbuf);
+      Currentbuf->layout.arrangeCursor();
     }
   }
   displayBuffer(Currentbuf, B_NORMAL);

@@ -183,7 +183,7 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
         Anchor *a;
         a = searchURLLabel(buf, pu.label.c_str());
         if (a != NULL) {
-          gotoLine(buf, a->start.line);
+          buf->layout.gotoLine( a->start.line);
           if (label_topline)
             buf->layout.topLine =
                 buf->layout.lineSkip(buf->layout.topLine,
@@ -191,13 +191,13 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
                                          buf->layout.topLine->linenumber,
                                      false);
           buf->layout.pos = a->start.pos;
-          arrangeCursor(buf);
+          buf->layout.arrangeCursor();
         }
       } else { /* plain text */
         int l = atoi(pu.label.c_str());
         gotoRealLine(buf, l);
         buf->layout.pos = 0;
-        arrangeCursor(buf);
+        buf->layout.arrangeCursor();
       }
     }
   }

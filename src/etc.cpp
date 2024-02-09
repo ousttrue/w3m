@@ -25,31 +25,6 @@
 
 char *personal_document_root = nullptr;
 
-int columnSkip(Buffer *buf, int offset) {
-  int i, maxColumn;
-  int column = buf->layout.currentColumn + offset;
-  int nlines = buf->layout.LINES + 1;
-  Line *l;
-
-  maxColumn = 0;
-  for (i = 0, l = buf->layout.topLine; i < nlines && l != NULL;
-       i++, l = l->next) {
-    if (l->width() - 1 > maxColumn) {
-      maxColumn = l->width() - 1;
-    }
-  }
-  maxColumn -= buf->layout.COLS - 1;
-  if (column < maxColumn)
-    maxColumn = column;
-  if (maxColumn < 0)
-    maxColumn = 0;
-
-  if (buf->layout.currentColumn == maxColumn)
-    return 0;
-  buf->layout.currentColumn = maxColumn;
-  return 1;
-}
-
 const char *lastFileName(const char *path) {
   const char *p, *q;
 

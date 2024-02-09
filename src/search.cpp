@@ -42,9 +42,10 @@ int forwardSearch(Buffer *buf, const char *str) {
       l = l->next;
     }
     buf->layout.pos = pos;
-    if (l != buf->layout.currentLine)
-      gotoLine(buf, l->linenumber);
-    arrangeCursor(buf);
+    if (l != buf->layout.currentLine) {
+      buf->layout.gotoLine(l->linenumber);
+    }
+    buf->layout.arrangeCursor();
     l->set_mark(pos, pos + last - first);
     return SR_FOUND;
   }
@@ -68,8 +69,8 @@ int forwardSearch(Buffer *buf, const char *str) {
       }
       buf->layout.pos = pos;
       buf->layout.currentLine = l;
-      gotoLine(buf, l->linenumber);
-      arrangeCursor(buf);
+      buf->layout.gotoLine(l->linenumber);
+      buf->layout.arrangeCursor();
       l->set_mark(pos, pos + last - first);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
@@ -126,9 +127,10 @@ int backwardSearch(Buffer *buf, const char *str) {
         l = l->next;
       }
       buf->layout.pos = pos;
-      if (l != buf->layout.currentLine)
-        gotoLine(buf, l->linenumber);
-      arrangeCursor(buf);
+      if (l != buf->layout.currentLine) {
+        buf->layout.gotoLine(l->linenumber);
+      }
+      buf->layout.arrangeCursor();
       l->set_mark(pos, pos + found_last - found);
       return SR_FOUND;
     }
@@ -161,8 +163,8 @@ int backwardSearch(Buffer *buf, const char *str) {
         l = l->next;
       }
       buf->layout.pos = pos;
-      gotoLine(buf, l->linenumber);
-      arrangeCursor(buf);
+      buf->layout.gotoLine(l->linenumber);
+      buf->layout.arrangeCursor();
       l->set_mark(pos, pos + found_last - found);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
@@ -290,7 +292,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
         Currentbuf->layout.pos -= 1;
         SAVE_BUFPOSITION(sbuf);
       }
-      arrangeCursor(Currentbuf);
+      Currentbuf->layout.arrangeCursor();
       displayBuffer(Currentbuf, B_FORCE_REDRAW);
       clear_mark(Currentbuf->layout.currentLine);
       return -1;
@@ -298,9 +300,9 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
     RESTORE_BUFPOSITION(sbuf);
-    arrangeCursor(Currentbuf);
+    Currentbuf->layout.arrangeCursor();
     srchcore(str, searchRoutine);
-    arrangeCursor(Currentbuf);
+    Currentbuf->layout.arrangeCursor();
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   clear_mark(Currentbuf->layout.currentLine);
