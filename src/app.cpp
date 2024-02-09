@@ -115,9 +115,9 @@ void mainLoop() {
     if (popAddDownloadList()) {
       ldDL();
     }
-    if (Currentbuf->submit) {
-      Anchor *a = Currentbuf->submit;
-      Currentbuf->submit = NULL;
+    if (Currentbuf->layout.submit) {
+      Anchor *a = Currentbuf->layout.submit;
+      Currentbuf->layout.submit = NULL;
       Currentbuf->layout.gotoLine(a->start.line);
       Currentbuf->layout.pos = a->start.pos;
       _followForm(true);

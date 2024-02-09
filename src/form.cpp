@@ -764,7 +764,7 @@ void preFormUpdateBuffer(Buffer *buf) {
                (fi->name && !Strcmp_charp(fi->name, pi->name))) &&
               (!pi->value || !*pi->value ||
                (fi->value && !Strcmp_charp(fi->value, pi->value))))
-            buf->submit = a;
+            buf->layout.submit = a;
           continue;
         }
         if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))

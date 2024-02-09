@@ -471,7 +471,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
        * Location: header. In this case, buf->form_submit must not be set
        * because the page is not loaded by POST method but GET method.
        */
-      buf->form_submit = save_submit_formlist(fi);
+      buf->layout.form_submit = save_submit_formlist(fi);
     }
   } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
               (!Strcmp_charp(fi->parent->action, "map") ||

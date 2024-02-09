@@ -165,9 +165,9 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
     break;
   }
 
-  if (buf->buffername == NULL || buf->buffername[0] == '\0') {
+  if (buf->buffername.empty() || buf->buffername[0] == '\0') {
     buf->buffername = buf->info->getHeader("Subject:");
-    if (buf->buffername == NULL && buf->info->filename != NULL)
+    if (buf->buffername.empty() && buf->info->filename != NULL)
       buf->buffername = lastFileName(buf->info->filename);
   }
   if (buf->info->currentURL.schema == SCM_UNKNOWN)
@@ -454,7 +454,7 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
   t_buf->info->filename = hr->url.real_file.size()
                               ? Strnew(hr->url.real_file)->ptr
                               : Strnew(hr->url.file)->ptr;
-  t_buf->ssl_certificate = (char *)f.ssl_certificate;
+  t_buf->info->ssl_certificate = (char *)f.ssl_certificate;
 
   auto b = loadSomething(&f, proc, t_buf, hr->url, real_type);
   // if (header_string)

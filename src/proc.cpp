@@ -571,7 +571,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
   if (fn == nullptr || /* Behaving as a pager */
       (Currentbuf->info->type == nullptr &&
-       Currentbuf->edit == nullptr) || /* Reading shell */
+       Currentbuf->info->edit == nullptr) || /* Reading shell */
       Currentbuf->info->real_schema != SCM_LOCAL ||
       Currentbuf->info->currentURL.file == "-" /* file is std input  */
   ) {
@@ -580,9 +580,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
   }
 
   Str *cmd;
-  if (Currentbuf->edit) {
+  if (Currentbuf->info->edit) {
     cmd =
-        unquote_mailcap(Currentbuf->edit, Currentbuf->info->real_type, fn,
+        unquote_mailcap(Currentbuf->info->edit, Currentbuf->info->real_type, fn,
                         Currentbuf->info->getHeader("Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
@@ -930,7 +930,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
       (Str_form_quote(localCookie()))->ptr,
       (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
       (Str_form_quote(Strnew(Currentbuf->info->currentURL.to_Str())))->ptr,
-      (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
+      (Str_form_quote(Strnew(Currentbuf->buffername)))->ptr);
   request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
@@ -1143,7 +1143,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
       buf->info->real_type = "text/plain";
     else
       buf->info->real_type = Currentbuf->info->real_type;
-    buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
+    buf->buffername =
+        Sprintf("source of %s", Currentbuf->buffername.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else if (!strcasecmp(Currentbuf->info->type, "text/plain")) {
@@ -1153,7 +1154,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
       buf->info->real_type = "text/html";
     else
       buf->info->real_type = Currentbuf->info->real_type;
-    buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
+    buf->buffername =
+        Sprintf("HTML view of %s", Currentbuf->buffername.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else {
@@ -1166,7 +1168,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->clone = Currentbuf->clone;
   buf->clone->count++;
 
-  buf->need_reshape = true;
+  buf->layout.need_reshape = true;
   reshapeBuffer(buf);
   pushBuffer(buf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -1188,14 +1190,14 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   *sbuf = *Currentbuf;
 
   multipart = 0;
-  if (Currentbuf->form_submit) {
-    request = Currentbuf->form_submit->parent;
+  if (Currentbuf->layout.form_submit) {
+    request = Currentbuf->layout.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       Str *query;
       struct stat st;
       multipart = 1;
-      query_from_followform(&query, Currentbuf->form_submit, multipart);
+      query_from_followform(&query, Currentbuf->layout.form_submit, multipart);
       stat(request->body, &st);
       request->length = st.st_size;
     }
@@ -1230,7 +1232,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
       CurrentTab->deleteBuffer(buf);
     }
   }
-  Currentbuf->form_submit = sbuf->form_submit;
+  Currentbuf->layout.form_submit = sbuf->layout.form_submit;
   if (Currentbuf->layout.firstLine) {
     Currentbuf->layout.COPY_BUFROOT_FROM(sbuf->layout);
     Currentbuf->layout.restorePosition(sbuf->layout);
@@ -1240,7 +1242,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document") {
-  Currentbuf->need_reshape = true;
+  Currentbuf->layout.need_reshape = true;
   reshapeBuffer(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

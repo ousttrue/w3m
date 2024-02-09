@@ -10,6 +10,7 @@ struct TabBuffer {
   short x2;
   short y;
   void deleteBuffer(Buffer *delbuf);
+  Buffer *namedBuffer(const char *name);
 };
 #define NO_TABBUFFER ((TabBuffer *)1)
 

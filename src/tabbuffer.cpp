@@ -464,3 +464,21 @@ void SAVE_BUFPOSITION(Buffer *sbufp) {
 void RESTORE_BUFPOSITION(Buffer *sbufp) {
   Currentbuf->layout.COPY_BUFPOSITION_FROM(sbufp->layout);
 }
+
+/*
+ * namedBuffer: Select buffer which have specified name
+ */
+Buffer *namedBuffer(Buffer *first, char *name) {
+  if (first->buffername == name) {
+    return first;
+  }
+  for (auto buf = first; buf->nextBuffer != nullptr; buf = buf->nextBuffer) {
+    if (buf->nextBuffer->buffername == name) {
+      return buf->nextBuffer;
+    }
+  }
+  return nullptr;
+}
+
+
+

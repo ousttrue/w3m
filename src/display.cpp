@@ -163,11 +163,11 @@ static Str *make_lastline_message(Buffer *buf) {
   } else {
     Strcat_charp(msg, "Viewing");
   }
-  if (buf->ssl_certificate) {
+  if (buf->info->ssl_certificate) {
     Strcat_charp(msg, "[SSL]");
   }
   Strcat_charp(msg, " <");
-  Strcat_charp(msg, buf->buffername);
+  Strcat(msg, buf->buffername);
 
   if (s) {
     int l = COLS - 3 - sl;
@@ -193,8 +193,8 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
     buf->layout.height = LASTLINE + 1;
   if ((buf->layout.width != INIT_BUFFER_WIDTH() &&
        (is_html_type(buf->info->type) || FoldLine)) ||
-      buf->need_reshape) {
-    buf->need_reshape = true;
+      buf->layout.need_reshape) {
+    buf->layout.need_reshape = true;
     reshapeBuffer(buf);
   }
 
@@ -248,7 +248,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   standout();
   message(msg->ptr, buf->layout.AbsCursorX(), buf->layout.AbsCursorY());
   standend();
-  term_title(buf->buffername);
+  term_title(buf->buffername.c_str());
   refresh(term_io());
   if (buf != save_current_buf) {
     saveBufferInfo();
@@ -342,14 +342,14 @@ static void redrawNLine(Buffer *buf, int n) {
       if (t == CurrentTab)
         bold();
       addch('[');
-      l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+      l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername.c_str());
       if (l < 0)
         l = 0;
       if (l / 2 > 0)
         addnstr_sup(" ", l / 2);
       if (t == CurrentTab)
         EFFECT_ACTIVE_START;
-      addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+      addnstr(t->currentBuffer->buffername.c_str(), t->x2 - t->x1 - l);
       if (t == CurrentTab)
         EFFECT_ACTIVE_END;
       if ((l + 1) / 2 > 0)

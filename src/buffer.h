@@ -38,26 +38,13 @@ struct Clone {
 };
 
 struct Buffer : public gc_cleanup {
+  std::string buffername;
   std::shared_ptr<HttpResponse> info;
-  const char *buffername = "";
   LineLayout layout = {};
   Buffer *nextBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
-
-  const char *baseTarget = nullptr;
   std::shared_ptr<Clone> clone;
-
-  size_t trbyte = 0;
   bool check_url = false;
-  FormItemList *form_submit = nullptr;
-  const char *edit = nullptr;
-  const char *ssl_certificate = nullptr;
-  char image_flag = 0;
-  char image_loaded = 0;
-
-  // always reshape new buffers to mark URLs
-  bool need_reshape = true;
-  Anchor *submit = nullptr;
   AlarmEvent *event = nullptr;
 
   Buffer(int width);
@@ -82,7 +69,6 @@ extern std::optional<Url> baseURL(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
 
 extern Buffer *nullBuffer(void);
-extern Buffer *namedBuffer(Buffer *first, char *name);
 extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
 extern Buffer *nthBuffer(Buffer *firstbuf, int n);
 extern void gotoRealLine(Buffer *buf, int n);

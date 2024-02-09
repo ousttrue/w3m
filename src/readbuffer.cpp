@@ -3831,7 +3831,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           break;
         case HTML_A:
           p = r = s = NULL;
-          q = buf->baseTarget;
+          q = buf->info->baseTarget;
           t = "";
           hseq = 0;
           id = NULL;
@@ -3941,7 +3941,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           }
 
           if (!form->target)
-            form->target = buf->baseTarget;
+            form->target = buf->info->baseTarget;
           if (a_textarea &&
               parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
             if (textareanumber >= max_textarea) {
@@ -4025,7 +4025,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             buf->info->baseURL = urlParse(p, buf->info->currentURL);
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-            buf->baseTarget = (char *)url_quote_conv(p, buf->document_charset);
+            buf->info->baseTarget = url_quote_conv(p, buf->document_charset);
           break;
         case HTML_META:
           p = q = NULL;
@@ -4184,7 +4184,7 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
     newBuf->buffername = htmlenv1.title;
 
 phase2:
-  newBuf->trbyte = trbyte + linelen;
+  newBuf->info->trbyte = trbyte + linelen;
   TRAP_OFF;
   HTMLlineproc2(newBuf, htmlenv1.buf);
 }

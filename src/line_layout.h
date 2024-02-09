@@ -8,6 +8,9 @@ struct BufferPos;
 struct LineLayout {
   LineLayout();
 
+  // always reshape new buffers to mark URLs
+  bool need_reshape = true;
+
   //
   // lines
   //
@@ -106,4 +109,6 @@ struct LineLayout {
   struct MapList *maplist = nullptr;
   struct HmarkerList *hmarklist = nullptr;
   HmarkerList *imarklist = nullptr;
+  struct FormItemList *form_submit = nullptr;
+  struct Anchor *submit = nullptr;
 };

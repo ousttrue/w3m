@@ -53,17 +53,8 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->layout.maplist = src.layout.maplist;
   this->layout.hmarklist = src.layout.hmarklist;
   this->layout.imarklist = src.layout.imarklist;
-  this->baseTarget = src.baseTarget;
   this->clone = src.clone;
-  this->trbyte = src.trbyte;
   this->check_url = src.check_url;
-  this->form_submit = src.form_submit;
-  this->edit = src.edit;
-  this->ssl_certificate = src.ssl_certificate;
-  this->image_flag = src.image_flag;
-  this->image_loaded = src.image_loaded;
-  this->need_reshape = src.need_reshape;
-  this->submit = src.submit;
   this->event = src.event;
   return *this;
 }
@@ -92,23 +83,6 @@ void discardBuffer(Buffer *buf) {
   if (--buf->clone->count) {
     return;
   }
-}
-
-/*
- * namedBuffer: Select buffer which have specified name
- */
-Buffer *namedBuffer(Buffer *first, char *name) {
-  Buffer *buf;
-
-  if (!strcmp(first->buffername, name)) {
-    return first;
-  }
-  for (buf = first; buf->nextBuffer != nullptr; buf = buf->nextBuffer) {
-    if (!strcmp(buf->nextBuffer->buffername, name)) {
-      return buf->nextBuffer;
-    }
-  }
-  return nullptr;
 }
 
 /*
@@ -361,10 +335,10 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
  * Reshape HTML buffer
  */
 void reshapeBuffer(Buffer *buf) {
-  if (!buf->need_reshape) {
+  if (!buf->layout.need_reshape) {
     return;
   }
-  buf->need_reshape = false;
+  buf->layout.need_reshape = false;
 
   buf->layout.width = INIT_BUFFER_WIDTH();
   if (buf->info->sourcefile.empty()) {
@@ -508,7 +482,7 @@ Buffer *page_info_panel(Buffer *buf) {
     p = url_decode0(buf->info->currentURL.to_Str().c_str());
     Strcat_m_charp(
         tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->buffername),
+        html_quote(buf->buffername.c_str()),
         "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
         buf->info->real_type ? html_quote(buf->info->real_type) : "unknown",
@@ -517,7 +491,7 @@ Buffer *page_info_panel(Buffer *buf) {
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                    Sprintf("%d", all)->ptr,
                    "<tr valign=top><td nowrap>Transferred bytes<td>",
-                   Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, nullptr);
+                   Sprintf("%lu", (unsigned long)buf->info->trbyte)->ptr, nullptr);
 
     a = retrieveCurrentAnchor(buf);
     if (a) {
@@ -574,9 +548,10 @@ Buffer *page_info_panel(Buffer *buf) {
       Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
       // append_frame_info(buf, tmp, f_set, 0);
     }
-    if (buf->ssl_certificate)
+    if (buf->info->ssl_certificate)
       Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-                     html_quote(buf->ssl_certificate), "</pre>\n", nullptr);
+                     html_quote(buf->info->ssl_certificate), "</pre>\n",
+                     nullptr);
   }
 
   Strcat_charp(tmp, "</body></html>");
@@ -595,7 +570,7 @@ void set_buffer_environ(Buffer *buf) {
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->info->sourcefile.c_str());
     set_environ("W3M_FILENAME", buf->info->filename);
-    set_environ("W3M_TITLE", buf->buffername);
+    set_environ("W3M_TITLE", buf->buffername.c_str());
     set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",
                 buf->info->real_type ? buf->info->real_type : "unknown");
@@ -1155,8 +1130,8 @@ void _movR(int n) {
   int i, m = searchKeyNum();
   if (Currentbuf->layout.firstLine == nullptr)
     return;
-  for (i = 0; i < m; i++){
-    Currentbuf->layout.cursorRight( n);
+  for (i = 0; i < m; i++) {
+    Currentbuf->layout.cursorRight(n);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }

@@ -19,6 +19,10 @@ struct HttpResponse {
   const char *filename = nullptr;
   std::string sourcefile;
   std::vector<Url> redirectins;
+  const char *ssl_certificate = nullptr;
+  const char *baseTarget = nullptr;
+  size_t trbyte = 0;
+  const char *edit = nullptr;
 
   ~HttpResponse();
   bool checkRedirection(const Url &pu);
