@@ -44,8 +44,14 @@ struct LineLayout {
   short rootY = 0;
   short COLS = 0;
   short LINES = 0;
+  // COLS/LINES と width height の違いは？
+  short width = 0;
+  short height = 0;
   short cursorX = 0;
   short cursorY = 0;
+
+  int pos = 0;
+  int visualpos = 0;
 
   int AbsCursorX() const { return cursorX + rootX; }
   int AbsCursorY() const { return cursorY + rootY; }
@@ -55,5 +61,15 @@ struct LineLayout {
     this->rootY = srcbuf.rootY;
     this->COLS = srcbuf.COLS;
     this->LINES = srcbuf.LINES;
+  }
+
+  void COPY_BUFPOSITION_FROM(const LineLayout &srcbuf) {
+    this->topLine = srcbuf.topLine;
+    this->currentLine = srcbuf.currentLine;
+    this->pos = srcbuf.pos;
+    this->cursorX = srcbuf.cursorX;
+    this->cursorY = srcbuf.cursorY;
+    this->visualpos = srcbuf.visualpos;
+    this->currentColumn = srcbuf.currentColumn;
   }
 };

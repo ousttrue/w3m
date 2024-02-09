@@ -29,7 +29,8 @@
 #include "proto.h"
 #include <unistd.h>
 
-Buffer::Buffer(int width) : width(width) {
+Buffer::Buffer(int width) {
+  this->layout.width = width;
   this->info = std::make_shared<HttpResponse>();
   this->clone = std::make_shared<Clone>();
   // use default from -o mark_all_pages
@@ -41,16 +42,9 @@ Buffer::~Buffer() {}
 Buffer &Buffer::operator=(const Buffer &src) {
   this->info = src.info;
   this->buffername = src.buffername;
-
   this->layout = src.layout;
-
   this->nextBuffer = src.nextBuffer;
   this->linkBuffer = src.linkBuffer;
-  this->width = src.width;
-  this->height = src.height;
-  this->layout.currentColumn = src.layout.currentColumn;
-  this->pos = src.pos;
-  this->visualpos = src.visualpos;
   this->href = src.href;
   this->name = src.name;
   this->img = src.img;
@@ -411,7 +405,7 @@ void reshapeBuffer(Buffer *buf) {
   }
   buf->need_reshape = false;
 
-  buf->width = INIT_BUFFER_WIDTH();
+  buf->layout.width = INIT_BUFFER_WIDTH();
   if (buf->info->sourcefile.empty()) {
     return;
   }
@@ -443,12 +437,12 @@ void reshapeBuffer(Buffer *buf) {
   else
     loadBuffer(&f, buf);
 
-  buf->height = LASTLINE + 1;
+  buf->layout.height = LASTLINE + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {
     Line *cur = sbuf->layout.currentLine;
     int n;
 
-    buf->pos = sbuf->pos + cur->bpos;
+    buf->layout.pos = sbuf->layout.pos + cur->bpos;
     while (cur->bpos && cur->prev)
       cur = cur->prev;
     if (cur->real_linenumber > 0)
@@ -465,7 +459,7 @@ void reshapeBuffer(Buffer *buf) {
       else
         gotoLine(buf, cur->linenumber);
     }
-    buf->pos -= buf->layout.currentLine->bpos;
+    buf->layout.pos -= buf->layout.currentLine->bpos;
     if (FoldLine && !is_html_type(buf->info->type))
       buf->layout.currentColumn = 0;
     else
@@ -643,7 +637,7 @@ void set_buffer_environ(Buffer *buf) {
                 buf->info->real_type ? buf->info->real_type : "unknown");
   }
   l = buf->layout.currentLine;
-  if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
+  if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
     Anchor *a;
     Url pu;
     char *s = GetWord(buf);
@@ -679,7 +673,7 @@ void set_buffer_environ(Buffer *buf) {
   }
   prev_buf = buf;
   prev_line = l;
-  prev_pos = buf->pos;
+  prev_pos = buf->layout.pos;
 }
 
 char *GetWord(Buffer *buf) {
@@ -700,21 +694,22 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
   if (l == nullptr)
     return nullptr;
   auto p = l->lineBuf;
-  auto e = buf->pos;
-  while (e > 0 && !is_wordchar(getChar(&p[e])))
+  auto e = buf->layout.pos;
+  while (e > 0 && !is_wordchar(p[e]))
     prevChar(e, l);
-  if (!is_wordchar(getChar(&p[e])))
+  if (!is_wordchar(p[e]))
     return nullptr;
   b = e;
   while (b > 0) {
     int tmp = b;
     prevChar(tmp, l);
-    if (!is_wordchar(getChar(&p[tmp])))
+    if (!is_wordchar(p[tmp]))
       break;
     b = tmp;
   }
-  while (e < l->len && is_wordchar(getChar(&p[e])))
-    nextChar(e, l);
+  while (e < l->len && is_wordchar(p[e])) {
+    e++;
+  }
   *spos = b;
   *epos = e;
   return &p[b];
@@ -722,14 +717,14 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
 
 void shiftvisualpos(Buffer *buf, int shift) {
   Line *l = buf->layout.currentLine;
-  buf->visualpos -= shift;
-  if (buf->visualpos - l->bwidth >= buf->layout.COLS)
-    buf->visualpos = l->bwidth + buf->layout.COLS - 1;
-  else if (buf->visualpos - l->bwidth < 0)
-    buf->visualpos = l->bwidth;
+  buf->layout.visualpos -= shift;
+  if (buf->layout.visualpos - l->bwidth >= buf->layout.COLS)
+    buf->layout.visualpos = l->bwidth + buf->layout.COLS - 1;
+  else if (buf->layout.visualpos - l->bwidth < 0)
+    buf->layout.visualpos = l->bwidth;
   arrangeLine(buf);
-  if (buf->visualpos - l->bwidth == -shift && buf->layout.cursorX == 0)
-    buf->visualpos = l->bwidth;
+  if (buf->layout.visualpos - l->bwidth == -shift && buf->layout.cursorX == 0)
+    buf->layout.visualpos = l->bwidth;
 }
 
 #define DICTBUFFERNAME "*dictionary*"
@@ -887,7 +882,7 @@ void nextY(int d) {
   if (an == nullptr)
     an = retrieveCurrentForm(Currentbuf);
 
-  x = Currentbuf->pos;
+  x = Currentbuf->layout.pos;
   y = Currentbuf->layout.currentLine->linenumber + d;
   pan = nullptr;
   hseq = -1;
@@ -935,7 +930,7 @@ void nextX(int d, int dy) {
     an = retrieveCurrentForm(Currentbuf);
 
   l = Currentbuf->layout.currentLine;
-  x = Currentbuf->pos;
+  x = Currentbuf->layout.pos;
   y = l->linenumber;
   pan = nullptr;
   for (i = 0; i < n; i++) {
@@ -970,7 +965,7 @@ void nextX(int d, int dy) {
   if (pan == nullptr)
     return;
   gotoLine(Currentbuf, y);
-  Currentbuf->pos = pan->start.pos;
+  Currentbuf->layout.pos = pan->start.pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -993,7 +988,7 @@ void _prevA(int visited) {
     an = retrieveCurrentForm(Currentbuf);
 
   y = Currentbuf->layout.currentLine->linenumber;
-  x = Currentbuf->pos;
+  x = Currentbuf->layout.pos;
 
   if (visited == true) {
     n = hl->nmark;
@@ -1053,7 +1048,7 @@ _end:
     return;
   po = hl->marks + an->hseq;
   gotoLine(Currentbuf, po->line);
-  Currentbuf->pos = po->pos;
+  Currentbuf->layout.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1076,7 +1071,7 @@ void _nextA(int visited) {
     an = retrieveCurrentForm(Currentbuf);
 
   y = Currentbuf->layout.currentLine->linenumber;
-  x = Currentbuf->pos;
+  x = Currentbuf->layout.pos;
 
   if (visited == true) {
     n = hl->nmark;
@@ -1136,7 +1131,7 @@ _end:
     return;
   po = &hl->marks[an->hseq];
   gotoLine(Currentbuf, po->line);
-  Currentbuf->pos = po->pos;
+  Currentbuf->layout.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1212,7 +1207,7 @@ int prev_nonnull_line(Line *line) {
 
   Currentbuf->layout.currentLine = l;
   if (l != line)
-    Currentbuf->pos = Currentbuf->layout.currentLine->len;
+    Currentbuf->layout.pos = Currentbuf->layout.currentLine->len;
   return 0;
 }
 
@@ -1227,7 +1222,7 @@ int next_nonnull_line(Line *line) {
 
   Currentbuf->layout.currentLine = l;
   if (l != line)
-    Currentbuf->pos = 0;
+    Currentbuf->layout.pos = 0;
   return 0;
 }
 
@@ -1242,7 +1237,7 @@ void _goLine(const char *l) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
-  Currentbuf->pos = 0;
+  Currentbuf->layout.pos = 0;
   if (((*l == '^') || (*l == '$')) && prec_num) {
     gotoRealLine(Currentbuf, prec_num);
   } else if (*l == '^') {

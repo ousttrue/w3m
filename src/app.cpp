@@ -119,7 +119,7 @@ void mainLoop() {
       Anchor *a = Currentbuf->submit;
       Currentbuf->submit = NULL;
       gotoLine(Currentbuf, a->start.line);
-      Currentbuf->pos = a->start.pos;
+      Currentbuf->layout.pos = a->start.pos;
       _followForm(true);
       continue;
     }

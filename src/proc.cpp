@@ -361,7 +361,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
 
   for (i = 0; i < n; i++) {
     pline = Currentbuf->layout.currentLine;
-    ppos = Currentbuf->pos;
+    ppos = Currentbuf->layout.pos;
 
     if (prev_nonnull_line(Currentbuf->layout.currentLine) < 0)
       goto end;
@@ -369,31 +369,33 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
     while (1) {
       l = Currentbuf->layout.currentLine;
       lb = l->lineBuf.data();
-      while (Currentbuf->pos > 0) {
-        int tmp = Currentbuf->pos;
+      while (Currentbuf->layout.pos > 0) {
+        int tmp = Currentbuf->layout.pos;
         prevChar(tmp, l);
-        if (is_wordchar(getChar(&lb[tmp])))
+        if (is_wordchar(lb[tmp])) {
           break;
-        Currentbuf->pos = tmp;
+        }
+        Currentbuf->layout.pos = tmp;
       }
-      if (Currentbuf->pos > 0)
+      if (Currentbuf->layout.pos > 0)
         break;
       if (prev_nonnull_line(Currentbuf->layout.currentLine->prev) < 0) {
         Currentbuf->layout.currentLine = pline;
-        Currentbuf->pos = ppos;
+        Currentbuf->layout.pos = ppos;
         goto end;
       }
-      Currentbuf->pos = Currentbuf->layout.currentLine->len;
+      Currentbuf->layout.pos = Currentbuf->layout.currentLine->len;
     }
 
     l = Currentbuf->layout.currentLine;
     lb = l->lineBuf.data();
-    while (Currentbuf->pos > 0) {
-      int tmp = Currentbuf->pos;
+    while (Currentbuf->layout.pos > 0) {
+      int tmp = Currentbuf->layout.pos;
       prevChar(tmp, l);
-      if (!is_wordchar(getChar(&lb[tmp])))
+      if (!is_wordchar(lb[tmp])) {
         break;
-      Currentbuf->pos = tmp;
+      }
+      Currentbuf->layout.pos = tmp;
     }
   }
 end:
@@ -412,29 +414,31 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
 
   for (i = 0; i < n; i++) {
     pline = Currentbuf->layout.currentLine;
-    ppos = Currentbuf->pos;
+    ppos = Currentbuf->layout.pos;
 
     if (next_nonnull_line(Currentbuf->layout.currentLine) < 0)
       goto end;
 
     l = Currentbuf->layout.currentLine;
     lb = l->lineBuf.data();
-    while (Currentbuf->pos < l->len &&
-           is_wordchar(getChar(&lb[Currentbuf->pos])))
-      nextChar(Currentbuf->pos, l);
+    while (Currentbuf->layout.pos < l->len &&
+           is_wordchar(lb[Currentbuf->layout.pos])) {
+      nextChar(Currentbuf->layout.pos, l);
+    }
 
     while (1) {
-      while (Currentbuf->pos < l->len &&
-             !is_wordchar(getChar(&lb[Currentbuf->pos])))
-        nextChar(Currentbuf->pos, l);
-      if (Currentbuf->pos < l->len)
+      while (Currentbuf->layout.pos < l->len &&
+             !is_wordchar(lb[Currentbuf->layout.pos])) {
+        nextChar(Currentbuf->layout.pos, l);
+      }
+      if (Currentbuf->layout.pos < l->len)
         break;
       if (next_nonnull_line(Currentbuf->layout.currentLine->next) < 0) {
         Currentbuf->layout.currentLine = pline;
-        Currentbuf->pos = ppos;
+        Currentbuf->layout.pos = ppos;
         goto end;
       }
-      Currentbuf->pos = 0;
+      Currentbuf->layout.pos = 0;
       l = Currentbuf->layout.currentLine;
       lb = l->lineBuf.data();
     }
@@ -540,7 +544,7 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
   while (Currentbuf->layout.currentLine->prev &&
          Currentbuf->layout.currentLine->bpos)
     cursorUp0(Currentbuf, 1);
-  Currentbuf->pos = 0;
+  Currentbuf->layout.pos = 0;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -552,7 +556,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line") {
   while (Currentbuf->layout.currentLine->next &&
          Currentbuf->layout.currentLine->next->bpos)
     cursorDown0(Currentbuf, 1);
-  Currentbuf->pos = Currentbuf->layout.currentLine->len - 1;
+  Currentbuf->layout.pos = Currentbuf->layout.currentLine->len - 1;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -712,7 +716,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
   } while (an == nullptr);
 
   gotoLine(Currentbuf, po->line);
-  Currentbuf->pos = po->pos;
+  Currentbuf->layout.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -749,7 +753,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
   } while (an == nullptr);
 
   gotoLine(Currentbuf, po->line);
-  Currentbuf->pos = po->pos;
+  Currentbuf->layout.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -757,8 +761,6 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link") {
   HmarkerList *hl = Currentbuf->hmarklist;
-  BufferPoint *po;
-  Anchor *an;
 
   int n = searchKeyNum();
   if (n < 0 || n > hl->nmark)
@@ -769,7 +771,9 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   if (!hl || hl->nmark == 0)
     return;
 
-  po = hl->marks + n - 1;
+  auto po = hl->marks + n - 1;
+
+  Anchor *an = nullptr;
   if (Currentbuf->href) {
     an = Currentbuf->href->retrieveAnchor(po->line, po->pos);
   }
@@ -780,7 +784,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
     return;
 
   gotoLine(Currentbuf, po->line);
-  Currentbuf->pos = po->pos;
+  Currentbuf->layout.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }

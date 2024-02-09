@@ -26,7 +26,7 @@ int forwardSearch(Buffer *buf, const char *str) {
     return SR_NOTFOUND;
   }
 
-  auto pos = buf->pos;
+  auto pos = buf->layout.pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -41,7 +41,7 @@ int forwardSearch(Buffer *buf, const char *str) {
       pos -= l->len;
       l = l->next;
     }
-    buf->pos = pos;
+    buf->layout.pos = pos;
     if (l != buf->layout.currentLine)
       gotoLine(buf, l->linenumber);
     arrangeCursor(buf);
@@ -66,7 +66,7 @@ int forwardSearch(Buffer *buf, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->pos = pos;
+      buf->layout.pos = pos;
       buf->layout.currentLine = l;
       gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
@@ -93,7 +93,7 @@ int backwardSearch(Buffer *buf, const char *str) {
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = buf->pos;
+  pos = buf->layout.pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -125,7 +125,7 @@ int backwardSearch(Buffer *buf, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->pos = pos;
+      buf->layout.pos = pos;
       if (l != buf->layout.currentLine)
         gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
@@ -160,7 +160,7 @@ int backwardSearch(Buffer *buf, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->pos = pos;
+      buf->layout.pos = pos;
       gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
       l->set_mark(pos, pos + found_last - found);
@@ -243,13 +243,13 @@ void srch_nxtprv(int reverse) {
   if (searchRoutine == backwardSearch)
     reverse ^= 1;
   if (reverse == 0)
-    Currentbuf->pos += 1;
+    Currentbuf->layout.pos += 1;
   result = srchcore(SearchString, routine[reverse]);
   if (result & SR_FOUND)
     clear_mark(Currentbuf->layout.currentLine);
   else {
     if (reverse == 0)
-      Currentbuf->pos -= 1;
+      Currentbuf->layout.pos -= 1;
   }
   displayBuffer(Currentbuf, B_NORMAL);
   disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
@@ -283,11 +283,11 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   if (do_next_search) {
     if (*str) {
       if (searchRoutine == forwardSearch)
-        Currentbuf->pos += 1;
+        Currentbuf->layout.pos += 1;
       SAVE_BUFPOSITION(sbuf);
       if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
-        Currentbuf->pos -= 1;
+        Currentbuf->layout.pos -= 1;
         SAVE_BUFPOSITION(sbuf);
       }
       arrangeCursor(Currentbuf);
@@ -338,14 +338,14 @@ void srch(int (*func)(Buffer *, const char *), const char *prompt) {
     }
     disp = true;
   }
-  pos = Currentbuf->pos;
+  pos = Currentbuf->layout.pos;
   if (func == forwardSearch)
-    Currentbuf->pos += 1;
+    Currentbuf->layout.pos += 1;
   result = srchcore(str, func);
   if (result & SR_FOUND)
     clear_mark(Currentbuf->layout.currentLine);
   else
-    Currentbuf->pos = pos;
+    Currentbuf->layout.pos = pos;
   displayBuffer(Currentbuf, B_NORMAL);
   if (disp)
     disp_srchresult(result, prompt, str);

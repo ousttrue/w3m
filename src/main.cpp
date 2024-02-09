@@ -364,7 +364,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
                      Currentbuf->layout.currentLine->linenumber -
                          Currentbuf->layout.topLine->linenumber,
                      false);
-      Currentbuf->pos = al->start.pos;
+      Currentbuf->layout.pos = al->start.pos;
       arrangeCursor(Currentbuf);
     }
   }

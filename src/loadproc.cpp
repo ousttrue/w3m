@@ -189,13 +189,13 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
                                            buf->layout.currentLine->linenumber -
                                                buf->layout.topLine->linenumber,
                                            false);
-          buf->pos = a->start.pos;
+          buf->layout.pos = a->start.pos;
           arrangeCursor(buf);
         }
       } else { /* plain text */
         int l = atoi(pu.label.c_str());
         gotoRealLine(buf, l);
-        buf->pos = 0;
+        buf->layout.pos = 0;
         arrangeCursor(buf);
       }
     }

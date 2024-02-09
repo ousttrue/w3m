@@ -11,13 +11,13 @@ void save_buffer_position(Buffer *buf) {
     return;
   if (b && b->top_linenumber == buf->layout.TOP_LINENUMBER() &&
       b->cur_linenumber == buf->layout.CUR_LINENUMBER() &&
-      b->currentColumn == buf->layout.currentColumn && b->pos == buf->pos)
+      b->currentColumn == buf->layout.currentColumn && b->pos == buf->layout.pos)
     return;
   b = (BufferPos *)New(BufferPos);
   b->top_linenumber = buf->layout.TOP_LINENUMBER();
   b->cur_linenumber = buf->layout.CUR_LINENUMBER();
   b->currentColumn = buf->layout.currentColumn;
-  b->pos = buf->pos;
+  b->pos = buf->layout.pos;
   b->bpos = buf->layout.currentLine ? buf->layout.currentLine->bpos : 0;
   b->next = NULL;
   b->prev = buf->undo;
@@ -35,7 +35,7 @@ void resetPos(BufferPos *b) {
   cur->bpos = b->bpos;
 
   buf->layout.currentLine = cur;
-  buf->pos = b->pos;
+  buf->layout.pos = b->pos;
   buf->layout.currentColumn = b->currentColumn;
   restorePosition(Currentbuf, buf);
   Currentbuf->undo = b;

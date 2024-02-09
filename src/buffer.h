@@ -44,10 +44,6 @@ struct Buffer : public gc_cleanup {
   LineLayout layout = {};
   Buffer *nextBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
-  short width = 0;
-  short height = 0;
-  int pos = 0;
-  int visualpos = 0;
   AnchorList *href = nullptr;
   AnchorList *name = nullptr;
   AnchorList *img = nullptr;
@@ -82,25 +78,15 @@ struct Buffer : public gc_cleanup {
   Buffer &operator=(const Buffer &src);
 };
 
-inline void COPY_BUFPOSITION(Buffer *dstbuf, Buffer *srcbuf) {
-  (dstbuf)->layout.topLine = (srcbuf)->layout.topLine;
-  (dstbuf)->layout.currentLine = (srcbuf)->layout.currentLine;
-  (dstbuf)->pos = (srcbuf)->pos;
-  (dstbuf)->layout.cursorX = (srcbuf)->layout.cursorX;
-  (dstbuf)->layout.cursorY = (srcbuf)->layout.cursorY;
-  (dstbuf)->visualpos = (srcbuf)->visualpos;
-  (dstbuf)->layout.currentColumn = (srcbuf)->layout.currentColumn;
-}
-
 void gotoLine(Buffer *buf, int n);
 void _followForm(int submit);
 void set_buffer_environ(Buffer *buf);
 char *GetWord(Buffer *buf);
 char *getCurWord(Buffer *buf, int *spos, int *epos);
 
-#define nextChar(s, l) (s)++
-#define prevChar(s, l) (s)--
-#define getChar(p) ((int)*(p))
+inline void nextChar(int &s, Line *l) { s++; }
+inline void prevChar(int &s, Line *l) { s--; }
+// #define getChar(p) ((int)*(p))
 
 extern void discardBuffer(Buffer *buf);
 extern std::optional<Url> baseURL(Buffer *buf);

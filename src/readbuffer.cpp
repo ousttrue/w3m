@@ -4142,7 +4142,7 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   forms = NULL;
   cur_hseq = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
+  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->layout.width, 0);
 
   htmlenv1.buf = newTextLineList();
 

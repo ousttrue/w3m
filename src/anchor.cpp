@@ -145,19 +145,19 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
 Anchor *retrieveCurrentAnchor(Buffer *buf) {
   if (!buf->layout.currentLine || !buf->href)
     return NULL;
-  return buf->href->retrieveAnchor(buf->layout.currentLine->linenumber, buf->pos);
+  return buf->href->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *retrieveCurrentImg(Buffer *buf) {
   if (!buf->layout.currentLine || !buf->img)
     return NULL;
-  return buf->img->retrieveAnchor(buf->layout.currentLine->linenumber, buf->pos);
+  return buf->img->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *retrieveCurrentForm(Buffer *buf) {
   if (!buf->layout.currentLine || !buf->formitem)
     return NULL;
-  return buf->formitem->retrieveAnchor(buf->layout.currentLine->linenumber, buf->pos);
+  return buf->formitem->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *searchAnchor(AnchorList *al, const char *str) {

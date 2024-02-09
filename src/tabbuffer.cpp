@@ -202,7 +202,7 @@ void gotoLabel(const char *label) {
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
   }
-  buf = new Buffer(Currentbuf->width);
+  buf = new Buffer(Currentbuf->layout.width);
   *buf = *Currentbuf;
   for (i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
@@ -212,11 +212,12 @@ void gotoLabel(const char *label) {
   pushBuffer(buf);
   gotoLine(Currentbuf, al->start.line);
   if (label_topline)
-    Currentbuf->layout.topLine = lineSkip(Currentbuf, Currentbuf->layout.topLine,
-                                   Currentbuf->layout.currentLine->linenumber -
-                                       Currentbuf->layout.topLine->linenumber,
-                                   false);
-  Currentbuf->pos = al->start.pos;
+    Currentbuf->layout.topLine =
+        lineSkip(Currentbuf, Currentbuf->layout.topLine,
+                 Currentbuf->layout.currentLine->linenumber -
+                     Currentbuf->layout.topLine->linenumber,
+                 false);
+  Currentbuf->layout.pos = al->start.pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   return;
@@ -384,7 +385,7 @@ void _newT() {
   if (!tag)
     return;
 
-  buf = new Buffer(Currentbuf->width);
+  buf = new Buffer(Currentbuf->layout.width);
   *buf = *Currentbuf;
   buf->nextBuffer = nullptr;
   for (i = 0; i < MAX_LB; i++)
@@ -457,5 +458,9 @@ void followTab(TabBuffer *tab) {
 /* show current URL */
 Str *currentURL(void) { return Strnew(Currentbuf->info->currentURL.to_Str()); }
 
-void SAVE_BUFPOSITION(Buffer *sbufp) { COPY_BUFPOSITION(sbufp, Currentbuf); }
-void RESTORE_BUFPOSITION(Buffer *sbufp) { COPY_BUFPOSITION(Currentbuf, sbufp); }
+void SAVE_BUFPOSITION(Buffer *sbufp) {
+  sbufp->layout.COPY_BUFPOSITION_FROM(Currentbuf->layout);
+}
+void RESTORE_BUFPOSITION(Buffer *sbufp) {
+  Currentbuf->layout.COPY_BUFPOSITION_FROM(sbufp->layout);
+}
