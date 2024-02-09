@@ -47,15 +47,8 @@ struct Buffer : public gc_cleanup {
   short width = 0;
   short height = 0;
   int allLine = 0;
-  int currentColumn = 0;
-  short cursorX = 0;
-  short cursorY = 0;
   int pos = 0;
   int visualpos = 0;
-  short rootX = 0;
-  short rootY = 0;
-  short COLS = 0;
-  short LINES = 0;
   AnchorList *href = nullptr;
   AnchorList *name = nullptr;
   AnchorList *img = nullptr;
@@ -93,21 +86,14 @@ struct Buffer : public gc_cleanup {
                   int realLinenum);
 };
 
-inline void COPY_BUFROOT(Buffer *dstbuf, Buffer *srcbuf) {
-  (dstbuf)->rootX = (srcbuf)->rootX;
-  (dstbuf)->rootY = (srcbuf)->rootY;
-  (dstbuf)->COLS = (srcbuf)->COLS;
-  (dstbuf)->LINES = (srcbuf)->LINES;
-}
-
 inline void COPY_BUFPOSITION(Buffer *dstbuf, Buffer *srcbuf) {
   (dstbuf)->layout.topLine = (srcbuf)->layout.topLine;
   (dstbuf)->layout.currentLine = (srcbuf)->layout.currentLine;
   (dstbuf)->pos = (srcbuf)->pos;
-  (dstbuf)->cursorX = (srcbuf)->cursorX;
-  (dstbuf)->cursorY = (srcbuf)->cursorY;
+  (dstbuf)->layout.cursorX = (srcbuf)->layout.cursorX;
+  (dstbuf)->layout.cursorY = (srcbuf)->layout.cursorY;
   (dstbuf)->visualpos = (srcbuf)->visualpos;
-  (dstbuf)->currentColumn = (srcbuf)->currentColumn;
+  (dstbuf)->layout.currentColumn = (srcbuf)->layout.currentColumn;
 }
 
 void gotoLine(Buffer *buf, int n);

@@ -27,8 +27,8 @@ char *personal_document_root = nullptr;
 
 int columnSkip(Buffer *buf, int offset) {
   int i, maxColumn;
-  int column = buf->currentColumn + offset;
-  int nlines = buf->LINES + 1;
+  int column = buf->layout.currentColumn + offset;
+  int nlines = buf->layout.LINES + 1;
   Line *l;
 
   maxColumn = 0;
@@ -37,15 +37,15 @@ int columnSkip(Buffer *buf, int offset) {
       maxColumn = l->width() - 1;
     }
   }
-  maxColumn -= buf->COLS - 1;
+  maxColumn -= buf->layout.COLS - 1;
   if (column < maxColumn)
     maxColumn = column;
   if (maxColumn < 0)
     maxColumn = 0;
 
-  if (buf->currentColumn == maxColumn)
+  if (buf->layout.currentColumn == maxColumn)
     return 0;
-  buf->currentColumn = maxColumn;
+  buf->layout.currentColumn = maxColumn;
   return 1;
 }
 
@@ -55,7 +55,7 @@ Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
 
   l = currentLineSkip(buf, line, offset, last);
   if (!nextpage_topline)
-    for (i = buf->LINES - 1 - (buf->layout.lastLine->linenumber - l->linenumber);
+    for (i = buf->layout.LINES - 1 - (buf->layout.lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
       ;
   return l;

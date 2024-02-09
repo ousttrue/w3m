@@ -66,8 +66,7 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
   }
 
   if (CurrentTab != NULL && Currentbuf != NULL)
-    message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
+    message(s, Currentbuf->layout.AbsCursorX(), Currentbuf->layout.AbsCursorY());
   else
     message(s, LASTLINE, 0);
   refresh(term_io());

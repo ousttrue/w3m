@@ -31,8 +31,6 @@
 
 Buffer::Buffer(int width) : width(width) {
   this->info = std::make_shared<HttpResponse>();
-  this->COLS = ::COLS;
-  this->LINES = LASTLINE;
   this->clone = std::make_shared<Clone>();
   // use default from -o mark_all_pages
   this->check_url = MarkAllPages;
@@ -43,24 +41,27 @@ Buffer::~Buffer() {}
 Buffer &Buffer::operator=(const Buffer &src) {
   this->info = src.info;
   this->buffername = src.buffername;
-  this->layout.firstLine = src.layout.firstLine;
-  this->layout.topLine = src.layout.topLine;
-  this->layout.currentLine = src.layout.currentLine;
-  this->layout.lastLine = src.layout.lastLine;
+
+  // this->layout.firstLine = src.layout.firstLine;
+  // this->layout.topLine = src.layout.topLine;
+  // this->layout.currentLine = src.layout.currentLine;
+  // this->layout.lastLine = src.layout.lastLine;
+  // this->rootX = src.rootX;
+  // this->rootY = src.rootY;
+  // this->COLS = src.COLS;
+  // this->LINES = src.LINES;
+  // this->cursorX = src.cursorX;
+  // this->cursorY = src.cursorY;
+  this->layout = src.layout;
+
   this->nextBuffer = src.nextBuffer;
   this->linkBuffer = src.linkBuffer;
   this->width = src.width;
   this->height = src.height;
   this->allLine = src.allLine;
-  this->currentColumn = src.currentColumn;
-  this->cursorX = src.cursorX;
-  this->cursorY = src.cursorY;
+  this->layout.currentColumn = src.layout.currentColumn;
   this->pos = src.pos;
   this->visualpos = src.visualpos;
-  this->rootX = src.rootX;
-  this->rootY = src.rootY;
-  this->COLS = src.COLS;
-  this->LINES = src.LINES;
   this->href = src.href;
   this->name = src.name;
   this->img = src.img;
@@ -99,7 +100,8 @@ Buffer *nullBuffer(void) {
  * clearBuffer: clear buffer content
  */
 void clearBuffer(Buffer *buf) {
-  buf->layout.firstLine = buf->layout.topLine = buf->layout.currentLine = buf->layout.lastLine = nullptr;
+  buf->layout.firstLine = buf->layout.topLine = buf->layout.currentLine =
+      buf->layout.lastLine = nullptr;
   buf->allLine = 0;
 }
 
@@ -227,15 +229,16 @@ void gotoLine(Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->layout.lastLine->linenumber);
     set_delayed_message(msg);
     buf->layout.currentLine = l;
-    buf->layout.topLine = lineSkip(buf, buf->layout.currentLine, -(buf->LINES - 1), false);
+    buf->layout.topLine =
+        lineSkip(buf, buf->layout.currentLine, -(buf->layout.LINES - 1), false);
     return;
   }
   for (; l != nullptr; l = l->next) {
     if (l->linenumber >= n) {
       buf->layout.currentLine = l;
       if (n < buf->layout.topLine->linenumber ||
-          buf->layout.topLine->linenumber + buf->LINES <= n)
-        buf->layout.topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+          buf->layout.topLine->linenumber + buf->layout.LINES <= n)
+        buf->layout.topLine = lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
       break;
     }
   }
@@ -262,15 +265,16 @@ void gotoRealLine(Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->layout.lastLine->real_linenumber);
     set_delayed_message(msg);
     buf->layout.currentLine = l;
-    buf->layout.topLine = lineSkip(buf, buf->layout.currentLine, -(buf->LINES - 1), false);
+    buf->layout.topLine =
+        lineSkip(buf, buf->layout.currentLine, -(buf->layout.LINES - 1), false);
     return;
   }
   for (; l != nullptr; l = l->next) {
     if (l->real_linenumber >= n) {
       buf->layout.currentLine = l;
       if (n < buf->layout.topLine->real_linenumber ||
-          buf->layout.topLine->real_linenumber + buf->LINES <= n)
-        buf->layout.topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+          buf->layout.topLine->real_linenumber + buf->layout.LINES <= n)
+        buf->layout.topLine = lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
       break;
     }
   }
@@ -470,7 +474,8 @@ void reshapeBuffer(Buffer *buf) {
       gotoRealLine(buf, cur->real_linenumber);
     else
       gotoLine(buf, cur->linenumber);
-    n = (buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber) -
+    n = (buf->layout.currentLine->linenumber -
+         buf->layout.topLine->linenumber) -
         (cur->linenumber - sbuf->layout.topLine->linenumber);
     if (n) {
       buf->layout.topLine = lineSkip(buf, buf->layout.topLine, n, false);
@@ -481,9 +486,9 @@ void reshapeBuffer(Buffer *buf) {
     }
     buf->pos -= buf->layout.currentLine->bpos;
     if (FoldLine && !is_html_type(buf->info->type))
-      buf->currentColumn = 0;
+      buf->layout.currentColumn = 0;
     else
-      buf->currentColumn = sbuf->currentColumn;
+      buf->layout.currentColumn = sbuf->layout.currentColumn;
     arrangeCursor(buf);
   }
   if (buf->check_url) {
@@ -643,8 +648,8 @@ Buffer *page_info_panel(Buffer *buf) {
 void Buffer::addnewline(const char *line, Lineprop *prop, int byteLen,
                         int breakWidth, int realLinenum) {
   {
-    auto l = new Line(++this->allLine, this->layout.currentLine, line, prop, byteLen,
-                      realLinenum);
+    auto l = new Line(++this->allLine, this->layout.currentLine, line, prop,
+                      byteLen, realLinenum);
     this->layout.pushLine(l);
   }
 
@@ -698,7 +703,7 @@ void set_buffer_environ(Buffer *buf) {
       set_environ("W3M_CURRENT_FORM", "");
     set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
     set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->currentColumn + buf->cursorX + 1)->ptr);
+                Sprintf("%d", buf->layout.currentColumn + buf->layout.cursorX + 1)->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -753,12 +758,12 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
 void shiftvisualpos(Buffer *buf, int shift) {
   Line *l = buf->layout.currentLine;
   buf->visualpos -= shift;
-  if (buf->visualpos - l->bwidth >= buf->COLS)
-    buf->visualpos = l->bwidth + buf->COLS - 1;
+  if (buf->visualpos - l->bwidth >= buf->layout.COLS)
+    buf->visualpos = l->bwidth + buf->layout.COLS - 1;
   else if (buf->visualpos - l->bwidth < 0)
     buf->visualpos = l->bwidth;
   arrangeLine(buf);
-  if (buf->visualpos - l->bwidth == -shift && buf->cursorX == 0)
+  if (buf->visualpos - l->bwidth == -shift && buf->layout.cursorX == 0)
     buf->visualpos = l->bwidth;
 }
 
@@ -1276,10 +1281,12 @@ void _goLine(const char *l) {
   if (((*l == '^') || (*l == '$')) && prec_num) {
     gotoRealLine(Currentbuf, prec_num);
   } else if (*l == '^') {
-    Currentbuf->layout.topLine = Currentbuf->layout.currentLine = Currentbuf->layout.firstLine;
+    Currentbuf->layout.topLine = Currentbuf->layout.currentLine =
+        Currentbuf->layout.firstLine;
   } else if (*l == '$') {
-    Currentbuf->layout.topLine = lineSkip(Currentbuf, Currentbuf->layout.lastLine,
-                                   -(Currentbuf->LINES + 1) / 2, true);
+    Currentbuf->layout.topLine =
+        lineSkip(Currentbuf, Currentbuf->layout.lastLine,
+                 -(Currentbuf->layout.LINES + 1) / 2, true);
     Currentbuf->layout.currentLine = Currentbuf->layout.lastLine;
   } else
     gotoRealLine(Currentbuf, atoi(l));
