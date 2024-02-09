@@ -111,12 +111,12 @@ DEFUN(ldown1, DOWN, "Scroll the screen down one line") {
 /* move cursor position to the center of screen */
 DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
   int offsety;
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   offsety = Currentbuf->LINES / 2 - Currentbuf->cursorY;
   if (offsety != 0) {
-    Currentbuf->topLine =
-        lineSkip(Currentbuf, Currentbuf->topLine, -offsety, false);
+    Currentbuf->layout.topLine =
+        lineSkip(Currentbuf, Currentbuf->layout.topLine, -offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
   }
@@ -124,7 +124,7 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
 
 DEFUN(ctrCsrH, CENTER_H, "Center on cursor column") {
   int offsetx;
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   offsetx = Currentbuf->cursorX - Currentbuf->COLS / 2;
   if (offsetx != 0) {
@@ -169,7 +169,7 @@ DEFUN(srchprv, SEARCH_PREV, "Continue search backward") { srch_nxtprv(1); }
 DEFUN(shiftl, SHIFT_LEFT, "Shift screen left") {
   int column;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   column = Currentbuf->currentColumn;
   columnSkip(Currentbuf, searchKeyNum() * (-Currentbuf->COLS + 1) + 1);
@@ -181,7 +181,7 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left") {
 DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right") {
   int column;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   column = Currentbuf->currentColumn;
   columnSkip(Currentbuf, searchKeyNum() * (Currentbuf->COLS - 1) - 1);
@@ -191,7 +191,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right") {
 
 DEFUN(col1R, RIGHT, "Shift screen one column right") {
   Buffer *buf = Currentbuf;
-  Line *l = buf->currentLine;
+  Line *l = buf->layout.currentLine;
   int j, column, n = searchKeyNum();
 
   if (l == nullptr)
@@ -208,7 +208,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right") {
 
 DEFUN(col1L, LEFT, "Shift screen one column left") {
   Buffer *buf = Currentbuf;
-  Line *l = buf->currentLine;
+  Line *l = buf->layout.currentLine;
   int j, n = searchKeyNum();
 
   if (l == nullptr)
@@ -354,18 +354,18 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
   int ppos;
   int i, n = searchKeyNum();
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
 
   for (i = 0; i < n; i++) {
-    pline = Currentbuf->currentLine;
+    pline = Currentbuf->layout.currentLine;
     ppos = Currentbuf->pos;
 
-    if (prev_nonnull_line(Currentbuf->currentLine) < 0)
+    if (prev_nonnull_line(Currentbuf->layout.currentLine) < 0)
       goto end;
 
     while (1) {
-      l = Currentbuf->currentLine;
+      l = Currentbuf->layout.currentLine;
       lb = l->lineBuf.data();
       while (Currentbuf->pos > 0) {
         int tmp = Currentbuf->pos;
@@ -376,15 +376,15 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
       }
       if (Currentbuf->pos > 0)
         break;
-      if (prev_nonnull_line(Currentbuf->currentLine->prev) < 0) {
-        Currentbuf->currentLine = pline;
+      if (prev_nonnull_line(Currentbuf->layout.currentLine->prev) < 0) {
+        Currentbuf->layout.currentLine = pline;
         Currentbuf->pos = ppos;
         goto end;
       }
-      Currentbuf->pos = Currentbuf->currentLine->len;
+      Currentbuf->pos = Currentbuf->layout.currentLine->len;
     }
 
-    l = Currentbuf->currentLine;
+    l = Currentbuf->layout.currentLine;
     lb = l->lineBuf.data();
     while (Currentbuf->pos > 0) {
       int tmp = Currentbuf->pos;
@@ -405,17 +405,17 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
   int ppos;
   int i, n = searchKeyNum();
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
 
   for (i = 0; i < n; i++) {
-    pline = Currentbuf->currentLine;
+    pline = Currentbuf->layout.currentLine;
     ppos = Currentbuf->pos;
 
-    if (next_nonnull_line(Currentbuf->currentLine) < 0)
+    if (next_nonnull_line(Currentbuf->layout.currentLine) < 0)
       goto end;
 
-    l = Currentbuf->currentLine;
+    l = Currentbuf->layout.currentLine;
     lb = l->lineBuf.data();
     while (Currentbuf->pos < l->len &&
            is_wordchar(getChar(&lb[Currentbuf->pos])))
@@ -427,13 +427,13 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
         nextChar(Currentbuf->pos, l);
       if (Currentbuf->pos < l->len)
         break;
-      if (next_nonnull_line(Currentbuf->currentLine->next) < 0) {
-        Currentbuf->currentLine = pline;
+      if (next_nonnull_line(Currentbuf->layout.currentLine->next) < 0) {
+        Currentbuf->layout.currentLine = pline;
         Currentbuf->pos = ppos;
         goto end;
       }
       Currentbuf->pos = 0;
-      l = Currentbuf->currentLine;
+      l = Currentbuf->layout.currentLine;
       lb = l->lineBuf.data();
     }
   }
@@ -533,9 +533,9 @@ DEFUN(goLineL, END, "Go to the last line") { _goLine("$"); }
 
 /* Go to the beginning of the line */
 DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
-  while (Currentbuf->currentLine->prev && Currentbuf->currentLine->bpos)
+  while (Currentbuf->layout.currentLine->prev && Currentbuf->layout.currentLine->bpos)
     cursorUp0(Currentbuf, 1);
   Currentbuf->pos = 0;
   arrangeCursor(Currentbuf);
@@ -544,11 +544,11 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
 
 /* Go to the bottom of the line */
 DEFUN(linend, LINE_END, "Go to the end of the line") {
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
-  while (Currentbuf->currentLine->next && Currentbuf->currentLine->next->bpos)
+  while (Currentbuf->layout.currentLine->next && Currentbuf->layout.currentLine->next->bpos)
     cursorDown0(Currentbuf, 1);
-  Currentbuf->pos = Currentbuf->currentLine->len - 1;
+  Currentbuf->pos = Currentbuf->layout.currentLine->len - 1;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -603,7 +603,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   Url u;
   const char *url;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
 
   // a = retrieveCurrentMap(Currentbuf);
@@ -655,7 +655,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   Anchor *a;
   Buffer *buf;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
 
   a = retrieveCurrentImg(Currentbuf);
@@ -685,7 +685,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
   Anchor *an;
   int hseq = 0;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   if (!hl || hl->nmark == 0)
     return;
@@ -720,7 +720,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
   Anchor *an;
   int hseq;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   if (!hl || hl->nmark == 0)
     return;
@@ -760,7 +760,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   if (n < 0 || n > hl->nmark)
     return;
 
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   if (!hl || hl->nmark == 0)
     return;
@@ -1221,7 +1221,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     }
   }
   Currentbuf->form_submit = sbuf->form_submit;
-  if (Currentbuf->firstLine) {
+  if (Currentbuf->layout.firstLine) {
     COPY_BUFROOT(Currentbuf, sbuf);
     restorePosition(Currentbuf, sbuf);
   }
@@ -1246,7 +1246,7 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
   p = getCurWord(Currentbuf, &spos, &epos);
   if (p == nullptr)
     return;
-  reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
+  reAnchorWord(Currentbuf, Currentbuf->layout.currentLine, spos, epos);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -1264,7 +1264,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   auto a = retrieveCurrentAnchor(Currentbuf);
   if (a == nullptr)
@@ -1275,7 +1275,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
 
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document") {
-  Line *l = Currentbuf->currentLine;
+  Line *l = Currentbuf->layout.currentLine;
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
@@ -1286,8 +1286,8 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
       l = l->next;
     len = l->bwidth + l->width();
   }
-  if (Currentbuf->lastLine)
-    all = Currentbuf->lastLine->real_linenumber;
+  if (Currentbuf->layout.lastLine)
+    all = Currentbuf->layout.lastLine->real_linenumber;
   tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
                 len);
@@ -1564,7 +1564,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
   BufferPos *b = Currentbuf->undo;
   int i;
 
-  if (!Currentbuf->firstLine)
+  if (!Currentbuf->layout.firstLine)
     return;
   if (!b || !b->prev)
     return;
@@ -1577,7 +1577,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo") {
   BufferPos *b = Currentbuf->undo;
   int i;
 
-  if (!Currentbuf->firstLine)
+  if (!Currentbuf->layout.firstLine)
     return;
   if (!b || !b->next)
     return;
@@ -1587,31 +1587,31 @@ DEFUN(redoPos, REDO, "Cancel the last undo") {
 }
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
-  Currentbuf->currentLine = lineSkip(Currentbuf, Currentbuf->topLine, 0, false);
+  Currentbuf->layout.currentLine = lineSkip(Currentbuf, Currentbuf->layout.topLine, 0, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
   int offsety;
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   offsety = (Currentbuf->LINES - 1) / 2;
-  Currentbuf->currentLine =
-      currentLineSkip(Currentbuf, Currentbuf->topLine, offsety, false);
+  Currentbuf->layout.currentLine =
+      currentLineSkip(Currentbuf, Currentbuf->layout.topLine, offsety, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
   int offsety;
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
   offsety = Currentbuf->LINES - 1;
-  Currentbuf->currentLine =
-      currentLineSkip(Currentbuf, Currentbuf->topLine, offsety, false);
+  Currentbuf->layout.currentLine =
+      currentLineSkip(Currentbuf, Currentbuf->layout.topLine, offsety, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }

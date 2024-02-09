@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
 #include "line.h"
+#include "line_layout.h"
 #include <memory>
 #include <gc_cpp.h>
 #include <stddef.h>
@@ -40,10 +41,7 @@ struct Clone {
 struct Buffer : public gc_cleanup {
   std::shared_ptr<HttpResponse> info;
   const char *buffername = "";
-  Line *firstLine = nullptr;
-  Line *topLine = nullptr;
-  Line *currentLine = nullptr;
-  Line *lastLine = nullptr;
+  LineLayout layout = {};
   Buffer *nextBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
   short width = 0;
@@ -91,21 +89,6 @@ struct Buffer : public gc_cleanup {
   // shallow copy
   Buffer &operator=(const Buffer &src);
 
-  int TOP_LINENUMBER() const { return topLine ? topLine->linenumber : 1; }
-  int CUR_LINENUMBER() const {
-    return currentLine ? currentLine->linenumber : 1;
-  }
-
-  void pushLine(Line *l) {
-    if (!this->lastLine || this->lastLine == this->currentLine) {
-      this->lastLine = l;
-    }
-    this->currentLine = l;
-    if (!this->firstLine) {
-      this->firstLine = l;
-    }
-  }
-
   void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,
                   int realLinenum);
 };
@@ -118,8 +101,8 @@ inline void COPY_BUFROOT(Buffer *dstbuf, Buffer *srcbuf) {
 }
 
 inline void COPY_BUFPOSITION(Buffer *dstbuf, Buffer *srcbuf) {
-  (dstbuf)->topLine = (srcbuf)->topLine;
-  (dstbuf)->currentLine = (srcbuf)->currentLine;
+  (dstbuf)->layout.topLine = (srcbuf)->layout.topLine;
+  (dstbuf)->layout.currentLine = (srcbuf)->layout.currentLine;
   (dstbuf)->pos = (srcbuf)->pos;
   (dstbuf)->cursorX = (srcbuf)->cursorX;
   (dstbuf)->cursorY = (srcbuf)->cursorY;

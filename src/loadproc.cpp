@@ -108,9 +108,9 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   }
   // _end:
   // TRAP_OFF;
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
+  newBuf->layout.topLine = newBuf->layout.firstLine;
+  newBuf->layout.lastLine = newBuf->layout.currentLine;
+  newBuf->layout.currentLine = newBuf->layout.firstLine;
   // newBuf->trbyte = trbyte + linelen;
   if (src)
     fclose(src);
@@ -185,9 +185,9 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
         if (a != NULL) {
           gotoLine(buf, a->start.line);
           if (label_topline)
-            buf->topLine = lineSkip(
-                buf, buf->topLine,
-                buf->currentLine->linenumber - buf->topLine->linenumber, false);
+            buf->layout.topLine = lineSkip(
+                buf, buf->layout.topLine,
+                buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber, false);
           buf->pos = a->start.pos;
           arrangeCursor(buf);
         }
@@ -644,7 +644,7 @@ static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
 }
 
 void saveBuffer(Buffer *buf, FILE *f, int cont) {
-  _saveBuffer(buf, buf->firstLine, f, cont);
+  _saveBuffer(buf, buf->layout.firstLine, f, cont);
 }
 
 bool couldWrite(const char *path) {

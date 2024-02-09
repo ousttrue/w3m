@@ -359,10 +359,11 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
     if (al) {
       gotoLine(Currentbuf, al->start.line);
       if (label_topline)
-        Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-                                       Currentbuf->currentLine->linenumber -
-                                           Currentbuf->topLine->linenumber,
-                                       false);
+        Currentbuf->layout.topLine =
+            lineSkip(Currentbuf, Currentbuf->layout.topLine,
+                     Currentbuf->layout.currentLine->linenumber -
+                         Currentbuf->layout.topLine->linenumber,
+                     false);
       Currentbuf->pos = al->start.pos;
       arrangeCursor(Currentbuf);
     }
@@ -483,7 +484,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
 }
 
 void _followForm(int submit) {
-  if (Currentbuf->firstLine == nullptr)
+  if (Currentbuf->layout.firstLine == nullptr)
     return;
 
   auto a = retrieveCurrentForm(Currentbuf);

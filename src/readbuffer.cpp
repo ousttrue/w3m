@@ -4206,9 +4206,9 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
 
   loadHTMLstream(f, newBuf, src, false/*newBuf->bufferprop*/);
 
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
+  newBuf->layout.topLine = newBuf->layout.firstLine;
+  newBuf->layout.lastLine = newBuf->layout.currentLine;
+  newBuf->layout.currentLine = newBuf->layout.firstLine;
   if (n_textarea)
     formResetBuffer(newBuf, newBuf->formitem);
   if (src)
@@ -4345,9 +4345,9 @@ Buffer *loadHTMLString(Str *page) {
   loadHTMLstream(&f, newBuf, NULL, true);
 
   TRAP_OFF;
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
+  newBuf->layout.topLine = newBuf->layout.firstLine;
+  newBuf->layout.lastLine = newBuf->layout.currentLine;
+  newBuf->layout.currentLine = newBuf->layout.firstLine;
   newBuf->info->type = "text/html";
   newBuf->info->real_type = newBuf->info->type;
   if (n_textarea)
@@ -4356,9 +4356,9 @@ Buffer *loadHTMLString(Str *page) {
 }
 
 int currentLn(Buffer *buf) {
-  if (buf->currentLine)
+  if (buf->layout.currentLine)
     /*     return buf->currentLine->real_linenumber + 1;      */
-    return buf->currentLine->linenumber + 1;
+    return buf->layout.currentLine->linenumber + 1;
   else
     return 1;
 }

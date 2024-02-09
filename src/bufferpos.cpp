@@ -7,18 +7,18 @@
 void save_buffer_position(Buffer *buf) {
   BufferPos *b = buf->undo;
 
-  if (!buf->firstLine)
+  if (!buf->layout.firstLine)
     return;
-  if (b && b->top_linenumber == buf->TOP_LINENUMBER() &&
-      b->cur_linenumber == buf->CUR_LINENUMBER() &&
+  if (b && b->top_linenumber == buf->layout.TOP_LINENUMBER() &&
+      b->cur_linenumber == buf->layout.CUR_LINENUMBER() &&
       b->currentColumn == buf->currentColumn && b->pos == buf->pos)
     return;
   b = (BufferPos *)New(BufferPos);
-  b->top_linenumber = buf->TOP_LINENUMBER();
-  b->cur_linenumber = buf->CUR_LINENUMBER();
+  b->top_linenumber = buf->layout.TOP_LINENUMBER();
+  b->cur_linenumber = buf->layout.CUR_LINENUMBER();
   b->currentColumn = buf->currentColumn;
   b->pos = buf->pos;
-  b->bpos = buf->currentLine ? buf->currentLine->bpos : 0;
+  b->bpos = buf->layout.currentLine ? buf->layout.currentLine->bpos : 0;
   b->next = NULL;
   b->prev = buf->undo;
   if (buf->undo)
@@ -29,12 +29,12 @@ void save_buffer_position(Buffer *buf) {
 void resetPos(BufferPos *b) {
   auto buf = new Buffer(0);
   auto top = new Line(b->top_linenumber);
-  buf->topLine = top;
+  buf->layout.topLine = top;
 
   auto cur = new Line(b->cur_linenumber);
   cur->bpos = b->bpos;
 
-  buf->currentLine = cur;
+  buf->layout.currentLine = cur;
   buf->pos = b->pos;
   buf->currentColumn = b->currentColumn;
   restorePosition(Currentbuf, buf);

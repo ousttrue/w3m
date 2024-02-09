@@ -143,21 +143,21 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
 }
 
 Anchor *retrieveCurrentAnchor(Buffer *buf) {
-  if (!buf->currentLine || !buf->href)
+  if (!buf->layout.currentLine || !buf->href)
     return NULL;
-  return buf->href->retrieveAnchor(buf->currentLine->linenumber, buf->pos);
+  return buf->href->retrieveAnchor(buf->layout.currentLine->linenumber, buf->pos);
 }
 
 Anchor *retrieveCurrentImg(Buffer *buf) {
-  if (!buf->currentLine || !buf->img)
+  if (!buf->layout.currentLine || !buf->img)
     return NULL;
-  return buf->img->retrieveAnchor(buf->currentLine->linenumber, buf->pos);
+  return buf->img->retrieveAnchor(buf->layout.currentLine->linenumber, buf->pos);
 }
 
 Anchor *retrieveCurrentForm(Buffer *buf) {
-  if (!buf->currentLine || !buf->formitem)
+  if (!buf->layout.currentLine || !buf->formitem)
     return NULL;
-  return buf->formitem->retrieveAnchor(buf->currentLine->linenumber, buf->pos);
+  return buf->formitem->retrieveAnchor(buf->layout.currentLine->linenumber, buf->pos);
 }
 
 Anchor *searchAnchor(AnchorList *al, const char *str) {
@@ -312,9 +312,9 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
   if ((re = regexCompile(re, 1)) != NULL) {
     return re;
   }
-  for (l = MarkAllPages ? buf->firstLine : buf->topLine;
+  for (l = MarkAllPages ? buf->layout.firstLine : buf->layout.topLine;
        l != NULL &&
-       (MarkAllPages || l->linenumber < buf->topLine->linenumber + LASTLINE);
+       (MarkAllPages || l->linenumber < buf->layout.topLine->linenumber + LASTLINE);
        l = l->next) {
     if (p && l->bpos) {
       continue;
@@ -441,7 +441,7 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
     al->anchors[i].rows = 1;
     if (a_form.hseq < 0 || a_form.rows <= 1)
       continue;
-    for (l = buf->firstLine; l != NULL; l = l->next) {
+    for (l = buf->layout.firstLine; l != NULL; l = l->next) {
       if (l->linenumber == a_form.y)
         break;
     }
@@ -492,7 +492,7 @@ const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
   if (!a || a->hseq < 0)
     return NULL;
   hseq = a->hseq;
-  l = buf->firstLine;
+  l = buf->layout.firstLine;
   for (size_t i = 0; i < al->size(); i++) {
     a = &al->anchors[i];
     if (a->hseq != hseq)

@@ -212,9 +212,9 @@ void gotoLabel(const char *label) {
   pushBuffer(buf);
   gotoLine(Currentbuf, al->start.line);
   if (label_topline)
-    Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-                                   Currentbuf->currentLine->linenumber -
-                                       Currentbuf->topLine->linenumber,
+    Currentbuf->layout.topLine = lineSkip(Currentbuf, Currentbuf->layout.topLine,
+                                   Currentbuf->layout.currentLine->linenumber -
+                                       Currentbuf->layout.topLine->linenumber,
                                    false);
   Currentbuf->pos = al->start.pos;
   arrangeCursor(Currentbuf);

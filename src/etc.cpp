@@ -32,7 +32,7 @@ int columnSkip(Buffer *buf, int offset) {
   Line *l;
 
   maxColumn = 0;
-  for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
+  for (i = 0, l = buf->layout.topLine; i < nlines && l != NULL; i++, l = l->next) {
     if (l->width() - 1 > maxColumn) {
       maxColumn = l->width() - 1;
     }
@@ -55,7 +55,7 @@ Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
 
   l = currentLineSkip(buf, line, offset, last);
   if (!nextpage_topline)
-    for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
+    for (i = buf->LINES - 1 - (buf->layout.lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
       ;
   return l;
