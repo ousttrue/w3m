@@ -2,6 +2,7 @@
 #include "utf8.h"
 #include "anchor.h"
 #include "htmlcommand.h"
+#include <memory>
 
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
@@ -212,8 +213,11 @@ int next_status(char c, int *status);
 int read_token(Str *buf, const char **instr, int *status, int pre, int append);
 
 struct UrlStream;
+struct HttpResponse;
+struct LineLayout;
+void loadHTMLstream(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
+                    LineLayout *layout, FILE *src, int internal);
 struct Buffer;
-void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal);
 Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf);
 Buffer *loadHTMLString(Str *page);
 
