@@ -15,7 +15,14 @@ struct LineLayout {
   int currentColumn = 0;
   // cursor position
   Line *currentLine = nullptr;
+  int allLine = 0;
 
+  void clearBuffer() {
+    firstLine = topLine = currentLine = lastLine = nullptr;
+    allLine = 0;
+  }
+  void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,
+                  int realLinenum);
   int TOP_LINENUMBER() const { return topLine ? topLine->linenumber : 1; }
   int CUR_LINENUMBER() const {
     return currentLine ? currentLine->linenumber : 1;

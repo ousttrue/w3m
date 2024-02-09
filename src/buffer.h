@@ -46,7 +46,6 @@ struct Buffer : public gc_cleanup {
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
   short width = 0;
   short height = 0;
-  int allLine = 0;
   int pos = 0;
   int visualpos = 0;
   AnchorList *href = nullptr;
@@ -81,9 +80,6 @@ struct Buffer : public gc_cleanup {
 
   // shallow copy
   Buffer &operator=(const Buffer &src);
-
-  void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,
-                  int realLinenum);
 };
 
 inline void COPY_BUFPOSITION(Buffer *dstbuf, Buffer *srcbuf) {
@@ -111,7 +107,6 @@ extern std::optional<Url> baseURL(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
 
 extern Buffer *nullBuffer(void);
-extern void clearBuffer(Buffer *buf);
 extern Buffer *namedBuffer(Buffer *first, char *name);
 extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
 extern Buffer *nthBuffer(Buffer *firstbuf, int n);

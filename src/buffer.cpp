@@ -42,23 +42,12 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->info = src.info;
   this->buffername = src.buffername;
 
-  // this->layout.firstLine = src.layout.firstLine;
-  // this->layout.topLine = src.layout.topLine;
-  // this->layout.currentLine = src.layout.currentLine;
-  // this->layout.lastLine = src.layout.lastLine;
-  // this->rootX = src.rootX;
-  // this->rootY = src.rootY;
-  // this->COLS = src.COLS;
-  // this->LINES = src.LINES;
-  // this->cursorX = src.cursorX;
-  // this->cursorY = src.cursorY;
   this->layout = src.layout;
 
   this->nextBuffer = src.nextBuffer;
   this->linkBuffer = src.linkBuffer;
   this->width = src.width;
   this->height = src.height;
-  this->allLine = src.allLine;
   this->layout.currentColumn = src.layout.currentColumn;
   this->pos = src.pos;
   this->visualpos = src.visualpos;
@@ -97,20 +86,11 @@ Buffer *nullBuffer(void) {
 }
 
 /*
- * clearBuffer: clear buffer content
- */
-void clearBuffer(Buffer *buf) {
-  buf->layout.firstLine = buf->layout.topLine = buf->layout.currentLine =
-      buf->layout.lastLine = nullptr;
-  buf->allLine = 0;
-}
-
-/*
  * discardBuffer: free buffer structure
  */
 
 void discardBuffer(Buffer *buf) {
-  clearBuffer(buf);
+  buf->layout.clearBuffer();
   for (int i = 0; i < MAX_LB; i++) {
     auto b = buf->linkBuffer[i];
     if (b == nullptr)
@@ -179,14 +159,13 @@ Buffer *nthBuffer(Buffer *firstbuf, int n) {
 }
 
 static void writeBufferName(Buffer *buf, int n) {
-  Str *msg;
-  int all;
-
-  all = buf->allLine;
-  if (all == 0 && buf->layout.lastLine != nullptr)
+  int all = buf->layout.allLine;
+  if (all == 0 && buf->layout.lastLine != nullptr) {
     all = buf->layout.lastLine->linenumber;
+  }
+
   move(n, 0);
-  msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+  auto msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
   if (buf->info->filename != nullptr) {
     switch (buf->info->currentURL.schema) {
     case SCM_LOCAL:
@@ -238,7 +217,8 @@ void gotoLine(Buffer *buf, int n) {
       buf->layout.currentLine = l;
       if (n < buf->layout.topLine->linenumber ||
           buf->layout.topLine->linenumber + buf->layout.LINES <= n)
-        buf->layout.topLine = lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
+        buf->layout.topLine =
+            lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
       break;
     }
   }
@@ -274,7 +254,8 @@ void gotoRealLine(Buffer *buf, int n) {
       buf->layout.currentLine = l;
       if (n < buf->layout.topLine->real_linenumber ||
           buf->layout.topLine->real_linenumber + buf->layout.LINES <= n)
-        buf->layout.topLine = lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
+        buf->layout.topLine =
+            lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
       break;
     }
   }
@@ -443,7 +424,7 @@ void reshapeBuffer(Buffer *buf) {
 
   auto sbuf = new Buffer(0);
   *sbuf = *buf;
-  clearBuffer(buf);
+  buf->layout.clearBuffer();
 
   buf->href = nullptr;
   buf->name = nullptr;
@@ -561,9 +542,9 @@ Buffer *page_info_panel(Buffer *buf) {
 </head><body>\
 <h1>Information about current page</h1>\n");
 
-  if (buf == nullptr) {
+  if (buf) {
 
-    all = buf->allLine;
+    all = buf->layout.allLine;
     if (all == 0 && buf->layout.lastLine)
       all = buf->layout.lastLine->linenumber;
     p = url_decode0(buf->info->currentURL.to_Str().c_str());
@@ -645,23 +626,6 @@ Buffer *page_info_panel(Buffer *buf) {
   return newbuf;
 }
 
-void Buffer::addnewline(const char *line, Lineprop *prop, int byteLen,
-                        int breakWidth, int realLinenum) {
-  {
-    auto l = new Line(++this->allLine, this->layout.currentLine, line, prop,
-                      byteLen, realLinenum);
-    this->layout.pushLine(l);
-  }
-
-  if (byteLen <= 0 || breakWidth <= 0) {
-    return;
-  }
-
-  while (auto l = this->layout.currentLine->breakLine(breakWidth)) {
-    this->layout.pushLine(l);
-  }
-}
-
 void set_buffer_environ(Buffer *buf) {
   static Buffer *prev_buf = nullptr;
   static Line *prev_line = nullptr;
@@ -702,8 +666,9 @@ void set_buffer_environ(Buffer *buf) {
     else
       set_environ("W3M_CURRENT_FORM", "");
     set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-    set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->layout.currentColumn + buf->layout.cursorX + 1)->ptr);
+    set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->layout.currentColumn +
+                                                        buf->layout.cursorX + 1)
+                                          ->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");

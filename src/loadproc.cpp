@@ -103,8 +103,8 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     ++nlines;
     Strchop(lineBuf2);
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    newBuf->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                       FOLD_BUFFER_WIDTH(), nlines);
+    newBuf->layout.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
+                              FOLD_BUFFER_WIDTH(), nlines);
   }
   // _end:
   // TRAP_OFF;
@@ -185,9 +185,10 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
         if (a != NULL) {
           gotoLine(buf, a->start.line);
           if (label_topline)
-            buf->layout.topLine = lineSkip(
-                buf, buf->layout.topLine,
-                buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber, false);
+            buf->layout.topLine = lineSkip(buf, buf->layout.topLine,
+                                           buf->layout.currentLine->linenumber -
+                                               buf->layout.topLine->linenumber,
+                                           false);
           buf->pos = a->start.pos;
           arrangeCursor(buf);
         }

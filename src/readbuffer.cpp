@@ -4093,8 +4093,9 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
       }
     }
     /* end of processing for one line */
-    if (!internal)
-      buf->addnewline(outc, outp, pos, -1, nlines);
+    if (!internal) {
+      buf->layout.addnewline(outc, outp, pos, -1, nlines);
+    }
     if (internal == HTML_N_INTERNAL)
       internal = 0;
     if (str != endp) {
@@ -4204,7 +4205,7 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
       newBuf->info->sourcefile = tmp->ptr;
   }
 
-  loadHTMLstream(f, newBuf, src, false/*newBuf->bufferprop*/);
+  loadHTMLstream(f, newBuf, src, false /*newBuf->bufferprop*/);
 
   newBuf->layout.topLine = newBuf->layout.firstLine;
   newBuf->layout.lastLine = newBuf->layout.currentLine;
