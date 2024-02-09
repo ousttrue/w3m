@@ -185,10 +185,11 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
         if (a != NULL) {
           gotoLine(buf, a->start.line);
           if (label_topline)
-            buf->layout.topLine = lineSkip(buf, buf->layout.topLine,
-                                           buf->layout.currentLine->linenumber -
-                                               buf->layout.topLine->linenumber,
-                                           false);
+            buf->layout.topLine =
+                buf->layout.lineSkip(buf->layout.topLine,
+                                     buf->layout.currentLine->linenumber -
+                                         buf->layout.topLine->linenumber,
+                                     false);
           buf->layout.pos = a->start.pos;
           arrangeCursor(buf);
         }

@@ -29,7 +29,6 @@ extern bool do_download;
 
 extern int vi_prec_num;
 extern int label_topline;
-extern int nextpage_topline;
 extern int displayLineInfo;
 extern int show_srch_str;
 extern int displayImage;

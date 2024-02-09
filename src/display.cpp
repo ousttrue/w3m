@@ -674,7 +674,7 @@ void cursorUp0(Buffer *buf, int n) {
   if (buf->layout.cursorY > 0)
     cursorUpDown(buf, -1);
   else {
-    buf->layout.topLine = lineSkip(buf, buf->layout.topLine, -n, false);
+    buf->layout.topLine = buf->layout.lineSkip(buf->layout.topLine, -n, false);
     if (buf->layout.currentLine->prev != NULL)
       buf->layout.currentLine = buf->layout.currentLine->prev;
     arrangeLine(buf);
@@ -703,7 +703,7 @@ void cursorDown0(Buffer *buf, int n) {
   if (buf->layout.cursorY < buf->layout.LINES - 1)
     cursorUpDown(buf, 1);
   else {
-    buf->layout.topLine = lineSkip(buf, buf->layout.topLine, n, false);
+    buf->layout.topLine = buf->layout.lineSkip(buf->layout.topLine, n, false);
     if (buf->layout.currentLine->next != NULL)
       buf->layout.currentLine = buf->layout.currentLine->next;
     arrangeLine(buf);
@@ -733,7 +733,7 @@ void cursorUpDown(Buffer *buf, int n) {
 
   if (buf->layout.firstLine == NULL)
     return;
-  if ((buf->layout.currentLine = currentLineSkip(buf, cl, n, false)) == cl)
+  if ((buf->layout.currentLine = cl->currentLineSkip(n, false)) == cl)
     return;
   arrangeLine(buf);
 }
@@ -819,7 +819,8 @@ void arrangeCursor(Buffer *buf) {
     /*
      * buf->topLine = buf->currentLine;
      */
-    buf->layout.topLine = lineSkip(buf, buf->layout.currentLine, 0, false);
+    buf->layout.topLine =
+        buf->layout.lineSkip(buf->layout.currentLine, 0, false);
   }
   /* Arrange column */
   while (buf->layout.pos < 0 && buf->layout.currentLine->prev &&
@@ -849,9 +850,10 @@ void arrangeCursor(Buffer *buf) {
   /* Arrange cursor */
   buf->layout.cursorY =
       buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber;
-  buf->layout.visualpos = buf->layout.currentLine->bwidth +
-                   buf->layout.currentLine->bytePosToColumn(buf->layout.pos) -
-                   buf->layout.currentColumn;
+  buf->layout.visualpos =
+      buf->layout.currentLine->bwidth +
+      buf->layout.currentLine->bytePosToColumn(buf->layout.pos) -
+      buf->layout.currentColumn;
   buf->layout.cursorX = buf->layout.visualpos - buf->layout.currentLine->bwidth;
 #ifdef DISPLAY_DEBUG
   fprintf(
@@ -915,12 +917,13 @@ void cursorXY(Buffer *buf, int x, int y) {
 }
 
 void restorePosition(Buffer *buf, Buffer *orig) {
-  buf->layout.topLine = lineSkip(buf, buf->layout.firstLine,
-                                 orig->layout.TOP_LINENUMBER() - 1, false);
+  buf->layout.topLine = buf->layout.lineSkip(
+      buf->layout.firstLine, orig->layout.TOP_LINENUMBER() - 1, false);
   gotoLine(buf, orig->layout.CUR_LINENUMBER());
   buf->layout.pos = orig->layout.pos;
   if (buf->layout.currentLine && orig->layout.currentLine)
-    buf->layout.pos += orig->layout.currentLine->bpos - buf->layout.currentLine->bpos;
+    buf->layout.pos +=
+        orig->layout.currentLine->bpos - buf->layout.currentLine->bpos;
   buf->layout.currentColumn = orig->layout.currentColumn;
   arrangeCursor(buf);
 }
@@ -936,7 +939,7 @@ void nscroll(int n, DisplayFlag mode) {
   if (buf->layout.firstLine == nullptr)
     return;
   lnum = cur->linenumber;
-  buf->layout.topLine = lineSkip(buf, top, n, false);
+  buf->layout.topLine = buf->layout.lineSkip(top, n, false);
   if (buf->layout.topLine == top) {
     lnum += n;
     if (lnum < buf->layout.topLine->linenumber)

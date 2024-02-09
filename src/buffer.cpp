@@ -202,8 +202,8 @@ void gotoLine(Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->layout.lastLine->linenumber);
     set_delayed_message(msg);
     buf->layout.currentLine = l;
-    buf->layout.topLine =
-        lineSkip(buf, buf->layout.currentLine, -(buf->layout.LINES - 1), false);
+    buf->layout.topLine = buf->layout.lineSkip(buf->layout.currentLine,
+                                               -(buf->layout.LINES - 1), false);
     return;
   }
   for (; l != nullptr; l = l->next) {
@@ -212,7 +212,7 @@ void gotoLine(Buffer *buf, int n) {
       if (n < buf->layout.topLine->linenumber ||
           buf->layout.topLine->linenumber + buf->layout.LINES <= n)
         buf->layout.topLine =
-            lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
+            buf->layout.lineSkip(l, -(buf->layout.LINES + 1) / 2, false);
       break;
     }
   }
@@ -239,8 +239,8 @@ void gotoRealLine(Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->layout.lastLine->real_linenumber);
     set_delayed_message(msg);
     buf->layout.currentLine = l;
-    buf->layout.topLine =
-        lineSkip(buf, buf->layout.currentLine, -(buf->layout.LINES - 1), false);
+    buf->layout.topLine = buf->layout.lineSkip(buf->layout.currentLine,
+                                               -(buf->layout.LINES - 1), false);
     return;
   }
   for (; l != nullptr; l = l->next) {
@@ -249,7 +249,7 @@ void gotoRealLine(Buffer *buf, int n) {
       if (n < buf->layout.topLine->real_linenumber ||
           buf->layout.topLine->real_linenumber + buf->layout.LINES <= n)
         buf->layout.topLine =
-            lineSkip(buf, l, -(buf->layout.LINES + 1) / 2, false);
+            buf->layout.lineSkip(l, -(buf->layout.LINES + 1) / 2, false);
       break;
     }
   }
@@ -453,7 +453,7 @@ void reshapeBuffer(Buffer *buf) {
          buf->layout.topLine->linenumber) -
         (cur->linenumber - sbuf->layout.topLine->linenumber);
     if (n) {
-      buf->layout.topLine = lineSkip(buf, buf->layout.topLine, n, false);
+      buf->layout.topLine = buf->layout.lineSkip(buf->layout.topLine, n, false);
       if (cur->real_linenumber > 0)
         gotoRealLine(buf, cur->real_linenumber);
       else
@@ -1244,9 +1244,8 @@ void _goLine(const char *l) {
     Currentbuf->layout.topLine = Currentbuf->layout.currentLine =
         Currentbuf->layout.firstLine;
   } else if (*l == '$') {
-    Currentbuf->layout.topLine =
-        lineSkip(Currentbuf, Currentbuf->layout.lastLine,
-                 -(Currentbuf->layout.LINES + 1) / 2, true);
+    Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
+        Currentbuf->layout.lastLine, -(Currentbuf->layout.LINES + 1) / 2, true);
     Currentbuf->layout.currentLine = Currentbuf->layout.lastLine;
   } else
     gotoRealLine(Currentbuf, atoi(l));

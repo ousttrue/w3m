@@ -1,6 +1,8 @@
 #pragma once
 #include "line.h"
 
+extern int nextpage_topline;
+
 struct Line;
 struct LineLayout {
   LineLayout();
@@ -36,6 +38,7 @@ struct LineLayout {
       this->firstLine = l;
     }
   }
+  Line *lineSkip(Line *line, int offset, int last);
 
   //
   // viewport

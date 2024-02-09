@@ -32,7 +32,8 @@ int columnSkip(Buffer *buf, int offset) {
   Line *l;
 
   maxColumn = 0;
-  for (i = 0, l = buf->layout.topLine; i < nlines && l != NULL; i++, l = l->next) {
+  for (i = 0, l = buf->layout.topLine; i < nlines && l != NULL;
+       i++, l = l->next) {
     if (l->width() - 1 > maxColumn) {
       maxColumn = l->width() - 1;
     }
@@ -47,31 +48,6 @@ int columnSkip(Buffer *buf, int offset) {
     return 0;
   buf->layout.currentColumn = maxColumn;
   return 1;
-}
-
-Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
-  int i;
-  Line *l;
-
-  l = currentLineSkip(buf, line, offset, last);
-  if (!nextpage_topline)
-    for (i = buf->layout.LINES - 1 - (buf->layout.lastLine->linenumber - l->linenumber);
-         i > 0 && l->prev != NULL; i--, l = l->prev)
-      ;
-  return l;
-}
-
-Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
-  Line *l = line;
-  if (offset == 0)
-    return l;
-  if (offset > 0)
-    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
-      ;
-  else
-    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-      ;
-  return l;
 }
 
 const char *lastFileName(const char *path) {
@@ -405,4 +381,3 @@ const char *file_to_url(const char *file) {
   Strcat_charp(tmp, file_quote(cleanupName((char *)file)));
   return tmp->ptr;
 }
-

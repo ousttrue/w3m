@@ -14,6 +14,20 @@ struct Line : public gc_cleanup {
   std::vector<char> lineBuf;
   std::vector<Lineprop> propBuf;
 
+  Line *currentLineSkip(int offset, int last) {
+    Line *l = this;
+    if (offset == 0){
+      return l;
+    }
+    if (offset > 0)
+      for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
+        ;
+    else
+      for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+        ;
+    return l;
+  }
+
 private:
   // column width. cache
   mutable int _width = -1;

@@ -115,8 +115,8 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
     return;
   offsety = Currentbuf->layout.LINES / 2 - Currentbuf->layout.cursorY;
   if (offsety != 0) {
-    Currentbuf->layout.topLine =
-        lineSkip(Currentbuf, Currentbuf->layout.topLine, -offsety, false);
+    Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
+        Currentbuf->layout.topLine, -offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
   }
@@ -1599,7 +1599,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
   Currentbuf->layout.currentLine =
-      lineSkip(Currentbuf, Currentbuf->layout.topLine, 0, false);
+      Currentbuf->layout.lineSkip(Currentbuf->layout.topLine, 0, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1610,7 +1610,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
     return;
   offsety = (Currentbuf->layout.LINES - 1) / 2;
   Currentbuf->layout.currentLine =
-      currentLineSkip(Currentbuf, Currentbuf->layout.topLine, offsety, false);
+      Currentbuf->layout.topLine->currentLineSkip(offsety, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1621,7 +1621,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
     return;
   offsety = Currentbuf->layout.LINES - 1;
   Currentbuf->layout.currentLine =
-      currentLineSkip(Currentbuf, Currentbuf->layout.topLine, offsety, false);
+      Currentbuf->layout.topLine->currentLineSkip(offsety, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }

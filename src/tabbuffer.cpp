@@ -213,10 +213,10 @@ void gotoLabel(const char *label) {
   gotoLine(Currentbuf, al->start.line);
   if (label_topline)
     Currentbuf->layout.topLine =
-        lineSkip(Currentbuf, Currentbuf->layout.topLine,
-                 Currentbuf->layout.currentLine->linenumber -
-                     Currentbuf->layout.topLine->linenumber,
-                 false);
+        Currentbuf->layout.lineSkip(Currentbuf->layout.topLine,
+                                    Currentbuf->layout.currentLine->linenumber -
+                                        Currentbuf->layout.topLine->linenumber,
+                                    false);
   Currentbuf->layout.pos = al->start.pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);

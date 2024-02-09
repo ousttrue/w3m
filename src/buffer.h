@@ -114,8 +114,6 @@ extern void arrangeCursor(Buffer *buf);
 extern void arrangeLine(Buffer *buf);
 extern void cursorXY(Buffer *buf, int x, int y);
 extern int columnSkip(Buffer *buf, int offset);
-extern Line *lineSkip(Buffer *buf, Line *line, int offset, int last);
-extern Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last);
 extern void chkURLBuffer(Buffer *buf);
 void isrch(int (*func)(Buffer *, const char *), const char *prompt);
 void srch(int (*func)(Buffer *, const char *), const char *prompt);

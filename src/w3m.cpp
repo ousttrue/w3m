@@ -26,7 +26,6 @@ bool IsForkChild = 0;
 bool confirm_on_quit = true;
 int vi_prec_num = false;
 int label_topline = false;
-int nextpage_topline = false;
 int displayLineInfo = false;
 int show_srch_str = true;
 int displayImage = false;
