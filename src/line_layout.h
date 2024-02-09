@@ -98,4 +98,12 @@ struct LineLayout {
   // Anchors
   //
   struct AnchorList *href = nullptr;
+  AnchorList *name = nullptr;
+  AnchorList *img = nullptr;
+  AnchorList *formitem = nullptr;
+  struct LinkList *linklist = nullptr;
+  struct FormList *formlist = nullptr;
+  struct MapList *maplist = nullptr;
+  struct HmarkerList *hmarklist = nullptr;
+  HmarkerList *imarklist = nullptr;
 };

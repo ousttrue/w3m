@@ -302,9 +302,9 @@ static void drawAnchorCursor(Buffer *buf) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (!buf->layout.firstLine || !buf->hmarklist)
+  if (!buf->layout.firstLine || !buf->layout.hmarklist)
     return;
-  if (!buf->layout.href && !buf->formitem)
+  if (!buf->layout.href && !buf->layout.formitem)
     return;
 
   an = retrieveCurrentAnchor(buf);
@@ -314,17 +314,17 @@ static void drawAnchorCursor(Buffer *buf) {
     hseq = -1;
   tline = buf->layout.topLine->linenumber;
   eline = tline + buf->layout.LINES;
-  prevhseq = buf->hmarklist->prevhseq;
+  prevhseq = buf->layout.hmarklist->prevhseq;
 
   if (buf->layout.href) {
     drawAnchorCursor0(buf, buf->layout.href, hseq, prevhseq, tline, eline, 1);
     drawAnchorCursor0(buf, buf->layout.href, hseq, -1, tline, eline, 0);
   }
-  if (buf->formitem) {
-    drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
-    drawAnchorCursor0(buf, buf->formitem, hseq, -1, tline, eline, 0);
+  if (buf->layout.formitem) {
+    drawAnchorCursor0(buf, buf->layout.formitem, hseq, prevhseq, tline, eline, 1);
+    drawAnchorCursor0(buf, buf->layout.formitem, hseq, -1, tline, eline, 0);
   }
-  buf->hmarklist->prevhseq = hseq;
+  buf->layout.hmarklist->prevhseq = hseq;
 }
 
 static void redrawNLine(Buffer *buf, int n) {

@@ -80,14 +80,14 @@ Anchor *registerHref(Buffer *buf, const char *url, const char *target,
 
 Anchor *registerName(Buffer *buf, const char *url, int line, int pos) {
   Anchor *a;
-  buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
+  buf->layout.name = putAnchor(buf->layout.name, url, NULL, &a, NULL, NULL, '\0', line, pos);
   return a;
 }
 
 Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
                     int pos) {
   Anchor *a;
-  buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line, pos);
+  buf->layout.img = putAnchor(buf->layout.img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
 }
 
@@ -99,7 +99,7 @@ Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag, int line,
   fi = formList_addInput(flist, tag);
   if (fi == NULL)
     return NULL;
-  buf->formitem = putAnchor(buf->formitem, (const char *)fi, flist->target, &a,
+  buf->layout.formitem = putAnchor(buf->layout.formitem, (const char *)fi, flist->target, &a,
                             NULL, NULL, '\0', line, pos);
   return a;
 }
@@ -149,15 +149,15 @@ Anchor *retrieveCurrentAnchor(Buffer *buf) {
 }
 
 Anchor *retrieveCurrentImg(Buffer *buf) {
-  if (!buf->layout.currentLine || !buf->img)
+  if (!buf->layout.currentLine || !buf->layout.img)
     return NULL;
-  return buf->img->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
+  return buf->layout.img->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *retrieveCurrentForm(Buffer *buf) {
-  if (!buf->layout.currentLine || !buf->formitem)
+  if (!buf->layout.currentLine || !buf->layout.formitem)
     return NULL;
-  return buf->formitem->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
+  return buf->layout.formitem->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *searchAnchor(AnchorList *al, const char *str) {
@@ -175,7 +175,7 @@ Anchor *searchAnchor(AnchorList *al, const char *str) {
 }
 
 Anchor *searchURLLabel(Buffer *buf, const char *url) {
-  return searchAnchor(buf->name, url);
+  return searchAnchor(buf->layout.name, url);
 }
 
 static Anchor *_put_anchor_all(Buffer *buf, const char *p1, const char *p2,
@@ -204,7 +204,7 @@ static void reseq_anchor(Buffer *buf) {
   if (!buf->layout.href)
     return;
 
-  int nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
+  int nmark = (buf->layout.hmarklist) ? buf->layout.hmarklist->nmark : 0;
   int n = nmark;
   for (size_t i = 0; i < buf->layout.href->size(); i++) {
     auto a = &buf->layout.href->anchors[i];
@@ -229,7 +229,7 @@ static void reseq_anchor(Buffer *buf) {
       a->hseq = n;
       auto a1 =
           closest_next_anchor(buf->layout.href, NULL, a->start.pos, a->start.line);
-      a1 = closest_next_anchor(buf->formitem, a1, a->start.pos, a->start.line);
+      a1 = closest_next_anchor(buf->layout.formitem, a1, a->start.pos, a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
         for (int j = a1->hseq; j < nmark; j++) {
@@ -242,13 +242,13 @@ static void reseq_anchor(Buffer *buf) {
   }
 
   for (int i = 0; i < nmark; i++) {
-    ml = putHmarker(ml, buf->hmarklist->marks[i].line,
-                    buf->hmarklist->marks[i].pos, seqmap[i]);
+    ml = putHmarker(ml, buf->layout.hmarklist->marks[i].line,
+                    buf->layout.hmarklist->marks[i].pos, seqmap[i]);
   }
-  buf->hmarklist = ml;
+  buf->layout.hmarklist = ml;
 
   reseq_anchor0(buf->layout.href, seqmap.data());
-  reseq_anchor0(buf->formitem, seqmap.data());
+  reseq_anchor0(buf->layout.formitem, seqmap.data());
 }
 
 static const char *reAnchorPos(Buffer *buf, Line *l, const char *p1,
@@ -463,12 +463,12 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
     for (j = 0; l && j < a_form.rows; l = l->next, j++) {
       pos = l->columnPos(col);
       if (j == 0) {
-        buf->hmarklist->marks[a_form.hseq].line = l->linenumber;
-        buf->hmarklist->marks[a_form.hseq].pos = pos;
+        buf->layout.hmarklist->marks[a_form.hseq].line = l->linenumber;
+        buf->layout.hmarklist->marks[a_form.hseq].pos = pos;
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      buf->formitem = putAnchor(buf->formitem, a_form.url, a_form.target, &a,
+      buf->layout.formitem = putAnchor(buf->layout.formitem, a_form.url, a_form.target, &a,
                                 NULL, NULL, '\0', l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
@@ -529,9 +529,9 @@ Buffer *link_list_panel(Buffer *buf) {
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-  if (buf->linklist) {
+  if (buf->layout.linklist) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-    for (l = buf->linklist; l; l = l->next) {
+    for (l = buf->layout.linklist; l; l = l->next) {
       if (l->url) {
         pu = Url::parse(l->url, baseURL(buf));
         p = Strnew(pu.to_Str())->ptr;
@@ -578,9 +578,9 @@ Buffer *link_list_panel(Buffer *buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->img) {
+  if (buf->layout.img) {
     Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-    al = buf->img;
+    al = buf->layout.img;
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->slave)
@@ -598,10 +598,10 @@ Buffer *link_list_panel(Buffer *buf) {
         t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
-      if (!buf->formitem) {
+      if (!buf->layout.formitem) {
         continue;
       }
-      a = buf->formitem->retrieveAnchor(a->start.line, a->start.pos);
+      a = buf->layout.formitem->retrieveAnchor(a->start.line, a->start.pos);
       if (!a)
         continue;
       fi = (FormItemList *)a->url;

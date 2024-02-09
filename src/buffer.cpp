@@ -45,14 +45,14 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->layout = src.layout;
   this->nextBuffer = src.nextBuffer;
   this->linkBuffer = src.linkBuffer;
-  this->name = src.name;
-  this->img = src.img;
-  this->formitem = src.formitem;
-  this->linklist = src.linklist;
-  this->formlist = src.formlist;
-  this->maplist = src.maplist;
-  this->hmarklist = src.hmarklist;
-  this->imarklist = src.imarklist;
+  this->layout.name = src.layout.name;
+  this->layout.img = src.layout.img;
+  this->layout.formitem = src.layout.formitem;
+  this->layout.linklist = src.layout.linklist;
+  this->layout.formlist = src.layout.formlist;
+  this->layout.maplist = src.layout.maplist;
+  this->layout.hmarklist = src.layout.hmarklist;
+  this->layout.imarklist = src.layout.imarklist;
   this->baseTarget = src.baseTarget;
   this->clone = src.clone;
   this->trbyte = src.trbyte;
@@ -382,16 +382,16 @@ void reshapeBuffer(Buffer *buf) {
   buf->layout.clearBuffer();
 
   buf->layout.href = nullptr;
-  buf->name = nullptr;
-  buf->img = nullptr;
-  buf->formitem = nullptr;
-  buf->formlist = nullptr;
-  buf->linklist = nullptr;
-  buf->maplist = nullptr;
-  if (buf->hmarklist)
-    buf->hmarklist->nmark = 0;
-  if (buf->imarklist)
-    buf->imarklist->nmark = 0;
+  buf->layout.name = nullptr;
+  buf->layout.img = nullptr;
+  buf->layout.formitem = nullptr;
+  buf->layout.formlist = nullptr;
+  buf->layout.linklist = nullptr;
+  buf->layout.maplist = nullptr;
+  if (buf->layout.hmarklist)
+    buf->layout.hmarklist->nmark = 0;
+  if (buf->layout.imarklist)
+    buf->layout.imarklist->nmark = 0;
 
   if (is_html_type(buf->info->type))
     loadHTMLBuffer(&f, buf);
@@ -433,7 +433,7 @@ void reshapeBuffer(Buffer *buf) {
   if (buf->check_url) {
     chkURLBuffer(buf);
   }
-  formResetBuffer(buf, sbuf->formitem);
+  formResetBuffer(buf, sbuf->layout.formitem);
 }
 
 Buffer *prevBuffer(Buffer *first, Buffer *buf) {
@@ -560,7 +560,7 @@ Buffer *page_info_panel(Buffer *buf) {
     }
     Strcat_charp(tmp, "</table>\n");
 
-    append_link_info(buf, tmp, buf->linklist);
+    append_link_info(buf, tmp, buf->layout.linklist);
 
     if (buf->info->document_header != nullptr) {
       Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
@@ -832,7 +832,7 @@ int checkBackBuffer(Buffer *buf) {
 
 /* go to the next downward/upward anchor */
 void nextY(int d) {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
   Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
   int hseq;
@@ -858,8 +858,8 @@ void nextY(int d) {
       if (Currentbuf->layout.href) {
         an = Currentbuf->layout.href->retrieveAnchor(y, x);
       }
-      if (!an && Currentbuf->formitem) {
-        an = Currentbuf->formitem->retrieveAnchor(y, x);
+      if (!an && Currentbuf->layout.formitem) {
+        an = Currentbuf->layout.formitem->retrieveAnchor(y, x);
       }
       if (an && hseq != abs(an->hseq)) {
         pan = an;
@@ -879,7 +879,7 @@ void nextY(int d) {
 
 /* go to the next left/right anchor */
 void nextX(int d, int dy) {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
   Anchor *an, *pan;
   Line *l;
   int i, x, y, n = searchKeyNum();
@@ -906,8 +906,8 @@ void nextX(int d, int dy) {
         if (Currentbuf->layout.href) {
           an = Currentbuf->layout.href->retrieveAnchor(y, x);
         }
-        if (!an && Currentbuf->formitem) {
-          an = Currentbuf->formitem->retrieveAnchor(y, x);
+        if (!an && Currentbuf->layout.formitem) {
+          an = Currentbuf->layout.formitem->retrieveAnchor(y, x);
         }
         if (an) {
           pan = an;
@@ -936,7 +936,7 @@ void nextX(int d, int dy) {
 
 /* go to the previous anchor */
 void _prevA(int visited) {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
   Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
@@ -973,8 +973,8 @@ void _prevA(int visited) {
         if (Currentbuf->layout.href) {
           an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
         }
-        if (visited != true && an == nullptr && Currentbuf->formitem) {
-          an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+        if (visited != true && an == nullptr && Currentbuf->layout.formitem) {
+          an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
         }
         hseq--;
         if (visited == true && an) {
@@ -987,7 +987,7 @@ void _prevA(int visited) {
     } else {
       an = closest_prev_anchor(Currentbuf->layout.href, nullptr, x, y);
       if (visited != true)
-        an = closest_prev_anchor(Currentbuf->formitem, an, x, y);
+        an = closest_prev_anchor(Currentbuf->layout.formitem, an, x, y);
       if (an == nullptr) {
         if (visited == true)
           return;
@@ -1019,7 +1019,7 @@ _end:
 
 /* go to the next [visited] anchor */
 void _nextA(int visited) {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
   Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
@@ -1056,8 +1056,8 @@ void _nextA(int visited) {
         if (Currentbuf->layout.href) {
           an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
         }
-        if (visited != true && an == nullptr && Currentbuf->formitem) {
-          an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+        if (visited != true && an == nullptr && Currentbuf->layout.formitem) {
+          an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
         }
         hseq++;
         if (visited == true && an) {
@@ -1070,7 +1070,7 @@ void _nextA(int visited) {
     } else {
       an = closest_next_anchor(Currentbuf->layout.href, nullptr, x, y);
       if (visited != true)
-        an = closest_next_anchor(Currentbuf->formitem, an, x, y);
+        an = closest_next_anchor(Currentbuf->layout.formitem, an, x, y);
       if (an == nullptr) {
         if (visited == true)
           return;

@@ -180,8 +180,8 @@ void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
   Anchor *a2;
   FormItemList *f2;
 
-  for (size_t i = 0; i < buf->formitem->size(); i++) {
-    a2 = &buf->formitem->anchors[i];
+  for (size_t i = 0; i < buf->layout.formitem->size(); i++) {
+    a2 = &buf->layout.formitem->anchors[i];
     f2 = (FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
@@ -197,10 +197,10 @@ void formResetBuffer(Buffer *buf, AnchorList *formitem) {
   Anchor *a;
   FormItemList *f1, *f2;
 
-  if (buf == NULL || buf->formitem == NULL || formitem == NULL)
+  if (buf == NULL || buf->layout.formitem == NULL || formitem == NULL)
     return;
-  for (size_t i = 0; i < buf->formitem->size() && i < formitem->size(); i++) {
-    a = &buf->formitem->anchors[i];
+  for (size_t i = 0; i < buf->layout.formitem->size() && i < formitem->size(); i++) {
+    a = &buf->layout.formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
     f1 = (FormItemList *)a->url;
@@ -377,9 +377,9 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
     for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
       if (l == NULL)
         break;
-      if (rows > 1 && buf->formitem) {
+      if (rows > 1 && buf->layout.formitem) {
         pos = l->columnPos(col);
-        a = buf->formitem->retrieveAnchor(l->linenumber, pos);
+        a = buf->layout.formitem->retrieveAnchor(l->linenumber, pos);
         if (a == NULL)
           break;
         spos = a->start.pos;
@@ -391,13 +391,13 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
                              rows > 1, form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(buf->layout.href, buf->hmarklist, a->start.line, spos,
+        shiftAnchorPosition(buf->layout.href, buf->layout.hmarklist, a->start.line, spos,
                             pos - epos);
-        shiftAnchorPosition(buf->name, buf->hmarklist, a->start.line, spos,
+        shiftAnchorPosition(buf->layout.name, buf->layout.hmarklist, a->start.line, spos,
                             pos - epos);
-        shiftAnchorPosition(buf->img, buf->hmarklist, a->start.line, spos,
+        shiftAnchorPosition(buf->layout.img, buf->layout.hmarklist, a->start.line, spos,
                             pos - epos);
-        shiftAnchorPosition(buf->formitem, buf->hmarklist, a->start.line, spos,
+        shiftAnchorPosition(buf->layout.formitem, buf->layout.hmarklist, a->start.line, spos,
                             pos - epos);
       }
     }
@@ -735,7 +735,7 @@ void preFormUpdateBuffer(Buffer *buf) {
   FormList *fl;
   FormItemList *fi;
 
-  if (!buf || !buf->formitem || !PreForm)
+  if (!buf || !buf->layout.formitem || !PreForm)
     return;
 
   for (pf = PreForm; pf; pf = pf->next) {
@@ -748,8 +748,8 @@ void preFormUpdateBuffer(Buffer *buf) {
         continue;
     } else
       continue;
-    for (size_t i = 0; i < buf->formitem->size(); i++) {
-      a = &buf->formitem->anchors[i];
+    for (size_t i = 0; i < buf->layout.formitem->size(); i++) {
+      a = &buf->layout.formitem->anchors[i];
       fi = (FormItemList *)a->url;
       fl = fi->parent;
       if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))

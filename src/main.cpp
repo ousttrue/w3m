@@ -594,8 +594,8 @@ void _followForm(int submit) {
     break;
 
   case FORM_INPUT_RESET:
-    for (size_t i = 0; i < Currentbuf->formitem->size(); i++) {
-      auto a2 = &Currentbuf->formitem->anchors[i];
+    for (size_t i = 0; i < Currentbuf->layout.formitem->size(); i++) {
+      auto a2 = &Currentbuf->layout.formitem->anchors[i];
       auto f2 = (FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&

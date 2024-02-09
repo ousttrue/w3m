@@ -44,14 +44,6 @@ struct Buffer : public gc_cleanup {
   Buffer *nextBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
 
-  AnchorList *name = nullptr;
-  AnchorList *img = nullptr;
-  AnchorList *formitem = nullptr;
-  LinkList *linklist = nullptr;
-  FormList *formlist = nullptr;
-  MapList *maplist = nullptr;
-  HmarkerList *hmarklist = nullptr;
-  HmarkerList *imarklist = nullptr;
   const char *baseTarget = nullptr;
   std::shared_ptr<Clone> clone;
 

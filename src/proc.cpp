@@ -690,7 +690,7 @@ DEFUN(submitForm, SUBMIT, "Submit form") { _followForm(true); }
 
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
   Anchor *an;
   int hseq = 0;
@@ -711,8 +711,8 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
     if (Currentbuf->layout.href) {
       an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
     }
-    if (an == nullptr && Currentbuf->formitem) {
-      an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+    if (an == nullptr && Currentbuf->layout.formitem) {
+      an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
     }
     hseq++;
   } while (an == nullptr);
@@ -725,7 +725,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
 
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
   Anchor *an;
   int hseq;
@@ -748,8 +748,8 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
     if (Currentbuf->layout.href) {
       an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
     }
-    if (an == nullptr && Currentbuf->formitem) {
-      an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+    if (an == nullptr && Currentbuf->layout.formitem) {
+      an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
     }
     hseq--;
   } while (an == nullptr);
@@ -762,7 +762,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
 
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link") {
-  HmarkerList *hl = Currentbuf->hmarklist;
+  HmarkerList *hl = Currentbuf->layout.hmarklist;
 
   int n = searchKeyNum();
   if (n < 0 || n > hl->nmark)
@@ -779,8 +779,8 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   if (Currentbuf->layout.href) {
     an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
   }
-  if (an == nullptr && Currentbuf->formitem) {
-    an = Currentbuf->formitem->retrieveAnchor(po->line, po->pos);
+  if (an == nullptr && Currentbuf->layout.formitem) {
+    an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
   }
   if (an == nullptr)
     return;

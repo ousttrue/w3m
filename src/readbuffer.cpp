@@ -3199,13 +3199,13 @@ static void addLink(Buffer *buf, struct HtmlTag *tag) {
   l->ctype = ctype;
   l->type = type;
   l->next = NULL;
-  if (buf->linklist) {
+  if (buf->layout.linklist) {
     LinkList *i;
-    for (i = buf->linklist; i->next; i = i->next)
+    for (i = buf->layout.linklist; i->next; i = i->next)
       ;
     i->next = l;
   } else
-    buf->linklist = l;
+    buf->layout.linklist = l;
 }
 
 static void proc_escape(struct readbuffer *obuf, const char **str_return) {
@@ -3849,15 +3849,15 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
           if (hseq > 0)
-            buf->hmarklist =
-                putHmarker(buf->hmarklist, currentLn(buf), pos, hseq - 1);
+            buf->layout.hmarklist =
+                putHmarker(buf->layout.hmarklist, currentLn(buf), pos, hseq - 1);
           else if (hseq < 0) {
             int h = -hseq - 1;
-            if (buf->hmarklist && h < buf->hmarklist->nmark &&
-                buf->hmarklist->marks[h].invalid) {
-              buf->hmarklist->marks[h].pos = pos;
-              buf->hmarklist->marks[h].line = currentLn(buf);
-              buf->hmarklist->marks[h].invalid = 0;
+            if (buf->layout.hmarklist && h < buf->layout.hmarklist->nmark &&
+                buf->layout.hmarklist->marks[h].invalid) {
+              buf->layout.hmarklist->marks[h].pos = pos;
+              buf->layout.hmarklist->marks[h].line = currentLn(buf);
+              buf->layout.hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -3875,9 +3875,9 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             a_href->end.pos = pos;
             if (a_href->start.line == a_href->end.line &&
                 a_href->start.pos == a_href->end.pos) {
-              if (buf->hmarklist && a_href->hseq >= 0 &&
-                  a_href->hseq < buf->hmarklist->nmark)
-                buf->hmarklist->marks[a_href->hseq].invalid = 1;
+              if (buf->layout.hmarklist && a_href->hseq >= 0 &&
+                  a_href->hseq < buf->layout.hmarklist->nmark)
+                buf->layout.hmarklist->marks[a_href->hseq].invalid = 1;
               a_href->hseq = -1;
             }
             a_href = NULL;
@@ -3924,18 +3924,18 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            buf->hmarklist =
-                putHmarker(buf->hmarklist, currentLn(buf), hpos, hseq - 1);
+            buf->layout.hmarklist =
+                putHmarker(buf->layout.hmarklist, currentLn(buf), hpos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (buf->hmarklist && h < buf->hmarklist->nmark &&
-                buf->hmarklist->marks[h].invalid) {
-              buf->hmarklist->marks[h].pos = hpos;
-              buf->hmarklist->marks[h].line = currentLn(buf);
-              buf->hmarklist->marks[h].invalid = 0;
+            if (buf->layout.hmarklist && h < buf->layout.hmarklist->nmark &&
+                buf->layout.hmarklist->marks[h].invalid) {
+              buf->layout.hmarklist->marks[h].pos = hpos;
+              buf->layout.hmarklist->marks[h].line = currentLn(buf);
+              buf->layout.hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -4110,9 +4110,9 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
   for (form_id = 1; form_id <= form_max; form_id++)
     if (forms[form_id])
       forms[form_id]->next = forms[form_id - 1];
-  buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
+  buf->layout.formlist = (form_max >= 0) ? forms[form_max] : NULL;
   if (n_textarea)
-    addMultirowsForm(buf, buf->formitem);
+    addMultirowsForm(buf, buf->layout.formitem);
 }
 void HTMLlineproc2(Buffer *buf, TextLineList *tl) {
   _tl_lp2 = tl->first;
@@ -4211,7 +4211,7 @@ Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
   newBuf->layout.lastLine = newBuf->layout.currentLine;
   newBuf->layout.currentLine = newBuf->layout.firstLine;
   if (n_textarea)
-    formResetBuffer(newBuf, newBuf->formitem);
+    formResetBuffer(newBuf, newBuf->layout.formitem);
   if (src)
     fclose(src);
 
@@ -4352,7 +4352,7 @@ Buffer *loadHTMLString(Str *page) {
   newBuf->info->type = "text/html";
   newBuf->info->real_type = newBuf->info->type;
   if (n_textarea)
-    formResetBuffer(newBuf, newBuf->formitem);
+    formResetBuffer(newBuf, newBuf->layout.formitem);
   return newBuf;
 }
 
