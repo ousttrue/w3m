@@ -1,6 +1,8 @@
 #include "line_layout.h"
 #include "message.h"
 #include "terms.h"
+#include "anchor.h"
+#include "form.h"
 
 int nextpage_topline = false;
 
@@ -339,4 +341,138 @@ void LineLayout::restorePosition(const LineLayout &orig) {
     this->pos += orig.currentLine->bpos - this->currentLine->bpos;
   this->currentColumn = orig.currentColumn;
   this->arrangeCursor();
+}
+
+static AnchorList *putAnchor(AnchorList *al, const char *url,
+                             const char *target, Anchor **anchor_return,
+                             const char *referer, const char *title,
+                             unsigned char key, int line, int pos) {
+  if (al == NULL) {
+    al = new AnchorList;
+  }
+
+  BufferPoint bp = {0};
+  bp.line = line;
+  bp.pos = pos;
+
+  size_t n = al->size();
+  size_t i;
+  if (!n || bpcmp(al->anchors[n - 1].start, bp) < 0) {
+    i = n;
+  } else {
+    for (i = 0; i < n; i++) {
+      if (bpcmp(al->anchors[i].start, bp) >= 0) {
+        for (size_t j = n; j > i; j--)
+          al->anchors[j] = al->anchors[j - 1];
+        break;
+      }
+    }
+  }
+
+  while (i >= al->anchors.size()) {
+    al->anchors.push_back({});
+  }
+  auto a = &al->anchors[i];
+  a->url = url;
+  a->target = target;
+  a->referer = referer;
+  a->title = title;
+  a->accesskey = key;
+  a->slave = false;
+  a->start = bp;
+  a->end = bp;
+  if (anchor_return)
+    *anchor_return = a;
+  return al;
+}
+
+Anchor *LineLayout::registerHref(const char *url, const char *target,
+                                 const char *referer, const char *title,
+                                 unsigned char key, int line, int pos) {
+  Anchor *a;
+  this->href =
+      putAnchor(this->href, url, target, &a, referer, title, key, line, pos);
+  return a;
+}
+
+Anchor *LineLayout::registerName(const char *url, int line, int pos) {
+  Anchor *a;
+  this->name =
+      putAnchor(this->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
+  return a;
+}
+
+Anchor *LineLayout::registerImg(const char *url, const char *title, int line,
+                                int pos) {
+  Anchor *a;
+  this->img = putAnchor(this->img, url, NULL, &a, NULL, title, '\0', line, pos);
+  return a;
+}
+
+Anchor *LineLayout::registerForm(FormList *flist, HtmlTag *tag, int line,
+                                 int pos) {
+
+  auto fi = formList_addInput(flist, tag);
+  if (!fi) {
+    return NULL;
+  }
+
+  Anchor *a;
+  this->formitem = putAnchor(this->formitem, (const char *)fi, flist->target,
+                             &a, NULL, NULL, '\0', line, pos);
+  return a;
+}
+
+void LineLayout::addMultirowsForm(AnchorList *al) {
+  int j, k, col, ecol, pos;
+  Anchor a_form, *a;
+  Line *l, *ls;
+
+  if (al == NULL || al->size() == 0)
+    return;
+  for (size_t i = 0; i < al->size(); i++) {
+    a_form = al->anchors[i];
+    al->anchors[i].rows = 1;
+    if (a_form.hseq < 0 || a_form.rows <= 1)
+      continue;
+    for (l = this->firstLine; l != NULL; l = l->next) {
+      if (l->linenumber == a_form.y)
+        break;
+    }
+    if (!l)
+      continue;
+    if (a_form.y == a_form.start.line)
+      ls = l;
+    else {
+      for (ls = l; ls != NULL;
+           ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
+        if (ls->linenumber == a_form.start.line)
+          break;
+      }
+      if (!ls)
+        continue;
+    }
+    col = ls->bytePosToColumn(a_form.start.pos);
+    ecol = ls->bytePosToColumn(a_form.end.pos);
+    for (j = 0; l && j < a_form.rows; l = l->next, j++) {
+      pos = l->columnPos(col);
+      if (j == 0) {
+        this->hmarklist->marks[a_form.hseq].line = l->linenumber;
+        this->hmarklist->marks[a_form.hseq].pos = pos;
+      }
+      if (a_form.start.line == l->linenumber)
+        continue;
+      this->formitem = putAnchor(this->formitem, a_form.url, a_form.target, &a,
+                                 NULL, NULL, '\0', l->linenumber, pos);
+      a->hseq = a_form.hseq;
+      a->y = a_form.y;
+      a->end.pos = pos + ecol - col;
+      if (pos < 1 || a->end.pos >= l->size())
+        continue;
+      l->lineBuf[pos - 1] = '[';
+      l->lineBuf[a->end.pos] = ']';
+      for (k = pos; k < a->end.pos; k++)
+        l->propBuf[k] |= PE_FORM;
+    }
+  }
 }

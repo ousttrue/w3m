@@ -22,87 +22,7 @@ bool MarkAllPages = false;
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 int PagerMax = PAGER_MAX_LINE;
 
-#define bpcmp(a, b)                                                            \
-  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
 #define FIRST_ANCHOR_SIZE 30
-
-AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
-                      Anchor **anchor_return, const char *referer,
-                      const char *title, unsigned char key, int line, int pos) {
-  if (al == NULL) {
-    al = new AnchorList;
-  }
-
-  BufferPoint bp = {0};
-  bp.line = line;
-  bp.pos = pos;
-
-  size_t n = al->size();
-  size_t i;
-  if (!n || bpcmp(al->anchors[n - 1].start, bp) < 0) {
-    i = n;
-  } else {
-    for (i = 0; i < n; i++) {
-      if (bpcmp(al->anchors[i].start, bp) >= 0) {
-        for (size_t j = n; j > i; j--)
-          al->anchors[j] = al->anchors[j - 1];
-        break;
-      }
-    }
-  }
-
-  while (i >= al->anchors.size()) {
-    al->anchors.push_back({});
-  }
-  auto a = &al->anchors[i];
-  a->url = url;
-  a->target = target;
-  a->referer = referer;
-  a->title = title;
-  a->accesskey = key;
-  a->slave = false;
-  a->start = bp;
-  a->end = bp;
-  if (anchor_return)
-    *anchor_return = a;
-  return al;
-}
-
-Anchor *registerHref(Buffer *buf, const char *url, const char *target,
-                     const char *referer, const char *title, unsigned char key,
-                     int line, int pos) {
-  Anchor *a;
-  buf->layout.href =
-      putAnchor(buf->layout.href, url, target, &a, referer, title, key, line, pos);
-  return a;
-}
-
-Anchor *registerName(Buffer *buf, const char *url, int line, int pos) {
-  Anchor *a;
-  buf->layout.name = putAnchor(buf->layout.name, url, NULL, &a, NULL, NULL, '\0', line, pos);
-  return a;
-}
-
-Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
-                    int pos) {
-  Anchor *a;
-  buf->layout.img = putAnchor(buf->layout.img, url, NULL, &a, NULL, title, '\0', line, pos);
-  return a;
-}
-
-Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag, int line,
-                     int pos) {
-  Anchor *a;
-  FormItemList *fi;
-
-  fi = formList_addInput(flist, tag);
-  if (fi == NULL)
-    return NULL;
-  buf->layout.formitem = putAnchor(buf->layout.formitem, (const char *)fi, flist->target, &a,
-                            NULL, NULL, '\0', line, pos);
-  return a;
-}
 
 int onAnchor(Anchor *a, int line, int pos) {
   BufferPoint bp;
@@ -145,19 +65,22 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
 Anchor *retrieveCurrentAnchor(Buffer *buf) {
   if (!buf->layout.currentLine || !buf->layout.href)
     return NULL;
-  return buf->layout.href->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
+  return buf->layout.href->retrieveAnchor(buf->layout.currentLine->linenumber,
+                                          buf->layout.pos);
 }
 
 Anchor *retrieveCurrentImg(Buffer *buf) {
   if (!buf->layout.currentLine || !buf->layout.img)
     return NULL;
-  return buf->layout.img->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
+  return buf->layout.img->retrieveAnchor(buf->layout.currentLine->linenumber,
+                                         buf->layout.pos);
 }
 
 Anchor *retrieveCurrentForm(Buffer *buf) {
   if (!buf->layout.currentLine || !buf->layout.formitem)
     return NULL;
-  return buf->layout.formitem->retrieveAnchor(buf->layout.currentLine->linenumber, buf->layout.pos);
+  return buf->layout.formitem->retrieveAnchor(
+      buf->layout.currentLine->linenumber, buf->layout.pos);
 }
 
 Anchor *searchAnchor(AnchorList *al, const char *str) {
@@ -183,8 +106,8 @@ static Anchor *_put_anchor_all(Buffer *buf, const char *p1, const char *p2,
   Str *tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
-  return registerHref(buf, url_quote(tmp->ptr).c_str(), NULL, NO_REFERER, NULL, '\0',
-                      line, pos);
+  return buf->layout.registerHref(url_quote(tmp->ptr).c_str(), NULL, NO_REFERER,
+                                  NULL, '\0', line, pos);
 }
 
 static void reseq_anchor0(AnchorList *al, short *seqmap) {
@@ -227,9 +150,10 @@ static void reseq_anchor(Buffer *buf) {
     auto a = &buf->layout.href->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
-      auto a1 =
-          closest_next_anchor(buf->layout.href, NULL, a->start.pos, a->start.line);
-      a1 = closest_next_anchor(buf->layout.formitem, a1, a->start.pos, a->start.line);
+      auto a1 = closest_next_anchor(buf->layout.href, NULL, a->start.pos,
+                                    a->start.line);
+      a1 = closest_next_anchor(buf->layout.formitem, a1, a->start.pos,
+                               a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
         for (int j = a1->hseq; j < nmark; j++) {
@@ -314,7 +238,8 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
   }
   for (l = MarkAllPages ? buf->layout.firstLine : buf->layout.topLine;
        l != NULL &&
-       (MarkAllPages || l->linenumber < buf->layout.topLine->linenumber + LASTLINE);
+       (MarkAllPages ||
+        l->linenumber < buf->layout.topLine->linenumber + LASTLINE);
        l = l->next) {
     if (p && l->bpos) {
       continue;
@@ -426,60 +351,6 @@ void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
     }
     if (a->end.pos >= pos)
       a->end.pos += shift;
-  }
-}
-
-void addMultirowsForm(Buffer *buf, AnchorList *al) {
-  int j, k, col, ecol, pos;
-  Anchor a_form, *a;
-  Line *l, *ls;
-
-  if (al == NULL || al->size() == 0)
-    return;
-  for (size_t i = 0; i < al->size(); i++) {
-    a_form = al->anchors[i];
-    al->anchors[i].rows = 1;
-    if (a_form.hseq < 0 || a_form.rows <= 1)
-      continue;
-    for (l = buf->layout.firstLine; l != NULL; l = l->next) {
-      if (l->linenumber == a_form.y)
-        break;
-    }
-    if (!l)
-      continue;
-    if (a_form.y == a_form.start.line)
-      ls = l;
-    else {
-      for (ls = l; ls != NULL;
-           ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
-        if (ls->linenumber == a_form.start.line)
-          break;
-      }
-      if (!ls)
-        continue;
-    }
-    col = ls->bytePosToColumn(a_form.start.pos);
-    ecol = ls->bytePosToColumn(a_form.end.pos);
-    for (j = 0; l && j < a_form.rows; l = l->next, j++) {
-      pos = l->columnPos(col);
-      if (j == 0) {
-        buf->layout.hmarklist->marks[a_form.hseq].line = l->linenumber;
-        buf->layout.hmarklist->marks[a_form.hseq].pos = pos;
-      }
-      if (a_form.start.line == l->linenumber)
-        continue;
-      buf->layout.formitem = putAnchor(buf->layout.formitem, a_form.url, a_form.target, &a,
-                                NULL, NULL, '\0', l->linenumber, pos);
-      a->hseq = a_form.hseq;
-      a->y = a_form.y;
-      a->end.pos = pos + ecol - col;
-      if (pos < 1 || a->end.pos >= l->size())
-        continue;
-      l->lineBuf[pos - 1] = '[';
-      l->lineBuf[a->end.pos] = ']';
-      for (k = pos; k < a->end.pos; k++)
-        l->propBuf[k] |= PE_FORM;
-    }
   }
 }
 

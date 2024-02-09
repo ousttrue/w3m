@@ -5,6 +5,7 @@ extern int nextpage_topline;
 
 struct Line;
 struct BufferPos;
+struct HtmlTag;
 struct LineLayout {
   LineLayout();
 
@@ -42,6 +43,14 @@ struct LineLayout {
       this->firstLine = l;
     }
   }
+  int currentLn() const {
+    if (currentLine) {
+      return currentLine->linenumber + 1;
+    } else {
+      return 1;
+    }
+  }
+
   Line *lineSkip(Line *line, int offset, int last);
   void arrangeLine();
   void cursorUpDown(int n);
@@ -111,4 +120,11 @@ struct LineLayout {
   HmarkerList *imarklist = nullptr;
   struct FormItemList *form_submit = nullptr;
   struct Anchor *submit = nullptr;
+
+  Anchor *registerHref(const char *url, const char *target, const char *referer,
+                       const char *title, unsigned char key, int line, int pos);
+  Anchor *registerName(const char *url, int line, int pos);
+  Anchor *registerImg(const char *url, const char *title, int line, int pos);
+  Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
+  void addMultirowsForm(AnchorList *al);
 };

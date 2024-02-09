@@ -3837,7 +3837,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           id = NULL;
           if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
             id = url_quote_conv(id, name_charset);
-            registerName(buf, id, currentLn(buf), pos);
+            buf->layout.registerName(id, buf->layout.currentLn(), pos);
           }
           if (parsedtag_get_value(tag, ATTR_HREF, &p))
             p = Strnew(url_quote(remove_space(p)))->ptr;
@@ -3849,21 +3849,22 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
           if (hseq > 0)
-            buf->layout.hmarklist =
-                putHmarker(buf->layout.hmarklist, currentLn(buf), pos, hseq - 1);
+            buf->layout.hmarklist = putHmarker(
+                buf->layout.hmarklist, buf->layout.currentLn(), pos, hseq - 1);
           else if (hseq < 0) {
             int h = -hseq - 1;
             if (buf->layout.hmarklist && h < buf->layout.hmarklist->nmark &&
                 buf->layout.hmarklist->marks[h].invalid) {
               buf->layout.hmarklist->marks[h].pos = pos;
-              buf->layout.hmarklist->marks[h].line = currentLn(buf);
+              buf->layout.hmarklist->marks[h].line = buf->layout.currentLn();
               buf->layout.hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = registerHref(buf, p, q, r, s, *t, currentLn(buf), pos);
+            a_href = buf->layout.registerHref(p, q, r, s, *t,
+                                              buf->layout.currentLn(), pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;
           }
@@ -3871,7 +3872,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         case HTML_N_A:
           effect &= ~PE_ANCHOR;
           if (a_href) {
-            a_href->end.line = currentLn(buf);
+            a_href->end.line = buf->layout.currentLn();
             a_href->end.pos = pos;
             if (a_href->start.line == a_href->end.line &&
                 a_href->start.pos == a_href->end.pos) {
@@ -3893,14 +3894,14 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             s = NULL;
             parsedtag_get_value(tag, ATTR_TITLE, &s);
             p = url_quote_conv(remove_space(p), buf->document_charset);
-            a_img = registerImg(buf, p, s, currentLn(buf), pos);
+            a_img = buf->layout.registerImg(p, s, buf->layout.currentLn(), pos);
           }
           effect |= PE_IMAGE;
           break;
         case HTML_N_IMG_ALT:
           effect &= ~PE_IMAGE;
           if (a_img) {
-            a_img->end.line = currentLn(buf);
+            a_img->end.line = buf->layout.currentLn();
             a_img->end.pos = pos;
           }
           a_img = NULL;
@@ -3924,8 +3925,8 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            buf->layout.hmarklist =
-                putHmarker(buf->layout.hmarklist, currentLn(buf), hpos, hseq - 1);
+            buf->layout.hmarklist = putHmarker(
+                buf->layout.hmarklist, buf->layout.currentLn(), hpos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
@@ -3934,7 +3935,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
             if (buf->layout.hmarklist && h < buf->layout.hmarklist->nmark &&
                 buf->layout.hmarklist->marks[h].invalid) {
               buf->layout.hmarklist->marks[h].pos = hpos;
-              buf->layout.hmarklist->marks[h].line = currentLn(buf);
+              buf->layout.hmarklist->marks[h].line = buf->layout.currentLn();
               buf->layout.hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
@@ -3952,12 +3953,13 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
                   (Anchor **)New_Reuse(Anchor *, a_textarea, max_textarea);
             }
           }
-          a_form = registerForm(buf, form, tag, currentLn(buf), pos);
+          a_form =
+              buf->layout.registerForm(form, tag, buf->layout.currentLn(), pos);
           if (a_textarea && textareanumber >= 0)
             a_textarea[textareanumber] = a_form;
           if (a_form) {
             a_form->hseq = hseq - 1;
-            a_form->y = currentLn(buf) - top;
+            a_form->y = buf->layout.currentLn() - top;
             a_form->rows = 1 + top + bottom;
             if (!parsedtag_exists(tag, ATTR_NO_EFFECT))
               effect |= PE_FORM;
@@ -3967,7 +3969,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         case HTML_N_INPUT_ALT:
           effect &= ~PE_FORM;
           if (a_form) {
-            a_form->end.line = currentLn(buf);
+            a_form->end.line = buf->layout.currentLn();
             a_form->end.pos = pos;
             if (a_form->start.line == a_form->end.line &&
                 a_form->start.pos == a_form->end.pos)
@@ -4087,7 +4089,7 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
         id = NULL;
         if (parsedtag_get_value(tag, ATTR_ID, &id)) {
           id = url_quote_conv(id, name_charset);
-          registerName(buf, id, currentLn(buf), pos);
+          buf->layout.registerName(id, buf->layout.currentLn(), pos);
         }
 #endif /* ID_EXT */
       }
@@ -4111,8 +4113,9 @@ static void HTMLlineproc2body(Buffer *buf, Str *(*feed)(), int llimit) {
     if (forms[form_id])
       forms[form_id]->next = forms[form_id - 1];
   buf->layout.formlist = (form_max >= 0) ? forms[form_max] : NULL;
-  if (n_textarea)
-    addMultirowsForm(buf, buf->layout.formitem);
+  if (n_textarea) {
+    buf->layout.addMultirowsForm(buf->layout.formitem);
+  }
 }
 void HTMLlineproc2(Buffer *buf, TextLineList *tl) {
   _tl_lp2 = tl->first;
@@ -4142,7 +4145,8 @@ void loadHTMLstream(UrlStream *f, Buffer *newBuf, FILE *src, int internal) {
   forms = NULL;
   cur_hseq = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->layout.width, 0);
+  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->layout.width,
+            0);
 
   htmlenv1.buf = newTextLineList();
 
@@ -4354,14 +4358,6 @@ Buffer *loadHTMLString(Str *page) {
   if (n_textarea)
     formResetBuffer(newBuf, newBuf->layout.formitem);
   return newBuf;
-}
-
-int currentLn(Buffer *buf) {
-  if (buf->layout.currentLine)
-    /*     return buf->currentLine->real_linenumber + 1;      */
-    return buf->layout.currentLine->linenumber + 1;
-  else
-    return 1;
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {

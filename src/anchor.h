@@ -2,6 +2,9 @@
 #include <gc_cpp.h>
 #include <vector>
 
+#define bpcmp(a, b)                                                            \
+  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
+
 extern bool MarkAllPages;
 extern int PagerMax;
 
@@ -47,9 +50,6 @@ struct HmarkerList {
   int prevhseq;
 };
 
-AnchorList *putAnchor(AnchorList *al, const char *url, const char *target,
-                      Anchor **anchor_return, const char *referer,
-                      const char *title, unsigned char key, int line, int pos);
 int onAnchor(Anchor *a, int line, int pos);
 Anchor *searchAnchor(AnchorList *al, const char *str);
 Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
@@ -59,17 +59,6 @@ void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line, int pos,
                          int shift);
 struct Buffer;
 const char *reAnchor(Buffer *buf, const char *re);
-Anchor *registerHref(Buffer *buf, const char *url, const char *target,
-                     const char *referer, const char *title, unsigned char key,
-                     int line, int pos);
-Anchor *registerName(Buffer *buf, const char *url, int line, int pos);
-Anchor *registerImg(Buffer *buf, const char *url, const char *title, int line,
-                    int pos);
-struct FormList;
-struct HtmlTag;
-Anchor *registerForm(Buffer *buf, FormList *flist, HtmlTag *tag, int line,
-                     int pos);
-
 Anchor *retrieveCurrentAnchor(Buffer *buf);
 Anchor *retrieveCurrentImg(Buffer *buf);
 Anchor *retrieveCurrentForm(Buffer *buf);
@@ -77,7 +66,6 @@ Anchor *searchURLLabel(Buffer *buf, const char *url);
 struct Line;
 void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
 struct AnchorList;
-void addMultirowsForm(Buffer *buf, AnchorList *al);
 
 const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
 Buffer *link_list_panel(Buffer *buf);
@@ -86,4 +74,3 @@ const char *html_quote(const char *str);
 const char *html_unquote(const char *str);
 int getescapechar(const char **s);
 const char *getescapecmd(const char **s);
-
