@@ -10,6 +10,6 @@ struct BufferPos {
   BufferPos *prev;
 };
 
-struct Buffer;
-void save_buffer_position(Buffer *buf);
+struct LineLayout;
+void save_buffer_position(LineLayout *buf);
 void resetPos(BufferPos *b);

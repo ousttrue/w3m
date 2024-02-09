@@ -1233,7 +1233,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   Currentbuf->form_submit = sbuf->form_submit;
   if (Currentbuf->layout.firstLine) {
     Currentbuf->layout.COPY_BUFROOT_FROM(sbuf->layout);
-    restorePosition(Currentbuf, sbuf);
+    Currentbuf->layout.restorePosition(sbuf->layout);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1556,7 +1556,7 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   }
   if (replace) {
     buf->layout.COPY_BUFROOT_FROM(Currentbuf->layout);
-    restorePosition(buf, Currentbuf);
+    buf->layout.restorePosition(Currentbuf->layout);
   }
   if (!replace && open_tab_dl_list) {
     _newT();
@@ -1572,27 +1572,23 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
 }
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
-  BufferPos *b = Currentbuf->undo;
-  int i;
-
+  BufferPos *b = Currentbuf->layout.undo;
   if (!Currentbuf->layout.firstLine)
     return;
   if (!b || !b->prev)
     return;
-  for (i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
+  for (int i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
     ;
   resetPos(b);
 }
 
 DEFUN(redoPos, REDO, "Cancel the last undo") {
-  BufferPos *b = Currentbuf->undo;
-  int i;
-
+  BufferPos *b = Currentbuf->layout.undo;
   if (!Currentbuf->layout.firstLine)
     return;
   if (!b || !b->next)
     return;
-  for (i = 0; i < PREC_NUM && b->next; i++, b = b->next)
+  for (int i = 0; i < PREC_NUM && b->next; i++, b = b->next)
     ;
   resetPos(b);
 }

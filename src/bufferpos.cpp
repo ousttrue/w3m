@@ -1,24 +1,25 @@
 #include "bufferpos.h"
-#include "buffer.h"
 #include "display.h"
 #include "alloc.h"
 #include "tabbuffer.h"
+#include "line_layout.h"
+#include "buffer.h"
 
-void save_buffer_position(Buffer *buf) {
+void save_buffer_position(LineLayout *buf) {
   BufferPos *b = buf->undo;
 
-  if (!buf->layout.firstLine)
+  if (!buf->firstLine)
     return;
-  if (b && b->top_linenumber == buf->layout.TOP_LINENUMBER() &&
-      b->cur_linenumber == buf->layout.CUR_LINENUMBER() &&
-      b->currentColumn == buf->layout.currentColumn && b->pos == buf->layout.pos)
+  if (b && b->top_linenumber == buf->TOP_LINENUMBER() &&
+      b->cur_linenumber == buf->CUR_LINENUMBER() &&
+      b->currentColumn == buf->currentColumn && b->pos == buf->pos)
     return;
   b = (BufferPos *)New(BufferPos);
-  b->top_linenumber = buf->layout.TOP_LINENUMBER();
-  b->cur_linenumber = buf->layout.CUR_LINENUMBER();
-  b->currentColumn = buf->layout.currentColumn;
-  b->pos = buf->layout.pos;
-  b->bpos = buf->layout.currentLine ? buf->layout.currentLine->bpos : 0;
+  b->top_linenumber = buf->TOP_LINENUMBER();
+  b->cur_linenumber = buf->CUR_LINENUMBER();
+  b->currentColumn = buf->currentColumn;
+  b->pos = buf->pos;
+  b->bpos = buf->currentLine ? buf->currentLine->bpos : 0;
   b->next = NULL;
   b->prev = buf->undo;
   if (buf->undo)
@@ -27,17 +28,17 @@ void save_buffer_position(Buffer *buf) {
 }
 
 void resetPos(BufferPos *b) {
-  auto buf = new Buffer(0);
+  LineLayout buf;
   auto top = new Line(b->top_linenumber);
-  buf->layout.topLine = top;
+  buf.topLine = top;
 
   auto cur = new Line(b->cur_linenumber);
   cur->bpos = b->bpos;
 
-  buf->layout.currentLine = cur;
-  buf->layout.pos = b->pos;
-  buf->layout.currentColumn = b->currentColumn;
-  restorePosition(Currentbuf, buf);
-  Currentbuf->undo = b;
+  buf.currentLine = cur;
+  buf.pos = b->pos;
+  buf.currentColumn = b->currentColumn;
+  Currentbuf->layout.restorePosition(buf);
+  Currentbuf->layout.undo = b;
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

@@ -670,46 +670,6 @@ void addMChar(char *p, Lineprop mode, size_t len) {
 
 void addChar(char c, Lineprop mode) { addMChar(&c, mode, 1); }
 
-void cursorHome(Buffer *buf) {
-  buf->layout.visualpos = 0;
-  buf->layout.cursorX = buf->layout.cursorY = 0;
-}
-
-void cursorXY(Buffer *buf, int x, int y) {
-  buf->layout.cursorUpDown(y - buf->layout.cursorY);
-
-  if (buf->layout.cursorX > x) {
-    while (buf->layout.cursorX > x) {
-      buf->layout.cursorLeft(buf->layout.COLS / 2);
-    }
-  } else if (buf->layout.cursorX < x) {
-    while (buf->layout.cursorX < x) {
-      auto oldX = buf->layout.cursorX;
-
-      buf->layout.cursorRight(buf->layout.COLS / 2);
-
-      if (oldX == buf->layout.cursorX) {
-        break;
-      }
-    }
-    if (buf->layout.cursorX > x) {
-      buf->layout.cursorLeft(buf->layout.COLS / 2);
-    }
-  }
-}
-
-void restorePosition(Buffer *buf, Buffer *orig) {
-  buf->layout.topLine = buf->layout.lineSkip(
-      buf->layout.firstLine, orig->layout.TOP_LINENUMBER() - 1, false);
-  buf->layout.gotoLine(orig->layout.CUR_LINENUMBER());
-  buf->layout.pos = orig->layout.pos;
-  if (buf->layout.currentLine && orig->layout.currentLine)
-    buf->layout.pos +=
-        orig->layout.currentLine->bpos - buf->layout.currentLine->bpos;
-  buf->layout.currentColumn = orig->layout.currentColumn;
-  buf->layout.arrangeCursor();
-}
-
 /*
  * Command functions: These functions are called with a keystroke.
  */

@@ -65,7 +65,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->image_loaded = src.image_loaded;
   this->need_reshape = src.need_reshape;
   this->submit = src.submit;
-  this->undo = src.undo;
   this->event = src.event;
   return *this;
 }

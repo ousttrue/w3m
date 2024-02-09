@@ -4,6 +4,7 @@
 extern int nextpage_topline;
 
 struct Line;
+struct BufferPos;
 struct LineLayout {
   LineLayout();
 
@@ -51,6 +52,9 @@ struct LineLayout {
   void arrangeCursor();
   void cursorRight(int n);
   void cursorLeft(int n);
+  void cursorHome();
+  void cursorXY(int x, int y);
+  void restorePosition(const LineLayout &orig);
 
   //
   // viewport
@@ -67,6 +71,8 @@ struct LineLayout {
 
   int pos = 0;
   int visualpos = 0;
+
+  BufferPos *undo = nullptr;
 
   int AbsCursorX() const { return cursorX + rootX; }
   int AbsCursorY() const { return cursorY + rootY; }

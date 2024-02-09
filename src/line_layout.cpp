@@ -301,3 +301,42 @@ void LineLayout::cursorLeft(int n) {
   }
   this->cursorX = this->visualpos - l->bwidth;
 }
+
+void LineLayout::cursorHome() {
+  this->visualpos = 0;
+  this->cursorX = this->cursorY = 0;
+}
+
+void LineLayout::cursorXY(int x, int y) {
+  this->cursorUpDown(y - this->cursorY);
+
+  if (this->cursorX > x) {
+    while (this->cursorX > x) {
+      this->cursorLeft(this->COLS / 2);
+    }
+  } else if (this->cursorX < x) {
+    while (this->cursorX < x) {
+      auto oldX = this->cursorX;
+
+      this->cursorRight(this->COLS / 2);
+
+      if (oldX == this->cursorX) {
+        break;
+      }
+    }
+    if (this->cursorX > x) {
+      this->cursorLeft(this->COLS / 2);
+    }
+  }
+}
+
+void LineLayout::restorePosition(const LineLayout &orig) {
+  this->topLine =
+      this->lineSkip(this->firstLine, orig.TOP_LINENUMBER() - 1, false);
+  this->gotoLine(orig.CUR_LINENUMBER());
+  this->pos = orig.pos;
+  if (this->currentLine && orig.currentLine)
+    this->pos += orig.currentLine->bpos - this->currentLine->bpos;
+  this->currentColumn = orig.currentColumn;
+  this->arrangeCursor();
+}

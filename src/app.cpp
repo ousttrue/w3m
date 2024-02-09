@@ -176,7 +176,7 @@ void mainLoop() {
           prec_num = PREC_LIMIT;
       } else {
         set_buffer_environ(Currentbuf);
-        save_buffer_position(Currentbuf);
+        save_buffer_position(&Currentbuf->layout);
         keyPressEventProc((int)c);
         prec_num = 0;
       }

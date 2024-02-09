@@ -30,7 +30,6 @@ struct MapList;
 struct TextList;
 struct Line;
 struct LinkList;
-struct BufferPos;
 struct AlarmEvent;
 struct HttpResponse;
 
@@ -67,7 +66,6 @@ struct Buffer : public gc_cleanup {
   // always reshape new buffers to mark URLs
   bool need_reshape = true;
   Anchor *submit = nullptr;
-  BufferPos *undo = nullptr;
   AlarmEvent *event = nullptr;
 
   Buffer(int width);
@@ -101,8 +99,6 @@ extern Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf,
 extern void reshapeBuffer(Buffer *buf);
 extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
 
-extern void cursorHome(Buffer *buf);
-extern void cursorXY(Buffer *buf, int x, int y);
 extern void chkURLBuffer(Buffer *buf);
 void isrch(int (*func)(Buffer *, const char *), const char *prompt);
 void srch(int (*func)(Buffer *, const char *), const char *prompt);
