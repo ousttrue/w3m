@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 #include <optional>
+#include <memory>
 
 extern const char *DefaultType;
 extern bool DecodeCTE;
@@ -11,6 +12,8 @@ struct Buffer;
 struct Url;
 struct FormList;
 struct UrlStream;
+struct HttpResponse;
+struct LineLayout;
 
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request = {});
@@ -25,7 +28,8 @@ bool couldWrite(const char *path);
 int setModtime(const char *path, time_t modtime);
 const char *shell_quote(const char *str);
 struct UrlStream;
-Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf);
+void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
+                LineLayout *layout);
 Buffer *loadHTMLString(Str *page);
 void cmd_loadBuffer(Buffer *buf, int linkid);
 void cmd_loadfile(const char *fn);

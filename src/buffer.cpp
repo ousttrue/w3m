@@ -360,7 +360,7 @@ void reshapeBuffer(Buffer *buf) {
   if (is_html_type(buf->info->type))
     loadHTMLstream(&f, buf->info, &buf->layout);
   else
-    loadBuffer(&f, buf);
+    loadBuffer(&f, buf->info, &buf->layout);
 
   buf->layout.height = LASTLINE + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {

@@ -36,10 +36,10 @@ bool DecodeCTE = false;
 static long long current_content_length;
 
 static int is_text_type(const char *type) {
-  return (type == NULL || type[0] == '\0' ||
+  return (type == nullptr || type[0] == '\0' ||
           strncasecmp(type, "text/", 5) == 0 ||
           (strncasecmp(type, "application/", 12) == 0 &&
-           strstr(type, "xhtml") != NULL) ||
+           strstr(type, "xhtml") != nullptr) ||
           strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
 }
 
@@ -51,34 +51,35 @@ int is_html_type(const char *type) {
 /*
  * loadBuffer: read file and make new buffer
  */
-Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
-  FILE *src = NULL;
-  char pre_lbuf = '\0';
-  int nlines;
-  Str *tmpf;
-  Lineprop *propBuffer = NULL;
-  // MySignalHandler prevtrap = NULL;
+void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
+                LineLayout *layout) {
+  // int nlines;
+  // Str *tmpf;
+  // MySignalHandler prevtrap = nullptr;
 
-  if (newBuf == NULL)
-    newBuf = new Buffer(INIT_BUFFER_WIDTH());
+  // if (newBuf == nullptr)
+  //   newBuf = new Buffer(INIT_BUFFER_WIDTH());
 
   // if (SETJMP(AbortLoading) != 0) {
   //   goto _end;
   // }
   // TRAP_ON;
 
-  if (newBuf->info->sourcefile.empty() && uf->schema != SCM_LOCAL) {
-    tmpf = tmpfname(TMPF_SRC, NULL);
+  FILE *src = nullptr;
+  if (res->sourcefile.empty() && uf->schema != SCM_LOCAL) {
+    auto tmpf = tmpfname(TMPF_SRC, nullptr);
     src = fopen(tmpf->ptr, "w");
-    if (src)
-      newBuf->info->sourcefile = tmpf->ptr;
+    if (src) {
+      res->sourcefile = tmpf->ptr;
+    }
   }
 
-  nlines = 0;
+  auto nlines = 0;
   if (uf->stream->IStype() != IST_ENCODED) {
     uf->stream = newEncodedStream(uf->stream, uf->encoding);
   }
 
+  char pre_lbuf = '\0';
   // long long linelen = 0;
   // long long trbyte = 0;
   while (true) {
@@ -102,20 +103,22 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
     }
     ++nlines;
     Strchop(lineBuf2);
+
+    Lineprop *propBuffer = nullptr;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    newBuf->layout.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                              FOLD_BUFFER_WIDTH(), nlines);
+    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
+                       FOLD_BUFFER_WIDTH(), nlines);
   }
   // _end:
   // TRAP_OFF;
-  newBuf->layout.topLine = newBuf->layout.firstLine;
-  newBuf->layout.lastLine = newBuf->layout.currentLine;
-  newBuf->layout.currentLine = newBuf->layout.firstLine;
+  layout->topLine = layout->firstLine;
+  layout->lastLine = layout->currentLine;
+  layout->currentLine = layout->firstLine;
   // newBuf->trbyte = trbyte + linelen;
-  if (src)
+  if (src) {
     fclose(src);
-
-  return newBuf;
+  }
+  res->type = "text/plain";
 }
 
 /*
@@ -136,29 +139,23 @@ enum class LoadProc {
   Buffer,
 };
 
-static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(UrlStream *, Buffer *),
-                          Buffer *defaultbuf) {
-  FILE *f, *popen(const char *, const char *);
-  Buffer *buf;
-
-  if (cmd == NULL || *cmd == '\0')
-    return NULL;
-  f = popen(cmd, "r");
-  if (f == NULL)
-    return NULL;
-
-  UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
-  buf = loadproc(&uf, defaultbuf);
-  return buf;
-}
-
 #define SHELLBUFFERNAME "*Shellout*"
 Buffer *getshell(const char *cmd) {
-  Buffer *buf;
+  if (cmd == nullptr || *cmd == '\0') {
+    return nullptr;
+  }
 
-  buf = loadcmdout((char *)cmd, loadBuffer, NULL);
-  if (buf == NULL)
-    return NULL;
+  auto f = popen(cmd, "r");
+  if (f == nullptr) {
+    return nullptr;
+  }
+
+  UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  loadBuffer(&uf, buf->info, &buf->layout);
+
+  // Buffer *buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
@@ -166,21 +163,19 @@ Buffer *getshell(const char *cmd) {
 
 static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
                              const Url &pu, const char *real_type) {
-  Buffer *buf = nullptr;
+  Buffer *buf = src;
   switch (loadproc) {
   case LoadProc::Html:
-    buf = src;
     loadHTMLstream(f, src->info, &src->layout);
     break;
   case LoadProc::Buffer:
-    buf = loadBuffer(f, src);
-    buf->info->type = "text/plain";
+    loadBuffer(f, src->info, &src->layout);
     break;
   }
 
   if (buf->layout.title.empty() || buf->layout.title[0] == '\0') {
     buf->layout.title = buf->info->getHeader("Subject:");
-    if (buf->layout.title.empty() && buf->info->filename != NULL)
+    if (buf->layout.title.empty() && buf->info->filename != nullptr)
       buf->layout.title = lastFileName(buf->info->filename);
   }
   if (buf->info->currentURL.schema == SCM_UNKNOWN)
@@ -195,7 +190,7 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
       if (loadproc == LoadProc::Html) {
         Anchor *a;
         a = searchURLLabel(buf, pu.label.c_str());
-        if (a != NULL) {
+        if (a != nullptr) {
           buf->layout.gotoLine(a->start.line);
           if (label_topline)
             buf->layout.topLine =
@@ -221,11 +216,11 @@ static int _MoveFile(const char *path1, const char *path2) {
   FILE *f2;
   int is_pipe;
   long long linelen = 0, trbyte = 0;
-  char *buf = NULL;
+  char *buf = nullptr;
   int count;
 
   auto f1 = openIS(path1);
-  if (f1 == NULL)
+  if (f1 == nullptr)
     return -1;
   if (*path2 == '|' && PermitSaveToPipe) {
     is_pipe = true;
@@ -234,7 +229,7 @@ static int _MoveFile(const char *path1, const char *path2) {
     is_pipe = false;
     f2 = fopen(path2, "wb");
   }
-  if (f2 == NULL) {
+  if (f2 == nullptr) {
     f1->close();
     return -1;
   }
@@ -270,7 +265,7 @@ int checkCopyFile(const char *path1, const char *path2) {
 int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   Str *msg;
   Str *filen;
-  const char *p, *q = NULL;
+  const char *p, *q = nullptr;
   pid_t pid;
   char *lock;
   struct stat st;
@@ -279,10 +274,10 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
 
   if (fmInitialized) {
     p = searchKeyData();
-    if (p == NULL || *p == '\0') {
+    if (p == nullptr || *p == '\0') {
       // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
       //                   SaveHist);
-      if (q == NULL || *q == '\0')
+      if (q == nullptr || *q == '\0')
         return false;
       p = q;
     }
@@ -325,7 +320,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     addDownloadList(pid, tmpf, p, lock, size);
   } else {
     q = searchKeyData();
-    if (q == NULL || *q == '\0') {
+    if (q == nullptr || *q == '\0') {
       printf("(Download)Save file to: ");
       fflush(stdout);
       filen = Strfgets(stdin);
@@ -368,9 +363,9 @@ int doFileMove(const char *tmpf, const char *defstr) {
 
 static long long strtoclen(const char *s) {
 #ifdef HAVE_STRTOLL
-  return strtoll(s, NULL, 10);
+  return strtoll(s, nullptr, 10);
 #elif defined(HAVE_STRTOQ)
-  return strtoq(s, NULL, 10);
+  return strtoq(s, nullptr, 10);
 #elif defined(HAVE_ATOLL)
   return atoll(s);
 #elif defined(HAVE_ATOQ)
@@ -396,7 +391,7 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
   //   }
   //   if (do_download) {
   //     if (!src)
-  //       return NULL;
+  //       return nullptr;
   //     auto file = guess_filename(hr->url.file.c_str());
   //     doFileMove(tmp->ptr, file);
   //     return NO_BUFFER;
@@ -445,7 +440,7 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
     hr->url.real_file = f.uncompress_stream();
   } else if (f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(t))) {
-      if (t_buf == NULL)
+      if (t_buf == nullptr)
         t_buf = new Buffer(INIT_BUFFER_WIDTH());
       t_buf->info->sourcefile = f.uncompress_stream();
       uncompressed_file_type(hr->url.file.c_str(), &f.ext);
@@ -461,7 +456,7 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
   } else {
     proc = LoadProc::Buffer;
   }
-  if (t_buf == NULL)
+  if (t_buf == nullptr)
     t_buf = new Buffer(INIT_BUFFER_WIDTH());
   t_buf->info->currentURL = hr->url;
   t_buf->info->filename = hr->url.real_file.size()
@@ -471,7 +466,7 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
 
   auto b = loadSomething(&f, proc, t_buf, hr->url, real_type);
   // if (header_string)
-  //   header_string = NULL;
+  //   header_string = nullptr;
   if (b && b != NO_BUFFER)
     preFormUpdateBuffer(b);
   // TRAP_OFF;
@@ -489,19 +484,19 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   auto hr = f.openURL(path, current, option, request);
 
   // Directory Open ?
-  // if (f.stream == NULL) {
+  // if (f.stream == nullptr) {
   //   switch (f.schema) {
   //   case SCM_LOCAL: {
   //     struct stat st;
   //     if (stat(pu.real_file.c_str(), &st) < 0)
-  //       return NULL;
+  //       return nullptr;
   //     if (S_ISDIR(st.st_mode)) {
   //       if (UseExternalDirBuffer) {
   //         Str *cmd =
   //             Sprintf("%s?dir=%s#current", DirBufferCommand,
   //             pu.file.c_str());
   //         auto b = loadGeneralFile(cmd->ptr, {}, {.referer = NO_REFERER});
-  //         if (b != NULL && b != NO_BUFFER) {
+  //         if (b != nullptr && b != NO_BUFFER) {
   //           b->info->currentURL = pu;
   //           b->info->filename = Strnew(b->info->currentURL.real_file)->ptr;
   //         }
@@ -523,12 +518,12 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   //   }
   //   if (page && page->length > 0)
   //     return page_loaded();
-  //   return NULL;
+  //   return nullptr;
   // }
 
   if (hr && hr->status == HTST_MISSING) {
     // TRAP_OFF;
-    return NULL;
+    return nullptr;
   }
 
   /* openURL() succeeded */
@@ -537,17 +532,17 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   //   TRAP_OFF;
   //   if (b)
   //     discardBuffer(b);
-  //   return NULL;
+  //   return nullptr;
   // }
 
-  // b = NULL;
+  // b = nullptr;
   // if (header_string){
-  //   header_string = NULL;
+  //   header_string = nullptr;
   // }
 
   // TRAP_ON;
   const char *t = "text/plain";
-  const char *real_type = NULL;
+  const char *real_type = nullptr;
   auto t_buf = new Buffer(INIT_BUFFER_WIDTH());
   if (hr->url.schema == SCM_HTTP || hr->url.schema == SCM_HTTPS) {
 
@@ -562,7 +557,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
-        (p = t_buf->info->getHeader("Location:")) != NULL &&
+        (p = t_buf->info->getHeader("Location:")) != nullptr &&
         t_buf->info->checkRedirection(hr->url)) {
       /* document moved */
       /* 301: Moved Permanently */
@@ -573,12 +568,12 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     }
 
     t = t_buf->info->checkContentType();
-    if (t == NULL && hr->url.file.size()) {
+    if (t == nullptr && hr->url.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
         t = guessContentType(hr->url.file.c_str());
     }
-    if (t == NULL) {
+    if (t == nullptr) {
       t = "text/plain";
     }
     hr->add_auth_cookie();
@@ -590,7 +585,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
           (hr->realm = get_auth_param(hauth.param, "realm"))) {
         getAuthCookie(&hauth, "Authorization:", hr->url, hr.get(), request,
                       &hr->uname, &hr->pwd);
-        if (hr->uname == NULL) {
+        if (hr->uname == nullptr) {
           /* abort */
           // TRAP_OFF;
           return page_loaded(hr, t_buf, f, t, {});
@@ -610,7 +605,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     t = f.guess_type;
   } else if (DefaultType) {
     t = DefaultType;
-    DefaultType = NULL;
+    DefaultType = nullptr;
   } else {
     t = guessContentType(hr->url.file.c_str());
     if (!t) {
@@ -637,7 +632,7 @@ int setModtime(const char *path, time_t modtime) {
   if (stat(path, &st) == 0)
     t.actime = st.st_atime;
   else
-    t.actime = time(NULL);
+    t.actime = time(nullptr);
   t.modtime = modtime;
   return utime(path, &t);
 }
@@ -646,7 +641,7 @@ static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
 
   auto is_html = is_html_type(buf->info->type);
 
-  for (; l != NULL; l = l->next) {
+  for (; l != nullptr; l = l->next) {
     Str *tmp;
     if (is_html)
       tmp = conv_symbol(l);
@@ -678,12 +673,12 @@ bool couldWrite(const char *path) {
 }
 
 const char *shell_quote(const char *str) {
-  Str *tmp = NULL;
+  Str *tmp = nullptr;
   const char *p;
 
   for (p = str; *p; p++) {
     if (is_shell_unsafe(*p)) {
-      if (tmp == NULL)
+      if (tmp == nullptr)
         tmp = Strnew_charp_n(str, (int)(p - str));
       Strcat_char(tmp, '\\');
       Strcat_char(tmp, *p);
