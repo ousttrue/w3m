@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <vector>
+#include <unistd.h>
 
 #define STREAM_BUF_SIZE 8192
 

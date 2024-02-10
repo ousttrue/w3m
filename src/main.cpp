@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "alloc.h"
 #include "url_quote.h"
 #include "tabbuffer.h"
@@ -50,6 +51,14 @@
 #include <time.h>
 #include <stdlib.h>
 #include <gc.h>
+
+// HOST_NAME_MAX is recommended by POSIX, but not required.
+// FreeBSD and OSX (as of 10.9) are known to not define it.
+// 255 is generally the safe value to assume and upstream
+// PHP does this as well.
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
 
 // #define HOST_NAME_MAX 255
 #define MAXIMUM_COLS 1024

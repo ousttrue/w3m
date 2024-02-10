@@ -100,7 +100,7 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
 
   /* get host and port */
   if (p[0] != '/' || p[1] != '/') { /* schema:foo or schema:/foo */
-    url.host = nullptr;
+    url.host = {};
     url.port = getDefaultPort(url.schema);
     goto analyze_file;
   }

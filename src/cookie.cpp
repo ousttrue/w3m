@@ -7,6 +7,8 @@
  *   [DRAFT 12]
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
+#include <fcntl.h>
+
 #include "cookie.h"
 #include "matchattr.h"
 #include "anchor.h"
@@ -25,6 +27,7 @@
 #include "myctype.h"
 #include "proto.h"
 #include <time.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 
 #define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
@@ -880,7 +883,7 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
       if (fmInitialized && (err & COO_OVERRIDE_OK) &&
           accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
         Str *msg =
-            Sprintf("Accept bad cookie from %s for %s?", pu->host,
+            Sprintf("Accept bad cookie from %s for %s?", pu->host.c_str(),
                     ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
         if (msg->length > COLS - 10)
           Strshrink(msg, msg->length - (COLS - 10));

@@ -1,3 +1,6 @@
+#include <sys/types.h>
+#include <fcntl.h>
+
 #include "local_cgi.h"
 #include "http_response.h"
 #include "terms.h"
@@ -14,7 +17,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
 #include <unistd.h>

@@ -495,7 +495,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *path,
       Strcat(tmp2, url.label);
       url.file = tmp2->ptr;
       url.real_file = cleanupName(file_unquote(url.file.c_str()));
-      url.label = nullptr;
+      url.label = {};
     } else {
       /* given URL must be null string */
 #ifdef SOCK_DEBUG
@@ -507,7 +507,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *path,
   }
 
   if (LocalhostOnly && url.host.size() && !is_localhost(url.host.c_str())) {
-    url.host = nullptr;
+    url.host = {};
   }
   auto hr = std::make_shared<HttpRequest>(url, current, option, request);
 
@@ -589,7 +589,7 @@ void UrlStream::openFile(const char *path) {
 
 int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf) {
 
-  long long linelen = 0;
+  // long long linelen = 0;
   int retval = 0;
   char *buf = nullptr;
 
@@ -614,7 +614,7 @@ int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf) {
         retval = -2;
         goto _end;
       }
-      linelen += count;
+      // linelen += count;
       // showProgress(&linelen, &trbyte, current_content_length);
     }
   }

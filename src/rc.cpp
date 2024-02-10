@@ -1,6 +1,8 @@
 /*
  * Initialization file etc.
  */
+#include <fcntl.h>
+
 #include "rc.h"
 #include "tabbuffer.h"
 #include "http_response.h"
