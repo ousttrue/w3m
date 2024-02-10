@@ -4134,14 +4134,8 @@ void HTMLlineproc2(const std::shared_ptr<HttpResponse> &res, LineLayout *layout,
 
 void loadHTMLstream(const std::shared_ptr<HttpResponse> &res,
                     LineLayout *layout, bool internal) {
-  FILE *src = NULL;
-  if (res->sourcefile.empty() && res->f.schema != SCM_LOCAL) {
-    auto tmp = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmp->ptr, "w");
-    if (src) {
-      res->sourcefile = tmp->ptr;
-    }
-  }
+
+  auto src = res->createSourceFile();
 
   struct environment envs[MAX_ENV_LEVEL];
   long long linelen = 0;

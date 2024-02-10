@@ -14,7 +14,10 @@ struct HttpResponse {
   std::string type = "text/plain";
   TextList *document_header = nullptr;
   std::string filename;
+
+  // cache / local filename / decompress
   std::string sourcefile;
+
   std::vector<Url> redirectins;
   const char *ssl_certificate = nullptr;
   const char *baseTarget = nullptr;
@@ -33,6 +36,7 @@ struct HttpResponse {
   bool is_html_type() const {
     return type == "text/html" || type == "application/xhtml+xml";
   }
+  FILE *createSourceFile();
 };
 
 const char *mybasename(const char *s);

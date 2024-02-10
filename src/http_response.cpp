@@ -1,4 +1,5 @@
 #include "http_response.h"
+#include "tmpfile.h"
 #include "matchattr.h"
 #include "app.h"
 #include "screen.h"
@@ -256,4 +257,25 @@ const char *HttpResponse::guess_save_name(const char *path) const {
       path = name->ptr;
   }
   return guess_filename(path);
+}
+
+FILE *HttpResponse::createSourceFile() {
+  if (sourcefile.size()) {
+    // already created
+    return {};
+  }
+  if (f.schema == SCM_LOCAL) {
+    // no cache for local file
+    return {};
+  }
+
+  auto tmp = tmpfname(TMPF_SRC, ".html");
+  auto src = fopen(tmp->ptr, "w");
+  if (!src) {
+    // fail to open file
+    return {};
+  }
+
+  sourcefile = tmp->ptr;
+  return src;
 }

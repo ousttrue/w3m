@@ -41,14 +41,7 @@ static int is_text_type(std::string_view type) {
 }
 
 void loadBuffer(const std::shared_ptr<HttpResponse> &res, LineLayout *layout) {
-  FILE *src = nullptr;
-  if (res->sourcefile.empty() && res->f.schema != SCM_LOCAL) {
-    auto tmpf = tmpfname(TMPF_SRC, nullptr);
-    src = fopen(tmpf->ptr, "w");
-    if (src) {
-      res->sourcefile = tmpf->ptr;
-    }
-  }
+  auto src = res->createSourceFile();
 
   auto nlines = 0;
   if (res->f.stream->IStype() != IST_ENCODED) {
@@ -133,10 +126,14 @@ static void loadSomething(const std::shared_ptr<HttpResponse> &res,
       layout->title = lastFileName(res->filename.c_str());
     }
   }
-  if (res->currentURL.schema == SCM_UNKNOWN)
+
+  if (res->currentURL.schema == SCM_UNKNOWN){
     res->currentURL.schema = res->f.schema;
-  if (res->f.schema == SCM_LOCAL && res->sourcefile.empty())
+  }
+
+  if (res->f.schema == SCM_LOCAL && res->sourcefile.empty()){
     res->sourcefile = res->filename;
+  }
 
   // if (buf && buf != NO_BUFFER)
   {
