@@ -129,8 +129,9 @@ static void loadSomething(const std::shared_ptr<HttpResponse> &res,
 
   if (layout->title.empty() || layout->title[0] == '\0') {
     layout->title = res->getHeader("Subject:");
-    if (layout->title.empty() && res->filename != nullptr)
-      layout->title = lastFileName(res->filename);
+    if (layout->title.empty() && res->filename.size()) {
+      layout->title = lastFileName(res->filename.c_str());
+    }
   }
   if (res->currentURL.schema == SCM_UNKNOWN)
     res->currentURL.schema = res->f.schema;

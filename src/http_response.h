@@ -13,7 +13,7 @@ struct HttpResponse {
   std::optional<Url> baseURL;
   std::string type = "text/plain";
   TextList *document_header = nullptr;
-  const char *filename = nullptr;
+  std::string filename;
   std::string sourcefile;
   std::vector<Url> redirectins;
   const char *ssl_certificate = nullptr;

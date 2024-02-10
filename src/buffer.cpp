@@ -122,7 +122,7 @@ static void writeBufferName(Buffer *buf, int n) {
 
   move(n, 0);
   auto msg = Sprintf("<%s> [%d lines]", buf->layout.title.c_str(), all);
-  if (buf->info->filename != nullptr) {
+  if (buf->info->filename.size()) {
     switch (buf->info->currentURL.schema) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
@@ -523,7 +523,7 @@ void set_buffer_environ(Buffer *buf) {
     return;
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->info->sourcefile.c_str());
-    set_environ("W3M_FILENAME", buf->info->filename);
+    set_environ("W3M_FILENAME", buf->info->filename.c_str());
     set_environ("W3M_TITLE", buf->layout.title.c_str());
     set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",

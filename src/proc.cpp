@@ -570,7 +570,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line") {
 DEFUN(editBf, EDIT, "Edit local source") {
   auto fn = Currentbuf->info->filename;
 
-  if (fn == nullptr || /* Behaving as a pager */
+  if (fn.empty() || /* Behaving as a pager */
       (Currentbuf->info->type.empty() &&
        Currentbuf->info->edit == nullptr) || /* Reading shell */
       Currentbuf->info->currentURL.schema != SCM_LOCAL ||
@@ -583,10 +583,11 @@ DEFUN(editBf, EDIT, "Edit local source") {
   Str *cmd;
   if (Currentbuf->info->edit) {
     cmd = unquote_mailcap(
-        Currentbuf->info->edit, Currentbuf->info->type.c_str(), fn,
+        Currentbuf->info->edit, Currentbuf->info->type.c_str(), fn.c_str(),
         Currentbuf->info->getHeader("Content-Type:"), nullptr);
   } else {
-    cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
+    cmd = myEditor(Editor, shell_quote(fn.c_str()),
+                   cur_real_linenumber(Currentbuf));
   }
   exec_cmd(cmd->ptr);
 
