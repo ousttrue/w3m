@@ -1,5 +1,5 @@
 #include "downloadlist.h"
-#include "readbuffer.h"
+#include "loadproc.h"
 #include "message.h"
 #include "terms.h"
 #include "anchor.h"

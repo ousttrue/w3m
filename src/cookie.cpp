@@ -9,6 +9,7 @@
  */
 #include "cookie.h"
 #include "matchattr.h"
+#include "anchor.h"
 #include "rc.h"
 #include "w3m.h"
 #include "terms.h"
@@ -16,7 +17,7 @@
 #include "mytime.h"
 #include "message.h"
 #include "http_request.h"
-#include "readbuffer.h"
+#include "loadproc.h"
 #include "textlist.h"
 #include "keyvalue.h"
 #include "local_cgi.h"

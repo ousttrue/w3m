@@ -118,6 +118,19 @@ Buffer *loadBuffer(UrlStream *uf, Buffer *newBuf) {
   return newBuf;
 }
 
+/*
+ * loadHTMLString: read string and make new buffer
+ */
+Buffer *loadHTMLString(Str *page) {
+
+  UrlStream f(SCM_LOCAL, newStrStream(page->ptr));
+  auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
+
+  loadHTMLstream(&f, newBuf->info, &newBuf->layout, true);
+
+  return newBuf;
+}
+
 enum class LoadProc {
   Html,
   Buffer,
@@ -156,8 +169,8 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
   Buffer *buf = nullptr;
   switch (loadproc) {
   case LoadProc::Html:
-    buf = loadHTMLBuffer(f, src);
-    buf->info->type = "text/html";
+    buf = src;
+    loadHTMLstream(f, src->info, &src->layout);
     break;
   case LoadProc::Buffer:
     buf = loadBuffer(f, src);

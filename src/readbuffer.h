@@ -216,10 +216,7 @@ struct UrlStream;
 struct HttpResponse;
 struct LineLayout;
 void loadHTMLstream(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
-                    LineLayout *layout, FILE *src, int internal);
-struct Buffer;
-Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf);
-Buffer *loadHTMLString(Str *page);
+                    LineLayout *layout, bool internal = false);
 
 enum CleanupMode {
   RAW_MODE = 0,

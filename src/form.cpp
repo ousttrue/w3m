@@ -186,21 +186,22 @@ void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
-      formUpdateBuffer(a2, buf, f2);
+      formUpdateBuffer(a2, &buf->layout, f2);
     }
   }
   fi->checked = 1;
-  formUpdateBuffer(a, buf, fi);
+  formUpdateBuffer(a, &buf->layout, fi);
 }
 
-void formResetBuffer(Buffer *buf, AnchorList *formitem) {
+void formResetBuffer(LineLayout *layout, AnchorList *formitem) {
   Anchor *a;
   FormItemList *f1, *f2;
 
-  if (buf == NULL || buf->layout.formitem == NULL || formitem == NULL)
+  if (!layout || layout->formitem == NULL || formitem == NULL)
     return;
-  for (size_t i = 0; i < buf->layout.formitem->size() && i < formitem->size(); i++) {
-    a = &buf->layout.formitem->anchors[i];
+  for (size_t i = 0; i < layout->formitem->size() && i < formitem->size();
+       i++) {
+    a = &layout->formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
     f1 = (FormItemList *)a->url;
@@ -227,7 +228,7 @@ void formResetBuffer(Buffer *buf, AnchorList *formitem) {
     default:
       continue;
     }
-    formUpdateBuffer(a, buf, f1);
+    formUpdateBuffer(a, layout, f1);
   }
 }
 
@@ -317,14 +318,14 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   return pos;
 }
 
-void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
+void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   Line *l;
 
-  auto save = new Buffer(0);
-  *save = *buf;
-  buf->layout.gotoLine(a->start.line);
+  LineLayout save;
+  save = *layout;
+  layout->gotoLine(a->start.line);
   switch (form->type) {
   case FORM_TEXTAREA:
   case FORM_INPUT_TEXT:
@@ -342,13 +343,13 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
   switch (form->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
-    if (buf->layout.currentLine == NULL ||
-        spos >= buf->layout.currentLine->len || spos < 0)
+    if (layout->currentLine == NULL || spos >= layout->currentLine->len ||
+        spos < 0)
       break;
     if (form->checked)
-      buf->layout.currentLine->lineBuf[spos] = '*';
+      layout->currentLine->lineBuf[spos] = '*';
     else
-      buf->layout.currentLine->lineBuf[spos] = ' ';
+      layout->currentLine->lineBuf[spos] = ' ';
     break;
   case FORM_INPUT_TEXT:
   case FORM_INPUT_FILE:
@@ -358,11 +359,11 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
       break;
     p = form->value->ptr;
   }
-    l = buf->layout.currentLine;
+    l = layout->currentLine;
     if (!l)
       break;
     if (form->type == FORM_TEXTAREA) {
-      int n = a->y - buf->layout.currentLine->linenumber;
+      int n = a->y - layout->currentLine->linenumber;
       if (n > 0)
         for (; l && n; l = l->prev, n--)
           ;
@@ -377,9 +378,9 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
     for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
       if (l == NULL)
         break;
-      if (rows > 1 && buf->layout.formitem) {
+      if (rows > 1 && layout->formitem) {
         pos = l->columnPos(col);
-        a = buf->layout.formitem->retrieveAnchor(l->linenumber, pos);
+        a = layout->formitem->retrieveAnchor(l->linenumber, pos);
         if (a == NULL)
           break;
         spos = a->start.pos;
@@ -391,20 +392,20 @@ void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
                              rows > 1, form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(buf->layout.href, buf->layout.hmarklist, a->start.line, spos,
+        shiftAnchorPosition(layout->href, layout->hmarklist, a->start.line,
+                            spos, pos - epos);
+        shiftAnchorPosition(layout->name, layout->hmarklist, a->start.line,
+                            spos, pos - epos);
+        shiftAnchorPosition(layout->img, layout->hmarklist, a->start.line, spos,
                             pos - epos);
-        shiftAnchorPosition(buf->layout.name, buf->layout.hmarklist, a->start.line, spos,
-                            pos - epos);
-        shiftAnchorPosition(buf->layout.img, buf->layout.hmarklist, a->start.line, spos,
-                            pos - epos);
-        shiftAnchorPosition(buf->layout.formitem, buf->layout.hmarklist, a->start.line, spos,
-                            pos - epos);
+        shiftAnchorPosition(layout->formitem, layout->hmarklist, a->start.line,
+                            spos, pos - epos);
       }
     }
     break;
   }
-  *buf = *save;
-  buf->layout.arrangeLine();
+  *layout = save;
+  layout->arrangeLine();
 }
 
 Str *textfieldrep(Str *s, int width) {
@@ -775,12 +776,12 @@ void preFormUpdateBuffer(Buffer *buf) {
         case FORM_INPUT_PASSWORD:
         case FORM_TEXTAREA:
           fi->value = Strnew_charp(pi->value);
-          formUpdateBuffer(a, buf, fi);
+          formUpdateBuffer(a, &buf->layout, fi);
           break;
         case FORM_INPUT_CHECKBOX:
           if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
             fi->checked = pi->checked;
-            formUpdateBuffer(a, buf, fi);
+            formUpdateBuffer(a, &buf->layout, fi);
           }
           break;
         case FORM_INPUT_RADIO:

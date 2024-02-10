@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "line_layout.h"
 #include "url_quote.h"
 #include "quote.h"
 #include "http_response.h"
@@ -16,7 +17,6 @@
 #include "signal_util.h"
 #include "form.h"
 #include "textlist.h"
-#include "buffer.h"
 #include "terms.h"
 #include "istream.h"
 #include "htmltag.h"
@@ -4123,8 +4123,26 @@ void HTMLlineproc2(const std::shared_ptr<HttpResponse> &res, LineLayout *layout,
   HTMLlineproc2body(res, layout, textlist_feed, -1);
 }
 
+/*
+ * loadHTMLBuffer: read file and make new buffer
+ */
+void loadHTMLBuffer(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
+                    LineLayout *layout) {
+
+  loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
+}
+
 void loadHTMLstream(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
-                    LineLayout *layout, FILE *src, int internal) {
+                    LineLayout *layout, bool internal) {
+  FILE *src = NULL;
+  if (res->sourcefile.empty() && f->schema != SCM_LOCAL) {
+    auto tmp = tmpfname(TMPF_SRC, ".html");
+    src = fopen(tmp->ptr, "w");
+    if (src) {
+      res->sourcefile = tmp->ptr;
+    }
+  }
+
   struct environment envs[MAX_ENV_LEVEL];
   long long linelen = 0;
   long long trbyte = 0;
@@ -4195,36 +4213,17 @@ phase2:
   res->trbyte = trbyte + linelen;
   TRAP_OFF;
   HTMLlineproc2(res, layout, htmlenv1.buf);
-}
 
-/*
- * loadHTMLBuffer: read file and make new buffer
- */
-Buffer *loadHTMLBuffer(UrlStream *f, Buffer *newBuf) {
-  FILE *src = NULL;
-  Str *tmp;
-
-  if (newBuf == NULL)
-    newBuf = new Buffer(INIT_BUFFER_WIDTH());
-  if (newBuf->info->sourcefile.empty() && f->schema != SCM_LOCAL) {
-    tmp = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmp->ptr, "w");
-    if (src)
-      newBuf->info->sourcefile = tmp->ptr;
-  }
-
-  loadHTMLstream(f, newBuf->info, &newBuf->layout, src,
-                 false /*newBuf->bufferprop*/);
-
-  newBuf->layout.topLine = newBuf->layout.firstLine;
-  newBuf->layout.lastLine = newBuf->layout.currentLine;
-  newBuf->layout.currentLine = newBuf->layout.firstLine;
-  if (n_textarea)
-    formResetBuffer(newBuf, newBuf->layout.formitem);
-  if (src)
+  layout->topLine = layout->firstLine;
+  layout->lastLine = layout->currentLine;
+  layout->currentLine = layout->firstLine;
+  res->type = "text/html";
+  res->real_type = res->type;
+  // if (n_textarea)
+  formResetBuffer(layout, layout->formitem);
+  if (src){
     fclose(src);
-
-  return newBuf;
+  }
 }
 
 void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
@@ -4334,35 +4333,6 @@ void completeHTMLstream(struct html_feed_environ *h_env,
     if (obuf->table_level >= tmp)
       break;
   }
-}
-
-/*
- * loadHTMLString: read string and make new buffer
- */
-Buffer *loadHTMLString(Str *page) {
-  MySignalHandler prevtrap = NULL;
-
-  UrlStream f(SCM_LOCAL, newStrStream(page->ptr));
-
-  auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
-  if (SETJMP(AbortLoading) != 0) {
-    TRAP_OFF;
-    discardBuffer(newBuf);
-    return NULL;
-  }
-  TRAP_ON;
-
-  loadHTMLstream(&f, newBuf->info, &newBuf->layout, NULL, true);
-
-  TRAP_OFF;
-  newBuf->layout.topLine = newBuf->layout.firstLine;
-  newBuf->layout.lastLine = newBuf->layout.currentLine;
-  newBuf->layout.currentLine = newBuf->layout.firstLine;
-  newBuf->info->type = "text/html";
-  newBuf->info->real_type = newBuf->info->type;
-  if (n_textarea)
-    formResetBuffer(newBuf, newBuf->layout.formitem);
-  return newBuf;
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {

@@ -358,7 +358,7 @@ void reshapeBuffer(Buffer *buf) {
     buf->layout.imarklist->nmark = 0;
 
   if (is_html_type(buf->info->type))
-    loadHTMLBuffer(&f, buf);
+    loadHTMLstream(&f, buf->info, &buf->layout);
   else
     loadBuffer(&f, buf);
 
@@ -397,7 +397,7 @@ void reshapeBuffer(Buffer *buf) {
   if (buf->check_url) {
     chkURLBuffer(buf);
   }
-  formResetBuffer(buf, sbuf->layout.formitem);
+  formResetBuffer(&buf->layout, sbuf->layout.formitem);
 }
 
 Buffer *prevBuffer(Buffer *first, Buffer *buf) {

@@ -507,7 +507,7 @@ void _followForm(int submit) {
                      // break;
                    }
                    fi->value = Strnew_charp(p);
-                   formUpdateBuffer(a, Currentbuf, fi);
+                   formUpdateBuffer(a, &Currentbuf->layout, fi);
                    if (fi->accept || fi->parent->nitems == 1) {
                      do_submit(fi, a);
                      return;
@@ -548,7 +548,7 @@ void _followForm(int submit) {
     // if (p == nullptr)
     //   break;
     // fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(a, &Currentbuf->layout, fi);
     if (fi->accept) {
       do_submit(fi, a);
       return;
@@ -562,7 +562,7 @@ void _followForm(int submit) {
     if (fi->readonly)
       disp_message_nsec("Read only field!", false, 1, true, false);
     input_textarea(fi);
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(a, &Currentbuf->layout, fi);
     break;
   case FORM_INPUT_RADIO:
     if (submit) {
@@ -585,7 +585,7 @@ void _followForm(int submit) {
       break;
     }
     fi->checked = !fi->checked;
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(a, &Currentbuf->layout, fi);
     break;
   case FORM_INPUT_IMAGE:
   case FORM_INPUT_SUBMIT:
@@ -602,7 +602,7 @@ void _followForm(int submit) {
           f2->type != FORM_INPUT_RESET) {
         f2->value = f2->init_value;
         f2->checked = f2->init_checked;
-        formUpdateBuffer(a2, Currentbuf, f2);
+        formUpdateBuffer(a2, &Currentbuf->layout, f2);
       }
     }
     break;

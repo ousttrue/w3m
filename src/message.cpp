@@ -1,4 +1,5 @@
 #include "message.h"
+#include "anchor.h"
 #include "display.h"
 #include "tabbuffer.h"
 #include "buffer.h"
@@ -6,7 +7,7 @@
 #include "terms.h"
 #include "screen.h"
 #include "textlist.h"
-#include "readbuffer.h"
+#include "loadproc.h"
 
 void message(const char *s, int return_x, int return_y) {
   if (!fmInitialized) {
