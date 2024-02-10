@@ -46,10 +46,9 @@ int is_html_type(const char *type) {
                    strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
-                LineLayout *layout) {
+void loadBuffer(const std::shared_ptr<HttpResponse> &res, LineLayout *layout) {
   FILE *src = nullptr;
-  if (res->sourcefile.empty() && uf->schema != SCM_LOCAL) {
+  if (res->sourcefile.empty() && res->f.schema != SCM_LOCAL) {
     auto tmpf = tmpfname(TMPF_SRC, nullptr);
     src = fopen(tmpf->ptr, "w");
     if (src) {
@@ -58,13 +57,13 @@ void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
   }
 
   auto nlines = 0;
-  if (uf->stream->IStype() != IST_ENCODED) {
-    uf->stream = newEncodedStream(uf->stream, uf->encoding);
+  if (res->f.stream->IStype() != IST_ENCODED) {
+    res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
   }
 
   char pre_lbuf = '\0';
   while (true) {
-    auto _lineBuf2 = uf->stream->StrmyISgets(); //&& lineBuf2->length
+    auto _lineBuf2 = res->f.stream->StrmyISgets(); //&& lineBuf2->length
     if (_lineBuf2.empty()) {
       break;
     }
@@ -98,11 +97,10 @@ void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
 }
 
 Buffer *loadHTMLString(Str *page) {
-
-  UrlStream f(SCM_LOCAL, newStrStream(page->ptr));
   auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
+  newBuf->info->f = UrlStream(SCM_LOCAL, newStrStream(page->ptr));
 
-  loadHTMLstream(&f, newBuf->info, &newBuf->layout, true);
+  loadHTMLstream(newBuf->info, &newBuf->layout, true);
 
   return newBuf;
 }
@@ -118,23 +116,21 @@ Buffer *getshell(const char *cmd) {
     return nullptr;
   }
 
-  UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
-
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
-  loadBuffer(&uf, buf->info, &buf->layout);
+  buf->info->f = UrlStream(SCM_UNKNOWN, newFileStream(f, pclose));
+  loadBuffer(buf->info, &buf->layout);
   buf->info->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }
 
-static void loadSomething(UrlStream *f,
-                          const std::shared_ptr<HttpResponse> &res,
+static void loadSomething(const std::shared_ptr<HttpResponse> &res,
                           LineLayout *layout) {
   // Buffer *buf = src;
   if (is_html_type(res->type)) {
-    loadHTMLstream(f, res, layout);
+    loadHTMLstream(res, layout);
   } else {
-    loadBuffer(f, res, layout);
+    loadBuffer(res, layout);
   }
 
   if (layout->title.empty() || layout->title[0] == '\0') {
@@ -143,13 +139,13 @@ static void loadSomething(UrlStream *f,
       layout->title = lastFileName(res->filename);
   }
   if (res->currentURL.schema == SCM_UNKNOWN)
-    res->currentURL.schema = f->schema;
-  if (f->schema == SCM_LOCAL && res->sourcefile.empty())
+    res->currentURL.schema = res->f.schema;
+  if (res->f.schema == SCM_LOCAL && res->sourcefile.empty())
     res->sourcefile = res->filename;
 
   // if (buf && buf != NO_BUFFER)
   {
-    res->real_schema = f->schema;
+    res->real_schema = res->f.schema;
     // res->real_type = real_type;
     if (res->currentURL.label.size()) {
       if (is_html_type(res->type)) {
@@ -337,7 +333,7 @@ static long long strtoclen(const char *s) {
 #endif
 }
 
-static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr, UrlStream &f,
+static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
                            const std::shared_ptr<HttpResponse> &res) {
   if (!res->real_type) {
     res->real_type = res->type;
@@ -350,41 +346,41 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr, UrlStream &f,
   if (do_download) {
     /* download only */
     const char *file;
-    if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
-      f.stream = newEncodedStream(f.stream, f.encoding);
+    if (DecodeCTE && res->f.stream->IStype() != IST_ENCODED) {
+      res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
     }
     if (hr->url.schema == SCM_LOCAL) {
       struct stat st;
       if (PreserveTimestamp && !stat(hr->url.real_file.c_str(), &st))
-        f.modtime = st.st_mtime;
+        res->f.modtime = st.st_mtime;
       file = guess_filename(hr->url.real_file.c_str());
     } else {
       file = res->guess_save_name(hr->url.file.c_str());
     }
-    f.doFileSave(file);
+    res->f.doFileSave(file);
     return NO_BUFFER;
   }
 
-  if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    hr->url.real_file = f.uncompress_stream();
-  } else if (f.compression != CMP_NOCOMPRESS) {
+  if ((res->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+    hr->url.real_file = res->f.uncompress_stream();
+  } else if (res->f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(res->type))) {
-      res->sourcefile = f.uncompress_stream();
-      uncompressed_file_type(hr->url.file.c_str(), &f.ext);
+      res->sourcefile = res->f.uncompress_stream();
+      uncompressed_file_type(hr->url.file.c_str(), &res->f.ext);
     } else {
-      res->type = compress_application_type(f.compression);
-      f.compression = CMP_NOCOMPRESS;
+      res->type = compress_application_type(res->f.compression);
+      res->f.compression = CMP_NOCOMPRESS;
     }
   }
 
   res->currentURL = hr->url;
   res->filename = hr->url.real_file.size() ? Strnew(hr->url.real_file)->ptr
                                            : Strnew(hr->url.file)->ptr;
-  res->ssl_certificate = (char *)f.ssl_certificate;
+  res->ssl_certificate = res->f.ssl_certificate;
 
   auto b = new Buffer(INIT_BUFFER_WIDTH());
   b->info = res;
-  loadSomething(&f, res, &b->layout);
+  loadSomething(res, &b->layout);
   preFormUpdateBuffer(b);
   return b;
 }
@@ -394,10 +390,10 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr, UrlStream &f,
  */
 Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
                         const HttpOption &option, FormList *request) {
-  UrlStream f(SCM_MISSING);
+  auto res = std::make_shared<HttpResponse>();
 
   // TRAP_OFF;
-  auto hr = f.openURL(path, current, option, request);
+  auto hr = res->f.openURL(path, current, option, request);
 
   // Directory Open ?
   // if (f.stream == nullptr) {
@@ -441,7 +437,6 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     return nullptr;
   }
 
-  auto res = std::make_shared<HttpResponse>();
   if (hr->url.schema == SCM_HTTP || hr->url.schema == SCM_HTTPS) {
 
     // if (fmInitialized) {
@@ -451,7 +446,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
-    auto http_response_code = res->readHeader(&f, hr->url);
+    auto http_response_code = res->readHeader(&res->f, hr->url);
     const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
@@ -486,7 +481,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
         if (hr->uname == nullptr) {
           /* abort */
           // TRAP_OFF;
-          return page_loaded(hr, f, res);
+          return page_loaded(hr, res);
         }
         hr->add_auth_cookie_flag = true;
         return loadGeneralFile(path, current, option, request);
@@ -497,9 +492,9 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
       return loadGeneralFile(path, current, option, request);
     }
 
-    f.modtime = mymktime(res->getHeader("Last-Modified:"));
+    res->f.modtime = mymktime(res->getHeader("Last-Modified:"));
   } else if (hr->url.schema == SCM_DATA) {
-    res->type = f.guess_type;
+    res->type = res->f.guess_type;
   } else if (DefaultType) {
     res->type = DefaultType;
     DefaultType = nullptr;
@@ -509,16 +504,16 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
       res->type = "text/plain";
     }
     res->real_type = res->type;
-    if (f.guess_type) {
-      res->type = f.guess_type;
+    if (res->f.guess_type) {
+      res->type = res->f.guess_type;
     }
   }
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
-  f.guess_type = res->type;
+  res->f.guess_type = res->type;
 
-  return page_loaded(hr, f, res);
+  return page_loaded(hr, res);
 }
 
 #define PIPEBUFFERNAME "*stream*"

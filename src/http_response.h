@@ -1,5 +1,6 @@
 #pragma once
 #include "url.h"
+#include "url_stream.h"
 #include "optional"
 #include <vector>
 #include <memory>
@@ -7,7 +8,6 @@
 extern int FollowRedirection;
 
 struct TextList;
-struct input_stream;
 struct HttpResponse {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
@@ -24,7 +24,9 @@ struct HttpResponse {
   size_t trbyte = 0;
   const char *edit = nullptr;
   long long current_content_length;
+  UrlStream f;
 
+  HttpResponse();
   ~HttpResponse();
   bool checkRedirection(const Url &pu);
   int readHeader(struct UrlStream *uf, const Url &pu);

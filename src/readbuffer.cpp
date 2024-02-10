@@ -4126,16 +4126,16 @@ void HTMLlineproc2(const std::shared_ptr<HttpResponse> &res, LineLayout *layout,
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
-void loadHTMLBuffer(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
-                    LineLayout *layout) {
+// void loadHTMLBuffer(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
+//                     LineLayout *layout) {
+//
+//   loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
+// }
 
-  loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
-}
-
-void loadHTMLstream(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
+void loadHTMLstream(const std::shared_ptr<HttpResponse> &res,
                     LineLayout *layout, bool internal) {
   FILE *src = NULL;
-  if (res->sourcefile.empty() && f->schema != SCM_LOCAL) {
+  if (res->sourcefile.empty() && res->f.schema != SCM_LOCAL) {
     auto tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");
     if (src) {
@@ -4176,12 +4176,12 @@ void loadHTMLstream(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
   }
   TRAP_ON;
 
-  if (f->stream->IStype() != IST_ENCODED) {
-    f->stream = newEncodedStream(f->stream, f->encoding);
+  if (res->f.stream->IStype() != IST_ENCODED) {
+    res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
   }
 
   while (true) {
-    auto _lineBuf2 = f->stream->StrmyISgets();
+    auto _lineBuf2 = res->f.stream->StrmyISgets();
     if (_lineBuf2.empty()) {
       break;
     }
@@ -4221,7 +4221,7 @@ phase2:
   res->real_type = res->type;
   // if (n_textarea)
   formResetBuffer(layout, layout->formitem);
-  if (src){
+  if (src) {
     fclose(src);
   }
 }

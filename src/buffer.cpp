@@ -298,9 +298,8 @@ void reshapeBuffer(Buffer *buf) {
     return;
   }
 
-  UrlStream f(SCM_LOCAL);
-  f.openFile(buf->info->sourcefile.c_str());
-  if (f.stream == nullptr) {
+  buf->info->f.openFile(buf->info->sourcefile.c_str());
+  if (buf->info->f.stream == nullptr) {
     return;
   }
 
@@ -321,9 +320,9 @@ void reshapeBuffer(Buffer *buf) {
     buf->layout.imarklist->nmark = 0;
 
   if (is_html_type(buf->info->type))
-    loadHTMLstream(&f, buf->info, &buf->layout);
+    loadHTMLstream(buf->info, &buf->layout);
   else
-    loadBuffer(&f, buf->info, &buf->layout);
+    loadBuffer(buf->info, &buf->layout);
 
   buf->layout.height = LASTLINE + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {
