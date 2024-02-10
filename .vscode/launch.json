@@ -5,12 +5,26 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(lldb) 起動",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/w3m",
+            "args": [
+                "http://www.yahoo.co.jp"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb"
+        },
+        {
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/w3m",
             "args": [
-                "http://www.yahoo.co.jp"                
+                "http://www.yahoo.co.jp"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
