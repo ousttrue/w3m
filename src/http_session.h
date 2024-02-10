@@ -6,7 +6,6 @@
 #include <memory>
 
 extern const char *DefaultType;
-extern bool DecodeCTE;
 
 struct Buffer;
 struct Url;
@@ -25,7 +24,7 @@ void saveBuffer(Buffer *buf, FILE *f, int cont);
 bool couldWrite(const char *path);
 int setModtime(const char *path, time_t modtime);
 const char *shell_quote(const char *str);
-void loadBuffer(const std::shared_ptr<HttpResponse> &res, LineLayout *layout);
+void loadBuffer(HttpResponse *res, LineLayout *layout);
 Buffer *loadHTMLString(Str *page);
 void cmd_loadBuffer(Buffer *buf, int linkid);
 void cmd_loadfile(const char *fn);

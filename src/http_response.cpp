@@ -14,11 +14,20 @@
 #include "mimehead.h"
 #include "terms.h"
 #include "func.h"
+#include "etc.h"
+
+#include "form.h"
+#include "display.h"
+#include "buffer.h"
+#include "http_session.h"
+
 #include <strings.h>
 #include <unistd.h>
 #include <assert.h>
+#include <sys/stat.h>
 
 int FollowRedirection = 10;
+bool DecodeCTE = false;
 
 HttpResponse::HttpResponse() : f(SCM_MISSING) {}
 
@@ -278,4 +287,122 @@ FILE *HttpResponse::createSourceFile() {
 
   sourcefile = tmp->ptr;
   return src;
+}
+
+static long long strtoclen(const char *s) {
+#ifdef HAVE_STRTOLL
+  return strtoll(s, nullptr, 10);
+#elif defined(HAVE_STRTOQ)
+  return strtoq(s, nullptr, 10);
+#elif defined(HAVE_ATOLL)
+  return atoll(s);
+#elif defined(HAVE_ATOQ)
+  return atoq(s);
+#else
+  return atoi(s);
+#endif
+}
+
+static int is_text_type(std::string_view type) {
+  return type.empty() || type.starts_with("text/") ||
+         (type.starts_with("application/") &&
+          type.find("xhtml") != std::string::npos) ||
+         type.starts_with("message/");
+}
+
+static void loadSomething(HttpResponse *res, LineLayout *layout) {
+  // Buffer *buf = src;
+  if (res->is_html_type()) {
+    loadHTMLstream(res, layout);
+  } else {
+    loadBuffer(res, layout);
+  }
+
+  if (layout->title.empty() || layout->title[0] == '\0') {
+    layout->title = res->getHeader("Subject:");
+    if (layout->title.empty() && res->filename.size()) {
+      layout->title = lastFileName(res->filename.c_str());
+    }
+  }
+
+  if (res->currentURL.schema == SCM_UNKNOWN) {
+    res->currentURL.schema = res->f.schema;
+  }
+
+  if (res->f.schema == SCM_LOCAL && res->sourcefile.empty()) {
+    res->sourcefile = res->filename;
+  }
+
+  // if (buf && buf != NO_BUFFER)
+  {
+    // res->real_schema = res->f.schema;
+    // res->real_type = real_type;
+    if (res->currentURL.label.size()) {
+      if (res->is_html_type()) {
+        auto a = layout->searchURLLabel(res->currentURL.label.c_str());
+        if (a != nullptr) {
+          layout->gotoLine(a->start.line);
+          if (label_topline)
+            layout->topLine = layout->lineSkip(layout->topLine,
+                                               layout->currentLine->linenumber -
+                                                   layout->topLine->linenumber,
+                                               false);
+          layout->pos = a->start.pos;
+          layout->arrangeCursor();
+        }
+      } else { /* plain text */
+        int l = atoi(res->currentURL.label.c_str());
+        layout->gotoRealLine(l);
+        layout->pos = 0;
+        layout->arrangeCursor();
+      }
+    }
+  }
+}
+Buffer *HttpResponse::page_loaded(Url url) {
+  const char *p;
+  if ((p = this->getHeader("Content-Length:"))) {
+    this->current_content_length = strtoclen(p);
+  }
+  if (do_download) {
+    /* download only */
+    const char *file;
+    if (DecodeCTE && this->f.stream->IStype() != IST_ENCODED) {
+      this->f.stream = newEncodedStream(this->f.stream, this->f.encoding);
+    }
+    if (url.schema == SCM_LOCAL) {
+      struct stat st;
+      if (PreserveTimestamp && !stat(url.real_file.c_str(), &st))
+        this->f.modtime = st.st_mtime;
+      file = guess_filename(url.real_file.c_str());
+    } else {
+      file = this->guess_save_name(url.file.c_str());
+    }
+    this->f.doFileSave(file);
+    return NO_BUFFER;
+  }
+
+  if ((this->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+    url.real_file = this->f.uncompress_stream();
+  } else if (this->f.compression != CMP_NOCOMPRESS) {
+    if ((is_text_type(this->type))) {
+      this->sourcefile = this->f.uncompress_stream();
+      uncompressed_file_type(url.file.c_str(), &this->f.ext);
+    } else {
+      this->type = compress_application_type(this->f.compression);
+      this->f.compression = CMP_NOCOMPRESS;
+    }
+  }
+
+  this->currentURL = url;
+  this->filename = this->currentURL.real_file.size()
+                       ? Strnew(this->currentURL.real_file)->ptr
+                       : Strnew(this->currentURL.file)->ptr;
+  this->ssl_certificate = this->f.ssl_certificate;
+
+  auto b = new Buffer(INIT_BUFFER_WIDTH());
+  b->info = shared_from_this();
+  loadSomething(this, &b->layout);
+  preFormUpdateBuffer(b);
+  return b;
 }

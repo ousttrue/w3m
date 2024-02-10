@@ -320,9 +320,9 @@ void reshapeBuffer(Buffer *buf) {
     buf->layout.imarklist->nmark = 0;
 
   if (buf->info->is_html_type())
-    loadHTMLstream(buf->info, &buf->layout);
+    loadHTMLstream(buf->info.get(), &buf->layout);
   else
-    loadBuffer(buf->info, &buf->layout);
+    loadBuffer(buf->info.get(), &buf->layout);
 
   buf->layout.height = LASTLINE + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {

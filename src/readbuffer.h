@@ -215,8 +215,8 @@ int read_token(Str *buf, const char **instr, int *status, int pre, int append);
 struct UrlStream;
 struct HttpResponse;
 struct LineLayout;
-void loadHTMLstream(const std::shared_ptr<HttpResponse> &res,
-                    LineLayout *layout, bool internal = false);
+void loadHTMLstream(HttpResponse *res, LineLayout *layout,
+                    bool internal = false);
 
 enum CleanupMode {
   RAW_MODE = 0,

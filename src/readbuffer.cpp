@@ -3698,7 +3698,7 @@ static Str *textlist_feed(void) {
     outp = (Lineprop *)New_Reuse(Lineprop, outp, out_size);                    \
   }
 
-static void HTMLlineproc2body(const std::shared_ptr<HttpResponse> &res,
+static void HTMLlineproc2body(HttpResponse *res,
                               LineLayout *layout, Str *(*feed)(), int llimit) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
@@ -4117,7 +4117,7 @@ static void HTMLlineproc2body(const std::shared_ptr<HttpResponse> &res,
     layout->addMultirowsForm(layout->formitem);
   }
 }
-void HTMLlineproc2(const std::shared_ptr<HttpResponse> &res, LineLayout *layout,
+void HTMLlineproc2(HttpResponse *res, LineLayout *layout,
                    TextLineList *tl) {
   _tl_lp2 = tl->first;
   HTMLlineproc2body(res, layout, textlist_feed, -1);
@@ -4132,8 +4132,8 @@ void HTMLlineproc2(const std::shared_ptr<HttpResponse> &res, LineLayout *layout,
 //   loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
 // }
 
-void loadHTMLstream(const std::shared_ptr<HttpResponse> &res,
-                    LineLayout *layout, bool internal) {
+void loadHTMLstream(HttpResponse *res, LineLayout *layout,
+                    bool internal) {
 
   auto src = res->createSourceFile();
 

@@ -3,11 +3,13 @@
 #include "url_stream.h"
 #include "optional"
 #include <vector>
+#include <memory>
 
 extern int FollowRedirection;
+extern bool DecodeCTE;
 
 struct TextList;
-struct HttpResponse {
+struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
@@ -37,6 +39,8 @@ struct HttpResponse {
     return type == "text/html" || type == "application/xhtml+xml";
   }
   FILE *createSourceFile();
+
+  struct Buffer *page_loaded(Url url);
 };
 
 const char *mybasename(const char *s);
