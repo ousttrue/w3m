@@ -145,7 +145,7 @@ static void loadSomething(const std::shared_ptr<HttpResponse> &res,
 
   // if (buf && buf != NO_BUFFER)
   {
-    res->real_schema = res->f.schema;
+    // res->real_schema = res->f.schema;
     // res->real_type = real_type;
     if (res->currentURL.label.size()) {
       if (is_html_type(res->type)) {

@@ -572,7 +572,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   if (fn == nullptr || /* Behaving as a pager */
       (Currentbuf->info->type == nullptr &&
        Currentbuf->info->edit == nullptr) || /* Reading shell */
-      Currentbuf->info->real_schema != SCM_LOCAL ||
+      Currentbuf->info->currentURL.schema != SCM_LOCAL ||
       Currentbuf->info->currentURL.file == "-" /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", true);
@@ -1081,7 +1081,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   PermitSaveToPipe = true;
 
   const char *file;
-  if (Currentbuf->info->real_schema == SCM_LOCAL) {
+  if (Currentbuf->info->currentURL.schema== SCM_LOCAL) {
     file = guess_filename(Currentbuf->info->currentURL.real_file.c_str());
   } else {
     file = Currentbuf->info->guess_save_name(
@@ -1162,7 +1162,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     return;
   }
   buf->info->currentURL = Currentbuf->info->currentURL;
-  buf->info->real_schema = Currentbuf->info->real_schema;
   buf->info->filename = Currentbuf->info->filename;
   buf->info->sourcefile = Currentbuf->info->sourcefile;
   buf->clone = Currentbuf->clone;

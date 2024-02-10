@@ -401,9 +401,9 @@ static Line *redrawLine(LineLayout *buf, Line *l, int i) {
       buf->COLS = COLS - buf->rootX;
     }
     if (l->real_linenumber && !l->bpos)
-      sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
+      snprintf(tmp, sizeof(tmp), "%*ld:", buf->rootX - 1, l->real_linenumber);
     else
-      sprintf(tmp, "%*s ", buf->rootX - 1, "");
+      snprintf(tmp, sizeof(tmp), "%*s ", buf->rootX - 1, "");
     addstr(tmp);
   }
   move(i, buf->rootX);

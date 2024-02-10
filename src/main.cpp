@@ -1058,9 +1058,11 @@ int main(int argc, char **argv) {
         }
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", load_argv[i]));
         continue;
-      } else if (newbuf == NO_BUFFER)
+      } else if (newbuf == NO_BUFFER) {
         continue;
-      switch (newbuf->info->real_schema) {
+      }
+
+      switch (newbuf->info->currentURL.schema) {
       case SCM_LOCAL:
       case SCM_LOCAL_CGI:
         unshiftHist(LoadHist, url);
@@ -1068,6 +1070,7 @@ int main(int argc, char **argv) {
         pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
         break;
       }
+
     } else if (newbuf == NO_BUFFER)
       continue;
     if (CurrentTab == nullptr) {

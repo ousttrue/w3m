@@ -14,7 +14,6 @@ struct HttpResponse {
   std::optional<Url> baseURL;
   const char *type = "text/plain";
   const char *real_type = nullptr;
-  UrlSchema real_schema = {};
   TextList *document_header = nullptr;
   const char *filename = nullptr;
   std::string sourcefile;
