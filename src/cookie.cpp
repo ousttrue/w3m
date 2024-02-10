@@ -17,7 +17,7 @@
 #include "mytime.h"
 #include "message.h"
 #include "http_request.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "textlist.h"
 #include "keyvalue.h"
 #include "local_cgi.h"

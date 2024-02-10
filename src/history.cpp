@@ -2,7 +2,7 @@
 #include "anchor.h"
 #include "url_quote.h"
 #include "url_stream.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "rc.h"
 #include "message.h"
 #include "tmpfile.h"

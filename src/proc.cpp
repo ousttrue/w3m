@@ -22,7 +22,7 @@
 #include "http_request.h"
 #include "http_response.h"
 #include "message.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "signal_util.h"
 #include "local_cgi.h"
 #include "Str.h"

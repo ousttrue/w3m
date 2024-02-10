@@ -3,7 +3,7 @@
 #include "tabbuffer.h"
 #include "quote.h"
 #include "http_response.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "bufferpos.h"
 #include "app.h"
 #include "etc.h"

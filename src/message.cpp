@@ -7,7 +7,7 @@
 #include "terms.h"
 #include "screen.h"
 #include "textlist.h"
-#include "loadproc.h"
+#include "http_session.h"
 
 void message(const char *s, int return_x, int return_y) {
   if (!fmInitialized) {

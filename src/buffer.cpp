@@ -7,7 +7,7 @@
 #include "search.h"
 #include "tabbuffer.h"
 #include "http_response.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "w3m.h"
 #include "local_cgi.h"
 #include "etc.h"

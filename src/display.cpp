@@ -1,7 +1,7 @@
 #include "display.h"
 #include "url_stream.h"
 #include "tabbuffer.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "http_response.h"
 #include "symbol.h"
 #include "message.h"

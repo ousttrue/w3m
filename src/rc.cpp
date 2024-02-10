@@ -5,7 +5,7 @@
 #include "tabbuffer.h"
 #include "http_response.h"
 #include "form.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "loaddirectory.h"
 #include "auth_pass.h"
 #include "http_auth.h"

@@ -4,7 +4,7 @@
 #include "proto.h"
 #include "rc.h"
 #include "screen.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "util.h"
 #include "etc.h"
 #include "message.h"

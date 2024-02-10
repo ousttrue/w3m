@@ -1,5 +1,5 @@
 #include "anchor.h"
-#include "loadproc.h"
+#include "http_session.h"
 #include "url_quote.h"
 #include "w3m.h"
 #include "url_stream.h"
