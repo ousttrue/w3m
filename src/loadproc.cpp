@@ -33,8 +33,6 @@
 const char *DefaultType = nullptr;
 bool DecodeCTE = false;
 
-static long long current_content_length;
-
 static int is_text_type(const char *type) {
   return (type == nullptr || type[0] == '\0' ||
           strncasecmp(type, "text/", 5) == 0 ||
@@ -48,23 +46,8 @@ int is_html_type(const char *type) {
                    strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-/*
- * loadBuffer: read file and make new buffer
- */
 void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
                 LineLayout *layout) {
-  // int nlines;
-  // Str *tmpf;
-  // MySignalHandler prevtrap = nullptr;
-
-  // if (newBuf == nullptr)
-  //   newBuf = new Buffer(INIT_BUFFER_WIDTH());
-
-  // if (SETJMP(AbortLoading) != 0) {
-  //   goto _end;
-  // }
-  // TRAP_ON;
-
   FILE *src = nullptr;
   if (res->sourcefile.empty() && uf->schema != SCM_LOCAL) {
     auto tmpf = tmpfname(TMPF_SRC, nullptr);
@@ -80,8 +63,6 @@ void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
   }
 
   char pre_lbuf = '\0';
-  // long long linelen = 0;
-  // long long trbyte = 0;
   while (true) {
     auto _lineBuf2 = uf->stream->StrmyISgets(); //&& lineBuf2->length
     if (_lineBuf2.empty()) {
@@ -91,8 +72,6 @@ void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
     if (src) {
       Strfputs(lineBuf2, src);
     }
-    // linelen += lineBuf2->length;
-    // showProgress(&linelen, &trbyte, current_content_length);
     cleanup_line(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
@@ -109,21 +88,15 @@ void loadBuffer(UrlStream *uf, const std::shared_ptr<HttpResponse> &res,
     layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
                        FOLD_BUFFER_WIDTH(), nlines);
   }
-  // _end:
-  // TRAP_OFF;
   layout->topLine = layout->firstLine;
   layout->lastLine = layout->currentLine;
   layout->currentLine = layout->firstLine;
-  // newBuf->trbyte = trbyte + linelen;
   if (src) {
     fclose(src);
   }
   res->type = "text/plain";
 }
 
-/*
- * loadHTMLString: read string and make new buffer
- */
 Buffer *loadHTMLString(Str *page) {
 
   UrlStream f(SCM_LOCAL, newStrStream(page->ptr));
@@ -133,11 +106,6 @@ Buffer *loadHTMLString(Str *page) {
 
   return newBuf;
 }
-
-enum class LoadProc {
-  Html,
-  Buffer,
-};
 
 #define SHELLBUFFERNAME "*Shellout*"
 Buffer *getshell(const char *cmd) {
@@ -154,61 +122,56 @@ Buffer *getshell(const char *cmd) {
 
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   loadBuffer(&uf, buf->info, &buf->layout);
-
-  // Buffer *buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }
 
-static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
-                             const Url &pu, const char *real_type) {
-  Buffer *buf = src;
-  switch (loadproc) {
-  case LoadProc::Html:
-    loadHTMLstream(f, src->info, &src->layout);
-    break;
-  case LoadProc::Buffer:
-    loadBuffer(f, src->info, &src->layout);
-    break;
+static void loadSomething(UrlStream *f,
+                          const std::shared_ptr<HttpResponse> &res,
+                          LineLayout *layout) {
+  // Buffer *buf = src;
+  if (is_html_type(res->type)) {
+    loadHTMLstream(f, res, layout);
+  } else {
+    loadBuffer(f, res, layout);
   }
 
-  if (buf->layout.title.empty() || buf->layout.title[0] == '\0') {
-    buf->layout.title = buf->info->getHeader("Subject:");
-    if (buf->layout.title.empty() && buf->info->filename != nullptr)
-      buf->layout.title = lastFileName(buf->info->filename);
+  if (layout->title.empty() || layout->title[0] == '\0') {
+    layout->title = res->getHeader("Subject:");
+    if (layout->title.empty() && res->filename != nullptr)
+      layout->title = lastFileName(res->filename);
   }
-  if (buf->info->currentURL.schema == SCM_UNKNOWN)
-    buf->info->currentURL.schema = f->schema;
-  if (f->schema == SCM_LOCAL && buf->info->sourcefile.empty())
-    buf->info->sourcefile = buf->info->filename;
+  if (res->currentURL.schema == SCM_UNKNOWN)
+    res->currentURL.schema = f->schema;
+  if (f->schema == SCM_LOCAL && res->sourcefile.empty())
+    res->sourcefile = res->filename;
 
-  if (buf && buf != NO_BUFFER) {
-    buf->info->real_schema = f->schema;
-    buf->info->real_type = real_type;
-    if (pu.label.size()) {
-      if (loadproc == LoadProc::Html) {
-        auto a = buf->layout.searchURLLabel(pu.label.c_str());
+  // if (buf && buf != NO_BUFFER)
+  {
+    res->real_schema = f->schema;
+    // res->real_type = real_type;
+    if (res->currentURL.label.size()) {
+      if (is_html_type(res->type)) {
+        auto a = layout->searchURLLabel(res->currentURL.label.c_str());
         if (a != nullptr) {
-          buf->layout.gotoLine(a->start.line);
+          layout->gotoLine(a->start.line);
           if (label_topline)
-            buf->layout.topLine =
-                buf->layout.lineSkip(buf->layout.topLine,
-                                     buf->layout.currentLine->linenumber -
-                                         buf->layout.topLine->linenumber,
-                                     false);
-          buf->layout.pos = a->start.pos;
-          buf->layout.arrangeCursor();
+            layout->topLine = layout->lineSkip(layout->topLine,
+                                               layout->currentLine->linenumber -
+                                                   layout->topLine->linenumber,
+                                               false);
+          layout->pos = a->start.pos;
+          layout->arrangeCursor();
         }
       } else { /* plain text */
-        int l = atoi(pu.label.c_str());
-        buf->layout.gotoRealLine(l);
-        buf->layout.pos = 0;
-        buf->layout.arrangeCursor();
+        int l = atoi(res->currentURL.label.c_str());
+        layout->gotoRealLine(l);
+        layout->pos = 0;
+        layout->arrangeCursor();
       }
     }
   }
-  return buf;
 }
 
 static int _MoveFile(const char *path1, const char *path2) {
@@ -374,52 +337,19 @@ static long long strtoclen(const char *s) {
 #endif
 }
 
-static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
-                           Buffer *t_buf, UrlStream &f,
-                           // Str *page,
-                           const char *t, const char *real_type) {
-  // if (page) {
-  //   FILE *src;
-  //   auto tmp = tmpfname(TMPF_SRC, ".html");
-  //   src = fopen(tmp->ptr, "w");
-  //   if (src) {
-  //     Str *s;
-  //     s = page;
-  //     Strfputs(s, src);
-  //     fclose(src);
-  //   }
-  //   if (do_download) {
-  //     if (!src)
-  //       return nullptr;
-  //     auto file = guess_filename(hr->url.file.c_str());
-  //     doFileMove(tmp->ptr, file);
-  //     return NO_BUFFER;
-  //   }
-  //   auto b = loadHTMLString(page);
-  //   if (b) {
-  //     b->info->currentURL = hr->url;
-  //     b->info->real_schema = hr->url.schema;
-  //     b->info->real_type = t;
-  //     if (src) {
-  //       b->info->sourcefile = tmp->ptr;
-  //     }
-  //   }
-  //   return b;
-  // }
-
-  if (!real_type) {
-    real_type = t;
+static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr, UrlStream &f,
+                           const std::shared_ptr<HttpResponse> &res) {
+  if (!res->real_type) {
+    res->real_type = res->type;
   }
 
-  current_content_length = 0;
   const char *p;
-  if ((p = t_buf->info->getHeader("Content-Length:"))) {
-    current_content_length = strtoclen(p);
+  if ((p = res->getHeader("Content-Length:"))) {
+    res->current_content_length = strtoclen(p);
   }
   if (do_download) {
     /* download only */
     const char *file;
-    // TRAP_OFF;
     if (DecodeCTE && f.stream->IStype() != IST_ENCODED) {
       f.stream = newEncodedStream(f.stream, f.encoding);
     }
@@ -429,7 +359,7 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
         f.modtime = st.st_mtime;
       file = guess_filename(hr->url.real_file.c_str());
     } else {
-      file = t_buf->info->guess_save_name(hr->url.file.c_str());
+      file = res->guess_save_name(hr->url.file.c_str());
     }
     f.doFileSave(file);
     return NO_BUFFER;
@@ -438,37 +368,24 @@ static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
   if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
     hr->url.real_file = f.uncompress_stream();
   } else if (f.compression != CMP_NOCOMPRESS) {
-    if ((is_text_type(t))) {
-      if (t_buf == nullptr)
-        t_buf = new Buffer(INIT_BUFFER_WIDTH());
-      t_buf->info->sourcefile = f.uncompress_stream();
+    if ((is_text_type(res->type))) {
+      res->sourcefile = f.uncompress_stream();
       uncompressed_file_type(hr->url.file.c_str(), &f.ext);
     } else {
-      t = compress_application_type(f.compression);
+      res->type = compress_application_type(f.compression);
       f.compression = CMP_NOCOMPRESS;
     }
   }
 
-  auto proc = LoadProc::Buffer;
-  if (is_html_type(t)) {
-    proc = LoadProc::Html;
-  } else {
-    proc = LoadProc::Buffer;
-  }
-  if (t_buf == nullptr)
-    t_buf = new Buffer(INIT_BUFFER_WIDTH());
-  t_buf->info->currentURL = hr->url;
-  t_buf->info->filename = hr->url.real_file.size()
-                              ? Strnew(hr->url.real_file)->ptr
-                              : Strnew(hr->url.file)->ptr;
-  t_buf->info->ssl_certificate = (char *)f.ssl_certificate;
+  res->currentURL = hr->url;
+  res->filename = hr->url.real_file.size() ? Strnew(hr->url.real_file)->ptr
+                                           : Strnew(hr->url.file)->ptr;
+  res->ssl_certificate = (char *)f.ssl_certificate;
 
-  auto b = loadSomething(&f, proc, t_buf, hr->url, real_type);
-  // if (header_string)
-  //   header_string = nullptr;
-  if (b && b != NO_BUFFER)
-    preFormUpdateBuffer(b);
-  // TRAP_OFF;
+  auto b = new Buffer(INIT_BUFFER_WIDTH());
+  b->info = res;
+  loadSomething(&f, res, &b->layout);
+  preFormUpdateBuffer(b);
   return b;
 }
 
@@ -521,28 +438,10 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
   // }
 
   if (hr && hr->status == HTST_MISSING) {
-    // TRAP_OFF;
     return nullptr;
   }
 
-  /* openURL() succeeded */
-  // if (SETJMP(AbortLoading) != 0) {
-  //   /* transfer interrupted */
-  //   TRAP_OFF;
-  //   if (b)
-  //     discardBuffer(b);
-  //   return nullptr;
-  // }
-
-  // b = nullptr;
-  // if (header_string){
-  //   header_string = nullptr;
-  // }
-
-  // TRAP_ON;
-  const char *t = "text/plain";
-  const char *real_type = nullptr;
-  auto t_buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto res = std::make_shared<HttpResponse>();
   if (hr->url.schema == SCM_HTTP || hr->url.schema == SCM_HTTPS) {
 
     // if (fmInitialized) {
@@ -552,12 +451,12 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
-    auto http_response_code = t_buf->info->readHeader(&f, hr->url);
+    auto http_response_code = res->readHeader(&f, hr->url);
     const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
-        (p = t_buf->info->getHeader("Location:")) != nullptr &&
-        t_buf->info->checkRedirection(hr->url)) {
+        (p = res->getHeader("Location:")) != nullptr &&
+        res->checkRedirection(hr->url)) {
       /* document moved */
       /* 301: Moved Permanently */
       /* 302: Found */
@@ -566,31 +465,30 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
       return loadGeneralFile(Strnew(url_quote(p))->ptr, hr->url, option, {});
     }
 
-    t = t_buf->info->checkContentType();
-    if (t == nullptr && hr->url.file.size()) {
+    res->type = res->checkContentType();
+    if (res->type == nullptr && hr->url.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
-        t = guessContentType(hr->url.file.c_str());
+        res->type = guessContentType(hr->url.file.c_str());
     }
-    if (t == nullptr) {
-      t = "text/plain";
+    if (res->type == nullptr) {
+      res->type = "text/plain";
     }
     hr->add_auth_cookie();
-    if ((p = t_buf->info->getHeader("WWW-Authenticate:")) &&
+    if ((p = res->getHeader("WWW-Authenticate:")) &&
         http_response_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
-      if (findAuthentication(&hauth, *t_buf->info, "WWW-Authenticate:") &&
+      if (findAuthentication(&hauth, *res, "WWW-Authenticate:") &&
           (hr->realm = get_auth_param(hauth.param, "realm"))) {
         getAuthCookie(&hauth, "Authorization:", hr->url, hr.get(), request,
                       &hr->uname, &hr->pwd);
         if (hr->uname == nullptr) {
           /* abort */
           // TRAP_OFF;
-          return page_loaded(hr, t_buf, f, t, {});
+          return page_loaded(hr, f, res);
         }
         hr->add_auth_cookie_flag = true;
-        // status = HTST_NORMAL;
         return loadGeneralFile(path, current, option, request);
       }
     }
@@ -599,27 +497,28 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
       return loadGeneralFile(path, current, option, request);
     }
 
-    f.modtime = mymktime(t_buf->info->getHeader("Last-Modified:"));
+    f.modtime = mymktime(res->getHeader("Last-Modified:"));
   } else if (hr->url.schema == SCM_DATA) {
-    t = f.guess_type;
+    res->type = f.guess_type;
   } else if (DefaultType) {
-    t = DefaultType;
+    res->type = DefaultType;
     DefaultType = nullptr;
   } else {
-    t = guessContentType(hr->url.file.c_str());
-    if (!t) {
-      t = "text/plain";
+    res->type = guessContentType(hr->url.file.c_str());
+    if (!res->type) {
+      res->type = "text/plain";
     }
-    real_type = t;
-    if (f.guess_type)
-      t = f.guess_type;
+    res->real_type = res->type;
+    if (f.guess_type) {
+      res->type = f.guess_type;
+    }
   }
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
-  f.guess_type = t;
+  f.guess_type = res->type;
 
-  return page_loaded(hr, t_buf, f, t, real_type);
+  return page_loaded(hr, f, res);
 }
 
 #define PIPEBUFFERNAME "*stream*"

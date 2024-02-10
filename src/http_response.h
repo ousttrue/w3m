@@ -12,7 +12,7 @@ struct HttpResponse {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
-  const char *type = nullptr;
+  const char *type = "text/plain";
   const char *real_type = nullptr;
   UrlSchema real_schema = {};
   TextList *document_header = nullptr;
@@ -23,6 +23,7 @@ struct HttpResponse {
   const char *baseTarget = nullptr;
   size_t trbyte = 0;
   const char *edit = nullptr;
+  long long current_content_length;
 
   ~HttpResponse();
   bool checkRedirection(const Url &pu);
