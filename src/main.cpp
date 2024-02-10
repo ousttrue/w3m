@@ -354,10 +354,10 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
 
     if (!al) {
       label = Strnew_m_charp("_", target, nullptr)->ptr;
-      al = searchURLLabel(Currentbuf, label.c_str());
+      al = Currentbuf->layout.searchURLLabel(label.c_str());
     }
     if (al) {
-      Currentbuf->layout.gotoLine( al->start.line);
+      Currentbuf->layout.gotoLine(al->start.line);
       if (label_topline)
         Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
             Currentbuf->layout.topLine,

@@ -143,43 +143,6 @@ static void writeBufferName(Buffer *buf, int n) {
   addnstr_sup(msg->ptr, COLS - 1);
 }
 
-/*
- * gotoRealLine: go to real line number
- */
-void gotoRealLine(Buffer *buf, int n) {
-  char msg[36];
-  Line *l = buf->layout.firstLine;
-
-  if (l == nullptr)
-    return;
-
-  if (l->real_linenumber > n) {
-    sprintf(msg, "First line is #%ld", l->real_linenumber);
-    set_delayed_message(msg);
-    buf->layout.topLine = buf->layout.currentLine = l;
-    return;
-  }
-  if (buf->layout.lastLine->real_linenumber < n) {
-    l = buf->layout.lastLine;
-    sprintf(msg, "Last line is #%ld", buf->layout.lastLine->real_linenumber);
-    set_delayed_message(msg);
-    buf->layout.currentLine = l;
-    buf->layout.topLine = buf->layout.lineSkip(buf->layout.currentLine,
-                                               -(buf->layout.LINES - 1), false);
-    return;
-  }
-  for (; l != nullptr; l = l->next) {
-    if (l->real_linenumber >= n) {
-      buf->layout.currentLine = l;
-      if (n < buf->layout.topLine->real_linenumber ||
-          buf->layout.topLine->real_linenumber + buf->layout.LINES <= n)
-        buf->layout.topLine =
-            buf->layout.lineSkip(l, -(buf->layout.LINES + 1) / 2, false);
-      break;
-    }
-  }
-}
-
 static Buffer *listBuffer(Buffer *top, Buffer *current) {
   int i, c = 0;
   Buffer *buf = top;
@@ -371,7 +334,7 @@ void reshapeBuffer(Buffer *buf) {
     while (cur->bpos && cur->prev)
       cur = cur->prev;
     if (cur->real_linenumber > 0) {
-      gotoRealLine(buf, cur->real_linenumber);
+      buf->layout.gotoRealLine(cur->real_linenumber);
     } else {
       buf->layout.gotoLine(cur->linenumber);
     }
@@ -381,7 +344,7 @@ void reshapeBuffer(Buffer *buf) {
     if (n) {
       buf->layout.topLine = buf->layout.lineSkip(buf->layout.topLine, n, false);
       if (cur->real_linenumber > 0) {
-        gotoRealLine(buf, cur->real_linenumber);
+        buf->layout.gotoRealLine(cur->real_linenumber);
       } else {
         buf->layout.gotoLine(cur->linenumber);
       }
@@ -1175,7 +1138,7 @@ void _goLine(const char *l) {
   }
   Currentbuf->layout.pos = 0;
   if (((*l == '^') || (*l == '$')) && prec_num) {
-    gotoRealLine(Currentbuf, prec_num);
+    Currentbuf->layout.gotoRealLine(prec_num);
   } else if (*l == '^') {
     Currentbuf->layout.topLine = Currentbuf->layout.currentLine =
         Currentbuf->layout.firstLine;
@@ -1184,7 +1147,7 @@ void _goLine(const char *l) {
         Currentbuf->layout.lastLine, -(Currentbuf->layout.LINES + 1) / 2, true);
     Currentbuf->layout.currentLine = Currentbuf->layout.lastLine;
   } else
-    gotoRealLine(Currentbuf, atoi(l));
+    Currentbuf->layout.gotoRealLine(atoi(l));
   Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

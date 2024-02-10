@@ -62,7 +62,6 @@ const char *reAnchor(Buffer *buf, const char *re);
 Anchor *retrieveCurrentAnchor(Buffer *buf);
 Anchor *retrieveCurrentImg(Buffer *buf);
 Anchor *retrieveCurrentForm(Buffer *buf);
-Anchor *searchURLLabel(Buffer *buf, const char *url);
 struct Line;
 void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
 struct AnchorList;

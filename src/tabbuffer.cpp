@@ -193,18 +193,15 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
 }
 
 void gotoLabel(const char *label) {
-  Buffer *buf;
-  Anchor *al;
-  int i;
 
-  al = searchURLLabel(Currentbuf, label);
+  auto al = Currentbuf->layout.searchURLLabel(label);
   if (al == nullptr) {
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
   }
-  buf = new Buffer(Currentbuf->layout.width);
+  auto buf = new Buffer(Currentbuf->layout.width);
   *buf = *Currentbuf;
-  for (i = 0; i < MAX_LB; i++)
+  for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
   buf->info->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, buf->info->currentURL.to_Str().c_str());

@@ -69,7 +69,6 @@ extern Buffer *page_info_panel(Buffer *buf);
 extern Buffer *nullBuffer(void);
 extern Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf);
 extern Buffer *nthBuffer(Buffer *firstbuf, int n);
-extern void gotoRealLine(Buffer *buf, int n);
 extern Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf,
                             char *selectchar);
 extern void reshapeBuffer(Buffer *buf);

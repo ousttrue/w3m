@@ -188,8 +188,7 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
     buf->info->real_type = real_type;
     if (pu.label.size()) {
       if (loadproc == LoadProc::Html) {
-        Anchor *a;
-        a = searchURLLabel(buf, pu.label.c_str());
+        auto a = buf->layout.searchURLLabel(pu.label.c_str());
         if (a != nullptr) {
           buf->layout.gotoLine(a->start.line);
           if (label_topline)
@@ -203,7 +202,7 @@ static Buffer *loadSomething(UrlStream *f, LoadProc loadproc, Buffer *src,
         }
       } else { /* plain text */
         int l = atoi(pu.label.c_str());
-        gotoRealLine(buf, l);
+        buf->layout.gotoRealLine(l);
         buf->layout.pos = 0;
         buf->layout.arrangeCursor();
       }

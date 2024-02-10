@@ -98,10 +98,6 @@ Anchor *searchAnchor(AnchorList *al, const char *str) {
   return NULL;
 }
 
-Anchor *searchURLLabel(Buffer *buf, const char *url) {
-  return searchAnchor(buf->layout.name, url);
-}
-
 static Anchor *_put_anchor_all(Buffer *buf, const char *p1, const char *p2,
                                int line, int pos) {
   Str *tmp;

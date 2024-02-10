@@ -343,6 +343,45 @@ void LineLayout::restorePosition(const LineLayout &orig) {
   this->arrangeCursor();
 }
 
+/*
+ * gotoRealLine: go to real line number
+ */
+void LineLayout::gotoRealLine(int n) {
+  Line *l = this->firstLine;
+  if (l == nullptr) {
+    return;
+  }
+
+  if (l->real_linenumber > n) {
+    char msg[36];
+    sprintf(msg, "First line is #%ld", l->real_linenumber);
+    set_delayed_message(msg);
+    this->topLine = this->currentLine = l;
+    return;
+  }
+
+  if (this->lastLine->real_linenumber < n) {
+    l = this->lastLine;
+    char msg[36];
+    sprintf(msg, "Last line is #%ld", this->lastLine->real_linenumber);
+    set_delayed_message(msg);
+    this->currentLine = l;
+    this->topLine =
+        this->lineSkip(this->currentLine, -(this->LINES - 1), false);
+    return;
+  }
+
+  for (; l != nullptr; l = l->next) {
+    if (l->real_linenumber >= n) {
+      this->currentLine = l;
+      if (n < this->topLine->real_linenumber ||
+          this->topLine->real_linenumber + this->LINES <= n)
+        this->topLine = this->lineSkip(l, -(this->LINES + 1) / 2, false);
+      break;
+    }
+  }
+}
+
 static AnchorList *putAnchor(AnchorList *al, const char *url,
                              const char *target, Anchor **anchor_return,
                              const char *referer, const char *title,
@@ -475,4 +514,8 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
         l->propBuf[k] |= PE_FORM;
     }
   }
+}
+
+Anchor *LineLayout::searchURLLabel(const char *url) {
+  return searchAnchor(this->name, url);
 }

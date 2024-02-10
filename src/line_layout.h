@@ -69,6 +69,7 @@ struct LineLayout {
   void cursorHome();
   void cursorXY(int x, int y);
   void restorePosition(const LineLayout &orig);
+  void gotoRealLine(int n);
 
   //
   // viewport
@@ -129,6 +130,7 @@ struct LineLayout {
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
   Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
   void addMultirowsForm(AnchorList *al);
+  Anchor *searchURLLabel(const char *url);
 
   //
   // Event
