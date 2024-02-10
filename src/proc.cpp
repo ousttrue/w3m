@@ -1136,7 +1136,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   buf = new Buffer(INIT_BUFFER_WIDTH());
 
-  if (is_html_type(Currentbuf->info->type)) {
+  if (Currentbuf->info->is_html_type()) {
     buf->info->type = "text/plain";
     buf->layout.title =
         Sprintf("source of %s", Currentbuf->layout.title.c_str())->ptr;
@@ -1213,8 +1213,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   repBuffer(Currentbuf, buf);
   if ((buf->info->type != nullptr) && (sbuf->info->type != nullptr) &&
       ((!strcasecmp(buf->info->type, "text/plain") &&
-        is_html_type(sbuf->info->type)) ||
-       (is_html_type(buf->info->type) &&
+        sbuf->info->is_html_type()) ||
+       (buf->info->is_html_type() &&
         !strcasecmp(sbuf->info->type, "text/plain")))) {
     vwSrc();
     if (Currentbuf != buf) {

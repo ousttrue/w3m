@@ -41,11 +41,6 @@ static int is_text_type(const char *type) {
           strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
 }
 
-int is_html_type(const char *type) {
-  return (type && (strcasecmp(type, "text/html") == 0 ||
-                   strcasecmp(type, "application/xhtml+xml") == 0));
-}
-
 void loadBuffer(const std::shared_ptr<HttpResponse> &res, LineLayout *layout) {
   FILE *src = nullptr;
   if (res->sourcefile.empty() && res->f.schema != SCM_LOCAL) {
@@ -127,7 +122,7 @@ Buffer *getshell(const char *cmd) {
 static void loadSomething(const std::shared_ptr<HttpResponse> &res,
                           LineLayout *layout) {
   // Buffer *buf = src;
-  if (is_html_type(res->type)) {
+  if (res->is_html_type()) {
     loadHTMLstream(res, layout);
   } else {
     loadBuffer(res, layout);
@@ -148,7 +143,7 @@ static void loadSomething(const std::shared_ptr<HttpResponse> &res,
     // res->real_schema = res->f.schema;
     // res->real_type = real_type;
     if (res->currentURL.label.size()) {
-      if (is_html_type(res->type)) {
+      if (res->is_html_type()) {
         auto a = layout->searchURLLabel(res->currentURL.label.c_str());
         if (a != nullptr) {
           layout->gotoLine(a->start.line);
@@ -527,7 +522,7 @@ int setModtime(const char *path, time_t modtime) {
 
 static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
 
-  auto is_html = is_html_type(buf->info->type);
+  auto is_html = buf->info->is_html_type();
 
   for (; l != nullptr; l = l->next) {
     Str *tmp;

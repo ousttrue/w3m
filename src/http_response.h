@@ -31,6 +31,10 @@ struct HttpResponse {
   const char *getHeader(const char *field) const;
   const char *checkContentType() const;
   const char *guess_save_name(const char *file) const;
+  bool is_html_type() const {
+    return (type && (strcasecmp(type, "text/html") == 0 ||
+                     strcasecmp(type, "application/xhtml+xml") == 0));
+  }
 };
 
 const char *mybasename(const char *s);

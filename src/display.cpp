@@ -192,7 +192,7 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   if (buf->layout.height == 0)
     buf->layout.height = LASTLINE + 1;
   if ((buf->layout.width != INIT_BUFFER_WIDTH() &&
-       (is_html_type(buf->info->type) || FoldLine)) ||
+       (buf->info->is_html_type() || FoldLine)) ||
       buf->layout.need_reshape) {
     buf->layout.need_reshape = true;
     reshapeBuffer(buf);

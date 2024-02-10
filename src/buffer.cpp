@@ -319,7 +319,7 @@ void reshapeBuffer(Buffer *buf) {
   if (buf->layout.imarklist)
     buf->layout.imarklist->nmark = 0;
 
-  if (is_html_type(buf->info->type))
+  if (buf->info->is_html_type())
     loadHTMLstream(buf->info, &buf->layout);
   else
     loadBuffer(buf->info, &buf->layout);
@@ -349,7 +349,7 @@ void reshapeBuffer(Buffer *buf) {
       }
     }
     buf->layout.pos -= buf->layout.currentLine->bpos;
-    if (FoldLine && !is_html_type(buf->info->type)) {
+    if (FoldLine && !buf->info->is_html_type()) {
       buf->layout.currentColumn = 0;
     } else {
       buf->layout.currentColumn = sbuf->layout.currentColumn;
