@@ -13,7 +13,6 @@ struct HttpResponse {
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
   const char *type = "text/plain";
-  const char *real_type = nullptr;
   TextList *document_header = nullptr;
   const char *filename = nullptr;
   std::string sourcefile;

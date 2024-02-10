@@ -582,7 +582,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   Str *cmd;
   if (Currentbuf->info->edit) {
     cmd =
-        unquote_mailcap(Currentbuf->info->edit, Currentbuf->info->real_type, fn,
+        unquote_mailcap(Currentbuf->info->edit, Currentbuf->info->type, fn,
                         Currentbuf->info->getHeader("Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
@@ -1081,7 +1081,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   PermitSaveToPipe = true;
 
   const char *file;
-  if (Currentbuf->info->currentURL.schema== SCM_LOCAL) {
+  if (Currentbuf->info->currentURL.schema == SCM_LOCAL) {
     file = guess_filename(Currentbuf->info->currentURL.real_file.c_str());
   } else {
     file = Currentbuf->info->guess_save_name(
@@ -1138,22 +1138,12 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   if (is_html_type(Currentbuf->info->type)) {
     buf->info->type = "text/plain";
-    if (Currentbuf->info->real_type &&
-        is_html_type(Currentbuf->info->real_type))
-      buf->info->real_type = "text/plain";
-    else
-      buf->info->real_type = Currentbuf->info->real_type;
     buf->layout.title =
         Sprintf("source of %s", Currentbuf->layout.title.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else if (!strcasecmp(Currentbuf->info->type, "text/plain")) {
     buf->info->type = "text/html";
-    if (Currentbuf->info->real_type &&
-        !strcasecmp(Currentbuf->info->real_type, "text/plain"))
-      buf->info->real_type = "text/html";
-    else
-      buf->info->real_type = Currentbuf->info->real_type;
     buf->layout.title =
         Sprintf("HTML view of %s", Currentbuf->layout.title.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
@@ -1206,7 +1196,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   url = Strnew(Currentbuf->info->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
-  DefaultType = Currentbuf->info->real_type;
+  DefaultType = Currentbuf->info->type;
   auto buf = loadGeneralFile(
       url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
   DefaultType = nullptr;

@@ -4218,7 +4218,6 @@ phase2:
   layout->lastLine = layout->currentLine;
   layout->currentLine = layout->firstLine;
   res->type = "text/html";
-  res->real_type = res->type;
   // if (n_textarea)
   formResetBuffer(layout, layout->formitem);
   if (src) {

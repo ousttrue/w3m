@@ -21,11 +21,7 @@ int FollowRedirection = 10;
 
 HttpResponse::HttpResponse() : f(SCM_MISSING) {}
 
-HttpResponse::~HttpResponse() {
-  if (this->sourcefile.size() &&
-      (!this->real_type || strncasecmp(this->real_type, "image/", 6))) {
-  }
-}
+HttpResponse::~HttpResponse() {}
 
 static bool same_url_p(const Url &pu1, const Url &pu2) {
   return (pu1.schema == pu2.schema && pu1.port == pu2.port &&

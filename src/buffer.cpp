@@ -432,14 +432,14 @@ Buffer *page_info_panel(Buffer *buf) {
     if (all == 0 && buf->layout.lastLine)
       all = buf->layout.lastLine->linenumber;
     p = url_decode0(buf->info->currentURL.to_Str().c_str());
-    Strcat_m_charp(
-        tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-        html_quote(buf->layout.title.c_str()),
-        "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
-        "<tr valign=top><td nowrap>Document Type<td>",
-        buf->info->real_type ? html_quote(buf->info->real_type) : "unknown",
-        "<tr valign=top><td nowrap>Last Modified<td>",
-        html_quote(last_modified(buf)), nullptr);
+    Strcat_m_charp(tmp, "<table cellpadding=0>",
+                   "<tr valign=top><td nowrap>Title<td>",
+                   html_quote(buf->layout.title.c_str()),
+                   "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
+                   "<tr valign=top><td nowrap>Document Type<td>",
+                   buf->info->type ? html_quote(buf->info->type) : "unknown",
+                   "<tr valign=top><td nowrap>Last Modified<td>",
+                   html_quote(last_modified(buf)), nullptr);
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                    Sprintf("%d", all)->ptr,
                    "<tr valign=top><td nowrap>Transferred bytes<td>",
@@ -525,8 +525,7 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_FILENAME", buf->info->filename);
     set_environ("W3M_TITLE", buf->layout.title.c_str());
     set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
-    set_environ("W3M_TYPE",
-                buf->info->real_type ? buf->info->real_type : "unknown");
+    set_environ("W3M_TYPE", buf->info->type ? buf->info->type : "unknown");
   }
   l = buf->layout.currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
@@ -1277,7 +1276,7 @@ Str *Str_form_quote(Str *x) {
     } else if (is_url_unsafe(*p)) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-      sprintf(buf, "%%%02X", (unsigned char)*p);
+      snprintf(buf, sizeof(buf), "%%%02X", (unsigned char)*p);
       Strcat_charp(tmp, buf);
     } else {
       if (tmp)

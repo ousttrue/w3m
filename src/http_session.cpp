@@ -335,10 +335,6 @@ static long long strtoclen(const char *s) {
 
 static Buffer *page_loaded(const std::shared_ptr<HttpRequest> &hr,
                            const std::shared_ptr<HttpResponse> &res) {
-  if (!res->real_type) {
-    res->real_type = res->type;
-  }
-
   const char *p;
   if ((p = res->getHeader("Content-Length:"))) {
     res->current_content_length = strtoclen(p);
@@ -503,7 +499,6 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     if (!res->type) {
       res->type = "text/plain";
     }
-    res->real_type = res->type;
     if (res->f.guess_type) {
       res->type = res->f.guess_type;
     }
