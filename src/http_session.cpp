@@ -33,12 +33,11 @@
 const char *DefaultType = nullptr;
 bool DecodeCTE = false;
 
-static int is_text_type(const char *type) {
-  return (type == nullptr || type[0] == '\0' ||
-          strncasecmp(type, "text/", 5) == 0 ||
-          (strncasecmp(type, "application/", 12) == 0 &&
-           strstr(type, "xhtml") != nullptr) ||
-          strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+static int is_text_type(std::string_view type) {
+  return type.empty() || type.starts_with("text/") ||
+         (type.starts_with("application/") &&
+          type.find("xhtml") != std::string::npos) ||
+         type.starts_with("message/");
 }
 
 void loadBuffer(const std::shared_ptr<HttpResponse> &res, LineLayout *layout) {
@@ -452,12 +451,12 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     }
 
     res->type = res->checkContentType();
-    if (res->type == nullptr && hr->url.file.size()) {
+    if (res->type.empty() && hr->url.file.size()) {
       if (!((http_response_code >= 400 && http_response_code <= 407) ||
             (http_response_code >= 500 && http_response_code <= 505)))
         res->type = guessContentType(hr->url.file.c_str());
     }
-    if (res->type == nullptr) {
+    if (res->type.empty()) {
       res->type = "text/plain";
     }
     hr->add_auth_cookie();
@@ -491,7 +490,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
     DefaultType = nullptr;
   } else {
     res->type = guessContentType(hr->url.file.c_str());
-    if (!res->type) {
+    if (res->type.empty()) {
       res->type = "text/plain";
     }
     if (res->f.guess_type) {
@@ -501,7 +500,7 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
-  res->f.guess_type = res->type;
+  res->f.guess_type = Strnew(res->type)->ptr;
 
   return page_loaded(hr, res);
 }

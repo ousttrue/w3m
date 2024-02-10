@@ -437,7 +437,8 @@ Buffer *page_info_panel(Buffer *buf) {
                    html_quote(buf->layout.title.c_str()),
                    "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
                    "<tr valign=top><td nowrap>Document Type<td>",
-                   buf->info->type ? html_quote(buf->info->type) : "unknown",
+                   buf->info->type.size() ? html_quote(buf->info->type.c_str())
+                                          : "unknown",
                    "<tr valign=top><td nowrap>Last Modified<td>",
                    html_quote(last_modified(buf)), nullptr);
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
@@ -525,7 +526,8 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_FILENAME", buf->info->filename);
     set_environ("W3M_TITLE", buf->layout.title.c_str());
     set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
-    set_environ("W3M_TYPE", buf->info->type ? buf->info->type : "unknown");
+    set_environ("W3M_TYPE",
+                buf->info->type.size() ? buf->info->type.c_str() : "unknown");
   }
   l = buf->layout.currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
@@ -641,8 +643,9 @@ void execdict(const char *word) {
   } else if (buf != NO_BUFFER) {
     buf->info->filename = w;
     buf->layout.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    if (buf->info->type == nullptr)
+    if (buf->info->type.empty()) {
       buf->info->type = "text/plain";
+    }
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);

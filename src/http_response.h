@@ -3,7 +3,6 @@
 #include "url_stream.h"
 #include "optional"
 #include <vector>
-#include <memory>
 
 extern int FollowRedirection;
 
@@ -12,7 +11,7 @@ struct HttpResponse {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
-  const char *type = "text/plain";
+  std::string type = "text/plain";
   TextList *document_header = nullptr;
   const char *filename = nullptr;
   std::string sourcefile;
@@ -32,8 +31,7 @@ struct HttpResponse {
   const char *checkContentType() const;
   const char *guess_save_name(const char *file) const;
   bool is_html_type() const {
-    return (type && (strcasecmp(type, "text/html") == 0 ||
-                     strcasecmp(type, "application/xhtml+xml") == 0));
+    return type == "text/html" || type == "application/xhtml+xml";
   }
 };
 

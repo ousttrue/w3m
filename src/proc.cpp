@@ -277,8 +277,9 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     disp_message("Execution failed", true);
     return;
   } else {
-    if (buf->info->type == nullptr)
+    if (buf->info->type.empty()) {
       buf->info->type = "text/plain";
+    }
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -570,7 +571,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   auto fn = Currentbuf->info->filename;
 
   if (fn == nullptr || /* Behaving as a pager */
-      (Currentbuf->info->type == nullptr &&
+      (Currentbuf->info->type.empty() &&
        Currentbuf->info->edit == nullptr) || /* Reading shell */
       Currentbuf->info->currentURL.schema != SCM_LOCAL ||
       Currentbuf->info->currentURL.file == "-" /* file is std input  */
@@ -581,9 +582,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
   Str *cmd;
   if (Currentbuf->info->edit) {
-    cmd =
-        unquote_mailcap(Currentbuf->info->edit, Currentbuf->info->type, fn,
-                        Currentbuf->info->getHeader("Content-Type:"), nullptr);
+    cmd = unquote_mailcap(
+        Currentbuf->info->edit, Currentbuf->info->type.c_str(), fn,
+        Currentbuf->info->getHeader("Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
   }
@@ -1121,10 +1122,12 @@ DEFUN(curURL, PEEK, "Show current address") {
 /* view HTML source */
 
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
-  Buffer *buf;
 
-  if (Currentbuf->info->type == nullptr)
+  if (Currentbuf->info->type.empty()) {
     return;
+  }
+
+  Buffer *buf;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
     Currentbuf = buf;
     displayBuffer(Currentbuf, B_NORMAL);
@@ -1142,7 +1145,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
         Sprintf("source of %s", Currentbuf->layout.title.c_str())->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
-  } else if (!strcasecmp(Currentbuf->info->type, "text/plain")) {
+  } else if (Currentbuf->info->type == "text/plain") {
     buf->info->type = "text/html";
     buf->layout.title =
         Sprintf("HTML view of %s", Currentbuf->layout.title.c_str())->ptr;
@@ -1196,7 +1199,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   url = Strnew(Currentbuf->info->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
-  DefaultType = Currentbuf->info->type;
+  DefaultType = Strnew(Currentbuf->info->type)->ptr;
   auto buf = loadGeneralFile(
       url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
   DefaultType = nullptr;
@@ -1211,11 +1214,9 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
   repBuffer(Currentbuf, buf);
-  if ((buf->info->type != nullptr) && (sbuf->info->type != nullptr) &&
-      ((!strcasecmp(buf->info->type, "text/plain") &&
-        sbuf->info->is_html_type()) ||
-       (buf->info->is_html_type() &&
-        !strcasecmp(sbuf->info->type, "text/plain")))) {
+  if ((buf->info->type.size()) && (sbuf->info->type.size()) &&
+      ((buf->info->type == "text/plain" && sbuf->info->is_html_type()) ||
+       (buf->info->is_html_type() && sbuf->info->type == "text/plain"))) {
     vwSrc();
     if (Currentbuf != buf) {
       CurrentTab->deleteBuffer(buf);
