@@ -39,6 +39,3 @@ void saveHistory(Hist *hist, int size);
 void ldHist(void);
 struct Buffer;
 std::shared_ptr<Buffer> historyBuffer(Hist *hist);
-struct FormList;
-std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
-                                 const char *referer, FormList *request);

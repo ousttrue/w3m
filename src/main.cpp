@@ -301,84 +301,6 @@ static void SigPipe(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
-                                 const char *referer, FormList *request) {
-  message(Sprintf("loading %s", url)->ptr, 0, 0);
-  refresh(term_io());
-
-  const int *no_referer_ptr = nullptr;
-  auto base = Currentbuf->info->getBaseURL();
-  if ((no_referer_ptr && *no_referer_ptr) || !base ||
-      base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
-      base->schema == SCM_DATA)
-    referer = NO_REFERER;
-  if (referer == nullptr)
-    referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
-
-  auto res = loadGeneralFile(url, Currentbuf->info->getBaseURL(),
-                             {.referer = referer}, request);
-  if (!res) {
-    char *emsg = Sprintf("Can't load %s", url)->ptr;
-    disp_err_message(emsg, false);
-    return nullptr;
-  }
-
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
-
-  auto pu = urlParse(url, base);
-  pushHashHist(URLHist, pu.to_Str().c_str());
-
-  // if (buf == NO_BUFFER) {
-  //   return nullptr;
-  // }
-  if (!on_target) { /* open link as an indivisual page */
-    CurrentTab->pushBuffer(buf);
-    return buf;
-  }
-
-  // if (do_download) /* download (thus no need to render frames) */
-  //   return loadNormalBuf(buf, false);
-
-  if (target == nullptr || /* no target specified (that means this page is not a
-                           frame page) */
-      !strcmp(target, "_top") /* this link is specified to be opened as an
-                                 indivisual * page */
-  ) {
-    CurrentTab->pushBuffer(buf);
-    return buf;
-  }
-  auto nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
-  if (nfbuf == nullptr) {
-    /* original page (that contains <frameset> tag) doesn't exist */
-    CurrentTab->pushBuffer(buf);
-    return buf;
-  }
-
-  {
-    Anchor *al = nullptr;
-    auto label = pu.label;
-
-    if (!al) {
-      label = Strnew_m_charp("_", target, nullptr)->ptr;
-      al = Currentbuf->layout.searchURLLabel(label.c_str());
-    }
-    if (al) {
-      Currentbuf->layout.gotoLine(al->start.line);
-      if (label_topline)
-        Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
-            Currentbuf->layout.topLine,
-            Currentbuf->layout.currentLine->linenumber -
-                Currentbuf->layout.topLine->linenumber,
-            false);
-      Currentbuf->layout.pos = al->start.pos;
-      Currentbuf->layout.arrangeCursor();
-    }
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-  return buf;
-}
-
 /* follow HREF link in the buffer */
 void bufferA(void) {
   on_target = false;
@@ -457,7 +379,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
     Strcat_charp(tmp2, "?");
     Strcat(tmp2, tmp);
-    loadLink(tmp2->ptr, a->target, nullptr, nullptr);
+    CurrentTab->loadLink(tmp2->ptr, a->target, nullptr, nullptr);
   } else if (fi->parent->method == FORM_METHOD_POST) {
     if (multipart) {
       struct stat st;
@@ -467,7 +389,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
       fi->parent->body = tmp->ptr;
       fi->parent->length = tmp->length;
     }
-    auto buf = loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
+    auto buf = CurrentTab->loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
     if (multipart) {
       unlink(fi->parent->body);
     }

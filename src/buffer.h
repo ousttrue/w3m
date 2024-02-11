@@ -54,7 +54,6 @@ public:
 };
 
 void _followForm(int submit);
-void set_buffer_environ(const std::shared_ptr<Buffer> &buf);
 char *GetWord(const std::shared_ptr<Buffer> &buf);
 char *getCurWord(const std::shared_ptr<Buffer> &buf, int *spos, int *epos);
 inline void nextChar(int &s, Line *l) { s++; }

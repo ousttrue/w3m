@@ -735,7 +735,7 @@ void followA() {
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
     TabBuffer::_newT();
     auto buf = Currentbuf;
-    loadLink(url, a->target, a->referer, nullptr);
+    CurrentTab->loadLink(url, a->target, a->referer, nullptr);
     if (buf != Currentbuf)
       CurrentTab->deleteBuffer(buf);
     else
@@ -743,7 +743,7 @@ void followA() {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
-  loadLink(url, a->target, a->referer, nullptr);
+  CurrentTab->loadLink(url, a->target, a->referer, nullptr);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 

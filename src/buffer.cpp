@@ -495,62 +495,6 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
   return newbuf;
 }
 
-void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
-  static std::shared_ptr<Buffer> prev_buf;
-  static Line *prev_line = nullptr;
-  static int prev_pos = -1;
-  Line *l;
-
-  if (buf == nullptr)
-    return;
-  if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->info->sourcefile.c_str());
-    set_environ("W3M_FILENAME", buf->info->filename.c_str());
-    set_environ("W3M_TITLE", buf->layout.title.c_str());
-    set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
-    set_environ("W3M_TYPE",
-                buf->info->type.size() ? buf->info->type.c_str() : "unknown");
-  }
-  l = buf->layout.currentLine;
-  if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
-    Anchor *a;
-    Url pu;
-    char *s = GetWord(buf);
-    set_environ("W3M_CURRENT_WORD", s ? s : "");
-    a = retrieveCurrentAnchor(&buf->layout);
-    if (a) {
-      pu = urlParse(a->url, buf->info->getBaseURL());
-      set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
-    } else
-      set_environ("W3M_CURRENT_LINK", "");
-    a = retrieveCurrentImg(&buf->layout);
-    if (a) {
-      pu = urlParse(a->url, buf->info->getBaseURL());
-      set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
-    } else
-      set_environ("W3M_CURRENT_IMG", "");
-    a = retrieveCurrentForm(&buf->layout);
-    if (a)
-      set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
-    else
-      set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-    set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->layout.currentColumn +
-                                                        buf->layout.cursorX + 1)
-                                          ->ptr);
-  } else if (!l) {
-    set_environ("W3M_CURRENT_WORD", "");
-    set_environ("W3M_CURRENT_LINK", "");
-    set_environ("W3M_CURRENT_IMG", "");
-    set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", "0");
-    set_environ("W3M_CURRENT_COLUMN", "0");
-  }
-  prev_buf = buf;
-  prev_line = l;
-  prev_pos = buf->layout.pos;
-}
-
 char *GetWord(const std::shared_ptr<Buffer> &buf) {
   int b, e;
   char *p;

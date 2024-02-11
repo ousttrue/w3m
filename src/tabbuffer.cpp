@@ -539,3 +539,84 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
   newbuf->backBuffer = first;
   return newbuf;
 }
+
+std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
+                                            const char *referer,
+                                            FormList *request) {
+  message(Sprintf("loading %s", url)->ptr, 0, 0);
+  refresh(term_io());
+
+  const int *no_referer_ptr = nullptr;
+  auto base = this->currentBuffer()->info->getBaseURL();
+  if ((no_referer_ptr && *no_referer_ptr) || !base ||
+      base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
+      base->schema == SCM_DATA)
+    referer = NO_REFERER;
+  if (referer == nullptr)
+    referer =
+        Strnew(this->currentBuffer()->info->currentURL.to_RefererStr())->ptr;
+
+  auto res = loadGeneralFile(url, this->currentBuffer()->info->getBaseURL(),
+                             {.referer = referer}, request);
+  if (!res) {
+    char *emsg = Sprintf("Can't load %s", url)->ptr;
+    disp_err_message(emsg, false);
+    return nullptr;
+  }
+
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
+  buf->info = res;
+
+  auto pu = urlParse(url, base);
+  pushHashHist(URLHist, pu.to_Str().c_str());
+
+  // if (buf == NO_BUFFER) {
+  //   return nullptr;
+  // }
+  if (!on_target) { /* open link as an indivisual page */
+    this->pushBuffer(buf);
+    return buf;
+  }
+
+  // if (do_download) /* download (thus no need to render frames) */
+  //   return loadNormalBuf(buf, false);
+
+  if (target == nullptr || /* no target specified (that means this page is not a
+                           frame page) */
+      !strcmp(target, "_top") /* this link is specified to be opened as an
+                                 indivisual * page */
+  ) {
+    this->pushBuffer(buf);
+    return buf;
+  }
+  auto nfbuf = this->currentBuffer()->linkBuffer[LB_N_FRAME];
+  if (nfbuf == nullptr) {
+    /* original page (that contains <frameset> tag) doesn't exist */
+    this->pushBuffer(buf);
+    return buf;
+  }
+
+  {
+    Anchor *al = nullptr;
+    auto label = pu.label;
+
+    if (!al) {
+      label = Strnew_m_charp("_", target, nullptr)->ptr;
+      al = this->currentBuffer()->layout.searchURLLabel(label.c_str());
+    }
+    if (al) {
+      this->currentBuffer()->layout.gotoLine(al->start.line);
+      if (label_topline)
+        this->currentBuffer()->layout.topLine =
+            this->currentBuffer()->layout.lineSkip(
+                this->currentBuffer()->layout.topLine,
+                this->currentBuffer()->layout.currentLine->linenumber -
+                    this->currentBuffer()->layout.topLine->linenumber,
+                false);
+      this->currentBuffer()->layout.pos = al->start.pos;
+      this->currentBuffer()->layout.arrangeCursor();
+    }
+  }
+  displayBuffer(B_NORMAL);
+  return buf;
+}
