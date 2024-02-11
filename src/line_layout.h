@@ -124,6 +124,11 @@ struct LineLayout {
   int next_nonnull_line(Line *line);
   void _goLine(const char *l, int prec_num);
   void shiftvisualpos(int shift);
+  std::string getCurWord(int *spos, int *epos) const;
+  std::string getCurWord() const {
+    int s, e;
+    return getCurWord(&s, &e);
+  }
 
   //
   // Anchors
@@ -153,3 +158,6 @@ struct LineLayout {
   //
   struct AlarmEvent *event = nullptr;
 };
+
+inline void nextChar(int &s, Line *l) { s++; }
+inline void prevChar(int &s, Line *l) { s--; }

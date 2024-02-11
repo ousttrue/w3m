@@ -1,4 +1,5 @@
 #include "line_layout.h"
+#include "myctype.h"
 #include "history.h"
 #include "url.h"
 #include "display.h"
@@ -891,3 +892,33 @@ void LineLayout::shiftvisualpos(int shift) {
   if (this->visualpos - l->bwidth == -shift && this->cursorX == 0)
     this->visualpos = l->bwidth;
 }
+
+std::string LineLayout::getCurWord(int *spos, int *epos) const {
+  Line *l = this->currentLine;
+  if (l == nullptr)
+    return {};
+
+  *spos = 0;
+  *epos = 0;
+  auto &p = l->lineBuf;
+  auto e = this->pos;
+  while (e > 0 && !is_wordchar(p[e]))
+    prevChar(e, l);
+  if (!is_wordchar(p[e]))
+    return {};
+  int b = e;
+  while (b > 0) {
+    int tmp = b;
+    prevChar(tmp, l);
+    if (!is_wordchar(p[tmp]))
+      break;
+    b = tmp;
+  }
+  while (e < l->len && is_wordchar(p[e])) {
+    e++;
+  }
+  *spos = b;
+  *epos = e;
+  return {p.data() + b, p.data() + e};
+}
+

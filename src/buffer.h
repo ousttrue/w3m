@@ -53,10 +53,6 @@ public:
   Buffer &operator=(const Buffer &src);
 };
 
-char *GetWord(const std::shared_ptr<Buffer> &buf);
-char *getCurWord(const std::shared_ptr<Buffer> &buf, int *spos, int *epos);
-inline void nextChar(int &s, Line *l) { s++; }
-inline void prevChar(int &s, Line *l) { s--; }
 void discardBuffer(const std::shared_ptr<Buffer> &buf);
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);
 std::shared_ptr<Buffer> nullBuffer(void);

@@ -495,45 +495,6 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
   return newbuf;
 }
 
-char *GetWord(const std::shared_ptr<Buffer> &buf) {
-  int b, e;
-  char *p;
-  if ((p = getCurWord(buf, &b, &e)) != nullptr) {
-    return Strnew_charp_n(p, e - b)->ptr;
-  }
-  return nullptr;
-}
-
-char *getCurWord(const std::shared_ptr<Buffer> &buf, int *spos, int *epos) {
-  Line *l = buf->layout.currentLine;
-  int b;
-
-  *spos = 0;
-  *epos = 0;
-  if (l == nullptr)
-    return nullptr;
-  auto &p = l->lineBuf;
-  auto e = buf->layout.pos;
-  while (e > 0 && !is_wordchar(p[e]))
-    prevChar(e, l);
-  if (!is_wordchar(p[e]))
-    return nullptr;
-  b = e;
-  while (b > 0) {
-    int tmp = b;
-    prevChar(tmp, l);
-    if (!is_wordchar(p[tmp]))
-      break;
-    b = tmp;
-  }
-  while (e < l->len && is_wordchar(p[e])) {
-    e++;
-  }
-  *spos = b;
-  *epos = e;
-  return &p[b];
-}
-
 #define DICTBUFFERNAME "*dictionary*"
 void execdict(const char *word) {
   const char *w, *dictcmd;

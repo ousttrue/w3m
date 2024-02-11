@@ -1428,10 +1428,9 @@ void chkURL() {
 // MARK_WORD
 //"Turn current word into hyperlink"
 void chkWORD() {
-  char *p;
   int spos, epos;
-  p = getCurWord(Currentbuf, &spos, &epos);
-  if (p == nullptr)
+  auto p = Currentbuf->layout.getCurWord(&spos, &epos);
+  if (p.empty())
     return;
   reAnchorWord(&Currentbuf->layout, Currentbuf->layout.currentLine, spos, epos);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1517,7 +1516,10 @@ void dictword() {
 
 // DICT_WORD_AT
 //"Execute dictionary command for word at cursor"
-void dictwordat() { execdict(GetWord(Currentbuf)); }
+void dictwordat() {
+  auto word = Currentbuf->layout.getCurWord();
+  execdict(word.c_str());
+}
 
 // COMMAND
 //"Invoke w3m function(s)"

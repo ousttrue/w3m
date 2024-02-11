@@ -133,8 +133,8 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
     Anchor *a;
     Url pu;
-    char *s = GetWord(buf);
-    set_environ("W3M_CURRENT_WORD", s ? s : "");
+    auto s = buf->layout.getCurWord();
+    set_environ("W3M_CURRENT_WORD", s.c_str());
     a = retrieveCurrentAnchor(&buf->layout);
     if (a) {
       pu = urlParse(a->url, buf->info->getBaseURL());
