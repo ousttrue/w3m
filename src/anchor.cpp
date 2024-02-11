@@ -1,4 +1,5 @@
 #include "anchor.h"
+#include "http_response.h"
 #include "http_session.h"
 #include "url_quote.h"
 #include "w3m.h"
@@ -401,7 +402,7 @@ Buffer *link_list_panel(Buffer *buf) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
     for (l = buf->layout.linklist; l; l = l->next) {
       if (l->url) {
-        pu = Url::parse(l->url, baseURL(buf));
+        pu = Url::parse(l->url, buf->info->getBaseURL());
         p = Strnew(pu.to_Str())->ptr;
         u = html_quote(p);
         if (DecodeURL)
@@ -431,7 +432,7 @@ Buffer *link_list_panel(Buffer *buf) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      pu = urlParse(a->url, baseURL(buf));
+      pu = urlParse(a->url, buf->info->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -453,7 +454,7 @@ Buffer *link_list_panel(Buffer *buf) {
       a = &al->anchors[i];
       if (a->slave)
         continue;
-      pu = urlParse(a->url, baseURL(buf));
+      pu = urlParse(a->url, buf->info->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)

@@ -308,16 +308,11 @@ static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
 
 Buffer *loadLink(const char *url, const char *target, const char *referer,
                  FormList *request) {
-  Buffer *nfbuf;
-  // union frameset_element *f_element = nullptr;
-  Url pu;
-  const int *no_referer_ptr;
-
   message(Sprintf("loading %s", url)->ptr, 0, 0);
   refresh(term_io());
 
-  no_referer_ptr = nullptr;
-  auto base = baseURL(Currentbuf);
+  const int *no_referer_ptr = nullptr;
+  auto base = Currentbuf->info->getBaseURL();
   if ((no_referer_ptr && *no_referer_ptr) || !base ||
       base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
       base->schema == SCM_DATA)
@@ -325,8 +320,8 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
   if (referer == nullptr)
     referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
 
-  auto res =
-      loadGeneralFile(url, baseURL(Currentbuf), {.referer = referer}, request);
+  auto res = loadGeneralFile(url, Currentbuf->info->getBaseURL(),
+                             {.referer = referer}, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
@@ -336,7 +331,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
 
-  pu = urlParse(url, base);
+  auto pu = urlParse(url, base);
   pushHashHist(URLHist, pu.to_Str().c_str());
 
   if (buf == NO_BUFFER) {
@@ -355,7 +350,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
   ) {
     return loadNormalBuf(buf, true);
   }
-  nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
+  auto nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
   if (nfbuf == nullptr) {
     /* original page (that contains <frameset> tag) doesn't exist */
     return loadNormalBuf(buf, true);

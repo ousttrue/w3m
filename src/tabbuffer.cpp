@@ -281,7 +281,7 @@ void goURL0(const char *prompt, int relative) {
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
 
-    current = baseURL(Currentbuf);
+    current = Currentbuf->info->getBaseURL();
     if (current) {
       auto c_url = current->to_Str();
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -306,7 +306,7 @@ void goURL0(const char *prompt, int relative) {
   const char *referer;
   if (relative) {
     const int *no_referer_ptr = nullptr;
-    current = baseURL(Currentbuf);
+    current = Currentbuf->info->getBaseURL();
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)

@@ -107,7 +107,7 @@ static Str *make_lastline_link(Buffer *buf, const char *title,
   }
   if (!url)
     return s;
-  pu = urlParse(url, baseURL(buf));
+  pu = urlParse(url, buf->info->getBaseURL());
   u = Strnew(pu.to_Str());
   if (DecodeURL)
     u = Strnew_charp(url_decode0(u->ptr));

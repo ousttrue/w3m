@@ -63,7 +63,6 @@ inline void prevChar(int &s, Line *l) { s--; }
 // #define getChar(p) ((int)*(p))
 
 extern void discardBuffer(Buffer *buf);
-extern std::optional<Url> baseURL(Buffer *buf);
 extern Buffer *page_info_panel(Buffer *buf);
 
 extern Buffer *nullBuffer(void);

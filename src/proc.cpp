@@ -694,7 +694,7 @@ void followA() {
     gotoLabel(a->url + 1);
     return;
   }
-  u = urlParse(a->url, baseURL(Currentbuf));
+  u = urlParse(a->url, Currentbuf->info->getBaseURL());
   if (u.to_Str() == Currentbuf->info->currentURL.to_Str()) {
     /* index within this buffer */
     if (u.label.size()) {
@@ -739,7 +739,7 @@ void followI() {
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   refresh(term_io());
 
-  auto res = loadGeneralFile(a->url, baseURL(Currentbuf), {});
+  auto res = loadGeneralFile(a->url, Currentbuf->info->getBaseURL(), {});
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     disp_err_message(emsg, false);
@@ -1415,7 +1415,7 @@ void linkbrz() {
   auto a = retrieveCurrentAnchor(Currentbuf);
   if (a == nullptr)
     return;
-  auto pu = urlParse(a->url, baseURL(Currentbuf));
+  auto pu = urlParse(a->url, Currentbuf->info->getBaseURL());
   invoke_browser(pu.to_Str().c_str());
 }
 

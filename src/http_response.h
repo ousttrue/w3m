@@ -13,6 +13,17 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
   std::optional<Url> baseURL;
+  std::optional<Url> getBaseURL() const {
+    if (this->baseURL) {
+      /* <BASE> tag is defined in the document */
+      return *this->baseURL;
+    } else if (this->currentURL.IS_EMPTY_PARSED_URL()) {
+      return {};
+    } else {
+      return this->currentURL;
+    }
+  }
+
   std::string type = "text/plain";
   TextList *document_header = nullptr;
   std::string filename;

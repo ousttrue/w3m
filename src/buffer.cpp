@@ -387,7 +387,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
   Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
   for (l = link; l; l = l->next) {
     if (l->url) {
-      pu = urlParse(l->url, baseURL(buf));
+      pu = urlParse(l->url, buf->info->getBaseURL());
       url = html_quote(pu.to_Str().c_str());
     } else
       url = "(empty)";
@@ -451,7 +451,7 @@ Buffer *page_info_panel(Buffer *buf) {
 
     a = retrieveCurrentAnchor(buf);
     if (a) {
-      pu = urlParse(a->url, baseURL(buf));
+      pu = urlParse(a->url, buf->info->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -464,7 +464,7 @@ Buffer *page_info_panel(Buffer *buf) {
     }
     a = retrieveCurrentImg(buf);
     if (a != nullptr) {
-      pu = urlParse(a->url, baseURL(buf));
+      pu = urlParse(a->url, buf->info->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -539,13 +539,13 @@ void set_buffer_environ(Buffer *buf) {
     set_environ("W3M_CURRENT_WORD", s ? s : "");
     a = retrieveCurrentAnchor(buf);
     if (a) {
-      pu = urlParse(a->url, baseURL(buf));
+      pu = urlParse(a->url, buf->info->getBaseURL());
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf);
     if (a) {
-      pu = urlParse(a->url, baseURL(buf));
+      pu = urlParse(a->url, buf->info->getBaseURL());
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_IMG", "");
@@ -588,7 +588,7 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
   *epos = 0;
   if (l == nullptr)
     return nullptr;
-  auto p = l->lineBuf;
+  auto &p = l->lineBuf;
   auto e = buf->layout.pos;
   while (e > 0 && !is_wordchar(p[e]))
     prevChar(e, l);
@@ -747,7 +747,7 @@ void _peekURL(int only_img) {
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    pu = urlParse(a->url, baseURL(Currentbuf));
+    pu = urlParse(a->url, Currentbuf->info->getBaseURL());
     s = Strnew(pu.to_Str());
   }
   if (DecodeURL)
@@ -913,7 +913,7 @@ void _prevA(int visited) {
         }
         hseq--;
         if (visited == true && an) {
-          url = urlParse(an->url, baseURL(Currentbuf));
+          url = urlParse(an->url, Currentbuf->info->getBaseURL());
           if (getHashHist(URLHist, url.to_Str().c_str())) {
             goto _end;
           }
@@ -932,7 +932,7 @@ void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true && an) {
-        url = urlParse(an->url, baseURL(Currentbuf));
+        url = urlParse(an->url, Currentbuf->info->getBaseURL());
         if (getHashHist(URLHist, url.to_Str().c_str())) {
           goto _end;
         }
@@ -996,7 +996,7 @@ void _nextA(int visited) {
         }
         hseq++;
         if (visited == true && an) {
-          url = urlParse(an->url, baseURL(Currentbuf));
+          url = urlParse(an->url, Currentbuf->info->getBaseURL());
           if (getHashHist(URLHist, url.to_Str().c_str())) {
             goto _end;
           }
@@ -1015,7 +1015,7 @@ void _nextA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true) {
-        url = urlParse(an->url, baseURL(Currentbuf));
+        url = urlParse(an->url, Currentbuf->info->getBaseURL());
         if (getHashHist(URLHist, url.to_Str().c_str())) {
           goto _end;
         }
@@ -1252,17 +1252,6 @@ void query_from_followform(Str **query, FormItemList *fi, int multipart) {
     /* remove trailing & */
     while (Strlastchar(*query) == '&')
       Strshrink(*query, 1);
-  }
-}
-
-std::optional<Url> baseURL(Buffer *buf) {
-  if (buf->info->baseURL) {
-    /* <BASE> tag is defined in the document */
-    return *buf->info->baseURL;
-  } else if (buf->info->currentURL.IS_EMPTY_PARSED_URL()) {
-    return {};
-  } else {
-    return buf->info->currentURL;
   }
 }
 
