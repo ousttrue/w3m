@@ -1,17 +1,29 @@
 #pragma once
 #include "url.h"
 #include <optional>
+#include <gc_cpp.h>
 
 struct Buffer;
 struct FormList;
-struct TabBuffer {
-  TabBuffer *nextTab;
-  TabBuffer *prevTab;
+
+struct TabBuffer : public gc_cleanup {
+  TabBuffer *nextTab=nullptr;
+  TabBuffer *prevTab=nullptr;
 
 private:
-  Buffer *_currentBuffer;
+  Buffer *_currentBuffer=nullptr;
 
 public:
+  Buffer *firstBuffer=nullptr;
+  short x1=0;
+  short x2=0;
+  short y=0;
+
+  TabBuffer();
+  ~TabBuffer();
+  TabBuffer(const TabBuffer &) = delete;
+  TabBuffer &operator=(const TabBuffer &) = delete;
+
   Buffer *currentBuffer() { return _currentBuffer; }
   void currentBuffer(Buffer *newbuf, bool first = false) {
     _currentBuffer = newbuf;
@@ -20,10 +32,6 @@ public:
     }
   }
 
-  Buffer *firstBuffer;
-  short x1;
-  short x2;
-  short y;
   void deleteBuffer(Buffer *delbuf);
   Buffer *namedBuffer(const char *name);
   void repBuffer(Buffer *oldbuf, Buffer *buf);
@@ -34,7 +42,6 @@ public:
                    const char *referer, FormList *request);
 
   static void init(Buffer *newbuf);
-  static TabBuffer *newTab();
   static void _newT();
 };
 #define NO_TABBUFFER ((TabBuffer *)1)

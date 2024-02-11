@@ -1110,7 +1110,7 @@ int main(int argc, char **argv) {
   if (popAddDownloadList()) {
     CurrentTab = LastTab;
     if (!FirstTab) {
-      FirstTab = LastTab = CurrentTab = TabBuffer::newTab();
+      FirstTab = LastTab = CurrentTab = new TabBuffer();
       nTab = 1;
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {

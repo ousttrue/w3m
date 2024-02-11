@@ -17,7 +17,7 @@
 #include "history.h"
 #include "app.h"
 #include "display.h"
-#include "alloc.h"
+// #include "alloc.h"
 #include "terms.h"
 #include "buffer.h"
 
@@ -31,19 +31,12 @@ int nTab = 0;
 int TabCols = 10;
 bool check_target = true;
 
-TabBuffer *TabBuffer::newTab(void) {
+TabBuffer::TabBuffer() {}
 
-  auto n = (TabBuffer *)New(TabBuffer);
-  if (n == nullptr)
-    return nullptr;
-  n->nextTab = nullptr;
-  n->_currentBuffer = nullptr;
-  n->firstBuffer = nullptr;
-  return n;
-}
+TabBuffer::~TabBuffer() {}
 
 void TabBuffer::init(Buffer *newbuf) {
-  FirstTab = LastTab = CurrentTab = TabBuffer::newTab();
+  FirstTab = LastTab = CurrentTab = new TabBuffer;
   if (!FirstTab) {
     fprintf(stderr, "%s\n", "Can't allocated memory");
     exit(1);
@@ -391,11 +384,7 @@ void TabBuffer::pushBuffer(Buffer *buf) {
 }
 
 void TabBuffer::_newT() {
-  auto tag = newTab();
-  if (!tag) {
-    return;
-  }
-
+  auto tag = new TabBuffer();
   auto buf = new Buffer(Currentbuf->layout.width);
   *buf = *Currentbuf;
   buf->backBuffer = nullptr;
