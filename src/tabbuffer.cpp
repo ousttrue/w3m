@@ -196,7 +196,7 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
       FirstTab = t;
     t2->prevTab = t;
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 void gotoLabel(const char *label) {
@@ -223,7 +223,7 @@ void gotoLabel(const char *label) {
                                     false);
   Currentbuf->layout.pos = al->start.pos;
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
   return;
 }
 
@@ -248,7 +248,7 @@ int handleMailto(const char *url) {
   }
   exec_cmd(
       myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), false)->ptr);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
   pushHashHist(URLHist, (char *)url);
   return 1;
 }
@@ -273,7 +273,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
   // if (buf != NO_BUFFER)
   { this->pushBuffer(buf); }
 
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* go to specified URL */
@@ -323,7 +323,7 @@ void goURL0(const char *prompt, int relative) {
   }
 
   if (url == nullptr || *url == '\0') {
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(B_FORCE_REDRAW);
     return;
   }
   if (*url == '#') {
@@ -367,7 +367,7 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
       CurrentTab->pushBuffer(buf);
     }
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
@@ -448,7 +448,7 @@ void followTab(TabBuffer *tab) {
       CurrentTab->pushBuffer(buf);
     }
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* show current URL */
@@ -754,7 +754,7 @@ void TabBuffer::_followForm(int submit) {
                      CurrentTab->do_submit(fi, a);
                      return;
                    }
-                   displayBuffer(Currentbuf, B_FORCE_REDRAW);
+                   displayBuffer(B_FORCE_REDRAW);
                  });
     break;
 

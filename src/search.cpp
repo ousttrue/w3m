@@ -258,7 +258,7 @@ void srch_nxtprv(int reverse) {
       Currentbuf->layout.pos -= 1;
     }
   }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
   disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }
 
@@ -298,7 +298,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
         SAVE_BUFPOSITION(&sbuf);
       }
       Currentbuf->layout.arrangeCursor();
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
+      displayBuffer(B_FORCE_REDRAW);
       clear_mark(Currentbuf->layout.currentLine);
       return -1;
     } else
@@ -309,7 +309,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     srchcore(str, searchRoutine);
     Currentbuf->layout.arrangeCursor();
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
   clear_mark(Currentbuf->layout.currentLine);
   return -1;
 }
@@ -325,7 +325,7 @@ void isrch(int (*func)(LineLayout *, const char *), const char *prompt) {
   // if (str == nullptr) {
   //   RESTORE_BUFPOSITION(&sbuf);
   // }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
@@ -340,7 +340,7 @@ void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
     if (str != nullptr && *str == '\0')
       str = SearchString;
     if (str == nullptr) {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
     disp = true;
@@ -353,7 +353,7 @@ void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
     clear_mark(Currentbuf->layout.currentLine);
   else
     Currentbuf->layout.pos = pos;
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
   if (disp)
     disp_srchresult(result, prompt, str);
   searchRoutine = func;

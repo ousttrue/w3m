@@ -136,7 +136,7 @@ void ctrCsrV() {
     Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
         Currentbuf->layout.topLine, -offsety, false);
     Currentbuf->layout.arrangeLine();
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
   }
 }
 
@@ -150,7 +150,7 @@ void ctrCsrH() {
   if (offsetx != 0) {
     Currentbuf->layout.columnSkip(offsetx);
     Currentbuf->layout.arrangeCursor();
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
   }
 }
 
@@ -160,7 +160,7 @@ void ctrCsrH() {
 void rdrwSc() {
   clear();
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 // SEARCH SEARCH_FORE WHEREIS
@@ -202,7 +202,7 @@ void shiftl() {
       searchKeyNum() * (-Currentbuf->layout.COLS + 1) + 1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       Currentbuf->layout.currentColumn - column);
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* Shift screen right */
@@ -216,7 +216,7 @@ void shiftr() {
                                 1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       Currentbuf->layout.currentColumn - column);
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // RIGHT
@@ -235,7 +235,7 @@ void col1R() {
       break;
     CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // LEFT
@@ -253,7 +253,7 @@ void col1L() {
     Currentbuf->layout.columnSkip(-1);
     CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // SETENV
@@ -269,7 +269,7 @@ void setEnv() {
       env = Sprintf("%s=", env)->ptr;
     // env = inputStrHist("Set environ: ", env, TextHist);
     if (env == nullptr || *env == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
   }
@@ -278,7 +278,7 @@ void setEnv() {
     value++;
     set_environ(var, value);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // PIPE_BUF
@@ -300,7 +300,7 @@ void readsh() {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd == nullptr || *cmd == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
   // MySignalHandler prevtrap = {};
@@ -318,7 +318,7 @@ void readsh() {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* Execute shell command */
@@ -341,7 +341,7 @@ void execsh() {
     fmInit();
     getch();
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* Load file */
@@ -353,7 +353,7 @@ void ldfile() {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
   if (fn == nullptr || *fn == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
   cmd_loadfile(fn);
@@ -487,7 +487,7 @@ void movLW() {
   }
 end:
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // NEXT_WORD
@@ -536,7 +536,7 @@ void movRW() {
   }
 end:
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* Quit */
@@ -561,7 +561,7 @@ void selBuf() {
     ok = CurrentTab->select(cmd, buf);
   } while (!ok);
 
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
@@ -590,7 +590,7 @@ void susp() {
   kill(0, SIGTSTP); /* stop whole job, not a single process */
 #endif /* SIGSTOP */
   fmInit();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 // GOTO_LINE
@@ -627,7 +627,7 @@ void linbeg() {
   }
   Currentbuf->layout.pos = 0;
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* Go to the bottom of the line */
@@ -642,7 +642,7 @@ void linend() {
   }
   Currentbuf->layout.pos = Currentbuf->layout.currentLine->len - 1;
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* Run editor on the current buffer */
@@ -672,7 +672,7 @@ void editBf() {
   }
   exec_cmd(cmd->ptr);
 
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
   reload();
 }
 
@@ -691,7 +691,7 @@ void editScr() {
   exec_cmd(myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(Currentbuf))
                ->ptr);
   unlink(tmpf);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* follow HREF link */
@@ -740,11 +740,11 @@ void followA() {
       CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(B_FORCE_REDRAW);
     return;
   }
   CurrentTab->loadLink(url, a->target, a->referer, nullptr);
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* view inline image */
@@ -771,7 +771,7 @@ void followI() {
   buf->info = res;
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* submit form */
@@ -813,7 +813,7 @@ void topA() {
   Currentbuf->layout.gotoLine(po->line);
   Currentbuf->layout.pos = po->pos;
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* go to the last anchor */
@@ -852,7 +852,7 @@ void lastA() {
   Currentbuf->layout.gotoLine(po->line);
   Currentbuf->layout.pos = po->pos;
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* go to the nth anchor */
@@ -885,7 +885,7 @@ void nthA() {
   Currentbuf->layout.gotoLine(po->line);
   Currentbuf->layout.pos = po->pos;
   Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* go to the next anchor */
@@ -985,7 +985,7 @@ void nextBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* go to the previous bufferr */
@@ -1001,7 +1001,7 @@ void prevBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -1013,7 +1013,7 @@ void backBf() {
   if (!checkBackBuffer(Currentbuf)) {
     if (close_tab_back && nTab >= 1) {
       deleteTab(CurrentTab);
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
+      displayBuffer(B_FORCE_REDRAW);
     } else
       disp_message("Can't go back...", true);
     return;
@@ -1021,7 +1021,7 @@ void backBf() {
 
   CurrentTab->deleteBuffer(Currentbuf);
 
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 // DELETE_PREVBUF
@@ -1107,13 +1107,13 @@ void setOpt() {
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == nullptr || *opt == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
   }
   if (set_param_option(opt))
     sync_with_option();
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+  displayBuffer(B_REDRAW_IMAGE);
 }
 
 /* error message list */
@@ -1128,7 +1128,7 @@ void pginfo() {
 
   if (auto buf = Currentbuf->linkBuffer[LB_N_INFO]) {
     CurrentTab->currentBuffer(buf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
 
@@ -1200,7 +1200,7 @@ void svBuf() {
   if (file == nullptr || *file == '\0') {
     // qfile = inputLineHist("Save buffer to: ", nullptr, IN_COMMAND, SaveHist);
     if (qfile == nullptr || *qfile == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
   }
@@ -1215,14 +1215,13 @@ void svBuf() {
     file = expandPath((char *)file);
     // if (checkOverWrite(file) < 0) {
     if (false) {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
     f = fopen(file, "w");
     is_pipe = false;
   }
   if (f == nullptr) {
-    /* FIXME: gettextize? */
     char *emsg = Sprintf("Can't open %s", file)->ptr;
     disp_err_message(emsg, true);
     return;
@@ -1232,7 +1231,7 @@ void svBuf() {
     pclose(f);
   else
     fclose(f);
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* save source */
@@ -1254,7 +1253,7 @@ void svSrc() {
   }
   doFileCopy(Currentbuf->info->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* peek URL */
@@ -1302,7 +1301,7 @@ void vwSrc() {
   std::shared_ptr<Buffer> buf;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
     CurrentTab->currentBuffer(buf);
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
   if (Currentbuf->info->sourcefile.empty()) {
@@ -1335,7 +1334,7 @@ void vwSrc() {
   buf->layout.need_reshape = true;
   reshapeBuffer(buf);
   CurrentTab->pushBuffer(buf);
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 /* reload */
@@ -1406,7 +1405,7 @@ void reload() {
     Currentbuf->layout.COPY_BUFROOT_FROM(sbuf->layout);
     Currentbuf->layout.restorePosition(sbuf->layout);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* reshape */
@@ -1415,14 +1414,14 @@ void reload() {
 void reshape() {
   Currentbuf->layout.need_reshape = true;
   reshapeBuffer(Currentbuf);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
 void chkURL() {
   chkURLBuffer(Currentbuf);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 // MARK_WORD
@@ -1433,7 +1432,7 @@ void chkWORD() {
   if (p.empty())
     return;
   reAnchorWord(&Currentbuf->layout, Currentbuf->layout.currentLine, spos, epos);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* render frames */
@@ -1532,7 +1531,7 @@ void execCmd() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("command [; ...]: ", "", TextHist);
     if (data == nullptr) {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
   }
@@ -1554,7 +1553,7 @@ void execCmd() {
     w3mFuncList[cmd].func();
     CurrentCmdData = nullptr;
   }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // ALARM
@@ -1568,7 +1567,7 @@ void setAlarm() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
   }
@@ -1586,7 +1585,7 @@ void setAlarm() {
   } else {
     setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, nullptr);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // REINIT
@@ -1598,14 +1597,14 @@ void reinit() {
     init_rc();
     sync_with_option();
     initCookie();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(B_REDRAW_IMAGE);
     return;
   }
 
   if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
     init_rc();
     sync_with_option();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+    displayBuffer(B_REDRAW_IMAGE);
     return;
   }
 
@@ -1643,19 +1642,19 @@ void defKey() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == nullptr || *data == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayBuffer(B_NORMAL);
       return;
     }
   }
   setKeymap(allocStr(data, -1), -1, true);
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // NEW_TAB
 //"Open a new tab (with current document)"
 void newT() {
   TabBuffer::_newT();
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+  displayBuffer(B_REDRAW_IMAGE);
 }
 
 // CLOSE_TAB
@@ -1671,7 +1670,7 @@ void closeT() {
     tab = CurrentTab;
   if (tab)
     deleteTab(tab);
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+  displayBuffer(B_REDRAW_IMAGE);
 }
 
 // NEXT_TAB
@@ -1687,7 +1686,7 @@ void nextT() {
     else
       CurrentTab = FirstTab;
   }
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+  displayBuffer(B_REDRAW_IMAGE);
 }
 
 // PREV_TAB
@@ -1703,7 +1702,7 @@ void prevT() {
     else
       CurrentTab = LastTab;
   }
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
+  displayBuffer(B_REDRAW_IMAGE);
 }
 
 // TAB_LINK
@@ -1760,14 +1759,14 @@ void ldDL() {
           deleteTab(CurrentTab);
       } else
         CurrentTab->deleteBuffer(Currentbuf);
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
+      displayBuffer(B_FORCE_REDRAW);
     }
     return;
   }
   reload = checkDownloadList();
   auto buf = DownloadListBuffer();
   if (!buf) {
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
   if (replace) {
@@ -1784,7 +1783,7 @@ void ldDL() {
   if (reload)
     Currentbuf->layout.event = setAlarmEvent(
         Currentbuf->layout.event, 1, AL_IMPLICIT, FUNCNAME_reload, nullptr);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 // UNDO
@@ -1821,7 +1820,7 @@ void cursorTop() {
   Currentbuf->layout.currentLine =
       Currentbuf->layout.lineSkip(Currentbuf->layout.topLine, 0, false);
   Currentbuf->layout.arrangeLine();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // CURSOR_MIDDLE
@@ -1834,7 +1833,7 @@ void cursorMiddle() {
   Currentbuf->layout.currentLine =
       Currentbuf->layout.topLine->currentLineSkip(offsety, false);
   Currentbuf->layout.arrangeLine();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 // CURSOR_BOTTOM
@@ -1847,5 +1846,5 @@ void cursorBottom() {
   Currentbuf->layout.currentLine =
       Currentbuf->layout.topLine->currentLineSkip(offsety, false);
   Currentbuf->layout.arrangeLine();
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }

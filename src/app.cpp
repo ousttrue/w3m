@@ -99,7 +99,7 @@ static void resize_screen(void) {
   setlinescols();
   setupscreen(term_entry());
   if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    displayBuffer(B_FORCE_REDRAW);
 }
 
 void resize_hook(SIGNAL_ARG) {

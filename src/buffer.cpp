@@ -500,12 +500,12 @@ void execdict(const char *word) {
   const char *w, *dictcmd;
 
   if (!UseDictCommand || word == nullptr || *word == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
   w = word;
   if (*w == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
   dictcmd =
@@ -527,7 +527,7 @@ void execdict(const char *word) {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 /* spawn external browser */
@@ -574,7 +574,7 @@ void invoke_browser(const char *url) {
     }
   }
   if (browser == nullptr || *browser == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
+    displayBuffer(B_NORMAL);
     return;
   }
 
@@ -588,7 +588,7 @@ void invoke_browser(const char *url) {
   fmTerm();
   mySystem(cmd->ptr, bg);
   fmInit();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 void _peekURL(int only_img) {
@@ -711,7 +711,7 @@ void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  displayBuffer(B_FORCE_REDRAW);
 }
 
 void cmd_loadfile(const char *fn) {
@@ -728,7 +728,7 @@ void cmd_loadfile(const char *fn) {
   buf->info = res;
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  displayBuffer(Currentbuf, B_NORMAL);
+  displayBuffer(B_NORMAL);
 }
 
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {

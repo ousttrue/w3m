@@ -185,10 +185,7 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
 }
 
 void displayBuffer(DisplayFlag mode) {
-  displayBuffer(CurrentTab->currentBuffer(), mode);
-}
-
-void displayBuffer(const std::shared_ptr<Buffer> &buf, DisplayFlag mode) {
+  auto buf = CurrentTab->currentBuffer();
   if (!buf) {
     return;
   }
@@ -262,7 +259,7 @@ void displayBuffer(const std::shared_ptr<Buffer> &buf, DisplayFlag mode) {
   }
   if (mode == B_FORCE_REDRAW && buf->check_url) {
     chkURLBuffer(buf);
-    displayBuffer(buf, B_NORMAL);
+    displayBuffer(B_NORMAL);
   }
 }
 
@@ -735,5 +732,5 @@ void nscroll(int n, DisplayFlag mode) {
         buf->layout.cursorUp0(1);
     }
   }
-  displayBuffer(buf, mode);
+  displayBuffer(mode);
 }

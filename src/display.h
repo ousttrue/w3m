@@ -19,7 +19,6 @@ enum DisplayFlag {
 };
 
 struct Buffer;
-void displayBuffer(const std::shared_ptr<Buffer> &buf, DisplayFlag mode);
 void displayBuffer(DisplayFlag mode);
 
 void fmInit(void);
