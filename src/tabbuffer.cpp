@@ -131,7 +131,7 @@ TabBuffer *deleteTab(TabBuffer *tab) {
   auto buf = tab->firstBuffer;
   while (buf /*&& buf != NO_BUFFER*/) {
     auto next = buf->backBuffer;
-    discardBuffer(buf);
+    buf->discardBuffer();
     buf = next;
   }
   return FirstTab;
@@ -151,12 +151,12 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
 
   if (firstBuffer == delbuf && firstBuffer->backBuffer != nullptr) {
     auto buf = firstBuffer->backBuffer;
-    discardBuffer(firstBuffer);
+    firstBuffer->discardBuffer();
     firstBuffer = buf;
   } else if (auto buf = forwardBuffer(firstBuffer, delbuf)) {
     auto b = buf->backBuffer;
     buf->backBuffer = b->backBuffer;
-    discardBuffer(b);
+    b->discardBuffer();
   }
 
   if (!Currentbuf) {
@@ -529,7 +529,7 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
 
   if (first == delbuf) {
     newbuf->backBuffer = delbuf->backBuffer;
-    discardBuffer(delbuf);
+    delbuf->discardBuffer();
     return newbuf;
   }
 
@@ -537,7 +537,7 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
   if (delbuf && (buf = forwardBuffer(first, delbuf))) {
     buf->backBuffer = newbuf;
     newbuf->backBuffer = delbuf->backBuffer;
-    discardBuffer(delbuf);
+    delbuf->discardBuffer();
     return first;
   }
   newbuf->backBuffer = first;

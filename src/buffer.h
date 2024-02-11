@@ -51,9 +51,9 @@ public:
   }
   // shallow copy
   Buffer &operator=(const Buffer &src);
+  void discardBuffer();
 };
 
-void discardBuffer(const std::shared_ptr<Buffer> &buf);
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);
 std::shared_ptr<Buffer> nullBuffer(void);
 std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,

@@ -64,15 +64,15 @@ std::shared_ptr<Buffer> nullBuffer(void) {
  * discardBuffer: free buffer structure
  */
 
-void discardBuffer(const std::shared_ptr<Buffer> &buf) {
-  buf->layout.clearBuffer();
+void Buffer::discardBuffer() {
+  this->layout.clearBuffer();
   for (int i = 0; i < MAX_LB; i++) {
-    auto b = buf->linkBuffer[i];
+    auto b = this->linkBuffer[i];
     if (b == nullptr)
       continue;
     b->linkBuffer[i] = nullptr;
   }
-  if (--buf->clone->count) {
+  if (--this->clone->count) {
     return;
   }
 }

@@ -337,7 +337,7 @@ void deleteFiles() {
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
     while (Firstbuf /*&& Firstbuf != NO_BUFFER*/) {
       auto buf = Firstbuf->backBuffer;
-      discardBuffer(Firstbuf);
+      Firstbuf->discardBuffer();
       Firstbuf = buf;
     }
   }
