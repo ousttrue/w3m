@@ -87,10 +87,6 @@ void _peekURL(int only_img);
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
 
 int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);
-void _movL(int n);
-void _movD(int n);
-void _movU(int n);
-void _movR(int n);
 int prev_nonnull_line(Line *line);
 int next_nonnull_line(Line *line);
 void _goLine(const char *l);

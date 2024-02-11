@@ -379,35 +379,61 @@ void ldhelp() {
 
 // MOVE_LEFT
 //"Cursor left"
-void movL() { _movL(Currentbuf->layout.COLS / 2); }
+void movL() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movL(Currentbuf->layout.COLS / 2, m);
+}
 
 // MOVE_LEFT1
 //"Cursor left. With edge touched, slide"
-void movL1() { _movL(1); }
+void movL1() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movL(1, m);
+}
 
 // MOVE_DOWN
 //"Cursor down"
-void movD() { _movD((Currentbuf->layout.LINES + 1) / 2); }
+void movD() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movD((Currentbuf->layout.LINES + 1) / 2,
+                                            m);
+}
 
 // MOVE_DOWN1
 //"Cursor down. With edge touched, slide"
-void movD1() { _movD(1); }
+void movD1() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movD(1, m);
+}
 
 // MOVE_UP
 //"Cursor up"
-void movU() { _movU((Currentbuf->layout.LINES + 1) / 2); }
+void movU() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movU((Currentbuf->layout.LINES + 1) / 2,
+                                            m);
+}
 
 // MOVE_UP1
 //"Cursor up. With edge touched, slide"
-void movU1() { _movU(1); }
+void movU1() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movU(1, m);
+}
 
 // MOVE_RIGHT
 //"Cursor right"
-void movR() { _movR(Currentbuf->layout.COLS / 2); }
+void movR() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movR(Currentbuf->layout.COLS / 2, m);
+}
 
 // MOVE_RIGHT1
 //"Cursor right. With edge touched, slide"
-void movR1() { _movR(1); }
+void movR1() {
+  int m = searchKeyNum();
+  CurrentTab->currentBuffer()->layout._movR(1, m);
+}
 
 // PREV_WORD
 //"Move to the previous word"

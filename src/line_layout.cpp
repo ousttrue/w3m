@@ -789,3 +789,45 @@ _end:
   this->arrangeCursor();
   displayBuffer(B_NORMAL);
 }
+
+/* Move cursor left */
+void LineLayout::_movL(int n, int m) {
+  if (this->firstLine == nullptr)
+    return;
+  for (int i = 0; i < m; i++) {
+    this->cursorLeft(n);
+  }
+  displayBuffer(B_NORMAL);
+}
+
+/* Move cursor downward */
+void LineLayout::_movD(int n, int m) {
+  if (this->firstLine == nullptr) {
+    return;
+  }
+  for (int i = 0; i < m; i++) {
+    this->cursorDown(n);
+  }
+  displayBuffer(B_NORMAL);
+}
+
+/* move cursor upward */
+void LineLayout::_movU(int n, int m) {
+  if (this->firstLine == nullptr) {
+    return;
+  }
+  for (int i = 0; i < m; i++) {
+    this->cursorUp(n);
+  }
+  displayBuffer(B_NORMAL);
+}
+
+/* Move cursor right */
+void LineLayout::_movR(int n, int m) {
+  if (this->firstLine == nullptr)
+    return;
+  for (int i = 0; i < m; i++) {
+    this->cursorRight(n);
+  }
+  displayBuffer(B_NORMAL);
+}

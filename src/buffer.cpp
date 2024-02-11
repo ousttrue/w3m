@@ -761,52 +761,6 @@ int cur_real_linenumber(const std::shared_ptr<Buffer> &buf) {
   return n;
 }
 
-/* Move cursor left */
-void _movL(int n) {
-  int i, m = searchKeyNum();
-  if (Currentbuf->layout.firstLine == nullptr)
-    return;
-  for (i = 0; i < m; i++) {
-    Currentbuf->layout.cursorLeft(n);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-}
-
-/* Move cursor downward */
-void _movD(int n) {
-  int i, m = searchKeyNum();
-  if (Currentbuf->layout.firstLine == nullptr) {
-    return;
-  }
-  for (i = 0; i < m; i++) {
-    Currentbuf->layout.cursorDown(n);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-}
-
-/* move cursor upward */
-void _movU(int n) {
-  int i, m = searchKeyNum();
-  if (Currentbuf->layout.firstLine == nullptr) {
-    return;
-  }
-  for (i = 0; i < m; i++) {
-    Currentbuf->layout.cursorUp(n);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-}
-
-/* Move cursor right */
-void _movR(int n) {
-  int i, m = searchKeyNum();
-  if (Currentbuf->layout.firstLine == nullptr)
-    return;
-  for (i = 0; i < m; i++) {
-    Currentbuf->layout.cursorRight(n);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-}
-
 /* movLW, movRW */
 /*
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun

@@ -116,6 +116,10 @@ struct LineLayout {
   void nextX(int d, int dy, int n);
   void _prevA(int visited, std::optional<Url> baseUrl, int n);
   void _nextA(int visited, std::optional<Url> baseUrl, int n);
+  void _movL(int n, int m);
+  void _movD(int n, int m);
+  void _movU(int n, int m);
+  void _movR(int n, int m);
 
   //
   // Anchors
