@@ -459,11 +459,11 @@ void followTab(TabBuffer *tab) {
 /* show current URL */
 Str *currentURL(void) { return Strnew(Currentbuf->info->currentURL.to_Str()); }
 
-void SAVE_BUFPOSITION(Buffer *sbufp) {
-  sbufp->layout.COPY_BUFPOSITION_FROM(Currentbuf->layout);
+void SAVE_BUFPOSITION(LineLayout *sbufp) {
+  sbufp->COPY_BUFPOSITION_FROM(Currentbuf->layout);
 }
-void RESTORE_BUFPOSITION(Buffer *sbufp) {
-  Currentbuf->layout.COPY_BUFPOSITION_FROM(sbufp->layout);
+void RESTORE_BUFPOSITION(const LineLayout &sbufp) {
+  Currentbuf->layout.COPY_BUFPOSITION_FROM(sbufp);
 }
 
 /*

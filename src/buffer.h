@@ -75,8 +75,8 @@ extern void reshapeBuffer(Buffer *buf);
 extern Buffer *forwardBuffer(Buffer *first, Buffer *buf);
 
 extern void chkURLBuffer(Buffer *buf);
-void isrch(int (*func)(Buffer *, const char *), const char *prompt);
-void srch(int (*func)(Buffer *, const char *), const char *prompt);
+void isrch(int (*func)(LineLayout *, const char *), const char *prompt);
+void srch(int (*func)(LineLayout *, const char *), const char *prompt);
 void srch_nxtprv(int reverse);
 void shiftvisualpos(Buffer *buf, int shift);
 void execdict(const char *word);

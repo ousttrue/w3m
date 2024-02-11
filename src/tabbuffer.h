@@ -7,17 +7,17 @@ struct Buffer;
 struct FormList;
 
 struct TabBuffer : public gc_cleanup {
-  TabBuffer *nextTab=nullptr;
-  TabBuffer *prevTab=nullptr;
+  TabBuffer *nextTab = nullptr;
+  TabBuffer *prevTab = nullptr;
 
 private:
-  Buffer *_currentBuffer=nullptr;
+  Buffer *_currentBuffer = nullptr;
 
 public:
-  Buffer *firstBuffer=nullptr;
-  short x1=0;
-  short x2=0;
-  short y=0;
+  Buffer *firstBuffer = nullptr;
+  short x1 = 0;
+  short x2 = 0;
+  short y = 0;
 
   TabBuffer();
   ~TabBuffer();
@@ -49,8 +49,9 @@ public:
 extern TabBuffer *CurrentTab;
 #define Currentbuf (CurrentTab->currentBuffer())
 #define Firstbuf (CurrentTab->firstBuffer)
-void SAVE_BUFPOSITION(Buffer *sbufp);
-void RESTORE_BUFPOSITION(Buffer *sbufp);
+struct LineLayout;
+void SAVE_BUFPOSITION(LineLayout *sbufp);
+void RESTORE_BUFPOSITION(const LineLayout &sbufp);
 
 extern TabBuffer *FirstTab;
 extern TabBuffer *LastTab;

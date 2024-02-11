@@ -11,6 +11,11 @@ LineLayout::LineLayout() {
   this->LINES = LASTLINE;
 }
 
+LineLayout::LineLayout(int width) : width(width) {
+  this->COLS = ::COLS;
+  this->LINES = LASTLINE;
+}
+
 void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen,
                             int breakWidth, int realLinenum) {
   {
@@ -519,3 +524,4 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
 Anchor *LineLayout::searchURLLabel(const char *url) {
   return searchAnchor(this->name, url);
 }
+

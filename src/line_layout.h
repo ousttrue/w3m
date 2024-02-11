@@ -9,6 +9,7 @@ struct BufferPos;
 struct HtmlTag;
 struct LineLayout {
   LineLayout();
+  LineLayout(int width);
 
   std::string title;
   // always reshape new buffers to mark URLs
