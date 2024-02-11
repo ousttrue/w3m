@@ -6,7 +6,8 @@
 
 struct Buffer;
 struct FormList;
-
+struct FormItemList;
+struct Anchor;
 struct TabBuffer : public gc_cleanup {
   TabBuffer *nextTab = nullptr;
   TabBuffer *prevTab = nullptr;
@@ -49,6 +50,7 @@ public:
 
   std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
                                    const char *referer, FormList *request);
+  void do_submit(FormItemList *fi, Anchor *a);
 
   static void init(const std::shared_ptr<Buffer> &newbuf);
   static void _newT();

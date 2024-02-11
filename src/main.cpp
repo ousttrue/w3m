@@ -308,108 +308,8 @@ void bufferA(void) {
   on_target = true;
 }
 
-static FormItemList *save_submit_formlist(FormItemList *src) {
-  FormList *list;
-  FormList *srclist;
-  FormItemList *srcitem;
-  FormItemList *item;
-  FormItemList *ret = nullptr;
-
-  if (src == nullptr)
-    return nullptr;
-  srclist = src->parent;
-  list = (FormList *)New(FormList);
-  list->method = srclist->method;
-  list->action = srclist->action->Strdup();
-  list->enctype = srclist->enctype;
-  list->nitems = srclist->nitems;
-  list->body = srclist->body;
-  list->boundary = srclist->boundary;
-  list->length = srclist->length;
-
-  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    item = (FormItemList *)New(FormItemList);
-    item->type = srcitem->type;
-    item->name = srcitem->name->Strdup();
-    item->value = srcitem->value->Strdup();
-    item->checked = srcitem->checked;
-    item->accept = srcitem->accept;
-    item->size = srcitem->size;
-    item->rows = srcitem->rows;
-    item->maxlength = srcitem->maxlength;
-    item->readonly = srcitem->readonly;
-    item->parent = list;
-    item->next = nullptr;
-
-    if (list->lastitem == nullptr) {
-      list->item = list->lastitem = item;
-    } else {
-      list->lastitem->next = item;
-      list->lastitem = item;
-    }
-
-    if (srcitem == src)
-      ret = item;
-  }
-
-  return ret;
-}
-
 /* process form */
 void followForm(void) { _followForm(false); }
-
-static void do_submit(FormItemList *fi, Anchor *a) {
-  auto tmp = Strnew();
-  auto multipart = (fi->parent->method == FORM_METHOD_POST &&
-                    fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-  query_from_followform(&tmp, fi, multipart);
-
-  auto tmp2 = fi->parent->action->Strdup();
-  if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
-    /* It means "current URL" */
-    tmp2 = Strnew(Currentbuf->info->currentURL.to_Str());
-    char *p;
-    if ((p = strchr(tmp2->ptr, '?')) != nullptr)
-      Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-  }
-
-  if (fi->parent->method == FORM_METHOD_GET) {
-    char *p;
-    if ((p = strchr(tmp2->ptr, '?')) != nullptr)
-      Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-    Strcat_charp(tmp2, "?");
-    Strcat(tmp2, tmp);
-    CurrentTab->loadLink(tmp2->ptr, a->target, nullptr, nullptr);
-  } else if (fi->parent->method == FORM_METHOD_POST) {
-    if (multipart) {
-      struct stat st;
-      stat(fi->parent->body, &st);
-      fi->parent->length = st.st_size;
-    } else {
-      fi->parent->body = tmp->ptr;
-      fi->parent->length = tmp->length;
-    }
-    auto buf = CurrentTab->loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
-    if (multipart) {
-      unlink(fi->parent->body);
-    }
-    if (buf &&
-        !(buf->info->redirectins.size() > 1)) { /* buf must be Currentbuf */
-      /* BP_REDIRECTED means that the buffer is obtained through
-       * Location: header. In this case, buf->form_submit must not be set
-       * because the page is not loaded by POST method but GET method.
-       */
-      buf->layout.form_submit = save_submit_formlist(fi);
-    }
-  } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
-              (!Strcmp_charp(fi->parent->action, "map") ||
-               !Strcmp_charp(fi->parent->action, "none")))) { /* internal */
-    do_internal(tmp2->ptr, tmp->ptr);
-  } else {
-    disp_err_message("Can't send form because of illegal method.", false);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
 
 void _followForm(int submit) {
   if (Currentbuf->layout.firstLine == nullptr)
@@ -423,7 +323,7 @@ void _followForm(int submit) {
   switch (fi->type) {
   case FORM_INPUT_TEXT:
     if (submit) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
     if (fi->readonly)
@@ -437,7 +337,7 @@ void _followForm(int submit) {
                    fi->value = Strnew_charp(p);
                    formUpdateBuffer(a, &Currentbuf->layout, fi);
                    if (fi->accept || fi->parent->nitems == 1) {
-                     do_submit(fi, a);
+                     CurrentTab->do_submit(fi, a);
                      return;
                    }
                    displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -446,7 +346,7 @@ void _followForm(int submit) {
 
   case FORM_INPUT_FILE:
     if (submit) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
 
@@ -464,7 +364,7 @@ void _followForm(int submit) {
     break;
   case FORM_INPUT_PASSWORD:
     if (submit) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
     if (fi->readonly) {
@@ -478,13 +378,13 @@ void _followForm(int submit) {
     // fi->value = Strnew_charp(p);
     formUpdateBuffer(a, &Currentbuf->layout, fi);
     if (fi->accept) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
     break;
   case FORM_TEXTAREA:
     if (submit) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
     if (fi->readonly)
@@ -494,7 +394,7 @@ void _followForm(int submit) {
     break;
   case FORM_INPUT_RADIO:
     if (submit) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
     if (fi->readonly) {
@@ -505,7 +405,7 @@ void _followForm(int submit) {
     break;
   case FORM_INPUT_CHECKBOX:
     if (submit) {
-      do_submit(fi, a);
+      CurrentTab->do_submit(fi, a);
       return;
     }
     if (fi->readonly) {
@@ -518,7 +418,7 @@ void _followForm(int submit) {
   case FORM_INPUT_IMAGE:
   case FORM_INPUT_SUBMIT:
   case FORM_INPUT_BUTTON:
-    do_submit(fi, a);
+    CurrentTab->do_submit(fi, a);
     break;
 
   case FORM_INPUT_RESET:
