@@ -34,7 +34,7 @@ struct UrlStream {
   const char *ext = {};
   int compression = CMP_NOCOMPRESS;
   int content_encoding = CMP_NOCOMPRESS;
-  const char *guess_type = {};
+  std::string guess_type;
   const char *ssl_certificate = {};
   time_t modtime = -1;
 
@@ -43,7 +43,7 @@ struct UrlStream {
 
   void openFile(const char *path);
 
-  std::shared_ptr<HttpRequest> openURL(const char *url,
+  std::shared_ptr<HttpRequest> openURL(std::string_view url,
                                        std::optional<Url> current,
                                        const HttpOption &option,
                                        FormList *request);

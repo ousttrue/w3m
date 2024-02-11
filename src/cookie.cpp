@@ -652,17 +652,19 @@ Buffer *cookie_list_panel(void) {
                                     "Sep ", "Oct ", "Nov ", "Dec "};
       gmt = gmtime(&p->expires);
       strcpy(tmp2, dow[gmt->tm_wday]);
-      sprintf(&tmp2[4], "%02d ", gmt->tm_mday);
+      snprintf(&tmp2[4], sizeof(tmp2) - 4, "%02d ", gmt->tm_mday);
       strcpy(&tmp2[7], month[gmt->tm_mon]);
-      if (gmt->tm_year < 1900)
-        sprintf(&tmp2[11], "%04d %02d:%02d:%02d GMT", (gmt->tm_year) + 1900,
-                gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
-      else
-        sprintf(&tmp2[11], "%04d %02d:%02d:%02d GMT", gmt->tm_year,
-                gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+      if (gmt->tm_year < 1900) {
+        snprintf(&tmp2[11], sizeof(tmp2) - 11, "%04d %02d:%02d:%02d GMT",
+                 (gmt->tm_year) + 1900, gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+      } else {
+        snprintf(&tmp2[11], sizeof(tmp2) - 11, "%04d %02d:%02d:%02d GMT",
+                 gmt->tm_year, gmt->tm_hour, gmt->tm_min, gmt->tm_sec);
+      }
 #endif /* not HAVE_STRFTIME */
-    } else
+    } else {
       tmp2[0] = '\0';
+    }
     Strcat_charp(src, "<li>");
     Strcat_charp(src, "<h1><a href=\"");
     Strcat_charp(src, tmp);

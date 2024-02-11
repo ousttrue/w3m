@@ -2,6 +2,7 @@
 #include "http_request.h"
 #include <optional>
 #include <memory>
+#include <string_view>
 
 extern const char *DefaultType;
 
@@ -10,7 +11,7 @@ struct FormList;
 struct HttpOption;
 struct HttpResponse;
 
-std::shared_ptr<HttpResponse> loadGeneralFile(const char *path,
+std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
                                               std::optional<Url> current,
                                               const HttpOption &option,
                                               FormList *request = {});

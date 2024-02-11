@@ -476,7 +476,7 @@ void UrlStream::openData(const Url &url) {
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 
-std::shared_ptr<HttpRequest> UrlStream::openURL(const char *path,
+std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
                                                 std::optional<Url> current,
                                                 const HttpOption &option,
                                                 FormList *request) {
@@ -488,7 +488,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const char *path,
   //   u = url;
   // }
 
-  auto url = urlParse(path, current);
+  auto url = urlParse(Strnew(path)->ptr, current);
   if (url.schema == SCM_LOCAL && url.file.empty()) {
     if (url.label.size()) {
       /* #hogege is not a label but a filename */
@@ -568,7 +568,7 @@ static bool exists(const char *path) {
 
 void UrlStream::openFile(const char *path) {
 
-  this->guess_type = nullptr;
+  this->guess_type = {};
   this->stream = nullptr;
   if (!exists(path)) {
     return;
@@ -789,8 +789,9 @@ const char *file_quote(const char *str) {
         Strcat_char(tmp, *p);
     }
   }
-  if (tmp)
+  if (tmp){
     return tmp->ptr;
+  }
   return str;
 }
 

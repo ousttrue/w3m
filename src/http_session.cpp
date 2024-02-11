@@ -1,6 +1,5 @@
 #include "http_session.h"
 #include "url_quote.h"
-#include "Str.h"
 #include "http_response.h"
 #include "mytime.h"
 #include "http_auth.h"
@@ -10,7 +9,7 @@
 
 const char *DefaultType = nullptr;
 
-std::shared_ptr<HttpResponse> loadGeneralFile(const char *path,
+std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
                                               std::optional<Url> current,
                                               const HttpOption &option,
                                               FormList *request) {
@@ -80,7 +79,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(const char *path,
       /* 302: Found */
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
-      return loadGeneralFile(Strnew(url_quote(p))->ptr, hr->url, option, {});
+      return loadGeneralFile(url_quote(p), hr->url, option, {});
     }
 
     res->type = res->checkContentType();
@@ -127,14 +126,14 @@ std::shared_ptr<HttpResponse> loadGeneralFile(const char *path,
     if (res->type.empty()) {
       res->type = "text/plain";
     }
-    if (res->f.guess_type) {
+    if (res->f.guess_type.size()) {
       res->type = res->f.guess_type;
     }
   }
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
-  res->f.guess_type = Strnew(res->type)->ptr;
+  res->f.guess_type = res->type;
 
   res->page_loaded(hr->url);
   return res;
