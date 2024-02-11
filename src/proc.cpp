@@ -712,7 +712,7 @@ void followA() {
   // }
   a = retrieveCurrentAnchor(&Currentbuf->layout);
   if (a == nullptr) {
-    _followForm(false);
+    CurrentTab->_followForm(false);
     return;
   }
   if (*a->url == '#') { /* index within this buffer */
@@ -777,7 +777,7 @@ void followI() {
 /* submit form */
 // SUBMIT
 //"Submit form"
-void submitForm() { _followForm(true); }
+void submitForm() { CurrentTab->_followForm(true); }
 
 /* go to the top anchor */
 // LINK_BEGIN

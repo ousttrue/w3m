@@ -53,7 +53,6 @@ public:
   Buffer &operator=(const Buffer &src);
 };
 
-void _followForm(int submit);
 char *GetWord(const std::shared_ptr<Buffer> &buf);
 char *getCurWord(const std::shared_ptr<Buffer> &buf, int *spos, int *epos);
 inline void nextChar(int &s, Line *l) { s++; }

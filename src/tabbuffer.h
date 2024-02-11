@@ -51,6 +51,7 @@ public:
   std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
                                    const char *referer, FormList *request);
   void do_submit(FormItemList *fi, Anchor *a);
+  void _followForm(int submit);
 
   static void init(const std::shared_ptr<Buffer> &newbuf);
   static void _newT();

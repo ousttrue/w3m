@@ -1,4 +1,5 @@
 #include "tabbuffer.h"
+#include "linein.h"
 #include "form.h"
 #include "alloc.h"
 #include "http_session.h"
@@ -720,6 +721,136 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
     do_internal(tmp2->ptr, tmp->ptr);
   } else {
     disp_err_message("Can't send form because of illegal method.", false);
+  }
+  displayBuffer(B_FORCE_REDRAW);
+}
+
+void TabBuffer::_followForm(int submit) {
+  if (currentBuffer()->layout.firstLine == nullptr)
+    return;
+
+  auto a = retrieveCurrentForm(&currentBuffer()->layout);
+  if (a == nullptr)
+    return;
+  auto fi = (FormItemList *)a->url;
+
+  switch (fi->type) {
+  case FORM_INPUT_TEXT:
+    if (submit) {
+      this->do_submit(fi, a);
+      return;
+    }
+    if (fi->readonly)
+      disp_message_nsec("Read only field!", false, 1, true, false);
+    inputStrHist("TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
+                 [fi, a](const char *p) {
+                   if (p == nullptr || fi->readonly) {
+                     return;
+                     // break;
+                   }
+                   fi->value = Strnew_charp(p);
+                   formUpdateBuffer(a, &Currentbuf->layout, fi);
+                   if (fi->accept || fi->parent->nitems == 1) {
+                     CurrentTab->do_submit(fi, a);
+                     return;
+                   }
+                   displayBuffer(Currentbuf, B_FORCE_REDRAW);
+                 });
+    break;
+
+  case FORM_INPUT_FILE:
+    if (submit) {
+      this->do_submit(fi, a);
+      return;
+    }
+
+    if (fi->readonly)
+      disp_message_nsec("Read only field!", false, 1, true, false);
+
+    // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : nullptr,
+    // nullptr); if (p == nullptr || fi->readonly)
+    //   break;
+    //
+    // fi->value = Strnew_charp(p);
+    // formUpdateBuffer(a, Currentbuf, fi);
+    // if (fi->accept || fi->parent->nitems == 1)
+    //   goto do_submit;
+    break;
+  case FORM_INPUT_PASSWORD:
+    if (submit) {
+      this->do_submit(fi, a);
+      return;
+    }
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", false, 1, true, false);
+      break;
+    }
+    // p = inputLine("Password:", fi->value ? fi->value->ptr : nullptr,
+    // IN_PASSWORD);
+    // if (p == nullptr)
+    //   break;
+    // fi->value = Strnew_charp(p);
+    formUpdateBuffer(a, &currentBuffer()->layout, fi);
+    if (fi->accept) {
+      this->do_submit(fi, a);
+      return;
+    }
+    break;
+  case FORM_TEXTAREA:
+    if (submit) {
+      this->do_submit(fi, a);
+      return;
+    }
+    if (fi->readonly)
+      disp_message_nsec("Read only field!", false, 1, true, false);
+    input_textarea(fi);
+    formUpdateBuffer(a, &currentBuffer()->layout, fi);
+    break;
+  case FORM_INPUT_RADIO:
+    if (submit) {
+      this->do_submit(fi, a);
+      return;
+    }
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", false, 1, true, false);
+      break;
+    }
+    formRecheckRadio(a, currentBuffer(), fi);
+    break;
+  case FORM_INPUT_CHECKBOX:
+    if (submit) {
+      this->do_submit(fi, a);
+      return;
+    }
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", false, 1, true, false);
+      break;
+    }
+    fi->checked = !fi->checked;
+    formUpdateBuffer(a, &currentBuffer()->layout, fi);
+    break;
+  case FORM_INPUT_IMAGE:
+  case FORM_INPUT_SUBMIT:
+  case FORM_INPUT_BUTTON:
+    this->do_submit(fi, a);
+    break;
+
+  case FORM_INPUT_RESET:
+    for (size_t i = 0; i < currentBuffer()->layout.formitem->size(); i++) {
+      auto a2 = &currentBuffer()->layout.formitem->anchors[i];
+      auto f2 = (FormItemList *)a2->url;
+      if (f2->parent == fi->parent && f2->name && f2->value &&
+          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
+          f2->type != FORM_INPUT_RESET) {
+        f2->value = f2->init_value;
+        f2->checked = f2->init_checked;
+        formUpdateBuffer(a2, &currentBuffer()->layout, f2);
+      }
+    }
+    break;
+  case FORM_INPUT_HIDDEN:
+  default:
+    break;
   }
   displayBuffer(B_FORCE_REDRAW);
 }

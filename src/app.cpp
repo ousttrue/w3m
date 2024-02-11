@@ -178,7 +178,7 @@ void mainLoop() {
       Currentbuf->layout.submit = NULL;
       Currentbuf->layout.gotoLine(a->start.line);
       Currentbuf->layout.pos = a->start.pos;
-      _followForm(true);
+      CurrentTab->_followForm(true);
       continue;
     }
 
