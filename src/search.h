@@ -9,3 +9,6 @@ struct LineLayout;
 int forwardSearch(LineLayout *layout, const char *str);
 int backwardSearch(LineLayout *layout, const char *str);
 int srchcore(const char *str, int (*func)(LineLayout *, const char *));
+void isrch(int (*func)(LineLayout *, const char *), const char *prompt);
+void srch(int (*func)(LineLayout *, const char *), const char *prompt);
+void srch_nxtprv(int reverse);

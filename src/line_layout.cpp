@@ -879,3 +879,15 @@ void LineLayout::_goLine(const char *l, int prec_num) {
   this->arrangeCursor();
   displayBuffer(B_FORCE_REDRAW);
 }
+
+void LineLayout::shiftvisualpos(int shift) {
+  Line *l = this->currentLine;
+  this->visualpos -= shift;
+  if (this->visualpos - l->bwidth >= this->COLS)
+    this->visualpos = l->bwidth + this->COLS - 1;
+  else if (this->visualpos - l->bwidth < 0)
+    this->visualpos = l->bwidth;
+  this->arrangeLine();
+  if (this->visualpos - l->bwidth == -shift && this->cursorX == 0)
+    this->visualpos = l->bwidth;
+}

@@ -123,6 +123,7 @@ struct LineLayout {
   int prev_nonnull_line(Line *line);
   int next_nonnull_line(Line *line);
   void _goLine(const char *l, int prec_num);
+  void shiftvisualpos(int shift);
 
   //
   // Anchors

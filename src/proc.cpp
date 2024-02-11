@@ -195,14 +195,13 @@ void srchprv() { srch_nxtprv(1); }
 // SHIFT_LEFT
 //"Shift screen left"
 void shiftl() {
-  int column;
-
   if (Currentbuf->layout.firstLine == nullptr)
     return;
-  column = Currentbuf->layout.currentColumn;
+  int column = Currentbuf->layout.currentColumn;
   Currentbuf->layout.columnSkip(
       searchKeyNum() * (-Currentbuf->layout.COLS + 1) + 1);
-  shiftvisualpos(Currentbuf, Currentbuf->layout.currentColumn - column);
+  CurrentTab->currentBuffer()->layout.shiftvisualpos(
+      Currentbuf->layout.currentColumn - column);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -210,14 +209,13 @@ void shiftl() {
 // SHIFT_RIGHT
 //"Shift screen right"
 void shiftr() {
-  int column;
-
   if (Currentbuf->layout.firstLine == nullptr)
     return;
-  column = Currentbuf->layout.currentColumn;
+  int column = Currentbuf->layout.currentColumn;
   Currentbuf->layout.columnSkip(searchKeyNum() * (Currentbuf->layout.COLS - 1) -
                                 1);
-  shiftvisualpos(Currentbuf, Currentbuf->layout.currentColumn - column);
+  CurrentTab->currentBuffer()->layout.shiftvisualpos(
+      Currentbuf->layout.currentColumn - column);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -235,7 +233,7 @@ void col1R() {
     Currentbuf->layout.columnSkip(1);
     if (column == buf->layout.currentColumn)
       break;
-    shiftvisualpos(Currentbuf, 1);
+    CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -253,7 +251,7 @@ void col1L() {
     if (buf->layout.currentColumn == 0)
       break;
     Currentbuf->layout.columnSkip(-1);
-    shiftvisualpos(Currentbuf, -1);
+    CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }

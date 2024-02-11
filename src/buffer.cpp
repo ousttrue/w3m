@@ -590,18 +590,6 @@ char *getCurWord(const std::shared_ptr<Buffer> &buf, int *spos, int *epos) {
   return &p[b];
 }
 
-void shiftvisualpos(const std::shared_ptr<Buffer> &buf, int shift) {
-  Line *l = buf->layout.currentLine;
-  buf->layout.visualpos -= shift;
-  if (buf->layout.visualpos - l->bwidth >= buf->layout.COLS)
-    buf->layout.visualpos = l->bwidth + buf->layout.COLS - 1;
-  else if (buf->layout.visualpos - l->bwidth < 0)
-    buf->layout.visualpos = l->bwidth;
-  buf->layout.arrangeLine();
-  if (buf->layout.visualpos - l->bwidth == -shift && buf->layout.cursorX == 0)
-    buf->layout.visualpos = l->bwidth;
-}
-
 #define DICTBUFFERNAME "*dictionary*"
 void execdict(const char *word) {
   const char *w, *dictcmd;
