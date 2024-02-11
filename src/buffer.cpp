@@ -44,7 +44,7 @@ Buffer::~Buffer() {}
 Buffer &Buffer::operator=(const Buffer &src) {
   this->info = src.info;
   this->layout = src.layout;
-  this->nextBuffer = src.nextBuffer;
+  this->backBuffer = src.backBuffer;
   this->linkBuffer = src.linkBuffer;
   this->clone = src.clone;
   this->check_url = src.check_url;
@@ -84,21 +84,21 @@ Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf) {
   Buffer *buf;
 
   if (delbuf == nullptr) {
-    newbuf->nextBuffer = first;
+    newbuf->backBuffer = first;
     return newbuf;
   }
   if (first == delbuf) {
-    newbuf->nextBuffer = delbuf->nextBuffer;
+    newbuf->backBuffer = delbuf->backBuffer;
     discardBuffer(delbuf);
     return newbuf;
   }
-  if (delbuf && (buf = prevBuffer(first, delbuf))) {
-    buf->nextBuffer = newbuf;
-    newbuf->nextBuffer = delbuf->nextBuffer;
+  if (delbuf && (buf = forwardBuffer(first, delbuf))) {
+    buf->backBuffer = newbuf;
+    newbuf->backBuffer = delbuf->backBuffer;
     discardBuffer(delbuf);
     return first;
   }
-  newbuf->nextBuffer = first;
+  newbuf->backBuffer = first;
   return newbuf;
 }
 
@@ -111,7 +111,7 @@ Buffer *nthBuffer(Buffer *firstbuf, int n) {
   for (i = 0; i < n; i++) {
     if (buf == nullptr)
       return nullptr;
-    buf = buf->nextBuffer;
+    buf = buf->backBuffer;
   }
   return buf;
 }
@@ -164,12 +164,12 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
       toggle_stand();
     } else
       clrtoeolx();
-    if (buf->nextBuffer == nullptr) {
+    if (buf->backBuffer == nullptr) {
       move(i + 1, 0);
       clrtobotx();
       break;
     }
-    buf = buf->nextBuffer;
+    buf = buf->backBuffer;
   }
   standout();
   /* FIXME: gettextize? */
@@ -179,7 +179,7 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
    * move(LASTLINE, COLS - 1); */
   move(c, 0);
   refresh(term_io());
-  return buf->nextBuffer;
+  return buf->backBuffer;
 }
 
 /*
@@ -194,7 +194,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
   char c;
 
   i = cpoint = 0;
-  for (buf = firstbuf; buf != nullptr; buf = buf->nextBuffer) {
+  for (buf = firstbuf; buf != nullptr; buf = buf->backBuffer) {
     if (buf == currentbuf)
       cpoint = i;
     i++;
@@ -233,10 +233,10 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
     case CTRL_N:
     case 'j':
       if (spoint < sclimit - 1) {
-        if (currentbuf->nextBuffer == nullptr)
+        if (currentbuf->backBuffer == nullptr)
           continue;
         writeBufferName(currentbuf, spoint);
-        currentbuf = currentbuf->nextBuffer;
+        currentbuf = currentbuf->backBuffer;
         cpoint++;
         spoint++;
         standout();
@@ -246,7 +246,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
         toggle_stand();
       } else if (cpoint < maxbuf - 1) {
         topbuf = currentbuf;
-        currentbuf = currentbuf->nextBuffer;
+        currentbuf = currentbuf->backBuffer;
         cpoint++;
         spoint = 1;
         listBuffer(topbuf, currentbuf);
@@ -364,10 +364,10 @@ void reshapeBuffer(Buffer *buf) {
   formResetBuffer(&buf->layout, sbuf->layout.formitem);
 }
 
-Buffer *prevBuffer(Buffer *first, Buffer *buf) {
+Buffer *forwardBuffer(Buffer *first, Buffer *buf) {
   Buffer *b;
 
-  for (b = first; b != nullptr && b->nextBuffer != buf; b = b->nextBuffer)
+  for (b = first; b != nullptr && b->backBuffer != buf; b = b->backBuffer)
     ;
   return b;
 }
@@ -759,7 +759,7 @@ disp:
   disp_message(&s->ptr[offset], true);
 }
 int checkBackBuffer(Buffer *buf) {
-  if (buf->nextBuffer)
+  if (buf->backBuffer)
     return true;
 
   return false;

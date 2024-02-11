@@ -110,8 +110,8 @@ void setKeymap(const char *p, int lineno, int verbose) {
           mmap[i][j] = FUNCNAME_nulcmd;
       }
       mmap[0][ESC_CODE] = FUNCNAME_escmap;
-      mmap[1]['['] = FUNCNAME_escbmap;
-      mmap[1]['O'] = FUNCNAME_escbmap;
+      mmap[1][(int)'['] = FUNCNAME_escbmap;
+      mmap[1][(int)'O'] = FUNCNAME_escbmap;
     }
     if (keyData == NULL)
       keyData = newHash_iv(KEYDATA_HASH_SIZE);

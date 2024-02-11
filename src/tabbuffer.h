@@ -1,6 +1,9 @@
 #pragma once
+#include "url.h"
+#include <optional>
 
 struct Buffer;
+struct FormList;
 struct TabBuffer {
   TabBuffer *nextTab;
   TabBuffer *prevTab;
@@ -26,6 +29,9 @@ public:
   void repBuffer(Buffer *oldbuf, Buffer *buf);
   void pushBuffer(Buffer *buf);
   bool select(char cmd, Buffer *buf);
+
+  void cmd_loadURL(const char *url, std::optional<Url> current,
+                   const char *referer, FormList *request);
 
   static void init(Buffer *newbuf);
   static TabBuffer *newTab();

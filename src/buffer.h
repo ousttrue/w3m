@@ -40,7 +40,7 @@ struct Clone {
 struct Buffer : public gc_cleanup {
   std::shared_ptr<HttpResponse> info;
   LineLayout layout = {};
-  Buffer *nextBuffer = nullptr;
+  Buffer *backBuffer = nullptr;
   std::array<Buffer *, MAX_LB> linkBuffer = {0};
   std::shared_ptr<Clone> clone;
   bool check_url = false;
@@ -72,7 +72,7 @@ extern Buffer *nthBuffer(Buffer *firstbuf, int n);
 extern Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf,
                             char *selectchar);
 extern void reshapeBuffer(Buffer *buf);
-extern Buffer *prevBuffer(Buffer *first, Buffer *buf);
+extern Buffer *forwardBuffer(Buffer *first, Buffer *buf);
 
 extern void chkURLBuffer(Buffer *buf);
 void isrch(int (*func)(Buffer *, const char *), const char *prompt);
@@ -104,5 +104,3 @@ void saveBuffer(Buffer *buf, FILE *f, int cont);
 
 void cmd_loadBuffer(Buffer *buf, int linkid);
 void cmd_loadfile(const char *fn);
-void cmd_loadURL(const char *url, std::optional<Url> current,
-                 const char *referer, FormList *request);

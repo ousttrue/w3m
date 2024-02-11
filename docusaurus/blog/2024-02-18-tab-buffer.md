@@ -34,4 +34,10 @@ V          v         v
 +Buffer+  +Buffer+  +Buffer+
 |next  |->|next  |->|next  |--> nullptr
 +------+  +------+  +------+
+
+next を辿るのが browser の back
 ```
+
+これがひとつの WebBrowser を表している。
+cmd_loadURL 関数が url を load して buffer を history に追加する基本型。
+

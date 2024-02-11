@@ -134,7 +134,7 @@ TabBuffer *deleteTab(TabBuffer *tab) {
   nTab--;
   buf = tab->firstBuffer;
   while (buf && buf != NO_BUFFER) {
-    next = buf->nextBuffer;
+    next = buf->backBuffer;
     discardBuffer(buf);
     buf = next;
   }
@@ -150,16 +150,16 @@ void TabBuffer::deleteBuffer(Buffer *delbuf) {
   }
 
   if (_currentBuffer == delbuf) {
-    _currentBuffer = delbuf->nextBuffer;
+    _currentBuffer = delbuf->backBuffer;
   }
 
-  if (firstBuffer == delbuf && firstBuffer->nextBuffer != nullptr) {
-    auto buf = firstBuffer->nextBuffer;
+  if (firstBuffer == delbuf && firstBuffer->backBuffer != nullptr) {
+    auto buf = firstBuffer->backBuffer;
     discardBuffer(firstBuffer);
     firstBuffer = buf;
-  } else if (auto buf = prevBuffer(firstBuffer, delbuf)) {
-    auto b = buf->nextBuffer;
-    buf->nextBuffer = b->nextBuffer;
+  } else if (auto buf = forwardBuffer(firstBuffer, delbuf)) {
+    auto b = buf->backBuffer;
+    buf->backBuffer = b->backBuffer;
     discardBuffer(b);
   }
 
@@ -257,10 +257,11 @@ int handleMailto(const char *url) {
   return 1;
 }
 
-void cmd_loadURL(const char *url, std::optional<Url> current,
-                 const char *referer, FormList *request) {
-  if (handleMailto((char *)url))
+void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
+                            const char *referer, FormList *request) {
+  if (handleMailto((char *)url)) {
     return;
+  }
 
   refresh(term_io());
   auto res = loadGeneralFile(url, current, {.referer = referer}, request);
@@ -272,24 +273,20 @@ void cmd_loadURL(const char *url, std::optional<Url> current,
 
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
+
   if (buf != NO_BUFFER) {
-    CurrentTab->pushBuffer(buf);
+    this->pushBuffer(buf);
   }
+
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to specified URL */
 void goURL0(const char *prompt, int relative) {
-  const char *url, *referer;
-  Url p_url;
-  Buffer *cur_buf = Currentbuf;
-  const int *no_referer_ptr;
-
-  url = searchKeyData();
+  auto url = searchKeyData();
   std::optional<Url> current;
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
-    Anchor *a;
 
     current = baseURL(Currentbuf);
     if (current) {
@@ -299,9 +296,9 @@ void goURL0(const char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    a = retrieveCurrentAnchor(Currentbuf);
+    auto a = retrieveCurrentAnchor(Currentbuf);
     if (a) {
-      p_url = urlParse(a->url, current);
+      auto p_url = urlParse(a->url, current);
       auto a_url = p_url.to_Str();
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url.c_str());
@@ -312,8 +309,10 @@ void goURL0(const char *prompt, int relative) {
     if (url != nullptr)
       SKIP_BLANKS(url);
   }
+
+  const char *referer;
   if (relative) {
-    no_referer_ptr = nullptr;
+    const int *no_referer_ptr = nullptr;
     current = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
@@ -327,6 +326,7 @@ void goURL0(const char *prompt, int relative) {
     referer = nullptr;
     url = Strnew(url_quote(url))->ptr;
   }
+
   if (url == nullptr || *url == '\0') {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
@@ -335,11 +335,14 @@ void goURL0(const char *prompt, int relative) {
     gotoLabel(url + 1);
     return;
   }
-  p_url = urlParse(url, current);
+
+  auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
-  cmd_loadURL(url, current, referer, nullptr);
-  if (Currentbuf != cur_buf) /* success */
+  Buffer *cur_buf = Currentbuf;
+  CurrentTab->cmd_loadURL(url, current, referer, nullptr);
+  if (Currentbuf != cur_buf) { /* success */
     pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
+  }
 }
 
 void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
@@ -362,13 +365,13 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
     Buffer *c, *p;
 
     c = Currentbuf;
-    if ((p = prevBuffer(c, buf)))
-      p->nextBuffer = nullptr;
+    if ((p = forwardBuffer(c, buf)))
+      p->backBuffer = nullptr;
     Firstbuf = buf;
     deleteTab(CurrentTab);
     CurrentTab = tab;
     for (buf = p; buf; buf = p) {
-      p = prevBuffer(c, buf);
+      p = forwardBuffer(c, buf);
       CurrentTab->pushBuffer(buf);
     }
   }
@@ -377,13 +380,13 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
 
 void TabBuffer::pushBuffer(Buffer *buf) {
   if (Firstbuf == Currentbuf) {
-    buf->nextBuffer = Firstbuf;
-    Firstbuf = _currentBuffer = buf;
-  } else if (auto b = prevBuffer(Firstbuf, Currentbuf)) {
-    b->nextBuffer = buf;
-    buf->nextBuffer = Currentbuf;
-    _currentBuffer = buf;
+    buf->backBuffer = Firstbuf;
+    Firstbuf = buf;
+  } else if (auto b = forwardBuffer(Firstbuf, Currentbuf)) {
+    buf->backBuffer = Currentbuf;
+    b->backBuffer = buf;
   }
+  _currentBuffer = buf;
   saveBufferInfo();
 }
 
@@ -395,7 +398,7 @@ void TabBuffer::_newT() {
 
   auto buf = new Buffer(Currentbuf->layout.width);
   *buf = *Currentbuf;
-  buf->nextBuffer = nullptr;
+  buf->backBuffer = nullptr;
   for (int i = 0; i < MAX_LB; i++) {
     buf->linkBuffer[i] = nullptr;
   }
@@ -451,13 +454,13 @@ void followTab(TabBuffer *tab) {
     Buffer *c, *p;
 
     c = Currentbuf;
-    if ((p = prevBuffer(c, buf)))
-      p->nextBuffer = nullptr;
+    if ((p = forwardBuffer(c, buf)))
+      p->backBuffer = nullptr;
     Firstbuf = buf;
     deleteTab(CurrentTab);
     CurrentTab = tab;
     for (buf = p; buf; buf = p) {
-      p = prevBuffer(c, buf);
+      p = forwardBuffer(c, buf);
       CurrentTab->pushBuffer(buf);
     }
   }
@@ -481,9 +484,9 @@ Buffer *namedBuffer(Buffer *first, char *name) {
   if (first->layout.title == name) {
     return first;
   }
-  for (auto buf = first; buf->nextBuffer != nullptr; buf = buf->nextBuffer) {
-    if (buf->nextBuffer->layout.title == name) {
-      return buf->nextBuffer;
+  for (auto buf = first; buf->backBuffer != nullptr; buf = buf->backBuffer) {
+    if (buf->backBuffer->layout.title == name) {
+      return buf->backBuffer;
     }
   }
   return nullptr;

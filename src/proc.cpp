@@ -377,7 +377,7 @@ void ldhelp() {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  cmd_loadURL(tmp->ptr, {}, NO_REFERER, nullptr);
+  CurrentTab->cmd_loadURL(tmp->ptr, {}, NO_REFERER, nullptr);
 }
 
 // MOVE_LEFT
@@ -926,7 +926,7 @@ void nextBf() {
   int i;
 
   for (i = 0; i < PREC_NUM; i++) {
-    buf = prevBuffer(Firstbuf, Currentbuf);
+    buf = forwardBuffer(Firstbuf, Currentbuf);
     if (!buf) {
       if (i == 0)
         return;
@@ -942,7 +942,7 @@ void nextBf() {
 //"Switch to the previous buffer"
 void prevBf() {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf = Currentbuf->nextBuffer;
+    auto buf = Currentbuf->backBuffer;
     if (!buf) {
       if (i == 0)
         return;
@@ -977,7 +977,7 @@ void backBf() {
 // DELETE_PREVBUF
 //"Delete previous buffer (mainly for local CGI-scripts)"
 void deletePrevBuf() {
-  Buffer *buf = Currentbuf->nextBuffer;
+  Buffer *buf = Currentbuf->backBuffer;
   if (buf) {
     CurrentTab->deleteBuffer(buf);
   }
@@ -999,7 +999,7 @@ void goHome() {
     url = Strnew(url_quote(url))->ptr;
     p_url = urlParse(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
-    cmd_loadURL(url, {}, nullptr, nullptr);
+    CurrentTab->cmd_loadURL(url, {}, nullptr, nullptr);
     if (Currentbuf != cur_buf) /* success */
       pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
   }
@@ -1012,7 +1012,9 @@ void gorURL() { goURL0("Goto relative URL: ", true); }
 /* load bookmark */
 // BOOKMARK VIEW_BOOKMARK
 //"View bookmarks"
-void ldBmark() { cmd_loadURL(BookmarkFile, {}, NO_REFERER, nullptr); }
+void ldBmark() {
+  CurrentTab->cmd_loadURL(BookmarkFile, {}, NO_REFERER, nullptr);
+}
 
 /* Add current to bookmark */
 // ADD_BOOKMARK
@@ -1031,7 +1033,8 @@ void adBmark() {
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
   request->length = tmp->length;
-  cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, NO_REFERER, request);
+  CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, NO_REFERER,
+                          request);
 }
 
 /* option setting */
@@ -1704,7 +1707,7 @@ void ldDL() {
 
   if (!FirstDL) {
     if (replace) {
-      if (Currentbuf == Firstbuf && Currentbuf->nextBuffer == nullptr) {
+      if (Currentbuf == Firstbuf && Currentbuf->backBuffer == nullptr) {
         if (nTab > 1)
           deleteTab(CurrentTab);
       } else

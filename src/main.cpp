@@ -657,7 +657,7 @@ void deleteFiles() {
 
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
     while (Firstbuf && Firstbuf != NO_BUFFER) {
-      buf = Firstbuf->nextBuffer;
+      buf = Firstbuf->backBuffer;
       discardBuffer(Firstbuf);
       Firstbuf = buf;
     }
@@ -1094,10 +1094,10 @@ int main(int argc, char **argv) {
       TabBuffer::init(newbuf);
     } else if (open_new_tab) {
       TabBuffer::_newT();
-      Currentbuf->nextBuffer = newbuf;
+      Currentbuf->backBuffer = newbuf;
       CurrentTab->deleteBuffer(Currentbuf);
     } else {
-      Currentbuf->nextBuffer = newbuf;
+      Currentbuf->backBuffer = newbuf;
       CurrentTab->currentBuffer(newbuf);
     }
 
