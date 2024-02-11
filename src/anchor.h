@@ -64,14 +64,10 @@ Anchor *retrieveCurrentAnchor(LineLayout *layout);
 Anchor *retrieveCurrentImg(LineLayout *layout);
 Anchor *retrieveCurrentForm(LineLayout *layout);
 struct Line;
-void reAnchorWord(LineLayout *layout, Line *l, int spos,
-                  int epos);
+void reAnchorWord(LineLayout *layout, Line *l, int spos, int epos);
 struct AnchorList;
 
-struct Buffer;
-const char *getAnchorText(const std::shared_ptr<Buffer> &buf, AnchorList *al,
-                          Anchor *a);
-std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf);
+const char *getAnchorText(LineLayout *layout, AnchorList *al, Anchor *a);
 
 const char *html_quote(const char *str);
 const char *html_unquote(const char *str);

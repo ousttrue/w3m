@@ -106,3 +106,5 @@ void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont);
 
 void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid);
 void cmd_loadfile(const char *fn);
+
+std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf);

@@ -231,5 +231,6 @@ const char *remove_space(const char *str);
 extern int is_boundary(unsigned char *, unsigned char *);
 
 void loadBuffer(HttpResponse *res, LineLayout *layout);
+struct Buffer;
 std::shared_ptr<Buffer> loadHTMLString(Str *page);
 std::shared_ptr<Buffer> getshell(const char *cmd);
