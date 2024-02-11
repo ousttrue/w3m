@@ -1,4 +1,5 @@
 #include "display.h"
+#include "line_layout.h"
 #include "url_stream.h"
 #include "tabbuffer.h"
 #include "http_session.h"
@@ -135,12 +136,12 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
 
   if (displayLink) {
     {
-      Anchor *a = retrieveCurrentAnchor(buf);
+      Anchor *a = retrieveCurrentAnchor(&buf->layout);
       const char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        Anchor *a_img = retrieveCurrentImg(buf);
+        auto a_img = retrieveCurrentImg(&buf->layout);
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
@@ -300,7 +301,6 @@ static void drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
 }
 
 static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
-  Anchor *an;
   int hseq, prevhseq;
   int tline, eline;
 
@@ -309,7 +309,7 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.href && !buf->layout.formitem)
     return;
 
-  an = retrieveCurrentAnchor(buf);
+  auto an = retrieveCurrentAnchor(&buf->layout);
   if (an)
     hseq = an->hseq;
   else

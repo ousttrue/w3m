@@ -67,9 +67,6 @@ extern void discardBuffer(const std::shared_ptr<Buffer> &buf);
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);
 
 std::shared_ptr<Buffer> nullBuffer(void);
-std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &first,
-                                      const std::shared_ptr<Buffer> &delbuf,
-                                      const std::shared_ptr<Buffer> &newbuf);
 std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
                                   int n);
 std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,

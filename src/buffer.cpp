@@ -77,35 +77,6 @@ void discardBuffer(const std::shared_ptr<Buffer> &buf) {
   }
 }
 
-/*
- * replaceBuffer: replace buffer
- */
-std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &first,
-                                      const std::shared_ptr<Buffer> &delbuf,
-                                      const std::shared_ptr<Buffer> &newbuf) {
-
-  if (delbuf == nullptr) {
-    newbuf->backBuffer = first;
-    return newbuf;
-  }
-
-  if (first == delbuf) {
-    newbuf->backBuffer = delbuf->backBuffer;
-    discardBuffer(delbuf);
-    return newbuf;
-  }
-
-  std::shared_ptr<Buffer> buf;
-  if (delbuf && (buf = forwardBuffer(first, delbuf))) {
-    buf->backBuffer = newbuf;
-    newbuf->backBuffer = delbuf->backBuffer;
-    discardBuffer(delbuf);
-    return first;
-  }
-  newbuf->backBuffer = first;
-  return newbuf;
-}
-
 std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
                                   int n) {
   int i;
@@ -458,7 +429,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
                    Sprintf("%lu", (unsigned long)buf->info->trbyte)->ptr,
                    nullptr);
 
-    a = retrieveCurrentAnchor(buf);
+    a = retrieveCurrentAnchor(&buf->layout);
     if (a) {
       pu = urlParse(a->url, buf->info->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
@@ -471,7 +442,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
           tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
           q, "\">", p, "</a>", nullptr);
     }
-    a = retrieveCurrentImg(buf);
+    a = retrieveCurrentImg(&buf->layout);
     if (a != nullptr) {
       pu = urlParse(a->url, buf->info->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
@@ -484,7 +455,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
           tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
           q, "\">", p, "</a>", nullptr);
     }
-    a = retrieveCurrentForm(buf);
+    a = retrieveCurrentForm(&buf->layout);
     if (a != nullptr) {
       FormItemList *fi = (FormItemList *)a->url;
       p = form2str(fi);
@@ -546,19 +517,19 @@ void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     Url pu;
     char *s = GetWord(buf);
     set_environ("W3M_CURRENT_WORD", s ? s : "");
-    a = retrieveCurrentAnchor(buf);
+    a = retrieveCurrentAnchor(&buf->layout);
     if (a) {
       pu = urlParse(a->url, buf->info->getBaseURL());
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_LINK", "");
-    a = retrieveCurrentImg(buf);
+    a = retrieveCurrentImg(&buf->layout);
     if (a) {
       pu = urlParse(a->url, buf->info->getBaseURL());
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_IMG", "");
-    a = retrieveCurrentForm(buf);
+    a = retrieveCurrentForm(&buf->layout);
     if (a)
       set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
     else
@@ -746,11 +717,11 @@ void _peekURL(int only_img) {
     offset = 0;
   }
   s = nullptr;
-  a = (only_img ? nullptr : retrieveCurrentAnchor(Currentbuf));
+  a = (only_img ? nullptr : retrieveCurrentAnchor(&Currentbuf->layout));
   if (a == nullptr) {
-    a = (only_img ? nullptr : retrieveCurrentForm(Currentbuf));
+    a = (only_img ? nullptr : retrieveCurrentForm(&Currentbuf->layout));
     if (a == nullptr) {
-      a = retrieveCurrentImg(Currentbuf);
+      a = retrieveCurrentImg(&Currentbuf->layout);
       if (a == nullptr)
         return;
     } else
@@ -778,7 +749,7 @@ int checkBackBuffer(const std::shared_ptr<Buffer> &buf) {
 /* go to the next downward/upward anchor */
 void nextY(int d) {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
-  Anchor *an, *pan;
+  Anchor *pan;
   int i, x, y, n = searchKeyNum();
   int hseq;
 
@@ -787,9 +758,9 @@ void nextY(int d) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  auto an = retrieveCurrentAnchor(&Currentbuf->layout);
   if (an == nullptr)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->layout);
 
   x = Currentbuf->layout.pos;
   y = Currentbuf->layout.currentLine->linenumber + d;
@@ -825,7 +796,7 @@ void nextY(int d) {
 /* go to the next left/right anchor */
 void nextX(int d, int dy) {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
-  Anchor *an, *pan;
+  Anchor *pan;
   Line *l;
   int i, x, y, n = searchKeyNum();
 
@@ -834,9 +805,9 @@ void nextX(int d, int dy) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  auto an = retrieveCurrentAnchor(&Currentbuf->layout);
   if (an == nullptr)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->layout);
 
   l = Currentbuf->layout.currentLine;
   x = Currentbuf->layout.pos;
@@ -883,7 +854,7 @@ void nextX(int d, int dy) {
 void _prevA(int visited) {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
-  Anchor *an, *pan;
+  Anchor *pan;
   int i, x, y, n = searchKeyNum();
   Url url;
 
@@ -892,9 +863,9 @@ void _prevA(int visited) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  auto an = retrieveCurrentAnchor(&Currentbuf->layout);
   if (visited != true && an == nullptr)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->layout);
 
   y = Currentbuf->layout.currentLine->linenumber;
   x = Currentbuf->layout.pos;
@@ -966,7 +937,7 @@ _end:
 void _nextA(int visited) {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
-  Anchor *an, *pan;
+  Anchor *pan;
   int i, x, y, n = searchKeyNum();
   Url url;
 
@@ -975,9 +946,9 @@ void _nextA(int visited) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  auto an = retrieveCurrentAnchor(&Currentbuf->layout);
   if (visited != true && an == nullptr)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->layout);
 
   y = Currentbuf->layout.currentLine->linenumber;
   x = Currentbuf->layout.pos;

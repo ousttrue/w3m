@@ -495,7 +495,7 @@ void _followForm(int submit) {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
 
-  auto a = retrieveCurrentForm(Currentbuf);
+  auto a = retrieveCurrentForm(&Currentbuf->layout);
   if (a == nullptr)
     return;
   auto fi = (FormItemList *)a->url;
@@ -641,7 +641,7 @@ void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
       nullptr};
   int i;
   for (i = 0; url_like_pat[i]; i++) {
-    reAnchor(buf, url_like_pat[i]);
+    reAnchor(&buf->layout, url_like_pat[i]);
   }
   buf->check_url = true;
 }

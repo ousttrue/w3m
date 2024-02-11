@@ -64,25 +64,25 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
   return NULL;
 }
 
-Anchor *retrieveCurrentAnchor(const std::shared_ptr<Buffer> &buf) {
-  if (!buf->layout.currentLine || !buf->layout.href)
+Anchor *retrieveCurrentAnchor(LineLayout *layout) {
+  if (!layout->currentLine || !layout->href)
     return NULL;
-  return buf->layout.href->retrieveAnchor(buf->layout.currentLine->linenumber,
-                                          buf->layout.pos);
+  return layout->href->retrieveAnchor(layout->currentLine->linenumber,
+                                      layout->pos);
 }
 
-Anchor *retrieveCurrentImg(const std::shared_ptr<Buffer> &buf) {
-  if (!buf->layout.currentLine || !buf->layout.img)
+Anchor *retrieveCurrentImg(LineLayout *layout) {
+  if (!layout->currentLine || !layout->img)
     return NULL;
-  return buf->layout.img->retrieveAnchor(buf->layout.currentLine->linenumber,
-                                         buf->layout.pos);
+  return layout->img->retrieveAnchor(layout->currentLine->linenumber,
+                                     layout->pos);
 }
 
-Anchor *retrieveCurrentForm(const std::shared_ptr<Buffer> &buf) {
-  if (!buf->layout.currentLine || !buf->layout.formitem)
+Anchor *retrieveCurrentForm(LineLayout *layout) {
+  if (!layout->currentLine || !layout->formitem)
     return NULL;
-  return buf->layout.formitem->retrieveAnchor(
-      buf->layout.currentLine->linenumber, buf->layout.pos);
+  return layout->formitem->retrieveAnchor(layout->currentLine->linenumber,
+                                          layout->pos);
 }
 
 Anchor *searchAnchor(AnchorList *al, const char *str) {
@@ -99,14 +99,13 @@ Anchor *searchAnchor(AnchorList *al, const char *str) {
   return NULL;
 }
 
-static Anchor *_put_anchor_all(const std::shared_ptr<Buffer> &buf,
-                               const char *p1, const char *p2, int line,
-                               int pos) {
+static Anchor *_put_anchor_all(LineLayout *layout, const char *p1,
+                               const char *p2, int line, int pos) {
   Str *tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
-  return buf->layout.registerHref(url_quote(tmp->ptr).c_str(), NULL, NO_REFERER,
-                                  NULL, '\0', line, pos);
+  return layout->registerHref(url_quote(tmp->ptr).c_str(), NULL, NO_REFERER,
+                              NULL, '\0', line, pos);
 }
 
 static void reseq_anchor0(AnchorList *al, short *seqmap) {
@@ -122,14 +121,14 @@ static void reseq_anchor0(AnchorList *al, short *seqmap) {
 }
 
 /* renumber anchor */
-static void reseq_anchor(const std::shared_ptr<Buffer> &buf) {
-  if (!buf->layout.href)
+static void reseq_anchor(LineLayout *layout) {
+  if (!layout->href)
     return;
 
-  int nmark = (buf->layout.hmarklist) ? buf->layout.hmarklist->nmark : 0;
+  int nmark = (layout->hmarklist) ? layout->hmarklist->nmark : 0;
   int n = nmark;
-  for (size_t i = 0; i < buf->layout.href->size(); i++) {
-    auto a = &buf->layout.href->anchors[i];
+  for (size_t i = 0; i < layout->href->size(); i++) {
+    auto a = &layout->href->anchors[i];
     if (a->hseq == -2) {
       n++;
     }
@@ -145,13 +144,13 @@ static void reseq_anchor(const std::shared_ptr<Buffer> &buf) {
 
   n = nmark;
   HmarkerList *ml = NULL;
-  for (size_t i = 0; i < buf->layout.href->size(); i++) {
-    auto a = &buf->layout.href->anchors[i];
+  for (size_t i = 0; i < layout->href->size(); i++) {
+    auto a = &layout->href->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
-      auto a1 = closest_next_anchor(buf->layout.href, NULL, a->start.pos,
-                                    a->start.line);
-      a1 = closest_next_anchor(buf->layout.formitem, a1, a->start.pos,
+      auto a1 =
+          closest_next_anchor(layout->href, NULL, a->start.pos, a->start.line);
+      a1 = closest_next_anchor(layout->formitem, a1, a->start.pos,
                                a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
@@ -165,20 +164,19 @@ static void reseq_anchor(const std::shared_ptr<Buffer> &buf) {
   }
 
   for (int i = 0; i < nmark; i++) {
-    ml = putHmarker(ml, buf->layout.hmarklist->marks[i].line,
-                    buf->layout.hmarklist->marks[i].pos, seqmap[i]);
+    ml = putHmarker(ml, layout->hmarklist->marks[i].line,
+                    layout->hmarklist->marks[i].pos, seqmap[i]);
   }
-  buf->layout.hmarklist = ml;
+  layout->hmarklist = ml;
 
-  reseq_anchor0(buf->layout.href, seqmap.data());
-  reseq_anchor0(buf->layout.formitem, seqmap.data());
+  reseq_anchor0(layout->href, seqmap.data());
+  reseq_anchor0(layout->formitem, seqmap.data());
 }
 
-static const char *
-reAnchorPos(const std::shared_ptr<Buffer> &buf, Line *l, const char *p1,
-            const char *p2,
-            Anchor *(*anchorproc)(const std::shared_ptr<Buffer> &, const char *,
-                                  const char *, int, int)) {
+static const char *reAnchorPos(LineLayout *layout, Line *l, const char *p1,
+                               const char *p2,
+                               Anchor *(*anchorproc)(LineLayout *, const char *,
+                                                     const char *, int, int)) {
   Anchor *a;
   int spos, epos;
   int i;
@@ -198,10 +196,10 @@ reAnchorPos(const std::shared_ptr<Buffer> &buf, Line *l, const char *p1,
     l = l->next;
   }
   while (1) {
-    a = anchorproc(buf, p1, p2, l->linenumber, spos);
+    a = anchorproc(layout, p1, p2, l->linenumber, spos);
     a->hseq = hseq;
     if (hseq == -2) {
-      reseq_anchor(buf);
+      reseq_anchor(layout);
       hseq = a->hseq;
     }
     a->end.line = l->linenumber;
@@ -218,17 +216,15 @@ reAnchorPos(const std::shared_ptr<Buffer> &buf, Line *l, const char *p1,
   return p2;
 }
 
-void reAnchorWord(const std::shared_ptr<Buffer> &buf, Line *l, int spos,
-                  int epos) {
-  reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
+void reAnchorWord(LineLayout *layout, Line *l, int spos, int epos) {
+  reAnchorPos(layout, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static const char *
-reAnchorAny(const std::shared_ptr<Buffer> &buf, const char *re,
-            Anchor *(*anchorproc)(const std::shared_ptr<Buffer> &, const char *,
-                                  const char *, int, int)) {
+static const char *reAnchorAny(LineLayout *layout, const char *re,
+                               Anchor *(*anchorproc)(LineLayout *, const char *,
+                                                     const char *, int, int)) {
   Line *l;
   const char *p = NULL, *p1, *p2;
 
@@ -238,10 +234,9 @@ reAnchorAny(const std::shared_ptr<Buffer> &buf, const char *re,
   if ((re = regexCompile(re, 1)) != NULL) {
     return re;
   }
-  for (l = MarkAllPages ? buf->layout.firstLine : buf->layout.topLine;
+  for (l = MarkAllPages ? layout->firstLine : layout->topLine;
        l != NULL &&
-       (MarkAllPages ||
-        l->linenumber < buf->layout.topLine->linenumber + LASTLINE);
+       (MarkAllPages || l->linenumber < layout->topLine->linenumber + LASTLINE);
        l = l->next) {
     if (p && l->bpos) {
       continue;
@@ -251,7 +246,7 @@ reAnchorAny(const std::shared_ptr<Buffer> &buf, const char *re,
       if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) ==
           1) {
         matchedPosition(&p1, &p2);
-        p = reAnchorPos(buf, l, p1, p2, anchorproc);
+        p = reAnchorPos(layout, l, p1, p2, anchorproc);
       } else
         break;
     }
@@ -259,8 +254,8 @@ reAnchorAny(const std::shared_ptr<Buffer> &buf, const char *re,
   return NULL;
 }
 
-const char *reAnchor(const std::shared_ptr<Buffer> &buf, const char *re) {
-  return reAnchorAny(buf, re, _put_anchor_all);
+const char *reAnchor(LineLayout *layout, const char *re) {
+  return reAnchorAny(layout, re, _put_anchor_all);
 }
 
 #define FIRST_MARKER_SIZE 30

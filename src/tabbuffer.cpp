@@ -287,7 +287,7 @@ void goURL0(const char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    auto a = retrieveCurrentAnchor(Currentbuf);
+    auto a = retrieveCurrentAnchor(&Currentbuf->layout);
     if (a) {
       auto p_url = urlParse(a->url, current);
       auto a_url = p_url.to_Str();
@@ -410,7 +410,7 @@ void saveBufferInfo() {
 }
 
 void followTab(TabBuffer *tab) {
-  auto a = retrieveCurrentAnchor(Currentbuf);
+  auto a = retrieveCurrentAnchor(&Currentbuf->layout);
   if (a == nullptr)
     return;
 
@@ -475,7 +475,7 @@ std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
 
 void TabBuffer::repBuffer(const std::shared_ptr<Buffer> &oldbuf,
                           const std::shared_ptr<Buffer> &buf) {
-  Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
+  Firstbuf = replaceBuffer(oldbuf, buf);
   _currentBuffer = buf;
 }
 
@@ -508,4 +508,34 @@ bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
   }
 
   return false;
+}
+
+/*
+ * replaceBuffer: replace buffer
+ */
+std::shared_ptr<Buffer>
+TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
+                         const std::shared_ptr<Buffer> &newbuf) {
+
+  auto first = Firstbuf;
+  if (delbuf == nullptr) {
+    newbuf->backBuffer = first;
+    return newbuf;
+  }
+
+  if (first == delbuf) {
+    newbuf->backBuffer = delbuf->backBuffer;
+    discardBuffer(delbuf);
+    return newbuf;
+  }
+
+  std::shared_ptr<Buffer> buf;
+  if (delbuf && (buf = forwardBuffer(first, delbuf))) {
+    buf->backBuffer = newbuf;
+    newbuf->backBuffer = delbuf->backBuffer;
+    discardBuffer(delbuf);
+    return first;
+  }
+  newbuf->backBuffer = first;
+  return newbuf;
 }

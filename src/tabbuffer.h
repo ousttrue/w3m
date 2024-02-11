@@ -44,6 +44,9 @@ public:
   void cmd_loadURL(const char *url, std::optional<Url> current,
                    const char *referer, FormList *request);
 
+  std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
+                                        const std::shared_ptr<Buffer> &newbuf);
+
   static void init(const std::shared_ptr<Buffer> &newbuf);
   static void _newT();
 };

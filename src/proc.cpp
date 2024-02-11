@@ -682,7 +682,7 @@ void followA() {
   //   _followForm(false);
   //   return;
   // }
-  a = retrieveCurrentAnchor(Currentbuf);
+  a = retrieveCurrentAnchor(&Currentbuf->layout);
   if (a == nullptr) {
     _followForm(false);
     return;
@@ -723,12 +723,10 @@ void followA() {
 // VIEW_IMAGE
 //"Display image in viewer"
 void followI() {
-  Anchor *a;
-
   if (Currentbuf->layout.firstLine == nullptr)
     return;
 
-  a = retrieveCurrentImg(Currentbuf);
+  auto a = retrieveCurrentImg(&Currentbuf->layout);
   if (a == nullptr)
     return;
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
@@ -1373,7 +1371,7 @@ void chkWORD() {
   p = getCurWord(Currentbuf, &spos, &epos);
   if (p == nullptr)
     return;
-  reAnchorWord(Currentbuf, Currentbuf->layout.currentLine, spos, epos);
+  reAnchorWord(&Currentbuf->layout, Currentbuf->layout.currentLine, spos, epos);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -1399,7 +1397,7 @@ void extbrz() {
 void linkbrz() {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
-  auto a = retrieveCurrentAnchor(Currentbuf);
+  auto a = retrieveCurrentAnchor(&Currentbuf->layout);
   if (a == nullptr)
     return;
   auto pu = urlParse(a->url, Currentbuf->info->getBaseURL());
