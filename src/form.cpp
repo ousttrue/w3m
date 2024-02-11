@@ -176,7 +176,8 @@ int formtype(const char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
+void formRecheckRadio(Anchor *a, const std::shared_ptr<Buffer> &buf,
+                      FormItemList *fi) {
   Anchor *a2;
   FormItemList *f2;
 
@@ -729,7 +730,7 @@ void loadPreForm(void) {
   fclose(fp);
 }
 
-void preFormUpdateBuffer(Buffer *buf) {
+void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
   struct pre_form *pf;
   struct pre_form_item *pi;
   Anchor *a;

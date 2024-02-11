@@ -38,7 +38,7 @@ void record_err_message(const char *s) {
 /*
  * List of error messages
  */
-Buffer *message_list_panel(void) {
+std::shared_ptr<Buffer> message_list_panel(void) {
   Str *tmp = Strnew_size(LINES * COLS);
   Strcat_charp(tmp,
                "<html><head><title>List of error messages</title></head><body>"
@@ -68,7 +68,8 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
   }
 
   if (CurrentTab != NULL && Currentbuf != NULL)
-    message(s, Currentbuf->layout.AbsCursorX(), Currentbuf->layout.AbsCursorY());
+    message(s, Currentbuf->layout.AbsCursorX(),
+            Currentbuf->layout.AbsCursorY());
   else
     message(s, LASTLINE, 0);
   refresh(term_io());

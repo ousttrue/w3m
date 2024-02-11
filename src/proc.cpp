@@ -224,7 +224,7 @@ void shiftr() {
 // RIGHT
 //"Shift screen one column right"
 void col1R() {
-  Buffer *buf = Currentbuf;
+  auto buf = Currentbuf;
   Line *l = buf->layout.currentLine;
   int j, column, n = searchKeyNum();
 
@@ -243,7 +243,7 @@ void col1R() {
 // LEFT
 //"Shift screen one column left"
 void col1L() {
-  Buffer *buf = Currentbuf;
+  auto buf = Currentbuf;
   Line *l = buf->layout.currentLine;
   int j, n = searchKeyNum();
 
@@ -296,11 +296,8 @@ void pipesh() {}
 // READ_SHELL
 //"Execute shell command and display output"
 void readsh() {
-  Buffer *buf;
-  const char *cmd;
-
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
+  auto cmd = searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
@@ -311,7 +308,7 @@ void readsh() {
   // MySignalHandler prevtrap = {};
   // prevtrap = mySignal(SIGINT, intTrap);
   crmode();
-  buf = getshell(cmd);
+  auto buf = getshell(cmd);
   // mySignal(SIGINT, prevtrap);
   term_raw();
   if (buf == nullptr) {
@@ -708,10 +705,8 @@ void followA() {
 
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    Buffer *buf;
-
     TabBuffer::_newT();
-    buf = Currentbuf;
+    auto buf = Currentbuf;
     loadLink(url, a->target, a->referer, nullptr);
     if (buf != Currentbuf)
       CurrentTab->deleteBuffer(buf);
@@ -746,7 +741,7 @@ void followI() {
     return;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
@@ -921,11 +916,8 @@ void nextU() { nextY(-1); }
 // NEXT
 //"Switch to the next buffer"
 void nextBf() {
-  Buffer *buf;
-  int i;
-
-  for (i = 0; i < PREC_NUM; i++) {
-    buf = forwardBuffer(Firstbuf, Currentbuf);
+  for (int i = 0; i < PREC_NUM; i++) {
+    auto buf = forwardBuffer(Firstbuf, Currentbuf);
     if (!buf) {
       if (i == 0)
         return;
@@ -963,7 +955,6 @@ void backBf() {
       deleteTab(CurrentTab);
       displayBuffer(Currentbuf, B_FORCE_REDRAW);
     } else
-      /* FIXME: gettextize? */
       disp_message("Can't go back...", true);
     return;
   }
@@ -976,7 +967,7 @@ void backBf() {
 // DELETE_PREVBUF
 //"Delete previous buffer (mainly for local CGI-scripts)"
 void deletePrevBuf() {
-  Buffer *buf = Currentbuf->backBuffer;
+  auto buf = Currentbuf->backBuffer;
   if (buf) {
     CurrentTab->deleteBuffer(buf);
   }
@@ -993,7 +984,7 @@ void goHome() {
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
     Url p_url;
-    Buffer *cur_buf = Currentbuf;
+    auto cur_buf = Currentbuf;
     SKIP_BLANKS(url);
     url = Strnew(url_quote(url))->ptr;
     p_url = urlParse(url);
@@ -1095,9 +1086,7 @@ void pginfo() {
 // LIST
 //"Show all URLs referenced"
 void linkLst() {
-  Buffer *buf;
-
-  buf = link_list_panel(Currentbuf);
+  auto buf = link_list_panel(Currentbuf);
   if (buf != nullptr) {
     cmd_loadBuffer(buf, LB_NOLINK);
   }
@@ -1107,11 +1096,10 @@ void linkLst() {
 // COOKIE
 //"View cookie list"
 void cooLst() {
-  Buffer *buf;
-
-  buf = cookie_list_panel();
-  if (buf != nullptr)
+  auto buf = cookie_list_panel();
+  if (buf != nullptr) {
     cmd_loadBuffer(buf, LB_NOLINK);
+  }
 }
 
 /* History page */
@@ -1251,7 +1239,7 @@ void vwSrc() {
     return;
   }
 
-  Buffer *buf;
+  std::shared_ptr<Buffer> buf;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
     CurrentTab->currentBuffer(buf);
     displayBuffer(Currentbuf, B_NORMAL);
@@ -1261,7 +1249,7 @@ void vwSrc() {
     return;
   }
 
-  buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf = Buffer::create(INIT_BUFFER_WIDTH());
 
   if (Currentbuf->info->is_html_type()) {
     buf->info->type = "text/plain";
@@ -1304,7 +1292,7 @@ void reload() {
     disp_err_message("Can't reload stdin", true);
     return;
   }
-  auto sbuf = new Buffer(0);
+  auto sbuf = Buffer::create(0);
   *sbuf = *Currentbuf;
 
   multipart = 0;
@@ -1338,7 +1326,7 @@ void reload() {
     return;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
   // if (buf == NO_BUFFER) {
   //   displayBuffer(Currentbuf, B_NORMAL);
@@ -1700,7 +1688,6 @@ void tabL() {
 // DOWNLOAD_LIST
 //"Display downloads panel"
 void ldDL() {
-  Buffer *buf;
   int replace = false, new_tab = false;
   int reload;
 
@@ -1716,7 +1703,7 @@ void ldDL() {
     return;
   }
   reload = checkDownloadList();
-  buf = DownloadListBuffer();
+  auto buf = DownloadListBuffer();
   if (!buf) {
     displayBuffer(Currentbuf, B_NORMAL);
     return;

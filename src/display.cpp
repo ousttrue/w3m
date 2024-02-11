@@ -76,17 +76,18 @@ static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 
-static Buffer *save_current_buf = NULL;
+static std::shared_ptr<Buffer> save_current_buf;
 
-static void drawAnchorCursor(Buffer *buf);
+static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
-static void redrawNLine(Buffer *buf, int n);
+static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n);
 static Line *redrawLine(LineLayout *buf, Line *l, int i);
-static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos);
+static int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
+                            int bpos, int epos);
 static void do_effects(Lineprop m);
 
-static Str *make_lastline_link(Buffer *buf, const char *title,
-                               const char *url) {
+static Str *make_lastline_link(const std::shared_ptr<Buffer> &buf,
+                               const char *title, const char *url) {
   Str *s = NULL;
   Str *u;
   Url pu;
@@ -127,7 +128,7 @@ static Str *make_lastline_link(Buffer *buf, const char *title,
   return s;
 }
 
-static Str *make_lastline_message(Buffer *buf) {
+static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   Str *msg;
   Str *s = NULL;
   int sl = 0;
@@ -182,7 +183,7 @@ static Str *make_lastline_message(Buffer *buf) {
   return msg;
 }
 
-void displayBuffer(Buffer *buf, DisplayFlag mode) {
+void displayBuffer(const std::shared_ptr<Buffer> &buf, DisplayFlag mode) {
   if (!buf) {
     return;
   }
@@ -260,8 +261,9 @@ void displayBuffer(Buffer *buf, DisplayFlag mode) {
   }
 }
 
-static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
-                              int prevhseq, int tline, int eline, int active) {
+static void drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
+                              AnchorList *al, int hseq, int prevhseq, int tline,
+                              int eline, int active) {
   auto l = buf->layout.topLine;
   for (size_t j = 0; j < al->size(); j++) {
     auto an = &al->anchors[j];
@@ -297,7 +299,7 @@ static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
   }
 }
 
-static void drawAnchorCursor(Buffer *buf) {
+static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   Anchor *an;
   int hseq, prevhseq;
   int tline, eline;
@@ -328,7 +330,7 @@ static void drawAnchorCursor(Buffer *buf) {
   buf->layout.hmarklist->prevhseq = hseq;
 }
 
-static void redrawNLine(Buffer *buf, int n) {
+static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
   Line *l;
   int i;
 
@@ -485,7 +487,8 @@ static Line *redrawLine(LineLayout *buf, Line *l, int i) {
   return l;
 }
 
-static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
+static int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
+                            int bpos, int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->layout.currentColumn;
   char *p;
@@ -676,7 +679,7 @@ void addChar(char c, Lineprop mode) { addMChar(&c, mode, 1); }
  * Command functions: These functions are called with a keystroke.
  */
 void nscroll(int n, DisplayFlag mode) {
-  Buffer *buf = Currentbuf;
+  auto buf = Currentbuf;
   Line *top = buf->layout.topLine, *cur = buf->layout.currentLine;
   int lnum, tlnum, llnum, diff_n;
 

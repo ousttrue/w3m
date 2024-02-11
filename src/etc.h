@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <unistd.h>
+#include <memory>
 
 extern char *personal_document_root;
 
@@ -16,6 +17,4 @@ struct Str;
 Str *myExtCommand(const char *cmd, const char *arg, int redirect);
 Str *myEditor(const char *cmd, const char *file, int line);
 struct Buffer;
-const char *last_modified(Buffer *buf);
-
-
+const char *last_modified(const std::shared_ptr<Buffer> &buf);

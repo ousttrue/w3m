@@ -2,6 +2,7 @@
 #include "url.h"
 #include <optional>
 #include <gc_cpp.h>
+#include <memory>
 
 struct Buffer;
 struct FormList;
@@ -11,10 +12,10 @@ struct TabBuffer : public gc_cleanup {
   TabBuffer *prevTab = nullptr;
 
 private:
-  Buffer *_currentBuffer = nullptr;
+  std::shared_ptr<Buffer> _currentBuffer;
 
 public:
-  Buffer *firstBuffer = nullptr;
+  std::shared_ptr<Buffer> firstBuffer;
   short x1 = 0;
   short x2 = 0;
   short y = 0;
@@ -24,24 +25,26 @@ public:
   TabBuffer(const TabBuffer &) = delete;
   TabBuffer &operator=(const TabBuffer &) = delete;
 
-  Buffer *currentBuffer() { return _currentBuffer; }
-  void currentBuffer(Buffer *newbuf, bool first = false) {
+  std::shared_ptr<Buffer> currentBuffer() { return _currentBuffer; }
+  void currentBuffer(const std::shared_ptr<Buffer> &newbuf,
+                     bool first = false) {
     _currentBuffer = newbuf;
     if (first) {
       firstBuffer = newbuf;
     }
   }
 
-  void deleteBuffer(Buffer *delbuf);
-  Buffer *namedBuffer(const char *name);
-  void repBuffer(Buffer *oldbuf, Buffer *buf);
-  void pushBuffer(Buffer *buf);
-  bool select(char cmd, Buffer *buf);
+  void deleteBuffer(const std::shared_ptr<Buffer> &delbuf);
+  const std::shared_ptr<Buffer> &namedBuffer(const char *name);
+  void repBuffer(const std::shared_ptr<Buffer> &oldbuf,
+                 const std::shared_ptr<Buffer> &buf);
+  void pushBuffer(const std::shared_ptr<Buffer> &buf);
+  bool select(char cmd, const std::shared_ptr<Buffer> &buf);
 
   void cmd_loadURL(const char *url, std::optional<Url> current,
                    const char *referer, FormList *request);
 
-  static void init(Buffer *newbuf);
+  static void init(const std::shared_ptr<Buffer> &newbuf);
   static void _newT();
 };
 #define NO_TABBUFFER ((TabBuffer *)1)

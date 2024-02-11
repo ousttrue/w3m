@@ -69,7 +69,7 @@ static char *convert_size3(long long size) {
   return tmp->ptr;
 }
 
-Buffer *DownloadListBuffer(void) {
+std::shared_ptr<Buffer> DownloadListBuffer(void) {
   DownloadList *d;
   Str *src = nullptr;
   struct stat st;

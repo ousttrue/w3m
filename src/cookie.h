@@ -80,4 +80,4 @@ int check_cookie_accept_domain(const char *domain);
 
 void process_http_cookie(const Url *pu, Str *lineBuf2);
 struct Buffer;
-Buffer *cookie_list_panel();
+std::shared_ptr<Buffer> cookie_list_panel();

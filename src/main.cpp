@@ -301,13 +301,14 @@ static void SigPipe(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
+static std::shared_ptr<Buffer> loadNormalBuf(const std::shared_ptr<Buffer> &buf,
+                                             int renderframe) {
   CurrentTab->pushBuffer(buf);
   return buf;
 }
 
-Buffer *loadLink(const char *url, const char *target, const char *referer,
-                 FormList *request) {
+std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
+                                 const char *referer, FormList *request) {
   message(Sprintf("loading %s", url)->ptr, 0, 0);
   refresh(term_io());
 
@@ -328,7 +329,7 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
     return nullptr;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
 
   auto pu = urlParse(url, base);
@@ -460,7 +461,6 @@ static void do_submit(FormItemList *fi, Anchor *a) {
     Strcat(tmp2, tmp);
     loadLink(tmp2->ptr, a->target, nullptr, nullptr);
   } else if (fi->parent->method == FORM_METHOD_POST) {
-    Buffer *buf;
     if (multipart) {
       struct stat st;
       stat(fi->parent->body, &st);
@@ -469,7 +469,7 @@ static void do_submit(FormItemList *fi, Anchor *a) {
       fi->parent->body = tmp->ptr;
       fi->parent->length = tmp->length;
     }
-    buf = loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
+    auto buf = loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
     if (multipart) {
       unlink(fi->parent->body);
     }
@@ -622,7 +622,7 @@ void _followForm(int submit) {
 }
 
 /* mark URL-like patterns as anchors */
-void chkURLBuffer(Buffer *buf) {
+void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
   static const char *url_like_pat[] = {
       "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
       "=\\-]",
@@ -647,17 +647,14 @@ void chkURLBuffer(Buffer *buf) {
 }
 
 void deleteFiles() {
-  Buffer *buf;
-  char *f;
-
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
     while (Firstbuf /*&& Firstbuf != NO_BUFFER*/) {
-      buf = Firstbuf->backBuffer;
+      auto buf = Firstbuf->backBuffer;
       discardBuffer(Firstbuf);
       Firstbuf = buf;
     }
   }
-  while ((f = popText(fileToDelete)) != nullptr) {
+  while (auto f = popText(fileToDelete)) {
     unlink(f);
   }
 }
@@ -729,7 +726,7 @@ void stopDownload(void) {
 }
 
 int main(int argc, char **argv) {
-  Buffer *newbuf = nullptr;
+  std::shared_ptr<Buffer> newbuf;
   char *p;
   int i;
   char *line_str = nullptr;
@@ -978,7 +975,7 @@ int main(int argc, char **argv) {
     if (load_bookmark) {
       auto res = loadGeneralFile(BookmarkFile, {}, {.referer = NO_REFERER});
       if (res) {
-        newbuf = new Buffer(INIT_BUFFER_WIDTH());
+        newbuf = Buffer::create(INIT_BUFFER_WIDTH());
         newbuf->info = res;
       } else {
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
@@ -999,7 +996,7 @@ int main(int argc, char **argv) {
                (p = getenv("WWW_HOME")) != nullptr) {
       auto res = loadGeneralFile(p, {}, {.referer = NO_REFERER});
       if (res) {
-        newbuf = new Buffer(INIT_BUFFER_WIDTH());
+        newbuf = Buffer::create(INIT_BUFFER_WIDTH());
         newbuf->info = res;
         // if (newbuf != NO_BUFFER)
         { pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str()); }
@@ -1058,7 +1055,7 @@ int main(int argc, char **argv) {
         }
         auto res = loadGeneralFile(url, {}, {.referer = NO_REFERER}, request);
         if (res) {
-          newbuf = new Buffer(INIT_BUFFER_WIDTH());
+          newbuf = Buffer::create(INIT_BUFFER_WIDTH());
           newbuf->info = res;
         }
       }
@@ -1110,7 +1107,7 @@ int main(int argc, char **argv) {
       nTab = 1;
     }
     if (!Firstbuf /*|| Firstbuf == NO_BUFFER*/) {
-      CurrentTab->currentBuffer(new Buffer(INIT_BUFFER_WIDTH()), true);
+      CurrentTab->currentBuffer(Buffer::create(INIT_BUFFER_WIDTH()), true);
       Currentbuf->layout.title = DOWNLOAD_LIST_TITLE;
     } else {
       CurrentTab->currentBuffer(Firstbuf);

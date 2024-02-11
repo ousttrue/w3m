@@ -64,21 +64,21 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
   return NULL;
 }
 
-Anchor *retrieveCurrentAnchor(Buffer *buf) {
+Anchor *retrieveCurrentAnchor(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.currentLine || !buf->layout.href)
     return NULL;
   return buf->layout.href->retrieveAnchor(buf->layout.currentLine->linenumber,
                                           buf->layout.pos);
 }
 
-Anchor *retrieveCurrentImg(Buffer *buf) {
+Anchor *retrieveCurrentImg(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.currentLine || !buf->layout.img)
     return NULL;
   return buf->layout.img->retrieveAnchor(buf->layout.currentLine->linenumber,
                                          buf->layout.pos);
 }
 
-Anchor *retrieveCurrentForm(Buffer *buf) {
+Anchor *retrieveCurrentForm(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.currentLine || !buf->layout.formitem)
     return NULL;
   return buf->layout.formitem->retrieveAnchor(
@@ -99,8 +99,9 @@ Anchor *searchAnchor(AnchorList *al, const char *str) {
   return NULL;
 }
 
-static Anchor *_put_anchor_all(Buffer *buf, const char *p1, const char *p2,
-                               int line, int pos) {
+static Anchor *_put_anchor_all(const std::shared_ptr<Buffer> &buf,
+                               const char *p1, const char *p2, int line,
+                               int pos) {
   Str *tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
@@ -121,7 +122,7 @@ static void reseq_anchor0(AnchorList *al, short *seqmap) {
 }
 
 /* renumber anchor */
-static void reseq_anchor(Buffer *buf) {
+static void reseq_anchor(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.href)
     return;
 
@@ -173,10 +174,11 @@ static void reseq_anchor(Buffer *buf) {
   reseq_anchor0(buf->layout.formitem, seqmap.data());
 }
 
-static const char *reAnchorPos(Buffer *buf, Line *l, const char *p1,
-                               const char *p2,
-                               Anchor *(*anchorproc)(Buffer *, const char *,
-                                                     const char *, int, int)) {
+static const char *
+reAnchorPos(const std::shared_ptr<Buffer> &buf, Line *l, const char *p1,
+            const char *p2,
+            Anchor *(*anchorproc)(const std::shared_ptr<Buffer> &, const char *,
+                                  const char *, int, int)) {
   Anchor *a;
   int spos, epos;
   int i;
@@ -216,15 +218,17 @@ static const char *reAnchorPos(Buffer *buf, Line *l, const char *p1,
   return p2;
 }
 
-void reAnchorWord(Buffer *buf, Line *l, int spos, int epos) {
+void reAnchorWord(const std::shared_ptr<Buffer> &buf, Line *l, int spos,
+                  int epos) {
   reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static const char *reAnchorAny(Buffer *buf, const char *re,
-                               Anchor *(*anchorproc)(Buffer *, const char *,
-                                                     const char *, int, int)) {
+static const char *
+reAnchorAny(const std::shared_ptr<Buffer> &buf, const char *re,
+            Anchor *(*anchorproc)(const std::shared_ptr<Buffer> &, const char *,
+                                  const char *, int, int)) {
   Line *l;
   const char *p = NULL, *p1, *p2;
 
@@ -255,7 +259,7 @@ static const char *reAnchorAny(Buffer *buf, const char *re,
   return NULL;
 }
 
-const char *reAnchor(Buffer *buf, const char *re) {
+const char *reAnchor(const std::shared_ptr<Buffer> &buf, const char *re) {
   return reAnchorAny(buf, re, _put_anchor_all);
 }
 
@@ -352,7 +356,8 @@ void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
   }
 }
 
-const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
+const char *getAnchorText(const std::shared_ptr<Buffer> &buf, AnchorList *al,
+                          Anchor *a) {
   int hseq;
   Line *l;
   Str *tmp = NULL;
@@ -387,7 +392,7 @@ const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
   return tmp ? tmp->ptr : NULL;
 }
 
-Buffer *link_list_panel(Buffer *buf) {
+std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
   LinkList *l;
   AnchorList *al;
   Anchor *a;

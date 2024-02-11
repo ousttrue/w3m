@@ -1,6 +1,7 @@
 #pragma once
 #include <unistd.h>
 #include <time.h>
+#include <memory>
 
 struct DownloadList {
   pid_t pid;
@@ -26,4 +27,4 @@ int checkDownloadList(void);
 bool popAddDownloadList();
 void ldDL();
 struct Buffer;
-Buffer *DownloadListBuffer(void);
+std::shared_ptr<Buffer> DownloadListBuffer(void);

@@ -58,16 +58,18 @@ HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
 void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line, int pos,
                          int shift);
 struct Buffer;
-const char *reAnchor(Buffer *buf, const char *re);
-Anchor *retrieveCurrentAnchor(Buffer *buf);
-Anchor *retrieveCurrentImg(Buffer *buf);
-Anchor *retrieveCurrentForm(Buffer *buf);
+const char *reAnchor(const std::shared_ptr<Buffer> &buf, const char *re);
+Anchor *retrieveCurrentAnchor(const std::shared_ptr<Buffer> &buf);
+Anchor *retrieveCurrentImg(const std::shared_ptr<Buffer> &buf);
+Anchor *retrieveCurrentForm(const std::shared_ptr<Buffer> &buf);
 struct Line;
-void reAnchorWord(Buffer *buf, Line *l, int spos, int epos);
+void reAnchorWord(const std::shared_ptr<Buffer> &buf, Line *l, int spos,
+                  int epos);
 struct AnchorList;
 
-const char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a);
-Buffer *link_list_panel(Buffer *buf);
+const char *getAnchorText(const std::shared_ptr<Buffer> &buf, AnchorList *al,
+                          Anchor *a);
+std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf);
 
 const char *html_quote(const char *str);
 const char *html_unquote(const char *str);

@@ -3699,8 +3699,8 @@ static Str *textlist_feed(void) {
     outp = (Lineprop *)New_Reuse(Lineprop, outp, out_size);                    \
   }
 
-static void HTMLlineproc2body(HttpResponse *res,
-                              LineLayout *layout, Str *(*feed)(), int llimit) {
+static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
+                              Str *(*feed)(), int llimit) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -4118,8 +4118,7 @@ static void HTMLlineproc2body(HttpResponse *res,
     layout->addMultirowsForm(layout->formitem);
   }
 }
-void HTMLlineproc2(HttpResponse *res, LineLayout *layout,
-                   TextLineList *tl) {
+void HTMLlineproc2(HttpResponse *res, LineLayout *layout, TextLineList *tl) {
   _tl_lp2 = tl->first;
   HTMLlineproc2body(res, layout, textlist_feed, -1);
 }
@@ -4133,8 +4132,7 @@ void HTMLlineproc2(HttpResponse *res, LineLayout *layout,
 //   loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
 // }
 
-void loadHTMLstream(HttpResponse *res, LineLayout *layout,
-                    bool internal) {
+void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
 
   auto src = res->createSourceFile();
 
@@ -4410,8 +4408,8 @@ void loadBuffer(HttpResponse *res, LineLayout *layout) {
   res->type = "text/plain";
 }
 
-Buffer *loadHTMLString(Str *page) {
-  auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
+std::shared_ptr<Buffer> loadHTMLString(Str *page) {
+  auto newBuf = Buffer::create(INIT_BUFFER_WIDTH());
   newBuf->info->f = UrlStream(SCM_LOCAL, newStrStream(page->ptr));
 
   loadHTMLstream(newBuf->info.get(), &newBuf->layout, true);
@@ -4420,7 +4418,7 @@ Buffer *loadHTMLString(Str *page) {
 }
 
 #define SHELLBUFFERNAME "*Shellout*"
-Buffer *getshell(const char *cmd) {
+std::shared_ptr<Buffer> getshell(const char *cmd) {
   if (cmd == nullptr || *cmd == '\0') {
     return nullptr;
   }
@@ -4430,12 +4428,10 @@ Buffer *getshell(const char *cmd) {
     return nullptr;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info->f = UrlStream(SCM_UNKNOWN, newFileStream(f, pclose));
   loadBuffer(buf->info.get(), &buf->layout);
   buf->info->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }
-
-

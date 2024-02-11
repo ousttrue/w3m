@@ -35,7 +35,7 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-void TabBuffer::init(Buffer *newbuf) {
+void TabBuffer::init(const std::shared_ptr<Buffer> &newbuf) {
   FirstTab = LastTab = CurrentTab = new TabBuffer;
   if (!FirstTab) {
     fprintf(stderr, "%s\n", "Can't allocated memory");
@@ -106,7 +106,6 @@ void calcTabPos(void) {
 }
 
 TabBuffer *deleteTab(TabBuffer *tab) {
-  Buffer *buf, *next;
 
   if (nTab <= 1)
     return FirstTab;
@@ -125,9 +124,9 @@ TabBuffer *deleteTab(TabBuffer *tab) {
       CurrentTab = tab->nextTab;
   }
   nTab--;
-  buf = tab->firstBuffer;
+  auto buf = tab->firstBuffer;
   while (buf /*&& buf != NO_BUFFER*/) {
-    next = buf->backBuffer;
+    auto next = buf->backBuffer;
     discardBuffer(buf);
     buf = next;
   }
@@ -137,7 +136,7 @@ TabBuffer *deleteTab(TabBuffer *tab) {
 /*
  * deleteBuffer: delete buffer
  */
-void TabBuffer::deleteBuffer(Buffer *delbuf) {
+void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   if (!delbuf) {
     return;
   }
@@ -203,7 +202,7 @@ void gotoLabel(const char *label) {
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
   }
-  auto buf = new Buffer(Currentbuf->layout.width);
+  auto buf = Buffer::create(Currentbuf->layout.width);
   *buf = *Currentbuf;
   for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
@@ -264,13 +263,11 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
     return;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
 
-  // if (buf != NO_BUFFER) 
-  {
-    this->pushBuffer(buf);
-  }
+  // if (buf != NO_BUFFER)
+  { this->pushBuffer(buf); }
 
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -332,7 +329,7 @@ void goURL0(const char *prompt, int relative) {
 
   auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
-  Buffer *cur_buf = Currentbuf;
+  auto cur_buf = Currentbuf;
   CurrentTab->cmd_loadURL(url, current, referer, nullptr);
   if (Currentbuf != cur_buf) { /* success */
     pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
@@ -340,14 +337,12 @@ void goURL0(const char *prompt, int relative) {
 }
 
 void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
-  Buffer *buf;
-
   if (tab == CurrentTab) {
     goURL0(prompt, relative);
     return;
   }
   TabBuffer::_newT();
-  buf = Currentbuf;
+  auto buf = Currentbuf;
   goURL0(prompt, relative);
   if (tab == nullptr) {
     if (buf != Currentbuf)
@@ -356,9 +351,8 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
       deleteTab(CurrentTab);
   } else if (buf != Currentbuf) {
     /* buf <- p <- ... <- Currentbuf = c */
-    Buffer *c, *p;
-
-    c = Currentbuf;
+    auto c = Currentbuf;
+    std::shared_ptr<Buffer> p;
     if ((p = forwardBuffer(c, buf)))
       p->backBuffer = nullptr;
     Firstbuf = buf;
@@ -372,7 +366,7 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void TabBuffer::pushBuffer(Buffer *buf) {
+void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
   if (Firstbuf == Currentbuf) {
     buf->backBuffer = Firstbuf;
     Firstbuf = buf;
@@ -386,7 +380,7 @@ void TabBuffer::pushBuffer(Buffer *buf) {
 
 void TabBuffer::_newT() {
   auto tag = new TabBuffer();
-  auto buf = new Buffer(Currentbuf->layout.width);
+  auto buf = Buffer::create(Currentbuf->layout.width);
   *buf = *Currentbuf;
   buf->backBuffer = nullptr;
   for (int i = 0; i < MAX_LB; i++) {
@@ -416,10 +410,7 @@ void saveBufferInfo() {
 }
 
 void followTab(TabBuffer *tab) {
-  Buffer *buf;
-  Anchor *a;
-
-  a = retrieveCurrentAnchor(Currentbuf);
+  auto a = retrieveCurrentAnchor(Currentbuf);
   if (a == nullptr)
     return;
 
@@ -430,7 +421,7 @@ void followTab(TabBuffer *tab) {
     return;
   }
   TabBuffer::_newT();
-  buf = Currentbuf;
+  auto buf = Currentbuf;
   check_target = false;
   followA();
   check_target = true;
@@ -441,9 +432,8 @@ void followTab(TabBuffer *tab) {
       deleteTab(CurrentTab);
   } else if (buf != Currentbuf) {
     /* buf <- p <- ... <- Currentbuf = c */
-    Buffer *c, *p;
-
-    c = Currentbuf;
+    auto c = Currentbuf;
+    std::shared_ptr<Buffer> p;
     if ((p = forwardBuffer(c, buf)))
       p->backBuffer = nullptr;
     Firstbuf = buf;
@@ -470,7 +460,8 @@ void RESTORE_BUFPOSITION(const LineLayout &sbufp) {
 /*
  * namedBuffer: Select buffer which have specified name
  */
-Buffer *namedBuffer(Buffer *first, char *name) {
+std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
+                                    char *name) {
   if (first->layout.title == name) {
     return first;
   }
@@ -482,12 +473,13 @@ Buffer *namedBuffer(Buffer *first, char *name) {
   return nullptr;
 }
 
-void TabBuffer::repBuffer(Buffer *oldbuf, Buffer *buf) {
+void TabBuffer::repBuffer(const std::shared_ptr<Buffer> &oldbuf,
+                          const std::shared_ptr<Buffer> &buf) {
   Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
   _currentBuffer = buf;
 }
 
-bool TabBuffer::select(char cmd, Buffer *buf) {
+bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
   switch (cmd) {
   case 'B':
     return true;

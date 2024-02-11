@@ -29,7 +29,7 @@ static int mergeHistory(Hist *ours, Hist *theirs) {
   return 0;
 }
 
-Buffer *historyBuffer(Hist *hist) {
+std::shared_ptr<Buffer> historyBuffer(Hist *hist) {
   Str *src = Strnew();
   HistItem *item;
   const char *p, *q;

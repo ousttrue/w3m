@@ -1,6 +1,7 @@
 #pragma once
 #include "lineprop.h"
 #include <stddef.h>
+#include <memory>
 
 extern bool displayLink;
 extern bool showLineNum;
@@ -18,7 +19,7 @@ enum DisplayFlag {
 };
 
 struct Buffer;
-void displayBuffer(Buffer *buf, DisplayFlag mode);
+void displayBuffer(const std::shared_ptr<Buffer> &buf, DisplayFlag mode);
 
 void fmInit(void);
 void fmTerm(void);

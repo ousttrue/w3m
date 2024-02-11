@@ -78,14 +78,14 @@ void LineLayout::gotoLine(int n) {
     return;
 
   if (l->linenumber > n) {
-    sprintf(msg, "First line is #%ld", l->linenumber);
+    snprintf(msg, sizeof(msg), "First line is #%ld", l->linenumber);
     set_delayed_message(msg);
     this->topLine = this->currentLine = l;
     return;
   }
   if (this->lastLine->linenumber < n) {
     l = this->lastLine;
-    sprintf(msg, "Last line is #%ld", this->lastLine->linenumber);
+    snprintf(msg, sizeof(msg), "Last line is #%ld", this->lastLine->linenumber);
     set_delayed_message(msg);
     this->currentLine = l;
     this->topLine =
@@ -359,7 +359,7 @@ void LineLayout::gotoRealLine(int n) {
 
   if (l->real_linenumber > n) {
     char msg[36];
-    sprintf(msg, "First line is #%ld", l->real_linenumber);
+    snprintf(msg, sizeof(msg), "First line is #%ld", l->real_linenumber);
     set_delayed_message(msg);
     this->topLine = this->currentLine = l;
     return;
@@ -368,7 +368,8 @@ void LineLayout::gotoRealLine(int n) {
   if (this->lastLine->real_linenumber < n) {
     l = this->lastLine;
     char msg[36];
-    sprintf(msg, "Last line is #%ld", this->lastLine->real_linenumber);
+    snprintf(msg, sizeof(msg), "Last line is #%ld",
+             this->lastLine->real_linenumber);
     set_delayed_message(msg);
     this->currentLine = l;
     this->topLine =
@@ -524,4 +525,3 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
 Anchor *LineLayout::searchURLLabel(const char *url) {
   return searchAnchor(this->name, url);
 }
-

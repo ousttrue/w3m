@@ -82,7 +82,7 @@ char *strerror(int errno) {
 #endif /* not HAVE_STRERROR */
 
 /* get last modified time */
-const char *last_modified(Buffer *buf) {
+const char *last_modified(const std::shared_ptr<Buffer> &buf) {
   TextListItem *ti;
   struct stat st;
 

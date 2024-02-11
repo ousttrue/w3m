@@ -54,8 +54,8 @@ Buffer &Buffer::operator=(const Buffer &src) {
 /*
  * Create null buffer
  */
-Buffer *nullBuffer(void) {
-  auto b = new Buffer(COLS);
+std::shared_ptr<Buffer> nullBuffer(void) {
+  auto b = Buffer::create(COLS);
   b->layout.title = "*Null*";
   return b;
 }
@@ -64,7 +64,7 @@ Buffer *nullBuffer(void) {
  * discardBuffer: free buffer structure
  */
 
-void discardBuffer(Buffer *buf) {
+void discardBuffer(const std::shared_ptr<Buffer> &buf) {
   buf->layout.clearBuffer();
   for (int i = 0; i < MAX_LB; i++) {
     auto b = buf->linkBuffer[i];
@@ -80,18 +80,22 @@ void discardBuffer(Buffer *buf) {
 /*
  * replaceBuffer: replace buffer
  */
-Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf) {
-  Buffer *buf;
+std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &first,
+                                      const std::shared_ptr<Buffer> &delbuf,
+                                      const std::shared_ptr<Buffer> &newbuf) {
 
   if (delbuf == nullptr) {
     newbuf->backBuffer = first;
     return newbuf;
   }
+
   if (first == delbuf) {
     newbuf->backBuffer = delbuf->backBuffer;
     discardBuffer(delbuf);
     return newbuf;
   }
+
+  std::shared_ptr<Buffer> buf;
   if (delbuf && (buf = forwardBuffer(first, delbuf))) {
     buf->backBuffer = newbuf;
     newbuf->backBuffer = delbuf->backBuffer;
@@ -102,9 +106,10 @@ Buffer *replaceBuffer(Buffer *first, Buffer *delbuf, Buffer *newbuf) {
   return newbuf;
 }
 
-Buffer *nthBuffer(Buffer *firstbuf, int n) {
+std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
+                                  int n) {
   int i;
-  Buffer *buf = firstbuf;
+  std::shared_ptr<Buffer> buf;
 
   if (n < 0)
     return firstbuf;
@@ -116,7 +121,7 @@ Buffer *nthBuffer(Buffer *firstbuf, int n) {
   return buf;
 }
 
-static void writeBufferName(Buffer *buf, int n) {
+static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
   int all = buf->layout.allLine;
   if (all == 0 && buf->layout.lastLine != nullptr) {
     all = buf->layout.lastLine->linenumber;
@@ -145,9 +150,11 @@ static void writeBufferName(Buffer *buf, int n) {
   addnstr_sup(msg->ptr, COLS - 1);
 }
 
-static Buffer *listBuffer(Buffer *top, Buffer *current) {
+static std::shared_ptr<Buffer>
+listBuffer(const std::shared_ptr<Buffer> &top,
+           const std::shared_ptr<Buffer> &current) {
   int i, c = 0;
-  Buffer *buf = top;
+  std::shared_ptr<Buffer> buf = top;
 
   move(0, 0);
   clrtobotx();
@@ -185,12 +192,14 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
 /*
  * Select buffer visually
  */
-Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
+std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
+                                     std::shared_ptr<Buffer> currentbuf,
+                                     char *selectchar) {
   int i, cpoint,                  /* Current Buffer Number */
       spoint,                     /* Current Line on Screen */
       maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
                                    * the * screen */
-  Buffer *buf, *topbuf;
+  std::shared_ptr<Buffer> buf, topbuf;
   char c;
 
   i = cpoint = 0;
@@ -289,7 +298,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(Buffer *buf) {
+void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.need_reshape) {
     return;
   }
@@ -305,7 +314,7 @@ void reshapeBuffer(Buffer *buf) {
     return;
   }
 
-  auto sbuf = new Buffer(0);
+  auto sbuf = Buffer::create(0);
   *sbuf = *buf;
   buf->layout.clearBuffer();
 
@@ -364,9 +373,9 @@ void reshapeBuffer(Buffer *buf) {
   formResetBuffer(&buf->layout, sbuf->layout.formitem);
 }
 
-Buffer *forwardBuffer(Buffer *first, Buffer *buf) {
-  Buffer *b;
-
+std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
+                                      const std::shared_ptr<Buffer> &buf) {
+  std::shared_ptr<Buffer> b;
   for (b = first; b != nullptr && b->backBuffer != buf; b = b->backBuffer)
     ;
   return b;
@@ -376,7 +385,8 @@ Buffer *forwardBuffer(Buffer *first, Buffer *buf) {
 #define fread1(d, f) (fread(&d, sizeof(d), 1, f) == 0)
 
 /* append links */
-static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
+static void append_link_info(const std::shared_ptr<Buffer> &buf, Str *html,
+                             LinkList *link) {
   LinkList *l;
   Url pu;
   const char *url;
@@ -413,7 +423,7 @@ static void append_link_info(Buffer *buf, Str *html, LinkList *link) {
 /*
  * information of current page and link
  */
-Buffer *page_info_panel(Buffer *buf) {
+std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
   Str *tmp = Strnew_size(1024);
   Anchor *a;
   Url pu;
@@ -421,7 +431,6 @@ Buffer *page_info_panel(Buffer *buf) {
   struct frameset *f_set = nullptr;
   int all;
   const char *p, *q;
-  Buffer *newbuf;
 
   Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\
@@ -511,12 +520,12 @@ Buffer *page_info_panel(Buffer *buf) {
   }
 
   Strcat_charp(tmp, "</body></html>");
-  newbuf = loadHTMLString(tmp);
+  auto newbuf = loadHTMLString(tmp);
   return newbuf;
 }
 
-void set_buffer_environ(Buffer *buf) {
-  static Buffer *prev_buf = nullptr;
+void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
+  static std::shared_ptr<Buffer> prev_buf;
   static Line *prev_line = nullptr;
   static int prev_pos = -1;
   Line *l;
@@ -571,7 +580,7 @@ void set_buffer_environ(Buffer *buf) {
   prev_pos = buf->layout.pos;
 }
 
-char *GetWord(Buffer *buf) {
+char *GetWord(const std::shared_ptr<Buffer> &buf) {
   int b, e;
   char *p;
   if ((p = getCurWord(buf, &b, &e)) != nullptr) {
@@ -580,7 +589,7 @@ char *GetWord(Buffer *buf) {
   return nullptr;
 }
 
-char *getCurWord(Buffer *buf, int *spos, int *epos) {
+char *getCurWord(const std::shared_ptr<Buffer> &buf, int *spos, int *epos) {
   Line *l = buf->layout.currentLine;
   int b;
 
@@ -610,7 +619,7 @@ char *getCurWord(Buffer *buf, int *spos, int *epos) {
   return &p[b];
 }
 
-void shiftvisualpos(Buffer *buf, int shift) {
+void shiftvisualpos(const std::shared_ptr<Buffer> &buf, int shift) {
   Line *l = buf->layout.currentLine;
   buf->layout.visualpos -= shift;
   if (buf->layout.visualpos - l->bwidth >= buf->layout.COLS)
@@ -643,7 +652,7 @@ void execdict(const char *word) {
     return;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
   // if (buf != NO_BUFFER)
   {
@@ -759,7 +768,7 @@ disp:
     offset = (n - 1) * (COLS - 1);
   disp_message(&s->ptr[offset], true);
 }
-int checkBackBuffer(Buffer *buf) {
+int checkBackBuffer(const std::shared_ptr<Buffer> &buf) {
   if (buf->backBuffer)
     return true;
 
@@ -1036,7 +1045,7 @@ _end:
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-int cur_real_linenumber(Buffer *buf) {
+int cur_real_linenumber(const std::shared_ptr<Buffer> &buf) {
   Line *l, *cur = buf->layout.currentLine;
   int n;
 
@@ -1281,7 +1290,8 @@ Str *Str_form_quote(Str *x) {
   return x;
 }
 
-static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
+static void _saveBuffer(const std::shared_ptr<Buffer> &buf, Line *l, FILE *f,
+                        int cont) {
 
   auto is_html = buf->info->is_html_type();
 
@@ -1297,11 +1307,11 @@ static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
   }
 }
 
-void saveBuffer(Buffer *buf, FILE *f, int cont) {
+void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont) {
   _saveBuffer(buf, buf->layout.firstLine, f, cont);
 }
 
-void cmd_loadBuffer(Buffer *buf, int linkid) {
+void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
   if (buf == nullptr) {
     disp_err_message("Can't load string", false);
   } else /*if (buf != NO_BUFFER)*/ {
@@ -1325,11 +1335,9 @@ void cmd_loadfile(const char *fn) {
     return;
   }
 
-  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
-  // if (buf != NO_BUFFER) 
-  {
-    CurrentTab->pushBuffer(buf);
-  }
+  // if (buf != NO_BUFFER)
+  { CurrentTab->pushBuffer(buf); }
   displayBuffer(Currentbuf, B_NORMAL);
 }

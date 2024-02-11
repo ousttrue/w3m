@@ -37,4 +37,4 @@ const char *w3m_conf_dir();
 const char *w3m_help_dir();
 void sync_with_option(void);
 struct Buffer;
-Buffer *load_option_panel(void);
+std::shared_ptr<Buffer> load_option_panel(void);

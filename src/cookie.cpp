@@ -624,7 +624,7 @@ void initCookie(void) {
   check_expired_cookies();
 }
 
-Buffer *cookie_list_panel(void) {
+std::shared_ptr<Buffer> cookie_list_panel(void) {
   /* FIXME: gettextize? */
   Str *src = Strnew_charp("<html><head><title>Cookies</title></head>"
                           "<body><center><b>Cookies</b></center>"
