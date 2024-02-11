@@ -77,7 +77,6 @@ void invoke_browser(const char *url);
 void _peekURL(int only_img);
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
 int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);
-void query_from_followform(Str **query, FormItemList *fi, int multipart);
 Str *Str_form_quote(Str *x);
 void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont);
 void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid);

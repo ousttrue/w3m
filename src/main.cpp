@@ -301,12 +301,6 @@ static void SigPipe(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
-static std::shared_ptr<Buffer> loadNormalBuf(const std::shared_ptr<Buffer> &buf,
-                                             int renderframe) {
-  CurrentTab->pushBuffer(buf);
-  return buf;
-}
-
 std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
                                  const char *referer, FormList *request) {
   message(Sprintf("loading %s", url)->ptr, 0, 0);
@@ -338,8 +332,10 @@ std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
   // if (buf == NO_BUFFER) {
   //   return nullptr;
   // }
-  if (!on_target) /* open link as an indivisual page */
-    return loadNormalBuf(buf, true);
+  if (!on_target) { /* open link as an indivisual page */
+    CurrentTab->pushBuffer(buf);
+    return buf;
+  }
 
   // if (do_download) /* download (thus no need to render frames) */
   //   return loadNormalBuf(buf, false);
@@ -349,12 +345,14 @@ std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
       !strcmp(target, "_top") /* this link is specified to be opened as an
                                  indivisual * page */
   ) {
-    return loadNormalBuf(buf, true);
+    CurrentTab->pushBuffer(buf);
+    return buf;
   }
   auto nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
   if (nfbuf == nullptr) {
     /* original page (that contains <frameset> tag) doesn't exist */
-    return loadNormalBuf(buf, true);
+    CurrentTab->pushBuffer(buf);
+    return buf;
   }
 
   {
