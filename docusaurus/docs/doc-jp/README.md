@@ -1,10 +1,10 @@
 # w3m
 
 ```
-	w3m: WWW wo Miru Tool  version 0.5.3	Jan 15, 2011
-		(C) Copyright by Akinori ITO
-				 Hironori SAKAMOTO
-				 Fumitoshi UKAI
+w3m: WWW wo Miru Tool  version 0.5.3	Jan 15, 2011
+(C) Copyright by Akinori ITO
+Hironori SAKAMOTO
+Fumitoshi UKAI
 ```
 
 ## はじめに
@@ -13,7 +13,7 @@
 テキストベース WWW ブラウザとしても使うことができます．
 
   w3m は，fm というページャをベースとして作られました．fm についての詳細
-は，STORY.html をお読みください．w3m のページャとしての基本的な特徴は，fm
+は，[STORY.html](./STORY) をお読みください．w3m のページャとしての基本的な特徴は，fm
 とほとんど同じです．
 
   w3m 独自の特徴としては，次のようなものがあります．
@@ -28,24 +28,25 @@
 
   現在の問題点は以下のようなものです．
 
-- オンラインマニュアルが貧弱．簡単な使い方については，MANUAL.html をお読み
+- オンラインマニュアルが貧弱．簡単な使い方については，[MANUAL.html](./MANUAL) をお読み
     ください．
 
   現在動作が確認されている OS は以下の通りです．
-      SunOS 4.1.x
-      HP-UX 9.x, 10.x
-      Solaris 2.5.x, 2.6, 8, 9
-      Linux 2.0.*/2.2.*/2.4.*/2.6.*
-      FreeBSD 2.2.8, 3.1, 3.2, 4.6
-      NetBSD/macppc, m68k
-      EWS4800 Rel.12.2 Rev.A
-      Digital UNIX: v3.2D, v4.0D
-      IRIX 5.3, IRIX 6.5
-      OS/2 with emx
-      Windows 9x/NT with Cygwin b20.1, 1.1.x, 1.3.x
-      MS-DOS with DJGPP and WATT32 packet driver
-      MacOS X Server
-      MacOS X 10.1, 10.2, 10.3, 10.4
+
+- SunOS 4.1.x
+- HP-UX 9.x, 10.x
+- Solaris 2.5.x, 2.6, 8, 9
+- Linux 2.0.*/2.2.*/2.4.*/2.6.*
+- FreeBSD 2.2.8, 3.1, 3.2, 4.6
+- NetBSD/macppc, m68k
+- EWS4800 Rel.12.2 Rev.A
+- Digital UNIX: v3.2D, v4.0D
+- IRIX 5.3, IRIX 6.5
+- OS/2 with emx
+- Windows 9x/NT with Cygwin b20.1, 1.1.x, 1.3.x
+- MS-DOS with DJGPP and WATT32 packet driver
+- MacOS X Server
+- MacOS X 10.1, 10.2, 10.3, 10.4
 
 ## インストール
 
@@ -58,7 +59,7 @@
     インストールしておく必要があります。
 
 ```sh
-## cp gc-6.1/include/gc.h PREFIX/include
+# cp gc-6.1/include/gc.h PREFIX/include
 ```
 
 - configure を実行する．
@@ -76,47 +77,54 @@
 - make install を実行
 
 ```sh
-## make install
+# make install
 ```
 
 以上でインストールは終わりです．
 
-機種ごとの注意点：
+## 機種ごとの注意点
 
-HP-UX
+### HP-UX
 	HP の C コンパイラ(gccでなく)でコンパイルする場合，
 	configure の
 
+```
 		Input your favorite C-compiler.
 		(Default: cc)
+```
 
 	に，cc -Aa -D_HPUX_SOURCE と答えてください．cc
 	だけだとコンパイルが通りません．gcc なら普通に
 	通りますが，バージョン古めの場合は -g を付けな
 	いでください．
 
-OS/2
+### OS/2
 	emx を使うことで w3m をコンパイルすることができます．
 	まず最初に
 
-	  cd gc
-	  make -f EMX_MAKEFILE
+```sh
+cd gc
+make -f EMX_MAKEFILE
+```
 
 	を実行して GC ライブラリをコンパイルしておいてから，w3m
 	本体をコンパイルします．なお，カラー表示が変になるらしい
 	ので，モノクロ用にコンパイルした方が良いでしょう．
 
-Windows
-	Windows で w3m を動かすためには，Windows 上の UNIX互換環境
-	である Cygwin(開発環境付き)が必要です．
-	詳細は README.cygwin を参照してください．
+### Windows
 
+Windows で w3m を動かすためには，Windows 上の UNIX互換環境
+である Cygwin(開発環境付き)が必要です．
+詳細は [README.cygwin](./README.cygwin) を参照してください．
 
 ## 著作権
 
 w3m の著作権は，伊藤彰則に属しています．
+
+```
 (C) Copyright 1994-2002 by Akinori Ito
 (C) Copyright 2002-2011 by Akinori Ito, Hironori Sakamoto, Fumitoshi Ukai
+```
 
 ## 配布条件
 
@@ -128,10 +136,10 @@ w3m の著作権は，伊藤彰則に属しています．
 ## 作者
 
 ```
-	伊藤 彰則
-	東北大学大学院工学研究科
-	aito@fw.ipsj.or.jp
+伊藤 彰則
+東北大学大学院工学研究科
+aito@fw.ipsj.or.jp
 ```
 
-This package is maintained for Debian `https://www.debian.org`
-forked from the original version `https://sourceforge.net/projects/w3m/`
+This package is maintained for Debian https://www.debian.org
+forked from the original version https://sourceforge.net/projects/w3m/
