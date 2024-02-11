@@ -355,20 +355,43 @@ Buffer *HttpResponse::page_loaded(Url url) {
   b->info = shared_from_this();
   // loadSomething(this, &b->layout);
   {
-    auto layout = &b->layout;
+    // auto layout = &b->layout;
     // Buffer *buf = src;
-    if (this->is_html_type()) {
-      loadHTMLstream(this, layout);
-    } else {
-      loadBuffer(this, layout);
+    // if (this->is_html_type()) {
+    //   loadHTMLstream(this, layout);
+    // } else {
+    //   loadBuffer(this, layout);
+    // }
+
+    auto src = this->createSourceFile();
+
+    if (this->f.stream->IStype() != IST_ENCODED) {
+      this->f.stream = newEncodedStream(this->f.stream, this->f.encoding);
     }
 
-    if (layout->title.empty() || layout->title[0] == '\0') {
-      layout->title = this->getHeader("Subject:");
-      if (layout->title.empty() && this->filename.size()) {
-        layout->title = lastFileName(this->filename.c_str());
+    while (true) {
+      auto _lineBuf2 = this->f.stream->StrmyISgets();
+      if (_lineBuf2.empty()) {
+        break;
       }
+      auto lineBuf2 = Strnew(_lineBuf2);
+
+      if (src)
+        Strfputs(lineBuf2, src);
     }
+    // res->type = "text/html";
+    // if (n_textarea)
+    // formResetBuffer(layout, layout->formitem);
+    if (src) {
+      fclose(src);
+    }
+
+    // if (layout->title.empty() || layout->title[0] == '\0') {
+    //   layout->title = this->getHeader("Subject:");
+    //   if (layout->title.empty() && this->filename.size()) {
+    //     layout->title = lastFileName(this->filename.c_str());
+    //   }
+    // }
 
     if (this->currentURL.schema == SCM_UNKNOWN) {
       this->currentURL.schema = this->f.schema;
@@ -379,30 +402,30 @@ Buffer *HttpResponse::page_loaded(Url url) {
     }
 
     // if (buf && buf != NO_BUFFER)
-    {
-      // this->real_schema = this->f.schema;
-      // this->real_type = real_type;
-      if (this->currentURL.label.size()) {
-        if (this->is_html_type()) {
-          auto a = layout->searchURLLabel(this->currentURL.label.c_str());
-          if (a != nullptr) {
-            layout->gotoLine(a->start.line);
-            if (label_topline)
-              layout->topLine = layout->lineSkip(
-                  layout->topLine,
-                  layout->currentLine->linenumber - layout->topLine->linenumber,
-                  false);
-            layout->pos = a->start.pos;
-            layout->arrangeCursor();
-          }
-        } else { /* plain text */
-          int l = atoi(this->currentURL.label.c_str());
-          layout->gotoRealLine(l);
-          layout->pos = 0;
-          layout->arrangeCursor();
-        }
-      }
-    }
+    // {
+    //   // this->real_schema = this->f.schema;
+    //   // this->real_type = real_type;
+    //   if (this->currentURL.label.size()) {
+    //     if (this->is_html_type()) {
+    //       auto a = layout->searchURLLabel(this->currentURL.label.c_str());
+    //       if (a != nullptr) {
+    //         layout->gotoLine(a->start.line);
+    //         if (label_topline)
+    //           layout->topLine = layout->lineSkip(
+    //               layout->topLine,
+    //               layout->currentLine->linenumber -
+    //               layout->topLine->linenumber, false);
+    //         layout->pos = a->start.pos;
+    //         layout->arrangeCursor();
+    //       }
+    //     } else { /* plain text */
+    //       int l = atoi(this->currentURL.label.c_str());
+    //       layout->gotoRealLine(l);
+    //       layout->pos = 0;
+    //       layout->arrangeCursor();
+    //     }
+    //   }
+    // }
   }
 
   preFormUpdateBuffer(b);
