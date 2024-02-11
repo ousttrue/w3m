@@ -831,3 +831,51 @@ void LineLayout::_movR(int n, int m) {
   }
   displayBuffer(B_NORMAL);
 }
+
+int LineLayout::prev_nonnull_line(Line *line) {
+  Line *l;
+  for (l = line; l != nullptr && l->len == 0; l = l->prev)
+    ;
+  if (l == nullptr || l->len == 0)
+    return -1;
+
+  this->currentLine = l;
+  if (l != line)
+    this->pos = this->currentLine->len;
+  return 0;
+}
+
+int LineLayout::next_nonnull_line(Line *line) {
+  Line *l;
+  for (l = line; l != nullptr && l->len == 0; l = l->next)
+    ;
+  if (l == nullptr || l->len == 0)
+    return -1;
+
+  this->currentLine = l;
+  if (l != line)
+    this->pos = 0;
+  return 0;
+}
+
+/* Go to specified line */
+void LineLayout::_goLine(const char *l, int prec_num) {
+  if (l == nullptr || *l == '\0' || this->currentLine == nullptr) {
+    displayBuffer(B_FORCE_REDRAW);
+    return;
+  }
+
+  this->pos = 0;
+  if (((*l == '^') || (*l == '$')) && prec_num) {
+    this->gotoRealLine(prec_num);
+  } else if (*l == '^') {
+    this->topLine = this->currentLine = this->firstLine;
+  } else if (*l == '$') {
+    this->topLine =
+        this->lineSkip(this->lastLine, -(this->LINES + 1) / 2, true);
+    this->currentLine = this->lastLine;
+  } else
+    this->gotoRealLine(atoi(l));
+  this->arrangeCursor();
+  displayBuffer(B_FORCE_REDRAW);
+}

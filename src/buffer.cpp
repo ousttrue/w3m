@@ -761,63 +761,6 @@ int cur_real_linenumber(const std::shared_ptr<Buffer> &buf) {
   return n;
 }
 
-/* movLW, movRW */
-/*
- * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
- * 1999 09:29:56 +0900
- */
-
-int prev_nonnull_line(Line *line) {
-  Line *l;
-
-  for (l = line; l != nullptr && l->len == 0; l = l->prev)
-    ;
-  if (l == nullptr || l->len == 0)
-    return -1;
-
-  Currentbuf->layout.currentLine = l;
-  if (l != line)
-    Currentbuf->layout.pos = Currentbuf->layout.currentLine->len;
-  return 0;
-}
-
-int next_nonnull_line(Line *line) {
-  Line *l;
-
-  for (l = line; l != nullptr && l->len == 0; l = l->next)
-    ;
-
-  if (l == nullptr || l->len == 0)
-    return -1;
-
-  Currentbuf->layout.currentLine = l;
-  if (l != line)
-    Currentbuf->layout.pos = 0;
-  return 0;
-}
-
-/* Go to specified line */
-void _goLine(const char *l) {
-  if (l == nullptr || *l == '\0' || Currentbuf->layout.currentLine == nullptr) {
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    return;
-  }
-  Currentbuf->layout.pos = 0;
-  if (((*l == '^') || (*l == '$')) && prec_num) {
-    Currentbuf->layout.gotoRealLine(prec_num);
-  } else if (*l == '^') {
-    Currentbuf->layout.topLine = Currentbuf->layout.currentLine =
-        Currentbuf->layout.firstLine;
-  } else if (*l == '$') {
-    Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
-        Currentbuf->layout.lastLine, -(Currentbuf->layout.LINES + 1) / 2, true);
-    Currentbuf->layout.currentLine = Currentbuf->layout.lastLine;
-  } else
-    Currentbuf->layout.gotoRealLine(atoi(l));
-  Currentbuf->layout.arrangeCursor();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
 #define conv_form_encoding(val, fi, buf) (val)
 void query_from_followform(Str **query, FormItemList *fi, int multipart) {
   FormItemList *f2;

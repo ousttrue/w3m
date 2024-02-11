@@ -120,6 +120,9 @@ struct LineLayout {
   void _movD(int n, int m);
   void _movU(int n, int m);
   void _movR(int n, int m);
+  int prev_nonnull_line(Line *line);
+  int next_nonnull_line(Line *line);
+  void _goLine(const char *l, int prec_num);
 
   //
   // Anchors

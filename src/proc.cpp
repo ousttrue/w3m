@@ -450,7 +450,8 @@ void movLW() {
     pline = Currentbuf->layout.currentLine;
     ppos = Currentbuf->layout.pos;
 
-    if (prev_nonnull_line(Currentbuf->layout.currentLine) < 0)
+    if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
+            Currentbuf->layout.currentLine) < 0)
       goto end;
 
     while (1) {
@@ -466,7 +467,8 @@ void movLW() {
       }
       if (Currentbuf->layout.pos > 0)
         break;
-      if (prev_nonnull_line(Currentbuf->layout.currentLine->prev) < 0) {
+      if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
+              Currentbuf->layout.currentLine->prev) < 0) {
         Currentbuf->layout.currentLine = pline;
         Currentbuf->layout.pos = ppos;
         goto end;
@@ -505,7 +507,8 @@ void movRW() {
     pline = Currentbuf->layout.currentLine;
     ppos = Currentbuf->layout.pos;
 
-    if (next_nonnull_line(Currentbuf->layout.currentLine) < 0)
+    if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
+            Currentbuf->layout.currentLine) < 0)
       goto end;
 
     l = Currentbuf->layout.currentLine;
@@ -522,7 +525,8 @@ void movRW() {
       }
       if (Currentbuf->layout.pos < l->len)
         break;
-      if (next_nonnull_line(Currentbuf->layout.currentLine->next) < 0) {
+      if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
+              Currentbuf->layout.currentLine->next) < 0) {
         Currentbuf->layout.currentLine = pline;
         Currentbuf->layout.pos = ppos;
         goto end;
@@ -597,9 +601,9 @@ void goLine() {
 
   auto str = searchKeyData();
   if (prec_num)
-    _goLine("^");
+    CurrentTab->currentBuffer()->layout._goLine("^", prec_num);
   else if (str)
-    _goLine(str);
+    CurrentTab->currentBuffer()->layout._goLine(str, prec_num);
   else {
     // _goLine(inputStr("Goto line: ", ""));
   }
@@ -607,11 +611,11 @@ void goLine() {
 
 // BEGIN
 //"Go to the first line"
-void goLineF() { _goLine("^"); }
+void goLineF() { CurrentTab->currentBuffer()->layout._goLine("^", prec_num); }
 
 // END
 //"Go to the last line"
-void goLineL() { _goLine("$"); }
+void goLineL() { CurrentTab->currentBuffer()->layout._goLine("$", prec_num); }
 
 /* Go to the beginning of the line */
 // LINE_BEGIN

@@ -1140,7 +1140,7 @@ int main(int argc, char **argv) {
   CurrentTab->currentBuffer(Firstbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   if (line_str) {
-    _goLine(line_str);
+    CurrentTab->currentBuffer()->layout._goLine(line_str, prec_num);
   }
 
   mainLoop();

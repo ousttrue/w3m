@@ -77,19 +77,19 @@ std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
                                       const std::shared_ptr<Buffer> &buf);
 
 extern void chkURLBuffer(const std::shared_ptr<Buffer> &buf);
+
 void isrch(int (*func)(LineLayout *, const char *), const char *prompt);
 void srch(int (*func)(LineLayout *, const char *), const char *prompt);
 void srch_nxtprv(int reverse);
 void shiftvisualpos(const std::shared_ptr<Buffer> &buf, int shift);
+
 void execdict(const char *word);
 void invoke_browser(const char *url);
 void _peekURL(int only_img);
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
 
 int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);
-int prev_nonnull_line(Line *line);
-int next_nonnull_line(Line *line);
-void _goLine(const char *l);
+
 void query_from_followform(Str **query, FormItemList *fi, int multipart);
 
 struct Str;
