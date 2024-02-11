@@ -94,6 +94,10 @@ struct Utf8 {
 
   int width() const {
     auto [cp, bytes] = codepoint();
+    if(bytes==0)
+    {
+      return 1;
+    }
     return codepoint_to_width(cp);
   }
 

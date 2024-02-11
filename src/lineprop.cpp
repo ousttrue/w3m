@@ -34,8 +34,13 @@ int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpo
     } else {
       auto utf8 = Utf8::from((const char8_t *)&l[i]);
       auto [cp, bytes] = utf8.codepoint();
+      if(bytes){
       for (int k = 0; k < bytes; ++k) {
         realColumn.push_back(j);
+        ++i;
+      }
+      }
+      else{
         ++i;
       }
       j += utf8.width();
