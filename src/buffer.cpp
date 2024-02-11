@@ -651,7 +651,7 @@ void execdict(const char *word) {
     if (buf->info->type.empty()) {
       buf->info->type = "text/plain";
     }
-    pushBuffer(buf);
+    CurrentTab->pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1131,11 +1131,6 @@ int next_nonnull_line(Line *line) {
   return 0;
 }
 
-void repBuffer(Buffer *oldbuf, Buffer *buf) {
-  Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
-  Currentbuf = buf;
-}
-
 /* Go to specified line */
 void _goLine(const char *l) {
   if (l == nullptr || *l == '\0' || Currentbuf->layout.currentLine == nullptr) {
@@ -1325,7 +1320,7 @@ void cmd_loadBuffer(Buffer *buf, int linkid) {
       buf->linkBuffer[linkid] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;
     }
-    pushBuffer(buf);
+    CurrentTab->pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1343,7 +1338,7 @@ void cmd_loadfile(const char *fn) {
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
   if (buf != NO_BUFFER) {
-    pushBuffer(buf);
+    CurrentTab->pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }

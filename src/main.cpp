@@ -302,7 +302,7 @@ static void SigPipe(SIGNAL_ARG) {
 }
 
 static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
-  pushBuffer(buf);
+  CurrentTab->pushBuffer(buf);
   return buf;
 }
 
@@ -1090,24 +1090,19 @@ int main(int argc, char **argv) {
 
     } else if (newbuf == NO_BUFFER)
       continue;
-    if (CurrentTab == nullptr) {
-      FirstTab = LastTab = CurrentTab = newTab();
-      if (!FirstTab) {
-        fprintf(stderr, "%s\n", "Can't allocated memory");
-        exit(1);
-      }
-      nTab = 1;
-      Firstbuf = Currentbuf = newbuf;
+    if (!CurrentTab) {
+      TabBuffer::init(newbuf);
     } else if (open_new_tab) {
-      _newT();
+      TabBuffer::_newT();
       Currentbuf->nextBuffer = newbuf;
       CurrentTab->deleteBuffer(Currentbuf);
     } else {
       Currentbuf->nextBuffer = newbuf;
-      Currentbuf = newbuf;
+      CurrentTab->currentBuffer(newbuf);
     }
+
     {
-      Currentbuf = newbuf;
+      CurrentTab->currentBuffer(newbuf);
       saveBufferInfo();
     }
   }
@@ -1115,14 +1110,15 @@ int main(int argc, char **argv) {
   if (popAddDownloadList()) {
     CurrentTab = LastTab;
     if (!FirstTab) {
-      FirstTab = LastTab = CurrentTab = newTab();
+      FirstTab = LastTab = CurrentTab = TabBuffer::newTab();
       nTab = 1;
     }
     if (!Firstbuf || Firstbuf == NO_BUFFER) {
-      Firstbuf = Currentbuf = new Buffer(INIT_BUFFER_WIDTH());
+      CurrentTab->currentBuffer(new Buffer(INIT_BUFFER_WIDTH()), true);
       Currentbuf->layout.title = DOWNLOAD_LIST_TITLE;
-    } else
-      Currentbuf = Firstbuf;
+    } else {
+      CurrentTab->currentBuffer(Firstbuf);
+    }
     ldDL();
   } else
     CurrentTab = FirstTab;
@@ -1148,7 +1144,7 @@ int main(int argc, char **argv) {
 
   DefaultType = nullptr;
 
-  Currentbuf = Firstbuf;
+  CurrentTab->currentBuffer(Firstbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   if (line_str) {
     _goLine(line_str);

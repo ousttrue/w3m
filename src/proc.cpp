@@ -282,7 +282,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     if (buf->info->type.empty()) {
       buf->info->type = "text/plain";
     }
-    pushBuffer(buf);
+    CurrentTab->pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -463,37 +463,12 @@ DEFUN(qquitfm, QUIT, "Quit with confirmation request") {
 
 /* Select buffer */
 DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
-  Buffer *buf;
-  int ok;
-  char cmd;
 
-  ok = false;
+  auto ok = false;
   do {
-    buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
-    switch (cmd) {
-    case 'B':
-      ok = true;
-      break;
-    case '\n':
-    case ' ':
-      Currentbuf = buf;
-      ok = true;
-      break;
-    case 'D':
-      CurrentTab->deleteBuffer(buf);
-      if (Firstbuf == nullptr) {
-        /* No more buffer */
-        Firstbuf = nullBuffer();
-        Currentbuf = Firstbuf;
-      }
-      break;
-    case 'q':
-      qquitfm();
-      break;
-    case 'Q':
-      quitfm();
-      break;
-    }
+    char cmd;
+    auto buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
+    ok = CurrentTab->select(cmd, buf);
   } while (!ok);
 
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -652,7 +627,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
     Buffer *buf;
 
-    _newT();
+    TabBuffer::_newT();
     buf = Currentbuf;
     loadLink(url, a->target, a->referer, nullptr);
     if (buf != Currentbuf)
@@ -689,7 +664,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
   if (buf != NO_BUFFER) {
-    pushBuffer(buf);
+    CurrentTab->pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -850,24 +825,21 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer") {
         return;
       break;
     }
-    Currentbuf = buf;
+    CurrentTab->currentBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer") {
-  Buffer *buf;
-  int i;
-
-  for (i = 0; i < PREC_NUM; i++) {
-    buf = Currentbuf->nextBuffer;
+  for (int i = 0; i < PREC_NUM; i++) {
+    auto buf = Currentbuf->nextBuffer;
     if (!buf) {
       if (i == 0)
         return;
       break;
     }
-    Currentbuf = buf;
+    CurrentTab->currentBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -981,18 +953,21 @@ DEFUN(msgs, MSGS, "Display error messages") {
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document") {
-  Buffer *buf;
 
-  if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != nullptr) {
-    Currentbuf = buf;
+  if (auto buf = Currentbuf->linkBuffer[LB_N_INFO]) {
+    CurrentTab->currentBuffer(buf);
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if ((buf = Currentbuf->linkBuffer[LB_INFO]) != nullptr) {
+
+  if (auto buf = Currentbuf->linkBuffer[LB_INFO]) {
     CurrentTab->deleteBuffer(buf);
   }
-  buf = page_info_panel(Currentbuf);
-  cmd_loadBuffer(buf, LB_INFO);
+
+  {
+    auto buf = page_info_panel(Currentbuf);
+    cmd_loadBuffer(buf, LB_INFO);
+  }
 }
 
 /* link,anchor,image list */
@@ -1137,7 +1112,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   Buffer *buf;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
-    Currentbuf = buf;
+    CurrentTab->currentBuffer(buf);
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
@@ -1170,7 +1145,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   buf->layout.need_reshape = true;
   reshapeBuffer(buf);
-  pushBuffer(buf);
+  CurrentTab->pushBuffer(buf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1226,7 +1201,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  repBuffer(Currentbuf, buf);
+  CurrentTab->repBuffer(Currentbuf, buf);
   if ((buf->info->type.size()) && (sbuf->info->type.size()) &&
       ((buf->info->type == "text/plain" && sbuf->info->is_html_type()) ||
        (buf->info->is_html_type() && sbuf->info->type == "text/plain"))) {
@@ -1458,7 +1433,7 @@ DEFUN(defKey, DEFINE_KEY,
 }
 
 DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
-  _newT();
+  TabBuffer::_newT();
   displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
@@ -1564,10 +1539,10 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
     buf->layout.restorePosition(Currentbuf->layout);
   }
   if (!replace && open_tab_dl_list) {
-    _newT();
+    TabBuffer::_newT();
     new_tab = true;
   }
-  pushBuffer(buf);
+  CurrentTab->pushBuffer(buf);
   if (replace || new_tab)
     deletePrevBuf();
   if (reload)

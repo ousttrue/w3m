@@ -94,7 +94,6 @@ void _movU(int n);
 void _movR(int n);
 int prev_nonnull_line(Line *line);
 int next_nonnull_line(Line *line);
-void repBuffer(Buffer *oldbuf, Buffer *buf);
 void _goLine(const char *l);
 void query_from_followform(Str **query, FormItemList *fi, int multipart);
 

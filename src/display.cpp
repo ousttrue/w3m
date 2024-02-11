@@ -344,14 +344,14 @@ static void redrawNLine(Buffer *buf, int n) {
         bold();
       addch('[');
       l = t->x2 - t->x1 - 1 -
-          get_strwidth(t->currentBuffer->layout.title.c_str());
+          get_strwidth(t->currentBuffer()->layout.title.c_str());
       if (l < 0)
         l = 0;
       if (l / 2 > 0)
         addnstr_sup(" ", l / 2);
       if (t == CurrentTab)
         EFFECT_ACTIVE_START;
-      addnstr(t->currentBuffer->layout.title.c_str(), t->x2 - t->x1 - l);
+      addnstr(t->currentBuffer()->layout.title.c_str(), t->x2 - t->x1 - l);
       if (t == CurrentTab)
         EFFECT_ACTIVE_END;
       if ((l + 1) / 2 > 0)
