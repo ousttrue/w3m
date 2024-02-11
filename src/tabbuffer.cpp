@@ -126,7 +126,7 @@ TabBuffer *deleteTab(TabBuffer *tab) {
   }
   nTab--;
   buf = tab->firstBuffer;
-  while (buf && buf != NO_BUFFER) {
+  while (buf /*&& buf != NO_BUFFER*/) {
     next = buf->backBuffer;
     discardBuffer(buf);
     buf = next;
@@ -267,7 +267,8 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
 
-  if (buf != NO_BUFFER) {
+  // if (buf != NO_BUFFER) 
+  {
     this->pushBuffer(buf);
   }
 

@@ -1,13 +1,8 @@
 #pragma once
-#include "url.h"
 #include "line.h"
 #include "line_layout.h"
 #include <memory>
 #include <gc_cpp.h>
-#include <stddef.h>
-#include <optional>
-
-#define NO_BUFFER ((Buffer *)1)
 
 /* Link Buffer */
 enum LinkBuffer {

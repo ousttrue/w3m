@@ -748,9 +748,8 @@ void followI() {
 
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
-  if (buf != NO_BUFFER) {
-    CurrentTab->pushBuffer(buf);
-  }
+  // if (buf != NO_BUFFER)
+  { CurrentTab->pushBuffer(buf); }
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -1125,9 +1124,9 @@ void ldHist() { cmd_loadBuffer(historyBuffer(URLHist), LB_NOLINK); }
 //"Save hyperlink target"
 void svA() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  do_download = true;
+  // do_download = true;
   followA();
-  do_download = false;
+  // do_download = false;
 }
 
 /* download IMG link */
@@ -1135,9 +1134,9 @@ void svA() {
 //"Save inline image"
 void svI() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  do_download = true;
+  // do_download = true;
   followI();
-  do_download = false;
+  // do_download = false;
 }
 
 /* save buffer */
@@ -1341,10 +1340,10 @@ void reload() {
 
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
-  if (buf == NO_BUFFER) {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
+  // if (buf == NO_BUFFER) {
+  //   displayBuffer(Currentbuf, B_NORMAL);
+  //   return;
+  // }
   CurrentTab->repBuffer(Currentbuf, buf);
   if ((buf->info->type.size()) && (sbuf->info->type.size()) &&
       ((buf->info->type == "text/plain" && sbuf->info->is_html_type()) ||

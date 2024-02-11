@@ -645,7 +645,8 @@ void execdict(const char *word) {
 
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
-  if (buf != NO_BUFFER) {
+  // if (buf != NO_BUFFER)
+  {
     buf->info->filename = w;
     buf->layout.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
     if (buf->info->type.empty()) {
@@ -1303,7 +1304,7 @@ void saveBuffer(Buffer *buf, FILE *f, int cont) {
 void cmd_loadBuffer(Buffer *buf, int linkid) {
   if (buf == nullptr) {
     disp_err_message("Can't load string", false);
-  } else if (buf != NO_BUFFER) {
+  } else /*if (buf != NO_BUFFER)*/ {
     buf->info->currentURL = Currentbuf->info->currentURL;
     if (linkid != LB_NOLINK) {
       buf->linkBuffer[linkid] = Currentbuf;
@@ -1326,7 +1327,8 @@ void cmd_loadfile(const char *fn) {
 
   auto buf = new Buffer(INIT_BUFFER_WIDTH());
   buf->info = res;
-  if (buf != NO_BUFFER) {
+  // if (buf != NO_BUFFER) 
+  {
     CurrentTab->pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);

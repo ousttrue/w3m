@@ -25,7 +25,6 @@ struct TextList;
 extern TextList *fileToDelete;
 
 extern char *document_root;
-extern bool do_download;
 
 extern int vi_prec_num;
 extern int label_topline;

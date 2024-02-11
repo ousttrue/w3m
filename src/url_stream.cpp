@@ -575,7 +575,8 @@ void UrlStream::openFile(const char *path) {
   }
 
   this->stream = openIS(path);
-  if (!do_download) {
+  // if (!do_download) 
+  {
     check_compression(path, this);
     if (this->compression != CMP_NOCOMPRESS) {
       auto ext = this->ext;

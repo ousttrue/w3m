@@ -73,7 +73,6 @@ char *CurrentDir = nullptr;
 int CurrentPid = {};
 TextList *fileToDelete = nullptr;
 char *document_root = nullptr;
-bool do_download = false;
 
 void _quitfm(bool confirm) {
   const char *ans = "y";

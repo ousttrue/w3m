@@ -334,14 +334,14 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
   auto pu = urlParse(url, base);
   pushHashHist(URLHist, pu.to_Str().c_str());
 
-  if (buf == NO_BUFFER) {
-    return nullptr;
-  }
+  // if (buf == NO_BUFFER) {
+  //   return nullptr;
+  // }
   if (!on_target) /* open link as an indivisual page */
     return loadNormalBuf(buf, true);
 
-  if (do_download) /* download (thus no need to render frames) */
-    return loadNormalBuf(buf, false);
+  // if (do_download) /* download (thus no need to render frames) */
+  //   return loadNormalBuf(buf, false);
 
   if (target == nullptr || /* no target specified (that means this page is not a
                            frame page) */
@@ -651,7 +651,7 @@ void deleteFiles() {
   char *f;
 
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
-    while (Firstbuf && Firstbuf != NO_BUFFER) {
+    while (Firstbuf /*&& Firstbuf != NO_BUFFER*/) {
       buf = Firstbuf->backBuffer;
       discardBuffer(Firstbuf);
       Firstbuf = buf;
@@ -1001,9 +1001,8 @@ int main(int argc, char **argv) {
       if (res) {
         newbuf = new Buffer(INIT_BUFFER_WIDTH());
         newbuf->info = res;
-        if (newbuf != NO_BUFFER) {
-          pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
-        }
+        // if (newbuf != NO_BUFFER)
+        { pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str()); }
       } else {
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
       }
@@ -1070,9 +1069,10 @@ int main(int argc, char **argv) {
         }
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", load_argv[i]));
         continue;
-      } else if (newbuf == NO_BUFFER) {
-        continue;
       }
+      // else if (newbuf == NO_BUFFER) {
+      //   continue;
+      // }
 
       switch (newbuf->info->currentURL.schema) {
       case SCM_LOCAL:
@@ -1082,9 +1082,10 @@ int main(int argc, char **argv) {
         pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
         break;
       }
+    }
+    // else if (newbuf == NO_BUFFER)
+    //   continue;
 
-    } else if (newbuf == NO_BUFFER)
-      continue;
     if (!CurrentTab) {
       TabBuffer::init(newbuf);
     } else if (open_new_tab) {
@@ -1108,7 +1109,7 @@ int main(int argc, char **argv) {
       FirstTab = LastTab = CurrentTab = new TabBuffer();
       nTab = 1;
     }
-    if (!Firstbuf || Firstbuf == NO_BUFFER) {
+    if (!Firstbuf /*|| Firstbuf == NO_BUFFER*/) {
       CurrentTab->currentBuffer(new Buffer(INIT_BUFFER_WIDTH()), true);
       Currentbuf->layout.title = DOWNLOAD_LIST_TITLE;
     } else {
@@ -1117,21 +1118,21 @@ int main(int argc, char **argv) {
     ldDL();
   } else
     CurrentTab = FirstTab;
-  if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
-    if (newbuf == NO_BUFFER) {
-      if (fmInitialized) {
-        // inputChar("Hit any key to quit w3m:");
-      }
-    }
+  if (!FirstTab || !Firstbuf /*|| Firstbuf == NO_BUFFER*/) {
+    // if (newbuf == NO_BUFFER) {
+    //   if (fmInitialized) {
+    //     // inputChar("Hit any key to quit w3m:");
+    //   }
+    // }
     if (fmInitialized)
       fmTerm();
     if (err_msg->length)
       fprintf(stderr, "%s", err_msg->ptr);
-    if (newbuf == NO_BUFFER) {
-      save_cookies();
-      if (!err_msg->length)
-        w3m_exit(0);
-    }
+    // if (newbuf == NO_BUFFER) {
+    //   save_cookies();
+    //   if (!err_msg->length)
+    //     w3m_exit(0);
+    // }
     w3m_exit(2);
   }
   if (err_msg->length)
