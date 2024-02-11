@@ -1,4 +1,6 @@
 #include "line_layout.h"
+#include "history.h"
+#include "url.h"
 #include "display.h"
 #include "message.h"
 #include "terms.h"
@@ -621,6 +623,169 @@ void LineLayout::nextX(int d, int dy, int n) {
     return;
   this->gotoLine(y);
   this->pos = pan->start.pos;
+  this->arrangeCursor();
+  displayBuffer(B_NORMAL);
+}
+
+/* go to the previous anchor */
+void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
+  HmarkerList *hl = this->hmarklist;
+  BufferPoint *po;
+  Anchor *pan;
+  int i, x, y;
+  Url url;
+
+  if (this->firstLine == nullptr)
+    return;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  auto an = retrieveCurrentAnchor(this);
+  if (visited != true && an == nullptr)
+    an = retrieveCurrentForm(this);
+
+  y = this->currentLine->linenumber;
+  x = this->pos;
+
+  if (visited == true) {
+    n = hl->nmark;
+  }
+
+  for (i = 0; i < n; i++) {
+    pan = an;
+    if (an && an->hseq >= 0) {
+      int hseq = an->hseq - 1;
+      do {
+        if (hseq < 0) {
+          if (visited == true)
+            return;
+          an = pan;
+          goto _end;
+        }
+        po = hl->marks + hseq;
+        if (this->href) {
+          an = this->href->retrieveAnchor(po->line, po->pos);
+        }
+        if (visited != true && an == nullptr && this->formitem) {
+          an = this->formitem->retrieveAnchor(po->line, po->pos);
+        }
+        hseq--;
+        if (visited == true && an) {
+          url = urlParse(an->url, baseUrl);
+          if (getHashHist(URLHist, url.to_Str().c_str())) {
+            goto _end;
+          }
+        }
+      } while (an == nullptr || an == pan);
+    } else {
+      an = closest_prev_anchor(this->href, nullptr, x, y);
+      if (visited != true)
+        an = closest_prev_anchor(this->formitem, an, x, y);
+      if (an == nullptr) {
+        if (visited == true)
+          return;
+        an = pan;
+        break;
+      }
+      x = an->start.pos;
+      y = an->start.line;
+      if (visited == true && an) {
+        url = urlParse(an->url, baseUrl);
+        if (getHashHist(URLHist, url.to_Str().c_str())) {
+          goto _end;
+        }
+      }
+    }
+  }
+  if (visited == true)
+    return;
+
+_end:
+  if (an == nullptr || an->hseq < 0)
+    return;
+  po = hl->marks + an->hseq;
+  this->gotoLine(po->line);
+  this->pos = po->pos;
+  this->arrangeCursor();
+  displayBuffer(B_NORMAL);
+}
+
+/* go to the next [visited] anchor */
+void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
+  if (this->firstLine == nullptr)
+    return;
+
+  HmarkerList *hl = this->hmarklist;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  auto an = retrieveCurrentAnchor(this);
+  if (visited != true && an == nullptr)
+    an = retrieveCurrentForm(this);
+
+  auto y = this->currentLine->linenumber;
+  auto x = this->pos;
+
+  if (visited == true) {
+    n = hl->nmark;
+  }
+
+  Anchor *pan = nullptr;
+  for (int i = 0; i < n; i++) {
+    pan = an;
+    if (an && an->hseq >= 0) {
+      int hseq = an->hseq + 1;
+      do {
+        if (hseq >= hl->nmark) {
+          if (visited == true)
+            return;
+          an = pan;
+          goto _end;
+        }
+        auto po = &hl->marks[hseq];
+        if (this->href) {
+          an = this->href->retrieveAnchor(po->line, po->pos);
+        }
+        if (visited != true && an == nullptr && this->formitem) {
+          an = this->formitem->retrieveAnchor(po->line, po->pos);
+        }
+        hseq++;
+        if (visited == true && an) {
+          auto url = urlParse(an->url, baseUrl);
+          if (getHashHist(URLHist, url.to_Str().c_str())) {
+            goto _end;
+          }
+        }
+      } while (an == nullptr || an == pan);
+    } else {
+      an = closest_next_anchor(this->href, nullptr, x, y);
+      if (visited != true)
+        an = closest_next_anchor(this->formitem, an, x, y);
+      if (an == nullptr) {
+        if (visited == true)
+          return;
+        an = pan;
+        break;
+      }
+      x = an->start.pos;
+      y = an->start.line;
+      if (visited == true) {
+        auto url = urlParse(an->url, baseUrl);
+        if (getHashHist(URLHist, url.to_Str().c_str())) {
+          goto _end;
+        }
+      }
+    }
+  }
+  if (visited == true)
+    return;
+
+_end:
+  if (an == nullptr || an->hseq < 0)
+    return;
+  auto po = &hl->marks[an->hseq];
+  this->gotoLine(po->line);
+  this->pos = po->pos;
   this->arrangeCursor();
   displayBuffer(B_NORMAL);
 }

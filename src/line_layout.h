@@ -1,6 +1,8 @@
 #pragma once
 #include "line.h"
+#include "url.h"
 #include <string>
+#include <optional>
 
 extern int nextpage_topline;
 
@@ -112,6 +114,8 @@ struct LineLayout {
 
   void nextY(int d, int n);
   void nextX(int d, int dy, int n);
+  void _prevA(int visited, std::optional<Url> baseUrl, int n);
+  void _nextA(int visited, std::optional<Url> baseUrl, int n);
 
   //
   // Anchors

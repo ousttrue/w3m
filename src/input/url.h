@@ -43,3 +43,5 @@ struct Url {
     return (this->schema == SCM_UNKNOWN && this->file.empty());
   }
 };
+
+Url urlParse(const char *url, std::optional<Url> current = {});

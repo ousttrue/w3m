@@ -74,4 +74,3 @@ extern const char *keymap_file;
 void w3m_exit(int i);
 void _quitfm(bool confirm);
 
-Url urlParse(const char *url, std::optional<Url> current = {});

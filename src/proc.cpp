@@ -863,22 +863,38 @@ void nthA() {
 /* go to the next anchor */
 // NEXT_LINK
 //"Move to the next hyperlink"
-void nextA() { _nextA(false); }
+void nextA() {
+  int n = searchKeyNum();
+  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  CurrentTab->currentBuffer()->layout._nextA(false, baseUr, n);
+}
 
 /* go to the previous anchor */
 // PREV_LINK
 //"Move to the previous hyperlink"
-void prevA() { _prevA(false); }
+void prevA() {
+  int n = searchKeyNum();
+  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  CurrentTab->currentBuffer()->layout._prevA(false, baseUr, n);
+}
 
 /* go to the next visited anchor */
 // NEXT_VISITED
 //"Move to the next visited hyperlink"
-void nextVA() { _nextA(true); }
+void nextVA() {
+  int n = searchKeyNum();
+  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  CurrentTab->currentBuffer()->layout._nextA(true, baseUr, n);
+}
 
 /* go to the previous visited anchor */
 // PREV_VISITED
 //"Move to the previous visited hyperlink"
-void prevVA() { _prevA(true); }
+void prevVA() {
+  int n = searchKeyNum();
+  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  CurrentTab->currentBuffer()->layout._prevA(true, baseUr, n);
+}
 
 /* go to the next left anchor */
 // NEXT_LEFT

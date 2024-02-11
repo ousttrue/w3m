@@ -575,7 +575,7 @@ void UrlStream::openFile(const char *path) {
   }
 
   this->stream = openIS(path);
-  // if (!do_download) 
+  // if (!do_download)
   {
     check_compression(path, this);
     if (this->compression != CMP_NOCOMPRESS) {
@@ -783,14 +783,14 @@ const char *file_quote(const char *str) {
     if (is_file_quote(*p)) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(str, (int)(p - str));
-      sprintf(buf, "%%%02X", (unsigned char)*p);
+      snprintf(buf, sizeof(buf), "%%%02X", (unsigned char)*p);
       Strcat_charp(tmp, buf);
     } else {
       if (tmp)
         Strcat_char(tmp, *p);
     }
   }
-  if (tmp){
+  if (tmp) {
     return tmp->ptr;
   }
   return str;
