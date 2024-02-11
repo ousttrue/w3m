@@ -41,6 +41,27 @@ static bool same_url_p(const Url &pu1, const Url &pu2) {
                            : true));
 }
 
+static long long strtoclen(const char *s) {
+#ifdef HAVE_STRTOLL
+  return strtoll(s, nullptr, 10);
+#elif defined(HAVE_STRTOQ)
+  return strtoq(s, nullptr, 10);
+#elif defined(HAVE_ATOLL)
+  return atoll(s);
+#elif defined(HAVE_ATOQ)
+  return atoq(s);
+#else
+  return atoi(s);
+#endif
+}
+
+static int is_text_type(std::string_view type) {
+  return type.empty() || type.starts_with("text/") ||
+         (type.starts_with("application/") &&
+          type.find("xhtml") != std::string::npos) ||
+         type.starts_with("message/");
+}
+
 bool HttpResponse::checkRedirection(const Url &pu) {
 
   if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
@@ -289,76 +310,6 @@ FILE *HttpResponse::createSourceFile() {
   return src;
 }
 
-static long long strtoclen(const char *s) {
-#ifdef HAVE_STRTOLL
-  return strtoll(s, nullptr, 10);
-#elif defined(HAVE_STRTOQ)
-  return strtoq(s, nullptr, 10);
-#elif defined(HAVE_ATOLL)
-  return atoll(s);
-#elif defined(HAVE_ATOQ)
-  return atoq(s);
-#else
-  return atoi(s);
-#endif
-}
-
-static int is_text_type(std::string_view type) {
-  return type.empty() || type.starts_with("text/") ||
-         (type.starts_with("application/") &&
-          type.find("xhtml") != std::string::npos) ||
-         type.starts_with("message/");
-}
-
-static void loadSomething(HttpResponse *res, LineLayout *layout) {
-  // Buffer *buf = src;
-  if (res->is_html_type()) {
-    loadHTMLstream(res, layout);
-  } else {
-    loadBuffer(res, layout);
-  }
-
-  if (layout->title.empty() || layout->title[0] == '\0') {
-    layout->title = res->getHeader("Subject:");
-    if (layout->title.empty() && res->filename.size()) {
-      layout->title = lastFileName(res->filename.c_str());
-    }
-  }
-
-  if (res->currentURL.schema == SCM_UNKNOWN) {
-    res->currentURL.schema = res->f.schema;
-  }
-
-  if (res->f.schema == SCM_LOCAL && res->sourcefile.empty()) {
-    res->sourcefile = res->filename;
-  }
-
-  // if (buf && buf != NO_BUFFER)
-  {
-    // res->real_schema = res->f.schema;
-    // res->real_type = real_type;
-    if (res->currentURL.label.size()) {
-      if (res->is_html_type()) {
-        auto a = layout->searchURLLabel(res->currentURL.label.c_str());
-        if (a != nullptr) {
-          layout->gotoLine(a->start.line);
-          if (label_topline)
-            layout->topLine = layout->lineSkip(layout->topLine,
-                                               layout->currentLine->linenumber -
-                                                   layout->topLine->linenumber,
-                                               false);
-          layout->pos = a->start.pos;
-          layout->arrangeCursor();
-        }
-      } else { /* plain text */
-        int l = atoi(res->currentURL.label.c_str());
-        layout->gotoRealLine(l);
-        layout->pos = 0;
-        layout->arrangeCursor();
-      }
-    }
-  }
-}
 Buffer *HttpResponse::page_loaded(Url url) {
   const char *p;
   if ((p = this->getHeader("Content-Length:"))) {
@@ -402,7 +353,58 @@ Buffer *HttpResponse::page_loaded(Url url) {
 
   auto b = new Buffer(INIT_BUFFER_WIDTH());
   b->info = shared_from_this();
-  loadSomething(this, &b->layout);
+  // loadSomething(this, &b->layout);
+  {
+    auto layout = &b->layout;
+    // Buffer *buf = src;
+    if (this->is_html_type()) {
+      loadHTMLstream(this, layout);
+    } else {
+      loadBuffer(this, layout);
+    }
+
+    if (layout->title.empty() || layout->title[0] == '\0') {
+      layout->title = this->getHeader("Subject:");
+      if (layout->title.empty() && this->filename.size()) {
+        layout->title = lastFileName(this->filename.c_str());
+      }
+    }
+
+    if (this->currentURL.schema == SCM_UNKNOWN) {
+      this->currentURL.schema = this->f.schema;
+    }
+
+    if (this->f.schema == SCM_LOCAL && this->sourcefile.empty()) {
+      this->sourcefile = this->filename;
+    }
+
+    // if (buf && buf != NO_BUFFER)
+    {
+      // this->real_schema = this->f.schema;
+      // this->real_type = real_type;
+      if (this->currentURL.label.size()) {
+        if (this->is_html_type()) {
+          auto a = layout->searchURLLabel(this->currentURL.label.c_str());
+          if (a != nullptr) {
+            layout->gotoLine(a->start.line);
+            if (label_topline)
+              layout->topLine = layout->lineSkip(
+                  layout->topLine,
+                  layout->currentLine->linenumber - layout->topLine->linenumber,
+                  false);
+            layout->pos = a->start.pos;
+            layout->arrangeCursor();
+          }
+        } else { /* plain text */
+          int l = atoi(this->currentURL.label.c_str());
+          layout->gotoRealLine(l);
+          layout->pos = 0;
+          layout->arrangeCursor();
+        }
+      }
+    }
+  }
+
   preFormUpdateBuffer(b);
   return b;
 }
