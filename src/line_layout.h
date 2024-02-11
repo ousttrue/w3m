@@ -110,6 +110,9 @@ struct LineLayout {
     this->currentColumn = srcbuf.currentColumn;
   }
 
+  void nextY(int d, int n);
+  void nextX(int d, int dy, int n);
+
   //
   // Anchors
   //

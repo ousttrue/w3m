@@ -1,4 +1,5 @@
 #include "line_layout.h"
+#include "display.h"
 #include "message.h"
 #include "terms.h"
 #include "anchor.h"
@@ -524,4 +525,102 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
 
 Anchor *LineLayout::searchURLLabel(const char *url) {
   return searchAnchor(this->name, url);
+}
+
+/* go to the next downward/upward anchor */
+void LineLayout::nextY(int d, int n) {
+  if (this->firstLine == nullptr)
+    return;
+
+  HmarkerList *hl = this->hmarklist;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  auto an = retrieveCurrentAnchor(this);
+  if (an == nullptr)
+    an = retrieveCurrentForm(this);
+
+  int x = this->pos;
+  int y = this->currentLine->linenumber + d;
+  Anchor *pan = nullptr;
+  int hseq = -1;
+  for (int i = 0; i < n; i++) {
+    if (an)
+      hseq = abs(an->hseq);
+    an = nullptr;
+    for (; y >= 0 && y <= this->lastLine->linenumber; y += d) {
+      if (this->href) {
+        an = this->href->retrieveAnchor(y, x);
+      }
+      if (!an && this->formitem) {
+        an = this->formitem->retrieveAnchor(y, x);
+      }
+      if (an && hseq != abs(an->hseq)) {
+        pan = an;
+        break;
+      }
+    }
+    if (!an)
+      break;
+  }
+
+  if (pan == nullptr)
+    return;
+  this->gotoLine(pan->start.line);
+  this->arrangeLine();
+  displayBuffer(B_NORMAL);
+}
+
+/* go to the next left/right anchor */
+void LineLayout::nextX(int d, int dy, int n) {
+  if (this->firstLine == nullptr)
+    return;
+
+  HmarkerList *hl = this->hmarklist;
+  if (!hl || hl->nmark == 0)
+    return;
+
+  auto an = retrieveCurrentAnchor(this);
+  if (an == nullptr)
+    an = retrieveCurrentForm(this);
+
+  auto l = this->currentLine;
+  auto x = this->pos;
+  auto y = l->linenumber;
+  Anchor *pan = nullptr;
+  for (int i = 0; i < n; i++) {
+    if (an)
+      x = (d > 0) ? an->end.pos : an->start.pos - 1;
+    an = nullptr;
+    while (1) {
+      for (; x >= 0 && x < l->len; x += d) {
+        if (this->href) {
+          an = this->href->retrieveAnchor(y, x);
+        }
+        if (!an && this->formitem) {
+          an = this->formitem->retrieveAnchor(y, x);
+        }
+        if (an) {
+          pan = an;
+          break;
+        }
+      }
+      if (!dy || an)
+        break;
+      l = (dy > 0) ? l->next : l->prev;
+      if (!l)
+        break;
+      x = (d > 0) ? 0 : l->len - 1;
+      y = l->linenumber;
+    }
+    if (!an)
+      break;
+  }
+
+  if (pan == nullptr)
+    return;
+  this->gotoLine(y);
+  this->pos = pan->start.pos;
+  this->arrangeCursor();
+  displayBuffer(B_NORMAL);
 }

@@ -85,8 +85,7 @@ void execdict(const char *word);
 void invoke_browser(const char *url);
 void _peekURL(int only_img);
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
-void nextY(int d);
-void nextX(int d, int dy);
+
 void _prevA(int visited);
 void _nextA(int visited);
 int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);

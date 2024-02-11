@@ -184,6 +184,10 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   return msg;
 }
 
+void displayBuffer(DisplayFlag mode) {
+  displayBuffer(CurrentTab->currentBuffer(), mode);
+}
+
 void displayBuffer(const std::shared_ptr<Buffer> &buf, DisplayFlag mode) {
   if (!buf) {
     return;

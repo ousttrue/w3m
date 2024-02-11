@@ -883,32 +883,50 @@ void prevVA() { _prevA(true); }
 /* go to the next left anchor */
 // NEXT_LEFT
 //"Move left to the next hyperlink"
-void nextL() { nextX(-1, 0); }
+void nextL() {
+  int n = searchKeyNum();
+  CurrentTab->currentBuffer()->layout.nextX(-1, 0, n);
+}
 
 /* go to the next left-up anchor */
 // NEXT_LEFT_UP
 //"Move left or upward to the next hyperlink"
-void nextLU() { nextX(-1, -1); }
+void nextLU() {
+  int n = searchKeyNum();
+  CurrentTab->currentBuffer()->layout.nextX(-1, -1, n);
+}
 
 /* go to the next right anchor */
 // NEXT_RIGHT
 //"Move right to the next hyperlink"
-void nextR() { nextX(1, 0); }
+void nextR() {
+  int n = searchKeyNum();
+  CurrentTab->currentBuffer()->layout.nextX(1, 0, n);
+}
 
 /* go to the next right-down anchor */
 // NEXT_RIGHT_DOWN
 //"Move right or downward to the next hyperlink"
-void nextRD() { nextX(1, 1); }
+void nextRD() {
+  int n = searchKeyNum();
+  CurrentTab->currentBuffer()->layout.nextX(1, 1, n);
+}
 
 /* go to the next downward anchor */
 // NEXT_DOWN
 //"Move downward to the next hyperlink"
-void nextD() { nextY(1); }
+void nextD() {
+  int n = searchKeyNum();
+  CurrentTab->currentBuffer()->layout.nextY(1, n);
+}
 
 /* go to the next upward anchor */
 // NEXT_UP
 //"Move upward to the next hyperlink"
-void nextU() { nextY(-1); }
+void nextU() {
+  int n = searchKeyNum();
+  CurrentTab->currentBuffer()->layout.nextY(-1, n);
+}
 
 /* go to the next bufferr */
 // NEXT
