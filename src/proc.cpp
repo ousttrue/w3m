@@ -40,18 +40,22 @@
 #include "buffer.h"
 #include <sys/stat.h>
 
-#define DEFUN(funcname, macroname, docstring) void funcname(void)
-
-DEFUN(nulcmd, NOTHING nullptr @ @ @, "Do nothing") { /* do nothing */
+// NOTHING nullptr @ @ @
+//"Do nothing"
+void nulcmd() { /* do nothing */
 }
 
-DEFUN(escmap, ESCMAP, "ESC map") {
+// ESCMAP
+//"ESC map"
+void escmap() {
   char c = getch();
   if (IS_ASCII(c))
     escKeyProc((int)c, K_ESC, EscKeymap);
 }
 
-DEFUN(escbmap, ESCBMAP, "ESC [ map") {
+// ESCBMAP
+//"ESC [ map"
+void escbmap() {
   char c = getch();
   if (IS_DIGIT(c)) {
     escdmap(c);
@@ -61,7 +65,9 @@ DEFUN(escbmap, ESCBMAP, "ESC [ map") {
     escKeyProc((int)c, K_ESCB, EscBKeymap);
 }
 
-DEFUN(multimap, MULTIMAP, "multimap") {
+// MULTIMAP
+//"multimap"
+void multimap() {
   char c;
   c = getch();
   if (IS_ASCII(c)) {
@@ -71,7 +77,9 @@ DEFUN(multimap, MULTIMAP, "multimap") {
 }
 
 /* Move page forward */
-DEFUN(pgFore, NEXT_PAGE, "Scroll down one page") {
+// NEXT_PAGE
+//"Scroll down one page"
+void pgFore() {
   if (vi_prec_num)
     nscroll(searchKeyNum() * (Currentbuf->layout.LINES - 1), B_NORMAL);
   else
@@ -81,7 +89,9 @@ DEFUN(pgFore, NEXT_PAGE, "Scroll down one page") {
 }
 
 /* Move page backward */
-DEFUN(pgBack, PREV_PAGE, "Scroll up one page") {
+// PREV_PAGE
+//"Scroll up one page"
+void pgBack() {
   if (vi_prec_num)
     nscroll(-searchKeyNum() * (Currentbuf->layout.LINES - 1), B_NORMAL);
   else
@@ -91,27 +101,33 @@ DEFUN(pgBack, PREV_PAGE, "Scroll up one page") {
 }
 
 /* Move half page forward */
-DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page") {
+// NEXT_HALF_PAGE
+//"Scroll down half a page"
+void hpgFore() {
   nscroll(searchKeyNum() * (Currentbuf->layout.LINES / 2 - 1), B_NORMAL);
 }
 
 /* Move half page backward */
-DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page") {
+// PREV_HALF_PAGE
+//"Scroll up half a page"
+void hpgBack() {
   nscroll(-searchKeyNum() * (Currentbuf->layout.LINES / 2 - 1), B_NORMAL);
 }
 
 /* 1 line up */
-DEFUN(lup1, UP, "Scroll the screen up one line") {
-  nscroll(searchKeyNum(), B_SCROLL);
-}
+// UP
+//"Scroll the screen up one line"
+void lup1() { nscroll(searchKeyNum(), B_SCROLL); }
 
 /* 1 line down */
-DEFUN(ldown1, DOWN, "Scroll the screen down one line") {
-  nscroll(-searchKeyNum(), B_SCROLL);
-}
+// DOWN
+//"Scroll the screen down one line"
+void ldown1() { nscroll(-searchKeyNum(), B_SCROLL); }
 
 /* move cursor position to the center of screen */
-DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
+// CENTER_V
+//"Center on cursor line"
+void ctrCsrV() {
   int offsety;
   if (Currentbuf->layout.firstLine == nullptr)
     return;
@@ -124,7 +140,9 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
   }
 }
 
-DEFUN(ctrCsrH, CENTER_H, "Center on cursor column") {
+// CENTER_H
+//"Center on cursor column"
+void ctrCsrH() {
   int offsetx;
   if (Currentbuf->layout.firstLine == nullptr)
     return;
@@ -137,38 +155,46 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column") {
 }
 
 /* Redraw screen */
-DEFUN(rdrwSc, REDRAW, "Draw the screen anew") {
+// REDRAW
+//"Draw the screen anew"
+void rdrwSc() {
   clear();
   Currentbuf->layout.arrangeCursor();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward") {
-  srch(forwardSearch, "Forward: ");
-}
+// SEARCH SEARCH_FORE WHEREIS
+//"Search forward"
+void srchfor() { srch(forwardSearch, "Forward: "); }
 
-DEFUN(isrchfor, ISEARCH, "Incremental search forward") {
-  isrch(forwardSearch, "I-search: ");
-}
+// ISEARCH
+//"Incremental search forward"
+void isrchfor() { isrch(forwardSearch, "I-search: "); }
 
 /* Search regular expression backward */
 
-DEFUN(srchbak, SEARCH_BACK, "Search backward") {
-  srch(backwardSearch, "Backward: ");
-}
+// SEARCH_BACK
+//"Search backward"
+void srchbak() { srch(backwardSearch, "Backward: "); }
 
-DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward") {
-  isrch(backwardSearch, "I-search backward: ");
-}
+// ISEARCH_BACK
+//"Incremental search backward"
+void isrchbak() { isrch(backwardSearch, "I-search backward: "); }
 
 /* Search next matching */
-DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward") { srch_nxtprv(0); }
+// SEARCH_NEXT
+//"Continue search forward"
+void srchnxt() { srch_nxtprv(0); }
 
 /* Search previous matching */
-DEFUN(srchprv, SEARCH_PREV, "Continue search backward") { srch_nxtprv(1); }
+// SEARCH_PREV
+//"Continue search backward"
+void srchprv() { srch_nxtprv(1); }
 
 /* Shift screen left */
-DEFUN(shiftl, SHIFT_LEFT, "Shift screen left") {
+// SHIFT_LEFT
+//"Shift screen left"
+void shiftl() {
   int column;
 
   if (Currentbuf->layout.firstLine == nullptr)
@@ -181,7 +207,9 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left") {
 }
 
 /* Shift screen right */
-DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right") {
+// SHIFT_RIGHT
+//"Shift screen right"
+void shiftr() {
   int column;
 
   if (Currentbuf->layout.firstLine == nullptr)
@@ -193,7 +221,9 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(col1R, RIGHT, "Shift screen one column right") {
+// RIGHT
+//"Shift screen one column right"
+void col1R() {
   Buffer *buf = Currentbuf;
   Line *l = buf->layout.currentLine;
   int j, column, n = searchKeyNum();
@@ -210,7 +240,9 @@ DEFUN(col1R, RIGHT, "Shift screen one column right") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(col1L, LEFT, "Shift screen one column left") {
+// LEFT
+//"Shift screen one column left"
+void col1L() {
   Buffer *buf = Currentbuf;
   Line *l = buf->layout.currentLine;
   int j, n = searchKeyNum();
@@ -226,7 +258,9 @@ DEFUN(col1L, LEFT, "Shift screen one column left") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(setEnv, SETENV, "Set environment variable") {
+// SETENV
+//"Set environment variable"
+void setEnv() {
   const char *env;
   const char *var, *value;
 
@@ -249,14 +283,19 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(pipeBuf, PIPE_BUF,
-      "Pipe current buffer through a shell command and display output") {}
+// PIPE_BUF
+//"Pipe current buffer through a shell command and display output"
+void pipeBuf() {}
 
 /* Execute shell command and read output ac pipe. */
-DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {}
+// PIPE_SHELL
+//"Execute shell command and display output"
+void pipesh() {}
 
 /* Execute shell command and load entire output to buffer */
-DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
+// READ_SHELL
+//"Execute shell command and display output"
+void readsh() {
   Buffer *buf;
   const char *cmd;
 
@@ -288,7 +327,9 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
 }
 
 /* Execute shell command */
-DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
+// EXEC_SHELL SHELL
+//"Execute shell command and display output"
+void execsh() {
   const char *cmd;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -309,7 +350,9 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
 }
 
 /* Load file */
-DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
+// LOAD
+//"Open local file in a new buffer"
+void ldfile() {
   auto fn = searchKeyData();
   // if (fn == nullptr || *fn == '\0') {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
@@ -325,7 +368,9 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
 
 /* Load help file */
-DEFUN(ldhelp, HELP, "Show help panel") {
+// HELP
+//"Show help panel"
+void ldhelp() {
   auto lang = AcceptLang;
   auto n = strcspn(lang, ";, \t");
   auto tmp =
@@ -335,27 +380,41 @@ DEFUN(ldhelp, HELP, "Show help panel") {
   cmd_loadURL(tmp->ptr, {}, NO_REFERER, nullptr);
 }
 
-DEFUN(movL, MOVE_LEFT, "Cursor left") { _movL(Currentbuf->layout.COLS / 2); }
+// MOVE_LEFT
+//"Cursor left"
+void movL() { _movL(Currentbuf->layout.COLS / 2); }
 
-DEFUN(movL1, MOVE_LEFT1, "Cursor left. With edge touched, slide") { _movL(1); }
+// MOVE_LEFT1
+//"Cursor left. With edge touched, slide"
+void movL1() { _movL(1); }
 
-DEFUN(movD, MOVE_DOWN, "Cursor down") {
-  _movD((Currentbuf->layout.LINES + 1) / 2);
-}
+// MOVE_DOWN
+//"Cursor down"
+void movD() { _movD((Currentbuf->layout.LINES + 1) / 2); }
 
-DEFUN(movD1, MOVE_DOWN1, "Cursor down. With edge touched, slide") { _movD(1); }
+// MOVE_DOWN1
+//"Cursor down. With edge touched, slide"
+void movD1() { _movD(1); }
 
-DEFUN(movU, MOVE_UP, "Cursor up") { _movU((Currentbuf->layout.LINES + 1) / 2); }
+// MOVE_UP
+//"Cursor up"
+void movU() { _movU((Currentbuf->layout.LINES + 1) / 2); }
 
-DEFUN(movU1, MOVE_UP1, "Cursor up. With edge touched, slide") { _movU(1); }
+// MOVE_UP1
+//"Cursor up. With edge touched, slide"
+void movU1() { _movU(1); }
 
-DEFUN(movR, MOVE_RIGHT, "Cursor right") { _movR(Currentbuf->layout.COLS / 2); }
+// MOVE_RIGHT
+//"Cursor right"
+void movR() { _movR(Currentbuf->layout.COLS / 2); }
 
-DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide") {
-  _movR(1);
-}
+// MOVE_RIGHT1
+//"Cursor right. With edge touched, slide"
+void movR1() { _movR(1); }
 
-DEFUN(movLW, PREV_WORD, "Move to the previous word") {
+// PREV_WORD
+//"Move to the previous word"
+void movLW() {
   char *lb;
   Line *pline, *l;
   int ppos;
@@ -408,7 +467,9 @@ end:
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(movRW, NEXT_WORD, "Move to the next word") {
+// NEXT_WORD
+//"Move to the next word"
+void movRW() {
   char *lb;
   Line *pline, *l;
   int ppos;
@@ -454,15 +515,19 @@ end:
 }
 
 /* Quit */
-DEFUN(quitfm, ABORT EXIT, "Quit without confirmation") { _quitfm(false); }
+// ABORT EXIT
+//"Quit without confirmation"
+void quitfm() { _quitfm(false); }
 
 /* Question and Quit */
-DEFUN(qquitfm, QUIT, "Quit with confirmation request") {
-  _quitfm(confirm_on_quit);
-}
+// QUIT
+//"Quit with confirmation request"
+void qquitfm() { _quitfm(confirm_on_quit); }
 
 /* Select buffer */
-DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
+// SELECT
+//"Display buffer-stack panel"
+void selBuf() {
 
   auto ok = false;
   do {
@@ -475,7 +540,9 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
-DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
+// INTERRUPT SUSPEND
+//"Suspend w3m to background"
+void susp() {
 #ifndef SIGSTOP
   char *shell;
 #endif /* not SIGSTOP */
@@ -501,7 +568,9 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
+// GOTO_LINE
+//"Go to the specified line"
+void goLine() {
 
   auto str = searchKeyData();
   if (prec_num)
@@ -513,12 +582,18 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
   }
 }
 
-DEFUN(goLineF, BEGIN, "Go to the first line") { _goLine("^"); }
+// BEGIN
+//"Go to the first line"
+void goLineF() { _goLine("^"); }
 
-DEFUN(goLineL, END, "Go to the last line") { _goLine("$"); }
+// END
+//"Go to the last line"
+void goLineL() { _goLine("$"); }
 
 /* Go to the beginning of the line */
-DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
+// LINE_BEGIN
+//"Go to the beginning of the line"
+void linbeg() {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
   while (Currentbuf->layout.currentLine->prev &&
@@ -531,7 +606,9 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
 }
 
 /* Go to the bottom of the line */
-DEFUN(linend, LINE_END, "Go to the end of the line") {
+// LINE_END
+//"Go to the end of the line"
+void linend() {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
   while (Currentbuf->layout.currentLine->next &&
@@ -544,7 +621,9 @@ DEFUN(linend, LINE_END, "Go to the end of the line") {
 }
 
 /* Run editor on the current buffer */
-DEFUN(editBf, EDIT, "Edit local source") {
+// EDIT
+//"Edit local source"
+void editBf() {
   auto fn = Currentbuf->info->filename;
 
   if (fn.empty() || /* Behaving as a pager */
@@ -573,7 +652,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
 }
 
 /* Run editor on the current screen */
-DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
+// EDIT_SCREEN
+//"Edit rendered copy of document"
+void editScr() {
   auto tmpf = tmpfname(TMPF_DFL, nullptr)->ptr;
   auto f = fopen(tmpf, "w");
   if (f == nullptr) {
@@ -589,7 +670,9 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
 }
 
 /* follow HREF link */
-DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
+// GOTO_LINK
+//"Follow current hyperlink in a new buffer"
+void followA() {
   Anchor *a;
   Url u;
   const char *url;
@@ -642,7 +725,9 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
 }
 
 /* view inline image */
-DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
+// VIEW_IMAGE
+//"Display image in viewer"
+void followI() {
   Anchor *a;
 
   if (Currentbuf->layout.firstLine == nullptr)
@@ -670,10 +755,14 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
 }
 
 /* submit form */
-DEFUN(submitForm, SUBMIT, "Submit form") { _followForm(true); }
+// SUBMIT
+//"Submit form"
+void submitForm() { _followForm(true); }
 
 /* go to the top anchor */
-DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
+// LINK_BEGIN
+//"Move to the first hyperlink"
+void topA() {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
   Anchor *an;
@@ -708,7 +797,9 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
 }
 
 /* go to the last anchor */
-DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
+// LINK_END
+//"Move to the last hyperlink"
+void lastA() {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
   BufferPoint *po;
   Anchor *an;
@@ -745,7 +836,9 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
 }
 
 /* go to the nth anchor */
-DEFUN(nthA, LINK_N, "Go to the nth link") {
+// LINK_N
+//"Go to the nth link"
+void nthA() {
   HmarkerList *hl = Currentbuf->layout.hmarklist;
 
   int n = searchKeyNum();
@@ -776,45 +869,59 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
 }
 
 /* go to the next anchor */
-DEFUN(nextA, NEXT_LINK, "Move to the next hyperlink") { _nextA(false); }
+// NEXT_LINK
+//"Move to the next hyperlink"
+void nextA() { _nextA(false); }
 
 /* go to the previous anchor */
-DEFUN(prevA, PREV_LINK, "Move to the previous hyperlink") { _prevA(false); }
+// PREV_LINK
+//"Move to the previous hyperlink"
+void prevA() { _prevA(false); }
 
 /* go to the next visited anchor */
-DEFUN(nextVA, NEXT_VISITED, "Move to the next visited hyperlink") {
-  _nextA(true);
-}
+// NEXT_VISITED
+//"Move to the next visited hyperlink"
+void nextVA() { _nextA(true); }
 
 /* go to the previous visited anchor */
-DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink") {
-  _prevA(true);
-}
+// PREV_VISITED
+//"Move to the previous visited hyperlink"
+void prevVA() { _prevA(true); }
 
 /* go to the next left anchor */
-DEFUN(nextL, NEXT_LEFT, "Move left to the next hyperlink") { nextX(-1, 0); }
+// NEXT_LEFT
+//"Move left to the next hyperlink"
+void nextL() { nextX(-1, 0); }
 
 /* go to the next left-up anchor */
-DEFUN(nextLU, NEXT_LEFT_UP, "Move left or upward to the next hyperlink") {
-  nextX(-1, -1);
-}
+// NEXT_LEFT_UP
+//"Move left or upward to the next hyperlink"
+void nextLU() { nextX(-1, -1); }
 
 /* go to the next right anchor */
-DEFUN(nextR, NEXT_RIGHT, "Move right to the next hyperlink") { nextX(1, 0); }
+// NEXT_RIGHT
+//"Move right to the next hyperlink"
+void nextR() { nextX(1, 0); }
 
 /* go to the next right-down anchor */
-DEFUN(nextRD, NEXT_RIGHT_DOWN, "Move right or downward to the next hyperlink") {
-  nextX(1, 1);
-}
+// NEXT_RIGHT_DOWN
+//"Move right or downward to the next hyperlink"
+void nextRD() { nextX(1, 1); }
 
 /* go to the next downward anchor */
-DEFUN(nextD, NEXT_DOWN, "Move downward to the next hyperlink") { nextY(1); }
+// NEXT_DOWN
+//"Move downward to the next hyperlink"
+void nextD() { nextY(1); }
 
 /* go to the next upward anchor */
-DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink") { nextY(-1); }
+// NEXT_UP
+//"Move upward to the next hyperlink"
+void nextU() { nextY(-1); }
 
 /* go to the next bufferr */
-DEFUN(nextBf, NEXT, "Switch to the next buffer") {
+// NEXT
+//"Switch to the next buffer"
+void nextBf() {
   Buffer *buf;
   int i;
 
@@ -831,7 +938,9 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer") {
 }
 
 /* go to the previous bufferr */
-DEFUN(prevBf, PREV, "Switch to the previous buffer") {
+// PREV
+//"Switch to the previous buffer"
+void prevBf() {
   for (int i = 0; i < PREC_NUM; i++) {
     auto buf = Currentbuf->nextBuffer;
     if (!buf) {
@@ -845,8 +954,9 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer") {
 }
 
 /* delete current buffer and back to the previous buffer */
-DEFUN(backBf, BACK,
-      "Close current buffer and return to the one below in stack") {
+// BACK
+//"Close current buffer and return to the one below in stack"
+void backBf() {
   // Buffer *buf = Currentbuf->linkBuffer[LB_N_FRAME];
 
   if (!checkBackBuffer(Currentbuf)) {
@@ -864,19 +974,22 @@ DEFUN(backBf, BACK,
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(deletePrevBuf, DELETE_PREVBUF,
-      "Delete previous buffer (mainly for local CGI-scripts)") {
+// DELETE_PREVBUF
+//"Delete previous buffer (mainly for local CGI-scripts)"
+void deletePrevBuf() {
   Buffer *buf = Currentbuf->nextBuffer;
   if (buf) {
     CurrentTab->deleteBuffer(buf);
   }
 }
 
-DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
-  goURL0("Goto URL: ", false);
-}
+// GOTO
+//"Open specified document in a new buffer"
+void goURL() { goURL0("Goto URL: ", false); }
 
-DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
+// GOTO_HOME
+//"Open home page in a new buffer"
+void goHome() {
   const char *url;
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
@@ -892,17 +1005,19 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
   }
 }
 
-DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address") {
-  goURL0("Goto relative URL: ", true);
-}
+// GOTO_RELATIVE
+//"Go to relative address"
+void gorURL() { goURL0("Goto relative URL: ", true); }
 
 /* load bookmark */
-DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
-  cmd_loadURL(BookmarkFile, {}, NO_REFERER, nullptr);
-}
+// BOOKMARK VIEW_BOOKMARK
+//"View bookmarks"
+void ldBmark() { cmd_loadURL(BookmarkFile, {}, NO_REFERER, nullptr); }
 
 /* Add current to bookmark */
-DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
+// ADD_BOOKMARK
+//"Add current page to bookmarks"
+void adBmark() {
   Str *tmp;
   FormList *request;
 
@@ -920,12 +1035,14 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
 }
 
 /* option setting */
-DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
-  cmd_loadBuffer(load_option_panel(), LB_NOLINK);
-}
+// OPTIONS
+//"Display options setting panel"
+void ldOpt() { cmd_loadBuffer(load_option_panel(), LB_NOLINK); }
 
 /* set an option */
-DEFUN(setOpt, SET_OPTION, "Set option") {
+// SET_OPTION
+//"Set option"
+void setOpt() {
   const char *opt;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -947,12 +1064,14 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
 }
 
 /* error message list */
-DEFUN(msgs, MSGS, "Display error messages") {
-  cmd_loadBuffer(message_list_panel(), LB_NOLINK);
-}
+// MSGS
+//"Display error messages"
+void msgs() { cmd_loadBuffer(message_list_panel(), LB_NOLINK); }
 
 /* page info */
-DEFUN(pginfo, INFO, "Display information about the current document") {
+// INFO
+//"Display information about the current document"
+void pginfo() {
 
   if (auto buf = Currentbuf->linkBuffer[LB_N_INFO]) {
     CurrentTab->currentBuffer(buf);
@@ -971,7 +1090,9 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
 }
 
 /* link,anchor,image list */
-DEFUN(linkLst, LIST, "Show all URLs referenced") {
+// LIST
+//"Show all URLs referenced"
+void linkLst() {
   Buffer *buf;
 
   buf = link_list_panel(Currentbuf);
@@ -981,7 +1102,9 @@ DEFUN(linkLst, LIST, "Show all URLs referenced") {
 }
 
 /* cookie list */
-DEFUN(cooLst, COOKIE, "View cookie list") {
+// COOKIE
+//"View cookie list"
+void cooLst() {
   Buffer *buf;
 
   buf = cookie_list_panel();
@@ -990,12 +1113,14 @@ DEFUN(cooLst, COOKIE, "View cookie list") {
 }
 
 /* History page */
-DEFUN(ldHist, HISTORY, "Show browsing history") {
-  cmd_loadBuffer(historyBuffer(URLHist), LB_NOLINK);
-}
+// HISTORY
+//"Show browsing history"
+void ldHist() { cmd_loadBuffer(historyBuffer(URLHist), LB_NOLINK); }
 
 /* download HREF link */
-DEFUN(svA, SAVE_LINK, "Save hyperlink target") {
+// SAVE_LINK
+//"Save hyperlink target"
+void svA() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   do_download = true;
   followA();
@@ -1003,7 +1128,9 @@ DEFUN(svA, SAVE_LINK, "Save hyperlink target") {
 }
 
 /* download IMG link */
-DEFUN(svI, SAVE_IMAGE, "Save inline image") {
+// SAVE_IMAGE
+//"Save inline image"
+void svI() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   do_download = true;
   followI();
@@ -1011,7 +1138,9 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image") {
 }
 
 /* save buffer */
-DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
+// PRINT SAVE_SCREEN
+//"Save rendered document"
+void svBuf() {
   const char *qfile = nullptr, *file;
   FILE *f;
   int is_pipe;
@@ -1057,7 +1186,9 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 }
 
 /* save source */
-DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
+// DOWNLOAD SAVE
+//"Save document source"
+void svSrc() {
   if (Currentbuf->info->sourcefile.empty()) {
     return;
   }
@@ -1077,12 +1208,18 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
 }
 
 /* peek URL */
-DEFUN(peekURL, PEEK_LINK, "Show target address") { _peekURL(0); }
+// PEEK_LINK
+//"Show target address"
+void peekURL() { _peekURL(0); }
 
 /* peek URL of image */
-DEFUN(peekIMG, PEEK_IMG, "Show image address") { _peekURL(1); }
+// PEEK_IMG
+//"Show image address"
+void peekIMG() { _peekURL(1); }
 
-DEFUN(curURL, PEEK, "Show current address") {
+// PEEK
+//"Show current address"
+void curURL() {
   static Str *s = nullptr;
   static int offset = 0, n;
 
@@ -1104,7 +1241,9 @@ DEFUN(curURL, PEEK, "Show current address") {
 }
 /* view HTML source */
 
-DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
+// SOURCE VIEW
+//"Toggle between HTML shown or processed"
+void vwSrc() {
 
   if (Currentbuf->info->type.empty()) {
     return;
@@ -1150,7 +1289,9 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 }
 
 /* reload */
-DEFUN(reload, RELOAD, "Load current document anew") {
+// RELOAD
+//"Load current document anew"
+void reload() {
   Str *url;
   FormList *request;
   int multipart;
@@ -1219,18 +1360,24 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 }
 
 /* reshape */
-DEFUN(reshape, RESHAPE, "Re-render document") {
+// RESHAPE
+//"Re-render document"
+void reshape() {
   Currentbuf->layout.need_reshape = true;
   reshapeBuffer(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
+// MARK_URL
+//"Turn URL-like strings into hyperlinks"
+void chkURL() {
   chkURLBuffer(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
+// MARK_WORD
+//"Turn current word into hyperlink"
+void chkWORD() {
   char *p;
   int spos, epos;
   p = getCurWord(Currentbuf, &spos, &epos);
@@ -1241,9 +1388,13 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
 }
 
 /* render frames */
-DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {}
+// FRAME
+//"Toggle rendering HTML frames"
+void rFrame() {}
 
-DEFUN(extbrz, EXTERN, "Display using an external browser") {
+// EXTERN
+//"Display using an external browser"
+void extbrz() {
   if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
       Currentbuf->info->currentURL.file == "-") {
     /* file is std input */
@@ -1253,7 +1404,9 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
   invoke_browser(Currentbuf->info->currentURL.to_Str().c_str());
 }
 
-DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
+// EXTERN_LINK
+//"Display target using an external browser"
+void linkbrz() {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
   auto a = retrieveCurrentAnchor(Currentbuf);
@@ -1264,7 +1417,9 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
 }
 
 /* show current line number and number of lines in the entire document */
-DEFUN(curlno, LINE_INFO, "Display current position in document") {
+// LINE_INFO
+//"Display current position in document"
+void curlno() {
   Line *l = Currentbuf->layout.currentLine;
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
@@ -1286,11 +1441,15 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
   disp_message(tmp->ptr, false);
 }
 
-DEFUN(dispVer, VERSION, "Display the version of w3m") {
+// VERSION
+//"Display the version of w3m"
+void dispVer() {
   disp_message(Sprintf("w3m version %s", w3m_version)->ptr, true);
 }
 
-DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
+// WRAP_TOGGLE
+//"Toggle wrapping mode in searches"
+void wrapToggle() {
   if (WrapSearch) {
     WrapSearch = false;
     disp_message("Wrap search off", true);
@@ -1300,16 +1459,19 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
   }
 }
 
-DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
+// DICT_WORD
+//"Execute dictionary command (see README.dict)"
+void dictword() {
   // execdict(inputStr("(dictionary)!", ""));
 }
 
-DEFUN(dictwordat, DICT_WORD_AT,
-      "Execute dictionary command for word at cursor") {
-  execdict(GetWord(Currentbuf));
-}
+// DICT_WORD_AT
+//"Execute dictionary command for word at cursor"
+void dictwordat() { execdict(GetWord(Currentbuf)); }
 
-DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
+// COMMAND
+//"Invoke w3m function(s)"
+void execCmd() {
   const char *data, *p;
   int cmd;
 
@@ -1343,7 +1505,9 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(setAlarm, ALARM, "Set alarm") {
+// ALARM
+//"Set alarm"
+void setAlarm() {
   const char *data;
   int sec = 0, cmd = -1;
 
@@ -1373,7 +1537,9 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(reinit, REINIT, "Reload configuration file") {
+// REINIT
+//"Reload configuration file"
+void reinit() {
   auto resource = searchKeyData();
 
   if (resource == nullptr) {
@@ -1415,8 +1581,9 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
       Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, false);
 }
 
-DEFUN(defKey, DEFINE_KEY,
-      "Define a binding between a key stroke combination and a command") {
+// DEFINE_KEY
+//"Define a binding between a key stroke combination and a command"
+void defKey() {
   const char *data;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -1432,12 +1599,16 @@ DEFUN(defKey, DEFINE_KEY,
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
+// NEW_TAB
+//"Open a new tab (with current document)"
+void newT() {
   TabBuffer::_newT();
   displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(closeT, CLOSE_TAB, "Close tab") {
+// CLOSE_TAB
+//"Close tab"
+void closeT() {
   TabBuffer *tab;
 
   if (nTab <= 1)
@@ -1451,7 +1622,9 @@ DEFUN(closeT, CLOSE_TAB, "Close tab") {
   displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(nextT, NEXT_TAB, "Switch to the next tab") {
+// NEXT_TAB
+//"Switch to the next tab"
+void nextT() {
   int i;
 
   if (nTab <= 1)
@@ -1465,7 +1638,9 @@ DEFUN(nextT, NEXT_TAB, "Switch to the next tab") {
   displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
+// PREV_TAB
+//"Switch to the previous tab"
+void prevT() {
   int i;
 
   if (nTab <= 1)
@@ -1479,21 +1654,27 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
   displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
-DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
-  followTab(prec_num ? numTab(PREC_NUM) : nullptr);
-}
+// TAB_LINK
+//"Follow current hyperlink in a new tab"
+void tabA() { followTab(prec_num ? numTab(PREC_NUM) : nullptr); }
 
-DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {
+// TAB_GOTO
+//"Open specified document in a new tab"
+void tabURL() {
   tabURL0(prec_num ? numTab(PREC_NUM) : nullptr,
           "Goto URL on new tab: ", false);
 }
 
-DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab") {
+// TAB_GOTO_RELATIVE
+//"Open relative address in a new tab"
+void tabrURL() {
   tabURL0(prec_num ? numTab(PREC_NUM) : nullptr,
           "Goto relative URL on new tab: ", true);
 }
 
-DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar") {
+// TAB_RIGHT
+//"Move right along the tab bar"
+void tabR() {
   TabBuffer *tab;
   int i;
 
@@ -1502,7 +1683,9 @@ DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar") {
   moveTab(CurrentTab, tab ? tab : LastTab, true);
 }
 
-DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
+// TAB_LEFT
+//"Move left along the tab bar"
+void tabL() {
   TabBuffer *tab;
   int i;
 
@@ -1512,7 +1695,9 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
 }
 
 /* download panel */
-DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
+// DOWNLOAD_LIST
+//"Display downloads panel"
+void ldDL() {
   Buffer *buf;
   int replace = false, new_tab = false;
   int reload;
@@ -1551,7 +1736,9 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
+// UNDO
+//"Cancel the last cursor movement"
+void undoPos() {
   BufferPos *b = Currentbuf->layout.undo;
   if (!Currentbuf->layout.firstLine)
     return;
@@ -1562,7 +1749,9 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
   resetPos(b);
 }
 
-DEFUN(redoPos, REDO, "Cancel the last undo") {
+// REDO
+//"Cancel the last undo"
+void redoPos() {
   BufferPos *b = Currentbuf->layout.undo;
   if (!Currentbuf->layout.firstLine)
     return;
@@ -1573,7 +1762,9 @@ DEFUN(redoPos, REDO, "Cancel the last undo") {
   resetPos(b);
 }
 
-DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
+// CURSOR_TOP
+//"Move cursor to the top of the screen"
+void cursorTop() {
   if (Currentbuf->layout.firstLine == nullptr)
     return;
   Currentbuf->layout.currentLine =
@@ -1582,7 +1773,9 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
+// CURSOR_MIDDLE
+//"Move cursor to the middle of the screen"
+void cursorMiddle() {
   int offsety;
   if (Currentbuf->layout.firstLine == nullptr)
     return;
@@ -1593,7 +1786,9 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
+// CURSOR_BOTTOM
+//"Move cursor to the bottom of the screen"
+void cursorBottom() {
   int offsety;
   if (Currentbuf->layout.firstLine == nullptr)
     return;
