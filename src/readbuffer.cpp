@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "buffer.h"
 #include "line_layout.h"
 #include "url_quote.h"
 #include "quote.h"
@@ -4365,3 +4366,76 @@ const char *remove_space(const char *str) {
     return Strnew_charp_n(p, q - p)->ptr;
   return p;
 }
+
+void loadBuffer(HttpResponse *res, LineLayout *layout) {
+  auto src = res->createSourceFile();
+
+  auto nlines = 0;
+  if (res->f.stream->IStype() != IST_ENCODED) {
+    res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
+  }
+
+  char pre_lbuf = '\0';
+  while (true) {
+    auto _lineBuf2 = res->f.stream->StrmyISgets(); //&& lineBuf2->length
+    if (_lineBuf2.empty()) {
+      break;
+    }
+    auto lineBuf2 = Strnew(_lineBuf2);
+    if (src) {
+      Strfputs(lineBuf2, src);
+    }
+    cleanup_line(lineBuf2, PAGER_MODE);
+    if (squeezeBlankLine) {
+      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
+        ++nlines;
+        continue;
+      }
+      pre_lbuf = lineBuf2->ptr[0];
+    }
+    ++nlines;
+    Strchop(lineBuf2);
+
+    Lineprop *propBuffer = nullptr;
+    lineBuf2 = checkType(lineBuf2, &propBuffer);
+    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
+                       FOLD_BUFFER_WIDTH(), nlines);
+  }
+  layout->topLine = layout->firstLine;
+  layout->lastLine = layout->currentLine;
+  layout->currentLine = layout->firstLine;
+  if (src) {
+    fclose(src);
+  }
+  res->type = "text/plain";
+}
+
+Buffer *loadHTMLString(Str *page) {
+  auto newBuf = new Buffer(INIT_BUFFER_WIDTH());
+  newBuf->info->f = UrlStream(SCM_LOCAL, newStrStream(page->ptr));
+
+  loadHTMLstream(newBuf->info.get(), &newBuf->layout, true);
+
+  return newBuf;
+}
+
+#define SHELLBUFFERNAME "*Shellout*"
+Buffer *getshell(const char *cmd) {
+  if (cmd == nullptr || *cmd == '\0') {
+    return nullptr;
+  }
+
+  auto f = popen(cmd, "r");
+  if (f == nullptr) {
+    return nullptr;
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info->f = UrlStream(SCM_UNKNOWN, newFileStream(f, pclose));
+  loadBuffer(buf->info.get(), &buf->layout);
+  buf->info->filename = cmd;
+  buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
+  return buf;
+}
+
+

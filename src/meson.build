@@ -127,6 +127,7 @@ executable(
         'tabbuffer.cpp',
         'proc.cpp',
         'line_layout.cpp',
+        'file_util.cpp',
     ],
     install: true,
     dependencies: [

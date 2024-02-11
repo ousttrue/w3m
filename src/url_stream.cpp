@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "file_util.h"
 #include "quote.h"
 #include "http_session.h"
 #include "rc.h"

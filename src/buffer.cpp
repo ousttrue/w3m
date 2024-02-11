@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "symbol.h"
+#include "file_util.h"
 #include "history.h"
 #include "quote.h"
 #include "app.h"
@@ -1292,4 +1294,56 @@ Str *Str_form_quote(Str *x) {
   if (tmp)
     return tmp;
   return x;
+}
+
+static void _saveBuffer(Buffer *buf, Line *l, FILE *f, int cont) {
+
+  auto is_html = buf->info->is_html_type();
+
+  for (; l != nullptr; l = l->next) {
+    Str *tmp;
+    if (is_html)
+      tmp = conv_symbol(l);
+    else
+      tmp = Strnew_charp_n(l->lineBuf.data(), l->len);
+    Strfputs(tmp, f);
+    if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
+      putc('\n', f);
+  }
+}
+
+void saveBuffer(Buffer *buf, FILE *f, int cont) {
+  _saveBuffer(buf, buf->layout.firstLine, f, cont);
+}
+
+void cmd_loadBuffer(Buffer *buf, int linkid) {
+  if (buf == nullptr) {
+    disp_err_message("Can't load string", false);
+  } else if (buf != NO_BUFFER) {
+    buf->info->currentURL = Currentbuf->info->currentURL;
+    if (linkid != LB_NOLINK) {
+      buf->linkBuffer[linkid] = Currentbuf;
+      Currentbuf->linkBuffer[linkid] = buf;
+    }
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+void cmd_loadfile(const char *fn) {
+
+  auto res =
+      loadGeneralFile(file_to_url((char *)fn), {}, {.referer = NO_REFERER});
+  if (!res) {
+    char *emsg = Sprintf("%s not found", fn)->ptr;
+    disp_err_message(emsg, false);
+    return;
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
+  if (buf != NO_BUFFER) {
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_NORMAL);
 }

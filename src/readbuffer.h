@@ -229,3 +229,7 @@ void cleanup_line(Str *s, CleanupMode mode);
 Str *getLinkNumberStr(int correction);
 const char *remove_space(const char *str);
 extern int is_boundary(unsigned char *, unsigned char *);
+
+void loadBuffer(HttpResponse *res, LineLayout *layout);
+Buffer *loadHTMLString(Str *page);
+Buffer *getshell(const char *cmd);

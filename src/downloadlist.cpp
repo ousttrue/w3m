@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "readbuffer.h"
 #include "http_session.h"
 #include "message.h"
 #include "terms.h"

@@ -10,6 +10,7 @@
 #include <fcntl.h>
 
 #include "cookie.h"
+#include "readbuffer.h"
 #include "matchattr.h"
 #include "anchor.h"
 #include "rc.h"

@@ -100,3 +100,10 @@ void query_from_followform(Str **query, FormItemList *fi, int multipart);
 
 struct Str;
 Str *Str_form_quote(Str *x);
+
+void saveBuffer(Buffer *buf, FILE *f, int cont);
+
+void cmd_loadBuffer(Buffer *buf, int linkid);
+void cmd_loadfile(const char *fn);
+void cmd_loadURL(const char *url, std::optional<Url> current,
+                 const char *referer, FormList *request);

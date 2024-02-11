@@ -1,4 +1,5 @@
 #include "message.h"
+#include "readbuffer.h"
 #include "anchor.h"
 #include "display.h"
 #include "tabbuffer.h"

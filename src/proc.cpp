@@ -1,4 +1,6 @@
 #include "proto.h"
+#include "file_util.h"
+#include "readbuffer.h"
 #include "http_response.h"
 #include "url_quote.h"
 #include "search.h"
