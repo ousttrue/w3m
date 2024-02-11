@@ -308,7 +308,7 @@ static Buffer *loadNormalBuf(Buffer *buf, int renderframe) {
 
 Buffer *loadLink(const char *url, const char *target, const char *referer,
                  FormList *request) {
-  Buffer *buf, *nfbuf;
+  Buffer *nfbuf;
   // union frameset_element *f_element = nullptr;
   Url pu;
   const int *no_referer_ptr;
@@ -324,13 +324,17 @@ Buffer *loadLink(const char *url, const char *target, const char *referer,
     referer = NO_REFERER;
   if (referer == nullptr)
     referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
-  buf =
+
+  auto res =
       loadGeneralFile(url, baseURL(Currentbuf), {.referer = referer}, request);
-  if (buf == nullptr) {
+  if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
     return nullptr;
   }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
 
   pu = urlParse(url, base);
   pushHashHist(URLHist, pu.to_Str().c_str());
@@ -977,9 +981,13 @@ int main(int argc, char **argv) {
   if (load_argc == 0) {
     /* no URL specified */
     if (load_bookmark) {
-      newbuf = loadGeneralFile(BookmarkFile, {}, {.referer = NO_REFERER});
-      if (newbuf == nullptr)
+      auto res = loadGeneralFile(BookmarkFile, {}, {.referer = NO_REFERER});
+      if (res) {
+        newbuf = new Buffer(INIT_BUFFER_WIDTH());
+        newbuf->info = res;
+      } else {
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
+      }
     } else if (visual_start) {
       Str *s_page;
       s_page =
@@ -994,11 +1002,16 @@ int main(int argc, char **argv) {
         Strcat_charp(err_msg, "w3m: Can't load string.\n");
     } else if ((p = getenv("HTTP_HOME")) != nullptr ||
                (p = getenv("WWW_HOME")) != nullptr) {
-      newbuf = loadGeneralFile(p, {}, {.referer = NO_REFERER});
-      if (newbuf == nullptr)
+      auto res = loadGeneralFile(p, {}, {.referer = NO_REFERER});
+      if (res) {
+        newbuf = new Buffer(INIT_BUFFER_WIDTH());
+        newbuf->info = res;
+        if (newbuf != NO_BUFFER) {
+          pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
+        }
+      } else {
         Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
-      else if (newbuf != NO_BUFFER)
-        pushHashHist(URLHist, newbuf->info->currentURL.to_Str().c_str());
+      }
     } else {
       if (fmInitialized)
         fmTerm();
@@ -1049,7 +1062,11 @@ int main(int argc, char **argv) {
         } else {
           request = nullptr;
         }
-        newbuf = loadGeneralFile(url, {}, {.referer = NO_REFERER}, request);
+        auto res = loadGeneralFile(url, {}, {.referer = NO_REFERER}, request);
+        if (res) {
+          newbuf = new Buffer(INIT_BUFFER_WIDTH());
+          newbuf->info = res;
+        }
       }
       if (newbuf == nullptr) {
         if (ArgvIsURL && !retry) {

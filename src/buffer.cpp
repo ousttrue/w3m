@@ -623,7 +623,6 @@ void shiftvisualpos(Buffer *buf, int shift) {
 #define DICTBUFFERNAME "*dictionary*"
 void execdict(const char *word) {
   const char *w, *dictcmd;
-  Buffer *buf;
 
   if (!UseDictCommand || word == nullptr || *word == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -636,11 +635,15 @@ void execdict(const char *word) {
   }
   dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  buf = loadGeneralFile(dictcmd, {}, {.referer = NO_REFERER});
-  if (buf == nullptr) {
+  auto res = loadGeneralFile(dictcmd, {}, {.referer = NO_REFERER});
+  if (!res) {
     disp_message("Execution failed", true);
     return;
-  } else if (buf != NO_BUFFER) {
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
+  if (buf != NO_BUFFER) {
     buf->info->filename = w;
     buf->layout.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
     if (buf->info->type.empty()) {

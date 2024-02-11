@@ -16,10 +16,10 @@
 #include "func.h"
 #include "etc.h"
 
-#include "form.h"
-#include "display.h"
-#include "buffer.h"
-#include "http_session.h"
+// #include "form.h"
+// #include "display.h"
+// #include "buffer.h"
+// #include "http_session.h"
 
 #include <strings.h>
 #include <unistd.h>
@@ -310,28 +310,29 @@ FILE *HttpResponse::createSourceFile() {
   return src;
 }
 
-Buffer *HttpResponse::page_loaded(Url url) {
+void HttpResponse::page_loaded(Url url) {
   const char *p;
   if ((p = this->getHeader("Content-Length:"))) {
     this->current_content_length = strtoclen(p);
   }
-  if (do_download) {
-    /* download only */
-    const char *file;
-    if (DecodeCTE && this->f.stream->IStype() != IST_ENCODED) {
-      this->f.stream = newEncodedStream(this->f.stream, this->f.encoding);
-    }
-    if (url.schema == SCM_LOCAL) {
-      struct stat st;
-      if (PreserveTimestamp && !stat(url.real_file.c_str(), &st))
-        this->f.modtime = st.st_mtime;
-      file = guess_filename(url.real_file.c_str());
-    } else {
-      file = this->guess_save_name(url.file.c_str());
-    }
-    this->f.doFileSave(file);
-    return NO_BUFFER;
-  }
+
+  // if (do_download) {
+  //   /* download only */
+  //   const char *file;
+  //   if (DecodeCTE && this->f.stream->IStype() != IST_ENCODED) {
+  //     this->f.stream = newEncodedStream(this->f.stream, this->f.encoding);
+  //   }
+  //   if (url.schema == SCM_LOCAL) {
+  //     struct stat st;
+  //     if (PreserveTimestamp && !stat(url.real_file.c_str(), &st))
+  //       this->f.modtime = st.st_mtime;
+  //     file = guess_filename(url.real_file.c_str());
+  //   } else {
+  //     file = this->guess_save_name(url.file.c_str());
+  //   }
+  //   this->f.doFileSave(file);
+  //   return NO_BUFFER;
+  // }
 
   if ((this->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
     url.real_file = this->f.uncompress_stream();
@@ -351,8 +352,6 @@ Buffer *HttpResponse::page_loaded(Url url) {
                        : Strnew(this->currentURL.file)->ptr;
   this->ssl_certificate = this->f.ssl_certificate;
 
-  auto b = new Buffer(INIT_BUFFER_WIDTH());
-  b->info = shared_from_this();
   // loadSomething(this, &b->layout);
   {
     // auto layout = &b->layout;
@@ -428,6 +427,8 @@ Buffer *HttpResponse::page_loaded(Url url) {
     // }
   }
 
-  preFormUpdateBuffer(b);
-  return b;
+  // auto b = new Buffer(INIT_BUFFER_WIDTH());
+  // b->info = shared_from_this();
+  // preFormUpdateBuffer(b);
+  // return b;
 }

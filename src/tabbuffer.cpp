@@ -252,11 +252,16 @@ void cmd_loadURL(const char *url, std::optional<Url> current,
     return;
 
   refresh(term_io());
-  auto buf = loadGeneralFile(url, current, {.referer = referer}, request);
-  if (buf == nullptr) {
+  auto res = loadGeneralFile(url, current, {.referer = referer}, request);
+  if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
-  } else if (buf != NO_BUFFER) {
+    return;
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
+  if (buf != NO_BUFFER) {
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);

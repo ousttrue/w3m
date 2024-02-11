@@ -40,7 +40,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   }
   FILE *createSourceFile();
 
-  struct Buffer *page_loaded(Url url);
+  void page_loaded(Url url);
 };
 
 const char *mybasename(const char *s);

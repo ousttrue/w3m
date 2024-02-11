@@ -667,7 +667,6 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
 /* view inline image */
 DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   Anchor *a;
-  Buffer *buf;
 
   if (Currentbuf->layout.firstLine == nullptr)
     return;
@@ -677,11 +676,17 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     return;
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   refresh(term_io());
-  buf = loadGeneralFile(a->url, baseURL(Currentbuf), {});
-  if (buf == nullptr) {
+
+  auto res = loadGeneralFile(a->url, baseURL(Currentbuf), {});
+  if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     disp_err_message(emsg, false);
-  } else if (buf != NO_BUFFER) {
+    return;
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
+  if (buf != NO_BUFFER) {
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);
@@ -1201,16 +1206,21 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   message("Reloading...", 0, 0);
   refresh(term_io());
   DefaultType = Strnew(Currentbuf->info->type)->ptr;
-  auto buf = loadGeneralFile(
+
+  auto res = loadGeneralFile(
       url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
   DefaultType = nullptr;
 
   if (multipart)
     unlink(request->body);
-  if (buf == nullptr) {
+  if (!res) {
     disp_err_message("Can't reload...", true);
     return;
-  } else if (buf == NO_BUFFER) {
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
+  if (buf == NO_BUFFER) {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }

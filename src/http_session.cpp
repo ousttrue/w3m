@@ -255,8 +255,10 @@ int doFileMove(const char *tmpf, const char *defstr) {
 /*
  * loadGeneralFile: load file to buffer
  */
-Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
-                        const HttpOption &option, FormList *request) {
+std::shared_ptr<HttpResponse> loadGeneralFile(const char *path,
+                                              std::optional<Url> current,
+                                              const HttpOption &option,
+                                              FormList *request) {
   auto res = std::make_shared<HttpResponse>();
 
   // TRAP_OFF;
@@ -348,7 +350,8 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
         if (hr->uname == nullptr) {
           /* abort */
           // TRAP_OFF;
-          return res->page_loaded(hr->url);
+          res->page_loaded(hr->url);
+          return res;
         }
         hr->add_auth_cookie_flag = true;
         return loadGeneralFile(path, current, option, request);
@@ -379,7 +382,8 @@ Buffer *loadGeneralFile(const char *path, std::optional<Url> current,
    *      to support default utf8 encoding for XHTML here? */
   res->f.guess_type = Strnew(res->type)->ptr;
 
-  return res->page_loaded(hr->url);
+  res->page_loaded(hr->url);
+  return res;
 }
 
 #define PIPEBUFFERNAME "*stream*"
@@ -467,12 +471,17 @@ void cmd_loadBuffer(Buffer *buf, int linkid) {
 
 void cmd_loadfile(const char *fn) {
 
-  auto buf =
+  auto res =
       loadGeneralFile(file_to_url((char *)fn), {}, {.referer = NO_REFERER});
-  if (buf == nullptr) {
+  if (!res) {
     char *emsg = Sprintf("%s not found", fn)->ptr;
     disp_err_message(emsg, false);
-  } else if (buf != NO_BUFFER) {
+    return;
+  }
+
+  auto buf = new Buffer(INIT_BUFFER_WIDTH());
+  buf->info = res;
+  if (buf != NO_BUFFER) {
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);
