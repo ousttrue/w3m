@@ -27,16 +27,11 @@ struct LinkList;
 struct AlarmEvent;
 struct HttpResponse;
 
-struct Clone {
-  int count = 1;
-};
-
 struct Buffer {
   std::shared_ptr<HttpResponse> info;
   LineLayout layout = {};
   std::shared_ptr<Buffer> backBuffer;
   std::array<std::shared_ptr<Buffer>, MAX_LB> linkBuffer = {0};
-  std::shared_ptr<Clone> clone;
   bool check_url = false;
 
 private:

@@ -1363,8 +1363,6 @@ void vwSrc() {
   buf->info->currentURL = CurrentTab->currentBuffer()->info->currentURL;
   buf->info->filename = CurrentTab->currentBuffer()->info->filename;
   buf->info->sourcefile = CurrentTab->currentBuffer()->info->sourcefile;
-  buf->clone = CurrentTab->currentBuffer()->clone;
-  buf->clone->count++;
 
   buf->layout.need_reshape = true;
   reshapeBuffer(buf);

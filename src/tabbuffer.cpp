@@ -210,7 +210,6 @@ void gotoLabel(const char *label) {
     buf->linkBuffer[i] = nullptr;
   buf->info->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, buf->info->currentURL.to_Str().c_str());
-  buf->clone->count++;
   CurrentTab->pushBuffer(buf);
   CurrentTab->currentBuffer()->layout.gotoLine(al->start.line);
   if (label_topline)
@@ -393,7 +392,6 @@ void TabBuffer::_newT() {
   for (int i = 0; i < MAX_LB; i++) {
     buf->linkBuffer[i] = nullptr;
   }
-  buf->clone->count++;
   tag->firstBuffer = tag->_currentBuffer = buf;
 
   tag->nextTab = CurrentTab->nextTab;

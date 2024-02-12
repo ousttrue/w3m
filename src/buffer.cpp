@@ -34,7 +34,6 @@
 Buffer::Buffer(int width) {
   this->layout.width = width;
   this->info = std::make_shared<HttpResponse>();
-  this->clone = std::make_shared<Clone>();
   // use default from -o mark_all_pages
   this->check_url = MarkAllPages;
 }
@@ -46,7 +45,6 @@ Buffer &Buffer::operator=(const Buffer &src) {
   this->layout = src.layout;
   this->backBuffer = src.backBuffer;
   this->linkBuffer = src.linkBuffer;
-  this->clone = src.clone;
   this->check_url = src.check_url;
   return *this;
 }
@@ -71,9 +69,6 @@ void Buffer::discardBuffer() {
     if (b == nullptr)
       continue;
     b->linkBuffer[i] = nullptr;
-  }
-  if (--this->clone->count) {
-    return;
   }
 }
 
