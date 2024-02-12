@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "keyvalue.h"
 #include "readbuffer.h"
 #include "http_session.h"
 #include "message.h"
@@ -8,6 +9,7 @@
 #include "w3m.h"
 #include "alloc.h"
 #include "Str.h"
+#include <csignal>
 #include <sys/stat.h>
 
 static bool add_download_list = false;
@@ -158,3 +160,48 @@ std::shared_ptr<Buffer> DownloadListBuffer(void) {
   Strcat_charp(src, "</form></body></html>");
   return loadHTMLString(src);
 }
+
+void stopDownload(void) {
+  DownloadList *d;
+
+  if (!FirstDL)
+    return;
+  for (d = FirstDL; d != nullptr; d = d->next) {
+    if (!d->running)
+      continue;
+    kill(d->pid, SIGKILL);
+    unlink(d->lock);
+  }
+}
+
+void download_action(struct keyvalue *arg) {
+  DownloadList *d;
+  pid_t pid;
+
+  for (; arg; arg = arg->next) {
+    if (!strncmp(arg->arg, "stop", 4)) {
+      pid = (pid_t)atoi(&arg->arg[4]);
+      kill(pid, SIGKILL);
+    } else if (!strncmp(arg->arg, "ok", 2))
+      pid = (pid_t)atoi(&arg->arg[2]);
+    else
+      continue;
+    for (d = FirstDL; d; d = d->next) {
+      if (d->pid == pid) {
+        unlink(d->lock);
+        if (d->prev)
+          d->prev->next = d->next;
+        else
+          FirstDL = d->next;
+        if (d->next)
+          d->next->prev = d->prev;
+        else
+          LastDL = d->prev;
+        break;
+      }
+    }
+  }
+  ldDL();
+}
+
+

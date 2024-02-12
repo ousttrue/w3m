@@ -3,6 +3,7 @@
  * w3m func.c
  */
 #include "w3m.h"
+#include "terms.h"
 #include "app.h"
 #include "message.h"
 #include "ctrlcode.h"
@@ -414,3 +415,17 @@ const char *getQWord(const char **str) {
   *str = p;
   return tmp->ptr;
 }
+
+void escdmap(char c) {
+  int d;
+  d = (int)c - (int)'0';
+  c = getch();
+  if (IS_DIGIT(c)) {
+    d = d * 10 + (int)c - (int)'0';
+    c = getch();
+  }
+  if (c == '~')
+    escKeyProc((int)d, K_ESCD, EscDKeymap);
+}
+
+void pcmap(void) {}

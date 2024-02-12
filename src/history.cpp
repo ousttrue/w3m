@@ -18,6 +18,12 @@ int UseHistory = true;
 int URLHistSize = 100;
 int SaveURLHist = true;
 
+Hist *LoadHist;
+Hist *SaveHist;
+Hist *URLHist;
+Hist *ShellHist;
+Hist *TextHist;
+
 /* Merge entries from their history into ours */
 static int mergeHistory(Hist *ours, Hist *theirs) {
   HistItem *item;

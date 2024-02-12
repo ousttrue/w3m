@@ -73,4 +73,4 @@ extern const char *keymap_file;
 
 void w3m_exit(int i);
 void _quitfm(bool confirm);
-
+char *currentdir();

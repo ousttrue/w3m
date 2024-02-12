@@ -1,4 +1,6 @@
 #include "w3m.h"
+#include "ssl_util.h"
+#include "downloadlist.h"
 #include "etc.h"
 #include "url_stream.h"
 #include "quote.h"
@@ -196,4 +198,60 @@ Url urlParse(const char *src, std::optional<Url> current) {
     }
   }
   return url;
+}
+
+void deleteFiles() {
+  for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
+    while (Firstbuf /*&& Firstbuf != NO_BUFFER*/) {
+      auto buf = Firstbuf->backBuffer;
+      Firstbuf->discardBuffer();
+      Firstbuf = buf;
+    }
+  }
+  while (auto f = popText(fileToDelete)) {
+    unlink(f);
+  }
+}
+
+void w3m_exit(int i) {
+  stopDownload();
+  deleteFiles();
+  free_ssl_ctx();
+  if (mkd_tmp_dir)
+    if (rmdir(mkd_tmp_dir) != 0) {
+      fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
+      exit(1);
+    }
+  exit(i);
+}
+
+#define HAVE_GETCWD 1
+char *currentdir() {
+  char *path;
+#ifdef HAVE_GETCWD
+#ifdef MAXPATHLEN
+  path = (char *)NewAtom_N(char, MAXPATHLEN);
+  getcwd(path, MAXPATHLEN);
+#else
+  path = getcwd(NULL, 0);
+#endif
+#else /* not HAVE_GETCWD */
+#ifdef HAVE_GETWD
+  path = NewAtom_N(char, 1024);
+  getwd(path);
+#else  /* not HAVE_GETWD */
+  FILE *f;
+  char *p;
+  path = (char *)NewAtom_N(char, 1024);
+  f = popen("pwd", "r");
+  fgets(path, 1024, f);
+  pclose(f);
+  for (p = path; *p; p++)
+    if (*p == '\n') {
+      *p = '\0';
+      break;
+    }
+#endif /* not HAVE_GETWD */
+#endif /* not HAVE_GETCWD */
+  return path;
 }

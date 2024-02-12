@@ -853,3 +853,37 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
 
   return loadHTMLString(tmp);
 }
+
+/* mark URL-like patterns as anchors */
+void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
+  static const char *url_like_pat[] = {
+      "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
+      "=\\-]",
+      "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+      "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
+      "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
+#endif
+#ifdef INET6
+      "https?://[a-zA-Z0-9:%\\-\\./"
+      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
+      "?=~_\\&+@#,\\$;]*",
+      "ftp://[a-zA-Z0-9:%\\-\\./"
+      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+#endif /* INET6 */
+      nullptr};
+  int i;
+  for (i = 0; url_like_pat[i]; i++) {
+    reAnchor(&buf->layout, url_like_pat[i]);
+  }
+  buf->check_url = true;
+}
+
+/* follow HREF link in the buffer */
+void bufferA(void) {
+  on_target = false;
+  followA();
+  on_target = true;
+}
+
+

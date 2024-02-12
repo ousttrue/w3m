@@ -128,6 +128,7 @@ executable(
         'proc.cpp',
         'line_layout.cpp',
         'file_util.cpp',
+        'alarm.cpp',
     ],
     install: true,
     dependencies: [
