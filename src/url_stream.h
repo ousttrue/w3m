@@ -32,7 +32,7 @@ struct UrlStream {
   EncodingType encoding = ENC_7BIT;
   std::shared_ptr<input_stream> stream;
   const char *ext = {};
-  int compression = CMP_NOCOMPRESS;
+  CompressionType compression = CMP_NOCOMPRESS;
   int content_encoding = CMP_NOCOMPRESS;
   std::string guess_type;
   const char *ssl_certificate = {};

@@ -27,17 +27,7 @@
 #define BROTLI_NAME "brotli"
 
 /* *INDENT-OFF* */
-static struct compression_decoder {
-  int type;
-  const char *ext;
-  const char *mime_type;
-  int auxbin_p;
-  const char *cmd;
-  const char *name;
-  const char *encoding;
-  const char *encodings[4];
-  int use_d_arg;
-} compression_decoders[] = {
+static compression_decoder compression_decoders[] = {
     {CMP_COMPRESS,
      ".gz",
      "application/x-gzip",
@@ -94,10 +84,8 @@ static struct compression_decoder {
      0},
 };
 
-const char *compress_application_type(int compression) {
-  struct compression_decoder *d;
-
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+const char *compress_application_type(CompressionType compression) {
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
     if (d->type == compression)
       return d->mime_type;
   }
@@ -105,50 +93,42 @@ const char *compress_application_type(int compression) {
 }
 
 const char *uncompressed_file_type(const char *path, const char **ext) {
-  int len, slen;
-  Str *fn;
+  if (path == nullptr)
+    return nullptr;
+
+  auto slen = 0;
+  auto len = strlen(path);
   struct compression_decoder *d;
-
-  if (path == NULL)
-    return NULL;
-
-  slen = 0;
-  len = strlen(path);
   for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (d->ext == NULL)
+    if (d->ext == nullptr)
       continue;
     slen = strlen(d->ext);
     if (len > slen && strcasecmp(&path[len - slen], d->ext) == 0)
       break;
   }
   if (d->type == CMP_NOCOMPRESS)
-    return NULL;
+    return nullptr;
 
-  fn = Strnew_charp(path);
+  auto fn = Strnew_charp(path);
   Strshrink(fn, slen);
   if (ext)
     *ext = filename_extension(fn->ptr, 0);
   auto t0 = guessContentType(fn->ptr);
-  if (t0 == NULL)
+  if (t0 == nullptr)
     t0 = "text/plain";
   return t0;
 }
 
 std::string UrlStream::uncompress_stream() {
-  pid_t pid1;
-  FILE *f1;
-  const char *expand_cmd = GUNZIP_CMDNAME;
-  const char *expand_name = GUNZIP_NAME;
-  char *tmpf = NULL;
-  char *ext = NULL;
-  struct compression_decoder *d;
-  int use_d_arg = 0;
-
   if (this->stream->IStype() != IST_ENCODED) {
     this->stream = newEncodedStream(this->stream, this->encoding);
     this->encoding = ENC_7BIT;
   }
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+
+  const char *expand_cmd = GUNZIP_CMDNAME;
+  const char *expand_name = GUNZIP_NAME;
+  int use_d_arg = 0;
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
     if (this->compression == d->type) {
       if (d->auxbin_p)
         expand_cmd = auxbinFile((char *)d->cmd);
@@ -162,12 +142,14 @@ std::string UrlStream::uncompress_stream() {
   }
   this->compression = CMP_NOCOMPRESS;
 
+  char *tmpf = nullptr;
   if (this->schema != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_DFL, ext)->ptr;
   }
 
   /* child1 -- stdout|f1=uf -> parent */
-  pid1 = open_pipe_rw(&f1, NULL);
+  FILE *f1;
+  auto pid1 = open_pipe_rw(&f1, nullptr);
   if (pid1 < 0) {
     return {};
   }
@@ -177,7 +159,7 @@ std::string UrlStream::uncompress_stream() {
     FILE *f2 = stdin;
 
     /* uf -> child2 -- stdout|stdin -> child1 */
-    pid2 = open_pipe_rw(&f2, NULL);
+    pid2 = open_pipe_rw(&f2, nullptr);
     if (pid2 < 0) {
       exit(1);
     }
@@ -185,7 +167,7 @@ std::string UrlStream::uncompress_stream() {
       /* child2 */
       char *buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
       int count;
-      FILE *f = NULL;
+      FILE *f = nullptr;
 
       // int UrlStream::fileno() const { return this->stream->ISfileno(); }
 
@@ -207,9 +189,9 @@ std::string UrlStream::uncompress_stream() {
     dup2(1, 2); /* stderr>&stdout */
     setup_child(true, -1, -1);
     if (use_d_arg)
-      execlp(expand_cmd, expand_name, "-d", NULL);
+      execlp(expand_cmd, expand_name, "-d", nullptr);
     else
-      execlp(expand_cmd, expand_name, NULL);
+      execlp(expand_cmd, expand_name, nullptr);
     exit(1);
   }
   this->stream = newFileStream(f1, fclose);
@@ -224,26 +206,27 @@ std::string UrlStream::uncompress_stream() {
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
 
 static int check_command(const char *cmd, int auxbin_p) {
-  static char *path = NULL;
-  Str *dirs;
-  char *p, *np;
-  Str *pathname;
-  struct stat st;
-
-  if (path == NULL)
+  static char *path = nullptr;
+  if (path == nullptr) {
     path = getenv("PATH");
+  }
+
+  Str *dirs;
   if (auxbin_p)
     dirs = Strnew_charp(w3m_auxbin_dir());
   else
     dirs = Strnew_charp(path);
-  for (p = dirs->ptr; p != NULL; p = np) {
+
+  char *np;
+  for (auto p = dirs->ptr; p != nullptr; p = np) {
     np = strchr(p, PATH_SEPARATOR);
     if (np)
       *np++ = '\0';
-    pathname = Strnew();
+    auto pathname = Strnew();
     Strcat_charp(pathname, p);
     Strcat_char(pathname, '/');
     Strcat_charp(pathname, cmd);
+    struct stat st;
     if (stat(pathname->ptr, &st) == 0 && S_ISREG(st.st_mode) &&
         (st.st_mode & S_IXANY) != 0)
       return 1;
@@ -252,21 +235,20 @@ static int check_command(const char *cmd, int auxbin_p) {
 }
 
 char *acceptableEncoding(void) {
-  static Str *encodings = NULL;
-  struct compression_decoder *d;
-  TextList *l;
-  char *p;
-
-  if (encodings != NULL)
+  static Str *encodings = nullptr;
+  if (encodings != nullptr) {
     return encodings->ptr;
-  l = newTextList();
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+  }
+
+  auto l = newTextList();
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
     if (check_command(d->cmd, d->auxbin_p)) {
       pushText(l, d->encoding);
     }
   }
+
   encodings = Strnew();
-  while ((p = popText(l)) != NULL) {
+  while (auto p = popText(l)) {
     if (encodings->length)
       Strcat_charp(encodings, ", ");
     Strcat_charp(encodings, p);
@@ -275,13 +257,12 @@ char *acceptableEncoding(void) {
 }
 
 void process_compression(Str *lineBuf2, UrlStream *uf) {
-  struct compression_decoder *d;
   auto p = lineBuf2->ptr + 17;
   while (IS_SPACE(*p))
     p++;
   uf->compression = CMP_NOCOMPRESS;
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    for (auto e = d->encodings; *e != NULL; e++) {
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+    for (auto e = d->encodings; *e != nullptr; e++) {
       if (strncasecmp(p, *e, strlen(*e)) == 0) {
         uf->compression = d->type;
         break;
@@ -294,19 +275,15 @@ void process_compression(Str *lineBuf2, UrlStream *uf) {
 }
 
 void check_compression(const char *path, UrlStream *uf) {
-  int len;
-  struct compression_decoder *d;
-
-  if (path == NULL)
+  if (!path) {
     return;
-
-  len = strlen(path);
+  }
+  auto len = strlen(path);
   uf->compression = CMP_NOCOMPRESS;
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    int elen;
-    if (d->ext == NULL)
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+    if (d->ext == nullptr)
       continue;
-    elen = strlen(d->ext);
+    auto elen = strlen(d->ext);
     if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
       uf->compression = d->type;
       uf->guess_type = d->mime_type;
@@ -316,13 +293,16 @@ void check_compression(const char *path, UrlStream *uf) {
 }
 
 const char *filename_extension(const char *path, int is_url) {
-  const char *last_dot = "", *p = path;
-  int i;
-
-  if (path == NULL)
+  const char *last_dot = "";
+  if (path == nullptr) {
     return last_dot;
-  if (*p == '.')
+  }
+
+  auto p = path;
+  if (*p == '.') {
     p++;
+  }
+
   for (; *p; p++) {
     if (*p == '.') {
       last_dot = p;
@@ -330,11 +310,12 @@ const char *filename_extension(const char *path, int is_url) {
       break;
   }
   if (*last_dot == '.') {
+    int i;
     for (i = 1; i < 8 && last_dot[i]; i++) {
       if (is_url && !IS_ALNUM(last_dot[i]))
         break;
     }
     return allocStr(last_dot, i);
-  } else
-    return last_dot;
+  }
+  return last_dot;
 }
