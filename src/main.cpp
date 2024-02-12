@@ -189,8 +189,7 @@ int main(int argc, char **argv) {
     return 2;
   }
 
-  auto newbuf = Buffer::create(INIT_BUFFER_WIDTH());
-  newbuf->info = res;
+  auto newbuf = Buffer::create(res);
 
   TabBuffer::init();
   CurrentTab->pushBuffer(newbuf);

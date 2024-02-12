@@ -322,8 +322,8 @@ void readsh() {
     disp_message("Execution failed", true);
     return;
   } else {
-    if (buf->info->type.empty()) {
-      buf->info->type = "text/plain";
+    if (buf->res->type.empty()) {
+      buf->res->type = "text/plain";
     }
     CurrentTab->pushBuffer(buf);
   }
@@ -663,14 +663,13 @@ void linend() {
 // EDIT
 //"Edit local source"
 void editBf() {
-  auto fn = CurrentTab->currentBuffer()->info->filename;
+  auto fn = CurrentTab->currentBuffer()->res->filename;
 
   if (fn.empty() || /* Behaving as a pager */
-      (CurrentTab->currentBuffer()->info->type.empty() &&
-       CurrentTab->currentBuffer()->info->edit ==
-           nullptr) || /* Reading shell */
-      CurrentTab->currentBuffer()->info->currentURL.schema != SCM_LOCAL ||
-      CurrentTab->currentBuffer()->info->currentURL.file ==
+      (CurrentTab->currentBuffer()->res->type.empty() &&
+       CurrentTab->currentBuffer()->res->edit == nullptr) || /* Reading shell */
+      CurrentTab->currentBuffer()->res->currentURL.schema != SCM_LOCAL ||
+      CurrentTab->currentBuffer()->res->currentURL.file ==
           "-" /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", true);
@@ -678,11 +677,11 @@ void editBf() {
   }
 
   Str *cmd;
-  if (CurrentTab->currentBuffer()->info->edit) {
+  if (CurrentTab->currentBuffer()->res->edit) {
     cmd = unquote_mailcap(
-        CurrentTab->currentBuffer()->info->edit,
-        CurrentTab->currentBuffer()->info->type.c_str(), fn.c_str(),
-        CurrentTab->currentBuffer()->info->getHeader("Content-Type:"), nullptr);
+        CurrentTab->currentBuffer()->res->edit,
+        CurrentTab->currentBuffer()->res->type.c_str(), fn.c_str(),
+        CurrentTab->currentBuffer()->res->getHeader("Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote(fn.c_str()),
                    cur_real_linenumber(CurrentTab->currentBuffer()));
@@ -737,8 +736,8 @@ void followA() {
     gotoLabel(a->url + 1);
     return;
   }
-  u = urlParse(a->url, CurrentTab->currentBuffer()->info->getBaseURL());
-  if (u.to_Str() == CurrentTab->currentBuffer()->info->currentURL.to_Str()) {
+  u = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
+  if (u.to_Str() == CurrentTab->currentBuffer()->res->currentURL.to_Str()) {
     /* index within this buffer */
     if (u.label.size()) {
       gotoLabel(u.label.c_str());
@@ -779,15 +778,14 @@ void followI() {
   refresh(term_io());
 
   auto res = loadGeneralFile(
-      a->url, CurrentTab->currentBuffer()->info->getBaseURL(), {});
+      a->url, CurrentTab->currentBuffer()->res->getBaseURL(), {});
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     disp_err_message(emsg, false);
     return;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
+  auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
   displayBuffer(B_NORMAL);
@@ -918,7 +916,7 @@ void nthA() {
 //"Move to the next hyperlink"
 void nextA() {
   int n = searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(false, baseUr, n);
 }
 
@@ -927,7 +925,7 @@ void nextA() {
 //"Move to the previous hyperlink"
 void prevA() {
   int n = searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(false, baseUr, n);
 }
 
@@ -936,7 +934,7 @@ void prevA() {
 //"Move to the next visited hyperlink"
 void nextVA() {
   int n = searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(true, baseUr, n);
 }
 
@@ -945,7 +943,7 @@ void nextVA() {
 //"Move to the previous visited hyperlink"
 void prevVA() {
   int n = searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->info->getBaseURL();
+  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(true, baseUr, n);
 }
 
@@ -1079,7 +1077,7 @@ void goHome() {
     if (CurrentTab->currentBuffer() != cur_buf) /* success */
       pushHashHist(
           URLHist,
-          CurrentTab->currentBuffer()->info->currentURL.to_Str().c_str());
+          CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
   }
 }
 
@@ -1106,7 +1104,7 @@ void adBmark() {
       (Str_form_quote(localCookie()))->ptr,
       (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
       (Str_form_quote(
-           Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str())))
+           Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str())))
           ->ptr,
       (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout.title)))->ptr);
   request =
@@ -1268,21 +1266,21 @@ void svBuf() {
 // DOWNLOAD SAVE
 //"Save document source"
 void svSrc() {
-  if (CurrentTab->currentBuffer()->info->sourcefile.empty()) {
+  if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
     return;
   }
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
 
   const char *file;
-  if (CurrentTab->currentBuffer()->info->currentURL.schema == SCM_LOCAL) {
+  if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL) {
     file = guess_filename(
-        CurrentTab->currentBuffer()->info->currentURL.real_file.c_str());
+        CurrentTab->currentBuffer()->res->currentURL.real_file.c_str());
   } else {
-    file = CurrentTab->currentBuffer()->info->guess_save_name(
-        CurrentTab->currentBuffer()->info->currentURL.file.c_str());
+    file = CurrentTab->currentBuffer()->res->guess_save_name(
+        CurrentTab->currentBuffer()->res->currentURL.file.c_str());
   }
-  doFileCopy(CurrentTab->currentBuffer()->info->sourcefile.c_str(), file);
+  doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
   displayBuffer(B_NORMAL);
 }
@@ -1310,7 +1308,7 @@ void curURL() {
       offset = 0;
   } else {
     offset = 0;
-    s = Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str());
+    s = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
     if (DecodeURL)
       s = Strnew_charp(url_decode0(s->ptr));
   }
@@ -1325,7 +1323,7 @@ void curURL() {
 //"Toggle between HTML shown or processed"
 void vwSrc() {
 
-  if (CurrentTab->currentBuffer()->info->type.empty()) {
+  if (CurrentTab->currentBuffer()->res->type.empty()) {
     return;
   }
 
@@ -1335,22 +1333,22 @@ void vwSrc() {
     displayBuffer(B_NORMAL);
     return;
   }
-  if (CurrentTab->currentBuffer()->info->sourcefile.empty()) {
+  if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
     return;
   }
 
-  buf = Buffer::create(INIT_BUFFER_WIDTH());
+  buf = Buffer::create();
 
-  if (CurrentTab->currentBuffer()->info->is_html_type()) {
-    buf->info->type = "text/plain";
+  if (CurrentTab->currentBuffer()->res->is_html_type()) {
+    buf->res->type = "text/plain";
     buf->layout.title =
         Sprintf("source of %s",
                 CurrentTab->currentBuffer()->layout.title.c_str())
             ->ptr;
     buf->linkBuffer[LB_SOURCE] = CurrentTab->currentBuffer();
     CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE] = buf;
-  } else if (CurrentTab->currentBuffer()->info->type == "text/plain") {
-    buf->info->type = "text/html";
+  } else if (CurrentTab->currentBuffer()->res->type == "text/plain") {
+    buf->res->type = "text/html";
     buf->layout.title =
         Sprintf("HTML view of %s",
                 CurrentTab->currentBuffer()->layout.title.c_str())
@@ -1360,9 +1358,9 @@ void vwSrc() {
   } else {
     return;
   }
-  buf->info->currentURL = CurrentTab->currentBuffer()->info->currentURL;
-  buf->info->filename = CurrentTab->currentBuffer()->info->filename;
-  buf->info->sourcefile = CurrentTab->currentBuffer()->info->sourcefile;
+  buf->res->currentURL = CurrentTab->currentBuffer()->res->currentURL;
+  buf->res->filename = CurrentTab->currentBuffer()->res->filename;
+  buf->res->sourcefile = CurrentTab->currentBuffer()->res->sourcefile;
 
   buf->layout.need_reshape = true;
   reshapeBuffer(buf);
@@ -1378,8 +1376,8 @@ void reload() {
   FormList *request;
   int multipart;
 
-  if (CurrentTab->currentBuffer()->info->currentURL.schema == SCM_LOCAL &&
-      CurrentTab->currentBuffer()->info->currentURL.file == "-") {
+  if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
+      CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     disp_err_message("Can't reload stdin", true);
     return;
@@ -1403,10 +1401,10 @@ void reload() {
   } else {
     request = nullptr;
   }
-  url = Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str());
+  url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
-  DefaultType = Strnew(CurrentTab->currentBuffer()->info->type)->ptr;
+  DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
 
   auto res = loadGeneralFile(
       url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
@@ -1419,16 +1417,15 @@ void reload() {
     return;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
+  auto buf = Buffer::create(res);
   // if (buf == NO_BUFFER) {
   //   displayBuffer(CurrentTab->currentBuffer(), B_NORMAL);
   //   return;
   // }
   CurrentTab->repBuffer(CurrentTab->currentBuffer(), buf);
-  if ((buf->info->type.size()) && (sbuf->info->type.size()) &&
-      ((buf->info->type == "text/plain" && sbuf->info->is_html_type()) ||
-       (buf->info->is_html_type() && sbuf->info->type == "text/plain"))) {
+  if ((buf->res->type.size()) && (sbuf->res->type.size()) &&
+      ((buf->res->type == "text/plain" && sbuf->res->is_html_type()) ||
+       (buf->res->is_html_type() && sbuf->res->type == "text/plain"))) {
     vwSrc();
     if (CurrentTab->currentBuffer() != buf) {
       CurrentTab->deleteBuffer(buf);
@@ -1478,14 +1475,13 @@ void rFrame() {}
 // EXTERN
 //"Display using an external browser"
 void extbrz() {
-  if (CurrentTab->currentBuffer()->info->currentURL.schema == SCM_LOCAL &&
-      CurrentTab->currentBuffer()->info->currentURL.file == "-") {
+  if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
+      CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     disp_err_message("Can't browse stdin", true);
     return;
   }
-  invoke_browser(
-      CurrentTab->currentBuffer()->info->currentURL.to_Str().c_str());
+  invoke_browser(CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
 }
 
 // EXTERN_LINK
@@ -1496,7 +1492,7 @@ void linkbrz() {
   auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
   if (a == nullptr)
     return;
-  auto pu = urlParse(a->url, CurrentTab->currentBuffer()->info->getBaseURL());
+  auto pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
   invoke_browser(pu.to_Str().c_str());
 }
 

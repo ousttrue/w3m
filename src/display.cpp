@@ -109,7 +109,7 @@ static Str *make_lastline_link(const std::shared_ptr<Buffer> &buf,
   }
   if (!url)
     return s;
-  pu = urlParse(url, buf->info->getBaseURL());
+  pu = urlParse(url, buf->res->getBaseURL());
   u = Strnew(pu.to_Str());
   if (DecodeURL)
     u = Strnew_charp(url_decode0(u->ptr));
@@ -165,7 +165,7 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   } else {
     Strcat_charp(msg, "Viewing");
   }
-  if (buf->info->ssl_certificate) {
+  if (buf->res->ssl_certificate) {
     Strcat_charp(msg, "[SSL]");
   }
   Strcat_charp(msg, " <");
@@ -195,7 +195,7 @@ void displayBuffer(DisplayFlag mode) {
   if (buf->layout.height == 0)
     buf->layout.height = LASTLINE + 1;
   if ((buf->layout.width != INIT_BUFFER_WIDTH() &&
-       (buf->info->is_html_type() || FoldLine)) ||
+       (buf->res->is_html_type() || FoldLine)) ||
       buf->layout.need_reshape) {
     buf->layout.need_reshape = true;
     reshapeBuffer(buf);

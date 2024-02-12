@@ -122,12 +122,12 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   if (buf == nullptr)
     return;
   if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->info->sourcefile.c_str());
-    set_environ("W3M_FILENAME", buf->info->filename.c_str());
+    set_environ("W3M_SOURCEFILE", buf->res->sourcefile.c_str());
+    set_environ("W3M_FILENAME", buf->res->filename.c_str());
     set_environ("W3M_TITLE", buf->layout.title.c_str());
-    set_environ("W3M_URL", buf->info->currentURL.to_Str().c_str());
+    set_environ("W3M_URL", buf->res->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",
-                buf->info->type.size() ? buf->info->type.c_str() : "unknown");
+                buf->res->type.size() ? buf->res->type.c_str() : "unknown");
   }
   l = buf->layout.currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
@@ -137,13 +137,13 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_CURRENT_WORD", s.c_str());
     a = retrieveCurrentAnchor(&buf->layout);
     if (a) {
-      pu = urlParse(a->url, buf->info->getBaseURL());
+      pu = urlParse(a->url, buf->res->getBaseURL());
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(&buf->layout);
     if (a) {
-      pu = urlParse(a->url, buf->info->getBaseURL());
+      pu = urlParse(a->url, buf->res->getBaseURL());
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_IMG", "");

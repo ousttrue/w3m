@@ -28,20 +28,21 @@ struct AlarmEvent;
 struct HttpResponse;
 
 struct Buffer {
-  std::shared_ptr<HttpResponse> info;
+  std::shared_ptr<HttpResponse> res;
   LineLayout layout = {};
   std::shared_ptr<Buffer> backBuffer;
   std::array<std::shared_ptr<Buffer>, MAX_LB> linkBuffer = {0};
   bool check_url = false;
 
 private:
-  Buffer(int width);
+  Buffer(const std::shared_ptr<HttpResponse> &res);
 
 public:
   ~Buffer();
   Buffer(const Buffer &src) { *this = src; }
-  static std::shared_ptr<Buffer> create(int width) {
-    return std::shared_ptr<Buffer>(new Buffer(width));
+  static std::shared_ptr<Buffer>
+  create(const std::shared_ptr<HttpResponse> &res = {}) {
+    return std::shared_ptr<Buffer>(new Buffer(res));
   }
   // shallow copy
   Buffer &operator=(const Buffer &src);

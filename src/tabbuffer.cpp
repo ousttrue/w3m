@@ -204,12 +204,12 @@ void gotoLabel(const char *label) {
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
   }
-  auto buf = Buffer::create(CurrentTab->currentBuffer()->layout.width);
+  auto buf = Buffer::create();
   *buf = *CurrentTab->currentBuffer();
   for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
-  buf->info->currentURL.label = allocStr(label, -1);
-  pushHashHist(URLHist, buf->info->currentURL.to_Str().c_str());
+  buf->res->currentURL.label = allocStr(label, -1);
+  pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
   CurrentTab->pushBuffer(buf);
   CurrentTab->currentBuffer()->layout.gotoLine(al->start.line);
   if (label_topline)
@@ -265,8 +265,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
     return;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
+  auto buf = Buffer::create(res);
 
   // if (buf != NO_BUFFER)
   { this->pushBuffer(buf); }
@@ -281,7 +280,7 @@ void goURL0(const char *prompt, int relative) {
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
 
-    current = CurrentTab->currentBuffer()->info->getBaseURL();
+    current = CurrentTab->currentBuffer()->res->getBaseURL();
     if (current) {
       auto c_url = current->to_Str();
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -306,14 +305,14 @@ void goURL0(const char *prompt, int relative) {
   const char *referer;
   if (relative) {
     const int *no_referer_ptr = nullptr;
-    current = CurrentTab->currentBuffer()->info->getBaseURL();
+    current = CurrentTab->currentBuffer()->res->getBaseURL();
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)
       referer = NO_REFERER;
     else
       referer =
-          Strnew(CurrentTab->currentBuffer()->info->currentURL.to_RefererStr())
+          Strnew(CurrentTab->currentBuffer()->res->currentURL.to_RefererStr())
               ->ptr;
     url = Strnew(url_quote(url))->ptr;
   } else {
@@ -336,9 +335,8 @@ void goURL0(const char *prompt, int relative) {
   auto cur_buf = CurrentTab->currentBuffer();
   CurrentTab->cmd_loadURL(url, current, referer, nullptr);
   if (CurrentTab->currentBuffer() != cur_buf) { /* success */
-    pushHashHist(
-        URLHist,
-        CurrentTab->currentBuffer()->info->currentURL.to_Str().c_str());
+    pushHashHist(URLHist,
+                 CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
   }
 }
 
@@ -386,7 +384,7 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
 
 void TabBuffer::_newT() {
   auto tag = new TabBuffer();
-  auto buf = Buffer::create(CurrentTab->currentBuffer()->layout.width);
+  auto buf = Buffer::create();
   *buf = *CurrentTab->currentBuffer();
   buf->backBuffer = nullptr;
   for (int i = 0; i < MAX_LB; i++) {
@@ -540,16 +538,16 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
   refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
-  auto base = this->currentBuffer()->info->getBaseURL();
+  auto base = this->currentBuffer()->res->getBaseURL();
   if ((no_referer_ptr && *no_referer_ptr) || !base ||
       base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
       base->schema == SCM_DATA)
     referer = NO_REFERER;
   if (referer == nullptr)
     referer =
-        Strnew(this->currentBuffer()->info->currentURL.to_RefererStr())->ptr;
+        Strnew(this->currentBuffer()->res->currentURL.to_RefererStr())->ptr;
 
-  auto res = loadGeneralFile(url, this->currentBuffer()->info->getBaseURL(),
+  auto res = loadGeneralFile(url, this->currentBuffer()->res->getBaseURL(),
                              {.referer = referer}, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -557,8 +555,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
     return nullptr;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
+  auto buf = Buffer::create(res);
 
   auto pu = urlParse(url, base);
   pushHashHist(URLHist, pu.to_Str().c_str());
@@ -670,7 +667,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
   auto tmp2 = fi->parent->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
-    tmp2 = Strnew(currentBuffer()->info->currentURL.to_Str());
+    tmp2 = Strnew(currentBuffer()->res->currentURL.to_Str());
     char *p;
     if ((p = strchr(tmp2->ptr, '?')) != nullptr)
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -697,7 +694,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
       unlink(fi->parent->body);
     }
     if (buf &&
-        !(buf->info->redirectins.size() > 1)) { /* buf must be Currentbuf */
+        !(buf->res->redirectins.size() > 1)) { /* buf must be Currentbuf */
       /* BP_REDIRECTED means that the buffer is obtained through
        * Location: header. In this case, buf->form_submit must not be set
        * because the page is not loaded by POST method but GET method.

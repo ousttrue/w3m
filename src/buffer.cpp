@@ -31,17 +31,18 @@
 #include "proto.h"
 #include <unistd.h>
 
-Buffer::Buffer(int width) {
-  this->layout.width = width;
-  this->info = std::make_shared<HttpResponse>();
+Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
   // use default from -o mark_all_pages
+  if (!res) {
+    res = std::make_shared<HttpResponse>();
+  }
   this->check_url = MarkAllPages;
 }
 
 Buffer::~Buffer() {}
 
 Buffer &Buffer::operator=(const Buffer &src) {
-  this->info = src.info;
+  this->res = src.res;
   this->layout = src.layout;
   this->backBuffer = src.backBuffer;
   this->linkBuffer = src.linkBuffer;
@@ -53,7 +54,7 @@ Buffer &Buffer::operator=(const Buffer &src) {
  * Create null buffer
  */
 std::shared_ptr<Buffer> nullBuffer(void) {
-  auto b = Buffer::create(COLS);
+  auto b = Buffer::create();
   b->layout.title = "*Null*";
   return b;
 }
@@ -95,13 +96,13 @@ static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
 
   move(n, 0);
   auto msg = Sprintf("<%s> [%d lines]", buf->layout.title.c_str(), all);
-  if (buf->info->filename.size()) {
-    switch (buf->info->currentURL.schema) {
+  if (buf->res->filename.size()) {
+    switch (buf->res->currentURL.schema) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
-      if (buf->info->currentURL.file != "-") {
+      if (buf->res->currentURL.file != "-") {
         Strcat_char(msg, ' ');
-        Strcat(msg, buf->info->currentURL.real_file);
+        Strcat(msg, buf->res->currentURL.real_file);
       }
       break;
     case SCM_UNKNOWN:
@@ -109,7 +110,7 @@ static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
       break;
     default:
       Strcat_char(msg, ' ');
-      Strcat(msg, buf->info->currentURL.to_Str());
+      Strcat(msg, buf->res->currentURL.to_Str());
       break;
     }
   }
@@ -271,12 +272,12 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   buf->layout.need_reshape = false;
 
   buf->layout.width = INIT_BUFFER_WIDTH();
-  if (buf->info->sourcefile.empty()) {
+  if (buf->res->sourcefile.empty()) {
     return;
   }
 
-  buf->info->f.openFile(buf->info->sourcefile.c_str());
-  if (buf->info->f.stream == nullptr) {
+  buf->res->f.openFile(buf->res->sourcefile.c_str());
+  if (buf->res->f.stream == nullptr) {
     return;
   }
 
@@ -296,10 +297,10 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   if (buf->layout.imarklist)
     buf->layout.imarklist->nmark = 0;
 
-  if (buf->info->is_html_type())
-    loadHTMLstream(buf->info.get(), &buf->layout);
+  if (buf->res->is_html_type())
+    loadHTMLstream(buf->res.get(), &buf->layout);
   else
-    loadBuffer(buf->info.get(), &buf->layout);
+    loadBuffer(buf->res.get(), &buf->layout);
 
   buf->layout.height = LASTLINE + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {
@@ -326,7 +327,7 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
       }
     }
     buf->layout.pos -= buf->layout.currentLine->bpos;
-    if (FoldLine && !buf->info->is_html_type()) {
+    if (FoldLine && !buf->res->is_html_type()) {
       buf->layout.currentColumn = 0;
     } else {
       buf->layout.currentColumn = sbuf->layout.currentColumn;
@@ -363,7 +364,7 @@ static void append_link_info(const std::shared_ptr<Buffer> &buf, Str *html,
   Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
   for (l = link; l; l = l->next) {
     if (l->url) {
-      pu = urlParse(l->url, buf->info->getBaseURL());
+      pu = urlParse(l->url, buf->res->getBaseURL());
       url = html_quote(pu.to_Str().c_str());
     } else
       url = "(empty)";
@@ -408,25 +409,24 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
     all = buf->layout.allLine;
     if (all == 0 && buf->layout.lastLine)
       all = buf->layout.lastLine->linenumber;
-    p = url_decode0(buf->info->currentURL.to_Str().c_str());
-    Strcat_m_charp(tmp, "<table cellpadding=0>",
-                   "<tr valign=top><td nowrap>Title<td>",
-                   html_quote(buf->layout.title.c_str()),
-                   "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
-                   "<tr valign=top><td nowrap>Document Type<td>",
-                   buf->info->type.size() ? html_quote(buf->info->type.c_str())
-                                          : "unknown",
-                   "<tr valign=top><td nowrap>Last Modified<td>",
-                   html_quote(last_modified(buf)), nullptr);
+    p = url_decode0(buf->res->currentURL.to_Str().c_str());
+    Strcat_m_charp(
+        tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
+        html_quote(buf->layout.title.c_str()),
+        "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
+        "<tr valign=top><td nowrap>Document Type<td>",
+        buf->res->type.size() ? html_quote(buf->res->type.c_str()) : "unknown",
+        "<tr valign=top><td nowrap>Last Modified<td>",
+        html_quote(last_modified(buf)), nullptr);
     Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                    Sprintf("%d", all)->ptr,
                    "<tr valign=top><td nowrap>Transferred bytes<td>",
-                   Sprintf("%lu", (unsigned long)buf->info->trbyte)->ptr,
+                   Sprintf("%lu", (unsigned long)buf->res->trbyte)->ptr,
                    nullptr);
 
     a = retrieveCurrentAnchor(&buf->layout);
     if (a) {
-      pu = urlParse(a->url, buf->info->getBaseURL());
+      pu = urlParse(a->url, buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -439,7 +439,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
     }
     a = retrieveCurrentImg(&buf->layout);
     if (a != nullptr) {
-      pu = urlParse(a->url, buf->info->getBaseURL());
+      pu = urlParse(a->url, buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       q = html_quote(p);
       if (DecodeURL)
@@ -467,9 +467,9 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
 
     append_link_info(buf, tmp, buf->layout.linklist);
 
-    if (buf->info->document_header != nullptr) {
+    if (buf->res->document_header != nullptr) {
       Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-      for (ti = buf->info->document_header->first; ti != nullptr; ti = ti->next)
+      for (ti = buf->res->document_header->first; ti != nullptr; ti = ti->next)
         Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
                        nullptr);
       Strcat_charp(tmp, "</pre>\n");
@@ -479,9 +479,9 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
       Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
       // append_frame_info(buf, tmp, f_set, 0);
     }
-    if (buf->info->ssl_certificate)
+    if (buf->res->ssl_certificate)
       Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-                     html_quote(buf->info->ssl_certificate), "</pre>\n",
+                     html_quote(buf->res->ssl_certificate), "</pre>\n",
                      nullptr);
   }
 
@@ -511,14 +511,13 @@ void execdict(const char *word) {
     return;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
+  auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   {
-    buf->info->filename = w;
+    buf->res->filename = w;
     buf->layout.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    if (buf->info->type.empty()) {
-      buf->info->type = "text/plain";
+    if (buf->res->type.empty()) {
+      buf->res->type = "text/plain";
     }
     CurrentTab->pushBuffer(buf);
   }
@@ -618,7 +617,7 @@ void _peekURL(int only_img) {
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    pu = urlParse(a->url, CurrentTab->currentBuffer()->info->getBaseURL());
+    pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
     s = Strnew(pu.to_Str());
   }
   if (DecodeURL)
@@ -679,7 +678,7 @@ Str *Str_form_quote(Str *x) {
 static void _saveBuffer(const std::shared_ptr<Buffer> &buf, Line *l, FILE *f,
                         int cont) {
 
-  auto is_html = buf->info->is_html_type();
+  auto is_html = buf->res->is_html_type();
 
   for (; l != nullptr; l = l->next) {
     Str *tmp;
@@ -701,7 +700,7 @@ void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
   if (buf == nullptr) {
     disp_err_message("Can't load string", false);
   } else /*if (buf != NO_BUFFER)*/ {
-    buf->info->currentURL = CurrentTab->currentBuffer()->info->currentURL;
+    buf->res->currentURL = CurrentTab->currentBuffer()->res->currentURL;
     if (linkid != LB_NOLINK) {
       buf->linkBuffer[linkid] = CurrentTab->currentBuffer();
       CurrentTab->currentBuffer()->linkBuffer[linkid] = buf;
@@ -721,8 +720,7 @@ void cmd_loadfile(const char *fn) {
     return;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info = res;
+  auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
   displayBuffer(B_NORMAL);
@@ -743,7 +741,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
     for (l = buf->layout.linklist; l; l = l->next) {
       if (l->url) {
-        pu = Url::parse(l->url, buf->info->getBaseURL());
+        pu = Url::parse(l->url, buf->res->getBaseURL());
         p = Strnew(pu.to_Str())->ptr;
         u = html_quote(p);
         if (DecodeURL)
@@ -773,7 +771,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      pu = urlParse(a->url, buf->info->getBaseURL());
+      pu = urlParse(a->url, buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -795,7 +793,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       a = &al->anchors[i];
       if (a->slave)
         continue;
-      pu = urlParse(a->url, buf->info->getBaseURL());
+      pu = urlParse(a->url, buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -885,7 +883,7 @@ void bufferA(void) {
 
 void Buffer::saveBufferInfo() {
   if (FILE *fp = fopen(rcFile("bufinfo"), "w")) {
-    fprintf(fp, "%s\n", this->info->currentURL.to_Str().c_str());
+    fprintf(fp, "%s\n", this->res->currentURL.to_Str().c_str());
     fclose(fp);
   }
 }

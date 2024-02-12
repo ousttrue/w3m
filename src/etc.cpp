@@ -86,15 +86,15 @@ const char *last_modified(const std::shared_ptr<Buffer> &buf) {
   TextListItem *ti;
   struct stat st;
 
-  if (buf->info->document_header) {
-    for (ti = buf->info->document_header->first; ti; ti = ti->next) {
+  if (buf->res->document_header) {
+    for (ti = buf->res->document_header->first; ti; ti = ti->next) {
       if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
         return ti->ptr + 15;
       }
     }
     return "unknown";
-  } else if (buf->info->currentURL.schema == SCM_LOCAL) {
-    if (stat(buf->info->currentURL.file.c_str(), &st) < 0)
+  } else if (buf->res->currentURL.schema == SCM_LOCAL) {
+    if (stat(buf->res->currentURL.file.c_str(), &st) < 0)
       return "unknown";
     return ctime(&st.st_mtime);
   }

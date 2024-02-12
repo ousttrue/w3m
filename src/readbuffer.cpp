@@ -4409,10 +4409,10 @@ void loadBuffer(HttpResponse *res, LineLayout *layout) {
 }
 
 std::shared_ptr<Buffer> loadHTMLString(Str *page) {
-  auto newBuf = Buffer::create(INIT_BUFFER_WIDTH());
-  newBuf->info->f = UrlStream(SCM_LOCAL, newStrStream(page->ptr));
+  auto newBuf = Buffer::create();
+  newBuf->res->f = UrlStream(SCM_LOCAL, newStrStream(page->ptr));
 
-  loadHTMLstream(newBuf->info.get(), &newBuf->layout, true);
+  loadHTMLstream(newBuf->res.get(), &newBuf->layout, true);
 
   return newBuf;
 }
@@ -4428,10 +4428,10 @@ std::shared_ptr<Buffer> getshell(const char *cmd) {
     return nullptr;
   }
 
-  auto buf = Buffer::create(INIT_BUFFER_WIDTH());
-  buf->info->f = UrlStream(SCM_UNKNOWN, newFileStream(f, pclose));
-  loadBuffer(buf->info.get(), &buf->layout);
-  buf->info->filename = cmd;
+  auto buf = Buffer::create();
+  buf->res->f = UrlStream(SCM_UNKNOWN, newFileStream(f, pclose));
+  loadBuffer(buf->res.get(), &buf->layout);
+  buf->res->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }

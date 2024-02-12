@@ -739,11 +739,11 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      auto url = buf->info->currentURL.to_Str();
+      auto url = buf->res->currentURL.to_Str();
       if (!RegexMatch(pf->re_url, url.c_str(), url.size(), 1))
         continue;
     } else if (pf->url) {
-      if (Strcmp(buf->info->currentURL.to_Str(), pf->url))
+      if (Strcmp(buf->res->currentURL.to_Str(), pf->url))
         continue;
     } else
       continue;
