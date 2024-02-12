@@ -126,11 +126,7 @@ extern void redoPos(void);
 extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
-extern void pcmap(void);
-extern void escmap(void);
-extern void escbmap(void);
-extern void escdmap(char c);
-extern void multimap(void);
+
 #define docCSet nulcmd
 #define defCSet nulcmd
 #define _mark nulcmd

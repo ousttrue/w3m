@@ -45,37 +45,6 @@
 void nulcmd() { /* do nothing */
 }
 
-// ESCMAP
-//"ESC map"
-void escmap() {
-  char c = getch();
-  if (IS_ASCII(c))
-    escKeyProc((int)c, K_ESC, EscKeymap);
-}
-
-// ESCBMAP
-//"ESC [ map"
-void escbmap() {
-  char c = getch();
-  if (IS_DIGIT(c)) {
-    escdmap(c);
-    return;
-  }
-  if (IS_ASCII(c))
-    escKeyProc((int)c, K_ESCB, EscBKeymap);
-}
-
-// MULTIMAP
-//"multimap"
-void multimap() {
-  char c;
-  c = getch();
-  if (IS_ASCII(c)) {
-    CurrentKey = K_MULTI | (CurrentKey << 16) | c;
-    escKeyProc((int)c, 0, nullptr);
-  }
-}
-
 /* Move page forward */
 // NEXT_PAGE
 //"Scroll down one page"
