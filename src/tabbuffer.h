@@ -60,7 +60,6 @@ public:
 
 extern TabBuffer *CurrentTab;
 #define Currentbuf (CurrentTab->currentBuffer())
-#define Firstbuf (CurrentTab->firstBuffer)
 struct LineLayout;
 void SAVE_BUFPOSITION(LineLayout *sbufp);
 void RESTORE_BUFPOSITION(const LineLayout &sbufp);

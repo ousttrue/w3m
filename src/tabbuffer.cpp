@@ -46,7 +46,7 @@ void TabBuffer::init(const std::shared_ptr<Buffer> &newbuf) {
     exit(1);
   }
   nTab = 1;
-  Firstbuf = CurrentTab->_currentBuffer = newbuf;
+  CurrentTab->firstBuffer = CurrentTab->_currentBuffer = newbuf;
 }
 
 TabBuffer *numTab(int n) {
@@ -160,7 +160,7 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   }
 
   if (!Currentbuf) {
-    _currentBuffer = Firstbuf;
+    _currentBuffer = CurrentTab->firstBuffer;
   }
 }
 
@@ -359,7 +359,7 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
     std::shared_ptr<Buffer> p;
     if ((p = forwardBuffer(c, buf)))
       p->backBuffer = nullptr;
-    Firstbuf = buf;
+    CurrentTab->firstBuffer = buf;
     deleteTab(CurrentTab);
     CurrentTab = tab;
     for (buf = p; buf; buf = p) {
@@ -371,10 +371,10 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
-  if (Firstbuf == Currentbuf) {
-    buf->backBuffer = Firstbuf;
-    Firstbuf = buf;
-  } else if (auto b = forwardBuffer(Firstbuf, Currentbuf)) {
+  if (CurrentTab->firstBuffer == Currentbuf) {
+    buf->backBuffer = CurrentTab->firstBuffer;
+    CurrentTab->firstBuffer = buf;
+  } else if (auto b = forwardBuffer(CurrentTab->firstBuffer, Currentbuf)) {
     buf->backBuffer = Currentbuf;
     b->backBuffer = buf;
   }
@@ -440,7 +440,7 @@ void followTab(TabBuffer *tab) {
     std::shared_ptr<Buffer> p;
     if ((p = forwardBuffer(c, buf)))
       p->backBuffer = nullptr;
-    Firstbuf = buf;
+    CurrentTab->firstBuffer = buf;
     deleteTab(CurrentTab);
     CurrentTab = tab;
     for (buf = p; buf; buf = p) {
@@ -479,7 +479,7 @@ std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
 
 void TabBuffer::repBuffer(const std::shared_ptr<Buffer> &oldbuf,
                           const std::shared_ptr<Buffer> &buf) {
-  Firstbuf = replaceBuffer(oldbuf, buf);
+  CurrentTab->firstBuffer = replaceBuffer(oldbuf, buf);
   _currentBuffer = buf;
 }
 
@@ -495,10 +495,10 @@ bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
 
   case 'D':
     CurrentTab->deleteBuffer(buf);
-    if (Firstbuf == nullptr) {
+    if (CurrentTab->firstBuffer == nullptr) {
       /* No more buffer */
-      Firstbuf = nullBuffer();
-      _currentBuffer = Firstbuf;
+      CurrentTab->firstBuffer = nullBuffer();
+      _currentBuffer = CurrentTab->firstBuffer;
     }
     break;
 
@@ -521,7 +521,7 @@ std::shared_ptr<Buffer>
 TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                          const std::shared_ptr<Buffer> &newbuf) {
 
-  auto first = Firstbuf;
+  auto first = CurrentTab->firstBuffer;
   if (delbuf == nullptr) {
     newbuf->backBuffer = first;
     return newbuf;

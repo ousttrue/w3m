@@ -202,10 +202,10 @@ Url urlParse(const char *src, std::optional<Url> current) {
 
 void deleteFiles() {
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
-    while (Firstbuf /*&& Firstbuf != NO_BUFFER*/) {
-      auto buf = Firstbuf->backBuffer;
-      Firstbuf->discardBuffer();
-      Firstbuf = buf;
+    while (CurrentTab->firstBuffer /*&& Firstbuf != NO_BUFFER*/) {
+      auto buf = CurrentTab->firstBuffer->backBuffer;
+      CurrentTab->firstBuffer->discardBuffer();
+      CurrentTab->firstBuffer = buf;
     }
   }
   while (auto f = popText(fileToDelete)) {

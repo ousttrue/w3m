@@ -557,7 +557,7 @@ void selBuf() {
   auto ok = false;
   do {
     char cmd;
-    auto buf = selectBuffer(Firstbuf, Currentbuf, &cmd);
+    auto buf = selectBuffer(CurrentTab->firstBuffer, Currentbuf, &cmd);
     ok = CurrentTab->select(cmd, buf);
   } while (!ok);
 
@@ -977,7 +977,7 @@ void nextU() {
 //"Switch to the next buffer"
 void nextBf() {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf = forwardBuffer(Firstbuf, Currentbuf);
+    auto buf = forwardBuffer(CurrentTab->firstBuffer, Currentbuf);
     if (!buf) {
       if (i == 0)
         return;
@@ -1754,7 +1754,8 @@ void ldDL() {
 
   if (!FirstDL) {
     if (replace) {
-      if (Currentbuf == Firstbuf && Currentbuf->backBuffer == nullptr) {
+      if (Currentbuf == CurrentTab->firstBuffer &&
+          Currentbuf->backBuffer == nullptr) {
         if (nTab > 1)
           deleteTab(CurrentTab);
       } else
