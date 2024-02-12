@@ -1,17 +1,17 @@
 #include "tmpfile.h"
-#include "Str.h"
 #include "rc.h"
 #include "w3m.h"
 #include "textlist.h"
+#include <sstream>
 
-const char *tmp_dir;
+const char *tmp_dir = {};
 
 static const char *tmpf_base[MAX_TMPF_TYPE] = {
     "tmp", "src", "frame", "cache", "cookie", "hist",
 };
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
-Str *tmpfname(int type, const char *ext) {
+std::string tmpfname(TmpfType type, const std::string &ext) {
   const char *dir;
   switch (type) {
   case TMPF_HIST:
@@ -26,8 +26,10 @@ Str *tmpfname(int type, const char *ext) {
     dir = tmp_dir;
   }
 
-  auto tmpf = Sprintf("%s/w3m%s%d-%d%s", dir, tmpf_base[type], CurrentPid,
-                      tmpf_seq[type]++, (ext) ? ext : "");
-  pushText(fileToDelete, tmpf->ptr);
+  std::stringstream ss;
+  ss << dir << "/w3m" << tmpf_base[type] << CurrentPid << tmpf_seq[type]++
+     << ext;
+  auto tmpf = ss.str();
+  pushText(fileToDelete, Strnew(tmpf)->ptr);
   return tmpf;
 }

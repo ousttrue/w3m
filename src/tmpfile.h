@@ -1,14 +1,15 @@
 #pragma once
+#include <string>
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define TMPF_HIST 5
-#define MAX_TMPF_TYPE 6
+enum TmpfType {
+  TMPF_DFL = 0,
+  TMPF_SRC = 1,
+  TMPF_FRAME = 2,
+  TMPF_CACHE = 3,
+  TMPF_COOKIE = 4,
+  TMPF_HIST = 5,
+  MAX_TMPF_TYPE = 6,
+};
 
 extern const char *tmp_dir;
-
-struct Str;
-Str *tmpfname(int type, const char *ext);
+std::string tmpfname(TmpfType type, const std::string &ext);

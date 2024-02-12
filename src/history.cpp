@@ -95,7 +95,7 @@ void saveHistory(Hist *hist, int size) {
   Hist *fhist;
   HistItem *item;
   const char *histf;
-  const char *tmpf;
+  std::string tmpf;
   int rename_ret;
   struct stat st;
 
@@ -113,8 +113,8 @@ void saveHistory(Hist *hist, int size) {
       hist = fhist;
   }
 
-  tmpf = tmpfname(TMPF_HIST, NULL)->ptr;
-  if ((f = fopen(tmpf, "w")) == NULL)
+  tmpf = tmpfname(TMPF_HIST, {});
+  if ((f = fopen(tmpf.c_str(), "w")) == NULL)
     goto fail;
   for (item = hist->list->first; item && hist->list->nitem > size;
        item = item->next)
@@ -123,7 +123,7 @@ void saveHistory(Hist *hist, int size) {
     fprintf(f, "%s\n", (const char *)item->ptr);
   if (fclose(f) == EOF)
     goto fail;
-  rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
+  rename_ret = rename(tmpf.c_str(), rcFile(HISTORY_FILE));
   if (rename_ret != 0)
     goto fail;
 

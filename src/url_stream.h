@@ -31,7 +31,7 @@ struct UrlStream {
   bool is_cgi = false;
   EncodingType encoding = ENC_7BIT;
   std::shared_ptr<input_stream> stream;
-  const char *ext = {};
+  std::string ext;
   CompressionType compression = CMP_NOCOMPRESS;
   int content_encoding = CMP_NOCOMPRESS;
   std::string guess_type;

@@ -460,11 +460,8 @@ static void form_fputs_decode(Str *s, FILE *f) {
 }
 
 void input_textarea(FormItemList *fi) {
-  char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  Str *tmp;
-  FILE *f;
-
-  f = fopen(tmpf, "w");
+  auto tmpf = tmpfname(TMPF_DFL, {});
+  auto f = fopen(tmpf.c_str(), "w");
   if (f == NULL) {
     disp_err_message("Can't open temporary file", false);
     return;
@@ -473,18 +470,18 @@ void input_textarea(FormItemList *fi) {
     form_fputs_decode(fi->value, f);
   fclose(f);
 
-  if (exec_cmd(myEditor(Editor, tmpf, 1)->ptr))
+  if (exec_cmd(myEditor(Editor, tmpf.c_str(), 1)->ptr))
     goto input_end;
 
   if (fi->readonly)
     goto input_end;
-  f = fopen(tmpf, "r");
+  f = fopen(tmpf.c_str(), "r");
   if (f == NULL) {
-    /* FIXME: gettextize? */
     disp_err_message("Can't open temporary file", false);
     goto input_end;
   }
   fi->value = Strnew();
+  Str *tmp;
   while (tmp = Strfgets(f), tmp->length > 0) {
     if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
       /* null line with bare LF */
@@ -499,7 +496,7 @@ void input_textarea(FormItemList *fi) {
   }
   fclose(f);
 input_end:
-  unlink(tmpf);
+  unlink(tmpf.c_str());
 }
 
 void do_internal(char *action, char *data) {
@@ -796,12 +793,13 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
 }
 
 #define conv_form_encoding(val, fi, buf) (val)
-void query_from_followform(Str **query, FormItemList *fi, int multipart) {
+void query_from_followform(Str **query, FormItemList *fi,
+                                  int multipart) {
   FormItemList *f2;
   FILE *body = nullptr;
 
   if (multipart) {
-    *query = tmpfname(TMPF_DFL, nullptr);
+    *query = Strnew(tmpfname(TMPF_DFL, {}));
     body = fopen((*query)->ptr, "w");
     if (body == nullptr) {
       return;

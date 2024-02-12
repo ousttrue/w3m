@@ -300,13 +300,13 @@ FILE *HttpResponse::createSourceFile() {
   }
 
   auto tmp = tmpfname(TMPF_SRC, ".html");
-  auto src = fopen(tmp->ptr, "w");
+  auto src = fopen(tmp.c_str(), "w");
   if (!src) {
     // fail to open file
     return {};
   }
 
-  sourcefile = tmp->ptr;
+  sourcefile = tmp;
   return src;
 }
 
@@ -339,7 +339,8 @@ void HttpResponse::page_loaded(Url url) {
   } else if (this->f.compression != CMP_NOCOMPRESS) {
     if ((is_text_type(this->type))) {
       this->sourcefile = this->f.uncompress_stream();
-      uncompressed_file_type(url.file.c_str(), &this->f.ext);
+      auto [_, ext] = uncompressed_file_type(url.file.c_str());
+      this->f.ext = ext;
     } else {
       this->type = compress_application_type(this->f.compression);
       this->f.compression = CMP_NOCOMPRESS;
@@ -432,4 +433,3 @@ void HttpResponse::page_loaded(Url url) {
   // preFormUpdateBuffer(b);
   // return b;
 }
-

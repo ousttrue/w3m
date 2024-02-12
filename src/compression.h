@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 enum CompressionType {
   CMP_NOCOMPRESS = 0,
@@ -11,7 +12,7 @@ enum CompressionType {
 
 struct compression_decoder {
   CompressionType type;
-  const char *ext;
+  std::string ext;
   const char *mime_type;
   int auxbin_p;
   const char *cmd;
@@ -23,7 +24,7 @@ struct compression_decoder {
 
 struct UrlStream;
 void check_compression(const char *path, UrlStream *uf);
-const char *uncompressed_file_type(const char *path, const char **ext);
+std::tuple<const char *, std::string> uncompressed_file_type(const char *path);
 char *acceptableEncoding(void);
 struct Str;
 void process_compression(Str *lineBuf2, UrlStream *uf);

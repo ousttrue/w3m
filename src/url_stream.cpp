@@ -579,8 +579,8 @@ void UrlStream::openFile(const char *path) {
   {
     check_compression(path, this);
     if (this->compression != CMP_NOCOMPRESS) {
-      auto ext = this->ext;
-      auto t0 = uncompressed_file_type(path, &ext);
+      auto [t0, ext] = uncompressed_file_type(path);
+      this->ext = ext;
       this->guess_type = t0;
       this->ext = ext;
       this->uncompress_stream();
@@ -661,8 +661,8 @@ int UrlStream::doFileSave(const char *defstr) {
       disp_err_message(msg->ptr, false);
       return -1;
     }
-    auto lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-    symlink(p, lock);
+    auto lock = tmpfname(TMPF_DFL, ".lock");
+    symlink(p, lock.c_str());
 
     flush_tty();
     auto pid = fork();
@@ -678,12 +678,13 @@ int UrlStream::doFileSave(const char *defstr) {
       err = save2tmp(this->stream, p);
       if (err == 0 && PreserveTimestamp && this->modtime != -1)
         setModtime(p, this->modtime);
-      unlink(lock);
+      unlink(lock.c_str());
       if (err != 0)
         exit(-err);
       exit(0);
     }
-    addDownloadList(pid, this->url, p, lock, 0 /*current_content_length*/);
+    addDownloadList(pid, this->url, p, Strnew(lock)->ptr,
+                    0 /*current_content_length*/);
   } else {
     auto q = searchKeyData();
     if (q == nullptr || *q == '\0') {

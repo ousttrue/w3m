@@ -73,15 +73,7 @@ static compression_decoder compression_decoders[] = {
      "br",
      {"br", "x-br", nullptr},
      1},
-    {CMP_NOCOMPRESS,
-     nullptr,
-     nullptr,
-     0,
-     nullptr,
-     nullptr,
-     nullptr,
-     {nullptr},
-     0},
+    {CMP_NOCOMPRESS, {}, nullptr, 0, nullptr, nullptr, nullptr, {nullptr}, 0},
 };
 
 const char *compress_application_type(CompressionType compression) {
@@ -92,31 +84,36 @@ const char *compress_application_type(CompressionType compression) {
   return {};
 }
 
-const char *uncompressed_file_type(const char *path, const char **ext) {
-  if (path == nullptr)
-    return nullptr;
+std::tuple<const char *, std::string> uncompressed_file_type(const char *path) {
+  if (path == nullptr) {
+    return {};
+  }
 
   auto slen = 0;
   auto len = strlen(path);
   struct compression_decoder *d;
   for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (d->ext == nullptr)
+    if (d->ext.empty())
       continue;
-    slen = strlen(d->ext);
-    if (len > slen && strcasecmp(&path[len - slen], d->ext) == 0)
+    slen = d->ext.size();
+    if (len > slen && strcasecmp(&path[len - slen], d->ext.c_str()) == 0)
       break;
   }
-  if (d->type == CMP_NOCOMPRESS)
-    return nullptr;
+  if (d->type == CMP_NOCOMPRESS) {
+    return {};
+  }
 
   auto fn = Strnew_charp(path);
   Strshrink(fn, slen);
-  if (ext)
-    *ext = filename_extension(fn->ptr, 0);
   auto t0 = guessContentType(fn->ptr);
-  if (t0 == nullptr)
+  if (t0 == nullptr) {
     t0 = "text/plain";
-  return t0;
+  }
+  auto ext = filename_extension(fn->ptr, 0);
+  if (!ext) {
+    ext = "";
+  }
+  return {t0, ext};
 }
 
 std::string UrlStream::uncompress_stream() {
@@ -135,16 +132,16 @@ std::string UrlStream::uncompress_stream() {
       else
         expand_cmd = d->cmd;
       expand_name = d->name;
-      ext = (char *)d->ext;
+      ext = d->ext;
       use_d_arg = d->use_d_arg;
       break;
     }
   }
   this->compression = CMP_NOCOMPRESS;
 
-  char *tmpf = nullptr;
+  std::string tmpf;
   if (this->schema != SCM_LOCAL) {
-    tmpf = tmpfname(TMPF_DFL, ext)->ptr;
+    tmpf = tmpfname(TMPF_DFL, ext);
   }
 
   /* child1 -- stdout|f1=uf -> parent */
@@ -172,8 +169,9 @@ std::string UrlStream::uncompress_stream() {
       // int UrlStream::fileno() const { return this->stream->ISfileno(); }
 
       setup_child(true, 2, this->stream->ISfileno());
-      if (tmpf)
-        f = fopen(tmpf, "wb");
+      if (tmpf.size()) {
+        f = fopen(tmpf.c_str(), "wb");
+      }
       while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
         if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
           break;
@@ -195,12 +193,10 @@ std::string UrlStream::uncompress_stream() {
     exit(1);
   }
   this->stream = newFileStream(f1, fclose);
-  if (tmpf) {
+  if (tmpf.size()) {
     this->schema = SCM_LOCAL;
-    return tmpf;
-  } else {
-    return {};
   }
+  return tmpf;
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
@@ -281,10 +277,11 @@ void check_compression(const char *path, UrlStream *uf) {
   auto len = strlen(path);
   uf->compression = CMP_NOCOMPRESS;
   for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (d->ext == nullptr)
+    if (d->ext.empty()) {
       continue;
-    auto elen = strlen(d->ext);
-    if (len > elen && strcasecmp(&path[len - elen], d->ext) == 0) {
+    }
+    auto elen = d->ext.size();
+    if (len > elen && strcasecmp(&path[len - elen], d->ext.c_str()) == 0) {
       uf->compression = d->type;
       uf->guess_type = d->mime_type;
       break;

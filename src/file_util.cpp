@@ -73,7 +73,6 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   Str *filen;
   const char *p, *q = nullptr;
   pid_t pid;
-  char *lock;
   struct stat st;
   long long size = 0;
   int is_pipe = false;
@@ -109,8 +108,8 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       }
       return -1;
     }
-    lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-    symlink(p, lock);
+    auto lock = tmpfname(TMPF_DFL, ".lock");
+    symlink(p, lock.c_str());
     flush_tty();
     pid = fork();
     if (!pid) {
@@ -118,12 +117,12 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe &&
           !stat(tmpf, &st))
         setModtime(p, st.st_mtime);
-      unlink(lock);
+      unlink(lock.c_str());
       exit(0);
     }
     if (!stat(tmpf, &st))
       size = st.st_size;
-    addDownloadList(pid, tmpf, p, lock, size);
+    addDownloadList(pid, tmpf, p, Strnew(lock)->ptr, size);
   } else {
     q = searchKeyData();
     if (q == nullptr || *q == '\0') {

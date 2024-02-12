@@ -37,22 +37,22 @@ char *cgi_bin = nullptr;
 #define HAVE_READLINK 1
 
 static Str *Local_cookie = NULL;
-static char *Local_cookie_file = NULL;
+static std::string Local_cookie_file;
 
 static void writeLocalCookie() {
-  FILE *f;
-
-  if (Local_cookie_file)
+  if (Local_cookie_file.size()) {
     return;
-  Local_cookie_file = tmpfname(TMPF_COOKIE, NULL)->ptr;
-  set_environ("LOCAL_COOKIE_FILE", Local_cookie_file);
-  f = fopen(Local_cookie_file, "wb");
-  if (!f)
+  }
+  Local_cookie_file = tmpfname(TMPF_COOKIE, {});
+  set_environ("LOCAL_COOKIE_FILE", Local_cookie_file.c_str());
+  auto f = fopen(Local_cookie_file.c_str(), "wb");
+  if (!f) {
     return;
+  }
   localCookie();
   fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
   fclose(f);
-  chmod(Local_cookie_file, S_IRUSR | S_IWUSR);
+  chmod(Local_cookie_file.c_str(), S_IRUSR | S_IWUSR);
 }
 
 /* setup cookie for local CGI */
@@ -64,8 +64,6 @@ Str *localCookie() {
       Sprintf("%ld@%s", lrand48(), HostName ? HostName : "localhost");
   return Local_cookie;
 }
-
-
 
 static int check_local_cgi(const char *file, int status) {
   struct stat st;
@@ -219,7 +217,7 @@ FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
   FILE *fr = NULL, *fw = NULL;
   int status;
   pid_t pid;
-  const char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
+  const char *file = uri, *name = uri, *path_info = NULL;
 #ifdef HAVE_CHDIR
   const char *cgi_dir;
 #endif
@@ -229,9 +227,10 @@ FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
   if (check_local_cgi(file, status) < 0)
     return NULL;
   writeLocalCookie();
+  std::string tmpf;
   if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-    fw = fopen(tmpf, "w");
+    tmpf = tmpfname(TMPF_DFL, {});
+    fw = fopen(tmpf.c_str(), "w");
     if (!fw)
       return NULL;
   }
@@ -275,7 +274,7 @@ FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
       set_environ("CONTENT_TYPE", "application/x-www-form-urlencoded");
       fwrite(request->body, sizeof(char), request->length, fw);
       fclose(fw);
-      freopen(tmpf, "r", stdin);
+      freopen(tmpf.c_str(), "r", stdin);
     }
   } else {
     set_environ("REQUEST_METHOD", "GET");
