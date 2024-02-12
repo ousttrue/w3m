@@ -29,6 +29,7 @@ const sidebars: SidebarsConfig = {
         "doc-jp/README.pre_form",
         "doc-jp/README.siteconf",
         "doc-jp/README.tab",
+        // "doc-jp/MANUAL",
       ],
     },
     {
