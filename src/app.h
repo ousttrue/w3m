@@ -11,7 +11,21 @@ extern int prec_num;
 extern bool on_target;
 extern void pushEvent(int cmd, void *data);
 
-void mainLoop();
 void resize_hook(int);
 const char *searchKeyData();
 int searchKeyNum(void);
+
+class App {
+  App();
+
+public:
+  ~App();
+  App(const App &) = delete;
+  App &operator=(const App &) = delete;
+  static App &instance() {
+    static App s_instance;
+    return s_instance;
+  }
+
+  int mainLoop();
+};

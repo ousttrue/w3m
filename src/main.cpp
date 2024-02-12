@@ -195,7 +195,6 @@ int main(int argc, char **argv) {
   CurrentTab->pushBuffer(newbuf);
 
   displayBuffer(B_FORCE_REDRAW);
-  mainLoop();
 
-  return 0;
+  return App::instance().mainLoop();
 }

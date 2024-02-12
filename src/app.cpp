@@ -19,6 +19,7 @@
 #include "alloc.h"
 #include "Str.h"
 #include <signal.h>
+#include <iostream>
 
 int CurrentKey;
 char *CurrentKeyData;
@@ -27,6 +28,15 @@ int prec_num = 0;
 int prev_key = -1;
 bool on_target = true;
 #define PREC_LIMIT 10000
+
+App::App()
+{
+}
+
+App::~App()
+{
+  std::cout << "App::~App" << std::endl;
+}
 
 const char *searchKeyData(void) {
   const char *data = NULL;
@@ -168,7 +178,8 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   prev_line = l;
   prev_pos = buf->layout.pos;
 }
-void mainLoop() {
+
+int App::mainLoop() {
   for (;;) {
     if (popAddDownloadList()) {
       ldDL();
@@ -243,6 +254,8 @@ void mainLoop() {
     CurrentKey = -1;
     CurrentKeyData = NULL;
   }
+
+  return 0;
 }
 
 int searchKeyNum(void) {
