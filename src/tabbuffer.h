@@ -56,7 +56,6 @@ public:
   static void init(const std::shared_ptr<Buffer> &newbuf);
   static void _newT();
 };
-#define NO_TABBUFFER ((TabBuffer *)1)
 
 extern TabBuffer *CurrentTab;
 struct LineLayout;

@@ -165,10 +165,12 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
 }
 
 void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
-  if (t2 == NO_TABBUFFER)
+  if (!t2) {
     t2 = FirstTab;
-  if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
+  }
+  if (!t || !t2 || t == t2 || !t) {
     return;
+  }
   if (t->prevTab) {
     if (t->nextTab)
       t->nextTab->prevTab = t->prevTab;
@@ -379,7 +381,8 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
   if (CurrentTab->firstBuffer == CurrentTab->currentBuffer()) {
     buf->backBuffer = CurrentTab->firstBuffer;
     CurrentTab->firstBuffer = buf;
-  } else if (auto b = forwardBuffer(CurrentTab->firstBuffer, CurrentTab->currentBuffer())) {
+  } else if (auto b = forwardBuffer(CurrentTab->firstBuffer,
+                                    CurrentTab->currentBuffer())) {
     buf->backBuffer = CurrentTab->currentBuffer();
     b->backBuffer = buf;
   }
@@ -457,7 +460,9 @@ void followTab(TabBuffer *tab) {
 }
 
 /* show current URL */
-Str *currentURL(void) { return Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str()); }
+Str *currentURL(void) {
+  return Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str());
+}
 
 void SAVE_BUFPOSITION(LineLayout *sbufp) {
   sbufp->COPY_BUFPOSITION_FROM(CurrentTab->currentBuffer()->layout);
@@ -754,7 +759,8 @@ void TabBuffer::_followForm(int submit) {
                      // break;
                    }
                    fi->value = Strnew_charp(p);
-                   formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
+                   formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout,
+                                    fi);
                    if (fi->accept || fi->parent->nitems == 1) {
                      CurrentTab->do_submit(fi, a);
                      return;
