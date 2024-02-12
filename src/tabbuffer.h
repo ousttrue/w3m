@@ -1,4 +1,5 @@
 #pragma once
+#include "display_flag.h"
 #include "url.h"
 #include <optional>
 #include <gc_cpp.h>
@@ -14,12 +15,12 @@ struct TabBuffer : public gc_cleanup {
 
 private:
   std::shared_ptr<Buffer> _currentBuffer;
-
-public:
-  std::shared_ptr<Buffer> firstBuffer;
   short x1 = 0;
   short x2 = 0;
   short y = 0;
+
+public:
+  std::shared_ptr<Buffer> firstBuffer;
 
   TabBuffer();
   ~TabBuffer();
@@ -52,9 +53,11 @@ public:
                                    const char *referer, FormList *request);
   void do_submit(FormItemList *fi, Anchor *a);
   void _followForm(int submit);
+  int draw();
 
   static void init();
   static void _newT();
+  static int calcTabPos(DisplayFlag mode);
 };
 
 extern TabBuffer *CurrentTab;
@@ -71,7 +74,6 @@ extern int nTab;
 extern int TabCols;
 extern bool check_target;
 
-void calcTabPos();
 TabBuffer *deleteTab(TabBuffer *tab);
 TabBuffer *numTab(int n);
 void moveTab(TabBuffer *t, TabBuffer *t2, int right);

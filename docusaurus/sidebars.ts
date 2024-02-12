@@ -45,6 +45,7 @@ const sidebars: SidebarsConfig = {
       items: [
         "refs/links",
         "refs/rfc",
+        "refs/http",
       ],
     },
   ],

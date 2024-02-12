@@ -60,14 +60,20 @@ TabBuffer *numTab(int n) {
   return tab;
 }
 
-void calcTabPos(void) {
+int TabBuffer::calcTabPos(DisplayFlag mode) {
+  if (mode != B_FORCE_REDRAW && mode != B_REDRAW_IMAGE) {
+    return LastTab->y;
+  }
+
+  if (nTab <= 0) {
+    return LastTab->y;
+  }
+
   TabBuffer *tab;
   int lcol = 0, rcol = 0, col;
-  int n1, n2, na, nx, ny, ix, iy;
 
-  if (nTab <= 0)
-    return;
-  n1 = (COLS - rcol - lcol) / TabCols;
+  int n2, ny;
+  int n1 = (COLS - rcol - lcol) / TabCols;
   if (n1 >= nTab) {
     n2 = 1;
     ny = 1;
@@ -79,13 +85,16 @@ void calcTabPos(void) {
       n2 = 1;
     ny = (nTab - n1 - 1) / n2 + 2;
   }
-  na = n1 + n2 * (ny - 1);
+
+  // int n2, na, nx, ny, ix, iy;
+  int na = n1 + n2 * (ny - 1);
   n1 -= (na - nTab) / ny;
   if (n1 < 0)
     n1 = 0;
   na = n1 + n2 * (ny - 1);
   tab = FirstTab;
-  for (iy = 0; iy < ny && tab; iy++) {
+  for (int iy = 0; iy < ny && tab; iy++) {
+    int nx;
     if (iy == 0) {
       nx = n1;
       col = COLS - rcol - lcol;
@@ -93,7 +102,7 @@ void calcTabPos(void) {
       nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
       col = COLS;
     }
-    for (ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
+    for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
       tab->x1 = col * ix / nx;
       tab->x2 = col * (ix + 1) / nx - 1;
       tab->y = iy;
@@ -103,6 +112,45 @@ void calcTabPos(void) {
       }
     }
   }
+  return LastTab->y;
+}
+
+int TabBuffer::draw() {
+  move(this->y, this->x1);
+  if (this == CurrentTab) {
+    bold();
+  } else {
+    boldend();
+  }
+  addch('[');
+  auto l = this->x2 - this->x1 - 1 -
+           get_strwidth(this->currentBuffer()->layout.title.c_str());
+  if (l < 0) {
+    l = 0;
+  }
+  if (l / 2 > 0) {
+    addnstr_sup(" ", l / 2);
+  }
+
+  if (this == CurrentTab) {
+    underline();
+    // standout();
+  }
+  addnstr(this->currentBuffer()->layout.title.c_str(), this->x2 - this->x1 - l);
+  if (this == CurrentTab) {
+    underlineend();
+    // standend();
+  }
+
+  if ((l + 1) / 2 > 0) {
+    addnstr_sup(" ", (l + 1) / 2);
+  }
+  move(this->y, this->x2);
+  addch(']');
+  if (this == CurrentTab) {
+    boldend();
+  }
+  return this->y;
 }
 
 TabBuffer *deleteTab(TabBuffer *tab) {

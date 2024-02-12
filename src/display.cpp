@@ -216,9 +216,7 @@ void displayBuffer(DisplayFlag mode) {
     layout.rootX = 0;
   layout.COLS = COLS - layout.rootX;
   if (nTab > 1) {
-    if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
-      calcTabPos();
-    ny = LastTab->y + 2;
+    ny = TabBuffer::calcTabPos(mode) + 2;
     if (ny > LASTLINE)
       ny = LASTLINE;
   }
@@ -332,52 +330,31 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
 }
 
 static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
-  Line *l;
-  int i;
-
   if (nTab > 1) {
-    TabBuffer *t;
-    int l;
-
     move(0, 0);
     clrtoeolx();
-    for (t = FirstTab; t; t = t->nextTab) {
-      move(t->y, t->x1);
-      if (t == CurrentTab)
-        bold();
-      addch('[');
-      l = t->x2 - t->x1 - 1 -
-          get_strwidth(t->currentBuffer()->layout.title.c_str());
-      if (l < 0)
-        l = 0;
-      if (l / 2 > 0)
-        addnstr_sup(" ", l / 2);
-      if (t == CurrentTab)
-        EFFECT_ACTIVE_START;
-      addnstr(t->currentBuffer()->layout.title.c_str(), t->x2 - t->x1 - l);
-      if (t == CurrentTab)
-        EFFECT_ACTIVE_END;
-      if ((l + 1) / 2 > 0)
-        addnstr_sup(" ", (l + 1) / 2);
-      move(t->y, t->x2);
-      addch(']');
-      if (t == CurrentTab)
-        boldend();
+    int y = 0;
+    for (auto t = FirstTab; t; t = t->nextTab) {
+      y = t->draw();
     }
-    move(LastTab->y + 1, 0);
-    for (i = 0; i < COLS; i++)
+    move(y + 1, 0);
+    for (int i = 0; i < COLS; i++)
       addch('~');
   }
-  for (i = 0, l = buf->layout.topLine; i < buf->layout.LINES;
-       i++, l = l->next) {
-    if (i >= buf->layout.LINES - n || i < -n)
-      l = redrawLine(&buf->layout, l, i + buf->layout.rootY);
-    if (l == NULL)
-      break;
-  }
-  if (n > 0) {
-    move(i + buf->layout.rootY, 0);
-    clrtobotx();
+  {
+    Line *l;
+    int i;
+    for (i = 0, l = buf->layout.topLine; i < buf->layout.LINES;
+         i++, l = l->next) {
+      if (i >= buf->layout.LINES - n || i < -n)
+        l = redrawLine(&buf->layout, l, i + buf->layout.rootY);
+      if (l == NULL)
+        break;
+    }
+    if (n > 0) {
+      move(i + buf->layout.rootY, 0);
+      clrtobotx();
+    }
   }
 }
 
