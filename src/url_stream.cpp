@@ -577,7 +577,12 @@ void UrlStream::openFile(const char *path) {
   this->stream = openIS(path);
   // if (!do_download)
   {
-    check_compression(path, this);
+    this->compression = CMP_NOCOMPRESS;
+    if (auto d = check_compression(path)) {
+      this->compression = d->type;
+      this->guess_type = d->mime_type;
+    }
+
     if (this->compression != CMP_NOCOMPRESS) {
       auto [t0, ext] = uncompressed_file_type(path);
       this->ext = ext;
@@ -874,4 +879,87 @@ const char *cleanupName(const char *name) {
     }
   }
   return buf;
+}
+
+std::string UrlStream::uncompress_stream() {
+  if (this->stream->IStype() != IST_ENCODED) {
+    this->stream = newEncodedStream(this->stream, this->encoding);
+    this->encoding = ENC_7BIT;
+  }
+
+  const char *expand_cmd = GUNZIP_CMDNAME;
+  const char *expand_name = GUNZIP_NAME;
+  int use_d_arg = 0;
+  for (auto &d : compression_decoders) {
+    if (this->compression == d.type) {
+      if (d.auxbin_p)
+        expand_cmd = auxbinFile(d.cmd);
+      else
+        expand_cmd = d.cmd;
+      expand_name = d.name;
+      ext = d.ext;
+      use_d_arg = d.use_d_arg;
+      break;
+    }
+  }
+  this->compression = CMP_NOCOMPRESS;
+
+  std::string tmpf;
+  if (this->schema != SCM_LOCAL) {
+    tmpf = tmpfname(TMPF_DFL, ext);
+  }
+
+  /* child1 -- stdout|f1=uf -> parent */
+  FILE *f1;
+  auto pid1 = open_pipe_rw(&f1, nullptr);
+  if (pid1 < 0) {
+    return {};
+  }
+  if (pid1 == 0) {
+    /* child */
+    pid_t pid2;
+    FILE *f2 = stdin;
+
+    /* uf -> child2 -- stdout|stdin -> child1 */
+    pid2 = open_pipe_rw(&f2, nullptr);
+    if (pid2 < 0) {
+      exit(1);
+    }
+    if (pid2 == 0) {
+      /* child2 */
+      char *buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+      int count;
+      FILE *f = nullptr;
+
+      // int UrlStream::fileno() const { return this->stream->ISfileno(); }
+
+      setup_child(true, 2, this->stream->ISfileno());
+      if (tmpf.size()) {
+        f = fopen(tmpf.c_str(), "wb");
+      }
+      while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
+        if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
+          break;
+        if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
+          break;
+      }
+      if (f)
+        fclose(f);
+      xfree(buf);
+      exit(0);
+    }
+    /* child1 */
+    dup2(1, 2); /* stderr>&stdout */
+    setup_child(true, -1, -1);
+    if (use_d_arg)
+      execlp(expand_cmd, expand_name, "-d", nullptr);
+    else
+      execlp(expand_cmd, expand_name, nullptr);
+    exit(1);
+  }
+  this->stream = newFileStream(f1, fclose);
+  if (tmpf.size()) {
+    this->schema = SCM_LOCAL;
+  }
+  return tmpf;
 }

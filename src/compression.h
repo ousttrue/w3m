@@ -1,5 +1,17 @@
 #pragma once
 #include <string>
+#include <string_view>
+#include <vector>
+
+#define GUNZIP_CMDNAME "gunzip"
+#define BUNZIP2_CMDNAME "bunzip2"
+#define INFLATE_CMDNAME "inflate"
+#define BROTLI_CMDNAME "brotli"
+
+#define GUNZIP_NAME "gunzip"
+#define BUNZIP2_NAME "bunzip2"
+#define INFLATE_NAME "inflate"
+#define BROTLI_NAME "brotli"
 
 enum CompressionType {
   CMP_NOCOMPRESS = 0,
@@ -13,7 +25,7 @@ enum CompressionType {
 struct compression_decoder {
   CompressionType type;
   std::string ext;
-  const char *mime_type;
+  std::string mime_type;
   int auxbin_p;
   const char *cmd;
   const char *name;
@@ -22,11 +34,16 @@ struct compression_decoder {
   int use_d_arg;
 };
 
-struct UrlStream;
-void check_compression(const char *path, UrlStream *uf);
-std::tuple<const char *, std::string> uncompressed_file_type(const char *path);
-char *acceptableEncoding(void);
+extern std::vector<compression_decoder> compression_decoders;
+
+const compression_decoder *
+compress_application_type(CompressionType compression);
+const compression_decoder *check_compression(const char *path);
+std::tuple<std::string, std::string> uncompressed_file_type(const char *path);
+char *acceptableEncoding();
+
 struct Str;
+struct UrlStream;
 void process_compression(Str *lineBuf2, UrlStream *uf);
-const char *compress_application_type(CompressionType compression);
-const char *filename_extension(const char *patch, int is_url);
+
+std::string filename_extension(const std::string_view patch, bool is_url);

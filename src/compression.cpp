@@ -16,18 +16,7 @@
 
 #define PATH_SEPARATOR ':'
 
-#define GUNZIP_CMDNAME "gunzip"
-#define BUNZIP2_CMDNAME "bunzip2"
-#define INFLATE_CMDNAME "inflate"
-#define BROTLI_CMDNAME "brotli"
-
-#define GUNZIP_NAME "gunzip"
-#define BUNZIP2_NAME "bunzip2"
-#define INFLATE_NAME "inflate"
-#define BROTLI_NAME "brotli"
-
-/* *INDENT-OFF* */
-static compression_decoder compression_decoders[] = {
+std::vector<compression_decoder> compression_decoders = {
     {CMP_COMPRESS,
      ".gz",
      "application/x-gzip",
@@ -73,33 +62,52 @@ static compression_decoder compression_decoders[] = {
      "br",
      {"br", "x-br", nullptr},
      1},
-    {CMP_NOCOMPRESS, {}, nullptr, 0, nullptr, nullptr, nullptr, {nullptr}, 0},
 };
 
-const char *compress_application_type(CompressionType compression) {
-  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (d->type == compression)
-      return d->mime_type;
+const compression_decoder *
+compress_application_type(CompressionType compression) {
+  for (auto &d : compression_decoders) {
+    if (d.type == compression)
+      return &d;
   }
   return {};
 }
 
-std::tuple<const char *, std::string> uncompressed_file_type(const char *path) {
+const compression_decoder *check_compression(const char *path) {
+  if (!path) {
+    return {};
+  }
+
+  auto len = strlen(path);
+  for (auto &d : compression_decoders) {
+    if (d.ext.empty()) {
+      continue;
+    }
+    auto elen = d.ext.size();
+    if (len > elen && strcasecmp(&path[len - elen], d.ext.c_str()) == 0) {
+      return &d;
+    }
+  }
+  return {};
+}
+
+std::tuple<std::string, std::string> uncompressed_file_type(const char *path) {
   if (path == nullptr) {
     return {};
   }
 
   auto slen = 0;
   auto len = strlen(path);
-  struct compression_decoder *d;
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+  compression_decoder *d = nullptr;
+  for (auto &_d : compression_decoders) {
+    auto d = &_d;
     if (d->ext.empty())
       continue;
     slen = d->ext.size();
     if (len > slen && strcasecmp(&path[len - slen], d->ext.c_str()) == 0)
       break;
   }
-  if (d->type == CMP_NOCOMPRESS) {
+  if (!d) {
     return {};
   }
 
@@ -110,93 +118,7 @@ std::tuple<const char *, std::string> uncompressed_file_type(const char *path) {
     t0 = "text/plain";
   }
   auto ext = filename_extension(fn->ptr, 0);
-  if (!ext) {
-    ext = "";
-  }
   return {t0, ext};
-}
-
-std::string UrlStream::uncompress_stream() {
-  if (this->stream->IStype() != IST_ENCODED) {
-    this->stream = newEncodedStream(this->stream, this->encoding);
-    this->encoding = ENC_7BIT;
-  }
-
-  const char *expand_cmd = GUNZIP_CMDNAME;
-  const char *expand_name = GUNZIP_NAME;
-  int use_d_arg = 0;
-  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (this->compression == d->type) {
-      if (d->auxbin_p)
-        expand_cmd = auxbinFile((char *)d->cmd);
-      else
-        expand_cmd = d->cmd;
-      expand_name = d->name;
-      ext = d->ext;
-      use_d_arg = d->use_d_arg;
-      break;
-    }
-  }
-  this->compression = CMP_NOCOMPRESS;
-
-  std::string tmpf;
-  if (this->schema != SCM_LOCAL) {
-    tmpf = tmpfname(TMPF_DFL, ext);
-  }
-
-  /* child1 -- stdout|f1=uf -> parent */
-  FILE *f1;
-  auto pid1 = open_pipe_rw(&f1, nullptr);
-  if (pid1 < 0) {
-    return {};
-  }
-  if (pid1 == 0) {
-    /* child */
-    pid_t pid2;
-    FILE *f2 = stdin;
-
-    /* uf -> child2 -- stdout|stdin -> child1 */
-    pid2 = open_pipe_rw(&f2, nullptr);
-    if (pid2 < 0) {
-      exit(1);
-    }
-    if (pid2 == 0) {
-      /* child2 */
-      char *buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-      int count;
-      FILE *f = nullptr;
-
-      // int UrlStream::fileno() const { return this->stream->ISfileno(); }
-
-      setup_child(true, 2, this->stream->ISfileno());
-      if (tmpf.size()) {
-        f = fopen(tmpf.c_str(), "wb");
-      }
-      while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
-        if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
-          break;
-        if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
-          break;
-      }
-      if (f)
-        fclose(f);
-      xfree(buf);
-      exit(0);
-    }
-    /* child1 */
-    dup2(1, 2); /* stderr>&stdout */
-    setup_child(true, -1, -1);
-    if (use_d_arg)
-      execlp(expand_cmd, expand_name, "-d", nullptr);
-    else
-      execlp(expand_cmd, expand_name, nullptr);
-    exit(1);
-  }
-  this->stream = newFileStream(f1, fclose);
-  if (tmpf.size()) {
-    this->schema = SCM_LOCAL;
-  }
-  return tmpf;
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
@@ -237,9 +159,9 @@ char *acceptableEncoding(void) {
   }
 
   auto l = newTextList();
-  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (check_command(d->cmd, d->auxbin_p)) {
-      pushText(l, d->encoding);
+  for (auto &d : compression_decoders) {
+    if (check_command(d.cmd, d.auxbin_p)) {
+      pushText(l, d.encoding);
     }
   }
 
@@ -257,10 +179,10 @@ void process_compression(Str *lineBuf2, UrlStream *uf) {
   while (IS_SPACE(*p))
     p++;
   uf->compression = CMP_NOCOMPRESS;
-  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    for (auto e = d->encodings; *e != nullptr; e++) {
+  for (auto &d : compression_decoders) {
+    for (auto e = d.encodings; *e != nullptr; e++) {
       if (strncasecmp(p, *e, strlen(*e)) == 0) {
-        uf->compression = d->type;
+        uf->compression = d.type;
         break;
       }
     }
@@ -270,49 +192,31 @@ void process_compression(Str *lineBuf2, UrlStream *uf) {
   uf->content_encoding = uf->compression;
 }
 
-void check_compression(const char *path, UrlStream *uf) {
-  if (!path) {
-    return;
-  }
-  auto len = strlen(path);
-  uf->compression = CMP_NOCOMPRESS;
-  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
-    if (d->ext.empty()) {
-      continue;
-    }
-    auto elen = d->ext.size();
-    if (len > elen && strcasecmp(&path[len - elen], d->ext.c_str()) == 0) {
-      uf->compression = d->type;
-      uf->guess_type = d->mime_type;
-      break;
-    }
-  }
-}
-
-const char *filename_extension(const char *path, int is_url) {
-  const char *last_dot = "";
-  if (path == nullptr) {
-    return last_dot;
+std::string filename_extension(const std::string_view path, bool is_url) {
+  if (path.empty()) {
+    return "";
   }
 
-  auto p = path;
+  auto p = path.begin();
   if (*p == '.') {
     p++;
   }
 
-  for (; *p; p++) {
+  const char *last_dot = "";
+  for (; p != path.end(); p++) {
     if (*p == '.') {
       last_dot = p;
     } else if (is_url && *p == '?')
       break;
   }
-  if (*last_dot == '.') {
-    int i;
-    for (i = 1; i < 8 && last_dot[i]; i++) {
-      if (is_url && !IS_ALNUM(last_dot[i]))
-        break;
-    }
-    return allocStr(last_dot, i);
+  if (*last_dot != '.') {
+    return "";
   }
-  return last_dot;
+
+  int i;
+  for (i = 1; i < 8 && last_dot[i]; i++) {
+    if (is_url && !IS_ALNUM(last_dot[i]))
+      break;
+  }
+  return std::string(last_dot, last_dot + i);
 }

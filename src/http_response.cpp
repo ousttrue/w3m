@@ -342,7 +342,7 @@ void HttpResponse::page_loaded(Url url) {
       auto [_, ext] = uncompressed_file_type(url.file.c_str());
       this->f.ext = ext;
     } else {
-      this->type = compress_application_type(this->f.compression);
+      this->type = compress_application_type(this->f.compression)->mime_type;
       this->f.compression = CMP_NOCOMPRESS;
     }
   }
