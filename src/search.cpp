@@ -207,9 +207,9 @@ int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
   crmode();
   if (SETJMP(IntReturn) == 0) {
     for (i = 0; i < PREC_NUM; i++) {
-      result = func(&Currentbuf->layout, str);
+      result = func(&CurrentTab->currentBuffer()->layout, str);
       if (i < PREC_NUM - 1 && result & SR_FOUND)
-        clear_mark(Currentbuf->layout.currentLine);
+        clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
     }
   }
   mySignal(SIGINT, prevtrap);
@@ -248,14 +248,14 @@ void srch_nxtprv(int reverse) {
     reverse ^= 1;
   }
   if (reverse == 0) {
-    Currentbuf->layout.pos += 1;
+    CurrentTab->currentBuffer()->layout.pos += 1;
   }
   result = srchcore(SearchString, routine[reverse]);
   if (result & SR_FOUND) {
-    clear_mark(Currentbuf->layout.currentLine);
+    clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   } else {
     if (reverse == 0) {
-      Currentbuf->layout.pos -= 1;
+      CurrentTab->currentBuffer()->layout.pos -= 1;
     }
   }
   displayBuffer(B_NORMAL);
@@ -290,27 +290,27 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   if (do_next_search) {
     if (*str) {
       if (searchRoutine == forwardSearch)
-        Currentbuf->layout.pos += 1;
+        CurrentTab->currentBuffer()->layout.pos += 1;
       SAVE_BUFPOSITION(&sbuf);
       if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
-        Currentbuf->layout.pos -= 1;
+        CurrentTab->currentBuffer()->layout.pos -= 1;
         SAVE_BUFPOSITION(&sbuf);
       }
-      Currentbuf->layout.arrangeCursor();
+      CurrentTab->currentBuffer()->layout.arrangeCursor();
       displayBuffer(B_FORCE_REDRAW);
-      clear_mark(Currentbuf->layout.currentLine);
+      clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
       return -1;
     } else
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
     RESTORE_BUFPOSITION(sbuf);
-    Currentbuf->layout.arrangeCursor();
+    CurrentTab->currentBuffer()->layout.arrangeCursor();
     srchcore(str, searchRoutine);
-    Currentbuf->layout.arrangeCursor();
+    CurrentTab->currentBuffer()->layout.arrangeCursor();
   }
   displayBuffer(B_FORCE_REDRAW);
-  clear_mark(Currentbuf->layout.currentLine);
+  clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   return -1;
 }
 
@@ -345,14 +345,14 @@ void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
     }
     disp = true;
   }
-  pos = Currentbuf->layout.pos;
+  pos = CurrentTab->currentBuffer()->layout.pos;
   if (func == forwardSearch)
-    Currentbuf->layout.pos += 1;
+    CurrentTab->currentBuffer()->layout.pos += 1;
   result = srchcore(str, func);
   if (result & SR_FOUND)
-    clear_mark(Currentbuf->layout.currentLine);
+    clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   else
-    Currentbuf->layout.pos = pos;
+    CurrentTab->currentBuffer()->layout.pos = pos;
   displayBuffer(B_NORMAL);
   if (disp)
     disp_srchresult(result, prompt, str);

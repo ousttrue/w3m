@@ -77,13 +77,13 @@ static void SigAlarm(SIGNAL_ARG) {
       CurrentAlarm->sec = 0;
       CurrentAlarm->status = AL_UNSET;
     }
-    if (Currentbuf->layout.event) {
-      if (Currentbuf->layout.event->status != AL_UNSET)
-        CurrentAlarm = Currentbuf->layout.event;
+    if (CurrentTab->currentBuffer()->layout.event) {
+      if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET)
+        CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
       else
-        Currentbuf->layout.event = NULL;
+        CurrentTab->currentBuffer()->layout.event = NULL;
     }
-    if (!Currentbuf->layout.event)
+    if (!CurrentTab->currentBuffer()->layout.event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
       mySignal(SIGALRM, SigAlarm);
@@ -173,11 +173,11 @@ void mainLoop() {
     if (popAddDownloadList()) {
       ldDL();
     }
-    if (Currentbuf->layout.submit) {
-      Anchor *a = Currentbuf->layout.submit;
-      Currentbuf->layout.submit = NULL;
-      Currentbuf->layout.gotoLine(a->start.line);
-      Currentbuf->layout.pos = a->start.pos;
+    if (CurrentTab->currentBuffer()->layout.submit) {
+      Anchor *a = CurrentTab->currentBuffer()->layout.submit;
+      CurrentTab->currentBuffer()->layout.submit = NULL;
+      CurrentTab->currentBuffer()->layout.gotoLine(a->start.line);
+      CurrentTab->currentBuffer()->layout.pos = a->start.pos;
       CurrentTab->_followForm(true);
       continue;
     }
@@ -194,11 +194,11 @@ void mainLoop() {
     }
 
     // get keypress event
-    if (Currentbuf->layout.event) {
-      if (Currentbuf->layout.event->status != AL_UNSET) {
-        CurrentAlarm = Currentbuf->layout.event;
+    if (CurrentTab->currentBuffer()->layout.event) {
+      if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET) {
+        CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
         if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          Currentbuf->layout.event = NULL;
+          CurrentTab->currentBuffer()->layout.event = NULL;
           CurrentKey = -1;
           CurrentKeyData = NULL;
           CurrentCmdData = (char *)CurrentAlarm->data;
@@ -207,9 +207,9 @@ void mainLoop() {
           continue;
         }
       } else
-        Currentbuf->layout.event = NULL;
+        CurrentTab->currentBuffer()->layout.event = NULL;
     }
-    if (!Currentbuf->layout.event)
+    if (!CurrentTab->currentBuffer()->layout.event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
       mySignal(SIGALRM, SigAlarm);
@@ -233,8 +233,8 @@ void mainLoop() {
         if (prec_num > PREC_LIMIT)
           prec_num = PREC_LIMIT;
       } else {
-        set_buffer_environ(Currentbuf);
-        save_buffer_position(&Currentbuf->layout);
+        set_buffer_environ(CurrentTab->currentBuffer());
+        save_buffer_position(&CurrentTab->currentBuffer()->layout);
         keyPressEventProc((int)c);
         prec_num = 0;
       }

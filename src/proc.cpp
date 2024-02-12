@@ -81,10 +81,10 @@ void multimap() {
 //"Scroll down one page"
 void pgFore() {
   if (vi_prec_num)
-    nscroll(searchKeyNum() * (Currentbuf->layout.LINES - 1), B_NORMAL);
+    nscroll(searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1), B_NORMAL);
   else
     nscroll(prec_num ? searchKeyNum()
-                     : searchKeyNum() * (Currentbuf->layout.LINES - 1),
+                     : searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
             prec_num ? B_SCROLL : B_NORMAL);
 }
 
@@ -93,10 +93,10 @@ void pgFore() {
 //"Scroll up one page"
 void pgBack() {
   if (vi_prec_num)
-    nscroll(-searchKeyNum() * (Currentbuf->layout.LINES - 1), B_NORMAL);
+    nscroll(-searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1), B_NORMAL);
   else
     nscroll(-(prec_num ? searchKeyNum()
-                       : searchKeyNum() * (Currentbuf->layout.LINES - 1)),
+                       : searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1)),
             prec_num ? B_SCROLL : B_NORMAL);
 }
 
@@ -104,14 +104,14 @@ void pgBack() {
 // NEXT_HALF_PAGE
 //"Scroll down half a page"
 void hpgFore() {
-  nscroll(searchKeyNum() * (Currentbuf->layout.LINES / 2 - 1), B_NORMAL);
+  nscroll(searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1), B_NORMAL);
 }
 
 /* Move half page backward */
 // PREV_HALF_PAGE
 //"Scroll up half a page"
 void hpgBack() {
-  nscroll(-searchKeyNum() * (Currentbuf->layout.LINES / 2 - 1), B_NORMAL);
+  nscroll(-searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1), B_NORMAL);
 }
 
 /* 1 line up */
@@ -129,13 +129,13 @@ void ldown1() { nscroll(-searchKeyNum(), B_SCROLL); }
 //"Center on cursor line"
 void ctrCsrV() {
   int offsety;
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  offsety = Currentbuf->layout.LINES / 2 - Currentbuf->layout.cursorY;
+  offsety = CurrentTab->currentBuffer()->layout.LINES / 2 - CurrentTab->currentBuffer()->layout.cursorY;
   if (offsety != 0) {
-    Currentbuf->layout.topLine = Currentbuf->layout.lineSkip(
-        Currentbuf->layout.topLine, -offsety, false);
-    Currentbuf->layout.arrangeLine();
+    CurrentTab->currentBuffer()->layout.topLine = CurrentTab->currentBuffer()->layout.lineSkip(
+        CurrentTab->currentBuffer()->layout.topLine, -offsety, false);
+    CurrentTab->currentBuffer()->layout.arrangeLine();
     displayBuffer(B_NORMAL);
   }
 }
@@ -144,12 +144,12 @@ void ctrCsrV() {
 //"Center on cursor column"
 void ctrCsrH() {
   int offsetx;
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  offsetx = Currentbuf->layout.cursorX - Currentbuf->layout.COLS / 2;
+  offsetx = CurrentTab->currentBuffer()->layout.cursorX - CurrentTab->currentBuffer()->layout.COLS / 2;
   if (offsetx != 0) {
-    Currentbuf->layout.columnSkip(offsetx);
-    Currentbuf->layout.arrangeCursor();
+    CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
+    CurrentTab->currentBuffer()->layout.arrangeCursor();
     displayBuffer(B_NORMAL);
   }
 }
@@ -159,7 +159,7 @@ void ctrCsrH() {
 //"Draw the screen anew"
 void rdrwSc() {
   clear();
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_FORCE_REDRAW);
 }
 
@@ -195,13 +195,13 @@ void srchprv() { srch_nxtprv(1); }
 // SHIFT_LEFT
 //"Shift screen left"
 void shiftl() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  int column = Currentbuf->layout.currentColumn;
-  Currentbuf->layout.columnSkip(
-      searchKeyNum() * (-Currentbuf->layout.COLS + 1) + 1);
+  int column = CurrentTab->currentBuffer()->layout.currentColumn;
+  CurrentTab->currentBuffer()->layout.columnSkip(
+      searchKeyNum() * (-CurrentTab->currentBuffer()->layout.COLS + 1) + 1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
-      Currentbuf->layout.currentColumn - column);
+      CurrentTab->currentBuffer()->layout.currentColumn - column);
   displayBuffer(B_NORMAL);
 }
 
@@ -209,20 +209,20 @@ void shiftl() {
 // SHIFT_RIGHT
 //"Shift screen right"
 void shiftr() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  int column = Currentbuf->layout.currentColumn;
-  Currentbuf->layout.columnSkip(searchKeyNum() * (Currentbuf->layout.COLS - 1) -
+  int column = CurrentTab->currentBuffer()->layout.currentColumn;
+  CurrentTab->currentBuffer()->layout.columnSkip(searchKeyNum() * (CurrentTab->currentBuffer()->layout.COLS - 1) -
                                 1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
-      Currentbuf->layout.currentColumn - column);
+      CurrentTab->currentBuffer()->layout.currentColumn - column);
   displayBuffer(B_NORMAL);
 }
 
 // RIGHT
 //"Shift screen one column right"
 void col1R() {
-  auto buf = Currentbuf;
+  auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
   int j, column, n = searchKeyNum();
 
@@ -230,7 +230,7 @@ void col1R() {
     return;
   for (j = 0; j < n; j++) {
     column = buf->layout.currentColumn;
-    Currentbuf->layout.columnSkip(1);
+    CurrentTab->currentBuffer()->layout.columnSkip(1);
     if (column == buf->layout.currentColumn)
       break;
     CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
@@ -241,7 +241,7 @@ void col1R() {
 // LEFT
 //"Shift screen one column left"
 void col1L() {
-  auto buf = Currentbuf;
+  auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
   int j, n = searchKeyNum();
 
@@ -250,7 +250,7 @@ void col1L() {
   for (j = 0; j < n; j++) {
     if (buf->layout.currentColumn == 0)
       break;
-    Currentbuf->layout.columnSkip(-1);
+    CurrentTab->currentBuffer()->layout.columnSkip(-1);
     CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
   displayBuffer(B_NORMAL);
@@ -379,7 +379,7 @@ void ldhelp() {
 //"Cursor left"
 void movL() {
   int m = searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movL(Currentbuf->layout.COLS / 2, m);
+  CurrentTab->currentBuffer()->layout._movL(CurrentTab->currentBuffer()->layout.COLS / 2, m);
 }
 
 // MOVE_LEFT1
@@ -393,7 +393,7 @@ void movL1() {
 //"Cursor down"
 void movD() {
   int m = searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movD((Currentbuf->layout.LINES + 1) / 2,
+  CurrentTab->currentBuffer()->layout._movD((CurrentTab->currentBuffer()->layout.LINES + 1) / 2,
                                             m);
 }
 
@@ -408,7 +408,7 @@ void movD1() {
 //"Cursor up"
 void movU() {
   int m = searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movU((Currentbuf->layout.LINES + 1) / 2,
+  CurrentTab->currentBuffer()->layout._movU((CurrentTab->currentBuffer()->layout.LINES + 1) / 2,
                                             m);
 }
 
@@ -423,7 +423,7 @@ void movU1() {
 //"Cursor right"
 void movR() {
   int m = searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movR(Currentbuf->layout.COLS / 2, m);
+  CurrentTab->currentBuffer()->layout._movR(CurrentTab->currentBuffer()->layout.COLS / 2, m);
 }
 
 // MOVE_RIGHT1
@@ -441,52 +441,52 @@ void movLW() {
   int ppos;
   int i, n = searchKeyNum();
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
 
   for (i = 0; i < n; i++) {
-    pline = Currentbuf->layout.currentLine;
-    ppos = Currentbuf->layout.pos;
+    pline = CurrentTab->currentBuffer()->layout.currentLine;
+    ppos = CurrentTab->currentBuffer()->layout.pos;
 
     if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
-            Currentbuf->layout.currentLine) < 0)
+            CurrentTab->currentBuffer()->layout.currentLine) < 0)
       goto end;
 
     while (1) {
-      l = Currentbuf->layout.currentLine;
+      l = CurrentTab->currentBuffer()->layout.currentLine;
       lb = l->lineBuf.data();
-      while (Currentbuf->layout.pos > 0) {
-        int tmp = Currentbuf->layout.pos;
+      while (CurrentTab->currentBuffer()->layout.pos > 0) {
+        int tmp = CurrentTab->currentBuffer()->layout.pos;
         prevChar(tmp, l);
         if (is_wordchar(lb[tmp])) {
           break;
         }
-        Currentbuf->layout.pos = tmp;
+        CurrentTab->currentBuffer()->layout.pos = tmp;
       }
-      if (Currentbuf->layout.pos > 0)
+      if (CurrentTab->currentBuffer()->layout.pos > 0)
         break;
       if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
-              Currentbuf->layout.currentLine->prev) < 0) {
-        Currentbuf->layout.currentLine = pline;
-        Currentbuf->layout.pos = ppos;
+              CurrentTab->currentBuffer()->layout.currentLine->prev) < 0) {
+        CurrentTab->currentBuffer()->layout.currentLine = pline;
+        CurrentTab->currentBuffer()->layout.pos = ppos;
         goto end;
       }
-      Currentbuf->layout.pos = Currentbuf->layout.currentLine->len;
+      CurrentTab->currentBuffer()->layout.pos = CurrentTab->currentBuffer()->layout.currentLine->len;
     }
 
-    l = Currentbuf->layout.currentLine;
+    l = CurrentTab->currentBuffer()->layout.currentLine;
     lb = l->lineBuf.data();
-    while (Currentbuf->layout.pos > 0) {
-      int tmp = Currentbuf->layout.pos;
+    while (CurrentTab->currentBuffer()->layout.pos > 0) {
+      int tmp = CurrentTab->currentBuffer()->layout.pos;
       prevChar(tmp, l);
       if (!is_wordchar(lb[tmp])) {
         break;
       }
-      Currentbuf->layout.pos = tmp;
+      CurrentTab->currentBuffer()->layout.pos = tmp;
     }
   }
 end:
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -498,44 +498,44 @@ void movRW() {
   int ppos;
   int i, n = searchKeyNum();
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
 
   for (i = 0; i < n; i++) {
-    pline = Currentbuf->layout.currentLine;
-    ppos = Currentbuf->layout.pos;
+    pline = CurrentTab->currentBuffer()->layout.currentLine;
+    ppos = CurrentTab->currentBuffer()->layout.pos;
 
     if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
-            Currentbuf->layout.currentLine) < 0)
+            CurrentTab->currentBuffer()->layout.currentLine) < 0)
       goto end;
 
-    l = Currentbuf->layout.currentLine;
+    l = CurrentTab->currentBuffer()->layout.currentLine;
     lb = l->lineBuf.data();
-    while (Currentbuf->layout.pos < l->len &&
-           is_wordchar(lb[Currentbuf->layout.pos])) {
-      nextChar(Currentbuf->layout.pos, l);
+    while (CurrentTab->currentBuffer()->layout.pos < l->len &&
+           is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
+      nextChar(CurrentTab->currentBuffer()->layout.pos, l);
     }
 
     while (1) {
-      while (Currentbuf->layout.pos < l->len &&
-             !is_wordchar(lb[Currentbuf->layout.pos])) {
-        nextChar(Currentbuf->layout.pos, l);
+      while (CurrentTab->currentBuffer()->layout.pos < l->len &&
+             !is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
+        nextChar(CurrentTab->currentBuffer()->layout.pos, l);
       }
-      if (Currentbuf->layout.pos < l->len)
+      if (CurrentTab->currentBuffer()->layout.pos < l->len)
         break;
       if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
-              Currentbuf->layout.currentLine->next) < 0) {
-        Currentbuf->layout.currentLine = pline;
-        Currentbuf->layout.pos = ppos;
+              CurrentTab->currentBuffer()->layout.currentLine->next) < 0) {
+        CurrentTab->currentBuffer()->layout.currentLine = pline;
+        CurrentTab->currentBuffer()->layout.pos = ppos;
         goto end;
       }
-      Currentbuf->layout.pos = 0;
-      l = Currentbuf->layout.currentLine;
+      CurrentTab->currentBuffer()->layout.pos = 0;
+      l = CurrentTab->currentBuffer()->layout.currentLine;
       lb = l->lineBuf.data();
     }
   }
 end:
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -557,7 +557,7 @@ void selBuf() {
   auto ok = false;
   do {
     char cmd;
-    auto buf = selectBuffer(CurrentTab->firstBuffer, Currentbuf, &cmd);
+    auto buf = selectBuffer(CurrentTab->firstBuffer, CurrentTab->currentBuffer(), &cmd);
     ok = CurrentTab->select(cmd, buf);
   } while (!ok);
 
@@ -619,14 +619,14 @@ void goLineL() { CurrentTab->currentBuffer()->layout._goLine("$", prec_num); }
 // LINE_BEGIN
 //"Go to the beginning of the line"
 void linbeg() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  while (Currentbuf->layout.currentLine->prev &&
-         Currentbuf->layout.currentLine->bpos) {
-    Currentbuf->layout.cursorUp0(1);
+  while (CurrentTab->currentBuffer()->layout.currentLine->prev &&
+         CurrentTab->currentBuffer()->layout.currentLine->bpos) {
+    CurrentTab->currentBuffer()->layout.cursorUp0(1);
   }
-  Currentbuf->layout.pos = 0;
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.pos = 0;
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -634,14 +634,14 @@ void linbeg() {
 // LINE_END
 //"Go to the end of the line"
 void linend() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  while (Currentbuf->layout.currentLine->next &&
-         Currentbuf->layout.currentLine->next->bpos) {
-    Currentbuf->layout.cursorDown0(1);
+  while (CurrentTab->currentBuffer()->layout.currentLine->next &&
+         CurrentTab->currentBuffer()->layout.currentLine->next->bpos) {
+    CurrentTab->currentBuffer()->layout.cursorDown0(1);
   }
-  Currentbuf->layout.pos = Currentbuf->layout.currentLine->len - 1;
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.pos = CurrentTab->currentBuffer()->layout.currentLine->len - 1;
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -649,26 +649,26 @@ void linend() {
 // EDIT
 //"Edit local source"
 void editBf() {
-  auto fn = Currentbuf->info->filename;
+  auto fn = CurrentTab->currentBuffer()->info->filename;
 
   if (fn.empty() || /* Behaving as a pager */
-      (Currentbuf->info->type.empty() &&
-       Currentbuf->info->edit == nullptr) || /* Reading shell */
-      Currentbuf->info->currentURL.schema != SCM_LOCAL ||
-      Currentbuf->info->currentURL.file == "-" /* file is std input  */
+      (CurrentTab->currentBuffer()->info->type.empty() &&
+       CurrentTab->currentBuffer()->info->edit == nullptr) || /* Reading shell */
+      CurrentTab->currentBuffer()->info->currentURL.schema != SCM_LOCAL ||
+      CurrentTab->currentBuffer()->info->currentURL.file == "-" /* file is std input  */
   ) {
     disp_err_message("Can't edit other than local file", true);
     return;
   }
 
   Str *cmd;
-  if (Currentbuf->info->edit) {
+  if (CurrentTab->currentBuffer()->info->edit) {
     cmd = unquote_mailcap(
-        Currentbuf->info->edit, Currentbuf->info->type.c_str(), fn.c_str(),
-        Currentbuf->info->getHeader("Content-Type:"), nullptr);
+        CurrentTab->currentBuffer()->info->edit, CurrentTab->currentBuffer()->info->type.c_str(), fn.c_str(),
+        CurrentTab->currentBuffer()->info->getHeader("Content-Type:"), nullptr);
   } else {
     cmd = myEditor(Editor, shell_quote(fn.c_str()),
-                   cur_real_linenumber(Currentbuf));
+                   cur_real_linenumber(CurrentTab->currentBuffer()));
   }
   exec_cmd(cmd->ptr);
 
@@ -686,9 +686,9 @@ void editScr() {
     disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, true);
     return;
   }
-  saveBuffer(Currentbuf, f, true);
+  saveBuffer(CurrentTab->currentBuffer(), f, true);
   fclose(f);
-  exec_cmd(myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(Currentbuf))
+  exec_cmd(myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(CurrentTab->currentBuffer()))
                ->ptr);
   unlink(tmpf);
   displayBuffer(B_FORCE_REDRAW);
@@ -702,15 +702,15 @@ void followA() {
   Url u;
   const char *url;
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
 
-  // a = retrieveCurrentMap(Currentbuf);
+  // a = retrieveCurrentMap(CurrentTab->currentBuffer());
   // if (a) {
   //   _followForm(false);
   //   return;
   // }
-  a = retrieveCurrentAnchor(&Currentbuf->layout);
+  a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
   if (a == nullptr) {
     CurrentTab->_followForm(false);
     return;
@@ -719,8 +719,8 @@ void followA() {
     gotoLabel(a->url + 1);
     return;
   }
-  u = urlParse(a->url, Currentbuf->info->getBaseURL());
-  if (u.to_Str() == Currentbuf->info->currentURL.to_Str()) {
+  u = urlParse(a->url, CurrentTab->currentBuffer()->info->getBaseURL());
+  if (u.to_Str() == CurrentTab->currentBuffer()->info->currentURL.to_Str()) {
     /* index within this buffer */
     if (u.label.size()) {
       gotoLabel(u.label.c_str());
@@ -734,9 +734,9 @@ void followA() {
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
     TabBuffer::_newT();
-    auto buf = Currentbuf;
+    auto buf = CurrentTab->currentBuffer();
     CurrentTab->loadLink(url, a->target, a->referer, nullptr);
-    if (buf != Currentbuf)
+    if (buf != CurrentTab->currentBuffer())
       CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
@@ -751,16 +751,16 @@ void followA() {
 // VIEW_IMAGE
 //"Display image in viewer"
 void followI() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
 
-  auto a = retrieveCurrentImg(&Currentbuf->layout);
+  auto a = retrieveCurrentImg(&CurrentTab->currentBuffer()->layout);
   if (a == nullptr)
     return;
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   refresh(term_io());
 
-  auto res = loadGeneralFile(a->url, Currentbuf->info->getBaseURL(), {});
+  auto res = loadGeneralFile(a->url, CurrentTab->currentBuffer()->info->getBaseURL(), {});
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     disp_err_message(emsg, false);
@@ -783,12 +783,12 @@ void submitForm() { CurrentTab->_followForm(true); }
 // LINK_BEGIN
 //"Move to the first hyperlink"
 void topA() {
-  HmarkerList *hl = Currentbuf->layout.hmarklist;
+  HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
   BufferPoint *po;
   Anchor *an;
   int hseq = 0;
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
   if (!hl || hl->nmark == 0)
     return;
@@ -801,18 +801,18 @@ void topA() {
     if (hseq >= hl->nmark)
       return;
     po = hl->marks + hseq;
-    if (Currentbuf->layout.href) {
-      an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
+    if (CurrentTab->currentBuffer()->layout.href) {
+      an = CurrentTab->currentBuffer()->layout.href->retrieveAnchor(po->line, po->pos);
     }
-    if (an == nullptr && Currentbuf->layout.formitem) {
-      an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem) {
+      an = CurrentTab->currentBuffer()->layout.formitem->retrieveAnchor(po->line, po->pos);
     }
     hseq++;
   } while (an == nullptr);
 
-  Currentbuf->layout.gotoLine(po->line);
-  Currentbuf->layout.pos = po->pos;
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.gotoLine(po->line);
+  CurrentTab->currentBuffer()->layout.pos = po->pos;
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -820,12 +820,12 @@ void topA() {
 // LINK_END
 //"Move to the last hyperlink"
 void lastA() {
-  HmarkerList *hl = Currentbuf->layout.hmarklist;
+  HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
   BufferPoint *po;
   Anchor *an;
   int hseq;
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
   if (!hl || hl->nmark == 0)
     return;
@@ -840,18 +840,18 @@ void lastA() {
     if (hseq < 0)
       return;
     po = hl->marks + hseq;
-    if (Currentbuf->layout.href) {
-      an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
+    if (CurrentTab->currentBuffer()->layout.href) {
+      an = CurrentTab->currentBuffer()->layout.href->retrieveAnchor(po->line, po->pos);
     }
-    if (an == nullptr && Currentbuf->layout.formitem) {
-      an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem) {
+      an = CurrentTab->currentBuffer()->layout.formitem->retrieveAnchor(po->line, po->pos);
     }
     hseq--;
   } while (an == nullptr);
 
-  Currentbuf->layout.gotoLine(po->line);
-  Currentbuf->layout.pos = po->pos;
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.gotoLine(po->line);
+  CurrentTab->currentBuffer()->layout.pos = po->pos;
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -859,13 +859,13 @@ void lastA() {
 // LINK_N
 //"Go to the nth link"
 void nthA() {
-  HmarkerList *hl = Currentbuf->layout.hmarklist;
+  HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
 
   int n = searchKeyNum();
   if (n < 0 || n > hl->nmark)
     return;
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
   if (!hl || hl->nmark == 0)
     return;
@@ -873,18 +873,18 @@ void nthA() {
   auto po = hl->marks + n - 1;
 
   Anchor *an = nullptr;
-  if (Currentbuf->layout.href) {
-    an = Currentbuf->layout.href->retrieveAnchor(po->line, po->pos);
+  if (CurrentTab->currentBuffer()->layout.href) {
+    an = CurrentTab->currentBuffer()->layout.href->retrieveAnchor(po->line, po->pos);
   }
-  if (an == nullptr && Currentbuf->layout.formitem) {
-    an = Currentbuf->layout.formitem->retrieveAnchor(po->line, po->pos);
+  if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem) {
+    an = CurrentTab->currentBuffer()->layout.formitem->retrieveAnchor(po->line, po->pos);
   }
   if (an == nullptr)
     return;
 
-  Currentbuf->layout.gotoLine(po->line);
-  Currentbuf->layout.pos = po->pos;
-  Currentbuf->layout.arrangeCursor();
+  CurrentTab->currentBuffer()->layout.gotoLine(po->line);
+  CurrentTab->currentBuffer()->layout.pos = po->pos;
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_NORMAL);
 }
 
@@ -977,7 +977,7 @@ void nextU() {
 //"Switch to the next buffer"
 void nextBf() {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf = forwardBuffer(CurrentTab->firstBuffer, Currentbuf);
+    auto buf = forwardBuffer(CurrentTab->firstBuffer, CurrentTab->currentBuffer());
     if (!buf) {
       if (i == 0)
         return;
@@ -993,7 +993,7 @@ void nextBf() {
 //"Switch to the previous buffer"
 void prevBf() {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf = Currentbuf->backBuffer;
+    auto buf = CurrentTab->currentBuffer()->backBuffer;
     if (!buf) {
       if (i == 0)
         return;
@@ -1008,9 +1008,9 @@ void prevBf() {
 // BACK
 //"Close current buffer and return to the one below in stack"
 void backBf() {
-  // Buffer *buf = Currentbuf->linkBuffer[LB_N_FRAME];
+  // Buffer *buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_FRAME];
 
-  if (!checkBackBuffer(Currentbuf)) {
+  if (!checkBackBuffer(CurrentTab->currentBuffer())) {
     if (close_tab_back && nTab >= 1) {
       deleteTab(CurrentTab);
       displayBuffer(B_FORCE_REDRAW);
@@ -1019,7 +1019,7 @@ void backBf() {
     return;
   }
 
-  CurrentTab->deleteBuffer(Currentbuf);
+  CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
 
   displayBuffer(B_FORCE_REDRAW);
 }
@@ -1027,7 +1027,7 @@ void backBf() {
 // DELETE_PREVBUF
 //"Delete previous buffer (mainly for local CGI-scripts)"
 void deletePrevBuf() {
-  auto buf = Currentbuf->backBuffer;
+  auto buf = CurrentTab->currentBuffer()->backBuffer;
   if (buf) {
     CurrentTab->deleteBuffer(buf);
   }
@@ -1044,14 +1044,14 @@ void goHome() {
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
     Url p_url;
-    auto cur_buf = Currentbuf;
+    auto cur_buf = CurrentTab->currentBuffer();
     SKIP_BLANKS(url);
     url = Strnew(url_quote(url))->ptr;
     p_url = urlParse(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
     CurrentTab->cmd_loadURL(url, {}, nullptr, nullptr);
-    if (Currentbuf != cur_buf) /* success */
-      pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
+    if (CurrentTab->currentBuffer() != cur_buf) /* success */
+      pushHashHist(URLHist, CurrentTab->currentBuffer()->info->currentURL.to_Str().c_str());
   }
 }
 
@@ -1077,8 +1077,8 @@ void adBmark() {
       "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
       (Str_form_quote(localCookie()))->ptr,
       (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-      (Str_form_quote(Strnew(Currentbuf->info->currentURL.to_Str())))->ptr,
-      (Str_form_quote(Strnew(Currentbuf->layout.title)))->ptr);
+      (Str_form_quote(Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str())))->ptr,
+      (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout.title)))->ptr);
   request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
@@ -1126,18 +1126,18 @@ void msgs() { cmd_loadBuffer(message_list_panel(), LB_NOLINK); }
 //"Display information about the current document"
 void pginfo() {
 
-  if (auto buf = Currentbuf->linkBuffer[LB_N_INFO]) {
+  if (auto buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_INFO]) {
     CurrentTab->currentBuffer(buf);
     displayBuffer(B_NORMAL);
     return;
   }
 
-  if (auto buf = Currentbuf->linkBuffer[LB_INFO]) {
+  if (auto buf = CurrentTab->currentBuffer()->linkBuffer[LB_INFO]) {
     CurrentTab->deleteBuffer(buf);
   }
 
   {
-    auto buf = page_info_panel(Currentbuf);
+    auto buf = page_info_panel(CurrentTab->currentBuffer());
     cmd_loadBuffer(buf, LB_INFO);
   }
 }
@@ -1146,7 +1146,7 @@ void pginfo() {
 // LIST
 //"Show all URLs referenced"
 void linkLst() {
-  auto buf = link_list_panel(Currentbuf);
+  auto buf = link_list_panel(CurrentTab->currentBuffer());
   if (buf != nullptr) {
     cmd_loadBuffer(buf, LB_NOLINK);
   }
@@ -1226,7 +1226,7 @@ void svBuf() {
     disp_err_message(emsg, true);
     return;
   }
-  saveBuffer(Currentbuf, f, true);
+  saveBuffer(CurrentTab->currentBuffer(), f, true);
   if (is_pipe)
     pclose(f);
   else
@@ -1238,20 +1238,20 @@ void svBuf() {
 // DOWNLOAD SAVE
 //"Save document source"
 void svSrc() {
-  if (Currentbuf->info->sourcefile.empty()) {
+  if (CurrentTab->currentBuffer()->info->sourcefile.empty()) {
     return;
   }
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
 
   const char *file;
-  if (Currentbuf->info->currentURL.schema == SCM_LOCAL) {
-    file = guess_filename(Currentbuf->info->currentURL.real_file.c_str());
+  if (CurrentTab->currentBuffer()->info->currentURL.schema == SCM_LOCAL) {
+    file = guess_filename(CurrentTab->currentBuffer()->info->currentURL.real_file.c_str());
   } else {
-    file = Currentbuf->info->guess_save_name(
-        Currentbuf->info->currentURL.file.c_str());
+    file = CurrentTab->currentBuffer()->info->guess_save_name(
+        CurrentTab->currentBuffer()->info->currentURL.file.c_str());
   }
-  doFileCopy(Currentbuf->info->sourcefile.c_str(), file);
+  doFileCopy(CurrentTab->currentBuffer()->info->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
   displayBuffer(B_NORMAL);
 }
@@ -1294,41 +1294,41 @@ void curURL() {
 //"Toggle between HTML shown or processed"
 void vwSrc() {
 
-  if (Currentbuf->info->type.empty()) {
+  if (CurrentTab->currentBuffer()->info->type.empty()) {
     return;
   }
 
   std::shared_ptr<Buffer> buf;
-  if ((buf = Currentbuf->linkBuffer[LB_SOURCE])) {
+  if ((buf = CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE])) {
     CurrentTab->currentBuffer(buf);
     displayBuffer(B_NORMAL);
     return;
   }
-  if (Currentbuf->info->sourcefile.empty()) {
+  if (CurrentTab->currentBuffer()->info->sourcefile.empty()) {
     return;
   }
 
   buf = Buffer::create(INIT_BUFFER_WIDTH());
 
-  if (Currentbuf->info->is_html_type()) {
+  if (CurrentTab->currentBuffer()->info->is_html_type()) {
     buf->info->type = "text/plain";
     buf->layout.title =
-        Sprintf("source of %s", Currentbuf->layout.title.c_str())->ptr;
-    buf->linkBuffer[LB_SOURCE] = Currentbuf;
-    Currentbuf->linkBuffer[LB_SOURCE] = buf;
-  } else if (Currentbuf->info->type == "text/plain") {
+        Sprintf("source of %s", CurrentTab->currentBuffer()->layout.title.c_str())->ptr;
+    buf->linkBuffer[LB_SOURCE] = CurrentTab->currentBuffer();
+    CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE] = buf;
+  } else if (CurrentTab->currentBuffer()->info->type == "text/plain") {
     buf->info->type = "text/html";
     buf->layout.title =
-        Sprintf("HTML view of %s", Currentbuf->layout.title.c_str())->ptr;
-    buf->linkBuffer[LB_SOURCE] = Currentbuf;
-    Currentbuf->linkBuffer[LB_SOURCE] = buf;
+        Sprintf("HTML view of %s", CurrentTab->currentBuffer()->layout.title.c_str())->ptr;
+    buf->linkBuffer[LB_SOURCE] = CurrentTab->currentBuffer();
+    CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE] = buf;
   } else {
     return;
   }
-  buf->info->currentURL = Currentbuf->info->currentURL;
-  buf->info->filename = Currentbuf->info->filename;
-  buf->info->sourcefile = Currentbuf->info->sourcefile;
-  buf->clone = Currentbuf->clone;
+  buf->info->currentURL = CurrentTab->currentBuffer()->info->currentURL;
+  buf->info->filename = CurrentTab->currentBuffer()->info->filename;
+  buf->info->sourcefile = CurrentTab->currentBuffer()->info->sourcefile;
+  buf->clone = CurrentTab->currentBuffer()->clone;
   buf->clone->count++;
 
   buf->layout.need_reshape = true;
@@ -1345,34 +1345,34 @@ void reload() {
   FormList *request;
   int multipart;
 
-  if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
-      Currentbuf->info->currentURL.file == "-") {
+  if (CurrentTab->currentBuffer()->info->currentURL.schema == SCM_LOCAL &&
+      CurrentTab->currentBuffer()->info->currentURL.file == "-") {
     /* file is std input */
     disp_err_message("Can't reload stdin", true);
     return;
   }
   auto sbuf = Buffer::create(0);
-  *sbuf = *Currentbuf;
+  *sbuf = *CurrentTab->currentBuffer();
 
   multipart = 0;
-  if (Currentbuf->layout.form_submit) {
-    request = Currentbuf->layout.form_submit->parent;
+  if (CurrentTab->currentBuffer()->layout.form_submit) {
+    request = CurrentTab->currentBuffer()->layout.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       Str *query;
       struct stat st;
       multipart = 1;
-      query_from_followform(&query, Currentbuf->layout.form_submit, multipart);
+      query_from_followform(&query, CurrentTab->currentBuffer()->layout.form_submit, multipart);
       stat(request->body, &st);
       request->length = st.st_size;
     }
   } else {
     request = nullptr;
   }
-  url = Strnew(Currentbuf->info->currentURL.to_Str());
+  url = Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
-  DefaultType = Strnew(Currentbuf->info->type)->ptr;
+  DefaultType = Strnew(CurrentTab->currentBuffer()->info->type)->ptr;
 
   auto res = loadGeneralFile(
       url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
@@ -1388,22 +1388,22 @@ void reload() {
   auto buf = Buffer::create(INIT_BUFFER_WIDTH());
   buf->info = res;
   // if (buf == NO_BUFFER) {
-  //   displayBuffer(Currentbuf, B_NORMAL);
+  //   displayBuffer(CurrentTab->currentBuffer(), B_NORMAL);
   //   return;
   // }
-  CurrentTab->repBuffer(Currentbuf, buf);
+  CurrentTab->repBuffer(CurrentTab->currentBuffer(), buf);
   if ((buf->info->type.size()) && (sbuf->info->type.size()) &&
       ((buf->info->type == "text/plain" && sbuf->info->is_html_type()) ||
        (buf->info->is_html_type() && sbuf->info->type == "text/plain"))) {
     vwSrc();
-    if (Currentbuf != buf) {
+    if (CurrentTab->currentBuffer() != buf) {
       CurrentTab->deleteBuffer(buf);
     }
   }
-  Currentbuf->layout.form_submit = sbuf->layout.form_submit;
-  if (Currentbuf->layout.firstLine) {
-    Currentbuf->layout.COPY_BUFROOT_FROM(sbuf->layout);
-    Currentbuf->layout.restorePosition(sbuf->layout);
+  CurrentTab->currentBuffer()->layout.form_submit = sbuf->layout.form_submit;
+  if (CurrentTab->currentBuffer()->layout.firstLine) {
+    CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
+    CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
   }
   displayBuffer(B_FORCE_REDRAW);
 }
@@ -1412,15 +1412,15 @@ void reload() {
 // RESHAPE
 //"Re-render document"
 void reshape() {
-  Currentbuf->layout.need_reshape = true;
-  reshapeBuffer(Currentbuf);
+  CurrentTab->currentBuffer()->layout.need_reshape = true;
+  reshapeBuffer(CurrentTab->currentBuffer());
   displayBuffer(B_FORCE_REDRAW);
 }
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
 void chkURL() {
-  chkURLBuffer(Currentbuf);
+  chkURLBuffer(CurrentTab->currentBuffer());
   displayBuffer(B_FORCE_REDRAW);
 }
 
@@ -1428,10 +1428,10 @@ void chkURL() {
 //"Turn current word into hyperlink"
 void chkWORD() {
   int spos, epos;
-  auto p = Currentbuf->layout.getCurWord(&spos, &epos);
+  auto p = CurrentTab->currentBuffer()->layout.getCurWord(&spos, &epos);
   if (p.empty())
     return;
-  reAnchorWord(&Currentbuf->layout, Currentbuf->layout.currentLine, spos, epos);
+  reAnchorWord(&CurrentTab->currentBuffer()->layout, CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
   displayBuffer(B_FORCE_REDRAW);
 }
 
@@ -1443,24 +1443,24 @@ void rFrame() {}
 // EXTERN
 //"Display using an external browser"
 void extbrz() {
-  if (Currentbuf->info->currentURL.schema == SCM_LOCAL &&
-      Currentbuf->info->currentURL.file == "-") {
+  if (CurrentTab->currentBuffer()->info->currentURL.schema == SCM_LOCAL &&
+      CurrentTab->currentBuffer()->info->currentURL.file == "-") {
     /* file is std input */
     disp_err_message("Can't browse stdin", true);
     return;
   }
-  invoke_browser(Currentbuf->info->currentURL.to_Str().c_str());
+  invoke_browser(CurrentTab->currentBuffer()->info->currentURL.to_Str().c_str());
 }
 
 // EXTERN_LINK
 //"Display target using an external browser"
 void linkbrz() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  auto a = retrieveCurrentAnchor(&Currentbuf->layout);
+  auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
   if (a == nullptr)
     return;
-  auto pu = urlParse(a->url, Currentbuf->info->getBaseURL());
+  auto pu = urlParse(a->url, CurrentTab->currentBuffer()->info->getBaseURL());
   invoke_browser(pu.to_Str().c_str());
 }
 
@@ -1468,20 +1468,20 @@ void linkbrz() {
 // LINE_INFO
 //"Display current position in document"
 void curlno() {
-  Line *l = Currentbuf->layout.currentLine;
+  Line *l = CurrentTab->currentBuffer()->layout.currentLine;
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
   if (l != nullptr) {
     cur = l->real_linenumber;
-    col = l->bwidth + Currentbuf->layout.currentColumn +
-          Currentbuf->layout.cursorX + 1;
+    col = l->bwidth + CurrentTab->currentBuffer()->layout.currentColumn +
+          CurrentTab->currentBuffer()->layout.cursorX + 1;
     while (l->next && l->next->bpos)
       l = l->next;
     len = l->bwidth + l->width();
   }
-  if (Currentbuf->layout.lastLine)
-    all = Currentbuf->layout.lastLine->real_linenumber;
+  if (CurrentTab->currentBuffer()->layout.lastLine)
+    all = CurrentTab->currentBuffer()->layout.lastLine->real_linenumber;
   tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
                 len);
@@ -1516,7 +1516,7 @@ void dictword() {
 // DICT_WORD_AT
 //"Execute dictionary command for word at cursor"
 void dictwordat() {
-  auto word = Currentbuf->layout.getCurWord();
+  auto word = CurrentTab->currentBuffer()->layout.getCurWord();
   execdict(word.c_str());
 }
 
@@ -1754,12 +1754,12 @@ void ldDL() {
 
   if (!FirstDL) {
     if (replace) {
-      if (Currentbuf == CurrentTab->firstBuffer &&
-          Currentbuf->backBuffer == nullptr) {
+      if (CurrentTab->currentBuffer() == CurrentTab->firstBuffer &&
+          CurrentTab->currentBuffer()->backBuffer == nullptr) {
         if (nTab > 1)
           deleteTab(CurrentTab);
       } else
-        CurrentTab->deleteBuffer(Currentbuf);
+        CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
       displayBuffer(B_FORCE_REDRAW);
     }
     return;
@@ -1771,8 +1771,8 @@ void ldDL() {
     return;
   }
   if (replace) {
-    buf->layout.COPY_BUFROOT_FROM(Currentbuf->layout);
-    buf->layout.restorePosition(Currentbuf->layout);
+    buf->layout.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
+    buf->layout.restorePosition(CurrentTab->currentBuffer()->layout);
   }
   if (!replace && open_tab_dl_list) {
     TabBuffer::_newT();
@@ -1782,16 +1782,16 @@ void ldDL() {
   if (replace || new_tab)
     deletePrevBuf();
   if (reload)
-    Currentbuf->layout.event = setAlarmEvent(
-        Currentbuf->layout.event, 1, AL_IMPLICIT, FUNCNAME_reload, nullptr);
+    CurrentTab->currentBuffer()->layout.event = setAlarmEvent(
+        CurrentTab->currentBuffer()->layout.event, 1, AL_IMPLICIT, FUNCNAME_reload, nullptr);
   displayBuffer(B_FORCE_REDRAW);
 }
 
 // UNDO
 //"Cancel the last cursor movement"
 void undoPos() {
-  BufferPos *b = Currentbuf->layout.undo;
-  if (!Currentbuf->layout.firstLine)
+  BufferPos *b = CurrentTab->currentBuffer()->layout.undo;
+  if (!CurrentTab->currentBuffer()->layout.firstLine)
     return;
   if (!b || !b->prev)
     return;
@@ -1803,8 +1803,8 @@ void undoPos() {
 // REDO
 //"Cancel the last undo"
 void redoPos() {
-  BufferPos *b = Currentbuf->layout.undo;
-  if (!Currentbuf->layout.firstLine)
+  BufferPos *b = CurrentTab->currentBuffer()->layout.undo;
+  if (!CurrentTab->currentBuffer()->layout.firstLine)
     return;
   if (!b || !b->next)
     return;
@@ -1816,11 +1816,11 @@ void redoPos() {
 // CURSOR_TOP
 //"Move cursor to the top of the screen"
 void cursorTop() {
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  Currentbuf->layout.currentLine =
-      Currentbuf->layout.lineSkip(Currentbuf->layout.topLine, 0, false);
-  Currentbuf->layout.arrangeLine();
+  CurrentTab->currentBuffer()->layout.currentLine =
+      CurrentTab->currentBuffer()->layout.lineSkip(CurrentTab->currentBuffer()->layout.topLine, 0, false);
+  CurrentTab->currentBuffer()->layout.arrangeLine();
   displayBuffer(B_NORMAL);
 }
 
@@ -1828,12 +1828,12 @@ void cursorTop() {
 //"Move cursor to the middle of the screen"
 void cursorMiddle() {
   int offsety;
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  offsety = (Currentbuf->layout.LINES - 1) / 2;
-  Currentbuf->layout.currentLine =
-      Currentbuf->layout.topLine->currentLineSkip(offsety, false);
-  Currentbuf->layout.arrangeLine();
+  offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
+  CurrentTab->currentBuffer()->layout.currentLine =
+      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety, false);
+  CurrentTab->currentBuffer()->layout.arrangeLine();
   displayBuffer(B_NORMAL);
 }
 
@@ -1841,11 +1841,11 @@ void cursorMiddle() {
 //"Move cursor to the bottom of the screen"
 void cursorBottom() {
   int offsety;
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  offsety = Currentbuf->layout.LINES - 1;
-  Currentbuf->layout.currentLine =
-      Currentbuf->layout.topLine->currentLineSkip(offsety, false);
-  Currentbuf->layout.arrangeLine();
+  offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
+  CurrentTab->currentBuffer()->layout.currentLine =
+      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety, false);
+  CurrentTab->currentBuffer()->layout.arrangeLine();
   displayBuffer(B_NORMAL);
 }

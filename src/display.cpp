@@ -680,7 +680,7 @@ void addChar(char c, Lineprop mode) { addMChar(&c, mode, 1); }
  * Command functions: These functions are called with a keystroke.
  */
 void nscroll(int n, DisplayFlag mode) {
-  auto buf = Currentbuf;
+  auto buf = CurrentTab->currentBuffer();
   Line *top = buf->layout.topLine, *cur = buf->layout.currentLine;
   int lnum, tlnum, llnum, diff_n;
 

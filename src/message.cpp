@@ -67,14 +67,14 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
     return;
   }
 
-  if (CurrentTab != NULL && Currentbuf != NULL)
-    message(s, Currentbuf->layout.AbsCursorX(),
-            Currentbuf->layout.AbsCursorY());
+  if (CurrentTab != NULL && CurrentTab->currentBuffer() != NULL)
+    message(s, CurrentTab->currentBuffer()->layout.AbsCursorX(),
+            CurrentTab->currentBuffer()->layout.AbsCursorY());
   else
     message(s, LASTLINE, 0);
   refresh(term_io());
   sleep_till_anykey(sec, purge);
-  if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
+  if (CurrentTab != NULL && CurrentTab->currentBuffer() != NULL && redraw_current)
     displayBuffer(B_NORMAL);
 }
 

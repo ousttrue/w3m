@@ -598,7 +598,7 @@ void _peekURL(int only_img) {
   static Str *s = nullptr;
   static int offset = 0, n;
 
-  if (Currentbuf->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
   if (CurrentKey == prev_key && s != nullptr) {
     if (s->length - offset >= COLS)
@@ -610,18 +610,20 @@ void _peekURL(int only_img) {
     offset = 0;
   }
   s = nullptr;
-  a = (only_img ? nullptr : retrieveCurrentAnchor(&Currentbuf->layout));
+  a = (only_img ? nullptr
+                : retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout));
   if (a == nullptr) {
-    a = (only_img ? nullptr : retrieveCurrentForm(&Currentbuf->layout));
+    a = (only_img ? nullptr
+                  : retrieveCurrentForm(&CurrentTab->currentBuffer()->layout));
     if (a == nullptr) {
-      a = retrieveCurrentImg(&Currentbuf->layout);
+      a = retrieveCurrentImg(&CurrentTab->currentBuffer()->layout);
       if (a == nullptr)
         return;
     } else
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    pu = urlParse(a->url, Currentbuf->info->getBaseURL());
+    pu = urlParse(a->url, CurrentTab->currentBuffer()->info->getBaseURL());
     s = Strnew(pu.to_Str());
   }
   if (DecodeURL)
@@ -704,10 +706,10 @@ void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
   if (buf == nullptr) {
     disp_err_message("Can't load string", false);
   } else /*if (buf != NO_BUFFER)*/ {
-    buf->info->currentURL = Currentbuf->info->currentURL;
+    buf->info->currentURL = CurrentTab->currentBuffer()->info->currentURL;
     if (linkid != LB_NOLINK) {
-      buf->linkBuffer[linkid] = Currentbuf;
-      Currentbuf->linkBuffer[linkid] = buf;
+      buf->linkBuffer[linkid] = CurrentTab->currentBuffer();
+      CurrentTab->currentBuffer()->linkBuffer[linkid] = buf;
     }
     CurrentTab->pushBuffer(buf);
   }
@@ -885,5 +887,3 @@ void bufferA(void) {
   followA();
   on_target = true;
 }
-
-

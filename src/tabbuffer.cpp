@@ -159,7 +159,7 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
     b->discardBuffer();
   }
 
-  if (!Currentbuf) {
+  if (!CurrentTab->currentBuffer()) {
     _currentBuffer = CurrentTab->firstBuffer;
   }
 }
@@ -201,28 +201,29 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
 
 void gotoLabel(const char *label) {
 
-  auto al = Currentbuf->layout.searchURLLabel(label);
+  auto al = CurrentTab->currentBuffer()->layout.searchURLLabel(label);
   if (al == nullptr) {
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
   }
-  auto buf = Buffer::create(Currentbuf->layout.width);
-  *buf = *Currentbuf;
+  auto buf = Buffer::create(CurrentTab->currentBuffer()->layout.width);
+  *buf = *CurrentTab->currentBuffer();
   for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
   buf->info->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, buf->info->currentURL.to_Str().c_str());
   buf->clone->count++;
   CurrentTab->pushBuffer(buf);
-  Currentbuf->layout.gotoLine(al->start.line);
+  CurrentTab->currentBuffer()->layout.gotoLine(al->start.line);
   if (label_topline)
-    Currentbuf->layout.topLine =
-        Currentbuf->layout.lineSkip(Currentbuf->layout.topLine,
-                                    Currentbuf->layout.currentLine->linenumber -
-                                        Currentbuf->layout.topLine->linenumber,
-                                    false);
-  Currentbuf->layout.pos = al->start.pos;
-  Currentbuf->layout.arrangeCursor();
+    CurrentTab->currentBuffer()->layout.topLine =
+        CurrentTab->currentBuffer()->layout.lineSkip(
+            CurrentTab->currentBuffer()->layout.topLine,
+            CurrentTab->currentBuffer()->layout.currentLine->linenumber -
+                CurrentTab->currentBuffer()->layout.topLine->linenumber,
+            false);
+  CurrentTab->currentBuffer()->layout.pos = al->start.pos;
+  CurrentTab->currentBuffer()->layout.arrangeCursor();
   displayBuffer(B_FORCE_REDRAW);
   return;
 }
@@ -283,7 +284,7 @@ void goURL0(const char *prompt, int relative) {
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
 
-    current = Currentbuf->info->getBaseURL();
+    current = CurrentTab->currentBuffer()->info->getBaseURL();
     if (current) {
       auto c_url = current->to_Str();
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -291,7 +292,7 @@ void goURL0(const char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    auto a = retrieveCurrentAnchor(&Currentbuf->layout);
+    auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
     if (a) {
       auto p_url = urlParse(a->url, current);
       auto a_url = p_url.to_Str();
@@ -308,13 +309,15 @@ void goURL0(const char *prompt, int relative) {
   const char *referer;
   if (relative) {
     const int *no_referer_ptr = nullptr;
-    current = Currentbuf->info->getBaseURL();
+    current = CurrentTab->currentBuffer()->info->getBaseURL();
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)
       referer = NO_REFERER;
     else
-      referer = Strnew(Currentbuf->info->currentURL.to_RefererStr())->ptr;
+      referer =
+          Strnew(CurrentTab->currentBuffer()->info->currentURL.to_RefererStr())
+              ->ptr;
     url = Strnew(url_quote(url))->ptr;
   } else {
     current = {};
@@ -333,10 +336,12 @@ void goURL0(const char *prompt, int relative) {
 
   auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
-  auto cur_buf = Currentbuf;
+  auto cur_buf = CurrentTab->currentBuffer();
   CurrentTab->cmd_loadURL(url, current, referer, nullptr);
-  if (Currentbuf != cur_buf) { /* success */
-    pushHashHist(URLHist, Currentbuf->info->currentURL.to_Str().c_str());
+  if (CurrentTab->currentBuffer() != cur_buf) { /* success */
+    pushHashHist(
+        URLHist,
+        CurrentTab->currentBuffer()->info->currentURL.to_Str().c_str());
   }
 }
 
@@ -346,16 +351,16 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
     return;
   }
   TabBuffer::_newT();
-  auto buf = Currentbuf;
+  auto buf = CurrentTab->currentBuffer();
   goURL0(prompt, relative);
   if (tab == nullptr) {
-    if (buf != Currentbuf)
+    if (buf != CurrentTab->currentBuffer())
       CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
-  } else if (buf != Currentbuf) {
+  } else if (buf != CurrentTab->currentBuffer()) {
     /* buf <- p <- ... <- Currentbuf = c */
-    auto c = Currentbuf;
+    auto c = CurrentTab->currentBuffer();
     std::shared_ptr<Buffer> p;
     if ((p = forwardBuffer(c, buf)))
       p->backBuffer = nullptr;
@@ -371,11 +376,11 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
-  if (CurrentTab->firstBuffer == Currentbuf) {
+  if (CurrentTab->firstBuffer == CurrentTab->currentBuffer()) {
     buf->backBuffer = CurrentTab->firstBuffer;
     CurrentTab->firstBuffer = buf;
-  } else if (auto b = forwardBuffer(CurrentTab->firstBuffer, Currentbuf)) {
-    buf->backBuffer = Currentbuf;
+  } else if (auto b = forwardBuffer(CurrentTab->firstBuffer, CurrentTab->currentBuffer())) {
+    buf->backBuffer = CurrentTab->currentBuffer();
     b->backBuffer = buf;
   }
   _currentBuffer = buf;
@@ -384,8 +389,8 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
 
 void TabBuffer::_newT() {
   auto tag = new TabBuffer();
-  auto buf = Buffer::create(Currentbuf->layout.width);
-  *buf = *Currentbuf;
+  auto buf = Buffer::create(CurrentTab->currentBuffer()->layout.width);
+  *buf = *CurrentTab->currentBuffer();
   buf->backBuffer = nullptr;
   for (int i = 0; i < MAX_LB; i++) {
     buf->linkBuffer[i] = nullptr;
@@ -414,7 +419,7 @@ void saveBufferInfo() {
 }
 
 void followTab(TabBuffer *tab) {
-  auto a = retrieveCurrentAnchor(&Currentbuf->layout);
+  auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
   if (a == nullptr)
     return;
 
@@ -425,18 +430,18 @@ void followTab(TabBuffer *tab) {
     return;
   }
   TabBuffer::_newT();
-  auto buf = Currentbuf;
+  auto buf = CurrentTab->currentBuffer();
   check_target = false;
   followA();
   check_target = true;
   if (tab == nullptr) {
-    if (buf != Currentbuf)
+    if (buf != CurrentTab->currentBuffer())
       CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
-  } else if (buf != Currentbuf) {
+  } else if (buf != CurrentTab->currentBuffer()) {
     /* buf <- p <- ... <- Currentbuf = c */
-    auto c = Currentbuf;
+    auto c = CurrentTab->currentBuffer();
     std::shared_ptr<Buffer> p;
     if ((p = forwardBuffer(c, buf)))
       p->backBuffer = nullptr;
@@ -452,13 +457,13 @@ void followTab(TabBuffer *tab) {
 }
 
 /* show current URL */
-Str *currentURL(void) { return Strnew(Currentbuf->info->currentURL.to_Str()); }
+Str *currentURL(void) { return Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str()); }
 
 void SAVE_BUFPOSITION(LineLayout *sbufp) {
-  sbufp->COPY_BUFPOSITION_FROM(Currentbuf->layout);
+  sbufp->COPY_BUFPOSITION_FROM(CurrentTab->currentBuffer()->layout);
 }
 void RESTORE_BUFPOSITION(const LineLayout &sbufp) {
-  Currentbuf->layout.COPY_BUFPOSITION_FROM(sbufp);
+  CurrentTab->currentBuffer()->layout.COPY_BUFPOSITION_FROM(sbufp);
 }
 
 /*
@@ -749,7 +754,7 @@ void TabBuffer::_followForm(int submit) {
                      // break;
                    }
                    fi->value = Strnew_charp(p);
-                   formUpdateBuffer(a, &Currentbuf->layout, fi);
+                   formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
                    if (fi->accept || fi->parent->nitems == 1) {
                      CurrentTab->do_submit(fi, a);
                      return;
