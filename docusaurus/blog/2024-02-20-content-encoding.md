@@ -35,3 +35,5 @@ Windows に対応に備えて組み込んでみようかしら。
 
 https://stackoverflow.com/questions/1838699/how-can-i-decompress-a-gzip-stream-with-zlib
 
+open_pipe_rw デバッグむずい。
+
