@@ -27,5 +27,6 @@ public:
     return s_instance;
   }
 
+  void initialize();
   int mainLoop();
 };

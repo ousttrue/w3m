@@ -18,8 +18,19 @@
 #include "display.h"
 #include "alloc.h"
 #include "Str.h"
+#include "rc.h"
+#include "cookie.h"
+#include "history.h"
 #include <signal.h>
 #include <iostream>
+
+// HOST_NAME_MAX is recommended by POSIX, but not required.
+// FreeBSD and OSX (as of 10.9) are known to not define it.
+// 255 is generally the safe value to assume and upstream
+// PHP does this as well.
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
 
 int CurrentKey;
 char *CurrentKeyData;
@@ -29,14 +40,85 @@ int prev_key = -1;
 bool on_target = true;
 #define PREC_LIMIT 10000
 
-App::App()
-{
+static void sig_chld(int signo) {
+  int p_stat;
+  pid_t pid;
+
+  while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
+    DownloadList *d;
+
+    if (WIFEXITED(p_stat)) {
+      for (d = FirstDL; d != nullptr; d = d->next) {
+        if (d->pid == pid) {
+          d->err = WEXITSTATUS(p_stat);
+          break;
+        }
+      }
+    }
+  }
+  mySignal(SIGCHLD, sig_chld);
+  return;
 }
 
-App::~App()
-{
-  std::cout << "App::~App" << std::endl;
+static void SigPipe(SIGNAL_ARG) {
+  mySignal(SIGPIPE, SigPipe);
+  SIGNAL_RETURN;
 }
+
+App::App() {
+  fileToDelete = newTextList();
+  CurrentDir = currentdir();
+  CurrentPid = (int)getpid();
+  {
+    char hostname[HOST_NAME_MAX + 2];
+    if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {
+      size_t hostname_len;
+      /* Don't use hostname if it is truncated.  */
+      hostname[HOST_NAME_MAX + 1] = '\0';
+      hostname_len = strlen(hostname);
+      if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX)
+        HostName = allocStr(hostname, (int)hostname_len);
+    }
+  }
+
+  /* initializations */
+  init_rc();
+
+  LoadHist = newHist();
+  SaveHist = newHist();
+  ShellHist = newHist();
+  TextHist = newHist();
+  URLHist = newHist();
+
+  const char *p;
+  if (!non_null(Editor) && (p = getenv("EDITOR")) != nullptr)
+    Editor = p;
+  if (!non_null(Mailer) && (p = getenv("MAILER")) != nullptr)
+    Mailer = p;
+
+  FirstTab = nullptr;
+  LastTab = nullptr;
+  nTab = 0;
+  CurrentTab = nullptr;
+  CurrentKey = -1;
+  if (!BookmarkFile) {
+    BookmarkFile = rcFile(BOOKMARK);
+  }
+
+  fmInit();
+
+  sync_with_option();
+  initCookie();
+  if (UseHistory) {
+    loadHistory(URLHist);
+  }
+
+  TabBuffer::init();
+}
+
+App::~App() { std::cout << "App::~App" << std::endl; }
+
+void App::initialize() {}
 
 const char *searchKeyData(void) {
   const char *data = NULL;
@@ -180,6 +262,12 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
 }
 
 int App::mainLoop() {
+  displayBuffer(B_FORCE_REDRAW);
+
+  mySignal(SIGWINCH, resize_hook);
+  mySignal(SIGCHLD, sig_chld);
+  mySignal(SIGPIPE, SigPipe);
+
   for (;;) {
     if (popAddDownloadList()) {
       ldDL();
