@@ -19,7 +19,7 @@ if host_machine.system() == 'darwin'
         'gccpp',
         dirs: '/opt/homebrew/Cellar/bdw-gc/8.2.6/lib',
     )
-     gc_dep = declare_dependency(
+    gc_dep = declare_dependency(
         include_directories: gc_inc,
         dependencies: [gc_lib, gccpp_lib],
     )
@@ -30,6 +30,7 @@ endif
 ssl_dep = dependency('openssl')
 ncurses_dep = dependency('ncurses')
 nkf_dep = dependency('nkf')
+lua_dep = dependency('lua')
 
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required: false)

@@ -46,3 +46,4 @@ Makefile
 !/subprojects/packagefiles
 !/subprojects/gtest.wrap
 !/subprojects/nkf.wrap
+!/subprojects/lua.wrap

@@ -138,6 +138,7 @@ executable(
         m_dep, # , wc_dep
         istream_dep,
         nkf_dep,
+        lua_dep,
     ],
     c_args: defs,
     cpp_args: defs,
