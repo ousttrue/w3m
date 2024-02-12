@@ -53,7 +53,7 @@ public:
   void do_submit(FormItemList *fi, Anchor *a);
   void _followForm(int submit);
 
-  static void init(const std::shared_ptr<Buffer> &newbuf);
+  static void init();
   static void _newT();
 };
 
@@ -76,10 +76,8 @@ TabBuffer *deleteTab(TabBuffer *tab);
 TabBuffer *numTab(int n);
 void moveTab(TabBuffer *t, TabBuffer *t2, int right);
 void tabURL0(TabBuffer *tab, const char *prompt, int relative);
-void saveBufferInfo();
 void followTab(TabBuffer *tab);
 struct Str;
-Str *currentURL(void);
 void gotoLabel(const char *label);
 int handleMailto(const char *url);
 void goURL0(const char *prompt, int relative);

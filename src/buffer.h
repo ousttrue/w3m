@@ -1,5 +1,4 @@
 #pragma once
-#include "line.h"
 #include "line_layout.h"
 #include <memory>
 #include <array>
@@ -32,7 +31,7 @@ struct Clone {
   int count = 1;
 };
 
-struct Buffer : public gc_cleanup {
+struct Buffer {
   std::shared_ptr<HttpResponse> info;
   LineLayout layout = {};
   std::shared_ptr<Buffer> backBuffer;
@@ -52,6 +51,7 @@ public:
   // shallow copy
   Buffer &operator=(const Buffer &src);
   void discardBuffer();
+  void saveBufferInfo();
 };
 
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);

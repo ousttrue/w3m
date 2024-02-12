@@ -887,3 +887,10 @@ void bufferA(void) {
   followA();
   on_target = true;
 }
+
+void Buffer::saveBufferInfo() {
+  if (FILE *fp = fopen(rcFile("bufinfo"), "w")) {
+    fprintf(fp, "%s\n", this->info->currentURL.to_Str().c_str());
+    fclose(fp);
+  }
+}

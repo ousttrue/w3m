@@ -39,14 +39,10 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-void TabBuffer::init(const std::shared_ptr<Buffer> &newbuf) {
+void TabBuffer::init() {
   FirstTab = LastTab = CurrentTab = new TabBuffer;
-  if (!FirstTab) {
-    fprintf(stderr, "%s\n", "Can't allocated memory");
-    exit(1);
-  }
+  assert(FirstTab);
   nTab = 1;
-  CurrentTab->firstBuffer = CurrentTab->_currentBuffer = newbuf;
 }
 
 TabBuffer *numTab(int n) {
@@ -378,16 +374,15 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
-  if (CurrentTab->firstBuffer == CurrentTab->currentBuffer()) {
-    buf->backBuffer = CurrentTab->firstBuffer;
-    CurrentTab->firstBuffer = buf;
-  } else if (auto b = forwardBuffer(CurrentTab->firstBuffer,
-                                    CurrentTab->currentBuffer())) {
-    buf->backBuffer = CurrentTab->currentBuffer();
+  if (this->firstBuffer == this->currentBuffer()) {
+    buf->backBuffer = this->firstBuffer;
+    this->firstBuffer = buf;
+  } else if (auto b = forwardBuffer(this->firstBuffer, this->currentBuffer())) {
+    buf->backBuffer = this->currentBuffer();
     b->backBuffer = buf;
   }
   _currentBuffer = buf;
-  saveBufferInfo();
+  this->currentBuffer()->saveBufferInfo();
 }
 
 void TabBuffer::_newT() {
@@ -410,15 +405,6 @@ void TabBuffer::_newT() {
   CurrentTab->nextTab = tag;
   CurrentTab = tag;
   nTab++;
-}
-
-void saveBufferInfo() {
-  FILE *fp;
-  if ((fp = fopen(rcFile("bufinfo"), "w")) == nullptr) {
-    return;
-  }
-  fprintf(fp, "%s\n", currentURL()->ptr);
-  fclose(fp);
 }
 
 void followTab(TabBuffer *tab) {
@@ -457,11 +443,6 @@ void followTab(TabBuffer *tab) {
     }
   }
   displayBuffer(B_FORCE_REDRAW);
-}
-
-/* show current URL */
-Str *currentURL(void) {
-  return Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str());
 }
 
 void SAVE_BUFPOSITION(LineLayout *sbufp) {

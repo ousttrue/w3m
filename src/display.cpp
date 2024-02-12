@@ -254,7 +254,7 @@ void displayBuffer(DisplayFlag mode) {
   term_title(buf->layout.title.c_str());
   refresh(term_io());
   if (buf != save_current_buf) {
-    saveBufferInfo();
+    CurrentTab->currentBuffer()->saveBufferInfo();
     save_current_buf = buf;
   }
   if (mode == B_FORCE_REDRAW && buf->check_url) {

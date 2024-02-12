@@ -1310,7 +1310,7 @@ void curURL() {
       offset = 0;
   } else {
     offset = 0;
-    s = currentURL();
+    s = Strnew(CurrentTab->currentBuffer()->info->currentURL.to_Str());
     if (DecodeURL)
       s = Strnew_charp(url_decode0(s->ptr));
   }

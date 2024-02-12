@@ -191,11 +191,9 @@ int main(int argc, char **argv) {
 
   auto newbuf = Buffer::create(INIT_BUFFER_WIDTH());
   newbuf->info = res;
-  TabBuffer::init(newbuf);
 
-  CurrentTab->currentBuffer(newbuf);
-  saveBufferInfo();
-  CurrentTab = FirstTab;
+  TabBuffer::init();
+  CurrentTab->pushBuffer(newbuf);
 
   displayBuffer(B_FORCE_REDRAW);
   mainLoop();
