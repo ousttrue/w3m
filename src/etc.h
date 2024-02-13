@@ -14,6 +14,5 @@ const char *expandPath(const char *name);
 void mySystem(const char *command, int background);
 struct Str;
 Str *myExtCommand(const char *cmd, const char *arg, int redirect);
-Str *myEditor(const char *cmd, const char *file, int line);
 struct Buffer;
 const char *last_modified(const std::shared_ptr<Buffer> &buf);

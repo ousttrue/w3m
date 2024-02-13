@@ -22,8 +22,9 @@
 #include "cookie.h"
 #include "history.h"
 #include <signal.h>
-#include <iostream>
 #include <sys/wait.h>
+#include <iostream>
+#include <sstream>
 
 // HOST_NAME_MAX is recommended by POSIX, but not required.
 // FreeBSD and OSX (as of 10.9) are known to not define it.
@@ -152,6 +153,12 @@ App::App() {
     }
   }
 
+  if (_editor.empty()) {
+    if (auto p = getenv("EDITOR")) {
+      _editor = p;
+    }
+  }
+
   if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
   }
@@ -185,14 +192,6 @@ bool App::initialize() {
   TextHist = newHist();
   URLHist = newHist();
 
-  const char *p;
-  if (!non_null(Editor) && (p = getenv("EDITOR")) != nullptr)
-    Editor = p;
-
-  FirstTab = nullptr;
-  LastTab = nullptr;
-  nTab = 0;
-  CurrentTab = nullptr;
   CurrentKey = -1;
   if (!BookmarkFile) {
     BookmarkFile = rcFile(BOOKMARK);
@@ -444,4 +443,30 @@ int searchKeyNum(void) {
   if (d != nullptr)
     n = atoi(d);
   return n * PREC_NUM;
+}
+
+std::string App::myEditor(const char *file, int line) const {
+  std::stringstream tmp;
+  bool set_file = false;
+  bool set_line = false;
+  for (auto p = _editor.begin(); *p; p++) {
+    if (*p == '%' && *(p + 1) == 's' && !set_file) {
+      tmp << file;
+      set_file = true;
+      p++;
+    } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
+      tmp << line;
+      set_line = true;
+      p++;
+    } else {
+      tmp << *p;
+    }
+  }
+  if (!set_file) {
+    if (!set_line && line > 1 && strcasestr(_editor.c_str(), "vi")) {
+      tmp << " +" << line;
+    }
+    tmp << " " << file;
+  }
+  return tmp.str();
 }

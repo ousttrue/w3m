@@ -420,7 +420,7 @@ struct param_ptr params6[] = {
     {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files, CMT_MIMETYPES,
      NULL},
     {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP, NULL},
-    {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
+    // {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
     {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
      CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
     {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ, NULL},

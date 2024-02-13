@@ -18,8 +18,6 @@
 
 #define DEFAULT_COLS 80
 #define SITECONF_FILE RC_DIR "/siteconf"
-#define DEF_EDITOR "/usr/bin/vi"
-#define DEF_MAILER "/usr/bin/mail"
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 #define PRE_FORM_FILE RC_DIR "/pre_form"
 
@@ -32,7 +30,6 @@ int label_topline = false;
 int displayLineInfo = false;
 int show_srch_str = true;
 int displayImage = false;
-const char *Editor = DEF_EDITOR;
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
 const char *ExtBrowser = DEF_EXT_BROWSER;
 char *ExtBrowser2 = nullptr;

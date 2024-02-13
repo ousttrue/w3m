@@ -18,6 +18,7 @@ class App {
   std::string _currentDir;
   int _currentPid = -1;
   std::string _hostName = "localhost";
+  std::string _editor = "/usr/bin/vim";
 
   App();
 
@@ -54,4 +55,5 @@ public:
     }
     return false;
   }
+  std::string myEditor(const char *file, int line) const;
 };

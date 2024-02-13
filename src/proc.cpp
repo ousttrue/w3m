@@ -645,17 +645,20 @@ void editBf() {
     return;
   }
 
-  Str *cmd;
+  std::string cmd;
   if (CurrentTab->currentBuffer()->res->edit) {
     cmd = unquote_mailcap(
-        CurrentTab->currentBuffer()->res->edit,
-        CurrentTab->currentBuffer()->res->type.c_str(), fn.c_str(),
-        CurrentTab->currentBuffer()->res->getHeader("Content-Type:"), nullptr);
+              CurrentTab->currentBuffer()->res->edit,
+              CurrentTab->currentBuffer()->res->type.c_str(), fn.c_str(),
+              CurrentTab->currentBuffer()->res->getHeader("Content-Type:"),
+              nullptr)
+              ->ptr;
   } else {
-    cmd = myEditor(Editor, shell_quote(fn.c_str()),
-                   cur_real_linenumber(CurrentTab->currentBuffer()));
+    cmd = App::instance().myEditor(
+        shell_quote(fn.c_str()),
+        cur_real_linenumber(CurrentTab->currentBuffer()));
   }
-  exec_cmd(cmd->ptr);
+  exec_cmd(cmd);
 
   displayBuffer(B_FORCE_REDRAW);
   reload();
@@ -673,9 +676,9 @@ void editScr() {
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
   fclose(f);
-  exec_cmd(myEditor(Editor, shell_quote(tmpf.c_str()),
-                    cur_real_linenumber(CurrentTab->currentBuffer()))
-               ->ptr);
+  exec_cmd(App::instance().myEditor(
+      shell_quote(tmpf.c_str()),
+      cur_real_linenumber(CurrentTab->currentBuffer())));
   unlink(tmpf.c_str());
   displayBuffer(B_FORCE_REDRAW);
 }

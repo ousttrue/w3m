@@ -467,15 +467,19 @@ void input_textarea(FormItemList *fi) {
     disp_err_message("Can't open temporary file", false);
     return;
   }
-  if (fi->value)
+  if (fi->value) {
     form_fputs_decode(fi->value, f);
+  }
   fclose(f);
 
-  if (exec_cmd(myEditor(Editor, tmpf.c_str(), 1)->ptr))
+  if (exec_cmd(App::instance().myEditor(tmpf.c_str(), 1).c_str())) {
     goto input_end;
+  }
 
-  if (fi->readonly)
+  if (fi->readonly) {
     goto input_end;
+  }
+
   f = fopen(tmpf.c_str(), "r");
   if (f == NULL) {
     disp_err_message("Can't open temporary file", false);
