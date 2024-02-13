@@ -47,3 +47,4 @@ Makefile
 !/subprojects/gtest.wrap
 !/subprojects/nkf.wrap
 !/subprojects/lua.wrap
+!/subprojects/libuv.wrap

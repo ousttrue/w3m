@@ -36,6 +36,7 @@ ssl_dep = dependency('openssl')
 ncurses_dep = dependency('ncurses')
 nkf_dep = dependency('nkf')
 lua_dep = dependency('lua')
+libuv_dep = dependency('libuv')
 
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required: false)

@@ -62,7 +62,7 @@ Str *localCookie() {
     return Local_cookie;
   srand48((long)New(char) + (long)time(NULL));
   Local_cookie =
-      Sprintf("%ld@%s", lrand48(), App::instance().hostname());
+      Sprintf("%ld@%s", lrand48(), App::instance().hostname().c_str());
   return Local_cookie;
 }
 

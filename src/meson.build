@@ -139,6 +139,7 @@ executable(
         istream_dep,
         nkf_dep,
         lua_dep,
+        libuv_dep,
     ],
     c_args: defs,
     cpp_args: defs,
