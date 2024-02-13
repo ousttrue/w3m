@@ -713,8 +713,6 @@ void followA() {
       return;
     }
   }
-  if (handleMailto(a->url))
-    return;
   url = a->url;
 
   if (check_target && open_tab_blank && a->target &&

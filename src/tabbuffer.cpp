@@ -273,37 +273,8 @@ void gotoLabel(const char *label) {
   return;
 }
 
-int handleMailto(const char *url) {
-  Str *to;
-  char *pos;
-
-  if (strncasecmp(url, "mailto:", 7))
-    return 0;
-  if (!non_null(Mailer)) {
-    disp_err_message("no mailer is specified", true);
-    return 1;
-  }
-
-  /* invoke external mailer */
-  if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-    to = Strnew_charp(html_unquote((char *)url));
-  } else {
-    to = Strnew_charp(url + 7);
-    if ((pos = strchr(to->ptr, '?')) != nullptr)
-      Strtruncate(to, pos - to->ptr);
-  }
-  exec_cmd(
-      myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), false)->ptr);
-  displayBuffer(B_FORCE_REDRAW);
-  pushHashHist(URLHist, (char *)url);
-  return 1;
-}
-
 void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
                             const char *referer, FormList *request) {
-  if (handleMailto((char *)url)) {
-    return;
-  }
 
   refresh(term_io());
   auto res = loadGeneralFile(url, current, {.referer = referer}, request);

@@ -33,7 +33,6 @@ int displayLineInfo = false;
 int show_srch_str = true;
 int displayImage = false;
 const char *Editor = DEF_EDITOR;
-const char *Mailer = DEF_MAILER;
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
 const char *ExtBrowser = DEF_EXT_BROWSER;
 char *ExtBrowser2 = nullptr;

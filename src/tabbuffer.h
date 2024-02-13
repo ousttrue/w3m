@@ -81,5 +81,4 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative);
 void followTab(TabBuffer *tab);
 struct Str;
 void gotoLabel(const char *label);
-int handleMailto(const char *url);
 void goURL0(const char *prompt, int relative);

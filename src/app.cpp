@@ -188,8 +188,6 @@ bool App::initialize() {
   const char *p;
   if (!non_null(Editor) && (p = getenv("EDITOR")) != nullptr)
     Editor = p;
-  if (!non_null(Mailer) && (p = getenv("MAILER")) != nullptr)
-    Mailer = p;
 
   FirstTab = nullptr;
   LastTab = nullptr;

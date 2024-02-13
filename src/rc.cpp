@@ -423,7 +423,6 @@ struct param_ptr params6[] = {
     {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
     {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
      CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
-    {"mailer", P_STRING, PI_TEXT, (void *)&Mailer, CMT_MAILER, NULL},
     {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ, NULL},
     {"extbrowser2", P_STRING, PI_TEXT, (void *)&ExtBrowser2, CMT_EXTBRZ2, NULL},
     {"extbrowser3", P_STRING, PI_TEXT, (void *)&ExtBrowser3, CMT_EXTBRZ3, NULL},

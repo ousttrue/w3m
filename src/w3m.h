@@ -30,7 +30,6 @@ extern int displayLineInfo;
 extern int show_srch_str;
 extern int displayImage;
 extern const char *Editor;
-extern const char *Mailer;
 extern int MailtoOptions;
 extern const char *ExtBrowser;
 extern char *ExtBrowser2;
