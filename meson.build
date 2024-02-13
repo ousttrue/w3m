@@ -8,9 +8,9 @@ project(
 )
 
 # gc_dep= dependency('gc')
+cxx = meson.get_compiler('cpp')
 if host_machine.system() == 'darwin'
     gc_inc = include_directories('/opt/homebrew/Cellar/bdw-gc/8.2.6/include/')
-    cxx = meson.get_compiler('cpp')
     gc_lib = cxx.find_library(
         'gc',
         dirs: '/opt/homebrew/Cellar/bdw-gc/8.2.6/lib',
@@ -24,7 +24,12 @@ if host_machine.system() == 'darwin'
         dependencies: [gc_lib, gccpp_lib],
     )
 else
-    gc_dep = dependency('bdwgc')
+    gccpp_lib = cxx.find_library(
+        'gccpp',
+    )
+    gc_dep = declare_dependency(
+        dependencies: [dependency('bdw-gc'), gccpp_lib],
+    )
 endif
 
 ssl_dep = dependency('openssl')

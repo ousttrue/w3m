@@ -1,5 +1,6 @@
 #pragma once
 #include <stdio.h>
+#include <memory>
 #include "url_schema.h"
 #include "url.h"
 

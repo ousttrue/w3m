@@ -2,6 +2,7 @@
 #include "textlist.h"
 #include "hash.h"
 #include <string_view>
+#include <memory>
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127

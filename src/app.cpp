@@ -23,6 +23,7 @@
 #include "history.h"
 #include <signal.h>
 #include <iostream>
+#include <sys/wait.h>
 
 // HOST_NAME_MAX is recommended by POSIX, but not required.
 // FreeBSD and OSX (as of 10.9) are known to not define it.

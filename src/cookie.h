@@ -4,6 +4,7 @@
 #include <time.h>
 #include <gc_cpp.h>
 #include <string>
+#include <memory>
 
 extern int default_use_cookie;
 extern int use_cookie;
