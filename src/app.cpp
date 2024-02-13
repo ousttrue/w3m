@@ -140,6 +140,18 @@ App::App() {
   _currentDir = getcwd(nullptr, 0);
 #endif
 
+  {
+    char hostname[HOST_NAME_MAX + 2];
+    if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {
+      /* Don't use hostname if it is truncated.  */
+      hostname[HOST_NAME_MAX + 1] = '\0';
+      auto hostname_len = strlen(hostname);
+      if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX) {
+        _hostName = hostname;
+      }
+    }
+  }
+
   if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
   }
@@ -163,17 +175,6 @@ App::App() {
 App::~App() { std::cout << "App::~App" << std::endl; }
 
 bool App::initialize() {
-  {
-    char hostname[HOST_NAME_MAX + 2];
-    if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {
-      size_t hostname_len;
-      /* Don't use hostname if it is truncated.  */
-      hostname[HOST_NAME_MAX + 1] = '\0';
-      hostname_len = strlen(hostname);
-      if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX)
-        HostName = allocStr(hostname, (int)hostname_len);
-    }
-  }
 
   /* initializations */
   init_rc();

@@ -507,7 +507,8 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
     }
   }
 
-  if (LocalhostOnly && url.host.size() && !is_localhost(url.host.c_str())) {
+  if (LocalhostOnly && url.host.size() &&
+      !App::instance().is_localhost(url.host)) {
     url.host = {};
   }
   auto hr = std::make_shared<HttpRequest>(url, current, option, request);

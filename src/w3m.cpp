@@ -71,7 +71,6 @@ int is_redisplay = false;
 int clear_buffer = true;
 int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
-char *HostName = nullptr;
 std::list<std::string> fileToDelete;
 char *document_root = nullptr;
 
@@ -186,7 +185,7 @@ Url urlParse(const char *src, std::optional<Url> current) {
       url.file = cleanupName(url.file.c_str());
     }
     if (url.schema == SCM_LOCAL) {
-      if (url.host.size() && !is_localhost(url.host.c_str())) {
+      if (url.host.size() && !App::instance().is_localhost(url.host)) {
         std::string tmp("//");
         tmp += url.host;
         tmp += cleanupName(file_unquote(url.file.c_str()));

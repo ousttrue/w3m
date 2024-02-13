@@ -2,6 +2,7 @@
 #include <fcntl.h>
 
 #include "local_cgi.h"
+#include "app.h"
 #include "http_response.h"
 #include "terms.h"
 #include "rc.h"
@@ -61,7 +62,7 @@ Str *localCookie() {
     return Local_cookie;
   srand48((long)New(char) + (long)time(NULL));
   Local_cookie =
-      Sprintf("%ld@%s", lrand48(), HostName ? HostName : "localhost");
+      Sprintf("%ld@%s", lrand48(), App::instance().hostname());
   return Local_cookie;
 }
 

@@ -20,7 +20,6 @@ extern bool fmInitialized;
 extern bool IsForkChild;
 extern char *w3m_version;
 
-extern char *HostName;
 extern std::list<std::string> fileToDelete;
 
 extern char *document_root;

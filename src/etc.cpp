@@ -301,13 +301,6 @@ rest:
   return name;
 }
 
-int is_localhost(const char *host) {
-  if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") ||
-      (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
-    return true;
-  return false;
-}
-
 const char *file_to_url(const char *file) {
   Str *tmp;
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
