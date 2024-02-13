@@ -67,7 +67,6 @@ static void SigPipe(SIGNAL_ARG) {
 }
 
 App::App() {
-  fileToDelete = newTextList();
   CurrentDir = currentdir();
   CurrentPid = (int)getpid();
   {

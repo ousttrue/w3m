@@ -1,6 +1,8 @@
 #pragma once
 #include "url.h"
 #include <optional>
+#include <string>
+#include <list>
 
 #define KEYMAP_FILE "keymap"
 #define CGI_EXTENSION ".cgi"
@@ -21,8 +23,7 @@ extern char *w3m_version;
 extern char *HostName;
 extern char *CurrentDir;
 extern int CurrentPid;
-struct TextList;
-extern TextList *fileToDelete;
+extern std::list<std::string> fileToDelete;
 
 extern char *document_root;
 

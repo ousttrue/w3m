@@ -73,7 +73,7 @@ const char *keymap_file = KEYMAP_FILE;
 char *HostName = nullptr;
 char *CurrentDir = nullptr;
 int CurrentPid = {};
-TextList *fileToDelete = nullptr;
+std::list<std::string> fileToDelete;
 char *document_root = nullptr;
 
 void _quitfm(bool confirm) {
@@ -208,9 +208,11 @@ void deleteFiles() {
       CurrentTab->firstBuffer = buf;
     }
   }
-  while (auto f = popText(fileToDelete)) {
-    unlink(f);
+
+  for (auto &f : fileToDelete) {
+    unlink(f.c_str());
   }
+  fileToDelete.clear();
 }
 
 void w3m_exit(int i) {

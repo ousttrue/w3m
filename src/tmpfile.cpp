@@ -30,6 +30,6 @@ std::string tmpfname(TmpfType type, const std::string &ext) {
   ss << dir << "/w3m" << tmpf_base[type] << CurrentPid << tmpf_seq[type]++
      << ext;
   auto tmpf = ss.str();
-  pushText(fileToDelete, Strnew(tmpf)->ptr);
+  fileToDelete.push_back(tmpf);
   return tmpf;
 }
