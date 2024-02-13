@@ -256,8 +256,9 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
   } while (i_cont);
 
   if (CurrentTab) {
-    if (need_redraw)
-      displayBuffer(B_FORCE_REDRAW);
+    if (need_redraw) {
+      displayBuffer();
+    }
   }
 
   if (i_broken) {
@@ -550,8 +551,7 @@ static void next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  if (CurrentTab)
-    displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
   if (LASTLINE >= 3) {
     comment = true;
     nline = LASTLINE - 2;
@@ -906,8 +906,7 @@ static void _editor(void) {
     Strcat_char(strBuf, *p);
   }
   CLen = CPos = setStrType(strBuf, strProp);
-  if (CurrentTab)
-    displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 inline void inputChar(const char *p, const OnInput &onInput) {

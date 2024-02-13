@@ -1,5 +1,4 @@
 #pragma once
-#include "display_flag.h"
 #include "url.h"
 #include <optional>
 #include <gc_cpp.h>
@@ -56,7 +55,7 @@ public:
   int draw();
 
   static void _newT();
-  static int calcTabPos(DisplayFlag mode);
+  static int calcTabPos();
 };
 
 extern TabBuffer *CurrentTab;

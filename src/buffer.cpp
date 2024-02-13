@@ -495,12 +495,12 @@ void execdict(const char *word) {
   const char *w, *dictcmd;
 
   if (!UseDictCommand || word == nullptr || *word == '\0') {
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
   w = word;
   if (*w == '\0') {
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
   dictcmd =
@@ -521,7 +521,7 @@ void execdict(const char *word) {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* spawn external browser */
@@ -567,7 +567,7 @@ void invoke_browser(const char *url) {
     }
   }
   if (browser == nullptr || *browser == '\0') {
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
 
@@ -581,7 +581,7 @@ void invoke_browser(const char *url) {
   fmTerm();
   mySystem(cmd->ptr, bg);
   fmInit();
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf) {
@@ -663,7 +663,7 @@ void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 void cmd_loadfile(const char *fn) {
@@ -679,7 +679,7 @@ void cmd_loadfile(const char *fn) {
   auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {

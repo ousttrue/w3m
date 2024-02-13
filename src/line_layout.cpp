@@ -571,7 +571,7 @@ void LineLayout::nextY(int d, int n) {
     return;
   this->gotoLine(pan->start.line);
   this->arrangeLine();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to the next left/right anchor */
@@ -625,7 +625,7 @@ void LineLayout::nextX(int d, int dy, int n) {
   this->gotoLine(y);
   this->pos = pan->start.pos;
   this->arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to the previous anchor */
@@ -708,7 +708,7 @@ _end:
   this->gotoLine(po->line);
   this->pos = po->pos;
   this->arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to the next [visited] anchor */
@@ -788,7 +788,7 @@ _end:
   this->gotoLine(po->line);
   this->pos = po->pos;
   this->arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Move cursor left */
@@ -798,7 +798,7 @@ void LineLayout::_movL(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorLeft(n);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Move cursor downward */
@@ -809,7 +809,7 @@ void LineLayout::_movD(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorDown(n);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* move cursor upward */
@@ -820,7 +820,7 @@ void LineLayout::_movU(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorUp(n);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Move cursor right */
@@ -830,7 +830,7 @@ void LineLayout::_movR(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorRight(n);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 int LineLayout::prev_nonnull_line(Line *line) {
@@ -862,7 +862,7 @@ int LineLayout::next_nonnull_line(Line *line) {
 /* Go to specified line */
 void LineLayout::_goLine(const char *l, int prec_num) {
   if (l == nullptr || *l == '\0' || this->currentLine == nullptr) {
-    displayBuffer(B_FORCE_REDRAW);
+    displayBuffer();
     return;
   }
 
@@ -878,7 +878,7 @@ void LineLayout::_goLine(const char *l, int prec_num) {
   } else
     this->gotoRealLine(atoi(l));
   this->arrangeCursor();
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 void LineLayout::shiftvisualpos(int shift) {

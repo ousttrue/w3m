@@ -184,7 +184,7 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   return msg;
 }
 
-void displayBuffer(DisplayFlag mode) {
+void displayBuffer() {
   auto buf = CurrentTab->currentBuffer();
   if (!buf) {
     return;
@@ -216,7 +216,7 @@ void displayBuffer(DisplayFlag mode) {
     layout.rootX = 0;
   layout.COLS = COLS - layout.rootX;
   if (nTab > 1) {
-    ny = TabBuffer::calcTabPos(mode) + 2;
+    ny = TabBuffer::calcTabPos() + 2;
     if (ny > LASTLINE)
       ny = LASTLINE;
   }
@@ -224,10 +224,8 @@ void displayBuffer(DisplayFlag mode) {
     layout.rootY = ny;
     layout.LINES = LASTLINE - ny;
     buf->layout.arrangeCursor();
-    mode = B_REDRAW_IMAGE;
   }
-  if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
-      cline != buf->layout.topLine || ccolumn != buf->layout.currentColumn) {
+  if (cline != buf->layout.topLine || ccolumn != buf->layout.currentColumn) {
     {
       redrawBuffer(buf);
     }
@@ -255,9 +253,9 @@ void displayBuffer(DisplayFlag mode) {
     CurrentTab->currentBuffer()->saveBufferInfo();
     save_current_buf = buf;
   }
-  if (mode == B_FORCE_REDRAW && buf->check_url) {
+  if (buf->check_url) {
     chkURLBuffer(buf);
-    displayBuffer(B_NORMAL);
+    displayBuffer();
   }
 }
 

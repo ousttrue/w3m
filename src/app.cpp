@@ -265,7 +265,7 @@ static void resize_screen(void) {
   setlinescols();
   setupscreen(term_entry());
   if (CurrentTab)
-    displayBuffer(B_FORCE_REDRAW);
+    displayBuffer();
 }
 
 void resize_hook(SIGNAL_ARG) {
@@ -339,7 +339,7 @@ uv_tty_t g_tty_in;
 
 int App::mainLoop() {
   fmInit();
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 
   uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
   uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
@@ -571,7 +571,7 @@ void App::cmd() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("command [; ...]: ", "", TextHist);
     if (data == nullptr) {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
   }
@@ -593,7 +593,7 @@ void App::cmd() {
     w3mFuncList[cmd].func();
     CurrentCmdData = nullptr;
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 void App::dispatch(const char *buf, size_t len) {

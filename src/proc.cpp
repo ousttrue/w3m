@@ -111,7 +111,7 @@ void ctrCsrV() {
         CurrentTab->currentBuffer()->layout.lineSkip(
             CurrentTab->currentBuffer()->layout.topLine, -offsety, false);
     CurrentTab->currentBuffer()->layout.arrangeLine();
-    displayBuffer(B_NORMAL);
+    displayBuffer();
   }
 }
 
@@ -126,7 +126,7 @@ void ctrCsrH() {
   if (offsetx != 0) {
     CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
     CurrentTab->currentBuffer()->layout.arrangeCursor();
-    displayBuffer(B_NORMAL);
+    displayBuffer();
   }
 }
 
@@ -136,7 +136,7 @@ void ctrCsrH() {
 void rdrwSc() {
   clear();
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 // SEARCH SEARCH_FORE WHEREIS
@@ -180,7 +180,7 @@ void shiftl() {
       1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Shift screen right */
@@ -196,7 +196,7 @@ void shiftr() {
       1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // RIGHT
@@ -215,7 +215,7 @@ void col1R() {
       break;
     CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // LEFT
@@ -233,7 +233,7 @@ void col1L() {
     CurrentTab->currentBuffer()->layout.columnSkip(-1);
     CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // SETENV
@@ -249,7 +249,7 @@ void setEnv() {
       env = Sprintf("%s=", env)->ptr;
     // env = inputStrHist("Set environ: ", env, TextHist);
     if (env == nullptr || *env == '\0') {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
   }
@@ -258,7 +258,7 @@ void setEnv() {
     value++;
     set_environ(var, value);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // PIPE_BUF
@@ -280,7 +280,7 @@ void readsh() {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd == nullptr || *cmd == '\0') {
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
   // MySignalHandler prevtrap = {};
@@ -298,7 +298,7 @@ void readsh() {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* Execute shell command */
@@ -321,7 +321,7 @@ void execsh() {
     fmInit();
     getch();
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* Load file */
@@ -333,7 +333,7 @@ void ldfile() {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
   if (fn == nullptr || *fn == '\0') {
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
   cmd_loadfile(fn);
@@ -470,7 +470,7 @@ void movLW() {
   }
 end:
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // NEXT_WORD
@@ -519,7 +519,7 @@ void movRW() {
   }
 end:
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Quit */
@@ -545,7 +545,7 @@ void selBuf() {
     ok = CurrentTab->select(cmd, buf);
   } while (!ok);
 
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
@@ -574,7 +574,7 @@ void susp() {
   kill(0, SIGTSTP); /* stop whole job, not a single process */
 #endif /* SIGSTOP */
   fmInit();
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 // GOTO_LINE
@@ -611,7 +611,7 @@ void linbeg() {
   }
   CurrentTab->currentBuffer()->layout.pos = 0;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Go to the bottom of the line */
@@ -627,7 +627,7 @@ void linend() {
   CurrentTab->currentBuffer()->layout.pos =
       CurrentTab->currentBuffer()->layout.currentLine->len - 1;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* Run editor on the current buffer */
@@ -662,7 +662,7 @@ void editBf() {
   }
   exec_cmd(cmd);
 
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
   reload();
 }
 
@@ -682,7 +682,7 @@ void editScr() {
       shell_quote(tmpf.c_str()),
       cur_real_linenumber(CurrentTab->currentBuffer())));
   unlink(tmpf.c_str());
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* follow HREF link */
@@ -729,11 +729,11 @@ void followA() {
       CurrentTab->deleteBuffer(buf);
     else
       deleteTab(CurrentTab);
-    displayBuffer(B_FORCE_REDRAW);
+    displayBuffer();
     return;
   }
   CurrentTab->loadLink(url, a->target, a->referer, nullptr);
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* view inline image */
@@ -760,7 +760,7 @@ void followI() {
   auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* submit form */
@@ -804,7 +804,7 @@ void topA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to the last anchor */
@@ -845,7 +845,7 @@ void lastA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to the nth anchor */
@@ -880,7 +880,7 @@ void nthA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to the next anchor */
@@ -981,7 +981,7 @@ void nextBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* go to the previous bufferr */
@@ -997,7 +997,7 @@ void prevBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -1009,7 +1009,7 @@ void backBf() {
   if (!checkBackBuffer(CurrentTab->currentBuffer())) {
     if (close_tab_back && nTab >= 1) {
       deleteTab(CurrentTab);
-      displayBuffer(B_FORCE_REDRAW);
+      displayBuffer();
     } else
       disp_message("Can't go back...", true);
     return;
@@ -1017,7 +1017,7 @@ void backBf() {
 
   CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
 
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 // DELETE_PREVBUF
@@ -1107,13 +1107,13 @@ void setOpt() {
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == nullptr || *opt == '\0') {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
   }
   if (set_param_option(opt))
     sync_with_option();
-  displayBuffer(B_REDRAW_IMAGE);
+  displayBuffer();
 }
 
 /* error message list */
@@ -1128,7 +1128,7 @@ void pginfo() {
 
   if (auto buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_INFO]) {
     CurrentTab->currentBuffer(buf);
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
 
@@ -1200,7 +1200,7 @@ void svBuf() {
   if (file == nullptr || *file == '\0') {
     // qfile = inputLineHist("Save buffer to: ", nullptr, IN_COMMAND, SaveHist);
     if (qfile == nullptr || *qfile == '\0') {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
   }
@@ -1215,7 +1215,7 @@ void svBuf() {
     file = expandPath((char *)file);
     // if (checkOverWrite(file) < 0) {
     if (false) {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
     f = fopen(file, "w");
@@ -1231,7 +1231,7 @@ void svBuf() {
     pclose(f);
   else
     fclose(f);
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* save source */
@@ -1254,7 +1254,7 @@ void svSrc() {
   }
   doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* peek URL */
@@ -1286,7 +1286,7 @@ void vwSrc() {
   std::shared_ptr<Buffer> buf;
   if ((buf = CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE])) {
     CurrentTab->currentBuffer(buf);
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
   if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
@@ -1321,7 +1321,7 @@ void vwSrc() {
   buf->layout.need_reshape = true;
   reshapeBuffer(buf);
   CurrentTab->pushBuffer(buf);
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* reload */
@@ -1392,7 +1392,7 @@ void reload() {
     CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
     CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* reshape */
@@ -1401,14 +1401,14 @@ void reload() {
 void reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
   reshapeBuffer(CurrentTab->currentBuffer());
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
 void chkURL() {
   chkURLBuffer(CurrentTab->currentBuffer());
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 // MARK_WORD
@@ -1420,7 +1420,7 @@ void chkWORD() {
     return;
   reAnchorWord(&CurrentTab->currentBuffer()->layout,
                CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 /* render frames */
@@ -1523,7 +1523,7 @@ void setAlarm() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
   }
@@ -1541,7 +1541,7 @@ void setAlarm() {
   } else {
     setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, nullptr);
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // REINIT
@@ -1553,14 +1553,14 @@ void reinit() {
     init_rc();
     sync_with_option();
     initCookie();
-    displayBuffer(B_REDRAW_IMAGE);
+    displayBuffer();
     return;
   }
 
   if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
     init_rc();
     sync_with_option();
-    displayBuffer(B_REDRAW_IMAGE);
+    displayBuffer();
     return;
   }
 
@@ -1598,19 +1598,19 @@ void defKey() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == nullptr || *data == '\0') {
-      displayBuffer(B_NORMAL);
+      displayBuffer();
       return;
     }
   }
   setKeymap(allocStr(data, -1), -1, true);
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // NEW_TAB
 //"Open a new tab (with current document)"
 void newT() {
   TabBuffer::_newT();
-  displayBuffer(B_REDRAW_IMAGE);
+  displayBuffer();
 }
 
 // CLOSE_TAB
@@ -1626,7 +1626,7 @@ void closeT() {
     tab = CurrentTab;
   if (tab)
     deleteTab(tab);
-  displayBuffer(B_REDRAW_IMAGE);
+  displayBuffer();
 }
 
 // NEXT_TAB
@@ -1642,7 +1642,7 @@ void nextT() {
     else
       CurrentTab = FirstTab;
   }
-  displayBuffer(B_REDRAW_IMAGE);
+  displayBuffer();
 }
 
 // PREV_TAB
@@ -1658,7 +1658,7 @@ void prevT() {
     else
       CurrentTab = LastTab;
   }
-  displayBuffer(B_REDRAW_IMAGE);
+  displayBuffer();
 }
 
 // TAB_LINK
@@ -1716,14 +1716,14 @@ void ldDL() {
           deleteTab(CurrentTab);
       } else
         CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
-      displayBuffer(B_FORCE_REDRAW);
+      displayBuffer();
     }
     return;
   }
   reload = checkDownloadList();
   auto buf = DownloadListBuffer();
   if (!buf) {
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
   if (replace) {
@@ -1741,7 +1741,7 @@ void ldDL() {
     CurrentTab->currentBuffer()->layout.event =
         setAlarmEvent(CurrentTab->currentBuffer()->layout.event, 1, AL_IMPLICIT,
                       FUNCNAME_reload, nullptr);
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 // UNDO
@@ -1779,7 +1779,7 @@ void cursorTop() {
       CurrentTab->currentBuffer()->layout.lineSkip(
           CurrentTab->currentBuffer()->layout.topLine, 0, false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // CURSOR_MIDDLE
@@ -1793,7 +1793,7 @@ void cursorMiddle() {
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
                                                                    false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 // CURSOR_BOTTOM
@@ -1807,5 +1807,5 @@ void cursorBottom() {
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
                                                                    false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }

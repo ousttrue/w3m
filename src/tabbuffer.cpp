@@ -54,11 +54,7 @@ TabBuffer *numTab(int n) {
   return tab;
 }
 
-int TabBuffer::calcTabPos(DisplayFlag mode) {
-  if (mode != B_FORCE_REDRAW && mode != B_REDRAW_IMAGE) {
-    return LastTab->y;
-  }
-
+int TabBuffer::calcTabPos() {
   if (nTab <= 0) {
     return LastTab->y;
   }
@@ -236,7 +232,7 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
       FirstTab = t;
     t2->prevTab = t;
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 void gotoLabel(const char *label) {
@@ -263,7 +259,7 @@ void gotoLabel(const char *label) {
             false);
   CurrentTab->currentBuffer()->layout.pos = al->start.pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
   return;
 }
 
@@ -283,7 +279,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
   // if (buf != NO_BUFFER)
   { this->pushBuffer(buf); }
 
-  displayBuffer(B_NORMAL);
+  displayBuffer();
 }
 
 /* go to specified URL */
@@ -335,7 +331,7 @@ void goURL0(const char *prompt, int relative) {
   }
 
   if (url == nullptr || *url == '\0') {
-    displayBuffer(B_FORCE_REDRAW);
+    displayBuffer();
     return;
   }
   if (*url == '#') {
@@ -380,7 +376,7 @@ void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
       CurrentTab->pushBuffer(buf);
     }
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
@@ -451,7 +447,7 @@ void followTab(TabBuffer *tab) {
       CurrentTab->pushBuffer(buf);
     }
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 void SAVE_BUFPOSITION(LineLayout *sbufp) {
@@ -620,7 +616,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
       this->currentBuffer()->layout.arrangeCursor();
     }
   }
-  displayBuffer(B_NORMAL);
+  displayBuffer();
   return buf;
 }
 
@@ -721,7 +717,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
   } else {
     disp_err_message("Can't send form because of illegal method.", false);
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }
 
 void TabBuffer::_followForm(int submit) {
@@ -754,7 +750,7 @@ void TabBuffer::_followForm(int submit) {
                      CurrentTab->do_submit(fi, a);
                      return;
                    }
-                   displayBuffer(B_FORCE_REDRAW);
+                   displayBuffer();
                  });
     break;
 
@@ -852,5 +848,5 @@ void TabBuffer::_followForm(int submit) {
   default:
     break;
   }
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }

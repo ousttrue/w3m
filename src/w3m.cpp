@@ -80,7 +80,7 @@ void _quitfm(bool confirm) {
 
   if (!(ans && TOLOWER(*ans) == 'y')) {
     // cancel
-    displayBuffer(B_NORMAL);
+    displayBuffer();
     return;
   }
 

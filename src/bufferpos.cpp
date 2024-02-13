@@ -40,5 +40,5 @@ void resetPos(BufferPos *b) {
   buf.currentColumn = b->currentColumn;
   CurrentTab->currentBuffer()->layout.restorePosition(buf);
   CurrentTab->currentBuffer()->layout.undo = b;
-  displayBuffer(B_FORCE_REDRAW);
+  displayBuffer();
 }

@@ -74,8 +74,9 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
     message(s, LASTLINE, 0);
   refresh(term_io());
   sleep_till_anykey(sec, purge);
-  if (CurrentTab != NULL && CurrentTab->currentBuffer() != NULL && redraw_current)
-    displayBuffer(B_NORMAL);
+  if (CurrentTab && CurrentTab->currentBuffer() && redraw_current) {
+    displayBuffer();
+  }
 }
 
 void disp_message(const char *s, int redraw_current) {
