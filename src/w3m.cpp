@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "app.h"
 #include "ssl_util.h"
 #include "downloadlist.h"
 #include "etc.h"
@@ -71,7 +72,6 @@ int clear_buffer = true;
 int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
 char *HostName = nullptr;
-char *CurrentDir = nullptr;
 int CurrentPid = {};
 std::list<std::string> fileToDelete;
 char *document_root = nullptr;
@@ -160,7 +160,7 @@ Url urlParse(const char *src, std::optional<Url> current) {
     if (url.schema == SCM_LOCAL && url.file[0] != '/' &&
         !(IS_ALPHA(url.file[0]) && url.file[1] == ':') && url.file != "-") {
       /* local file, relative path */
-      std::string tmp = CurrentDir;
+      auto tmp = App::instance().pwd();
       if (tmp.back() != '/') {
         tmp += '/';
       }
@@ -225,35 +225,4 @@ void w3m_exit(int i) {
       exit(1);
     }
   exit(i);
-}
-
-#define HAVE_GETCWD 1
-char *currentdir() {
-  char *path;
-#ifdef HAVE_GETCWD
-#ifdef MAXPATHLEN
-  path = (char *)NewAtom_N(char, MAXPATHLEN);
-  getcwd(path, MAXPATHLEN);
-#else
-  path = getcwd(NULL, 0);
-#endif
-#else /* not HAVE_GETCWD */
-#ifdef HAVE_GETWD
-  path = NewAtom_N(char, 1024);
-  getwd(path);
-#else  /* not HAVE_GETWD */
-  FILE *f;
-  char *p;
-  path = (char *)NewAtom_N(char, 1024);
-  f = popen("pwd", "r");
-  fgets(path, 1024, f);
-  pclose(f);
-  for (p = path; *p; p++)
-    if (*p == '\n') {
-      *p = '\0';
-      break;
-    }
-#endif /* not HAVE_GETWD */
-#endif /* not HAVE_GETCWD */
-  return path;
 }

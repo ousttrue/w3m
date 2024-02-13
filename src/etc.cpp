@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "app.h"
 #include "url_stream.h"
 #include "buffer.h"
 #include "line.h"
@@ -338,7 +339,7 @@ const char *file_to_url(const char *file) {
   } else
 #endif
       if (file[0] != '/') {
-    tmp = Strnew_charp(CurrentDir);
+    tmp = Strnew(App::instance().pwd());
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, file);

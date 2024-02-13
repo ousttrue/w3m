@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "app.h"
 #include "keyvalue.h"
 #include "readbuffer.h"
 #include "http_session.h"
@@ -28,8 +29,9 @@ void addDownloadList(pid_t pid, const char *url, const char *save,
   auto d = (DownloadList *)New(DownloadList);
   d->pid = pid;
   d->url = url;
-  if (save[0] != '/' && save[0] != '~')
-    save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+  if (save[0] != '/' && save[0] != '~') {
+    save = Strnew_m_charp(App::instance().pwd().c_str(), "/", save, NULL)->ptr;
+  }
   d->save = expandPath(save);
   d->lock = lock;
   d->size = size;
@@ -203,5 +205,3 @@ void download_action(struct keyvalue *arg) {
   }
   ldDL();
 }
-
-

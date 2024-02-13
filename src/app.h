@@ -1,6 +1,5 @@
 #pragma once
-
-// runtime
+#include <string>
 
 extern int CurrentKey;
 extern int prev_key;
@@ -16,6 +15,8 @@ const char *searchKeyData();
 int searchKeyNum(void);
 
 class App {
+  std::string _currentDir;
+
   App();
 
 public:
@@ -27,6 +28,8 @@ public:
     return s_instance;
   }
 
-  void initialize();
+  bool initialize();
   int mainLoop();
+
+  std::string pwd() const { return _currentDir; }
 };

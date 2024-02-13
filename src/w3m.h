@@ -21,7 +21,6 @@ extern bool IsForkChild;
 extern char *w3m_version;
 
 extern char *HostName;
-extern char *CurrentDir;
 extern int CurrentPid;
 extern std::list<std::string> fileToDelete;
 
@@ -74,4 +73,3 @@ extern const char *keymap_file;
 
 void w3m_exit(int i);
 void _quitfm(bool confirm);
-char *currentdir();

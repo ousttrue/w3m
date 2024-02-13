@@ -66,8 +66,98 @@ static void SigPipe(SIGNAL_ARG) {
   SIGNAL_RETURN;
 }
 
+static GC_warn_proc orig_GC_warn_proc = nullptr;
+#define GC_WARN_KEEP_MAX (20)
+
+static void wrap_GC_warn_proc(char *msg, GC_word arg) {
+  if (fmInitialized) {
+    /* *INDENT-OFF* */
+    static struct {
+      char *msg;
+      GC_word arg;
+    } msg_ring[GC_WARN_KEEP_MAX];
+    /* *INDENT-ON* */
+    static int i = 0;
+    static size_t n = 0;
+    static int lock = 0;
+    int j;
+
+    j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+    msg_ring[j].msg = msg;
+    msg_ring[j].arg = arg;
+
+    if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+      ++n;
+    else
+      ++i;
+
+    if (!lock) {
+      lock = 1;
+
+      for (; n > 0; --n, ++i) {
+        i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+
+        printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
+        sleep_till_anykey(1, 1);
+      }
+
+      lock = 0;
+    }
+  } else if (orig_GC_warn_proc)
+    orig_GC_warn_proc(msg, arg);
+  else
+    fprintf(stderr, msg, (unsigned long)arg);
+}
+
+static void *die_oom(size_t bytes) {
+  fprintf(stderr, "Out of memory: %lu bytes unavailable!\n",
+          (unsigned long)bytes);
+  exit(1);
+  /*
+   * Suppress compiler warning: function might return no value
+   * This code is never reached.
+   */
+  return nullptr;
+}
+
 App::App() {
-  CurrentDir = currentdir();
+  static int s_i = 0;
+  assert(s_i == 0);
+  ++s_i;
+
+#ifdef MAXPATHLEN
+  {
+    char buf[MAXPATHLEN];
+    getcwd(buf, MAXPATHLEN);
+    _currentDir = buf;
+  }
+#else
+  _currentDir = getcwd(nullptr, 0);
+#endif
+
+  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
+    set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
+  }
+  GC_INIT();
+#if (GC_VERSION_MAJOR > 7) ||                                                  \
+    ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
+  GC_set_oom_fn(die_oom);
+#else
+  GC_oom_fn = die_oom;
+#endif
+
+#if (GC_VERSION_MAJOR > 7) ||                                                  \
+    ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
+  orig_GC_warn_proc = GC_get_warn_proc();
+  GC_set_warn_proc(wrap_GC_warn_proc);
+#else
+  orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
+#endif
+}
+
+App::~App() { std::cout << "App::~App" << std::endl; }
+
+bool App::initialize() {
   CurrentPid = (int)getpid();
   {
     char hostname[HOST_NAME_MAX + 2];
@@ -114,11 +204,9 @@ App::App() {
   }
 
   TabBuffer::init();
+
+  return true;
 }
-
-App::~App() { std::cout << "App::~App" << std::endl; }
-
-void App::initialize() {}
 
 const char *searchKeyData(void) {
   const char *data = NULL;
