@@ -72,7 +72,6 @@ int clear_buffer = true;
 int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
 char *HostName = nullptr;
-int CurrentPid = {};
 std::list<std::string> fileToDelete;
 char *document_root = nullptr;
 

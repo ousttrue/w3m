@@ -1,7 +1,7 @@
 #include "tmpfile.h"
 #include "rc.h"
 #include "w3m.h"
-#include "textlist.h"
+#include "app.h"
 #include <sstream>
 
 const char *tmp_dir = {};
@@ -27,8 +27,8 @@ std::string tmpfname(TmpfType type, const std::string &ext) {
   }
 
   std::stringstream ss;
-  ss << dir << "/w3m" << tmpf_base[type] << CurrentPid << tmpf_seq[type]++
-     << ext;
+  ss << dir << "/w3m" << tmpf_base[type] << App::instance().pid()
+     << tmpf_seq[type]++ << ext;
   auto tmpf = ss.str();
   fileToDelete.push_back(tmpf);
   return tmpf;

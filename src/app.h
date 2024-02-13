@@ -16,6 +16,7 @@ int searchKeyNum(void);
 
 class App {
   std::string _currentDir;
+  int _currentPid = -1;
 
   App();
 
@@ -31,5 +32,6 @@ public:
   bool initialize();
   int mainLoop();
 
+  int pid() const { return _currentPid; }
   std::string pwd() const { return _currentDir; }
 };

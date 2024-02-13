@@ -125,6 +125,11 @@ App::App() {
   assert(s_i == 0);
   ++s_i;
 
+  //
+  // process
+  //
+  _currentPid = getpid();
+
 #ifdef MAXPATHLEN
   {
     char buf[MAXPATHLEN];
@@ -158,7 +163,6 @@ App::App() {
 App::~App() { std::cout << "App::~App" << std::endl; }
 
 bool App::initialize() {
-  CurrentPid = (int)getpid();
   {
     char hostname[HOST_NAME_MAX + 2];
     if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {

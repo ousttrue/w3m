@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "app.h"
 #include "http_response.h"
 #include "auth_pass.h"
 #include "w3m.h"
@@ -793,8 +794,7 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
 }
 
 #define conv_form_encoding(val, fi, buf) (val)
-void query_from_followform(Str **query, FormItemList *fi,
-                                  int multipart) {
+void query_from_followform(Str **query, FormItemList *fi, int multipart) {
   FormItemList *f2;
   FILE *body = nullptr;
 
@@ -805,10 +805,10 @@ void query_from_followform(Str **query, FormItemList *fi,
       return;
     }
     fi->parent->body = (*query)->ptr;
-    fi->parent->boundary =
-        Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
-                fi->parent, fi->parent->body, fi->parent->boundary)
-            ->ptr;
+    fi->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld",
+                                   App::instance().pid(), fi->parent,
+                                   fi->parent->body, fi->parent->boundary)
+                               ->ptr;
   }
   *query = Strnew();
   for (f2 = fi->parent->item; f2; f2 = f2->next) {
