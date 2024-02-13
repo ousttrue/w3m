@@ -78,7 +78,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   int is_pipe = false;
 
   if (fmInitialized) {
-    p = searchKeyData();
+    p = App::instance().searchKeyData();
     if (p == nullptr || *p == '\0') {
       // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
       //                   SaveHist);
@@ -124,7 +124,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       size = st.st_size;
     addDownloadList(pid, tmpf, p, Strnew(lock)->ptr, size);
   } else {
-    q = searchKeyData();
+    q = App::instance().searchKeyData();
     if (q == nullptr || *q == '\0') {
       printf("(Download)Save file to: ");
       fflush(stdout);

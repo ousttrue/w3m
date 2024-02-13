@@ -50,11 +50,11 @@ void nulcmd() { /* do nothing */
 //"Scroll down one page"
 void pgFore() {
   if (vi_prec_num)
-    nscroll(searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
+    nscroll(App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
             B_NORMAL);
   else
-    nscroll(prec_num ? searchKeyNum()
-                     : searchKeyNum() *
+    nscroll(prec_num ? App::instance().searchKeyNum()
+                     : App::instance().searchKeyNum() *
                            (CurrentTab->currentBuffer()->layout.LINES - 1),
             prec_num ? B_SCROLL : B_NORMAL);
 }
@@ -64,11 +64,11 @@ void pgFore() {
 //"Scroll up one page"
 void pgBack() {
   if (vi_prec_num)
-    nscroll(-searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
+    nscroll(-App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
             B_NORMAL);
   else
-    nscroll(-(prec_num ? searchKeyNum()
-                       : searchKeyNum() *
+    nscroll(-(prec_num ? App::instance().searchKeyNum()
+                       : App::instance().searchKeyNum() *
                              (CurrentTab->currentBuffer()->layout.LINES - 1)),
             prec_num ? B_SCROLL : B_NORMAL);
 }
@@ -77,7 +77,7 @@ void pgBack() {
 // NEXT_HALF_PAGE
 //"Scroll down half a page"
 void hpgFore() {
-  nscroll(searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1),
+  nscroll(App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1),
           B_NORMAL);
 }
 
@@ -85,19 +85,19 @@ void hpgFore() {
 // PREV_HALF_PAGE
 //"Scroll up half a page"
 void hpgBack() {
-  nscroll(-searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1),
+  nscroll(-App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1),
           B_NORMAL);
 }
 
 /* 1 line up */
 // UP
 //"Scroll the screen up one line"
-void lup1() { nscroll(searchKeyNum(), B_SCROLL); }
+void lup1() { nscroll(App::instance().searchKeyNum(), B_SCROLL); }
 
 /* 1 line down */
 // DOWN
 //"Scroll the screen down one line"
-void ldown1() { nscroll(-searchKeyNum(), B_SCROLL); }
+void ldown1() { nscroll(-App::instance().searchKeyNum(), B_SCROLL); }
 
 /* move cursor position to the center of screen */
 // CENTER_V
@@ -177,7 +177,7 @@ void shiftl() {
     return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
-      searchKeyNum() * (-CurrentTab->currentBuffer()->layout.COLS + 1) + 1);
+      App::instance().searchKeyNum() * (-CurrentTab->currentBuffer()->layout.COLS + 1) + 1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
   displayBuffer(B_NORMAL);
@@ -191,7 +191,7 @@ void shiftr() {
     return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
-      searchKeyNum() * (CurrentTab->currentBuffer()->layout.COLS - 1) - 1);
+      App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.COLS - 1) - 1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
   displayBuffer(B_NORMAL);
@@ -202,7 +202,7 @@ void shiftr() {
 void col1R() {
   auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
-  int j, column, n = searchKeyNum();
+  int j, column, n = App::instance().searchKeyNum();
 
   if (l == nullptr)
     return;
@@ -221,7 +221,7 @@ void col1R() {
 void col1L() {
   auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
-  int j, n = searchKeyNum();
+  int j, n = App::instance().searchKeyNum();
 
   if (l == nullptr)
     return;
@@ -241,7 +241,7 @@ void setEnv() {
   const char *var, *value;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  env = searchKeyData();
+  env = App::instance().searchKeyData();
   if (env == nullptr || *env == '\0' || strchr(env, '=') == nullptr) {
     if (env != nullptr && *env != '\0')
       env = Sprintf("%s=", env)->ptr;
@@ -273,7 +273,7 @@ void pipesh() {}
 //"Execute shell command and display output"
 void readsh() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  auto cmd = searchKeyData();
+  auto cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
@@ -306,7 +306,7 @@ void execsh() {
   const char *cmd;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
+  cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
     // cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
@@ -326,7 +326,7 @@ void execsh() {
 // LOAD
 //"Open local file in a new buffer"
 void ldfile() {
-  auto fn = searchKeyData();
+  auto fn = App::instance().searchKeyData();
   // if (fn == nullptr || *fn == '\0') {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
@@ -356,7 +356,7 @@ void ldhelp() {
 // MOVE_LEFT
 //"Cursor left"
 void movL() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movL(
       CurrentTab->currentBuffer()->layout.COLS / 2, m);
 }
@@ -364,14 +364,14 @@ void movL() {
 // MOVE_LEFT1
 //"Cursor left. With edge touched, slide"
 void movL1() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movL(1, m);
 }
 
 // MOVE_DOWN
 //"Cursor down"
 void movD() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(
       (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
 }
@@ -379,14 +379,14 @@ void movD() {
 // MOVE_DOWN1
 //"Cursor down. With edge touched, slide"
 void movD1() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(1, m);
 }
 
 // MOVE_UP
 //"Cursor up"
 void movU() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(
       (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
 }
@@ -394,14 +394,14 @@ void movU() {
 // MOVE_UP1
 //"Cursor up. With edge touched, slide"
 void movU1() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(1, m);
 }
 
 // MOVE_RIGHT
 //"Cursor right"
 void movR() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movR(
       CurrentTab->currentBuffer()->layout.COLS / 2, m);
 }
@@ -409,7 +409,7 @@ void movR() {
 // MOVE_RIGHT1
 //"Cursor right. With edge touched, slide"
 void movR1() {
-  int m = searchKeyNum();
+  int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movR(1, m);
 }
 
@@ -419,7 +419,7 @@ void movLW() {
   char *lb;
   Line *pline, *l;
   int ppos;
-  int i, n = searchKeyNum();
+  int i, n = App::instance().searchKeyNum();
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
@@ -477,7 +477,7 @@ void movRW() {
   char *lb;
   Line *pline, *l;
   int ppos;
-  int i, n = searchKeyNum();
+  int i, n = App::instance().searchKeyNum();
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
@@ -579,7 +579,7 @@ void susp() {
 //"Go to the specified line"
 void goLine() {
 
-  auto str = searchKeyData();
+  auto str = App::instance().searchKeyData();
   if (prec_num)
     CurrentTab->currentBuffer()->layout._goLine("^", prec_num);
   else if (str)
@@ -852,7 +852,7 @@ void lastA() {
 void nthA() {
   HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
 
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   if (n < 0 || n > hl->nmark)
     return;
 
@@ -885,7 +885,7 @@ void nthA() {
 // NEXT_LINK
 //"Move to the next hyperlink"
 void nextA() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(false, baseUr, n);
 }
@@ -894,7 +894,7 @@ void nextA() {
 // PREV_LINK
 //"Move to the previous hyperlink"
 void prevA() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(false, baseUr, n);
 }
@@ -903,7 +903,7 @@ void prevA() {
 // NEXT_VISITED
 //"Move to the next visited hyperlink"
 void nextVA() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(true, baseUr, n);
 }
@@ -912,7 +912,7 @@ void nextVA() {
 // PREV_VISITED
 //"Move to the previous visited hyperlink"
 void prevVA() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(true, baseUr, n);
 }
@@ -921,7 +921,7 @@ void prevVA() {
 // NEXT_LEFT
 //"Move left to the next hyperlink"
 void nextL() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(-1, 0, n);
 }
 
@@ -929,7 +929,7 @@ void nextL() {
 // NEXT_LEFT_UP
 //"Move left or upward to the next hyperlink"
 void nextLU() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(-1, -1, n);
 }
 
@@ -937,7 +937,7 @@ void nextLU() {
 // NEXT_RIGHT
 //"Move right to the next hyperlink"
 void nextR() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(1, 0, n);
 }
 
@@ -945,7 +945,7 @@ void nextR() {
 // NEXT_RIGHT_DOWN
 //"Move right or downward to the next hyperlink"
 void nextRD() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(1, 1, n);
 }
 
@@ -953,7 +953,7 @@ void nextRD() {
 // NEXT_DOWN
 //"Move downward to the next hyperlink"
 void nextD() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextY(1, n);
 }
 
@@ -961,7 +961,7 @@ void nextD() {
 // NEXT_UP
 //"Move upward to the next hyperlink"
 void nextU() {
-  int n = searchKeyNum();
+  int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextY(-1, n);
 }
 
@@ -1097,7 +1097,7 @@ void setOpt() {
   const char *opt;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  opt = searchKeyData();
+  opt = App::instance().searchKeyData();
   if (opt == nullptr || *opt == '\0' || strchr(opt, '=') == nullptr) {
     if (opt != nullptr && *opt != '\0') {
       auto v = get_param_option(opt);
@@ -1194,7 +1194,7 @@ void svBuf() {
   int is_pipe;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  file = searchKeyData();
+  file = App::instance().searchKeyData();
   if (file == nullptr || *file == '\0') {
     // qfile = inputLineHist("Save buffer to: ", nullptr, IN_COMMAND, SaveHist);
     if (qfile == nullptr || *qfile == '\0') {
@@ -1258,37 +1258,21 @@ void svSrc() {
 /* peek URL */
 // PEEK_LINK
 //"Show target address"
-void peekURL() { _peekURL(0); }
+void peekURL() { App::instance()._peekURL(0); }
 
 /* peek URL of image */
 // PEEK_IMG
 //"Show image address"
-void peekIMG() { _peekURL(1); }
+void peekIMG() { App::instance()._peekURL(1); }
 
 // PEEK
 //"Show current address"
 void curURL() {
-  static Str *s = nullptr;
-  static int offset = 0, n;
-
-  if (CurrentKey == prev_key && s != nullptr) {
-    if (s->length - offset >= COLS)
-      offset++;
-    else if (s->length <= offset) /* bug ? */
-      offset = 0;
-  } else {
-    offset = 0;
-    s = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
-    if (DecodeURL)
-      s = Strnew_charp(url_decode0(s->ptr));
-  }
-  n = searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS - 1))
-    offset = (n - 1) * (COLS - 1);
-  disp_message(&s->ptr[offset], true);
+  auto url = App::instance().currentUrl();
+  disp_message(url.c_str(), true);
 }
-/* view HTML source */
 
+/* view HTML source */
 // SOURCE VIEW
 //"Toggle between HTML shown or processed"
 void vwSrc() {
@@ -1525,37 +1509,7 @@ void dictwordat() {
 // COMMAND
 //"Invoke w3m function(s)"
 void execCmd() {
-  const char *data, *p;
-  int cmd;
-
-  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  data = searchKeyData();
-  if (data == nullptr || *data == '\0') {
-    // data = inputStrHist("command [; ...]: ", "", TextHist);
-    if (data == nullptr) {
-      displayBuffer(B_NORMAL);
-      return;
-    }
-  }
-  /* data: FUNC [DATA] [; FUNC [DATA] ...] */
-  while (*data) {
-    SKIP_BLANKS(data);
-    if (*data == ';') {
-      data++;
-      continue;
-    }
-    p = getWord(&data);
-    cmd = getFuncList((char *)p);
-    if (cmd < 0)
-      break;
-    p = getQWord(&data);
-    CurrentKey = -1;
-    CurrentKeyData = nullptr;
-    CurrentCmdData = *p ? (char *)p : nullptr;
-    w3mFuncList[cmd].func();
-    CurrentCmdData = nullptr;
-  }
-  displayBuffer(B_NORMAL);
+  App::instance().cmd();
 }
 
 // ALARM
@@ -1565,7 +1519,7 @@ void setAlarm() {
   int sec = 0, cmd = -1;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  data = searchKeyData();
+  data = App::instance().searchKeyData();
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
@@ -1593,7 +1547,7 @@ void setAlarm() {
 // REINIT
 //"Reload configuration file"
 void reinit() {
-  auto resource = searchKeyData();
+  auto resource = App::instance().searchKeyData();
 
   if (resource == nullptr) {
     init_rc();
@@ -1640,7 +1594,7 @@ void defKey() {
   const char *data;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  data = searchKeyData();
+  data = App::instance().searchKeyData();
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == nullptr || *data == '\0') {

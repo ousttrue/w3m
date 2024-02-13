@@ -653,7 +653,7 @@ static int checkSaveFile(const std::shared_ptr<input_stream> &stream,
 
 int UrlStream::doFileSave(const char *defstr) {
   if (fmInitialized) {
-    auto p = searchKeyData();
+    auto p = App::instance().searchKeyData();
     if (p == nullptr || *p == '\0') {
       // p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
       //                   SaveHist);
@@ -692,7 +692,7 @@ int UrlStream::doFileSave(const char *defstr) {
     addDownloadList(pid, this->url, p, Strnew(lock)->ptr,
                     0 /*current_content_length*/);
   } else {
-    auto q = searchKeyData();
+    auto q = App::instance().searchKeyData();
     if (q == nullptr || *q == '\0') {
       printf("(Download)Save file to: ");
       fflush(stdout);

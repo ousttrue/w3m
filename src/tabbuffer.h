@@ -55,7 +55,6 @@ public:
   void _followForm(int submit);
   int draw();
 
-  static void init();
   static void _newT();
   static int calcTabPos(DisplayFlag mode);
 };

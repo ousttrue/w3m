@@ -39,12 +39,6 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-void TabBuffer::init() {
-  FirstTab = LastTab = CurrentTab = new TabBuffer;
-  assert(FirstTab);
-  nTab = 1;
-}
-
 TabBuffer *numTab(int n) {
   TabBuffer *tab;
   int i;
@@ -294,7 +288,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
 
 /* go to specified URL */
 void goURL0(const char *prompt, int relative) {
-  auto url = searchKeyData();
+  auto url = App::instance().searchKeyData();
   std::optional<Url> current;
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);

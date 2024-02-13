@@ -329,12 +329,11 @@ void isrch(int (*func)(LineLayout *, const char *), const char *prompt) {
 }
 
 void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
-  const char *str;
   int result;
   int disp = false;
   int pos;
 
-  str = searchKeyData();
+  auto str = App::instance().searchKeyData();
   if (str == nullptr || *str == '\0') {
     // str = inputStrHist(prompt, nullptr, TextHist);
     if (str != nullptr && *str == '\0')

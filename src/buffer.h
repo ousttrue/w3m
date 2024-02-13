@@ -64,7 +64,6 @@ void chkURLBuffer(const std::shared_ptr<Buffer> &buf);
 
 void execdict(const char *word);
 void invoke_browser(const char *url);
-void _peekURL(int only_img);
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
 int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);
 Str *Str_form_quote(Str *x);

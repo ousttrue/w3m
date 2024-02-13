@@ -1,5 +1,6 @@
 #include "app.h"
 #include "form.h"
+#include "message.h"
 #include "http_response.h"
 #include "local_cgi.h"
 #include "w3m.h"
@@ -34,9 +35,8 @@
 #define HOST_NAME_MAX 255
 #endif
 
-int CurrentKey;
-char *CurrentKeyData;
-char *CurrentCmdData;
+const char *CurrentKeyData;
+const char *CurrentCmdData;
 int prec_num = 0;
 int prev_key = -1;
 bool on_target = true;
@@ -177,52 +177,34 @@ App::App() {
 #else
   orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
 #endif
+
+  FirstTab = LastTab = CurrentTab = new TabBuffer;
+  assert(FirstTab);
+  nTab = 1;
 }
 
 App::~App() { std::cout << "App::~App" << std::endl; }
 
 bool App::initialize() {
-
-  /* initializations */
   init_rc();
+
+  if (!BookmarkFile) {
+    BookmarkFile = rcFile(BOOKMARK);
+  }
+
+  sync_with_option();
+  initCookie();
 
   LoadHist = newHist();
   SaveHist = newHist();
   ShellHist = newHist();
   TextHist = newHist();
   URLHist = newHist();
-
-  CurrentKey = -1;
-  if (!BookmarkFile) {
-    BookmarkFile = rcFile(BOOKMARK);
-  }
-
-  fmInit();
-
-  sync_with_option();
-  initCookie();
   if (UseHistory) {
     loadHistory(URLHist);
   }
 
-  TabBuffer::init();
-
   return true;
-}
-
-const char *searchKeyData(void) {
-  const char *data = NULL;
-  if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
-    data = CurrentKeyData;
-  else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
-    data = CurrentCmdData;
-  else if (CurrentKey >= 0)
-    data = getKeyData(CurrentKey);
-  CurrentKeyData = NULL;
-  CurrentCmdData = NULL;
-  if (data == NULL || *data == '\0')
-    return NULL;
-  return allocStr(data, -1);
 }
 
 struct Event {
@@ -246,13 +228,14 @@ void pushEvent(int cmd, void *data) {
 
 AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
 static AlarmEvent *CurrentAlarm = &DefaultAlarm;
-static void SigAlarm(SIGNAL_ARG) {
-  char *data;
 
+static void SigAlarm(SIGNAL_ARG) { App::instance().SigAlarm(); }
+
+void App::SigAlarm() {
   if (CurrentAlarm->sec > 0) {
-    CurrentKey = -1;
+    _currentKey = -1;
     CurrentKeyData = NULL;
-    CurrentCmdData = data = (char *)CurrentAlarm->data;
+    CurrentCmdData = (char *)CurrentAlarm->data;
     w3mFuncList[CurrentAlarm->cmd].func();
     CurrentCmdData = NULL;
     if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
@@ -268,7 +251,7 @@ static void SigAlarm(SIGNAL_ARG) {
     if (!CurrentTab->currentBuffer()->layout.event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
+      mySignal(SIGALRM, ::SigAlarm);
       alarm(CurrentAlarm->sec);
     }
   }
@@ -288,11 +271,6 @@ void resize_hook(SIGNAL_ARG) {
   need_resize_screen = true;
   mySignal(SIGWINCH, resize_hook);
   SIGNAL_RETURN;
-}
-
-static void keyPressEventProc(int c) {
-  CurrentKey = c;
-  w3mFuncList[(int)GlobalKeymap[c]].func();
 }
 
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
@@ -352,6 +330,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
 }
 
 int App::mainLoop() {
+  fmInit();
   displayBuffer(B_FORCE_REDRAW);
 
   mySignal(SIGWINCH, resize_hook);
@@ -373,7 +352,7 @@ int App::mainLoop() {
 
     // event processing
     if (CurrentEvent) {
-      CurrentKey = -1;
+      _currentKey = -1;
       CurrentKeyData = NULL;
       CurrentCmdData = (char *)CurrentEvent->data;
       w3mFuncList[CurrentEvent->cmd].func();
@@ -388,7 +367,7 @@ int App::mainLoop() {
         CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
         if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
           CurrentTab->currentBuffer()->layout.event = NULL;
-          CurrentKey = -1;
+          _currentKey = -1;
           CurrentKeyData = NULL;
           CurrentCmdData = (char *)CurrentAlarm->data;
           w3mFuncList[CurrentAlarm->cmd].func();
@@ -401,7 +380,7 @@ int App::mainLoop() {
     if (!CurrentTab->currentBuffer()->layout.event)
       CurrentAlarm = &DefaultAlarm;
     if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
+      mySignal(SIGALRM, ::SigAlarm);
       alarm(CurrentAlarm->sec);
     }
     mySignal(SIGWINCH, resize_hook);
@@ -424,20 +403,21 @@ int App::mainLoop() {
       } else {
         set_buffer_environ(CurrentTab->currentBuffer());
         save_buffer_position(&CurrentTab->currentBuffer()->layout);
-        keyPressEventProc((int)c);
+        // keyPressEventProc((int)c);
+        _currentKey = c;
+        w3mFuncList[(int)GlobalKeymap[(int)c]].func();
         prec_num = 0;
       }
     }
-    prev_key = CurrentKey;
-    CurrentKey = -1;
+    prev_key = _currentKey;
+    _currentKey = -1;
     CurrentKeyData = NULL;
   }
 
   return 0;
 }
 
-int searchKeyNum(void) {
-
+int App::searchKeyNum() {
   auto d = searchKeyData();
   int n = 1;
   if (d != nullptr)
@@ -469,4 +449,118 @@ std::string App::myEditor(const char *file, int line) const {
     tmp << " " << file;
   }
   return tmp.str();
+}
+
+const char *App::searchKeyData() {
+  const char *data = NULL;
+  if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
+    data = CurrentKeyData;
+  else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
+    data = CurrentCmdData;
+  else if (_currentKey >= 0)
+    data = getKeyData(_currentKey);
+  CurrentKeyData = NULL;
+  CurrentCmdData = NULL;
+  if (data == NULL || *data == '\0')
+    return NULL;
+  return allocStr(data, -1);
+}
+
+void App::_peekURL(bool only_img) {
+
+  Anchor *a;
+  // Url pu;
+  static Str *s = nullptr;
+  static int offset = 0;
+
+  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr) {
+    return;
+  }
+
+  if (_currentKey == prev_key && s != nullptr) {
+    if (s->length - offset >= COLS)
+      offset++;
+    else if (s->length <= offset) /* bug ? */
+      offset = 0;
+    goto disp;
+  } else {
+    offset = 0;
+  }
+  s = nullptr;
+  a = (only_img ? nullptr
+                : retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout));
+  if (a == nullptr) {
+    a = (only_img ? nullptr
+                  : retrieveCurrentForm(&CurrentTab->currentBuffer()->layout));
+    if (a == nullptr) {
+      a = retrieveCurrentImg(&CurrentTab->currentBuffer()->layout);
+      if (a == nullptr)
+        return;
+    } else
+      s = Strnew_charp(form2str((FormItemList *)a->url));
+  }
+  if (s == nullptr) {
+    auto pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
+    s = Strnew(pu.to_Str());
+  }
+  if (DecodeURL)
+    s = Strnew_charp(url_decode0(s->ptr));
+disp:
+  int n = searchKeyNum();
+  if (n > 1 && s->length > (n - 1) * (COLS - 1))
+    offset = (n - 1) * (COLS - 1);
+  disp_message(&s->ptr[offset], true);
+}
+
+std::string App::currentUrl() const {
+  static Str *s = nullptr;
+  static int offset = 0;
+
+  if (_currentKey == prev_key && s != nullptr) {
+    if (s->length - offset >= COLS)
+      offset++;
+    else if (s->length <= offset) /* bug ? */
+      offset = 0;
+  } else {
+    offset = 0;
+    s = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
+    if (DecodeURL)
+      s = Strnew_charp(url_decode0(s->ptr));
+  }
+  auto n = App::instance().searchKeyNum();
+  if (n > 1 && s->length > (n - 1) * (COLS - 1))
+    offset = (n - 1) * (COLS - 1);
+
+  return &s->ptr[offset];
+}
+
+void App::cmd() {
+  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
+  auto data = searchKeyData();
+  if (data == nullptr || *data == '\0') {
+    // data = inputStrHist("command [; ...]: ", "", TextHist);
+    if (data == nullptr) {
+      displayBuffer(B_NORMAL);
+      return;
+    }
+  }
+  /* data: FUNC [DATA] [; FUNC [DATA] ...] */
+  while (*data) {
+    SKIP_BLANKS(data);
+    if (*data == ';') {
+      data++;
+      continue;
+    }
+    auto p = getWord(&data);
+    auto cmd = getFuncList(p);
+    if (cmd < 0)
+      break;
+    p = getQWord(&data);
+    _currentKey = -1;
+    CurrentKeyData = nullptr;
+    CurrentCmdData = *p ? p : nullptr;
+    w3mFuncList[cmd].func();
+    CurrentCmdData = nullptr;
+  }
+  displayBuffer(B_NORMAL);
 }

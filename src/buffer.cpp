@@ -527,11 +527,10 @@ void execdict(const char *word) {
 /* spawn external browser */
 void invoke_browser(const char *url) {
   Str *cmd;
-  const char *browser = nullptr;
   int bg = 0, len;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  browser = searchKeyData();
+  auto browser = App::instance().searchKeyData();
   if (browser == nullptr || *browser == '\0') {
     switch (prec_num) {
     case 0:
@@ -585,49 +584,6 @@ void invoke_browser(const char *url) {
   displayBuffer(B_FORCE_REDRAW);
 }
 
-void _peekURL(int only_img) {
-
-  Anchor *a;
-  Url pu;
-  static Str *s = nullptr;
-  static int offset = 0, n;
-
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
-  if (CurrentKey == prev_key && s != nullptr) {
-    if (s->length - offset >= COLS)
-      offset++;
-    else if (s->length <= offset) /* bug ? */
-      offset = 0;
-    goto disp;
-  } else {
-    offset = 0;
-  }
-  s = nullptr;
-  a = (only_img ? nullptr
-                : retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout));
-  if (a == nullptr) {
-    a = (only_img ? nullptr
-                  : retrieveCurrentForm(&CurrentTab->currentBuffer()->layout));
-    if (a == nullptr) {
-      a = retrieveCurrentImg(&CurrentTab->currentBuffer()->layout);
-      if (a == nullptr)
-        return;
-    } else
-      s = Strnew_charp(form2str((FormItemList *)a->url));
-  }
-  if (s == nullptr) {
-    pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
-    s = Strnew(pu.to_Str());
-  }
-  if (DecodeURL)
-    s = Strnew_charp(url_decode0(s->ptr));
-disp:
-  n = searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS - 1))
-    offset = (n - 1) * (COLS - 1);
-  disp_message(&s->ptr[offset], true);
-}
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf) {
   if (buf->backBuffer)
     return true;
