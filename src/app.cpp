@@ -26,6 +26,7 @@
 #include <sys/wait.h>
 #include <iostream>
 #include <sstream>
+#include <uv.h>
 
 // HOST_NAME_MAX is recommended by POSIX, but not required.
 // FreeBSD and OSX (as of 10.9) are known to not define it.
@@ -329,90 +330,120 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   prev_pos = buf->layout.pos;
 }
 
+static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
+                         uv_buf_t *buf) {
+  *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
+}
+
+uv_tty_t g_tty_in;
+
 int App::mainLoop() {
   fmInit();
   displayBuffer(B_FORCE_REDRAW);
 
-  mySignal(SIGWINCH, resize_hook);
-  mySignal(SIGCHLD, sig_chld);
-  mySignal(SIGPIPE, SigPipe);
+  uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
+  uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
 
-  for (;;) {
-    if (popAddDownloadList()) {
-      ldDL();
-    }
-    if (CurrentTab->currentBuffer()->layout.submit) {
-      Anchor *a = CurrentTab->currentBuffer()->layout.submit;
-      CurrentTab->currentBuffer()->layout.submit = NULL;
-      CurrentTab->currentBuffer()->layout.gotoLine(a->start.line);
-      CurrentTab->currentBuffer()->layout.pos = a->start.pos;
-      CurrentTab->_followForm(true);
-      continue;
-    }
+  uv_read_start((uv_stream_t *)&g_tty_in, &alloc_buffer,
+                [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+                  if (nread < 0) {
+                    if (nread == UV_EOF) {
+                      // end of file
+                      uv_close((uv_handle_t *)&g_tty_in, NULL);
+                    }
+                  } else if (nread > 0) {
+                    // process key input
+                    App::instance().dispatch(buf->base, nread);
+                  }
 
-    // event processing
-    if (CurrentEvent) {
-      _currentKey = -1;
-      CurrentKeyData = NULL;
-      CurrentCmdData = (char *)CurrentEvent->data;
-      w3mFuncList[CurrentEvent->cmd].func();
-      CurrentCmdData = NULL;
-      CurrentEvent = CurrentEvent->next;
-      continue;
-    }
+                  // OK to free buffer as write_data copies it.
+                  if (buf->base) {
+                    free(buf->base);
+                  }
+                });
+  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+  uv_loop_close(uv_default_loop());
 
-    // get keypress event
-    if (CurrentTab->currentBuffer()->layout.event) {
-      if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET) {
-        CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
-        if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          CurrentTab->currentBuffer()->layout.event = NULL;
-          _currentKey = -1;
-          CurrentKeyData = NULL;
-          CurrentCmdData = (char *)CurrentAlarm->data;
-          w3mFuncList[CurrentAlarm->cmd].func();
-          CurrentCmdData = NULL;
-          continue;
-        }
-      } else
-        CurrentTab->currentBuffer()->layout.event = NULL;
-    }
-    if (!CurrentTab->currentBuffer()->layout.event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, ::SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-    mySignal(SIGWINCH, resize_hook);
-    {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-      } while (sleep_till_anykey(1, 0) <= 0);
-    }
-    auto c = getch();
-    if (CurrentAlarm->sec > 0) {
-      alarm(0);
-    }
-    if (IS_ASCII(c)) { /* Ascii */
-      if (('0' <= c) && (c <= '9') &&
-          (prec_num || (GlobalKeymap[(int)c] == FUNCNAME_nulcmd))) {
-        prec_num = prec_num * 10 + (int)(c - '0');
-        if (prec_num > PREC_LIMIT)
-          prec_num = PREC_LIMIT;
-      } else {
-        set_buffer_environ(CurrentTab->currentBuffer());
-        save_buffer_position(&CurrentTab->currentBuffer()->layout);
-        // keyPressEventProc((int)c);
-        _currentKey = c;
-        w3mFuncList[(int)GlobalKeymap[(int)c]].func();
-        prec_num = 0;
-      }
-    }
-    prev_key = _currentKey;
-    _currentKey = -1;
-    CurrentKeyData = NULL;
-  }
+  // mySignal(SIGWINCH, resize_hook);
+  // mySignal(SIGCHLD, sig_chld);
+  // mySignal(SIGPIPE, SigPipe);
+
+  // for (;;) {
+  //   if (popAddDownloadList()) {
+  //     ldDL();
+  //   }
+  //   if (CurrentTab->currentBuffer()->layout.submit) {
+  //     Anchor *a = CurrentTab->currentBuffer()->layout.submit;
+  //     CurrentTab->currentBuffer()->layout.submit = NULL;
+  //     CurrentTab->currentBuffer()->layout.gotoLine(a->start.line);
+  //     CurrentTab->currentBuffer()->layout.pos = a->start.pos;
+  //     CurrentTab->_followForm(true);
+  //     continue;
+  //   }
+  //
+  //   // event processing
+  //   if (CurrentEvent) {
+  //     _currentKey = -1;
+  //     CurrentKeyData = NULL;
+  //     CurrentCmdData = (char *)CurrentEvent->data;
+  //     w3mFuncList[CurrentEvent->cmd].func();
+  //     CurrentCmdData = NULL;
+  //     CurrentEvent = CurrentEvent->next;
+  //     continue;
+  //   }
+  //
+  //   // get keypress event
+  //   if (CurrentTab->currentBuffer()->layout.event) {
+  //     if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET) {
+  //       CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
+  //       if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
+  //         CurrentTab->currentBuffer()->layout.event = NULL;
+  //         _currentKey = -1;
+  //         CurrentKeyData = NULL;
+  //         CurrentCmdData = (char *)CurrentAlarm->data;
+  //         w3mFuncList[CurrentAlarm->cmd].func();
+  //         CurrentCmdData = NULL;
+  //         continue;
+  //       }
+  //     } else
+  //       CurrentTab->currentBuffer()->layout.event = NULL;
+  //   }
+  //   if (!CurrentTab->currentBuffer()->layout.event)
+  //     CurrentAlarm = &DefaultAlarm;
+  //   if (CurrentAlarm->sec > 0) {
+  //     mySignal(SIGALRM, ::SigAlarm);
+  //     alarm(CurrentAlarm->sec);
+  //   }
+  //   mySignal(SIGWINCH, resize_hook);
+  //   {
+  //     do {
+  //       if (need_resize_screen)
+  //         resize_screen();
+  //     } while (sleep_till_anykey(1, 0) <= 0);
+  //   }
+  //   auto c = getch();
+  //   if (CurrentAlarm->sec > 0) {
+  //     alarm(0);
+  //   }
+  //   if (IS_ASCII(c)) { /* Ascii */
+  //     if (('0' <= c) && (c <= '9') &&
+  //         (prec_num || (GlobalKeymap[(int)c] == FUNCNAME_nulcmd))) {
+  //       prec_num = prec_num * 10 + (int)(c - '0');
+  //       if (prec_num > PREC_LIMIT)
+  //         prec_num = PREC_LIMIT;
+  //     } else {
+  //       set_buffer_environ(CurrentTab->currentBuffer());
+  //       save_buffer_position(&CurrentTab->currentBuffer()->layout);
+  //       // keyPressEventProc((int)c);
+  //       _currentKey = c;
+  //       w3mFuncList[(int)GlobalKeymap[(int)c]].func();
+  //       prec_num = 0;
+  //     }
+  //   }
+  //   prev_key = _currentKey;
+  //   _currentKey = -1;
+  //   CurrentKeyData = NULL;
+  // }
 
   return 0;
 }
@@ -563,4 +594,29 @@ void App::cmd() {
     CurrentCmdData = nullptr;
   }
   displayBuffer(B_NORMAL);
+}
+
+void App::dispatch(const char *buf, size_t len) {
+  if (len == 0) {
+    return;
+  }
+  auto c = buf[0];
+  if (IS_ASCII(c)) { /* Ascii */
+    if (('0' <= c) && (c <= '9') &&
+        (prec_num || (GlobalKeymap[(int)c] == FUNCNAME_nulcmd))) {
+      prec_num = prec_num * 10 + (int)(c - '0');
+      if (prec_num > PREC_LIMIT)
+        prec_num = PREC_LIMIT;
+    } else {
+      set_buffer_environ(CurrentTab->currentBuffer());
+      save_buffer_position(&CurrentTab->currentBuffer()->layout);
+      // keyPressEventProc((int)c);
+      _currentKey = c;
+      w3mFuncList[(int)GlobalKeymap[(int)c]].func();
+      prec_num = 0;
+    }
+  }
+  prev_key = _currentKey;
+  _currentKey = -1;
+  CurrentKeyData = NULL;
 }

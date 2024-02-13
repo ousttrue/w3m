@@ -61,4 +61,5 @@ public:
   void SigAlarm();
   std::string currentUrl() const;
   void cmd();
+  void dispatch(const char *buf, size_t len);
 };
