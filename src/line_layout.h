@@ -73,6 +73,7 @@ struct LineLayout {
   void cursorXY(int x, int y);
   void restorePosition(const LineLayout &orig);
   void gotoRealLine(int n);
+  void nscroll(int n);
 
   //
   // viewport

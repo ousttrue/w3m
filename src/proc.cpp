@@ -49,55 +49,53 @@ void nulcmd() { /* do nothing */
 // NEXT_PAGE
 //"Scroll down one page"
 void pgFore() {
-  if (vi_prec_num)
-    nscroll(App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
-            B_NORMAL);
-  else
-    nscroll(prec_num ? App::instance().searchKeyNum()
-                     : App::instance().searchKeyNum() *
-                           (CurrentTab->currentBuffer()->layout.LINES - 1),
-            prec_num ? B_SCROLL : B_NORMAL);
+  CurrentTab->currentBuffer()->layout.nscroll(
+      prec_num ? App::instance().searchKeyNum()
+               : App::instance().searchKeyNum() *
+                     (CurrentTab->currentBuffer()->layout.LINES - 1));
 }
 
 /* Move page backward */
 // PREV_PAGE
 //"Scroll up one page"
 void pgBack() {
-  if (vi_prec_num)
-    nscroll(-App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES - 1),
-            B_NORMAL);
-  else
-    nscroll(-(prec_num ? App::instance().searchKeyNum()
-                       : App::instance().searchKeyNum() *
-                             (CurrentTab->currentBuffer()->layout.LINES - 1)),
-            prec_num ? B_SCROLL : B_NORMAL);
+  CurrentTab->currentBuffer()->layout.nscroll(
+      -(prec_num ? App::instance().searchKeyNum()
+                 : App::instance().searchKeyNum() *
+                       (CurrentTab->currentBuffer()->layout.LINES - 1)));
 }
 
 /* Move half page forward */
 // NEXT_HALF_PAGE
 //"Scroll down half a page"
 void hpgFore() {
-  nscroll(App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1),
-          B_NORMAL);
+  CurrentTab->currentBuffer()->layout.nscroll(
+      App::instance().searchKeyNum() *
+      (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
 }
 
 /* Move half page backward */
 // PREV_HALF_PAGE
 //"Scroll up half a page"
 void hpgBack() {
-  nscroll(-App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.LINES / 2 - 1),
-          B_NORMAL);
+  CurrentTab->currentBuffer()->layout.nscroll(
+      -App::instance().searchKeyNum() *
+      (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
 }
 
 /* 1 line up */
 // UP
 //"Scroll the screen up one line"
-void lup1() { nscroll(App::instance().searchKeyNum(), B_SCROLL); }
+void lup1() {
+  CurrentTab->currentBuffer()->layout.nscroll(App::instance().searchKeyNum());
+}
 
 /* 1 line down */
 // DOWN
 //"Scroll the screen down one line"
-void ldown1() { nscroll(-App::instance().searchKeyNum(), B_SCROLL); }
+void ldown1() {
+  CurrentTab->currentBuffer()->layout.nscroll(-App::instance().searchKeyNum());
+}
 
 /* move cursor position to the center of screen */
 // CENTER_V
@@ -177,7 +175,9 @@ void shiftl() {
     return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
-      App::instance().searchKeyNum() * (-CurrentTab->currentBuffer()->layout.COLS + 1) + 1);
+      App::instance().searchKeyNum() *
+          (-CurrentTab->currentBuffer()->layout.COLS + 1) +
+      1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
   displayBuffer(B_NORMAL);
@@ -191,7 +191,9 @@ void shiftr() {
     return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
-      App::instance().searchKeyNum() * (CurrentTab->currentBuffer()->layout.COLS - 1) - 1);
+      App::instance().searchKeyNum() *
+          (CurrentTab->currentBuffer()->layout.COLS - 1) -
+      1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
   displayBuffer(B_NORMAL);
@@ -1508,9 +1510,7 @@ void dictwordat() {
 
 // COMMAND
 //"Invoke w3m function(s)"
-void execCmd() {
-  App::instance().cmd();
-}
+void execCmd() { App::instance().cmd(); }
 
 // ALARM
 //"Set alarm"

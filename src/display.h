@@ -19,4 +19,3 @@ void fmTerm(void);
 
 void addChar(char c, Lineprop mode);
 void addMChar(char *p, Lineprop mode, size_t len);
-void nscroll(int n, DisplayFlag mode);

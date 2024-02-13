@@ -24,7 +24,6 @@ extern std::list<std::string> fileToDelete;
 
 extern char *document_root;
 
-extern int vi_prec_num;
 extern int label_topline;
 extern int displayLineInfo;
 extern int show_srch_str;

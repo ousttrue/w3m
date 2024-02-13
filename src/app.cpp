@@ -449,10 +449,10 @@ int App::mainLoop() {
 }
 
 int App::searchKeyNum() {
-  auto d = searchKeyData();
   int n = 1;
-  if (d != nullptr)
+  if (auto d = searchKeyData()) {
     n = atoi(d);
+  }
   return n * PREC_NUM;
 }
 

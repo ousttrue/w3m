@@ -380,8 +380,6 @@ struct param_ptr params3[] = {
      CMT_EMACS_LIKE_LINEEDIT, NULL},
     {"space_autocomplete", P_INT, PI_ONOFF, (void *)&space_autocomplete,
      CMT_SPACE_AUTOCOMPLETE, NULL},
-    {"vi_prec_num", P_INT, PI_ONOFF, (void *)&vi_prec_num, CMT_VI_PREC_NUM,
-     NULL},
     {"mark_all_pages", P_INT, PI_ONOFF, (void *)&MarkAllPages,
      CMT_MARK_ALL_PAGES, NULL},
     {"wrap_search", P_INT, PI_ONOFF, (void *)&WrapDefault, CMT_WRAP, NULL},

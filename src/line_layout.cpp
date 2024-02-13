@@ -922,3 +922,59 @@ std::string LineLayout::getCurWord(int *spos, int *epos) const {
   return {p.data() + b, p.data() + e};
 }
 
+/*
+ * Command functions: These functions are called with a keystroke.
+ */
+void LineLayout::nscroll(int n) {
+  if (this->firstLine == nullptr) {
+    return;
+  }
+
+  auto top = this->topLine;
+  auto cur = this->currentLine;
+
+  auto lnum = cur->linenumber;
+  this->topLine = this->lineSkip(top, n, false);
+  if (this->topLine == top) {
+    lnum += n;
+    if (lnum < this->topLine->linenumber)
+      lnum = this->topLine->linenumber;
+    else if (lnum > this->lastLine->linenumber)
+      lnum = this->lastLine->linenumber;
+  } else {
+    auto tlnum = this->topLine->linenumber;
+    auto llnum = this->topLine->linenumber + this->LINES - 1;
+    int diff_n;
+    if (nextpage_topline)
+      diff_n = 0;
+    else
+      diff_n = n - (tlnum - top->linenumber);
+    if (lnum < tlnum)
+      lnum = tlnum + diff_n;
+    if (lnum > llnum)
+      lnum = llnum + diff_n;
+  }
+  this->gotoLine(lnum);
+  this->arrangeLine();
+  if (n > 0) {
+    if (this->currentLine->bpos &&
+        this->currentLine->bwidth >= this->currentColumn + this->visualpos)
+      this->cursorDown(1);
+    else {
+      while (this->currentLine->next && this->currentLine->next->bpos &&
+             this->currentLine->bwidth + this->currentLine->width() <
+                 this->currentColumn + this->visualpos)
+        this->cursorDown0(1);
+    }
+  } else {
+    if (this->currentLine->bwidth + this->currentLine->width() <
+        this->currentColumn + this->visualpos)
+      this->cursorUp(1);
+    else {
+      while (this->currentLine->prev && this->currentLine->bpos &&
+             this->currentLine->bwidth >= this->currentColumn + this->visualpos)
+        this->cursorUp0(1);
+    }
+  }
+  // displayBuffer(mode);
+}
