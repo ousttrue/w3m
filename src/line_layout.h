@@ -154,11 +154,6 @@ struct LineLayout {
   Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
   void addMultirowsForm(AnchorList *al);
   Anchor *searchURLLabel(const char *url);
-
-  //
-  // Event
-  //
-  struct AlarmEvent *event = nullptr;
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

@@ -184,19 +184,20 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
 
     } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
                url.schema == SCM_LOCAL_CGI) {
-      Str *funcname = Strnew();
-      int f;
 
       auto p = lineBuf2->ptr + 12;
       SKIP_BLANKS(p);
+      Str *funcname = Strnew();
       while (*p && !IS_SPACE(*p))
         Strcat_char(funcname, *(p++));
       SKIP_BLANKS(p);
-      f = getFuncList(funcname->ptr);
+
+      auto f = getFuncList(funcname->ptr);
       if (f >= 0) {
         tmp = Strnew_charp(p);
         Strchop(tmp);
-        pushEvent(f, tmp->ptr);
+        // TODO:
+        App::instance().task(0, f, tmp->ptr);
       }
     }
     pushText(document_header, lineBuf2->ptr);

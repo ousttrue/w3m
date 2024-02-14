@@ -210,25 +210,6 @@ bool App::initialize() {
   return true;
 }
 
-struct Event {
-  int cmd;
-  void *data;
-  Event *next;
-};
-static Event *CurrentEvent = NULL;
-static Event *LastEvent = NULL;
-void pushEvent(int cmd, void *data) {
-  auto event = (Event *)New(Event);
-  event->cmd = cmd;
-  event->data = data;
-  event->next = NULL;
-  if (CurrentEvent)
-    LastEvent->next = event;
-  else
-    CurrentEvent = event;
-  LastEvent = event;
-}
-
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   static std::shared_ptr<Buffer> prev_buf;
   static Line *prev_line = nullptr;
@@ -312,7 +293,7 @@ int App::mainLoop() {
                     }
                   } else if (nread > 0) {
                     // process key input
-                    App::instance().dispatch(buf->base, nread);
+                    App::instance().dispatchPtyIn(buf->base, nread);
                   }
 
                   // OK to free buffer as write_data copies it.
@@ -334,92 +315,8 @@ int App::mainLoop() {
   //
   uv_timer_init(uv_default_loop(), &g_timer);
   uv_timer_start(
-      &g_timer,
-      [](uv_timer_t *handle) {
-        App::instance().onFrame();
-        // if (g_pty) {
-        // auto interval = g_el.Timer();
-        // uv_timer_set_repeat(handle, interval);
-        // }
-      },
-      0, FRAME_INTERVAL_MS.count());
-
-  // for (;;) {
-  //   if (popAddDownloadList()) {
-  //     ldDL();
-  //   }
-  //   if (CurrentTab->currentBuffer()->layout.submit) {
-  //     Anchor *a = CurrentTab->currentBuffer()->layout.submit;
-  //     CurrentTab->currentBuffer()->layout.submit = NULL;
-  //     CurrentTab->currentBuffer()->layout.gotoLine(a->start.line);
-  //     CurrentTab->currentBuffer()->layout.pos = a->start.pos;
-  //     CurrentTab->_followForm(true);
-  //     continue;
-  //   }
-  //
-  //   // event processing
-  //   if (CurrentEvent) {
-  //     _currentKey = -1;
-  //     CurrentKeyData = NULL;
-  //     CurrentCmdData = (char *)CurrentEvent->data;
-  //     w3mFuncList[CurrentEvent->cmd].func();
-  //     CurrentCmdData = NULL;
-  //     CurrentEvent = CurrentEvent->next;
-  //     continue;
-  //   }
-  //
-  //   // get keypress event
-  //   if (CurrentTab->currentBuffer()->layout.event) {
-  //     if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET) {
-  //       CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
-  //       if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-  //         CurrentTab->currentBuffer()->layout.event = NULL;
-  //         _currentKey = -1;
-  //         CurrentKeyData = NULL;
-  //         CurrentCmdData = (char *)CurrentAlarm->data;
-  //         w3mFuncList[CurrentAlarm->cmd].func();
-  //         CurrentCmdData = NULL;
-  //         continue;
-  //       }
-  //     } else
-  //       CurrentTab->currentBuffer()->layout.event = NULL;
-  //   }
-  //   if (!CurrentTab->currentBuffer()->layout.event)
-  //     CurrentAlarm = &DefaultAlarm;
-  //   if (CurrentAlarm->sec > 0) {
-  //     mySignal(SIGALRM, ::SigAlarm);
-  //     alarm(CurrentAlarm->sec);
-  //   }
-  //   mySignal(SIGWINCH, resize_hook);
-  //   {
-  //     do {
-  //       if (need_resize_screen)
-  //         resize_screen();
-  //     } while (sleep_till_anykey(1, 0) <= 0);
-  //   }
-  //   auto c = getch();
-  //   if (CurrentAlarm->sec > 0) {
-  //     alarm(0);
-  //   }
-  //   if (IS_ASCII(c)) { /* Ascii */
-  //     if (('0' <= c) && (c <= '9') &&
-  //         (prec_num || (GlobalKeymap[(int)c] == FUNCNAME_nulcmd))) {
-  //       prec_num = prec_num * 10 + (int)(c - '0');
-  //       if (prec_num > PREC_LIMIT)
-  //         prec_num = PREC_LIMIT;
-  //     } else {
-  //       set_buffer_environ(CurrentTab->currentBuffer());
-  //       save_buffer_position(&CurrentTab->currentBuffer()->layout);
-  //       // keyPressEventProc((int)c);
-  //       _currentKey = c;
-  //       w3mFuncList[(int)GlobalKeymap[(int)c]].func();
-  //       prec_num = 0;
-  //     }
-  //   }
-  //   prev_key = _currentKey;
-  //   _currentKey = -1;
-  //   CurrentKeyData = NULL;
-  // }
+      &g_timer, [](uv_timer_t *handle) { App::instance().onFrame(); }, 0,
+      FRAME_INTERVAL_MS.count());
 
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
   uv_loop_close(uv_default_loop());
@@ -578,7 +475,7 @@ void App::doCmd(int cmd, const char *data) {
   CurrentCmdData = nullptr;
 }
 
-void App::dispatch(const char *buf, size_t len) {
+void App::dispatchPtyIn(const char *buf, size_t len) {
   if (len == 0) {
     return;
   }
@@ -592,7 +489,6 @@ void App::dispatch(const char *buf, size_t len) {
     } else {
       set_buffer_environ(CurrentTab->currentBuffer());
       save_buffer_position(&CurrentTab->currentBuffer()->layout);
-      // keyPressEventProc((int)c);
       _currentKey = c;
       w3mFuncList[(int)GlobalKeymap[(int)c]].func();
       prec_num = 0;
@@ -604,9 +500,18 @@ void App::dispatch(const char *buf, size_t len) {
 }
 
 void App::onFrame() {
-  // event
-  // task
-  // display
+  if (popAddDownloadList()) {
+    ldDL();
+  }
+
+  if (CurrentTab->currentBuffer()->layout.submit) {
+    Anchor *a = CurrentTab->currentBuffer()->layout.submit;
+    CurrentTab->currentBuffer()->layout.submit = NULL;
+    CurrentTab->currentBuffer()->layout.gotoLine(a->start.line);
+    CurrentTab->currentBuffer()->layout.pos = a->start.pos;
+    CurrentTab->_followForm(true);
+    return;
+  }
 }
 
 struct TimerTask {
