@@ -1,6 +1,6 @@
 #include "htmltag.h"
+#include "readbuffer.h"
 #include "quote.h"
-#include "anchor.h"
 #include "htmlcommand.h"
 #include "myctype.h"
 #include "Str.h"

@@ -234,3 +234,8 @@ void loadBuffer(HttpResponse *res, LineLayout *layout);
 struct Buffer;
 std::shared_ptr<Buffer> loadHTMLString(Str *page);
 std::shared_ptr<Buffer> getshell(const char *cmd);
+
+const char *html_quote(const char *str);
+const char *html_unquote(const char *str);
+int getescapechar(const char **s);
+const char *getescapecmd(const char **s);

@@ -1,10 +1,9 @@
 #include "anchor.h"
+#include "readbuffer.h"
 #include "line_layout.h"
 #include "Str.h"
-#include "url_quote.h"
 #include "quote.h"
 #include "entity.h"
-#include "terms.h"
 #include "http_request.h"
 #include "myctype.h"
 #include "regex.h"
@@ -276,4 +275,40 @@ void AnchorList::reseq_anchor0(short *seqmap) {
       a->hseq = seqmap[a->hseq];
     }
   }
+}
+
+Anchor *AnchorList::putAnchor(const char *url, const char *target,
+                              const char *referer, const char *title,
+                              unsigned char key, int line, int pos) {
+  BufferPoint bp = {0};
+  bp.line = line;
+  bp.pos = pos;
+
+  size_t n = this->size();
+  size_t i;
+  if (!n || bpcmp(this->anchors[n - 1].start, bp) < 0) {
+    i = n;
+  } else {
+    for (i = 0; i < n; i++) {
+      if (bpcmp(this->anchors[i].start, bp) >= 0) {
+        for (size_t j = n; j > i; j--)
+          this->anchors[j] = this->anchors[j - 1];
+        break;
+      }
+    }
+  }
+
+  while (i >= this->anchors.size()) {
+    this->anchors.push_back({});
+  }
+  auto a = &this->anchors[i];
+  a->url = url;
+  a->target = target;
+  a->referer = referer;
+  a->title = title;
+  a->accesskey = key;
+  a->slave = false;
+  a->start = bp;
+  a->end = bp;
+  return a;
 }

@@ -3864,8 +3864,8 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href =
-                layout->registerHref(p, q, r, s, *t, layout->currentLn(), pos);
+            a_href = layout->href()->putAnchor(p, q, r, s, *t,
+                                               layout->currentLn(), pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;
           }
@@ -3934,7 +3934,7 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (h < layout->hmarklist()->size() &&
+            if (h < (int)layout->hmarklist()->size() &&
                 layout->hmarklist()->marks[h].invalid) {
               layout->hmarklist()->marks[h].pos = hpos;
               layout->hmarklist()->marks[h].line = layout->currentLn();

@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "anchor.h"
 #include "url.h"
 #include <string>
 #include <optional>
@@ -156,10 +157,12 @@ public:
   struct FormItemList *form_submit = nullptr;
   struct Anchor *submit = nullptr;
 
-  Anchor *registerHref(const char *url, const char *target, const char *referer,
-                       const char *title, unsigned char key, int line, int pos);
-  Anchor *registerName(const char *url, int line, int pos);
-  Anchor *registerImg(const char *url, const char *title, int line, int pos);
+  Anchor *registerName(const char *url, int line, int pos) {
+    return this->name()->putAnchor(url, NULL, NULL, NULL, '\0', line, pos);
+  }
+  Anchor *registerImg(const char *url, const char *title, int line, int pos) {
+    return this->img()->putAnchor(url, NULL, NULL, title, '\0', line, pos);
+  }
   Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
   void addMultirowsForm(AnchorList *al);
   void reseq_anchor();

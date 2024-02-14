@@ -417,68 +417,14 @@ void LineLayout::gotoRealLine(int n) {
   }
 }
 
-static Anchor *putAnchor(const std::shared_ptr<AnchorList> &al, const char *url,
-                         const char *target, const char *referer,
-                         const char *title, unsigned char key, int line,
-                         int pos) {
-  BufferPoint bp = {0};
-  bp.line = line;
-  bp.pos = pos;
-
-  size_t n = al->size();
-  size_t i;
-  if (!n || bpcmp(al->anchors[n - 1].start, bp) < 0) {
-    i = n;
-  } else {
-    for (i = 0; i < n; i++) {
-      if (bpcmp(al->anchors[i].start, bp) >= 0) {
-        for (size_t j = n; j > i; j--)
-          al->anchors[j] = al->anchors[j - 1];
-        break;
-      }
-    }
-  }
-
-  while (i >= al->anchors.size()) {
-    al->anchors.push_back({});
-  }
-  auto a = &al->anchors[i];
-  a->url = url;
-  a->target = target;
-  a->referer = referer;
-  a->title = title;
-  a->accesskey = key;
-  a->slave = false;
-  a->start = bp;
-  a->end = bp;
-  return a;
-}
-
-Anchor *LineLayout::registerHref(const char *url, const char *target,
-                                 const char *referer, const char *title,
-                                 unsigned char key, int line, int pos) {
-  return putAnchor(this->href(), url, target, referer, title, key, line, pos);
-}
-
-Anchor *LineLayout::registerName(const char *url, int line, int pos) {
-  return putAnchor(this->name(), url, NULL, NULL, NULL, '\0', line, pos);
-}
-
-Anchor *LineLayout::registerImg(const char *url, const char *title, int line,
-                                int pos) {
-  return putAnchor(this->img(), url, NULL, NULL, title, '\0', line, pos);
-}
-
 Anchor *LineLayout::registerForm(FormList *flist, HtmlTag *tag, int line,
                                  int pos) {
-
   auto fi = formList_addInput(flist, tag);
   if (!fi) {
     return NULL;
   }
-
-  return putAnchor(this->formitem(), (const char *)fi, flist->target, NULL,
-                   NULL, '\0', line, pos);
+  return this->formitem()->putAnchor((const char *)fi, flist->target, NULL,
+                                     NULL, '\0', line, pos);
 }
 
 void LineLayout::addMultirowsForm(AnchorList *al) {
@@ -520,8 +466,8 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      a = putAnchor(this->formitem(), a_form.url, a_form.target, NULL, NULL,
-                    '\0', l->linenumber, pos);
+      a = this->formitem()->putAnchor(a_form.url, a_form.target, NULL, NULL,
+                                      '\0', l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -1117,8 +1063,8 @@ const char *LineLayout::reAnchorAny(
 static Anchor *_put_anchor_all(LineLayout *layout, const char *p1,
                                const char *p2, int line, int pos) {
   auto tmp = Strnew_charp_n(p1, p2 - p1);
-  return layout->registerHref(url_quote(tmp->ptr).c_str(), NULL, NO_REFERER,
-                              NULL, '\0', line, pos);
+  return layout->href()->putAnchor(url_quote(tmp->ptr).c_str(), NULL,
+                                   NO_REFERER, NULL, '\0', line, pos);
 }
 
 const char *LineLayout::reAnchor(const char *re) {

@@ -54,12 +54,9 @@ struct AnchorList {
   Anchor *closest_prev_anchor(Anchor *an, int x, int y);
   void shiftAnchorPosition(HmarkerList *hl, int line, int pos, int shift);
   void reseq_anchor0(short *seqmap);
+  Anchor *putAnchor(const char *url, const char *target, const char *referer,
+                    const char *title, unsigned char key, int line, int pos);
 
 private:
   int acache = -1;
 };
-
-const char *html_quote(const char *str);
-const char *html_unquote(const char *str);
-int getescapechar(const char **s);
-const char *getescapecmd(const char **s);
