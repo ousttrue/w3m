@@ -16,6 +16,7 @@ struct LineLayout {
   std::string title;
   // always reshape new buffers to mark URLs
   bool need_reshape = true;
+  int refresh_interval = 0;
 
   //
   // lines

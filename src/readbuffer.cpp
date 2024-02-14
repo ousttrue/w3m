@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "app.h"
 #include "buffer.h"
 #include "line_layout.h"
 #include "url_quote.h"
@@ -23,7 +24,6 @@
 #include "htmltag.h"
 #include "proto.h"
 #include "alloc.h"
-#include "alarm.h"
 #include "funcname1.h"
 #include "entity.h"
 #include "tmpfile.h"
@@ -4039,12 +4039,10 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             int refresh_interval = getMetaRefreshParam(q, &tmp);
             if (tmp) {
               p = Strnew(url_quote(remove_space(tmp->ptr)))->ptr;
-              layout->event =
-                  setAlarmEvent(layout->event, refresh_interval,
-                                AL_IMPLICIT_ONCE, FUNCNAME_gorURL, (void *)p);
-            } else if (refresh_interval > 0)
-              layout->event = setAlarmEvent(layout->event, refresh_interval,
-                                            AL_IMPLICIT, FUNCNAME_reload, NULL);
+              App::instance().task(refresh_interval, FUNCNAME_gorURL, p);
+            } else if (refresh_interval > 0) {
+              layout->refresh_interval = refresh_interval;
+            }
           }
           break;
         case HTML_INTERNAL:

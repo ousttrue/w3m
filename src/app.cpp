@@ -11,7 +11,6 @@
 #include "anchor.h"
 #include "myctype.h"
 #include "func.h"
-#include "alarm.h"
 #include "funcname1.h"
 // #include "signal_util.h"
 #include "terms.h"
@@ -27,6 +26,9 @@
 #include <iostream>
 #include <sstream>
 #include <uv.h>
+#include <chrono>
+
+const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
 
 // HOST_NAME_MAX is recommended by POSIX, but not required.
 // FreeBSD and OSX (as of 10.9) are known to not define it.
@@ -227,38 +229,6 @@ void pushEvent(int cmd, void *data) {
   LastEvent = event;
 }
 
-AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
-static AlarmEvent *CurrentAlarm = &DefaultAlarm;
-
-// static void SigAlarm(SIGNAL_ARG) { App::instance().SigAlarm(); }
-
-void App::SigAlarm() {
-  // if (CurrentAlarm->sec > 0) {
-  //   _currentKey = -1;
-  //   CurrentKeyData = NULL;
-  //   CurrentCmdData = (char *)CurrentAlarm->data;
-  //   w3mFuncList[CurrentAlarm->cmd].func();
-  //   CurrentCmdData = NULL;
-  //   if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-  //     CurrentAlarm->sec = 0;
-  //     CurrentAlarm->status = AL_UNSET;
-  //   }
-  //   if (CurrentTab->currentBuffer()->layout.event) {
-  //     if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET)
-  //       CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
-  //     else
-  //       CurrentTab->currentBuffer()->layout.event = NULL;
-  //   }
-  //   if (!CurrentTab->currentBuffer()->layout.event)
-  //     CurrentAlarm = &DefaultAlarm;
-  //   if (CurrentAlarm->sec > 0) {
-  //     mySignal(SIGALRM, ::SigAlarm);
-  //     alarm(CurrentAlarm->sec);
-  //   }
-  // }
-  // SIGNAL_RETURN;
-}
-
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   static std::shared_ptr<Buffer> prev_buf;
   static Line *prev_line = nullptr;
@@ -322,6 +292,7 @@ static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
 
 uv_tty_t g_tty_in;
 uv_signal_t g_signal_resize;
+uv_timer_t g_timer;
 
 int App::mainLoop() {
   fmInit();
@@ -349,8 +320,6 @@ int App::mainLoop() {
                     free(buf->base);
                   }
                 });
-  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-  uv_loop_close(uv_default_loop());
 
   //
   // SIGWINCH
@@ -360,9 +329,20 @@ int App::mainLoop() {
       &g_signal_resize, [](uv_signal_t *handle, int signum) { setResize(); },
       SIGWINCH);
 
-  // mySignal(SIGWINCH, resize_hook);
-  // mySignal(SIGCHLD, sig_chld);
-  // mySignal(SIGPIPE, SigPipe);
+  //
+  // timer
+  //
+  uv_timer_init(uv_default_loop(), &g_timer);
+  uv_timer_start(
+      &g_timer,
+      [](uv_timer_t *handle) {
+        App::instance().onFrame();
+        // if (g_pty) {
+        // auto interval = g_el.Timer();
+        // uv_timer_set_repeat(handle, interval);
+        // }
+      },
+      0, FRAME_INTERVAL_MS.count());
 
   // for (;;) {
   //   if (popAddDownloadList()) {
@@ -441,6 +421,8 @@ int App::mainLoop() {
   //   CurrentKeyData = NULL;
   // }
 
+  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+  uv_loop_close(uv_default_loop());
   return 0;
 }
 
@@ -561,7 +543,7 @@ std::string App::currentUrl() const {
   return &s->ptr[offset];
 }
 
-void App::cmd() {
+void App::doCmd() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto data = searchKeyData();
   if (data == nullptr || *data == '\0') {
@@ -583,13 +565,17 @@ void App::cmd() {
     if (cmd < 0)
       break;
     p = getQWord(&data);
-    _currentKey = -1;
-    CurrentKeyData = nullptr;
-    CurrentCmdData = *p ? p : nullptr;
-    w3mFuncList[cmd].func();
-    CurrentCmdData = nullptr;
+    doCmd(cmd, p);
   }
   displayBuffer();
+}
+
+void App::doCmd(int cmd, const char *data) {
+  _currentKey = -1;
+  CurrentKeyData = nullptr;
+  CurrentCmdData = *data ? data : nullptr;
+  w3mFuncList[cmd].func();
+  CurrentCmdData = nullptr;
 }
 
 void App::dispatch(const char *buf, size_t len) {
@@ -615,4 +601,58 @@ void App::dispatch(const char *buf, size_t len) {
   prev_key = _currentKey;
   _currentKey = -1;
   CurrentKeyData = NULL;
+}
+
+void App::onFrame() {
+  // event
+  // task
+  // display
+}
+
+struct TimerTask {
+  int cmd;
+  std::string data;
+  uv_timer_t handle;
+};
+std::list<std::shared_ptr<TimerTask>> g_timers;
+
+void App::task(int sec, int cmd, const char *data, bool repeat) {
+  if (cmd >= 0) {
+    auto t = std::make_shared<TimerTask>();
+    t->cmd = cmd;
+    t->data = data ? data : "";
+    t->handle.data = t.get();
+    g_timers.push_back(t);
+
+    uv_timer_init(uv_default_loop(), &t->handle);
+    if (repeat) {
+      uv_timer_start(
+          &t->handle,
+          [](uv_timer_t *handle) {
+            auto _t = (TimerTask *)handle->data;
+            App::instance().doCmd(_t->cmd, _t->data.c_str());
+          },
+          0, sec * 1000);
+    } else {
+      uv_timer_start(
+          &t->handle,
+          [](uv_timer_t *handle) {
+            auto _t = (TimerTask *)handle->data;
+            App::instance().doCmd(_t->cmd, _t->data.c_str());
+            for (auto it = g_timers.begin(); it != g_timers.end(); ++it) {
+              if (it->get() == _t) {
+                g_timers.erase(it);
+                break;
+              }
+            }
+          },
+          sec * 1000, 0);
+    }
+    disp_message_nsec(
+        Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, false, 1,
+        false, true);
+  } else {
+    // cancel timer
+    g_timers.clear();
+  }
 }

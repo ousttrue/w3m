@@ -7,7 +7,6 @@
 #include "bufferpos.h"
 #include "mimetypes.h"
 #include "funcname1.h"
-#include "alarm.h"
 #include "downloadlist.h"
 #include "url_stream.h"
 #include "linein.h"
@@ -1510,16 +1509,13 @@ void dictwordat() {
 
 // COMMAND
 //"Invoke w3m function(s)"
-void execCmd() { App::instance().cmd(); }
+void execCmd() { App::instance().doCmd(); }
 
 // ALARM
 //"Set alarm"
 void setAlarm() {
-  const char *data;
-  int sec = 0, cmd = -1;
-
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  data = App::instance().searchKeyData();
+  auto data = App::instance().searchKeyData();
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
@@ -1527,21 +1523,18 @@ void setAlarm() {
       return;
     }
   }
+
+  int cmd = -1;
+  int sec = 0;
   if (*data != '\0') {
     sec = atoi(getWord(&data));
     if (sec > 0)
       cmd = getFuncList(getWord(&data));
   }
-  if (cmd >= 0) {
-    data = getQWord(&data);
-    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, (void *)data);
-    disp_message_nsec(
-        Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, false, 1,
-        false, true);
-  } else {
-    setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, nullptr);
-  }
-  displayBuffer();
+
+  data = getQWord(&data);
+
+  App::instance().task(sec, cmd, data);
 }
 
 // REINIT
@@ -1706,7 +1699,6 @@ void tabL() {
 //"Display downloads panel"
 void ldDL() {
   int replace = false, new_tab = false;
-  int reload;
 
   if (!FirstDL) {
     if (replace) {
@@ -1720,7 +1712,8 @@ void ldDL() {
     }
     return;
   }
-  reload = checkDownloadList();
+
+  auto reload = checkDownloadList();
   auto buf = DownloadListBuffer();
   if (!buf) {
     displayBuffer();
@@ -1737,10 +1730,12 @@ void ldDL() {
   CurrentTab->pushBuffer(buf);
   if (replace || new_tab)
     deletePrevBuf();
-  if (reload)
-    CurrentTab->currentBuffer()->layout.event =
-        setAlarmEvent(CurrentTab->currentBuffer()->layout.event, 1, AL_IMPLICIT,
-                      FUNCNAME_reload, nullptr);
+  if (reload) {
+    // CurrentTab->currentBuffer()->layout.event =
+    //     setAlarmEvent(CurrentTab->currentBuffer()->layout.event, 1,
+    //     AL_IMPLICIT,
+    //                   FUNCNAME_reload, nullptr);
+  }
   displayBuffer();
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <functional>
+#include <queue>
 
 extern int prev_key;
 extern const char *CurrentKeyData;
@@ -56,8 +58,10 @@ public:
   const char *searchKeyData();
   int searchKeyNum();
   void _peekURL(bool only_img);
-  void SigAlarm();
   std::string currentUrl() const;
-  void cmd();
+  void doCmd();
+  void doCmd(int cmd, const char *data);
   void dispatch(const char *buf, size_t len);
+  void onFrame();
+  void task(int sec, int cmd, const char *data = nullptr, bool releat = false);
 };
