@@ -668,11 +668,6 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
 }
 
 void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
-  auto tmp = Strnew();
-  auto multipart = (fi->parent->method == FORM_METHOD_POST &&
-                    fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-  query_from_followform(&tmp, fi, multipart);
-
   auto tmp2 = fi->parent->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
@@ -683,6 +678,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
   }
 
   if (fi->parent->method == FORM_METHOD_GET) {
+    auto tmp = fi->query_from_followform();
     char *p;
     if ((p = strchr(tmp2->ptr, '?')) != nullptr)
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -690,16 +686,18 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
     Strcat(tmp2, tmp);
     this->loadLink(tmp2->ptr, a->target, nullptr, nullptr);
   } else if (fi->parent->method == FORM_METHOD_POST) {
-    if (multipart) {
+    if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
+      fi->query_from_followform_multipart();
       struct stat st;
       stat(fi->parent->body, &st);
       fi->parent->length = st.st_size;
     } else {
+      auto tmp = fi->query_from_followform();
       fi->parent->body = tmp->ptr;
       fi->parent->length = tmp->length;
     }
     auto buf = this->loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
-    if (multipart) {
+    if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
       unlink(fi->parent->body);
     }
     if (buf &&
@@ -713,6 +711,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
   } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
               (!Strcmp_charp(fi->parent->action, "map") ||
                !Strcmp_charp(fi->parent->action, "none")))) { /* internal */
+    auto tmp = fi->query_from_followform();
     do_internal(tmp2->ptr, tmp->ptr);
   } else {
     disp_err_message("Can't send form because of illegal method.", false);

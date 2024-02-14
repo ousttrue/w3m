@@ -1328,9 +1328,6 @@ void vwSrc() {
 // RELOAD
 //"Load current document anew"
 void reload() {
-  Str *url;
-  FormList *request;
-  int multipart;
 
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
@@ -1338,26 +1335,28 @@ void reload() {
     disp_err_message("Can't reload stdin", true);
     return;
   }
+
   auto sbuf = Buffer::create(0);
   *sbuf = *CurrentTab->currentBuffer();
 
-  multipart = 0;
+  bool multipart = false;
+  FormList *request;
   if (CurrentTab->currentBuffer()->layout.form_submit) {
     request = CurrentTab->currentBuffer()->layout.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
-      Str *query;
+      multipart = true;
+      CurrentTab->currentBuffer()
+          ->layout.form_submit->query_from_followform_multipart();
       struct stat st;
-      multipart = 1;
-      query_from_followform(
-          &query, CurrentTab->currentBuffer()->layout.form_submit, multipart);
       stat(request->body, &st);
       request->length = st.st_size;
     }
   } else {
     request = nullptr;
   }
-  url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
+
+  auto url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
   message("Reloading...", 0, 0);
   refresh(term_io());
   DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
@@ -1366,8 +1365,9 @@ void reload() {
       url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
   DefaultType = nullptr;
 
-  if (multipart)
+  if (multipart) {
     unlink(request->body);
+  }
   if (!res) {
     disp_err_message("Can't reload...", true);
     return;

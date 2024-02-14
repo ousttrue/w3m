@@ -65,6 +65,9 @@ struct FormItemList {
   int readonly;
   FormList *parent;
   FormItemList *next;
+
+  Str *query_from_followform();
+  void query_from_followform_multipart();
 };
 
 FormList *newFormList(const char *action, const char *method,
@@ -91,4 +94,3 @@ void form_write_data(FILE *f, char *boundary, char *name, char *value);
 void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
                           char *file);
 void loadPreForm(void);
-void query_from_followform(Str **query, FormItemList *fi, int multipart);
