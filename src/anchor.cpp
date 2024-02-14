@@ -87,162 +87,6 @@ Anchor *AnchorList::searchAnchor(std::string_view str) {
   return {};
 }
 
-static Anchor *_put_anchor_all(LineLayout *layout, const char *p1,
-                               const char *p2, int line, int pos) {
-  auto tmp = Strnew_charp_n(p1, p2 - p1);
-  return layout->registerHref(url_quote(tmp->ptr).c_str(), NULL, NO_REFERER,
-                              NULL, '\0', line, pos);
-}
-
-static void reseq_anchor0(AnchorList *al, short *seqmap) {
-  if (!al)
-    return;
-
-  for (size_t i = 0; i < al->size(); i++) {
-    auto a = &al->anchors[i];
-    if (a->hseq >= 0) {
-      a->hseq = seqmap[a->hseq];
-    }
-  }
-}
-
-/* renumber anchor */
-static void reseq_anchor(LineLayout *layout) {
-  if (!layout->href())
-    return;
-
-  int nmark = layout->hmarklist()->size();
-  int n = nmark;
-  for (size_t i = 0; i < layout->href()->size(); i++) {
-    auto a = &layout->href()->anchors[i];
-    if (a->hseq == -2) {
-      n++;
-    }
-  }
-  if (n == nmark) {
-    return;
-  }
-
-  auto seqmap = std::vector<short>(n);
-  for (int i = 0; i < n; i++) {
-    seqmap[i] = i;
-  }
-
-  n = nmark;
-  for (size_t i = 0; i < layout->href()->size(); i++) {
-    auto a = &layout->href()->anchors[i];
-    if (a->hseq == -2) {
-      a->hseq = n;
-      auto a1 = layout->href()->closest_next_anchor(NULL, a->start.pos,
-                                                    a->start.line);
-      a1 = layout->formitem()->closest_next_anchor(a1, a->start.pos,
-                                                   a->start.line);
-      if (a1 && a1->hseq >= 0) {
-        seqmap[n] = seqmap[a1->hseq];
-        for (int j = a1->hseq; j < nmark; j++) {
-          seqmap[j]++;
-        }
-      }
-      layout->hmarklist()->putHmarker(a->start.line, a->start.pos, seqmap[n]);
-      n++;
-    }
-  }
-
-  for (int i = 0; i < nmark; i++) {
-    layout->hmarklist()->putHmarker(layout->hmarklist()->marks[i].line,
-                                    layout->hmarklist()->marks[i].pos,
-                                    seqmap[i]);
-  }
-
-  reseq_anchor0(layout->href().get(), seqmap.data());
-  reseq_anchor0(layout->formitem().get(), seqmap.data());
-}
-
-static const char *reAnchorPos(LineLayout *layout, Line *l, const char *p1,
-                               const char *p2,
-                               Anchor *(*anchorproc)(LineLayout *, const char *,
-                                                     const char *, int, int)) {
-  Anchor *a;
-  int spos, epos;
-  int i;
-  int hseq = -2;
-
-  spos = p1 - l->lineBuf.data();
-  epos = p2 - l->lineBuf.data();
-  for (i = spos; i < epos; i++) {
-    if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
-      return p2;
-  }
-  for (i = spos; i < epos; i++)
-    l->propBuf[i] |= PE_ANCHOR;
-  while (spos > l->len && l->next && l->next->bpos) {
-    spos -= l->len;
-    epos -= l->len;
-    l = l->next;
-  }
-  while (1) {
-    a = anchorproc(layout, p1, p2, l->linenumber, spos);
-    a->hseq = hseq;
-    if (hseq == -2) {
-      reseq_anchor(layout);
-      hseq = a->hseq;
-    }
-    a->end.line = l->linenumber;
-    if (epos > l->len && l->next && l->next->bpos) {
-      a->end.pos = l->len;
-      spos = 0;
-      epos -= l->len;
-      l = l->next;
-    } else {
-      a->end.pos = epos;
-      break;
-    }
-  }
-  return p2;
-}
-
-void reAnchorWord(LineLayout *layout, Line *l, int spos, int epos) {
-  reAnchorPos(layout, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
-}
-
-/* search regexp and register them as anchors */
-/* returns error message if any               */
-static const char *reAnchorAny(LineLayout *layout, const char *re,
-                               Anchor *(*anchorproc)(LineLayout *, const char *,
-                                                     const char *, int, int)) {
-  Line *l;
-  const char *p = NULL, *p1, *p2;
-
-  if (re == NULL || *re == '\0') {
-    return NULL;
-  }
-  if ((re = regexCompile(re, 1)) != NULL) {
-    return re;
-  }
-  for (l = MarkAllPages ? layout->firstLine : layout->topLine;
-       l != NULL &&
-       (MarkAllPages || l->linenumber < layout->topLine->linenumber + LASTLINE);
-       l = l->next) {
-    if (p && l->bpos) {
-      continue;
-    }
-    p = l->lineBuf.data();
-    for (;;) {
-      if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) ==
-          1) {
-        matchedPosition(&p1, &p2);
-        p = reAnchorPos(layout, l, p1, p2, anchorproc);
-      } else
-        break;
-    }
-  }
-  return NULL;
-}
-
-const char *reAnchor(LineLayout *layout, const char *re) {
-  return reAnchorAny(layout, re, _put_anchor_all);
-}
-
 #define FIRST_MARKER_SIZE 30
 void HmarkerList::putHmarker(int line, int pos, int seq) {
   // if (seq + 1 > ml->nmark)
@@ -477,4 +321,13 @@ int getescapechar(const char **str) {
   }
   *str = p;
   return getHash_si(&entity, q, -1);
+}
+
+void AnchorList::reseq_anchor0(short *seqmap) {
+  for (size_t i = 0; i < this->size(); i++) {
+    auto a = &this->anchors[i];
+    if (a->hseq >= 0) {
+      a->hseq = seqmap[a->hseq];
+    }
+  }
 }

@@ -1,4 +1,6 @@
 #include "line_layout.h"
+#include "http_request.h"
+#include "url_quote.h"
 #include "myctype.h"
 #include "history.h"
 #include "url.h"
@@ -7,6 +9,7 @@
 #include "terms.h"
 #include "anchor.h"
 #include "form.h"
+#include "regex.h"
 
 int nextpage_topline = false;
 
@@ -739,7 +742,7 @@ void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
     if (an && an->hseq >= 0) {
       int hseq = an->hseq + 1;
       do {
-        if (hseq >= hl->size()) {
+        if (hseq >= (int)hl->size()) {
           if (visited == true)
             return;
           an = pan;
@@ -979,4 +982,144 @@ void LineLayout::nscroll(int n) {
     }
   }
   // displayBuffer(mode);
+}
+
+/* renumber anchor */
+void LineLayout::reseq_anchor() {
+  int nmark = this->hmarklist()->size();
+  int n = nmark;
+  for (size_t i = 0; i < this->href()->size(); i++) {
+    auto a = &this->href()->anchors[i];
+    if (a->hseq == -2) {
+      n++;
+    }
+  }
+  if (n == nmark) {
+    return;
+  }
+
+  auto seqmap = std::vector<short>(n);
+  for (int i = 0; i < n; i++) {
+    seqmap[i] = i;
+  }
+
+  n = nmark;
+  for (size_t i = 0; i < this->href()->size(); i++) {
+    auto a = &this->href()->anchors[i];
+    if (a->hseq == -2) {
+      a->hseq = n;
+      auto a1 =
+          this->href()->closest_next_anchor(NULL, a->start.pos, a->start.line);
+      a1 = this->formitem()->closest_next_anchor(a1, a->start.pos,
+                                                 a->start.line);
+      if (a1 && a1->hseq >= 0) {
+        seqmap[n] = seqmap[a1->hseq];
+        for (int j = a1->hseq; j < nmark; j++) {
+          seqmap[j]++;
+        }
+      }
+      this->hmarklist()->putHmarker(a->start.line, a->start.pos, seqmap[n]);
+      n++;
+    }
+  }
+
+  for (int i = 0; i < nmark; i++) {
+    this->hmarklist()->putHmarker(this->hmarklist()->marks[i].line,
+                                  this->hmarklist()->marks[i].pos, seqmap[i]);
+  }
+
+  this->href()->reseq_anchor0(seqmap.data());
+  this->formitem()->reseq_anchor0(seqmap.data());
+}
+
+const char *LineLayout ::reAnchorPos(
+    Line *l, const char *p1, const char *p2,
+    Anchor *(*anchorproc)(LineLayout *, const char *, const char *, int, int)) {
+  Anchor *a;
+  int spos, epos;
+  int i;
+  int hseq = -2;
+
+  spos = p1 - l->lineBuf.data();
+  epos = p2 - l->lineBuf.data();
+  for (i = spos; i < epos; i++) {
+    if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
+      return p2;
+  }
+  for (i = spos; i < epos; i++)
+    l->propBuf[i] |= PE_ANCHOR;
+  while (spos > l->len && l->next && l->next->bpos) {
+    spos -= l->len;
+    epos -= l->len;
+    l = l->next;
+  }
+  while (1) {
+    a = anchorproc(this, p1, p2, l->linenumber, spos);
+    a->hseq = hseq;
+    if (hseq == -2) {
+      this->reseq_anchor();
+      hseq = a->hseq;
+    }
+    a->end.line = l->linenumber;
+    if (epos > l->len && l->next && l->next->bpos) {
+      a->end.pos = l->len;
+      spos = 0;
+      epos -= l->len;
+      l = l->next;
+    } else {
+      a->end.pos = epos;
+      break;
+    }
+  }
+  return p2;
+}
+
+/* search regexp and register them as anchors */
+/* returns error message if any               */
+const char *LineLayout::reAnchorAny(
+    const char *re,
+    Anchor *(*anchorproc)(LineLayout *, const char *, const char *, int, int)) {
+  Line *l;
+  const char *p = NULL, *p1, *p2;
+
+  if (re == NULL || *re == '\0') {
+    return NULL;
+  }
+  if ((re = regexCompile(re, 1)) != NULL) {
+    return re;
+  }
+  for (l = MarkAllPages ? this->firstLine : this->topLine;
+       l != NULL &&
+       (MarkAllPages || l->linenumber < this->topLine->linenumber + LASTLINE);
+       l = l->next) {
+    if (p && l->bpos) {
+      continue;
+    }
+    p = l->lineBuf.data();
+    for (;;) {
+      if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) ==
+          1) {
+        matchedPosition(&p1, &p2);
+        p = this->reAnchorPos(l, p1, p2, anchorproc);
+      } else
+        break;
+    }
+  }
+  return NULL;
+}
+
+static Anchor *_put_anchor_all(LineLayout *layout, const char *p1,
+                               const char *p2, int line, int pos) {
+  auto tmp = Strnew_charp_n(p1, p2 - p1);
+  return layout->registerHref(url_quote(tmp->ptr).c_str(), NULL, NO_REFERER,
+                              NULL, '\0', line, pos);
+}
+
+const char *LineLayout::reAnchor(const char *re) {
+  return this->reAnchorAny(re, _put_anchor_all);
+}
+
+const char *LineLayout::reAnchorWord(Line *l, int spos, int epos) {
+  return this->reAnchorPos(l, &l->lineBuf[spos], &l->lineBuf[epos],
+                           _put_anchor_all);
 }

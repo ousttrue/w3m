@@ -810,7 +810,7 @@ void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
       nullptr};
   int i;
   for (i = 0; url_like_pat[i]; i++) {
-    reAnchor(&buf->layout, url_like_pat[i]);
+    buf->layout.reAnchor(url_like_pat[i]);
   }
   buf->check_url = true;
 }

@@ -53,18 +53,17 @@ struct AnchorList {
   Anchor *closest_next_anchor(Anchor *an, int x, int y);
   Anchor *closest_prev_anchor(Anchor *an, int x, int y);
   void shiftAnchorPosition(HmarkerList *hl, int line, int pos, int shift);
+  void reseq_anchor0(short *seqmap);
 
 private:
   int acache = -1;
 };
 
 struct LineLayout;
-const char *reAnchor(LineLayout *layout, const char *re);
 Anchor *retrieveCurrentAnchor(LineLayout *layout);
 Anchor *retrieveCurrentImg(LineLayout *layout);
 Anchor *retrieveCurrentForm(LineLayout *layout);
 struct Line;
-void reAnchorWord(LineLayout *layout, Line *l, int spos, int epos);
 struct AnchorList;
 
 const char *getAnchorText(LineLayout *layout, AnchorList *al, Anchor *a);

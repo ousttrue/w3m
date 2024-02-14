@@ -854,8 +854,9 @@ void nthA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
 
   int n = App::instance().searchKeyNum();
-  if (n < 0 || n > hl->size())
+  if (n < 0 || n > (int)hl->size()) {
     return;
+  }
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
@@ -1417,8 +1418,8 @@ void chkWORD() {
   auto p = CurrentTab->currentBuffer()->layout.getCurWord(&spos, &epos);
   if (p.empty())
     return;
-  reAnchorWord(&CurrentTab->currentBuffer()->layout,
-               CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
+  CurrentTab->currentBuffer()->layout.reAnchorWord(
+      CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
   displayBuffer();
 }
 

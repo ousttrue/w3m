@@ -162,6 +162,15 @@ public:
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
   Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
   void addMultirowsForm(AnchorList *al);
+  void reseq_anchor();
+  const char *reAnchorPos(Line *l, const char *p1, const char *p2,
+                          Anchor *(*anchorproc)(LineLayout *, const char *,
+                                                const char *, int, int));
+  const char *reAnchorAny(const char *re,
+                          Anchor *(*anchorproc)(LineLayout *, const char *,
+                                                const char *, int, int));
+  const char *reAnchor(const char *re);
+  const char *reAnchorWord(Line *l, int spos, int epos);
 };
 
 inline void nextChar(int &s, Line *l) { s++; }
