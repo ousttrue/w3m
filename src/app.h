@@ -9,8 +9,6 @@ extern int prec_num;
 extern bool on_target;
 extern void pushEvent(int cmd, void *data);
 
-void resize_hook(int);
-
 class App {
   std::string _currentDir;
   int _currentPid = -1;

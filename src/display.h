@@ -10,6 +10,7 @@ int INIT_BUFFER_WIDTH();
 extern bool FoldLine;
 int FOLD_BUFFER_WIDTH();
 
+void setResize();
 void displayBuffer();
 
 void fmInit(void);

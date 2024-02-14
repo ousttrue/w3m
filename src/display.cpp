@@ -184,7 +184,17 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   return msg;
 }
 
+static bool need_resize_screen = false;
+
+void setResize() { need_resize_screen = true; }
+
 void displayBuffer() {
+  if (need_resize_screen) {
+    need_resize_screen = false;
+    setlinescols();
+    setupscreen(term_entry());
+  }
+
   auto buf = CurrentTab->currentBuffer();
   if (!buf) {
     return;

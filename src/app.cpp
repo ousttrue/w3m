@@ -13,7 +13,7 @@
 #include "func.h"
 #include "alarm.h"
 #include "funcname1.h"
-#include "signal_util.h"
+// #include "signal_util.h"
 #include "terms.h"
 #include "screen.h"
 #include "display.h"
@@ -22,7 +22,7 @@
 #include "rc.h"
 #include "cookie.h"
 #include "history.h"
-#include <signal.h>
+// #include <signal.h>
 #include <sys/wait.h>
 #include <iostream>
 #include <sstream>
@@ -43,30 +43,30 @@ int prev_key = -1;
 bool on_target = true;
 #define PREC_LIMIT 10000
 
-static void sig_chld(int signo) {
-  int p_stat;
-  pid_t pid;
+// static void sig_chld(int signo) {
+//   int p_stat;
+//   pid_t pid;
+//
+//   while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
+//     DownloadList *d;
+//
+//     if (WIFEXITED(p_stat)) {
+//       for (d = FirstDL; d != nullptr; d = d->next) {
+//         if (d->pid == pid) {
+//           d->err = WEXITSTATUS(p_stat);
+//           break;
+//         }
+//       }
+//     }
+//   }
+//   mySignal(SIGCHLD, sig_chld);
+//   return;
+// }
 
-  while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
-    DownloadList *d;
-
-    if (WIFEXITED(p_stat)) {
-      for (d = FirstDL; d != nullptr; d = d->next) {
-        if (d->pid == pid) {
-          d->err = WEXITSTATUS(p_stat);
-          break;
-        }
-      }
-    }
-  }
-  mySignal(SIGCHLD, sig_chld);
-  return;
-}
-
-static void SigPipe(SIGNAL_ARG) {
-  mySignal(SIGPIPE, SigPipe);
-  SIGNAL_RETURN;
-}
+// static void SigPipe(SIGNAL_ARG) {
+//   mySignal(SIGPIPE, SigPipe);
+//   SIGNAL_RETURN;
+// }
 
 static GC_warn_proc orig_GC_warn_proc = nullptr;
 #define GC_WARN_KEEP_MAX (20)
@@ -230,48 +230,33 @@ void pushEvent(int cmd, void *data) {
 AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
 static AlarmEvent *CurrentAlarm = &DefaultAlarm;
 
-static void SigAlarm(SIGNAL_ARG) { App::instance().SigAlarm(); }
+// static void SigAlarm(SIGNAL_ARG) { App::instance().SigAlarm(); }
 
 void App::SigAlarm() {
-  if (CurrentAlarm->sec > 0) {
-    _currentKey = -1;
-    CurrentKeyData = NULL;
-    CurrentCmdData = (char *)CurrentAlarm->data;
-    w3mFuncList[CurrentAlarm->cmd].func();
-    CurrentCmdData = NULL;
-    if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-      CurrentAlarm->sec = 0;
-      CurrentAlarm->status = AL_UNSET;
-    }
-    if (CurrentTab->currentBuffer()->layout.event) {
-      if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET)
-        CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
-      else
-        CurrentTab->currentBuffer()->layout.event = NULL;
-    }
-    if (!CurrentTab->currentBuffer()->layout.event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, ::SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-  }
-  SIGNAL_RETURN;
-}
-
-static bool need_resize_screen = false;
-static void resize_screen(void) {
-  need_resize_screen = false;
-  setlinescols();
-  setupscreen(term_entry());
-  if (CurrentTab)
-    displayBuffer();
-}
-
-void resize_hook(SIGNAL_ARG) {
-  need_resize_screen = true;
-  mySignal(SIGWINCH, resize_hook);
-  SIGNAL_RETURN;
+  // if (CurrentAlarm->sec > 0) {
+  //   _currentKey = -1;
+  //   CurrentKeyData = NULL;
+  //   CurrentCmdData = (char *)CurrentAlarm->data;
+  //   w3mFuncList[CurrentAlarm->cmd].func();
+  //   CurrentCmdData = NULL;
+  //   if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
+  //     CurrentAlarm->sec = 0;
+  //     CurrentAlarm->status = AL_UNSET;
+  //   }
+  //   if (CurrentTab->currentBuffer()->layout.event) {
+  //     if (CurrentTab->currentBuffer()->layout.event->status != AL_UNSET)
+  //       CurrentAlarm = CurrentTab->currentBuffer()->layout.event;
+  //     else
+  //       CurrentTab->currentBuffer()->layout.event = NULL;
+  //   }
+  //   if (!CurrentTab->currentBuffer()->layout.event)
+  //     CurrentAlarm = &DefaultAlarm;
+  //   if (CurrentAlarm->sec > 0) {
+  //     mySignal(SIGALRM, ::SigAlarm);
+  //     alarm(CurrentAlarm->sec);
+  //   }
+  // }
+  // SIGNAL_RETURN;
 }
 
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
@@ -336,14 +321,17 @@ static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
 }
 
 uv_tty_t g_tty_in;
+uv_signal_t g_signal_resize;
 
 int App::mainLoop() {
   fmInit();
   displayBuffer();
 
+  //
+  // stdin tty read
+  //
   uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
   uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
-
   uv_read_start((uv_stream_t *)&g_tty_in, &alloc_buffer,
                 [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
                   if (nread < 0) {
@@ -363,6 +351,14 @@ int App::mainLoop() {
                 });
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
   uv_loop_close(uv_default_loop());
+
+  //
+  // SIGWINCH
+  //
+  uv_signal_init(uv_default_loop(), &g_signal_resize);
+  uv_signal_start(
+      &g_signal_resize, [](uv_signal_t *handle, int signum) { setResize(); },
+      SIGWINCH);
 
   // mySignal(SIGWINCH, resize_hook);
   // mySignal(SIGCHLD, sig_chld);
