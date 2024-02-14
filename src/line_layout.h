@@ -3,12 +3,15 @@
 #include "url.h"
 #include <string>
 #include <optional>
+#include <memory>
 
 extern int nextpage_topline;
 
 struct Line;
 struct BufferPos;
 struct HtmlTag;
+struct AnchorList;
+struct HmarkerList;
 struct LineLayout {
   LineLayout();
   LineLayout(int width);
@@ -30,10 +33,7 @@ struct LineLayout {
   Line *currentLine = nullptr;
   int allLine = 0;
 
-  void clearBuffer() {
-    firstLine = topLine = currentLine = lastLine = nullptr;
-    allLine = 0;
-  }
+  void clearBuffer();
   void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,
                   int realLinenum);
   int TOP_LINENUMBER() const { return topLine ? topLine->linenumber : 1; }
@@ -135,15 +135,24 @@ struct LineLayout {
   //
   // Anchors
   //
-  struct AnchorList *href = nullptr;
-  AnchorList *name = nullptr;
-  AnchorList *img = nullptr;
-  AnchorList *formitem = nullptr;
+private:
+  std::shared_ptr<AnchorList> _href;
+  std::shared_ptr<AnchorList> _name;
+  std::shared_ptr<AnchorList> _img;
+  std::shared_ptr<AnchorList> _formitem;
+  std::shared_ptr<HmarkerList> _hmarklist;
+  std::shared_ptr<HmarkerList> _imarklist;
+
+public:
+  std::shared_ptr<AnchorList> href() const { return _href; }
+  std::shared_ptr<AnchorList> name() const { return _name; }
+  std::shared_ptr<AnchorList> img() const { return _img; }
+  std::shared_ptr<AnchorList> formitem() const { return _formitem; }
+  std::shared_ptr<HmarkerList> hmarklist() const { return _hmarklist; }
+  std::shared_ptr<HmarkerList> imarklist() const { return _imarklist; }
   struct LinkList *linklist = nullptr;
   struct FormList *formlist = nullptr;
   struct MapList *maplist = nullptr;
-  struct HmarkerList *hmarklist = nullptr;
-  HmarkerList *imarklist = nullptr;
   struct FormItemList *form_submit = nullptr;
   struct Anchor *submit = nullptr;
 
@@ -153,7 +162,6 @@ struct LineLayout {
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
   Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
   void addMultirowsForm(AnchorList *al);
-  Anchor *searchURLLabel(const char *url);
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

@@ -237,7 +237,7 @@ void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
 
 void gotoLabel(const char *label) {
 
-  auto al = CurrentTab->currentBuffer()->layout.searchURLLabel(label);
+  auto al = CurrentTab->currentBuffer()->layout.name()->searchAnchor(label);
   if (al == nullptr) {
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
@@ -601,7 +601,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
 
     if (!al) {
       label = Strnew_m_charp("_", target, nullptr)->ptr;
-      al = this->currentBuffer()->layout.searchURLLabel(label.c_str());
+      al = this->currentBuffer()->layout.name()->searchAnchor(label);
     }
     if (al) {
       this->currentBuffer()->layout.gotoLine(al->start.line);
@@ -832,8 +832,8 @@ void TabBuffer::_followForm(int submit) {
     break;
 
   case FORM_INPUT_RESET:
-    for (size_t i = 0; i < currentBuffer()->layout.formitem->size(); i++) {
-      auto a2 = &currentBuffer()->layout.formitem->anchors[i];
+    for (size_t i = 0; i < currentBuffer()->layout.formitem()->size(); i++) {
+      auto a2 = &currentBuffer()->layout.formitem()->anchors[i];
       auto f2 = (FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&

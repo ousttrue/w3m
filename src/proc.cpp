@@ -771,30 +771,30 @@ void submitForm() { CurrentTab->_followForm(true); }
 // LINK_BEGIN
 //"Move to the first hyperlink"
 void topA() {
-  HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
+  auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
   BufferPoint *po;
   Anchor *an;
   int hseq = 0;
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  if (!hl || hl->nmark == 0)
+  if (hl->size() == 0)
     return;
 
-  if (prec_num > hl->nmark)
-    hseq = hl->nmark - 1;
+  if (prec_num > (int)hl->size())
+    hseq = hl->size() - 1;
   else if (prec_num > 0)
     hseq = prec_num - 1;
   do {
-    if (hseq >= hl->nmark)
+    if (hseq >= (int)hl->size())
       return;
-    po = hl->marks + hseq;
-    if (CurrentTab->currentBuffer()->layout.href) {
-      an = CurrentTab->currentBuffer()->layout.href->retrieveAnchor(po->line,
-                                                                    po->pos);
+    po = &hl->marks[hseq];
+    if (CurrentTab->currentBuffer()->layout.href()) {
+      an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
+                                                                      po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem) {
-      an = CurrentTab->currentBuffer()->layout.formitem->retrieveAnchor(
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem()) {
+      an = CurrentTab->currentBuffer()->layout.formitem()->retrieveAnchor(
           po->line, po->pos);
     }
     hseq++;
@@ -810,32 +810,32 @@ void topA() {
 // LINK_END
 //"Move to the last hyperlink"
 void lastA() {
-  HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
+  auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
   BufferPoint *po;
   Anchor *an;
   int hseq;
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  if (!hl || hl->nmark == 0)
+  if (hl->size() == 0)
     return;
 
-  if (prec_num >= hl->nmark)
+  if (prec_num >= (int)hl->size())
     hseq = 0;
   else if (prec_num > 0)
-    hseq = hl->nmark - prec_num;
+    hseq = hl->size() - prec_num;
   else
-    hseq = hl->nmark - 1;
+    hseq = hl->size() - 1;
   do {
     if (hseq < 0)
       return;
-    po = hl->marks + hseq;
-    if (CurrentTab->currentBuffer()->layout.href) {
-      an = CurrentTab->currentBuffer()->layout.href->retrieveAnchor(po->line,
-                                                                    po->pos);
+    po = &hl->marks[hseq];
+    if (CurrentTab->currentBuffer()->layout.href()) {
+      an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
+                                                                      po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem) {
-      an = CurrentTab->currentBuffer()->layout.formitem->retrieveAnchor(
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem()) {
+      an = CurrentTab->currentBuffer()->layout.formitem()->retrieveAnchor(
           po->line, po->pos);
     }
     hseq--;
@@ -851,27 +851,27 @@ void lastA() {
 // LINK_N
 //"Go to the nth link"
 void nthA() {
-  HmarkerList *hl = CurrentTab->currentBuffer()->layout.hmarklist;
+  auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
 
   int n = App::instance().searchKeyNum();
-  if (n < 0 || n > hl->nmark)
+  if (n < 0 || n > hl->size())
     return;
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  if (!hl || hl->nmark == 0)
+  if (!hl || hl->size() == 0)
     return;
 
-  auto po = hl->marks + n - 1;
+  auto po = &hl->marks[n - 1];
 
   Anchor *an = nullptr;
-  if (CurrentTab->currentBuffer()->layout.href) {
-    an = CurrentTab->currentBuffer()->layout.href->retrieveAnchor(po->line,
-                                                                  po->pos);
+  if (CurrentTab->currentBuffer()->layout.href()) {
+    an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
+                                                                    po->pos);
   }
-  if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem) {
-    an = CurrentTab->currentBuffer()->layout.formitem->retrieveAnchor(po->line,
-                                                                      po->pos);
+  if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem()) {
+    an = CurrentTab->currentBuffer()->layout.formitem()->retrieveAnchor(
+        po->line, po->pos);
   }
   if (an == nullptr)
     return;

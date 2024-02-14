@@ -17,15 +17,16 @@ int PagerMax = PAGER_MAX_LINE;
 
 #define FIRST_ANCHOR_SIZE 30
 
-int onAnchor(Anchor *a, int line, int pos) {
+int Anchor::onAnchor(int line, int pos) {
   BufferPoint bp;
   bp.line = line;
   bp.pos = pos;
-
-  if (bpcmp(bp, a->start) < 0)
+  if (bpcmp(bp, this->start) < 0) {
     return -1;
-  if (bpcmp(a->end, bp) <= 0)
+  }
+  if (bpcmp(this->end, bp) <= 0) {
     return 1;
+  }
   return 0;
 }
 
@@ -37,12 +38,9 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
   if (this->acache < 0 || static_cast<size_t>(this->acache) >= this->size())
     this->acache = 0;
 
-  Anchor *a;
-  size_t b, e;
-  int cmp;
-  for (b = 0, e = this->size() - 1; b <= e; this->acache = (b + e) / 2) {
-    a = &this->anchors[this->acache];
-    cmp = onAnchor(a, line, pos);
+  for (int b = 0, e = this->size() - 1; b <= e; this->acache = (b + e) / 2) {
+    auto a = &this->anchors[this->acache];
+    auto cmp = a->onAnchor(line, pos);
     if (cmp == 0)
       return a;
     else if (cmp > 0)
@@ -56,38 +54,37 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
 }
 
 Anchor *retrieveCurrentAnchor(LineLayout *layout) {
-  if (!layout->currentLine || !layout->href)
+  if (!layout->currentLine || !layout->href())
     return NULL;
-  return layout->href->retrieveAnchor(layout->currentLine->linenumber,
-                                      layout->pos);
+  return layout->href()->retrieveAnchor(layout->currentLine->linenumber,
+                                        layout->pos);
 }
 
 Anchor *retrieveCurrentImg(LineLayout *layout) {
-  if (!layout->currentLine || !layout->img)
+  if (!layout->currentLine || !layout->img())
     return NULL;
-  return layout->img->retrieveAnchor(layout->currentLine->linenumber,
-                                     layout->pos);
+  return layout->img()->retrieveAnchor(layout->currentLine->linenumber,
+                                       layout->pos);
 }
 
 Anchor *retrieveCurrentForm(LineLayout *layout) {
-  if (!layout->currentLine || !layout->formitem)
+  if (!layout->currentLine || !layout->formitem())
     return NULL;
-  return layout->formitem->retrieveAnchor(layout->currentLine->linenumber,
-                                          layout->pos);
+  return layout->formitem()->retrieveAnchor(layout->currentLine->linenumber,
+                                            layout->pos);
 }
 
-Anchor *searchAnchor(AnchorList *al, const char *str) {
-  Anchor *a;
-  if (al == NULL)
-    return NULL;
-  for (size_t i = 0; i < al->size(); i++) {
-    a = &al->anchors[i];
-    if (a->hseq < 0)
+Anchor *AnchorList::searchAnchor(std::string_view str) {
+  for (size_t i = 0; i < this->size(); i++) {
+    auto a = &this->anchors[i];
+    if (a->hseq < 0) {
       continue;
-    if (!strcmp(a->url, str))
+    }
+    if (a->url == str) {
       return a;
+    }
   }
-  return NULL;
+  return {};
 }
 
 static Anchor *_put_anchor_all(LineLayout *layout, const char *p1,
@@ -111,13 +108,13 @@ static void reseq_anchor0(AnchorList *al, short *seqmap) {
 
 /* renumber anchor */
 static void reseq_anchor(LineLayout *layout) {
-  if (!layout->href)
+  if (!layout->href())
     return;
 
-  int nmark = (layout->hmarklist) ? layout->hmarklist->nmark : 0;
+  int nmark = layout->hmarklist()->size();
   int n = nmark;
-  for (size_t i = 0; i < layout->href->size(); i++) {
-    auto a = &layout->href->anchors[i];
+  for (size_t i = 0; i < layout->href()->size(); i++) {
+    auto a = &layout->href()->anchors[i];
     if (a->hseq == -2) {
       n++;
     }
@@ -132,34 +129,33 @@ static void reseq_anchor(LineLayout *layout) {
   }
 
   n = nmark;
-  HmarkerList *ml = NULL;
-  for (size_t i = 0; i < layout->href->size(); i++) {
-    auto a = &layout->href->anchors[i];
+  for (size_t i = 0; i < layout->href()->size(); i++) {
+    auto a = &layout->href()->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
-      auto a1 =
-          closest_next_anchor(layout->href, NULL, a->start.pos, a->start.line);
-      a1 = closest_next_anchor(layout->formitem, a1, a->start.pos,
-                               a->start.line);
+      auto a1 = layout->href()->closest_next_anchor(NULL, a->start.pos,
+                                                    a->start.line);
+      a1 = layout->formitem()->closest_next_anchor(a1, a->start.pos,
+                                                   a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
         for (int j = a1->hseq; j < nmark; j++) {
           seqmap[j]++;
         }
       }
-      ml = putHmarker(ml, a->start.line, a->start.pos, seqmap[n]);
+      layout->hmarklist()->putHmarker(a->start.line, a->start.pos, seqmap[n]);
       n++;
     }
   }
 
   for (int i = 0; i < nmark; i++) {
-    ml = putHmarker(ml, layout->hmarklist->marks[i].line,
-                    layout->hmarklist->marks[i].pos, seqmap[i]);
+    layout->hmarklist()->putHmarker(layout->hmarklist()->marks[i].line,
+                                    layout->hmarklist()->marks[i].pos,
+                                    seqmap[i]);
   }
-  layout->hmarklist = ml;
 
-  reseq_anchor0(layout->href, seqmap.data());
-  reseq_anchor0(layout->formitem, seqmap.data());
+  reseq_anchor0(layout->href().get(), seqmap.data());
+  reseq_anchor0(layout->formitem().get(), seqmap.data());
 }
 
 static const char *reAnchorPos(LineLayout *layout, Line *l, const char *p1,
@@ -248,75 +244,66 @@ const char *reAnchor(LineLayout *layout, const char *re) {
 }
 
 #define FIRST_MARKER_SIZE 30
-HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq) {
-  if (ml == NULL) {
-    ml = (HmarkerList *)New(HmarkerList);
-    ml->marks = NULL;
-    ml->nmark = 0;
-    ml->markmax = 0;
-    ml->prevhseq = -1;
+void HmarkerList::putHmarker(int line, int pos, int seq) {
+  // if (seq + 1 > ml->nmark)
+  //   ml->nmark = seq + 1;
+  // if (ml->nmark >= ml->markmax) {
+  //   ml->markmax = ml->nmark * 2;
+  //   ml->marks = (BufferPoint *)New_Reuse(BufferPoint, ml->marks,
+  //   ml->markmax);
+  // }
+  while (seq >= (int)marks.size()) {
+    marks.push_back({});
   }
-  if (ml->markmax == 0) {
-    ml->markmax = FIRST_MARKER_SIZE;
-    ml->marks = (BufferPoint *)NewAtom_N(BufferPoint, ml->markmax);
-    bzero(ml->marks, sizeof(BufferPoint) * ml->markmax);
-  }
-  if (seq + 1 > ml->nmark)
-    ml->nmark = seq + 1;
-  if (ml->nmark >= ml->markmax) {
-    ml->markmax = ml->nmark * 2;
-    ml->marks = (BufferPoint *)New_Reuse(BufferPoint, ml->marks, ml->markmax);
-  }
-  ml->marks[seq].line = line;
-  ml->marks[seq].pos = pos;
-  ml->marks[seq].invalid = 0;
-  return ml;
+  this->marks[seq].line = line;
+  this->marks[seq].pos = pos;
+  this->marks[seq].invalid = 0;
 }
 
-Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y) {
-  if (a == NULL || a->size() == 0)
+Anchor *AnchorList::closest_next_anchor(Anchor *an, int x, int y) {
+  if (this->size() == 0)
     return an;
-  for (size_t i = 0; i < a->size(); i++) {
-    if (a->anchors[i].hseq < 0)
+  for (size_t i = 0; i < this->size(); i++) {
+    if (this->anchors[i].hseq < 0)
       continue;
-    if (a->anchors[i].start.line > y ||
-        (a->anchors[i].start.line == y && a->anchors[i].start.pos > x)) {
-      if (an == NULL || an->start.line > a->anchors[i].start.line ||
-          (an->start.line == a->anchors[i].start.line &&
-           an->start.pos > a->anchors[i].start.pos))
-        an = &a->anchors[i];
+    if (this->anchors[i].start.line > y ||
+        (this->anchors[i].start.line == y && this->anchors[i].start.pos > x)) {
+      if (an == NULL || an->start.line > this->anchors[i].start.line ||
+          (an->start.line == this->anchors[i].start.line &&
+           an->start.pos > this->anchors[i].start.pos))
+        an = &this->anchors[i];
     }
   }
   return an;
 }
 
-Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y) {
-  if (a == NULL || a->size() == 0)
+Anchor *AnchorList ::closest_prev_anchor(Anchor *an, int x, int y) {
+  if (this->size() == 0)
     return an;
-  for (size_t i = 0; i < a->size(); i++) {
-    if (a->anchors[i].hseq < 0)
+  for (size_t i = 0; i < this->size(); i++) {
+    if (this->anchors[i].hseq < 0)
       continue;
-    if (a->anchors[i].end.line < y ||
-        (a->anchors[i].end.line == y && a->anchors[i].end.pos <= x)) {
-      if (an == NULL || an->end.line < a->anchors[i].end.line ||
-          (an->end.line == a->anchors[i].end.line &&
-           an->end.pos < a->anchors[i].end.pos))
-        an = &a->anchors[i];
+    if (this->anchors[i].end.line < y ||
+        (this->anchors[i].end.line == y && this->anchors[i].end.pos <= x)) {
+      if (an == NULL || an->end.line < this->anchors[i].end.line ||
+          (an->end.line == this->anchors[i].end.line &&
+           an->end.pos < this->anchors[i].end.pos))
+        an = &this->anchors[i];
     }
   }
   return an;
 }
 
-void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
-                         int shift) {
-  if (al == NULL || al->size() == 0)
+void AnchorList::shiftAnchorPosition(HmarkerList *hl, int line, int pos,
+                                     int shift) {
+  if (this->size() == 0)
     return;
 
-  auto s = al->size() / 2;
+  auto s = this->size() / 2;
   size_t b, e;
-  for (b = 0, e = al->size() - 1; b <= e; s = (b + e + 1) / 2) {
-    auto a = &al->anchors[s];
-    auto cmp = onAnchor(a, line, pos);
+  for (b = 0, e = this->size() - 1; b <= e; s = (b + e + 1) / 2) {
+    auto a = &this->anchors[s];
+    auto cmp = a->onAnchor(line, pos);
     if (cmp == 0)
       break;
     else if (cmp > 0)
@@ -326,13 +313,13 @@ void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
     else
       e = s - 1;
   }
-  for (; s < al->size(); s++) {
-    auto a = &al->anchors[s];
+  for (; s < this->size(); s++) {
+    auto a = &this->anchors[s];
     if (a->start.line > line)
       break;
     if (a->start.pos > pos) {
       a->start.pos += shift;
-      if (hl && hl->marks && a->hseq >= 0 && hl->marks[a->hseq].line == line)
+      if (hl->size() && a->hseq >= 0 && hl->marks[a->hseq].line == line)
         hl->marks[a->hseq].pos = a->start.pos;
     }
     if (a->end.pos >= pos)

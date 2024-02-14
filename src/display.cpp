@@ -311,9 +311,9 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (!buf->layout.firstLine || !buf->layout.hmarklist)
+  if (!buf->layout.firstLine || !buf->layout.hmarklist())
     return;
-  if (!buf->layout.href && !buf->layout.formitem)
+  if (!buf->layout.href() && !buf->layout.formitem())
     return;
 
   auto an = retrieveCurrentAnchor(&buf->layout);
@@ -323,18 +323,20 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
     hseq = -1;
   tline = buf->layout.topLine->linenumber;
   eline = tline + buf->layout.LINES;
-  prevhseq = buf->layout.hmarklist->prevhseq;
+  prevhseq = buf->layout.hmarklist()->prevhseq;
 
-  if (buf->layout.href) {
-    drawAnchorCursor0(buf, buf->layout.href, hseq, prevhseq, tline, eline, 1);
-    drawAnchorCursor0(buf, buf->layout.href, hseq, -1, tline, eline, 0);
+  if (buf->layout.href()) {
+    drawAnchorCursor0(buf, buf->layout.href().get(), hseq, prevhseq, tline,
+                      eline, 1);
+    drawAnchorCursor0(buf, buf->layout.href().get(), hseq, -1, tline, eline, 0);
   }
-  if (buf->layout.formitem) {
-    drawAnchorCursor0(buf, buf->layout.formitem, hseq, prevhseq, tline, eline,
-                      1);
-    drawAnchorCursor0(buf, buf->layout.formitem, hseq, -1, tline, eline, 0);
+  if (buf->layout.formitem()) {
+    drawAnchorCursor0(buf, buf->layout.formitem().get(), hseq, prevhseq, tline,
+                      eline, 1);
+    drawAnchorCursor0(buf, buf->layout.formitem().get(), hseq, -1, tline, eline,
+                      0);
   }
-  buf->layout.hmarklist->prevhseq = hseq;
+  buf->layout.hmarklist()->prevhseq = hseq;
 }
 
 static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {

@@ -11,6 +11,13 @@
 int nextpage_topline = false;
 
 LineLayout::LineLayout() {
+  this->_href = std::make_shared<AnchorList>();
+  this->_name = std::make_shared<AnchorList>();
+  this->_img = std::make_shared<AnchorList>();
+  this->_formitem = std::make_shared<AnchorList>();
+  this->_hmarklist = std::make_shared<HmarkerList>();
+  this->_imarklist = std::make_shared<HmarkerList>();
+
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
 }
@@ -18,6 +25,21 @@ LineLayout::LineLayout() {
 LineLayout::LineLayout(int width) : width(width) {
   this->COLS = ::COLS;
   this->LINES = LASTLINE;
+}
+
+void LineLayout::clearBuffer() {
+  firstLine = topLine = currentLine = lastLine = nullptr;
+  allLine = 0;
+
+  this->_href->clear();
+  this->_name->clear();
+  this->_img->clear();
+  this->_formitem->clear();
+  this->formlist = nullptr;
+  this->linklist = nullptr;
+  this->maplist = nullptr;
+  this->_hmarklist->clear();
+  this->_imarklist->clear();
 }
 
 void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen,
@@ -392,14 +414,10 @@ void LineLayout::gotoRealLine(int n) {
   }
 }
 
-static AnchorList *putAnchor(AnchorList *al, const char *url,
-                             const char *target, Anchor **anchor_return,
-                             const char *referer, const char *title,
-                             unsigned char key, int line, int pos) {
-  if (al == NULL) {
-    al = new AnchorList;
-  }
-
+static Anchor *putAnchor(const std::shared_ptr<AnchorList> &al, const char *url,
+                         const char *target, const char *referer,
+                         const char *title, unsigned char key, int line,
+                         int pos) {
   BufferPoint bp = {0};
   bp.line = line;
   bp.pos = pos;
@@ -430,32 +448,22 @@ static AnchorList *putAnchor(AnchorList *al, const char *url,
   a->slave = false;
   a->start = bp;
   a->end = bp;
-  if (anchor_return)
-    *anchor_return = a;
-  return al;
+  return a;
 }
 
 Anchor *LineLayout::registerHref(const char *url, const char *target,
                                  const char *referer, const char *title,
                                  unsigned char key, int line, int pos) {
-  Anchor *a;
-  this->href =
-      putAnchor(this->href, url, target, &a, referer, title, key, line, pos);
-  return a;
+  return putAnchor(this->href(), url, target, referer, title, key, line, pos);
 }
 
 Anchor *LineLayout::registerName(const char *url, int line, int pos) {
-  Anchor *a;
-  this->name =
-      putAnchor(this->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
-  return a;
+  return putAnchor(this->name(), url, NULL, NULL, NULL, '\0', line, pos);
 }
 
 Anchor *LineLayout::registerImg(const char *url, const char *title, int line,
                                 int pos) {
-  Anchor *a;
-  this->img = putAnchor(this->img, url, NULL, &a, NULL, title, '\0', line, pos);
-  return a;
+  return putAnchor(this->img(), url, NULL, NULL, title, '\0', line, pos);
 }
 
 Anchor *LineLayout::registerForm(FormList *flist, HtmlTag *tag, int line,
@@ -466,10 +474,8 @@ Anchor *LineLayout::registerForm(FormList *flist, HtmlTag *tag, int line,
     return NULL;
   }
 
-  Anchor *a;
-  this->formitem = putAnchor(this->formitem, (const char *)fi, flist->target,
-                             &a, NULL, NULL, '\0', line, pos);
-  return a;
+  return putAnchor(this->formitem(), (const char *)fi, flist->target, NULL,
+                   NULL, '\0', line, pos);
 }
 
 void LineLayout::addMultirowsForm(AnchorList *al) {
@@ -506,13 +512,13 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
     for (j = 0; l && j < a_form.rows; l = l->next, j++) {
       pos = l->columnPos(col);
       if (j == 0) {
-        this->hmarklist->marks[a_form.hseq].line = l->linenumber;
-        this->hmarklist->marks[a_form.hseq].pos = pos;
+        this->hmarklist()->marks[a_form.hseq].line = l->linenumber;
+        this->hmarklist()->marks[a_form.hseq].pos = pos;
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      this->formitem = putAnchor(this->formitem, a_form.url, a_form.target, &a,
-                                 NULL, NULL, '\0', l->linenumber, pos);
+      a = putAnchor(this->formitem(), a_form.url, a_form.target, NULL, NULL,
+                    '\0', l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -526,17 +532,13 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
   }
 }
 
-Anchor *LineLayout::searchURLLabel(const char *url) {
-  return searchAnchor(this->name, url);
-}
-
 /* go to the next downward/upward anchor */
 void LineLayout::nextY(int d, int n) {
   if (this->firstLine == nullptr)
     return;
 
-  HmarkerList *hl = this->hmarklist;
-  if (!hl || hl->nmark == 0)
+  auto hl = this->hmarklist();
+  if (hl->size() == 0)
     return;
 
   auto an = retrieveCurrentAnchor(this);
@@ -552,11 +554,11 @@ void LineLayout::nextY(int d, int n) {
       hseq = abs(an->hseq);
     an = nullptr;
     for (; y >= 0 && y <= this->lastLine->linenumber; y += d) {
-      if (this->href) {
-        an = this->href->retrieveAnchor(y, x);
+      if (this->href()) {
+        an = this->href()->retrieveAnchor(y, x);
       }
-      if (!an && this->formitem) {
-        an = this->formitem->retrieveAnchor(y, x);
+      if (!an && this->formitem()) {
+        an = this->formitem()->retrieveAnchor(y, x);
       }
       if (an && hseq != abs(an->hseq)) {
         pan = an;
@@ -579,8 +581,8 @@ void LineLayout::nextX(int d, int dy, int n) {
   if (this->firstLine == nullptr)
     return;
 
-  HmarkerList *hl = this->hmarklist;
-  if (!hl || hl->nmark == 0)
+  auto hl = this->hmarklist();
+  if (hl->size() == 0)
     return;
 
   auto an = retrieveCurrentAnchor(this);
@@ -597,11 +599,11 @@ void LineLayout::nextX(int d, int dy, int n) {
     an = nullptr;
     while (1) {
       for (; x >= 0 && x < l->len; x += d) {
-        if (this->href) {
-          an = this->href->retrieveAnchor(y, x);
+        if (this->href()) {
+          an = this->href()->retrieveAnchor(y, x);
         }
-        if (!an && this->formitem) {
-          an = this->formitem->retrieveAnchor(y, x);
+        if (!an && this->formitem()) {
+          an = this->formitem()->retrieveAnchor(y, x);
         }
         if (an) {
           pan = an;
@@ -630,7 +632,7 @@ void LineLayout::nextX(int d, int dy, int n) {
 
 /* go to the previous anchor */
 void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
-  HmarkerList *hl = this->hmarklist;
+  auto hl = this->hmarklist();
   BufferPoint *po;
   Anchor *pan;
   int i, x, y;
@@ -638,7 +640,7 @@ void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
 
   if (this->firstLine == nullptr)
     return;
-  if (!hl || hl->nmark == 0)
+  if (hl->size() == 0)
     return;
 
   auto an = retrieveCurrentAnchor(this);
@@ -649,7 +651,7 @@ void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
   x = this->pos;
 
   if (visited == true) {
-    n = hl->nmark;
+    n = hl->size();
   }
 
   for (i = 0; i < n; i++) {
@@ -663,12 +665,12 @@ void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
           an = pan;
           goto _end;
         }
-        po = hl->marks + hseq;
-        if (this->href) {
-          an = this->href->retrieveAnchor(po->line, po->pos);
+        po = &hl->marks[hseq];
+        if (this->href()) {
+          an = this->href()->retrieveAnchor(po->line, po->pos);
         }
-        if (visited != true && an == nullptr && this->formitem) {
-          an = this->formitem->retrieveAnchor(po->line, po->pos);
+        if (visited != true && an == nullptr && this->formitem()) {
+          an = this->formitem()->retrieveAnchor(po->line, po->pos);
         }
         hseq--;
         if (visited == true && an) {
@@ -679,9 +681,9 @@ void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
         }
       } while (an == nullptr || an == pan);
     } else {
-      an = closest_prev_anchor(this->href, nullptr, x, y);
+      an = this->href()->closest_prev_anchor(nullptr, x, y);
       if (visited != true)
-        an = closest_prev_anchor(this->formitem, an, x, y);
+        an = this->formitem()->closest_prev_anchor(an, x, y);
       if (an == nullptr) {
         if (visited == true)
           return;
@@ -704,7 +706,7 @@ void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
 _end:
   if (an == nullptr || an->hseq < 0)
     return;
-  po = hl->marks + an->hseq;
+  po = &hl->marks[an->hseq];
   this->gotoLine(po->line);
   this->pos = po->pos;
   this->arrangeCursor();
@@ -716,8 +718,8 @@ void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
   if (this->firstLine == nullptr)
     return;
 
-  HmarkerList *hl = this->hmarklist;
-  if (!hl || hl->nmark == 0)
+  auto hl = this->hmarklist();
+  if (hl->size() == 0)
     return;
 
   auto an = retrieveCurrentAnchor(this);
@@ -728,7 +730,7 @@ void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
   auto x = this->pos;
 
   if (visited == true) {
-    n = hl->nmark;
+    n = hl->size();
   }
 
   Anchor *pan = nullptr;
@@ -737,18 +739,18 @@ void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
     if (an && an->hseq >= 0) {
       int hseq = an->hseq + 1;
       do {
-        if (hseq >= hl->nmark) {
+        if (hseq >= hl->size()) {
           if (visited == true)
             return;
           an = pan;
           goto _end;
         }
         auto po = &hl->marks[hseq];
-        if (this->href) {
-          an = this->href->retrieveAnchor(po->line, po->pos);
+        if (this->href()) {
+          an = this->href()->retrieveAnchor(po->line, po->pos);
         }
-        if (visited != true && an == nullptr && this->formitem) {
-          an = this->formitem->retrieveAnchor(po->line, po->pos);
+        if (visited != true && an == nullptr && this->formitem()) {
+          an = this->formitem()->retrieveAnchor(po->line, po->pos);
         }
         hseq++;
         if (visited == true && an) {
@@ -759,9 +761,9 @@ void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
         }
       } while (an == nullptr || an == pan);
     } else {
-      an = closest_next_anchor(this->href, nullptr, x, y);
+      an = this->href()->closest_next_anchor(nullptr, x, y);
       if (visited != true)
-        an = closest_next_anchor(this->formitem, an, x, y);
+        an = this->formitem()->closest_next_anchor(an, x, y);
       if (an == nullptr) {
         if (visited == true)
           return;

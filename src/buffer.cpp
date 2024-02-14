@@ -270,12 +270,10 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
     return;
   }
   buf->layout.need_reshape = false;
-
   buf->layout.width = INIT_BUFFER_WIDTH();
   if (buf->res->sourcefile.empty()) {
     return;
   }
-
   buf->res->f.openFile(buf->res->sourcefile.c_str());
   if (buf->res->f.stream == nullptr) {
     return;
@@ -284,18 +282,6 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   auto sbuf = Buffer::create(0);
   *sbuf = *buf;
   buf->layout.clearBuffer();
-
-  buf->layout.href = nullptr;
-  buf->layout.name = nullptr;
-  buf->layout.img = nullptr;
-  buf->layout.formitem = nullptr;
-  buf->layout.formlist = nullptr;
-  buf->layout.linklist = nullptr;
-  buf->layout.maplist = nullptr;
-  if (buf->layout.hmarklist)
-    buf->layout.hmarklist->nmark = 0;
-  if (buf->layout.imarklist)
-    buf->layout.imarklist->nmark = 0;
 
   if (buf->res->is_html_type())
     loadHTMLstream(buf->res.get(), &buf->layout);
@@ -337,7 +323,7 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   if (buf->check_url) {
     chkURLBuffer(buf);
   }
-  formResetBuffer(&buf->layout, sbuf->layout.formitem);
+  formResetBuffer(&buf->layout, sbuf->layout.formitem().get());
 }
 
 std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
@@ -684,7 +670,6 @@ void cmd_loadfile(const char *fn) {
 
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
   LinkList *l;
-  AnchorList *al;
   Anchor *a;
   FormItemList *fi;
   const char *u, *p;
@@ -720,9 +705,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->layout.href) {
+  if (buf->layout.href()) {
     Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-    al = buf->layout.href;
+    auto al = buf->layout.href();
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
@@ -734,7 +719,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         p = html_quote(url_decode0(p));
       else
         p = u;
-      t = getAnchorText(&buf->layout, al, a);
+      t = getAnchorText(&buf->layout, al.get(), a);
       t = t ? html_quote(t) : "";
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
@@ -742,9 +727,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->layout.img) {
+  if (buf->layout.img()) {
     Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-    al = buf->layout.img;
+    auto al = buf->layout.img();
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->slave)
@@ -762,10 +747,10 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
-      if (!buf->layout.formitem) {
+      if (!buf->layout.formitem()) {
         continue;
       }
-      a = buf->layout.formitem->retrieveAnchor(a->start.line, a->start.pos);
+      a = buf->layout.formitem()->retrieveAnchor(a->start.line, a->start.pos);
       if (!a)
         continue;
       fi = (FormItemList *)a->url;

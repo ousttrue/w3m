@@ -182,8 +182,8 @@ void formRecheckRadio(Anchor *a, const std::shared_ptr<Buffer> &buf,
   Anchor *a2;
   FormItemList *f2;
 
-  for (size_t i = 0; i < buf->layout.formitem->size(); i++) {
-    a2 = &buf->layout.formitem->anchors[i];
+  for (size_t i = 0; i < buf->layout.formitem()->size(); i++) {
+    a2 = &buf->layout.formitem()->anchors[i];
     f2 = (FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
@@ -199,11 +199,11 @@ void formResetBuffer(LineLayout *layout, AnchorList *formitem) {
   Anchor *a;
   FormItemList *f1, *f2;
 
-  if (!layout || layout->formitem == NULL || formitem == NULL)
+  if (!layout || layout->formitem() == NULL || formitem == NULL)
     return;
-  for (size_t i = 0; i < layout->formitem->size() && i < formitem->size();
+  for (size_t i = 0; i < layout->formitem()->size() && i < formitem->size();
        i++) {
-    a = &layout->formitem->anchors[i];
+    a = &layout->formitem()->anchors[i];
     if (a->y != a->start.line)
       continue;
     f1 = (FormItemList *)a->url;
@@ -380,9 +380,9 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
     for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
       if (l == NULL)
         break;
-      if (rows > 1 && layout->formitem) {
+      if (rows > 1 && layout->formitem()) {
         pos = l->columnPos(col);
-        a = layout->formitem->retrieveAnchor(l->linenumber, pos);
+        a = layout->formitem()->retrieveAnchor(l->linenumber, pos);
         if (a == NULL)
           break;
         spos = a->start.pos;
@@ -394,14 +394,14 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
                              rows > 1, form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(layout->href, layout->hmarklist, a->start.line,
-                            spos, pos - epos);
-        shiftAnchorPosition(layout->name, layout->hmarklist, a->start.line,
-                            spos, pos - epos);
-        shiftAnchorPosition(layout->img, layout->hmarklist, a->start.line, spos,
-                            pos - epos);
-        shiftAnchorPosition(layout->formitem, layout->hmarklist, a->start.line,
-                            spos, pos - epos);
+        layout->href()->shiftAnchorPosition(layout->hmarklist().get(),
+                                            a->start.line, spos, pos - epos);
+        layout->name()->shiftAnchorPosition(layout->hmarklist().get(),
+                                            a->start.line, spos, pos - epos);
+        layout->img()->shiftAnchorPosition(layout->hmarklist().get(),
+                                           a->start.line, spos, pos - epos);
+        layout->formitem()->shiftAnchorPosition(
+            layout->hmarklist().get(), a->start.line, spos, pos - epos);
       }
     }
     break;
@@ -739,7 +739,7 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
   FormList *fl;
   FormItemList *fi;
 
-  if (!buf || !buf->layout.formitem || !PreForm)
+  if (!buf || !buf->layout.formitem() || !PreForm)
     return;
 
   for (pf = PreForm; pf; pf = pf->next) {
@@ -752,8 +752,8 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
         continue;
     } else
       continue;
-    for (size_t i = 0; i < buf->layout.formitem->size(); i++) {
-      a = &buf->layout.formitem->anchors[i];
+    for (size_t i = 0; i < buf->layout.formitem()->size(); i++) {
+      a = &buf->layout.formitem()->anchors[i];
       fi = (FormItemList *)a->url;
       fl = fi->parent;
       if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))

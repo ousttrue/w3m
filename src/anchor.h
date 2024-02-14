@@ -1,6 +1,6 @@
 #pragma once
-#include <gc_cpp.h>
 #include <vector>
+#include <string_view>
 
 #define bpcmp(a, b)                                                            \
   (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
@@ -26,37 +26,37 @@ struct Anchor {
   char slave;
   short y;
   short rows;
+
+  int onAnchor(int line, int pos);
 };
 
-struct AnchorList : public gc_cleanup {
+struct HmarkerList {
+  std::vector<BufferPoint> marks;
+  size_t size() const { return marks.size(); }
+  void clear() { marks.clear(); }
+  int prevhseq = -1;
+  void putHmarker(int line, int pos, int seq);
+};
+
+struct AnchorList {
   std::vector<Anchor> anchors;
   size_t size() const { return anchors.size(); }
+  void clear() { anchors.clear(); }
 
   AnchorList() {}
   ~AnchorList() {}
   AnchorList(const AnchorList &) = delete;
   AnchorList &operator=(const AnchorList &) = delete;
 
+  Anchor *searchAnchor(std::string_view str);
   Anchor *retrieveAnchor(int line, int pos);
+  Anchor *closest_next_anchor(Anchor *an, int x, int y);
+  Anchor *closest_prev_anchor(Anchor *an, int x, int y);
+  void shiftAnchorPosition(HmarkerList *hl, int line, int pos, int shift);
 
 private:
   int acache = -1;
 };
-
-struct HmarkerList {
-  BufferPoint *marks;
-  int nmark;
-  int markmax;
-  int prevhseq;
-};
-
-int onAnchor(Anchor *a, int line, int pos);
-Anchor *searchAnchor(AnchorList *al, const char *str);
-Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
-Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
-HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
-void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line, int pos,
-                         int shift);
 
 struct LineLayout;
 const char *reAnchor(LineLayout *layout, const char *re);

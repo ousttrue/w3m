@@ -3850,16 +3850,15 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           parsedtag_get_value(tag, ATTR_TITLE, &s);
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
-          if (hseq > 0)
-            layout->hmarklist = putHmarker(layout->hmarklist,
-                                           layout->currentLn(), pos, hseq - 1);
-          else if (hseq < 0) {
+          if (hseq > 0) {
+            layout->hmarklist()->putHmarker(layout->currentLn(), pos, hseq - 1);
+          } else if (hseq < 0) {
             int h = -hseq - 1;
-            if (layout->hmarklist && h < layout->hmarklist->nmark &&
-                layout->hmarklist->marks[h].invalid) {
-              layout->hmarklist->marks[h].pos = pos;
-              layout->hmarklist->marks[h].line = layout->currentLn();
-              layout->hmarklist->marks[h].invalid = 0;
+            if (h < (int)layout->hmarklist()->size() &&
+                layout->hmarklist()->marks[h].invalid) {
+              layout->hmarklist()->marks[h].pos = pos;
+              layout->hmarklist()->marks[h].line = layout->currentLn();
+              layout->hmarklist()->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -3878,9 +3877,10 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             a_href->end.pos = pos;
             if (a_href->start.line == a_href->end.line &&
                 a_href->start.pos == a_href->end.pos) {
-              if (layout->hmarklist && a_href->hseq >= 0 &&
-                  a_href->hseq < layout->hmarklist->nmark)
-                layout->hmarklist->marks[a_href->hseq].invalid = 1;
+              if (a_href->hseq >= 0 &&
+                  a_href->hseq < (int)layout->hmarklist()->size()) {
+                layout->hmarklist()->marks[a_href->hseq].invalid = 1;
+              }
               a_href->hseq = -1;
             }
             a_href = NULL;
@@ -3927,18 +3927,18 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            layout->hmarklist = putHmarker(layout->hmarklist,
-                                           layout->currentLn(), hpos, hseq - 1);
+            layout->hmarklist()->putHmarker(layout->currentLn(), hpos,
+                                            hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (layout->hmarklist && h < layout->hmarklist->nmark &&
-                layout->hmarklist->marks[h].invalid) {
-              layout->hmarklist->marks[h].pos = hpos;
-              layout->hmarklist->marks[h].line = layout->currentLn();
-              layout->hmarklist->marks[h].invalid = 0;
+            if (h < layout->hmarklist()->size() &&
+                layout->hmarklist()->marks[h].invalid) {
+              layout->hmarklist()->marks[h].pos = hpos;
+              layout->hmarklist()->marks[h].line = layout->currentLn();
+              layout->hmarklist()->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -4113,7 +4113,7 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
       forms[form_id]->next = forms[form_id - 1];
   layout->formlist = (form_max >= 0) ? forms[form_max] : NULL;
   if (n_textarea) {
-    layout->addMultirowsForm(layout->formitem);
+    layout->addMultirowsForm(layout->formitem().get());
   }
 }
 void HTMLlineproc2(HttpResponse *res, LineLayout *layout, TextLineList *tl) {
@@ -4210,7 +4210,7 @@ phase2:
   layout->currentLine = layout->firstLine;
   res->type = "text/html";
   // if (n_textarea)
-  formResetBuffer(layout, layout->formitem);
+  formResetBuffer(layout, layout->formitem().get());
   if (src) {
     fclose(src);
   }
