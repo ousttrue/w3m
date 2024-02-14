@@ -797,7 +797,6 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
   }
 }
 
-#define conv_form_encoding(val, fi, buf) (val)
 void query_from_followform(Str **query, FormItemList *fi, int multipart) {
   FormItemList *f2;
   FILE *body = nullptr;
@@ -838,50 +837,43 @@ void query_from_followform(Str **query, FormItemList *fi, int multipart) {
     if (multipart) {
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
-        *query = conv_form_encoding(f2->name, fi, Currentbuf)->Strdup();
+        *query = f2->name->Strdup();
         Strcat_charp(*query, ".x");
         form_write_data(body, fi->parent->boundary, (*query)->ptr,
                         Sprintf("%d", x)->ptr);
-        *query = conv_form_encoding(f2->name, fi, Currentbuf)->Strdup();
+        *query = f2->name->Strdup();
         Strcat_charp(*query, ".y");
         form_write_data(body, fi->parent->boundary, (*query)->ptr,
                         Sprintf("%d", y)->ptr);
       } else if (f2->name && f2->name->length > 0 && f2->value != nullptr) {
         /* not IMAGE */
-        *query = conv_form_encoding(f2->value, fi, Currentbuf);
+        *query = f2->value;
         if (f2->type == FORM_INPUT_FILE)
-          form_write_from_file(
-              body, fi->parent->boundary,
-              conv_form_encoding(f2->name, fi, Currentbuf)->ptr, (*query)->ptr,
-              f2->value->ptr);
+          form_write_from_file(body, fi->parent->boundary, f2->name->ptr,
+                               (*query)->ptr, f2->value->ptr);
         else
-          form_write_data(body, fi->parent->boundary,
-                          conv_form_encoding(f2->name, fi, Currentbuf)->ptr,
+          form_write_data(body, fi->parent->boundary, f2->name->ptr,
                           (*query)->ptr);
       }
     } else {
       /* not multipart */
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
-        Strcat(*query,
-               Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
+        Strcat(*query, Str_form_quote(f2->name));
         Strcat(*query, Sprintf(".x=%d&", x));
-        Strcat(*query,
-               Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
+        Strcat(*query, Str_form_quote(f2->name));
         Strcat(*query, Sprintf(".y=%d", y));
       } else {
         /* not IMAGE */
         if (f2->name && f2->name->length > 0) {
-          Strcat(*query,
-                 Str_form_quote(conv_form_encoding(f2->name, fi, Currentbuf)));
+          Strcat(*query, Str_form_quote(f2->name));
           Strcat_char(*query, '=');
         }
         if (f2->value != nullptr) {
           if (fi->parent->method == FORM_METHOD_INTERNAL)
             Strcat(*query, Str_form_quote(f2->value));
           else {
-            Strcat(*query, Str_form_quote(
-                               conv_form_encoding(f2->value, fi, Currentbuf)));
+            Strcat(*query, Str_form_quote(f2->value));
           }
         }
       }
