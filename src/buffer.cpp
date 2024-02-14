@@ -378,7 +378,6 @@ static void append_link_info(const std::shared_ptr<Buffer> &buf, Str *html,
  */
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
   Str *tmp = Strnew_size(1024);
-  Anchor *a;
   Url pu;
   TextListItem *ti;
   struct frameset *f_set = nullptr;
@@ -410,7 +409,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
                    Sprintf("%lu", (unsigned long)buf->res->trbyte)->ptr,
                    nullptr);
 
-    a = retrieveCurrentAnchor(&buf->layout);
+    auto a = buf->layout.retrieveCurrentAnchor();
     if (a) {
       pu = urlParse(a->url, buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
@@ -423,7 +422,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
           tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
           q, "\">", p, "</a>", nullptr);
     }
-    a = retrieveCurrentImg(&buf->layout);
+    a = buf->layout.retrieveCurrentImg();
     if (a != nullptr) {
       pu = urlParse(a->url, buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
@@ -436,7 +435,7 @@ std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf) {
           tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
           q, "\">", p, "</a>", nullptr);
     }
-    a = retrieveCurrentForm(&buf->layout);
+    a = buf->layout.retrieveCurrentForm();
     if (a != nullptr) {
       FormItemList *fi = (FormItemList *)a->url;
       p = form2str(fi);
@@ -719,7 +718,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         p = html_quote(url_decode0(p));
       else
         p = u;
-      t = getAnchorText(&buf->layout, al.get(), a);
+      t = buf->layout.getAnchorText(al.get(), a);
       t = t ? html_quote(t) : "";
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);

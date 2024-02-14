@@ -700,7 +700,7 @@ void followA() {
   //   _followForm(false);
   //   return;
   // }
-  a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
+  a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr) {
     CurrentTab->_followForm(false);
     return;
@@ -742,7 +742,7 @@ void followI() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
 
-  auto a = retrieveCurrentImg(&CurrentTab->currentBuffer()->layout);
+  auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
   if (a == nullptr)
     return;
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
@@ -1445,7 +1445,7 @@ void extbrz() {
 void linkbrz() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     return;
-  auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
+  auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr)
     return;
   auto pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());

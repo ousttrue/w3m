@@ -136,12 +136,12 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
 
   if (displayLink) {
     {
-      Anchor *a = retrieveCurrentAnchor(&buf->layout);
+      Anchor *a = buf->layout.retrieveCurrentAnchor();
       const char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        auto a_img = retrieveCurrentImg(&buf->layout);
+        auto a_img = buf->layout.retrieveCurrentImg();
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
@@ -316,11 +316,12 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   if (!buf->layout.href() && !buf->layout.formitem())
     return;
 
-  auto an = retrieveCurrentAnchor(&buf->layout);
-  if (an)
+  auto an = buf->layout.retrieveCurrentAnchor();
+  if (an) {
     hseq = an->hseq;
-  else
+  } else {
     hseq = -1;
+  }
   tline = buf->layout.topLine->linenumber;
   eline = tline + buf->layout.LINES;
   prevhseq = buf->layout.hmarklist()->prevhseq;

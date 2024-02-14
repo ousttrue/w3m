@@ -537,16 +537,19 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
 
 /* go to the next downward/upward anchor */
 void LineLayout::nextY(int d, int n) {
-  if (this->firstLine == nullptr)
+  if (!this->firstLine) {
     return;
+  }
 
   auto hl = this->hmarklist();
-  if (hl->size() == 0)
+  if (hl->size() == 0) {
     return;
+  }
 
-  auto an = retrieveCurrentAnchor(this);
-  if (an == nullptr)
-    an = retrieveCurrentForm(this);
+  auto an = this->retrieveCurrentAnchor();
+  if (!an) {
+    an = this->retrieveCurrentForm();
+  }
 
   int x = this->pos;
   int y = this->currentLine->linenumber + d;
@@ -588,9 +591,10 @@ void LineLayout::nextX(int d, int dy, int n) {
   if (hl->size() == 0)
     return;
 
-  auto an = retrieveCurrentAnchor(this);
-  if (an == nullptr)
-    an = retrieveCurrentForm(this);
+  auto an = this->retrieveCurrentAnchor();
+  if (!an) {
+    an = retrieveCurrentForm();
+  }
 
   auto l = this->currentLine;
   auto x = this->pos;
@@ -646,9 +650,10 @@ void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
   if (hl->size() == 0)
     return;
 
-  auto an = retrieveCurrentAnchor(this);
-  if (visited != true && an == nullptr)
-    an = retrieveCurrentForm(this);
+  auto an = this->retrieveCurrentAnchor();
+  if (visited != true && an == nullptr) {
+    an = this->retrieveCurrentForm();
+  }
 
   y = this->currentLine->linenumber;
   x = this->pos;
@@ -725,9 +730,10 @@ void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
   if (hl->size() == 0)
     return;
 
-  auto an = retrieveCurrentAnchor(this);
-  if (visited != true && an == nullptr)
-    an = retrieveCurrentForm(this);
+  auto an = this->retrieveCurrentAnchor();
+  if (visited != true && an == nullptr) {
+    an = this->retrieveCurrentForm();
+  }
 
   auto y = this->currentLine->linenumber;
   auto x = this->pos;
@@ -1122,4 +1128,55 @@ const char *LineLayout::reAnchor(const char *re) {
 const char *LineLayout::reAnchorWord(Line *l, int spos, int epos) {
   return this->reAnchorPos(l, &l->lineBuf[spos], &l->lineBuf[epos],
                            _put_anchor_all);
+}
+
+Anchor *LineLayout::retrieveCurrentAnchor() {
+  if (!this->currentLine || !this->href())
+    return NULL;
+  return this->href()->retrieveAnchor(this->currentLine->linenumber, this->pos);
+}
+
+Anchor *LineLayout::retrieveCurrentImg() {
+  if (!this->currentLine || !this->img())
+    return NULL;
+  return this->img()->retrieveAnchor(this->currentLine->linenumber, this->pos);
+}
+
+Anchor *LineLayout::retrieveCurrentForm() {
+  if (!this->currentLine || !this->formitem())
+    return NULL;
+  return this->formitem()->retrieveAnchor(this->currentLine->linenumber,
+                                          this->pos);
+}
+
+const char *LineLayout::getAnchorText(AnchorList *al, Anchor *a) {
+  if (!a || a->hseq < 0)
+    return NULL;
+
+  Str *tmp = NULL;
+  auto hseq = a->hseq;
+  auto l = this->firstLine;
+  for (size_t i = 0; i < al->size(); i++) {
+    a = &al->anchors[i];
+    if (a->hseq != hseq)
+      continue;
+    for (; l; l = l->next) {
+      if (l->linenumber == a->start.line)
+        break;
+    }
+    if (!l)
+      break;
+    auto p = l->lineBuf.data() + a->start.pos;
+    auto ep = l->lineBuf.data() + a->end.pos;
+    for (; p < ep && IS_SPACE(*p); p++)
+      ;
+    if (p == ep)
+      continue;
+    if (!tmp)
+      tmp = Strnew_size(ep - p);
+    else
+      Strcat_char(tmp, ' ');
+    Strcat_charp_n(tmp, p, ep - p);
+  }
+  return tmp ? tmp->ptr : NULL;
 }

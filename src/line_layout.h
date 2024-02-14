@@ -171,6 +171,10 @@ public:
                                                 const char *, int, int));
   const char *reAnchor(const char *re);
   const char *reAnchorWord(Line *l, int spos, int epos);
+  Anchor *retrieveCurrentAnchor();
+  Anchor *retrieveCurrentImg();
+  Anchor *retrieveCurrentForm();
+  const char *getAnchorText(AnchorList *al, Anchor *a);
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

@@ -53,27 +53,6 @@ Anchor *AnchorList::retrieveAnchor(int line, int pos) {
   return NULL;
 }
 
-Anchor *retrieveCurrentAnchor(LineLayout *layout) {
-  if (!layout->currentLine || !layout->href())
-    return NULL;
-  return layout->href()->retrieveAnchor(layout->currentLine->linenumber,
-                                        layout->pos);
-}
-
-Anchor *retrieveCurrentImg(LineLayout *layout) {
-  if (!layout->currentLine || !layout->img())
-    return NULL;
-  return layout->img()->retrieveAnchor(layout->currentLine->linenumber,
-                                       layout->pos);
-}
-
-Anchor *retrieveCurrentForm(LineLayout *layout) {
-  if (!layout->currentLine || !layout->formitem())
-    return NULL;
-  return layout->formitem()->retrieveAnchor(layout->currentLine->linenumber,
-                                            layout->pos);
-}
-
 Anchor *AnchorList::searchAnchor(std::string_view str) {
   for (size_t i = 0; i < this->size(); i++) {
     auto a = &this->anchors[i];
@@ -169,39 +148,6 @@ void AnchorList::shiftAnchorPosition(HmarkerList *hl, int line, int pos,
     if (a->end.pos >= pos)
       a->end.pos += shift;
   }
-}
-
-const char *getAnchorText(LineLayout *layout, AnchorList *al, Anchor *a) {
-  if (!a || a->hseq < 0)
-    return NULL;
-
-  Str *tmp = NULL;
-  char *p, *ep;
-  auto hseq = a->hseq;
-  auto l = layout->firstLine;
-  for (size_t i = 0; i < al->size(); i++) {
-    a = &al->anchors[i];
-    if (a->hseq != hseq)
-      continue;
-    for (; l; l = l->next) {
-      if (l->linenumber == a->start.line)
-        break;
-    }
-    if (!l)
-      break;
-    p = l->lineBuf.data() + a->start.pos;
-    ep = l->lineBuf.data() + a->end.pos;
-    for (; p < ep && IS_SPACE(*p); p++)
-      ;
-    if (p == ep)
-      continue;
-    if (!tmp)
-      tmp = Strnew_size(ep - p);
-    else
-      Strcat_char(tmp, ' ');
-    Strcat_charp_n(tmp, p, ep - p);
-  }
-  return tmp ? tmp->ptr : NULL;
 }
 
 const char *html_quote(const char *str) {

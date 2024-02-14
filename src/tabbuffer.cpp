@@ -297,7 +297,7 @@ void goURL0(const char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
+    auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
     if (a) {
       auto p_url = urlParse(a->url, current);
       auto a_url = p_url.to_Str();
@@ -413,7 +413,7 @@ void TabBuffer::_newT() {
 }
 
 void followTab(TabBuffer *tab) {
-  auto a = retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout);
+  auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr)
     return;
 
@@ -724,7 +724,7 @@ void TabBuffer::_followForm(int submit) {
   if (currentBuffer()->layout.firstLine == nullptr)
     return;
 
-  auto a = retrieveCurrentForm(&currentBuffer()->layout);
+  auto a = currentBuffer()->layout.retrieveCurrentForm();
   if (a == nullptr)
     return;
   auto fi = (FormItemList *)a->url;

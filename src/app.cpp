@@ -228,23 +228,22 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   }
   l = buf->layout.currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
-    Anchor *a;
     Url pu;
     auto s = buf->layout.getCurWord();
     set_environ("W3M_CURRENT_WORD", s.c_str());
-    a = retrieveCurrentAnchor(&buf->layout);
+    auto a = buf->layout.retrieveCurrentAnchor();
     if (a) {
       pu = urlParse(a->url, buf->res->getBaseURL());
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_LINK", "");
-    a = retrieveCurrentImg(&buf->layout);
+    a = buf->layout.retrieveCurrentImg();
     if (a) {
       pu = urlParse(a->url, buf->res->getBaseURL());
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else
       set_environ("W3M_CURRENT_IMG", "");
-    a = retrieveCurrentForm(&buf->layout);
+    a = buf->layout.retrieveCurrentForm();
     if (a)
       set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
     else
@@ -373,9 +372,7 @@ const char *App::searchKeyData() {
 }
 
 void App::_peekURL(bool only_img) {
-
   Anchor *a;
-  // Url pu;
   static Str *s = nullptr;
   static int offset = 0;
 
@@ -394,12 +391,12 @@ void App::_peekURL(bool only_img) {
   }
   s = nullptr;
   a = (only_img ? nullptr
-                : retrieveCurrentAnchor(&CurrentTab->currentBuffer()->layout));
+                : CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor());
   if (a == nullptr) {
     a = (only_img ? nullptr
-                  : retrieveCurrentForm(&CurrentTab->currentBuffer()->layout));
+                  : CurrentTab->currentBuffer()->layout.retrieveCurrentForm());
     if (a == nullptr) {
-      a = retrieveCurrentImg(&CurrentTab->currentBuffer()->layout);
+      a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
       if (a == nullptr)
         return;
     } else

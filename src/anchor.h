@@ -59,15 +59,6 @@ private:
   int acache = -1;
 };
 
-struct LineLayout;
-Anchor *retrieveCurrentAnchor(LineLayout *layout);
-Anchor *retrieveCurrentImg(LineLayout *layout);
-Anchor *retrieveCurrentForm(LineLayout *layout);
-struct Line;
-struct AnchorList;
-
-const char *getAnchorText(LineLayout *layout, AnchorList *al, Anchor *a);
-
 const char *html_quote(const char *str);
 const char *html_unquote(const char *str);
 int getescapechar(const char **s);
