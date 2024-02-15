@@ -1,5 +1,4 @@
 #include "line_layout.h"
-#include "http_request.h"
 #include "url_quote.h"
 #include "myctype.h"
 #include "history.h"
@@ -10,6 +9,7 @@
 #include "anchor.h"
 #include "form.h"
 #include "regex.h"
+#include "alloc.h"
 
 int nextpage_topline = false;
 
@@ -1125,4 +1125,60 @@ const char *LineLayout::getAnchorText(AnchorList *al, Anchor *a) {
     Strcat_charp_n(tmp, p, ep - p);
   }
   return tmp ? tmp->ptr : NULL;
+}
+
+void LineLayout::save_buffer_position() {
+  BufferPos *b = this->undo;
+
+  if (!this->firstLine)
+    return;
+  if (b && b->top_linenumber == this->TOP_LINENUMBER() &&
+      b->cur_linenumber == this->CUR_LINENUMBER() &&
+      b->currentColumn == this->currentColumn && b->pos == this->pos)
+    return;
+  b = (BufferPos *)New(BufferPos);
+  b->top_linenumber = this->TOP_LINENUMBER();
+  b->cur_linenumber = this->CUR_LINENUMBER();
+  b->currentColumn = this->currentColumn;
+  b->pos = this->pos;
+  b->bpos = this->currentLine ? this->currentLine->bpos : 0;
+  b->next = NULL;
+  b->prev = this->undo;
+  if (this->undo)
+    this->undo->next = b;
+  this->undo = b;
+}
+
+void LineLayout::resetPos(BufferPos *b) {
+  LineLayout buf;
+  auto top = new Line(b->top_linenumber);
+  buf.topLine = top;
+
+  auto cur = new Line(b->cur_linenumber);
+  cur->bpos = b->bpos;
+
+  buf.currentLine = cur;
+  buf.pos = b->pos;
+  buf.currentColumn = b->currentColumn;
+  this->restorePosition(buf);
+  this->undo = b;
+  displayBuffer();
+}
+
+void LineLayout::undoPos(int n) {
+  BufferPos *b = this->undo;
+  if (!b || !b->prev)
+    return;
+  for (int i = 0; i < n && b->prev; i++, b = b->prev)
+    ;
+  this->resetPos(b);
+}
+
+void LineLayout::redoPos(int n) {
+  BufferPos *b = this->undo;
+  if (!b || !b->next)
+    return;
+  for (int i = 0; i < n && b->next; i++, b = b->next)
+    ;
+  this->resetPos(b);
 }

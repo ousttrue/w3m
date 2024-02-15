@@ -8,7 +8,6 @@
 #include "w3m.h"
 #include "downloadlist.h"
 #include "tabbuffer.h"
-#include "bufferpos.h"
 #include "buffer.h"
 #include "myctype.h"
 #include "func.h"
@@ -507,7 +506,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
         prec_num = PREC_LIMIT;
     } else {
       set_buffer_environ(_currentTab->currentBuffer());
-      save_buffer_position(&_currentTab->currentBuffer()->layout);
+      _currentTab->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
       w3mFuncList[(int)GlobalKeymap[(int)c]].func();
       prec_num = 0;

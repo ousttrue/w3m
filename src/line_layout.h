@@ -9,6 +9,16 @@
 
 extern int nextpage_topline;
 
+struct BufferPos {
+  long top_linenumber;
+  long cur_linenumber;
+  int currentColumn;
+  int pos;
+  int bpos;
+  BufferPos *next;
+  BufferPos *prev;
+};
+
 struct Line;
 struct BufferPos;
 struct HtmlTag;
@@ -77,6 +87,11 @@ struct LineLayout {
   void restorePosition(const LineLayout &orig);
   void gotoRealLine(int n);
   void nscroll(int n);
+
+  void save_buffer_position();
+  void resetPos(BufferPos *b);
+  void undoPos(int n);
+  void redoPos(int n);
 
   //
   // viewport

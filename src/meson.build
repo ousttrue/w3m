@@ -111,7 +111,6 @@ executable(
         'mytime.cpp',
         'funcname.cpp',
         'app.cpp',
-        'bufferpos.cpp',
         'http_auth.cpp',
         'http_request.cpp',
         'http_response.cpp',

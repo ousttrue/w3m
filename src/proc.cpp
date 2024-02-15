@@ -4,7 +4,6 @@
 #include "http_response.h"
 #include "url_quote.h"
 #include "search.h"
-#include "bufferpos.h"
 #include "mimetypes.h"
 #include "funcname1.h"
 #include "downloadlist.h"
@@ -1727,27 +1726,17 @@ void ldDL() {
 // UNDO
 //"Cancel the last cursor movement"
 void undoPos() {
-  BufferPos *b = CurrentTab->currentBuffer()->layout.undo;
   if (!CurrentTab->currentBuffer()->layout.firstLine)
     return;
-  if (!b || !b->prev)
-    return;
-  for (int i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
-    ;
-  resetPos(b);
+  CurrentTab->currentBuffer()->layout.undoPos(PREC_NUM);
 }
 
 // REDO
 //"Cancel the last undo"
 void redoPos() {
-  BufferPos *b = CurrentTab->currentBuffer()->layout.undo;
   if (!CurrentTab->currentBuffer()->layout.firstLine)
     return;
-  if (!b || !b->next)
-    return;
-  for (int i = 0; i < PREC_NUM && b->next; i++, b = b->next)
-    ;
-  resetPos(b);
+  CurrentTab->currentBuffer()->layout.redoPos(PREC_NUM);
 }
 
 // CURSOR_TOP
