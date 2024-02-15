@@ -617,7 +617,7 @@ void App::drawTabs() {
     clrtoeolx();
     int y = 0;
     for (auto t = _firstTab; t; t = t->nextTab) {
-      y = t->draw();
+      y = t->draw(_currentTab);
     }
     move(y + 1, 0);
     for (int i = 0; i < COLS; i++)

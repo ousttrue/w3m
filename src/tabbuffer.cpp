@@ -1,41 +1,35 @@
 #include "tabbuffer.h"
-#include "http_option.h"
+#include "buffer.h"
+#include "line_layout.h"
+#include "utf8.h"
+#include "Str.h"
 #include "linein.h"
 #include "form.h"
 #include "alloc.h"
 #include "http_session.h"
-#include "file_util.h"
-#include "url_quote.h"
-#include "url_stream.h"
-#include "proto.h"
-#include "rc.h"
-#include "screen.h"
-#include "etc.h"
-#include "message.h"
-#include "buffer.h"
 #include "http_response.h"
+#include "url_quote.h"
+#include "proto.h"
+#include "screen.h"
+#include "message.h"
 #include "myctype.h"
-#include "anchor.h"
 #include "w3m.h"
 #include "history.h"
 #include "app.h"
-#include "terms.h"
-#include "buffer.h"
 #include <sys/stat.h>
 
 bool open_tab_blank = false;
 bool open_tab_dl_list = false;
 bool close_tab_back = false;
 int TabCols = 10;
-bool check_target = true;
 
 TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-int TabBuffer::draw() {
+int TabBuffer::draw(TabBuffer *current) {
   move(this->y, this->x1);
-  if (this == CurrentTab) {
+  if (this == current) {
     bold();
   } else {
     boldend();
@@ -50,12 +44,12 @@ int TabBuffer::draw() {
     addnstr_sup(" ", l / 2);
   }
 
-  if (this == CurrentTab) {
+  if (this == current) {
     underline();
     // standout();
   }
   addnstr(this->currentBuffer()->layout.title.c_str(), this->x2 - this->x1 - l);
-  if (this == CurrentTab) {
+  if (this == current) {
     underlineend();
     // standend();
   }
@@ -65,7 +59,7 @@ int TabBuffer::draw() {
   }
   move(this->y, this->x2);
   addch(']');
-  if (this == CurrentTab) {
+  if (this == current) {
     boldend();
   }
   return this->y;
@@ -88,43 +82,43 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   } else if (auto buf = forwardBuffer(firstBuffer, delbuf)) {
   }
 
-  if (!CurrentTab->currentBuffer()) {
-    _currentBuffer = CurrentTab->firstBuffer;
+  if (!this->currentBuffer()) {
+    _currentBuffer = this->firstBuffer;
   }
 }
 
-void gotoLabel(const char *label) {
+std::shared_ptr<Buffer> TabBuffer::gotoLabel(const char *label) {
 
-  auto al = CurrentTab->currentBuffer()->layout.name()->searchAnchor(label);
+  auto al = this->currentBuffer()->layout.name()->searchAnchor(label);
   if (al == nullptr) {
     disp_message(Sprintf("%s is not found", label)->ptr);
-    return;
+    return {};
   }
+
   auto buf = Buffer::create();
-  *buf = *CurrentTab->currentBuffer();
+  *buf = *this->currentBuffer();
   for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = nullptr;
   buf->res->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
-  CurrentTab->pushBuffer(buf);
-  CurrentTab->currentBuffer()->layout.gotoLine(al->start.line);
+  this->pushBuffer(buf);
+  this->currentBuffer()->layout.gotoLine(al->start.line);
   if (label_topline)
-    CurrentTab->currentBuffer()->layout.topLine =
-        CurrentTab->currentBuffer()->layout.lineSkip(
-            CurrentTab->currentBuffer()->layout.topLine,
-            CurrentTab->currentBuffer()->layout.currentLine->linenumber -
-                CurrentTab->currentBuffer()->layout.topLine->linenumber,
+    this->currentBuffer()->layout.topLine =
+        this->currentBuffer()->layout.lineSkip(
+            this->currentBuffer()->layout.topLine,
+            this->currentBuffer()->layout.currentLine->linenumber -
+                this->currentBuffer()->layout.topLine->linenumber,
             false);
-  CurrentTab->currentBuffer()->layout.pos = al->start.pos;
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
-  return;
+  this->currentBuffer()->layout.pos = al->start.pos;
+  this->currentBuffer()->layout.arrangeCursor();
+  return buf;
 }
 
 void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
                             const HttpOption &option, FormList *request) {
 
-  refresh(term_io());
+  // refresh(term_io());
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -136,18 +130,16 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
 
   // if (buf != NO_BUFFER)
   { this->pushBuffer(buf); }
-
-  App::instance().invalidate();
 }
 
 /* go to specified URL */
-void goURL0(const char *prompt, int relative) {
+void TabBuffer::goURL0(const char *prompt, bool relative) {
   auto url = App::instance().searchKeyData();
   std::optional<Url> current;
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
 
-    current = CurrentTab->currentBuffer()->res->getBaseURL();
+    current = this->currentBuffer()->res->getBaseURL();
     if (current) {
       auto c_url = current->to_Str();
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -155,7 +147,7 @@ void goURL0(const char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
+    auto a = this->currentBuffer()->layout.retrieveCurrentAnchor();
     if (a) {
       auto p_url = urlParse(a->url, current);
       auto a_url = p_url.to_Str();
@@ -165,21 +157,21 @@ void goURL0(const char *prompt, int relative) {
         pushHist(hist, a_url);
     }
     // url = inputLineHist(prompt, url, IN_URL, hist);
-    if (url != nullptr)
+    if (url != nullptr) {
       SKIP_BLANKS(url);
+    }
   }
 
   HttpOption option = {};
   if (relative) {
     const int *no_referer_ptr = nullptr;
-    current = CurrentTab->currentBuffer()->res->getBaseURL();
+    current = this->currentBuffer()->res->getBaseURL();
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)
       option.no_referer = true;
     else
-      option.referer =
-          CurrentTab->currentBuffer()->res->currentURL.to_RefererStr();
+      option.referer = this->currentBuffer()->res->currentURL.to_RefererStr();
     url = Strnew(url_quote(url))->ptr;
   } else {
     current = {};
@@ -187,21 +179,20 @@ void goURL0(const char *prompt, int relative) {
   }
 
   if (url == nullptr || *url == '\0') {
-    App::instance().invalidate();
     return;
   }
   if (*url == '#') {
-    gotoLabel(url + 1);
+    this->gotoLabel(url + 1);
     return;
   }
 
   auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
-  auto cur_buf = CurrentTab->currentBuffer();
-  CurrentTab->cmd_loadURL(url, current, option, nullptr);
-  if (CurrentTab->currentBuffer() != cur_buf) { /* success */
+  auto cur_buf = this->currentBuffer();
+  this->cmd_loadURL(url, current, option, nullptr);
+  if (this->currentBuffer() != cur_buf) { /* success */
     pushHashHist(URLHist,
-                 CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
+                 this->currentBuffer()->res->currentURL.to_Str().c_str());
   }
 }
 
@@ -215,24 +206,6 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
   }
   _currentBuffer = buf;
   this->currentBuffer()->saveBufferInfo();
-}
-
-void followTab() {
-  auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
-  if (!a) {
-    return;
-  }
-
-  App::instance()._newT();
-  auto buf = CurrentTab->currentBuffer();
-  check_target = false;
-  followA();
-  check_target = true;
-  if (buf != CurrentTab->currentBuffer())
-    CurrentTab->deleteBuffer(buf);
-  else
-    App::instance().deleteTab(CurrentTab);
-  App::instance().invalidate();
 }
 
 /*
@@ -253,7 +226,7 @@ std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
 
 void TabBuffer::repBuffer(const std::shared_ptr<Buffer> &oldbuf,
                           const std::shared_ptr<Buffer> &buf) {
-  CurrentTab->firstBuffer = replaceBuffer(oldbuf, buf);
+  this->firstBuffer = replaceBuffer(oldbuf, buf);
   _currentBuffer = buf;
 }
 
@@ -268,11 +241,11 @@ bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
     return true;
 
   case 'D':
-    CurrentTab->deleteBuffer(buf);
-    if (CurrentTab->firstBuffer == nullptr) {
+    this->deleteBuffer(buf);
+    if (this->firstBuffer == nullptr) {
       /* No more buffer */
-      CurrentTab->firstBuffer = nullBuffer();
-      _currentBuffer = CurrentTab->firstBuffer;
+      this->firstBuffer = nullBuffer();
+      _currentBuffer = this->firstBuffer;
     }
     break;
 
@@ -295,7 +268,7 @@ std::shared_ptr<Buffer>
 TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                          const std::shared_ptr<Buffer> &newbuf) {
 
-  auto first = CurrentTab->firstBuffer;
+  auto first = this->firstBuffer;
   if (delbuf == nullptr) {
     newbuf->backBuffer = first;
     return newbuf;
@@ -320,7 +293,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
                                             HttpOption option,
                                             FormList *request) {
   message(Sprintf("loading %s", url)->ptr, 0, 0);
-  refresh(term_io());
+  // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
   auto base = this->currentBuffer()->res->getBaseURL();
@@ -350,10 +323,10 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
   // if (buf == NO_BUFFER) {
   //   return nullptr;
   // }
-  if (!on_target) { /* open link as an indivisual page */
-    this->pushBuffer(buf);
-    return buf;
-  }
+  // if (!on_target) { /* open link as an indivisual page */
+  //   this->pushBuffer(buf);
+  //   return buf;
+  // }
 
   // if (do_download) /* download (thus no need to render frames) */
   //   return loadNormalBuf(buf, false);
@@ -394,7 +367,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
       this->currentBuffer()->layout.arrangeCursor();
     }
   }
-  App::instance().invalidate();
+  // App::instance().invalidate();
   return buf;
 }
 
@@ -445,7 +418,7 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   return ret;
 }
 
-void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
+std::shared_ptr<Buffer> TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
   auto tmp2 = fi->parent->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
@@ -462,7 +435,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
     Strcat_charp(tmp2, "?");
     Strcat(tmp2, tmp);
-    this->loadLink(tmp2->ptr, a->target, {}, nullptr);
+    return this->loadLink(tmp2->ptr, a->target, {}, nullptr);
   } else if (fi->parent->method == FORM_METHOD_POST) {
     if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
       fi->query_from_followform_multipart();
@@ -486,31 +459,34 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
        */
       buf->layout.form_submit = save_submit_formlist(fi);
     }
+    return buf;
   } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
               (!Strcmp_charp(fi->parent->action, "map") ||
                !Strcmp_charp(fi->parent->action, "none")))) { /* internal */
     auto tmp = fi->query_from_followform();
     do_internal(tmp2->ptr, tmp->ptr);
+    return {};
   } else {
     disp_err_message("Can't send form because of illegal method.");
+    return {};
   }
-  App::instance().invalidate();
 }
 
-void TabBuffer::_followForm(int submit) {
-  if (currentBuffer()->layout.firstLine == nullptr)
-    return;
+std::shared_ptr<Buffer> TabBuffer::_followForm(int submit) {
+  if (!currentBuffer()->layout.firstLine) {
+    return {};
+  }
 
   auto a = currentBuffer()->layout.retrieveCurrentForm();
-  if (a == nullptr)
-    return;
+  if (!a) {
+    return {};
+  }
   auto fi = (FormItemList *)a->url;
 
   switch (fi->type) {
   case FORM_INPUT_TEXT:
     if (submit) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
     if (fi->readonly)
       disp_message_nsec("Read only field!", 1, true);
@@ -533,8 +509,7 @@ void TabBuffer::_followForm(int submit) {
 
   case FORM_INPUT_FILE:
     if (submit) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
 
     if (fi->readonly)
@@ -551,8 +526,7 @@ void TabBuffer::_followForm(int submit) {
     break;
   case FORM_INPUT_PASSWORD:
     if (submit) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
     if (fi->readonly) {
       disp_message_nsec("Read only field!", 1, true);
@@ -565,14 +539,12 @@ void TabBuffer::_followForm(int submit) {
     // fi->value = Strnew_charp(p);
     formUpdateBuffer(a, &currentBuffer()->layout, fi);
     if (fi->accept) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
     break;
   case FORM_TEXTAREA:
     if (submit) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
     if (fi->readonly)
       disp_message_nsec("Read only field!", 1, true);
@@ -581,8 +553,7 @@ void TabBuffer::_followForm(int submit) {
     break;
   case FORM_INPUT_RADIO:
     if (submit) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
     if (fi->readonly) {
       disp_message_nsec("Read only field!", 1, true);
@@ -592,8 +563,7 @@ void TabBuffer::_followForm(int submit) {
     break;
   case FORM_INPUT_CHECKBOX:
     if (submit) {
-      this->do_submit(fi, a);
-      return;
+      return this->do_submit(fi, a);
     }
     if (fi->readonly) {
       disp_message_nsec("Read only field!", 1, true);
@@ -625,5 +595,45 @@ void TabBuffer::_followForm(int submit) {
   default:
     break;
   }
-  App::instance().invalidate();
+
+  return {};
+}
+
+std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
+  if (!this->currentBuffer()->layout.firstLine) {
+    return {};
+  }
+
+  auto a = this->currentBuffer()->layout.retrieveCurrentAnchor();
+  if (!a) {
+    return this->_followForm(false);
+  }
+
+  if (*a->url == '#') { /* index within this buffer */
+    return this->gotoLabel(a->url + 1);
+  }
+
+  auto u = urlParse(a->url, this->currentBuffer()->res->getBaseURL());
+  if (u.to_Str() == this->currentBuffer()->res->currentURL.to_Str()) {
+    /* index within this buffer */
+    if (u.label.size()) {
+      return this->gotoLabel(u.label.c_str());
+    }
+  }
+
+  if (check_target && open_tab_blank && a->target &&
+      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    App::instance()._newT();
+    auto buf = this->currentBuffer();
+    this->loadLink(a->url, a->target, a->option, nullptr);
+    if (buf != this->currentBuffer()) {
+      this->deleteBuffer(buf);
+      return buf;
+    } else {
+      App::instance().deleteTab(this);
+      return {};
+    }
+  }
+
+  return this->loadLink(a->url, a->target, a->option, nullptr);
 }

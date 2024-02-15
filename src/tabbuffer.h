@@ -8,7 +8,6 @@ extern bool open_tab_blank;
 extern bool open_tab_dl_list;
 extern bool close_tab_back;
 extern int TabCols;
-extern bool check_target;
 
 struct Buffer;
 struct FormList;
@@ -58,12 +57,13 @@ public:
 
   std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
                                    HttpOption option, FormList *request);
-  void do_submit(FormItemList *fi, Anchor *a);
-  void _followForm(int submit);
-  int draw();
+  std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
+  std::shared_ptr<Buffer> _followForm(int submit);
+  std::shared_ptr<Buffer> followAnchor(bool check_target = true);
+  std::shared_ptr<Buffer> gotoLabel(const char *label);
+  void goURL0(const char *prompt, bool relative);
+
+  int draw(TabBuffer *current);
 };
 
-void followTab();
-struct Str;
-void gotoLabel(const char *label);
-void goURL0(const char *prompt, int relative);
+// void followTab();

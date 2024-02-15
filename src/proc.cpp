@@ -684,50 +684,9 @@ void editScr() {
 // GOTO_LINK
 //"Follow current hyperlink in a new buffer"
 void followA() {
-  Anchor *a;
-  Url u;
-  const char *url;
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+  CurrentTab->followAnchor();
 
-  // a = retrieveCurrentMap(CurrentTab->currentBuffer());
-  // if (a) {
-  //   _followForm(false);
-  //   return;
-  // }
-  a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
-  if (a == nullptr) {
-    CurrentTab->_followForm(false);
-    return;
-  }
-  if (*a->url == '#') { /* index within this buffer */
-    gotoLabel(a->url + 1);
-    return;
-  }
-  u = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
-  if (u.to_Str() == CurrentTab->currentBuffer()->res->currentURL.to_Str()) {
-    /* index within this buffer */
-    if (u.label.size()) {
-      gotoLabel(u.label.c_str());
-      return;
-    }
-  }
-  url = a->url;
-
-  if (check_target && open_tab_blank && a->target &&
-      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    App::instance()._newT();
-    auto buf = CurrentTab->currentBuffer();
-    CurrentTab->loadLink(url, a->target, a->option, nullptr);
-    if (buf != CurrentTab->currentBuffer())
-      CurrentTab->deleteBuffer(buf);
-    else
-      App::instance().deleteTab(CurrentTab);
-    App::instance().invalidate();
-    return;
-  }
-  CurrentTab->loadLink(url, a->target, a->option, nullptr);
   App::instance().invalidate();
 }
 
@@ -1027,7 +986,7 @@ void deletePrevBuf() {
 
 // GOTO
 //"Open specified document in a new buffer"
-void goURL() { goURL0("Goto URL: ", false); }
+void goURL() { CurrentTab->goURL0("Goto URL: ", false); }
 
 // GOTO_HOME
 //"Open home page in a new buffer"
@@ -1051,7 +1010,7 @@ void goHome() {
 
 // GOTO_RELATIVE
 //"Go to relative address"
-void gorURL() { goURL0("Goto relative URL: ", true); }
+void gorURL() { CurrentTab->goURL0("Goto relative URL: ", true); }
 
 /* load bookmark */
 // BOOKMARK VIEW_BOOKMARK
@@ -1621,7 +1580,6 @@ void closeT() {
 // NEXT_TAB
 //"Switch to the next tab"
 void nextT() {
-
   App::instance().nextTab();
   App::instance().invalidate();
 }
@@ -1629,22 +1587,37 @@ void nextT() {
 // PREV_TAB
 //"Switch to the previous tab"
 void prevT() {
-
   App::instance().prevTab();
   App::instance().invalidate();
 }
 
 // TAB_LINK
 //"Follow current hyperlink in a new tab"
-void tabA() { followTab(); }
+void tabA() {
+  auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
+  if (!a) {
+    return;
+  }
+
+  App::instance()._newT();
+  auto buf = CurrentTab->currentBuffer();
+
+  CurrentTab->followAnchor(false);
+
+  if (buf != CurrentTab->currentBuffer())
+    CurrentTab->deleteBuffer(buf);
+  else
+    App::instance().deleteTab(CurrentTab);
+  App::instance().invalidate();
+}
 
 // TAB_GOTO
 //"Open specified document in a new tab"
 void tabURL() {
-  // tabURL0("Goto URL on new tab: ", false);
   App::instance()._newT();
+
   auto buf = CurrentTab->currentBuffer();
-  goURL0("Goto URL on new tab: ", false);
+  CurrentTab->goURL0("Goto URL on new tab: ", false);
   if (buf != CurrentTab->currentBuffer())
     CurrentTab->deleteBuffer(buf);
   else
@@ -1655,10 +1628,10 @@ void tabURL() {
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
 void tabrURL() {
-  // tabURL0(, true);
   App::instance()._newT();
+
   auto buf = CurrentTab->currentBuffer();
-  goURL0("Goto relative URL on new tab: ", true);
+  CurrentTab->goURL0("Goto relative URL on new tab: ", true);
   if (buf != CurrentTab->currentBuffer())
     CurrentTab->deleteBuffer(buf);
   else
