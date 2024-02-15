@@ -30,7 +30,6 @@
 #include "terms.h"
 #include "cookie.h"
 #include "w3m.h"
-#include "tmpfile.h"
 #include "http_request.h"
 #include "url.h"
 #include "signal_util.h"

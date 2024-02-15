@@ -1,7 +1,6 @@
 #include "compression.h"
 #include "signal_util.h"
 #include "etc.h"
-#include "tmpfile.h"
 #include "rc.h"
 #include "mimetypes.h"
 #include "myctype.h"

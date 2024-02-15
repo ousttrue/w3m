@@ -4,7 +4,6 @@
 #include "downloadlist.h"
 #include "signal_util.h"
 #include "terms.h"
-#include "tmpfile.h"
 #include "etc.h"
 #include "linein.h"
 #include "Str.h"
@@ -108,7 +107,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       }
       return -1;
     }
-    auto lock = tmpfname(TMPF_DFL, ".lock");
+    auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");
     symlink(p, lock.c_str());
     flush_tty();
     pid = fork();

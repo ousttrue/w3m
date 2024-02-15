@@ -15,7 +15,6 @@
 #include "form.h"
 #include "history.h"
 #include "anchor.h"
-#include "tmpfile.h"
 #include "util.h"
 #include "etc.h"
 #include "mailcap.h"
@@ -669,7 +668,7 @@ void editBf() {
 // EDIT_SCREEN
 //"Edit rendered copy of document"
 void editScr() {
-  auto tmpf = tmpfname(TMPF_DFL, {});
+  auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
     disp_err_message(Sprintf("Can't open %s", tmpf.c_str())->ptr, true);

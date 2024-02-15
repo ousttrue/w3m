@@ -21,7 +21,6 @@
 #include "rc.h"
 #include "textlist.h"
 #include "linklist.h"
-#include "tmpfile.h"
 #include "terms.h"
 #include "form.h"
 #include "anchor.h"

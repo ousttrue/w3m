@@ -1,4 +1,5 @@
 #include "history.h"
+#include "app.h"
 #include "readbuffer.h"
 #include "anchor.h"
 #include "url_quote.h"
@@ -6,7 +7,6 @@
 #include "http_session.h"
 #include "rc.h"
 #include "message.h"
-#include "tmpfile.h"
 #include "buffer.h"
 #include "proto.h"
 #include "alloc.h"
@@ -113,7 +113,7 @@ void saveHistory(Hist *hist, int size) {
       hist = fhist;
   }
 
-  tmpf = tmpfname(TMPF_HIST, {});
+  tmpf = App::instance().tmpfname(TMPF_HIST, {});
   if ((f = fopen(tmpf.c_str(), "w")) == NULL)
     goto fail;
   for (item = hist->list->first; item && hist->list->nitem > size;

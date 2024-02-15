@@ -26,7 +26,6 @@
 #include "alloc.h"
 #include "funcname1.h"
 #include "entity.h"
-#include "tmpfile.h"
 #include <math.h>
 #include <algorithm>
 

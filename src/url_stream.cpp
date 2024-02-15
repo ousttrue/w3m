@@ -10,7 +10,6 @@
 #include "myctype.h"
 #include "downloadlist.h"
 #include "alloc.h"
-#include "tmpfile.h"
 #include "message.h"
 #include "history.h"
 #include "terms.h"
@@ -667,7 +666,7 @@ int UrlStream::doFileSave(const char *defstr) {
       disp_err_message(msg->ptr, false);
       return -1;
     }
-    auto lock = tmpfname(TMPF_DFL, ".lock");
+    auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");
     symlink(p, lock.c_str());
 
     flush_tty();
@@ -907,7 +906,7 @@ std::string UrlStream::uncompress_stream() {
 
   std::string tmpf;
   if (this->schema != SCM_LOCAL) {
-    tmpf = tmpfname(TMPF_DFL, ext);
+    tmpf = App::instance().tmpfname(TMPF_DFL, ext);
   }
 
   /* child1 -- stdout|f1=uf -> parent */

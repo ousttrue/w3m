@@ -7,7 +7,6 @@
 #include "terms.h"
 #include "rc.h"
 #include "w3m.h"
-#include "tmpfile.h"
 #include "http_request.h"
 #include "etc.h"
 #include "form.h"
@@ -44,7 +43,7 @@ static void writeLocalCookie() {
   if (Local_cookie_file.size()) {
     return;
   }
-  Local_cookie_file = tmpfname(TMPF_COOKIE, {});
+  Local_cookie_file = App::instance().tmpfname(TMPF_COOKIE, {});
   set_environ("LOCAL_COOKIE_FILE", Local_cookie_file.c_str());
   auto f = fopen(Local_cookie_file.c_str(), "wb");
   if (!f) {
@@ -230,7 +229,7 @@ FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
   writeLocalCookie();
   std::string tmpf;
   if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
-    tmpf = tmpfname(TMPF_DFL, {});
+    tmpf = App::instance().tmpfname(TMPF_DFL, {});
     fw = fopen(tmpf.c_str(), "w");
     if (!fw)
       return NULL;

@@ -1,7 +1,5 @@
 #pragma once
 #include <string>
-#include <functional>
-#include <queue>
 
 extern int prev_key;
 extern const char *CurrentKeyData;
@@ -9,6 +7,16 @@ extern const char *CurrentCmdData;
 extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)
 extern bool on_target;
+
+enum TmpfType {
+  TMPF_DFL = 0,
+  TMPF_SRC = 1,
+  TMPF_FRAME = 2,
+  TMPF_CACHE = 3,
+  TMPF_COOKIE = 4,
+  TMPF_HIST = 5,
+  MAX_TMPF_TYPE = 6,
+};
 
 class App {
   std::string _currentDir;
@@ -63,4 +71,5 @@ public:
   void dispatchPtyIn(const char *buf, size_t len);
   void onFrame();
   void task(int sec, int cmd, const char *data = nullptr, bool releat = false);
+  std::string tmpfname(TmpfType type, const std::string &ext);
 };

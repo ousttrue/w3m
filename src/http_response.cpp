@@ -1,5 +1,4 @@
 #include "http_response.h"
-#include "tmpfile.h"
 #include "matchattr.h"
 #include "app.h"
 #include "screen.h"
@@ -300,7 +299,7 @@ FILE *HttpResponse::createSourceFile() {
     return {};
   }
 
-  auto tmp = tmpfname(TMPF_SRC, ".html");
+  auto tmp = App::instance().tmpfname(TMPF_SRC, ".html");
   auto src = fopen(tmp.c_str(), "w");
   if (!src) {
     // fail to open file

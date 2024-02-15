@@ -14,7 +14,6 @@
 #include "alloc.h"
 #include "html.h"
 #include "utf8.h"
-#include "tmpfile.h"
 #include "line.h"
 #include "display.h"
 #include "buffer.h"
@@ -461,7 +460,7 @@ static void form_fputs_decode(Str *s, FILE *f) {
 }
 
 void input_textarea(FormItemList *fi) {
-  auto tmpf = tmpfname(TMPF_DFL, {});
+  auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == NULL) {
     disp_err_message("Can't open temporary file", false);
@@ -854,7 +853,7 @@ Str *FormItemList::query_from_followform() {
 }
 
 void FormItemList ::query_from_followform_multipart() {
-  auto tmpf = Strnew(tmpfname(TMPF_DFL, {}));
+  auto tmpf = Strnew(App::instance().tmpfname(TMPF_DFL, {}));
   auto body = fopen(tmpf->ptr, "w");
   if (body == nullptr) {
     return;
