@@ -46,7 +46,6 @@ public:
   }
   // shallow copy
   Buffer &operator=(const Buffer &src);
-  void discardBuffer();
   void saveBufferInfo();
 };
 

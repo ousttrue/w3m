@@ -59,20 +59,6 @@ std::shared_ptr<Buffer> nullBuffer(void) {
   return b;
 }
 
-/*
- * discardBuffer: free buffer structure
- */
-
-void Buffer::discardBuffer() {
-  this->layout.clearBuffer();
-  for (int i = 0; i < MAX_LB; i++) {
-    auto b = this->linkBuffer[i];
-    if (b == nullptr)
-      continue;
-    b->linkBuffer[i] = nullptr;
-  }
-}
-
 std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
                                   int n) {
   int i;
