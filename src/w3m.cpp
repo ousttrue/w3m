@@ -65,7 +65,6 @@ int is_redisplay = false;
 int clear_buffer = true;
 int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
-std::list<std::string> fileToDelete;
 char *document_root = nullptr;
 
 void _quitfm(bool confirm) {
@@ -192,23 +191,8 @@ Url urlParse(const char *src, std::optional<Url> current) {
   return url;
 }
 
-void deleteFiles() {
-  for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
-    while (CurrentTab->firstBuffer /*&& Firstbuf != NO_BUFFER*/) {
-      auto buf = CurrentTab->firstBuffer->backBuffer;
-      CurrentTab->firstBuffer = buf;
-    }
-  }
-
-  for (auto &f : fileToDelete) {
-    unlink(f.c_str());
-  }
-  fileToDelete.clear();
-}
-
 void w3m_exit(int i) {
   stopDownload();
-  deleteFiles();
   free_ssl_ctx();
   if (mkd_tmp_dir)
     if (rmdir(mkd_tmp_dir) != 0) {

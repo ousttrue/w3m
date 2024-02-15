@@ -19,11 +19,7 @@ extern bool confirm_on_quit;
 extern bool fmInitialized;
 extern bool IsForkChild;
 extern char *w3m_version;
-
-extern std::list<std::string> fileToDelete;
-
 extern char *document_root;
-
 extern int label_topline;
 extern int displayLineInfo;
 extern int show_srch_str;

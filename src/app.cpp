@@ -8,25 +8,21 @@
 #include "tabbuffer.h"
 #include "bufferpos.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "myctype.h"
 #include "func.h"
 #include "funcname1.h"
-// #include "signal_util.h"
 #include "terms.h"
-#include "screen.h"
 #include "display.h"
 #include "alloc.h"
 #include "Str.h"
 #include "rc.h"
 #include "cookie.h"
 #include "history.h"
-// #include <signal.h>
-#include <sys/wait.h>
 #include <iostream>
 #include <sstream>
 #include <uv.h>
 #include <chrono>
+#include <unistd.h>
 
 const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
 
@@ -186,7 +182,19 @@ App::App() {
   nTab = 1;
 }
 
-App::~App() { std::cout << "App::~App" << std::endl; }
+App::~App() {
+  if (getpid() != _currentPid) {
+    return;
+  }
+
+  // clean up only not fork process
+  std::cout << "App::~App" << std::endl;
+  for (auto &f : fileToDelete) {
+    std::cout << "fileToDelete: " << f << std::endl;
+    unlink(f.c_str());
+  }
+  fileToDelete.clear();
+}
 
 bool App::initialize() {
   init_rc();

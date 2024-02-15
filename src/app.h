@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <list>
 
 extern int prev_key;
 extern const char *CurrentKeyData;
@@ -19,6 +20,8 @@ enum TmpfType {
 };
 
 class App {
+  std::list<std::string> fileToDelete;
+
   std::string _currentDir;
   int _currentPid = -1;
   std::string _hostName = "localhost";
