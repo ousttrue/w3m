@@ -410,7 +410,6 @@ struct param_ptr params5[] = {
      (void *)&personal_document_root, CMT_PDROOT, NULL},
     {"cgi_bin", P_STRING, PI_TEXT, (void *)&cgi_bin, CMT_CGIBIN, NULL},
     {"index_file", P_STRING, PI_TEXT, (void *)&index_file, CMT_IFILE, NULL},
-    {"tmp_dir", P_STRING, PI_TEXT, (void *)&param_tmp_dir, CMT_TMP, NULL},
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
@@ -820,57 +819,7 @@ static void parse_cookie(void) {
         make_domain_list(cookie_avoid_wrong_number_of_dots);
 }
 
-#define do_mkdir(dir, mode) mkdir(dir, mode)
-
-static int do_recursive_mkdir(const char *dir) {
-  const char *ch, *dircpy;
-  char tmp;
-  struct stat st;
-
-  if (*dir == '\0')
-    return -1;
-
-  dircpy = Strnew_charp(dir)->ptr;
-  ch = dircpy + 1;
-  do {
-    while (!(*ch == '/' || *ch == '\0')) {
-      ch++;
-    }
-
-    tmp = *ch;
-    *(char *)ch = '\0';
-
-    if (stat(dircpy, &st) < 0) {
-      if (errno != ENOENT) { /* no directory */
-        return -1;
-      }
-      if (do_mkdir(dircpy, 0700) < 0) {
-        return -1;
-      }
-      stat(dircpy, &st);
-    }
-    if (!S_ISDIR(st.st_mode)) {
-      /* not a directory */
-      return -1;
-    }
-    if (!(st.st_mode & S_IWUSR)) {
-      return -1;
-    }
-
-    *(char *)ch = tmp;
-
-  } while (*ch++ != '\0');
-#ifdef HAVE_FACCESSAT
-  if (faccessat(AT_FDCWD, dir, W_OK | X_OK, AT_EACCESS) < 0) {
-    return -1;
-  }
-#endif
-
-  return 0;
-}
-
 void sync_with_option(void) {
-  init_tmp();
   if (PagerMax < LINES)
     PagerMax = LINES;
   WrapSearch = WrapDefault;
@@ -916,8 +865,6 @@ void init_rc(void) {
   if (i > 1 && rc_dir[i - 1] == '/')
     ((char *)rc_dir)[i - 1] = '\0';
 
-  tmp_dir = rc_dir;
-
   if (do_recursive_mkdir(rc_dir) == -1)
     goto rc_dir_err;
 
@@ -948,45 +895,6 @@ rc_dir_err:
   no_rc_dir = true;
   create_option_search_table();
   goto open_rc;
-}
-
-void init_tmp(void) {
-  int i;
-
-  if (param_tmp_dir)
-    tmp_dir = param_tmp_dir;
-  if (*tmp_dir == '\0')
-    tmp_dir = rc_dir;
-
-  if (strcmp(tmp_dir, rc_dir) == 0) {
-    if (no_rc_dir)
-      goto tmp_dir_err;
-    return;
-  }
-
-  tmp_dir = expandPath(tmp_dir);
-  i = strlen(tmp_dir);
-  if (i > 1 && tmp_dir[i - 1] == '/')
-    ((char *)tmp_dir)[i - 1] = '\0';
-  if (do_recursive_mkdir(tmp_dir) == -1)
-    goto tmp_dir_err;
-  return;
-
-tmp_dir_err:
-  if (mkd_tmp_dir) {
-    tmp_dir = mkd_tmp_dir;
-    return;
-  }
-  if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') &&
-      ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') &&
-      ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
-    tmp_dir = "/tmp";
-  tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
-  if (tmp_dir)
-    mkd_tmp_dir = tmp_dir;
-  else
-    tmp_dir = rc_dir;
-  return;
 }
 
 static char optionpanel_src1[] =

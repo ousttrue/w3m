@@ -58,7 +58,6 @@ extern struct auth_cookie *Auth_cookie;
 extern struct Cookie *First_cookie;
 extern char UseAltEntity;
 extern int no_rc_dir;
-extern char *param_tmp_dir;
 extern const char *mkd_tmp_dir;
 extern const char *config_file;
 extern int is_redisplay;

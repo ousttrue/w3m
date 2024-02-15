@@ -30,7 +30,6 @@ const char *helpFile(const char *base);
 int set_param_option(const char *option);
 const char *get_param_option(const char *name);
 void init_rc();
-void init_tmp();
 const char *w3m_auxbin_dir();
 const char *w3m_lib_dir();
 const char *w3m_etc_dir();

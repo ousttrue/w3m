@@ -59,7 +59,6 @@ struct auth_cookie *Auth_cookie = nullptr;
 struct Cookie *First_cookie = nullptr;
 char UseAltEntity = false;
 int no_rc_dir = false;
-char *param_tmp_dir = nullptr;
 const char *mkd_tmp_dir = nullptr;
 const char *config_file = nullptr;
 int is_redisplay = false;

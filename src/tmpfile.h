@@ -11,5 +11,4 @@ enum TmpfType {
   MAX_TMPF_TYPE = 6,
 };
 
-extern const char *tmp_dir;
 std::string tmpfname(TmpfType type, const std::string &ext);

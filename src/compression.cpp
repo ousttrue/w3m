@@ -96,7 +96,7 @@ std::tuple<std::string, std::string> uncompressed_file_type(const char *path) {
     return {};
   }
 
-  auto slen = 0;
+  size_t slen = 0;
   auto len = strlen(path);
   compression_decoder *d = nullptr;
   for (auto &_d : compression_decoders) {

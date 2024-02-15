@@ -318,3 +318,50 @@ const char *file_to_url(const char *file) {
   Strcat_charp(tmp, file_quote(cleanupName((char *)file)));
   return tmp->ptr;
 }
+
+int do_recursive_mkdir(const char *dir) {
+  const char *ch, *dircpy;
+  char tmp;
+  struct stat st;
+
+  if (*dir == '\0')
+    return -1;
+
+  dircpy = Strnew_charp(dir)->ptr;
+  ch = dircpy + 1;
+  do {
+    while (!(*ch == '/' || *ch == '\0')) {
+      ch++;
+    }
+
+    tmp = *ch;
+    *(char *)ch = '\0';
+
+    if (stat(dircpy, &st) < 0) {
+      if (errno != ENOENT) { /* no directory */
+        return -1;
+      }
+      if (mkdir(dircpy, 0700) < 0) {
+        return -1;
+      }
+      stat(dircpy, &st);
+    }
+    if (!S_ISDIR(st.st_mode)) {
+      /* not a directory */
+      return -1;
+    }
+    if (!(st.st_mode & S_IWUSR)) {
+      return -1;
+    }
+
+    *(char *)ch = tmp;
+
+  } while (*ch++ != '\0');
+#ifdef HAVE_FACCESSAT
+  if (faccessat(AT_FDCWD, dir, W_OK | X_OK, AT_EACCESS) < 0) {
+    return -1;
+  }
+#endif
+
+  return 0;
+}

@@ -16,3 +16,4 @@ struct Str;
 Str *myExtCommand(const char *cmd, const char *arg, int redirect);
 struct Buffer;
 const char *last_modified(const std::shared_ptr<Buffer> &buf);
+int do_recursive_mkdir(const char *dir);
