@@ -4,11 +4,18 @@
 #include <gc_cpp.h>
 #include <memory>
 
+extern bool open_tab_blank;
+extern bool open_tab_dl_list;
+extern bool close_tab_back;
+extern int TabCols;
+extern bool check_target;
+
 struct Buffer;
 struct FormList;
 struct FormItemList;
 struct Anchor;
 struct TabBuffer : public gc_cleanup {
+  friend class App;
   TabBuffer *nextTab = nullptr;
   TabBuffer *prevTab = nullptr;
 
@@ -53,30 +60,14 @@ public:
   void do_submit(FormItemList *fi, Anchor *a);
   void _followForm(int submit);
   int draw();
-
-  static void _newT();
-  static int calcTabPos();
 };
 
-extern TabBuffer *CurrentTab;
 struct LineLayout;
 void SAVE_BUFPOSITION(LineLayout *sbufp);
 void RESTORE_BUFPOSITION(const LineLayout &sbufp);
 
-extern TabBuffer *FirstTab;
-extern TabBuffer *LastTab;
-extern bool open_tab_blank;
-extern bool open_tab_dl_list;
-extern bool close_tab_back;
-extern int nTab;
-extern int TabCols;
-extern bool check_target;
-
-TabBuffer *deleteTab(TabBuffer *tab);
-TabBuffer *numTab(int n);
-void moveTab(TabBuffer *t, TabBuffer *t2, int right);
-void tabURL0(TabBuffer *tab, const char *prompt, int relative);
-void followTab(TabBuffer *tab);
+void tabURL0(const char *prompt, int relative);
+void followTab();
 struct Str;
 void gotoLabel(const char *label);
 void goURL0(const char *prompt, int relative);

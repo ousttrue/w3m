@@ -1,4 +1,5 @@
 #include "app.h"
+#include "screen.h"
 #include "ssl_util.h"
 #include "form.h"
 #include "message.h"
@@ -178,9 +179,9 @@ App::App() {
   orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
 #endif
 
-  FirstTab = LastTab = CurrentTab = new TabBuffer;
-  assert(FirstTab);
-  nTab = 1;
+  _firstTab = _lastTab = _currentTab = new TabBuffer;
+  assert(_firstTab);
+  _nTab = 1;
 }
 
 App::~App() {
@@ -397,7 +398,7 @@ void App::_peekURL(bool only_img) {
   static Str *s = nullptr;
   static int offset = 0;
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr) {
+  if (_currentTab->currentBuffer()->layout.firstLine == nullptr) {
     return;
   }
 
@@ -412,19 +413,19 @@ void App::_peekURL(bool only_img) {
   }
   s = nullptr;
   a = (only_img ? nullptr
-                : CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor());
+                : _currentTab->currentBuffer()->layout.retrieveCurrentAnchor());
   if (a == nullptr) {
     a = (only_img ? nullptr
-                  : CurrentTab->currentBuffer()->layout.retrieveCurrentForm());
+                  : _currentTab->currentBuffer()->layout.retrieveCurrentForm());
     if (a == nullptr) {
-      a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
+      a = _currentTab->currentBuffer()->layout.retrieveCurrentImg();
       if (a == nullptr)
         return;
     } else
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    auto pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
+    auto pu = urlParse(a->url, _currentTab->currentBuffer()->res->getBaseURL());
     s = Strnew(pu.to_Str());
   }
   if (DecodeURL)
@@ -447,7 +448,7 @@ std::string App::currentUrl() const {
       offset = 0;
   } else {
     offset = 0;
-    s = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
+    s = Strnew(_currentTab->currentBuffer()->res->currentURL.to_Str());
     if (DecodeURL)
       s = Strnew_charp(url_decode0(s->ptr));
   }
@@ -505,8 +506,8 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       if (prec_num > PREC_LIMIT)
         prec_num = PREC_LIMIT;
     } else {
-      set_buffer_environ(CurrentTab->currentBuffer());
-      save_buffer_position(&CurrentTab->currentBuffer()->layout);
+      set_buffer_environ(_currentTab->currentBuffer());
+      save_buffer_position(&_currentTab->currentBuffer()->layout);
       _currentKey = c;
       w3mFuncList[(int)GlobalKeymap[(int)c]].func();
       prec_num = 0;
@@ -522,12 +523,12 @@ void App::onFrame() {
     ldDL();
   }
 
-  if (CurrentTab->currentBuffer()->layout.submit) {
-    Anchor *a = CurrentTab->currentBuffer()->layout.submit;
-    CurrentTab->currentBuffer()->layout.submit = NULL;
-    CurrentTab->currentBuffer()->layout.gotoLine(a->start.line);
-    CurrentTab->currentBuffer()->layout.pos = a->start.pos;
-    CurrentTab->_followForm(true);
+  if (_currentTab->currentBuffer()->layout.submit) {
+    Anchor *a = _currentTab->currentBuffer()->layout.submit;
+    _currentTab->currentBuffer()->layout.submit = NULL;
+    _currentTab->currentBuffer()->layout.gotoLine(a->start.line);
+    _currentTab->currentBuffer()->layout.pos = a->start.pos;
+    _currentTab->_followForm(true);
     return;
   }
 }
@@ -592,4 +593,204 @@ std::string App::tmpfname(TmpfType type, const std::string &ext) {
   auto tmpf = ss.str();
   fileToDelete.push_back(tmpf);
   return tmpf;
+}
+
+TabBuffer *App::numTab(int n) const {
+  if (n == 0)
+    return _currentTab;
+  if (n == 1)
+    return _firstTab;
+  if (_nTab <= 1)
+    return nullptr;
+
+  TabBuffer *tab;
+  int i;
+  for (tab = _firstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
+    ;
+  return tab;
+}
+
+void App::drawTabs() {
+  if (_nTab > 1) {
+    move(0, 0);
+    clrtoeolx();
+    int y = 0;
+    for (auto t = _firstTab; t; t = t->nextTab) {
+      y = t->draw();
+    }
+    move(y + 1, 0);
+    for (int i = 0; i < COLS; i++)
+      addch('~');
+  }
+}
+
+void App::nextTab() {
+  if (_nTab <= 1) {
+    return;
+  }
+
+  for (int i = 0; i < PREC_NUM; i++) {
+    if (_currentTab->nextTab)
+      _currentTab = _currentTab->nextTab;
+    else
+      _currentTab = _firstTab;
+  }
+}
+
+void App::prevTab() {
+  if (_nTab <= 1) {
+    return;
+  }
+  for (int i = 0; i < PREC_NUM; i++) {
+    if (_currentTab->prevTab)
+      _currentTab = _currentTab->prevTab;
+    else
+      _currentTab = _lastTab;
+  }
+}
+
+void App::tabRight() {
+  TabBuffer *tab;
+  int i;
+  for (tab = _currentTab, i = 0; tab && i < PREC_NUM; tab = tab->nextTab, i++)
+    ;
+  moveTab(_currentTab, tab ? tab : _lastTab, true);
+}
+
+void App::tabLeft() {
+  TabBuffer *tab;
+  int i;
+  for (tab = _currentTab, i = 0; tab && i < PREC_NUM; tab = tab->prevTab, i++)
+    ;
+  moveTab(_currentTab, tab ? tab : _firstTab, false);
+}
+
+int App::calcTabPos() {
+  if (_nTab <= 0) {
+    return _lastTab->y;
+  }
+
+  TabBuffer *tab;
+  int lcol = 0, rcol = 0, col;
+
+  int n2, ny;
+  int n1 = (COLS - rcol - lcol) / TabCols;
+  if (n1 >= _nTab) {
+    n2 = 1;
+    ny = 1;
+  } else {
+    if (n1 < 0)
+      n1 = 0;
+    n2 = COLS / TabCols;
+    if (n2 == 0)
+      n2 = 1;
+    ny = (_nTab - n1 - 1) / n2 + 2;
+  }
+
+  // int n2, na, nx, ny, ix, iy;
+  int na = n1 + n2 * (ny - 1);
+  n1 -= (na - _nTab) / ny;
+  if (n1 < 0)
+    n1 = 0;
+  na = n1 + n2 * (ny - 1);
+  tab = _firstTab;
+  for (int iy = 0; iy < ny && tab; iy++) {
+    int nx;
+    if (iy == 0) {
+      nx = n1;
+      col = COLS - rcol - lcol;
+    } else {
+      nx = n2 - (na - _nTab + (iy - 1)) / (ny - 1);
+      col = COLS;
+    }
+    for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
+      tab->x1 = col * ix / nx;
+      tab->x2 = col * (ix + 1) / nx - 1;
+      tab->y = iy;
+      if (iy == 0) {
+        tab->x1 += lcol;
+        tab->x2 += lcol;
+      }
+    }
+  }
+  return _lastTab->y;
+}
+
+TabBuffer *App::deleteTab(TabBuffer *tab) {
+  if (_nTab <= 1)
+    return _firstTab;
+  if (tab->prevTab) {
+    if (tab->nextTab)
+      tab->nextTab->prevTab = tab->prevTab;
+    else
+      _lastTab = tab->prevTab;
+    tab->prevTab->nextTab = tab->nextTab;
+    if (tab == _currentTab)
+      _currentTab = tab->prevTab;
+  } else { /* tab == FirstTab */
+    tab->nextTab->prevTab = nullptr;
+    _firstTab = tab->nextTab;
+    if (tab == _currentTab)
+      _currentTab = tab->nextTab;
+  }
+  _nTab--;
+  return _firstTab;
+}
+
+void App::moveTab(TabBuffer *t, TabBuffer *t2, int right) {
+  if (!t2) {
+    t2 = _firstTab;
+  }
+  if (!t || !t2 || t == t2 || !t) {
+    return;
+  }
+  if (t->prevTab) {
+    if (t->nextTab)
+      t->nextTab->prevTab = t->prevTab;
+    else
+      _lastTab = t->prevTab;
+    t->prevTab->nextTab = t->nextTab;
+  } else {
+    t->nextTab->prevTab = nullptr;
+    _firstTab = t->nextTab;
+  }
+  if (right) {
+    t->nextTab = t2->nextTab;
+    t->prevTab = t2;
+    if (t2->nextTab)
+      t2->nextTab->prevTab = t;
+    else
+      _lastTab = t;
+    t2->nextTab = t;
+  } else {
+    t->prevTab = t2->prevTab;
+    t->nextTab = t2;
+    if (t2->prevTab)
+      t2->prevTab->nextTab = t;
+    else
+      _firstTab = t;
+    t2->prevTab = t;
+  }
+  displayBuffer();
+}
+
+void App::_newT() {
+  auto tag = new TabBuffer();
+  auto buf = Buffer::create();
+  *buf = *_currentTab->currentBuffer();
+  buf->backBuffer = nullptr;
+  for (int i = 0; i < MAX_LB; i++) {
+    buf->linkBuffer[i] = nullptr;
+  }
+  tag->firstBuffer = tag->_currentBuffer = buf;
+
+  tag->nextTab = _currentTab->nextTab;
+  tag->prevTab = _currentTab;
+  if (_currentTab->nextTab)
+    _currentTab->nextTab->prevTab = tag;
+  else
+    _lastTab = tag;
+  _currentTab->nextTab = tag;
+  _currentTab = tag;
+  _nTab++;
 }

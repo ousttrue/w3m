@@ -720,13 +720,13 @@ void followA() {
 
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    TabBuffer::_newT();
+    App::instance()._newT();
     auto buf = CurrentTab->currentBuffer();
     CurrentTab->loadLink(url, a->target, a->referer, nullptr);
     if (buf != CurrentTab->currentBuffer())
       CurrentTab->deleteBuffer(buf);
     else
-      deleteTab(CurrentTab);
+      App::instance().deleteTab(CurrentTab);
     displayBuffer();
     return;
   }
@@ -1006,8 +1006,8 @@ void backBf() {
   // Buffer *buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_FRAME];
 
   if (!checkBackBuffer(CurrentTab->currentBuffer())) {
-    if (close_tab_back && nTab >= 1) {
-      deleteTab(CurrentTab);
+    if (close_tab_back && App::instance().nTab() >= 1) {
+      App::instance().deleteTab(CurrentTab);
       displayBuffer();
     } else
       disp_message("Can't go back...", true);
@@ -1602,97 +1602,62 @@ void defKey() {
 // NEW_TAB
 //"Open a new tab (with current document)"
 void newT() {
-  TabBuffer::_newT();
+  App::instance()._newT();
   displayBuffer();
 }
 
 // CLOSE_TAB
 //"Close tab"
 void closeT() {
-  TabBuffer *tab;
 
-  if (nTab <= 1)
+  if (App::instance().nTab() <= 1)
     return;
+
+  TabBuffer *tab;
   if (prec_num)
-    tab = numTab(PREC_NUM);
+    tab = App::instance().numTab(PREC_NUM);
   else
     tab = CurrentTab;
   if (tab)
-    deleteTab(tab);
+    App::instance().deleteTab(tab);
   displayBuffer();
 }
 
 // NEXT_TAB
 //"Switch to the next tab"
 void nextT() {
-  int i;
 
-  if (nTab <= 1)
-    return;
-  for (i = 0; i < PREC_NUM; i++) {
-    if (CurrentTab->nextTab)
-      CurrentTab = CurrentTab->nextTab;
-    else
-      CurrentTab = FirstTab;
-  }
+  App::instance().nextTab();
   displayBuffer();
 }
 
 // PREV_TAB
 //"Switch to the previous tab"
 void prevT() {
-  int i;
 
-  if (nTab <= 1)
-    return;
-  for (i = 0; i < PREC_NUM; i++) {
-    if (CurrentTab->prevTab)
-      CurrentTab = CurrentTab->prevTab;
-    else
-      CurrentTab = LastTab;
-  }
+  App::instance().prevTab();
   displayBuffer();
 }
 
 // TAB_LINK
 //"Follow current hyperlink in a new tab"
-void tabA() { followTab(prec_num ? numTab(PREC_NUM) : nullptr); }
+void tabA() { followTab(); }
 
 // TAB_GOTO
 //"Open specified document in a new tab"
-void tabURL() {
-  tabURL0(prec_num ? numTab(PREC_NUM) : nullptr,
-          "Goto URL on new tab: ", false);
-}
+void tabURL() { tabURL0("Goto URL on new tab: ", false); }
 
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
-void tabrURL() {
-  tabURL0(prec_num ? numTab(PREC_NUM) : nullptr,
-          "Goto relative URL on new tab: ", true);
-}
+void tabrURL() { tabURL0("Goto relative URL on new tab: ", true); }
 
 // TAB_RIGHT
 //"Move right along the tab bar"
-void tabR() {
-  TabBuffer *tab;
-  int i;
-
-  for (tab = CurrentTab, i = 0; tab && i < PREC_NUM; tab = tab->nextTab, i++)
-    ;
-  moveTab(CurrentTab, tab ? tab : LastTab, true);
-}
+void tabR() { App::instance().tabRight(); }
 
 // TAB_LEFT
 //"Move left along the tab bar"
-void tabL() {
-  TabBuffer *tab;
-  int i;
-
-  for (tab = CurrentTab, i = 0; tab && i < PREC_NUM; tab = tab->prevTab, i++)
-    ;
-  moveTab(CurrentTab, tab ? tab : FirstTab, false);
-}
+void tabL() { App::instance().tabLeft(); }
 
 /* download panel */
 // DOWNLOAD_LIST
@@ -1704,8 +1669,8 @@ void ldDL() {
     if (replace) {
       if (CurrentTab->currentBuffer() == CurrentTab->firstBuffer &&
           CurrentTab->currentBuffer()->backBuffer == nullptr) {
-        if (nTab > 1)
-          deleteTab(CurrentTab);
+        if (App::instance().nTab() > 1)
+          App::instance().deleteTab(CurrentTab);
       } else
         CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
       displayBuffer();
@@ -1724,7 +1689,7 @@ void ldDL() {
     buf->layout.restorePosition(CurrentTab->currentBuffer()->layout);
   }
   if (!replace && open_tab_dl_list) {
-    TabBuffer::_newT();
+    App::instance()._newT();
     new_tab = true;
   }
   CurrentTab->pushBuffer(buf);

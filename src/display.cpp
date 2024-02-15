@@ -1,4 +1,5 @@
 #include "display.h"
+#include "app.h"
 #include "line_layout.h"
 #include "url_stream.h"
 #include "tabbuffer.h"
@@ -225,8 +226,8 @@ void displayBuffer() {
   } else
     layout.rootX = 0;
   layout.COLS = COLS - layout.rootX;
-  if (nTab > 1) {
-    ny = TabBuffer::calcTabPos() + 2;
+  if (App::instance().nTab() > 1) {
+    ny = App::instance().calcTabPos() + 2;
     if (ny > LASTLINE)
       ny = LASTLINE;
   }
@@ -341,17 +342,7 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
 }
 
 static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
-  if (nTab > 1) {
-    move(0, 0);
-    clrtoeolx();
-    int y = 0;
-    for (auto t = FirstTab; t; t = t->nextTab) {
-      y = t->draw();
-    }
-    move(y + 1, 0);
-    for (int i = 0; i < COLS; i++)
-      addch('~');
-  }
+  App::instance().drawTabs();
   {
     Line *l;
     int i;

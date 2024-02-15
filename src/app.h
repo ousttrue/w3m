@@ -19,6 +19,7 @@ enum TmpfType {
   MAX_TMPF_TYPE = 6,
 };
 
+struct TabBuffer;
 class App {
   std::list<std::string> fileToDelete;
 
@@ -28,6 +29,11 @@ class App {
   std::string _editor = "/usr/bin/vim";
 
   int _currentKey = -1;
+
+  TabBuffer *_firstTab = 0;
+  TabBuffer *_lastTab = 0;
+  int _nTab = 0;
+  TabBuffer *_currentTab = 0;
 
   App();
 
@@ -76,4 +82,21 @@ public:
   void onFrame();
   void task(int sec, int cmd, const char *data = nullptr, bool releat = false);
   std::string tmpfname(TmpfType type, const std::string &ext);
+
+  // tabs
+  TabBuffer *FirstTab() const { return _firstTab; }
+  TabBuffer *LastTab() const { return _lastTab; }
+  int nTab() const { return _nTab; }
+  TabBuffer *CurrentTab() const { return _currentTab; }
+  void _newT();
+  TabBuffer *numTab(int n) const;
+  void drawTabs();
+  void nextTab();
+  void prevTab();
+  void tabRight();
+  void tabLeft();
+  int calcTabPos();
+  TabBuffer *deleteTab(TabBuffer *tab);
+  void moveTab(TabBuffer *t, TabBuffer *t2, int right);
 };
+#define CurrentTab App::instance().CurrentTab()

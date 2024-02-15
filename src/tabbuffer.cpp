@@ -25,85 +25,15 @@
 #include "buffer.h"
 #include <sys/stat.h>
 
-TabBuffer *CurrentTab;
-TabBuffer *FirstTab;
-TabBuffer *LastTab;
 bool open_tab_blank = false;
 bool open_tab_dl_list = false;
 bool close_tab_back = false;
-int nTab = 0;
 int TabCols = 10;
 bool check_target = true;
 
 TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
-
-TabBuffer *numTab(int n) {
-  TabBuffer *tab;
-  int i;
-
-  if (n == 0)
-    return CurrentTab;
-  if (n == 1)
-    return FirstTab;
-  if (nTab <= 1)
-    return nullptr;
-  for (tab = FirstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
-    ;
-  return tab;
-}
-
-int TabBuffer::calcTabPos() {
-  if (nTab <= 0) {
-    return LastTab->y;
-  }
-
-  TabBuffer *tab;
-  int lcol = 0, rcol = 0, col;
-
-  int n2, ny;
-  int n1 = (COLS - rcol - lcol) / TabCols;
-  if (n1 >= nTab) {
-    n2 = 1;
-    ny = 1;
-  } else {
-    if (n1 < 0)
-      n1 = 0;
-    n2 = COLS / TabCols;
-    if (n2 == 0)
-      n2 = 1;
-    ny = (nTab - n1 - 1) / n2 + 2;
-  }
-
-  // int n2, na, nx, ny, ix, iy;
-  int na = n1 + n2 * (ny - 1);
-  n1 -= (na - nTab) / ny;
-  if (n1 < 0)
-    n1 = 0;
-  na = n1 + n2 * (ny - 1);
-  tab = FirstTab;
-  for (int iy = 0; iy < ny && tab; iy++) {
-    int nx;
-    if (iy == 0) {
-      nx = n1;
-      col = COLS - rcol - lcol;
-    } else {
-      nx = n2 - (na - nTab + (iy - 1)) / (ny - 1);
-      col = COLS;
-    }
-    for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
-      tab->x1 = col * ix / nx;
-      tab->x2 = col * (ix + 1) / nx - 1;
-      tab->y = iy;
-      if (iy == 0) {
-        tab->x1 += lcol;
-        tab->x2 += lcol;
-      }
-    }
-  }
-  return LastTab->y;
-}
 
 int TabBuffer::draw() {
   move(this->y, this->x1);
@@ -143,27 +73,6 @@ int TabBuffer::draw() {
   return this->y;
 }
 
-TabBuffer *deleteTab(TabBuffer *tab) {
-  if (nTab <= 1)
-    return FirstTab;
-  if (tab->prevTab) {
-    if (tab->nextTab)
-      tab->nextTab->prevTab = tab->prevTab;
-    else
-      LastTab = tab->prevTab;
-    tab->prevTab->nextTab = tab->nextTab;
-    if (tab == CurrentTab)
-      CurrentTab = tab->prevTab;
-  } else { /* tab == FirstTab */
-    tab->nextTab->prevTab = nullptr;
-    FirstTab = tab->nextTab;
-    if (tab == CurrentTab)
-      CurrentTab = tab->nextTab;
-  }
-  nTab--;
-  return FirstTab;
-}
-
 /*
  * deleteBuffer: delete buffer
  */
@@ -184,43 +93,6 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   if (!CurrentTab->currentBuffer()) {
     _currentBuffer = CurrentTab->firstBuffer;
   }
-}
-
-void moveTab(TabBuffer *t, TabBuffer *t2, int right) {
-  if (!t2) {
-    t2 = FirstTab;
-  }
-  if (!t || !t2 || t == t2 || !t) {
-    return;
-  }
-  if (t->prevTab) {
-    if (t->nextTab)
-      t->nextTab->prevTab = t->prevTab;
-    else
-      LastTab = t->prevTab;
-    t->prevTab->nextTab = t->nextTab;
-  } else {
-    t->nextTab->prevTab = nullptr;
-    FirstTab = t->nextTab;
-  }
-  if (right) {
-    t->nextTab = t2->nextTab;
-    t->prevTab = t2;
-    if (t2->nextTab)
-      t2->nextTab->prevTab = t;
-    else
-      LastTab = t;
-    t2->nextTab = t;
-  } else {
-    t->prevTab = t2->prevTab;
-    t->nextTab = t2;
-    if (t2->prevTab)
-      t2->prevTab->nextTab = t;
-    else
-      FirstTab = t;
-    t2->prevTab = t;
-  }
-  displayBuffer();
 }
 
 void gotoLabel(const char *label) {
@@ -337,33 +209,14 @@ void goURL0(const char *prompt, int relative) {
   }
 }
 
-void tabURL0(TabBuffer *tab, const char *prompt, int relative) {
-  if (tab == CurrentTab) {
-    goURL0(prompt, relative);
-    return;
-  }
-  TabBuffer::_newT();
+void tabURL0(const char *prompt, int relative) {
+  App::instance()._newT();
   auto buf = CurrentTab->currentBuffer();
   goURL0(prompt, relative);
-  if (tab == nullptr) {
-    if (buf != CurrentTab->currentBuffer())
-      CurrentTab->deleteBuffer(buf);
-    else
-      deleteTab(CurrentTab);
-  } else if (buf != CurrentTab->currentBuffer()) {
-    /* buf <- p <- ... <- Currentbuf = c */
-    auto c = CurrentTab->currentBuffer();
-    std::shared_ptr<Buffer> p;
-    if ((p = forwardBuffer(c, buf)))
-      p->backBuffer = nullptr;
-    CurrentTab->firstBuffer = buf;
-    deleteTab(CurrentTab);
-    CurrentTab = tab;
-    for (buf = p; buf; buf = p) {
-      p = forwardBuffer(c, buf);
-      CurrentTab->pushBuffer(buf);
-    }
-  }
+  if (buf != CurrentTab->currentBuffer())
+    CurrentTab->deleteBuffer(buf);
+  else
+    App::instance().deleteTab(CurrentTab);
   displayBuffer();
 }
 
@@ -379,62 +232,21 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
   this->currentBuffer()->saveBufferInfo();
 }
 
-void TabBuffer::_newT() {
-  auto tag = new TabBuffer();
-  auto buf = Buffer::create();
-  *buf = *CurrentTab->currentBuffer();
-  buf->backBuffer = nullptr;
-  for (int i = 0; i < MAX_LB; i++) {
-    buf->linkBuffer[i] = nullptr;
-  }
-  tag->firstBuffer = tag->_currentBuffer = buf;
-
-  tag->nextTab = CurrentTab->nextTab;
-  tag->prevTab = CurrentTab;
-  if (CurrentTab->nextTab)
-    CurrentTab->nextTab->prevTab = tag;
-  else
-    LastTab = tag;
-  CurrentTab->nextTab = tag;
-  CurrentTab = tag;
-  nTab++;
-}
-
-void followTab(TabBuffer *tab) {
+void followTab() {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
-  if (a == nullptr)
-    return;
-
-  if (tab == CurrentTab) {
-    check_target = false;
-    followA();
-    check_target = true;
+  if (!a) {
     return;
   }
-  TabBuffer::_newT();
+
+  App::instance()._newT();
   auto buf = CurrentTab->currentBuffer();
   check_target = false;
   followA();
   check_target = true;
-  if (tab == nullptr) {
-    if (buf != CurrentTab->currentBuffer())
-      CurrentTab->deleteBuffer(buf);
-    else
-      deleteTab(CurrentTab);
-  } else if (buf != CurrentTab->currentBuffer()) {
-    /* buf <- p <- ... <- Currentbuf = c */
-    auto c = CurrentTab->currentBuffer();
-    std::shared_ptr<Buffer> p;
-    if ((p = forwardBuffer(c, buf)))
-      p->backBuffer = nullptr;
-    CurrentTab->firstBuffer = buf;
-    deleteTab(CurrentTab);
-    CurrentTab = tab;
-    for (buf = p; buf; buf = p) {
-      p = forwardBuffer(c, buf);
-      CurrentTab->pushBuffer(buf);
-    }
-  }
+  if (buf != CurrentTab->currentBuffer())
+    CurrentTab->deleteBuffer(buf);
+  else
+    App::instance().deleteTab(CurrentTab);
   displayBuffer();
 }
 

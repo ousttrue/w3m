@@ -1,4 +1,5 @@
 #include "bufferpos.h"
+#include "app.h"
 #include "display.h"
 #include "alloc.h"
 #include "tabbuffer.h"

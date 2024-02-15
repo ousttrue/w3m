@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "app.h"
 #include "url_stream.h"
 #include "tabbuffer.h"
 #include "etc.h"
