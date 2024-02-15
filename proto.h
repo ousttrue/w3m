@@ -30,6 +30,7 @@ extern void shiftl(void);
 extern void shiftr(void);
 extern void col1R(void);
 extern void col1L(void);
+extern void cd(void);
 extern void setEnv(void);
 extern void pipeBuf(void);
 extern void pipesh(void);

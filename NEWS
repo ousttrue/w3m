@@ -3,6 +3,9 @@ Unreleased
 * new features
   - Add commands to scroll current line to top/bottom (LINE_BOTTOM, LINE_TOP)
 
+* new features
+  - Add command to change directory (CD)
+
 * bug fixes
   - Fix version number in some place, e.g. make dist
   - Ignore C-i, C-l, C-s, C-z, C-\, C-], C-^ and C-_ key presses when

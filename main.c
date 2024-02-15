@@ -2154,6 +2154,16 @@ DEFUN(col1L, LEFT, "Shift screen one column left")
     displayBuffer(Currentbuf, B_NORMAL);
 }
 
+DEFUN(cd, CD, "Change working directory")
+{
+    char *dir;
+
+    dir = inputFilename(_("cd to? "), NULL);
+    if (chdir(dir) == -1)
+	disp_err_message(strerror(errno), FALSE);
+    CurrentDir = currentdir();
+}
+
 DEFUN(setEnv, SETENV, "Set environment variable")
 {
     char *env;
