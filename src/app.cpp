@@ -190,11 +190,11 @@ App::~App() {
 
   // clean up only not fork process
   std::cout << "App::~App" << std::endl;
-  for (auto &f : fileToDelete) {
+  for (auto &f : _fileToDelete) {
     std::cout << "fileToDelete: " << f << std::endl;
     unlink(f.c_str());
   }
-  fileToDelete.clear();
+  _fileToDelete.clear();
 
   stopDownload();
   free_ssl_ctx();
@@ -289,7 +289,6 @@ uv_timer_t g_timer;
 
 int App::mainLoop() {
   fmInit();
-  displayBuffer();
 
   //
   // stdin tty read
@@ -433,7 +432,7 @@ disp:
   int n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS - 1))
     offset = (n - 1) * (COLS - 1);
-  disp_message(&s->ptr[offset], true);
+  disp_message(&s->ptr[offset]);
 }
 
 std::string App::currentUrl() const {
@@ -464,7 +463,7 @@ void App::doCmd() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("command [; ...]: ", "", TextHist);
     if (data == nullptr) {
-      displayBuffer();
+      invalidate();
       return;
     }
   }
@@ -482,7 +481,7 @@ void App::doCmd() {
     p = getQWord(&data);
     doCmd(cmd, p);
   }
-  displayBuffer();
+  invalidate();
 }
 
 void App::doCmd(int cmd, const char *data) {
@@ -528,7 +527,11 @@ void App::onFrame() {
     _currentTab->currentBuffer()->layout.gotoLine(a->start.line);
     _currentTab->currentBuffer()->layout.pos = a->start.pos;
     _currentTab->_followForm(true);
-    return;
+  }
+
+  if (_dirty > 0) {
+    _dirty = 0;
+    _displayBuffer();
   }
 }
 
@@ -572,8 +575,7 @@ void App::task(int sec, int cmd, const char *data, bool repeat) {
           sec * 1000, 0);
     }
     disp_message_nsec(
-        Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, false, 1,
-        false, true);
+        Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, 1, false);
   } else {
     // cancel timer
     g_timers.clear();
@@ -590,7 +592,7 @@ std::string App::tmpfname(TmpfType type, const std::string &ext) {
   ss << rc_dir << "/w3m" << tmpf_base[type] << App::instance().pid()
      << tmpf_seq[type]++ << ext;
   auto tmpf = ss.str();
-  fileToDelete.push_back(tmpf);
+  _fileToDelete.push_back(tmpf);
   return tmpf;
 }
 
@@ -770,10 +772,12 @@ void App::moveTab(TabBuffer *t, TabBuffer *t2, int right) {
       _firstTab = t;
     t2->prevTab = t;
   }
-  displayBuffer();
+  invalidate();
 }
 
 void App::_newT() {
+  invalidate();
+
   auto tag = new TabBuffer();
   auto buf = Buffer::create();
   *buf = *_currentTab->currentBuffer();

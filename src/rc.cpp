@@ -999,11 +999,11 @@ void panel_set_option(keyvalue *arg) {
   Str *s = Strnew(), *tmp;
 
   if (config_file == NULL) {
-    disp_message("There's no config file... config not saved", false);
+    disp_message("There's no config file... config not saved");
   } else {
     f = fopen(config_file, "wt");
     if (f == NULL) {
-      disp_message("Can't write option!", false);
+      disp_message("Can't write option!");
     }
   }
   while (arg) {

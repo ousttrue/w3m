@@ -21,7 +21,8 @@ enum TmpfType {
 
 struct TabBuffer;
 class App {
-  std::list<std::string> fileToDelete;
+  int _dirty = 1;
+  std::list<std::string> _fileToDelete;
 
   std::string _currentDir;
   int _currentPid = -1;
@@ -82,6 +83,7 @@ public:
   void onFrame();
   void task(int sec, int cmd, const char *data = nullptr, bool releat = false);
   std::string tmpfname(TmpfType type, const std::string &ext);
+  void invalidate() { ++_dirty; }
 
   // tabs
   TabBuffer *FirstTab() const { return _firstTab; }
@@ -100,3 +102,6 @@ public:
   void moveTab(TabBuffer *t, TabBuffer *t2, int right);
 };
 #define CurrentTab App::instance().CurrentTab()
+
+void fmInit(void);
+void fmTerm(void);

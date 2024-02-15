@@ -14,7 +14,6 @@
 #include "form.h"
 #include "history.h"
 #include "anchor.h"
-#include "util.h"
 #include "etc.h"
 #include "mailcap.h"
 #include "quote.h"
@@ -26,7 +25,6 @@
 #include "local_cgi.h"
 #include "Str.h"
 #include "search.h"
-#include "display.h"
 #include "w3m.h"
 #include "app.h"
 #include "terms.h"
@@ -108,7 +106,7 @@ void ctrCsrV() {
         CurrentTab->currentBuffer()->layout.lineSkip(
             CurrentTab->currentBuffer()->layout.topLine, -offsety, false);
     CurrentTab->currentBuffer()->layout.arrangeLine();
-    displayBuffer();
+    App::instance().invalidate();
   }
 }
 
@@ -123,7 +121,7 @@ void ctrCsrH() {
   if (offsetx != 0) {
     CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
     CurrentTab->currentBuffer()->layout.arrangeCursor();
-    displayBuffer();
+    App::instance().invalidate();
   }
 }
 
@@ -133,7 +131,7 @@ void ctrCsrH() {
 void rdrwSc() {
   clear();
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // SEARCH SEARCH_FORE WHEREIS
@@ -177,7 +175,7 @@ void shiftl() {
       1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Shift screen right */
@@ -193,7 +191,7 @@ void shiftr() {
       1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // RIGHT
@@ -212,7 +210,7 @@ void col1R() {
       break;
     CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // LEFT
@@ -230,7 +228,7 @@ void col1L() {
     CurrentTab->currentBuffer()->layout.columnSkip(-1);
     CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // SETENV
@@ -246,7 +244,7 @@ void setEnv() {
       env = Sprintf("%s=", env)->ptr;
     // env = inputStrHist("Set environ: ", env, TextHist);
     if (env == nullptr || *env == '\0') {
-      displayBuffer();
+      App::instance().invalidate();
       return;
     }
   }
@@ -255,7 +253,7 @@ void setEnv() {
     value++;
     set_environ(var, value);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // PIPE_BUF
@@ -277,7 +275,7 @@ void readsh() {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd == nullptr || *cmd == '\0') {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   // MySignalHandler prevtrap = {};
@@ -287,7 +285,7 @@ void readsh() {
   // mySignal(SIGINT, prevtrap);
   term_raw();
   if (buf == nullptr) {
-    disp_message("Execution failed", true);
+    disp_message("Execution failed");
     return;
   } else {
     if (buf->res->type.empty()) {
@@ -295,7 +293,7 @@ void readsh() {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Execute shell command */
@@ -318,7 +316,7 @@ void execsh() {
     fmInit();
     getch();
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Load file */
@@ -330,7 +328,7 @@ void ldfile() {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
   if (fn == nullptr || *fn == '\0') {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   cmd_loadfile(fn);
@@ -467,7 +465,7 @@ void movLW() {
   }
 end:
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // NEXT_WORD
@@ -516,7 +514,7 @@ void movRW() {
   }
 end:
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Quit */
@@ -542,7 +540,7 @@ void selBuf() {
     ok = CurrentTab->select(cmd, buf);
   } while (!ok);
 
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
@@ -571,7 +569,7 @@ void susp() {
   kill(0, SIGTSTP); /* stop whole job, not a single process */
 #endif /* SIGSTOP */
   fmInit();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // GOTO_LINE
@@ -608,7 +606,7 @@ void linbeg() {
   }
   CurrentTab->currentBuffer()->layout.pos = 0;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Go to the bottom of the line */
@@ -624,7 +622,7 @@ void linend() {
   CurrentTab->currentBuffer()->layout.pos =
       CurrentTab->currentBuffer()->layout.currentLine->len - 1;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Run editor on the current buffer */
@@ -640,7 +638,7 @@ void editBf() {
       CurrentTab->currentBuffer()->res->currentURL.file ==
           "-" /* file is std input  */
   ) {
-    disp_err_message("Can't edit other than local file", true);
+    disp_err_message("Can't edit other than local file");
     return;
   }
 
@@ -659,7 +657,7 @@ void editBf() {
   }
   exec_cmd(cmd);
 
-  displayBuffer();
+  App::instance().invalidate();
   reload();
 }
 
@@ -670,7 +668,7 @@ void editScr() {
   auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
-    disp_err_message(Sprintf("Can't open %s", tmpf.c_str())->ptr, true);
+    disp_err_message(Sprintf("Can't open %s", tmpf.c_str())->ptr);
     return;
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
@@ -679,7 +677,7 @@ void editScr() {
       shell_quote(tmpf.c_str()),
       cur_real_linenumber(CurrentTab->currentBuffer())));
   unlink(tmpf.c_str());
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* follow HREF link */
@@ -726,11 +724,11 @@ void followA() {
       CurrentTab->deleteBuffer(buf);
     else
       App::instance().deleteTab(CurrentTab);
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   CurrentTab->loadLink(url, a->target, a->option, nullptr);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* view inline image */
@@ -750,14 +748,14 @@ void followI() {
       a->url, CurrentTab->currentBuffer()->res->getBaseURL(), {});
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
-    disp_err_message(emsg, false);
+    disp_err_message(emsg);
     return;
   }
 
   auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* submit form */
@@ -801,7 +799,7 @@ void topA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the last anchor */
@@ -842,7 +840,7 @@ void lastA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the nth anchor */
@@ -878,7 +876,7 @@ void nthA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the next anchor */
@@ -979,7 +977,7 @@ void nextBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the previous bufferr */
@@ -995,7 +993,7 @@ void prevBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -1007,15 +1005,15 @@ void backBf() {
   if (!checkBackBuffer(CurrentTab->currentBuffer())) {
     if (close_tab_back && App::instance().nTab() >= 1) {
       App::instance().deleteTab(CurrentTab);
-      displayBuffer();
+      App::instance().invalidate();
     } else
-      disp_message("Can't go back...", true);
+      disp_message("Can't go back...");
     return;
   }
 
   CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
 
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // DELETE_PREVBUF
@@ -1105,13 +1103,13 @@ void setOpt() {
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == nullptr || *opt == '\0') {
-      displayBuffer();
+      App::instance().invalidate();
       return;
     }
   }
   if (set_param_option(opt))
     sync_with_option();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* error message list */
@@ -1126,7 +1124,7 @@ void pginfo() {
 
   if (auto buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_INFO]) {
     CurrentTab->currentBuffer(buf);
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
 
@@ -1198,7 +1196,7 @@ void svBuf() {
   if (file == nullptr || *file == '\0') {
     // qfile = inputLineHist("Save buffer to: ", nullptr, IN_COMMAND, SaveHist);
     if (qfile == nullptr || *qfile == '\0') {
-      displayBuffer();
+      App::instance().invalidate();
       return;
     }
   }
@@ -1213,7 +1211,7 @@ void svBuf() {
     file = expandPath((char *)file);
     // if (checkOverWrite(file) < 0) {
     if (false) {
-      displayBuffer();
+      App::instance().invalidate();
       return;
     }
     f = fopen(file, "w");
@@ -1221,7 +1219,7 @@ void svBuf() {
   }
   if (f == nullptr) {
     char *emsg = Sprintf("Can't open %s", file)->ptr;
-    disp_err_message(emsg, true);
+    disp_err_message(emsg);
     return;
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
@@ -1229,7 +1227,7 @@ void svBuf() {
     pclose(f);
   else
     fclose(f);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* save source */
@@ -1252,7 +1250,7 @@ void svSrc() {
   }
   doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* peek URL */
@@ -1269,7 +1267,7 @@ void peekIMG() { App::instance()._peekURL(1); }
 //"Show current address"
 void curURL() {
   auto url = App::instance().currentUrl();
-  disp_message(url.c_str(), true);
+  disp_message(url.c_str());
 }
 
 /* view HTML source */
@@ -1284,7 +1282,7 @@ void vwSrc() {
   std::shared_ptr<Buffer> buf;
   if ((buf = CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE])) {
     CurrentTab->currentBuffer(buf);
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
@@ -1319,7 +1317,7 @@ void vwSrc() {
   buf->layout.need_reshape = true;
   reshapeBuffer(buf);
   CurrentTab->pushBuffer(buf);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* reload */
@@ -1330,7 +1328,7 @@ void reload() {
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
-    disp_err_message("Can't reload stdin", true);
+    disp_err_message("Can't reload stdin");
     return;
   }
 
@@ -1367,13 +1365,13 @@ void reload() {
     unlink(request->body);
   }
   if (!res) {
-    disp_err_message("Can't reload...", true);
+    disp_err_message("Can't reload...");
     return;
   }
 
   auto buf = Buffer::create(res);
   // if (buf == NO_BUFFER) {
-  //   displayBuffer(CurrentTab->currentBuffer(), B_NORMAL);
+  //   App::instance().invalidate(CurrentTab->currentBuffer(), B_NORMAL);
   //   return;
   // }
   CurrentTab->repBuffer(CurrentTab->currentBuffer(), buf);
@@ -1390,7 +1388,7 @@ void reload() {
     CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
     CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* reshape */
@@ -1399,14 +1397,14 @@ void reload() {
 void reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
   reshapeBuffer(CurrentTab->currentBuffer());
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
 void chkURL() {
   chkURLBuffer(CurrentTab->currentBuffer());
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // MARK_WORD
@@ -1418,7 +1416,7 @@ void chkWORD() {
     return;
   CurrentTab->currentBuffer()->layout.reAnchorWord(
       CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* render frames */
@@ -1432,7 +1430,7 @@ void extbrz() {
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
-    disp_err_message("Can't browse stdin", true);
+    disp_err_message("Can't browse stdin");
     return;
   }
   invoke_browser(CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
@@ -1472,24 +1470,22 @@ void curlno() {
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
                 len);
 
-  disp_message(tmp->ptr, false);
+  disp_message(tmp->ptr);
 }
 
 // VERSION
 //"Display the version of w3m"
-void dispVer() {
-  disp_message(Sprintf("w3m version %s", w3m_version)->ptr, true);
-}
+void dispVer() { disp_message(Sprintf("w3m version %s", w3m_version)->ptr); }
 
 // WRAP_TOGGLE
 //"Toggle wrapping mode in searches"
 void wrapToggle() {
   if (WrapSearch) {
     WrapSearch = false;
-    disp_message("Wrap search off", true);
+    disp_message("Wrap search off");
   } else {
     WrapSearch = true;
-    disp_message("Wrap search on", true);
+    disp_message("Wrap search on");
   }
 }
 
@@ -1518,7 +1514,7 @@ void setAlarm() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
-      displayBuffer();
+      App::instance().invalidate();
       return;
     }
   }
@@ -1545,14 +1541,14 @@ void reinit() {
     init_rc();
     sync_with_option();
     initCookie();
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
 
   if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
     init_rc();
     sync_with_option();
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
 
@@ -1577,7 +1573,7 @@ void reinit() {
   }
 
   disp_err_message(
-      Sprintf("Don't know how to reinitialize '%s'", resource)->ptr, false);
+      Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
 }
 
 // DEFINE_KEY
@@ -1590,19 +1586,19 @@ void defKey() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == nullptr || *data == '\0') {
-      displayBuffer();
+      App::instance().invalidate();
       return;
     }
   }
   setKeymap(allocStr(data, -1), -1, true);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // NEW_TAB
 //"Open a new tab (with current document)"
 void newT() {
   App::instance()._newT();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // CLOSE_TAB
@@ -1619,7 +1615,7 @@ void closeT() {
     tab = CurrentTab;
   if (tab)
     App::instance().deleteTab(tab);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // NEXT_TAB
@@ -1627,7 +1623,7 @@ void closeT() {
 void nextT() {
 
   App::instance().nextTab();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // PREV_TAB
@@ -1635,7 +1631,7 @@ void nextT() {
 void prevT() {
 
   App::instance().prevTab();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // TAB_LINK
@@ -1653,7 +1649,7 @@ void tabURL() {
     CurrentTab->deleteBuffer(buf);
   else
     App::instance().deleteTab(CurrentTab);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // TAB_GOTO_RELATIVE
@@ -1667,7 +1663,7 @@ void tabrURL() {
     CurrentTab->deleteBuffer(buf);
   else
     App::instance().deleteTab(CurrentTab);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // TAB_RIGHT
@@ -1692,7 +1688,7 @@ void ldDL() {
           App::instance().deleteTab(CurrentTab);
       } else
         CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
-      displayBuffer();
+      App::instance().invalidate();
     }
     return;
   }
@@ -1700,7 +1696,7 @@ void ldDL() {
   auto reload = checkDownloadList();
   auto buf = DownloadListBuffer();
   if (!buf) {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   if (replace) {
@@ -1720,7 +1716,7 @@ void ldDL() {
     //     AL_IMPLICIT,
     //                   FUNCNAME_reload, nullptr);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // UNDO
@@ -1748,7 +1744,7 @@ void cursorTop() {
       CurrentTab->currentBuffer()->layout.lineSkip(
           CurrentTab->currentBuffer()->layout.topLine, 0, false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // CURSOR_MIDDLE
@@ -1762,7 +1758,7 @@ void cursorMiddle() {
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
                                                                    false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 // CURSOR_BOTTOM
@@ -1776,5 +1772,5 @@ void cursorBottom() {
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
                                                                    false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  displayBuffer();
+  App::instance().invalidate();
 }

@@ -1,9 +1,9 @@
 #include "line_layout.h"
+#include "app.h"
 #include "url_quote.h"
 #include "myctype.h"
 #include "history.h"
 #include "url.h"
-#include "display.h"
 #include "message.h"
 #include "terms.h"
 #include "anchor.h"
@@ -525,7 +525,7 @@ void LineLayout::nextY(int d, int n) {
     return;
   this->gotoLine(pan->start.line);
   this->arrangeLine();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the next left/right anchor */
@@ -580,7 +580,7 @@ void LineLayout::nextX(int d, int dy, int n) {
   this->gotoLine(y);
   this->pos = pan->start.pos;
   this->arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the previous anchor */
@@ -664,7 +664,7 @@ _end:
   this->gotoLine(po->line);
   this->pos = po->pos;
   this->arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to the next [visited] anchor */
@@ -745,7 +745,7 @@ _end:
   this->gotoLine(po->line);
   this->pos = po->pos;
   this->arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Move cursor left */
@@ -755,7 +755,7 @@ void LineLayout::_movL(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorLeft(n);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Move cursor downward */
@@ -766,7 +766,7 @@ void LineLayout::_movD(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorDown(n);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* move cursor upward */
@@ -777,7 +777,7 @@ void LineLayout::_movU(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorUp(n);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* Move cursor right */
@@ -787,7 +787,7 @@ void LineLayout::_movR(int n, int m) {
   for (int i = 0; i < m; i++) {
     this->cursorRight(n);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 int LineLayout::prev_nonnull_line(Line *line) {
@@ -819,7 +819,7 @@ int LineLayout::next_nonnull_line(Line *line) {
 /* Go to specified line */
 void LineLayout::_goLine(const char *l, int prec_num) {
   if (l == nullptr || *l == '\0' || this->currentLine == nullptr) {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
 
@@ -835,7 +835,7 @@ void LineLayout::_goLine(const char *l, int prec_num) {
   } else
     this->gotoRealLine(atoi(l));
   this->arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 void LineLayout::shiftvisualpos(int shift) {
@@ -933,7 +933,7 @@ void LineLayout::nscroll(int n) {
         this->cursorUp0(1);
     }
   }
-  // displayBuffer(mode);
+  // App::instance().invalidate(mode);
 }
 
 /* renumber anchor */
@@ -1162,7 +1162,7 @@ void LineLayout::resetPos(BufferPos *b) {
   buf.currentColumn = b->currentColumn;
   this->restorePosition(buf);
   this->undo = b;
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 void LineLayout::undoPos(int n) {

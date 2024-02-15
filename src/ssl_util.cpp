@@ -252,12 +252,12 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-      disp_err_message(e, false);
+      disp_err_message(e);
       free_ssl_ctx();
       return NULL;
     }
     if (amsg)
-      disp_err_message(amsg->ptr, false);
+      disp_err_message(amsg->ptr);
     ssl_accept_this_site(hostname);
     s = amsg ? amsg : Strnew_charp("valid certificate");
     return s;
@@ -284,7 +284,7 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
                        em);
       } else {
         char *e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-        disp_err_message(e, false);
+        disp_err_message(e);
         free_ssl_ctx();
         return NULL;
       }
@@ -310,13 +310,13 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     } else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation";
-      disp_err_message(e, false);
+      disp_err_message(e);
       free_ssl_ctx();
       return NULL;
     }
   }
   if (amsg) {
-    disp_err_message(amsg->ptr, false);
+    disp_err_message(amsg->ptr);
   }
 
   ssl_accept_this_site(hostname);
@@ -488,12 +488,10 @@ eend:
   close(sock);
   if (handle)
     SSL_free(handle);
-  /* FIXME: gettextize? */
   disp_err_message(
       Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
               ERR_error_string(ERR_get_error(), NULL))
-          ->ptr,
-      false);
+          ->ptr);
   return NULL;
 }
 void free_ssl_ctx() {

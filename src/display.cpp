@@ -81,7 +81,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 static std::shared_ptr<Buffer> save_current_buf;
 
 static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf);
-#define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n);
 static Line *redrawLine(LineLayout *buf, Line *l, int i);
 static int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
@@ -189,7 +188,7 @@ static bool need_resize_screen = false;
 
 void setResize() { need_resize_screen = true; }
 
-void displayBuffer() {
+void _displayBuffer() {
   if (need_resize_screen) {
     need_resize_screen = false;
     setlinescols();
@@ -236,10 +235,13 @@ void displayBuffer() {
     layout.LINES = LASTLINE - ny;
     buf->layout.arrangeCursor();
   }
+
+  App::instance().drawTabs();
+
   if (cline != buf->layout.topLine || ccolumn != buf->layout.currentColumn) {
-    {
-      redrawBuffer(buf);
-    }
+
+    redrawNLine(buf, LASTLINE);
+
     cline = buf->layout.topLine;
     ccolumn = buf->layout.currentColumn;
   }
@@ -266,7 +268,7 @@ void displayBuffer() {
   }
   if (buf->check_url) {
     chkURLBuffer(buf);
-    displayBuffer();
+    _displayBuffer();
   }
 }
 
@@ -342,7 +344,6 @@ static void drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
 }
 
 static void redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
-  App::instance().drawTabs();
   {
     Line *l;
     int i;

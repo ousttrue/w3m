@@ -872,11 +872,11 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
     int err;
     if (show_cookie) {
       if (flag & COO_SECURE)
-        disp_message_nsec("Received a secured cookie", false, 1, true, false);
+        disp_message_nsec("Received a secured cookie", 1, true);
       else
         disp_message_nsec(
-            Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
-            false, 1, true, false);
+            Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr, 1,
+            true);
     }
     err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
                      version, port, commentURL);
@@ -910,12 +910,12 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
           emsg = "This cookie was rejected to prevent security violation.";
         record_err_message(emsg);
         if (show_cookie)
-          disp_message_nsec(emsg, false, 1, true, false);
+          disp_message_nsec(emsg, 1, true);
       } else if (show_cookie)
         disp_message_nsec(
             Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)
                 ->ptr,
-            false, 1, true, false);
+            1, true);
     }
   }
 }

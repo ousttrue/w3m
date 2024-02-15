@@ -10,7 +10,6 @@
 #include "proto.h"
 #include "rc.h"
 #include "screen.h"
-#include "util.h"
 #include "etc.h"
 #include "message.h"
 #include "buffer.h"
@@ -20,8 +19,6 @@
 #include "w3m.h"
 #include "history.h"
 #include "app.h"
-#include "display.h"
-// #include "alloc.h"
 #include "terms.h"
 #include "buffer.h"
 #include <sys/stat.h>
@@ -100,7 +97,7 @@ void gotoLabel(const char *label) {
 
   auto al = CurrentTab->currentBuffer()->layout.name()->searchAnchor(label);
   if (al == nullptr) {
-    disp_message(Sprintf("%s is not found", label)->ptr, true);
+    disp_message(Sprintf("%s is not found", label)->ptr);
     return;
   }
   auto buf = Buffer::create();
@@ -120,7 +117,7 @@ void gotoLabel(const char *label) {
             false);
   CurrentTab->currentBuffer()->layout.pos = al->start.pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  displayBuffer();
+  App::instance().invalidate();
   return;
 }
 
@@ -131,7 +128,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
-    disp_err_message(emsg, false);
+    disp_err_message(emsg);
     return;
   }
 
@@ -140,7 +137,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
   // if (buf != NO_BUFFER)
   { this->pushBuffer(buf); }
 
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* go to specified URL */
@@ -190,7 +187,7 @@ void goURL0(const char *prompt, int relative) {
   }
 
   if (url == nullptr || *url == '\0') {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   if (*url == '#') {
@@ -235,7 +232,7 @@ void followTab() {
     CurrentTab->deleteBuffer(buf);
   else
     App::instance().deleteTab(CurrentTab);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /*
@@ -341,7 +338,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
                              option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
-    disp_err_message(emsg, false);
+    disp_err_message(emsg);
     return nullptr;
   }
 
@@ -397,7 +394,7 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
       this->currentBuffer()->layout.arrangeCursor();
     }
   }
-  displayBuffer();
+  App::instance().invalidate();
   return buf;
 }
 
@@ -495,9 +492,9 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
     auto tmp = fi->query_from_followform();
     do_internal(tmp2->ptr, tmp->ptr);
   } else {
-    disp_err_message("Can't send form because of illegal method.", false);
+    disp_err_message("Can't send form because of illegal method.");
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 void TabBuffer::_followForm(int submit) {
@@ -516,7 +513,7 @@ void TabBuffer::_followForm(int submit) {
       return;
     }
     if (fi->readonly)
-      disp_message_nsec("Read only field!", false, 1, true, false);
+      disp_message_nsec("Read only field!", 1, true);
     inputStrHist("TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
                  [fi, a](const char *p) {
                    if (p == nullptr || fi->readonly) {
@@ -530,7 +527,7 @@ void TabBuffer::_followForm(int submit) {
                      CurrentTab->do_submit(fi, a);
                      return;
                    }
-                   displayBuffer();
+                   App::instance().invalidate();
                  });
     break;
 
@@ -541,7 +538,7 @@ void TabBuffer::_followForm(int submit) {
     }
 
     if (fi->readonly)
-      disp_message_nsec("Read only field!", false, 1, true, false);
+      disp_message_nsec("Read only field!", 1, true);
 
     // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : nullptr,
     // nullptr); if (p == nullptr || fi->readonly)
@@ -558,7 +555,7 @@ void TabBuffer::_followForm(int submit) {
       return;
     }
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", false, 1, true, false);
+      disp_message_nsec("Read only field!", 1, true);
       break;
     }
     // p = inputLine("Password:", fi->value ? fi->value->ptr : nullptr,
@@ -578,7 +575,7 @@ void TabBuffer::_followForm(int submit) {
       return;
     }
     if (fi->readonly)
-      disp_message_nsec("Read only field!", false, 1, true, false);
+      disp_message_nsec("Read only field!", 1, true);
     input_textarea(fi);
     formUpdateBuffer(a, &currentBuffer()->layout, fi);
     break;
@@ -588,7 +585,7 @@ void TabBuffer::_followForm(int submit) {
       return;
     }
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", false, 1, true, false);
+      disp_message_nsec("Read only field!", 1, true);
       break;
     }
     formRecheckRadio(a, currentBuffer(), fi);
@@ -599,7 +596,7 @@ void TabBuffer::_followForm(int submit) {
       return;
     }
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", false, 1, true, false);
+      disp_message_nsec("Read only field!", 1, true);
       break;
     }
     fi->checked = !fi->checked;
@@ -628,5 +625,5 @@ void TabBuffer::_followForm(int submit) {
   default:
     break;
   }
-  displayBuffer();
+  App::instance().invalidate();
 }

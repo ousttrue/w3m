@@ -77,7 +77,7 @@ void _quitfm(bool confirm) {
 
   if (!(ans && TOLOWER(*ans) == 'y')) {
     // cancel
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
 
@@ -189,4 +189,3 @@ Url urlParse(const char *src, std::optional<Url> current) {
   }
   return url;
 }
-

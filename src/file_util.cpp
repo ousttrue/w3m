@@ -97,13 +97,13 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     }
     if (checkCopyFile(tmpf, p) < 0) {
       msg = Sprintf("Can't copy. %s and %s are identical.", tmpf, p);
-      disp_err_message(msg->ptr, false);
+      disp_err_message(msg->ptr);
       return -1;
     }
     if (!download) {
       if (_MoveFile(tmpf, p) < 0) {
         msg = Sprintf("Can't save to %s", p);
-        disp_err_message(msg->ptr, false);
+        disp_err_message(msg->ptr);
       }
       return -1;
     }

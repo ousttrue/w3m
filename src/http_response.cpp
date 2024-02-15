@@ -66,7 +66,7 @@ bool HttpResponse::checkRedirection(const Url &pu) {
   if (redirectins.size() >= static_cast<size_t>(FollowRedirection)) {
     auto tmp = Sprintf("Number of redirections exceeded %d at %s",
                        FollowRedirection, pu.to_Str().c_str());
-    disp_err_message(tmp->ptr, false);
+    disp_err_message(tmp->ptr);
     return false;
   }
 
@@ -74,7 +74,7 @@ bool HttpResponse::checkRedirection(const Url &pu) {
     if (same_url_p(pu, url)) {
       // same url found !
       auto tmp = Sprintf("Redirection loop detected (%s)", pu.to_Str().c_str());
-      disp_err_message(tmp->ptr, false);
+      disp_err_message(tmp->ptr);
       return false;
     }
   }

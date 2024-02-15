@@ -94,7 +94,6 @@ executable(
         'func.cpp',
         'cookie.cpp',
         'history.cpp',
-        'util.cpp',
         'anchor.cpp',
         'htmltag.cpp',
         'tagtable.cpp',

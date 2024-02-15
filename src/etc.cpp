@@ -365,3 +365,17 @@ int do_recursive_mkdir(const char *dir) {
 
   return 0;
 }
+
+int exec_cmd(const std::string &cmd) {
+  fmTerm();
+  if (auto rv = system(cmd.c_str())) {
+    printf("\n[Hit any key]");
+    fflush(stdout);
+    fmInit();
+    getch();
+    return rv;
+  }
+  fmInit();
+
+  return 0;
+}

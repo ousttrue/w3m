@@ -662,7 +662,7 @@ int UrlStream::doFileSave(const char *defstr) {
       return -1;
     if (checkSaveFile(this->stream, p) < 0) {
       auto msg = Sprintf("Can't save. Load file and %s are identical.", p);
-      disp_err_message(msg->ptr, false);
+      disp_err_message(msg->ptr);
       return -1;
     }
     auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");

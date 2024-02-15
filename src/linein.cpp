@@ -258,7 +258,7 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
 
   if (CurrentTab) {
     if (need_redraw) {
-      displayBuffer();
+      App::instance().invalidate();
     }
   }
 
@@ -552,7 +552,7 @@ static void next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  displayBuffer();
+  App::instance().invalidate();
   if (LASTLINE >= 3) {
     comment = true;
     nline = LASTLINE - 2;
@@ -907,7 +907,7 @@ static void _editor(void) {
     Strcat_char(strBuf, *p);
   }
   CLen = CPos = setStrType(strBuf, strProp);
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 inline void inputChar(const char *p, const OnInput &onInput) {

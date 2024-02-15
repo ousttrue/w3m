@@ -43,7 +43,7 @@ void setKeymap(const char *p, int lineno, int verbose) {
       emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
     record_err_message(emsg);
     if (verbose)
-      disp_message_nsec(emsg, false, 1, true, false);
+      disp_message_nsec(emsg, 1, true);
     return;
   }
   s = getWord(&p);
@@ -55,7 +55,7 @@ void setKeymap(const char *p, int lineno, int verbose) {
       emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
     record_err_message(emsg);
     if (verbose)
-      disp_message_nsec(emsg, false, 1, true, false);
+      disp_message_nsec(emsg, 1, true);
     return;
   }
   map = GlobalKeymap;
@@ -107,7 +107,7 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
       emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
       record_err_message(emsg);
       if (verbose)
-        disp_message_nsec(emsg, false, 1, true, false);
+        disp_message_nsec(emsg, 1, true);
       continue;
     }
     setKeymap(p, lineno, verbose);

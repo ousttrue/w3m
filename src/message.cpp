@@ -54,13 +54,12 @@ std::shared_ptr<Buffer> message_list_panel(void) {
   return loadHTMLString(tmp);
 }
 
-void disp_err_message(const char *s, int redraw_current) {
+void disp_err_message(const char *s) {
   record_err_message(s);
-  disp_message(s, redraw_current);
+  disp_message(s);
 }
 
-void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
-                       int mouse) {
+void disp_message_nsec(const char *s, int sec, int purge) {
   if (IsForkChild)
     return;
   if (!fmInitialized) {
@@ -75,20 +74,15 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
     message(s, LASTLINE, 0);
   refresh(term_io());
   sleep_till_anykey(sec, purge);
-  if (CurrentTab && CurrentTab->currentBuffer() && redraw_current) {
-    displayBuffer();
-  }
 }
 
-void disp_message(const char *s, int redraw_current) {
-  disp_message_nsec(s, redraw_current, 10, false, true);
-}
+void disp_message(const char *s) { disp_message_nsec(s, 10, false); }
 
 void set_delayed_message(const char *s) { delayed_msg = allocStr(s, -1); }
 
 void refresh_message() {
   if (delayed_msg != NULL) {
-    disp_message(delayed_msg, false);
+    disp_message(delayed_msg);
     delayed_msg = NULL;
     refresh(term_io());
   }

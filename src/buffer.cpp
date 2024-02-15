@@ -465,19 +465,19 @@ void execdict(const char *word) {
   const char *w, *dictcmd;
 
   if (!UseDictCommand || word == nullptr || *word == '\0') {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   w = word;
   if (*w == '\0') {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
   dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
   auto res = loadGeneralFile(dictcmd, {}, {.no_referer = true});
   if (!res) {
-    disp_message("Execution failed", true);
+    disp_message("Execution failed");
     return;
   }
 
@@ -491,7 +491,7 @@ void execdict(const char *word) {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 /* spawn external browser */
@@ -537,7 +537,7 @@ void invoke_browser(const char *url) {
     }
   }
   if (browser == nullptr || *browser == '\0') {
-    displayBuffer();
+    App::instance().invalidate();
     return;
   }
 
@@ -551,7 +551,7 @@ void invoke_browser(const char *url) {
   fmTerm();
   mySystem(cmd->ptr, bg);
   fmInit();
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 int checkBackBuffer(const std::shared_ptr<Buffer> &buf) {
@@ -624,7 +624,7 @@ void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont) {
 
 void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
   if (buf == nullptr) {
-    disp_err_message("Can't load string", false);
+    disp_err_message("Can't load string");
   } else /*if (buf != NO_BUFFER)*/ {
     buf->res->currentURL = CurrentTab->currentBuffer()->res->currentURL;
     if (linkid != LB_NOLINK) {
@@ -633,7 +633,7 @@ void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
     }
     CurrentTab->pushBuffer(buf);
   }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 void cmd_loadfile(const char *fn) {
@@ -641,14 +641,14 @@ void cmd_loadfile(const char *fn) {
   auto res = loadGeneralFile(file_to_url((char *)fn), {}, {.no_referer = true});
   if (!res) {
     char *emsg = Sprintf("%s not found", fn)->ptr;
-    disp_err_message(emsg, false);
+    disp_err_message(emsg);
     return;
   }
 
   auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  displayBuffer();
+  App::instance().invalidate();
 }
 
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {

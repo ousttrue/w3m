@@ -108,7 +108,7 @@ void saveHistory(Hist *hist, int size) {
   if (hist->mtime != (long long)st.st_mtime) {
     fhist = newHist();
     if (loadHistory(fhist) || mergeHistory(fhist, hist))
-      disp_err_message("Can't merge history", false);
+      disp_err_message("Can't merge history");
     else
       hist = fhist;
   }
@@ -130,7 +130,7 @@ void saveHistory(Hist *hist, int size) {
   return;
 
 fail:
-  disp_err_message("Can't open history", false);
+  disp_err_message("Can't open history");
   return;
 }
 
