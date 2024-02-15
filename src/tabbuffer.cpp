@@ -1,4 +1,5 @@
 #include "tabbuffer.h"
+#include "http_option.h"
 #include "linein.h"
 #include "form.h"
 #include "alloc.h"
@@ -124,10 +125,10 @@ void gotoLabel(const char *label) {
 }
 
 void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
-                            const char *referer, FormList *request) {
+                            const HttpOption &option, FormList *request) {
 
   refresh(term_io());
-  auto res = loadGeneralFile(url, current, {.referer = referer}, request);
+  auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
@@ -171,22 +172,20 @@ void goURL0(const char *prompt, int relative) {
       SKIP_BLANKS(url);
   }
 
-  const char *referer;
+  HttpOption option = {};
   if (relative) {
     const int *no_referer_ptr = nullptr;
     current = CurrentTab->currentBuffer()->res->getBaseURL();
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
         current->schema == SCM_DATA)
-      referer = NO_REFERER;
+      option.no_referer = true;
     else
-      referer =
-          Strnew(CurrentTab->currentBuffer()->res->currentURL.to_RefererStr())
-              ->ptr;
+      option.referer =
+          CurrentTab->currentBuffer()->res->currentURL.to_RefererStr();
     url = Strnew(url_quote(url))->ptr;
   } else {
     current = {};
-    referer = nullptr;
     url = Strnew(url_quote(url))->ptr;
   }
 
@@ -202,22 +201,11 @@ void goURL0(const char *prompt, int relative) {
   auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
   auto cur_buf = CurrentTab->currentBuffer();
-  CurrentTab->cmd_loadURL(url, current, referer, nullptr);
+  CurrentTab->cmd_loadURL(url, current, option, nullptr);
   if (CurrentTab->currentBuffer() != cur_buf) { /* success */
     pushHashHist(URLHist,
                  CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
   }
-}
-
-void tabURL0(const char *prompt, int relative) {
-  App::instance()._newT();
-  auto buf = CurrentTab->currentBuffer();
-  goURL0(prompt, relative);
-  if (buf != CurrentTab->currentBuffer())
-    CurrentTab->deleteBuffer(buf);
-  else
-    App::instance().deleteTab(CurrentTab);
-  displayBuffer();
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
@@ -248,13 +236,6 @@ void followTab() {
   else
     App::instance().deleteTab(CurrentTab);
   displayBuffer();
-}
-
-void SAVE_BUFPOSITION(LineLayout *sbufp) {
-  sbufp->COPY_BUFPOSITION_FROM(CurrentTab->currentBuffer()->layout);
-}
-void RESTORE_BUFPOSITION(const LineLayout &sbufp) {
-  CurrentTab->currentBuffer()->layout.COPY_BUFPOSITION_FROM(sbufp);
 }
 
 /*
@@ -339,23 +320,25 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
 }
 
 std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
-                                            const char *referer,
+                                            HttpOption option,
                                             FormList *request) {
   message(Sprintf("loading %s", url)->ptr, 0, 0);
   refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
   auto base = this->currentBuffer()->res->getBaseURL();
+
   if ((no_referer_ptr && *no_referer_ptr) || !base ||
       base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
-      base->schema == SCM_DATA)
-    referer = NO_REFERER;
-  if (referer == nullptr)
-    referer =
-        Strnew(this->currentBuffer()->res->currentURL.to_RefererStr())->ptr;
+      base->schema == SCM_DATA) {
+    option.no_referer = true;
+  }
+  if (option.referer.empty()) {
+    option.referer = this->currentBuffer()->res->currentURL.to_RefererStr();
+  }
 
   auto res = loadGeneralFile(url, this->currentBuffer()->res->getBaseURL(),
-                             {.referer = referer}, request);
+                             option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
@@ -482,7 +465,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
     Strcat_charp(tmp2, "?");
     Strcat(tmp2, tmp);
-    this->loadLink(tmp2->ptr, a->target, nullptr, nullptr);
+    this->loadLink(tmp2->ptr, a->target, {}, nullptr);
   } else if (fi->parent->method == FORM_METHOD_POST) {
     if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
       fi->query_from_followform_multipart();
@@ -494,7 +477,7 @@ void TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
       fi->parent->body = tmp->ptr;
       fi->parent->length = tmp->length;
     }
-    auto buf = this->loadLink(tmp2->ptr, a->target, nullptr, fi->parent);
+    auto buf = this->loadLink(tmp2->ptr, a->target, {}, fi->parent);
     if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
       unlink(fi->parent->body);
     }

@@ -1,5 +1,6 @@
 #pragma once
 #include "url.h"
+#include "http_option.h"
 #include "enum_template.h"
 #include <string>
 #include <optional>
@@ -52,13 +53,6 @@ enum HttpRequestFlags {
   HR_FLAG_PROXY = 2,
 };
 ENUM_OP_INSTANCE(HttpRequestFlags);
-
-#define NO_REFERER ((const char *)-1)
-
-struct HttpOption {
-  const char *referer = {};
-  bool no_cache = {};
-};
 
 struct HttpRequest {
   Url url;

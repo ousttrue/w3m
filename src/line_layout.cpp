@@ -423,8 +423,8 @@ Anchor *LineLayout::registerForm(FormList *flist, HtmlTag *tag, int line,
   if (!fi) {
     return NULL;
   }
-  return this->formitem()->putAnchor((const char *)fi, flist->target, NULL,
-                                     NULL, '\0', line, pos);
+  return this->formitem()->putAnchor((const char *)fi, flist->target, {}, NULL,
+                                     '\0', line, pos);
 }
 
 void LineLayout::addMultirowsForm(AnchorList *al) {
@@ -466,8 +466,8 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      a = this->formitem()->putAnchor(a_form.url, a_form.target, NULL, NULL,
-                                      '\0', l->linenumber, pos);
+      a = this->formitem()->putAnchor(a_form.url, a_form.target, {}, NULL, '\0',
+                                      l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -1064,7 +1064,7 @@ static Anchor *_put_anchor_all(LineLayout *layout, const char *p1,
                                const char *p2, int line, int pos) {
   auto tmp = Strnew_charp_n(p1, p2 - p1);
   return layout->href()->putAnchor(url_quote(tmp->ptr).c_str(), NULL,
-                                   NO_REFERER, NULL, '\0', line, pos);
+                                   {.no_referer = true}, NULL, '\0', line, pos);
 }
 
 const char *LineLayout::reAnchor(const char *re) {

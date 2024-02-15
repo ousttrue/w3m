@@ -278,7 +278,7 @@ void AnchorList::reseq_anchor0(short *seqmap) {
 }
 
 Anchor *AnchorList::putAnchor(const char *url, const char *target,
-                              const char *referer, const char *title,
+                              const HttpOption &option, const char *title,
                               unsigned char key, int line, int pos) {
   BufferPoint bp = {0};
   bp.line = line;
@@ -291,6 +291,9 @@ Anchor *AnchorList::putAnchor(const char *url, const char *target,
   } else {
     for (i = 0; i < n; i++) {
       if (bpcmp(this->anchors[i].start, bp) >= 0) {
+        while (n >= this->anchors.size()) {
+          this->anchors.push_back({});
+        }
         for (size_t j = n; j > i; j--)
           this->anchors[j] = this->anchors[j - 1];
         break;
@@ -304,7 +307,7 @@ Anchor *AnchorList::putAnchor(const char *url, const char *target,
   auto a = &this->anchors[i];
   a->url = url;
   a->target = target;
-  a->referer = referer;
+  a->option = option;
   a->title = title;
   a->accesskey = key;
   a->slave = false;

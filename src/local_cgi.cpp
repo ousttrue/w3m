@@ -213,7 +213,7 @@ static int cgi_filename(const char *uri, const char **fn, const char **name,
 }
 
 FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
-                    const char *referer) {
+                    const HttpOption &option) {
   FILE *fr = NULL, *fw = NULL;
   int status;
   pid_t pid;
@@ -258,8 +258,8 @@ FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
   set_cgi_environ(name, file, uri);
   if (path_info)
     set_environ("PATH_INFO", path_info);
-  if (referer && referer != NO_REFERER)
-    set_environ("HTTP_REFERER", referer);
+  if (option.referer.size() && !option.no_referer)
+    set_environ("HTTP_REFERER", option.referer.c_str());
   if (request) {
     set_environ("REQUEST_METHOD", "POST");
     if (qstr)

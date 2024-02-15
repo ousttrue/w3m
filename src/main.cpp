@@ -10,7 +10,7 @@ int main(int argc, char **argv) {
   }
 
   if (argc > 1) {
-    auto res = loadGeneralFile(argv[1], {}, {.referer = NO_REFERER}, {});
+    auto res = loadGeneralFile(argv[1], {}, {.no_referer = true}, {});
     if (!res) {
       return 2;
     }

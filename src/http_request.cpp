@@ -40,7 +40,7 @@ Str *HttpRequest::getRequestURI() const {
 }
 
 static char *otherinfo(const Url &target, std::optional<Url> current,
-                       const char *referer, bool no_cache) {
+                       const HttpOption &option) {
   Str *s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -69,7 +69,7 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
     }
     Strcat_charp(s, "\r\n");
   }
-  if (no_cache || NoCache) {
+  if (option.no_cache || NoCache) {
     Strcat_charp(s, "Pragma: no-cache\r\n");
     Strcat_charp(s, "Cache-control: no-cache\r\n");
   }
@@ -82,12 +82,13 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
     int cross_origin = false;
     if (CrossOriginReferer && current && current->host.size() &&
         (target.host.empty() || current->host != target.host ||
-         current->port != target.port || current->schema != target.schema)){
+         current->port != target.port || current->schema != target.schema)) {
       cross_origin = true;
     }
     if (current && current->schema == SCM_HTTPS && target.schema != SCM_HTTPS) {
       /* Don't send Referer: if https:// -> http:// */
-    } else if (referer == nullptr && current && current->schema != SCM_LOCAL &&
+    } else if (option.referer.empty() && current &&
+               current->schema != SCM_LOCAL &&
                current->schema != SCM_LOCAL_CGI &&
                current->schema != SCM_DATA) {
       Strcat_charp(s, "Referer: ");
@@ -96,12 +97,12 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
       else
         Strcat(s, current->to_RefererStr());
       Strcat_charp(s, "\r\n");
-    } else if (referer != nullptr && referer != NO_REFERER) {
+    } else if (option.referer.size() && !option.no_referer) {
       Strcat_charp(s, "Referer: ");
       if (cross_origin)
         Strcat(s, current->RefererOriginStr());
       else
-        Strcat_charp(s, referer);
+        Strcat(s, option.referer);
       Strcat_charp(s, "\r\n");
     }
   }
@@ -114,11 +115,10 @@ Str *HttpRequest::to_Str() const {
   Strcat_charp(tmp, " ");
   Strcat_charp(tmp, this->getRequestURI()->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
-  if (this->option.referer == NO_REFERER) {
-    Strcat_charp(tmp, otherinfo(url, {}, {}, this->option.no_cache));
+  if (this->option.no_referer) {
+    Strcat_charp(tmp, otherinfo(url, {}, this->option));
   } else {
-    Strcat_charp(tmp, otherinfo(url, current, this->option.referer,
-                                this->option.no_cache));
+    Strcat_charp(tmp, otherinfo(url, current, this->option));
   }
   if (extra_headers) {
     for (auto i = extra_headers->first; i != nullptr; i = i->next) {

@@ -1086,9 +1086,9 @@ void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
       Strcat_charp(tmp, "\" TARGET=\"");
       Strcat_charp(tmp, html_quote(obuf->anchor.target));
     }
-    if (obuf->anchor.referer) {
+    if (obuf->anchor.option.use_referer()) {
       Strcat_charp(tmp, "\" REFERER=\"");
-      Strcat_charp(tmp, html_quote(obuf->anchor.referer));
+      Strcat_charp(tmp, html_quote(obuf->anchor.option.referer.c_str()));
     }
     if (obuf->anchor.title) {
       Strcat_charp(tmp, "\" TITLE=\"");
@@ -2671,7 +2671,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
       obuf->anchor.target = Strnew_charp(p)->ptr;
     if (parsedtag_get_value(tag, ATTR_REFERER, &p))
-      obuf->anchor.referer = Strnew_charp(p)->ptr;
+      obuf->anchor.option = {.referer = p};
     if (parsedtag_get_value(tag, ATTR_TITLE, &p))
       obuf->anchor.title = Strnew_charp(p)->ptr;
     if (parsedtag_get_value(tag, ATTR_ACCESSKEY, &p))
@@ -3863,7 +3863,7 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = layout->href()->putAnchor(p, q, r, s, *t,
+            a_href = layout->href()->putAnchor(p, q, {.referer = r ? r : ""}, s, *t,
                                                layout->currentLn(), pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;

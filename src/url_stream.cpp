@@ -145,16 +145,15 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
                              const HttpOption &option, FormList *request) {
   if (request && request->body) {
     /* local CGI: POST */
-    this->stream = newFileStream(localcgi_post(hr->url.real_file.c_str(),
-                                               hr->url.query.c_str(), request,
-                                               option.referer),
-                                 fclose);
+    this->stream =
+        newFileStream(localcgi_post(hr->url.real_file.c_str(),
+                                    hr->url.query.c_str(), request, option),
+                      fclose);
   } else {
     /* lodal CGI: GET */
-    this->stream =
-        newFileStream(localcgi_get(hr->url.real_file.c_str(),
-                                   hr->url.query.c_str(), option.referer),
-                      fclose);
+    this->stream = newFileStream(
+        localcgi_get(hr->url.real_file.c_str(), hr->url.query.c_str(), option),
+        fclose);
   }
 
   if (this->stream) {

@@ -263,14 +263,15 @@ void srch_nxtprv(int reverse) {
 }
 
 static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
-  bool do_next_search = false;
 
   static LineLayout sbuf(0);
-  if (ch == 0 && buf == nullptr) {
-    SAVE_BUFPOSITION(&sbuf); /* search starting point */
+  if (ch == 0 && !buf) {
+    sbuf.COPY_BUFROOT_FROM(
+        CurrentTab->currentBuffer()->layout); /* search starting point */
     return -1;
   }
 
+  bool do_next_search = false;
   auto str = buf->ptr;
   switch (ch) {
   case 022: /* C-r */
@@ -291,11 +292,11 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     if (*str) {
       if (searchRoutine == forwardSearch)
         CurrentTab->currentBuffer()->layout.pos += 1;
-      SAVE_BUFPOSITION(&sbuf);
+      sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
       if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
         CurrentTab->currentBuffer()->layout.pos -= 1;
-        SAVE_BUFPOSITION(&sbuf);
+        sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
       }
       CurrentTab->currentBuffer()->layout.arrangeCursor();
       displayBuffer();
@@ -304,7 +305,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     } else
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
-    RESTORE_BUFPOSITION(sbuf);
+    CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf);
     CurrentTab->currentBuffer()->layout.arrangeCursor();
     srchcore(str, searchRoutine);
     CurrentTab->currentBuffer()->layout.arrangeCursor();
@@ -316,7 +317,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
 
 void isrch(int (*func)(LineLayout *, const char *), const char *prompt) {
   LineLayout sbuf(0);
-  SAVE_BUFPOSITION(&sbuf);
+  sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
   dispincsrch(0, nullptr, nullptr); /* initialize incremental search state */
 
   searchRoutine = func;

@@ -350,7 +350,7 @@ void ldhelp() {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  CurrentTab->cmd_loadURL(tmp->ptr, {}, NO_REFERER, nullptr);
+  CurrentTab->cmd_loadURL(tmp->ptr, {}, {.no_referer = true}, nullptr);
 }
 
 // MOVE_LEFT
@@ -722,7 +722,7 @@ void followA() {
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
     App::instance()._newT();
     auto buf = CurrentTab->currentBuffer();
-    CurrentTab->loadLink(url, a->target, a->referer, nullptr);
+    CurrentTab->loadLink(url, a->target, a->option, nullptr);
     if (buf != CurrentTab->currentBuffer())
       CurrentTab->deleteBuffer(buf);
     else
@@ -730,7 +730,7 @@ void followA() {
     displayBuffer();
     return;
   }
-  CurrentTab->loadLink(url, a->target, a->referer, nullptr);
+  CurrentTab->loadLink(url, a->target, a->option, nullptr);
   displayBuffer();
 }
 
@@ -1044,7 +1044,7 @@ void goHome() {
     url = Strnew(url_quote(url))->ptr;
     p_url = urlParse(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
-    CurrentTab->cmd_loadURL(url, {}, nullptr, nullptr);
+    CurrentTab->cmd_loadURL(url, {}, {}, nullptr);
     if (CurrentTab->currentBuffer() != cur_buf) /* success */
       pushHashHist(
           URLHist,
@@ -1060,7 +1060,7 @@ void gorURL() { goURL0("Goto relative URL: ", true); }
 // BOOKMARK VIEW_BOOKMARK
 //"View bookmarks"
 void ldBmark() {
-  CurrentTab->cmd_loadURL(BookmarkFile, {}, NO_REFERER, nullptr);
+  CurrentTab->cmd_loadURL(BookmarkFile, {}, {.no_referer = true}, nullptr);
 }
 
 /* Add current to bookmark */
@@ -1082,8 +1082,8 @@ void adBmark() {
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
   request->length = tmp->length;
-  CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, NO_REFERER,
-                          request);
+  CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {},
+                          {.no_referer = true}, request);
 }
 
 /* option setting */
@@ -1360,8 +1360,8 @@ void reload() {
   refresh(term_io());
   DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
 
-  auto res = loadGeneralFile(
-      url->ptr, {}, {.referer = NO_REFERER, .no_cache = true}, request);
+  auto res = loadGeneralFile(url->ptr, {},
+                             {.no_referer = true, .no_cache = true}, request);
   DefaultType = nullptr;
 
   if (multipart) {
@@ -1645,11 +1645,31 @@ void tabA() { followTab(); }
 
 // TAB_GOTO
 //"Open specified document in a new tab"
-void tabURL() { tabURL0("Goto URL on new tab: ", false); }
+void tabURL() {
+  // tabURL0("Goto URL on new tab: ", false);
+  App::instance()._newT();
+  auto buf = CurrentTab->currentBuffer();
+  goURL0("Goto URL on new tab: ", false);
+  if (buf != CurrentTab->currentBuffer())
+    CurrentTab->deleteBuffer(buf);
+  else
+    App::instance().deleteTab(CurrentTab);
+  displayBuffer();
+}
 
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
-void tabrURL() { tabURL0("Goto relative URL on new tab: ", true); }
+void tabrURL() {
+  // tabURL0(, true);
+  App::instance()._newT();
+  auto buf = CurrentTab->currentBuffer();
+  goURL0("Goto relative URL on new tab: ", true);
+  if (buf != CurrentTab->currentBuffer())
+    CurrentTab->deleteBuffer(buf);
+  else
+    App::instance().deleteTab(CurrentTab);
+  displayBuffer();
+}
 
 // TAB_RIGHT
 //"Move right along the tab bar"

@@ -1,4 +1,5 @@
 #pragma once
+#include "http_option.h"
 #include <vector>
 #include <string_view>
 
@@ -17,7 +18,7 @@ struct BufferPoint {
 struct Anchor {
   const char *url;
   const char *target;
-  const char *referer;
+  HttpOption option = {};
   const char *title;
   unsigned char accesskey;
   BufferPoint start;
@@ -38,6 +39,7 @@ struct HmarkerList {
   void putHmarker(int line, int pos, int seq);
 };
 
+struct HttpOption;
 struct AnchorList {
   std::vector<Anchor> anchors;
   size_t size() const { return anchors.size(); }
@@ -54,8 +56,9 @@ struct AnchorList {
   Anchor *closest_prev_anchor(Anchor *an, int x, int y);
   void shiftAnchorPosition(HmarkerList *hl, int line, int pos, int shift);
   void reseq_anchor0(short *seqmap);
-  Anchor *putAnchor(const char *url, const char *target, const char *referer,
-                    const char *title, unsigned char key, int line, int pos);
+  Anchor *putAnchor(const char *url, const char *target,
+                    const HttpOption &option, const char *title,
+                    unsigned char key, int line, int pos);
 
 private:
   int acache = -1;

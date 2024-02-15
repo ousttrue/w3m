@@ -14,6 +14,7 @@ struct Buffer;
 struct FormList;
 struct FormItemList;
 struct Anchor;
+struct HttpOption;
 struct TabBuffer : public gc_cleanup {
   friend class App;
   TabBuffer *nextTab = nullptr;
@@ -50,23 +51,18 @@ public:
   bool select(char cmd, const std::shared_ptr<Buffer> &buf);
 
   void cmd_loadURL(const char *url, std::optional<Url> current,
-                   const char *referer, FormList *request);
+                   const HttpOption &option, FormList *request);
 
   std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                                         const std::shared_ptr<Buffer> &newbuf);
 
   std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
-                                   const char *referer, FormList *request);
+                                   HttpOption option, FormList *request);
   void do_submit(FormItemList *fi, Anchor *a);
   void _followForm(int submit);
   int draw();
 };
 
-struct LineLayout;
-void SAVE_BUFPOSITION(LineLayout *sbufp);
-void RESTORE_BUFPOSITION(const LineLayout &sbufp);
-
-void tabURL0(const char *prompt, int relative);
 void followTab();
 struct Str;
 void gotoLabel(const char *label);

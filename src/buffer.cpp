@@ -475,7 +475,7 @@ void execdict(const char *word) {
   }
   dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  auto res = loadGeneralFile(dictcmd, {}, {.referer = NO_REFERER});
+  auto res = loadGeneralFile(dictcmd, {}, {.no_referer = true});
   if (!res) {
     disp_message("Execution failed", true);
     return;
@@ -638,8 +638,7 @@ void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
 
 void cmd_loadfile(const char *fn) {
 
-  auto res =
-      loadGeneralFile(file_to_url((char *)fn), {}, {.referer = NO_REFERER});
+  auto res = loadGeneralFile(file_to_url((char *)fn), {}, {.no_referer = true});
   if (!res) {
     char *emsg = Sprintf("%s not found", fn)->ptr;
     disp_err_message(emsg, false);
