@@ -59,7 +59,6 @@ struct auth_cookie *Auth_cookie = nullptr;
 struct Cookie *First_cookie = nullptr;
 char UseAltEntity = false;
 int no_rc_dir = false;
-const char *mkd_tmp_dir = nullptr;
 const char *config_file = nullptr;
 int is_redisplay = false;
 int clear_buffer = true;
@@ -88,7 +87,7 @@ void _quitfm(bool confirm) {
   save_cookies();
   if (UseHistory && SaveURLHist)
     saveHistory(URLHist, URLHistSize);
-  w3m_exit(0);
+  App::instance().exit(0);
 }
 
 Url urlParse(const char *src, std::optional<Url> current) {
@@ -191,13 +190,3 @@ Url urlParse(const char *src, std::optional<Url> current) {
   return url;
 }
 
-void w3m_exit(int i) {
-  stopDownload();
-  free_ssl_ctx();
-  if (mkd_tmp_dir)
-    if (rmdir(mkd_tmp_dir) != 0) {
-      fprintf(stderr, "Can't remove temporary directory (%s)!\n", mkd_tmp_dir);
-      exit(1);
-    }
-  exit(i);
-}

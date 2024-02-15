@@ -42,6 +42,7 @@ public:
 
   bool initialize();
   int mainLoop();
+  void exit(int rval = 0);
 
   int pid() const { return _currentPid; }
   std::string pwd() const { return _currentDir; }

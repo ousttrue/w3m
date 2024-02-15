@@ -1,4 +1,5 @@
 #include "app.h"
+#include "ssl_util.h"
 #include "form.h"
 #include "message.h"
 #include "http_response.h"
@@ -194,6 +195,10 @@ App::~App() {
     unlink(f.c_str());
   }
   fileToDelete.clear();
+
+  stopDownload();
+  free_ssl_ctx();
+  reset_tty();
 }
 
 bool App::initialize() {
@@ -328,6 +333,14 @@ int App::mainLoop() {
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
   uv_loop_close(uv_default_loop());
   return 0;
+}
+
+void App::exit(int) {
+  // stop libuv
+  // exit(i);
+  uv_read_stop((uv_stream_t *)&g_tty_in);
+  uv_signal_stop(&g_signal_resize);
+  uv_timer_stop(&g_timer);
 }
 
 int App::searchKeyNum() {

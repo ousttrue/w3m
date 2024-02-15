@@ -4,6 +4,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "screen.h"
+#include "app.h"
 #include "w3m.h"
 #include "proto.h"
 #include "Str.h"
@@ -30,7 +31,7 @@
 #define HAVE_TERMIOS_H 1
 #define DEFAULT_TERM 0 /* XXX */
 
-#define DEV_TTY_PATH	"/dev/tty"
+#define DEV_TTY_PATH "/dev/tty"
 static const char *title_str = NULL;
 static int tty = -1;
 
@@ -235,15 +236,9 @@ void reset_tty(void) {
     close_tty();
 }
 
-static void reset_exit_with_value(SIGNAL_ARG, int rval) {
-  reset_tty();
-  w3m_exit(rval);
-  SIGNAL_RETURN;
-}
+void reset_error_exit(SIGNAL_ARG) { App::instance().exit(1); }
 
-void reset_error_exit(SIGNAL_ARG) { reset_exit_with_value(SIGNAL_ARGLIST, 1); }
-
-void reset_exit(SIGNAL_ARG) { reset_exit_with_value(SIGNAL_ARGLIST, 0); }
+void reset_exit(SIGNAL_ARG) { App::instance().exit(0); }
 
 void error_dump(SIGNAL_ARG) {
   mySignal(SIGIOT, SIG_DFL);

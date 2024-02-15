@@ -54,12 +54,9 @@ extern struct auth_cookie *Auth_cookie;
 extern struct Cookie *First_cookie;
 extern char UseAltEntity;
 extern int no_rc_dir;
-extern const char *mkd_tmp_dir;
 extern const char *config_file;
 extern int is_redisplay;
 extern int clear_buffer;
 extern int set_pixel_per_char;
 extern const char *keymap_file;
-
-void w3m_exit(int i);
 void _quitfm(bool confirm);
