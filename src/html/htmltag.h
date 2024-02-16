@@ -1,6 +1,7 @@
 #pragma once
 #include "htmlcommand.h"
 #include "html.h"
+#include <gc_cpp.h>
 
 /* Parsed Tag structure */
 
@@ -78,13 +79,19 @@ enum HtmlTagAttr {
   MAX_TAGATTR = 75,
 };
 
-struct HtmlTag {
-  HtmlCommand tagid;
-  unsigned char *attrid;
-  char **value;
-  unsigned char *map;
-  char need_reconstruct;
+struct HtmlTag : public gc_cleanup {
+  HtmlCommand tagid = {};
+  unsigned char *attrid = {};
+  char **value = {};
+  unsigned char *map = {};
+  char need_reconstruct = {};
 
+private:
+  HtmlTag(HtmlCommand id) : tagid(id) {}
+
+public:
+  HtmlTag(const HtmlTag &) = delete;
+  HtmlTag &operator=(const HtmlTag &) = delete;
   static HtmlTag *parse(const char **s, int internal);
   bool parsedtag_accepts(HtmlTagAttr id) const {
     return (this->map && this->map[id] != MAX_TAGATTR);
@@ -93,11 +100,9 @@ struct HtmlTag {
     return (this->parsedtag_accepts(id) &&
             (this->attrid[this->map[id]] != ATTR_UNKNOWN));
   }
+  bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
 };
 
-#define parsedtag_delete(tag, id)                                              \
-  (tag->parsedtag_accepts(id) && ((tag)->attrid[(tag)->map[id]] = ATTR_UNKNOWN))
-#define parsedtag_need_reconstruct(tag) ((tag)->need_reconstruct)
 #define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
 
 struct Str;

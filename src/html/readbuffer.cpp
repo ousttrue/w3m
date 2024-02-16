@@ -1444,7 +1444,7 @@ img_end:
 }
 
 Str *process_anchor(struct HtmlTag *tag, const char *tagbuf) {
-  if (parsedtag_need_reconstruct(tag)) {
+  if (tag->parsedtag_need_reconstruct()) {
     parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
     return parsedtag2str(tag);
   } else {
@@ -3458,7 +3458,7 @@ table_start:
       /* process tags */
       if (HTMLtagproc1(tag, h_env) == 0) {
         /* preserve the tag for second-stage processing */
-        if (parsedtag_need_reconstruct(tag))
+        if (tag->parsedtag_need_reconstruct())
           h_env->tagbuf = parsedtag2str(tag);
         push_tag(obuf, h_env->tagbuf->ptr, cmd);
       }

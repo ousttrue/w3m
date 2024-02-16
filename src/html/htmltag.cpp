@@ -129,9 +129,7 @@ HtmlTag *HtmlTag::parse(const char **s, int internal) {
   if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
     goto skip_parse_tagarg;
 
-  tag = (struct HtmlTag *)New(struct HtmlTag);
-  bzero(tag, sizeof(struct HtmlTag));
-  tag->tagid = tag_id;
+  tag = new HtmlTag(tag_id);
 
   int nattr;
   if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
