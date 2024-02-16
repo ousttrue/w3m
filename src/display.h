@@ -1,5 +1,5 @@
 #pragma once
-#include "lineprop.h"
+#include "html/lineprop.h"
 #include <stddef.h>
 
 extern bool displayLink;

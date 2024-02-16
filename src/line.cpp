@@ -1,6 +1,6 @@
 #include "line.h"
 #include "utf8.h"
-#include "lineprop.h"
+#include "html/lineprop.h"
 
 Line::Line(int n, Line *prevl) : linenumber(n), prev(prevl) {
   if (prev) {

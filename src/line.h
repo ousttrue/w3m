@@ -1,7 +1,7 @@
 #pragma once
 #include <gc_cpp.h>
 #include <vector>
-#include "lineprop.h"
+#include "html/lineprop.h"
 
 #define LINELEN 256 /* Initial line length */
 

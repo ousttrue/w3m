@@ -101,3 +101,7 @@ int Strcmp(const Str *x, const Str *y);
 #define Strinsert(s, n, p) Strinsert_charp((s), (n), (p)->ptr)
 #define Strshrinkfirst(s, n) Strdelete((s), 0, (n))
 #define Strfputs(s, f) fwrite((s)->ptr, 1, (s)->length, (f))
+
+#define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
+#define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
+

@@ -117,8 +117,6 @@ Str *process_input(HtmlParser *parser, HtmlTag *tag);
 Str *process_button(HtmlParser *parser, HtmlTag *tag);
 Str *process_n_button(void);
 Str *process_select(HtmlTag *tag);
-Str *process_n_select(HtmlParser *parser);
-void feed_select(HtmlParser *parser, const char *str);
 void process_option(HtmlParser *parser);
 Str *process_textarea(HtmlTag *tag, int width);
 Str *process_n_textarea(HtmlParser *parser);

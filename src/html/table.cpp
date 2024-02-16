@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "readbuffer.h"
+#include "html_parser.h"
 #include "symbol.h"
 #include "htmlcommand.h"
 #include "terms.h"
@@ -58,9 +59,6 @@ int symbol_width0 = 0;
 #ifndef abs
 #define abs(a) ((a) >= 0. ? (a) : -(a))
 #endif /* not abs */
-
-#define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
-#define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
 #ifdef MATRIX
 #ifndef MESCHACH
@@ -2235,7 +2233,7 @@ static void feed_table_block_tag(struct table *tbl, const char *line,
 
 static void table_close_select(HtmlParser *parser, struct table *tbl,
                                struct table_mode *mode, int width) {
-  Str *tmp = process_n_select(parser);
+  Str *tmp = parser->process_n_select();
   mode->pre_mode &= ~TBLM_INSELECT;
   mode->end_tag = 0;
   feed_table1(parser, tbl, tmp, mode, width);
@@ -2771,7 +2769,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_SELECT:
-    tmp = process_select(tag);
+    tmp = parser->process_select(tag);
     if (tmp)
       feed_table1(parser, tbl, tmp, mode, width);
     mode->pre_mode |= TBLM_INSELECT;
@@ -3029,7 +3027,7 @@ int feed_table(HtmlParser *parser, struct table *tbl, const char *line,
     return -1;
   }
   if (mode->pre_mode & TBLM_INSELECT) {
-    feed_select(parser, line);
+    parser->feed_select(line);
     return -1;
   }
   if (!(mode->pre_mode & TBLM_PLAIN) &&
