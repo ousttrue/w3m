@@ -31,7 +31,16 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(Hist *hist) {
+LineInput::LineInput(const char *prompt, Hist *hist, IncFunc incrfunc)
+    : prompt(prompt), incrfunc(incrfunc) {
+  opos = get_strwidth(prompt);
+  epos = (COLS() - 2) - opos;
+  if (epos < 0) {
+    epos = 0;
+  }
+  lpos = epos / 3;
+  rpos = epos * 2 / 3;
+
   CurrentHist = hist;
   if (hist) {
     use_hist = true;
@@ -79,9 +88,9 @@ LineInput::LineInput(Hist *hist) {
   };
 }
 
-void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
-                                    InputFlags flag, IncFunc incrfunc,
+void LineInput::inputLineHistSearch(const char *def_str, InputFlags _flag,
                                     const OnInput &onInput) {
+  this->flag = _flag;
   if (flag & IN_URL) {
     cm_mode = CPL_ALWAYS | CPL_URL;
   } else if (flag & IN_FILENAME) {
@@ -96,14 +105,6 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
     cm_mode = CPL_OFF;
   }
 
-  int opos = get_strwidth(prompt);
-  int epos = (COLS() - 2) - opos;
-  if (epos < 0){
-    epos = 0;
-  }
-  int lpos = epos / 3;
-  int rpos = epos * 2 / 3;
-
   if (def_str) {
     strBuf = Strnew_charp(def_str);
     CLen = CPos = setStrType(strBuf, strProp);
@@ -112,84 +113,16 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
     CLen = CPos = 0;
   }
 
-  do {
-    int x = bytePosToColumn(strBuf->ptr, strProp, CLen, CPos, 0, true);
-    if (x - rpos > offset) {
-      int y = bytePosToColumn(strBuf->ptr, strProp, CLen, CLen, 0, false);
-      if (y - epos > x - rpos)
-        offset = x - rpos;
-      else if (y - epos > 0)
-        offset = y - epos;
-    } else if (x - lpos < offset) {
-      if (x - lpos > 0)
-        offset = x - lpos;
-      else
-        offset = 0;
-    }
-    move(LASTLINE(), 0);
-    addstr(prompt);
-    if (is_passwd)
-      addPasswd(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
-    else
-      addStr(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
-    clrtoeolx();
-    move(LASTLINE(), opos + x - offset);
-    refresh(term_io());
+  draw();
+  while (i_cont) {
 
-  next_char:
-    int c = getch();
-    cm_clear = true;
-    cm_disp_clear = true;
-    if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
-                      (c == CTRL_I || (space_autocomplete && c == ' '))) ||
-                     ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
-      if (emacs_like_lineedit && cm_next) {
-        _dcompl({});
-        need_redraw = true;
-      } else {
-        _compl({});
-        cm_disp_next = -1;
-      }
-    } else if (!i_quote && CLen == CPos &&
-               (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
-      if (!emacs_like_lineedit) {
-        _dcompl({});
-        need_redraw = true;
-      }
-    } else if (!i_quote && c == DEL_CODE) {
-      _bs({});
-      cm_next = false;
-      cm_disp_next = -1;
-    } else if (!i_quote && c < 0x20) { /* Control code */
-      if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20) {
-        auto callback = InputKeymap[(int)c];
-        callback(c);
-      }
-      if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
-        incrfunc(-1, strBuf, strProp);
-      if (cm_clear)
-        cm_next = false;
-      if (cm_disp_clear)
-        cm_disp_next = -1;
-    } else {
-      i_quote = false;
-      cm_next = false;
-      cm_disp_next = -1;
-      if (CLen >= STR_LEN)
-        goto next_char;
-      insC({});
-      strBuf->ptr[CPos] = c;
-      if (!is_passwd && get_mctype((const char *)&c) == PC_CTRL)
-        strProp[CPos] = PC_CTRL;
-      else
-        strProp[CPos] = PC_ASCII;
-      CPos++;
-      if (incrfunc)
-        incrfunc(-1, strBuf, strProp);
-    }
-    if (CLen && (flag & IN_CHAR))
+    auto c = getch();
+    if (!dispatch(c)) {
       break;
-  } while (i_cont);
+    }
+
+    draw();
+  }
 
   if (CurrentTab) {
     if (need_redraw) {
@@ -219,6 +152,94 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
   } else {
     onInput(Strnew_charp(p)->ptr);
   }
+}
+
+void LineInput::draw() {
+  int x = bytePosToColumn(strBuf->ptr, strProp, CLen, CPos, 0, true);
+  if (x - rpos > offset) {
+    int y = bytePosToColumn(strBuf->ptr, strProp, CLen, CLen, 0, false);
+    if (y - epos > x - rpos)
+      offset = x - rpos;
+    else if (y - epos > 0)
+      offset = y - epos;
+  } else if (x - lpos < offset) {
+    if (x - lpos > 0)
+      offset = x - lpos;
+    else
+      offset = 0;
+  }
+  move(LASTLINE(), 0);
+  addstr(prompt.c_str());
+  if (is_passwd)
+    addPasswd(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
+  else
+    addStr(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
+  clrtoeolx();
+  move(LASTLINE(), opos + x - offset);
+  refresh(term_io());
+}
+
+bool LineInput::dispatch(char c) {
+  cm_clear = true;
+  cm_disp_clear = true;
+  if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
+                    (c == CTRL_I || (space_autocomplete && c == ' '))) ||
+                   ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
+    if (emacs_like_lineedit && cm_next) {
+      _dcompl({});
+      need_redraw = true;
+    } else {
+      _compl({});
+      cm_disp_next = -1;
+    }
+  } else if (!i_quote && CLen == CPos &&
+             (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
+    if (!emacs_like_lineedit) {
+      _dcompl({});
+      need_redraw = true;
+    }
+  } else if (!i_quote && c == DEL_CODE) {
+    _bs({});
+    cm_next = false;
+    cm_disp_next = -1;
+  } else if (!i_quote && c < 0x20) { /* Control code */
+    if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20) {
+      auto callback = InputKeymap[(int)c];
+      callback(c);
+    }
+    if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
+      incrfunc(-1, strBuf, strProp);
+    if (cm_clear)
+      cm_next = false;
+    if (cm_disp_clear)
+      cm_disp_next = -1;
+  } else {
+    i_quote = false;
+    cm_next = false;
+    cm_disp_next = -1;
+    if (CLen < STR_LEN) {
+      insC({});
+      strBuf->ptr[CPos] = c;
+      if (!is_passwd && get_mctype((const char *)&c) == PC_CTRL)
+        strProp[CPos] = PC_CTRL;
+      else
+        strProp[CPos] = PC_ASCII;
+      CPos++;
+      if (incrfunc)
+        incrfunc(-1, strBuf, strProp);
+    }
+  }
+
+  if (!i_cont) {
+    return false;
+  }
+
+  if (CLen && (flag & IN_CHAR)) {
+    // (y/n) one char char
+    return false;
+  }
+
+  return true;
 }
 
 void LineInput::addPasswd(char *p, Lineprop *pr, int len, int offset,
@@ -825,19 +846,19 @@ void LineInput::_editor(char) {
   App::instance().invalidate();
 }
 
-void LineInput::inputAnswer(const char *prompt, const OnInput &onInput) {
+void LineInput::inputAnswer(const OnInput &onInput) {
   if (IsForkChild) {
     onInput("n");
     return;
   }
 
-  if (!fmInitialized) {
-    printf("%s", prompt);
-    fflush(stdout);
-    onInput(Strfgets(stdin)->ptr);
-    return;
-  }
+  // if (!fmInitialized) {
+  //   printf("%s", prompt);
+  //   fflush(stdout);
+  //   onInput(Strfgets(stdin)->ptr);
+  //   return;
+  // }
 
   term_raw();
-  inputChar(prompt, onInput);
+  inputChar(onInput);
 }

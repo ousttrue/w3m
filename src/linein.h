@@ -1,6 +1,7 @@
 #pragma once
 #include "line.h"
 #include <functional>
+#include <string>
 
 #define STR_LEN 1024
 
@@ -40,9 +41,18 @@ using OnInput = std::function<void(const char *input)>;
 using KeyCallback = std::function<void(char)>;
 
 class LineInput {
+  std::string prompt;
+  int opos = 0;
+  int epos = 0;
+  int lpos = 0;
+  int rpos = 0;
+  InputFlags flag = {};
+
   std::array<KeyCallback, 32> InputKeymap;
-  Str *strCurrentBuf = nullptr;
   Hist *CurrentHist = nullptr;
+  IncFunc incrfunc = nullptr;
+
+  Str *strCurrentBuf = nullptr;
   bool move_word = true;
   bool need_redraw = false;
   bool is_passwd = false;
@@ -106,45 +116,42 @@ class LineInput {
   void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
   void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
   int terminated(unsigned char c);
+  bool dispatch(char c);
+  void draw();
 
 public:
-  LineInput(Hist *hist);
-  void inputLineHistSearch(const char *prompt, const char *def_str,
-                           InputFlags flag, IncFunc incFunc,
+  LineInput(const char *prompt, Hist *hist, IncFunc incrfunc = {});
+  void inputLineHistSearch(const char *def_str, InputFlags flag,
                            const OnInput &onInput);
 
-  inline void inputLineHist(const char *p, const char *d, InputFlags f,
+  inline void inputLineHist(const char *d, InputFlags f,
                             const OnInput &onInput) {
-    inputLineHistSearch(p, d, f, nullptr, onInput);
+    inputLineHistSearch(d, f, onInput);
   }
 
-  inline void inputLine(const char *p, const char *d, InputFlags f,
-                        const OnInput &onInput) {
-    inputLineHist(p, d, f, onInput);
+  inline void inputLine(const char *d, InputFlags f, const OnInput &onInput) {
+    inputLineHist(d, f, onInput);
   }
 
-  inline void inputStr(const char *p, const char *d, const OnInput &onInput) {
-    inputLine(p, d, IN_STRING, onInput);
+  inline void inputStr(const char *d, const OnInput &onInput) {
+    inputLine(d, IN_STRING, onInput);
   }
 
-  inline void inputStrHist(const char *p, const char *d,
-                           const OnInput &onInput) {
-    inputLineHist(p, d, IN_STRING, onInput);
+  inline void inputStrHist(const char *d, const OnInput &onInput) {
+    inputLineHist(d, IN_STRING, onInput);
   }
 
-  inline void inputFilename(const char *p, const char *d,
-                            const OnInput &onInput) {
-    inputLine(p, d, IN_FILENAME, onInput);
+  inline void inputFilename(const char *d, const OnInput &onInput) {
+    inputLine(d, IN_FILENAME, onInput);
   }
 
-  inline void inputFilenameHist(const char *p, const char *d,
-                                const OnInput &onInput) {
-    inputLineHist(p, d, IN_FILENAME, onInput);
+  inline void inputFilenameHist(const char *d, const OnInput &onInput) {
+    inputLineHist(d, IN_FILENAME, onInput);
   }
 
-  inline void inputChar(const char *p, const OnInput &onInput) {
-    inputLine(p, "", IN_CHAR, onInput);
+  inline void inputChar(const OnInput &onInput) {
+    inputLine("", IN_CHAR, onInput);
   }
 
-  void inputAnswer(const char *prompt, const OnInput &onInput);
+  void inputAnswer(const OnInput &onInput);
 };

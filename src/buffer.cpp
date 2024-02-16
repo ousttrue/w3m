@@ -1005,23 +1005,24 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     }
     if (fi->readonly)
       disp_message_nsec("Read only field!", 1, true);
-    LineInput(TextHist).inputStrHist(
-        "TEXT:", fi->value ? fi->value->ptr : nullptr, [fi, a](const char *p) {
-          if (p == nullptr || fi->readonly) {
-            return;
-            // break;
-          }
-          fi->value = Strnew_charp(p);
-          formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
-          if (fi->accept || fi->parent->nitems == 1) {
-            auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
-            if (buf) {
-              App::instance().pushBuffer(buf, a->target);
-            }
-            return;
-          }
-          App::instance().invalidate();
-        });
+    LineInput("TEXT:", TextHist)
+        .inputStrHist(
+            fi->value ? fi->value->ptr : nullptr, [fi, a](const char *p) {
+              if (p == nullptr || fi->readonly) {
+                return;
+                // break;
+              }
+              fi->value = Strnew_charp(p);
+              formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
+              if (fi->accept || fi->parent->nitems == 1) {
+                auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
+                if (buf) {
+                  App::instance().pushBuffer(buf, a->target);
+                }
+                return;
+              }
+              App::instance().invalidate();
+            });
     break;
 
   case FORM_INPUT_FILE:
