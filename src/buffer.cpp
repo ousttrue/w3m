@@ -822,3 +822,26 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
 
   return {};
 }
+
+std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
+  auto a = this->layout.name()->searchAnchor(label);
+  if (!a) {
+    disp_message(Sprintf("%s is not found", label)->ptr);
+    return {};
+  }
+
+  auto buf = Buffer::create();
+  *buf = *this;
+  buf->res->currentURL.label = label;
+  pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
+  // this->pushBuffer(buf);
+  buf->layout.gotoLine(a->start.line);
+  if (label_topline)
+    buf->layout.topLine = buf->layout.lineSkip(
+        buf->layout.topLine,
+        buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber,
+        false);
+  buf->layout.pos = a->start.pos;
+  buf->layout.arrangeCursor();
+  return buf;
+}

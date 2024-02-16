@@ -60,7 +60,6 @@ public:
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> _followForm(int submit);
   std::shared_ptr<Buffer> followAnchor(bool check_target = true);
-  std::shared_ptr<Buffer> gotoLabel(const char *label);
   void goURL0(const char *prompt, bool relative);
 
   int draw(TabBuffer *current);

@@ -34,6 +34,7 @@ public:
   // shallow copy
   Buffer &operator=(const Buffer &src) = default;
   void saveBufferInfo();
+  std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> sourceBuffer();
 };
 

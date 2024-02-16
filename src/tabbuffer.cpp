@@ -88,32 +88,6 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   }
 }
 
-std::shared_ptr<Buffer> TabBuffer::gotoLabel(const char *label) {
-
-  auto al = this->currentBuffer()->layout.name()->searchAnchor(label);
-  if (al == nullptr) {
-    disp_message(Sprintf("%s is not found", label)->ptr);
-    return {};
-  }
-
-  auto buf = Buffer::create();
-  *buf = *this->currentBuffer();
-  buf->res->currentURL.label = allocStr(label, -1);
-  pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
-  this->pushBuffer(buf);
-  this->currentBuffer()->layout.gotoLine(al->start.line);
-  if (label_topline)
-    this->currentBuffer()->layout.topLine =
-        this->currentBuffer()->layout.lineSkip(
-            this->currentBuffer()->layout.topLine,
-            this->currentBuffer()->layout.currentLine->linenumber -
-                this->currentBuffer()->layout.topLine->linenumber,
-            false);
-  this->currentBuffer()->layout.pos = al->start.pos;
-  this->currentBuffer()->layout.arrangeCursor();
-  return buf;
-}
-
 void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
                             const HttpOption &option, FormList *request) {
 
@@ -181,7 +155,9 @@ void TabBuffer::goURL0(const char *prompt, bool relative) {
     return;
   }
   if (*url == '#') {
-    this->gotoLabel(url + 1);
+    if (auto buf = this->currentBuffer()->gotoLabel(url + 1)) {
+      this->pushBuffer(buf);
+    }
     return;
   }
 
@@ -603,14 +579,22 @@ std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
   }
 
   if (*a->url == '#') { /* index within this buffer */
-    return this->gotoLabel(a->url + 1);
+    auto buf = this->currentBuffer()->gotoLabel(a->url + 1);
+    if (buf) {
+      this->pushBuffer(buf);
+    }
+    return buf;
   }
 
   auto u = urlParse(a->url, this->currentBuffer()->res->getBaseURL());
   if (u.to_Str() == this->currentBuffer()->res->currentURL.to_Str()) {
     // index within this buffer
     if (u.label.size()) {
-      return this->gotoLabel(u.label.c_str());
+      auto buf = this->currentBuffer()->gotoLabel(u.label.c_str());
+      if (buf) {
+        this->pushBuffer(buf);
+      }
+      return buf;
     }
   }
 
