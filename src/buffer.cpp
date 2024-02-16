@@ -94,7 +94,7 @@ static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
       break;
     }
   }
-  addnstr_sup(msg->ptr, COLS - 1);
+  addnstr_sup(msg->ptr, COLS() - 1);
 }
 
 static std::shared_ptr<Buffer>
@@ -105,7 +105,7 @@ listBuffer(const std::shared_ptr<Buffer> &top,
 
   move(0, 0);
   clrtobotx();
-  for (i = 0; i < LASTLINE; i++) {
+  for (i = 0; i < LASTLINE(); i++) {
     if (buf == current) {
       c = i;
       standout();
@@ -126,7 +126,6 @@ listBuffer(const std::shared_ptr<Buffer> &top,
     buf = buf->backBuffer;
   }
   standout();
-  /* FIXME: gettextize? */
   message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
   standend();
   /*
@@ -142,10 +141,10 @@ listBuffer(const std::shared_ptr<Buffer> &top,
 std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
                                      std::shared_ptr<Buffer> currentbuf,
                                      char *selectchar) {
-  int i, cpoint,                  /* Current Buffer Number */
-      spoint,                     /* Current Line on Screen */
-      maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
-                                   * the * screen */
+  int i, cpoint,                    /* Current Buffer Number */
+      spoint,                       /* Current Line on Screen */
+      maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
+                                     * the * screen */
   std::shared_ptr<Buffer> buf, topbuf;
   char c;
 
@@ -268,7 +267,7 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   else
     loadBuffer(buf->res.get(), &buf->layout);
 
-  buf->layout.height = LASTLINE + 1;
+  buf->layout.height = LASTLINE() + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {
     Line *cur = sbuf->layout.currentLine;
     int n;

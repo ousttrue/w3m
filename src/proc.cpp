@@ -551,7 +551,7 @@ void susp() {
 #ifndef SIGSTOP
   char *shell;
 #endif /* not SIGSTOP */
-  move(LASTLINE, 0);
+  move(LASTLINE(), 0);
   clrtoeolx();
   refresh(term_io());
   fmTerm();

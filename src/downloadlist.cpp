@@ -106,7 +106,7 @@ std::shared_ptr<Buffer> DownloadListBuffer(void) {
     } else
       size = 0;
     if (d->size) {
-      int i, l = COLS - 6;
+      int i, l = COLS() - 6;
       if (size < d->size)
         i = 1.0 * l * size / d->size;
       else

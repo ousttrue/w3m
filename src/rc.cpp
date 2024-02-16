@@ -818,8 +818,8 @@ static void parse_cookie(void) {
 }
 
 void sync_with_option(void) {
-  if (PagerMax < LINES)
-    PagerMax = LINES;
+  if (PagerMax < LINES())
+    PagerMax = LINES();
   WrapSearch = WrapDefault;
   parse_cookie();
   initMailcap();

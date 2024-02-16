@@ -21,14 +21,14 @@ static int CurColumn;
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
 static void touch_column(int col) {
-  if (col >= 0 && col < COLS)
+  if (col >= 0 && col < COLS())
     ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
 }
 
 static void touch_line(void) {
   if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
     int i;
-    for (i = 0; i < COLS; i++)
+    for (i = 0; i < COLS(); i++)
       ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
     ScreenImage[CurLine]->isdirty =
         (LineDirtyFlags)(ScreenImage[CurLine]->isdirty | L_DIRTY);
@@ -40,14 +40,14 @@ static TermEntry _entry;
 void setupscreen(const TermEntry &entry) {
   _entry = entry;
 
-  if (LINES + 1 > max_LINES) {
-    max_LINES = LINES + 1;
+  if (LINES() + 1 > max_LINES) {
+    max_LINES = LINES() + 1;
     max_COLS = 0;
     ScreenElem = (Screen *)New_N(Screen, max_LINES);
     ScreenImage = (Screen **)New_N(Screen *, max_LINES);
   }
-  if (COLS + 1 > max_COLS) {
-    max_COLS = COLS + 1;
+  if (COLS() + 1 > max_COLS) {
+    max_COLS = COLS() + 1;
     for (int i = 0; i < max_LINES; i++) {
       ScreenElem[i].lineimage = (Utf8 *)New_N(Utf8, max_COLS);
       ScreenElem[i].lineprop = (l_prop *)New_N(l_prop, max_COLS);
@@ -55,7 +55,7 @@ void setupscreen(const TermEntry &entry) {
   }
 
   int i;
-  for (i = 0; i < LINES; i++) {
+  for (i = 0; i < LINES(); i++) {
     ScreenImage[i] = &ScreenElem[i];
     ScreenImage[i]->lineprop[0] = S_EOL;
     ScreenImage[i]->isdirty = {};
@@ -73,10 +73,10 @@ void clear(void) {
   int i, j;
   l_prop *p;
   move(0, 0);
-  for (i = 0; i < LINES; i++) {
+  for (i = 0; i < LINES(); i++) {
     ScreenImage[i]->isdirty = {};
     p = ScreenImage[i]->lineprop;
-    for (j = 0; j < COLS; j++) {
+    for (j = 0; j < COLS(); j++) {
       p[j] = S_EOL;
     }
   }
@@ -98,7 +98,7 @@ void clrtoeol(void) { /* Clear to the end of line */
   ScreenImage[CurLine]->isdirty =
       (LineDirtyFlags)(ScreenImage[CurLine]->isdirty | L_CLRTOEOL);
   touch_line();
-  for (i = CurColumn; i < COLS && !(lprop[i] & S_EOL); i++) {
+  for (i = CurColumn; i < COLS() && !(lprop[i] & S_EOL); i++) {
     lprop[i] = S_EOL | S_DIRTY;
   }
 }
@@ -113,7 +113,7 @@ static void clrtobot_eol(void (*clrtoeol)()) {
   (*clrtoeol)();
   CurColumn = 0;
   CurLine++;
-  for (; CurLine < LINES; CurLine++)
+  for (; CurLine < LINES(); CurLine++)
     (*clrtoeol)();
   CurLine = l;
   CurColumn = c;
@@ -182,13 +182,13 @@ void refresh(FILE *ttyf) {
   l_prop *pr, mode = 0;
   LineDirtyFlags *dirty;
 
-  for (line = 0; line <= LASTLINE; line++) {
+  for (line = 0; line <= LASTLINE(); line++) {
     dirty = &ScreenImage[line]->isdirty;
     if (*dirty & L_DIRTY) {
       *dirty = (LineDirtyFlags)(*dirty & ~L_DIRTY);
       pc = ScreenImage[line]->lineimage;
       pr = ScreenImage[line]->lineprop;
-      for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
+      for (col = 0; col < COLS() && !(pr[col] & S_EOL); col++) {
         if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
           if (need_redraw(pc[col], pr[col], SPACE, 0))
             break;
@@ -199,14 +199,14 @@ void refresh(FILE *ttyf) {
       }
       if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
         pcol = ScreenImage[line]->eol;
-        if (pcol >= COLS) {
+        if (pcol >= COLS()) {
           *dirty = (LineDirtyFlags)(*dirty & ~(L_NEED_CE | L_CLRTOEOL));
           pcol = col;
         }
       } else {
         pcol = col;
       }
-      if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
+      if (line < LINES() - 2 && pline == line - 1 && pcol == 0) {
         switch (moved) {
         case RF_NEED_TO_MOVE:
           term_move(line, 0);
@@ -233,7 +233,7 @@ void refresh(FILE *ttyf) {
       pcol = col;
 
       term_move(line, col);
-      for (; col < COLS;) {
+      for (; col < COLS();) {
         if (pr[col] & S_EOL)
           break;
 
@@ -308,9 +308,9 @@ void refresh(FILE *ttyf) {
         }
       } // cols
 
-      if (col == COLS)
+      if (col == COLS())
         moved = RF_NEED_TO_MOVE;
-      for (; col < COLS && !(pr[col] & S_EOL); col++)
+      for (; col < COLS() && !(pr[col] & S_EOL); col++)
         pr[col] |= S_EOL;
     }
     *dirty = (LineDirtyFlags)(*dirty & ~(L_NEED_CE | L_CLRTOEOL));
@@ -328,9 +328,9 @@ void refresh(FILE *ttyf) {
   flush_tty();
 }
 void move(int line, int column) {
-  if (line >= 0 && line < LINES)
+  if (line >= 0 && line < LINES())
     CurLine = line;
-  if (column >= 0 && column < COLS)
+  if (column >= 0 && column < COLS())
     CurColumn = column;
 }
 
@@ -362,8 +362,9 @@ void standout(void) { CurrentMode |= S_STANDOUT; }
 void standend(void) { CurrentMode &= ~S_STANDOUT; }
 
 void wrap(void) {
-  if (CurLine == LASTLINE)
+  if (CurLine == LASTLINE()) {
     return;
+  }
   CurLine++;
   CurColumn = 0;
 }
@@ -371,9 +372,9 @@ void wrap(void) {
 void addch(char c) { addmch({(char8_t)c, 0, 0, 0}); }
 
 void addmch(const Utf8 &utf8) {
-  if (CurColumn == COLS)
+  if (CurColumn == COLS())
     wrap();
-  if (CurColumn >= COLS)
+  if (CurColumn >= COLS())
     return;
   auto p = ScreenImage[CurLine]->lineimage;
   auto pr = ScreenImage[CurLine]->lineprop;
@@ -403,32 +404,32 @@ void addmch(const Utf8 &utf8) {
   /* Required to erase bold or underlined character for some * terminal
    * emulators. */
   int i = CurColumn + width - 1;
-  if (i < COLS &&
+  if (i < COLS() &&
       (((pr[i] & S_BOLD) && need_redraw(p[i], pr[i], utf8, CurrentMode)) ||
        ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
     touch_line();
     i++;
-    if (i < COLS) {
+    if (i < COLS()) {
       touch_column(i);
       if (pr[i] & S_EOL) {
         SETCH(p[i], SPACE, 1);
         SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
       } else {
-        for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
+        for (i++; i < COLS() && CHMODE(pr[i]) == C_WCHAR2; i++)
           touch_column(i);
       }
     }
   }
 
-  if (CurColumn + width > COLS) {
+  if (CurColumn + width > COLS()) {
     touch_line();
-    for (i = CurColumn; i < COLS; i++) {
+    for (i = CurColumn; i < COLS(); i++) {
       SETCH(p[i], SPACE, 1);
       SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
       touch_column(i);
     }
     wrap();
-    if (CurColumn + width > COLS)
+    if (CurColumn + width > COLS())
       return;
     p = ScreenImage[CurLine]->lineimage;
     pr = ScreenImage[CurLine]->lineprop;
@@ -456,7 +457,7 @@ void addmch(const Utf8 &utf8) {
         SETPROP(pr[i], (pr[CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
         touch_column(i);
       }
-      for (; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
+      for (; i < COLS() && CHMODE(pr[i]) == C_WCHAR2; i++) {
         SETCH(p[i], SPACE, 1);
         SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
         touch_column(i);
@@ -465,7 +466,7 @@ void addmch(const Utf8 &utf8) {
     CurColumn += width;
   } else if (c == '\t') {
     auto dest = (CurColumn + tab_step) / tab_step * tab_step;
-    if (dest >= COLS) {
+    if (dest >= COLS()) {
       wrap();
       touch_line();
       dest = tab_step;

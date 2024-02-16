@@ -16,8 +16,8 @@ void message(const char *s, int return_x, int return_y) {
     return;
   }
 
-  move(LASTLINE, 0);
-  addnstr(s, COLS - 1);
+  move(LASTLINE(), 0);
+  addnstr(s, COLS() - 1);
   clrtoeolx();
   move(return_y, return_x);
 }
@@ -31,7 +31,7 @@ void record_err_message(const char *s) {
   }
   if (!message_list)
     message_list = newGeneralList();
-  if (message_list->nitem >= LINES)
+  if (message_list->nitem >= LINES())
     popValue(message_list);
   pushValue(message_list, allocStr(s, -1));
 }
@@ -40,7 +40,7 @@ void record_err_message(const char *s) {
  * List of error messages
  */
 std::shared_ptr<Buffer> message_list_panel(void) {
-  Str *tmp = Strnew_size(LINES * COLS);
+  Str *tmp = Strnew_size(LINES() * COLS());
   Strcat_charp(tmp,
                "<html><head><title>List of error messages</title></head><body>"
                "<h1>List of error messages</h1><table cellpadding=0>\n");
@@ -71,7 +71,7 @@ void disp_message_nsec(const char *s, int sec, int purge) {
     message(s, CurrentTab->currentBuffer()->layout.AbsCursorX(),
             CurrentTab->currentBuffer()->layout.AbsCursorY());
   else
-    message(s, LASTLINE, 0);
+    message(s, LASTLINE(), 0);
   refresh(term_io());
   sleep_till_anykey(sec, purge);
 }
@@ -105,7 +105,7 @@ void showProgress(long long *linelen, long long *trbyte,
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      move(LASTLINE, 0);
+      move(LASTLINE(), 0);
       clrtoeolx();
       start_time = cur_time;
     }
@@ -114,7 +114,7 @@ void showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    move(LASTLINE, 0);
+    move(LASTLINE(), 0);
     ratio = 100.0 * (*trbyte) / current_content_length;
     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
     duration = cur_time - start_time;
@@ -133,8 +133,8 @@ void showProgress(long long *linelen, long long *trbyte,
     }
     addstr(messages->ptr);
     pos = 42;
-    i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-    move(LASTLINE, pos);
+    i = pos + (COLS() - pos - 1) * (*trbyte) / current_content_length;
+    move(LASTLINE(), pos);
     standout();
     addch(' ');
     for (j = pos + 1; j <= i; j++)
@@ -145,7 +145,7 @@ void showProgress(long long *linelen, long long *trbyte,
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      move(LASTLINE, 0);
+      move(LASTLINE(), 0);
       clrtoeolx();
       start_time = cur_time;
     }
@@ -154,7 +154,7 @@ void showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    move(LASTLINE, 0);
+    move(LASTLINE(), 0);
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {

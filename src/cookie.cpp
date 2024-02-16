@@ -888,8 +888,8 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
         Str *msg =
             Sprintf("Accept bad cookie from %s for %s?", pu->host.c_str(),
                     ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
-        if (msg->length > COLS - 10)
-          Strshrink(msg, msg->length - (COLS - 10));
+        if (msg->length > COLS() - 10)
+          Strshrink(msg, msg->length - (COLS() - 10));
         Strcat_charp(msg, " (y/n)");
         // ans = inputAnswer(msg->ptr);
         ans = "y";

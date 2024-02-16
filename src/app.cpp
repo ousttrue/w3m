@@ -401,7 +401,7 @@ void App::_peekURL(bool only_img) {
   }
 
   if (_currentKey == prev_key && s != nullptr) {
-    if (s->length - offset >= COLS)
+    if (s->length - offset >= COLS())
       offset++;
     else if (s->length <= offset) /* bug ? */
       offset = 0;
@@ -430,8 +430,8 @@ void App::_peekURL(bool only_img) {
     s = Strnew_charp(url_decode0(s->ptr));
 disp:
   int n = searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS - 1))
-    offset = (n - 1) * (COLS - 1);
+  if (n > 1 && s->length > (n - 1) * (COLS() - 1))
+    offset = (n - 1) * (COLS() - 1);
   disp_message(&s->ptr[offset]);
 }
 
@@ -440,7 +440,7 @@ std::string App::currentUrl() const {
   static int offset = 0;
 
   if (_currentKey == prev_key && s != nullptr) {
-    if (s->length - offset >= COLS)
+    if (s->length - offset >= COLS())
       offset++;
     else if (s->length <= offset) /* bug ? */
       offset = 0;
@@ -451,8 +451,8 @@ std::string App::currentUrl() const {
       s = Strnew_charp(url_decode0(s->ptr));
   }
   auto n = App::instance().searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS - 1))
-    offset = (n - 1) * (COLS - 1);
+  if (n > 1 && s->length > (n - 1) * (COLS() - 1))
+    offset = (n - 1) * (COLS() - 1);
 
   return &s->ptr[offset];
 }
@@ -621,7 +621,7 @@ void App::drawTabs() {
       y = t->draw(_currentTab);
     }
     move(y + 1, 0);
-    for (int i = 0; i < COLS; i++)
+    for (int i = 0; i < COLS(); i++)
       addch('~');
   }
 }
@@ -676,14 +676,14 @@ int App::calcTabPos() {
   int lcol = 0, rcol = 0, col;
 
   int n2, ny;
-  int n1 = (COLS - rcol - lcol) / TabCols;
+  int n1 = (COLS() - rcol - lcol) / TabCols;
   if (n1 >= _nTab) {
     n2 = 1;
     ny = 1;
   } else {
     if (n1 < 0)
       n1 = 0;
-    n2 = COLS / TabCols;
+    n2 = COLS() / TabCols;
     if (n2 == 0)
       n2 = 1;
     ny = (_nTab - n1 - 1) / n2 + 2;
@@ -700,10 +700,10 @@ int App::calcTabPos() {
     int nx;
     if (iy == 0) {
       nx = n1;
-      col = COLS - rcol - lcol;
+      col = COLS() - rcol - lcol;
     } else {
       nx = n2 - (na - _nTab + (iy - 1)) / (ny - 1);
-      col = COLS;
+      col = COLS();
     }
     for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
       tab->x1 = col * ix / nx;

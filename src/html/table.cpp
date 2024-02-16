@@ -74,13 +74,13 @@ void set_table_matrix(struct table *, int);
 #ifdef MATRIX
 static double weight(int x) {
 
-  if (x < COLS)
+  if (x < COLS())
     return (double)x;
   else
-    return COLS * (log((double)x / COLS) + 1.);
+    return COLS() * (log((double)x / COLS()) + 1.);
 }
 
-static double weight2(int a) { return (double)a / COLS * 4 + 1.; }
+static double weight2(int a) { return (double)a / COLS() * 4 + 1.; }
 
 #define sigma_td(a) (0.5 * weight2(a))     /* <td width=...> */
 #define sigma_td_nw(a) (32 * weight2(a))   /* <td ...> */

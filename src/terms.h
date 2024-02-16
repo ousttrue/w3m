@@ -3,8 +3,9 @@
 #include "utf8.h"
 #include "termentry.h"
 
-extern int LINES, COLS;
-#define LASTLINE (LINES - 1)
+int LINES();
+int COLS();
+int LASTLINE();
 
 #define GRAPHIC_CHAR_ASCII 2
 #define GRAPHIC_CHAR_DEC 1

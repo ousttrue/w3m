@@ -24,13 +24,13 @@ LineLayout::LineLayout() {
   this->_hmarklist = std::make_shared<HmarkerList>();
   this->_imarklist = std::make_shared<HmarkerList>();
 
-  this->COLS = ::COLS;
-  this->LINES = LASTLINE;
+  this->COLS = ::COLS();
+  this->LINES = LASTLINE();
 }
 
 LineLayout::LineLayout(int width) : width(width) {
-  this->COLS = ::COLS;
-  this->LINES = LASTLINE;
+  this->COLS = ::COLS();
+  this->LINES = LASTLINE();
 }
 
 void LineLayout::clearBuffer() {
@@ -469,8 +469,8 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      a = this->formitem()->putAnchor(a_form.url, a_form.target.c_str(), {}, NULL, '\0',
-                                      l->linenumber, pos);
+      a = this->formitem()->putAnchor(a_form.url, a_form.target.c_str(), {},
+                                      NULL, '\0', l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -1045,7 +1045,7 @@ const char *LineLayout::reAnchorAny(
   }
   for (l = MarkAllPages ? this->firstLine : this->topLine;
        l != NULL &&
-       (MarkAllPages || l->linenumber < this->topLine->linenumber + LASTLINE);
+       (MarkAllPages || l->linenumber < this->topLine->linenumber + LASTLINE());
        l = l->next) {
     if (p && l->bpos) {
       continue;

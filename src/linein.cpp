@@ -40,7 +40,7 @@ bool space_autocomplete = false;
 bool emacs_like_lineedit = false;
 
 #define STR_LEN 1024
-#define CLEN (COLS - 2)
+#define CLEN (COLS() - 2)
 
 static Str *strBuf;
 static Lineprop strProp[STR_LEN];
@@ -192,14 +192,14 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
       else
         offset = 0;
     }
-    move(LASTLINE, 0);
+    move(LASTLINE(), 0);
     addstr(prompt);
     if (is_passwd)
-      addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+      addPasswd(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
     else
-      addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
+      addStr(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
     clrtoeolx();
-    move(LASTLINE, opos + x - offset);
+    move(LASTLINE(), opos + x - offset);
     refresh(term_io());
 
   next_char:
@@ -268,7 +268,7 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
     return;
   }
 
-  move(LASTLINE, 0);
+  move(LASTLINE(), 0);
   refresh(term_io());
   p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -554,12 +554,12 @@ static void next_dcompl(int next) {
     return;
   cm_disp_clear = false;
   App::instance().invalidate();
-  if (LASTLINE >= 3) {
+  if (LASTLINE() >= 3) {
     comment = true;
-    nline = LASTLINE - 2;
-  } else if (LASTLINE) {
+    nline = LASTLINE() - 2;
+  } else if (LASTLINE()) {
     comment = false;
-    nline = LASTLINE;
+    nline = LASTLINE();
   } else {
     return;
   }
@@ -604,8 +604,8 @@ static void next_dcompl(int next) {
     if (len < n)
       len = n;
   }
-  if (len > 0 && COLS > static_cast<int>(len))
-    col = COLS / len;
+  if (len > 0 && COLS() > static_cast<int>(len))
+    col = COLS() / len;
   else
     col = 1;
   row = (NCFileBuf + col - 1) / col;
@@ -651,7 +651,7 @@ disp_next:
     }
     y++;
   }
-  if (comment && y == LASTLINE - 1) {
+  if (comment && y == LASTLINE() - 1) {
     move(y, 0);
     clrtoeolx();
     bold();
