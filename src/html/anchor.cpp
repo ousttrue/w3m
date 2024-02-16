@@ -306,7 +306,7 @@ Anchor *AnchorList::putAnchor(const char *url, const char *target,
   }
   auto a = &this->anchors[i];
   a->url = url;
-  a->target = target;
+  a->target = target ? target : "";
   a->option = option;
   a->title = title;
   a->accesskey = key;

@@ -795,3 +795,34 @@ void App::newTab(std::shared_ptr<Buffer> buf) {
 
   invalidate();
 }
+
+void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
+                     std::string_view target) {
+
+  if (target.empty() || /* no target specified (that means this page is
+  not a
+                           frame page) */
+      target == "_top"  /* this link is specified to be opened as an
+                                   indivisual * page */
+  ) {
+    CurrentTab->pushBuffer(buf);
+  } else {
+    Anchor *al = nullptr;
+    if (!al) {
+      auto label = Strnew_m_charp("_", target, nullptr)->ptr;
+      al = CurrentTab->currentBuffer()->layout.name()->searchAnchor(label);
+    }
+    if (al) {
+      CurrentTab->currentBuffer()->layout.gotoLine(al->start.line);
+      if (label_topline)
+        CurrentTab->currentBuffer()->layout.topLine =
+            CurrentTab->currentBuffer()->layout.lineSkip(
+                CurrentTab->currentBuffer()->layout.topLine,
+                CurrentTab->currentBuffer()->layout.currentLine->linenumber -
+                    CurrentTab->currentBuffer()->layout.topLine->linenumber,
+                false);
+      CurrentTab->currentBuffer()->layout.pos = al->start.pos;
+      CurrentTab->currentBuffer()->layout.arrangeCursor();
+    }
+  }
+}

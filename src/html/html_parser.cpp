@@ -567,9 +567,9 @@ void HtmlParser::flushline(struct html_feed_environ *h_env,
       obuf->anchor.hseq = -obuf->anchor.hseq;
     tmp = Sprintf("<A HSEQ=\"%d\" HREF=\"", obuf->anchor.hseq);
     Strcat_charp(tmp, html_quote(obuf->anchor.url));
-    if (obuf->anchor.target) {
+    if (obuf->anchor.target.size()) {
       Strcat_charp(tmp, "\" TARGET=\"");
-      Strcat_charp(tmp, html_quote(obuf->anchor.target));
+      Strcat_charp(tmp, html_quote(obuf->anchor.target.c_str()));
     }
     if (obuf->anchor.option.use_referer()) {
       Strcat_charp(tmp, "\" REFERER=\"");

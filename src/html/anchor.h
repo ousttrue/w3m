@@ -17,7 +17,7 @@ struct BufferPoint {
 
 struct Anchor {
   const char *url;
-  const char *target;
+  std::string target;
   HttpOption option = {};
   const char *title;
   unsigned char accesskey;

@@ -55,8 +55,6 @@ public:
   std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                                         const std::shared_ptr<Buffer> &newbuf);
 
-  std::shared_ptr<Buffer> loadLink(const char *url, const char *target,
-                                   HttpOption option, FormList *request);
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> _followForm(int submit);
   std::shared_ptr<Buffer> followAnchor(bool check_target = true);

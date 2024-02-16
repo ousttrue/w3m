@@ -845,3 +845,35 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   buf->layout.arrangeCursor();
   return buf;
 }
+
+std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
+                                         FormList *request) {
+  message(Sprintf("loading %s", url)->ptr, 0, 0);
+  // refresh(term_io());
+
+  const int *no_referer_ptr = nullptr;
+  auto base = this->res->getBaseURL();
+
+  if ((no_referer_ptr && *no_referer_ptr) || !base ||
+      base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
+      base->schema == SCM_DATA) {
+    option.no_referer = true;
+  }
+  if (option.referer.empty()) {
+    option.referer = this->res->currentURL.to_RefererStr();
+  }
+
+  auto res = loadGeneralFile(url, this->res->getBaseURL(), option, request);
+  if (!res) {
+    char *emsg = Sprintf("Can't load %s", url)->ptr;
+    disp_err_message(emsg);
+    return {};
+  }
+
+  auto buf = Buffer::create(res);
+
+  auto pu = urlParse(url, base);
+  pushHashHist(URLHist, pu.to_Str().c_str());
+
+  return buf;
+}

@@ -469,7 +469,7 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      a = this->formitem()->putAnchor(a_form.url, a_form.target, {}, NULL, '\0',
+      a = this->formitem()->putAnchor(a_form.url, a_form.target.c_str(), {}, NULL, '\0',
                                       l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;

@@ -102,6 +102,8 @@ public:
   int calcTabPos();
   TabBuffer *deleteTab(TabBuffer *tab);
   void moveTab(TabBuffer *t, TabBuffer *t2, int right);
+  void pushBuffer(const std::shared_ptr<Buffer> &buf,
+                  std::string_view target = "");
 };
 #define CurrentTab App::instance().CurrentTab()
 

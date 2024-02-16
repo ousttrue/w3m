@@ -264,82 +264,6 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
   return newbuf;
 }
 
-std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
-                                            HttpOption option,
-                                            FormList *request) {
-  message(Sprintf("loading %s", url)->ptr, 0, 0);
-  // refresh(term_io());
-
-  const int *no_referer_ptr = nullptr;
-  auto base = this->currentBuffer()->res->getBaseURL();
-
-  if ((no_referer_ptr && *no_referer_ptr) || !base ||
-      base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
-      base->schema == SCM_DATA) {
-    option.no_referer = true;
-  }
-  if (option.referer.empty()) {
-    option.referer = this->currentBuffer()->res->currentURL.to_RefererStr();
-  }
-
-  auto res = loadGeneralFile(url, this->currentBuffer()->res->getBaseURL(),
-                             option, request);
-  if (!res) {
-    char *emsg = Sprintf("Can't load %s", url)->ptr;
-    disp_err_message(emsg);
-    return nullptr;
-  }
-
-  auto buf = Buffer::create(res);
-
-  auto pu = urlParse(url, base);
-  pushHashHist(URLHist, pu.to_Str().c_str());
-
-  // if (buf == NO_BUFFER) {
-  //   return nullptr;
-  // }
-  // if (!on_target) { /* open link as an indivisual page */
-  //   this->pushBuffer(buf);
-  //   return buf;
-  // }
-
-  // if (do_download) /* download (thus no need to render frames) */
-  //   return loadNormalBuf(buf, false);
-
-  if (target == nullptr || /* no target specified (that means this page is not a
-                           frame page) */
-      !strcmp(target, "_top") /* this link is specified to be opened as an
-                                 indivisual * page */
-  ) {
-    this->pushBuffer(buf);
-    return buf;
-  }
-
-  {
-    Anchor *al = nullptr;
-    auto label = pu.label;
-
-    if (!al) {
-      label = Strnew_m_charp("_", target, nullptr)->ptr;
-      al = this->currentBuffer()->layout.name()->searchAnchor(label);
-    }
-    if (al) {
-      this->currentBuffer()->layout.gotoLine(al->start.line);
-      if (label_topline)
-        this->currentBuffer()->layout.topLine =
-            this->currentBuffer()->layout.lineSkip(
-                this->currentBuffer()->layout.topLine,
-                this->currentBuffer()->layout.currentLine->linenumber -
-                    this->currentBuffer()->layout.topLine->linenumber,
-                false);
-      this->currentBuffer()->layout.pos = al->start.pos;
-      this->currentBuffer()->layout.arrangeCursor();
-    }
-  }
-  // App::instance().invalidate();
-  return buf;
-}
-
 static FormItemList *save_submit_formlist(FormItemList *src) {
   FormList *list;
   FormList *srclist;
@@ -404,7 +328,11 @@ std::shared_ptr<Buffer> TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
     Strcat_charp(tmp2, "?");
     Strcat(tmp2, tmp);
-    return this->loadLink(tmp2->ptr, a->target, {}, nullptr);
+    auto buf = this->currentBuffer()->loadLink(tmp2->ptr, {}, nullptr);
+    if (buf) {
+      App::instance().pushBuffer(buf, a->target);
+    }
+    return buf;
   } else if (fi->parent->method == FORM_METHOD_POST) {
     if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
       fi->query_from_followform_multipart();
@@ -416,7 +344,10 @@ std::shared_ptr<Buffer> TabBuffer::do_submit(FormItemList *fi, Anchor *a) {
       fi->parent->body = tmp->ptr;
       fi->parent->length = tmp->length;
     }
-    auto buf = this->loadLink(tmp2->ptr, a->target, {}, fi->parent);
+    auto buf = this->currentBuffer()->loadLink(tmp2->ptr, {}, fi->parent);
+    if (buf) {
+      App::instance().pushBuffer(buf);
+    }
     if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
       unlink(fi->parent->body);
     }
@@ -598,13 +529,14 @@ std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
     }
   }
 
-  auto buf = this->loadLink(a->url, a->target, a->option, nullptr);
+  auto buf = this->currentBuffer()->loadLink(a->url, a->option, nullptr);
   if (!buf) {
     return {};
   }
+  App::instance().pushBuffer(buf, a->target);
 
-  if (check_target && open_tab_blank && a->target &&
-      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+  if (check_target && open_tab_blank && a->target.size() &&
+      (a->target == "_new" || a->target == "_blank")) {
     // open in new tab
     App::instance().newTab(buf);
   } else {
