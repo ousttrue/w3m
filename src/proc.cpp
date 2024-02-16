@@ -1046,7 +1046,7 @@ void adBmark() {
 /* option setting */
 // OPTIONS
 //"Display options setting panel"
-void ldOpt() { cmd_loadBuffer(load_option_panel(), LB_NOLINK); }
+void ldOpt() { CurrentTab->pushBuffer(load_option_panel()); }
 
 /* set an option */
 // SET_OPTION
@@ -1075,36 +1075,22 @@ void setOpt() {
 /* error message list */
 // MSGS
 //"Display error messages"
-void msgs() { cmd_loadBuffer(message_list_panel(), LB_NOLINK); }
+void msgs() { CurrentTab->pushBuffer(message_list_panel()); }
 
 /* page info */
 // INFO
 //"Display information about the current document"
 void pginfo() {
-
-  if (auto buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_INFO]) {
-    CurrentTab->currentBuffer(buf);
-    App::instance().invalidate();
-    return;
-  }
-
-  if (auto buf = CurrentTab->currentBuffer()->linkBuffer[LB_INFO]) {
-    CurrentTab->deleteBuffer(buf);
-  }
-
-  {
-    auto buf = page_info_panel(CurrentTab->currentBuffer());
-    cmd_loadBuffer(buf, LB_INFO);
-  }
+  auto buf = page_info_panel(CurrentTab->currentBuffer());
+  CurrentTab->pushBuffer(buf);
 }
 
 /* link,anchor,image list */
 // LIST
 //"Show all URLs referenced"
 void linkLst() {
-  auto buf = link_list_panel(CurrentTab->currentBuffer());
-  if (buf != nullptr) {
-    cmd_loadBuffer(buf, LB_NOLINK);
+  if (auto buf = link_list_panel(CurrentTab->currentBuffer())) {
+    CurrentTab->pushBuffer(buf);
   }
 }
 
@@ -1112,16 +1098,19 @@ void linkLst() {
 // COOKIE
 //"View cookie list"
 void cooLst() {
-  auto buf = cookie_list_panel();
-  if (buf != nullptr) {
-    cmd_loadBuffer(buf, LB_NOLINK);
+  if (auto buf = cookie_list_panel()) {
+    CurrentTab->pushBuffer(buf);
   }
 }
 
 /* History page */
 // HISTORY
 //"Show browsing history"
-void ldHist() { cmd_loadBuffer(historyBuffer(URLHist), LB_NOLINK); }
+void ldHist() {
+  if (auto buf = historyBuffer(URLHist)) {
+    CurrentTab->pushBuffer(buf);
+  }
+}
 
 /* download HREF link */
 // SAVE_LINK
@@ -1239,45 +1228,12 @@ void vwSrc() {
     return;
   }
 
-  std::shared_ptr<Buffer> buf;
-  if ((buf = CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE])) {
-    CurrentTab->currentBuffer(buf);
-    App::instance().invalidate();
-    return;
-  }
   if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
     return;
   }
 
-  buf = Buffer::create();
-
-  if (CurrentTab->currentBuffer()->res->is_html_type()) {
-    buf->res->type = "text/plain";
-    buf->layout.title =
-        Sprintf("source of %s",
-                CurrentTab->currentBuffer()->layout.title.c_str())
-            ->ptr;
-    buf->linkBuffer[LB_SOURCE] = CurrentTab->currentBuffer();
-    CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE] = buf;
-  } else if (CurrentTab->currentBuffer()->res->type == "text/plain") {
-    buf->res->type = "text/html";
-    buf->layout.title =
-        Sprintf("HTML view of %s",
-                CurrentTab->currentBuffer()->layout.title.c_str())
-            ->ptr;
-    buf->linkBuffer[LB_SOURCE] = CurrentTab->currentBuffer();
-    CurrentTab->currentBuffer()->linkBuffer[LB_SOURCE] = buf;
-  } else {
-    return;
-  }
-  buf->res->currentURL = CurrentTab->currentBuffer()->res->currentURL;
-  buf->res->filename = CurrentTab->currentBuffer()->res->filename;
-  buf->res->sourcefile = CurrentTab->currentBuffer()->res->sourcefile;
-
-  buf->layout.need_reshape = true;
-  reshapeBuffer(buf);
+  auto buf = CurrentTab->currentBuffer()->sourceBuffer();
   CurrentTab->pushBuffer(buf);
-  App::instance().invalidate();
 }
 
 /* reload */

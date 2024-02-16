@@ -782,9 +782,6 @@ void App::_newT() {
   auto buf = Buffer::create();
   *buf = *_currentTab->currentBuffer();
   buf->backBuffer = nullptr;
-  for (int i = 0; i < MAX_LB; i++) {
-    buf->linkBuffer[i] = nullptr;
-  }
   tag->firstBuffer = tag->_currentBuffer = buf;
 
   tag->nextTab = _currentTab->nextTab;

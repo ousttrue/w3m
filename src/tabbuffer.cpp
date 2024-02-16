@@ -98,8 +98,6 @@ std::shared_ptr<Buffer> TabBuffer::gotoLabel(const char *label) {
 
   auto buf = Buffer::create();
   *buf = *this->currentBuffer();
-  for (int i = 0; i < MAX_LB; i++)
-    buf->linkBuffer[i] = nullptr;
   buf->res->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
   this->pushBuffer(buf);
@@ -337,12 +335,6 @@ std::shared_ptr<Buffer> TabBuffer::loadLink(const char *url, const char *target,
       !strcmp(target, "_top") /* this link is specified to be opened as an
                                  indivisual * page */
   ) {
-    this->pushBuffer(buf);
-    return buf;
-  }
-  auto nfbuf = this->currentBuffer()->linkBuffer[LB_N_FRAME];
-  if (nfbuf == nullptr) {
-    /* original page (that contains <frameset> tag) doesn't exist */
     this->pushBuffer(buf);
     return buf;
   }

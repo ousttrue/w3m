@@ -41,15 +41,6 @@ Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
 
 Buffer::~Buffer() {}
 
-Buffer &Buffer::operator=(const Buffer &src) {
-  this->res = src.res;
-  this->layout = src.layout;
-  this->backBuffer = src.backBuffer;
-  this->linkBuffer = src.linkBuffer;
-  this->check_url = src.check_url;
-  return *this;
-}
-
 /*
  * Create null buffer
  */
@@ -623,20 +614,6 @@ void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont) {
   _saveBuffer(buf, buf->layout.firstLine, f, cont);
 }
 
-void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid) {
-  if (buf == nullptr) {
-    disp_err_message("Can't load string");
-  } else /*if (buf != NO_BUFFER)*/ {
-    buf->res->currentURL = CurrentTab->currentBuffer()->res->currentURL;
-    if (linkid != LB_NOLINK) {
-      buf->linkBuffer[linkid] = CurrentTab->currentBuffer();
-      CurrentTab->currentBuffer()->linkBuffer[linkid] = buf;
-    }
-    CurrentTab->pushBuffer(buf);
-  }
-  App::instance().invalidate();
-}
-
 void cmd_loadfile(const char *fn) {
 
   auto res = loadGeneralFile(file_to_url((char *)fn), {}, {.no_referer = true});
@@ -811,4 +788,37 @@ void Buffer::saveBufferInfo() {
     fprintf(fp, "%s\n", this->res->currentURL.to_Str().c_str());
     fclose(fp);
   }
+}
+
+std::shared_ptr<Buffer> Buffer::sourceBuffer() {
+
+  if (this->res->is_html_type()) {
+    auto buf = Buffer::create();
+    buf->res->type = "text/plain";
+    buf->layout.title =
+        Sprintf("source of %s", this->layout.title.c_str())->ptr;
+
+    buf->res->currentURL = this->res->currentURL;
+    buf->res->filename = this->res->filename;
+    buf->res->sourcefile = this->res->sourcefile;
+    buf->layout.need_reshape = true;
+
+    return buf;
+  } else if (CurrentTab->currentBuffer()->res->type == "text/plain") {
+    auto buf = Buffer::create();
+    buf->res->type = "text/html";
+    buf->layout.title =
+        Sprintf("HTML view of %s",
+                CurrentTab->currentBuffer()->layout.title.c_str())
+            ->ptr;
+
+    buf->res->currentURL = this->res->currentURL;
+    buf->res->filename = this->res->filename;
+    buf->res->sourcefile = this->res->sourcefile;
+    buf->layout.need_reshape = true;
+
+    return buf;
+  }
+
+  return {};
 }

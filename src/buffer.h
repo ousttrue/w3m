@@ -3,18 +3,6 @@
 #include <memory>
 #include <array>
 
-/* Link const Buffer */
-enum LinkBuffer {
-  LB_FRAME = 0, /* rFrame() */
-  LB_N_FRAME = 1,
-  LB_INFO = 2 /* pginfo() */,
-  LB_N_INFO = 3,
-  LB_SOURCE = 4 /* vwSrc() */,
-  // LB_N_SOURCE = LB_SOURCE,
-  MAX_LB = 5,
-  LB_NOLINK = -1,
-};
-
 struct FormList;
 struct Anchor;
 struct AnchorList;
@@ -31,7 +19,6 @@ struct Buffer {
   std::shared_ptr<HttpResponse> res;
   LineLayout layout = {};
   std::shared_ptr<Buffer> backBuffer;
-  std::array<std::shared_ptr<Buffer>, MAX_LB> linkBuffer = {0};
   bool check_url = false;
 
 private:
@@ -45,8 +32,9 @@ public:
     return std::shared_ptr<Buffer>(new Buffer(res));
   }
   // shallow copy
-  Buffer &operator=(const Buffer &src);
+  Buffer &operator=(const Buffer &src) = default;
   void saveBufferInfo();
+  std::shared_ptr<Buffer> sourceBuffer();
 };
 
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);
@@ -67,6 +55,5 @@ int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
 int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);
 Str *Str_form_quote(Str *x);
 void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont);
-void cmd_loadBuffer(const std::shared_ptr<Buffer> &buf, int linkid);
 void cmd_loadfile(const char *fn);
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf);
