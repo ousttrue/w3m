@@ -36,6 +36,7 @@ public:
   void saveBufferInfo();
   std::shared_ptr<Buffer> loadLink(const char *url, HttpOption option,
                                    FormList *request);
+  std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> sourceBuffer();
 };

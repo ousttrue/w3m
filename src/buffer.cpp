@@ -21,15 +21,17 @@
 #include "textlist.h"
 #include "linklist.h"
 #include "terms.h"
-#include "html/form_item.h"
 #include "html/readbuffer.h"
 #include "html/form.h"
+#include "html/form_item.h"
 #include "html/anchor.h"
 #include "ctrlcode.h"
 #include "line.h"
 #include "istream.h"
 #include "proto.h"
+#include "alloc.h"
 #include <unistd.h>
+#include <sys/stat.h>
 
 Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
   // use default from -o mark_all_pages
@@ -876,4 +878,111 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   pushHashHist(URLHist, pu.to_Str().c_str());
 
   return buf;
+}
+
+static FormItemList *save_submit_formlist(FormItemList *src) {
+  FormList *list;
+  FormList *srclist;
+  FormItemList *srcitem;
+  FormItemList *item;
+  FormItemList *ret = nullptr;
+
+  if (src == nullptr)
+    return nullptr;
+  srclist = src->parent;
+  list = (FormList *)New(FormList);
+  list->method = srclist->method;
+  list->action = srclist->action->Strdup();
+  list->enctype = srclist->enctype;
+  list->nitems = srclist->nitems;
+  list->body = srclist->body;
+  list->boundary = srclist->boundary;
+  list->length = srclist->length;
+
+  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
+    item = (FormItemList *)New(FormItemList);
+    item->type = srcitem->type;
+    item->name = srcitem->name->Strdup();
+    item->value = srcitem->value->Strdup();
+    item->checked = srcitem->checked;
+    item->accept = srcitem->accept;
+    item->size = srcitem->size;
+    item->rows = srcitem->rows;
+    item->maxlength = srcitem->maxlength;
+    item->readonly = srcitem->readonly;
+    item->parent = list;
+    item->next = nullptr;
+
+    if (list->lastitem == nullptr) {
+      list->item = list->lastitem = item;
+    } else {
+      list->lastitem->next = item;
+      list->lastitem = item;
+    }
+
+    if (srcitem == src)
+      ret = item;
+  }
+
+  return ret;
+}
+std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
+  auto tmp2 = fi->parent->action->Strdup();
+  if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
+    /* It means "current URL" */
+    tmp2 = Strnew(this->res->currentURL.to_Str());
+    char *p;
+    if ((p = strchr(tmp2->ptr, '?')) != nullptr)
+      Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+  }
+
+  if (fi->parent->method == FORM_METHOD_GET) {
+    auto tmp = fi->query_from_followform();
+    char *p;
+    if ((p = strchr(tmp2->ptr, '?')) != nullptr)
+      Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    Strcat_charp(tmp2, "?");
+    Strcat(tmp2, tmp);
+    return this->loadLink(tmp2->ptr, {}, nullptr);
+    // if (buf) {
+    //   App::instance().pushBuffer(buf, a->target);
+    // }
+    // return buf;
+    // if (buf) {
+    //   App::instance().pushBuffer(buf);
+    // }
+  } else if (fi->parent->method == FORM_METHOD_POST) {
+    if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
+      fi->query_from_followform_multipart();
+      struct stat st;
+      stat(fi->parent->body, &st);
+      fi->parent->length = st.st_size;
+    } else {
+      auto tmp = fi->query_from_followform();
+      fi->parent->body = tmp->ptr;
+      fi->parent->length = tmp->length;
+    }
+    auto buf = this->loadLink(tmp2->ptr, {}, fi->parent);
+    if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
+      unlink(fi->parent->body);
+    }
+    if (buf &&
+        !(buf->res->redirectins.size() > 1)) { /* buf must be Currentbuf */
+      /* BP_REDIRECTED means that the buffer is obtained through
+       * Location: header. In this case, buf->form_submit must not be set
+       * because the page is not loaded by POST method but GET method.
+       */
+      buf->layout.form_submit = save_submit_formlist(fi);
+    }
+    return buf;
+  } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
+              (!Strcmp_charp(fi->parent->action, "map") ||
+               !Strcmp_charp(fi->parent->action, "none")))) { /* internal */
+    auto tmp = fi->query_from_followform();
+    do_internal(tmp2->ptr, tmp->ptr);
+    return {};
+  } else {
+    disp_err_message("Can't send form because of illegal method.");
+    return {};
+  }
 }
