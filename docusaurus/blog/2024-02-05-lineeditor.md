@@ -88,3 +88,7 @@ linein が有効になったタイミングで LineInput dispatcher を stack �
 入力をオーバーライドする。
 context menu や ダイアログの入力がオーバーライドすることが可能な設計。
 menu は削除して消えていますが。
+
+## LineInput のオーバーライド動いた
+
+libuv の pty 入力を、 stack に積んだ dispatcher で処理できた。

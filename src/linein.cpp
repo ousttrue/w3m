@@ -31,9 +31,9 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(const char *prompt, Hist *hist, const OnInput &onInput,
+LineInput::LineInput(const char *prompt, Hist *hist, const OnInput &_onInput,
                      IncFunc incrfunc)
-    : prompt(prompt), onInput(onInput), incrfunc(incrfunc) {
+    : prompt(prompt), onInput(_onInput), incrfunc(incrfunc) {
   opos = get_strwidth(prompt);
   epos = (COLS() - 2) - opos;
   if (epos < 0) {
@@ -129,19 +129,13 @@ void LineInput::run() {
   while (i_cont) {
 
     auto c = getch();
-    if (!dispatch(c)) {
+    if (!dispatch(&c, 1)) {
       break;
     }
-
-    draw();
   }
+}
 
-  if (CurrentTab) {
-    if (need_redraw) {
-      App::instance().invalidate();
-    }
-  }
-
+void LineInput::onBreak() {
   if (i_broken) {
     onInput(NULL);
     return;
@@ -191,7 +185,12 @@ void LineInput::draw() {
   refresh(term_io());
 }
 
-bool LineInput::dispatch(char c) {
+bool LineInput::dispatch(const char *buf, int len) {
+
+  // TODO: non ascii input.
+  // ex: paste ?
+  char c = buf[0];
+
   cm_clear = true;
   cm_disp_clear = true;
   if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
@@ -243,14 +242,17 @@ bool LineInput::dispatch(char c) {
   }
 
   if (!i_cont) {
+    onBreak();
     return false;
   }
 
   if (CLen && (flag & IN_CHAR)) {
     // (y/n) one char char
+    onBreak();
     return false;
   }
 
+  draw();
   return true;
 }
 

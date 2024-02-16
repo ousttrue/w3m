@@ -181,6 +181,13 @@ App::App() {
   _firstTab = _lastTab = _currentTab = new TabBuffer;
   assert(_firstTab);
   _nTab = 1;
+
+  // default dispatcher
+  _dispatcher.push([this](const char *buf, int len) {
+    this->dispatchPtyIn(buf, len);
+    // never exit
+    return true;
+  });
 }
 
 App::~App() {
@@ -304,7 +311,7 @@ int App::mainLoop() {
                     }
                   } else if (nread > 0) {
                     // process key input
-                    App::instance().dispatchPtyIn(buf->base, nread);
+                    App::instance().dispatch(buf->base, nread);
                   }
 
                   // OK to free buffer as write_data copies it.

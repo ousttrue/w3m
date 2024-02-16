@@ -1023,7 +1023,11 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
           }
           App::instance().invalidate();
         });
-    input->run();
+    input->draw();
+    App::instance().pushDispatcher([input](const char *buf, int len) -> bool {
+      return input->dispatch(buf, len);
+    });
+    return {};
   } break;
 
   case FORM_INPUT_FILE:

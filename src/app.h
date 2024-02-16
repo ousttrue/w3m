@@ -2,6 +2,8 @@
 #include <string>
 #include <list>
 #include <memory>
+#include <functional>
+#include <stack>
 
 extern int prev_key;
 extern const char *CurrentKeyData;
@@ -20,6 +22,8 @@ enum TmpfType {
   MAX_TMPF_TYPE = 6,
 };
 
+using Dispatcher = std::function<bool(const char *buf, size_t len)>;
+
 struct TabBuffer;
 struct Buffer;
 class App {
@@ -37,6 +41,8 @@ class App {
   TabBuffer *_lastTab = 0;
   int _nTab = 0;
   TabBuffer *_currentTab = 0;
+
+  std::stack<Dispatcher> _dispatcher;
 
   App();
 
@@ -82,6 +88,14 @@ public:
   void doCmd();
   void doCmd(int cmd, const char *data);
   void dispatchPtyIn(const char *buf, size_t len);
+  void dispatch(const char *buf, size_t len) {
+    if (!_dispatcher.top()(buf, len)) {
+      _dispatcher.pop();
+    }
+  }
+  void pushDispatcher(const Dispatcher &dispatcher) {
+    _dispatcher.push(dispatcher);
+  }
   void onFrame();
   void task(int sec, int cmd, const char *data = nullptr, bool releat = false);
   std::string tmpfname(TmpfType type, const std::string &ext);

@@ -118,8 +118,6 @@ class LineInput {
   void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
   void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
   int terminated(unsigned char c);
-  bool dispatch(char c);
-  void draw();
 
   LineInput(const char *prompt, Hist *hist, const OnInput &onInput,
             IncFunc incrfunc);
@@ -128,6 +126,9 @@ public:
   LineInput(const LineInput &) = delete;
   LineInput &operator=(const LineInput &) = delete;
   void run();
+  bool dispatch(const char *buf, int len);
+  void draw();
+  void onBreak();
 
   static std::shared_ptr<LineInput>
   inputLineHistSearch(const char *prompt, const char *def_str, Hist *hist,
