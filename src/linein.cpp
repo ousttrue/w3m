@@ -31,8 +31,14 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput() {
-  /* *INDENT-OFF* */
+LineInput::LineInput(Hist *hist) {
+  CurrentHist = hist;
+  if (hist) {
+    use_hist = true;
+  } else {
+    use_hist = false;
+  }
+
   InputKeymap = {
       /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
       std::bind(&LineInput::_compl, this, std::placeholders::_1),
@@ -74,19 +80,8 @@ LineInput::LineInput() {
 }
 
 void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
-                                    InputFlags flag, Hist *hist,
-                                    IncFunc incrfunc, const OnInput &onInput) {
-  int opos, x, y, lpos, rpos, epos;
-  unsigned char c;
-  char *p;
-
-  CurrentHist = hist;
-  if (hist != NULL) {
-    use_hist = true;
-    strCurrentBuf = NULL;
-  } else {
-    use_hist = false;
-  }
+                                    InputFlags flag, IncFunc incrfunc,
+                                    const OnInput &onInput) {
   if (flag & IN_URL) {
     cm_mode = CPL_ALWAYS | CPL_URL;
   } else if (flag & IN_FILENAME) {
@@ -97,15 +92,17 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
     move_word = false;
   } else if (flag & IN_COMMAND)
     cm_mode = CPL_ON;
-  else
+  else {
     cm_mode = CPL_OFF;
-  opos = get_strwidth(prompt);
-  epos = (COLS() - 2) - opos;
-  if (epos < 0)
+  }
+
+  int opos = get_strwidth(prompt);
+  int epos = (COLS() - 2) - opos;
+  if (epos < 0){
     epos = 0;
-  lpos = epos / 3;
-  rpos = epos * 2 / 3;
-  offset = 0;
+  }
+  int lpos = epos / 3;
+  int rpos = epos * 2 / 3;
 
   if (def_str) {
     strBuf = Strnew_charp(def_str);
@@ -115,16 +112,10 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
     CLen = CPos = 0;
   }
 
-  i_cont = true;
-  i_broken = false;
-  i_quote = false;
-  cm_next = false;
-  cm_disp_next = -1;
-
   do {
-    x = bytePosToColumn(strBuf->ptr, strProp, CLen, CPos, 0, true);
+    int x = bytePosToColumn(strBuf->ptr, strProp, CLen, CPos, 0, true);
     if (x - rpos > offset) {
-      y = bytePosToColumn(strBuf->ptr, strProp, CLen, CLen, 0, false);
+      int y = bytePosToColumn(strBuf->ptr, strProp, CLen, CLen, 0, false);
       if (y - epos > x - rpos)
         offset = x - rpos;
       else if (y - epos > 0)
@@ -146,7 +137,7 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
     refresh(term_io());
 
   next_char:
-    c = getch();
+    int c = getch();
     cm_clear = true;
     cm_disp_clear = true;
     if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
@@ -213,14 +204,15 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
 
   move(LASTLINE(), 0);
   refresh(term_io());
-  p = strBuf->ptr;
+  auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
   }
   if (use_hist && !(flag & IN_URL) && *p != '\0') {
-    const char *q = lastHist(hist);
-    if (!q || strcmp(q, p))
-      pushHist(hist, p);
+    const char *q = lastHist(CurrentHist);
+    if (!q || strcmp(q, p)) {
+      pushHist(CurrentHist, p);
+    }
   }
   if (flag & IN_FILENAME) {
     onInput(expandPath(p));

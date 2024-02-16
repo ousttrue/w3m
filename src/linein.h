@@ -48,17 +48,21 @@ class LineInput {
   bool is_passwd = false;
   bool use_hist = false;
   int cm_mode = {};
-  int cm_next = {};
+  bool cm_next = false;
   int cm_clear = {};
-  int cm_disp_next = {};
+  int cm_disp_next = -1;
   int cm_disp_clear = {};
-  int i_cont = {};
-  int i_broken = {};
-  int i_quote = {};
+
+  // loop
+  bool i_cont = true;
+  bool i_broken = false;
+  bool i_quote = false;
+
+  Str *strBuf;
   int CPos = {};
   int CLen = {};
-  int offset = {};
-  Str *strBuf;
+
+  int offset = 0;
   Lineprop strProp[STR_LEN];
   Str *CompleteBuf;
   Str *CFileName;
@@ -104,29 +108,28 @@ class LineInput {
   int terminated(unsigned char c);
 
 public:
-  LineInput();
+  LineInput(Hist *hist);
   void inputLineHistSearch(const char *prompt, const char *def_str,
-                           InputFlags flag, Hist *hist, IncFunc incFunc,
+                           InputFlags flag, IncFunc incFunc,
                            const OnInput &onInput);
 
-  inline void inputLineHist(const char *p, const char *d, InputFlags f, Hist *h,
+  inline void inputLineHist(const char *p, const char *d, InputFlags f,
                             const OnInput &onInput) {
-    inputLineHistSearch(p, d, f, h, nullptr, onInput);
+    inputLineHistSearch(p, d, f, nullptr, onInput);
   }
 
   inline void inputLine(const char *p, const char *d, InputFlags f,
                         const OnInput &onInput) {
-    inputLineHist(p, d, f, nullptr, onInput);
+    inputLineHist(p, d, f, onInput);
   }
 
   inline void inputStr(const char *p, const char *d, const OnInput &onInput) {
     inputLine(p, d, IN_STRING, onInput);
   }
 
-  // TODO:
-  inline void inputStrHist(const char *p, const char *d, Hist *h,
+  inline void inputStrHist(const char *p, const char *d,
                            const OnInput &onInput) {
-    inputLineHist(p, d, IN_STRING, h, onInput);
+    inputLineHist(p, d, IN_STRING, onInput);
   }
 
   inline void inputFilename(const char *p, const char *d,
@@ -134,9 +137,9 @@ public:
     inputLine(p, d, IN_FILENAME, onInput);
   }
 
-  inline void inputFilenameHist(const char *p, const char *d, Hist *h,
+  inline void inputFilenameHist(const char *p, const char *d,
                                 const OnInput &onInput) {
-    inputLineHist(p, d, IN_FILENAME, h, onInput);
+    inputLineHist(p, d, IN_FILENAME, onInput);
   }
 
   inline void inputChar(const char *p, const OnInput &onInput) {
