@@ -398,7 +398,9 @@ std::shared_ptr<Buffer> TabBuffer::_followForm(int submit) {
   case FORM_INPUT_IMAGE:
   case FORM_INPUT_SUBMIT:
   case FORM_INPUT_BUTTON:
-    this->currentBuffer()->do_submit(fi, a);
+    if (auto buf = this->currentBuffer()->do_submit(fi, a)) {
+      App::instance().pushBuffer(buf, a->target);
+    }
     break;
 
   case FORM_INPUT_RESET:
