@@ -45,11 +45,8 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-static void insertself(char c);
 static void _mvR(char);
 static void _mvL(char);
-static void _mvRw(char);
-static void _mvLw(char);
 static void delC(char);
 static void insC(char);
 static void _mvB(char);
@@ -57,29 +54,21 @@ static void _mvE(char);
 static void _enter(char);
 static void _quo(char);
 static void _bs(char);
-static void _bsw(char);
 static void killn(char);
 static void killb(char);
 static void _inbrk(char);
-static void _editor(char);
-static void _compl(char);
 static void _tcompl(char);
-static void _dcompl(char);
-static void _rdcompl(char);
-static void _rcompl(char);
 
 static int terminated(unsigned char c);
-#define iself ((void (*)(char))insertself)
+// #define iself ((void (*)(char))insertself)
 
-static void next_compl(int next);
-static void next_dcompl(int next);
 static Str *doComplete(Str *ifn, int *status, int next);
 
 LineInput::LineInput() {
   /* *INDENT-OFF* */
   InputKeymap = {
       /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
-      _compl,
+      std::bind(&LineInput::_compl, this, std::placeholders::_1),
       _mvB,
       _mvL,
       _inbrk,
@@ -89,48 +78,42 @@ LineInput::LineInput() {
       _inbrk,
       /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
       _bs,
-      iself,
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
       _enter,
       killn,
-      iself,
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
       _enter,
       std::bind(&LineInput::_next, this, std::placeholders::_1),
-      _editor,
+      std::bind(&LineInput::_editor, this, std::placeholders::_1),
       /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
       std::bind(&LineInput::_prev, this, std::placeholders::_1),
       _quo,
-      _bsw,
-      iself,
-      _mvLw,
+      std::bind(&LineInput::_bsw, this, std::placeholders::_1),
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
+      std::bind(&LineInput::_mvLw, this, std::placeholders::_1),
       killb,
       _quo,
-      _bsw,
+      std::bind(&LineInput::_bsw, this, std::placeholders::_1),
       /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
       _tcompl,
-      _mvRw,
-      iself,
+      std::bind(&LineInput::_mvRw, this, std::placeholders::_1),
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
       std::bind(&LineInput::_esc, this, std::placeholders::_1),
-      iself,
-      iself,
-      iself,
-      iself,
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
+      std::bind(&LineInput::insertself, this, std::placeholders::_1),
   };
 }
 
 /* *INDENT-ON* */
 
-static int setStrType(Str *str, Lineprop *prop);
 static void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
 static void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
 
 static int CPos, CLen, offset;
 static int i_cont, i_broken, i_quote;
 static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
-static int need_redraw, is_passwd;
-static int move_word;
-
-static Hist *CurrentHist;
-static Str *strCurrentBuf;
 
 void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
                                     InputFlags flag, Hist *hist,
@@ -138,9 +121,6 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
-
-  is_passwd = false;
-  move_word = true;
 
   CurrentHist = hist;
   if (hist != NULL) {
@@ -182,7 +162,6 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
   i_quote = false;
   cm_next = false;
   cm_disp_next = -1;
-  need_redraw = false;
 
   do {
     x = bytePosToColumn(strBuf->ptr, strProp, CLen, CPos, 0, true);
@@ -415,7 +394,7 @@ static void _mvL(char) {
     CPos--;
 }
 
-static void _mvLw(char) {
+void LineInput::_mvLw(char) {
   int first = 1;
   while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
     CPos--;
@@ -425,7 +404,7 @@ static void _mvLw(char) {
   }
 }
 
-static void _mvRw(char) {
+void LineInput::_mvRw(char) {
   int first = 1;
   while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
     CPos++;
@@ -447,7 +426,7 @@ static void _bs(char) {
   }
 }
 
-static void _bsw(char) {
+void LineInput::_bsw(char) {
   int t = 0;
   while (CPos > 0 && !t) {
     _mvL({});
@@ -458,7 +437,7 @@ static void _bsw(char) {
 
 static void _enter(char) { i_cont = false; }
 
-static void insertself(char c) {
+void LineInput::insertself(char c) {
   if (CLen >= STR_LEN)
     return;
   insC({});
@@ -488,9 +467,9 @@ static void _inbrk(char) {
   i_broken = true;
 }
 
-static void _compl(char) { next_compl(1); }
+void LineInput::_compl(char) { next_compl(1); }
 
-static void _rcompl(char) { next_compl(-1); }
+void LineInput::_rcompl(char) { next_compl(-1); }
 
 static void _tcompl(char) {
   if (cm_mode & CPL_OFF)
@@ -499,7 +478,7 @@ static void _tcompl(char) {
     cm_mode = CPL_OFF;
 }
 
-static void next_compl(int next) {
+void LineInput::next_compl(int next) {
   int status;
   int b, a;
   Str *buf;
@@ -542,11 +521,11 @@ static void next_compl(int next) {
     CPos = CLen;
 }
 
-static void _dcompl(char) { next_dcompl(1); }
+void LineInput::_dcompl(char) { next_dcompl(1); }
 
-static void _rdcompl(char) { next_dcompl(-1); }
+void LineInput::_rdcompl(char) { next_dcompl(-1); }
 
-static void next_dcompl(int next) {
+void LineInput::next_dcompl(int next) {
   static int col, row;
   static unsigned int len;
   static Str *d;
@@ -862,7 +841,7 @@ void LineInput::_next(char) {
   offset = 0;
 }
 
-static int setStrType(Str *str, Lineprop *prop) {
+int LineInput::setStrType(Str *str, Lineprop *prop) {
   Lineprop ctype;
   char *p = str->ptr, *ep = p + str->length;
   int i, len = 1;
@@ -894,7 +873,7 @@ static int terminated(unsigned char c) {
   return 0;
 }
 
-static void _editor(char) {
+void LineInput::_editor(char) {
   if (is_passwd)
     return;
 

@@ -39,11 +39,29 @@ using KeyCallback = std::function<void(char)>;
 
 class LineInput {
   std::array<KeyCallback, 32> InputKeymap;
+  Str *strCurrentBuf = nullptr;
+  Hist *CurrentHist = nullptr;
+  bool move_word = true;
+  bool need_redraw = false;
+  bool is_passwd = false;
+  bool use_hist = false;
 
-  int use_hist;
   void _prev(char);
   void _next(char);
   void _esc(char);
+  void _mvLw(char);
+  void _mvRw(char);
+  void _bsw(char);
+  void insertself(char c);
+  void _editor(char);
+  void _compl(char);
+  void _rcompl(char);
+  void _dcompl(char);
+  void _rdcompl(char);
+
+  int setStrType(Str *str, Lineprop *prop);
+  void next_compl(int next);
+  void next_dcompl(int next);
 
 public:
   LineInput();
