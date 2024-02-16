@@ -101,17 +101,14 @@ static int toVAlign(char *oval, int *valign) {
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct HtmlTag *parse_tag(const char **s, int internal) {
-  struct HtmlTag *tag = NULL;
-  HtmlCommand tag_id;
-  char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
-  const char *p, *q;
-  int i, attr_id = 0, nattr;
+HtmlTag *HtmlTag::parse(const char **s, int internal) {
+  char tagname[MAX_TAG_LEN];
+  char attrname[MAX_TAG_LEN];
 
   /* Parse tag name */
   tagname[0] = '\0';
-  q = (*s) + 1;
-  p = tagname;
+  auto q = (*s) + 1;
+  auto p = tagname;
   if (*q == '/') {
     *(char *)(p++) = *(q++);
     SKIP_BLANKS(q);
@@ -125,8 +122,10 @@ struct HtmlTag *parse_tag(const char **s, int internal) {
   while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
     q++;
 
-  tag_id = (HtmlCommand)getHash_si(&tagtable, tagname, HTML_UNKNOWN);
+  auto tag_id = (HtmlCommand)getHash_si(&tagtable, tagname, HTML_UNKNOWN);
 
+  HtmlTag *tag = nullptr;
+  int attr_id = 0;
   if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
     goto skip_parse_tagarg;
 
@@ -134,14 +133,16 @@ struct HtmlTag *parse_tag(const char **s, int internal) {
   bzero(tag, sizeof(struct HtmlTag));
   tag->tagid = tag_id;
 
+  int nattr;
   if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
     tag->attrid = (unsigned char *)NewAtom_N(unsigned char, nattr);
     tag->value = (char **)New_N(char *, nattr);
     tag->map = (unsigned char *)NewAtom_N(unsigned char, MAX_TAGATTR);
     memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
     memset(tag->attrid, ATTR_UNKNOWN, nattr);
-    for (i = 0; i < nattr; i++)
+    for (int i = 0; i < nattr; i++) {
       tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
+    }
   }
 
   /* Parse tag arguments */
@@ -194,6 +195,7 @@ struct HtmlTag *parse_tag(const char **s, int internal) {
         }
       }
     }
+    int i;
     for (i = 0; i < nattr; i++) {
       if ((tag)->attrid[i] == ATTR_UNKNOWN &&
           strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) ==
@@ -204,8 +206,8 @@ struct HtmlTag *parse_tag(const char **s, int internal) {
     }
 
     if (value_tmp) {
-      int j, hidden = false;
-      for (j = 0; j < i; j++) {
+      int hidden = false;
+      for (int j = 0; j < i; j++) {
         if (tag->attrid[j] == ATTR_TYPE && tag->value[j] &&
             strcmp("hidden", tag->value[j]) == 0) {
           hidden = true;
@@ -252,10 +254,10 @@ done_parse_tag:
   return tag;
 }
 
-int parsedtag_set_value(struct HtmlTag *tag, int id, char *value) {
+int parsedtag_set_value(struct HtmlTag *tag, HtmlTagAttr id, char *value) {
   int i;
 
-  if (!parsedtag_accepts(tag, id))
+  if (!tag->parsedtag_accepts(id))
     return 0;
 
   i = tag->map[id];
@@ -268,9 +270,9 @@ int parsedtag_set_value(struct HtmlTag *tag, int id, char *value) {
   return 1;
 }
 
-int parsedtag_get_value(struct HtmlTag *tag, int id, void *value) {
+int parsedtag_get_value(struct HtmlTag *tag, HtmlTagAttr id, void *value) {
   int i;
-  if (!parsedtag_exists(tag, id) || !tag->value[i = tag->map[id]])
+  if (!tag->parsedtag_exists(id) || !tag->value[i = tag->map[id]])
     return 0;
   return toValFunc[AttrMAP[id].vtype](tag->value[i], (int *)value);
 }

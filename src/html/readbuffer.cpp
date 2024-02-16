@@ -1333,7 +1333,7 @@ Str *process_img(struct HtmlTag *tag, int width) {
   parsedtag_get_value(tag, ATTR_HEIGHT, &i);
   r = NULL;
   parsedtag_get_value(tag, ATTR_USEMAP, &r);
-  if (parsedtag_exists(tag, ATTR_PRE_INT))
+  if (tag->parsedtag_exists(ATTR_PRE_INT))
     ext_pre_int = true;
 
   tmp = Strnew_size(128);
@@ -1341,7 +1341,7 @@ Str *process_img(struct HtmlTag *tag, int width) {
     Str *tmp2;
     r2 = strchr(r, '#');
     s = "<form_int method=internal action=map>";
-    tmp2 = process_form(parse_tag(&s, true));
+    tmp2 = process_form(HtmlTag::parse(&s, true));
     if (tmp2)
       Strcat(tmp, tmp2);
     Strcat(tmp, Sprintf("<input_alt fid=\"%d\" "
@@ -1463,7 +1463,7 @@ Str *process_input(struct HtmlTag *tag) {
 
   if (cur_form_id < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, true));
+    tmp = process_form(HtmlTag::parse(&s, true));
   }
   if (tmp == NULL)
     tmp = Strnew();
@@ -1480,9 +1480,9 @@ Str *process_input(struct HtmlTag *tag) {
   parsedtag_get_value(tag, ATTR_MAXLENGTH, &i);
   p2 = NULL;
   parsedtag_get_value(tag, ATTR_ALT, &p2);
-  x = parsedtag_exists(tag, ATTR_CHECKED);
-  y = parsedtag_exists(tag, ATTR_ACCEPT);
-  z = parsedtag_exists(tag, ATTR_READONLY);
+  x = tag->parsedtag_exists(ATTR_CHECKED);
+  y = tag->parsedtag_exists(ATTR_ACCEPT);
+  z = tag->parsedtag_exists(ATTR_READONLY);
 
   v = formtype(p);
   if (v == FORM_UNKNOWN)
@@ -1646,7 +1646,7 @@ Str *process_button(struct HtmlTag *tag) {
 
   if (cur_form_id < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, true));
+    tmp = process_form(HtmlTag::parse(&s, true));
   }
   if (tmp == NULL)
     tmp = Strnew();
@@ -1708,13 +1708,13 @@ Str *process_select(struct HtmlTag *tag) {
 
   if (cur_form_id < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, true));
+    tmp = process_form(HtmlTag::parse(&s, true));
   }
 
   auto p = "";
   parsedtag_get_value(tag, ATTR_NAME, &p);
   cur_select = Strnew_charp(p);
-  select_is_multiple = parsedtag_exists(tag, ATTR_MULTIPLE);
+  select_is_multiple = tag->parsedtag_exists(ATTR_MULTIPLE);
 
   select_str = Strnew();
   cur_option = NULL;
@@ -1748,7 +1748,7 @@ void feed_select(const char *str) {
     if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
       struct HtmlTag *tag;
       char *q;
-      if (!(tag = parse_tag(&p, false)))
+      if (!(tag = HtmlTag::parse(&p, false)))
         continue;
       switch (tag->tagid) {
       case HTML_OPTION:
@@ -1762,7 +1762,7 @@ void feed_select(const char *str) {
           cur_option_label = Strnew_charp(q);
         else
           cur_option_label = NULL;
-        cur_option_selected = parsedtag_exists(tag, ATTR_SELECTED);
+        cur_option_selected = tag->parsedtag_exists(ATTR_SELECTED);
         prev_spaces = -1;
         break;
       case HTML_N_OPTION:
@@ -1832,7 +1832,7 @@ Str *process_textarea(struct HtmlTag *tag, int width) {
 
   if (cur_form_id < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, true));
+    tmp = process_form(HtmlTag::parse(&s, true));
   }
 
   p = "";
@@ -1858,7 +1858,7 @@ Str *process_textarea(struct HtmlTag *tag, int width) {
       cur_textarea_rows = TEXTAREA_ATTR_ROWS_MAX;
     }
   }
-  cur_textarea_readonly = parsedtag_exists(tag, ATTR_READONLY);
+  cur_textarea_readonly = tag->parsedtag_exists(ATTR_READONLY);
   if (n_textarea >= max_textarea) {
     max_textarea *= 2;
     textarea_str = (Str **)New_Reuse(Str *, textarea_str, max_textarea);
@@ -2356,7 +2356,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
         do_blankline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
     }
     PUSH_ENV_NOINDENT(cmd);
-    if (parsedtag_exists(tag, ATTR_COMPACT))
+    if (tag->parsedtag_exists(ATTR_COMPACT))
       envs[h_env->envc].env = HTML_DL_COMPACT;
     obuf->flag |= RB_IGNORE_P;
     return 1;
@@ -2546,7 +2546,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
     set_space_to_prevchar(obuf->prevchar);
     return 1;
   case HTML_PRE:
-    x = parsedtag_exists(tag, ATTR_FOR_TABLE);
+    x = tag->parsedtag_exists(ATTR_FOR_TABLE);
     CLOSE_A;
     if (!(obuf->flag & RB_IGNORE_P)) {
       flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
@@ -2691,7 +2691,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
     close_anchor(h_env, obuf);
     return 1;
   case HTML_IMG:
-    if (parsedtag_exists(tag, ATTR_USEMAP))
+    if (tag->parsedtag_exists(ATTR_USEMAP))
       HTML5_CLOSE_A;
     tmp = process_img(tag, h_env->limit);
     if (need_number) {
@@ -2762,7 +2762,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
     y = 1;
     z = 0;
     width = 0;
-    if (parsedtag_exists(tag, ATTR_BORDER)) {
+    if (tag->parsedtag_exists(ATTR_BORDER)) {
       if (parsedtag_get_value(tag, ATTR_BORDER, &w)) {
         if (w > 2)
           w = BORDER_THICK;
@@ -2780,7 +2780,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
       else
         width = RELATIVE_WIDTH(i);
     }
-    if (parsedtag_exists(tag, ATTR_HBORDER))
+    if (tag->parsedtag_exists(ATTR_HBORDER))
       w = BORDER_NOWIN;
 #define MAX_CELLSPACING 1000
 #define MAX_CELLPADDING 1000
@@ -2936,7 +2936,7 @@ int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env) {
     HTMLlineproc1(tmp->ptr, h_env);
     return 1;
   case HTML_DOCTYPE:
-    if (!parsedtag_exists(tag, ATTR_PUBLIC)) {
+    if (!tag->parsedtag_exists(ATTR_PUBLIC)) {
       obuf->flag |= RB_HTML5;
     }
     return 1;
@@ -3351,7 +3351,7 @@ table_start:
                     RB_TITLE)) {
       if (is_tag) {
         p = str;
-        if ((tag = parse_tag(&p, internal))) {
+        if ((tag = HtmlTag::parse(&p, internal))) {
           if (tag->tagid == end_tag ||
               (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM) ||
               (pre_mode & RB_TITLE &&
@@ -3451,7 +3451,7 @@ table_start:
 
     if (is_tag) {
       /*** Beginning of a new tag ***/
-      if ((tag = parse_tag(&str, internal)))
+      if ((tag = HtmlTag::parse(&str, internal)))
         cmd = tag->tagid;
       else
         continue;
@@ -3798,7 +3798,7 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
       } else {
         /* tag processing */
         struct HtmlTag *tag;
-        if (!(tag = parse_tag(&str, true)))
+        if (!(tag = HtmlTag::parse(&str, true)))
           continue;
         switch (tag->tagid) {
         case HTML_B:
@@ -3864,8 +3864,8 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = layout->href()->putAnchor(p, q, {.referer = r ? r : ""}, s, *t,
-                                               layout->currentLn(), pos);
+            a_href = layout->href()->putAnchor(p, q, {.referer = r ? r : ""}, s,
+                                               *t, layout->currentLn(), pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;
           }
@@ -3962,7 +3962,7 @@ static void HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             a_form->hseq = hseq - 1;
             a_form->y = layout->currentLn() - top;
             a_form->rows = 1 + top + bottom;
-            if (!parsedtag_exists(tag, ATTR_NO_EFFECT))
+            if (!tag->parsedtag_exists(ATTR_NO_EFFECT))
               effect |= PE_FORM;
             break;
           }

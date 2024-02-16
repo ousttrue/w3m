@@ -679,7 +679,7 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
       int id = -1;
       const char *p = l->ptr;
       struct HtmlTag *tag;
-      if ((tag = parse_tag(&p, true)) != NULL)
+      if ((tag = HtmlTag::parse(&p, true)) != NULL)
         parsedtag_get_value(tag, ATTR_TID, &id);
       if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
         int alignment;
@@ -2522,7 +2522,7 @@ static int feed_table_tag(struct table *tbl, const char *line,
       }
     }
 #ifdef NOWRAP
-    if (parsedtag_exists(tag, ATTR_NOWRAP))
+    if (tag->parsedtag_exists(ATTR_NOWRAP))
       tbl->tabattr[tbl->row][tbl->col] |= HTT_NOWRAP;
 #endif /* NOWRAP */
     v = 0;
@@ -2987,9 +2987,8 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
   struct table_linfo *linfo = &tbl->linfo;
 
   if (*line == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
-    struct HtmlTag *tag;
     p = line;
-    tag = parse_tag(&p, internal);
+    auto tag = HtmlTag::parse(&p, internal);
     if (tag) {
       switch (feed_table_tag(tbl, line, mode, width, tag)) {
       case TAG_ACTION_NONE:
