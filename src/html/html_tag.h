@@ -77,6 +77,7 @@ enum HtmlTagAttr {
   MAX_TAGATTR = 75,
 };
 
+struct Str;
 struct HtmlTag : public gc_cleanup {
   HtmlCommand tagid = {};
   unsigned char *attrid = {};
@@ -101,17 +102,6 @@ public:
   bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
 
   bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
+  bool parsedtag_set_value(HtmlTagAttr id, char *value);
+  Str *parsedtag2str() const;
 };
-
-struct Str;
-int parsedtag_set_value(HtmlTag *tag, HtmlTagAttr id, char *value);
-Str *parsedtag2str(HtmlTag *tag);
-
-struct HtmlParser;
-Str *process_img(HtmlParser *parser, HtmlTag *tag, int width);
-Str *process_anchor(HtmlParser *parser, HtmlTag *tag, const char *tagbuf);
-Str *process_input(HtmlParser *parser, HtmlTag *tag);
-Str *process_button(HtmlParser *parser, HtmlTag *tag);
-Str *process_n_button(void);
-
-int getMetaRefreshParam(const char *q, Str **refresh_uri);

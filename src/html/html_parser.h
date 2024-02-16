@@ -1,5 +1,8 @@
 #pragma once
 #include "lineprop.h"
+#include "table.h"
+
+#define MAX_INDENT_LEVEL 10
 
 struct Str;
 struct HtmlTag;
@@ -14,6 +17,10 @@ struct link_stack {
 class HtmlParser {
 
   int need_number = 0;
+
+  struct table *tables[MAX_TABLE];
+  struct table_mode table_mode[MAX_TABLE];
+  int table_width(struct html_feed_environ *h_env, int table_level);
 
   // link
   struct link_stack *link_stack = nullptr;
@@ -45,14 +52,6 @@ public:
   Str *process_n_select();
   void process_option();
   void feed_select(const char *str);
-
-  // Str *process_select(HtmlTag *tag);
-  // void process_option(HtmlParser *parser);
-  // Str *process_textarea(HtmlTag *tag, int width);
-  // Str *process_n_textarea(HtmlParser *parser);
-  // void feed_textarea(const char *str);
-  // Str *process_form(HtmlTag *tag);
-  // Str *process_n_form(void);
 
 private:
   // form
@@ -128,6 +127,15 @@ public:
   void HTMLlineproc2body(struct HttpResponse *res, struct LineLayout *layout,
                          Str *(*feed)(), int llimit);
 
+  Str *process_img(HtmlTag *tag, int width);
+  Str *process_anchor(HtmlTag *tag, const char *tagbuf);
+  Str *process_input(HtmlTag *tag);
+  Str *process_button(HtmlTag *tag);
+  Str *process_n_button();
+  Str *process_hr(struct HtmlTag *tag, int width, int indent_width);
+
 private:
   int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
 };
+
+int getMetaRefreshParam(const char *q, Str **refresh_uri);

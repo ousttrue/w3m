@@ -44,4 +44,3 @@ extern TagInfo TagMAP[];
 extern TagAttrInfo AttrMAP[];
 
 #define MAX_ENV_LEVEL 20
-#define MAX_INDENT_LEVEL 10

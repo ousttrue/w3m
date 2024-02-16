@@ -2743,7 +2743,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
       else if (width > 0)
         w = width;
     }
-    tok = process_img(parser, tag, w);
+    tok = parser->process_img(tag, w);
     feed_table1(parser, tbl, tok, mode, width);
     break;
   case HTML_FORM:
@@ -2757,15 +2757,15 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     parser->process_n_form();
     break;
   case HTML_INPUT:
-    tmp = process_input(parser, tag);
+    tmp = parser->process_input(tag);
     feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_BUTTON:
-    tmp = process_button(parser, tag);
+    tmp = parser->process_button(tag);
     feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_N_BUTTON:
-    tmp = process_n_button();
+    tmp = parser->process_n_button();
     feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_SELECT:
@@ -2805,7 +2805,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     if (anchor) {
       check_rowcol(tbl, mode);
       if (i == 0) {
-        Str *tmp = process_anchor(parser, tag, line);
+        Str *tmp = parser->process_anchor(tag, line);
         if (displayLinkNumber) {
           Str *t = parser->getLinkNumberStr(-1);
           feed_table_inline_tag(tbl, NULL, mode, t->length);
@@ -3002,7 +3002,7 @@ int feed_table(HtmlParser *parser, struct table *tbl, const char *line,
       case TAG_ACTION_FEED:
       default:
         if (tag->parsedtag_need_reconstruct()) {
-          line = parsedtag2str(tag)->ptr;
+          line = tag->parsedtag2str()->ptr;
         }
       }
     } else {

@@ -252,20 +252,17 @@ done_parse_tag:
   return tag;
 }
 
-int parsedtag_set_value(struct HtmlTag *tag, HtmlTagAttr id, char *value) {
-  int i;
-
-  if (!tag->parsedtag_accepts(id))
-    return 0;
-
-  i = tag->map[id];
-  tag->attrid[i] = id;
+bool HtmlTag::parsedtag_set_value(HtmlTagAttr id, char *value) {
+  if (!this->parsedtag_accepts(id))
+    return false;
+  auto i = this->map[id];
+  this->attrid[i] = id;
   if (value)
-    tag->value[i] = allocStr(value, -1);
+    this->value[i] = allocStr(value, -1);
   else
-    tag->value[i] = NULL;
-  tag->need_reconstruct = true;
-  return 1;
+    this->value[i] = NULL;
+  this->need_reconstruct = true;
+  return true;
 }
 
 bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
@@ -279,19 +276,18 @@ bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
   return toValFunc[AttrMAP[id].vtype](this->value[i], (int *)value);
 }
 
-Str *parsedtag2str(struct HtmlTag *tag) {
-  int i;
-  int tag_id = tag->tagid;
+Str *HtmlTag::parsedtag2str() const {
+  int tag_id = this->tagid;
   int nattr = TagMAP[tag_id].max_attribute;
   Str *tagstr = Strnew();
   Strcat_char(tagstr, '<');
   Strcat_charp(tagstr, TagMAP[tag_id].name);
-  for (i = 0; i < nattr; i++) {
-    if (tag->attrid[i] != ATTR_UNKNOWN) {
+  for (int i = 0; i < nattr; i++) {
+    if (this->attrid[i] != ATTR_UNKNOWN) {
       Strcat_char(tagstr, ' ');
-      Strcat_charp(tagstr, AttrMAP[tag->attrid[i]].name);
-      if (tag->value[i])
-        Strcat(tagstr, Sprintf("=\"%s\"", html_quote(tag->value[i])));
+      Strcat_charp(tagstr, AttrMAP[this->attrid[i]].name);
+      if (this->value[i])
+        Strcat(tagstr, Sprintf("=\"%s\"", html_quote(this->value[i])));
     }
   }
   Strcat_char(tagstr, '>');
