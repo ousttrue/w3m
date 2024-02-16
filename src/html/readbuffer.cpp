@@ -53,7 +53,6 @@ bool MetaRefresh = false;
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
-static int cur_hseq;
 static int need_number = 0;
 
 static JMP_BUF AbortLoading;
@@ -422,7 +421,7 @@ proc_end:
   return 1;
 }
 
-Str *getLinkNumberStr(int correction) {
+Str *HtmlParser::getLinkNumberStr(int correction) const {
   return Sprintf("[%d]", cur_hseq + correction);
 }
 
@@ -1305,7 +1304,7 @@ static void feed_title(const char *str) {
   }
 }
 
-Str *process_img(struct HtmlTag *tag, int width) {
+Str *process_img(HtmlParser *parser, struct HtmlTag *tag, int width) {
   const char *p, *q, *r, *r2 = NULL, *s, *t;
   int w, i, nw, n;
   int pre_int = false, ext_pre_int = false;
@@ -1350,7 +1349,7 @@ Str *process_img(struct HtmlTag *tag, int width) {
     Strcat_charp(tmp, html_quote((r2) ? r2 + 1 : r));
     Strcat(tmp, Sprintf("\"><input_alt hseq=\"%d\" fid=\"%d\" "
                         "type=submit no_effect=true>",
-                        cur_hseq++, cur_form_id));
+                        parser->cur_hseq++, cur_form_id));
   }
   {
     if (w < 0)
@@ -1443,18 +1442,19 @@ img_end:
   return tmp;
 }
 
-Str *process_anchor(struct HtmlTag *tag, const char *tagbuf) {
+Str *process_anchor(HtmlParser *parser, struct HtmlTag *tag,
+                    const char *tagbuf) {
   if (tag->parsedtag_need_reconstruct()) {
-    parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", cur_hseq++)->ptr);
+    parsedtag_set_value(tag, ATTR_HSEQ, Sprintf("%d", parser->cur_hseq++)->ptr);
     return parsedtag2str(tag);
   } else {
-    Str *tmp = Sprintf("<a hseq=\"%d\"", cur_hseq++);
+    Str *tmp = Sprintf("<a hseq=\"%d\"", parser->cur_hseq++);
     Strcat_charp(tmp, tagbuf + 2);
     return tmp;
   }
 }
 
-Str *process_input(struct HtmlTag *tag) {
+Str *process_input(HtmlParser *parser, struct HtmlTag *tag) {
   int i = 20, v, x, y, z, iw, ih, size = 20;
   const char *q, *p, *r, *p2, *s;
   Str *tmp = NULL;
@@ -1522,18 +1522,18 @@ Str *process_input(struct HtmlTag *tag) {
   case FORM_INPUT_FILE:
   case FORM_INPUT_CHECKBOX:
     if (displayLinkNumber)
-      Strcat(tmp, getLinkNumberStr(0));
+      Strcat(tmp, parser->getLinkNumberStr(0));
     Strcat_char(tmp, '[');
     break;
   case FORM_INPUT_RADIO:
     if (displayLinkNumber)
-      Strcat(tmp, getLinkNumberStr(0));
+      Strcat(tmp, parser->getLinkNumberStr(0));
     Strcat_char(tmp, '(');
   }
   Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
                       "name=\"%s\" width=%d maxlength=%d value=\"%s\"",
-                      cur_hseq++, cur_form_id, html_quote(p), html_quote(r),
-                      size, i, qq));
+                      parser->cur_hseq++, cur_form_id, html_quote(p),
+                      html_quote(r), size, i, qq));
   if (x)
     Strcat_charp(tmp, " checked");
   if (y)
@@ -1570,7 +1570,7 @@ Str *process_input(struct HtmlTag *tag) {
     case FORM_INPUT_BUTTON:
     case FORM_INPUT_RESET:
       if (displayLinkNumber)
-        Strcat(tmp, getLinkNumberStr(-1));
+        Strcat(tmp, parser->getLinkNumberStr(-1));
       Strcat_charp(tmp, "[");
       break;
     }
@@ -1639,7 +1639,7 @@ Str *process_input(struct HtmlTag *tag) {
   return tmp;
 }
 
-Str *process_button(struct HtmlTag *tag) {
+Str *process_button(HtmlParser *parser, struct HtmlTag *tag) {
   Str *tmp = NULL;
   const char *p, *q, *r, *qq = "";
   int v;
@@ -1689,10 +1689,10 @@ Str *process_button(struct HtmlTag *tag) {
   }
 
   /*    Strcat_charp(tmp, "<pre_int>"); */
-  Strcat(tmp,
-         Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
-                 "name=\"%s\" value=\"%s\">",
-                 cur_hseq++, cur_form_id, html_quote(p), html_quote(r), qq));
+  Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
+                      "name=\"%s\" value=\"%s\">",
+                      parser->cur_hseq++, cur_form_id, html_quote(p),
+                      html_quote(r), qq));
   return tmp;
 }
 
@@ -1723,17 +1723,17 @@ Str *process_select(struct HtmlTag *tag) {
   return tmp;
 }
 
-Str *process_n_select(void) {
+Str *process_n_select(HtmlParser *parser) {
   if (cur_select == NULL)
     return NULL;
-  process_option();
+  process_option(parser);
   Strcat_charp(select_str, "<br>");
   cur_select = NULL;
   n_selectitem = 0;
   return select_str;
 }
 
-void feed_select(const char *str) {
+void feed_select(HtmlParser *parser, const char *str) {
   Str *tmp = Strnew();
   int prev_status = cur_status;
   static int prev_spaces = -1;
@@ -1752,7 +1752,7 @@ void feed_select(const char *str) {
         continue;
       switch (tag->tagid) {
       case HTML_OPTION:
-        process_option();
+        process_option(parser);
         cur_option = Strnew();
         if (parsedtag_get_value(tag, ATTR_VALUE, &q))
           cur_option_value = Strnew_charp(q);
@@ -1793,7 +1793,7 @@ void feed_select(const char *str) {
   }
 }
 
-void process_option(void) {
+void process_option(HtmlParser *parser) {
   char begin_char = '[', end_char = ']';
 
   if (cur_select == NULL || cur_option == NULL)
@@ -1810,7 +1810,7 @@ void process_option(void) {
   }
   Strcat(select_str, Sprintf("<br><pre_int>%c<input_alt hseq=\"%d\" "
                              "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
-                             begin_char, cur_hseq++, cur_form_id,
+                             begin_char, parser->cur_hseq++, cur_form_id,
                              select_is_multiple ? "checkbox" : "radio",
                              html_quote(cur_select->ptr),
                              html_quote(cur_option_value->ptr)));
@@ -1869,7 +1869,7 @@ Str *process_textarea(struct HtmlTag *tag, int width) {
   return tmp;
 }
 
-Str *process_n_textarea(void) {
+Str *process_n_textarea(HtmlParser *parser) {
   Str *tmp;
   int i;
 
@@ -1880,16 +1880,16 @@ Str *process_n_textarea(void) {
   Strcat(tmp, Sprintf("<pre_int>[<input_alt hseq=\"%d\" fid=\"%d\" "
                       "type=textarea name=\"%s\" size=%d rows=%d "
                       "top_margin=%d textareanumber=%d",
-                      cur_hseq, cur_form_id, html_quote(cur_textarea->ptr),
-                      cur_textarea_size, cur_textarea_rows,
-                      cur_textarea_rows - 1, n_textarea));
+                      parser->cur_hseq, cur_form_id,
+                      html_quote(cur_textarea->ptr), cur_textarea_size,
+                      cur_textarea_rows, cur_textarea_rows - 1, n_textarea));
   if (cur_textarea_readonly)
     Strcat_charp(tmp, " readonly");
   Strcat_charp(tmp, "><u>");
   for (i = 0; i < cur_textarea_size; i++)
     Strcat_char(tmp, ' ');
   Strcat_charp(tmp, "</u></input_alt>]</pre_int>\n");
-  cur_hseq++;
+  parser->cur_hseq++;
   n_textarea++;
   cur_textarea = NULL;
 
@@ -2685,7 +2685,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
 
     if (hseq == 0 && obuf->anchor.url) {
       obuf->anchor.hseq = cur_hseq;
-      tmp = process_anchor(tag, h_env->tagbuf->ptr);
+      tmp = process_anchor(parser, tag, h_env->tagbuf->ptr);
       push_tag(obuf, tmp->ptr, HTML_A);
       return 1;
     }
@@ -2696,7 +2696,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   case HTML_IMG:
     if (tag->parsedtag_exists(ATTR_USEMAP))
       HTML5_CLOSE_A;
-    tmp = process_img(tag, h_env->limit);
+    tmp = process_img(parser, tag, h_env->limit);
     if (need_number) {
       tmp = Strnew_m_charp(getLinkNumberStr(-1)->ptr, tmp->ptr, NULL);
       need_number = 0;
@@ -2880,13 +2880,13 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     return 1;
   case HTML_INPUT:
     close_anchor(this, h_env, obuf);
-    tmp = process_input(tag);
+    tmp = process_input(parser, tag);
     if (tmp)
       HTMLlineproc1(tmp->ptr, h_env);
     return 1;
   case HTML_BUTTON:
     HTML5_CLOSE_A;
-    tmp = process_button(tag);
+    tmp = process_button(parser, tag);
     if (tmp)
       HTMLlineproc1(tmp->ptr, h_env);
     return 1;
@@ -2906,7 +2906,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   case HTML_N_SELECT:
     obuf->flag &= ~RB_INSELECT;
     obuf->end_tag = 0;
-    tmp = process_n_select();
+    tmp = process_n_select(parser);
     if (tmp)
       HTMLlineproc1(tmp->ptr, h_env);
     return 1;
@@ -2924,7 +2924,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   case HTML_N_TEXTAREA:
     obuf->flag &= ~RB_INTXTA;
     obuf->end_tag = 0;
-    tmp = process_n_textarea();
+    tmp = process_n_textarea(this);
     if (tmp)
       HTMLlineproc1(tmp->ptr, h_env);
     return 1;
@@ -3371,7 +3371,7 @@ table_start:
       if (pre_mode & RB_INSELECT) {
         if (obuf->table_level >= 0)
           goto proc_normal;
-        feed_select(str);
+        feed_select(this, str);
         continue;
       }
       if (is_tag) {
@@ -3404,7 +3404,7 @@ table_start:
        * are fed to the table renderer, and then the renderer
        * makes HTML output.
        */
-      switch (feed_table(tbl, str, tbl_mode, tbl_width, internal)) {
+      switch (feed_table(this, tbl, str, tbl_mode, tbl_width, internal)) {
       case 0:
         /* </table> tag */
         obuf->table_level--;
@@ -3420,7 +3420,7 @@ table_start:
           tbl = tbl0;
           tbl_mode = &table_mode[obuf->table_level];
           tbl_width = table_width(h_env, obuf->table_level);
-          feed_table(tbl, str, tbl_mode, tbl_width, true);
+          feed_table(this, tbl, str, tbl_mode, tbl_width, true);
           continue;
           /* continue to the next */
         }
@@ -4159,7 +4159,6 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
   form_max = -1;
   forms_size = 0;
   forms = NULL;
-  cur_hseq = 1;
 
   init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, INIT_BUFFER_WIDTH(),
             0);

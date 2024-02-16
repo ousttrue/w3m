@@ -201,13 +201,17 @@ void push_render_image(Str *str, int width, int limit,
 
 struct HtmlTag;
 class HtmlParser {
+
 public:
+  int cur_hseq = 1;
   void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
                      int internal);
 
   void HTMLlineproc1(const char *x, struct html_feed_environ *y) {
     HTMLlineproc0(x, y, true);
   }
+
+  Str *getLinkNumberStr(int correction) const;
 
 private:
   int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
@@ -238,7 +242,6 @@ enum CleanupMode {
 };
 void cleanup_line(Str *s, CleanupMode mode);
 
-Str *getLinkNumberStr(int correction);
 const char *remove_space(const char *str);
 extern int is_boundary(unsigned char *, unsigned char *);
 

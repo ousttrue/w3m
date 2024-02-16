@@ -2233,20 +2233,20 @@ static void feed_table_block_tag(struct table *tbl, const char *line,
   }
 }
 
-static void table_close_select(struct table *tbl, struct table_mode *mode,
-                               int width) {
-  Str *tmp = process_n_select();
+static void table_close_select(HtmlParser *parser, struct table *tbl,
+                               struct table_mode *mode, int width) {
+  Str *tmp = process_n_select(parser);
   mode->pre_mode &= ~TBLM_INSELECT;
   mode->end_tag = 0;
-  feed_table1(tbl, tmp, mode, width);
+  feed_table1(parser, tbl, tmp, mode, width);
 }
 
-static void table_close_textarea(struct table *tbl, struct table_mode *mode,
-                                 int width) {
-  Str *tmp = process_n_textarea();
+static void table_close_textarea(HtmlParser *parser, struct table *tbl,
+                                 struct table_mode *mode, int width) {
+  Str *tmp = process_n_textarea(parser);
   mode->pre_mode &= ~TBLM_INTXTA;
   mode->end_tag = 0;
-  feed_table1(tbl, tmp, mode, width);
+  feed_table1(parser, tbl, tmp, mode, width);
 }
 
 static void table_close_anchor0(struct table *tbl, struct table_mode *mode) {
@@ -2291,8 +2291,8 @@ static void table_close_anchor0(struct table *tbl, struct table_mode *mode) {
 
 #define ATTR_ROWSPAN_MAX 32766
 
-static int feed_table_tag(struct table *tbl, const char *line,
-                          struct table_mode *mode, int width,
+static int feed_table_tag(HtmlParser *parser, struct table *tbl,
+                          const char *line, struct table_mode *mode, int width,
                           struct HtmlTag *tag) {
   int cmd;
 #ifdef ID_EXT
@@ -2320,7 +2320,7 @@ static int feed_table_tag(struct table *tbl, const char *line,
     switch (cmd) {
     CASE_TABLE_TAG:
     case HTML_N_TEXTAREA:
-      table_close_textarea(tbl, mode, width);
+      table_close_textarea(parser, tbl, mode, width);
       if (cmd == HTML_N_TEXTAREA)
         return TAG_ACTION_NONE;
       break;
@@ -2351,7 +2351,7 @@ static int feed_table_tag(struct table *tbl, const char *line,
     CASE_TABLE_TAG:
     case HTML_N_FORM:
     case HTML_N_SELECT: /* mode->end_tag */
-      table_close_select(tbl, mode, width);
+      table_close_select(parser, tbl, mode, width);
       if (cmd == HTML_N_SELECT)
         return TAG_ACTION_NONE;
       break;
@@ -2745,35 +2745,35 @@ static int feed_table_tag(struct table *tbl, const char *line,
       else if (width > 0)
         w = width;
     }
-    tok = process_img(tag, w);
-    feed_table1(tbl, tok, mode, width);
+    tok = process_img(parser, tag, w);
+    feed_table1(parser, tbl, tok, mode, width);
     break;
   case HTML_FORM:
     feed_table_block_tag(tbl, "", mode, 0, cmd);
     tmp = process_form(tag);
     if (tmp)
-      feed_table1(tbl, tmp, mode, width);
+      feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_N_FORM:
     feed_table_block_tag(tbl, "", mode, 0, cmd);
     process_n_form();
     break;
   case HTML_INPUT:
-    tmp = process_input(tag);
-    feed_table1(tbl, tmp, mode, width);
+    tmp = process_input(parser, tag);
+    feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_BUTTON:
-    tmp = process_button(tag);
-    feed_table1(tbl, tmp, mode, width);
+    tmp = process_button(parser, tag);
+    feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_N_BUTTON:
     tmp = process_n_button();
-    feed_table1(tbl, tmp, mode, width);
+    feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_SELECT:
     tmp = process_select(tag);
     if (tmp)
-      feed_table1(tbl, tmp, mode, width);
+      feed_table1(parser, tbl, tmp, mode, width);
     mode->pre_mode |= TBLM_INSELECT;
     mode->end_tag = HTML_N_SELECT;
     break;
@@ -2794,7 +2794,7 @@ static int feed_table_tag(struct table *tbl, const char *line,
     }
     tmp = process_textarea(tag, w);
     if (tmp)
-      feed_table1(tbl, tmp, mode, width);
+      feed_table1(parser, tbl, tmp, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
     mode->end_tag = HTML_N_TEXTAREA;
     break;
@@ -2807,9 +2807,9 @@ static int feed_table_tag(struct table *tbl, const char *line,
     if (anchor) {
       check_rowcol(tbl, mode);
       if (i == 0) {
-        Str *tmp = process_anchor(tag, line);
+        Str *tmp = process_anchor(parser, tag, line);
         if (displayLinkNumber) {
-          Str *t = getLinkNumberStr(-1);
+          Str *t = parser->getLinkNumberStr(-1);
           feed_table_inline_tag(tbl, NULL, mode, t->length);
           Strcat(tmp, t);
         }
@@ -2981,8 +2981,8 @@ static int feed_table_tag(struct table *tbl, const char *line,
   return TAG_ACTION_NONE;
 }
 
-int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
-               int width, int internal) {
+int feed_table(HtmlParser *parser, struct table *tbl, const char *line,
+               struct table_mode *mode, int width, int internal) {
   int i;
   const char *p;
   Str *tmp;
@@ -2992,7 +2992,7 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
     p = line;
     auto tag = HtmlTag::parse(&p, internal);
     if (tag) {
-      switch (feed_table_tag(tbl, line, mode, width, tag)) {
+      switch (feed_table_tag(parser, tbl, line, mode, width, tag)) {
       case TAG_ACTION_NONE:
         return -1;
       case TAG_ACTION_N_TABLE:
@@ -3029,7 +3029,7 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
     return -1;
   }
   if (mode->pre_mode & TBLM_INSELECT) {
-    feed_select(line);
+    feed_select(parser, line);
     return -1;
   }
   if (!(mode->pre_mode & TBLM_PLAIN) &&
@@ -3139,8 +3139,8 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
   return -1;
 }
 
-void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
-                 int width) {
+void feed_table1(HtmlParser *parser, struct table *tbl, Str *tok,
+                 struct table_mode *mode, int width) {
   Str *tokbuf;
   int status;
   if (!tok)
@@ -3150,7 +3150,7 @@ void feed_table1(struct table *tbl, Str *tok, struct table_mode *mode,
   auto line = tok->ptr;
   while (read_token(tokbuf, (const char **)&line, &status,
                     mode->pre_mode & TBLM_PREMODE, 0))
-    feed_table(tbl, tokbuf->ptr, mode, width, true);
+    feed_table(parser, tbl, tokbuf->ptr, mode, width, true);
 }
 
 void pushTable(struct table *tbl, struct table *tbl1) {
