@@ -189,20 +189,57 @@ struct html_feed_environ {
   int blank_lines;
 };
 
-void flushline(html_feed_environ *h_env, readbuffer *obuf, int indent,
-               int force, int width);
-void do_blankline(html_feed_environ *h_env, readbuffer *obuf, int indent,
-                  int indent_incr, int width);
 void purgeline(html_feed_environ *h_env);
-void save_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
-void restore_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
-void push_render_image(Str *str, int width, int limit,
-                       html_feed_environ *h_env);
+
+struct link_stack {
+  int cmd = 0;
+  short offset = 0;
+  short pos = 0;
+  link_stack *next = nullptr;
+};
 
 struct HtmlTag;
 class HtmlParser {
 
+  int need_number = 0;
+  struct link_stack *link_stack = nullptr;
+
+  char *has_hidden_link(struct readbuffer *obuf, int cmd) const;
+  void passthrough(struct readbuffer *obuf, char *str, int back);
+  void append_tags(struct readbuffer *obuf);
+
 public:
+  void push_tag(struct readbuffer *obuf, const char *cmdname, int cmd);
+
+  void push_nchars(struct readbuffer *obuf, int width, const char *str, int len,
+                   Lineprop mode);
+  void push_charp(readbuffer *obuf, int width, const char *str, Lineprop mode);
+  void push_str(readbuffer *obuf, int width, Str *str, Lineprop mode);
+  void check_breakpoint(struct readbuffer *obuf, int pre_mode, const char *ch);
+  void push_char(struct readbuffer *obuf, int pre_mode, char ch);
+  void push_spaces(struct readbuffer *obuf, int pre_mode, int width);
+  void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
+                  const char **str, Lineprop mode);
+  void fillline(struct readbuffer *obuf, int indent);
+  void flushline(html_feed_environ *h_env, readbuffer *obuf, int indent,
+                 int force, int width);
+  int close_effect0(struct readbuffer *obuf, int cmd);
+  void close_anchor(struct html_feed_environ *h_env, struct readbuffer *obuf);
+  void save_fonteffect(struct html_feed_environ *h_env,
+                       struct readbuffer *obuf);
+  void restore_fonteffect(struct html_feed_environ *h_env,
+                          struct readbuffer *obuf);
+  void proc_escape(struct readbuffer *obuf, const char **str_return);
+
+  void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
+
+  void push_render_image(Str *str, int width, int limit,
+                         html_feed_environ *h_env);
+  void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,
+                    int indent, int indent_incr, int width);
+
+public:
+  void push_link(int cmd, int offset, int pos);
   int cur_hseq = 1;
   void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
                      int internal);
@@ -219,8 +256,6 @@ private:
 
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, TextLineList *, int, int);
-void completeHTMLstream(HtmlParser *parser, struct html_feed_environ *,
-                        struct readbuffer *);
 
 Str *romanNumeral(int n);
 Str *romanAlphabet(int n);

@@ -674,7 +674,7 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
   if (h_env.limit > maxlimit)
     h_env.limit = maxlimit;
   if (tbl->border_mode != BORDER_NONE && tbl->vcellpadding > 0)
-    do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+    parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
   for (l = orgdata->first; l != NULL; l = l->next) {
     if (TAG_IS(l->ptr, "<table_alt", 10)) {
       int id = -1;
@@ -688,10 +688,10 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
         struct table *t = tbl->tables[id].ptr;
         int limit = tbl->tables[id].indent + t->total_width;
         tbl->tables[id].ptr = NULL;
-        save_fonteffect(&h_env, h_env.obuf);
-        flushline(&h_env, &obuf, 0, 2, h_env.limit);
+        parser->save_fonteffect(&h_env, h_env.obuf);
+        parser->flushline(&h_env, &obuf, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
-          do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+          parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
         if (RB_GET_ALIGN(h_env.obuf) == RB_CENTER)
           alignment = ALIGN_CENTER;
         else if (RB_GET_ALIGN(h_env.obuf) == RB_RIGHT)
@@ -706,11 +706,11 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
         appendTextLineList(h_env.buf, tbl->tables[id].buf);
         if (h_env.maxlimit < limit)
           h_env.maxlimit = limit;
-        restore_fonteffect(&h_env, h_env.obuf);
+        parser->restore_fonteffect(&h_env, h_env.obuf);
         obuf.flag &= ~RB_IGNORE_P;
         h_env.blank_lines = 0;
         if (t->vspace > 0) {
-          do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+          parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
           obuf.flag |= RB_IGNORE_P;
         }
       }
@@ -721,13 +721,13 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
     obuf.status = R_ST_EOL;
     parser->HTMLlineproc1("\n", &h_env);
   }
-  completeHTMLstream(parser, &h_env, &obuf);
-  flushline(&h_env, &obuf, 0, 2, h_env.limit);
+  parser->completeHTMLstream(&h_env, &obuf);
+  parser->flushline(&h_env, &obuf, 0, 2, h_env.limit);
   if (tbl->border_mode == BORDER_NONE) {
     int rowspan = table_rowspan(tbl, row, col);
     if (row + rowspan <= tbl->maxrow) {
       if (tbl->vcellpadding > 0 && !(obuf.flag & RB_IGNORE_P))
-        do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+        parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
     } else {
       if (tbl->vspace > 0)
         purgeline(&h_env);
@@ -735,7 +735,7 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
   } else {
     if (tbl->vcellpadding > 0) {
       if (!(obuf.flag & RB_IGNORE_P))
-        do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+        parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
     } else
       purgeline(&h_env);
   }
@@ -1778,7 +1778,7 @@ void renderTable(HtmlParser *parser, struct table *t, int max_width,
   case BORDER_THICK:
     renderbuf = Strnew();
     print_sep(t, -1, T_TOP, t->maxcol, renderbuf);
-    push_render_image(renderbuf, width, t->total_width, h_env);
+    parser->push_render_image(renderbuf, width, t->total_width, h_env);
     t->total_height += 1;
     break;
   }
@@ -1847,12 +1847,12 @@ void renderTable(HtmlParser *parser, struct table *t, int max_width,
         t->total_height += 1;
         break;
       }
-      push_render_image(renderbuf, width, t->total_width, h_env);
+      parser->push_render_image(renderbuf, width, t->total_width, h_env);
     }
     if (r < t->maxrow && t->border_mode != BORDER_NONE) {
       renderbuf = Strnew();
       print_sep(t, r, T_MIDDLE, t->maxcol, renderbuf);
-      push_render_image(renderbuf, width, t->total_width, h_env);
+      parser->push_render_image(renderbuf, width, t->total_width, h_env);
     }
     t->total_height += t->tabheight[r];
   }
@@ -1861,7 +1861,7 @@ void renderTable(HtmlParser *parser, struct table *t, int max_width,
   case BORDER_THICK:
     renderbuf = Strnew();
     print_sep(t, t->maxrow, T_BOTTOM, t->maxcol, renderbuf);
-    push_render_image(renderbuf, width, t->total_width, h_env);
+    parser->push_render_image(renderbuf, width, t->total_width, h_env);
     t->total_height += 1;
     break;
   }
@@ -1869,7 +1869,7 @@ void renderTable(HtmlParser *parser, struct table *t, int max_width,
     renderbuf = Strnew_charp(" ");
     t->total_height++;
     t->total_width = 1;
-    push_render_image(renderbuf, 1, t->total_width, h_env);
+    parser->push_render_image(renderbuf, 1, t->total_width, h_env);
   }
   parser->HTMLlineproc1("</pre>", h_env);
 }
