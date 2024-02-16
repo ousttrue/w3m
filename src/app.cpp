@@ -775,22 +775,23 @@ void App::moveTab(TabBuffer *t, TabBuffer *t2, int right) {
   invalidate();
 }
 
-void App::_newT() {
-  invalidate();
+void App::newTab(std::shared_ptr<Buffer> buf) {
+  auto tab = new TabBuffer();
+  if (!buf) {
+    buf = Buffer::create();
+    *buf = *_currentTab->currentBuffer();
+  }
+  tab->firstBuffer = tab->_currentBuffer = buf;
 
-  auto tag = new TabBuffer();
-  auto buf = Buffer::create();
-  *buf = *_currentTab->currentBuffer();
-  buf->backBuffer = nullptr;
-  tag->firstBuffer = tag->_currentBuffer = buf;
-
-  tag->nextTab = _currentTab->nextTab;
-  tag->prevTab = _currentTab;
+  tab->nextTab = _currentTab->nextTab;
+  tab->prevTab = _currentTab;
   if (_currentTab->nextTab)
-    _currentTab->nextTab->prevTab = tag;
+    _currentTab->nextTab->prevTab = tab;
   else
-    _lastTab = tag;
-  _currentTab->nextTab = tag;
-  _currentTab = tag;
+    _lastTab = tab;
+  _currentTab->nextTab = tab;
+  _currentTab = tab;
   _nTab++;
+
+  invalidate();
 }

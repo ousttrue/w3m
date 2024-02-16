@@ -608,25 +608,23 @@ std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
 
   auto u = urlParse(a->url, this->currentBuffer()->res->getBaseURL());
   if (u.to_Str() == this->currentBuffer()->res->currentURL.to_Str()) {
-    /* index within this buffer */
+    // index within this buffer
     if (u.label.size()) {
       return this->gotoLabel(u.label.c_str());
     }
   }
 
-  if (check_target && open_tab_blank && a->target &&
-      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
-    App::instance()._newT();
-    auto buf = this->currentBuffer();
-    this->loadLink(a->url, a->target, a->option, nullptr);
-    if (buf != this->currentBuffer()) {
-      this->deleteBuffer(buf);
-      return buf;
-    } else {
-      App::instance().deleteTab(this);
-      return {};
-    }
+  auto buf = this->loadLink(a->url, a->target, a->option, nullptr);
+  if (!buf) {
+    return {};
   }
 
-  return this->loadLink(a->url, a->target, a->option, nullptr);
+  if (check_target && open_tab_blank && a->target &&
+      (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
+    // open in new tab
+    App::instance().newTab(buf);
+  } else {
+    this->pushBuffer(buf);
+  }
+  return buf;
 }

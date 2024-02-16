@@ -1513,7 +1513,7 @@ void defKey() {
 // NEW_TAB
 //"Open a new tab (with current document)"
 void newT() {
-  App::instance()._newT();
+  App::instance().newTab();
   App::instance().invalidate();
 }
 
@@ -1556,7 +1556,7 @@ void tabA() {
     return;
   }
 
-  App::instance()._newT();
+  App::instance().newTab();
   auto buf = CurrentTab->currentBuffer();
 
   CurrentTab->followAnchor(false);
@@ -1571,7 +1571,7 @@ void tabA() {
 // TAB_GOTO
 //"Open specified document in a new tab"
 void tabURL() {
-  App::instance()._newT();
+  App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
   CurrentTab->goURL0("Goto URL on new tab: ", false);
@@ -1585,7 +1585,7 @@ void tabURL() {
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
 void tabrURL() {
-  App::instance()._newT();
+  App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
   CurrentTab->goURL0("Goto relative URL on new tab: ", true);
@@ -1634,7 +1634,7 @@ void ldDL() {
     buf->layout.restorePosition(CurrentTab->currentBuffer()->layout);
   }
   if (!replace && open_tab_dl_list) {
-    App::instance()._newT();
+    App::instance().newTab();
     new_tab = true;
   }
   CurrentTab->pushBuffer(buf);

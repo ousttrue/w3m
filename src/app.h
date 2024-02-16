@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <list>
+#include <memory>
 
 extern int prev_key;
 extern const char *CurrentKeyData;
@@ -20,6 +21,7 @@ enum TmpfType {
 };
 
 struct TabBuffer;
+struct Buffer;
 class App {
   int _dirty = 1;
   std::list<std::string> _fileToDelete;
@@ -90,7 +92,7 @@ public:
   TabBuffer *LastTab() const { return _lastTab; }
   int nTab() const { return _nTab; }
   TabBuffer *CurrentTab() const { return _currentTab; }
-  void _newT();
+  void newTab(std::shared_ptr<Buffer> buf = {});
   TabBuffer *numTab(int n) const;
   void drawTabs();
   void nextTab();
