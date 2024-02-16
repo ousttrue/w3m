@@ -1,10 +1,8 @@
 #pragma once
-#include "htmlcommand.h"
-#include "html.h"
+#include "html_command.h"
 #include <gc_cpp.h>
 
-/* Parsed Tag structure */
-
+// Parsed Tag structure
 enum HtmlTagAttr {
   ATTR_UNKNOWN = 0,
   ATTR_ACCEPT = 1,
@@ -101,12 +99,11 @@ public:
             (this->attrid[this->map[id]] != ATTR_UNKNOWN));
   }
   bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
+
+  bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
 };
 
-#define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
-
 struct Str;
-int parsedtag_get_value(HtmlTag *tag, HtmlTagAttr id, void *value);
 int parsedtag_set_value(HtmlTag *tag, HtmlTagAttr id, char *value);
 Str *parsedtag2str(HtmlTag *tag);
 

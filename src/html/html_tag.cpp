@@ -1,7 +1,7 @@
-#include "htmltag.h"
+#include "html_tag.h"
 #include "readbuffer.h"
 #include "quote.h"
-#include "htmlcommand.h"
+#include "html_command.h"
 #include "myctype.h"
 #include "Str.h"
 #include "hash.h"
@@ -268,11 +268,15 @@ int parsedtag_set_value(struct HtmlTag *tag, HtmlTagAttr id, char *value) {
   return 1;
 }
 
-int parsedtag_get_value(struct HtmlTag *tag, HtmlTagAttr id, void *value) {
-  int i;
-  if (!tag->parsedtag_exists(id) || !tag->value[i = tag->map[id]])
-    return 0;
-  return toValFunc[AttrMAP[id].vtype](tag->value[i], (int *)value);
+bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
+  if (!this->map) {
+    return false;
+  }
+  int i = this->map[id];
+  if (!this->parsedtag_exists(id) || !this->value[i]) {
+    return false;
+  }
+  return toValFunc[AttrMAP[id].vtype](this->value[i], (int *)value);
 }
 
 Str *parsedtag2str(struct HtmlTag *tag) {

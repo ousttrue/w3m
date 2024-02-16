@@ -1,7 +1,7 @@
 #pragma once
 #include "utf8.h"
 #include "anchor.h"
-#include "htmlcommand.h"
+#include "html_command.h"
 #include <memory>
 
 #define N_GRAPH_SYMBOL 32

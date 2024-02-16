@@ -21,7 +21,7 @@
 #include "buffer.h"
 #include "anchor.h"
 #include "keyvalue.h"
-#include "htmltag.h"
+#include "html_tag.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "regex.h"
@@ -81,7 +81,8 @@ struct FormList *newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *FormList ::formList_addInput(HtmlParser *parser, struct HtmlTag *tag) {
+FormItemList *FormList ::formList_addInput(HtmlParser *parser,
+                                           struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
   //   return NULL;
@@ -96,27 +97,27 @@ FormItemList *FormList ::formList_addInput(HtmlParser *parser, struct HtmlTag *t
   item->value = item->init_value = NULL;
   item->readonly = 0;
   char *p;
-  if (parsedtag_get_value(tag, ATTR_TYPE, &p)) {
+  if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
     item->type = formtype(p);
     if (item->size < 0 &&
         (item->type == FORM_INPUT_TEXT || item->type == FORM_INPUT_FILE ||
          item->type == FORM_INPUT_PASSWORD))
       item->size = FORM_I_TEXT_DEFAULT_SIZE;
   }
-  if (parsedtag_get_value(tag, ATTR_NAME, &p))
+  if (tag->parsedtag_get_value(ATTR_NAME, &p))
     item->name = Strnew_charp(p);
-  if (parsedtag_get_value(tag, ATTR_VALUE, &p))
+  if (tag->parsedtag_get_value(ATTR_VALUE, &p))
     item->value = item->init_value = Strnew_charp(p);
   item->checked = item->init_checked = tag->parsedtag_exists(ATTR_CHECKED);
   item->accept = tag->parsedtag_exists(ATTR_ACCEPT);
-  parsedtag_get_value(tag, ATTR_SIZE, &item->size);
-  parsedtag_get_value(tag, ATTR_MAXLENGTH, &item->maxlength);
+  tag->parsedtag_get_value(ATTR_SIZE, &item->size);
+  tag->parsedtag_get_value(ATTR_MAXLENGTH, &item->maxlength);
   item->readonly = tag->parsedtag_exists(ATTR_READONLY);
   int i;
-  if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
+  if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
       i < parser->max_textarea)
     item->value = item->init_value = parser->textarea_str[i];
-  if (parsedtag_get_value(tag, ATTR_ROWS, &p))
+  if (tag->parsedtag_get_value(ATTR_ROWS, &p))
     item->rows = atoi(p);
   if (item->type == FORM_UNKNOWN) {
     /* type attribute is missing. Ignore the tag. */

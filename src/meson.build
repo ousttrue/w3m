@@ -73,7 +73,7 @@ executable(
         'html/table.cpp',
         'html/form.cpp',
         'html/anchor.cpp',
-        'html/htmltag.cpp',
+        'html/html_tag.cpp',
         'html/tagtable.cpp',
         'html/html_parser.cpp',
         'html/lineprop.cpp',

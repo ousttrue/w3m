@@ -7,7 +7,7 @@
 #include "symbol.h"
 #include "url_quote.h"
 #include "form.h"
-#include "htmltag.h"
+#include "html_tag.h"
 #include "quote.h"
 #include "ctrlcode.h"
 #include "myctype.h"
@@ -780,10 +780,10 @@ Str *HtmlParser::process_textarea(struct HtmlTag *tag, int width) {
   }
 
   p = "";
-  parsedtag_get_value(tag, ATTR_NAME, &p);
+  tag->parsedtag_get_value(ATTR_NAME, &p);
   cur_textarea = Strnew_charp(p);
   cur_textarea_size = 20;
-  if (parsedtag_get_value(tag, ATTR_COLS, &p)) {
+  if (tag->parsedtag_get_value(ATTR_COLS, &p)) {
     cur_textarea_size = atoi(p);
     if (strlen(p) > 0 && p[strlen(p) - 1] == '%')
       cur_textarea_size = width * cur_textarea_size / 100 - 2;
@@ -794,7 +794,7 @@ Str *HtmlParser::process_textarea(struct HtmlTag *tag, int width) {
     }
   }
   cur_textarea_rows = 1;
-  if (parsedtag_get_value(tag, ATTR_ROWS, &p)) {
+  if (tag->parsedtag_get_value(ATTR_ROWS, &p)) {
     cur_textarea_rows = atoi(p);
     if (cur_textarea_rows <= 0) {
       cur_textarea_rows = 1;
@@ -869,17 +869,17 @@ Str *HtmlParser::process_form_int(struct HtmlTag *tag, int fid) {
   const char *p, *q, *r, *s, *tg, *n;
 
   p = "get";
-  parsedtag_get_value(tag, ATTR_METHOD, &p);
+  tag->parsedtag_get_value(ATTR_METHOD, &p);
   q = "!CURRENT_URL!";
-  parsedtag_get_value(tag, ATTR_ACTION, &q);
+  tag->parsedtag_get_value(ATTR_ACTION, &q);
   q = Strnew(url_quote(remove_space(q)))->ptr;
   r = NULL;
   s = NULL;
-  parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
+  tag->parsedtag_get_value(ATTR_ENCTYPE, &s);
   tg = NULL;
-  parsedtag_get_value(tag, ATTR_TARGET, &tg);
+  tag->parsedtag_get_value(ATTR_TARGET, &tg);
   n = NULL;
-  parsedtag_get_value(tag, ATTR_NAME, &n);
+  tag->parsedtag_get_value(ATTR_NAME, &n);
 
   if (fid < 0) {
     form_max++;
@@ -1083,19 +1083,19 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           t = "";
           hseq = 0;
           id = NULL;
-          if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
+          if (tag->parsedtag_get_value(ATTR_NAME, &id)) {
             id = url_quote_conv(id, name_charset);
             layout->registerName(id, layout->currentLn(), pos);
           }
-          if (parsedtag_get_value(tag, ATTR_HREF, &p))
+          if (tag->parsedtag_get_value(ATTR_HREF, &p))
             p = Strnew(url_quote(remove_space(p)))->ptr;
-          if (parsedtag_get_value(tag, ATTR_TARGET, &q))
+          if (tag->parsedtag_get_value(ATTR_TARGET, &q))
             q = url_quote_conv(q, buf->document_charset);
-          if (parsedtag_get_value(tag, ATTR_REFERER, &r))
+          if (tag->parsedtag_get_value(ATTR_REFERER, &r))
             r = Strnew(url_quote(r))->ptr;
-          parsedtag_get_value(tag, ATTR_TITLE, &s);
-          parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
-          parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
+          tag->parsedtag_get_value(ATTR_TITLE, &s);
+          tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
+          tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
           if (hseq > 0) {
             layout->hmarklist()->putHmarker(layout->currentLn(), pos, hseq - 1);
           } else if (hseq < 0) {
@@ -1138,9 +1138,9 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           break;
 
         case HTML_IMG_ALT:
-          if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
+          if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
             s = NULL;
-            parsedtag_get_value(tag, ATTR_TITLE, &s);
+            tag->parsedtag_get_value(ATTR_TITLE, &s);
             p = url_quote_conv(remove_space(p), buf->document_charset);
             a_img = layout->registerImg(p, s, layout->currentLn(), pos);
           }
@@ -1161,10 +1161,10 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           hseq = 0;
           form_id = -1;
 
-          parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
-          parsedtag_get_value(tag, ATTR_FID, &form_id);
-          parsedtag_get_value(tag, ATTR_TOP_MARGIN, &top);
-          parsedtag_get_value(tag, ATTR_BOTTOM_MARGIN, &bottom);
+          tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
+          tag->parsedtag_get_value(ATTR_FID, &form_id);
+          tag->parsedtag_get_value(ATTR_TOP_MARGIN, &top);
+          tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &bottom);
           if (form_id < 0 || form_id > form_max || forms == NULL ||
               forms[form_id] == NULL)
             break; /* outside of <form>..</form> */
@@ -1192,7 +1192,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           if (!form->target)
             form->target = res->baseTarget;
           if (a_textarea &&
-              parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
+              tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
             if (textareanumber >= max_textarea) {
               max_textarea = 2 * textareanumber;
               textarea_str =
@@ -1226,7 +1226,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           a_form = NULL;
           break;
         case HTML_MAP:
-          // if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
+          // if (tag->parsedtag_get_value( ATTR_NAME, &p)) {
           //   MapList *m = (MapList *)New(MapList);
           //   m->name = Strnew_charp(p);
           //   m->area = newGeneralList();
@@ -1240,13 +1240,13 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
         case HTML_AREA:
           // if (buf->maplist == NULL) /* outside of <map>..</map> */
           //   break;
-          // if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
+          // if (tag->parsedtag_get_value( ATTR_HREF, &p)) {
           //   MapArea *a;
           //   p = url_encode(remove_space(p), base, buf->document_charset);
           //   t = NULL;
-          //   parsedtag_get_value(tag, ATTR_TARGET, &t);
+          //   tag->parsedtag_get_value( ATTR_TARGET, &t);
           //   q = "";
-          //   parsedtag_get_value(tag, ATTR_ALT, &q);
+          //   tag->parsedtag_get_value( ATTR_ALT, &q);
           //   r = NULL;
           //   s = NULL;
           //   a = newMapArea(p, t, q, r, s);
@@ -1270,17 +1270,17 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           // }
           break;
         case HTML_BASE:
-          if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
+          if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
             p = Strnew(url_quote(remove_space(p)))->ptr;
             res->baseURL = urlParse(p, res->currentURL);
           }
-          if (parsedtag_get_value(tag, ATTR_TARGET, &p))
+          if (tag->parsedtag_get_value(ATTR_TARGET, &p))
             res->baseTarget = url_quote_conv(p, buf->document_charset);
           break;
         case HTML_META:
           p = q = NULL;
-          parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
-          parsedtag_get_value(tag, ATTR_CONTENT, &q);
+          tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
+          tag->parsedtag_get_value(ATTR_CONTENT, &q);
           if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
             Str *tmp = NULL;
             int refresh_interval = getMetaRefreshParam(q, &tmp);
@@ -1300,11 +1300,11 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           internal = HTML_N_INTERNAL;
           break;
         case HTML_FORM_INT:
-          if (parsedtag_get_value(tag, ATTR_FID, &form_id))
+          if (tag->parsedtag_get_value(ATTR_FID, &form_id))
             process_form_int(tag, form_id);
           break;
         case HTML_TEXTAREA_INT:
-          if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &n_textarea) &&
+          if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &n_textarea) &&
               n_textarea >= 0 && n_textarea < max_textarea) {
             textarea_str[n_textarea] = Strnew();
           } else
@@ -1317,12 +1317,12 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           }
           break;
         case HTML_TITLE_ALT:
-          if (parsedtag_get_value(tag, ATTR_TITLE, &p))
+          if (tag->parsedtag_get_value(ATTR_TITLE, &p))
             layout->title = html_unquote(p);
           break;
         case HTML_SYMBOL:
           effect |= PC_SYMBOL;
-          if (parsedtag_get_value(tag, ATTR_TYPE, &p))
+          if (tag->parsedtag_get_value(ATTR_TYPE, &p))
             symbol = (char)atoi(p);
           break;
         case HTML_N_SYMBOL:
@@ -1334,7 +1334,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
         }
 #ifdef ID_EXT
         id = NULL;
-        if (parsedtag_get_value(tag, ATTR_ID, &id)) {
+        if (tag->parsedtag_get_value(ATTR_ID, &id)) {
           id = url_quote_conv(id, name_charset);
           layout->registerName(id, layout->currentLn(), pos);
         }

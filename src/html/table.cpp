@@ -4,7 +4,7 @@
 #include "readbuffer.h"
 #include "html_parser.h"
 #include "symbol.h"
-#include "htmlcommand.h"
+#include "html_command.h"
 #include "terms.h"
 #include "textlist.h"
 #include <sys/types.h>
@@ -13,7 +13,7 @@
 #include <math.h>
 #include "table.h"
 #include "html.h"
-#include "htmltag.h"
+#include "html_tag.h"
 #include "Str.h"
 #include "myctype.h"
 #include "entity.h"
@@ -679,7 +679,7 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
       const char *p = l->ptr;
       struct HtmlTag *tag;
       if ((tag = HtmlTag::parse(&p, true)) != NULL)
-        parsedtag_get_value(tag, ATTR_TID, &id);
+        tag->parsedtag_get_value(ATTR_TID, &id);
       if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
         int alignment;
         TextLineListItem *ti;
@@ -2399,7 +2399,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     tbl->flag &= ~TBL_IN_COL;
     align = 0;
     valign = 0;
-    if (parsedtag_get_value(tag, ATTR_ALIGN, &i)) {
+    if (tag->parsedtag_get_value(ATTR_ALIGN, &i)) {
       switch (i) {
       case ALIGN_LEFT:
         align = (HTT_LEFT | HTT_TRSET);
@@ -2412,7 +2412,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
         break;
       }
     }
-    if (parsedtag_get_value(tag, ATTR_VALIGN, &i)) {
+    if (tag->parsedtag_get_value(ATTR_VALIGN, &i)) {
       switch (i) {
       case VALIGN_TOP:
         valign = (HTT_TOP | HTT_VTRSET);
@@ -2426,7 +2426,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
       }
     }
 #ifdef ID_EXT
-    if (parsedtag_get_value(tag, ATTR_ID, &p)) {
+    if (tag->parsedtag_get_value(ATTR_ID, &p)) {
       check_row(tbl, tbl->row);
       tbl->tridvalue[tbl->row] = Strnew_charp(p);
     }
@@ -2477,7 +2477,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
       valign = (tbl->trattr & HTT_VALIGN);
     else
       valign = HTT_MIDDLE;
-    if (parsedtag_get_value(tag, ATTR_ROWSPAN, &rowspan)) {
+    if (tag->parsedtag_get_value(ATTR_ROWSPAN, &rowspan)) {
       if (rowspan < 0 || rowspan > ATTR_ROWSPAN_MAX)
         rowspan = ATTR_ROWSPAN_MAX;
       if ((tbl->row + rowspan - 1) >= MAXROW_LIMIT)
@@ -2487,7 +2487,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     }
     if (rowspan < 1)
       rowspan = 1;
-    if (parsedtag_get_value(tag, ATTR_COLSPAN, &colspan)) {
+    if (tag->parsedtag_get_value(ATTR_COLSPAN, &colspan)) {
       if ((tbl->col + colspan) >= MAXCOL) {
         /* Can't expand column */
         colspan = MAXCOL - tbl->col;
@@ -2495,7 +2495,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     }
     if (colspan < 1)
       colspan = 1;
-    if (parsedtag_get_value(tag, ATTR_ALIGN, &i)) {
+    if (tag->parsedtag_get_value(ATTR_ALIGN, &i)) {
       switch (i) {
       case ALIGN_LEFT:
         align = HTT_LEFT;
@@ -2508,7 +2508,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
         break;
       }
     }
-    if (parsedtag_get_value(tag, ATTR_VALIGN, &i)) {
+    if (tag->parsedtag_get_value(ATTR_VALIGN, &i)) {
       switch (i) {
       case VALIGN_TOP:
         valign = HTT_TOP;
@@ -2526,7 +2526,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
       tbl->tabattr[tbl->row][tbl->col] |= HTT_NOWRAP;
 #endif /* NOWRAP */
     v = 0;
-    if (parsedtag_get_value(tag, ATTR_WIDTH, &v)) {
+    if (tag->parsedtag_get_value(ATTR_WIDTH, &v)) {
 #ifdef TABLE_EXPAND
       if (v > 0) {
         if (tbl->real_width > 0)
@@ -2539,7 +2539,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
 #endif /* not TABLE_EXPAND */
     }
 #ifdef ID_EXT
-    if (parsedtag_get_value(tag, ATTR_ID, &p))
+    if (tag->parsedtag_get_value(ATTR_ID, &p))
       tbl->tabidvalue[tbl->row][tbl->col] = Strnew_charp(p);
 #endif /* ID_EXT */
 #ifdef NOWRAP
@@ -2800,8 +2800,8 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     table_close_anchor0(tbl, mode);
     anchor = NULL;
     i = 0;
-    parsedtag_get_value(tag, ATTR_HREF, &anchor);
-    parsedtag_get_value(tag, ATTR_HSEQ, &i);
+    tag->parsedtag_get_value(ATTR_HREF, &anchor);
+    tag->parsedtag_get_value(ATTR_HSEQ, &i);
     if (anchor) {
       check_rowcol(tbl, mode);
       if (i == 0) {
@@ -2896,7 +2896,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     break;
   case HTML_TABLE_ALT:
     id = -1;
-    parsedtag_get_value(tag, ATTR_TID, &id);
+    tag->parsedtag_get_value(ATTR_TID, &id);
     if (id >= 0 && id < tbl->ntable) {
       struct table *tbl1 = tbl->tables[id].ptr;
       feed_table_block_tag(tbl, line, mode, 0, cmd);

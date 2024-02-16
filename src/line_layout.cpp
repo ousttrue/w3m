@@ -1,6 +1,6 @@
 #include "line_layout.h"
 #include "etc.h"
-#include "html/htmltag.h"
+#include "html/html_tag.h"
 #include "linklist.h"
 #include "app.h"
 #include "url_quote.h"
@@ -420,8 +420,8 @@ void LineLayout::gotoRealLine(int n) {
   }
 }
 
-Anchor *LineLayout::registerForm(HtmlParser *parser, FormList *flist, HtmlTag *tag, int line,
-                                 int pos) {
+Anchor *LineLayout::registerForm(HtmlParser *parser, FormList *flist,
+                                 HtmlTag *tag, int line, int pos) {
   auto fi = flist->formList_addInput(parser, tag);
   if (!fi) {
     return NULL;
@@ -1192,19 +1192,19 @@ void LineLayout::addLink(struct HtmlTag *tag) {
   char type = LINK_TYPE_NONE;
   LinkList *l;
 
-  parsedtag_get_value(tag, ATTR_HREF, &href);
+  tag->parsedtag_get_value(ATTR_HREF, &href);
   if (href)
     href = Strnew(url_quote(remove_space(href)))->ptr;
-  parsedtag_get_value(tag, ATTR_TITLE, &title);
-  parsedtag_get_value(tag, ATTR_TYPE, &ctype);
-  parsedtag_get_value(tag, ATTR_REL, &rel);
+  tag->parsedtag_get_value(ATTR_TITLE, &title);
+  tag->parsedtag_get_value(ATTR_TYPE, &ctype);
+  tag->parsedtag_get_value(ATTR_REL, &rel);
   if (rel != NULL) {
     /* forward link type */
     type = LINK_TYPE_REL;
     if (title == NULL)
       title = rel;
   }
-  parsedtag_get_value(tag, ATTR_REV, &rev);
+  tag->parsedtag_get_value(ATTR_REV, &rev);
   if (rev != NULL) {
     /* reverse link type */
     type = LINK_TYPE_REV;
