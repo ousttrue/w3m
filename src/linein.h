@@ -35,8 +35,18 @@ struct Str;
 using IncFunc = int (*)(int ch, Str *buf, Lineprop *prop);
 using OnInput = std::function<void(const char *input)>;
 
+using KeyCallback = std::function<void(char)>;
+
 class LineInput {
+  std::array<KeyCallback, 32> InputKeymap;
+
+  int use_hist;
+  void _prev(char);
+  void _next(char);
+  void _esc(char);
+
 public:
+  LineInput();
   void inputLineHistSearch(const char *prompt, const char *def_str,
                            InputFlags flag, Hist *hist, IncFunc incFunc,
                            const OnInput &onInput);

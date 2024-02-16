@@ -61,10 +61,7 @@ static void _bsw(char);
 static void killn(char);
 static void killb(char);
 static void _inbrk(char);
-static void _esc(char);
 static void _editor(char);
-static void _prev(char);
-static void _next(char);
 static void _compl(char);
 static void _tcompl(char);
 static void _dcompl(char);
@@ -78,46 +75,48 @@ static void next_compl(int next);
 static void next_dcompl(int next);
 static Str *doComplete(Str *ifn, int *status, int next);
 
-/* *INDENT-OFF* */
-using KeyCallback = std::function<void(char)>;
-KeyCallback InputKeymap[32] = {
-    /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
-    _compl,
-    _mvB,
-    _mvL,
-    _inbrk,
-    delC,
-    _mvE,
-    _mvR,
-    _inbrk,
-    /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
-    _bs,
-    iself,
-    _enter,
-    killn,
-    iself,
-    _enter,
-    _next,
-    _editor,
-    /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
-    _prev,
-    _quo,
-    _bsw,
-    iself,
-    _mvLw,
-    killb,
-    _quo,
-    _bsw,
-    /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
-    _tcompl,
-    _mvRw,
-    iself,
-    _esc,
-    iself,
-    iself,
-    iself,
-    iself,
-};
+LineInput::LineInput() {
+  /* *INDENT-OFF* */
+  InputKeymap = {
+      /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
+      _compl,
+      _mvB,
+      _mvL,
+      _inbrk,
+      delC,
+      _mvE,
+      _mvR,
+      _inbrk,
+      /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
+      _bs,
+      iself,
+      _enter,
+      killn,
+      iself,
+      _enter,
+      std::bind(&LineInput::_next, this, std::placeholders::_1),
+      _editor,
+      /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
+      std::bind(&LineInput::_prev, this, std::placeholders::_1),
+      _quo,
+      _bsw,
+      iself,
+      _mvLw,
+      killb,
+      _quo,
+      _bsw,
+      /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
+      _tcompl,
+      _mvRw,
+      iself,
+      std::bind(&LineInput::_esc, this, std::placeholders::_1),
+      iself,
+      iself,
+      iself,
+      iself,
+  };
+}
+
 /* *INDENT-ON* */
 
 static int setStrType(Str *str, Lineprop *prop);
@@ -132,7 +131,6 @@ static int move_word;
 
 static Hist *CurrentHist;
 static Str *strCurrentBuf;
-static int use_hist;
 
 void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
                                     InputFlags flag, Hist *hist,
@@ -339,7 +337,7 @@ static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
   }
 }
 
-static void _esc(char) {
+void LineInput::_esc(char) {
   char c;
 
   switch (c = getch()) {
@@ -820,7 +818,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
   return CompleteBuf;
 }
 
-static void _prev(char) {
+void LineInput::_prev(char) {
   Hist *hist = CurrentHist;
   const char *p;
 
@@ -843,7 +841,7 @@ static void _prev(char) {
   offset = 0;
 }
 
-static void _next(char) {
+void LineInput::_next(char) {
   Hist *hist = CurrentHist;
   const char *p;
 
