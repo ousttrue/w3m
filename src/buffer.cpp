@@ -999,31 +999,32 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
   auto fi = (FormItemList *)a->url;
 
   switch (fi->type) {
-  case FORM_INPUT_TEXT:
+  case FORM_INPUT_TEXT: {
     if (submit) {
       return this->do_submit(fi, a);
     }
     if (fi->readonly)
       disp_message_nsec("Read only field!", 1, true);
-    LineInput("TEXT:", TextHist)
-        .inputStrHist(
-            fi->value ? fi->value->ptr : nullptr, [fi, a](const char *p) {
-              if (p == nullptr || fi->readonly) {
-                return;
-                // break;
-              }
-              fi->value = Strnew_charp(p);
-              formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
-              if (fi->accept || fi->parent->nitems == 1) {
-                auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
-                if (buf) {
-                  App::instance().pushBuffer(buf, a->target);
-                }
-                return;
-              }
-              App::instance().invalidate();
-            });
-    break;
+    auto input = LineInput::inputStrHist(
+        "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
+        [fi, a](const char *p) {
+          if (p == nullptr || fi->readonly) {
+            return;
+            // break;
+          }
+          fi->value = Strnew_charp(p);
+          formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
+          if (fi->accept || fi->parent->nitems == 1) {
+            auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
+            if (buf) {
+              App::instance().pushBuffer(buf, a->target);
+            }
+            return;
+          }
+          App::instance().invalidate();
+        });
+    input->run();
+  } break;
 
   case FORM_INPUT_FILE:
     if (submit) {

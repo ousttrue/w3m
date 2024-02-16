@@ -31,8 +31,9 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(const char *prompt, Hist *hist, IncFunc incrfunc)
-    : prompt(prompt), incrfunc(incrfunc) {
+LineInput::LineInput(const char *prompt, Hist *hist, const OnInput &onInput,
+                     IncFunc incrfunc)
+    : prompt(prompt), onInput(onInput), incrfunc(incrfunc) {
   opos = get_strwidth(prompt);
   epos = (COLS() - 2) - opos;
   if (epos < 0) {
@@ -88,31 +89,42 @@ LineInput::LineInput(const char *prompt, Hist *hist, IncFunc incrfunc)
   };
 }
 
-void LineInput::inputLineHistSearch(const char *def_str, InputFlags _flag,
-                                    const OnInput &onInput) {
-  this->flag = _flag;
+std::shared_ptr<LineInput>
+LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
+                               Hist *hist, InputFlags flag,
+                               const OnInput &onInput, IncFunc incrfunc) {
+
+  auto input = std::shared_ptr<LineInput>(
+      new LineInput(prompt, hist, onInput, incrfunc));
+
+  input->flag = flag;
   if (flag & IN_URL) {
-    cm_mode = CPL_ALWAYS | CPL_URL;
+    input->cm_mode = CPL_ALWAYS | CPL_URL;
   } else if (flag & IN_FILENAME) {
-    cm_mode = CPL_ALWAYS;
+    input->cm_mode = CPL_ALWAYS;
   } else if (flag & IN_PASSWORD) {
-    cm_mode = CPL_NEVER;
-    is_passwd = true;
-    move_word = false;
+    input->cm_mode = CPL_NEVER;
+    input->is_passwd = true;
+    input->move_word = false;
   } else if (flag & IN_COMMAND)
-    cm_mode = CPL_ON;
+    input->cm_mode = CPL_ON;
   else {
-    cm_mode = CPL_OFF;
+    input->cm_mode = CPL_OFF;
   }
 
   if (def_str) {
-    strBuf = Strnew_charp(def_str);
-    CLen = CPos = setStrType(strBuf, strProp);
+    input->strBuf = Strnew_charp(def_str);
+    input->CLen = input->CPos =
+        input->setStrType(input->strBuf, input->strProp);
   } else {
-    strBuf = Strnew();
-    CLen = CPos = 0;
+    input->strBuf = Strnew();
+    input->CLen = input->CPos = 0;
   }
 
+  return input;
+}
+
+void LineInput::run() {
   draw();
   while (i_cont) {
 
@@ -846,10 +858,10 @@ void LineInput::_editor(char) {
   App::instance().invalidate();
 }
 
-void LineInput::inputAnswer(const OnInput &onInput) {
+std::shared_ptr<LineInput> LineInput::inputAnswer(const OnInput &onInput) {
   if (IsForkChild) {
     onInput("n");
-    return;
+    return {};
   }
 
   // if (!fmInitialized) {
@@ -858,7 +870,7 @@ void LineInput::inputAnswer(const OnInput &onInput) {
   //   onInput(Strfgets(stdin)->ptr);
   //   return;
   // }
+  // term_raw();
 
-  term_raw();
-  inputChar(onInput);
+  return inputChar("(y/n)?", onInput);
 }

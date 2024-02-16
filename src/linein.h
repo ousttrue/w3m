@@ -2,6 +2,7 @@
 #include "line.h"
 #include <functional>
 #include <string>
+#include <memory>
 
 #define STR_LEN 1024
 
@@ -47,6 +48,7 @@ class LineInput {
   int lpos = 0;
   int rpos = 0;
   InputFlags flag = {};
+  OnInput onInput;
 
   std::array<KeyCallback, 32> InputKeymap;
   Hist *CurrentHist = nullptr;
@@ -119,39 +121,57 @@ class LineInput {
   bool dispatch(char c);
   void draw();
 
+  LineInput(const char *prompt, Hist *hist, const OnInput &onInput,
+            IncFunc incrfunc);
+
 public:
-  LineInput(const char *prompt, Hist *hist, IncFunc incrfunc = {});
-  void inputLineHistSearch(const char *def_str, InputFlags flag,
-                           const OnInput &onInput);
+  LineInput(const LineInput &) = delete;
+  LineInput &operator=(const LineInput &) = delete;
+  void run();
 
-  inline void inputLineHist(const char *d, InputFlags f,
-                            const OnInput &onInput) {
-    inputLineHistSearch(d, f, onInput);
+  static std::shared_ptr<LineInput>
+  inputLineHistSearch(const char *prompt, const char *def_str, Hist *hist,
+                      InputFlags flag, const OnInput &onInput,
+                      IncFunc incrfunc = {});
+
+  static std::shared_ptr<LineInput> inputLineHist(const char *prompt,
+                                                  const char *def_str,
+                                                  Hist *hist, InputFlags f,
+                                                  const OnInput &onInput) {
+    return inputLineHistSearch(prompt, def_str, hist, f, onInput);
   }
 
-  inline void inputLine(const char *d, InputFlags f, const OnInput &onInput) {
-    inputLineHist(d, f, onInput);
+  static std::shared_ptr<LineInput> inputLine(const char *prompt, const char *d,
+                                              InputFlags f,
+                                              const OnInput &onInput) {
+    return inputLineHist(prompt, d, {}, f, onInput);
   }
 
-  inline void inputStr(const char *d, const OnInput &onInput) {
-    inputLine(d, IN_STRING, onInput);
+  static std::shared_ptr<LineInput> inputStr(const char *prompt, const char *d,
+                                             const OnInput &onInput) {
+    return inputLine(prompt, d, IN_STRING, onInput);
   }
 
-  inline void inputStrHist(const char *d, const OnInput &onInput) {
-    inputLineHist(d, IN_STRING, onInput);
+  static std::shared_ptr<LineInput> inputStrHist(const char *prompt,
+                                                 const char *d, Hist *hist,
+                                                 const OnInput &onInput) {
+    return inputLineHist(prompt, d, hist, IN_STRING, onInput);
   }
 
-  inline void inputFilename(const char *d, const OnInput &onInput) {
-    inputLine(d, IN_FILENAME, onInput);
+  static std::shared_ptr<LineInput>
+  inputFilename(const char *prompt, const char *d, const OnInput &onInput) {
+    return inputLine(prompt, d, IN_FILENAME, onInput);
   }
 
-  inline void inputFilenameHist(const char *d, const OnInput &onInput) {
-    inputLineHist(d, IN_FILENAME, onInput);
+  static std::shared_ptr<LineInput>
+  inputFilenameHist(const char *prompt, const char *d, const OnInput &onInput) {
+    return inputLineHist(prompt, d, {}, IN_FILENAME, onInput);
   }
 
-  inline void inputChar(const OnInput &onInput) {
-    inputLine("", IN_CHAR, onInput);
+  static std::shared_ptr<LineInput> inputChar(const char *prompt,
+                                              const OnInput &onInput) {
+    return inputLine(prompt, "", IN_CHAR, onInput);
   }
 
-  void inputAnswer(const OnInput &onInput);
+  static std::shared_ptr<LineInput> inputAnswer(const OnInput &onInput);
 };
