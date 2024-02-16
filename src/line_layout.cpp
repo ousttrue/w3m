@@ -419,7 +419,7 @@ void LineLayout::gotoRealLine(int n) {
 
 Anchor *LineLayout::registerForm(FormList *flist, HtmlTag *tag, int line,
                                  int pos) {
-  auto fi = formList_addInput(flist, tag);
+  auto fi = flist->formList_addInput(tag);
   if (!fi) {
     return NULL;
   }

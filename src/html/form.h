@@ -37,6 +37,7 @@
       * within one document */
 
 struct FormItemList;
+struct HtmlTag;
 struct FormList {
   FormItemList *item;
   FormItemList *lastitem;
@@ -50,31 +51,13 @@ struct FormList {
   char *body;
   char *boundary;
   unsigned long length;
-};
 
-struct FormItemList {
-  int type;
-  Str *name;
-  Str *value;
-  Str *init_value;
-  int checked, init_checked;
-  int accept;
-  int size;
-  int rows;
-  int maxlength;
-  int readonly;
-  FormList *parent;
-  FormItemList *next;
-
-  Str *query_from_followform();
-  void query_from_followform_multipart();
+  FormItemList *formList_addInput(HtmlTag *tag);
 };
 
 FormList *newFormList(const char *action, const char *method,
                       const char *charset, const char *enctype,
                       const char *target, const char *name, FormList *_next);
-struct HtmlTag;
-struct FormItemList *formList_addInput(FormList *fl, HtmlTag *tag);
 
 struct Buffer;
 struct Anchor;

@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "form_item.h"
 #include "app.h"
 #include "http_response.h"
 #include "auth_pass.h"
@@ -82,16 +83,12 @@ struct FormList *newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *formList_addInput(FormList *fl, struct HtmlTag *tag) {
-  FormItemList *item;
-  char *p;
-  int i;
-
+FormItemList *FormList ::formList_addInput(struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
-  if (fl == NULL)
-    return NULL;
+  // if (fl == NULL)
+  //   return NULL;
 
-  item = (FormItemList *)New(FormItemList);
+  auto item = (FormItemList *)New(FormItemList);
   item->type = FORM_UNKNOWN;
   item->size = -1;
   item->rows = 0;
@@ -100,6 +97,7 @@ FormItemList *formList_addInput(FormList *fl, struct HtmlTag *tag) {
   item->name = NULL;
   item->value = item->init_value = NULL;
   item->readonly = 0;
+  char *p;
   if (parsedtag_get_value(tag, ATTR_TYPE, &p)) {
     item->type = formtype(p);
     if (item->size < 0 &&
@@ -116,6 +114,7 @@ FormItemList *formList_addInput(FormList *fl, struct HtmlTag *tag) {
   parsedtag_get_value(tag, ATTR_SIZE, &item->size);
   parsedtag_get_value(tag, ATTR_MAXLENGTH, &item->maxlength);
   item->readonly = parsedtag_exists(tag, ATTR_READONLY);
+  int i;
   if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
       i < max_textarea)
     item->value = item->init_value = textarea_str[i];
@@ -129,17 +128,18 @@ FormItemList *formList_addInput(FormList *fl, struct HtmlTag *tag) {
     /* security hole ! */
     return NULL;
   }
-  item->parent = fl;
+  item->parent = this;
   item->next = NULL;
-  if (fl->item == NULL) {
-    fl->item = fl->lastitem = item;
+  if (!this->item) {
+    this->item = this->lastitem = item;
   } else {
-    fl->lastitem->next = item;
-    fl->lastitem = item;
+    this->lastitem->next = item;
+    this->lastitem = item;
   }
-  if (item->type == FORM_INPUT_HIDDEN)
+  if (item->type == FORM_INPUT_HIDDEN) {
     return NULL;
-  fl->nitems++;
+  }
+  this->nitems++;
   return item;
 }
 

@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "html/form_item.h"
 #include "app.h"
 #include "url_stream.h"
 #include "tabbuffer.h"
@@ -888,12 +889,10 @@ static int terminated(unsigned char c) {
 }
 
 static void _editor(void) {
-  FormItemList fi;
-  char *p;
-
   if (is_passwd)
     return;
 
+  FormItemList fi;
   fi.readonly = false;
   fi.value = strBuf->Strdup();
   Strcat_char(fi.value, '\n');
@@ -901,7 +900,7 @@ static void _editor(void) {
   input_textarea(&fi);
 
   strBuf = Strnew();
-  for (p = fi.value->ptr; *p; p++) {
+  for (auto p = fi.value->ptr; *p; p++) {
     if (*p == '\r' || *p == '\n')
       continue;
     Strcat_char(strBuf, *p);

@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "html/form_item.h"
 #include "app.h"
 #include "buffer.h"
 #include "line_layout.h"

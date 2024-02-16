@@ -1,4 +1,5 @@
 #include "tabbuffer.h"
+#include "html/form_item.h"
 #include "buffer.h"
 #include "line_layout.h"
 #include "utf8.h"
