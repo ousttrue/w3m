@@ -38,6 +38,10 @@ nkf_dep = dependency('nkf')
 lua_dep = dependency('lua')
 libuv_dep = dependency('libuv')
 
+screen_dep = dependency('ftxui-screen')
+# dom_dep = dependency('ftxui-dom')
+# component_dep = dependency('ftxui-component')
+
 cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required: false)
 

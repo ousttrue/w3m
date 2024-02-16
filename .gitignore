@@ -48,3 +48,4 @@ Makefile
 !/subprojects/nkf.wrap
 !/subprojects/lua.wrap
 !/subprojects/libuv.wrap
+!/subprojects/ftxui.wrap

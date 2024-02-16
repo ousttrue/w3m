@@ -137,6 +137,7 @@ executable(
         nkf_dep,
         lua_dep,
         libuv_dep,
+        screen_dep,
     ],
     c_args: defs,
     cpp_args: defs,

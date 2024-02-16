@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "myctype.h"
 #include "termentry.h"
+#include <ftxui/screen/screen.hpp>
 
 static int max_LINES = 0;
 static int max_COLS = 0;
@@ -175,6 +176,41 @@ static int need_redraw(const Utf8 &c1, l_prop pr1, const Utf8 &c2, l_prop pr2) {
 }
 
 void refresh(FILE *ttyf) {
+  // using namespace ftxui;
+  auto screen = ftxui::Screen::Create(ftxui::Dimension::Fixed(COLS()),
+                                      ftxui::Dimension::Fixed(LINES()));
+
+  for (int y = 0; y <= LASTLINE(); y++) {
+    auto pc = ScreenImage[y]->lineimage;
+    auto pr = ScreenImage[y]->lineprop;
+    for (int x = 0; x < COLS(); x++) {
+      if (CHMODE(pr[x]) == C_WCHAR2) {
+      } else {
+        auto &pixel = screen.PixelAt(x, y);
+        auto &utf8 = pc[x];
+        if (utf8.view().size() == 0) {
+          pixel.character = " ";
+        } else {
+          pixel.character = pc[x].view();
+        }
+
+        auto p = pr[x];
+        pixel.inverted = p & S_STANDOUT;
+        pixel.underlined = p & S_UNDERLINE;
+        pixel.bold = p & S_BOLD;
+      }
+    }
+  }
+
+  term_move(0, 0);
+  auto str = screen.ToString();
+  fwrite(str.data(), str.size(), 1, ttyf);
+
+  term_move(CurLine, CurColumn);
+  flush_tty();
+}
+
+void _refresh(FILE *ttyf) {
   int line, col, pcol;
   int pline = CurLine;
   int moved = RF_NEED_TO_MOVE;
