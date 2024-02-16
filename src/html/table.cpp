@@ -653,7 +653,8 @@ static int get_spec_cell_width(struct table *tbl, int row, int col) {
   return w;
 }
 
-void do_refill(struct table *tbl, int row, int col, int maxlimit) {
+void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
+               int maxlimit) {
   TextList *orgdata;
   TextListItem *l;
   struct readbuffer obuf;
@@ -714,13 +715,13 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
         }
       }
     } else
-      HTMLlineproc1(l->ptr, &h_env);
+      parser->HTMLlineproc1(l->ptr, &h_env);
   }
   if (obuf.status != R_ST_NORMAL) {
     obuf.status = R_ST_EOL;
-    HTMLlineproc1("\n", &h_env);
+    parser->HTMLlineproc1("\n", &h_env);
   }
-  completeHTMLstream(&h_env, &obuf);
+  completeHTMLstream(parser, &h_env, &obuf);
   flushline(&h_env, &obuf, 0, 2, h_env.limit);
   if (tbl->border_mode == BORDER_NONE) {
     int rowspan = table_rowspan(tbl, row, col);
@@ -1534,7 +1535,7 @@ static int cotable_level;
 
 void initRenderTable(void) { cotable_level = 0; }
 
-static void renderCoTable(struct table *tbl, int maxlimit) {
+static void renderCoTable(HtmlParser *parser, struct table *tbl, int maxlimit) {
   struct readbuffer obuf;
   struct html_feed_environ h_env;
   struct environment envs[MAX_ENV_LEVEL];
@@ -1565,11 +1566,12 @@ static void renderCoTable(struct table *tbl, int maxlimit) {
       maxwidth = t->total_width;
     else
       maxwidth = t->total_width = -t->total_width * h_env.limit / 100;
-    renderTable(t, maxwidth, &h_env);
+    renderTable(parser, t, maxwidth, &h_env);
   }
 }
 
-static void make_caption(struct table *t, struct html_feed_environ *h_env) {
+static void make_caption(HtmlParser *parser, struct table *t,
+                         struct html_feed_environ *h_env) {
   struct html_feed_environ henv;
   struct readbuffer obuf;
   struct environment envs[MAX_ENV_LEVEL];
@@ -1584,21 +1586,21 @@ static void make_caption(struct table *t, struct html_feed_environ *h_env) {
     limit = h_env->limit;
   init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(), limit,
             h_env->envs[h_env->envc].indent);
-  HTMLlineproc1("<center>", &henv);
-  HTMLlineproc0(t->caption->ptr, &henv, false);
-  HTMLlineproc1("</center>", &henv);
+  parser->HTMLlineproc1("<center>", &henv);
+  parser->HTMLlineproc0(t->caption->ptr, &henv, false);
+  parser->HTMLlineproc1("</center>", &henv);
 
   if (t->total_width < henv.maxlimit)
     t->total_width = henv.maxlimit;
   limit = h_env->limit;
   h_env->limit = t->total_width;
-  HTMLlineproc1("<center>", h_env);
-  HTMLlineproc0(t->caption->ptr, h_env, false);
-  HTMLlineproc1("</center>", h_env);
+  parser->HTMLlineproc1("<center>", h_env);
+  parser->HTMLlineproc0(t->caption->ptr, h_env, false);
+  parser->HTMLlineproc1("</center>", h_env);
   h_env->limit = limit;
 }
 
-void renderTable(struct table *t, int max_width,
+void renderTable(HtmlParser *parser, struct table *t, int max_width,
                  struct html_feed_environ *h_env) {
   int i, j, w, r, h;
   Str *renderbuf;
@@ -1618,7 +1620,7 @@ void renderTable(struct table *t, int max_width,
 
   t->total_height = 0;
   if (t->maxcol < 0) {
-    make_caption(t, h_env);
+    make_caption(parser, t, h_env);
     return;
   }
 
@@ -1705,14 +1707,14 @@ void renderTable(struct table *t, int max_width,
   for (i = 0; i <= t->maxcol; i++)
     t->tabwidth[i] = ceil_at_intervals(t->tabwidth[i], rulewidth);
 
-  renderCoTable(t, h_env->limit);
+  renderCoTable(parser, t, h_env->limit);
 
   for (i = 0; i <= t->maxcol; i++) {
     for (j = 0; j <= t->maxrow; j++) {
       check_row(t, j);
       if (t->tabattr[j][i] & HTT_Y)
         continue;
-      do_refill(t, j, i, h_env->limit);
+      do_refill(parser, t, j, i, h_env->limit);
     }
   }
 
@@ -1762,13 +1764,13 @@ void renderTable(struct table *t, int max_width,
   /* table output */
   width = t->total_width;
 
-  make_caption(t, h_env);
+  make_caption(parser, t, h_env);
 
-  HTMLlineproc1("<pre for_table>", h_env);
+  parser->HTMLlineproc1("<pre for_table>", h_env);
 #ifdef ID_EXT
   if (t->id != NULL) {
     idtag = Sprintf("<_id id=\"%s\">", html_quote((t->id)->ptr));
-    HTMLlineproc1(idtag->ptr, h_env);
+    parser->HTMLlineproc1(idtag->ptr, h_env);
   }
 #endif /* ID_EXT */
   switch (t->border_mode) {
@@ -1869,7 +1871,7 @@ void renderTable(struct table *t, int max_width,
     t->total_width = 1;
     push_render_image(renderbuf, 1, t->total_width, h_env);
   }
-  HTMLlineproc1("</pre>", h_env);
+  parser->HTMLlineproc1("</pre>", h_env);
 }
 
 #ifdef TABLE_NO_COMPACT

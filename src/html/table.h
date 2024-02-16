@@ -1,8 +1,6 @@
 #pragma once
 #include "line.h"
 
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
-
 extern int symbol_width;
 extern int symbol_width0;
 
@@ -167,16 +165,17 @@ struct table_mode {
 };
 
 struct TextLine;
+class HtmlParser;
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, const char *data);
 extern int visible_length(const char *str);
 extern void align(TextLine *lbuf, int width, int mode);
 extern void print_item(struct table *t, int row, int col, int width, Str *buf);
 extern void print_sep(struct table *t, int row, int type, int maxcol, Str *buf);
-extern void do_refill(struct table *tbl, int row, int col, int maxlimit);
+extern void do_refill(HtmlParser *parser, struct table *tbl, int row, int col, int maxlimit);
 
 extern void initRenderTable(void);
-extern void renderTable(struct table *t, int max_width,
+extern void renderTable(HtmlParser *parser, struct table *t, int max_width,
                         struct html_feed_environ *h_env);
 extern struct table *begin_table(int border, int spacing, int padding,
                                  int vspace);

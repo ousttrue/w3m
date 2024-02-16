@@ -198,13 +198,25 @@ void save_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void restore_fonteffect(html_feed_environ *h_env, readbuffer *obuf);
 void push_render_image(Str *str, int width, int limit,
                        html_feed_environ *h_env);
+
 struct HtmlTag;
-int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
-void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
-                   int internal);
+class HtmlParser {
+public:
+  void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
+                     int internal);
+
+  void HTMLlineproc1(const char *x, struct html_feed_environ *y) {
+    HTMLlineproc0(x, y, true);
+  }
+
+private:
+  int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
+};
+
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, TextLineList *, int, int);
-void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
+void completeHTMLstream(HtmlParser *parser, struct html_feed_environ *,
+                        struct readbuffer *);
 
 Str *romanNumeral(int n);
 Str *romanAlphabet(int n);
