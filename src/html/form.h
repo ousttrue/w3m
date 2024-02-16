@@ -61,8 +61,7 @@ struct AnchorList;
 struct LineLayout;
 char *form2str(FormItemList *fi);
 int formtype(const char *typestr);
-void formRecheckRadio(Anchor *a, const std::shared_ptr<Buffer> &buf,
-                      FormItemList *form);
+void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
 void formResetBuffer(LineLayout *layout, AnchorList *formitem);
 void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form);
 void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf);

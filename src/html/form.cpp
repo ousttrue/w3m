@@ -174,14 +174,10 @@ int formtype(const char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(Anchor *a, const std::shared_ptr<Buffer> &buf,
-                      FormItemList *fi) {
-  Anchor *a2;
-  FormItemList *f2;
-
+void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
   for (size_t i = 0; i < buf->layout.formitem()->size(); i++) {
-    a2 = &buf->layout.formitem()->anchors[i];
-    f2 = (FormItemList *)a2->url;
+    auto a2 = &buf->layout.formitem()->anchors[i];
+    auto f2 = (FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
@@ -784,7 +780,7 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
           break;
         case FORM_INPUT_RADIO:
           if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
-            formRecheckRadio(a, buf, fi);
+            formRecheckRadio(a, buf.get(), fi);
           break;
         }
       }

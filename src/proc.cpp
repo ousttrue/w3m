@@ -721,7 +721,14 @@ void followI() {
 /* submit form */
 // SUBMIT
 //"Submit form"
-void submitForm() { CurrentTab->_followForm(true); }
+void submitForm() {
+  if (auto f = CurrentTab->currentBuffer()->layout.retrieveCurrentForm()) {
+    auto buf = CurrentTab->currentBuffer()->followForm(f, true);
+    if (buf) {
+      App::instance().pushBuffer(buf, f->target);
+    }
+  }
+}
 
 /* go to the top anchor */
 // LINK_BEGIN

@@ -521,12 +521,13 @@ void App::onFrame() {
     ldDL();
   }
 
-  if (_currentTab->currentBuffer()->layout.submit) {
-    Anchor *a = _currentTab->currentBuffer()->layout.submit;
+  if (auto a = _currentTab->currentBuffer()->layout.submit) {
     _currentTab->currentBuffer()->layout.submit = NULL;
     _currentTab->currentBuffer()->layout.gotoLine(a->start.line);
     _currentTab->currentBuffer()->layout.pos = a->start.pos;
-    _currentTab->_followForm(true);
+    if (auto buf = _currentTab->currentBuffer()->followForm(a, true)) {
+      pushBuffer(buf, a->target);
+    }
   }
 
   if (_dirty > 0) {

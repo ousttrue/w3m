@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "linein.h"
 #include "symbol.h"
 #include "file_util.h"
 #include "history.h"
@@ -985,4 +986,139 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
     disp_err_message("Can't send form because of illegal method.");
     return {};
   }
+}
+
+std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
+  // if (!currentBuffer()->layout.firstLine) {
+  //   return {};
+  // }
+
+  // auto a = currentBuffer()->layout.retrieveCurrentForm();
+  if (!a) {
+    return {};
+  }
+  auto fi = (FormItemList *)a->url;
+
+  switch (fi->type) {
+  case FORM_INPUT_TEXT:
+    if (submit) {
+      return this->do_submit(fi, a);
+    }
+    if (fi->readonly)
+      disp_message_nsec("Read only field!", 1, true);
+    inputStrHist("TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
+                 [fi, a](const char *p) {
+                   if (p == nullptr || fi->readonly) {
+                     return;
+                     // break;
+                   }
+                   fi->value = Strnew_charp(p);
+                   formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout,
+                                    fi);
+                   if (fi->accept || fi->parent->nitems == 1) {
+                     auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
+                     if (buf) {
+                       App::instance().pushBuffer(buf, a->target);
+                     }
+                     return;
+                   }
+                   App::instance().invalidate();
+                 });
+    break;
+
+  case FORM_INPUT_FILE:
+    if (submit) {
+      return this->do_submit(fi, a);
+    }
+
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", 1, true);
+    }
+
+    // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : nullptr,
+    // nullptr); if (p == nullptr || fi->readonly)
+    //   break;
+    //
+    // fi->value = Strnew_charp(p);
+    // formUpdateBuffer(a, Currentbuf, fi);
+    // if (fi->accept || fi->parent->nitems == 1)
+    //   goto do_submit;
+    break;
+
+  case FORM_INPUT_PASSWORD:
+    if (submit) {
+      return this->do_submit(fi, a);
+    }
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", 1, true);
+      break;
+    }
+    // p = inputLine("Password:", fi->value ? fi->value->ptr : nullptr,
+    // IN_PASSWORD);
+    // if (p == nullptr)
+    //   break;
+    // fi->value = Strnew_charp(p);
+    formUpdateBuffer(a, &this->layout, fi);
+    if (fi->accept) {
+      return this->do_submit(fi, a);
+    }
+    break;
+
+  case FORM_TEXTAREA:
+    if (submit) {
+      return this->do_submit(fi, a);
+    }
+    if (fi->readonly)
+      disp_message_nsec("Read only field!", 1, true);
+    input_textarea(fi);
+    formUpdateBuffer(a, &this->layout, fi);
+    break;
+
+  case FORM_INPUT_RADIO:
+    if (submit) {
+      return this->do_submit(fi, a);
+    }
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", 1, true);
+      break;
+    }
+    formRecheckRadio(a, this, fi);
+    break;
+
+  case FORM_INPUT_CHECKBOX:
+    if (submit) {
+      return this->do_submit(fi, a);
+    }
+    if (fi->readonly) {
+      disp_message_nsec("Read only field!", 1, true);
+      break;
+    }
+    fi->checked = !fi->checked;
+    formUpdateBuffer(a, &this->layout, fi);
+    break;
+  case FORM_INPUT_IMAGE:
+  case FORM_INPUT_SUBMIT:
+  case FORM_INPUT_BUTTON:
+    return this->do_submit(fi, a);
+
+  case FORM_INPUT_RESET:
+    for (size_t i = 0; i < this->layout.formitem()->size(); i++) {
+      auto a2 = &this->layout.formitem()->anchors[i];
+      auto f2 = (FormItemList *)a2->url;
+      if (f2->parent == fi->parent && f2->name && f2->value &&
+          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
+          f2->type != FORM_INPUT_RESET) {
+        f2->value = f2->init_value;
+        f2->checked = f2->init_checked;
+        formUpdateBuffer(a2, &this->layout, f2);
+      }
+    }
+    break;
+
+  case FORM_INPUT_HIDDEN:
+  default:
+    break;
+  }
+
+  return {};
 }

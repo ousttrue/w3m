@@ -264,166 +264,6 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
   return newbuf;
 }
 
-std::shared_ptr<Buffer> TabBuffer::_followForm(int submit) {
-  if (!currentBuffer()->layout.firstLine) {
-    return {};
-  }
-
-  auto a = currentBuffer()->layout.retrieveCurrentForm();
-  if (!a) {
-    return {};
-  }
-  auto fi = (FormItemList *)a->url;
-
-  switch (fi->type) {
-  case FORM_INPUT_TEXT:
-    if (submit) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-    if (fi->readonly)
-      disp_message_nsec("Read only field!", 1, true);
-    inputStrHist("TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
-                 [fi, a](const char *p) {
-                   if (p == nullptr || fi->readonly) {
-                     return;
-                     // break;
-                   }
-                   fi->value = Strnew_charp(p);
-                   formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout,
-                                    fi);
-                   if (fi->accept || fi->parent->nitems == 1) {
-                     auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
-                     if (buf) {
-                       App::instance().pushBuffer(buf, a->target);
-                     }
-                     return;
-                   }
-                   App::instance().invalidate();
-                 });
-    break;
-
-  case FORM_INPUT_FILE:
-    if (submit) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-
-    if (fi->readonly)
-      disp_message_nsec("Read only field!", 1, true);
-
-    // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : nullptr,
-    // nullptr); if (p == nullptr || fi->readonly)
-    //   break;
-    //
-    // fi->value = Strnew_charp(p);
-    // formUpdateBuffer(a, Currentbuf, fi);
-    // if (fi->accept || fi->parent->nitems == 1)
-    //   goto do_submit;
-    break;
-  case FORM_INPUT_PASSWORD:
-    if (submit) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-    if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
-      break;
-    }
-    // p = inputLine("Password:", fi->value ? fi->value->ptr : nullptr,
-    // IN_PASSWORD);
-    // if (p == nullptr)
-    //   break;
-    // fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, &currentBuffer()->layout, fi);
-    if (fi->accept) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-    break;
-  case FORM_TEXTAREA:
-    if (submit) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-    if (fi->readonly)
-      disp_message_nsec("Read only field!", 1, true);
-    input_textarea(fi);
-    formUpdateBuffer(a, &currentBuffer()->layout, fi);
-    break;
-  case FORM_INPUT_RADIO:
-    if (submit) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-    if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
-      break;
-    }
-    formRecheckRadio(a, currentBuffer(), fi);
-    break;
-  case FORM_INPUT_CHECKBOX:
-    if (submit) {
-      auto buf = this->currentBuffer()->do_submit(fi, a);
-      if (buf) {
-        App::instance().pushBuffer(buf, a->target);
-      }
-      return buf;
-    }
-    if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
-      break;
-    }
-    fi->checked = !fi->checked;
-    formUpdateBuffer(a, &currentBuffer()->layout, fi);
-    break;
-  case FORM_INPUT_IMAGE:
-  case FORM_INPUT_SUBMIT:
-  case FORM_INPUT_BUTTON:
-    if (auto buf = this->currentBuffer()->do_submit(fi, a)) {
-      App::instance().pushBuffer(buf, a->target);
-    }
-    break;
-
-  case FORM_INPUT_RESET:
-    for (size_t i = 0; i < currentBuffer()->layout.formitem()->size(); i++) {
-      auto a2 = &currentBuffer()->layout.formitem()->anchors[i];
-      auto f2 = (FormItemList *)a2->url;
-      if (f2->parent == fi->parent && f2->name && f2->value &&
-          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
-          f2->type != FORM_INPUT_RESET) {
-        f2->value = f2->init_value;
-        f2->checked = f2->init_checked;
-        formUpdateBuffer(a2, &currentBuffer()->layout, f2);
-      }
-    }
-    break;
-  case FORM_INPUT_HIDDEN:
-  default:
-    break;
-  }
-
-  return {};
-}
-
 std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
   if (!this->currentBuffer()->layout.firstLine) {
     return {};
@@ -431,7 +271,15 @@ std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
 
   auto a = this->currentBuffer()->layout.retrieveCurrentAnchor();
   if (!a) {
-    return this->_followForm(false);
+    if (auto f = this->currentBuffer()->layout.retrieveCurrentForm()) {
+      auto buf = this->currentBuffer()->followForm(f, false);
+      if (buf) {
+        App::instance().pushBuffer(buf, f->target);
+      }
+      return buf;
+    } else {
+      return {};
+    }
   }
 
   if (*a->url == '#') { /* index within this buffer */
