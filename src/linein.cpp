@@ -134,9 +134,9 @@ static Hist *CurrentHist;
 static Str *strCurrentBuf;
 static int use_hist;
 
-void inputLineHistSearch(const char *prompt, const char *def_str,
-                         InputFlags flag, Hist *hist, IncFunc incrfunc,
-                         const OnInput &onInput) {
+void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
+                                    InputFlags flag, Hist *hist,
+                                    IncFunc incrfunc, const OnInput &onInput) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
@@ -917,11 +917,7 @@ static void _editor(char) {
   App::instance().invalidate();
 }
 
-inline void inputChar(const char *p, const OnInput &onInput) {
-  inputLine(p, "", IN_CHAR, onInput);
-}
-
-void inputAnswer(const char *prompt, const OnInput &onInput) {
+void LineInput::inputAnswer(const char *prompt, const OnInput &onInput) {
   if (IsForkChild) {
     onInput("n");
     return;

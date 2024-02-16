@@ -34,40 +34,46 @@ struct Hist;
 struct Str;
 using IncFunc = int (*)(int ch, Str *buf, Lineprop *prop);
 using OnInput = std::function<void(const char *input)>;
-void inputLineHistSearch(const char *prompt, const char *def_str,
-                         InputFlags flag, Hist *hist, IncFunc incFunc,
-                         const OnInput &onInput);
 
-inline void inputLineHist(const char *p, const char *d, InputFlags f, Hist *h,
-                          const OnInput &onInput) {
-  inputLineHistSearch(p, d, f, h, nullptr, onInput);
-}
+class LineInput {
+public:
+  void inputLineHistSearch(const char *prompt, const char *def_str,
+                           InputFlags flag, Hist *hist, IncFunc incFunc,
+                           const OnInput &onInput);
 
-inline void inputLine(const char *p, const char *d, InputFlags f,
-                      const OnInput &onInput) {
-  inputLineHist(p, d, f, nullptr, onInput);
-}
+  inline void inputLineHist(const char *p, const char *d, InputFlags f, Hist *h,
+                            const OnInput &onInput) {
+    inputLineHistSearch(p, d, f, h, nullptr, onInput);
+  }
 
-inline void inputStr(const char *p, const char *d, const OnInput &onInput) {
-  inputLine(p, d, IN_STRING, onInput);
-}
+  inline void inputLine(const char *p, const char *d, InputFlags f,
+                        const OnInput &onInput) {
+    inputLineHist(p, d, f, nullptr, onInput);
+  }
 
-// TODO:
-inline void inputStrHist(const char *p, const char *d, Hist *h,
-                         const OnInput &onInput) {
-  inputLineHist(p, d, IN_STRING, h, onInput);
-}
+  inline void inputStr(const char *p, const char *d, const OnInput &onInput) {
+    inputLine(p, d, IN_STRING, onInput);
+  }
 
-inline void inputFilename(const char *p, const char *d,
-                          const OnInput &onInput) {
-  inputLine(p, d, IN_FILENAME, onInput);
-}
+  // TODO:
+  inline void inputStrHist(const char *p, const char *d, Hist *h,
+                           const OnInput &onInput) {
+    inputLineHist(p, d, IN_STRING, h, onInput);
+  }
 
-inline void inputFilenameHist(const char *p, const char *d, Hist *h,
-                              const OnInput &onInput) {
-  inputLineHist(p, d, IN_FILENAME, h, onInput);
-}
+  inline void inputFilename(const char *p, const char *d,
+                            const OnInput &onInput) {
+    inputLine(p, d, IN_FILENAME, onInput);
+  }
 
-void inputAnswer(const char *prompt, const OnInput &onInput);
+  inline void inputFilenameHist(const char *p, const char *d, Hist *h,
+                                const OnInput &onInput) {
+    inputLineHist(p, d, IN_FILENAME, h, onInput);
+  }
 
-Str *unescape_spaces(Str *s);
+  inline void inputChar(const char *p, const OnInput &onInput) {
+    inputLine(p, "", IN_CHAR, onInput);
+  }
+
+  void inputAnswer(const char *prompt, const OnInput &onInput);
+};

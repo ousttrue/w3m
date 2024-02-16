@@ -19,3 +19,4 @@ const char *last_modified(const std::shared_ptr<Buffer> &buf);
 int do_recursive_mkdir(const char *dir);
 int exec_cmd(const std::string &cmd);
 const char *remove_space(const char *str);
+Str *unescape_spaces(Str *s);

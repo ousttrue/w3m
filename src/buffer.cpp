@@ -1005,7 +1005,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     }
     if (fi->readonly)
       disp_message_nsec("Read only field!", 1, true);
-    inputStrHist("TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
+    LineInput().inputStrHist("TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
                  [fi, a](const char *p) {
                    if (p == nullptr || fi->readonly) {
                      return;
