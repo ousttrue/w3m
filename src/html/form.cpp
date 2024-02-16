@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "html_parser.h"
 #include "form_item.h"
 #include "app.h"
 #include "http_response.h"
@@ -27,9 +28,6 @@
 #include "proto.h"
 #include <unistd.h>
 #include <sys/stat.h>
-
-extern Str **textarea_str;
-extern int max_textarea;
 
 /* *INDENT-OFF* */
 struct {
@@ -83,7 +81,7 @@ struct FormList *newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *FormList ::formList_addInput(struct HtmlTag *tag) {
+FormItemList *FormList ::formList_addInput(HtmlParser *parser, struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
   //   return NULL;
@@ -116,8 +114,8 @@ FormItemList *FormList ::formList_addInput(struct HtmlTag *tag) {
   item->readonly = tag->parsedtag_exists(ATTR_READONLY);
   int i;
   if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
-      i < max_textarea)
-    item->value = item->init_value = textarea_str[i];
+      i < parser->max_textarea)
+    item->value = item->init_value = parser->textarea_str[i];
   if (parsedtag_get_value(tag, ATTR_ROWS, &p))
     item->rows = atoi(p);
   if (item->type == FORM_UNKNOWN) {

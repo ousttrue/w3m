@@ -32,10 +32,6 @@
 #define FORM_ENCTYPE_URLENCODED 0
 #define FORM_ENCTYPE_MULTIPART 1
 
-#define MAX_TEXTAREA                                                           \
-  10 /* max number of <textarea>..</textarea>                                  \
-      * within one document */
-
 struct FormItemList;
 struct HtmlTag;
 struct FormList {
@@ -52,7 +48,7 @@ struct FormList {
   char *boundary;
   unsigned long length;
 
-  FormItemList *formList_addInput(HtmlTag *tag);
+  FormItemList *formList_addInput(struct HtmlParser *parser, HtmlTag *tag);
 };
 
 FormList *newFormList(const char *action, const char *method,

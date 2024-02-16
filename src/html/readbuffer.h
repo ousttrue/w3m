@@ -214,7 +214,6 @@ enum CleanupMode {
 };
 void cleanup_line(Str *s, CleanupMode mode);
 
-const char *remove_space(const char *str);
 extern int is_boundary(unsigned char *, unsigned char *);
 
 void loadBuffer(HttpResponse *res, LineLayout *layout);

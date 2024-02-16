@@ -2241,7 +2241,7 @@ static void table_close_select(HtmlParser *parser, struct table *tbl,
 
 static void table_close_textarea(HtmlParser *parser, struct table *tbl,
                                  struct table_mode *mode, int width) {
-  Str *tmp = process_n_textarea(parser);
+  Str *tmp = parser->process_n_textarea();
   mode->pre_mode &= ~TBLM_INTXTA;
   mode->end_tag = 0;
   feed_table1(parser, tbl, tmp, mode, width);
@@ -2748,13 +2748,13 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
     break;
   case HTML_FORM:
     feed_table_block_tag(tbl, "", mode, 0, cmd);
-    tmp = process_form(tag);
+    tmp = parser->process_form(tag);
     if (tmp)
       feed_table1(parser, tbl, tmp, mode, width);
     break;
   case HTML_N_FORM:
     feed_table_block_tag(tbl, "", mode, 0, cmd);
-    process_n_form();
+    parser->process_n_form();
     break;
   case HTML_INPUT:
     tmp = process_input(parser, tag);
@@ -2790,7 +2790,7 @@ static int feed_table_tag(HtmlParser *parser, struct table *tbl,
       if (tbl->fixed_width[tbl->col] > 0)
         w = tbl->fixed_width[tbl->col];
     }
-    tmp = process_textarea(tag, w);
+    tmp = parser->process_textarea(tag, w);
     if (tmp)
       feed_table1(parser, tbl, tmp, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
@@ -3023,7 +3023,7 @@ int feed_table(HtmlParser *parser, struct table *tbl, const char *line,
   if (mode->pre_mode & TBLM_STYLE)
     return -1;
   if (mode->pre_mode & TBLM_INTXTA) {
-    feed_textarea(line);
+    parser->feed_textarea(line);
     return -1;
   }
   if (mode->pre_mode & TBLM_INSELECT) {

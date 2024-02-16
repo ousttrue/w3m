@@ -179,7 +179,8 @@ public:
   Anchor *registerImg(const char *url, const char *title, int line, int pos) {
     return this->img()->putAnchor(url, NULL, {}, title, '\0', line, pos);
   }
-  Anchor *registerForm(FormList *flist, HtmlTag *tag, int line, int pos);
+  Anchor *registerForm(struct HtmlParser *parser, FormList *flist, HtmlTag *tag,
+                       int line, int pos);
   void addMultirowsForm(AnchorList *al);
   void reseq_anchor();
   const char *reAnchorPos(Line *l, const char *p1, const char *p2,
@@ -194,6 +195,8 @@ public:
   Anchor *retrieveCurrentImg();
   Anchor *retrieveCurrentForm();
   const char *getAnchorText(AnchorList *al, Anchor *a);
+
+  void addLink(struct HtmlTag *tag);
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

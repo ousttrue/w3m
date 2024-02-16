@@ -40,12 +40,50 @@ class HtmlParser {
   int cur_status = {};
 
 public:
+  HtmlParser();
   Str *process_select(HtmlTag *tag);
   Str *process_n_select();
   void process_option();
   void feed_select(const char *str);
 
+  // Str *process_select(HtmlTag *tag);
+  // void process_option(HtmlParser *parser);
+  // Str *process_textarea(HtmlTag *tag, int width);
+  // Str *process_n_textarea(HtmlParser *parser);
+  // void feed_textarea(const char *str);
+  // Str *process_form(HtmlTag *tag);
+  // Str *process_n_form(void);
+
+private:
+  // form
+  struct FormList **forms = {};
+  int *form_stack = {};
+  int form_max = -1;
+  int forms_size = 0;
+  int form_sp = -1;
+
+  // textarea
+  Str *cur_textarea = {};
+  int cur_textarea_size = {};
+  int cur_textarea_rows = {};
+  int cur_textarea_readonly = {};
+  int n_textarea = 0;
+  int ignore_nl_textarea = {};
+
 public:
+  Str **textarea_str = {};
+  int max_textarea = 10;
+  Str *process_form_int(struct HtmlTag *tag, int fid);
+  Str *process_n_form();
+  Str *process_form(struct HtmlTag *tag) { return process_form_int(tag, -1); }
+  int cur_form_id() const {
+    return ((form_sp >= 0) ? form_stack[form_sp] : -1);
+  }
+
+  Str *process_textarea(struct HtmlTag *tag, int width);
+  Str *process_n_textarea();
+  void feed_textarea(const char *str);
+
   void push_tag(struct readbuffer *obuf, const char *cmdname, int cmd);
 
   void push_nchars(struct readbuffer *obuf, int width, const char *str, int len,
@@ -86,6 +124,9 @@ public:
   }
 
   Str *getLinkNumberStr(int correction) const;
+
+  void HTMLlineproc2body(struct HttpResponse *res, struct LineLayout *layout,
+                         Str *(*feed)(), int llimit);
 
 private:
   int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);

@@ -116,11 +116,5 @@ Str *process_anchor(HtmlParser *parser, HtmlTag *tag, const char *tagbuf);
 Str *process_input(HtmlParser *parser, HtmlTag *tag);
 Str *process_button(HtmlParser *parser, HtmlTag *tag);
 Str *process_n_button(void);
-Str *process_select(HtmlTag *tag);
-void process_option(HtmlParser *parser);
-Str *process_textarea(HtmlTag *tag, int width);
-Str *process_n_textarea(HtmlParser *parser);
-void feed_textarea(const char *str);
-Str *process_form(HtmlTag *tag);
-Str *process_n_form(void);
+
 int getMetaRefreshParam(const char *q, Str **refresh_uri);
