@@ -1,7 +1,7 @@
 #include "app.h"
 #include "screen.h"
 #include "ssl_util.h"
-#include "form.h"
+#include "html/form.h"
 #include "message.h"
 #include "http_response.h"
 #include "local_cgi.h"

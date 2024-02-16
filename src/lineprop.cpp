@@ -1,5 +1,5 @@
 #include "lineprop.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "Str.h"
 #include "myctype.h"
 #include "alloc.h"

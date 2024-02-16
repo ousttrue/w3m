@@ -8,7 +8,7 @@
 #include "screen.h"
 #include "terms.h"
 #include "display.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "w3m.h"
 #include "buffer.h"
 #include "signal_util.h"

@@ -1,6 +1,6 @@
 #include "auth_digest.h"
 #include "http_request.h"
-#include "form.h"
+#include "html/form.h"
 #include "http_auth.h"
 #include "Str.h"
 #include "myctype.h"

@@ -9,16 +9,11 @@
 #include "w3m.h"
 #include "myctype.h"
 #include "url_stream.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "mimehead.h"
 #include "terms.h"
 #include "func.h"
 #include "etc.h"
-
-// #include "form.h"
-// #include "display.h"
-// #include "buffer.h"
-// #include "http_session.h"
 
 #include <strings.h>
 #include <unistd.h>

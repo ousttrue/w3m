@@ -1,6 +1,6 @@
 #include "symbol.h"
 #include "Str.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "ctrlcode.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"

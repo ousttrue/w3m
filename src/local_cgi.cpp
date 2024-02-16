@@ -9,7 +9,7 @@
 #include "w3m.h"
 #include "http_request.h"
 #include "etc.h"
-#include "form.h"
+#include "html/form.h"
 #include "signal_util.h"
 #include "alloc.h"
 #include "proto.h"

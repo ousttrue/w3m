@@ -10,9 +10,9 @@
 #include <fcntl.h>
 
 #include "cookie.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "matchattr.h"
-#include "anchor.h"
+#include "html/anchor.h"
 #include "rc.h"
 #include "w3m.h"
 #include "terms.h"

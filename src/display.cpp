@@ -8,7 +8,7 @@
 #include "symbol.h"
 #include "message.h"
 #include "w3m.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "screen.h"
 #include "rc.h"
 #include "utf8.h"
@@ -16,7 +16,7 @@
 #include "buffer.h"
 #include "textlist.h"
 #include "ctrlcode.h"
-#include "anchor.h"
+#include "html/anchor.h"
 #include "signal_util.h"
 #include "proto.h"
 #include <math.h>

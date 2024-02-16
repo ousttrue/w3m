@@ -18,7 +18,7 @@
 #include "mimetypes.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
-#include "form.h"
+#include "html/form.h"
 #include "etc.h"
 #include "url.h"
 #include "w3m.h"

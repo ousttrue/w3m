@@ -6,8 +6,8 @@
 #include "url.h"
 #include "message.h"
 #include "terms.h"
-#include "anchor.h"
-#include "form.h"
+#include "html/anchor.h"
+#include "html/form.h"
 #include "regex.h"
 #include "alloc.h"
 

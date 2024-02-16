@@ -3,7 +3,7 @@
 #include "http_response.h"
 #include "http_request.h"
 #include "auth_digest.h"
-#include "form.h"
+#include "html/form.h"
 #include "screen.h"
 #include "w3m.h"
 #include "message.h"

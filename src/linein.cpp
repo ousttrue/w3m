@@ -12,7 +12,7 @@
 #include "buffer.h"
 #include "terms.h"
 #include "proto.h"
-#include "form.h"
+#include "html/form.h"
 #include "ctrlcode.h"
 #include "local_cgi.h"
 #include "myctype.h"

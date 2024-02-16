@@ -1,6 +1,6 @@
 #include "loaddirectory.h"
 #include "url_stream.h"
-#include "readbuffer.h"
+#include "html/readbuffer.h"
 #include "terms.h"
 #include "Str.h"
 #include "etc.h"

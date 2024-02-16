@@ -5,7 +5,7 @@
 #include "textlist.h"
 #include "rc.h"
 #include "cookie.h"
-#include "form.h"
+#include "html/form.h"
 #include "http_auth.h"
 #include "auth_pass.h"
 #include "myctype.h"
