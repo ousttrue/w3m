@@ -27,75 +27,42 @@ typedef struct direct Directory;
 bool space_autocomplete = false;
 bool emacs_like_lineedit = false;
 
-#define STR_LEN 1024
-
-static Str *strBuf;
-static Lineprop strProp[STR_LEN];
-
-static Str *CompleteBuf;
-static Str *CFileName;
-static Str *CBeforeBuf;
-static Str *CAfterBuf;
-static Str *CDirBuf;
-static char **CFileBuf = NULL;
-static int NCFileBuf;
-static int NCFileOffset;
-
 static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
-
-static void _mvR(char);
-static void _mvL(char);
-static void delC(char);
-static void insC(char);
-static void _mvB(char);
-static void _mvE(char);
-static void _enter(char);
-static void _quo(char);
-static void _bs(char);
-static void killn(char);
-static void killb(char);
-static void _inbrk(char);
-static void _tcompl(char);
-
-static int terminated(unsigned char c);
-// #define iself ((void (*)(char))insertself)
-
-static Str *doComplete(Str *ifn, int *status, int next);
 
 LineInput::LineInput() {
   /* *INDENT-OFF* */
   InputKeymap = {
       /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
       std::bind(&LineInput::_compl, this, std::placeholders::_1),
-      _mvB,
-      _mvL,
-      _inbrk,
-      delC,
-      _mvE,
-      _mvR,
-      _inbrk,
+      std::bind(&LineInput::_mvB, this, std::placeholders::_1),
+      std::bind(&LineInput::_mvL, this, std::placeholders::_1),
+      std::bind(&LineInput::_inbrk, this, std::placeholders::_1),
+      std::bind(&LineInput::delC, this, std::placeholders::_1),
+      std::bind(&LineInput::_mvE, this, std::placeholders::_1),
+      std::bind(&LineInput::_mvR, this, std::placeholders::_1),
+      std::bind(&LineInput::_inbrk, this, std::placeholders::_1),
       /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o     */
-      _bs,
+      std::bind(&LineInput::_bs, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
-      _enter,
-      killn,
+      std::bind(&LineInput::_enter, this, std::placeholders::_1),
+      std::bind(&LineInput::killn, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
-      _enter,
+      std::bind(&LineInput::_enter, this, std::placeholders::_1),
       std::bind(&LineInput::_next, this, std::placeholders::_1),
       std::bind(&LineInput::_editor, this, std::placeholders::_1),
       /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
       std::bind(&LineInput::_prev, this, std::placeholders::_1),
-      _quo,
+      std::bind(&LineInput::_quo, this, std::placeholders::_1),
       std::bind(&LineInput::_bsw, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
       std::bind(&LineInput::_mvLw, this, std::placeholders::_1),
-      killb,
-      _quo,
+      std::bind(&LineInput::killb, this, std::placeholders::_1),
+      std::bind(&LineInput::_quo, this, std::placeholders::_1),
       std::bind(&LineInput::_bsw, this, std::placeholders::_1),
       /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
-      _tcompl,
+      std::bind(&LineInput::_tcompl, this, std::placeholders::_1),
       std::bind(&LineInput::_mvRw, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
       std::bind(&LineInput::_esc, this, std::placeholders::_1),
@@ -105,15 +72,6 @@ LineInput::LineInput() {
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
   };
 }
-
-/* *INDENT-ON* */
-
-static void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
-static void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
-
-static int CPos, CLen, offset;
-static int i_cont, i_broken, i_quote;
-static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
 
 void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
                                     InputFlags flag, Hist *hist,
@@ -271,7 +229,8 @@ void LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
   }
 }
 
-static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
+void LineInput::addPasswd(char *p, Lineprop *pr, int len, int offset,
+                          int limit) {
   auto ncol = bytePosToColumn(p, pr, len, len, 0, false);
   if (ncol > offset + limit) {
     ncol = offset + limit;
@@ -285,7 +244,7 @@ static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
     addChar('*', 0);
 }
 
-static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
+void LineInput::addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
   int i = 0, rcol = 0, ncol, delta = 1;
 
   if (offset) {
@@ -366,7 +325,7 @@ void LineInput::_esc(char) {
   }
 }
 
-static void insC(char) {
+void LineInput::insC(char) {
   int i;
 
   Strinsert_char(strBuf, CPos, ' ');
@@ -376,7 +335,7 @@ static void insC(char) {
   }
 }
 
-static void delC(char) {
+void LineInput::delC(char) {
   int i = CPos;
   int delta = 1;
 
@@ -389,7 +348,7 @@ static void delC(char) {
   CLen -= delta;
 }
 
-static void _mvL(char) {
+void LineInput::_mvL(char) {
   if (CPos > 0)
     CPos--;
 }
@@ -414,12 +373,12 @@ void LineInput::_mvRw(char) {
   }
 }
 
-static void _mvR(char) {
+void LineInput::_mvR(char) {
   if (CPos < CLen)
     CPos++;
 }
 
-static void _bs(char) {
+void LineInput::_bs(char) {
   if (CPos > 0) {
     _mvL({});
     delC({});
@@ -435,7 +394,7 @@ void LineInput::_bsw(char) {
   }
 }
 
-static void _enter(char) { i_cont = false; }
+void LineInput::_enter(char) { i_cont = false; }
 
 void LineInput::insertself(char c) {
   if (CLen >= STR_LEN)
@@ -446,23 +405,23 @@ void LineInput::insertself(char c) {
   CPos++;
 }
 
-static void _quo(char) { i_quote = true; }
+void LineInput::_quo(char) { i_quote = true; }
 
-static void _mvB(char) { CPos = 0; }
+void LineInput::_mvB(char) { CPos = 0; }
 
-static void _mvE(char) { CPos = CLen; }
+void LineInput::_mvE(char) { CPos = CLen; }
 
-static void killn(char) {
+void LineInput::killn(char) {
   CLen = CPos;
   Strtruncate(strBuf, CLen);
 }
 
-static void killb(char) {
+void LineInput::killb(char) {
   while (CPos > 0)
     _bs({});
 }
 
-static void _inbrk(char) {
+void LineInput::_inbrk(char) {
   i_cont = false;
   i_broken = true;
 }
@@ -471,7 +430,7 @@ void LineInput::_compl(char) { next_compl(1); }
 
 void LineInput::_rcompl(char) { next_compl(-1); }
 
-static void _tcompl(char) {
+void LineInput::_tcompl(char) {
   if (cm_mode & CPL_OFF)
     cm_mode = CPL_ON;
   else if (cm_mode & CPL_ON)
@@ -668,27 +627,7 @@ static Str *escape_spaces(Str *s) {
   return s;
 }
 
-Str *unescape_spaces(Str *s) {
-  Str *tmp = NULL;
-  char *p;
-
-  if (s == NULL)
-    return s;
-  for (p = s->ptr; *p; p++) {
-    if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp;
-  return s;
-}
-
-static Str *doComplete(Str *ifn, int *status, int next) {
+Str *LineInput::doComplete(Str *ifn, int *status, int next) {
   int fl, i;
   const char *fn, *p;
   DIR *d;
@@ -860,7 +799,7 @@ int LineInput::setStrType(Str *str, Lineprop *prop) {
   return i;
 }
 
-static int terminated(unsigned char c) {
+int LineInput::terminated(unsigned char c) {
   int termchar[] = {'/', '&', '?', ' ', -1};
   int *tp;
 

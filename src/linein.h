@@ -2,6 +2,8 @@
 #include "line.h"
 #include <functional>
 
+#define STR_LEN 1024
+
 extern bool space_autocomplete;
 extern bool emacs_like_lineedit;
 
@@ -45,7 +47,41 @@ class LineInput {
   bool need_redraw = false;
   bool is_passwd = false;
   bool use_hist = false;
+  int cm_mode = {};
+  int cm_next = {};
+  int cm_clear = {};
+  int cm_disp_next = {};
+  int cm_disp_clear = {};
+  int i_cont = {};
+  int i_broken = {};
+  int i_quote = {};
+  int CPos = {};
+  int CLen = {};
+  int offset = {};
+  Str *strBuf;
+  Lineprop strProp[STR_LEN];
+  Str *CompleteBuf;
+  Str *CFileName;
+  Str *CBeforeBuf;
+  Str *CAfterBuf;
+  Str *CDirBuf;
+  char **CFileBuf = NULL;
+  int NCFileBuf;
+  int NCFileOffset;
 
+  void killb(char);
+  void killn(char);
+  void _mvE(char);
+  void _mvB(char);
+  void _bs(char);
+  void _mvR(char);
+  void _mvL(char);
+  void delC(char);
+  void insC(char);
+  void _inbrk(char);
+  void _quo(char);
+  void _enter(char);
+  void _tcompl(char);
   void _prev(char);
   void _next(char);
   void _esc(char);
@@ -59,9 +95,13 @@ class LineInput {
   void _dcompl(char);
   void _rdcompl(char);
 
+  Str *doComplete(Str *ifn, int *status, int next);
   int setStrType(Str *str, Lineprop *prop);
   void next_compl(int next);
   void next_dcompl(int next);
+  void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
+  void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
+  int terminated(unsigned char c);
 
 public:
   LineInput();
