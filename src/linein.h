@@ -15,6 +15,21 @@ enum InputFlags {
   IN_CHAR = 0x200,
 };
 
+enum CompletionStatus {
+  CPL_OK = 0,
+  CPL_AMBIG = 1,
+  CPL_FAIL = 2,
+  CPL_MENU = 3,
+};
+
+enum CompletionModes {
+  CPL_NEVER = 0x0,
+  CPL_OFF = 0x1,
+  CPL_ON = 0x2,
+  CPL_ALWAYS = 0x4,
+  CPL_URL = 0x8,
+};
+
 struct Hist;
 struct Str;
 using IncFunc = int (*)(int ch, Str *buf, Lineprop *prop);

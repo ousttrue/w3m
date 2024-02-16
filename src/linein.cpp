@@ -24,23 +24,10 @@
 #include <sys/dir.h>
 typedef struct direct Directory;
 
-/* Completion status. */
-#define CPL_OK 0
-#define CPL_AMBIG 1
-#define CPL_FAIL 2
-#define CPL_MENU 3
-
-#define CPL_NEVER 0x0
-#define CPL_OFF 0x1
-#define CPL_ON 0x2
-#define CPL_ALWAYS 0x4
-#define CPL_URL 0x8
-
 bool space_autocomplete = false;
 bool emacs_like_lineedit = false;
 
 #define STR_LEN 1024
-#define CLEN (COLS() - 2)
 
 static Str *strBuf;
 static Lineprop strProp[STR_LEN];
@@ -58,21 +45,42 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-static void insertself(char c), _mvR(void), _mvL(void), _mvRw(void),
-    _mvLw(void), delC(void), insC(void), _mvB(void), _mvE(void), _enter(void),
-    _quo(void), _bs(void), _bsw(void), killn(void), killb(void), _inbrk(void),
-    _esc(void), _editor(void), _prev(void), _next(void), _compl(void),
-    _tcompl(void), _dcompl(void), _rdcompl(void), _rcompl(void);
+static void insertself(char c);
+static void _mvR(char);
+static void _mvL(char);
+static void _mvRw(char);
+static void _mvLw(char);
+static void delC(char);
+static void insC(char);
+static void _mvB(char);
+static void _mvE(char);
+static void _enter(char);
+static void _quo(char);
+static void _bs(char);
+static void _bsw(char);
+static void killn(char);
+static void killb(char);
+static void _inbrk(char);
+static void _esc(char);
+static void _editor(char);
+static void _prev(char);
+static void _next(char);
+static void _compl(char);
+static void _tcompl(char);
+static void _dcompl(char);
+static void _rdcompl(char);
+static void _rcompl(char);
 
 static int terminated(unsigned char c);
-#define iself ((void (*)())insertself)
+#define iself ((void (*)(char))insertself)
 
 static void next_compl(int next);
 static void next_dcompl(int next);
 static Str *doComplete(Str *ifn, int *status, int next);
 
 /* *INDENT-OFF* */
-void (*InputKeymap[32])() = {
+using KeyCallback = std::function<void(char)>;
+KeyCallback InputKeymap[32] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
     _compl,
     _mvB,
@@ -156,7 +164,7 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
   else
     cm_mode = CPL_OFF;
   opos = get_strwidth(prompt);
-  epos = CLEN - opos;
+  epos = (COLS() - 2) - opos;
   if (epos < 0)
     epos = 0;
   lpos = epos / 3;
@@ -210,25 +218,25 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
                       (c == CTRL_I || (space_autocomplete && c == ' '))) ||
                      ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
       if (emacs_like_lineedit && cm_next) {
-        _dcompl();
+        _dcompl({});
         need_redraw = true;
       } else {
-        _compl();
+        _compl({});
         cm_disp_next = -1;
       }
     } else if (!i_quote && CLen == CPos &&
                (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
       if (!emacs_like_lineedit) {
-        _dcompl();
+        _dcompl({});
         need_redraw = true;
       }
     } else if (!i_quote && c == DEL_CODE) {
-      _bs();
+      _bs({});
       cm_next = false;
       cm_disp_next = -1;
     } else if (!i_quote && c < 0x20) { /* Control code */
       if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20) {
-        auto callback = (void (*)(char c))InputKeymap[(int)c];
+        auto callback = InputKeymap[(int)c];
         callback(c);
       }
       if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
@@ -243,7 +251,7 @@ void inputLineHistSearch(const char *prompt, const char *def_str,
       cm_disp_next = -1;
       if (CLen >= STR_LEN)
         goto next_char;
-      insC();
+      insC({});
       strBuf->ptr[CPos] = c;
       if (!is_passwd && get_mctype((const char *)&c) == PC_CTRL)
         strProp[CPos] = PC_CTRL;
@@ -331,7 +339,7 @@ static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
   }
 }
 
-static void _esc(void) {
+static void _esc(char) {
   char c;
 
   switch (c = getch()) {
@@ -339,49 +347,49 @@ static void _esc(void) {
   case 'O':
     switch (c = getch()) {
     case 'A':
-      _prev();
+      _prev({});
       break;
     case 'B':
-      _next();
+      _next({});
       break;
     case 'C':
-      _mvR();
+      _mvR({});
       break;
     case 'D':
-      _mvL();
+      _mvL({});
       break;
     }
     break;
   case CTRL_I:
   case ' ':
     if (emacs_like_lineedit) {
-      _rdcompl();
+      _rdcompl({});
       cm_clear = false;
       need_redraw = true;
     } else
-      _rcompl();
+      _rcompl({});
     break;
   case CTRL_D:
     if (!emacs_like_lineedit)
-      _rdcompl();
+      _rdcompl({});
     need_redraw = true;
     break;
   case 'f':
     if (emacs_like_lineedit)
-      _mvRw();
+      _mvRw({});
     break;
   case 'b':
     if (emacs_like_lineedit)
-      _mvLw();
+      _mvLw({});
     break;
   case CTRL_H:
     if (emacs_like_lineedit)
-      _bsw();
+      _bsw({});
     break;
   }
 }
 
-static void insC(void) {
+static void insC(char) {
   int i;
 
   Strinsert_char(strBuf, CPos, ' ');
@@ -391,7 +399,7 @@ static void insC(void) {
   }
 }
 
-static void delC(void) {
+static void delC(char) {
   int i = CPos;
   int delta = 1;
 
@@ -404,12 +412,12 @@ static void delC(void) {
   CLen -= delta;
 }
 
-static void _mvL(void) {
+static void _mvL(char) {
   if (CPos > 0)
     CPos--;
 }
 
-static void _mvLw(void) {
+static void _mvLw(char) {
   int first = 1;
   while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
     CPos--;
@@ -419,7 +427,7 @@ static void _mvLw(void) {
   }
 }
 
-static void _mvRw(void) {
+static void _mvRw(char) {
   int first = 1;
   while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
     CPos++;
@@ -429,64 +437,64 @@ static void _mvRw(void) {
   }
 }
 
-static void _mvR(void) {
+static void _mvR(char) {
   if (CPos < CLen)
     CPos++;
 }
 
-static void _bs(void) {
+static void _bs(char) {
   if (CPos > 0) {
-    _mvL();
-    delC();
+    _mvL({});
+    delC({});
   }
 }
 
-static void _bsw(void) {
+static void _bsw(char) {
   int t = 0;
   while (CPos > 0 && !t) {
-    _mvL();
+    _mvL({});
     t = (move_word && terminated(strBuf->ptr[CPos - 1]));
-    delC();
+    delC({});
   }
 }
 
-static void _enter(void) { i_cont = false; }
+static void _enter(char) { i_cont = false; }
 
 static void insertself(char c) {
   if (CLen >= STR_LEN)
     return;
-  insC();
+  insC({});
   strBuf->ptr[CPos] = c;
   strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
   CPos++;
 }
 
-static void _quo(void) { i_quote = true; }
+static void _quo(char) { i_quote = true; }
 
-static void _mvB(void) { CPos = 0; }
+static void _mvB(char) { CPos = 0; }
 
-static void _mvE(void) { CPos = CLen; }
+static void _mvE(char) { CPos = CLen; }
 
-static void killn(void) {
+static void killn(char) {
   CLen = CPos;
   Strtruncate(strBuf, CLen);
 }
 
-static void killb(void) {
+static void killb(char) {
   while (CPos > 0)
-    _bs();
+    _bs({});
 }
 
-static void _inbrk(void) {
+static void _inbrk(char) {
   i_cont = false;
   i_broken = true;
 }
 
-static void _compl(void) { next_compl(1); }
+static void _compl(char) { next_compl(1); }
 
-static void _rcompl(void) { next_compl(-1); }
+static void _rcompl(char) { next_compl(-1); }
 
-static void _tcompl(void) {
+static void _tcompl(char) {
   if (cm_mode & CPL_OFF)
     cm_mode = CPL_ON;
   else if (cm_mode & CPL_ON)
@@ -536,9 +544,9 @@ static void next_compl(int next) {
     CPos = CLen;
 }
 
-static void _dcompl(void) { next_dcompl(1); }
+static void _dcompl(char) { next_dcompl(1); }
 
-static void _rdcompl(void) { next_dcompl(-1); }
+static void _rdcompl(char) { next_dcompl(-1); }
 
 static void next_dcompl(int next) {
   static int col, row;
@@ -812,7 +820,7 @@ static Str *doComplete(Str *ifn, int *status, int next) {
   return CompleteBuf;
 }
 
-static void _prev(void) {
+static void _prev(char) {
   Hist *hist = CurrentHist;
   const char *p;
 
@@ -835,7 +843,7 @@ static void _prev(void) {
   offset = 0;
 }
 
-static void _next(void) {
+static void _next(char) {
   Hist *hist = CurrentHist;
   const char *p;
 
@@ -888,7 +896,7 @@ static int terminated(unsigned char c) {
   return 0;
 }
 
-static void _editor(void) {
+static void _editor(char) {
   if (is_passwd)
     return;
 
