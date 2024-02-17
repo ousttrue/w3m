@@ -49,3 +49,5 @@ Makefile
 !/subprojects/lua.wrap
 !/subprojects/libuv.wrap
 !/subprojects/ftxui.wrap
+!/subprojects/openssl.wrap
+!/subprojects/bdwgc.wrap
