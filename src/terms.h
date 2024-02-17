@@ -2,10 +2,7 @@
 #include <stddef.h>
 #include "utf8.h"
 #include "termentry.h"
-
-int LINES();
-int COLS();
-int LASTLINE();
+#include "rowcol.h"
 
 #define GRAPHIC_CHAR_ASCII 2
 #define GRAPHIC_CHAR_DEC 1
@@ -29,7 +26,7 @@ const char *ttyname_tty(void);
 void reset_tty(void);
 void set_int(void);
 void getTCstr(void);
-void setlinescols(void);
+RowCol getlinescols();
 TermEntry *initscr(void);
 int graph_ok(void);
 void crmode(void);

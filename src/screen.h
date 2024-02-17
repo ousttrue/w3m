@@ -1,6 +1,7 @@
 #pragma once
 #include "termentry.h"
 #include "utf8.h"
+#include "rowcol.h"
 #include <stdio.h>
 #include <functional>
 
@@ -46,15 +47,8 @@ struct Screen {
 
 struct TermEntry;
 
-struct RowCol {
-  int row;
-  int col;
-};
-
 class TermScreen {
   RowCol _size;
-  int COLS() const { return _size.col; }
-  int LINES() const { return _size.row; }
 
   TermEntry _entry;
 
@@ -84,6 +78,9 @@ class TermScreen {
   }
 
 public:
+  int COLS() const { return _size.col; }
+  int LINES() const { return _size.row; }
+  int LASTLINE() const { return (LINES() - 1); }
   void setupscreen(const RowCol &size, const TermEntry &entry);
   void clear();
   void _refresh(FILE *ttyf);

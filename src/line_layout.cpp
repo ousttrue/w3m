@@ -23,13 +23,13 @@ LineLayout::LineLayout() {
   this->_hmarklist = std::make_shared<HmarkerList>();
   this->_imarklist = std::make_shared<HmarkerList>();
 
-  this->COLS = ::COLS();
-  this->LINES = LASTLINE();
+  this->COLS = App::instance().COLS();
+  this->LINES = App::instance().LASTLINE();
 }
 
 LineLayout::LineLayout(int width) : width(width) {
-  this->COLS = ::COLS();
-  this->LINES = LASTLINE();
+  this->COLS = App::instance().COLS();
+  this->LINES = App::instance().LASTLINE();
 }
 
 void LineLayout::clearBuffer() {
@@ -1044,7 +1044,7 @@ const char *LineLayout::reAnchorAny(
   }
   for (l = MarkAllPages ? this->firstLine : this->topLine;
        l != NULL &&
-       (MarkAllPages || l->linenumber < this->topLine->linenumber + LASTLINE());
+       (MarkAllPages || l->linenumber < this->topLine->linenumber + App::instance().LASTLINE());
        l = l->next) {
     if (p && l->bpos) {
       continue;

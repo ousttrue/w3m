@@ -22,7 +22,9 @@
 bool displayLink = false;
 bool showLineNum = false;
 bool FoldLine = false;
-int _INIT_BUFFER_WIDTH() { return (COLS() - (showLineNum ? 6 : 1)); }
+int _INIT_BUFFER_WIDTH() {
+  return (App::instance().COLS() - (showLineNum ? 6 : 1));
+}
 int INIT_BUFFER_WIDTH() {
   return ((_INIT_BUFFER_WIDTH() > 0) ? _INIT_BUFFER_WIDTH() : 0);
 }
@@ -56,13 +58,14 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 
 static std::shared_ptr<Buffer> save_current_buf;
 
-static Str *make_lastline_link(const std::shared_ptr<Buffer> &buf,
+static Str *make_lastline_link(TermScreen *screen,
+                               const std::shared_ptr<Buffer> &buf,
                                const char *title, const char *url) {
   Str *s = NULL;
   Str *u;
   Url pu;
   const char *p;
-  int l = COLS() - 1, i;
+  int l = screen->COLS() - 1, i;
 
   if (title && *title) {
     s = Strnew_m_charp("[", title, "]", NULL);
@@ -89,16 +92,17 @@ static Str *make_lastline_link(const std::shared_ptr<Buffer> &buf,
     return s;
   }
   if (!s)
-    s = Strnew_size(COLS());
+    s = Strnew_size(screen->COLS());
   i = (l - 2) / 2;
   Strcat_charp_n(s, u->ptr, i);
   Strcat_charp(s, "..");
-  i = get_Str_strwidth(u) - (COLS() - 1 - get_Str_strwidth(s));
+  i = get_Str_strwidth(u) - (screen->COLS() - 1 - get_Str_strwidth(s));
   Strcat_charp(s, &u->ptr[i]);
   return s;
 }
 
-static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
+static Str *make_lastline_message(TermScreen *screen,
+                                  const std::shared_ptr<Buffer> &buf) {
   Str *msg;
   Str *s = NULL;
   int sl = 0;
@@ -115,11 +119,11 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
           p = a_img->title;
       }
       if (p || a)
-        s = make_lastline_link(buf, p, a ? a->url : NULL);
+        s = make_lastline_link(screen, buf, p, a ? a->url : NULL);
     }
     if (s) {
       sl = get_Str_strwidth(s);
-      if (sl >= COLS() - 3)
+      if (sl >= screen->COLS() - 3)
         return s;
     }
   }
@@ -141,7 +145,7 @@ static Str *make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   Strcat(msg, buf->layout.title);
 
   if (s) {
-    int l = COLS() - 3 - sl;
+    int l = screen->COLS() - 3 - sl;
     if (get_Str_strwidth(msg) > l) {
       Strtruncate(msg, l);
     }
@@ -171,9 +175,9 @@ static Line *redrawLine(TermScreen *screen, LineLayout *buf, Line *l, int i) {
             (int)(log(buf->lastLine->real_linenumber + 0.1) / log(10)) + 2;
       if (buf->rootX < 5)
         buf->rootX = 5;
-      if (buf->rootX > COLS())
-        buf->rootX = COLS();
-      buf->COLS = COLS() - buf->rootX;
+      if (buf->rootX > screen->COLS())
+        buf->rootX = screen->COLS();
+      buf->COLS = screen->COLS() - buf->rootX;
     }
     if (l->real_linenumber && !l->bpos)
       snprintf(tmp, sizeof(tmp), "%*ld:", buf->rootX - 1, l->real_linenumber);
@@ -453,7 +457,7 @@ void _displayBuffer(TermScreen *screen) {
   if (buf->layout.width == 0)
     buf->layout.width = INIT_BUFFER_WIDTH();
   if (buf->layout.height == 0)
-    buf->layout.height = LASTLINE() + 1;
+    buf->layout.height = screen->LASTLINE() + 1;
   if ((buf->layout.width != INIT_BUFFER_WIDTH() &&
        (buf->res->is_html_type() || FoldLine)) ||
       buf->layout.need_reshape) {
@@ -470,20 +474,20 @@ void _displayBuffer(TermScreen *screen) {
           (int)(log(layout.lastLine->real_linenumber + 0.1) / log(10)) + 2;
     if (layout.rootX < 5)
       layout.rootX = 5;
-    if (layout.rootX > COLS())
-      layout.rootX = COLS();
+    if (layout.rootX > screen->COLS())
+      layout.rootX = screen->COLS();
   } else
     layout.rootX = 0;
-  layout.COLS = COLS() - layout.rootX;
+  layout.COLS = screen->COLS() - layout.rootX;
   if (App::instance().nTab() > 1) {
     ny = App::instance().calcTabPos() + 2;
-    if (ny > LASTLINE()) {
-      ny = LASTLINE();
+    if (ny > screen->LASTLINE()) {
+      ny = screen->LASTLINE();
     }
   }
-  if (layout.rootY != ny || layout.LINES != LASTLINE() - ny) {
+  if (layout.rootY != ny || layout.LINES != screen->LASTLINE() - ny) {
     layout.rootY = ny;
-    layout.LINES = LASTLINE() - ny;
+    layout.LINES = screen->LASTLINE() - ny;
     buf->layout.arrangeCursor();
   }
 
@@ -491,7 +495,7 @@ void _displayBuffer(TermScreen *screen) {
 
   if (cline != buf->layout.topLine || ccolumn != buf->layout.currentColumn) {
 
-    redrawNLine(screen, buf, LASTLINE());
+    redrawNLine(screen, buf, screen->LASTLINE());
 
     cline = buf->layout.topLine;
     ccolumn = buf->layout.currentColumn;
@@ -501,7 +505,7 @@ void _displayBuffer(TermScreen *screen) {
 
   drawAnchorCursor(screen, buf);
 
-  auto msg = make_lastline_message(buf);
+  auto msg = make_lastline_message(screen, buf);
   if (buf->layout.firstLine == NULL) {
     Strcat_charp(msg, "\tNo Line");
   }

@@ -1,4 +1,5 @@
 #include "loaddirectory.h"
+#include "app.h"
 #include "url_stream.h"
 #include "html/readbuffer.h"
 #include "terms.h"
@@ -71,7 +72,7 @@ Str *loadLocalDir(const char *dname) {
   closedir(d);
 
   if (multicolList) {
-    l = COLS() / (maxlen + 2);
+    l = App::instance().COLS() / (maxlen + 2);
     if (!l)
       l = 1;
     nrow = (n + l - 1) / l;

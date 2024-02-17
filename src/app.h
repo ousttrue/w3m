@@ -1,4 +1,5 @@
 #pragma once
+#include "rowcol.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -28,6 +29,8 @@ struct TabBuffer;
 struct Buffer;
 struct TermScreen;
 class App {
+  RowCol _size = {};
+
   std::shared_ptr<TermScreen> _screen;
   bool _fmInitialized = false;
 
@@ -59,6 +62,10 @@ public:
     static App s_instance;
     return s_instance;
   }
+
+  int LINES() const { return _size.row; }
+  int COLS() const { return _size.col; }
+  int LASTLINE() const { return (_size.row - 1); }
 
   std::shared_ptr<TermScreen> screen() const { return _screen; }
   bool initialize();

@@ -38,7 +38,7 @@ LineInput::LineInput(const std::shared_ptr<TermScreen> &screen,
                      IncFunc incrfunc)
     : _screen(screen), prompt(prompt), onInput(_onInput), incrfunc(incrfunc) {
   opos = get_strwidth(prompt);
-  epos = (COLS() - 2) - opos;
+  epos = (_screen->COLS() - 2) - opos;
   if (epos < 0) {
     epos = 0;
   }
@@ -145,7 +145,7 @@ void LineInput::onBreak() {
     return;
   }
 
-  _screen->move(LASTLINE(), 0);
+  _screen->move(_screen->LASTLINE(), 0);
   _screen->refresh(term_io());
   auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -178,14 +178,14 @@ void LineInput::draw() {
     else
       offset = 0;
   }
-  _screen->move(LASTLINE(), 0);
+  _screen->move(_screen->LASTLINE(), 0);
   _screen->addstr(prompt.c_str());
   if (is_passwd)
-    addPasswd(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
+    addPasswd(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
   else
-    addStr(strBuf->ptr, strProp, CLen, offset, COLS() - opos);
+    addStr(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
   _screen->clrtoeolx();
-  _screen->move(LASTLINE(), opos + x - offset);
+  _screen->move(_screen->LASTLINE(), opos + x - offset);
   _screen->refresh(term_io());
 }
 
@@ -529,12 +529,12 @@ void LineInput::next_dcompl(int next) {
     return;
   cm_disp_clear = false;
   App::instance().invalidate();
-  if (LASTLINE() >= 3) {
+  if (_screen->LASTLINE() >= 3) {
     comment = true;
-    nline = LASTLINE() - 2;
-  } else if (LASTLINE()) {
+    nline = _screen->LASTLINE() - 2;
+  } else if (_screen->LASTLINE()) {
     comment = false;
-    nline = LASTLINE();
+    nline = _screen->LASTLINE();
   } else {
     return;
   }
@@ -579,8 +579,8 @@ void LineInput::next_dcompl(int next) {
     if (len < n)
       len = n;
   }
-  if (len > 0 && COLS() > static_cast<int>(len))
-    col = COLS() / len;
+  if (len > 0 && _screen->COLS() > static_cast<int>(len))
+    col = _screen->COLS() / len;
   else
     col = 1;
   row = (NCFileBuf + col - 1) / col;
@@ -626,7 +626,7 @@ disp_next:
     }
     y++;
   }
-  if (comment && y == LASTLINE() - 1) {
+  if (comment && y == _screen->LASTLINE() - 1) {
     _screen->move(y, 0);
     _screen->clrtoeolx();
     _screen->bold();

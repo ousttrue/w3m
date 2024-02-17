@@ -264,7 +264,7 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
   else
     loadBuffer(buf->res.get(), &buf->layout);
 
-  buf->layout.height = LASTLINE() + 1;
+  buf->layout.height = App::instance().LASTLINE() + 1;
   if (buf->layout.firstLine && sbuf->layout.firstLine) {
     Line *cur = sbuf->layout.currentLine;
     int n;

@@ -814,8 +814,8 @@ static void parse_cookie(void) {
 }
 
 void sync_with_option(void) {
-  if (PagerMax < LINES())
-    PagerMax = LINES();
+  if (PagerMax < App::instance().LINES())
+    PagerMax = App::instance().LINES();
   WrapSearch = WrapDefault;
   parse_cookie();
   initMailcap();

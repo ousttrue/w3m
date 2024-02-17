@@ -383,7 +383,7 @@ int App::mainLoop() {
 
 void App::onResize() {
   // setResize();
-  setlinescols();
+  _size = getlinescols();
   _screen->setupscreen(
       {
           .row = LINES(),

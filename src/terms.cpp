@@ -92,12 +92,6 @@ const TermEntry &term_entry() { return _entry; }
 
 static char bp[1024], funcstr[256];
 
-int _LINES = 0;
-int _COLS = 0;
-int LINES() { return _LINES; }
-int COLS() { return _COLS; }
-int LASTLINE() { return (_LINES - 1); }
-
 static char gcmap[96];
 
 extern "C" {
@@ -369,35 +363,44 @@ void getTCstr(void) {
   GETSTR(T_ac, "ac"); /* graphics charset pairs */
   GETSTR(T_op, "op"); /* set default color pair to its original value */
 
-  _LINES = _COLS = 0;
-  setlinescols();
   setgraphchar();
 }
 
-void setlinescols(void) {
-  char *p;
+RowCol getlinescols() {
   int i;
 #if defined(HAVE_TERMIOS_H) && defined(TIOCGWINSZ)
   struct winsize wins;
 
   i = ioctl(tty, TIOCGWINSZ, &wins);
   if (i >= 0 && wins.ws_row != 0 && wins.ws_col != 0) {
-    _LINES = wins.ws_row;
-    _COLS = wins.ws_col;
+    return {
+        .row = wins.ws_row,
+        .col = wins.ws_col,
+    };
   }
 #endif /* defined(HAVE-TERMIOS_H) && defined(TIOCGWINSZ) */
-  if (_LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-    _LINES = i;
-  if (_COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-    _COLS = i;
-  if (_LINES <= 0)
-    _LINES = tgetnum("li"); /* number of line */
-  if (_COLS <= 0)
-    _COLS = tgetnum("co"); /* number of column */
-  if (_COLS > MAX_COLUMN)
-    _COLS = MAX_COLUMN;
-  if (_LINES > MAX_LINE)
-    _LINES = MAX_LINE;
+
+  const char *p;
+  RowCol size = {0};
+  if (size.row <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0) {
+    size.row = i;
+  }
+  if (size.col <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0) {
+    size.col = i;
+  }
+  if (size.row <= 0) {
+    size.row = tgetnum("li"); /* number of line */
+  }
+  if (size.col <= 0) {
+    size.col = tgetnum("co"); /* number of column */
+  }
+  if (size.col > MAX_COLUMN) {
+    size.col = MAX_COLUMN;
+  }
+  if (size.row > MAX_LINE) {
+    size.row = MAX_LINE;
+  }
+  return size;
 }
 
 TermEntry *initscr() {
