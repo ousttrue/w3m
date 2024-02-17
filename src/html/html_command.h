@@ -181,12 +181,3 @@ enum HtmlCommand : int {
 
   MAX_HTMLTAG = 185,
 };
-
-struct environment {
-  HtmlCommand env;
-
-public:
-  int type;
-  int count;
-  char indent;
-};

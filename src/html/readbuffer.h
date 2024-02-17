@@ -117,12 +117,12 @@ extern bool MetaRefresh;
 
 struct Str;
 struct input_alt_attr {
-  int hseq;
-  int fid;
-  int in;
-  Str *type;
-  Str *name;
-  Str *value;
+  int hseq = 0;
+  int fid = -1;
+  int in = 0;
+  Str *type = nullptr;
+  Str *name = nullptr;
+  Str *value = nullptr;
 };
 
 struct Breakpoint {
@@ -132,11 +132,11 @@ struct Breakpoint {
   long flag;
   Anchor anchor;
   Str *img_alt;
-  struct input_alt_attr input_alt;
+  struct input_alt_attr input_alt = {};
   char fontstat[FONTSTAT_SIZE];
   short nobr_level;
   Lineprop prev_ctype;
-  char init_flag;
+  char init_flag = 1;
   short top_margin;
   short bottom_margin;
 };
@@ -148,30 +148,31 @@ struct cmdtable {
 
 struct readbuffer {
   Str *line;
-  Lineprop cprop;
-  short pos;
+  Lineprop cprop = 0;
+  short pos = 0;
   Str *prevchar;
   long flag;
   long flag_stack[RB_STACK_SIZE];
-  int flag_sp;
+  int flag_sp = 0;
   int status;
   unsigned char end_tag;
-  unsigned char q_level;
-  short table_level;
-  short nobr_level;
-  Anchor anchor;
-  Str *img_alt;
-  struct input_alt_attr input_alt;
+  unsigned char q_level = 0;
+  short table_level = -1;
+  short nobr_level = 0;
+  Anchor anchor = {0};
+  Str *img_alt = 0;
+  struct input_alt_attr input_alt = {};
   char fontstat[FONTSTAT_SIZE];
   char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
-  int fontstat_sp;
+  int fontstat_sp = 0;
   Lineprop prev_ctype;
   Breakpoint bp;
   struct cmdtable *tag_stack[TAG_STACK_SIZE];
-  int tag_sp;
-  short top_margin;
-  short bottom_margin;
+  int tag_sp = 0;
+  short top_margin = 0;
+  short bottom_margin = 0;
 
+  readbuffer();
   void set_breakpoint(int tag_length);
   void back_to_breakpoint() {
     this->flag = this->bp.flag;
@@ -194,9 +195,6 @@ struct readbuffer {
 };
 
 struct TextLineList;
-
-void init_henv(struct html_feed_environ *, struct readbuffer *,
-               struct environment *, int, TextLineList *, int, int);
 
 Str *romanNumeral(int n);
 Str *romanAlphabet(int n);

@@ -542,6 +542,23 @@ static void HTMLlineproc2(HtmlParser *parser, HttpResponse *res,
   parser->HTMLlineproc2body(res, layout, textlist_feed, -1);
 }
 
+readbuffer::readbuffer() {
+  this->line = Strnew();
+  this->prevchar = Strnew_size(8);
+  set_space_to_prevchar(this->prevchar);
+  this->flag = RB_IGNORE_P;
+  this->status = R_ST_NORMAL;
+  this->in_bold = 0;
+  this->in_italic = 0;
+  this->in_under = 0;
+  this->in_strike = 0;
+  this->in_ins = 0;
+  this->prev_ctype = PC_ASCII;
+
+  this->bp.init_flag = 1;
+  this->set_breakpoint(0);
+}
+
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
@@ -557,16 +574,12 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
 
   auto src = res->createSourceFile();
 
-  struct environment envs[MAX_ENV_LEVEL];
   long long linelen = 0;
   long long trbyte = 0;
-  struct html_feed_environ htmlenv1;
-  struct readbuffer obuf;
 
   symbol_width = symbol_width0 = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, INIT_BUFFER_WIDTH(),
-            0);
+  html_feed_environ htmlenv1(MAX_ENV_LEVEL, NULL, INIT_BUFFER_WIDTH(), 0);
 
   htmlenv1.buf = newTextLineList();
 
@@ -592,12 +605,12 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
     cleanup_line(lineBuf2, HTML_MODE);
     parser.HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
   }
-  if (obuf.status != R_ST_NORMAL) {
+  if (htmlenv1.obuf.status != R_ST_NORMAL) {
     parser.HTMLlineproc0("\n", &htmlenv1, internal);
   }
-  obuf.status = R_ST_NORMAL;
-  parser.completeHTMLstream(&htmlenv1, &obuf);
-  parser.flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
+  htmlenv1.obuf.status = R_ST_NORMAL;
+  parser.completeHTMLstream(&htmlenv1);
+  parser.flushline(&htmlenv1, 0, 2, htmlenv1.limit);
 
   if (htmlenv1.title) {
     layout->title = htmlenv1.title;
@@ -615,57 +628,6 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
   if (src) {
     fclose(src);
   }
-}
-
-void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
-               struct environment *envs, int nenv, TextLineList *buf, int limit,
-               int indent) {
-  envs[0].indent = indent;
-
-  obuf->line = Strnew();
-  obuf->cprop = 0;
-  obuf->pos = 0;
-  obuf->prevchar = Strnew_size(8);
-  set_space_to_prevchar(obuf->prevchar);
-  obuf->flag = RB_IGNORE_P;
-  obuf->flag_sp = 0;
-  obuf->status = R_ST_NORMAL;
-  obuf->table_level = -1;
-  obuf->nobr_level = 0;
-  obuf->q_level = 0;
-  obuf->anchor = {0};
-  obuf->img_alt = 0;
-  obuf->input_alt.hseq = 0;
-  obuf->input_alt.fid = -1;
-  obuf->input_alt.in = 0;
-  obuf->input_alt.type = NULL;
-  obuf->input_alt.name = NULL;
-  obuf->input_alt.value = NULL;
-  obuf->in_bold = 0;
-  obuf->in_italic = 0;
-  obuf->in_under = 0;
-  obuf->in_strike = 0;
-  obuf->in_ins = 0;
-  obuf->prev_ctype = PC_ASCII;
-  obuf->tag_sp = 0;
-  obuf->fontstat_sp = 0;
-  obuf->top_margin = 0;
-  obuf->bottom_margin = 0;
-  obuf->bp.init_flag = 1;
-  obuf->set_breakpoint(0);
-
-  h_env->buf = buf;
-  h_env->f = NULL;
-  h_env->obuf = obuf;
-  h_env->tagbuf = Strnew();
-  h_env->limit = limit;
-  h_env->maxlimit = 0;
-  h_env->envs = envs;
-  h_env->nenv = nenv;
-  h_env->envc = 0;
-  h_env->envc_real = 0;
-  h_env->title = NULL;
-  h_env->blank_lines = 0;
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {

@@ -1,5 +1,16 @@
 #include "html_feed_env.h"
 #include "textlist.h"
+#include "readbuffer.h"
+
+html_feed_environ::html_feed_environ(int nenv, TextLineList *buf, int limit,
+                                     int indent)
+    : buf(buf) {
+  assert(nenv);
+  envs.resize(nenv);
+  this->tagbuf = Strnew();
+  this->limit = limit;
+  envs[0].indent = indent;
+}
 
 int sloppy_parse_line(char **str) {
   if (**str == '<') {

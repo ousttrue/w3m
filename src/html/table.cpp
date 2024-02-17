@@ -657,9 +657,6 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
                int maxlimit) {
   TextList *orgdata;
   TextListItem *l;
-  struct readbuffer obuf;
-  struct html_feed_environ h_env;
-  environment envs[MAX_ENV_LEVEL];
   int colspan, icell;
 
   if (tbl->tabdata[row] == NULL || tbl->tabdata[row][col] == NULL)
@@ -667,9 +664,9 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
   orgdata = (TextList *)tbl->tabdata[row][col];
   tbl->tabdata[row][col] = newGeneralList();
 
-  init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
-            (TextLineList *)tbl->tabdata[row][col],
-            get_spec_cell_width(tbl, row, col), 0);
+  html_feed_environ h_env(MAX_ENV_LEVEL, (TextLineList *)tbl->tabdata[row][col],
+                          get_spec_cell_width(tbl, row, col), 0);
+  auto &obuf = h_env.obuf;
   obuf.flag |= RB_INTABLE;
   if (h_env.limit > maxlimit)
     h_env.limit = maxlimit;
@@ -688,13 +685,13 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
         struct table *t = tbl->tables[id].ptr;
         int limit = tbl->tables[id].indent + t->total_width;
         tbl->tables[id].ptr = NULL;
-        parser->save_fonteffect(&h_env, h_env.obuf);
-        parser->flushline(&h_env, &obuf, 0, 2, h_env.limit);
+        parser->save_fonteffect(&h_env);
+        parser->flushline(&h_env, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
           parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
-        if (RB_GET_ALIGN(h_env.obuf) == RB_CENTER)
+        if (RB_GET_ALIGN(&h_env.obuf) == RB_CENTER)
           alignment = ALIGN_CENTER;
-        else if (RB_GET_ALIGN(h_env.obuf) == RB_RIGHT)
+        else if (RB_GET_ALIGN(&h_env.obuf) == RB_RIGHT)
           alignment = ALIGN_RIGHT;
         else
           alignment = ALIGN_LEFT;
@@ -706,7 +703,7 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
         appendTextLineList(h_env.buf, tbl->tables[id].buf);
         if (h_env.maxlimit < limit)
           h_env.maxlimit = limit;
-        parser->restore_fonteffect(&h_env, h_env.obuf);
+        parser->restore_fonteffect(&h_env);
         obuf.flag &= ~RB_IGNORE_P;
         h_env.blank_lines = 0;
         if (t->vspace > 0) {
@@ -721,8 +718,8 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
     obuf.status = R_ST_EOL;
     parser->HTMLlineproc1("\n", &h_env);
   }
-  parser->completeHTMLstream(&h_env, &obuf);
-  parser->flushline(&h_env, &obuf, 0, 2, h_env.limit);
+  parser->completeHTMLstream(&h_env);
+  parser->flushline(&h_env, 0, 2, h_env.limit);
   if (tbl->border_mode == BORDER_NONE) {
     int rowspan = table_rowspan(tbl, row, col);
     if (row + rowspan <= tbl->maxrow) {
@@ -1538,9 +1535,6 @@ static int cotable_level;
 void initRenderTable(void) { cotable_level = 0; }
 
 static void renderCoTable(HtmlParser *parser, struct table *tbl, int maxlimit) {
-  struct readbuffer obuf;
-  struct html_feed_environ h_env;
-  struct environment envs[MAX_ENV_LEVEL];
   struct table *t;
   int i, col, row;
   int indent, maxwidth;
@@ -1557,8 +1551,8 @@ static void renderCoTable(HtmlParser *parser, struct table *tbl, int maxlimit) {
     row = tbl->tables[i].row;
     indent = tbl->tables[i].indent;
 
-    init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL, tbl->tables[i].buf,
-              get_spec_cell_width(tbl, row, col), indent);
+    html_feed_environ h_env(MAX_ENV_LEVEL, tbl->tables[i].buf,
+                            get_spec_cell_width(tbl, row, col), indent);
     check_row(tbl, row);
     if (h_env.limit > maxlimit)
       h_env.limit = maxlimit;
@@ -1574,9 +1568,6 @@ static void renderCoTable(HtmlParser *parser, struct table *tbl, int maxlimit) {
 
 static void make_caption(HtmlParser *parser, struct table *t,
                          struct html_feed_environ *h_env) {
-  struct html_feed_environ henv;
-  struct readbuffer obuf;
-  struct environment envs[MAX_ENV_LEVEL];
   int limit;
 
   if (t->caption->length <= 0)
@@ -1586,8 +1577,9 @@ static void make_caption(HtmlParser *parser, struct table *t,
     limit = t->total_width;
   else
     limit = h_env->limit;
-  init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(), limit,
-            h_env->envs[h_env->envc].indent);
+
+  html_feed_environ henv(MAX_ENV_LEVEL, newTextLineList(), limit,
+                         h_env->envs[h_env->envc].indent);
   parser->HTMLlineproc1("<center>", &henv);
   parser->HTMLlineproc0(t->caption->ptr, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);

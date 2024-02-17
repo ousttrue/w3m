@@ -95,18 +95,13 @@ public:
   void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
                   const char **str, Lineprop mode);
   void fillline(struct readbuffer *obuf, int indent);
-  void flushline(struct html_feed_environ *h_env, readbuffer *obuf, int indent,
-                 int force, int width);
+  void flushline(html_feed_environ *h_env, int indent, int force, int width);
   int close_effect0(struct readbuffer *obuf, int cmd);
-  void close_anchor(struct html_feed_environ *h_env, struct readbuffer *obuf);
-  void save_fonteffect(struct html_feed_environ *h_env,
-                       struct readbuffer *obuf);
-  void restore_fonteffect(struct html_feed_environ *h_env,
-                          struct readbuffer *obuf);
+  void close_anchor(struct html_feed_environ *h_env);
+  void save_fonteffect(html_feed_environ *h_env);
+  void restore_fonteffect(html_feed_environ *h_env);
   void proc_escape(struct readbuffer *obuf, const char **str_return);
-
-  void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
-
+  void completeHTMLstream(html_feed_environ *);
   void push_render_image(Str *str, int width, int limit,
                          html_feed_environ *h_env);
   void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,
