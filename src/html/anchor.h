@@ -10,23 +10,23 @@ extern bool MarkAllPages;
 extern int PagerMax;
 
 struct BufferPoint {
-  int line;
-  int pos;
-  int invalid;
+  int line = 0;
+  int pos = 0;
+  int invalid = 0;
 };
 
 struct Anchor {
-  const char *url;
+  const char *url = nullptr;
   std::string target;
   HttpOption option = {};
-  const char *title;
-  unsigned char accesskey;
-  BufferPoint start;
-  BufferPoint end;
-  int hseq;
-  char slave;
-  short y;
-  short rows;
+  const char *title = nullptr;
+  unsigned char accesskey = 0;
+  BufferPoint start = {};
+  BufferPoint end = {};
+  int hseq = 0;
+  char slave = 0;
+  short y = 0;
+  short rows = 0;
 
   int onAnchor(int line, int pos);
 };

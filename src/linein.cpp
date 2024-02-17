@@ -20,7 +20,11 @@
 #include "history.h"
 #include <sys/stat.h>
 #include <sys/types.h>
-typedef struct direct Directory;
+#ifdef _MSC_VER
+#else
+#include <dirent.h>
+#endif
+// typedef struct direct Directory;
 
 bool space_autocomplete = false;
 bool emacs_like_lineedit = false;
@@ -659,7 +663,7 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
   int fl, i;
   const char *fn, *p;
   // DIR *d;
-  Directory *dir;
+  // Directory *dir;
   struct stat st;
 
   if (!cm_next) {
@@ -690,7 +694,8 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
     if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1) {
       Strshrink(CompleteBuf, 1);
     }
-    if ((d = opendir(expandPath(CompleteBuf->ptr))) == NULL) {
+    auto d = opendir(expandPath(CompleteBuf->ptr));
+    if (d == NULL) {
       CompleteBuf = ifn->Strdup();
       *status = CPL_FAIL;
       if (cm_mode & CPL_ON)
@@ -701,7 +706,7 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
     fl = strlen(fn);
     CFileName = Strnew();
     for (;;) {
-      dir = readdir(d);
+      auto dir = readdir(d);
       if (dir == NULL)
         break;
       if (fl == 0 && (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")))

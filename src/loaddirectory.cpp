@@ -12,6 +12,7 @@ typedef struct direct Directory;
 #ifdef _MSC_VER
 #else
 #include <sys/dir.h>
+#include <dirent.h>
 #endif
 
 bool multicolList = false;
@@ -23,10 +24,9 @@ static int strCmp(const void *s1, const void *s2) {
 Str *loadLocalDir(const char *dname) {
 #ifdef _MSC_VER
   return {};
+
 #else
   Str *tmp;
-  DIR *d;
-  Directory *dir;
   struct stat st;
   char **flist;
   const char *p, *qdir;
@@ -41,7 +41,7 @@ Str *loadLocalDir(const char *dname) {
   int nfile, nfile_max = 100;
   Str *dirname;
 
-  d = opendir(dname);
+  auto d = opendir(dname);
   if (d == NULL)
     return NULL;
   dirname = Strnew_charp(dname);
@@ -55,7 +55,7 @@ Str *loadLocalDir(const char *dname) {
                        qdir, "</H1>\n", NULL);
   flist = (char **)New_N(char *, nfile_max);
   nfile = 0;
-  while ((dir = readdir(d)) != NULL) {
+  while (auto dir = readdir(d)) {
     flist[nfile++] = allocStr(dir->d_name, -1);
     if (nfile == nfile_max) {
       nfile_max *= 2;

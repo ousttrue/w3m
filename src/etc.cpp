@@ -27,6 +27,8 @@
 #ifdef _MSC_VER
 #include <direct.h>
 #define mkdir _mkdir;
+#else
+#include <pwd.h>
 #endif
 
 char *personal_document_root = nullptr;
@@ -117,14 +119,14 @@ int open_pipe_rw(FILE **fr, FILE **fw) {
 #else
   int fdr[2];
   int fdw[2];
-
+  int pid;
   if (fr && pipe(fdr) < 0)
     goto err0;
   if (fw && pipe(fdw) < 0)
     goto err1;
 
   flush_tty();
-  auto pid = fork();
+  pid = fork();
   if (pid < 0)
     goto err2;
   if (pid == 0) {
@@ -213,18 +215,17 @@ const char *expandPath(const char *name) {
 #ifdef _MSC_VER
   return {};
 #else
-  const char *p;
-  struct passwd *passent;
-  struct passwd *getpwnam(const char *);
-  Str *extpath = NULL;
+  if (!name) {
+    return {};
+  }
 
-  if (name == NULL)
-    return NULL;
-  p = name;
+  auto p = name;
   if (*p == '~') {
     p++;
+    Str *extpath = {};
     if (IS_ALPHA(*p)) {
       auto q = strchr(p, '/');
+      struct passwd *passent;
       if (q) { /* ~user/dir... */
         passent = getpwnam(allocStr(p, q - p));
         p = q;
@@ -232,19 +233,21 @@ const char *expandPath(const char *name) {
         passent = getpwnam(p);
         p = "";
       }
-      if (!passent)
-        goto rest;
+      if (!passent) {
+        return name;
+      }
       extpath = Strnew_charp(passent->pw_dir);
     } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
       extpath = Strnew_charp(getenv("HOME"));
-    } else
-      goto rest;
+    } else {
+      return name;
+    }
     if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
       p++;
     Strcat_charp(extpath, p);
     return extpath->ptr;
   }
-rest:
+
   return name;
 #endif
 }

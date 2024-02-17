@@ -3017,7 +3017,7 @@ static int need_flushline(struct html_feed_environ *h_env,
 
 static void back_to_breakpoint(struct readbuffer *obuf) {
   obuf->flag = obuf->bp.flag;
-  memcpy(&obuf->anchor, &obuf->bp.anchor, sizeof(obuf->anchor));
+  obuf->anchor = obuf->bp.anchor;
   obuf->img_alt = obuf->bp.img_alt;
   obuf->input_alt = obuf->bp.input_alt;
   obuf->in_bold = obuf->bp.in_bold;

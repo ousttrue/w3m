@@ -14,6 +14,10 @@
 #include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#else
+#include <utime.h>
+#endif
 
 int _MoveFile(const char *path1, const char *path2) {
 #ifdef _MSC_VER
