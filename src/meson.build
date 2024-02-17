@@ -92,7 +92,6 @@ executable(
         'mailcap.cpp',
         'symbol.cpp',
         'entity.cpp',
-        'terms.cpp',
         'mimehead.cpp',
         'func.cpp',
         'cookie.cpp',

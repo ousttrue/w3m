@@ -1,9 +1,8 @@
 #include "screen.h"
-#include "terms.h"
 #include "alloc.h"
 #include "myctype.h"
-#include "termentry.h"
 #include <ftxui/screen/screen.hpp>
+#include <iostream>
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
@@ -11,9 +10,8 @@
 #define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
 
-void TermScreen::setupscreen(const RowCol &size, const TermEntry &entry) {
+void TermScreen::setupscreen(const RowCol &size) {
   _size = size;
-  _entry = entry;
 
   if (LINES() + 1 > max_LINES) {
     max_LINES = LINES() + 1;
@@ -43,7 +41,7 @@ void TermScreen::setupscreen(const RowCol &size, const TermEntry &entry) {
 }
 
 void TermScreen::clear(void) {
-  term_writestr(_entry.T_cl);
+  // term_writestr(_entry.T_cl);
 
   int i, j;
   l_prop *p;
@@ -143,7 +141,11 @@ static int need_redraw(const Utf8 &c1, l_prop pr1, const Utf8 &c2, l_prop pr2) {
   return 0;
 }
 
-void TermScreen::refresh(FILE *ttyf) {
+static void cursor(const RowCol p) {
+  std::cout << "\e[" << p.row << ";" << p.col << "H";
+}
+
+void TermScreen::print() {
   // using namespace ftxui;
   auto screen = ftxui::Screen::Create(ftxui::Dimension::Fixed(COLS()),
                                       ftxui::Dimension::Fixed(LINES()));
@@ -170,166 +172,25 @@ void TermScreen::refresh(FILE *ttyf) {
     }
   }
 
-  term_move(0, 0);
-  auto str = screen.ToString();
-  fwrite(str.data(), str.size(), 1, ttyf);
-
-  term_move(CurLine, CurColumn);
-  flush_tty();
-}
-
-void TermScreen::_refresh(FILE *ttyf) {
-  int line, col, pcol;
-  int pline = CurLine;
-  int moved = RF_NEED_TO_MOVE;
-  Utf8 *pc;
-  l_prop *pr, mode = 0;
-  LineDirtyFlags *dirty;
-
-  for (line = 0; line <= LASTLINE(); line++) {
-    dirty = &ScreenImage[line]->isdirty;
-    if (*dirty & L_DIRTY) {
-      *dirty = (LineDirtyFlags)(*dirty & ~L_DIRTY);
-      pc = ScreenImage[line]->lineimage;
-      pr = ScreenImage[line]->lineprop;
-      for (col = 0; col < COLS() && !(pr[col] & S_EOL); col++) {
-        if (*dirty & L_NEED_CE && col >= ScreenImage[line]->eol) {
-          if (need_redraw(pc[col], pr[col], SPACE, 0))
-            break;
-        } else {
-          if (pr[col] & S_DIRTY)
-            break;
-        }
-      }
-      if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-        pcol = ScreenImage[line]->eol;
-        if (pcol >= COLS()) {
-          *dirty = (LineDirtyFlags)(*dirty & ~(L_NEED_CE | L_CLRTOEOL));
-          pcol = col;
-        }
-      } else {
-        pcol = col;
-      }
-      if (line < LINES() - 2 && pline == line - 1 && pcol == 0) {
-        switch (moved) {
-        case RF_NEED_TO_MOVE:
-          term_move(line, 0);
-          moved = RF_CR_OK;
-          break;
-        case RF_CR_OK:
-          term_write1('\n');
-          term_write1('\r');
-          break;
-        case RF_NONEED_TO_MOVE:
-          moved = RF_CR_OK;
-          break;
-        }
-      } else {
-        term_move(line, pcol);
-        moved = RF_CR_OK;
-      }
-      if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-        term_writestr(_entry.T_ce);
-        if (col != pcol)
-          term_move(line, col);
-      }
-      pline = line;
-      pcol = col;
-
-      term_move(line, col);
-      for (; col < COLS();) {
-        if (pr[col] & S_EOL)
-          break;
-
-        /*
-         * some terminal emulators do linefeed when a
-         * character is put on COLS-th column. this behavior
-         * is different from one of vt100, but such terminal
-         * emulators are used as vt100-compatible
-         * emulators. This behaviour causes scroll when a
-         * character is drawn on (COLS-1,LINES-1) point.  To
-         * avoid the scroll, I prohibit to draw character on
-         * (COLS-1,LINES-1).
-         */
-        if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) ||
-            (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) ||
-            (!(pr[col] & S_BOLD) && (mode & S_BOLD)) ||
-            (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
-            (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-          if ((mode & S_COLORED))
-            term_writestr(_entry.T_op);
-          if (mode & S_GRAPHICS)
-            term_writestr(_entry.T_ae);
-          term_writestr(_entry.T_me);
-          mode &= ~M_MEND;
-        }
-
-        // if ((*dirty & L_NEED_CE && col >= ScreenImage[line]->eol)
-        //         ? need_redraw(pc[col], pr[col], SPACE, 0)
-        //         : (pr[col] & S_DIRTY))
-        {
-          if (pcol == col - 1)
-            term_writestr(_entry.T_nd);
-          else if (pcol != col)
-            term_move(line, col);
-
-          if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-            term_writestr(_entry.T_so);
-            mode |= S_STANDOUT;
-          }
-          if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-            term_writestr(_entry.T_us);
-            mode |= S_UNDERLINE;
-          }
-          if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-            term_writestr(_entry.T_md);
-            mode |= S_BOLD;
-          }
-          // if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
-          //   color = (pr[col] & COL_FCOLOR);
-          //   mode = ((mode & ~COL_FCOLOR) | color);
-          //   writestr(color_seq(color));
-          // }
-          if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
-            if (!graph_enabled) {
-              graph_enabled = 1;
-              term_writestr(_entry.T_eA);
-            }
-            term_writestr(_entry.T_as);
-            mode |= S_GRAPHICS;
-          }
-          if (pr[col] & S_GRAPHICS) {
-            term_write1(term_graphchar(pc[col].b0));
-            pcol = col = col + 1;
-          } else {
-            assert(CHMODE(pr[col]) != C_WCHAR2);
-            auto utf8 = pc[col];
-            auto view = utf8.view();
-            auto width = utf8.width();
-            fwrite(view.data(), view.size(), 1, ttyf);
-            pcol = col = col + width;
-          }
-        }
-      } // cols
-
-      if (col == COLS())
-        moved = RF_NEED_TO_MOVE;
-      for (; col < COLS() && !(pr[col] & S_EOL); col++)
-        pr[col] |= S_EOL;
-    }
-    *dirty = (LineDirtyFlags)(*dirty & ~(L_NEED_CE | L_CLRTOEOL));
-    if (mode & M_MEND) {
-      if (mode & (S_COLORED))
-        term_writestr(_entry.T_op);
-      if (mode & S_GRAPHICS) {
-        term_writestr(_entry.T_ae);
-      }
-      term_writestr(_entry.T_me);
-      mode &= ~M_MEND;
-    }
-  }
-  term_move(CurLine, CurColumn);
-  flush_tty();
+  std::cout << "\e[?25l";
+  std::flush(std::cout);
+  cursor({
+      .row = 1,
+      .col = 1,
+  });
+  // screen.SetCursor({
+  //     .x = CurColumn + 1,
+  //     .y = CurLine + 1,
+  //     .shape = ftxui::Screen::Cursor::Shape::Hidden,
+  // });
+  screen.Print();
+  // std::cout << "\e[2 q";
+  cursor({
+      .row = CurLine + 1,
+      .col = CurColumn + 1,
+  });
+  std::cout << "\e[?25h";
+  std::flush(std::cout);
 }
 
 void TermScreen::move(int line, int column) {
@@ -357,7 +218,6 @@ void TermScreen::wrap(void) {
   CurLine++;
   CurColumn = 0;
 }
-
 
 void TermScreen::addmch(const Utf8 &utf8) {
   if (CurColumn == COLS())

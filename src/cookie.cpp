@@ -17,7 +17,6 @@
 #include "html/anchor.h"
 #include "rc.h"
 #include "w3m.h"
-#include "terms.h"
 #include "alloc.h"
 #include "mytime.h"
 #include "http_request.h"

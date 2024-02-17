@@ -7,7 +7,6 @@
 #include "myctype.h"
 #include "history.h"
 #include "url.h"
-#include "terms.h"
 #include "html/anchor.h"
 #include "html/form.h"
 #include "regex.h"

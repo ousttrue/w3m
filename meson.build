@@ -64,8 +64,8 @@ cc = meson.get_compiler('c')
 m_dep = cc.find_library('m', required: false)
 
 if host_machine.system() != 'windows'
-    ncurses_dep = dependency('ncurses')
-    deps += ncurses_dep
+    # ncurses_dep = dependency('ncurses')
+    # deps += ncurses_dep
     deps += (
         m_dep # , wc_dep
     )

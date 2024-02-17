@@ -2,7 +2,6 @@
 #include "app.h"
 #include "url_stream.h"
 #include "html/readbuffer.h"
-#include "terms.h"
 #include "Str.h"
 #include "etc.h"
 #include "alloc.h"

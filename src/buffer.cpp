@@ -19,7 +19,6 @@
 #include "rc.h"
 #include "textlist.h"
 #include "linklist.h"
-#include "terms.h"
 #include "html/readbuffer.h"
 #include "html/form.h"
 #include "html/form_item.h"

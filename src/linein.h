@@ -102,7 +102,7 @@ class LineInput {
   void _tcompl(char);
   void _prev(char);
   void _next(char);
-  void _esc(char);
+  // void _esc(char);
   void _mvLw(char);
   void _mvRw(char);
   void _bsw(char);
@@ -127,7 +127,6 @@ class LineInput {
 public:
   LineInput(const LineInput &) = delete;
   LineInput &operator=(const LineInput &) = delete;
-  void run();
   bool dispatch(const char *buf, int len);
   void draw();
   void onBreak();

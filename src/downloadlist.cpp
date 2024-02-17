@@ -3,7 +3,6 @@
 #include "keyvalue.h"
 #include "html/readbuffer.h"
 #include "http_session.h"
-#include "terms.h"
 #include "html/anchor.h"
 #include "etc.h"
 #include "w3m.h"

@@ -8,7 +8,6 @@
 #include "html_parser.h"
 #include "symbol.h"
 #include "html_command.h"
-#include "terms.h"
 #include "textlist.h"
 #include <sys/types.h>
 #include <stdio.h>

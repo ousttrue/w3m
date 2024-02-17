@@ -11,7 +11,6 @@
 #include "url_stream.h"
 #include "html/readbuffer.h"
 #include "mimehead.h"
-#include "terms.h"
 #include "func.h"
 #include "etc.h"
 

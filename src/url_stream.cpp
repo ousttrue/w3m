@@ -11,7 +11,6 @@
 #include "downloadlist.h"
 #include "alloc.h"
 #include "history.h"
-#include "terms.h"
 #include "compression.h"
 #include "mimetypes.h"
 #include "ssl_util.h"
@@ -682,7 +681,7 @@ int UrlStream::doFileSave(const char *defstr) {
     auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");
     symlink(p, lock.c_str());
 
-    flush_tty();
+    // flush_tty();
     auto pid = fork();
     if (!pid) {
       int err;

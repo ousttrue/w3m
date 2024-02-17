@@ -7,7 +7,6 @@
 #include "line.h"
 #include "http_response.h"
 #include "screen.h"
-#include "terms.h"
 #include "display.h"
 #include "html/readbuffer.h"
 #include "w3m.h"
@@ -124,7 +123,7 @@ int open_pipe_rw(FILE **fr, FILE **fw) {
   if (fw && pipe(fdw) < 0)
     goto err1;
 
-  flush_tty();
+  // flush_tty();
   pid = fork();
   if (pid < 0)
     goto err2;
@@ -174,7 +173,7 @@ void mySystem(const char *command, int background) {
 #ifdef _MSC_VER
 #else
   if (background) {
-    flush_tty();
+    // flush_tty();
     if (!fork()) {
       setup_child(false, 0, -1);
       myExec(command);
@@ -399,7 +398,7 @@ int exec_cmd(const std::string &cmd) {
     printf("\n[Hit any key]");
     fflush(stdout);
     App::instance().beginRawMode();
-    getch();
+    // getch();
     return rv;
   }
   App::instance().endRawMode();

@@ -8,7 +8,6 @@
 #include "url.h"
 #include "Str.h"
 #include "myctype.h"
-#include "terms.h"
 #include "display.h"
 #include <string.h>
 #include <sys/stat.h>

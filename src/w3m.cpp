@@ -6,7 +6,6 @@
 #include "url_stream.h"
 #include "quote.h"
 #include "history.h"
-#include "terms.h"
 #include "display.h"
 #include "tabbuffer.h"
 #include "http_request.h"

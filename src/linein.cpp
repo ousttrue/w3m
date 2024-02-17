@@ -11,7 +11,6 @@
 #include "utf8.h"
 #include "display.h"
 #include "buffer.h"
-#include "terms.h"
 #include "proto.h"
 #include "html/form.h"
 #include "ctrlcode.h"
@@ -25,6 +24,7 @@
 #include <dirent.h>
 #endif
 // typedef struct direct Directory;
+#include <iostream>
 
 bool space_autocomplete = false;
 bool emacs_like_lineedit = false;
@@ -84,7 +84,7 @@ LineInput::LineInput(const std::shared_ptr<TermScreen> &screen,
       std::bind(&LineInput::_tcompl, this, std::placeholders::_1),
       std::bind(&LineInput::_mvRw, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
-      std::bind(&LineInput::_esc, this, std::placeholders::_1),
+      // std::bind(&LineInput::_esc, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
       std::bind(&LineInput::insertself, this, std::placeholders::_1),
@@ -128,16 +128,16 @@ LineInput::inputLineHistSearch(const std::shared_ptr<TermScreen> &screen,
   return input;
 }
 
-void LineInput::run() {
-  draw();
-  while (i_cont) {
-
-    auto c = getch();
-    if (!dispatch(&c, 1)) {
-      break;
-    }
-  }
-}
+// void LineInput::run() {
+//   draw();
+//   while (i_cont) {
+//
+//     auto c = getch();
+//     if (!dispatch(&c, 1)) {
+//       break;
+//     }
+//   }
+// }
 
 void LineInput::onBreak() {
   if (i_broken) {
@@ -146,7 +146,7 @@ void LineInput::onBreak() {
   }
 
   _screen->move(_screen->LASTLINE(), 0);
-  _screen->refresh(term_io());
+  _screen->print();
   auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
@@ -186,7 +186,7 @@ void LineInput::draw() {
     addStr(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
   _screen->clrtoeolx();
   _screen->move(_screen->LASTLINE(), opos + x - offset);
-  _screen->refresh(term_io());
+  _screen->print();
 }
 
 bool LineInput::dispatch(const char *buf, int len) {
@@ -306,55 +306,55 @@ void LineInput::addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
   }
 }
 
-void LineInput::_esc(char) {
-  char c;
-
-  switch (c = getch()) {
-  case '[':
-  case 'O':
-    switch (c = getch()) {
-    case 'A':
-      _prev({});
-      break;
-    case 'B':
-      _next({});
-      break;
-    case 'C':
-      _mvR({});
-      break;
-    case 'D':
-      _mvL({});
-      break;
-    }
-    break;
-  case CTRL_I:
-  case ' ':
-    if (emacs_like_lineedit) {
-      _rdcompl({});
-      cm_clear = false;
-      need_redraw = true;
-    } else
-      _rcompl({});
-    break;
-  case CTRL_D:
-    if (!emacs_like_lineedit)
-      _rdcompl({});
-    need_redraw = true;
-    break;
-  case 'f':
-    if (emacs_like_lineedit)
-      _mvRw({});
-    break;
-  case 'b':
-    if (emacs_like_lineedit)
-      _mvLw({});
-    break;
-  case CTRL_H:
-    if (emacs_like_lineedit)
-      _bsw({});
-    break;
-  }
-}
+// void LineInput::_esc(char) {
+//   char c;
+//
+//   switch (c = getch()) {
+//   case '[':
+//   case 'O':
+//     switch (c = getch()) {
+//     case 'A':
+//       _prev({});
+//       break;
+//     case 'B':
+//       _next({});
+//       break;
+//     case 'C':
+//       _mvR({});
+//       break;
+//     case 'D':
+//       _mvL({});
+//       break;
+//     }
+//     break;
+//   case CTRL_I:
+//   case ' ':
+//     if (emacs_like_lineedit) {
+//       _rdcompl({});
+//       cm_clear = false;
+//       need_redraw = true;
+//     } else
+//       _rcompl({});
+//     break;
+//   case CTRL_D:
+//     if (!emacs_like_lineedit)
+//       _rdcompl({});
+//     need_redraw = true;
+//     break;
+//   case 'f':
+//     if (emacs_like_lineedit)
+//       _mvRw({});
+//     break;
+//   case 'b':
+//     if (emacs_like_lineedit)
+//       _mvLw({});
+//     break;
+//   case CTRL_H:
+//     if (emacs_like_lineedit)
+//       _bsw({});
+//     break;
+//   }
+// }
 
 void LineInput::insC(char) {
   int i;
@@ -499,8 +499,8 @@ void LineInput::next_compl(int next) {
   if (next == 0)
     return;
 
-  if (status != CPL_OK && status != CPL_MENU)
-    bell();
+  // if (status != CPL_OK && status != CPL_MENU)
+  //   bell();
   if (status == CPL_FAIL)
     return;
 

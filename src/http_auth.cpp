@@ -12,7 +12,6 @@
 #include "myctype.h"
 #include "buffer.h"
 #include "textlist.h"
-#include "terms.h"
 #include "etc.h"
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -389,7 +388,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     // sleep(2);
     if (true /*fmInitialized*/) {
       const char *pp = {};
-      term_raw();
+      // term_raw();
       // if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
       //     NULL)
       //   return;
@@ -401,7 +400,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
         return;
       }
       *pwd = Strnew_charp(pp);
-      term_cbreak();
+      // term_cbreak();
     } else {
       /*
        * If post file is specified as '-', stdin is closed at this

@@ -4,7 +4,6 @@
 #include "local_cgi.h"
 #include "app.h"
 #include "http_response.h"
-#include "terms.h"
 #include "rc.h"
 #include "w3m.h"
 #include "http_request.h"

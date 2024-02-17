@@ -4,7 +4,6 @@
  */
 #include "w3m.h"
 #include "quote.h"
-#include "terms.h"
 #include "app.h"
 #include "ctrlcode.h"
 #include "func.h"

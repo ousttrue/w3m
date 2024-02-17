@@ -14,7 +14,6 @@
 #include "myctype.h"
 #include "func.h"
 #include "funcname1.h"
-#include "terms.h"
 #include "display.h"
 #include "alloc.h"
 #include "Str.h"
@@ -106,7 +105,7 @@ void wrap_GC_warn_proc(char *msg, GC_word arg) {
         i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
         printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-        sleep_till_anykey(1, 1);
+        // sleep_till_anykey(1, 1);
       }
 
       lock = 0;
@@ -213,7 +212,7 @@ App::~App() {
   std::cout << "App::~App" << std::endl;
 
   // exit
-  term_title(""); /* XXX */
+  // term_title(""); /* XXX */
   save_cookies();
   if (UseHistory && SaveURLHist) {
     saveHistory(URLHist, URLHistSize);
@@ -256,7 +255,7 @@ bool App::initialize() {
  */
 void App::beginRawMode(void) {
   if (!_fmInitialized) {
-    initscr();
+    // initscr();
     uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
     // term_raw();
     // term_noecho();
@@ -268,8 +267,8 @@ void App::endRawMode(void) {
   if (_fmInitialized) {
     _screen->move(LASTLINE(), 0);
     _screen->clrtoeolx();
-    _screen->refresh(term_io());
-    reset_tty();
+    _screen->print();
+    uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
     _fmInitialized = false;
   }
 }
@@ -381,15 +380,24 @@ int App::mainLoop() {
   return 0;
 }
 
+#ifdef _MSC_VER
+#else
+#include <sys/ioctl.h>
+#include <termios.h>
+#include <unistd.h>
+RowCol getTermSize() {
+  struct winsize win;
+  ioctl(STDOUT_FILENO, TIOCGWINSZ, &win);
+  return {
+      .row = win.ws_row,
+      .col = win.ws_col,
+  };
+}
+#endif
+
 void App::onResize() {
-  // setResize();
-  _size = getlinescols();
-  _screen->setupscreen(
-      {
-          .row = LINES(),
-          .col = COLS(),
-      },
-      term_entry());
+  _size = getTermSize();
+  _screen->setupscreen(_size);
 }
 
 void App::exit(int) {
@@ -960,8 +968,8 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
             CurrentTab->currentBuffer()->layout.AbsCursorY());
   else
     message(s, LASTLINE(), 0);
-  _screen->refresh(term_io());
-  sleep_till_anykey(sec, purge);
+  _screen->print();
+  // sleep_till_anykey(sec, purge);
 }
 
 void App::disp_message(const char *s) { disp_message_nsec(s, 10, false); }
@@ -972,7 +980,7 @@ void App::refresh_message() {
   if (delayed_msg != NULL) {
     disp_message(delayed_msg);
     delayed_msg = NULL;
-    _screen->refresh(term_io());
+    _screen->print();
   }
 }
 
@@ -1031,7 +1039,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     }
     _screen->standend();
     /* no_clrtoeol(); */
-    _screen->refresh(term_io());
+    _screen->print();
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
@@ -1054,6 +1062,6 @@ void App::showProgress(long long *linelen, long long *trbyte,
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
     message(messages->ptr, 0, 0);
-    _screen->refresh(term_io());
+    _screen->print();
   }
 }

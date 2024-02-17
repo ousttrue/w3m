@@ -2,7 +2,6 @@
 #include "termentry.h"
 #include "utf8.h"
 #include "rowcol.h"
-#include <stdio.h>
 #include <functional>
 
 struct Utf8;
@@ -49,9 +48,6 @@ struct TermEntry;
 
 class TermScreen {
   RowCol _size;
-
-  TermEntry _entry;
-
   int max_LINES = 0;
   int max_COLS = 0;
   int graph_enabled = 0;
@@ -81,11 +77,10 @@ public:
   int COLS() const { return _size.col; }
   int LINES() const { return _size.row; }
   int LASTLINE() const { return (LINES() - 1); }
-  void setupscreen(const RowCol &size, const TermEntry &entry);
+  void setupscreen(const RowCol &size);
   void clear();
-  void _refresh(FILE *ttyf);
   void clrtoeol();
-  void refresh(FILE *ttyf);
+  void print();
   void clrtoeolx();
   void clrtobot_eol(const std::function<void()> &);
   void clrtobot(void) { clrtobot_eol(std::bind(&TermScreen::clrtoeol, this)); }

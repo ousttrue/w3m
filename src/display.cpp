@@ -11,13 +11,13 @@
 #include "screen.h"
 #include "rc.h"
 #include "utf8.h"
-#include "terms.h"
 #include "buffer.h"
 #include "textlist.h"
 #include "ctrlcode.h"
 #include "html/anchor.h"
 #include "proto.h"
 #include <math.h>
+#include <iostream>
 
 bool displayLink = false;
 bool showLineNum = false;
@@ -516,8 +516,8 @@ void _displayBuffer(TermScreen *screen) {
   App::instance().message(msg->ptr, buf->layout.AbsCursorX(),
                           buf->layout.AbsCursorY());
   screen->standend();
-  term_title(buf->layout.title.c_str());
-  screen->refresh(term_io());
+  // term_title(buf->layout.title.c_str());
+  screen->print();
   if (buf != save_current_buf) {
     CurrentTab->currentBuffer()->saveBufferInfo();
     save_current_buf = buf;
@@ -587,19 +587,20 @@ void addMChar(TermScreen *screen, char *p, Lineprop mode, size_t len) {
   do_effects(screen, m);
   if (mode & PC_SYMBOL) {
     const char **symbol;
-    int w = (mode & PC_KANJI) ? 2 : 1;
+    // int w = (mode & PC_KANJI) ? 2 : 1;
 
     // c = ((char)wtf_get_code((wc_uchar *)p) & 0x7f) - SYMBOL_BASE;
-    if (graph_ok() && c < N_GRAPH_SYMBOL) {
-      if (!graph_mode) {
-        screen->graphstart();
-        graph_mode = true;
-      }
-      if (w == 2)
-        screen->addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-      else
-        screen->addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    } else {
+    // if (graph_ok() && c < N_GRAPH_SYMBOL) {
+    //   if (!graph_mode) {
+    //     screen->graphstart();
+    //     graph_mode = true;
+    //   }
+    //   if (w == 2)
+    //     screen->addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+    //   else
+    //     screen->addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+    // } else 
+    {
       symbol = get_symbol();
       screen->addstr(symbol[(unsigned char)c % N_SYMBOL]);
     }

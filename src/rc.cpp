@@ -27,7 +27,6 @@
 #include "html/anchor.h"
 #include "buffer.h"
 #include "linein.h"
-#include "terms.h"
 #include "cookie.h"
 #include "w3m.h"
 #include "http_request.h"
@@ -300,9 +299,9 @@ static struct sel_c mailtooptionsstr[] = {
     {0, NULL, NULL}};
 
 static struct sel_c graphic_char_str[] = {
-    {N_S(GRAPHIC_CHAR_ASCII), N_("ASCII")},
-    {N_S(GRAPHIC_CHAR_CHARSET), N_("charset specific")},
-    {N_S(GRAPHIC_CHAR_DEC), N_("DEC special graphics")},
+    // {N_S(GRAPHIC_CHAR_ASCII), N_("ASCII")},
+    // {N_S(GRAPHIC_CHAR_CHARSET), N_("charset specific")},
+    // {N_S(GRAPHIC_CHAR_DEC), N_("DEC special graphics")},
     {0, NULL, NULL}};
 
 struct param_ptr params1[] = {
@@ -333,8 +332,6 @@ struct param_ptr params1[] = {
     {"multicol", P_INT, PI_ONOFF, (void *)&multicolList, CMT_MULTICOL, NULL},
     {"alt_entity", P_CHARINT, PI_ONOFF, (void *)&UseAltEntity, CMT_ALT_ENTITY,
      NULL},
-    {"graphic_char", P_CHARINT, PI_SEL_C, (void *)&UseGraphicChar,
-     CMT_GRAPHIC_CHAR, (void *)graphic_char_str},
     {"display_borders", P_CHARINT, PI_ONOFF, (void *)&DisplayBorders,
      CMT_DISP_BORDERS, NULL},
     {"disable_center", P_CHARINT, PI_ONOFF, (void *)&DisableCenter,

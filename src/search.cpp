@@ -3,7 +3,6 @@
 #include "line_layout.h"
 #include "Str.h"
 #include "app.h"
-#include "terms.h"
 #include "w3m.h"
 #include "display.h"
 #include "regex.h"
@@ -193,7 +192,7 @@ int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
     return SR_NOTFOUND;
 
   str = SearchString;
-  crmode();
+  // crmode();
   // if (SETJMP(IntReturn) == 0) {
   //   for (i = 0; i < PREC_NUM; i++) {
   //     result = func(&CurrentTab->currentBuffer()->layout, str);
@@ -202,7 +201,7 @@ int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
   //   }
   // }
   // mySignal(SIGINT, prevtrap);
-  term_raw();
+  // term_raw();
   return result;
 }
 

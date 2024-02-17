@@ -22,7 +22,6 @@
 #include "html.h"
 #include "form.h"
 #include "textlist.h"
-#include "terms.h"
 #include "istream.h"
 #include "html_tag.h"
 #include "proto.h"

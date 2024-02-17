@@ -2,7 +2,6 @@
 #include "quote.h"
 #include "myctype.h"
 #include "downloadlist.h"
-#include "terms.h"
 #include "etc.h"
 #include "linein.h"
 #include "Str.h"
@@ -13,6 +12,7 @@
 #include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
 #ifdef _MSC_VER
 #else
 #include <utime.h>
@@ -117,7 +117,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     }
     auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");
     symlink(p, lock.c_str());
-    flush_tty();
+    // flush_tty();
     pid = fork();
     if (!pid) {
       setup_child(false, 0, -1);
