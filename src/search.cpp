@@ -186,7 +186,7 @@ static void clear_mark(Line *l) {
 
 /* search by regular expression */
 int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
-  int i, result = SR_NOTFOUND;
+  int result = SR_NOTFOUND;
 
   if (str != nullptr && str != SearchString)
     SearchString = str;

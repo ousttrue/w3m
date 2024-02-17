@@ -4,7 +4,7 @@
 struct Utf8;
 using l_prop = unsigned short;
 
-/* Screen properties */
+// Screen properties
 enum ScreenFlags : unsigned short {
   S_NORMAL = 0x00,
   S_STANDOUT = 0x01,
@@ -42,7 +42,12 @@ struct Screen {
 };
 
 struct TermEntry;
-void setupscreen(const TermEntry &entry);
+
+class TermScreen {
+public:
+  void setupscreen(const TermEntry &entry);
+};
+
 void refresh(FILE *ttyf);
 void clear();
 void clrtoeol();

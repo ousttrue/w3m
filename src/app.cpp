@@ -1,6 +1,7 @@
 #include "app.h"
 #include "quote.h"
 #include "screen.h"
+#include "screen.h"
 #include "ssl_util.h"
 #include "html/form.h"
 #include "message.h"
@@ -127,7 +128,7 @@ static void *die_oom(size_t bytes) {
   return nullptr;
 }
 
-App::App() {
+App::App() : _screen(new TermScreen) {
   static int s_i = 0;
   assert(s_i == 0);
   ++s_i;
@@ -302,6 +303,7 @@ uv_timer_t g_timer;
 
 int App::mainLoop() {
   fmInit();
+  onResize();
 
   //
   // stdin tty read
@@ -331,7 +333,8 @@ int App::mainLoop() {
   //
   uv_signal_init(uv_default_loop(), &g_signal_resize);
   uv_signal_start(
-      &g_signal_resize, [](uv_signal_t *handle, int signum) { setResize(); },
+      &g_signal_resize,
+      [](uv_signal_t *handle, int signum) { App::instance().onResize(); },
       SIGWINCH);
 
   //
@@ -345,6 +348,12 @@ int App::mainLoop() {
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
   uv_loop_close(uv_default_loop());
   return 0;
+}
+
+void App::onResize() {
+  // setResize();
+  setlinescols();
+  _screen->setupscreen(term_entry());
 }
 
 void App::exit(int) {

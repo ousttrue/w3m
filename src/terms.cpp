@@ -3,14 +3,12 @@
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
-#include "screen.h"
-#include "app.h"
+#include "terms.h"
 #include "w3m.h"
 #include "proto.h"
 #include "Str.h"
 #include "ctrlcode.h"
 #include "myctype.h"
-#include "terms.h"
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -402,21 +400,18 @@ void setlinescols(void) {
     _LINES = MAX_LINE;
 }
 
-/*
- * Screen initialize
- */
-int initscr(void) {
+TermEntry *initscr() {
 #ifdef _MSC_VER
 #else
-  if (set_tty() < 0)
-    return -1;
+  if (set_tty() < 0) {
+    return 0;
+  }
 #endif
   // set_int();
   getTCstr();
   if (_entry.T_ti && !Do_not_use_ti_te)
     term_writestr(_entry.T_ti);
-  setupscreen(_entry);
-  return 0;
+  return &_entry;
 }
 
 int term_write1(char c) {

@@ -38,7 +38,7 @@ static void touch_line(void) {
 
 static TermEntry _entry;
 
-void setupscreen(const TermEntry &entry) {
+void TermScreen::setupscreen(const TermEntry &entry) {
   _entry = entry;
 
   if (LINES() + 1 > max_LINES) {

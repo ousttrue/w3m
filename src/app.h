@@ -26,7 +26,9 @@ using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
 struct TabBuffer;
 struct Buffer;
+struct TermScreen;
 class App {
+  std::shared_ptr<TermScreen> _screen;
   int _dirty = 1;
   std::list<std::string> _fileToDelete;
 
@@ -45,6 +47,7 @@ class App {
   std::stack<Dispatcher> _dispatcher;
 
   App();
+  void onResize();
 
 public:
   ~App();

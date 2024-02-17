@@ -30,7 +30,7 @@ void reset_tty(void);
 void set_int(void);
 void getTCstr(void);
 void setlinescols(void);
-int initscr(void);
+TermEntry *initscr(void);
 int graph_ok(void);
 void crmode(void);
 void nocrmode(void);
