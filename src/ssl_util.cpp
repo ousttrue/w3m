@@ -173,7 +173,7 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
           auto asn = (char *)GC_MALLOC(sl + 1);
           if (!asn)
             exit(1);
-          bcopy(sn, asn, sl);
+          memcpy(asn, sn, sl);
           asn[sl] = '\0';
 
           if (!seen_dnsname)

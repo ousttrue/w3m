@@ -790,7 +790,7 @@ void set_breakpoint(struct readbuffer *obuf, int tag_length) {
   if (!obuf->bp.init_flag)
     return;
 
-  bcopy((void *)&obuf->anchor, (void *)&obuf->bp.anchor, sizeof(obuf->anchor));
+  obuf->bp.anchor = obuf->anchor;
   obuf->bp.img_alt = obuf->img_alt;
   obuf->bp.input_alt = obuf->input_alt;
   obuf->bp.in_bold = obuf->in_bold;

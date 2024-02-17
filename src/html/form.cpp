@@ -256,8 +256,8 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   buf = (char *)New_N(char, len + 1);
   buf[len] = '\0';
   prop = (Lineprop *)New_N(Lineprop, len);
-  bcopy((void *)line->lineBuf.data(), (void *)buf, spos * sizeof(char));
-  bcopy((void *)line->propBuf.data(), (void *)prop, spos * sizeof(Lineprop));
+  memcpy(buf, line->lineBuf.data(), spos * sizeof(char));
+  memcpy(prop, line->propBuf.data(), spos * sizeof(Lineprop));
 
   effect = CharEffect(line->propBuf[spos]);
   for (p = *str, w = 0, pos = spos; *p && w < width;) {
@@ -303,10 +303,9 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   }
   *str = p;
 
-  bcopy((void *)&line->lineBuf[epos], (void *)&buf[pos],
-        (line->len - epos) * sizeof(char));
-  bcopy((void *)&line->propBuf[epos], (void *)&prop[pos],
-        (line->len - epos) * sizeof(Lineprop));
+  memcpy(&buf[pos], &line->lineBuf[epos], (line->len - epos) * sizeof(char));
+  memcpy(&prop[pos], &line->propBuf[epos],
+         (line->len - epos) * sizeof(Lineprop));
 
   line->assign(buf, prop, len);
 

@@ -52,7 +52,7 @@ char *allocStr(const char *s, int len) {
     fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
     exit(-1);
   }
-  bcopy(s, ptr, len);
+  memcpy(ptr, s, len);
   ptr[len] = '\0';
   return ptr;
 }
@@ -106,7 +106,7 @@ Str *Strnew(std::string_view p) {
     exit(1);
   x->area_size = n;
   x->length = len;
-  bcopy(p.data(), x->ptr, len);
+  memcpy(x->ptr, p.data(), len);
   x->ptr[x->length] = '\0';
   return x;
 }
@@ -143,7 +143,7 @@ Str *Strnew_charp_n(const char *p, int n) {
     exit(1);
   x->area_size = n + 1;
   x->length = len;
-  bcopy((void *)p, (void *)x->ptr, len);
+  memcpy(x->ptr, p, len);
   x->ptr[x->length] = '\0';
   return x;
 }
@@ -174,7 +174,7 @@ void Strcopy(Str *x, const Str *y) {
       exit(1);
     x->area_size = y->length + 1;
   }
-  bcopy((void *)y->ptr, (void *)x->ptr, y->length + 1);
+  memcpy(x->ptr, y->ptr, y->length + 1);
   x->length = y->length;
 }
 
@@ -196,7 +196,7 @@ void Strcopy_charp(Str *x, const char *y) {
       exit(1);
     x->area_size = len + 1;
   }
-  bcopy((void *)y, (void *)x->ptr, len);
+  memcpy(x->ptr, y, len);
   x->ptr[len] = '\0';
   x->length = len;
 }
@@ -218,7 +218,7 @@ void Strcopy_charp_n(Str *x, const char *y, int n) {
       exit(1);
     x->area_size = len + 1;
   }
-  bcopy((void *)y, (void *)x->ptr, len);
+  memcpy(x->ptr, y, len);
   x->ptr[len] = '\0';
   x->length = len;
 }
@@ -247,7 +247,7 @@ void Strcat_charp_n(Str *x, const char *y, int n) {
       exit(1);
     x->area_size = newlen;
   }
-  bcopy((void *)y, (void *)&x->ptr[x->length], n);
+  memcpy(&x->ptr[x->length], y, n);
   x->length += n;
   x->ptr[x->length] = '\0';
 }

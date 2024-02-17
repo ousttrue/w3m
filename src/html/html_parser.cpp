@@ -380,7 +380,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env,
 
     if (obuf->bp.pos == obuf->pos && tp <= ep && tp > line->ptr &&
         tp[-1] == ' ') {
-      bcopy(tp, tp - 1, ep - tp + 1);
+      memcpy(tp - 1, tp, ep - tp + 1);
       line->length--;
       obuf->pos--;
     }
@@ -637,8 +637,8 @@ int HtmlParser::close_effect0(struct readbuffer *obuf, int cmd) {
   }
   if (i >= 0) {
     obuf->tag_sp--;
-    bcopy(&obuf->tag_stack[i + 1], &obuf->tag_stack[i],
-          (obuf->tag_sp - i) * sizeof(struct cmdtable *));
+    memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1],
+           (obuf->tag_sp - i) * sizeof(struct cmdtable *));
     return 1;
   } else if ((p = this->has_hidden_link(obuf, cmd)) != NULL) {
     this->passthrough(obuf, p, 1);
@@ -671,8 +671,8 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env,
       } else {
         if (i >= 0) {
           obuf->tag_sp--;
-          bcopy(&obuf->tag_stack[i + 1], &obuf->tag_stack[i],
-                (obuf->tag_sp - i) * sizeof(struct cmdtable *));
+          memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1],
+                 (obuf->tag_sp - i) * sizeof(struct cmdtable *));
         } else {
           passthrough(obuf, p, 1);
         }
@@ -694,8 +694,8 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env,
 void HtmlParser::save_fonteffect(struct html_feed_environ *h_env,
                                  struct readbuffer *obuf) {
   if (obuf->fontstat_sp < FONT_STACK_SIZE)
-    bcopy(obuf->fontstat, obuf->fontstat_stack[obuf->fontstat_sp],
-          FONTSTAT_SIZE);
+    memcpy(obuf->fontstat_stack[obuf->fontstat_sp], obuf->fontstat,
+           FONTSTAT_SIZE);
   if (obuf->fontstat_sp < INT_MAX)
     obuf->fontstat_sp++;
   if (obuf->in_bold)
@@ -716,8 +716,8 @@ void HtmlParser::restore_fonteffect(struct html_feed_environ *h_env,
   if (obuf->fontstat_sp > 0)
     obuf->fontstat_sp--;
   if (obuf->fontstat_sp < FONT_STACK_SIZE)
-    bcopy(obuf->fontstat_stack[obuf->fontstat_sp], obuf->fontstat,
-          FONTSTAT_SIZE);
+    memcpy(obuf->fontstat, obuf->fontstat_stack[obuf->fontstat_sp],
+           FONTSTAT_SIZE);
   if (obuf->in_bold)
     push_tag(obuf, "<b>", HTML_B);
   if (obuf->in_italic)
@@ -3017,7 +3017,7 @@ static int need_flushline(struct html_feed_environ *h_env,
 
 static void back_to_breakpoint(struct readbuffer *obuf) {
   obuf->flag = obuf->bp.flag;
-  bcopy((void *)&obuf->bp.anchor, (void *)&obuf->anchor, sizeof(obuf->anchor));
+  memcpy(&obuf->anchor, &obuf->bp.anchor, sizeof(obuf->anchor));
   obuf->img_alt = obuf->bp.img_alt;
   obuf->input_alt = obuf->bp.input_alt;
   obuf->in_bold = obuf->bp.in_bold;
