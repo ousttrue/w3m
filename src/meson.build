@@ -1,5 +1,3 @@
-subdir('input')
-
 # SHELL=/bin/bash
 PACKAGE = meson.project_name()
 # VERSION = 0.5.3
@@ -78,7 +76,6 @@ executable(
         'html/html_parser.cpp',
         'html/lineprop.cpp',
         'keybind.cpp',
-        'signal_util.cpp',
         'Str.cpp',
         'regex.cpp',
         'textlist.cpp',
@@ -128,17 +125,7 @@ executable(
         'file_util.cpp',
     ],
     install: true,
-    dependencies: [
-        gc_dep,
-        ssl_dep,
-        ncurses_dep,
-        m_dep, # , wc_dep
-        istream_dep,
-        nkf_dep,
-        lua_dep,
-        libuv_dep,
-        screen_dep,
-    ],
+    dependencies: deps,
     c_args: defs,
     cpp_args: defs,
 )
