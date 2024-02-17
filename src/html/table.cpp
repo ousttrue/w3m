@@ -387,7 +387,7 @@ static void suspend_or_pushdata(struct table *tbl, const char *line) {
 int visible_length_offset = 0;
 int visible_length(const char *str) {
   int len = 0, n, max_len = 0;
-  int status = R_ST_NORMAL;
+  auto status = R_ST_NORMAL;
   int prev_status = status;
   Str *tagbuf = Strnew();
   const char *t, *r2;
@@ -3137,7 +3137,7 @@ int feed_table(HtmlParser *parser, struct table *tbl, const char *line,
 void feed_table1(HtmlParser *parser, struct table *tbl, Str *tok,
                  struct table_mode *mode, int width) {
   Str *tokbuf;
-  int status;
+  ReadBufferStatus status;
   if (!tok)
     return;
   tokbuf = Strnew();

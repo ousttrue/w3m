@@ -127,7 +127,7 @@ Str *romanAlphabet(int n) {
   return r;
 }
 
-int next_status(char c, int *status) {
+int next_status(char c, ReadBufferStatus *status) {
   switch (*status) {
   case R_ST_NORMAL:
     if (c == '<') {
@@ -263,18 +263,22 @@ int next_status(char c, int *status) {
     if (c == '>')
       *status = R_ST_NORMAL;
     return 0;
+
+  case R_ST_EOL:
+    break;
   }
   /* notreached */
   return 0;
 }
 
-int read_token(Str *buf, const char **instr, int *status, int pre, int append) {
+int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
+               int append) {
   if (!append)
     Strclear(buf);
   if (**instr == '\0')
     return 0;
 
-  int prev_status;
+  ReadBufferStatus prev_status;
   const char *p;
   for (p = *instr; *p; p++) {
     /* Drop Unicode soft hyphen */
@@ -350,6 +354,9 @@ int read_token(Str *buf, const char **instr, int *status, int pre, int append) {
       /* do nothing */
       if (pre)
         Strcat_char(buf, *p);
+      break;
+
+    case R_ST_EOL:
       break;
     }
   }
@@ -449,45 +456,6 @@ int is_boundary(unsigned char *ch1, unsigned char *ch2) {
     return 0;
 
   return 1;
-}
-
-Str *correct_irrtag(int status) {
-  char c;
-  Str *tmp = Strnew();
-
-  while (status != R_ST_NORMAL) {
-    switch (status) {
-    case R_ST_CMNT:   /* required "-->" */
-    case R_ST_NCMNT1: /* required "->" */
-      c = '-';
-      break;
-    case R_ST_NCMNT2:
-    case R_ST_NCMNT3:
-    case R_ST_IRRTAG:
-    case R_ST_CMNT1:
-    case R_ST_CMNT2:
-    case R_ST_TAG:
-    case R_ST_TAG0:
-    case R_ST_EQL: /* required ">" */
-    case R_ST_VALUE:
-      c = '>';
-      break;
-    case R_ST_QUOTE:
-      c = '\'';
-      break;
-    case R_ST_DQUOTE:
-      c = '"';
-      break;
-    case R_ST_AMP:
-      c = ';';
-      break;
-    default:
-      return tmp;
-    }
-    next_status(c, &status);
-    Strcat_char(tmp, c);
-  }
-  return tmp;
 }
 
 static const char *_size_unit[] = {"b",  "kb", "Mb", "Gb", "Tb", "Pb",

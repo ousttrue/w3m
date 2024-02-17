@@ -1,6 +1,7 @@
 #pragma once
 #include "lineprop.h"
 #include "table.h"
+#include "readbuffer_status.h"
 
 #define MAX_INDENT_LEVEL 10
 
@@ -44,7 +45,7 @@ class HtmlParser {
   Str *cur_option_value = {};
   Str *cur_option_label = {};
   int cur_option_selected = {};
-  int cur_status = {};
+  ReadBufferStatus cur_status = {};
 
 public:
   HtmlParser();
