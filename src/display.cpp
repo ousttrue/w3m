@@ -17,7 +17,6 @@
 #include "textlist.h"
 #include "ctrlcode.h"
 #include "html/anchor.h"
-#include "signal_util.h"
 #include "proto.h"
 #include <math.h>
 

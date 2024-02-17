@@ -19,7 +19,6 @@
 #include "ctrlcode.h"
 #include "table.h"
 #include "html.h"
-#include "signal_util.h"
 #include "form.h"
 #include "textlist.h"
 #include "terms.h"
@@ -46,12 +45,6 @@ bool DisplayBorders = false;
 int displayInsDel = DISPLAY_INS_DEL_NORMAL;
 bool view_unseenobject = true;
 bool MetaRefresh = false;
-
-static JMP_BUF AbortLoading;
-static void KeyAbort(SIGNAL_ARG) {
-  LONGJMP(AbortLoading, 1);
-  SIGNAL_RETURN;
-}
 
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
@@ -568,7 +561,6 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
   long long trbyte = 0;
   struct html_feed_environ htmlenv1;
   struct readbuffer obuf;
-  MySignalHandler prevtrap = NULL;
 
   symbol_width = symbol_width0 = 1;
 
@@ -576,12 +568,6 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
             0);
 
   htmlenv1.buf = newTextLineList();
-
-  if (SETJMP(AbortLoading) != 0) {
-    parser.HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
-    goto phase2;
-  }
-  TRAP_ON;
 
   if (res->f.stream->IStype() != IST_ENCODED) {
     res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
@@ -616,9 +602,7 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
     layout->title = htmlenv1.title;
   }
 
-phase2:
   res->trbyte = trbyte + linelen;
-  TRAP_OFF;
   HTMLlineproc2(&parser, res, layout, htmlenv1.buf);
 
   layout->topLine = layout->firstLine;

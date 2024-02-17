@@ -10,7 +10,6 @@
 #include "http_request.h"
 #include "etc.h"
 #include "html/form.h"
-#include "signal_util.h"
 #include "alloc.h"
 #include "proto.h"
 #include "hash.h"

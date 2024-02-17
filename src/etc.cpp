@@ -12,7 +12,6 @@
 #include "html/readbuffer.h"
 #include "w3m.h"
 #include "buffer.h"
-#include "signal_util.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "textlist.h"
@@ -399,4 +398,40 @@ Str *unescape_spaces(Str *s) {
   if (tmp)
     return tmp;
   return s;
+}
+
+static void close_all_fds_except(int i, int f) {
+  switch (i) { /* fall through */
+  case 0:
+    dup2(open("/dev/null", O_RDONLY), 0);
+  case 1:
+    dup2(open("/dev/null", O_WRONLY), 1);
+  case 2:
+    dup2(open("/dev/null", O_WRONLY), 2);
+  }
+  /* close all other file descriptors (socket, ...) */
+  for (i = 3; i < FOPEN_MAX; i++) {
+    if (i != f)
+      close(i);
+  }
+}
+
+void setup_child(int child, int i, int f) {
+  // reset_signals();
+  // mySignal(SIGINT, SIG_IGN);
+  // if (!child)
+  //   SETPGRP();
+  /*
+   * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in
+   * loadImage() and corrupt image data can be cached in ~/.w3m.
+   */
+  close_all_fds_except(i, f);
+  IsForkChild = true;
+  fmInitialized = false;
+}
+
+void myExec(const char *command) {
+  // mySignal(SIGINT, SIG_DFL);
+  execl("/bin/sh", "sh", "-c", command, 0);
+  exit(127);
 }

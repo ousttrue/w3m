@@ -22,7 +22,6 @@
 #include "http_response.h"
 #include "message.h"
 #include "http_session.h"
-#include "signal_util.h"
 #include "local_cgi.h"
 #include "Str.h"
 #include "search.h"
@@ -549,7 +548,7 @@ void selBuf() {
 //"Suspend w3m to background"
 void susp() {
 #ifndef SIGSTOP
-  char *shell;
+  const char *shell;
 #endif /* not SIGSTOP */
   move(LASTLINE(), 0);
   clrtoeolx();

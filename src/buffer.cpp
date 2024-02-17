@@ -6,7 +6,6 @@
 #include "quote.h"
 #include "app.h"
 #include "search.h"
-#include "signal_util.h"
 #include "search.h"
 #include "tabbuffer.h"
 #include "http_response.h"

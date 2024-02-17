@@ -2,7 +2,6 @@
 #include "quote.h"
 #include "myctype.h"
 #include "downloadlist.h"
-#include "signal_util.h"
 #include "terms.h"
 #include "etc.h"
 #include "linein.h"

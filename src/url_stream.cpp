@@ -13,7 +13,6 @@
 #include "message.h"
 #include "history.h"
 #include "terms.h"
-#include "signal_util.h"
 #include "compression.h"
 #include "mimetypes.h"
 #include "ssl_util.h"
@@ -70,12 +69,6 @@ int ai_family_order_table[7][3] = {
     {PF_INET6, PF_UNSPEC, PF_UNSPEC},  /* 6:inet6 */
 };
 #endif /* INET6 */
-
-static JMP_BUF AbortLoading;
-static void KeyAbort(SIGNAL_ARG) {
-  LONGJMP(AbortLoading, 1);
-  SIGNAL_RETURN;
-}
 
 bool PermitSaveToPipe = false;
 bool AutoUncompress = false;
@@ -210,21 +203,20 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   int a1, a2, a3, a4;
   unsigned long adr;
 #endif /* not INET6 */
-  MySignalHandler prevtrap = nullptr;
 
   if (fmInitialized) {
     message(Sprintf("Opening socket...")->ptr, 0, 0);
     refresh(term_io());
   }
-  if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: user abort\n");
-#endif
-    if (sock >= 0)
-      close(sock);
-    goto error;
-  }
-  TRAP_ON;
+//   if (SETJMP(AbortLoading) != 0) {
+// #ifdef SOCK_DEBUG
+//     sock_log("openSocket() failed. reason: user abort\n");
+// #endif
+//     if (sock >= 0)
+//       close(sock);
+//     goto error;
+//   }
+//   TRAP_ON;
   if (hostname == nullptr) {
 #ifdef SOCK_DEBUG
     sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
@@ -362,10 +354,9 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   }
 #endif /* not INET6 */
 
-  TRAP_OFF;
   return sock;
+
 error:
-  TRAP_OFF;
   return -1;
 }
 
@@ -605,13 +596,13 @@ int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf) {
     return -1;
   }
 
-  static JMP_BUF env_bak;
-  bcopy(AbortLoading, env_bak, sizeof(JMP_BUF));
-  MySignalHandler prevtrap = nullptr;
-  if (SETJMP(AbortLoading) != 0) {
-    goto _end;
-  }
-  TRAP_ON;
+  // static JMP_BUF env_bak;
+  // bcopy(AbortLoading, env_bak, sizeof(JMP_BUF));
+  // MySignalHandler prevtrap = nullptr;
+  // if (SETJMP(AbortLoading) != 0) {
+  //   goto _end;
+  // }
+  // TRAP_ON;
   {
     int count;
     buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
@@ -625,8 +616,8 @@ int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf) {
     }
   }
 _end:
-  bcopy(env_bak, AbortLoading, sizeof(JMP_BUF));
-  TRAP_OFF;
+  // bcopy(env_bak, AbortLoading, sizeof(JMP_BUF));
+  // TRAP_OFF;
   xfree(buf);
   fclose(ff);
   // current_content_length = 0;

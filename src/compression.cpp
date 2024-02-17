@@ -1,5 +1,4 @@
 #include "compression.h"
-#include "signal_util.h"
 #include "etc.h"
 #include "rc.h"
 #include "mimetypes.h"

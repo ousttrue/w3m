@@ -31,7 +31,6 @@
 #include "cookie.h"
 #include "w3m.h"
 #include "http_request.h"
-#include "signal_util.h"
 #include "myctype.h"
 #include "proto.h"
 #include "keyvalue.h"

@@ -4,7 +4,6 @@
 #include "Str.h"
 #include "app.h"
 #include "terms.h"
-#include "signal_util.h"
 #include "w3m.h"
 #include "message.h"
 #include "display.h"
@@ -175,12 +174,6 @@ int backwardSearch(LineLayout *layout, const char *str) {
   return SR_NOTFOUND;
 }
 
-JMP_BUF IntReturn;
-static void intTrap(SIGNAL_ARG) { /* Interrupt catcher */
-  LONGJMP(IntReturn, 0);
-  SIGNAL_RETURN;
-}
-
 static const char *SearchString = nullptr;
 int (*searchRoutine)(LineLayout *, const char *);
 
@@ -194,7 +187,6 @@ static void clear_mark(Line *l) {
 
 /* search by regular expression */
 int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
-  MySignalHandler prevtrap = {};
   int i, result = SR_NOTFOUND;
 
   if (str != nullptr && str != SearchString)
@@ -203,16 +195,15 @@ int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
     return SR_NOTFOUND;
 
   str = SearchString;
-  prevtrap = mySignal(SIGINT, intTrap);
   crmode();
-  if (SETJMP(IntReturn) == 0) {
-    for (i = 0; i < PREC_NUM; i++) {
-      result = func(&CurrentTab->currentBuffer()->layout, str);
-      if (i < PREC_NUM - 1 && result & SR_FOUND)
-        clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
-    }
-  }
-  mySignal(SIGINT, prevtrap);
+  // if (SETJMP(IntReturn) == 0) {
+  //   for (i = 0; i < PREC_NUM; i++) {
+  //     result = func(&CurrentTab->currentBuffer()->layout, str);
+  //     if (i < PREC_NUM - 1 && result & SR_FOUND)
+  //       clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
+  //   }
+  // }
+  // mySignal(SIGINT, prevtrap);
   term_raw();
   return result;
 }

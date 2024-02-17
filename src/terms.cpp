@@ -9,7 +9,6 @@
 #include "proto.h"
 #include "Str.h"
 #include "ctrlcode.h"
-#include "signal_util.h"
 #include "myctype.h"
 #include "terms.h"
 #include <errno.h>
@@ -167,7 +166,6 @@ int set_tty(void) {
   return 0;
 }
 
-void reset_error_exit(SIGNAL_ARG);
 void ttymode_set(int mode, int imode) {
   TerminalMode ioval;
 
@@ -181,7 +179,7 @@ void ttymode_set(int mode, int imode) {
     if (errno == EINTR || errno == EAGAIN)
       continue;
     printf("Error occurred while set %x: errno=%d\n", mode, errno);
-    reset_error_exit(SIGNAL_ARGLIST);
+    // reset_error_exit(SIGNAL_ARGLIST);
   }
 }
 
@@ -198,7 +196,7 @@ void ttymode_reset(int mode, int imode) {
     if (errno == EINTR || errno == EAGAIN)
       continue;
     printf("Error occurred while reset %x: errno=%d\n", mode, errno);
-    reset_error_exit(SIGNAL_ARGLIST);
+    // reset_error_exit(SIGNAL_ARGLIST);
   }
 }
 
@@ -212,7 +210,7 @@ void set_cc(int spec, int val) {
     if (errno == EINTR || errno == EAGAIN)
       continue;
     printf("Error occurred: errno=%d\n", errno);
-    reset_error_exit(SIGNAL_ARGLIST);
+    // reset_error_exit(SIGNAL_ARGLIST);
   }
 }
 #endif /* not HAVE_SGTTY_H */
@@ -240,30 +238,30 @@ void reset_tty(void) {
     close_tty();
 }
 
-void reset_error_exit(SIGNAL_ARG) { App::instance().exit(1); }
+// void reset_error_exit(SIGNAL_ARG) { App::instance().exit(1); }
 
-void reset_exit(SIGNAL_ARG) { App::instance().exit(0); }
+// void reset_exit(SIGNAL_ARG) { App::instance().exit(0); }
 
-void error_dump(SIGNAL_ARG) {
-  mySignal(SIGIOT, SIG_DFL);
-  reset_tty();
-  abort();
-  SIGNAL_RETURN;
-}
+// void error_dump(SIGNAL_ARG) {
+//   mySignal(SIGIOT, SIG_DFL);
+//   reset_tty();
+//   abort();
+//   SIGNAL_RETURN;
+// }
 
-void set_int(void) {
-  mySignal(SIGHUP, reset_exit);
-  mySignal(SIGINT, reset_exit);
-  mySignal(SIGQUIT, reset_exit);
-  mySignal(SIGTERM, reset_exit);
-  mySignal(SIGILL, error_dump);
-  mySignal(SIGIOT, error_dump);
-  mySignal(SIGFPE, error_dump);
-#ifdef SIGBUS
-  mySignal(SIGBUS, error_dump);
-#endif /* SIGBUS */
-       /* mySignal(SIGSEGV, error_dump); */
-}
+// void set_int(void) {
+//   mySignal(SIGHUP, reset_exit);
+//   mySignal(SIGINT, reset_exit);
+//   mySignal(SIGQUIT, reset_exit);
+//   mySignal(SIGTERM, reset_exit);
+//   mySignal(SIGILL, error_dump);
+//   mySignal(SIGIOT, error_dump);
+//   mySignal(SIGFPE, error_dump);
+// #ifdef SIGBUS
+//   mySignal(SIGBUS, error_dump);
+// #endif /* SIGBUS */
+//        /* mySignal(SIGSEGV, error_dump); */
+// }
 
 static void setgraphchar(void) {
   int c, i, n;
@@ -301,14 +299,14 @@ void getTCstr(void) {
   ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
   if (ent == NULL) {
     fprintf(stderr, "TERM is not set\n");
-    reset_error_exit(SIGNAL_ARGLIST);
+    // reset_error_exit(SIGNAL_ARGLIST);
   }
 
   r = tgetent(bp, ent);
   if (r != 1) {
     /* Can't find termcap entry */
     fprintf(stderr, "Can't find termcap entry %s\n", ent);
-    reset_error_exit(SIGNAL_ARGLIST);
+    // reset_error_exit(SIGNAL_ARGLIST);
   }
 
   GETSTR(T_ce, "ce"); /* clear to the end of line */
@@ -385,7 +383,7 @@ void setlinescols(void) {
 int initscr(void) {
   if (set_tty() < 0)
     return -1;
-  set_int();
+  // set_int();
   getTCstr();
   if (_entry.T_ti && !Do_not_use_ti_te)
     term_writestr(_entry.T_ti);
@@ -544,7 +542,7 @@ int sleep_till_anykey(int sec, int purge) {
   er = TerminalSet(tty, &ioval);
   if (er == -1) {
     printf("Error occurred: errno=%d\n", errno);
-    reset_error_exit(SIGNAL_ARGLIST);
+    // reset_error_exit(SIGNAL_ARGLIST);
   }
   return ret;
 }
