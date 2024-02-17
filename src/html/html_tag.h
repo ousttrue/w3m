@@ -104,4 +104,5 @@ public:
   bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
   bool parsedtag_set_value(HtmlTagAttr id, char *value);
   Str *parsedtag2str() const;
+  int ul_type(int default_type) const;
 };

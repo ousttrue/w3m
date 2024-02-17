@@ -689,12 +689,13 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
         parser->flushline(&h_env, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
           parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
-        if (RB_GET_ALIGN(&h_env.obuf) == RB_CENTER)
+        if (h_env.obuf.RB_GET_ALIGN() == RB_CENTER) {
           alignment = ALIGN_CENTER;
-        else if (RB_GET_ALIGN(&h_env.obuf) == RB_RIGHT)
+        } else if (h_env.obuf.RB_GET_ALIGN() == RB_RIGHT) {
           alignment = ALIGN_RIGHT;
-        else
+        } else {
           alignment = ALIGN_LEFT;
+        }
 
         if (alignment != ALIGN_LEFT) {
           for (ti = tbl->tables[id].buf->first; ti != NULL; ti = ti->next)

@@ -1,5 +1,6 @@
 #pragma once
 #include "utf8.h"
+#include "enum_template.h"
 #include "anchor.h"
 #include "html_command.h"
 #include <memory>
@@ -33,54 +34,40 @@ extern bool MetaRefresh;
 #define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
 
-#define RB_PRE 0x01
-#define RB_SCRIPT 0x02
-#define RB_STYLE 0x04
-#define RB_PLAIN 0x08
-#define RB_LEFT 0x10
-#define RB_CENTER 0x20
-#define RB_RIGHT 0x40
-#define RB_ALIGN (RB_LEFT | RB_CENTER | RB_RIGHT)
-#define RB_NOBR 0x80
-#define RB_P 0x100
-#define RB_PRE_INT 0x200
-#define RB_IN_DT 0x400
-#define RB_INTXTA 0x800
-#define RB_INSELECT 0x1000
-#define RB_IGNORE_P 0x2000
-#define RB_TITLE 0x4000
-#define RB_NFLUSHED 0x8000
-#define RB_NOFRAMES 0x10000
-#define RB_INTABLE 0x20000
-#define RB_PREMODE                                                             \
-  (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA)
-#define RB_SPECIAL                                                             \
-  (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR)
-#define RB_PLAIN_PRE 0x40000
-
+enum ReadBufferFlags {
+  RB_NONE = 0,
+  RB_PRE = 0x01,
+  RB_SCRIPT = 0x02,
+  RB_STYLE = 0x04,
+  RB_PLAIN = 0x08,
+  RB_LEFT = 0x10,
+  RB_CENTER = 0x20,
+  RB_RIGHT = 0x40,
+  RB_ALIGN = (RB_LEFT | RB_CENTER | RB_RIGHT),
+  RB_NOBR = 0x80,
+  RB_P = 0x100,
+  RB_PRE_INT = 0x200,
+  RB_IN_DT = 0x400,
+  RB_INTXTA = 0x800,
+  RB_INSELECT = 0x1000,
+  RB_IGNORE_P = 0x2000,
+  RB_TITLE = 0x4000,
+  RB_NFLUSHED = 0x8000,
+  RB_NOFRAMES = 0x10000,
+  RB_INTABLE = 0x20000,
+  RB_PREMODE =
+      (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA),
+  RB_SPECIAL =
+      (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR),
+  RB_PLAIN_PRE = 0x40000,
 #ifdef FORMAT_NICE
-#define RB_FILL 0x80000
+  RB_FILL = 0x80000,
 #endif /* FORMAT_NICE */
-#define RB_DEL 0x100000
-#define RB_S 0x200000
-#define RB_HTML5 0x400000
-
-#define RB_GET_ALIGN(obuf) ((obuf)->flag & RB_ALIGN)
-#define RB_SET_ALIGN(obuf, align)                                              \
-  do {                                                                         \
-    (obuf)->flag &= ~RB_ALIGN;                                                 \
-    (obuf)->flag |= (align);                                                   \
-  } while (0)
-#define RB_SAVE_FLAG(obuf)                                                     \
-  {                                                                            \
-    if ((obuf)->flag_sp < RB_STACK_SIZE)                                       \
-      (obuf)->flag_stack[(obuf)->flag_sp++] = RB_GET_ALIGN(obuf);              \
-  }
-#define RB_RESTORE_FLAG(obuf)                                                  \
-  {                                                                            \
-    if ((obuf)->flag_sp > 0)                                                   \
-      RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]);               \
-  }
+  RB_DEL = 0x100000,
+  RB_S = 0x200000,
+  RB_HTML5 = 0x400000,
+};
+ENUM_OP_INSTANCE(ReadBufferFlags);
 
 /* state of token scanning finite state machine */
 #define R_ST_NORMAL 0  /* normal */
@@ -126,19 +113,19 @@ struct input_alt_attr {
 };
 
 struct Breakpoint {
-  int pos;
-  int len;
-  int tlen;
-  long flag;
-  Anchor anchor;
-  Str *img_alt;
+  int pos = 0;
+  int len = 0;
+  int tlen = 0;
+  ReadBufferFlags flag = {};
+  Anchor anchor = {};
+  Str *img_alt = nullptr;
   struct input_alt_attr input_alt = {};
-  char fontstat[FONTSTAT_SIZE];
-  short nobr_level;
-  Lineprop prev_ctype;
+  char fontstat[FONTSTAT_SIZE] = {0};
+  short nobr_level = 0;
+  Lineprop prev_ctype = 0;
   char init_flag = 1;
-  short top_margin;
-  short bottom_margin;
+  short top_margin = 0;
+  short bottom_margin = 0;
 };
 
 struct cmdtable {
@@ -151,8 +138,8 @@ struct readbuffer {
   Lineprop cprop = 0;
   short pos = 0;
   Str *prevchar;
-  long flag;
-  long flag_stack[RB_STACK_SIZE];
+  ReadBufferFlags flag = {};
+  ReadBufferFlags flag_stack[RB_STACK_SIZE];
   int flag_sp = 0;
   int status;
   unsigned char end_tag;
@@ -173,6 +160,24 @@ struct readbuffer {
   short bottom_margin = 0;
 
   readbuffer();
+
+  ReadBufferFlags RB_GET_ALIGN() const { return (this->flag & RB_ALIGN); }
+
+  void RB_SET_ALIGN(ReadBufferFlags align) {
+    this->flag &= ~RB_ALIGN;
+    this->flag |= (align);
+  }
+
+  void RB_SAVE_FLAG() {
+    if (this->flag_sp < RB_STACK_SIZE)
+      this->flag_stack[this->flag_sp++] = RB_GET_ALIGN();
+  }
+
+  void RB_RESTORE_FLAG() {
+    if (this->flag_sp > 0)
+      RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
+  }
+
   void set_breakpoint(int tag_length);
   void back_to_breakpoint() {
     this->flag = this->bp.flag;

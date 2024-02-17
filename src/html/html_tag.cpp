@@ -293,3 +293,16 @@ Str *HtmlTag::parsedtag2str() const {
   Strcat_char(tagstr, '>');
   return tagstr;
 }
+
+int HtmlTag::ul_type(int default_type) const {
+  char *p;
+  if (this->parsedtag_get_value(ATTR_TYPE, &p)) {
+    if (!strcasecmp(p, "disc"))
+      return (int)'d';
+    else if (!strcasecmp(p, "circle"))
+      return (int)'c';
+    else if (!strcasecmp(p, "square"))
+      return (int)'s';
+  }
+  return default_type;
+}

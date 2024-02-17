@@ -391,11 +391,11 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   if (force == 1 || obuf->flag & RB_NFLUSHED) {
     TextLine *lbuf = newTextLine(line, obuf->pos);
-    if (RB_GET_ALIGN(obuf) == RB_CENTER) {
+    if (obuf->RB_GET_ALIGN() == RB_CENTER) {
       align(lbuf, width, ALIGN_CENTER);
-    } else if (RB_GET_ALIGN(obuf) == RB_RIGHT) {
+    } else if (obuf->RB_GET_ALIGN() == RB_RIGHT) {
       align(lbuf, width, ALIGN_RIGHT);
-    } else if (RB_GET_ALIGN(obuf) == RB_LEFT && obuf->flag & RB_INTABLE) {
+    } else if (obuf->RB_GET_ALIGN() == RB_LEFT && obuf->flag & RB_INTABLE) {
       align(lbuf, width, ALIGN_LEFT);
     }
 #ifdef FORMAT_NICE
@@ -1842,7 +1842,7 @@ static void process_idattr(HtmlParser *parser, struct readbuffer *obuf, int cmd,
 #define CLOSE_P                                                                \
   if (obuf->flag & RB_P) {                                                     \
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);               \
-    RB_RESTORE_FLAG(obuf);                                                     \
+    obuf->RB_RESTORE_FLAG();                                                   \
     obuf->flag &= ~RB_P;                                                       \
   }
 
@@ -1890,21 +1890,8 @@ static void process_idattr(HtmlParser *parser, struct readbuffer *obuf, int cmd,
   if (h_env->envc_real-- < (int)h_env->envs.size())                            \
     h_env->envc--;
 
-static int ul_type(struct HtmlTag *tag, int default_type) {
-  char *p;
-  if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-    if (!strcasecmp(p, "disc"))
-      return (int)'d';
-    else if (!strcasecmp(p, "circle"))
-      return (int)'c';
-    else if (!strcasecmp(p, "square"))
-      return (int)'s';
-  }
-  return default_type;
-}
-
 static void set_alignment(struct readbuffer *obuf, struct HtmlTag *tag) {
-  long flag = -1;
+  auto flag = (ReadBufferFlags)-1;
   int align;
 
   if (tag->parsedtag_get_value(ATTR_ALIGN, &align)) {
@@ -1922,9 +1909,9 @@ static void set_alignment(struct readbuffer *obuf, struct HtmlTag *tag) {
       flag = RB_LEFT;
     }
   }
-  RB_SAVE_FLAG(obuf);
+  obuf->RB_SAVE_FLAG();
   if (flag != -1) {
-    RB_SET_ALIGN(obuf, flag);
+    obuf->RB_SET_ALIGN(flag);
   }
 }
 int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
@@ -2056,7 +2043,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
     }
     do_blankline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
-    RB_RESTORE_FLAG(obuf);
+    obuf->RB_RESTORE_FLAG();
     this->close_anchor(h_env);
     obuf->flag |= RB_IGNORE_P;
     return 1;
@@ -2081,8 +2068,9 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
         envs[h_env->envc].type = (int)*p;
       }
     }
-    if (cmd == HTML_UL)
-      envs[h_env->envc].type = ul_type(tag, 0);
+    if (cmd == HTML_UL) {
+      envs[h_env->envc].type = tag->ul_type(0);
+    }
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
     return 1;
   case HTML_N_UL:
@@ -2134,7 +2122,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
       }
       switch (envs[h_env->envc].env) {
       case HTML_UL:
-        envs[h_env->envc].type = ul_type(tag, envs[h_env->envc].type);
+        envs[h_env->envc].type = tag->ul_type(envs[h_env->envc].type);
         for (i = 0; i < INDENT_INCR - 3; i++)
           push_charp(obuf, 1, NBSP, PC_ASCII);
         tmp = Strnew();
@@ -2585,17 +2573,19 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     CLOSE_A;
     if (!(obuf->flag & (RB_PREMODE | RB_IGNORE_P)))
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    RB_SAVE_FLAG(obuf);
-    if (DisableCenter)
-      RB_SET_ALIGN(obuf, RB_LEFT);
-    else
-      RB_SET_ALIGN(obuf, RB_CENTER);
+    obuf->RB_SAVE_FLAG();
+    if (DisableCenter) {
+      obuf->RB_SET_ALIGN(RB_LEFT);
+    } else {
+      obuf->RB_SET_ALIGN(RB_CENTER);
+    }
     return 1;
   case HTML_N_CENTER:
     CLOSE_A;
-    if (!(obuf->flag & RB_PREMODE))
+    if (!(obuf->flag & RB_PREMODE)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    RB_RESTORE_FLAG(obuf);
+    }
+    obuf->RB_RESTORE_FLAG();
     return 1;
   case HTML_DIV:
     CLOSE_A;
@@ -2606,7 +2596,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   case HTML_N_DIV:
     CLOSE_A;
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    RB_RESTORE_FLAG(obuf);
+    obuf->RB_RESTORE_FLAG();
     return 1;
   case HTML_DIV_INT:
     CLOSE_P;
@@ -2617,7 +2607,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   case HTML_N_DIV_INT:
     CLOSE_P;
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    RB_RESTORE_FLAG(obuf);
+    obuf->RB_RESTORE_FLAG();
     return 1;
   case HTML_FORM:
     CLOSE_A;
