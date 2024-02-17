@@ -530,8 +530,8 @@ void term_cbreak(void) {
 }
 
 void term_title(const char *s) {
-  if (!fmInitialized)
-    return;
+  // if (!fmInitialized)
+  //   return;
   if (title_str != NULL) {
     fprintf(ttyf, title_str, s);
   }

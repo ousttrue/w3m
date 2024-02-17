@@ -394,16 +394,15 @@ int do_recursive_mkdir(const char *dir) {
 }
 
 int exec_cmd(const std::string &cmd) {
-  fmTerm();
+  App::instance().endRawMode();
   if (auto rv = system(cmd.c_str())) {
     printf("\n[Hit any key]");
     fflush(stdout);
-    fmInit();
+    App::instance().beginRawMode();
     getch();
     return rv;
   }
-  fmInit();
-
+  App::instance().endRawMode();
   return 0;
 }
 
@@ -457,7 +456,7 @@ void setup_child(int child, int i, int f) {
    */
   close_all_fds_except(i, f);
   IsForkChild = true;
-  fmInitialized = false;
+  // fmInitialized = false;
 }
 
 void myExec(const char *command) {

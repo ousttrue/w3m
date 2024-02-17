@@ -299,20 +299,18 @@ void readsh() {
 // EXEC_SHELL SHELL
 //"Execute shell command and display output"
 void execsh() {
-  const char *cmd;
-
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  cmd = App::instance().searchKeyData();
+  auto cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
     // cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd != nullptr && *cmd != '\0') {
-    fmTerm();
+    App::instance().endRawMode();
     printf("\n");
     (void)!system(cmd); /* We do not care about the exit code here! */
     printf("\n[Hit any key]");
     fflush(stdout);
-    fmInit();
+    App::instance().beginRawMode();
     // getch();
   }
   App::instance().invalidate();
@@ -519,56 +517,56 @@ end:
 /* Quit */
 // ABORT EXIT
 //"Quit without confirmation"
-void quitfm() { _quitfm(false); }
+void quitfm() { App::instance().exit(0); }
 
 /* Question and Quit */
 // QUIT
 //"Quit with confirmation request"
-void qquitfm() { _quitfm(confirm_on_quit); }
+void qquitfm() { App::instance().exit(0); }
 
 /* Select buffer */
 // SELECT
 //"Display buffer-stack panel"
 void selBuf() {
 
-  auto ok = false;
-  do {
-    char cmd;
-    auto buf = selectBuffer(CurrentTab->firstBuffer,
-                            CurrentTab->currentBuffer(), &cmd);
-    ok = CurrentTab->select(cmd, buf);
-  } while (!ok);
-
-  App::instance().invalidate();
+  // auto ok = false;
+  // do {
+  //   char cmd;
+  //   auto buf = selectBuffer(CurrentTab->firstBuffer,
+  //                           CurrentTab->currentBuffer(), &cmd);
+  //   ok = CurrentTab->select(cmd, buf);
+  // } while (!ok);
+  //
+  // App::instance().invalidate();
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 // INTERRUPT SUSPEND
 //"Suspend w3m to background"
 void susp() {
-#ifndef SIGSTOP
-  const char *shell;
-#endif /* not SIGSTOP */
-  // move(LASTLINE(), 0);
-  clrtoeolx();
-  // refresh(term_io());
-  fmTerm();
-#ifndef SIGSTOP
-  shell = getenv("SHELL");
-  if (shell == nullptr)
-    shell = "/bin/sh";
-  system(shell);
-#else  /* SIGSTOP */
-  signal(SIGTSTP, SIG_DFL); /* just in case */
-  /*
-   * Note: If susp() was called from SIGTSTP handler,
-   * unblocking SIGTSTP would be required here.
-   * Currently not.
-   */
-  kill(0, SIGTSTP); /* stop whole job, not a single process */
-#endif /* SIGSTOP */
-  fmInit();
-  App::instance().invalidate();
+  // #ifndef SIGSTOP
+  //   const char *shell;
+  // #endif /* not SIGSTOP */
+  //   // move(LASTLINE(), 0);
+  //   clrtoeolx();
+  //   // refresh(term_io());
+  //   fmTerm();
+  // #ifndef SIGSTOP
+  //   shell = getenv("SHELL");
+  //   if (shell == nullptr)
+  //     shell = "/bin/sh";
+  //   system(shell);
+  // #else  /* SIGSTOP */
+  //   signal(SIGTSTP, SIG_DFL); /* just in case */
+  //   /*
+  //    * Note: If susp() was called from SIGTSTP handler,
+  //    * unblocking SIGTSTP would be required here.
+  //    * Currently not.
+  //    */
+  //   kill(0, SIGTSTP); /* stop whole job, not a single process */
+  // #endif /* SIGSTOP */
+  //   fmInit();
+  //   App::instance().invalidate();
 }
 
 // GOTO_LINE
@@ -1401,7 +1399,9 @@ void curlno() {
 
 // VERSION
 //"Display the version of w3m"
-void dispVer() { App::instance().disp_message(Sprintf("w3m version %s", w3m_version)->ptr); }
+void dispVer() {
+  App::instance().disp_message(Sprintf("w3m version %s", w3m_version)->ptr);
+}
 
 // WRAP_TOGGLE
 //"Toggle wrapping mode in searches"

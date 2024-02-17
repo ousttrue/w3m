@@ -368,8 +368,6 @@ struct param_ptr params3[] = {
     {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY, NULL},
     {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
     {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST, NULL},
-    {"confirm_qq", P_INT, PI_ONOFF, (void *)&confirm_on_quit, CMT_CONFIRM_QQ,
-     NULL},
     {"close_tab_back", P_INT, PI_ONOFF, (void *)&close_tab_back,
      CMT_CLOSE_TAB_BACK, NULL},
     {"emacs_like_lineedit", P_INT, PI_ONOFF, (void *)&emacs_like_lineedit,
@@ -838,9 +836,7 @@ void sync_with_option(void) {
     AcceptEncoding = acceptableEncoding();
   if (AcceptMedia == NULL || *AcceptMedia == '\0')
     AcceptMedia = acceptableMimeTypes();
-  if (fmInitialized) {
-    initKeymap(false);
-  }
+  initKeymap(false);
 }
 
 void init_rc(void) {

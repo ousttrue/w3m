@@ -1,6 +1,8 @@
 #pragma once
 #include "termentry.h"
+#include "utf8.h"
 #include <stdio.h>
+#include <functional>
 
 struct Utf8;
 using l_prop = unsigned short;
@@ -51,33 +53,63 @@ struct RowCol {
 
 class TermScreen {
   RowCol _size;
+  int COLS() const { return _size.col; }
+  int LINES() const { return _size.row; }
+
   TermEntry _entry;
+
+  int max_LINES = 0;
+  int max_COLS = 0;
+  int graph_enabled = 0;
+  int tab_step = 8;
+  Screen *ScreenElem = {};
+  Screen **ScreenImage = {};
+  l_prop CurrentMode = {};
+  int CurLine;
+  int CurColumn;
+
+  void touch_column(int col) {
+    if (col >= 0 && col < COLS())
+      ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
+  }
+
+  void touch_line(void) {
+    if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
+      int i;
+      for (i = 0; i < COLS(); i++)
+        ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
+      ScreenImage[CurLine]->isdirty =
+          (LineDirtyFlags)(ScreenImage[CurLine]->isdirty | L_DIRTY);
+    }
+  }
 
 public:
   void setupscreen(const RowCol &size, const TermEntry &entry);
   void clear();
-
   void _refresh(FILE *ttyf);
+  void clrtoeol();
+  void refresh(FILE *ttyf);
+  void clrtoeolx();
+  void clrtobot_eol(const std::function<void()> &);
+  void clrtobot(void) { clrtobot_eol(std::bind(&TermScreen::clrtoeol, this)); }
+  void clrtobotx(void) {
+    clrtobot_eol(std::bind(&TermScreen::clrtoeolx, this));
+  }
+  void wrap();
+  void no_clrtoeol();
+  void move(int line, int column);
+  void addmch(const Utf8 &utf8);
+  void addch(char c) { addmch({(char8_t)c, 0, 0, 0}); }
+  void addstr(const char *s);
+  void addnstr(const char *s, int n);
+  void addnstr_sup(const char *s, int n);
+  void toggle_stand();
+  void bold(void) { CurrentMode |= S_BOLD; }
+  void boldend(void) { CurrentMode &= ~S_BOLD; }
+  void underline(void) { CurrentMode |= S_UNDERLINE; }
+  void underlineend(void) { CurrentMode &= ~S_UNDERLINE; }
+  void graphstart(void) { CurrentMode |= S_GRAPHICS; }
+  void graphend(void) { CurrentMode &= ~S_GRAPHICS; }
+  void standout(void) { CurrentMode |= S_STANDOUT; }
+  void standend(void) { CurrentMode &= ~S_STANDOUT; }
 };
-
-void refresh(FILE *ttyf);
-void clrtoeol();
-void clrtoeolx();
-void clrtobot();
-void clrtobotx();
-void no_clrtoeol();
-void move(int line, int column);
-void addch(char c);
-void addmch(const Utf8 &utf8);
-void addstr(const char *s);
-void addnstr(const char *s, int n);
-void addnstr_sup(const char *s, int n);
-void standout();
-void standend();
-void toggle_stand();
-void bold();
-void boldend();
-void underline();
-void underlineend();
-void graphstart();
-void graphend();

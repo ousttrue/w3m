@@ -5,36 +5,11 @@
 #include "termentry.h"
 #include <ftxui/screen/screen.hpp>
 
-static int max_LINES = 0;
-static int max_COLS = 0;
-static int graph_enabled = 0;
-static int tab_step = 8;
-
-static Screen *ScreenElem = {};
-static Screen **ScreenImage = {};
-static l_prop CurrentMode = {};
-static int CurLine;
-static int CurColumn;
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 #define SETCH(var, ch, len) ((var) = (ch))
 #define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 #define M_CEOL (~(M_SPACE | C_WHICHCHAR))
-
-static void touch_column(int col) {
-  if (col >= 0 && col < COLS())
-    ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
-}
-
-static void touch_line(void) {
-  if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
-    int i;
-    for (i = 0; i < COLS(); i++)
-      ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
-    ScreenImage[CurLine]->isdirty =
-        (LineDirtyFlags)(ScreenImage[CurLine]->isdirty | L_DIRTY);
-  }
-}
 
 void TermScreen::setupscreen(const RowCol &size, const TermEntry &entry) {
   _size = size;
@@ -84,7 +59,7 @@ void TermScreen::clear(void) {
 }
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
-void clrtoeol(void) { /* Clear to the end of line */
+void TermScreen::clrtoeol() { /* Clear to the end of line */
   int i;
   auto lprop = ScreenImage[CurLine]->lineprop;
 
@@ -103,38 +78,32 @@ void clrtoeol(void) { /* Clear to the end of line */
   }
 }
 
-void clrtoeolx(void) { clrtoeol(); }
+void TermScreen::clrtoeolx(void) { clrtoeol(); }
 
-static void clrtobot_eol(void (*clrtoeol)()) {
-  int l, c;
-
-  l = CurLine;
-  c = CurColumn;
-  (*clrtoeol)();
+void TermScreen::clrtobot_eol(const std::function<void()> &ffclrtoeol) {
+  int l = CurLine;
+  int c = CurColumn;
+  clrtoeol();
   CurColumn = 0;
   CurLine++;
   for (; CurLine < LINES(); CurLine++)
-    (*clrtoeol)();
+    clrtoeol();
   CurLine = l;
   CurColumn = c;
 }
 
-void clrtobot(void) { clrtobot_eol(clrtoeol); }
-
-void clrtobotx(void) { clrtobot_eol(clrtoeolx); }
-
-void addstr(const char *s) {
+void TermScreen::addstr(const char *s) {
   while (*s != '\0')
     addch(*(s++));
 }
 
-void addnstr(const char *s, int n) {
+void TermScreen::addnstr(const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++)
     addch(*(s++));
 }
 
-void addnstr_sup(const char *s, int n) {
+void TermScreen::addnstr_sup(const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++)
     addch(*(s++));
@@ -174,7 +143,7 @@ static int need_redraw(const Utf8 &c1, l_prop pr1, const Utf8 &c2, l_prop pr2) {
   return 0;
 }
 
-void refresh(FILE *ttyf) {
+void TermScreen::refresh(FILE *ttyf) {
   // using namespace ftxui;
   auto screen = ftxui::Screen::Create(ftxui::Dimension::Fixed(COLS()),
                                       ftxui::Dimension::Fixed(LINES()));
@@ -362,14 +331,15 @@ void TermScreen::_refresh(FILE *ttyf) {
   term_move(CurLine, CurColumn);
   flush_tty();
 }
-void move(int line, int column) {
+
+void TermScreen::move(int line, int column) {
   if (line >= 0 && line < LINES())
     CurLine = line;
   if (column >= 0 && column < COLS())
     CurColumn = column;
 }
 
-void toggle_stand(void) {
+void TermScreen::toggle_stand(void) {
   l_prop *pr = ScreenImage[CurLine]->lineprop;
   pr[CurColumn] ^= S_STANDOUT;
 }
@@ -380,23 +350,7 @@ void toggle_stand(void) {
 //     CurrentMode |= (((color & 7) | 8) << 8);
 // }
 
-void bold(void) { CurrentMode |= S_BOLD; }
-
-void boldend(void) { CurrentMode &= ~S_BOLD; }
-
-void underline(void) { CurrentMode |= S_UNDERLINE; }
-
-void underlineend(void) { CurrentMode &= ~S_UNDERLINE; }
-
-void graphstart(void) { CurrentMode |= S_GRAPHICS; }
-
-void graphend(void) { CurrentMode &= ~S_GRAPHICS; }
-
-void standout(void) { CurrentMode |= S_STANDOUT; }
-
-void standend(void) { CurrentMode &= ~S_STANDOUT; }
-
-void wrap(void) {
+void TermScreen::wrap(void) {
   if (CurLine == LASTLINE()) {
     return;
   }
@@ -404,9 +358,8 @@ void wrap(void) {
   CurColumn = 0;
 }
 
-void addch(char c) { addmch({(char8_t)c, 0, 0, 0}); }
 
-void addmch(const Utf8 &utf8) {
+void TermScreen::addmch(const Utf8 &utf8) {
   if (CurColumn == COLS())
     wrap();
   if (CurColumn >= COLS())

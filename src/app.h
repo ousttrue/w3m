@@ -29,6 +29,8 @@ struct Buffer;
 struct TermScreen;
 class App {
   std::shared_ptr<TermScreen> _screen;
+  bool _fmInitialized = false;
+
   int _dirty = 1;
   std::list<std::string> _fileToDelete;
 
@@ -58,7 +60,11 @@ public:
     return s_instance;
   }
 
+  std::shared_ptr<TermScreen> screen() const { return _screen; }
   bool initialize();
+  void beginRawMode();
+  void endRawMode();
+  bool isRawMode() const { return _fmInitialized; }
   int mainLoop();
   void exit(int rval = 0);
 
@@ -141,5 +147,3 @@ public:
 
 char *convert_size(long long size, int usefloat);
 char *convert_size2(long long size1, long long size2, int usefloat);
-void fmInit(void);
-void fmTerm(void);

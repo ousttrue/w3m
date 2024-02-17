@@ -10,7 +10,7 @@ int INIT_BUFFER_WIDTH();
 extern bool FoldLine;
 int FOLD_BUFFER_WIDTH();
 
-void _displayBuffer();
-
-void addChar(char c, Lineprop mode);
-void addMChar(char *p, Lineprop mode, size_t len);
+class TermScreen;
+void _displayBuffer(TermScreen *screen);
+void addChar(TermScreen *screen, char c, Lineprop mode);
+void addMChar(TermScreen *screen, char *p, Lineprop mode, size_t len);

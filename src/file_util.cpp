@@ -84,7 +84,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   long long size = 0;
   int is_pipe = false;
 
-  if (fmInitialized) {
+  if (true /*fmInitialized*/) {
     p = App::instance().searchKeyData();
     if (p == nullptr || *p == '\0') {
       // q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,

@@ -27,40 +27,41 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-int TabBuffer::draw(TabBuffer *current) {
-  move(this->y, this->x1);
+int TabBuffer::draw(TermScreen *screen, TabBuffer *current) {
+  screen->move(this->y, this->x1);
   if (this == current) {
-    bold();
+    screen->bold();
   } else {
-    boldend();
+    screen->boldend();
   }
-  addch('[');
+  screen->addch('[');
   auto l = this->x2 - this->x1 - 1 -
            get_strwidth(this->currentBuffer()->layout.title.c_str());
   if (l < 0) {
     l = 0;
   }
   if (l / 2 > 0) {
-    addnstr_sup(" ", l / 2);
+    screen->addnstr_sup(" ", l / 2);
   }
 
   if (this == current) {
-    underline();
+    screen->underline();
     // standout();
   }
-  addnstr(this->currentBuffer()->layout.title.c_str(), this->x2 - this->x1 - l);
+  screen->addnstr(this->currentBuffer()->layout.title.c_str(),
+                  this->x2 - this->x1 - l);
   if (this == current) {
-    underlineend();
+    screen->underlineend();
     // standend();
   }
 
   if ((l + 1) / 2 > 0) {
-    addnstr_sup(" ", (l + 1) / 2);
+    screen->addnstr_sup(" ", (l + 1) / 2);
   }
-  move(this->y, this->x2);
-  addch(']');
+  screen->move(this->y, this->x2);
+  screen->addch(']');
   if (this == current) {
-    boldend();
+    screen->boldend();
   }
   return this->y;
 }

@@ -22,9 +22,7 @@
 #define PRE_FORM_FILE RC_DIR "/pre_form"
 
 const char *w3m_reqlog = {};
-bool fmInitialized = 0;
 bool IsForkChild = 0;
-bool confirm_on_quit = true;
 int label_topline = false;
 int displayLineInfo = false;
 int show_srch_str = true;
@@ -65,30 +63,6 @@ int clear_buffer = true;
 int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
 char *document_root = nullptr;
-
-void _quitfm(bool confirm) {
-  const char *ans = "y";
-  // if (checkDownloadList()) {
-  //   ans = inputChar("Download process retains. "
-  //                   "Do you want to exit w3m? (y/n)");
-  // } else if (confirm) {
-  //   ans = inputChar("Do you want to exit w3m? (y/n)");
-  // }
-
-  if (!(ans && TOLOWER(*ans) == 'y')) {
-    // cancel
-    App::instance().invalidate();
-    return;
-  }
-
-  // exit
-  term_title(""); /* XXX */
-  fmTerm();
-  save_cookies();
-  if (UseHistory && SaveURLHist)
-    saveHistory(URLHist, URLHistSize);
-  App::instance().exit(0);
-}
 
 Url urlParse(const char *src, std::optional<Url> current) {
   auto url = Url::parse(src, current);

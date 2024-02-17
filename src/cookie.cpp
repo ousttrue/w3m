@@ -901,7 +901,7 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
     if (err) {
       const char *ans =
           (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
-      if (fmInitialized && (err & COO_OVERRIDE_OK) &&
+      if (/*fmInitialized &&*/ (err & COO_OVERRIDE_OK) &&
           accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
         Str *msg =
             Sprintf("Accept bad cookie from %s for %s?", pu->host.c_str(),

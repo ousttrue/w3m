@@ -147,10 +147,7 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
       while (*p && IS_SPACE(*p))
         p++;
       http_response_code = atoi(p);
-      if (fmInitialized) {
-        App::instance().message(lineBuf2->ptr, 0, 0);
-        refresh(term_io());
-      }
+      App::instance().message(lineBuf2->ptr, 0, 0);
     }
     if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
       auto p = lineBuf2->ptr + 26;

@@ -65,178 +65,178 @@ std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
   return buf;
 }
 
-static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
-  int all = buf->layout.allLine;
-  if (all == 0 && buf->layout.lastLine != nullptr) {
-    all = buf->layout.lastLine->linenumber;
-  }
+// static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
+//   int all = buf->layout.allLine;
+//   if (all == 0 && buf->layout.lastLine != nullptr) {
+//     all = buf->layout.lastLine->linenumber;
+//   }
+//
+//   move(n, 0);
+//   auto msg = Sprintf("<%s> [%d lines]", buf->layout.title.c_str(), all);
+//   if (buf->res->filename.size()) {
+//     switch (buf->res->currentURL.schema) {
+//     case SCM_LOCAL:
+//     case SCM_LOCAL_CGI:
+//       if (buf->res->currentURL.file != "-") {
+//         Strcat_char(msg, ' ');
+//         Strcat(msg, buf->res->currentURL.real_file);
+//       }
+//       break;
+//     case SCM_UNKNOWN:
+//     case SCM_MISSING:
+//       break;
+//     default:
+//       Strcat_char(msg, ' ');
+//       Strcat(msg, buf->res->currentURL.to_Str());
+//       break;
+//     }
+//   }
+//   addnstr_sup(msg->ptr, COLS() - 1);
+// }
 
-  move(n, 0);
-  auto msg = Sprintf("<%s> [%d lines]", buf->layout.title.c_str(), all);
-  if (buf->res->filename.size()) {
-    switch (buf->res->currentURL.schema) {
-    case SCM_LOCAL:
-    case SCM_LOCAL_CGI:
-      if (buf->res->currentURL.file != "-") {
-        Strcat_char(msg, ' ');
-        Strcat(msg, buf->res->currentURL.real_file);
-      }
-      break;
-    case SCM_UNKNOWN:
-    case SCM_MISSING:
-      break;
-    default:
-      Strcat_char(msg, ' ');
-      Strcat(msg, buf->res->currentURL.to_Str());
-      break;
-    }
-  }
-  addnstr_sup(msg->ptr, COLS() - 1);
-}
-
-static std::shared_ptr<Buffer>
-listBuffer(const std::shared_ptr<Buffer> &top,
-           const std::shared_ptr<Buffer> &current) {
-  int i, c = 0;
-  std::shared_ptr<Buffer> buf = top;
-
-  move(0, 0);
-  clrtobotx();
-  for (i = 0; i < LASTLINE(); i++) {
-    if (buf == current) {
-      c = i;
-      standout();
-    }
-    writeBufferName(buf, i);
-    if (buf == current) {
-      standend();
-      clrtoeolx();
-      move(i, 0);
-      toggle_stand();
-    } else
-      clrtoeolx();
-    if (buf->backBuffer == nullptr) {
-      move(i + 1, 0);
-      clrtobotx();
-      break;
-    }
-    buf = buf->backBuffer;
-  }
-  standout();
-  App::instance().message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
-  standend();
-  /*
-   * move(LASTLINE, COLS - 1); */
-  move(c, 0);
-  refresh(term_io());
-  return buf->backBuffer;
-}
+// static std::shared_ptr<Buffer>
+// listBuffer(const std::shared_ptr<Buffer> &top,
+//            const std::shared_ptr<Buffer> &current) {
+//   int i, c = 0;
+//   std::shared_ptr<Buffer> buf = top;
+//
+//   move(0, 0);
+//   clrtobotx();
+//   for (i = 0; i < LASTLINE(); i++) {
+//     if (buf == current) {
+//       c = i;
+//       standout();
+//     }
+//     writeBufferName(buf, i);
+//     if (buf == current) {
+//       standend();
+//       clrtoeolx();
+//       move(i, 0);
+//       toggle_stand();
+//     } else
+//       clrtoeolx();
+//     if (buf->backBuffer == nullptr) {
+//       move(i + 1, 0);
+//       clrtobotx();
+//       break;
+//     }
+//     buf = buf->backBuffer;
+//   }
+//   standout();
+//   App::instance().message("Buffer selection mode: SPC for select / D for
+//   delete buffer", 0, 0); standend();
+//   /*
+//    * move(LASTLINE, COLS - 1); */
+//   move(c, 0);
+//   refresh(term_io());
+//   return buf->backBuffer;
+// }
 
 /*
  * Select buffer visually
  */
-std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
-                                     std::shared_ptr<Buffer> currentbuf,
-                                     char *selectchar) {
-  int i, cpoint,                    /* Current Buffer Number */
-      spoint,                       /* Current Line on Screen */
-      maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
-                                     * the * screen */
-  std::shared_ptr<Buffer> buf, topbuf;
-  char c;
-
-  i = cpoint = 0;
-  for (buf = firstbuf; buf != nullptr; buf = buf->backBuffer) {
-    if (buf == currentbuf)
-      cpoint = i;
-    i++;
-  }
-  maxbuf = i;
-
-  if (cpoint >= sclimit) {
-    spoint = sclimit / 2;
-    topbuf = nthBuffer(firstbuf, cpoint - spoint);
-  } else {
-    topbuf = firstbuf;
-    spoint = cpoint;
-  }
-  listBuffer(topbuf, currentbuf);
-
-  for (;;) {
-    if ((c = getch()) == ESC_CODE) {
-      if ((c = getch()) == '[' || c == 'O') {
-        switch (c = getch()) {
-        case 'A':
-          c = 'k';
-          break;
-        case 'B':
-          c = 'j';
-          break;
-        case 'C':
-          c = ' ';
-          break;
-        case 'D':
-          c = 'B';
-          break;
-        }
-      }
-    }
-    switch (c) {
-    case CTRL_N:
-    case 'j':
-      if (spoint < sclimit - 1) {
-        if (currentbuf->backBuffer == nullptr)
-          continue;
-        writeBufferName(currentbuf, spoint);
-        currentbuf = currentbuf->backBuffer;
-        cpoint++;
-        spoint++;
-        standout();
-        writeBufferName(currentbuf, spoint);
-        standend();
-        move(spoint, 0);
-        toggle_stand();
-      } else if (cpoint < maxbuf - 1) {
-        topbuf = currentbuf;
-        currentbuf = currentbuf->backBuffer;
-        cpoint++;
-        spoint = 1;
-        listBuffer(topbuf, currentbuf);
-      }
-      break;
-    case CTRL_P:
-    case 'k':
-      if (spoint > 0) {
-        writeBufferName(currentbuf, spoint);
-        currentbuf = nthBuffer(topbuf, --spoint);
-        cpoint--;
-        standout();
-        writeBufferName(currentbuf, spoint);
-        standend();
-        move(spoint, 0);
-        toggle_stand();
-      } else if (cpoint > 0) {
-        i = cpoint - sclimit;
-        if (i < 0)
-          i = 0;
-        cpoint--;
-        spoint = cpoint - i;
-        currentbuf = nthBuffer(firstbuf, cpoint);
-        topbuf = nthBuffer(firstbuf, i);
-        listBuffer(topbuf, currentbuf);
-      }
-      break;
-    default:
-      *selectchar = c;
-      return currentbuf;
-    }
-    /*
-     * move(LASTLINE, COLS - 1);
-     */
-    move(spoint, 0);
-    refresh(term_io());
-  }
-}
+// std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
+//                                      std::shared_ptr<Buffer> currentbuf,
+//                                      char *selectchar) {
+//   int i, cpoint,                    /* Current Buffer Number */
+//       spoint,                       /* Current Line on Screen */
+//       maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
+//                                      * the * screen */
+//   std::shared_ptr<Buffer> buf, topbuf;
+//   char c;
+//
+//   i = cpoint = 0;
+//   for (buf = firstbuf; buf != nullptr; buf = buf->backBuffer) {
+//     if (buf == currentbuf)
+//       cpoint = i;
+//     i++;
+//   }
+//   maxbuf = i;
+//
+//   if (cpoint >= sclimit) {
+//     spoint = sclimit / 2;
+//     topbuf = nthBuffer(firstbuf, cpoint - spoint);
+//   } else {
+//     topbuf = firstbuf;
+//     spoint = cpoint;
+//   }
+//   listBuffer(topbuf, currentbuf);
+//
+//   for (;;) {
+//     if ((c = getch()) == ESC_CODE) {
+//       if ((c = getch()) == '[' || c == 'O') {
+//         switch (c = getch()) {
+//         case 'A':
+//           c = 'k';
+//           break;
+//         case 'B':
+//           c = 'j';
+//           break;
+//         case 'C':
+//           c = ' ';
+//           break;
+//         case 'D':
+//           c = 'B';
+//           break;
+//         }
+//       }
+//     }
+//     switch (c) {
+//     case CTRL_N:
+//     case 'j':
+//       if (spoint < sclimit - 1) {
+//         if (currentbuf->backBuffer == nullptr)
+//           continue;
+//         writeBufferName(currentbuf, spoint);
+//         currentbuf = currentbuf->backBuffer;
+//         cpoint++;
+//         spoint++;
+//         standout();
+//         writeBufferName(currentbuf, spoint);
+//         standend();
+//         move(spoint, 0);
+//         toggle_stand();
+//       } else if (cpoint < maxbuf - 1) {
+//         topbuf = currentbuf;
+//         currentbuf = currentbuf->backBuffer;
+//         cpoint++;
+//         spoint = 1;
+//         listBuffer(topbuf, currentbuf);
+//       }
+//       break;
+//     case CTRL_P:
+//     case 'k':
+//       if (spoint > 0) {
+//         writeBufferName(currentbuf, spoint);
+//         currentbuf = nthBuffer(topbuf, --spoint);
+//         cpoint--;
+//         standout();
+//         writeBufferName(currentbuf, spoint);
+//         standend();
+//         move(spoint, 0);
+//         toggle_stand();
+//       } else if (cpoint > 0) {
+//         i = cpoint - sclimit;
+//         if (i < 0)
+//           i = 0;
+//         cpoint--;
+//         spoint = cpoint - i;
+//         currentbuf = nthBuffer(firstbuf, cpoint);
+//         topbuf = nthBuffer(firstbuf, i);
+//         listBuffer(topbuf, currentbuf);
+//       }
+//       break;
+//     default:
+//       *selectchar = c;
+//       return currentbuf;
+//     }
+//     /*
+//      * move(LASTLINE, COLS - 1);
+//      */
+//     move(spoint, 0);
+//     refresh(term_io());
+//   }
+// }
 
 /*
  * Reshape HTML buffer
@@ -539,9 +539,9 @@ void invoke_browser(const char *url) {
   }
   cmd = myExtCommand((char *)browser, shell_quote(url), false);
   Strremovetrailingspaces(cmd);
-  fmTerm();
+  App::instance().endRawMode();
   mySystem(cmd->ptr, bg);
-  fmInit();
+  App::instance().beginRawMode();
   App::instance().invalidate();
 }
 
@@ -979,7 +979,8 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
     do_internal(tmp2->ptr, tmp->ptr);
     return {};
   } else {
-    App::instance().disp_err_message("Can't send form because of illegal method.");
+    App::instance().disp_err_message(
+        "Can't send form because of illegal method.");
     return {};
   }
 }
@@ -1002,7 +1003,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     }
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
-    auto input = LineInput::inputStrHist(
+    auto input = LineInput::inputStrHist(App::instance().screen(),
         "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
         [fi, a](const char *p) {
           if (p == nullptr || fi->readonly) {

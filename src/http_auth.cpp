@@ -370,11 +370,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     /* This means that *-Authenticate: header is received after
      * Authorization: header is sent to the server.
      */
-    if (fmInitialized) {
-      App::instance().message("Wrong username or password", 0, 0);
-      refresh(term_io());
-    } else
-      fprintf(stderr, "Wrong username or password\n");
+    App::instance().message("Wrong username or password", 0, 0);
     // sleep(1);
     /* delete Authenticate: header from extra_header */
     delText(hr->extra_headers, i);
@@ -391,7 +387,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
       return;
     /* input username and password */
     // sleep(2);
-    if (fmInitialized) {
+    if (true /*fmInitialized*/) {
       const char *pp = {};
       term_raw();
       // if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
@@ -428,7 +424,8 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
           getpassphrase(proxy ? "Proxy Password: " : "Password: "));
 #else
       assert(false);
-      // *pwd = Strnew_charp(getpass(proxy ? "Proxy Password: " : "Password: "));
+      // *pwd = Strnew_charp(getpass(proxy ? "Proxy Password: " : "Password:
+      // "));
 #endif
     }
   }

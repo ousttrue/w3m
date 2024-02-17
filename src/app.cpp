@@ -77,8 +77,8 @@ bool on_target = true;
 static GC_warn_proc orig_GC_warn_proc = nullptr;
 #define GC_WARN_KEEP_MAX (20)
 
-static void wrap_GC_warn_proc(char *msg, GC_word arg) {
-  if (fmInitialized) {
+void wrap_GC_warn_proc(char *msg, GC_word arg) {
+  if (App::instance().isRawMode()) {
     /* *INDENT-OFF* */
     static struct {
       char *msg;
@@ -128,10 +128,16 @@ static void *die_oom(size_t bytes) {
   return nullptr;
 }
 
+uv_tty_t g_tty_in;
+uv_signal_t g_signal_resize;
+uv_timer_t g_timer;
+
 App::App() : _screen(new TermScreen) {
   static int s_i = 0;
   assert(s_i == 0);
   ++s_i;
+
+  uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
 
   //
   // process
@@ -201,9 +207,18 @@ App::~App() {
   if (getpid() != _currentPid) {
     return;
   }
+  endRawMode();
 
   // clean up only not fork process
   std::cout << "App::~App" << std::endl;
+
+  // exit
+  term_title(""); /* XXX */
+  save_cookies();
+  if (UseHistory && SaveURLHist) {
+    saveHistory(URLHist, URLHistSize);
+  }
+
   for (auto &f : _fileToDelete) {
     std::cout << "fileToDelete: " << f << std::endl;
     unlink(f.c_str());
@@ -212,7 +227,6 @@ App::~App() {
 
   stopDownload();
   free_ssl_ctx();
-  reset_tty();
 }
 
 bool App::initialize() {
@@ -235,6 +249,29 @@ bool App::initialize() {
   }
 
   return true;
+}
+
+/*
+ * Initialize routine.
+ */
+void App::beginRawMode(void) {
+  if (!_fmInitialized) {
+    initscr();
+    uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
+    // term_raw();
+    // term_noecho();
+    _fmInitialized = true;
+  }
+}
+
+void App::endRawMode(void) {
+  if (_fmInitialized) {
+    _screen->move(LASTLINE(), 0);
+    _screen->clrtoeolx();
+    _screen->refresh(term_io());
+    reset_tty();
+    _fmInitialized = false;
+  }
 }
 
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
@@ -297,19 +334,13 @@ static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
   *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
 }
 
-uv_tty_t g_tty_in;
-uv_signal_t g_signal_resize;
-uv_timer_t g_timer;
-
 int App::mainLoop() {
-  fmInit();
+  App::instance().beginRawMode();
   onResize();
 
   //
   // stdin tty read
   //
-  uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
-  uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
   uv_read_start((uv_stream_t *)&g_tty_in, &alloc_buffer,
                 [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
                   if (nread < 0) {
@@ -362,6 +393,21 @@ void App::onResize() {
 }
 
 void App::exit(int) {
+  // const char *ans = "y";
+  // if (checkDownloadList()) {
+  //   ans = inputChar("Download process retains. "
+  //                   "Do you want to exit w3m? (y/n)");
+  // } else if (confirm) {
+  //   ans = inputChar("Do you want to exit w3m? (y/n)");
+  // }
+
+  // if (!(ans && TOLOWER(*ans) == 'y')) {
+  //   // cancel
+  //   App::instance().invalidate();
+  //   return;
+  // }
+
+  // App::instance().exit(0);
   // stop libuv
   // exit(i);
   uv_read_stop((uv_stream_t *)&g_tty_in);
@@ -559,7 +605,7 @@ void App::onFrame() {
 
   if (_dirty > 0) {
     _dirty = 0;
-    _displayBuffer();
+    _displayBuffer(_screen.get());
   }
 }
 
@@ -641,15 +687,16 @@ TabBuffer *App::numTab(int n) const {
 
 void App::drawTabs() {
   if (_nTab > 1) {
-    move(0, 0);
-    clrtoeolx();
+    _screen->move(0, 0);
+    _screen->clrtoeolx();
     int y = 0;
     for (auto t = _firstTab; t; t = t->nextTab) {
-      y = t->draw(_currentTab);
+      y = t->draw(_screen.get(), _currentTab);
     }
-    move(y + 1, 0);
-    for (int i = 0; i < COLS(); i++)
-      addch('~');
+    _screen->move(y + 1, 0);
+    for (int i = 0; i < COLS(); i++) {
+      _screen->addch('~');
+    }
   }
 }
 
@@ -856,18 +903,18 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
 }
 
 void App::message(const char *s, int return_x, int return_y) {
-  if (!fmInitialized) {
-    return;
+  if (_fmInitialized) {
+    _screen->move(LASTLINE(), 0);
+    _screen->addnstr(s, COLS() - 1);
+    _screen->clrtoeolx();
+    _screen->move(return_y, return_x);
+  } else {
+    fprintf(stderr, "%s\n", s);
   }
-
-  move(LASTLINE(), 0);
-  addnstr(s, COLS() - 1);
-  clrtoeolx();
-  move(return_y, return_x);
 }
 
 void App::record_err_message(const char *s) {
-  if (!fmInitialized) {
+  if (!_fmInitialized) {
     return;
   }
   if (!message_list)
@@ -903,7 +950,7 @@ void App::disp_err_message(const char *s) {
 void App::disp_message_nsec(const char *s, int sec, int purge) {
   if (IsForkChild)
     return;
-  if (!fmInitialized) {
+  if (!_fmInitialized) {
     fprintf(stderr, "%s\n", s);
     return;
   }
@@ -913,7 +960,7 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
             CurrentTab->currentBuffer()->layout.AbsCursorY());
   else
     message(s, LASTLINE(), 0);
-  refresh(term_io());
+  _screen->refresh(term_io());
   sleep_till_anykey(sec, purge);
 }
 
@@ -925,7 +972,7 @@ void App::refresh_message() {
   if (delayed_msg != NULL) {
     disp_message(delayed_msg);
     delayed_msg = NULL;
-    refresh(term_io());
+    _screen->refresh(term_io());
   }
 }
 
@@ -937,8 +984,9 @@ void App::showProgress(long long *linelen, long long *trbyte,
   Str *messages;
   char *fmtrbyte, *fmrate;
 
-  if (!fmInitialized)
+  if (!_fmInitialized) {
     return;
+  }
 
   if (*linelen < 1024)
     return;
@@ -946,8 +994,8 @@ void App::showProgress(long long *linelen, long long *trbyte,
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      move(LASTLINE(), 0);
-      clrtoeolx();
+      _screen->move(LASTLINE(), 0);
+      _screen->clrtoeolx();
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -955,7 +1003,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    move(LASTLINE(), 0);
+    _screen->move(LASTLINE(), 0);
     ratio = 100.0 * (*trbyte) / current_content_length;
     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
     duration = cur_time - start_time;
@@ -972,22 +1020,23 @@ void App::showProgress(long long *linelen, long long *trbyte,
       messages =
           Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
     }
-    addstr(messages->ptr);
+    _screen->addstr(messages->ptr);
     pos = 42;
     i = pos + (COLS() - pos - 1) * (*trbyte) / current_content_length;
-    move(LASTLINE(), pos);
-    standout();
-    addch(' ');
-    for (j = pos + 1; j <= i; j++)
-      addch('|');
-    standend();
+    _screen->move(LASTLINE(), pos);
+    _screen->standout();
+    _screen->addch(' ');
+    for (j = pos + 1; j <= i; j++) {
+      _screen->addch('|');
+    }
+    _screen->standend();
     /* no_clrtoeol(); */
-    refresh(term_io());
+    _screen->refresh(term_io());
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      move(LASTLINE(), 0);
-      clrtoeolx();
+      _screen->move(LASTLINE(), 0);
+      _screen->clrtoeolx();
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -995,7 +1044,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    move(LASTLINE(), 0);
+    _screen->move(LASTLINE(), 0);
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {
@@ -1005,6 +1054,6 @@ void App::showProgress(long long *linelen, long long *trbyte,
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
     message(messages->ptr, 0, 0);
-    refresh(term_io());
+    _screen->refresh(term_io());
   }
 }

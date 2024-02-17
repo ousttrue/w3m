@@ -15,8 +15,6 @@
 #define DEFAULT_URL_LINK 2
 
 extern const char *w3m_reqlog;
-extern bool confirm_on_quit;
-extern bool fmInitialized;
 extern bool IsForkChild;
 extern char *w3m_version;
 extern char *document_root;
@@ -59,4 +57,3 @@ extern int is_redisplay;
 extern int clear_buffer;
 extern int set_pixel_per_char;
 extern const char *keymap_file;
-void _quitfm(bool confirm);

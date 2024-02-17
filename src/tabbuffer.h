@@ -58,7 +58,7 @@ public:
   std::shared_ptr<Buffer> followAnchor(bool check_target = true);
   void goURL0(const char *prompt, bool relative);
 
-  int draw(TabBuffer *current);
+  int draw(class TermScreen *screen, TabBuffer *current);
 };
 
 // void followTab();

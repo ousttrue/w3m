@@ -215,10 +215,7 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   unsigned long adr;
 #endif /* not INET6 */
 
-  if (fmInitialized) {
-    App::instance().message(Sprintf("Opening socket...")->ptr, 0, 0);
-    refresh(term_io());
-  }
+  App::instance().message(Sprintf("Opening socket...")->ptr, 0, 0);
   //   if (SETJMP(AbortLoading) != 0) {
   // #ifdef SOCK_DEBUG
   //     sock_log("openSocket() failed. reason: user abort\n");
@@ -667,7 +664,7 @@ int UrlStream::doFileSave(const char *defstr) {
 #ifdef _MSC_VER
   return {};
 #else
-  if (fmInitialized) {
+  if (true/*fmInitialized*/) {
     auto p = App::instance().searchKeyData();
     if (p == nullptr || *p == '\0') {
       // p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
