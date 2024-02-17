@@ -6,10 +6,13 @@
 #include "etc.h"
 #include "alloc.h"
 
-#include <sys/dir.h>
 typedef struct direct Directory;
 #include <sys/stat.h>
 #include <string.h>
+#ifdef _MSC_VER
+#else
+#include <sys/dir.h>
+#endif
 
 bool multicolList = false;
 
@@ -18,6 +21,9 @@ static int strCmp(const void *s1, const void *s2) {
 }
 
 Str *loadLocalDir(const char *dname) {
+#ifdef _MSC_VER
+  return {};
+#else
   Str *tmp;
   DIR *d;
   Directory *dir;
@@ -135,4 +141,5 @@ Str *loadLocalDir(const char *dname) {
   Strcat_charp(tmp, "</BODY>\n</HTML>\n");
 
   return tmp;
+#endif
 }

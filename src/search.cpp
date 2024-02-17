@@ -10,7 +10,6 @@
 #include "regex.h"
 #include "proto.h"
 #include "tabbuffer.h"
-#include <unistd.h>
 
 int forwardSearch(LineLayout *layout, const char *str) {
   const char *p, *first, *last;

@@ -179,7 +179,7 @@ public:
   Anchor *registerImg(const char *url, const char *title, int line, int pos) {
     return this->img()->putAnchor(url, NULL, {}, title, '\0', line, pos);
   }
-  Anchor *registerForm(struct HtmlParser *parser, FormList *flist, HtmlTag *tag,
+  Anchor *registerForm(class HtmlParser *parser, FormList *flist, HtmlTag *tag,
                        int line, int pos);
   void addMultirowsForm(AnchorList *al);
   void reseq_anchor();

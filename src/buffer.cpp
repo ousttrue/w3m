@@ -30,7 +30,6 @@
 #include "istream.h"
 #include "proto.h"
 #include "alloc.h"
-#include <unistd.h>
 #include <sys/stat.h>
 
 Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {

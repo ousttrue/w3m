@@ -3,6 +3,7 @@
 #include <functional>
 #include <string>
 #include <memory>
+#include <array>
 
 #define STR_LEN 1024
 

@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "quote.h"
 #include "auth_pass.h"
 #include "http_response.h"
 #include "http_request.h"
@@ -14,7 +15,6 @@
 #include "terms.h"
 #include "etc.h"
 #include <sys/stat.h>
-#include <unistd.h>
 #include <stdlib.h>
 
 enum AuthChrType {
@@ -306,7 +306,7 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
   TextListItem *i;
   const char *p0, *p;
 
-  bzero(hauth, sizeof(struct http_auth));
+  *hauth = {0};
   for (i = res.document_header->first; i != nullptr; i = i->next) {
     if (strncasecmp(i->ptr, auth_field, len) == 0) {
       for (p = i->ptr + len; p != nullptr && *p != '\0';) {
@@ -375,7 +375,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
       refresh(term_io());
     } else
       fprintf(stderr, "Wrong username or password\n");
-    sleep(1);
+    // sleep(1);
     /* delete Authenticate: header from extra_header */
     delText(hr->extra_headers, i);
     invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
@@ -390,7 +390,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     if (IsForkChild)
       return;
     /* input username and password */
-    sleep(2);
+    // sleep(2);
     if (fmInitialized) {
       const char *pp = {};
       term_raw();
@@ -425,10 +425,10 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
       Strchop(*uname);
 #ifdef HAVE_GETPASSPHRASE
       *pwd = Strnew_charp(
-          (char *)getpassphrase(proxy ? "Proxy Password: " : "Password: "));
+          getpassphrase(proxy ? "Proxy Password: " : "Password: "));
 #else
-      *pwd = Strnew_charp(
-          (char *)getpass(proxy ? "Proxy Password: " : "Password: "));
+      assert(false);
+      // *pwd = Strnew_charp(getpass(proxy ? "Proxy Password: " : "Password: "));
 #endif
     }
   }

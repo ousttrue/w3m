@@ -1,7 +1,7 @@
 #include "matchattr.h"
+#include "quote.h"
 #include "myctype.h"
 #include "Str.h"
-#include <strings.h>
 
 // get: ^attr\S*=\S*value;
 // get: ^attr\S*=\S*"value";

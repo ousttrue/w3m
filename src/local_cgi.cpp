@@ -19,13 +19,22 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <errno.h>
-#include <unistd.h>
 #include <time.h>
 #define HAVE_DIRENT_H 1
 #define DEV_NULL_PATH "/dev/null"
 #define HAVE_LSTAT 1
 
 char *cgi_bin = nullptr;
+
+#if !(_SVID_SOURCE || _XOPEN_SOURCE)
+// https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
+static double drand48(void) { return rand() / (RAND_MAX + 1.0); }
+static long int lrand48(void) { return rand(); }
+static long int mrand48(void) {
+  return rand() > RAND_MAX / 2 ? rand() : -rand();
+}
+static void srand48(long int seedval) { srand(seedval); }
+#endif
 
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
@@ -39,6 +48,8 @@ static Str *Local_cookie = NULL;
 static std::string Local_cookie_file;
 
 static void writeLocalCookie() {
+#ifdef _MSC_VER
+#else
   if (Local_cookie_file.size()) {
     return;
   }
@@ -52,6 +63,7 @@ static void writeLocalCookie() {
   fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
   fclose(f);
   chmod(Local_cookie_file.c_str(), S_IRUSR | S_IWUSR);
+#endif
 }
 
 /* setup cookie for local CGI */
@@ -65,6 +77,8 @@ Str *localCookie() {
 }
 
 static int check_local_cgi(const char *file, int status) {
+#ifdef _MSC_VER
+#else
   struct stat st;
 
   if (status != CGIFN_LIBDIR && status != CGIFN_CGIBIN)
@@ -78,9 +92,12 @@ static int check_local_cgi(const char *file, int status) {
       (st.st_mode & S_IXOTH)) /* executable */
     return 0;
   return -1;
+#endif
 }
 
 void set_environ(const char *var, const char *value) {
+#ifdef _MSC_VER
+#else
 #ifdef HAVE_SETENV
   if (var != NULL && value != NULL)
     setenv(var, value, 1);
@@ -127,6 +144,7 @@ void set_environ(const char *var, const char *value) {
   environ = newenv;
 #endif /* not HAVE_PUTENV */
 #endif /* not HAVE_SETENV */
+#endif
 }
 
 static void set_cgi_environ(const char *name, const char *fn,
@@ -213,9 +231,12 @@ static int cgi_filename(const char *uri, const char **fn, const char **name,
 
 FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
                     const HttpOption &option) {
+#ifdef _MSC_VER
+  return {};
+#else
   FILE *fr = NULL, *fw = NULL;
   int status;
-  pid_t pid;
+  int pid;
   const char *file = uri, *name = uri, *path_info = NULL;
 #ifdef HAVE_CHDIR
   const char *cgi_dir;
@@ -296,4 +317,5 @@ FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
    * This code is never reached.
    */
   return NULL;
+#endif
 }

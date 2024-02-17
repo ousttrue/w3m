@@ -42,7 +42,6 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <string.h>
 #include <sys/stat.h>
 

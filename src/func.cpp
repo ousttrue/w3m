@@ -3,6 +3,7 @@
  * w3m func.c
  */
 #include "w3m.h"
+#include "quote.h"
 #include "terms.h"
 #include "app.h"
 #include "message.h"

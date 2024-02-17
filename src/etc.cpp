@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "quote.h"
 #include "ctrlcode.h"
 #include "app.h"
 #include "url_stream.h"
@@ -16,13 +17,17 @@
 #include "local_cgi.h"
 #include "textlist.h"
 #include "proto.h"
-#include <pwd.h>
+// #include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#include <sys/wait.h>
 #include <sys/stat.h>
 #define HAVE_STRERROR 1
+
+#ifdef _MSC_VER
+#include <direct.h>
+#define mkdir _mkdir;
+#endif
 
 char *personal_document_root = nullptr;
 
@@ -106,10 +111,12 @@ const char *last_modified(const std::shared_ptr<Buffer> &buf) {
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
 
-pid_t open_pipe_rw(FILE **fr, FILE **fw) {
+int open_pipe_rw(FILE **fr, FILE **fw) {
+#ifdef _MSC_VER
+  return {};
+#else
   int fdr[2];
   int fdw[2];
-  pid_t pid;
 
   if (fr && pipe(fdr) < 0)
     goto err0;
@@ -117,7 +124,7 @@ pid_t open_pipe_rw(FILE **fr, FILE **fw) {
     goto err1;
 
   flush_tty();
-  pid = fork();
+  auto pid = fork();
   if (pid < 0)
     goto err2;
   if (pid == 0) {
@@ -159,9 +166,12 @@ err1:
   }
 err0:
   return (pid_t)-1;
+#endif
 }
 
 void mySystem(const char *command, int background) {
+#ifdef _MSC_VER
+#else
   if (background) {
     flush_tty();
     if (!fork()) {
@@ -170,6 +180,7 @@ void mySystem(const char *command, int background) {
     }
   } else
     system(command);
+#endif
 }
 
 Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
@@ -199,8 +210,12 @@ Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
 }
 
 const char *expandPath(const char *name) {
+#ifdef _MSC_VER
+  return {};
+#else
   const char *p;
-  struct passwd *passent, *getpwnam(const char *);
+  struct passwd *passent;
+  struct passwd *getpwnam(const char *);
   Str *extpath = NULL;
 
   if (name == NULL)
@@ -231,8 +246,13 @@ const char *expandPath(const char *name) {
   }
 rest:
   return name;
+#endif
 }
+
 const char *expandName(const char *name) {
+#ifdef _MSC_VER
+  return {};
+#else
   const char *p;
   struct passwd *passent, *getpwnam(const char *);
   Str *extpath = NULL;
@@ -267,6 +287,7 @@ const char *expandName(const char *name) {
     return expandPath(p);
 rest:
   return name;
+#endif
 }
 
 const char *file_to_url(const char *file) {
@@ -320,6 +341,9 @@ const char *file_to_url(const char *file) {
 }
 
 int do_recursive_mkdir(const char *dir) {
+#ifdef _MSC_VER
+  return {};
+#else
   const char *ch, *dircpy;
   char tmp;
   struct stat st;
@@ -364,6 +388,7 @@ int do_recursive_mkdir(const char *dir) {
 #endif
 
   return 0;
+#endif
 }
 
 int exec_cmd(const std::string &cmd) {
@@ -401,6 +426,8 @@ Str *unescape_spaces(Str *s) {
 }
 
 static void close_all_fds_except(int i, int f) {
+#ifdef _MSC_VER
+#else
   switch (i) { /* fall through */
   case 0:
     dup2(open("/dev/null", O_RDONLY), 0);
@@ -414,6 +441,7 @@ static void close_all_fds_except(int i, int f) {
     if (i != f)
       close(i);
   }
+#endif
 }
 
 void setup_child(int child, int i, int f) {
@@ -431,7 +459,10 @@ void setup_child(int child, int i, int f) {
 }
 
 void myExec(const char *command) {
+#ifdef _MSC_VER
+#else
   // mySignal(SIGINT, SIG_DFL);
   execl("/bin/sh", "sh", "-c", command, 0);
   exit(127);
+#endif
 }

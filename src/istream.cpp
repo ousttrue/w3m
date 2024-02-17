@@ -6,7 +6,12 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <vector>
-#include <unistd.h>
+
+#ifdef _MSC_VER
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <io.h>
+#endif
 
 #define STREAM_BUF_SIZE 8192
 

@@ -1,5 +1,6 @@
 #include "compression.h"
 #include "etc.h"
+#include "quote.h"
 #include "rc.h"
 #include "mimetypes.h"
 #include "myctype.h"
@@ -12,7 +13,18 @@
 #include <sys/stat.h>
 #include <string.h>
 
+#ifdef _MSC_VER
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <io.h>
+#endif
+
 #define PATH_SEPARATOR ':'
+
+// https://stackoverflow.com/questions/11238918/s-isreg-macro-undefined
+#if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
+#define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
+#endif
 
 std::vector<compression_decoder> compression_decoders = {
     {CMP_COMPRESS,
@@ -122,6 +134,9 @@ std::tuple<std::string, std::string> uncompressed_file_type(const char *path) {
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
 
 static int check_command(const char *cmd, int auxbin_p) {
+#ifdef _MSC_VER
+  return {};
+#else
   static char *path = nullptr;
   if (path == nullptr) {
     path = getenv("PATH");
@@ -148,6 +163,7 @@ static int check_command(const char *cmd, int auxbin_p) {
       return 1;
   }
   return 0;
+#endif
 }
 
 char *acceptableEncoding(void) {
@@ -203,7 +219,7 @@ std::string filename_extension(const std::string_view path, bool is_url) {
   const char *last_dot = "";
   for (; p != path.end(); p++) {
     if (*p == '.') {
-      last_dot = p;
+      last_dot = &*p;
     } else if (is_url && *p == '?')
       break;
   }

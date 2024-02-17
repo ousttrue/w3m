@@ -1146,6 +1146,8 @@ void svBuf() {
   FILE *f;
   int is_pipe;
 
+#ifdef _MSC_VER
+#else
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   file = App::instance().searchKeyData();
   if (file == nullptr || *file == '\0') {
@@ -1183,6 +1185,7 @@ void svBuf() {
   else
     fclose(f);
   App::instance().invalidate();
+#endif
 }
 
 /* save source */

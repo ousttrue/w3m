@@ -4,7 +4,6 @@
 #include "mytime.h"
 #include "http_auth.h"
 #include "mimetypes.h"
-#include <utime.h>
 #include <sys/stat.h>
 
 const char *DefaultType = nullptr;

@@ -1,10 +1,9 @@
 #pragma once
-#include <unistd.h>
 #include <time.h>
 #include <memory>
 
 struct DownloadList {
-  pid_t pid;
+  int pid;
   const char *url;
   const char *save;
   const char *lock;
@@ -20,7 +19,7 @@ struct DownloadList {
 extern DownloadList *FirstDL;
 extern DownloadList *LastDL;
 
-void addDownloadList(pid_t pid, const char *url, const char *save,
+void addDownloadList(int pid, const char *url, const char *save,
                      const char *lock, long long size);
 void stopDownload(void);
 int checkDownloadList(void);

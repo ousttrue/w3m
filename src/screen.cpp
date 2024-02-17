@@ -338,7 +338,7 @@ void _refresh(FILE *ttyf) {
             auto utf8 = pc[col];
             auto view = utf8.view();
             auto width = utf8.width();
-            fwrite(view.begin(), view.size(), 1, ttyf);
+            fwrite(view.data(), view.size(), 1, ttyf);
             pcol = col = col + width;
           }
         }

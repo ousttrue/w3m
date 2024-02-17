@@ -10,6 +10,7 @@
 #include <fcntl.h>
 
 #include "cookie.h"
+#include "quote.h"
 #include "html/readbuffer.h"
 #include "matchattr.h"
 #include "html/anchor.h"
@@ -30,6 +31,11 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <io.h>
+#endif
 
 #define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
 /* version 0 refers to the original cookie_spec.html */
@@ -75,9 +81,17 @@ static bool is_saved = 1;
 #define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
 #ifdef INET6
+#ifdef _MSC_VER
+#else
 #include <sys/socket.h>
+#endif
 #endif /* INET6 */
+
+#ifdef _MSC_VER
+#include <winsock2.h>
+#else
 #include <netdb.h>
+#endif
 static const char *FQDN(const char *host) {
   const char *p;
 #ifndef INET6
@@ -531,7 +545,11 @@ void save_cookies(void) {
             str2charp(p->commentURL));
   }
   fclose(fp);
+
+#ifdef _MSC_VER
+#else
   chmod(cookie_file, S_IRUSR | S_IWUSR);
+#endif
 }
 
 static Str *readcol(char **p) {

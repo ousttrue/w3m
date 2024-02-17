@@ -14,9 +14,11 @@
 #include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
-#include <utime.h>
 
 int _MoveFile(const char *path1, const char *path2) {
+#ifdef _MSC_VER
+  return {};
+#else
   FILE *f2;
   int is_pipe;
   long long linelen = 0, trbyte = 0;
@@ -53,6 +55,7 @@ int _MoveFile(const char *path1, const char *path2) {
   else
     fclose(f2);
   return 0;
+#endif
 }
 
 int checkCopyFile(const char *path1, const char *path2) {
@@ -67,10 +70,13 @@ int checkCopyFile(const char *path1, const char *path2) {
 }
 
 int _doFileCopy(const char *tmpf, const char *defstr, int download) {
+#ifdef _MSC_VER
+  return {};
+#else
   Str *msg;
   Str *filen;
   const char *p, *q = nullptr;
-  pid_t pid;
+  int pid;
   struct stat st;
   long long size = 0;
   int is_pipe = false;
@@ -156,6 +162,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       setModtime(p, st.st_mtime);
   }
   return 0;
+#endif
 }
 
 int doFileMove(const char *tmpf, const char *defstr) {
@@ -185,6 +192,9 @@ const char *shell_quote(const char *str) {
 }
 
 int setModtime(const char *path, time_t modtime) {
+#ifdef _MSC_VER
+  return {};
+#else
   struct utimbuf t;
   struct stat st;
 
@@ -194,6 +204,7 @@ int setModtime(const char *path, time_t modtime) {
     t.actime = time(nullptr);
   t.modtime = modtime;
   return utime(path, &t);
+#endif
 }
 
 #define PIPEBUFFERNAME "*stream*"

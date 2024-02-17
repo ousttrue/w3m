@@ -23,7 +23,7 @@ bool popAddDownloadList() {
   return ret;
 }
 
-void addDownloadList(pid_t pid, const char *url, const char *save,
+void addDownloadList(int pid, const char *url, const char *save,
                      const char *lock, long long size) {
 
   auto d = (DownloadList *)New(DownloadList);
@@ -49,6 +49,9 @@ void addDownloadList(pid_t pid, const char *url, const char *save,
 }
 
 int checkDownloadList() {
+#ifdef _MSC_VER
+  return {};
+#else
   DownloadList *d;
   struct stat st;
 
@@ -59,6 +62,7 @@ int checkDownloadList() {
       return true;
   }
   return false;
+#endif
 }
 
 static char *convert_size3(long long size) {
@@ -74,6 +78,9 @@ static char *convert_size3(long long size) {
 }
 
 std::shared_ptr<Buffer> DownloadListBuffer(void) {
+#ifdef _MSC_VER
+  return {};
+#else
   DownloadList *d;
   Str *src = nullptr;
   struct stat st;
@@ -84,7 +91,6 @@ std::shared_ptr<Buffer> DownloadListBuffer(void) {
   if (!FirstDL)
     return nullptr;
   cur_time = time(0);
-  /* FIXME: gettextize? */
   src = Strnew_charp(
       "<html><head><title>" DOWNLOAD_LIST_TITLE
       "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"
@@ -161,6 +167,7 @@ std::shared_ptr<Buffer> DownloadListBuffer(void) {
   }
   Strcat_charp(src, "</form></body></html>");
   return loadHTMLString(src);
+#endif
 }
 
 void stopDownload(void) {
@@ -171,14 +178,19 @@ void stopDownload(void) {
   for (d = FirstDL; d != nullptr; d = d->next) {
     if (!d->running)
       continue;
+#ifdef _MSC_VER
+#else
     kill(d->pid, SIGKILL);
+#endif
     unlink(d->lock);
   }
 }
 
 void download_action(struct keyvalue *arg) {
+#ifdef _MSC_VER
+#else
   DownloadList *d;
-  pid_t pid;
+  int pid;
 
   for (; arg; arg = arg->next) {
     if (!strncmp(arg->arg, "stop", 4)) {
@@ -204,4 +216,5 @@ void download_action(struct keyvalue *arg) {
     }
   }
   ldDL();
+#endif
 }

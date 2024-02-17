@@ -1,4 +1,5 @@
 #include "mimetypes.h"
+#include "quote.h"
 #include "myctype.h"
 #include "etc.h"
 #include "textlist.h"

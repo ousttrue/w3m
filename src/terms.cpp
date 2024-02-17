@@ -16,18 +16,19 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
-#include <sys/wait.h>
-#include <unistd.h>
 #include <stdlib.h>
 #ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
 #endif
-#include <sys/ioctl.h>
+// #include <sys/ioctl.h>
 
+#ifdef _MSC_VER
+#include <io.h>
+#else
 #define HAVE_SYS_SELECT_H 1
 #define HAVE_TERMIOS_H 1
+#endif
 #define DEFAULT_TERM 0 /* XXX */
 
 #define DEV_TTY_PATH "/dev/tty"
@@ -38,7 +39,7 @@ bool Do_not_use_ti_te = false;
 char *displayTitleTerm = nullptr;
 char UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
-char *getenv(const char *);
+// char *getenv(const char *);
 // MySignalHandler reset_exit(SIGNAL_ARG), , error_dump(SIGNAL_ARG);
 void setlinescols(void);
 void flush_tty(void);
@@ -81,7 +82,10 @@ typedef struct sgttyb TerminalMode;
 #define ISUNUSED(d) ((d) & L_UNUSED)
 #define NEED_CE(d) ((d) & L_NEED_CE)
 
+#ifdef _MSC_VER
+#else
 static TerminalMode d_ioval;
+#endif
 static FILE *ttyf = NULL;
 FILE *term_io() { return ttyf; }
 
@@ -141,7 +145,9 @@ static struct w3m_term_info {
 #undef W3M_TERM_INFO
 /* *INDENT-ON * */
 
-int set_tty(void) {
+#ifdef _MSC_VER
+#else
+static int set_tty(void) {
   const char *ttyn;
   if (isatty(0)) /* stdin */
     ttyn = ttyname(0);
@@ -165,8 +171,11 @@ int set_tty(void) {
   }
   return 0;
 }
+#endif
 
 void ttymode_set(int mode, int imode) {
+#ifdef _MSC_VER
+#else
   TerminalMode ioval;
 
   TerminalGet(tty, &ioval);
@@ -181,9 +190,12 @@ void ttymode_set(int mode, int imode) {
     printf("Error occurred while set %x: errno=%d\n", mode, errno);
     // reset_error_exit(SIGNAL_ARGLIST);
   }
+#endif
 }
 
 void ttymode_reset(int mode, int imode) {
+#ifdef _MSC_VER
+#else
   TerminalMode ioval;
 
   TerminalGet(tty, &ioval);
@@ -198,10 +210,13 @@ void ttymode_reset(int mode, int imode) {
     printf("Error occurred while reset %x: errno=%d\n", mode, errno);
     // reset_error_exit(SIGNAL_ARGLIST);
   }
+#endif
 }
 
 #ifndef HAVE_SGTTY_H
 void set_cc(int spec, int val) {
+#ifdef _MSC_VER
+#else
   TerminalMode ioval;
 
   TerminalGet(tty, &ioval);
@@ -212,6 +227,7 @@ void set_cc(int spec, int val) {
     printf("Error occurred: errno=%d\n", errno);
     // reset_error_exit(SIGNAL_ARGLIST);
   }
+#endif
 }
 #endif /* not HAVE_SGTTY_H */
 
@@ -220,7 +236,13 @@ void close_tty(void) {
     close(tty);
 }
 
-char *ttyname_tty(void) { return ttyname(tty); }
+const char *ttyname_tty(void) {
+#ifdef _MSC_VER
+  return "";
+#else
+  return ttyname(tty);
+#endif
+}
 
 void reset_tty(void) {
   term_writestr(_entry.T_op); /* turn off */
@@ -233,7 +255,10 @@ void reset_tty(void) {
   }
   term_writestr(_entry.T_se); /* reset terminal */
   flush_tty();
+#ifdef _MSC_VER
+#else
   TerminalSet(tty, &d_ioval);
+#endif
   if (tty != 2)
     close_tty();
 }
@@ -381,8 +406,11 @@ void setlinescols(void) {
  * Screen initialize
  */
 int initscr(void) {
+#ifdef _MSC_VER
+#else
   if (set_tty() < 0)
     return -1;
+#endif
   // set_int();
   getTCstr();
   if (_entry.T_ti && !Do_not_use_ti_te)
@@ -408,6 +436,8 @@ int graph_ok(void) {
 void crmode(void)
 #ifndef HAVE_SGTTY_H
 {
+#ifdef _MSC_VER
+#else
   ttymode_reset(ICANON, IXON);
   ttymode_set(ISIG, 0);
 #ifdef HAVE_TERMIOS_H
@@ -415,6 +445,7 @@ void crmode(void)
 #else  /* not HAVE_TERMIOS_H */
   set_cc(VEOF, 1);
 #endif /* not HAVE_TERMIOS_H */
+#endif
 }
 #else  /* HAVE_SGTTY_H */
 {
@@ -425,12 +456,15 @@ void crmode(void)
 void nocrmode(void)
 #ifndef HAVE_SGTTY_H
 {
+#ifdef _MSC_VER
+#else
   ttymode_set(ICANON, 0);
 #ifdef HAVE_TERMIOS_H
   set_cc(VMIN, 4);
 #else  /* not HAVE_TERMIOS_H */
   set_cc(VEOF, 4);
 #endif /* not HAVE_TERMIOS_H */
+#endif
 }
 #else  /* HAVE_SGTTY_H */
 {
@@ -438,9 +472,19 @@ void nocrmode(void)
 }
 #endif /* HAVE_SGTTY_H */
 
-void term_echo(void) { ttymode_set(ECHO, 0); }
+void term_echo(void) {
+#ifdef _MSC_VER
+#else
+  ttymode_set(ECHO, 0);
+#endif
+}
 
-void term_noecho(void) { ttymode_reset(ECHO, 0); }
+void term_noecho(void) {
+#ifdef _MSC_VER
+#else
+  ttymode_reset(ECHO, 0);
+#endif
+}
 
 void term_raw(void)
 #ifndef HAVE_SGTTY_H
@@ -450,12 +494,15 @@ void term_raw(void)
 #define TTY_MODE ISIG | ICANON | ECHO
 #endif /* not IEXTEN */
 {
+#ifdef _MSC_VER
+#else
   ttymode_reset(TTY_MODE, IXON | IXOFF);
 #ifdef HAVE_TERMIOS_H
   set_cc(VMIN, 1);
 #else  /* not HAVE_TERMIOS_H */
   set_cc(VEOF, 1);
 #endif /* not HAVE_TERMIOS_H */
+#endif
 }
 #else  /* HAVE_SGTTY_H */
 {
@@ -466,12 +513,15 @@ void term_raw(void)
 void term_cooked(void)
 #ifndef HAVE_SGTTY_H
 {
+#ifdef _MSC_VER
+#else
   ttymode_set(TTY_MODE, 0);
 #ifdef HAVE_TERMIOS_H
   set_cc(VMIN, 4);
 #else  /* not HAVE_TERMIOS_H */
   set_cc(VEOF, 4);
 #endif /* not HAVE_TERMIOS_H */
+#endif
 }
 #else  /* HAVE_SGTTY_H */
 {
@@ -519,6 +569,9 @@ static void skip_escseq(void) {
 }
 
 int sleep_till_anykey(int sec, int purge) {
+#ifdef _MSC_VER
+  return {};
+#else
   fd_set rfd;
   struct timeval tim;
   int er, c, ret;
@@ -545,6 +598,7 @@ int sleep_till_anykey(int sec, int purge) {
     // reset_error_exit(SIGNAL_ARGLIST);
   }
   return ret;
+#endif
 }
 
 void flush_tty(void) {

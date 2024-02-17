@@ -48,7 +48,7 @@ struct FormList {
   char *boundary;
   unsigned long length;
 
-  FormItemList *formList_addInput(struct HtmlParser *parser, HtmlTag *tag);
+  FormItemList *formList_addInput(class HtmlParser *parser, HtmlTag *tag);
 };
 
 FormList *newFormList(const char *action, const char *method,

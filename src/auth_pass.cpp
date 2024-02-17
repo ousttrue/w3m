@@ -1,4 +1,5 @@
 #include "auth_pass.h"
+#include "quote.h"
 #include "screen.h"
 #include "w3m.h"
 #include "etc.h"
@@ -11,6 +12,11 @@
 #include "display.h"
 #include <string.h>
 #include <sys/stat.h>
+#ifdef _MSC_VER
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <io.h>
+#endif
 
 #define PASSWD_FILE RC_DIR "/passwd"
 
@@ -103,10 +109,9 @@ static Str *next_token(Str *arg) {
 }
 
 static void parsePasswd(FILE *fp, int netrc) {
-  struct auth_pass ent;
+  auth_pass ent = {0};
   Str *line = NULL;
 
-  bzero(&ent, sizeof(struct auth_pass));
   while (1) {
     Str *arg = NULL;
     char *p;
@@ -127,7 +132,7 @@ static void parsePasswd(FILE *fp, int netrc) {
     if (!strcmp(p, "machine") || !strcmp(p, "host") ||
         (netrc && !strcmp(p, "default"))) {
       add_auth_pass_entry(ent, netrc, 0);
-      bzero(&ent, sizeof(struct auth_pass));
+      ent = {0};
       if (netrc)
         ent.port = 21; /* XXX: getservbyname("ftp"); ? */
       if (strcmp(p, "default") != 0) {
@@ -221,6 +226,9 @@ int find_auth_user_passwd(const Url &pu, const char *realm, Str **uname,
   "SECURITY NOTE: file %s must not be accessible by others"
 
 FILE *openSecretFile(const char *fname) {
+#ifdef _MSC_VER
+  return {};
+#else
   if (!fname) {
     return nullptr;
   }
@@ -255,6 +263,7 @@ FILE *openSecretFile(const char *fname) {
   }
 
   return fopen(efname, "r");
+#endif
 }
 
 void loadPasswd() {

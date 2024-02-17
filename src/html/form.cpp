@@ -2,6 +2,7 @@
  * HTML forms
  */
 #include "form.h"
+#include "quote.h"
 #include "html_parser.h"
 #include "form_item.h"
 #include "app.h"
@@ -26,7 +27,6 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "proto.h"
-#include <unistd.h>
 #include <sys/stat.h>
 
 /* *INDENT-OFF* */
@@ -514,6 +514,8 @@ void form_write_data(FILE *f, char *boundary, char *name, char *value) {
 
 void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
                           char *file) {
+#ifdef _MSC_VER
+#else
   FILE *fd;
   struct stat st;
   int c;
@@ -537,6 +539,7 @@ void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
   }
 write_end:
   fprintf(f, "\r\n");
+#endif
 }
 
 struct pre_form_item {

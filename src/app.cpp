@@ -1,4 +1,5 @@
 #include "app.h"
+#include "quote.h"
 #include "screen.h"
 #include "ssl_util.h"
 #include "html/form.h"
@@ -23,7 +24,12 @@
 #include <sstream>
 #include <uv.h>
 #include <chrono>
-#include <unistd.h>
+// #include <unistd.h>
+
+#ifdef _MSC_VER
+#include <direct.h>
+// #define getcwd _getcwd
+#endif
 
 const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
 

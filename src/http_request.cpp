@@ -1,4 +1,5 @@
 #include "http_request.h"
+#include "quote.h"
 #include "w3m.h"
 #include "Str.h"
 #include "url.h"
@@ -10,6 +11,9 @@
 #include "auth_pass.h"
 #include "myctype.h"
 #include <string.h>
+#ifdef _MSC_VER
+#include <io.h>
+#endif
 
 bool override_user_agent = false;
 char *UserAgent = nullptr;

@@ -632,7 +632,7 @@ void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
   obuf->table_level = -1;
   obuf->nobr_level = 0;
   obuf->q_level = 0;
-  bzero((void *)&obuf->anchor, sizeof(obuf->anchor));
+  obuf->anchor = {0};
   obuf->img_alt = 0;
   obuf->input_alt.hseq = 0;
   obuf->input_alt.fid = -1;
@@ -759,6 +759,9 @@ std::shared_ptr<Buffer> loadHTMLString(Str *page) {
 
 #define SHELLBUFFERNAME "*Shellout*"
 std::shared_ptr<Buffer> getshell(const char *cmd) {
+#ifdef _MSC_VER
+  return {};
+#else
   if (cmd == nullptr || *cmd == '\0') {
     return nullptr;
   }
@@ -774,6 +777,7 @@ std::shared_ptr<Buffer> getshell(const char *cmd) {
   buf->res->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
+#endif
 }
 
 void set_breakpoint(struct readbuffer *obuf, int tag_length) {

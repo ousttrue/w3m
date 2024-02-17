@@ -20,8 +20,6 @@
 #include "history.h"
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <dirent.h>
-#include <sys/dir.h>
 typedef struct direct Directory;
 
 bool space_autocomplete = false;
@@ -655,9 +653,12 @@ static Str *escape_spaces(Str *s) {
 }
 
 Str *LineInput::doComplete(Str *ifn, int *status, int next) {
+#ifdef _MSC_VER
+  return {};
+#else
   int fl, i;
   const char *fn, *p;
-  DIR *d;
+  // DIR *d;
   Directory *dir;
   struct stat st;
 
@@ -761,6 +762,7 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
   if (cm_mode & CPL_ON)
     CompleteBuf = escape_spaces(CompleteBuf);
   return CompleteBuf;
+#endif
 }
 
 void LineInput::_prev(char) {

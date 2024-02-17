@@ -1,4 +1,5 @@
 #include "http_response.h"
+#include "quote.h"
 #include "matchattr.h"
 #include "app.h"
 #include "screen.h"
@@ -15,8 +16,6 @@
 #include "func.h"
 #include "etc.h"
 
-#include <strings.h>
-#include <unistd.h>
 #include <assert.h>
 #include <sys/stat.h>
 

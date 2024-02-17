@@ -676,7 +676,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env,
         } else {
           passthrough(obuf, p, 1);
         }
-        bzero((void *)&obuf->anchor, sizeof(obuf->anchor));
+        obuf->anchor = {0};
         return;
       }
       is_erased = 0;
@@ -688,7 +688,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env,
 
     push_tag(obuf, "</a>", HTML_N_A);
   }
-  bzero((void *)&obuf->anchor, sizeof(obuf->anchor));
+  obuf->anchor = {0};
 }
 
 void HtmlParser::save_fonteffect(struct html_feed_environ *h_env,
@@ -708,7 +708,7 @@ void HtmlParser::save_fonteffect(struct html_feed_environ *h_env,
     push_tag(obuf, "</s>", HTML_N_S);
   if (obuf->in_ins)
     push_tag(obuf, "</ins>", HTML_N_INS);
-  bzero(obuf->fontstat, FONTSTAT_SIZE);
+  memset(obuf->fontstat, 0, FONTSTAT_SIZE);
 }
 
 void HtmlParser::restore_fonteffect(struct html_feed_environ *h_env,

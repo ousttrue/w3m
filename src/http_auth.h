@@ -13,10 +13,10 @@ using HttpAuthFunc = Str *(*)(struct http_auth *ha, Str *uname, Str *pw,
                               const Url &pu, HttpRequest *hr,
                               FormList *request);
 struct http_auth {
-  int pri;
-  const char *schema;
-  struct auth_param *param;
-  HttpAuthFunc cred;
+  int pri = 0;
+  const char *schema = nullptr;
+  struct auth_param *param = nullptr;
+  HttpAuthFunc cred = {};
 };
 
 struct HttpResponse;

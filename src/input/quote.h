@@ -1,5 +1,12 @@
 #pragma once
 
+#ifdef _MSC_VER
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+
+char *strcasestr(const char *str, const char *pattern);
+#endif
+
 extern const char *HTML_QUOTE_MAP[];
 extern unsigned char QUOTE_MAP[];
 #define HTML_QUOTE_MASK 0x07   /* &, <, >, ", ' */

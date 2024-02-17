@@ -3,7 +3,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "alloc.h"
-#include <unistd.h>
+#include "quote.h"
 
 #define DEF_CAFILE ""
 #include <openssl/bio.h>
@@ -14,6 +14,20 @@
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
+
+#ifdef _MSC_VER
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <io.h>
+#endif
+
+#if !(_SVID_SOURCE || _XOPEN_SOURCE)
+// https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
+static double drand48(void) { return rand() / (RAND_MAX + 1.0); }
+static long int lrand48(void) { return rand(); }
+static long int mrand48(void) { return rand() > RAND_MAX / 2 ? rand() : -rand(); }
+static void srand48(long int seedval) { srand(seedval); }
+#endif
 
 const char *ssl_forbid_method = "2, 3, t, 5";
 bool ssl_path_modified = false;
@@ -202,10 +216,9 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
   }
 
   if (match_ident == false && ret == NULL) {
-    X509_NAME *xn;
     char buf[2048];
 
-    xn = X509_get_subject_name(x);
+    auto xn = X509_get_subject_name(x);
 
     auto slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
     if (slen == -1)
@@ -227,7 +240,6 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
 static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
   BIO *bp;
   X509 *x;
-  X509_NAME *xn;
   char *p;
   int len;
   Str *s;
@@ -322,7 +334,7 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
   ssl_accept_this_site(hostname);
   s = amsg ? amsg : Strnew_charp("valid certificate");
   Strcat_charp(s, "\n");
-  xn = X509_get_subject_name(x);
+  auto xn = X509_get_subject_name(x);
   if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
     Strcat_charp(s, " subject=<unknown>");
   else

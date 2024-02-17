@@ -2,6 +2,7 @@
 #include "url_stream.h"
 #include "alloc.h"
 #include "Str.h"
+#include "quote.h"
 #include <string.h>
 
 const char *tag_get_value(struct keyvalue *t, const char *arg) {

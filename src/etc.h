@@ -1,10 +1,10 @@
 #pragma once
-#include <stdio.h>
 #include <memory>
+#include <string>
 
 extern char *personal_document_root;
 
-pid_t open_pipe_rw(FILE **fr, FILE **fw);
+int open_pipe_rw(FILE **fr, FILE **fw);
 const char *file_to_url(const char *file);
 const char *lastFileName(const char *path);
 const char *mydirname(const char *s);
@@ -21,5 +21,3 @@ const char *remove_space(const char *str);
 Str *unescape_spaces(Str *s);
 void setup_child(int child, int i, int f);
 void myExec(const char *command);
-
-

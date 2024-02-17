@@ -1,4 +1,5 @@
 #include "url_schema.h"
+#include "quote.h"
 #include <string.h>
 #include <cctype>
 

@@ -27,16 +27,25 @@
 #include "func.h"
 #include "linein.h"
 #include <string.h>
-#include <unistd.h>
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/types.h>
+#include <setjmp.h>
+#include <sys/stat.h>
+#include <string.h>
+
+#ifdef _MSC_VER
+// #include <windows.h>
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <mstcpip.h>
+// #include <stdlib.h>
+// #include <stdio.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#include <setjmp.h>
-#include <sys/stat.h>
+#endif
 
 bool DecodeURL = false;
 bool ArgvIsURL = true;
@@ -121,6 +130,8 @@ static int dir_exist(const char *path) {
 }
 
 static void write_from_file(int sock, char *file) {
+#ifdef _MSC_VER
+#else
   FILE *fd;
   int c;
   char buf[1];
@@ -132,6 +143,7 @@ static void write_from_file(int sock, char *file) {
     }
     fclose(fd);
   }
+#endif
 }
 
 void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
@@ -189,7 +201,7 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
 
 static int openSocket(const char *const hostname, const char *remoteport_name,
                       unsigned short remoteport_num) {
-  volatile int sock = -1;
+  int sock = -1;
 #ifdef INET6
   int *af;
   struct addrinfo hints, *res0, *res;
@@ -261,7 +273,11 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
         continue;
       }
       if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
+#ifdef _MSC_VER
+        closesocket(sock);
+#else
         close(sock);
+#endif
         sock = -1;
         continue;
       }
@@ -280,7 +296,7 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   }
 #else /* not INET6 */
   s_port = htons(remoteport_num);
-  bzero((char *)&hostaddr, sizeof(struct sockaddr_in));
+  memset(&hostaddr, 0, sizeof(struct sockaddr_in));
   if ((proto = getprotobyname("tcp")) == nullptr) {
     /* protocol number of TCP is 6 */
     proto = New(struct protoent);
@@ -398,8 +414,13 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     this->stream = newSSLStream(sslh, sock);
     if (sslh)
       SSL_write(sslh, tmp->ptr, tmp->length);
-    else
+    else {
+#ifdef _MSC_VER
+      send(sock, tmp->ptr, tmp->length, {});
+#else
       write(sock, tmp->ptr, tmp->length);
+#endif
+    }
     if (w3m_reqlog) {
       FILE *ff = fopen(w3m_reqlog, "a");
       if (ff == nullptr) {
@@ -421,7 +442,11 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     }
     return;
   } else {
+#ifdef _MSC_VER
+    send(sock, tmp->ptr, tmp->length, {});
+#else
     write(sock, tmp->ptr, tmp->length);
+#endif
     if (w3m_reqlog) {
       FILE *ff = fopen(w3m_reqlog, "a");
       if (ff == nullptr) {
@@ -640,6 +665,9 @@ static int checkSaveFile(const std::shared_ptr<input_stream> &stream,
 }
 
 int UrlStream::doFileSave(const char *defstr) {
+#ifdef _MSC_VER
+  return {};
+#else
   if (fmInitialized) {
     auto p = App::instance().searchKeyData();
     if (p == nullptr || *p == '\0') {
@@ -716,6 +744,7 @@ int UrlStream::doFileSave(const char *defstr) {
       setModtime(p, this->modtime);
   }
   return 0;
+#endif
 }
 
 static char url_unquote_char(const char **pstr) {
@@ -871,6 +900,9 @@ const char *cleanupName(const char *name) {
 }
 
 std::string UrlStream::uncompress_stream() {
+#ifdef _MSC_VER
+  return {};
+#else
   if (this->stream->IStype() != IST_ENCODED) {
     this->stream = newEncodedStream(this->stream, this->encoding);
     this->encoding = ENC_7BIT;
@@ -906,11 +938,10 @@ std::string UrlStream::uncompress_stream() {
   }
   if (pid1 == 0) {
     /* child */
-    pid_t pid2;
     FILE *f2 = stdin;
 
     /* uf -> child2 -- stdout|stdin -> child1 */
-    pid2 = open_pipe_rw(&f2, nullptr);
+    auto pid2 = open_pipe_rw(&f2, nullptr);
     if (pid2 < 0) {
       exit(1);
     }
@@ -951,4 +982,5 @@ std::string UrlStream::uncompress_stream() {
     this->schema = SCM_LOCAL;
   }
   return tmpf;
+#endif
 }

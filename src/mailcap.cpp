@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "quote.h"
 #include "matchattr.h"
 #include "etc.h"
 #include "url.h"
@@ -68,7 +69,7 @@ static Mailcap DefaultMailcap = {
 
 static TextList *mailcap_list;
 
-static struct std::vector<Mailcap> UserMailcap;
+static std::vector<Mailcap> UserMailcap;
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"

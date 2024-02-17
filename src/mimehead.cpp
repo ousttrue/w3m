@@ -3,11 +3,12 @@
  * MIME header support by Akinori ITO
  */
 #include "mimehead.h"
-#include <sys/types.h>
-#include <string.h>
+#include "quote.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "Str.h"
+#include <sys/types.h>
+#include <string.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18
