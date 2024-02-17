@@ -68,6 +68,7 @@ executable(
         'w3m.cpp',
         'main.cpp',
         'html/readbuffer.cpp',
+        'html/html_feed_env.cpp',
         'html/table.cpp',
         'html/form.cpp',
         'html/anchor.cpp',

@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "html_feed_env.h"
 #include "etc.h"
 #include "html_parser.h"
 #include "html/form_item.h"
@@ -651,7 +652,7 @@ void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
   obuf->top_margin = 0;
   obuf->bottom_margin = 0;
   obuf->bp.init_flag = 1;
-  set_breakpoint(obuf, 0);
+  obuf->set_breakpoint(0);
 
   h_env->buf = buf;
   h_env->f = NULL;
@@ -780,29 +781,29 @@ std::shared_ptr<Buffer> getshell(const char *cmd) {
 #endif
 }
 
-void set_breakpoint(struct readbuffer *obuf, int tag_length) {
-  obuf->bp.len = obuf->line->length;
-  obuf->bp.pos = obuf->pos;
-  obuf->bp.tlen = tag_length;
-  obuf->bp.flag = obuf->flag;
+void readbuffer::set_breakpoint(int tag_length) {
+  this->bp.len = this->line->length;
+  this->bp.pos = this->pos;
+  this->bp.tlen = tag_length;
+  this->bp.flag = this->flag;
 #ifdef FORMAT_NICE
-  obuf->bp.flag &= ~RB_FILL;
+  this->bp.flag &= ~RB_FILL;
 #endif /* FORMAT_NICE */
-  obuf->bp.top_margin = obuf->top_margin;
-  obuf->bp.bottom_margin = obuf->bottom_margin;
+  this->bp.top_margin = this->top_margin;
+  this->bp.bottom_margin = this->bottom_margin;
 
-  if (!obuf->bp.init_flag)
+  if (!this->bp.init_flag)
     return;
 
-  obuf->bp.anchor = obuf->anchor;
-  obuf->bp.img_alt = obuf->img_alt;
-  obuf->bp.input_alt = obuf->input_alt;
-  obuf->bp.in_bold = obuf->in_bold;
-  obuf->bp.in_italic = obuf->in_italic;
-  obuf->bp.in_under = obuf->in_under;
-  obuf->bp.in_strike = obuf->in_strike;
-  obuf->bp.in_ins = obuf->in_ins;
-  obuf->bp.nobr_level = obuf->nobr_level;
-  obuf->bp.prev_ctype = obuf->prev_ctype;
-  obuf->bp.init_flag = 0;
+  this->bp.anchor = this->anchor;
+  this->bp.img_alt = this->img_alt;
+  this->bp.input_alt = this->input_alt;
+  this->bp.in_bold = this->in_bold;
+  this->bp.in_italic = this->in_italic;
+  this->bp.in_under = this->in_under;
+  this->bp.in_strike = this->in_strike;
+  this->bp.in_ins = this->in_ins;
+  this->bp.nobr_level = this->nobr_level;
+  this->bp.prev_ctype = this->prev_ctype;
+  this->bp.init_flag = 0;
 }

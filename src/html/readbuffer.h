@@ -171,25 +171,29 @@ struct readbuffer {
   int tag_sp;
   short top_margin;
   short bottom_margin;
+
+  void set_breakpoint(int tag_length);
+  void back_to_breakpoint() {
+    this->flag = this->bp.flag;
+    this->anchor = this->bp.anchor;
+    this->img_alt = this->bp.img_alt;
+    this->input_alt = this->bp.input_alt;
+    this->in_bold = this->bp.in_bold;
+    this->in_italic = this->bp.in_italic;
+    this->in_under = this->bp.in_under;
+    this->in_strike = this->bp.in_strike;
+    this->in_ins = this->bp.in_ins;
+    this->prev_ctype = this->bp.prev_ctype;
+    this->pos = this->bp.pos;
+    this->top_margin = this->bp.top_margin;
+    this->bottom_margin = this->bp.bottom_margin;
+    if (this->flag & RB_NOBR) {
+      this->nobr_level = this->bp.nobr_level;
+    }
+  }
 };
 
 struct TextLineList;
-struct html_feed_environ {
-  struct readbuffer *obuf;
-  TextLineList *buf;
-  FILE *f;
-  Str *tagbuf;
-  int limit;
-  int maxlimit;
-  struct environment *envs;
-  int nenv;
-  int envc;
-  int envc_real;
-  const char *title;
-  int blank_lines;
-};
-
-void purgeline(html_feed_environ *h_env);
 
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, TextLineList *, int, int);
@@ -225,4 +229,3 @@ const char *html_quote(const char *str);
 const char *html_unquote(const char *str);
 int getescapechar(const char **s);
 const char *getescapecmd(const char **s);
-void set_breakpoint(struct readbuffer *obuf, int tag_length);

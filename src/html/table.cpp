@@ -3,6 +3,7 @@
  */
 #include "readbuffer.h"
 #include "quote.h"
+#include "html_feed_env.h"
 #include "html_parser.h"
 #include "symbol.h"
 #include "html_command.h"
@@ -728,15 +729,17 @@ void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
       if (tbl->vcellpadding > 0 && !(obuf.flag & RB_IGNORE_P))
         parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
     } else {
-      if (tbl->vspace > 0)
-        purgeline(&h_env);
+      if (tbl->vspace > 0) {
+        h_env.purgeline();
+      }
     }
   } else {
     if (tbl->vcellpadding > 0) {
       if (!(obuf.flag & RB_IGNORE_P))
         parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
-    } else
-      purgeline(&h_env);
+    } else {
+      h_env.purgeline();
+    }
   }
   if ((colspan = table_colspan(tbl, row, col)) > 1) {
     struct table_cell *cell = &tbl->cell;

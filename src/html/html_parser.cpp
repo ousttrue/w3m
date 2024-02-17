@@ -1,4 +1,5 @@
 #include "html_parser.h"
+#include "html_feed_env.h"
 #include "entity.h"
 #include "form_item.h"
 #include "form.h"
@@ -21,41 +22,6 @@
 
 HtmlParser::HtmlParser() { textarea_str = (Str **)New_N(Str *, max_textarea); }
 
-static int sloppy_parse_line(char **str) {
-  if (**str == '<') {
-    while (**str && **str != '>')
-      (*str)++;
-    if (**str == '>')
-      (*str)++;
-    return 1;
-  } else {
-    while (**str && **str != '<')
-      (*str)++;
-    return 0;
-  }
-}
-
-void purgeline(struct html_feed_environ *h_env) {
-  char *p, *q;
-  Str *tmp;
-  TextLine *tl;
-
-  if (h_env->buf == NULL || h_env->blank_lines == 0)
-    return;
-
-  if (!(tl = rpopTextLine(h_env->buf)))
-    return;
-  p = tl->line->ptr;
-  tmp = Strnew();
-  while (*p) {
-    q = p;
-    if (sloppy_parse_line(&p)) {
-      Strcat_charp_n(tmp, q, p - q);
-    }
-  }
-  appendTextLine(h_env->buf, tmp, 0);
-  h_env->blank_lines--;
-}
 Str *HtmlParser::getLinkNumberStr(int correction) const {
   return Sprintf("[%d]", cur_hseq + correction);
 }
@@ -119,8 +85,9 @@ void HtmlParser::append_tags(struct readbuffer *obuf) {
     }
   }
   obuf->tag_sp = 0;
-  if (set_bp)
-    set_breakpoint(obuf, obuf->line->length - len);
+  if (set_bp) {
+    obuf->set_breakpoint(obuf->line->length - len);
+  }
 }
 
 void HtmlParser::push_tag(struct readbuffer *obuf, const char *cmdname,
@@ -166,7 +133,7 @@ void HtmlParser::check_breakpoint(struct readbuffer *obuf, int pre_mode,
   tlen = obuf->line->length - len;
   if (tlen > 0 ||
       is_boundary((unsigned char *)obuf->prevchar->ptr, (unsigned char *)ch))
-    set_breakpoint(obuf, tlen);
+    obuf->set_breakpoint(tlen);
 }
 
 void HtmlParser::push_char(struct readbuffer *obuf, int pre_mode, char ch) {
@@ -555,7 +522,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env,
   set_space_to_prevchar(obuf->prevchar);
   obuf->bp.init_flag = 1;
   obuf->flag &= ~RB_NFLUSHED;
-  set_breakpoint(obuf, 0);
+  obuf->set_breakpoint(0);
   obuf->prev_ctype = PC_ASCII;
   link_stack = NULL;
   fillline(obuf, indent);
@@ -2363,7 +2330,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     i = obuf->line->length;
     append_tags(obuf);
     if (!(obuf->flag & RB_SPECIAL)) {
-      set_breakpoint(obuf, obuf->line->length - i);
+      obuf->set_breakpoint(obuf->line->length - i);
     }
     obuf->flag |= RB_PRE_INT;
     return 0;
@@ -3015,24 +2982,6 @@ static int need_flushline(struct html_feed_environ *h_env,
 
 #define PUSH(c) push_char(obuf, obuf->flag &RB_SPECIAL, c)
 
-static void back_to_breakpoint(struct readbuffer *obuf) {
-  obuf->flag = obuf->bp.flag;
-  obuf->anchor = obuf->bp.anchor;
-  obuf->img_alt = obuf->bp.img_alt;
-  obuf->input_alt = obuf->bp.input_alt;
-  obuf->in_bold = obuf->bp.in_bold;
-  obuf->in_italic = obuf->bp.in_italic;
-  obuf->in_under = obuf->bp.in_under;
-  obuf->in_strike = obuf->bp.in_strike;
-  obuf->in_ins = obuf->bp.in_ins;
-  obuf->prev_ctype = obuf->bp.prev_ctype;
-  obuf->pos = obuf->bp.pos;
-  obuf->top_margin = obuf->bp.top_margin;
-  obuf->bottom_margin = obuf->bp.bottom_margin;
-  if (obuf->flag & RB_NOBR)
-    obuf->nobr_level = obuf->bp.nobr_level;
-}
-
 /* HTML processing first pass */
 void HtmlParser::HTMLlineproc0(const char *line,
                                struct html_feed_environ *h_env, int internal) {
@@ -3331,7 +3280,7 @@ table_start:
           if (obuf->pos - i > h_env->limit)
             obuf->flag |= RB_FILL;
 #endif /* FORMAT_NICE */
-          back_to_breakpoint(obuf);
+          obuf->back_to_breakpoint();
           flushline(h_env, obuf, indent, 0, h_env->limit);
 #ifdef FORMAT_NICE
           obuf->flag &= ~RB_FILL;
