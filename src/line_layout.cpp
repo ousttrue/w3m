@@ -7,7 +7,6 @@
 #include "myctype.h"
 #include "history.h"
 #include "url.h"
-#include "message.h"
 #include "terms.h"
 #include "html/anchor.h"
 #include "html/form.h"
@@ -111,14 +110,14 @@ void LineLayout::gotoLine(int n) {
 
   if (l->linenumber > n) {
     snprintf(msg, sizeof(msg), "First line is #%ld", l->linenumber);
-    set_delayed_message(msg);
+    App::instance().set_delayed_message(msg);
     this->topLine = this->currentLine = l;
     return;
   }
   if (this->lastLine->linenumber < n) {
     l = this->lastLine;
     snprintf(msg, sizeof(msg), "Last line is #%ld", this->lastLine->linenumber);
-    set_delayed_message(msg);
+    App::instance().set_delayed_message(msg);
     this->currentLine = l;
     this->topLine =
         this->lineSkip(this->currentLine, -(this->LINES - 1), false);
@@ -392,7 +391,7 @@ void LineLayout::gotoRealLine(int n) {
   if (l->real_linenumber > n) {
     char msg[36];
     snprintf(msg, sizeof(msg), "First line is #%ld", l->real_linenumber);
-    set_delayed_message(msg);
+    App::instance().set_delayed_message(msg);
     this->topLine = this->currentLine = l;
     return;
   }
@@ -402,7 +401,7 @@ void LineLayout::gotoRealLine(int n) {
     char msg[36];
     snprintf(msg, sizeof(msg), "Last line is #%ld",
              this->lastLine->real_linenumber);
-    set_delayed_message(msg);
+    App::instance().set_delayed_message(msg);
     this->currentLine = l;
     this->topLine =
         this->lineSkip(this->currentLine, -(this->LINES - 1), false);

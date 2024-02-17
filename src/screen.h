@@ -1,4 +1,5 @@
 #pragma once
+#include "termentry.h"
 #include <stdio.h>
 
 struct Utf8;
@@ -43,13 +44,23 @@ struct Screen {
 
 struct TermEntry;
 
+struct RowCol {
+  int row;
+  int col;
+};
+
 class TermScreen {
+  RowCol _size;
+  TermEntry _entry;
+
 public:
-  void setupscreen(const TermEntry &entry);
+  void setupscreen(const RowCol &size, const TermEntry &entry);
+  void clear();
+
+  void _refresh(FILE *ttyf);
 };
 
 void refresh(FILE *ttyf);
-void clear();
 void clrtoeol();
 void clrtoeolx();
 void clrtobot();

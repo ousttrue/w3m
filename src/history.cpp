@@ -6,7 +6,6 @@
 #include "url_stream.h"
 #include "http_session.h"
 #include "rc.h"
-#include "message.h"
 #include "buffer.h"
 #include "proto.h"
 #include "alloc.h"
@@ -108,7 +107,7 @@ void saveHistory(Hist *hist, int size) {
   if (hist->mtime != (long long)st.st_mtime) {
     fhist = newHist();
     if (loadHistory(fhist) || mergeHistory(fhist, hist))
-      disp_err_message("Can't merge history");
+      App::instance().disp_err_message("Can't merge history");
     else
       hist = fhist;
   }
@@ -130,7 +129,7 @@ void saveHistory(Hist *hist, int size) {
   return;
 
 fail:
-  disp_err_message("Can't open history");
+  App::instance().disp_err_message("Can't open history");
   return;
 }
 

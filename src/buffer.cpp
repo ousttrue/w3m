@@ -14,7 +14,6 @@
 #include "local_cgi.h"
 #include "etc.h"
 #include "url_stream.h"
-#include "message.h"
 #include "screen.h"
 #include "display.h"
 #include "rc.h"
@@ -124,7 +123,7 @@ listBuffer(const std::shared_ptr<Buffer> &top,
     buf = buf->backBuffer;
   }
   standout();
-  message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
+  App::instance().message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
   standend();
   /*
    * move(LASTLINE, COLS - 1); */
@@ -469,7 +468,7 @@ void execdict(const char *word) {
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
   auto res = loadGeneralFile(dictcmd, {}, {.no_referer = true});
   if (!res) {
-    disp_message("Execution failed");
+    App::instance().disp_message("Execution failed");
     return;
   }
 
@@ -619,7 +618,7 @@ void cmd_loadfile(const char *fn) {
   auto res = loadGeneralFile(file_to_url((char *)fn), {}, {.no_referer = true});
   if (!res) {
     char *emsg = Sprintf("%s not found", fn)->ptr;
-    disp_err_message(emsg);
+    App::instance().disp_err_message(emsg);
     return;
   }
 
@@ -826,7 +825,7 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
 std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   auto a = this->layout.name()->searchAnchor(label);
   if (!a) {
-    disp_message(Sprintf("%s is not found", label)->ptr);
+    App::instance().disp_message(Sprintf("%s is not found", label)->ptr);
     return {};
   }
 
@@ -848,7 +847,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
 
 std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
                                          FormList *request) {
-  message(Sprintf("loading %s", url)->ptr, 0, 0);
+  App::instance().message(Sprintf("loading %s", url)->ptr, 0, 0);
   // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
@@ -866,7 +865,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   auto res = loadGeneralFile(url, this->res->getBaseURL(), option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
-    disp_err_message(emsg);
+    App::instance().disp_err_message(emsg);
     return {};
   }
 
@@ -980,7 +979,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
     do_internal(tmp2->ptr, tmp->ptr);
     return {};
   } else {
-    disp_err_message("Can't send form because of illegal method.");
+    App::instance().disp_err_message("Can't send form because of illegal method.");
     return {};
   }
 }
@@ -1002,7 +1001,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
       return this->do_submit(fi, a);
     }
     if (fi->readonly)
-      disp_message_nsec("Read only field!", 1, true);
+      App::instance().disp_message_nsec("Read only field!", 1, true);
     auto input = LineInput::inputStrHist(
         "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
         [fi, a](const char *p) {
@@ -1034,7 +1033,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     }
 
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
+      App::instance().disp_message_nsec("Read only field!", 1, true);
     }
 
     // p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : nullptr,
@@ -1052,7 +1051,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
       return this->do_submit(fi, a);
     }
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
+      App::instance().disp_message_nsec("Read only field!", 1, true);
       break;
     }
     // p = inputLine("Password:", fi->value ? fi->value->ptr : nullptr,
@@ -1071,7 +1070,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
       return this->do_submit(fi, a);
     }
     if (fi->readonly)
-      disp_message_nsec("Read only field!", 1, true);
+      App::instance().disp_message_nsec("Read only field!", 1, true);
     input_textarea(fi);
     formUpdateBuffer(a, &this->layout, fi);
     break;
@@ -1081,7 +1080,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
       return this->do_submit(fi, a);
     }
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
+      App::instance().disp_message_nsec("Read only field!", 1, true);
       break;
     }
     formRecheckRadio(a, this, fi);
@@ -1092,7 +1091,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
       return this->do_submit(fi, a);
     }
     if (fi->readonly) {
-      disp_message_nsec("Read only field!", 1, true);
+      App::instance().disp_message_nsec("Read only field!", 1, true);
       break;
     }
     fi->checked = !fi->checked;

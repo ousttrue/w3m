@@ -12,7 +12,6 @@
 #include "url_quote.h"
 #include "proto.h"
 #include "screen.h"
-#include "message.h"
 #include "myctype.h"
 #include "w3m.h"
 #include "history.h"
@@ -95,7 +94,7 @@ void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
-    disp_err_message(emsg);
+    App::instance().disp_err_message(emsg);
     return;
   }
 

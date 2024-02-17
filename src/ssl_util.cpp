@@ -1,5 +1,5 @@
 #include "ssl_util.h"
-#include "message.h"
+#include "app.h"
 #include "Str.h"
 #include "myctype.h"
 #include "alloc.h"
@@ -25,7 +25,9 @@
 // https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
 static double drand48(void) { return rand() / (RAND_MAX + 1.0); }
 static long int lrand48(void) { return rand(); }
-static long int mrand48(void) { return rand() > RAND_MAX / 2 ? rand() : -rand(); }
+static long int mrand48(void) {
+  return rand() > RAND_MAX / 2 ? rand() : -rand();
+}
 static void srand48(long int seedval) { srand(seedval); }
 #endif
 
@@ -264,12 +266,12 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-      disp_err_message(e);
+      App::instance().disp_err_message(e);
       free_ssl_ctx();
       return NULL;
     }
     if (amsg)
-      disp_err_message(amsg->ptr);
+      App::instance().disp_err_message(amsg->ptr);
     ssl_accept_this_site(hostname);
     s = amsg ? amsg : Strnew_charp("valid certificate");
     return s;
@@ -296,7 +298,7 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
                        em);
       } else {
         char *e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-        disp_err_message(e);
+        App::instance().disp_err_message(e);
         free_ssl_ctx();
         return NULL;
       }
@@ -322,13 +324,13 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     } else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation";
-      disp_err_message(e);
+      App::instance().disp_err_message(e);
       free_ssl_ctx();
       return NULL;
     }
   }
   if (amsg) {
-    disp_err_message(amsg->ptr);
+    App::instance().disp_err_message(amsg->ptr);
   }
 
   ssl_accept_this_site(hostname);
@@ -500,7 +502,7 @@ eend:
   close(sock);
   if (handle)
     SSL_free(handle);
-  disp_err_message(
+  App::instance().disp_err_message(
       Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
               ERR_error_string(ERR_get_error(), NULL))
           ->ptr);

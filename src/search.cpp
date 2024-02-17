@@ -5,7 +5,6 @@
 #include "app.h"
 #include "terms.h"
 #include "w3m.h"
-#include "message.h"
 #include "display.h"
 #include "regex.h"
 #include "proto.h"
@@ -17,7 +16,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
   int wrapped = false;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-    message(p, 0, 0);
+    App::instance().message(p, 0, 0);
     return SR_NOTFOUND;
   }
   l = layout->currentLine;
@@ -86,7 +85,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-    message(p, 0, 0);
+    App::instance().message(p, 0, 0);
     return SR_NOTFOUND;
   }
   l = layout->currentLine;
@@ -211,11 +210,11 @@ static void disp_srchresult(int result, const char *prompt, const char *str) {
   if (str == nullptr)
     str = "";
   if (result & SR_NOTFOUND)
-    disp_message(Sprintf("Not found: %s", str)->ptr);
+    App::instance().disp_message(Sprintf("Not found: %s", str)->ptr);
   else if (result & SR_WRAPPED)
-    disp_message(Sprintf("Search wrapped: %s", str)->ptr);
+    App::instance().disp_message(Sprintf("Search wrapped: %s", str)->ptr);
   else if (show_srch_str)
-    disp_message(Sprintf("%s%s", prompt, str)->ptr);
+    App::instance().disp_message(Sprintf("%s%s", prompt, str)->ptr);
 }
 
 /* Search regular expression forward */
@@ -228,7 +227,7 @@ void srch_nxtprv(int reverse) {
   /* *INDENT-ON* */
 
   if (searchRoutine == nullptr) {
-    disp_message("No previous regular expression");
+    App::instance().disp_message("No previous regular expression");
     return;
   }
   if (reverse != 0) {

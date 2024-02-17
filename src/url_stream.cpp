@@ -10,7 +10,6 @@
 #include "myctype.h"
 #include "downloadlist.h"
 #include "alloc.h"
-#include "message.h"
 #include "history.h"
 #include "terms.h"
 #include "compression.h"
@@ -217,7 +216,7 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
 #endif /* not INET6 */
 
   if (fmInitialized) {
-    message(Sprintf("Opening socket...")->ptr, 0, 0);
+    App::instance().message(Sprintf("Opening socket...")->ptr, 0, 0);
     refresh(term_io());
   }
   //   if (SETJMP(AbortLoading) != 0) {
@@ -680,7 +679,7 @@ int UrlStream::doFileSave(const char *defstr) {
       return -1;
     if (checkSaveFile(this->stream, p) < 0) {
       auto msg = Sprintf("Can't save. Load file and %s are identical.", p);
-      disp_err_message(msg->ptr);
+      App::instance().disp_err_message(msg->ptr);
       return -1;
     }
     auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");

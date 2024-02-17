@@ -10,6 +10,7 @@
 #include <fcntl.h>
 
 #include "cookie.h"
+#include "app.h"
 #include "quote.h"
 #include "html/readbuffer.h"
 #include "matchattr.h"
@@ -19,7 +20,6 @@
 #include "terms.h"
 #include "alloc.h"
 #include "mytime.h"
-#include "message.h"
 #include "http_request.h"
 #include "http_session.h"
 #include "textlist.h"
@@ -890,9 +890,9 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
     int err;
     if (show_cookie) {
       if (flag & COO_SECURE)
-        disp_message_nsec("Received a secured cookie", 1, true);
+        App::instance().disp_message_nsec("Received a secured cookie", 1, true);
       else
-        disp_message_nsec(
+        App::instance().disp_message_nsec(
             Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr, 1,
             true);
     }
@@ -926,11 +926,11 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
                      ->ptr;
         else
           emsg = "This cookie was rejected to prevent security violation.";
-        record_err_message(emsg);
+        App::instance().App::instance().record_err_message(emsg);
         if (show_cookie)
-          disp_message_nsec(emsg, 1, true);
+          App::instance().disp_message_nsec(emsg, 1, true);
       } else if (show_cookie)
-        disp_message_nsec(
+        App::instance().disp_message_nsec(
             Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)
                 ->ptr,
             1, true);

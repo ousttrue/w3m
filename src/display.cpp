@@ -6,7 +6,6 @@
 #include "http_session.h"
 #include "http_response.h"
 #include "symbol.h"
-#include "message.h"
 #include "w3m.h"
 #include "html/readbuffer.h"
 #include "screen.h"
@@ -246,10 +245,10 @@ void _displayBuffer() {
     Strcat_charp(msg, "\tNo Line");
   }
 
-  refresh_message();
+  App::instance().refresh_message();
 
   standout();
-  message(msg->ptr, buf->layout.AbsCursorX(), buf->layout.AbsCursorY());
+  App::instance().message(msg->ptr, buf->layout.AbsCursorX(), buf->layout.AbsCursorY());
   standend();
   term_title(buf->layout.title.c_str());
   refresh(term_io());

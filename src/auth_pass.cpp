@@ -1,4 +1,5 @@
 #include "auth_pass.h"
+#include "app.h"
 #include "quote.h"
 #include "screen.h"
 #include "w3m.h"
@@ -7,7 +8,6 @@
 #include "url.h"
 #include "Str.h"
 #include "myctype.h"
-#include "message.h"
 #include "terms.h"
 #include "display.h"
 #include <string.h>
@@ -252,7 +252,7 @@ FILE *openSecretFile(const char *fname) {
     /* do nothing */;
   else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
     if (fmInitialized) {
-      message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
+      App::instance().message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
       refresh(term_io());
     } else {
       fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);

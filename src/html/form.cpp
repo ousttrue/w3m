@@ -12,7 +12,6 @@
 #include "func.h"
 #include "etc.h"
 #include "mimetypes.h"
-#include "message.h"
 #include "readbuffer.h"
 #include "alloc.h"
 #include "html.h"
@@ -456,7 +455,7 @@ void input_textarea(FormItemList *fi) {
   auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == NULL) {
-    disp_err_message("Can't open temporary file");
+    App::instance().disp_err_message("Can't open temporary file");
     return;
   }
   if (fi->value) {
@@ -474,7 +473,7 @@ void input_textarea(FormItemList *fi) {
 
   f = fopen(tmpf.c_str(), "r");
   if (f == NULL) {
-    disp_err_message("Can't open temporary file");
+    App::instance().disp_err_message("Can't open temporary file");
     goto input_end;
   }
   fi->value = Strnew();

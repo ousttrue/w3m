@@ -102,7 +102,6 @@ executable(
         'utf8.cpp',
         'downloadlist.cpp',
         'screen.cpp',
-        'message.cpp',
         'ssl_util.cpp',
         'mimetypes.cpp',
         'url_stream.cpp',

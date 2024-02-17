@@ -5,7 +5,6 @@
 #include "url_stream.h"
 #include "buffer.h"
 #include "line.h"
-#include "message.h"
 #include "http_response.h"
 #include "screen.h"
 #include "terms.h"

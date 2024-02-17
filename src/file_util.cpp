@@ -8,7 +8,6 @@
 #include "Str.h"
 #include "app.h"
 #include "w3m.h"
-#include "message.h"
 #include "url_stream.h"
 #include "istream.h"
 #include "alloc.h"
@@ -49,7 +48,7 @@ int _MoveFile(const char *path1, const char *path2) {
   while ((count = f1->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
     fwrite(buf, 1, count, f2);
     linelen += count;
-    showProgress(&linelen, &trbyte, current_content_length);
+    App::instance().showProgress(&linelen, &trbyte, current_content_length);
   }
 
   xfree(buf);
@@ -106,13 +105,13 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     }
     if (checkCopyFile(tmpf, p) < 0) {
       msg = Sprintf("Can't copy. %s and %s are identical.", tmpf, p);
-      disp_err_message(msg->ptr);
+      App::instance().disp_err_message(msg->ptr);
       return -1;
     }
     if (!download) {
       if (_MoveFile(tmpf, p) < 0) {
         msg = Sprintf("Can't save to %s", p);
-        disp_err_message(msg->ptr);
+        App::instance().disp_err_message(msg->ptr);
       }
       return -1;
     }

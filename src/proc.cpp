@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "app.h"
 #include "html/form_item.h"
 #include "file_util.h"
 #include "html/readbuffer.h"
@@ -20,14 +21,12 @@
 #include "quote.h"
 #include "http_request.h"
 #include "http_response.h"
-#include "message.h"
 #include "http_session.h"
 #include "local_cgi.h"
 #include "Str.h"
 #include "search.h"
 #include "w3m.h"
 #include "app.h"
-#include "terms.h"
 #include "screen.h"
 #include "myctype.h"
 #include "func.h"
@@ -129,7 +128,7 @@ void ctrCsrH() {
 // REDRAW
 //"Draw the screen anew"
 void rdrwSc() {
-  clear();
+  // clear();
   CurrentTab->currentBuffer()->layout.arrangeCursor();
   App::instance().invalidate();
 }
@@ -280,12 +279,12 @@ void readsh() {
   }
   // MySignalHandler prevtrap = {};
   // prevtrap = mySignal(SIGINT, intTrap);
-  crmode();
+  // crmode();
   auto buf = getshell(cmd);
   // mySignal(SIGINT, prevtrap);
-  term_raw();
+  // term_raw();
   if (buf == nullptr) {
-    disp_message("Execution failed");
+    App::instance().disp_message("Execution failed");
     return;
   } else {
     if (buf->res->type.empty()) {
@@ -314,7 +313,7 @@ void execsh() {
     printf("\n[Hit any key]");
     fflush(stdout);
     fmInit();
-    getch();
+    // getch();
   }
   App::instance().invalidate();
 }
@@ -550,9 +549,9 @@ void susp() {
 #ifndef SIGSTOP
   const char *shell;
 #endif /* not SIGSTOP */
-  move(LASTLINE(), 0);
+  // move(LASTLINE(), 0);
   clrtoeolx();
-  refresh(term_io());
+  // refresh(term_io());
   fmTerm();
 #ifndef SIGSTOP
   shell = getenv("SHELL");
@@ -638,7 +637,7 @@ void editBf() {
       CurrentTab->currentBuffer()->res->currentURL.file ==
           "-" /* file is std input  */
   ) {
-    disp_err_message("Can't edit other than local file");
+    App::instance().disp_err_message("Can't edit other than local file");
     return;
   }
 
@@ -668,7 +667,8 @@ void editScr() {
   auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
-    disp_err_message(Sprintf("Can't open %s", tmpf.c_str())->ptr);
+    App::instance().disp_err_message(
+        Sprintf("Can't open %s", tmpf.c_str())->ptr);
     return;
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
@@ -700,14 +700,13 @@ void followI() {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
   if (a == nullptr)
     return;
-  message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-  refresh(term_io());
+  App::instance().message(Sprintf("loading %s", a->url)->ptr, 0, 0);
 
   auto res = loadGeneralFile(
       a->url, CurrentTab->currentBuffer()->res->getBaseURL(), {});
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
-    disp_err_message(emsg);
+    App::instance().disp_err_message(emsg);
     return;
   }
 
@@ -973,7 +972,7 @@ void backBf() {
       App::instance().deleteTab(CurrentTab);
       App::instance().invalidate();
     } else
-      disp_message("Can't go back...");
+      App::instance().disp_message("Can't go back...");
     return;
   }
 
@@ -1081,7 +1080,10 @@ void setOpt() {
 /* error message list */
 // MSGS
 //"Display error messages"
-void msgs() { CurrentTab->pushBuffer(message_list_panel()); }
+void msgs() {
+  auto buf = App::instance().message_list_panel();
+  CurrentTab->pushBuffer(buf);
+}
 
 /* page info */
 // INFO
@@ -1176,7 +1178,7 @@ void svBuf() {
   }
   if (f == nullptr) {
     char *emsg = Sprintf("Can't open %s", file)->ptr;
-    disp_err_message(emsg);
+    App::instance().disp_err_message(emsg);
     return;
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
@@ -1225,7 +1227,7 @@ void peekIMG() { App::instance()._peekURL(1); }
 //"Show current address"
 void curURL() {
   auto url = App::instance().currentUrl();
-  disp_message(url.c_str());
+  App::instance().disp_message(url.c_str());
 }
 
 /* view HTML source */
@@ -1253,7 +1255,7 @@ void reload() {
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
-    disp_err_message("Can't reload stdin");
+    App::instance().disp_err_message("Can't reload stdin");
     return;
   }
 
@@ -1278,8 +1280,7 @@ void reload() {
   }
 
   auto url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
-  message("Reloading...", 0, 0);
-  refresh(term_io());
+  App::instance().message("Reloading...", 0, 0);
   DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
 
   auto res = loadGeneralFile(url->ptr, {},
@@ -1290,7 +1291,7 @@ void reload() {
     unlink(request->body);
   }
   if (!res) {
-    disp_err_message("Can't reload...");
+    App::instance().disp_err_message("Can't reload...");
     return;
   }
 
@@ -1355,7 +1356,7 @@ void extbrz() {
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
-    disp_err_message("Can't browse stdin");
+    App::instance().disp_err_message("Can't browse stdin");
     return;
   }
   invoke_browser(CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
@@ -1395,22 +1396,22 @@ void curlno() {
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
                 len);
 
-  disp_message(tmp->ptr);
+  App::instance().disp_message(tmp->ptr);
 }
 
 // VERSION
 //"Display the version of w3m"
-void dispVer() { disp_message(Sprintf("w3m version %s", w3m_version)->ptr); }
+void dispVer() { App::instance().disp_message(Sprintf("w3m version %s", w3m_version)->ptr); }
 
 // WRAP_TOGGLE
 //"Toggle wrapping mode in searches"
 void wrapToggle() {
   if (WrapSearch) {
     WrapSearch = false;
-    disp_message("Wrap search off");
+    App::instance().disp_message("Wrap search off");
   } else {
     WrapSearch = true;
-    disp_message("Wrap search on");
+    App::instance().disp_message("Wrap search on");
   }
 }
 
@@ -1497,7 +1498,7 @@ void reinit() {
     return;
   }
 
-  disp_err_message(
+  App::instance().disp_err_message(
       Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
 }
 

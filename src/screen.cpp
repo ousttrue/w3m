@@ -36,9 +36,8 @@ static void touch_line(void) {
   }
 }
 
-static TermEntry _entry;
-
-void TermScreen::setupscreen(const TermEntry &entry) {
+void TermScreen::setupscreen(const RowCol &size, const TermEntry &entry) {
+  _size = size;
   _entry = entry;
 
   if (LINES() + 1 > max_LINES) {
@@ -68,7 +67,7 @@ void TermScreen::setupscreen(const TermEntry &entry) {
   clear();
 }
 
-void clear(void) {
+void TermScreen::clear(void) {
   term_writestr(_entry.T_cl);
 
   int i, j;
@@ -210,7 +209,7 @@ void refresh(FILE *ttyf) {
   flush_tty();
 }
 
-void _refresh(FILE *ttyf) {
+void TermScreen::_refresh(FILE *ttyf) {
   int line, col, pcol;
   int pline = CurLine;
   int moved = RF_NEED_TO_MOVE;

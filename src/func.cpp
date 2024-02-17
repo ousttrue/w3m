@@ -6,7 +6,6 @@
 #include "quote.h"
 #include "terms.h"
 #include "app.h"
-#include "message.h"
 #include "ctrlcode.h"
 #include "func.h"
 #include "myctype.h"
@@ -42,9 +41,9 @@ void setKeymap(const char *p, int lineno, int verbose) {
       emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
     else
       emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-    record_err_message(emsg);
+    App::instance().App::instance().record_err_message(emsg);
     if (verbose)
-      disp_message_nsec(emsg, 1, true);
+      App::instance().disp_message_nsec(emsg, 1, true);
     return;
   }
   s = getWord(&p);
@@ -54,9 +53,9 @@ void setKeymap(const char *p, int lineno, int verbose) {
       emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
     else
       emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-    record_err_message(emsg);
+    App::instance().record_err_message(emsg);
     if (verbose)
-      disp_message_nsec(emsg, 1, true);
+      App::instance().disp_message_nsec(emsg, 1, true);
     return;
   }
   map = GlobalKeymap;
@@ -106,9 +105,9 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
       continue;
     } else { /* error */
       emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
-      record_err_message(emsg);
+      App::instance().record_err_message(emsg);
       if (verbose)
-        disp_message_nsec(emsg, 1, true);
+        App::instance().disp_message_nsec(emsg, 1, true);
       continue;
     }
     setKeymap(p, lineno, verbose);

@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "app.h"
 #include "quote.h"
 #include "auth_pass.h"
 #include "http_response.h"
@@ -7,7 +8,6 @@
 #include "html/form.h"
 #include "screen.h"
 #include "w3m.h"
-#include "message.h"
 #include "Str.h"
 #include "myctype.h"
 #include "buffer.h"
@@ -371,7 +371,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
      * Authorization: header is sent to the server.
      */
     if (fmInitialized) {
-      message("Wrong username or password", 0, 0);
+      App::instance().message("Wrong username or password", 0, 0);
       refresh(term_io());
     } else
       fprintf(stderr, "Wrong username or password\n");

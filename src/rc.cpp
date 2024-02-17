@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #include "rc.h"
+#include "app.h"
 #include "tabbuffer.h"
 #include "http_response.h"
 #include "html/form.h"
@@ -18,7 +19,6 @@
 #include "compression.h"
 #include "url_stream.h"
 #include "ssl_util.h"
-#include "message.h"
 #include "display.h"
 #include "html/readbuffer.h"
 #include "history.h"
@@ -996,11 +996,10 @@ void panel_set_option(keyvalue *arg) {
   Str *s = Strnew(), *tmp;
 
   if (config_file == NULL) {
-    disp_message("There's no config file... config not saved");
+    App::instance().disp_message("There's no config file... config not saved");
   } else {
     f = fopen(config_file, "wt");
     if (f == NULL) {
-      disp_message("Can't write option!");
     }
   }
   while (arg) {

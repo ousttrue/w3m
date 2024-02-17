@@ -120,8 +120,26 @@ public:
   TabBuffer *deleteTab(TabBuffer *tab);
   void moveTab(TabBuffer *t, TabBuffer *t2, int right);
   void pushBuffer(const std::shared_ptr<Buffer> &buf, std::string_view target);
+
+  struct GeneralList *message_list = NULL;
+  char *delayed_msg = NULL;
+  void message(const char *s, int return_x, int return_y);
+
+  void record_err_message(const char *s);
+  std::shared_ptr<Buffer> message_list_panel();
+  void disp_err_message(const char *s);
+  void disp_message_nsec(const char *s, int sec, int purge);
+  void disp_message(const char *s);
+  void set_delayed_message(const char *s);
+
+  void refresh_message();
+
+  void showProgress(long long *linelen, long long *trbyte,
+                    long long current_content_length);
 };
 #define CurrentTab App::instance().CurrentTab()
 
+char *convert_size(long long size, int usefloat);
+char *convert_size2(long long size1, long long size2, int usefloat);
 void fmInit(void);
 void fmTerm(void);
