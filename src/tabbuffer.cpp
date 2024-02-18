@@ -28,27 +28,27 @@ TabBuffer::TabBuffer() {}
 TabBuffer::~TabBuffer() {}
 
 int TabBuffer::draw(TermScreen *screen, TabBuffer *current) {
-  screen->move(this->y, this->x1);
   if (this == current) {
     screen->bold();
   } else {
     screen->boldend();
   }
-  screen->addch('[');
+  RowCol pos{.row = this->y, .col = this->x1};
+  screen->addch(pos, '[');
   auto l = this->x2 - this->x1 - 1 -
            get_strwidth(this->currentBuffer()->layout.title.c_str());
   if (l < 0) {
     l = 0;
   }
   if (l / 2 > 0) {
-    screen->addnstr_sup(" ", l / 2);
+    pos = screen->addnstr_sup(pos, " ", l / 2);
   }
 
   if (this == current) {
     screen->underline();
     // standout();
   }
-  screen->addnstr(this->currentBuffer()->layout.title.c_str(),
+  screen->addnstr(pos, this->currentBuffer()->layout.title.c_str(),
                   this->x2 - this->x1 - l);
   if (this == current) {
     screen->underlineend();
@@ -56,10 +56,9 @@ int TabBuffer::draw(TermScreen *screen, TabBuffer *current) {
   }
 
   if ((l + 1) / 2 > 0) {
-    screen->addnstr_sup(" ", (l + 1) / 2);
+    pos = screen->addnstr_sup(pos, " ", (l + 1) / 2);
   }
-  screen->move(this->y, this->x2);
-  screen->addch(']');
+  screen->addch({.row = this->y, .col = this->x2}, ']');
   if (this == current) {
     screen->boldend();
   }

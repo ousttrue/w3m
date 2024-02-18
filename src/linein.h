@@ -117,8 +117,8 @@ class LineInput {
   int setStrType(Str *str, Lineprop *prop);
   void next_compl(int next);
   void next_dcompl(int next);
-  void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
-  void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
+  // void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);
+  // void addStr(char *p, Lineprop *pr, int len, int pos, int limit);
   int terminated(unsigned char c);
 
   LineInput(const std::shared_ptr<TermScreen> &screen, const char *prompt,

@@ -149,21 +149,19 @@ static Line *redrawLine(TermScreen *screen, LineLayout *buf, Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->currentColumn;
   char *p;
-  Lineprop *pr;
 
   if (l == NULL) {
     return NULL;
   }
-  screen->move(i, 0);
-  screen->move(i, buf->rootX);
+  RowCol pixel{.row = i, .col = buf->rootX};
   if (l->len == 0 || l->width() - 1 < column) {
-    screen->clrtoeolx();
+    screen->clrtoeolx(pixel);
     return l;
   }
   /* need_clrtoeol(); */
   pos = l->columnPos(column);
   p = &(l->lineBuf[pos]);
-  pr = &(l->propBuf[pos]);
+  // pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
 
   for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
@@ -173,14 +171,14 @@ static Line *redrawLine(TermScreen *screen, LineLayout *buf, Line *l, int i) {
       break;
     if (rcol < column) {
       for (rcol = column; rcol < ncol; rcol++)
-        addChar(screen, ' ', 0);
+        pixel = screen->addch(pixel, ' ');
       continue;
     }
     if (p[j] == '\t') {
       for (; rcol < ncol; rcol++)
-        addChar(screen, ' ', 0);
+        pixel = screen->addch(pixel, ' ');
     } else {
-      addMChar(screen, &p[j], pr[j], delta);
+      pixel = screen->addnstr(pixel, &p[j], delta);
     }
     rcol = ncol;
   }
@@ -230,7 +228,7 @@ static Line *redrawLine(TermScreen *screen, LineLayout *buf, Line *l, int i) {
     screen->graphend();
   }
   if (rcol - column < buf->COLS)
-    screen->clrtoeolx();
+    screen->clrtoeolx(pixel);
   return l;
 }
 
@@ -247,8 +245,7 @@ static void redrawNLine(TermScreen *screen, const std::shared_ptr<Buffer> &buf,
         break;
     }
     if (n > 0) {
-      screen->move(i + buf->layout.rootY, 0);
-      screen->clrtobotx();
+      screen->clrtobotx({.row = i + buf->layout.rootY, .col = 0});
     }
   }
 }
@@ -259,14 +256,14 @@ static int redrawLineRegion(TermScreen *screen,
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->layout.currentColumn;
   char *p;
-  Lineprop *pr;
+  // Lineprop *pr;
   int bcol, ecol;
 
   if (l == NULL)
     return 0;
   pos = l->columnPos(column);
   p = &(l->lineBuf[pos]);
-  pr = &(l->propBuf[pos]);
+  // pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
   bcol = bpos - pos;
   ecol = epos - pos;
@@ -279,17 +276,17 @@ static int redrawLineRegion(TermScreen *screen,
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        screen->move(i, buf->layout.rootX);
+        RowCol pixel{.row = i, .col = buf->layout.rootX};
         for (rcol = column; rcol < ncol; rcol++)
-          addChar(screen, ' ', 0);
+          pixel = screen->addch(pixel, ' ');
         continue;
       }
-      screen->move(i, rcol - column + buf->layout.rootX);
+      RowCol pixel{.row = i, .col = rcol - column + buf->layout.rootX};
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++)
-          addChar(screen, ' ', 0);
+          pixel = screen->addch(pixel, ' ');
       } else
-        addMChar(screen, &p[j], pr[j], delta);
+        pixel = screen->addnstr(pixel, &p[j], delta);
     }
     rcol = ncol;
   }
@@ -479,6 +476,10 @@ void _displayBuffer(TermScreen *screen, int width) {
   screen->standend();
   // term_title(buf->layout.title.c_str());
   screen->print();
+  screen->cursor({
+      .row = buf->layout.AbsCursorY(),
+      .col = buf->layout.AbsCursorX(),
+  });
   if (buf != save_current_buf) {
     CurrentTab->currentBuffer()->saveBufferInfo();
     save_current_buf = buf;
@@ -537,62 +538,4 @@ static void do_effects(TermScreen *screen, Lineprop m) {
   do_effect1(PE_ACTIVE, active_mode, screen->EFFECT_ACTIVE_START,
              EFFECT_ACTIVE_END);
   do_effect1(PE_MARK, mark_mode, screen->EFFECT_MARK_START, EFFECT_MARK_END);
-}
-
-void addMChar(TermScreen *screen, char *p, Lineprop mode, size_t len) {
-  Lineprop m = CharEffect(mode);
-  char c = *p;
-
-  if (mode & PC_WCHAR2)
-    return;
-  do_effects(screen, m);
-  if (mode & PC_SYMBOL) {
-    const char **symbol;
-    // int w = (mode & PC_KANJI) ? 2 : 1;
-
-    // c = ((char)wtf_get_code((wc_uchar *)p) & 0x7f) - SYMBOL_BASE;
-    // if (graph_ok() && c < N_GRAPH_SYMBOL) {
-    //   if (!graph_mode) {
-    //     screen->graphstart();
-    //     graph_mode = true;
-    //   }
-    //   if (w == 2)
-    //     screen->addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    //   else
-    //     screen->addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    // } else
-    {
-      symbol = get_symbol();
-      screen->addstr(symbol[(unsigned char)c % N_SYMBOL]);
-    }
-  } else if (mode & PC_CTRL) {
-    switch (c) {
-    case '\t':
-      screen->addch(c);
-      break;
-    case '\n':
-      screen->addch(' ');
-      break;
-    case '\r':
-      break;
-    case DEL_CODE:
-      screen->addstr("^?");
-      break;
-    default:
-      screen->addch('^');
-      screen->addch(c + '@');
-      break;
-    }
-  } else if (mode & PC_UNKNOWN) {
-    // char buf[5];
-    // sprintf(buf, "[%.2X]", (unsigned char)wtf_get_code((wc_uchar *)p) |
-    // 0x80); addstr(buf);
-    screen->addstr("[xx]");
-  } else {
-    screen->addmch(Utf8::from((const char8_t *)p, len));
-  }
-}
-
-void addChar(TermScreen *screen, char c, Lineprop mode) {
-  addMChar(screen, &c, mode, 1);
 }

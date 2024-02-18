@@ -2,7 +2,9 @@
 #include "termentry.h"
 #include "utf8.h"
 #include "rowcol.h"
+#include <ftxui/screen/screen.hpp>
 #include <functional>
+#include <memory>
 
 struct Utf8;
 using l_prop = unsigned short;
@@ -37,65 +39,44 @@ enum LineDirtyFlags : unsigned short {
   L_CLRTOEOL = 0x08,
 };
 
-struct Screen {
-  Utf8 *lineimage;
-  l_prop *lineprop;
-  LineDirtyFlags isdirty;
-  short eol;
-};
-
 struct TermEntry;
 
 class TermScreen {
-  RowCol _size;
+  std::shared_ptr<ftxui::Screen> _screen;
   int max_LINES = 0;
   int max_COLS = 0;
   int graph_enabled = 0;
   int tab_step = 8;
-  Screen *ScreenElem = {};
-  Screen **ScreenImage = {};
   l_prop CurrentMode = {};
-  int CurLine;
-  int CurColumn;
-
-  void touch_column(int col) {
-    if (col >= 0 && col < COLS())
-      ScreenImage[CurLine]->lineprop[col] |= S_DIRTY;
-  }
-
-  void touch_line(void) {
-    if (!(ScreenImage[CurLine]->isdirty & L_DIRTY)) {
-      int i;
-      for (i = 0; i < COLS(); i++)
-        ScreenImage[CurLine]->lineprop[i] &= ~S_DIRTY;
-      ScreenImage[CurLine]->isdirty =
-          (LineDirtyFlags)(ScreenImage[CurLine]->isdirty | L_DIRTY);
-    }
-  }
 
 public:
-  int COLS() const { return _size.col; }
-  int LINES() const { return _size.row; }
+  int COLS() const { return _screen->dimx(); }
+  int LINES() const { return _screen->dimy(); }
   int LASTLINE() const { return (LINES() - 1); }
   void setupscreen(const RowCol &size);
   void clear();
-  void clrtoeol();
+  void clrtoeol(const RowCol &pos);
   void print();
-  void clrtoeolx();
-  void clrtobot_eol(const std::function<void()> &);
-  void clrtobot(void) { clrtobot_eol(std::bind(&TermScreen::clrtoeol, this)); }
-  void clrtobotx(void) {
-    clrtobot_eol(std::bind(&TermScreen::clrtoeolx, this));
+  void clrtoeolx(const RowCol &pos) { clrtoeol(pos); }
+  void clrtobot_eol(const RowCol &pos,
+                    const std::function<void(const RowCol &)> &);
+  void clrtobot(const RowCol &pos) {
+    clrtobot_eol(pos,
+                 std::bind(&TermScreen::clrtoeol, this, std::placeholders::_1));
   }
-  void wrap();
+  void clrtobotx(const RowCol &pos) {
+    clrtobot_eol(
+        pos, std::bind(&TermScreen::clrtoeolx, this, std::placeholders::_1));
+  }
   void no_clrtoeol();
-  void move(int line, int column);
-  void addmch(const Utf8 &utf8);
-  void addch(char c) { addmch({(char8_t)c, 0, 0, 0}); }
-  void addstr(const char *s);
-  void addnstr(const char *s, int n);
-  void addnstr_sup(const char *s, int n);
-  void toggle_stand();
+  RowCol addmch(RowCol pos, const Utf8 &utf8);
+  RowCol addch(const RowCol &pos, char c) {
+    return addmch(pos, {(char8_t)c, 0, 0, 0});
+  }
+  RowCol addstr(RowCol pos, const char *s);
+  RowCol addnstr(RowCol pos, const char *s, int n);
+  RowCol addnstr_sup(RowCol pos, const char *s, int n);
+  void toggle_stand(const RowCol &pos);
   void bold(void) { CurrentMode |= S_BOLD; }
   void boldend(void) { CurrentMode &= ~S_BOLD; }
   void underline(void) { CurrentMode |= S_UNDERLINE; }
@@ -104,4 +85,5 @@ public:
   void graphend(void) { CurrentMode &= ~S_GRAPHICS; }
   void standout(void) { CurrentMode |= S_STANDOUT; }
   void standend(void) { CurrentMode &= ~S_STANDOUT; }
+  void cursor(const RowCol &pos);
 };

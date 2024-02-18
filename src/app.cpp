@@ -265,8 +265,7 @@ void App::beginRawMode(void) {
 
 void App::endRawMode(void) {
   if (_fmInitialized) {
-    _screen->move(LASTLINE(), 0);
-    _screen->clrtoeolx();
+    _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
     _screen->print();
     uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
     _fmInitialized = false;
@@ -695,15 +694,14 @@ TabBuffer *App::numTab(int n) const {
 
 void App::drawTabs() {
   if (_nTab > 1) {
-    _screen->move(0, 0);
-    _screen->clrtoeolx();
+    _screen->clrtoeolx({0, 0});
     int y = 0;
     for (auto t = _firstTab; t; t = t->nextTab) {
       y = t->draw(_screen.get(), _currentTab);
     }
-    _screen->move(y + 1, 0);
+    RowCol pos{.row = y + 1, .col = 0};
     for (int i = 0; i < COLS(); i++) {
-      _screen->addch('~');
+      pos = _screen->addch(pos, '~');
     }
   }
 }
@@ -912,10 +910,10 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
 
 void App::message(const char *s, int return_x, int return_y) {
   if (_fmInitialized) {
-    _screen->move(LASTLINE(), 0);
-    _screen->addnstr(s, COLS() - 1);
-    _screen->clrtoeolx();
-    _screen->move(return_y, return_x);
+    RowCol pos{.row = LASTLINE(), .col = 0};
+    pos = _screen->addnstr(pos, s, COLS() - 1);
+    _screen->clrtoeolx(pos);
+    _screen->cursor({.row = return_y, .col = return_x});
   } else {
     fprintf(stderr, "%s\n", s);
   }
@@ -1002,8 +1000,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      _screen->move(LASTLINE(), 0);
-      _screen->clrtoeolx();
+      _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -1011,7 +1008,6 @@ void App::showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    _screen->move(LASTLINE(), 0);
     ratio = 100.0 * (*trbyte) / current_content_length;
     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
     duration = cur_time - start_time;
@@ -1028,14 +1024,15 @@ void App::showProgress(long long *linelen, long long *trbyte,
       messages =
           Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
     }
-    _screen->addstr(messages->ptr);
+    RowCol pixel{.row = LASTLINE(), .col = 0};
+    pixel = _screen->addstr(pixel, messages->ptr);
     pos = 42;
     i = pos + (COLS() - pos - 1) * (*trbyte) / current_content_length;
-    _screen->move(LASTLINE(), pos);
     _screen->standout();
-    _screen->addch(' ');
+    pixel = {.row = LASTLINE(), .col = pos};
+    pixel = _screen->addch(pixel, ' ');
     for (j = pos + 1; j <= i; j++) {
-      _screen->addch('|');
+      pixel = _screen->addch(pixel, '|');
     }
     _screen->standend();
     /* no_clrtoeol(); */
@@ -1043,8 +1040,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      _screen->move(LASTLINE(), 0);
-      _screen->clrtoeolx();
+      _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -1052,7 +1048,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    _screen->move(LASTLINE(), 0);
+    _screen->cursor({.row = LASTLINE(), .col = 0});
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {

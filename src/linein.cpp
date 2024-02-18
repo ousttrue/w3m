@@ -145,8 +145,8 @@ void LineInput::onBreak() {
     return;
   }
 
-  _screen->move(_screen->LASTLINE(), 0);
   _screen->print();
+  _screen->cursor({.row = _screen->LASTLINE(), .col = 0});
   auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
@@ -178,15 +178,23 @@ void LineInput::draw() {
     else
       offset = 0;
   }
-  _screen->move(_screen->LASTLINE(), 0);
-  _screen->addstr(prompt.c_str());
-  if (is_passwd)
-    addPasswd(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
-  else
-    addStr(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
-  _screen->clrtoeolx();
-  _screen->move(_screen->LASTLINE(), opos + x - offset);
+  _screen->addstr(
+      {
+          .row = _screen->LASTLINE(),
+          .col = 0,
+      },
+      prompt.c_str());
+  if (is_passwd) {
+    // TODO
+    assert(false);
+    // addPasswd(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
+  } else {
+    // addStr(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
+  }
+  RowCol pos = {.row = _screen->LASTLINE(), .col = opos + x - offset};
+  _screen->clrtoeolx(pos);
   _screen->print();
+  _screen->cursor(pos);
 }
 
 bool LineInput::dispatch(const char *buf, int len) {
@@ -260,51 +268,51 @@ bool LineInput::dispatch(const char *buf, int len) {
   return true;
 }
 
-void LineInput::addPasswd(char *p, Lineprop *pr, int len, int offset,
-                          int limit) {
-  auto ncol = bytePosToColumn(p, pr, len, len, 0, false);
-  if (ncol > offset + limit) {
-    ncol = offset + limit;
-  }
-  int rcol = 0;
-  if (offset) {
-    addChar(_screen.get(), '{', 0);
-    rcol = offset + 1;
-  }
-  for (; rcol < ncol; rcol++)
-    addChar(_screen.get(), '*', 0);
-}
+// void LineInput::addPasswd(char *p, Lineprop *pr, int len, int offset,
+//                           int limit) {
+//   auto ncol = bytePosToColumn(p, pr, len, len, 0, false);
+//   if (ncol > offset + limit) {
+//     ncol = offset + limit;
+//   }
+//   int rcol = 0;
+//   if (offset) {
+//     addChar(_screen.get(), '{', 0);
+//     rcol = offset + 1;
+//   }
+//   for (; rcol < ncol; rcol++)
+//     addChar(_screen.get(), '*', 0);
+// }
 
-void LineInput::addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
-  int i = 0, rcol = 0, ncol, delta = 1;
-
-  if (offset) {
-    for (i = 0; i < len; i++) {
-      if (bytePosToColumn(p, pr, len, i, 0, false) > offset)
-        break;
-    }
-    if (i >= len)
-      return;
-    addChar(_screen.get(), '{', 0);
-    rcol = offset + 1;
-    ncol = bytePosToColumn(p, pr, len, i, 0, false);
-    for (; rcol < ncol; rcol++)
-      addChar(_screen.get(), ' ', 0);
-  }
-  for (; i < len; i += delta) {
-    ncol = bytePosToColumn(p, pr, len, i + delta, 0, false);
-    if (ncol - offset > limit)
-      break;
-    if (p[i] == '\t') {
-      for (; rcol < ncol; rcol++)
-        addChar(_screen.get(), ' ', 0);
-      continue;
-    } else {
-      addChar(_screen.get(), p[i], pr[i]);
-    }
-    rcol = ncol;
-  }
-}
+// void LineInput::addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
+//   int i = 0, rcol = 0, ncol, delta = 1;
+//
+//   if (offset) {
+//     for (i = 0; i < len; i++) {
+//       if (bytePosToColumn(p, pr, len, i, 0, false) > offset)
+//         break;
+//     }
+//     if (i >= len)
+//       return;
+//     addChar(_screen.get(), '{', 0);
+//     rcol = offset + 1;
+//     ncol = bytePosToColumn(p, pr, len, i, 0, false);
+//     for (; rcol < ncol; rcol++)
+//       addChar(_screen.get(), ' ', 0);
+//   }
+//   for (; i < len; i += delta) {
+//     ncol = bytePosToColumn(p, pr, len, i + delta, 0, false);
+//     if (ncol - offset > limit)
+//       break;
+//     if (p[i] == '\t') {
+//       for (; rcol < ncol; rcol++)
+//         addChar(_screen.get(), ' ', 0);
+//       continue;
+//     } else {
+//       addChar(_screen.get(), p[i], pr[i]);
+//     }
+//     rcol = ncol;
+//   }
+// }
 
 // void LineInput::_esc(char) {
 //   char c;
@@ -600,14 +608,12 @@ disp_next:
       y = nline - row - 1;
   }
   if (y) {
-    _screen->move(y - 1, 0);
-    _screen->clrtoeolx();
+    _screen->clrtoeolx({.row = y - 1, .col = 0});
   }
   if (comment) {
-    _screen->move(y, 0);
-    _screen->clrtoeolx();
+    _screen->clrtoeolx({.row = y, .col = 0});
     _screen->bold();
-    _screen->addstr("----- Completion list -----");
+    _screen->addstr({.row = y, .col = 0}, "----- Completion list -----");
     _screen->boldend();
     y++;
   }
@@ -616,24 +622,25 @@ disp_next:
       auto n = cm_disp_next + j * row + i;
       if (n >= NCFileBuf)
         break;
-      _screen->move(y, j * len);
-      _screen->clrtoeolx();
+      RowCol pos{.row = y, .col = (int)(j * len)};
+      _screen->clrtoeolx(pos);
       f = d->Strdup();
       Strcat_charp(f, CFileBuf[n]);
-      _screen->addstr(CFileBuf[n]);
-      if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-        _screen->addstr("/");
+      _screen->addstr(pos, CFileBuf[n]);
+      if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode)) {
+        // _screen->addstr("/");
+      }
     }
     y++;
   }
   if (comment && y == _screen->LASTLINE() - 1) {
-    _screen->move(y, 0);
-    _screen->clrtoeolx();
+    RowCol pos{.row = y, .col = 0};
+    _screen->clrtoeolx(pos);
     _screen->bold();
     if (emacs_like_lineedit)
-      _screen->addstr("----- Press TAB to continue -----");
+      _screen->addstr(pos, "----- Press TAB to continue -----");
     else
-      _screen->addstr("----- Press CTRL-D to continue -----");
+      _screen->addstr(pos, "----- Press CTRL-D to continue -----");
     _screen->boldend();
   }
 }
