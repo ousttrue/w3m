@@ -613,7 +613,7 @@ void App::onFrame() {
 
   if (_dirty > 0) {
     _dirty = 0;
-    _displayBuffer(_screen.get());
+    _displayBuffer(_screen.get(), INIT_BUFFER_WIDTH());
   }
 }
 

@@ -20,15 +20,6 @@
 #include <iostream>
 
 bool displayLink = false;
-bool showLineNum = false;
-int _INIT_BUFFER_WIDTH() {
-  return (App::instance().COLS() - (showLineNum ? 6 : 1));
-}
-int INIT_BUFFER_WIDTH() {
-  return ((_INIT_BUFFER_WIDTH() > 0) ? _INIT_BUFFER_WIDTH() : 0);
-}
-
-/* *INDENT-OFF* */
 
 #define EFFECT_ANCHOR_START underline()
 #define EFFECT_ANCHOR_END underlineend()
@@ -42,7 +33,6 @@ int INIT_BUFFER_WIDTH() {
 #define EFFECT_VISITED_END   /**/
 #define EFFECT_MARK_START standout()
 #define EFFECT_MARK_END standend()
-/* *INDENT-ON* */
 
 /*
  * Display some lines.
@@ -165,24 +155,6 @@ static Line *redrawLine(TermScreen *screen, LineLayout *buf, Line *l, int i) {
     return NULL;
   }
   screen->move(i, 0);
-  if (showLineNum) {
-    char tmp[16];
-    if (!buf->rootX) {
-      if (buf->lastLine->real_linenumber > 0)
-        buf->rootX =
-            (int)(log(buf->lastLine->real_linenumber + 0.1) / log(10)) + 2;
-      if (buf->rootX < 5)
-        buf->rootX = 5;
-      if (buf->rootX > screen->COLS())
-        buf->rootX = screen->COLS();
-      buf->COLS = screen->COLS() - buf->rootX;
-    }
-    if (l->real_linenumber && !l->bpos)
-      snprintf(tmp, sizeof(tmp), "%*ld:", buf->rootX - 1, l->real_linenumber);
-    else
-      snprintf(tmp, sizeof(tmp), "%*s ", buf->rootX - 1, "");
-    screen->addstr(tmp);
-  }
   screen->move(i, buf->rootX);
   if (l->len == 0 || l->width() - 1 < column) {
     screen->clrtoeolx();
@@ -445,7 +417,7 @@ static void drawAnchorCursor(TermScreen *screen,
   buf->layout.hmarklist()->prevhseq = hseq;
 }
 
-void _displayBuffer(TermScreen *screen) {
+void _displayBuffer(TermScreen *screen, int width) {
 
   auto buf = CurrentTab->currentBuffer();
   if (!buf) {
@@ -453,29 +425,20 @@ void _displayBuffer(TermScreen *screen) {
   }
 
   if (buf->layout.width == 0)
-    buf->layout.width = INIT_BUFFER_WIDTH();
+    buf->layout.width = width;
   if (buf->layout.height == 0)
     buf->layout.height = screen->LASTLINE() + 1;
-  if ((buf->layout.width != INIT_BUFFER_WIDTH() &&
-       (buf->res->is_html_type())) ||
+  if ((buf->layout.width != width && (buf->res->is_html_type())) ||
       buf->layout.need_reshape) {
     buf->layout.need_reshape = true;
-    reshapeBuffer(buf);
+    reshapeBuffer(buf, width);
   }
 
   // Str *msg;
   int ny = 0;
   auto &layout = buf->layout;
-  if (showLineNum) {
-    if (layout.lastLine && layout.lastLine->real_linenumber > 0)
-      layout.rootX =
-          (int)(log(layout.lastLine->real_linenumber + 0.1) / log(10)) + 2;
-    if (layout.rootX < 5)
-      layout.rootX = 5;
-    if (layout.rootX > screen->COLS())
-      layout.rootX = screen->COLS();
-  } else
-    layout.rootX = 0;
+
+  layout.rootX = 0;
   layout.COLS = screen->COLS() - layout.rootX;
   if (App::instance().nTab() > 1) {
     ny = App::instance().calcTabPos() + 2;
@@ -522,7 +485,7 @@ void _displayBuffer(TermScreen *screen) {
   }
   if (buf->check_url) {
     chkURLBuffer(buf);
-    _displayBuffer(screen);
+    _displayBuffer(screen, width);
   }
 }
 

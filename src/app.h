@@ -66,6 +66,7 @@ public:
   int LINES() const { return _size.row; }
   int COLS() const { return _size.col; }
   int LASTLINE() const { return (_size.row - 1); }
+  int INIT_BUFFER_WIDTH() { return App::instance().COLS() - (1); }
 
   std::shared_ptr<TermScreen> screen() const { return _screen; }
   bool initialize();

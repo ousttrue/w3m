@@ -240,12 +240,12 @@ std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
 /*
  * Reshape HTML buffer
  */
-void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
+void reshapeBuffer(const std::shared_ptr<Buffer> &buf, int width) {
   if (!buf->layout.need_reshape) {
     return;
   }
   buf->layout.need_reshape = false;
-  buf->layout.width = INIT_BUFFER_WIDTH();
+  buf->layout.width = width;
   if (buf->res->sourcefile.empty()) {
     return;
   }

@@ -48,7 +48,7 @@ std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
 // std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
 //                                      std::shared_ptr<Buffer> currentbuf,
 //                                      char *selectchar);
-void reshapeBuffer(const std::shared_ptr<Buffer> &buf);
+void reshapeBuffer(const std::shared_ptr<Buffer> &buf, int width);
 std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
                                       const std::shared_ptr<Buffer> &buf);
 void chkURLBuffer(const std::shared_ptr<Buffer> &buf);

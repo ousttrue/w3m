@@ -298,12 +298,6 @@ static struct sel_c mailtooptionsstr[] = {
     {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
     {0, NULL, NULL}};
 
-static struct sel_c graphic_char_str[] = {
-    // {N_S(GRAPHIC_CHAR_ASCII), N_("ASCII")},
-    // {N_S(GRAPHIC_CHAR_CHARSET), N_("charset specific")},
-    // {N_S(GRAPHIC_CHAR_DEC), N_("DEC special graphics")},
-    {0, NULL, NULL}};
-
 struct param_ptr params1[] = {
     {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
     {"indent_incr", P_NZINT, PI_TEXT, (void *)&IndentIncr, CMT_INDENT_INCR,
@@ -349,7 +343,6 @@ struct param_ptr params1[] = {
      NULL},
     {"pseudo_inlines", P_INT, PI_ONOFF, (void *)&pseudoInlines,
      CMT_PSEUDO_INLINES, NULL},
-    {"show_lnum", P_INT, PI_ONOFF, (void *)&showLineNum, CMT_SHOW_NUM, NULL},
     {"show_srch_str", P_INT, PI_ONOFF, (void *)&show_srch_str,
      CMT_SHOW_SRCH_STR, NULL},
     {"label_topline", P_INT, PI_ONOFF, (void *)&label_topline,

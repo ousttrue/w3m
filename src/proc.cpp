@@ -1320,7 +1320,8 @@ void reload() {
 //"Re-render document"
 void reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
-  reshapeBuffer(CurrentTab->currentBuffer());
+  reshapeBuffer(CurrentTab->currentBuffer(),
+                App::instance().INIT_BUFFER_WIDTH());
   App::instance().invalidate();
 }
 

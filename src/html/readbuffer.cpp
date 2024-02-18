@@ -6,15 +6,10 @@
 #include "app.h"
 #include "buffer.h"
 #include "line_layout.h"
-#include "url_quote.h"
-#include "quote.h"
 #include "http_response.h"
 #include "symbol.h"
 #include "url_stream.h"
 #include "w3m.h"
-#include "hash.h"
-#include "linklist.h"
-#include "display.h"
 #include "Str.h"
 #include "myctype.h"
 #include "ctrlcode.h"
@@ -27,9 +22,7 @@
 #include "proto.h"
 #include "alloc.h"
 #include "funcname1.h"
-#include "entity.h"
 #include <math.h>
-#include <algorithm>
 
 #define ENABLE_REMOVE_TRAILINGSPACES
 
@@ -546,7 +539,8 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
 
   symbol_width = symbol_width0 = 1;
 
-  html_feed_environ htmlenv1(MAX_ENV_LEVEL, NULL, INIT_BUFFER_WIDTH(), 0);
+  html_feed_environ htmlenv1(MAX_ENV_LEVEL, NULL,
+                             App::instance().INIT_BUFFER_WIDTH(), 0);
 
   htmlenv1.buf = newTextLineList();
 
