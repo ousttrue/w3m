@@ -21,14 +21,12 @@
 
 bool displayLink = false;
 bool showLineNum = false;
-bool FoldLine = false;
 int _INIT_BUFFER_WIDTH() {
   return (App::instance().COLS() - (showLineNum ? 6 : 1));
 }
 int INIT_BUFFER_WIDTH() {
   return ((_INIT_BUFFER_WIDTH() > 0) ? _INIT_BUFFER_WIDTH() : 0);
 }
-int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH() + 1) : -1); }
 
 /* *INDENT-OFF* */
 
@@ -459,7 +457,7 @@ void _displayBuffer(TermScreen *screen) {
   if (buf->layout.height == 0)
     buf->layout.height = screen->LASTLINE() + 1;
   if ((buf->layout.width != INIT_BUFFER_WIDTH() &&
-       (buf->res->is_html_type() || FoldLine)) ||
+       (buf->res->is_html_type())) ||
       buf->layout.need_reshape) {
     buf->layout.need_reshape = true;
     reshapeBuffer(buf);
@@ -599,7 +597,7 @@ void addMChar(TermScreen *screen, char *p, Lineprop mode, size_t len) {
     //     screen->addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
     //   else
     //     screen->addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    // } else 
+    // } else
     {
       symbol = get_symbol();
       screen->addstr(symbol[(unsigned char)c % N_SYMBOL]);

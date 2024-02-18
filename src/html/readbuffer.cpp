@@ -666,8 +666,7 @@ void loadBuffer(HttpResponse *res, LineLayout *layout) {
 
     Lineprop *propBuffer = nullptr;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length,
-                       FOLD_BUFFER_WIDTH(), nlines);
+    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length, -1, nlines);
   }
   layout->topLine = layout->firstLine;
   layout->lastLine = layout->currentLine;

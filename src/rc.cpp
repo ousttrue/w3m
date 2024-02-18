@@ -349,7 +349,6 @@ struct param_ptr params1[] = {
      NULL},
     {"pseudo_inlines", P_INT, PI_ONOFF, (void *)&pseudoInlines,
      CMT_PSEUDO_INLINES, NULL},
-    {"fold_line", P_INT, PI_ONOFF, (void *)&FoldLine, CMT_FOLD_LINE, NULL},
     {"show_lnum", P_INT, PI_ONOFF, (void *)&showLineNum, CMT_SHOW_NUM, NULL},
     {"show_srch_str", P_INT, PI_ONOFF, (void *)&show_srch_str,
      CMT_SHOW_SRCH_STR, NULL},

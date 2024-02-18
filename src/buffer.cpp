@@ -288,11 +288,7 @@ void reshapeBuffer(const std::shared_ptr<Buffer> &buf) {
       }
     }
     buf->layout.pos -= buf->layout.currentLine->bpos;
-    if (FoldLine && !buf->res->is_html_type()) {
-      buf->layout.currentColumn = 0;
-    } else {
-      buf->layout.currentColumn = sbuf->layout.currentColumn;
-    }
+    buf->layout.currentColumn = sbuf->layout.currentColumn;
     buf->layout.arrangeCursor();
   }
   if (buf->check_url) {
@@ -1002,9 +998,9 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     }
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
-    auto input = LineInput::inputStrHist(App::instance().screen(),
-        "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist,
-        [fi, a](const char *p) {
+    auto input = LineInput::inputStrHist(
+        App::instance().screen(), "TEXT:", fi->value ? fi->value->ptr : nullptr,
+        TextHist, [fi, a](const char *p) {
           if (p == nullptr || fi->readonly) {
             return;
             // break;
