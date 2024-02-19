@@ -69,10 +69,8 @@ public:
         pos, std::bind(&TermScreen::clrtoeolx, this, std::placeholders::_1));
   }
   void no_clrtoeol();
-  RowCol addmch(RowCol pos, const Utf8 &utf8);
-  RowCol addch(const RowCol &pos, char c) {
-    return addmch(pos, {(char8_t)c, 0, 0, 0});
-  }
+  void addmch(const RowCol &pos, const Utf8 &utf8);
+  void addch(const RowCol &pos, char c) { addmch(pos, {(char8_t)c, 0, 0, 0}); }
   RowCol addstr(RowCol pos, const char *s);
   RowCol addnstr(RowCol pos, const char *s, int n);
   RowCol addnstr_sup(RowCol pos, const char *s, int n);

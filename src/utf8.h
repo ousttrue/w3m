@@ -36,39 +36,37 @@ struct Utf8 {
   char8_t b2 = 0;
   char8_t b3 = 0;
 
-  static Utf8 from(const char8_t *p) {
-    Utf8 utf8{0};
-    if (*p) {
-      utf8.b0 = *(p++);
-    }
-    if (*p) {
-      utf8.b1 = *(p++);
-    }
-    if (*p) {
-      utf8.b2 = *(p++);
-    }
-    if (*p) {
-      utf8.b3 = *(p++);
-    }
-    return utf8;
-  }
-
-  static Utf8 from(const char8_t *p, size_t n) {
+  static Utf8 from(const char8_t *p, size_t n = 4) {
     assert(n >= 1 && n <= 4);
-    Utf8 utf8{};
-    if (*p && n >= 1) {
-      utf8.b0 = *(p++);
+    if (n <= 0 || p[0] == 0) {
+      return {0, 0, 0, 0};
     }
-    if (*p && n >= 2) {
-      utf8.b1 = *(p++);
+    if (p[0] >= 0 && p[0] <= 127) {
+      // ascii
+      return {p[0], 0, 0, 0};
     }
-    if (*p && n >= 3) {
-      utf8.b2 = *(p++);
+    if (n < 2 || p[1] == 0) {
+      return {0, 0, 0, 0};
     }
-    if (*p && n >= 4) {
-      utf8.b3 = *(p++);
+    if (p[0] >= 192 && p[0] <= 223) {
+      return {p[0], p[1], 0, 0};
     }
-    return utf8;
+    if (p[0] == 0xed && (p[1] & 0xa0) == 0xa0) {
+      return {0, 0, 0, 0}; // code points, 0xd800 to 0xdfff
+    }
+    if (n < 3 || p[2] == 0) {
+      return {0, 0, 0, 0};
+    }
+    if (p[0] >= 224 && p[0] <= 239) {
+      return {p[0], p[1], p[2], 0};
+    }
+    if (n < 4 || p[3] == 0) {
+      return {0, 0, 0, 0};
+    }
+    if (p[0] >= 240 && p[0] <= 247) {
+      return {p[0], p[1], p[2], p[3]};
+    }
+    return {0};
   }
 
   const char8_t *begin() const { return &b0; }
@@ -94,8 +92,7 @@ struct Utf8 {
 
   int width() const {
     auto [cp, bytes] = codepoint();
-    if(bytes==0)
-    {
+    if (bytes == 0) {
       return 1;
     }
     return codepoint_to_width(cp);

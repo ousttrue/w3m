@@ -1,5 +1,6 @@
 #include "display.h"
 #include "app.h"
+#include "Str.h"
 #include "line_layout.h"
 #include "url_stream.h"
 #include "tabbuffer.h"
@@ -12,7 +13,6 @@
 #include "rc.h"
 #include "utf8.h"
 #include "buffer.h"
-#include "textlist.h"
 #include "ctrlcode.h"
 #include "html/anchor.h"
 #include "proto.h"
@@ -170,13 +170,17 @@ static Line *redrawLine(TermScreen *screen, LineLayout *buf, Line *l, int i) {
     if (ncol - column > buf->COLS)
       break;
     if (rcol < column) {
-      for (rcol = column; rcol < ncol; rcol++)
-        pixel = screen->addch(pixel, ' ');
+      for (rcol = column; rcol < ncol; rcol++) {
+        screen->addch(pixel, ' ');
+        ++pixel.col;
+      }
       continue;
     }
     if (p[j] == '\t') {
-      for (; rcol < ncol; rcol++)
-        pixel = screen->addch(pixel, ' ');
+      for (; rcol < ncol; rcol++) {
+        screen->addch(pixel, ' ');
+        ++pixel.col;
+      }
     } else {
       pixel = screen->addnstr(pixel, &p[j], delta);
     }
@@ -277,14 +281,18 @@ static int redrawLineRegion(TermScreen *screen,
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
         RowCol pixel{.row = i, .col = buf->layout.rootX};
-        for (rcol = column; rcol < ncol; rcol++)
-          pixel = screen->addch(pixel, ' ');
+        for (rcol = column; rcol < ncol; rcol++) {
+          screen->addch(pixel, ' ');
+          ++pixel.col;
+        }
         continue;
       }
       RowCol pixel{.row = i, .col = rcol - column + buf->layout.rootX};
       if (p[j] == '\t') {
-        for (; rcol < ncol; rcol++)
-          pixel = screen->addch(pixel, ' ');
+        for (; rcol < ncol; rcol++) {
+          screen->addch(pixel, ' ');
+          ++pixel.col;
+        }
       } else
         pixel = screen->addnstr(pixel, &p[j], delta);
     }
@@ -488,54 +496,4 @@ void _displayBuffer(TermScreen *screen, int width) {
     chkURLBuffer(buf);
     _displayBuffer(screen, width);
   }
-}
-
-#define do_effect1(effect, modeflag, action_start, action_end)                 \
-  if (m & effect) {                                                            \
-    if (!modeflag) {                                                           \
-      action_start;                                                            \
-      modeflag = true;                                                         \
-    }                                                                          \
-  }
-
-#define do_effect2(effect, modeflag, action_start, action_end)                 \
-  if (modeflag) {                                                              \
-    action_end;                                                                \
-    modeflag = false;                                                          \
-  }
-
-static void do_effects(TermScreen *screen, Lineprop m) {
-  /* effect end */
-  do_effect2(PE_UNDER, ulmode, underline(), screen->underlineend());
-  do_effect2(PE_STAND, somode, standout(), screen->standend());
-  do_effect2(PE_BOLD, bomode, bold(), screen->boldend());
-  do_effect2(PE_EMPH, emph_mode, bold(), screen->boldend());
-  do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START,
-             screen->EFFECT_ANCHOR_END);
-  do_effect2(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, screen->EFFECT_IMAGE_END);
-  do_effect2(PE_FORM, form_mode, EFFECT_FORM_START, screen->EFFECT_FORM_END);
-  do_effect2(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-             EFFECT_VISITED_END);
-  do_effect2(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START,
-             screen->EFFECT_ACTIVE_END);
-  do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, screen->EFFECT_MARK_END);
-  if (graph_mode) {
-    screen->graphend();
-    graph_mode = false;
-  }
-
-  /* effect start */
-  do_effect1(PE_UNDER, ulmode, screen->underline(), underlineend());
-  do_effect1(PE_STAND, somode, screen->standout(), standend());
-  do_effect1(PE_BOLD, bomode, screen->bold(), boldend());
-  do_effect1(PE_EMPH, emph_mode, screen->bold(), boldend());
-  do_effect1(PE_ANCHOR, anch_mode, screen->EFFECT_ANCHOR_START,
-             EFFECT_ANCHOR_END);
-  do_effect1(PE_IMAGE, imag_mode, screen->EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-  do_effect1(PE_FORM, form_mode, screen->EFFECT_FORM_START, EFFECT_FORM_END);
-  do_effect1(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-             EFFECT_VISITED_END);
-  do_effect1(PE_ACTIVE, active_mode, screen->EFFECT_ACTIVE_START,
-             EFFECT_ACTIVE_END);
-  do_effect1(PE_MARK, mark_mode, screen->EFFECT_MARK_START, EFFECT_MARK_END);
 }

@@ -40,26 +40,39 @@ void TermScreen::clrtobot_eol(
 }
 
 RowCol TermScreen::addstr(RowCol pos, const char *s) {
-  while (*s != '\0') {
-    pos = addch(pos, *(s++));
+  while (*s) {
+    auto utf8 = Utf8::from((const char8_t *)s);
+    addmch(pos, utf8);
+    pos.col += utf8.width();
+    s += utf8.view().size();
   }
   return pos;
 }
 
 RowCol TermScreen::addnstr(RowCol pos, const char *s, int n) {
-  int i;
-  for (i = 0; i < n && *s != '\0'; i++) {
-    pos = addch(pos, *(s++));
+  for (int i = 0; i < n && *s != '\0'; i++) {
+    auto utf8 = Utf8::from((const char8_t *)s);
+    addmch(pos, utf8);
+    pos.col += utf8.width();
+    s += utf8.view().size();
+    i += utf8.view().size();
   }
   return pos;
 }
 
 RowCol TermScreen::addnstr_sup(RowCol pos, const char *s, int n) {
   int i;
-  for (i = 0; i < n && *s != '\0'; i++)
-    pos = addch(pos, *(s++));
-  for (; i < n; i++)
-    pos = addch(pos, ' ');
+  for (i = 0; i < n && *s != '\0'; i++) {
+    auto utf8 = Utf8::from((const char8_t *)s);
+    addmch(pos, utf8);
+    pos.col += utf8.width();
+    s += utf8.view().size();
+    i += utf8.view().size();
+  }
+  for (; i < n; i++) {
+    addch(pos, ' ');
+    pos.col += 1;
+  }
   return pos;
 }
 
@@ -79,21 +92,6 @@ RowCol TermScreen::addnstr_sup(RowCol pos, const char *s, int n) {
 #define COL_FCYAN 0xe00
 #define COL_FWHITE 0xf00
 #define COL_FTERM 0x000
-
-const Utf8 SPACE = {' ', 0, 0, 0};
-#define M_SPACE (S_SCREENPROP | S_COLORED | S_GRAPHICS)
-
-static int need_redraw(const Utf8 &c1, l_prop pr1, const Utf8 &c2, l_prop pr2) {
-  if (c1 != c2)
-    return 1;
-  if (c1 == Utf8{' '})
-    return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
-
-  if ((pr1 ^ pr2) & ~S_DIRTY)
-    return 1;
-
-  return 0;
-}
 
 static void cursor(const RowCol p) {
   std::cout << "\e[" << p.row << ";" << p.col << "H";
@@ -131,9 +129,7 @@ void TermScreen::toggle_stand(const RowCol &pos) {
   pixel.inverted = !pixel.inverted;
 }
 
-RowCol TermScreen::addmch(RowCol pos, const Utf8 &utf8) {
+void TermScreen::addmch(const RowCol &pos, const Utf8 &utf8) {
   auto &pixel = _screen->PixelAt(pos.col, pos.row);
   pixel.character = utf8.view();
-  pos.col += utf8.width();
-  return pos;
 }

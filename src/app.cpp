@@ -701,7 +701,8 @@ void App::drawTabs() {
     }
     RowCol pos{.row = y + 1, .col = 0};
     for (int i = 0; i < COLS(); i++) {
-      pos = _screen->addch(pos, '~');
+      _screen->addch(pos, '~');
+      ++pos.col;
     }
   }
 }
@@ -1030,9 +1031,11 @@ void App::showProgress(long long *linelen, long long *trbyte,
     i = pos + (COLS() - pos - 1) * (*trbyte) / current_content_length;
     _screen->standout();
     pixel = {.row = LASTLINE(), .col = pos};
-    pixel = _screen->addch(pixel, ' ');
+    _screen->addch(pixel, ' ');
+    ++pixel.col;
     for (j = pos + 1; j <= i; j++) {
-      pixel = _screen->addch(pixel, '|');
+      _screen->addch(pixel, '|');
+      ++pixel.col;
     }
     _screen->standend();
     /* no_clrtoeol(); */
