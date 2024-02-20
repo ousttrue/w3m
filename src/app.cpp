@@ -14,7 +14,6 @@
 #include "myctype.h"
 #include "func.h"
 #include "funcname1.h"
-#include "display.h"
 #include "alloc.h"
 #include "Str.h"
 #include "rc.h"
@@ -612,7 +611,7 @@ void App::onFrame() {
 
   if (_dirty > 0) {
     _dirty = 0;
-    _displayBuffer(_screen.get(), INIT_BUFFER_WIDTH());
+    _screen->display(INIT_BUFFER_WIDTH(), _currentTab);
   }
 }
 

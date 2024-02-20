@@ -7,7 +7,6 @@
 #include "line.h"
 #include "http_response.h"
 #include "screen.h"
-#include "display.h"
 #include "html/readbuffer.h"
 #include "w3m.h"
 #include "buffer.h"

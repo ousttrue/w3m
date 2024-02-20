@@ -9,7 +9,6 @@
 #include "screen.h"
 #include "rc.h"
 #include "utf8.h"
-#include "display.h"
 #include "buffer.h"
 #include "proto.h"
 #include "html/form.h"

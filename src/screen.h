@@ -6,6 +6,9 @@
 #include <functional>
 #include <memory>
 
+extern bool displayLink;
+extern int displayLineInfo;
+
 struct Utf8;
 using l_prop = unsigned short;
 
@@ -40,7 +43,10 @@ enum LineDirtyFlags : unsigned short {
 };
 
 struct TermEntry;
-
+struct Buffer;
+struct TabBuffer;
+struct LineLayout;
+struct AnchorList;
 class TermScreen {
   std::shared_ptr<ftxui::Screen> _screen;
   int max_LINES = 0;
@@ -48,6 +54,9 @@ class TermScreen {
   int graph_enabled = 0;
   int tab_step = 8;
   l_prop CurrentMode = {};
+  ftxui::Pixel &pixel(const RowCol &pos) {
+    return _screen->PixelAt(pos.col + 1, pos.row + 1);
+  }
 
 public:
   int COLS() const { return _screen->dimx(); }
@@ -84,4 +93,16 @@ public:
   void standout(void) { CurrentMode |= S_STANDOUT; }
   void standend(void) { CurrentMode &= ~S_STANDOUT; }
   void cursor(const RowCol &pos);
+  int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
+                       int bpos, int epos);
+  Line *redrawLine(LineLayout *buf, Line *l, int i);
+  void redrawNLine(const std::shared_ptr<Buffer> &buf, int n);
+  void drawAnchorCursor0(const std::shared_ptr<Buffer> &buf, AnchorList *al,
+                         int hseq, int prevhseq, int tline, int eline,
+                         int active);
+  void drawAnchorCursor(const std::shared_ptr<Buffer> &buf);
+  Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
+                          const char *url);
+  Str *make_lastline_message(const std::shared_ptr<Buffer> &buf);
+  void display(int width, TabBuffer *currentTab);
 };

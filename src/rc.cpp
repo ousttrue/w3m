@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #include "rc.h"
+#include "screen.h"
 #include "app.h"
 #include "tabbuffer.h"
 #include "http_response.h"
@@ -19,7 +20,6 @@
 #include "compression.h"
 #include "url_stream.h"
 #include "ssl_util.h"
-#include "display.h"
 #include "html/readbuffer.h"
 #include "history.h"
 #include "url.h"

@@ -19,7 +19,6 @@ extern bool IsForkChild;
 extern char *w3m_version;
 extern char *document_root;
 extern int label_topline;
-extern int displayLineInfo;
 extern int show_srch_str;
 extern int displayImage;
 extern int MailtoOptions;

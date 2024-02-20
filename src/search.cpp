@@ -4,7 +4,6 @@
 #include "Str.h"
 #include "app.h"
 #include "w3m.h"
-#include "display.h"
 #include "regex.h"
 #include "proto.h"
 #include "tabbuffer.h"

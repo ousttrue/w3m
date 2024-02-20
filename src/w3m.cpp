@@ -6,7 +6,6 @@
 #include "url_stream.h"
 #include "quote.h"
 #include "history.h"
-#include "display.h"
 #include "tabbuffer.h"
 #include "http_request.h"
 #include "cookie.h"
@@ -23,7 +22,6 @@
 const char *w3m_reqlog = {};
 bool IsForkChild = 0;
 int label_topline = false;
-int displayLineInfo = false;
 int show_srch_str = true;
 int displayImage = false;
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;

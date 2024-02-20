@@ -15,7 +15,6 @@
 #include "etc.h"
 #include "url_stream.h"
 #include "screen.h"
-#include "display.h"
 #include "rc.h"
 #include "textlist.h"
 #include "linklist.h"

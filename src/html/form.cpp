@@ -17,7 +17,6 @@
 #include "html.h"
 #include "utf8.h"
 #include "line.h"
-#include "display.h"
 #include "buffer.h"
 #include "anchor.h"
 #include "keyvalue.h"

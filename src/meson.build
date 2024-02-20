@@ -83,7 +83,6 @@ executable(
         'keyvalue.cpp',
         'hash.cpp',
         'buffer.cpp',
-        'display.cpp',
         'etc.cpp',
         'search.cpp',
         'linein.cpp',
