@@ -54,8 +54,24 @@ class Screen {
   int graph_enabled = 0;
   int tab_step = 8;
   l_prop CurrentMode = {};
+
+  Line *cline = NULL;
+  int ccolumn = -1;
+  int ulmode = 0;
+  int somode = 0;
+  int bomode = 0;
+  int anch_mode = 0;
+  int emph_mode = 0;
+  int imag_mode = 0;
+  int form_mode = 0;
+  int active_mode = 0;
+  int visited_mode = 0;
+  int mark_mode = 0;
+  int graph_mode = 0;
+  std::shared_ptr<Buffer> save_current_buf;
+
   ftxui::Pixel &pixel(const RowCol &pos) {
-    return _screen->PixelAt(pos.col + 1, pos.row + 1);
+    return _screen->PixelAt(pos.col, pos.row);
   }
 
 public:
@@ -74,8 +90,8 @@ public:
                  std::bind(&Screen::clrtoeol, this, std::placeholders::_1));
   }
   void clrtobotx(const RowCol &pos) {
-    clrtobot_eol(
-        pos, std::bind(&Screen::clrtoeolx, this, std::placeholders::_1));
+    clrtobot_eol(pos,
+                 std::bind(&Screen::clrtoeolx, this, std::placeholders::_1));
   }
   void no_clrtoeol();
   void addmch(const RowCol &pos, const Utf8 &utf8);

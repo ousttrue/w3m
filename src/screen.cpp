@@ -13,36 +13,15 @@
 bool displayLink = false;
 int displayLineInfo = false;
 
-#define CHMODE(c) ((c) & C_WHICHCHAR)
-#define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#define SETCH(var, ch, len) ((var) = (ch))
-#define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
-#define M_CEOL (~(M_SPACE | C_WHICHCHAR))
-
-#define EFFECT_ANCHOR_START underline()
-#define EFFECT_ANCHOR_END underlineend()
-#define EFFECT_IMAGE_START standout()
-#define EFFECT_IMAGE_END standend()
-#define EFFECT_FORM_START standout()
-#define EFFECT_FORM_END standend()
-#define EFFECT_ACTIVE_START bold()
-#define EFFECT_ACTIVE_END boldend()
-#define EFFECT_VISITED_START /**/
-#define EFFECT_VISITED_END   /**/
-#define EFFECT_MARK_START standout()
-#define EFFECT_MARK_END standend()
-
 void Screen::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
 }
 
 void Screen::clear(void) {
-  // term_writestr(_entry.T_cl);
   _screen->Clear();
   CurrentMode = C_ASCII;
 }
 
-/* XXX: conflicts with curses's clrtoeol(3) ? */
 void Screen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
   if (pos.row >= 0 && pos.row < LINES()) {
     int y = pos.row + 1;
@@ -98,23 +77,6 @@ RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
   return pos;
 }
 
-#define RF_NEED_TO_MOVE 0
-#define RF_CR_OK 1
-#define RF_NONEED_TO_MOVE 2
-#define M_MEND (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_GRAPHICS)
-
-/* Charactor Color */
-#define COL_FCOLOR 0xf00
-#define COL_FBLACK 0x800
-#define COL_FRED 0x900
-#define COL_FGREEN 0xa00
-#define COL_FYELLOW 0xb00
-#define COL_FBLUE 0xc00
-#define COL_FMAGENTA 0xd00
-#define COL_FCYAN 0xe00
-#define COL_FWHITE 0xf00
-#define COL_FTERM 0x000
-
 static void cursor(const RowCol p) {
   std::cout << "\e[" << p.row << ";" << p.col << "H";
 }
@@ -156,20 +118,8 @@ void Screen::addmch(const RowCol &pos, const Utf8 &utf8) {
   pixel.character = utf8.view();
 }
 
-/*
- * Display some lines.
- */
-static Line *cline = NULL;
-static int ccolumn = -1;
-
-static int ulmode = 0, somode = 0, bomode = 0;
-static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
-           active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-
-static std::shared_ptr<Buffer> save_current_buf;
-
 Str *Screen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
-                                    const char *title, const char *url) {
+                                const char *title, const char *url) {
   Str *s = NULL;
   Str *u;
   Url pu;
@@ -325,27 +275,26 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
 
   if (anch_mode) {
     anch_mode = false;
-    this->EFFECT_ANCHOR_END;
+    this->underlineend();
   }
   if (imag_mode) {
     imag_mode = false;
-    this->EFFECT_IMAGE_END;
+    this->standend();
   }
   if (form_mode) {
     form_mode = false;
-    this->EFFECT_FORM_END;
+    this->standend();
   }
   if (visited_mode) {
     visited_mode = false;
-    EFFECT_VISITED_END;
   }
   if (active_mode) {
     active_mode = false;
-    this->EFFECT_ACTIVE_END;
+    this->boldend();
   }
   if (mark_mode) {
     mark_mode = false;
-    this->EFFECT_MARK_END;
+    this->standend();
   }
   if (graph_mode) {
     graph_mode = false;
@@ -373,8 +322,8 @@ void Screen::redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
   }
 }
 
-int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l,
-                                 int i, int bpos, int epos) {
+int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
+                             int bpos, int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->layout.currentColumn;
   char *p;
@@ -435,27 +384,26 @@ int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l,
 
   if (anch_mode) {
     anch_mode = false;
-    this->EFFECT_ANCHOR_END;
+    this->underlineend();
   }
   if (imag_mode) {
     imag_mode = false;
-    this->EFFECT_IMAGE_END;
+    this->standend();
   }
   if (form_mode) {
     form_mode = false;
-    this->EFFECT_FORM_END;
+    this->standend();
   }
   if (visited_mode) {
     visited_mode = false;
-    EFFECT_VISITED_END;
   }
   if (active_mode) {
     active_mode = false;
-    this->EFFECT_ACTIVE_END;
+    this->boldend();
   }
   if (mark_mode) {
     mark_mode = false;
-    this->EFFECT_MARK_END;
+    this->standend();
   }
   if (graph_mode) {
     graph_mode = false;
@@ -465,8 +413,8 @@ int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l,
 }
 
 void Screen::drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
-                                   AnchorList *al, int hseq, int prevhseq,
-                                   int tline, int eline, int active) {
+                               AnchorList *al, int hseq, int prevhseq,
+                               int tline, int eline, int active) {
   auto l = buf->layout.topLine;
   for (size_t j = 0; j < al->size(); j++) {
     auto an = &al->anchors[j];
@@ -607,10 +555,5 @@ void Screen::display(int width, TabBuffer *currentTab) {
   if (buf != save_current_buf) {
     CurrentTab->currentBuffer()->saveBufferInfo();
     save_current_buf = buf;
-  }
-  if (buf->check_url) {
-    chkURLBuffer(buf);
-    this->display(width, currentTab);
-
   }
 }
