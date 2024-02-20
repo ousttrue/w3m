@@ -47,7 +47,7 @@ struct Buffer;
 struct TabBuffer;
 struct LineLayout;
 struct AnchorList;
-class TermScreen {
+class Screen {
   std::shared_ptr<ftxui::Screen> _screen;
   int max_LINES = 0;
   int max_COLS = 0;
@@ -71,11 +71,11 @@ public:
                     const std::function<void(const RowCol &)> &);
   void clrtobot(const RowCol &pos) {
     clrtobot_eol(pos,
-                 std::bind(&TermScreen::clrtoeol, this, std::placeholders::_1));
+                 std::bind(&Screen::clrtoeol, this, std::placeholders::_1));
   }
   void clrtobotx(const RowCol &pos) {
     clrtobot_eol(
-        pos, std::bind(&TermScreen::clrtoeolx, this, std::placeholders::_1));
+        pos, std::bind(&Screen::clrtoeolx, this, std::placeholders::_1));
   }
   void no_clrtoeol();
   void addmch(const RowCol &pos, const Utf8 &utf8);

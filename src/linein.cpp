@@ -32,7 +32,7 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(const std::shared_ptr<TermScreen> &screen,
+LineInput::LineInput(const std::shared_ptr<Screen> &screen,
                      const char *prompt, Hist *hist, const OnInput &_onInput,
                      IncFunc incrfunc)
     : _screen(screen), prompt(prompt), onInput(_onInput), incrfunc(incrfunc) {
@@ -92,7 +92,7 @@ LineInput::LineInput(const std::shared_ptr<TermScreen> &screen,
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputLineHistSearch(const std::shared_ptr<TermScreen> &screen,
+LineInput::inputLineHistSearch(const std::shared_ptr<Screen> &screen,
                                const char *prompt, const char *def_str,
                                Hist *hist, InputFlags flag,
                                const OnInput &onInput, IncFunc incrfunc) {
@@ -876,7 +876,7 @@ void LineInput::_editor(char) {
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputAnswer(const std::shared_ptr<TermScreen> &screen,
+LineInput::inputAnswer(const std::shared_ptr<Screen> &screen,
                        const OnInput &onInput) {
   if (IsForkChild) {
     onInput("n");

@@ -27,11 +27,11 @@ using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
 struct TabBuffer;
 struct Buffer;
-struct TermScreen;
+struct Screen;
 class App {
   RowCol _size = {};
 
-  std::shared_ptr<TermScreen> _screen;
+  std::shared_ptr<Screen> _screen;
   bool _fmInitialized = false;
 
   int _dirty = 1;
@@ -68,7 +68,7 @@ public:
   int LASTLINE() const { return (_size.row - 1); }
   int INIT_BUFFER_WIDTH() { return App::instance().COLS() - (1); }
 
-  std::shared_ptr<TermScreen> screen() const { return _screen; }
+  std::shared_ptr<Screen> screen() const { return _screen; }
   bool initialize();
   void beginRawMode();
   void endRawMode();

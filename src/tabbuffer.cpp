@@ -27,7 +27,7 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-int TabBuffer::draw(TermScreen *screen, TabBuffer *current) {
+int TabBuffer::draw(Screen *screen, TabBuffer *current) {
   if (this == current) {
     screen->bold();
   } else {

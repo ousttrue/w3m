@@ -130,7 +130,7 @@ uv_tty_t g_tty_in;
 uv_signal_t g_signal_resize;
 uv_timer_t g_timer;
 
-App::App() : _screen(new TermScreen) {
+App::App() : _screen(new Screen) {
   static int s_i = 0;
   assert(s_i == 0);
   ++s_i;

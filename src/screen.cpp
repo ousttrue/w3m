@@ -32,18 +32,18 @@ int displayLineInfo = false;
 #define EFFECT_MARK_START standout()
 #define EFFECT_MARK_END standend()
 
-void TermScreen::setupscreen(const RowCol &size) {
+void Screen::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
 }
 
-void TermScreen::clear(void) {
+void Screen::clear(void) {
   // term_writestr(_entry.T_cl);
   _screen->Clear();
   CurrentMode = C_ASCII;
 }
 
 /* XXX: conflicts with curses's clrtoeol(3) ? */
-void TermScreen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
+void Screen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
   if (pos.row >= 0 && pos.row < LINES()) {
     int y = pos.row + 1;
     for (int x = pos.col + 1; x <= COLS(); ++x) {
@@ -52,7 +52,7 @@ void TermScreen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
   }
 }
 
-void TermScreen::clrtobot_eol(
+void Screen::clrtobot_eol(
     const RowCol &pos, const std::function<void(const RowCol &pos)> &callback) {
   clrtoeol(pos);
   int CurLine = pos.row + 1;
@@ -61,7 +61,7 @@ void TermScreen::clrtobot_eol(
   }
 }
 
-RowCol TermScreen::addstr(RowCol pos, const char *s) {
+RowCol Screen::addstr(RowCol pos, const char *s) {
   while (*s) {
     auto utf8 = Utf8::from((const char8_t *)s);
     addmch(pos, utf8);
@@ -71,7 +71,7 @@ RowCol TermScreen::addstr(RowCol pos, const char *s) {
   return pos;
 }
 
-RowCol TermScreen::addnstr(RowCol pos, const char *s, int n) {
+RowCol Screen::addnstr(RowCol pos, const char *s, int n) {
   for (int i = 0; i < n && *s != '\0'; i++) {
     auto utf8 = Utf8::from((const char8_t *)s);
     addmch(pos, utf8);
@@ -82,7 +82,7 @@ RowCol TermScreen::addnstr(RowCol pos, const char *s, int n) {
   return pos;
 }
 
-RowCol TermScreen::addnstr_sup(RowCol pos, const char *s, int n) {
+RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++) {
     auto utf8 = Utf8::from((const char8_t *)s);
@@ -119,7 +119,7 @@ static void cursor(const RowCol p) {
   std::cout << "\e[" << p.row << ";" << p.col << "H";
 }
 
-void TermScreen::print() {
+void Screen::print() {
   // using namespace ftxui;
 
   std::cout << "\e[?25l";
@@ -136,7 +136,7 @@ void TermScreen::print() {
   _screen->Print();
 }
 
-void TermScreen::cursor(const RowCol &pos) {
+void Screen::cursor(const RowCol &pos) {
   // std::cout << "\e[2 q";
   ::cursor({
       .row = pos.row + 1,
@@ -146,12 +146,12 @@ void TermScreen::cursor(const RowCol &pos) {
   std::flush(std::cout);
 }
 
-void TermScreen::toggle_stand(const RowCol &pos) {
+void Screen::toggle_stand(const RowCol &pos) {
   auto &pixel = this->pixel(pos);
   pixel.inverted = !pixel.inverted;
 }
 
-void TermScreen::addmch(const RowCol &pos, const Utf8 &utf8) {
+void Screen::addmch(const RowCol &pos, const Utf8 &utf8) {
   auto &pixel = this->pixel(pos);
   pixel.character = utf8.view();
 }
@@ -168,7 +168,7 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
 
 static std::shared_ptr<Buffer> save_current_buf;
 
-Str *TermScreen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
+Str *Screen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
                                     const char *title, const char *url) {
   Str *s = NULL;
   Str *u;
@@ -210,7 +210,7 @@ Str *TermScreen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
   return s;
 }
 
-Str *TermScreen::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
+Str *Screen::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   Str *msg;
   Str *s = NULL;
   int sl = 0;
@@ -265,7 +265,7 @@ Str *TermScreen::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   return msg;
 }
 
-Line *TermScreen::redrawLine(LineLayout *buf, Line *l, int i) {
+Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->currentColumn;
   char *p;
@@ -356,7 +356,7 @@ Line *TermScreen::redrawLine(LineLayout *buf, Line *l, int i) {
   return l;
 }
 
-void TermScreen::redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
+void Screen::redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
   {
     Line *l;
     int i;
@@ -373,7 +373,7 @@ void TermScreen::redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
   }
 }
 
-int TermScreen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l,
+int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l,
                                  int i, int bpos, int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->layout.currentColumn;
@@ -464,7 +464,7 @@ int TermScreen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l,
   return rcol - column;
 }
 
-void TermScreen::drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
+void Screen::drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
                                    AnchorList *al, int hseq, int prevhseq,
                                    int tline, int eline, int active) {
   auto l = buf->layout.topLine;
@@ -504,7 +504,7 @@ void TermScreen::drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
   }
 }
 
-void TermScreen ::drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
+void Screen ::drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   int hseq, prevhseq;
   int tline, eline;
 
@@ -538,7 +538,7 @@ void TermScreen ::drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   buf->layout.hmarklist()->prevhseq = hseq;
 }
 
-void TermScreen::display(int width, TabBuffer *currentTab) {
+void Screen::display(int width, TabBuffer *currentTab) {
 
   auto buf = currentTab->currentBuffer();
   if (!buf) {
