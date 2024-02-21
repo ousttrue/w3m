@@ -21,3 +21,5 @@ const char *remove_space(const char *str);
 Str *unescape_spaces(Str *s);
 void setup_child(int child, int i, int f);
 void myExec(const char *command);
+extern const char *getWord(const char **str);
+extern const char *getQWord(const char **str);

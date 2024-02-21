@@ -14,9 +14,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gc.h>
+#include "etc.h"
 #include "regex.h"
 #include "myctype.h"
-#include "func.h"
 #include "proto.h"
 #include "Str.h"
 

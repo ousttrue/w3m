@@ -13,7 +13,6 @@
 #include "loaddirectory.h"
 #include "auth_pass.h"
 #include "http_auth.h"
-#include "func.h"
 #include "etc.h"
 #include "alloc.h"
 #include "mimetypes.h"
@@ -825,7 +824,7 @@ void sync_with_option(void) {
     AcceptEncoding = acceptableEncoding();
   if (AcceptMedia == NULL || *AcceptMedia == '\0')
     AcceptMedia = acceptableMimeTypes();
-  initKeymap(false);
+  App::instance().initKeymap(false);
 }
 
 void init_rc(void) {

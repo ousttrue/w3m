@@ -28,7 +28,6 @@
 #include "app.h"
 #include "screen.h"
 #include "myctype.h"
-#include "func.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 #include <sys/stat.h>
@@ -1485,7 +1484,7 @@ void reinit() {
   }
 
   if (!strcasecmp(resource, "KEYMAP")) {
-    initKeymap(true);
+    App::instance().initKeymap(true);
     return;
   }
 

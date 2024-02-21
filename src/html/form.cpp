@@ -9,7 +9,6 @@
 #include "http_response.h"
 #include "auth_pass.h"
 #include "w3m.h"
-#include "func.h"
 #include "etc.h"
 #include "mimetypes.h"
 #include "readbuffer.h"

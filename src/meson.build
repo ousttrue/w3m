@@ -91,7 +91,6 @@ executable(
         'symbol.cpp',
         'entity.cpp',
         'mimehead.cpp',
-        'func.cpp',
         'cookie.cpp',
         'history.cpp',
         'istream.cpp',

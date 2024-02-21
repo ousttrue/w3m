@@ -1,4 +1,6 @@
 #include "app.h"
+#include "etc.h"
+#include "ctrlcode.h"
 #include "proto.h"
 #include "quote.h"
 #include "html/readbuffer.h"
@@ -13,7 +15,6 @@
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "myctype.h"
-#include "func.h"
 #include "alloc.h"
 #include "Str.h"
 #include "rc.h"
@@ -691,13 +692,85 @@ App::~App() {
   free_ssl_ctx();
 }
 
-void App::setKeymap(const char *p, int lineno, int verbose) {
-  const char *s, *emsg;
-  int c;
+static int getKey2(const char **str) {
+  const char *s = *str;
+  int esc = 0, ctrl = 0;
 
-  s = getQWord(&p);
-  c = getKey(s);
+  if (s == NULL || *s == '\0')
+    return -1;
+
+  if (strncasecmp(s, "C-", 2) == 0) { /* ^, ^[^ */
+    s += 2;
+    ctrl = 1;
+  } else if (*s == '^' && *(s + 1)) { /* ^, ^[^ */
+    s++;
+    ctrl = 1;
+  }
+
+  if (ctrl) {
+    *str = s + 1;
+    if (*s >= '@' && *s <= '_') /* ^@ .. ^_ */
+      return esc | (*s - '@');
+    else if (*s >= 'a' && *s <= 'z') /* ^a .. ^z */
+      return esc | (*s - 'a' + 1);
+    else if (*s == '?') /* ^? */
+      return esc | DEL_CODE;
+    else
+      return -1;
+  }
+
+  if (strncasecmp(s, "SPC", 3) == 0) { /* ' ' */
+    *str = s + 3;
+    return esc | ' ';
+  } else if (strncasecmp(s, "TAB", 3) == 0) { /* ^i */
+    *str = s + 3;
+    return esc | '\t';
+  } else if (strncasecmp(s, "DEL", 3) == 0) { /* ^? */
+    *str = s + 3;
+    return esc | DEL_CODE;
+  }
+
+  if (*s == '\\' && *(s + 1) != '\0') {
+    s++;
+    *str = s + 1;
+    switch (*s) {
+    case 'a': /* ^g */
+      return esc | CTRL_G;
+    case 'b': /* ^h */
+      return esc | CTRL_H;
+    case 't': /* ^i */
+      return esc | CTRL_I;
+    case 'n': /* ^j */
+      return esc | CTRL_J;
+    case 'r': /* ^m */
+      return esc | CTRL_M;
+    case 'e': /* ^[ */
+      return esc | ESC_CODE;
+    case '^': /* ^ */
+      return esc | '^';
+    case '\\': /* \ */
+      return esc | '\\';
+    default:
+      return -1;
+    }
+  }
+  *str = s + 1;
+  if (IS_ASCII(*s)) /* Ascii */
+    return esc | *s;
+  else
+    return -1;
+}
+
+int getKey(const char *s) {
+  int c = getKey2(&s);
+  return c;
+}
+
+void App::setKeymap(const char *p, int lineno, int verbose) {
+  auto s = getQWord(&p);
+  auto c = getKey(s);
   if (c < 0) { /* error */
+    const char *emsg;
     if (lineno > 0)
       emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
     else
@@ -710,6 +783,7 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
   s = getWord(&p);
   auto f = getFuncList(s);
   if ((int)f < 0) {
+    const char *emsg;
     if (lineno > 0)
       emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
     else
@@ -724,6 +798,7 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
   s = getQWord(&p);
   keyData.insert({(FuncId)f, s});
 }
+
 bool App::initialize() {
   init_rc();
 
@@ -1561,4 +1636,68 @@ void App::showProgress(long long *linelen, long long *trbyte,
     message(messages->ptr, 0, 0);
     _screen->print();
   }
+}
+
+static void interpret_keymap(FILE *kf, struct stat *current, int force) {
+  int fd;
+  struct stat kstat;
+  Str *line;
+  const char *p, *s, *emsg;
+  int lineno;
+  int verbose = 1;
+
+  if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) ||
+      (!force && kstat.st_mtime == current->st_mtime &&
+       kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino &&
+       kstat.st_size == current->st_size))
+    return;
+  *current = kstat;
+
+  lineno = 0;
+  while (!feof(kf)) {
+    line = Strfgets(kf);
+    lineno++;
+    Strchop(line);
+    Strremovefirstspaces(line);
+    if (line->length == 0)
+      continue;
+    p = line->ptr;
+    s = getWord(&p);
+    if (*s == '#') /* comment */
+      continue;
+    if (!strcmp(s, "keymap"))
+      ;
+    else if (!strcmp(s, "verbose")) {
+      s = getWord(&p);
+      if (*s)
+        verbose = str_to_bool(s, verbose);
+      continue;
+    } else { /* error */
+      emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
+      App::instance().record_err_message(emsg);
+      if (verbose)
+        App::instance().disp_message_nsec(emsg, 1, true);
+      continue;
+    }
+    App::instance().setKeymap(p, lineno, verbose);
+  }
+}
+
+static char keymap_initialized = false;
+static struct stat sys_current_keymap_file;
+static struct stat current_keymap_file;
+
+void App::initKeymap(bool force) {
+  FILE *kf;
+
+  if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
+    interpret_keymap(kf, &sys_current_keymap_file,
+                     force || !keymap_initialized);
+    fclose(kf);
+  }
+  if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
+    interpret_keymap(kf, &current_keymap_file, force || !keymap_initialized);
+    fclose(kf);
+  }
+  keymap_initialized = true;
 }

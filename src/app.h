@@ -132,6 +132,8 @@ public:
       _dispatcher.pop();
     }
   }
+
+  void initKeymap(bool force);
   void setKeymap(const char *p, int lineno, int verbose);
   const char *getKeyData(char key) {
     auto func = GlobalKeymap[key];

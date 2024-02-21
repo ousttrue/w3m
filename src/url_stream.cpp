@@ -22,7 +22,6 @@
 #include "istream.h"
 #include "http_request.h"
 #include "textlist.h"
-#include "func.h"
 #include "linein.h"
 #include <string.h>
 #include <fcntl.h>
