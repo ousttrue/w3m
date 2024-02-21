@@ -1,11 +1,6 @@
 #pragma once
 #define KEY_HASH_SIZE 127
 
-struct FuncList {
-  const char *id;
-  void (*func)();
-};
-extern FuncList w3mFuncList[];
 extern unsigned char GlobalKeymap[];
 
 extern int getFuncList(const char *id);

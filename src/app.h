@@ -5,6 +5,7 @@
 #include <memory>
 #include <functional>
 #include <stack>
+#include <vector>
 
 extern int prev_key;
 extern const char *CurrentKeyData;
@@ -21,6 +22,11 @@ enum TmpfType {
   TMPF_COOKIE = 4,
   TMPF_HIST = 5,
   MAX_TMPF_TYPE = 6,
+};
+
+struct FuncList {
+  std::string id;
+  std::function<void()> func;
 };
 
 using Dispatcher = std::function<bool(const char *buf, size_t len)>;
@@ -42,6 +48,7 @@ class App {
   std::string _hostName = "localhost";
   std::string _editor = "/usr/bin/vim";
 
+  std::vector<FuncList> w3mFuncList;
   int _currentKey = -1;
 
   TabBuffer *_firstTab = 0;
