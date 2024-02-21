@@ -180,8 +180,8 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
         Strcat_char(funcname, *(p++));
       SKIP_BLANKS(p);
 
-      auto f = getFuncList(funcname->ptr);
-      if (f >= 0) {
+      auto f = App::instance().getFuncList(funcname->ptr);
+      if ((int)f >= 0) {
         tmp = Strnew_charp(p);
         Strchop(tmp);
         // TODO:

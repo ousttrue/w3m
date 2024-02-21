@@ -96,14 +96,14 @@ extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
 extern void chkWORD(void);
-#define chkNMID nulcmd
+inline auto chkNMID = nulcmd;
 extern void rFrame(void);
 extern void extbrz(void);
 extern void linkbrz(void);
 extern void curlno(void);
 extern void execCmd(void);
-#define dispI nulcmd
-#define stopI nulcmd
+inline auto dispI = nulcmd;
+inline auto stopI = nulcmd;
 extern void setAlarm(void);
 extern void reinit(void);
 extern void defKey(void);
@@ -117,32 +117,32 @@ extern void tabrURL(void);
 extern void tabR(void);
 extern void tabL(void);
 extern void linkLst(void);
-#define linkMn nulcmd
-#define accessKey nulcmd
-#define listMn nulcmd
-#define movlistMn nulcmd
+inline auto linkMn = nulcmd;
+inline auto accessKey = nulcmd;
+inline auto listMn = nulcmd;
+inline auto movlistMn = nulcmd;
 extern void undoPos(void);
 extern void redoPos(void);
 extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
-#define docCSet nulcmd
-#define defCSet nulcmd
-#define _mark nulcmd
-#define nextMk nulcmd
-#define prevMk nulcmd
-#define reMark nulcmd
-#define mouse nulcmd
-#define sgrmouse nulcmd
-#define msToggle nulcmd
-#define movMs nulcmd
-#define menuMs nulcmd
-#define tabMs nulcmd
-#define closeTMs nulcmd
-#define mainMn nulcmd
-#define selMn selBuf
-#define tabMn nulcmd
+inline auto docCSet = nulcmd;
+inline auto defCSet = nulcmd;
+inline auto _mark = nulcmd;
+inline auto nextMk = nulcmd;
+inline auto prevMk = nulcmd;
+inline auto reMark = nulcmd;
+inline auto mouse = nulcmd;
+inline auto sgrmouse = nulcmd;
+inline auto msToggle = nulcmd;
+inline auto movMs = nulcmd;
+inline auto menuMs = nulcmd;
+inline auto tabMs = nulcmd;
+inline auto closeTMs = nulcmd;
+inline auto mainMn = nulcmd;
+inline auto selMn = selBuf;
+inline auto tabMn = nulcmd;
 extern void dictword(void);
 extern void dictwordat(void);
 extern void wrapToggle(void);

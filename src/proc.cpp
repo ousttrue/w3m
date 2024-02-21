@@ -7,7 +7,6 @@
 #include "url_quote.h"
 #include "search.h"
 #include "mimetypes.h"
-#include "funcname1.h"
 #include "downloadlist.h"
 #include "url_stream.h"
 #include "linein.h"
@@ -1446,12 +1445,13 @@ void setAlarm() {
     }
   }
 
-  int cmd = -1;
+  FuncId cmd = (FuncId)-1;
   int sec = 0;
   if (*data != '\0') {
     sec = atoi(getWord(&data));
-    if (sec > 0)
-      cmd = getFuncList(getWord(&data));
+    if (sec > 0) {
+      cmd = App::instance().getFuncList(getWord(&data));
+    }
   }
 
   data = getQWord(&data);
@@ -1517,7 +1517,7 @@ void defKey() {
       return;
     }
   }
-  setKeymap(allocStr(data, -1), -1, true);
+  App::instance().setKeymap(allocStr(data, -1), -1, true);
   App::instance().invalidate();
 }
 

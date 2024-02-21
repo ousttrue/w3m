@@ -1,145 +1,148 @@
-#define nulcmd 0
-#define quitfm 1
-#define accessKey 2
-#define adBmark 3
-#define setAlarm 4
-#define backBf 5
-#define goLineF 6
-#define ldBmark 7
-#define ctrCsrH 8
-#define ctrCsrV 9
-#define docCSet 10
-#define closeT 11
-#define closeTMs 12
-#define execCmd 13
-#define cooLst 14
-#define cursorBottom 15
-#define cursorMiddle 16
-#define cursorTop 17
-#define defCSet 18
-#define defKey 19
-#define deletePrevBuf 20
-#define dictword 21
-#define dictwordat 22
-#define dispI 23
-#define ldown1 24
-#define svSrc 25
-#define ldDL 26
-#define editBf 27
-#define editScr 28
-#define goLineL 29
-#define escbmap 30
-#define escmap 31
-#define execsh 32
-#define extbrz 34
-#define linkbrz 35
-#define rFrame 36
-#define goURL 37
-#define goHome 38
-#define goLine 39
-#define followA 40
-#define gorURL 41
-#define ldhelp 42
-#define ldHist 43
-#define pginfo 44
-#define susp 45
-#define isrchfor 46
-#define isrchbak 47
-#define col1L 48
-#define linbeg 49
-#define linend 50
-#define curlno 51
-#define topA 52
-#define lastA 53
-#define linkMn 54
-#define nthA 55
-#define linkLst 56
-#define listMn 57
-#define ldfile 58
-#define mainMn 59
-#define _mark 60
-#define chkNMID 61
-#define chkURL 62
-#define chkWORD 63
-#define menuMs 65
-#define mouse 66
-#define msToggle 67
-#define movD 68
-#define movD1 69
-#define movL 70
-#define movL1 71
-#define movlistMn 72
-#define movMs 73
-#define movR 74
-#define movR1 75
-#define movU 76
-#define movU1 77
-#define msgs 78
-#define multimap 79
-#define newT 80
-#define nextBf 81
-#define nextD 82
-#define hpgFore 83
-#define nextL 84
-#define nextLU 85
-#define nextA 86
-#define nextMk 87
-#define pgFore 88
-#define nextR 89
-#define nextRD 90
-#define nextT 91
-#define nextU 92
-#define nextVA 93
-#define movRW 94
-#define ldOpt 97
-#define curURL 98
-#define peekIMG 99
-#define peekURL 100
-#define pipeBuf 101
-#define pipesh 102
-#define prevBf 103
-#define hpgBack 104
-#define prevA 105
-#define prevMk 106
-#define pgBack 107
-#define prevT 108
-#define prevVA 109
-#define movLW 110
-#define svBuf 111
-#define qquitfm 112
-#define readsh 113
-#define redoPos 114
-#define rdrwSc 115
-#define reMark 116
-#define reinit 117
-#define reload 118
-#define reshape 119
-#define col1R 120
-#define svI 122
-#define svA 123
-#define srchfor 125
-#define srchbak 126
-#define srchnxt 128
-#define srchprv 129
-#define selBuf 130
-#define selMn 131
-#define setEnv 132
-#define setOpt 133
-#define sgrmouse 134
-#define shiftl 136
-#define shiftr 137
-#define vwSrc 138
-#define stopI 139
-#define submitForm 140
-#define tabURL 142
-#define tabrURL 143
-#define tabL 144
-#define tabA 145
-#define tabMn 146
-#define tabMs 147
-#define tabR 148
-#define undoPos 149
-#define lup1 150
-#define dispVer 151
-#define followI 154
-#define wrapToggle 156
+#pragma once
+enum class FuncId {
+  nulcmd = 0,
+  quitfm = 1,
+  accessKey = 2,
+  adBmark = 3,
+  setAlarm = 4,
+  backBf = 5,
+  goLineF = 6,
+  ldBmark = 7,
+  ctrCsrH = 8,
+  ctrCsrV = 9,
+  docCSet = 10,
+  closeT = 11,
+  closeTMs = 12,
+  execCmd = 13,
+  cooLst = 14,
+  cursorBottom = 15,
+  cursorMiddle = 16,
+  cursorTop = 17,
+  defCSet = 18,
+  defKey = 19,
+  deletePrevBuf = 20,
+  dictword = 21,
+  dictwordat = 22,
+  dispI = 23,
+  ldown1 = 24,
+  svSrc = 25,
+  ldDL = 26,
+  editBf = 27,
+  editScr = 28,
+  goLineL = 29,
+  escbmap = 30,
+  escmap = 31,
+  execsh = 32,
+  extbrz = 34,
+  linkbrz = 35,
+  rFrame = 36,
+  goURL = 37,
+  goHome = 38,
+  goLine = 39,
+  followA = 40,
+  gorURL = 41,
+  ldhelp = 42,
+  ldHist = 43,
+  pginfo = 44,
+  susp = 45,
+  isrchfor = 46,
+  isrchbak = 47,
+  col1L = 48,
+  linbeg = 49,
+  linend = 50,
+  curlno = 51,
+  topA = 52,
+  lastA = 53,
+  linkMn = 54,
+  nthA = 55,
+  linkLst = 56,
+  listMn = 57,
+  ldfile = 58,
+  mainMn = 59,
+  _mark = 60,
+  chkNMID = 61,
+  chkURL = 62,
+  chkWORD = 63,
+  menuMs = 65,
+  mouse = 66,
+  msToggle = 67,
+  movD = 68,
+  movD1 = 69,
+  movL = 70,
+  movL1 = 71,
+  movlistMn = 72,
+  movMs = 73,
+  movR = 74,
+  movR1 = 75,
+  movU = 76,
+  movU1 = 77,
+  msgs = 78,
+  multimap = 79,
+  newT = 80,
+  nextBf = 81,
+  nextD = 82,
+  hpgFore = 83,
+  nextL = 84,
+  nextLU = 85,
+  nextA = 86,
+  nextMk = 87,
+  pgFore = 88,
+  nextR = 89,
+  nextRD = 90,
+  nextT = 91,
+  nextU = 92,
+  nextVA = 93,
+  movRW = 94,
+  ldOpt = 97,
+  curURL = 98,
+  peekIMG = 99,
+  peekURL = 100,
+  pipeBuf = 101,
+  pipesh = 102,
+  prevBf = 103,
+  hpgBack = 104,
+  prevA = 105,
+  prevMk = 106,
+  pgBack = 107,
+  prevT = 108,
+  prevVA = 109,
+  movLW = 110,
+  svBuf = 111,
+  qquitfm = 112,
+  readsh = 113,
+  redoPos = 114,
+  rdrwSc = 115,
+  reMark = 116,
+  reinit = 117,
+  reload = 118,
+  reshape = 119,
+  col1R = 120,
+  svI = 122,
+  svA = 123,
+  srchfor = 125,
+  srchbak = 126,
+  srchnxt = 128,
+  srchprv = 129,
+  selBuf = 130,
+  selMn = 131,
+  setEnv = 132,
+  setOpt = 133,
+  sgrmouse = 134,
+  shiftl = 136,
+  shiftr = 137,
+  vwSrc = 138,
+  stopI = 139,
+  submitForm = 140,
+  tabURL = 142,
+  tabrURL = 143,
+  tabL = 144,
+  tabA = 145,
+  tabMn = 146,
+  tabMs = 147,
+  tabR = 148,
+  undoPos = 149,
+  lup1 = 150,
+  dispVer = 151,
+  followI = 154,
+  wrapToggle = 156,
+};

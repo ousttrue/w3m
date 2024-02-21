@@ -15,7 +15,6 @@
 #include "alloc.h"
 #include "proto.h"
 #include "cookie.h"
-#include "functable.c"
 // #include "textlist.h"
 // #include "hash.h"
 #include <stdio.h>
@@ -23,50 +22,9 @@
 #include <string.h>
 
 #define KEYDATA_HASH_SIZE 16
-static Hash_iv *keyData = NULL;
 static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
-
-void setKeymap(const char *p, int lineno, int verbose) {
-  unsigned char *map = NULL;
-  const char *s, *emsg;
-  int c, f;
-
-  s = getQWord(&p);
-  c = getKey(s);
-  if (c < 0) { /* error */
-    if (lineno > 0)
-      emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
-    else
-      emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-    App::instance().App::instance().record_err_message(emsg);
-    if (verbose)
-      App::instance().disp_message_nsec(emsg, 1, true);
-    return;
-  }
-  s = getWord(&p);
-  f = getFuncList(s);
-  if (f < 0) {
-    if (lineno > 0)
-      emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
-    else
-      emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-    App::instance().record_err_message(emsg);
-    if (verbose)
-      App::instance().disp_message_nsec(emsg, 1, true);
-    return;
-  }
-  map = GlobalKeymap;
-  map[c & 0x7F] = f;
-  s = getQWord(&p);
-  if (*s) {
-    if (keyData == NULL)
-      keyData = newHash_iv(KEYDATA_HASH_SIZE);
-    putHash_iv(keyData, c, (void *)s);
-  } else if (getKeyData(c))
-    putHash_iv(keyData, c, NULL);
-}
 
 static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   int fd;
@@ -109,7 +67,7 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
         App::instance().disp_message_nsec(emsg, 1, true);
       continue;
     }
-    setKeymap(p, lineno, verbose);
+    App::instance().setKeymap(p, lineno, verbose);
   }
 }
 
@@ -126,14 +84,6 @@ void initKeymap(int force) {
     fclose(kf);
   }
   keymap_initialized = true;
-}
-
-int getFuncList(const char *id) { return getHash_si(&functable, id, -1); }
-
-const char *getKeyData(int key) {
-  if (keyData == NULL)
-    return NULL;
-  return (char *)getHash_iv(keyData, key, NULL);
 }
 
 static int getKey2(const char **str) {

@@ -21,7 +21,6 @@
 #include "html_tag.h"
 #include "proto.h"
 #include "alloc.h"
-#include "funcname1.h"
 #include <math.h>
 
 #define ENABLE_REMOVE_TRAILINGSPACES
