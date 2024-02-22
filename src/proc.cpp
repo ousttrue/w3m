@@ -1444,12 +1444,12 @@ void setAlarm() {
     }
   }
 
-  FuncId cmd = (FuncId)-1;
+  std::string cmd = "";
   int sec = 0;
   if (*data != '\0') {
     sec = atoi(getWord(&data));
     if (sec > 0) {
-      cmd = App::instance().getFuncList(getWord(&data));
+      cmd = getWord(&data);
     }
   }
 

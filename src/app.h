@@ -1,6 +1,5 @@
 #pragma once
 #include "rowcol.h"
-#include "funcname2.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -27,10 +26,7 @@ enum TmpfType {
   MAX_TMPF_TYPE = 6,
 };
 
-struct FuncList {
-  std::string id;
-  std::function<void()> func;
-};
+using Func = std::function<void()>;
 
 using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
@@ -51,7 +47,7 @@ class App {
   std::string _hostName = "localhost";
   std::string _editor = "/usr/bin/vim";
 
-  std::vector<FuncList> w3mFuncList;
+  std::unordered_map<std::string, Func> w3mFuncList;
   char _currentKey = -1;
   char prev_key = -1;
 
@@ -62,9 +58,8 @@ class App {
 
   std::stack<Dispatcher> _dispatcher;
 
-  std::array<FuncId, 128> GlobalKeymap;
-  std::unordered_map<FuncId, std::string> keyData;
-  std::unordered_map<std::string, FuncId> _funcTable;
+  std::array<std::string, 128> GlobalKeymap;
+  std::unordered_map<std::string, std::string> keyData;
 
   App();
   void onResize();
@@ -117,15 +112,15 @@ public:
   int searchKeyNum();
   void _peekURL(bool only_img);
   std::string currentUrl() const;
-  FuncId getFuncList(const std::string &id) const {
-    auto found = _funcTable.find(id);
-    if (found != _funcTable.end()) {
-      return found->second;
-    }
-    return (FuncId)-1;
-  }
+  // FuncId getFuncList(const std::string &id) const {
+  //   auto found = _funcTable.find(id);
+  //   if (found != _funcTable.end()) {
+  //     return found->second;
+  //   }
+  //   return (FuncId)-1;
+  // }
   void doCmd();
-  void doCmd(FuncId cmd, const char *data);
+  void doCmd(const std::string &cmd, const char *data);
   void dispatchPtyIn(const char *buf, size_t len);
   void dispatch(const char *buf, size_t len) {
     if (!_dispatcher.top()(buf, len)) {
@@ -148,7 +143,7 @@ public:
     _dispatcher.push(dispatcher);
   }
   void onFrame();
-  void task(int sec, FuncId cmd, const char *data = nullptr,
+  void task(int sec, const std::string &cmd, const char *data = nullptr,
             bool releat = false);
   std::string tmpfname(TmpfType type, const std::string &ext);
   void invalidate() { ++_dirty; }

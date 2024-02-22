@@ -136,7 +136,7 @@ App::App() : _screen(new Screen) {
   ++s_i;
 
   w3mFuncList = {
-      /*0*/ {"@@@", nulcmd},
+      // /*0*/ {"@@@", nulcmd},
       /*1*/ {"ABORT", quitfm},
       /*2*/ {"ACCESSKEY", accessKey},
       /*3*/ {"ADD_BOOKMARK", adBmark},
@@ -296,308 +296,149 @@ App::App() : _screen(new Screen) {
   };
   GlobalKeymap = {
       /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
-      FuncId::_mark,
-      FuncId::linbeg,
-      FuncId::movL,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::linend,
-      FuncId::movR,
-      FuncId::curlno,
+      "MARK",
+      "LINE_BEGIN",
+      "MOVE_LEFT",
+      {},
+      {},
+      "LINE_END",
+      "MOVE_RIGHT",
+      "LINE_INFO",
       /*  C-h     C-i     C-j     C-k     C-l     C-m     C-n     C-o      */
-      FuncId::ldHist,
-      FuncId::nextA,
-      FuncId::followA,
-      FuncId::cooLst,
-      FuncId::rdrwSc,
-      FuncId::followA,
-      FuncId::movD,
-      FuncId::nulcmd,
+      "HISTORY",
+      "NEXT_LINK",
+      "GOTO_LINK",
+      "COOKIE",
+      "REDRAW",
+      "GOTO_LINK",
+      "MOVE_DOWN",
+      {},
       /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w      */
-      FuncId::movU,
-      FuncId::closeT,
-      FuncId::isrchbak,
-      FuncId::isrchfor,
-      FuncId::tabA,
-      FuncId::prevA,
-      FuncId::pgFore,
-      FuncId::wrapToggle,
+      "MOVE_UP",
+      "CLOSE_TAB",
+      "ISEARCH_BACK",
+      "ISEARCH",
+      "TAB_LINK",
+      "PREV_LINK",
+      "NEXT_PAGE",
+      "WRAP_TOGGLE",
       /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_      */
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::susp,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::goHome,
+      {},
+      {},
+      "SUSPEND",
+      {},
+      {},
+      {},
+      {},
+      "GOTO_HOME",
       /*  SPC     !       "       #       $       %       &       '        */
-      FuncId::pgFore,
-      FuncId::execsh,
-      FuncId::reMark,
-      FuncId::pipesh,
-      FuncId::linend,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
+      "NEXT_PAGE",
+      "SHELL",
+      "REG_MARK",
+      "PIPE_SHELL",
+      "LINE_END",
+      {},
+      {},
+      {},
       /*  (       )       *       +       FuncId::,       -       .       / */
-      FuncId::undoPos,
-      FuncId::redoPos,
-      FuncId::nulcmd,
-      FuncId::pgFore,
-      FuncId::col1L,
-      FuncId::pgBack,
-      FuncId::col1R,
-      FuncId::srchfor,
+      "UNDO",
+      "REDO",
+      {},
+      "NEXT_PAGE",
+      "LEFT",
+      "PREV_PAGE",
+      "RIGHT",
+      "SEARCH",
       /*  0       1       2       3       4       5       6       7        */
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
+      {},
       /*  8       9       :       ;       <       =       >       ?        */
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::chkURL,
-      FuncId::chkWORD,
-      FuncId::shiftl,
-      FuncId::pginfo,
-      FuncId::shiftr,
-      FuncId::srchbak,
+      {},
+      {},
+      "MARK_URL",
+      "MARK_WORD",
+      "SHIFT_LEFT",
+      "INFO",
+      "SHIFT_RIGHT",
+      "SEARCH_BACK",
       /*  @       A       B       C       D       E       F       G        */
-      FuncId::readsh,
-      FuncId::nulcmd,
-      FuncId::backBf,
-      FuncId::nulcmd,
-      FuncId::ldDL,
-      FuncId::editBf,
-      FuncId::rFrame,
-      FuncId::goLineL,
+      "READ_SHELL",
+      {},
+      "BACK",
+      {},
+      "DOWNLOAD_LIST",
+      "EDIT",
+      "FRAME",
+      "END",
       /*  H       I       J       K       L       M       N       O        */
-      FuncId::ldhelp,
-      FuncId::followI,
-      FuncId::lup1,
-      FuncId::ldown1,
-      FuncId::linkLst,
-      FuncId::extbrz,
-      FuncId::srchprv,
-      FuncId::nulcmd,
+      "HELP",
+      "VIEW_IMAGE",
+      "UP",
+      "DOWN",
+      "LIST",
+      "EXTERN",
+      "SEARCH_PREV",
+      {},
       /*  P       Q       R       S       T       U       V       W        */
-      FuncId::nulcmd,
-      FuncId::quitfm,
-      FuncId::reload,
-      FuncId::svBuf,
-      FuncId::newT,
-      FuncId::goURL,
-      FuncId::ldfile,
-      FuncId::movLW,
+      {},
+      "ABORT",
+      "RELOAD",
+      "PRINT",
+      "NEW_TAB",
+      "GOTO",
+      "LOAD",
+      "PREV_WORD",
       /*  X       Y       Z       [       \       ]       ^       _        */
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::ctrCsrH,
-      FuncId::topA,
-      FuncId::nulcmd,
-      FuncId::lastA,
-      FuncId::linbeg,
-      FuncId::nulcmd,
+      {},
+      {},
+      "CENTER_H",
+      "LINK_BEGIN",
+      {},
+      "LINK_END",
+      "LINK_BEGIN",
+      {},
       /*  `       a       b       c       d       e       f       g        */
-      FuncId::nulcmd,
-      FuncId::svA,
-      FuncId::pgBack,
-      FuncId::curURL,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::goLineF,
+      {},
+      "SAVE_LINK",
+      "PREV_PAGE",
+      "PEEK",
+      {},
+      {},
+      {},
+      "BEGIN",
       /*  h       i       j       k       l       m       n       o        */
-      FuncId::movL,
-      FuncId::peekIMG,
-      FuncId::movD,
-      FuncId::movU,
-      FuncId::movR,
-      FuncId::msToggle,
-      FuncId::srchnxt,
-      FuncId::ldOpt,
+      "MOVE_LEFT",
+      "PEEK_IMG",
+      "MOVE_DOWN",
+      "MOVE_UP",
+      "MOVE_RIGHT",
+      "MOUSE_TOGGLE",
+      "SEARCH_NEXT",
+      "OPTIONS",
       /*  p       q       r       s       t       u       v       w        */
-      FuncId::nulcmd,
-      FuncId::qquitfm,
-      FuncId::dispVer,
-      FuncId::selMn,
-      FuncId::nulcmd,
-      FuncId::peekURL,
-      FuncId::vwSrc,
-      FuncId::movRW,
+      {},
+      "QUIT",
+      "VERSION",
+      "SELECT_MENU",
+      {},
+      "PEEK_LINK",
+      "VIEW",
+      "NEXT_WORD",
       /*  x       y       z       {       |       }       ~       DEL      */
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-      FuncId::ctrCsrV,
-      FuncId::prevT,
-      FuncId::pipeBuf,
-      FuncId::nextT,
-      FuncId::nulcmd,
-      FuncId::nulcmd,
-  };
-  _funcTable = {
-      {"SUSPEND", FuncId::susp},
-      {"SET_OPTION", FuncId::setOpt},
-      {"END", FuncId::goLineL},
-      {"VIEW", FuncId::vwSrc},
-      {"PREV_VISITED", FuncId::prevVA},
-      {"EXTERN", FuncId::extbrz},
-      {"UNDO", FuncId::undoPos},
-      {"SHELL", FuncId::execsh},
-      {"RIGHT", FuncId::col1R},
-      {"PREV_WORD", FuncId::movLW},
-      {"LEFT", FuncId::col1L},
-      {"INTERRUPT", FuncId::susp},
-      {"TAB_GOTO_RELATIVE", FuncId::tabrURL},
-      {"NEXT_UP", FuncId::nextU},
-      {"CLOSE_TAB_MOUSE", FuncId::closeTMs},
-      {"DOWN", FuncId::ldown1},
-      {"HISTORY", FuncId::ldHist},
-      {"SEARCH", FuncId::srchfor},
-      {"NEXT_VISITED", FuncId::nextVA},
-      {"NEXT_LEFT_UP", FuncId::nextLU},
-      {"MOVE_UP", FuncId::movU},
-      {"DOWNLOAD", FuncId::svSrc},
-      {"VIEW_IMAGE", FuncId::followI},
-      {"MARK", FuncId::_mark},
-      {"INFO", FuncId::pginfo},
-      {"VERSION", FuncId::dispVer},
-      {"BEGIN", FuncId::goLineF},
-      {"REDRAW", FuncId::rdrwSc},
-      {"QUIT", FuncId::qquitfm},
-      {"DOWNLOAD_LIST", FuncId::ldDL},
-      {"REG_MARK", FuncId::reMark},
-      {"MOVE_RIGHT", FuncId::movR},
-      {"MARK_MID", FuncId::chkNMID},
-      {"LOAD", FuncId::ldfile},
-      {"EXEC_SHELL", FuncId::execsh},
-      {"VIEW_BOOKMARK", FuncId::ldBmark},
-      {"TAB_MOUSE", FuncId::tabMs},
-      {"STOP_IMAGE", FuncId::stopI},
-      {"GOTO_HOME", FuncId::goHome},
-      {"SHIFT_RIGHT", FuncId::shiftr},
-      {"SEARCH_NEXT", FuncId::srchnxt},
-      {"PEEK", FuncId::curURL},
-      {"DICT_WORD_AT", FuncId::dictwordat},
-      {"SOURCE", FuncId::vwSrc},
-      {"SGRMOUSE", FuncId::sgrmouse},
-      {"SAVE_LINK", FuncId::svA},
-      {"GOTO", FuncId::goURL},
-      {"ACCESSKEY", FuncId::accessKey},
-      {"ABORT", FuncId::quitfm},
-      {"MENU", FuncId::mainMn},
-      {"EXIT", FuncId::quitfm},
-      {"PREV_HALF_PAGE", FuncId::hpgBack},
-      {"LINE_INFO", FuncId::curlno},
-      {"ADD_BOOKMARK", FuncId::adBmark},
-      {"WHEREIS", FuncId::srchfor},
-      {"SELECT_MENU", FuncId::selMn},
-      {"GOTO_LINE", FuncId::goLine},
-      {"MOUSE", FuncId::mouse},
-      {"PIPE_BUF", FuncId::pipeBuf},
-      {"LINK_BEGIN", FuncId::topA},
-      {"PEEK_IMG", FuncId::peekIMG},
-      {"CHARSET", FuncId::docCSet},
-      {"GOTO_LINK", FuncId::followA},
-      {"EXTERN_LINK", FuncId::linkbrz},
-      {"MARK_WORD", FuncId::chkWORD},
-      {"MOVE_LIST_MENU", FuncId::movlistMn},
-      {"LINK_MENU", FuncId::linkMn},
-      {"CURSOR_MIDDLE", FuncId::cursorMiddle},
-      {"CURSOR_TOP", FuncId::cursorTop},
-      {"REDO", FuncId::redoPos},
-      {"BOOKMARK", FuncId::ldBmark},
-      {"NEXT_RIGHT_DOWN", FuncId::nextRD},
-      {"NEXT_LEFT", FuncId::nextL},
-      {"COMMAND", FuncId::execCmd},
-      {"@@@", FuncId::nulcmd},
-      {"RESHAPE", FuncId::reshape},
-      {"ALARM", FuncId::setAlarm},
-      {"UP", FuncId::lup1},
-      {"SETENV", FuncId::setEnv},
-      {"RELOAD", FuncId::reload},
-      {"LIST", FuncId::linkLst},
-      {"NEXT_PAGE", FuncId::pgFore},
-      {"MOVE_MOUSE", FuncId::movMs},
-      {"DISPLAY_IMAGE", FuncId::dispI},
-      {"TAB_LEFT", FuncId::tabL},
-      {"PIPE_SHELL", FuncId::pipesh},
-      {"NEXT_TAB", FuncId::nextT},
-      {"NEXT_DOWN", FuncId::nextD},
-      {"MAIN_MENU", FuncId::mainMn},
-      {"LIST_MENU", FuncId::listMn},
-      {"REINIT", FuncId::reinit},
-      {"EDIT", FuncId::editBf},
-      {"SAVE_IMAGE", FuncId::svI},
-      {"NEXT_MARK", FuncId::nextMk},
-      {"COOKIE", FuncId::cooLst},
-      {"LINK_END", FuncId::lastA},
-      {"LINE_BEGIN", FuncId::linbeg},
-      {"DELETE_PREVBUF", FuncId::deletePrevBuf},
-      {"WRAP_TOGGLE", FuncId::wrapToggle},
-      {"DEFAULT_CHARSET", FuncId::defCSet},
-      {"NOTHING", FuncId::nulcmd},
-      {"FRAME", FuncId::rFrame},
-      {"SEARCH_PREV", FuncId::srchprv},
-      {"NEXT", FuncId::nextBf},
-      {"LINE_END", FuncId::linend},
-      {"SELECT", FuncId::selBuf},
-      {"PREV_TAB", FuncId::prevT},
-      {"MOVE_LEFT", FuncId::movL},
-      {"SEARCH_BACK", FuncId::srchbak},
-      {"SAVE", FuncId::svSrc},
-      {"NEXT_HALF_PAGE", FuncId::hpgFore},
-      {"SHIFT_LEFT", FuncId::shiftl},
-      {"READ_SHELL", FuncId::readsh},
-      {"PRINT", FuncId::svBuf},
-      {"MOVE_DOWN", FuncId::movD},
-      {"EDIT_SCREEN", FuncId::editScr},
-      {"ISEARCH_BACK", FuncId::isrchbak},
-      {"NEXT_LINK", FuncId::nextA},
-      {"MSGS", FuncId::msgs},
-      {"MULTIMAP", FuncId::multimap},
-      {"CENTER_H", FuncId::ctrCsrH},
-      {"TAB_LINK", FuncId::tabA},
-      {"TAB_GOTO", FuncId::tabURL},
-      {"PREV_PAGE", FuncId::pgBack},
-      {"SAVE_SCREEN", FuncId::svBuf},
-      {"TAB_MENU", FuncId::tabMn},
-      {"SEARCH_FORE", FuncId::srchfor},
-      {"MOVE_UP1", FuncId::movU1},
-      {"MOVE_LEFT1", FuncId::movL1},
-      {"PREV_MARK", FuncId::prevMk},
-      {"PEEK_LINK", FuncId::peekURL},
-      {"MARK_URL", FuncId::chkURL},
-      {"GOTO_RELATIVE", FuncId::gorURL},
-      {"SUBMIT", FuncId::submitForm},
-      {"NEXT_WORD", FuncId::movRW},
-      {"NEW_TAB", FuncId::newT},
-      {"HELP", FuncId::ldhelp},
-      {"MOVE_DOWN1", FuncId::movD1},
-      {"ISEARCH", FuncId::isrchfor},
-      {"NEXT_RIGHT", FuncId::nextR},
-      {"CLOSE_TAB", FuncId::closeT},
-      {"CENTER_V", FuncId::ctrCsrV},
-      {"MOVE_RIGHT1", FuncId::movR1},
-      {"ESCMAP", FuncId::escmap},
-      {"ESCBMAP", FuncId::escbmap},
-      {"MENU_MOUSE", FuncId::menuMs},
-      {"PREV", FuncId::prevBf},
-      {"NULL", FuncId::nulcmd},
-      {"LINK_N", FuncId::nthA},
-      {"DICT_WORD", FuncId::dictword},
-      {"PREV_LINK", FuncId::prevA},
-      {"CURSOR_BOTTOM", FuncId::cursorBottom},
-      {"TAB_RIGHT", FuncId::tabR},
-      {"MOUSE_TOGGLE", FuncId::msToggle},
-      {"BACK", FuncId::backBf},
-      {"OPTIONS", FuncId::ldOpt},
-      {"DEFINE_KEY", FuncId::defKey},
+      {},
+      {},
+      "CENTER_V",
+      "PREV_TAB",
+      "PIPE_BUF",
+      "NEXT_TAB",
+      {},
+      {},
   };
 
   uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
@@ -780,9 +621,8 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
       App::instance().disp_message_nsec(emsg, 1, true);
     return;
   }
-  s = getWord(&p);
-  auto f = getFuncList(s);
-  if ((int)f < 0) {
+  std::string f = getWord(&p);
+  if (f.empty()) {
     const char *emsg;
     if (lineno > 0)
       emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
@@ -794,9 +634,9 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
     return;
   }
   auto map = GlobalKeymap;
-  map[c & 0x7F] = (FuncId)f;
+  map[c & 0x7F] = f;
   s = getQWord(&p);
-  keyData.insert({(FuncId)f, s});
+  keyData.insert({f, s});
 }
 
 bool App::initialize() {
@@ -1127,21 +967,25 @@ void App::doCmd() {
       continue;
     }
     auto p = getWord(&data);
-    auto cmd = getFuncList(p);
-    if ((int)cmd < 0)
+    std::string cmd = p;
+    if (cmd.empty()) {
       break;
+    }
     p = getQWord(&data);
     doCmd(cmd, p);
   }
   invalidate();
 }
 
-void App::doCmd(FuncId cmd, const char *data) {
-  _currentKey = -1;
-  CurrentKeyData = nullptr;
-  CurrentCmdData = *data ? data : nullptr;
-  w3mFuncList[(int)cmd].func();
-  CurrentCmdData = nullptr;
+void App::doCmd(const std::string &cmd, const char *data) {
+  auto found = w3mFuncList.find(cmd);
+  if (found != w3mFuncList.end()) {
+    _currentKey = -1;
+    CurrentKeyData = nullptr;
+    CurrentCmdData = *data ? data : nullptr;
+    found->second();
+    CurrentCmdData = nullptr;
+  }
 }
 
 void App::dispatchPtyIn(const char *buf, size_t len) {
@@ -1150,8 +994,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
   }
   auto c = buf[0];
   if (IS_ASCII(c)) { /* Ascii */
-    if (('0' <= c) && (c <= '9') &&
-        (prec_num || (GlobalKeymap[(int)c] == FuncId::nulcmd))) {
+    if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c].empty()))) {
       prec_num = prec_num * 10 + (int)(c - '0');
       if (prec_num > PREC_LIMIT)
         prec_num = PREC_LIMIT;
@@ -1159,7 +1002,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       set_buffer_environ(_currentTab->currentBuffer());
       _currentTab->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
-      w3mFuncList[(int)GlobalKeymap[(int)c]].func();
+      w3mFuncList[GlobalKeymap[c]]();
       prec_num = 0;
     }
   }
@@ -1189,14 +1032,14 @@ void App::onFrame() {
 }
 
 struct TimerTask {
-  FuncId cmd;
+  std::string cmd;
   std::string data;
   uv_timer_t handle;
 };
 std::list<std::shared_ptr<TimerTask>> g_timers;
 
-void App::task(int sec, FuncId cmd, const char *data, bool repeat) {
-  if ((int)cmd >= 0) {
+void App::task(int sec, const std::string &cmd, const char *data, bool repeat) {
+  if (cmd.size()) {
     auto t = std::make_shared<TimerTask>();
     t->cmd = cmd;
     t->data = data ? data : "";
@@ -1227,9 +1070,8 @@ void App::task(int sec, FuncId cmd, const char *data, bool repeat) {
           },
           sec * 1000, 0);
     }
-    disp_message_nsec(
-        Sprintf("%dsec %s %s", sec, w3mFuncList[(int)cmd].id, data)->ptr, 1,
-        false);
+    disp_message_nsec(Sprintf("%dsec %s %s", sec, cmd.c_str(), data)->ptr, 1,
+                      false);
   } else {
     // cancel timer
     g_timers.clear();

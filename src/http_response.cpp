@@ -179,8 +179,8 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
         Strcat_char(funcname, *(p++));
       SKIP_BLANKS(p);
 
-      auto f = App::instance().getFuncList(funcname->ptr);
-      if ((int)f >= 0) {
+      std::string f = funcname->ptr;
+      if (f.size()) {
         tmp = Strnew_charp(p);
         Strchop(tmp);
         // TODO:
