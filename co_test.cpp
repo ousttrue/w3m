@@ -2,15 +2,17 @@
 #include <uv.h>
 #include <coroutine>
 #include <chrono>
+#include <optional>
+#include <functional>
 
-struct RetObj {
+struct CoObj {
   struct promise_type // 👈重要
   {
     uv_async_t *async = nullptr;
     using handle_t = std::coroutine_handle<promise_type>;
 
     auto get_return_object() {
-      return RetObj{handle_t::from_promise(*this)}; // 👈重要
+      return CoObj{handle_t::from_promise(*this)}; // 👈重要
     }
     auto initial_suspend() {
       std::cout << "[promise_type] initial_suspend" << std::endl;
@@ -43,37 +45,63 @@ struct RetObj {
   std::coroutine_handle<promise_type> handle; // 👈重要
 };
 
+struct VoidAwaiter {
+  std::function<void(std::coroutine_handle<>)> onSuspend;
+  bool await_ready() const { return false; }
+  void await_resume() {}
+  void await_suspend(std::coroutine_handle<> h) { /* ... */
+    if (this->onSuspend) {
+      this->onSuspend(h);
+    }
+  }
+};
+
+template <typename T> struct ValueAwaiter {
+  std::optional<T> payload;
+  void *handle_address;
+  std::function<void(ValueAwaiter *, std::coroutine_handle<>)> onSuspend;
+  bool await_ready() const { return this->payload.has_value(); }
+  T await_resume() { return this->payload.value(); }
+  void await_suspend(std::coroutine_handle<> h) { /* ... */
+    if (this->onSuspend) {
+      this->onSuspend(this, h);
+    }
+  }
+
+  std::coroutine_handle<> handle() const {
+    return std::coroutine_handle<>::from_address(this->handle_address);
+  }
+  void resume(const T &value) {
+    this->payload = value;
+    handle().resume();
+  }
+};
+
 template <class Rep, class Period>
 auto operator co_await(std::chrono::duration<Rep, Period> d) {
-  struct awaiter {
-    using handle_t = std::coroutine_handle<RetObj::promise_type>;
-    uv_timer_t *timer = nullptr;
-    std::chrono::milliseconds duration;
-    /* ... */
-    awaiter(std::chrono::milliseconds d) : duration(d) {
-      std::cout << "duration: " << duration.count() << std::endl;
-    }
-    bool await_ready() const { return duration.count() <= 0; }
-    void await_resume() { std::cout << "await_resume" << std::endl; }
-    void await_suspend(handle_t h) { /* ... */
-      std::cout << "await_suspend" << std::endl;
-      timer = new uv_timer_t;
-      timer->data = h.address();
-      uv_timer_init(uv_default_loop(), timer);
-      uv_timer_start(
-          timer,
-          [](uv_timer_t *t) {
-            //
-            std::cout << "timer: " << std::endl;
+  using awaiter_t = ValueAwaiter<int>;
+  awaiter_t awaiter;
+  awaiter.onSuspend = [d](awaiter_t *self, auto h) {
+    std::cout << "await_suspend" << std::endl;
+    self->handle_address = h.address();
+    auto timer = new uv_timer_t;
+    timer->data = self;
+    uv_timer_init(uv_default_loop(), timer);
+    uv_timer_start(
+        timer,
+        [](uv_timer_t *t) {
+          //
+          std::cout << "timer: " << std::endl;
 
-            // auto a = (uv_async_t *)handle->data;
-            // uv_async_send(a);
-            handle_t::from_address(t->data).resume();
-          },
-          duration.count(), 0);
-    }
+          auto a = (awaiter_t *)t->data;
+
+          // auto a = (uv_async_t *)handle->data;
+          // uv_async_send(a);
+          a->resume(5);
+        },
+        d.count(), 0);
   };
-  return awaiter{d};
+  return awaiter;
 }
 
 int main(int argc, char **argv) {
@@ -81,10 +109,10 @@ int main(int argc, char **argv) {
   std::cout << "start" << std::endl;
 
   using namespace std::literals::chrono_literals;
-  auto task = [d = 500ms]() -> RetObj {
+  auto task = [d = 500ms]() -> CoObj {
     std::cout << "[task] wait 500ms" << std::endl;
-    co_await d;
-    std::cout << "[task] done" << std::endl;
+    auto value = co_await d;
+    std::cout << "[task] done: " << value << std::endl;
   };
 
   auto ret = task();
