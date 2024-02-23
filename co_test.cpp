@@ -4,12 +4,11 @@
 #include <chrono>
 #include <optional>
 #include <functional>
+#include <assert.h>
 
-struct CoObj {
-  struct promise_type {
+template <typename T> struct CoObj {
+  struct promise_type_base {
     uv_async_t *async = nullptr;
-    using handle_t = std::coroutine_handle<promise_type>;
-    auto get_return_object() { return CoObj{handle_t::from_promise(*this)}; }
     auto initial_suspend() {
       std::cout << "[promise_type] initial_suspend" << std::endl;
       std::cout << "create uv_async_t" << std::endl;
@@ -29,110 +28,149 @@ struct CoObj {
         delete a;
       });
 
+      std::cout << "onFinal:" << (onFinal ? "has" : "empty") << std::endl;
       if (this->onFinal) {
-        std::cout << "onFinal" << std::endl;
         this->onFinal();
       }
 
       return std::suspend_always{};
     }
     void unhandled_exception() { std::terminate(); }
-    void return_void() {}
+
+    template <class Rep, class Period>
+    auto await_transform(std::chrono::duration<Rep, Period> d) {
+      using awaiter_t = CoObj::ValueAwaiter<int>;
+      awaiter_t awaiter;
+      awaiter.onSuspend = [d](awaiter_t *self) {
+        std::cout << "await_suspend" << std::endl;
+        auto timer = new uv_timer_t;
+        timer->data = self;
+        uv_timer_init(uv_default_loop(), timer);
+        uv_timer_start(
+            timer,
+            [](uv_timer_t *t) {
+              //
+              std::cout << "timer: end" << std::endl;
+
+              auto a = (awaiter_t *)t->data;
+
+              // auto a = (uv_async_t *)handle->data;
+              // uv_async_send(a);
+              a->resume(5);
+            },
+            d.count(), 0);
+      };
+      return awaiter;
+    }
+
+    template <typename S> auto await_transform(CoObj<S> nested) {
+      using awaiter_t = CoObj::ValueAwaiter<S>;
+      awaiter_t awaiter;
+      awaiter.onSuspend = [p = nested.handle.address()](awaiter_t *self) {
+        std::cout << "nest suspend" << std::endl;
+        CoObj::handle_type::from_address(p).promise().onFinal = [p, self]() {
+          // std::cout << "onFinal: resume" << std::endl;
+          auto value = CoObj<S>::handle_type::from_address(p).promise().value;
+          // resume outer awaiter use nested value
+          self->resume(*value);
+        };
+      };
+      return awaiter;
+    }
+
+    auto await_transform(CoObj<void> nested) {
+      return CoObj::VoidAwaiter{[p = nested.handle.address()](auto outer) {
+        std::cout << "nest suspend" << std::endl;
+        CoObj::handle_type::from_address(p).promise().onFinal = [](auto self) {
+          // std::cout << "onFinal: resume" << std::endl;
+          // resume outer awaiter
+          self->resume();
+        };
+      }};
+    }
   };
+
+  template <typename S> struct promise_type_t : public promise_type_base {
+    using handle_t = std::coroutine_handle<promise_type_t>;
+    auto get_return_object() { return CoObj{handle_t::from_promise(*this)}; }
+    std::optional<T> value;
+    void return_value(const T &value) { this->value = value; }
+  };
+
+  using promise_type = promise_type_t<T>;
+
   std::coroutine_handle<promise_type> handle; // 👈重要
-};
-using promise_handle_t = std::coroutine_handle<CoObj::promise_type>;
+  using handle_type = std::coroutine_handle<CoObj<T>::promise_type>;
 
-struct VoidAwaiter {
-  std::function<void(promise_handle_t)> onSuspend;
-  bool await_ready() const { return false; }
-  void await_resume() {}
-  void await_suspend(promise_handle_t h) { /* ... */
-    if (this->onSuspend) {
-      this->onSuspend(h);
+  template <typename S> struct ValueAwaiter {
+    std::optional<S> payload;
+    void *handle_address;
+    std::function<void(ValueAwaiter *)> onSuspend;
+    bool await_ready() const { return this->payload.has_value(); }
+    S await_resume() { return this->payload.value(); }
+    void await_suspend(CoObj::handle_type h) { /* ... */
+      this->handle_address = h.address();
+      if (this->onSuspend) {
+        this->onSuspend(this);
+      }
     }
-  }
-};
-
-template <typename T> struct ValueAwaiter {
-  std::optional<T> payload;
-  void *handle_address;
-  std::function<void(ValueAwaiter *, promise_handle_t)> onSuspend;
-  bool await_ready() const { return this->payload.has_value(); }
-  T await_resume() { return this->payload.value(); }
-  void await_suspend(promise_handle_t h) { /* ... */
-    if (this->onSuspend) {
-      this->onSuspend(this, h);
+    CoObj::handle_type handle() const {
+      return CoObj::handle_type::from_address(this->handle_address);
     }
-  }
-
-  promise_handle_t handle() const {
-    return promise_handle_t::from_address(this->handle_address);
-  }
-  void resume(const T &value) {
-    this->payload = value;
-    handle().resume();
-  }
-};
-
-template <class Rep, class Period>
-auto operator co_await(std::chrono::duration<Rep, Period> d) {
-  using awaiter_t = ValueAwaiter<int>;
-  awaiter_t awaiter;
-  awaiter.onSuspend = [d](awaiter_t *self, auto h) {
-    std::cout << "await_suspend" << std::endl;
-    self->handle_address = h.address();
-    auto timer = new uv_timer_t;
-    timer->data = self;
-    uv_timer_init(uv_default_loop(), timer);
-    uv_timer_start(
-        timer,
-        [](uv_timer_t *t) {
-          //
-          std::cout << "timer: " << std::endl;
-
-          auto a = (awaiter_t *)t->data;
-
-          // auto a = (uv_async_t *)handle->data;
-          // uv_async_send(a);
-          a->resume(5);
-        },
-        d.count(), 0);
+    void resume(const S &value) {
+      this->payload = value;
+      assert(!handle().done());
+      handle().resume();
+    }
   };
-  return awaiter;
-}
 
-auto operator co_await(CoObj inner) {
-  return VoidAwaiter{[p = inner.handle.address()](promise_handle_t outer_h) {
-    std::cout << "nest suspend" << std::endl;
-    promise_handle_t::from_address(p).promise().onFinal = [p]() {
-      // resume inner
-      std::cout << "onFinal: resume" << std::endl;
-      promise_handle_t::from_address(p).resume();
-    };
-  }};
-}
+  struct VoidAwaiter {
+    std::function<void(CoObj::handle_type)> onSuspend;
+    bool await_ready() const { return false; }
+    void await_resume() {}
+    void await_suspend(CoObj::handle_type h) { /* ... */
+      this->handle_address = h.address();
+      if (this->onSuspend) {
+        this->onSuspend(this);
+      }
+    }
+    CoObj::handle_type handle() const {
+      return CoObj::handle_type::from_address(this->handle_address);
+    }
+    void resume() {
+      assert(!handle().done());
+      handle().resume();
+    }
+  };
+};
+
+template <>
+template <>
+struct CoObj<void>::promise_type_t<void> : public promise_type_base {
+  using handle_t = std::coroutine_handle<promise_type_t>;
+  auto get_return_object() { return CoObj{handle_t::from_promise(*this)}; }
+  void return_void() {}
+};
 
 int main(int argc, char **argv) {
 
   std::cout << "start" << std::endl;
 
   using namespace std::literals::chrono_literals;
-  auto task = [d = 500ms]() -> CoObj {
+  auto task = [d = 500ms]() -> CoObj<int> {
     std::cout << "[task] wait 500ms" << std::endl;
-    auto value = co_await d;
-    std::cout << "[task] done: " << value << std::endl;
+    co_await d;
+    std::cout << "[task] timer done" << std::endl;
+    co_return 4;
   };
 
-  auto nest = [task]() -> CoObj { co_await task(); };
+  auto outer = [task]() -> CoObj<int> { co_return co_await task(); };
 
-  auto ret = nest();
+  auto ret = outer();
 
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
-  std::cout << "end" << std::endl;
-
-  std::cout << ret.handle.done() << std::endl;
+  std::cout << "handle.done: " << *ret.handle.promise().value << std::endl;
 
   return 0;
 }
