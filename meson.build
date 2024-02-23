@@ -50,3 +50,10 @@ endif
 
 subdir('src')
 subdir('tests')
+
+executable(
+    'co_test',
+    'co_test.cpp',
+    install: true,
+    dependencies: [libuv_dep],
+)
