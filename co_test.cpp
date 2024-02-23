@@ -6,28 +6,20 @@
 #include <functional>
 
 struct CoObj {
-  struct promise_type // 👈重要
-  {
+  struct promise_type {
     uv_async_t *async = nullptr;
     using handle_t = std::coroutine_handle<promise_type>;
-
-    auto get_return_object() {
-      return CoObj{handle_t::from_promise(*this)}; // 👈重要
-    }
+    auto get_return_object() { return CoObj{handle_t::from_promise(*this)}; }
     auto initial_suspend() {
       std::cout << "[promise_type] initial_suspend" << std::endl;
-
       std::cout << "create uv_async_t" << std::endl;
       async = new uv_async_t;
-      // async->data = handle_t::from_promise(*this).address();
-      uv_async_init(uv_default_loop(), async, [](auto a) {
-        //
-        // std::cout << "awake uv_async_t" << std::endl;
-        // handle_t::from_address(a->data).resume();
-      });
-
+      uv_async_init(uv_default_loop(), async, [](auto a) {});
       return std::suspend_never{};
     }
+
+    // for resume outer coroutine when final
+    std::function<void()> onFinal;
     auto final_suspend() noexcept {
       std::cout << "[promise_type] final_suspend" << std::endl;
 
@@ -37,6 +29,11 @@ struct CoObj {
         delete a;
       });
 
+      if (this->onFinal) {
+        std::cout << "onFinal" << std::endl;
+        this->onFinal();
+      }
+
       return std::suspend_always{};
     }
     void unhandled_exception() { std::terminate(); }
@@ -44,12 +41,13 @@ struct CoObj {
   };
   std::coroutine_handle<promise_type> handle; // 👈重要
 };
+using promise_handle_t = std::coroutine_handle<CoObj::promise_type>;
 
 struct VoidAwaiter {
-  std::function<void(std::coroutine_handle<>)> onSuspend;
+  std::function<void(promise_handle_t)> onSuspend;
   bool await_ready() const { return false; }
   void await_resume() {}
-  void await_suspend(std::coroutine_handle<> h) { /* ... */
+  void await_suspend(promise_handle_t h) { /* ... */
     if (this->onSuspend) {
       this->onSuspend(h);
     }
@@ -59,17 +57,17 @@ struct VoidAwaiter {
 template <typename T> struct ValueAwaiter {
   std::optional<T> payload;
   void *handle_address;
-  std::function<void(ValueAwaiter *, std::coroutine_handle<>)> onSuspend;
+  std::function<void(ValueAwaiter *, promise_handle_t)> onSuspend;
   bool await_ready() const { return this->payload.has_value(); }
   T await_resume() { return this->payload.value(); }
-  void await_suspend(std::coroutine_handle<> h) { /* ... */
+  void await_suspend(promise_handle_t h) { /* ... */
     if (this->onSuspend) {
       this->onSuspend(this, h);
     }
   }
 
-  std::coroutine_handle<> handle() const {
-    return std::coroutine_handle<>::from_address(this->handle_address);
+  promise_handle_t handle() const {
+    return promise_handle_t::from_address(this->handle_address);
   }
   void resume(const T &value) {
     this->payload = value;
@@ -104,6 +102,17 @@ auto operator co_await(std::chrono::duration<Rep, Period> d) {
   return awaiter;
 }
 
+auto operator co_await(CoObj inner) {
+  return VoidAwaiter{[p = inner.handle.address()](promise_handle_t outer_h) {
+    std::cout << "nest suspend" << std::endl;
+    promise_handle_t::from_address(p).promise().onFinal = [p]() {
+      // resume inner
+      std::cout << "onFinal: resume" << std::endl;
+      promise_handle_t::from_address(p).resume();
+    };
+  }};
+}
+
 int main(int argc, char **argv) {
 
   std::cout << "start" << std::endl;
@@ -115,7 +124,9 @@ int main(int argc, char **argv) {
     std::cout << "[task] done: " << value << std::endl;
   };
 
-  auto ret = task();
+  auto nest = [task]() -> CoObj { co_await task(); };
+
+  auto ret = nest();
 
   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
 
