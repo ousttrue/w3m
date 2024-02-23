@@ -24,6 +24,5 @@ void addDownloadList(int pid, const char *url, const char *save,
 void stopDownload(void);
 int checkDownloadList(void);
 bool popAddDownloadList();
-void ldDL();
 struct Buffer;
 std::shared_ptr<Buffer> DownloadListBuffer(void);

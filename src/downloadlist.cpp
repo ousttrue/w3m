@@ -10,6 +10,7 @@
 #include "Str.h"
 #include <csignal>
 #include <sys/stat.h>
+#include "proto.h"
 
 static bool add_download_list = false;
 DownloadList *FirstDL = nullptr;

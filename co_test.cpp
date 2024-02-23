@@ -76,17 +76,16 @@ auto operator co_await(std::chrono::duration<Rep, Period> d) {
   return awaiter{d};
 }
 
-RetObj task() {
-  using namespace std::literals::chrono_literals;
-
-  std::cout << "[task] wait 500ms" << std::endl;
-  co_await 500ms;
-  std::cout << "[task] done" << std::endl;
-}
-
 int main(int argc, char **argv) {
 
   std::cout << "start" << std::endl;
+
+  using namespace std::literals::chrono_literals;
+  auto task = [d = 500ms]() -> RetObj {
+    std::cout << "[task] wait 500ms" << std::endl;
+    co_await d;
+    std::cout << "[task] done" << std::endl;
+  };
 
   auto ret = task();
 

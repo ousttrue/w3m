@@ -34,68 +34,75 @@
 
 // NOTHING nullptr @ @ @
 //"Do nothing"
-void nulcmd() { /* do nothing */
+FuncCoroutine nulcmd() { /* do nothing */
+  co_return;
 }
 
 /* Move page forward */
 // NEXT_PAGE
 //"Scroll down one page"
-void pgFore() {
+FuncCoroutine pgFore() {
   CurrentTab->currentBuffer()->layout.nscroll(
       prec_num ? App::instance().searchKeyNum()
                : App::instance().searchKeyNum() *
                      (CurrentTab->currentBuffer()->layout.LINES - 1));
+  co_return;
 }
 
 /* Move page backward */
 // PREV_PAGE
 //"Scroll up one page"
-void pgBack() {
+FuncCoroutine pgBack() {
   CurrentTab->currentBuffer()->layout.nscroll(
       -(prec_num ? App::instance().searchKeyNum()
                  : App::instance().searchKeyNum() *
                        (CurrentTab->currentBuffer()->layout.LINES - 1)));
+  co_return;
 }
 
 /* Move half page forward */
 // NEXT_HALF_PAGE
 //"Scroll down half a page"
-void hpgFore() {
+FuncCoroutine hpgFore() {
   CurrentTab->currentBuffer()->layout.nscroll(
       App::instance().searchKeyNum() *
       (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
+  co_return;
 }
 
 /* Move half page backward */
 // PREV_HALF_PAGE
 //"Scroll up half a page"
-void hpgBack() {
+FuncCoroutine hpgBack() {
   CurrentTab->currentBuffer()->layout.nscroll(
       -App::instance().searchKeyNum() *
       (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
+  co_return;
 }
 
 /* 1 line up */
 // UP
 //"Scroll the screen up one line"
-void lup1() {
+FuncCoroutine lup1() {
   CurrentTab->currentBuffer()->layout.nscroll(App::instance().searchKeyNum());
+  co_return;
 }
 
 /* 1 line down */
 // DOWN
 //"Scroll the screen down one line"
-void ldown1() {
+FuncCoroutine ldown1() {
   CurrentTab->currentBuffer()->layout.nscroll(-App::instance().searchKeyNum());
+  co_return;
 }
 
 /* move cursor position to the center of screen */
 // CENTER_V
 //"Center on cursor line"
-void ctrCsrV() {
+FuncCoroutine ctrCsrV() {
   int offsety;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   offsety = CurrentTab->currentBuffer()->layout.LINES / 2 -
             CurrentTab->currentBuffer()->layout.cursorY;
   if (offsety != 0) {
@@ -109,10 +116,10 @@ void ctrCsrV() {
 
 // CENTER_H
 //"Center on cursor column"
-void ctrCsrH() {
+FuncCoroutine ctrCsrH() {
   int offsetx;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   offsetx = CurrentTab->currentBuffer()->layout.cursorX -
             CurrentTab->currentBuffer()->layout.COLS / 2;
   if (offsetx != 0) {
@@ -125,46 +132,65 @@ void ctrCsrH() {
 /* Redraw screen */
 // REDRAW
 //"Draw the screen anew"
-void rdrwSc() {
+FuncCoroutine rdrwSc() {
   // clear();
   CurrentTab->currentBuffer()->layout.arrangeCursor();
   App::instance().invalidate();
+  co_return;
 }
 
 // SEARCH SEARCH_FORE WHEREIS
 //"Search forward"
-void srchfor() { srch(forwardSearch, "Forward: "); }
+FuncCoroutine srchfor() {
+  srch(forwardSearch, "Forward: ");
+  co_return;
+}
 
 // ISEARCH
 //"Incremental search forward"
-void isrchfor() { isrch(forwardSearch, "I-search: "); }
+FuncCoroutine isrchfor() {
+  isrch(forwardSearch, "I-search: ");
+  co_return;
+}
 
 /* Search regular expression backward */
 
 // SEARCH_BACK
 //"Search backward"
-void srchbak() { srch(backwardSearch, "Backward: "); }
+FuncCoroutine srchbak() {
+  srch(backwardSearch, "Backward: ");
+  co_return;
+}
 
 // ISEARCH_BACK
 //"Incremental search backward"
-void isrchbak() { isrch(backwardSearch, "I-search backward: "); }
+FuncCoroutine isrchbak() {
+  isrch(backwardSearch, "I-search backward: ");
+  co_return;
+}
 
 /* Search next matching */
 // SEARCH_NEXT
 //"Continue search forward"
-void srchnxt() { srch_nxtprv(0); }
+FuncCoroutine srchnxt() {
+  srch_nxtprv(0);
+  co_return;
+}
 
 /* Search previous matching */
 // SEARCH_PREV
 //"Continue search backward"
-void srchprv() { srch_nxtprv(1); }
+FuncCoroutine srchprv() {
+  srch_nxtprv(1);
+  co_return;
+}
 
 /* Shift screen left */
 // SHIFT_LEFT
 //"Shift screen left"
-void shiftl() {
+FuncCoroutine shiftl() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
       App::instance().searchKeyNum() *
@@ -178,9 +204,9 @@ void shiftl() {
 /* Shift screen right */
 // SHIFT_RIGHT
 //"Shift screen right"
-void shiftr() {
+FuncCoroutine shiftr() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
       App::instance().searchKeyNum() *
@@ -193,13 +219,13 @@ void shiftr() {
 
 // RIGHT
 //"Shift screen one column right"
-void col1R() {
+FuncCoroutine col1R() {
   auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
   int j, column, n = App::instance().searchKeyNum();
 
   if (l == nullptr)
-    return;
+    co_return;
   for (j = 0; j < n; j++) {
     column = buf->layout.currentColumn;
     CurrentTab->currentBuffer()->layout.columnSkip(1);
@@ -212,13 +238,13 @@ void col1R() {
 
 // LEFT
 //"Shift screen one column left"
-void col1L() {
+FuncCoroutine col1L() {
   auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
   int j, n = App::instance().searchKeyNum();
 
   if (l == nullptr)
-    return;
+    co_return;
   for (j = 0; j < n; j++) {
     if (buf->layout.currentColumn == 0)
       break;
@@ -230,7 +256,7 @@ void col1L() {
 
 // SETENV
 //"Set environment variable"
-void setEnv() {
+FuncCoroutine setEnv() {
   const char *env;
   const char *var, *value;
 
@@ -242,7 +268,7 @@ void setEnv() {
     // env = inputStrHist("Set environ: ", env, TextHist);
     if (env == nullptr || *env == '\0') {
       App::instance().invalidate();
-      return;
+      co_return;
     }
   }
   if ((value = strchr(env, '=')) != nullptr && value > env) {
@@ -255,17 +281,17 @@ void setEnv() {
 
 // PIPE_BUF
 //"Pipe current buffer through a shell command and display output"
-void pipeBuf() {}
+FuncCoroutine pipeBuf() { co_return; }
 
 /* Execute shell command and read output ac pipe. */
 // PIPE_SHELL
 //"Execute shell command and display output"
-void pipesh() {}
+FuncCoroutine pipesh() { co_return; }
 
 /* Execute shell command and load entire output to buffer */
 // READ_SHELL
 //"Execute shell command and display output"
-void readsh() {
+FuncCoroutine readsh() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
@@ -273,7 +299,7 @@ void readsh() {
   }
   if (cmd == nullptr || *cmd == '\0') {
     App::instance().invalidate();
-    return;
+    co_return;
   }
   // MySignalHandler prevtrap = {};
   // prevtrap = mySignal(SIGINT, intTrap);
@@ -283,7 +309,7 @@ void readsh() {
   // term_raw();
   if (buf == nullptr) {
     App::instance().disp_message("Execution failed");
-    return;
+    co_return;
   } else {
     if (buf->res->type.empty()) {
       buf->res->type = "text/plain";
@@ -296,7 +322,7 @@ void readsh() {
 /* Execute shell command */
 // EXEC_SHELL SHELL
 //"Execute shell command and display output"
-void execsh() {
+FuncCoroutine execsh() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
@@ -312,19 +338,20 @@ void execsh() {
     // getch();
   }
   App::instance().invalidate();
+  co_return;
 }
 
 /* Load file */
 // LOAD
 //"Open local file in a new buffer"
-void ldfile() {
+FuncCoroutine ldfile() {
   auto fn = App::instance().searchKeyData();
   // if (fn == nullptr || *fn == '\0') {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
   if (fn == nullptr || *fn == '\0') {
     App::instance().invalidate();
-    return;
+    co_return;
   }
   cmd_loadfile(fn);
 }
@@ -335,7 +362,7 @@ void ldfile() {
 /* Load help file */
 // HELP
 //"Show help panel"
-void ldhelp() {
+FuncCoroutine ldhelp() {
   auto lang = AcceptLang;
   auto n = strcspn(lang, ";, \t");
   auto tmp =
@@ -343,78 +370,87 @@ void ldhelp() {
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
   CurrentTab->cmd_loadURL(tmp->ptr, {}, {.no_referer = true}, nullptr);
+  co_return;
 }
 
 // MOVE_LEFT
 //"Cursor left"
-void movL() {
+FuncCoroutine movL() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movL(
       CurrentTab->currentBuffer()->layout.COLS / 2, m);
+  co_return;
 }
 
 // MOVE_LEFT1
 //"Cursor left. With edge touched, slide"
-void movL1() {
+FuncCoroutine movL1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movL(1, m);
+  co_return;
 }
 
 // MOVE_DOWN
 //"Cursor down"
-void movD() {
+FuncCoroutine movD() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(
       (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
+  co_return;
 }
 
 // MOVE_DOWN1
 //"Cursor down. With edge touched, slide"
-void movD1() {
+FuncCoroutine movD1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(1, m);
+  co_return;
 }
 
 // MOVE_UP
 //"Cursor up"
-void movU() {
+FuncCoroutine movU() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(
       (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
+  co_return;
 }
 
 // MOVE_UP1
 //"Cursor up. With edge touched, slide"
-void movU1() {
+FuncCoroutine movU1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(1, m);
+  co_return;
 }
 
 // MOVE_RIGHT
 //"Cursor right"
-void movR() {
+FuncCoroutine movR() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movR(
       CurrentTab->currentBuffer()->layout.COLS / 2, m);
+  co_return;
 }
 
 // MOVE_RIGHT1
 //"Cursor right. With edge touched, slide"
-void movR1() {
+FuncCoroutine movR1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movR(1, m);
+  co_return;
 }
 
 // PREV_WORD
 //"Move to the previous word"
-void movLW() {
+FuncCoroutine movLW() {
   char *lb;
   Line *pline, *l;
   int ppos;
   int i, n = App::instance().searchKeyNum();
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
 
   for (i = 0; i < n; i++) {
     pline = CurrentTab->currentBuffer()->layout.currentLine;
@@ -465,14 +501,14 @@ end:
 
 // NEXT_WORD
 //"Move to the next word"
-void movRW() {
+FuncCoroutine movRW() {
   char *lb;
   Line *pline, *l;
   int ppos;
   int i, n = App::instance().searchKeyNum();
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
 
   for (i = 0; i < n; i++) {
     pline = CurrentTab->currentBuffer()->layout.currentLine;
@@ -515,17 +551,23 @@ end:
 /* Quit */
 // ABORT EXIT
 //"Quit without confirmation"
-void quitfm() { App::instance().exit(0); }
+FuncCoroutine quitfm() {
+  App::instance().exit(0);
+  co_return;
+}
 
 /* Question and Quit */
 // QUIT
 //"Quit with confirmation request"
-void qquitfm() { App::instance().exit(0); }
+FuncCoroutine qquitfm() {
+  App::instance().exit(0);
+  co_return;
+}
 
 /* Select buffer */
 // SELECT
 //"Display buffer-stack panel"
-void selBuf() {
+FuncCoroutine selBuf() {
 
   // auto ok = false;
   // do {
@@ -536,12 +578,13 @@ void selBuf() {
   // } while (!ok);
   //
   // App::instance().invalidate();
+  co_return;
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 // INTERRUPT SUSPEND
 //"Suspend w3m to background"
-void susp() {
+FuncCoroutine susp() {
   // #ifndef SIGSTOP
   //   const char *shell;
   // #endif /* not SIGSTOP */
@@ -565,11 +608,12 @@ void susp() {
   // #endif /* SIGSTOP */
   //   fmInit();
   //   App::instance().invalidate();
+  co_return;
 }
 
 // GOTO_LINE
 //"Go to the specified line"
-void goLine() {
+FuncCoroutine goLine() {
 
   auto str = App::instance().searchKeyData();
   if (prec_num)
@@ -579,22 +623,29 @@ void goLine() {
   else {
     // _goLine(inputStr("Goto line: ", ""));
   }
+  co_return;
 }
 
 // BEGIN
 //"Go to the first line"
-void goLineF() { CurrentTab->currentBuffer()->layout._goLine("^", prec_num); }
+FuncCoroutine goLineF() {
+  CurrentTab->currentBuffer()->layout._goLine("^", prec_num);
+  co_return;
+}
 
 // END
 //"Go to the last line"
-void goLineL() { CurrentTab->currentBuffer()->layout._goLine("$", prec_num); }
+FuncCoroutine goLineL() {
+  CurrentTab->currentBuffer()->layout._goLine("$", prec_num);
+  co_return;
+}
 
 /* Go to the beginning of the line */
 // LINE_BEGIN
 //"Go to the beginning of the line"
-void linbeg() {
+FuncCoroutine linbeg() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   while (CurrentTab->currentBuffer()->layout.currentLine->prev &&
          CurrentTab->currentBuffer()->layout.currentLine->bpos) {
     CurrentTab->currentBuffer()->layout.cursorUp0(1);
@@ -607,9 +658,9 @@ void linbeg() {
 /* Go to the bottom of the line */
 // LINE_END
 //"Go to the end of the line"
-void linend() {
+FuncCoroutine linend() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   while (CurrentTab->currentBuffer()->layout.currentLine->next &&
          CurrentTab->currentBuffer()->layout.currentLine->next->bpos) {
     CurrentTab->currentBuffer()->layout.cursorDown0(1);
@@ -623,7 +674,7 @@ void linend() {
 /* Run editor on the current buffer */
 // EDIT
 //"Edit local source"
-void editBf() {
+FuncCoroutine editBf() {
   auto fn = CurrentTab->currentBuffer()->res->filename;
 
   if (fn.empty() || /* Behaving as a pager */
@@ -634,7 +685,7 @@ void editBf() {
           "-" /* file is std input  */
   ) {
     App::instance().disp_err_message("Can't edit other than local file");
-    return;
+    co_return;
   }
 
   std::string cmd;
@@ -659,13 +710,13 @@ void editBf() {
 /* Run editor on the current screen */
 // EDIT_SCREEN
 //"Edit rendered copy of document"
-void editScr() {
+FuncCoroutine editScr() {
   auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
     App::instance().disp_err_message(
         Sprintf("Can't open %s", tmpf.c_str())->ptr);
-    return;
+    co_return;
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
   fclose(f);
@@ -679,23 +730,24 @@ void editScr() {
 /* follow HREF link */
 // GOTO_LINK
 //"Follow current hyperlink in a new buffer"
-void followA() {
+FuncCoroutine followA() {
 
   CurrentTab->followAnchor();
 
   App::instance().invalidate();
+  co_return;
 }
 
 /* view inline image */
 // VIEW_IMAGE
 //"Display image in viewer"
-void followI() {
+FuncCoroutine followI() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
 
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
   if (a == nullptr)
-    return;
+    co_return;
   App::instance().message(Sprintf("loading %s", a->url)->ptr, 0, 0);
 
   auto res = loadGeneralFile(
@@ -703,7 +755,7 @@ void followI() {
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     App::instance().disp_err_message(emsg);
-    return;
+    co_return;
   }
 
   auto buf = Buffer::create(res);
@@ -715,28 +767,29 @@ void followI() {
 /* submit form */
 // SUBMIT
 //"Submit form"
-void submitForm() {
+FuncCoroutine submitForm() {
   if (auto f = CurrentTab->currentBuffer()->layout.retrieveCurrentForm()) {
     auto buf = CurrentTab->currentBuffer()->followForm(f, true);
     if (buf) {
       App::instance().pushBuffer(buf, f->target);
     }
   }
+  co_return;
 }
 
 /* go to the top anchor */
 // LINK_BEGIN
 //"Move to the first hyperlink"
-void topA() {
+FuncCoroutine topA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
   BufferPoint *po;
   Anchor *an;
   int hseq = 0;
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   if (hl->size() == 0)
-    return;
+    co_return;
 
   if (prec_num > (int)hl->size())
     hseq = hl->size() - 1;
@@ -744,7 +797,7 @@ void topA() {
     hseq = prec_num - 1;
   do {
     if (hseq >= (int)hl->size())
-      return;
+      co_return;
     po = &hl->marks[hseq];
     if (CurrentTab->currentBuffer()->layout.href()) {
       an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
@@ -766,16 +819,16 @@ void topA() {
 /* go to the last anchor */
 // LINK_END
 //"Move to the last hyperlink"
-void lastA() {
+FuncCoroutine lastA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
   BufferPoint *po;
   Anchor *an;
   int hseq;
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   if (hl->size() == 0)
-    return;
+    co_return;
 
   if (prec_num >= (int)hl->size())
     hseq = 0;
@@ -785,7 +838,7 @@ void lastA() {
     hseq = hl->size() - 1;
   do {
     if (hseq < 0)
-      return;
+      co_return;
     po = &hl->marks[hseq];
     if (CurrentTab->currentBuffer()->layout.href()) {
       an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
@@ -807,18 +860,18 @@ void lastA() {
 /* go to the nth anchor */
 // LINK_N
 //"Go to the nth link"
-void nthA() {
+FuncCoroutine nthA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
 
   int n = App::instance().searchKeyNum();
   if (n < 0 || n > (int)hl->size()) {
-    return;
+    co_return;
   }
 
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   if (!hl || hl->size() == 0)
-    return;
+    co_return;
 
   auto po = &hl->marks[n - 1];
 
@@ -832,7 +885,7 @@ void nthA() {
         po->line, po->pos);
   }
   if (an == nullptr)
-    return;
+    co_return;
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
@@ -843,97 +896,107 @@ void nthA() {
 /* go to the next anchor */
 // NEXT_LINK
 //"Move to the next hyperlink"
-void nextA() {
+FuncCoroutine nextA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(false, baseUr, n);
+  co_return;
 }
 
 /* go to the previous anchor */
 // PREV_LINK
 //"Move to the previous hyperlink"
-void prevA() {
+FuncCoroutine prevA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(false, baseUr, n);
+  co_return;
 }
 
 /* go to the next visited anchor */
 // NEXT_VISITED
 //"Move to the next visited hyperlink"
-void nextVA() {
+FuncCoroutine nextVA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(true, baseUr, n);
+  co_return;
 }
 
 /* go to the previous visited anchor */
 // PREV_VISITED
 //"Move to the previous visited hyperlink"
-void prevVA() {
+FuncCoroutine prevVA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(true, baseUr, n);
+  co_return;
 }
 
 /* go to the next left anchor */
 // NEXT_LEFT
 //"Move left to the next hyperlink"
-void nextL() {
+FuncCoroutine nextL() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(-1, 0, n);
+  co_return;
 }
 
 /* go to the next left-up anchor */
 // NEXT_LEFT_UP
 //"Move left or upward to the next hyperlink"
-void nextLU() {
+FuncCoroutine nextLU() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(-1, -1, n);
+  co_return;
 }
 
 /* go to the next right anchor */
 // NEXT_RIGHT
 //"Move right to the next hyperlink"
-void nextR() {
+FuncCoroutine nextR() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(1, 0, n);
+  co_return;
 }
 
 /* go to the next right-down anchor */
 // NEXT_RIGHT_DOWN
 //"Move right or downward to the next hyperlink"
-void nextRD() {
+FuncCoroutine nextRD() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(1, 1, n);
+  co_return;
 }
 
 /* go to the next downward anchor */
 // NEXT_DOWN
 //"Move downward to the next hyperlink"
-void nextD() {
+FuncCoroutine nextD() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextY(1, n);
+  co_return;
 }
 
 /* go to the next upward anchor */
 // NEXT_UP
 //"Move upward to the next hyperlink"
-void nextU() {
+FuncCoroutine nextU() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextY(-1, n);
+  co_return;
 }
 
 /* go to the next bufferr */
 // NEXT
 //"Switch to the next buffer"
-void nextBf() {
+FuncCoroutine nextBf() {
   for (int i = 0; i < PREC_NUM; i++) {
     auto buf =
         forwardBuffer(CurrentTab->firstBuffer, CurrentTab->currentBuffer());
     if (!buf) {
       if (i == 0)
-        return;
+        co_return;
       break;
     }
     CurrentTab->currentBuffer(buf);
@@ -944,12 +1007,12 @@ void nextBf() {
 /* go to the previous bufferr */
 // PREV
 //"Switch to the previous buffer"
-void prevBf() {
+FuncCoroutine prevBf() {
   for (int i = 0; i < PREC_NUM; i++) {
     auto buf = CurrentTab->currentBuffer()->backBuffer;
     if (!buf) {
       if (i == 0)
-        return;
+        co_return;
       break;
     }
     CurrentTab->currentBuffer(buf);
@@ -960,7 +1023,7 @@ void prevBf() {
 /* delete current buffer and back to the previous buffer */
 // BACK
 //"Close current buffer and return to the one below in stack"
-void backBf() {
+FuncCoroutine backBf() {
   // Buffer *buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_FRAME];
 
   if (!checkBackBuffer(CurrentTab->currentBuffer())) {
@@ -969,7 +1032,7 @@ void backBf() {
       App::instance().invalidate();
     } else
       App::instance().disp_message("Can't go back...");
-    return;
+    co_return;
   }
 
   CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
@@ -979,20 +1042,24 @@ void backBf() {
 
 // DELETE_PREVBUF
 //"Delete previous buffer (mainly for local CGI-scripts)"
-void deletePrevBuf() {
+FuncCoroutine deletePrevBuf() {
   auto buf = CurrentTab->currentBuffer()->backBuffer;
   if (buf) {
     CurrentTab->deleteBuffer(buf);
   }
+  co_return;
 }
 
 // GOTO
 //"Open specified document in a new buffer"
-void goURL() { CurrentTab->goURL0("Goto URL: ", false); }
+FuncCoroutine goURL() {
+  CurrentTab->goURL0("Goto URL: ", false);
+  co_return;
+}
 
 // GOTO_HOME
 //"Open home page in a new buffer"
-void goHome() {
+FuncCoroutine goHome() {
   const char *url;
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
@@ -1008,23 +1075,28 @@ void goHome() {
           URLHist,
           CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
   }
+  co_return;
 }
 
 // GOTO_RELATIVE
 //"Go to relative address"
-void gorURL() { CurrentTab->goURL0("Goto relative URL: ", true); }
+FuncCoroutine gorURL() {
+  CurrentTab->goURL0("Goto relative URL: ", true);
+  co_return;
+}
 
 /* load bookmark */
 // BOOKMARK VIEW_BOOKMARK
 //"View bookmarks"
-void ldBmark() {
+FuncCoroutine ldBmark() {
   CurrentTab->cmd_loadURL(BookmarkFile, {}, {.no_referer = true}, nullptr);
+  co_return;
 }
 
 /* Add current to bookmark */
 // ADD_BOOKMARK
 //"Add current page to bookmarks"
-void adBmark() {
+FuncCoroutine adBmark() {
   Str *tmp;
   FormList *request;
 
@@ -1042,17 +1114,21 @@ void adBmark() {
   request->length = tmp->length;
   CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {},
                           {.no_referer = true}, request);
+  co_return;
 }
 
 /* option setting */
 // OPTIONS
 //"Display options setting panel"
-void ldOpt() { CurrentTab->pushBuffer(load_option_panel()); }
+FuncCoroutine ldOpt() {
+  CurrentTab->pushBuffer(load_option_panel());
+  co_return;
+}
 
 /* set an option */
 // SET_OPTION
 //"Set option"
-void setOpt() {
+FuncCoroutine setOpt() {
   const char *opt;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -1065,7 +1141,7 @@ void setOpt() {
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == nullptr || *opt == '\0') {
       App::instance().invalidate();
-      return;
+      co_return;
     }
   }
   if (set_param_option(opt))
@@ -1076,70 +1152,77 @@ void setOpt() {
 /* error message list */
 // MSGS
 //"Display error messages"
-void msgs() {
+FuncCoroutine msgs() {
   auto buf = App::instance().message_list_panel();
   CurrentTab->pushBuffer(buf);
+  co_return;
 }
 
 /* page info */
 // INFO
 //"Display information about the current document"
-void pginfo() {
+FuncCoroutine pginfo() {
   auto buf = page_info_panel(CurrentTab->currentBuffer());
   CurrentTab->pushBuffer(buf);
+  co_return;
 }
 
 /* link,anchor,image list */
 // LIST
 //"Show all URLs referenced"
-void linkLst() {
+FuncCoroutine linkLst() {
   if (auto buf = link_list_panel(CurrentTab->currentBuffer())) {
     CurrentTab->pushBuffer(buf);
   }
+  co_return;
 }
 
 /* cookie list */
 // COOKIE
 //"View cookie list"
-void cooLst() {
+FuncCoroutine cooLst() {
   if (auto buf = cookie_list_panel()) {
     CurrentTab->pushBuffer(buf);
   }
+  co_return;
 }
 
 /* History page */
 // HISTORY
 //"Show browsing history"
-void ldHist() {
+FuncCoroutine ldHist() {
   if (auto buf = historyBuffer(URLHist)) {
     CurrentTab->pushBuffer(buf);
   }
+  co_return;
 }
 
 /* download HREF link */
 // SAVE_LINK
 //"Save hyperlink target"
-void svA() {
+FuncCoroutine svA() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   // do_download = true;
   followA();
   // do_download = false;
+  co_return;
 }
 
 /* download IMG link */
 // SAVE_IMAGE
 //"Save inline image"
-void svI() {
+FuncCoroutine svI() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   // do_download = true;
   followI();
   // do_download = false;
+  co_return;
 }
 
 /* save buffer */
 // PRINT SAVE_SCREEN
 //"Save rendered document"
-void svBuf() {
+FuncCoroutine svBuf() {
   const char *qfile = nullptr, *file;
   FILE *f;
   int is_pipe;
@@ -1152,7 +1235,7 @@ void svBuf() {
     // qfile = inputLineHist("Save buffer to: ", nullptr, IN_COMMAND, SaveHist);
     if (qfile == nullptr || *qfile == '\0') {
       App::instance().invalidate();
-      return;
+      co_return;
     }
   }
   file = qfile ? qfile : file;
@@ -1167,7 +1250,7 @@ void svBuf() {
     // if (checkOverWrite(file) < 0) {
     if (false) {
       App::instance().invalidate();
-      return;
+      co_return;
     }
     f = fopen(file, "w");
     is_pipe = false;
@@ -1175,7 +1258,7 @@ void svBuf() {
   if (f == nullptr) {
     char *emsg = Sprintf("Can't open %s", file)->ptr;
     App::instance().disp_err_message(emsg);
-    return;
+    co_return;
   }
   saveBuffer(CurrentTab->currentBuffer(), f, true);
   if (is_pipe)
@@ -1189,9 +1272,9 @@ void svBuf() {
 /* save source */
 // DOWNLOAD SAVE
 //"Save document source"
-void svSrc() {
+FuncCoroutine svSrc() {
   if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
-    return;
+    co_return;
   }
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
@@ -1212,31 +1295,38 @@ void svSrc() {
 /* peek URL */
 // PEEK_LINK
 //"Show target address"
-void peekURL() { App::instance()._peekURL(0); }
+FuncCoroutine peekURL() {
+  App::instance()._peekURL(0);
+  co_return;
+}
 
 /* peek URL of image */
 // PEEK_IMG
 //"Show image address"
-void peekIMG() { App::instance()._peekURL(1); }
+FuncCoroutine peekIMG() {
+  App::instance()._peekURL(1);
+  co_return;
+}
 
 // PEEK
 //"Show current address"
-void curURL() {
+FuncCoroutine curURL() {
   auto url = App::instance().currentUrl();
   App::instance().disp_message(url.c_str());
+  co_return;
 }
 
 /* view HTML source */
 // SOURCE VIEW
 //"Toggle between HTML shown or processed"
-void vwSrc() {
+FuncCoroutine vwSrc() {
 
   if (CurrentTab->currentBuffer()->res->type.empty()) {
-    return;
+    co_return;
   }
 
   if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
-    return;
+    co_return;
   }
 
   auto buf = CurrentTab->currentBuffer()->sourceBuffer();
@@ -1246,13 +1336,13 @@ void vwSrc() {
 /* reload */
 // RELOAD
 //"Load current document anew"
-void reload() {
+FuncCoroutine reload() {
 
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     App::instance().disp_err_message("Can't reload stdin");
-    return;
+    co_return;
   }
 
   auto sbuf = Buffer::create(0);
@@ -1288,7 +1378,7 @@ void reload() {
   }
   if (!res) {
     App::instance().disp_err_message("Can't reload...");
-    return;
+    co_return;
   }
 
   auto buf = Buffer::create(res);
@@ -1316,27 +1406,29 @@ void reload() {
 /* reshape */
 // RESHAPE
 //"Re-render document"
-void reshape() {
+FuncCoroutine reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
   reshapeBuffer(CurrentTab->currentBuffer(),
                 App::instance().INIT_BUFFER_WIDTH());
   App::instance().invalidate();
+  co_return;
 }
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
-void chkURL() {
+FuncCoroutine chkURL() {
   chkURLBuffer(CurrentTab->currentBuffer());
   App::instance().invalidate();
+  co_return;
 }
 
 // MARK_WORD
 //"Turn current word into hyperlink"
-void chkWORD() {
+FuncCoroutine chkWORD() {
   int spos, epos;
   auto p = CurrentTab->currentBuffer()->layout.getCurWord(&spos, &epos);
   if (p.empty())
-    return;
+    co_return;
   CurrentTab->currentBuffer()->layout.reAnchorWord(
       CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
   App::instance().invalidate();
@@ -1345,28 +1437,28 @@ void chkWORD() {
 /* render frames */
 // FRAME
 //"Toggle rendering HTML frames"
-void rFrame() {}
+FuncCoroutine rFrame() { co_return; }
 
 // EXTERN
 //"Display using an external browser"
-void extbrz() {
+FuncCoroutine extbrz() {
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     App::instance().disp_err_message("Can't browse stdin");
-    return;
+    co_return;
   }
   invoke_browser(CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
 }
 
 // EXTERN_LINK
 //"Display target using an external browser"
-void linkbrz() {
+FuncCoroutine linkbrz() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr)
-    return;
+    co_return;
   auto pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
   invoke_browser(pu.to_Str().c_str());
 }
@@ -1374,7 +1466,7 @@ void linkbrz() {
 /* show current line number and number of lines in the entire document */
 // LINE_INFO
 //"Display current position in document"
-void curlno() {
+FuncCoroutine curlno() {
   Line *l = CurrentTab->currentBuffer()->layout.currentLine;
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
@@ -1394,17 +1486,19 @@ void curlno() {
                 len);
 
   App::instance().disp_message(tmp->ptr);
+  co_return;
 }
 
 // VERSION
 //"Display the version of w3m"
-void dispVer() {
+FuncCoroutine dispVer() {
   App::instance().disp_message(Sprintf("w3m version %s", w3m_version)->ptr);
+  co_return;
 }
 
 // WRAP_TOGGLE
 //"Toggle wrapping mode in searches"
-void wrapToggle() {
+FuncCoroutine wrapToggle() {
   if (WrapSearch) {
     WrapSearch = false;
     App::instance().disp_message("Wrap search off");
@@ -1412,35 +1506,41 @@ void wrapToggle() {
     WrapSearch = true;
     App::instance().disp_message("Wrap search on");
   }
+  co_return;
 }
 
 // DICT_WORD
 //"Execute dictionary command (see README.dict)"
-void dictword() {
+FuncCoroutine dictword() {
   // execdict(inputStr("(dictionary)!", ""));
+  co_return;
 }
 
 // DICT_WORD_AT
 //"Execute dictionary command for word at cursor"
-void dictwordat() {
+FuncCoroutine dictwordat() {
   auto word = CurrentTab->currentBuffer()->layout.getCurWord();
   execdict(word.c_str());
+  co_return;
 }
 
 // COMMAND
 //"Invoke w3m function(s)"
-void execCmd() { App::instance().doCmd(); }
+FuncCoroutine execCmd() {
+  App::instance().doCmd();
+  co_return;
+}
 
 // ALARM
 //"Set alarm"
-void setAlarm() {
+FuncCoroutine setAlarm() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto data = App::instance().searchKeyData();
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
       App::instance().invalidate();
-      return;
+      co_return;
     }
   }
 
@@ -1460,7 +1560,7 @@ void setAlarm() {
 
 // REINIT
 //"Reload configuration file"
-void reinit() {
+FuncCoroutine reinit() {
   auto resource = App::instance().searchKeyData();
 
   if (resource == nullptr) {
@@ -1468,34 +1568,34 @@ void reinit() {
     sync_with_option();
     initCookie();
     App::instance().invalidate();
-    return;
+    co_return;
   }
 
   if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
     init_rc();
     sync_with_option();
     App::instance().invalidate();
-    return;
+    co_return;
   }
 
   if (!strcasecmp(resource, "COOKIE")) {
     initCookie();
-    return;
+    co_return;
   }
 
   if (!strcasecmp(resource, "KEYMAP")) {
     App::instance().initKeymap(true);
-    return;
+    co_return;
   }
 
   if (!strcasecmp(resource, "MAILCAP")) {
     initMailcap();
-    return;
+    co_return;
   }
 
   if (!strcasecmp(resource, "MIMETYPES")) {
     initMimeTypes();
-    return;
+    co_return;
   }
 
   App::instance().disp_err_message(
@@ -1504,7 +1604,7 @@ void reinit() {
 
 // DEFINE_KEY
 //"Define a binding between a key stroke combination and a command"
-void defKey() {
+FuncCoroutine defKey() {
   const char *data;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -1513,7 +1613,7 @@ void defKey() {
     // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == nullptr || *data == '\0') {
       App::instance().invalidate();
-      return;
+      co_return;
     }
   }
   App::instance().setKeymap(allocStr(data, -1), -1, true);
@@ -1522,17 +1622,18 @@ void defKey() {
 
 // NEW_TAB
 //"Open a new tab (with current document)"
-void newT() {
+FuncCoroutine newT() {
   App::instance().newTab();
   App::instance().invalidate();
+  co_return;
 }
 
 // CLOSE_TAB
 //"Close tab"
-void closeT() {
+FuncCoroutine closeT() {
 
   if (App::instance().nTab() <= 1)
-    return;
+    co_return;
 
   TabBuffer *tab;
   if (prec_num)
@@ -1546,24 +1647,26 @@ void closeT() {
 
 // NEXT_TAB
 //"Switch to the next tab"
-void nextT() {
+FuncCoroutine nextT() {
   App::instance().nextTab();
   App::instance().invalidate();
+  co_return;
 }
 
 // PREV_TAB
 //"Switch to the previous tab"
-void prevT() {
+FuncCoroutine prevT() {
   App::instance().prevTab();
   App::instance().invalidate();
+  co_return;
 }
 
 // TAB_LINK
 //"Follow current hyperlink in a new tab"
-void tabA() {
+FuncCoroutine tabA() {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (!a) {
-    return;
+    co_return;
   }
 
   App::instance().newTab();
@@ -1580,7 +1683,7 @@ void tabA() {
 
 // TAB_GOTO
 //"Open specified document in a new tab"
-void tabURL() {
+FuncCoroutine tabURL() {
   App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
@@ -1590,11 +1693,12 @@ void tabURL() {
   else
     App::instance().deleteTab(CurrentTab);
   App::instance().invalidate();
+  co_return;
 }
 
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
-void tabrURL() {
+FuncCoroutine tabrURL() {
   App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
@@ -1604,20 +1708,27 @@ void tabrURL() {
   else
     App::instance().deleteTab(CurrentTab);
   App::instance().invalidate();
+  co_return;
 }
 
 // TAB_RIGHT
 //"Move right along the tab bar"
-void tabR() { App::instance().tabRight(); }
+FuncCoroutine tabR() {
+  App::instance().tabRight();
+  co_return;
+}
 
 // TAB_LEFT
 //"Move left along the tab bar"
-void tabL() { App::instance().tabLeft(); }
+FuncCoroutine tabL() {
+  App::instance().tabLeft();
+  co_return;
+}
 
 /* download panel */
 // DOWNLOAD_LIST
 //"Display downloads panel"
-void ldDL() {
+FuncCoroutine ldDL() {
   int replace = false, new_tab = false;
 
   if (!FirstDL) {
@@ -1630,14 +1741,14 @@ void ldDL() {
         CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
       App::instance().invalidate();
     }
-    return;
+    co_return;
   }
 
   auto reload = checkDownloadList();
   auto buf = DownloadListBuffer();
   if (!buf) {
     App::instance().invalidate();
-    return;
+    co_return;
   }
   if (replace) {
     buf->layout.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
@@ -1661,25 +1772,25 @@ void ldDL() {
 
 // UNDO
 //"Cancel the last cursor movement"
-void undoPos() {
+FuncCoroutine undoPos() {
   if (!CurrentTab->currentBuffer()->layout.firstLine)
-    return;
+    co_return;
   CurrentTab->currentBuffer()->layout.undoPos(PREC_NUM);
 }
 
 // REDO
 //"Cancel the last undo"
-void redoPos() {
+FuncCoroutine redoPos() {
   if (!CurrentTab->currentBuffer()->layout.firstLine)
-    return;
+    co_return;
   CurrentTab->currentBuffer()->layout.redoPos(PREC_NUM);
 }
 
 // CURSOR_TOP
 //"Move cursor to the top of the screen"
-void cursorTop() {
+FuncCoroutine cursorTop() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   CurrentTab->currentBuffer()->layout.currentLine =
       CurrentTab->currentBuffer()->layout.lineSkip(
           CurrentTab->currentBuffer()->layout.topLine, 0, false);
@@ -1689,10 +1800,10 @@ void cursorTop() {
 
 // CURSOR_MIDDLE
 //"Move cursor to the middle of the screen"
-void cursorMiddle() {
+FuncCoroutine cursorMiddle() {
   int offsety;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
   CurrentTab->currentBuffer()->layout.currentLine =
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
@@ -1703,10 +1814,10 @@ void cursorMiddle() {
 
 // CURSOR_BOTTOM
 //"Move cursor to the bottom of the screen"
-void cursorBottom() {
+FuncCoroutine cursorBottom() {
   int offsety;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
-    return;
+    co_return;
   offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
   CurrentTab->currentBuffer()->layout.currentLine =
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,

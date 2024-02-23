@@ -770,10 +770,11 @@ void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
 }
 
 /* follow HREF link in the buffer */
-void bufferA(void) {
+FuncCoroutine bufferA(void) {
   on_target = false;
   followA();
   on_target = true;
+  co_return;
 }
 
 void Buffer::saveBufferInfo() {

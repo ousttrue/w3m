@@ -1,5 +1,6 @@
 #pragma once
 #include "rowcol.h"
+#include "func.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -25,8 +26,6 @@ enum TmpfType {
   TMPF_HIST = 5,
   MAX_TMPF_TYPE = 6,
 };
-
-using Func = std::function<void()>;
 
 using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 

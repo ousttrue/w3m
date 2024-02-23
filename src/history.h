@@ -37,6 +37,5 @@ const char *nextHist(Hist *hist);
 const char *prevHist(Hist *hist);
 int loadHistory(Hist *hist);
 void saveHistory(Hist *hist, int size);
-void ldHist(void);
 struct Buffer;
 std::shared_ptr<Buffer> historyBuffer(Hist *hist);

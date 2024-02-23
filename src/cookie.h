@@ -76,7 +76,6 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
 void save_cookies();
 void load_cookies();
 void initCookie();
-void cooLst();
 int check_cookie_accept_domain(const char *domain);
 
 void process_http_cookie(const Url *pu, Str *lineBuf2);
