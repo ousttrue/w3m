@@ -3,6 +3,7 @@
 #include <coroutine>
 #include <chrono>
 #include <functional>
+#include <assert.h>
 
 template <typename T> struct FuncCoroutine {
   struct promise_type_base {
@@ -15,6 +16,7 @@ template <typename T> struct FuncCoroutine {
 
     // for resume outer coroutine when final
     std::function<void()> onFinal;
+
     auto final_suspend() noexcept {
       uv_close((uv_handle_t *)async, [](auto a) { delete a; });
 
@@ -22,8 +24,9 @@ template <typename T> struct FuncCoroutine {
         this->onFinal();
       }
 
-      return std::suspend_always{};
+      return std::suspend_never{};
     }
+
     void unhandled_exception() { std::terminate(); }
 
     template <class Rep, class Period>
@@ -38,7 +41,6 @@ template <typename T> struct FuncCoroutine {
             timer,
             [](uv_timer_t *t) {
               auto a = (awaiter_t *)t->data;
-
               // auto a = (uv_async_t *)handle->data;
               // uv_async_send(a);
               a->resume(5);
@@ -51,17 +53,25 @@ template <typename T> struct FuncCoroutine {
     template <typename S> auto await_transform(FuncCoroutine<S> nested) {
       using awaiter_t = FuncCoroutine::ValueAwaiter<S>;
       awaiter_t awaiter;
-      awaiter.onSuspend = [p = nested.handle.address()](awaiter_t *self) {
-        FuncCoroutine::handle_type::from_address(p)
-            .promise()
-            .onFinal = [p, self]() {
-          // std::cout << "onFinal: resume" << std::endl;
-          auto value =
-              FuncCoroutine<S>::handle_type::from_address(p).promise().value;
-          // resume outer awaiter use nested value
-          self->resume(*value);
+      auto value = nested.handle.promise().value;
+      // std::cout << "has:" << value.has_value() << std::endl;
+      if (value) {
+        // ready value
+        awaiter.payload = *value;
+      } else {
+        // wait value
+        awaiter.onSuspend = [p = nested.handle.address()](awaiter_t *self) {
+          FuncCoroutine::handle_type::from_address(p)
+              .promise()
+              .onFinal = [p, self]() {
+            // std::cout << "onFinal: resume" << std::endl;
+            auto value =
+                FuncCoroutine<S>::handle_type::from_address(p).promise().value;
+            // resume outer awaiter use nested value
+            self->resume(*value);
+          };
         };
-      };
+      }
       return awaiter;
     }
 
