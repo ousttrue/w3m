@@ -1408,8 +1408,20 @@ FuncCoroutine<void> reload() {
 //"Re-render document"
 FuncCoroutine<void> reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
-  reshapeBuffer(CurrentTab->currentBuffer(),
-                App::instance().INIT_BUFFER_WIDTH());
+  if (CurrentTab->currentBuffer()->layout.need_reshape &&
+      CurrentTab->currentBuffer()->reopenSource()) {
+
+    LineLayout sbuf = CurrentTab->currentBuffer()->layout;
+    if (CurrentTab->currentBuffer()->res->is_html_type())
+      loadHTMLstream(CurrentTab->currentBuffer()->res.get(),
+                     &CurrentTab->currentBuffer()->layout);
+    else
+      loadBuffer(CurrentTab->currentBuffer()->res.get(),
+                 &CurrentTab->currentBuffer()->layout);
+
+    CurrentTab->currentBuffer()->layout.reshape(
+        App::instance().INIT_BUFFER_WIDTH(), sbuf);
+  }
   App::instance().invalidate();
   co_return;
 }
@@ -1417,7 +1429,7 @@ FuncCoroutine<void> reshape() {
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
 FuncCoroutine<void> chkURL() {
-  chkURLBuffer(CurrentTab->currentBuffer());
+  CurrentTab->currentBuffer()->layout.chkURLBuffer();
   App::instance().invalidate();
   co_return;
 }

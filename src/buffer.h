@@ -14,11 +14,10 @@ struct LinkList;
 struct AlarmEvent;
 struct HttpResponse;
 
-struct Buffer {
+struct Buffer : std::enable_shared_from_this<Buffer> {
   std::shared_ptr<HttpResponse> res;
   LineLayout layout = {};
   std::shared_ptr<Buffer> backBuffer;
-  bool check_url = false;
 
 private:
   Buffer(const std::shared_ptr<HttpResponse> &res);
@@ -26,12 +25,20 @@ private:
 public:
   ~Buffer();
   Buffer(const Buffer &src) { *this = src; }
+  Buffer &operator=(const Buffer &src) = default;
+
   static std::shared_ptr<Buffer>
   create(const std::shared_ptr<HttpResponse> &res = {}) {
     return std::shared_ptr<Buffer>(new Buffer(res));
   }
+
+  static std::shared_ptr<Buffer> nullBuffer(void) {
+    auto b = Buffer::create();
+    b->layout.title = "*Null*";
+    return b;
+  }
+
   // shallow copy
-  Buffer &operator=(const Buffer &src) = default;
   void saveBufferInfo();
   std::shared_ptr<Buffer> loadLink(const char *url, HttpOption option,
                                    FormList *request);
@@ -39,19 +46,15 @@ public:
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> sourceBuffer();
   std::shared_ptr<Buffer> followForm(Anchor *a, bool submit);
+  bool reopenSource();
 };
 
 std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);
-std::shared_ptr<Buffer> nullBuffer(void);
-std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
-                                  int n);
 // std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
 //                                      std::shared_ptr<Buffer> currentbuf,
 //                                      char *selectchar);
-void reshapeBuffer(const std::shared_ptr<Buffer> &buf, int width);
 std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
                                       const std::shared_ptr<Buffer> &buf);
-void chkURLBuffer(const std::shared_ptr<Buffer> &buf);
 
 void execdict(const char *word);
 void invoke_browser(const char *url);

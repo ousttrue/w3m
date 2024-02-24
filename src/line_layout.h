@@ -44,6 +44,9 @@ struct LineLayout {
   // cursor position
   Line *currentLine = nullptr;
   int allLine = 0;
+  bool check_url = false;
+  void chkURLBuffer();
+  void reshape(int width, const LineLayout &sbuf);
 
   void clearBuffer();
   void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,

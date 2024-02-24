@@ -218,7 +218,7 @@ bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
     this->deleteBuffer(buf);
     if (this->firstBuffer == nullptr) {
       /* No more buffer */
-      this->firstBuffer = nullBuffer();
+      this->firstBuffer = Buffer::nullBuffer();
       _currentBuffer = this->firstBuffer;
     }
     break;

@@ -1043,7 +1043,8 @@ const char *LineLayout::reAnchorAny(
   }
   for (l = MarkAllPages ? this->firstLine : this->topLine;
        l != NULL &&
-       (MarkAllPages || l->linenumber < this->topLine->linenumber + App::instance().LASTLINE());
+       (MarkAllPages ||
+        l->linenumber < this->topLine->linenumber + App::instance().LASTLINE());
        l = l->next) {
     if (p && l->bpos) {
       continue;
@@ -1223,4 +1224,68 @@ void LineLayout::addLink(struct HtmlTag *tag) {
     i->next = l;
   } else
     this->linklist = l;
+}
+
+/* mark URL-like patterns as anchors */
+void LineLayout::chkURLBuffer() {
+  static const char *url_like_pat[] = {
+      "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
+      "=\\-]",
+      "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+      "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
+      "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
+#endif
+#ifdef INET6
+      "https?://[a-zA-Z0-9:%\\-\\./"
+      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
+      "?=~_\\&+@#,\\$;]*",
+      "ftp://[a-zA-Z0-9:%\\-\\./"
+      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+#endif /* INET6 */
+      nullptr};
+  for (int i = 0; url_like_pat[i]; i++) {
+    this->reAnchor(url_like_pat[i]);
+  }
+  this->check_url = true;
+}
+
+void LineLayout::reshape(int width, const LineLayout &sbuf) {
+  if (!this->need_reshape) {
+    return;
+  }
+  this->need_reshape = false;
+  this->width = width;
+
+  this->height = App::instance().LASTLINE() + 1;
+  if (this->firstLine && sbuf.firstLine) {
+    Line *cur = sbuf.currentLine;
+    int n;
+
+    this->pos = sbuf.pos + cur->bpos;
+    while (cur->bpos && cur->prev)
+      cur = cur->prev;
+    if (cur->real_linenumber > 0) {
+      this->gotoRealLine(cur->real_linenumber);
+    } else {
+      this->gotoLine(cur->linenumber);
+    }
+    n = (this->currentLine->linenumber - this->topLine->linenumber) -
+        (cur->linenumber - sbuf.topLine->linenumber);
+    if (n) {
+      this->topLine = this->lineSkip(this->topLine, n, false);
+      if (cur->real_linenumber > 0) {
+        this->gotoRealLine(cur->real_linenumber);
+      } else {
+        this->gotoLine(cur->linenumber);
+      }
+    }
+    this->pos -= this->currentLine->bpos;
+    this->currentColumn = sbuf.currentColumn;
+    this->arrangeCursor();
+  }
+  if (this->check_url) {
+    this->chkURLBuffer();
+  }
+  formResetBuffer(this, sbuf.formitem().get());
 }

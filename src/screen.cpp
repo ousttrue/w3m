@@ -1,4 +1,5 @@
 #include "screen.h"
+#include "html/readbuffer.h"
 #include "app.h"
 #include "alloc.h"
 #include "myctype.h"
@@ -500,7 +501,16 @@ void Screen::display(int width, TabBuffer *currentTab) {
   if ((buf->layout.width != width && (buf->res->is_html_type())) ||
       buf->layout.need_reshape) {
     buf->layout.need_reshape = true;
-    reshapeBuffer(buf, width);
+    if (buf->layout.need_reshape && buf->reopenSource()) {
+
+      LineLayout sbuf = buf->layout;
+      if (buf->res->is_html_type())
+        loadHTMLstream(buf->res.get(), &buf->layout);
+      else
+        loadBuffer(buf->res.get(), &buf->layout);
+
+      buf->layout.reshape(width, sbuf);
+    }
   }
 
   // Str *msg;

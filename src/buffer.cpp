@@ -34,267 +34,10 @@ Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
   if (!res) {
     res = std::make_shared<HttpResponse>();
   }
-  this->check_url = MarkAllPages;
+  this->layout.check_url = MarkAllPages;
 }
 
 Buffer::~Buffer() {}
-
-/*
- * Create null buffer
- */
-std::shared_ptr<Buffer> nullBuffer(void) {
-  auto b = Buffer::create();
-  b->layout.title = "*Null*";
-  return b;
-}
-
-std::shared_ptr<Buffer> nthBuffer(const std::shared_ptr<Buffer> &firstbuf,
-                                  int n) {
-  int i;
-  std::shared_ptr<Buffer> buf;
-
-  if (n < 0)
-    return firstbuf;
-  for (i = 0; i < n; i++) {
-    if (buf == nullptr)
-      return nullptr;
-    buf = buf->backBuffer;
-  }
-  return buf;
-}
-
-// static void writeBufferName(const std::shared_ptr<Buffer> &buf, int n) {
-//   int all = buf->layout.allLine;
-//   if (all == 0 && buf->layout.lastLine != nullptr) {
-//     all = buf->layout.lastLine->linenumber;
-//   }
-//
-//   move(n, 0);
-//   auto msg = Sprintf("<%s> [%d lines]", buf->layout.title.c_str(), all);
-//   if (buf->res->filename.size()) {
-//     switch (buf->res->currentURL.schema) {
-//     case SCM_LOCAL:
-//     case SCM_LOCAL_CGI:
-//       if (buf->res->currentURL.file != "-") {
-//         Strcat_char(msg, ' ');
-//         Strcat(msg, buf->res->currentURL.real_file);
-//       }
-//       break;
-//     case SCM_UNKNOWN:
-//     case SCM_MISSING:
-//       break;
-//     default:
-//       Strcat_char(msg, ' ');
-//       Strcat(msg, buf->res->currentURL.to_Str());
-//       break;
-//     }
-//   }
-//   addnstr_sup(msg->ptr, COLS() - 1);
-// }
-
-// static std::shared_ptr<Buffer>
-// listBuffer(const std::shared_ptr<Buffer> &top,
-//            const std::shared_ptr<Buffer> &current) {
-//   int i, c = 0;
-//   std::shared_ptr<Buffer> buf = top;
-//
-//   move(0, 0);
-//   clrtobotx();
-//   for (i = 0; i < LASTLINE(); i++) {
-//     if (buf == current) {
-//       c = i;
-//       standout();
-//     }
-//     writeBufferName(buf, i);
-//     if (buf == current) {
-//       standend();
-//       clrtoeolx();
-//       move(i, 0);
-//       toggle_stand();
-//     } else
-//       clrtoeolx();
-//     if (buf->backBuffer == nullptr) {
-//       move(i + 1, 0);
-//       clrtobotx();
-//       break;
-//     }
-//     buf = buf->backBuffer;
-//   }
-//   standout();
-//   App::instance().message("Buffer selection mode: SPC for select / D for
-//   delete buffer", 0, 0); standend();
-//   /*
-//    * move(LASTLINE, COLS - 1); */
-//   move(c, 0);
-//   refresh(term_io());
-//   return buf->backBuffer;
-// }
-
-/*
- * Select buffer visually
- */
-// std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
-//                                      std::shared_ptr<Buffer> currentbuf,
-//                                      char *selectchar) {
-//   int i, cpoint,                    /* Current Buffer Number */
-//       spoint,                       /* Current Line on Screen */
-//       maxbuf, sclimit = LASTLINE(); /* Upper limit of line * number in
-//                                      * the * screen */
-//   std::shared_ptr<Buffer> buf, topbuf;
-//   char c;
-//
-//   i = cpoint = 0;
-//   for (buf = firstbuf; buf != nullptr; buf = buf->backBuffer) {
-//     if (buf == currentbuf)
-//       cpoint = i;
-//     i++;
-//   }
-//   maxbuf = i;
-//
-//   if (cpoint >= sclimit) {
-//     spoint = sclimit / 2;
-//     topbuf = nthBuffer(firstbuf, cpoint - spoint);
-//   } else {
-//     topbuf = firstbuf;
-//     spoint = cpoint;
-//   }
-//   listBuffer(topbuf, currentbuf);
-//
-//   for (;;) {
-//     if ((c = getch()) == ESC_CODE) {
-//       if ((c = getch()) == '[' || c == 'O') {
-//         switch (c = getch()) {
-//         case 'A':
-//           c = 'k';
-//           break;
-//         case 'B':
-//           c = 'j';
-//           break;
-//         case 'C':
-//           c = ' ';
-//           break;
-//         case 'D':
-//           c = 'B';
-//           break;
-//         }
-//       }
-//     }
-//     switch (c) {
-//     case CTRL_N:
-//     case 'j':
-//       if (spoint < sclimit - 1) {
-//         if (currentbuf->backBuffer == nullptr)
-//           continue;
-//         writeBufferName(currentbuf, spoint);
-//         currentbuf = currentbuf->backBuffer;
-//         cpoint++;
-//         spoint++;
-//         standout();
-//         writeBufferName(currentbuf, spoint);
-//         standend();
-//         move(spoint, 0);
-//         toggle_stand();
-//       } else if (cpoint < maxbuf - 1) {
-//         topbuf = currentbuf;
-//         currentbuf = currentbuf->backBuffer;
-//         cpoint++;
-//         spoint = 1;
-//         listBuffer(topbuf, currentbuf);
-//       }
-//       break;
-//     case CTRL_P:
-//     case 'k':
-//       if (spoint > 0) {
-//         writeBufferName(currentbuf, spoint);
-//         currentbuf = nthBuffer(topbuf, --spoint);
-//         cpoint--;
-//         standout();
-//         writeBufferName(currentbuf, spoint);
-//         standend();
-//         move(spoint, 0);
-//         toggle_stand();
-//       } else if (cpoint > 0) {
-//         i = cpoint - sclimit;
-//         if (i < 0)
-//           i = 0;
-//         cpoint--;
-//         spoint = cpoint - i;
-//         currentbuf = nthBuffer(firstbuf, cpoint);
-//         topbuf = nthBuffer(firstbuf, i);
-//         listBuffer(topbuf, currentbuf);
-//       }
-//       break;
-//     default:
-//       *selectchar = c;
-//       return currentbuf;
-//     }
-//     /*
-//      * move(LASTLINE, COLS - 1);
-//      */
-//     move(spoint, 0);
-//     refresh(term_io());
-//   }
-// }
-
-/*
- * Reshape HTML buffer
- */
-void reshapeBuffer(const std::shared_ptr<Buffer> &buf, int width) {
-  if (!buf->layout.need_reshape) {
-    return;
-  }
-  buf->layout.need_reshape = false;
-  buf->layout.width = width;
-  if (buf->res->sourcefile.empty()) {
-    return;
-  }
-  buf->res->f.openFile(buf->res->sourcefile.c_str());
-  if (buf->res->f.stream == nullptr) {
-    return;
-  }
-
-  auto sbuf = Buffer::create(0);
-  *sbuf = *buf;
-  buf->layout.clearBuffer();
-
-  if (buf->res->is_html_type())
-    loadHTMLstream(buf->res.get(), &buf->layout);
-  else
-    loadBuffer(buf->res.get(), &buf->layout);
-
-  buf->layout.height = App::instance().LASTLINE() + 1;
-  if (buf->layout.firstLine && sbuf->layout.firstLine) {
-    Line *cur = sbuf->layout.currentLine;
-    int n;
-
-    buf->layout.pos = sbuf->layout.pos + cur->bpos;
-    while (cur->bpos && cur->prev)
-      cur = cur->prev;
-    if (cur->real_linenumber > 0) {
-      buf->layout.gotoRealLine(cur->real_linenumber);
-    } else {
-      buf->layout.gotoLine(cur->linenumber);
-    }
-    n = (buf->layout.currentLine->linenumber -
-         buf->layout.topLine->linenumber) -
-        (cur->linenumber - sbuf->layout.topLine->linenumber);
-    if (n) {
-      buf->layout.topLine = buf->layout.lineSkip(buf->layout.topLine, n, false);
-      if (cur->real_linenumber > 0) {
-        buf->layout.gotoRealLine(cur->real_linenumber);
-      } else {
-        buf->layout.gotoLine(cur->linenumber);
-      }
-    }
-    buf->layout.pos -= buf->layout.currentLine->bpos;
-    buf->layout.currentColumn = sbuf->layout.currentColumn;
-    buf->layout.arrangeCursor();
-  }
-  if (buf->check_url) {
-    chkURLBuffer(buf);
-  }
-  formResetBuffer(&buf->layout, sbuf->layout.formitem().get());
-}
 
 std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
                                       const std::shared_ptr<Buffer> &buf) {
@@ -744,31 +487,6 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
   return loadHTMLString(tmp);
 }
 
-/* mark URL-like patterns as anchors */
-void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
-  static const char *url_like_pat[] = {
-      "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
-      "=\\-]",
-      "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-      "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
-      "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
-#endif
-#ifdef INET6
-      "https?://[a-zA-Z0-9:%\\-\\./"
-      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
-      "?=~_\\&+@#,\\$;]*",
-      "ftp://[a-zA-Z0-9:%\\-\\./"
-      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-#endif /* INET6 */
-      nullptr};
-  int i;
-  for (i = 0; url_like_pat[i]; i++) {
-    buf->layout.reAnchor(url_like_pat[i]);
-  }
-  buf->check_url = true;
-}
-
 void Buffer::saveBufferInfo() {
   if (FILE *fp = fopen(rcFile("bufinfo"), "w")) {
     fprintf(fp, "%s\n", this->res->currentURL.to_Str().c_str());
@@ -1110,4 +828,15 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
   }
 
   return {};
+}
+
+bool Buffer::reopenSource() {
+  if (this->res->sourcefile.empty()) {
+    return false;
+  }
+  this->res->f.openFile(this->res->sourcefile.c_str());
+  if (this->res->f.stream == nullptr) {
+    return false;
+  }
+  return true;
 }

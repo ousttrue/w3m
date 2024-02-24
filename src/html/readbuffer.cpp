@@ -529,6 +529,8 @@ readbuffer::readbuffer() {
 
 void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
 
+  layout->clearBuffer();
+
   HtmlParser parser;
 
   auto src = res->createSourceFile();
@@ -629,6 +631,9 @@ const char *remove_space(const char *str) {
 }
 
 void loadBuffer(HttpResponse *res, LineLayout *layout) {
+
+  layout->clearBuffer();
+
   auto src = res->createSourceFile();
 
   auto nlines = 0;
