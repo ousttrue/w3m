@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "dict.h"
 #include "app.h"
 #include "html/form_item.h"
 #include "file_util.h"
@@ -353,7 +354,14 @@ FuncCoroutine<void> ldfile() {
     App::instance().invalidate();
     co_return;
   }
-  cmd_loadfile(fn);
+  if (auto res =
+          loadGeneralFile(file_to_url((char *)fn), {}, {.no_referer = true})) {
+    auto buf = Buffer::create(res);
+    CurrentTab->pushBuffer(buf);
+  } else {
+    char *emsg = Sprintf("%s not found", fn)->ptr;
+    App::instance().disp_err_message(emsg);
+  }
 }
 
 #define HELP_CGI "w3mhelp"
@@ -699,7 +707,7 @@ FuncCoroutine<void> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        cur_real_linenumber(CurrentTab->currentBuffer()));
+        CurrentTab->currentBuffer()->layout.cur_real_linenumber());
   }
   exec_cmd(cmd);
 
@@ -718,11 +726,11 @@ FuncCoroutine<void> editScr() {
         Sprintf("Can't open %s", tmpf.c_str())->ptr);
     co_return;
   }
-  saveBuffer(CurrentTab->currentBuffer(), f, true);
+  CurrentTab->currentBuffer()->saveBuffer(f, true);
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      cur_real_linenumber(CurrentTab->currentBuffer())));
+      CurrentTab->currentBuffer()->layout.cur_real_linenumber()));
   unlink(tmpf.c_str());
   App::instance().invalidate();
 }
@@ -992,8 +1000,7 @@ FuncCoroutine<void> nextU() {
 //"Switch to the next buffer"
 FuncCoroutine<void> nextBf() {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf =
-        forwardBuffer(CurrentTab->firstBuffer, CurrentTab->currentBuffer());
+    auto buf = CurrentTab->forwardBuffer(CurrentTab->currentBuffer());
     if (!buf) {
       if (i == 0)
         co_return;
@@ -1026,7 +1033,7 @@ FuncCoroutine<void> prevBf() {
 FuncCoroutine<void> backBf() {
   // Buffer *buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_FRAME];
 
-  if (!checkBackBuffer(CurrentTab->currentBuffer())) {
+  if (!CurrentTab->currentBuffer()->checkBackBuffer()) {
     if (close_tab_back && App::instance().nTab() >= 1) {
       App::instance().deleteTab(CurrentTab);
       App::instance().invalidate();
@@ -1162,7 +1169,7 @@ FuncCoroutine<void> msgs() {
 // INFO
 //"Display information about the current document"
 FuncCoroutine<void> pginfo() {
-  auto buf = page_info_panel(CurrentTab->currentBuffer());
+  auto buf = CurrentTab->currentBuffer()->page_info_panel();
   CurrentTab->pushBuffer(buf);
   co_return;
 }
@@ -1260,7 +1267,7 @@ FuncCoroutine<void> svBuf() {
     App::instance().disp_err_message(emsg);
     co_return;
   }
-  saveBuffer(CurrentTab->currentBuffer(), f, true);
+  CurrentTab->currentBuffer()->saveBuffer(f, true);
   if (is_pipe)
     pclose(f);
   else
@@ -1524,7 +1531,10 @@ FuncCoroutine<void> wrapToggle() {
 // DICT_WORD
 //"Execute dictionary command (see README.dict)"
 FuncCoroutine<void> dictword() {
-  // execdict(inputStr("(dictionary)!", ""));
+  // auto buf = execdict(inputStr("(dictionary)!", ""));
+  // CurrentTab->pushBuffer(buf);
+  // App::instance().invalidate();
+
   co_return;
 }
 
@@ -1532,7 +1542,10 @@ FuncCoroutine<void> dictword() {
 //"Execute dictionary command for word at cursor"
 FuncCoroutine<void> dictwordat() {
   auto word = CurrentTab->currentBuffer()->layout.getCurWord();
-  execdict(word.c_str());
+  if (auto buf = execdict(word.c_str())) {
+    CurrentTab->pushBuffer(buf);
+    App::instance().invalidate();
+  }
   co_return;
 }
 

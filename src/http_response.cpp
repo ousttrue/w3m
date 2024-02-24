@@ -421,3 +421,21 @@ void HttpResponse::page_loaded(Url url) {
   // preFormUpdateBuffer(b);
   // return b;
 }
+
+/* get last modified time */
+const char *HttpResponse::last_modified() {
+  if (this->document_header) {
+    for (auto ti = this->document_header->first; ti; ti = ti->next) {
+      if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
+        return ti->ptr + 15;
+      }
+    }
+    return "unknown";
+  } else if (this->currentURL.schema == SCM_LOCAL) {
+    struct stat st;
+    if (stat(this->currentURL.file.c_str(), &st) < 0)
+      return "unknown";
+    return ctime(&st.st_mtime);
+  }
+  return "unknown";
+}

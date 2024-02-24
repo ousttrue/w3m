@@ -52,6 +52,8 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   FILE *createSourceFile();
 
   void page_loaded(Url url);
+
+  const char *last_modified();
 };
 
 const char *mybasename(const char *s);

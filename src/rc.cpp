@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #include "rc.h"
+#include "dict.h"
 #include "screen.h"
 #include "app.h"
 #include "tabbuffer.h"

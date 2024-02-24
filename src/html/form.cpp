@@ -910,3 +910,28 @@ void FormItemList ::query_from_followform_multipart() {
     fclose(body);
   }
 }
+
+Str *Str_form_quote(Str *x) {
+  Str *tmp = {};
+  char *p = x->ptr, *ep = x->ptr + x->length;
+  char buf[4];
+
+  for (; p < ep; p++) {
+    if (*p == ' ') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, '+');
+    } else if (is_url_unsafe(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      snprintf(buf, sizeof(buf), "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp;
+  return x;
+}

@@ -79,7 +79,7 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
 
   if (firstBuffer == delbuf && firstBuffer->backBuffer != nullptr) {
     firstBuffer = firstBuffer->backBuffer;
-  } else if (auto buf = forwardBuffer(firstBuffer, delbuf)) {
+  } else if (auto buf = forwardBuffer(delbuf)) {
   }
 
   if (!this->currentBuffer()) {
@@ -174,7 +174,7 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
   if (this->firstBuffer == this->currentBuffer()) {
     buf->backBuffer = this->firstBuffer;
     this->firstBuffer = buf;
-  } else if (auto b = forwardBuffer(this->firstBuffer, this->currentBuffer())) {
+  } else if (auto b = forwardBuffer(this->currentBuffer())) {
     buf->backBuffer = this->currentBuffer();
     b->backBuffer = buf;
   }
@@ -254,7 +254,7 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
   }
 
   std::shared_ptr<Buffer> buf;
-  if (delbuf && (buf = forwardBuffer(first, delbuf))) {
+  if (delbuf && (buf = forwardBuffer(delbuf))) {
     buf->backBuffer = newbuf;
     newbuf->backBuffer = delbuf->backBuffer;
     return first;
@@ -315,4 +315,12 @@ std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
     this->pushBuffer(buf);
   }
   return buf;
+}
+
+std::shared_ptr<Buffer>
+TabBuffer::forwardBuffer(const std::shared_ptr<Buffer> &buf) {
+  std::shared_ptr<Buffer> b;
+  for (b = firstBuffer; b != nullptr && b->backBuffer != buf; b = b->backBuffer)
+    ;
+  return b;
 }

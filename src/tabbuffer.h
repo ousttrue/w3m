@@ -41,6 +41,7 @@ public:
       firstBuffer = newbuf;
     }
   }
+  std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &buf);
 
   void deleteBuffer(const std::shared_ptr<Buffer> &delbuf);
   const std::shared_ptr<Buffer> &namedBuffer(const char *name);

@@ -38,6 +38,8 @@ public:
     return b;
   }
 
+  bool checkBackBuffer() const { return this->backBuffer ? true : false; }
+
   // shallow copy
   void saveBufferInfo();
   std::shared_ptr<Buffer> loadLink(const char *url, HttpOption option,
@@ -47,20 +49,14 @@ public:
   std::shared_ptr<Buffer> sourceBuffer();
   std::shared_ptr<Buffer> followForm(Anchor *a, bool submit);
   bool reopenSource();
+  std::string link_info() const;
+  std::shared_ptr<Buffer> page_info_panel();
+  void saveBuffer(FILE *f, bool cont);
 };
 
-std::shared_ptr<Buffer> page_info_panel(const std::shared_ptr<Buffer> &buf);
-// std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer> &firstbuf,
+// std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer>
+// &firstbuf,
 //                                      std::shared_ptr<Buffer> currentbuf,
 //                                      char *selectchar);
-std::shared_ptr<Buffer> forwardBuffer(const std::shared_ptr<Buffer> &first,
-                                      const std::shared_ptr<Buffer> &buf);
 
-void execdict(const char *word);
-void invoke_browser(const char *url);
-int checkBackBuffer(const std::shared_ptr<Buffer> &buf);
-int cur_real_linenumber(const std::shared_ptr<Buffer> &buf);
-Str *Str_form_quote(Str *x);
-void saveBuffer(const std::shared_ptr<Buffer> &buf, FILE *f, int cont);
-void cmd_loadfile(const char *fn);
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf);

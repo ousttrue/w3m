@@ -47,6 +47,7 @@ struct LineLayout {
   bool check_url = false;
   void chkURLBuffer();
   void reshape(int width, const LineLayout &sbuf);
+  int cur_real_linenumber() const;
 
   void clearBuffer();
   void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,

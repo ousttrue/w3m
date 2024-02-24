@@ -1,20 +1,14 @@
 #include "etc.h"
-#include "quote.h"
+#include "file_util.h"
 #include "ctrlcode.h"
 #include "app.h"
 #include "url_stream.h"
-#include "buffer.h"
-#include "line.h"
-#include "http_response.h"
-#include "screen.h"
 #include "html/readbuffer.h"
 #include "w3m.h"
-#include "buffer.h"
 #include "myctype.h"
 #include "local_cgi.h"
-#include "textlist.h"
 #include "proto.h"
-// #include <pwd.h>
+#include "Str.h"
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
@@ -85,26 +79,6 @@ char *strerror(int errno) {
   return sys_errlist[errno];
 }
 #endif /* not HAVE_STRERROR */
-
-/* get last modified time */
-const char *last_modified(const std::shared_ptr<Buffer> &buf) {
-  TextListItem *ti;
-  struct stat st;
-
-  if (buf->res->document_header) {
-    for (ti = buf->res->document_header->first; ti; ti = ti->next) {
-      if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
-        return ti->ptr + 15;
-      }
-    }
-    return "unknown";
-  } else if (buf->res->currentURL.schema == SCM_LOCAL) {
-    if (stat(buf->res->currentURL.file.c_str(), &st) < 0)
-      return "unknown";
-    return ctime(&st.st_mtime);
-  }
-  return "unknown";
-}
 
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
@@ -522,4 +496,64 @@ const char *getQWord(const char **str) {
   }
   *str = p;
   return tmp->ptr;
+}
+
+/* spawn external browser */
+void invoke_browser(const char *url) {
+  Str *cmd;
+  int bg = 0, len;
+
+  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
+  auto browser = App::instance().searchKeyData();
+  if (browser == nullptr || *browser == '\0') {
+    switch (prec_num) {
+    case 0:
+    case 1:
+      browser = ExtBrowser;
+      break;
+    case 2:
+      browser = ExtBrowser2;
+      break;
+    case 3:
+      browser = ExtBrowser3;
+      break;
+    case 4:
+      browser = ExtBrowser4;
+      break;
+    case 5:
+      browser = ExtBrowser5;
+      break;
+    case 6:
+      browser = ExtBrowser6;
+      break;
+    case 7:
+      browser = ExtBrowser7;
+      break;
+    case 8:
+      browser = ExtBrowser8;
+      break;
+    case 9:
+      browser = ExtBrowser9;
+      break;
+    }
+    if (browser == nullptr || *browser == '\0') {
+      // browser = inputStr("Browse command: ", nullptr);
+    }
+  }
+  if (browser == nullptr || *browser == '\0') {
+    App::instance().invalidate();
+    return;
+  }
+
+  if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' &&
+      browser[len - 2] != '\\') {
+    browser = allocStr(browser, len - 2);
+    bg = 1;
+  }
+  cmd = myExtCommand((char *)browser, shell_quote(url), false);
+  Strremovetrailingspaces(cmd);
+  App::instance().endRawMode();
+  mySystem(cmd->ptr, bg);
+  App::instance().beginRawMode();
+  App::instance().invalidate();
 }

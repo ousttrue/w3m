@@ -118,6 +118,7 @@ executable(
         'proc.cpp',
         'line_layout.cpp',
         'file_util.cpp',
+        'dict.cpp',
     ],
     install: true,
     dependencies: deps,

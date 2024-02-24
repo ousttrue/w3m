@@ -1289,3 +1289,19 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
   }
   formResetBuffer(this, sbuf.formitem().get());
 }
+
+int LineLayout::cur_real_linenumber() const {
+
+  auto cur = this->currentLine;
+  if (!cur) {
+    return 1;
+  }
+
+  int n = cur->real_linenumber ? cur->real_linenumber : 1;
+  for (auto l = this->firstLine; l && l != cur && l->real_linenumber == 0;
+       l = l->next) { /* header */
+    if (l->bpos == 0)
+      n++;
+  }
+  return n;
+}
