@@ -769,14 +769,6 @@ void chkURLBuffer(const std::shared_ptr<Buffer> &buf) {
   buf->check_url = true;
 }
 
-/* follow HREF link in the buffer */
-FuncCoroutine bufferA(void) {
-  on_target = false;
-  followA();
-  on_target = true;
-  co_return;
-}
-
 void Buffer::saveBufferInfo() {
   if (FILE *fp = fopen(rcFile("bufinfo"), "w")) {
     fprintf(fp, "%s\n", this->res->currentURL.to_Str().c_str());

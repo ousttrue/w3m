@@ -1,79 +1,147 @@
 #pragma once
-#include <iostream>
 #include <uv.h>
 #include <coroutine>
 #include <chrono>
 #include <functional>
 
-struct FuncCoroutine {
-  struct promise_type // 👈重要
-  {
-    using handle_t = std::coroutine_handle<promise_type>;
-
-    auto get_return_object() {
-      return FuncCoroutine{handle_t::from_promise(*this)}; // 👈重要
-    }
+template <typename T> struct FuncCoroutine {
+  struct promise_type_base {
+    uv_async_t *async = nullptr;
     auto initial_suspend() {
-      // std::cout << "[promise_type] initial_suspend" << std::endl;
+      async = new uv_async_t;
+      uv_async_init(uv_default_loop(), async, [](auto a) {});
       return std::suspend_never{};
     }
+
+    // for resume outer coroutine when final
+    std::function<void()> onFinal;
     auto final_suspend() noexcept {
-      // std::cout << "[promise_type] final_suspend" << std::endl;
+      uv_close((uv_handle_t *)async, [](auto a) { delete a; });
+
+      if (this->onFinal) {
+        this->onFinal();
+      }
+
       return std::suspend_always{};
     }
     void unhandled_exception() { std::terminate(); }
-    void return_void() {}
+
+    template <class Rep, class Period>
+    auto await_transform(std::chrono::duration<Rep, Period> d) {
+      using awaiter_t = FuncCoroutine::ValueAwaiter<int>;
+      awaiter_t awaiter;
+      awaiter.onSuspend = [d](awaiter_t *self) {
+        auto timer = new uv_timer_t;
+        timer->data = self;
+        uv_timer_init(uv_default_loop(), timer);
+        uv_timer_start(
+            timer,
+            [](uv_timer_t *t) {
+              auto a = (awaiter_t *)t->data;
+
+              // auto a = (uv_async_t *)handle->data;
+              // uv_async_send(a);
+              a->resume(5);
+            },
+            d.count(), 0);
+      };
+      return awaiter;
+    }
+
+    template <typename S> auto await_transform(FuncCoroutine<S> nested) {
+      using awaiter_t = FuncCoroutine::ValueAwaiter<S>;
+      awaiter_t awaiter;
+      awaiter.onSuspend = [p = nested.handle.address()](awaiter_t *self) {
+        FuncCoroutine::handle_type::from_address(p)
+            .promise()
+            .onFinal = [p, self]() {
+          // std::cout << "onFinal: resume" << std::endl;
+          auto value =
+              FuncCoroutine<S>::handle_type::from_address(p).promise().value;
+          // resume outer awaiter use nested value
+          self->resume(*value);
+        };
+      };
+      return awaiter;
+    }
+
+    auto await_transform(FuncCoroutine<void> nested) {
+      return FuncCoroutine::VoidAwaiter{
+          [p = nested.handle.address()](auto outer) {
+            FuncCoroutine::handle_type::from_address(p).promise().onFinal =
+                [](auto self) {
+                  // std::cout << "onFinal: resume" << std::endl;
+                  // resume outer awaiter
+                  self->resume();
+                };
+          }};
+    }
   };
+
+  template <typename S> struct promise_type_t : public promise_type_base {
+    using handle_t = std::coroutine_handle<promise_type_t>;
+    auto get_return_object() {
+      return FuncCoroutine{handle_t::from_promise(*this)};
+    }
+    std::optional<T> value;
+    void return_value(const T &value) { this->value = value; }
+  };
+
+  using promise_type = promise_type_t<T>;
+
   std::coroutine_handle<promise_type> handle; // 👈重要
+  using handle_type = std::coroutine_handle<FuncCoroutine<T>::promise_type>;
+
+  template <typename S> struct ValueAwaiter {
+    std::optional<S> payload;
+    void *handle_address;
+    std::function<void(ValueAwaiter *)> onSuspend;
+    bool await_ready() const { return this->payload.has_value(); }
+    S await_resume() { return this->payload.value(); }
+    void await_suspend(FuncCoroutine::handle_type h) { /* ... */
+      this->handle_address = h.address();
+      if (this->onSuspend) {
+        this->onSuspend(this);
+      }
+    }
+    FuncCoroutine::handle_type handle() const {
+      return FuncCoroutine::handle_type::from_address(this->handle_address);
+    }
+    void resume(const S &value) {
+      this->payload = value;
+      assert(!handle().done());
+      handle().resume();
+    }
+  };
+
+  struct VoidAwaiter {
+    std::function<void(FuncCoroutine::handle_type)> onSuspend;
+    bool await_ready() const { return false; }
+    void await_resume() {}
+    void await_suspend(FuncCoroutine::handle_type h) { /* ... */
+      this->handle_address = h.address();
+      if (this->onSuspend) {
+        this->onSuspend(this);
+      }
+    }
+    FuncCoroutine::handle_type handle() const {
+      return FuncCoroutine::handle_type::from_address(this->handle_address);
+    }
+    void resume() {
+      assert(!handle().done());
+      handle().resume();
+    }
+  };
 };
 
-template <class Rep, class Period>
-auto operator co_await(std::chrono::duration<Rep, Period> d) {
-  struct awaiter {
-    using handle_t = std::coroutine_handle<>;
-    uv_timer_t *timer = nullptr;
-    std::chrono::milliseconds duration;
-    /* ... */
-    awaiter(std::chrono::milliseconds d) : duration(d) {
-      // std::cout << "duration: " << duration.count() << std::endl;
-    }
-    bool await_ready() const { return duration.count() <= 0; }
-    void await_resume() {
-      // std::cout << "await_resume" << std::endl;
-    }
-    void await_suspend(handle_t h) { /* ... */
-      // std::cout << "await_suspend" << std::endl;
-      timer = new uv_timer_t;
-      timer->data = h.address();
-      uv_timer_init(uv_default_loop(), timer);
-      uv_timer_start(
-          timer,
-          [](uv_timer_t *t) {
-            //
-            // std::cout << "timer: " << std::endl;
-            // auto a = (uv_async_t *)handle->data;
-            // uv_async_send(a);
-            handle_t::from_address(t->data).resume();
-          },
-          duration.count(), 0);
-    }
-  };
-  return awaiter{d};
-}
+template <>
+template <>
+struct FuncCoroutine<void>::promise_type_t<void> : public promise_type_base {
+  using handle_t = std::coroutine_handle<promise_type_t>;
+  auto get_return_object() {
+    return FuncCoroutine{handle_t::from_promise(*this)};
+  }
+  void return_void() {}
+};
 
-// int main(int argc, char **argv) {
-//
-//   std::cout << "start" << std::endl;
-//
-//   auto ret = task();
-//
-//   uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-//
-//   std::cout << "end" << std::endl;
-//
-//   std::cout << ret.handle.done() << std::endl;
-//
-//   return 0;
-// }
-
-using Func = std::function<FuncCoroutine()>;
+using Func = std::function<FuncCoroutine<void>()>;
