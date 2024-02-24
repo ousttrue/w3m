@@ -739,10 +739,13 @@ FuncCoroutine<void> editScr() {
 // GOTO_LINK
 //"Follow current hyperlink in a new buffer"
 FuncCoroutine<void> followA() {
+  auto [a, buf] = CurrentTab->currentBuffer()->followAnchor();
+  if (buf) {
+    App::instance().pushBuffer(buf, a->target);
 
-  CurrentTab->followAnchor();
+    App::instance().invalidate();
+  }
 
-  App::instance().invalidate();
   co_return;
 }
 
@@ -1689,21 +1692,13 @@ FuncCoroutine<void> prevT() {
 // TAB_LINK
 //"Follow current hyperlink in a new tab"
 FuncCoroutine<void> tabA() {
-  auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
-  if (!a) {
-    co_return;
+  auto [a, buf] = CurrentTab->currentBuffer()->followAnchor(false);
+  if (buf) {
+    App::instance().newTab();
+    App::instance().pushBuffer(buf, a->target);
+    App::instance().invalidate();
   }
-
-  App::instance().newTab();
-  auto buf = CurrentTab->currentBuffer();
-
-  CurrentTab->followAnchor(false);
-
-  if (buf != CurrentTab->currentBuffer())
-    CurrentTab->deleteBuffer(buf);
-  else
-    App::instance().deleteTab(CurrentTab);
-  App::instance().invalidate();
+  co_return;
 }
 
 // TAB_GOTO

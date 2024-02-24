@@ -1296,6 +1296,14 @@ void App::newTab(std::shared_ptr<Buffer> buf) {
 void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
                      std::string_view target) {
 
+  this->invalidate();
+
+  //   if (check_target && open_tab_blank && a->target.size() &&
+  //       (a->target == "_new" || a->target == "_blank")) {
+  //     // open in new tab
+  //     App::instance().newTab(buf);
+  //   }
+
   if (target.empty() || /* no target specified (that means this page is
   not a
                            frame page) */

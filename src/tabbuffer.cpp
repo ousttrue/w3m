@@ -263,60 +263,6 @@ TabBuffer::replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
   return newbuf;
 }
 
-std::shared_ptr<Buffer> TabBuffer::followAnchor(bool check_target) {
-  if (!this->currentBuffer()->layout.firstLine) {
-    return {};
-  }
-
-  auto a = this->currentBuffer()->layout.retrieveCurrentAnchor();
-  if (!a) {
-    if (auto f = this->currentBuffer()->layout.retrieveCurrentForm()) {
-      auto buf = this->currentBuffer()->followForm(f, false);
-      if (buf) {
-        App::instance().pushBuffer(buf, f->target);
-      }
-      return buf;
-    } else {
-      return {};
-    }
-  }
-
-  if (*a->url == '#') { /* index within this buffer */
-    auto buf = this->currentBuffer()->gotoLabel(a->url + 1);
-    if (buf) {
-      this->pushBuffer(buf);
-    }
-    return buf;
-  }
-
-  auto u = urlParse(a->url, this->currentBuffer()->res->getBaseURL());
-  if (u.to_Str() == this->currentBuffer()->res->currentURL.to_Str()) {
-    // index within this buffer
-    if (u.label.size()) {
-      auto buf = this->currentBuffer()->gotoLabel(u.label.c_str());
-      if (buf) {
-        this->pushBuffer(buf);
-      }
-      return buf;
-    }
-  }
-
-  auto buf = this->currentBuffer()->loadLink(a->url, a->option, nullptr);
-  if (!buf) {
-    return {};
-  }
-  App::instance().pushBuffer(buf, a->target);
-
-  if (check_target && open_tab_blank && a->target.size() &&
-      (a->target == "_new" || a->target == "_blank")) {
-    // open in new tab
-    App::instance().newTab(buf);
-  } else {
-    this->pushBuffer(buf);
-  }
-  return buf;
-}
-
 std::shared_ptr<Buffer>
 TabBuffer::forwardBuffer(const std::shared_ptr<Buffer> &buf) {
   std::shared_ptr<Buffer> b;
