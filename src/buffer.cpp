@@ -518,8 +518,8 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
   }
 }
 
-FuncCoroutine<std::shared_ptr<Buffer>> Buffer::followForm(Anchor *a,
-                                                          bool submit) {
+std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>
+Buffer::followForm(Anchor *a, bool submit) {
   // if (!currentBuffer()->layout.firstLine) {
   //   return {};
   // }
@@ -694,8 +694,8 @@ Buffer::followAnchor(bool check_target) {
 
   if (auto f = this->layout.retrieveCurrentForm()) {
     auto task = this->followForm(f, false);
-    assert(task.handle.done());
-    return {f, *task.handle.promise().value};
+    assert(task->return_value);
+    return {f, *task->return_value};
   }
 
   return {};

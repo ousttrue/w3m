@@ -1022,8 +1022,7 @@ void App::onFrame() {
     _currentTab->currentBuffer()->layout.pos = a->start.pos;
     if (auto buf = _currentTab->currentBuffer()
                        ->followForm(a, true)
-                       .handle.promise()
-                       .value.value()) {
+                       ->return_value.value()) {
       pushBuffer(buf, a->target);
     }
   }

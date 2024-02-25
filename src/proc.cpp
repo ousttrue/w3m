@@ -35,14 +35,14 @@
 
 // NOTHING nullptr @ @ @
 //"Do nothing"
-FuncCoroutine<void> nulcmd() { /* do nothing */
+std::shared_ptr<CoroutineState<void>> nulcmd() { /* do nothing */
   co_return;
 }
 
 /* Move page forward */
 // NEXT_PAGE
 //"Scroll down one page"
-FuncCoroutine<void> pgFore() {
+std::shared_ptr<CoroutineState<void>> pgFore() {
   CurrentTab->currentBuffer()->layout.nscroll(
       prec_num ? App::instance().searchKeyNum()
                : App::instance().searchKeyNum() *
@@ -53,7 +53,7 @@ FuncCoroutine<void> pgFore() {
 /* Move page backward */
 // PREV_PAGE
 //"Scroll up one page"
-FuncCoroutine<void> pgBack() {
+std::shared_ptr<CoroutineState<void>> pgBack() {
   CurrentTab->currentBuffer()->layout.nscroll(
       -(prec_num ? App::instance().searchKeyNum()
                  : App::instance().searchKeyNum() *
@@ -64,7 +64,7 @@ FuncCoroutine<void> pgBack() {
 /* Move half page forward */
 // NEXT_HALF_PAGE
 //"Scroll down half a page"
-FuncCoroutine<void> hpgFore() {
+std::shared_ptr<CoroutineState<void>> hpgFore() {
   CurrentTab->currentBuffer()->layout.nscroll(
       App::instance().searchKeyNum() *
       (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
@@ -74,7 +74,7 @@ FuncCoroutine<void> hpgFore() {
 /* Move half page backward */
 // PREV_HALF_PAGE
 //"Scroll up half a page"
-FuncCoroutine<void> hpgBack() {
+std::shared_ptr<CoroutineState<void>> hpgBack() {
   CurrentTab->currentBuffer()->layout.nscroll(
       -App::instance().searchKeyNum() *
       (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
@@ -84,7 +84,7 @@ FuncCoroutine<void> hpgBack() {
 /* 1 line up */
 // UP
 //"Scroll the screen up one line"
-FuncCoroutine<void> lup1() {
+std::shared_ptr<CoroutineState<void>> lup1() {
   CurrentTab->currentBuffer()->layout.nscroll(App::instance().searchKeyNum());
   co_return;
 }
@@ -92,7 +92,7 @@ FuncCoroutine<void> lup1() {
 /* 1 line down */
 // DOWN
 //"Scroll the screen down one line"
-FuncCoroutine<void> ldown1() {
+std::shared_ptr<CoroutineState<void>> ldown1() {
   CurrentTab->currentBuffer()->layout.nscroll(-App::instance().searchKeyNum());
   co_return;
 }
@@ -100,7 +100,7 @@ FuncCoroutine<void> ldown1() {
 /* move cursor position to the center of screen */
 // CENTER_V
 //"Center on cursor line"
-FuncCoroutine<void> ctrCsrV() {
+std::shared_ptr<CoroutineState<void>> ctrCsrV() {
   int offsety;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
@@ -117,7 +117,7 @@ FuncCoroutine<void> ctrCsrV() {
 
 // CENTER_H
 //"Center on cursor column"
-FuncCoroutine<void> ctrCsrH() {
+std::shared_ptr<CoroutineState<void>> ctrCsrH() {
   int offsetx;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
@@ -133,7 +133,7 @@ FuncCoroutine<void> ctrCsrH() {
 /* Redraw screen */
 // REDRAW
 //"Draw the screen anew"
-FuncCoroutine<void> rdrwSc() {
+std::shared_ptr<CoroutineState<void>> rdrwSc() {
   // clear();
   CurrentTab->currentBuffer()->layout.arrangeCursor();
   App::instance().invalidate();
@@ -142,14 +142,14 @@ FuncCoroutine<void> rdrwSc() {
 
 // SEARCH SEARCH_FORE WHEREIS
 //"Search forward"
-FuncCoroutine<void> srchfor() {
+std::shared_ptr<CoroutineState<void>> srchfor() {
   srch(forwardSearch, "Forward: ");
   co_return;
 }
 
 // ISEARCH
 //"Incremental search forward"
-FuncCoroutine<void> isrchfor() {
+std::shared_ptr<CoroutineState<void>> isrchfor() {
   isrch(forwardSearch, "I-search: ");
   co_return;
 }
@@ -158,14 +158,14 @@ FuncCoroutine<void> isrchfor() {
 
 // SEARCH_BACK
 //"Search backward"
-FuncCoroutine<void> srchbak() {
+std::shared_ptr<CoroutineState<void>> srchbak() {
   srch(backwardSearch, "Backward: ");
   co_return;
 }
 
 // ISEARCH_BACK
 //"Incremental search backward"
-FuncCoroutine<void> isrchbak() {
+std::shared_ptr<CoroutineState<void>> isrchbak() {
   isrch(backwardSearch, "I-search backward: ");
   co_return;
 }
@@ -173,7 +173,7 @@ FuncCoroutine<void> isrchbak() {
 /* Search next matching */
 // SEARCH_NEXT
 //"Continue search forward"
-FuncCoroutine<void> srchnxt() {
+std::shared_ptr<CoroutineState<void>> srchnxt() {
   srch_nxtprv(0);
   co_return;
 }
@@ -181,7 +181,7 @@ FuncCoroutine<void> srchnxt() {
 /* Search previous matching */
 // SEARCH_PREV
 //"Continue search backward"
-FuncCoroutine<void> srchprv() {
+std::shared_ptr<CoroutineState<void>> srchprv() {
   srch_nxtprv(1);
   co_return;
 }
@@ -189,7 +189,7 @@ FuncCoroutine<void> srchprv() {
 /* Shift screen left */
 // SHIFT_LEFT
 //"Shift screen left"
-FuncCoroutine<void> shiftl() {
+std::shared_ptr<CoroutineState<void>> shiftl() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
@@ -205,7 +205,7 @@ FuncCoroutine<void> shiftl() {
 /* Shift screen right */
 // SHIFT_RIGHT
 //"Shift screen right"
-FuncCoroutine<void> shiftr() {
+std::shared_ptr<CoroutineState<void>> shiftr() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
@@ -220,7 +220,7 @@ FuncCoroutine<void> shiftr() {
 
 // RIGHT
 //"Shift screen one column right"
-FuncCoroutine<void> col1R() {
+std::shared_ptr<CoroutineState<void>> col1R() {
   auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
   int j, column, n = App::instance().searchKeyNum();
@@ -239,7 +239,7 @@ FuncCoroutine<void> col1R() {
 
 // LEFT
 //"Shift screen one column left"
-FuncCoroutine<void> col1L() {
+std::shared_ptr<CoroutineState<void>> col1L() {
   auto buf = CurrentTab->currentBuffer();
   Line *l = buf->layout.currentLine;
   int j, n = App::instance().searchKeyNum();
@@ -257,7 +257,7 @@ FuncCoroutine<void> col1L() {
 
 // SETENV
 //"Set environment variable"
-FuncCoroutine<void> setEnv() {
+std::shared_ptr<CoroutineState<void>> setEnv() {
   const char *env;
   const char *var, *value;
 
@@ -282,17 +282,17 @@ FuncCoroutine<void> setEnv() {
 
 // PIPE_BUF
 //"Pipe current buffer through a shell command and display output"
-FuncCoroutine<void> pipeBuf() { co_return; }
+std::shared_ptr<CoroutineState<void>> pipeBuf() { co_return; }
 
 /* Execute shell command and read output ac pipe. */
 // PIPE_SHELL
 //"Execute shell command and display output"
-FuncCoroutine<void> pipesh() { co_return; }
+std::shared_ptr<CoroutineState<void>> pipesh() { co_return; }
 
 /* Execute shell command and load entire output to buffer */
 // READ_SHELL
 //"Execute shell command and display output"
-FuncCoroutine<void> readsh() {
+std::shared_ptr<CoroutineState<void>> readsh() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
@@ -323,7 +323,7 @@ FuncCoroutine<void> readsh() {
 /* Execute shell command */
 // EXEC_SHELL SHELL
 //"Execute shell command and display output"
-FuncCoroutine<void> execsh() {
+std::shared_ptr<CoroutineState<void>> execsh() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto cmd = App::instance().searchKeyData();
   if (cmd == nullptr || *cmd == '\0') {
@@ -345,7 +345,7 @@ FuncCoroutine<void> execsh() {
 /* Load file */
 // LOAD
 //"Open local file in a new buffer"
-FuncCoroutine<void> ldfile() {
+std::shared_ptr<CoroutineState<void>> ldfile() {
   auto fn = App::instance().searchKeyData();
   // if (fn == nullptr || *fn == '\0') {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
@@ -370,7 +370,7 @@ FuncCoroutine<void> ldfile() {
 /* Load help file */
 // HELP
 //"Show help panel"
-FuncCoroutine<void> ldhelp() {
+std::shared_ptr<CoroutineState<void>> ldhelp() {
   auto lang = AcceptLang;
   auto n = strcspn(lang, ";, \t");
   auto tmp =
@@ -383,7 +383,7 @@ FuncCoroutine<void> ldhelp() {
 
 // MOVE_LEFT
 //"Cursor left"
-FuncCoroutine<void> movL() {
+std::shared_ptr<CoroutineState<void>> movL() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movL(
       CurrentTab->currentBuffer()->layout.COLS / 2, m);
@@ -392,7 +392,7 @@ FuncCoroutine<void> movL() {
 
 // MOVE_LEFT1
 //"Cursor left. With edge touched, slide"
-FuncCoroutine<void> movL1() {
+std::shared_ptr<CoroutineState<void>> movL1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movL(1, m);
   co_return;
@@ -400,7 +400,7 @@ FuncCoroutine<void> movL1() {
 
 // MOVE_DOWN
 //"Cursor down"
-FuncCoroutine<void> movD() {
+std::shared_ptr<CoroutineState<void>> movD() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(
       (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
@@ -409,7 +409,7 @@ FuncCoroutine<void> movD() {
 
 // MOVE_DOWN1
 //"Cursor down. With edge touched, slide"
-FuncCoroutine<void> movD1() {
+std::shared_ptr<CoroutineState<void>> movD1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(1, m);
   co_return;
@@ -417,7 +417,7 @@ FuncCoroutine<void> movD1() {
 
 // MOVE_UP
 //"Cursor up"
-FuncCoroutine<void> movU() {
+std::shared_ptr<CoroutineState<void>> movU() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(
       (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
@@ -426,7 +426,7 @@ FuncCoroutine<void> movU() {
 
 // MOVE_UP1
 //"Cursor up. With edge touched, slide"
-FuncCoroutine<void> movU1() {
+std::shared_ptr<CoroutineState<void>> movU1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(1, m);
   co_return;
@@ -434,7 +434,7 @@ FuncCoroutine<void> movU1() {
 
 // MOVE_RIGHT
 //"Cursor right"
-FuncCoroutine<void> movR() {
+std::shared_ptr<CoroutineState<void>> movR() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movR(
       CurrentTab->currentBuffer()->layout.COLS / 2, m);
@@ -443,7 +443,7 @@ FuncCoroutine<void> movR() {
 
 // MOVE_RIGHT1
 //"Cursor right. With edge touched, slide"
-FuncCoroutine<void> movR1() {
+std::shared_ptr<CoroutineState<void>> movR1() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movR(1, m);
   co_return;
@@ -451,7 +451,7 @@ FuncCoroutine<void> movR1() {
 
 // PREV_WORD
 //"Move to the previous word"
-FuncCoroutine<void> movLW() {
+std::shared_ptr<CoroutineState<void>> movLW() {
   char *lb;
   Line *pline, *l;
   int ppos;
@@ -509,7 +509,7 @@ end:
 
 // NEXT_WORD
 //"Move to the next word"
-FuncCoroutine<void> movRW() {
+std::shared_ptr<CoroutineState<void>> movRW() {
   char *lb;
   Line *pline, *l;
   int ppos;
@@ -559,7 +559,7 @@ end:
 /* Quit */
 // ABORT EXIT
 //"Quit without confirmation"
-FuncCoroutine<void> quitfm() {
+std::shared_ptr<CoroutineState<void>> quitfm() {
   App::instance().exit(0);
   co_return;
 }
@@ -567,7 +567,7 @@ FuncCoroutine<void> quitfm() {
 /* Question and Quit */
 // QUIT
 //"Quit with confirmation request"
-FuncCoroutine<void> qquitfm() {
+std::shared_ptr<CoroutineState<void>> qquitfm() {
   App::instance().exit(0);
   co_return;
 }
@@ -575,7 +575,7 @@ FuncCoroutine<void> qquitfm() {
 /* Select buffer */
 // SELECT
 //"Display buffer-stack panel"
-FuncCoroutine<void> selBuf() {
+std::shared_ptr<CoroutineState<void>> selBuf() {
 
   // auto ok = false;
   // do {
@@ -592,7 +592,7 @@ FuncCoroutine<void> selBuf() {
 /* Suspend (on BSD), or run interactive shell (on SysV) */
 // INTERRUPT SUSPEND
 //"Suspend w3m to background"
-FuncCoroutine<void> susp() {
+std::shared_ptr<CoroutineState<void>> susp() {
   // #ifndef SIGSTOP
   //   const char *shell;
   // #endif /* not SIGSTOP */
@@ -621,7 +621,7 @@ FuncCoroutine<void> susp() {
 
 // GOTO_LINE
 //"Go to the specified line"
-FuncCoroutine<void> goLine() {
+std::shared_ptr<CoroutineState<void>> goLine() {
 
   auto str = App::instance().searchKeyData();
   if (prec_num)
@@ -636,14 +636,14 @@ FuncCoroutine<void> goLine() {
 
 // BEGIN
 //"Go to the first line"
-FuncCoroutine<void> goLineF() {
+std::shared_ptr<CoroutineState<void>> goLineF() {
   CurrentTab->currentBuffer()->layout._goLine("^", prec_num);
   co_return;
 }
 
 // END
 //"Go to the last line"
-FuncCoroutine<void> goLineL() {
+std::shared_ptr<CoroutineState<void>> goLineL() {
   CurrentTab->currentBuffer()->layout._goLine("$", prec_num);
   co_return;
 }
@@ -651,7 +651,7 @@ FuncCoroutine<void> goLineL() {
 /* Go to the beginning of the line */
 // LINE_BEGIN
 //"Go to the beginning of the line"
-FuncCoroutine<void> linbeg() {
+std::shared_ptr<CoroutineState<void>> linbeg() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   while (CurrentTab->currentBuffer()->layout.currentLine->prev &&
@@ -666,7 +666,7 @@ FuncCoroutine<void> linbeg() {
 /* Go to the bottom of the line */
 // LINE_END
 //"Go to the end of the line"
-FuncCoroutine<void> linend() {
+std::shared_ptr<CoroutineState<void>> linend() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   while (CurrentTab->currentBuffer()->layout.currentLine->next &&
@@ -682,7 +682,7 @@ FuncCoroutine<void> linend() {
 /* Run editor on the current buffer */
 // EDIT
 //"Edit local source"
-FuncCoroutine<void> editBf() {
+std::shared_ptr<CoroutineState<void>> editBf() {
   auto fn = CurrentTab->currentBuffer()->res->filename;
 
   if (fn.empty() || /* Behaving as a pager */
@@ -718,7 +718,7 @@ FuncCoroutine<void> editBf() {
 /* Run editor on the current screen */
 // EDIT_SCREEN
 //"Edit rendered copy of document"
-FuncCoroutine<void> editScr() {
+std::shared_ptr<CoroutineState<void>> editScr() {
   auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
@@ -738,7 +738,7 @@ FuncCoroutine<void> editScr() {
 /* follow HREF link */
 // GOTO_LINK
 //"Follow current hyperlink in a new buffer"
-FuncCoroutine<void> followA() {
+std::shared_ptr<CoroutineState<void>> followA() {
   auto [a, buf] = CurrentTab->currentBuffer()->followAnchor();
   if (buf) {
     App::instance().pushBuffer(buf, a->target);
@@ -752,7 +752,7 @@ FuncCoroutine<void> followA() {
 /* view inline image */
 // VIEW_IMAGE
 //"Display image in viewer"
-FuncCoroutine<void> followI() {
+std::shared_ptr<CoroutineState<void>> followI() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
 
@@ -778,12 +778,10 @@ FuncCoroutine<void> followI() {
 /* submit form */
 // SUBMIT
 //"Submit form"
-FuncCoroutine<void> submitForm() {
+std::shared_ptr<CoroutineState<void>> submitForm() {
   if (auto f = CurrentTab->currentBuffer()->layout.retrieveCurrentForm()) {
-    auto buf = CurrentTab->currentBuffer()
-                   ->followForm(f, true)
-                   .handle.promise()
-                   .value.value();
+    auto buf =
+        CurrentTab->currentBuffer()->followForm(f, true)->return_value.value();
     ;
     if (buf) {
       App::instance().pushBuffer(buf, f->target);
@@ -795,7 +793,7 @@ FuncCoroutine<void> submitForm() {
 /* go to the top anchor */
 // LINK_BEGIN
 //"Move to the first hyperlink"
-FuncCoroutine<void> topA() {
+std::shared_ptr<CoroutineState<void>> topA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
   BufferPoint *po;
   Anchor *an;
@@ -834,7 +832,7 @@ FuncCoroutine<void> topA() {
 /* go to the last anchor */
 // LINK_END
 //"Move to the last hyperlink"
-FuncCoroutine<void> lastA() {
+std::shared_ptr<CoroutineState<void>> lastA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
   BufferPoint *po;
   Anchor *an;
@@ -875,7 +873,7 @@ FuncCoroutine<void> lastA() {
 /* go to the nth anchor */
 // LINK_N
 //"Go to the nth link"
-FuncCoroutine<void> nthA() {
+std::shared_ptr<CoroutineState<void>> nthA() {
   auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
 
   int n = App::instance().searchKeyNum();
@@ -911,7 +909,7 @@ FuncCoroutine<void> nthA() {
 /* go to the next anchor */
 // NEXT_LINK
 //"Move to the next hyperlink"
-FuncCoroutine<void> nextA() {
+std::shared_ptr<CoroutineState<void>> nextA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(false, baseUr, n);
@@ -921,7 +919,7 @@ FuncCoroutine<void> nextA() {
 /* go to the previous anchor */
 // PREV_LINK
 //"Move to the previous hyperlink"
-FuncCoroutine<void> prevA() {
+std::shared_ptr<CoroutineState<void>> prevA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(false, baseUr, n);
@@ -931,7 +929,7 @@ FuncCoroutine<void> prevA() {
 /* go to the next visited anchor */
 // NEXT_VISITED
 //"Move to the next visited hyperlink"
-FuncCoroutine<void> nextVA() {
+std::shared_ptr<CoroutineState<void>> nextVA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._nextA(true, baseUr, n);
@@ -941,7 +939,7 @@ FuncCoroutine<void> nextVA() {
 /* go to the previous visited anchor */
 // PREV_VISITED
 //"Move to the previous visited hyperlink"
-FuncCoroutine<void> prevVA() {
+std::shared_ptr<CoroutineState<void>> prevVA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
   CurrentTab->currentBuffer()->layout._prevA(true, baseUr, n);
@@ -951,7 +949,7 @@ FuncCoroutine<void> prevVA() {
 /* go to the next left anchor */
 // NEXT_LEFT
 //"Move left to the next hyperlink"
-FuncCoroutine<void> nextL() {
+std::shared_ptr<CoroutineState<void>> nextL() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(-1, 0, n);
   co_return;
@@ -960,7 +958,7 @@ FuncCoroutine<void> nextL() {
 /* go to the next left-up anchor */
 // NEXT_LEFT_UP
 //"Move left or upward to the next hyperlink"
-FuncCoroutine<void> nextLU() {
+std::shared_ptr<CoroutineState<void>> nextLU() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(-1, -1, n);
   co_return;
@@ -969,7 +967,7 @@ FuncCoroutine<void> nextLU() {
 /* go to the next right anchor */
 // NEXT_RIGHT
 //"Move right to the next hyperlink"
-FuncCoroutine<void> nextR() {
+std::shared_ptr<CoroutineState<void>> nextR() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(1, 0, n);
   co_return;
@@ -978,7 +976,7 @@ FuncCoroutine<void> nextR() {
 /* go to the next right-down anchor */
 // NEXT_RIGHT_DOWN
 //"Move right or downward to the next hyperlink"
-FuncCoroutine<void> nextRD() {
+std::shared_ptr<CoroutineState<void>> nextRD() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextX(1, 1, n);
   co_return;
@@ -987,7 +985,7 @@ FuncCoroutine<void> nextRD() {
 /* go to the next downward anchor */
 // NEXT_DOWN
 //"Move downward to the next hyperlink"
-FuncCoroutine<void> nextD() {
+std::shared_ptr<CoroutineState<void>> nextD() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextY(1, n);
   co_return;
@@ -996,7 +994,7 @@ FuncCoroutine<void> nextD() {
 /* go to the next upward anchor */
 // NEXT_UP
 //"Move upward to the next hyperlink"
-FuncCoroutine<void> nextU() {
+std::shared_ptr<CoroutineState<void>> nextU() {
   int n = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout.nextY(-1, n);
   co_return;
@@ -1005,7 +1003,7 @@ FuncCoroutine<void> nextU() {
 /* go to the next bufferr */
 // NEXT
 //"Switch to the next buffer"
-FuncCoroutine<void> nextBf() {
+std::shared_ptr<CoroutineState<void>> nextBf() {
   for (int i = 0; i < PREC_NUM; i++) {
     auto buf = CurrentTab->forwardBuffer(CurrentTab->currentBuffer());
     if (!buf) {
@@ -1021,7 +1019,7 @@ FuncCoroutine<void> nextBf() {
 /* go to the previous bufferr */
 // PREV
 //"Switch to the previous buffer"
-FuncCoroutine<void> prevBf() {
+std::shared_ptr<CoroutineState<void>> prevBf() {
   for (int i = 0; i < PREC_NUM; i++) {
     auto buf = CurrentTab->currentBuffer()->backBuffer;
     if (!buf) {
@@ -1037,7 +1035,7 @@ FuncCoroutine<void> prevBf() {
 /* delete current buffer and back to the previous buffer */
 // BACK
 //"Close current buffer and return to the one below in stack"
-FuncCoroutine<void> backBf() {
+std::shared_ptr<CoroutineState<void>> backBf() {
   // Buffer *buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_FRAME];
 
   if (!CurrentTab->currentBuffer()->checkBackBuffer()) {
@@ -1056,7 +1054,7 @@ FuncCoroutine<void> backBf() {
 
 // DELETE_PREVBUF
 //"Delete previous buffer (mainly for local CGI-scripts)"
-FuncCoroutine<void> deletePrevBuf() {
+std::shared_ptr<CoroutineState<void>> deletePrevBuf() {
   auto buf = CurrentTab->currentBuffer()->backBuffer;
   if (buf) {
     CurrentTab->deleteBuffer(buf);
@@ -1066,14 +1064,14 @@ FuncCoroutine<void> deletePrevBuf() {
 
 // GOTO
 //"Open specified document in a new buffer"
-FuncCoroutine<void> goURL() {
+std::shared_ptr<CoroutineState<void>> goURL() {
   CurrentTab->goURL0("Goto URL: ", false);
   co_return;
 }
 
 // GOTO_HOME
 //"Open home page in a new buffer"
-FuncCoroutine<void> goHome() {
+std::shared_ptr<CoroutineState<void>> goHome() {
   const char *url;
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
@@ -1094,7 +1092,7 @@ FuncCoroutine<void> goHome() {
 
 // GOTO_RELATIVE
 //"Go to relative address"
-FuncCoroutine<void> gorURL() {
+std::shared_ptr<CoroutineState<void>> gorURL() {
   CurrentTab->goURL0("Goto relative URL: ", true);
   co_return;
 }
@@ -1102,7 +1100,7 @@ FuncCoroutine<void> gorURL() {
 /* load bookmark */
 // BOOKMARK VIEW_BOOKMARK
 //"View bookmarks"
-FuncCoroutine<void> ldBmark() {
+std::shared_ptr<CoroutineState<void>> ldBmark() {
   CurrentTab->cmd_loadURL(BookmarkFile, {}, {.no_referer = true}, nullptr);
   co_return;
 }
@@ -1110,7 +1108,7 @@ FuncCoroutine<void> ldBmark() {
 /* Add current to bookmark */
 // ADD_BOOKMARK
 //"Add current page to bookmarks"
-FuncCoroutine<void> adBmark() {
+std::shared_ptr<CoroutineState<void>> adBmark() {
   Str *tmp;
   FormList *request;
 
@@ -1134,7 +1132,7 @@ FuncCoroutine<void> adBmark() {
 /* option setting */
 // OPTIONS
 //"Display options setting panel"
-FuncCoroutine<void> ldOpt() {
+std::shared_ptr<CoroutineState<void>> ldOpt() {
   CurrentTab->pushBuffer(load_option_panel());
   co_return;
 }
@@ -1142,7 +1140,7 @@ FuncCoroutine<void> ldOpt() {
 /* set an option */
 // SET_OPTION
 //"Set option"
-FuncCoroutine<void> setOpt() {
+std::shared_ptr<CoroutineState<void>> setOpt() {
   const char *opt;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -1166,7 +1164,7 @@ FuncCoroutine<void> setOpt() {
 /* error message list */
 // MSGS
 //"Display error messages"
-FuncCoroutine<void> msgs() {
+std::shared_ptr<CoroutineState<void>> msgs() {
   auto buf = App::instance().message_list_panel();
   CurrentTab->pushBuffer(buf);
   co_return;
@@ -1175,7 +1173,7 @@ FuncCoroutine<void> msgs() {
 /* page info */
 // INFO
 //"Display information about the current document"
-FuncCoroutine<void> pginfo() {
+std::shared_ptr<CoroutineState<void>> pginfo() {
   auto buf = CurrentTab->currentBuffer()->page_info_panel();
   CurrentTab->pushBuffer(buf);
   co_return;
@@ -1184,7 +1182,7 @@ FuncCoroutine<void> pginfo() {
 /* link,anchor,image list */
 // LIST
 //"Show all URLs referenced"
-FuncCoroutine<void> linkLst() {
+std::shared_ptr<CoroutineState<void>> linkLst() {
   if (auto buf = link_list_panel(CurrentTab->currentBuffer())) {
     CurrentTab->pushBuffer(buf);
   }
@@ -1194,7 +1192,7 @@ FuncCoroutine<void> linkLst() {
 /* cookie list */
 // COOKIE
 //"View cookie list"
-FuncCoroutine<void> cooLst() {
+std::shared_ptr<CoroutineState<void>> cooLst() {
   if (auto buf = cookie_list_panel()) {
     CurrentTab->pushBuffer(buf);
   }
@@ -1204,7 +1202,7 @@ FuncCoroutine<void> cooLst() {
 /* History page */
 // HISTORY
 //"Show browsing history"
-FuncCoroutine<void> ldHist() {
+std::shared_ptr<CoroutineState<void>> ldHist() {
   if (auto buf = historyBuffer(URLHist)) {
     CurrentTab->pushBuffer(buf);
   }
@@ -1214,7 +1212,7 @@ FuncCoroutine<void> ldHist() {
 /* download HREF link */
 // SAVE_LINK
 //"Save hyperlink target"
-FuncCoroutine<void> svA() {
+std::shared_ptr<CoroutineState<void>> svA() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   // do_download = true;
   followA();
@@ -1225,7 +1223,7 @@ FuncCoroutine<void> svA() {
 /* download IMG link */
 // SAVE_IMAGE
 //"Save inline image"
-FuncCoroutine<void> svI() {
+std::shared_ptr<CoroutineState<void>> svI() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   // do_download = true;
   followI();
@@ -1236,7 +1234,7 @@ FuncCoroutine<void> svI() {
 /* save buffer */
 // PRINT SAVE_SCREEN
 //"Save rendered document"
-FuncCoroutine<void> svBuf() {
+std::shared_ptr<CoroutineState<void>> svBuf() {
   const char *qfile = nullptr, *file;
   FILE *f;
   int is_pipe;
@@ -1286,7 +1284,7 @@ FuncCoroutine<void> svBuf() {
 /* save source */
 // DOWNLOAD SAVE
 //"Save document source"
-FuncCoroutine<void> svSrc() {
+std::shared_ptr<CoroutineState<void>> svSrc() {
   if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
     co_return;
   }
@@ -1309,7 +1307,7 @@ FuncCoroutine<void> svSrc() {
 /* peek URL */
 // PEEK_LINK
 //"Show target address"
-FuncCoroutine<void> peekURL() {
+std::shared_ptr<CoroutineState<void>> peekURL() {
   App::instance()._peekURL(0);
   co_return;
 }
@@ -1317,14 +1315,14 @@ FuncCoroutine<void> peekURL() {
 /* peek URL of image */
 // PEEK_IMG
 //"Show image address"
-FuncCoroutine<void> peekIMG() {
+std::shared_ptr<CoroutineState<void>> peekIMG() {
   App::instance()._peekURL(1);
   co_return;
 }
 
 // PEEK
 //"Show current address"
-FuncCoroutine<void> curURL() {
+std::shared_ptr<CoroutineState<void>> curURL() {
   auto url = App::instance().currentUrl();
   App::instance().disp_message(url.c_str());
   co_return;
@@ -1333,7 +1331,7 @@ FuncCoroutine<void> curURL() {
 /* view HTML source */
 // SOURCE VIEW
 //"Toggle between HTML shown or processed"
-FuncCoroutine<void> vwSrc() {
+std::shared_ptr<CoroutineState<void>> vwSrc() {
 
   if (CurrentTab->currentBuffer()->res->type.empty()) {
     co_return;
@@ -1350,7 +1348,7 @@ FuncCoroutine<void> vwSrc() {
 /* reload */
 // RELOAD
 //"Load current document anew"
-FuncCoroutine<void> reload() {
+std::shared_ptr<CoroutineState<void>> reload() {
 
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
@@ -1420,7 +1418,7 @@ FuncCoroutine<void> reload() {
 /* reshape */
 // RESHAPE
 //"Re-render document"
-FuncCoroutine<void> reshape() {
+std::shared_ptr<CoroutineState<void>> reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
   if (CurrentTab->currentBuffer()->layout.need_reshape &&
       CurrentTab->currentBuffer()->reopenSource()) {
@@ -1442,7 +1440,7 @@ FuncCoroutine<void> reshape() {
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
-FuncCoroutine<void> chkURL() {
+std::shared_ptr<CoroutineState<void>> chkURL() {
   CurrentTab->currentBuffer()->layout.chkURLBuffer();
   App::instance().invalidate();
   co_return;
@@ -1450,7 +1448,7 @@ FuncCoroutine<void> chkURL() {
 
 // MARK_WORD
 //"Turn current word into hyperlink"
-FuncCoroutine<void> chkWORD() {
+std::shared_ptr<CoroutineState<void>> chkWORD() {
   int spos, epos;
   auto p = CurrentTab->currentBuffer()->layout.getCurWord(&spos, &epos);
   if (p.empty())
@@ -1463,11 +1461,11 @@ FuncCoroutine<void> chkWORD() {
 /* render frames */
 // FRAME
 //"Toggle rendering HTML frames"
-FuncCoroutine<void> rFrame() { co_return; }
+std::shared_ptr<CoroutineState<void>> rFrame() { co_return; }
 
 // EXTERN
 //"Display using an external browser"
-FuncCoroutine<void> extbrz() {
+std::shared_ptr<CoroutineState<void>> extbrz() {
   if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
@@ -1479,7 +1477,7 @@ FuncCoroutine<void> extbrz() {
 
 // EXTERN_LINK
 //"Display target using an external browser"
-FuncCoroutine<void> linkbrz() {
+std::shared_ptr<CoroutineState<void>> linkbrz() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
@@ -1492,7 +1490,7 @@ FuncCoroutine<void> linkbrz() {
 /* show current line number and number of lines in the entire document */
 // LINE_INFO
 //"Display current position in document"
-FuncCoroutine<void> curlno() {
+std::shared_ptr<CoroutineState<void>> curlno() {
   Line *l = CurrentTab->currentBuffer()->layout.currentLine;
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
@@ -1517,14 +1515,14 @@ FuncCoroutine<void> curlno() {
 
 // VERSION
 //"Display the version of w3m"
-FuncCoroutine<void> dispVer() {
+std::shared_ptr<CoroutineState<void>> dispVer() {
   App::instance().disp_message(Sprintf("w3m version %s", w3m_version)->ptr);
   co_return;
 }
 
 // WRAP_TOGGLE
 //"Toggle wrapping mode in searches"
-FuncCoroutine<void> wrapToggle() {
+std::shared_ptr<CoroutineState<void>> wrapToggle() {
   if (WrapSearch) {
     WrapSearch = false;
     App::instance().disp_message("Wrap search off");
@@ -1537,7 +1535,7 @@ FuncCoroutine<void> wrapToggle() {
 
 // DICT_WORD
 //"Execute dictionary command (see README.dict)"
-FuncCoroutine<void> dictword() {
+std::shared_ptr<CoroutineState<void>> dictword() {
   // auto buf = execdict(inputStr("(dictionary)!", ""));
   // CurrentTab->pushBuffer(buf);
   // App::instance().invalidate();
@@ -1547,7 +1545,7 @@ FuncCoroutine<void> dictword() {
 
 // DICT_WORD_AT
 //"Execute dictionary command for word at cursor"
-FuncCoroutine<void> dictwordat() {
+std::shared_ptr<CoroutineState<void>> dictwordat() {
   auto word = CurrentTab->currentBuffer()->layout.getCurWord();
   if (auto buf = execdict(word.c_str())) {
     CurrentTab->pushBuffer(buf);
@@ -1558,14 +1556,14 @@ FuncCoroutine<void> dictwordat() {
 
 // COMMAND
 //"Invoke w3m function(s)"
-FuncCoroutine<void> execCmd() {
+std::shared_ptr<CoroutineState<void>> execCmd() {
   App::instance().doCmd();
   co_return;
 }
 
 // ALARM
 //"Set alarm"
-FuncCoroutine<void> setAlarm() {
+std::shared_ptr<CoroutineState<void>> setAlarm() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto data = App::instance().searchKeyData();
   if (data == nullptr || *data == '\0') {
@@ -1592,7 +1590,7 @@ FuncCoroutine<void> setAlarm() {
 
 // REINIT
 //"Reload configuration file"
-FuncCoroutine<void> reinit() {
+std::shared_ptr<CoroutineState<void>> reinit() {
   auto resource = App::instance().searchKeyData();
 
   if (resource == nullptr) {
@@ -1636,7 +1634,7 @@ FuncCoroutine<void> reinit() {
 
 // DEFINE_KEY
 //"Define a binding between a key stroke combination and a command"
-FuncCoroutine<void> defKey() {
+std::shared_ptr<CoroutineState<void>> defKey() {
   const char *data;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
@@ -1654,7 +1652,7 @@ FuncCoroutine<void> defKey() {
 
 // NEW_TAB
 //"Open a new tab (with current document)"
-FuncCoroutine<void> newT() {
+std::shared_ptr<CoroutineState<void>> newT() {
   App::instance().newTab();
   App::instance().invalidate();
   co_return;
@@ -1662,7 +1660,7 @@ FuncCoroutine<void> newT() {
 
 // CLOSE_TAB
 //"Close tab"
-FuncCoroutine<void> closeT() {
+std::shared_ptr<CoroutineState<void>> closeT() {
 
   if (App::instance().nTab() <= 1)
     co_return;
@@ -1679,7 +1677,7 @@ FuncCoroutine<void> closeT() {
 
 // NEXT_TAB
 //"Switch to the next tab"
-FuncCoroutine<void> nextT() {
+std::shared_ptr<CoroutineState<void>> nextT() {
   App::instance().nextTab();
   App::instance().invalidate();
   co_return;
@@ -1687,7 +1685,7 @@ FuncCoroutine<void> nextT() {
 
 // PREV_TAB
 //"Switch to the previous tab"
-FuncCoroutine<void> prevT() {
+std::shared_ptr<CoroutineState<void>> prevT() {
   App::instance().prevTab();
   App::instance().invalidate();
   co_return;
@@ -1695,7 +1693,7 @@ FuncCoroutine<void> prevT() {
 
 // TAB_LINK
 //"Follow current hyperlink in a new tab"
-FuncCoroutine<void> tabA() {
+std::shared_ptr<CoroutineState<void>> tabA() {
   auto [a, buf] = CurrentTab->currentBuffer()->followAnchor(false);
   if (buf) {
     App::instance().newTab();
@@ -1707,7 +1705,7 @@ FuncCoroutine<void> tabA() {
 
 // TAB_GOTO
 //"Open specified document in a new tab"
-FuncCoroutine<void> tabURL() {
+std::shared_ptr<CoroutineState<void>> tabURL() {
   App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
@@ -1722,7 +1720,7 @@ FuncCoroutine<void> tabURL() {
 
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
-FuncCoroutine<void> tabrURL() {
+std::shared_ptr<CoroutineState<void>> tabrURL() {
   App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
@@ -1737,14 +1735,14 @@ FuncCoroutine<void> tabrURL() {
 
 // TAB_RIGHT
 //"Move right along the tab bar"
-FuncCoroutine<void> tabR() {
+std::shared_ptr<CoroutineState<void>> tabR() {
   App::instance().tabRight();
   co_return;
 }
 
 // TAB_LEFT
 //"Move left along the tab bar"
-FuncCoroutine<void> tabL() {
+std::shared_ptr<CoroutineState<void>> tabL() {
   App::instance().tabLeft();
   co_return;
 }
@@ -1752,7 +1750,7 @@ FuncCoroutine<void> tabL() {
 /* download panel */
 // DOWNLOAD_LIST
 //"Display downloads panel"
-FuncCoroutine<void> ldDL() {
+std::shared_ptr<CoroutineState<void>> ldDL() {
   int replace = false, new_tab = false;
 
   if (!FirstDL) {
@@ -1796,7 +1794,7 @@ FuncCoroutine<void> ldDL() {
 
 // UNDO
 //"Cancel the last cursor movement"
-FuncCoroutine<void> undoPos() {
+std::shared_ptr<CoroutineState<void>> undoPos() {
   if (!CurrentTab->currentBuffer()->layout.firstLine)
     co_return;
   CurrentTab->currentBuffer()->layout.undoPos(PREC_NUM);
@@ -1804,7 +1802,7 @@ FuncCoroutine<void> undoPos() {
 
 // REDO
 //"Cancel the last undo"
-FuncCoroutine<void> redoPos() {
+std::shared_ptr<CoroutineState<void>> redoPos() {
   if (!CurrentTab->currentBuffer()->layout.firstLine)
     co_return;
   CurrentTab->currentBuffer()->layout.redoPos(PREC_NUM);
@@ -1812,7 +1810,7 @@ FuncCoroutine<void> redoPos() {
 
 // CURSOR_TOP
 //"Move cursor to the top of the screen"
-FuncCoroutine<void> cursorTop() {
+std::shared_ptr<CoroutineState<void>> cursorTop() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   CurrentTab->currentBuffer()->layout.currentLine =
@@ -1824,7 +1822,7 @@ FuncCoroutine<void> cursorTop() {
 
 // CURSOR_MIDDLE
 //"Move cursor to the middle of the screen"
-FuncCoroutine<void> cursorMiddle() {
+std::shared_ptr<CoroutineState<void>> cursorMiddle() {
   int offsety;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
@@ -1838,7 +1836,7 @@ FuncCoroutine<void> cursorMiddle() {
 
 // CURSOR_BOTTOM
 //"Move cursor to the bottom of the screen"
-FuncCoroutine<void> cursorBottom() {
+std::shared_ptr<CoroutineState<void>> cursorBottom() {
   int offsety;
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
@@ -1851,7 +1849,7 @@ FuncCoroutine<void> cursorBottom() {
 }
 
 /* follow HREF link in the buffer */
-FuncCoroutine<void> bufferA(void) {
+std::shared_ptr<CoroutineState<void>> bufferA(void) {
   on_target = false;
   followA();
   on_target = true;

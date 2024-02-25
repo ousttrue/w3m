@@ -51,7 +51,8 @@ public:
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> sourceBuffer();
-  FuncCoroutine<std::shared_ptr<Buffer>> followForm(Anchor *a, bool submit);
+  std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>
+  followForm(Anchor *a, bool submit);
   bool reopenSource();
   std::string link_info() const;
   std::shared_ptr<Buffer> page_info_panel();
