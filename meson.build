@@ -10,13 +10,7 @@ project(
 # gc_dep= dependency('gc')
 cxx = meson.get_compiler('cpp')
 gc_dep = dependency('gc', default_options: ['default_library=static'])
-
-if host_machine.system() == 'windows'
-    ssl_dep = dependency('openssl')
-else
-    ssl_dep = dependency('openssl')
-endif
-
+ssl_dep = dependency('openssl', default_options: ['default_library=static'])
 nkf_dep = dependency('nkf')
 lua_dep = dependency('lua')
 libuv_dep = dependency('libuv')
