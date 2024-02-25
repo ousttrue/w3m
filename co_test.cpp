@@ -1,11 +1,9 @@
 #include <iostream>
-// #include "src/func.h"
 #include <coroutine>
 #include <functional>
 #include <memory>
-#include <utility>
 #include <optional>
-// #include <memory>
+#include <assert.h>
 
 template <typename T> struct CoroutineState {
   using Disposer = std::function<void()>;
@@ -34,13 +32,89 @@ public:
 };
 
 template <typename T> struct CoroutinePromiseBase {
-  using handle_t = std::coroutine_handle<CoroutineState<T>>;
-  auto initial_suspend() { return std::suspend_never{}; }
-  auto final_suspend() noexcept { return std::suspend_always{}; }
+  using handle_t = std::coroutine_handle<T>;
+  auto initial_suspend() {
+    // hot-start
+    return std::suspend_never{};
+  }
+  auto final_suspend() noexcept {
+    // keep coroutine state
+    // https://devblogs.microsoft.com/oldnewthing/20210331-00/?p=105028
+    return std::suspend_always{};
+  }
   void unhandled_exception() { std::terminate(); }
+
+  template <typename S> struct ValueAwaiter {
+    std::optional<S> payload;
+    void *handle_address;
+    std::function<void(ValueAwaiter *)> onSuspend;
+    bool await_ready() const { return this->payload.has_value(); }
+    S await_resume() { return this->payload.value(); }
+    void await_suspend(handle_t t) { /* ... */
+      this->handle_address = t.address();
+      if (this->onSuspend) {
+        this->onSuspend(this);
+      }
+    }
+    void resume(const S &value) {
+      auto handle = handle_t::from_address(this->handle_address);
+      this->payload = value;
+      assert(!handle.done());
+      handle.resume();
+    }
+  };
+
+  template <typename S>
+  ValueAwaiter<S>
+  await_transform(const std::shared_ptr<CoroutineState<S>> &state) {
+    ValueAwaiter<S> awaiter;
+    if (state->return_value) {
+      awaiter.payload = *state->return_value;
+    } else {
+      awaiter.onSuspend = [state](auto a) {
+        //
+        a->resume(*state->return_value);
+      };
+    }
+    return awaiter;
+  }
+
+  struct VoidAwaiter {
+    bool ready = false;
+    void *handle_address;
+    std::function<void(VoidAwaiter *)> onSuspend;
+    bool await_ready() const { return this->ready; }
+    void await_resume() { ; }
+    void await_suspend(handle_t t) { /* ... */
+      this->handle_address = t.address();
+      if (this->onSuspend) {
+        this->onSuspend(this);
+      }
+    }
+    void resume() {
+      auto handle = handle_t::from_address(this->handle_address);
+      assert(!handle.done());
+      handle.resume();
+    }
+  };
+
+  VoidAwaiter
+  await_transform(const std::shared_ptr<CoroutineState<void>> &state) {
+    VoidAwaiter awaiter;
+    if (state->return_void) {
+      awaiter.ready = true;
+    } else {
+      awaiter.onSuspend = [state](auto a) {
+        //
+        a->resume();
+      };
+    }
+    return awaiter;
+  }
 };
 
-template <typename T> struct CoroutinePromise : CoroutinePromiseBase<T> {
+template <typename T>
+struct CoroutinePromise : CoroutinePromiseBase<CoroutinePromise<T>> {
   using handle_t = std::coroutine_handle<CoroutinePromise>;
   std::shared_ptr<CoroutineState<T>> _state;
   std::shared_ptr<CoroutineState<T>> get_return_object() {
@@ -71,11 +145,18 @@ struct std::coroutine_traits<std::shared_ptr<CoroutineState<T>>, ArgTypes...> {
   using promise_type = CoroutinePromise<T>;
 };
 
+std::shared_ptr<CoroutineState<void>> void_nest() { co_return; }
+
+std::shared_ptr<CoroutineState<int>> nest() {
+  co_await void_nest();
+  co_return 4;
+}
+
 std::shared_ptr<CoroutineState<int>> coro() {
   std::cout << "coro#1" << std::endl;
-  // co_yield {};
+  auto value = co_await nest();
   std::cout << "coro#2" << std::endl;
-  co_return 4;
+  co_return value;
 }
 
 int main() {
