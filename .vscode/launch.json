@@ -5,6 +5,19 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "(Windows) Launch",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/prefix/bin/w3m.exe",
+            "args": [
+                "http://www.yahoo.co.jp",
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}",
+            "environment": [],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "(lldb) 起動",
             "type": "cppdbg",
             "request": "launch",

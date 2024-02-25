@@ -790,6 +790,20 @@ int App::mainLoop() {
 }
 
 #ifdef _MSC_VER
+#include <Windows.h>
+RowCol getTermSize() {
+  CONSOLE_SCREEN_BUFFER_INFO csbi;
+  int columns, rows;
+
+  GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+  columns = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+  rows = csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+
+  return {
+      .row = rows,
+      .col = columns,
+  };
+}
 #else
 #include <sys/ioctl.h>
 #include <termios.h>

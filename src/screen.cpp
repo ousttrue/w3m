@@ -20,7 +20,7 @@ void Screen::setupscreen(const RowCol &size) {
 
 void Screen::clear(void) {
   _screen->Clear();
-  CurrentMode = C_ASCII;
+  CurrentMode = ScreenFlags::ASCII;
 }
 
 void Screen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
@@ -79,13 +79,13 @@ RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
 }
 
 static void cursor(const RowCol p) {
-  std::cout << "\e[" << p.row << ";" << p.col << "H";
+  std::cout << "\x1b[" << p.row << ";" << p.col << "H";
 }
 
 void Screen::print() {
   // using namespace ftxui;
 
-  std::cout << "\e[?25l";
+  std::cout << "\x1b[?25l";
   std::flush(std::cout);
   ::cursor({
       .row = 1,
@@ -100,12 +100,12 @@ void Screen::print() {
 }
 
 void Screen::cursor(const RowCol &pos) {
-  // std::cout << "\e[2 q";
+  // std::cout << "\x1b[2 q";
   ::cursor({
       .row = pos.row + 1,
       .col = pos.col + 1,
   });
-  std::cout << "\e[?25h";
+  std::cout << "\x1b[?25h";
   std::flush(std::cout);
 }
 

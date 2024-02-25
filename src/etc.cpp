@@ -183,9 +183,6 @@ Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
 }
 
 const char *expandPath(const char *name) {
-#ifdef _MSC_VER
-  return {};
-#else
   if (!name) {
     return {};
   }
@@ -194,6 +191,11 @@ const char *expandPath(const char *name) {
   if (*p == '~') {
     p++;
     Str *extpath = {};
+#ifdef _MSC_VER
+    if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+      extpath = Strnew_charp(getenv("USERPROFILE"));
+    }
+#else
     if (IS_ALPHA(*p)) {
       auto q = strchr(p, '/');
       struct passwd *passent;
@@ -210,7 +212,9 @@ const char *expandPath(const char *name) {
       extpath = Strnew_charp(passent->pw_dir);
     } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
       extpath = Strnew_charp(getenv("HOME"));
-    } else {
+    }
+#endif
+    else {
       return name;
     }
     if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
@@ -220,7 +224,6 @@ const char *expandPath(const char *name) {
   }
 
   return name;
-#endif
 }
 
 const char *expandName(const char *name) {

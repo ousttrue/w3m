@@ -38,6 +38,7 @@ defs = [
     '-DCONF_DIR="' + CONF_DIR + '"',
     '-DRC_DIR="' + RC_DIR + '"',
     '-DLOCALEDIR="' + localedir + '"',
+    '-DWIN32_LEAN_AND_MEAN=1',
     # '-w',
 ]
 

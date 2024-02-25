@@ -16,7 +16,7 @@
 
 extern const char *w3m_reqlog;
 extern bool IsForkChild;
-extern char *w3m_version;
+extern const char *w3m_version;
 extern char *document_root;
 extern int label_topline;
 extern int show_srch_str;

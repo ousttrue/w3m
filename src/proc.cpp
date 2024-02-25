@@ -1295,6 +1295,9 @@ std::shared_ptr<CoroutineState<void>> svBuf() {
     fclose(f);
   App::instance().invalidate();
 #endif
+
+  co_return;
+  ;
 }
 
 /* save source */

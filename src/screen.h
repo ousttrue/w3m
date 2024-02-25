@@ -2,6 +2,7 @@
 #include "termentry.h"
 #include "utf8.h"
 #include "rowcol.h"
+#include "enum_template.h"
 #include <ftxui/screen/screen.hpp>
 #include <functional>
 #include <memory>
@@ -13,26 +14,27 @@ struct Utf8;
 using l_prop = unsigned short;
 
 // Screen properties
-enum ScreenFlags : unsigned short {
-  S_NORMAL = 0x00,
-  S_STANDOUT = 0x01,
-  S_UNDERLINE = 0x02,
-  S_BOLD = 0x04,
-  S_EOL = 0x08,
-  S_SCREENPROP = 0x0f,
+enum class ScreenFlags : unsigned short {
+  NORMAL = 0x00,
+  STANDOUT = 0x01,
+  UNDERLINE = 0x02,
+  BOLD = 0x04,
+  EOL = 0x08,
+  SCREENPROP = 0x0f,
 
-  S_GRAPHICS = 0x10,
-  S_DIRTY = 0x20,
+  GRAPHICS = 0x10,
+  DIRTY = 0x20,
 
   /* Sort of Character */
-  C_ASCII = 0x00,
-  C_WCHAR1 = 0x40,
-  C_WCHAR2 = 0x80,
-  C_WHICHCHAR = 0xc0,
-  C_CTRL = 0xc0,
+  ASCII = 0x00,
+  WCHAR1 = 0x40,
+  WCHAR2 = 0x80,
+  WHICHCHAR = 0xc0,
+  CTRL = 0xc0,
 
-  S_COLORED = 0xf00,
+  COLORED = 0xf00,
 };
+ENUM_OP_INSTANCE(ScreenFlags);
 
 /* Line status */
 enum LineDirtyFlags : unsigned short {
@@ -53,7 +55,7 @@ class Screen {
   int max_COLS = 0;
   int graph_enabled = 0;
   int tab_step = 8;
-  l_prop CurrentMode = {};
+  ScreenFlags CurrentMode = {};
 
   Line *cline = NULL;
   int ccolumn = -1;
@@ -100,14 +102,14 @@ public:
   RowCol addnstr(RowCol pos, const char *s, int n);
   RowCol addnstr_sup(RowCol pos, const char *s, int n);
   void toggle_stand(const RowCol &pos);
-  void bold(void) { CurrentMode |= S_BOLD; }
-  void boldend(void) { CurrentMode &= ~S_BOLD; }
-  void underline(void) { CurrentMode |= S_UNDERLINE; }
-  void underlineend(void) { CurrentMode &= ~S_UNDERLINE; }
-  void graphstart(void) { CurrentMode |= S_GRAPHICS; }
-  void graphend(void) { CurrentMode &= ~S_GRAPHICS; }
-  void standout(void) { CurrentMode |= S_STANDOUT; }
-  void standend(void) { CurrentMode &= ~S_STANDOUT; }
+  void bold(void) { CurrentMode |= ScreenFlags::BOLD; }
+  void boldend(void) { CurrentMode &= ~ScreenFlags::BOLD; }
+  void underline(void) { CurrentMode |= ScreenFlags::UNDERLINE; }
+  void underlineend(void) { CurrentMode &= ~ScreenFlags::UNDERLINE; }
+  void graphstart(void) { CurrentMode |= ScreenFlags::GRAPHICS; }
+  void graphend(void) { CurrentMode &= ~ScreenFlags::GRAPHICS; }
+  void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
+  void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
   void cursor(const RowCol &pos);
   int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
                        int bpos, int epos);
