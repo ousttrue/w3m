@@ -63,7 +63,8 @@ public:
   std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                                         const std::shared_ptr<Buffer> &newbuf);
 
-  void goURL0(const char *url, const char *prompt, bool relative);
+  std::shared_ptr<Buffer> goURL0(const char *url, const char *prompt,
+                                 bool relative);
 
   int draw(class Screen *screen, TabBuffer *current);
 };

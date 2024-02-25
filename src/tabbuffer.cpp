@@ -100,10 +100,10 @@ std::shared_ptr<Buffer> TabBuffer::cmd_loadURL(const char *url,
   return Buffer::create(res);
 }
 
-/* go to specified URL */
-void TabBuffer::goURL0(const char *url, const char *prompt, bool relative) {
+std::shared_ptr<Buffer> TabBuffer::goURL0(const char *url, const char *prompt,
+                                          bool relative) {
   std::optional<Url> current;
-  if (url == nullptr) {
+  if (!url) {
     Hist *hist = copyHist(URLHist);
 
     current = this->currentBuffer()->res->getBaseURL();
@@ -146,26 +146,22 @@ void TabBuffer::goURL0(const char *url, const char *prompt, bool relative) {
   }
 
   if (url == nullptr || *url == '\0') {
-    return;
+    return {};
   }
+
   if (*url == '#') {
-    if (auto buf = this->currentBuffer()->gotoLabel(url + 1)) {
-      this->pushBuffer(buf);
-    }
-    return;
+    return this->currentBuffer()->gotoLabel(url + 1);
   }
 
   auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
   auto cur_buf = this->currentBuffer();
-  if (auto buf = this->cmd_loadURL(url, current, option, nullptr)) {
-    this->pushBuffer(buf);
-    pushHashHist(URLHist,
-                 this->currentBuffer()->res->currentURL.to_Str().c_str());
-  }
+  return this->cmd_loadURL(url, current, option, nullptr);
 }
 
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
+  // pushHashHist(URLHist,
+  // this->currentBuffer()->res->currentURL.to_Str().c_str());
   if (this->firstBuffer == this->currentBuffer()) {
     buf->backBuffer = this->firstBuffer;
     this->firstBuffer = buf;

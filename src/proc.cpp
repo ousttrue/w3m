@@ -1072,7 +1072,9 @@ std::shared_ptr<CoroutineState<void>> deletePrevBuf() {
 //"Open specified document in a new buffer"
 std::shared_ptr<CoroutineState<void>> goURL() {
   auto url = App::instance().searchKeyData();
-  CurrentTab->goURL0(url, "Goto URL: ", false);
+  if (auto buf = CurrentTab->goURL0(url, "Goto URL: ", false)) {
+    CurrentTab->pushBuffer(buf);
+  }
   co_return;
 }
 
@@ -1099,7 +1101,9 @@ std::shared_ptr<CoroutineState<void>> goHome() {
 //"Go to relative address"
 std::shared_ptr<CoroutineState<void>> gorURL() {
   auto url = App::instance().searchKeyData();
-  CurrentTab->goURL0(url, "Goto relative URL: ", true);
+  if (auto buf = CurrentTab->goURL0(url, "Goto relative URL: ", true)) {
+    CurrentTab->pushBuffer(buf);
+  }
   co_return;
 }
 
@@ -1714,33 +1718,22 @@ std::shared_ptr<CoroutineState<void>> tabA() {
 // TAB_GOTO
 //"Open specified document in a new tab"
 std::shared_ptr<CoroutineState<void>> tabURL() {
-  auto tab = App::instance().newTab();
-
-  auto buf = tab->currentBuffer();
-
   auto url = App::instance().searchKeyData();
-  tab->goURL0(url, "Goto URL on new tab: ", false);
-  if (buf != tab->currentBuffer())
-    tab->deleteBuffer(buf);
-  else
-    App::instance().deleteTab(tab);
-  App::instance().invalidate();
+  if (auto buf = CurrentTab->goURL0(url, "Goto URL on new tab: ", false)) {
+    App::instance().newTab(buf);
+  }
   co_return;
 }
 
 // TAB_GOTO_RELATIVE
 //"Open relative address in a new tab"
 std::shared_ptr<CoroutineState<void>> tabrURL() {
-  App::instance().newTab();
-
-  auto buf = CurrentTab->currentBuffer();
   auto url = App::instance().searchKeyData();
-  CurrentTab->goURL0(url, "Goto relative URL on new tab: ", true);
-  if (buf != CurrentTab->currentBuffer())
-    CurrentTab->deleteBuffer(buf);
-  else
-    App::instance().deleteTab(CurrentTab);
-  App::instance().invalidate();
+  if (auto buf =
+          CurrentTab->goURL0(url, "Goto relative URL on new tab: ", true)) {
+    auto tab = App::instance().newTab();
+    tab->pushBuffer(buf);
+  }
   co_return;
 }
 
