@@ -50,7 +50,6 @@ class LineInput {
   int lpos = 0;
   int rpos = 0;
   InputFlags flag = {};
-  OnInput onInput;
 
   std::array<KeyCallback, 32> InputKeymap;
   Hist *CurrentHist = nullptr;
@@ -125,6 +124,7 @@ class LineInput {
             Hist *hist, const OnInput &onInput, IncFunc incrfunc);
 
 public:
+  OnInput onInput;
   LineInput(const LineInput &) = delete;
   LineInput &operator=(const LineInput &) = delete;
   bool dispatch(const char *buf, int len);
@@ -132,55 +132,51 @@ public:
   void onBreak();
 
   static std::shared_ptr<LineInput>
-  inputLineHistSearch(const std::shared_ptr<Screen> &screen,
-                      const char *prompt, const char *def_str, Hist *hist,
-                      InputFlags flag, const OnInput &onInput,
+  inputLineHistSearch(const std::shared_ptr<Screen> &screen, const char *prompt,
+                      const char *def_str, Hist *hist, InputFlags flag,
                       IncFunc incrfunc = {});
 
   static std::shared_ptr<LineInput>
   inputLineHist(const std::shared_ptr<Screen> &screen, const char *prompt,
-                const char *def_str, Hist *hist, InputFlags f,
-                const OnInput &onInput) {
-    return inputLineHistSearch(screen, prompt, def_str, hist, f, onInput);
+                const char *def_str, Hist *hist, InputFlags f) {
+    return inputLineHistSearch(screen, prompt, def_str, hist, f);
   }
 
   static std::shared_ptr<LineInput>
   inputLine(const std::shared_ptr<Screen> &screen, const char *prompt,
-            const char *d, InputFlags f, const OnInput &onInput) {
-    return inputLineHist(screen, prompt, d, {}, f, onInput);
+            const char *d, InputFlags f) {
+    return inputLineHist(screen, prompt, d, {}, f);
   }
 
   static std::shared_ptr<LineInput>
   inputStr(const std::shared_ptr<Screen> &screen, const char *prompt,
-           const char *d, const OnInput &onInput) {
-    return inputLine(screen, prompt, d, IN_STRING, onInput);
+           const char *d) {
+    return inputLine(screen, prompt, d, IN_STRING);
   }
 
   static std::shared_ptr<LineInput>
   inputStrHist(const std::shared_ptr<Screen> &screen, const char *prompt,
-               const char *d, Hist *hist, const OnInput &onInput) {
-    return inputLineHist(screen, prompt, d, hist, IN_STRING, onInput);
+               const char *d, Hist *hist) {
+    return inputLineHist(screen, prompt, d, hist, IN_STRING);
   }
 
   static std::shared_ptr<LineInput>
   inputFilename(const std::shared_ptr<Screen> &screen, const char *prompt,
-                const char *d, const OnInput &onInput) {
-    return inputLine(screen, prompt, d, IN_FILENAME, onInput);
+                const char *d) {
+    return inputLine(screen, prompt, d, IN_FILENAME);
   }
 
   static std::shared_ptr<LineInput>
-  inputFilenameHist(const std::shared_ptr<Screen> &screen,
-                    const char *prompt, const char *d, const OnInput &onInput) {
-    return inputLineHist(screen, prompt, d, {}, IN_FILENAME, onInput);
+  inputFilenameHist(const std::shared_ptr<Screen> &screen, const char *prompt,
+                    const char *d) {
+    return inputLineHist(screen, prompt, d, {}, IN_FILENAME);
   }
 
   static std::shared_ptr<LineInput>
-  inputChar(const std::shared_ptr<Screen> &screen, const char *prompt,
-            const OnInput &onInput) {
-    return inputLine(screen, prompt, "", IN_CHAR, onInput);
+  inputChar(const std::shared_ptr<Screen> &screen, const char *prompt) {
+    return inputLine(screen, prompt, "", IN_CHAR);
   }
 
   static std::shared_ptr<LineInput>
-  inputAnswer(const std::shared_ptr<Screen> &screen,
-              const OnInput &onInput);
+  inputAnswer(const std::shared_ptr<Screen> &screen);
 };

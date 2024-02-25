@@ -1,34 +1,46 @@
 #pragma once
+#include "linein.h"
 #include <uv.h>
 #include <coroutine>
-#include <chrono>
 #include <functional>
 #include <assert.h>
+#include <optional>
 
-template <typename T> struct CoroutineState {
+template <typename T> class CoroutineState {
   using Disposer = std::function<void()>;
-  std::optional<T> return_value;
+  std::optional<T> _return;
 
 private:
   Disposer _disposer;
 
 public:
+  std::function<void(const T &)> onReturn;
   explicit CoroutineState(const Disposer &disposer) : _disposer(disposer) {}
   CoroutineState(CoroutineState const &) = delete;
   ~CoroutineState() { _disposer(); }
+  const std::optional<T> &return_value() const { return _return; }
+  void return_value(const T &value) {
+    _return = value;
+    if (onReturn) {
+      onReturn(value);
+    }
+  }
 };
 
-template <> struct CoroutineState<void> {
+template <> class CoroutineState<void> {
   using Disposer = std::function<void()>;
-  bool return_void = false;
+  bool _return = false;
 
 private:
   Disposer _disposer;
 
 public:
+  std::function<void()> onReturn;
   explicit CoroutineState(const Disposer &disposer) : _disposer(disposer) {}
   CoroutineState(CoroutineState const &) = delete;
   ~CoroutineState() { _disposer(); }
+  bool return_void() const { return _return; }
+  void done() { _return = true; }
 };
 
 template <typename T> struct CoroutinePromiseBase {
@@ -64,21 +76,6 @@ template <typename T> struct CoroutinePromiseBase {
     }
   };
 
-  template <typename S>
-  ValueAwaiter<S>
-  await_transform(const std::shared_ptr<CoroutineState<S>> &state) {
-    ValueAwaiter<S> awaiter;
-    if (state->return_value) {
-      awaiter.payload = *state->return_value;
-    } else {
-      awaiter.onSuspend = [state](auto a) {
-        //
-        a->resume(*state->return_value);
-      };
-    }
-    return awaiter;
-  }
-
   struct VoidAwaiter {
     bool ready = false;
     void *handle_address;
@@ -98,17 +95,43 @@ template <typename T> struct CoroutinePromiseBase {
     }
   };
 
+  //
+  template <typename S>
+  ValueAwaiter<S>
+  await_transform(const std::shared_ptr<CoroutineState<S>> &state) {
+    ValueAwaiter<S> awaiter;
+    if (auto value = state->return_value()) {
+      awaiter.payload = *value;
+    } else {
+      awaiter.onSuspend = [state](auto a) {
+        state->onReturn = [a](const S &value) { a->resume(value); };
+      };
+    }
+    return awaiter;
+  }
+
   VoidAwaiter
   await_transform(const std::shared_ptr<CoroutineState<void>> &state) {
     VoidAwaiter awaiter;
-    if (state->return_void) {
+    if (state->return_void()) {
       awaiter.ready = true;
     } else {
       awaiter.onSuspend = [state](auto a) {
-        //
-        a->resume();
+        state->onReturn = [a]() { a->resume(); };
       };
     }
+    return awaiter;
+  }
+
+  //
+  ValueAwaiter<std::string>
+  await_transform(const std::shared_ptr<LineInput> &input) {
+    ValueAwaiter<std::string> awaiter;
+
+    awaiter.onSuspend = [input](auto a) {
+      input->onInput = [a](const char *p) { a->resume(p); };
+    };
+
     return awaiter;
   }
 };
@@ -124,7 +147,7 @@ struct CoroutinePromise : CoroutinePromiseBase<CoroutinePromise<T>> {
         });
     return _state;
   }
-  void return_value(const T &value) { _state->return_value = value; }
+  void return_value(const T &value) { _state->return_value(value); }
 };
 
 template <> struct CoroutinePromise<void> : CoroutinePromiseBase<void> {
@@ -137,7 +160,7 @@ template <> struct CoroutinePromise<void> : CoroutinePromiseBase<void> {
         });
     return _state;
   }
-  void return_void() { _state->return_void = true; }
+  void return_void() { _state->done(); }
 };
 
 template <typename T, typename... ArgTypes>

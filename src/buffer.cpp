@@ -27,6 +27,7 @@
 #include "proto.h"
 #include "alloc.h"
 #include <sys/stat.h>
+#include <sstream>
 
 Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
   // use default from -o mark_all_pages
@@ -535,30 +536,27 @@ Buffer::followForm(Anchor *a, bool submit) {
     if (submit) {
       co_return this->do_submit(fi, a);
     }
-    if (fi->readonly)
+    if (fi->readonly) {
       App::instance().disp_message_nsec("Read only field!", 1, true);
+      co_return {};
+    }
     auto input = LineInput::inputStrHist(
         App::instance().screen(), "TEXT:", fi->value ? fi->value->ptr : nullptr,
-        TextHist, [fi, a](const char *p) {
-          if (p == nullptr || fi->readonly) {
-            return;
-            // break;
-          }
-          fi->value = Strnew_charp(p);
-          formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
-          if (fi->accept || fi->parent->nitems == 1) {
-            auto buf = CurrentTab->currentBuffer()->do_submit(fi, a);
-            if (buf) {
-              App::instance().pushBuffer(buf, a->target);
-            }
-            return;
-          }
-          App::instance().invalidate();
-        });
+        TextHist);
     input->draw();
     App::instance().pushDispatcher([input](const char *buf, int len) -> bool {
       return input->dispatch(buf, len);
     });
+
+    auto p = co_await input;
+    if (p.size()) {
+      fi->value = Strnew(p);
+      formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
+      if (fi->accept || fi->parent->nitems == 1) {
+        co_return CurrentTab->currentBuffer()->do_submit(fi, a);
+      }
+    }
+
     co_return {};
   } break;
 

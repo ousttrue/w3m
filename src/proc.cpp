@@ -780,8 +780,10 @@ std::shared_ptr<CoroutineState<void>> followI() {
 //"Submit form"
 std::shared_ptr<CoroutineState<void>> submitForm() {
   if (auto f = CurrentTab->currentBuffer()->layout.retrieveCurrentForm()) {
-    auto buf =
-        CurrentTab->currentBuffer()->followForm(f, true)->return_value.value();
+    auto buf = CurrentTab->currentBuffer()
+                   ->followForm(f, true)
+                   ->return_value()
+                   .value();
     ;
     if (buf) {
       App::instance().pushBuffer(buf, f->target);

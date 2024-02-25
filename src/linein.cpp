@@ -32,10 +32,9 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(const std::shared_ptr<Screen> &screen,
-                     const char *prompt, Hist *hist, const OnInput &_onInput,
-                     IncFunc incrfunc)
-    : _screen(screen), prompt(prompt), onInput(_onInput), incrfunc(incrfunc) {
+LineInput::LineInput(const std::shared_ptr<Screen> &screen, const char *prompt,
+                     Hist *hist, const OnInput &_onInput, IncFunc incrfunc)
+    : _screen(screen), prompt(prompt), incrfunc(incrfunc), onInput(_onInput) {
   opos = get_strwidth(prompt);
   epos = (_screen->COLS() - 2) - opos;
   if (epos < 0) {
@@ -94,11 +93,10 @@ LineInput::LineInput(const std::shared_ptr<Screen> &screen,
 std::shared_ptr<LineInput>
 LineInput::inputLineHistSearch(const std::shared_ptr<Screen> &screen,
                                const char *prompt, const char *def_str,
-                               Hist *hist, InputFlags flag,
-                               const OnInput &onInput, IncFunc incrfunc) {
+                               Hist *hist, InputFlags flag, IncFunc incrfunc) {
 
   auto input = std::shared_ptr<LineInput>(
-      new LineInput(screen, prompt, hist, onInput, incrfunc));
+      new LineInput(screen, prompt, hist, {}, incrfunc));
 
   input->flag = flag;
   if (flag & IN_URL) {
@@ -282,7 +280,8 @@ bool LineInput::dispatch(const char *buf, int len) {
 //     addChar(_screen.get(), '*', 0);
 // }
 
-// void LineInput::addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
+// void LineInput::addStr(char *p, Lineprop *pr, int len, int offset, int limit)
+// {
 //   int i = 0, rcol = 0, ncol, delta = 1;
 //
 //   if (offset) {
@@ -876,10 +875,9 @@ void LineInput::_editor(char) {
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputAnswer(const std::shared_ptr<Screen> &screen,
-                       const OnInput &onInput) {
+LineInput::inputAnswer(const std::shared_ptr<Screen> &screen) {
   if (IsForkChild) {
-    onInput("n");
+    // onInput("n");
     return {};
   }
 
@@ -891,5 +889,5 @@ LineInput::inputAnswer(const std::shared_ptr<Screen> &screen,
   // }
   // term_raw();
 
-  return inputChar(screen, "(y/n)?", onInput);
+  return inputChar(screen, "(y/n)?");
 }
