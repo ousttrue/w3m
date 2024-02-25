@@ -495,7 +495,7 @@ App::App() : _screen(new Screen) {
   orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
 #endif
 
-  _firstTab = _lastTab = _currentTab = new TabBuffer;
+  _firstTab = _lastTab = _currentTab = TabBuffer::create();
   assert(_firstTab);
   _nTab = 1;
 
@@ -1030,7 +1030,7 @@ void App::onFrame() {
 
   if (_dirty > 0) {
     _dirty = 0;
-    _screen->display(INIT_BUFFER_WIDTH(), _currentTab);
+    _screen->display(INIT_BUFFER_WIDTH(), _currentTab.get());
   }
 }
 
@@ -1095,7 +1095,7 @@ std::string App::tmpfname(TmpfType type, const std::string &ext) {
   return tmpf;
 }
 
-TabBuffer *App::numTab(int n) const {
+std::shared_ptr<TabBuffer> App::numTab(int n) const {
   if (n == 0)
     return _currentTab;
   if (n == 1)
@@ -1103,7 +1103,7 @@ TabBuffer *App::numTab(int n) const {
   if (_nTab <= 1)
     return nullptr;
 
-  TabBuffer *tab;
+  std::shared_ptr<TabBuffer> tab;
   int i;
   for (tab = _firstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
     ;
@@ -1115,7 +1115,7 @@ void App::drawTabs() {
     _screen->clrtoeolx({0, 0});
     int y = 0;
     for (auto t = _firstTab; t; t = t->nextTab) {
-      y = t->draw(_screen.get(), _currentTab);
+      y = t->draw(_screen.get(), _currentTab.get());
     }
     RowCol pos{.row = y + 1, .col = 0};
     for (int i = 0; i < COLS(); i++) {
@@ -1151,7 +1151,7 @@ void App::prevTab() {
 }
 
 void App::tabRight() {
-  TabBuffer *tab;
+  std::shared_ptr<TabBuffer> tab;
   int i;
   for (tab = _currentTab, i = 0; tab && i < PREC_NUM; tab = tab->nextTab, i++)
     ;
@@ -1159,7 +1159,7 @@ void App::tabRight() {
 }
 
 void App::tabLeft() {
-  TabBuffer *tab;
+  std::shared_ptr<TabBuffer> tab;
   int i;
   for (tab = _currentTab, i = 0; tab && i < PREC_NUM; tab = tab->prevTab, i++)
     ;
@@ -1171,7 +1171,7 @@ int App::calcTabPos() {
     return _lastTab->y;
   }
 
-  TabBuffer *tab;
+  std::shared_ptr<TabBuffer> tab;
   int lcol = 0, rcol = 0, col;
 
   int n2, ny;
@@ -1217,7 +1217,8 @@ int App::calcTabPos() {
   return _lastTab->y;
 }
 
-TabBuffer *App::deleteTab(TabBuffer *tab) {
+std::shared_ptr<TabBuffer>
+App::deleteTab(const std::shared_ptr<TabBuffer> &tab) {
   if (_nTab <= 1)
     return _firstTab;
   if (tab->prevTab) {
@@ -1238,7 +1239,8 @@ TabBuffer *App::deleteTab(TabBuffer *tab) {
   return _firstTab;
 }
 
-void App::moveTab(TabBuffer *t, TabBuffer *t2, int right) {
+void App::moveTab(const std::shared_ptr<TabBuffer> &t,
+                  std::shared_ptr<TabBuffer> t2, int right) {
   if (!t2) {
     t2 = _firstTab;
   }
@@ -1275,8 +1277,8 @@ void App::moveTab(TabBuffer *t, TabBuffer *t2, int right) {
   invalidate();
 }
 
-void App::newTab(std::shared_ptr<Buffer> buf) {
-  auto tab = new TabBuffer();
+std::shared_ptr<TabBuffer> App::newTab(std::shared_ptr<Buffer> buf) {
+  auto tab = TabBuffer::create();
   if (!buf) {
     buf = Buffer::create();
     *buf = *_currentTab->currentBuffer();
@@ -1294,6 +1296,8 @@ void App::newTab(std::shared_ptr<Buffer> buf) {
   _nTab++;
 
   invalidate();
+
+  return tab;
 }
 
 void App::pushBuffer(const std::shared_ptr<Buffer> &buf,

@@ -50,10 +50,10 @@ class App {
   char _currentKey = -1;
   char prev_key = -1;
 
-  TabBuffer *_firstTab = 0;
-  TabBuffer *_lastTab = 0;
+  std::shared_ptr<TabBuffer> _firstTab;
+  std::shared_ptr<TabBuffer> _lastTab;
   int _nTab = 0;
-  TabBuffer *_currentTab = 0;
+  std::shared_ptr<TabBuffer> _currentTab;
 
   std::stack<Dispatcher> _dispatcher;
 
@@ -148,20 +148,21 @@ public:
   void invalidate() { ++_dirty; }
 
   // tabs
-  TabBuffer *FirstTab() const { return _firstTab; }
-  TabBuffer *LastTab() const { return _lastTab; }
+  std::shared_ptr<TabBuffer> FirstTab() const { return _firstTab; }
+  std::shared_ptr<TabBuffer> LastTab() const { return _lastTab; }
   int nTab() const { return _nTab; }
-  TabBuffer *CurrentTab() const { return _currentTab; }
-  void newTab(std::shared_ptr<Buffer> buf = {});
-  TabBuffer *numTab(int n) const;
+  std::shared_ptr<TabBuffer> CurrentTab() const { return _currentTab; }
+  std::shared_ptr<TabBuffer> newTab(std::shared_ptr<Buffer> buf = {});
+  std::shared_ptr<TabBuffer> numTab(int n) const;
   void drawTabs();
   void nextTab();
   void prevTab();
   void tabRight();
   void tabLeft();
   int calcTabPos();
-  TabBuffer *deleteTab(TabBuffer *tab);
-  void moveTab(TabBuffer *t, TabBuffer *t2, int right);
+  std::shared_ptr<TabBuffer> deleteTab(const std::shared_ptr<TabBuffer> &tab);
+  void moveTab(const std::shared_ptr<TabBuffer> &t,
+               std::shared_ptr<TabBuffer> t2, int right);
   void pushBuffer(const std::shared_ptr<Buffer> &buf, std::string_view target);
 
   struct GeneralList *message_list = NULL;

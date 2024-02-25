@@ -8,10 +8,8 @@
 
 template <typename T> class CoroutineState {
   using Disposer = std::function<void()>;
-  std::optional<T> _return;
-
-private:
   Disposer _disposer;
+  std::optional<T> _return;
 
 public:
   std::function<void(const T &)> onReturn;
@@ -29,18 +27,16 @@ public:
 
 template <> class CoroutineState<void> {
   using Disposer = std::function<void()>;
-  bool _return = false;
-
-private:
   Disposer _disposer;
+  bool _return = false;
 
 public:
   std::function<void()> onReturn;
   explicit CoroutineState(const Disposer &disposer) : _disposer(disposer) {}
   CoroutineState(CoroutineState const &) = delete;
   ~CoroutineState() { _disposer(); }
-  bool return_void() const { return _return; }
-  void done() { _return = true; }
+  bool isDone() const { return _return; }
+  void setDone() { _return = true; }
 };
 
 template <typename T> struct CoroutinePromiseBase {
@@ -113,7 +109,7 @@ template <typename T> struct CoroutinePromiseBase {
   VoidAwaiter
   await_transform(const std::shared_ptr<CoroutineState<void>> &state) {
     VoidAwaiter awaiter;
-    if (state->return_void()) {
+    if (state->isDone()) {
       awaiter.ready = true;
     } else {
       awaiter.onSuspend = [state](auto a) {
@@ -160,7 +156,7 @@ template <> struct CoroutinePromise<void> : CoroutinePromiseBase<void> {
         });
     return _state;
   }
-  void return_void() { _state->done(); }
+  void return_void() { _state->setDone(); }
 };
 
 template <typename T, typename... ArgTypes>

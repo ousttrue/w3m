@@ -14,24 +14,30 @@ struct FormList;
 struct FormItemList;
 struct Anchor;
 struct HttpOption;
-struct TabBuffer : public gc_cleanup {
-  friend class App;
-  TabBuffer *nextTab = nullptr;
-  TabBuffer *prevTab = nullptr;
 
-private:
-  std::shared_ptr<Buffer> _currentBuffer;
+struct TabBuffer {
+  // friend class App;
+  std::shared_ptr<TabBuffer> nextTab;
+  std::shared_ptr<TabBuffer> prevTab;
+
   short x1 = 0;
   short x2 = 0;
   short y = 0;
+  std::shared_ptr<Buffer> _currentBuffer;
+
+private:
+
+  TabBuffer();
 
 public:
   std::shared_ptr<Buffer> firstBuffer;
 
-  TabBuffer();
   ~TabBuffer();
   TabBuffer(const TabBuffer &) = delete;
   TabBuffer &operator=(const TabBuffer &) = delete;
+  static std::shared_ptr<TabBuffer> create() {
+    return std::shared_ptr<TabBuffer>(new TabBuffer);
+  }
 
   std::shared_ptr<Buffer> currentBuffer() { return _currentBuffer; }
   void currentBuffer(const std::shared_ptr<Buffer> &newbuf,

@@ -1667,7 +1667,7 @@ std::shared_ptr<CoroutineState<void>> closeT() {
   if (App::instance().nTab() <= 1)
     co_return;
 
-  TabBuffer *tab;
+  std::shared_ptr<TabBuffer> tab;
   if (prec_num)
     tab = App::instance().numTab(PREC_NUM);
   else
