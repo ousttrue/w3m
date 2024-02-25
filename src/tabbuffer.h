@@ -53,18 +53,10 @@ public:
   void repBuffer(const std::shared_ptr<Buffer> &oldbuf,
                  const std::shared_ptr<Buffer> &buf);
   void pushBuffer(const std::shared_ptr<Buffer> &buf);
-  bool select(char cmd, const std::shared_ptr<Buffer> &buf);
-
-  std::shared_ptr<Buffer> cmd_loadURL(const char *url,
-                                      std::optional<Url> current,
-                                      const HttpOption &option,
-                                      FormList *request);
+  // bool select(char cmd, const std::shared_ptr<Buffer> &buf);
 
   std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                                         const std::shared_ptr<Buffer> &newbuf);
-
-  std::shared_ptr<Buffer> goURL0(const char *url, const char *prompt,
-                                 bool relative);
 
   int draw(class Screen *screen, TabBuffer *current);
 };

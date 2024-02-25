@@ -1,20 +1,7 @@
 #include "tabbuffer.h"
-#include "html/form_item.h"
 #include "buffer.h"
-#include "line_layout.h"
 #include "utf8.h"
-#include "Str.h"
-#include "linein.h"
-#include "html/form.h"
-#include "http_session.h"
-#include "http_response.h"
-#include "url_quote.h"
-#include "proto.h"
 #include "screen.h"
-#include "myctype.h"
-#include "w3m.h"
-#include "history.h"
-#include "app.h"
 #include <sys/stat.h>
 
 bool open_tab_blank = false;
@@ -86,79 +73,6 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   }
 }
 
-std::shared_ptr<Buffer> TabBuffer::cmd_loadURL(const char *url,
-                                               std::optional<Url> current,
-                                               const HttpOption &option,
-                                               FormList *request) {
-  auto res = loadGeneralFile(url, current, option, request);
-  if (!res) {
-    char *emsg = Sprintf("Can't load %s", url)->ptr;
-    App::instance().disp_err_message(emsg);
-    return {};
-  }
-
-  return Buffer::create(res);
-}
-
-std::shared_ptr<Buffer> TabBuffer::goURL0(const char *url, const char *prompt,
-                                          bool relative) {
-  std::optional<Url> current;
-  if (!url) {
-    Hist *hist = copyHist(URLHist);
-
-    current = this->currentBuffer()->res->getBaseURL();
-    if (current) {
-      auto c_url = current->to_Str();
-      if (DefaultURLString == DEFAULT_URL_CURRENT)
-        url = url_decode0(c_url.c_str());
-      else
-        pushHist(hist, c_url);
-    }
-    auto a = this->currentBuffer()->layout.retrieveCurrentAnchor();
-    if (a) {
-      auto p_url = urlParse(a->url, current);
-      auto a_url = p_url.to_Str();
-      if (DefaultURLString == DEFAULT_URL_LINK)
-        url = url_decode0(a_url.c_str());
-      else
-        pushHist(hist, a_url);
-    }
-    // url = inputLineHist(prompt, url, IN_URL, hist);
-    if (url != nullptr) {
-      SKIP_BLANKS(url);
-    }
-  }
-
-  HttpOption option = {};
-  if (relative) {
-    const int *no_referer_ptr = nullptr;
-    current = this->currentBuffer()->res->getBaseURL();
-    if ((no_referer_ptr && *no_referer_ptr) || !current ||
-        current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
-        current->schema == SCM_DATA)
-      option.no_referer = true;
-    else
-      option.referer = this->currentBuffer()->res->currentURL.to_RefererStr();
-    url = Strnew(url_quote(url))->ptr;
-  } else {
-    current = {};
-    url = Strnew(url_quote(url))->ptr;
-  }
-
-  if (url == nullptr || *url == '\0') {
-    return {};
-  }
-
-  if (*url == '#') {
-    return this->currentBuffer()->gotoLabel(url + 1);
-  }
-
-  auto p_url = urlParse(url, current);
-  pushHashHist(URLHist, p_url.to_Str().c_str());
-  auto cur_buf = this->currentBuffer();
-  return this->cmd_loadURL(url, current, option, nullptr);
-}
-
 void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
   // pushHashHist(URLHist,
   // this->currentBuffer()->res->currentURL.to_Str().c_str());
@@ -195,36 +109,36 @@ void TabBuffer::repBuffer(const std::shared_ptr<Buffer> &oldbuf,
   _currentBuffer = buf;
 }
 
-bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
-  switch (cmd) {
-  case 'B':
-    return true;
-
-  case '\n':
-  case ' ':
-    _currentBuffer = buf;
-    return true;
-
-  case 'D':
-    this->deleteBuffer(buf);
-    if (this->firstBuffer == nullptr) {
-      /* No more buffer */
-      this->firstBuffer = Buffer::nullBuffer();
-      _currentBuffer = this->firstBuffer;
-    }
-    break;
-
-  case 'q':
-    qquitfm();
-    break;
-
-  case 'Q':
-    quitfm();
-    break;
-  }
-
-  return false;
-}
+// bool TabBuffer::select(char cmd, const std::shared_ptr<Buffer> &buf) {
+//   switch (cmd) {
+//   case 'B':
+//     return true;
+//
+//   case '\n':
+//   case ' ':
+//     _currentBuffer = buf;
+//     return true;
+//
+//   case 'D':
+//     this->deleteBuffer(buf);
+//     if (this->firstBuffer == nullptr) {
+//       /* No more buffer */
+//       this->firstBuffer = Buffer::nullBuffer();
+//       _currentBuffer = this->firstBuffer;
+//     }
+//     break;
+//
+//   case 'q':
+//     qquitfm();
+//     break;
+//
+//   case 'Q':
+//     quitfm();
+//     break;
+//   }
+//
+//   return false;
+// }
 
 /*
  * replaceBuffer: replace buffer

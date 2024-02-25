@@ -50,6 +50,12 @@ public:
                                    FormList *request);
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
+  std::shared_ptr<Buffer> cmd_loadURL(const char *url,
+                                      std::optional<Url> current,
+                                      const HttpOption &option,
+                                      FormList *request);
+  std::shared_ptr<Buffer> goURL0(const char *url, const char *prompt,
+                                 bool relative);
   std::shared_ptr<Buffer> sourceBuffer();
   std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>
   followForm(Anchor *a, bool submit);

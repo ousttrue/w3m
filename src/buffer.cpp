@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "url_quote.h"
 #include "linein.h"
 #include "symbol.h"
 #include "file_util.h"
@@ -695,4 +696,76 @@ Buffer::followAnchor(bool check_target) {
   }
 
   co_return {};
+}
+
+std::shared_ptr<Buffer> Buffer::cmd_loadURL(const char *url,
+                                            std::optional<Url> current,
+                                            const HttpOption &option,
+                                            FormList *request) {
+  auto res = loadGeneralFile(url, current, option, request);
+  if (!res) {
+    char *emsg = Sprintf("Can't load %s", url)->ptr;
+    App::instance().disp_err_message(emsg);
+    return {};
+  }
+
+  return Buffer::create(res);
+}
+
+std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
+                                       bool relative) {
+  std::optional<Url> current;
+  if (!url) {
+    Hist *hist = copyHist(URLHist);
+
+    current = this->res->getBaseURL();
+    if (current) {
+      auto c_url = current->to_Str();
+      if (DefaultURLString == DEFAULT_URL_CURRENT)
+        url = url_decode0(c_url.c_str());
+      else
+        pushHist(hist, c_url);
+    }
+    auto a = this->layout.retrieveCurrentAnchor();
+    if (a) {
+      auto p_url = urlParse(a->url, current);
+      auto a_url = p_url.to_Str();
+      if (DefaultURLString == DEFAULT_URL_LINK)
+        url = url_decode0(a_url.c_str());
+      else
+        pushHist(hist, a_url);
+    }
+    // url = inputLineHist(prompt, url, IN_URL, hist);
+    if (url != nullptr) {
+      SKIP_BLANKS(url);
+    }
+  }
+
+  HttpOption option = {};
+  if (relative) {
+    const int *no_referer_ptr = nullptr;
+    current = this->res->getBaseURL();
+    if ((no_referer_ptr && *no_referer_ptr) || !current ||
+        current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
+        current->schema == SCM_DATA)
+      option.no_referer = true;
+    else
+      option.referer = this->res->currentURL.to_RefererStr();
+    url = Strnew(url_quote(url))->ptr;
+  } else {
+    current = {};
+    url = Strnew(url_quote(url))->ptr;
+  }
+
+  if (url == nullptr || *url == '\0') {
+    return {};
+  }
+
+  if (*url == '#') {
+    return this->gotoLabel(url + 1);
+  }
+
+  auto p_url = urlParse(url, current);
+  pushHashHist(URLHist, p_url.to_Str().c_str());
+  return this->cmd_loadURL(url, current, option, nullptr);
 }

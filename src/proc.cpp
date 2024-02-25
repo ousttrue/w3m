@@ -377,8 +377,8 @@ std::shared_ptr<CoroutineState<void>> ldhelp() {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  if (auto buf = CurrentTab->cmd_loadURL(tmp->ptr, {}, {.no_referer = true},
-                                         nullptr)) {
+  if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
+          tmp->ptr, {}, {.no_referer = true}, nullptr)) {
     CurrentTab->pushBuffer(buf);
   }
 
@@ -1072,7 +1072,8 @@ std::shared_ptr<CoroutineState<void>> deletePrevBuf() {
 //"Open specified document in a new buffer"
 std::shared_ptr<CoroutineState<void>> goURL() {
   auto url = App::instance().searchKeyData();
-  if (auto buf = CurrentTab->goURL0(url, "Goto URL: ", false)) {
+  if (auto buf =
+          CurrentTab->currentBuffer()->goURL0(url, "Goto URL: ", false)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1089,7 +1090,8 @@ std::shared_ptr<CoroutineState<void>> goHome() {
     url = Strnew(url_quote(url))->ptr;
     auto p_url = urlParse(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
-    if (auto buf = CurrentTab->cmd_loadURL(url, {}, {}, nullptr)) {
+    if (auto buf =
+            CurrentTab->currentBuffer()->cmd_loadURL(url, {}, {}, nullptr)) {
       CurrentTab->pushBuffer(buf);
       pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
     }
@@ -1101,7 +1103,8 @@ std::shared_ptr<CoroutineState<void>> goHome() {
 //"Go to relative address"
 std::shared_ptr<CoroutineState<void>> gorURL() {
   auto url = App::instance().searchKeyData();
-  if (auto buf = CurrentTab->goURL0(url, "Goto relative URL: ", true)) {
+  if (auto buf = CurrentTab->currentBuffer()->goURL0(
+          url, "Goto relative URL: ", true)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1111,8 +1114,8 @@ std::shared_ptr<CoroutineState<void>> gorURL() {
 // BOOKMARK VIEW_BOOKMARK
 //"View bookmarks"
 std::shared_ptr<CoroutineState<void>> ldBmark() {
-  if (auto buf = CurrentTab->cmd_loadURL(BookmarkFile, {}, {.no_referer = true},
-                                         nullptr)) {
+  if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
+          BookmarkFile, {}, {.no_referer = true}, nullptr)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1134,8 +1137,9 @@ std::shared_ptr<CoroutineState<void>> adBmark() {
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
   request->length = tmp->length;
-  if (auto buf = CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME,
-                                         {}, {.no_referer = true}, request)) {
+  if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
+          "file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, {.no_referer = true},
+          request)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1719,7 +1723,8 @@ std::shared_ptr<CoroutineState<void>> tabA() {
 //"Open specified document in a new tab"
 std::shared_ptr<CoroutineState<void>> tabURL() {
   auto url = App::instance().searchKeyData();
-  if (auto buf = CurrentTab->goURL0(url, "Goto URL on new tab: ", false)) {
+  if (auto buf = CurrentTab->currentBuffer()->goURL0(
+          url, "Goto URL on new tab: ", false)) {
     App::instance().newTab(buf);
   }
   co_return;
@@ -1729,8 +1734,8 @@ std::shared_ptr<CoroutineState<void>> tabURL() {
 //"Open relative address in a new tab"
 std::shared_ptr<CoroutineState<void>> tabrURL() {
   auto url = App::instance().searchKeyData();
-  if (auto buf =
-          CurrentTab->goURL0(url, "Goto relative URL on new tab: ", true)) {
+  if (auto buf = CurrentTab->currentBuffer()->goURL0(
+          url, "Goto relative URL on new tab: ", true)) {
     auto tab = App::instance().newTab();
     tab->pushBuffer(buf);
   }
