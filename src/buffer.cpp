@@ -518,21 +518,22 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
   }
 }
 
-std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
+FuncCoroutine<std::shared_ptr<Buffer>> Buffer::followForm(Anchor *a,
+                                                          bool submit) {
   // if (!currentBuffer()->layout.firstLine) {
   //   return {};
   // }
 
   // auto a = currentBuffer()->layout.retrieveCurrentForm();
   if (!a) {
-    return {};
+    co_return {};
   }
   auto fi = (FormItemList *)a->url;
 
   switch (fi->type) {
   case FORM_INPUT_TEXT: {
     if (submit) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
@@ -558,12 +559,12 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     App::instance().pushDispatcher([input](const char *buf, int len) -> bool {
       return input->dispatch(buf, len);
     });
-    return {};
+    co_return {};
   } break;
 
   case FORM_INPUT_FILE:
     if (submit) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
 
     if (fi->readonly) {
@@ -582,7 +583,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
 
   case FORM_INPUT_PASSWORD:
     if (submit) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
     if (fi->readonly) {
       App::instance().disp_message_nsec("Read only field!", 1, true);
@@ -595,13 +596,13 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     // fi->value = Strnew_charp(p);
     formUpdateBuffer(a, &this->layout, fi);
     if (fi->accept) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
     break;
 
   case FORM_TEXTAREA:
     if (submit) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
@@ -611,7 +612,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
 
   case FORM_INPUT_RADIO:
     if (submit) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
     if (fi->readonly) {
       App::instance().disp_message_nsec("Read only field!", 1, true);
@@ -622,7 +623,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
 
   case FORM_INPUT_CHECKBOX:
     if (submit) {
-      return this->do_submit(fi, a);
+      co_return this->do_submit(fi, a);
     }
     if (fi->readonly) {
       App::instance().disp_message_nsec("Read only field!", 1, true);
@@ -634,7 +635,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
   case FORM_INPUT_IMAGE:
   case FORM_INPUT_SUBMIT:
   case FORM_INPUT_BUTTON:
-    return this->do_submit(fi, a);
+    co_return this->do_submit(fi, a);
 
   case FORM_INPUT_RESET:
     for (size_t i = 0; i < this->layout.formitem()->size(); i++) {
@@ -655,7 +656,7 @@ std::shared_ptr<Buffer> Buffer::followForm(Anchor *a, bool submit) {
     break;
   }
 
-  return {};
+  co_return {};
 }
 
 bool Buffer::reopenSource() {
@@ -692,7 +693,9 @@ Buffer::followAnchor(bool check_target) {
   }
 
   if (auto f = this->layout.retrieveCurrentForm()) {
-    return {f, this->followForm(f, false)};
+    auto task = this->followForm(f, false);
+    assert(task.handle.done());
+    return {f, *task.handle.promise().value};
   }
 
   return {};

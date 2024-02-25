@@ -780,7 +780,11 @@ FuncCoroutine<void> followI() {
 //"Submit form"
 FuncCoroutine<void> submitForm() {
   if (auto f = CurrentTab->currentBuffer()->layout.retrieveCurrentForm()) {
-    auto buf = CurrentTab->currentBuffer()->followForm(f, true);
+    auto buf = CurrentTab->currentBuffer()
+                   ->followForm(f, true)
+                   .handle.promise()
+                   .value.value();
+    ;
     if (buf) {
       App::instance().pushBuffer(buf, f->target);
     }

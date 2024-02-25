@@ -1,25 +1,84 @@
 #include <iostream>
-#include "src/func.h"
+// #include "src/func.h"
+#include <coroutine>
+#include <functional>
+#include <memory>
+#include <utility>
+#include <optional>
+// #include <memory>
 
-int main(int argc, char **argv) {
+template <typename T> struct CoroutineState {
+  using Disposer = std::function<void()>;
+  std::optional<T> return_value;
 
-  std::cout << "start" << std::endl;
+private:
+  Disposer _disposer;
 
-  using namespace std::literals::chrono_literals;
-  auto task = [d = 500ms]() -> FuncCoroutine<int> {
-    std::cout << "[task] wait 500ms" << std::endl;
-    // co_await d;
-    std::cout << "[task] timer done" << std::endl;
-    co_return 4;
-  };
+public:
+  explicit CoroutineState(const Disposer &disposer) : _disposer(disposer) {}
+  CoroutineState(CoroutineState const &) = delete;
+  ~CoroutineState() { _disposer(); }
+};
 
-  auto outer = [task]() -> FuncCoroutine<int> { co_return co_await task(); };
+template <> struct CoroutineState<void> {
+  using Disposer = std::function<void()>;
+  bool return_void = false;
 
-  auto ret = outer();
+private:
+  Disposer _disposer;
 
-  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+public:
+  explicit CoroutineState(const Disposer &disposer) : _disposer(disposer) {}
+  CoroutineState(CoroutineState const &) = delete;
+  ~CoroutineState() { _disposer(); }
+};
 
-  std::cout << "handle.done: " << *ret.handle.promise().value << std::endl;
+template <typename T> struct CoroutinePromiseBase {
+  using handle_t = std::coroutine_handle<CoroutineState<T>>;
+  auto initial_suspend() { return std::suspend_never{}; }
+  auto final_suspend() noexcept { return std::suspend_always{}; }
+  void unhandled_exception() { std::terminate(); }
+};
 
-  return 0;
+template <typename T> struct CoroutinePromise : CoroutinePromiseBase<T> {
+  using handle_t = std::coroutine_handle<CoroutinePromise>;
+  std::shared_ptr<CoroutineState<T>> _state;
+  std::shared_ptr<CoroutineState<T>> get_return_object() {
+    _state = std::make_shared<CoroutineState<T>>(
+        [p = handle_t::from_promise(*this).address()]() {
+          handle_t::from_address(p).destroy();
+        });
+    return _state;
+  }
+  void return_value(const T &value) { _state->return_value = value; }
+};
+
+template <> struct CoroutinePromise<void> : CoroutinePromiseBase<void> {
+  using handle_t = std::coroutine_handle<CoroutinePromise>;
+  std::shared_ptr<CoroutineState<void>> _state;
+  std::shared_ptr<CoroutineState<void>> get_return_object() {
+    _state = std::make_shared<CoroutineState<void>>(
+        [p = handle_t::from_promise(*this).address()]() {
+          handle_t::from_address(p).destroy();
+        });
+    return _state;
+  }
+  void return_void() { _state->return_void = true; }
+};
+
+template <typename T, typename... ArgTypes>
+struct std::coroutine_traits<std::shared_ptr<CoroutineState<T>>, ArgTypes...> {
+  using promise_type = CoroutinePromise<T>;
+};
+
+std::shared_ptr<CoroutineState<int>> coro() {
+  std::cout << "coro#1" << std::endl;
+  // co_yield {};
+  std::cout << "coro#2" << std::endl;
+  co_return 4;
+}
+
+int main() {
+  auto t = coro();
+  std::cout << t->return_value.value() << std::endl;
 }

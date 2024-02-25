@@ -1,5 +1,6 @@
 #pragma once
 #include "line_layout.h"
+#include "func.h"
 #include <memory>
 
 struct FormList;
@@ -50,7 +51,7 @@ public:
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> sourceBuffer();
-  std::shared_ptr<Buffer> followForm(Anchor *a, bool submit);
+  FuncCoroutine<std::shared_ptr<Buffer>> followForm(Anchor *a, bool submit);
   bool reopenSource();
   std::string link_info() const;
   std::shared_ptr<Buffer> page_info_panel();
