@@ -86,26 +86,22 @@ void TabBuffer::deleteBuffer(const std::shared_ptr<Buffer> &delbuf) {
   }
 }
 
-void TabBuffer::cmd_loadURL(const char *url, std::optional<Url> current,
-                            const HttpOption &option, FormList *request) {
-
-  // refresh(term_io());
+std::shared_ptr<Buffer> TabBuffer::cmd_loadURL(const char *url,
+                                               std::optional<Url> current,
+                                               const HttpOption &option,
+                                               FormList *request) {
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     App::instance().disp_err_message(emsg);
-    return;
+    return {};
   }
 
-  auto buf = Buffer::create(res);
-
-  // if (buf != NO_BUFFER)
-  { this->pushBuffer(buf); }
+  return Buffer::create(res);
 }
 
 /* go to specified URL */
-void TabBuffer::goURL0(const char *prompt, bool relative) {
-  auto url = App::instance().searchKeyData();
+void TabBuffer::goURL0(const char *url, const char *prompt, bool relative) {
   std::optional<Url> current;
   if (url == nullptr) {
     Hist *hist = copyHist(URLHist);
@@ -162,8 +158,8 @@ void TabBuffer::goURL0(const char *prompt, bool relative) {
   auto p_url = urlParse(url, current);
   pushHashHist(URLHist, p_url.to_Str().c_str());
   auto cur_buf = this->currentBuffer();
-  this->cmd_loadURL(url, current, option, nullptr);
-  if (this->currentBuffer() != cur_buf) { /* success */
+  if (auto buf = this->cmd_loadURL(url, current, option, nullptr)) {
+    this->pushBuffer(buf);
     pushHashHist(URLHist,
                  this->currentBuffer()->res->currentURL.to_Str().c_str());
   }

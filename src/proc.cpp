@@ -377,7 +377,11 @@ std::shared_ptr<CoroutineState<void>> ldhelp() {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  CurrentTab->cmd_loadURL(tmp->ptr, {}, {.no_referer = true}, nullptr);
+  if (auto buf = CurrentTab->cmd_loadURL(tmp->ptr, {}, {.no_referer = true},
+                                         nullptr)) {
+    CurrentTab->pushBuffer(buf);
+  }
+
   co_return;
 }
 
@@ -1067,7 +1071,8 @@ std::shared_ptr<CoroutineState<void>> deletePrevBuf() {
 // GOTO
 //"Open specified document in a new buffer"
 std::shared_ptr<CoroutineState<void>> goURL() {
-  CurrentTab->goURL0("Goto URL: ", false);
+  auto url = App::instance().searchKeyData();
+  CurrentTab->goURL0(url, "Goto URL: ", false);
   co_return;
 }
 
@@ -1077,17 +1082,15 @@ std::shared_ptr<CoroutineState<void>> goHome() {
   const char *url;
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
-    Url p_url;
     auto cur_buf = CurrentTab->currentBuffer();
     SKIP_BLANKS(url);
     url = Strnew(url_quote(url))->ptr;
-    p_url = urlParse(url);
+    auto p_url = urlParse(url);
     pushHashHist(URLHist, p_url.to_Str().c_str());
-    CurrentTab->cmd_loadURL(url, {}, {}, nullptr);
-    if (CurrentTab->currentBuffer() != cur_buf) /* success */
-      pushHashHist(
-          URLHist,
-          CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
+    if (auto buf = CurrentTab->cmd_loadURL(url, {}, {}, nullptr)) {
+      CurrentTab->pushBuffer(buf);
+      pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
+    }
   }
   co_return;
 }
@@ -1095,7 +1098,8 @@ std::shared_ptr<CoroutineState<void>> goHome() {
 // GOTO_RELATIVE
 //"Go to relative address"
 std::shared_ptr<CoroutineState<void>> gorURL() {
-  CurrentTab->goURL0("Goto relative URL: ", true);
+  auto url = App::instance().searchKeyData();
+  CurrentTab->goURL0(url, "Goto relative URL: ", true);
   co_return;
 }
 
@@ -1103,7 +1107,10 @@ std::shared_ptr<CoroutineState<void>> gorURL() {
 // BOOKMARK VIEW_BOOKMARK
 //"View bookmarks"
 std::shared_ptr<CoroutineState<void>> ldBmark() {
-  CurrentTab->cmd_loadURL(BookmarkFile, {}, {.no_referer = true}, nullptr);
+  if (auto buf = CurrentTab->cmd_loadURL(BookmarkFile, {}, {.no_referer = true},
+                                         nullptr)) {
+    CurrentTab->pushBuffer(buf);
+  }
   co_return;
 }
 
@@ -1111,10 +1118,7 @@ std::shared_ptr<CoroutineState<void>> ldBmark() {
 // ADD_BOOKMARK
 //"Add current page to bookmarks"
 std::shared_ptr<CoroutineState<void>> adBmark() {
-  Str *tmp;
-  FormList *request;
-
-  tmp = Sprintf(
+  auto tmp = Sprintf(
       "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
       (Str_form_quote(localCookie()))->ptr,
       (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
@@ -1122,12 +1126,14 @@ std::shared_ptr<CoroutineState<void>> adBmark() {
            Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str())))
           ->ptr,
       (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout.title)))->ptr);
-  request =
+  auto request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
   request->length = tmp->length;
-  CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, {},
-                          {.no_referer = true}, request);
+  if (auto buf = CurrentTab->cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME,
+                                         {}, {.no_referer = true}, request)) {
+    CurrentTab->pushBuffer(buf);
+  }
   co_return;
 }
 
@@ -1708,14 +1714,16 @@ std::shared_ptr<CoroutineState<void>> tabA() {
 // TAB_GOTO
 //"Open specified document in a new tab"
 std::shared_ptr<CoroutineState<void>> tabURL() {
-  App::instance().newTab();
+  auto tab = App::instance().newTab();
 
-  auto buf = CurrentTab->currentBuffer();
-  CurrentTab->goURL0("Goto URL on new tab: ", false);
-  if (buf != CurrentTab->currentBuffer())
-    CurrentTab->deleteBuffer(buf);
+  auto buf = tab->currentBuffer();
+
+  auto url = App::instance().searchKeyData();
+  tab->goURL0(url, "Goto URL on new tab: ", false);
+  if (buf != tab->currentBuffer())
+    tab->deleteBuffer(buf);
   else
-    App::instance().deleteTab(CurrentTab);
+    App::instance().deleteTab(tab);
   App::instance().invalidate();
   co_return;
 }
@@ -1726,7 +1734,8 @@ std::shared_ptr<CoroutineState<void>> tabrURL() {
   App::instance().newTab();
 
   auto buf = CurrentTab->currentBuffer();
-  CurrentTab->goURL0("Goto relative URL on new tab: ", true);
+  auto url = App::instance().searchKeyData();
+  CurrentTab->goURL0(url, "Goto relative URL on new tab: ", true);
   if (buf != CurrentTab->currentBuffer())
     CurrentTab->deleteBuffer(buf);
   else

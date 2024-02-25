@@ -26,7 +26,6 @@ struct TabBuffer {
   std::shared_ptr<Buffer> _currentBuffer;
 
 private:
-
   TabBuffer();
 
 public:
@@ -56,13 +55,15 @@ public:
   void pushBuffer(const std::shared_ptr<Buffer> &buf);
   bool select(char cmd, const std::shared_ptr<Buffer> &buf);
 
-  void cmd_loadURL(const char *url, std::optional<Url> current,
-                   const HttpOption &option, FormList *request);
+  std::shared_ptr<Buffer> cmd_loadURL(const char *url,
+                                      std::optional<Url> current,
+                                      const HttpOption &option,
+                                      FormList *request);
 
   std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                                         const std::shared_ptr<Buffer> &newbuf);
 
-  void goURL0(const char *prompt, bool relative);
+  void goURL0(const char *url, const char *prompt, bool relative);
 
   int draw(class Screen *screen, TabBuffer *current);
 };
