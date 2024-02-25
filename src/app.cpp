@@ -24,6 +24,7 @@
 #include <sstream>
 #include <uv.h>
 #include <chrono>
+#include <algorithm>
 // #include <unistd.h>
 
 #ifdef _MSC_VER
@@ -495,9 +496,7 @@ App::App() : _screen(new Screen) {
   orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
 #endif
 
-  _firstTab = _lastTab = _currentTab = TabBuffer::create();
-  assert(_firstTab);
-  _nTab = 1;
+  _tabs.push_back(TabBuffer::create());
 
   // default dispatcher
   _dispatcher.push([this](const char *buf, int len) {
@@ -888,7 +887,7 @@ void App::_peekURL(bool only_img) {
   static Str *s = nullptr;
   static int offset = 0;
 
-  if (_currentTab->currentBuffer()->layout.firstLine == nullptr) {
+  if (currentTab()->currentBuffer()->layout.firstLine == nullptr) {
     return;
   }
 
@@ -902,20 +901,23 @@ void App::_peekURL(bool only_img) {
     offset = 0;
   }
   s = nullptr;
-  a = (only_img ? nullptr
-                : _currentTab->currentBuffer()->layout.retrieveCurrentAnchor());
+  a = (only_img
+           ? nullptr
+           : currentTab()->currentBuffer()->layout.retrieveCurrentAnchor());
   if (a == nullptr) {
-    a = (only_img ? nullptr
-                  : _currentTab->currentBuffer()->layout.retrieveCurrentForm());
+    a = (only_img
+             ? nullptr
+             : currentTab()->currentBuffer()->layout.retrieveCurrentForm());
     if (a == nullptr) {
-      a = _currentTab->currentBuffer()->layout.retrieveCurrentImg();
+      a = currentTab()->currentBuffer()->layout.retrieveCurrentImg();
       if (a == nullptr)
         return;
     } else
       s = Strnew_charp(form2str((FormItemList *)a->url));
   }
   if (s == nullptr) {
-    auto pu = urlParse(a->url, _currentTab->currentBuffer()->res->getBaseURL());
+    auto pu =
+        urlParse(a->url, currentTab()->currentBuffer()->res->getBaseURL());
     s = Strnew(pu.to_Str());
   }
   if (DecodeURL)
@@ -938,7 +940,7 @@ std::string App::currentUrl() const {
       offset = 0;
   } else {
     offset = 0;
-    s = Strnew(_currentTab->currentBuffer()->res->currentURL.to_Str());
+    s = Strnew(currentTab()->currentBuffer()->res->currentURL.to_Str());
     if (DecodeURL)
       s = Strnew_charp(url_decode0(s->ptr));
   }
@@ -999,8 +1001,8 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       if (prec_num > PREC_LIMIT)
         prec_num = PREC_LIMIT;
     } else {
-      set_buffer_environ(_currentTab->currentBuffer());
-      _currentTab->currentBuffer()->layout.save_buffer_position();
+      set_buffer_environ(currentTab()->currentBuffer());
+      currentTab()->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
       w3mFuncList[GlobalKeymap[c]]();
       prec_num = 0;
@@ -1016,11 +1018,12 @@ void App::onFrame() {
     ldDL();
   }
 
-  if (auto a = _currentTab->currentBuffer()->layout.submit) {
-    _currentTab->currentBuffer()->layout.submit = NULL;
-    _currentTab->currentBuffer()->layout.gotoLine(a->start.line);
-    _currentTab->currentBuffer()->layout.pos = a->start.pos;
-    if (auto buf = _currentTab->currentBuffer()
+  if (auto a = currentTab()->currentBuffer()->layout.submit) {
+    currentTab()->currentBuffer()->layout.submit = NULL;
+    currentTab()->currentBuffer()->layout.gotoLine(a->start.line);
+    currentTab()->currentBuffer()->layout.pos = a->start.pos;
+    if (auto buf = currentTab()
+                       ->currentBuffer()
                        ->followForm(a, true)
                        ->return_value()
                        .value()) {
@@ -1030,7 +1033,7 @@ void App::onFrame() {
 
   if (_dirty > 0) {
     _dirty = 0;
-    _screen->display(INIT_BUFFER_WIDTH(), _currentTab.get());
+    _screen->display(INIT_BUFFER_WIDTH(), currentTab().get());
   }
 }
 
@@ -1097,86 +1100,99 @@ std::string App::tmpfname(TmpfType type, const std::string &ext) {
 
 std::shared_ptr<TabBuffer> App::numTab(int n) const {
   if (n == 0)
-    return _currentTab;
-  if (n == 1)
-    return _firstTab;
-  if (_nTab <= 1)
-    return nullptr;
+    return currentTab();
 
-  std::shared_ptr<TabBuffer> tab;
-  int i;
-  for (tab = _firstTab, i = 1; tab && i < n; tab = tab->nextTab, i++)
-    ;
-  return tab;
+  auto it = _tabs.begin();
+
+  for (int i = 1; i < n && it != _tabs.end(); ++i) {
+    ++it;
+  }
+  return *it ? *it : _tabs.back();
 }
 
 void App::drawTabs() {
-  if (_nTab > 1) {
-    _screen->clrtoeolx({0, 0});
-    int y = 0;
-    for (auto t = _firstTab; t; t = t->nextTab) {
-      y = t->draw(_screen.get(), _currentTab.get());
-    }
-    RowCol pos{.row = y + 1, .col = 0};
-    for (int i = 0; i < COLS(); i++) {
-      _screen->addch(pos, '~');
-      ++pos.col;
-    }
+  _screen->clrtoeolx({0, 0});
+  int y = 0;
+  for (auto t : _tabs) {
+    y = t->draw(_screen.get(), currentTab().get());
+  }
+  RowCol pos{.row = y + 1, .col = 0};
+  for (int i = 0; i < COLS(); i++) {
+    _screen->addch(pos, '~');
+    ++pos.col;
   }
 }
 
-void App::nextTab() {
-  if (_nTab <= 1) {
+void App::nextTab(int n) {
+  assert(_tabs.size() > 0);
+  for (int i = 0; i < n; i++) {
+    ++_currentTab;
+  }
+  if (_currentTab >= (int)_tabs.size()) {
+    _currentTab = _tabs.size() - 1;
+  }
+  invalidate();
+}
+
+void App::prevTab(int n) {
+  assert(_tabs.size() > 0);
+  for (int i = 0; i < n; i++) {
+    --_currentTab;
+  }
+  if (_currentTab < 0) {
+    _currentTab = 0;
+  }
+  invalidate();
+}
+
+void App::tabRight(int n) {
+  auto src = _tabs.begin();
+  for (int i = 0; i < _currentTab && src != _tabs.end(); ++i) {
+    ++src;
+  }
+  if (src == _tabs.end()) {
+    assert(false);
     return;
   }
+  auto end = src;
+  ++end;
 
-  for (int i = 0; i < PREC_NUM; i++) {
-    if (_currentTab->nextTab)
-      _currentTab = _currentTab->nextTab;
-    else
-      _currentTab = _firstTab;
-  }
+  // right position
+  auto dst = src;
+  ++dst;
+  for (int i = 0; i < n && dst != _tabs.end(); ++i) {
+    ++dst;
+  };
+
+  _tabs.splice(dst, _tabs, src, end);
 }
 
-void App::prevTab() {
-  if (_nTab <= 1) {
+void App::tabLeft(int n) {
+  auto src = _tabs.begin();
+  for (int i = 0; i < _currentTab && src != _tabs.end(); ++i) {
+    ++src;
+  }
+  if (src == _tabs.end()) {
+    assert(false);
     return;
   }
-  for (int i = 0; i < PREC_NUM; i++) {
-    if (_currentTab->prevTab)
-      _currentTab = _currentTab->prevTab;
-    else
-      _currentTab = _lastTab;
+  auto end = src;
+  ++end;
+
+  auto dst = src;
+  for (int i = 0; i < n && dst != _tabs.begin(); ++i) {
+    --dst;
   }
-}
 
-void App::tabRight() {
-  std::shared_ptr<TabBuffer> tab;
-  int i;
-  for (tab = _currentTab, i = 0; tab && i < PREC_NUM; tab = tab->nextTab, i++)
-    ;
-  moveTab(_currentTab, tab ? tab : _lastTab, true);
-}
-
-void App::tabLeft() {
-  std::shared_ptr<TabBuffer> tab;
-  int i;
-  for (tab = _currentTab, i = 0; tab && i < PREC_NUM; tab = tab->prevTab, i++)
-    ;
-  moveTab(_currentTab, tab ? tab : _firstTab, false);
+  _tabs.splice(dst, _tabs, src, end);
 }
 
 int App::calcTabPos() {
-  if (_nTab <= 0) {
-    return _lastTab->y;
-  }
-
-  std::shared_ptr<TabBuffer> tab;
   int lcol = 0, rcol = 0, col;
 
   int n2, ny;
   int n1 = (COLS() - rcol - lcol) / TabCols;
-  if (n1 >= _nTab) {
+  if (n1 >= (int)_tabs.size()) {
     n2 = 1;
     ny = 1;
   } else {
@@ -1185,115 +1201,58 @@ int App::calcTabPos() {
     n2 = COLS() / TabCols;
     if (n2 == 0)
       n2 = 1;
-    ny = (_nTab - n1 - 1) / n2 + 2;
+    ny = (_tabs.size() - n1 - 1) / n2 + 2;
   }
 
   // int n2, na, nx, ny, ix, iy;
   int na = n1 + n2 * (ny - 1);
-  n1 -= (na - _nTab) / ny;
+  n1 -= (na - _tabs.size()) / ny;
   if (n1 < 0)
     n1 = 0;
   na = n1 + n2 * (ny - 1);
-  tab = _firstTab;
-  for (int iy = 0; iy < ny && tab; iy++) {
+
+  auto tab = _tabs.begin();
+  ;
+  for (int iy = 0; iy < ny && tab != _tabs.end(); iy++) {
     int nx;
     if (iy == 0) {
       nx = n1;
       col = COLS() - rcol - lcol;
     } else {
-      nx = n2 - (na - _nTab + (iy - 1)) / (ny - 1);
+      nx = n2 - (na - _tabs.size() + (iy - 1)) / (ny - 1);
       col = COLS();
     }
-    for (int ix = 0; ix < nx && tab; ix++, tab = tab->nextTab) {
-      tab->x1 = col * ix / nx;
-      tab->x2 = col * (ix + 1) / nx - 1;
-      tab->y = iy;
+    for (int ix = 0; ix < nx && tab != _tabs.end(); ix++, ++tab) {
+      (*tab)->x1 = col * ix / nx;
+      (*tab)->x2 = col * (ix + 1) / nx - 1;
+      (*tab)->y = iy;
       if (iy == 0) {
-        tab->x1 += lcol;
-        tab->x2 += lcol;
+        (*tab)->x1 += lcol;
+        (*tab)->x2 += lcol;
       }
     }
   }
-  return _lastTab->y;
+  return _tabs.back()->y;
 }
 
-std::shared_ptr<TabBuffer>
-App::deleteTab(const std::shared_ptr<TabBuffer> &tab) {
-  if (_nTab <= 1)
-    return _firstTab;
-  if (tab->prevTab) {
-    if (tab->nextTab)
-      tab->nextTab->prevTab = tab->prevTab;
-    else
-      _lastTab = tab->prevTab;
-    tab->prevTab->nextTab = tab->nextTab;
-    if (tab == _currentTab)
-      _currentTab = tab->prevTab;
-  } else { /* tab == FirstTab */
-    tab->nextTab->prevTab = nullptr;
-    _firstTab = tab->nextTab;
-    if (tab == _currentTab)
-      _currentTab = tab->nextTab;
-  }
-  _nTab--;
-  return _firstTab;
-}
-
-void App::moveTab(const std::shared_ptr<TabBuffer> &t,
-                  std::shared_ptr<TabBuffer> t2, int right) {
-  if (!t2) {
-    t2 = _firstTab;
-  }
-  if (!t || !t2 || t == t2 || !t) {
+void App::deleteTab(const std::shared_ptr<TabBuffer> &tab) {
+  auto found = std::find(_tabs.begin(), _tabs.end(), tab);
+  if (found == _tabs.end()) {
     return;
   }
-  if (t->prevTab) {
-    if (t->nextTab)
-      t->nextTab->prevTab = t->prevTab;
-    else
-      _lastTab = t->prevTab;
-    t->prevTab->nextTab = t->nextTab;
-  } else {
-    t->nextTab->prevTab = nullptr;
-    _firstTab = t->nextTab;
-  }
-  if (right) {
-    t->nextTab = t2->nextTab;
-    t->prevTab = t2;
-    if (t2->nextTab)
-      t2->nextTab->prevTab = t;
-    else
-      _lastTab = t;
-    t2->nextTab = t;
-  } else {
-    t->prevTab = t2->prevTab;
-    t->nextTab = t2;
-    if (t2->prevTab)
-      t2->prevTab->nextTab = t;
-    else
-      _firstTab = t;
-    t2->prevTab = t;
-  }
-  invalidate();
+  _tabs.erase(found);
 }
 
 std::shared_ptr<TabBuffer> App::newTab(std::shared_ptr<Buffer> buf) {
-  auto tab = TabBuffer::create();
   if (!buf) {
     buf = Buffer::create();
-    *buf = *_currentTab->currentBuffer();
+    *buf = *currentTab()->currentBuffer();
   }
+  auto tab = TabBuffer::create();
   tab->firstBuffer = tab->_currentBuffer = buf;
 
-  tab->nextTab = _currentTab->nextTab;
-  tab->prevTab = _currentTab;
-  if (_currentTab->nextTab)
-    _currentTab->nextTab->prevTab = tab;
-  else
-    _lastTab = tab;
-  _currentTab->nextTab = tab;
-  _currentTab = tab;
-  _nTab++;
+  _tabs.push_back(tab);
+  _currentTab = _tabs.size() - 1;
 
   invalidate();
 

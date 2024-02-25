@@ -6,7 +6,6 @@
 #include <memory>
 #include <functional>
 #include <stack>
-#include <vector>
 #include <array>
 #include <unordered_map>
 
@@ -31,7 +30,6 @@ using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
 struct TabBuffer;
 struct Buffer;
-struct Screen;
 class App {
   RowCol _size = {};
 
@@ -50,10 +48,8 @@ class App {
   char _currentKey = -1;
   char prev_key = -1;
 
-  std::shared_ptr<TabBuffer> _firstTab;
-  std::shared_ptr<TabBuffer> _lastTab;
-  int _nTab = 0;
-  std::shared_ptr<TabBuffer> _currentTab;
+  std::list<std::shared_ptr<TabBuffer>> _tabs;
+  int _currentTab = 0;
 
   std::stack<Dispatcher> _dispatcher;
 
@@ -148,21 +144,24 @@ public:
   void invalidate() { ++_dirty; }
 
   // tabs
-  std::shared_ptr<TabBuffer> FirstTab() const { return _firstTab; }
-  std::shared_ptr<TabBuffer> LastTab() const { return _lastTab; }
-  int nTab() const { return _nTab; }
-  std::shared_ptr<TabBuffer> CurrentTab() const { return _currentTab; }
+  std::shared_ptr<TabBuffer> FirstTab() const { return _tabs.front(); }
+  std::shared_ptr<TabBuffer> LastTab() const { return _tabs.back(); }
+  int nTab() const { return _tabs.size(); }
+  std::shared_ptr<TabBuffer> currentTab() const {
+    auto it = _tabs.begin();
+    for (int i = 0; i < _currentTab && it != _tabs.end(); ++i, ++it) {
+    }
+    return *it ? *it : _tabs.back();
+  }
   std::shared_ptr<TabBuffer> newTab(std::shared_ptr<Buffer> buf = {});
   std::shared_ptr<TabBuffer> numTab(int n) const;
   void drawTabs();
-  void nextTab();
-  void prevTab();
-  void tabRight();
-  void tabLeft();
+  void nextTab(int n);
+  void prevTab(int n);
+  void tabRight(int n);
+  void tabLeft(int n);
   int calcTabPos();
-  std::shared_ptr<TabBuffer> deleteTab(const std::shared_ptr<TabBuffer> &tab);
-  void moveTab(const std::shared_ptr<TabBuffer> &t,
-               std::shared_ptr<TabBuffer> t2, int right);
+  void deleteTab(const std::shared_ptr<TabBuffer> &tab);
   void pushBuffer(const std::shared_ptr<Buffer> &buf, std::string_view target);
 
   struct GeneralList *message_list = NULL;
@@ -181,7 +180,7 @@ public:
   void showProgress(long long *linelen, long long *trbyte,
                     long long current_content_length);
 };
-#define CurrentTab App::instance().CurrentTab()
+#define CurrentTab App::instance().currentTab()
 
 char *convert_size(long long size, int usefloat);
 char *convert_size2(long long size1, long long size2, int usefloat);

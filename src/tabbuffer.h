@@ -16,9 +16,6 @@ struct Anchor;
 struct HttpOption;
 
 struct TabBuffer {
-  // friend class App;
-  std::shared_ptr<TabBuffer> nextTab;
-  std::shared_ptr<TabBuffer> prevTab;
 
   short x1 = 0;
   short x2 = 0;

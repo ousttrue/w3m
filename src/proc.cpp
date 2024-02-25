@@ -1670,7 +1670,6 @@ std::shared_ptr<CoroutineState<void>> defKey() {
 //"Open a new tab (with current document)"
 std::shared_ptr<CoroutineState<void>> newT() {
   App::instance().newTab();
-  App::instance().invalidate();
   co_return;
 }
 
@@ -1694,7 +1693,7 @@ std::shared_ptr<CoroutineState<void>> closeT() {
 // NEXT_TAB
 //"Switch to the next tab"
 std::shared_ptr<CoroutineState<void>> nextT() {
-  App::instance().nextTab();
+  App::instance().nextTab(PREC_NUM);
   App::instance().invalidate();
   co_return;
 }
@@ -1702,7 +1701,7 @@ std::shared_ptr<CoroutineState<void>> nextT() {
 // PREV_TAB
 //"Switch to the previous tab"
 std::shared_ptr<CoroutineState<void>> prevT() {
-  App::instance().prevTab();
+  App::instance().prevTab(PREC_NUM);
   App::instance().invalidate();
   co_return;
 }
@@ -1712,9 +1711,7 @@ std::shared_ptr<CoroutineState<void>> prevT() {
 std::shared_ptr<CoroutineState<void>> tabA() {
   auto [a, buf] = co_await CurrentTab->currentBuffer()->followAnchor(false);
   if (buf) {
-    App::instance().newTab();
-    App::instance().pushBuffer(buf, a->target);
-    App::instance().invalidate();
+    App::instance().newTab(buf);
   }
   co_return;
 }
@@ -1736,8 +1733,7 @@ std::shared_ptr<CoroutineState<void>> tabrURL() {
   auto url = App::instance().searchKeyData();
   if (auto buf = CurrentTab->currentBuffer()->goURL0(
           url, "Goto relative URL on new tab: ", true)) {
-    auto tab = App::instance().newTab();
-    tab->pushBuffer(buf);
+    App::instance().newTab(buf);
   }
   co_return;
 }
@@ -1745,14 +1741,14 @@ std::shared_ptr<CoroutineState<void>> tabrURL() {
 // TAB_RIGHT
 //"Move right along the tab bar"
 std::shared_ptr<CoroutineState<void>> tabR() {
-  App::instance().tabRight();
+  App::instance().tabRight(PREC_NUM);
   co_return;
 }
 
 // TAB_LEFT
 //"Move left along the tab bar"
 std::shared_ptr<CoroutineState<void>> tabL() {
-  App::instance().tabLeft();
+  App::instance().tabLeft(PREC_NUM);
   co_return;
 }
 
