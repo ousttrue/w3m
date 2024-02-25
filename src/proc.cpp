@@ -739,7 +739,7 @@ std::shared_ptr<CoroutineState<void>> editScr() {
 // GOTO_LINK
 //"Follow current hyperlink in a new buffer"
 std::shared_ptr<CoroutineState<void>> followA() {
-  auto [a, buf] = CurrentTab->currentBuffer()->followAnchor();
+  auto [a, buf] = co_await CurrentTab->currentBuffer()->followAnchor();
   if (buf) {
     App::instance().pushBuffer(buf, a->target);
 
@@ -1694,7 +1694,7 @@ std::shared_ptr<CoroutineState<void>> prevT() {
 // TAB_LINK
 //"Follow current hyperlink in a new tab"
 std::shared_ptr<CoroutineState<void>> tabA() {
-  auto [a, buf] = CurrentTab->currentBuffer()->followAnchor(false);
+  auto [a, buf] = co_await CurrentTab->currentBuffer()->followAnchor(false);
   if (buf) {
     App::instance().newTab();
     App::instance().pushBuffer(buf, a->target);

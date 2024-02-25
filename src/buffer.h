@@ -39,7 +39,7 @@ public:
     return b;
   }
 
-  std::tuple<Anchor *, std::shared_ptr<Buffer>>
+  std::shared_ptr<CoroutineState<std::tuple<Anchor *, std::shared_ptr<Buffer>>>>
   followAnchor(bool check_target = true);
 
   bool checkBackBuffer() const { return this->backBuffer ? true : false; }

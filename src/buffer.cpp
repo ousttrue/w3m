@@ -670,33 +670,31 @@ bool Buffer::reopenSource() {
   return true;
 }
 
-std::tuple<Anchor *, std::shared_ptr<Buffer>>
+std::shared_ptr<CoroutineState<std::tuple<Anchor *, std::shared_ptr<Buffer>>>>
 Buffer::followAnchor(bool check_target) {
   if (!this->layout.firstLine) {
-    return {};
+    co_return {};
   }
 
   if (auto a = this->layout.retrieveCurrentAnchor()) {
     if (*a->url == '#') { /* index within this buffer */
-      return {a, this->gotoLabel(a->url + 1)};
+      co_return {a, this->gotoLabel(a->url + 1)};
     }
 
     auto u = urlParse(a->url, this->res->getBaseURL());
     if (u.to_Str() == this->res->currentURL.to_Str()) {
       // index within this buffer
       if (u.label.size()) {
-        return {a, this->gotoLabel(u.label.c_str())};
+        co_return {a, this->gotoLabel(u.label.c_str())};
       }
     }
 
-    return {a, this->loadLink(a->url, a->option, nullptr)};
+    co_return {a, this->loadLink(a->url, a->option, nullptr)};
   }
 
   if (auto f = this->layout.retrieveCurrentForm()) {
-    auto task = this->followForm(f, false);
-    assert(task->return_value);
-    return {f, *task->return_value};
+    co_return {f, co_await this->followForm(f, false)};
   }
 
-  return {};
+  co_return {};
 }
