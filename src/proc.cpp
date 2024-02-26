@@ -1439,16 +1439,18 @@ std::shared_ptr<CoroutineState<void>> reload() {
 //"Re-render document"
 std::shared_ptr<CoroutineState<void>> reshape() {
   CurrentTab->currentBuffer()->layout.need_reshape = true;
-  if (CurrentTab->currentBuffer()->layout.need_reshape &&
-      CurrentTab->currentBuffer()->reopenSource()) {
+  if (CurrentTab->currentBuffer()->layout.need_reshape) {
 
     LineLayout sbuf = CurrentTab->currentBuffer()->layout;
-    if (CurrentTab->currentBuffer()->res->is_html_type())
-      loadHTMLstream(CurrentTab->currentBuffer()->res.get(),
-                     &CurrentTab->currentBuffer()->layout);
-    else
-      loadBuffer(CurrentTab->currentBuffer()->res.get(),
-                 &CurrentTab->currentBuffer()->layout);
+    auto body = CurrentTab->currentBuffer()->res->getBody();
+    if (CurrentTab->currentBuffer()->res->is_html_type()){
+      loadHTMLstream(&CurrentTab->currentBuffer()->layout,
+                     CurrentTab->currentBuffer()->res.get(), body);
+    }
+    else{
+      loadBuffer(&CurrentTab->currentBuffer()->layout,
+                 CurrentTab->currentBuffer()->res.get(), body);
+    }
 
     CurrentTab->currentBuffer()->layout.reshape(
         App::instance().INIT_BUFFER_WIDTH(), sbuf);

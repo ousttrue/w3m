@@ -1,5 +1,5 @@
 #include "keyvalue.h"
-#include "url_stream.h"
+#include "app.h"
 #include "alloc.h"
 #include "Str.h"
 #include "quote.h"

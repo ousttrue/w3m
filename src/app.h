@@ -9,6 +9,7 @@
 #include <array>
 #include <unordered_map>
 
+extern bool DecodeURL;
 extern int prev_key;
 extern const char *CurrentKeyData;
 extern const char *CurrentCmdData;
@@ -184,3 +185,6 @@ public:
 
 char *convert_size(long long size, int usefloat);
 char *convert_size2(long long size1, long long size2, int usefloat);
+const char *url_decode0(const char *url);
+Str *Str_url_unquote(Str *x, int is_form, int safe);
+inline Str *Str_form_unquote(Str *x) { return Str_url_unquote(x, true, false); }

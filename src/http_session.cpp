@@ -4,6 +4,7 @@
 #include "mytime.h"
 #include "http_auth.h"
 #include "mimetypes.h"
+#include "url_stream.h"
 #include <sys/stat.h>
 
 const char *DefaultType = nullptr;
@@ -14,7 +15,8 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
                                               FormList *request) {
   auto res = std::make_shared<HttpResponse>();
 
-  auto hr = res->f.openURL(path, current, option, request);
+  UrlStream f(SCM_UNKNOWN);
+  auto hr = f.openURL(path, current, option, request);
 
   // Directory Open ?
   // if (f.stream == nullptr) {
@@ -67,7 +69,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
     //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
-    auto http_response_code = res->readHeader(&res->f, hr->url);
+    auto http_response_code = res->readHeader(&f, hr->url);
     const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
@@ -102,7 +104,8 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
         if (hr->uname == nullptr) {
           /* abort */
           // TRAP_OFF;
-          res->page_loaded(hr->url);
+          res->ssl_certificate = f.ssl_certificate;
+          res->page_loaded(hr->url, &f);
           return res;
         }
         hr->add_auth_cookie_flag = true;
@@ -114,9 +117,9 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
       return loadGeneralFile(path, current, option, request);
     }
 
-    res->f.modtime = mymktime(res->getHeader("Last-Modified:"));
+    f.modtime = mymktime(res->getHeader("Last-Modified:"));
   } else if (hr->url.schema == SCM_DATA) {
-    res->type = res->f.guess_type;
+    res->type = f.guess_type;
   } else if (DefaultType) {
     res->type = DefaultType;
     DefaultType = nullptr;
@@ -125,15 +128,16 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
     if (res->type.empty()) {
       res->type = "text/plain";
     }
-    if (res->f.guess_type.size()) {
-      res->type = res->f.guess_type;
+    if (f.guess_type.size()) {
+      res->type = f.guess_type;
     }
   }
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
-  res->f.guess_type = res->type;
+  f.guess_type = res->type;
 
-  res->page_loaded(hr->url);
+  res->ssl_certificate = f.ssl_certificate;
+  res->page_loaded(hr->url, &f);
   return res;
 }

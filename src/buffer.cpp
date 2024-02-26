@@ -89,7 +89,6 @@ std::string Buffer::link_info() const {
 std::shared_ptr<Buffer> Buffer::page_info_panel() {
   Str *tmp = Strnew_size(1024);
   Url pu;
-  TextListItem *ti;
   struct frameset *f_set = nullptr;
   int all;
   const char *p, *q;
@@ -657,17 +656,6 @@ Buffer::followForm(Anchor *a, bool submit) {
   }
 
   co_return {};
-}
-
-bool Buffer::reopenSource() {
-  if (this->res->sourcefile.empty()) {
-    return false;
-  }
-  this->res->f.openFile(this->res->sourcefile.c_str());
-  if (this->res->f.stream == nullptr) {
-    return false;
-  }
-  return true;
 }
 
 std::shared_ptr<CoroutineState<std::tuple<Anchor *, std::shared_ptr<Buffer>>>>

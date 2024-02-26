@@ -11,14 +11,27 @@
 #include "html/readbuffer.h"
 #include "mimehead.h"
 #include "etc.h"
-
 #include <assert.h>
 #include <sys/stat.h>
+#include <fstream>
 
 int FollowRedirection = 10;
 bool DecodeCTE = false;
 
-HttpResponse::HttpResponse() : f(SCM_MISSING) {}
+static std::vector<uint8_t> ReadAllBytes(const std::string &filename) {
+  std::ifstream ifs(filename.c_str(), std::ios::binary | std::ios::ate);
+  if (!ifs) {
+    return {};
+  }
+  auto pos = ifs.tellg();
+  auto size = pos;
+  std::vector<uint8_t> buffer(size);
+  ifs.seekg(0, std::ios::beg);
+  ifs.read((char *)buffer.data(), pos);
+  return buffer;
+}
+
+HttpResponse::HttpResponse() {}
 
 HttpResponse::~HttpResponse() {}
 
@@ -284,10 +297,10 @@ FILE *HttpResponse::createSourceFile() {
     // already created
     return {};
   }
-  if (f.schema == SCM_LOCAL) {
-    // no cache for local file
-    return {};
-  }
+  // if (f.schema == SCM_LOCAL) {
+  //   // no cache for local file
+  //   return {};
+  // }
 
   auto tmp = App::instance().tmpfname(TMPF_SRC, ".html");
   auto src = fopen(tmp.c_str(), "w");
@@ -300,7 +313,7 @@ FILE *HttpResponse::createSourceFile() {
   return src;
 }
 
-void HttpResponse::page_loaded(Url url) {
+void HttpResponse::page_loaded(Url url, UrlStream *f) {
   const char *p;
   if ((p = this->getHeader("Content-Length:"))) {
     this->current_content_length = strtoclen(p);
@@ -324,16 +337,16 @@ void HttpResponse::page_loaded(Url url) {
   //   return NO_BUFFER;
   // }
 
-  if ((this->f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    url.real_file = this->f.uncompress_stream();
-  } else if (this->f.compression != CMP_NOCOMPRESS) {
+  if ((f->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+    url.real_file = f->uncompress_stream();
+  } else if (f->compression != CMP_NOCOMPRESS) {
     if ((is_text_type(this->type))) {
-      this->sourcefile = this->f.uncompress_stream();
+      this->sourcefile = f->uncompress_stream();
       auto [_, ext] = uncompressed_file_type(url.file.c_str());
-      this->f.ext = ext;
+      f->ext = ext;
     } else {
-      this->type = compress_application_type(this->f.compression)->mime_type;
-      this->f.compression = CMP_NOCOMPRESS;
+      this->type = compress_application_type(f->compression)->mime_type;
+      f->compression = CMP_NOCOMPRESS;
     }
   }
 
@@ -341,7 +354,7 @@ void HttpResponse::page_loaded(Url url) {
   this->filename = this->currentURL.real_file.size()
                        ? Strnew(this->currentURL.real_file)->ptr
                        : Strnew(this->currentURL.file)->ptr;
-  this->ssl_certificate = this->f.ssl_certificate;
+  this->ssl_certificate = f->ssl_certificate;
 
   // loadSomething(this, &b->layout);
   {
@@ -355,12 +368,12 @@ void HttpResponse::page_loaded(Url url) {
 
     auto src = this->createSourceFile();
 
-    if (this->f.stream->IStype() != IST_ENCODED) {
-      this->f.stream = newEncodedStream(this->f.stream, this->f.encoding);
+    if (f->stream->IStype() != IST_ENCODED) {
+      f->stream = newEncodedStream(f->stream, f->encoding);
     }
 
     while (true) {
-      auto _lineBuf2 = this->f.stream->StrmyISgets();
+      auto _lineBuf2 = f->stream->StrmyISgets();
       if (_lineBuf2.empty()) {
         break;
       }
@@ -384,10 +397,10 @@ void HttpResponse::page_loaded(Url url) {
     // }
 
     if (this->currentURL.schema == SCM_UNKNOWN) {
-      this->currentURL.schema = this->f.schema;
+      this->currentURL.schema = f->schema;
     }
 
-    if (this->f.schema == SCM_LOCAL && this->sourcefile.empty()) {
+    if (f->schema == SCM_LOCAL && this->sourcefile.empty()) {
       this->sourcefile = this->filename;
     }
 
@@ -440,4 +453,11 @@ std::string HttpResponse::last_modified() const {
     return ctime(&st.st_mtime);
   }
   return "unknown";
+}
+
+std::string_view HttpResponse::getBody() {
+  if (body.empty()) {
+    body = ReadAllBytes(sourcefile);
+  }
+  return {(const char *)body.data(), (const char *)body.data() + body.size()};
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include "url.h"
-#include "url_stream.h"
 #include "optional"
+#include <stdint.h>
 #include <vector>
 #include <memory>
 #include <list>
@@ -31,6 +31,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
 
   // cache / local filename / decompress
   std::string sourcefile;
+  std::vector<uint8_t> body;
 
   std::vector<Url> redirectins;
   const char *ssl_certificate = nullptr;
@@ -38,7 +39,6 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   size_t trbyte = 0;
   const char *edit = nullptr;
   long long current_content_length;
-  UrlStream f;
 
   HttpResponse();
   ~HttpResponse();
@@ -51,10 +51,9 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
     return type == "text/html" || type == "application/xhtml+xml";
   }
   FILE *createSourceFile();
-
-  void page_loaded(Url url);
-
+  void page_loaded(Url url, struct UrlStream *f);
   std::string last_modified() const;
+  std::string_view getBody();
 };
 
 const char *mybasename(const char *s);

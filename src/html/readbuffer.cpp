@@ -527,13 +527,12 @@ readbuffer::readbuffer() {
 //   loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
 // }
 
-void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
+void loadHTMLstream(LineLayout *layout, HttpResponse *res,
+                    std::string_view body, bool internal) {
 
   layout->clearBuffer();
 
   HtmlParser parser;
-
-  auto src = res->createSourceFile();
 
   long long linelen = 0;
   long long trbyte = 0;
@@ -545,19 +544,19 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
 
   htmlenv1.buf = newTextLineList();
 
-  if (res->f.stream->IStype() != IST_ENCODED) {
-    res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
-  }
+  // if (res->f.stream->IStype() != IST_ENCODED) {
+  //   res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
+  // }
+  UrlStream f(SCM_UNKNOWN);
+  f.openFile(res->sourcefile.c_str());
 
   while (true) {
-    auto _lineBuf2 = res->f.stream->StrmyISgets();
+    auto _lineBuf2 = f.stream->StrmyISgets();
     if (_lineBuf2.empty()) {
       break;
     }
     auto lineBuf2 = Strnew(_lineBuf2);
 
-    if (src)
-      Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
     // showProgress(&linelen, &trbyte);
     /*
@@ -587,9 +586,6 @@ void loadHTMLstream(HttpResponse *res, LineLayout *layout, bool internal) {
   res->type = "text/html";
   // if (n_textarea)
   formResetBuffer(layout, layout->formitem().get());
-  if (src) {
-    fclose(src);
-  }
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {
@@ -616,27 +612,17 @@ void cleanup_line(Str *s, CleanupMode mode) {
   }
 }
 
-void loadBuffer(HttpResponse *res, LineLayout *layout) {
-
+void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
   layout->clearBuffer();
-
-  auto src = res->createSourceFile();
-
   auto nlines = 0;
-  if (res->f.stream->IStype() != IST_ENCODED) {
-    res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
-  }
-
+  UrlStream f(SCM_LOCAL, newStrStream(page));
   char pre_lbuf = '\0';
   while (true) {
-    auto _lineBuf2 = res->f.stream->StrmyISgets(); //&& lineBuf2->length
+    auto _lineBuf2 = f.stream->StrmyISgets(); //&& lineBuf2->length
     if (_lineBuf2.empty()) {
       break;
     }
     auto lineBuf2 = Strnew(_lineBuf2);
-    if (src) {
-      Strfputs(lineBuf2, src);
-    }
     cleanup_line(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
@@ -655,18 +641,12 @@ void loadBuffer(HttpResponse *res, LineLayout *layout) {
   layout->topLine = layout->firstLine;
   layout->lastLine = layout->currentLine;
   layout->currentLine = layout->firstLine;
-  if (src) {
-    fclose(src);
-  }
   res->type = "text/plain";
 }
 
 std::shared_ptr<Buffer> loadHTMLString(Str *page) {
   auto newBuf = Buffer::create();
-  newBuf->res->f = UrlStream(SCM_LOCAL, newStrStream(page->ptr));
-
-  loadHTMLstream(newBuf->res.get(), &newBuf->layout, true);
-
+  loadHTMLstream(&newBuf->layout, newBuf->res.get(), page->ptr, true);
   return newBuf;
 }
 
@@ -685,8 +665,9 @@ std::shared_ptr<Buffer> getshell(const char *cmd) {
   }
 
   auto buf = Buffer::create();
-  buf->res->f = UrlStream(SCM_UNKNOWN, newFileStream(f, pclose));
-  loadBuffer(buf->res.get(), &buf->layout);
+  UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
+  // TODO:
+  // loadBuffer(buf->res.get(), &buf->layout);
   buf->res->filename = cmd;
   buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;

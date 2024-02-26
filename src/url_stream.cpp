@@ -43,7 +43,6 @@
 #include <netdb.h>
 #endif
 
-bool DecodeURL = false;
 bool ArgvIsURL = true;
 bool LocalhostOnly = false;
 bool retryAsHttp = true;
@@ -738,106 +737,6 @@ int UrlStream::doFileSave(const char *defstr) {
   }
   return 0;
 #endif
-}
-
-static char url_unquote_char(const char **pstr) {
-  return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))
-              ? (*(pstr) += 3, (GET_MYCDIGIT((*(pstr))[-2]) << 4) |
-                                   GET_MYCDIGIT((*(pstr))[-1]))
-              : -1);
-}
-
-Str *Str_url_unquote(Str *x, int is_form, int safe) {
-  Str *tmp = NULL;
-  const char *p = x->ptr, *ep = x->ptr + x->length, *q;
-  int c;
-
-  for (; p < ep;) {
-    if (is_form && *p == '+') {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-      Strcat_char(tmp, ' ');
-      p++;
-      continue;
-    } else if (*p == '%') {
-      q = p;
-      c = url_unquote_char(&q);
-      if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
-        if (tmp == NULL)
-          tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-        Strcat_char(tmp, (char)c);
-        p = q;
-        continue;
-      }
-    }
-    if (tmp)
-      Strcat_char(tmp, *p);
-    p++;
-  }
-  if (tmp)
-    return tmp;
-  return x;
-}
-
-const char *url_unquote_conv0(const char *url) {
-  Str *tmp;
-  tmp = Str_url_unquote(Strnew_charp(url), false, true);
-  return tmp->ptr;
-}
-
-const char *url_decode0(const char *url) {
-  if (!DecodeURL)
-    return url;
-  return url_unquote_conv0(url);
-}
-
-const char *file_quote(const char *str) {
-  Str *tmp = NULL;
-  const char *p;
-  char buf[4];
-
-  for (p = str; *p; p++) {
-    if (is_file_quote(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      snprintf(buf, sizeof(buf), "%%%02X", (unsigned char)*p);
-      Strcat_charp(tmp, buf);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp) {
-    return tmp->ptr;
-  }
-  return str;
-}
-
-const char *file_unquote(const char *str) {
-  Str *tmp = NULL;
-  const char *p, *q;
-  int c;
-
-  for (p = str; *p;) {
-    if (*p == '%') {
-      q = p;
-      c = url_unquote_char(&q);
-      if (c >= 0) {
-        if (tmp == NULL)
-          tmp = Strnew_charp_n(str, (int)(p - str));
-        if (c != '\0' && c != '\n' && c != '\r')
-          Strcat_char(tmp, (char)c);
-        p = q;
-        continue;
-      }
-    }
-    if (tmp)
-      Strcat_char(tmp, *p);
-    p++;
-  }
-  if (tmp)
-    return tmp->ptr;
-  return str;
 }
 
 const char *cleanupName(const char *name) {

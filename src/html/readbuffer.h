@@ -5,6 +5,7 @@
 #include "readbuffer_status.h"
 #include "html_command.h"
 #include <memory>
+#include <string_view>
 
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
@@ -182,8 +183,6 @@ struct readbuffer {
   }
 };
 
-struct TextLineList;
-
 Str *romanNumeral(int n);
 Str *romanAlphabet(int n);
 // extern int next_status(char c, int *status);
@@ -191,11 +190,11 @@ int next_status(char c, ReadBufferStatus *status);
 int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
                int append);
 
-struct UrlStream;
-struct HttpResponse;
 struct LineLayout;
-void loadHTMLstream(HttpResponse *res, LineLayout *layout,
-                    bool internal = false);
+struct HttpResponse;
+void loadHTMLstream(LineLayout *layout, HttpResponse *res,
+                    std::string_view body, bool internal = false);
+void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view body);
 
 enum CleanupMode {
   RAW_MODE = 0,
@@ -207,7 +206,6 @@ void cleanup_line(Str *s, CleanupMode mode);
 
 extern int is_boundary(unsigned char *, unsigned char *);
 
-void loadBuffer(HttpResponse *res, LineLayout *layout);
 struct Buffer;
 std::shared_ptr<Buffer> loadHTMLString(Str *page);
 std::shared_ptr<Buffer> getshell(const char *cmd);

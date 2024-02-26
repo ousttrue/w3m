@@ -501,13 +501,16 @@ void Screen::display(int width, TabBuffer *currentTab) {
   if ((buf->layout.width != width && (buf->res->is_html_type())) ||
       buf->layout.need_reshape) {
     buf->layout.need_reshape = true;
-    if (buf->layout.need_reshape && buf->reopenSource()) {
+    if (buf->layout.need_reshape) {
+
+      auto body = buf->res->getBody();
 
       LineLayout sbuf = buf->layout;
-      if (buf->res->is_html_type())
-        loadHTMLstream(buf->res.get(), &buf->layout);
-      else
-        loadBuffer(buf->res.get(), &buf->layout);
+      if (buf->res->is_html_type()) {
+        loadHTMLstream(&buf->layout, buf->res.get(), body);
+      } else {
+        loadBuffer(&buf->layout, buf->res.get(), body);
+      }
 
       buf->layout.reshape(width, sbuf);
     }
