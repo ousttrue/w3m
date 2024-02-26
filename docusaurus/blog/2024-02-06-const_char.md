@@ -1,5 +1,5 @@
 ---
-title: const char との戦い
+title: const char * との戦い
 date: 2024-02-06
 tags: [cpp]
 ---

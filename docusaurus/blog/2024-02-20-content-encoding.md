@@ -10,7 +10,7 @@ Content-Encoding 処理が input_stream と密結合だった。
 
 わりと深く結合していて迂闊に変えると動かなくなる。
 
-## Content-Encoding 
+## Content-Encoding
 
 最低限 gz の動作を確保したい。
 
@@ -35,5 +35,9 @@ Windows に対応に備えて組み込んでみようかしら。
 
 https://stackoverflow.com/questions/1838699/how-can-i-decompress-a-gzip-stream-with-zlib
 
-open_pipe_rw デバッグむずい。
+## open_pipe_rw デバッグむずい。
 
+fork したプロセスが終了するときに、
+シングルトンの destructor が誤爆する事故が発生。
+アプリの終了処理で一時ファイルが削除されていた。
+むずい。
