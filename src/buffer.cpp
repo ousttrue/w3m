@@ -546,7 +546,7 @@ Buffer::followForm(Anchor *a, bool submit) {
         App::instance().screen(), "TEXT:", fi->value ? fi->value->ptr : nullptr,
         TextHist);
     input->draw();
-    App::instance().pushDispatcher([input](const char *buf, int len) -> bool {
+    App::instance().pushDispatcher([input](const char *buf, size_t len) -> bool {
       return input->dispatch(buf, len);
     });
 

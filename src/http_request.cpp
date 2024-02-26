@@ -3,7 +3,6 @@
 #include "w3m.h"
 #include "Str.h"
 #include "url.h"
-#include "textlist.h"
 #include "rc.h"
 #include "cookie.h"
 #include "html/form.h"
@@ -124,20 +123,18 @@ Str *HttpRequest::to_Str() const {
   } else {
     Strcat_charp(tmp, otherinfo(url, current, this->option));
   }
-  if (extra_headers) {
-    for (auto i = extra_headers->first; i != nullptr; i = i->next) {
-      if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
-          0) {
-        if (this->method == HttpMethod::CONNECT)
-          continue;
-      }
-      if (strncasecmp(i->ptr, "Proxy-Authorization:",
-                      sizeof("Proxy-Authorization:") - 1) == 0) {
-        if (url.schema == SCM_HTTPS && this->method != HttpMethod::CONNECT)
-          continue;
-      }
-      Strcat_charp(tmp, i->ptr);
+  for (auto &i : extra_headers) {
+    if (strncasecmp(i.c_str(),
+                    "Authorization:", sizeof("Authorization:") - 1) == 0) {
+      if (this->method == HttpMethod::CONNECT)
+        continue;
     }
+    if (strncasecmp(i.c_str(), "Proxy-Authorization:",
+                    sizeof("Proxy-Authorization:") - 1) == 0) {
+      if (url.schema == SCM_HTTPS && this->method != HttpMethod::CONNECT)
+        continue;
+    }
+    Strcat_charp(tmp, i.c_str());
   }
 
   Str *cookie = {};

@@ -21,7 +21,6 @@
 #include "mytime.h"
 #include "http_request.h"
 #include "http_session.h"
-#include "textlist.h"
 #include "keyvalue.h"
 #include "local_cgi.h"
 #include "regex.h"
@@ -71,9 +70,9 @@ int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
 const char *cookie_reject_domains = nullptr;
 const char *cookie_accept_domains = nullptr;
 const char *cookie_avoid_wrong_number_of_dots = nullptr;
-TextList *Cookie_reject_domains;
-TextList *Cookie_accept_domains;
-TextList *Cookie_avoid_wrong_number_of_dots_domains;
+std::list<std::string> Cookie_reject_domains;
+std::list<std::string> Cookie_accept_domains;
+std::list<std::string> Cookie_avoid_wrong_number_of_dots_domains;
 
 static bool is_saved = 1;
 
@@ -348,18 +347,12 @@ Str *find_cookie(const Url &pu) {
   return tmp;
 }
 
-static int check_avoid_wrong_number_of_dots_domain(Str *domain) {
-  TextListItem *tl;
-  int avoid_wrong_number_of_dots_domain = false;
-
-  if (Cookie_avoid_wrong_number_of_dots_domains &&
-      Cookie_avoid_wrong_number_of_dots_domains->nitem > 0) {
-    for (tl = Cookie_avoid_wrong_number_of_dots_domains->first; tl != NULL;
-         tl = tl->next) {
-      if (domain_match(domain->ptr, tl->ptr)) {
-        avoid_wrong_number_of_dots_domain = true;
-        break;
-      }
+static bool check_avoid_wrong_number_of_dots_domain(Str *domain) {
+  bool avoid_wrong_number_of_dots_domain = false;
+  for (auto &tl : Cookie_avoid_wrong_number_of_dots_domains) {
+    if (domain_match(domain->ptr, tl.c_str())) {
+      avoid_wrong_number_of_dots_domain = true;
+      break;
     }
   }
 
@@ -773,25 +766,24 @@ void set_cookie_flag(struct keyvalue *arg) {
   backBf();
 }
 
-int check_cookie_accept_domain(const char *domain) {
-  TextListItem *tl;
+bool check_cookie_accept_domain(const char *domain) {
+  if (!domain) {
+    return false;
+  }
 
-  if (domain == NULL)
-    return 0;
-
-  if (Cookie_accept_domains && Cookie_accept_domains->nitem > 0) {
-    for (tl = Cookie_accept_domains->first; tl != NULL; tl = tl->next) {
-      if (domain_match(domain, tl->ptr))
-        return 1;
+  for (auto &tl : Cookie_accept_domains) {
+    if (domain_match(domain, tl.c_str())) {
+      return true;
     }
   }
-  if (Cookie_reject_domains && Cookie_reject_domains->nitem > 0) {
-    for (tl = Cookie_reject_domains->first; tl != NULL; tl = tl->next) {
-      if (domain_match(domain, tl->ptr))
-        return 0;
+
+  for (auto &tl : Cookie_reject_domains) {
+    if (domain_match(domain, tl.c_str())) {
+      return false;
     }
   }
-  return 1;
+
+  return true;
 }
 
 /* This array should be somewhere else */

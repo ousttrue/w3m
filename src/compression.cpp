@@ -5,13 +5,13 @@
 #include "mimetypes.h"
 #include "myctype.h"
 #include "url_stream.h"
-#include "istream.h"
-#include "textlist.h"
+#include "Str.h"
 #include "alloc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <sstream>
 
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -169,26 +169,25 @@ static int check_command(const char *cmd, bool auxbin_p) {
   return false;
 }
 
-char *acceptableEncoding(void) {
-  static Str *encodings = nullptr;
-  if (encodings != nullptr) {
-    return encodings->ptr;
-  }
-
-  auto l = newTextList();
-  for (auto &d : compression_decoders) {
-    if (check_command(d.cmd, d.auxbin_p)) {
-      pushText(l, d.encoding);
+const char *acceptableEncoding() {
+  static std::string encodings;
+  if (encodings.empty()) {
+    std::list<std::string> l;
+    for (auto &d : compression_decoders) {
+      if (check_command(d.cmd, d.auxbin_p)) {
+        l.push_back(d.encoding);
+      }
+    }
+    while (l.size()) {
+      auto p = l.back();
+      l.pop_back();
+      if (encodings.size()) {
+        encodings += ", ";
+      }
+      encodings += p;
     }
   }
-
-  encodings = Strnew();
-  while (auto p = popText(l)) {
-    if (encodings->length)
-      Strcat_charp(encodings, ", ");
-    Strcat_charp(encodings, p);
-  }
-  return encodings->ptr;
+  return encodings.c_str();
 }
 
 void process_compression(Str *lineBuf2, UrlStream *uf) {

@@ -2,9 +2,11 @@
 #include "quote.h"
 #include "myctype.h"
 #include "etc.h"
-#include "textlist.h"
 #include "alloc.h"
+#include "Str.h"
 #include <string.h>
+#include <list>
+#include <string>
 
 #define USER_MIMETYPES "~/.mime.types"
 #ifndef ETC_DIR
@@ -14,7 +16,7 @@
 
 const char *mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
 
-static TextList *mimetypes_list;
+static std::list<std::string> mimetypes_list;
 
 struct table2 {
   const char *item1;
@@ -34,37 +36,35 @@ static struct table2 DefaultGuess[] = {
     {"lzh", "application/x-lha"},  {"ps", "application/postscript"},
     {"pdf", "application/pdf"},    {NULL, NULL}};
 
-static struct table2 *loadMimeTypes(char *filename) {
-  FILE *f;
-  char *d, *type;
-  int i, n;
-  Str *tmp;
-  struct table2 *mtypes;
-
-  f = fopen(expandPath(filename), "r");
-  if (f == NULL)
+static struct table2 *loadMimeTypes(const char *filename) {
+  auto f = fopen(expandPath(filename), "r");
+  if (f == NULL) {
     return NULL;
-  n = 0;
+  }
+  int n = 0;
+  Str *tmp;
   while (tmp = Strfgets(f), tmp->length > 0) {
-    d = tmp->ptr;
+    auto d = tmp->ptr;
     if (d[0] != '#') {
       d = strtok(d, " \t\n\r");
       if (d != NULL) {
         d = strtok(NULL, " \t\n\r");
-        for (i = 0; d != NULL; i++)
+        int i = 0;
+        for (; d != NULL; i++)
           d = strtok(NULL, " \t\n\r");
         n += i;
       }
     }
   }
   fseek(f, 0, 0);
-  mtypes = (struct table2 *)New_N(struct table2, n + 1);
-  i = 0;
+
+  auto mtypes = (struct table2 *)New_N(struct table2, n + 1);
+  int i = 0;
   while (tmp = Strfgets(f), tmp->length > 0) {
-    d = tmp->ptr;
+    auto d = tmp->ptr;
     if (d[0] == '#')
       continue;
-    type = strtok(d, " \t\n\r");
+    auto type = strtok(d, " \t\n\r");
     if (type == NULL)
       continue;
     while (1) {
@@ -83,19 +83,18 @@ static struct table2 *loadMimeTypes(char *filename) {
 }
 
 void initMimeTypes() {
-  int i;
-  TextListItem *tl;
-
-  if (non_null(mimetypes_files))
-    mimetypes_list = make_domain_list(mimetypes_files);
-  else
-    mimetypes_list = NULL;
-  if (mimetypes_list == NULL)
+  if (non_null(mimetypes_files)) {
+    make_domain_list(mimetypes_list, mimetypes_files);
+  }
+  if (mimetypes_list.empty()) {
     return;
+  }
   UserMimeTypes =
-      (struct table2 **)New_N(struct table2 *, mimetypes_list->nitem);
-  for (i = 0, tl = mimetypes_list->first; tl; i++, tl = tl->next)
-    UserMimeTypes[i] = loadMimeTypes(tl->ptr);
+      (struct table2 **)New_N(struct table2 *, mimetypes_list.size());
+  int i = 0;
+  for (auto &tl : mimetypes_list) {
+    UserMimeTypes[i++] = loadMimeTypes(tl.c_str());
+  }
 }
 
 static const char *guessContentTypeFromTable(struct table2 *table,
@@ -121,14 +120,13 @@ static const char *guessContentTypeFromTable(struct table2 *table,
 }
 
 const char *guessContentType(const char *filename) {
-  if (!filename)
+  if (!filename) {
     return {};
+  }
 
-  if (mimetypes_list) {
-    for (int i = 0; i < mimetypes_list->nitem; i++) {
-      const char *ret;
-      if ((ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) != NULL)
-        return ret;
+  for (int i = 0; i < mimetypes_list.size(); i++) {
+    if (auto ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) {
+      return ret;
     }
   }
 

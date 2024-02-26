@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #include "rc.h"
+#include "quote.h"
 #include "dict.h"
 #include "screen.h"
 #include "app.h"
@@ -793,13 +794,10 @@ static void interpret_rc(FILE *f) {
 }
 
 static void parse_cookie(void) {
-  if (non_null(cookie_reject_domains))
-    Cookie_reject_domains = make_domain_list(cookie_reject_domains);
-  if (non_null(cookie_accept_domains))
-    Cookie_accept_domains = make_domain_list(cookie_accept_domains);
-  if (non_null(cookie_avoid_wrong_number_of_dots))
-    Cookie_avoid_wrong_number_of_dots_domains =
-        make_domain_list(cookie_avoid_wrong_number_of_dots);
+  make_domain_list(Cookie_reject_domains, cookie_reject_domains);
+  make_domain_list(Cookie_accept_domains, cookie_accept_domains);
+  make_domain_list(Cookie_avoid_wrong_number_of_dots_domains,
+                   cookie_avoid_wrong_number_of_dots);
 }
 
 void sync_with_option(void) {
@@ -822,7 +820,7 @@ void sync_with_option(void) {
     AcceptLang = _("en;q=1.0");
   }
   if (AcceptEncoding == NULL || *AcceptEncoding == '\0')
-    AcceptEncoding = acceptableEncoding();
+    AcceptEncoding = Strnew_charp(acceptableEncoding())->ptr;
   if (AcceptMedia == NULL || *AcceptMedia == '\0')
     AcceptMedia = acceptableMimeTypes();
   App::instance().initKeymap(false);

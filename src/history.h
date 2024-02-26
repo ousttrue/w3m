@@ -1,6 +1,6 @@
 #pragma once
-#include "textlist.h"
 #include "hash.h"
+#include "textlist.h"
 #include <string_view>
 #include <memory>
 

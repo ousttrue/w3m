@@ -1,5 +1,6 @@
 #include "quote.h"
 #include "myctype.h"
+#include <sstream>
 
 #ifdef _MSC_VER
 #include <ctype.h>
@@ -312,4 +313,28 @@ std::string_view remove_space(std::string_view str) {
     ;
 
   return {p, q};
+}
+
+void make_domain_list(std::list<std::string> &list, const char *domain_list) {
+  list.clear();
+  auto p = domain_list;
+  while (*p) {
+    while (*p && IS_SPACE(*p))
+      p++;
+    // Strclear(tmp);
+    std::stringstream tmp;
+    while (*p && !IS_SPACE(*p) && *p != ',') {
+      tmp << *p++;
+    }
+    auto str = tmp.str();
+    if (str.size()) {
+      list.push_back(str);
+    }
+    while (*p && IS_SPACE(*p)) {
+      p++;
+    }
+    if (*p == ',') {
+      p++;
+    }
+  }
 }

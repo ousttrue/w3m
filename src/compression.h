@@ -40,7 +40,7 @@ const compression_decoder *
 compress_application_type(CompressionType compression);
 const compression_decoder *check_compression(const char *path);
 std::tuple<std::string, std::string> uncompressed_file_type(const char *path);
-char *acceptableEncoding();
+const char *acceptableEncoding();
 
 struct Str;
 struct UrlStream;

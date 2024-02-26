@@ -5,7 +5,6 @@
 #include "screen.h"
 #include "cookie.h"
 #include "Str.h"
-#include "textlist.h"
 #include "w3m.h"
 #include "myctype.h"
 #include "url_stream.h"

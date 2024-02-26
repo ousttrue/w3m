@@ -3,7 +3,7 @@
 #include "matchattr.h"
 #include "etc.h"
 #include "url.h"
-#include "textlist.h"
+#include "Str.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "hash.h"
@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <vector>
 #include <string>
+#include <list>
 
 #define DEF_AUDIO_PLAYER "showaudio"
 #define DEF_IMAGE_VIEWER "display"
@@ -67,7 +68,7 @@ static Mailcap DefaultMailcap = {
         {"audio/basic", DEF_AUDIO_PLAYER " %s", {}, NULL, NULL, NULL},
     }};
 
-static TextList *mailcap_list;
+static std::list<std::string> mailcap_list;
 
 static std::vector<Mailcap> UserMailcap;
 
@@ -209,21 +210,20 @@ bool MailcapEntry::extract(const char *mcap_entry) {
   return true;
 }
 
-void initMailcap(void) {
-
-  if (non_null(mailcap_files))
-    mailcap_list = make_domain_list(mailcap_files);
-  else
-    mailcap_list = NULL;
-  if (mailcap_list == NULL)
+void initMailcap() {
+  if (non_null(mailcap_files)) {
+    make_domain_list(mailcap_list, mailcap_files);
+  }
+  if (mailcap_list.empty()) {
     return;
+  }
 
   // UserMailcap =
   //     (struct MailcapEntry **)New_N(struct MailcapEntry *,
   //     mailcap_list->nitem);
-  for (auto tl = mailcap_list->first; tl; tl = tl->next) {
+  for (auto &tl : mailcap_list) {
     UserMailcap.push_back({});
-    if (auto f = fopen(expandPath(tl->ptr), "r")) {
+    if (auto f = fopen(expandPath(tl.c_str()), "r")) {
       UserMailcap.back().load(f);
       fclose(f);
     }
@@ -232,40 +232,39 @@ void initMailcap(void) {
 
 char *acceptableMimeTypes(void) {
   static Str *types = NULL;
-  TextList *l;
-  Hash_si *mhash;
-  const char *p;
-
-  if (types != NULL)
+  if (types) {
     return types->ptr;
+  }
 
   /* generate acceptable media types */
-  l = newTextList();
-  mhash = newHash_si(16); /* XXX */
+  std::list<std::string> l;
+  auto mhash = newHash_si(16); /* XXX */
   /* pushText(l, "text"); */
   putHash_si(mhash, "text", 1);
-  pushText(l, "image");
+  l.push_back("image");
   putHash_si(mhash, "image", 1);
-  for (int i = 0; i < mailcap_list->nitem; i++) {
+  for (int i = 0; i < mailcap_list.size(); i++) {
     auto &mailcap = UserMailcap[i];
     // if (mp == NULL)
     //   continue;
     for (auto &e : mailcap.entries) {
-      p = strchr(e.type, '/');
+      auto p = strchr(e.type, '/');
       if (p == NULL)
         continue;
       auto mt = allocStr(e.type, p - e.type);
       if (getHash_si(mhash, mt, 0) == 0) {
-        pushText(l, mt);
+        l.push_back(mt);
         putHash_si(mhash, mt, 1);
       }
     }
   }
   types = Strnew();
   Strcat_charp(types, "text/html, text/*;q=0.5");
-  while ((p = popText(l)) != NULL) {
+  while (l.size()) {
+    auto p = l.back();
+    l.pop_back();
     Strcat_charp(types, ", ");
-    Strcat_charp(types, p);
+    Strcat(types, p);
     Strcat_charp(types, "/*");
   }
   return types->ptr;

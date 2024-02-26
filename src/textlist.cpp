@@ -3,6 +3,7 @@
 #include "Str.h"
 #include <gc.h>
 #include "myctype.h"
+#include <sstream>
 
 /* General doubly linked list */
 
@@ -130,27 +131,3 @@ void appendTextLine(TextLineList *tl, Str *line, int pos) {
   }
 }
 
-TextList *make_domain_list(const char *domain_list) {
-  Str *tmp;
-  TextList *domains = NULL;
-
-  auto p = domain_list;
-  tmp = Strnew_size(64);
-  while (*p) {
-    while (*p && IS_SPACE(*p))
-      p++;
-    Strclear(tmp);
-    while (*p && !IS_SPACE(*p) && *p != ',')
-      Strcat_char(tmp, *p++);
-    if (tmp->length > 0) {
-      if (domains == NULL)
-        domains = newTextList();
-      pushText(domains, tmp->ptr);
-    }
-    while (*p && IS_SPACE(*p))
-      p++;
-    if (*p == ',')
-      p++;
-  }
-  return domains;
-}

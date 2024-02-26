@@ -9,7 +9,6 @@ struct AnchorList;
 struct HmarkerList;
 struct FormItemList;
 struct MapList;
-struct TextList;
 struct Line;
 struct LinkList;
 struct AlarmEvent;

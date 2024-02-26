@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <string_view>
+#include <list>
 
 #ifdef _MSC_VER
 #define strncasecmp _strnicmp
@@ -25,3 +26,4 @@ extern unsigned char QUOTE_MAP[];
 #define html_quote_char(c) HTML_QUOTE_MAP[(int)is_html_quote(c)]
 
 std::string_view remove_space(std::string_view str);
+void make_domain_list(std::list<std::string> &list, const char *domain_list);

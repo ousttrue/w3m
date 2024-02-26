@@ -1,6 +1,8 @@
 #pragma once
 #include "Str.h"
 #include <limits.h>
+#include <string>
+#include <list>
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 
 /* General doubly linked list */
@@ -76,4 +78,3 @@ extern void appendTextLine(TextLineList *tl, Str *line, int pos);
 #define appendTextLineList(tl, tl2)                                            \
   ((TextLineList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
 
-TextList *make_domain_list(const char *domain_list);

@@ -10,7 +10,6 @@
 #include "http_request.h"
 #include "cookie.h"
 #include "buffer.h"
-#include "textlist.h"
 #include "proto.h"
 #include "myctype.h"
 

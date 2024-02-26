@@ -3,11 +3,11 @@
 #include "http_option.h"
 #include "enum_template.h"
 #include <string>
+#include <list>
 #include <optional>
 
 struct Str;
 struct Url;
-struct TextList;
 struct FormList;
 
 extern bool override_user_agent;
@@ -68,7 +68,7 @@ struct HttpRequest {
   Str *realm = NULL;
   bool add_auth_cookie_flag = false;
 
-  TextList *extra_headers = {};
+  std::list<std::string> extra_headers;
 
   HttpRequest(const Url &url, std::optional<Url> &current,
               const HttpOption option, FormList *request)

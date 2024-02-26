@@ -11,7 +11,6 @@
 #include "Str.h"
 #include "myctype.h"
 #include "buffer.h"
-#include "textlist.h"
 #include "etc.h"
 #include <sys/stat.h>
 #include <stdlib.h>
@@ -305,7 +304,7 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
   const char *p0, *p;
 
   *hauth = {0};
-  for (auto &i: res.document_header) {
+  for (auto &i : res.document_header) {
     if (strncasecmp(i.c_str(), auth_field, len) == 0) {
       for (p = i.c_str() + len; p != nullptr && *p != '\0';) {
         SKIP_BLANKS(p);
@@ -354,9 +353,9 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
 
   auto a_found = false;
   int auth_header_len = strlen(auth_header);
-  TextListItem *i;
-  for (i = hr->extra_headers->first; i != NULL; i = i->next) {
-    if (!strncasecmp(i->ptr, auth_header, auth_header_len)) {
+  auto i = hr->extra_headers.begin();
+  for (; i != hr->extra_headers.end(); ++i) {
+    if (!strncasecmp(i->c_str(), auth_header, auth_header_len)) {
       a_found = true;
       break;
     }
@@ -371,7 +370,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     App::instance().message("Wrong username or password", 0, 0);
     // sleep(1);
     /* delete Authenticate: header from extra_header */
-    delText(hr->extra_headers, i);
+    hr->extra_headers.erase(i);
     invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
   }
   *uname = NULL;
@@ -431,7 +430,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
   if (ss) {
     auto tmp = Strnew_charp(auth_header);
     Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
-    pushText(hr->extra_headers, tmp->ptr);
+    hr->extra_headers.push_back(tmp->ptr);
   } else {
     *uname = NULL;
     *pwd = NULL;

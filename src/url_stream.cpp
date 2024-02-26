@@ -21,7 +21,6 @@
 #include "w3m.h"
 #include "istream.h"
 #include "http_request.h"
-#include "textlist.h"
 #include "linein.h"
 #include <string.h>
 #include <fcntl.h>
@@ -92,18 +91,18 @@ char *index_file = nullptr;
 
 /* add index_file if exists */
 void UrlStream::add_index_file(Url *pu) {
-  TextList *index_file_list = nullptr;
+  std::list<std::string> index_file_list;
   if (non_null(index_file)) {
-    index_file_list = make_domain_list(index_file);
+    make_domain_list(index_file_list, index_file);
   }
-  if (!index_file_list) {
+  if (index_file_list.empty()) {
     this->stream = nullptr;
     return;
   }
 
-  for (auto ti = index_file_list->first; ti; ti = ti->next) {
+  for (auto &ti : index_file_list) {
     const char *p =
-        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti->ptr), nullptr)
+        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti.c_str()), nullptr)
             ->ptr;
     p = cleanupName(p);
     auto q = cleanupName(file_unquote(p));
@@ -662,7 +661,7 @@ int UrlStream::doFileSave(const char *defstr) {
 #ifdef _MSC_VER
   return {};
 #else
-  if (true/*fmInitialized*/) {
+  if (true /*fmInitialized*/) {
     auto p = App::instance().searchKeyData();
     if (p == nullptr || *p == '\0') {
       // p = inputLineHist("(Download)Save file to: ", defstr, IN_FILENAME,
