@@ -318,6 +318,9 @@ std::string_view remove_space(std::string_view str) {
 void make_domain_list(std::list<std::string> &list, const char *domain_list) {
   list.clear();
   auto p = domain_list;
+  if(!p){
+    return;
+  }
   while (*p) {
     while (*p && IS_SPACE(*p))
       p++;

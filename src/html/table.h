@@ -1,5 +1,6 @@
 #pragma once
 #include "line.h"
+#include "enum_template.h"
 
 extern int symbol_width;
 extern int symbol_width0;
@@ -43,8 +44,6 @@ extern int symbol_width0;
 #define BORDER_THICK 2
 #define BORDER_NOWIN 3
 
-typedef unsigned short table_attr;
-
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
 /* flag */
@@ -86,32 +85,68 @@ struct table_linfo {
   short length;
 };
 
+struct table_mode {
+  unsigned int pre_mode;
+  char indent_level;
+  char caption;
+  short nobr_offset;
+  char nobr_level;
+  short anchor_offset;
+  unsigned char end_tag;
+};
+
+enum TableWidthFlags {
+  CHECK_NONE = 0,
+  CHECK_MINIMUM = 1,
+  CHECK_FIXED = 2,
+};
+
+#define NOWRAP
+enum table_attr : uint16_t {
+  HTT_X = 1,
+  HTT_Y = 2,
+  HTT_ALIGN = 0x30,
+  HTT_LEFT = 0x00,
+  HTT_CENTER = 0x10,
+  HTT_RIGHT = 0x20,
+  HTT_TRSET = 0x40,
+  HTT_VALIGN = 0x700,
+  HTT_TOP = 0x100,
+  HTT_MIDDLE = 0x200,
+  HTT_BOTTOM = 0x400,
+  HTT_VTRSET = 0x800,
+#ifdef NOWRAP
+  HTT_NOWRAP = 4,
+#endif /* NOWRAP */
+};
+ENUM_OP_INSTANCE(table_attr);
+
 #define ID_EXT
 struct GeneralList;
 struct TextList;
 struct table {
+#ifdef ID_EXT
+  Str *id;
+#endif
+  int total_width;
   int row;
   int col;
+  short ntable;
+  int vspace;
+
+private:
   int maxrow;
   int maxcol;
   int max_rowsize;
   int border_mode;
-  int total_width;
   int total_height;
   int tabcontentssize;
   int indent;
   int cellspacing;
   int cellpadding;
   int vcellpadding;
-  int vspace;
   int flag;
-#ifdef TABLE_EXPAND
-  int real_width;
-#endif /* TABLE_EXPAND */
   Str *caption;
-#ifdef ID_EXT
-  Str *id;
-#endif
   GeneralList ***tabdata;
   table_attr **tabattr;
   table_attr trattr;
@@ -125,7 +160,6 @@ struct table {
   struct table_cell cell;
   int *tabheight;
   struct table_in *tables;
-  short ntable;
   short tables_size;
   TextList *suspended_data;
   /* use for counting skipped spaces */
@@ -136,7 +170,90 @@ struct table {
 #endif /* MATRIX */
   int sloppy_width;
 
+public:
+  static table *newTable();
+  static table *begin_table(int border, int spacing, int padding, int vspace);
+  int feed_table(struct HtmlParser *parser, const char *line,
+                 struct table_mode *mode, int width, int internal);
   void end_table();
+  void pushTable(struct table *);
+  void renderTable(HtmlParser *parser, int max_width,
+                   struct html_feed_environ *h_env);
+
+private:
+  int feed_table_tag(struct HtmlParser *parser, const char *line,
+                     struct table_mode *mode, int width, struct HtmlTag *tag);
+
+  int table_rule_width() const;
+  int get_table_width(const short *orgwidth, const short *cellwidth,
+                      TableWidthFlags flag) const;
+  void check_minimum_width(short *tabwidth) const;
+  int table_border_width() const;
+  int minimum_table_width() const {
+    return (this->get_table_width(this->minimum_width, this->cell.minimum_width,
+                                  {}));
+  }
+  int maximum_table_width() const {
+    return (
+        this->get_table_width(this->tabwidth, this->cell.width, CHECK_FIXED));
+  }
+  int fixed_table_width() const {
+    return (this->get_table_width(this->fixed_width, this->cell.fixed_width,
+                                  CHECK_MINIMUM));
+  }
+
+  void pushdata(int row, int col, const char *data);
+  void check_rowcol(table_mode *mode);
+  void check_row(int row);
+  int table_colspan(int row, int col) const {
+    int i;
+    for (i = col + 1; i <= this->maxcol && (this->tabattr[row][i] & HTT_X); i++)
+      ;
+    return i - col;
+  }
+  void table_close_anchor0(struct table_mode *mode);
+  void check_minimum0(int min);
+  void addcontentssize(int width);
+  void setwidth(struct table_mode *mode);
+  int setwidth0(struct table_mode *mode);
+  void clearcontentssize(struct table_mode *mode);
+  void begin_cell(struct table_mode *mode);
+  int skip_space(const char *line, struct table_linfo *linfo, int checkminimum);
+  void feed_table_block_tag(const char *line, struct table_mode *mode,
+                            int indent, int cmd);
+  void feed_table_inline_tag(const char *line, struct table_mode *mode,
+                             int width);
+  void suspend_or_pushdata(const char *line);
+  void table_close_textarea(HtmlParser *parser, struct table_mode *mode,
+                            int width);
+  void feed_table1(HtmlParser *parser, Str *tok, struct table_mode *mode,
+                   int width);
+  void table_close_select(HtmlParser *parser, struct table_mode *mode,
+                          int width);
+  void print_item(int row, int col, int width, Str *buf);
+  void print_sep(int row, int type, int maxcol, Str *buf);
+  void make_caption(HtmlParser *parser, struct html_feed_environ *h_env);
+  void renderCoTable(HtmlParser *parser, int maxlimit);
+  void check_table_height();
+  int table_rowspan(int row, int col);
+  void set_table_width(short *newwidth, int maxwidth);
+  int check_table_width(double *newwidth, struct matrix *minv, int itr);
+  int check_compressible_cell(struct matrix *minv, double *newwidth,
+                              double *swidth, short *cwidth, double totalwidth,
+                              double *Sxx, int icol, int icell, double sxx,
+                              int corr);
+  void set_integered_width(double *dwidth, short *iwidth);
+  void check_maximum_width();
+  void do_refill(HtmlParser *parser, int row, int col, int maxlimit);
+  int get_spec_cell_width(int row, int col);
+  int correct_table_matrix(int col, int cspan, int a, double b);
+  void correct_table_matrix2(int col, int cspan, double s, double b);
+  void set_table_matrix(int width);
+  void set_table_matrix0(int maxwidth);
+  void check_relative_width(int maxwidth);
+  void correct_table_matrix3(int col, char *flags, double s, double b);
+  void correct_table_matrix4(int col, int cspan, char *flags, double s,
+                             double b);
 };
 
 #define TBLM_PRE RB_PRE
@@ -156,36 +273,10 @@ struct table {
 #define TBLM_S RB_S
 #define TBLM_ANCHOR 0x1000000
 
-struct table_mode {
-  unsigned int pre_mode;
-  char indent_level;
-  char caption;
-  short nobr_offset;
-  char nobr_level;
-  short anchor_offset;
-  unsigned char end_tag;
-};
-
 struct TextLine;
 class HtmlParser;
-extern struct table *newTable(void);
-extern void pushdata(struct table *t, int row, int col, const char *data);
 extern int visible_length(const char *str);
 extern void align(TextLine *lbuf, int width, int mode);
-extern void print_item(struct table *t, int row, int col, int width, Str *buf);
-extern void print_sep(struct table *t, int row, int type, int maxcol, Str *buf);
-extern void do_refill(HtmlParser *parser, struct table *tbl, int row, int col,
-                      int maxlimit);
 
 extern void initRenderTable(void);
-extern void renderTable(HtmlParser *parser, struct table *t, int max_width,
-                        struct html_feed_environ *h_env);
-extern struct table *begin_table(int border, int spacing, int padding,
-                                 int vspace);
-extern void check_rowcol(struct table *tbl, struct table_mode *mode);
 extern int minimum_length(char *line);
-extern int feed_table(HtmlParser *parser, struct table *tbl, const char *line,
-                      struct table_mode *mode, int width, int internal);
-extern void feed_table1(HtmlParser *parser, struct table *tbl, Str *tok,
-                        struct table_mode *mode, int width);
-extern void pushTable(struct table *, struct table *);

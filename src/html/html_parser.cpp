@@ -2550,7 +2550,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
 #ifdef ID_EXT
     tag->parsedtag_get_value(ATTR_ID, &id);
 #endif /* ID_EXT */
-    tables[obuf->table_level] = begin_table(w, x, y, z);
+    tables[obuf->table_level] = table::begin_table(w, x, y, z);
 #ifdef ID_EXT
     if (id != NULL)
       tables[obuf->table_level]->id = Strnew_charp(id);
@@ -3105,7 +3105,7 @@ table_start:
        * are fed to the table renderer, and then the renderer
        * makes HTML output.
        */
-      switch (feed_table(this, tbl, str, tbl_mode, tbl_width, internal)) {
+      switch (tbl->feed_table(this, str, tbl_mode, tbl_width, internal)) {
       case 0:
         /* </table> tag */
         obuf->table_level--;
@@ -3117,11 +3117,11 @@ table_start:
           str = Sprintf("<table_alt tid=%d>", tbl0->ntable)->ptr;
           if (tbl0->row < 0)
             continue;
-          pushTable(tbl0, tbl);
+          tbl0->pushTable(tbl);
           tbl = tbl0;
           tbl_mode = &table_mode[obuf->table_level];
           tbl_width = table_width(h_env, obuf->table_level);
-          feed_table(this, tbl, str, tbl_mode, tbl_width, true);
+          tbl->feed_table(this, str, tbl_mode, tbl_width, true);
           continue;
           /* continue to the next */
         }
@@ -3135,7 +3135,7 @@ table_start:
         }
         save_fonteffect(h_env);
         initRenderTable();
-        renderTable(this, tbl, tbl_width, h_env);
+        tbl->renderTable(this, tbl_width, h_env);
         restore_fonteffect(h_env);
         obuf->flag &= ~RB_IGNORE_P;
         if (tbl->vspace > 0) {
