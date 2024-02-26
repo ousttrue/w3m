@@ -77,7 +77,7 @@ bool HttpResponse::checkRedirection(const Url &pu) {
 
 int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
 
-  this->document_header = newTextList();
+  this->document_header.clear();
   if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS)
     http_response_code = -1;
   else
@@ -187,7 +187,8 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
         App::instance().task(0, f, tmp->ptr);
       }
     }
-    pushText(document_header, lineBuf2->ptr);
+    auto view = remove_space(lineBuf2->ptr);
+    document_header.push_back({view.begin(), view.end()});
     Strfree(lineBuf2);
     lineBuf2 = NULL;
   }
@@ -199,18 +200,20 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
 }
 
 const char *HttpResponse::getHeader(const char *field) const {
-  if (field == NULL || this->document_header == NULL) {
-    return NULL;
+  if (!field) {
+    return {};
   }
-
   auto len = strlen(field);
-  for (auto i = this->document_header->first; i != NULL; i = i->next) {
-    if (!strncasecmp(i->ptr, field, len)) {
-      auto p = i->ptr + len;
-      return remove_space(p);
+  for (auto &i : this->document_header) {
+    if (!strncasecmp(i.c_str(), field, len)) {
+      auto p = i.c_str() + len;
+      while (*p && IS_SPACE(*p)) {
+        ++p;
+      }
+      return p;
     }
   }
-  return NULL;
+  return {};
 }
 
 const char *HttpResponse::checkContentType() const {
@@ -260,7 +263,7 @@ const char *guess_filename(const char *file) {
 }
 
 const char *HttpResponse::guess_save_name(const char *path) const {
-  if (this->document_header) {
+  if (this->document_header.size()) {
     Str *name = NULL;
     const char *p, *q;
     if ((p = this->getHeader("Content-Disposition:")) != NULL &&
@@ -423,11 +426,11 @@ void HttpResponse::page_loaded(Url url) {
 }
 
 /* get last modified time */
-const char *HttpResponse::last_modified() {
-  if (this->document_header) {
-    for (auto ti = this->document_header->first; ti; ti = ti->next) {
-      if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
-        return ti->ptr + 15;
+std::string HttpResponse::last_modified() const {
+  if (this->document_header.size()) {
+    for (auto &i : document_header) {
+      if (strncasecmp(i.c_str(), "Last-modified: ", 15) == 0) {
+        return i.c_str() + 15;
       }
     }
     return "unknown";

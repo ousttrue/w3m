@@ -16,7 +16,6 @@ Str *myExtCommand(const char *cmd, const char *arg, int redirect);
 struct Buffer;
 int do_recursive_mkdir(const char *dir);
 int exec_cmd(const std::string &cmd);
-const char *remove_space(const char *str);
 Str *unescape_spaces(Str *s);
 void setup_child(int child, int i, int f);
 void myExec(const char *command);

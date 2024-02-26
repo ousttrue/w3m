@@ -1429,8 +1429,9 @@ Str *HtmlParser::process_img(struct HtmlTag *tag, int width) {
                         this->cur_hseq++, this->cur_form_id()));
   }
   {
-    if (w < 0)
-      w = 12 * pixel_per_char;
+    if (w < 0) {
+      w = static_cast<int>(12 * pixel_per_char);
+    }
     nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
     if (r) {
       Strcat_charp(tmp, "<pre_int>");
@@ -1480,7 +1481,7 @@ Str *HtmlParser::process_img(struct HtmlTag *tag, int width) {
         Strcat_charp(tmp, "<pre_int>");
         pre_int = true;
       }
-      w = w / pixel_per_char / symbol_width;
+      w = static_cast<int>(w / pixel_per_char / symbol_width);
       if (w <= 0)
         w = 1;
       push_symbol(tmp, HR_SYMBOL, symbol_width, w);

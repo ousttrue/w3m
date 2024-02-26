@@ -1,4 +1,5 @@
 #include "line_layout.h"
+#include "quote.h"
 #include "etc.h"
 #include "html/html_tag.h"
 #include "linklist.h"
@@ -585,7 +586,7 @@ void LineLayout::nextX(int d, int dy, int n) {
 }
 
 /* go to the previous anchor */
-void LineLayout::_prevA(int visited, std::optional<Url> baseUrl, int n) {
+void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
   auto hl = this->hmarklist();
   BufferPoint *po;
   Anchor *pan;
@@ -669,7 +670,7 @@ _end:
 }
 
 /* go to the next [visited] anchor */
-void LineLayout::_nextA(int visited, std::optional<Url> baseUrl, int n) {
+void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
   if (this->firstLine == nullptr)
     return;
 

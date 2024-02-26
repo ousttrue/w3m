@@ -1,4 +1,6 @@
 #pragma once
+#include <string>
+#include <string_view>
 
 #ifdef _MSC_VER
 #define strncasecmp _strnicmp
@@ -21,3 +23,5 @@ extern unsigned char QUOTE_MAP[];
 #define is_file_quote(c) (GET_QUOTE_TYPE(c) & FILE_QUOTE_MASK)
 #define is_url_unsafe(c) (GET_QUOTE_TYPE(c) & URL_UNSAFE_MASK)
 #define html_quote_char(c) HTML_QUOTE_MAP[(int)is_html_quote(c)]
+
+std::string_view remove_space(std::string_view str);

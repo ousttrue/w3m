@@ -1,4 +1,5 @@
 #include "quote.h"
+#include "myctype.h"
 
 #ifdef _MSC_VER
 #include <ctype.h>
@@ -297,3 +298,18 @@ unsigned char QUOTE_MAP[0x100] = {
 const char *HTML_QUOTE_MAP[] = {
     nullptr, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", nullptr, nullptr,
 };
+
+std::string_view remove_space(std::string_view str) {
+  auto p = str.begin();
+  for (; p != str.end() && IS_SPACE(*p); p++)
+    ;
+
+  auto q = p;
+  for (; q != str.end(); q++)
+    ;
+
+  for (; q > p && IS_SPACE(*(q - 1)); q--)
+    ;
+
+  return {p, q};
+}

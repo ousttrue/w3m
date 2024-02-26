@@ -220,7 +220,7 @@ static Str *base64_encode(const char *src, int len) {
   auto endw = s + len - 2;
 
   while (in < endw) {
-    auto j = *in++;
+    uint32_t j = *in++;
     j = j << 8 | *in++;
     j = j << 8 | *in++;
 
@@ -231,7 +231,7 @@ static Str *base64_encode(const char *src, int len) {
   }
 
   if (s + len - in) {
-    auto j = *in++;
+    uint32_t j = *in++;
     if (s + len - in) {
       j = j << 8 | *in++;
       j = j << 8;
@@ -302,13 +302,12 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
                               const char *auth_field) {
   struct http_auth *ha;
   int len = strlen(auth_field), slen;
-  TextListItem *i;
   const char *p0, *p;
 
   *hauth = {0};
-  for (i = res.document_header->first; i != nullptr; i = i->next) {
-    if (strncasecmp(i->ptr, auth_field, len) == 0) {
-      for (p = i->ptr + len; p != nullptr && *p != '\0';) {
+  for (auto &i: res.document_header) {
+    if (strncasecmp(i.c_str(), auth_field, len) == 0) {
+      for (p = i.c_str() + len; p != nullptr && *p != '\0';) {
         SKIP_BLANKS(p);
         p0 = p;
         for (ha = &www_auth[0]; ha->schema != nullptr; ha++) {

@@ -28,7 +28,7 @@
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
 double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
-int pixel_per_char_i = DEFAULT_PIXEL_PER_CHAR;
+int pixel_per_char_i = static_cast<int>(DEFAULT_PIXEL_PER_CHAR);
 int displayLinkNumber = false;
 bool DisableCenter = false;
 int Tabstop = 8;
@@ -614,20 +614,6 @@ void cleanup_line(Str *s, CleanupMode mode) {
       }
     }
   }
-}
-
-const char *remove_space(const char *str) {
-  const char *p, *q;
-
-  for (p = str; *p && IS_SPACE(*p); p++)
-    ;
-  for (q = p; *q; q++)
-    ;
-  for (; q > p && IS_SPACE(*(q - 1)); q--)
-    ;
-  if (*q != '\0')
-    return Strnew_charp_n(p, q - p)->ptr;
-  return p;
 }
 
 void loadBuffer(HttpResponse *res, LineLayout *layout) {

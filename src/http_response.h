@@ -4,11 +4,12 @@
 #include "optional"
 #include <vector>
 #include <memory>
+#include <list>
+#include <string>
 
 extern int FollowRedirection;
 extern bool DecodeCTE;
 
-struct TextList;
 struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   int http_response_code = 0;
   Url currentURL = {.schema = SCM_UNKNOWN};
@@ -25,7 +26,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   }
 
   std::string type = "text/plain";
-  TextList *document_header = nullptr;
+  std::list<std::string> document_header;
   std::string filename;
 
   // cache / local filename / decompress
@@ -53,7 +54,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
 
   void page_loaded(Url url);
 
-  const char *last_modified();
+  std::string last_modified() const;
 };
 
 const char *mybasename(const char *s);

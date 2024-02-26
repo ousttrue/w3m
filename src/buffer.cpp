@@ -110,7 +110,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
       "<tr valign=top><td nowrap>Document Type<td>",
       this->res->type.size() ? html_quote(this->res->type.c_str()) : "unknown",
       "<tr valign=top><td nowrap>Last Modified<td>",
-      html_quote(this->res->last_modified()), nullptr);
+      html_quote(this->res->last_modified().c_str()), nullptr);
   Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
                  Sprintf("%d", all)->ptr,
                  "<tr valign=top><td nowrap>Transferred bytes<td>",
@@ -159,11 +159,12 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
 
   Strcat(tmp, this->link_info());
 
-  if (this->res->document_header != nullptr) {
+  if (this->res->document_header.size()) {
     Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-    for (ti = this->res->document_header->first; ti != nullptr; ti = ti->next)
-      Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
+    for (auto &ti : this->res->document_header) {
+      Strcat_m_charp(tmp, "<pre_int>", html_quote(ti.c_str()), "</pre_int>\n",
                      nullptr);
+    }
     Strcat_charp(tmp, "</pre>\n");
   }
 

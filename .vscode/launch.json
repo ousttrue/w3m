@@ -12,9 +12,14 @@
             "args": [
                 "http://www.yahoo.co.jp",
             ],
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${env:PATH};D:\\msys64\\usr\\bin"
+                }
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
-            "environment": [],
             "console": "integratedTerminal"
         },
         {
