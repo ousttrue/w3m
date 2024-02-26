@@ -61,7 +61,11 @@ struct base_stream : public input_stream {
     }
   }
   int read(unsigned char *buf, int len) override {
+#ifdef _MSC_VER
+    return ::recv(_des, (char *)buf, len, 0);
+#else
     return ::read(_des, buf, len);
+#endif
   }
 };
 

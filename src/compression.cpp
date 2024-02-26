@@ -17,9 +17,10 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <io.h>
-#endif
-
+#define PATH_SEPARATOR ';'
+#else
 #define PATH_SEPARATOR ':'
+#endif
 
 // https://stackoverflow.com/questions/11238918/s-isreg-macro-undefined
 #if !defined(S_ISREG) && defined(S_IFMT) && defined(S_IFREG)
@@ -133,37 +134,39 @@ std::tuple<std::string, std::string> uncompressed_file_type(const char *path) {
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
 
-static int check_command(const char *cmd, int auxbin_p) {
-#ifdef _MSC_VER
-  return {};
-#else
+static int check_command(const char *cmd, bool auxbin_p) {
   static char *path = nullptr;
-  if (path == nullptr) {
+  if (!path) {
     path = getenv("PATH");
   }
 
   Str *dirs;
-  if (auxbin_p)
+  if (auxbin_p) {
     dirs = Strnew_charp(w3m_auxbin_dir());
-  else
+  } else {
     dirs = Strnew_charp(path);
+  }
 
   char *np;
   for (auto p = dirs->ptr; p != nullptr; p = np) {
     np = strchr(p, PATH_SEPARATOR);
-    if (np)
+    if (np) {
       *np++ = '\0';
+    }
     auto pathname = Strnew();
     Strcat_charp(pathname, p);
     Strcat_char(pathname, '/');
     Strcat_charp(pathname, cmd);
     struct stat st;
-    if (stat(pathname->ptr, &st) == 0 && S_ISREG(st.st_mode) &&
-        (st.st_mode & S_IXANY) != 0)
-      return 1;
-  }
-  return 0;
+    if (stat(pathname->ptr, &st) == 0 && S_ISREG(st.st_mode)
+#ifndef _MSC_VER
+        && (st.st_mode & S_IXANY) != 0
 #endif
+    ) {
+      return true;
+    }
+  }
+  return false;
 }
 
 char *acceptableEncoding(void) {
