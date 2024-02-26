@@ -41,13 +41,20 @@ if host_machine.cpu().contains('sparc')
     gc_src += files('sparc_mach_dep.S')
 endif
 
+args = [
+    '-DGC_NOT_DLL=1',
+]
+
 gclib = library(
     'gc',
     gc_src,
     include_directories: 'include',
+    c_args: args,
+    cpp_args: args,
 )
 
 bdwgc_dep = declare_dependency(
     include_directories: 'include',
     link_with: gclib,
+    compile_args: args,
 )
