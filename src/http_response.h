@@ -1,6 +1,7 @@
 #pragma once
 #include "url.h"
 #include "optional"
+#include "compression.h"
 #include <stdint.h>
 #include <vector>
 #include <memory>
@@ -31,7 +32,8 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
 
   // cache / local filename / decompress
   std::string sourcefile;
-  std::vector<uint8_t> body;
+  std::vector<uint8_t> raw;
+  bool decoded = false;
 
   std::vector<Url> redirectins;
   const char *ssl_certificate = nullptr;
@@ -54,6 +56,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   void page_loaded(Url url, struct UrlStream *f);
   std::string last_modified() const;
   std::string_view getBody();
+  CompressionType contentEncoding() const;
 };
 
 const char *mybasename(const char *s);

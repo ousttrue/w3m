@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <span>
 
 #define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
@@ -47,3 +48,5 @@ struct UrlStream;
 void process_compression(Str *lineBuf2, UrlStream *uf);
 
 std::string filename_extension(const std::string_view patch, bool is_url);
+
+std::vector<uint8_t> decode_gzip(std::span<uint8_t> src);

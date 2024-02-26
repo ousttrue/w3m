@@ -14,6 +14,7 @@ ssl_dep = dependency('openssl')
 nkf_dep = dependency('nkf')
 lua_dep = dependency('lua')
 libuv_dep = dependency('libuv')
+zlib_dep = dependency('zlib', default_options: ['default_library=static'])
 
 screen_dep = dependency('ftxui-screen')
 # dom_dep = dependency('ftxui-dom')
@@ -29,6 +30,7 @@ deps = [
     lua_dep,
     libuv_dep,
     screen_dep,
+    zlib_dep,
 ]
 
 cc = meson.get_compiler('c')

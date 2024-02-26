@@ -547,8 +547,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   // if (res->f.stream->IStype() != IST_ENCODED) {
   //   res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
   // }
-  UrlStream f(SCM_UNKNOWN);
-  f.openFile(res->sourcefile.c_str());
+  UrlStream f(SCM_LOCAL, newStrStream(body));
 
   while (true) {
     auto _lineBuf2 = f.stream->StrmyISgets();

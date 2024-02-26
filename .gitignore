@@ -51,3 +51,4 @@ Makefile
 !/subprojects/ftxui.wrap
 !/subprojects/openssl.wrap
 !/subprojects/bdwgc.wrap
+!/subprojects/zlib.wrap

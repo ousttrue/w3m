@@ -12,6 +12,7 @@
 #include <sys/stat.h>
 #include <string.h>
 #include <sstream>
+#include <zlib.h>
 
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -235,4 +236,50 @@ std::string filename_extension(const std::string_view path, bool is_url) {
       break;
   }
   return std::string(last_dot, last_dot + i);
+}
+
+std::vector<uint8_t> decode_gzip(std::span<uint8_t> src) {
+  assert(src[0] == 0x1f);
+  assert(src[1] == 0x8b);
+  assert(src[2] == 0x08);
+
+  z_stream strm = {0};
+  strm.zalloc = Z_NULL;
+  strm.zfree = Z_NULL;
+  strm.opaque = Z_NULL;
+  strm.avail_in = 0;
+  strm.next_in = Z_NULL;
+  int ret = inflateInit2(&strm, 47);
+  assert(ret == Z_OK);
+
+  std::vector<uint8_t> buffer;
+
+  strm.avail_in = src.size();
+  strm.next_in = src.data();
+  do {
+    const int CHUNK = 16384;
+    unsigned char out[CHUNK];
+    strm.avail_out = CHUNK;
+    strm.next_out = out;
+    ret = inflate(&strm, Z_NO_FLUSH);
+    assert(ret != Z_STREAM_ERROR); /* state not clobbered */
+    switch (ret) {
+    case Z_NEED_DICT:
+      ret = Z_DATA_ERROR; /* and fall through */
+    case Z_DATA_ERROR:
+    case Z_MEM_ERROR:
+      (void)inflateEnd(&strm);
+      assert(false);
+      return {};
+    }
+    auto have = CHUNK - strm.avail_out;
+    auto before = buffer.size();
+    buffer.resize(before + have);
+    memcpy(buffer.data() + before, out, have);
+
+  } while (strm.avail_out == 0);
+
+  inflateEnd(&strm);
+
+  return buffer;
 }

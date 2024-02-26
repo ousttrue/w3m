@@ -57,12 +57,12 @@ static long long strtoclen(const char *s) {
 #endif
 }
 
-static int is_text_type(std::string_view type) {
-  return type.empty() || type.starts_with("text/") ||
-         (type.starts_with("application/") &&
-          type.find("xhtml") != std::string::npos) ||
-         type.starts_with("message/");
-}
+// static int is_text_type(std::string_view type) {
+//   return type.empty() || type.starts_with("text/") ||
+//          (type.starts_with("application/") &&
+//           type.find("xhtml") != std::string::npos) ||
+//          type.starts_with("message/");
+// }
 
 bool HttpResponse::checkRedirection(const Url &pu) {
 
@@ -337,18 +337,18 @@ void HttpResponse::page_loaded(Url url, UrlStream *f) {
   //   return NO_BUFFER;
   // }
 
-  if ((f->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    url.real_file = f->uncompress_stream();
-  } else if (f->compression != CMP_NOCOMPRESS) {
-    if ((is_text_type(this->type))) {
-      this->sourcefile = f->uncompress_stream();
-      auto [_, ext] = uncompressed_file_type(url.file.c_str());
-      f->ext = ext;
-    } else {
-      this->type = compress_application_type(f->compression)->mime_type;
-      f->compression = CMP_NOCOMPRESS;
-    }
-  }
+  // if ((f->content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+  //   url.real_file = f->uncompress_stream();
+  // } else if (f->compression != CMP_NOCOMPRESS) {
+  //   if ((is_text_type(this->type))) {
+  //     this->sourcefile = f->uncompress_stream();
+  //     auto [_, ext] = uncompressed_file_type(url.file.c_str());
+  //     f->ext = ext;
+  //   } else {
+  //     this->type = compress_application_type(f->compression)->mime_type;
+  //     f->compression = CMP_NOCOMPRESS;
+  //   }
+  // }
 
   this->currentURL = url;
   this->filename = this->currentURL.real_file.size()
@@ -366,28 +366,32 @@ void HttpResponse::page_loaded(Url url, UrlStream *f) {
     //   loadBuffer(this, layout);
     // }
 
-    auto src = this->createSourceFile();
+    // auto src = this->createSourceFile();
 
-    if (f->stream->IStype() != IST_ENCODED) {
-      f->stream = newEncodedStream(f->stream, f->encoding);
-    }
+    // if (f->stream->IStype() != IST_ENCODED) {
+    //   f->stream = newEncodedStream(f->stream, f->encoding);
+    // }
 
     while (true) {
-      auto _lineBuf2 = f->stream->StrmyISgets();
-      if (_lineBuf2.empty()) {
+      unsigned char buf[4096];
+      auto readSize = f->stream->read(buf, sizeof(buf));
+      if (readSize == 0) {
         break;
       }
-      auto lineBuf2 = Strnew(_lineBuf2);
+      // auto lineBuf2 = Strnew(_lineBuf2);
+      auto before = this->raw.size();
+      this->raw.resize(before + readSize);
+      memcpy(this->raw.data() + before, buf, readSize);
 
-      if (src)
-        Strfputs(lineBuf2, src);
+      // if (src)
+      //   Strfputs(lineBuf2, src);
     }
     // res->type = "text/html";
     // if (n_textarea)
     // formResetBuffer(layout, layout->formitem);
-    if (src) {
-      fclose(src);
-    }
+    // if (src) {
+    //   fclose(src);
+    // }
 
     // if (layout->title.empty() || layout->title[0] == '\0') {
     //   layout->title = this->getHeader("Subject:");
@@ -455,9 +459,30 @@ std::string HttpResponse::last_modified() const {
   return "unknown";
 }
 
-std::string_view HttpResponse::getBody() {
-  if (body.empty()) {
-    body = ReadAllBytes(sourcefile);
+CompressionType HttpResponse::contentEncoding() const {
+
+  if (auto p = this->getHeader("Content-Encoding:")) {
+    if (std::string_view("gzip") == p) {
+      return CMP_GZIP;
+    }
+
+    // TODO:
+    assert(false);
   }
-  return {(const char *)body.data(), (const char *)body.data() + body.size()};
+
+  return {};
+}
+
+std::string_view HttpResponse::getBody() {
+  if (raw.empty()) {
+    raw = ReadAllBytes(sourcefile);
+  }
+
+  auto encoding = contentEncoding();
+  if (encoding != CMP_NOCOMPRESS && !decoded) {
+    raw = decode_gzip(raw);
+    decoded = true;
+  }
+
+  return {(const char *)raw.data(), (const char *)raw.data() + raw.size()};
 }
