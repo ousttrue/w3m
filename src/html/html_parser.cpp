@@ -3111,7 +3111,7 @@ table_start:
         obuf->table_level--;
         if (obuf->table_level >= MAX_TABLE - 1)
           continue;
-        end_table(tbl);
+        tbl->end_table();
         if (obuf->table_level >= 0) {
           struct table *tbl0 = tables[obuf->table_level];
           str = Sprintf("<table_alt tid=%d>", tbl0->ntable)->ptr;

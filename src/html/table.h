@@ -135,6 +135,8 @@ struct table {
   ::vector *vector;
 #endif /* MATRIX */
   int sloppy_width;
+
+  void end_table();
 };
 
 #define TBLM_PRE RB_PRE
@@ -180,7 +182,6 @@ extern void renderTable(HtmlParser *parser, struct table *t, int max_width,
                         struct html_feed_environ *h_env);
 extern struct table *begin_table(int border, int spacing, int padding,
                                  int vspace);
-extern void end_table(struct table *tbl);
 extern void check_rowcol(struct table *tbl, struct table_mode *mode);
 extern int minimum_length(char *line);
 extern int feed_table(HtmlParser *parser, struct table *tbl, const char *line,

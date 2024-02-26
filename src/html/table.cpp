@@ -878,7 +878,7 @@ static void set_integered_width(struct table *t, double *dwidth,
   indexarray = (short *)NewAtom_N(short, t->maxcol + 1);
   mod = (double *)NewAtom_N(double, t->maxcol + 1);
   for (i = 0; i <= t->maxcol; i++) {
-    iwidth[i] = ceil_at_intervals(ceil(dwidth[i]), rulewidth);
+    iwidth[i] = static_cast<int>(ceil_at_intervals(ceil(dwidth[i]), rulewidth));
     mod[i] = (double)iwidth[i] - dwidth[i];
   }
 
@@ -1948,18 +1948,19 @@ struct table *begin_table(int border, int spacing, int padding, int vspace) {
   return t;
 }
 
-void end_table(struct table *tbl) {
-  struct table_cell *cell = &tbl->cell;
-  int i, rulewidth = table_rule_width(tbl);
+void table::end_table() {
+  struct table_cell *cell = &this->cell;
+  int i, rulewidth = table_rule_width(this);
   if (rulewidth > 1) {
-    if (tbl->total_width > 0)
-      tbl->total_width = ceil_at_intervals(tbl->total_width, rulewidth);
-    for (i = 0; i <= tbl->maxcol; i++) {
-      tbl->minimum_width[i] =
-          ceil_at_intervals(tbl->minimum_width[i], rulewidth);
-      tbl->tabwidth[i] = ceil_at_intervals(tbl->tabwidth[i], rulewidth);
-      if (tbl->fixed_width[i] > 0)
-        tbl->fixed_width[i] = ceil_at_intervals(tbl->fixed_width[i], rulewidth);
+    if (this->total_width > 0)
+      this->total_width = ceil_at_intervals(this->total_width, rulewidth);
+    for (i = 0; i <= this->maxcol; i++) {
+      this->minimum_width[i] =
+          ceil_at_intervals(this->minimum_width[i], rulewidth);
+      this->tabwidth[i] = ceil_at_intervals(this->tabwidth[i], rulewidth);
+      if (this->fixed_width[i] > 0)
+        this->fixed_width[i] =
+            ceil_at_intervals(this->fixed_width[i], rulewidth);
     }
     for (i = 0; i <= cell->maxcell; i++) {
       cell->minimum_width[i] =
@@ -1970,9 +1971,9 @@ void end_table(struct table *tbl) {
             ceil_at_intervals(cell->fixed_width[i], rulewidth);
     }
   }
-  tbl->sloppy_width = fixed_table_width(tbl);
-  if (tbl->total_width > tbl->sloppy_width)
-    tbl->sloppy_width = tbl->total_width;
+  this->sloppy_width = fixed_table_width(this);
+  if (this->total_width > this->sloppy_width)
+    this->sloppy_width = this->total_width;
 }
 
 static void check_minimum0(struct table *t, int min) {
