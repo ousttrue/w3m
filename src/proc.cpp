@@ -111,7 +111,6 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
         CurrentTab->currentBuffer()->layout.lineSkip(
             CurrentTab->currentBuffer()->layout.topLine, -offsety, false);
     CurrentTab->currentBuffer()->layout.arrangeLine();
-    App::instance().invalidate();
   }
 }
 
@@ -126,7 +125,6 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH() {
   if (offsetx != 0) {
     CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
     CurrentTab->currentBuffer()->layout.arrangeCursor();
-    App::instance().invalidate();
   }
 }
 
@@ -136,7 +134,6 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH() {
 std::shared_ptr<CoroutineState<void>> rdrwSc() {
   // clear();
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
   co_return;
 }
 
@@ -199,7 +196,6 @@ std::shared_ptr<CoroutineState<void>> shiftl() {
       1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
-  App::instance().invalidate();
 }
 
 /* Shift screen right */
@@ -215,7 +211,6 @@ std::shared_ptr<CoroutineState<void>> shiftr() {
       1);
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
       CurrentTab->currentBuffer()->layout.currentColumn - column);
-  App::instance().invalidate();
 }
 
 // RIGHT
@@ -234,7 +229,6 @@ std::shared_ptr<CoroutineState<void>> col1R() {
       break;
     CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
   }
-  App::instance().invalidate();
 }
 
 // LEFT
@@ -252,7 +246,6 @@ std::shared_ptr<CoroutineState<void>> col1L() {
     CurrentTab->currentBuffer()->layout.columnSkip(-1);
     CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
-  App::instance().invalidate();
 }
 
 // SETENV
@@ -268,7 +261,6 @@ std::shared_ptr<CoroutineState<void>> setEnv() {
       env = Sprintf("%s=", env)->ptr;
     // env = inputStrHist("Set environ: ", env, TextHist);
     if (env == nullptr || *env == '\0') {
-      App::instance().invalidate();
       co_return;
     }
   }
@@ -277,7 +269,6 @@ std::shared_ptr<CoroutineState<void>> setEnv() {
     value++;
     set_environ(var, value);
   }
-  App::instance().invalidate();
 }
 
 // PIPE_BUF
@@ -299,7 +290,6 @@ std::shared_ptr<CoroutineState<void>> readsh() {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd == nullptr || *cmd == '\0') {
-    App::instance().invalidate();
     co_return;
   }
   // MySignalHandler prevtrap = {};
@@ -317,7 +307,6 @@ std::shared_ptr<CoroutineState<void>> readsh() {
     }
     CurrentTab->pushBuffer(buf);
   }
-  App::instance().invalidate();
 }
 
 /* Execute shell command */
@@ -338,7 +327,6 @@ std::shared_ptr<CoroutineState<void>> execsh() {
     App::instance().beginRawMode();
     // getch();
   }
-  App::instance().invalidate();
   co_return;
 }
 
@@ -351,7 +339,6 @@ std::shared_ptr<CoroutineState<void>> ldfile() {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
   if (fn == nullptr || *fn == '\0') {
-    App::instance().invalidate();
     co_return;
   }
   if (auto res =
@@ -508,7 +495,6 @@ std::shared_ptr<CoroutineState<void>> movLW() {
   }
 end:
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 // NEXT_WORD
@@ -557,7 +543,6 @@ std::shared_ptr<CoroutineState<void>> movRW() {
   }
 end:
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 /* Quit */
@@ -664,7 +649,6 @@ std::shared_ptr<CoroutineState<void>> linbeg() {
   }
   CurrentTab->currentBuffer()->layout.pos = 0;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 /* Go to the bottom of the line */
@@ -680,7 +664,6 @@ std::shared_ptr<CoroutineState<void>> linend() {
   CurrentTab->currentBuffer()->layout.pos =
       CurrentTab->currentBuffer()->layout.currentLine->len - 1;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 /* Run editor on the current buffer */
@@ -715,7 +698,6 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   }
   exec_cmd(cmd);
 
-  App::instance().invalidate();
   reload();
 }
 
@@ -736,7 +718,6 @@ std::shared_ptr<CoroutineState<void>> editScr() {
       shell_quote(tmpf.c_str()),
       CurrentTab->currentBuffer()->layout.cur_real_linenumber()));
   unlink(tmpf.c_str());
-  App::instance().invalidate();
 }
 
 /* follow HREF link */
@@ -747,7 +728,6 @@ std::shared_ptr<CoroutineState<void>> followA() {
   if (buf) {
     App::instance().pushBuffer(buf, a->target);
 
-    App::instance().invalidate();
   }
 
   co_return;
@@ -776,7 +756,6 @@ std::shared_ptr<CoroutineState<void>> followI() {
   auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
   { CurrentTab->pushBuffer(buf); }
-  App::instance().invalidate();
 }
 
 /* submit form */
@@ -832,7 +811,6 @@ std::shared_ptr<CoroutineState<void>> topA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 /* go to the last anchor */
@@ -873,7 +851,6 @@ std::shared_ptr<CoroutineState<void>> lastA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 /* go to the nth anchor */
@@ -909,7 +886,6 @@ std::shared_ptr<CoroutineState<void>> nthA() {
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.pos = po->pos;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
-  App::instance().invalidate();
 }
 
 /* go to the next anchor */
@@ -1019,7 +995,6 @@ std::shared_ptr<CoroutineState<void>> nextBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  App::instance().invalidate();
 }
 
 /* go to the previous bufferr */
@@ -1035,7 +1010,6 @@ std::shared_ptr<CoroutineState<void>> prevBf() {
     }
     CurrentTab->currentBuffer(buf);
   }
-  App::instance().invalidate();
 }
 
 /* delete current buffer and back to the previous buffer */
@@ -1047,7 +1021,6 @@ std::shared_ptr<CoroutineState<void>> backBf() {
   if (!CurrentTab->currentBuffer()->checkBackBuffer()) {
     if (close_tab_back && App::instance().nTab() >= 1) {
       App::instance().deleteTab(CurrentTab);
-      App::instance().invalidate();
     } else
       App::instance().disp_message("Can't go back...");
     co_return;
@@ -1055,7 +1028,6 @@ std::shared_ptr<CoroutineState<void>> backBf() {
 
   CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
 
-  App::instance().invalidate();
 }
 
 // DELETE_PREVBUF
@@ -1168,13 +1140,11 @@ std::shared_ptr<CoroutineState<void>> setOpt() {
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == nullptr || *opt == '\0') {
-      App::instance().invalidate();
       co_return;
     }
   }
   if (set_param_option(opt))
     sync_with_option();
-  App::instance().invalidate();
 }
 
 /* error message list */
@@ -1321,7 +1291,6 @@ std::shared_ptr<CoroutineState<void>> svSrc() {
   }
   doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file);
   PermitSaveToPipe = false;
-  App::instance().invalidate();
 }
 
 /* peek URL */
@@ -1432,7 +1401,6 @@ std::shared_ptr<CoroutineState<void>> reload() {
     CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
     CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
   }
-  App::instance().invalidate();
 }
 
 /* reshape */
@@ -1455,7 +1423,6 @@ std::shared_ptr<CoroutineState<void>> reshape() {
     CurrentTab->currentBuffer()->layout.reshape(
         App::instance().INIT_BUFFER_WIDTH(), sbuf);
   }
-  App::instance().invalidate();
   co_return;
 }
 
@@ -1463,7 +1430,6 @@ std::shared_ptr<CoroutineState<void>> reshape() {
 //"Turn URL-like strings into hyperlinks"
 std::shared_ptr<CoroutineState<void>> chkURL() {
   CurrentTab->currentBuffer()->layout.chkURLBuffer();
-  App::instance().invalidate();
   co_return;
 }
 
@@ -1476,7 +1442,6 @@ std::shared_ptr<CoroutineState<void>> chkWORD() {
     co_return;
   CurrentTab->currentBuffer()->layout.reAnchorWord(
       CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
-  App::instance().invalidate();
 }
 
 /* render frames */
@@ -1570,7 +1535,6 @@ std::shared_ptr<CoroutineState<void>> dictwordat() {
   auto word = CurrentTab->currentBuffer()->layout.getCurWord();
   if (auto buf = execdict(word.c_str())) {
     CurrentTab->pushBuffer(buf);
-    App::instance().invalidate();
   }
   co_return;
 }
@@ -1590,7 +1554,6 @@ std::shared_ptr<CoroutineState<void>> setAlarm() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
     if (data == nullptr) {
-      App::instance().invalidate();
       co_return;
     }
   }
@@ -1618,14 +1581,12 @@ std::shared_ptr<CoroutineState<void>> reinit() {
     init_rc();
     sync_with_option();
     initCookie();
-    App::instance().invalidate();
     co_return;
   }
 
   if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
     init_rc();
     sync_with_option();
-    App::instance().invalidate();
     co_return;
   }
 
@@ -1663,12 +1624,10 @@ std::shared_ptr<CoroutineState<void>> defKey() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("Key definition: ", "", TextHist);
     if (data == nullptr || *data == '\0') {
-      App::instance().invalidate();
       co_return;
     }
   }
   App::instance().setKeymap(allocStr(data, -1), -1, true);
-  App::instance().invalidate();
 }
 
 // NEW_TAB
@@ -1692,14 +1651,12 @@ std::shared_ptr<CoroutineState<void>> closeT() {
     tab = CurrentTab;
   if (tab)
     App::instance().deleteTab(tab);
-  App::instance().invalidate();
 }
 
 // NEXT_TAB
 //"Switch to the next tab"
 std::shared_ptr<CoroutineState<void>> nextT() {
   App::instance().nextTab(PREC_NUM);
-  App::instance().invalidate();
   co_return;
 }
 
@@ -1707,7 +1664,6 @@ std::shared_ptr<CoroutineState<void>> nextT() {
 //"Switch to the previous tab"
 std::shared_ptr<CoroutineState<void>> prevT() {
   App::instance().prevTab(PREC_NUM);
-  App::instance().invalidate();
   co_return;
 }
 
@@ -1771,7 +1727,6 @@ std::shared_ptr<CoroutineState<void>> ldDL() {
           App::instance().deleteTab(CurrentTab);
       } else
         CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
-      App::instance().invalidate();
     }
     co_return;
   }
@@ -1779,7 +1734,6 @@ std::shared_ptr<CoroutineState<void>> ldDL() {
   auto reload = checkDownloadList();
   auto buf = DownloadListBuffer();
   if (!buf) {
-    App::instance().invalidate();
     co_return;
   }
   if (replace) {
@@ -1799,7 +1753,6 @@ std::shared_ptr<CoroutineState<void>> ldDL() {
     //     AL_IMPLICIT,
     //                   FUNCNAME_reload, nullptr);
   }
-  App::instance().invalidate();
 }
 
 // UNDO
@@ -1827,7 +1780,6 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
       CurrentTab->currentBuffer()->layout.lineSkip(
           CurrentTab->currentBuffer()->layout.topLine, 0, false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  App::instance().invalidate();
 }
 
 // CURSOR_MIDDLE
@@ -1841,7 +1793,6 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
                                                                    false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  App::instance().invalidate();
 }
 
 // CURSOR_BOTTOM
@@ -1855,7 +1806,6 @@ std::shared_ptr<CoroutineState<void>> cursorBottom() {
       CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
                                                                    false);
   CurrentTab->currentBuffer()->layout.arrangeLine();
-  App::instance().invalidate();
 }
 
 /* follow HREF link in the buffer */

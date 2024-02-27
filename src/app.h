@@ -37,7 +37,6 @@ class App {
   std::shared_ptr<Screen> _screen;
   bool _fmInitialized = false;
 
-  int _dirty = 1;
   std::list<std::string> _fileToDelete;
 
   std::string _currentDir;
@@ -142,7 +141,6 @@ public:
   void task(int sec, const std::string &cmd, const char *data = nullptr,
             bool releat = false);
   std::string tmpfname(TmpfType type, const std::string &ext);
-  void invalidate() { ++_dirty; }
 
   // tabs
   std::shared_ptr<TabBuffer> FirstTab() const { return _tabs.front(); }

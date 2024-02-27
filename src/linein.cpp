@@ -536,7 +536,6 @@ void LineInput::next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  App::instance().invalidate();
   if (_screen->LASTLINE() >= 3) {
     comment = true;
     nline = _screen->LASTLINE() - 2;
@@ -873,7 +872,6 @@ void LineInput::_editor(char) {
     Strcat_char(strBuf, *p);
   }
   CLen = CPos = setStrType(strBuf, strProp);
-  App::instance().invalidate();
 }
 
 std::shared_ptr<LineInput>

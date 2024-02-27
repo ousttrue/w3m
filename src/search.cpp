@@ -245,7 +245,6 @@ void srch_nxtprv(int reverse) {
       CurrentTab->currentBuffer()->layout.pos -= 1;
     }
   }
-  App::instance().invalidate();
   disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }
 
@@ -286,7 +285,6 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
         sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
       }
       CurrentTab->currentBuffer()->layout.arrangeCursor();
-      App::instance().invalidate();
       clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
       return -1;
     } else
@@ -297,7 +295,6 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     srchcore(str, searchRoutine);
     CurrentTab->currentBuffer()->layout.arrangeCursor();
   }
-  App::instance().invalidate();
   clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   return -1;
 }
@@ -313,7 +310,6 @@ void isrch(int (*func)(LineLayout *, const char *), const char *prompt) {
   // if (str == nullptr) {
   //   RESTORE_BUFPOSITION(&sbuf);
   // }
-  App::instance().invalidate();
 }
 
 void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
@@ -327,7 +323,6 @@ void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
     if (str != nullptr && *str == '\0')
       str = SearchString;
     if (str == nullptr) {
-      App::instance().invalidate();
       return;
     }
     disp = true;
@@ -340,7 +335,6 @@ void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
     clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   else
     CurrentTab->currentBuffer()->layout.pos = pos;
-  App::instance().invalidate();
   if (disp)
     disp_srchresult(result, prompt, str);
   searchRoutine = func;

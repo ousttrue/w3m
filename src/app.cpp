@@ -1073,7 +1073,6 @@ void App::doCmd() {
   if (data == nullptr || *data == '\0') {
     // data = inputStrHist("command [; ...]: ", "", TextHist);
     if (data == nullptr) {
-      invalidate();
       return;
     }
   }
@@ -1092,7 +1091,6 @@ void App::doCmd() {
     p = getQWord(&data);
     doCmd(cmd, p);
   }
-  invalidate();
 }
 
 void App::doCmd(const std::string &cmd, const char *data) {
@@ -1147,10 +1145,7 @@ void App::onFrame() {
     }
   }
 
-  if (_dirty > 0) {
-    _dirty = 0;
-    _screen->display(INIT_BUFFER_WIDTH(), currentTab().get());
-  }
+  _screen->display(INIT_BUFFER_WIDTH(), currentTab().get());
 }
 
 struct TimerTask {
@@ -1247,7 +1242,6 @@ void App::nextTab(int n) {
   if (_currentTab >= (int)_tabs.size()) {
     _currentTab = _tabs.size() - 1;
   }
-  invalidate();
 }
 
 void App::prevTab(int n) {
@@ -1258,7 +1252,6 @@ void App::prevTab(int n) {
   if (_currentTab < 0) {
     _currentTab = 0;
   }
-  invalidate();
 }
 
 void App::tabRight(int n) {
@@ -1370,16 +1363,11 @@ std::shared_ptr<TabBuffer> App::newTab(std::shared_ptr<Buffer> buf) {
   _tabs.push_back(tab);
   _currentTab = _tabs.size() - 1;
 
-  invalidate();
-
   return tab;
 }
 
 void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
                      std::string_view target) {
-
-  this->invalidate();
-
   //   if (check_target && open_tab_blank && a->target.size() &&
   //       (a->target == "_new" || a->target == "_blank")) {
   //     // open in new tab

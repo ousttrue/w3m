@@ -544,7 +544,6 @@ void invoke_browser(const char *url) {
     }
   }
   if (browser == nullptr || *browser == '\0') {
-    App::instance().invalidate();
     return;
   }
 
@@ -558,5 +557,4 @@ void invoke_browser(const char *url) {
   App::instance().endRawMode();
   mySystem(cmd->ptr, bg);
   App::instance().beginRawMode();
-  App::instance().invalidate();
 }
