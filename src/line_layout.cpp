@@ -631,7 +631,7 @@ void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
         hseq--;
         if (visited == true && an) {
           url = urlParse(an->url, baseUrl);
-          if (getHashHist(URLHist, url.to_Str().c_str())) {
+          if (URLHist->getHashHist(url.to_Str().c_str())) {
             goto _end;
           }
         }
@@ -650,7 +650,7 @@ void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
       y = an->start.line;
       if (visited == true && an) {
         url = urlParse(an->url, baseUrl);
-        if (getHashHist(URLHist, url.to_Str().c_str())) {
+        if (URLHist->getHashHist(url.to_Str().c_str())) {
           goto _end;
         }
       }
@@ -712,7 +712,7 @@ void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
         hseq++;
         if (visited == true && an) {
           auto url = urlParse(an->url, baseUrl);
-          if (getHashHist(URLHist, url.to_Str().c_str())) {
+          if (URLHist->getHashHist(url.to_Str().c_str())) {
             goto _end;
           }
         }
@@ -731,7 +731,7 @@ void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
       y = an->start.line;
       if (visited == true) {
         auto url = urlParse(an->url, baseUrl);
-        if (getHashHist(URLHist, url.to_Str().c_str())) {
+        if (URLHist->getHashHist(url.to_Str().c_str())) {
           goto _end;
         }
       }

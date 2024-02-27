@@ -8,11 +8,15 @@
 #include "rc.h"
 #include "buffer.h"
 #include "proto.h"
-#include "alloc.h"
+// #include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include <sstream>
 
+#define HIST_LIST_MAX GENERAL_LIST_MAX
+#define HIST_HASH_SIZE 127
 #define HISTORY_FILE "history"
+
 int UseHistory = true;
 int URLHistSize = 100;
 int SaveURLHist = true;
@@ -28,94 +32,89 @@ static int mergeHistory(Hist *ours, Hist *theirs) {
   HistItem *item;
 
   for (item = theirs->list->first; item; item = item->next)
-    if (!getHashHist(ours, (const char *)item->ptr))
-      pushHist(ours, (const char *)item->ptr);
+    if (!ours->getHashHist((const char *)item->ptr))
+      ours->pushHist((const char *)item->ptr);
 
   return 0;
 }
 
-std::shared_ptr<Buffer> historyBuffer(Hist *hist) {
-  Str *src = Strnew();
-  HistItem *item;
-  const char *p, *q;
+std::string Hist::toHtml() const {
+  std::stringstream src;
+  src << "<html>\n<head><title>History Page</title></head>\n";
+  src << "<body>\n<h1>History Page</h1>\n<hr>\n";
+  src << "<ol>\n";
 
-  Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
-  Strcat_charp(src, "<body>\n<h1>History Page</h1>\n<hr>\n");
-  Strcat_charp(src, "<ol>\n");
-  if (hist && hist->list) {
-    for (item = hist->list->last; item; item = item->prev) {
+  const char *p, *q;
+  if (this->list) {
+    for (auto item = this->list->last; item; item = item->prev) {
       q = html_quote((const char *)item->ptr);
       if (DecodeURL)
         p = html_quote(url_decode0((const char *)item->ptr));
       else
         p = q;
-      Strcat_charp(src, "<li><a href=\"");
-      Strcat_charp(src, q);
-      Strcat_charp(src, "\">");
-      Strcat_charp(src, p);
-      Strcat_charp(src, "</a>\n");
+      src << "<li><a href=\"";
+      src << q;
+      src << "\">";
+      src << p;
+      src << "</a>\n";
     }
   }
-  Strcat_charp(src, "</ol>\n</body>\n</html>");
-  return loadHTMLString(src);
+  src << "</ol>\n</body>\n</html>";
+  // return loadHTMLString(src);
+  return src.str();
 }
 
-int loadHistory(Hist *hist) {
-  FILE *f;
-  Str *line;
-  struct stat st;
+bool Hist::loadHistory() {
+  if (auto f = fopen(rcFile(HISTORY_FILE), "rt")) {
+    struct stat st;
+    if (fstat(fileno(f), &st) == -1) {
+      fclose(f);
+      return false;
+    }
+    this->mtime = (long long)st.st_mtime;
 
-  if (hist == NULL)
-    return 1;
-  if ((f = fopen(rcFile(HISTORY_FILE), "rt")) == NULL)
-    return 1;
-
-  if (fstat(fileno(f), &st) == -1) {
+    while (!feof(f)) {
+      auto line = Strfgets(f);
+      Strchop(line);
+      Strremovefirstspaces(line);
+      Strremovetrailingspaces(line);
+      if (line->length == 0)
+        continue;
+      this->pushHist(url_quote(line->ptr));
+    }
     fclose(f);
-    return 1;
+    return true;
+  } else {
+    return false;
   }
-  hist->mtime = (long long)st.st_mtime;
-
-  while (!feof(f)) {
-    line = Strfgets(f);
-    Strchop(line);
-    Strremovefirstspaces(line);
-    Strremovetrailingspaces(line);
-    if (line->length == 0)
-      continue;
-    pushHist(hist, url_quote(line->ptr));
-  }
-  fclose(f);
-  return 0;
 }
 
-void saveHistory(Hist *hist, int size) {
+void Hist::saveHistory(int size) {
   FILE *f;
-  Hist *fhist;
   HistItem *item;
   const char *histf;
   std::string tmpf;
   int rename_ret;
   struct stat st;
 
-  if (hist == NULL || hist->list == NULL)
+  if (this->list == NULL)
     return;
 
   histf = rcFile(HISTORY_FILE);
-  if (stat(histf, &st) == -1)
+  if (stat(histf, &st) == -1) {
     goto fail;
-  if (hist->mtime != (long long)st.st_mtime) {
-    fhist = newHist();
-    if (loadHistory(fhist) || mergeHistory(fhist, hist))
+  }
+
+  if (this->mtime != (long long)st.st_mtime) {
+    auto fhist = Hist::newHist();
+    if (!fhist->loadHistory() || mergeHistory(this, fhist))
       App::instance().disp_err_message("Can't merge history");
-    else
-      hist = fhist;
   }
 
   tmpf = App::instance().tmpfname(TMPF_HIST, {});
   if ((f = fopen(tmpf.c_str(), "w")) == NULL)
     goto fail;
-  for (item = hist->list->first; item && hist->list->nitem > size;
+  for (item = this->list->first; item && this->list->nitem > size;
        item = item->next)
     size++;
   for (; item; item = item->next)
@@ -137,122 +136,97 @@ fail:
  * The following functions are used for internal stuff, we need them regardless
  * if history is used or not.
  */
+Hist::Hist() {}
 
-Hist *newHist(void) {
-  auto hist = (Hist *)New(Hist);
+Hist *Hist::newHist(void) {
+  auto hist = new Hist;
   hist->list = (HistList *)newGeneralList();
   hist->current = NULL;
   hist->hash = NULL;
   return hist;
 }
 
-Hist *copyHist(Hist *hist) {
-  Hist *_new;
-  HistItem *item;
-
-  if (hist == NULL)
-    return NULL;
-  _new = newHist();
-  for (item = hist->list->first; item; item = item->next)
-    pushHist(_new, (const char *)item->ptr);
+Hist *Hist::copyHist() const {
+  auto _new = newHist();
+  for (auto item = this->list->first; item; item = item->next)
+    _new->pushHist((const char *)item->ptr);
   return _new;
 }
 
-HistItem *unshiftHist(Hist *hist, const char *ptr) {
-  HistItem *item;
-
-  if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
+HistItem *Hist::pushHist(std::string_view ptr) {
+  if (this->list == NULL || this->list->nitem >= HIST_LIST_MAX)
     return NULL;
-  item = (HistItem *)newListItem((void *)allocStr(ptr, -1),
-                                 (ListItem *)hist->list->first, NULL);
-  if (hist->list->first)
-    hist->list->first->prev = item;
+  auto item = (HistItem *)newListItem((void *)allocStr(ptr.data(), ptr.size()),
+                                      NULL, (ListItem *)this->list->last);
+  if (this->list->last)
+    this->list->last->next = item;
   else
-    hist->list->last = item;
-  hist->list->first = item;
-  hist->list->nitem++;
-  return item;
-}
-
-HistItem *pushHist(Hist *hist, std::string_view ptr) {
-  HistItem *item;
-
-  if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
-    return NULL;
-  item = (HistItem *)newListItem((void *)allocStr(ptr.data(), ptr.size()), NULL,
-                                 (ListItem *)hist->list->last);
-  if (hist->list->last)
-    hist->list->last->next = item;
-  else
-    hist->list->first = item;
-  hist->list->last = item;
-  hist->list->nitem++;
+    this->list->first = item;
+  this->list->last = item;
+  this->list->nitem++;
   return item;
 }
 
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
-HistItem *pushHashHist(Hist *hist, const char *ptr) {
-  HistItem *item;
-
-  if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
+HistItem *Hist::pushHashHist(const char *ptr) {
+  if (this->list == NULL || this->list->nitem >= HIST_LIST_MAX)
     return NULL;
-  item = getHashHist(hist, ptr);
+  auto item = this->getHashHist(ptr);
   if (item) {
     if (item->next)
       item->next->prev = item->prev;
-    else /* item == hist->list->last */
-      hist->list->last = item->prev;
+    else /* item == this->list->last */
+      this->list->last = item->prev;
     if (item->prev)
       item->prev->next = item->next;
-    else /* item == hist->list->first */
-      hist->list->first = item->next;
-    hist->list->nitem--;
+    else /* item == this->list->first */
+      this->list->first = item->next;
+    this->list->nitem--;
   }
-  item = pushHist(hist, ptr);
-  putHash_sv(hist->hash, ptr, (void *)item);
+  item = this->pushHist(ptr);
+  putHash_sv(this->hash, ptr, (void *)item);
   return item;
 }
 
-HistItem *getHashHist(Hist *hist, const char *ptr) {
-  HistItem *item;
-
-  if (hist == NULL || hist->list == NULL)
+HistItem *Hist::getHashHist(const char *ptr) {
+  if (this->list == NULL)
     return NULL;
-  if (hist->hash == NULL) {
-    hist->hash = newHash_sv(HIST_HASH_SIZE);
-    for (item = hist->list->first; item; item = item->next)
-      putHash_sv(hist->hash, (const char *)item->ptr, (void *)item);
+  if (this->hash == NULL) {
+    this->hash = newHash_sv(HIST_HASH_SIZE);
+    for (auto item = this->list->first; item; item = item->next)
+      putHash_sv(this->hash, (const char *)item->ptr, (void *)item);
   }
-  return (HistItem *)getHash_sv(hist->hash, ptr, NULL);
+  return (HistItem *)getHash_sv(this->hash, ptr, NULL);
 }
 
-const char *lastHist(Hist *hist) {
-  if (hist == NULL || hist->list == NULL)
+const char *Hist::lastHist() {
+  if (this->list == NULL) {
     return NULL;
-  if (hist->list->last) {
-    hist->current = hist->list->last;
-    return (const char *)hist->current->ptr;
   }
-  return NULL;
-}
-
-const char *nextHist(Hist *hist) {
-  if (hist == NULL || hist->list == NULL)
-    return NULL;
-  if (hist->current && hist->current->next) {
-    hist->current = hist->current->next;
-    return (char *)hist->current->ptr;
+  if (this->list->last) {
+    this->current = this->list->last;
+    return (const char *)this->current->ptr;
   }
   return NULL;
 }
 
-const char *prevHist(Hist *hist) {
-  if (hist == NULL || hist->list == NULL)
+const char *Hist::nextHist() {
+  if (this->list == NULL)
     return NULL;
-  if (hist->current && hist->current->prev) {
-    hist->current = hist->current->prev;
-    return (char *)hist->current->ptr;
+  if (this->current && this->current->next) {
+    this->current = this->current->next;
+    return (char *)this->current->ptr;
+  }
+  return NULL;
+}
+
+const char *Hist::prevHist() {
+  if (this->list == NULL)
+    return NULL;
+  if (this->current && this->current->prev) {
+    this->current = this->current->prev;
+    return (char *)this->current->ptr;
   }
   return NULL;
 }

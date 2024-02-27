@@ -643,9 +643,9 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
   res->type = "text/plain";
 }
 
-std::shared_ptr<Buffer> loadHTMLString(Str *page) {
+std::shared_ptr<Buffer> loadHTMLString(std::string_view html) {
   auto newBuf = Buffer::create();
-  loadHTMLstream(&newBuf->layout, newBuf->res.get(), page->ptr, true);
+  loadHTMLstream(&newBuf->layout, newBuf->res.get(), html, true);
   return newBuf;
 }
 

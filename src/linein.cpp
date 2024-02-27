@@ -149,9 +149,9 @@ void LineInput::onBreak() {
     SKIP_BLANKS(p);
   }
   if (use_hist && !(flag & IN_URL) && *p != '\0') {
-    const char *q = lastHist(CurrentHist);
+    const char *q = CurrentHist->lastHist();
     if (!q || strcmp(q, p)) {
-      pushHist(CurrentHist, p);
+      CurrentHist->pushHist(p);
     }
   }
   if (flag & IN_FILENAME) {
@@ -778,17 +778,17 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
 }
 
 void LineInput::_prev(char) {
-  Hist *hist = CurrentHist;
-  const char *p;
-
   if (!use_hist)
     return;
+
+  Hist *hist = CurrentHist;
+  const char *p;
   if (strCurrentBuf) {
-    p = prevHist(hist);
+    p = hist->prevHist();
     if (p == NULL)
       return;
   } else {
-    p = lastHist(hist);
+    p = hist->lastHist();
     if (p == NULL)
       return;
     strCurrentBuf = strBuf;
@@ -801,14 +801,14 @@ void LineInput::_prev(char) {
 }
 
 void LineInput::_next(char) {
-  Hist *hist = CurrentHist;
-  const char *p;
-
   if (!use_hist)
     return;
+
   if (strCurrentBuf == NULL)
     return;
-  p = nextHist(hist);
+
+  Hist *hist = CurrentHist;
+  auto p = hist->nextHist();
   if (p) {
     if (DecodeURL && (cm_mode & CPL_URL))
       p = url_decode0(p);

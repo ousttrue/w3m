@@ -600,7 +600,7 @@ App::App() : _screen(new Screen) {
   _tabs.push_back(TabBuffer::create());
 
   // default dispatcher
-  _dispatcher.push([this](const char *buf, int len) {
+  _dispatcher.push([this](const char *buf, size_t len) {
     this->dispatchPtyIn(buf, len);
     // never exit
     return true;
@@ -620,7 +620,7 @@ App::~App() {
   // term_title(""); /* XXX */
   save_cookies();
   if (UseHistory && SaveURLHist) {
-    saveHistory(URLHist, URLHistSize);
+    URLHist->saveHistory(URLHistSize);
   }
 
   for (auto &f : _fileToDelete) {
@@ -749,13 +749,13 @@ bool App::initialize() {
   sync_with_option();
   initCookie();
 
-  LoadHist = newHist();
-  SaveHist = newHist();
-  ShellHist = newHist();
-  TextHist = newHist();
-  URLHist = newHist();
+  LoadHist = Hist::newHist();
+  SaveHist = Hist::newHist();
+  ShellHist = Hist::newHist();
+  TextHist = Hist::newHist();
+  URLHist = Hist::newHist();
   if (UseHistory) {
-    loadHistory(URLHist);
+    URLHist->loadHistory();
   }
 
   return true;
@@ -1450,7 +1450,7 @@ std::shared_ptr<Buffer> App::message_list_panel(void) {
   else
     Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
   Strcat_charp(tmp, "</table></body></html>");
-  return loadHTMLString(tmp);
+  return loadHTMLString(tmp->ptr);
 }
 
 void App::disp_err_message(const char *s) {

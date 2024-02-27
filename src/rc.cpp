@@ -969,7 +969,7 @@ std::shared_ptr<Buffer> load_option_panel(void) {
     Strcat_charp(src, "</table><hr width=50%>");
   }
   Strcat_charp(src, "</table></form></body></html>");
-  buf = loadHTMLString(src);
+  buf = loadHTMLString(src->ptr);
   return buf;
 }
 

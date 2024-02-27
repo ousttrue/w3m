@@ -173,7 +173,7 @@ private:
 public:
   static table *newTable();
   static table *begin_table(int border, int spacing, int padding, int vspace);
-  int feed_table(struct HtmlParser *parser, const char *line,
+  int feed_table(class HtmlParser *parser, const char *line,
                  struct table_mode *mode, int width, int internal);
   void end_table();
   void pushTable(struct table *);
@@ -181,7 +181,7 @@ public:
                    struct html_feed_environ *h_env);
 
 private:
-  int feed_table_tag(struct HtmlParser *parser, const char *line,
+  int feed_table_tag(class HtmlParser *parser, const char *line,
                      struct table_mode *mode, int width, struct HtmlTag *tag);
 
   int table_rule_width() const;

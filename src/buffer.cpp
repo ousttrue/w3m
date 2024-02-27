@@ -176,7 +176,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
                    html_quote(this->res->ssl_certificate), "</pre>\n", nullptr);
 
   Strcat_charp(tmp, "</body></html>");
-  auto newbuf = loadHTMLString(tmp);
+  auto newbuf = loadHTMLString(tmp->ptr);
   return newbuf;
 }
 
@@ -314,7 +314,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  return loadHTMLString(tmp);
+  return loadHTMLString(tmp->ptr);
 }
 
 void Buffer::saveBufferInfo() {
@@ -367,7 +367,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   auto buf = Buffer::create();
   *buf = *this;
   buf->res->currentURL.label = label;
-  pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
+  URLHist->pushHashHist(buf->res->currentURL.to_Str().c_str());
   // this->pushBuffer(buf);
   buf->layout.gotoLine(a->start.line);
   if (label_topline)
@@ -407,7 +407,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   auto buf = Buffer::create(res);
 
   auto pu = urlParse(url, base);
-  pushHashHist(URLHist, pu.to_Str().c_str());
+  URLHist->pushHashHist(pu.to_Str().c_str());
 
   return buf;
 }
@@ -545,9 +545,10 @@ Buffer::followForm(Anchor *a, bool submit) {
         App::instance().screen(), "TEXT:", fi->value ? fi->value->ptr : nullptr,
         TextHist);
     input->draw();
-    App::instance().pushDispatcher([input](const char *buf, size_t len) -> bool {
-      return input->dispatch(buf, len);
-    });
+    App::instance().pushDispatcher(
+        [input](const char *buf, size_t len) -> bool {
+          return input->dispatch(buf, len);
+        });
 
     auto p = co_await input;
     if (p.size()) {
@@ -705,7 +706,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
                                        bool relative) {
   std::optional<Url> current;
   if (!url) {
-    Hist *hist = copyHist(URLHist);
+    auto hist = URLHist->copyHist();
 
     current = this->res->getBaseURL();
     if (current) {
@@ -713,7 +714,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
       if (DefaultURLString == DEFAULT_URL_CURRENT)
         url = url_decode0(c_url.c_str());
       else
-        pushHist(hist, c_url);
+        hist->pushHist(c_url);
     }
     auto a = this->layout.retrieveCurrentAnchor();
     if (a) {
@@ -722,7 +723,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url.c_str());
       else
-        pushHist(hist, a_url);
+        hist->pushHist(a_url);
     }
     // url = inputLineHist(prompt, url, IN_URL, hist);
     if (url != nullptr) {
@@ -755,6 +756,6 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
   }
 
   auto p_url = urlParse(url, current);
-  pushHashHist(URLHist, p_url.to_Str().c_str());
+  URLHist->pushHashHist(p_url.to_Str().c_str());
   return this->cmd_loadURL(url, current, option, nullptr);
 }

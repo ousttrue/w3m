@@ -2,21 +2,37 @@
 #include "hash.h"
 #include "textlist.h"
 #include <string_view>
-#include <memory>
-
-#define HIST_LIST_MAX GENERAL_LIST_MAX
-#define HIST_HASH_SIZE 127
+#include <gc_cpp.h>
 
 typedef ListItem HistItem;
-
 typedef GeneralList HistList;
 
-struct Hist {
-  HistList *list;
-  HistItem *current;
-  Hash_sv *hash;
-  long long mtime;
+struct Hist : public gc_cleanup {
+  HistList *list = nullptr;
+  HistItem *current = nullptr;
+  Hash_sv *hash = nullptr;
+  long long mtime = {};
+
+private:
+  Hist();
+
+public:
+  static Hist *newHist();
+  bool loadHistory();
+  void saveHistory(int size);
+  Hist *copyHist() const;
+
+  const char *nextHist();
+  const char *prevHist();
+  const char *lastHist();
+
+  HistItem *pushHist(std::string_view ptr);
+
+  HistItem *pushHashHist(const char *ptr);
+  HistItem *getHashHist(const char *ptr);
+  std::string toHtml() const;
 };
+
 extern Hist *LoadHist;
 extern Hist *SaveHist;
 extern Hist *URLHist;
@@ -25,17 +41,3 @@ extern Hist *TextHist;
 extern int UseHistory;
 extern int URLHistSize;
 extern int SaveURLHist;
-
-Hist *newHist(void);
-Hist *copyHist(Hist *hist);
-HistItem *unshiftHist(Hist *hist, const char *ptr);
-HistItem *pushHist(Hist *hist, std::string_view ptr);
-HistItem *pushHashHist(Hist *hist, const char *ptr);
-HistItem *getHashHist(Hist *hist, const char *ptr);
-const char *lastHist(Hist *hist);
-const char *nextHist(Hist *hist);
-const char *prevHist(Hist *hist);
-int loadHistory(Hist *hist);
-void saveHistory(Hist *hist, int size);
-struct Buffer;
-std::shared_ptr<Buffer> historyBuffer(Hist *hist);

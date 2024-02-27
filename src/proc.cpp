@@ -1089,11 +1089,11 @@ std::shared_ptr<CoroutineState<void>> goHome() {
     SKIP_BLANKS(url);
     url = Strnew(url_quote(url))->ptr;
     auto p_url = urlParse(url);
-    pushHashHist(URLHist, p_url.to_Str().c_str());
+    URLHist->pushHashHist(p_url.to_Str().c_str());
     if (auto buf =
             CurrentTab->currentBuffer()->cmd_loadURL(url, {}, {}, nullptr)) {
       CurrentTab->pushBuffer(buf);
-      pushHashHist(URLHist, buf->res->currentURL.to_Str().c_str());
+      URLHist->pushHashHist(buf->res->currentURL.to_Str().c_str());
     }
   }
   co_return;
@@ -1219,7 +1219,8 @@ std::shared_ptr<CoroutineState<void>> cooLst() {
 // HISTORY
 //"Show browsing history"
 std::shared_ptr<CoroutineState<void>> ldHist() {
-  if (auto buf = historyBuffer(URLHist)) {
+  auto html = URLHist->toHtml();
+  if (auto buf = loadHTMLString(html)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1443,11 +1444,10 @@ std::shared_ptr<CoroutineState<void>> reshape() {
 
     LineLayout sbuf = CurrentTab->currentBuffer()->layout;
     auto body = CurrentTab->currentBuffer()->res->getBody();
-    if (CurrentTab->currentBuffer()->res->is_html_type()){
+    if (CurrentTab->currentBuffer()->res->is_html_type()) {
       loadHTMLstream(&CurrentTab->currentBuffer()->layout,
                      CurrentTab->currentBuffer()->res.get(), body);
-    }
-    else{
+    } else {
       loadBuffer(&CurrentTab->currentBuffer()->layout,
                  CurrentTab->currentBuffer()->res.get(), body);
     }

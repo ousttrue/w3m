@@ -207,7 +207,7 @@ void cleanup_line(Str *s, CleanupMode mode);
 extern int is_boundary(unsigned char *, unsigned char *);
 
 struct Buffer;
-std::shared_ptr<Buffer> loadHTMLString(Str *page);
+std::shared_ptr<Buffer> loadHTMLString(std::string_view html);
 std::shared_ptr<Buffer> getshell(const char *cmd);
 
 const char *html_quote(const char *str);
