@@ -367,7 +367,6 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
                          const HttpOption &option, FormList *request) {
   hr->status = HTST_NORMAL;
   int sock = -1;
-  SSL *sslh = nullptr;
   Str *tmp = nullptr;
   if (hr->url.file.empty()) {
     hr->url.file = "/";
@@ -379,6 +378,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     hr->method = HttpMethod::HEAD;
   }
 
+  SslConnection sslh = {};
   {
     sock = openSocket(hr->url.host.c_str(), schemaNumToName(hr->url.schema),
                       hr->url.port);
@@ -387,8 +387,8 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       return;
     }
     if (hr->url.schema == SCM_HTTPS) {
-      if (!(sslh = openSSLHandle(sock, hr->url.host.c_str(),
-                                 &this->ssl_certificate))) {
+      sslh = openSSLHandle(sock, hr->url.host.c_str());
+      if (!sslh.handle) {
         hr->status = HTST_MISSING;
         return;
       }
@@ -398,9 +398,9 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     hr->status = HTST_NORMAL;
   }
   if (hr->url.schema == SCM_HTTPS) {
-    this->stream = newSSLStream(sslh, sock);
-    if (sslh)
-      SSL_write(sslh, tmp->ptr, tmp->length);
+    this->stream = newSSLStream(sslh.handle, sock);
+    if (sslh.handle)
+      SSL_write(sslh.handle, tmp->ptr, tmp->length);
     else {
 #ifdef _MSC_VER
       send(sock, tmp->ptr, tmp->length, {});
@@ -413,7 +413,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       if (ff == nullptr) {
         return;
       }
-      if (sslh)
+      if (sslh.handle)
         fputs("HTTPS: request via SSL\n", ff);
       else
         fputs("HTTPS: request without SSL\n", ff);
@@ -422,8 +422,8 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     }
     if (hr->method == HttpMethod::POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
-      if (sslh)
-        SSL_write_from_file(sslh, request->body);
+      if (sslh.handle)
+        SSL_write_from_file(sslh.handle, request->body);
       else
         write_from_file(sock, request->body);
     }

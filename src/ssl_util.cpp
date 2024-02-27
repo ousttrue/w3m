@@ -239,21 +239,15 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
   }
   return ret;
 }
-static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
-  BIO *bp;
-  X509 *x;
-  char *p;
-  int len;
-  Str *s;
-  char buf[2048];
-  Str *amsg = NULL;
-  Str *emsg;
-  const char *ans;
 
-  if (ssl == NULL)
+static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
+  if (!ssl) {
     return NULL;
-  x = SSL_get_peer_certificate(ssl);
+  }
+
+  auto x = SSL_get_peer_certificate(ssl);
   if (x == NULL) {
+    const char *ans;
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
@@ -261,6 +255,8 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
       // ans = inputAnswer(emsg->ptr);
       ans = "y";
     }
+
+    Str *amsg = NULL;
     if (ans && TOLOWER(*ans) == 'y')
       amsg = Strnew_charp("Accept SSL session without any peer certificate");
     else {
@@ -273,7 +269,8 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     if (amsg)
       App::instance().disp_err_message(amsg->ptr);
     ssl_accept_this_site(hostname);
-    s = amsg ? amsg : Strnew_charp("valid certificate");
+
+    auto s = amsg ? amsg : Strnew_charp("valid certificate");
     return s;
   }
 
@@ -281,10 +278,12 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
    * The chain length is automatically checked by OpenSSL when we
    * set the verify depth in the ctx.
    */
+  Str *amsg = NULL;
   if (ssl_verify_server) {
     long verr;
     if ((verr = SSL_get_verify_result(ssl)) != X509_V_OK) {
       const char *em = X509_verify_cert_error_string(verr);
+      const char *ans;
       if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
         ans = "y";
       else {
@@ -305,8 +304,9 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     }
   }
 
-  emsg = ssl_check_cert_ident(x, hostname);
+  auto emsg = ssl_check_cert_ident(x, hostname);
   if (emsg != NULL) {
+    const char *ans;
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
@@ -334,9 +334,11 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
   }
 
   ssl_accept_this_site(hostname);
-  s = amsg ? amsg : Strnew_charp("valid certificate");
+  auto s = amsg ? amsg : Strnew_charp("valid certificate");
   Strcat_charp(s, "\n");
   auto xn = X509_get_subject_name(x);
+
+  char buf[2048];
   if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
     Strcat_charp(s, " subject=<unknown>");
   else
@@ -348,17 +350,18 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     Strcat_m_charp(s, ": issuer=", buf, NULL);
   Strcat_charp(s, "\n\n");
 
-  bp = BIO_new(BIO_s_mem());
+  auto bp = BIO_new(BIO_s_mem());
   X509_print(bp, x);
-  len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, (char *)&p);
+  char *p;
+  auto len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, (char *)&p);
   Strcat_charp_n(s, p, len);
   BIO_free_all(bp);
   X509_free(x);
   return s;
 }
 
-SSL *openSSLHandle(int sock, const char *hostname, const char **p_cert) {
-  SSL *handle = nullptr;
+SslConnection openSSLHandle(int sock, const char *hostname) {
+  SslConnection con = {};
   static const char *old_ssl_forbid_method = nullptr;
   static int old_ssl_verify_server = -1;
 
@@ -479,35 +482,37 @@ SSL *openSSLHandle(int sock, const char *hostname, const char **p_cert) {
     }
 #endif /* SSLEAY_VERSION_NUMBER >= 0x0800 */
   }
-  handle = SSL_new(ssl_ctx);
-  SSL_set_fd(handle, sock);
+  con.handle = SSL_new(ssl_ctx);
+  SSL_set_fd(con.handle, sock);
 #if SSLEAY_VERSION_NUMBER >= 0x00905100
   init_PRNG();
 #endif /* SSLEAY_VERSION_NUMBER >= 0x00905100 */
 #if (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT)
-  SSL_set_tlsext_host_name(handle, hostname);
+  SSL_set_tlsext_host_name(con.handle, hostname);
 #endif /* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) \
         */
-  if (SSL_connect(handle) > 0) {
-    Str *serv_cert = ssl_get_certificate(handle, hostname);
+  if (SSL_connect(con.handle) > 0) {
+    Str *serv_cert = ssl_get_certificate(con.handle, hostname);
     if (serv_cert) {
-      *p_cert = serv_cert->ptr;
-      return handle;
+      con.cert = serv_cert->ptr;
+      return con;
     }
     close(sock);
-    SSL_free(handle);
-    return NULL;
+    SSL_free(con.handle);
+    return {};
   }
+
 eend:
   close(sock);
-  if (handle)
-    SSL_free(handle);
+  if (con.handle)
+    SSL_free(con.handle);
   App::instance().disp_err_message(
       Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
               ERR_error_string(ERR_get_error(), NULL))
           ->ptr);
-  return NULL;
+  return {};
 }
+
 void free_ssl_ctx() {
   if (ssl_ctx) {
     SSL_CTX_free(ssl_ctx);
