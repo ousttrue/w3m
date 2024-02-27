@@ -367,7 +367,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   auto buf = Buffer::create();
   *buf = *this;
   buf->res->currentURL.label = label;
-  URLHist->pushHashHist(buf->res->currentURL.to_Str().c_str());
+  URLHist->push(buf->res->currentURL.to_Str());
   // this->pushBuffer(buf);
   buf->layout.gotoLine(a->start.line);
   if (label_topline)
@@ -407,7 +407,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   auto buf = Buffer::create(res);
 
   auto pu = urlParse(url, base);
-  URLHist->pushHashHist(pu.to_Str().c_str());
+  URLHist->push(pu.to_Str().c_str());
 
   return buf;
 }
@@ -714,7 +714,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
       if (DefaultURLString == DEFAULT_URL_CURRENT)
         url = url_decode0(c_url.c_str());
       else
-        hist->pushHist(c_url);
+        hist->push(c_url);
     }
     auto a = this->layout.retrieveCurrentAnchor();
     if (a) {
@@ -723,7 +723,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url.c_str());
       else
-        hist->pushHist(a_url);
+        hist->push(a_url);
     }
     // url = inputLineHist(prompt, url, IN_URL, hist);
     if (url != nullptr) {
@@ -756,6 +756,6 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
   }
 
   auto p_url = urlParse(url, current);
-  URLHist->pushHashHist(p_url.to_Str().c_str());
+  URLHist->push(p_url.to_Str());
   return this->cmd_loadURL(url, current, option, nullptr);
 }

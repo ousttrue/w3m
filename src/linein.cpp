@@ -33,7 +33,8 @@ static int strCmp(const void *s1, const void *s2) {
 }
 
 LineInput::LineInput(const std::shared_ptr<Screen> &screen, const char *prompt,
-                     Hist *hist, const OnInput &_onInput, IncFunc incrfunc)
+                     const std::shared_ptr<Hist> &hist, const OnInput &_onInput,
+                     IncFunc incrfunc)
     : _screen(screen), prompt(prompt), incrfunc(incrfunc), onInput(_onInput) {
   opos = get_strwidth(prompt);
   epos = (_screen->COLS() - 2) - opos;
@@ -93,7 +94,8 @@ LineInput::LineInput(const std::shared_ptr<Screen> &screen, const char *prompt,
 std::shared_ptr<LineInput>
 LineInput::inputLineHistSearch(const std::shared_ptr<Screen> &screen,
                                const char *prompt, const char *def_str,
-                               Hist *hist, InputFlags flag, IncFunc incrfunc) {
+                               const std::shared_ptr<Hist> &hist,
+                               InputFlags flag, IncFunc incrfunc) {
 
   auto input = std::shared_ptr<LineInput>(
       new LineInput(screen, prompt, hist, {}, incrfunc));
@@ -149,9 +151,9 @@ void LineInput::onBreak() {
     SKIP_BLANKS(p);
   }
   if (use_hist && !(flag & IN_URL) && *p != '\0') {
-    const char *q = CurrentHist->lastHist();
-    if (!q || strcmp(q, p)) {
-      CurrentHist->pushHist(p);
+    auto q = CurrentHist->lastHist();
+    if (q.empty() || q == p) {
+      CurrentHist->push(p);
     }
   }
   if (flag & IN_FILENAME) {
@@ -781,21 +783,21 @@ void LineInput::_prev(char) {
   if (!use_hist)
     return;
 
-  Hist *hist = CurrentHist;
-  const char *p;
+  auto hist = CurrentHist;
+  std::string_view p;
   if (strCurrentBuf) {
     p = hist->prevHist();
-    if (p == NULL)
+    if (p.empty())
       return;
   } else {
     p = hist->lastHist();
-    if (p == NULL)
+    if (p.empty())
       return;
     strCurrentBuf = strBuf;
   }
   if (DecodeURL && (cm_mode & CPL_URL))
-    p = url_decode0(p);
-  strBuf = Strnew_charp(p);
+    p = url_decode0(Strnew(p)->ptr);
+  strBuf = Strnew(p);
   CLen = CPos = setStrType(strBuf, strProp);
   offset = 0;
 }
@@ -807,12 +809,12 @@ void LineInput::_next(char) {
   if (strCurrentBuf == NULL)
     return;
 
-  Hist *hist = CurrentHist;
+  auto hist = CurrentHist;
   auto p = hist->nextHist();
-  if (p) {
+  if (p.size()) {
     if (DecodeURL && (cm_mode & CPL_URL))
-      p = url_decode0(p);
-    strBuf = Strnew_charp(p);
+      p = url_decode0(Strnew(p)->ptr);
+    strBuf = Strnew(p);
   } else {
     strBuf = strCurrentBuf;
     strCurrentBuf = NULL;

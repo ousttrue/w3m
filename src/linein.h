@@ -1,5 +1,5 @@
 #pragma once
-#include "line.h"
+#include "html/lineprop.h"
 #include <functional>
 #include <string>
 #include <memory>
@@ -52,7 +52,7 @@ class LineInput {
   InputFlags flag = {};
 
   std::array<KeyCallback, 32> InputKeymap;
-  Hist *CurrentHist = nullptr;
+  std::shared_ptr<Hist> CurrentHist;
   IncFunc incrfunc = nullptr;
 
   Str *strCurrentBuf = nullptr;
@@ -121,7 +121,8 @@ class LineInput {
   int terminated(unsigned char c);
 
   LineInput(const std::shared_ptr<Screen> &screen, const char *prompt,
-            Hist *hist, const OnInput &onInput, IncFunc incrfunc);
+            const std::shared_ptr<Hist> &hist, const OnInput &onInput,
+            IncFunc incrfunc);
 
 public:
   OnInput onInput;
@@ -133,12 +134,13 @@ public:
 
   static std::shared_ptr<LineInput>
   inputLineHistSearch(const std::shared_ptr<Screen> &screen, const char *prompt,
-                      const char *def_str, Hist *hist, InputFlags flag,
-                      IncFunc incrfunc = {});
+                      const char *def_str, const std::shared_ptr<Hist> &hist,
+                      InputFlags flag, IncFunc incrfunc = {});
 
   static std::shared_ptr<LineInput>
   inputLineHist(const std::shared_ptr<Screen> &screen, const char *prompt,
-                const char *def_str, Hist *hist, InputFlags f) {
+                const char *def_str, const std::shared_ptr<Hist> &hist,
+                InputFlags f) {
     return inputLineHistSearch(screen, prompt, def_str, hist, f);
   }
 
@@ -156,7 +158,7 @@ public:
 
   static std::shared_ptr<LineInput>
   inputStrHist(const std::shared_ptr<Screen> &screen, const char *prompt,
-               const char *d, Hist *hist) {
+               const char *d, const std::shared_ptr<Hist> &hist) {
     return inputLineHist(screen, prompt, d, hist, IN_STRING);
   }
 

@@ -1,5 +1,6 @@
 #include "app.h"
 #include "url_quote.h"
+#include "textlist.h"
 #include "etc.h"
 #include "ctrlcode.h"
 #include "proto.h"

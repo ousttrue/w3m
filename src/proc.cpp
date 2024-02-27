@@ -1089,11 +1089,11 @@ std::shared_ptr<CoroutineState<void>> goHome() {
     SKIP_BLANKS(url);
     url = Strnew(url_quote(url))->ptr;
     auto p_url = urlParse(url);
-    URLHist->pushHashHist(p_url.to_Str().c_str());
+    URLHist->push(p_url.to_Str().c_str());
     if (auto buf =
             CurrentTab->currentBuffer()->cmd_loadURL(url, {}, {}, nullptr)) {
       CurrentTab->pushBuffer(buf);
-      URLHist->pushHashHist(buf->res->currentURL.to_Str().c_str());
+      URLHist->push(buf->res->currentURL.to_Str().c_str());
     }
   }
   co_return;
