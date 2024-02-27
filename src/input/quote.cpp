@@ -318,7 +318,7 @@ std::string_view remove_space(std::string_view str) {
 void make_domain_list(std::list<std::string> &list, const char *domain_list) {
   list.clear();
   auto p = domain_list;
-  if(!p){
+  if (!p) {
     return;
   }
   while (*p) {
@@ -340,4 +340,56 @@ void make_domain_list(std::list<std::string> &list, const char *domain_list) {
       p++;
     }
   }
+}
+
+std::string cleanupName(std::string_view name) {
+  std::string buf(name.begin(), name.end());
+  auto p = buf.data();
+  auto q = name.data();
+  while (q != name.data() + name.size()) {
+    if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
+      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+        /* ../../       */
+        p += 3;
+        q += 3;
+      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+        /* ../../../    */
+        p += 3;
+        q += 3;
+      } else {
+        while (p != buf && *--p != '/')
+          ; /* ->foo/FOO */
+        *p = '\0';
+        q += 3;
+        buf += q;
+      }
+    } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
+      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+        /* ../..        */
+      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+        /* ../../..     */
+      } else {
+        while (p != buf && *--p != '/')
+          ; /* ->foo/ */
+        *++p = '\0';
+      }
+      break;
+    } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
+      *p = '\0';                            /* -> foo/bar           */
+      q += 2;
+      buf += q;
+    } else if (strcmp(p, "/.") == 0) { /* foo/. */
+      *++p = '\0';                     /* -> foo/              */
+      break;
+    } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
+      /* -> foo/bar           */
+      *p = '\0';
+      q++;
+      buf += q;
+    } else {
+      p++;
+      q++;
+    }
+  }
+  return buf;
 }

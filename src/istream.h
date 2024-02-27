@@ -35,7 +35,7 @@ public:
 
 std::shared_ptr<input_stream> newInputStream(int des);
 std::shared_ptr<input_stream> newSSLStream(SSL *ssl, int sock);
-std::shared_ptr<input_stream> openIS(const char *path);
+std::shared_ptr<input_stream> openIS(const std::string &path);
 using FileClose = int (*)(FILE *);
 std::shared_ptr<input_stream> newFileStream(FILE *f, FileClose closep);
 std::shared_ptr<input_stream> newStrStream(std::string_view str);

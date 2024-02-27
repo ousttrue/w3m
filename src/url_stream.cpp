@@ -100,8 +100,8 @@ void UrlStream::add_index_file(Url *pu) {
   }
 
   for (auto &ti : index_file_list) {
-    const char *p =
-        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti.c_str()), nullptr)
+    std::string p =
+        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti).c_str(), nullptr)
             ->ptr;
     p = cleanupName(p);
     auto q = cleanupName(file_unquote(p));
@@ -114,13 +114,16 @@ void UrlStream::add_index_file(Url *pu) {
   }
 }
 
-static int dir_exist(const char *path) {
-  struct stat stbuf;
+static bool dir_exist(const std::string &path) {
+  if (path.empty()) {
+    return false;
+  }
 
-  if (path == nullptr || *path == '\0')
-    return 0;
-  if (stat(path, &stbuf) == -1)
-    return 0;
+  struct stat stbuf;
+  if (stat(path.c_str(), &stbuf) == -1) {
+    return false;
+  }
+
   return IS_DIRECTORY(stbuf.st_mode);
 }
 
@@ -178,7 +181,7 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
       auto q = cleanupName(file_unquote(p));
       if (dir_exist(q)) {
         hr->url.file = p;
-        hr->url.real_file = (char *)q;
+        hr->url.real_file = q;
         add_index_file(&hr->url);
         if (!this->stream) {
           return;
@@ -187,7 +190,7 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
         this->openFile(q);
         if (this->stream) {
           hr->url.file = p;
-          hr->url.real_file = (char *)q;
+          hr->url.real_file = q;
         }
       }
     }
@@ -558,21 +561,24 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
   return hr;
 }
 
-static bool exists(const char *path) {
-  if (path == nullptr || *path == '\0') {
+static bool exists(const std::string &path) {
+  if (path.empty()) {
     return false;
   }
+
   struct stat stbuf;
-  if (stat(path, &stbuf) == -1) {
+  if (stat(path.c_str(), &stbuf) == -1) {
     return false;
   }
+
   if (NOT_REGULAR(stbuf.st_mode)) {
     return false;
   }
+
   return true;
 }
 
-void UrlStream::openFile(const char *path) {
+void UrlStream::openFile(const std::string &path) {
 
   this->guess_type = {};
   this->stream = nullptr;
@@ -737,58 +743,6 @@ int UrlStream::doFileSave(const char *defstr) {
   }
   return 0;
 #endif
-}
-
-const char *cleanupName(const char *name) {
-  auto buf = allocStr(name, -1);
-  auto p = buf;
-  auto q = name;
-  while (*q != '\0') {
-    if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
-      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-        /* ../../       */
-        p += 3;
-        q += 3;
-      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-        /* ../../../    */
-        p += 3;
-        q += 3;
-      } else {
-        while (p != buf && *--p != '/')
-          ; /* ->foo/FOO */
-        *p = '\0';
-        q += 3;
-        strcat(buf, q);
-      }
-    } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
-      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-        /* ../..        */
-      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-        /* ../../..     */
-      } else {
-        while (p != buf && *--p != '/')
-          ; /* ->foo/ */
-        *++p = '\0';
-      }
-      break;
-    } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
-      *p = '\0';                            /* -> foo/bar           */
-      q += 2;
-      strcat(buf, q);
-    } else if (strcmp(p, "/.") == 0) { /* foo/. */
-      *++p = '\0';                     /* -> foo/              */
-      break;
-    } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
-      /* -> foo/bar           */
-      *p = '\0';
-      q++;
-      strcat(buf, q);
-    } else {
-      p++;
-      q++;
-    }
-  }
-  return buf;
 }
 
 std::string UrlStream::uncompress_stream() {

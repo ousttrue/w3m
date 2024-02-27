@@ -8,7 +8,7 @@ int open_pipe_rw(FILE **fr, FILE **fw);
 const char *file_to_url(const char *file);
 const char *lastFileName(const char *path);
 const char *mydirname(const char *s);
-const char *expandName(const char *name);
+std::string expandName(std::string_view name);
 const char *expandPath(const char *name);
 void mySystem(const char *command, int background);
 struct Str;

@@ -4,7 +4,6 @@
 #include "rc.h"
 #include "mimetypes.h"
 #include "myctype.h"
-#include "url_stream.h"
 #include "Str.h"
 #include "alloc.h"
 #include <stdio.h>
@@ -85,12 +84,12 @@ compress_application_type(CompressionType compression) {
   return {};
 }
 
-const compression_decoder *check_compression(const char *path) {
-  if (!path) {
+const compression_decoder *check_compression(const std::string &path) {
+  if (path.empty()) {
     return {};
   }
 
-  auto len = strlen(path);
+  auto len = path.size();
   for (auto &d : compression_decoders) {
     if (d.ext.empty()) {
       continue;
@@ -103,13 +102,14 @@ const compression_decoder *check_compression(const char *path) {
   return {};
 }
 
-std::tuple<std::string, std::string> uncompressed_file_type(const char *path) {
-  if (path == nullptr) {
+std::tuple<std::string, std::string>
+uncompressed_file_type(const std::string &path) {
+  if (path.empty()) {
     return {};
   }
 
   size_t slen = 0;
-  auto len = strlen(path);
+  auto len = path.size();
   compression_decoder *d = nullptr;
   for (auto &_d : compression_decoders) {
     auto d = &_d;
@@ -123,7 +123,7 @@ std::tuple<std::string, std::string> uncompressed_file_type(const char *path) {
     return {};
   }
 
-  auto fn = Strnew_charp(path);
+  auto fn = Strnew(path);
   Strshrink(fn, slen);
   auto t0 = guessContentType(fn->ptr);
   if (t0 == nullptr) {
@@ -189,24 +189,6 @@ const char *acceptableEncoding() {
     }
   }
   return encodings.c_str();
-}
-
-void process_compression(Str *lineBuf2, UrlStream *uf) {
-  auto p = lineBuf2->ptr + 17;
-  while (IS_SPACE(*p))
-    p++;
-  uf->compression = CMP_NOCOMPRESS;
-  for (auto &d : compression_decoders) {
-    for (auto e = d.encodings; *e != nullptr; e++) {
-      if (strncasecmp(p, *e, strlen(*e)) == 0) {
-        uf->compression = d.type;
-        break;
-      }
-    }
-    if (uf->compression != CMP_NOCOMPRESS)
-      break;
-  }
-  uf->content_encoding = uf->compression;
 }
 
 std::string filename_extension(const std::string_view path, bool is_url) {

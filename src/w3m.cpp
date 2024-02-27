@@ -66,10 +66,10 @@ Url urlParse(const char *src, std::optional<Url> current) {
   }
 
   if (url.schema == SCM_LOCAL) {
-    auto q = expandName(file_unquote(url.file.c_str()));
+    auto q = expandName(file_unquote(url.file));
     if (IS_ALPHA(q[0]) && q[1] == ':') {
-      std::string drive(q, q + 2);
-      drive += file_quote(q + 2);
+      std::string drive = q.substr(0, 2);
+      drive += file_quote(q.substr(2));
       url.file = drive;
     } else {
       url.file = file_quote(q);

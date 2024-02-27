@@ -5,21 +5,14 @@
 
 extern char *cgi_bin;
 
-#ifndef S_IFMT
-#define S_IFMT 0170000
-#endif /* not S_IFMT */
-#ifndef S_IFREG
-#define S_IFREG 0100000
-#endif /* not S_IFREG */
+// #ifndef S_IFMT
+// #define S_IFMT 0170000
+// #endif /* not S_IFMT */
+// #ifndef S_IFREG
+// #define S_IFREG 0100000
+// #endif /* not S_IFREG */
 
 #define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
-
-#ifndef S_ISDIR
-#ifndef S_IFDIR
-#define S_IFDIR 0040000
-#endif /* not S_IFDIR */
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
-#endif /* not S_ISDIR */
 
 #ifdef HAVE_READLINK
 #ifndef S_IFLNK

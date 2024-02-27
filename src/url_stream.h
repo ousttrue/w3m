@@ -39,7 +39,7 @@ struct UrlStream {
   UrlStream(UrlSchema schema, const std::shared_ptr<input_stream> &stream = {})
       : schema(schema), stream(stream) {}
 
-  void openFile(const char *path);
+  void openFile(const std::string &path);
 
   std::shared_ptr<HttpRequest> openURL(std::string_view url,
                                        std::optional<Url> current,
@@ -60,6 +60,3 @@ private:
 
 int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf);
 
-const char *file_quote(const char *str);
-const char *file_unquote(const char *str);
-const char *cleanupName(const char *name);

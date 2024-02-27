@@ -39,14 +39,9 @@ extern std::vector<compression_decoder> compression_decoders;
 
 const compression_decoder *
 compress_application_type(CompressionType compression);
-const compression_decoder *check_compression(const char *path);
-std::tuple<std::string, std::string> uncompressed_file_type(const char *path);
+const compression_decoder *check_compression(const std::string &path);
+std::tuple<std::string, std::string>
+uncompressed_file_type(const std::string &path);
 const char *acceptableEncoding();
-
-struct Str;
-struct UrlStream;
-void process_compression(Str *lineBuf2, UrlStream *uf);
-
 std::string filename_extension(const std::string_view patch, bool is_url);
-
 std::vector<uint8_t> decode_gzip(std::span<uint8_t> src);

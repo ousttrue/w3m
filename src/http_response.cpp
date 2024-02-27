@@ -160,7 +160,7 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
       else
         uf->encoding = ENC_7BIT;
     } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-      process_compression(lineBuf2, uf);
+      // process_compression(lineBuf2, uf);
     } else if (use_cookie && accept_cookie &&
                check_cookie_accept_domain(url.host.c_str()) &&
                (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||

@@ -14,7 +14,6 @@
 #include "w3m.h"
 #include "local_cgi.h"
 #include "etc.h"
-#include "url_stream.h"
 #include "screen.h"
 #include "rc.h"
 #include "textlist.h"

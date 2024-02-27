@@ -1,8 +1,8 @@
 #include "etc.h"
+#include "quote.h"
 #include "file_util.h"
 #include "ctrlcode.h"
 #include "app.h"
-#include "url_stream.h"
 #include "html/readbuffer.h"
 #include "w3m.h"
 #include "myctype.h"
@@ -226,7 +226,7 @@ const char *expandPath(const char *name) {
   return name;
 }
 
-const char *expandName(const char *name) {
+std::string expandName(std::string_view name) {
 #ifdef _MSC_VER
   return {};
 #else
@@ -313,7 +313,7 @@ const char *file_to_url(const char *file) {
   if (drive)
     Strcat_charp(tmp, drive);
 #endif
-  Strcat_charp(tmp, file_quote(cleanupName((char *)file)));
+  Strcat(tmp, file_quote(cleanupName(file)));
   return tmp->ptr;
 }
 

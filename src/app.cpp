@@ -43,54 +43,40 @@ static char url_unquote_char(const char **pstr) {
               : -1);
 }
 
-const char *file_quote(const char *str) {
-  Str *tmp = NULL;
-  const char *p;
-  char buf[4];
-
-  for (p = str; *p; p++) {
+std::string file_quote(std::string_view str) {
+  std::stringstream tmp;
+  for (auto p = str.begin(); p != str.end(); ++p) {
     if (is_file_quote(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
+      char buf[4];
       snprintf(buf, sizeof(buf), "%%%02X", (unsigned char)*p);
-      Strcat_charp(tmp, buf);
+      tmp << buf;
     } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
+      tmp << *p;
     }
   }
-  if (tmp) {
-    return tmp->ptr;
-  }
-  return str;
+  return tmp.str();
 }
 
-const char *file_unquote(const char *str) {
-  Str *tmp = NULL;
-  const char *p, *q;
-  int c;
-
-  for (p = str; *p;) {
+std::string file_unquote(std::string_view str) {
+  std::stringstream tmp;
+  for (auto p = str.data(); p != str.data() + str.size();) {
     if (*p == '%') {
-      q = p;
-      c = url_unquote_char(&q);
+      auto q = &*p;
+      int c = url_unquote_char(&q);
       if (c >= 0) {
-        if (tmp == NULL)
-          tmp = Strnew_charp_n(str, (int)(p - str));
-        if (c != '\0' && c != '\n' && c != '\r')
-          Strcat_char(tmp, (char)c);
+        if (c != '\0' && c != '\n' && c != '\r') {
+          tmp << (char)c;
+        }
         p = q;
         continue;
       }
     }
-    if (tmp)
-      Strcat_char(tmp, *p);
+    tmp << *p;
     p++;
   }
-  if (tmp)
-    return tmp->ptr;
-  return str;
+  return tmp.str();
 }
+
 Str *Str_url_unquote(Str *x, int is_form, int safe) {
   Str *tmp = NULL;
   const char *p = x->ptr, *ep = x->ptr + x->length, *q;

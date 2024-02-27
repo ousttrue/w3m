@@ -101,8 +101,8 @@ std::shared_ptr<input_stream> newFileStream(FILE *f, FileClose closep) {
   return std::make_shared<file_stream>(f, closep ? closep : fclose);
 }
 
-std::shared_ptr<input_stream> openIS(const char *path) {
-  return newInputStream(open(path, O_RDONLY));
+std::shared_ptr<input_stream> openIS(const std::string &path) {
+  return newInputStream(::open(path.c_str(), O_RDONLY));
 };
 
 struct str_stream : public input_stream {
