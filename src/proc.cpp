@@ -9,7 +9,6 @@
 #include "search.h"
 #include "mimetypes.h"
 #include "downloadlist.h"
-#include "url_stream.h"
 #include "linein.h"
 #include "cookie.h"
 #include "rc.h"

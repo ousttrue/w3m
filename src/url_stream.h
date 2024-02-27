@@ -8,14 +8,6 @@
 
 #define SAVE_BUF_SIZE 1536
 
-extern char *index_file;
-extern bool PermitSaveToPipe;
-extern bool AutoUncompress;
-extern bool PreserveTimestamp;
-extern bool ArgvIsURL;
-extern bool LocalhostOnly;
-extern bool retryAsHttp;
-
 class input_stream;
 struct Url;
 struct FormList;

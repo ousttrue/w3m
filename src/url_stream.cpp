@@ -43,10 +43,6 @@
 #include <netdb.h>
 #endif
 
-bool ArgvIsURL = true;
-bool LocalhostOnly = false;
-bool retryAsHttp = true;
-
 #ifdef SOCK_DEBUG
 #include <stdarg.h>
 static void sock_log(char *message, ...) {
@@ -73,10 +69,6 @@ int ai_family_order_table[7][3] = {
     {PF_INET6, PF_UNSPEC, PF_UNSPEC},  /* 6:inet6 */
 };
 #endif /* INET6 */
-
-bool PermitSaveToPipe = false;
-bool AutoUncompress = false;
-bool PreserveTimestamp = true;
 
 // static JMP_BUF AbortLoading;
 // static void KeyAbort(SIGNAL_ARG) {

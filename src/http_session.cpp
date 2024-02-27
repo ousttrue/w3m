@@ -69,7 +69,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
     //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
-    auto http_response_code = res->readHeader(&f, hr->url);
+    auto http_response_code = res->readHeader(f.stream, hr->url);
     const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
@@ -105,7 +105,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
           /* abort */
           // TRAP_OFF;
           res->ssl_certificate = f.ssl_certificate;
-          res->page_loaded(hr->url, &f);
+          res->page_loaded(hr->url, f.stream);
           return res;
         }
         hr->add_auth_cookie_flag = true;
@@ -138,6 +138,6 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
   f.guess_type = res->type;
 
   res->ssl_certificate = f.ssl_certificate;
-  res->page_loaded(hr->url, &f);
+  res->page_loaded(hr->url, f.stream);
   return res;
 }

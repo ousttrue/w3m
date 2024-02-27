@@ -1,6 +1,8 @@
 #pragma once
 #include <time.h>
 
+extern bool PermitSaveToPipe;
+
 int _MoveFile(const char *path1, const char *path2);
 int _doFileCopy(const char *tmpf, const char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);

@@ -1,10 +1,14 @@
 #pragma once
 #include <stdio.h>
 #include <memory>
-#include "url_schema.h"
-#include "url.h"
 
 extern const char *rc_dir;
+extern char *index_file;
+extern bool AutoUncompress;
+extern bool PreserveTimestamp;
+extern bool ArgvIsURL;
+extern bool LocalhostOnly;
+extern bool retryAsHttp;
 
 struct Url;
 void show_params(FILE *fp);

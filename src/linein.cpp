@@ -1,13 +1,11 @@
 #include "linein.h"
 #include "html/form_item.h"
 #include "app.h"
-#include "url_stream.h"
 #include "tabbuffer.h"
 #include "etc.h"
 #include "w3m.h"
 #include "alloc.h"
 #include "screen.h"
-#include "rc.h"
 #include "utf8.h"
 #include "buffer.h"
 #include "proto.h"
@@ -22,8 +20,6 @@
 #else
 #include <dirent.h>
 #endif
-// typedef struct direct Directory;
-#include <iostream>
 
 bool space_autocomplete = false;
 bool emacs_like_lineedit = false;

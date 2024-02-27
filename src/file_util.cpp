@@ -1,22 +1,17 @@
 #include "file_util.h"
 #include "quote.h"
-#include "myctype.h"
-#include "downloadlist.h"
 #include "etc.h"
 #include "linein.h"
 #include "Str.h"
-#include "app.h"
-#include "w3m.h"
-#include "url_stream.h"
-#include "istream.h"
 #include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
-#include <string.h>
 #ifdef _MSC_VER
 #else
 #include <utime.h>
 #endif
+
+bool PermitSaveToPipe = false;
 
 int _MoveFile(const char *path1, const char *path2) {
 #ifdef _MSC_VER

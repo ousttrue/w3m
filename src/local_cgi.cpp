@@ -69,30 +69,30 @@ static void writeLocalCookie() {
 Str *localCookie() {
   if (Local_cookie)
     return Local_cookie;
-  srand48((long)New(char) + (long)time(NULL));
+  srand48((long)(uint64_t)New(char) + (long)time(NULL));
   Local_cookie =
       Sprintf("%ld@%s", lrand48(), App::instance().hostname().c_str());
   return Local_cookie;
 }
 
-static int check_local_cgi(const char *file, int status) {
-#ifdef _MSC_VER
-#else
-  struct stat st;
-
-  if (status != CGIFN_LIBDIR && status != CGIFN_CGIBIN)
-    return -1;
-  if (stat(file, &st) < 0)
-    return -1;
-  if (S_ISDIR(st.st_mode))
-    return -1;
-  if ((st.st_uid == geteuid() && (st.st_mode & S_IXUSR)) ||
-      (st.st_gid == getegid() && (st.st_mode & S_IXGRP)) ||
-      (st.st_mode & S_IXOTH)) /* executable */
-    return 0;
-  return -1;
-#endif
-}
+// static int check_local_cgi(const char *file, int status) {
+// #ifdef _MSC_VER
+// #else
+//   struct stat st;
+//
+//   if (status != CGIFN_LIBDIR && status != CGIFN_CGIBIN)
+//     return -1;
+//   if (stat(file, &st) < 0)
+//     return -1;
+//   if (S_ISDIR(st.st_mode))
+//     return -1;
+//   if ((st.st_uid == geteuid() && (st.st_mode & S_IXUSR)) ||
+//       (st.st_gid == getegid() && (st.st_mode & S_IXGRP)) ||
+//       (st.st_mode & S_IXOTH)) /* executable */
+//     return 0;
+//   return -1;
+// #endif
+// }
 
 void set_environ(const char *var, const char *value) {
 #ifdef _MSC_VER

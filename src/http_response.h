@@ -45,7 +45,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   HttpResponse();
   ~HttpResponse();
   bool checkRedirection(const Url &pu);
-  int readHeader(struct UrlStream *uf, const Url &pu);
+  int readHeader(const std::shared_ptr<class input_stream> &s, const Url &pu);
   const char *getHeader(const char *field) const;
   const char *checkContentType() const;
   const char *guess_save_name(const char *file) const;
@@ -53,7 +53,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
     return type == "text/html" || type == "application/xhtml+xml";
   }
   FILE *createSourceFile();
-  void page_loaded(Url url, struct UrlStream *f);
+  void page_loaded(Url url, const std::shared_ptr<input_stream> &stream);
   std::string last_modified() const;
   std::string_view getBody();
   CompressionType contentEncoding() const;

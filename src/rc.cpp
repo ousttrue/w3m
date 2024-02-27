@@ -19,7 +19,6 @@
 #include "alloc.h"
 #include "mimetypes.h"
 #include "compression.h"
-#include "url_stream.h"
 #include "ssl_util.h"
 #include "html/readbuffer.h"
 #include "history.h"
@@ -60,6 +59,11 @@ int DNS_order = DNS_ORDER_UNSPEC;
 
 bool TargetSelf = false;
 const char *rc_dir = nullptr;
+bool ArgvIsURL = true;
+bool LocalhostOnly = false;
+bool retryAsHttp = true;
+bool AutoUncompress = false;
+bool PreserveTimestamp = true;
 
 #define _(Text) Text
 #define N_(Text) Text

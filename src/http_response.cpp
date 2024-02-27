@@ -1,4 +1,5 @@
 #include "http_response.h"
+#include "istream.h"
 #include "quote.h"
 #include "matchattr.h"
 #include "app.h"
@@ -8,7 +9,6 @@
 #include "Str.h"
 #include "w3m.h"
 #include "myctype.h"
-#include "url_stream.h"
 #include "html/readbuffer.h"
 #include "mimehead.h"
 #include "etc.h"
@@ -74,7 +74,8 @@ bool HttpResponse::checkRedirection(const Url &pu) {
   return true;
 }
 
-int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
+int HttpResponse::readHeader(const std::shared_ptr<input_stream> &stream,
+                             const Url &url) {
 
   this->document_header.clear();
   if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS)
@@ -85,7 +86,7 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
   FILE *src = NULL;
   Str *lineBuf2 = NULL;
   while (true) {
-    auto _tmp = uf->stream->StrmyISgets();
+    auto _tmp = stream->StrmyISgets();
     if (_tmp.empty()) {
       break;
     }
@@ -113,9 +114,9 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
         lineBuf2 = tmp;
       }
 
-      auto c = uf->stream ? uf->stream->ISgetc() : '\0';
+      auto c = stream->ISgetc();
 
-      uf->stream->ISundogetc();
+      stream->ISundogetc();
       if (c == ' ' || c == '\t')
         /* header line is continued */
         continue;
@@ -150,15 +151,16 @@ int HttpResponse::readHeader(UrlStream *uf, const Url &url) {
       auto p = lineBuf2->ptr + 26;
       while (IS_SPACE(*p))
         p++;
-      if (!strncasecmp(p, "base64", 6))
-        uf->encoding = ENC_BASE64;
-      else if (!strncasecmp(p, "quoted-printable", 16))
-        uf->encoding = ENC_QUOTE;
-      else if (!strncasecmp(p, "uuencode", 8) ||
-               !strncasecmp(p, "x-uuencode", 10))
-        uf->encoding = ENC_UUENCODE;
-      else
-        uf->encoding = ENC_7BIT;
+
+      // if (!strncasecmp(p, "base64", 6))
+      //   uf->encoding = ENC_BASE64;
+      // else if (!strncasecmp(p, "quoted-printable", 16))
+      //   uf->encoding = ENC_QUOTE;
+      // else if (!strncasecmp(p, "uuencode", 8) ||
+      //          !strncasecmp(p, "x-uuencode", 10))
+      //   uf->encoding = ENC_UUENCODE;
+      // else
+      //   uf->encoding = ENC_7BIT;
     } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
       // process_compression(lineBuf2, uf);
     } else if (use_cookie && accept_cookie &&
@@ -300,7 +302,8 @@ FILE *HttpResponse::createSourceFile() {
   return src;
 }
 
-void HttpResponse::page_loaded(Url url, UrlStream *f) {
+void HttpResponse::page_loaded(Url url,
+                               const std::shared_ptr<input_stream> &stream) {
   const char *p;
   if ((p = this->getHeader("Content-Length:"))) {
     this->current_content_length = strtoclen(p);
@@ -341,7 +344,6 @@ void HttpResponse::page_loaded(Url url, UrlStream *f) {
   this->filename = this->currentURL.real_file.size()
                        ? Strnew(this->currentURL.real_file)->ptr
                        : Strnew(this->currentURL.file)->ptr;
-  this->ssl_certificate = f->ssl_certificate;
 
   // loadSomething(this, &b->layout);
   {
@@ -361,7 +363,7 @@ void HttpResponse::page_loaded(Url url, UrlStream *f) {
 
     while (true) {
       unsigned char buf[4096];
-      auto readSize = f->stream->read(buf, sizeof(buf));
+      auto readSize = stream->read(buf, sizeof(buf));
       if (readSize == 0) {
         break;
       }
@@ -387,13 +389,13 @@ void HttpResponse::page_loaded(Url url, UrlStream *f) {
     //   }
     // }
 
-    if (this->currentURL.schema == SCM_UNKNOWN) {
-      this->currentURL.schema = f->schema;
-    }
+    // if (this->currentURL.schema == SCM_UNKNOWN) {
+    //   this->currentURL.schema = f->schema;
+    // }
 
-    if (f->schema == SCM_LOCAL && this->sourcefile.empty()) {
-      this->sourcefile = this->filename;
-    }
+    // if (f->schema == SCM_LOCAL && this->sourcefile.empty()) {
+    //   this->sourcefile = this->filename;
+    // }
 
     // if (buf && buf != NO_BUFFER)
     // {
