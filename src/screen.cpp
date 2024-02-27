@@ -1,12 +1,10 @@
 #include "screen.h"
-#include "html/readbuffer.h"
-#include "app.h"
-#include "alloc.h"
-#include "myctype.h"
+#include "url.h"
 #include "Str.h"
+#include "app.h"
+#include "myctype.h"
 #include "buffer.h"
 #include "tabbuffer.h"
-#include "line_layout.h"
 #include "http_response.h"
 #include <ftxui/screen/screen.hpp>
 #include <iostream>
@@ -123,7 +121,6 @@ Str *Screen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
                                 const char *title, const char *url) {
   Str *s = NULL;
   Str *u;
-  Url pu;
   const char *p;
   int l = this->COLS() - 1, i;
 
@@ -141,7 +138,7 @@ Str *Screen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
   }
   if (!url)
     return s;
-  pu = urlParse(url, buf->res->getBaseURL());
+  auto pu = urlParse(url, buf->res->getBaseURL());
   u = Strnew(pu.to_Str());
   if (DecodeURL)
     u = Strnew_charp(url_decode0(u->ptr));
@@ -487,47 +484,16 @@ void Screen ::drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   buf->layout.hmarklist()->prevhseq = hseq;
 }
 
-void Screen::display(int width, TabBuffer *currentTab) {
+void Screen::display(int ny, int width, TabBuffer *currentTab) {
 
   auto buf = currentTab->currentBuffer();
   if (!buf) {
     return;
   }
 
-  if (buf->layout.width == 0)
-    buf->layout.width = width;
-  if (buf->layout.height == 0)
-    buf->layout.height = this->LASTLINE() + 1;
-  if ((buf->layout.width != width && (buf->res->is_html_type())) ||
-      buf->layout.need_reshape) {
-    buf->layout.need_reshape = true;
-    if (buf->layout.need_reshape) {
-
-      auto body = buf->res->getBody();
-
-      LineLayout sbuf = buf->layout;
-      if (buf->res->is_html_type()) {
-        loadHTMLstream(&buf->layout, buf->res.get(), body);
-      } else {
-        loadBuffer(&buf->layout, buf->res.get(), body);
-      }
-
-      buf->layout.reshape(width, sbuf);
-    }
-  }
-
-  // Str *msg;
-  int ny = 0;
   auto &layout = buf->layout;
-
   layout.rootX = 0;
   layout.COLS = this->COLS() - layout.rootX;
-  if (App::instance().nTab() > 1) {
-    ny = App::instance().calcTabPos() + 2;
-    if (ny > this->LASTLINE()) {
-      ny = this->LASTLINE();
-    }
-  }
   if (layout.rootY != ny || layout.LINES != this->LASTLINE() - ny) {
     layout.rootY = ny;
     layout.LINES = this->LASTLINE() - ny;

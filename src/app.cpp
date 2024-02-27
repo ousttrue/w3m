@@ -1131,7 +1131,40 @@ void App::onFrame() {
     }
   }
 
-  _screen->display(INIT_BUFFER_WIDTH(), currentTab().get());
+  // reload
+  auto buf = currentTab()->currentBuffer();
+  int width = INIT_BUFFER_WIDTH();
+  if (buf->layout.width == 0)
+    buf->layout.width = width;
+  if (buf->layout.height == 0)
+    buf->layout.height = this->LASTLINE() + 1;
+  if ((buf->layout.width != width && (buf->res->is_html_type())) ||
+      buf->layout.need_reshape) {
+    buf->layout.need_reshape = true;
+    if (buf->layout.need_reshape) {
+
+      auto body = buf->res->getBody();
+
+      LineLayout sbuf = buf->layout;
+      if (buf->res->is_html_type()) {
+        loadHTMLstream(&buf->layout, buf->res.get(), body);
+      } else {
+        loadBuffer(&buf->layout, buf->res.get(), body);
+      }
+
+      buf->layout.reshape(width, sbuf);
+    }
+  }
+
+  int ny = 0;
+  if (App::instance().nTab() > 1) {
+    ny = App::instance().calcTabPos() + 2;
+    if (ny > this->LASTLINE()) {
+      ny = this->LASTLINE();
+    }
+  }
+
+  _screen->display(ny, width, currentTab().get());
 }
 
 struct TimerTask {

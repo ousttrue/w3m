@@ -1,5 +1,4 @@
 #pragma once
-#include "termentry.h"
 #include "utf8.h"
 #include "rowcol.h"
 #include "enum_template.h"
@@ -122,5 +121,5 @@ public:
   Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
                           const char *url);
   Str *make_lastline_message(const std::shared_ptr<Buffer> &buf);
-  void display(int width, TabBuffer *currentTab);
+  void display(int ny, int width, TabBuffer *currentTab);
 };
