@@ -1,54 +1,12 @@
 #pragma once
-#include <time.h>
-#include "encoding.h"
-#include "url_schema.h"
-#include "istream.h"
-#include "compression.h"
 #include "url.h"
-
-#define SAVE_BUF_SIZE 1536
+#include <memory>
 
 class input_stream;
-struct Url;
-struct FormList;
-struct TextList;
 struct HttpRequest;
 struct HttpOption;
-
-struct UrlStream {
-  const char *url = {};
-  UrlSchema schema = {};
-  bool is_cgi = false;
-  EncodingType encoding = ENC_7BIT;
-  std::shared_ptr<input_stream> stream;
-  std::string ext;
-  CompressionType compression = CMP_NOCOMPRESS;
-  int content_encoding = CMP_NOCOMPRESS;
-  std::string guess_type;
-  const char *ssl_certificate = {};
-  time_t modtime = -1;
-
-  UrlStream(UrlSchema schema, const std::shared_ptr<input_stream> &stream = {})
-      : schema(schema), stream(stream) {}
-
-  void openFile(const std::string &path);
-
-  std::shared_ptr<HttpRequest> openURL(std::string_view url,
-                                       std::optional<Url> current,
-                                       const HttpOption &option,
-                                       FormList *request);
-
-  int doFileSave(const char *defstr);
-  std::string uncompress_stream();
-
-private:
-  void openHttp(const std::shared_ptr<HttpRequest> &hr,
-                const HttpOption &option, FormList *request);
-  void openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
-                    const HttpOption &option, FormList *request);
-  void openData(const Url &pu);
-  void add_index_file(Url *pu);
-};
-
-int save2tmp(const std::shared_ptr<input_stream> &stream, const char *tmpf);
-
+struct FormList;
+;
+std::tuple<std::shared_ptr<HttpRequest>, std::shared_ptr<input_stream>>
+openURL(std::string_view url, std::optional<Url> current,
+        const HttpOption &option, FormList *request);

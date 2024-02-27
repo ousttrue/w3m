@@ -517,15 +517,6 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
-/*
- * loadHTMLBuffer: read file and make new buffer
- */
-// void loadHTMLBuffer(UrlStream *f, const std::shared_ptr<HttpResponse> &res,
-//                     LineLayout *layout) {
-//
-//   loadHTMLstream(f, res, layout, false /*newBuf->bufferprop*/);
-// }
-
 void loadHTMLstream(LineLayout *layout, HttpResponse *res,
                     std::string_view body, bool internal) {
 
@@ -660,7 +651,7 @@ std::shared_ptr<Buffer> getshell(const char *cmd) {
   }
 
   auto buf = Buffer::create();
-  UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
+  // UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
   // TODO:
   // loadBuffer(buf->res.get(), &buf->layout);
   buf->res->filename = cmd;
