@@ -8,7 +8,6 @@
 #include "line_layout.h"
 #include "http_response.h"
 #include "symbol.h"
-#include "url_stream.h"
 #include "w3m.h"
 #include "Str.h"
 #include "myctype.h"
@@ -544,13 +543,10 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
   htmlenv1.buf = newTextLineList();
 
-  // if (res->f.stream->IStype() != IST_ENCODED) {
-  //   res->f.stream = newEncodedStream(res->f.stream, res->f.encoding);
-  // }
-  UrlStream f(SCM_LOCAL, newStrStream(body));
+  auto stream = newStrStream(body);
 
   while (true) {
-    auto _lineBuf2 = f.stream->StrmyISgets();
+    auto _lineBuf2 = stream->StrmyISgets();
     if (_lineBuf2.empty()) {
       break;
     }
@@ -614,10 +610,10 @@ void cleanup_line(Str *s, CleanupMode mode) {
 void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
   layout->clearBuffer();
   auto nlines = 0;
-  UrlStream f(SCM_LOCAL, newStrStream(page));
+  auto stream = newStrStream(page);
   char pre_lbuf = '\0';
   while (true) {
-    auto _lineBuf2 = f.stream->StrmyISgets(); //&& lineBuf2->length
+    auto _lineBuf2 = stream->StrmyISgets(); //&& lineBuf2->length
     if (_lineBuf2.empty()) {
       break;
     }
