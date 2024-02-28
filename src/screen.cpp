@@ -1,11 +1,5 @@
 #include "screen.h"
-#include "url.h"
-#include "Str.h"
-#include "app.h"
-#include "myctype.h"
-#include "buffer.h"
-#include "tabbuffer.h"
-#include "http_response.h"
+#include "line_layout.h"
 #include <ftxui/screen/screen.hpp>
 
 bool displayLink = false;
@@ -75,15 +69,6 @@ RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
   return pos;
 }
 
-std::string Screen::print() {
-  // screen.SetCursor({
-  //     .x = CurColumn + 1,
-  //     .y = CurLine + 1,
-  //     .shape = ftxui::Screen::Cursor::Shape::Hidden,
-  // });
-  return _screen->ToString();
-}
-
 void Screen::toggle_stand(const RowCol &pos) {
   auto &pixel = this->pixel(pos);
   pixel.inverted = !pixel.inverted;
@@ -92,102 +77,6 @@ void Screen::toggle_stand(const RowCol &pos) {
 void Screen::addmch(const RowCol &pos, const Utf8 &utf8) {
   auto &pixel = this->pixel(pos);
   pixel.character = utf8.view();
-}
-
-Str *Screen::make_lastline_link(const std::shared_ptr<Buffer> &buf,
-                                const char *title, const char *url) {
-  Str *s = NULL;
-  Str *u;
-  const char *p;
-  int l = this->COLS() - 1, i;
-
-  if (title && *title) {
-    s = Strnew_m_charp("[", title, "]", NULL);
-    for (p = s->ptr; *p; p++) {
-      if (IS_CNTRL(*p) || IS_SPACE(*p))
-        *(char *)p = ' ';
-    }
-    if (url)
-      Strcat_charp(s, " ");
-    l -= get_Str_strwidth(s);
-    if (l <= 0)
-      return s;
-  }
-  if (!url)
-    return s;
-  auto pu = urlParse(url, buf->res->getBaseURL());
-  u = Strnew(pu.to_Str());
-  if (DecodeURL)
-    u = Strnew_charp(url_decode0(u->ptr));
-  if (l <= 4 || l >= get_Str_strwidth(u)) {
-    if (!s)
-      return u;
-    Strcat(s, u);
-    return s;
-  }
-  if (!s)
-    s = Strnew_size(this->COLS());
-  i = (l - 2) / 2;
-  Strcat_charp_n(s, u->ptr, i);
-  Strcat_charp(s, "..");
-  i = get_Str_strwidth(u) - (this->COLS() - 1 - get_Str_strwidth(s));
-  Strcat_charp(s, &u->ptr[i]);
-  return s;
-}
-
-Str *Screen::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
-  Str *msg;
-  Str *s = NULL;
-  int sl = 0;
-
-  if (displayLink) {
-    {
-      Anchor *a = buf->layout.retrieveCurrentAnchor();
-      const char *p = NULL;
-      if (a && a->title && *a->title)
-        p = a->title;
-      else {
-        auto a_img = buf->layout.retrieveCurrentImg();
-        if (a_img && a_img->title && *a_img->title)
-          p = a_img->title;
-      }
-      if (p || a)
-        s = this->make_lastline_link(buf, p, a ? a->url : NULL);
-    }
-    if (s) {
-      sl = get_Str_strwidth(s);
-      if (sl >= this->COLS() - 3)
-        return s;
-    }
-  }
-
-  msg = Strnew();
-  if (displayLineInfo && buf->layout.currentLine != NULL &&
-      buf->layout.lastLine != NULL) {
-    int cl = buf->layout.currentLine->real_linenumber;
-    int ll = buf->layout.lastLine->real_linenumber;
-    int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
-    Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
-  } else {
-    Strcat_charp(msg, "Viewing");
-  }
-  if (buf->res->ssl_certificate) {
-    Strcat_charp(msg, "[SSL]");
-  }
-  Strcat_charp(msg, " <");
-  Strcat(msg, buf->layout.title);
-
-  if (s) {
-    int l = this->COLS() - 3 - sl;
-    if (get_Str_strwidth(msg) > l) {
-      Strtruncate(msg, l);
-    }
-    Strcat_charp(msg, "> ");
-    Strcat(msg, s);
-  } else {
-    Strcat_charp(msg, ">");
-  }
-  return msg;
 }
 
 Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
@@ -280,27 +169,25 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
   return l;
 }
 
-void Screen::redrawNLine(const std::shared_ptr<Buffer> &buf, int n) {
-  {
-    Line *l;
-    int i;
-    for (i = 0, l = buf->layout.topLine; i < buf->layout.LINES;
-         i++, l = l->next) {
-      if (i >= buf->layout.LINES - n || i < -n)
-        l = this->redrawLine(&buf->layout, l, i + buf->layout.rootY);
-      if (l == NULL)
-        break;
-    }
-    if (n > 0) {
-      this->clrtobotx({.row = i + buf->layout.rootY, .col = 0});
-    }
+void Screen::redrawNLine(LineLayout *layout, int n) {
+
+  Line *l;
+  int i;
+  for (i = 0, l = layout->topLine; i < layout->LINES; i++, l = l->next) {
+    if (i >= layout->LINES - n || i < -n)
+      l = this->redrawLine(layout, l, i + layout->rootY);
+    if (l == NULL)
+      break;
+  }
+  if (n > 0) {
+    this->clrtobotx({.row = i + layout->rootY, .col = 0});
   }
 }
 
-int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
-                             int bpos, int epos) {
+int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
+                             int epos) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->layout.currentColumn;
+  int column = layout->currentColumn;
   char *p;
   // Lineprop *pr;
   int bcol, ecol;
@@ -314,22 +201,21 @@ int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
   bcol = bpos - pos;
   ecol = epos - pos;
 
-  for (j = 0; rcol - column < buf->layout.COLS && pos + j < l->len;
-       j += delta) {
+  for (j = 0; rcol - column < layout->COLS && pos + j < l->len; j += delta) {
     delta = get_mclen(&p[j]);
     ncol = l->bytePosToColumn(pos + j + delta);
-    if (ncol - column > buf->layout.COLS)
+    if (ncol - column > layout->COLS)
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        RowCol pixel{.row = i, .col = buf->layout.rootX};
+        RowCol pixel{.row = i, .col = layout->rootX};
         for (rcol = column; rcol < ncol; rcol++) {
           this->addch(pixel, ' ');
           ++pixel.col;
         }
         continue;
       }
-      RowCol pixel{.row = i, .col = rcol - column + buf->layout.rootX};
+      RowCol pixel{.row = i, .col = rcol - column + layout->rootX};
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++) {
           this->addch(pixel, ' ');
@@ -387,10 +273,9 @@ int Screen::redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
   return rcol - column;
 }
 
-void Screen::drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
-                               AnchorList *al, int hseq, int prevhseq,
-                               int tline, int eline, int active) {
-  auto l = buf->layout.topLine;
+void Screen::drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
+                               int prevhseq, int tline, int eline, int active) {
+  auto l = layout->topLine;
   for (size_t j = 0; j < al->size(); j++) {
     auto an = &al->anchors[j];
     if (an->start.line < tline)
@@ -415,97 +300,61 @@ void Screen::drawAnchorCursor0(const std::shared_ptr<Buffer> &buf,
         }
       }
       if (active && start_pos < end_pos)
-        this->redrawLineRegion(buf, l,
-                               l->linenumber - tline + buf->layout.rootY,
+        this->redrawLineRegion(layout, l, l->linenumber - tline + layout->rootY,
                                start_pos, end_pos);
     } else if (prevhseq >= 0 && an->hseq == prevhseq) {
       if (active)
-        this->redrawLineRegion(buf, l,
-                               l->linenumber - tline + buf->layout.rootY,
+        this->redrawLineRegion(layout, l, l->linenumber - tline + layout->rootY,
                                an->start.pos, an->end.pos);
     }
   }
 }
 
-void Screen ::drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
+void Screen ::drawAnchorCursor(LineLayout *layout) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (!buf->layout.firstLine || !buf->layout.hmarklist())
+  if (!layout->firstLine || !layout->hmarklist())
     return;
-  if (!buf->layout.href() && !buf->layout.formitem())
+  if (!layout->href() && !layout->formitem())
     return;
 
-  auto an = buf->layout.retrieveCurrentAnchor();
+  auto an = layout->retrieveCurrentAnchor();
   if (an) {
     hseq = an->hseq;
   } else {
     hseq = -1;
   }
-  tline = buf->layout.topLine->linenumber;
-  eline = tline + buf->layout.LINES;
-  prevhseq = buf->layout.hmarklist()->prevhseq;
+  tline = layout->topLine->linenumber;
+  eline = tline + layout->LINES;
+  prevhseq = layout->hmarklist()->prevhseq;
 
-  if (buf->layout.href()) {
-    this->drawAnchorCursor0(buf, buf->layout.href().get(), hseq, prevhseq,
-                            tline, eline, 1);
-    this->drawAnchorCursor0(buf, buf->layout.href().get(), hseq, -1, tline,
+  if (layout->href()) {
+    this->drawAnchorCursor0(layout, layout->href().get(), hseq, prevhseq, tline,
+                            eline, 1);
+    this->drawAnchorCursor0(layout, layout->href().get(), hseq, -1, tline,
                             eline, 0);
   }
-  if (buf->layout.formitem()) {
-    this->drawAnchorCursor0(buf, buf->layout.formitem().get(), hseq, prevhseq,
+  if (layout->formitem()) {
+    this->drawAnchorCursor0(layout, layout->formitem().get(), hseq, prevhseq,
                             tline, eline, 1);
-    this->drawAnchorCursor0(buf, buf->layout.formitem().get(), hseq, -1, tline,
+    this->drawAnchorCursor0(layout, layout->formitem().get(), hseq, -1, tline,
                             eline, 0);
   }
-  buf->layout.hmarklist()->prevhseq = hseq;
+  layout->hmarklist()->prevhseq = hseq;
 }
 
-std::string Screen::display(int ny, int width, TabBuffer *currentTab) {
-
-  auto buf = currentTab->currentBuffer();
-  if (!buf) {
-    return {};
+std::string Screen::str(LineLayout *layout) {
+  if (cline != layout->topLine || ccolumn != layout->currentColumn) {
+    this->redrawNLine(layout, this->LASTLINE());
+    cline = layout->topLine;
+    ccolumn = layout->currentColumn;
+  }
+  if (!layout->topLine) {
+    layout->topLine = layout->firstLine;
   }
 
-  auto &layout = buf->layout;
-  layout.rootX = 0;
-  layout.COLS = this->COLS() - layout.rootX;
-  if (layout.rootY != ny || layout.LINES != this->LASTLINE() - ny) {
-    layout.rootY = ny;
-    layout.LINES = this->LASTLINE() - ny;
-    buf->layout.arrangeCursor();
-  }
+  this->drawAnchorCursor(layout);
 
-  App::instance().drawTabs();
-
-  if (cline != buf->layout.topLine || ccolumn != buf->layout.currentColumn) {
-
-    this->redrawNLine(buf, this->LASTLINE());
-
-    cline = buf->layout.topLine;
-    ccolumn = buf->layout.currentColumn;
-  }
-  if (buf->layout.topLine == NULL)
-    buf->layout.topLine = buf->layout.firstLine;
-
-  this->drawAnchorCursor(buf);
-
-  auto msg = this->make_lastline_message(buf);
-  if (buf->layout.firstLine == NULL) {
-    Strcat_charp(msg, "\tNo Line");
-  }
-
-  App::instance().refresh_message();
-
-  this->standout();
-  App::instance().message(msg->ptr, buf->layout.AbsCursorX(),
-                          buf->layout.AbsCursorY());
-  this->standend();
-  // term_title(buf->layout.title.c_str());
-  if (buf != save_current_buf) {
-    CurrentTab->currentBuffer()->saveBufferInfo();
-    save_current_buf = buf;
-  }
-  return this->print();
+  return this->_screen->ToString();
 }

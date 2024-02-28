@@ -43,9 +43,6 @@ enum LineDirtyFlags : unsigned short {
   L_CLRTOEOL = 0x08,
 };
 
-struct TermEntry;
-struct Buffer;
-struct TabBuffer;
 struct LineLayout;
 struct AnchorList;
 class Screen {
@@ -69,7 +66,6 @@ class Screen {
   int visited_mode = 0;
   int mark_mode = 0;
   int graph_mode = 0;
-  std::shared_ptr<Buffer> save_current_buf;
 
   ftxui::Pixel &pixel(const RowCol &pos) {
     return _screen->PixelAt(pos.col, pos.row);
@@ -82,7 +78,6 @@ public:
   void setupscreen(const RowCol &size);
   void clear();
   void clrtoeol(const RowCol &pos);
-  std::string print();
   void clrtoeolx(const RowCol &pos) { clrtoeol(pos); }
   void clrtobot_eol(const RowCol &pos,
                     const std::function<void(const RowCol &)> &);
@@ -109,16 +104,11 @@ public:
   void graphend(void) { CurrentMode &= ~ScreenFlags::GRAPHICS; }
   void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
-  int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
-                       int bpos, int epos);
+  int redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos, int epos);
   Line *redrawLine(LineLayout *buf, Line *l, int i);
-  void redrawNLine(const std::shared_ptr<Buffer> &buf, int n);
-  void drawAnchorCursor0(const std::shared_ptr<Buffer> &buf, AnchorList *al,
-                         int hseq, int prevhseq, int tline, int eline,
-                         int active);
-  void drawAnchorCursor(const std::shared_ptr<Buffer> &buf);
-  Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
-                          const char *url);
-  Str *make_lastline_message(const std::shared_ptr<Buffer> &buf);
-  std::string display(int ny, int width, TabBuffer *currentTab);
+  void redrawNLine(LineLayout *layout, int n);
+  void drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
+                         int prevhseq, int tline, int eline, int active);
+  void drawAnchorCursor(LineLayout *layout);
+  std::string str(LineLayout *layout);
 };

@@ -55,6 +55,8 @@ class App {
 
   std::array<std::string, 128> GlobalKeymap;
   std::unordered_map<std::string, std::string> keyData;
+  std::string _last;
+  std::shared_ptr<Buffer> save_current_buf;
 
   App();
   void onResize();
@@ -180,6 +182,9 @@ public:
 
   void showProgress(long long *linelen, long long *trbyte,
                     long long current_content_length);
+  Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
+                          const char *url);
+  Str *make_lastline_message(const std::shared_ptr<Buffer> &buf);
 };
 #define CurrentTab App::instance().currentTab()
 

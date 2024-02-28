@@ -764,7 +764,7 @@ void App::beginRawMode(void) {
 void App::endRawMode(void) {
   if (_fmInitialized) {
     _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
-    _screen->print();
+    // _screen->print();
     uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
     _fmInitialized = false;
   }
@@ -1174,18 +1174,44 @@ void App::cursor(const RowCol &pos) {
 }
 
 void App::display() {
-  static std::string _last;
 
-  int ny = 0;
-  if (App::instance().nTab() > 1) {
-    ny = App::instance().calcTabPos() + 2;
-    if (ny > this->LASTLINE()) {
-      ny = this->LASTLINE();
-    }
+  auto buf = CurrentTab->currentBuffer();
+  auto layout = &buf->layout;
+
+  // tabs
+  int ny = App::instance().calcTabPos() + 2;
+  if (ny > this->LASTLINE()) {
+    ny = this->LASTLINE();
+  }
+  layout->rootX = 0;
+  layout->COLS = this->COLS() - layout->rootX;
+  if (layout->rootY != ny || layout->LINES != this->LASTLINE() - ny) {
+    layout->rootY = ny;
+    layout->LINES = this->LASTLINE() - ny;
+    layout->arrangeCursor();
   }
 
-  int width = INIT_BUFFER_WIDTH();
-  auto rendered = _screen->display(ny, width, currentTab().get());
+  App::instance().drawTabs();
+
+  // msg
+  auto msg = this->make_lastline_message(buf);
+  if (buf->layout.firstLine == NULL) {
+    Strcat_charp(msg, "\tNo Line");
+  }
+
+  App::instance().refresh_message();
+
+  _screen->standout();
+  App::instance().message(msg->ptr, buf->layout.AbsCursorX(),
+                          buf->layout.AbsCursorY());
+  _screen->standend();
+  // term_title(buf->layout.title.c_str());
+  if (buf != save_current_buf) {
+    CurrentTab->currentBuffer()->saveBufferInfo();
+    save_current_buf = buf;
+  }
+
+  auto rendered = _screen->str(&buf->layout);
   if (rendered != _last) {
     _last = rendered;
 
@@ -1203,7 +1229,6 @@ void App::display() {
   }
 
   // cursor
-  auto buf = currentTab()->currentBuffer();
   this->cursor({
       .row = buf->layout.AbsCursorY(),
       .col = buf->layout.AbsCursorX(),
@@ -1522,7 +1547,7 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
             CurrentTab->currentBuffer()->layout.AbsCursorY());
   else
     message(s, LASTLINE(), 0);
-  _screen->print();
+  // _screen->print();
   // sleep_till_anykey(sec, purge);
 }
 
@@ -1534,7 +1559,7 @@ void App::refresh_message() {
   if (delayed_msg != NULL) {
     disp_message(delayed_msg);
     delayed_msg = NULL;
-    _screen->print();
+    // _screen->print();
   }
 }
 
@@ -1594,7 +1619,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     }
     _screen->standend();
     /* no_clrtoeol(); */
-    _screen->print();
+    // _screen->print();
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
@@ -1616,7 +1641,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
     message(messages->ptr, 0, 0);
-    _screen->print();
+    // _screen->print();
   }
 }
 
@@ -1682,4 +1707,100 @@ void App::initKeymap(bool force) {
     fclose(kf);
   }
   keymap_initialized = true;
+}
+
+Str *App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
+                             const char *title, const char *url) {
+  Str *s = NULL;
+  Str *u;
+  const char *p;
+  int l = this->COLS() - 1, i;
+
+  if (title && *title) {
+    s = Strnew_m_charp("[", title, "]", NULL);
+    for (p = s->ptr; *p; p++) {
+      if (IS_CNTRL(*p) || IS_SPACE(*p))
+        *(char *)p = ' ';
+    }
+    if (url)
+      Strcat_charp(s, " ");
+    l -= get_Str_strwidth(s);
+    if (l <= 0)
+      return s;
+  }
+  if (!url)
+    return s;
+  auto pu = urlParse(url, buf->res->getBaseURL());
+  u = Strnew(pu.to_Str());
+  if (DecodeURL)
+    u = Strnew_charp(url_decode0(u->ptr));
+  if (l <= 4 || l >= get_Str_strwidth(u)) {
+    if (!s)
+      return u;
+    Strcat(s, u);
+    return s;
+  }
+  if (!s)
+    s = Strnew_size(this->COLS());
+  i = (l - 2) / 2;
+  Strcat_charp_n(s, u->ptr, i);
+  Strcat_charp(s, "..");
+  i = get_Str_strwidth(u) - (this->COLS() - 1 - get_Str_strwidth(s));
+  Strcat_charp(s, &u->ptr[i]);
+  return s;
+}
+
+Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
+  Str *msg;
+  Str *s = NULL;
+  int sl = 0;
+
+  if (displayLink) {
+    {
+      Anchor *a = buf->layout.retrieveCurrentAnchor();
+      const char *p = NULL;
+      if (a && a->title && *a->title)
+        p = a->title;
+      else {
+        auto a_img = buf->layout.retrieveCurrentImg();
+        if (a_img && a_img->title && *a_img->title)
+          p = a_img->title;
+      }
+      if (p || a)
+        s = this->make_lastline_link(buf, p, a ? a->url : NULL);
+    }
+    if (s) {
+      sl = get_Str_strwidth(s);
+      if (sl >= this->COLS() - 3)
+        return s;
+    }
+  }
+
+  msg = Strnew();
+  if (displayLineInfo && buf->layout.currentLine != NULL &&
+      buf->layout.lastLine != NULL) {
+    int cl = buf->layout.currentLine->real_linenumber;
+    int ll = buf->layout.lastLine->real_linenumber;
+    int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
+    Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
+  } else {
+    Strcat_charp(msg, "Viewing");
+  }
+  if (buf->res->ssl_certificate) {
+    Strcat_charp(msg, "[SSL]");
+  }
+  Strcat_charp(msg, " <");
+  Strcat(msg, buf->layout.title);
+
+  if (s) {
+    int l = this->COLS() - 3 - sl;
+    if (get_Str_strwidth(msg) > l) {
+      Strtruncate(msg, l);
+    }
+    Strcat_charp(msg, "> ");
+    Strcat(msg, s);
+  } else {
+    Strcat_charp(msg, ">");
+  }
+  return msg;
 }
