@@ -1,6 +1,6 @@
 #pragma once
 #include <time.h>
-#include <memory>
+#include <string>
 
 struct DownloadList {
   int pid;

@@ -840,23 +840,21 @@ void table::check_maximum_width() {
 
 #ifdef MATRIX
 void table::set_integered_width(double *dwidth, short *iwidth) {
-  int i, j, k, n, bcol, ecol, step;
-  short *indexarray;
-  char *fixed;
-  double *mod;
-  double sum = 0., x = 0.;
+  int i, j, n, bcol, ecol, step;
   struct table_cell *cell = &this->cell;
   int rulewidth = this->table_rule_width();
 
-  indexarray = (short *)NewAtom_N(short, this->maxcol + 1);
-  mod = (double *)NewAtom_N(double, this->maxcol + 1);
+  auto indexarray = (short *)NewAtom_N(short, this->maxcol + 1);
+  auto mod = (double *)NewAtom_N(double, this->maxcol + 1);
   for (i = 0; i <= this->maxcol; i++) {
-    iwidth[i] = static_cast<int>(ceil_at_intervals(ceil(dwidth[i]), rulewidth));
+    iwidth[i] = static_cast<short>(
+        ceil_at_intervals(static_cast<int>(ceil(dwidth[i])), rulewidth));
     mod[i] = (double)iwidth[i] - dwidth[i];
   }
 
-  sum = 0.;
-  for (k = 0; k <= this->maxcol; k++) {
+  auto sum = 0.;
+  double x = 0;
+  for (int k = 0; k <= this->maxcol; k++) {
     x = mod[k];
     sum += x;
     i = bsearch_double(x, mod, indexarray, k);
@@ -868,7 +866,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
     indexarray[i] = k;
   }
 
-  fixed = (char *)NewAtom_N(char, this->maxcol + 1);
+  auto fixed = (char *)NewAtom_N(char, this->maxcol + 1);
   memset(fixed, 0, this->maxcol + 1);
   for (step = 0; step < 2; step++) {
     for (i = 0; i <= this->maxcol; i += n) {
@@ -884,7 +882,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
         else if (fabs(mod[ii] - x) > 1e-6)
           break;
       }
-      for (k = 0; k < n; k++) {
+      for (int k = 0; k < n; k++) {
         int ii = indexarray[i + k];
         if (fixed[ii] < 2 && iwidth[ii] - rulewidth < this->minimum_width[ii])
           fixed[ii] = 2;
@@ -893,7 +891,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
           fixed[ii] = 1;
       }
       idx = (short *)NewAtom_N(short, n);
-      for (k = 0; k < cell->maxcell; k++) {
+      for (int k = 0; k < cell->maxcell; k++) {
         int kk, w, width, m;
         j = cell->index[k];
         bcol = cell->col[j];
@@ -937,7 +935,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
         }
       }
       nn = 0;
-      for (k = 0; k < n; k++) {
+      for (int k = 0; k < n; k++) {
         int ii = indexarray[i + k];
         if (fixed[ii] <= step)
           nn++;
@@ -945,7 +943,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
       nsum = sum - (double)(nn * rulewidth);
       if (nsum < 0. && fabs(sum) <= fabs(nsum))
         return;
-      for (k = 0; k < n; k++) {
+      for (int k = 0; k < n; k++) {
         int ii = indexarray[i + k];
         if (fixed[ii] <= step) {
           iwidth[ii] -= rulewidth;
@@ -3202,7 +3200,7 @@ void table::set_table_matrix0(int maxwidth) {
   size_t size = this->maxcol + 1;
   int j, k, bcol;
   int width;
-  double w0, w1, w, s, b;
+  double w0, w1, s, b;
 #ifdef __GNUC__
   double we[size];
   char expand[size];
@@ -3240,7 +3238,7 @@ void table::set_table_matrix0(int maxwidth) {
       expand[i]++;
     }
     for (size_t i = bcol; i < ecol; i++) {
-      w = weight(width * (this->tabwidth[i] + 0.1) / w1);
+      auto w = weight(static_cast<int>(width * (this->tabwidth[i] + 0.1) / w1));
       if (w > we[i])
         we[i] = w;
     }
@@ -3260,7 +3258,7 @@ void table::set_table_matrix0(int maxwidth) {
     j = cell->eindex[k];
     bcol = cell->col[j];
     width = cell->width[j] - (cell->colspan[j] - 1) * this->cellspacing;
-    w = weight(width);
+    auto w = weight(width);
     s = w / (w1 + w);
     b = sigma_td_nw((int)(s * maxwidth));
     this->correct_table_matrix4(bcol, cell->colspan[j], expand, s, b);
@@ -3313,14 +3311,15 @@ void table::check_relative_width(int maxwidth) {
       }
       if (n_leftcell == 0) {
         /* w must be identical to r */
-        if (w != r)
-          cell->fixed_width[i] = -100 * r;
+        if (w != r) {
+          cell->fixed_width[i] = static_cast<short>(-100 * r);
+        }
       } else {
         if (w <= r) {
           /* make room for the left(width-unspecified) cell */
           /* the next formula is an estimation of required width */
           w = r * cell->colspan[i] / (cell->colspan[i] - n_leftcell);
-          cell->fixed_width[i] = -100 * w;
+          cell->fixed_width[i] = static_cast<short>(-100 * w);
         }
         for (j = 0; j < cell->colspan[i]; j++) {
           if (rcolwidth[j + k] == 0)
@@ -3341,7 +3340,7 @@ void table::check_relative_width(int maxwidth) {
     }
     for (i = 0; i < size; i++) {
       if (this->fixed_width[i] < 0)
-        this->fixed_width[i] = -rcolwidth[i] * 100;
+        this->fixed_width[i] = static_cast<short>(-rcolwidth[i] * 100);
     }
     for (i = 0; i <= cell->maxcell; i++) {
       if (cell->fixed_width[i] < 0) {
@@ -3351,7 +3350,7 @@ void table::check_relative_width(int maxwidth) {
         r = 0.0;
         for (j = 0; j < cell->colspan[i]; j++)
           r += rcolwidth[j + k];
-        cell->fixed_width[i] = -r * 100;
+        cell->fixed_width[i] = static_cast<short>(-r * 100);
       }
     }
   }

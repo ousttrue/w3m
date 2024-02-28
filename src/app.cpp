@@ -1174,6 +1174,8 @@ void App::cursor(const RowCol &pos) {
 }
 
 void App::display() {
+  static std::string _last;
+
   int ny = 0;
   if (App::instance().nTab() > 1) {
     ny = App::instance().calcTabPos() + 2;
@@ -1182,18 +1184,23 @@ void App::display() {
     }
   }
 
-  // hide
-  std::cout << "\x1b[?25l";
-  std::flush(std::cout);
-
-  // origin
-  ::cursor({
-      .row = 0,
-      .col = 0,
-  });
-
   int width = INIT_BUFFER_WIDTH();
-  _screen->display(ny, width, currentTab().get());
+  auto rendered = _screen->display(ny, width, currentTab().get());
+  if (rendered != _last) {
+    _last = rendered;
+
+    // hide
+    std::cout << "\x1b[?25l";
+    std::flush(std::cout);
+
+    // origin
+    ::cursor({
+        .row = 0,
+        .col = 0,
+    });
+
+    std::cout << rendered;
+  }
 
   // cursor
   auto buf = currentTab()->currentBuffer();
