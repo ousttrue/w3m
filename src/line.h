@@ -6,8 +6,8 @@
 #define LINELEN 256 /* Initial line length */
 
 struct Line : public gc_cleanup {
-  long linenumber = 0;  /* on buffer */
-  long real_linenumber; /* on file */
+  long linenumber = 0; /* on buffer */
+
   Line *next = nullptr;
   Line *prev = nullptr;
 
@@ -35,7 +35,7 @@ private:
 public:
   int width(bool force = false) const {
     if (force || _width == -1) {
-      this->_width = this->bytePosToColumn(this->len);
+      this->_width = this->bytePosToColumn(this->lineBuf.size());
     }
     return this->_width;
   }
@@ -51,15 +51,7 @@ public:
     }
     lineBuf.push_back(0);
     propBuf.push_back(0);
-    this->len = byteLen;
   }
-
-  // line break
-  int len = 0;
-  // bpos += l->len;
-  int bpos = 0;
-  // bwidth += l->width;
-  int bwidth = 0;
 
   Line(int n, Line *prevl = nullptr);
   // Line(int linenumber, Line *prevl, char *line, Lineprop *prop, int byteLen,
@@ -79,8 +71,6 @@ public:
 
   // column required byteLen
   int columnLen(int col) const;
-
-  Line *breakLine(int breakWidth);
 
   void set_mark(int pos, int epos) {
     for (; pos < epos && pos < this->size(); pos++) {

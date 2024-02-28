@@ -187,10 +187,8 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
     if (is_html)
       tmp = conv_symbol(l);
     else
-      tmp = Strnew_charp_n(l->lineBuf.data(), l->len);
+      tmp = Strnew_charp_n(l->lineBuf.data(), l->lineBuf.size());
     Strfputs(tmp, f);
-    if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
-      putc('\n', f);
   }
 }
 

@@ -478,7 +478,7 @@ std::shared_ptr<CoroutineState<void>> movLW() {
         goto end;
       }
       CurrentTab->currentBuffer()->layout.pos =
-          CurrentTab->currentBuffer()->layout.currentLine->len;
+          CurrentTab->currentBuffer()->layout.currentLine->lineBuf.size();
     }
 
     l = CurrentTab->currentBuffer()->layout.currentLine;
@@ -517,17 +517,17 @@ std::shared_ptr<CoroutineState<void>> movRW() {
 
     l = CurrentTab->currentBuffer()->layout.currentLine;
     lb = l->lineBuf.data();
-    while (CurrentTab->currentBuffer()->layout.pos < l->len &&
+    while (CurrentTab->currentBuffer()->layout.pos < l->lineBuf.size() &&
            is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
       nextChar(CurrentTab->currentBuffer()->layout.pos, l);
     }
 
     while (1) {
-      while (CurrentTab->currentBuffer()->layout.pos < l->len &&
+      while (CurrentTab->currentBuffer()->layout.pos < l->lineBuf.size() &&
              !is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
         nextChar(CurrentTab->currentBuffer()->layout.pos, l);
       }
-      if (CurrentTab->currentBuffer()->layout.pos < l->len)
+      if (CurrentTab->currentBuffer()->layout.pos < l->lineBuf.size())
         break;
       if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
               CurrentTab->currentBuffer()->layout.currentLine->next) < 0) {
@@ -642,10 +642,6 @@ std::shared_ptr<CoroutineState<void>> goLineL() {
 std::shared_ptr<CoroutineState<void>> linbeg() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
-  while (CurrentTab->currentBuffer()->layout.currentLine->prev &&
-         CurrentTab->currentBuffer()->layout.currentLine->bpos) {
-    CurrentTab->currentBuffer()->layout.cursorUp0(1);
-  }
   CurrentTab->currentBuffer()->layout.pos = 0;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
@@ -656,12 +652,8 @@ std::shared_ptr<CoroutineState<void>> linbeg() {
 std::shared_ptr<CoroutineState<void>> linend() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
-  while (CurrentTab->currentBuffer()->layout.currentLine->next &&
-         CurrentTab->currentBuffer()->layout.currentLine->next->bpos) {
-    CurrentTab->currentBuffer()->layout.cursorDown0(1);
-  }
   CurrentTab->currentBuffer()->layout.pos =
-      CurrentTab->currentBuffer()->layout.currentLine->len - 1;
+      CurrentTab->currentBuffer()->layout.currentLine->lineBuf.size() - 1;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -693,7 +685,7 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout.cur_real_linenumber());
+        CurrentTab->currentBuffer()->layout.currentLine->linenumber);
   }
   exec_cmd(cmd);
 
@@ -715,7 +707,7 @@ std::shared_ptr<CoroutineState<void>> editScr() {
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout.cur_real_linenumber()));
+      CurrentTab->currentBuffer()->layout.currentLine->linenumber));
   unlink(tmpf.c_str());
 }
 
@@ -1476,15 +1468,14 @@ std::shared_ptr<CoroutineState<void>> curlno() {
   int cur = 0, all = 0, col = 0, len = 0;
 
   if (l != nullptr) {
-    cur = l->real_linenumber;
-    col = l->bwidth + CurrentTab->currentBuffer()->layout.currentColumn +
+    cur = l->linenumber;
+    ;
+    col = l->width() + CurrentTab->currentBuffer()->layout.currentColumn +
           CurrentTab->currentBuffer()->layout.cursorX + 1;
-    while (l->next && l->next->bpos)
-      l = l->next;
-    len = l->bwidth + l->width();
+    len = l->width();
   }
   if (CurrentTab->currentBuffer()->layout.lastLine)
-    all = CurrentTab->currentBuffer()->layout.lastLine->real_linenumber;
+    all = CurrentTab->currentBuffer()->layout.lastLine->linenumber;
   tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
                 len);

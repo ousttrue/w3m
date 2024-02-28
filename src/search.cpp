@@ -23,20 +23,11 @@ int forwardSearch(LineLayout *layout, const char *str) {
   }
 
   auto pos = layout->pos;
-  if (l->bpos) {
-    pos += l->bpos;
-    while (l->bpos && l->prev)
-      l = l->prev;
-  }
   begin = l;
   if (pos < l->size() &&
       regexMatch(&l->lineBuf[pos], l->size() - pos, 0) == 1) {
     matchedPosition(&first, &last);
     pos = first - l->lineBuf.data();
-    while (pos >= l->len && l->next && l->next->bpos) {
-      pos -= l->len;
-      l = l->next;
-    }
     layout->pos = pos;
     if (l != layout->currentLine) {
       layout->gotoLine(l->linenumber);
@@ -54,15 +45,9 @@ int forwardSearch(LineLayout *layout, const char *str) {
         break;
       }
     }
-    if (l->bpos)
-      continue;
     if (regexMatch(l->lineBuf.data(), l->size(), 1) == 1) {
       matchedPosition(&first, &last);
       pos = first - l->lineBuf.data();
-      while (pos >= l->len && l->next && l->next->bpos) {
-        pos -= l->len;
-        l = l->next;
-      }
       layout->pos = pos;
       layout->currentLine = l;
       layout->gotoLine(l->linenumber);
@@ -91,11 +76,6 @@ int backwardSearch(LineLayout *layout, const char *str) {
     return SR_NOTFOUND;
   }
   pos = layout->pos;
-  if (l->bpos) {
-    pos += l->bpos;
-    while (l->bpos && l->prev)
-      l = l->prev;
-  }
   begin = l;
   if (pos > 0) {
     pos--;
@@ -118,10 +98,6 @@ int backwardSearch(LineLayout *layout, const char *str) {
     }
     if (found) {
       pos = found - l->lineBuf.data();
-      while (pos >= l->len && l->next && l->next->bpos) {
-        pos -= l->len;
-        l = l->next;
-      }
       layout->pos = pos;
       if (l != layout->currentLine) {
         layout->gotoLine(l->linenumber);
@@ -154,10 +130,6 @@ int backwardSearch(LineLayout *layout, const char *str) {
     }
     if (found) {
       pos = found - l->lineBuf.data();
-      while (pos >= l->len && l->next && l->next->bpos) {
-        pos -= l->len;
-        l = l->next;
-      }
       layout->pos = pos;
       layout->gotoLine(l->linenumber);
       layout->arrangeCursor();

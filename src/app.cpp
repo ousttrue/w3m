@@ -810,7 +810,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
       set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
     else
       set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
+    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->linenumber)->ptr);
     set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->layout.currentColumn +
                                                         buf->layout.cursorX + 1)
                                           ->ptr);
@@ -1780,8 +1780,8 @@ Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   msg = Strnew();
   if (displayLineInfo && buf->layout.currentLine != NULL &&
       buf->layout.lastLine != NULL) {
-    int cl = buf->layout.currentLine->real_linenumber;
-    int ll = buf->layout.lastLine->real_linenumber;
+    int cl = buf->layout.currentLine->linenumber;
+    int ll = buf->layout.lastLine->linenumber;
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else {

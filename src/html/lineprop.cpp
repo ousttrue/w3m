@@ -41,6 +41,7 @@ int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpo
       }
       }
       else{
+        realColumn.push_back(j);
         ++i;
       }
       j += utf8.width();
