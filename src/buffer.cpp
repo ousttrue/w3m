@@ -372,8 +372,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   if (label_topline)
     buf->layout.topLine = buf->layout.lineSkip(
         buf->layout.topLine,
-        buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber,
-        false);
+        buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber);
   buf->layout.pos = a->start.pos;
   buf->layout.arrangeCursor();
   return buf;

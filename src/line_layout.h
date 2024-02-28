@@ -73,7 +73,7 @@ struct LineLayout {
     }
   }
 
-  Line *lineSkip(Line *line, int offset, int last);
+  Line *lineSkip(Line *line, int offset);
   void arrangeLine();
   void cursorUpDown(int n);
   void gotoLine(int n);

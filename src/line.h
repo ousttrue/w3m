@@ -14,9 +14,9 @@ struct Line : public gc_cleanup {
   std::vector<char> lineBuf;
   std::vector<Lineprop> propBuf;
 
-  Line *currentLineSkip(int offset, int last) {
+  Line *currentLineSkip(int offset) {
     Line *l = this;
-    if (offset == 0){
+    if (offset == 0) {
       return l;
     }
     if (offset > 0)

@@ -64,8 +64,8 @@ void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen,
   }
 }
 
-Line *LineLayout::lineSkip(Line *line, int offset, int last) {
-  auto l = line->currentLineSkip(offset, last);
+Line *LineLayout::lineSkip(Line *line, int offset) {
+  auto l = line->currentLineSkip(offset);
   if (!nextpage_topline)
     for (int i = LINES - 1 - (lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
@@ -119,8 +119,7 @@ void LineLayout::gotoLine(int n) {
     snprintf(msg, sizeof(msg), "Last line is #%ld", this->lastLine->linenumber);
     App::instance().set_delayed_message(msg);
     this->currentLine = l;
-    this->topLine =
-        this->lineSkip(this->currentLine, -(this->LINES - 1), false);
+    this->topLine = this->lineSkip(this->currentLine, -(this->LINES - 1));
     return;
   }
   for (; l != nullptr; l = l->next) {
@@ -128,7 +127,7 @@ void LineLayout::gotoLine(int n) {
       this->currentLine = l;
       if (n < this->topLine->linenumber ||
           this->topLine->linenumber + this->LINES <= n)
-        this->topLine = this->lineSkip(l, -(this->LINES + 1) / 2, false);
+        this->topLine = this->lineSkip(l, -(this->LINES + 1) / 2);
       break;
     }
   }
@@ -139,7 +138,7 @@ void LineLayout::cursorUpDown(int n) {
 
   if (this->firstLine == NULL)
     return;
-  if ((this->currentLine = cl->currentLineSkip(n, false)) == cl)
+  if ((this->currentLine = cl->currentLineSkip(n)) == cl)
     return;
   this->arrangeLine();
 }
@@ -148,7 +147,7 @@ void LineLayout::cursorUp0(int n) {
   if (this->cursorY > 0)
     this->cursorUpDown(-1);
   else {
-    this->topLine = this->lineSkip(this->topLine, -n, false);
+    this->topLine = this->lineSkip(this->topLine, -n);
     if (this->currentLine->prev != NULL)
       this->currentLine = this->currentLine->prev;
     this->arrangeLine();
@@ -176,7 +175,7 @@ void LineLayout::cursorDown0(int n) {
   if (this->cursorY < this->LINES - 1)
     this->cursorUpDown(1);
   else {
-    this->topLine = this->lineSkip(this->topLine, n, false);
+    this->topLine = this->lineSkip(this->topLine, n);
     if (this->currentLine->next != NULL)
       this->currentLine = this->currentLine->next;
     this->arrangeLine();
@@ -242,7 +241,7 @@ void LineLayout::arrangeCursor() {
     /*
      * buf->topLine = buf->currentLine;
      */
-    this->topLine = this->lineSkip(this->currentLine, 0, false);
+    this->topLine = this->lineSkip(this->currentLine, 0);
   }
   /* Arrange column */
   while (this->pos < 0 && this->currentLine->prev && this->currentLine->bpos) {
@@ -369,8 +368,7 @@ void LineLayout::cursorXY(int x, int y) {
 }
 
 void LineLayout::restorePosition(const LineLayout &orig) {
-  this->topLine =
-      this->lineSkip(this->firstLine, orig.TOP_LINENUMBER() - 1, false);
+  this->topLine = this->lineSkip(this->firstLine, orig.TOP_LINENUMBER() - 1);
   this->gotoLine(orig.CUR_LINENUMBER());
   this->pos = orig.pos;
   if (this->currentLine && orig.currentLine)
@@ -403,8 +401,7 @@ void LineLayout::gotoRealLine(int n) {
              this->lastLine->real_linenumber);
     App::instance().set_delayed_message(msg);
     this->currentLine = l;
-    this->topLine =
-        this->lineSkip(this->currentLine, -(this->LINES - 1), false);
+    this->topLine = this->lineSkip(this->currentLine, -(this->LINES - 1));
     return;
   }
 
@@ -413,7 +410,7 @@ void LineLayout::gotoRealLine(int n) {
       this->currentLine = l;
       if (n < this->topLine->real_linenumber ||
           this->topLine->real_linenumber + this->LINES <= n)
-        this->topLine = this->lineSkip(l, -(this->LINES + 1) / 2, false);
+        this->topLine = this->lineSkip(l, -(this->LINES + 1) / 2);
       break;
     }
   }
@@ -822,8 +819,7 @@ void LineLayout::_goLine(const char *l, int prec_num) {
   } else if (*l == '^') {
     this->topLine = this->currentLine = this->firstLine;
   } else if (*l == '$') {
-    this->topLine =
-        this->lineSkip(this->lastLine, -(this->LINES + 1) / 2, true);
+    this->topLine = this->lineSkip(this->lastLine, -(this->LINES + 1) / 2);
     this->currentLine = this->lastLine;
   } else
     this->gotoRealLine(atoi(l));
@@ -883,7 +879,7 @@ void LineLayout::nscroll(int n) {
   auto cur = this->currentLine;
 
   auto lnum = cur->linenumber;
-  this->topLine = this->lineSkip(top, n, false);
+  this->topLine = this->lineSkip(top, n);
   if (this->topLine == top) {
     lnum += n;
     if (lnum < this->topLine->linenumber)
@@ -1263,7 +1259,7 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
     n = (this->currentLine->linenumber - this->topLine->linenumber) -
         (cur->linenumber - sbuf.topLine->linenumber);
     if (n) {
-      this->topLine = this->lineSkip(this->topLine, n, false);
+      this->topLine = this->lineSkip(this->topLine, n);
       if (cur->real_linenumber > 0) {
         this->gotoRealLine(cur->real_linenumber);
       } else {

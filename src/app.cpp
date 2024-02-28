@@ -1483,8 +1483,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
             CurrentTab->currentBuffer()->layout.lineSkip(
                 CurrentTab->currentBuffer()->layout.topLine,
                 CurrentTab->currentBuffer()->layout.currentLine->linenumber -
-                    CurrentTab->currentBuffer()->layout.topLine->linenumber,
-                false);
+                    CurrentTab->currentBuffer()->layout.topLine->linenumber);
       CurrentTab->currentBuffer()->layout.pos = al->start.pos;
       CurrentTab->currentBuffer()->layout.arrangeCursor();
     }

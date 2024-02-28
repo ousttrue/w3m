@@ -108,7 +108,7 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
   if (offsety != 0) {
     CurrentTab->currentBuffer()->layout.topLine =
         CurrentTab->currentBuffer()->layout.lineSkip(
-            CurrentTab->currentBuffer()->layout.topLine, -offsety, false);
+            CurrentTab->currentBuffer()->layout.topLine, -offsety);
     CurrentTab->currentBuffer()->layout.arrangeLine();
   }
 }
@@ -1774,7 +1774,7 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
     co_return;
   CurrentTab->currentBuffer()->layout.currentLine =
       CurrentTab->currentBuffer()->layout.lineSkip(
-          CurrentTab->currentBuffer()->layout.topLine, 0, false);
+          CurrentTab->currentBuffer()->layout.topLine, 0);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1786,8 +1786,7 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
     co_return;
   offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
   CurrentTab->currentBuffer()->layout.currentLine =
-      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
-                                                                   false);
+      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1799,8 +1798,7 @@ std::shared_ptr<CoroutineState<void>> cursorBottom() {
     co_return;
   offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
   CurrentTab->currentBuffer()->layout.currentLine =
-      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety,
-                                                                   false);
+      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
