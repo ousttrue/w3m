@@ -9,7 +9,7 @@ Line::Line(int n, Line *prevl) : linenumber(n), prev(prevl) {
 }
 
 Line::Line(int linenumber, Line *prevl, const char *buf, Lineprop *prop,
-           int byteLen, int realLinenumber)
+           int byteLen)
     : linenumber(linenumber), prev(prevl), lineBuf(byteLen + 1),
       propBuf(byteLen + 1) {
   if (prev) {

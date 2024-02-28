@@ -47,17 +47,9 @@ void LineLayout::clearBuffer() {
   this->_imarklist->clear();
 }
 
-void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen,
-                            int breakWidth, int realLinenum) {
-  {
-    auto l = new Line(++this->allLine, this->currentLine, line, prop, byteLen,
-                      realLinenum);
-    this->pushLine(l);
-  }
-
-  if (byteLen <= 0 || breakWidth <= 0) {
-    return;
-  }
+void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen) {
+  auto l = new Line(++this->allLine, this->currentLine, line, prop, byteLen);
+  this->pushLine(l);
 }
 
 Line *LineLayout::lineSkip(Line *line, int offset) {

@@ -61,7 +61,7 @@ public:
   // Line(int linenumber, Line *prevl, char *line, Lineprop *prop, int byteLen,
   //      int realLinenumber);
   Line(int linenumber, Line *prevl, const char *line, Lineprop *prop,
-       int byteLen, int realLinenumber);
+       int byteLen);
   ~Line() {}
 
   Line(const Line &) = delete;

@@ -50,8 +50,7 @@ struct LineLayout {
   void reshape(int width, const LineLayout &sbuf);
 
   void clearBuffer();
-  void addnewline(const char *line, Lineprop *prop, int byteLen, int breakWidth,
-                  int realLinenum);
+  void addnewline(const char *line, Lineprop *prop, int byteLen);
   int TOP_LINENUMBER() const { return topLine ? topLine->linenumber : 1; }
   int CUR_LINENUMBER() const {
     return currentLine ? currentLine->linenumber : 1;

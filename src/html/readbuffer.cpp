@@ -622,7 +622,7 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
 
     Lineprop *propBuffer = nullptr;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length, -1, nlines);
+    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
   }
   layout->topLine = layout->firstLine;
   layout->lastLine = layout->currentLine;

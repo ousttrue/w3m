@@ -1310,7 +1310,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
     }
     /* end of processing for one line */
     if (!internal) {
-      layout->addnewline(outc, outp, pos, -1, nlines);
+      layout->addnewline(outc, outp, pos);
     }
     if (internal == HTML_N_INTERNAL)
       internal = 0;
