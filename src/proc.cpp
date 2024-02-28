@@ -685,7 +685,8 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout.currentLine->linenumber);
+        CurrentTab->currentBuffer()->layout.linenumber(
+            CurrentTab->currentBuffer()->layout.currentLine));
   }
   exec_cmd(cmd);
 
@@ -707,7 +708,8 @@ std::shared_ptr<CoroutineState<void>> editScr() {
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout.currentLine->linenumber));
+      CurrentTab->currentBuffer()->layout.linenumber(
+          CurrentTab->currentBuffer()->layout.currentLine)));
   unlink(tmpf.c_str());
 }
 
@@ -1463,19 +1465,19 @@ std::shared_ptr<CoroutineState<void>> linkbrz() {
 // LINE_INFO
 //"Display current position in document"
 std::shared_ptr<CoroutineState<void>> curlno() {
-  Line *l = CurrentTab->currentBuffer()->layout.currentLine;
+  auto layout = &CurrentTab->currentBuffer()->layout;
+  Line *l = layout->currentLine;
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
   if (l != nullptr) {
-    cur = l->linenumber;
+    cur = layout->linenumber(l);
     ;
-    col = l->width() + CurrentTab->currentBuffer()->layout.currentColumn +
-          CurrentTab->currentBuffer()->layout.cursorX + 1;
+    col = l->width() + layout->currentColumn + layout->cursorX + 1;
     len = l->width();
   }
   if (CurrentTab->currentBuffer()->layout.lastLine)
-    all = CurrentTab->currentBuffer()->layout.lastLine->linenumber;
+    all = layout->linenumber(layout->lastLine);
   tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
                 len);

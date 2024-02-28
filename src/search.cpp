@@ -30,7 +30,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
     pos = first - l->lineBuf.data();
     layout->pos = pos;
     if (l != layout->currentLine) {
-      layout->gotoLine(l->linenumber);
+      layout->gotoLine(layout->linenumber(l));
     }
     layout->arrangeCursor();
     l->set_mark(pos, pos + last - first);
@@ -50,7 +50,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
       pos = first - l->lineBuf.data();
       layout->pos = pos;
       layout->currentLine = l;
-      layout->gotoLine(l->linenumber);
+      layout->gotoLine(layout->linenumber(l));
       layout->arrangeCursor();
       l->set_mark(pos, pos + last - first);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
@@ -100,7 +100,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
       pos = found - l->lineBuf.data();
       layout->pos = pos;
       if (l != layout->currentLine) {
-        layout->gotoLine(l->linenumber);
+        layout->gotoLine(layout->linenumber(l));
       }
       layout->arrangeCursor();
       l->set_mark(pos, pos + found_last - found);
@@ -131,7 +131,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
     if (found) {
       pos = found - l->lineBuf.data();
       layout->pos = pos;
-      layout->gotoLine(l->linenumber);
+      layout->gotoLine(layout->linenumber(l));
       layout->arrangeCursor();
       l->set_mark(pos, pos + found_last - found);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);

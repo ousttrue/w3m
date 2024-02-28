@@ -1,5 +1,4 @@
 #include "app.h"
-#include "url_quote.h"
 #include "textlist.h"
 #include "etc.h"
 #include "ctrlcode.h"
@@ -27,7 +26,6 @@
 #include <uv.h>
 #include <chrono>
 #include <algorithm>
-// #include <unistd.h>
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -810,7 +808,8 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
       set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
     else
       set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->linenumber)->ptr);
+    set_environ("W3M_CURRENT_LINE",
+                Sprintf("%ld", buf->layout.linenumber(l))->ptr);
     set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->layout.currentColumn +
                                                         buf->layout.cursorX + 1)
                                           ->ptr);
@@ -1471,21 +1470,19 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   ) {
     CurrentTab->pushBuffer(buf);
   } else {
-    Anchor *al = nullptr;
-    if (!al) {
-      auto label = Strnew_m_charp("_", target, nullptr)->ptr;
-      al = CurrentTab->currentBuffer()->layout.name()->searchAnchor(label);
-    }
+    auto label = Strnew_m_charp("_", target, nullptr)->ptr;
+    auto buf = CurrentTab->currentBuffer();
+    auto al = buf->layout.name()->searchAnchor(label);
     if (al) {
-      CurrentTab->currentBuffer()->layout.gotoLine(al->start.line);
-      if (label_topline)
-        CurrentTab->currentBuffer()->layout.topLine =
-            CurrentTab->currentBuffer()->layout.lineSkip(
-                CurrentTab->currentBuffer()->layout.topLine,
-                CurrentTab->currentBuffer()->layout.currentLine->linenumber -
-                    CurrentTab->currentBuffer()->layout.topLine->linenumber);
-      CurrentTab->currentBuffer()->layout.pos = al->start.pos;
-      CurrentTab->currentBuffer()->layout.arrangeCursor();
+      buf->layout.gotoLine(al->start.line);
+      if (label_topline) {
+        buf->layout.topLine = buf->layout.lineSkip(
+            buf->layout.topLine,
+            buf->layout.linenumber(buf->layout.currentLine) -
+                buf->layout.linenumber(buf->layout.topLine));
+      }
+      buf->layout.pos = al->start.pos;
+      buf->layout.arrangeCursor();
     }
   }
 }
@@ -1780,8 +1777,8 @@ Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   msg = Strnew();
   if (displayLineInfo && buf->layout.currentLine != NULL &&
       buf->layout.lastLine != NULL) {
-    int cl = buf->layout.currentLine->linenumber;
-    int ll = buf->layout.lastLine->linenumber;
+    int cl = buf->layout.linenumber(buf->layout.currentLine);
+    int ll = buf->layout.linenumber(buf->layout.lastLine);
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else {

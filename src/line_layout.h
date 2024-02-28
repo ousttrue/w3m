@@ -38,6 +38,7 @@ struct LineLayout {
   //
   Line *firstLine = nullptr;
   Line *lastLine = nullptr;
+  int linenumber(Line *l) const { return l->linenumber; }
   // scroll position
   Line *topLine = nullptr;
   int currentColumn = 0;

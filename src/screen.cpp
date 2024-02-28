@@ -284,7 +284,7 @@ void Screen::drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
     for (;; l = l->next) {
       if (l == NULL)
         return;
-      if (l->linenumber == an->start.line)
+      if (layout->linenumber(l) == an->start.line)
         break;
     }
     if (hseq >= 0 && an->hseq == hseq) {
@@ -299,11 +299,13 @@ void Screen::drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
         }
       }
       if (active && start_pos < end_pos)
-        this->redrawLineRegion(layout, l, l->linenumber - tline + layout->rootY,
+        this->redrawLineRegion(layout, l,
+                               layout->linenumber(l) - tline + layout->rootY,
                                start_pos, end_pos);
     } else if (prevhseq >= 0 && an->hseq == prevhseq) {
       if (active)
-        this->redrawLineRegion(layout, l, l->linenumber - tline + layout->rootY,
+        this->redrawLineRegion(layout, l,
+                               layout->linenumber(l) - tline + layout->rootY,
                                an->start.pos, an->end.pos);
     }
   }
@@ -324,7 +326,7 @@ void Screen ::drawAnchorCursor(LineLayout *layout) {
   } else {
     hseq = -1;
   }
-  tline = layout->topLine->linenumber;
+  tline = layout->linenumber(layout->topLine);
   eline = tline + layout->LINES;
   prevhseq = layout->hmarklist()->prevhseq;
 

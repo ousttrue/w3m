@@ -6,8 +6,12 @@
 #define LINELEN 256 /* Initial line length */
 
 struct Line : public gc_cleanup {
+  friend struct LineLayout;
+
+private:
   long linenumber = 0; /* on buffer */
 
+public:
   Line *next = nullptr;
   Line *prev = nullptr;
 

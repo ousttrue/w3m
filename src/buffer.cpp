@@ -99,7 +99,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
 
   all = this->layout.allLine;
   if (all == 0 && this->layout.lastLine)
-    all = this->layout.lastLine->linenumber;
+    all = this->layout.linenumber(this->layout.lastLine);
   p = url_decode0(this->res->currentURL.to_Str().c_str());
   Strcat_m_charp(
       tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
@@ -369,8 +369,8 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   buf->layout.gotoLine(a->start.line);
   if (label_topline)
     buf->layout.topLine = buf->layout.lineSkip(
-        buf->layout.topLine,
-        buf->layout.currentLine->linenumber - buf->layout.topLine->linenumber);
+        buf->layout.topLine, buf->layout.linenumber(buf->layout.currentLine) -
+                                 buf->layout.linenumber(buf->layout.topLine));
   buf->layout.pos = a->start.pos;
   buf->layout.arrangeCursor();
   return buf;

@@ -355,7 +355,7 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
     if (!l)
       break;
     if (form->type == FORM_TEXTAREA) {
-      int n = a->y - layout->currentLine->linenumber;
+      int n = a->y - layout->linenumber(layout->currentLine);
       if (n > 0)
         for (; l && n; l = l->prev, n--)
           ;
@@ -372,14 +372,15 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
         break;
       if (rows > 1 && layout->formitem()) {
         pos = l->columnPos(col);
-        a = layout->formitem()->retrieveAnchor(l->linenumber, pos);
+        a = layout->formitem()->retrieveAnchor(layout->linenumber(l), pos);
         if (a == NULL)
           break;
         spos = a->start.pos;
         epos = a->end.pos;
       }
-      if (a->start.line != a->end.line || spos > epos || epos >= l->lineBuf.size() ||
-          spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
+      if (a->start.line != a->end.line || spos > epos ||
+          epos >= l->lineBuf.size() || spos < 0 || epos < 0 ||
+          l->bytePosToColumn(epos) < col)
         break;
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
                              rows > 1, form->type == FORM_INPUT_PASSWORD);
