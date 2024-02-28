@@ -7,7 +7,6 @@
 #include "tabbuffer.h"
 #include "http_response.h"
 #include <ftxui/screen/screen.hpp>
-#include <iostream>
 
 bool displayLink = false;
 int displayLineInfo = false;
@@ -76,35 +75,13 @@ RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
   return pos;
 }
 
-static void cursor(const RowCol p) {
-  std::cout << "\x1b[" << p.row << ";" << p.col << "H";
-}
-
-void Screen::print() {
-  // using namespace ftxui;
-
-  std::cout << "\x1b[?25l";
-  std::flush(std::cout);
-  ::cursor({
-      .row = 1,
-      .col = 1,
-  });
+std::string Screen::print() {
   // screen.SetCursor({
   //     .x = CurColumn + 1,
   //     .y = CurLine + 1,
   //     .shape = ftxui::Screen::Cursor::Shape::Hidden,
   // });
-  _screen->Print();
-}
-
-void Screen::cursor(const RowCol &pos) {
-  // std::cout << "\x1b[2 q";
-  ::cursor({
-      .row = pos.row + 1,
-      .col = pos.col + 1,
-  });
-  std::cout << "\x1b[?25h";
-  std::flush(std::cout);
+  return _screen->ToString();
 }
 
 void Screen::toggle_stand(const RowCol &pos) {
@@ -484,11 +461,11 @@ void Screen ::drawAnchorCursor(const std::shared_ptr<Buffer> &buf) {
   buf->layout.hmarklist()->prevhseq = hseq;
 }
 
-void Screen::display(int ny, int width, TabBuffer *currentTab) {
+std::string Screen::display(int ny, int width, TabBuffer *currentTab) {
 
   auto buf = currentTab->currentBuffer();
   if (!buf) {
-    return;
+    return {};
   }
 
   auto &layout = buf->layout;
@@ -526,13 +503,9 @@ void Screen::display(int ny, int width, TabBuffer *currentTab) {
                           buf->layout.AbsCursorY());
   this->standend();
   // term_title(buf->layout.title.c_str());
-  this->print();
-  this->cursor({
-      .row = buf->layout.AbsCursorY(),
-      .col = buf->layout.AbsCursorX(),
-  });
   if (buf != save_current_buf) {
     CurrentTab->currentBuffer()->saveBufferInfo();
     save_current_buf = buf;
   }
+  return this->print();
 }

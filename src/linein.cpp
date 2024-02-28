@@ -145,7 +145,7 @@ void LineInput::onBreak() {
   }
 
   _screen->print();
-  _screen->cursor({.row = _screen->LASTLINE(), .col = 0});
+  App::instance().cursor({.row = _screen->LASTLINE(), .col = 0});
   auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
@@ -193,7 +193,7 @@ void LineInput::draw() {
   RowCol pos = {.row = _screen->LASTLINE(), .col = opos + x - offset};
   _screen->clrtoeolx(pos);
   _screen->print();
-  _screen->cursor(pos);
+  App::instance().cursor(pos);
 }
 
 bool LineInput::dispatch(const char *buf, int len) {

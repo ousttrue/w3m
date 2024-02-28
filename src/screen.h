@@ -82,7 +82,7 @@ public:
   void setupscreen(const RowCol &size);
   void clear();
   void clrtoeol(const RowCol &pos);
-  void print();
+  std::string print();
   void clrtoeolx(const RowCol &pos) { clrtoeol(pos); }
   void clrtobot_eol(const RowCol &pos,
                     const std::function<void(const RowCol &)> &);
@@ -109,7 +109,6 @@ public:
   void graphend(void) { CurrentMode &= ~ScreenFlags::GRAPHICS; }
   void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
-  void cursor(const RowCol &pos);
   int redrawLineRegion(const std::shared_ptr<Buffer> &buf, Line *l, int i,
                        int bpos, int epos);
   Line *redrawLine(LineLayout *buf, Line *l, int i);
@@ -121,5 +120,5 @@ public:
   Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
                           const char *url);
   Str *make_lastline_message(const std::shared_ptr<Buffer> &buf);
-  void display(int ny, int width, TabBuffer *currentTab);
+  std::string display(int ny, int width, TabBuffer *currentTab);
 };

@@ -138,6 +138,7 @@ public:
     _dispatcher.push(dispatcher);
   }
   void onFrame();
+  void cursor(const RowCol &pos);
   void display();
   void task(int sec, const std::string &cmd, const char *data = nullptr,
             bool releat = false);

@@ -1159,6 +1159,20 @@ void App::onFrame() {
   display();
 }
 
+static void cursor(const RowCol p) {
+  std::cout << "\x1b[" << (p.row + 1) << ";" << (p.col + 1) << "H";
+}
+
+void App::cursor(const RowCol &pos) {
+  // std::cout << "\x1b[2 q";
+  ::cursor({
+      .row = pos.row,
+      .col = pos.col,
+  });
+  std::cout << "\x1b[?25h";
+  std::flush(std::cout);
+}
+
 void App::display() {
   int ny = 0;
   if (App::instance().nTab() > 1) {
@@ -1168,8 +1182,25 @@ void App::display() {
     }
   }
 
+  // hide
+  std::cout << "\x1b[?25l";
+  std::flush(std::cout);
+
+  // origin
+  ::cursor({
+      .row = 0,
+      .col = 0,
+  });
+
   int width = INIT_BUFFER_WIDTH();
   _screen->display(ny, width, currentTab().get());
+
+  // cursor
+  auto buf = currentTab()->currentBuffer();
+  this->cursor({
+      .row = buf->layout.AbsCursorY(),
+      .col = buf->layout.AbsCursorX(),
+  });
 }
 
 struct TimerTask {
@@ -1431,7 +1462,7 @@ void App::message(const char *s, int return_x, int return_y) {
     RowCol pos{.row = LASTLINE(), .col = 0};
     pos = _screen->addnstr(pos, s, COLS() - 1);
     _screen->clrtoeolx(pos);
-    _screen->cursor({.row = return_y, .col = return_x});
+    this->cursor({.row = return_y, .col = return_x});
   } else {
     fprintf(stderr, "%s\n", s);
   }
@@ -1568,7 +1599,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    _screen->cursor({.row = LASTLINE(), .col = 0});
+    this->cursor({.row = LASTLINE(), .col = 0});
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {
