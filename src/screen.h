@@ -6,11 +6,7 @@
 #include <functional>
 #include <memory>
 
-extern bool displayLink;
-extern int displayLineInfo;
-
 struct Utf8;
-using l_prop = unsigned short;
 
 // Screen properties
 enum class ScreenFlags : unsigned short {

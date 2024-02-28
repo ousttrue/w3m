@@ -35,6 +35,8 @@
 #endif
 
 bool DecodeURL = false;
+bool displayLink = false;
+int displayLineInfo = false;
 
 static char url_unquote_char(const char **pstr) {
   return ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))

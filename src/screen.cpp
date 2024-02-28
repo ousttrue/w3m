@@ -2,9 +2,6 @@
 #include "line_layout.h"
 #include <ftxui/screen/screen.hpp>
 
-bool displayLink = false;
-int displayLineInfo = false;
-
 void Screen::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
 }

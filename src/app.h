@@ -9,6 +9,8 @@
 #include <array>
 #include <unordered_map>
 
+extern bool displayLink;
+extern int displayLineInfo;
 extern bool DecodeURL;
 extern int prev_key;
 extern const char *CurrentKeyData;
