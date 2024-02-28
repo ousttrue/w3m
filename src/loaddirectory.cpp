@@ -3,6 +3,7 @@
 #include "Str.h"
 #include "etc.h"
 #include "alloc.h"
+#include "app.h"
 
 typedef struct direct Directory;
 #include <sys/stat.h>
@@ -47,7 +48,7 @@ Str *loadLocalDir(const char *dname) {
     Strcat_char(dirname, '/');
   qdir = html_quote(dirname->ptr);
   tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
-                       html_quote(file_quote(dirname->ptr)),
+                       html_quote(file_quote(dirname->ptr).c_str()),
                        "\">\n<TITLE>Directory list of ", qdir,
                        "</TITLE>\n</HEAD>\n<BODY>\n<H1>Directory list of ",
                        qdir, "</H1>\n", NULL);
@@ -105,7 +106,7 @@ Str *loadLocalDir(const char *dname) {
         else
           Strcat_charp(tmp, "[FILE] ");
     }
-    Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
+    Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p).c_str()), NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
     Strcat_m_charp(tmp, "\">", html_quote(p), NULL);

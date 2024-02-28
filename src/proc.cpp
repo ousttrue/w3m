@@ -726,7 +726,6 @@ std::shared_ptr<CoroutineState<void>> followA() {
   auto [a, buf] = co_await CurrentTab->currentBuffer()->followAnchor();
   if (buf) {
     App::instance().pushBuffer(buf, a->target);
-
   }
 
   co_return;
@@ -1026,7 +1025,6 @@ std::shared_ptr<CoroutineState<void>> backBf() {
   }
 
   CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
-
 }
 
 // DELETE_PREVBUF
@@ -1232,7 +1230,6 @@ std::shared_ptr<CoroutineState<void>> svBuf() {
   if (file == nullptr || *file == '\0') {
     // qfile = inputLineHist("Save buffer to: ", nullptr, IN_COMMAND, SaveHist);
     if (qfile == nullptr || *qfile == '\0') {
-      App::instance().invalidate();
       co_return;
     }
   }
@@ -1247,7 +1244,6 @@ std::shared_ptr<CoroutineState<void>> svBuf() {
     file = expandPath((char *)file);
     // if (checkOverWrite(file) < 0) {
     if (false) {
-      App::instance().invalidate();
       co_return;
     }
     f = fopen(file, "w");
@@ -1263,7 +1259,6 @@ std::shared_ptr<CoroutineState<void>> svBuf() {
     pclose(f);
   else
     fclose(f);
-  App::instance().invalidate();
 #endif
 
   co_return;
@@ -1731,10 +1726,12 @@ std::shared_ptr<CoroutineState<void>> ldDL() {
   }
 
   auto reload = checkDownloadList();
-  auto buf = DownloadListBuffer();
-  if (!buf) {
+  auto html = DownloadListBuffer();
+  if (html.empty()) {
     co_return;
   }
+  auto buf = Buffer::create();
+  loadHTMLstream(&buf->layout, buf->res.get(), html, true);
   if (replace) {
     buf->layout.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
     buf->layout.restorePosition(CurrentTab->currentBuffer()->layout);

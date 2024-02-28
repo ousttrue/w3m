@@ -139,7 +139,7 @@ std::shared_ptr<Hist> Hist::copyHist() const {
 }
 
 void Hist::push(std::string_view ptr) {
-  if (this->hash.insert({ptr.begin(), ptr.end()}).second) {
+  if (this->hash.insert({{ptr.begin(), ptr.end()}, true}).second) {
     this->list.push_back({ptr.begin(), ptr.end()});
   }
 }

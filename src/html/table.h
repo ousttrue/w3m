@@ -1,6 +1,7 @@
 #pragma once
 #include "line.h"
 #include "enum_template.h"
+#include <stdint.h>
 
 extern int symbol_width;
 extern int symbol_width0;

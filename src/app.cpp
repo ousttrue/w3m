@@ -1156,6 +1156,10 @@ void App::onFrame() {
     }
   }
 
+  display();
+}
+
+void App::display() {
   int ny = 0;
   if (App::instance().nTab() > 1) {
     ny = App::instance().calcTabPos() + 2;
@@ -1164,6 +1168,7 @@ void App::onFrame() {
     }
   }
 
+  int width = INIT_BUFFER_WIDTH();
   _screen->display(ny, width, currentTab().get());
 }
 

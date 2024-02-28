@@ -76,7 +76,7 @@ static char *convert_size3(long long size) {
   return tmp->ptr;
 }
 
-std::shared_ptr<Buffer> DownloadListBuffer(void) {
+std::string DownloadListBuffer(void) {
 #ifdef _MSC_VER
   return {};
 #else
@@ -87,8 +87,9 @@ std::shared_ptr<Buffer> DownloadListBuffer(void) {
   int duration, rate, eta;
   size_t size;
 
-  if (!FirstDL)
-    return nullptr;
+  if (!FirstDL) {
+    return {};
+  }
   cur_time = time(0);
   src = Strnew_charp(
       "<html><head><title>" DOWNLOAD_LIST_TITLE
@@ -165,7 +166,7 @@ std::shared_ptr<Buffer> DownloadListBuffer(void) {
     Strcat_charp(src, "\n</pre><hr>\n");
   }
   Strcat_charp(src, "</form></body></html>");
-  return loadHTMLString(src);
+  return src->ptr;
 #endif
 }
 

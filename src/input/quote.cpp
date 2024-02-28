@@ -1,6 +1,7 @@
 #include "quote.h"
 #include "myctype.h"
 #include <sstream>
+#include <string.h>
 
 #ifdef _MSC_VER
 #include <ctype.h>

@@ -230,13 +230,13 @@ std::string expandName(std::string_view name) {
 #ifdef _MSC_VER
   return {};
 #else
-  const char *p;
   struct passwd *passent, *getpwnam(const char *);
   Str *extpath = NULL;
 
-  if (name == NULL)
-    return NULL;
-  p = name;
+  if (name.empty()) {
+    return {};
+  }
+  auto p = name.begin();
   if (*p == '/') {
     if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2))) && personal_document_root) {
       p += 2;
@@ -263,7 +263,7 @@ std::string expandName(std::string_view name) {
   } else
     return expandPath(p);
 rest:
-  return name;
+  return {name.begin(), name.end()};
 #endif
 }
 

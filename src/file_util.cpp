@@ -1,4 +1,9 @@
 #include "file_util.h"
+#include "myctype.h"
+#include "downloadlist.h"
+#include "app.h"
+#include "rc.h"
+#include "istream.h"
 #include "quote.h"
 #include "etc.h"
 #include "linein.h"
@@ -6,10 +11,13 @@
 #include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include <string.h>
 #ifdef _MSC_VER
 #else
 #include <utime.h>
 #endif
+
+#define SAVE_BUF_SIZE 1536
 
 bool PermitSaveToPipe = false;
 
@@ -43,7 +51,7 @@ int _MoveFile(const char *path1, const char *path2) {
   while ((count = f1->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
     fwrite(buf, 1, count, f2);
     linelen += count;
-    App::instance().showProgress(&linelen, &trbyte, current_content_length);
+    // App::instance().showProgress(&linelen, &trbyte, current_content_length);
   }
 
   xfree(buf);

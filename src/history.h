@@ -3,7 +3,7 @@
 #include <string>
 #include <string_view>
 #include <list>
-#include <unordered_set>
+#include <unordered_map>
 #include <memory>
 
 extern bool UseHistory;
@@ -15,7 +15,7 @@ struct Hist {
 private:
   std::list<std::string> list;
   std::list<std::string>::iterator current;
-  std::unordered_set<std::string> hash;
+  std::unordered_map<std::string, bool> hash;
   long long mtime = {};
 
   Hist();
