@@ -478,7 +478,7 @@ std::shared_ptr<CoroutineState<void>> movLW() {
         goto end;
       }
       CurrentTab->currentBuffer()->layout.pos =
-          CurrentTab->currentBuffer()->layout.currentLine->lineBuf.size();
+          CurrentTab->currentBuffer()->layout.currentLine->len();
     }
 
     l = CurrentTab->currentBuffer()->layout.currentLine;
@@ -517,17 +517,17 @@ std::shared_ptr<CoroutineState<void>> movRW() {
 
     l = CurrentTab->currentBuffer()->layout.currentLine;
     lb = l->lineBuf.data();
-    while (CurrentTab->currentBuffer()->layout.pos < l->lineBuf.size() &&
+    while (CurrentTab->currentBuffer()->layout.pos < l->len() &&
            is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
       nextChar(CurrentTab->currentBuffer()->layout.pos, l);
     }
 
     while (1) {
-      while (CurrentTab->currentBuffer()->layout.pos < l->lineBuf.size() &&
+      while (CurrentTab->currentBuffer()->layout.pos < l->len() &&
              !is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
         nextChar(CurrentTab->currentBuffer()->layout.pos, l);
       }
-      if (CurrentTab->currentBuffer()->layout.pos < l->lineBuf.size())
+      if (CurrentTab->currentBuffer()->layout.pos < l->len())
         break;
       if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
               CurrentTab->currentBuffer()->layout.currentLine->next) < 0) {
@@ -653,7 +653,7 @@ std::shared_ptr<CoroutineState<void>> linend() {
   if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
     co_return;
   CurrentTab->currentBuffer()->layout.pos =
-      CurrentTab->currentBuffer()->layout.currentLine->lineBuf.size() - 1;
+      CurrentTab->currentBuffer()->layout.currentLine->len() - 1;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -1779,7 +1779,7 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
     co_return;
   offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
   CurrentTab->currentBuffer()->layout.currentLine =
-      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety);
+      currentLineSkip(CurrentTab->currentBuffer()->layout.topLine, offsety);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1791,7 +1791,7 @@ std::shared_ptr<CoroutineState<void>> cursorBottom() {
     co_return;
   offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
   CurrentTab->currentBuffer()->layout.currentLine =
-      CurrentTab->currentBuffer()->layout.topLine->currentLineSkip(offsety);
+      currentLineSkip(CurrentTab->currentBuffer()->layout.topLine, offsety);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 

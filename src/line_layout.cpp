@@ -53,7 +53,7 @@ void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen) {
 }
 
 Line *LineLayout::lineSkip(Line *line, int offset) {
-  auto l = line->currentLineSkip(offset);
+  auto l = currentLineSkip(line, offset);
   if (!nextpage_topline)
     for (int i = LINES - 1 - (lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
@@ -126,7 +126,7 @@ void LineLayout::cursorUpDown(int n) {
 
   if (this->firstLine == NULL)
     return;
-  if ((this->currentLine = cl->currentLineSkip(n)) == cl)
+  if ((this->currentLine = currentLineSkip(cl, n)) == cl)
     return;
   this->arrangeLine();
 }

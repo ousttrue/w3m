@@ -19,20 +19,6 @@ public:
   int len() const { return static_cast<int>(lineBuf.size()); }
   std::vector<Lineprop> propBuf;
 
-  Line *currentLineSkip(int offset) {
-    Line *l = this;
-    if (offset == 0) {
-      return l;
-    }
-    if (offset > 0)
-      for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
-        ;
-    else
-      for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-        ;
-    return l;
-  }
-
 private:
   // column width. cache
   mutable int _width = -1;
@@ -83,3 +69,16 @@ public:
     }
   }
 };
+
+inline Line *currentLineSkip(Line *l, int offset) {
+  if (offset == 0) {
+    return l;
+  }
+  if (offset > 0)
+    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
+      ;
+  else
+    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+      ;
+  return l;
+}
