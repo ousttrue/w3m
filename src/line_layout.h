@@ -36,7 +36,10 @@ struct LineLayout {
   //
   // lines
   //
-  Line *firstLine = nullptr;
+  Line *_firstLine = nullptr;
+  Line *firstLine() { return _firstLine; }
+  bool empty() const { return !_firstLine; }
+
   Line *lastLine = nullptr;
   // scroll position
   Line *topLine = nullptr;
@@ -64,8 +67,8 @@ struct LineLayout {
       this->lastLine = l;
     }
     this->currentLine = l;
-    if (!this->firstLine) {
-      this->firstLine = l;
+    if (!this->_firstLine) {
+      this->_firstLine = l;
     }
   }
 

@@ -39,7 +39,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
   for (l = l->next;; l = l->next) {
     if (l == NULL) {
       if (WrapSearch) {
-        l = layout->firstLine;
+        l = layout->firstLine();
         wrapped = true;
       } else {
         break;

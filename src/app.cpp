@@ -986,11 +986,10 @@ const char *App::searchKeyData() {
 }
 
 void App::_peekURL(bool only_img) {
-  Anchor *a;
   static Str *s = nullptr;
   static int offset = 0;
 
-  if (currentTab()->currentBuffer()->layout.firstLine == nullptr) {
+  if (currentTab()->currentBuffer()->layout.empty()) {
     return;
   }
 
@@ -1003,7 +1002,9 @@ void App::_peekURL(bool only_img) {
   } else {
     offset = 0;
   }
+
   s = nullptr;
+  Anchor *a;
   a = (only_img
            ? nullptr
            : currentTab()->currentBuffer()->layout.retrieveCurrentAnchor());
@@ -1196,7 +1197,7 @@ void App::display() {
 
   // msg
   auto msg = this->make_lastline_message(buf);
-  if (buf->layout.firstLine == NULL) {
+  if (buf->layout.empty()) {
     Strcat_charp(msg, "\tNo Line");
   }
 

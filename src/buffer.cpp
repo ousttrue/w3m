@@ -181,7 +181,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
 
 void Buffer::saveBuffer(FILE *f, bool cont) {
   auto is_html = this->res->is_html_type();
-  auto l = this->layout.firstLine;
+  auto l = this->layout.firstLine();
   for (; l != nullptr; l = l->next) {
     Str *tmp;
     if (is_html)
@@ -657,7 +657,7 @@ Buffer::followForm(Anchor *a, bool submit) {
 
 std::shared_ptr<CoroutineState<std::tuple<Anchor *, std::shared_ptr<Buffer>>>>
 Buffer::followAnchor(bool check_target) {
-  if (!this->layout.firstLine) {
+  if (this->layout.empty()) {
     co_return {};
   }
 

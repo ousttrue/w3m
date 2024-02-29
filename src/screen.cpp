@@ -95,8 +95,7 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
   // pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
 
-  for (j = 0; rcol - column < buf->COLS && pos + j < l->len();
-       j += delta) {
+  for (j = 0; rcol - column < buf->COLS && pos + j < l->len(); j += delta) {
     delta = get_mclen(&p[j]);
     ncol = l->bytePosToColumn(pos + j + delta);
     if (ncol - column > buf->COLS)
@@ -199,8 +198,7 @@ int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
   bcol = bpos - pos;
   ecol = epos - pos;
 
-  for (j = 0; rcol - column < layout->COLS && pos + j < l->len();
-       j += delta) {
+  for (j = 0; rcol - column < layout->COLS && pos + j < l->len(); j += delta) {
     delta = get_mclen(&p[j]);
     ncol = l->bytePosToColumn(pos + j + delta);
     if (ncol - column > layout->COLS)
@@ -315,7 +313,7 @@ void Screen ::drawAnchorCursor(LineLayout *layout) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (!layout->firstLine || !layout->hmarklist())
+  if (layout->empty() || !layout->hmarklist())
     return;
   if (!layout->href() && !layout->formitem())
     return;
@@ -351,9 +349,7 @@ std::string Screen::str(LineLayout *layout) {
     cline = layout->topLine;
     ccolumn = layout->currentColumn;
   }
-  if (!layout->topLine) {
-    layout->topLine = layout->firstLine;
-  }
+  assert(layout->topLine);
 
   this->drawAnchorCursor(layout);
 

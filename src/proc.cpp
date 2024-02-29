@@ -100,10 +100,10 @@ std::shared_ptr<CoroutineState<void>> ldown1() {
 // CENTER_V
 //"Center on cursor line"
 std::shared_ptr<CoroutineState<void>> ctrCsrV() {
-  int offsety;
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  offsety = CurrentTab->currentBuffer()->layout.LINES / 2 -
+
+  int offsety = CurrentTab->currentBuffer()->layout.LINES / 2 -
             CurrentTab->currentBuffer()->layout.cursorY;
   if (offsety != 0) {
     CurrentTab->currentBuffer()->layout.topLine =
@@ -116,10 +116,10 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
 // CENTER_H
 //"Center on cursor column"
 std::shared_ptr<CoroutineState<void>> ctrCsrH() {
-  int offsetx;
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  offsetx = CurrentTab->currentBuffer()->layout.cursorX -
+
+  int offsetx = CurrentTab->currentBuffer()->layout.cursorX -
             CurrentTab->currentBuffer()->layout.COLS / 2;
   if (offsetx != 0) {
     CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
@@ -186,7 +186,7 @@ std::shared_ptr<CoroutineState<void>> srchprv() {
 // SHIFT_LEFT
 //"Shift screen left"
 std::shared_ptr<CoroutineState<void>> shiftl() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
@@ -201,7 +201,7 @@ std::shared_ptr<CoroutineState<void>> shiftl() {
 // SHIFT_RIGHT
 //"Shift screen right"
 std::shared_ptr<CoroutineState<void>> shiftr() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   int column = CurrentTab->currentBuffer()->layout.currentColumn;
   CurrentTab->currentBuffer()->layout.columnSkip(
@@ -447,7 +447,7 @@ std::shared_ptr<CoroutineState<void>> movLW() {
   int ppos;
   int i, n = App::instance().searchKeyNum();
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
   for (i = 0; i < n; i++) {
@@ -504,7 +504,7 @@ std::shared_ptr<CoroutineState<void>> movRW() {
   int ppos;
   int i, n = App::instance().searchKeyNum();
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
   for (i = 0; i < n; i++) {
@@ -640,7 +640,7 @@ std::shared_ptr<CoroutineState<void>> goLineL() {
 // LINE_BEGIN
 //"Go to the beginning of the line"
 std::shared_ptr<CoroutineState<void>> linbeg() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   CurrentTab->currentBuffer()->layout.pos = 0;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
@@ -650,7 +650,7 @@ std::shared_ptr<CoroutineState<void>> linbeg() {
 // LINE_END
 //"Go to the end of the line"
 std::shared_ptr<CoroutineState<void>> linend() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   CurrentTab->currentBuffer()->layout.pos =
       CurrentTab->currentBuffer()->layout.currentLine->len() - 1;
@@ -729,7 +729,7 @@ std::shared_ptr<CoroutineState<void>> followA() {
 // VIEW_IMAGE
 //"Display image in viewer"
 std::shared_ptr<CoroutineState<void>> followI() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
@@ -776,7 +776,7 @@ std::shared_ptr<CoroutineState<void>> topA() {
   Anchor *an;
   int hseq = 0;
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   if (hl->size() == 0)
     co_return;
@@ -814,7 +814,7 @@ std::shared_ptr<CoroutineState<void>> lastA() {
   Anchor *an;
   int hseq;
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   if (hl->size() == 0)
     co_return;
@@ -856,7 +856,7 @@ std::shared_ptr<CoroutineState<void>> nthA() {
     co_return;
   }
 
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   if (!hl || hl->size() == 0)
     co_return;
@@ -1385,7 +1385,7 @@ std::shared_ptr<CoroutineState<void>> reload() {
     }
   }
   CurrentTab->currentBuffer()->layout.form_submit = sbuf->layout.form_submit;
-  if (CurrentTab->currentBuffer()->layout.firstLine) {
+  if (CurrentTab->currentBuffer()->layout.firstLine()) {
     CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
     CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
   }
@@ -1452,7 +1452,7 @@ std::shared_ptr<CoroutineState<void>> extbrz() {
 // EXTERN_LINK
 //"Display target using an external browser"
 std::shared_ptr<CoroutineState<void>> linkbrz() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr)
@@ -1747,24 +1747,27 @@ std::shared_ptr<CoroutineState<void>> ldDL() {
 // UNDO
 //"Cancel the last cursor movement"
 std::shared_ptr<CoroutineState<void>> undoPos() {
-  if (!CurrentTab->currentBuffer()->layout.firstLine)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
+
   CurrentTab->currentBuffer()->layout.undoPos(PREC_NUM);
 }
 
 // REDO
 //"Cancel the last undo"
 std::shared_ptr<CoroutineState<void>> redoPos() {
-  if (!CurrentTab->currentBuffer()->layout.firstLine)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
+
   CurrentTab->currentBuffer()->layout.redoPos(PREC_NUM);
 }
 
 // CURSOR_TOP
 //"Move cursor to the top of the screen"
 std::shared_ptr<CoroutineState<void>> cursorTop() {
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
+
   CurrentTab->currentBuffer()->layout.currentLine =
       CurrentTab->currentBuffer()->layout.lineSkip(
           CurrentTab->currentBuffer()->layout.topLine, 0);
@@ -1775,7 +1778,7 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
 //"Move cursor to the middle of the screen"
 std::shared_ptr<CoroutineState<void>> cursorMiddle() {
   int offsety;
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
   CurrentTab->currentBuffer()->layout.currentLine =
@@ -1787,7 +1790,7 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
 //"Move cursor to the bottom of the screen"
 std::shared_ptr<CoroutineState<void>> cursorBottom() {
   int offsety;
-  if (CurrentTab->currentBuffer()->layout.firstLine == nullptr)
+  if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
   CurrentTab->currentBuffer()->layout.currentLine =
