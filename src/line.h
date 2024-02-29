@@ -16,6 +16,7 @@ public:
   Line *prev = nullptr;
 
   std::vector<char> lineBuf;
+  int len() const { return static_cast<int>(lineBuf.size()); }
   std::vector<Lineprop> propBuf;
 
   Line *currentLineSkip(int offset) {

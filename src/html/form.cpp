@@ -249,7 +249,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   }
   pos += width - w;
 
-  len = line->lineBuf.size() + pos + spos - epos;
+  len = line->len() + pos + spos - epos;
   buf = (char *)New_N(char, len + 1);
   buf[len] = '\0';
   prop = (Lineprop *)New_N(Lineprop, len);
@@ -301,9 +301,9 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   *str = p;
 
   memcpy(&buf[pos], &line->lineBuf[epos],
-         (line->lineBuf.size() - epos) * sizeof(char));
+         (line->len() - epos) * sizeof(char));
   memcpy(&prop[pos], &line->propBuf[epos],
-         (line->lineBuf.size() - epos) * sizeof(Lineprop));
+         (line->len() - epos) * sizeof(Lineprop));
 
   line->assign(buf, prop, len);
 
@@ -336,7 +336,7 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
     if (layout->currentLine == NULL ||
-        spos >= layout->currentLine->lineBuf.size() || spos < 0)
+        spos >= layout->currentLine->len() || spos < 0)
       break;
     if (form->checked)
       layout->currentLine->lineBuf[spos] = '*';
@@ -379,7 +379,7 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
         epos = a->end.pos;
       }
       if (a->start.line != a->end.line || spos > epos ||
-          epos >= l->lineBuf.size() || spos < 0 || epos < 0 ||
+          epos >= l->len() || spos < 0 || epos < 0 ||
           l->bytePosToColumn(epos) < col)
         break;
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,

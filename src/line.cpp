@@ -19,13 +19,13 @@ Line::Line(int linenumber, Line *prevl, const char *buf, Lineprop *prop,
 }
 
 int Line::bytePosToColumn(int pos) const {
-  return ::bytePosToColumn(lineBuf.data(), propBuf.data(), lineBuf.size(), pos,
-                           0, false);
+  return ::bytePosToColumn(lineBuf.data(), propBuf.data(), len(), pos, 0,
+                           false);
 }
 
 int Line::columnPos(int column) const {
   int i = 1;
-  for (; i < this->lineBuf.size(); i++) {
+  for (; i < this->len(); i++) {
     if (this->bytePosToColumn(i) > column)
       break;
   }
@@ -35,14 +35,14 @@ int Line::columnPos(int column) const {
 }
 
 int Line::columnLen(int column) const {
-  for (auto i = 0; i < this->lineBuf.size();) {
+  for (auto i = 0; i < this->len();) {
     auto j = ::bytePosToColumn(&this->lineBuf[i], &this->propBuf[i],
-                               this->lineBuf.size(), i, 0, false);
+                               this->len(), i, 0, false);
     if (j > column)
       return i;
     auto utf8 = Utf8::from((const char8_t *)&this->lineBuf[i]);
     auto [cp, bytes] = utf8.codepoint();
     i += bytes;
   }
-  return this->lineBuf.size();
+  return this->len();
 }
