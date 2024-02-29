@@ -55,7 +55,7 @@ void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen) {
 Line *LineLayout::lineSkip(Line *line, int offset) {
   auto l = currentLineSkip(line, offset);
   if (!nextpage_topline)
-    for (int i = LINES - 1 - (lastLine->linenumber - l->linenumber);
+    for (int i = LINES - 1 - (linenumber(lastLine) - linenumber(l));
          i > 0 && l->prev != NULL; i--, l = l->prev)
       ;
   return l;
@@ -64,7 +64,7 @@ Line *LineLayout::lineSkip(Line *line, int offset) {
 void LineLayout::arrangeLine() {
   if (this->firstLine == NULL)
     return;
-  this->cursorY = this->currentLine->linenumber - this->topLine->linenumber;
+  this->cursorY = linenumber(currentLine) - linenumber(topLine);
   auto i = this->currentLine->columnPos(this->currentColumn + this->visualpos -
                                         this->currentLine->width());
   auto cpos = this->currentLine->bytePosToColumn(i) - this->currentColumn;
@@ -96,25 +96,24 @@ void LineLayout::gotoLine(int n) {
   if (l == nullptr)
     return;
 
-  if (l->linenumber > n) {
-    snprintf(msg, sizeof(msg), "First line is #%ld", l->linenumber);
+  if (linenumber(l) > n) {
+    snprintf(msg, sizeof(msg), "First line is #%d", linenumber(l));
     App::instance().set_delayed_message(msg);
     this->topLine = this->currentLine = l;
     return;
   }
-  if (this->lastLine->linenumber < n) {
+  if (linenumber(lastLine) < n) {
     l = this->lastLine;
-    snprintf(msg, sizeof(msg), "Last line is #%ld", this->lastLine->linenumber);
+    snprintf(msg, sizeof(msg), "Last line is #%d", linenumber(lastLine));
     App::instance().set_delayed_message(msg);
     this->currentLine = l;
     this->topLine = this->lineSkip(this->currentLine, -(this->LINES - 1));
     return;
   }
   for (; l != nullptr; l = l->next) {
-    if (l->linenumber >= n) {
+    if (linenumber(l) >= n) {
       this->currentLine = l;
-      if (n < this->topLine->linenumber ||
-          this->topLine->linenumber + this->LINES <= n)
+      if (n < linenumber(topLine) || linenumber(topLine) + this->LINES <= n)
         this->topLine = this->lineSkip(l, -(this->LINES + 1) / 2);
       break;
     }
@@ -147,7 +146,7 @@ void LineLayout::cursorUp(int n) {
   if (this->firstLine == NULL)
     return;
   if (this->currentLine == this->firstLine) {
-    this->gotoLine(l->linenumber);
+    this->gotoLine(linenumber(l));
     this->arrangeLine();
     return;
   }
@@ -170,7 +169,7 @@ void LineLayout::cursorDown(int n) {
   if (this->firstLine == NULL)
     return;
   if (this->currentLine == this->lastLine) {
-    this->gotoLine(l->linenumber);
+    this->gotoLine(linenumber(l));
     this->arrangeLine();
     return;
   }
@@ -212,9 +211,8 @@ void LineLayout::arrangeCursor() {
     return;
   }
   /* Arrange line */
-  if (this->currentLine->linenumber - this->topLine->linenumber >=
-          this->LINES ||
-      this->currentLine->linenumber < this->topLine->linenumber) {
+  if (linenumber(currentLine) - linenumber(topLine) >= this->LINES ||
+      linenumber(currentLine) < linenumber(topLine)) {
     /*
      * buf->topLine = buf->currentLine;
      */
@@ -233,7 +231,7 @@ void LineLayout::arrangeCursor() {
       columnSkip(col);
   }
   /* Arrange cursor */
-  this->cursorY = this->currentLine->linenumber - this->topLine->linenumber;
+  this->cursorY = linenumber(currentLine) - linenumber(topLine);
   this->visualpos = this->currentLine->width() +
                     this->currentLine->bytePosToColumn(this->pos) -
                     this->currentColumn;
@@ -352,7 +350,7 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
     if (a_form.hseq < 0 || a_form.rows <= 1)
       continue;
     for (l = this->firstLine; l != NULL; l = l->next) {
-      if (l->linenumber == a_form.y)
+      if (linenumber(l) == a_form.y)
         break;
     }
     if (!l)
@@ -362,7 +360,7 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
     else {
       for (ls = l; ls != NULL;
            ls = (a_form.y < a_form.start.line) ? ls->next : ls->prev) {
-        if (ls->linenumber == a_form.start.line)
+        if (linenumber(ls) == a_form.start.line)
           break;
       }
       if (!ls)
@@ -373,13 +371,13 @@ void LineLayout::addMultirowsForm(AnchorList *al) {
     for (j = 0; l && j < a_form.rows; l = l->next, j++) {
       pos = l->columnPos(col);
       if (j == 0) {
-        this->hmarklist()->marks[a_form.hseq].line = l->linenumber;
+        this->hmarklist()->marks[a_form.hseq].line = linenumber(l);
         this->hmarklist()->marks[a_form.hseq].pos = pos;
       }
-      if (a_form.start.line == l->linenumber)
+      if (a_form.start.line == linenumber(l))
         continue;
       a = this->formitem()->putAnchor(a_form.url, a_form.target.c_str(), {},
-                                      NULL, '\0', l->linenumber, pos);
+                                      NULL, '\0', linenumber(l), pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -410,14 +408,14 @@ void LineLayout::nextY(int d, int n) {
   }
 
   int x = this->pos;
-  int y = this->currentLine->linenumber + d;
+  int y = linenumber(this->currentLine) + d;
   Anchor *pan = nullptr;
   int hseq = -1;
   for (int i = 0; i < n; i++) {
     if (an)
       hseq = abs(an->hseq);
     an = nullptr;
-    for (; y >= 0 && y <= this->lastLine->linenumber; y += d) {
+    for (; y >= 0 && y <= linenumber(this->lastLine); y += d) {
       if (this->href()) {
         an = this->href()->retrieveAnchor(y, x);
       }
@@ -455,7 +453,7 @@ void LineLayout::nextX(int d, int dy, int n) {
 
   auto l = this->currentLine;
   auto x = this->pos;
-  auto y = l->linenumber;
+  auto y = linenumber(l);
   Anchor *pan = nullptr;
   for (int i = 0; i < n; i++) {
     if (an)
@@ -480,7 +478,7 @@ void LineLayout::nextX(int d, int dy, int n) {
       if (!l)
         break;
       x = (d > 0) ? 0 : l->len() - 1;
-      y = l->linenumber;
+      y = linenumber(l);
     }
     if (!an)
       break;
@@ -511,7 +509,7 @@ void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
     an = this->retrieveCurrentForm();
   }
 
-  y = this->currentLine->linenumber;
+  y = linenumber(this->currentLine);
   x = this->pos;
 
   if (visited == true) {
@@ -590,7 +588,7 @@ void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
     an = this->retrieveCurrentForm();
   }
 
-  auto y = this->currentLine->linenumber;
+  auto y = linenumber(currentLine);
   auto x = this->pos;
 
   if (visited == true) {
@@ -791,22 +789,22 @@ void LineLayout::nscroll(int n) {
   auto top = this->topLine;
   auto cur = this->currentLine;
 
-  auto lnum = cur->linenumber;
+  auto lnum = linenumber(cur);
   this->topLine = this->lineSkip(top, n);
   if (this->topLine == top) {
     lnum += n;
-    if (lnum < this->topLine->linenumber)
-      lnum = this->topLine->linenumber;
-    else if (lnum > this->lastLine->linenumber)
-      lnum = this->lastLine->linenumber;
+    if (lnum < linenumber(topLine))
+      lnum = linenumber(topLine);
+    else if (lnum > linenumber(lastLine))
+      lnum = linenumber(lastLine);
   } else {
-    auto tlnum = this->topLine->linenumber;
-    auto llnum = this->topLine->linenumber + this->LINES - 1;
+    auto tlnum = linenumber(topLine);
+    auto llnum = linenumber(topLine) + this->LINES - 1;
     int diff_n;
     if (nextpage_topline)
       diff_n = 0;
     else
-      diff_n = n - (tlnum - top->linenumber);
+      diff_n = n - (tlnum - linenumber(top));
     if (lnum < tlnum)
       lnum = tlnum + diff_n;
     if (lnum > llnum)
@@ -889,13 +887,13 @@ const char *LineLayout ::reAnchorPos(
     l->propBuf[i] |= PE_ANCHOR;
 
   while (1) {
-    a = anchorproc(this, p1, p2, l->linenumber, spos);
+    a = anchorproc(this, p1, p2, linenumber(l), spos);
     a->hseq = hseq;
     if (hseq == -2) {
       this->reseq_anchor();
       hseq = a->hseq;
     }
-    a->end.line = l->linenumber;
+    a->end.line = linenumber(l);
     a->end.pos = epos;
     break;
   }
@@ -919,7 +917,7 @@ const char *LineLayout::reAnchorAny(
   for (l = MarkAllPages ? this->firstLine : this->topLine;
        l != NULL &&
        (MarkAllPages ||
-        l->linenumber < this->topLine->linenumber + App::instance().LASTLINE());
+        linenumber(l) < linenumber(topLine) + App::instance().LASTLINE());
        l = l->next) {
     p = l->lineBuf.data();
     for (;;) {
@@ -953,20 +951,19 @@ const char *LineLayout::reAnchorWord(Line *l, int spos, int epos) {
 Anchor *LineLayout::retrieveCurrentAnchor() {
   if (!this->currentLine || !this->href())
     return NULL;
-  return this->href()->retrieveAnchor(this->currentLine->linenumber, this->pos);
+  return this->href()->retrieveAnchor(linenumber(currentLine), this->pos);
 }
 
 Anchor *LineLayout::retrieveCurrentImg() {
   if (!this->currentLine || !this->img())
     return NULL;
-  return this->img()->retrieveAnchor(this->currentLine->linenumber, this->pos);
+  return this->img()->retrieveAnchor(linenumber(currentLine), this->pos);
 }
 
 Anchor *LineLayout::retrieveCurrentForm() {
   if (!this->currentLine || !this->formitem())
     return NULL;
-  return this->formitem()->retrieveAnchor(this->currentLine->linenumber,
-                                          this->pos);
+  return this->formitem()->retrieveAnchor(linenumber(currentLine), this->pos);
 }
 
 const char *LineLayout::getAnchorText(AnchorList *al, Anchor *a) {
@@ -981,7 +978,7 @@ const char *LineLayout::getAnchorText(AnchorList *al, Anchor *a) {
     if (a->hseq != hseq)
       continue;
     for (; l; l = l->next) {
-      if (l->linenumber == a->start.line)
+      if (linenumber(l) == a->start.line)
         break;
     }
     if (!l)
@@ -1096,23 +1093,22 @@ void LineLayout::addLink(struct HtmlTag *tag) {
 }
 
 /* mark URL-like patterns as anchors */
-void LineLayout::chkURLBuffer() {
-  static const char *url_like_pat[] = {
-      "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
-      "=\\-]",
-      "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-      "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+static const char *url_like_pat[] = {
+    "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
+    "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+    "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
 #ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
-      "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
+    "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
 #endif
 #ifdef INET6
-      "https?://[a-zA-Z0-9:%\\-\\./"
-      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
-      "?=~_\\&+@#,\\$;]*",
-      "ftp://[a-zA-Z0-9:%\\-\\./"
-      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+    "https?://[a-zA-Z0-9:%\\-\\./"
+    "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
+    "?=~_\\&+@#,\\$;]*",
+    "ftp://[a-zA-Z0-9:%\\-\\./"
+    "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
 #endif /* INET6 */
-      nullptr};
+    nullptr};
+void LineLayout::chkURLBuffer() {
   for (int i = 0; url_like_pat[i]; i++) {
     this->reAnchor(url_like_pat[i]);
   }
@@ -1130,12 +1126,12 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
   if (this->firstLine && sbuf.firstLine) {
     Line *cur = sbuf.currentLine;
     this->pos = sbuf.pos;
-    this->gotoLine(cur->linenumber);
-    int n = (this->currentLine->linenumber - this->topLine->linenumber) -
-            (cur->linenumber - sbuf.topLine->linenumber);
+    this->gotoLine(sbuf.linenumber(cur));
+    int n = (linenumber(currentLine) - linenumber(topLine)) -
+            (sbuf.linenumber(cur) - sbuf.linenumber(sbuf.topLine));
     if (n) {
       this->topLine = this->lineSkip(this->topLine, n);
-      this->gotoLine(cur->linenumber);
+      this->gotoLine(sbuf.linenumber(cur));
     }
     this->currentColumn = sbuf.currentColumn;
     this->arrangeCursor();

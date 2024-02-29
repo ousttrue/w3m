@@ -38,7 +38,6 @@ struct LineLayout {
   //
   Line *firstLine = nullptr;
   Line *lastLine = nullptr;
-  int linenumber(Line *l) const { return l->linenumber; }
   // scroll position
   Line *topLine = nullptr;
   int currentColumn = 0;
@@ -51,10 +50,15 @@ struct LineLayout {
 
   void clearBuffer();
   void addnewline(const char *line, Lineprop *prop, int byteLen);
-  int TOP_LINENUMBER() const { return topLine ? topLine->linenumber : 1; }
+
+  int linenumber(Line *l) const { return l->_linenumber; }
+  int TOP_LINENUMBER() const { return topLine ? topLine->_linenumber : 1; }
   int CUR_LINENUMBER() const {
-    return currentLine ? currentLine->linenumber : 1;
+    return currentLine ? currentLine->_linenumber : 1;
   }
+  // next ?
+  int currentLn() const { return CUR_LINENUMBER() + 1; }
+
   void pushLine(Line *l) {
     if (!this->lastLine || this->lastLine == this->currentLine) {
       this->lastLine = l;
@@ -62,13 +66,6 @@ struct LineLayout {
     this->currentLine = l;
     if (!this->firstLine) {
       this->firstLine = l;
-    }
-  }
-  int currentLn() const {
-    if (currentLine) {
-      return currentLine->linenumber + 1;
-    } else {
-      return 1;
     }
   }
 

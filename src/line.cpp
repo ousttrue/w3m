@@ -2,7 +2,7 @@
 #include "utf8.h"
 #include "html/lineprop.h"
 
-Line::Line(int n, Line *prevl) : linenumber(n), prev(prevl) {
+Line::Line(int n, Line *prevl) : _linenumber(n), prev(prevl) {
   if (prev) {
     prev->next = this;
   }
@@ -10,7 +10,7 @@ Line::Line(int n, Line *prevl) : linenumber(n), prev(prevl) {
 
 Line::Line(int linenumber, Line *prevl, const char *buf, Lineprop *prop,
            int byteLen)
-    : linenumber(linenumber), prev(prevl), lineBuf(byteLen + 1),
+    : _linenumber(linenumber), prev(prevl), lineBuf(byteLen + 1),
       propBuf(byteLen + 1) {
   if (prev) {
     prev->next = this;

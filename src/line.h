@@ -9,7 +9,7 @@ struct Line : public gc_cleanup {
   friend struct LineLayout;
 
 private:
-  long linenumber = 0; /* on buffer */
+  long _linenumber = 0; /* on buffer */
 
 public:
   Line *next = nullptr;
