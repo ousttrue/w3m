@@ -71,7 +71,7 @@ void LineLayout::arrangeLine() {
   if (cpos >= 0) {
     this->cursorX = cpos;
     this->pos = i;
-  } else if (this->currentLine->lineBuf.size() > i) {
+  } else if (this->currentLine->len() > i) {
     this->cursorX = 0;
     this->pos = i + 1;
   } else {
@@ -82,7 +82,7 @@ void LineLayout::arrangeLine() {
   fprintf(stderr,
           "arrangeLine: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
           buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-          buf->currentLine->lineBuf.size());
+          buf->currentLine->len());
 #endif
 }
 
@@ -206,7 +206,7 @@ int LineLayout::columnSkip(int offset) {
  * current position.
  */
 void LineLayout::arrangeCursor() {
-  int col, col2, pos;
+  int col, col2;
   int delta = 1;
   if (this->currentLine == NULL) {
     return;
@@ -221,10 +221,10 @@ void LineLayout::arrangeCursor() {
     this->topLine = this->lineSkip(this->currentLine, 0);
   }
   /* Arrange column */
-  if (this->currentLine->lineBuf.size() == 0 || this->pos < 0)
+  if (this->currentLine->len() == 0 || this->pos < 0)
     this->pos = 0;
-  else if (this->pos >= this->currentLine->lineBuf.size())
-    this->pos = this->currentLine->lineBuf.size() - 1;
+  else if (this->pos >= this->currentLine->len())
+    this->pos = this->currentLine->len() - 1;
   col = this->currentLine->bytePosToColumn(this->pos);
   col2 = this->currentLine->bytePosToColumn(this->pos + delta);
   if (col < this->currentColumn || col2 > this->COLS + this->currentColumn) {
@@ -243,7 +243,7 @@ void LineLayout::arrangeCursor() {
       stderr,
       "arrangeCursor: column=%d, cursorX=%d, visualpos=%d, pos=%d, len=%d\n",
       buf->currentColumn, buf->cursorX, buf->visualpos, buf->pos,
-      buf->currentLine->lineBuf.size());
+      buf->currentLine->len());
 #endif
 }
 
@@ -254,12 +254,12 @@ void LineLayout::cursorRight(int n) {
   if (this->firstLine == NULL)
     return;
   i = this->pos;
-  if (i + delta < l->lineBuf.size()) {
+  if (i + delta < l->len()) {
     this->pos = i + delta;
-  } else if (l->lineBuf.size() == 0) {
+  } else if (l->len() == 0) {
     this->pos = 0;
   } else {
-    this->pos = l->lineBuf.size() - 1;
+    this->pos = l->len() - 1;
   }
   cpos = l->bytePosToColumn(this->pos);
   this->visualpos = l->width() + cpos - this->currentColumn;
@@ -462,7 +462,7 @@ void LineLayout::nextX(int d, int dy, int n) {
       x = (d > 0) ? an->end.pos : an->start.pos - 1;
     an = nullptr;
     while (1) {
-      for (; x >= 0 && x < l->lineBuf.size(); x += d) {
+      for (; x >= 0 && x < l->len(); x += d) {
         if (this->href()) {
           an = this->href()->retrieveAnchor(y, x);
         }
@@ -479,7 +479,7 @@ void LineLayout::nextX(int d, int dy, int n) {
       l = (dy > 0) ? l->next : l->prev;
       if (!l)
         break;
-      x = (d > 0) ? 0 : l->lineBuf.size() - 1;
+      x = (d > 0) ? 0 : l->len() - 1;
       y = l->linenumber;
     }
     if (!an)
@@ -696,22 +696,22 @@ void LineLayout::_movR(int n, int m) {
 
 int LineLayout::prev_nonnull_line(Line *line) {
   Line *l;
-  for (l = line; l != nullptr && l->lineBuf.size() == 0; l = l->prev)
+  for (l = line; l != nullptr && l->len() == 0; l = l->prev)
     ;
-  if (l == nullptr || l->lineBuf.size() == 0)
+  if (l == nullptr || l->len() == 0)
     return -1;
 
   this->currentLine = l;
   if (l != line)
-    this->pos = this->currentLine->lineBuf.size();
+    this->pos = this->currentLine->len();
   return 0;
 }
 
 int LineLayout::next_nonnull_line(Line *line) {
   Line *l;
-  for (l = line; l != nullptr && l->lineBuf.size() == 0; l = l->next)
+  for (l = line; l != nullptr && l->len() == 0; l = l->next)
     ;
-  if (l == nullptr || l->lineBuf.size() == 0)
+  if (l == nullptr || l->len() == 0)
     return -1;
 
   this->currentLine = l;
@@ -772,7 +772,7 @@ std::string LineLayout::getCurWord(int *spos, int *epos) const {
       break;
     b = tmp;
   }
-  while (e < l->lineBuf.size() && is_wordchar(p[e])) {
+  while (e < l->len() && is_wordchar(p[e])) {
     e++;
   }
   *spos = b;

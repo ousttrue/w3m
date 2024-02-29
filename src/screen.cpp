@@ -85,7 +85,7 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
     return NULL;
   }
   RowCol pixel{.row = i, .col = buf->rootX};
-  if (l->lineBuf.size() == 0 || l->width() - 1 < column) {
+  if (l->len() == 0 || l->width() - 1 < column) {
     this->clrtoeolx(pixel);
     return l;
   }
@@ -95,7 +95,7 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
   // pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
 
-  for (j = 0; rcol - column < buf->COLS && pos + j < l->lineBuf.size();
+  for (j = 0; rcol - column < buf->COLS && pos + j < l->len();
        j += delta) {
     delta = get_mclen(&p[j]);
     ncol = l->bytePosToColumn(pos + j + delta);
@@ -199,7 +199,7 @@ int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
   bcol = bpos - pos;
   ecol = epos - pos;
 
-  for (j = 0; rcol - column < layout->COLS && pos + j < l->lineBuf.size();
+  for (j = 0; rcol - column < layout->COLS && pos + j < l->len();
        j += delta) {
     delta = get_mclen(&p[j]);
     ncol = l->bytePosToColumn(pos + j + delta);
