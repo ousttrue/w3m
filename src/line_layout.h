@@ -59,8 +59,6 @@ struct LineLayout {
   int CUR_LINENUMBER() const {
     return currentLine ? currentLine->_linenumber : 1;
   }
-  // next ?
-  int currentLn() const { return CUR_LINENUMBER() + 1; }
 
   void pushLine(Line *l) {
     if (!this->lastLine || this->lastLine == this->currentLine) {
