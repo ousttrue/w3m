@@ -9,23 +9,22 @@
 #include "tabbuffer.h"
 
 int forwardSearch(LineLayout *layout, const char *str) {
-  const char *p, *first, *last;
-  Line *l, *begin;
-  int wrapped = false;
 
-  if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+  if (auto p = regexCompile(str, IgnoreCase)) {
     App::instance().message(p, 0, 0);
     return SR_NOTFOUND;
   }
-  l = layout->currentLine;
+
+  auto l = layout->currentLine;
   if (l == NULL) {
     return SR_NOTFOUND;
   }
 
   auto pos = layout->pos;
-  begin = l;
+  auto begin = l;
   if (pos < l->size() &&
       regexMatch(&l->lineBuf[pos], l->size() - pos, 0) == 1) {
+    const char *first, *last;
     matchedPosition(&first, &last);
     pos = first - l->lineBuf.data();
     layout->pos = pos;
@@ -36,6 +35,8 @@ int forwardSearch(LineLayout *layout, const char *str) {
     l->set_mark(pos, pos + last - first);
     return SR_FOUND;
   }
+
+  bool wrapped = false;
   for (l = l->next;; l = l->next) {
     if (l == NULL) {
       if (WrapSearch) {
@@ -46,6 +47,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
       }
     }
     if (regexMatch(l->lineBuf.data(), l->size(), 1) == 1) {
+      const char *first, *last;
       matchedPosition(&first, &last);
       pos = first - l->lineBuf.data();
       layout->pos = pos;
@@ -62,29 +64,27 @@ int forwardSearch(LineLayout *layout, const char *str) {
 }
 
 int backwardSearch(LineLayout *layout, const char *str) {
-  const char *p, *q, *found, *found_last, *first, *last;
-  Line *l, *begin;
-  int wrapped = false;
-  int pos;
-
-  if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+  if (auto p = regexCompile(str, IgnoreCase)) {
     App::instance().message(p, 0, 0);
     return SR_NOTFOUND;
   }
-  l = layout->currentLine;
+
+  auto l = layout->currentLine;
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = layout->pos;
-  begin = l;
+
+  auto pos = layout->pos;
+  auto begin = l;
   if (pos > 0) {
     pos--;
-    p = &l->lineBuf[pos];
-    found = NULL;
-    found_last = NULL;
-    q = l->lineBuf.data();
+    auto p = &l->lineBuf[pos];
+    const char *found = NULL;
+    const char *found_last = NULL;
+    auto q = l->lineBuf.data();
     while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) ==
            1) {
+      const char *first, *last;
       matchedPosition(&first, &last);
       if (first <= p) {
         found = first;
@@ -107,6 +107,8 @@ int backwardSearch(LineLayout *layout, const char *str) {
       return SR_FOUND;
     }
   }
+
+  bool wrapped = false;
   for (l = l->prev;; l = l->prev) {
     if (l == NULL) {
       if (WrapSearch) {
@@ -116,11 +118,12 @@ int backwardSearch(LineLayout *layout, const char *str) {
         break;
       }
     }
-    found = NULL;
-    found_last = NULL;
-    q = l->lineBuf.data();
+    const char *found = NULL;
+    const char *found_last = NULL;
+    auto q = l->lineBuf.data();
     while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) ==
            1) {
+      const char *first, *last;
       matchedPosition(&first, &last);
       found = first;
       found_last = last;
@@ -143,7 +146,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
 }
 
 static const char *SearchString = nullptr;
-int (*searchRoutine)(LineLayout *, const char *);
+static SearchFunc searchRoutine;
 
 static void clear_mark(Line *l) {
   int pos;
@@ -190,11 +193,7 @@ static void disp_srchresult(int result, const char *prompt, const char *str) {
 /* Search regular expression forward */
 
 void srch_nxtprv(int reverse) {
-  int result;
-  /* *INDENT-OFF* */
-  static int (*routine[2])(LineLayout *, const char *) = {forwardSearch,
-                                                          backwardSearch};
-  /* *INDENT-ON* */
+  static SearchFunc routine[2] = {forwardSearch, backwardSearch};
 
   if (searchRoutine == nullptr) {
     App::instance().disp_message("No previous regular expression");
@@ -209,7 +208,8 @@ void srch_nxtprv(int reverse) {
   if (reverse == 0) {
     CurrentTab->currentBuffer()->layout.pos += 1;
   }
-  result = srchcore(SearchString, routine[reverse]);
+
+  auto result = srchcore(SearchString, routine[reverse]);
   if (result & SR_FOUND) {
     clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   } else {
@@ -271,7 +271,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   return -1;
 }
 
-void isrch(int (*func)(LineLayout *, const char *), const char *prompt) {
+void isrch(SearchFunc func, const char *prompt) {
   LineLayout sbuf(0);
   sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
   dispincsrch(0, nullptr, nullptr); /* initialize incremental search state */
@@ -284,11 +284,8 @@ void isrch(int (*func)(LineLayout *, const char *), const char *prompt) {
   // }
 }
 
-void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
-  int result;
-  int disp = false;
-  int pos;
-
+void srch(SearchFunc func, const char *prompt) {
+  bool disp = false;
   auto str = App::instance().searchKeyData();
   if (str == nullptr || *str == '\0') {
     // str = inputStrHist(prompt, nullptr, TextHist);
@@ -299,10 +296,12 @@ void srch(int (*func)(LineLayout *, const char *), const char *prompt) {
     }
     disp = true;
   }
-  pos = CurrentTab->currentBuffer()->layout.pos;
+
+  int pos = CurrentTab->currentBuffer()->layout.pos;
   if (func == forwardSearch)
     CurrentTab->currentBuffer()->layout.pos += 1;
-  result = srchcore(str, func);
+
+  int result = srchcore(str, func);
   if (result & SR_FOUND)
     clear_mark(CurrentTab->currentBuffer()->layout.currentLine);
   else
