@@ -222,9 +222,20 @@ std::string filename_extension(const std::string_view path, bool is_url) {
 }
 
 std::vector<uint8_t> decode_gzip(std::span<uint8_t> src) {
-  assert(src[0] == 0x1f);
-  assert(src[1] == 0x8b);
-  assert(src[2] == 0x08);
+  if (src.size() < 3) {
+    return {};
+  }
+  static const std::array<uint8_t, 3> gz_sig = {
+      0x1f,
+      0x8b,
+      0x08,
+  };
+  auto sig = src.subspan(0, 3);
+  if (!std::ranges::equal(sig, gz_sig)) {
+    assert(false);
+    uint8_t _debug[] = {sig[0], sig[1], sig[2]};
+    return {};
+  }
 
   z_stream strm = {0};
   strm.zalloc = Z_NULL;

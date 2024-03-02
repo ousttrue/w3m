@@ -246,7 +246,7 @@ FILE *openSecretFile(const char *fname) {
   if (disable_secret_security_check)
     /* do nothing */;
   else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-    App::instance().message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
+    // App::instance().message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
     sleep(2);
     return NULL;
   }

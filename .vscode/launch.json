@@ -43,7 +43,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/w3m",
             "args": [
-                "http://www.yahoo.co.jp"
+                // "http://www.yahoo.co.jp"
+                "http://www.google.com",
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
