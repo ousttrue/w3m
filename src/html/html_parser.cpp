@@ -944,7 +944,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
   effect = 0;
   ex_effect = 0;
 
-  for (int nlines = 1; auto line = feed(); ++nlines) {
+  for (int nlines = 0; auto line = feed(); ++nlines) {
     if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
       Strcat(textarea_str[n_textarea], line);
       continue;

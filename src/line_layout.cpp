@@ -48,7 +48,7 @@ void LineLayout::clearBuffer() {
 }
 
 void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen) {
-  auto l = new Line(++this->allLine, this->lastLine, line, prop, byteLen);
+  auto l = new Line(this->allLine++, this->lastLine, line, prop, byteLen);
   this->lastLine = l;
   if (!this->_firstLine) {
     this->_firstLine = l;

@@ -55,9 +55,9 @@ struct LineLayout {
   void addnewline(const char *line, Lineprop *prop, int byteLen);
 
   int linenumber(Line *l) const { return l->_linenumber; }
-  int TOP_LINENUMBER() const { return topLine ? topLine->_linenumber : 1; }
+  int TOP_LINENUMBER() const { return topLine ? topLine->_linenumber : 0; }
   int CUR_LINENUMBER() const {
-    return currentLine ? currentLine->_linenumber : 1;
+    return currentLine ? currentLine->_linenumber : 0;
   }
 
   Line *lineSkip(Line *line, int offset);
