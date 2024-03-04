@@ -48,8 +48,11 @@ void LineLayout::clearBuffer() {
 }
 
 void LineLayout::addnewline(const char *line, Lineprop *prop, int byteLen) {
-  auto l = new Line(++this->allLine, this->currentLine, line, prop, byteLen);
-  this->pushLine(l);
+  auto l = new Line(++this->allLine, this->lastLine, line, prop, byteLen);
+  this->lastLine = l;
+  if (!this->_firstLine) {
+    this->_firstLine = l;
+  }
 }
 
 Line *LineLayout::lineSkip(Line *line, int offset) {

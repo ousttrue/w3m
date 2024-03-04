@@ -565,9 +565,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
   res->trbyte = trbyte + linelen;
   HTMLlineproc2(&parser, res, layout, htmlenv1.buf);
-
   layout->topLine = layout->firstLine();
-  layout->lastLine = layout->currentLine;
   layout->currentLine = layout->firstLine();
   res->type = "text/html";
   // if (n_textarea)
@@ -625,7 +623,6 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
     layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
   }
   layout->topLine = layout->firstLine();
-  layout->lastLine = layout->currentLine;
   layout->currentLine = layout->firstLine();
   res->type = "text/plain";
 }

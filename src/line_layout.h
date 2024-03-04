@@ -60,16 +60,6 @@ struct LineLayout {
     return currentLine ? currentLine->_linenumber : 1;
   }
 
-  void pushLine(Line *l) {
-    if (!this->lastLine || this->lastLine == this->currentLine) {
-      this->lastLine = l;
-    }
-    this->currentLine = l;
-    if (!this->_firstLine) {
-      this->_firstLine = l;
-    }
-  }
-
   Line *lineSkip(Line *line, int offset);
   void arrangeLine();
   void cursorUpDown(int n);
