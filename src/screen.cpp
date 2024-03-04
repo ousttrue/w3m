@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "line_layout.h"
+#include "html/anchor.h"
 #include <ftxui/screen/screen.hpp>
 
 void Screen::setupscreen(const RowCol &size) {

@@ -1,11 +1,9 @@
 #pragma once
-#include "line.h"
+#include "line_data.h"
 #include "http_request.h"
-#include "html/anchor.h"
 #include "url.h"
 #include <string>
 #include <optional>
-#include <memory>
 
 extern int nextpage_topline;
 
@@ -24,78 +22,6 @@ struct BufferPos;
 struct HtmlTag;
 struct AnchorList;
 struct HmarkerList;
-
-using AnchorFunc = Anchor *(*)(struct LineData *, const char *, const char *,
-                               int, int);
-struct LineData {
-  std::string title;
-  // always reshape new buffers to mark URLs
-  bool need_reshape = true;
-  int refresh_interval = 0;
-  std::vector<Line> lines;
-  std::shared_ptr<AnchorList> _href;
-  std::shared_ptr<AnchorList> _name;
-  std::shared_ptr<AnchorList> _img;
-  std::shared_ptr<AnchorList> _formitem;
-  std::shared_ptr<HmarkerList> _hmarklist;
-  std::shared_ptr<HmarkerList> _imarklist;
-  struct LinkList *linklist = nullptr;
-  struct FormList *formlist = nullptr;
-  struct MapList *maplist = nullptr;
-  struct FormItemList *form_submit = nullptr;
-  struct Anchor *submit = nullptr;
-
-  LineData();
-  Line *firstLine() { return lines.size() ? &lines.front() : nullptr; }
-  Line *lastLine() { return lines.size() ? &lines.back() : nullptr; }
-  int linenumber(Line *t) const {
-    for (int i = 0; i < (int)lines.size(); ++i) {
-      if (&lines[i] == t) {
-        return i;
-      }
-    }
-    assert(false);
-    return -1;
-  }
-  void clear() {
-    lines.clear();
-    this->_href->clear();
-    this->_name->clear();
-    this->_img->clear();
-    this->_formitem->clear();
-    this->formlist = nullptr;
-    this->linklist = nullptr;
-    this->maplist = nullptr;
-    this->_hmarklist->clear();
-    this->_imarklist->clear();
-  }
-  void addnewline(const char *line, Lineprop *prop, int byteLen);
-  std::shared_ptr<AnchorList> href() const { return _href; }
-  std::shared_ptr<AnchorList> name() const { return _name; }
-  std::shared_ptr<AnchorList> img() const { return _img; }
-  std::shared_ptr<AnchorList> formitem() const { return _formitem; }
-  std::shared_ptr<HmarkerList> hmarklist() const { return _hmarklist; }
-  std::shared_ptr<HmarkerList> imarklist() const { return _imarklist; }
-
-  Anchor *registerName(const char *url, int line, int pos) {
-    return this->name()->putAnchor(url, NULL, {}, NULL, '\0', line, pos);
-  }
-  Anchor *registerImg(const char *url, const char *title, int line, int pos) {
-    return this->img()->putAnchor(url, NULL, {}, title, '\0', line, pos);
-  }
-  Anchor *registerForm(class HtmlParser *parser, FormList *flist, HtmlTag *tag,
-                       int line, int pos);
-  void addMultirowsForm(AnchorList *al);
-  void reseq_anchor();
-  const char *reAnchorPos(Line *l, const char *p1, const char *p2,
-                          AnchorFunc anchorproc);
-  const char *reAnchorAny(Line *topLine, const char *re, AnchorFunc anchorproc);
-  const char *reAnchor(Line *topLine, const char *re);
-  const char *reAnchorWord(Line *l, int spos, int epos);
-  const char *getAnchorText(AnchorList *al, Anchor *a);
-
-  void addLink(struct HtmlTag *tag);
-};
 
 struct LineLayout {
   LineData data;
@@ -215,25 +141,9 @@ struct LineLayout {
     return getCurWord(&s, &e);
   }
 
-  Anchor *retrieveCurrentAnchor() {
-    if (!this->currentLine || !this->data.href())
-      return NULL;
-    return this->data.href()->retrieveAnchor(linenumber(currentLine),
-                                             this->pos);
-  }
-
-  Anchor *retrieveCurrentImg() {
-    if (!this->currentLine || !this->data.img())
-      return NULL;
-    return this->data.img()->retrieveAnchor(linenumber(currentLine), this->pos);
-  }
-
-  Anchor *retrieveCurrentForm() {
-    if (!this->currentLine || !this->data.formitem())
-      return NULL;
-    return this->data.formitem()->retrieveAnchor(linenumber(currentLine),
-                                                 this->pos);
-  }
+  Anchor *retrieveCurrentAnchor();
+  Anchor *retrieveCurrentImg();
+  Anchor *retrieveCurrentForm();
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

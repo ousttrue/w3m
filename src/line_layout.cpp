@@ -1116,3 +1116,22 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
   }
   formResetBuffer(this, sbuf.data.formitem().get());
 }
+
+Anchor *LineLayout::retrieveCurrentAnchor() {
+  if (!this->currentLine || !this->data.href())
+    return NULL;
+  return this->data.href()->retrieveAnchor(linenumber(currentLine), this->pos);
+}
+
+Anchor *LineLayout::retrieveCurrentImg() {
+  if (!this->currentLine || !this->data.img())
+    return NULL;
+  return this->data.img()->retrieveAnchor(linenumber(currentLine), this->pos);
+}
+
+Anchor *LineLayout::retrieveCurrentForm() {
+  if (!this->currentLine || !this->data.formitem())
+    return NULL;
+  return this->data.formitem()->retrieveAnchor(linenumber(currentLine),
+                                               this->pos);
+}

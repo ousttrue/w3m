@@ -118,6 +118,7 @@ executable(
         'tabbuffer.cpp',
         'proc.cpp',
         'line_layout.cpp',
+        'line_data.cpp',
         'file_util.cpp',
         'dict.cpp',
     ],
