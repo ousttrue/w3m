@@ -2,19 +2,8 @@
 #include "utf8.h"
 #include "html/lineprop.h"
 
-Line::Line(int n, Line *prevl) : _linenumber(n), prev(prevl) {
-  if (prev) {
-    prev->next = this;
-  }
-}
-
-Line::Line(int linenumber, Line *prevl, const char *buf, Lineprop *prop,
-           int byteLen)
-    : _linenumber(linenumber), prev(prevl), lineBuf(byteLen + 1),
-      propBuf(byteLen + 1) {
-  if (prev) {
-    prev->next = this;
-  }
+Line::Line(const char *buf, Lineprop *prop, int byteLen)
+    : lineBuf(byteLen + 1), propBuf(byteLen + 1) {
   assign(buf, prop, byteLen);
 }
 

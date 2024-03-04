@@ -37,7 +37,8 @@ int forwardSearch(LineLayout *layout, const char *str) {
   }
 
   bool wrapped = false;
-  for (l = l->next;; l = l->next) {
+  ++l;
+  for (;; ++l) {
     if (l == NULL) {
       if (WrapSearch) {
         l = layout->firstLine();
@@ -109,10 +110,11 @@ int backwardSearch(LineLayout *layout, const char *str) {
   }
 
   bool wrapped = false;
-  for (l = l->prev;; l = l->prev) {
-    if (l == NULL) {
+  --l;
+  for (;; --l) {
+    if (layout->isNull(l)) {
       if (WrapSearch) {
-        l = layout->lastLine;
+        l = layout->lastLine();
         wrapped = true;
       } else {
         break;

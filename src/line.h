@@ -1,20 +1,10 @@
 #pragma once
-#include <gc_cpp.h>
 #include <vector>
 #include "html/lineprop.h"
 
 #define LINELEN 256 /* Initial line length */
 
-struct Line : public gc_cleanup {
-  friend struct LineLayout;
-
-private:
-  long _linenumber = 0; /* on buffer */
-
-public:
-  Line *next = nullptr;
-  Line *prev = nullptr;
-
+struct Line {
   std::vector<char> lineBuf;
   int len() const { return static_cast<int>(lineBuf.size()); }
   std::vector<Lineprop> propBuf;
@@ -44,15 +34,9 @@ public:
     propBuf.push_back(0);
   }
 
-  Line(int n, Line *prevl = nullptr);
-  // Line(int linenumber, Line *prevl, char *line, Lineprop *prop, int byteLen,
-  //      int realLinenumber);
-  Line(int linenumber, Line *prevl, const char *line, Lineprop *prop,
-       int byteLen);
+  Line() {}
+  Line(const char *line, Lineprop *prop, int byteLen);
   ~Line() {}
-
-  Line(const Line &) = delete;
-  Line &operator=(const Line &) = delete;
 
   // byte pos to column
   int bytePosToColumn(int pos) const;
@@ -69,16 +53,3 @@ public:
     }
   }
 };
-
-inline Line *currentLineSkip(Line *l, int offset) {
-  if (offset == 0) {
-    return l;
-  }
-  if (offset > 0)
-    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
-      ;
-  else
-    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-      ;
-  return l;
-}

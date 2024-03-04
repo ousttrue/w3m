@@ -1106,7 +1106,8 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       set_buffer_environ(currentTab()->currentBuffer());
       currentTab()->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
-      w3mFuncList[GlobalKeymap[c]]();
+      auto callback = w3mFuncList[GlobalKeymap[c]];
+      callback();
       prec_num = 0;
     }
   }
@@ -1776,10 +1777,9 @@ Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   }
 
   msg = Strnew();
-  if (displayLineInfo && buf->layout.currentLine != NULL &&
-      buf->layout.lastLine != NULL) {
+  if (displayLineInfo && buf->layout.currentLine != NULL) {
     int cl = buf->layout.linenumber(buf->layout.currentLine);
-    int ll = buf->layout.linenumber(buf->layout.lastLine);
+    int ll = buf->layout.linenumber(buf->layout.lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else {

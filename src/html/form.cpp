@@ -300,8 +300,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   }
   *str = p;
 
-  memcpy(&buf[pos], &line->lineBuf[epos],
-         (line->len() - epos) * sizeof(char));
+  memcpy(&buf[pos], &line->lineBuf[epos], (line->len() - epos) * sizeof(char));
   memcpy(&prop[pos], &line->propBuf[epos],
          (line->len() - epos) * sizeof(Lineprop));
 
@@ -335,8 +334,8 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
   switch (form->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
-    if (layout->currentLine == NULL ||
-        spos >= layout->currentLine->len() || spos < 0)
+    if (layout->currentLine == NULL || spos >= layout->currentLine->len() ||
+        spos < 0)
       break;
     if (form->checked)
       layout->currentLine->lineBuf[spos] = '*';
@@ -357,18 +356,18 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
     if (form->type == FORM_TEXTAREA) {
       int n = a->y - layout->linenumber(layout->currentLine);
       if (n > 0)
-        for (; l && n; l = l->prev, n--)
+        for (; !layout->isNull(l) && n; --l, n--)
           ;
       else if (n < 0)
-        for (; l && n; l = l->prev, n++)
+        for (; !layout->isNull(l) && n; --l, n++)
           ;
       if (!l)
         break;
     }
     rows = form->rows ? form->rows : 1;
     col = l->bytePosToColumn(a->start.pos);
-    for (c_rows = 0; c_rows < rows; c_rows++, l = l->next) {
-      if (l == NULL)
+    for (c_rows = 0; c_rows < rows; c_rows++, ++l) {
+      if (layout->isNull(l))
         break;
       if (rows > 1 && layout->formitem()) {
         pos = l->columnPos(col);
@@ -378,9 +377,8 @@ void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
         spos = a->start.pos;
         epos = a->end.pos;
       }
-      if (a->start.line != a->end.line || spos > epos ||
-          epos >= l->len() || spos < 0 || epos < 0 ||
-          l->bytePosToColumn(epos) < col)
+      if (a->start.line != a->end.line || spos > epos || epos >= l->len() ||
+          spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
         break;
       pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
                              rows > 1, form->type == FORM_INPUT_PASSWORD);

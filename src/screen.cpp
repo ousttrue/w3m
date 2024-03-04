@@ -170,7 +170,7 @@ void Screen::redrawNLine(LineLayout *layout, int n) {
 
   Line *l;
   int i;
-  for (i = 0, l = layout->topLine; i < layout->LINES; i++, l = l->next) {
+  for (i = 0, l = layout->topLine; i < layout->LINES; i++, ++l) {
     if (i >= layout->LINES - n || i < -n)
       l = this->redrawLine(layout, l, i + layout->rootY);
     if (l == NULL)
@@ -279,8 +279,8 @@ void Screen::drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
       continue;
     if (an->start.line >= eline)
       return;
-    for (;; l = l->next) {
-      if (l == NULL)
+    for (;; ++l) {
+      if (layout->isNull(l))
         return;
       if (layout->linenumber(l) == an->start.line)
         break;

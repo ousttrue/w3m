@@ -36,17 +36,30 @@ struct LineLayout {
   //
   // lines
   //
-  Line *_firstLine = nullptr;
-  Line *firstLine() { return _firstLine; }
-  bool empty() const { return !_firstLine; }
+  std::vector<Line> lines;
+  Line *firstLine() { return lines.size() ? &lines.front() : nullptr; }
+  Line *lastLine() { return lines.size() ? &lines.back() : nullptr; }
+  bool empty() const { return lines.empty(); }
+  int linenumber(Line *t) const {
+    for (int i = 0; i < (int)lines.size(); ++i) {
+      if (&lines[i] == t) {
+        return i;
+      }
+    }
+    assert(false);
+    return -1;
+  }
+  int TOP_LINENUMBER() const { return linenumber(topLine); }
+  int CUR_LINENUMBER() const { return linenumber(currentLine); }
+  bool isNull(Line *l) const { return linenumber(l) < 0; }
+  bool hasNext(Line *l) const { return linenumber(++l) >= 0; }
+  bool hasPrev(Line *l) const { return linenumber(--l) >= 0; }
 
-  Line *lastLine = nullptr;
   // scroll position
   Line *topLine = nullptr;
   int currentColumn = 0;
   // cursor position
   Line *currentLine = nullptr;
-  int allLine = 0;
   bool check_url = false;
   void chkURLBuffer();
   void reshape(int width, const LineLayout &sbuf);
@@ -54,13 +67,16 @@ struct LineLayout {
   void clearBuffer();
   void addnewline(const char *line, Lineprop *prop, int byteLen);
 
-  int linenumber(Line *l) const { return l->_linenumber; }
-  int TOP_LINENUMBER() const { return topLine ? topLine->_linenumber : 0; }
-  int CUR_LINENUMBER() const {
-    return currentLine ? currentLine->_linenumber : 0;
-  }
-
   Line *lineSkip(Line *line, int offset);
+  Line *currentLineSkip(Line *l, int offset) {
+    if (offset > 0)
+      for (int i = 0; i < offset && hasNext(l); i++, ++l)
+        ;
+    else if (offset < 0)
+      for (int i = 0; i < -offset && hasPrev(l); i++, --l)
+        ;
+    return l;
+  }
   void arrangeLine();
   void cursorUpDown(int n);
   void gotoLine(int n);

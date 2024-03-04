@@ -97,9 +97,9 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
 </head><body>\
 <h1>Information about current page</h1>\n");
 
-  all = this->layout.allLine;
-  if (all == 0 && this->layout.lastLine)
-    all = this->layout.linenumber(this->layout.lastLine);
+  all = this->layout.lines.size();
+  if (all == 0 && this->layout.lastLine())
+    all = this->layout.linenumber(this->layout.lastLine());
   p = url_decode0(this->res->currentURL.to_Str().c_str());
   Strcat_m_charp(
       tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
@@ -182,7 +182,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
 void Buffer::saveBuffer(FILE *f, bool cont) {
   auto is_html = this->res->is_html_type();
   auto l = this->layout.firstLine();
-  for (; l != nullptr; l = l->next) {
+  for (; !layout.isNull(l); ++l) {
     Str *tmp;
     if (is_html)
       tmp = conv_symbol(l);
