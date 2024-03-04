@@ -497,7 +497,7 @@ static Str *textlist_feed(void) {
 static void HTMLlineproc2(HtmlParser *parser, HttpResponse *res,
                           LineLayout *layout, TextLineList *tl) {
   _tl_lp2 = tl->first;
-  parser->HTMLlineproc2body(res, layout, textlist_feed);
+  parser->HTMLlineproc2body(res, &layout->data, textlist_feed);
 }
 
 readbuffer::readbuffer() {
@@ -560,7 +560,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   parser.flushline(&htmlenv1, 0, 2, htmlenv1.limit);
 
   if (htmlenv1.title) {
-    layout->title = htmlenv1.title;
+    layout->data.title = htmlenv1.title;
   }
 
   res->trbyte = trbyte + linelen;
@@ -569,7 +569,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   layout->currentLine = layout->firstLine();
   res->type = "text/html";
   // if (n_textarea)
-  formResetBuffer(layout, layout->formitem().get());
+  formResetBuffer(layout, layout->data.formitem().get());
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {
@@ -620,7 +620,7 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
 
     Lineprop *propBuffer = nullptr;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    layout->addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
+    layout->data.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
   }
   layout->topLine = layout->firstLine();
   layout->currentLine = layout->firstLine();

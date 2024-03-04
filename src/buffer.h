@@ -34,7 +34,7 @@ public:
 
   static std::shared_ptr<Buffer> nullBuffer(void) {
     auto b = Buffer::create();
-    b->layout.title = "*Null*";
+    b->layout.data.title = "*Null*";
     return b;
   }
 

@@ -22,7 +22,7 @@ int TabBuffer::draw(Screen *screen, TabBuffer *current) {
   RowCol pos{.row = this->y, .col = this->x1};
   screen->addch(pos, '[');
   auto l = this->x2 - this->x1 - 1 -
-           get_strwidth(this->currentBuffer()->layout.title.c_str());
+           get_strwidth(this->currentBuffer()->layout.data.title.c_str());
   if (l < 0) {
     l = 0;
   }
@@ -34,7 +34,7 @@ int TabBuffer::draw(Screen *screen, TabBuffer *current) {
     screen->underline();
     // standout();
   }
-  screen->addnstr(pos, this->currentBuffer()->layout.title.c_str(),
+  screen->addnstr(pos, this->currentBuffer()->layout.data.title.c_str(),
                   this->x2 - this->x1 - l);
   if (this == current) {
     screen->underlineend();
@@ -92,11 +92,11 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
  */
 std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
                                     char *name) {
-  if (first->layout.title == name) {
+  if (first->layout.data.title == name) {
     return first;
   }
   for (auto buf = first; buf->backBuffer != nullptr; buf = buf->backBuffer) {
-    if (buf->backBuffer->layout.title == name) {
+    if (buf->backBuffer->layout.data.title == name) {
       return buf->backBuffer;
     }
   }

@@ -24,22 +24,30 @@ struct BufferPos;
 struct HtmlTag;
 struct AnchorList;
 struct HmarkerList;
-struct LineLayout {
-  LineLayout();
-  LineLayout(int width);
 
+using AnchorFunc = Anchor *(*)(struct LineData *, const char *, const char *,
+                               int, int);
+struct LineData {
   std::string title;
   // always reshape new buffers to mark URLs
   bool need_reshape = true;
   int refresh_interval = 0;
-
-  //
-  // lines
-  //
   std::vector<Line> lines;
+  std::shared_ptr<AnchorList> _href;
+  std::shared_ptr<AnchorList> _name;
+  std::shared_ptr<AnchorList> _img;
+  std::shared_ptr<AnchorList> _formitem;
+  std::shared_ptr<HmarkerList> _hmarklist;
+  std::shared_ptr<HmarkerList> _imarklist;
+  struct LinkList *linklist = nullptr;
+  struct FormList *formlist = nullptr;
+  struct MapList *maplist = nullptr;
+  struct FormItemList *form_submit = nullptr;
+  struct Anchor *submit = nullptr;
+
+  LineData();
   Line *firstLine() { return lines.size() ? &lines.front() : nullptr; }
   Line *lastLine() { return lines.size() ? &lines.back() : nullptr; }
-  bool empty() const { return lines.empty(); }
   int linenumber(Line *t) const {
     for (int i = 0; i < (int)lines.size(); ++i) {
       if (&lines[i] == t) {
@@ -49,6 +57,59 @@ struct LineLayout {
     assert(false);
     return -1;
   }
+  void clear() {
+    lines.clear();
+    this->_href->clear();
+    this->_name->clear();
+    this->_img->clear();
+    this->_formitem->clear();
+    this->formlist = nullptr;
+    this->linklist = nullptr;
+    this->maplist = nullptr;
+    this->_hmarklist->clear();
+    this->_imarklist->clear();
+  }
+  void addnewline(const char *line, Lineprop *prop, int byteLen);
+  std::shared_ptr<AnchorList> href() const { return _href; }
+  std::shared_ptr<AnchorList> name() const { return _name; }
+  std::shared_ptr<AnchorList> img() const { return _img; }
+  std::shared_ptr<AnchorList> formitem() const { return _formitem; }
+  std::shared_ptr<HmarkerList> hmarklist() const { return _hmarklist; }
+  std::shared_ptr<HmarkerList> imarklist() const { return _imarklist; }
+
+  Anchor *registerName(const char *url, int line, int pos) {
+    return this->name()->putAnchor(url, NULL, {}, NULL, '\0', line, pos);
+  }
+  Anchor *registerImg(const char *url, const char *title, int line, int pos) {
+    return this->img()->putAnchor(url, NULL, {}, title, '\0', line, pos);
+  }
+  Anchor *registerForm(class HtmlParser *parser, FormList *flist, HtmlTag *tag,
+                       int line, int pos);
+  void addMultirowsForm(AnchorList *al);
+  void reseq_anchor();
+  const char *reAnchorPos(Line *l, const char *p1, const char *p2,
+                          AnchorFunc anchorproc);
+  const char *reAnchorAny(Line *topLine, const char *re, AnchorFunc anchorproc);
+  const char *reAnchor(Line *topLine, const char *re);
+  const char *reAnchorWord(Line *l, int spos, int epos);
+  const char *getAnchorText(AnchorList *al, Anchor *a);
+
+  void addLink(struct HtmlTag *tag);
+};
+
+struct LineLayout {
+  LineData data;
+
+  LineLayout();
+  LineLayout(int width);
+
+  //
+  // lines
+  //
+  Line *firstLine() { return data.firstLine(); }
+  Line *lastLine() { return data.lastLine(); }
+  bool empty() const { return data.lines.empty(); }
+  int linenumber(Line *t) const { return data.linenumber(t); }
   int TOP_LINENUMBER() const { return linenumber(topLine); }
   int CUR_LINENUMBER() const { return linenumber(currentLine); }
   bool isNull(Line *l) const { return linenumber(l) < 0; }
@@ -65,7 +126,6 @@ struct LineLayout {
   void reshape(int width, const LineLayout &sbuf);
 
   void clearBuffer();
-  void addnewline(const char *line, Lineprop *prop, int byteLen);
 
   Line *lineSkip(Line *line, int offset);
   Line *currentLineSkip(Line *l, int offset) {
@@ -155,54 +215,25 @@ struct LineLayout {
     return getCurWord(&s, &e);
   }
 
-  //
-  // Anchors
-  //
-private:
-  std::shared_ptr<AnchorList> _href;
-  std::shared_ptr<AnchorList> _name;
-  std::shared_ptr<AnchorList> _img;
-  std::shared_ptr<AnchorList> _formitem;
-  std::shared_ptr<HmarkerList> _hmarklist;
-  std::shared_ptr<HmarkerList> _imarklist;
-
-public:
-  std::shared_ptr<AnchorList> href() const { return _href; }
-  std::shared_ptr<AnchorList> name() const { return _name; }
-  std::shared_ptr<AnchorList> img() const { return _img; }
-  std::shared_ptr<AnchorList> formitem() const { return _formitem; }
-  std::shared_ptr<HmarkerList> hmarklist() const { return _hmarklist; }
-  std::shared_ptr<HmarkerList> imarklist() const { return _imarklist; }
-  struct LinkList *linklist = nullptr;
-  struct FormList *formlist = nullptr;
-  struct MapList *maplist = nullptr;
-  struct FormItemList *form_submit = nullptr;
-  struct Anchor *submit = nullptr;
-
-  Anchor *registerName(const char *url, int line, int pos) {
-    return this->name()->putAnchor(url, NULL, {}, NULL, '\0', line, pos);
+  Anchor *retrieveCurrentAnchor() {
+    if (!this->currentLine || !this->data.href())
+      return NULL;
+    return this->data.href()->retrieveAnchor(linenumber(currentLine),
+                                             this->pos);
   }
-  Anchor *registerImg(const char *url, const char *title, int line, int pos) {
-    return this->img()->putAnchor(url, NULL, {}, title, '\0', line, pos);
-  }
-  Anchor *registerForm(class HtmlParser *parser, FormList *flist, HtmlTag *tag,
-                       int line, int pos);
-  void addMultirowsForm(AnchorList *al);
-  void reseq_anchor();
-  const char *reAnchorPos(Line *l, const char *p1, const char *p2,
-                          Anchor *(*anchorproc)(LineLayout *, const char *,
-                                                const char *, int, int));
-  const char *reAnchorAny(const char *re,
-                          Anchor *(*anchorproc)(LineLayout *, const char *,
-                                                const char *, int, int));
-  const char *reAnchor(const char *re);
-  const char *reAnchorWord(Line *l, int spos, int epos);
-  Anchor *retrieveCurrentAnchor();
-  Anchor *retrieveCurrentImg();
-  Anchor *retrieveCurrentForm();
-  const char *getAnchorText(AnchorList *al, Anchor *a);
 
-  void addLink(struct HtmlTag *tag);
+  Anchor *retrieveCurrentImg() {
+    if (!this->currentLine || !this->data.img())
+      return NULL;
+    return this->data.img()->retrieveAnchor(linenumber(currentLine), this->pos);
+  }
+
+  Anchor *retrieveCurrentForm() {
+    if (!this->currentLine || !this->data.formitem())
+      return NULL;
+    return this->data.formitem()->retrieveAnchor(linenumber(currentLine),
+                                                 this->pos);
+  }
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

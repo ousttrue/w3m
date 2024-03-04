@@ -773,7 +773,7 @@ std::shared_ptr<CoroutineState<void>> submitForm() {
 // LINK_BEGIN
 //"Move to the first hyperlink"
 std::shared_ptr<CoroutineState<void>> topA() {
-  auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
+  auto hl = CurrentTab->currentBuffer()->layout.data.hmarklist();
   BufferPoint *po;
   Anchor *an;
   int hseq = 0;
@@ -791,12 +791,12 @@ std::shared_ptr<CoroutineState<void>> topA() {
     if (hseq >= (int)hl->size())
       co_return;
     po = &hl->marks[hseq];
-    if (CurrentTab->currentBuffer()->layout.href()) {
-      an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
-                                                                      po->pos);
+    if (CurrentTab->currentBuffer()->layout.data.href()) {
+      an = CurrentTab->currentBuffer()->layout.data.href()->retrieveAnchor(
+          po->line, po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem()) {
-      an = CurrentTab->currentBuffer()->layout.formitem()->retrieveAnchor(
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.data.formitem()) {
+      an = CurrentTab->currentBuffer()->layout.data.formitem()->retrieveAnchor(
           po->line, po->pos);
     }
     hseq++;
@@ -811,7 +811,7 @@ std::shared_ptr<CoroutineState<void>> topA() {
 // LINK_END
 //"Move to the last hyperlink"
 std::shared_ptr<CoroutineState<void>> lastA() {
-  auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
+  auto hl = CurrentTab->currentBuffer()->layout.data.hmarklist();
   BufferPoint *po;
   Anchor *an;
   int hseq;
@@ -831,12 +831,12 @@ std::shared_ptr<CoroutineState<void>> lastA() {
     if (hseq < 0)
       co_return;
     po = &hl->marks[hseq];
-    if (CurrentTab->currentBuffer()->layout.href()) {
-      an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
-                                                                      po->pos);
+    if (CurrentTab->currentBuffer()->layout.data.href()) {
+      an = CurrentTab->currentBuffer()->layout.data.href()->retrieveAnchor(
+          po->line, po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem()) {
-      an = CurrentTab->currentBuffer()->layout.formitem()->retrieveAnchor(
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.data.formitem()) {
+      an = CurrentTab->currentBuffer()->layout.data.formitem()->retrieveAnchor(
           po->line, po->pos);
     }
     hseq--;
@@ -851,7 +851,7 @@ std::shared_ptr<CoroutineState<void>> lastA() {
 // LINK_N
 //"Go to the nth link"
 std::shared_ptr<CoroutineState<void>> nthA() {
-  auto hl = CurrentTab->currentBuffer()->layout.hmarklist();
+  auto hl = CurrentTab->currentBuffer()->layout.data.hmarklist();
 
   int n = App::instance().searchKeyNum();
   if (n < 0 || n > (int)hl->size()) {
@@ -866,12 +866,12 @@ std::shared_ptr<CoroutineState<void>> nthA() {
   auto po = &hl->marks[n - 1];
 
   Anchor *an = nullptr;
-  if (CurrentTab->currentBuffer()->layout.href()) {
-    an = CurrentTab->currentBuffer()->layout.href()->retrieveAnchor(po->line,
-                                                                    po->pos);
+  if (CurrentTab->currentBuffer()->layout.data.href()) {
+    an = CurrentTab->currentBuffer()->layout.data.href()->retrieveAnchor(
+        po->line, po->pos);
   }
-  if (an == nullptr && CurrentTab->currentBuffer()->layout.formitem()) {
-    an = CurrentTab->currentBuffer()->layout.formitem()->retrieveAnchor(
+  if (an == nullptr && CurrentTab->currentBuffer()->layout.data.formitem()) {
+    an = CurrentTab->currentBuffer()->layout.data.formitem()->retrieveAnchor(
         po->line, po->pos);
   }
   if (an == nullptr)
@@ -1097,7 +1097,8 @@ std::shared_ptr<CoroutineState<void>> adBmark() {
       (Str_form_quote(
            Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str())))
           ->ptr,
-      (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout.title)))->ptr);
+      (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout.data.title)))
+          ->ptr);
   auto request =
       newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
   request->body = tmp->ptr;
@@ -1341,13 +1342,13 @@ std::shared_ptr<CoroutineState<void>> reload() {
 
   bool multipart = false;
   FormList *request;
-  if (CurrentTab->currentBuffer()->layout.form_submit) {
-    request = CurrentTab->currentBuffer()->layout.form_submit->parent;
+  if (CurrentTab->currentBuffer()->layout.data.form_submit) {
+    request = CurrentTab->currentBuffer()->layout.data.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       multipart = true;
       CurrentTab->currentBuffer()
-          ->layout.form_submit->query_from_followform_multipart();
+          ->layout.data.form_submit->query_from_followform_multipart();
       struct stat st;
       stat(request->body, &st);
       request->length = st.st_size;
@@ -1386,7 +1387,8 @@ std::shared_ptr<CoroutineState<void>> reload() {
       CurrentTab->deleteBuffer(buf);
     }
   }
-  CurrentTab->currentBuffer()->layout.form_submit = sbuf->layout.form_submit;
+  CurrentTab->currentBuffer()->layout.data.form_submit =
+      sbuf->layout.data.form_submit;
   if (CurrentTab->currentBuffer()->layout.firstLine()) {
     CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
     CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
@@ -1397,8 +1399,8 @@ std::shared_ptr<CoroutineState<void>> reload() {
 // RESHAPE
 //"Re-render document"
 std::shared_ptr<CoroutineState<void>> reshape() {
-  CurrentTab->currentBuffer()->layout.need_reshape = true;
-  if (CurrentTab->currentBuffer()->layout.need_reshape) {
+  CurrentTab->currentBuffer()->layout.data.need_reshape = true;
+  if (CurrentTab->currentBuffer()->layout.data.need_reshape) {
 
     LineLayout sbuf = CurrentTab->currentBuffer()->layout;
     auto body = CurrentTab->currentBuffer()->res->getBody();
@@ -1430,7 +1432,7 @@ std::shared_ptr<CoroutineState<void>> chkWORD() {
   auto p = CurrentTab->currentBuffer()->layout.getCurWord(&spos, &epos);
   if (p.empty())
     co_return;
-  CurrentTab->currentBuffer()->layout.reAnchorWord(
+  CurrentTab->currentBuffer()->layout.data.reAnchorWord(
       CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
 }
 

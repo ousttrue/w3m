@@ -41,7 +41,7 @@ Buffer::~Buffer() {}
 
 /* append links */
 std::string Buffer::link_info() const {
-  auto link = this->layout.linklist;
+  auto link = this->layout.data.linklist;
   if (!link) {
     return {};
   }
@@ -97,13 +97,13 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
 </head><body>\
 <h1>Information about current page</h1>\n");
 
-  all = this->layout.lines.size();
+  all = this->layout.data.lines.size();
   if (all == 0 && this->layout.lastLine())
     all = this->layout.linenumber(this->layout.lastLine());
   p = url_decode0(this->res->currentURL.to_Str().c_str());
   Strcat_m_charp(
       tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-      html_quote(this->layout.title.c_str()),
+      html_quote(this->layout.data.title.c_str()),
       "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
       "<tr valign=top><td nowrap>Document Type<td>",
       this->res->type.size() ? html_quote(this->res->type.c_str()) : "unknown",
@@ -202,9 +202,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-  if (buf->layout.linklist) {
+  if (buf->layout.data.linklist) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-    for (l = buf->layout.linklist; l; l = l->next) {
+    for (l = buf->layout.data.linklist; l; l = l->next) {
       if (l->url) {
         pu = Url::parse(l->url, buf->res->getBaseURL());
         p = Strnew(pu.to_Str())->ptr;
@@ -229,9 +229,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->layout.href()) {
+  if (buf->layout.data.href()) {
     Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-    auto al = buf->layout.href();
+    auto al = buf->layout.data.href();
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
@@ -243,7 +243,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         p = html_quote(url_decode0(p));
       else
         p = u;
-      t = buf->layout.getAnchorText(al.get(), a);
+      t = buf->layout.data.getAnchorText(al.get(), a);
       t = t ? html_quote(t) : "";
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
@@ -251,9 +251,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->layout.img()) {
+  if (buf->layout.data.img()) {
     Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-    auto al = buf->layout.img();
+    auto al = buf->layout.data.img();
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->slave)
@@ -271,10 +271,10 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
-      if (!buf->layout.formitem()) {
+      if (!buf->layout.data.formitem()) {
         continue;
       }
-      a = buf->layout.formitem()->retrieveAnchor(a->start.line, a->start.pos);
+      a = buf->layout.data.formitem()->retrieveAnchor(a->start.line, a->start.pos);
       if (!a)
         continue;
       fi = (FormItemList *)a->url;
@@ -326,27 +326,27 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
   if (this->res->is_html_type()) {
     auto buf = Buffer::create();
     buf->res->type = "text/plain";
-    buf->layout.title =
-        Sprintf("source of %s", this->layout.title.c_str())->ptr;
+    buf->layout.data.title =
+        Sprintf("source of %s", this->layout.data.title.c_str())->ptr;
 
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
-    buf->layout.need_reshape = true;
+    buf->layout.data.need_reshape = true;
 
     return buf;
   } else if (CurrentTab->currentBuffer()->res->type == "text/plain") {
     auto buf = Buffer::create();
     buf->res->type = "text/html";
-    buf->layout.title =
+    buf->layout.data.title =
         Sprintf("HTML view of %s",
-                CurrentTab->currentBuffer()->layout.title.c_str())
+                CurrentTab->currentBuffer()->layout.data.title.c_str())
             ->ptr;
 
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
-    buf->layout.need_reshape = true;
+    buf->layout.data.need_reshape = true;
 
     return buf;
   }
@@ -355,7 +355,7 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
 }
 
 std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
-  auto a = this->layout.name()->searchAnchor(label);
+  auto a = this->layout.data.name()->searchAnchor(label);
   if (!a) {
     App::instance().disp_message(Sprintf("%s is not found", label)->ptr);
     return {};
@@ -500,7 +500,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
        * Location: header. In this case, buf->form_submit must not be set
        * because the page is not loaded by POST method but GET method.
        */
-      buf->layout.form_submit = save_submit_formlist(fi);
+      buf->layout.data.form_submit = save_submit_formlist(fi);
     }
     return buf;
   } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
@@ -634,8 +634,8 @@ Buffer::followForm(Anchor *a, bool submit) {
     co_return this->do_submit(fi, a);
 
   case FORM_INPUT_RESET:
-    for (size_t i = 0; i < this->layout.formitem()->size(); i++) {
-      auto a2 = &this->layout.formitem()->anchors[i];
+    for (size_t i = 0; i < this->layout.data.formitem()->size(); i++) {
+      auto a2 = &this->layout.data.formitem()->anchors[i];
       auto f2 = (FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&

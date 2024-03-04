@@ -781,7 +781,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->res->sourcefile.c_str());
     set_environ("W3M_FILENAME", buf->res->filename.c_str());
-    set_environ("W3M_TITLE", buf->layout.title.c_str());
+    set_environ("W3M_TITLE", buf->layout.data.title.c_str());
     set_environ("W3M_URL", buf->res->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",
                 buf->res->type.size() ? buf->res->type.c_str() : "unknown");
@@ -1121,8 +1121,8 @@ void App::onFrame() {
     ldDL();
   }
 
-  if (auto a = currentTab()->currentBuffer()->layout.submit) {
-    currentTab()->currentBuffer()->layout.submit = NULL;
+  if (auto a = currentTab()->currentBuffer()->layout.data.submit) {
+    currentTab()->currentBuffer()->layout.data.submit = NULL;
     currentTab()->currentBuffer()->layout.gotoLine(a->start.line);
     currentTab()->currentBuffer()->layout.pos = a->start.pos;
     if (auto buf = currentTab()
@@ -1142,9 +1142,9 @@ void App::onFrame() {
   if (buf->layout.height == 0)
     buf->layout.height = this->LASTLINE() + 1;
   if ((buf->layout.width != width && (buf->res->is_html_type())) ||
-      buf->layout.need_reshape) {
-    buf->layout.need_reshape = true;
-    if (buf->layout.need_reshape) {
+      buf->layout.data.need_reshape) {
+    buf->layout.data.need_reshape = true;
+    if (buf->layout.data.need_reshape) {
 
       auto body = buf->res->getBody();
 
@@ -1474,7 +1474,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   } else {
     auto label = Strnew_m_charp("_", target, nullptr)->ptr;
     auto buf = CurrentTab->currentBuffer();
-    auto al = buf->layout.name()->searchAnchor(label);
+    auto al = buf->layout.data.name()->searchAnchor(label);
     if (al) {
       buf->layout.gotoLine(al->start.line);
       if (label_topline) {
@@ -1789,7 +1789,7 @@ Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(msg, "[SSL]");
   }
   Strcat_charp(msg, " <");
-  Strcat(msg, buf->layout.title);
+  Strcat(msg, buf->layout.data.title);
 
   if (s) {
     int l = this->COLS() - 3 - sl;

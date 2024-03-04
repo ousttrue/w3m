@@ -912,7 +912,7 @@ static int ex_efct(int ex) {
 
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
-void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
+void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
                                    Str *(*feed)()) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
@@ -1034,7 +1034,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           id = NULL;
           if (tag->parsedtag_get_value(ATTR_NAME, &id)) {
             id = url_quote_conv(id, name_charset);
-            layout->registerName(id, nlines, pos);
+            data->registerName(id, nlines, pos);
           }
           if (tag->parsedtag_get_value(ATTR_HREF, &p))
             p = Strnew(url_quote(remove_space(p)))->ptr;
@@ -1046,20 +1046,20 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
           tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
           if (hseq > 0) {
-            layout->hmarklist()->putHmarker(nlines, pos, hseq - 1);
+            data->hmarklist()->putHmarker(nlines, pos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
-            if (h < (int)layout->hmarklist()->size() &&
-                layout->hmarklist()->marks[h].invalid) {
-              layout->hmarklist()->marks[h].pos = pos;
-              layout->hmarklist()->marks[h].line = nlines;
-              layout->hmarklist()->marks[h].invalid = 0;
+            if (h < (int)data->hmarklist()->size() &&
+                data->hmarklist()->marks[h].invalid) {
+              data->hmarklist()->marks[h].pos = pos;
+              data->hmarklist()->marks[h].line = nlines;
+              data->hmarklist()->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = layout->href()->putAnchor(p, q, {.referer = r ? r : ""}, s,
+            a_href = data->href()->putAnchor(p, q, {.referer = r ? r : ""}, s,
                                                *t, nlines, pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;
@@ -1073,8 +1073,8 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             if (a_href->start.line == a_href->end.line &&
                 a_href->start.pos == a_href->end.pos) {
               if (a_href->hseq >= 0 &&
-                  a_href->hseq < (int)layout->hmarklist()->size()) {
-                layout->hmarklist()->marks[a_href->hseq].invalid = 1;
+                  a_href->hseq < (int)data->hmarklist()->size()) {
+                data->hmarklist()->marks[a_href->hseq].invalid = 1;
               }
               a_href->hseq = -1;
             }
@@ -1083,7 +1083,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           break;
 
         case HTML_LINK:
-          layout->addLink(tag);
+          data->addLink(tag);
           break;
 
         case HTML_IMG_ALT:
@@ -1091,7 +1091,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             s = NULL;
             tag->parsedtag_get_value(ATTR_TITLE, &s);
             p = url_quote_conv(remove_space(p), buf->document_charset);
-            a_img = layout->registerImg(p, s, nlines, pos);
+            a_img = data->registerImg(p, s, nlines, pos);
           }
           effect |= PE_IMAGE;
           break;
@@ -1122,17 +1122,17 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            layout->hmarklist()->putHmarker(nlines, hpos, hseq - 1);
+            data->hmarklist()->putHmarker(nlines, hpos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (h < (int)layout->hmarklist()->size() &&
-                layout->hmarklist()->marks[h].invalid) {
-              layout->hmarklist()->marks[h].pos = hpos;
-              layout->hmarklist()->marks[h].line = nlines;
-              layout->hmarklist()->marks[h].invalid = 0;
+            if (h < (int)data->hmarklist()->size() &&
+                data->hmarklist()->marks[h].invalid) {
+              data->hmarklist()->marks[h].pos = hpos;
+              data->hmarklist()->marks[h].line = nlines;
+              data->hmarklist()->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -1149,7 +1149,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
                   (Anchor **)New_Reuse(Anchor *, a_textarea, max_textarea);
             }
           }
-          a_form = layout->registerForm(this, form, tag, nlines, pos);
+          a_form = data->registerForm(this, form, tag, nlines, pos);
           if (a_textarea && textareanumber >= 0)
             a_textarea[textareanumber] = a_form;
           if (a_form) {
@@ -1236,7 +1236,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
               // TODO:
               // App::instance().task(refresh_interval, FUNCNAME_gorURL, p);
             } else if (refresh_interval > 0) {
-              layout->refresh_interval = refresh_interval;
+              data->refresh_interval = refresh_interval;
             }
           }
           break;
@@ -1265,7 +1265,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
           break;
         case HTML_TITLE_ALT:
           if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-            layout->title = html_unquote(p);
+            data->title = html_unquote(p);
           break;
         case HTML_SYMBOL:
           effect |= PC_SYMBOL;
@@ -1283,14 +1283,14 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
         id = NULL;
         if (tag->parsedtag_get_value(ATTR_ID, &id)) {
           id = url_quote_conv(id, name_charset);
-          layout->registerName(id, nlines, pos);
+          data->registerName(id, nlines, pos);
         }
 #endif /* ID_EXT */
       }
     }
     /* end of processing for one line */
     if (!internal) {
-      layout->addnewline(outc, outp, pos);
+      data->addnewline(outc, outp, pos);
     }
     if (internal == HTML_N_INTERNAL)
       internal = 0;
@@ -1302,9 +1302,9 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
   for (form_id = 1; form_id <= form_max; form_id++)
     if (forms[form_id])
       forms[form_id]->next = forms[form_id - 1];
-  layout->formlist = (form_max >= 0) ? forms[form_max] : NULL;
+  data->formlist = (form_max >= 0) ? forms[form_max] : NULL;
   if (n_textarea) {
-    layout->addMultirowsForm(layout->formitem().get());
+    data->addMultirowsForm(data->formitem().get());
   }
 }
 

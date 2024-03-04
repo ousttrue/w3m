@@ -120,7 +120,7 @@ public:
 
   Str *getLinkNumberStr(int correction) const;
 
-  void HTMLlineproc2body(struct HttpResponse *res, struct LineLayout *layout,
+  void HTMLlineproc2body(struct HttpResponse *res, struct LineData *layout,
                          Str *(*feed)());
 
   Str *process_img(HtmlTag *tag, int width);
