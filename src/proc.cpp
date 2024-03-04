@@ -888,7 +888,7 @@ std::shared_ptr<CoroutineState<void>> nthA() {
 std::shared_ptr<CoroutineState<void>> nextA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout._nextA(false, baseUr, n);
+  CurrentTab->currentBuffer()->layout._nextA(baseUr, n);
   co_return;
 }
 
@@ -898,27 +898,7 @@ std::shared_ptr<CoroutineState<void>> nextA() {
 std::shared_ptr<CoroutineState<void>> prevA() {
   int n = App::instance().searchKeyNum();
   auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout._prevA(false, baseUr, n);
-  co_return;
-}
-
-/* go to the next visited anchor */
-// NEXT_VISITED
-//"Move to the next visited hyperlink"
-std::shared_ptr<CoroutineState<void>> nextVA() {
-  int n = App::instance().searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout._nextA(true, baseUr, n);
-  co_return;
-}
-
-/* go to the previous visited anchor */
-// PREV_VISITED
-//"Move to the previous visited hyperlink"
-std::shared_ptr<CoroutineState<void>> prevVA() {
-  int n = App::instance().searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout._prevA(true, baseUr, n);
+  CurrentTab->currentBuffer()->layout._prevA(baseUr, n);
   co_return;
 }
 

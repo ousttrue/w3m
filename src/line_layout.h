@@ -125,8 +125,8 @@ struct LineLayout {
 
   void nextY(int d, int n);
   void nextX(int d, int dy, int n);
-  void _prevA(bool visited, std::optional<Url> baseUrl, int n);
-  void _nextA(bool visited, std::optional<Url> baseUrl, int n);
+  void _prevA(std::optional<Url> baseUrl, int n);
+  void _nextA(std::optional<Url> baseUrl, int n);
   void _movL(int n, int m);
   void _movD(int n, int m);
   void _movU(int n, int m);

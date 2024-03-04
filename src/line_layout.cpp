@@ -404,7 +404,7 @@ void LineLayout::nextX(int d, int dy, int n) {
 }
 
 /* go to the previous anchor */
-void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
+void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
   if (empty())
     return;
 
@@ -418,16 +418,12 @@ void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
     return;
 
   auto an = this->retrieveCurrentAnchor();
-  if (visited != true && an == nullptr) {
+  if (an == nullptr) {
     an = this->retrieveCurrentForm();
   }
 
   y = linenumber(this->currentLine);
   x = this->pos;
-
-  if (visited == true) {
-    n = hl->size();
-  }
 
   for (i = 0; i < n; i++) {
     pan = an;
@@ -435,8 +431,6 @@ void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
       int hseq = an->hseq - 1;
       do {
         if (hseq < 0) {
-          if (visited == true)
-            return;
           an = pan;
           goto _end;
         }
@@ -444,39 +438,22 @@ void LineLayout::_prevA(bool visited, std::optional<Url> baseUrl, int n) {
         if (this->data.href()) {
           an = this->data.href()->retrieveAnchor(po->line, po->pos);
         }
-        if (visited != true && an == nullptr && this->data.formitem()) {
+        if (an == nullptr && this->data.formitem()) {
           an = this->data.formitem()->retrieveAnchor(po->line, po->pos);
         }
         hseq--;
-        if (visited == true && an) {
-          url = urlParse(an->url, baseUrl);
-          if (URLHist->getHashHist(url.to_Str().c_str())) {
-            goto _end;
-          }
-        }
       } while (an == nullptr || an == pan);
     } else {
       an = this->data.href()->closest_prev_anchor(nullptr, x, y);
-      if (visited != true)
-        an = this->data.formitem()->closest_prev_anchor(an, x, y);
+      an = this->data.formitem()->closest_prev_anchor(an, x, y);
       if (an == nullptr) {
-        if (visited == true)
-          return;
         an = pan;
         break;
       }
       x = an->start.pos;
       y = an->start.line;
-      if (visited == true && an) {
-        url = urlParse(an->url, baseUrl);
-        if (URLHist->getHashHist(url.to_Str().c_str())) {
-          goto _end;
-        }
-      }
     }
   }
-  if (visited == true)
-    return;
 
 _end:
   if (an == nullptr || an->hseq < 0)
@@ -487,8 +464,8 @@ _end:
   this->arrangeCursor();
 }
 
-/* go to the next [visited] anchor */
-void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
+/* go to the next anchor */
+void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
   if (empty())
     return;
 
@@ -497,16 +474,12 @@ void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
     return;
 
   auto an = this->retrieveCurrentAnchor();
-  if (visited != true && an == nullptr) {
+  if (an == nullptr) {
     an = this->retrieveCurrentForm();
   }
 
   auto y = linenumber(currentLine);
   auto x = this->pos;
-
-  if (visited == true) {
-    n = hl->size();
-  }
 
   Anchor *pan = nullptr;
   for (int i = 0; i < n; i++) {
@@ -515,8 +488,6 @@ void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
       int hseq = an->hseq + 1;
       do {
         if (hseq >= (int)hl->size()) {
-          if (visited == true)
-            return;
           an = pan;
           goto _end;
         }
@@ -524,39 +495,22 @@ void LineLayout::_nextA(bool visited, std::optional<Url> baseUrl, int n) {
         if (this->data.href()) {
           an = this->data.href()->retrieveAnchor(po->line, po->pos);
         }
-        if (visited != true && an == nullptr && this->data.formitem()) {
+        if (an == nullptr && this->data.formitem()) {
           an = this->data.formitem()->retrieveAnchor(po->line, po->pos);
         }
         hseq++;
-        if (visited == true && an) {
-          auto url = urlParse(an->url, baseUrl);
-          if (URLHist->getHashHist(url.to_Str().c_str())) {
-            goto _end;
-          }
-        }
       } while (an == nullptr || an == pan);
     } else {
       an = this->data.href()->closest_next_anchor(nullptr, x, y);
-      if (visited != true)
-        an = this->data.formitem()->closest_next_anchor(an, x, y);
+      an = this->data.formitem()->closest_next_anchor(an, x, y);
       if (an == nullptr) {
-        if (visited == true)
-          return;
         an = pan;
         break;
       }
       x = an->start.pos;
       y = an->start.line;
-      if (visited == true) {
-        auto url = urlParse(an->url, baseUrl);
-        if (URLHist->getHashHist(url.to_Str().c_str())) {
-          goto _end;
-        }
-      }
     }
   }
-  if (visited == true)
-    return;
 
 _end:
   if (an == nullptr || an->hseq < 0)
