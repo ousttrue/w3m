@@ -10,9 +10,10 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <string.h>
-// #include <sstream>
 #include <zlib.h>
 #include <assert.h>
+#include <array>
+#include <algorithm>
 
 #ifdef _MSC_VER
 #include <winsock2.h>
