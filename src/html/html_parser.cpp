@@ -913,7 +913,7 @@ static int ex_efct(int ex) {
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
 void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
-                                   Str *(*feed)(), int llimit) {
+                                   Str *(*feed)()) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -921,13 +921,8 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
   const char *p, *q, *r, *s, *t, *str;
   Lineprop mode, effect, ex_effect;
   int pos;
-  int nlines;
-#ifdef DEBUG
-  FILE *debug = NULL;
-#endif
   const char *id = NULL;
   int hseq, form_id;
-  Str *line;
   const char *endp;
   char symbol = '\0';
   int internal = 0;
@@ -946,28 +941,15 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
     a_textarea = (Anchor **)New_N(Anchor *, max_textarea);
   }
 
-#ifdef DEBUG
-  if (w3m_debug)
-    debug = fopen("zzzerr", "a");
-#endif
-
   effect = 0;
   ex_effect = 0;
-  nlines = 0;
-  while ((line = feed()) != NULL) {
-#ifdef DEBUG
-    if (w3m_debug) {
-      Strfputs(line, debug);
-      fputc('\n', debug);
-    }
-#endif
+
+  for (int nlines = 1; auto line = feed(); ++nlines) {
     if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
       Strcat(textarea_str[n_textarea], line);
       continue;
     }
-  proc_again:
-    if (++nlines == llimit)
-      break;
+
     pos = 0;
 #ifdef ENABLE_REMOVE_TRAILINGSPACES
     Strremovetrailingspaces(line);
@@ -1314,13 +1296,9 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineLayout *layout,
       internal = 0;
     if (str != endp) {
       line = Strsubstr(line, str - line->ptr, endp - str);
-      goto proc_again;
     }
   }
-#ifdef DEBUG
-  if (w3m_debug)
-    fclose(debug);
-#endif
+
   for (form_id = 1; form_id <= form_max; form_id++)
     if (forms[form_id])
       forms[form_id]->next = forms[form_id - 1];

@@ -497,7 +497,7 @@ static Str *textlist_feed(void) {
 static void HTMLlineproc2(HtmlParser *parser, HttpResponse *res,
                           LineLayout *layout, TextLineList *tl) {
   _tl_lp2 = tl->first;
-  parser->HTMLlineproc2body(res, layout, textlist_feed, -1);
+  parser->HTMLlineproc2body(res, layout, textlist_feed);
 }
 
 readbuffer::readbuffer() {

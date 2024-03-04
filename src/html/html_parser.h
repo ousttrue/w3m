@@ -121,7 +121,7 @@ public:
   Str *getLinkNumberStr(int correction) const;
 
   void HTMLlineproc2body(struct HttpResponse *res, struct LineLayout *layout,
-                         Str *(*feed)(), int llimit);
+                         Str *(*feed)());
 
   Str *process_img(HtmlTag *tag, int width);
   Str *process_anchor(HtmlTag *tag, const char *tagbuf);
