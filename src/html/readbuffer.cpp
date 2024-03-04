@@ -671,7 +671,6 @@ void readbuffer::set_breakpoint(int tag_length) {
   if (!this->bp.init_flag)
     return;
 
-  this->bp.anchor = this->anchor;
   this->bp.img_alt = this->img_alt;
   this->bp.input_alt = this->input_alt;
   this->bp.in_bold = this->in_bold;

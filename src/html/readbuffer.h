@@ -101,7 +101,6 @@ struct Breakpoint {
   int len = 0;
   int tlen = 0;
   ReadBufferFlags flag = {};
-  Anchor anchor = {};
   Str *img_alt = nullptr;
   struct input_alt_attr input_alt = {};
   char fontstat[FONTSTAT_SIZE] = {0};
@@ -165,7 +164,6 @@ struct readbuffer {
   void set_breakpoint(int tag_length);
   void back_to_breakpoint() {
     this->flag = this->bp.flag;
-    this->anchor = this->bp.anchor;
     this->img_alt = this->bp.img_alt;
     this->input_alt = this->bp.input_alt;
     this->in_bold = this->bp.in_bold;
