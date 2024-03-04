@@ -5,6 +5,7 @@
 #include "proto.h"
 #include "quote.h"
 #include "html/readbuffer.h"
+#include "html/form_item.h"
 #include "screen.h"
 #include "screen.h"
 #include "ssl_util.h"
@@ -805,7 +806,8 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
       set_environ("W3M_CURRENT_IMG", "");
     a = buf->layout.retrieveCurrentForm();
     if (a)
-      set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
+      set_environ("W3M_CURRENT_FORM",
+                  ((FormItemList *)a->url)->form2str().c_str());
     else
       set_environ("W3M_CURRENT_FORM", "");
     set_environ("W3M_CURRENT_LINE",
@@ -1014,10 +1016,12 @@ void App::_peekURL(bool only_img) {
              : currentTab()->currentBuffer()->layout.retrieveCurrentForm());
     if (a == nullptr) {
       a = currentTab()->currentBuffer()->layout.retrieveCurrentImg();
-      if (a == nullptr)
+      if (a == nullptr) {
         return;
-    } else
-      s = Strnew_charp(form2str((FormItemList *)a->url));
+      }
+    } else {
+      s = Strnew(((FormItemList *)a->url)->form2str());
+    }
   }
   if (s == nullptr) {
     auto pu =

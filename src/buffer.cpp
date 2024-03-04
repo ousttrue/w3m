@@ -144,7 +144,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
   a = this->layout.retrieveCurrentForm();
   if (a != nullptr) {
     FormItemList *fi = (FormItemList *)a->url;
-    p = form2str(fi);
+    p = Strnew(fi->form2str())->ptr;
     p = html_quote(url_decode0(p));
     Strcat_m_charp(
         tmp, "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
@@ -274,7 +274,8 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       if (!buf->layout.data.formitem()) {
         continue;
       }
-      a = buf->layout.data.formitem()->retrieveAnchor(a->start.line, a->start.pos);
+      a = buf->layout.data.formitem()->retrieveAnchor(a->start.line,
+                                                      a->start.pos);
       if (!a)
         continue;
       fi = (FormItemList *)a->url;

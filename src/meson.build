@@ -72,6 +72,7 @@ executable(
         'html/html_feed_env.cpp',
         'html/table.cpp',
         'html/form.cpp',
+        'html/form_item.cpp',
         'html/anchor.cpp',
         'html/html_tag.cpp',
         'html/tagtable.cpp',

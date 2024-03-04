@@ -6,20 +6,6 @@
 #include "Str.h"
 #include <memory>
 
-#define FORM_UNKNOWN -1
-#define FORM_INPUT_TEXT 0
-#define FORM_INPUT_PASSWORD 1
-#define FORM_INPUT_CHECKBOX 2
-#define FORM_INPUT_RADIO 3
-#define FORM_INPUT_SUBMIT 4
-#define FORM_INPUT_RESET 5
-#define FORM_INPUT_HIDDEN 6
-#define FORM_INPUT_IMAGE 7
-#define FORM_SELECT 8
-#define FORM_TEXTAREA 9
-#define FORM_INPUT_BUTTON 10
-#define FORM_INPUT_FILE 11
-
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 #define FORM_I_SELECT_DEFAULT_SIZE 40
 #define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
@@ -59,8 +45,6 @@ struct Buffer;
 struct Anchor;
 struct AnchorList;
 struct LineLayout;
-char *form2str(FormItemList *fi);
-int formtype(const char *typestr);
 void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
 void formResetBuffer(LineLayout *layout, AnchorList *formitem);
 void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form);
