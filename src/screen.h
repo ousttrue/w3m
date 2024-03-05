@@ -88,10 +88,10 @@ public:
                  std::bind(&Screen::clrtoeolx, this, std::placeholders::_1));
   }
   void no_clrtoeol();
-  void addmch(const RowCol &pos, const Utf8 &utf8);
+  void addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode = {});
   void addch(const RowCol &pos, char c) { addmch(pos, {(char8_t)c, 0, 0, 0}); }
   RowCol addstr(RowCol pos, const char *s);
-  RowCol addnstr(RowCol pos, const char *s, int n);
+  RowCol addnstr(RowCol pos, const char *s, int n, ScreenFlags mode = {});
   RowCol addnstr_sup(RowCol pos, const char *s, int n);
   void toggle_stand(const RowCol &pos);
   void bold(void) { CurrentMode |= ScreenFlags::BOLD; }
@@ -103,9 +103,9 @@ public:
   void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
 
-  void redrawLine(RowCol pixel, LineLayout *layout, Line *l);
-  int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int i,
-                       int bpos, int epos);
+  RowCol redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft);
+  // int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int i,
+  //                      int bpos, int epos);
 
   std::string str(const RowCol &root, LineLayout *layout);
 };
