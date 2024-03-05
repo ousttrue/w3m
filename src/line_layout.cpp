@@ -442,7 +442,7 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
         hseq--;
       } while (an == nullptr || an == pan);
     } else {
-      an = this->data._href->closest_prev_anchor(nullptr, x, y);
+      an = this->data._href->closest_prev_anchor((Anchor *)nullptr, x, y);
       an = this->data._formitem->closest_prev_anchor(an, x, y);
       if (an == nullptr) {
         an = pan;
@@ -499,7 +499,7 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
         hseq++;
       } while (an == nullptr || an == pan);
     } else {
-      an = this->data._href->closest_next_anchor(nullptr, x, y);
+      an = this->data._href->closest_next_anchor((Anchor *)nullptr, x, y);
       an = this->data._formitem->closest_next_anchor(an, x, y);
       if (an == nullptr) {
         an = pan;
@@ -797,7 +797,7 @@ Anchor *LineLayout::retrieveCurrentImg() {
   return this->data._img->retrieveAnchor(linenumber(currentLine), this->pos);
 }
 
-Anchor *LineLayout::retrieveCurrentForm() {
+FormAnchor *LineLayout::retrieveCurrentForm() {
   if (!this->currentLine || !this->data._formitem)
     return NULL;
   return this->data._formitem->retrieveAnchor(linenumber(currentLine),

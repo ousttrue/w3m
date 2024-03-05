@@ -142,7 +142,7 @@ struct LineLayout {
 
   Anchor *retrieveCurrentAnchor();
   Anchor *retrieveCurrentImg();
-  Anchor *retrieveCurrentForm();
+  FormAnchor *retrieveCurrentForm();
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

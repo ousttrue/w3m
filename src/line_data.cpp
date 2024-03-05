@@ -15,7 +15,7 @@ LineData::LineData() {
   this->_href = std::make_shared<AnchorList<Anchor>>();
   this->_name = std::make_shared<AnchorList<Anchor>>();
   this->_img = std::make_shared<AnchorList<Anchor>>();
-  this->_formitem = std::make_shared<AnchorList<Anchor>>();
+  this->_formitem = std::make_shared<AnchorList<FormAnchor>>();
   this->_hmarklist = std::make_shared<HmarkerList>();
 }
 
@@ -23,8 +23,8 @@ void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
   lines.push_back({line, prop, byteLen});
 }
 
-Anchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
-                               HtmlTag *tag, int line, int pos) {
+FormAnchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
+                                   HtmlTag *tag, int line, int pos) {
   auto fi = flist->formList_addInput(parser, tag);
   if (!fi) {
     return NULL;
@@ -34,12 +34,12 @@ Anchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
           .line = line,
           .pos = pos,
       },
-      Anchor{
-          .url = (const char *)fi,
-          .target = flist->target ? flist->target : "",
-          .option = {},
-          .title = "",
-          .accesskey = '\0',
+      FormAnchor{
+          // .target = flist->target ? flist->target : "",
+          // .option = {},
+          // .title = "",
+          // .accesskey = '\0',
+          .formItem = fi,
       });
 }
 
@@ -90,14 +90,15 @@ void LineData::addMultirowsForm() {
               .line = linenumber(l),
               .pos = pos,
           },
-          Anchor{
-              .url = a_form.url,
-              .target = a_form.target,
-              .option = {},
-              .title = "",
-              .accesskey = '\0',
-              .hseq = a_form.hseq,
-              .y = a_form.y,
+          FormAnchor{
+              .formItem = a_form.formItem,
+              // .url = a_form.url,
+              // .target = a_form.target,
+              // .option = {},
+              // .title = "",
+              // .accesskey = '\0',
+              // .hseq = a_form.hseq,
+              // .y = a_form.y,
           });
       a->end.pos = pos + ecol - col;
       if (pos < 1 || a->end.pos >= l->size())
@@ -135,8 +136,8 @@ void LineData::reseq_anchor() {
     auto a = &this->_href->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
-      auto a1 =
-          this->_href->closest_next_anchor(NULL, a->start.pos, a->start.line);
+      auto a1 = this->_href->closest_next_anchor((Anchor *)NULL, a->start.pos,
+                                                 a->start.line);
       a1 =
           this->_formitem->closest_next_anchor(a1, a->start.pos, a->start.line);
       if (a1 && a1->hseq >= 0) {

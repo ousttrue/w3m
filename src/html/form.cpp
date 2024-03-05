@@ -138,10 +138,10 @@ FormItemList *FormList ::formList_addInput(HtmlParser *parser,
   return item;
 }
 
-void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
+void formRecheckRadio(FormAnchor *a, Buffer *buf, FormItemList *fi) {
   for (size_t i = 0; i < buf->layout.data._formitem->size(); i++) {
     auto a2 = &buf->layout.data._formitem->anchors[i];
-    auto f2 = (FormItemList *)a2->url;
+    auto f2 = a2->formItem;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
@@ -152,8 +152,8 @@ void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
   formUpdateBuffer(a, &buf->layout, fi);
 }
 
-void formResetBuffer(LineLayout *layout, AnchorList<Anchor> *formitem) {
-  Anchor *a;
+void formResetBuffer(LineLayout *layout, AnchorList<FormAnchor> *formitem) {
+  FormAnchor *a;
   FormItemList *f1, *f2;
 
   if (!layout || layout->data._formitem == NULL || formitem == NULL)
@@ -163,8 +163,8 @@ void formResetBuffer(LineLayout *layout, AnchorList<Anchor> *formitem) {
     a = &layout->data._formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
-    f1 = (FormItemList *)a->url;
-    f2 = (FormItemList *)formitem->anchors[i].url;
+    f1 = a->formItem;
+    f2 = formitem->anchors[i].formItem;
     if (f1->type != f2->type ||
         strcmp(((f1->name == NULL) ? "" : f1->name->ptr),
                ((f2->name == NULL) ? "" : f2->name->ptr)))
@@ -276,7 +276,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   return pos;
 }
 
-void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form) {
+void formUpdateBuffer(FormAnchor *a, LineLayout *layout, FormItemList *form) {
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   Line *l;
@@ -690,15 +690,12 @@ void loadPreForm(void) {
 }
 
 void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
-  struct pre_form *pf;
-  struct pre_form_item *pi;
-  Anchor *a;
-  FormList *fl;
-  FormItemList *fi;
 
   if (!buf || !buf->layout.data._formitem || !PreForm)
     return;
 
+  struct pre_form *pf;
+  struct pre_form_item *pi;
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
       auto url = buf->res->currentURL.to_Str();
@@ -710,9 +707,9 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
     } else
       continue;
     for (size_t i = 0; i < buf->layout.data._formitem->size(); i++) {
-      a = &buf->layout.data._formitem->anchors[i];
-      fi = (FormItemList *)a->url;
-      fl = fi->parent;
+      auto a = &buf->layout.data._formitem->anchors[i];
+      auto fi = a->formItem;
+      auto fl = fi->parent;
       if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
         continue;
       if (pf->action && (!fl->action || Strcmp_charp(fl->action, pf->action)))

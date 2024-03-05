@@ -294,8 +294,9 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   append_tags(&h_env->obuf);
 
   auto obuf = &h_env->obuf;
-  if (obuf->anchor.url)
+  if (obuf->anchor.url.size()) {
     hidden = hidden_anchor = has_hidden_link(obuf, HTML_A);
+  }
   if (obuf->img_alt) {
     if ((hidden_img = has_hidden_link(obuf, HTML_IMG_ALT)) != NULL) {
       if (!hidden || hidden_img < hidden)
@@ -355,7 +356,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     }
   }
 
-  if (obuf->anchor.url && !hidden_anchor)
+  if (obuf->anchor.url.size() && !hidden_anchor)
     Strcat_charp(line, "</a>");
   if (obuf->img_alt && !hidden_img)
     Strcat_charp(line, "</img_alt>");
@@ -527,12 +528,12 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   fillline(obuf, indent);
   if (pass)
     passthrough(obuf, pass->ptr, 0);
-  if (!hidden_anchor && obuf->anchor.url) {
+  if (!hidden_anchor && obuf->anchor.url.size()) {
     Str *tmp;
     if (obuf->anchor.hseq > 0)
       obuf->anchor.hseq = -obuf->anchor.hseq;
     tmp = Sprintf("<A HSEQ=\"%d\" HREF=\"", obuf->anchor.hseq);
-    Strcat_charp(tmp, html_quote(obuf->anchor.url));
+    Strcat_charp(tmp, html_quote(obuf->anchor.url.c_str()));
     if (obuf->anchor.target.size()) {
       Strcat_charp(tmp, "\" TARGET=\"");
       Strcat_charp(tmp, html_quote(obuf->anchor.target.c_str()));
@@ -616,7 +617,7 @@ int HtmlParser::close_effect0(struct readbuffer *obuf, int cmd) {
 
 void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
   auto obuf = &h_env->obuf;
-  if (obuf->anchor.url) {
+  if (obuf->anchor.url.size()) {
     int i;
     char *p = NULL;
     int is_erased = 0;
@@ -918,7 +919,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
-  Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
+  Anchor *a_href = NULL, *a_img = NULL;
   const char *p, *q, *r, *s, *t, *str;
   Lineprop mode, effect, ex_effect;
   int pos;
@@ -927,7 +928,8 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
   const char *endp;
   char symbol = '\0';
   int internal = 0;
-  Anchor **a_textarea = NULL;
+  FormAnchor *a_form = NULL;
+  FormAnchor **a_textarea = NULL;
 
   if (out_size == 0) {
     out_size = LINELEN;
@@ -939,7 +941,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
   if (!max_textarea) { /* halfload */
     max_textarea = 10;
     textarea_str = (Str **)New_N(Str *, max_textarea);
-    a_textarea = (Anchor **)New_N(Anchor *, max_textarea);
+    a_textarea = (FormAnchor **)New_N(FormAnchor *, max_textarea);
   }
 
   effect = 0;
@@ -1174,8 +1176,8 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
               max_textarea = 2 * textareanumber;
               textarea_str =
                   (Str **)New_Reuse(Str *, textarea_str, max_textarea);
-              a_textarea =
-                  (Anchor **)New_Reuse(Anchor *, a_textarea, max_textarea);
+              a_textarea = (FormAnchor **)New_Reuse(FormAnchor *, a_textarea,
+                                                    max_textarea);
             }
           }
           a_form = data->registerForm(this, form, tag, nlines, pos);
@@ -1288,7 +1290,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
           break;
         case HTML_N_TEXTAREA_INT:
           if (a_textarea && n_textarea >= 0) {
-            FormItemList *item = (FormItemList *)a_textarea[n_textarea]->url;
+            FormItemList *item = a_textarea[n_textarea]->formItem;
             item->init_value = item->value = textarea_str[n_textarea];
           }
           break;
@@ -2414,7 +2416,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     obuf->end_tag = 0;
     return 1;
   case HTML_A:
-    if (obuf->anchor.url) {
+    if (obuf->anchor.url.size()) {
       this->close_anchor(h_env);
     }
     hseq = 0;
@@ -2432,7 +2434,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq))
       obuf->anchor.hseq = hseq;
 
-    if (hseq == 0 && obuf->anchor.url) {
+    if (hseq == 0 && obuf->anchor.url.size()) {
       obuf->anchor.hseq = cur_hseq;
       tmp = parser->process_anchor(tag, h_env->tagbuf->ptr);
       push_tag(obuf, tmp->ptr, HTML_A);
@@ -3182,8 +3184,9 @@ table_start:
         goto table_start;
       else {
         if (displayLinkNumber && cmd == HTML_A && !internal)
-          if (h_env->obuf.anchor.url)
+          if (h_env->obuf.anchor.url.size()) {
             need_number = 1;
+          }
         continue;
       }
     }

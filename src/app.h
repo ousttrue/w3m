@@ -109,7 +109,7 @@ public:
   std::string myEditor(const char *file, int line) const;
   const char *searchKeyData();
   int searchKeyNum();
-  void _peekURL(bool only_img);
+  void _peekURL();
   std::string currentUrl() const;
   // FuncId getFuncList(const std::string &id) const {
   //   auto found = _funcTable.find(id);

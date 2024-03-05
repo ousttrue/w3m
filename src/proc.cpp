@@ -1268,15 +1268,7 @@ std::shared_ptr<CoroutineState<void>> svSrc() {
 // PEEK_LINK
 //"Show target address"
 std::shared_ptr<CoroutineState<void>> peekURL() {
-  App::instance()._peekURL(0);
-  co_return;
-}
-
-/* peek URL of image */
-// PEEK_IMG
-//"Show image address"
-std::shared_ptr<CoroutineState<void>> peekIMG() {
-  App::instance()._peekURL(1);
+  App::instance()._peekURL();
   co_return;
 }
 
@@ -1441,7 +1433,8 @@ std::shared_ptr<CoroutineState<void>> linkbrz() {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr)
     co_return;
-  auto pu = urlParse(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
+  auto pu =
+      urlParse(a->url.c_str(), CurrentTab->currentBuffer()->res->getBaseURL());
   invoke_browser(pu.to_Str().c_str());
 }
 

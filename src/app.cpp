@@ -793,24 +793,27 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     Url pu;
     auto s = buf->layout.getCurWord();
     set_environ("W3M_CURRENT_WORD", s.c_str());
-    auto a = buf->layout.retrieveCurrentAnchor();
-    if (a) {
-      pu = urlParse(a->url, buf->res->getBaseURL());
+
+    if (auto a = buf->layout.retrieveCurrentAnchor()) {
+      pu = urlParse(a->url.c_str(), buf->res->getBaseURL());
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
-    } else
+    } else {
       set_environ("W3M_CURRENT_LINK", "");
-    a = buf->layout.retrieveCurrentImg();
-    if (a) {
-      pu = urlParse(a->url, buf->res->getBaseURL());
+    }
+
+    if (auto a = buf->layout.retrieveCurrentImg()) {
+      pu = urlParse(a->url.c_str(), buf->res->getBaseURL());
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
-    } else
+    } else {
       set_environ("W3M_CURRENT_IMG", "");
-    a = buf->layout.retrieveCurrentForm();
-    if (a)
-      set_environ("W3M_CURRENT_FORM",
-                  ((FormItemList *)a->url)->form2str().c_str());
-    else
+    }
+
+    if (auto a = buf->layout.retrieveCurrentForm()) {
+      set_environ("W3M_CURRENT_FORM", a->formItem->form2str().c_str());
+    } else {
       set_environ("W3M_CURRENT_FORM", "");
+    }
+
     set_environ("W3M_CURRENT_LINE",
                 Sprintf("%ld", buf->layout.linenumber(l))->ptr);
     set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->layout.currentColumn +
@@ -988,7 +991,7 @@ const char *App::searchKeyData() {
   return allocStr(data, -1);
 }
 
-void App::_peekURL(bool only_img) {
+void App::_peekURL() {
   static Str *s = nullptr;
   static int offset = 0;
 
@@ -1007,30 +1010,36 @@ void App::_peekURL(bool only_img) {
   }
 
   s = nullptr;
-  Anchor *a;
-  a = (only_img
-           ? nullptr
-           : currentTab()->currentBuffer()->layout.retrieveCurrentAnchor());
-  if (a == nullptr) {
-    a = (only_img
-             ? nullptr
-             : currentTab()->currentBuffer()->layout.retrieveCurrentForm());
-    if (a == nullptr) {
-      a = currentTab()->currentBuffer()->layout.retrieveCurrentImg();
-      if (a == nullptr) {
-        return;
-      }
-    } else {
-      s = Strnew(((FormItemList *)a->url)->form2str());
+  if (auto a = currentTab()->currentBuffer()->layout.retrieveCurrentAnchor()) {
+    s = Strnew(a->url);
+    if (s == nullptr) {
+      auto pu = urlParse(a->url.c_str(),
+                         currentTab()->currentBuffer()->res->getBaseURL());
+      s = Strnew(pu.to_Str());
     }
+  } else if (auto a =
+                 currentTab()->currentBuffer()->layout.retrieveCurrentForm()) {
+    s = Strnew(a->formItem->form2str());
+    if (s == nullptr) {
+      auto pu = urlParse(a->url.c_str(),
+                         currentTab()->currentBuffer()->res->getBaseURL());
+      s = Strnew(pu.to_Str());
+    }
+  } else if (auto a =
+                 currentTab()->currentBuffer()->layout.retrieveCurrentImg()) {
+    s = Strnew(a->url);
+    if (s == nullptr) {
+      auto pu = urlParse(a->url.c_str(),
+                         currentTab()->currentBuffer()->res->getBaseURL());
+      s = Strnew(pu.to_Str());
+    }
+  } else {
+    return;
   }
-  if (s == nullptr) {
-    auto pu =
-        urlParse(a->url, currentTab()->currentBuffer()->res->getBaseURL());
-    s = Strnew(pu.to_Str());
-  }
+
   if (DecodeURL)
     s = Strnew_charp(url_decode0(s->ptr));
+
 disp:
   int n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS() - 1))
@@ -1772,7 +1781,7 @@ Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
           p = a_img->title;
       }
       if (p.size() || a)
-        s = this->make_lastline_link(buf, p.c_str(), a ? a->url : NULL);
+        s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() : NULL);
     }
     if (s) {
       sl = get_Str_strwidth(s);

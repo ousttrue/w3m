@@ -55,7 +55,7 @@ public:
     return NULL;
   }
 
-  Anchor *closest_next_anchor(Anchor *an, int x, int y) {
+  template <typename S> S *closest_next_anchor(S *an, int x, int y) {
     if (this->size() == 0)
       return an;
     for (size_t i = 0; i < this->size(); i++) {
@@ -73,7 +73,7 @@ public:
     return an;
   }
 
-  Anchor *closest_prev_anchor(Anchor *an, int x, int y) {
+  template <typename S> S *closest_prev_anchor(S *an, int x, int y) {
     if (this->size() == 0)
       return an;
     for (size_t i = 0; i < this->size(); i++) {

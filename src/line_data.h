@@ -2,6 +2,7 @@
 
 #include "line.h"
 #include "html/anchorlist.h"
+#include "html/form.h"
 #include <memory>
 #include <string>
 #include <assert.h>
@@ -21,12 +22,12 @@ struct LineData {
   std::shared_ptr<AnchorList<Anchor>> _href;
   std::shared_ptr<AnchorList<Anchor>> _name;
   std::shared_ptr<AnchorList<Anchor>> _img;
-  std::shared_ptr<AnchorList<Anchor>> _formitem;
+  std::shared_ptr<AnchorList<FormAnchor>> _formitem;
   std::shared_ptr<HmarkerList> _hmarklist;
   struct LinkList *linklist = nullptr;
   struct FormList *formlist = nullptr;
   struct FormItemList *form_submit = nullptr;
-  struct Anchor *submit = nullptr;
+  struct FormAnchor *submit = nullptr;
 
   LineData();
   Line *firstLine() { return lines.size() ? &lines.front() : nullptr; }
@@ -45,8 +46,8 @@ struct LineData {
 
   Anchor *registerName(const char *url, int line, int pos);
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
-  Anchor *registerForm(class HtmlParser *parser, FormList *flist, HtmlTag *tag,
-                       int line, int pos);
+  FormAnchor *registerForm(class HtmlParser *parser, FormList *flist,
+                           HtmlTag *tag, int line, int pos);
   void addMultirowsForm();
   void reseq_anchor();
   const char *reAnchorPos(Line *l, const char *p1, const char *p2,

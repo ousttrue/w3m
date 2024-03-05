@@ -3,6 +3,7 @@
 #include "rowcol.h"
 #include "enum_template.h"
 #include "html/anchorlist.h"
+#include "line_layout.h"
 #include <ftxui/screen/screen.hpp>
 #include <functional>
 #include <memory>
@@ -103,8 +104,46 @@ public:
   int redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos, int epos);
   Line *redrawLine(LineLayout *buf, Line *l, int i);
   void redrawNLine(LineLayout *layout, int n);
-  void drawAnchorCursor0(LineLayout *layout, AnchorList<Anchor> *al, int hseq,
-                         int prevhseq, int tline, int eline, int active);
+
+  template <typename T>
+  void drawAnchorCursor0(LineLayout *layout, AnchorList<T> *al, int hseq,
+                         int prevhseq, int tline, int eline, int active) {
+    auto l = layout->topLine;
+    for (size_t j = 0; j < al->size(); j++) {
+      auto an = &al->anchors[j];
+      if (an->start.line < tline)
+        continue;
+      if (an->start.line >= eline)
+        return;
+      for (;; ++l) {
+        if (layout->isNull(l))
+          return;
+        if (layout->linenumber(l) == an->start.line)
+          break;
+      }
+      if (hseq >= 0 && an->hseq == hseq) {
+        int start_pos = an->start.pos;
+        int end_pos = an->end.pos;
+        for (int i = an->start.pos; i < an->end.pos; i++) {
+          if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
+            if (active)
+              l->propBuf[i] |= PE_ACTIVE;
+            else
+              l->propBuf[i] &= ~PE_ACTIVE;
+          }
+        }
+        if (active && start_pos < end_pos)
+          this->redrawLineRegion(layout, l,
+                                 layout->linenumber(l) - tline + layout->rootY,
+                                 start_pos, end_pos);
+      } else if (prevhseq >= 0 && an->hseq == prevhseq) {
+        if (active)
+          this->redrawLineRegion(layout, l,
+                                 layout->linenumber(l) - tline + layout->rootY,
+                                 an->start.pos, an->end.pos);
+      }
+    }
+  }
   void drawAnchorCursor(LineLayout *layout);
   std::string str(LineLayout *layout);
 };

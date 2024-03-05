@@ -115,9 +115,8 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
                  Sprintf("%lu", (unsigned long)this->res->trbyte)->ptr,
                  nullptr);
 
-  auto a = this->layout.retrieveCurrentAnchor();
-  if (a) {
-    pu = urlParse(a->url, this->res->getBaseURL());
+  if (auto a = this->layout.retrieveCurrentAnchor()) {
+    pu = urlParse(a->url.c_str(), this->res->getBaseURL());
     p = Strnew(pu.to_Str())->ptr;
     q = html_quote(p);
     if (DecodeURL)
@@ -128,9 +127,9 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
         tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"", q,
         "\">", p, "</a>", nullptr);
   }
-  a = this->layout.retrieveCurrentImg();
-  if (a != nullptr) {
-    pu = urlParse(a->url, this->res->getBaseURL());
+
+  if (auto a = this->layout.retrieveCurrentImg()) {
+    pu = urlParse(a->url.c_str(), this->res->getBaseURL());
     p = Strnew(pu.to_Str())->ptr;
     q = html_quote(p);
     if (DecodeURL)
@@ -141,9 +140,9 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
         tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"", q,
         "\">", p, "</a>", nullptr);
   }
-  a = this->layout.retrieveCurrentForm();
-  if (a != nullptr) {
-    FormItemList *fi = (FormItemList *)a->url;
+
+  if (auto a = this->layout.retrieveCurrentForm()) {
+    FormItemList *fi = a->formItem;
     p = Strnew(fi->form2str())->ptr;
     p = html_quote(url_decode0(p));
     Strcat_m_charp(
@@ -153,6 +152,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
     //     !Strcmp_charp(fi->parent->action, "map"))
     //   append_map_info(buf, tmp, fi->parent->item);
   }
+
   Strcat_charp(tmp, "</table>\n");
 
   Strcat(tmp, this->link_info());
@@ -194,7 +194,6 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
 
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
   LinkList *l;
-  Anchor *a;
   FormItemList *fi;
   const char *u, *p;
   const char *t;
@@ -233,10 +232,10 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
     // auto al = buf->layout.data._href;
     for (size_t i = 0; i < buf->layout.data._href->size(); i++) {
-      a = &buf->layout.data._href->anchors[i];
+      auto a = &buf->layout.data._href->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      pu = urlParse(a->url, buf->res->getBaseURL());
+      pu = urlParse(a->url.c_str(), buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -255,10 +254,10 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
     auto al = buf->layout.data._img;
     for (size_t i = 0; i < al->size(); i++) {
-      a = &al->anchors[i];
+      auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      pu = urlParse(a->url, buf->res->getBaseURL());
+      pu = urlParse(a->url.c_str(), buf->res->getBaseURL());
       p = Strnew(pu.to_Str())->ptr;
       u = html_quote(p);
       if (DecodeURL)
@@ -268,17 +267,18 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       if (a->title.size())
         t = html_quote(a->title.c_str());
       else
-        t = html_quote(url_decode0(a->url));
+        t = html_quote(url_decode0(a->url.c_str()));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
       if (!buf->layout.data._formitem) {
         continue;
       }
-      a = buf->layout.data._formitem->retrieveAnchor(a->start.line,
-                                                     a->start.pos);
-      if (!a)
+
+      auto fa = buf->layout.data._formitem->retrieveAnchor(a->start.line,
+                                                           a->start.pos);
+      if (!fa)
         continue;
-      fi = (FormItemList *)a->url;
+      fi = fa->formItem;
       fi = fi->parent->item;
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
           !Strcmp_charp(fi->parent->action, "map") && fi->value) {
@@ -518,7 +518,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
 }
 
 std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>
-Buffer::followForm(Anchor *a, bool submit) {
+Buffer::followForm(FormAnchor *a, bool submit) {
   // if (!currentBuffer()->layout.firstLine) {
   //   return {};
   // }
@@ -527,7 +527,7 @@ Buffer::followForm(Anchor *a, bool submit) {
   if (!a) {
     co_return {};
   }
-  auto fi = (FormItemList *)a->url;
+  auto fi = a->formItem;
 
   switch (fi->type) {
   case FORM_INPUT_TEXT: {
@@ -637,7 +637,7 @@ Buffer::followForm(Anchor *a, bool submit) {
   case FORM_INPUT_RESET:
     for (size_t i = 0; i < this->layout.data._formitem->size(); i++) {
       auto a2 = &this->layout.data._formitem->anchors[i];
-      auto f2 = (FormItemList *)a2->url;
+      auto f2 = a2->formItem;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
           f2->type != FORM_INPUT_RESET) {
@@ -663,11 +663,11 @@ Buffer::followAnchor(bool check_target) {
   }
 
   if (auto a = this->layout.retrieveCurrentAnchor()) {
-    if (*a->url == '#') { /* index within this buffer */
-      co_return {a, this->gotoLabel(a->url + 1)};
+    if (a->url.size() && a->url[0] == '#') { /* index within this buffer */
+      co_return {a, this->gotoLabel(a->url.substr(1))};
     }
 
-    auto u = urlParse(a->url, this->res->getBaseURL());
+    auto u = urlParse(a->url.c_str(), this->res->getBaseURL());
     if (u.to_Str() == this->res->currentURL.to_Str()) {
       // index within this buffer
       if (u.label.size()) {
@@ -675,7 +675,7 @@ Buffer::followAnchor(bool check_target) {
       }
     }
 
-    co_return {a, this->loadLink(a->url, a->option, nullptr)};
+    co_return {a, this->loadLink(a->url.c_str(), a->option, nullptr)};
   }
 
   if (auto f = this->layout.retrieveCurrentForm()) {
@@ -715,7 +715,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
     }
     auto a = this->layout.retrieveCurrentAnchor();
     if (a) {
-      auto p_url = urlParse(a->url, current);
+      auto p_url = urlParse(a->url.c_str(), current);
       auto a_url = p_url.to_Str();
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url.c_str());
