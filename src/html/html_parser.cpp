@@ -20,7 +20,6 @@
 #include "alloc.h"
 #include "hash.h"
 #include "table.h"
-#include "textlist.h"
 
 HtmlParser::HtmlParser() { textarea_str = (Str **)New_N(Str *, max_textarea); }
 

@@ -16,7 +16,6 @@
 #include "etc.h"
 #include "screen.h"
 #include "rc.h"
-#include "textlist.h"
 #include "linklist.h"
 #include "html/readbuffer.h"
 #include "html/form.h"

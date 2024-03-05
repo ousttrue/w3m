@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "Str.h"
-#include "textlist.h"
 #include "parsetag.h"
 
 #if LANG == JA

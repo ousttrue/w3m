@@ -8,7 +8,6 @@
 #include "html_parser.h"
 #include "symbol.h"
 #include "html_command.h"
-#include "textlist.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +21,22 @@
 #include "proto.h"
 #include "textline.h"
 #include "generallist.h"
+
+struct TextListItem {
+  char *ptr;
+  TextListItem *next;
+  TextListItem *prev;
+};
+
+struct TextList {
+  TextListItem *first;
+  TextListItem *last;
+  int nitem;
+};
+
+#define newTextList() ((TextList *)newGeneralList())
+#define pushText(tl, s)                                                        \
+  pushValue((GeneralList *)(tl), (void *)allocStr((s), -1))
 
 int symbol_width = 0;
 int symbol_width0 = 0;
