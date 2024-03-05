@@ -2,6 +2,85 @@
 #include "line_layout.h"
 #include <ftxui/screen/screen.hpp>
 
+class ActiveAnchorDrawer {
+
+  Screen *_screen;
+  RowCol _root;
+  LineLayout *_layout;
+
+public:
+  ActiveAnchorDrawer(Screen *screen, const RowCol &root, LineLayout *layout)
+      : _screen(screen), _root(root), _layout(layout) {}
+
+  void drawAnchorCursor() {
+    int hseq = -1;
+    auto an = _layout->retrieveCurrentAnchor();
+    if (an) {
+      hseq = an->hseq;
+    }
+    int tline = _layout->linenumber(_layout->topLine);
+    int eline = tline + _layout->LINES;
+    int prevhseq = _layout->data._hmarklist->prevhseq;
+
+    if (_layout->data._href) {
+      this->drawAnchorCursor0(_layout->data._href.get(), hseq, prevhseq, tline,
+                              eline, true);
+      this->drawAnchorCursor0(_layout->data._href.get(), hseq, -1, tline, eline,
+                              false);
+    }
+    if (_layout->data._formitem) {
+      this->drawAnchorCursor0(_layout->data._formitem.get(), hseq, prevhseq,
+                              tline, eline, true);
+      this->drawAnchorCursor0(_layout->data._formitem.get(), hseq, -1, tline,
+                              eline, false);
+    }
+    _layout->data._hmarklist->prevhseq = hseq;
+  }
+
+private:
+  template <typename T>
+  void drawAnchorCursor0(AnchorList<T> *al, int hseq, int prevhseq, int tline,
+                         int eline, int active) {
+    auto l = _layout->topLine;
+    for (size_t j = 0; j < al->size(); j++) {
+      auto an = &al->anchors[j];
+      if (an->start.line < tline)
+        continue;
+      if (an->start.line >= eline)
+        return;
+      for (;; ++l) {
+        if (_layout->isNull(l))
+          return;
+        if (_layout->linenumber(l) == an->start.line)
+          break;
+      }
+      if (hseq >= 0 && an->hseq == hseq) {
+        int start_pos = an->start.pos;
+        int end_pos = an->end.pos;
+        for (int i = an->start.pos; i < an->end.pos; i++) {
+          if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
+            if (active)
+              l->propBuf[i] |= PE_ACTIVE;
+            else
+              l->propBuf[i] &= ~PE_ACTIVE;
+          }
+        }
+        if (active && start_pos < end_pos) {
+          _screen->redrawLineRegion(_root, _layout, l,
+                                    _layout->linenumber(l) - tline + _root.row,
+                                    start_pos, end_pos);
+        }
+      } else if (prevhseq >= 0 && an->hseq == prevhseq) {
+        if (active) {
+          _screen->redrawLineRegion(_root, _layout, l,
+                                    _layout->linenumber(l) - tline + _root.row,
+                                    an->start.pos, an->end.pos);
+        }
+      }
+    }
+  }
+};
+
 void Screen::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
 }
@@ -76,29 +155,55 @@ void Screen::addmch(const RowCol &pos, const Utf8 &utf8) {
   pixel.character = utf8.view();
 }
 
-Line *Screen::redrawLine(const RowCol &root, LineLayout *layout, Line *l,
-                         int i) {
-  int j, pos, rcol, ncol, delta = 1;
-  int column = layout->currentColumn;
-  char *p;
-
-  if (l == NULL) {
-    return NULL;
+std::string Screen::str(const RowCol &root, LineLayout *layout) {
+  // draw lines
+  if (cline != layout->topLine || ccolumn != layout->currentColumn) {
+    int i = 0;
+    for (auto l = layout->topLine; i < layout->LINES && l; i++, ++l) {
+      this->redrawLine(root, layout, l, i + root.row);
+    }
+    // clear remain
+    this->clrtobotx({.row = i + root.row, .col = 0});
+    cline = layout->topLine;
+    ccolumn = layout->currentColumn;
   }
+  assert(layout->topLine);
+
+  // highlight active anchor
+  if (!layout->empty() && layout->data._hmarklist) {
+    if (layout->data._href || layout->data._formitem) {
+      class ActiveAnchorDrawer d(this, root, layout);
+      d.drawAnchorCursor();
+    }
+  }
+
+  // toStr
+  return this->_screen->ToString();
+}
+
+void Screen::redrawLine(const RowCol &root, LineLayout *layout, Line *l,
+                        int i) {
+  if (!l) {
+    return;
+  }
+
+  int column = layout->currentColumn;
   RowCol pixel{.row = i, .col = root.col};
   if (l->len() == 0 || l->width() - 1 < column) {
     this->clrtoeolx(pixel);
-    return l;
+    return;
   }
-  /* need_clrtoeol(); */
-  pos = l->columnPos(column);
-  p = &(l->lineBuf[pos]);
-  // pr = &(l->propBuf[pos]);
-  rcol = l->bytePosToColumn(pos);
 
-  for (j = 0; rcol - column < layout->COLS && pos + j < l->len(); j += delta) {
+  int pos = l->columnPos(column);
+  auto p = &(l->lineBuf[pos]);
+  // pr = &(l->propBuf[pos]);
+  int rcol = l->bytePosToColumn(pos);
+
+  int delta = 1;
+  for (int j = 0; rcol - column < layout->COLS && pos + j < l->len();
+       j += delta) {
     delta = get_mclen(&p[j]);
-    ncol = l->bytePosToColumn(pos + j + delta);
+    int ncol = l->bytePosToColumn(pos + j + delta);
     if (ncol - column > layout->COLS)
       break;
     if (rcol < column) {
@@ -118,8 +223,8 @@ Line *Screen::redrawLine(const RowCol &root, LineLayout *layout, Line *l,
     }
     rcol = ncol;
   }
-  if (somode) {
-    somode = false;
+  if (this->somode) {
+    this->somode = false;
     this->standend();
   }
   if (ulmode) {
@@ -164,22 +269,6 @@ Line *Screen::redrawLine(const RowCol &root, LineLayout *layout, Line *l,
   }
   if (rcol - column < layout->COLS)
     this->clrtoeolx(pixel);
-  return l;
-}
-
-void Screen::redrawNLine(const RowCol &root, LineLayout *layout, int n) {
-
-  Line *l;
-  int i;
-  for (i = 0, l = layout->topLine; i < layout->LINES; i++, ++l) {
-    if (i >= layout->LINES - n || i < -n)
-      l = this->redrawLine(root, layout, l, i + root.row);
-    if (l == NULL)
-      break;
-  }
-  if (n > 0) {
-    this->clrtobotx({.row = i + root.row, .col = 0});
-  }
 }
 
 int Screen::redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l,
@@ -269,51 +358,4 @@ int Screen::redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l,
     this->graphend();
   }
   return rcol - column;
-}
-
-void Screen::drawAnchorCursor(const RowCol &root, LineLayout *layout) {
-  int hseq, prevhseq;
-  int tline, eline;
-
-  if (layout->empty() || !layout->data._hmarklist)
-    return;
-  if (!layout->data._href && !layout->data._formitem)
-    return;
-
-  auto an = layout->retrieveCurrentAnchor();
-  if (an) {
-    hseq = an->hseq;
-  } else {
-    hseq = -1;
-  }
-  tline = layout->linenumber(layout->topLine);
-  eline = tline + layout->LINES;
-  prevhseq = layout->data._hmarklist->prevhseq;
-
-  if (layout->data._href) {
-    this->drawAnchorCursor0(root, layout, layout->data._href.get(), hseq,
-                            prevhseq, tline, eline, 1);
-    this->drawAnchorCursor0(root, layout, layout->data._href.get(), hseq, -1,
-                            tline, eline, 0);
-  }
-  if (layout->data._formitem) {
-    this->drawAnchorCursor0(root, layout, layout->data._formitem.get(), hseq,
-                            prevhseq, tline, eline, 1);
-    this->drawAnchorCursor0(root, layout, layout->data._formitem.get(), hseq,
-                            -1, tline, eline, 0);
-  }
-  layout->data._hmarklist->prevhseq = hseq;
-}
-
-std::string Screen::str(const RowCol &root, LineLayout *layout) {
-  if (cline != layout->topLine || ccolumn != layout->currentColumn) {
-    this->redrawNLine(root, layout, this->LASTLINE());
-    cline = layout->topLine;
-    ccolumn = layout->currentColumn;
-  }
-  assert(layout->topLine);
-
-  this->drawAnchorCursor(root, layout);
-
-  return this->_screen->ToString();
 }
