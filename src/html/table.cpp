@@ -21,6 +21,7 @@
 #include "entity.h"
 #include "proto.h"
 #include "textline.h"
+#include "generallist.h"
 
 int symbol_width = 0;
 int symbol_width0 = 0;

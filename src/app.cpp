@@ -23,6 +23,7 @@
 #include "rc.h"
 #include "cookie.h"
 #include "history.h"
+#include "generallist.h"
 #include <iostream>
 #include <sstream>
 #include <uv.h>

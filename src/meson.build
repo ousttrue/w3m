@@ -80,6 +80,7 @@ executable(
         'html/lineprop.cpp',
         'Str.cpp',
         'regex.cpp',
+        'generallist.cpp',
         'textlist.cpp',
         'textline.cpp',
         'keyvalue.cpp',

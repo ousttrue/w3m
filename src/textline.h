@@ -19,7 +19,8 @@ struct TextLineList {
 
 extern TextLine *newTextLine(Str *line, int pos);
 extern void appendTextLine(TextLineList *tl, Str *line, int pos);
-#define newTextLineList() ((TextLineList *)newGeneralList())
+
+TextLineList *newTextLineList();
 
 void pushTextLine(TextLineList *tl, TextLine *lbuf);
 

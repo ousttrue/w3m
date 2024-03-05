@@ -2,7 +2,7 @@
 #include "quote.h"
 #include "alloc.h"
 #include "Str.h"
-#include "textlist.h"
+#include "generallist.h"
 
 TextLine *newTextLine(Str *line, int pos) {
   auto lbuf = (TextLine *)New(TextLine);
@@ -95,3 +95,5 @@ void pushTextLine(TextLineList *tl, TextLine *lbuf) {
 TextLine *rpopTextLine(TextLineList *tl) {
   return ((TextLine *)rpopValue((GeneralList *)(tl)));
 }
+
+TextLineList *newTextLineList() { return ((TextLineList *)newGeneralList()); }
