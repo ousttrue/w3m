@@ -145,5 +145,5 @@ public:
     }
   }
   void drawAnchorCursor(LineLayout *layout);
-  std::string str(LineLayout *layout);
+  std::string str(const Viewport &vp, LineLayout *layout);
 };

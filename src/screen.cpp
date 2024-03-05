@@ -77,15 +77,15 @@ void Screen::addmch(const RowCol &pos, const Utf8 &utf8) {
   pixel.character = utf8.view();
 }
 
-Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
+Line *Screen::redrawLine(LineLayout *layout, Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->currentColumn;
+  int column = layout->currentColumn;
   char *p;
 
   if (l == NULL) {
     return NULL;
   }
-  RowCol pixel{.row = i, .col = buf->rootX};
+  RowCol pixel{.row = i, .col = layout->rootX};
   if (l->len() == 0 || l->width() - 1 < column) {
     this->clrtoeolx(pixel);
     return l;
@@ -96,10 +96,10 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
   // pr = &(l->propBuf[pos]);
   rcol = l->bytePosToColumn(pos);
 
-  for (j = 0; rcol - column < buf->COLS && pos + j < l->len(); j += delta) {
+  for (j = 0; rcol - column < layout->COLS && pos + j < l->len(); j += delta) {
     delta = get_mclen(&p[j]);
     ncol = l->bytePosToColumn(pos + j + delta);
-    if (ncol - column > buf->COLS)
+    if (ncol - column > layout->COLS)
       break;
     if (rcol < column) {
       for (rcol = column; rcol < ncol; rcol++) {
@@ -162,7 +162,7 @@ Line *Screen::redrawLine(LineLayout *buf, Line *l, int i) {
     graph_mode = false;
     this->graphend();
   }
-  if (rcol - column < buf->COLS)
+  if (rcol - column < layout->COLS)
     this->clrtoeolx(pixel);
   return l;
 }
@@ -305,7 +305,7 @@ void Screen ::drawAnchorCursor(LineLayout *layout) {
   layout->data._hmarklist->prevhseq = hseq;
 }
 
-std::string Screen::str(LineLayout *layout) {
+std::string Screen::str(const Viewport &vp, LineLayout *layout) {
   if (cline != layout->topLine || ccolumn != layout->currentColumn) {
     this->redrawNLine(layout, this->LASTLINE());
     cline = layout->topLine;

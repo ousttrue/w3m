@@ -326,7 +326,7 @@ App::App() : _screen(new Screen) {
       /*96*/ {"NULL", nulcmd},
       /*97*/ {"OPTIONS", ldOpt},
       /*98*/ {"PEEK", curURL},
-      /*99*/ {"PEEK_IMG", peekIMG},
+      /*99*/ {"PEEK_IMG", nulcmd},
       /*100*/ {"PEEK_LINK", peekURL},
       /*101*/ {"PIPE_BUF", pipeBuf},
       /*102*/ {"PIPE_SHELL", pipesh},
@@ -1228,7 +1228,7 @@ void App::display() {
     save_current_buf = buf;
   }
 
-  auto rendered = _screen->str(&buf->layout);
+  auto rendered = _screen->str(_viewport, &buf->layout);
   if (rendered != _last) {
     _last = rendered;
 

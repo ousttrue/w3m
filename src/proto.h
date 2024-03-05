@@ -91,7 +91,7 @@ std::shared_ptr<CoroutineState<void>> svI(void);
 std::shared_ptr<CoroutineState<void>> svBuf(void);
 std::shared_ptr<CoroutineState<void>> svSrc(void);
 std::shared_ptr<CoroutineState<void>> peekURL(void);
-std::shared_ptr<CoroutineState<void>> peekIMG(void);
+// std::shared_ptr<CoroutineState<void>> peekIMG(void);
 std::shared_ptr<CoroutineState<void>> curURL(void);
 std::shared_ptr<CoroutineState<void>> vwSrc(void);
 std::shared_ptr<CoroutineState<void>> reload(void);

@@ -644,7 +644,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
         } else {
           passthrough(obuf, p, 1);
         }
-        obuf->anchor = {0};
+        obuf->anchor = {};
         return;
       }
       is_erased = 0;
@@ -656,7 +656,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
 
     push_tag(obuf, "</a>", HTML_N_A);
   }
-  obuf->anchor = {0};
+  obuf->anchor = {};
 }
 
 void HtmlParser::save_fonteffect(struct html_feed_environ *h_env) {

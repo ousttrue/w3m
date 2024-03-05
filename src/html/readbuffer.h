@@ -129,7 +129,7 @@ struct readbuffer {
   unsigned char q_level = 0;
   short table_level = -1;
   short nobr_level = 0;
-  Anchor anchor = {0};
+  Anchor anchor = {};
   Str *img_alt = 0;
   struct input_alt_attr input_alt = {};
   char fontstat[FONTSTAT_SIZE];

@@ -35,6 +35,7 @@ struct TabBuffer;
 struct Buffer;
 class App {
   RowCol _size = {};
+  Viewport _viewport = {};
 
   std::shared_ptr<Screen> _screen;
   bool _fmInitialized = false;
