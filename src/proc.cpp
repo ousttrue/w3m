@@ -104,7 +104,7 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
     co_return;
 
   int offsety = CurrentTab->currentBuffer()->layout.LINES / 2 -
-                CurrentTab->currentBuffer()->layout.cursorY;
+                CurrentTab->currentBuffer()->layout.cursor.row;
   if (offsety != 0) {
     CurrentTab->currentBuffer()->layout.topLine =
         CurrentTab->currentBuffer()->layout.lineSkip(
@@ -119,7 +119,7 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  int offsetx = CurrentTab->currentBuffer()->layout.cursorX -
+  int offsetx = CurrentTab->currentBuffer()->layout.cursor.col -
                 CurrentTab->currentBuffer()->layout.COLS / 2;
   if (offsetx != 0) {
     CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
@@ -737,12 +737,12 @@ std::shared_ptr<CoroutineState<void>> followI() {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
   if (a == nullptr)
     co_return;
-  App::instance().message(Sprintf("loading %s", a->url)->ptr, 0, 0);
+  App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr, {0, 0});
 
   auto res = loadGeneralFile(
       a->url, CurrentTab->currentBuffer()->res->getBaseURL(), {});
   if (!res) {
-    char *emsg = Sprintf("Can't load %s", a->url)->ptr;
+    char *emsg = Sprintf("Can't load %s", a->url.c_str())->ptr;
     App::instance().disp_err_message(emsg);
     co_return;
   }
@@ -1330,7 +1330,7 @@ std::shared_ptr<CoroutineState<void>> reload() {
   }
 
   auto url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
-  App::instance().message("Reloading...", 0, 0);
+  App::instance().message("Reloading...", {0, 0});
   DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
 
   auto res = loadGeneralFile(url->ptr, {},
@@ -1450,7 +1450,7 @@ std::shared_ptr<CoroutineState<void>> curlno() {
   if (l != nullptr) {
     cur = layout->linenumber(l);
     ;
-    col = l->width() + layout->currentColumn + layout->cursorX + 1;
+    col = l->width() + layout->currentColumn + layout->cursor.col + 1;
     len = l->width();
   }
   if (CurrentTab->currentBuffer()->layout.lastLine())

@@ -1,8 +1,8 @@
 #pragma once
+#include "rowcol.h"
 #include "line_data.h"
 #include "http_request.h"
 #include "url.h"
-#include "html/anchorlist.h"
 #include <string>
 #include <optional>
 
@@ -94,16 +94,15 @@ struct LineLayout {
   // COLS/LINES と width height の違いは？
   short width = 0;
   short height = 0;
-  short cursorX = 0;
-  short cursorY = 0;
+  RowCol cursor = {0, 0};
 
   int pos = 0;
   int visualpos = 0;
 
   BufferPos *undo = nullptr;
 
-  int AbsCursorX() const { return cursorX + rootX; }
-  int AbsCursorY() const { return cursorY + rootY; }
+  int AbsCursorX() const { return cursor.col + rootX; }
+  int AbsCursorY() const { return cursor.row + rootY; }
 
   inline void COPY_BUFROOT_FROM(const LineLayout &srcbuf) {
     this->rootX = srcbuf.rootX;
@@ -116,8 +115,7 @@ struct LineLayout {
     this->topLine = srcbuf.topLine;
     this->currentLine = srcbuf.currentLine;
     this->pos = srcbuf.pos;
-    this->cursorX = srcbuf.cursorX;
-    this->cursorY = srcbuf.cursorY;
+    this->cursor = srcbuf.cursor;
     this->visualpos = srcbuf.visualpos;
     this->currentColumn = srcbuf.currentColumn;
   }

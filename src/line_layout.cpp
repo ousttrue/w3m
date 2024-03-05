@@ -35,18 +35,18 @@ Line *LineLayout::lineSkip(Line *line, int offset) {
 void LineLayout::arrangeLine() {
   if (this->empty())
     return;
-  this->cursorY = linenumber(currentLine) - linenumber(topLine);
+  this->cursor.row = linenumber(currentLine) - linenumber(topLine);
   auto i = this->currentLine->columnPos(this->currentColumn + this->visualpos -
                                         this->currentLine->width());
   auto cpos = this->currentLine->bytePosToColumn(i) - this->currentColumn;
   if (cpos >= 0) {
-    this->cursorX = cpos;
+    this->cursor.col = cpos;
     this->pos = i;
   } else if (this->currentLine->len() > i) {
-    this->cursorX = 0;
+    this->cursor.col = 0;
     this->pos = i + 1;
   } else {
-    this->cursorX = 0;
+    this->cursor.col = 0;
     this->pos = 0;
   }
 #ifdef DISPLAY_DEBUG
@@ -101,7 +101,7 @@ void LineLayout::cursorUpDown(int n) {
 }
 
 void LineLayout::cursorUp0(int n) {
-  if (this->cursorY > 0)
+  if (this->cursor.row > 0)
     this->cursorUpDown(-1);
   else {
     this->topLine = this->lineSkip(this->topLine, -n);
@@ -125,7 +125,7 @@ void LineLayout::cursorUp(int n) {
 }
 
 void LineLayout::cursorDown0(int n) {
-  if (this->cursorY < this->LINES - 1)
+  if (this->cursor.row < this->LINES - 1)
     this->cursorUpDown(1);
   else {
     this->topLine = this->lineSkip(this->topLine, n);
@@ -203,11 +203,11 @@ void LineLayout::arrangeCursor() {
       columnSkip(col);
   }
   /* Arrange cursor */
-  this->cursorY = linenumber(currentLine) - linenumber(topLine);
+  this->cursor.row = linenumber(currentLine) - linenumber(topLine);
   this->visualpos = this->currentLine->width() +
                     this->currentLine->bytePosToColumn(this->pos) -
                     this->currentColumn;
-  this->cursorX = this->visualpos - this->currentLine->width();
+  this->cursor.col = this->visualpos - this->currentLine->width();
 #ifdef DISPLAY_DEBUG
   fprintf(
       stderr,
@@ -240,7 +240,7 @@ void LineLayout::cursorRight(int n) {
     this->columnSkip(n + (vpos2 - this->COLS) - (vpos2 - this->COLS) % n);
     this->visualpos = l->width() + cpos - this->currentColumn;
   }
-  this->cursorX = this->visualpos - l->width();
+  this->cursor.col = this->visualpos - l->width();
 }
 
 void LineLayout::cursorLeft(int n) {
@@ -262,32 +262,32 @@ void LineLayout::cursorLeft(int n) {
                      (this->visualpos - l->width()) % n);
     this->visualpos = l->width() + cpos - this->currentColumn;
   }
-  this->cursorX = this->visualpos - l->width();
+  this->cursor.col = this->visualpos - l->width();
 }
 
 void LineLayout::cursorHome() {
   this->visualpos = 0;
-  this->cursorX = this->cursorY = 0;
+  this->cursor = {0, 0};
 }
 
 void LineLayout::cursorXY(int x, int y) {
-  this->cursorUpDown(y - this->cursorY);
+  this->cursorUpDown(y - this->cursor.row);
 
-  if (this->cursorX > x) {
-    while (this->cursorX > x) {
+  if (this->cursor.col > x) {
+    while (this->cursor.col > x) {
       this->cursorLeft(this->COLS / 2);
     }
-  } else if (this->cursorX < x) {
-    while (this->cursorX < x) {
-      auto oldX = this->cursorX;
+  } else if (this->cursor.col < x) {
+    while (this->cursor.col < x) {
+      auto oldX = this->cursor.col;
 
       this->cursorRight(this->COLS / 2);
 
-      if (oldX == this->cursorX) {
+      if (oldX == this->cursor.col) {
         break;
       }
     }
-    if (this->cursorX > x) {
+    if (this->cursor.col > x) {
       this->cursorLeft(this->COLS / 2);
     }
   }
@@ -610,7 +610,7 @@ void LineLayout::shiftvisualpos(int shift) {
   else if (this->visualpos - l->width() < 0)
     this->visualpos = l->width();
   this->arrangeLine();
-  if (this->visualpos - l->width() == -shift && this->cursorX == 0)
+  if (this->visualpos - l->width() == -shift && this->cursor.col == 0)
     this->visualpos = l->width();
 }
 

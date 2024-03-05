@@ -172,8 +172,7 @@ public:
 
   struct GeneralList *message_list = NULL;
   char *delayed_msg = NULL;
-  void message(const char *s, int return_x, int return_y);
-
+  void message(const char *s, const RowCol &cursor);
   void record_err_message(const char *s);
   std::shared_ptr<Buffer> message_list_panel();
   void disp_err_message(const char *s);

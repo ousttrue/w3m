@@ -367,7 +367,7 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     /* This means that *-Authenticate: header is received after
      * Authorization: header is sent to the server.
      */
-    App::instance().message("Wrong username or password", 0, 0);
+    App::instance().message("Wrong username or password", {0, 0});
     // sleep(1);
     /* delete Authenticate: header from extra_header */
     hr->extra_headers.erase(i);

@@ -816,9 +816,10 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
 
     set_environ("W3M_CURRENT_LINE",
                 Sprintf("%ld", buf->layout.linenumber(l))->ptr);
-    set_environ("W3M_CURRENT_COLUMN", Sprintf("%d", buf->layout.currentColumn +
-                                                        buf->layout.cursorX + 1)
-                                          ->ptr);
+    set_environ(
+        "W3M_CURRENT_COLUMN",
+        Sprintf("%d", buf->layout.currentColumn + buf->layout.cursor.col + 1)
+            ->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -1219,8 +1220,7 @@ void App::display() {
   App::instance().refresh_message();
 
   _screen->standout();
-  App::instance().message(msg->ptr, buf->layout.AbsCursorX(),
-                          buf->layout.AbsCursorY());
+  App::instance().message(msg->ptr, buf->layout.cursor + _viewport.root);
   _screen->standend();
   // term_title(buf->layout.title.c_str());
   if (buf != save_current_buf) {
@@ -1503,12 +1503,12 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   }
 }
 
-void App::message(const char *s, int return_x, int return_y) {
+void App::message(const char *s, const RowCol &cursor) {
   if (_fmInitialized) {
     RowCol pos{.row = LASTLINE(), .col = 0};
     pos = _screen->addnstr(pos, s, COLS() - 1);
     _screen->clrtoeolx(pos);
-    this->cursor({.row = return_y, .col = return_x});
+    this->cursor(cursor);
   } else {
     fprintf(stderr, "%s\n", s);
   }
@@ -1557,10 +1557,9 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
   }
 
   if (CurrentTab != NULL && CurrentTab->currentBuffer() != NULL)
-    message(s, CurrentTab->currentBuffer()->layout.AbsCursorX(),
-            CurrentTab->currentBuffer()->layout.AbsCursorY());
+    message(s, CurrentTab->currentBuffer()->layout.cursor + _viewport.root);
   else
-    message(s, LASTLINE(), 0);
+    message(s, {LASTLINE(), 0});
   // _screen->print();
   // sleep_till_anykey(sec, purge);
 }
@@ -1654,7 +1653,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     } else {
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
-    message(messages->ptr, 0, 0);
+    message(messages->ptr, {0, 0});
     // _screen->print();
   }
 }

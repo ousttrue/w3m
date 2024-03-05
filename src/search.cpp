@@ -11,7 +11,7 @@
 int forwardSearch(LineLayout *layout, const char *str) {
 
   if (auto p = regexCompile(str, IgnoreCase)) {
-    App::instance().message(p, 0, 0);
+    App::instance().message(p, {0, 0});
     return SR_NOTFOUND;
   }
 
@@ -66,7 +66,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
 
 int backwardSearch(LineLayout *layout, const char *str) {
   if (auto p = regexCompile(str, IgnoreCase)) {
-    App::instance().message(p, 0, 0);
+    App::instance().message(p, {0, 0});
     return SR_NOTFOUND;
   }
 

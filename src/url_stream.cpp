@@ -250,7 +250,7 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   unsigned long adr;
 #endif /* not INET6 */
 
-  App::instance().message(Sprintf("Opening socket...")->ptr, 0, 0);
+  App::instance().message(Sprintf("Opening socket...")->ptr, {0, 0});
   //   if (SETJMP(AbortLoading) != 0) {
   // #ifdef SOCK_DEBUG
   //     sock_log("openSocket() failed. reason: user abort\n");
