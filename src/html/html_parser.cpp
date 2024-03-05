@@ -1304,7 +1304,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
       forms[form_id]->next = forms[form_id - 1];
   data->formlist = (form_max >= 0) ? forms[form_max] : NULL;
   if (n_textarea) {
-    data->addMultirowsForm(data->_formitem.get());
+    data->addMultirowsForm();
   }
 }
 

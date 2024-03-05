@@ -35,24 +35,26 @@ Anchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
                                     '\0', line, pos);
 }
 
-void LineData::addMultirowsForm(AnchorList *al) {
-  int j, k, col, ecol, pos;
-  Anchor a_form, *a;
-  Line *l, *ls;
+void LineData::addMultirowsForm() {
 
-  if (al == NULL || al->size() == 0)
+  if (_formitem->size() == 0)
     return;
-  for (size_t i = 0; i < al->size(); i++) {
-    a_form = al->anchors[i];
-    al->anchors[i].rows = 1;
+
+  for (size_t i = 0; i < _formitem->size(); i++) {
+    auto a_form = _formitem->anchors[i];
+    _formitem->anchors[i].rows = 1;
     if (a_form.hseq < 0 || a_form.rows <= 1)
       continue;
+
+    Line *l;
     for (l = firstLine(); l != NULL; ++l) {
       if (linenumber(l) == a_form.y)
         break;
     }
     if (!l)
       continue;
+
+    Line *ls;
     if (a_form.y == a_form.start.line)
       ls = l;
     else {
@@ -63,18 +65,20 @@ void LineData::addMultirowsForm(AnchorList *al) {
       if (!ls)
         continue;
     }
-    col = ls->bytePosToColumn(a_form.start.pos);
-    ecol = ls->bytePosToColumn(a_form.end.pos);
-    for (j = 0; l && j < a_form.rows; ++l, j++) {
-      pos = l->columnPos(col);
+
+    auto col = ls->bytePosToColumn(a_form.start.pos);
+    auto ecol = ls->bytePosToColumn(a_form.end.pos);
+    for (int j = 0; l && j < a_form.rows; ++l, j++) {
+      auto pos = l->columnPos(col);
       if (j == 0) {
         this->_hmarklist->marks[a_form.hseq].line = linenumber(l);
         this->_hmarklist->marks[a_form.hseq].pos = pos;
       }
       if (a_form.start.line == linenumber(l))
         continue;
-      a = this->_formitem->putAnchor(a_form.url, a_form.target.c_str(), {},
-                                     NULL, '\0', linenumber(l), pos);
+
+      auto a = this->_formitem->putAnchor(a_form.url, a_form.target.c_str(), {},
+                                          NULL, '\0', linenumber(l), pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -82,8 +86,9 @@ void LineData::addMultirowsForm(AnchorList *al) {
         continue;
       l->lineBuf[pos - 1] = '[';
       l->lineBuf[a->end.pos] = ']';
-      for (k = pos; k < a->end.pos; k++)
+      for (int k = pos; k < a->end.pos; k++) {
         l->propBuf[k] |= PE_FORM;
+      }
     }
   }
 }
@@ -215,15 +220,15 @@ const char *LineData::reAnchorWord(Line *l, int spos, int epos) {
                            _put_anchor_all);
 }
 
-const char *LineData::getAnchorText(AnchorList *al, Anchor *a) {
+const char *LineData::getAnchorText(Anchor *a) {
   if (!a || a->hseq < 0)
     return NULL;
 
   Str *tmp = NULL;
   auto hseq = a->hseq;
   auto l = this->lines.begin();
-  for (size_t i = 0; i < al->size(); i++) {
-    a = &al->anchors[i];
+  for (size_t i = 0; i < _href->size(); i++) {
+    a = &_href->anchors[i];
     if (a->hseq != hseq)
       continue;
     for (; l != lines.end(); ++l) {
@@ -296,7 +301,6 @@ void LineData::clear() {
   this->_formitem->clear();
   this->formlist = nullptr;
   this->linklist = nullptr;
-  this->maplist = nullptr;
   this->_hmarklist->clear();
   this->_imarklist->clear();
 }

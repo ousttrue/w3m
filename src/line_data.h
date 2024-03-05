@@ -27,7 +27,6 @@ struct LineData {
   std::shared_ptr<HmarkerList> _imarklist;
   struct LinkList *linklist = nullptr;
   struct FormList *formlist = nullptr;
-  struct MapList *maplist = nullptr;
   struct FormItemList *form_submit = nullptr;
   struct Anchor *submit = nullptr;
 
@@ -50,14 +49,14 @@ struct LineData {
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
   Anchor *registerForm(class HtmlParser *parser, FormList *flist, HtmlTag *tag,
                        int line, int pos);
-  void addMultirowsForm(AnchorList *al);
+  void addMultirowsForm();
   void reseq_anchor();
   const char *reAnchorPos(Line *l, const char *p1, const char *p2,
                           AnchorFunc anchorproc);
   const char *reAnchorAny(Line *topLine, const char *re, AnchorFunc anchorproc);
   const char *reAnchor(Line *topLine, const char *re);
   const char *reAnchorWord(Line *l, int spos, int epos);
-  const char *getAnchorText(AnchorList *al, Anchor *a);
+  const char *getAnchorText(Anchor *a);
 
   void addLink(struct HtmlTag *tag);
 };
