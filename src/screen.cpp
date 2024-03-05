@@ -314,9 +314,9 @@ void Screen ::drawAnchorCursor(LineLayout *layout) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (layout->empty() || !layout->data.hmarklist())
+  if (layout->empty() || !layout->data._hmarklist)
     return;
-  if (!layout->data.href() && !layout->data.formitem())
+  if (!layout->data._href && !layout->data._formitem)
     return;
 
   auto an = layout->retrieveCurrentAnchor();
@@ -327,21 +327,21 @@ void Screen ::drawAnchorCursor(LineLayout *layout) {
   }
   tline = layout->linenumber(layout->topLine);
   eline = tline + layout->LINES;
-  prevhseq = layout->data.hmarklist()->prevhseq;
+  prevhseq = layout->data._hmarklist->prevhseq;
 
-  if (layout->data.href()) {
-    this->drawAnchorCursor0(layout, layout->data.href().get(), hseq, prevhseq,
+  if (layout->data._href) {
+    this->drawAnchorCursor0(layout, layout->data._href.get(), hseq, prevhseq,
                             tline, eline, 1);
-    this->drawAnchorCursor0(layout, layout->data.href().get(), hseq, -1, tline,
+    this->drawAnchorCursor0(layout, layout->data._href.get(), hseq, -1, tline,
                             eline, 0);
   }
-  if (layout->data.formitem()) {
-    this->drawAnchorCursor0(layout, layout->data.formitem().get(), hseq,
+  if (layout->data._formitem) {
+    this->drawAnchorCursor0(layout, layout->data._formitem.get(), hseq,
                             prevhseq, tline, eline, 1);
-    this->drawAnchorCursor0(layout, layout->data.formitem().get(), hseq, -1,
+    this->drawAnchorCursor0(layout, layout->data._formitem.get(), hseq, -1,
                             tline, eline, 0);
   }
-  layout->data.hmarklist()->prevhseq = hseq;
+  layout->data._hmarklist->prevhseq = hseq;
 }
 
 std::string Screen::str(LineLayout *layout) {

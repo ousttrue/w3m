@@ -1478,7 +1478,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   } else {
     auto label = Strnew_m_charp("_", target, nullptr)->ptr;
     auto buf = CurrentTab->currentBuffer();
-    auto al = buf->layout.data.name()->searchAnchor(label);
+    auto al = buf->layout.data._name->searchAnchor(label);
     if (al) {
       buf->layout.gotoLine(al->start.line);
       if (label_topline) {

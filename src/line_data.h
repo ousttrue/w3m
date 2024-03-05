@@ -45,12 +45,6 @@ struct LineData {
   }
   void clear();
   void addnewline(const char *line, Lineprop *prop, int byteLen);
-  std::shared_ptr<AnchorList> href() const { return _href; }
-  std::shared_ptr<AnchorList> name() const { return _name; }
-  std::shared_ptr<AnchorList> img() const { return _img; }
-  std::shared_ptr<AnchorList> formitem() const { return _formitem; }
-  std::shared_ptr<HmarkerList> hmarklist() const { return _hmarklist; }
-  std::shared_ptr<HmarkerList> imarklist() const { return _imarklist; }
 
   Anchor *registerName(const char *url, int line, int pos);
   Anchor *registerImg(const char *url, const char *title, int line, int pos);

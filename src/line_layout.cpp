@@ -309,7 +309,7 @@ void LineLayout::nextY(int d, int n) {
     return;
   }
 
-  auto hl = this->data.hmarklist();
+  auto hl = this->data._hmarklist;
   if (hl->size() == 0) {
     return;
   }
@@ -328,11 +328,11 @@ void LineLayout::nextY(int d, int n) {
       hseq = abs(an->hseq);
     an = nullptr;
     for (; y >= 0 && y <= linenumber(this->lastLine()); y += d) {
-      if (this->data.href()) {
-        an = this->data.href()->retrieveAnchor(y, x);
+      if (this->data._href) {
+        an = this->data._href->retrieveAnchor(y, x);
       }
-      if (!an && this->data.formitem()) {
-        an = this->data.formitem()->retrieveAnchor(y, x);
+      if (!an && this->data._formitem) {
+        an = this->data._formitem->retrieveAnchor(y, x);
       }
       if (an && hseq != abs(an->hseq)) {
         pan = an;
@@ -354,7 +354,7 @@ void LineLayout::nextX(int d, int dy, int n) {
   if (empty())
     return;
 
-  auto hl = this->data.hmarklist();
+  auto hl = this->data._hmarklist;
   if (hl->size() == 0)
     return;
 
@@ -373,11 +373,11 @@ void LineLayout::nextX(int d, int dy, int n) {
     an = nullptr;
     while (1) {
       for (; x >= 0 && x < l->len(); x += d) {
-        if (this->data.href()) {
-          an = this->data.href()->retrieveAnchor(y, x);
+        if (this->data._href) {
+          an = this->data._href->retrieveAnchor(y, x);
         }
-        if (!an && this->data.formitem()) {
-          an = this->data.formitem()->retrieveAnchor(y, x);
+        if (!an && this->data._formitem) {
+          an = this->data._formitem->retrieveAnchor(y, x);
         }
         if (an) {
           pan = an;
@@ -408,7 +408,7 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
   if (empty())
     return;
 
-  auto hl = this->data.hmarklist();
+  auto hl = this->data._hmarklist;
   BufferPoint *po;
   Anchor *pan;
   int i, x, y;
@@ -435,17 +435,17 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
           goto _end;
         }
         po = &hl->marks[hseq];
-        if (this->data.href()) {
-          an = this->data.href()->retrieveAnchor(po->line, po->pos);
+        if (this->data._href) {
+          an = this->data._href->retrieveAnchor(po->line, po->pos);
         }
-        if (an == nullptr && this->data.formitem()) {
-          an = this->data.formitem()->retrieveAnchor(po->line, po->pos);
+        if (an == nullptr && this->data._formitem) {
+          an = this->data._formitem->retrieveAnchor(po->line, po->pos);
         }
         hseq--;
       } while (an == nullptr || an == pan);
     } else {
-      an = this->data.href()->closest_prev_anchor(nullptr, x, y);
-      an = this->data.formitem()->closest_prev_anchor(an, x, y);
+      an = this->data._href->closest_prev_anchor(nullptr, x, y);
+      an = this->data._formitem->closest_prev_anchor(an, x, y);
       if (an == nullptr) {
         an = pan;
         break;
@@ -469,7 +469,7 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
   if (empty())
     return;
 
-  auto hl = this->data.hmarklist();
+  auto hl = this->data._hmarklist;
   if (hl->size() == 0)
     return;
 
@@ -492,17 +492,17 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
           goto _end;
         }
         auto po = &hl->marks[hseq];
-        if (this->data.href()) {
-          an = this->data.href()->retrieveAnchor(po->line, po->pos);
+        if (this->data._href) {
+          an = this->data._href->retrieveAnchor(po->line, po->pos);
         }
-        if (an == nullptr && this->data.formitem()) {
-          an = this->data.formitem()->retrieveAnchor(po->line, po->pos);
+        if (an == nullptr && this->data._formitem) {
+          an = this->data._formitem->retrieveAnchor(po->line, po->pos);
         }
         hseq++;
       } while (an == nullptr || an == pan);
     } else {
-      an = this->data.href()->closest_next_anchor(nullptr, x, y);
-      an = this->data.formitem()->closest_next_anchor(an, x, y);
+      an = this->data._href->closest_next_anchor(nullptr, x, y);
+      an = this->data._formitem->closest_next_anchor(an, x, y);
       if (an == nullptr) {
         an = pan;
         break;
@@ -784,24 +784,24 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
   if (this->check_url) {
     this->chkURLBuffer();
   }
-  formResetBuffer(this, sbuf.data.formitem().get());
+  formResetBuffer(this, sbuf.data._formitem.get());
 }
 
 Anchor *LineLayout::retrieveCurrentAnchor() {
-  if (!this->currentLine || !this->data.href())
+  if (!this->currentLine || !this->data._href)
     return NULL;
-  return this->data.href()->retrieveAnchor(linenumber(currentLine), this->pos);
+  return this->data._href->retrieveAnchor(linenumber(currentLine), this->pos);
 }
 
 Anchor *LineLayout::retrieveCurrentImg() {
-  if (!this->currentLine || !this->data.img())
+  if (!this->currentLine || !this->data._img)
     return NULL;
-  return this->data.img()->retrieveAnchor(linenumber(currentLine), this->pos);
+  return this->data._img->retrieveAnchor(linenumber(currentLine), this->pos);
 }
 
 Anchor *LineLayout::retrieveCurrentForm() {
-  if (!this->currentLine || !this->data.formitem())
+  if (!this->currentLine || !this->data._formitem)
     return NULL;
-  return this->data.formitem()->retrieveAnchor(linenumber(currentLine),
-                                               this->pos);
+  return this->data._formitem->retrieveAnchor(linenumber(currentLine),
+                                              this->pos);
 }

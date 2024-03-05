@@ -1046,21 +1046,21 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
           tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
           tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
           if (hseq > 0) {
-            data->hmarklist()->putHmarker(nlines, pos, hseq - 1);
+            data->_hmarklist->putHmarker(nlines, pos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
-            if (h < (int)data->hmarklist()->size() &&
-                data->hmarklist()->marks[h].invalid) {
-              data->hmarklist()->marks[h].pos = pos;
-              data->hmarklist()->marks[h].line = nlines;
-              data->hmarklist()->marks[h].invalid = 0;
+            if (h < (int)data->_hmarklist->size() &&
+                data->_hmarklist->marks[h].invalid) {
+              data->_hmarklist->marks[h].pos = pos;
+              data->_hmarklist->marks[h].line = nlines;
+              data->_hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = data->href()->putAnchor(p, q, {.referer = r ? r : ""}, s,
-                                               *t, nlines, pos);
+            a_href = data->_href->putAnchor(p, q, {.referer = r ? r : ""}, s,
+                                            *t, nlines, pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;
           }
@@ -1073,8 +1073,8 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
             if (a_href->start.line == a_href->end.line &&
                 a_href->start.pos == a_href->end.pos) {
               if (a_href->hseq >= 0 &&
-                  a_href->hseq < (int)data->hmarklist()->size()) {
-                data->hmarklist()->marks[a_href->hseq].invalid = 1;
+                  a_href->hseq < (int)data->_hmarklist->size()) {
+                data->_hmarklist->marks[a_href->hseq].invalid = 1;
               }
               a_href->hseq = -1;
             }
@@ -1122,17 +1122,17 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            data->hmarklist()->putHmarker(nlines, hpos, hseq - 1);
+            data->_hmarklist->putHmarker(nlines, hpos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (h < (int)data->hmarklist()->size() &&
-                data->hmarklist()->marks[h].invalid) {
-              data->hmarklist()->marks[h].pos = hpos;
-              data->hmarklist()->marks[h].line = nlines;
-              data->hmarklist()->marks[h].invalid = 0;
+            if (h < (int)data->_hmarklist->size() &&
+                data->_hmarklist->marks[h].invalid) {
+              data->_hmarklist->marks[h].pos = hpos;
+              data->_hmarklist->marks[h].line = nlines;
+              data->_hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -1304,7 +1304,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
       forms[form_id]->next = forms[form_id - 1];
   data->formlist = (form_max >= 0) ? forms[form_max] : NULL;
   if (n_textarea) {
-    data->addMultirowsForm(data->formitem().get());
+    data->addMultirowsForm(data->_formitem.get());
   }
 }
 

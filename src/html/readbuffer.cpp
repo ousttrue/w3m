@@ -569,7 +569,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   layout->currentLine = layout->firstLine();
   res->type = "text/html";
   // if (n_textarea)
-  formResetBuffer(layout, layout->data.formitem().get());
+  formResetBuffer(layout, layout->data._formitem.get());
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {

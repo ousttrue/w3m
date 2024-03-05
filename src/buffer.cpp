@@ -229,9 +229,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->layout.data.href()) {
+  if (buf->layout.data._href) {
     Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-    auto al = buf->layout.data.href();
+    auto al = buf->layout.data._href;
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
@@ -251,9 +251,9 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  if (buf->layout.data.img()) {
+  if (buf->layout.data._img) {
     Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-    auto al = buf->layout.data.img();
+    auto al = buf->layout.data._img;
     for (size_t i = 0; i < al->size(); i++) {
       a = &al->anchors[i];
       if (a->slave)
@@ -271,10 +271,10 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
-      if (!buf->layout.data.formitem()) {
+      if (!buf->layout.data._formitem) {
         continue;
       }
-      a = buf->layout.data.formitem()->retrieveAnchor(a->start.line,
+      a = buf->layout.data._formitem->retrieveAnchor(a->start.line,
                                                       a->start.pos);
       if (!a)
         continue;
@@ -356,7 +356,7 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
 }
 
 std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
-  auto a = this->layout.data.name()->searchAnchor(label);
+  auto a = this->layout.data._name->searchAnchor(label);
   if (!a) {
     App::instance().disp_message(Sprintf("%s is not found", label)->ptr);
     return {};
@@ -635,8 +635,8 @@ Buffer::followForm(Anchor *a, bool submit) {
     co_return this->do_submit(fi, a);
 
   case FORM_INPUT_RESET:
-    for (size_t i = 0; i < this->layout.data.formitem()->size(); i++) {
-      auto a2 = &this->layout.data.formitem()->anchors[i];
+    for (size_t i = 0; i < this->layout.data._formitem->size(); i++) {
+      auto a2 = &this->layout.data._formitem->anchors[i];
       auto f2 = (FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&

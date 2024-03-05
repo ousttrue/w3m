@@ -31,8 +31,8 @@ Anchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
   if (!fi) {
     return NULL;
   }
-  return this->formitem()->putAnchor((const char *)fi, flist->target, {}, NULL,
-                                     '\0', line, pos);
+  return this->_formitem->putAnchor((const char *)fi, flist->target, {}, NULL,
+                                    '\0', line, pos);
 }
 
 void LineData::addMultirowsForm(AnchorList *al) {
@@ -68,13 +68,13 @@ void LineData::addMultirowsForm(AnchorList *al) {
     for (j = 0; l && j < a_form.rows; ++l, j++) {
       pos = l->columnPos(col);
       if (j == 0) {
-        this->hmarklist()->marks[a_form.hseq].line = linenumber(l);
-        this->hmarklist()->marks[a_form.hseq].pos = pos;
+        this->_hmarklist->marks[a_form.hseq].line = linenumber(l);
+        this->_hmarklist->marks[a_form.hseq].pos = pos;
       }
       if (a_form.start.line == linenumber(l))
         continue;
-      a = this->formitem()->putAnchor(a_form.url, a_form.target.c_str(), {},
-                                      NULL, '\0', linenumber(l), pos);
+      a = this->_formitem->putAnchor(a_form.url, a_form.target.c_str(), {},
+                                     NULL, '\0', linenumber(l), pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -90,10 +90,10 @@ void LineData::addMultirowsForm(AnchorList *al) {
 
 /* renumber anchor */
 void LineData::reseq_anchor() {
-  int nmark = this->hmarklist()->size();
+  int nmark = this->_hmarklist->size();
   int n = nmark;
-  for (size_t i = 0; i < this->href()->size(); i++) {
-    auto a = &this->href()->anchors[i];
+  for (size_t i = 0; i < this->_href->size(); i++) {
+    auto a = &this->_href->anchors[i];
     if (a->hseq == -2) {
       n++;
     }
@@ -108,32 +108,32 @@ void LineData::reseq_anchor() {
   }
 
   n = nmark;
-  for (size_t i = 0; i < this->href()->size(); i++) {
-    auto a = &this->href()->anchors[i];
+  for (size_t i = 0; i < this->_href->size(); i++) {
+    auto a = &this->_href->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
       auto a1 =
-          this->href()->closest_next_anchor(NULL, a->start.pos, a->start.line);
-      a1 = this->formitem()->closest_next_anchor(a1, a->start.pos,
-                                                 a->start.line);
+          this->_href->closest_next_anchor(NULL, a->start.pos, a->start.line);
+      a1 =
+          this->_formitem->closest_next_anchor(a1, a->start.pos, a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
         for (int j = a1->hseq; j < nmark; j++) {
           seqmap[j]++;
         }
       }
-      this->hmarklist()->putHmarker(a->start.line, a->start.pos, seqmap[n]);
+      this->_hmarklist->putHmarker(a->start.line, a->start.pos, seqmap[n]);
       n++;
     }
   }
 
   for (int i = 0; i < nmark; i++) {
-    this->hmarklist()->putHmarker(this->hmarklist()->marks[i].line,
-                                  this->hmarklist()->marks[i].pos, seqmap[i]);
+    this->_hmarklist->putHmarker(this->_hmarklist->marks[i].line,
+                                 this->_hmarklist->marks[i].pos, seqmap[i]);
   }
 
-  this->href()->reseq_anchor0(seqmap.data());
-  this->formitem()->reseq_anchor0(seqmap.data());
+  this->_href->reseq_anchor0(seqmap.data());
+  this->_formitem->reseq_anchor0(seqmap.data());
 }
 
 const char *LineData ::reAnchorPos(
@@ -202,8 +202,8 @@ const char *LineData::reAnchorAny(
 static Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
                                int line, int pos) {
   auto tmp = Strnew_charp_n(p1, p2 - p1);
-  return layout->href()->putAnchor(url_quote(tmp->ptr).c_str(), NULL,
-                                   {.no_referer = true}, NULL, '\0', line, pos);
+  return layout->_href->putAnchor(url_quote(tmp->ptr).c_str(), NULL,
+                                  {.no_referer = true}, NULL, '\0', line, pos);
 }
 
 const char *LineData::reAnchor(Line *topLine, const char *re) {
@@ -302,10 +302,10 @@ void LineData::clear() {
 }
 
 Anchor *LineData::registerName(const char *url, int line, int pos) {
-  return this->name()->putAnchor(url, NULL, {}, NULL, '\0', line, pos);
+  return this->_name->putAnchor(url, NULL, {}, NULL, '\0', line, pos);
 }
 
 Anchor *LineData::registerImg(const char *url, const char *title, int line,
                               int pos) {
-  return this->img()->putAnchor(url, NULL, {}, title, '\0', line, pos);
+  return this->_img->putAnchor(url, NULL, {}, title, '\0', line, pos);
 }

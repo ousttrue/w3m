@@ -773,7 +773,7 @@ std::shared_ptr<CoroutineState<void>> submitForm() {
 // LINK_BEGIN
 //"Move to the first hyperlink"
 std::shared_ptr<CoroutineState<void>> topA() {
-  auto hl = CurrentTab->currentBuffer()->layout.data.hmarklist();
+  auto hl = CurrentTab->currentBuffer()->layout.data._hmarklist;
   BufferPoint *po;
   Anchor *an;
   int hseq = 0;
@@ -791,12 +791,12 @@ std::shared_ptr<CoroutineState<void>> topA() {
     if (hseq >= (int)hl->size())
       co_return;
     po = &hl->marks[hseq];
-    if (CurrentTab->currentBuffer()->layout.data.href()) {
-      an = CurrentTab->currentBuffer()->layout.data.href()->retrieveAnchor(
+    if (CurrentTab->currentBuffer()->layout.data._href) {
+      an = CurrentTab->currentBuffer()->layout.data._href->retrieveAnchor(
           po->line, po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout.data.formitem()) {
-      an = CurrentTab->currentBuffer()->layout.data.formitem()->retrieveAnchor(
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.data._formitem) {
+      an = CurrentTab->currentBuffer()->layout.data._formitem->retrieveAnchor(
           po->line, po->pos);
     }
     hseq++;
@@ -811,7 +811,7 @@ std::shared_ptr<CoroutineState<void>> topA() {
 // LINK_END
 //"Move to the last hyperlink"
 std::shared_ptr<CoroutineState<void>> lastA() {
-  auto hl = CurrentTab->currentBuffer()->layout.data.hmarklist();
+  auto hl = CurrentTab->currentBuffer()->layout.data._hmarklist;
   BufferPoint *po;
   Anchor *an;
   int hseq;
@@ -831,12 +831,12 @@ std::shared_ptr<CoroutineState<void>> lastA() {
     if (hseq < 0)
       co_return;
     po = &hl->marks[hseq];
-    if (CurrentTab->currentBuffer()->layout.data.href()) {
-      an = CurrentTab->currentBuffer()->layout.data.href()->retrieveAnchor(
+    if (CurrentTab->currentBuffer()->layout.data._href) {
+      an = CurrentTab->currentBuffer()->layout.data._href->retrieveAnchor(
           po->line, po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout.data.formitem()) {
-      an = CurrentTab->currentBuffer()->layout.data.formitem()->retrieveAnchor(
+    if (an == nullptr && CurrentTab->currentBuffer()->layout.data._formitem) {
+      an = CurrentTab->currentBuffer()->layout.data._formitem->retrieveAnchor(
           po->line, po->pos);
     }
     hseq--;
@@ -851,7 +851,7 @@ std::shared_ptr<CoroutineState<void>> lastA() {
 // LINK_N
 //"Go to the nth link"
 std::shared_ptr<CoroutineState<void>> nthA() {
-  auto hl = CurrentTab->currentBuffer()->layout.data.hmarklist();
+  auto hl = CurrentTab->currentBuffer()->layout.data._hmarklist;
 
   int n = App::instance().searchKeyNum();
   if (n < 0 || n > (int)hl->size()) {
@@ -866,12 +866,12 @@ std::shared_ptr<CoroutineState<void>> nthA() {
   auto po = &hl->marks[n - 1];
 
   Anchor *an = nullptr;
-  if (CurrentTab->currentBuffer()->layout.data.href()) {
-    an = CurrentTab->currentBuffer()->layout.data.href()->retrieveAnchor(
+  if (CurrentTab->currentBuffer()->layout.data._href) {
+    an = CurrentTab->currentBuffer()->layout.data._href->retrieveAnchor(
         po->line, po->pos);
   }
-  if (an == nullptr && CurrentTab->currentBuffer()->layout.data.formitem()) {
-    an = CurrentTab->currentBuffer()->layout.data.formitem()->retrieveAnchor(
+  if (an == nullptr && CurrentTab->currentBuffer()->layout.data._formitem) {
+    an = CurrentTab->currentBuffer()->layout.data._formitem->retrieveAnchor(
         po->line, po->pos);
   }
   if (an == nullptr)
