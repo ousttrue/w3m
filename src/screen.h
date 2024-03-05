@@ -103,7 +103,7 @@ public:
   void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
 
-  void redrawLine(const RowCol &root, LineLayout *buf, Line *l, int i);
+  void redrawLine(RowCol pixel, LineLayout *layout, Line *l);
   int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int i,
                        int bpos, int epos);
 

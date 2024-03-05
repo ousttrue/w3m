@@ -160,7 +160,7 @@ std::string Screen::str(const RowCol &root, LineLayout *layout) {
   if (cline != layout->topLine || ccolumn != layout->currentColumn) {
     int i = 0;
     for (auto l = layout->topLine; i < layout->LINES && l; i++, ++l) {
-      this->redrawLine(root, layout, l, i + root.row);
+      this->redrawLine({.row = i + root.row, .col = root.col}, layout, l);
     }
     // clear remain
     this->clrtobotx({.row = i + root.row, .col = 0});
@@ -181,14 +181,8 @@ std::string Screen::str(const RowCol &root, LineLayout *layout) {
   return this->_screen->ToString();
 }
 
-void Screen::redrawLine(const RowCol &root, LineLayout *layout, Line *l,
-                        int i) {
-  if (!l) {
-    return;
-  }
-
+void Screen::redrawLine(RowCol pixel, LineLayout *layout, Line *l) {
   int column = layout->currentColumn;
-  RowCol pixel{.row = i, .col = root.col};
   if (l->len() == 0 || l->width() - 1 < column) {
     this->clrtoeolx(pixel);
     return;
