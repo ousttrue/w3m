@@ -1,5 +1,6 @@
 #include "html_parser.h"
 #include "html_feed_env.h"
+#include "textline.h"
 #include "entity.h"
 #include "anchorlist.h"
 #include "form_item.h"

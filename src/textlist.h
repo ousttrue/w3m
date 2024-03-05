@@ -49,32 +49,3 @@ struct TextList {
 #define delText(tl, i) delValue((GeneralList *)(tl), (ListItem *)(i))
 #define appendTextList(tl, tl2)                                                \
   ((TextList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
-
-/* Line text list */
-
-struct TextLine {
-  Str *line;
-  int pos;
-};
-
-struct TextLineListItem {
-  TextLine *ptr;
-  TextLineListItem *next;
-  TextLineListItem *prev;
-};
-
-struct TextLineList {
-  TextLineListItem *first;
-  TextLineListItem *last;
-  int nitem;
-};
-
-extern TextLine *newTextLine(Str *line, int pos);
-extern void appendTextLine(TextLineList *tl, Str *line, int pos);
-#define newTextLineList() ((TextLineList *)newGeneralList())
-#define pushTextLine(tl, lbuf) pushValue((GeneralList *)(tl), (void *)(lbuf))
-#define popTextLine(tl) ((TextLine *)popValue((GeneralList *)(tl)))
-#define rpopTextLine(tl) ((TextLine *)rpopValue((GeneralList *)(tl)))
-#define appendTextLineList(tl, tl2)                                            \
-  ((TextLineList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
-

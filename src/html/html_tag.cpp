@@ -8,13 +8,13 @@
 #include "table.h"
 #include "alloc.h"
 #include "html.c"
+#include "textline.h"
 
 /* parse HTML tag */
 
 static int noConv(char *, char **);
 static int toNumber(char *, int *);
 static int toLength(char *, int *);
-static int toAlign(char *, int *);
 static int toVAlign(char *, int *);
 
 /* *INDENT-OFF* */
@@ -24,7 +24,9 @@ static toValFuncType toValFunc[] = {
     (toValFuncType)noConv, /* VTYPE_STR     */
     toNumber,              /* VTYPE_NUMBER  */
     toLength,              /* VTYPE_LENGTH  */
-    toAlign,               /* VTYPE_ALIGN   */
+    [](char *p, int *r) -> int {
+      return toAlign(p, (AlignMode *)r);
+    },                     /* VTYPE_ALIGN   */
     toVAlign,              /* VTYPE_VALIGN  */
     (toValFuncType)noConv, /* VTYPE_ACTION  */
     (toValFuncType)noConv, /* VTYPE_ENCTYPE */
@@ -65,24 +67,6 @@ static int toLength(char *oval, int *len) {
     *len = -w;
   else
     *len = w;
-  return 1;
-}
-
-static int toAlign(char *oval, int *align) {
-  if (strcasecmp(oval, "left") == 0)
-    *align = ALIGN_LEFT;
-  else if (strcasecmp(oval, "right") == 0)
-    *align = ALIGN_RIGHT;
-  else if (strcasecmp(oval, "center") == 0)
-    *align = ALIGN_CENTER;
-  else if (strcasecmp(oval, "top") == 0)
-    *align = ALIGN_TOP;
-  else if (strcasecmp(oval, "bottom") == 0)
-    *align = ALIGN_BOTTOM;
-  else if (strcasecmp(oval, "middle") == 0)
-    *align = ALIGN_MIDDLE;
-  else
-    return 0;
   return 1;
 }
 

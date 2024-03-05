@@ -1,6 +1,7 @@
 #include "html_feed_env.h"
-#include "textlist.h"
 #include "readbuffer.h"
+#include "textline.h"
+#include "Str.h"
 
 html_feed_environ::html_feed_environ(int nenv, TextLineList *buf, int limit,
                                      int indent)

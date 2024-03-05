@@ -81,6 +81,7 @@ executable(
         'Str.cpp',
         'regex.cpp',
         'textlist.cpp',
+        'textline.cpp',
         'keyvalue.cpp',
         'hash.cpp',
         'buffer.cpp',

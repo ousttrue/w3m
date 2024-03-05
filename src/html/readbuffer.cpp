@@ -14,6 +14,7 @@
 #include "ctrlcode.h"
 #include "table.h"
 #include "html.h"
+#include "textline.h"
 #include "form.h"
 #include "textlist.h"
 #include "istream.h"

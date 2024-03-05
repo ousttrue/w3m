@@ -103,31 +103,3 @@ GeneralList *appendGeneralList(GeneralList *tl, GeneralList *tl2) {
 
   return tl;
 }
-
-/* Line text list */
-
-TextLine *newTextLine(Str *line, int pos) {
-  auto lbuf = (TextLine *)New(TextLine);
-  if (line)
-    lbuf->line = line;
-  else
-    lbuf->line = Strnew();
-  lbuf->pos = pos;
-  return lbuf;
-}
-
-void appendTextLine(TextLineList *tl, Str *line, int pos) {
-  TextLine *lbuf;
-
-  if (tl->last == NULL) {
-    pushTextLine(tl, newTextLine(line->Strdup(), pos));
-  } else {
-    lbuf = tl->last->ptr;
-    if (lbuf->line)
-      Strcat(lbuf->line, line);
-    else
-      lbuf->line = line;
-    lbuf->pos += pos;
-  }
-}
-
