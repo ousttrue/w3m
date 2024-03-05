@@ -12,7 +12,6 @@
 bool MarkAllPages = false;
 
 #define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
-int PagerMax = PAGER_MAX_LINE;
 
 #define FIRST_ANCHOR_SIZE 30
 
@@ -20,10 +19,10 @@ int Anchor::onAnchor(int line, int pos) {
   BufferPoint bp;
   bp.line = line;
   bp.pos = pos;
-  if (bpcmp(bp, this->start) < 0) {
+  if (bp.cmp(this->start) < 0) {
     return -1;
   }
-  if (bpcmp(this->end, bp) <= 0) {
+  if (this->end.cmp(bp) <= 0) {
     return 1;
   }
   return 0;

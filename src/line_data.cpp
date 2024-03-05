@@ -29,8 +29,18 @@ Anchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
   if (!fi) {
     return NULL;
   }
-  return this->_formitem->putAnchor((const char *)fi, flist->target, {}, NULL,
-                                    '\0', line, pos);
+  return this->_formitem->putAnchor(
+      {
+          .line = line,
+          .pos = pos,
+      },
+      Anchor{
+          .url = (const char *)fi,
+          .target = flist->target ? flist->target : "",
+          .option = {},
+          .title = "",
+          .accesskey = '\0',
+      });
 }
 
 void LineData::addMultirowsForm() {
@@ -75,10 +85,20 @@ void LineData::addMultirowsForm() {
       if (a_form.start.line == linenumber(l))
         continue;
 
-      auto a = this->_formitem->putAnchor(a_form.url, a_form.target.c_str(), {},
-                                          NULL, '\0', linenumber(l), pos);
-      a->hseq = a_form.hseq;
-      a->y = a_form.y;
+      auto a = this->_formitem->putAnchor(
+          {
+              .line = linenumber(l),
+              .pos = pos,
+          },
+          Anchor{
+              .url = a_form.url,
+              .target = a_form.target,
+              .option = {},
+              .title = "",
+              .accesskey = '\0',
+              .hseq = a_form.hseq,
+              .y = a_form.y,
+          });
       a->end.pos = pos + ecol - col;
       if (pos < 1 || a->end.pos >= l->size())
         continue;
@@ -205,8 +225,18 @@ const char *LineData::reAnchorAny(
 static Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
                                int line, int pos) {
   auto tmp = Strnew_charp_n(p1, p2 - p1);
-  return layout->_href->putAnchor(url_quote(tmp->ptr).c_str(), NULL,
-                                  {.no_referer = true}, NULL, '\0', line, pos);
+  return layout->_href->putAnchor(
+      {
+          .line = line,
+          .pos = pos,
+      },
+      Anchor{
+          .url = url_quote(tmp->ptr).c_str(),
+          .target = "",
+          .option = {.no_referer = true},
+          .title = "",
+          .accesskey = '\0',
+      });
 }
 
 const char *LineData::reAnchor(Line *topLine, const char *re) {
@@ -303,10 +333,32 @@ void LineData::clear() {
 }
 
 Anchor *LineData::registerName(const char *url, int line, int pos) {
-  return this->_name->putAnchor(url, NULL, {}, NULL, '\0', line, pos);
+  return this->_name->putAnchor(
+      {
+          .line = line,
+          .pos = pos,
+      },
+      Anchor{
+          .url = url,
+          .target = "",
+          .option = {},
+          .title = "",
+          .accesskey = '\0',
+      });
 }
 
 Anchor *LineData::registerImg(const char *url, const char *title, int line,
                               int pos) {
-  return this->_img->putAnchor(url, NULL, {}, title, '\0', line, pos);
+  return this->_img->putAnchor(
+      {
+          .line = line,
+          .pos = pos,
+      },
+      Anchor{
+          .url = url,
+          .target = "",
+          .option = {},
+          .title = title ? title : "",
+          .accesskey = '\0',
+      });
 }

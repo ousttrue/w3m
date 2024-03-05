@@ -541,9 +541,9 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
       Strcat_charp(tmp, "\" REFERER=\"");
       Strcat_charp(tmp, html_quote(obuf->anchor.option.referer.c_str()));
     }
-    if (obuf->anchor.title) {
+    if (obuf->anchor.title.size()) {
       Strcat_charp(tmp, "\" TITLE=\"");
-      Strcat_charp(tmp, html_quote(obuf->anchor.title));
+      Strcat_charp(tmp, html_quote(obuf->anchor.title.c_str()));
     }
     if (obuf->anchor.accesskey) {
       auto c = html_quote_char(obuf->anchor.accesskey);
@@ -1060,12 +1060,40 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = data->_href->putAnchor(p, q, {.referer = r ? r : ""}, s,
-                                            *t, nlines, pos);
-            a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
-            a_href->slave = (hseq > 0) ? false : true;
+
+            // const char *url, const char *target,
+            //                     const HttpOption &option, const char *title,
+            //                     unsigned char key, int line, int pos
+            // BufferPoint bp = {0};
+            // bp.line = line;
+            // bp.pos = pos;
+            // a->url = url;
+            // a->target = target ? target : "";
+            // a->option = option;
+            // a->title = title;
+            // a->accesskey = key;
+            // a->slave = false;
+            // a->start = bp;
+            // a->end = bp;
+            // return a;
+            // p, q, {.referer = r ? r : ""}, s, *t
+            auto a_href = data->_href->putAnchor(
+                BufferPoint{
+                    .line = nlines,
+                    .pos = pos,
+                },
+                Anchor{
+                    .url = p,
+                    .target = q ? q : "",
+                    .option = {.referer = r ? r : ""},
+                    .title = s ? s : "",
+                    .accesskey = (unsigned char)*t,
+                    .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
+                    .slave = (hseq > 0) ? false : true,
+                });
           }
           break;
+
         case HTML_N_A:
           effect &= ~PE_ANCHOR;
           if (a_href) {

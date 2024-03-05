@@ -358,7 +358,6 @@ struct param_ptr params1[] = {
 };
 
 struct param_ptr params3[] = {
-    {"pagerline", P_NZINT, PI_TEXT, (void *)&PagerMax, CMT_PAGERLINE, NULL},
     {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY, NULL},
     {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
     {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST, NULL},
@@ -805,8 +804,6 @@ static void parse_cookie(void) {
 }
 
 void sync_with_option(void) {
-  if (PagerMax < App::instance().LINES())
-    PagerMax = App::instance().LINES();
   WrapSearch = WrapDefault;
   parse_cookie();
   initMailcap();

@@ -1,30 +1,29 @@
 #pragma once
 #include "http_option.h"
 #include <vector>
-#include <string_view>
-
-#define bpcmp(a, b)                                                            \
-  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
 
 extern bool MarkAllPages;
-extern int PagerMax;
 
 struct BufferPoint {
   int line = 0;
   int pos = 0;
   int invalid = 0;
+
+  int cmp(const BufferPoint &b) const {
+    return (this->line - b.line) ? (this->line - b.line) : (this->pos - b.pos);
+  }
 };
 
 struct Anchor {
   const char *url = nullptr;
   std::string target;
   HttpOption option = {};
-  const char *title = nullptr;
+  std::string title;
   unsigned char accesskey = 0;
   BufferPoint start = {};
   BufferPoint end = {};
   int hseq = 0;
-  char slave = 0;
+  bool slave = false;
   short y = 0;
   short rows = 0;
 

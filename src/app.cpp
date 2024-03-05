@@ -1763,16 +1763,16 @@ Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   if (displayLink) {
     {
       Anchor *a = buf->layout.retrieveCurrentAnchor();
-      const char *p = NULL;
-      if (a && a->title && *a->title)
+      std::string p;
+      if (a && a->title.size())
         p = a->title;
       else {
         auto a_img = buf->layout.retrieveCurrentImg();
-        if (a_img && a_img->title && *a_img->title)
+        if (a_img && a_img->title.size())
           p = a_img->title;
       }
-      if (p || a)
-        s = this->make_lastline_link(buf, p, a ? a->url : NULL);
+      if (p.size() || a)
+        s = this->make_lastline_link(buf, p.c_str(), a ? a->url : NULL);
     }
     if (s) {
       sl = get_Str_strwidth(s);

@@ -265,8 +265,8 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
         p = html_quote(url_decode0(p));
       else
         p = u;
-      if (a->title && *a->title)
-        t = html_quote(a->title);
+      if (a->title.size())
+        t = html_quote(a->title.c_str());
       else
         t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",

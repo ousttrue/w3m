@@ -131,21 +131,14 @@ public:
     }
   }
 
-  Anchor *putAnchor(const char *url, const char *target,
-                    const HttpOption &option, const char *title,
-                    unsigned char key, int line, int pos) {
-
-    BufferPoint bp = {0};
-    bp.line = line;
-    bp.pos = pos;
-
+  Anchor *putAnchor(const BufferPoint &bp, const Anchor &a) {
     size_t n = this->size();
     size_t i;
-    if (!n || bpcmp(this->anchors[n - 1].start, bp) < 0) {
+    if (!n || this->anchors[n - 1].start.cmp(bp) < 0) {
       i = n;
     } else {
       for (i = 0; i < n; i++) {
-        if (bpcmp(this->anchors[i].start, bp) >= 0) {
+        if (this->anchors[i].start.cmp(bp) >= 0) {
           while (n >= this->anchors.size()) {
             this->anchors.push_back({});
           }
@@ -159,15 +152,9 @@ public:
     while (i >= this->anchors.size()) {
       this->anchors.push_back({});
     }
-    auto a = &this->anchors[i];
-    a->url = url;
-    a->target = target ? target : "";
-    a->option = option;
-    a->title = title;
-    a->accesskey = key;
-    a->slave = false;
-    a->start = bp;
-    a->end = bp;
-    return a;
+    this->anchors[i] = a;
+    this->anchors[i].start = bp;
+    this->anchors[i].end = bp;
+    return &this->anchors[i];
   }
 };
