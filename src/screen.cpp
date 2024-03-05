@@ -1,6 +1,6 @@
 #include "screen.h"
 #include "line_layout.h"
-#include "html/anchor.h"
+#include "html/anchorlist.h"
 #include <ftxui/screen/screen.hpp>
 
 void Screen::setupscreen(const RowCol &size) {
@@ -271,8 +271,9 @@ int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
   return rcol - column;
 }
 
-void Screen::drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
-                               int prevhseq, int tline, int eline, int active) {
+void Screen::drawAnchorCursor0(LineLayout *layout, AnchorList<Anchor> *al,
+                               int hseq, int prevhseq, int tline, int eline,
+                               int active) {
   auto l = layout->topLine;
   for (size_t j = 0; j < al->size(); j++) {
     auto an = &al->anchors[j];

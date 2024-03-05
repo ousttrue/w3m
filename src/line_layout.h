@@ -2,6 +2,7 @@
 #include "line_data.h"
 #include "http_request.h"
 #include "url.h"
+#include "html/anchorlist.h"
 #include <string>
 #include <optional>
 
@@ -20,8 +21,6 @@ struct BufferPos {
 struct Line;
 struct BufferPos;
 struct HtmlTag;
-struct AnchorList;
-struct HmarkerList;
 
 struct LineLayout {
   LineData data;

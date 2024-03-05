@@ -1,12 +1,11 @@
 #pragma once
 
 #include "line.h"
+#include "html/anchorlist.h"
 #include <memory>
 #include <string>
 #include <assert.h>
 
-struct AnchorList;
-struct Anchor;
 struct HmarkerList;
 struct HtmlTag;
 
@@ -19,12 +18,11 @@ struct LineData {
   bool need_reshape = true;
   int refresh_interval = 0;
   std::vector<Line> lines;
-  std::shared_ptr<AnchorList> _href;
-  std::shared_ptr<AnchorList> _name;
-  std::shared_ptr<AnchorList> _img;
-  std::shared_ptr<AnchorList> _formitem;
+  std::shared_ptr<AnchorList<Anchor>> _href;
+  std::shared_ptr<AnchorList<Anchor>> _name;
+  std::shared_ptr<AnchorList<Anchor>> _img;
+  std::shared_ptr<AnchorList<Anchor>> _formitem;
   std::shared_ptr<HmarkerList> _hmarklist;
-  std::shared_ptr<HmarkerList> _imarklist;
   struct LinkList *linklist = nullptr;
   struct FormList *formlist = nullptr;
   struct FormItemList *form_submit = nullptr;

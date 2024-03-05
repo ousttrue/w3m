@@ -29,42 +29,6 @@ int Anchor::onAnchor(int line, int pos) {
   return 0;
 }
 
-Anchor *AnchorList::retrieveAnchor(int line, int pos) {
-
-  if (this->size() == 0)
-    return NULL;
-
-  if (this->acache < 0 || static_cast<size_t>(this->acache) >= this->size())
-    this->acache = 0;
-
-  for (int b = 0, e = this->size() - 1; b <= e; this->acache = (b + e) / 2) {
-    auto a = &this->anchors[this->acache];
-    auto cmp = a->onAnchor(line, pos);
-    if (cmp == 0)
-      return a;
-    else if (cmp > 0)
-      b = this->acache + 1;
-    else if (this->acache == 0)
-      return NULL;
-    else
-      e = this->acache - 1;
-  }
-  return NULL;
-}
-
-Anchor *AnchorList::searchAnchor(std::string_view str) {
-  for (size_t i = 0; i < this->size(); i++) {
-    auto a = &this->anchors[i];
-    if (a->hseq < 0) {
-      continue;
-    }
-    if (a->url == str) {
-      return a;
-    }
-  }
-  return {};
-}
-
 #define FIRST_MARKER_SIZE 30
 void HmarkerList::putHmarker(int line, int pos, int seq) {
   // if (seq + 1 > ml->nmark)
@@ -80,73 +44,6 @@ void HmarkerList::putHmarker(int line, int pos, int seq) {
   this->marks[seq].line = line;
   this->marks[seq].pos = pos;
   this->marks[seq].invalid = 0;
-}
-
-Anchor *AnchorList::closest_next_anchor(Anchor *an, int x, int y) {
-  if (this->size() == 0)
-    return an;
-  for (size_t i = 0; i < this->size(); i++) {
-    if (this->anchors[i].hseq < 0)
-      continue;
-    if (this->anchors[i].start.line > y ||
-        (this->anchors[i].start.line == y && this->anchors[i].start.pos > x)) {
-      if (an == NULL || an->start.line > this->anchors[i].start.line ||
-          (an->start.line == this->anchors[i].start.line &&
-           an->start.pos > this->anchors[i].start.pos))
-        an = &this->anchors[i];
-    }
-  }
-  return an;
-}
-
-Anchor *AnchorList ::closest_prev_anchor(Anchor *an, int x, int y) {
-  if (this->size() == 0)
-    return an;
-  for (size_t i = 0; i < this->size(); i++) {
-    if (this->anchors[i].hseq < 0)
-      continue;
-    if (this->anchors[i].end.line < y ||
-        (this->anchors[i].end.line == y && this->anchors[i].end.pos <= x)) {
-      if (an == NULL || an->end.line < this->anchors[i].end.line ||
-          (an->end.line == this->anchors[i].end.line &&
-           an->end.pos < this->anchors[i].end.pos))
-        an = &this->anchors[i];
-    }
-  }
-  return an;
-}
-
-void AnchorList::shiftAnchorPosition(HmarkerList *hl, int line, int pos,
-                                     int shift) {
-  if (this->size() == 0)
-    return;
-
-  auto s = this->size() / 2;
-  size_t b, e;
-  for (b = 0, e = this->size() - 1; b <= e; s = (b + e + 1) / 2) {
-    auto a = &this->anchors[s];
-    auto cmp = a->onAnchor(line, pos);
-    if (cmp == 0)
-      break;
-    else if (cmp > 0)
-      b = s + 1;
-    else if (s == 0)
-      break;
-    else
-      e = s - 1;
-  }
-  for (; s < this->size(); s++) {
-    auto a = &this->anchors[s];
-    if (a->start.line > line)
-      break;
-    if (a->start.pos > pos) {
-      a->start.pos += shift;
-      if (hl->size() && a->hseq >= 0 && hl->marks[a->hseq].line == line)
-        hl->marks[a->hseq].pos = a->start.pos;
-    }
-    if (a->end.pos >= pos)
-      a->end.pos += shift;
-  }
 }
 
 const char *html_quote(const char *str) {
@@ -266,52 +163,4 @@ int getescapechar(const char **str) {
   }
   *str = p;
   return getHash_si(&entity, q, -1);
-}
-
-void AnchorList::reseq_anchor0(short *seqmap) {
-  for (size_t i = 0; i < this->size(); i++) {
-    auto a = &this->anchors[i];
-    if (a->hseq >= 0) {
-      a->hseq = seqmap[a->hseq];
-    }
-  }
-}
-
-Anchor *AnchorList::putAnchor(const char *url, const char *target,
-                              const HttpOption &option, const char *title,
-                              unsigned char key, int line, int pos) {
-  BufferPoint bp = {0};
-  bp.line = line;
-  bp.pos = pos;
-
-  size_t n = this->size();
-  size_t i;
-  if (!n || bpcmp(this->anchors[n - 1].start, bp) < 0) {
-    i = n;
-  } else {
-    for (i = 0; i < n; i++) {
-      if (bpcmp(this->anchors[i].start, bp) >= 0) {
-        while (n >= this->anchors.size()) {
-          this->anchors.push_back({});
-        }
-        for (size_t j = n; j > i; j--)
-          this->anchors[j] = this->anchors[j - 1];
-        break;
-      }
-    }
-  }
-
-  while (i >= this->anchors.size()) {
-    this->anchors.push_back({});
-  }
-  auto a = &this->anchors[i];
-  a->url = url;
-  a->target = target ? target : "";
-  a->option = option;
-  a->title = title;
-  a->accesskey = key;
-  a->slave = false;
-  a->start = bp;
-  a->end = bp;
-  return a;
 }

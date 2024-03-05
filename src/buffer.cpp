@@ -21,7 +21,7 @@
 #include "html/readbuffer.h"
 #include "html/form.h"
 #include "html/form_item.h"
-#include "html/anchor.h"
+#include "html/anchorlist.h"
 #include "ctrlcode.h"
 #include "line.h"
 #include "proto.h"

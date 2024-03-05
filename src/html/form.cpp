@@ -17,7 +17,6 @@
 #include "utf8.h"
 #include "line.h"
 #include "buffer.h"
-#include "anchor.h"
 #include "keyvalue.h"
 #include "html_tag.h"
 #include "myctype.h"
@@ -153,7 +152,7 @@ void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
   formUpdateBuffer(a, &buf->layout, fi);
 }
 
-void formResetBuffer(LineLayout *layout, AnchorList *formitem) {
+void formResetBuffer(LineLayout *layout, AnchorList<Anchor> *formitem) {
   Anchor *a;
   FormItemList *f1, *f2;
 

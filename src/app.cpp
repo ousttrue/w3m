@@ -6,6 +6,7 @@
 #include "quote.h"
 #include "html/readbuffer.h"
 #include "html/form_item.h"
+#include "html/anchorlist.h"
 #include "screen.h"
 #include "screen.h"
 #include "ssl_util.h"

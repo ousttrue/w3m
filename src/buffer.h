@@ -1,12 +1,11 @@
 #pragma once
 #include "line_layout.h"
 #include "func.h"
+#include "html/anchorlist.h"
 #include <memory>
 
 struct FormList;
 struct Anchor;
-struct AnchorList;
-struct HmarkerList;
 struct FormItemList;
 struct MapList;
 struct Line;

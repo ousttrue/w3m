@@ -4,6 +4,7 @@
  */
 #pragma once
 #include "Str.h"
+#include "anchorlist.h"
 #include <memory>
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
@@ -42,11 +43,9 @@ FormList *newFormList(const char *action, const char *method,
                       const char *target, const char *name, FormList *_next);
 
 struct Buffer;
-struct Anchor;
-struct AnchorList;
 struct LineLayout;
 void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *form);
-void formResetBuffer(LineLayout *layout, AnchorList *formitem);
+void formResetBuffer(LineLayout *layout, AnchorList<Anchor> *formitem);
 void formUpdateBuffer(Anchor *a, LineLayout *layout, FormItemList *form);
 void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf);
 Str *textfieldrep(Str *s, int width);

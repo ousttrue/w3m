@@ -1,7 +1,6 @@
 #include "line_data.h"
 #include "linklist.h"
 #include "myctype.h"
-#include "html/anchor.h"
 #include "html/form.h"
 #include "quote.h"
 #include "etc.h"
@@ -13,12 +12,11 @@
 #include "alloc.h"
 
 LineData::LineData() {
-  this->_href = std::make_shared<AnchorList>();
-  this->_name = std::make_shared<AnchorList>();
-  this->_img = std::make_shared<AnchorList>();
-  this->_formitem = std::make_shared<AnchorList>();
+  this->_href = std::make_shared<AnchorList<Anchor>>();
+  this->_name = std::make_shared<AnchorList<Anchor>>();
+  this->_img = std::make_shared<AnchorList<Anchor>>();
+  this->_formitem = std::make_shared<AnchorList<Anchor>>();
   this->_hmarklist = std::make_shared<HmarkerList>();
-  this->_imarklist = std::make_shared<HmarkerList>();
 }
 
 void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
@@ -302,7 +300,6 @@ void LineData::clear() {
   this->formlist = nullptr;
   this->linklist = nullptr;
   this->_hmarklist->clear();
-  this->_imarklist->clear();
 }
 
 Anchor *LineData::registerName(const char *url, int line, int pos) {

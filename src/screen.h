@@ -2,6 +2,7 @@
 #include "utf8.h"
 #include "rowcol.h"
 #include "enum_template.h"
+#include "html/anchorlist.h"
 #include <ftxui/screen/screen.hpp>
 #include <functional>
 #include <memory>
@@ -40,7 +41,6 @@ enum LineDirtyFlags : unsigned short {
 };
 
 struct LineLayout;
-struct AnchorList;
 class Screen {
   std::shared_ptr<ftxui::Screen> _screen;
   int max_LINES = 0;
@@ -103,7 +103,7 @@ public:
   int redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos, int epos);
   Line *redrawLine(LineLayout *buf, Line *l, int i);
   void redrawNLine(LineLayout *layout, int n);
-  void drawAnchorCursor0(LineLayout *layout, AnchorList *al, int hseq,
+  void drawAnchorCursor0(LineLayout *layout, AnchorList<Anchor> *al, int hseq,
                          int prevhseq, int tline, int eline, int active);
   void drawAnchorCursor(LineLayout *layout);
   std::string str(LineLayout *layout);
