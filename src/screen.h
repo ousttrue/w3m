@@ -101,13 +101,15 @@ public:
   void graphend(void) { CurrentMode &= ~ScreenFlags::GRAPHICS; }
   void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
-  int redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos, int epos);
-  Line *redrawLine(LineLayout *buf, Line *l, int i);
-  void redrawNLine(LineLayout *layout, int n);
 
+  int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int i,
+                       int bpos, int epos);
+  Line *redrawLine(const RowCol &root, LineLayout *buf, Line *l, int i);
+  void redrawNLine(const RowCol &root, LineLayout *layout, int n);
   template <typename T>
-  void drawAnchorCursor0(LineLayout *layout, AnchorList<T> *al, int hseq,
-                         int prevhseq, int tline, int eline, int active) {
+  void drawAnchorCursor0(const RowCol &root, LineLayout *layout,
+                         AnchorList<T> *al, int hseq, int prevhseq, int tline,
+                         int eline, int active) {
     auto l = layout->topLine;
     for (size_t j = 0; j < al->size(); j++) {
       auto an = &al->anchors[j];
@@ -133,17 +135,17 @@ public:
           }
         }
         if (active && start_pos < end_pos)
-          this->redrawLineRegion(layout, l,
-                                 layout->linenumber(l) - tline + layout->rootY,
+          this->redrawLineRegion(root, layout, l,
+                                 layout->linenumber(l) - tline + root.row,
                                  start_pos, end_pos);
       } else if (prevhseq >= 0 && an->hseq == prevhseq) {
         if (active)
-          this->redrawLineRegion(layout, l,
-                                 layout->linenumber(l) - tline + layout->rootY,
+          this->redrawLineRegion(root, layout, l,
+                                 layout->linenumber(l) - tline + root.row,
                                  an->start.pos, an->end.pos);
       }
     }
   }
-  void drawAnchorCursor(LineLayout *layout);
-  std::string str(const Viewport &vp, LineLayout *layout);
+  void drawAnchorCursor(const RowCol &root, LineLayout *layout);
+  std::string str(const RowCol &root, LineLayout *layout);
 };

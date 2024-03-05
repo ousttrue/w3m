@@ -87,8 +87,6 @@ struct LineLayout {
   //
   // viewport
   //
-  short rootX = 0;
-  short rootY = 0;
   short COLS = 0;
   short LINES = 0;
   // COLS/LINES と width height の違いは？
@@ -101,12 +99,7 @@ struct LineLayout {
 
   BufferPos *undo = nullptr;
 
-  int AbsCursorX() const { return cursor.col + rootX; }
-  int AbsCursorY() const { return cursor.row + rootY; }
-
   inline void COPY_BUFROOT_FROM(const LineLayout &srcbuf) {
-    this->rootX = srcbuf.rootX;
-    this->rootY = srcbuf.rootY;
     this->COLS = srcbuf.COLS;
     this->LINES = srcbuf.LINES;
   }

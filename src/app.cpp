@@ -1201,10 +1201,10 @@ void App::display() {
   if (ny > this->LASTLINE()) {
     ny = this->LASTLINE();
   }
-  layout->rootX = 0;
-  layout->COLS = this->COLS() - layout->rootX;
-  if (layout->rootY != ny || layout->LINES != this->LASTLINE() - ny) {
-    layout->rootY = ny;
+  _viewport.root.col = 0;
+  layout->COLS = this->COLS() - _viewport.root.col;
+  if (_viewport.root.row != ny || layout->LINES != this->LASTLINE() - ny) {
+    _viewport.root.row = ny;
     layout->LINES = this->LASTLINE() - ny;
     layout->arrangeCursor();
   }
@@ -1228,7 +1228,7 @@ void App::display() {
     save_current_buf = buf;
   }
 
-  auto rendered = _screen->str(_viewport, &buf->layout);
+  auto rendered = _screen->str(_viewport.root, &buf->layout);
   if (rendered != _last) {
     _last = rendered;
 
@@ -1246,10 +1246,7 @@ void App::display() {
   }
 
   // cursor
-  this->cursor({
-      .row = buf->layout.AbsCursorY(),
-      .col = buf->layout.AbsCursorX(),
-  });
+  this->cursor(_viewport.root + buf->layout.cursor);
 }
 
 struct TimerTask {

@@ -1,6 +1,5 @@
 #include "screen.h"
 #include "line_layout.h"
-#include "html/anchorlist.h"
 #include <ftxui/screen/screen.hpp>
 
 void Screen::setupscreen(const RowCol &size) {
@@ -77,7 +76,8 @@ void Screen::addmch(const RowCol &pos, const Utf8 &utf8) {
   pixel.character = utf8.view();
 }
 
-Line *Screen::redrawLine(LineLayout *layout, Line *l, int i) {
+Line *Screen::redrawLine(const RowCol &root, LineLayout *layout, Line *l,
+                         int i) {
   int j, pos, rcol, ncol, delta = 1;
   int column = layout->currentColumn;
   char *p;
@@ -85,7 +85,7 @@ Line *Screen::redrawLine(LineLayout *layout, Line *l, int i) {
   if (l == NULL) {
     return NULL;
   }
-  RowCol pixel{.row = i, .col = layout->rootX};
+  RowCol pixel{.row = i, .col = root.col};
   if (l->len() == 0 || l->width() - 1 < column) {
     this->clrtoeolx(pixel);
     return l;
@@ -167,23 +167,23 @@ Line *Screen::redrawLine(LineLayout *layout, Line *l, int i) {
   return l;
 }
 
-void Screen::redrawNLine(LineLayout *layout, int n) {
+void Screen::redrawNLine(const RowCol &root, LineLayout *layout, int n) {
 
   Line *l;
   int i;
   for (i = 0, l = layout->topLine; i < layout->LINES; i++, ++l) {
     if (i >= layout->LINES - n || i < -n)
-      l = this->redrawLine(layout, l, i + layout->rootY);
+      l = this->redrawLine(root, layout, l, i + root.row);
     if (l == NULL)
       break;
   }
   if (n > 0) {
-    this->clrtobotx({.row = i + layout->rootY, .col = 0});
+    this->clrtobotx({.row = i + root.row, .col = 0});
   }
 }
 
-int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
-                             int epos) {
+int Screen::redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l,
+                             int i, int bpos, int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = layout->currentColumn;
   char *p;
@@ -206,14 +206,14 @@ int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        RowCol pixel{.row = i, .col = layout->rootX};
+        RowCol pixel{.row = i, .col = root.col};
         for (rcol = column; rcol < ncol; rcol++) {
           this->addch(pixel, ' ');
           ++pixel.col;
         }
         continue;
       }
-      RowCol pixel{.row = i, .col = rcol - column + layout->rootX};
+      RowCol pixel{.row = i, .col = rcol - column + root.col};
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++) {
           this->addch(pixel, ' ');
@@ -271,7 +271,7 @@ int Screen::redrawLineRegion(LineLayout *layout, Line *l, int i, int bpos,
   return rcol - column;
 }
 
-void Screen ::drawAnchorCursor(LineLayout *layout) {
+void Screen::drawAnchorCursor(const RowCol &root, LineLayout *layout) {
   int hseq, prevhseq;
   int tline, eline;
 
@@ -291,29 +291,29 @@ void Screen ::drawAnchorCursor(LineLayout *layout) {
   prevhseq = layout->data._hmarklist->prevhseq;
 
   if (layout->data._href) {
-    this->drawAnchorCursor0(layout, layout->data._href.get(), hseq, prevhseq,
-                            tline, eline, 1);
-    this->drawAnchorCursor0(layout, layout->data._href.get(), hseq, -1, tline,
-                            eline, 0);
+    this->drawAnchorCursor0(root, layout, layout->data._href.get(), hseq,
+                            prevhseq, tline, eline, 1);
+    this->drawAnchorCursor0(root, layout, layout->data._href.get(), hseq, -1,
+                            tline, eline, 0);
   }
   if (layout->data._formitem) {
-    this->drawAnchorCursor0(layout, layout->data._formitem.get(), hseq,
+    this->drawAnchorCursor0(root, layout, layout->data._formitem.get(), hseq,
                             prevhseq, tline, eline, 1);
-    this->drawAnchorCursor0(layout, layout->data._formitem.get(), hseq, -1,
-                            tline, eline, 0);
+    this->drawAnchorCursor0(root, layout, layout->data._formitem.get(), hseq,
+                            -1, tline, eline, 0);
   }
   layout->data._hmarklist->prevhseq = hseq;
 }
 
-std::string Screen::str(const Viewport &vp, LineLayout *layout) {
+std::string Screen::str(const RowCol &root, LineLayout *layout) {
   if (cline != layout->topLine || ccolumn != layout->currentColumn) {
-    this->redrawNLine(layout, this->LASTLINE());
+    this->redrawNLine(root, layout, this->LASTLINE());
     cline = layout->topLine;
     ccolumn = layout->currentColumn;
   }
   assert(layout->topLine);
 
-  this->drawAnchorCursor(layout);
+  this->drawAnchorCursor(root, layout);
 
   return this->_screen->ToString();
 }
