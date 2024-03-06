@@ -232,8 +232,7 @@ table *table::newTable() {
 
   t = (struct table *)New(struct table);
   t->max_rowsize = MAXROW;
-  t->tabdata =
-      (GeneralList<TextLine> ***)New_N(GeneralList<TextLine> **, MAXROW);
+  t->tabdata.resize(MAXROW);
   t->tabattr = (table_attr **)New_N(table_attr *, MAXROW);
   t->tabheight = (int *)NewAtom_N(int, MAXROW);
 #ifdef ID_EXT
@@ -242,7 +241,6 @@ table *table::newTable() {
 #endif /* ID_EXT */
 
   for (i = 0; i < MAXROW; i++) {
-    t->tabdata[i] = NULL;
     t->tabattr[i] = 0;
     t->tabheight[i] = 0;
 #ifdef ID_EXT
@@ -278,7 +276,7 @@ table *table::newTable() {
 
 void table::check_row(int row) {
   int i, r;
-  GeneralList<TextLine> ***tabdata;
+  std::vector<std::vector<GeneralList<TextLine> *>> tabdata;
   table_attr **tabattr;
   int *tabheight;
 #ifdef ID_EXT
@@ -292,7 +290,7 @@ void table::check_row(int row) {
     r = max(this->max_rowsize * 2, row + 1);
     if (r <= 0 || r > MAXROW_LIMIT)
       r = MAXROW_LIMIT;
-    tabdata = (GeneralList<TextLine> ***)New_N(GeneralList<TextLine> **, r);
+    tabdata.resize(r);
     tabattr = (table_attr **)New_N(table_attr *, r);
     tabheight = (int *)NewAtom_N(int, r);
 #ifdef ID_EXT
@@ -309,7 +307,6 @@ void table::check_row(int row) {
 #endif /* ID_EXT */
     }
     for (; i < r; i++) {
-      tabdata[i] = NULL;
       tabattr[i] = NULL;
       tabheight[i] = 0;
 #ifdef ID_EXT
@@ -327,9 +324,8 @@ void table::check_row(int row) {
     this->max_rowsize = r;
   }
 
-  if (this->tabdata[row] == NULL) {
-    this->tabdata[row] =
-        (GeneralList<TextLine> **)New_N(GeneralList<TextLine> *, MAXCOL);
+  if (this->tabdata[row].empty()) {
+    this->tabdata[row].resize(MAXCOL);
     this->tabattr[row] = (table_attr *)NewAtom_N(table_attr, MAXCOL);
 #ifdef ID_EXT
     this->tabidvalue[row] = (Str **)New_N(Str *, MAXCOL);
@@ -464,10 +460,11 @@ void table::print_item(int row, int col, int width, Str *buf) {
   AlignMode alignment;
 
   TextLine *lbuf;
-  if (this->tabdata[row])
+  if (this->tabdata[row].size()) {
     lbuf = this->tabdata[row][col]->popValue();
-  else
+  } else {
     lbuf = NULL;
+  }
 
   if (lbuf != NULL) {
     this->check_row(row);
@@ -596,12 +593,9 @@ int table::get_spec_cell_width(int row, int col) {
 }
 
 void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
-  // TextList *orgdata;
-  // TextListItem *l;
-  int colspan, icell;
-
-  if (this->tabdata[row] == NULL || this->tabdata[row][col] == NULL)
+  if (this->tabdata[row].empty() || this->tabdata[row][col] == NULL) {
     return;
+  }
   auto orgdata = this->tabdata[row][col];
   this->tabdata[row][col] = GeneralList<TextLine>::newGeneralList();
 
@@ -681,6 +675,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
       h_env.purgeline();
     }
   }
+  int colspan, icell;
   if ((colspan = this->table_colspan(row, col)) > 1) {
     struct table_cell *cell = &this->cell;
     int k;

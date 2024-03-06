@@ -140,7 +140,7 @@ private:
   int vcellpadding;
   int flag;
   Str *caption;
-  GeneralList<TextLine> ***tabdata;
+  std::vector<std::vector<GeneralList<TextLine> *>> tabdata;
   table_attr **tabattr;
   table_attr trattr;
 #ifdef ID_EXT
