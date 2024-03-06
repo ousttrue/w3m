@@ -1079,7 +1079,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
             // a->end = bp;
             // return a;
             // p, q, {.referer = r ? r : ""}, s, *t
-            auto a_href = data->_href->putAnchor(
+            /*auto a_href =*/data->_href->putAnchor(
                 BufferPoint{
                     .line = nlines,
                     .pos = pos,

@@ -170,7 +170,7 @@ public:
   void deleteTab(const std::shared_ptr<TabBuffer> &tab);
   void pushBuffer(const std::shared_ptr<Buffer> &buf, std::string_view target);
 
-  struct GeneralList *message_list = NULL;
+  std::list<std::string> message_list;
   char *delayed_msg = NULL;
   void message(const char *s, const RowCol &cursor);
   void record_err_message(const char *s);

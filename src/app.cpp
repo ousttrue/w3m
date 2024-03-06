@@ -17,12 +17,9 @@
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "myctype.h"
-#include "alloc.h"
-#include "Str.h"
 #include "rc.h"
 #include "cookie.h"
 #include "history.h"
-#include "generallist.h"
 #include <iostream>
 #include <sstream>
 #include <uv.h>
@@ -1515,29 +1512,27 @@ void App::record_err_message(const char *s) {
   if (!_fmInitialized) {
     return;
   }
-  if (!message_list)
-    message_list = GeneralList::newGeneralList();
-  if (message_list->nitem >= LINES())
-    message_list->popValue();
-  message_list->pushValue(allocStr(s, -1));
+  if ((int)message_list.size() >= LINES()) {
+    message_list.pop_back();
+  }
+  message_list.push_back(s);
 }
 
 /*
  * List of error messages
  */
 std::shared_ptr<Buffer> App::message_list_panel(void) {
-  Str *tmp = Strnew_size(LINES() * COLS());
-  Strcat_charp(tmp,
-               "<html><head><title>List of error messages</title></head><body>"
-               "<h1>List of error messages</h1><table cellpadding=0>\n");
-  if (message_list)
-    for (auto p = message_list->last; p; p = p->prev)
-      Strcat_m_charp(tmp, "<tr><td><pre>", html_quote((char *)p->ptr),
-                     "</pre></td></tr>\n", NULL);
-  else
-    Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
-  Strcat_charp(tmp, "</table></body></html>");
-  return loadHTMLString(tmp->ptr);
+  std::stringstream tmp;
+  tmp << "<html><head><title>List of error messages</title></head><body>"
+         "<h1>List of error messages</h1><table cellpadding=0>\n";
+  if (message_list.size()) {
+    for (auto p = message_list.rbegin(); p != message_list.rend(); ++p)
+      tmp << "<tr><td><pre>" << html_quote(p->c_str()) << "</pre></td></tr>\n";
+  } else {
+    tmp << "<tr><td>(no message recorded)</td></tr>\n";
+  }
+  tmp << "</table></body></html>";
+  return loadHTMLString(tmp.str());
 }
 
 void App::disp_err_message(const char *s) {
