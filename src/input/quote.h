@@ -8,6 +8,8 @@
 #define strcasecmp _stricmp
 
 char *strcasestr(const char *str, const char *pattern);
+#else
+#include <string.h>
 #endif
 
 extern const char *HTML_QUOTE_MAP[];

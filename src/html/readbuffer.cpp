@@ -652,7 +652,7 @@ std::shared_ptr<Buffer> getshell(const char *cmd) {
   // TODO:
   // loadBuffer(buf->res.get(), &buf->layout);
   buf->res->filename = cmd;
-  buf->layout.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
+  buf->layout.data.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 #endif
 }

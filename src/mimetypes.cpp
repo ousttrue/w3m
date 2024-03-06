@@ -124,7 +124,7 @@ const char *guessContentType(const char *filename) {
     return {};
   }
 
-  for (int i = 0; i < mimetypes_list.size(); i++) {
+  for (size_t i = 0; i < mimetypes_list.size(); i++) {
     if (auto ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) {
       return ret;
     }
