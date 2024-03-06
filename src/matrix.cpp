@@ -60,14 +60,13 @@
 
 int Matrix::LUfactor(int *indexarray) {
   int dim = this->dim, i, j, k, i_max, k_max;
-  vector *scale;
-  double mx, tmp;
 
-  scale = new_vector(dim);
+  Vector scale(dim);
 
   for (i = 0; i < dim; i++)
     indexarray[i] = i;
 
+  double mx, tmp;
   for (i = 0; i < dim; i++) {
     mx = 0.;
     for (j = 0; j < dim; j++) {
@@ -75,7 +74,7 @@ int Matrix::LUfactor(int *indexarray) {
       if (mx < tmp)
         mx = tmp;
     }
-    scale->ve[i] = mx;
+    scale.ve[i] = mx;
   }
 
   k_max = dim - 1;
@@ -83,8 +82,8 @@ int Matrix::LUfactor(int *indexarray) {
     mx = 0.;
     i_max = -1;
     for (i = k; i < dim; i++) {
-      if (fabs(scale->ve[i]) >= Tiny * fabs(this->M_VAL(i, k))) {
-        tmp = fabs(this->M_VAL(i, k)) / scale->ve[i];
+      if (fabs(scale.ve[i]) >= Tiny * fabs(this->M_VAL(i, k))) {
+        tmp = fabs(this->M_VAL(i, k)) / scale.ve[i];
         if (mx < tmp) {
           mx = tmp;
           i_max = i;
@@ -115,7 +114,7 @@ int Matrix::LUfactor(int *indexarray) {
  * LUsolve -- given an LU factorisation in A, solve Ax=b.
  */
 
-int Matrix::LUsolve(int *indexarray, vector *b, vector *x) {
+int Matrix::LUsolve(int *indexarray, Vector *b, Vector *x) {
   int i, dim = this->dim;
 
   for (i = 0; i < dim; i++)
@@ -130,20 +129,17 @@ int Matrix::LUsolve(int *indexarray, vector *b, vector *x) {
  *           -- uses LU factorisation */
 
 Matrix Matrix::LUinverse(int *indexarray) {
-  // int i, j, dim = this->dim;
-  // vector *tmp, *tmp2;
-
   Matrix out(dim);
-  auto tmp = new_vector(dim);
-  auto tmp2 = new_vector(dim);
+  Vector tmp(dim);
+  Vector tmp2(dim);
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++)
-      tmp->ve[j] = 0.;
-    tmp->ve[i] = 1.;
-    if (this->LUsolve(indexarray, tmp, tmp2) == -1)
+      tmp.ve[j] = 0.;
+    tmp.ve[i] = 1.;
+    if (this->LUsolve(indexarray, &tmp, &tmp2) == -1)
       return NULL;
     for (int j = 0; j < dim; j++)
-      out.M_VAL(j, i) = tmp2->ve[j];
+      out.M_VAL(j, i) = tmp2.ve[j];
   }
   return out;
 }
@@ -153,7 +149,7 @@ Matrix Matrix::LUinverse(int *indexarray) {
  *        -- can be in-situ but doesn't need to be.
  */
 
-int Matrix::Usolve(vector *b, vector *out, double diag) {
+int Matrix::Usolve(Vector *b, Vector *out, double diag) {
   int i, j, i_lim, dim = this->dim;
   double sum;
 
@@ -185,7 +181,7 @@ int Matrix::Usolve(vector *b, vector *out, double diag) {
  * Lsolve -- forward elimination with (optional) default diagonal value.
  */
 
-int Matrix::Lsolve(vector *b, vector *out, double diag) {
+int Matrix::Lsolve(Vector *b, Vector *out, double diag) {
   int i, j, i_lim, dim = this->dim;
   double sum;
 
@@ -211,17 +207,4 @@ int Matrix::Lsolve(vector *b, vector *out, double diag) {
   }
 
   return 0;
-}
-
-/*
- * new_matrix -- generate a n-dimension vector.
- */
-
-vector *new_vector(int n) {
-  vector *vec;
-
-  vec = (struct vector *)New(struct vector);
-  vec->dim = n;
-  vec->ve = (double *)NewAtom_N(double, n);
-  return vec;
 }

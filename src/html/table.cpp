@@ -1303,7 +1303,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
   Str *renderbuf;
   short new_tabwidth[MAXCOL] = {0};
   int itr;
-  ::vector *newwidth;
   PERM *pivot;
   int width;
   Str *vrulea = NULL, *vruleb = NULL, *vrulec = NULL;
@@ -1348,24 +1347,19 @@ void table::renderTable(HtmlParser *parser, int max_width,
     itr = 0;
     Matrix mat(this->maxcol + 1);
     pivot = (PERM *)px_get(this->maxcol + 1);
-    newwidth = v_get(this->maxcol + 1);
+    Vector newwidth(this->maxcol + 1);
     Matrix minv(this->maxcol + 1);
     do {
       this->matrix.copy_to(&mat);
       mat.LUfactor(pivot);
-      mat.LUsolve(pivot, this->vector, newwidth);
+      mat.LUsolve(pivot, &this->vector, &newwidth);
       minv = mat.LUinverse(pivot);
       itr++;
-    } while (this->check_table_width(newwidth->ve, &minv, itr));
-    this->set_integered_width(newwidth->ve, new_tabwidth);
+    } while (this->check_table_width(newwidth.ve.data(), &minv, itr));
+    this->set_integered_width(newwidth.ve.data(), new_tabwidth);
     this->check_minimum_width(new_tabwidth);
-    v_free(newwidth);
     px_free(pivot);
-    m_free(mat);
-    m_free(minv);
-    m_free(this->matrix);
-    v_free(this->vector);
-    for (i = 0; i <= this->maxcol; i++) {
+    for (int i = 0; i <= this->maxcol; i++) {
       this->tabwidth[i] = new_tabwidth[i];
     }
   }
@@ -2793,13 +2787,13 @@ void table::pushTable(struct table *tbl1) {
 }
 
 int table::correct_table_matrix(int col, int cspan, int a, double b) {
-  int i, j;
   int ecol = col + cspan;
   double w = 1. / (b * b);
 
-  for (i = col; i < ecol; i++) {
-    v_add_val(this->vector, i, w * a);
-    for (j = i; j < ecol; j++) {
+  int i = col;
+  for (; i < ecol; i++) {
+    this->vector.v_add_val(i, w * a);
+    for (int j = i; j < ecol; j++) {
       this->matrix.m_add_val(i, j, w);
       this->matrix.m_set_val(j, i, this->matrix.m_entry(i, j));
     }
@@ -3042,11 +3036,11 @@ void table::set_table_matrix(int width) {
     return;
 
   this->matrix = Matrix(size);
-  this->vector = v_get(size);
+  this->vector = Vector(size);
   for (int i = 0; i < size; i++) {
     for (int j = i; j < size; j++)
       this->matrix.m_set_val(i, j, 0.);
-    v_set_val(this->vector, i, 0.);
+    this->vector.v_set_val(i, 0.);
   }
 
   this->check_relative_width(width);

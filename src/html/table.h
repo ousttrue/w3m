@@ -136,8 +136,8 @@ private:
   GeneralList<TextLine> *suspended_data;
   /* use for counting skipped spaces */
   struct table_linfo linfo;
-  ::Matrix matrix;
-  ::vector *vector;
+  Matrix matrix;
+  Vector vector;
   int sloppy_width;
 
 public:
