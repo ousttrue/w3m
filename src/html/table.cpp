@@ -918,7 +918,7 @@ int table::check_compressible_cell(struct matrix *minv, double *newwidth,
     sxy = 0.;
     for (m = bcol1; m < ecol1; m++) {
       for (i = bcol; i < ecol; i++)
-        sxy += m_entry(minv, i, m);
+        sxy += minv->m_entry(i, m);
     }
     if (bcol1 >= bcol && ecol1 <= ecol) {
       is_inclusive = 1;
@@ -938,16 +938,16 @@ int table::check_compressible_cell(struct matrix *minv, double *newwidth,
       continue;
     sxy = 0.;
     for (i = bcol; i < ecol; i++)
-      sxy += m_entry(minv, i, m);
+      sxy += minv->m_entry(i, m);
     if (m >= bcol && m < ecol) {
       is_inclusive = 1;
     }
     if (sxy > 0.)
       dmin = recalc_width(dmin, newwidth[m], this->tabwidth[m], sxx,
-                          m_entry(minv, m, m), sxy, is_inclusive);
+                          minv->m_entry(m, m), sxy, is_inclusive);
     else
       dmax = recalc_width(dmax, newwidth[m], this->tabwidth[m], sxx,
-                          m_entry(minv, m, m), sxy, is_inclusive);
+                          minv->m_entry(m, m), sxy, is_inclusive);
   }
 _end:
   if (dmax > 0. && dmin > dmax)
@@ -983,9 +983,9 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
   stotal = 0.;
   for (i = 0; i <= this->maxcol; i++) {
     twidth += newwidth[i];
-    stotal += m_entry(minv, i, i);
+    stotal += minv->m_entry(i, i);
     for (m = 0; m < i; m++) {
-      stotal += 2 * m_entry(minv, i, m);
+      stotal += 2 * minv->m_entry(i, m);
     }
   }
 
@@ -1000,10 +1000,10 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
     cwidth[j] = cell->width[j] - (cell->colspan[j] - 1) * this->cellspacing;
     Sxx[j] = 0.;
     for (i = bcol; i < ecol; i++) {
-      Sxx[j] += m_entry(minv, i, i);
+      Sxx[j] += minv->m_entry(i, i);
       for (m = bcol; m <= ecol; m++) {
         if (m < i)
-          Sxx[j] += 2 * m_entry(minv, i, m);
+          Sxx[j] += 2 * minv->m_entry(i, m);
       }
     }
   }
@@ -1026,7 +1026,7 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
   /* compress single column cell */
   for (i = 0; i <= this->maxcol; i++) {
     corr = this->check_compressible_cell(minv, newwidth, swidth, cwidth, twidth,
-                                         Sxx, i, -1, m_entry(minv, i, i), corr);
+                                         Sxx, i, -1, minv->m_entry(i, i), corr);
     if (itr < MAX_ITERATION && corr > 0)
       return corr;
   }
@@ -1037,7 +1037,7 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
   this->check_minimum_width(corwidth);
 
   for (i = 0; i <= this->maxcol; i++) {
-    double sx = sqrt(m_entry(minv, i, i));
+    double sx = sqrt(minv->m_entry(i, i));
     if (sx < 0.1)
       continue;
     if (orgwidth[i] < this->minimum_width[i] &&
@@ -1047,7 +1047,7 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
       for (m = 0; m <= this->maxcol; m++) {
         if (m == i)
           continue;
-        sxy += m_entry(minv, i, m);
+        sxy += minv->m_entry(i, m);
       }
       if (sxy <= 0.) {
         this->correct_table_matrix(i, 1, this->minimum_width[i], w);
@@ -1078,7 +1078,7 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
         for (m = 0; m <= this->maxcol; m++) {
           if (m >= bcol && m < ecol)
             continue;
-          sxy += m_entry(minv, i, m);
+          sxy += minv->m_entry(i, m);
         }
       }
       if (sxy <= 0.) {
@@ -2816,8 +2816,8 @@ int table::correct_table_matrix(int col, int cspan, int a, double b) {
   for (i = col; i < ecol; i++) {
     v_add_val(this->vector, i, w * a);
     for (j = i; j < ecol; j++) {
-      m_add_val(this->matrix, i, j, w);
-      m_set_val(this->matrix, j, i, m_entry(this->matrix, i, j));
+      this->matrix->m_add_val(i, j, w);
+      this->matrix->m_set_val(j, i, this->matrix->m_entry(i, j));
     }
   }
   return i;
@@ -2838,7 +2838,7 @@ void table::correct_table_matrix2(int col, int cspan, double s, double b) {
         ss = -(1. - s) * s;
       else
         ss = s * s;
-      m_add_val(this->matrix, i, j, w * ss);
+      this->matrix->m_add_val(i, j, w * ss);
     }
   }
 }
@@ -2862,7 +2862,7 @@ void table::correct_table_matrix3(int col, char *flags, double s, double b) {
         ss = -(1. - s) * s;
       else
         ss = s * s;
-      m_add_val(this->matrix, i, j, w * ss);
+      this->matrix->m_add_val(i, j, w * ss);
     }
   }
 }
@@ -2887,7 +2887,7 @@ void table::correct_table_matrix4(int col, int cspan, char *flags, double s,
         ss = -(1. - s) * s;
       else
         ss = s * s;
-      m_add_val(this->matrix, i, j, w * ss);
+      this->matrix->m_add_val(i, j, w * ss);
     }
   }
 }
@@ -3061,7 +3061,7 @@ void table::set_table_matrix(int width) {
   this->vector = v_get(size);
   for (int i = 0; i < size; i++) {
     for (int j = i; j < size; j++)
-      m_set_val(this->matrix, i, j, 0.);
+      this->matrix->m_set_val(i, j, 0.);
     v_set_val(this->vector, i, 0.);
   }
 
