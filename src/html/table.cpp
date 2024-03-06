@@ -235,18 +235,10 @@ table *table::newTable() {
   t->tabdata.resize(MAXROW);
   t->tabattr = (table_attr **)New_N(table_attr *, MAXROW);
   t->tabheight = (int *)NewAtom_N(int, MAXROW);
-#ifdef ID_EXT
-  t->tabidvalue = (Str ***)New_N(Str **, MAXROW);
-  t->tridvalue = (Str **)New_N(Str *, MAXROW);
-#endif /* ID_EXT */
 
   for (i = 0; i < MAXROW; i++) {
     t->tabattr[i] = 0;
     t->tabheight[i] = 0;
-#ifdef ID_EXT
-    t->tabidvalue[i] = NULL;
-    t->tridvalue[i] = NULL;
-#endif /* ID_EXT */
   }
   for (j = 0; j < MAXCOL; j++) {
     t->tabwidth[j] = 0;
@@ -268,9 +260,6 @@ table *table::newTable() {
 
   t->caption = Strnew();
   t->suspended_data = NULL;
-#ifdef ID_EXT
-  t->id = NULL;
-#endif
   return t;
 }
 
@@ -279,10 +268,6 @@ void table::check_row(int row) {
   std::vector<std::vector<GeneralList<TextLine> *>> tabdata;
   table_attr **tabattr;
   int *tabheight;
-#ifdef ID_EXT
-  Str ***tabidvalue;
-  Str **tridvalue;
-#endif /* ID_EXT */
 
   if (row < 0 || row >= MAXROW_LIMIT)
     return;
@@ -293,49 +278,27 @@ void table::check_row(int row) {
     tabdata.resize(r);
     tabattr = (table_attr **)New_N(table_attr *, r);
     tabheight = (int *)NewAtom_N(int, r);
-#ifdef ID_EXT
-    tabidvalue = (Str ***)New_N(Str **, r);
-    tridvalue = (Str **)New_N(Str *, r);
-#endif /* ID_EXT */
     for (i = 0; i < this->max_rowsize; i++) {
       tabdata[i] = this->tabdata[i];
       tabattr[i] = this->tabattr[i];
       tabheight[i] = this->tabheight[i];
-#ifdef ID_EXT
-      tabidvalue[i] = this->tabidvalue[i];
-      tridvalue[i] = this->tridvalue[i];
-#endif /* ID_EXT */
     }
     for (; i < r; i++) {
       tabattr[i] = NULL;
       tabheight[i] = 0;
-#ifdef ID_EXT
-      tabidvalue[i] = NULL;
-      tridvalue[i] = NULL;
-#endif /* ID_EXT */
     }
     this->tabdata = tabdata;
     this->tabattr = tabattr;
     this->tabheight = tabheight;
-#ifdef ID_EXT
-    this->tabidvalue = tabidvalue;
-    this->tridvalue = tridvalue;
-#endif /* ID_EXT */
     this->max_rowsize = r;
   }
 
   if (this->tabdata[row].empty()) {
     this->tabdata[row].resize(MAXCOL);
     this->tabattr[row] = (table_attr *)NewAtom_N(table_attr, MAXCOL);
-#ifdef ID_EXT
-    this->tabidvalue[row] = (Str **)New_N(Str *, MAXCOL);
-#endif /* ID_EXT */
     for (i = 0; i < MAXCOL; i++) {
       this->tabdata[row][i] = NULL;
       this->tabattr[row][i] = {};
-#ifdef ID_EXT
-      this->tabidvalue[row][i] = NULL;
-#endif /* ID_EXT */
     }
   }
 }
@@ -1528,9 +1491,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
 #endif /* MATRIX */
   int width;
   Str *vrulea = NULL, *vruleb = NULL, *vrulec = NULL;
-#ifdef ID_EXT
-  Str *idtag;
-#endif /* ID_EXT */
 
   this->total_height = 0;
   if (this->maxcol < 0) {
@@ -1684,12 +1644,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
   this->make_caption(parser, h_env);
 
   parser->HTMLlineproc1("<pre for_table>", h_env);
-#ifdef ID_EXT
-  if (this->id != NULL) {
-    idtag = Sprintf("<_id id=\"%s\">", html_quote((this->id)->ptr));
-    parser->HTMLlineproc1(idtag->ptr, h_env);
-  }
-#endif /* ID_EXT */
   switch (this->border_mode) {
   case BORDER_THIN:
   case BORDER_THICK:
@@ -1727,22 +1681,8 @@ void table::renderTable(HtmlParser *parser, int max_width,
       renderbuf = Strnew();
       if (this->border_mode == BORDER_THIN || this->border_mode == BORDER_THICK)
         Strcat(renderbuf, vrulea);
-#ifdef ID_EXT
-      if (this->tridvalue[r] != NULL && h == 0) {
-        idtag =
-            Sprintf("<_id id=\"%s\">", html_quote((this->tridvalue[r])->ptr));
-        Strcat(renderbuf, idtag);
-      }
-#endif /* ID_EXT */
       for (i = 0; i <= this->maxcol; i++) {
         this->check_row(r);
-#ifdef ID_EXT
-        if (this->tabidvalue[r][i] != NULL && h == 0) {
-          idtag = Sprintf("<_id id=\"%s\">",
-                          html_quote((this->tabidvalue[r][i])->ptr));
-          Strcat(renderbuf, idtag);
-        }
-#endif /* ID_EXT */
         if (!(this->tabattr[r][i] & HTT_X)) {
           w = this->tabwidth[i];
           for (j = i + 1; j <= this->maxcol && (this->tabattr[r][j] & HTT_X);
@@ -2212,9 +2152,6 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
                           struct table_mode *mode, int width,
                           struct HtmlTag *tag) {
   int cmd;
-#ifdef ID_EXT
-  char *p;
-#endif
   struct table_cell *cell = &this->cell;
   int colspan, rowspan;
   int col, prev_col;
@@ -2344,12 +2281,6 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
         break;
       }
     }
-#ifdef ID_EXT
-    if (tag->parsedtag_get_value(ATTR_ID, &p)) {
-      this->check_row(this->row);
-      this->tridvalue[this->row] = Strnew_charp(p);
-    }
-#endif /* ID_EXT */
     this->trattr = align | valign;
     break;
   case HTML_TH:
@@ -2448,10 +2379,6 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     if (tag->parsedtag_get_value(ATTR_WIDTH, &v)) {
       v = RELATIVE_WIDTH(v);
     }
-#ifdef ID_EXT
-    if (tag->parsedtag_get_value(ATTR_ID, &p))
-      this->tabidvalue[this->row][this->col] = Strnew_charp(p);
-#endif /* ID_EXT */
 #ifdef NOWRAP
     if (v != 0) {
       /* NOWRAP and WIDTH= conflicts each other */

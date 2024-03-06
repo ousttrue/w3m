@@ -118,9 +118,6 @@ ENUM_OP_INSTANCE(table_attr);
 
 #define ID_EXT
 struct table {
-#ifdef ID_EXT
-  Str *id;
-#endif
   int total_width;
   int row;
   int col;
@@ -143,10 +140,6 @@ private:
   std::vector<std::vector<GeneralList<TextLine> *>> tabdata;
   table_attr **tabattr;
   table_attr trattr;
-#ifdef ID_EXT
-  Str ***tabidvalue;
-  Str **tridvalue;
-#endif
   short tabwidth[MAXCOL];
   short minimum_width[MAXCOL];
   short fixed_width[MAXCOL];

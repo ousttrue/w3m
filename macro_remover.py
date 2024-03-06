@@ -56,6 +56,8 @@ CONTEXT = {
 
     'USE_NNTP': False,
     'USE_GOPHER': False,
+
+    'ID_EXT': False,
 }
 
 MACRO_PATTERN = re.compile(r'^#\s*(\S+)\s*(\S.*)?')
@@ -245,6 +247,7 @@ def main(path: pathlib.Path, debug=False):
     root = MacroNode(0, None)
     stack = [root]
     for i, l in enumerate(lines):
+        l = l.rstrip()
         if l.startswith('#'):
             match parse_macro(l):
                 case Include() as m:
@@ -279,7 +282,7 @@ def main(path: pathlib.Path, debug=False):
         root.print()
     else:
         root.apply(lines)
-        path.write_text(''.join(l + '\n' for l in lines if l != None))
+        path.write_text(''.join(l + '\n' for l in lines if l != None), newline='\n')
 
 
 if __name__ == '__main__':
@@ -288,7 +291,11 @@ if __name__ == '__main__':
     # for arg in sys.argv[1:]:
     #     main(pathlib.Path(arg), debug)
 
-    for root, dirs, files in os.walk(HERE):
+    dir = HERE
+    if len(sys.argv)>1:
+        dir = pathlib.Path(sys.argv[1]).absolute()
+
+    for root, dirs, files in os.walk(dir):
         for f in files:
             main(pathlib.Path(root) / f, debug)
 

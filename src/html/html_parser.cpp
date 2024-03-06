@@ -1280,13 +1280,6 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
         default:
           break;
         }
-#ifdef ID_EXT
-        id = NULL;
-        if (tag->parsedtag_get_value(ATTR_ID, &id)) {
-          id = url_quote_conv(id, name_charset);
-          data->registerName(id, nlines, pos);
-        }
-#endif /* ID_EXT */
       }
     }
     /* end of processing for one line */
@@ -1792,30 +1785,6 @@ Str *HtmlParser::process_hr(struct HtmlTag *tag, int width, int indent_width) {
   return tmp;
 }
 
-#ifdef ID_EXT
-static void process_idattr(HtmlParser *parser, struct readbuffer *obuf, int cmd,
-                           struct HtmlTag *tag) {
-  char *id = NULL, *framename = NULL;
-  Str *idtag = NULL;
-
-  /*
-   * HTML_TABLE is handled by the other process.
-   */
-  if (cmd == HTML_TABLE)
-    return;
-
-  tag->parsedtag_get_value(ATTR_ID, &id);
-  tag->parsedtag_get_value(ATTR_FRAMENAME, &framename);
-  if (id == NULL)
-    return;
-  if (framename)
-    idtag = Sprintf("<_id id=\"%s\" framename=\"%s\">", html_quote(id),
-                    html_quote(framename));
-  else
-    idtag = Sprintf("<_id id=\"%s\">", html_quote(id));
-  parser->push_tag(obuf, idtag->ptr, HTML_NOP);
-}
-#endif /* ID_EXT */
 
 #define CLOSE_P                                                                \
   if (obuf->flag & RB_P) {                                                     \
@@ -1903,9 +1872,6 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   Str *tmp;
   int hseq;
   HtmlCommand cmd;
-#ifdef ID_EXT
-  char *id = NULL;
-#endif /* ID_EXT */
 
   cmd = tag->tagid;
 
@@ -2524,14 +2490,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
       y = MAX_CELLPADDING;
     if (z > MAX_VSPACE)
       z = MAX_VSPACE;
-#ifdef ID_EXT
-    tag->parsedtag_get_value(ATTR_ID, &id);
-#endif /* ID_EXT */
     tables[obuf->table_level] = table::begin_table(w, x, y, z);
-#ifdef ID_EXT
-    if (id != NULL)
-      tables[obuf->table_level]->id = Strnew_charp(id);
-#endif /* ID_EXT */
     table_mode[obuf->table_level].pre_mode = 0;
     table_mode[obuf->table_level].indent_level = 0;
     table_mode[obuf->table_level].nobr_level = 0;
@@ -3143,11 +3102,6 @@ table_start:
           h_env->tagbuf = tag->parsedtag2str();
         push_tag(obuf, h_env->tagbuf->ptr, cmd);
       }
-#ifdef ID_EXT
-      else {
-        process_idattr(this, obuf, cmd, tag);
-      }
-#endif /* ID_EXT */
       obuf->bp.init_flag = 1;
       clear_ignore_p_flag(cmd, obuf);
       if (cmd == HTML_TABLE)
