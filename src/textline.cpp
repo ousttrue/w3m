@@ -96,4 +96,4 @@ TextLine *rpopTextLine(TextLineList *tl) {
   return ((TextLine *)rpopValue((GeneralList *)(tl)));
 }
 
-TextLineList *newTextLineList() { return ((TextLineList *)newGeneralList()); }
+TextLineList *newTextLineList() { return ((TextLineList *)GeneralList::newGeneralList()); }

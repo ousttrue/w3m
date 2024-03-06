@@ -34,7 +34,7 @@ struct TextList {
   int nitem;
 };
 
-#define newTextList() ((TextList *)newGeneralList())
+#define newTextList() ((TextList *)GeneralList::newGeneralList())
 #define pushText(tl, s)                                                        \
   pushValue((GeneralList *)(tl), (void *)allocStr((s), -1))
 
@@ -361,7 +361,7 @@ void table::check_row(int row) {
 void table::pushdata(int row, int col, const char *data) {
   this->check_row(row);
   if (this->tabdata[row][col] == NULL)
-    this->tabdata[row][col] = newGeneralList();
+    this->tabdata[row][col] = GeneralList::newGeneralList();
 
   pushText(this->tabdata[row][col], data ? data : "");
 }
@@ -617,7 +617,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
   if (this->tabdata[row] == NULL || this->tabdata[row][col] == NULL)
     return;
   orgdata = (TextList *)this->tabdata[row][col];
-  this->tabdata[row][col] = newGeneralList();
+  this->tabdata[row][col] = GeneralList::newGeneralList();
 
   html_feed_environ h_env(MAX_ENV_LEVEL,
                           (TextLineList *)this->tabdata[row][col],
@@ -2006,7 +2006,7 @@ void table::begin_cell(struct table_mode *mode) {
   if (this->suspended_data) {
     this->check_row(this->row);
     if (this->tabdata[this->row][this->col] == NULL)
-      this->tabdata[this->row][this->col] = newGeneralList();
+      this->tabdata[this->row][this->col] = GeneralList::newGeneralList();
     appendGeneralList(this->tabdata[this->row][this->col],
                       (GeneralList *)this->suspended_data);
     this->suspended_data = NULL;

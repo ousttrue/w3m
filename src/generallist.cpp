@@ -9,13 +9,6 @@ ListItem *newListItem(void *s, ListItem *n, ListItem *p) {
   return it;
 }
 
-GeneralList *newGeneralList() {
-  auto tl = (GeneralList *)New(GeneralList);
-  tl->first = tl->last = NULL;
-  tl->nitem = 0;
-  return tl;
-}
-
 void pushValue(GeneralList *tl, void *s) {
   ListItem *it;
   if (s == NULL || tl == NULL || tl->nitem >= GENERAL_LIST_MAX)
