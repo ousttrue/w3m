@@ -136,7 +136,7 @@ private:
   GeneralList<TextLine> *suspended_data;
   /* use for counting skipped spaces */
   struct table_linfo linfo;
-  ::matrix *matrix;
+  ::Matrix matrix;
   ::vector *vector;
   int sloppy_width;
 
@@ -207,8 +207,8 @@ private:
   void check_table_height();
   int table_rowspan(int row, int col);
   void set_table_width(short *newwidth, int maxwidth);
-  int check_table_width(double *newwidth, struct matrix *minv, int itr);
-  int check_compressible_cell(struct matrix *minv, double *newwidth,
+  int check_table_width(double *newwidth, struct Matrix *minv, int itr);
+  int check_compressible_cell(struct Matrix *minv, double *newwidth,
                               double *swidth, short *cwidth, double totalwidth,
                               double *Sxx, int icol, int icell, double sxx,
                               int corr);

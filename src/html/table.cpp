@@ -21,6 +21,7 @@
 #include "proto.h"
 #include "textline.h"
 #include "generallist.h"
+#include "matrix.h"
 
 int symbol_width = 0;
 int symbol_width0 = 0;
@@ -873,7 +874,7 @@ static double recalc_width(double old, double swidth, int cwidth, double sxx,
   return old;
 }
 
-int table::check_compressible_cell(struct matrix *minv, double *newwidth,
+int table::check_compressible_cell(Matrix *minv, double *newwidth,
                                    double *swidth, short *cwidth,
                                    double totalwidth, double *Sxx, int icol,
                                    int icell, double sxx, int corr) {
@@ -963,7 +964,7 @@ _end:
 }
 
 #define MAX_ITERATION 10
-int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
+int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
   int i, j, k, m, bcol, ecol;
   int corr = 0;
   struct table_cell *cell = &this->cell;
@@ -1303,7 +1304,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
   short new_tabwidth[MAXCOL] = {0};
   int itr;
   ::vector *newwidth;
-  ::matrix *mat, *minv;
   PERM *pivot;
   int width;
   Str *vrulea = NULL, *vruleb = NULL, *vrulec = NULL;
@@ -1346,33 +1346,17 @@ void table::renderTable(HtmlParser *parser, int max_width,
     this->set_table_matrix(max_width);
 
     itr = 0;
-    mat = m_get(this->maxcol + 1, this->maxcol + 1);
+    Matrix mat(this->maxcol + 1);
     pivot = (PERM *)px_get(this->maxcol + 1);
     newwidth = v_get(this->maxcol + 1);
-    minv = m_get(this->maxcol + 1, this->maxcol + 1);
+    Matrix minv(this->maxcol + 1);
     do {
-      m_copy(this->matrix, mat);
-      LUfactor(mat, pivot);
-      LUsolve(mat, pivot, this->vector, newwidth);
-      LUinverse(mat, pivot, minv);
-#ifdef TABLE_DEBUG
-      set_integered_width(t, newwidth->ve, new_tabwidth);
-      fprintf(stderr, "itr=%d\n", itr);
-      fprintf(stderr, "max_width=%d\n", max_width);
-      fprintf(stderr, "minimum : ");
-      for (i = 0; i <= this->maxcol; i++)
-        fprintf(stderr, "%2d ", this->minimum_width[i]);
-      fprintf(stderr, "\nfixed : ");
-      for (i = 0; i <= this->maxcol; i++)
-        fprintf(stderr, "%2d ", this->fixed_width[i]);
-      fprintf(stderr, "\ndecided : ");
-      for (i = 0; i <= this->maxcol; i++)
-        fprintf(stderr, "%2d ", new_tabwidth[i]);
-      fprintf(stderr, "\n");
-#endif /* TABLE_DEBUG */
+      this->matrix.copy_to(&mat);
+      mat.LUfactor(pivot);
+      mat.LUsolve(pivot, this->vector, newwidth);
+      minv = mat.LUinverse(pivot);
       itr++;
-
-    } while (this->check_table_width(newwidth->ve, minv, itr));
+    } while (this->check_table_width(newwidth->ve, &minv, itr));
     this->set_integered_width(newwidth->ve, new_tabwidth);
     this->check_minimum_width(new_tabwidth);
     v_free(newwidth);
@@ -2816,8 +2800,8 @@ int table::correct_table_matrix(int col, int cspan, int a, double b) {
   for (i = col; i < ecol; i++) {
     v_add_val(this->vector, i, w * a);
     for (j = i; j < ecol; j++) {
-      this->matrix->m_add_val(i, j, w);
-      this->matrix->m_set_val(j, i, this->matrix->m_entry(i, j));
+      this->matrix.m_add_val(i, j, w);
+      this->matrix.m_set_val(j, i, this->matrix.m_entry(i, j));
     }
   }
   return i;
@@ -2838,7 +2822,7 @@ void table::correct_table_matrix2(int col, int cspan, double s, double b) {
         ss = -(1. - s) * s;
       else
         ss = s * s;
-      this->matrix->m_add_val(i, j, w * ss);
+      this->matrix.m_add_val(i, j, w * ss);
     }
   }
 }
@@ -2862,7 +2846,7 @@ void table::correct_table_matrix3(int col, char *flags, double s, double b) {
         ss = -(1. - s) * s;
       else
         ss = s * s;
-      this->matrix->m_add_val(i, j, w * ss);
+      this->matrix.m_add_val(i, j, w * ss);
     }
   }
 }
@@ -2887,7 +2871,7 @@ void table::correct_table_matrix4(int col, int cspan, char *flags, double s,
         ss = -(1. - s) * s;
       else
         ss = s * s;
-      this->matrix->m_add_val(i, j, w * ss);
+      this->matrix.m_add_val(i, j, w * ss);
     }
   }
 }
@@ -3057,11 +3041,11 @@ void table::set_table_matrix(int width) {
   if (size < 1)
     return;
 
-  this->matrix = m_get(size, size);
+  this->matrix = Matrix(size);
   this->vector = v_get(size);
   for (int i = 0; i < size; i++) {
     for (int j = i; j < size; j++)
-      this->matrix->m_set_val(i, j, 0.);
+      this->matrix.m_set_val(i, j, 0.);
     v_set_val(this->vector, i, 0.);
   }
 

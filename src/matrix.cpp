@@ -58,8 +58,8 @@
  *          -- Note: returns LU matrix which is A.
  */
 
-int LUfactor(matrix *A, int *indexarray) {
-  int dim = A->dim, i, j, k, i_max, k_max;
+int Matrix::LUfactor(int *indexarray) {
+  int dim = this->dim, i, j, k, i_max, k_max;
   vector *scale;
   double mx, tmp;
 
@@ -71,7 +71,7 @@ int LUfactor(matrix *A, int *indexarray) {
   for (i = 0; i < dim; i++) {
     mx = 0.;
     for (j = 0; j < dim; j++) {
-      tmp = fabs(A->M_VAL(i, j));
+      tmp = fabs(this->M_VAL(i, j));
       if (mx < tmp)
         mx = tmp;
     }
@@ -83,8 +83,8 @@ int LUfactor(matrix *A, int *indexarray) {
     mx = 0.;
     i_max = -1;
     for (i = k; i < dim; i++) {
-      if (fabs(scale->ve[i]) >= Tiny * fabs(A->M_VAL(i, k))) {
-        tmp = fabs(A->M_VAL(i, k)) / scale->ve[i];
+      if (fabs(scale->ve[i]) >= Tiny * fabs(this->M_VAL(i, k))) {
+        tmp = fabs(this->M_VAL(i, k)) / scale->ve[i];
         if (mx < tmp) {
           mx = tmp;
           i_max = i;
@@ -92,20 +92,20 @@ int LUfactor(matrix *A, int *indexarray) {
       }
     }
     if (i_max == -1) {
-      A->M_VAL(k, k) = 0.;
+      this->M_VAL(k, k) = 0.;
       continue;
     }
 
     if (i_max != k) {
       SWAPI(indexarray[i_max], indexarray[k]);
       for (j = 0; j < dim; j++)
-        SWAPD(A->M_VAL(i_max, j), A->M_VAL(k, j));
+        SWAPD(this->M_VAL(i_max, j), this->M_VAL(k, j));
     }
 
     for (i = k + 1; i < dim; i++) {
-      tmp = A->M_VAL(i, k) = A->M_VAL(i, k) / A->M_VAL(k, k);
+      tmp = this->M_VAL(i, k) = this->M_VAL(i, k) / this->M_VAL(k, k);
       for (j = k + 1; j < dim; j++)
-        A->M_VAL(i, j) -= tmp * A->M_VAL(k, j);
+        this->M_VAL(i, j) -= tmp * this->M_VAL(k, j);
     }
   }
   return 0;
@@ -115,13 +115,13 @@ int LUfactor(matrix *A, int *indexarray) {
  * LUsolve -- given an LU factorisation in A, solve Ax=b.
  */
 
-int LUsolve(matrix *A, int *indexarray, vector *b, vector *x) {
-  int i, dim = A->dim;
+int Matrix::LUsolve(int *indexarray, vector *b, vector *x) {
+  int i, dim = this->dim;
 
   for (i = 0; i < dim; i++)
     x->ve[i] = b->ve[indexarray[i]];
 
-  if (Lsolve(A, x, x, 1.) == -1 || Usolve(A, x, x, 0.) == -1)
+  if (this->Lsolve(x, x, 1.) == -1 || this->Usolve(x, x, 0.) == -1)
     return -1;
   return 0;
 }
@@ -129,22 +129,21 @@ int LUsolve(matrix *A, int *indexarray, vector *b, vector *x) {
 /* m_inverse -- returns inverse of A, provided A is not too rank deficient
  *           -- uses LU factorisation */
 
-matrix *LUinverse(matrix *A, int *indexarray, matrix *out) {
-  int i, j, dim = A->dim;
-  vector *tmp, *tmp2;
+Matrix Matrix::LUinverse(int *indexarray) {
+  // int i, j, dim = this->dim;
+  // vector *tmp, *tmp2;
 
-  if (!out)
-    out = new_matrix(dim);
-  tmp = new_vector(dim);
-  tmp2 = new_vector(dim);
-  for (i = 0; i < dim; i++) {
-    for (j = 0; j < dim; j++)
+  Matrix out(dim);
+  auto tmp = new_vector(dim);
+  auto tmp2 = new_vector(dim);
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++)
       tmp->ve[j] = 0.;
     tmp->ve[i] = 1.;
-    if (LUsolve(A, indexarray, tmp, tmp2) == -1)
+    if (this->LUsolve(indexarray, tmp, tmp2) == -1)
       return NULL;
-    for (j = 0; j < dim; j++)
-      out->M_VAL(j, i) = tmp2->ve[j];
+    for (int j = 0; j < dim; j++)
+      out.M_VAL(j, i) = tmp2->ve[j];
   }
   return out;
 }
@@ -154,8 +153,8 @@ matrix *LUinverse(matrix *A, int *indexarray, matrix *out) {
  *        -- can be in-situ but doesn't need to be.
  */
 
-int Usolve(matrix *mat, vector *b, vector *out, double diag) {
-  int i, j, i_lim, dim = mat->dim;
+int Matrix::Usolve(vector *b, vector *out, double diag) {
+  int i, j, i_lim, dim = this->dim;
   double sum;
 
   for (i = dim - 1; i >= 0; i--) {
@@ -169,12 +168,12 @@ int Usolve(matrix *mat, vector *b, vector *out, double diag) {
   for (; i >= 0; i--) {
     sum = b->ve[i];
     for (j = i + 1; j <= i_lim; j++)
-      sum -= mat->M_VAL(i, j) * out->ve[j];
+      sum -= this->M_VAL(i, j) * out->ve[j];
     if (diag == 0.) {
-      if (fabs(mat->M_VAL(i, i)) <= Tiny * fabs(sum))
+      if (fabs(this->M_VAL(i, i)) <= Tiny * fabs(sum))
         return -1;
       else
-        out->ve[i] = sum / mat->M_VAL(i, i);
+        out->ve[i] = sum / this->M_VAL(i, i);
     } else
       out->ve[i] = sum / diag;
   }
@@ -186,8 +185,8 @@ int Usolve(matrix *mat, vector *b, vector *out, double diag) {
  * Lsolve -- forward elimination with (optional) default diagonal value.
  */
 
-int Lsolve(matrix *mat, vector *b, vector *out, double diag) {
-  int i, j, i_lim, dim = mat->dim;
+int Matrix::Lsolve(vector *b, vector *out, double diag) {
+  int i, j, i_lim, dim = this->dim;
   double sum;
 
   for (i = 0; i < dim; i++) {
@@ -201,30 +200,17 @@ int Lsolve(matrix *mat, vector *b, vector *out, double diag) {
   for (; i < dim; i++) {
     sum = b->ve[i];
     for (j = i_lim; j < i; j++)
-      sum -= mat->M_VAL(i, j) * out->ve[j];
+      sum -= this->M_VAL(i, j) * out->ve[j];
     if (diag == 0.) {
-      if (fabs(mat->M_VAL(i, i)) <= Tiny * fabs(sum))
+      if (fabs(this->M_VAL(i, i)) <= Tiny * fabs(sum))
         return -1;
       else
-        out->ve[i] = sum / mat->M_VAL(i, i);
+        out->ve[i] = sum / this->M_VAL(i, i);
     } else
       out->ve[i] = sum / diag;
   }
 
   return 0;
-}
-
-/*
- * new_matrix -- generate a nxn matrix.
- */
-
-matrix *new_matrix(int n) {
-  matrix *mat;
-
-  mat = (struct matrix *)New(struct matrix);
-  mat->dim = n;
-  mat->me = (double *)NewAtom_N(double, n *n);
-  return mat;
 }
 
 /*
