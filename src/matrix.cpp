@@ -34,7 +34,6 @@
 
 #define HAVE_FLOAT_H 1
 #include "matrix.h"
-#include "alloc.h"
 
 /*
  * Macros from "fm.h".
@@ -183,7 +182,6 @@ int Matrix::Usolve(Vector *b, Vector *out, double diag) {
 
 int Matrix::Lsolve(Vector *b, Vector *out, double diag) {
   int i, j, i_lim, dim = this->dim;
-  double sum;
 
   for (i = 0; i < dim; i++) {
     if (b->ve[i] != 0.)
@@ -194,7 +192,7 @@ int Matrix::Lsolve(Vector *b, Vector *out, double diag) {
   i_lim = i;
 
   for (; i < dim; i++) {
-    sum = b->ve[i];
+    double sum = b->ve[i];
     for (j = i_lim; j < i; j++)
       sum -= this->M_VAL(i, j) * out->ve[j];
     if (diag == 0.) {

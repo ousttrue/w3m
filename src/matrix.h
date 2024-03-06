@@ -55,10 +55,3 @@ struct Vector {
   void v_set_val(int i, double x) { (V_VAL(i) = (x)); }
   void v_add_val(int i, double x) { (V_VAL(i) += (x)); }
 };
-
-/*
- * Compatible macros with those in Meschach Library.
- */
-#define px_free(px) ((px) = NULL)
-#define px_get(n) (New_N(int, n))
-typedef int PERM;

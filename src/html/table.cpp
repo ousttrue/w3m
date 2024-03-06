@@ -1303,7 +1303,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
   Str *renderbuf;
   short new_tabwidth[MAXCOL] = {0};
   int itr;
-  PERM *pivot;
   int width;
   Str *vrulea = NULL, *vruleb = NULL, *vrulec = NULL;
 
@@ -1346,19 +1345,19 @@ void table::renderTable(HtmlParser *parser, int max_width,
 
     itr = 0;
     Matrix mat(this->maxcol + 1);
-    pivot = (PERM *)px_get(this->maxcol + 1);
+    std::vector<int> pivot;
+    pivot.resize(this->maxcol + 1);
     Vector newwidth(this->maxcol + 1);
     Matrix minv(this->maxcol + 1);
     do {
       this->matrix.copy_to(&mat);
-      mat.LUfactor(pivot);
-      mat.LUsolve(pivot, &this->vector, &newwidth);
-      minv = mat.LUinverse(pivot);
+      mat.LUfactor(pivot.data());
+      mat.LUsolve(pivot.data(), &this->vector, &newwidth);
+      minv = mat.LUinverse(pivot.data());
       itr++;
     } while (this->check_table_width(newwidth.ve.data(), &minv, itr));
     this->set_integered_width(newwidth.ve.data(), new_tabwidth);
     this->check_minimum_width(new_tabwidth);
-    px_free(pivot);
     for (int i = 0; i <= this->maxcol; i++) {
       this->tabwidth[i] = new_tabwidth[i];
     }
