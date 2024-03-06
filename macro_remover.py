@@ -58,6 +58,7 @@ CONTEXT = {
     'USE_GOPHER': False,
 
     'ID_EXT': False,
+    'MATRIX': True,
 }
 
 MACRO_PATTERN = re.compile(r'^#\s*(\S+)\s*(\S.*)?')

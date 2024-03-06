@@ -12,18 +12,7 @@ extern int symbol_width0;
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-#if (defined(MESCHACH) && !defined(MATRIX))
-#define MATRIX
-#endif /* (defined(MESCHACH) && !defined(MATRIX)) */
-
-#define MATRIX
-#ifdef MATRIX
-#ifdef MESCHACH
-#include <matrix2.h>
-#else /* not MESCHACH */
 #include "matrix.h"
-#endif /* not MESCHACH */
-#endif /* MATRIX */
 
 #include "Str.h"
 
@@ -55,10 +44,8 @@ struct table_cell {
   short index[MAXCELL];
   short maxcell;
   short icell;
-#ifdef MATRIX
   short eindex[MAXCELL];
   short necell;
-#endif /* MATRIX */
   short width[MAXCELL];
   short minimum_width[MAXCELL];
   short fixed_width[MAXCELL];
@@ -116,7 +103,6 @@ enum table_attr : uint16_t {
 };
 ENUM_OP_INSTANCE(table_attr);
 
-#define ID_EXT
 struct table {
   int total_width;
   int row;
@@ -150,10 +136,8 @@ private:
   GeneralList<TextLine> *suspended_data;
   /* use for counting skipped spaces */
   struct table_linfo linfo;
-#ifdef MATRIX
   ::matrix *matrix;
   ::vector *vector;
-#endif /* MATRIX */
   int sloppy_width;
 
 public:

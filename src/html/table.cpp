@@ -47,13 +47,8 @@ int symbol_width0 = 0;
 #define abs(a) ((a) >= 0. ? (a) : -(a))
 #endif /* not abs */
 
-#ifdef MATRIX
-#ifndef MESCHACH
 #include "matrix.c"
-#endif /* not MESCHACH */
-#endif /* MATRIX */
 
-#ifdef MATRIX
 static double weight(int x) {
 
   if (x < App::instance().COLS())
@@ -71,17 +66,6 @@ static double weight2(int a) {
 #define sigma_td_nw(a) (32 * weight2(a))   /* <td ...> */
 #define sigma_table(a) (0.25 * weight2(a)) /* <table width=...> */
 #define sigma_table_nw(a) (2 * weight2(a)) /* <table...> */
-#else                                      /* not MATRIX */
-#define LOG_MIN 1.0
-static double weight3(int x) {
-  if (x < 0.1)
-    return 0.1;
-  if (x < LOG_MIN)
-    return (double)x;
-  else
-    return LOG_MIN * (log((double)x / LOG_MIN) + 1.);
-}
-#endif /* not MATRIX */
 
 static int bsearch_2short(short e1, short *ent1, short e2, short *ent2,
                           int base, short *indexarray, int nent) {
@@ -147,45 +131,6 @@ static int floor_at_intervals(int x, int step) {
 
 #define round(x) ((int)floor((x) + 0.5))
 
-#ifndef MATRIX
-static void dv2sv(double *dv, short *iv, int size) {
-  int i, k, iw;
-  short *indexarray;
-  double *edv;
-  double w = 0., x;
-
-  indexarray = NewAtom_N(short, size);
-  edv = NewAtom_N(double, size);
-  for (i = 0; i < size; i++) {
-    iv[i] = (short)ceil(dv[i]);
-    edv[i] = (double)iv[i] - dv[i];
-  }
-
-  w = 0.;
-  for (k = 0; k < size; k++) {
-    x = edv[k];
-    w += x;
-    i = bsearch_double(x, edv, indexarray, k);
-    if (k > i) {
-      int ii;
-      for (ii = k; ii > i; ii--)
-        indexarray[ii] = indexarray[ii - 1];
-    }
-    indexarray[i] = k;
-  }
-  iw = min((int)(w + 0.5), size);
-  if (iw <= 1)
-    return;
-  x = edv[(int)indexarray[iw - 1]];
-  for (i = 0; i < size; i++) {
-    k = indexarray[i];
-    if (i >= iw && abs(edv[k] - x) > 1e-6)
-      break;
-    iv[k]--;
-  }
-}
-#endif
-
 int table::table_rowspan(int row, int col) {
   int i;
   if (!this->tabattr[row])
@@ -250,10 +195,8 @@ table *table::newTable() {
   t->ntable = 0;
   t->tables_size = 0;
   t->tables = NULL;
-#ifdef MATRIX
   t->matrix = NULL;
   t->vector = NULL;
-#endif /* MATRIX */
   t->linfo.prevchar = Strnew_size(8);
   set_prevchar(t->linfo.prevchar, "", 0);
   t->trattr = {};
@@ -734,7 +677,6 @@ void table::check_minimum_width(short *tabwidth) const {
 
 void table::check_maximum_width() {
   struct table_cell *cell = &this->cell;
-#ifdef MATRIX
   int i, j, bcol, ecol;
   int swidth, width;
 
@@ -752,14 +694,8 @@ void table::check_maximum_width() {
       cell->necell++;
     }
   }
-#else  /* not MATRIX */
-  check_cell_width(this->tabwidth, cell->width, cell->col, cell->colspan,
-                   cell->maxcell, cell->index, this->cellspacing, 0);
-  check_minimum_width(t, this->tabwidth);
-#endif /* not MATRIX */
 }
 
-#ifdef MATRIX
 void table::set_integered_width(double *dwidth, short *iwidth) {
   int i, j, n, bcol, ecol, step;
   struct table_cell *cell = &this->cell;
@@ -1160,122 +1096,6 @@ int table::check_table_width(double *newwidth, ::matrix *minv, int itr) {
     return corr;
 }
 
-#else  /* not MATRIX */
-void table::set_table_width(short *newwidth, int maxwidth) {
-  int i, j, k, bcol, ecol;
-  struct table_cell *cell = &t->cell;
-  char *fixed;
-  int swidth, fwidth, width, nvar;
-  double s;
-  double *dwidth;
-  int try_again;
-
-  fixed = NewAtom_N(char, t->maxcol + 1);
-  bzero(fixed, t->maxcol + 1);
-  dwidth = NewAtom_N(double, t->maxcol + 1);
-
-  for (i = 0; i <= t->maxcol; i++) {
-    dwidth[i] = 0.0;
-    if (t->fixed_width[i] < 0) {
-      t->fixed_width[i] = -t->fixed_width[i] * maxwidth / 100;
-    }
-    if (t->fixed_width[i] > 0) {
-      newwidth[i] = t->fixed_width[i];
-      fixed[i] = 1;
-    } else
-      newwidth[i] = 0;
-    if (newwidth[i] < t->minimum_width[i])
-      newwidth[i] = t->minimum_width[i];
-  }
-
-  for (k = 0; k <= cell->maxcell; k++) {
-    j = cell->indexarray[k];
-    bcol = cell->col[j];
-    ecol = bcol + cell->colspan[j];
-
-    if (cell->fixed_width[j] < 0)
-      cell->fixed_width[j] = -cell->fixed_width[j] * maxwidth / 100;
-
-    swidth = 0;
-    fwidth = 0;
-    nvar = 0;
-    for (i = bcol; i < ecol; i++) {
-      if (fixed[i]) {
-        fwidth += newwidth[i];
-      } else {
-        swidth += newwidth[i];
-        nvar++;
-      }
-    }
-    width = max(cell->fixed_width[j], cell->minimum_width[j]) -
-            (cell->colspan[j] - 1) * t->cellspacing;
-    if (nvar > 0 && width > fwidth + swidth) {
-      s = 0.;
-      for (i = bcol; i < ecol; i++) {
-        if (!fixed[i])
-          s += weight3(t->tabwidth[i]);
-      }
-      for (i = bcol; i < ecol; i++) {
-        if (!fixed[i])
-          dwidth[i] = (width - fwidth) * weight3(t->tabwidth[i]) / s;
-        else
-          dwidth[i] = (double)newwidth[i];
-      }
-      dv2sv(dwidth, newwidth, cell->colspan[j]);
-      if (cell->fixed_width[j] > 0) {
-        for (i = bcol; i < ecol; i++)
-          fixed[i] = 1;
-      }
-    }
-  }
-
-  do {
-    nvar = 0;
-    swidth = 0;
-    fwidth = 0;
-    for (i = 0; i <= t->maxcol; i++) {
-      if (fixed[i]) {
-        fwidth += newwidth[i];
-      } else {
-        swidth += newwidth[i];
-        nvar++;
-      }
-    }
-    width = maxwidth - t->maxcol * t->cellspacing;
-    if (nvar == 0 || width <= fwidth + swidth)
-      break;
-
-    s = 0.;
-    for (i = 0; i <= t->maxcol; i++) {
-      if (!fixed[i])
-        s += weight3(t->tabwidth[i]);
-    }
-    for (i = 0; i <= t->maxcol; i++) {
-      if (!fixed[i])
-        dwidth[i] = (width - fwidth) * weight3(t->tabwidth[i]) / s;
-      else
-        dwidth[i] = (double)newwidth[i];
-    }
-    dv2sv(dwidth, newwidth, t->maxcol + 1);
-
-    try_again = 0;
-    for (i = 0; i <= t->maxcol; i++) {
-      if (!fixed[i]) {
-        if (newwidth[i] > t->tabwidth[i]) {
-          newwidth[i] = t->tabwidth[i];
-          fixed[i] = 1;
-          try_again = 1;
-        } else if (newwidth[i] < t->minimum_width[i]) {
-          newwidth[i] = t->minimum_width[i];
-          fixed[i] = 1;
-          try_again = 1;
-        }
-      }
-    }
-  } while (try_again);
-}
-#endif /* not MATRIX */
-
 void table::check_table_height() {
   int i, j, k;
   struct {
@@ -1483,12 +1303,10 @@ void table::renderTable(HtmlParser *parser, int max_width,
   int i, j, w, r, h;
   Str *renderbuf;
   short new_tabwidth[MAXCOL] = {0};
-#ifdef MATRIX
   int itr;
   ::vector *newwidth;
   ::matrix *mat, *minv;
   PERM *pivot;
-#endif /* MATRIX */
   int width;
   Str *vrulea = NULL, *vruleb = NULL, *vrulec = NULL;
 
@@ -1517,7 +1335,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
 
   this->check_maximum_width();
 
-#ifdef MATRIX
   if (this->maxcol == 0) {
     if (this->tabwidth[0] > max_width)
       this->tabwidth[0] = max_width;
@@ -1570,12 +1387,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
       this->tabwidth[i] = new_tabwidth[i];
     }
   }
-#else  /* not MATRIX */
-  t->set_table_width(new_tabwidth, max_width);
-  for (i = 0; i <= this->maxcol; i++) {
-    this->tabwidth[i] = new_tabwidth[i];
-  }
-#endif /* not MATRIX */
 
   this->check_minimum_width(this->tabwidth);
   for (i = 0; i <= this->maxcol; i++)
@@ -2999,7 +2810,6 @@ void table::pushTable(struct table *tbl1) {
   this->ntable++;
 }
 
-#ifdef MATRIX
 int table::correct_table_matrix(int col, int cspan, int a, double b) {
   int i, j;
   int ecol = col + cspan;
@@ -3246,50 +3056,47 @@ void table::check_relative_width(int maxwidth) {
 
 void table::set_table_matrix(int width) {
   int size = this->maxcol + 1;
-  int i, j;
-  double b, s;
-  int a;
-  struct table_cell *cell = &this->cell;
-
   if (size < 1)
     return;
 
   this->matrix = m_get(size, size);
   this->vector = v_get(size);
-  for (i = 0; i < size; i++) {
-    for (j = i; j < size; j++)
+  for (int i = 0; i < size; i++) {
+    for (int j = i; j < size; j++)
       m_set_val(this->matrix, i, j, 0.);
     v_set_val(this->vector, i, 0.);
   }
 
   this->check_relative_width(width);
 
-  for (i = 0; i < size; i++) {
+  for (int i = 0; i < size; i++) {
     if (this->fixed_width[i] > 0) {
-      a = max(this->fixed_width[i], this->minimum_width[i]);
-      b = sigma_td(a);
+      auto a = max(this->fixed_width[i], this->minimum_width[i]);
+      auto b = sigma_td(a);
       this->correct_table_matrix(i, 1, a, b);
     } else if (this->fixed_width[i] < 0) {
-      s = -(double)this->fixed_width[i] / 100.;
-      b = sigma_td((int)(s * width));
+      auto s = -(double)this->fixed_width[i] / 100.;
+      auto b = sigma_td((int)(s * width));
       this->correct_table_matrix2(i, 1, s, b);
     }
   }
 
-  for (j = 0; j <= cell->maxcell; j++) {
+  auto cell = &this->cell;
+  for (int j = 0; j <= cell->maxcell; j++) {
     if (cell->fixed_width[j] > 0) {
-      a = max(cell->fixed_width[j], cell->minimum_width[j]);
-      b = sigma_td(a);
+      auto a = max(cell->fixed_width[j], cell->minimum_width[j]);
+      auto b = sigma_td(a);
       this->correct_table_matrix(cell->col[j], cell->colspan[j], a, b);
     } else if (cell->fixed_width[j] < 0) {
-      s = -(double)cell->fixed_width[j] / 100.;
-      b = sigma_td((int)(s * width));
+      auto s = -(double)cell->fixed_width[j] / 100.;
+      auto b = sigma_td((int)(s * width));
       this->correct_table_matrix2(cell->col[j], cell->colspan[j], s, b);
     }
   }
 
   this->set_table_matrix0(width);
 
+  double b;
   if (this->total_width > 0) {
     b = sigma_table(width);
   } else {
@@ -3297,4 +3104,3 @@ void table::set_table_matrix(int width) {
   }
   this->correct_table_matrix(0, size, width, b);
 }
-#endif /* MATRIX */
