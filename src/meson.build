@@ -123,6 +123,7 @@ executable(
         'line_data.cpp',
         'file_util.cpp',
         'dict.cpp',
+        'matrix.cpp',
     ],
     install: true,
     dependencies: deps,

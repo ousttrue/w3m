@@ -53,17 +53,6 @@
     b = tmp;                                                                   \
   }
 
-#ifdef HAVE_FLOAT_H
-#include <float.h>
-#endif /* not HAVE_FLOAT_H */
-#if defined(DBL_MAX)
-static double Tiny = 10.0 / DBL_MAX;
-#elif defined(FLT_MAX)
-static double Tiny = 10.0 / FLT_MAX;
-#else  /* not defined(FLT_MAX) */
-static double Tiny = 1.0e-30;
-#endif /* not defined(FLT_MAX */
-
 /*
  * LUfactor -- gaussian elimination with scaled partial pivoting
  *          -- Note: returns LU matrix which is A.

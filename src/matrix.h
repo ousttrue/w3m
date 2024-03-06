@@ -7,9 +7,19 @@
  * You can use,copy,modify and distribute this program without any permission.
  */
 
-#ifndef _MATRIX_H
 #include <math.h>
 #include <string.h>
+
+#ifdef HAVE_FLOAT_H
+#include <float.h>
+#endif /* not HAVE_FLOAT_H */
+#if defined(DBL_MAX)
+inline double Tiny = 10.0 / DBL_MAX;
+#elif defined(FLT_MAX)
+inline double Tiny = 10.0 / FLT_MAX;
+#else  /* not defined(FLT_MAX) */
+inline double Tiny = 1.0e-30;
+#endif /* not defined(FLT_MAX */
 
 /*
  * Types.
@@ -60,6 +70,3 @@ extern int Lsolve(matrix *, vector *, vector *, double);
 extern int Usolve(matrix *, vector *, vector *, double);
 extern matrix *new_matrix(int);
 extern vector *new_vector(int);
-
-#define _MATRIX_H
-#endif /* _MATRIX_H */

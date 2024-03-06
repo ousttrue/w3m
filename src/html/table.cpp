@@ -47,8 +47,6 @@ int symbol_width0 = 0;
 #define abs(a) ((a) >= 0. ? (a) : -(a))
 #endif /* not abs */
 
-#include "matrix.c"
-
 static double weight(int x) {
 
   if (x < App::instance().COLS())
