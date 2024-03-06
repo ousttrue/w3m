@@ -392,13 +392,13 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   }
 
   if (force == 1 || obuf->flag & RB_NFLUSHED) {
-    TextLine *lbuf = newTextLine(line, obuf->pos);
+    TextLine *lbuf = TextLine::newTextLine(line, obuf->pos);
     if (obuf->RB_GET_ALIGN() == RB_CENTER) {
-      align(lbuf, width, ALIGN_CENTER);
+      lbuf->align(width, ALIGN_CENTER);
     } else if (obuf->RB_GET_ALIGN() == RB_RIGHT) {
-      align(lbuf, width, ALIGN_RIGHT);
+      lbuf->align(width, ALIGN_RIGHT);
     } else if (obuf->RB_GET_ALIGN() == RB_LEFT && obuf->flag & RB_INTABLE) {
-      align(lbuf, width, ALIGN_LEFT);
+      lbuf->align(width, ALIGN_LEFT);
     }
 #ifdef FORMAT_NICE
     else if (obuf->flag & RB_FILL) {
@@ -449,11 +449,14 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
       fclose(f);
     }
 #endif
-    if (lbuf->pos > h_env->maxlimit)
-      h_env->maxlimit = lbuf->pos;
-    if (buf)
+
+    if (lbuf->pos() > h_env->maxlimit) {
+      h_env->maxlimit = lbuf->pos();
+    }
+
+    if (buf) {
       buf->pushValue(lbuf);
-    else if (f) {
+    } else if (f) {
       Strfputs(lbuf->line, f);
       fputc('\n', f);
     }

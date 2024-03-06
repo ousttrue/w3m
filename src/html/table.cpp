@@ -349,7 +349,7 @@ void table::pushdata(int row, int col, const char *data) {
   if (this->tabdata[row][col] == NULL)
     this->tabdata[row][col] = GeneralList<TextLine>::newGeneralList();
 
-  this->tabdata[row][col]->pushValue(newTextLine(data));
+  this->tabdata[row][col]->pushValue(TextLine::newTextLine(data));
 }
 
 void table::suspend_or_pushdata(const char *line) {
@@ -358,7 +358,7 @@ void table::suspend_or_pushdata(const char *line) {
   else {
     if (!this->suspended_data)
       this->suspended_data = GeneralList<TextLine>::newGeneralList();
-    this->suspended_data->pushValue(newTextLine(line));
+    this->suspended_data->pushValue(TextLine::newTextLine(line));
   }
 }
 
@@ -480,14 +480,14 @@ void table::print_item(int row, int col, int width, Str *buf) {
       alignment = ALIGN_CENTER;
     if (DisableCenter && alignment == ALIGN_CENTER)
       alignment = ALIGN_LEFT;
-    align(lbuf, width, alignment);
+    lbuf->align(width, alignment);
     Strcat(buf, lbuf->line);
   } else {
-    lbuf = newTextLine(NULL, 0);
+    lbuf = TextLine::newTextLine(NULL, 0);
     if (DisableCenter)
-      align(lbuf, width, ALIGN_LEFT);
+      lbuf->align(width, ALIGN_LEFT);
     else
-      align(lbuf, width, ALIGN_CENTER);
+      lbuf->align(width, ALIGN_CENTER);
     Strcat(buf, lbuf->line);
   }
 }
@@ -639,8 +639,9 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         }
 
         if (alignment != ALIGN_LEFT) {
-          for (ti = this->tables[id].buf->first; ti != NULL; ti = ti->next)
-            align(ti->ptr, h_env.limit, alignment);
+          for (ti = this->tables[id].buf->first; ti != NULL; ti = ti->next) {
+            ti->ptr->align(h_env.limit, alignment);
+          }
         }
         h_env.buf->appendGeneralList(this->tables[id].buf);
         if (h_env.maxlimit < limit)
@@ -1675,7 +1676,7 @@ void table::renderTable(HtmlParser *parser, int max_width,
       GeneralList<TextLine> *l;
       l = GeneralList<TextLine>::newGeneralList();
       for (k = 0; k < h; k++) {
-        l->pushValue(newTextLine(NULL, 0));
+        l->pushValue(TextLine::newTextLine(NULL, 0));
       }
       l->appendGeneralList(this->tabdata[j][i]);
       this->tabdata[j][i] = l;

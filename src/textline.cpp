@@ -4,28 +4,16 @@
 #include "Str.h"
 #include "generallist.h"
 
-TextLine *newTextLine(Str *line, int pos) {
-  auto lbuf = (TextLine *)New(TextLine);
-  if (line)
-    lbuf->line = line;
-  else
-    lbuf->line = Strnew();
-  lbuf->pos = pos;
-  return lbuf;
-}
-
 void appendTextLine(GeneralList<TextLine> *tl, Str *line, int pos) {
-  TextLine *lbuf;
-
   if (tl->last == NULL) {
-    tl->pushValue(newTextLine(line->Strdup(), pos));
+    tl->pushValue(TextLine::newTextLine(line->Strdup(), pos));
   } else {
-    lbuf = tl->last->ptr;
+    auto lbuf = tl->last->ptr;
     if (lbuf->line)
       Strcat(lbuf->line, line);
     else
       lbuf->line = line;
-    lbuf->pos += pos;
+    lbuf->_pos += pos;
   }
 }
 
@@ -45,43 +33,4 @@ bool toAlign(char *oval, AlignMode *align) {
   else
     return false;
   return true;
-}
-
-void align(TextLine *lbuf, int width, AlignMode mode) {
-  Str *line = lbuf->line;
-  if (line->length == 0) {
-    for (int i = 0; i < width; i++)
-      Strcat_char(line, ' ');
-    lbuf->pos = width;
-    return;
-  }
-  auto buf = Strnew();
-  int l = width - lbuf->pos;
-  switch (mode) {
-  case ALIGN_CENTER: {
-    int l1 = l / 2;
-    int l2 = l - l1;
-    for (int i = 0; i < l1; i++)
-      Strcat_char(buf, ' ');
-    Strcat(buf, line);
-    for (int i = 0; i < l2; i++)
-      Strcat_char(buf, ' ');
-    break;
-  }
-  case ALIGN_LEFT:
-    Strcat(buf, line);
-    for (int i = 0; i < l; i++)
-      Strcat_char(buf, ' ');
-    break;
-  case ALIGN_RIGHT:
-    for (int i = 0; i < l; i++)
-      Strcat_char(buf, ' ');
-    Strcat(buf, line);
-    break;
-  default:
-    return;
-  }
-  lbuf->line = buf;
-  if (lbuf->pos < width)
-    lbuf->pos = width;
 }
