@@ -36,7 +36,7 @@ struct TextList {
 
 #define newTextList() ((TextList *)GeneralList::newGeneralList())
 #define pushText(tl, s)                                                        \
-  pushValue((GeneralList *)(tl), (void *)allocStr((s), -1))
+  ((GeneralList *)tl)->pushValue((void *)allocStr((s), -1))
 
 int symbol_width = 0;
 int symbol_width0 = 0;
@@ -1690,8 +1690,9 @@ void table::renderTable(HtmlParser *parser, int max_width,
       l = newTextLineList();
       for (k = 0; k < h; k++)
         pushTextLine(l, newTextLine(NULL, 0));
-      this->tabdata[j][i] =
-          appendGeneralList((GeneralList *)l, this->tabdata[j][i]);
+
+      ((GeneralList *)l)->appendGeneralList(this->tabdata[j][i]);
+      this->tabdata[j][i] = (GeneralList *)l;
     }
   }
 
@@ -2007,8 +2008,8 @@ void table::begin_cell(struct table_mode *mode) {
     this->check_row(this->row);
     if (this->tabdata[this->row][this->col] == NULL)
       this->tabdata[this->row][this->col] = GeneralList::newGeneralList();
-    appendGeneralList(this->tabdata[this->row][this->col],
-                      (GeneralList *)this->suspended_data);
+    this->tabdata[this->row][this->col]->appendGeneralList(
+        (GeneralList *)this->suspended_data);
     this->suspended_data = NULL;
   }
 }

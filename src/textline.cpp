@@ -87,13 +87,15 @@ void align(TextLine *lbuf, int width, AlignMode mode) {
 }
 
 void pushTextLine(TextLineList *tl, TextLine *lbuf) {
-  pushValue((GeneralList *)(tl), (void *)(lbuf));
+  ((GeneralList *)tl)->pushValue((void *)(lbuf));
 }
 
-#define popTextLine(tl) ((TextLine *)popValue((GeneralList *)(tl)))
+#define popTextLine(tl) ((TextLine *)((GeneralList *)(tl))->popValue())
 
 TextLine *rpopTextLine(TextLineList *tl) {
-  return ((TextLine *)rpopValue((GeneralList *)(tl)));
+  return ((TextLine *)((GeneralList *)(tl))->rpopValue());
 }
 
-TextLineList *newTextLineList() { return ((TextLineList *)GeneralList::newGeneralList()); }
+TextLineList *newTextLineList() {
+  return ((TextLineList *)GeneralList::newGeneralList());
+}

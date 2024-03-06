@@ -24,12 +24,12 @@ TextLineList *newTextLineList();
 
 void pushTextLine(TextLineList *tl, TextLine *lbuf);
 
-#define popTextLine(tl) ((TextLine *)popValue((GeneralList *)(tl)))
+#define popTextLine(tl) ((TextLine *)((GeneralList *)(tl))->popValue())
 
 TextLine *rpopTextLine(TextLineList *tl);
 
 #define appendTextLineList(tl, tl2)                                            \
-  ((TextLineList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
+  ((GeneralList *)(tl))->appendGeneralList((GeneralList *)(tl2))
 
 enum AlignMode {
   ALIGN_CENTER = 0,

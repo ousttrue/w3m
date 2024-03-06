@@ -1518,8 +1518,8 @@ void App::record_err_message(const char *s) {
   if (!message_list)
     message_list = GeneralList::newGeneralList();
   if (message_list->nitem >= LINES())
-    popValue(message_list);
-  pushValue(message_list, allocStr(s, -1));
+    message_list->popValue();
+  message_list->pushValue(allocStr(s, -1));
 }
 
 /*
