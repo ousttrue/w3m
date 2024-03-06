@@ -482,7 +482,7 @@ char *convert_size2(long long size1, long long size2, int usefloat) {
       ->ptr;
 }
 
-static TextLineListItem *_tl_lp2;
+static GeneralList<TextLine>::ListItem *_tl_lp2;
 
 static Str *textlist_feed(void) {
   TextLine *p;
@@ -495,7 +495,7 @@ static Str *textlist_feed(void) {
 }
 
 static void HTMLlineproc2(HtmlParser *parser, HttpResponse *res,
-                          LineLayout *layout, TextLineList *tl) {
+                          LineLayout *layout, GeneralList<TextLine> *tl) {
   _tl_lp2 = tl->first;
   parser->HTMLlineproc2body(res, &layout->data, textlist_feed);
 }
@@ -529,10 +529,10 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
   symbol_width = symbol_width0 = 1;
 
-  html_feed_environ htmlenv1(MAX_ENV_LEVEL, NULL,
-                             App::instance().INIT_BUFFER_WIDTH(), 0);
+  html_feed_environ htmlenv1(MAX_ENV_LEVEL, App::instance().INIT_BUFFER_WIDTH(),
+                             0);
 
-  htmlenv1.buf = newTextLineList();
+  htmlenv1.buf = GeneralList<TextLine>::newGeneralList();
 
   auto stream = newStrStream(body);
 

@@ -263,7 +263,7 @@ void HtmlParser::fillline(struct readbuffer *obuf, int indent) {
 
 void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
                            int force, int width) {
-  TextLineList *buf = h_env->buf;
+  auto buf = h_env->buf;
   FILE *f = h_env->f;
   Str *line = h_env->obuf.line, *pass = NULL;
   char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
@@ -376,7 +376,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   if (obuf->top_margin > 0) {
     int i;
 
-    struct html_feed_environ h(1, NULL, width, indent);
+    struct html_feed_environ h(1, width, indent);
     h.obuf.line = Strnew_size(width + 20);
     h.obuf.pos = obuf->pos;
     h.obuf.flag = obuf->flag;
@@ -452,7 +452,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     if (lbuf->pos > h_env->maxlimit)
       h_env->maxlimit = lbuf->pos;
     if (buf)
-      pushTextLine(buf, lbuf);
+      buf->pushValue(lbuf);
     else if (f) {
       Strfputs(lbuf->line, f);
       fputc('\n', f);
@@ -497,7 +497,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   if (obuf->bottom_margin > 0) {
     int i;
 
-    struct html_feed_environ h(1, NULL, width, indent);
+    struct html_feed_environ h(1, width, indent);
     h.obuf.line = Strnew_size(width + 20);
     h.obuf.pos = obuf->pos;
     h.obuf.flag = obuf->flag;

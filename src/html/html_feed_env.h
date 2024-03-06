@@ -3,6 +3,8 @@
 #include <vector>
 #include "html_command.h"
 #include "readbuffer.h"
+#include "textline.h"
+#include "generallist.h"
 
 struct Str;
 struct TextLineList;
@@ -17,7 +19,7 @@ struct environment {
 
 struct html_feed_environ {
   readbuffer obuf;
-  TextLineList *buf;
+  GeneralList<TextLine> *buf;
   FILE *f = nullptr;
   Str *tagbuf;
   int limit;
@@ -30,7 +32,7 @@ struct html_feed_environ {
   const char *title = nullptr;
   int blank_lines = 0;
 
-  html_feed_environ(int envc, TextLineList *, int, int);
+  html_feed_environ(int envc, int, int, GeneralList<TextLine> *_buf = nullptr);
   void purgeline();
 };
 

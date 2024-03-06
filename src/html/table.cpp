@@ -22,22 +22,6 @@
 #include "textline.h"
 #include "generallist.h"
 
-struct TextListItem {
-  char *ptr;
-  TextListItem *next;
-  TextListItem *prev;
-};
-
-struct TextList {
-  TextListItem *first;
-  TextListItem *last;
-  int nitem;
-};
-
-#define newTextList() ((TextList *)GeneralList::newGeneralList())
-#define pushText(tl, s)                                                        \
-  ((GeneralList *)tl)->pushValue((void *)allocStr((s), -1))
-
 int symbol_width = 0;
 int symbol_width0 = 0;
 
@@ -248,7 +232,8 @@ table *table::newTable() {
 
   t = (struct table *)New(struct table);
   t->max_rowsize = MAXROW;
-  t->tabdata = (GeneralList ***)New_N(GeneralList **, MAXROW);
+  t->tabdata =
+      (GeneralList<TextLine> ***)New_N(GeneralList<TextLine> **, MAXROW);
   t->tabattr = (table_attr **)New_N(table_attr *, MAXROW);
   t->tabheight = (int *)NewAtom_N(int, MAXROW);
 #ifdef ID_EXT
@@ -293,7 +278,7 @@ table *table::newTable() {
 
 void table::check_row(int row) {
   int i, r;
-  GeneralList ***tabdata;
+  GeneralList<TextLine> ***tabdata;
   table_attr **tabattr;
   int *tabheight;
 #ifdef ID_EXT
@@ -307,7 +292,7 @@ void table::check_row(int row) {
     r = max(this->max_rowsize * 2, row + 1);
     if (r <= 0 || r > MAXROW_LIMIT)
       r = MAXROW_LIMIT;
-    tabdata = (GeneralList ***)New_N(GeneralList **, r);
+    tabdata = (GeneralList<TextLine> ***)New_N(GeneralList<TextLine> **, r);
     tabattr = (table_attr **)New_N(table_attr *, r);
     tabheight = (int *)NewAtom_N(int, r);
 #ifdef ID_EXT
@@ -343,7 +328,8 @@ void table::check_row(int row) {
   }
 
   if (this->tabdata[row] == NULL) {
-    this->tabdata[row] = (GeneralList **)New_N(GeneralList *, MAXCOL);
+    this->tabdata[row] =
+        (GeneralList<TextLine> **)New_N(GeneralList<TextLine> *, MAXCOL);
     this->tabattr[row] = (table_attr *)NewAtom_N(table_attr, MAXCOL);
 #ifdef ID_EXT
     this->tabidvalue[row] = (Str **)New_N(Str *, MAXCOL);
@@ -361,9 +347,9 @@ void table::check_row(int row) {
 void table::pushdata(int row, int col, const char *data) {
   this->check_row(row);
   if (this->tabdata[row][col] == NULL)
-    this->tabdata[row][col] = GeneralList::newGeneralList();
+    this->tabdata[row][col] = GeneralList<TextLine>::newGeneralList();
 
-  pushText(this->tabdata[row][col], data ? data : "");
+  this->tabdata[row][col]->pushValue(newTextLine(data));
 }
 
 void table::suspend_or_pushdata(const char *line) {
@@ -371,8 +357,8 @@ void table::suspend_or_pushdata(const char *line) {
     this->pushdata(this->row, this->col, line);
   else {
     if (!this->suspended_data)
-      this->suspended_data = newTextList();
-    pushText(this->suspended_data, line ? line : "");
+      this->suspended_data = GeneralList<TextLine>::newGeneralList();
+    this->suspended_data->pushValue(newTextLine(line));
   }
 }
 
@@ -479,7 +465,7 @@ void table::print_item(int row, int col, int width, Str *buf) {
 
   TextLine *lbuf;
   if (this->tabdata[row])
-    lbuf = popTextLine(this->tabdata[row][col]);
+    lbuf = this->tabdata[row][col]->popValue();
   else
     lbuf = NULL;
 
@@ -610,34 +596,33 @@ int table::get_spec_cell_width(int row, int col) {
 }
 
 void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
-  TextList *orgdata;
-  TextListItem *l;
+  // TextList *orgdata;
+  // TextListItem *l;
   int colspan, icell;
 
   if (this->tabdata[row] == NULL || this->tabdata[row][col] == NULL)
     return;
-  orgdata = (TextList *)this->tabdata[row][col];
-  this->tabdata[row][col] = GeneralList::newGeneralList();
+  auto orgdata = this->tabdata[row][col];
+  this->tabdata[row][col] = GeneralList<TextLine>::newGeneralList();
 
-  html_feed_environ h_env(MAX_ENV_LEVEL,
-                          (TextLineList *)this->tabdata[row][col],
-                          this->get_spec_cell_width(row, col), 0);
+  html_feed_environ h_env(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col), 0,
+                          this->tabdata[row][col]);
   auto &obuf = h_env.obuf;
   obuf.flag |= RB_INTABLE;
   if (h_env.limit > maxlimit)
     h_env.limit = maxlimit;
   if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
     parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
-  for (l = orgdata->first; l != NULL; l = l->next) {
-    if (TAG_IS(l->ptr, "<table_alt", 10)) {
+  for (auto l = orgdata->first; l != NULL; l = l->next) {
+    if (TAG_IS(l->ptr->line->ptr, "<table_alt", 10)) {
       int id = -1;
-      const char *p = l->ptr;
+      const char *p = l->ptr->line->ptr;
       struct HtmlTag *tag;
       if ((tag = HtmlTag::parse(&p, true)) != NULL)
         tag->parsedtag_get_value(ATTR_TID, &id);
       if (id >= 0 && id < this->ntable && this->tables[id].ptr) {
         AlignMode alignment;
-        TextLineListItem *ti;
+        GeneralList<TextLine>::ListItem *ti;
         struct table *t = this->tables[id].ptr;
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
@@ -657,7 +642,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
           for (ti = this->tables[id].buf->first; ti != NULL; ti = ti->next)
             align(ti->ptr, h_env.limit, alignment);
         }
-        appendTextLineList(h_env.buf, this->tables[id].buf);
+        h_env.buf->appendGeneralList(this->tables[id].buf);
         if (h_env.maxlimit < limit)
           h_env.maxlimit = limit;
         parser->restore_fonteffect(&h_env);
@@ -669,7 +654,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         }
       }
     } else
-      parser->HTMLlineproc1(l->ptr, &h_env);
+      parser->HTMLlineproc1(l->ptr->line->ptr, &h_env);
   }
   if (obuf.status != R_ST_NORMAL) {
     obuf.status = R_ST_EOL;
@@ -1492,8 +1477,8 @@ void table::renderCoTable(HtmlParser *parser, int maxlimit) {
     row = this->tables[i].row;
     indent = this->tables[i].indent;
 
-    html_feed_environ h_env(MAX_ENV_LEVEL, this->tables[i].buf,
-                            this->get_spec_cell_width(row, col), indent);
+    html_feed_environ h_env(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
+                            indent, this->tables[i].buf);
     this->check_row(row);
     if (h_env.limit > maxlimit)
       h_env.limit = maxlimit;
@@ -1518,8 +1503,8 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   else
     limit = h_env->limit;
 
-  html_feed_environ henv(MAX_ENV_LEVEL, newTextLineList(), limit,
-                         h_env->envs[h_env->envc].indent);
+  html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
+                         GeneralList<TextLine>::newGeneralList());
   parser->HTMLlineproc1("<center>", &henv);
   parser->HTMLlineproc0(this->caption->ptr, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);
@@ -1664,7 +1649,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
 
   for (i = 0; i <= this->maxcol; i++) {
     for (j = 0; j <= this->maxrow; j++) {
-      TextLineList *l;
       int k;
       if ((this->tabattr[j][i] & HTT_Y) || (this->tabattr[j][i] & HTT_TOP) ||
           (this->tabdata[j][i] == NULL))
@@ -1687,12 +1671,14 @@ void table::renderTable(HtmlParser *parser, int max_width,
         h /= 2;
       if (h <= 0)
         continue;
-      l = newTextLineList();
-      for (k = 0; k < h; k++)
-        pushTextLine(l, newTextLine(NULL, 0));
 
-      ((GeneralList *)l)->appendGeneralList(this->tabdata[j][i]);
-      this->tabdata[j][i] = (GeneralList *)l;
+      GeneralList<TextLine> *l;
+      l = GeneralList<TextLine>::newGeneralList();
+      for (k = 0; k < h; k++) {
+        l->pushValue(newTextLine(NULL, 0));
+      }
+      l->appendGeneralList(this->tabdata[j][i]);
+      this->tabdata[j][i] = l;
     }
   }
 
@@ -2007,9 +1993,10 @@ void table::begin_cell(struct table_mode *mode) {
   if (this->suspended_data) {
     this->check_row(this->row);
     if (this->tabdata[this->row][this->col] == NULL)
-      this->tabdata[this->row][this->col] = GeneralList::newGeneralList();
+      this->tabdata[this->row][this->col] =
+          GeneralList<TextLine>::newGeneralList();
     this->tabdata[this->row][this->col]->appendGeneralList(
-        (GeneralList *)this->suspended_data);
+        this->suspended_data);
     this->suspended_data = NULL;
   }
 }
@@ -3080,7 +3067,7 @@ void table::pushTable(struct table *tbl1) {
   this->tables[this->ntable].col = col;
   this->tables[this->ntable].row = row;
   this->tables[this->ntable].indent = this->indent;
-  this->tables[this->ntable].buf = newTextLineList();
+  this->tables[this->ntable].buf = GeneralList<TextLine>::newGeneralList();
   this->check_row(row);
   if (col + 1 <= this->maxcol && this->tabattr[row][col + 1] & HTT_X)
     this->tables[this->ntable].cell = this->cell.icell;

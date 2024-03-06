@@ -3,9 +3,9 @@
 #include "textline.h"
 #include "Str.h"
 
-html_feed_environ::html_feed_environ(int nenv, TextLineList *buf, int limit,
-                                     int indent)
-    : buf(buf) {
+html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
+                                     GeneralList<TextLine> *_buf)
+    : buf(_buf) {
   assert(nenv);
   envs.resize(nenv);
   this->tagbuf = Strnew();
@@ -35,7 +35,7 @@ void html_feed_environ::purgeline() {
   if (this->buf == NULL || this->blank_lines == 0)
     return;
 
-  if (!(tl = rpopTextLine(this->buf)))
+  if (!(tl = this->buf->rpopValue()))
     return;
   p = tl->line->ptr;
   tmp = Strnew();

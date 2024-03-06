@@ -2,20 +2,21 @@
 #include "alloc.h"
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 
-struct ListItem {
-  void *ptr;
-  ListItem *next;
-  ListItem *prev;
-  static ListItem *newListItem(void *s, ListItem *n, ListItem *p) {
-    auto it = (ListItem *)New(ListItem);
-    it->ptr = s;
-    it->next = n;
-    it->prev = p;
-    return it;
-  }
-};
-
+template<typename T>
 struct GeneralList {
+  struct ListItem {
+    T *ptr;
+    ListItem *next;
+    ListItem *prev;
+    static ListItem *newListItem(T *s, ListItem *n, ListItem *p) {
+      auto it = (ListItem *)New(ListItem);
+      it->ptr = s;
+      it->next = n;
+      it->prev = p;
+      return it;
+    }
+  };
+
   ListItem *first;
   ListItem *last;
   int nitem;
@@ -27,7 +28,7 @@ struct GeneralList {
     return tl;
   }
 
-  void pushValue(void *s) {
+  void pushValue(T *s) {
     ListItem *it;
     if (s == NULL /*|| tl == NULL*/ || this->nitem >= GENERAL_LIST_MAX)
       return;
@@ -43,7 +44,7 @@ struct GeneralList {
     }
   }
 
-  void *popValue() {
+  T *popValue() {
     if (!this->first) {
       return nullptr;
     }
@@ -57,7 +58,7 @@ struct GeneralList {
     return f->ptr;
   }
 
-  void *rpopValue() {
+  T *rpopValue() {
     if (this->last == NULL)
       return NULL;
     auto f = this->last;

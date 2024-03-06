@@ -1,35 +1,19 @@
 #pragma once
+#include "generallist.h"
+#include "Str.h"
 
 struct TextLine {
   struct Str *line;
   int pos;
 };
 
-struct TextLineListItem {
-  TextLine *ptr;
-  TextLineListItem *next;
-  TextLineListItem *prev;
-};
-
-struct TextLineList {
-  TextLineListItem *first;
-  TextLineListItem *last;
-  int nitem;
-};
-
 extern TextLine *newTextLine(Str *line, int pos);
-extern void appendTextLine(TextLineList *tl, Str *line, int pos);
 
-TextLineList *newTextLineList();
+inline TextLine *newTextLine(const char *line) {
+  return newTextLine(Strnew_charp(line ? line : ""), 0);
+}
 
-void pushTextLine(TextLineList *tl, TextLine *lbuf);
-
-#define popTextLine(tl) ((TextLine *)((GeneralList *)(tl))->popValue())
-
-TextLine *rpopTextLine(TextLineList *tl);
-
-#define appendTextLineList(tl, tl2)                                            \
-  ((GeneralList *)(tl))->appendGeneralList((GeneralList *)(tl2))
+extern void appendTextLine(GeneralList<TextLine> *tl, Str *line, int pos);
 
 enum AlignMode {
   ALIGN_CENTER = 0,

@@ -1,6 +1,8 @@
 #pragma once
 #include "line.h"
 #include "enum_template.h"
+#include "generallist.h"
+#include "textline.h"
 #include <stdint.h>
 
 extern int symbol_width;
@@ -62,14 +64,13 @@ struct table_cell {
   short fixed_width[MAXCELL];
 };
 
-struct TextLineList;
 struct table_in {
   struct table *ptr;
   short col;
   short row;
   short cell;
   short indent;
-  TextLineList *buf;
+  GeneralList<TextLine> *buf;
 };
 
 struct table_linfo {
@@ -116,8 +117,6 @@ enum table_attr : uint16_t {
 ENUM_OP_INSTANCE(table_attr);
 
 #define ID_EXT
-struct GeneralList;
-struct TextList;
 struct table {
 #ifdef ID_EXT
   Str *id;
@@ -141,7 +140,7 @@ private:
   int vcellpadding;
   int flag;
   Str *caption;
-  GeneralList ***tabdata;
+  GeneralList<TextLine> ***tabdata;
   table_attr **tabattr;
   table_attr trattr;
 #ifdef ID_EXT
@@ -155,7 +154,7 @@ private:
   int *tabheight;
   struct table_in *tables;
   short tables_size;
-  TextList *suspended_data;
+  GeneralList<TextLine> *suspended_data;
   /* use for counting skipped spaces */
   struct table_linfo linfo;
 #ifdef MATRIX

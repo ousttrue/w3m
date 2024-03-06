@@ -14,11 +14,11 @@ TextLine *newTextLine(Str *line, int pos) {
   return lbuf;
 }
 
-void appendTextLine(TextLineList *tl, Str *line, int pos) {
+void appendTextLine(GeneralList<TextLine> *tl, Str *line, int pos) {
   TextLine *lbuf;
 
   if (tl->last == NULL) {
-    pushTextLine(tl, newTextLine(line->Strdup(), pos));
+    tl->pushValue(newTextLine(line->Strdup(), pos));
   } else {
     lbuf = tl->last->ptr;
     if (lbuf->line)
@@ -84,18 +84,4 @@ void align(TextLine *lbuf, int width, AlignMode mode) {
   lbuf->line = buf;
   if (lbuf->pos < width)
     lbuf->pos = width;
-}
-
-void pushTextLine(TextLineList *tl, TextLine *lbuf) {
-  ((GeneralList *)tl)->pushValue((void *)(lbuf));
-}
-
-#define popTextLine(tl) ((TextLine *)((GeneralList *)(tl))->popValue())
-
-TextLine *rpopTextLine(TextLineList *tl) {
-  return ((TextLine *)((GeneralList *)(tl))->rpopValue());
-}
-
-TextLineList *newTextLineList() {
-  return ((TextLineList *)GeneralList::newGeneralList());
 }
