@@ -20,7 +20,6 @@ struct environment {
 struct html_feed_environ {
   readbuffer obuf;
   GeneralList<TextLine> *buf;
-  FILE *f = nullptr;
   Str *tagbuf;
   int limit;
   int maxlimit = 0;

@@ -55,6 +55,13 @@ public:
   void feed_select(const char *str);
 
 private:
+  void APPEND(GeneralList<TextLine> *buf, Str *str) {
+    if (buf)
+      appendTextLine(buf, (str), 0);
+    // else if (f)
+    //   Strfputs((str), f);
+  };
+
   // form
   struct FormList **forms = {};
   int *form_stack = {};

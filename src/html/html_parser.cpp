@@ -264,26 +264,10 @@ void HtmlParser::fillline(struct readbuffer *obuf, int indent) {
 void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
                            int force, int width) {
   auto buf = h_env->buf;
-  FILE *f = h_env->f;
   Str *line = h_env->obuf.line, *pass = NULL;
   char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
        *hidden_under = NULL, *hidden_italic = NULL, *hidden_strike = NULL,
        *hidden_ins = NULL, *hidden_input = NULL, *hidden = NULL;
-
-#ifdef DEBUG
-  if (w3m_debug) {
-    FILE *df = fopen("zzzproc1", "a");
-    fprintf(df, "flushline(%s,%d,%d,%d)\n", obuf->line->ptr, indent, force,
-            width);
-    if (buf) {
-      TextLineListItem *p;
-      for (p = buf->first; p; p = p->next) {
-        fprintf(df, "buf=\"%s\"\n", p->ptr->line->ptr);
-      }
-    }
-    fclose(df);
-  }
-#endif
 
   if (!(h_env->obuf.flag & (RB_SPECIAL & ~RB_NOBR)) &&
       Strlastchar(line) == ' ') {
@@ -441,14 +425,6 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
       }
     }
 #endif /* FORMAT_NICE */
-#ifdef TABLE_DEBUG
-    if (w3m_debug) {
-      FILE *f = fopen("zzzproc1", "a");
-      fprintf(f, "pos=%d,%d, maxlimit=%d\n", visible_length(lbuf->line->ptr),
-              lbuf->pos, h_env->maxlimit);
-      fclose(f);
-    }
-#endif
 
     if (lbuf->pos() > h_env->maxlimit) {
       h_env->maxlimit = lbuf->pos();
@@ -456,9 +432,6 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
     if (buf) {
       buf->pushValue(lbuf);
-    } else if (f) {
-      Strfputs(lbuf->line, f);
-      fputc('\n', f);
     }
     if (obuf->flag & RB_SPECIAL || obuf->flag & RB_NFLUSHED)
       h_env->blank_lines = 0;
@@ -468,18 +441,12 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     char *p = line->ptr, *q;
     Str *tmp = Strnew(), *tmp2 = Strnew();
 
-#define APPEND(str)                                                            \
-  if (buf)                                                                     \
-    appendTextLine(buf, (str), 0);                                             \
-  else if (f)                                                                  \
-  Strfputs((str), f)
-
     while (*p) {
       q = p;
       if (sloppy_parse_line(&p)) {
         Strcat_charp_n(tmp, q, p - q);
         if (force == 2) {
-          APPEND(tmp);
+          APPEND(buf, tmp);
         } else
           Strcat(tmp2, tmp);
         Strclear(tmp);
@@ -487,7 +454,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     }
     if (force == 2) {
       if (pass) {
-        APPEND(pass);
+        APPEND(buf, pass);
       }
       pass = NULL;
     } else {
