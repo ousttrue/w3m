@@ -114,11 +114,16 @@ public:
         break;
       if (a->start.pos > pos) {
         a->start.pos += shift;
-        if (hl->size() && a->hseq >= 0 && hl->marks[a->hseq].line == line)
-          hl->marks[a->hseq].pos = a->start.pos;
+        if (auto po = hl->get(a->hseq)) {
+          ;
+          if (po->line == line) {
+            po->pos = a->start.pos;
+          }
+        }
       }
-      if (a->end.pos >= pos)
+      if (a->end.pos >= pos) {
         a->end.pos += shift;
+      }
     }
   }
 

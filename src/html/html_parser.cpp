@@ -870,6 +870,37 @@ static int ex_efct(int ex) {
 
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
+static Str *textfieldrep(Str *s, int width) {
+  Lineprop c_type;
+  Str *n = Strnew_size(width + 2);
+  int i, j, k, c_len;
+
+  j = 0;
+  for (i = 0; i < s->length; i += c_len) {
+    c_type = get_mctype(&s->ptr[i]);
+    c_len = get_mclen(&s->ptr[i]);
+    if (s->ptr[i] == '\r')
+      continue;
+    k = j + get_mcwidth(&s->ptr[i]);
+    if (k > width)
+      break;
+    if (c_type == PC_CTRL)
+      Strcat_char(n, ' ');
+    else if (s->ptr[i] == '&')
+      Strcat_charp(n, "&amp;");
+    else if (s->ptr[i] == '<')
+      Strcat_charp(n, "&lt;");
+    else if (s->ptr[i] == '>')
+      Strcat_charp(n, "&gt;");
+    else
+      Strcat_charp_n(n, &s->ptr[i], c_len);
+    j = k;
+  }
+  for (; j < width; j++)
+    Strcat_char(n, ' ');
+  return n;
+}
+
 void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
 
   const char *p, *q, *r, *s, *t, *str;
@@ -992,11 +1023,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
             data->_hmarklist->putHmarker(nlines, pos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
-            if (h < (int)data->_hmarklist->size() &&
-                data->_hmarklist->marks[h].invalid) {
-              data->_hmarklist->marks[h].pos = pos;
-              data->_hmarklist->marks[h].line = nlines;
-              data->_hmarklist->marks[h].invalid = 0;
+            if (data->_hmarklist->tryMark(h, nlines, pos)) {
               hseq = -hseq;
             }
           }
@@ -1028,7 +1055,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
                 a_href->start.pos == a_href->end.pos) {
               if (a_href->hseq >= 0 &&
                   a_href->hseq < (int)data->_hmarklist->size()) {
-                data->_hmarklist->marks[a_href->hseq].invalid = 1;
+                data->_hmarklist->invalidate(a_href->hseq);
               }
               a_href->hseq = -1;
             }
@@ -1083,11 +1110,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (h < (int)data->_hmarklist->size() &&
-                data->_hmarklist->marks[h].invalid) {
-              data->_hmarklist->marks[h].pos = hpos;
-              data->_hmarklist->marks[h].line = nlines;
-              data->_hmarklist->marks[h].invalid = 0;
+            if (data->_hmarklist->tryMark(h, nlines, hpos)) {
               hseq = -hseq;
             }
           }
@@ -1239,7 +1262,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
     if (!internal) {
       data->addnewline(outc.data(), outp.data(), pos);
     }
-    if (internal == HTML_N_INTERNAL){
+    if (internal == HTML_N_INTERNAL) {
       internal = 0;
     }
     // if (str != endp) {

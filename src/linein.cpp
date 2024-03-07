@@ -863,7 +863,7 @@ void LineInput::_editor(char) {
   fi.value = strBuf->Strdup();
   Strcat_char(fi.value, '\n');
 
-  input_textarea(&fi);
+  fi.input_textarea();
 
   strBuf = Strnew();
   for (auto p = fi.value->ptr; *p; p++) {

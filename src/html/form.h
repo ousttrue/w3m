@@ -1,30 +1,29 @@
 #pragma once
 #include "Str.h"
 #include "anchorlist.h"
-#include <memory>
 
-#define FORM_I_TEXT_DEFAULT_SIZE 40
-#define FORM_I_SELECT_DEFAULT_SIZE 40
-#define FORM_I_TEXTAREA_DEFAULT_WIDTH 40
+enum FormMethod {
+  FORM_METHOD_GET = 0,
+  FORM_METHOD_POST = 1,
+  FORM_METHOD_INTERNAL = 2,
+  FORM_METHOD_HEAD = 3,
+};
 
-#define FORM_METHOD_GET 0
-#define FORM_METHOD_POST 1
-#define FORM_METHOD_INTERNAL 2
-#define FORM_METHOD_HEAD 3
-
-#define FORM_ENCTYPE_URLENCODED 0
-#define FORM_ENCTYPE_MULTIPART 1
+enum FormEncoding {
+  FORM_ENCTYPE_URLENCODED = 0,
+  FORM_ENCTYPE_MULTIPART = 1,
+};
 
 struct FormItemList;
 struct HtmlTag;
 struct FormList {
   FormItemList *item;
   FormItemList *lastitem;
-  int method;
+  FormMethod method;
   Str *action;
   const char *target;
   const char *name;
-  int enctype;
+  FormEncoding enctype;
   FormList *next;
   int nitems;
   char *body;
@@ -36,17 +35,13 @@ struct FormList {
 
 struct FormAnchor : public Anchor {
   FormItemList *formItem;
+
+  short y = 0;
+  short rows = 0;
 };
 
 FormList *newFormList(const char *action, const char *method,
                       const char *charset, const char *enctype,
                       const char *target, const char *name, FormList *_next);
 
-Str *textfieldrep(Str *s, int width);
-void input_textarea(FormItemList *fi);
-void do_internal(char *action, char *data);
-void form_write_data(FILE *f, char *boundary, char *name, char *value);
-void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
-                          char *file);
-void loadPreForm(void);
 Str *Str_form_quote(Str *x);

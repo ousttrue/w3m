@@ -79,8 +79,7 @@ void LineData::addMultirowsForm() {
     for (int j = 0; l && j < a_form.rows; ++l, j++) {
       auto pos = l->columnPos(col);
       if (j == 0) {
-        this->_hmarklist->marks[a_form.hseq].line = linenumber(l);
-        this->_hmarklist->marks[a_form.hseq].pos = pos;
+        this->_hmarklist->set(a_form.hseq, linenumber(l), pos);
       }
       if (a_form.start.line == linenumber(l))
         continue;
@@ -152,8 +151,8 @@ void LineData::reseq_anchor() {
   }
 
   for (int i = 0; i < nmark; i++) {
-    this->_hmarklist->putHmarker(this->_hmarklist->marks[i].line,
-                                 this->_hmarklist->marks[i].pos, seqmap[i]);
+    auto po = this->_hmarklist->get(i);
+    this->_hmarklist->putHmarker(po->line, po->pos, seqmap[i]);
   }
 
   this->_href->reseq_anchor0(seqmap.data());

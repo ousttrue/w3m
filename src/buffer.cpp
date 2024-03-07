@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "keyvalue.h"
 #include "regex.h"
 #include "html/preform.h"
 #include "url_quote.h"
@@ -456,6 +457,25 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
 
   return ret;
 }
+
+InternalAction internal_action[] = {
+    {"option", panel_set_option},
+    {"cookie", set_cookie_flag},
+    {"download", download_action},
+    {"none", NULL},
+    {NULL, NULL},
+};
+
+static void do_internal(char *action, char *data) {
+  for (int i = 0; internal_action[i].action; i++) {
+    if (strcasecmp(internal_action[i].action, action) == 0) {
+      if (internal_action[i].rout)
+        internal_action[i].rout(cgistr2tagarg(data));
+      return;
+    }
+  }
+}
+
 std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
   auto tmp2 = fi->parent->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
@@ -604,7 +624,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     }
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
-    input_textarea(fi);
+    fi->input_textarea();
     this->layout.formUpdateBuffer(a);
     break;
 

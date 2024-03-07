@@ -38,4 +38,6 @@ struct FormItemList {
   Str *query_from_followform();
   void query_from_followform_multipart();
   std::string form2str() const;
+
+  void input_textarea();
 };

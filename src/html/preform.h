@@ -21,9 +21,7 @@ struct pre_form {
 
 pre_form *add_pre_form(pre_form *prev, const char *url, Regex *re_url,
                        const char *name, const char *action);
-
 pre_form_item *add_pre_form_item(pre_form *pf, pre_form_item *prev, int type,
                                  const char *name, const char *value,
                                  const char *checked);
-
 void loadPreForm();

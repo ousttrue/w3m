@@ -1,52 +1,22 @@
-/*
- * HTML forms
- */
 #include "form.h"
+#include "form_item.h"
 #include "quote.h"
 #include "html_parser.h"
-#include "form_item.h"
 #include "app.h"
-#include "http_response.h"
-#include "auth_pass.h"
-#include "w3m.h"
 #include "etc.h"
-#include "mimetypes.h"
 #include "readbuffer.h"
 #include "alloc.h"
-#include "html.h"
-#include "utf8.h"
-#include "line.h"
-#include "buffer.h"
-#include "keyvalue.h"
 #include "html_tag.h"
-#include "myctype.h"
-#include "local_cgi.h"
-#include "regex.h"
-#include "proto.h"
 #include <sys/stat.h>
 
-/* *INDENT-OFF* */
-struct {
-  const char *action;
-  void (*rout)(struct keyvalue *);
-} internal_action[] = {
-    {"option", panel_set_option},
-    {"cookie", set_cookie_flag},
-    {"download", download_action},
-    {"none", NULL},
-    {NULL, NULL},
-};
-/* *INDENT-ON* */
+#define FORM_I_TEXT_DEFAULT_SIZE 40
 
 struct FormList *newFormList(const char *action, const char *method,
                              const char *charset, const char *enctype,
                              const char *target, const char *name,
                              FormList *_next) {
-  FormList *l;
-  Str *a = Strnew_charp(action);
-  int m = FORM_METHOD_GET;
-  int e = FORM_ENCTYPE_URLENCODED;
 
+  FormMethod m = FORM_METHOD_GET;
   if (method == NULL || !strcasecmp(method, "get"))
     m = FORM_METHOD_GET;
   else if (!strcasecmp(method, "post"))
@@ -55,14 +25,15 @@ struct FormList *newFormList(const char *action, const char *method,
     m = FORM_METHOD_INTERNAL;
   /* unknown method is regarded as 'get' */
 
+  FormEncoding e = FORM_ENCTYPE_URLENCODED;
   if (m != FORM_METHOD_GET && enctype != NULL &&
       !strcasecmp(enctype, "multipart/form-data")) {
     e = FORM_ENCTYPE_MULTIPART;
   }
 
-  l = (FormList *)New(FormList);
+  auto l = (FormList *)New(FormList);
   l->item = l->lastitem = NULL;
-  l->action = a;
+  l->action = Strnew_charp(action);
   l->method = m;
   l->enctype = e;
   l->target = target;
@@ -139,117 +110,13 @@ FormItemList *FormList ::formList_addInput(HtmlParser *parser,
   return item;
 }
 
-Str *textfieldrep(Str *s, int width) {
-  Lineprop c_type;
-  Str *n = Strnew_size(width + 2);
-  int i, j, k, c_len;
-
-  j = 0;
-  for (i = 0; i < s->length; i += c_len) {
-    c_type = get_mctype(&s->ptr[i]);
-    c_len = get_mclen(&s->ptr[i]);
-    if (s->ptr[i] == '\r')
-      continue;
-    k = j + get_mcwidth(&s->ptr[i]);
-    if (k > width)
-      break;
-    if (c_type == PC_CTRL)
-      Strcat_char(n, ' ');
-    else if (s->ptr[i] == '&')
-      Strcat_charp(n, "&amp;");
-    else if (s->ptr[i] == '<')
-      Strcat_charp(n, "&lt;");
-    else if (s->ptr[i] == '>')
-      Strcat_charp(n, "&gt;");
-    else
-      Strcat_charp_n(n, &s->ptr[i], c_len);
-    j = k;
-  }
-  for (; j < width; j++)
-    Strcat_char(n, ' ');
-  return n;
-}
-
-static void form_fputs_decode(Str *s, FILE *f) {
-  char *p;
-  Str *z = Strnew();
-
-  for (p = s->ptr; *p;) {
-    switch (*p) {
-
-    case '\r':
-      if (*(p + 1) == '\n')
-        p++;
-    default:
-      Strcat_char(z, *p);
-      p++;
-      break;
-    }
-  }
-  Strfputs(z, f);
-}
-
-void input_textarea(FormItemList *fi) {
-  auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
-  auto f = fopen(tmpf.c_str(), "w");
-  if (f == NULL) {
-    App::instance().disp_err_message("Can't open temporary file");
-    return;
-  }
-  if (fi->value) {
-    form_fputs_decode(fi->value, f);
-  }
-  fclose(f);
-
-  if (exec_cmd(App::instance().myEditor(tmpf.c_str(), 1).c_str())) {
-    goto input_end;
-  }
-
-  if (fi->readonly) {
-    goto input_end;
-  }
-
-  f = fopen(tmpf.c_str(), "r");
-  if (f == NULL) {
-    App::instance().disp_err_message("Can't open temporary file");
-    goto input_end;
-  }
-  fi->value = Strnew();
-  Str *tmp;
-  while (tmp = Strfgets(f), tmp->length > 0) {
-    if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
-      /* null line with bare LF */
-      tmp = Strnew_charp("\r\n");
-    } else if (tmp->length > 1 && tmp->ptr[tmp->length - 1] == '\n' &&
-               tmp->ptr[tmp->length - 2] != '\r') {
-      Strshrink(tmp, 1);
-      Strcat_charp(tmp, "\r\n");
-    }
-    cleanup_line(tmp, RAW_MODE);
-    Strcat(fi->value, tmp);
-  }
-  fclose(f);
-input_end:
-  unlink(tmpf.c_str());
-}
-
-void do_internal(char *action, char *data) {
-  for (int i = 0; internal_action[i].action; i++) {
-    if (strcasecmp(internal_action[i].action, action) == 0) {
-      if (internal_action[i].rout)
-        internal_action[i].rout(cgistr2tagarg(data));
-      return;
-    }
-  }
-}
-
-void form_write_data(FILE *f, char *boundary, char *name, char *value) {
+static void form_write_data(FILE *f, char *boundary, char *name, char *value) {
   fprintf(f, "--%s\r\n", boundary);
   fprintf(f, "Content-Disposition: form-data; name=\"%s\"\r\n\r\n", name);
   fprintf(f, "%s\r\n", value);
 }
 
-void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
+static void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
                           char *file) {
 #ifdef _MSC_VER
 #else

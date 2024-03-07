@@ -774,23 +774,24 @@ std::shared_ptr<CoroutineState<void>> submitForm() {
 //"Move to the first hyperlink"
 std::shared_ptr<CoroutineState<void>> topA() {
   auto hl = CurrentTab->currentBuffer()->layout.data._hmarklist;
-  BufferPoint *po;
-  Anchor *an;
-  int hseq = 0;
 
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   if (hl->size() == 0)
     co_return;
 
+  int hseq = 0;
   if (prec_num > (int)hl->size())
     hseq = hl->size() - 1;
   else if (prec_num > 0)
     hseq = prec_num - 1;
+
+  Anchor *an = nullptr;
+  BufferPoint *po = nullptr;
   do {
     if (hseq >= (int)hl->size())
       co_return;
-    po = &hl->marks[hseq];
+    po = hl->get(hseq);
     if (CurrentTab->currentBuffer()->layout.data._href) {
       an = CurrentTab->currentBuffer()->layout.data._href->retrieveAnchor(
           po->line, po->pos);
@@ -812,25 +813,27 @@ std::shared_ptr<CoroutineState<void>> topA() {
 //"Move to the last hyperlink"
 std::shared_ptr<CoroutineState<void>> lastA() {
   auto hl = CurrentTab->currentBuffer()->layout.data._hmarklist;
-  BufferPoint *po;
-  Anchor *an;
-  int hseq;
 
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   if (hl->size() == 0)
     co_return;
 
+  int hseq;
   if (prec_num >= (int)hl->size())
     hseq = 0;
   else if (prec_num > 0)
     hseq = hl->size() - prec_num;
   else
     hseq = hl->size() - 1;
+
+  Anchor *an = nullptr;
+  ;
+  BufferPoint *po = nullptr;
   do {
     if (hseq < 0)
       co_return;
-    po = &hl->marks[hseq];
+    po = hl->get(hseq);
     if (CurrentTab->currentBuffer()->layout.data._href) {
       an = CurrentTab->currentBuffer()->layout.data._href->retrieveAnchor(
           po->line, po->pos);
@@ -863,8 +866,7 @@ std::shared_ptr<CoroutineState<void>> nthA() {
   if (!hl || hl->size() == 0)
     co_return;
 
-  auto po = &hl->marks[n - 1];
-
+  auto po = hl->get(n - 1);
   Anchor *an = nullptr;
   if (CurrentTab->currentBuffer()->layout.data._href) {
     an = CurrentTab->currentBuffer()->layout.data._href->retrieveAnchor(

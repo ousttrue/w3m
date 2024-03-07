@@ -6,6 +6,11 @@ struct keyvalue {
   keyvalue *next;
 };
 
+struct InternalAction {
+  const char *action;
+  void (*rout)(keyvalue *);
+};
+
 const char *tag_get_value(keyvalue *t, const char *arg);
 int tag_exists(keyvalue *t, const char *arg);
 keyvalue *cgistr2tagarg(const char *cgistr);

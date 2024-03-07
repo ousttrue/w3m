@@ -410,11 +410,6 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
     return;
 
   auto hl = this->data._hmarklist;
-  BufferPoint *po;
-  Anchor *pan;
-  int i, x, y;
-  Url url;
-
   if (hl->size() == 0)
     return;
 
@@ -423,11 +418,11 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
     an = this->retrieveCurrentForm();
   }
 
-  y = linenumber(this->currentLine);
-  x = this->pos;
+  int y = linenumber(this->currentLine);
+  int x = this->pos;
 
-  for (i = 0; i < n; i++) {
-    pan = an;
+  for (int i = 0; i < n; i++) {
+    auto pan = an;
     if (an && an->hseq >= 0) {
       int hseq = an->hseq - 1;
       do {
@@ -435,7 +430,7 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
           an = pan;
           goto _end;
         }
-        po = &hl->marks[hseq];
+        auto po = hl->get(hseq);
         if (this->data._href) {
           an = this->data._href->retrieveAnchor(po->line, po->pos);
         }
@@ -459,10 +454,13 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
 _end:
   if (an == nullptr || an->hseq < 0)
     return;
-  po = &hl->marks[an->hseq];
-  this->gotoLine(po->line);
-  this->pos = po->pos;
-  this->arrangeCursor();
+
+  {
+    auto po = hl->get(an->hseq);
+    this->gotoLine(po->line);
+    this->pos = po->pos;
+    this->arrangeCursor();
+  }
 }
 
 /* go to the next anchor */
@@ -492,7 +490,7 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
           an = pan;
           goto _end;
         }
-        auto po = &hl->marks[hseq];
+        auto po = hl->get(hseq);
         if (this->data._href) {
           an = this->data._href->retrieveAnchor(po->line, po->pos);
         }
@@ -516,10 +514,12 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
 _end:
   if (an == nullptr || an->hseq < 0)
     return;
-  auto po = &hl->marks[an->hseq];
-  this->gotoLine(po->line);
-  this->pos = po->pos;
-  this->arrangeCursor();
+  {
+    auto po = hl->get(an->hseq);
+    this->gotoLine(po->line);
+    this->pos = po->pos;
+    this->arrangeCursor();
+  }
 }
 
 /* Move cursor left */
