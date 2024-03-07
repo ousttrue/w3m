@@ -132,9 +132,6 @@ public:
 
   Str *getLinkNumberStr(int correction) const;
 
-  void HTMLlineproc2body(struct HttpResponse *res, struct LineData *layout,
-                         GeneralList<TextLine> *tl);
-
   Str *process_img(HtmlTag *tag, int width);
   Str *process_anchor(HtmlTag *tag, const char *tagbuf);
   Str *process_input(HtmlTag *tag);
@@ -144,6 +141,14 @@ public:
 
 private:
   int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
+
+  char *outc = NULL;
+  Lineprop *outp = NULL;
+  int out_size = 0;
+
+public:
+  void render(struct HttpResponse *res, struct LineData *layout,
+                         GeneralList<TextLine> *tl);
 };
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri);

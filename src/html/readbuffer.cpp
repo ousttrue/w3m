@@ -546,7 +546,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   //
   // render ?
   //
-  parser.HTMLlineproc2body(res, &layout->data, htmlenv1.buf);
+  parser.render(res, &layout->data, htmlenv1.buf);
 
   layout->topLine = layout->firstLine();
   layout->currentLine = layout->firstLine();

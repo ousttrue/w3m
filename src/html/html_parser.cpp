@@ -888,13 +888,10 @@ static int ex_efct(int ex) {
 
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
-void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
+void HtmlParser::render(HttpResponse *res, LineData *data,
                                    GeneralList<TextLine> *tl) {
   _tl_lp2 = tl->first;
 
-  static char *outc = NULL;
-  static Lineprop *outp = NULL;
-  static int out_size = 0;
   Anchor *a_href = NULL, *a_img = NULL;
   const char *p, *q, *r, *s, *t, *str;
   Lineprop mode, effect, ex_effect;
