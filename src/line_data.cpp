@@ -328,7 +328,7 @@ void LineData::clear() {
   this->_name->clear();
   this->_img->clear();
   this->_formitem->clear();
-  this->formlist = nullptr;
+  this->formlist.clear();
   this->linklist = nullptr;
   this->_hmarklist->clear();
 }

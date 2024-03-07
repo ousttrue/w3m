@@ -468,9 +468,14 @@ std::string_view HttpResponse::getBody() {
   }
 
   auto encoding = contentEncoding();
-  if (encoding != CMP_NOCOMPRESS && !decoded) {
-    raw = decode_gzip(raw);
-    decoded = true;
+  if (encoding == CMP_GZIP && !decoded) {
+    if (is_gzip(raw)) {
+      raw = decode_gzip(raw);
+      decoded = true;
+    } else {
+      // TODO: ?
+      decoded = true;
+    }
   }
 
   return {(const char *)raw.data(), (const char *)raw.data() + raw.size()};

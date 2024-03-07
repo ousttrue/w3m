@@ -25,7 +25,7 @@ struct LineData {
   std::shared_ptr<AnchorList<FormAnchor>> _formitem;
   std::shared_ptr<HmarkerList> _hmarklist;
   struct LinkList *linklist = nullptr;
-  struct FormList *formlist = nullptr;
+  std::vector<FormList *> formlist;
   struct FormItemList *form_submit = nullptr;
   struct FormAnchor *submit = nullptr;
 

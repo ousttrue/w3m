@@ -68,9 +68,8 @@ public:
 
 private:
   // form
-  struct FormList **forms = {};
-  int *form_stack = {};
-  int form_max = -1;
+  std::vector<struct FormList *> forms;
+  std::vector<int> form_stack;
   int forms_size = 0;
   int form_sp = -1;
 
@@ -148,7 +147,7 @@ private:
 
 public:
   void render(struct HttpResponse *res, struct LineData *layout,
-                         GeneralList<TextLine> *tl);
+              GeneralList<TextLine> *tl);
 };
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri);

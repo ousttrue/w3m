@@ -825,23 +825,16 @@ Str *HtmlParser::process_form_int(struct HtmlTag *tag, int fid) {
   tag->parsedtag_get_value(ATTR_NAME, &n);
 
   if (fid < 0) {
-    form_max++;
+    forms.push_back({});
+    form_stack.push_back({});
     form_sp++;
-    fid = form_max;
+    fid = forms.size() - 1;
   } else { /* <form_int> */
-    if (form_max < fid)
-      form_max = fid;
+    while (fid >= forms.size()) {
+      forms.push_back({});
+      form_stack.push_back({});
+    }
     form_sp = fid;
-  }
-  if (forms_size == 0) {
-    forms_size = INITIAL_FORM_SIZE;
-    forms = (FormList **)New_N(FormList *, forms_size);
-    form_stack = (int *)NewAtom_N(int, forms_size);
-  }
-  if (forms_size <= form_max) {
-    forms_size += form_max;
-    forms = (FormList **)New_Reuse(FormList *, forms, forms_size);
-    form_stack = (int *)New_Reuse(int, form_stack, forms_size);
   }
   form_stack[form_sp] = fid;
 
@@ -889,10 +882,9 @@ static int ex_efct(int ex) {
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
 void HtmlParser::render(HttpResponse *res, LineData *data,
-                                   GeneralList<TextLine> *tl) {
+                        GeneralList<TextLine> *tl) {
   _tl_lp2 = tl->first;
 
-  Anchor *a_href = NULL, *a_img = NULL;
   const char *p, *q, *r, *s, *t, *str;
   Lineprop mode, effect, ex_effect;
   int pos;
@@ -920,6 +912,8 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
   effect = 0;
   ex_effect = 0;
 
+  Anchor *a_href = NULL;
+  Anchor *a_img = NULL;
   for (int nlines = 0; auto line = textlist_feed(); ++nlines) {
     if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
       Strcat(textarea_str[n_textarea], line);
@@ -1035,24 +1029,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
           }
           if (p) {
             effect |= PE_ANCHOR;
-
-            // const char *url, const char *target,
-            //                     const HttpOption &option, const char *title,
-            //                     unsigned char key, int line, int pos
-            // BufferPoint bp = {0};
-            // bp.line = line;
-            // bp.pos = pos;
-            // a->url = url;
-            // a->target = target ? target : "";
-            // a->option = option;
-            // a->title = title;
-            // a->accesskey = key;
-            // a->slave = false;
-            // a->start = bp;
-            // a->end = bp;
-            // return a;
-            // p, q, {.referer = r ? r : ""}, s, *t
-            /*auto a_href =*/data->_href->putAnchor(
+            a_href = data->_href->putAnchor(
                 BufferPoint{
                     .line = nlines,
                     .pos = pos,
@@ -1118,9 +1095,10 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
           tag->parsedtag_get_value(ATTR_FID, &form_id);
           tag->parsedtag_get_value(ATTR_TOP_MARGIN, &top);
           tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &bottom);
-          if (form_id < 0 || form_id > form_max || forms == NULL ||
-              forms[form_id] == NULL)
+          if (form_id < 0 || form_id >= forms.size() ||
+              forms[form_id] == NULL) {
             break; /* outside of <form>..</form> */
+          }
           form = forms[form_id];
           if (hseq > 0) {
             int hpos = pos;
@@ -1296,10 +1274,12 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
     }
   }
 
-  for (form_id = 1; form_id <= form_max; form_id++)
-    if (forms[form_id])
+  for (form_id = 1; form_id < forms.size(); form_id++) {
+    if (forms[form_id]) {
       forms[form_id]->next = forms[form_id - 1];
-  data->formlist = (form_max >= 0) ? forms[form_max] : NULL;
+    }
+  }
+  data->formlist = forms;
   if (n_textarea) {
     data->addMultirowsForm();
   }

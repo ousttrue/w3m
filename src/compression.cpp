@@ -222,7 +222,7 @@ std::string filename_extension(const std::string_view path, bool is_url) {
   return std::string(last_dot, last_dot + i);
 }
 
-std::vector<uint8_t> decode_gzip(std::span<uint8_t> src) {
+bool is_gzip(std::span<uint8_t> src) {
   if (src.size() < 3) {
     return {};
   }
@@ -232,7 +232,12 @@ std::vector<uint8_t> decode_gzip(std::span<uint8_t> src) {
       0x08,
   };
   auto sig = src.subspan(0, 3);
-  if (!std::ranges::equal(sig, gz_sig)) {
+  return std::ranges::equal(sig, gz_sig);
+}
+
+std::vector<uint8_t> decode_gzip(std::span<uint8_t> src) {
+  auto sig = src.subspan(0, 3);
+  if (!is_gzip(src)) {
     assert(false);
     uint8_t _debug[] = {sig[0], sig[1], sig[2]};
     return {};
