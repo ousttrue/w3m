@@ -10,7 +10,6 @@
 #define DEFAULT_COLS 80
 #define SITECONF_FILE RC_DIR "/siteconf"
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
-#define PRE_FORM_FILE RC_DIR "/pre_form"
 
 const char *w3m_reqlog = {};
 bool IsForkChild = 0;
@@ -28,7 +27,7 @@ char *ExtBrowser7 = nullptr;
 char *ExtBrowser8 = nullptr;
 char *ExtBrowser9 = nullptr;
 int BackgroundExtViewer = true;
-const char *pre_form_file = PRE_FORM_FILE;
+
 const char *siteconf_file = SITECONF_FILE;
 const char *ftppasswd = nullptr;
 int ftppass_hostnamegen = true;

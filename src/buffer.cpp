@@ -1,4 +1,6 @@
 #include "buffer.h"
+#include "regex.h"
+#include "html/preform.h"
 #include "url_quote.h"
 #include "linein.h"
 #include "symbol.h"
@@ -614,7 +616,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       App::instance().disp_message_nsec("Read only field!", 1, true);
       break;
     }
-    formRecheckRadio(a, this, fi);
+    this->formRecheckRadio(a);
     break;
 
   case FORM_INPUT_CHECKBOX:
@@ -755,4 +757,83 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *url, const char *prompt,
   auto p_url = urlParse(url, current);
   URLHist->push(p_url.to_Str());
   return this->cmd_loadURL(url, current, option, nullptr);
+}
+
+void Buffer::formRecheckRadio(FormAnchor *a) {
+  FormItemList *fi = a->formItem;
+  for (size_t i = 0; i < this->layout.data._formitem->size(); i++) {
+    auto a2 = &this->layout.data._formitem->anchors[i];
+    auto f2 = a2->formItem;
+    if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
+        Strcmp(f2->name, fi->name) == 0) {
+      f2->checked = 0;
+      this->layout.formUpdateBuffer(a2);
+    }
+  }
+  fi->checked = 1;
+  this->layout.formUpdateBuffer(a);
+}
+
+void Buffer::preFormUpdateBuffer(pre_form *PreForm) {
+
+  if (!this->layout.data._formitem || !PreForm)
+    return;
+
+  struct pre_form *pf;
+  struct pre_form_item *pi;
+  for (pf = PreForm; pf; pf = pf->next) {
+    if (pf->re_url) {
+      auto url = this->res->currentURL.to_Str();
+      if (!RegexMatch(pf->re_url, url.c_str(), url.size(), 1))
+        continue;
+    } else if (pf->url) {
+      if (Strcmp(this->res->currentURL.to_Str(), pf->url))
+        continue;
+    } else
+      continue;
+    for (size_t i = 0; i < this->layout.data._formitem->size(); i++) {
+      auto a = &this->layout.data._formitem->anchors[i];
+      auto fi = a->formItem;
+      auto fl = fi->parent;
+      if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
+        continue;
+      if (pf->action && (!fl->action || Strcmp_charp(fl->action, pf->action)))
+        continue;
+      for (pi = pf->item; pi; pi = pi->next) {
+        if (pi->type != fi->type)
+          continue;
+        if (pi->type == FORM_INPUT_SUBMIT || pi->type == FORM_INPUT_IMAGE) {
+          if ((!pi->name || !*pi->name ||
+               (fi->name && !Strcmp_charp(fi->name, pi->name))) &&
+              (!pi->value || !*pi->value ||
+               (fi->value && !Strcmp_charp(fi->value, pi->value))))
+            this->layout.data.submit = a;
+          continue;
+        }
+        if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))
+          continue;
+
+        switch (pi->type) {
+        case FORM_INPUT_TEXT:
+        case FORM_INPUT_FILE:
+        case FORM_INPUT_PASSWORD:
+        case FORM_TEXTAREA:
+          fi->value = Strnew_charp(pi->value);
+          this->layout.formUpdateBuffer(a);
+          break;
+
+        case FORM_INPUT_CHECKBOX:
+          if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
+            fi->checked = pi->checked;
+            this->layout.formUpdateBuffer(a);
+          }
+          break;
+        case FORM_INPUT_RADIO:
+          if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
+            this->formRecheckRadio(a);
+          break;
+        }
+      }
+    }
+  }
 }

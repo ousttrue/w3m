@@ -60,11 +60,8 @@ public:
   std::string link_info() const;
   std::shared_ptr<Buffer> page_info_panel();
   void saveBuffer(FILE *f, bool cont);
+  void formRecheckRadio(FormAnchor *a);
+  void preFormUpdateBuffer(struct pre_form *PreForm);
 };
-
-// std::shared_ptr<Buffer> selectBuffer(const std::shared_ptr<Buffer>
-// &firstbuf,
-//                                      std::shared_ptr<Buffer> currentbuf,
-//                                      char *selectchar);
 
 std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf);

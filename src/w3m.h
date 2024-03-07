@@ -32,7 +32,6 @@ extern char *ExtBrowser7;
 extern char *ExtBrowser8;
 extern char *ExtBrowser9;
 extern int BackgroundExtViewer;
-extern const char *pre_form_file;
 extern const char *siteconf_file;
 extern const char *ftppasswd;
 extern int ftppass_hostnamegen;
