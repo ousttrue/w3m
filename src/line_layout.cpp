@@ -3,10 +3,13 @@
 #include "myctype.h"
 #include "url.h"
 #include "html/form.h"
+#include "html/form_item.h"
 #include "regex.h"
 #include "alloc.h"
+#include "utf8.h"
 
 int nextpage_topline = false;
+int FoldTextarea = false;
 
 LineLayout::LineLayout() {
   this->COLS = App::instance().COLS();
@@ -782,7 +785,7 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
   if (this->check_url) {
     this->chkURLBuffer();
   }
-  formResetBuffer(this, sbuf.data._formitem.get());
+  this->formResetBuffer(sbuf.data._formitem.get());
 }
 
 Anchor *LineLayout::retrieveCurrentAnchor() {
@@ -802,4 +805,219 @@ FormAnchor *LineLayout::retrieveCurrentForm() {
     return NULL;
   return this->data._formitem->retrieveAnchor(linenumber(currentLine),
                                               this->pos);
+}
+
+void LineLayout::formResetBuffer(const AnchorList<FormAnchor> *formitem) {
+
+  if (this->data._formitem == NULL || formitem == NULL)
+    return;
+
+  for (size_t i = 0; i < this->data._formitem->size() && i < formitem->size();
+       i++) {
+    auto a = &this->data._formitem->anchors[i];
+    if (a->y != a->start.line)
+      continue;
+
+    auto f1 = a->formItem;
+    auto f2 = formitem->anchors[i].formItem;
+    if (f1->type != f2->type ||
+        strcmp(((f1->name == NULL) ? "" : f1->name->ptr),
+               ((f2->name == NULL) ? "" : f2->name->ptr)))
+      break; /* What's happening */
+    switch (f1->type) {
+    case FORM_INPUT_TEXT:
+    case FORM_INPUT_PASSWORD:
+    case FORM_INPUT_FILE:
+    case FORM_TEXTAREA:
+      f1->value = f2->value;
+      f1->init_value = f2->init_value;
+      break;
+    case FORM_INPUT_CHECKBOX:
+    case FORM_INPUT_RADIO:
+      f1->checked = f2->checked;
+      f1->init_checked = f2->init_checked;
+      break;
+    case FORM_SELECT:
+      break;
+    default:
+      continue;
+    }
+
+    this->formUpdateBuffer(a);
+  }
+}
+
+static int form_update_line(Line *line, char **str, int spos, int epos,
+                            int width, int newline, int password) {
+  int c_len = 1, c_width = 1, w, i, len, pos;
+  char *p, *buf;
+  Lineprop c_type, effect, *prop;
+
+  for (p = *str, w = 0, pos = 0; *p && w < width;) {
+    c_type = get_mctype(p);
+    if (c_type == PC_CTRL) {
+      if (newline && *p == '\n')
+        break;
+      if (*p != '\r') {
+        w++;
+        pos++;
+      }
+    } else if (password) {
+      w += c_width;
+      pos += c_width;
+      w += c_width;
+      pos += c_len;
+    }
+    p += c_len;
+  }
+  pos += width - w;
+
+  len = line->len() + pos + spos - epos;
+  buf = (char *)New_N(char, len + 1);
+  buf[len] = '\0';
+  prop = (Lineprop *)New_N(Lineprop, len);
+  memcpy(buf, line->lineBuf.data(), spos * sizeof(char));
+  memcpy(prop, line->propBuf.data(), spos * sizeof(Lineprop));
+
+  effect = CharEffect(line->propBuf[spos]);
+  for (p = *str, w = 0, pos = spos; *p && w < width;) {
+    c_type = get_mctype(p);
+    if (c_type == PC_CTRL) {
+      if (newline && *p == '\n')
+        break;
+      if (*p != '\r') {
+        buf[pos] = password ? '*' : ' ';
+        prop[pos] = effect | PC_ASCII;
+        pos++;
+        w++;
+      }
+    } else if (password) {
+      for (i = 0; i < c_width; i++) {
+        buf[pos] = '*';
+        prop[pos] = effect | PC_ASCII;
+        pos++;
+        w++;
+      }
+    } else {
+      buf[pos] = *p;
+      prop[pos] = effect | c_type;
+      pos++;
+      w += c_width;
+    }
+    p += c_len;
+  }
+  for (; w < width; w++) {
+    buf[pos] = ' ';
+    prop[pos] = effect | PC_ASCII;
+    pos++;
+  }
+  if (newline) {
+    if (!FoldTextarea) {
+      while (*p && *p != '\r' && *p != '\n')
+        p++;
+    }
+    if (*p == '\r')
+      p++;
+    if (*p == '\n')
+      p++;
+  }
+  *str = p;
+
+  memcpy(&buf[pos], &line->lineBuf[epos], (line->len() - epos) * sizeof(char));
+  memcpy(&prop[pos], &line->propBuf[epos],
+         (line->len() - epos) * sizeof(Lineprop));
+
+  line->assign(buf, prop, len);
+
+  return pos;
+}
+void LineLayout::formUpdateBuffer(FormAnchor *a) {
+  char *p;
+  int spos, epos, rows, c_rows, pos, col = 0;
+  Line *l;
+
+  LineLayout save = *this;
+  this->gotoLine(a->start.line);
+  auto form = a->formItem;
+  switch (form->type) {
+  case FORM_TEXTAREA:
+  case FORM_INPUT_TEXT:
+  case FORM_INPUT_FILE:
+  case FORM_INPUT_PASSWORD:
+  case FORM_INPUT_CHECKBOX:
+  case FORM_INPUT_RADIO:
+    spos = a->start.pos;
+    epos = a->end.pos;
+    break;
+  default:
+    spos = a->start.pos + 1;
+    epos = a->end.pos - 1;
+  }
+
+  switch (form->type) {
+  case FORM_INPUT_CHECKBOX:
+  case FORM_INPUT_RADIO:
+    if (this->currentLine == NULL || spos >= this->currentLine->len() ||
+        spos < 0)
+      break;
+    if (form->checked)
+      this->currentLine->lineBuf[spos] = '*';
+    else
+      this->currentLine->lineBuf[spos] = ' ';
+    break;
+  case FORM_INPUT_TEXT:
+  case FORM_INPUT_FILE:
+  case FORM_INPUT_PASSWORD:
+  case FORM_TEXTAREA: {
+    if (!form->value)
+      break;
+    p = form->value->ptr;
+  }
+    l = this->currentLine;
+    if (!l)
+      break;
+    if (form->type == FORM_TEXTAREA) {
+      int n = a->y - this->linenumber(this->currentLine);
+      if (n > 0)
+        for (; !this->isNull(l) && n; --l, n--)
+          ;
+      else if (n < 0)
+        for (; !this->isNull(l) && n; --l, n++)
+          ;
+      if (!l)
+        break;
+    }
+    rows = form->rows ? form->rows : 1;
+    col = l->bytePosToColumn(a->start.pos);
+    for (c_rows = 0; c_rows < rows; c_rows++, ++l) {
+      if (this->isNull(l))
+        break;
+      if (rows > 1 && this->data._formitem) {
+        pos = l->columnPos(col);
+        a = this->data._formitem->retrieveAnchor(this->linenumber(l), pos);
+        if (a == NULL)
+          break;
+        spos = a->start.pos;
+        epos = a->end.pos;
+      }
+      if (a->start.line != a->end.line || spos > epos || epos >= l->len() ||
+          spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
+        break;
+      pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
+                             rows > 1, form->type == FORM_INPUT_PASSWORD);
+      if (pos != epos) {
+        this->data._href->shiftAnchorPosition(this->data._hmarklist.get(),
+                                              a->start.line, spos, pos - epos);
+        this->data._name->shiftAnchorPosition(this->data._hmarklist.get(),
+                                              a->start.line, spos, pos - epos);
+        this->data._img->shiftAnchorPosition(this->data._hmarklist.get(),
+                                             a->start.line, spos, pos - epos);
+        this->data._formitem->shiftAnchorPosition(
+            this->data._hmarklist.get(), a->start.line, spos, pos - epos);
+      }
+    }
+    break;
+  }
+  *this = save;
+  this->arrangeLine();
 }

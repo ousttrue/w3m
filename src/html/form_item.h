@@ -25,7 +25,8 @@ struct FormItemList {
   Str *name;
   Str *value;
   Str *init_value;
-  int checked, init_checked;
+  int checked;
+  int init_checked;
   int accept;
   int size;
   int rows;

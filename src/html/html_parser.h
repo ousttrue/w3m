@@ -15,7 +15,19 @@ struct link_stack {
   link_stack *next = nullptr;
 };
 
+using FeedFunc = Str *(*)();
+
 class HtmlParser {
+  GeneralList<TextLine>::ListItem *_tl_lp2 = nullptr;
+  Str *textlist_feed(void) {
+    TextLine *p;
+    if (_tl_lp2 != NULL) {
+      p = _tl_lp2->ptr;
+      _tl_lp2 = _tl_lp2->next;
+      return p->line;
+    }
+    return NULL;
+  }
 
   int need_number = 0;
 
@@ -55,13 +67,6 @@ public:
   void feed_select(const char *str);
 
 private:
-  void APPEND(GeneralList<TextLine> *buf, Str *str) {
-    if (buf)
-      appendTextLine(buf, (str), 0);
-    // else if (f)
-    //   Strfputs((str), f);
-  };
-
   // form
   struct FormList **forms = {};
   int *form_stack = {};
@@ -128,7 +133,7 @@ public:
   Str *getLinkNumberStr(int correction) const;
 
   void HTMLlineproc2body(struct HttpResponse *res, struct LineData *layout,
-                         Str *(*feed)());
+                         GeneralList<TextLine> *tl);
 
   Str *process_img(HtmlTag *tag, int width);
   Str *process_anchor(HtmlTag *tag, const char *tagbuf);

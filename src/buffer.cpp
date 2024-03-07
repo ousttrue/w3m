@@ -549,7 +549,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     auto p = co_await input;
     if (p.size()) {
       fi->value = Strnew(p);
-      formUpdateBuffer(a, &CurrentTab->currentBuffer()->layout, fi);
+      CurrentTab->currentBuffer()->layout.formUpdateBuffer(a);
       if (fi->accept || fi->parent->nitems == 1) {
         co_return CurrentTab->currentBuffer()->do_submit(fi, a);
       }
@@ -590,7 +590,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     // if (p == nullptr)
     //   break;
     // fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, &this->layout, fi);
+    this->layout.formUpdateBuffer(a);
     if (fi->accept) {
       co_return this->do_submit(fi, a);
     }
@@ -603,7 +603,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
     input_textarea(fi);
-    formUpdateBuffer(a, &this->layout, fi);
+    this->layout.formUpdateBuffer(a);
     break;
 
   case FORM_INPUT_RADIO:
@@ -626,8 +626,9 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       break;
     }
     fi->checked = !fi->checked;
-    formUpdateBuffer(a, &this->layout, fi);
+    this->layout.formUpdateBuffer(a);
     break;
+
   case FORM_INPUT_IMAGE:
   case FORM_INPUT_SUBMIT:
   case FORM_INPUT_BUTTON:
@@ -642,7 +643,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
           f2->type != FORM_INPUT_RESET) {
         f2->value = f2->init_value;
         f2->checked = f2->init_checked;
-        formUpdateBuffer(a2, &this->layout, f2);
+        this->layout.formUpdateBuffer(a2);
       }
     }
     break;

@@ -49,8 +49,6 @@ FormList *newFormList(const char *action, const char *method,
 struct Buffer;
 struct LineLayout;
 void formRecheckRadio(FormAnchor *a, Buffer *buf, FormItemList *form);
-void formResetBuffer(LineLayout *layout, AnchorList<FormAnchor> *formitem);
-void formUpdateBuffer(FormAnchor *a, LineLayout *layout, FormItemList *form);
 void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf);
 Str *textfieldrep(Str *s, int width);
 void input_textarea(FormItemList *fi);

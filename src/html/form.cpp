@@ -145,225 +145,11 @@ void formRecheckRadio(FormAnchor *a, Buffer *buf, FormItemList *fi) {
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
-      formUpdateBuffer(a2, &buf->layout, f2);
+      buf->layout.formUpdateBuffer(a2);
     }
   }
   fi->checked = 1;
-  formUpdateBuffer(a, &buf->layout, fi);
-}
-
-void formResetBuffer(LineLayout *layout, AnchorList<FormAnchor> *formitem) {
-  FormAnchor *a;
-  FormItemList *f1, *f2;
-
-  if (!layout || layout->data._formitem == NULL || formitem == NULL)
-    return;
-  for (size_t i = 0; i < layout->data._formitem->size() && i < formitem->size();
-       i++) {
-    a = &layout->data._formitem->anchors[i];
-    if (a->y != a->start.line)
-      continue;
-    f1 = a->formItem;
-    f2 = formitem->anchors[i].formItem;
-    if (f1->type != f2->type ||
-        strcmp(((f1->name == NULL) ? "" : f1->name->ptr),
-               ((f2->name == NULL) ? "" : f2->name->ptr)))
-      break; /* What's happening */
-    switch (f1->type) {
-    case FORM_INPUT_TEXT:
-    case FORM_INPUT_PASSWORD:
-    case FORM_INPUT_FILE:
-    case FORM_TEXTAREA:
-      f1->value = f2->value;
-      f1->init_value = f2->init_value;
-      break;
-    case FORM_INPUT_CHECKBOX:
-    case FORM_INPUT_RADIO:
-      f1->checked = f2->checked;
-      f1->init_checked = f2->init_checked;
-      break;
-    case FORM_SELECT:
-      break;
-    default:
-      continue;
-    }
-    formUpdateBuffer(a, layout, f1);
-  }
-}
-
-static int form_update_line(Line *line, char **str, int spos, int epos,
-                            int width, int newline, int password) {
-  int c_len = 1, c_width = 1, w, i, len, pos;
-  char *p, *buf;
-  Lineprop c_type, effect, *prop;
-
-  for (p = *str, w = 0, pos = 0; *p && w < width;) {
-    c_type = get_mctype(p);
-    if (c_type == PC_CTRL) {
-      if (newline && *p == '\n')
-        break;
-      if (*p != '\r') {
-        w++;
-        pos++;
-      }
-    } else if (password) {
-      w += c_width;
-      pos += c_width;
-      w += c_width;
-      pos += c_len;
-    }
-    p += c_len;
-  }
-  pos += width - w;
-
-  len = line->len() + pos + spos - epos;
-  buf = (char *)New_N(char, len + 1);
-  buf[len] = '\0';
-  prop = (Lineprop *)New_N(Lineprop, len);
-  memcpy(buf, line->lineBuf.data(), spos * sizeof(char));
-  memcpy(prop, line->propBuf.data(), spos * sizeof(Lineprop));
-
-  effect = CharEffect(line->propBuf[spos]);
-  for (p = *str, w = 0, pos = spos; *p && w < width;) {
-    c_type = get_mctype(p);
-    if (c_type == PC_CTRL) {
-      if (newline && *p == '\n')
-        break;
-      if (*p != '\r') {
-        buf[pos] = password ? '*' : ' ';
-        prop[pos] = effect | PC_ASCII;
-        pos++;
-        w++;
-      }
-    } else if (password) {
-      for (i = 0; i < c_width; i++) {
-        buf[pos] = '*';
-        prop[pos] = effect | PC_ASCII;
-        pos++;
-        w++;
-      }
-    } else {
-      buf[pos] = *p;
-      prop[pos] = effect | c_type;
-      pos++;
-      w += c_width;
-    }
-    p += c_len;
-  }
-  for (; w < width; w++) {
-    buf[pos] = ' ';
-    prop[pos] = effect | PC_ASCII;
-    pos++;
-  }
-  if (newline) {
-    if (!FoldTextarea) {
-      while (*p && *p != '\r' && *p != '\n')
-        p++;
-    }
-    if (*p == '\r')
-      p++;
-    if (*p == '\n')
-      p++;
-  }
-  *str = p;
-
-  memcpy(&buf[pos], &line->lineBuf[epos], (line->len() - epos) * sizeof(char));
-  memcpy(&prop[pos], &line->propBuf[epos],
-         (line->len() - epos) * sizeof(Lineprop));
-
-  line->assign(buf, prop, len);
-
-  return pos;
-}
-
-void formUpdateBuffer(FormAnchor *a, LineLayout *layout, FormItemList *form) {
-  char *p;
-  int spos, epos, rows, c_rows, pos, col = 0;
-  Line *l;
-
-  LineLayout save;
-  save = *layout;
-  layout->gotoLine(a->start.line);
-  switch (form->type) {
-  case FORM_TEXTAREA:
-  case FORM_INPUT_TEXT:
-  case FORM_INPUT_FILE:
-  case FORM_INPUT_PASSWORD:
-  case FORM_INPUT_CHECKBOX:
-  case FORM_INPUT_RADIO:
-    spos = a->start.pos;
-    epos = a->end.pos;
-    break;
-  default:
-    spos = a->start.pos + 1;
-    epos = a->end.pos - 1;
-  }
-  switch (form->type) {
-  case FORM_INPUT_CHECKBOX:
-  case FORM_INPUT_RADIO:
-    if (layout->currentLine == NULL || spos >= layout->currentLine->len() ||
-        spos < 0)
-      break;
-    if (form->checked)
-      layout->currentLine->lineBuf[spos] = '*';
-    else
-      layout->currentLine->lineBuf[spos] = ' ';
-    break;
-  case FORM_INPUT_TEXT:
-  case FORM_INPUT_FILE:
-  case FORM_INPUT_PASSWORD:
-  case FORM_TEXTAREA: {
-    if (!form->value)
-      break;
-    p = form->value->ptr;
-  }
-    l = layout->currentLine;
-    if (!l)
-      break;
-    if (form->type == FORM_TEXTAREA) {
-      int n = a->y - layout->linenumber(layout->currentLine);
-      if (n > 0)
-        for (; !layout->isNull(l) && n; --l, n--)
-          ;
-      else if (n < 0)
-        for (; !layout->isNull(l) && n; --l, n++)
-          ;
-      if (!l)
-        break;
-    }
-    rows = form->rows ? form->rows : 1;
-    col = l->bytePosToColumn(a->start.pos);
-    for (c_rows = 0; c_rows < rows; c_rows++, ++l) {
-      if (layout->isNull(l))
-        break;
-      if (rows > 1 && layout->data._formitem) {
-        pos = l->columnPos(col);
-        a = layout->data._formitem->retrieveAnchor(layout->linenumber(l), pos);
-        if (a == NULL)
-          break;
-        spos = a->start.pos;
-        epos = a->end.pos;
-      }
-      if (a->start.line != a->end.line || spos > epos || epos >= l->len() ||
-          spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
-        break;
-      pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
-                             rows > 1, form->type == FORM_INPUT_PASSWORD);
-      if (pos != epos) {
-        layout->data._href->shiftAnchorPosition(
-            layout->data._hmarklist.get(), a->start.line, spos, pos - epos);
-        layout->data._name->shiftAnchorPosition(
-            layout->data._hmarklist.get(), a->start.line, spos, pos - epos);
-        layout->data._img->shiftAnchorPosition(layout->data._hmarklist.get(),
-                                               a->start.line, spos, pos - epos);
-        layout->data._formitem->shiftAnchorPosition(
-            layout->data._hmarklist.get(), a->start.line, spos, pos - epos);
-      }
-    }
-    break;
-  }
-  *layout = save;
-  layout->arrangeLine();
+  buf->layout.formUpdateBuffer(a);
 }
 
 Str *textfieldrep(Str *s, int width) {
@@ -727,18 +513,20 @@ void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf) {
         }
         if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))
           continue;
+
         switch (pi->type) {
         case FORM_INPUT_TEXT:
         case FORM_INPUT_FILE:
         case FORM_INPUT_PASSWORD:
         case FORM_TEXTAREA:
           fi->value = Strnew_charp(pi->value);
-          formUpdateBuffer(a, &buf->layout, fi);
+          buf->layout.formUpdateBuffer(a);
           break;
+
         case FORM_INPUT_CHECKBOX:
           if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
             fi->checked = pi->checked;
-            formUpdateBuffer(a, &buf->layout, fi);
+            buf->layout.formUpdateBuffer(a);
           }
           break;
         case FORM_INPUT_RADIO:

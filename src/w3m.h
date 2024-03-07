@@ -43,7 +43,6 @@ extern int squeezeBlankLine;
 extern const char *BookmarkFile;
 extern int UseExternalDirBuffer;
 extern const char *DirBufferCommand;
-extern int FoldTextarea;
 extern int DefaultURLString;
 extern struct auth_cookie *Auth_cookie;
 extern struct Cookie *First_cookie;

@@ -446,7 +446,9 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
       if (sloppy_parse_line(&p)) {
         Strcat_charp_n(tmp, q, p - q);
         if (force == 2) {
-          APPEND(buf, tmp);
+          if (buf) {
+            appendTextLine(buf, tmp, 0);
+          }
         } else
           Strcat(tmp2, tmp);
         Strclear(tmp);
@@ -454,7 +456,9 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     }
     if (force == 2) {
       if (pass) {
-        APPEND(buf, pass);
+        if (buf) {
+          appendTextLine(buf, pass, 0);
+        }
       }
       pass = NULL;
     } else {
@@ -885,7 +889,9 @@ static int ex_efct(int ex) {
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
 void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
-                                   Str *(*feed)()) {
+                                   GeneralList<TextLine> *tl) {
+  _tl_lp2 = tl->first;
+
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -917,7 +923,7 @@ void HtmlParser::HTMLlineproc2body(HttpResponse *res, LineData *data,
   effect = 0;
   ex_effect = 0;
 
-  for (int nlines = 0; auto line = feed(); ++nlines) {
+  for (int nlines = 0; auto line = textlist_feed(); ++nlines) {
     if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
       Strcat(textarea_str[n_textarea], line);
       continue;
@@ -1784,7 +1790,6 @@ Str *HtmlParser::process_hr(struct HtmlTag *tag, int width, int indent_width) {
   Strcat_charp(tmp, "</div_int></nobr>");
   return tmp;
 }
-
 
 #define CLOSE_P                                                                \
   if (obuf->flag & RB_P) {                                                     \

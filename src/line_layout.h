@@ -7,6 +7,7 @@
 #include <optional>
 
 extern int nextpage_topline;
+extern int FoldTextarea;
 
 struct BufferPos {
   long top_linenumber;
@@ -134,6 +135,8 @@ struct LineLayout {
   Anchor *retrieveCurrentAnchor();
   Anchor *retrieveCurrentImg();
   FormAnchor *retrieveCurrentForm();
+  void formResetBuffer(const AnchorList<FormAnchor> *formitem);
+  void formUpdateBuffer(FormAnchor *a);
 };
 
 inline void nextChar(int &s, Line *l) { s++; }

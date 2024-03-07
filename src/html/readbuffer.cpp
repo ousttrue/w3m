@@ -482,24 +482,6 @@ char *convert_size2(long long size1, long long size2, int usefloat) {
       ->ptr;
 }
 
-static GeneralList<TextLine>::ListItem *_tl_lp2;
-
-static Str *textlist_feed(void) {
-  TextLine *p;
-  if (_tl_lp2 != NULL) {
-    p = _tl_lp2->ptr;
-    _tl_lp2 = _tl_lp2->next;
-    return p->line;
-  }
-  return NULL;
-}
-
-static void HTMLlineproc2(HtmlParser *parser, HttpResponse *res,
-                          LineLayout *layout, GeneralList<TextLine> *tl) {
-  _tl_lp2 = tl->first;
-  parser->HTMLlineproc2body(res, &layout->data, textlist_feed);
-}
-
 readbuffer::readbuffer() {
   this->line = Strnew();
   this->prevchar = Strnew_size(8);
@@ -527,7 +509,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   long long linelen = 0;
   long long trbyte = 0;
 
-  symbol_width = symbol_width0 = 1;
+  symbol_width = 1;
 
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, App::instance().INIT_BUFFER_WIDTH(),
                              0);
@@ -544,17 +526,13 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
     auto lineBuf2 = Strnew(_lineBuf2);
 
     linelen += lineBuf2->length;
-    // showProgress(&linelen, &trbyte);
-    /*
-     * if (frame_source)
-     * continue;
-     */
     cleanup_line(lineBuf2, HTML_MODE);
     parser.HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
   }
   if (htmlenv1.obuf.status != R_ST_NORMAL) {
     parser.HTMLlineproc0("\n", &htmlenv1, internal);
   }
+
   htmlenv1.obuf.status = R_ST_NORMAL;
   parser.completeHTMLstream(&htmlenv1);
   parser.flushline(&htmlenv1, 0, 2, htmlenv1.limit);
@@ -564,12 +542,16 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   }
 
   res->trbyte = trbyte + linelen;
-  HTMLlineproc2(&parser, res, layout, htmlenv1.buf);
+
+  //
+  // render ?
+  //
+  parser.HTMLlineproc2body(res, &layout->data, htmlenv1.buf);
+
   layout->topLine = layout->firstLine();
   layout->currentLine = layout->firstLine();
   res->type = "text/html";
-  // if (n_textarea)
-  formResetBuffer(layout, layout->data._formitem.get());
+  layout->formResetBuffer(layout->data._formitem.get());
 }
 
 void cleanup_line(Str *s, CleanupMode mode) {

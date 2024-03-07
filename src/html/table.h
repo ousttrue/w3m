@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 extern int symbol_width;
-extern int symbol_width0;
 
 #define VALIGN_MIDDLE 0
 #define VALIGN_TOP 1
