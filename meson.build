@@ -17,8 +17,8 @@ libuv_dep = dependency('libuv')
 zlib_dep = dependency('zlib', default_options: ['default_library=static'])
 
 screen_dep = dependency('ftxui-screen')
-# dom_dep = dependency('ftxui-dom')
-# component_dep = dependency('ftxui-component')
+dom_dep = dependency('ftxui-dom')
+component_dep = dependency('ftxui-component')
 
 subdir('src/input')
 
@@ -53,3 +53,6 @@ executable(
     install: true,
     dependencies: [libuv_dep],
 )
+
+subdir('tui_sample')
+
