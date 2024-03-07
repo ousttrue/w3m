@@ -141,9 +141,22 @@ public:
 private:
   int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
 
-  char *outc = NULL;
-  Lineprop *outp = NULL;
-  int out_size = 0;
+  std::vector<char> outc;
+  std::vector<Lineprop> outp;
+
+  void PPUSH(char p, Lineprop c, int *pos) {
+    outp[*pos] = (p);
+    outc[*pos] = (c);
+    (*pos)++;
+  }
+
+  void PSIZE(int pos) {
+    if (outc.size() <= pos + 1) {
+      auto out_size = pos * 3 / 2;
+      outc.resize(out_size);
+      outp.resize(out_size);
+    }
+  }
 
 public:
   void render(struct HttpResponse *res, struct LineData *layout,

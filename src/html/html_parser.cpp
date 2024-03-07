@@ -848,19 +848,6 @@ Str *HtmlParser::process_n_form(void) {
   return NULL;
 }
 
-#define PPUSH(p, c)                                                            \
-  {                                                                            \
-    outp[pos] = (p);                                                           \
-    outc[pos] = (c);                                                           \
-    pos++;                                                                     \
-  }
-#define PSIZE                                                                  \
-  if (out_size <= pos + 1) {                                                   \
-    out_size = pos * 3 / 2;                                                    \
-    outc = (char *)New_Reuse(char, outc, out_size);                            \
-    outp = (Lineprop *)New_Reuse(Lineprop, outp, out_size);                    \
-  }
-
 static int ex_efct(int ex) {
   int effect = 0;
 
@@ -896,10 +883,9 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
   FormAnchor *a_form = NULL;
   FormAnchor **a_textarea = NULL;
 
-  if (out_size == 0) {
-    out_size = LINELEN;
-    outc = (char *)NewAtom_N(char, out_size);
-    outp = (Lineprop *)NewAtom_N(Lineprop, out_size);
+  if (outc.size() == 0) {
+    outc.resize(LINELEN);
+    outp.resize(LINELEN);
   }
 
   n_textarea = -1;
@@ -921,28 +907,26 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
     }
 
     pos = 0;
-#ifdef ENABLE_REMOVE_TRAILINGSPACES
-    Strremovetrailingspaces(line);
-#endif
     str = line->ptr;
     endp = str + line->length;
     while (str < endp) {
-      PSIZE;
+      PSIZE(pos);
       mode = get_mctype(str);
       if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
+        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol,
+              &pos);
         str += symbol_width;
       } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
+        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
         str++;
       } else if (*str != '<' && *str != '&') {
         int len = get_mclen(str);
-        PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
+        PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
         if (--len) {
           mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
           while (len--) {
-            PSIZE;
-            PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
+            PSIZE(pos);
+            PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
           }
         }
       } else if (*str == '&') {
@@ -951,13 +935,13 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
          */
         p = getescapecmd(&str);
         while (*p) {
-          PSIZE;
+          PSIZE(pos);
           mode = get_mctype(p);
           if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-            PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
+            PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
             p++;
           } else {
-            PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
+            PPUSH(mode | effect | ex_efct(ex_effect), *(p++), &pos);
           }
         }
       } else {
@@ -1265,7 +1249,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
     }
     /* end of processing for one line */
     if (!internal) {
-      data->addnewline(outc, outp, pos);
+      data->addnewline(outc.data(), outp.data(), pos);
     }
     if (internal == HTML_N_INTERNAL)
       internal = 0;

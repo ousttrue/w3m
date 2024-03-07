@@ -22,7 +22,6 @@
 #include "alloc.h"
 #include <math.h>
 
-#define ENABLE_REMOVE_TRAILINGSPACES
 
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
