@@ -17,18 +17,24 @@ struct link_stack {
 
 using FeedFunc = Str *(*)();
 
-class HtmlParser {
+class LineFeed {
   GeneralList<TextLine>::ListItem *_tl_lp2 = nullptr;
-  Str *textlist_feed(void) {
+
+public:
+  LineFeed(GeneralList<TextLine> *tl) : _tl_lp2(tl->first) {}
+
+  const char *textlist_feed(void) {
     TextLine *p;
     if (_tl_lp2 != NULL) {
       p = _tl_lp2->ptr;
       _tl_lp2 = _tl_lp2->next;
-      return p->line;
+      return p->line->ptr;
     }
     return NULL;
   }
+};
 
+class HtmlParser {
   int need_number = 0;
 
   struct table *tables[MAX_TABLE];
@@ -82,8 +88,9 @@ private:
   int ignore_nl_textarea = {};
 
 public:
-  Str **textarea_str = {};
-  int max_textarea = 10;
+  std::vector<std::string> textarea_str;
+  std::vector<struct FormAnchor *> a_textarea;
+
   Str *process_form_int(struct HtmlTag *tag, int fid);
   Str *process_n_form();
   Str *process_form(struct HtmlTag *tag) { return process_form_int(tag, -1); }
@@ -159,8 +166,7 @@ private:
   }
 
 public:
-  void render(struct HttpResponse *res, struct LineData *layout,
-              GeneralList<TextLine> *tl);
+  void render(struct HttpResponse *res, struct LineData *layout, LineFeed *tl);
 };
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri);

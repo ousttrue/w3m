@@ -22,7 +22,6 @@
 #include "alloc.h"
 #include <math.h>
 
-
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
 double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
@@ -545,7 +544,8 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   //
   // render ?
   //
-  parser.render(res, &layout->data, htmlenv1.buf);
+  LineFeed feed(htmlenv1.buf);
+  parser.render(res, &layout->data, &feed);
 
   layout->topLine = layout->firstLine();
   layout->currentLine = layout->firstLine();

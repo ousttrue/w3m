@@ -17,11 +17,10 @@
 #include "myctype.h"
 #include "Str.h"
 #include "readbuffer.h"
-#include "alloc.h"
 #include "hash.h"
 #include "table.h"
 
-HtmlParser::HtmlParser() { textarea_str = (Str **)New_N(Str *, max_textarea); }
+HtmlParser::HtmlParser() {}
 
 Str *HtmlParser::getLinkNumberStr(int correction) const {
   return Sprintf("[%d]", cur_hseq + correction);
@@ -746,24 +745,21 @@ Str *HtmlParser::process_textarea(struct HtmlTag *tag, int width) {
     }
   }
   cur_textarea_readonly = tag->parsedtag_exists(ATTR_READONLY);
-  if (n_textarea >= max_textarea) {
-    max_textarea *= 2;
-    textarea_str = (Str **)New_Reuse(Str *, textarea_str, max_textarea);
-  }
-  textarea_str[n_textarea] = Strnew();
+  // if (n_textarea >= max_textarea) {
+  //   max_textarea *= 2;
+  // textarea_str = (Str **)New_Reuse(Str *, textarea_str, max_textarea);
+  // }
   ignore_nl_textarea = true;
 
   return tmp;
 }
 
 Str *HtmlParser::process_n_textarea() {
-  Str *tmp;
-  int i;
-
-  if (cur_textarea == NULL)
+  if (cur_textarea == NULL) {
     return NULL;
+  }
 
-  tmp = Strnew();
+  auto tmp = Strnew();
   Strcat(tmp, Sprintf("<pre_int>[<input_alt hseq=\"%d\" fid=\"%d\" "
                       "type=textarea name=\"%s\" size=%d rows=%d "
                       "top_margin=%d textareanumber=%d",
@@ -773,10 +769,13 @@ Str *HtmlParser::process_n_textarea() {
   if (cur_textarea_readonly)
     Strcat_charp(tmp, " readonly");
   Strcat_charp(tmp, "><u>");
-  for (i = 0; i < cur_textarea_size; i++)
+  for (int i = 0; i < cur_textarea_size; i++) {
     Strcat_char(tmp, ' ');
+  }
   Strcat_charp(tmp, "</u></input_alt>]</pre_int>\n");
   this->cur_hseq++;
+  textarea_str.push_back({});
+  a_textarea.push_back({});
   n_textarea++;
   cur_textarea = NULL;
 
@@ -787,22 +786,25 @@ void HtmlParser::feed_textarea(const char *str) {
   if (cur_textarea == NULL)
     return;
   if (ignore_nl_textarea) {
-    if (*str == '\r')
+    if (*str == '\r') {
       str++;
-    if (*str == '\n')
+    }
+    if (*str == '\n') {
       str++;
+    }
   }
   ignore_nl_textarea = false;
   while (*str) {
-    if (*str == '&')
-      Strcat_charp(textarea_str[n_textarea], getescapecmd(&str));
-    else if (*str == '\n') {
-      Strcat_charp(textarea_str[n_textarea], "\r\n");
+    if (*str == '&') {
+      textarea_str[n_textarea] += getescapecmd(&str);
+    } else if (*str == '\n') {
+      textarea_str[n_textarea] += "\r\n";
       str++;
-    } else if (*str == '\r')
+    } else if (*str == '\r') {
       str++;
-    else
-      Strcat_char(textarea_str[n_textarea], *(str++));
+    } else {
+      textarea_str[n_textarea] += *(str++);
+    }
   }
 }
 
@@ -868,20 +870,14 @@ static int ex_efct(int ex) {
 
 #define url_quote_conv(x, c) Strnew(url_quote(x))->ptr
 
-void HtmlParser::render(HttpResponse *res, LineData *data,
-                        GeneralList<TextLine> *tl) {
-  _tl_lp2 = tl->first;
+void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
 
   const char *p, *q, *r, *s, *t, *str;
-  Lineprop mode, effect, ex_effect;
-  int pos;
   const char *id = NULL;
   int hseq, form_id;
-  const char *endp;
   char symbol = '\0';
   int internal = 0;
   FormAnchor *a_form = NULL;
-  FormAnchor **a_textarea = NULL;
 
   if (outc.size() == 0) {
     outc.resize(LINELEN);
@@ -889,29 +885,22 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
   }
 
   n_textarea = -1;
-  if (!max_textarea) { /* halfload */
-    max_textarea = 10;
-    textarea_str = (Str **)New_N(Str *, max_textarea);
-    a_textarea = (FormAnchor **)New_N(FormAnchor *, max_textarea);
-  }
 
-  effect = 0;
-  ex_effect = 0;
-
+  Lineprop effect = 0;
+  Lineprop ex_effect = 0;
   Anchor *a_href = NULL;
   Anchor *a_img = NULL;
-  for (int nlines = 0; auto line = textlist_feed(); ++nlines) {
-    if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
-      Strcat(textarea_str[n_textarea], line);
+  for (int nlines = 0; auto str = tl->textlist_feed(); ++nlines) {
+    if (n_textarea >= 0 && *str != '<') {
+      textarea_str[n_textarea] += str;
       continue;
     }
 
-    pos = 0;
-    str = line->ptr;
-    endp = str + line->length;
+    auto pos = 0;
+    auto endp = str + strlen(str);
     while (str < endp) {
       PSIZE(pos);
-      mode = get_mctype(str);
+      auto mode = get_mctype(str);
       if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
         PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol,
               &pos);
@@ -1103,21 +1092,20 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
             }
           }
 
-          if (!form->target)
+          if (!form->target) {
             form->target = res->baseTarget;
-          if (a_textarea &&
+          }
+          if (a_textarea.size() &&
               tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
-            if (textareanumber >= max_textarea) {
-              max_textarea = 2 * textareanumber;
-              textarea_str =
-                  (Str **)New_Reuse(Str *, textarea_str, max_textarea);
-              a_textarea = (FormAnchor **)New_Reuse(FormAnchor *, a_textarea,
-                                                    max_textarea);
-            }
           }
           a_form = data->registerForm(this, form, tag, nlines, pos);
-          if (a_textarea && textareanumber >= 0)
+          if (textareanumber >= 0) {
+            while (textareanumber >= a_textarea.size()) {
+              textarea_str.push_back({});
+              a_textarea.push_back({});
+            }
             a_textarea[textareanumber] = a_form;
+          }
           if (a_form) {
             a_form->hseq = hseq - 1;
             a_form->y = nlines - top;
@@ -1218,15 +1206,15 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
           break;
         case HTML_TEXTAREA_INT:
           if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &n_textarea) &&
-              n_textarea >= 0 && n_textarea < max_textarea) {
-            textarea_str[n_textarea] = Strnew();
-          } else
+              n_textarea >= 0) {
+          } else {
             n_textarea = -1;
+          }
           break;
         case HTML_N_TEXTAREA_INT:
-          if (a_textarea && n_textarea >= 0) {
+          if (n_textarea >= 0) {
             FormItemList *item = a_textarea[n_textarea]->formItem;
-            item->init_value = item->value = textarea_str[n_textarea];
+            item->init_value = item->value = Strnew(textarea_str[n_textarea]);
           }
           break;
         case HTML_TITLE_ALT:
@@ -1251,11 +1239,12 @@ void HtmlParser::render(HttpResponse *res, LineData *data,
     if (!internal) {
       data->addnewline(outc.data(), outp.data(), pos);
     }
-    if (internal == HTML_N_INTERNAL)
+    if (internal == HTML_N_INTERNAL){
       internal = 0;
-    if (str != endp) {
-      line = Strsubstr(line, str - line->ptr, endp - str);
     }
+    // if (str != endp) {
+    //   line = Strsubstr(line, str - line->ptr, endp - str);
+    // }
   }
 
   for (form_id = 1; form_id < forms.size(); form_id++) {
@@ -2561,22 +2550,29 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
   case HTML_OPTION:
     /* nothing */
     return 1;
-  case HTML_TEXTAREA:
+
+  case HTML_TEXTAREA: {
     this->close_anchor(h_env);
     tmp = process_textarea(tag, h_env->limit);
-    if (tmp)
+    if (tmp) {
       HTMLlineproc1(tmp->ptr, h_env);
+    }
     obuf->flag |= RB_INTXTA;
     obuf->end_tag = HTML_N_TEXTAREA;
     return 1;
-  case HTML_N_TEXTAREA:
+  }
+
+  case HTML_N_TEXTAREA: {
     obuf->flag &= ~RB_INTXTA;
     obuf->end_tag = 0;
     tmp = this->process_n_textarea();
-    if (tmp)
+    if (tmp) {
       HTMLlineproc1(tmp->ptr, h_env);
+    }
     return 1;
-  case HTML_ISINDEX:
+  }
+
+  case HTML_ISINDEX: {
     p = "";
     q = "!CURRENT_URL!";
     tag->parsedtag_get_value(ATTR_PROMPT, &p);
@@ -2586,6 +2582,8 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
                          "<input type=text name=\"\" accept></form>", NULL);
     HTMLlineproc1(tmp->ptr, h_env);
     return 1;
+  }
+
   case HTML_DOCTYPE:
     if (!tag->parsedtag_exists(ATTR_PUBLIC)) {
       obuf->flag |= RB_HTML5;

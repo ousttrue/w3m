@@ -111,8 +111,9 @@ FormItemList *FormList ::formList_addInput(HtmlParser *parser,
   item->readonly = tag->parsedtag_exists(ATTR_READONLY);
   int i;
   if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
-      i < parser->max_textarea)
-    item->value = item->init_value = parser->textarea_str[i];
+      i < parser->textarea_str.size()) {
+    item->value = item->init_value = Strnew(parser->textarea_str[i]);
+  }
   if (tag->parsedtag_get_value(ATTR_ROWS, &p))
     item->rows = atoi(p);
   if (item->type == FORM_UNKNOWN) {

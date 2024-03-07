@@ -1,7 +1,3 @@
-/* $Id: form.h,v 1.6 2003/09/22 21:02:18 ukai Exp $ */
-/*
- * HTML forms
- */
 #pragma once
 #include "Str.h"
 #include "anchorlist.h"
@@ -47,7 +43,6 @@ FormList *newFormList(const char *action, const char *method,
                       const char *target, const char *name, FormList *_next);
 
 struct Buffer;
-struct LineLayout;
 void formRecheckRadio(FormAnchor *a, Buffer *buf, FormItemList *form);
 void preFormUpdateBuffer(const std::shared_ptr<Buffer> &buf);
 Str *textfieldrep(Str *s, int width);
