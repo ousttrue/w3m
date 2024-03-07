@@ -29,8 +29,11 @@ deps = [
     nkf_dep,
     lua_dep,
     libuv_dep,
-    screen_dep,
     zlib_dep,
+    #
+    screen_dep,
+    dom_dep,
+    # component_dep,
 ]
 
 cc = meson.get_compiler('c')
@@ -55,4 +58,3 @@ executable(
 )
 
 subdir('tui_sample')
-

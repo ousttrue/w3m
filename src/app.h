@@ -8,6 +8,9 @@
 #include <stack>
 #include <array>
 #include <unordered_map>
+#include <ftxui/screen/terminal.hpp>
+#include <ftxui/screen/screen.hpp>
+#include <ftxui/dom/elements.hpp>
 
 extern bool displayLink;
 extern int displayLineInfo;
@@ -31,11 +34,16 @@ enum TmpfType {
 
 using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
+
+class Content;
 struct TabBuffer;
 struct Buffer;
 class App {
   RowCol _size = {};
   Viewport _viewport = {};
+
+  std::shared_ptr<Content> _content;
+  std::string _status;
 
   std::shared_ptr<Screen> _screen;
   bool _fmInitialized = false;
@@ -145,6 +153,8 @@ public:
   void onFrame();
   void cursor(const RowCol &pos);
   void display();
+  ftxui::Element dom();
+  ftxui::Element tabs();
   void task(int sec, const std::string &cmd, const char *data = nullptr,
             bool releat = false);
   std::string tmpfname(TmpfType type, const std::string &ext);
@@ -186,7 +196,7 @@ public:
                     long long current_content_length);
   Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
                           const char *url);
-  Str *make_lastline_message(const std::shared_ptr<Buffer> &buf);
+  std::string make_lastline_message(const std::shared_ptr<Buffer> &buf);
 };
 #define CurrentTab App::instance().currentTab()
 

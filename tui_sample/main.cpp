@@ -14,12 +14,22 @@ static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
   *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
 }
 
+class Content : public ftxui::Node {
+
+public:
+  ftxui::Box box() const { return box_; }
+};
+
 class Renderer {
   ftxui::Screen _screen;
   ftxui::Screen::Cursor _cursor = {0, 0, ftxui::Screen::Cursor::Shape::Block};
+  std::string _status;
+  std::shared_ptr<Content> _content;
 
 public:
   Renderer() : _screen(ftxui::Screen::Create(ftxui::Terminal::Size())) {
+    _content = std::make_shared<Content>();
+    updateStatus();
     render();
   }
 
@@ -51,6 +61,7 @@ public:
         break;
       }
     }
+
     render();
   }
 
@@ -58,39 +69,49 @@ private:
   // Set cursor position for user using tools to insert CJK characters.
   std::string cursor() {
     std::stringstream ss;
-    ss << "\x1b[" << (_cursor.y + 1) << ";" << (_cursor.x + 1) << "H";
+
+    ss << "\x1b[" << (_cursor.y + 1) << ";" << (_cursor.x + 1)
+       << "H"
+       // show
+       << "\x1b[?25h";
     return ss.str();
   }
 
+  void updateStatus() {
+    auto box = _content->box();
+    std::stringstream ss;
+    ss << "row:" << _cursor.y << "/" << (box.y_max - box.y_min)
+       << ", col:" << _cursor.x;
+    _status = ss.str();
+  }
+
   ftxui::Element dom() {
-    using namespace ftxui;
-    auto document = //
-        vbox({
-            hbox({
-                text("north-west"),
-                filler(),
-                text("north-east"),
-            }),
-            filler(),
-            hbox({
-                filler(),
-                text("center"),
-                filler(),
-            }),
-            filler(),
-            hbox({
-                text("south-west"),
-                filler(),
-                text("south-east"),
-            }),
-        });
-    return document;
+    return ftxui::vbox({
+        // tabs
+        ftxui::hbox({
+            ftxui::text("tabA"),
+            ftxui::separator(),
+            ftxui::text("tabB"),
+            ftxui::separator(),
+            ftxui::text("tabC"),
+        }),
+        // address bar
+        ftxui::text("http://hoge.fuga/path/to/index.html") | ftxui::inverted,
+        // main
+        _content | ftxui::flex,
+        // status
+        ftxui::text(_status) | ftxui::inverted,
+    });
   }
 
   void render() {
+    updateStatus();
 
     // auto screen = Screen::Create(Dimension::Full());
     ftxui::Render(_screen, dom());
+
+    // hide
+    std::cout << "\x1b[?25l" << '\0' << std::flush;
 
     std::cout
         // origin
@@ -102,6 +123,8 @@ private:
         << '\0' << std::flush
         //
         ;
+
+    _screen.Clear();
   }
 };
 

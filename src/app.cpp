@@ -218,7 +218,32 @@ uv_tty_t g_tty_in;
 uv_signal_t g_signal_resize;
 uv_timer_t g_timer;
 
+class Content : public ftxui::Node {
+public:
+  std::shared_ptr<Buffer> buf;
+  std::shared_ptr<Screen> _screen;
+
+  void Render(ftxui::Screen &screen) override {
+    int x = box_.x_min;
+    const int y = box_.y_min;
+    if (y > box_.y_max) {
+      return;
+    }
+    // draw lines
+    auto view = _screen->render(box_, &buf->layout);
+    for (int row = 0; row < screen.dimy(); ++row) {
+      for (int col = 0; col < screen.dimx(); ++col) {
+        auto p = view->PixelAt(col, row);
+        screen.PixelAt(x + col, y + row) = p;
+      }
+    }
+  }
+};
+
 App::App() : _screen(new Screen) {
+
+  _content = std::make_shared<Content>();
+
   static int s_i = 0;
   assert(s_i == 0);
   ++s_i;
@@ -1190,60 +1215,133 @@ void App::cursor(const RowCol &pos) {
 
 void App::display() {
 
-  auto buf = CurrentTab->currentBuffer();
-  auto layout = &buf->layout;
+  // auto buf = CurrentTab->currentBuffer();
+  // auto layout = &buf->layout;
+  //
+  // // tabs
+  // int ny = App::instance().calcTabPos() + 2;
+  // if (ny > this->LASTLINE()) {
+  //   ny = this->LASTLINE();
+  // }
+  // _viewport.root.col = 0;
+  // layout->COLS = this->COLS() - _viewport.root.col;
+  // if (_viewport.root.row != ny || layout->LINES != this->LASTLINE() - ny) {
+  //   _viewport.root.row = ny;
+  //   layout->LINES = this->LASTLINE() - ny;
+  //   layout->arrangeCursor();
+  // }
+  //
+  // App::instance().drawTabs();
+  //
+  // // msg
+  // auto msg = this->make_lastline_message(buf);
+  // if (buf->layout.empty()) {
+  //   Strcat_charp(msg, "\tNo Line");
+  // }
+  //
+  // App::instance().refresh_message();
+  //
+  // _screen->standout();
+  // App::instance().message(msg->ptr, buf->layout.cursor + _viewport.root);
+  // _screen->standend();
+  // // term_title(buf->layout.title.c_str());
+  // if (buf != save_current_buf) {
+  //   CurrentTab->currentBuffer()->saveBufferInfo();
+  //   save_current_buf = buf;
+  // }
+  //
+  // auto rendered = _screen->str(_viewport.root, &buf->layout);
+  // if (rendered != _last) {
+  //   _last = rendered;
+  //
+  //   // hide
+  //   std::cout << "\x1b[?25l";
+  //   std::flush(std::cout);
+  //
+  //   // origin
+  //   ::cursor({
+  //       .row = 0,
+  //       .col = 0,
+  //   });
+  //
+  //   std::cout << rendered;
+  // }
+  //
+  // // cursor
+  // this->cursor(_viewport.root + buf->layout.cursor);
 
-  // tabs
-  int ny = App::instance().calcTabPos() + 2;
-  if (ny > this->LASTLINE()) {
-    ny = this->LASTLINE();
-  }
-  _viewport.root.col = 0;
-  layout->COLS = this->COLS() - _viewport.root.col;
-  if (_viewport.root.row != ny || layout->LINES != this->LASTLINE() - ny) {
-    _viewport.root.row = ny;
-    layout->LINES = this->LASTLINE() - ny;
-    layout->arrangeCursor();
-  }
+  auto screen = ftxui::Screen::Create(ftxui::Dimension::Full());
 
-  App::instance().drawTabs();
+  ftxui::Render(screen, dom());
 
-  // msg
-  auto msg = this->make_lastline_message(buf);
-  if (buf->layout.empty()) {
-    Strcat_charp(msg, "\tNo Line");
-  }
+  auto buf = currentTab()->currentBuffer();
+  auto layout = buf->layout;
+  auto cursor = _viewport.root + layout.cursor;
 
-  App::instance().refresh_message();
-
-  _screen->standout();
-  App::instance().message(msg->ptr, buf->layout.cursor + _viewport.root);
-  _screen->standend();
-  // term_title(buf->layout.title.c_str());
-  if (buf != save_current_buf) {
-    CurrentTab->currentBuffer()->saveBufferInfo();
-    save_current_buf = buf;
-  }
-
-  auto rendered = _screen->str(_viewport.root, &buf->layout);
+  auto rendered = screen.ToString();
   if (rendered != _last) {
     _last = rendered;
-
-    // hide
-    std::cout << "\x1b[?25l";
-    std::flush(std::cout);
-
-    // origin
-    ::cursor({
-        .row = 0,
-        .col = 0,
-    });
-
-    std::cout << rendered;
+    // hide cursor
+    std::cout << "\x1b[?25l" << '\0' << std::flush;
+    std::cout
+        // origin
+        << "\x1b[1;1H"
+        // render
+        << screen.ToString()
+        //
+        << "\x1b[" << (cursor.row + 1) << ";" << (cursor.col + 1) << "H"
+        << "\x1b[?25h" << '\0' << std::flush
+        //
+        ;
+  } else {
+    std::cout << "\x1b[" << (cursor.row + 1) << ";" << (cursor.col + 1) << "H"
+              << "\x1b[?25h" << '\0' << std::flush;
   }
 
-  // cursor
-  this->cursor(_viewport.root + buf->layout.cursor);
+  // _screen.Clear();
+}
+
+ftxui::Element App::dom() {
+  auto buf = currentTab()->currentBuffer();
+  _content->buf = buf;
+  _content->_screen = _screen;
+  auto msg = this->make_lastline_message(buf);
+
+  std::stringstream ss;
+  ss << buf->layout.cursor.row << ", " << buf->layout.cursor.col;
+  _status = ss.str();
+
+  return ftxui::vbox({
+      // tabs
+      tabs(),
+      // address
+      ftxui::text(buf->res->currentURL.to_Str()) | ftxui::inverted,
+      // content
+      _content | ftxui::flex,
+      // status
+      ftxui::text(_status) | ftxui::inverted,
+      // input/ message
+      ftxui::text(msg),
+  });
+}
+
+ftxui::Element App::tabs() {
+
+  std::vector<ftxui::Element> tabs;
+
+  for (auto tab : _tabs) {
+    if (tabs.size()) {
+      tabs.push_back(ftxui::separator());
+    }
+    if (tab == currentTab()) {
+      tabs.push_back(ftxui::text(tab->currentBuffer()->layout.data.title) |
+                     ftxui::underlined);
+    } else {
+      tabs.push_back(ftxui::text(tab->currentBuffer()->layout.data.title));
+    }
+  }
+
+  return ftxui::vbox(tabs);
 }
 
 struct TimerTask {
@@ -1755,56 +1853,59 @@ Str *App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
   return s;
 }
 
-Str *App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
-  Str *msg;
-  Str *s = NULL;
-  int sl = 0;
+std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
 
+  std::string s;
   if (displayLink) {
-    {
-      Anchor *a = buf->layout.retrieveCurrentAnchor();
-      std::string p;
-      if (a && a->title.size())
-        p = a->title;
-      else {
-        auto a_img = buf->layout.retrieveCurrentImg();
-        if (a_img && a_img->title.size())
-          p = a_img->title;
-      }
-      if (p.size() || a)
-        s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() : NULL);
+
+    Anchor *a = buf->layout.retrieveCurrentAnchor();
+    std::string p;
+    if (a && a->title.size())
+      p = a->title;
+    else {
+      auto a_img = buf->layout.retrieveCurrentImg();
+      if (a_img && a_img->title.size())
+        p = a_img->title;
     }
-    if (s) {
-      sl = get_Str_strwidth(s);
+
+    if (p.size() || a)
+      s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() : NULL)
+              ->ptr;
+
+    if (s.size()) {
+      auto sl = get_strwidth(s.c_str());
       if (sl >= this->COLS() - 3)
         return s;
     }
   }
 
-  msg = Strnew();
+  std::stringstream ss;
+  int sl = 0;
   if (displayLineInfo && buf->layout.currentLine != NULL) {
     int cl = buf->layout.linenumber(buf->layout.currentLine);
     int ll = buf->layout.linenumber(buf->layout.lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
-    Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
+    ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;
   } else {
-    Strcat_charp(msg, "Viewing");
+    ss << "Viewing";
   }
-  if (buf->res->ssl_certificate) {
-    Strcat_charp(msg, "[SSL]");
-  }
-  Strcat_charp(msg, " <");
-  Strcat(msg, buf->layout.data.title);
 
-  if (s) {
+  if (buf->res->ssl_certificate) {
+    ss << "[SSL]";
+  }
+
+  ss << " <" << buf->layout.data.title;
+
+  auto msg = ss.str();
+  if (s.size()) {
     int l = this->COLS() - 3 - sl;
-    if (get_Str_strwidth(msg) > l) {
-      Strtruncate(msg, l);
+    if (get_strwidth(msg.c_str()) > l) {
+      msg = msg.substr(0, l);
     }
-    Strcat_charp(msg, "> ");
-    Strcat(msg, s);
+    msg += "> ";
+    msg += s;
   } else {
-    Strcat_charp(msg, ">");
+    msg += ">";
   }
   return msg;
 }

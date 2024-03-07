@@ -23,9 +23,11 @@
 //     int prevhseq = _layout->data._hmarklist->prevhseq;
 //
 //     if (_layout->data._href) {
-//       this->drawAnchorCursor0(_layout->data._href.get(), hseq, prevhseq, tline,
+//       this->drawAnchorCursor0(_layout->data._href.get(), hseq, prevhseq,
+//       tline,
 //                               eline, true);
-//       this->drawAnchorCursor0(_layout->data._href.get(), hseq, -1, tline, eline,
+//       this->drawAnchorCursor0(_layout->data._href.get(), hseq, -1, tline,
+//       eline,
 //                               false);
 //     }
 //     if (_layout->data._formitem) {
@@ -39,7 +41,8 @@
 //
 // private:
 //   template <typename T>
-//   void drawAnchorCursor0(AnchorList<T> *al, int hseq, int prevhseq, int tline,
+//   void drawAnchorCursor0(AnchorList<T> *al, int hseq, int prevhseq, int
+//   tline,
 //                          int eline, int active) {
 //     auto l = _layout->topLine;
 //     for (size_t j = 0; j < al->size(); j++) {
@@ -67,14 +70,14 @@
 //         }
 //         if (active && start_pos < end_pos) {
 //           _screen->redrawLineRegion(_root, _layout, l,
-//                                     _layout->linenumber(l) - tline + _root.row,
-//                                     start_pos, end_pos);
+//                                     _layout->linenumber(l) - tline +
+//                                     _root.row, start_pos, end_pos);
 //         }
 //       } else if (prevhseq >= 0 && an->hseq == prevhseq) {
 //         if (active) {
 //           _screen->redrawLineRegion(_root, _layout, l,
-//                                     _layout->linenumber(l) - tline + _root.row,
-//                                     an->start.pos, an->end.pos);
+//                                     _layout->linenumber(l) - tline +
+//                                     _root.row, an->start.pos, an->end.pos);
 //         }
 //       }
 //     }
@@ -192,6 +195,33 @@ std::string Screen::str(const RowCol &root, LineLayout *layout) {
   return this->_screen->ToString();
 }
 
+std::shared_ptr<ftxui::Screen> Screen::render(const ftxui::Box &box,
+                                              LineLayout *layout) {
+
+  _screen = std::make_shared<ftxui::Screen>(box.x_max - box.x_min + 1,
+                                            box.y_max - box.y_min + 1);
+  auto l = layout->data.firstLine();
+  int i = 0;
+  for (; i < layout->data.lines.size(); ++i, ++l) {
+    auto pixel = this->redrawLine(
+        {
+            .row = i,
+            .col = 0,
+        },
+        l, layout->COLS, layout->currentColumn);
+    this->clrtoeolx(pixel);
+  }
+  // clear remain
+  this->clrtobotx({
+      .row = i,
+      .col = 0,
+  });
+  cline = layout->topLine;
+  ccolumn = layout->currentColumn;
+
+  return _screen;
+}
+
 static ScreenFlags propToFlag(Lineprop prop) {
   ScreenFlags flag =
       (prop & PE_BOLD ? ScreenFlags::BOLD : ScreenFlags::NORMAL) |
@@ -300,7 +330,8 @@ RowCol Screen::redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft) {
 //   bcol = bpos - pos;
 //   ecol = epos - pos;
 //
-//   for (j = 0; rcol - column < layout->COLS && pos + j < l->len(); j += delta) {
+//   for (j = 0; rcol - column < layout->COLS && pos + j < l->len(); j += delta)
+//   {
 //     delta = get_mclen(&p[j]);
 //     ncol = l->bytePosToColumn(pos + j + delta);
 //     if (ncol - column > layout->COLS)

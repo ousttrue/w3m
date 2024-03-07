@@ -104,8 +104,11 @@ public:
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
 
   RowCol redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft);
-  // int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int i,
+  // int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int
+  // i,
   //                      int bpos, int epos);
 
   std::string str(const RowCol &root, LineLayout *layout);
+  std::shared_ptr<ftxui::Screen> render(const ftxui::Box &box,
+                                        LineLayout *layout);
 };
