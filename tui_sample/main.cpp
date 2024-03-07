@@ -1,6 +1,7 @@
 #include <uv.h>
 #include <ftxui/screen/terminal.hpp>
 #include <ftxui/screen/screen.hpp>
+#include <ftxui/dom/elements.hpp>
 #include <string>
 #include <iostream>
 #include <sstream>
@@ -14,13 +15,16 @@ static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
 }
 
 class Renderer {
-  ftxui::Dimensions _size;
+  ftxui::Screen _screen;
   ftxui::Screen::Cursor _cursor = {0, 0, ftxui::Screen::Cursor::Shape::Block};
 
 public:
-  Renderer() : _size(ftxui::Terminal::Size()) { render(); }
+  Renderer() : _screen(ftxui::Screen::Create(ftxui::Terminal::Size())) {
+    render();
+  }
+
   void onResize() {
-    _size = ftxui::Terminal::Size();
+    _screen = ftxui::Screen::Create(ftxui::Terminal::Size());
     render();
   }
 
@@ -58,7 +62,47 @@ private:
     return ss.str();
   }
 
-  void render() { std::cout << cursor() << '\0' << std::flush; }
+  ftxui::Element dom() {
+    using namespace ftxui;
+    auto document = //
+        vbox({
+            hbox({
+                text("north-west"),
+                filler(),
+                text("north-east"),
+            }),
+            filler(),
+            hbox({
+                filler(),
+                text("center"),
+                filler(),
+            }),
+            filler(),
+            hbox({
+                text("south-west"),
+                filler(),
+                text("south-east"),
+            }),
+        });
+    return document;
+  }
+
+  void render() {
+
+    // auto screen = Screen::Create(Dimension::Full());
+    ftxui::Render(_screen, dom());
+
+    std::cout
+        // origin
+        << "\x1b[1;1H"
+        // render
+        << _screen.ToString()
+        << cursor()
+        //
+        << '\0' << std::flush
+        //
+        ;
+  }
 };
 
 int main(int argc, char **argv) {
