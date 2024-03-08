@@ -7,7 +7,7 @@
 #include "html/preform.h"
 #include "quote.h"
 #include "dict.h"
-#include "screen.h"
+#include "content.h"
 #include "app.h"
 #include "tabbuffer.h"
 #include "http_response.h"

@@ -17,7 +17,7 @@
 #include "w3m.h"
 #include "local_cgi.h"
 #include "etc.h"
-#include "screen.h"
+#include "content.h"
 #include "rc.h"
 #include "linklist.h"
 #include "html/readbuffer.h"

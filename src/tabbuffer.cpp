@@ -1,7 +1,7 @@
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "utf8.h"
-#include "screen.h"
+#include "content.h"
 #include <sys/stat.h>
 
 bool open_tab_blank = false;
@@ -13,7 +13,7 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-int TabBuffer::draw(Screen *screen, TabBuffer *current) {
+int TabBuffer::draw(Content *screen, TabBuffer *current) {
   if (this == current) {
     screen->bold();
   } else {

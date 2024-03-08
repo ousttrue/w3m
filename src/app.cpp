@@ -6,8 +6,7 @@
 #include "html/readbuffer.h"
 #include "html/form_item.h"
 #include "html/anchorlist.h"
-#include "screen.h"
-#include "screen.h"
+#include "content.h"
 #include "ssl_util.h"
 #include "html/form.h"
 #include "http_response.h"
@@ -218,31 +217,7 @@ uv_tty_t g_tty_in;
 uv_signal_t g_signal_resize;
 uv_timer_t g_timer;
 
-class Content : public ftxui::Node {
-public:
-  std::shared_ptr<Buffer> buf;
-  std::shared_ptr<Screen> _screen;
-
-  void Render(ftxui::Screen &screen) override {
-    int x = box_.x_min;
-    const int y = box_.y_min;
-    if (y > box_.y_max) {
-      return;
-    }
-    // draw lines
-    auto view = _screen->render(box_, &buf->layout);
-    for (int row = 0; row < screen.dimy(); ++row) {
-      for (int col = 0; col < screen.dimx(); ++col) {
-        auto p = view->PixelAt(col, row);
-        screen.PixelAt(x + col, y + row) = p;
-      }
-    }
-  }
-};
-
-App::App() : _screen(new Screen) {
-
-  _content = std::make_shared<Content>();
+App::App() : _content(new Content) {
 
   static int s_i = 0;
   assert(s_i == 0);
@@ -787,7 +762,7 @@ void App::beginRawMode(void) {
 
 void App::endRawMode(void) {
   if (_fmInitialized) {
-    _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
+    _content->clrtoeolx({.row = LASTLINE(), .col = 0});
     // _screen->print();
     uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
     _fmInitialized = false;
@@ -938,7 +913,7 @@ RowCol getTermSize() {
 
 void App::onResize() {
   _size = getTermSize();
-  _screen->setupscreen(_size);
+  _content->setupscreen(_size);
 }
 
 void App::exit(int) {
@@ -1215,21 +1190,21 @@ void App::cursor(const RowCol &pos) {
 
 void App::display() {
 
-  // auto buf = CurrentTab->currentBuffer();
-  // auto layout = &buf->layout;
-  //
-  // // tabs
-  // int ny = App::instance().calcTabPos() + 2;
-  // if (ny > this->LASTLINE()) {
-  //   ny = this->LASTLINE();
-  // }
-  // _viewport.root.col = 0;
-  // layout->COLS = this->COLS() - _viewport.root.col;
-  // if (_viewport.root.row != ny || layout->LINES != this->LASTLINE() - ny) {
-  //   _viewport.root.row = ny;
-  //   layout->LINES = this->LASTLINE() - ny;
-  //   layout->arrangeCursor();
-  // }
+  auto buf = CurrentTab->currentBuffer();
+  auto layout = &buf->layout;
+
+  // tabs
+  int ny = App::instance().calcTabPos() + 2;
+  if (ny > this->LASTLINE()) {
+    ny = this->LASTLINE();
+  }
+  _viewport.root.col = 0;
+  layout->COLS = this->COLS() - _viewport.root.col;
+  if (_viewport.root.row != ny || layout->LINES != this->LASTLINE() - ny) {
+    _viewport.root.row = ny;
+    layout->LINES = this->LASTLINE() - ny;
+    layout->arrangeCursor();
+  }
   //
   // App::instance().drawTabs();
   //
@@ -1274,9 +1249,7 @@ void App::display() {
 
   ftxui::Render(screen, dom());
 
-  auto buf = currentTab()->currentBuffer();
-  auto layout = buf->layout;
-  auto cursor = _viewport.root + layout.cursor;
+  auto cursor = _viewport.root + layout->cursor;
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1303,8 +1276,7 @@ void App::display() {
 
 ftxui::Element App::dom() {
   auto buf = currentTab()->currentBuffer();
-  _content->buf = buf;
-  _content->_screen = _screen;
+  _content->layout = &buf->layout;
   auto msg = this->make_lastline_message(buf);
 
   std::stringstream ss;
@@ -1335,7 +1307,7 @@ ftxui::Element App::tabs() {
     }
     if (tab == currentTab()) {
       tabs.push_back(ftxui::text(tab->currentBuffer()->layout.data.title) |
-                     ftxui::underlined);
+                     ftxui::inverted);
     } else {
       tabs.push_back(ftxui::text(tab->currentBuffer()->layout.data.title));
     }
@@ -1418,14 +1390,14 @@ std::shared_ptr<TabBuffer> App::numTab(int n) const {
 }
 
 void App::drawTabs() {
-  _screen->clrtoeolx({0, 0});
+  _content->clrtoeolx({0, 0});
   int y = 0;
   for (auto t : _tabs) {
-    y = t->draw(_screen.get(), currentTab().get());
+    y = t->draw(_content.get(), currentTab().get());
   }
   RowCol pos{.row = y + 1, .col = 0};
   for (int i = 0; i < COLS(); i++) {
-    _screen->addch(pos, '~');
+    _content->addch(pos, '~');
     ++pos.col;
   }
 }
@@ -1598,8 +1570,8 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
 void App::message(const char *s, const RowCol &cursor) {
   if (_fmInitialized) {
     RowCol pos{.row = LASTLINE(), .col = 0};
-    pos = _screen->addnstr(pos, s, COLS() - 1);
-    _screen->clrtoeolx(pos);
+    pos = _content->addnstr(pos, s, COLS() - 1);
+    _content->clrtoeolx(pos);
     this->cursor(cursor);
   } else {
     fprintf(stderr, "%s\n", s);
@@ -1684,7 +1656,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
+      _content->clrtoeolx({.row = LASTLINE(), .col = 0});
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -1709,24 +1681,24 @@ void App::showProgress(long long *linelen, long long *trbyte,
           Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
     }
     RowCol pixel{.row = LASTLINE(), .col = 0};
-    pixel = _screen->addstr(pixel, messages->ptr);
+    pixel = _content->addstr(pixel, messages->ptr);
     pos = 42;
     i = pos + (COLS() - pos - 1) * (*trbyte) / current_content_length;
-    _screen->standout();
+    _content->standout();
     pixel = {.row = LASTLINE(), .col = pos};
-    _screen->addch(pixel, ' ');
+    _content->addch(pixel, ' ');
     ++pixel.col;
     for (j = pos + 1; j <= i; j++) {
-      _screen->addch(pixel, '|');
+      _content->addch(pixel, '|');
       ++pixel.col;
     }
-    _screen->standend();
+    _content->standend();
     /* no_clrtoeol(); */
     // _screen->print();
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      _screen->clrtoeolx({.row = LASTLINE(), .col = 0});
+      _content->clrtoeolx({.row = LASTLINE(), .col = 0});
       start_time = cur_time;
     }
     *trbyte += *linelen;

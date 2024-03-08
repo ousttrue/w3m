@@ -26,7 +26,7 @@
 #include "search.h"
 #include "w3m.h"
 #include "app.h"
-#include "screen.h"
+#include "content.h"
 #include "myctype.h"
 #include "tabbuffer.h"
 #include "buffer.h"

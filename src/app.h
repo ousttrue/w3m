@@ -34,7 +34,6 @@ enum TmpfType {
 
 using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
-
 class Content;
 struct TabBuffer;
 struct Buffer;
@@ -45,7 +44,6 @@ class App {
   std::shared_ptr<Content> _content;
   std::string _status;
 
-  std::shared_ptr<Screen> _screen;
   bool _fmInitialized = false;
 
   std::list<std::string> _fileToDelete;
@@ -86,7 +84,7 @@ public:
   int LASTLINE() const { return (_size.row - 1); }
   int INIT_BUFFER_WIDTH() { return App::instance().COLS() - (1); }
 
-  std::shared_ptr<Screen> screen() const { return _screen; }
+  std::shared_ptr<Content> screen() const { return _content; }
   bool initialize();
   void beginRawMode();
   void endRawMode();

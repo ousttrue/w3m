@@ -3,7 +3,9 @@
 #include "rowcol.h"
 #include "enum_template.h"
 #include "line_layout.h"
+#include <ftxui/screen/terminal.hpp>
 #include <ftxui/screen/screen.hpp>
+#include <ftxui/dom/elements.hpp>
 #include <functional>
 #include <memory>
 
@@ -41,7 +43,7 @@ enum LineDirtyFlags : unsigned short {
 };
 
 struct LineLayout;
-class Screen {
+class Content : public ftxui::Node {
   std::shared_ptr<ftxui::Screen> _screen;
   int max_LINES = 0;
   int max_COLS = 0;
@@ -51,6 +53,11 @@ class Screen {
 
   Line *cline = NULL;
   int ccolumn = -1;
+
+public:
+  LineLayout *layout;
+
+  void Render(ftxui::Screen &screen) override;
 
 public:
   int ulmode = 0;
@@ -81,11 +88,11 @@ public:
                     const std::function<void(const RowCol &)> &);
   void clrtobot(const RowCol &pos) {
     clrtobot_eol(pos,
-                 std::bind(&Screen::clrtoeol, this, std::placeholders::_1));
+                 std::bind(&Content::clrtoeol, this, std::placeholders::_1));
   }
   void clrtobotx(const RowCol &pos) {
     clrtobot_eol(pos,
-                 std::bind(&Screen::clrtoeolx, this, std::placeholders::_1));
+                 std::bind(&Content::clrtoeolx, this, std::placeholders::_1));
   }
   void no_clrtoeol();
   void addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode = {});
@@ -109,6 +116,4 @@ public:
   //                      int bpos, int epos);
 
   std::string str(const RowCol &root, LineLayout *layout);
-  std::shared_ptr<ftxui::Screen> render(const ftxui::Box &box,
-                                        LineLayout *layout);
 };

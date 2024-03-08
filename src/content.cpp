@@ -1,4 +1,4 @@
-#include "screen.h"
+#include "content.h"
 #include "line_layout.h"
 #include <ftxui/screen/screen.hpp>
 
@@ -84,16 +84,16 @@
 //   }
 // };
 
-void Screen::setupscreen(const RowCol &size) {
+void Content::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
 }
 
-void Screen::clear(void) {
+void Content::clear(void) {
   _screen->Clear();
   CurrentMode = ScreenFlags::ASCII;
 }
 
-void Screen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
+void Content::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
   if (pos.row >= 0 && pos.row < LINES()) {
     int y = pos.row + 1;
     for (int x = pos.col + 1; x <= COLS(); ++x) {
@@ -102,7 +102,7 @@ void Screen::clrtoeol(const RowCol &pos) { /* Clear to the end of line */
   }
 }
 
-void Screen::clrtobot_eol(
+void Content::clrtobot_eol(
     const RowCol &pos, const std::function<void(const RowCol &pos)> &callback) {
   clrtoeol(pos);
   int CurLine = pos.row + 1;
@@ -111,7 +111,7 @@ void Screen::clrtobot_eol(
   }
 }
 
-RowCol Screen::addstr(RowCol pos, const char *s) {
+RowCol Content::addstr(RowCol pos, const char *s) {
   while (*s) {
     auto utf8 = Utf8::from((const char8_t *)s);
     addmch(pos, utf8);
@@ -121,7 +121,7 @@ RowCol Screen::addstr(RowCol pos, const char *s) {
   return pos;
 }
 
-RowCol Screen::addnstr(RowCol pos, const char *s, int n, ScreenFlags mode) {
+RowCol Content::addnstr(RowCol pos, const char *s, int n, ScreenFlags mode) {
   for (int i = 0; i < n && *s != '\0'; i++) {
     auto utf8 = Utf8::from((const char8_t *)s);
     addmch(pos, utf8, mode);
@@ -132,7 +132,7 @@ RowCol Screen::addnstr(RowCol pos, const char *s, int n, ScreenFlags mode) {
   return pos;
 }
 
-RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
+RowCol Content::addnstr_sup(RowCol pos, const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++) {
     auto utf8 = Utf8::from((const char8_t *)s);
@@ -148,19 +148,19 @@ RowCol Screen::addnstr_sup(RowCol pos, const char *s, int n) {
   return pos;
 }
 
-void Screen::toggle_stand(const RowCol &pos) {
+void Content::toggle_stand(const RowCol &pos) {
   auto &pixel = this->pixel(pos);
   pixel.inverted = !pixel.inverted;
 }
 
-void Screen::addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode) {
+void Content::addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode) {
   auto &pixel = this->pixel(pos);
   pixel.character = utf8.view();
   pixel.bold = (int)(mode & ScreenFlags::BOLD);
   pixel.underlined = (int)(mode & ScreenFlags::UNDERLINE);
 }
 
-std::string Screen::str(const RowCol &root, LineLayout *layout) {
+std::string Content::str(const RowCol &root, LineLayout *layout) {
   // draw lines
   if (cline != layout->topLine || ccolumn != layout->currentColumn) {
     int i = 0;
@@ -195,11 +195,12 @@ std::string Screen::str(const RowCol &root, LineLayout *layout) {
   return this->_screen->ToString();
 }
 
-std::shared_ptr<ftxui::Screen> Screen::render(const ftxui::Box &box,
-                                              LineLayout *layout) {
-
-  _screen = std::make_shared<ftxui::Screen>(box.x_max - box.x_min + 1,
-                                            box.y_max - box.y_min + 1);
+void Content::Render(ftxui::Screen &screen) {
+  //
+  // render to _screen
+  //
+  _screen = std::make_shared<ftxui::Screen>(box_.x_max - box_.x_min + 1,
+                                            box_.y_max - box_.y_min + 1);
   auto l = layout->data.firstLine();
   int i = 0;
   for (; i < layout->data.lines.size(); ++i, ++l) {
@@ -219,7 +220,21 @@ std::shared_ptr<ftxui::Screen> Screen::render(const ftxui::Box &box,
   cline = layout->topLine;
   ccolumn = layout->currentColumn;
 
-  return _screen;
+  //
+  // _screen to screen
+  //
+  int x = box_.x_min;
+  const int y = box_.y_min;
+  if (y > box_.y_max) {
+    return;
+  }
+  // draw line
+  for (int row = 0; row < screen.dimy(); ++row) {
+    for (int col = 0; col < screen.dimx(); ++col) {
+      auto p = _screen->PixelAt(col, row);
+      screen.PixelAt(x + col, y + row) = p;
+    }
+  }
 }
 
 static ScreenFlags propToFlag(Lineprop prop) {
@@ -230,7 +245,7 @@ static ScreenFlags propToFlag(Lineprop prop) {
   return flag;
 }
 
-RowCol Screen::redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft) {
+RowCol Content::redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft) {
   if (l->len() == 0 || l->width() - 1 < pixel.col) {
     return pixel;
   }
@@ -315,7 +330,8 @@ RowCol Screen::redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft) {
   return pixel;
 }
 
-// int Screen::redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l,
+// int Content::redrawLineRegion(const RowCol &root, LineLayout *layout, Line
+// *l,
 //                              int i, int bpos, int epos) {
 //   int j, pos, rcol, ncol, delta = 1;
 //   int column = layout->currentColumn;

@@ -5,7 +5,7 @@
 #include "rc.h"
 #include "app.h"
 #include "alloc.h"
-#include "screen.h"
+#include "content.h"
 #include "istream.h"
 #include "myctype.h"
 #include "downloadlist.h"

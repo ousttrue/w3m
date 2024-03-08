@@ -4,7 +4,7 @@
 #include "matchattr.h"
 #include "app.h"
 #include "input/readallbytes.h"
-#include "screen.h"
+#include "content.h"
 #include "cookie.h"
 #include "Str.h"
 #include "w3m.h"
