@@ -519,10 +519,10 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
     linelen += lineBuf2->length;
     cleanup_line(lineBuf2, HTML_MODE);
-    parser.HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
+    parser.parseLine(lineBuf2->ptr, &htmlenv1, internal);
   }
   if (htmlenv1.obuf.status != R_ST_NORMAL) {
-    parser.HTMLlineproc0("\n", &htmlenv1, internal);
+    parser.parseLine("\n", &htmlenv1, internal);
   }
 
   htmlenv1.obuf.status = R_ST_NORMAL;

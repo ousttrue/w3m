@@ -129,11 +129,13 @@ public:
 public:
   void push_link(int cmd, int offset, int pos);
   int cur_hseq = 1;
-  void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
-                     int internal);
+
+  // HTML processing first pass
+  void parseLine(const char *istr, struct html_feed_environ *h_env,
+                 bool internal);
 
   void HTMLlineproc1(const char *x, struct html_feed_environ *y) {
-    HTMLlineproc0(x, y, true);
+    parseLine(x, y, true);
   }
 
   Str *getLinkNumberStr(int correction) const;

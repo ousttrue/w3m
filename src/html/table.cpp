@@ -1284,7 +1284,7 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
                          GeneralList<TextLine>::newGeneralList());
   parser->HTMLlineproc1("<center>", &henv);
-  parser->HTMLlineproc0(this->caption->ptr, &henv, false);
+  parser->parseLine(this->caption->ptr, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);
 
   if (this->total_width < henv.maxlimit)
@@ -1292,7 +1292,7 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   limit = h_env->limit;
   h_env->limit = this->total_width;
   parser->HTMLlineproc1("<center>", h_env);
-  parser->HTMLlineproc0(this->caption->ptr, h_env, false);
+  parser->parseLine(this->caption->ptr, h_env, false);
   parser->HTMLlineproc1("</center>", h_env);
   h_env->limit = limit;
 }
