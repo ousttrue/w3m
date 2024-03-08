@@ -4,6 +4,7 @@
 #include "ctrlcode.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
+#include "line.h"
 
 const char **get_symbol(void) { return alt_symbol; }
 

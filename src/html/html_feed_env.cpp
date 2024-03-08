@@ -2,6 +2,7 @@
 #include "readbuffer.h"
 #include "textline.h"
 #include "Str.h"
+#include <assert.h>
 
 html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
                                      GeneralList<TextLine> *_buf)

@@ -3,6 +3,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "alloc.h"
+#include "utf8.h"
 #include <vector>
 
 int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpos,

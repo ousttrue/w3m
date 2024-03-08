@@ -15,11 +15,11 @@
 #include "table.h"
 #include "html.h"
 #include "textline.h"
-#include "form.h"
 #include "istream.h"
 #include "html_tag.h"
 #include "proto.h"
 #include "alloc.h"
+#include "utf8.h"
 #include <math.h>
 
 bool pseudoInlines = true;
@@ -486,13 +486,7 @@ readbuffer::readbuffer() {
   set_space_to_prevchar(this->prevchar);
   this->flag = RB_IGNORE_P;
   this->status = R_ST_NORMAL;
-  this->in_bold = 0;
-  this->in_italic = 0;
-  this->in_under = 0;
-  this->in_strike = 0;
-  this->in_ins = 0;
   this->prev_ctype = PC_ASCII;
-
   this->bp.init_flag = 1;
   this->set_breakpoint(0);
 }
@@ -654,11 +648,7 @@ void readbuffer::set_breakpoint(int tag_length) {
 
   this->bp.img_alt = this->img_alt;
   this->bp.input_alt = this->input_alt;
-  this->bp.in_bold = this->in_bold;
-  this->bp.in_italic = this->in_italic;
-  this->bp.in_under = this->in_under;
-  this->bp.in_strike = this->in_strike;
-  this->bp.in_ins = this->in_ins;
+  this->bp.fontstat = this->fontstat;
   this->bp.nobr_level = this->nobr_level;
   this->bp.prev_ctype = this->prev_ctype;
   this->bp.init_flag = 0;

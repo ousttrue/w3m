@@ -1,5 +1,5 @@
 #pragma once
-#include "utf8.h"
+#include "lineprop.h"
 #include "enum_template.h"
 #include "anchor.h"
 #include "readbuffer_status.h"
@@ -33,7 +33,6 @@ extern bool MetaRefresh;
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10
 #define FONT_STACK_SIZE 5
-#define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
 
 enum ReadBufferFlags {
@@ -79,12 +78,14 @@ ENUM_OP_INSTANCE(ReadBufferFlags);
   (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' ||              \
    p[1] == '\0' || p[1] == '_')
 
-#define in_bold fontstat[0]
-#define in_under fontstat[1]
-#define in_italic fontstat[2]
-#define in_strike fontstat[3]
-#define in_ins fontstat[4]
-#define in_stand fontstat[5]
+struct FontStat {
+  char in_bold = 0;
+  char in_under = 0;
+  char in_italic = 0;
+  char in_strike = 0;
+  char in_ins = 0;
+  char in_stand = 0;
+};
 
 struct Str;
 struct input_alt_attr {
@@ -103,7 +104,7 @@ struct Breakpoint {
   ReadBufferFlags flag = {};
   Str *img_alt = nullptr;
   struct input_alt_attr input_alt = {};
-  char fontstat[FONTSTAT_SIZE] = {0};
+  FontStat fontstat = {};
   short nobr_level = 0;
   Lineprop prev_ctype = 0;
   char init_flag = 1;
@@ -132,8 +133,8 @@ struct readbuffer {
   Anchor anchor = {};
   Str *img_alt = 0;
   struct input_alt_attr input_alt = {};
-  char fontstat[FONTSTAT_SIZE];
-  char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
+  FontStat fontstat = {};
+  FontStat fontstat_stack[FONT_STACK_SIZE];
   int fontstat_sp = 0;
   Lineprop prev_ctype;
   Breakpoint bp;
@@ -166,11 +167,7 @@ struct readbuffer {
     this->flag = this->bp.flag;
     this->img_alt = this->bp.img_alt;
     this->input_alt = this->bp.input_alt;
-    this->in_bold = this->bp.in_bold;
-    this->in_italic = this->bp.in_italic;
-    this->in_under = this->bp.in_under;
-    this->in_strike = this->bp.in_strike;
-    this->in_ins = this->bp.in_ins;
+    this->fontstat = this->bp.fontstat;
     this->prev_ctype = this->bp.prev_ctype;
     this->pos = this->bp.pos;
     this->top_margin = this->bp.top_margin;

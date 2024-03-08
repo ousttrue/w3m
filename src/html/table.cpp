@@ -22,6 +22,7 @@
 #include "textline.h"
 #include "generallist.h"
 #include "matrix.h"
+#include "utf8.h"
 
 int symbol_width = 0;
 
