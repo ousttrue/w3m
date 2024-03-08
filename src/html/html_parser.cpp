@@ -408,8 +408,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
       lbuf->align(width, ALIGN_RIGHT);
     } else if (obuf->RB_GET_ALIGN() == RB_LEFT && obuf->flag & RB_INTABLE) {
       lbuf->align(width, ALIGN_LEFT);
-    }
-    else if (obuf->flag & RB_FILL) {
+    } else if (obuf->flag & RB_FILL) {
       char *p;
       int rest, rrest;
       int nspace, d, i;
@@ -929,394 +928,22 @@ static Str *textfieldrep(Str *s, int width) {
 }
 
 void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
-
-  // const char *p, *q, *r, *s, *t;
-  const char *id = nullptr;
-  int hseq, form_id;
-  char symbol = '\0';
-  int internal = 0;
-  FormAnchor *a_form = nullptr;
-
+  n_textarea = -1;
   if (outc.size() == 0) {
     outc.resize(LINELEN);
     outp.resize(LINELEN);
   }
 
-  n_textarea = -1;
-
-  Lineprop effect = 0;
-  Lineprop ex_effect = 0;
-  Anchor *a_href = nullptr;
-  Anchor *a_img = nullptr;
   for (int nlines = 0; auto str = tl->textlist_feed(); ++nlines) {
     if (n_textarea >= 0 && *str != '<') {
       textarea_str[n_textarea] += str;
       continue;
     }
 
-    auto pos = 0;
-    auto endp = str + strlen(str);
-    while (str < endp) {
-      PSIZE(pos);
-      auto mode = get_mctype(str);
-      if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol,
-              &pos);
-        str += symbol_width;
-      } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
-        str++;
-      } else if (*str != '<' && *str != '&') {
-        int len = get_mclen(str);
-        PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
-        if (--len) {
-          mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
-          while (len--) {
-            PSIZE(pos);
-            PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
-          }
-        }
-      } else if (*str == '&') {
-        /*
-         * & escape processing
-         */
-        auto p = getescapecmd(&str);
-        while (*p) {
-          PSIZE(pos);
-          mode = get_mctype(p);
-          if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-            PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
-            p++;
-          } else {
-            PPUSH(mode | effect | ex_efct(ex_effect), *(p++), &pos);
-          }
-        }
-      } else {
-        /* tag processing */
-        struct HtmlTag *tag;
-        if (!(tag = HtmlTag::parse(&str, true)))
-          continue;
-        switch (tag->tagid) {
-        case HTML_B:
-          effect |= PE_BOLD;
-          break;
-        case HTML_N_B:
-          effect &= ~PE_BOLD;
-          break;
-        case HTML_I:
-          ex_effect |= PE_EX_ITALIC;
-          break;
-        case HTML_N_I:
-          ex_effect &= ~PE_EX_ITALIC;
-          break;
-        case HTML_INS:
-          ex_effect |= PE_EX_INSERT;
-          break;
-        case HTML_N_INS:
-          ex_effect &= ~PE_EX_INSERT;
-          break;
-        case HTML_U:
-          effect |= PE_UNDER;
-          break;
-        case HTML_N_U:
-          effect &= ~PE_UNDER;
-          break;
-        case HTML_S:
-          ex_effect |= PE_EX_STRIKE;
-          break;
-        case HTML_N_S:
-          ex_effect &= ~PE_EX_STRIKE;
-          break;
-        case HTML_A: {
-          const char *p = nullptr;
-          const char *r = nullptr;
-          const char *s = nullptr;
-          auto q = res->baseTarget;
-          auto t = "";
-          hseq = 0;
-          id = nullptr;
-          if (tag->parsedtag_get_value(ATTR_NAME, &id)) {
-            id = url_quote_conv(id, name_charset);
-            data->registerName(id, nlines, pos);
-          }
-          if (tag->parsedtag_get_value(ATTR_HREF, &p))
-            p = Strnew(url_quote(remove_space(p)))->ptr;
-          if (tag->parsedtag_get_value(ATTR_TARGET, &q))
-            q = url_quote_conv(q, buf->document_charset);
-          if (tag->parsedtag_get_value(ATTR_REFERER, &r))
-            r = Strnew(url_quote(r))->ptr;
-          tag->parsedtag_get_value(ATTR_TITLE, &s);
-          tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
-          tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
-          if (hseq > 0) {
-            data->_hmarklist->putHmarker(nlines, pos, hseq - 1);
-          } else if (hseq < 0) {
-            int h = -hseq - 1;
-            if (data->_hmarklist->tryMark(h, nlines, pos)) {
-              hseq = -hseq;
-            }
-          }
-          if (p) {
-            effect |= PE_ANCHOR;
-            a_href = data->_href->putAnchor(
-                BufferPoint{
-                    .line = nlines,
-                    .pos = pos,
-                },
-                Anchor{
-                    .url = p,
-                    .target = q ? q : "",
-                    .option = {.referer = r ? r : ""},
-                    .title = s ? s : "",
-                    .accesskey = (unsigned char)*t,
-                    .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
-                    .slave = (hseq > 0) ? false : true,
-                });
-          }
-          break;
-        }
-
-        case HTML_N_A:
-          effect &= ~PE_ANCHOR;
-          if (a_href) {
-            a_href->end.line = nlines;
-            a_href->end.pos = pos;
-            if (a_href->start.line == a_href->end.line &&
-                a_href->start.pos == a_href->end.pos) {
-              if (a_href->hseq >= 0 &&
-                  a_href->hseq < (int)data->_hmarklist->size()) {
-                data->_hmarklist->invalidate(a_href->hseq);
-              }
-              a_href->hseq = -1;
-            }
-            a_href = nullptr;
-          }
-          break;
-
-        case HTML_LINK:
-          data->addLink(tag);
-          break;
-
-        case HTML_IMG_ALT: {
-          const char *p;
-          if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
-            const char *s = nullptr;
-            tag->parsedtag_get_value(ATTR_TITLE, &s);
-            p = url_quote_conv(remove_space(p), buf->document_charset);
-            a_img = data->registerImg(p, s, nlines, pos);
-          }
-          effect |= PE_IMAGE;
-          break;
-        }
-
-        case HTML_N_IMG_ALT:
-          effect &= ~PE_IMAGE;
-          if (a_img) {
-            a_img->end.line = nlines;
-            a_img->end.pos = pos;
-          }
-          a_img = nullptr;
-          break;
-        case HTML_INPUT_ALT: {
-          FormList *form;
-          int top = 0, bottom = 0;
-          int textareanumber = -1;
-          hseq = 0;
-          form_id = -1;
-
-          tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
-          tag->parsedtag_get_value(ATTR_FID, &form_id);
-          tag->parsedtag_get_value(ATTR_TOP_MARGIN, &top);
-          tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &bottom);
-          if (form_id < 0 || form_id >= forms.size() ||
-              forms[form_id] == nullptr) {
-            break; /* outside of <form>..</form> */
-          }
-          form = forms[form_id];
-          if (hseq > 0) {
-            int hpos = pos;
-            if (*str == '[')
-              hpos++;
-            data->_hmarklist->putHmarker(nlines, hpos, hseq - 1);
-          } else if (hseq < 0) {
-            int h = -hseq - 1;
-            int hpos = pos;
-            if (*str == '[')
-              hpos++;
-            if (data->_hmarklist->tryMark(h, nlines, hpos)) {
-              hseq = -hseq;
-            }
-          }
-
-          if (!form->target) {
-            form->target = res->baseTarget;
-          }
-          if (a_textarea.size() &&
-              tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
-          }
-          a_form = data->registerForm(this, form, tag, nlines, pos);
-          if (textareanumber >= 0) {
-            while (textareanumber >= a_textarea.size()) {
-              textarea_str.push_back({});
-              a_textarea.push_back({});
-            }
-            a_textarea[textareanumber] = a_form;
-          }
-          if (a_form) {
-            a_form->hseq = hseq - 1;
-            a_form->y = nlines - top;
-            a_form->rows = 1 + top + bottom;
-            if (!tag->parsedtag_exists(ATTR_NO_EFFECT))
-              effect |= PE_FORM;
-            break;
-          }
-        }
-        case HTML_N_INPUT_ALT:
-          effect &= ~PE_FORM;
-          if (a_form) {
-            a_form->end.line = nlines;
-            a_form->end.pos = pos;
-            if (a_form->start.line == a_form->end.line &&
-                a_form->start.pos == a_form->end.pos)
-              a_form->hseq = -1;
-          }
-          a_form = nullptr;
-          break;
-        case HTML_MAP:
-          // if (tag->parsedtag_get_value( ATTR_NAME, &p)) {
-          //   MapList *m = (MapList *)New(MapList);
-          //   m->name = Strnew_charp(p);
-          //   m->area = newGeneralList();
-          //   m->next = buf->maplist;
-          //   buf->maplist = m;
-          // }
-          break;
-        case HTML_N_MAP:
-          /* nothing to do */
-          break;
-        case HTML_AREA:
-          // if (buf->maplist == nullptr) /* outside of <map>..</map> */
-          //   break;
-          // if (tag->parsedtag_get_value( ATTR_HREF, &p)) {
-          //   MapArea *a;
-          //   p = url_encode(remove_space(p), base, buf->document_charset);
-          //   t = nullptr;
-          //   tag->parsedtag_get_value( ATTR_TARGET, &t);
-          //   q = "";
-          //   tag->parsedtag_get_value( ATTR_ALT, &q);
-          //   r = nullptr;
-          //   s = nullptr;
-          //   a = newMapArea(p, t, q, r, s);
-          //   pushValue(buf->maplist->area, (void *)a);
-          // }
-          break;
-        case HTML_FRAMESET:
-          // frameset_sp++;
-          // if (frameset_sp >= FRAMESTACK_SIZE)
-          //   break;
-          // frameset_s[frameset_sp] = newFrameSet(tag);
-          // if (frameset_s[frameset_sp] == nullptr)
-          //   break;
-          break;
-        case HTML_N_FRAMESET:
-          // if (frameset_sp >= 0)
-          //   frameset_sp--;
-          break;
-        case HTML_FRAME:
-          // if (frameset_sp >= 0 && frameset_sp < FRAMESTACK_SIZE) {
-          // }
-          break;
-        case HTML_BASE: {
-          const char *p;
-          if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
-            p = Strnew(url_quote(remove_space(p)))->ptr;
-            res->baseURL = urlParse(p, res->currentURL);
-          }
-          if (tag->parsedtag_get_value(ATTR_TARGET, &p))
-            res->baseTarget = url_quote_conv(p, buf->document_charset);
-          break;
-        }
-
-        case HTML_META: {
-          const char *p = nullptr;
-          const char *q = nullptr;
-          tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
-          tag->parsedtag_get_value(ATTR_CONTENT, &q);
-          if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
-            Str *tmp = nullptr;
-            int refresh_interval = getMetaRefreshParam(q, &tmp);
-            if (tmp) {
-              p = Strnew(url_quote(remove_space(tmp->ptr)))->ptr;
-              // TODO:
-              // App::instance().task(refresh_interval, FUNCNAME_gorURL, p);
-            } else if (refresh_interval > 0) {
-              data->refresh_interval = refresh_interval;
-            }
-          }
-          break;
-        }
-
-        case HTML_INTERNAL:
-          internal = HTML_INTERNAL;
-          break;
-        case HTML_N_INTERNAL:
-          internal = HTML_N_INTERNAL;
-          break;
-        case HTML_FORM_INT:
-          if (tag->parsedtag_get_value(ATTR_FID, &form_id))
-            process_form_int(tag, form_id);
-          break;
-        case HTML_TEXTAREA_INT:
-          if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &n_textarea) &&
-              n_textarea >= 0) {
-          } else {
-            n_textarea = -1;
-          }
-          break;
-        case HTML_N_TEXTAREA_INT:
-          if (n_textarea >= 0) {
-            FormItemList *item = a_textarea[n_textarea]->formItem;
-            item->init_value = item->value = Strnew(textarea_str[n_textarea]);
-          }
-          break;
-
-        case HTML_TITLE_ALT: {
-          const char *p;
-          if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-            data->title = html_unquote(p);
-          break;
-        }
-
-        case HTML_SYMBOL: {
-          effect |= PC_SYMBOL;
-          const char *p;
-          if (tag->parsedtag_get_value(ATTR_TYPE, &p))
-            symbol = (char)atoi(p);
-          break;
-        }
-
-        case HTML_N_SYMBOL:
-          effect &= ~PC_SYMBOL;
-          break;
-
-        default:
-          break;
-        }
-      }
-    }
-    /* end of processing for one line */
-    if (!internal) {
-      data->addnewline(outc.data(), outp.data(), pos);
-    }
-    if (internal == HTML_N_INTERNAL) {
-      internal = 0;
-    }
-    // if (str != endp) {
-    //   line = Strsubstr(line, str - line->ptr, endp - str);
-    // }
+    renderLine(res, data, nlines, str);
   }
 
-  for (form_id = 1; form_id < forms.size(); form_id++) {
+  for (int form_id = 1; form_id < forms.size(); form_id++) {
     if (forms[form_id]) {
       forms[form_id]->next = forms[form_id - 1];
     }
@@ -1325,6 +952,371 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
   if (n_textarea) {
     data->addMultirowsForm();
   }
+}
+
+void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
+                            const char *str) {
+  auto pos = 0;
+  auto endp = str + strlen(str);
+  while (str < endp) {
+    PSIZE(pos);
+    auto mode = get_mctype(str);
+    if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
+      PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol, &pos);
+      str += symbol_width;
+    } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
+      PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
+      str++;
+    } else if (*str != '<' && *str != '&') {
+      int len = get_mclen(str);
+      PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
+      if (--len) {
+        mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
+        while (len--) {
+          PSIZE(pos);
+          PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
+        }
+      }
+    } else if (*str == '&') {
+      /*
+       * & escape processing
+       */
+      auto p = getescapecmd(&str);
+      while (*p) {
+        PSIZE(pos);
+        mode = get_mctype(p);
+        if (mode == PC_CTRL || IS_INTSPACE(*str)) {
+          PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
+          p++;
+        } else {
+          PPUSH(mode | effect | ex_efct(ex_effect), *(p++), &pos);
+        }
+      }
+    } else {
+      /* tag processing */
+      struct HtmlTag *tag;
+      if (!(tag = HtmlTag::parse(&str, true)))
+        continue;
+      switch (tag->tagid) {
+      case HTML_B:
+        effect |= PE_BOLD;
+        break;
+      case HTML_N_B:
+        effect &= ~PE_BOLD;
+        break;
+      case HTML_I:
+        ex_effect |= PE_EX_ITALIC;
+        break;
+      case HTML_N_I:
+        ex_effect &= ~PE_EX_ITALIC;
+        break;
+      case HTML_INS:
+        ex_effect |= PE_EX_INSERT;
+        break;
+      case HTML_N_INS:
+        ex_effect &= ~PE_EX_INSERT;
+        break;
+      case HTML_U:
+        effect |= PE_UNDER;
+        break;
+      case HTML_N_U:
+        effect &= ~PE_UNDER;
+        break;
+      case HTML_S:
+        ex_effect |= PE_EX_STRIKE;
+        break;
+      case HTML_N_S:
+        ex_effect &= ~PE_EX_STRIKE;
+        break;
+      case HTML_A: {
+        const char *p = nullptr;
+        const char *r = nullptr;
+        const char *s = nullptr;
+        auto q = res->baseTarget;
+        auto t = "";
+        auto hseq = 0;
+        char *id = nullptr;
+        if (tag->parsedtag_get_value(ATTR_NAME, &id)) {
+          id = url_quote_conv(id, name_charset);
+          data->registerName(id, nlines, pos);
+        }
+        if (tag->parsedtag_get_value(ATTR_HREF, &p))
+          p = Strnew(url_quote(remove_space(p)))->ptr;
+        if (tag->parsedtag_get_value(ATTR_TARGET, &q))
+          q = url_quote_conv(q, buf->document_charset);
+        if (tag->parsedtag_get_value(ATTR_REFERER, &r))
+          r = Strnew(url_quote(r))->ptr;
+        tag->parsedtag_get_value(ATTR_TITLE, &s);
+        tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
+        tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
+        if (hseq > 0) {
+          data->_hmarklist->putHmarker(nlines, pos, hseq - 1);
+        } else if (hseq < 0) {
+          int h = -hseq - 1;
+          if (data->_hmarklist->tryMark(h, nlines, pos)) {
+            hseq = -hseq;
+          }
+        }
+        if (p) {
+          effect |= PE_ANCHOR;
+          a_href = data->_href->putAnchor(
+              BufferPoint{
+                  .line = nlines,
+                  .pos = pos,
+              },
+              Anchor{
+                  .url = p,
+                  .target = q ? q : "",
+                  .option = {.referer = r ? r : ""},
+                  .title = s ? s : "",
+                  .accesskey = (unsigned char)*t,
+                  .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
+                  .slave = (hseq > 0) ? false : true,
+              });
+        }
+        break;
+      }
+
+      case HTML_N_A:
+        effect &= ~PE_ANCHOR;
+        if (a_href) {
+          a_href->end.line = nlines;
+          a_href->end.pos = pos;
+          if (a_href->start.line == a_href->end.line &&
+              a_href->start.pos == a_href->end.pos) {
+            if (a_href->hseq >= 0 &&
+                a_href->hseq < (int)data->_hmarklist->size()) {
+              data->_hmarklist->invalidate(a_href->hseq);
+            }
+            a_href->hseq = -1;
+          }
+          a_href = nullptr;
+        }
+        break;
+
+      case HTML_LINK:
+        data->addLink(tag);
+        break;
+
+      case HTML_IMG_ALT: {
+        const char *p;
+        if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
+          const char *s = nullptr;
+          tag->parsedtag_get_value(ATTR_TITLE, &s);
+          p = url_quote_conv(remove_space(p), buf->document_charset);
+          a_img = data->registerImg(p, s, nlines, pos);
+        }
+        effect |= PE_IMAGE;
+        break;
+      }
+
+      case HTML_N_IMG_ALT:
+        effect &= ~PE_IMAGE;
+        if (a_img) {
+          a_img->end.line = nlines;
+          a_img->end.pos = pos;
+        }
+        a_img = nullptr;
+        break;
+      case HTML_INPUT_ALT: {
+        FormList *form;
+        int top = 0, bottom = 0;
+        int textareanumber = -1;
+        auto hseq = 0;
+        auto form_id = -1;
+
+        tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
+        tag->parsedtag_get_value(ATTR_FID, &form_id);
+        tag->parsedtag_get_value(ATTR_TOP_MARGIN, &top);
+        tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &bottom);
+        if (form_id < 0 || form_id >= forms.size() ||
+            forms[form_id] == nullptr) {
+          break; /* outside of <form>..</form> */
+        }
+        form = forms[form_id];
+        if (hseq > 0) {
+          int hpos = pos;
+          if (*str == '[')
+            hpos++;
+          data->_hmarklist->putHmarker(nlines, hpos, hseq - 1);
+        } else if (hseq < 0) {
+          int h = -hseq - 1;
+          int hpos = pos;
+          if (*str == '[')
+            hpos++;
+          if (data->_hmarklist->tryMark(h, nlines, hpos)) {
+            hseq = -hseq;
+          }
+        }
+
+        if (!form->target) {
+          form->target = res->baseTarget;
+        }
+        if (a_textarea.size() &&
+            tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
+        }
+        a_form = data->registerForm(this, form, tag, nlines, pos);
+        if (textareanumber >= 0) {
+          while (textareanumber >= a_textarea.size()) {
+            textarea_str.push_back({});
+            a_textarea.push_back({});
+          }
+          a_textarea[textareanumber] = a_form;
+        }
+        if (a_form) {
+          a_form->hseq = hseq - 1;
+          a_form->y = nlines - top;
+          a_form->rows = 1 + top + bottom;
+          if (!tag->parsedtag_exists(ATTR_NO_EFFECT))
+            effect |= PE_FORM;
+          break;
+        }
+      }
+      case HTML_N_INPUT_ALT:
+        effect &= ~PE_FORM;
+        if (a_form) {
+          a_form->end.line = nlines;
+          a_form->end.pos = pos;
+          if (a_form->start.line == a_form->end.line &&
+              a_form->start.pos == a_form->end.pos)
+            a_form->hseq = -1;
+        }
+        a_form = nullptr;
+        break;
+      case HTML_MAP:
+        // if (tag->parsedtag_get_value( ATTR_NAME, &p)) {
+        //   MapList *m = (MapList *)New(MapList);
+        //   m->name = Strnew_charp(p);
+        //   m->area = newGeneralList();
+        //   m->next = buf->maplist;
+        //   buf->maplist = m;
+        // }
+        break;
+      case HTML_N_MAP:
+        /* nothing to do */
+        break;
+      case HTML_AREA:
+        // if (buf->maplist == nullptr) /* outside of <map>..</map> */
+        //   break;
+        // if (tag->parsedtag_get_value( ATTR_HREF, &p)) {
+        //   MapArea *a;
+        //   p = url_encode(remove_space(p), base, buf->document_charset);
+        //   t = nullptr;
+        //   tag->parsedtag_get_value( ATTR_TARGET, &t);
+        //   q = "";
+        //   tag->parsedtag_get_value( ATTR_ALT, &q);
+        //   r = nullptr;
+        //   s = nullptr;
+        //   a = newMapArea(p, t, q, r, s);
+        //   pushValue(buf->maplist->area, (void *)a);
+        // }
+        break;
+      case HTML_FRAMESET:
+        // frameset_sp++;
+        // if (frameset_sp >= FRAMESTACK_SIZE)
+        //   break;
+        // frameset_s[frameset_sp] = newFrameSet(tag);
+        // if (frameset_s[frameset_sp] == nullptr)
+        //   break;
+        break;
+      case HTML_N_FRAMESET:
+        // if (frameset_sp >= 0)
+        //   frameset_sp--;
+        break;
+      case HTML_FRAME:
+        // if (frameset_sp >= 0 && frameset_sp < FRAMESTACK_SIZE) {
+        // }
+        break;
+      case HTML_BASE: {
+        const char *p;
+        if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
+          p = Strnew(url_quote(remove_space(p)))->ptr;
+          res->baseURL = urlParse(p, res->currentURL);
+        }
+        if (tag->parsedtag_get_value(ATTR_TARGET, &p))
+          res->baseTarget = url_quote_conv(p, buf->document_charset);
+        break;
+      }
+
+      case HTML_META: {
+        const char *p = nullptr;
+        const char *q = nullptr;
+        tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
+        tag->parsedtag_get_value(ATTR_CONTENT, &q);
+        if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
+          Str *tmp = nullptr;
+          int refresh_interval = getMetaRefreshParam(q, &tmp);
+          if (tmp) {
+            p = Strnew(url_quote(remove_space(tmp->ptr)))->ptr;
+            // TODO:
+            // App::instance().task(refresh_interval, FUNCNAME_gorURL, p);
+          } else if (refresh_interval > 0) {
+            data->refresh_interval = refresh_interval;
+          }
+        }
+        break;
+      }
+
+      case HTML_INTERNAL:
+        internal = HTML_INTERNAL;
+        break;
+      case HTML_N_INTERNAL:
+        internal = HTML_N_INTERNAL;
+        break;
+      case HTML_FORM_INT: {
+        int form_id;
+        if (tag->parsedtag_get_value(ATTR_FID, &form_id))
+          process_form_int(tag, form_id);
+        break;
+      }
+      case HTML_TEXTAREA_INT:
+        if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &n_textarea) &&
+            n_textarea >= 0) {
+        } else {
+          n_textarea = -1;
+        }
+        break;
+      case HTML_N_TEXTAREA_INT:
+        if (n_textarea >= 0) {
+          FormItemList *item = a_textarea[n_textarea]->formItem;
+          item->init_value = item->value = Strnew(textarea_str[n_textarea]);
+        }
+        break;
+
+      case HTML_TITLE_ALT: {
+        const char *p;
+        if (tag->parsedtag_get_value(ATTR_TITLE, &p))
+          data->title = html_unquote(p);
+        break;
+      }
+
+      case HTML_SYMBOL: {
+        // effect |= PC_SYMBOL;
+        // const char *p;
+        // if (tag->parsedtag_get_value(ATTR_TYPE, &p))
+        //   symbol = (char)atoi(p);
+        break;
+      }
+
+      case HTML_N_SYMBOL:
+        // effect &= ~PC_SYMBOL;
+        break;
+
+      default:
+        break;
+      }
+    }
+  }
+  /* end of processing for one line */
+  if (!internal) {
+    data->addnewline(outc.data(), outp.data(), pos);
+  }
+  if (internal == HTML_N_INTERNAL) {
+    internal = {};
+  }
+  // if (str != endp) {
+  //   line = Strsubstr(line, str - line->ptr, endp - str);
+  // }
 }
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri) {
@@ -1997,6 +1989,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     flushline(h_env, envs[h_env->envc].indent, 1, h_env->limit);
     h_env->blank_lines = 0;
     return 1;
+
   case HTML_H:
     if (!(obuf->flag & (RB_PREMODE | RB_IGNORE_P))) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
@@ -2005,6 +1998,7 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     HTMLlineproc1("<b>", h_env);
     set_alignment(obuf, tag);
     return 1;
+
   case HTML_N_H:
     HTMLlineproc1("</b>", h_env);
     if (!(obuf->flag & RB_PREMODE)) {
@@ -2253,12 +2247,14 @@ int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
     }
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
     return 0;
+
   case HTML_HR:
     this->close_anchor(h_env);
     tmp = process_hr(tag, h_env->limit, envs[h_env->envc].indent);
     HTMLlineproc1(tmp->ptr, h_env);
     set_space_to_prevchar(obuf->prevchar);
     return 1;
+
   case HTML_PRE:
     x = tag->parsedtag_exists(ATTR_FOR_TABLE);
     CLOSE_A;

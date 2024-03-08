@@ -1,4 +1,5 @@
 #pragma once
+#include "html_command.h"
 #include "lineprop.h"
 #include "table.h"
 #include "readbuffer_status.h"
@@ -34,6 +35,10 @@ public:
   }
 };
 
+struct HttpResponse;
+struct LineData;
+struct FormAnchor;
+struct Anchor;
 class HtmlParser {
   int need_number = 0;
 
@@ -167,8 +172,18 @@ private:
     }
   }
 
+  Lineprop effect = 0;
+  Lineprop ex_effect = 0;
+  char symbol = '\0';
+  Anchor *a_href = nullptr;
+  Anchor *a_img = nullptr;
+  FormAnchor *a_form = nullptr;
+  HtmlCommand internal = {};
+  void renderLine(HttpResponse *res, LineData *data, int nlines,
+                  const char *str);
+
 public:
-  void render(struct HttpResponse *res, struct LineData *layout, LineFeed *tl);
+  void render(HttpResponse *res, LineData *layout, LineFeed *tl);
 };
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri);
