@@ -1,4 +1,5 @@
 #include "form.h"
+#include "mimetypes.h"
 #include "form_item.h"
 #include "quote.h"
 #include "html_parser.h"
@@ -7,6 +8,7 @@
 #include "readbuffer.h"
 #include "alloc.h"
 #include "html_tag.h"
+#include "http_response.h"
 #include <sys/stat.h>
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
@@ -82,7 +84,7 @@ FormItemList *FormList ::formList_addInput(HtmlParser *parser,
   item->readonly = tag->parsedtag_exists(ATTR_READONLY);
   int i;
   if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
-      i < parser->textarea_str.size()) {
+      i < (int)parser->textarea_str.size()) {
     item->value = item->init_value = Strnew(parser->textarea_str[i]);
   }
   if (tag->parsedtag_get_value(ATTR_ROWS, &p))
@@ -167,6 +169,9 @@ Str *FormItemList::query_from_followform() {
     case FORM_INPUT_CHECKBOX:
       if (!f2->checked)
         continue;
+
+    default:
+      break;
     }
     {
       /* not multipart */
@@ -234,6 +239,9 @@ void FormItemList ::query_from_followform_multipart() {
     case FORM_INPUT_CHECKBOX:
       if (!f2->checked)
         continue;
+
+    default:
+      break;
     }
     {
       if (f2->type == FORM_INPUT_IMAGE) {

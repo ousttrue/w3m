@@ -34,6 +34,7 @@
 
 #define HAVE_FLOAT_H 1
 #include "matrix.h"
+#include <math.h>
 
 /*
  * Macros from "fm.h".
@@ -136,7 +137,7 @@ Matrix Matrix::LUinverse(int *indexarray) {
       tmp.ve[j] = 0.;
     tmp.ve[i] = 1.;
     if (this->LUsolve(indexarray, &tmp, &tmp2) == -1)
-      return NULL;
+      return {};
     for (int j = 0; j < dim; j++)
       out.M_VAL(j, i) = tmp2.ve[j];
   }

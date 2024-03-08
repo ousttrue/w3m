@@ -153,7 +153,7 @@ public:
   Str *process_hr(struct HtmlTag *tag, int width, int indent_width);
 
 private:
-  int HTMLtagproc1(HtmlTag *tag, struct html_feed_environ *h_env);
+  int pushHtmlTag(HtmlTag *tag, struct html_feed_environ *h_env);
 
   std::vector<char> outc;
   std::vector<Lineprop> outp;
@@ -165,7 +165,7 @@ private:
   }
 
   void PSIZE(int pos) {
-    if (outc.size() <= pos + 1) {
+    if ((int)outc.size() <= pos + 1) {
       auto out_size = pos * 3 / 2;
       outc.resize(out_size);
       outp.resize(out_size);

@@ -858,7 +858,7 @@ Str *HtmlParser::process_form_int(struct HtmlTag *tag, int fid) {
     form_sp++;
     fid = forms.size() - 1;
   } else { /* <form_int> */
-    while (fid >= forms.size()) {
+    while (fid >= (int)forms.size()) {
       forms.push_back({});
       form_stack.push_back({});
     }
@@ -943,7 +943,7 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
     renderLine(res, data, nlines, str);
   }
 
-  for (int form_id = 1; form_id < forms.size(); form_id++) {
+  for (int form_id = 1; form_id < (int)forms.size(); form_id++) {
     if (forms[form_id]) {
       forms[form_id]->next = forms[form_id - 1];
     }
@@ -1129,7 +1129,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         tag->parsedtag_get_value(ATTR_FID, &form_id);
         tag->parsedtag_get_value(ATTR_TOP_MARGIN, &top);
         tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &bottom);
-        if (form_id < 0 || form_id >= forms.size() ||
+        if (form_id < 0 || form_id >= (int)forms.size() ||
             forms[form_id] == nullptr) {
           break; /* outside of <form>..</form> */
         }
@@ -1157,7 +1157,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         }
         a_form = data->registerForm(this, form, tag, nlines, pos);
         if (textareanumber >= 0) {
-          while (textareanumber >= a_textarea.size()) {
+          while (textareanumber >= (int)a_textarea.size()) {
             textarea_str.push_back({});
             a_textarea.push_back({});
           }
@@ -1877,7 +1877,8 @@ static void set_alignment(struct readbuffer *obuf, struct HtmlTag *tag) {
     obuf->RB_SET_ALIGN(flag);
   }
 }
-int HtmlParser::HTMLtagproc1(struct HtmlTag *tag,
+
+int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
                              struct html_feed_environ *h_env) {
   auto parser = this;
 
@@ -3106,7 +3107,7 @@ table_start:
       else
         continue;
       /* process tags */
-      if (HTMLtagproc1(tag, h_env) == 0) {
+      if (pushHtmlTag(tag, h_env) == 0) {
         /* preserve the tag for second-stage processing */
         if (tag->parsedtag_need_reconstruct())
           h_env->tagbuf = tag->parsedtag2str();

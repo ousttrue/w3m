@@ -1,5 +1,6 @@
 #include "downloadlist.h"
 #include "app.h"
+#include "quote.h"
 #include "keyvalue.h"
 #include "html/readbuffer.h"
 #include "http_session.h"

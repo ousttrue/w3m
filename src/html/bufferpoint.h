@@ -18,7 +18,7 @@ private:
 
 public:
   BufferPoint *get(int hseq) {
-    if (hseq >= 0 && hseq < this->size()) {
+    if (hseq >= 0 && hseq < (int)this->size()) {
       return &this->marks[hseq];
     } else {
       return nullptr;
@@ -33,7 +33,7 @@ public:
     this->marks[i].pos = pos;
   }
   bool tryMark(int h, int nlines, int pos) {
-    if (h < this->size() && this->marks[h].invalid) {
+    if (h < (int)this->size() && this->marks[h].invalid) {
       this->marks[h].pos = pos;
       this->marks[h].line = nlines;
       this->marks[h].invalid = 0;
