@@ -15,12 +15,11 @@
 #include "table.h"
 #include "html.h"
 #include "textline.h"
-#include "istream.h"
 #include "html_tag.h"
 #include "proto.h"
-#include "alloc.h"
 #include "utf8.h"
 #include <math.h>
+#include <string_view>
 
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
@@ -508,18 +507,23 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
   htmlenv1.buf = GeneralList<TextLine>::newGeneralList();
 
-  auto stream = newStrStream(body);
-
-  while (true) {
-    auto _lineBuf2 = stream->StrmyISgets();
-    if (_lineBuf2.empty()) {
-      break;
+  auto begin = body.begin();
+  while (begin != body.end()) {
+    auto it = begin;
+    for (; it != body.end(); ++it) {
+      if (*it == '\n') {
+        break;
+      }
     }
-    auto lineBuf2 = Strnew(_lineBuf2);
+    std::string_view l(begin, it);
+    begin = it;
+    if (begin != body.end()) {
+      ++begin;
+    }
 
-    linelen += lineBuf2->length;
-    cleanup_line(lineBuf2, HTML_MODE);
-    parser.parseLine(lineBuf2->ptr, &htmlenv1, internal);
+    linelen += l.size();
+    auto line = cleanup_line(l, HTML_MODE);
+    parser.parseLine(line, &htmlenv1, internal);
   }
   if (htmlenv1.obuf.status != R_ST_NORMAL) {
     parser.parseLine("\n", &htmlenv1, internal);
@@ -547,50 +551,62 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   layout->formResetBuffer(layout->data._formitem.get());
 }
 
-void cleanup_line(Str *s, CleanupMode mode) {
+std::string cleanup_line(std::string_view _s, CleanupMode mode) {
+  std::string s{_s.begin(), _s.end()};
   if (mode == RAW_MODE) {
-    return;
+    return s;
   }
 
-  if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
-      s->ptr[s->length - 1] == '\n') {
-    Strshrink(s, 2);
-    Strcat_char(s, '\n');
-  } else if (Strlastchar(s) == '\r') {
-    s->ptr[s->length - 1] = '\n';
-  } else if (Strlastchar(s) != '\n') {
-    Strcat_char(s, '\n');
+  if (s.size() >= 2 && s[s.size() - 2] == '\r' && s[s.size() - 1] == '\n') {
+    s.pop_back();
+    s.pop_back();
+    s += '\n';
+  } else if (s.back() == '\r') {
+    s[s.size() - 1] = '\n';
+  } else if (s.back() != '\n') {
+    s += '\n';
   }
 
   if (mode != PAGER_MODE) {
-    for (int i = 0; i < s->length; i++) {
-      if (s->ptr[i] == '\0') {
-        s->ptr[i] = ' ';
+    for (size_t i = 0; i < s.size(); i++) {
+      if (s[i] == '\0') {
+        s[i] = ' ';
       }
     }
   }
+  return s;
 }
 
 void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
   layout->clearBuffer();
   auto nlines = 0;
-  auto stream = newStrStream(page);
+  // auto stream = newStrStream(page);
   char pre_lbuf = '\0';
-  while (true) {
-    auto _lineBuf2 = stream->StrmyISgets(); //&& lineBuf2->length
-    if (_lineBuf2.empty()) {
-      break;
+
+  auto begin = page.begin();
+  while (begin != page.end()) {
+    auto it = begin;
+    for (; it != page.end(); ++it) {
+      if (*it == '\n') {
+        break;
+      }
     }
-    auto lineBuf2 = Strnew(_lineBuf2);
-    cleanup_line(lineBuf2, PAGER_MODE);
+    std::string_view l(begin, it);
+    begin = it;
+    if (begin != page.end()) {
+      ++begin;
+    }
+    auto line = cleanup_line(l, PAGER_MODE);
+
     if (squeezeBlankLine) {
-      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
+      if (line[0] == '\n' && pre_lbuf == '\n') {
         ++nlines;
         continue;
       }
-      pre_lbuf = lineBuf2->ptr[0];
+      pre_lbuf = line[0];
     }
     ++nlines;
+    auto lineBuf2 = Strnew(line);
     Strchop(lineBuf2);
 
     Lineprop *propBuffer = nullptr;

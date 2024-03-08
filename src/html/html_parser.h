@@ -136,7 +136,7 @@ public:
   int cur_hseq = 1;
 
   // HTML processing first pass
-  void parseLine(const char *istr, struct html_feed_environ *h_env,
+  void parseLine(std::string_view istr, struct html_feed_environ *h_env,
                  bool internal);
 
   void HTMLlineproc1(const char *x, struct html_feed_environ *y) {

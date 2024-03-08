@@ -243,7 +243,7 @@ char *acceptableMimeTypes(void) {
   putHash_si(mhash, "text", 1);
   l.push_back("image");
   putHash_si(mhash, "image", 1);
-  for (int i = 0; i < mailcap_list.size(); i++) {
+  for (size_t i = 0; i < mailcap_list.size(); i++) {
     auto &mailcap = UserMailcap[i];
     // if (mp == NULL)
     //   continue;

@@ -1,6 +1,7 @@
 #pragma once
 #include "lineprop.h"
 #include "enum_template.h"
+#include "Str.h"
 #include "anchor.h"
 #include "readbuffer_status.h"
 #include "html_command.h"
@@ -195,7 +196,12 @@ enum CleanupMode {
   HTML_MODE = 2,
   HEADER_MODE = 3,
 };
-void cleanup_line(Str *s, CleanupMode mode);
+std::string cleanup_line(std::string_view s, CleanupMode mode);
+inline void cleanup_line(Str *s, CleanupMode mode) {
+  auto tmp = cleanup_line(s->ptr, mode);
+  Strclear(s);
+  Strcat(s, tmp);
+}
 
 extern int is_boundary(unsigned char *, unsigned char *);
 

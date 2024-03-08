@@ -1879,7 +1879,7 @@ static void set_alignment(struct readbuffer *obuf, struct HtmlTag *tag) {
 }
 
 int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
-                             struct html_feed_environ *h_env) {
+                            struct html_feed_environ *h_env) {
   auto parser = this;
 
   const char *p, *q, *r;
@@ -2936,11 +2936,14 @@ static int need_flushline(struct html_feed_environ *h_env,
   return 0;
 }
 
-void HtmlParser::parseLine(const char *line, struct html_feed_environ *h_env,
-                           bool internal) {
+void HtmlParser::parseLine(std::string_view _line,
+                           struct html_feed_environ *h_env, bool internal) {
   struct table *tbl = nullptr;
   struct table_mode *tbl_mode = nullptr;
   int tbl_width = 0;
+
+  std::string __line{_line.begin(), _line.end()};
+  auto line = __line.c_str();
 
 table_start:
   if (h_env->obuf.table_level >= 0) {
