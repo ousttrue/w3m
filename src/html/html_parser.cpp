@@ -409,7 +409,6 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     } else if (obuf->RB_GET_ALIGN() == RB_LEFT && obuf->flag & RB_INTABLE) {
       lbuf->align(width, ALIGN_LEFT);
     }
-#ifdef FORMAT_NICE
     else if (obuf->flag & RB_FILL) {
       char *p;
       int rest, rrest;
@@ -445,11 +444,10 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
               }
             }
           }
-          lbuf = newTextLine(line, width);
+          lbuf = TextLine::newTextLine(line, width);
         }
       }
     }
-#endif /* FORMAT_NICE */
 
     if (lbuf->pos() > h_env->maxlimit) {
       h_env->maxlimit = lbuf->pos();
@@ -3216,15 +3214,11 @@ table_start:
           line = Strnew_charp(bp);
           Strshrink(h_env->obuf.line,
                     h_env->obuf.line->length - h_env->obuf.bp.len);
-#ifdef FORMAT_NICE
           if (h_env->obuf.pos - i > h_env->limit)
             h_env->obuf.flag |= RB_FILL;
-#endif /* FORMAT_NICE */
           h_env->obuf.back_to_breakpoint();
           flushline(h_env, indent, 0, h_env->limit);
-#ifdef FORMAT_NICE
           h_env->obuf.flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
           HTMLlineproc1(line->ptr, h_env);
         }
       }
@@ -3244,13 +3238,9 @@ table_start:
       i = 1;
     int indent = h_env->envs[h_env->envc].indent;
     if (h_env->obuf.pos - i > h_env->limit) {
-#ifdef FORMAT_NICE
       h_env->obuf.flag |= RB_FILL;
-#endif /* FORMAT_NICE */
       flushline(h_env, indent, 0, h_env->limit);
-#ifdef FORMAT_NICE
       h_env->obuf.flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
     }
   }
 }

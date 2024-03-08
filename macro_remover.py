@@ -9,59 +9,53 @@ from termcolor import colored
 HERE = pathlib.Path(__file__).absolute().parent
 
 CONTEXT = {
-    'SIGWINCH': True,
-    'SIGPIPE': True,
-    'SIGCHLD': True,
-    'SIGTSTP': True,
-    'USE_COOKIE': True,
-    'USE_ALARM': True,
-    'USE_SSL': True,
-    'USE_SSL_VERIFY': True,
-    'USE_HELP_CGI': True,
-    'USE_DICT': True,
-    'USE_BUFINFO': True,
-    'USE_HISTORY': True,
-    'USE_EXTERNAL_URI_LOADER': False,
+    "SIGWINCH": True,
+    "SIGPIPE": True,
+    "SIGCHLD": True,
+    "SIGTSTP": True,
+    "USE_COOKIE": True,
+    "USE_ALARM": True,
+    "USE_SSL": True,
+    "USE_SSL_VERIFY": True,
+    "USE_HELP_CGI": True,
+    "USE_DICT": True,
+    "USE_BUFINFO": True,
+    "USE_HISTORY": True,
+    "USE_EXTERNAL_URI_LOADER": False,
     # # 'HAVE_WAITPID': True,
     # #
     # 'SIGSTOP': False,
     # 'USE_INCLUDED_SRAND48': False,
-
-    'USE_MIGEMO': False,
-    'USE_W3MMAILER': False,
-    'USE_MARK': False,
-
-    '__CYGWIN__': False,
-    'SUPPORT_WIN9X_CONSOLE_MBCS': False,
-    '__MINGW32_VERSION': False,
-    '__EMX__': False,
-    '__WATT32__': False,
-    'USE_BINMODE_STREAM': False,
-
-    'USE_M17N': False,
-    'USE_UNICODE': False,
-    'ENABLE_NLS': False,
-
-    'USE_COLOR': False,
-    'USE_ANSI_COLOR': False,
-    'USE_BG_COLOR': False,
-    'USE_RAW_SCROLL': False,
-
-    'USE_MENU': False,
-    'MENU_MAP': False,
-    'MENU_SELECT': False,
-    'USE_MOUSE': False,
-    'USE_GPM': False,
-    'USE_IMAGE': False,
-
-    'USE_NNTP': False,
-    'USE_GOPHER': False,
-
-    'ID_EXT': False,
-    'MATRIX': True,
+    "USE_MIGEMO": False,
+    "USE_W3MMAILER": False,
+    "USE_MARK": False,
+    "__CYGWIN__": False,
+    "SUPPORT_WIN9X_CONSOLE_MBCS": False,
+    "__MINGW32_VERSION": False,
+    "__EMX__": False,
+    "__WATT32__": False,
+    "USE_BINMODE_STREAM": False,
+    "USE_M17N": False,
+    "USE_UNICODE": False,
+    "ENABLE_NLS": False,
+    "USE_COLOR": False,
+    "USE_ANSI_COLOR": False,
+    "USE_BG_COLOR": False,
+    "USE_RAW_SCROLL": False,
+    "USE_MENU": False,
+    "MENU_MAP": False,
+    "MENU_SELECT": False,
+    "USE_MOUSE": False,
+    "USE_GPM": False,
+    "USE_IMAGE": False,
+    "USE_NNTP": False,
+    "USE_GOPHER": False,
+    "ID_EXT": False,
+    "MATRIX": True,
+    "FORMAT_NICE": True,
 }
 
-MACRO_PATTERN = re.compile(r'^#\s*(\S+)\s*(\S.*)?')
+MACRO_PATTERN = re.compile(r"^#\s*(\S+)\s*(\S.*)?")
 
 
 class Include(NamedTuple):
@@ -77,9 +71,9 @@ class If(NamedTuple):
 
     def eval(self, context) -> Optional[bool]:
         match self.value:
-            case '0':
+            case "0":
                 return False
-            case '1':
+            case "1":
                 return True
         return None
 
@@ -113,33 +107,35 @@ class Elif(NamedTuple):
 
 class Else:
     def __str__(self) -> str:
-        return 'Else'
+        return "Else"
 
 
 class Endif:
     def __str__(self) -> str:
-        return 'Endif'
+        return "Endif"
 
 
-def parse_macro(l: str) -> Union[None, Include, Define, If, Ifdef, Ifndef, Else, Elif, Endif]:
+def parse_macro(
+    l: str,
+) -> Union[None, Include, Define, If, Ifdef, Ifndef, Else, Elif, Endif]:
     m = MACRO_PATTERN.match(l)
     if m:
         match m.group(1):
-            case 'include':
+            case "include":
                 return Include(m.group(2).strip())
-            case 'define':
+            case "define":
                 return Define(m.group(2).strip())
-            case 'if':
+            case "if":
                 return If(m.group(2).strip())
-            case 'ifndef':
+            case "ifndef":
                 return Ifndef(m.group(2).strip())
-            case 'ifdef':
+            case "ifdef":
                 return Ifdef(m.group(2).strip())
-            case 'elif':
+            case "elif":
                 return Elif(m.group(2).strip())
-            case 'else':
+            case "else":
                 return Else()
-            case 'endif':
+            case "endif":
                 return Endif()
 
 
@@ -183,11 +179,11 @@ class MacroNode:
                     self.result = m.eval(context)
             case Else() as m:
                 if any(prevs):
-                    assert (self.result == None)
+                    assert self.result == None
                     self.result = False
                 elif any(prev == False for prev in prevs):
                     # has false
-                    assert (self.result == None)
+                    assert self.result == None
                     self.result = True
             case _:
                 raise NotImplementedError()
@@ -195,20 +191,24 @@ class MacroNode:
         for child in self.children:
             child.eval(context)
 
-    def print(self, indent=''):
+    def print(self, indent=""):
         match self.result:
             case True:
-                color = 'green'
+                color = "green"
             case False:
-                color = 'red'
+                color = "red"
             case None:
-                color = 'grey'
+                color = "grey"
             case _:
                 raise NotImplementedError()
 
-        print(colored(f'{self.begin:04} ~ {self.end:04}:{indent}{self.begin_macro}', color))
+        print(
+            colored(
+                f"{self.begin:04} ~ {self.end:04}:{indent}{self.begin_macro}", color
+            )
+        )
         for child in self.children:
-            child.print(indent + '  ')
+            child.print(indent + "  ")
 
     def apply(self, lines):
         removed = False
@@ -240,16 +240,16 @@ class MacroNode:
 
 
 def main(path: pathlib.Path, debug=False):
-    if path.suffix not in ['.h', '.c', '.cpp']:
+    if path.suffix not in [".h", ".c", ".cpp"]:
         return
 
-    print(colored(str(path), 'magenta'))
-    lines = path.read_text().splitlines()
+    print(colored(str(path), "magenta"))
+    lines = path.read_text(encoding="utf-8").splitlines()
     root = MacroNode(0, None)
     stack = [root]
     for i, l in enumerate(lines):
         l = l.rstrip()
-        if l.startswith('#'):
+        if l.startswith("#"):
             match parse_macro(l):
                 case Include() as m:
                     pass
@@ -275,7 +275,7 @@ def main(path: pathlib.Path, debug=False):
                 case _:
                     print(l)
                     # print(l)
-    assert (len(stack) == 1)
+    assert len(stack) == 1
     root.close(len(lines) - 1, None)
     root.eval(CONTEXT)
 
@@ -283,20 +283,23 @@ def main(path: pathlib.Path, debug=False):
         root.print()
     else:
         root.apply(lines)
-        path.write_text(''.join(l + '\n' for l in lines if l != None), newline='\n')
+        path.write_text(
+            "".join(l + "\n" for l in lines if l != None),
+            encoding="utf-8",
+            newline="\n",
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     debug = False
     # debug = True
     # for arg in sys.argv[1:]:
     #     main(pathlib.Path(arg), debug)
 
     dir = HERE
-    if len(sys.argv)>1:
+    if len(sys.argv) > 1:
         dir = pathlib.Path(sys.argv[1]).absolute()
 
     for root, dirs, files in os.walk(dir):
         for f in files:
             main(pathlib.Path(root) / f, debug)
-

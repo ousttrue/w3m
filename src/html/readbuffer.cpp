@@ -637,9 +637,7 @@ void readbuffer::set_breakpoint(int tag_length) {
   this->bp.pos = this->pos;
   this->bp.tlen = tag_length;
   this->bp.flag = this->flag;
-#ifdef FORMAT_NICE
   this->bp.flag &= ~RB_FILL;
-#endif /* FORMAT_NICE */
   this->bp.top_margin = this->top_margin;
   this->bp.bottom_margin = this->bottom_margin;
 

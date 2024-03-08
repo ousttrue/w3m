@@ -61,9 +61,7 @@ enum ReadBufferFlags {
   RB_SPECIAL =
       (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR),
   RB_PLAIN_PRE = 0x40000,
-#ifdef FORMAT_NICE
   RB_FILL = 0x80000,
-#endif /* FORMAT_NICE */
   RB_DEL = 0x100000,
   RB_S = 0x200000,
   RB_HTML5 = 0x400000,
