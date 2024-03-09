@@ -4,39 +4,43 @@
 
 #define LINELEN 256 /* Initial line length */
 
-struct Line {
-  std::vector<char> lineBuf;
-  int len() const { return static_cast<int>(lineBuf.size()); }
-  std::vector<Lineprop> propBuf;
+class Line {
+  std::vector<char> _lineBuf;
+  std::vector<Lineprop> _propBuf;
 
-private:
   // column width. cache
   mutable int _width = -1;
 
 public:
+  const char *lineBuf() const { return _lineBuf.data(); }
+  void lineBuf(int pos, char c) { _lineBuf[pos] = c; }
+  const Lineprop *propBuf() const { return _propBuf.data(); }
+  void propBufAdd(int pos, Lineprop p) { _propBuf[pos] |= p; }
+  void propBufDel(int pos, Lineprop p) { _propBuf[pos] &= ~p; }
+  int len() const { return static_cast<int>(_lineBuf.size()); }
   void PPUSH(char p, Lineprop c) {
-    propBuf.push_back(p);
-    lineBuf.push_back(c);
+    _propBuf.push_back(p);
+    _lineBuf.push_back(c);
   }
 
   int push_mc(Lineprop prop, const char *str);
 
   int width(bool force = false) const {
     if (force || _width == -1) {
-      this->_width = this->bytePosToColumn(this->lineBuf.size());
+      this->_width = this->bytePosToColumn(this->_lineBuf.size());
     }
     return this->_width;
   }
 
   void assign(const char *buf, const Lineprop *prop, int byteLen) {
-    lineBuf.reserve(byteLen + 1);
-    propBuf.reserve(byteLen + 1);
+    _lineBuf.reserve(byteLen + 1);
+    _propBuf.reserve(byteLen + 1);
     if (byteLen > 0) {
-      lineBuf.assign(buf, buf + byteLen);
-      propBuf.assign(prop, prop + byteLen);
+      _lineBuf.assign(buf, buf + byteLen);
+      _propBuf.assign(prop, prop + byteLen);
     }
-    lineBuf.push_back(0);
-    propBuf.push_back(0);
+    _lineBuf.push_back(0);
+    _propBuf.push_back(0);
   }
 
   Line() {}
@@ -54,7 +58,7 @@ public:
 
   void set_mark(int pos, int epos) {
     for (; pos < epos && pos < this->len(); pos++) {
-      this->propBuf[pos] |= PE_MARK;
+      this->_propBuf[pos] |= PE_MARK;
     }
   }
 };

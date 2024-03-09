@@ -624,7 +624,7 @@ std::string LineLayout::getCurWord(int *spos, int *epos) const {
 
   *spos = 0;
   *epos = 0;
-  auto &p = l->lineBuf;
+  auto p = l->lineBuf();
   auto e = this->pos;
   while (e > 0 && !is_wordchar(p[e]))
     prevChar(e, l);
@@ -643,7 +643,7 @@ std::string LineLayout::getCurWord(int *spos, int *epos) const {
   }
   *spos = b;
   *epos = e;
-  return {p.data() + b, p.data() + e};
+  return {p + b, p + e};
 }
 
 /*
@@ -876,10 +876,10 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   buf = (char *)New_N(char, len + 1);
   buf[len] = '\0';
   prop = (Lineprop *)New_N(Lineprop, len);
-  memcpy(buf, line->lineBuf.data(), spos * sizeof(char));
-  memcpy(prop, line->propBuf.data(), spos * sizeof(Lineprop));
+  memcpy(buf, line->lineBuf(), spos * sizeof(char));
+  memcpy(prop, line->propBuf(), spos * sizeof(Lineprop));
 
-  effect = CharEffect(line->propBuf[spos]);
+  effect = CharEffect(line->propBuf()[spos]);
   for (p = *str, w = 0, pos = spos; *p && w < width;) {
     c_type = get_mctype(p);
     if (c_type == PC_CTRL) {
@@ -923,8 +923,9 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   }
   *str = p;
 
-  memcpy(&buf[pos], &line->lineBuf[epos], (line->len() - epos) * sizeof(char));
-  memcpy(&prop[pos], &line->propBuf[epos],
+  memcpy(&buf[pos], &line->lineBuf()[epos],
+         (line->len() - epos) * sizeof(char));
+  memcpy(&prop[pos], &line->propBuf()[epos],
          (line->len() - epos) * sizeof(Lineprop));
 
   line->assign(buf, prop, len);
@@ -961,9 +962,9 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
         spos < 0)
       break;
     if (form->checked)
-      this->currentLine->lineBuf[spos] = '*';
+      this->currentLine->lineBuf(spos, '*');
     else
-      this->currentLine->lineBuf[spos] = ' ';
+      this->currentLine->lineBuf(spos, ' ');
     break;
   case FORM_INPUT_TEXT:
   case FORM_INPUT_FILE:
@@ -972,7 +973,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
     if (!form->value)
       break;
     p = form->value->ptr;
-  }
+
     l = this->currentLine;
     if (!l)
       break;
@@ -1016,6 +1017,10 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
             this->data._hmarklist.get(), a->start.line, spos, pos - epos);
       }
     }
+    break;
+  }
+
+  default:
     break;
   }
   *this = save;

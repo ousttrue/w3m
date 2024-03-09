@@ -203,7 +203,7 @@ void Content::Render(ftxui::Screen &screen) {
                                             box_.y_max - box_.y_min + 1);
   auto l = layout->data.firstLine();
   int i = 0;
-  for (; i < layout->data.lines.size(); ++i, ++l) {
+  for (; i < (int)layout->data.lines.size(); ++i, ++l) {
     auto pixel = this->redrawLine(
         {
             .row = i,
@@ -251,8 +251,8 @@ RowCol Content::redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft) {
   }
 
   int pos = l->columnPos(pixel.col);
-  auto p = &(l->lineBuf[pos]);
-  auto pr = &(l->propBuf[pos]);
+  auto p = l->lineBuf() + pos;
+  auto pr = l->propBuf() + pos;
   int col = pixel.col; // l->bytePosToColumn(pos);
 
   if (col < scrollLeft) {

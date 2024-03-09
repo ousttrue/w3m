@@ -27,17 +27,17 @@ void push_symbol(Str *str, char symbol, int width, int n) {
 
 Str *conv_symbol(Line *l) {
   Str *tmp = NULL;
-  char *p = l->lineBuf.data();
-  char *ep = p + l->lineBuf.size();
-  Lineprop *pr = l->propBuf.data();
+  auto p = l->lineBuf();
+  auto ep = p + l->len();
+  auto pr = l->propBuf();
   auto symbol = get_symbol();
 
   for (; p < ep; p++, pr++) {
     if (*pr & PC_SYMBOL) {
       char c = *p - SYMBOL_BASE;
       if (tmp == NULL) {
-        tmp = Strnew_size(l->lineBuf.size());
-        Strcopy_charp_n(tmp, l->lineBuf.data(), p - l->lineBuf.data());
+        tmp = Strnew_size(l->len());
+        Strcopy_charp_n(tmp, l->lineBuf(), p - l->lineBuf());
       }
       Strcat_charp(tmp, symbol[(unsigned char)c % N_SYMBOL]);
     } else if (tmp != NULL)
@@ -46,5 +46,5 @@ Str *conv_symbol(Line *l) {
   if (tmp)
     return tmp;
   else
-    return Strnew_charp_n(l->lineBuf.data(), l->lineBuf.size());
+    return Strnew_charp_n(l->lineBuf(), l->len());
 }

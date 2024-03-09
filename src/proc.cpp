@@ -442,8 +442,7 @@ std::shared_ptr<CoroutineState<void>> movR1() {
 // PREV_WORD
 //"Move to the previous word"
 std::shared_ptr<CoroutineState<void>> movLW() {
-  char *lb;
-  Line *pline, *l;
+  Line *pline;
   int ppos;
   int i, n = App::instance().searchKeyNum();
 
@@ -459,8 +458,8 @@ std::shared_ptr<CoroutineState<void>> movLW() {
       goto end;
 
     while (1) {
-      l = CurrentTab->currentBuffer()->layout.currentLine;
-      lb = l->lineBuf.data();
+      auto l = CurrentTab->currentBuffer()->layout.currentLine;
+      auto lb = l->lineBuf();
       while (CurrentTab->currentBuffer()->layout.pos > 0) {
         int tmp = CurrentTab->currentBuffer()->layout.pos;
         prevChar(tmp, l);
@@ -482,15 +481,17 @@ std::shared_ptr<CoroutineState<void>> movLW() {
           CurrentTab->currentBuffer()->layout.currentLine->len();
     }
 
-    l = CurrentTab->currentBuffer()->layout.currentLine;
-    lb = l->lineBuf.data();
-    while (CurrentTab->currentBuffer()->layout.pos > 0) {
-      int tmp = CurrentTab->currentBuffer()->layout.pos;
-      prevChar(tmp, l);
-      if (!is_wordchar(lb[tmp])) {
-        break;
+    {
+      auto l = CurrentTab->currentBuffer()->layout.currentLine;
+      auto lb = l->lineBuf();
+      while (CurrentTab->currentBuffer()->layout.pos > 0) {
+        int tmp = CurrentTab->currentBuffer()->layout.pos;
+        prevChar(tmp, l);
+        if (!is_wordchar(lb[tmp])) {
+          break;
+        }
+        CurrentTab->currentBuffer()->layout.pos = tmp;
       }
-      CurrentTab->currentBuffer()->layout.pos = tmp;
     }
   }
 end:
@@ -500,8 +501,7 @@ end:
 // NEXT_WORD
 //"Move to the next word"
 std::shared_ptr<CoroutineState<void>> movRW() {
-  char *lb;
-  Line *pline, *l;
+  Line *pline;
   int ppos;
   int i, n = App::instance().searchKeyNum();
 
@@ -516,8 +516,8 @@ std::shared_ptr<CoroutineState<void>> movRW() {
             CurrentTab->currentBuffer()->layout.currentLine) < 0)
       goto end;
 
-    l = CurrentTab->currentBuffer()->layout.currentLine;
-    lb = l->lineBuf.data();
+    auto l = CurrentTab->currentBuffer()->layout.currentLine;
+    auto lb = l->lineBuf();
     while (CurrentTab->currentBuffer()->layout.pos < l->len() &&
            is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
       nextChar(CurrentTab->currentBuffer()->layout.pos, l);
@@ -539,7 +539,7 @@ std::shared_ptr<CoroutineState<void>> movRW() {
       }
       CurrentTab->currentBuffer()->layout.pos = 0;
       l = CurrentTab->currentBuffer()->layout.currentLine;
-      lb = l->lineBuf.data();
+      lb = l->lineBuf();
     }
   }
 end:

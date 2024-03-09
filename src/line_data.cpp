@@ -102,10 +102,10 @@ void LineData::addMultirowsForm() {
       a->end.pos = pos + ecol - col;
       if (pos < 1 || a->end.pos >= l->len())
         continue;
-      l->lineBuf[pos - 1] = '[';
-      l->lineBuf[a->end.pos] = ']';
+      l->lineBuf(pos - 1, '[');
+      l->lineBuf(a->end.pos, ']');
       for (int k = pos; k < a->end.pos; k++) {
-        l->propBuf[k] |= PE_FORM;
+        l->propBufAdd(k, PE_FORM);
       }
     }
   }
@@ -163,18 +163,18 @@ const char *LineData ::reAnchorPos(
     Line *l, const char *p1, const char *p2,
     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int)) {
   Anchor *a;
-  int spos, epos;
   int i;
   int hseq = -2;
 
-  spos = p1 - l->lineBuf.data();
-  epos = p2 - l->lineBuf.data();
+  auto spos = p1 - l->lineBuf();
+  auto epos = p2 - l->lineBuf();
   for (i = spos; i < epos; i++) {
-    if (l->propBuf[i] & (PE_ANCHOR | PE_FORM))
+    if (l->propBuf()[i] & (PE_ANCHOR | PE_FORM))
       return p2;
   }
-  for (i = spos; i < epos; i++)
-    l->propBuf[i] |= PE_ANCHOR;
+  for (i = spos; i < epos; i++) {
+    l->propBufAdd(i, PE_ANCHOR);
+  }
 
   while (1) {
     a = anchorproc(this, p1, p2, linenumber(l), spos);
@@ -195,8 +195,6 @@ const char *LineData ::reAnchorPos(
 const char *LineData::reAnchorAny(
     Line *topLine, const char *re,
     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int)) {
-  Line *l;
-  const char *p = NULL, *p1, *p2;
 
   if (re == NULL || *re == '\0') {
     return NULL;
@@ -204,15 +202,17 @@ const char *LineData::reAnchorAny(
   if ((re = regexCompile(re, 1)) != NULL) {
     return re;
   }
+
+  Line *l;
   for (l = MarkAllPages ? this->firstLine() : topLine;
        l != NULL &&
        (MarkAllPages ||
         linenumber(l) < linenumber(topLine) + App::instance().LASTLINE());
        ++l) {
-    p = l->lineBuf.data();
+    auto p = l->lineBuf();
     for (;;) {
-      if (regexMatch(p, &l->lineBuf[l->len()] - p, p == l->lineBuf.data()) ==
-          1) {
+      if (regexMatch(p, &l->lineBuf()[l->len()] - p, p == l->lineBuf()) == 1) {
+        const char *p1, *p2;
         matchedPosition(&p1, &p2);
         p = this->reAnchorPos(l, p1, p2, anchorproc);
       } else
@@ -244,7 +244,7 @@ const char *LineData::reAnchor(Line *topLine, const char *re) {
 }
 
 const char *LineData::reAnchorWord(Line *l, int spos, int epos) {
-  return this->reAnchorPos(l, &l->lineBuf[spos], &l->lineBuf[epos],
+  return this->reAnchorPos(l, &l->lineBuf()[spos], &l->lineBuf()[epos],
                            _put_anchor_all);
 }
 
@@ -265,8 +265,8 @@ const char *LineData::getAnchorText(Anchor *a) {
     }
     if (l == lines.end())
       break;
-    auto p = l->lineBuf.data() + a->start.pos;
-    auto ep = l->lineBuf.data() + a->end.pos;
+    auto p = l->lineBuf() + a->start.pos;
+    auto ep = l->lineBuf() + a->end.pos;
     for (; p < ep && IS_SPACE(*p); p++)
       ;
     if (p == ep)

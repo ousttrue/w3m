@@ -2124,8 +2124,9 @@ int getescapechar(const char **str) {
   const char *p = *str, *q;
   int strict_entity = true;
 
-  assert (*p == '&');
-  p++;
+  if (*p == '&'){
+    p++;
+  }
 
   if (*p == '#') {
     p++;

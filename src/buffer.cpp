@@ -189,7 +189,7 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
     if (is_html)
       tmp = conv_symbol(l);
     else
-      tmp = Strnew_charp_n(l->lineBuf.data(), l->lineBuf.size());
+      tmp = Strnew_charp_n(l->lineBuf(), l->len());
     Strfputs(tmp, f);
   }
 }

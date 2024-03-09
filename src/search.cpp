@@ -22,10 +22,11 @@ int forwardSearch(LineLayout *layout, const char *str) {
 
   auto pos = layout->pos;
   auto begin = l;
-  if (pos < l->len() && regexMatch(&l->lineBuf[pos], l->len() - pos, 0) == 1) {
+  if (pos < l->len() &&
+      regexMatch(&l->lineBuf()[pos], l->len() - pos, 0) == 1) {
     const char *first, *last;
     matchedPosition(&first, &last);
-    pos = first - l->lineBuf.data();
+    pos = first - l->lineBuf();
     layout->pos = pos;
     if (l != layout->currentLine) {
       layout->gotoLine(layout->linenumber(l));
@@ -46,10 +47,10 @@ int forwardSearch(LineLayout *layout, const char *str) {
         break;
       }
     }
-    if (regexMatch(l->lineBuf.data(), l->len(), 1) == 1) {
+    if (regexMatch(l->lineBuf(), l->len(), 1) == 1) {
       const char *first, *last;
       matchedPosition(&first, &last);
-      pos = first - l->lineBuf.data();
+      pos = first - l->lineBuf();
       layout->pos = pos;
       layout->currentLine = l;
       layout->gotoLine(layout->linenumber(l));
@@ -78,26 +79,25 @@ int backwardSearch(LineLayout *layout, const char *str) {
   auto begin = l;
   if (pos > 0) {
     pos--;
-    auto p = &l->lineBuf[pos];
+    auto p = &l->lineBuf()[pos];
     const char *found = NULL;
     const char *found_last = NULL;
-    auto q = l->lineBuf.data();
-    while (regexMatch(q, &l->lineBuf[l->len()] - q, q == l->lineBuf.data()) ==
-           1) {
+    auto q = l->lineBuf();
+    while (regexMatch(q, &l->lineBuf()[l->len()] - q, q == l->lineBuf()) == 1) {
       const char *first, *last;
       matchedPosition(&first, &last);
       if (first <= p) {
         found = first;
         found_last = last;
       }
-      if (q - l->lineBuf.data() >= l->len())
+      if (q - l->lineBuf() >= l->len())
         break;
       q++;
       if (q > p)
         break;
     }
     if (found) {
-      pos = found - l->lineBuf.data();
+      pos = found - l->lineBuf();
       layout->pos = pos;
       if (l != layout->currentLine) {
         layout->gotoLine(layout->linenumber(l));
@@ -121,19 +121,18 @@ int backwardSearch(LineLayout *layout, const char *str) {
     }
     const char *found = NULL;
     const char *found_last = NULL;
-    auto q = l->lineBuf.data();
-    while (regexMatch(q, &l->lineBuf[l->len()] - q, q == l->lineBuf.data()) ==
-           1) {
+    auto q = l->lineBuf();
+    while (regexMatch(q, &l->lineBuf()[l->len()] - q, q == l->lineBuf()) == 1) {
       const char *first, *last;
       matchedPosition(&first, &last);
       found = first;
       found_last = last;
-      if (q - l->lineBuf.data() >= l->len())
+      if (q - l->lineBuf() >= l->len())
         break;
       q++;
     }
     if (found) {
-      pos = found - l->lineBuf.data();
+      pos = found - l->lineBuf();
       layout->pos = pos;
       layout->gotoLine(layout->linenumber(l));
       layout->arrangeCursor();
@@ -153,8 +152,9 @@ static void clear_mark(Line *l) {
   int pos;
   if (!l)
     return;
-  for (pos = 0; pos < l->len(); pos++)
-    l->propBuf[pos] &= ~PE_MARK;
+  for (pos = 0; pos < l->len(); pos++){
+    l->propBufDel(pos, PE_MARK);
+  }
 }
 
 /* search by regular expression */

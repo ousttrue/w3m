@@ -19,8 +19,7 @@ int Line::push_mc(Lineprop prop, const char *str) {
 }
 
 int Line::bytePosToColumn(int pos) const {
-  return ::bytePosToColumn(lineBuf.data(), propBuf.data(), len(), pos, 0,
-                           false);
+  return ::bytePosToColumn(lineBuf(), propBuf(), len(), pos, 0, false);
 }
 
 int Line::columnPos(int column) const {
@@ -29,18 +28,18 @@ int Line::columnPos(int column) const {
     if (this->bytePosToColumn(i) > column)
       break;
   }
-  for (i--; i > 0 && this->propBuf[i] & PC_WCHAR2; i--)
+  for (i--; i > 0 && this->_propBuf[i] & PC_WCHAR2; i--)
     ;
   return i;
 }
 
 int Line::columnLen(int column) const {
   for (auto i = 0; i < this->len();) {
-    auto j = ::bytePosToColumn(&this->lineBuf[i], &this->propBuf[i],
+    auto j = ::bytePosToColumn(&this->_lineBuf[i], &this->_propBuf[i],
                                this->len(), i, 0, false);
     if (j > column)
       return i;
-    auto utf8 = Utf8::from((const char8_t *)&this->lineBuf[i]);
+    auto utf8 = Utf8::from((const char8_t *)&this->_lineBuf[i]);
     auto [cp, bytes] = utf8.codepoint();
     i += bytes;
   }
