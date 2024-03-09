@@ -11,6 +11,7 @@
 #include <ftxui/screen/terminal.hpp>
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/dom/elements.hpp>
+#include <sstream>
 
 extern bool displayLink;
 extern int displayLineInfo;
@@ -42,6 +43,7 @@ class App {
   RowCol _root = {};
 
   std::shared_ptr<Content> _content;
+  std::stringstream _lastKeyCmd;
   std::string _status;
 
   bool _fmInitialized = false;

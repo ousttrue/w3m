@@ -1109,6 +1109,12 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
     return;
   }
   auto c = buf[0];
+  _lastKeyCmd.str("");
+  if (std::isalnum(c) || std::ispunct(c)) {
+    _lastKeyCmd << c;
+  } else {
+    _lastKeyCmd << "0x" << std::hex << (int)c;
+  }
   if (IS_ASCII(c)) { /* Ascii */
     if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c].empty()))) {
       prec_num = prec_num * 10 + (int)(c - '0');
@@ -1118,8 +1124,14 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       set_buffer_environ(currentTab()->currentBuffer());
       // currentTab()->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
-      auto callback = w3mFuncList[GlobalKeymap[c]];
-      callback();
+      auto cmd = GlobalKeymap[c];
+      if (cmd.size()) {
+        _lastKeyCmd << " => " << cmd;
+        auto callback = w3mFuncList[cmd];
+        callback();
+      } else {
+        _lastKeyCmd << " => not found";
+      }
       prec_num = 0;
     }
   }
@@ -1280,7 +1292,12 @@ ftxui::Element App::dom() {
   auto msg = this->make_lastline_message(buf);
 
   std::stringstream ss;
-  ss << buf->layout.cursor.row << ", " << buf->layout.cursor.col;
+  ss
+      // row, col
+      << buf->layout.cursor.row << ", "
+      << buf->layout.cursor.col
+      //
+      << ", " << _lastKeyCmd.str();
   _status = ss.str();
 
   return ftxui::vbox({
