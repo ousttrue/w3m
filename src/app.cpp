@@ -1556,8 +1556,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
     if (al) {
       buf->layout.gotoLine(al->start.line);
       if (label_topline) {
-        buf->layout._topLine =
-            buf->layout.lineSkip(buf->layout.topLine(), buf->layout.cursor.row);
+        buf->layout._topLine += buf->layout.cursor.row;
       }
       buf->layout.pos = al->start.pos;
       buf->layout.arrangeCursor();

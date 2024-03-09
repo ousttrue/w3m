@@ -63,25 +63,6 @@ struct LineLayout {
 
   void clearBuffer();
 
-  int lineSkip(const Line *line, int offset) const {
-    auto l = currentLineSkip(line, offset);
-    if (!nextpage_topline) {
-      for (int i = LINES - 1 - (linenumber(lastLine()) - l);
-           i > 0 && hasPrev(&data.lines[l]); i--, --l)
-        ;
-    }
-    return l;
-  }
-
-  int currentLineSkip(const Line *l, int offset) const {
-    if (offset > 0)
-      for (int i = 0; i < offset && hasNext(l); i++, ++l)
-        ;
-    else if (offset < 0)
-      for (int i = 0; i < -offset && hasPrev(l); i++, --l)
-        ;
-    return linenumber(l);
-  }
   void arrangeLine();
   void cursorUpDown(int n);
   void gotoLine(int n);
