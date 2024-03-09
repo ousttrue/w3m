@@ -272,8 +272,8 @@ void LineLayout::cursorXY(int x, int y) {
 }
 
 void LineLayout::restorePosition(const LineLayout &orig) {
-  this->_topLine = orig.TOP_LINENUMBER() - 1;
-  this->gotoLine(orig.CUR_LINENUMBER());
+  this->_topLine = orig._topLine - 1;
+  this->gotoLine(orig._topLine + orig.cursor.row);
   this->pos = orig.pos;
   this->currentColumn = orig.currentColumn;
   this->arrangeCursor();

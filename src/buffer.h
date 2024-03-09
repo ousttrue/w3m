@@ -8,7 +8,6 @@ struct FormList;
 struct Anchor;
 struct FormItemList;
 struct MapList;
-struct Line;
 struct LinkList;
 struct AlarmEvent;
 struct HttpResponse;

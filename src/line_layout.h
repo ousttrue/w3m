@@ -25,8 +25,6 @@ struct LineLayout {
   const Line *lastLine() const { return data.lastLine(); }
   bool empty() const { return data.lines.empty(); }
   int linenumber(const Line *t) const { return data.linenumber(t); }
-  int TOP_LINENUMBER() const { return _topLine; }
-  int CUR_LINENUMBER() const { return linenumber(currentLine()); }
   bool isNull(Line *l) const { return linenumber(l) < 0; }
   bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
   bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
