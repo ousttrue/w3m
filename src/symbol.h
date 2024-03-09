@@ -8,5 +8,5 @@ extern const char **get_symbol(void);
 struct Str;
 extern void push_symbol(Str *str, char symbol, int width, int n);
 
-struct Line;
+class Line;
 Str *conv_symbol(Line *l);

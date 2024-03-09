@@ -160,38 +160,40 @@ void Content::addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode) {
   pixel.underlined = (int)(mode & ScreenFlags::UNDERLINE);
 }
 
-std::string Content::str(const RowCol &root, LineLayout *layout) {
-  // draw lines
-  int i = 0;
-  for (auto l = layout->_topLine;
-       i < layout->LINES && l < (int)layout->data.lines.size(); i++, ++l) {
-    auto pixel = this->redrawLine(
-        {
-            .row = i + root.row,
-            .col = root.col,
-        },
-        l, layout->COLS, layout->currentColumn);
-    this->clrtoeolx(pixel);
-  }
-  // clear remain
-  this->clrtobotx({
-      .row = i + root.row,
-      .col = 0,
-  });
-  cline = layout->_topLine;
-  ccolumn = layout->currentColumn;
-
-  // highlight active anchor
-  // if (!layout->empty() && layout->data._hmarklist) {
-  //   if (layout->data._href || layout->data._formitem) {
-  //     class ActiveAnchorDrawer d(this, root, layout);
-  //     d.drawAnchorCursor();
-  //   }
-  // }
-
-  // toStr
-  return this->_screen->ToString();
-}
+// std::string Content::str(const RowCol &root, LineLayout *layout) {
+//   // draw lines
+//   int i = 0;
+//   int height = box_.y_max - box_.y_min + 1;
+//   int width = box_.x_max - box_.x_min + 1;
+//   for (auto l = layout->_scroll.row;
+//        i < height && l < (int)layout->data.lines.size(); ++i, ++l) {
+//     auto pixel = this->redrawLine(
+//         {
+//             .row = i + root.row,
+//             .col = root.col,
+//         },
+//         l, width, layout->_scroll.col);
+//     this->clrtoeolx(pixel);
+//   }
+//   // clear remain
+//   this->clrtobotx({
+//       .row = i + root.row,
+//       .col = 0,
+//   });
+//   // cline = layout->_topLine;
+//   // ccolumn = layout->currentColumn;
+//
+//   // highlight active anchor
+//   // if (!layout->empty() && layout->data._hmarklist) {
+//   //   if (layout->data._href || layout->data._formitem) {
+//   //     class ActiveAnchorDrawer d(this, root, layout);
+//   //     d.drawAnchorCursor();
+//   //   }
+//   // }
+//
+//   // toStr
+//   return this->_screen->ToString();
+// }
 
 void Content::Render(ftxui::Screen &screen) {
   //
@@ -199,15 +201,17 @@ void Content::Render(ftxui::Screen &screen) {
   //
   _screen = std::make_shared<ftxui::Screen>(box_.x_max - box_.x_min + 1,
                                             box_.y_max - box_.y_min + 1);
-  auto l = layout->_topLine;
+  auto l = layout->_scroll.row;
   int i = 0;
-  for (; l < (int)layout->data.lines.size(); ++i, ++l) {
+  int height = box_.y_max - box_.y_min + 1;
+  int width = box_.x_max - box_.x_min + 1;
+  for (; i < height; ++i, ++l) {
     auto pixel = this->redrawLine(
         {
             .row = i,
             .col = 0,
         },
-        l, layout->COLS, layout->currentColumn);
+        l, width, layout->_scroll.col);
     this->clrtoeolx(pixel);
   }
   // clear remain
@@ -215,8 +219,8 @@ void Content::Render(ftxui::Screen &screen) {
       .row = i,
       .col = 0,
   });
-  cline = layout->_topLine;
-  ccolumn = layout->currentColumn;
+  // cline = layout->_topLine;
+  // ccolumn = layout->currentColumn;
 
   //
   // _screen to screen
@@ -244,7 +248,7 @@ static ScreenFlags propToFlag(Lineprop prop) {
 }
 
 RowCol Content::redrawLine(RowCol pixel, int _l, int cols, int scrollLeft) {
-  if(_l<0 || _l>=(int)layout->data.lines.size()){
+  if (_l < 0 || _l >= (int)layout->data.lines.size()) {
     return pixel;
   }
 

@@ -110,7 +110,7 @@ void HttpResponse::pushHeader(const Url &url, Str *lineBuf2) {
     while (*p && IS_SPACE(*p))
       p++;
     http_response_code = atoi(p);
-    App::instance().message(lineBuf2->ptr, {0, 0});
+    App::instance().message(lineBuf2->ptr);
   }
   if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
     auto p = lineBuf2->ptr + 26;

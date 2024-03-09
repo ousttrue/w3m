@@ -370,17 +370,17 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   URLHist->push(buf->res->currentURL.to_Str());
   // this->pushBuffer(buf);
   buf->layout.gotoLine(a->start.line);
-  if (label_topline) {
-    buf->layout._topLine += buf->layout.cursor.row;
-  }
-  buf->layout.pos = a->start.pos;
+  // if (label_topline) {
+  //   buf->layout._topLine += buf->layout.cursor.row;
+  // }
+  buf->layout.cursorPos(a->start.pos);
   buf->layout.arrangeCursor();
   return buf;
 }
 
 std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
                                          FormList *request) {
-  App::instance().message(Sprintf("loading %s", url)->ptr, {0, 0});
+  App::instance().message(Sprintf("loading %s", url)->ptr);
   // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;

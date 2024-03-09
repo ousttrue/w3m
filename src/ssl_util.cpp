@@ -55,7 +55,7 @@ void ssl_accept_this_site(const char *hostname) {
 }
 
 SSL_CTX *ssl_ctx = nullptr;
-bool ssl_verify_server = true;
+int ssl_verify_server = true;
 #ifdef SSL_CTX_set_min_proto_version
 char *ssl_min_version = NULL;
 static int str_to_ssl_version(const char *name) {

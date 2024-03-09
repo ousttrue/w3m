@@ -542,16 +542,15 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   LineFeed feed(htmlenv1.buf);
   parser.render(res, &layout->data, &feed);
 
-  layout->_topLine = 0;
-  layout->cursor.row = 0;
+  layout->_scroll.row = 0;
+  layout->_cursor.row = 0;
   res->type = "text/html";
   layout->formResetBuffer(layout->data._formitem.get());
 }
 
 std::string cleanup_line(std::string_view _s, CleanupMode mode) {
   std::string s{_s.begin(), _s.end()};
-  if(s.empty())
-  {
+  if (s.empty()) {
     return s;
   }
   if (mode == RAW_MODE) {
@@ -614,8 +613,8 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
     lineBuf2 = checkType(lineBuf2, &propBuffer);
     layout->data.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
   }
-  layout->_topLine = 0;
-  layout->cursor.row = 0;
+  layout->_scroll.row = 0;
+  layout->_cursor.row = 0;
   res->type = "text/plain";
 }
 

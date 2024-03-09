@@ -1,6 +1,7 @@
 #pragma once
 #include "rowcol.h"
 #include "func.h"
+#include "content.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -40,11 +41,11 @@ struct TabBuffer;
 struct Buffer;
 class App {
   RowCol _size = {};
-  RowCol _root = {};
 
   std::shared_ptr<Content> _content;
   std::stringstream _lastKeyCmd;
   std::string _status;
+  std::string _message;
 
   bool _fmInitialized = false;
 
@@ -81,6 +82,8 @@ public:
     return s_instance;
   }
 
+  int contentLines() const { return _content->LINES(); }
+  int contentCols() const { return _content->COLS(); }
   int LINES() const { return _size.row; }
   int COLS() const { return _size.col; }
   int LASTLINE() const { return (_size.row - 1); }
@@ -182,7 +185,7 @@ public:
 
   std::list<std::string> message_list;
   char *delayed_msg = NULL;
-  void message(const char *s, const RowCol &cursor);
+  void message(const char *s);
   void record_err_message(const char *s);
   std::shared_ptr<Buffer> message_list_panel();
   void disp_err_message(const char *s);

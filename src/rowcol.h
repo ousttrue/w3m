@@ -10,4 +10,11 @@ struct RowCol {
         .col = col + rhs.col,
     };
   }
+
+  RowCol operator-(const RowCol &rhs) const {
+    return {
+        .row = row - rhs.row,
+        .col = col - rhs.col,
+    };
+  }
 };

@@ -786,7 +786,8 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
                 buf->res->type.size() ? buf->res->type.c_str() : "unknown");
   }
   l = buf->layout.currentLine();
-  if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
+  if (l && (buf != prev_buf || l != prev_line ||
+            buf->layout.cursorPos() != prev_pos)) {
     Url pu;
     auto s = buf->layout.getCurWord();
     set_environ("W3M_CURRENT_WORD", s.c_str());
@@ -813,10 +814,8 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
 
     set_environ("W3M_CURRENT_LINE",
                 Sprintf("%ld", buf->layout.linenumber(l))->ptr);
-    set_environ(
-        "W3M_CURRENT_COLUMN",
-        Sprintf("%d", buf->layout.currentColumn + buf->layout.cursor.col + 1)
-            ->ptr);
+    set_environ("W3M_CURRENT_COLUMN",
+                Sprintf("%d", buf->layout._cursor.col + 1)->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -827,7 +826,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   }
   prev_buf = buf;
   prev_line = l;
-  prev_pos = buf->layout.pos;
+  prev_pos = buf->layout.cursorPos();
 }
 
 static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
@@ -1148,7 +1147,7 @@ void App::onFrame() {
   if (auto a = currentTab()->currentBuffer()->layout.data.submit) {
     currentTab()->currentBuffer()->layout.data.submit = NULL;
     currentTab()->currentBuffer()->layout.gotoLine(a->start.line);
-    currentTab()->currentBuffer()->layout.pos = a->start.pos;
+    currentTab()->currentBuffer()->layout.cursorPos(a->start.pos);
     if (auto buf = currentTab()
                        ->currentBuffer()
                        ->followForm(a, true)
@@ -1161,11 +1160,11 @@ void App::onFrame() {
   // reload
   auto buf = currentTab()->currentBuffer();
   int width = INIT_BUFFER_WIDTH();
-  if (buf->layout.width == 0)
-    buf->layout.width = width;
-  if (buf->layout.height == 0)
-    buf->layout.height = this->LASTLINE() + 1;
-  if ((buf->layout.width != width && (buf->res->is_html_type())) ||
+  // if (buf->layout.width == 0)
+  //   buf->layout.width = width;
+  // if (buf->layout.height == 0)
+  //   buf->layout.height = this->LASTLINE() + 1;
+  if (/*(buf->layout.width != width && (buf->res->is_html_type())) ||*/
       buf->layout.data.need_reshape) {
     buf->layout.data.need_reshape = true;
     if (buf->layout.data.need_reshape) {
@@ -1210,13 +1209,13 @@ void App::display() {
   if (ny > this->LASTLINE()) {
     ny = this->LASTLINE();
   }
-  _root.col = 0;
-  layout->COLS = this->COLS() - _root.col;
-  if (_root.row != ny || layout->LINES != this->LASTLINE() - ny) {
-    _root.row = ny;
-    layout->LINES = this->LASTLINE() - ny;
-    layout->arrangeCursor();
-  }
+  // _root.col = 0;
+  // layout->COLS = this->COLS() - _root.col;
+  // if (_root.row != ny || layout->LINES != this->LASTLINE() - ny) {
+  //   _root.row = ny;
+  //   layout->LINES = this->LASTLINE() - ny;
+  //   layout->arrangeCursor();
+  // }
   //
   // App::instance().drawTabs();
   //
@@ -1261,7 +1260,7 @@ void App::display() {
 
   ftxui::Render(screen, dom());
 
-  auto cursor = _root + layout->cursor;
+  auto cursor = _content->root() + layout->_cursor - layout->_scroll;
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1294,8 +1293,8 @@ ftxui::Element App::dom() {
   std::stringstream ss;
   ss
       // row, col
-      << buf->layout.cursor.row << ", "
-      << buf->layout.cursor.col
+      << buf->layout._cursor.row << ", "
+      << buf->layout._cursor.col
       //
       << ", " << _lastKeyCmd.str();
   _status = ss.str();
@@ -1572,22 +1571,22 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
     auto al = buf->layout.data._name->searchAnchor(label);
     if (al) {
       buf->layout.gotoLine(al->start.line);
-      if (label_topline) {
-        buf->layout._topLine += buf->layout.cursor.row;
-      }
-      buf->layout.pos = al->start.pos;
+      // if (label_topline) {
+      //   buf->layout._topLine += buf->layout.cursor.row;
+      // }
+      buf->layout.cursorPos(al->start.pos);
       buf->layout.arrangeCursor();
     }
   }
 }
 
-void App::message(const char *s, const RowCol &cursor) {
-  if (_fmInitialized) {
-    RowCol pos{.row = LASTLINE(), .col = 0};
-    pos = _content->addnstr(pos, s, COLS() - 1);
-    _content->clrtoeolx(pos);
-    this->cursor(cursor);
-  } else {
+void App::message(const char *s) {
+  _message = s;
+  if (!_fmInitialized) {
+    // RowCol pos{.row = LASTLINE(), .col = 0};
+    // pos = _content->addnstr(pos, s, COLS() - 1);
+    // _content->clrtoeolx(pos);
+    // this->cursor(cursor);
     fprintf(stderr, "%s\n", s);
   }
 }
@@ -1632,10 +1631,7 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
     return;
   }
 
-  if (CurrentTab != NULL && CurrentTab->currentBuffer() != NULL)
-    message(s, CurrentTab->currentBuffer()->layout.cursor + _root);
-  else
-    message(s, {LASTLINE(), 0});
+  message(s);
   // _screen->print();
   // sleep_till_anykey(sec, purge);
 }
@@ -1729,7 +1725,7 @@ void App::showProgress(long long *linelen, long long *trbyte,
     } else {
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
-    message(messages->ptr, {0, 0});
+    message(messages->ptr);
     // _screen->print();
   }
 }
@@ -1868,7 +1864,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   std::stringstream ss;
   int sl = 0;
   if (displayLineInfo && buf->layout.currentLine()) {
-    int cl = buf->layout._topLine + buf->layout.cursor.row;
+    int cl = buf->layout._cursor.row;
     int ll = buf->layout.linenumber(buf->layout.lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;
@@ -1893,5 +1889,8 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   } else {
     msg += ">";
   }
+
+  ss << "::" << _message;
+
   return msg;
 }

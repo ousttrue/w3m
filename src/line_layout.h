@@ -15,7 +15,7 @@ struct LineLayout {
   LineData data;
 
   LineLayout();
-  LineLayout(int width);
+  // LineLayout(int width);
 
   //
   // lines
@@ -29,31 +29,64 @@ struct LineLayout {
   bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
   bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
 
+  // short COLS = 0;
+  // short LINES = 0;
+  // // COLS/LINES と width height の違いは？
+  // short width = 0;
+  // short height = 0;
+
+  // int pos = 0;
+  // int visualpos = 0;
   // scroll position
-  int _topLine = 0;
+  // int _topLine = 0;
+  RowCol _scroll = {0, 0};
+  // leftPos
+  // int scrollPos() const;
   Line *topLine() {
-    if (_topLine < 0 || _topLine >= (int)data.lines.size()) {
-      return nullptr;
-    }
-    return &data.lines[_topLine];
+    //
+    return &data.lines[_scroll.row];
   }
+  // {
+  //   if (_topLine < 0 || _topLine >= (int)data.lines.size()) {
+  //     return nullptr;
+  //   }
+  //   return &data.lines[_topLine];
+  // }
 
   // cursor position
-  int currentColumn = 0;
+  RowCol _cursor = {0, 0};
+  int cursorPos() const {
+    auto l = data.lines[_cursor.row];
+    return l.columnPos(_cursor.col);
+  }
+  void cursorPos(int pos) {
+    auto l = data.lines[_cursor.row];
+    _cursor.col = l.bytePosToColumn(pos);
+  }
+  // int currentColumn = 0;
   Line *currentLine() {
-    auto _currentLine = _topLine + cursor.row;
-    if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
-      return nullptr;
-    }
-    return &data.lines[_currentLine];
+    //
+    return &data.lines[_cursor.row];
   }
+  // {
+  //   auto _currentLine = _topLine + cursor.row;
+  //   if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
+  //     return nullptr;
+  //   }
+  //   return &data.lines[_currentLine];
+  // }
+
   const Line *currentLine() const {
-    auto _currentLine = _topLine + cursor.row;
-    if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
-      return nullptr;
-    }
-    return &data.lines[_currentLine];
+    //
+    return &data.lines[_cursor.row];
   }
+  // {
+  //   auto _currentLine = _topLine + cursor.row;
+  //   if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
+  //     return nullptr;
+  //   }
+  //   return &data.lines[_currentLine];
+  // }
 
   bool check_url = false;
   void chkURLBuffer();
@@ -69,7 +102,7 @@ struct LineLayout {
   void cursorDown0(int n);
   void cursorDown(int n);
 
-  int columnSkip(int offset);
+  // int columnSkip(int offset);
   void arrangeCursor();
   void cursorRight(int n);
   void cursorLeft(int n);
@@ -81,28 +114,6 @@ struct LineLayout {
   //
   // viewport
   //
-  short COLS = 0;
-  short LINES = 0;
-  // COLS/LINES と width height の違いは？
-  short width = 0;
-  short height = 0;
-  RowCol cursor = {0, 0};
-
-  int pos = 0;
-  int visualpos = 0;
-
-  inline void COPY_BUFROOT_FROM(const LineLayout &srcbuf) {
-    this->COLS = srcbuf.COLS;
-    this->LINES = srcbuf.LINES;
-  }
-
-  void COPY_BUFPOSITION_FROM(const LineLayout &srcbuf) {
-    this->_topLine = srcbuf._topLine;
-    this->pos = srcbuf.pos;
-    this->cursor = srcbuf.cursor;
-    this->visualpos = srcbuf.visualpos;
-    this->currentColumn = srcbuf.currentColumn;
-  }
 
   void nextY(int d, int n);
   void nextX(int d, int dy, int n);

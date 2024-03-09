@@ -43,9 +43,9 @@ std::shared_ptr<CoroutineState<void>> nulcmd() { /* do nothing */
 //"Scroll down one page"
 std::shared_ptr<CoroutineState<void>> pgFore() {
   CurrentTab->currentBuffer()->layout.nscroll(
-      prec_num ? App::instance().searchKeyNum()
-               : App::instance().searchKeyNum() *
-                     (CurrentTab->currentBuffer()->layout.LINES - 1));
+      prec_num
+          ? App::instance().searchKeyNum()
+          : App::instance().searchKeyNum() * (App::instance().contentLines()));
   co_return;
 }
 
@@ -53,10 +53,10 @@ std::shared_ptr<CoroutineState<void>> pgFore() {
 // PREV_PAGE
 //"Scroll up one page"
 std::shared_ptr<CoroutineState<void>> pgBack() {
-  CurrentTab->currentBuffer()->layout.nscroll(
-      -(prec_num ? App::instance().searchKeyNum()
-                 : App::instance().searchKeyNum() *
-                       (CurrentTab->currentBuffer()->layout.LINES - 1)));
+  CurrentTab->currentBuffer()->layout.nscroll(-(
+      prec_num
+          ? App::instance().searchKeyNum()
+          : App::instance().searchKeyNum() * (App::instance().contentLines())));
   co_return;
 }
 
@@ -65,8 +65,7 @@ std::shared_ptr<CoroutineState<void>> pgBack() {
 //"Scroll down half a page"
 std::shared_ptr<CoroutineState<void>> hpgFore() {
   CurrentTab->currentBuffer()->layout.nscroll(
-      App::instance().searchKeyNum() *
-      (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
+      App::instance().searchKeyNum() * (App::instance().contentLines() / 2));
   co_return;
 }
 
@@ -75,8 +74,7 @@ std::shared_ptr<CoroutineState<void>> hpgFore() {
 //"Scroll up half a page"
 std::shared_ptr<CoroutineState<void>> hpgBack() {
   CurrentTab->currentBuffer()->layout.nscroll(
-      -App::instance().searchKeyNum() *
-      (CurrentTab->currentBuffer()->layout.LINES / 2 - 1));
+      -App::instance().searchKeyNum() * (App::instance().contentLines() / 2));
   co_return;
 }
 
@@ -103,10 +101,10 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  int offsety = CurrentTab->currentBuffer()->layout.LINES / 2 -
-                CurrentTab->currentBuffer()->layout.cursor.row;
+  int offsety = App::instance().contentLines() / 2 -
+                CurrentTab->currentBuffer()->layout._cursor.row;
   if (offsety != 0) {
-    CurrentTab->currentBuffer()->layout._topLine -= offsety;
+    CurrentTab->currentBuffer()->layout._scroll.row -= offsety;
     CurrentTab->currentBuffer()->layout.arrangeLine();
   }
 }
@@ -117,10 +115,10 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  int offsetx = CurrentTab->currentBuffer()->layout.cursor.col -
-                CurrentTab->currentBuffer()->layout.COLS / 2;
+  int offsetx = CurrentTab->currentBuffer()->layout._cursor.col -
+                App::instance().contentCols() / 2;
   if (offsetx != 0) {
-    CurrentTab->currentBuffer()->layout.columnSkip(offsetx);
+    CurrentTab->currentBuffer()->layout._cursor.col += offsetx;
     CurrentTab->currentBuffer()->layout.arrangeCursor();
   }
 }
@@ -186,13 +184,11 @@ std::shared_ptr<CoroutineState<void>> srchprv() {
 std::shared_ptr<CoroutineState<void>> shiftl() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  int column = CurrentTab->currentBuffer()->layout.currentColumn;
-  CurrentTab->currentBuffer()->layout.columnSkip(
-      App::instance().searchKeyNum() *
-          (-CurrentTab->currentBuffer()->layout.COLS + 1) +
-      1);
+  int column = CurrentTab->currentBuffer()->layout._cursor.col;
+  CurrentTab->currentBuffer()->layout._cursor.col +=
+      App::instance().searchKeyNum() * -App::instance().contentCols();
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
-      CurrentTab->currentBuffer()->layout.currentColumn - column);
+      CurrentTab->currentBuffer()->layout._cursor.col - column);
 }
 
 /* Shift screen right */
@@ -201,13 +197,13 @@ std::shared_ptr<CoroutineState<void>> shiftl() {
 std::shared_ptr<CoroutineState<void>> shiftr() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  int column = CurrentTab->currentBuffer()->layout.currentColumn;
-  CurrentTab->currentBuffer()->layout.columnSkip(
-      App::instance().searchKeyNum() *
-          (CurrentTab->currentBuffer()->layout.COLS - 1) -
-      1);
-  CurrentTab->currentBuffer()->layout.shiftvisualpos(
-      CurrentTab->currentBuffer()->layout.currentColumn - column);
+  // int column = CurrentTab->currentBuffer()->layout.currentColumn;
+  // CurrentTab->currentBuffer()->layout.columnSkip(
+  //     App::instance().searchKeyNum() *
+  //         (App::instance().contentCols() - 1) -
+  //     1);
+  // CurrentTab->currentBuffer()->layout.shiftvisualpos(
+  //     CurrentTab->currentBuffer()->layout.currentColumn - column);
 }
 
 // RIGHT
@@ -220,11 +216,11 @@ std::shared_ptr<CoroutineState<void>> col1R() {
   if (l == nullptr)
     co_return;
   for (j = 0; j < n; j++) {
-    column = buf->layout.currentColumn;
-    CurrentTab->currentBuffer()->layout.columnSkip(1);
-    if (column == buf->layout.currentColumn)
-      break;
-    CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
+    // column = buf->layout.currentColumn;
+    // CurrentTab->currentBuffer()->layout.columnSkip(1);
+    // if (column == buf->layout.currentColumn)
+    //   break;
+    // CurrentTab->currentBuffer()->layout.shiftvisualpos(1);
   }
 }
 
@@ -238,10 +234,10 @@ std::shared_ptr<CoroutineState<void>> col1L() {
   if (l == nullptr)
     co_return;
   for (j = 0; j < n; j++) {
-    if (buf->layout.currentColumn == 0)
-      break;
-    CurrentTab->currentBuffer()->layout.columnSkip(-1);
-    CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
+    // if (buf->layout.currentColumn == 0)
+    //   break;
+    // CurrentTab->currentBuffer()->layout.columnSkip(-1);
+    // CurrentTab->currentBuffer()->layout.shiftvisualpos(-1);
   }
 }
 
@@ -373,8 +369,8 @@ std::shared_ptr<CoroutineState<void>> ldhelp() {
 //"Cursor left"
 std::shared_ptr<CoroutineState<void>> movL() {
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movL(
-      CurrentTab->currentBuffer()->layout.COLS / 2, m);
+  CurrentTab->currentBuffer()->layout._movL(App::instance().contentCols() / 2,
+                                            m);
   co_return;
 }
 
@@ -391,7 +387,7 @@ std::shared_ptr<CoroutineState<void>> movL1() {
 std::shared_ptr<CoroutineState<void>> movD() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movD(
-      (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
+      (App::instance().contentLines() + 1) / 2, m);
   co_return;
 }
 
@@ -408,7 +404,7 @@ std::shared_ptr<CoroutineState<void>> movD1() {
 std::shared_ptr<CoroutineState<void>> movU() {
   int m = App::instance().searchKeyNum();
   CurrentTab->currentBuffer()->layout._movU(
-      (CurrentTab->currentBuffer()->layout.LINES + 1) / 2, m);
+      (App::instance().contentLines() + 1) / 2, m);
   co_return;
 }
 
@@ -424,8 +420,8 @@ std::shared_ptr<CoroutineState<void>> movU1() {
 //"Cursor right"
 std::shared_ptr<CoroutineState<void>> movR() {
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movR(
-      CurrentTab->currentBuffer()->layout.COLS / 2, m);
+  CurrentTab->currentBuffer()->layout._movR(App::instance().contentCols() / 2,
+                                            m);
   co_return;
 }
 
@@ -449,7 +445,7 @@ std::shared_ptr<CoroutineState<void>> movLW() {
 
   for (i = 0; i < n; i++) {
     pline = CurrentTab->currentBuffer()->layout.currentLine();
-    ppos = CurrentTab->currentBuffer()->layout.pos;
+    ppos = CurrentTab->currentBuffer()->layout.cursorPos();
 
     if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
             CurrentTab->currentBuffer()->layout.currentLine()) < 0)
@@ -458,39 +454,39 @@ std::shared_ptr<CoroutineState<void>> movLW() {
     while (1) {
       auto l = CurrentTab->currentBuffer()->layout.currentLine();
       auto lb = l->lineBuf();
-      while (CurrentTab->currentBuffer()->layout.pos > 0) {
-        int tmp = CurrentTab->currentBuffer()->layout.pos;
+      while (CurrentTab->currentBuffer()->layout.cursorPos() > 0) {
+        int tmp = CurrentTab->currentBuffer()->layout.cursorPos();
         prevChar(tmp, l);
         if (is_wordchar(lb[tmp])) {
           break;
         }
-        CurrentTab->currentBuffer()->layout.pos = tmp;
+        CurrentTab->currentBuffer()->layout.cursorPos(tmp);
       }
-      if (CurrentTab->currentBuffer()->layout.pos > 0)
+      if (CurrentTab->currentBuffer()->layout.cursorPos() > 0)
         break;
       auto prev = CurrentTab->currentBuffer()->layout.currentLine();
       --prev;
       if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(prev) < 0) {
-        CurrentTab->currentBuffer()->layout.cursor.row =
+        CurrentTab->currentBuffer()->layout._cursor.row =
             CurrentTab->currentBuffer()->layout.linenumber(pline) -
-            CurrentTab->currentBuffer()->layout._topLine;
-        CurrentTab->currentBuffer()->layout.pos = ppos;
+            CurrentTab->currentBuffer()->layout._scroll.row;
+        CurrentTab->currentBuffer()->layout.cursorPos(ppos);
         goto end;
       }
-      CurrentTab->currentBuffer()->layout.pos =
-          CurrentTab->currentBuffer()->layout.currentLine()->len();
+      CurrentTab->currentBuffer()->layout.cursorPos(
+          CurrentTab->currentBuffer()->layout.currentLine()->len());
     }
 
     {
       auto l = CurrentTab->currentBuffer()->layout.currentLine();
       auto lb = l->lineBuf();
-      while (CurrentTab->currentBuffer()->layout.pos > 0) {
-        int tmp = CurrentTab->currentBuffer()->layout.pos;
+      while (CurrentTab->currentBuffer()->layout.cursorPos() > 0) {
+        int tmp = CurrentTab->currentBuffer()->layout.cursorPos();
         prevChar(tmp, l);
         if (!is_wordchar(lb[tmp])) {
           break;
         }
-        CurrentTab->currentBuffer()->layout.pos = tmp;
+        CurrentTab->currentBuffer()->layout.cursorPos(tmp);
       }
     }
   }
@@ -501,51 +497,56 @@ end:
 // NEXT_WORD
 //"Move to the next word"
 std::shared_ptr<CoroutineState<void>> movRW() {
-  Line *pline;
-  int ppos;
-  int i, n = App::instance().searchKeyNum();
-
-  if (CurrentTab->currentBuffer()->layout.empty())
-    co_return;
-
-  for (i = 0; i < n; i++) {
-    pline = CurrentTab->currentBuffer()->layout.currentLine();
-    ppos = CurrentTab->currentBuffer()->layout.pos;
-
-    if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
-            CurrentTab->currentBuffer()->layout.currentLine()) < 0)
-      goto end;
-
-    auto l = CurrentTab->currentBuffer()->layout.currentLine();
-    auto lb = l->lineBuf();
-    while (CurrentTab->currentBuffer()->layout.pos < l->len() &&
-           is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
-      nextChar(CurrentTab->currentBuffer()->layout.pos, l);
-    }
-
-    while (1) {
-      while (CurrentTab->currentBuffer()->layout.pos < l->len() &&
-             !is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
-        nextChar(CurrentTab->currentBuffer()->layout.pos, l);
-      }
-      if (CurrentTab->currentBuffer()->layout.pos < l->len())
-        break;
-      auto next = CurrentTab->currentBuffer()->layout.currentLine();
-      ++next;
-      if (CurrentTab->currentBuffer()->layout.next_nonnull_line(next) < 0) {
-        CurrentTab->currentBuffer()->layout.cursor.row =
-            CurrentTab->currentBuffer()->layout.linenumber(pline) -
-            CurrentTab->currentBuffer()->layout._topLine;
-        CurrentTab->currentBuffer()->layout.pos = ppos;
-        goto end;
-      }
-      CurrentTab->currentBuffer()->layout.pos = 0;
-      l = CurrentTab->currentBuffer()->layout.currentLine();
-      lb = l->lineBuf();
-    }
-  }
-end:
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
+  //   Line *pline;
+  //   int ppos;
+  //   int i, n = App::instance().searchKeyNum();
+  //
+  //   if (CurrentTab->currentBuffer()->layout.empty())
+  //     co_return;
+  //
+  //   for (i = 0; i < n; i++) {
+  //     pline = CurrentTab->currentBuffer()->layout.currentLine();
+  //     ppos = CurrentTab->currentBuffer()->layout.cursorPos();
+  //
+  //     if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
+  //             CurrentTab->currentBuffer()->layout.currentLine()) < 0)
+  //       goto end;
+  //
+  //     auto l = CurrentTab->currentBuffer()->layout.currentLine();
+  //     auto lb = l->lineBuf();
+  //     while (CurrentTab->currentBuffer()->layout.cursorPos() < l->len() &&
+  //            is_wordchar(lb[CurrentTab->currentBuffer()->layout.cursorPos()]))
+  //            {
+  //       nextChar(CurrentTab->currentBuffer()->layout.cursorPos(), l);
+  //     }
+  //
+  //     while (1) {
+  //       while (
+  //           CurrentTab->currentBuffer()->layout.cursorPos() < l->len() &&
+  //           !is_wordchar(lb[CurrentTab->currentBuffer()->layout.cursorPos()]))
+  //           {
+  //         nextChar(CurrentTab->currentBuffer()->layout.cursorPos(), l);
+  //       }
+  //       if (CurrentTab->currentBuffer()->layout.cursorPos() < l->len())
+  //         break;
+  //       auto next = CurrentTab->currentBuffer()->layout.currentLine();
+  //       ++next;
+  //       if (CurrentTab->currentBuffer()->layout.next_nonnull_line(next) < 0)
+  //       {
+  //         CurrentTab->currentBuffer()->layout.cursor.row =
+  //             CurrentTab->currentBuffer()->layout.linenumber(pline) -
+  //             CurrentTab->currentBuffer()->layout._topLine;
+  //         CurrentTab->currentBuffer()->layout.cursorPos() = ppos;
+  //         goto end;
+  //       }
+  //       CurrentTab->currentBuffer()->layout.cursorPos() = 0;
+  //       l = CurrentTab->currentBuffer()->layout.currentLine();
+  //       lb = l->lineBuf();
+  //     }
+  //   }
+  // end:
+  //   CurrentTab->currentBuffer()->layout.arrangeCursor();
+  co_return;
 }
 
 /* Quit */
@@ -646,7 +647,7 @@ std::shared_ptr<CoroutineState<void>> goLineL() {
 std::shared_ptr<CoroutineState<void>> linbeg() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  CurrentTab->currentBuffer()->layout.pos = 0;
+  CurrentTab->currentBuffer()->layout.cursorPos(0);
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -656,8 +657,8 @@ std::shared_ptr<CoroutineState<void>> linbeg() {
 std::shared_ptr<CoroutineState<void>> linend() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  CurrentTab->currentBuffer()->layout.pos =
-      CurrentTab->currentBuffer()->layout.currentLine()->len() - 1;
+  CurrentTab->currentBuffer()->layout.cursorPos(
+      CurrentTab->currentBuffer()->layout.currentLine()->len() - 1);
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -689,8 +690,7 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout._topLine +
-            CurrentTab->currentBuffer()->layout.cursor.row);
+        CurrentTab->currentBuffer()->layout._cursor.row);
   }
   exec_cmd(cmd);
 
@@ -712,8 +712,7 @@ std::shared_ptr<CoroutineState<void>> editScr() {
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout._topLine +
-          CurrentTab->currentBuffer()->layout.cursor.row));
+      CurrentTab->currentBuffer()->layout._cursor.row));
   unlink(tmpf.c_str());
 }
 
@@ -739,7 +738,7 @@ std::shared_ptr<CoroutineState<void>> followI() {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentImg();
   if (a == nullptr)
     co_return;
-  App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr, {0, 0});
+  App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr);
 
   auto res = loadGeneralFile(
       a->url, CurrentTab->currentBuffer()->res->getBaseURL(), {});
@@ -806,7 +805,7 @@ std::shared_ptr<CoroutineState<void>> topA() {
   } while (an == nullptr);
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
-  CurrentTab->currentBuffer()->layout.pos = po->pos;
+  CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -848,7 +847,7 @@ std::shared_ptr<CoroutineState<void>> lastA() {
   } while (an == nullptr);
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
-  CurrentTab->currentBuffer()->layout.pos = po->pos;
+  CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -882,7 +881,7 @@ std::shared_ptr<CoroutineState<void>> nthA() {
     co_return;
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
-  CurrentTab->currentBuffer()->layout.pos = po->pos;
+  CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -1334,7 +1333,7 @@ std::shared_ptr<CoroutineState<void>> reload() {
   }
 
   auto url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
-  App::instance().message("Reloading...", {0, 0});
+  App::instance().message("Reloading...");
   DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
 
   auto res = loadGeneralFile(url->ptr, {},
@@ -1366,7 +1365,7 @@ std::shared_ptr<CoroutineState<void>> reload() {
   CurrentTab->currentBuffer()->layout.data.form_submit =
       sbuf->layout.data.form_submit;
   if (CurrentTab->currentBuffer()->layout.firstLine()) {
-    CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
+    // CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf->layout);
     CurrentTab->currentBuffer()->layout.restorePosition(sbuf->layout);
   }
 }
@@ -1454,7 +1453,7 @@ std::shared_ptr<CoroutineState<void>> curlno() {
   if (l != nullptr) {
     cur = layout->linenumber(l);
     ;
-    col = l->width() + layout->currentColumn + layout->cursor.col + 1;
+    col = layout->_cursor.col + 1;
     len = l->width();
   }
   if (CurrentTab->currentBuffer()->layout.lastLine())
@@ -1707,7 +1706,7 @@ std::shared_ptr<CoroutineState<void>> ldDL() {
   auto buf = Buffer::create();
   loadHTMLstream(&buf->layout, buf->res.get(), html, true);
   if (replace) {
-    buf->layout.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
+    // buf->layout.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
     buf->layout.restorePosition(CurrentTab->currentBuffer()->layout);
   }
   if (!replace && open_tab_dl_list) {
@@ -1749,7 +1748,7 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout.cursor.row = 0;
+  CurrentTab->currentBuffer()->layout._cursor.row = 0;
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1759,9 +1758,8 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  int offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
-  CurrentTab->currentBuffer()->layout.cursor.row =
-      CurrentTab->currentBuffer()->layout.cursor.row += offsety;
+  int offsety = (App::instance().contentLines() - 1) / 2;
+  CurrentTab->currentBuffer()->layout._cursor.row += offsety;
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1771,8 +1769,8 @@ std::shared_ptr<CoroutineState<void>> cursorBottom() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  int offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
-  CurrentTab->currentBuffer()->layout.cursor.row += offsety;
+  int offsety = App::instance().contentLines() - 1;
+  CurrentTab->currentBuffer()->layout._cursor.row += offsety;
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 

@@ -51,8 +51,8 @@ class Content : public ftxui::Node {
   int tab_step = 8;
   ScreenFlags CurrentMode = {};
 
-  int cline = -1;
-  int ccolumn = -1;
+  // int cline = -1;
+  // int ccolumn = -1;
 
 public:
   LineLayout *layout;
@@ -77,6 +77,12 @@ public:
   }
 
 public:
+  RowCol root() const {
+    return {
+        .row = box_.y_min,
+        .col = box_.x_min,
+    };
+  }
   int COLS() const { return _screen->dimx(); }
   int LINES() const { return _screen->dimy(); }
   int LASTLINE() const { return (LINES() - 1); }
@@ -115,5 +121,5 @@ public:
   // i,
   //                      int bpos, int epos);
 
-  std::string str(const RowCol &root, LineLayout *layout);
+  // std::string str(const RowCol &root, LineLayout *layout);
 };
