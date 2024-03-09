@@ -22,10 +22,11 @@ struct LineLayout {
   //
   Line *firstLine() { return data.firstLine(); }
   Line *lastLine() { return data.lastLine(); }
+  const Line *lastLine() const { return data.lastLine(); }
   bool empty() const { return data.lines.empty(); }
   int linenumber(const Line *t) const { return data.linenumber(t); }
   int TOP_LINENUMBER() const { return _topLine; }
-  int CUR_LINENUMBER() const { return _currentLine; }
+  int CUR_LINENUMBER() const { return linenumber(currentLine()); }
   bool isNull(Line *l) const { return linenumber(l) < 0; }
   bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
   bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
@@ -41,14 +42,15 @@ struct LineLayout {
 
   // cursor position
   int currentColumn = 0;
-  int _currentLine = 0;
   Line *currentLine() {
+    auto _currentLine = _topLine + cursor.row;
     if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
       return nullptr;
     }
     return &data.lines[_currentLine];
   }
   const Line *currentLine() const {
+    auto _currentLine = _topLine + cursor.row;
     if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
       return nullptr;
     }
@@ -61,7 +63,7 @@ struct LineLayout {
 
   void clearBuffer();
 
-  int lineSkip(const Line *line, int offset) {
+  int lineSkip(const Line *line, int offset) const {
     auto l = currentLineSkip(line, offset);
     if (!nextpage_topline) {
       for (int i = LINES - 1 - (linenumber(lastLine()) - l);
@@ -71,7 +73,7 @@ struct LineLayout {
     return l;
   }
 
-  int currentLineSkip(const Line *l, int offset) {
+  int currentLineSkip(const Line *l, int offset) const {
     if (offset > 0)
       for (int i = 0; i < offset && hasNext(l); i++, ++l)
         ;
@@ -117,7 +119,6 @@ struct LineLayout {
 
   void COPY_BUFPOSITION_FROM(const LineLayout &srcbuf) {
     this->_topLine = srcbuf._topLine;
-    this->_currentLine = srcbuf._currentLine;
     this->pos = srcbuf.pos;
     this->cursor = srcbuf.cursor;
     this->visualpos = srcbuf.visualpos;

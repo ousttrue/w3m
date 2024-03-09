@@ -32,6 +32,9 @@ struct LineData {
   LineData();
   Line *firstLine() { return lines.size() ? &lines.front() : nullptr; }
   Line *lastLine() { return lines.size() ? &lines.back() : nullptr; }
+  const Line *lastLine() const {
+    return lines.size() ? &lines.back() : nullptr;
+  }
   int linenumber(const Line *t) const {
     for (int i = 0; i < (int)lines.size(); ++i) {
       if (&lines[i] == t) {

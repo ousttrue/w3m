@@ -473,8 +473,9 @@ std::shared_ptr<CoroutineState<void>> movLW() {
       auto prev = CurrentTab->currentBuffer()->layout.currentLine();
       --prev;
       if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(prev) < 0) {
-        CurrentTab->currentBuffer()->layout._currentLine =
-            CurrentTab->currentBuffer()->layout.linenumber(pline);
+        CurrentTab->currentBuffer()->layout.cursor.row =
+            CurrentTab->currentBuffer()->layout.linenumber(pline) -
+            CurrentTab->currentBuffer()->layout._topLine;
         CurrentTab->currentBuffer()->layout.pos = ppos;
         goto end;
       }
@@ -534,8 +535,9 @@ std::shared_ptr<CoroutineState<void>> movRW() {
       auto next = CurrentTab->currentBuffer()->layout.currentLine();
       ++next;
       if (CurrentTab->currentBuffer()->layout.next_nonnull_line(next) < 0) {
-        CurrentTab->currentBuffer()->layout._currentLine =
-            CurrentTab->currentBuffer()->layout.linenumber(pline);
+        CurrentTab->currentBuffer()->layout.cursor.row =
+            CurrentTab->currentBuffer()->layout.linenumber(pline) -
+            CurrentTab->currentBuffer()->layout._topLine;
         CurrentTab->currentBuffer()->layout.pos = ppos;
         goto end;
       }
@@ -689,7 +691,8 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout._currentLine);
+        CurrentTab->currentBuffer()->layout._topLine +
+            CurrentTab->currentBuffer()->layout.cursor.row);
   }
   exec_cmd(cmd);
 
@@ -711,7 +714,8 @@ std::shared_ptr<CoroutineState<void>> editScr() {
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout._currentLine));
+      CurrentTab->currentBuffer()->layout._topLine +
+          CurrentTab->currentBuffer()->layout.cursor.row));
   unlink(tmpf.c_str());
 }
 
@@ -1747,35 +1751,38 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout._currentLine =
+  CurrentTab->currentBuffer()->layout.cursor.row =
       CurrentTab->currentBuffer()->layout.lineSkip(
-          CurrentTab->currentBuffer()->layout.topLine(), 0);
+          CurrentTab->currentBuffer()->layout.topLine(), 0) -
+      CurrentTab->currentBuffer()->layout._topLine;
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
 // CURSOR_MIDDLE
 //"Move cursor to the middle of the screen"
 std::shared_ptr<CoroutineState<void>> cursorMiddle() {
-  int offsety;
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
-  CurrentTab->currentBuffer()->layout._currentLine =
+
+  int offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
+  CurrentTab->currentBuffer()->layout.cursor.row =
       CurrentTab->currentBuffer()->layout.currentLineSkip(
-          CurrentTab->currentBuffer()->layout.topLine(), offsety);
+          CurrentTab->currentBuffer()->layout.topLine(), offsety) -
+      CurrentTab->currentBuffer()->layout._topLine;
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
 // CURSOR_BOTTOM
 //"Move cursor to the bottom of the screen"
 std::shared_ptr<CoroutineState<void>> cursorBottom() {
-  int offsety;
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
-  CurrentTab->currentBuffer()->layout._currentLine =
+
+  int offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
+  CurrentTab->currentBuffer()->layout.cursor.row =
       CurrentTab->currentBuffer()->layout.currentLineSkip(
-          CurrentTab->currentBuffer()->layout.topLine(), offsety);
+          CurrentTab->currentBuffer()->layout.topLine(), offsety) -
+      CurrentTab->currentBuffer()->layout._topLine;
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 

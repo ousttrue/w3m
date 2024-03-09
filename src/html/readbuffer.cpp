@@ -543,7 +543,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   parser.render(res, &layout->data, &feed);
 
   layout->_topLine = 0;
-  layout->_currentLine = 0;
+  layout->cursor.row = 0;
   res->type = "text/html";
   layout->formResetBuffer(layout->data._formitem.get());
 }
@@ -611,7 +611,7 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
     layout->data.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
   }
   layout->_topLine = 0;
-  layout->_currentLine = 0;
+  layout->cursor.row = 0;
   res->type = "text/plain";
 }
 

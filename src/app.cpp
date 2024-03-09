@@ -1556,9 +1556,8 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
     if (al) {
       buf->layout.gotoLine(al->start.line);
       if (label_topline) {
-        buf->layout._topLine = buf->layout.lineSkip(buf->layout.topLine(),
-                                                    buf->layout._currentLine -
-                                                        buf->layout._topLine);
+        buf->layout._topLine =
+            buf->layout.lineSkip(buf->layout.topLine(), buf->layout.cursor.row);
       }
       buf->layout.pos = al->start.pos;
       buf->layout.arrangeCursor();
@@ -1853,7 +1852,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   std::stringstream ss;
   int sl = 0;
   if (displayLineInfo && buf->layout.currentLine()) {
-    int cl = buf->layout._currentLine;
+    int cl = buf->layout._topLine + buf->layout.cursor.row;
     int ll = buf->layout.linenumber(buf->layout.lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;

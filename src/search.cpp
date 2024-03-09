@@ -52,7 +52,6 @@ int forwardSearch(LineLayout *layout, const char *str) {
       matchedPosition(&first, &last);
       pos = first - l->lineBuf();
       layout->pos = pos;
-      layout->_currentLine = layout->linenumber(l);
       layout->gotoLine(layout->linenumber(l));
       layout->arrangeCursor();
       l->set_mark(pos, pos + last - first);
