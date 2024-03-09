@@ -2856,9 +2856,9 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
 }
 
 void HtmlParser::proc_escape(struct readbuffer *obuf, const char **str_return) {
-  const char *str = *str_return, *estr;
-  int ech = getescapechar(str_return);
-  int width, n_add = *str_return - str;
+  const char *str = *str_return;
+  char32_t ech = getescapechar(str_return);
+  int n_add = *str_return - str;
   Lineprop mode = PC_ASCII;
 
   if (ech < 0) {
@@ -2868,17 +2868,18 @@ void HtmlParser::proc_escape(struct readbuffer *obuf, const char **str_return) {
   }
   mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
-  estr = conv_entity(ech);
-  check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr);
-  width = get_strwidth(estr);
-  if (width == 1 && ech == (unsigned char)*estr && ech != '&' && ech != '<' &&
+  auto estr = conv_entity(ech);
+  check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr.c_str());
+  auto width = get_strwidth(estr.c_str());
+  if (width == 1 && ech == (char32_t)estr[0] && ech != '&' && ech != '<' &&
       ech != '>') {
     if (IS_CNTRL(ech))
       mode = PC_CTRL;
-    push_charp(obuf, width, estr, mode);
-  } else
+    push_charp(obuf, width, estr.c_str(), mode);
+  } else {
     push_nchars(obuf, width, str, n_add, mode);
-  set_prevchar(obuf->prevchar, estr, strlen(estr));
+  }
+  set_prevchar(obuf->prevchar, estr.c_str(), estr.size());
   obuf->prev_ctype = mode;
 }
 

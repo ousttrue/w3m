@@ -23,13 +23,13 @@ static const char *alt_latin1[96] = {
     "o/", "u`",  "u'",  "u^",  "u:",  "y'",  "th",  "y:"};
 /* *INDENT-ON* */
 
-const char *conv_entity(unsigned int c) {
+std::string conv_entity(char32_t c) {
   char b = c & 0xff;
 
   if (c < 0x20) /* C0 */
     return " ";
   if (c < 0x7f) /* ASCII */
-    return Strnew_charp_n(&b, 1)->ptr;
+    return std::string(&b, 1);
   if (c < 0xa0) /* DEL, C1 */
     return " ";
   if (c == 0xa0)
@@ -39,7 +39,7 @@ const char *conv_entity(unsigned int c) {
   if (c < 0x100) { /* Latin1 (ISO 8859-1) */
     if (UseAltEntity)
       return alt_latin1[c - 0xa0];
-    return Strnew_charp_n(&b, 1)->ptr;
+    return std::string(&b, 1);
   }
   if (c == 0x201c || c == 0x201f || c == 0x201d || c == 0x2033)
     return "\"";
@@ -51,7 +51,7 @@ const char *conv_entity(unsigned int c) {
     return "--";
 
   auto utf8 = codepoint_to_utf8(c);
-  return Strnew_charp_n(utf8.data(), utf8.size())->ptr;
+  return std::string(utf8.data(), utf8.size());
 }
 
 HashItem_si MyHashItem[] = {
@@ -2118,3 +2118,84 @@ HashItem_si *MyHashItemTbl[] = {
 };
 
 Hash_si entity = {100, MyHashItemTbl};
+
+int getescapechar(const char **str) {
+  int dummy = -1;
+  const char *p = *str, *q;
+  int strict_entity = true;
+
+  assert (*p == '&');
+  p++;
+
+  if (*p == '#') {
+    p++;
+    if (*p == 'x' || *p == 'X') {
+      p++;
+      if (!IS_XDIGIT(*p)) {
+        *str = p;
+        return -1;
+      }
+      for (dummy = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++)
+        dummy = dummy * 0x10 + GET_MYCDIGIT(*p);
+      if (*p == ';')
+        p++;
+      *str = p;
+      return dummy;
+    } else {
+      if (!IS_DIGIT(*p)) {
+        *str = p;
+        return -1;
+      }
+      for (dummy = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++)
+        dummy = dummy * 10 + GET_MYCDIGIT(*p);
+      if (*p == ';')
+        p++;
+      *str = p;
+      return dummy;
+    }
+  }
+  if (!IS_ALPHA(*p)) {
+    *str = p;
+    return -1;
+  }
+  q = p;
+  for (p++; IS_ALNUM(*p); p++)
+    ;
+  q = allocStr(q, p - q);
+  if (strcasestr("lt gt amp quot apos nbsp", q) && *p != '=') {
+    /* a character entity MUST be terminated with ";". However,
+     * there's MANY web pages which uses &lt , &gt or something
+     * like them as &lt;, &gt;, etc. Therefore, we treat the most
+     * popular character entities (including &#xxxx;) without
+     * the last ";" as character entities. If the trailing character
+     * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
+     * are not regarded as character entities.
+     */
+    strict_entity = false;
+  }
+  if (*p == ';')
+    p++;
+  else if (strict_entity) {
+    *str = p;
+    return -1;
+  }
+  *str = p;
+  return getHash_si(&entity, q, -1);
+}
+
+std::string getescapecmd(const char **s) {
+  const char *save = *s;
+
+  int ch = getescapechar(s);
+  if (ch >= 0) {
+    return conv_entity(ch);
+  }
+
+  Str *tmp;
+  if (*save != '&')
+    tmp = Strnew_charp("&");
+  else
+    tmp = Strnew();
+  Strcat_charp_n(tmp, save, *s - save);
+  return tmp->ptr;
+}

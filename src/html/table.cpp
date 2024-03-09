@@ -1793,11 +1793,11 @@ int table::skip_space(const char *line, struct table_linfo *linfo,
       if (*c == '&') {
         ec = getescapechar(&line);
         if (ec >= 0) {
-          c = conv_entity(ec);
-          ctype = get_mctype(c);
-          len = get_strwidth(c);
+          auto e = conv_entity(ec);
+          ctype = get_mctype(e.c_str());
+          len = get_strwidth(e.c_str());
           wlen = line - save;
-          plen = get_mclen(c);
+          plen = get_mclen(e.c_str());
         }
       }
       if (prevchar->length &&
@@ -2661,14 +2661,16 @@ int table::feed_table(HtmlParser *parser, const char *line,
           case '\r':
             Strcat_char(tmp, '\n');
             break;
-          default:
-            r = conv_entity(ec);
-            if (!r || !*r)
+          default: {
+            auto e = conv_entity(ec);
+            if (e.empty())
               break;
-            if (strlen(r) == 1 && ec == (unsigned char)*r) {
-              Strcat_char(tmp, *r);
+            if (e.size() == 1 && ec == e[0]) {
+              Strcat_char(tmp, e[0]);
               break;
             }
+          }
+
           case -1:
             Strcat_char(tmp, *q);
             p = q + 1;

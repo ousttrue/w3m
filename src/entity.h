@@ -1,7 +1,8 @@
 #pragma once
-#include "hash.h"
-extern HashItem_si MyHashItem[];
-extern HashItem_si *MyHashItemTbl[];
-extern Hash_si entity;
+#include <string>
 
-const char *conv_entity(unsigned int ch);
+std::string conv_entity(char32_t ch);
+
+int getescapechar(const char **s);
+
+std::string getescapecmd(const char **s);
