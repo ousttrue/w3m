@@ -6,6 +6,18 @@ Line::Line(const char *buf, Lineprop *prop, int byteLen) {
   assign(buf, prop, byteLen);
 }
 
+int Line::push_mc(Lineprop prop, const char *str) {
+  int len = get_mclen(str);
+  assert(len);
+  auto mode = get_mctype(str);
+  this->PPUSH(mode | prop, *(str++));
+  mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
+  for (int i = 1; i < len; ++i) {
+    this->PPUSH(mode | prop, *(str++));
+  }
+  return len;
+}
+
 int Line::bytePosToColumn(int pos) const {
   return ::bytePosToColumn(lineBuf.data(), propBuf.data(), len(), pos, 0,
                            false);

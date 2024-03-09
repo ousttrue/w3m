@@ -965,14 +965,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
       line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
       str++;
     } else if (*str != '<' && *str != '&') {
-      int len = get_mclen(str);
-      line.PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-      if (--len) {
-        mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
-        while (len--) {
-          line.PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-        }
-      }
+      str += line.push_mc(effect | ex_efct(ex_effect), str);
     } else if (*str == '&') {
       /*
        * & escape processing
@@ -984,7 +977,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
           line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
           p++;
         } else {
-          line.PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
+          p += line.push_mc(mode | effect | ex_efct(ex_effect), p);
         }
       }
     } else {

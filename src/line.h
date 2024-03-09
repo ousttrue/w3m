@@ -19,6 +19,8 @@ public:
     lineBuf.push_back(c);
   }
 
+  int push_mc(Lineprop prop, const char *str);
+
   int width(bool force = false) const {
     if (force || _width == -1) {
       this->_width = this->bytePosToColumn(this->lineBuf.size());
