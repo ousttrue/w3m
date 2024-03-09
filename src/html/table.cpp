@@ -2638,7 +2638,7 @@ int table::feed_table(HtmlParser *parser, const char *line,
       strchr(line, '&') != NULL) {
     tmp = Strnew();
     for (p = line; *p;) {
-      const char *q, *r;
+      const char *q;
       if (*p == '&') {
         if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) ||
             !strncasecmp(p, "&lt;", 4)) {

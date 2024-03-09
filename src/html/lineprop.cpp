@@ -6,8 +6,10 @@
 #include "utf8.h"
 #include <vector>
 
-int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpos,
-                    bool forceCalc) {
+int Tabstop = 8;
+
+int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos,
+                    int bpos, bool forceCalc) {
   if (!l || len == 0 || pos < 0)
     return bpos;
 
@@ -35,13 +37,12 @@ int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos, int bpo
     } else {
       auto utf8 = Utf8::from((const char8_t *)&l[i]);
       auto [cp, bytes] = utf8.codepoint();
-      if(bytes){
-      for (int k = 0; k < bytes; ++k) {
-        realColumn.push_back(j);
-        ++i;
-      }
-      }
-      else{
+      if (bytes) {
+        for (int k = 0; k < bytes; ++k) {
+          realColumn.push_back(j);
+          ++i;
+        }
+      } else {
         realColumn.push_back(j);
         ++i;
       }

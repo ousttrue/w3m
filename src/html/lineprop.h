@@ -4,6 +4,8 @@ typedef unsigned short Lineprop;
 
 // #define P_CHARTYPE 0x3f00
 
+extern int Tabstop;
+
 #define WTF_TYPE_ASCII 0x0
 #define WTF_TYPE_CTRL 0x1
 #define WTF_TYPE_WCHAR1 0x2

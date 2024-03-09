@@ -18,30 +18,43 @@ int Line::push_mc(Lineprop prop, const char *str) {
   return len;
 }
 
-int Line::bytePosToColumn(int pos) const {
-  return ::bytePosToColumn(lineBuf(), propBuf(), len(), pos, 0, false);
-}
-
-int Line::columnPos(int column) const {
-  int i = 1;
-  for (; i < this->len(); i++) {
-    if (this->bytePosToColumn(i) > column)
-      break;
+void Line::_update() const {
+  if (_posEndColMap.size() == _lineBuf.size()) {
+    return;
   }
-  for (i--; i > 0 && this->_propBuf[i] & PC_WCHAR2; i--)
-    ;
-  return i;
-}
 
-int Line::columnLen(int column) const {
-  for (auto i = 0; i < this->len();) {
-    auto j = ::bytePosToColumn(&this->_lineBuf[i], &this->_propBuf[i],
-                               this->len(), i, 0, false);
-    if (j > column)
-      return i;
-    auto utf8 = Utf8::from((const char8_t *)&this->_lineBuf[i]);
-    auto [cp, bytes] = utf8.codepoint();
-    i += bytes;
+  _posEndColMap.clear();
+
+  int i = 0;
+  int j = 0;
+  for (; i < len();) {
+    if (_propBuf[i] & PC_CTRL) {
+      int width = 0;
+      if (_lineBuf[i] == '\t') {
+        width = Tabstop - (j % Tabstop);
+      } else if (_lineBuf[i] == '\n') {
+        width = 1;
+      } else if (_lineBuf[i] != '\r') {
+        width = 2;
+      }
+      _pushColWidth(width);
+      j += width;
+      ++i;
+    } else {
+      auto utf8 = Utf8::from((const char8_t *)&_lineBuf[i]);
+      auto [cp, bytes] = utf8.codepoint();
+      if (bytes) {
+        for (int k = 0; k < bytes; ++k) {
+          _pushColWidth(utf8.width());
+          j += utf8.width();
+          ++i;
+        }
+      } else {
+        // ?
+        _pushColWidth(1);
+        j += 1;
+        ++i;
+      }
+    }
   }
-  return this->len();
 }

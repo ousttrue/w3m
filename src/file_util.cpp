@@ -27,7 +27,7 @@ int _MoveFile(const char *path1, const char *path2) {
 #else
   FILE *f2;
   int is_pipe;
-  long long linelen = 0, trbyte = 0;
+  // long long linelen = 0, trbyte = 0;
   char *buf = nullptr;
   int count;
 
@@ -46,11 +46,11 @@ int _MoveFile(const char *path1, const char *path2) {
     return -1;
   }
 
-  auto current_content_length = 0;
+  // auto current_content_length = 0;
   buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
   while ((count = f1->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
     fwrite(buf, 1, count, f2);
-    linelen += count;
+    // linelen += count;
     // App::instance().showProgress(&linelen, &trbyte, current_content_length);
   }
 

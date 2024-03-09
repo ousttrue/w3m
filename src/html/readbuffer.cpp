@@ -27,7 +27,6 @@ double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 int pixel_per_char_i = static_cast<int>(DEFAULT_PIXEL_PER_CHAR);
 int displayLinkNumber = false;
 bool DisableCenter = false;
-int Tabstop = 8;
 int IndentIncr = 4;
 bool DisplayBorders = false;
 int displayInsDel = DISPLAY_INS_DEL_NORMAL;

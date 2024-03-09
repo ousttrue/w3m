@@ -20,7 +20,6 @@ extern double pixel_per_char;
 extern int pixel_per_char_i;
 extern int displayLinkNumber;
 extern bool DisableCenter;
-extern int Tabstop;
 extern int IndentIncr;
 #define INDENT_INCR IndentIncr
 extern bool DisplayBorders;
