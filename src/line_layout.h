@@ -9,18 +9,6 @@
 extern int nextpage_topline;
 extern int FoldTextarea;
 
-struct BufferPos {
-  long top_linenumber;
-  long cur_linenumber;
-  int currentColumn;
-  int pos;
-  int bpos;
-  BufferPos *next;
-  BufferPos *prev;
-};
-
-struct Line;
-struct BufferPos;
 struct HtmlTag;
 
 struct LineLayout {
@@ -80,11 +68,6 @@ struct LineLayout {
   void restorePosition(const LineLayout &orig);
   void nscroll(int n);
 
-  void save_buffer_position();
-  void resetPos(BufferPos *b);
-  void undoPos(int n);
-  void redoPos(int n);
-
   //
   // viewport
   //
@@ -97,8 +80,6 @@ struct LineLayout {
 
   int pos = 0;
   int visualpos = 0;
-
-  BufferPos *undo = nullptr;
 
   inline void COPY_BUFROOT_FROM(const LineLayout &srcbuf) {
     this->COLS = srcbuf.COLS;

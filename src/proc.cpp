@@ -1729,7 +1729,7 @@ std::shared_ptr<CoroutineState<void>> undoPos() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout.undoPos(PREC_NUM);
+  // CurrentTab->currentBuffer()->layout.undoPos(PREC_NUM);
 }
 
 // REDO
@@ -1738,7 +1738,7 @@ std::shared_ptr<CoroutineState<void>> redoPos() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout.redoPos(PREC_NUM);
+  // CurrentTab->currentBuffer()->layout.redoPos(PREC_NUM);
 }
 
 // CURSOR_TOP

@@ -1116,7 +1116,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
         prec_num = PREC_LIMIT;
     } else {
       set_buffer_environ(currentTab()->currentBuffer());
-      currentTab()->currentBuffer()->layout.save_buffer_position();
+      // currentTab()->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
       auto callback = w3mFuncList[GlobalKeymap[c]];
       callback();

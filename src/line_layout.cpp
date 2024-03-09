@@ -689,55 +689,6 @@ void LineLayout::nscroll(int n) {
   // App::instance().invalidate(mode);
 }
 
-void LineLayout::save_buffer_position() {
-  if (empty())
-    return;
-
-  BufferPos *b = this->undo;
-  if (b && b->top_linenumber == this->TOP_LINENUMBER() &&
-      b->cur_linenumber == this->CUR_LINENUMBER() &&
-      b->currentColumn == this->currentColumn && b->pos == this->pos)
-    return;
-  b = (BufferPos *)New(BufferPos);
-  b->top_linenumber = this->TOP_LINENUMBER();
-  b->cur_linenumber = this->CUR_LINENUMBER();
-  b->currentColumn = this->currentColumn;
-  b->pos = this->pos;
-  b->next = NULL;
-  b->prev = this->undo;
-  if (this->undo)
-    this->undo->next = b;
-  this->undo = b;
-}
-
-void LineLayout::resetPos(BufferPos *b) {
-  LineLayout buf;
-  *buf.topLine = {};
-  *buf.currentLine = {};
-  buf.pos = b->pos;
-  buf.currentColumn = b->currentColumn;
-  this->restorePosition(buf);
-  this->undo = b;
-}
-
-void LineLayout::undoPos(int n) {
-  BufferPos *b = this->undo;
-  if (!b || !b->prev)
-    return;
-  for (int i = 0; i < n && b->prev; i++, b = b->prev)
-    ;
-  this->resetPos(b);
-}
-
-void LineLayout::redoPos(int n) {
-  BufferPos *b = this->undo;
-  if (!b || !b->next)
-    return;
-  for (int i = 0; i < n && b->next; i++, b = b->next)
-    ;
-  this->resetPos(b);
-}
-
 /* mark URL-like patterns as anchors */
 static const char *url_like_pat[] = {
     "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
