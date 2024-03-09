@@ -815,7 +815,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_CURRENT_LINE",
                 Sprintf("%ld", buf->layout.linenumber(l))->ptr);
     set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->layout._cursor.col + 1)->ptr);
+                Sprintf("%d", buf->layout.cursor().col + 1)->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -1260,7 +1260,7 @@ void App::display() {
 
   ftxui::Render(screen, dom());
 
-  auto cursor = _content->root() + layout->_cursor - layout->_scroll;
+  auto cursor = _content->root() + layout->cursor() - layout->scroll();
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1291,12 +1291,12 @@ ftxui::Element App::dom() {
   auto msg = this->make_lastline_message(buf);
 
   std::stringstream ss;
-  ss
-      // row, col
-      << buf->layout._cursor.row << ", "
-      << buf->layout._cursor.col
-      //
-      << ", " << _lastKeyCmd.str();
+  ss << "[cursor]" << buf->layout.cursor().row << ","
+     << buf->layout.cursor().col << "[scroll]" << buf->layout.scroll().row
+     << ","
+     << buf->layout.scroll().col
+     //
+     << ", " << _lastKeyCmd.str();
   _status = ss.str();
 
   return ftxui::vbox({
@@ -1575,7 +1575,6 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
       //   buf->layout._topLine += buf->layout.cursor.row;
       // }
       buf->layout.cursorPos(al->start.pos);
-      buf->layout.arrangeCursor();
     }
   }
 }
@@ -1864,7 +1863,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   std::stringstream ss;
   int sl = 0;
   if (displayLineInfo && buf->layout.currentLine()) {
-    int cl = buf->layout._cursor.row;
+    int cl = buf->layout.cursor().row;
     int ll = buf->layout.linenumber(buf->layout.lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;

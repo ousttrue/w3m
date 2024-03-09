@@ -39,7 +39,13 @@ struct LineLayout {
   // int visualpos = 0;
   // scroll position
   // int _topLine = 0;
+private:
   RowCol _scroll = {0, 0};
+
+public:
+  RowCol scroll() const { return _scroll; }
+  void scrollMoveRow(int row) { _scroll.row += row; }
+  void scrollMoveCol(int col) { _scroll.col += col; }
   // leftPos
   // int scrollPos() const;
   Line *topLine() {
@@ -54,7 +60,12 @@ struct LineLayout {
   // }
 
   // cursor position
+private:
   RowCol _cursor = {0, 0};
+
+public:
+  RowCol cursor() const { return _cursor; }
+  void cursorCol(int col) { _cursor.col = col; }
   int cursorPos() const {
     auto l = data.lines[_cursor.row];
     return l.columnPos(_cursor.col);
@@ -63,6 +74,9 @@ struct LineLayout {
     auto l = data.lines[_cursor.row];
     _cursor.col = l.bytePosToColumn(pos);
   }
+  void cursorMoveCol(int col) { _cursor.col += col; }
+  void cursorRow(int row) { _cursor.row = row; }
+  void cursorMoveRow(int row) { _cursor.row += row; }
   // int currentColumn = 0;
   Line *currentLine() {
     //
@@ -94,7 +108,6 @@ struct LineLayout {
 
   void clearBuffer();
 
-  void arrangeLine();
   void cursorUpDown(int n);
   void gotoLine(int n);
   void cursorUp0(int n);
@@ -103,7 +116,6 @@ struct LineLayout {
   void cursorDown(int n);
 
   // int columnSkip(int offset);
-  void arrangeCursor();
   void cursorRight(int n);
   void cursorLeft(int n);
   void cursorHome();

@@ -201,7 +201,7 @@ void Content::Render(ftxui::Screen &screen) {
   //
   _screen = std::make_shared<ftxui::Screen>(box_.x_max - box_.x_min + 1,
                                             box_.y_max - box_.y_min + 1);
-  auto l = layout->_scroll.row;
+  auto l = layout->scroll().row;
   int i = 0;
   int height = box_.y_max - box_.y_min + 1;
   int width = box_.x_max - box_.x_min + 1;
@@ -211,7 +211,7 @@ void Content::Render(ftxui::Screen &screen) {
             .row = i,
             .col = 0,
         },
-        l, width, layout->_scroll.col);
+        l, width, layout->scroll().col);
     this->clrtoeolx(pixel);
   }
   // clear remain

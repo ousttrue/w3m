@@ -102,10 +102,9 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
     co_return;
 
   int offsety = App::instance().contentLines() / 2 -
-                CurrentTab->currentBuffer()->layout._cursor.row;
+                CurrentTab->currentBuffer()->layout.cursor().row;
   if (offsety != 0) {
-    CurrentTab->currentBuffer()->layout._scroll.row -= offsety;
-    CurrentTab->currentBuffer()->layout.arrangeLine();
+    CurrentTab->currentBuffer()->layout.scrollMoveRow(-offsety);
   }
 }
 
@@ -115,11 +114,10 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  int offsetx = CurrentTab->currentBuffer()->layout._cursor.col -
+  int offsetx = CurrentTab->currentBuffer()->layout.cursor().col -
                 App::instance().contentCols() / 2;
   if (offsetx != 0) {
-    CurrentTab->currentBuffer()->layout._cursor.col += offsetx;
-    CurrentTab->currentBuffer()->layout.arrangeCursor();
+    CurrentTab->currentBuffer()->layout.cursorMoveCol(offsetx);
   }
 }
 
@@ -128,7 +126,6 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH() {
 //"Draw the screen anew"
 std::shared_ptr<CoroutineState<void>> rdrwSc() {
   // clear();
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
   co_return;
 }
 
@@ -184,11 +181,11 @@ std::shared_ptr<CoroutineState<void>> srchprv() {
 std::shared_ptr<CoroutineState<void>> shiftl() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
-  int column = CurrentTab->currentBuffer()->layout._cursor.col;
-  CurrentTab->currentBuffer()->layout._cursor.col +=
-      App::instance().searchKeyNum() * -App::instance().contentCols();
+  int column = CurrentTab->currentBuffer()->layout.cursor().col;
+  CurrentTab->currentBuffer()->layout.cursorMoveCol(
+      App::instance().searchKeyNum() * -App::instance().contentCols());
   CurrentTab->currentBuffer()->layout.shiftvisualpos(
-      CurrentTab->currentBuffer()->layout._cursor.col - column);
+      CurrentTab->currentBuffer()->layout.cursor().col - column);
 }
 
 /* Shift screen right */
@@ -449,7 +446,7 @@ std::shared_ptr<CoroutineState<void>> movLW() {
 
     if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
             CurrentTab->currentBuffer()->layout.currentLine()) < 0)
-      goto end;
+      co_return;
 
     while (1) {
       auto l = CurrentTab->currentBuffer()->layout.currentLine();
@@ -467,11 +464,10 @@ std::shared_ptr<CoroutineState<void>> movLW() {
       auto prev = CurrentTab->currentBuffer()->layout.currentLine();
       --prev;
       if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(prev) < 0) {
-        CurrentTab->currentBuffer()->layout._cursor.row =
-            CurrentTab->currentBuffer()->layout.linenumber(pline) -
-            CurrentTab->currentBuffer()->layout._scroll.row;
+        CurrentTab->currentBuffer()->layout.cursorRow(
+            CurrentTab->currentBuffer()->layout.linenumber(pline));
         CurrentTab->currentBuffer()->layout.cursorPos(ppos);
-        goto end;
+        co_return;
       }
       CurrentTab->currentBuffer()->layout.cursorPos(
           CurrentTab->currentBuffer()->layout.currentLine()->len());
@@ -490,8 +486,6 @@ std::shared_ptr<CoroutineState<void>> movLW() {
       }
     }
   }
-end:
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
 // NEXT_WORD
@@ -648,7 +642,6 @@ std::shared_ptr<CoroutineState<void>> linbeg() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   CurrentTab->currentBuffer()->layout.cursorPos(0);
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
 /* Go to the bottom of the line */
@@ -659,7 +652,6 @@ std::shared_ptr<CoroutineState<void>> linend() {
     co_return;
   CurrentTab->currentBuffer()->layout.cursorPos(
       CurrentTab->currentBuffer()->layout.currentLine()->len() - 1);
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
 /* Run editor on the current buffer */
@@ -690,7 +682,7 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout._cursor.row);
+        CurrentTab->currentBuffer()->layout.cursor().row);
   }
   exec_cmd(cmd);
 
@@ -712,7 +704,7 @@ std::shared_ptr<CoroutineState<void>> editScr() {
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout._cursor.row));
+      CurrentTab->currentBuffer()->layout.cursor().row));
   unlink(tmpf.c_str());
 }
 
@@ -806,7 +798,6 @@ std::shared_ptr<CoroutineState<void>> topA() {
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
 /* go to the last anchor */
@@ -848,7 +839,6 @@ std::shared_ptr<CoroutineState<void>> lastA() {
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
 /* go to the nth anchor */
@@ -882,7 +872,6 @@ std::shared_ptr<CoroutineState<void>> nthA() {
 
   CurrentTab->currentBuffer()->layout.gotoLine(po->line);
   CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
-  CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
 /* go to the next anchor */
@@ -1453,7 +1442,7 @@ std::shared_ptr<CoroutineState<void>> curlno() {
   if (l != nullptr) {
     cur = layout->linenumber(l);
     ;
-    col = layout->_cursor.col + 1;
+    col = layout->cursor().col + 1;
     len = l->width();
   }
   if (CurrentTab->currentBuffer()->layout.lastLine())
@@ -1748,8 +1737,7 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout._cursor.row = 0;
-  CurrentTab->currentBuffer()->layout.arrangeLine();
+  CurrentTab->currentBuffer()->layout.cursorRow(0);
 }
 
 // CURSOR_MIDDLE
@@ -1759,8 +1747,7 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
     co_return;
 
   int offsety = (App::instance().contentLines() - 1) / 2;
-  CurrentTab->currentBuffer()->layout._cursor.row += offsety;
-  CurrentTab->currentBuffer()->layout.arrangeLine();
+  CurrentTab->currentBuffer()->layout.cursorMoveRow(offsety);
 }
 
 // CURSOR_BOTTOM
@@ -1770,8 +1757,7 @@ std::shared_ptr<CoroutineState<void>> cursorBottom() {
     co_return;
 
   int offsety = App::instance().contentLines() - 1;
-  CurrentTab->currentBuffer()->layout._cursor.row += offsety;
-  CurrentTab->currentBuffer()->layout.arrangeLine();
+  CurrentTab->currentBuffer()->layout.cursorMoveRow(offsety);
 }
 
 /* follow HREF link in the buffer */

@@ -374,7 +374,6 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   //   buf->layout._topLine += buf->layout.cursor.row;
   // }
   buf->layout.cursorPos(a->start.pos);
-  buf->layout.arrangeCursor();
   return buf;
 }
 
