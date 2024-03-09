@@ -298,7 +298,8 @@ int visible_length(const char *str) {
     } else if (status == R_ST_NORMAL && prev_status == R_ST_AMP) {
       PUSH_TAG(str, n);
       r2 = tagbuf->ptr;
-      t = getescapecmd(&r2);
+      auto _t = getescapecmd(&r2);
+      t = _t.c_str();
       if (!*r2 && (*t == '\r' || *t == '\n')) {
         if (len > max_len)
           max_len = len;
@@ -322,7 +323,8 @@ int visible_length(const char *str) {
   }
   if (status == R_ST_AMP) {
     r2 = tagbuf->ptr;
-    t = getescapecmd(&r2);
+    auto _t = getescapecmd(&r2);
+    t = _t.c_str();
     if (*t != '\r' && *t != '\n')
       len += get_strwidth(t) + get_strwidth(r2);
   }

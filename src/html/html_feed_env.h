@@ -28,7 +28,7 @@ struct html_feed_environ {
   int envc = 0;
 
   int envc_real = 0;
-  const char *title = nullptr;
+  std::string title;
   int blank_lines = 0;
 
   html_feed_environ(int envc, int, int, GeneralList<TextLine> *_buf = nullptr);

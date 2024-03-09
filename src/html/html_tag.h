@@ -1,6 +1,8 @@
 #pragma once
 #include "html_command.h"
 #include <gc_cpp.h>
+#include <string>
+#include <string_view>
 
 // Parsed Tag structure
 enum HtmlTagAttr {
@@ -106,3 +108,5 @@ public:
   Str *parsedtag2str() const;
   int ul_type(int default_type) const;
 };
+
+std::string html_unquote(std::string_view str);

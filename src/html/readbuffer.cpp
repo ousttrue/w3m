@@ -533,9 +533,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   parser.completeHTMLstream(&htmlenv1);
   parser.flushline(&htmlenv1, 0, 2, htmlenv1.limit);
 
-  if (htmlenv1.title) {
-    layout->data.title = htmlenv1.title;
-  }
+  layout->data.title = htmlenv1.title;
 
   res->trbyte = trbyte + linelen;
 

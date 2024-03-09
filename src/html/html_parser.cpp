@@ -727,7 +727,7 @@ void HtmlParser::feed_title(const char *str) {
     return;
   while (*str) {
     if (*str == '&')
-      Strcat_charp(cur_title, getescapecmd(&str));
+      Strcat(cur_title, getescapecmd(&str));
     else if (*str == '\n' || *str == '\r') {
       Strcat_char(cur_title, ' ');
       str++;
@@ -970,7 +970,8 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
       /*
        * & escape processing
        */
-      auto p = getescapecmd(&str);
+      auto _p = getescapecmd(&str);
+      auto p = _p.c_str();
       while (*p) {
         mode = get_mctype(p);
         if (mode == PC_CTRL || IS_INTSPACE(*str)) {
@@ -3322,7 +3323,7 @@ void HtmlParser::feed_select(const char *str) {
           else
             prev_spaces = 0;
           if (*p == '&')
-            Strcat_charp(cur_option, getescapecmd(&p));
+            Strcat(cur_option, getescapecmd(&p));
           else
             Strcat_char(cur_option, *(p++));
         }

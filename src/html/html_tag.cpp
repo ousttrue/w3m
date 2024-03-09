@@ -9,6 +9,7 @@
 #include "alloc.h"
 #include "html.c"
 #include "textline.h"
+#include <sstream>
 
 /* parse HTML tag */
 
@@ -16,6 +17,22 @@ static int noConv(char *, char **);
 static int toNumber(char *, int *);
 static int toLength(char *, int *);
 static int toVAlign(char *, int *);
+
+std::string html_unquote(std::string_view str) {
+  std::stringstream tmp;
+
+  for (auto p = str.begin(); p != str.end();) {
+    if (*p == '&') {
+      auto q = getescapecmd(&p);
+      tmp << q;
+    } else {
+      tmp << *p;
+      p++;
+    }
+  }
+
+  return tmp.str();
+}
 
 /* *INDENT-OFF* */
 using toValFuncType = int (*)(char *, int *);
@@ -218,7 +235,7 @@ HtmlTag *HtmlTag::parse(const char **s, int internal) {
       }
       tag->attrid[i] = attr_id;
       if (value)
-        tag->value[i] = (char *)html_unquote(value->ptr);
+        tag->value[i] = Strnew(html_unquote(value->ptr))->ptr;
       else
         tag->value[i] = NULL;
     } else {

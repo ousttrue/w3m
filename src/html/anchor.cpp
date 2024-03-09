@@ -63,36 +63,15 @@ const char *html_quote(const char *str) {
   return Strnew_charp(str)->ptr;
 }
 
-const char *html_unquote(const char *str) {
-  Str *tmp = NULL;
-  const char *p, *q;
+std::string getescapecmd(const char **s) {
+  const char *save = *s;
 
-  for (p = str; *p;) {
-    if (*p == '&') {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      q = getescapecmd(&p);
-      Strcat_charp(tmp, q);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-      p++;
-    }
+  int ch = getescapechar(s);
+  if (ch >= 0) {
+    return conv_entity(ch);
   }
 
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
-
-const char *getescapecmd(const char **s) {
-  const char *save = *s;
   Str *tmp;
-  int ch = getescapechar(s);
-
-  if (ch >= 0)
-    return conv_entity(ch);
-
   if (*save != '&')
     tmp = Strnew_charp("&");
   else
