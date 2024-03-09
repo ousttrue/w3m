@@ -366,8 +366,7 @@ std::shared_ptr<CoroutineState<void>> ldhelp() {
 //"Cursor left"
 std::shared_ptr<CoroutineState<void>> movL() {
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movL(App::instance().contentCols() / 2,
-                                            m);
+  CurrentTab->currentBuffer()->layout.cursorMoveCol(-m);
   co_return;
 }
 
@@ -375,41 +374,7 @@ std::shared_ptr<CoroutineState<void>> movL() {
 //"Cursor left. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>> movL1() {
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movL(1, m);
-  co_return;
-}
-
-// MOVE_DOWN
-//"Cursor down"
-std::shared_ptr<CoroutineState<void>> movD() {
-  int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movD(
-      (App::instance().contentLines() + 1) / 2, m);
-  co_return;
-}
-
-// MOVE_DOWN1
-//"Cursor down. With edge touched, slide"
-std::shared_ptr<CoroutineState<void>> movD1() {
-  int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movD(1, m);
-  co_return;
-}
-
-// MOVE_UP
-//"Cursor up"
-std::shared_ptr<CoroutineState<void>> movU() {
-  int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movU(
-      (App::instance().contentLines() + 1) / 2, m);
-  co_return;
-}
-
-// MOVE_UP1
-//"Cursor up. With edge touched, slide"
-std::shared_ptr<CoroutineState<void>> movU1() {
-  int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movU(1, m);
+  CurrentTab->currentBuffer()->layout.cursorMoveCol(-m);
   co_return;
 }
 
@@ -417,8 +382,7 @@ std::shared_ptr<CoroutineState<void>> movU1() {
 //"Cursor right"
 std::shared_ptr<CoroutineState<void>> movR() {
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movR(App::instance().contentCols() / 2,
-                                            m);
+  CurrentTab->currentBuffer()->layout.cursorMoveCol(m);
   co_return;
 }
 
@@ -426,7 +390,39 @@ std::shared_ptr<CoroutineState<void>> movR() {
 //"Cursor right. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>> movR1() {
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout._movR(1, m);
+  CurrentTab->currentBuffer()->layout.cursorMoveCol(m);
+  co_return;
+}
+
+// MOVE_DOWN
+//"Cursor down"
+std::shared_ptr<CoroutineState<void>> movD() {
+  int m = App::instance().searchKeyNum();
+  CurrentTab->currentBuffer()->layout.cursorMoveRow(m);
+  co_return;
+}
+
+// MOVE_DOWN1
+//"Cursor down. With edge touched, slide"
+std::shared_ptr<CoroutineState<void>> movD1() {
+  int m = App::instance().searchKeyNum();
+  CurrentTab->currentBuffer()->layout.cursorMoveRow(m);
+  co_return;
+}
+
+// MOVE_UP
+//"Cursor up"
+std::shared_ptr<CoroutineState<void>> movU() {
+  int m = App::instance().searchKeyNum();
+  CurrentTab->currentBuffer()->layout.cursorMoveRow(-m);
+  co_return;
+}
+
+// MOVE_UP1
+//"Cursor up. With edge touched, slide"
+std::shared_ptr<CoroutineState<void>> movU1() {
+  int m = App::instance().searchKeyNum();
+  CurrentTab->currentBuffer()->layout.cursorMoveRow(-m);
   co_return;
 }
 
@@ -796,7 +792,7 @@ std::shared_ptr<CoroutineState<void>> topA() {
     hseq++;
   } while (an == nullptr);
 
-  CurrentTab->currentBuffer()->layout.gotoLine(po->line);
+  CurrentTab->currentBuffer()->layout.cursorRow(po->line);
   CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
 }
 
@@ -837,7 +833,7 @@ std::shared_ptr<CoroutineState<void>> lastA() {
     hseq--;
   } while (an == nullptr);
 
-  CurrentTab->currentBuffer()->layout.gotoLine(po->line);
+  CurrentTab->currentBuffer()->layout.cursorRow(po->line);
   CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
 }
 
@@ -870,7 +866,7 @@ std::shared_ptr<CoroutineState<void>> nthA() {
   if (an == nullptr)
     co_return;
 
-  CurrentTab->currentBuffer()->layout.gotoLine(po->line);
+  CurrentTab->currentBuffer()->layout.cursorRow(po->line);
   CurrentTab->currentBuffer()->layout.cursorPos(po->pos);
 }
 
@@ -879,8 +875,8 @@ std::shared_ptr<CoroutineState<void>> nthA() {
 //"Move to the next hyperlink"
 std::shared_ptr<CoroutineState<void>> nextA() {
   int n = App::instance().searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout._nextA(baseUr, n);
+  auto baseUrl = CurrentTab->currentBuffer()->res->getBaseURL();
+  CurrentTab->currentBuffer()->layout._nextA(baseUrl, n);
   co_return;
 }
 

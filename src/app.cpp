@@ -6,6 +6,7 @@
 #include "html/readbuffer.h"
 #include "html/form_item.h"
 #include "html/anchorlist.h"
+#include "html/anchor.h"
 #include "content.h"
 #include "ssl_util.h"
 #include "html/form.h"
@@ -1146,7 +1147,7 @@ void App::onFrame() {
 
   if (auto a = currentTab()->currentBuffer()->layout.data.submit) {
     currentTab()->currentBuffer()->layout.data.submit = NULL;
-    currentTab()->currentBuffer()->layout.gotoLine(a->start.line);
+    currentTab()->currentBuffer()->layout.cursorRow(a->start.line);
     currentTab()->currentBuffer()->layout.cursorPos(a->start.pos);
     if (auto buf = currentTab()
                        ->currentBuffer()
@@ -1292,11 +1293,28 @@ ftxui::Element App::dom() {
 
   std::stringstream ss;
   ss << "[cursor]" << buf->layout.cursor().row << ","
-     << buf->layout.cursor().col << "[scroll]" << buf->layout.scroll().row
-     << ","
-     << buf->layout.scroll().col
+     << buf->layout.cursor().col
      //
-     << ", " << _lastKeyCmd.str();
+     << "(pos)"
+     << buf->layout.cursorPos()
+     //
+     << "[scroll]" << buf->layout.scroll().row << ","
+     << buf->layout.scroll().col
+      //
+      ;
+
+  if (auto a = buf->layout.retrieveCurrentAnchor()) {
+    ss << ", [a]" << a->start.line << "," << a->start.pos << " " << a->title;
+  }
+  if (auto f = buf->layout.retrieveCurrentForm()) {
+    ss << ", [f]" << f->start.line << "," << f->start.pos << " " << f->title;
+  }
+
+  auto cmd = _lastKeyCmd.str();
+  if (cmd.size()) {
+    ss << ", " << cmd;
+  }
+
   _status = ss.str();
 
   return ftxui::vbox({
@@ -1570,7 +1588,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
     auto buf = CurrentTab->currentBuffer();
     auto al = buf->layout.data._name->searchAnchor(label);
     if (al) {
-      buf->layout.gotoLine(al->start.line);
+      buf->layout.cursorRow(al->start.line);
       // if (label_topline) {
       //   buf->layout._topLine += buf->layout.cursor.row;
       // }

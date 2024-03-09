@@ -37,21 +37,22 @@ void Line::_update() const {
       } else if (_lineBuf[i] != '\r') {
         width = 2;
       }
-      _pushColWidth(width);
+      _pushCell(j, width);
       j += width;
       ++i;
     } else {
       auto utf8 = Utf8::from((const char8_t *)&_lineBuf[i]);
       auto [cp, bytes] = utf8.codepoint();
       if (bytes) {
+        auto width = utf8.width();
         for (int k = 0; k < bytes; ++k) {
-          _pushColWidth(utf8.width());
-          j += utf8.width();
+          _pushCell(j, width);
           ++i;
         }
+        j += width;
       } else {
         // ?
-        _pushColWidth(1);
+        _pushCell(j, 1);
         j += 1;
         ++i;
       }

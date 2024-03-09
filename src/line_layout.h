@@ -108,18 +108,18 @@ public:
 
   void clearBuffer();
 
-  void cursorUpDown(int n);
-  void gotoLine(int n);
-  void cursorUp0(int n);
-  void cursorUp(int n);
-  void cursorDown0(int n);
-  void cursorDown(int n);
+  // void cursorUpDown(int n);
+  // void gotoLine(int n);
+  // void cursorUp0(int n);
+  // void cursorUp(int n);
+  // void cursorDown0(int n);
+  // void cursorDown(int n);
 
   // int columnSkip(int offset);
-  void cursorRight(int n);
-  void cursorLeft(int n);
+  // void cursorRight(int n);
+  // void cursorLeft(int n);
   void cursorHome();
-  void cursorXY(int x, int y);
+  // void cursorXY(int x, int y);
   void restorePosition(const LineLayout &orig);
   void nscroll(int n);
 
@@ -131,10 +131,10 @@ public:
   void nextX(int d, int dy, int n);
   void _prevA(std::optional<Url> baseUrl, int n);
   void _nextA(std::optional<Url> baseUrl, int n);
-  void _movL(int n, int m);
-  void _movD(int n, int m);
-  void _movU(int n, int m);
-  void _movR(int n, int m);
+  // void _movL(int n, int m);
+  // void _movD(int n, int m);
+  // void _movU(int n, int m);
+  // void _movR(int n, int m);
   int prev_nonnull_line(Line *line);
   int next_nonnull_line(Line *line);
   void _goLine(const char *l, int prec_num);

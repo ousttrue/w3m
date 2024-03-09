@@ -369,7 +369,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   buf->res->currentURL.label = label;
   URLHist->push(buf->res->currentURL.to_Str());
   // this->pushBuffer(buf);
-  buf->layout.gotoLine(a->start.line);
+  buf->layout.cursorRow(a->start.line);
   // if (label_topline) {
   //   buf->layout._topLine += buf->layout.cursor.row;
   // }

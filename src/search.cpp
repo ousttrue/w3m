@@ -29,7 +29,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
     pos = first - l->lineBuf();
     layout->cursorPos(pos);
     if (l != layout->currentLine()) {
-      layout->gotoLine(layout->linenumber(l));
+      layout->cursorRow(layout->linenumber(l));
     }
     l->set_mark(pos, pos + last - first);
     return SR_FOUND;
@@ -51,7 +51,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
       matchedPosition(&first, &last);
       pos = first - l->lineBuf();
       layout->cursorPos(pos);
-      layout->gotoLine(layout->linenumber(l));
+      layout->cursorRow(layout->linenumber(l));
       l->set_mark(pos, pos + last - first);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
@@ -97,7 +97,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
       pos = found - l->lineBuf();
       layout->cursorPos(pos);
       if (l != layout->currentLine()) {
-        layout->gotoLine(layout->linenumber(l));
+        layout->cursorRow(layout->linenumber(l));
       }
       l->set_mark(pos, pos + found_last - found);
       return SR_FOUND;
@@ -130,7 +130,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
     if (found) {
       pos = found - l->lineBuf();
       layout->cursorPos(pos);
-      layout->gotoLine(layout->linenumber(l));
+      layout->cursorRow(layout->linenumber(l));
       l->set_mark(pos, pos + found_last - found);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }

@@ -42,19 +42,20 @@ public:
 
 private:
   // column width. cache
-  mutable std::vector<int> _posEndColMap;
+  struct Cell {
+    uint16_t begin;
+    uint16_t end;
+  };
+  mutable std::vector<Cell> _posEndColMap;
   void _update() const;
-  void _pushColWidth(uint16_t col) const {
-    if (_posEndColMap.size()) {
-      col += _posEndColMap.back();
-    }
-    _posEndColMap.push_back(col);
+  void _pushCell(int col, int width) const {
+    _posEndColMap.push_back({(uint16_t)col, (uint16_t)(col + width)});
   }
 
 public:
   int width() const {
     _update();
-    return _posEndColMap.back();
+    return _posEndColMap.back().end;
   }
   // byte pos to column
   int bytePosToColumn(int pos) const {
@@ -64,28 +65,25 @@ public:
     } else if (pos >= len()) {
       pos = len() - 1;
     }
-    auto end = _posEndColMap[pos];
-    for (int i = pos - 1; i >= 0; --i) {
-      auto begin = _posEndColMap[i];
-      if (begin != end) {
-        return begin;
-      }
-    }
-    return 0;
+    // auto end = _posEndColMap[pos];
+    // for (int i = pos - 1; i >= 0; --i) {
+    //   auto begin = _posEndColMap[i];
+    //   if (begin != end) {
+    //     return begin;
+    //   }
+    // }
+    // return 0;
+    return _posEndColMap[pos].begin;
   }
   // column to byte pos
   int columnPos(int col) const {
     _update();
-    auto begin = 0;
-    int beginPos = 0;
+    // auto begin = 0;
+    // int beginPos = 0;
     for (int i = 0; i < len(); ++i) {
-      auto end = _posEndColMap[i];
-      if (end >= col) {
-        return beginPos;
-      }
-      if (end != begin) {
-        begin = end;
-        beginPos = i;
+      auto cell = _posEndColMap[i];
+      if (cell.end > col) {
+        return i;
       }
     }
     return _posEndColMap.size() - 1;

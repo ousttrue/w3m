@@ -41,85 +41,86 @@ void LineLayout::clearBuffer() {
 /*
  * gotoLine: go to line number
  */
-void LineLayout::gotoLine(int n) {
-  if (empty()) {
-    return;
-  }
+// void LineLayout::gotoLine(int n) {
+//   if (empty()) {
+//     return;
+//   }
+//
+//   for (auto l = firstLine(); l != nullptr; ++l) {
+//     if (linenumber(l) >= n) {
+//       this->_cursor.row = linenumber(l);
+//       if (n < _scroll.row || _scroll.row + this->data.lines.size() <= n) {
+//         // this->_scroll.row = linenumber(l) - (this->LINES + 1) / 2;
+//       }
+//       return;
+//     }
+//   }
+//
+//   auto l = this->lastLine();
+//   char msg[36];
+//   snprintf(msg, sizeof(msg), "Last line is #%d", linenumber(lastLine()));
+//   App::instance().set_delayed_message(msg);
+//   this->_cursor.row = linenumber(l);
+//   // this->_scroll.row = this->linenumber(this->currentLine()) - (this->LINES
+//   -
+//   // 1);
+//   return;
+// }
 
-  for (auto l = firstLine(); l != nullptr; ++l) {
-    if (linenumber(l) >= n) {
-      this->_cursor.row = linenumber(l);
-      if (n < _scroll.row || _scroll.row + this->data.lines.size() <= n) {
-        // this->_scroll.row = linenumber(l) - (this->LINES + 1) / 2;
-      }
-      return;
-    }
-  }
+// void LineLayout::cursorUpDown(int n) {
+//   if (this->empty())
+//     return;
+//
+//   _cursor.row += n;
+// }
+//
+// void LineLayout::cursorUp0(int n) {
+//   if (this->_cursor.row > 0) {
+//     this->cursorUpDown(-1);
+//     return;
+//   }
+//
+//   this->_scroll.row -= n;
+//   if (hasPrev(this->currentLine())) {
+//     --this->_cursor.row;
+//   }
+// }
 
-  auto l = this->lastLine();
-  char msg[36];
-  snprintf(msg, sizeof(msg), "Last line is #%d", linenumber(lastLine()));
-  App::instance().set_delayed_message(msg);
-  this->_cursor.row = linenumber(l);
-  // this->_scroll.row = this->linenumber(this->currentLine()) - (this->LINES -
-  // 1);
-  return;
-}
+// void LineLayout::cursorUp(int n) {
+//   if (this->empty())
+//     return;
+//
+//   Line *l = this->currentLine();
+//   if (this->currentLine() == this->firstLine()) {
+//     this->cursorRow(linenumber(l));
+//     return;
+//   }
+//   cursorUp0(n);
+// }
+//
+// void LineLayout::cursorDown0(int n) {
+//   // if (this->_cursor.row < this->LINES - 1)
+//   this->cursorUpDown(1);
+//   // else {
+//   //   this->_topLine += n;
+//   //   if (hasNext(this->currentLine()))
+//   //     ++this->cursor.row;
+//   //   this->arrangeLine();
+//   // }
+// }
 
-void LineLayout::cursorUpDown(int n) {
-  if (this->empty())
-    return;
-
-  _cursor.row += n;
-}
-
-void LineLayout::cursorUp0(int n) {
-  if (this->_cursor.row > 0) {
-    this->cursorUpDown(-1);
-    return;
-  }
-
-  this->_scroll.row -= n;
-  if (hasPrev(this->currentLine())) {
-    --this->_cursor.row;
-  }
-}
-
-void LineLayout::cursorUp(int n) {
-  if (this->empty())
-    return;
-
-  Line *l = this->currentLine();
-  if (this->currentLine() == this->firstLine()) {
-    this->gotoLine(linenumber(l));
-    return;
-  }
-  cursorUp0(n);
-}
-
-void LineLayout::cursorDown0(int n) {
-  // if (this->_cursor.row < this->LINES - 1)
-  this->cursorUpDown(1);
-  // else {
-  //   this->_topLine += n;
-  //   if (hasNext(this->currentLine()))
-  //     ++this->cursor.row;
-  //   this->arrangeLine();
-  // }
-}
-
-void LineLayout::cursorDown(int n) {
-  if (empty())
-    return;
-
-  // Line *l = this->currentLine();
-  // if (this->currentLine() == this->lastLine()) {
-  //   this->gotoLine(linenumber(l));
-  //   this->arrangeLine();
-  //   return;
-  // }
-  cursorDown0(n);
-}
+// void LineLayout::cursorDown(int n) {
+//   if (empty())
+//     return;
+//
+//   // Line *l = this->currentLine();
+//   // if (this->currentLine() == this->lastLine()) {
+//   //   this->cursorRow(linenumber(l));
+//   //   this->arrangeLine();
+//   //   return;
+//   // }
+//   cursorDown0(n);
+// }
 
 // int LineLayout::columnSkip(int offset) {
 //   int i, maxColumn;
@@ -182,54 +183,54 @@ void LineLayout::cursorDown(int n) {
 //   this->cursor.col = this->visualpos - this->currentLine()->width();
 // }
 
-void LineLayout::cursorRight(int n) {
-  if (empty())
-    return;
+// void LineLayout::cursorRight(int n) {
+//   if (empty())
+//     return;
+//
+//   _cursor.col += n;
+//   // auto l = this->currentLine();
+//   // int i = this->pos;
+//   // int delta = 1;
+//   // if (i + delta < l->len()) {
+//   //   this->pos = i + delta;
+//   // } else if (l->len() == 0) {
+//   //   this->pos = 0;
+//   // } else {
+//   //   this->pos = l->len() - 1;
+//   // }
+//   // int cpos = l->bytePosToColumn(this->pos);
+//   // this->visualpos = l->width() + cpos - this->currentColumn;
+//   // delta = 1;
+//   // int vpos2 = l->bytePosToColumn(this->pos + delta) - this->currentColumn -
+//   // 1; if (vpos2 >= this->COLS && n) {
+//   //   this->columnSkip(n + (vpos2 - this->COLS) - (vpos2 - this->COLS) % n);
+//   //   this->visualpos = l->width() + cpos - this->currentColumn;
+//   // }
+//   // this->cursor.col = this->visualpos - l->width();
+// }
 
-  _cursor.col += n;
-  // auto l = this->currentLine();
-  // int i = this->pos;
-  // int delta = 1;
-  // if (i + delta < l->len()) {
-  //   this->pos = i + delta;
-  // } else if (l->len() == 0) {
-  //   this->pos = 0;
-  // } else {
-  //   this->pos = l->len() - 1;
-  // }
-  // int cpos = l->bytePosToColumn(this->pos);
-  // this->visualpos = l->width() + cpos - this->currentColumn;
-  // delta = 1;
-  // int vpos2 = l->bytePosToColumn(this->pos + delta) - this->currentColumn -
-  // 1; if (vpos2 >= this->COLS && n) {
-  //   this->columnSkip(n + (vpos2 - this->COLS) - (vpos2 - this->COLS) % n);
-  //   this->visualpos = l->width() + cpos - this->currentColumn;
-  // }
-  // this->cursor.col = this->visualpos - l->width();
-}
-
-void LineLayout::cursorLeft(int n) {
-  if (empty())
-    return;
-
-  _cursor.col -= n;
-  // auto l = this->currentLine();
-  //
-  // int i = this->pos;
-  // int delta = 1;
-  // if (i >= delta)
-  //   this->pos = i - delta;
-  // else
-  //   this->pos = 0;
-  // int cpos = l->bytePosToColumn(this->pos);
-  // this->visualpos = l->width() + cpos - this->currentColumn;
-  // if (this->visualpos - l->width() < 0 && n) {
-  //   this->columnSkip(-n + this->visualpos - l->width() -
-  //                    (this->visualpos - l->width()) % n);
-  //   this->visualpos = l->width() + cpos - this->currentColumn;
-  // }
-  // this->cursor.col = this->visualpos - l->width();
-}
+// void LineLayout::cursorLeft(int n) {
+//   if (empty())
+//     return;
+//
+//   _cursor.col -= n;
+//   // auto l = this->currentLine();
+//   //
+//   // int i = this->pos;
+//   // int delta = 1;
+//   // if (i >= delta)
+//   //   this->pos = i - delta;
+//   // else
+//   //   this->pos = 0;
+//   // int cpos = l->bytePosToColumn(this->pos);
+//   // this->visualpos = l->width() + cpos - this->currentColumn;
+//   // if (this->visualpos - l->width() < 0 && n) {
+//   //   this->columnSkip(-n + this->visualpos - l->width() -
+//   //                    (this->visualpos - l->width()) % n);
+//   //   this->visualpos = l->width() + cpos - this->currentColumn;
+//   // }
+//   // this->cursor.col = this->visualpos - l->width();
+// }
 
 void LineLayout::cursorHome() {
   // this->visualpos = 0;
@@ -237,33 +238,33 @@ void LineLayout::cursorHome() {
   this->_cursor = {0, 0};
 }
 
-void LineLayout::cursorXY(int x, int y) {
-  // this->cursorUpDown(y - this->cursor.row);
-  //
-  // if (this->cursor.col > x) {
-  //   while (this->cursor.col > x) {
-  //     this->cursorLeft(this->COLS / 2);
-  //   }
-  // } else if (this->cursor.col < x) {
-  //   while (this->cursor.col < x) {
-  //     auto oldX = this->cursor.col;
-  //
-  //     this->cursorRight(this->COLS / 2);
-  //
-  //     if (oldX == this->cursor.col) {
-  //       break;
-  //     }
-  //   }
-  //   if (this->cursor.col > x) {
-  //     this->cursorLeft(this->COLS / 2);
-  //   }
-  // }
-}
+// void LineLayout::cursorXY(int x, int y) {
+//   // this->cursorUpDown(y - this->cursor.row);
+//   //
+//   // if (this->cursor.col > x) {
+//   //   while (this->cursor.col > x) {
+//   //     this->cursorLeft(this->COLS / 2);
+//   //   }
+//   // } else if (this->cursor.col < x) {
+//   //   while (this->cursor.col < x) {
+//   //     auto oldX = this->cursor.col;
+//   //
+//   //     this->cursorRight(this->COLS / 2);
+//   //
+//   //     if (oldX == this->cursor.col) {
+//   //       break;
+//   //     }
+//   //   }
+//   //   if (this->cursor.col > x) {
+//   //     this->cursorLeft(this->COLS / 2);
+//   //   }
+//   // }
+// }
 
 void LineLayout::restorePosition(const LineLayout &orig) {
   this->_cursor = orig._cursor;
   this->_scroll = orig._scroll;
-  // this->gotoLine(orig._topLine + orig.cursor.row);
+  // this->cursorRow(orig._topLine + orig.cursor.row);
   // this->pos = orig.pos;
   // this->currentColumn = orig.currentColumn;
   // this->arrangeCursor();
@@ -311,7 +312,7 @@ void LineLayout::nextY(int d, int n) {
 
   if (pan == nullptr)
     return;
-  this->gotoLine(pan->start.line);
+  this->cursorRow(pan->start.line);
 }
 
 /* go to the next left/right anchor */
@@ -363,7 +364,7 @@ void LineLayout::nextX(int d, int dy, int n) {
 
   if (pan == nullptr)
     return;
-  this->gotoLine(y);
+  this->cursorRow(y);
   this->cursorPos(pan->start.pos);
 }
 
@@ -420,7 +421,7 @@ _end:
 
   {
     auto po = hl->get(an->hseq);
-    this->gotoLine(po->line);
+    this->cursorRow(po->line);
     this->cursorPos(po->pos);
   }
 }
@@ -476,50 +477,49 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
 _end:
   if (an == nullptr || an->hseq < 0)
     return;
-  {
-    auto po = hl->get(an->hseq);
-    this->gotoLine(po->line);
-    this->cursorPos(po->pos);
-  }
+
+  auto po = hl->get(an->hseq);
+  this->cursorRow(po->line);
+  this->cursorPos(po->pos);
 }
 
 /* Move cursor left */
-void LineLayout::_movL(int n, int m) {
-  if (empty())
-    return;
-  for (int i = 0; i < m; i++) {
-    this->cursorLeft(n);
-  }
-}
+// void LineLayout::_movL(int n, int m) {
+//   if (empty())
+//     return;
+//   for (int i = 0; i < m; i++) {
+//     this->cursorLeft(n);
+//   }
+// }
 
 /* Move cursor downward */
-void LineLayout::_movD(int n, int m) {
-  if (empty()) {
-    return;
-  }
-  for (int i = 0; i < m; i++) {
-    this->cursorDown(n);
-  }
-}
+// void LineLayout::_movD(int n, int m) {
+//   if (empty()) {
+//     return;
+//   }
+//   for (int i = 0; i < m; i++) {
+//     this->cursorDown(n);
+//   }
+// }
 
 /* move cursor upward */
-void LineLayout::_movU(int n, int m) {
-  if (empty()) {
-    return;
-  }
-  for (int i = 0; i < m; i++) {
-    this->cursorUp(n);
-  }
-}
+// void LineLayout::_movU(int n, int m) {
+//   if (empty()) {
+//     return;
+//   }
+//   for (int i = 0; i < m; i++) {
+//     this->cursorUp(n);
+//   }
+// }
 
 /* Move cursor right */
-void LineLayout::_movR(int n, int m) {
-  if (empty())
-    return;
-  for (int i = 0; i < m; i++) {
-    this->cursorRight(n);
-  }
-}
+// void LineLayout::_movR(int n, int m) {
+//   if (empty())
+//     return;
+//   for (int i = 0; i < m; i++) {
+//     this->cursorRight(n);
+//   }
+// }
 
 int LineLayout::prev_nonnull_line(Line *line) {
   Line *l;
@@ -555,14 +555,14 @@ void LineLayout::_goLine(const char *l, int prec_num) {
 
   this->_cursor.col = 0;
   if (((*l == '^') || (*l == '$')) && prec_num) {
-    this->gotoLine(prec_num);
+    this->cursorRow(prec_num);
   } else if (*l == '^') {
     this->_scroll.row = this->_cursor.row = 0;
   } else if (*l == '$') {
     // this->_scroll.row = linenumber(this->lastLine()) - (this->LINES + 1) / 2;
     this->_cursor.row = linenumber(this->lastLine());
   } else {
-    this->gotoLine(atoi(l));
+    this->cursorRow(atoi(l));
   }
 }
 
@@ -639,7 +639,7 @@ void LineLayout::nscroll(int n) {
   //   if (lnum > llnum)
   //     lnum = llnum + diff_n;
   // }
-  // this->gotoLine(lnum);
+  // this->cursorRow(lnum);
   // this->arrangeLine();
   // if (n > 0) {
   // } else {
@@ -684,11 +684,11 @@ void LineLayout::reshape(int width, const LineLayout &sbuf) {
   // if (!empty() && !sbuf.empty()) {
   //   const Line *cur = sbuf.currentLine();
   //   this->pos = sbuf.pos;
-  //   this->gotoLine(sbuf.linenumber(cur));
+  //   this->cursorRow(sbuf.linenumber(cur));
   //   int n = cursor.row - (sbuf.linenumber(cur) - sbuf._topLine);
   //   if (n) {
   //     this->_topLine += n;
-  //     this->gotoLine(sbuf.linenumber(cur));
+  //     this->cursorRow(sbuf.linenumber(cur));
   //   }
   //   this->currentColumn = sbuf.currentColumn;
   //   this->arrangeCursor();
@@ -848,7 +848,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
   Line *l;
 
   LineLayout save = *this;
-  this->gotoLine(a->start.line);
+  this->cursorRow(a->start.line);
   auto form = a->formItem;
   switch (form->type) {
   case FORM_TEXTAREA:
