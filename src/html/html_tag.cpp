@@ -22,7 +22,7 @@ static int toVAlign(char *, int *);
 std::string html_unquote(std::string_view str) {
   std::stringstream tmp;
 
-  for (auto p = str.begin(); p != str.end();) {
+  for (auto p = str.data(); p != str.data() + str.size();) {
     if (*p == '&') {
       auto q = getescapecmd(&p);
       tmp << q;

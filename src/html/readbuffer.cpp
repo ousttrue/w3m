@@ -550,6 +550,10 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
 std::string cleanup_line(std::string_view _s, CleanupMode mode) {
   std::string s{_s.begin(), _s.end()};
+  if(s.empty())
+  {
+    return s;
+  }
   if (mode == RAW_MODE) {
     return s;
   }

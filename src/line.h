@@ -59,6 +59,11 @@ public:
   // byte pos to column
   int bytePosToColumn(int pos) const {
     _update();
+    if (pos < 0) {
+      pos = 0;
+    } else if (pos >= len()) {
+      pos = len() - 1;
+    }
     auto end = _posEndColMap[pos];
     for (int i = pos - 1; i >= 0; --i) {
       auto begin = _posEndColMap[i];

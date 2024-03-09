@@ -3,6 +3,7 @@
 #include "ctrlcode.h"
 #include "w3m.h"
 #include "Str.h"
+#include "quote.h"
 #include "hash.h"
 #ifdef DUMMY
 #define NBSP " "
