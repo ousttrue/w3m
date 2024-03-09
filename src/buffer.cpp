@@ -371,9 +371,8 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
   // this->pushBuffer(buf);
   buf->layout.gotoLine(a->start.line);
   if (label_topline)
-    buf->layout.topLine = buf->layout.lineSkip(
-        buf->layout.topLine, buf->layout.linenumber(buf->layout.currentLine) -
-                                 buf->layout.linenumber(buf->layout.topLine));
+    buf->layout._topLine = buf->layout.lineSkip(
+        buf->layout.topLine(), buf->layout._currentLine - buf->layout._topLine);
   buf->layout.pos = a->start.pos;
   buf->layout.arrangeCursor();
   return buf;

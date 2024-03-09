@@ -51,7 +51,7 @@ class Content : public ftxui::Node {
   int tab_step = 8;
   ScreenFlags CurrentMode = {};
 
-  Line *cline = NULL;
+  int cline = -1;
   int ccolumn = -1;
 
 public:
@@ -110,7 +110,7 @@ public:
   void standout(void) { CurrentMode |= ScreenFlags::STANDOUT; }
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
 
-  RowCol redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft);
+  RowCol redrawLine(RowCol pixel, int l, int cols, int scrollLeft);
   // int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int
   // i,
   //                      int bpos, int epos);

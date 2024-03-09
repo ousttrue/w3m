@@ -23,33 +23,62 @@ struct LineLayout {
   Line *firstLine() { return data.firstLine(); }
   Line *lastLine() { return data.lastLine(); }
   bool empty() const { return data.lines.empty(); }
-  int linenumber(Line *t) const { return data.linenumber(t); }
-  int TOP_LINENUMBER() const { return linenumber(topLine); }
-  int CUR_LINENUMBER() const { return linenumber(currentLine); }
+  int linenumber(const Line *t) const { return data.linenumber(t); }
+  int TOP_LINENUMBER() const { return _topLine; }
+  int CUR_LINENUMBER() const { return _currentLine; }
   bool isNull(Line *l) const { return linenumber(l) < 0; }
-  bool hasNext(Line *l) const { return linenumber(++l) >= 0; }
-  bool hasPrev(Line *l) const { return linenumber(--l) >= 0; }
+  bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
+  bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
 
   // scroll position
-  Line *topLine = nullptr;
-  int currentColumn = 0;
+  int _topLine = 0;
+  Line *topLine() {
+    if (_topLine < 0 || _topLine >= (int)data.lines.size()) {
+      return nullptr;
+    }
+    return &data.lines[_topLine];
+  }
+
   // cursor position
-  Line *currentLine = nullptr;
+  int currentColumn = 0;
+  int _currentLine = 0;
+  Line *currentLine() {
+    if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
+      return nullptr;
+    }
+    return &data.lines[_currentLine];
+  }
+  const Line *currentLine() const {
+    if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
+      return nullptr;
+    }
+    return &data.lines[_currentLine];
+  }
+
   bool check_url = false;
   void chkURLBuffer();
   void reshape(int width, const LineLayout &sbuf);
 
   void clearBuffer();
 
-  Line *lineSkip(Line *line, int offset);
-  Line *currentLineSkip(Line *l, int offset) {
+  int lineSkip(const Line *line, int offset) {
+    auto l = currentLineSkip(line, offset);
+    if (!nextpage_topline) {
+      for (int i = LINES - 1 - (linenumber(lastLine()) - l);
+           i > 0 && hasPrev(&data.lines[l]); i--, --l)
+        ;
+    }
+    return l;
+  }
+
+  int currentLineSkip(const Line *l, int offset) {
     if (offset > 0)
       for (int i = 0; i < offset && hasNext(l); i++, ++l)
         ;
     else if (offset < 0)
       for (int i = 0; i < -offset && hasPrev(l); i++, --l)
         ;
-    return l;
+    return linenumber(l);
   }
   void arrangeLine();
   void cursorUpDown(int n);
@@ -87,8 +116,8 @@ struct LineLayout {
   }
 
   void COPY_BUFPOSITION_FROM(const LineLayout &srcbuf) {
-    this->topLine = srcbuf.topLine;
-    this->currentLine = srcbuf.currentLine;
+    this->_topLine = srcbuf._topLine;
+    this->_currentLine = srcbuf._currentLine;
     this->pos = srcbuf.pos;
     this->cursor = srcbuf.cursor;
     this->visualpos = srcbuf.visualpos;
@@ -120,5 +149,5 @@ struct LineLayout {
   void formUpdateBuffer(FormAnchor *a);
 };
 
-inline void nextChar(int &s, Line *l) { s++; }
-inline void prevChar(int &s, Line *l) { s--; }
+inline void nextChar(int &s, const Line *l) { s++; }
+inline void prevChar(int &s, const Line *l) { s--; }

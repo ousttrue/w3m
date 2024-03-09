@@ -785,7 +785,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_TYPE",
                 buf->res->type.size() ? buf->res->type.c_str() : "unknown");
   }
-  l = buf->layout.currentLine;
+  l = buf->layout.currentLine();
   if (l && (buf != prev_buf || l != prev_line || buf->layout.pos != prev_pos)) {
     Url pu;
     auto s = buf->layout.getCurWord();
@@ -1556,10 +1556,9 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
     if (al) {
       buf->layout.gotoLine(al->start.line);
       if (label_topline) {
-        buf->layout.topLine = buf->layout.lineSkip(
-            buf->layout.topLine,
-            buf->layout.linenumber(buf->layout.currentLine) -
-                buf->layout.linenumber(buf->layout.topLine));
+        buf->layout._topLine = buf->layout.lineSkip(buf->layout.topLine(),
+                                                    buf->layout._currentLine -
+                                                        buf->layout._topLine);
       }
       buf->layout.pos = al->start.pos;
       buf->layout.arrangeCursor();
@@ -1853,8 +1852,8 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
 
   std::stringstream ss;
   int sl = 0;
-  if (displayLineInfo && buf->layout.currentLine != NULL) {
-    int cl = buf->layout.linenumber(buf->layout.currentLine);
+  if (displayLineInfo && buf->layout.currentLine()) {
+    int cl = buf->layout._currentLine;
     int ll = buf->layout.linenumber(buf->layout.lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;

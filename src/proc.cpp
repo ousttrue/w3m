@@ -106,9 +106,9 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV() {
   int offsety = CurrentTab->currentBuffer()->layout.LINES / 2 -
                 CurrentTab->currentBuffer()->layout.cursor.row;
   if (offsety != 0) {
-    CurrentTab->currentBuffer()->layout.topLine =
+    CurrentTab->currentBuffer()->layout._topLine =
         CurrentTab->currentBuffer()->layout.lineSkip(
-            CurrentTab->currentBuffer()->layout.topLine, -offsety);
+            CurrentTab->currentBuffer()->layout.topLine(), -offsety);
     CurrentTab->currentBuffer()->layout.arrangeLine();
   }
 }
@@ -216,7 +216,7 @@ std::shared_ptr<CoroutineState<void>> shiftr() {
 //"Shift screen one column right"
 std::shared_ptr<CoroutineState<void>> col1R() {
   auto buf = CurrentTab->currentBuffer();
-  Line *l = buf->layout.currentLine;
+  Line *l = buf->layout.currentLine();
   int j, column, n = App::instance().searchKeyNum();
 
   if (l == nullptr)
@@ -234,7 +234,7 @@ std::shared_ptr<CoroutineState<void>> col1R() {
 //"Shift screen one column left"
 std::shared_ptr<CoroutineState<void>> col1L() {
   auto buf = CurrentTab->currentBuffer();
-  Line *l = buf->layout.currentLine;
+  Line *l = buf->layout.currentLine();
   int j, n = App::instance().searchKeyNum();
 
   if (l == nullptr)
@@ -450,15 +450,15 @@ std::shared_ptr<CoroutineState<void>> movLW() {
     co_return;
 
   for (i = 0; i < n; i++) {
-    pline = CurrentTab->currentBuffer()->layout.currentLine;
+    pline = CurrentTab->currentBuffer()->layout.currentLine();
     ppos = CurrentTab->currentBuffer()->layout.pos;
 
     if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(
-            CurrentTab->currentBuffer()->layout.currentLine) < 0)
+            CurrentTab->currentBuffer()->layout.currentLine()) < 0)
       goto end;
 
     while (1) {
-      auto l = CurrentTab->currentBuffer()->layout.currentLine;
+      auto l = CurrentTab->currentBuffer()->layout.currentLine();
       auto lb = l->lineBuf();
       while (CurrentTab->currentBuffer()->layout.pos > 0) {
         int tmp = CurrentTab->currentBuffer()->layout.pos;
@@ -470,19 +470,20 @@ std::shared_ptr<CoroutineState<void>> movLW() {
       }
       if (CurrentTab->currentBuffer()->layout.pos > 0)
         break;
-      auto prev = CurrentTab->currentBuffer()->layout.currentLine;
+      auto prev = CurrentTab->currentBuffer()->layout.currentLine();
       --prev;
       if (CurrentTab->currentBuffer()->layout.prev_nonnull_line(prev) < 0) {
-        CurrentTab->currentBuffer()->layout.currentLine = pline;
+        CurrentTab->currentBuffer()->layout._currentLine =
+            CurrentTab->currentBuffer()->layout.linenumber(pline);
         CurrentTab->currentBuffer()->layout.pos = ppos;
         goto end;
       }
       CurrentTab->currentBuffer()->layout.pos =
-          CurrentTab->currentBuffer()->layout.currentLine->len();
+          CurrentTab->currentBuffer()->layout.currentLine()->len();
     }
 
     {
-      auto l = CurrentTab->currentBuffer()->layout.currentLine;
+      auto l = CurrentTab->currentBuffer()->layout.currentLine();
       auto lb = l->lineBuf();
       while (CurrentTab->currentBuffer()->layout.pos > 0) {
         int tmp = CurrentTab->currentBuffer()->layout.pos;
@@ -509,14 +510,14 @@ std::shared_ptr<CoroutineState<void>> movRW() {
     co_return;
 
   for (i = 0; i < n; i++) {
-    pline = CurrentTab->currentBuffer()->layout.currentLine;
+    pline = CurrentTab->currentBuffer()->layout.currentLine();
     ppos = CurrentTab->currentBuffer()->layout.pos;
 
     if (CurrentTab->currentBuffer()->layout.next_nonnull_line(
-            CurrentTab->currentBuffer()->layout.currentLine) < 0)
+            CurrentTab->currentBuffer()->layout.currentLine()) < 0)
       goto end;
 
-    auto l = CurrentTab->currentBuffer()->layout.currentLine;
+    auto l = CurrentTab->currentBuffer()->layout.currentLine();
     auto lb = l->lineBuf();
     while (CurrentTab->currentBuffer()->layout.pos < l->len() &&
            is_wordchar(lb[CurrentTab->currentBuffer()->layout.pos])) {
@@ -530,15 +531,16 @@ std::shared_ptr<CoroutineState<void>> movRW() {
       }
       if (CurrentTab->currentBuffer()->layout.pos < l->len())
         break;
-      auto next = CurrentTab->currentBuffer()->layout.currentLine;
+      auto next = CurrentTab->currentBuffer()->layout.currentLine();
       ++next;
       if (CurrentTab->currentBuffer()->layout.next_nonnull_line(next) < 0) {
-        CurrentTab->currentBuffer()->layout.currentLine = pline;
+        CurrentTab->currentBuffer()->layout._currentLine =
+            CurrentTab->currentBuffer()->layout.linenumber(pline);
         CurrentTab->currentBuffer()->layout.pos = ppos;
         goto end;
       }
       CurrentTab->currentBuffer()->layout.pos = 0;
-      l = CurrentTab->currentBuffer()->layout.currentLine;
+      l = CurrentTab->currentBuffer()->layout.currentLine();
       lb = l->lineBuf();
     }
   }
@@ -655,7 +657,7 @@ std::shared_ptr<CoroutineState<void>> linend() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   CurrentTab->currentBuffer()->layout.pos =
-      CurrentTab->currentBuffer()->layout.currentLine->len() - 1;
+      CurrentTab->currentBuffer()->layout.currentLine()->len() - 1;
   CurrentTab->currentBuffer()->layout.arrangeCursor();
 }
 
@@ -687,8 +689,7 @@ std::shared_ptr<CoroutineState<void>> editBf() {
   } else {
     cmd = App::instance().myEditor(
         shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout.linenumber(
-            CurrentTab->currentBuffer()->layout.currentLine));
+        CurrentTab->currentBuffer()->layout._currentLine);
   }
   exec_cmd(cmd);
 
@@ -710,8 +711,7 @@ std::shared_ptr<CoroutineState<void>> editScr() {
   fclose(f);
   exec_cmd(App::instance().myEditor(
       shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout.linenumber(
-          CurrentTab->currentBuffer()->layout.currentLine)));
+      CurrentTab->currentBuffer()->layout._currentLine));
   unlink(tmpf.c_str());
 }
 
@@ -1407,7 +1407,7 @@ std::shared_ptr<CoroutineState<void>> chkWORD() {
   if (p.empty())
     co_return;
   CurrentTab->currentBuffer()->layout.data.reAnchorWord(
-      CurrentTab->currentBuffer()->layout.currentLine, spos, epos);
+      CurrentTab->currentBuffer()->layout.currentLine(), spos, epos);
 }
 
 /* render frames */
@@ -1445,7 +1445,7 @@ std::shared_ptr<CoroutineState<void>> linkbrz() {
 //"Display current position in document"
 std::shared_ptr<CoroutineState<void>> curlno() {
   auto layout = &CurrentTab->currentBuffer()->layout;
-  Line *l = layout->currentLine;
+  Line *l = layout->currentLine();
   Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
@@ -1747,9 +1747,9 @@ std::shared_ptr<CoroutineState<void>> cursorTop() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout.currentLine =
+  CurrentTab->currentBuffer()->layout._currentLine =
       CurrentTab->currentBuffer()->layout.lineSkip(
-          CurrentTab->currentBuffer()->layout.topLine, 0);
+          CurrentTab->currentBuffer()->layout.topLine(), 0);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1760,9 +1760,9 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   offsety = (CurrentTab->currentBuffer()->layout.LINES - 1) / 2;
-  CurrentTab->currentBuffer()->layout.currentLine =
+  CurrentTab->currentBuffer()->layout._currentLine =
       CurrentTab->currentBuffer()->layout.currentLineSkip(
-          CurrentTab->currentBuffer()->layout.topLine, offsety);
+          CurrentTab->currentBuffer()->layout.topLine(), offsety);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 
@@ -1773,9 +1773,9 @@ std::shared_ptr<CoroutineState<void>> cursorBottom() {
   if (CurrentTab->currentBuffer()->layout.empty())
     co_return;
   offsety = CurrentTab->currentBuffer()->layout.LINES - 1;
-  CurrentTab->currentBuffer()->layout.currentLine =
+  CurrentTab->currentBuffer()->layout._currentLine =
       CurrentTab->currentBuffer()->layout.currentLineSkip(
-          CurrentTab->currentBuffer()->layout.topLine, offsety);
+          CurrentTab->currentBuffer()->layout.topLine(), offsety);
   CurrentTab->currentBuffer()->layout.arrangeLine();
 }
 

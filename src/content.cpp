@@ -162,26 +162,24 @@ void Content::addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode) {
 
 std::string Content::str(const RowCol &root, LineLayout *layout) {
   // draw lines
-  if (cline != layout->topLine || ccolumn != layout->currentColumn) {
-    int i = 0;
-    for (auto l = layout->topLine; i < layout->LINES && l; i++, ++l) {
-      auto pixel = this->redrawLine(
-          {
-              .row = i + root.row,
-              .col = root.col,
-          },
-          l, layout->COLS, layout->currentColumn);
-      this->clrtoeolx(pixel);
-    }
-    // clear remain
-    this->clrtobotx({
-        .row = i + root.row,
-        .col = 0,
-    });
-    cline = layout->topLine;
-    ccolumn = layout->currentColumn;
+  int i = 0;
+  for (auto l = layout->_topLine;
+       i < layout->LINES && l < (int)layout->data.lines.size(); i++, ++l) {
+    auto pixel = this->redrawLine(
+        {
+            .row = i + root.row,
+            .col = root.col,
+        },
+        l, layout->COLS, layout->currentColumn);
+    this->clrtoeolx(pixel);
   }
-  assert(layout->topLine);
+  // clear remain
+  this->clrtobotx({
+      .row = i + root.row,
+      .col = 0,
+  });
+  cline = layout->_topLine;
+  ccolumn = layout->currentColumn;
 
   // highlight active anchor
   // if (!layout->empty() && layout->data._hmarklist) {
@@ -201,9 +199,9 @@ void Content::Render(ftxui::Screen &screen) {
   //
   _screen = std::make_shared<ftxui::Screen>(box_.x_max - box_.x_min + 1,
                                             box_.y_max - box_.y_min + 1);
-  auto l = layout->data.firstLine();
+  auto l = layout->_topLine;
   int i = 0;
-  for (; i < (int)layout->data.lines.size(); ++i, ++l) {
+  for (; l < (int)layout->data.lines.size(); ++i, ++l) {
     auto pixel = this->redrawLine(
         {
             .row = i,
@@ -217,7 +215,7 @@ void Content::Render(ftxui::Screen &screen) {
       .row = i,
       .col = 0,
   });
-  cline = layout->topLine;
+  cline = layout->_topLine;
   ccolumn = layout->currentColumn;
 
   //
@@ -245,11 +243,12 @@ static ScreenFlags propToFlag(Lineprop prop) {
   return flag;
 }
 
-RowCol Content::redrawLine(RowCol pixel, Line *l, int cols, int scrollLeft) {
-  if (l->len() == 0 || l->width() - 1 < pixel.col) {
+RowCol Content::redrawLine(RowCol pixel, int _l, int cols, int scrollLeft) {
+  if(_l<0 || _l>=(int)layout->data.lines.size()){
     return pixel;
   }
 
+  auto l = &layout->data.lines[_l];
   int pos = l->columnPos(pixel.col);
   auto p = l->lineBuf() + pos;
   auto pr = l->propBuf() + pos;
