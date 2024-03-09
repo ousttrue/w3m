@@ -19,7 +19,11 @@ public:
   virtual ~input_stream();
   input_stream(const input_stream &) = delete;
   input_stream &operator=(const input_stream &) = delete;
+
+private:
   virtual int read(unsigned char *buf, int size) = 0;
+
+public:
   virtual void close() = 0;
   virtual StreamType IStype() const = 0;
   virtual int ISfileno() const = 0;

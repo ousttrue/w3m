@@ -77,127 +77,84 @@ bool HttpResponse::checkRedirection(const Url &pu) {
 int HttpResponse::readHeader(const std::shared_ptr<input_stream> &stream,
                              const Url &url) {
 
-  this->document_header.clear();
+  assert(this->document_header.empty());
   if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS)
     http_response_code = -1;
   else
     http_response_code = 0;
 
-  FILE *src = NULL;
-  Str *lineBuf2 = NULL;
   while (true) {
     auto _tmp = stream->StrmyISgets();
     if (_tmp.empty()) {
       break;
     }
-    auto tmp = Strnew(_tmp);
-    if (w3m_reqlog) {
-      FILE *ff;
-      ff = fopen(w3m_reqlog, "a");
-      if (ff) {
-        Strfputs(tmp, ff);
-        fclose(ff);
-      }
-    }
-    if (src)
-      Strfputs(tmp, src);
-    cleanup_line(tmp, HEADER_MODE);
-    if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
-      if (!lineBuf2)
-        /* there is no header */
-        break;
-      /* last header */
-    } else {
-      if (lineBuf2) {
-        Strcat(lineBuf2, tmp);
-      } else {
-        lineBuf2 = tmp;
-      }
 
-      auto c = stream->ISgetc();
-
-      stream->ISundogetc();
-      if (c == ' ' || c == '\t')
-        /* header line is continued */
-        continue;
-      lineBuf2 = decodeMIME0(lineBuf2);
-      cleanup_line(lineBuf2, RAW_MODE);
-      /* separated with line and stored */
-      tmp = Strnew_size(lineBuf2->length);
-      char *p, *q;
-      for (p = lineBuf2->ptr; *p; p = q) {
-        for (q = p; *q && *q != '\r' && *q != '\n'; q++)
-          ;
-        Lineprop *propBuffer;
-        lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
-        Strcat(tmp, lineBuf2);
-        for (; *q && (*q == '\r' || *q == '\n'); q++)
-          ;
-      }
-      lineBuf2 = tmp;
+    auto tmp = cleanup_line(_tmp, HEADER_MODE);
+    if (tmp[0] == '\n' || tmp[0] == '\r' || tmp[0] == '\0') {
+      // there is no header
+      break;
     }
 
-    if ((url.schema == SCM_HTTP || url.schema == SCM_HTTPS) &&
-        http_response_code == -1) {
-      auto p = lineBuf2->ptr;
-      while (*p && !IS_SPACE(*p))
-        p++;
-      while (*p && IS_SPACE(*p))
-        p++;
-      http_response_code = atoi(p);
-      App::instance().message(lineBuf2->ptr, {0, 0});
-    }
-    if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-      auto p = lineBuf2->ptr + 26;
-      while (IS_SPACE(*p))
-        p++;
-
-      // if (!strncasecmp(p, "base64", 6))
-      //   uf->encoding = ENC_BASE64;
-      // else if (!strncasecmp(p, "quoted-printable", 16))
-      //   uf->encoding = ENC_QUOTE;
-      // else if (!strncasecmp(p, "uuencode", 8) ||
-      //          !strncasecmp(p, "x-uuencode", 10))
-      //   uf->encoding = ENC_UUENCODE;
-      // else
-      //   uf->encoding = ENC_7BIT;
-    } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-      // process_compression(lineBuf2, uf);
-    } else if (use_cookie && accept_cookie &&
-               check_cookie_accept_domain(url.host.c_str()) &&
-               (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||
-                !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
-
-      process_http_cookie(&url, lineBuf2);
-
-    } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
-               url.schema == SCM_LOCAL_CGI) {
-
-      auto p = lineBuf2->ptr + 12;
-      SKIP_BLANKS(p);
-      Str *funcname = Strnew();
-      while (*p && !IS_SPACE(*p))
-        Strcat_char(funcname, *(p++));
-      SKIP_BLANKS(p);
-
-      std::string f = funcname->ptr;
-      if (f.size()) {
-        tmp = Strnew_charp(p);
-        Strchop(tmp);
-        // TODO:
-        App::instance().task(0, f, tmp->ptr);
-      }
-    }
-    auto view = remove_space(lineBuf2->ptr);
-    document_header.push_back({view.begin(), view.end()});
-    Strfree(lineBuf2);
-    lineBuf2 = NULL;
-  }
-  if (src) {
-    fclose(src);
+    pushHeader(url, Strnew(tmp));
   }
 
   return http_response_code;
+}
+
+void HttpResponse::pushHeader(const Url &url, Str *lineBuf2) {
+  if ((url.schema == SCM_HTTP || url.schema == SCM_HTTPS) &&
+      http_response_code == -1) {
+    auto p = lineBuf2->ptr;
+    while (*p && !IS_SPACE(*p))
+      p++;
+    while (*p && IS_SPACE(*p))
+      p++;
+    http_response_code = atoi(p);
+    App::instance().message(lineBuf2->ptr, {0, 0});
+  }
+  if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
+    auto p = lineBuf2->ptr + 26;
+    while (IS_SPACE(*p))
+      p++;
+
+    // if (!strncasecmp(p, "base64", 6))
+    //   uf->encoding = ENC_BASE64;
+    // else if (!strncasecmp(p, "quoted-printable", 16))
+    //   uf->encoding = ENC_QUOTE;
+    // else if (!strncasecmp(p, "uuencode", 8) ||
+    //          !strncasecmp(p, "x-uuencode", 10))
+    //   uf->encoding = ENC_UUENCODE;
+    // else
+    //   uf->encoding = ENC_7BIT;
+  } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
+    // process_compression(lineBuf2, uf);
+  } else if (use_cookie && accept_cookie &&
+             check_cookie_accept_domain(url.host.c_str()) &&
+             (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||
+              !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
+
+    process_http_cookie(&url, lineBuf2);
+
+  } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
+             url.schema == SCM_LOCAL_CGI) {
+
+    auto p = lineBuf2->ptr + 12;
+    SKIP_BLANKS(p);
+    Str *funcname = Strnew();
+    while (*p && !IS_SPACE(*p))
+      Strcat_char(funcname, *(p++));
+    SKIP_BLANKS(p);
+
+    std::string f = funcname->ptr;
+    if (f.size()) {
+      auto tmp = Strnew_charp(p);
+      Strchop(tmp);
+      // TODO:
+      App::instance().task(0, f, tmp->ptr);
+    }
+  }
+  auto view = remove_space(lineBuf2->ptr);
+  document_header.push_back({view.begin(), view.end()});
 }
 
 const char *HttpResponse::getHeader(const char *field) const {
@@ -362,8 +319,8 @@ void HttpResponse::page_loaded(Url url,
     // }
 
     while (true) {
-      unsigned char buf[4096];
-      auto readSize = stream->read(buf, sizeof(buf));
+      char buf[4096];
+      auto readSize = stream->ISread_n(buf, sizeof(buf));
       if (readSize == 0) {
         break;
       }

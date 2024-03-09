@@ -46,6 +46,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   ~HttpResponse();
   bool checkRedirection(const Url &pu);
   int readHeader(const std::shared_ptr<class input_stream> &s, const Url &pu);
+  void pushHeader(const Url &url, struct Str *lineBuf2);
   const char *getHeader(const char *field) const;
   const char *checkContentType() const;
   const char *guess_save_name(const char *file) const;
