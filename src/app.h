@@ -39,7 +39,7 @@ struct TabBuffer;
 struct Buffer;
 class App {
   RowCol _size = {};
-  Viewport _viewport = {};
+  RowCol _root = {};
 
   std::shared_ptr<Content> _content;
   std::string _status;

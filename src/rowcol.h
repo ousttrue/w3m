@@ -11,8 +11,3 @@ struct RowCol {
     };
   }
 };
-
-struct Viewport {
-  RowCol root = {};
-  RowCol size = {};
-};

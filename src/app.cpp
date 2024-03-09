@@ -1198,10 +1198,10 @@ void App::display() {
   if (ny > this->LASTLINE()) {
     ny = this->LASTLINE();
   }
-  _viewport.root.col = 0;
-  layout->COLS = this->COLS() - _viewport.root.col;
-  if (_viewport.root.row != ny || layout->LINES != this->LASTLINE() - ny) {
-    _viewport.root.row = ny;
+  _root.col = 0;
+  layout->COLS = this->COLS() - _root.col;
+  if (_root.row != ny || layout->LINES != this->LASTLINE() - ny) {
+    _root.row = ny;
     layout->LINES = this->LASTLINE() - ny;
     layout->arrangeCursor();
   }
@@ -1249,7 +1249,7 @@ void App::display() {
 
   ftxui::Render(screen, dom());
 
-  auto cursor = _viewport.root + layout->cursor;
+  auto cursor = _root + layout->cursor;
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1619,7 +1619,7 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
   }
 
   if (CurrentTab != NULL && CurrentTab->currentBuffer() != NULL)
-    message(s, CurrentTab->currentBuffer()->layout.cursor + _viewport.root);
+    message(s, CurrentTab->currentBuffer()->layout.cursor + _root);
   else
     message(s, {LASTLINE(), 0});
   // _screen->print();
