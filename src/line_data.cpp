@@ -100,7 +100,7 @@ void LineData::addMultirowsForm() {
               // .y = a_form.y,
           });
       a->end.pos = pos + ecol - col;
-      if (pos < 1 || a->end.pos >= l->size())
+      if (pos < 1 || a->end.pos >= l->len())
         continue;
       l->lineBuf[pos - 1] = '[';
       l->lineBuf[a->end.pos] = ']';
@@ -211,7 +211,7 @@ const char *LineData::reAnchorAny(
        ++l) {
     p = l->lineBuf.data();
     for (;;) {
-      if (regexMatch(p, &l->lineBuf[l->size()] - p, p == l->lineBuf.data()) ==
+      if (regexMatch(p, &l->lineBuf[l->len()] - p, p == l->lineBuf.data()) ==
           1) {
         matchedPosition(&p1, &p2);
         p = this->reAnchorPos(l, p1, p2, anchorproc);

@@ -22,8 +22,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
 
   auto pos = layout->pos;
   auto begin = l;
-  if (pos < l->size() &&
-      regexMatch(&l->lineBuf[pos], l->size() - pos, 0) == 1) {
+  if (pos < l->len() && regexMatch(&l->lineBuf[pos], l->len() - pos, 0) == 1) {
     const char *first, *last;
     matchedPosition(&first, &last);
     pos = first - l->lineBuf.data();
@@ -47,7 +46,7 @@ int forwardSearch(LineLayout *layout, const char *str) {
         break;
       }
     }
-    if (regexMatch(l->lineBuf.data(), l->size(), 1) == 1) {
+    if (regexMatch(l->lineBuf.data(), l->len(), 1) == 1) {
       const char *first, *last;
       matchedPosition(&first, &last);
       pos = first - l->lineBuf.data();
@@ -83,7 +82,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
     const char *found = NULL;
     const char *found_last = NULL;
     auto q = l->lineBuf.data();
-    while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) ==
+    while (regexMatch(q, &l->lineBuf[l->len()] - q, q == l->lineBuf.data()) ==
            1) {
       const char *first, *last;
       matchedPosition(&first, &last);
@@ -91,7 +90,7 @@ int backwardSearch(LineLayout *layout, const char *str) {
         found = first;
         found_last = last;
       }
-      if (q - l->lineBuf.data() >= l->size())
+      if (q - l->lineBuf.data() >= l->len())
         break;
       q++;
       if (q > p)
@@ -123,13 +122,13 @@ int backwardSearch(LineLayout *layout, const char *str) {
     const char *found = NULL;
     const char *found_last = NULL;
     auto q = l->lineBuf.data();
-    while (regexMatch(q, &l->lineBuf[l->size()] - q, q == l->lineBuf.data()) ==
+    while (regexMatch(q, &l->lineBuf[l->len()] - q, q == l->lineBuf.data()) ==
            1) {
       const char *first, *last;
       matchedPosition(&first, &last);
       found = first;
       found_last = last;
-      if (q - l->lineBuf.data() >= l->size())
+      if (q - l->lineBuf.data() >= l->len())
         break;
       q++;
     }
@@ -154,7 +153,7 @@ static void clear_mark(Line *l) {
   int pos;
   if (!l)
     return;
-  for (pos = 0; pos < l->size(); pos++)
+  for (pos = 0; pos < l->len(); pos++)
     l->propBuf[pos] &= ~PE_MARK;
 }
 

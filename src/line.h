@@ -21,8 +21,6 @@ public:
     return this->_width;
   }
 
-  int size() const { return lineBuf.size() - 1; }
-
   void assign(const char *buf, const Lineprop *prop, int byteLen) {
     lineBuf.reserve(byteLen + 1);
     propBuf.reserve(byteLen + 1);
@@ -48,7 +46,7 @@ public:
   int columnLen(int col) const;
 
   void set_mark(int pos, int epos) {
-    for (; pos < epos && pos < this->size(); pos++) {
+    for (; pos < epos && pos < this->len(); pos++) {
       this->propBuf[pos] |= PE_MARK;
     }
   }
