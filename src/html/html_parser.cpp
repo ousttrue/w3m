@@ -929,10 +929,6 @@ static Str *textfieldrep(Str *s, int width) {
 
 void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
   n_textarea = -1;
-  if (outc.size() == 0) {
-    outc.resize(LINELEN);
-    outp.resize(LINELEN);
-  }
 
   for (int nlines = 0; auto str = tl->textlist_feed(); ++nlines) {
     if (n_textarea >= 0 && *str != '<') {
@@ -956,25 +952,25 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
 
 void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
                             const char *str) {
-  auto pos = 0;
+
+  Line line;
+
   auto endp = str + strlen(str);
   while (str < endp) {
-    PSIZE(pos);
     auto mode = get_mctype(str);
     if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-      PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol, &pos);
+      line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
       str += symbol_width;
     } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-      PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
+      line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
       str++;
     } else if (*str != '<' && *str != '&') {
       int len = get_mclen(str);
-      PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
+      line.PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
       if (--len) {
         mode = (mode & ~PC_WCHAR1) | PC_WCHAR2;
         while (len--) {
-          PSIZE(pos);
-          PPUSH(mode | effect | ex_efct(ex_effect), *(str++), &pos);
+          line.PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
         }
       }
     } else if (*str == '&') {
@@ -983,13 +979,12 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
        */
       auto p = getescapecmd(&str);
       while (*p) {
-        PSIZE(pos);
         mode = get_mctype(p);
         if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-          PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ', &pos);
+          line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
           p++;
         } else {
-          PPUSH(mode | effect | ex_efct(ex_effect), *(p++), &pos);
+          line.PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
         }
       }
     } else {
@@ -1038,7 +1033,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         char *id = nullptr;
         if (tag->parsedtag_get_value(ATTR_NAME, &id)) {
           id = url_quote_conv(id, name_charset);
-          data->registerName(id, nlines, pos);
+          data->registerName(id, nlines, line.len());
         }
         if (tag->parsedtag_get_value(ATTR_HREF, &p))
           p = Strnew(url_quote(remove_space(p)))->ptr;
@@ -1050,10 +1045,10 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
         tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
         if (hseq > 0) {
-          data->_hmarklist->putHmarker(nlines, pos, hseq - 1);
+          data->_hmarklist->putHmarker(nlines, line.len(), hseq - 1);
         } else if (hseq < 0) {
           int h = -hseq - 1;
-          if (data->_hmarklist->tryMark(h, nlines, pos)) {
+          if (data->_hmarklist->tryMark(h, nlines, line.len())) {
             hseq = -hseq;
           }
         }
@@ -1062,7 +1057,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
           a_href = data->_href->putAnchor(
               BufferPoint{
                   .line = nlines,
-                  .pos = pos,
+                  .pos = line.len(),
               },
               Anchor{
                   .url = p,
@@ -1081,7 +1076,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         effect &= ~PE_ANCHOR;
         if (a_href) {
           a_href->end.line = nlines;
-          a_href->end.pos = pos;
+          a_href->end.pos = line.len();
           if (a_href->start.line == a_href->end.line &&
               a_href->start.pos == a_href->end.pos) {
             if (a_href->hseq >= 0 &&
@@ -1104,7 +1099,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
           const char *s = nullptr;
           tag->parsedtag_get_value(ATTR_TITLE, &s);
           p = url_quote_conv(remove_space(p), buf->document_charset);
-          a_img = data->registerImg(p, s, nlines, pos);
+          a_img = data->registerImg(p, s, nlines, line.len());
         }
         effect |= PE_IMAGE;
         break;
@@ -1114,7 +1109,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         effect &= ~PE_IMAGE;
         if (a_img) {
           a_img->end.line = nlines;
-          a_img->end.pos = pos;
+          a_img->end.pos = line.len();
         }
         a_img = nullptr;
         break;
@@ -1135,13 +1130,13 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         }
         form = forms[form_id];
         if (hseq > 0) {
-          int hpos = pos;
+          int hpos = line.len();
           if (*str == '[')
             hpos++;
           data->_hmarklist->putHmarker(nlines, hpos, hseq - 1);
         } else if (hseq < 0) {
           int h = -hseq - 1;
-          int hpos = pos;
+          int hpos = line.len();
           if (*str == '[')
             hpos++;
           if (data->_hmarklist->tryMark(h, nlines, hpos)) {
@@ -1155,7 +1150,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         if (a_textarea.size() &&
             tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
         }
-        a_form = data->registerForm(this, form, tag, nlines, pos);
+        a_form = data->registerForm(this, form, tag, nlines, line.len());
         if (textareanumber >= 0) {
           while (textareanumber >= (int)a_textarea.size()) {
             textarea_str.push_back({});
@@ -1176,7 +1171,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         effect &= ~PE_FORM;
         if (a_form) {
           a_form->end.line = nlines;
-          a_form->end.pos = pos;
+          a_form->end.pos = line.len();
           if (a_form->start.line == a_form->end.line &&
               a_form->start.pos == a_form->end.pos)
             a_form->hseq = -1;
@@ -1309,13 +1304,14 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
   }
   /* end of processing for one line */
   if (!internal) {
-    data->addnewline(outc.data(), outp.data(), pos);
+    line.PPUSH(0, 0);
+    data->lines.push_back(line);
   }
   if (internal == HTML_N_INTERNAL) {
     internal = {};
   }
   // if (str != endp) {
-  //   line = Strsubstr(line, str - line->ptr, endp - str);
+  //   line = Strsubstr(line, str - line.ptr, endp - str);
   // }
 }
 

@@ -193,9 +193,9 @@ table *table::newTable() {
   t->cell.icell = -1;
   t->ntable = 0;
   t->tables_size = 0;
-  t->tables = NULL;
-  t->matrix = NULL;
-  t->vector = NULL;
+  t->tables = {};
+  t->matrix = {};
+  t->vector = {};
   t->linfo.prevchar = Strnew_size(8);
   set_prevchar(t->linfo.prevchar, "", 0);
   t->trattr = {};

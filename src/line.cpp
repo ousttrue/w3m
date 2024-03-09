@@ -2,8 +2,7 @@
 #include "utf8.h"
 #include "html/lineprop.h"
 
-Line::Line(const char *buf, Lineprop *prop, int byteLen)
-    : lineBuf(byteLen + 1), propBuf(byteLen + 1) {
+Line::Line(const char *buf, Lineprop *prop, int byteLen) {
   assign(buf, prop, byteLen);
 }
 

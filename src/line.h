@@ -14,6 +14,11 @@ private:
   mutable int _width = -1;
 
 public:
+  void PPUSH(char p, Lineprop c) {
+    propBuf.push_back(p);
+    lineBuf.push_back(c);
+  }
+
   int width(bool force = false) const {
     if (force || _width == -1) {
       this->_width = this->bytePosToColumn(this->lineBuf.size());

@@ -155,23 +155,6 @@ public:
 private:
   int pushHtmlTag(HtmlTag *tag, struct html_feed_environ *h_env);
 
-  std::vector<char> outc;
-  std::vector<Lineprop> outp;
-
-  void PPUSH(char p, Lineprop c, int *pos) {
-    outp[*pos] = (p);
-    outc[*pos] = (c);
-    (*pos)++;
-  }
-
-  void PSIZE(int pos) {
-    if ((int)outc.size() <= pos + 1) {
-      auto out_size = pos * 3 / 2;
-      outc.resize(out_size);
-      outp.resize(out_size);
-    }
-  }
-
   Lineprop effect = 0;
   Lineprop ex_effect = 0;
   char symbol = '\0';
