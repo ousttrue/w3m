@@ -23,9 +23,9 @@ void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
   lines.push_back({line, prop, byteLen});
 }
 
-FormAnchor *LineData::registerForm(HtmlParser *parser, FormList *flist,
+FormAnchor *LineData::registerForm(html_feed_environ *h_env, FormList *flist,
                                    HtmlTag *tag, int line, int pos) {
-  auto fi = flist->formList_addInput(parser, tag);
+  auto fi = flist->formList_addInput(h_env, tag);
   if (!fi) {
     return NULL;
   }

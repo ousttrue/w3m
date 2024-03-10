@@ -169,11 +169,11 @@ private:
   Anchor *a_img = nullptr;
   FormAnchor *a_form = nullptr;
   HtmlCommand internal = {};
-  void renderLine(HttpResponse *res, LineData *data, int nlines,
-                  const char *str);
+  void renderLine(HttpResponse *res, html_feed_environ *h_env, LineData *data,
+                  int nlines, const char *str);
 
 public:
-  void render(HttpResponse *res, LineData *layout, LineFeed *tl);
+  void render(HttpResponse *res, html_feed_environ *h_env, LineData *layout);
 };
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri);

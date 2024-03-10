@@ -30,7 +30,8 @@ struct FormList {
   char *boundary;
   unsigned long length;
 
-  FormItemList *formList_addInput(class HtmlParser *parser, HtmlTag *tag);
+  FormItemList *formList_addInput(struct html_feed_environ *h_env,
+                                  HtmlTag *tag);
 };
 
 struct FormAnchor : public Anchor {

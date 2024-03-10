@@ -973,16 +973,18 @@ static Str *textfieldrep(Str *s, int width) {
   return n;
 }
 
-void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
+void HtmlParser::render(HttpResponse *res, html_feed_environ *h_env,
+                        LineData *data) {
   n_textarea = -1;
 
-  for (int nlines = 0; auto str = tl->textlist_feed(); ++nlines) {
+  LineFeed feed(h_env->buf);
+  for (int nlines = 0; auto str = feed.textlist_feed(); ++nlines) {
     if (n_textarea >= 0 && *str != '<') {
       textarea_str[n_textarea] += str;
       continue;
     }
 
-    renderLine(res, data, nlines, str);
+    renderLine(res, h_env, data, nlines, str);
   }
 
   for (int form_id = 1; form_id < (int)forms.size(); form_id++) {
@@ -996,8 +998,8 @@ void HtmlParser::render(HttpResponse *res, LineData *data, LineFeed *tl) {
   }
 }
 
-void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
-                            const char *str) {
+void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
+                            LineData *data, int nlines, const char *str) {
 
   Line line;
 
@@ -1191,7 +1193,7 @@ void HtmlParser::renderLine(HttpResponse *res, LineData *data, int nlines,
         if (a_textarea.size() &&
             tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
         }
-        a_form = data->registerForm(this, form, tag, nlines, line.len());
+        a_form = data->registerForm(h_env, form, tag, nlines, line.len());
         if (textareanumber >= 0) {
           while (textareanumber >= (int)a_textarea.size()) {
             textarea_str.push_back({});

@@ -5,7 +5,6 @@
 #include "app.h"
 #include "quote.h"
 #include "html_feed_env.h"
-#include "html_parser.h"
 #include "symbol.h"
 #include "html_command.h"
 #include <sys/types.h>

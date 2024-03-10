@@ -49,7 +49,7 @@ struct LineData {
 
   Anchor *registerName(const char *url, int line, int pos);
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
-  FormAnchor *registerForm(class HtmlParser *parser, FormList *flist,
+  FormAnchor *registerForm(struct html_feed_environ *h_env, FormList *flist,
                            HtmlTag *tag, int line, int pos);
   void addMultirowsForm();
   void reseq_anchor();

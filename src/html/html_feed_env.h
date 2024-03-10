@@ -77,8 +77,7 @@ struct html_feed_environ {
   }
 
   void render(HttpResponse *res, LineData *layout) {
-    LineFeed feed(this->buf);
-    parser.render(res, layout, &feed);
+    parser.render(res, this, layout);
   }
 };
 

@@ -2,12 +2,12 @@
 #include "mimetypes.h"
 #include "form_item.h"
 #include "quote.h"
-#include "html_parser.h"
 #include "app.h"
 #include "etc.h"
 #include "readbuffer.h"
 #include "alloc.h"
 #include "html_tag.h"
+#include "html_feed_env.h"
 #include "http_response.h"
 #include <sys/stat.h>
 
@@ -50,7 +50,7 @@ struct FormList *newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *FormList ::formList_addInput(HtmlParser *parser,
+FormItemList *FormList ::formList_addInput(html_feed_environ *h_env,
                                            struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
@@ -84,8 +84,8 @@ FormItemList *FormList ::formList_addInput(HtmlParser *parser,
   item->readonly = tag->parsedtag_exists(ATTR_READONLY);
   int i;
   if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
-      i < (int)parser->textarea_str.size()) {
-    item->value = item->init_value = Strnew(parser->textarea_str[i]);
+      i < (int)h_env->parser.textarea_str.size()) {
+    item->value = item->init_value = Strnew(h_env->parser.textarea_str[i]);
   }
   if (tag->parsedtag_get_value(ATTR_ROWS, &p))
     item->rows = atoi(p);
@@ -118,8 +118,8 @@ static void form_write_data(FILE *f, char *boundary, char *name, char *value) {
   fprintf(f, "%s\r\n", value);
 }
 
-static void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
-                          char *file) {
+static void form_write_from_file(FILE *f, char *boundary, char *name,
+                                 char *filename, char *file) {
 #ifdef _MSC_VER
 #else
   FILE *fd;
