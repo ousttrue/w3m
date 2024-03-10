@@ -5,7 +5,7 @@
 #include "app.h"
 #include "w3m.h"
 #include "regex.h"
-#include "proto.h"
+#include "proc.h"
 #include "tabbuffer.h"
 
 int forwardSearch(LineLayout *layout, const char *str) {

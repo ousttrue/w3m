@@ -16,7 +16,7 @@
 #include "html.h"
 #include "textline.h"
 #include "html_tag.h"
-#include "proto.h"
+#include "proc.h"
 #include "utf8.h"
 #include <math.h>
 #include <string_view>

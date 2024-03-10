@@ -8,7 +8,7 @@
 #include "content.h"
 #include "utf8.h"
 #include "buffer.h"
-#include "proto.h"
+#include "proc.h"
 #include "html/form.h"
 #include "ctrlcode.h"
 #include "local_cgi.h"

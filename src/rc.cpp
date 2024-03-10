@@ -32,7 +32,7 @@
 #include "w3m.h"
 #include "http_request.h"
 #include "myctype.h"
-#include "proto.h"
+#include "proc.h"
 #include "keyvalue.h"
 #include "local_cgi.h"
 #include "regex.h"
@@ -1004,7 +1004,7 @@ void panel_set_option(keyvalue *arg) {
     fclose(f);
   }
   sync_with_option();
-  backBf();
+  backBf({});
 }
 
 const char *rcFile(const char *base) {

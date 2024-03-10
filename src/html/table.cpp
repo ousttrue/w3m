@@ -18,7 +18,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "entity.h"
-#include "proto.h"
+#include "proc.h"
 #include "textline.h"
 #include "generallist.h"
 #include "matrix.h"

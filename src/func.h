@@ -164,4 +164,9 @@ struct std::coroutine_traits<std::shared_ptr<CoroutineState<T>>, ArgTypes...> {
   using promise_type = CoroutinePromise<T>;
 };
 
-using Func = std::function<std::shared_ptr<CoroutineState<void>>()>;
+struct FuncContext {
+  std::shared_ptr<struct TabBuffer> curretTab;
+};
+
+using Func = std::function<std::shared_ptr<CoroutineState<void>>(
+    const FuncContext &ctx)>;

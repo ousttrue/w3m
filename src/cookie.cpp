@@ -25,7 +25,7 @@
 #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
-#include "proto.h"
+#include "proc.h"
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -763,7 +763,7 @@ void set_cookie_flag(struct keyvalue *arg) {
     }
     arg = arg->next;
   }
-  backBf();
+  backBf({});
 }
 
 bool check_cookie_accept_domain(const char *domain) {

@@ -150,6 +150,12 @@ public:
     return found->second.c_str();
   }
 
+  FuncContext context() {
+    return {
+        .curretTab = currentTab(),
+    };
+  }
+
   void pushDispatcher(const Dispatcher &dispatcher) {
     _dispatcher.push(dispatcher);
   }

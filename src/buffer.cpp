@@ -26,7 +26,7 @@
 #include "html/anchorlist.h"
 #include "ctrlcode.h"
 #include "line.h"
-#include "proto.h"
+#include "proc.h"
 #include "alloc.h"
 #include <sys/stat.h>
 #include <sstream>

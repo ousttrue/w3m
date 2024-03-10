@@ -7,7 +7,7 @@
 #include "myctype.h"
 #include "local_cgi.h"
 #include "hash.h"
-#include "proto.h"
+#include "proc.h"
 #include <string.h>
 #include <cstdlib>
 #include <stdio.h>

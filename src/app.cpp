@@ -1,7 +1,7 @@
 #include "app.h"
 #include "etc.h"
 #include "ctrlcode.h"
-#include "proto.h"
+#include "proc.h"
 #include "quote.h"
 #include "html/readbuffer.h"
 #include "html/form_item.h"
@@ -1099,7 +1099,7 @@ void App::doCmd(const std::string &cmd, const char *data) {
     _currentKey = -1;
     CurrentKeyData = nullptr;
     CurrentCmdData = *data ? data : nullptr;
-    found->second();
+    found->second(context());
     CurrentCmdData = nullptr;
   }
 }
@@ -1128,7 +1128,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       if (cmd.size()) {
         _lastKeyCmd << " => " << cmd;
         auto callback = w3mFuncList[cmd];
-        callback();
+        callback(context());
       } else {
         _lastKeyCmd << " => not found";
       }
@@ -1142,7 +1142,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
 
 void App::onFrame() {
   if (popAddDownloadList()) {
-    ldDL();
+    ldDL(context());
   }
 
   if (auto a = currentTab()->currentBuffer()->layout.data.submit) {

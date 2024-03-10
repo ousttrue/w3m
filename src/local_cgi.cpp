@@ -10,7 +10,7 @@
 #include "etc.h"
 #include "html/form.h"
 #include "alloc.h"
-#include "proto.h"
+#include "proc.h"
 #include "hash.h"
 #include <string.h>
 #include <stdio.h>

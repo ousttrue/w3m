@@ -4,7 +4,7 @@
 #include "quote.h"
 #include "http_request.h"
 #include "cookie.h"
-#include "proto.h"
+#include "proc.h"
 #include "myctype.h"
 
 #define DEFAULT_COLS 80

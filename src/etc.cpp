@@ -7,7 +7,7 @@
 #include "w3m.h"
 #include "myctype.h"
 #include "local_cgi.h"
-#include "proto.h"
+#include "proc.h"
 #include "Str.h"
 #include <fcntl.h>
 #include <sys/types.h>

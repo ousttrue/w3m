@@ -17,7 +17,7 @@
 #include "etc.h"
 #include "regex.h"
 #include "myctype.h"
-#include "proto.h"
+#include "proc.h"
 #include "Str.h"
 
 #ifndef NULL
