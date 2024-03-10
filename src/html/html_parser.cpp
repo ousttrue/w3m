@@ -1831,31 +1831,6 @@ Str *HtmlParser::process_hr(struct HtmlTag *tag, int width, int indent_width) {
   return tmp;
 }
 
-static void set_alignment(struct readbuffer *obuf, struct HtmlTag *tag) {
-  auto flag = (ReadBufferFlags)-1;
-  int align;
-
-  if (tag->parsedtag_get_value(ATTR_ALIGN, &align)) {
-    switch (align) {
-    case ALIGN_CENTER:
-      if (DisableCenter)
-        flag = RB_LEFT;
-      else
-        flag = RB_CENTER;
-      break;
-    case ALIGN_RIGHT:
-      flag = RB_RIGHT;
-      break;
-    case ALIGN_LEFT:
-      flag = RB_LEFT;
-    }
-  }
-  obuf->RB_SAVE_FLAG();
-  if (flag != -1) {
-    obuf->RB_SET_ALIGN(flag);
-  }
-}
-
 int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
                             struct html_feed_environ *h_env) {
 
@@ -1878,53 +1853,23 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
 
   switch (cmd) {
   case HTML_B:
-    if (h_env->obuf.fontstat.in_bold < FONTSTAT_MAX)
-      h_env->obuf.fontstat.in_bold++;
-    if (h_env->obuf.fontstat.in_bold > 1)
-      return 1;
-    return 0;
+    return h_env->HTML_B_enter();
+
   case HTML_N_B:
-    if (h_env->obuf.fontstat.in_bold == 1 &&
-        close_effect0(&h_env->obuf, HTML_B))
-      h_env->obuf.fontstat.in_bold = 0;
-    if (h_env->obuf.fontstat.in_bold > 0) {
-      h_env->obuf.fontstat.in_bold--;
-      if (h_env->obuf.fontstat.in_bold == 0)
-        return 0;
-    }
-    return 1;
+    return h_env->HTML_B_exit();
+
   case HTML_I:
-    if (h_env->obuf.fontstat.in_italic < FONTSTAT_MAX)
-      h_env->obuf.fontstat.in_italic++;
-    if (h_env->obuf.fontstat.in_italic > 1)
-      return 1;
-    return 0;
+    return h_env->HTML_I_enter();
+
   case HTML_N_I:
-    if (h_env->obuf.fontstat.in_italic == 1 &&
-        close_effect0(&h_env->obuf, HTML_I))
-      h_env->obuf.fontstat.in_italic = 0;
-    if (h_env->obuf.fontstat.in_italic > 0) {
-      h_env->obuf.fontstat.in_italic--;
-      if (h_env->obuf.fontstat.in_italic == 0)
-        return 0;
-    }
-    return 1;
+    return h_env->HTML_I_exit();
+
   case HTML_U:
-    if (h_env->obuf.fontstat.in_under < FONTSTAT_MAX)
-      h_env->obuf.fontstat.in_under++;
-    if (h_env->obuf.fontstat.in_under > 1)
-      return 1;
-    return 0;
+    return h_env->HTML_U_enter();
+
   case HTML_N_U:
-    if (h_env->obuf.fontstat.in_under == 1 &&
-        close_effect0(&h_env->obuf, HTML_U))
-      h_env->obuf.fontstat.in_under = 0;
-    if (h_env->obuf.fontstat.in_under > 0) {
-      h_env->obuf.fontstat.in_under--;
-      if (h_env->obuf.fontstat.in_under == 0)
-        return 0;
-    }
-    return 1;
+    return h_env->HTML_U_exit();
+
   case HTML_EM:
     HTMLlineproc1("<i>", h_env);
     return 1;
@@ -1943,22 +1888,13 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
   case HTML_N_Q:
     HTMLlineproc1("'", h_env);
     return 1;
+
   case HTML_FIGURE:
   case HTML_N_FIGURE:
   case HTML_P:
   case HTML_N_P:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 1, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-    }
-    h_env->obuf.flag |= RB_IGNORE_P;
-    if (cmd == HTML_P) {
-      set_alignment(&h_env->obuf, tag);
-      h_env->obuf.flag |= RB_P;
-    }
-    return 1;
+    return h_env->HTML_Paragraph(tag);
+
   case HTML_FIGCAPTION:
   case HTML_N_FIGCAPTION:
   case HTML_BR:
@@ -1967,14 +1903,7 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     return 1;
 
   case HTML_H:
-    if (!(h_env->obuf.flag & (RB_PREMODE | RB_IGNORE_P))) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-    }
-    HTMLlineproc1("<b>", h_env);
-    set_alignment(&h_env->obuf, tag);
-    return 1;
+    return h_env->HTML_H_enter(tag);
 
   case HTML_N_H:
     HTMLlineproc1("</b>", h_env);
@@ -2569,23 +2498,19 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     }
     h_env->obuf.RB_RESTORE_FLAG();
     return 1;
+
   case HTML_DIV:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P))
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    set_alignment(&h_env->obuf, tag);
-    return 1;
+    return h_env->HTML_DIV_enter(tag);
+
   case HTML_N_DIV:
     CLOSE_A(&h_env->obuf, h_env);
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
     h_env->obuf.RB_RESTORE_FLAG();
     return 1;
+
   case HTML_DIV_INT:
-    CLOSE_P(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P))
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    set_alignment(&h_env->obuf, tag);
-    return 1;
+    return h_env->HTML_DIV_INT_enter(tag);
+
   case HTML_N_DIV_INT:
     CLOSE_P(&h_env->obuf, h_env);
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
