@@ -108,5 +108,3 @@ public:
   Str *parsedtag2str() const;
   int ul_type(int default_type) const;
 };
-
-std::string html_unquote(std::string_view str);

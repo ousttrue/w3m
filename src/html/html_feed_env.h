@@ -2,6 +2,7 @@
 #include "html_parser.h"
 #include "html_command.h"
 #include "html_tag.h"
+#include "html_quote.h"
 #include "readbuffer.h"
 #include "textline.h"
 #include "generallist.h"

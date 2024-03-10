@@ -1,9 +1,6 @@
 #pragma once
 #include "http_option.h"
 #include "bufferpoint.h"
-#include <vector>
-
-extern bool MarkAllPages;
 
 struct Anchor {
   std::string url;

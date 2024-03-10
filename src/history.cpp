@@ -1,6 +1,7 @@
 #include "history.h"
 #include "app.h"
 #include "html/readbuffer.h"
+#include "html/html_quote.h"
 #include "url_quote.h"
 #include "rc.h"
 #include "Str.h"

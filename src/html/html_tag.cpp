@@ -1,4 +1,5 @@
 #include "html_tag.h"
+#include "html_quote.h"
 #include "readbuffer.h"
 #include "entity.h"
 #include "quote.h"
@@ -18,22 +19,6 @@ static int noConv(char *, char **);
 static int toNumber(char *, int *);
 static int toLength(char *, int *);
 static int toVAlign(char *, int *);
-
-std::string html_unquote(std::string_view str) {
-  std::stringstream tmp;
-
-  for (auto p = str.data(); p != str.data() + str.size();) {
-    if (*p == '&') {
-      auto q = getescapecmd(&p);
-      tmp << q;
-    } else {
-      tmp << *p;
-      p++;
-    }
-  }
-
-  return tmp.str();
-}
 
 /* *INDENT-OFF* */
 using toValFuncType = int (*)(char *, int *);

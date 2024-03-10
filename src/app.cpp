@@ -7,6 +7,7 @@
 #include "html/form_item.h"
 #include "html/anchorlist.h"
 #include "html/anchor.h"
+#include "html/html_quote.h"
 #include "content.h"
 #include "ssl_util.h"
 #include "html/form.h"

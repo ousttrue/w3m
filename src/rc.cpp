@@ -23,6 +23,7 @@
 #include "compression.h"
 #include "ssl_util.h"
 #include "html/readbuffer.h"
+#include "html/html_quote.h"
 #include "history.h"
 #include "url.h"
 #include "istream.h"

@@ -7,6 +7,8 @@
 #include <string>
 #include <assert.h>
 
+extern bool MarkAllPages;
+
 struct HmarkerList;
 struct HtmlTag;
 

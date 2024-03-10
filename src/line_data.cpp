@@ -11,6 +11,8 @@
 #include "app.h"
 #include "alloc.h"
 
+bool MarkAllPages = false;
+
 LineData::LineData() {
   this->_href = std::make_shared<AnchorList<Anchor>>();
   this->_name = std::make_shared<AnchorList<Anchor>>();
