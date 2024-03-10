@@ -24,6 +24,7 @@
 #include "utf8.h"
 
 int symbol_width = 0;
+double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 
 #define RULE_WIDTH symbol_width
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))

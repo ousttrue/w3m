@@ -22,16 +22,9 @@
 #include "utf8.h"
 
 #define MAX_CMD_LEN 128
-#define MAX_CELLSPACING 1000
-#define MAX_CELLPADDING 1000
-#define MAX_VSPACE 1000
 #define HR_ATTR_WIDTH_MAX 65535
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
-#define MAX_UL_LEVEL 9
-#define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
-#define UL_SYMBOL_DISC UL_SYMBOL(9)
-#define UL_SYMBOL_CIRCLE UL_SYMBOL(10)
-#define UL_SYMBOL_SQUARE UL_SYMBOL(11)
+
 #define IMG_SYMBOL UL_SYMBOL(12)
 #define HR_SYMBOL 26
 #define TEXTAREA_ATTR_COL_MAX 4096
@@ -1069,7 +1062,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         const char *p = nullptr;
         const char *r = nullptr;
         const char *s = nullptr;
-        auto q = res->baseTarget;
+        // auto q = res->baseTarget;
         auto t = "";
         auto hseq = 0;
         char *id = nullptr;
@@ -1077,8 +1070,10 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
           auto _id = url_quote(id);
           data->registerName(_id.c_str(), nlines, line.len());
         }
-        if (tag->parsedtag_get_value(ATTR_HREF, &p))
+        if (tag->parsedtag_get_value(ATTR_HREF, &p)){
           p = Strnew(url_quote(remove_space(p)))->ptr;
+        }
+        const char *q = nullptr;
         if (tag->parsedtag_get_value(ATTR_TARGET, &q)) {
           q = Strnew(url_quote(q))->ptr;
         }
@@ -1104,7 +1099,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
               },
               Anchor{
                   .url = p,
-                  .target = q.size() ? q : "",
+                  .target = q ? q : "",
                   .option = {.referer = r ? r : ""},
                   .title = s ? s : "",
                   .accesskey = (unsigned char)*t,
@@ -1791,10 +1786,6 @@ Str *HtmlParser::process_button(struct HtmlTag *tag) {
   return tmp;
 }
 
-static int REAL_WIDTH(int w, int limit) {
-  return (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100);
-}
-
 Str *HtmlParser::process_hr(struct HtmlTag *tag, int width, int indent_width) {
   Str *tmp = Strnew_charp("<nobr>");
   int w = 0;
@@ -1854,22 +1845,16 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
   switch (cmd) {
   case HTML_B:
     return h_env->HTML_B_enter();
-
   case HTML_N_B:
     return h_env->HTML_B_exit();
-
   case HTML_I:
     return h_env->HTML_I_enter();
-
   case HTML_N_I:
     return h_env->HTML_I_exit();
-
   case HTML_U:
     return h_env->HTML_U_enter();
-
   case HTML_N_U:
     return h_env->HTML_U_exit();
-
   case HTML_EM:
     HTMLlineproc1("<i>", h_env);
     return 1;
@@ -1888,417 +1873,82 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
   case HTML_N_Q:
     HTMLlineproc1("'", h_env);
     return 1;
-
   case HTML_FIGURE:
   case HTML_N_FIGURE:
   case HTML_P:
   case HTML_N_P:
     return h_env->HTML_Paragraph(tag);
-
   case HTML_FIGCAPTION:
   case HTML_N_FIGCAPTION:
   case HTML_BR:
     flushline(h_env, envs[h_env->envc].indent, 1, h_env->limit);
     h_env->blank_lines = 0;
     return 1;
-
   case HTML_H:
     return h_env->HTML_H_enter(tag);
-
   case HTML_N_H:
-    HTMLlineproc1("</b>", h_env);
-    if (!(h_env->obuf.flag & RB_PREMODE)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    }
-    do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                 h_env->limit);
-    h_env->obuf.RB_RESTORE_FLAG();
-    this->close_anchor(h_env);
-    h_env->obuf.flag |= RB_IGNORE_P;
-    return 1;
+    return h_env->HTML_H_exit();
   case HTML_UL:
   case HTML_OL:
-  case HTML_BLQ: {
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      if (!(h_env->obuf.flag & RB_PREMODE) &&
-          (h_env->envc == 0 || cmd == HTML_BLQ))
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                     h_env->limit);
-    }
-    h_env->PUSH_ENV(cmd);
-    if (cmd == HTML_UL || cmd == HTML_OL) {
-      int count;
-      if (tag->parsedtag_get_value(ATTR_START, &count)) {
-        envs[h_env->envc].count = count - 1;
-      }
-    }
-    if (cmd == HTML_OL) {
-      envs[h_env->envc].type = '1';
-      const char *p;
-      if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-        envs[h_env->envc].type = (int)*p;
-      }
-    }
-    if (cmd == HTML_UL) {
-      envs[h_env->envc].type = tag->ul_type(0);
-    }
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    return 1;
-  }
-
+  case HTML_BLQ:
+    return h_env->HTML_List_enter(tag);
   case HTML_N_UL:
   case HTML_N_OL:
   case HTML_N_DL:
   case HTML_N_BLQ:
   case HTML_N_DD:
-    CLOSE_DT(&h_env->obuf, h_env);
-    CLOSE_A(&h_env->obuf, h_env);
-    if (h_env->envc > 0) {
-      flushline(h_env, envs[h_env->envc - 1].indent, 0, h_env->limit);
-      h_env->POP_ENV();
-      if (!(h_env->obuf.flag & RB_PREMODE) &&
-          (h_env->envc == 0 || cmd == HTML_N_BLQ)) {
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, INDENT_INCR,
-                     h_env->limit);
-        h_env->obuf.flag |= RB_IGNORE_P;
-      }
-    }
-    this->close_anchor(h_env);
-    return 1;
-
+    return h_env->HTML_List_exit(tag);
   case HTML_DL:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      if (!(h_env->obuf.flag & RB_PREMODE) &&
-          envs[h_env->envc].env != HTML_DL &&
-          envs[h_env->envc].env != HTML_DL_COMPACT &&
-          envs[h_env->envc].env != HTML_DD)
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                     h_env->limit);
-    }
-    h_env->PUSH_ENV_NOINDENT(cmd);
-    if (tag->parsedtag_exists(ATTR_COMPACT))
-      envs[h_env->envc].env = HTML_DL_COMPACT;
-    h_env->obuf.flag |= RB_IGNORE_P;
-    return 1;
-
+    return h_env->HTML_DL_enter(tag);
   case HTML_LI:
-    CLOSE_A(&h_env->obuf, h_env);
-    CLOSE_DT(&h_env->obuf, h_env);
-    if (h_env->envc > 0) {
-      Str *num;
-      flushline(h_env, envs[h_env->envc - 1].indent, 0, h_env->limit);
-      envs[h_env->envc].count++;
-      const char *p;
-      if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
-        int count = atoi(p);
-        if (count > 0)
-          envs[h_env->envc].count = count;
-        else
-          envs[h_env->envc].count = 0;
-      }
-      switch (envs[h_env->envc].env) {
-      case HTML_UL: {
-        envs[h_env->envc].type = tag->ul_type(envs[h_env->envc].type);
-        for (int i = 0; i < INDENT_INCR - 3; i++)
-          push_charp(&h_env->obuf, 1, NBSP, PC_ASCII);
-        auto tmp = Strnew();
-        switch (envs[h_env->envc].type) {
-        case 'd':
-          push_symbol(tmp, UL_SYMBOL_DISC, symbol_width, 1);
-          break;
-        case 'c':
-          push_symbol(tmp, UL_SYMBOL_CIRCLE, symbol_width, 1);
-          break;
-        case 's':
-          push_symbol(tmp, UL_SYMBOL_SQUARE, symbol_width, 1);
-          break;
-        default:
-          push_symbol(tmp, UL_SYMBOL((h_env->envc_real - 1) % MAX_UL_LEVEL),
-                      symbol_width, 1);
-          break;
-        }
-        if (symbol_width == 1)
-          push_charp(&h_env->obuf, 1, NBSP, PC_ASCII);
-        push_str(&h_env->obuf, symbol_width, tmp, PC_ASCII);
-        push_charp(&h_env->obuf, 1, NBSP, PC_ASCII);
-        set_space_to_prevchar(h_env->obuf.prevchar);
-        break;
-      }
-
-      case HTML_OL:
-        if (tag->parsedtag_get_value(ATTR_TYPE, &p))
-          envs[h_env->envc].type = (int)*p;
-        switch ((envs[h_env->envc].count > 0) ? envs[h_env->envc].type : '1') {
-        case 'i':
-          num = romanNumeral(envs[h_env->envc].count);
-          break;
-        case 'I':
-          num = romanNumeral(envs[h_env->envc].count);
-          Strupper(num);
-          break;
-        case 'a':
-          num = romanAlphabet(envs[h_env->envc].count);
-          break;
-        case 'A':
-          num = romanAlphabet(envs[h_env->envc].count);
-          Strupper(num);
-          break;
-        default:
-          num = Sprintf("%d", envs[h_env->envc].count);
-          break;
-        }
-        if (INDENT_INCR >= 4)
-          Strcat_charp(num, ". ");
-        else
-          Strcat_char(num, '.');
-        push_spaces(&h_env->obuf, 1, INDENT_INCR - num->length);
-        push_str(&h_env->obuf, num->length, num, PC_ASCII);
-        if (INDENT_INCR >= 4)
-          set_space_to_prevchar(h_env->obuf.prevchar);
-        break;
-      default:
-        push_spaces(&h_env->obuf, 1, INDENT_INCR);
-        break;
-      }
-    } else {
-      flushline(h_env, 0, 0, h_env->limit);
-    }
-    h_env->obuf.flag |= RB_IGNORE_P;
-    return 1;
+    return h_env->HTML_LI_enter(tag);
   case HTML_DT:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (h_env->envc == 0 || (h_env->envc_real < (int)h_env->envs.size() &&
-                             envs[h_env->envc].env != HTML_DL &&
-                             envs[h_env->envc].env != HTML_DL_COMPACT)) {
-      h_env->PUSH_ENV_NOINDENT(HTML_DL);
-    }
-    if (h_env->envc > 0) {
-      flushline(h_env, envs[h_env->envc - 1].indent, 0, h_env->limit);
-    }
-    if (!(h_env->obuf.flag & RB_IN_DT)) {
-      HTMLlineproc1("<b>", h_env);
-      h_env->obuf.flag |= RB_IN_DT;
-    }
-    h_env->obuf.flag |= RB_IGNORE_P;
-    return 1;
+    return h_env->HTML_DT_enter();
   case HTML_N_DT:
-    if (!(h_env->obuf.flag & RB_IN_DT)) {
-      return 1;
-    }
-    h_env->obuf.flag &= ~RB_IN_DT;
-    HTMLlineproc1("</b>", h_env);
-    if (h_env->envc > 0 && envs[h_env->envc].env == HTML_DL)
-      flushline(h_env, envs[h_env->envc - 1].indent, 0, h_env->limit);
-    return 1;
+    return h_env->HTML_DT_exit();
   case HTML_DD:
-    CLOSE_A(&h_env->obuf, h_env);
-    CLOSE_DT(&h_env->obuf, h_env);
-    if (envs[h_env->envc].env == HTML_DL ||
-        envs[h_env->envc].env == HTML_DL_COMPACT) {
-      h_env->PUSH_ENV(HTML_DD);
-    }
-
-    if (h_env->envc > 0 && envs[h_env->envc - 1].env == HTML_DL_COMPACT) {
-      if (h_env->obuf.pos > envs[h_env->envc].indent)
-        flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      else
-        push_spaces(&h_env->obuf, 1,
-                    envs[h_env->envc].indent - h_env->obuf.pos);
-    } else
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    /* h_env->obuf.flag |= RB_IGNORE_P; */
-    return 1;
+    return h_env->HTML_DD_enter();
   case HTML_TITLE:
-    this->close_anchor(h_env);
-    process_title(tag);
-    h_env->obuf.flag |= RB_TITLE;
-    h_env->obuf.end_tag = HTML_N_TITLE;
-    return 1;
-
-  case HTML_N_TITLE: {
-    if (!(h_env->obuf.flag & RB_TITLE))
-      return 1;
-    h_env->obuf.flag &= ~RB_TITLE;
-    h_env->obuf.end_tag = 0;
-    auto tmp = process_n_title(tag);
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
-  case HTML_TITLE_ALT: {
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-      h_env->title = html_unquote(p);
-    return 0;
-  }
-
+    return h_env->HTML_TITLE_enter(tag);
+  case HTML_N_TITLE:
+    return h_env->HTML_TITLE_exit(tag);
+  case HTML_TITLE_ALT:
+    return h_env->HTML_TITLE_ALT(tag);
   case HTML_FRAMESET:
-    h_env->PUSH_ENV(cmd);
-    push_charp(&h_env->obuf, 9, "--FRAME--", PC_ASCII);
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    return 0;
+    return h_env->HTML_FRAMESET_enter(tag);
   case HTML_N_FRAMESET:
-    if (h_env->envc > 0) {
-      h_env->POP_ENV();
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    }
-    return 0;
+    return h_env->HTML_FRAMESET_exit();
   case HTML_NOFRAMES:
-    CLOSE_A(&h_env->obuf, h_env);
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    h_env->obuf.flag |= (RB_NOFRAMES | RB_IGNORE_P);
-    /* istr = str; */
-    return 1;
+    return h_env->HTML_NOFRAMES_enter();
   case HTML_N_NOFRAMES:
-    CLOSE_A(&h_env->obuf, h_env);
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    h_env->obuf.flag &= ~RB_NOFRAMES;
-    return 1;
-
-  case HTML_FRAME: {
-    const char *q = nullptr;
-    const char *r = nullptr;
-    tag->parsedtag_get_value(ATTR_SRC, &q);
-    tag->parsedtag_get_value(ATTR_NAME, &r);
-    if (q) {
-      q = html_quote(q);
-      push_tag(&h_env->obuf,
-               Sprintf("<a hseq=\"%d\" href=\"%s\">", cur_hseq++, q)->ptr,
-               HTML_A);
-      if (r)
-        q = html_quote(r);
-      push_charp(&h_env->obuf, get_strwidth(q), q, PC_ASCII);
-      push_tag(&h_env->obuf, "</a>", HTML_N_A);
-    }
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    return 0;
-  }
-
-  case HTML_HR: {
-    this->close_anchor(h_env);
-    auto tmp = process_hr(tag, h_env->limit, envs[h_env->envc].indent);
-    HTMLlineproc1(tmp->ptr, h_env);
-    set_space_to_prevchar(h_env->obuf.prevchar);
-    return 1;
-  }
-
-  case HTML_PRE: {
-    int x = tag->parsedtag_exists(ATTR_FOR_TABLE);
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      if (!x)
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                     h_env->limit);
-    } else
-      fillline(&h_env->obuf, envs[h_env->envc].indent);
-    h_env->obuf.flag |= (RB_PRE | RB_IGNORE_P);
-    /* istr = str; */
-    return 1;
-  }
-
+    return h_env->HTML_NOFRAMES_exit();
+  case HTML_FRAME:
+    return h_env->HTML_FRAME(tag);
+  case HTML_HR:
+    return h_env->HTML_HR(tag);
+  case HTML_PRE:
+    return h_env->HTML_PRE_enter(tag);
   case HTML_N_PRE:
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-      h_env->obuf.flag |= RB_IGNORE_P;
-      h_env->blank_lines++;
-    }
-    h_env->obuf.flag &= ~RB_PRE;
-    this->close_anchor(h_env);
-    return 1;
-
-  case HTML_PRE_INT: {
-    int i = h_env->obuf.line->length;
-    append_tags(&h_env->obuf);
-    if (!(h_env->obuf.flag & RB_SPECIAL)) {
-      h_env->obuf.set_breakpoint(h_env->obuf.line->length - i);
-    }
-    h_env->obuf.flag |= RB_PRE_INT;
-    return 0;
-  }
-
+    return h_env->HTML_PRE_exit();
+  case HTML_PRE_INT:
+    return h_env->HTML_PRE_INT_enter();
   case HTML_N_PRE_INT:
-    push_tag(&h_env->obuf, "</pre_int>", HTML_N_PRE_INT);
-    h_env->obuf.flag &= ~RB_PRE_INT;
-    if (!(h_env->obuf.flag & RB_SPECIAL) &&
-        h_env->obuf.pos > h_env->obuf.bp.pos) {
-      set_prevchar(h_env->obuf.prevchar, "", 0);
-      h_env->obuf.prev_ctype = PC_CTRL;
-    }
-    return 1;
+    return h_env->HTML_PRE_INT_exit();
   case HTML_NOBR:
-    h_env->obuf.flag |= RB_NOBR;
-    h_env->obuf.nobr_level++;
-    return 0;
+    return h_env->HTML_NOBR_enter();
   case HTML_N_NOBR:
-    if (h_env->obuf.nobr_level > 0)
-      h_env->obuf.nobr_level--;
-    if (h_env->obuf.nobr_level == 0)
-      h_env->obuf.flag &= ~RB_NOBR;
-    return 0;
+    return h_env->HTML_NOBR_exit();
   case HTML_PRE_PLAIN:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-    }
-    h_env->obuf.flag |= (RB_PRE | RB_IGNORE_P);
-    return 1;
+    return h_env->HTML_PRE_PLAIN_enter();
   case HTML_N_PRE_PLAIN:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-      h_env->obuf.flag |= RB_IGNORE_P;
-    }
-    h_env->obuf.flag &= ~RB_PRE;
-    return 1;
+    return h_env->HTML_PRE_PLAIN_exit();
   case HTML_LISTING:
   case HTML_XMP:
   case HTML_PLAINTEXT:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-    }
-    h_env->obuf.flag |= (RB_PLAIN | RB_IGNORE_P);
-    switch (cmd) {
-    case HTML_LISTING:
-      h_env->obuf.end_tag = HTML_N_LISTING;
-      break;
-    case HTML_XMP:
-      h_env->obuf.end_tag = HTML_N_XMP;
-      break;
-    case HTML_PLAINTEXT:
-      h_env->obuf.end_tag = MAX_HTMLTAG;
-      break;
-
-    default:
-      break;
-    }
-    return 1;
+    return h_env->HTML_PLAINTEXT_enter(tag);
   case HTML_N_LISTING:
   case HTML_N_XMP:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                   h_env->limit);
-      h_env->obuf.flag |= RB_IGNORE_P;
-    }
-    h_env->obuf.flag &= ~RB_PLAIN;
-    h_env->obuf.end_tag = 0;
-    return 1;
+    return h_env->HTML_LISTING_exit();
   case HTML_SCRIPT:
     h_env->obuf.flag |= RB_SCRIPT;
     h_env->obuf.end_tag = HTML_N_SCRIPT;
@@ -2315,455 +1965,85 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     h_env->obuf.flag &= ~RB_STYLE;
     h_env->obuf.end_tag = 0;
     return 1;
-  case HTML_A: {
-    if (h_env->obuf.anchor.url.size()) {
-      this->close_anchor(h_env);
-    }
-    int hseq = 0;
-
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_HREF, &p))
-      h_env->obuf.anchor.url = Strnew_charp(p)->ptr;
-    if (tag->parsedtag_get_value(ATTR_TARGET, &p))
-      h_env->obuf.anchor.target = Strnew_charp(p)->ptr;
-    if (tag->parsedtag_get_value(ATTR_REFERER, &p))
-      h_env->obuf.anchor.option = {.referer = p};
-    if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-      h_env->obuf.anchor.title = Strnew_charp(p)->ptr;
-    if (tag->parsedtag_get_value(ATTR_ACCESSKEY, &p))
-      h_env->obuf.anchor.accesskey = (unsigned char)*p;
-    if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq))
-      h_env->obuf.anchor.hseq = hseq;
-
-    if (hseq == 0 && h_env->obuf.anchor.url.size()) {
-      h_env->obuf.anchor.hseq = cur_hseq;
-      auto tmp = this->process_anchor(tag, h_env->tagbuf->ptr);
-      push_tag(&h_env->obuf, tmp->ptr, HTML_A);
-      return 1;
-    }
-    return 0;
-  }
-
+  case HTML_A:
+    return h_env->HTML_A_enter(tag);
   case HTML_N_A:
     this->close_anchor(h_env);
     return 1;
-
-  case HTML_IMG: {
-    if (tag->parsedtag_exists(ATTR_USEMAP))
-      HTML5_CLOSE_A(&h_env->obuf, h_env);
-    auto tmp = this->process_img(tag, h_env->limit);
-    if (need_number) {
-      tmp = Strnew_m_charp(getLinkNumberStr(-1)->ptr, tmp->ptr, nullptr);
-      need_number = 0;
-    }
-    HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
-  case HTML_IMG_ALT: {
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_SRC, &p))
-      h_env->obuf.img_alt = Strnew_charp(p);
-    return 0;
-  }
-
+  case HTML_IMG:
+    return h_env->HTML_IMG_enter(tag);
+  case HTML_IMG_ALT:
+    return h_env->HTML_IMG_ALT_enter(tag);
   case HTML_N_IMG_ALT:
-    if (h_env->obuf.img_alt) {
-      if (!close_effect0(&h_env->obuf, HTML_IMG_ALT))
-        push_tag(&h_env->obuf, "</img_alt>", HTML_N_IMG_ALT);
-      h_env->obuf.img_alt = nullptr;
-    }
-    return 1;
-
-  case HTML_INPUT_ALT: {
-    int i = 0;
-    if (tag->parsedtag_get_value(ATTR_TOP_MARGIN, &i)) {
-      if ((short)i > h_env->obuf.top_margin)
-        h_env->obuf.top_margin = (short)i;
-    }
-    i = 0;
-    if (tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &i)) {
-      if ((short)i > h_env->obuf.bottom_margin)
-        h_env->obuf.bottom_margin = (short)i;
-    }
-    int hseq;
-    if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq)) {
-      h_env->obuf.input_alt.hseq = hseq;
-    }
-    if (tag->parsedtag_get_value(ATTR_FID, &i)) {
-      h_env->obuf.input_alt.fid = i;
-    }
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-      h_env->obuf.input_alt.type = Strnew_charp(p);
-    }
-    if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
-      h_env->obuf.input_alt.value = Strnew_charp(p);
-    }
-    if (tag->parsedtag_get_value(ATTR_NAME, &p)) {
-      h_env->obuf.input_alt.name = Strnew_charp(p);
-    }
-    h_env->obuf.input_alt.in = 1;
-    return 0;
-  }
-
+    return h_env->HTML_IMG_ALT_exit();
+  case HTML_INPUT_ALT:
+    return h_env->HTML_INPUT_ALT_enter(tag);
   case HTML_N_INPUT_ALT:
-    if (h_env->obuf.input_alt.in) {
-      if (!close_effect0(&h_env->obuf, HTML_INPUT_ALT))
-        push_tag(&h_env->obuf, "</input_alt>", HTML_N_INPUT_ALT);
-      h_env->obuf.input_alt.hseq = 0;
-      h_env->obuf.input_alt.fid = -1;
-      h_env->obuf.input_alt.in = 0;
-      h_env->obuf.input_alt.type = nullptr;
-      h_env->obuf.input_alt.name = nullptr;
-      h_env->obuf.input_alt.value = nullptr;
-    }
-    return 1;
-
-  case HTML_TABLE: {
-    this->close_anchor(h_env);
-    if (h_env->obuf.table_level + 1 >= MAX_TABLE)
-      break;
-    h_env->obuf.table_level++;
-    int w = BORDER_NONE;
-    /* x: cellspacing, y: cellpadding */
-    int x = 2;
-    int y = 1;
-    int z = 0;
-    int width = 0;
-    if (tag->parsedtag_exists(ATTR_BORDER)) {
-      if (tag->parsedtag_get_value(ATTR_BORDER, &w)) {
-        if (w > 2)
-          w = BORDER_THICK;
-        else if (w < 0) { /* weird */
-          w = BORDER_THIN;
-        }
-      } else
-        w = BORDER_THIN;
-    }
-    if (DisplayBorders && w == BORDER_NONE)
-      w = BORDER_THIN;
-    int i;
-    if (tag->parsedtag_get_value(ATTR_WIDTH, &i)) {
-      if (h_env->obuf.table_level == 0)
-        width = REAL_WIDTH(i, h_env->limit - envs[h_env->envc].indent);
-      else
-        width = RELATIVE_WIDTH(i);
-    }
-    if (tag->parsedtag_exists(ATTR_HBORDER))
-      w = BORDER_NOWIN;
-    tag->parsedtag_get_value(ATTR_CELLSPACING, &x);
-    tag->parsedtag_get_value(ATTR_CELLPADDING, &y);
-    tag->parsedtag_get_value(ATTR_VSPACE, &z);
-    if (x < 0)
-      x = 0;
-    if (y < 0)
-      y = 0;
-    if (z < 0)
-      z = 0;
-    if (x > MAX_CELLSPACING)
-      x = MAX_CELLSPACING;
-    if (y > MAX_CELLPADDING)
-      y = MAX_CELLPADDING;
-    if (z > MAX_VSPACE)
-      z = MAX_VSPACE;
-    tables[h_env->obuf.table_level] = table::begin_table(w, x, y, z);
-    table_mode[h_env->obuf.table_level].pre_mode = 0;
-    table_mode[h_env->obuf.table_level].indent_level = 0;
-    table_mode[h_env->obuf.table_level].nobr_level = 0;
-    table_mode[h_env->obuf.table_level].caption = 0;
-    table_mode[h_env->obuf.table_level].end_tag = 0; /* HTML_UNKNOWN */
-    tables[h_env->obuf.table_level]->total_width = width;
-    return 1;
-  }
-
+    return h_env->HTML_INPUT_ALT_exit();
+  case HTML_TABLE: 
+    return h_env->HTML_TABLE_enter(tag);
   case HTML_N_TABLE:
-    /* should be processed in HTMLlineproc() */
+    // should be processed in HTMLlineproc()
     return 1;
   case HTML_CENTER:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & (RB_PREMODE | RB_IGNORE_P)))
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    h_env->obuf.RB_SAVE_FLAG();
-    if (DisableCenter) {
-      h_env->obuf.RB_SET_ALIGN(RB_LEFT);
-    } else {
-      h_env->obuf.RB_SET_ALIGN(RB_CENTER);
-    }
-    return 1;
+    return h_env->HTML_CENTER_enter();
   case HTML_N_CENTER:
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_PREMODE)) {
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    }
-    h_env->obuf.RB_RESTORE_FLAG();
-    return 1;
-
+    return h_env->HTML_CENTER_exit();
   case HTML_DIV:
     return h_env->HTML_DIV_enter(tag);
-
   case HTML_N_DIV:
-    CLOSE_A(&h_env->obuf, h_env);
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    h_env->obuf.RB_RESTORE_FLAG();
-    return 1;
-
+    return h_env->HTML_DIV_exit();
   case HTML_DIV_INT:
     return h_env->HTML_DIV_INT_enter(tag);
-
   case HTML_N_DIV_INT:
-    CLOSE_P(&h_env->obuf, h_env);
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    h_env->obuf.RB_RESTORE_FLAG();
-    return 1;
-
-  case HTML_FORM: {
-    CLOSE_A(&h_env->obuf, h_env);
-    if (!(h_env->obuf.flag & RB_IGNORE_P))
-      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    auto tmp = process_form(tag);
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
+    return h_env->HTML_DIV_INT_exit();
+  case HTML_FORM:
+    return h_env->HTML_FORM_enter(tag);
   case HTML_N_FORM:
-    CLOSE_A(&h_env->obuf, h_env);
-    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-    h_env->obuf.flag |= RB_IGNORE_P;
-    process_n_form();
-    return 1;
-
-  case HTML_INPUT: {
-    this->close_anchor(h_env);
-    auto tmp = this->process_input(tag);
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
-  case HTML_BUTTON: {
-    HTML5_CLOSE_A(&h_env->obuf, h_env);
-    auto tmp = this->process_button(tag);
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
-  case HTML_N_BUTTON: {
-    auto tmp = process_n_button();
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
-  case HTML_SELECT: {
-    this->close_anchor(h_env);
-    auto tmp = process_select(tag);
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    h_env->obuf.flag |= RB_INSELECT;
-    h_env->obuf.end_tag = HTML_N_SELECT;
-    return 1;
-  }
-
-  case HTML_N_SELECT: {
-    h_env->obuf.flag &= ~RB_INSELECT;
-    h_env->obuf.end_tag = 0;
-    auto tmp = this->process_n_select();
-    if (tmp)
-      HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
+    return h_env->HTML_FORM_exit();
+  case HTML_INPUT:
+    return h_env->HTML_INPUT_enter(tag);
+  case HTML_BUTTON:
+    return h_env->HTML_BUTTON_enter(tag);
+  case HTML_N_BUTTON:
+    return h_env->HTML_BUTTON_exit();
+  case HTML_SELECT:
+    return h_env->HTML_SELECT_enter(tag);
+  case HTML_N_SELECT:
+    return h_env->HTML_SELECT_exit();
   case HTML_OPTION:
     /* nothing */
     return 1;
-
-  case HTML_TEXTAREA: {
-    this->close_anchor(h_env);
-    auto tmp = process_textarea(tag, h_env->limit);
-    if (tmp) {
-      HTMLlineproc1(tmp->ptr, h_env);
-    }
-    h_env->obuf.flag |= RB_INTXTA;
-    h_env->obuf.end_tag = HTML_N_TEXTAREA;
-    return 1;
-  }
-
-  case HTML_N_TEXTAREA: {
-    h_env->obuf.flag &= ~RB_INTXTA;
-    h_env->obuf.end_tag = 0;
-    auto tmp = this->process_n_textarea();
-    if (tmp) {
-      HTMLlineproc1(tmp->ptr, h_env);
-    }
-    return 1;
-  }
-
-  case HTML_ISINDEX: {
-    auto p = "";
-    auto q = "!CURRENT_URL!";
-    tag->parsedtag_get_value(ATTR_PROMPT, &p);
-    tag->parsedtag_get_value(ATTR_ACTION, &q);
-    auto tmp = Strnew_m_charp(
-        "<form method=get action=\"", html_quote(q), "\">", html_quote(p),
-        "<input type=text name=\"\" accept></form>", nullptr);
-    HTMLlineproc1(tmp->ptr, h_env);
-    return 1;
-  }
-
+  case HTML_TEXTAREA:
+    return h_env->HTML_TEXTAREA_enter(tag);
+  case HTML_N_TEXTAREA:
+    return h_env->HTML_TEXTAREA_exit();
+  case HTML_ISINDEX:
+    return h_env->HTML_ISINDEX_enter(tag);
   case HTML_DOCTYPE:
     if (!tag->parsedtag_exists(ATTR_PUBLIC)) {
       h_env->obuf.flag |= RB_HTML5;
     }
     return 1;
-
-  case HTML_META: {
-    const char *p = nullptr;
-    const char *q = nullptr;
-    tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
-    tag->parsedtag_get_value(ATTR_CONTENT, &q);
-    if (p && q && !strcasecmp(p, "refresh")) {
-      int refresh_interval;
-      Str *tmp = nullptr;
-      refresh_interval = getMetaRefreshParam(q, &tmp);
-      if (tmp) {
-        q = html_quote(tmp->ptr);
-        tmp = Sprintf("Refresh (%d sec) <a href=\"%s\">%s</a>",
-                      refresh_interval, q, q);
-      } else if (refresh_interval > 0)
-        tmp = Sprintf("Refresh (%d sec)", refresh_interval);
-      if (tmp) {
-        HTMLlineproc1(tmp->ptr, h_env);
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
-                     h_env->limit);
-      }
-    }
-    return 1;
-  }
-
+  case HTML_META:
+    return h_env->HTML_META_enter(tag);
   case HTML_BASE:
   case HTML_MAP:
   case HTML_N_MAP:
   case HTML_AREA:
     return 0;
   case HTML_DEL:
-    switch (displayInsDel) {
-    case DISPLAY_INS_DEL_SIMPLE:
-      h_env->obuf.flag |= RB_DEL;
-      break;
-    case DISPLAY_INS_DEL_NORMAL:
-      HTMLlineproc1("<U>[DEL:</U>", h_env);
-      break;
-    case DISPLAY_INS_DEL_FONTIFY:
-      if (h_env->obuf.fontstat.in_strike < FONTSTAT_MAX)
-        h_env->obuf.fontstat.in_strike++;
-      if (h_env->obuf.fontstat.in_strike == 1) {
-        push_tag(&h_env->obuf, "<s>", HTML_S);
-      }
-      break;
-    }
-    return 1;
+    return h_env->HTML_DEL_enter();
   case HTML_N_DEL:
-    switch (displayInsDel) {
-    case DISPLAY_INS_DEL_SIMPLE:
-      h_env->obuf.flag &= ~RB_DEL;
-      break;
-    case DISPLAY_INS_DEL_NORMAL:
-      HTMLlineproc1("<U>:DEL]</U>", h_env);
-    case DISPLAY_INS_DEL_FONTIFY:
-      if (h_env->obuf.fontstat.in_strike == 0)
-        return 1;
-      if (h_env->obuf.fontstat.in_strike == 1 &&
-          close_effect0(&h_env->obuf, HTML_S))
-        h_env->obuf.fontstat.in_strike = 0;
-      if (h_env->obuf.fontstat.in_strike > 0) {
-        h_env->obuf.fontstat.in_strike--;
-        if (h_env->obuf.fontstat.in_strike == 0) {
-          push_tag(&h_env->obuf, "</s>", HTML_N_S);
-        }
-      }
-      break;
-    }
-    return 1;
+    return h_env->HTML_DEL_exit();
   case HTML_S:
-    switch (displayInsDel) {
-    case DISPLAY_INS_DEL_SIMPLE:
-      h_env->obuf.flag |= RB_S;
-      break;
-    case DISPLAY_INS_DEL_NORMAL:
-      HTMLlineproc1("<U>[S:</U>", h_env);
-      break;
-    case DISPLAY_INS_DEL_FONTIFY:
-      if (h_env->obuf.fontstat.in_strike < FONTSTAT_MAX)
-        h_env->obuf.fontstat.in_strike++;
-      if (h_env->obuf.fontstat.in_strike == 1) {
-        push_tag(&h_env->obuf, "<s>", HTML_S);
-      }
-      break;
-    }
-    return 1;
+    return h_env->HTML_S_enter();
   case HTML_N_S:
-    switch (displayInsDel) {
-    case DISPLAY_INS_DEL_SIMPLE:
-      h_env->obuf.flag &= ~RB_S;
-      break;
-    case DISPLAY_INS_DEL_NORMAL:
-      HTMLlineproc1("<U>:S]</U>", h_env);
-      break;
-    case DISPLAY_INS_DEL_FONTIFY:
-      if (h_env->obuf.fontstat.in_strike == 0)
-        return 1;
-      if (h_env->obuf.fontstat.in_strike == 1 &&
-          close_effect0(&h_env->obuf, HTML_S))
-        h_env->obuf.fontstat.in_strike = 0;
-      if (h_env->obuf.fontstat.in_strike > 0) {
-        h_env->obuf.fontstat.in_strike--;
-        if (h_env->obuf.fontstat.in_strike == 0) {
-          push_tag(&h_env->obuf, "</s>", HTML_N_S);
-        }
-      }
-    }
-    return 1;
+    return h_env->HTML_S_exit();
   case HTML_INS:
-    switch (displayInsDel) {
-    case DISPLAY_INS_DEL_SIMPLE:
-      break;
-    case DISPLAY_INS_DEL_NORMAL:
-      HTMLlineproc1("<U>[INS:</U>", h_env);
-      break;
-    case DISPLAY_INS_DEL_FONTIFY:
-      if (h_env->obuf.fontstat.in_ins < FONTSTAT_MAX)
-        h_env->obuf.fontstat.in_ins++;
-      if (h_env->obuf.fontstat.in_ins == 1) {
-        push_tag(&h_env->obuf, "<ins>", HTML_INS);
-      }
-      break;
-    }
-    return 1;
+    return h_env->HTML_INS_enter();
   case HTML_N_INS:
-    switch (displayInsDel) {
-    case DISPLAY_INS_DEL_SIMPLE:
-      break;
-    case DISPLAY_INS_DEL_NORMAL:
-      HTMLlineproc1("<U>:INS]</U>", h_env);
-      break;
-    case DISPLAY_INS_DEL_FONTIFY:
-      if (h_env->obuf.fontstat.in_ins == 0)
-        return 1;
-      if (h_env->obuf.fontstat.in_ins == 1 &&
-          close_effect0(&h_env->obuf, HTML_INS))
-        h_env->obuf.fontstat.in_ins = 0;
-      if (h_env->obuf.fontstat.in_ins > 0) {
-        h_env->obuf.fontstat.in_ins--;
-        if (h_env->obuf.fontstat.in_ins == 0) {
-          push_tag(&h_env->obuf, "</ins>", HTML_N_INS);
-        }
-      }
-      break;
-    }
-    return 1;
+    return h_env->HTML_INS_exit();
   case HTML_SUP:
     if (!(h_env->obuf.flag & (RB_DEL | RB_S)))
       HTMLlineproc1("^", h_env);
@@ -2782,53 +2062,18 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
   case HTML_N_FONT:
   case HTML_NOP:
     return 1;
-
   case HTML_BGSOUND:
-    if (view_unseenobject) {
-      const char *p;
-      if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
-        auto q = html_quote(p);
-        auto s = Sprintf("<A HREF=\"%s\">bgsound(%s)</A>", q, q);
-        HTMLlineproc1(s->ptr, h_env);
-      }
-    }
-    return 1;
-
+    return h_env->HTML_BGSOUND_enter(tag);
   case HTML_EMBED:
-    HTML5_CLOSE_A(&h_env->obuf, h_env);
-    if (view_unseenobject) {
-      const char *p;
-      if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
-        auto q = html_quote(p);
-        auto s = Sprintf("<A HREF=\"%s\">embed(%s)</A>", q, q);
-        HTMLlineproc1(s->ptr, h_env);
-      }
-    }
-    return 1;
-
+    return h_env->HTML_EMBED_enter(tag);
   case HTML_APPLET:
-    if (view_unseenobject) {
-      const char *p;
-      if (tag->parsedtag_get_value(ATTR_ARCHIVE, &p)) {
-        auto q = html_quote(p);
-        auto s = Sprintf("<A HREF=\"%s\">applet archive(%s)</A>", q, q);
-        HTMLlineproc1(s->ptr, h_env);
-      }
-    }
-    return 1;
-
+    return h_env->HTML_APPLET_enter(tag);
   case HTML_BODY:
-    if (view_unseenobject) {
-      const char *p;
-      if (tag->parsedtag_get_value(ATTR_BACKGROUND, &p)) {
-        auto q = html_quote(p);
-        auto s = Sprintf("<IMG SRC=\"%s\" ALT=\"bg image(%s)\"><BR>", q, q);
-        HTMLlineproc1(s->ptr, h_env);
-      }
-    }
+    return h_env->HTML_BODY_enter(tag);
   case HTML_N_HEAD:
     if (h_env->obuf.flag & RB_TITLE)
       HTMLlineproc1("</title>", h_env);
+    return 1;
   case HTML_HEAD:
   case HTML_N_BODY:
     return 1;
@@ -2836,7 +2081,7 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     /* h_env->obuf.prevchar = '\0'; */
     return 0;
   }
-  /* not reached */
+
   return 0;
 }
 

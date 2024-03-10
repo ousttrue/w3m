@@ -9,6 +9,11 @@
 #include <string_view>
 
 #define N_GRAPH_SYMBOL 32
+#define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
+#define UL_SYMBOL_DISC UL_SYMBOL(9)
+#define UL_SYMBOL_CIRCLE UL_SYMBOL(10)
+#define UL_SYMBOL_SQUARE UL_SYMBOL(11)
+
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 
 extern bool pseudoInlines;
@@ -16,7 +21,6 @@ extern bool ignore_null_img_alt;
 #define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
-extern double pixel_per_char;
 extern int pixel_per_char_i;
 extern int displayLinkNumber;
 extern bool DisableCenter;

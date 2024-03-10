@@ -41,6 +41,8 @@ struct LineData;
 struct FormAnchor;
 struct Anchor;
 class HtmlParser {
+  friend struct html_feed_environ;
+
   int need_number = 0;
 
   struct table *tables[MAX_TABLE];

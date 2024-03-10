@@ -4,6 +4,7 @@
 #include <fcntl.h>
 
 #include "rc.h"
+#include "html/table.h"
 #include "html/preform.h"
 #include "quote.h"
 #include "dict.h"

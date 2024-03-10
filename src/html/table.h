@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 extern int symbol_width;
+extern double pixel_per_char;
 
 #define VALIGN_MIDDLE 0
 #define VALIGN_TOP 1
@@ -247,3 +248,7 @@ extern int visible_length(const char *str);
 
 extern void initRenderTable(void);
 extern int minimum_length(char *line);
+
+inline int REAL_WIDTH(int w, int limit) {
+  return (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100);
+}
