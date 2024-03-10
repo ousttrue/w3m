@@ -40,6 +40,43 @@
 
 HtmlParser::HtmlParser() {}
 
+void HtmlParser::HTMLlineproc1(const char *x, struct html_feed_environ *y) {
+  parseLine(x, y, true);
+}
+
+void HtmlParser::CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env) {
+  if (obuf->flag & RB_IN_DT) {
+    obuf->flag &= ~RB_IN_DT;
+    HTMLlineproc1("</b>", h_env);
+  }
+}
+
+void HtmlParser::CLOSE_P(readbuffer *obuf, html_feed_environ *h_env) {
+  if (obuf->flag & RB_P) {
+    struct environment *envs = h_env->envs.data();
+    flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
+    obuf->RB_RESTORE_FLAG();
+    obuf->flag &= ~RB_P;
+  }
+}
+
+void HtmlParser::CLOSE_A(readbuffer *obuf, html_feed_environ *h_env) {
+  do {
+    CLOSE_P(obuf, h_env);
+    if (!(obuf->flag & RB_HTML5)) {
+      this->close_anchor(h_env);
+    }
+  } while (0);
+}
+
+void HtmlParser::HTML5_CLOSE_A(readbuffer *obuf, html_feed_environ *h_env) {
+  do {
+    if (obuf->flag & RB_HTML5) {
+      this->close_anchor(h_env);
+    }
+  } while (0);
+}
+
 Str *HtmlParser::getLinkNumberStr(int correction) const {
   return Sprintf("[%d]", cur_hseq + correction);
 }
@@ -1911,7 +1948,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     CLOSE_A(&h_env->obuf, h_env);
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
       flushline(h_env, envs[h_env->envc].indent, 1, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
     }
     h_env->obuf.flag |= RB_IGNORE_P;
     if (cmd == HTML_P) {
@@ -1929,7 +1967,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
   case HTML_H:
     if (!(h_env->obuf.flag & (RB_PREMODE | RB_IGNORE_P))) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
     }
     HTMLlineproc1("<b>", h_env);
     set_alignment(&h_env->obuf, tag);
@@ -1940,7 +1979,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     if (!(h_env->obuf.flag & RB_PREMODE)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
     }
-    do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+    do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                 h_env->limit);
     h_env->obuf.RB_RESTORE_FLAG();
     this->close_anchor(h_env);
     h_env->obuf.flag |= RB_IGNORE_P;
@@ -1953,7 +1993,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
       if (!(h_env->obuf.flag & RB_PREMODE) &&
           (h_env->envc == 0 || cmd == HTML_BLQ))
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                     h_env->limit);
     }
     h_env->PUSH_ENV(cmd);
     if (cmd == HTML_UL || cmd == HTML_OL) {
@@ -2004,7 +2045,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
           envs[h_env->envc].env != HTML_DL &&
           envs[h_env->envc].env != HTML_DL_COMPACT &&
           envs[h_env->envc].env != HTML_DD)
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                     h_env->limit);
     }
     h_env->PUSH_ENV_NOINDENT(cmd);
     if (tag->parsedtag_exists(ATTR_COMPACT))
@@ -2220,7 +2262,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
       if (!x)
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                     h_env->limit);
     } else
       fillline(&h_env->obuf, envs[h_env->envc].indent);
     h_env->obuf.flag |= (RB_PRE | RB_IGNORE_P);
@@ -2231,7 +2274,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
   case HTML_N_PRE:
     flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
       h_env->obuf.flag |= RB_IGNORE_P;
       h_env->blank_lines++;
     }
@@ -2272,7 +2316,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     CLOSE_A(&h_env->obuf, h_env);
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
     }
     h_env->obuf.flag |= (RB_PRE | RB_IGNORE_P);
     return 1;
@@ -2280,7 +2325,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     CLOSE_A(&h_env->obuf, h_env);
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
       h_env->obuf.flag |= RB_IGNORE_P;
     }
     h_env->obuf.flag &= ~RB_PRE;
@@ -2291,7 +2337,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     CLOSE_A(&h_env->obuf, h_env);
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
     }
     h_env->obuf.flag |= (RB_PLAIN | RB_IGNORE_P);
     switch (cmd) {
@@ -2314,7 +2361,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     CLOSE_A(&h_env->obuf, h_env);
     if (!(h_env->obuf.flag & RB_IGNORE_P)) {
       flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
-      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+      do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                   h_env->limit);
       h_env->obuf.flag |= RB_IGNORE_P;
     }
     h_env->obuf.flag &= ~RB_PLAIN;
@@ -2661,7 +2709,8 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
         tmp = Sprintf("Refresh (%d sec)", refresh_interval);
       if (tmp) {
         HTMLlineproc1(tmp->ptr, h_env);
-        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0, h_env->limit);
+        do_blankline(h_env, &h_env->obuf, envs[h_env->envc].indent, 0,
+                     h_env->limit);
       }
     }
     return 1;

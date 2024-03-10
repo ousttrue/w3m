@@ -1,4 +1,5 @@
 #pragma once
+#include "html_parser.h"
 #include <stdio.h>
 #include <vector>
 #include "html_command.h"
@@ -33,6 +34,8 @@ struct html_feed_environ {
   std::string title;
   int blank_lines = 0;
 
+  HtmlParser parser;
+
   html_feed_environ(int envc, int, int, GeneralList<TextLine> *_buf = nullptr);
   void purgeline();
 
@@ -61,6 +64,21 @@ struct html_feed_environ {
       else
         envs[this->envc].indent = envs[this->envc - 1].indent;
     }
+  }
+
+  void parseLine(std::string_view istr, bool internal) {
+    parser.parseLine(istr, this, internal);
+  }
+
+  void completeHTMLstream() { parser.completeHTMLstream(this); }
+
+  void flushline(int indent, int force, int width) {
+    parser.flushline(this, indent, force, width);
+  }
+
+  void render(HttpResponse *res, LineData *layout) {
+    LineFeed feed(this->buf);
+    parser.render(res, layout, &feed);
   }
 };
 

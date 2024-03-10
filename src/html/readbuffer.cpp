@@ -494,8 +494,6 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
   layout->clearBuffer();
 
-  HtmlParser parser;
-
   long long linelen = 0;
   long long trbyte = 0;
 
@@ -522,15 +520,16 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
 
     linelen += l.size();
     auto line = cleanup_line(l, HTML_MODE);
-    parser.parseLine(line, &htmlenv1, internal);
+    htmlenv1.parseLine(line, internal);
   }
+
   if (htmlenv1.obuf.status != R_ST_NORMAL) {
-    parser.parseLine("\n", &htmlenv1, internal);
+    htmlenv1.parseLine("\n", internal);
   }
 
   htmlenv1.obuf.status = R_ST_NORMAL;
-  parser.completeHTMLstream(&htmlenv1);
-  parser.flushline(&htmlenv1, 0, 2, htmlenv1.limit);
+  htmlenv1.completeHTMLstream();
+  htmlenv1.flushline(0, 2, htmlenv1.limit);
 
   layout->data.title = htmlenv1.title;
 
@@ -539,8 +538,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   //
   // render ?
   //
-  LineFeed feed(htmlenv1.buf);
-  parser.render(res, &layout->data, &feed);
+  htmlenv1.render(res, &layout->data);
 
   // layout->_scroll.row = 0;
   // layout->_cursor.row = 0;
