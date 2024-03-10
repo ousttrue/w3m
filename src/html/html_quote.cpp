@@ -1,31 +1,26 @@
 #include "html_quote.h"
 #include "quote.h"
-#include "Str.h"
 #include "entity.h"
 #include <sstream>
 
-const char *html_quote(const char *str) {
-  Str *tmp = NULL;
-  for (auto p = str; *p; p++) {
+std::string html_quote(std::string_view str) {
+  std::stringstream tmp;
+  auto end = str.data() + str.size();
+  for (auto p = str.data(); p != end; p++) {
     auto q = html_quote_char(*p);
     if (q) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      Strcat_charp(tmp, q);
+      tmp << q;
     } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
+      tmp << *p;
     }
   }
-  if (tmp)
-    return tmp->ptr;
-  return Strnew_charp(str)->ptr;
+  return tmp.str();
 }
 
 std::string html_unquote(std::string_view str) {
   std::stringstream tmp;
-
-  for (auto p = str.data(); p != str.data() + str.size();) {
+  auto end = str.data() + str.size();
+  for (auto p = str.data(); p != end;) {
     if (*p == '&') {
       auto q = getescapecmd(&p);
       tmp << q;
@@ -34,6 +29,5 @@ std::string html_unquote(std::string_view str) {
       p++;
     }
   }
-
   return tmp.str();
 }
