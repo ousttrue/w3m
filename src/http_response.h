@@ -37,7 +37,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
 
   std::vector<Url> redirectins;
   const char *ssl_certificate = nullptr;
-  const char *baseTarget = nullptr;
+  std::string baseTarget;
   size_t trbyte = 0;
   const char *edit = nullptr;
   long long current_content_length;

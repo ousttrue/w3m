@@ -3,8 +3,9 @@
 #include "lineprop.h"
 #include "table.h"
 #include "readbuffer_status.h"
-
-#define MAX_INDENT_LEVEL 10
+#include "readbuffer.h"
+#include "html_feed_env.h"
+#include "quote.h"
 
 struct Str;
 struct HtmlTag;
@@ -141,6 +142,39 @@ public:
 
   void HTMLlineproc1(const char *x, struct html_feed_environ *y) {
     parseLine(x, y, true);
+  }
+
+  void CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env) {
+    if (obuf->flag & RB_IN_DT) {
+      obuf->flag &= ~RB_IN_DT;
+      HTMLlineproc1("</b>", h_env);
+    }
+  }
+
+  void CLOSE_P(readbuffer *obuf, html_feed_environ *h_env) {
+    if (obuf->flag & RB_P) {
+      struct environment *envs = h_env->envs.data();
+      flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
+      obuf->RB_RESTORE_FLAG();
+      obuf->flag &= ~RB_P;
+    }
+  }
+
+  void CLOSE_A(readbuffer *obuf, html_feed_environ *h_env) {
+    do {
+      CLOSE_P(obuf, h_env);
+      if (!(obuf->flag & RB_HTML5)) {
+        this->close_anchor(h_env);
+      }
+    } while (0);
+  }
+
+  void HTML5_CLOSE_A(readbuffer *obuf, html_feed_environ *h_env) {
+    do {
+      if (obuf->flag & RB_HTML5) {
+        this->close_anchor(h_env);
+      }
+    } while (0);
   }
 
   Str *getLinkNumberStr(int correction) const;
