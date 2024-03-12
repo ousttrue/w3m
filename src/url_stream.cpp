@@ -8,11 +8,8 @@
 #include "content.h"
 #include "istream.h"
 #include "myctype.h"
-#include "downloadlist.h"
 #include "alloc.h"
-#include "history.h"
 #include "compression.h"
-#include "mimetypes.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
 #include "html/form.h"
@@ -22,10 +19,10 @@
 #include "istream.h"
 #include "http_request.h"
 #include "linein.h"
+#include "url_decode.h"
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
-#include <setjmp.h>
 #include <sys/stat.h>
 #include <string.h>
 

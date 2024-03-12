@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "url_decode.h"
 #include "html/form_item.h"
 #include "app.h"
 #include "tabbuffer.h"

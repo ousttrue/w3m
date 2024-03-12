@@ -7,6 +7,7 @@
 #include "html/table.h"
 #include "html/preform.h"
 #include "quote.h"
+#include "url_decode.h"
 #include "dict.h"
 #include "content.h"
 #include "app.h"

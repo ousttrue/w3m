@@ -126,6 +126,7 @@ executable(
         'file_util.cpp',
         'dict.cpp',
         'matrix.cpp',
+        'url_decode.cpp',
     ],
     install: true,
     dependencies: deps,

@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "url_decode.h"
 #include "quote.h"
 #include "file_util.h"
 #include "ctrlcode.h"

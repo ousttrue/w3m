@@ -1,4 +1,5 @@
 #include "history.h"
+#include "url_decode.h"
 #include "app.h"
 #include "html/readbuffer.h"
 #include "html/html_quote.h"

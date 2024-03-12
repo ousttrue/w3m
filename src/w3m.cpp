@@ -1,4 +1,5 @@
 #include "w3m.h"
+#include "url_decode.h"
 #include "app.h"
 #include "etc.h"
 #include "quote.h"

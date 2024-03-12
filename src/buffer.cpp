@@ -5,7 +5,7 @@
 #include "url_quote.h"
 #include "linein.h"
 #include "symbol.h"
-// #include "file_util.h"
+#include "url_decode.h"
 #include "history.h"
 #include "quote.h"
 #include "app.h"
