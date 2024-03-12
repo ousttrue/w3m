@@ -745,14 +745,11 @@ std::shared_ptr<Buffer> cookie_list_panel(void) {
 }
 
 void set_cookie_flag(struct keyvalue *arg) {
-  int n, v;
-  struct Cookie *p;
-
   while (arg) {
-    if (arg->arg && *arg->arg && arg->value && *arg->value) {
-      n = atoi(arg->arg);
-      v = atoi(arg->value);
-      if ((p = nth_cookie(n)) != NULL) {
+    if (arg->arg.size() && arg->value.size()) {
+      int n = atoi(arg->arg.c_str());
+      int v = atoi(arg->value.c_str());
+      if (auto p = nth_cookie(n)) {
         if (v && !(p->flag & COO_USE))
           p->flag = (CookieFlags)(p->flag | COO_USE);
         else if (!v && p->flag & COO_USE)

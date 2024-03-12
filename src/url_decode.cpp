@@ -1,6 +1,5 @@
 #include "url_decode.h"
 #include "quote.h"
-#include "Str.h"
 #include "myctype.h"
 #include <sstream>
 
@@ -47,45 +46,26 @@ std::string file_unquote(std::string_view str) {
   return tmp.str();
 }
 
-Str *Str_url_unquote(Str *x, int is_form, int safe) {
-  Str *tmp = nullptr;
-  const char *p = x->ptr, *ep = x->ptr + x->length, *q;
-  int c;
-
+std::string Str_url_unquote(std::string_view x, bool is_form, bool safe) {
+  std::stringstream tmp;
+  auto p = x.data();
+  auto ep = x.data() + x.size();
   for (; p < ep;) {
     if (is_form && *p == '+') {
-      if (tmp == nullptr)
-        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-      Strcat_char(tmp, ' ');
+      tmp << ' ';
       p++;
       continue;
     } else if (*p == '%') {
-      q = p;
-      c = url_unquote_char(&q);
+      auto q = p;
+      int c = url_unquote_char(&q);
       if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
-        if (tmp == NULL)
-          tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-        Strcat_char(tmp, (char)c);
+        tmp << (char)c;
         p = q;
         continue;
       }
     }
-    if (tmp)
-      Strcat_char(tmp, *p);
+    tmp << *p;
     p++;
   }
-  if (tmp)
-    return tmp;
-  return x;
-}
-
-static const char *url_unquote_conv0(const char *url) {
-  auto tmp = Str_url_unquote(Strnew_charp(url), false, true);
-  return tmp->ptr;
-}
-
-const char *url_decode0(const char *url) {
-  if (!DecodeURL)
-    return url;
-  return url_unquote_conv0(url);
+  return tmp.str();
 }

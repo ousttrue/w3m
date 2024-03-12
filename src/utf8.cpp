@@ -2,7 +2,6 @@
 #include <locale>
 #include <codecvt>
 #include <string>
-#include <string.h>
 #include "myctype.h"
 #include "widechar_width.h"
 #include "Str.h"
@@ -114,10 +113,10 @@ int get_mcwidth(const char *c) {
   return codepoint_to_width(codepoint);
 }
 
-int get_strwidth(const char *c) {
+int get_strwidth(std::string_view _c) {
   int width = 0;
-  while (*c) {
-    auto [codepoint, bytes] = Utf8::from((const char8_t *)c).codepoint();
+  for (auto c = _c.begin(); c != _c.end();) {
+    auto [codepoint, bytes] = Utf8::from((const char8_t *)&*c).codepoint();
     width += codepoint_to_width(codepoint);
     if (bytes == 0) {
       break;

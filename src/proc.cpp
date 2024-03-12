@@ -1262,7 +1262,7 @@ std::shared_ptr<CoroutineState<void>> svSrc(const FuncContext &context) {
 // PEEK_LINK
 //"Show target address"
 std::shared_ptr<CoroutineState<void>> peekURL(const FuncContext &context) {
-  App::instance()._peekURL();
+  App::instance().peekURL();
   co_return;
 }
 

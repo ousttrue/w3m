@@ -120,7 +120,13 @@ public:
   std::string myEditor(const char *file, int line) const;
   const char *searchKeyData();
   int searchKeyNum();
-  void _peekURL();
+
+  mutable std::string _peekUrl;
+  mutable int _peekUrlOffset = 0;
+  void peekURL();
+
+  mutable std::string _currentUrl;
+  mutable int _currentUrlOffset = 0;
   std::string currentUrl() const;
   // FuncId getFuncList(const std::string &id) const {
   //   auto found = _funcTable.find(id);
@@ -202,8 +208,8 @@ public:
 
   void showProgress(long long *linelen, long long *trbyte,
                     long long current_content_length);
-  Str *make_lastline_link(const std::shared_ptr<Buffer> &buf, const char *title,
-                          const char *url);
+  std::string make_lastline_link(const std::shared_ptr<Buffer> &buf,
+                                 const char *title, const char *url);
   std::string make_lastline_message(const std::shared_ptr<Buffer> &buf);
 };
 #define CurrentTab App::instance().currentTab()

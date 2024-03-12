@@ -18,7 +18,7 @@ int get_mclen(const char *c);
 int get_mcwidth(const char *c);
 
 // 文字列のcolumn幅
-int get_strwidth(const char *c);
+int get_strwidth(std::string_view c);
 
 // 文字列のcolumn幅
 int get_Str_strwidth(struct Str *c);

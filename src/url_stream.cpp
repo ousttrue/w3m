@@ -504,7 +504,7 @@ void UrlStream::openData(const Url &url) {
   }
 
   *(char *)q++ = '\0';
-  auto tmp = Strnew_charp(q);
+  std::string tmp;
   q = strrchr(p, ';');
   if (q != nullptr && !strcmp(q, ";base64")) {
     *(char *)q = '\0';
@@ -512,7 +512,7 @@ void UrlStream::openData(const Url &url) {
   } else {
     tmp = Str_url_unquote(tmp, false, false);
   }
-  this->stream = newStrStream(tmp->ptr);
+  this->stream = newStrStream(tmp.c_str());
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 

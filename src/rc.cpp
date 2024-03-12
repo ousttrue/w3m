@@ -676,62 +676,73 @@ int str_to_bool(const char *value, int old) {
   return 1;
 }
 
-static int set_param(const char *name, const char *value) {
-  struct param_ptr *p;
-  double ppc;
+static int set_param(const std::string &name, const std::string &value) {
+  if (value.empty()) {
+    return 0;
+  }
 
-  if (value == NULL)
+  auto p = search_param(name.c_str());
+  if (p == NULL) {
     return 0;
-  p = search_param(name);
-  if (p == NULL)
-    return 0;
+  }
+
+  double ppc;
   switch (p->type) {
   case P_INT:
-    if (atoi(value) >= 0)
+    if (atoi(value.c_str()) >= 0)
       *(int *)p->varptr = (p->inputtype == PI_ONOFF)
-                              ? str_to_bool(value, *(int *)p->varptr)
-                              : atoi(value);
+                              ? str_to_bool(value.c_str(), *(int *)p->varptr)
+                              : atoi(value.c_str());
     break;
+
   case P_NZINT:
-    if (atoi(value) > 0)
-      *(int *)p->varptr = atoi(value);
+    if (atoi(value.c_str()) > 0)
+      *(int *)p->varptr = atoi(value.c_str());
     break;
+
   case P_SHORT:
     *(short *)p->varptr = (p->inputtype == PI_ONOFF)
-                              ? str_to_bool(value, *(short *)p->varptr)
-                              : atoi(value);
+                              ? str_to_bool(value.c_str(), *(short *)p->varptr)
+                              : atoi(value.c_str());
     break;
+
   case P_CHARINT:
     *(char *)p->varptr = (p->inputtype == PI_ONOFF)
-                             ? str_to_bool(value, *(char *)p->varptr)
-                             : atoi(value);
+                             ? str_to_bool(value.c_str(), *(char *)p->varptr)
+                             : atoi(value.c_str());
     break;
+
   case P_CHAR:
     *(char *)p->varptr = value[0];
     break;
+
   case P_STRING:
-    *(const char **)p->varptr = value;
+    *(const char **)p->varptr = Strnew(value)->ptr;
     break;
+
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
   case P_SSLPATH:
-    if (value != NULL && value[0] != '\0')
-      *(const char **)p->varptr = rcFile(value);
+    if (value.size())
+      *(const char **)p->varptr = rcFile(value.c_str());
     else
       *(char **)p->varptr = NULL;
     ssl_path_modified = 1;
     break;
 #endif
+
   case P_PIXELS:
-    ppc = atof(value);
+    ppc = atof(value.c_str());
     if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2)
       *(double *)p->varptr = ppc;
     break;
+
   case P_SCALE:
-    ppc = atof(value);
+    ppc = atof(value.c_str());
     if (ppc >= 10 && ppc <= 1000)
       *(double *)p->varptr = ppc;
     break;
   }
+
   return 1;
 }
 
@@ -980,9 +991,6 @@ std::shared_ptr<Buffer> load_option_panel(void) {
 
 void panel_set_option(keyvalue *arg) {
   FILE *f = NULL;
-  const char *p;
-  Str *s = Strnew(), *tmp;
-
   if (config_file == NULL) {
     App::instance().disp_message("There's no config file... config not saved");
   } else {
@@ -990,12 +998,14 @@ void panel_set_option(keyvalue *arg) {
     if (f == NULL) {
     }
   }
+
+  Str *s = nullptr;
   while (arg) {
     /*  InnerCharset -> SystemCharset */
-    if (arg->value) {
-      p = arg->value;
+    if (arg->value.size()) {
+      auto p = arg->value;
       if (set_param(arg->arg, p)) {
-        tmp = Sprintf("%s %s\n", arg->arg, p);
+        auto tmp = Sprintf("%s %s\n", arg->arg, p);
         Strcat(tmp, s);
         s = tmp;
       }

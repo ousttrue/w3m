@@ -242,7 +242,7 @@ App::App() : _content(new Content) {
       /*97*/ {"OPTIONS", ldOpt},
       /*98*/ {"PEEK", curURL},
       /*99*/ {"PEEK_IMG", nulcmd},
-      /*100*/ {"PEEK_LINK", peekURL},
+      /*100*/ {"PEEK_LINK", ::peekURL},
       /*101*/ {"PIPE_BUF", pipeBuf},
       /*102*/ {"PIPE_SHELL", pipesh},
       /*103*/ {"PREV", prevBf},
@@ -906,82 +906,81 @@ const char *App::searchKeyData() {
   return allocStr(data, -1);
 }
 
-void App::_peekURL() {
-  static Str *s = nullptr;
-  static int offset = 0;
-
+void App::peekURL() {
   if (currentTab()->currentBuffer()->layout.empty()) {
     return;
   }
 
-  if (_currentKey == prev_key && s != nullptr) {
-    if (s->length - offset >= COLS())
-      offset++;
-    else if (s->length <= offset) /* bug ? */
-      offset = 0;
+  if (_currentKey == prev_key && _peekUrl.size()) {
+    if (_peekUrl.size() - _peekUrlOffset >= COLS()) {
+      _peekUrlOffset++;
+    } else if (_peekUrl.size() <= _peekUrlOffset) { /* bug ? */
+      _peekUrlOffset = 0;
+    }
     goto disp;
   } else {
-    offset = 0;
+    _peekUrlOffset = 0;
   }
 
-  s = nullptr;
+  _peekUrl = "";
   if (auto a = currentTab()->currentBuffer()->layout.retrieveCurrentAnchor()) {
-    s = Strnew(a->url);
-    if (s == nullptr) {
+    _peekUrl = a->url;
+    if (_peekUrl.empty()) {
       auto pu = urlParse(a->url.c_str(),
                          currentTab()->currentBuffer()->res->getBaseURL());
-      s = Strnew(pu.to_Str());
+      _peekUrl = pu.to_Str();
     }
   } else if (auto a =
                  currentTab()->currentBuffer()->layout.retrieveCurrentForm()) {
-    s = Strnew(a->formItem->form2str());
-    if (s == nullptr) {
+    _peekUrl = a->formItem->form2str();
+    if (_peekUrl.empty()) {
       auto pu = urlParse(a->url.c_str(),
                          currentTab()->currentBuffer()->res->getBaseURL());
-      s = Strnew(pu.to_Str());
+      _peekUrl = pu.to_Str();
     }
   } else if (auto a =
                  currentTab()->currentBuffer()->layout.retrieveCurrentImg()) {
-    s = Strnew(a->url);
-    if (s == nullptr) {
+    _peekUrl = a->url;
+    if (_peekUrl.empty()) {
       auto pu = urlParse(a->url.c_str(),
                          currentTab()->currentBuffer()->res->getBaseURL());
-      s = Strnew(pu.to_Str());
+      _peekUrl = pu.to_Str();
     }
   } else {
     return;
   }
 
-  if (DecodeURL)
-    s = Strnew_charp(url_decode0(s->ptr));
+  if (DecodeURL) {
+    _peekUrl = url_decode0(_peekUrl);
+  }
 
 disp:
   int n = searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS() - 1))
-    offset = (n - 1) * (COLS() - 1);
-  disp_message(&s->ptr[offset]);
+  if (n > 1 && _peekUrl.size() > (n - 1) * (COLS() - 1)) {
+    _peekUrlOffset = (n - 1) * (COLS() - 1);
+  }
+  disp_message(_peekUrl.substr(_peekUrlOffset).c_str());
 }
 
 std::string App::currentUrl() const {
-  static Str *s = nullptr;
-  static int offset = 0;
 
-  if (_currentKey == prev_key && s != nullptr) {
-    if (s->length - offset >= COLS())
-      offset++;
-    else if (s->length <= offset) /* bug ? */
-      offset = 0;
+  if (_currentKey == prev_key && _currentUrl.size()) {
+    if (_currentUrl.size() - _currentUrlOffset >= COLS())
+      _currentUrlOffset++;
+    else if (_currentUrl.size() <= _currentUrlOffset) /* bug ? */
+      _currentUrlOffset = 0;
   } else {
-    offset = 0;
-    s = Strnew(currentTab()->currentBuffer()->res->currentURL.to_Str());
+    _currentUrlOffset = 0;
+    _currentUrl = currentTab()->currentBuffer()->res->currentURL.to_Str();
     if (DecodeURL)
-      s = Strnew_charp(url_decode0(s->ptr));
+      _currentUrl = url_decode0(_currentUrl);
   }
   auto n = App::instance().searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS() - 1))
-    offset = (n - 1) * (COLS() - 1);
+  if (n > 1 && _currentUrl.size() > (n - 1) * (COLS() - 1)) {
+    _currentUrlOffset = (n - 1) * (COLS() - 1);
+  }
 
-  return &s->ptr[offset];
+  return _currentUrl.substr(_currentUrlOffset);
 }
 
 void App::doCmd() {
@@ -1728,45 +1727,49 @@ void App::initKeymap(bool force) {
   keymap_initialized = true;
 }
 
-Str *App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
-                             const char *title, const char *url) {
-  Str *s = NULL;
-  Str *u;
-  const char *p;
-  int l = this->COLS() - 1, i;
-
+std::string App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
+                                    const char *title, const char *url) {
+  int l = this->COLS() - 1;
+  std::stringstream s;
   if (title && *title) {
-    s = Strnew_m_charp("[", title, "]", NULL);
-    for (p = s->ptr; *p; p++) {
-      if (IS_CNTRL(*p) || IS_SPACE(*p))
-        *(char *)p = ' ';
+    s << "[" << title << "]";
+    // for (auto p = s.begin(); p != s.end(); p++) {
+    //   if (IS_CNTRL(*p) || IS_SPACE(*p)) {
+    //     *p = ' ';
+    //   }
+    // }
+    if (url) {
+      s << " ";
     }
-    if (url)
-      Strcat_charp(s, " ");
-    l -= get_Str_strwidth(s);
-    if (l <= 0)
-      return s;
+    l -= get_strwidth(s.str());
+    if (l <= 0) {
+      return s.str();
+    }
   }
-  if (!url)
-    return s;
+  if (!url) {
+    return s.str();
+  }
+
   auto pu = urlParse(url, buf->res->getBaseURL());
-  u = Strnew(pu.to_Str());
-  if (DecodeURL)
-    u = Strnew_charp(url_decode0(u->ptr));
-  if (l <= 4 || l >= get_Str_strwidth(u)) {
-    if (!s)
-      return u;
-    Strcat(s, u);
-    return s;
+  auto u = pu.to_Str();
+  if (DecodeURL) {
+    u = url_decode0(u);
   }
-  if (!s)
-    s = Strnew_size(this->COLS());
-  i = (l - 2) / 2;
-  Strcat_charp_n(s, u->ptr, i);
-  Strcat_charp(s, "..");
-  i = get_Str_strwidth(u) - (this->COLS() - 1 - get_Str_strwidth(s));
-  Strcat_charp(s, &u->ptr[i]);
-  return s;
+
+  if (l <= 4 || l >= get_strwidth(u)) {
+    if (s.str().empty()) {
+      return u;
+    }
+    s << u;
+    return s.str();
+  }
+
+  int i = (l - 2) / 2;
+  s << u.substr(0, i);
+  s << "..";
+  i = get_strwidth(u) - (this->COLS() - 1 - get_strwidth(s.str()));
+  s << u.c_str() + i;
+  return s.str();
 }
 
 std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
@@ -1785,8 +1788,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
     }
 
     if (p.size() || a)
-      s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() : NULL)
-              ->ptr;
+      s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() : NULL);
 
     if (s.size()) {
       auto sl = get_strwidth(s.c_str());

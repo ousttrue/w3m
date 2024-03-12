@@ -1,13 +1,12 @@
 #include "keyvalue.h"
 #include "url_decode.h"
 #include "alloc.h"
-#include "Str.h"
-#include "quote.h"
+#include <sstream>
 #include <string.h>
 
-const char *tag_get_value(struct keyvalue *t, const char *arg) {
+std::string tag_get_value(struct keyvalue *t, const char *arg) {
   for (; t; t = t->next) {
-    if (!strcasecmp(t->arg, arg))
+    if (t->arg == arg)
       return t->value;
   }
   return NULL;
@@ -15,7 +14,7 @@ const char *tag_get_value(struct keyvalue *t, const char *arg) {
 
 int tag_exists(struct keyvalue *t, const char *arg) {
   for (; t; t = t->next) {
-    if (!strcasecmp(t->arg, arg))
+    if (t->arg == arg)
       return 1;
   }
   return 0;
@@ -29,19 +28,19 @@ struct keyvalue *cgistr2tagarg(const char *cgistr) {
     t = (keyvalue *)New(struct keyvalue);
     t->next = t0;
     t0 = t;
-    auto tag = Strnew();
+    std::stringstream tag;
     while (*cgistr && *cgistr != '=' && *cgistr != '&')
-      Strcat_char(tag, *cgistr++);
-    t->arg = Str_form_unquote(tag)->ptr;
-    t->value = NULL;
+      tag << *cgistr++;
+    t->arg = tag.str();
+    t->value = {};
     if (*cgistr == '\0')
       return t;
     else if (*cgistr == '=') {
       cgistr++;
-      auto value = Strnew();
+      std::stringstream value;
       while (*cgistr && *cgistr != '&')
-        Strcat_char(value, *cgistr++);
-      t->value = Str_form_unquote(value)->ptr;
+        value << *cgistr++;
+      t->value = Str_form_unquote(value.str());
     } else if (*cgistr == '&')
       cgistr++;
   } while (*cgistr);

@@ -39,11 +39,11 @@ std::string Hist::toHtml() const {
   src << "<body>\n<h1>History Page</h1>\n<hr>\n";
   src << "<ol>\n";
 
-  const char *p, *q;
   for (auto &item : this->list) {
-    q = html_quote(item.c_str());
+    auto q = html_quote(item.c_str());
+    std::string p;
     if (DecodeURL)
-      p = html_quote(url_decode0(item.c_str()));
+      p = html_quote(url_decode0(item));
     else
       p = q;
     src << "<li><a href=\"";

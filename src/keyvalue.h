@@ -1,17 +1,13 @@
 #pragma once
+#include <string>
 
 struct keyvalue {
-  const char *arg;
-  const char *value;
+  std::string arg;
+  std::string value;
   keyvalue *next;
 };
 
-struct InternalAction {
-  const char *action;
-  void (*rout)(keyvalue *);
-};
-
-const char *tag_get_value(keyvalue *t, const char *arg);
+std::string tag_get_value(keyvalue *t, const char *arg);
 int tag_exists(keyvalue *t, const char *arg);
 keyvalue *cgistr2tagarg(const char *cgistr);
 void download_action(keyvalue *arg);
