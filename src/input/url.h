@@ -42,6 +42,8 @@ struct Url {
   bool IS_EMPTY_PARSED_URL() const {
     return (this->schema == SCM_UNKNOWN && this->file.empty());
   }
+
+  void do_label(std::string_view p);
 };
 
 Url urlParse(const char *url, std::optional<Url> current = {});

@@ -58,7 +58,8 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
     if (current) {
       url = *current;
     }
-    goto do_label;
+    url.do_label(p);
+    return url;
   }
 
   /* search for schema */
@@ -229,17 +230,24 @@ do_query:
       p++;
     url.query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
   }
-do_label:
-  if (url.schema == SCM_MISSING) {
-    url.schema = SCM_LOCAL;
-    url.file = p;
-    url.label = {};
-  } else if (*p == '#')
-    url.label = p + 1;
-  else
-    url.label = {};
+
+  url.do_label(p);
 
   return url;
+}
+
+void Url::do_label(std::string_view p) {
+  if (this->schema == SCM_MISSING) {
+    // ?
+    assert(false);
+    this->schema = SCM_LOCAL;
+    this->file = p;
+    this->label = {};
+  } else if (p.size() && p[0] == '#') {
+    this->label = p.substr(1);
+  } else {
+    this->label = {};
+  }
 }
 
 std::string Url::to_Str(bool pass, bool user, bool label) const {
