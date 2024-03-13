@@ -1,46 +1,44 @@
-#include "url_schema.h"
+#include "url_scheme.h"
 #include "quote.h"
 #include <string.h>
 #include <cctype>
 
 struct cmdtable {
   const char *cmdname;
-  UrlSchema cmd;
+  UrlScheme cmd;
 };
 
-struct cmdtable schematable[] = {
+struct cmdtable schemetable[] = {
     {"http", SCM_HTTP}, {"local", SCM_LOCAL}, {"file", SCM_LOCAL},
     {"data", SCM_DATA}, {"https", SCM_HTTPS}, {nullptr, SCM_UNKNOWN},
 };
 
-const char *schemaNumToName(UrlSchema schema) {
-  int i;
-
-  for (i = 0; schematable[i].cmdname != NULL; i++) {
-    if (schematable[i].cmd == schema)
-      return schematable[i].cmdname;
+std::string schemeNumToName(UrlScheme scheme) {
+  for (int i = 0; schemetable[i].cmdname != NULL; i++) {
+    if (schemetable[i].cmd == scheme)
+      return schemetable[i].cmdname;
   }
-  return NULL;
+  return {};
 }
 
-UrlSchema parseUrlSchema(const char **url) {
-  auto schema = SCM_MISSING;
+UrlScheme parseUrlScheme(const char **url) {
+  auto scheme = SCM_MISSING;
 
   const char *p = *url, *q;
   while (*p && (std::isalnum(*p) || *p == '.' || *p == '+' || *p == '-'))
     p++;
-  if (*p == ':') { /* schema found */
-    schema = SCM_UNKNOWN;
-    for (auto i = 0; (q = schematable[i].cmdname) != NULL; i++) {
+  if (*p == ':') { /* scheme found */
+    scheme = SCM_UNKNOWN;
+    for (auto i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
       int len = strlen(q);
       if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-        schema = schematable[i].cmd;
+        scheme = schemetable[i].cmd;
         *url = p + 1;
         break;
       }
     }
   }
-  return schema;
+  return scheme;
 }
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
@@ -49,8 +47,8 @@ UrlSchema parseUrlSchema(const char **url) {
 #define HTTP_DEFAULT_FILE "/"
 #endif /* not HTTP_DEFAULT_FILE */
 
-const char *DefaultFile(UrlSchema schema) {
-  switch (schema) {
+const char *DefaultFile(UrlScheme scheme) {
+  switch (scheme) {
   case SCM_HTTP:
   case SCM_HTTPS:
     return HTTP_DEFAULT_FILE;

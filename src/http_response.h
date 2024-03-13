@@ -13,7 +13,7 @@ extern bool DecodeCTE;
 
 struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   int http_response_code = 0;
-  Url currentURL = {.schema = SCM_UNKNOWN};
+  Url currentURL = {.scheme = SCM_UNKNOWN};
   std::optional<Url> baseURL;
   std::optional<Url> getBaseURL() const {
     if (this->baseURL) {

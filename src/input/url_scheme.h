@@ -1,7 +1,9 @@
 #pragma once
 #include <assert.h>
+#include <string>
 
-enum UrlSchema {
+// https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
+enum UrlScheme {
   SCM_UNKNOWN,
   SCM_HTTP,
   SCM_LOCAL,
@@ -10,15 +12,15 @@ enum UrlSchema {
   SCM_HTTPS,
   SCM_MISSING = 254,
 };
-inline const char *schema_str[] = {
+inline const char *scheme_str[] = {
     "", "http", "file", "file", "data", "https",
 };
 
-inline int getDefaultPort(UrlSchema schema) {
-  if (schema == SCM_UNKNOWN) {
+inline int getDefaultPort(UrlScheme scheme) {
+  if (scheme == SCM_UNKNOWN) {
     return 0;
   }
-  if (schema == SCM_MISSING) {
+  if (scheme == SCM_MISSING) {
     assert(false);
     return -1;
   }
@@ -39,8 +41,8 @@ inline int getDefaultPort(UrlSchema schema) {
       0,   /* mailto - not defined */
       443, /* https */
   };
-  return DefaultPort[schema];
+  return DefaultPort[scheme];
 }
-const char *DefaultFile(UrlSchema schema);
-UrlSchema parseUrlSchema(const char **url);
-const char *schemaNumToName(UrlSchema schema);
+const char *DefaultFile(UrlScheme scheme);
+UrlScheme parseUrlScheme(const char **url);
+std::string schemeNumToName(UrlScheme scheme);

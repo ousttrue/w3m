@@ -380,8 +380,8 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   auto base = this->res->getBaseURL();
 
   if ((no_referer_ptr && *no_referer_ptr) || !base ||
-      base->schema == SCM_LOCAL || base->schema == SCM_LOCAL_CGI ||
-      base->schema == SCM_DATA) {
+      base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
+      base->scheme == SCM_DATA) {
     option.no_referer = true;
   }
   if (option.referer.empty()) {
@@ -752,8 +752,8 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
     const int *no_referer_ptr = nullptr;
     current = this->res->getBaseURL();
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
-        current->schema == SCM_LOCAL || current->schema == SCM_LOCAL_CGI ||
-        current->schema == SCM_DATA)
+        current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
+        current->scheme == SCM_DATA)
       option.no_referer = true;
     else
       option.referer = this->res->currentURL.to_RefererStr();

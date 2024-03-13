@@ -23,7 +23,7 @@ HttpResponse::HttpResponse() {}
 HttpResponse::~HttpResponse() {}
 
 static bool same_url_p(const Url &pu1, const Url &pu2) {
-  return (pu1.schema == pu2.schema && pu1.port == pu2.port &&
+  return (pu1.scheme == pu2.scheme && pu1.port == pu2.port &&
           (pu1.host.size() ? pu2.host.size() ? pu1.host == pu2.host : false
                            : true) &&
           (pu1.file.size() ? pu2.file.size() ? pu1.file == pu2.file : false
@@ -78,7 +78,7 @@ int HttpResponse::readHeader(const std::shared_ptr<input_stream> &stream,
                              const Url &url) {
 
   assert(this->document_header.empty());
-  if (url.schema == SCM_HTTP || url.schema == SCM_HTTPS)
+  if (url.scheme == SCM_HTTP || url.scheme == SCM_HTTPS)
     http_response_code = -1;
   else
     http_response_code = 0;
@@ -102,7 +102,7 @@ int HttpResponse::readHeader(const std::shared_ptr<input_stream> &stream,
 }
 
 void HttpResponse::pushHeader(const Url &url, Str *lineBuf2) {
-  if ((url.schema == SCM_HTTP || url.schema == SCM_HTTPS) &&
+  if ((url.scheme == SCM_HTTP || url.scheme == SCM_HTTPS) &&
       http_response_code == -1) {
     auto p = lineBuf2->ptr;
     while (*p && !IS_SPACE(*p))
@@ -136,7 +136,7 @@ void HttpResponse::pushHeader(const Url &url, Str *lineBuf2) {
     process_http_cookie(&url, lineBuf2);
 
   } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
-             url.schema == SCM_LOCAL_CGI) {
+             url.scheme == SCM_LOCAL_CGI) {
 
     auto p = lineBuf2->ptr + 12;
     SKIP_BLANKS(p);
@@ -243,7 +243,7 @@ FILE *HttpResponse::createSourceFile() {
     // already created
     return {};
   }
-  // if (f.schema == SCM_LOCAL) {
+  // if (f.scheme == SCM_LOCAL) {
   //   // no cache for local file
   //   return {};
   // }
@@ -272,7 +272,7 @@ void HttpResponse::page_loaded(Url url,
   //   if (DecodeCTE && this->f.stream->IStype() != IST_ENCODED) {
   //     this->f.stream = newEncodedStream(this->f.stream, this->f.encoding);
   //   }
-  //   if (url.schema == SCM_LOCAL) {
+  //   if (url.scheme == SCM_LOCAL) {
   //     struct stat st;
   //     if (PreserveTimestamp && !stat(url.real_file.c_str(), &st))
   //       this->f.modtime = st.st_mtime;
@@ -346,17 +346,17 @@ void HttpResponse::page_loaded(Url url,
     //   }
     // }
 
-    // if (this->currentURL.schema == SCM_UNKNOWN) {
-    //   this->currentURL.schema = f->schema;
+    // if (this->currentURL.scheme == SCM_UNKNOWN) {
+    //   this->currentURL.scheme = f->scheme;
     // }
 
-    // if (f->schema == SCM_LOCAL && this->sourcefile.empty()) {
+    // if (f->scheme == SCM_LOCAL && this->sourcefile.empty()) {
     //   this->sourcefile = this->filename;
     // }
 
     // if (buf && buf != NO_BUFFER)
     // {
-    //   // this->real_schema = this->f.schema;
+    //   // this->real_schema = this->f.scheme;
     //   // this->real_type = real_type;
     //   if (this->currentURL.label.size()) {
     //     if (this->is_html_type()) {
@@ -396,7 +396,7 @@ std::string HttpResponse::last_modified() const {
       }
     }
     return "unknown";
-  } else if (this->currentURL.schema == SCM_LOCAL) {
+  } else if (this->currentURL.scheme == SCM_LOCAL) {
     struct stat st;
     if (stat(this->currentURL.file.c_str(), &st) < 0)
       return "unknown";

@@ -60,7 +60,7 @@ struct Cookie : public gc_cleanup {
       return 0;
     if (!pu.file.starts_with(this->path))
       return 0;
-    if (this->flag & COO_SECURE && pu.schema != SCM_HTTPS)
+    if (this->flag & COO_SECURE && pu.scheme != SCM_HTTPS)
       return 0;
     if (this->portl && !port_match(this->portl, pu.port))
       return 0;

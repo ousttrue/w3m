@@ -1,4 +1,5 @@
 #include "form_item.h"
+#include "ioutil.h"
 #include "readbuffer.h"
 #include "etc.h"
 #include "app.h"
@@ -68,7 +69,7 @@ void FormItemList::input_textarea() {
   }
   fclose(f);
 
-  if (exec_cmd(App::instance().myEditor(tmpf.c_str(), 1).c_str())) {
+  if (exec_cmd(ioutil::myEditor(tmpf, 1))) {
     goto input_end;
   }
 

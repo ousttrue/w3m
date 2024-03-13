@@ -4,8 +4,7 @@
 
 extern bool DecodeURL;
 
-std::string file_quote(std::string_view str);
-std::string file_unquote(std::string_view str);
+char url_unquote_char(const char **pstr);
 
 std::string Str_url_unquote(std::string_view url, bool is_form, bool safe);
 inline std::string Str_form_unquote(std::string_view url) {

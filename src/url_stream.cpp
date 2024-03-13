@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "ioutil.h"
 #include "file_util.h"
 #include "quote.h"
 #include "http_session.h"
@@ -51,7 +52,7 @@ struct HttpOption;
 
 struct UrlStream {
   const char *url = {};
-  UrlSchema schema = {};
+  UrlScheme scheme = {};
   bool is_cgi = false;
   EncodingType encoding = ENC_7BIT;
   std::shared_ptr<input_stream> stream;
@@ -62,8 +63,8 @@ struct UrlStream {
   const char *ssl_certificate = {};
   time_t modtime = -1;
 
-  UrlStream(UrlSchema schema, const std::shared_ptr<input_stream> &stream = {})
-      : schema(schema), stream(stream) {}
+  UrlStream(UrlScheme scheme, const std::shared_ptr<input_stream> &stream = {})
+      : scheme(scheme), stream(stream) {}
 
   std::shared_ptr<HttpRequest> openURL(std::string_view url,
                                        std::optional<Url> current,
@@ -132,11 +133,11 @@ void UrlStream::add_index_file(Url *pu) {
   }
 
   for (auto &ti : index_file_list) {
-    std::string p =
-        Strnew_m_charp(pu->file.c_str(), "/", file_quote(ti).c_str(), nullptr)
-            ->ptr;
+    std::string p = Strnew_m_charp(pu->file.c_str(), "/",
+                                   ioutil::file_quote(ti).c_str(), nullptr)
+                        ->ptr;
     p = cleanupName(p);
-    auto q = cleanupName(file_unquote(p));
+    auto q = cleanupName(ioutil::file_unquote(p));
     this->openFile(q);
     if (this->stream) {
       pu->file = p;
@@ -193,7 +194,7 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
 
   if (this->stream) {
     this->is_cgi = true;
-    // this->schema = pu->schema = SCM_LOCAL_CGI;
+    // this->scheme = pu->scheme = SCM_LOCAL_CGI;
     return;
   }
 
@@ -210,7 +211,7 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
         Strcat_char(tmp, '/');
       Strcat(tmp, hr->url.file);
       auto p = cleanupName(tmp->ptr);
-      auto q = cleanupName(file_unquote(p));
+      auto q = cleanupName(ioutil::file_unquote(p));
       if (dir_exist(q)) {
         hr->url.file = p;
         hr->url.real_file = q;
@@ -420,13 +421,13 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
 
   SslConnection sslh = {};
   {
-    sock = openSocket(hr->url.host.c_str(), schemaNumToName(hr->url.schema),
-                      hr->url.port);
+    sock = openSocket(hr->url.host.c_str(),
+                      schemeNumToName(hr->url.scheme).c_str(), hr->url.port);
     if (sock < 0) {
       hr->status = HTST_MISSING;
       return;
     }
-    if (hr->url.schema == SCM_HTTPS) {
+    if (hr->url.scheme == SCM_HTTPS) {
       sslh = openSSLHandle(sock, hr->url.host.c_str());
       if (!sslh.handle) {
         hr->status = HTST_MISSING;
@@ -437,7 +438,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     tmp = hr->to_Str();
     hr->status = HTST_NORMAL;
   }
-  if (hr->url.schema == SCM_HTTPS) {
+  if (hr->url.scheme == SCM_HTTPS) {
     this->stream = newSSLStream(sslh.handle, sock);
     if (sslh.handle)
       SSL_write(sslh.handle, tmp->ptr, tmp->length);
@@ -529,13 +530,13 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
   // }
 
   auto url = urlParse(Strnew(path)->ptr, current);
-  if (url.schema == SCM_LOCAL && url.file.empty()) {
+  if (url.scheme == SCM_LOCAL && url.file.empty()) {
     if (url.label.size()) {
       /* #hogege is not a label but a filename */
       auto tmp2 = Strnew_charp("#");
       Strcat(tmp2, url.label);
       url.file = tmp2->ptr;
-      url.real_file = cleanupName(file_unquote(url.file.c_str()));
+      url.real_file = cleanupName(ioutil::file_unquote(url.file));
       url.label = {};
     } else {
       /* given URL must be null string */
@@ -547,24 +548,23 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
     }
   }
 
-  if (LocalhostOnly && url.host.size() &&
-      !App::instance().is_localhost(url.host)) {
+  if (LocalhostOnly && url.host.size() && !ioutil::is_localhost(url.host)) {
     url.host = {};
   }
   auto hr = std::make_shared<HttpRequest>(url, current, option, request);
 
-  // this->schema = pu->schema;
+  // this->scheme = pu->scheme;
   // this->url = Strnew(pu->to_Str())->ptr;
   // this->ext = filename_extension(pu->file.c_str(), 1);
 
-  switch (hr->url.schema) {
+  switch (hr->url.scheme) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     this->openLocalCgi(hr, option, request);
     if (!this->stream && retryAsHttp && path[0] != '/') {
       // auto u = url;
-      // auto schema = parseUrlSchema(&u);
-      // if (schema == SCM_MISSING || schema == SCM_UNKNOWN) {
+      // auto scheme = parseUrlSchema(&u);
+      // if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
       //   /* retry it as "http://" */
       //   u = Strnew_m_charp("http://", url, nullptr)->ptr;
       //   return openURL(u, pu, current, option, request);
@@ -803,7 +803,7 @@ int UrlStream::doFileSave(const char *defstr) {
 //   this->compression = CMP_NOCOMPRESS;
 //
 //   std::string tmpf;
-//   if (this->schema != SCM_LOCAL) {
+//   if (this->scheme != SCM_LOCAL) {
 //     tmpf = App::instance().tmpfname(TMPF_DFL, ext);
 //   }
 //
@@ -856,7 +856,7 @@ int UrlStream::doFileSave(const char *defstr) {
 //   }
 //   this->stream = newFileStream(f1, fclose);
 //   if (tmpf.size()) {
-//     this->schema = SCM_LOCAL;
+//     this->scheme = SCM_LOCAL;
 //   }
 //   return tmpf;
 // #endif

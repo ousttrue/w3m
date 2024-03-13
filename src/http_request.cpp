@@ -67,7 +67,7 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   if (target.host.size()) {
     Strcat_charp(s, "Host: ");
     Strcat(s, target.host);
-    if (target.port != getDefaultPort(target.schema)) {
+    if (target.port != getDefaultPort(target.scheme)) {
       Strcat(s, Sprintf(":%d", target.port));
     }
     Strcat_charp(s, "\r\n");
@@ -85,15 +85,15 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
     int cross_origin = false;
     if (CrossOriginReferer && current && current->host.size() &&
         (target.host.empty() || current->host != target.host ||
-         current->port != target.port || current->schema != target.schema)) {
+         current->port != target.port || current->scheme != target.scheme)) {
       cross_origin = true;
     }
-    if (current && current->schema == SCM_HTTPS && target.schema != SCM_HTTPS) {
+    if (current && current->scheme == SCM_HTTPS && target.scheme != SCM_HTTPS) {
       /* Don't send Referer: if https:// -> http:// */
     } else if (option.referer.empty() && current &&
-               current->schema != SCM_LOCAL &&
-               current->schema != SCM_LOCAL_CGI &&
-               current->schema != SCM_DATA) {
+               current->scheme != SCM_LOCAL &&
+               current->scheme != SCM_LOCAL_CGI &&
+               current->scheme != SCM_DATA) {
       Strcat_charp(s, "Referer: ");
       if (cross_origin)
         Strcat(s, current->RefererOriginStr());
@@ -131,7 +131,7 @@ Str *HttpRequest::to_Str() const {
     }
     if (strncasecmp(i.c_str(), "Proxy-Authorization:",
                     sizeof("Proxy-Authorization:") - 1) == 0) {
-      if (url.schema == SCM_HTTPS && this->method != HttpMethod::CONNECT)
+      if (url.scheme == SCM_HTTPS && this->method != HttpMethod::CONNECT)
         continue;
     }
     Strcat_charp(tmp, i.c_str());

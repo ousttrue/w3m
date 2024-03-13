@@ -1,4 +1,5 @@
 #include "app.h"
+#include "ioutil.h"
 #include "url_decode.h"
 #include "etc.h"
 #include "ctrlcode.h"
@@ -37,14 +38,6 @@ bool displayLink = false;
 int displayLineInfo = false;
 
 const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
-
-// HOST_NAME_MAX is recommended by POSIX, but not required.
-// FreeBSD and OSX (as of 10.9) are known to not define it.
-// 255 is generally the safe value to assume and upstream
-// PHP does this as well.
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
 
 const char *CurrentKeyData;
 const char *CurrentCmdData;
@@ -454,33 +447,7 @@ App::App() : _content(new Content) {
   //
   _currentPid = getpid();
 
-#ifdef MAXPATHLEN
-  {
-    char buf[MAXPATHLEN];
-    getcwd(buf, MAXPATHLEN);
-    _currentDir = buf;
-  }
-#else
-  _currentDir = getcwd(nullptr, 0);
-#endif
-
-  {
-    char hostname[HOST_NAME_MAX + 2];
-    if (gethostname(hostname, HOST_NAME_MAX + 2) == 0) {
-      /* Don't use hostname if it is truncated.  */
-      hostname[HOST_NAME_MAX + 1] = '\0';
-      auto hostname_len = strlen(hostname);
-      if (hostname_len <= HOST_NAME_MAX && hostname_len < STR_SIZE_MAX) {
-        _hostName = hostname;
-      }
-    }
-  }
-
-  if (_editor.empty()) {
-    if (auto p = getenv("EDITOR")) {
-      _editor = p;
-    }
-  }
+  ioutil::initialize();
 
   if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
@@ -862,32 +829,6 @@ int App::searchKeyNum() {
     n = atoi(d);
   }
   return n * PREC_NUM;
-}
-
-std::string App::myEditor(const char *file, int line) const {
-  std::stringstream tmp;
-  bool set_file = false;
-  bool set_line = false;
-  for (auto p = _editor.begin(); *p; p++) {
-    if (*p == '%' && *(p + 1) == 's' && !set_file) {
-      tmp << file;
-      set_file = true;
-      p++;
-    } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
-      tmp << line;
-      set_line = true;
-      p++;
-    } else {
-      tmp << *p;
-    }
-  }
-  if (!set_file) {
-    if (!set_line && line > 1 && strcasestr(_editor.c_str(), "vi")) {
-      tmp << " +" << line;
-    }
-    tmp << " " << file;
-  }
-  return tmp.str();
 }
 
 const char *App::searchKeyData() {

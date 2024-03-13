@@ -1,4 +1,5 @@
 #include "proc.h"
+#include "ioutil.h"
 #include "dict.h"
 #include "app.h"
 #include "html/form_item.h"
@@ -664,7 +665,7 @@ std::shared_ptr<CoroutineState<void>> editBf(const FuncContext &context) {
   if (fn.empty() || /* Behaving as a pager */
       (CurrentTab->currentBuffer()->res->type.empty() &&
        CurrentTab->currentBuffer()->res->edit == nullptr) || /* Reading shell */
-      CurrentTab->currentBuffer()->res->currentURL.schema != SCM_LOCAL ||
+      CurrentTab->currentBuffer()->res->currentURL.scheme != SCM_LOCAL ||
       CurrentTab->currentBuffer()->res->currentURL.file ==
           "-" /* file is std input  */
   ) {
@@ -681,9 +682,8 @@ std::shared_ptr<CoroutineState<void>> editBf(const FuncContext &context) {
               nullptr)
               ->ptr;
   } else {
-    cmd = App::instance().myEditor(
-        shell_quote(fn.c_str()),
-        CurrentTab->currentBuffer()->layout.cursor().row);
+    cmd = ioutil::myEditor(shell_quote(fn.c_str()),
+                           CurrentTab->currentBuffer()->layout.cursor().row);
   }
   exec_cmd(cmd);
 
@@ -703,9 +703,8 @@ std::shared_ptr<CoroutineState<void>> editScr(const FuncContext &context) {
   }
   CurrentTab->currentBuffer()->saveBuffer(f, true);
   fclose(f);
-  exec_cmd(App::instance().myEditor(
-      shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout.cursor().row));
+  exec_cmd(ioutil::myEditor(shell_quote(tmpf.c_str()),
+                            CurrentTab->currentBuffer()->layout.cursor().row));
   unlink(tmpf.c_str());
 }
 
@@ -1247,7 +1246,7 @@ std::shared_ptr<CoroutineState<void>> svSrc(const FuncContext &context) {
   PermitSaveToPipe = true;
 
   const char *file;
-  if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL) {
+  if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL) {
     file = guess_filename(
         CurrentTab->currentBuffer()->res->currentURL.real_file.c_str());
   } else {
@@ -1296,7 +1295,7 @@ std::shared_ptr<CoroutineState<void>> vwSrc(const FuncContext &context) {
 //"Load current document anew"
 std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
 
-  if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
+  if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     App::instance().disp_err_message("Can't reload stdin");
@@ -1412,7 +1411,7 @@ std::shared_ptr<CoroutineState<void>> rFrame(const FuncContext &context) {
 // EXTERN
 //"Display using an external browser"
 std::shared_ptr<CoroutineState<void>> extbrz(const FuncContext &context) {
-  if (CurrentTab->currentBuffer()->res->currentURL.schema == SCM_LOCAL &&
+  if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL &&
       CurrentTab->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     App::instance().disp_err_message("Can't browse stdin");

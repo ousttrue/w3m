@@ -1,9 +1,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
-
+#include "ioutil.h"
 #include "local_cgi.h"
-#include "app.h"
-#include "http_response.h"
 #include "rc.h"
 #include "w3m.h"
 #include "http_request.h"
@@ -11,13 +9,11 @@
 #include "html/form.h"
 #include "alloc.h"
 #include "proc.h"
-#include "hash.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <errno.h>
 #include <time.h>
 #define HAVE_DIRENT_H 1
 #define DEV_NULL_PATH "/dev/null"
@@ -70,8 +66,7 @@ Str *localCookie() {
   if (Local_cookie)
     return Local_cookie;
   srand48((long)(uint64_t)New(char) + (long)time(NULL));
-  Local_cookie =
-      Sprintf("%ld@%s", lrand48(), App::instance().hostname().c_str());
+  Local_cookie = Sprintf("%ld@%s", lrand48(), ioutil::hostname().c_str());
   return Local_cookie;
 }
 

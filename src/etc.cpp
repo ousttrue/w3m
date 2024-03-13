@@ -1,5 +1,5 @@
 #include "etc.h"
-#include "url_decode.h"
+#include "ioutil.h"
 #include "quote.h"
 #include "file_util.h"
 #include "ctrlcode.h"
@@ -227,47 +227,6 @@ const char *expandPath(const char *name) {
   return name;
 }
 
-std::string expandName(std::string_view name) {
-#ifdef _MSC_VER
-  return {};
-#else
-  struct passwd *passent, *getpwnam(const char *);
-  Str *extpath = NULL;
-
-  if (name.empty()) {
-    return {};
-  }
-  auto p = name.begin();
-  if (*p == '/') {
-    if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2))) && personal_document_root) {
-      p += 2;
-      auto q = strchr(p, '/');
-      if (q) { /* /~user/dir... */
-        passent = getpwnam(allocStr(p, q - p));
-        p = q;
-      } else { /* /~user */
-        passent = getpwnam(p);
-        p = "";
-      }
-      if (!passent)
-        goto rest;
-      extpath =
-          Strnew_m_charp(passent->pw_dir, "/", personal_document_root, NULL);
-      if (*personal_document_root == '\0' && *p == '/')
-        p++;
-    } else
-      goto rest;
-    if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
-      p++;
-    Strcat_charp(extpath, p);
-    return extpath->ptr;
-  } else
-    return expandPath(p);
-rest:
-  return {name.begin(), name.end()};
-#endif
-}
-
 const char *file_to_url(const char *file) {
   Str *tmp;
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
@@ -299,7 +258,7 @@ const char *file_to_url(const char *file) {
   } else
 #endif
       if (file[0] != '/') {
-    tmp = Strnew(App::instance().pwd());
+    tmp = Strnew(ioutil::pwd());
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, file);
@@ -314,7 +273,7 @@ const char *file_to_url(const char *file) {
   if (drive)
     Strcat_charp(tmp, drive);
 #endif
-  Strcat(tmp, file_quote(cleanupName(file)));
+  Strcat(tmp, ioutil::file_quote(cleanupName(file)));
   return tmp->ptr;
 }
 

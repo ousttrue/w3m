@@ -19,7 +19,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
 
   // Directory Open ?
   // if (f.stream == nullptr) {
-  //   switch (f.schema) {
+  //   switch (f.scheme) {
   //   case SCM_LOCAL: {
   //     struct stat st;
   //     if (stat(pu.real_file.c_str(), &st) < 0)
@@ -59,7 +59,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
     return nullptr;
   }
 
-  if (hr->url.schema == SCM_HTTP || hr->url.schema == SCM_HTTPS) {
+  if (hr->url.scheme == SCM_HTTP || hr->url.scheme == SCM_HTTPS) {
 
     // if (fmInitialized) {
     //   term_cbreak();
@@ -114,7 +114,7 @@ std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
     }
 
     /*f.modtime =*/mymktime(res->getHeader("Last-Modified:"));
-  } else if (hr->url.schema == SCM_DATA) {
+  } else if (hr->url.scheme == SCM_DATA) {
     // res->type = f.guess_type;
   } else if (DefaultType) {
     res->type = DefaultType;

@@ -7,6 +7,9 @@ project(
     ],
 )
 
+cc = meson.get_compiler('c')
+cpp = meson.get_compiler('cpp')
+
 # gc_dep= dependency('gc')
 cxx = meson.get_compiler('cpp')
 gc_dep = dependency('gc', default_options: ['default_library=static'])
@@ -36,15 +39,12 @@ deps = [
     # component_dep,
 ]
 
-cc = meson.get_compiler('c')
-m_dep = cc.find_library('m', required: false)
 
 if host_machine.system() != 'windows'
-    # ncurses_dep = dependency('ncurses')
-    # deps += ncurses_dep
-    deps += (
-        m_dep # , wc_dep
-    )
+    m_dep = cc.find_library('m', required: false)
+    deps += [
+        m_dep,
+    ]
 endif
 
 subdir('src')

@@ -1,10 +1,11 @@
 #pragma once
-#include "url_schema.h"
+#include "url_scheme.h"
 #include <string>
 #include <optional>
 
+/// https://datatracker.ietf.org/doc/html/rfc3986#section-3
 struct Url {
-  UrlSchema schema = SCM_UNKNOWN;
+  UrlScheme scheme = SCM_UNKNOWN;
   std::string user;
   std::string pass;
   std::string host;
@@ -17,7 +18,7 @@ struct Url {
   static Url parse(const char *url, std::optional<Url> current = {});
 
   Url &operator=(const Url &src) {
-    this->schema = src.schema;
+    this->scheme = src.scheme;
     this->port = src.port;
     this->user = src.user;
     this->pass = src.pass;
@@ -40,7 +41,7 @@ struct Url {
   }
 
   bool IS_EMPTY_PARSED_URL() const {
-    return (this->schema == SCM_UNKNOWN && this->file.empty());
+    return (this->scheme == SCM_UNKNOWN && this->file.empty());
   }
 
   void do_label(std::string_view p);

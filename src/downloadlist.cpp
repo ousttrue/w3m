@@ -1,15 +1,10 @@
 #include "downloadlist.h"
-#include "app.h"
-#include "quote.h"
 #include "keyvalue.h"
 #include "html/readbuffer.h"
-#include "http_session.h"
-#include "html/anchor.h"
 #include "etc.h"
-#include "w3m.h"
 #include "alloc.h"
 #include "Str.h"
-#include <csignal>
+#include "ioutil.h"
 #include <sys/stat.h>
 #include "proc.h"
 
@@ -30,7 +25,7 @@ void addDownloadList(int pid, const char *url, const char *save,
   d->pid = pid;
   d->url = url;
   if (save[0] != '/' && save[0] != '~') {
-    save = Strnew_m_charp(App::instance().pwd().c_str(), "/", save, NULL)->ptr;
+    save = Strnew_m_charp(ioutil::pwd().c_str(), "/", save, NULL)->ptr;
   }
   d->save = expandPath(save);
   d->lock = lock;
