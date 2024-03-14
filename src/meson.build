@@ -78,7 +78,6 @@ executable(
         'html/tagtable.cpp',
         'html/html_parser.cpp',
         'html/lineprop.cpp',
-        'html/preform.cpp',
         'html/html_quote.cpp',
         'Str.cpp',
         'regex.cpp',

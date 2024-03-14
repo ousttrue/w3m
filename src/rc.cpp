@@ -5,7 +5,6 @@
 
 #include "rc.h"
 #include "html/table.h"
-#include "html/preform.h"
 #include "quote.h"
 #include "url_decode.h"
 #include "dict.h"
@@ -476,8 +475,6 @@ struct param_ptr params9[] = {
     {"ftppasswd", P_STRING, PI_TEXT, (void *)&ftppasswd, CMT_FTPPASS, NULL},
     {"ftppass_hostnamegen", P_INT, PI_ONOFF, (void *)&ftppass_hostnamegen,
      CMT_FTPPASS_HOSTNAMEGEN, NULL},
-    {"pre_form_file", P_STRING, PI_TEXT, (void *)&pre_form_file,
-     CMT_PRE_FORM_FILE, NULL},
     {"siteconf_file", P_STRING, PI_TEXT, (void *)&siteconf_file,
      CMT_SITECONF_FILE, NULL},
     {"user_agent", P_STRING, PI_TEXT, (void *)&UserAgent, CMT_USERAGENT, NULL},
@@ -825,7 +822,6 @@ void sync_with_option(void) {
   initMimeTypes();
   displayImage = false; /* XXX */
   loadPasswd();
-  loadPreForm();
 
   if (AcceptLang == NULL || *AcceptLang == '\0') {
     /* TRANSLATORS:
