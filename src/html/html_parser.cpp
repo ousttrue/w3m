@@ -1070,7 +1070,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
           auto _id = url_quote(id);
           data->registerName(_id.c_str(), nlines, line.len());
         }
-        if (tag->parsedtag_get_value(ATTR_HREF, &p)){
+        if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
           p = Strnew(url_quote(remove_space(p)))->ptr;
         }
         const char *q = nullptr;
@@ -1264,7 +1264,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         const char *p;
         if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
           p = Strnew(url_quote(remove_space(p)))->ptr;
-          res->baseURL = urlParse(p, res->currentURL);
+          res->baseURL = {p, res->currentURL};
         }
         if (tag->parsedtag_get_value(ATTR_TARGET, &p))
           res->baseTarget = url_quote(p);
@@ -1980,7 +1980,7 @@ int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
     return h_env->HTML_INPUT_ALT_enter(tag);
   case HTML_N_INPUT_ALT:
     return h_env->HTML_INPUT_ALT_exit();
-  case HTML_TABLE: 
+  case HTML_TABLE:
     return h_env->HTML_TABLE_enter(tag);
   case HTML_N_TABLE:
     // should be processed in HTMLlineproc()

@@ -1020,18 +1020,17 @@ std::shared_ptr<CoroutineState<void>> goURL(const FuncContext &context) {
 // GOTO_HOME
 //"Open home page in a new buffer"
 std::shared_ptr<CoroutineState<void>> goHome(const FuncContext &context) {
-  const char *url;
+  const char *url = nullptr;
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
     auto cur_buf = CurrentTab->currentBuffer();
     SKIP_BLANKS(url);
-    url = Strnew(url_quote(url))->ptr;
-    auto p_url = urlParse(url);
-    URLHist->push(p_url.to_Str().c_str());
+    Url p_url(url_quote(url));
+    URLHist->push(p_url.to_Str());
     if (auto buf =
             CurrentTab->currentBuffer()->cmd_loadURL(url, {}, {}, nullptr)) {
       CurrentTab->pushBuffer(buf);
-      URLHist->push(buf->res->currentURL.to_Str().c_str());
+      URLHist->push(buf->res->currentURL.to_Str());
     }
   }
   co_return;
@@ -1428,8 +1427,7 @@ std::shared_ptr<CoroutineState<void>> linkbrz(const FuncContext &context) {
   auto a = CurrentTab->currentBuffer()->layout.retrieveCurrentAnchor();
   if (a == nullptr)
     co_return;
-  auto pu =
-      urlParse(a->url.c_str(), CurrentTab->currentBuffer()->res->getBaseURL());
+  Url pu(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
   invoke_browser(pu.to_Str().c_str());
 }
 

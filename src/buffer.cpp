@@ -58,7 +58,7 @@ std::string Buffer::link_info() const {
     Url pu;
     std::string url;
     if (l->url) {
-      pu = urlParse(l->url, this->res->getBaseURL());
+      pu = {l->url, this->res->getBaseURL()};
       url = html_quote(pu.to_Str().c_str());
     } else {
       url = "(empty)";
@@ -115,7 +115,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
                  nullptr);
 
   if (auto a = this->layout.retrieveCurrentAnchor()) {
-    auto pu = urlParse(a->url.c_str(), this->res->getBaseURL());
+    Url pu(a->url.c_str(), this->res->getBaseURL());
     auto p = pu.to_Str();
     auto q = html_quote(p);
     if (DecodeURL)
@@ -128,7 +128,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
   }
 
   if (auto a = this->layout.retrieveCurrentImg()) {
-    auto pu = urlParse(a->url.c_str(), this->res->getBaseURL());
+    Url pu(a->url.c_str(), this->res->getBaseURL());
     auto p = pu.to_Str();
     auto q = html_quote(p);
     if (DecodeURL)
@@ -201,7 +201,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       std::string p;
       std::string u;
       if (l->url) {
-        auto pu = Url::parse(l->url, buf->res->getBaseURL());
+        Url pu(l->url, buf->res->getBaseURL());
         p = pu.to_Str();
         u = html_quote(p);
         if (DecodeURL)
@@ -230,7 +230,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       auto a = &buf->layout.data._href->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      auto pu = urlParse(a->url.c_str(), buf->res->getBaseURL());
+      Url pu(a->url.c_str(), buf->res->getBaseURL());
       auto p = pu.to_Str();
       auto u = html_quote(p);
       if (DecodeURL)
@@ -252,7 +252,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
       auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      auto pu = urlParse(a->url.c_str(), buf->res->getBaseURL());
+      Url pu(a->url.c_str(), buf->res->getBaseURL());
       auto p = pu.to_Str();
       auto u = html_quote(p);
       if (DecodeURL)
@@ -397,7 +397,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
 
   auto buf = Buffer::create(res);
 
-  auto pu = urlParse(url, base);
+  Url pu(url, base);
   URLHist->push(pu.to_Str().c_str());
 
   return buf;
@@ -685,7 +685,7 @@ Buffer::followAnchor(bool check_target) {
       co_return {a, this->gotoLabel(a->url.substr(1))};
     }
 
-    auto u = urlParse(a->url.c_str(), this->res->getBaseURL());
+    Url u(a->url.c_str(), this->res->getBaseURL());
     if (u.to_Str() == this->res->currentURL.to_Str()) {
       // index within this buffer
       if (u.label.size()) {
@@ -734,7 +734,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
     }
     auto a = this->layout.retrieveCurrentAnchor();
     if (a) {
-      auto p_url = urlParse(a->url.c_str(), current);
+      Url p_url(a->url.c_str(), current);
       auto a_url = p_url.to_Str();
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url.c_str());
@@ -771,7 +771,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
     return this->gotoLabel(url.substr(1));
   }
 
-  auto p_url = urlParse(url.c_str(), current);
+  Url p_url(url.c_str(), current);
   URLHist->push(p_url.to_Str());
   return this->cmd_loadURL(url.c_str(), current, option, nullptr);
 }

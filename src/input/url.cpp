@@ -43,7 +43,7 @@ static std::string copyPath(const char *orgpath, int length,
   return ss.str();
 }
 
-Url Url::parse(const char *__src, std::optional<Url> current) {
+void Url::parse(const char *__src, std::optional<Url> current) {
   // quote 0x01-0x20, 0x7F-0xFF
   auto _src = url_quote(__src);
   auto src = _src.c_str();
@@ -51,23 +51,21 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
   const char *q = {};
   const char *qq = {};
 
-  Url url = {};
-
   /* RFC1808: Relative Uniform Resource Locators
    * 4.  Resolving Relative URLs
    */
   if (*src == '\0' || *src == '#') {
     if (current) {
-      url = *current;
+      *this = *current;
     }
-    url.do_label(p);
-    return url;
+    this->do_label(p);
+    return;
   }
 
   /* search for scheme */
   auto scheme = parseUrlScheme(&p);
   if (scheme) {
-    url.scheme = *scheme;
+    this->scheme = *scheme;
   } else {
     /* scheme part is not found in the url. This means either
      * (a) the url is relative to the current or (b) the url
@@ -77,15 +75,16 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
       switch (current->scheme) {
       case SCM_LOCAL:
       case SCM_LOCAL_CGI:
-        url.scheme = SCM_LOCAL;
+        this->scheme = SCM_LOCAL;
         break;
 
       default:
-        url.scheme = current->scheme;
+        this->scheme = current->scheme;
         break;
       }
-    } else
-      url.scheme = SCM_LOCAL;
+    } else {
+      this->scheme = SCM_LOCAL;
+    }
     p = src;
     if (!strncmp(p, "//", 2)) {
       /* URL begins with // */
@@ -98,20 +97,20 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
   }
 
   /* scheme part has been found */
-  if (url.scheme == SCM_UNKNOWN) {
-    url.file = src;
-    return url;
+  if (this->scheme == SCM_UNKNOWN) {
+    this->file = src;
+    return;
   }
 
   /* get host and port */
   if (p[0] != '/' || p[1] != '/') { /* scheme:foo or scheme:/foo */
-    url.host = {};
-    url.port = getDefaultPort(url.scheme);
+    this->host = {};
+    this->port = getDefaultPort(this->scheme);
     goto analyze_file;
   }
 
   /* after here, p begins with // */
-  if (url.scheme == SCM_LOCAL) { /* file://foo           */
+  if (this->scheme == SCM_LOCAL) { /* file://foo           */
     if (p[2] == '/' || p[2] == '~'
     /* <A HREF="file:///foo">file:///foo</A>  or <A
      * HREF="file://~user">file://~user</A> */
@@ -151,37 +150,39 @@ analyze_url:
       p++;
     if (*p == '@') {
       /* scheme://user:pass@...       */
-      url.user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
-      url.pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+      this->user = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE);
+      this->pass = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
       p++;
       goto analyze_url;
     }
     /* scheme://host:port/ */
-    url.host = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE, true);
+    this->host = copyPath(qq, q - 1 - qq, COPYPATH_SPC_IGNORE, true);
     {
       std::string tmp(q, q + (p - q));
-      url.port = atoi(tmp.c_str());
+      this->port = atoi(tmp.c_str());
     }
     /* *p is one of ['\0', '/', '?', '#'] */
     break;
+
   case '@':
     /* scheme://user@...            */
-    url.user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+    this->user = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
     p++;
     goto analyze_url;
+
   case '\0':
     /* scheme://host                */
   case '/':
   case '?':
   case '#':
-    url.host = copyPath(q, p - q, COPYPATH_SPC_IGNORE, true);
-    url.port = getDefaultPort(url.scheme);
+    this->host = copyPath(q, p - q, COPYPATH_SPC_IGNORE, true);
+    this->port = getDefaultPort(this->scheme);
     break;
   }
-analyze_file:
 
-  if ((*p == '\0' || *p == '#' || *p == '?') && url.host.empty()) {
-    url.file = "";
+analyze_file:
+  if ((*p == '\0' || *p == '#' || *p == '?') && this->host.empty()) {
+    this->file = "";
     goto do_query;
   }
 
@@ -189,15 +190,16 @@ analyze_file:
   if (*p == '/')
     p++;
   if (*p == '\0' || *p == '#' || *p == '?') { /* scheme://host[:port]/ */
-    url.file = DefaultFile(url.scheme);
+    this->file = DefaultFile(this->scheme);
     goto do_query;
   }
+
   {
     auto cgi = strchr(p, '?');
   again:
     while (*p && *p != '#' && p != cgi)
       p++;
-    if (*p == '#' && url.scheme == SCM_LOCAL) {
+    if (*p == '#' && this->scheme == SCM_LOCAL) {
       /*
        * According to RFC2396, # means the beginning of
        * URI-reference, and # should be escaped.  But,
@@ -221,10 +223,10 @@ analyze_file:
         p++;
       }
     }
-    if (url.scheme == SCM_LOCAL) {
-      url.file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+    if (this->scheme == SCM_LOCAL) {
+      this->file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
     } else {
-      url.file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+      this->file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
     }
   }
 
@@ -233,12 +235,10 @@ do_query:
     q = ++p;
     while (*p && *p != '#')
       p++;
-    url.query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
+    this->query = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
   }
 
-  url.do_label(p);
-
-  return url;
+  this->do_label(p);
 }
 
 void Url::do_label(std::string_view p) {
@@ -328,39 +328,40 @@ std::string Url::to_Str(bool pass, bool user, bool label) const {
   }
 }
 
-Url urlParse(const char *src, std::optional<Url> current) {
-  auto url = Url::parse(src, current);
-  if (url.scheme == SCM_DATA) {
-    return url;
+Url::Url(const std::string &_src, std::optional<Url> current) {
+  auto src = _src.c_str();
+  this->parse(src, current);
+  if (this->scheme == SCM_DATA) {
+    return;
   }
 
-  if (url.scheme == SCM_LOCAL) {
-    auto q = ioutil::expandName(ioutil::file_unquote(url.file));
+  if (this->scheme == SCM_LOCAL) {
+    auto q = ioutil::expandName(ioutil::file_unquote(this->file));
     if (IS_ALPHA(q[0]) && q[1] == ':') {
       std::string drive = q.substr(0, 2);
       drive += ioutil::file_quote(q.substr(2));
-      url.file = drive;
+      this->file = drive;
     } else {
-      url.file = ioutil::file_quote(q);
+      this->file = ioutil::file_quote(q);
     }
   }
 
   int relative_uri = false;
   if (current &&
-      (url.scheme == current->scheme ||
-       (url.scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI)) &&
-      url.host.empty()) {
+      (this->scheme == current->scheme ||
+       (this->scheme == SCM_LOCAL && current->scheme == SCM_LOCAL_CGI)) &&
+      this->host.empty()) {
     /* Copy omitted element from the current URL */
-    url.user = current->user;
-    url.pass = current->pass;
-    url.host = current->host;
-    url.port = current->port;
-    if (url.file.size()) {
-      if (url.file[0] != '/' &&
-          !(url.scheme == SCM_LOCAL && IS_ALPHA(url.file[0]) &&
-            url.file[1] == ':')) {
+    this->user = current->user;
+    this->pass = current->pass;
+    this->host = current->host;
+    this->port = current->port;
+    if (this->file.size()) {
+      if (this->file[0] != '/' &&
+          !(this->scheme == SCM_LOCAL && IS_ALPHA(this->file[0]) &&
+            this->file[1] == ':')) {
         /* file is relative [process 1] */
-        auto p = url.file;
+        auto p = this->file;
         if (current->file.size()) {
           std::string tmp = current->file;
           while (tmp.size()) {
@@ -370,60 +371,60 @@ Url urlParse(const char *src, std::optional<Url> current) {
             tmp.pop_back();
           }
           tmp += p;
-          url.file = tmp;
+          this->file = tmp;
           relative_uri = true;
         }
       }
     } else { /* scheme:[?query][#label] */
-      url.file = current->file;
-      if (url.query.empty()) {
-        url.query = current->query;
+      this->file = current->file;
+      if (this->query.empty()) {
+        this->query = current->query;
       }
     }
     /* comment: query part need not to be completed
      * from the current URL. */
   }
 
-  if (url.file.size()) {
-    if (url.scheme == SCM_LOCAL && url.file[0] != '/' &&
-        !(IS_ALPHA(url.file[0]) && url.file[1] == ':') && url.file != "-") {
+  if (this->file.size()) {
+    if (this->scheme == SCM_LOCAL && this->file[0] != '/' &&
+        !(IS_ALPHA(this->file[0]) && this->file[1] == ':') &&
+        this->file != "-") {
       /* local file, relative path */
       auto tmp = ioutil::pwd();
       if (tmp.back() != '/') {
         tmp += '/';
       }
-      tmp += ioutil::file_unquote(url.file.c_str());
-      url.file = ioutil::file_quote(cleanupName(tmp.c_str()));
-    } else if (url.scheme == SCM_HTTP || url.scheme == SCM_HTTPS) {
+      tmp += ioutil::file_unquote(this->file.c_str());
+      this->file = ioutil::file_quote(cleanupName(tmp.c_str()));
+    } else if (this->scheme == SCM_HTTP || this->scheme == SCM_HTTPS) {
       if (relative_uri) {
-        /* In this case, url.file is created by [process 1] above.
-         * url.file may contain relative path (for example,
+        /* In this case, this->file is created by [process 1] above.
+         * this->file may contain relative path (for example,
          * "/foo/../bar/./baz.html"), cleanupName() must be applied.
          * When the entire abs_path is given, it still may contain
-         * elements like `//', `..' or `.' in the url.file. It is
+         * elements like `//', `..' or `.' in the this->file. It is
          * server's responsibility to canonicalize such path.
          */
-        url.file = cleanupName(url.file.c_str());
+        this->file = cleanupName(this->file.c_str());
       }
-    } else if (url.file[0] == '/') {
+    } else if (this->file[0] == '/') {
       /*
        * this happens on the following conditions:
        * (1) ftp scheme (2) local, looks like absolute path.
        * In both case, there must be no side effect with
        * cleanupName(). (I hope so...)
        */
-      url.file = cleanupName(url.file.c_str());
+      this->file = cleanupName(this->file.c_str());
     }
-    if (url.scheme == SCM_LOCAL) {
-      if (url.host.size() && !ioutil::is_localhost(url.host)) {
+    if (this->scheme == SCM_LOCAL) {
+      if (this->host.size() && !ioutil::is_localhost(this->host)) {
         std::string tmp("//");
-        tmp += url.host;
-        tmp += cleanupName(ioutil::file_unquote(url.file.c_str()));
-        url.real_file = tmp;
+        tmp += this->host;
+        tmp += cleanupName(ioutil::file_unquote(this->file.c_str()));
+        this->real_file = tmp;
       } else {
-        url.real_file = cleanupName(ioutil::file_unquote(url.file.c_str()));
+        this->real_file = cleanupName(ioutil::file_unquote(this->file.c_str()));
       }
     }
   }
-  return url;
 }

@@ -9,7 +9,7 @@
 
 const char *DefaultType = nullptr;
 
-std::shared_ptr<HttpResponse> loadGeneralFile(std::string_view path,
+std::shared_ptr<HttpResponse> loadGeneralFile(const std::string &path,
                                               std::optional<Url> current,
                                               const HttpOption &option,
                                               FormList *request) {

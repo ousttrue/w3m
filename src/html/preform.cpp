@@ -22,8 +22,7 @@ pre_form *add_pre_form(pre_form *prev, const char *url, Regex *re_url,
   else
     _new = PreForm = (struct pre_form *)New(struct pre_form);
   if (url && !re_url) {
-    auto pu = urlParse(url);
-    _new->url = Strnew(pu.to_Str())->ptr;
+    _new->url = Strnew(Url(url).to_Str())->ptr;
   } else {
     _new->url = url;
   }

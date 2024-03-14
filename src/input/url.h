@@ -1,6 +1,7 @@
 #pragma once
 #include "url_scheme.h"
 #include <string>
+#include <string_view>
 #include <optional>
 
 /// https://datatracker.ietf.org/doc/html/rfc3986#section-3
@@ -15,7 +16,12 @@ struct Url {
   std::string query;
   std::string label;
 
-  static Url parse(const char *url, std::optional<Url> current = {});
+private:
+  void parse(const char *url, std::optional<Url> current = {});
+
+public:
+  Url() {}
+  Url(const std::string &url, std::optional<Url> current = {});
 
   Url &operator=(const Url &src) {
     this->scheme = src.scheme;
@@ -46,5 +52,3 @@ struct Url {
 
   void do_label(std::string_view p);
 };
-
-Url urlParse(const char *url, std::optional<Url> current = {});

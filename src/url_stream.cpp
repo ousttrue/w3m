@@ -66,7 +66,7 @@ struct UrlStream {
   UrlStream(UrlScheme scheme, const std::shared_ptr<input_stream> &stream = {})
       : scheme(scheme), stream(stream) {}
 
-  std::shared_ptr<HttpRequest> openURL(std::string_view url,
+  std::shared_ptr<HttpRequest> openURL(const std::string &url,
                                        std::optional<Url> current,
                                        const HttpOption &option,
                                        FormList *request);
@@ -517,7 +517,7 @@ void UrlStream::openData(const Url &url) {
   this->guess_type = (*p != '\0') ? p : "text/plain";
 }
 
-std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
+std::shared_ptr<HttpRequest> UrlStream::openURL(const std::string &path,
                                                 std::optional<Url> current,
                                                 const HttpOption &option,
                                                 FormList *request) {
@@ -529,7 +529,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(std::string_view path,
   //   u = url;
   // }
 
-  auto url = urlParse(Strnew(path)->ptr, current);
+  Url url(path, current);
   if (url.scheme == SCM_LOCAL && url.file.empty()) {
     if (url.label.size()) {
       /* #hogege is not a label but a filename */
@@ -863,7 +863,7 @@ int UrlStream::doFileSave(const char *defstr) {
 // }
 
 std::tuple<std::shared_ptr<HttpRequest>, std::shared_ptr<input_stream>>
-openURL(std::string_view url, std::optional<Url> current,
+openURL(const std::string &url, std::optional<Url> current,
         const HttpOption &option, FormList *request) {
   UrlStream f(SCM_UNKNOWN);
   auto res = f.openURL(url, current, option, request);
