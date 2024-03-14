@@ -51,7 +51,7 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
   const char *q = {};
   const char *qq = {};
 
-  Url url = {.scheme = SCM_MISSING};
+  Url url = {};
 
   /* RFC1808: Relative Uniform Resource Locators
    * 4.  Resolving Relative URLs
@@ -65,8 +65,10 @@ Url Url::parse(const char *__src, std::optional<Url> current) {
   }
 
   /* search for scheme */
-  url.scheme = parseUrlScheme(&p);
-  if (url.scheme == SCM_MISSING) {
+  auto scheme = parseUrlScheme(&p);
+  if (scheme) {
+    url.scheme = *scheme;
+  } else {
     /* scheme part is not found in the url. This means either
      * (a) the url is relative to the current or (b) the url
      * denotes a filename (therefore the scheme is SCM_LOCAL).
@@ -219,10 +221,11 @@ analyze_file:
         p++;
       }
     }
-    if (url.scheme == SCM_LOCAL || url.scheme == SCM_MISSING)
+    if (url.scheme == SCM_LOCAL) {
       url.file = copyPath(q, p - q, COPYPATH_SPC_ALLOW);
-    else
+    } else {
       url.file = copyPath(q, p - q, COPYPATH_SPC_IGNORE);
+    }
   }
 
 do_query:
@@ -239,13 +242,14 @@ do_query:
 }
 
 void Url::do_label(std::string_view p) {
-  if (this->scheme == SCM_MISSING) {
-    // ?
-    assert(false);
-    this->scheme = SCM_LOCAL;
-    this->file = p;
-    this->label = {};
-  } else if (p.size() && p[0] == '#') {
+  // if (this->scheme == SCM_MISSING) {
+  //   // ?
+  //   assert(false);
+  //   this->scheme = SCM_LOCAL;
+  //   this->file = p;
+  //   this->label = {};
+  // } else
+  if (p.size() && p[0] == '#') {
     this->label = p.substr(1);
   } else {
     this->label = {};
@@ -254,9 +258,9 @@ void Url::do_label(std::string_view p) {
 
 std::string Url::to_Str(bool pass, bool user, bool label) const {
 
-  if (this->scheme == SCM_MISSING) {
-    return "???";
-  }
+  // if (this->scheme == SCM_MISSING) {
+  //   return "???";
+  // }
 
   if (this->scheme == SCM_UNKNOWN) {
     return this->file.size() ? this->file : "";

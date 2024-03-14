@@ -21,24 +21,22 @@ std::string schemeNumToName(UrlScheme scheme) {
   return {};
 }
 
-UrlScheme parseUrlScheme(const char **url) {
-  auto scheme = SCM_MISSING;
+std::optional<UrlScheme> parseUrlScheme(const char **url) {
 
   const char *p = *url, *q;
   while (*p && (std::isalnum(*p) || *p == '.' || *p == '+' || *p == '-'))
     p++;
   if (*p == ':') { /* scheme found */
-    scheme = SCM_UNKNOWN;
     for (auto i = 0; (q = schemetable[i].cmdname) != NULL; i++) {
       int len = strlen(q);
       if (!strncasecmp(q, *url, len) && (*url)[len] == ':') {
-        scheme = schemetable[i].cmd;
         *url = p + 1;
-        break;
+        return schemetable[i].cmd;
       }
     }
   }
-  return scheme;
+
+  return {};
 }
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
