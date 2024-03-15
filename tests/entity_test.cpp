@@ -15,6 +15,12 @@ TEST(EntityTest, getescapechar) {
     EXPECT_EQ('&', getescapechar(&p));
     EXPECT_EQ(q + 5, p);
   }
+  {
+    const char *p = "&#9312;";
+    auto q = p;
+    EXPECT_EQ(U'①', getescapechar(&p));
+    EXPECT_EQ(q + 7, p);
+  }
 }
 
 TEST(EntityTest, getescapecmd) {
@@ -23,5 +29,11 @@ TEST(EntityTest, getescapecmd) {
     auto q = p;
     EXPECT_EQ("&", getescapecmd(&p));
     EXPECT_EQ(q + 5, p);
+  }
+  {
+    const char *p = "&#9312;";
+    auto q = p;
+    EXPECT_EQ("①", getescapecmd(&p));
+    EXPECT_EQ(q + 7, p);
   }
 }
