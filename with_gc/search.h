@@ -1,6 +1,10 @@
 #pragma once
 #include <functional>
 
+extern int IgnoreCase;
+extern int WrapSearch;
+extern int show_srch_str;
+
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2

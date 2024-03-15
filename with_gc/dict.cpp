@@ -1,5 +1,5 @@
 #include "dict.h"
-#include "w3m.h"
+#include "rc.h"
 #include "Str.h"
 #include "html/form.h"
 #include "http_session.h"

@@ -7,7 +7,6 @@
 #include "line_layout.h"
 #include "http_response.h"
 #include "symbol.h"
-#include "w3m.h"
 #include "Str.h"
 #include "myctype.h"
 #include "ctrlcode.h"
@@ -20,6 +19,7 @@
 #include <math.h>
 #include <string_view>
 
+int squeezeBlankLine = false;
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
 int pixel_per_char_i = static_cast<int>(DEFAULT_PIXEL_PER_CHAR);

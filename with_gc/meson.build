@@ -29,7 +29,6 @@ defs = [
 with_gc_lib = static_library(
     'with_gc',
     [
-        'w3m.cpp',
         'html/readbuffer.cpp',
         'html/html_feed_env.cpp',
         'html/table.cpp',

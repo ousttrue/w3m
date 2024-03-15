@@ -3,10 +3,13 @@
 #include "line_layout.h"
 #include "Str.h"
 #include "app.h"
-#include "w3m.h"
 #include "regex.h"
 #include "proc.h"
 #include "tabbuffer.h"
+
+int IgnoreCase = true;
+int WrapSearch = false;
+int show_srch_str = true;
 
 int forwardSearch(LineLayout *layout, const char *str) {
 

@@ -5,7 +5,6 @@
 #include "ctrlcode.h"
 #include "app.h"
 #include "html/readbuffer.h"
-#include "w3m.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "proc.h"
@@ -15,6 +14,19 @@
 #include <time.h>
 #include <sys/stat.h>
 #define HAVE_STRERROR 1
+
+bool IsForkChild = 0;
+#define DEF_EXT_BROWSER "/usr/bin/firefox"
+const char *ExtBrowser = DEF_EXT_BROWSER;
+char *ExtBrowser2 = nullptr;
+char *ExtBrowser3 = nullptr;
+char *ExtBrowser4 = nullptr;
+char *ExtBrowser5 = nullptr;
+char *ExtBrowser6 = nullptr;
+char *ExtBrowser7 = nullptr;
+char *ExtBrowser8 = nullptr;
+char *ExtBrowser9 = nullptr;
+
 
 #ifdef _MSC_VER
 #include <direct.h>

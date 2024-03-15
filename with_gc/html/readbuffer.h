@@ -8,6 +8,8 @@
 #include <memory>
 #include <string_view>
 
+extern int squeezeBlankLine;
+
 #define N_GRAPH_SYMBOL 32
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
 #define UL_SYMBOL_DISC UL_SYMBOL(9)

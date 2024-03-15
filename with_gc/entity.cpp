@@ -1,17 +1,11 @@
-/* $Id: entity.c,v 1.7 2003/09/24 18:48:59 ukai Exp $ */
 #include "utf8.h"
 #include "ctrlcode.h"
-#include "w3m.h"
-#include "Str.h"
 #include "quote.h"
 #include "hash.h"
-#ifdef DUMMY
-#define NBSP " "
-#define UseAltEntity 1
-#else /* DUMMY */
-#endif /* DUMMY */
+#include <sstream>
 
-/* *INDENT-OFF* */
+char UseAltEntity = false;
+
 static const char *alt_latin1[96] = {
     NBSP, "!",   "-c-", "-L-", "CUR", "=Y=", "|",   "S:",  "\"",  "(C)", "-a",
     "<<", "NOT", "-",   "(R)", "-",   "DEG", "+-",  "^2",  "^3",  "'",   "u",
@@ -22,7 +16,6 @@ static const char *alt_latin1[96] = {
     "a^", "a~",  "a:",  "aa",  "ae",  "c,",  "e`",  "e'",  "e^",  "e:",  "i`",
     "i'", "i^",  "i:",  "d-",  "n~",  "o`",  "o'",  "o^",  "o~",  "o:",  "-:",
     "o/", "u`",  "u'",  "u^",  "u:",  "y'",  "th",  "y:"};
-/* *INDENT-ON* */
 
 std::string conv_entity(char32_t c) {
   char b = c & 0xff;
@@ -2125,7 +2118,7 @@ int getescapechar(const char **str) {
   const char *p = *str, *q;
   int strict_entity = true;
 
-  if (*p == '&'){
+  if (*p == '&') {
     p++;
   }
 
@@ -2163,7 +2156,8 @@ int getescapechar(const char **str) {
   q = p;
   for (p++; IS_ALNUM(*p); p++)
     ;
-  q = allocStr(q, p - q);
+
+  std::string qq(q, p - q);
   if (strcasestr("lt gt amp quot apos nbsp", q) && *p != '=') {
     /* a character entity MUST be terminated with ";". However,
      * there's MANY web pages which uses &lt , &gt or something
@@ -2182,7 +2176,7 @@ int getescapechar(const char **str) {
     return -1;
   }
   *str = p;
-  return getHash_si(&entity, q, -1);
+  return getHash_si(&entity, qq.c_str(), -1);
 }
 
 std::string getescapecmd(const char **s) {
@@ -2193,11 +2187,9 @@ std::string getescapecmd(const char **s) {
     return conv_entity(ch);
   }
 
-  Str *tmp;
+  std::stringstream tmp;
   if (*save != '&')
-    tmp = Strnew_charp("&");
-  else
-    tmp = Strnew();
-  Strcat_charp_n(tmp, save, *s - save);
-  return tmp->ptr;
+    tmp << "&";
+  tmp << save << (*s - save);
+  return tmp.str();
 }

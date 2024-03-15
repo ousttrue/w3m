@@ -4,6 +4,8 @@
 #include <fcntl.h>
 
 #include "rc.h"
+#include "search.h"
+#include "entity.h"
 #include "html/table.h"
 #include "quote.h"
 #include "url_decode.h"
@@ -31,7 +33,6 @@
 #include "buffer.h"
 #include "linein.h"
 #include "cookie.h"
-#include "w3m.h"
 #include "http_request.h"
 #include "myctype.h"
 #include "proc.h"
@@ -70,6 +71,36 @@ bool PreserveTimestamp = true;
 
 #define _(Text) Text
 #define N_(Text) Text
+
+#define DEFAULT_COLS 80
+#define SITECONF_FILE RC_DIR "/siteconf"
+
+const char *w3m_reqlog = {};
+int label_topline = false;
+int displayImage = false;
+int MailtoOptions = MAILTO_OPTIONS_IGNORE;
+
+int BackgroundExtViewer = true;
+
+const char *siteconf_file = SITECONF_FILE;
+const char *ftppasswd = nullptr;
+int ftppass_hostnamegen = true;
+int WrapDefault = false;
+
+const char *BookmarkFile = nullptr;
+int UseExternalDirBuffer = true;
+const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
+
+int DefaultURLString = DEFAULT_URL_CURRENT;
+struct auth_cookie *Auth_cookie = nullptr;
+struct Cookie *First_cookie = nullptr;
+int no_rc_dir = false;
+const char *config_file = nullptr;
+int is_redisplay = false;
+int clear_buffer = true;
+int set_pixel_per_char = false;
+const char *keymap_file = KEYMAP_FILE;
+char *document_root = nullptr;
 
 struct param_ptr {
   const char *name;

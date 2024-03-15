@@ -24,17 +24,12 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "(Windows) tui",
+            "name": "(Windows) tests",
             "type": "cppvsdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/prefix/bin/tui_sample.exe",
+            "program": "${workspaceFolder}/prefix/bin/w3btest.exe",
             "args": [],
-            "environment": [
-                {
-                    "name": "PATH",
-                    "value": "${env:PATH};D:\\msys64\\usr\\bin"
-                }
-            ],
+            "environment": [],
             "stopAtEntry": false,
             "cwd": "${workspaceRoot}",
             "console": "integratedTerminal"

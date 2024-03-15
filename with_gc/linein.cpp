@@ -4,7 +4,6 @@
 #include "app.h"
 #include "tabbuffer.h"
 #include "etc.h"
-#include "w3m.h"
 #include "alloc.h"
 #include "content.h"
 #include "utf8.h"

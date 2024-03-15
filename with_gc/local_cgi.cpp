@@ -3,7 +3,6 @@
 #include "ioutil.h"
 #include "local_cgi.h"
 #include "rc.h"
-#include "w3m.h"
 #include "http_request.h"
 #include "etc.h"
 #include "html/form.h"

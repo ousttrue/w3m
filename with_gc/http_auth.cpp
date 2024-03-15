@@ -6,7 +6,6 @@
 #include "http_request.h"
 #include "auth_digest.h"
 #include "html/form.h"
-#include "w3m.h"
 #include "Str.h"
 #include "myctype.h"
 #include "buffer.h"

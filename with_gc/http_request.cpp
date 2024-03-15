@@ -1,6 +1,5 @@
 #include "http_request.h"
 #include "quote.h"
-#include "w3m.h"
 #include "Str.h"
 #include "url.h"
 #include "rc.h"

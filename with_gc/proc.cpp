@@ -25,7 +25,6 @@
 #include "local_cgi.h"
 #include "Str.h"
 #include "search.h"
-#include "w3m.h"
 #include "app.h"
 #include "content.h"
 #include "myctype.h"

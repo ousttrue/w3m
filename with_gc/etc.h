@@ -2,7 +2,17 @@
 #include <memory>
 #include <string>
 
+extern bool IsForkChild;
 extern char *personal_document_root;
+extern const char *ExtBrowser;
+extern char *ExtBrowser2;
+extern char *ExtBrowser3;
+extern char *ExtBrowser4;
+extern char *ExtBrowser5;
+extern char *ExtBrowser6;
+extern char *ExtBrowser7;
+extern char *ExtBrowser8;
+extern char *ExtBrowser9;
 
 int open_pipe_rw(FILE **fr, FILE **fw);
 const char *file_to_url(const char *file);

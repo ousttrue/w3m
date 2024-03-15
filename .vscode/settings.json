@@ -4,7 +4,8 @@
         "--header-insertion=never",
         "--clang-tidy",
         "--enable-config",
-    ],    
+    ],
+    "testMate.cpp.test.executables": "{prefix,build,Build,BUILD,out,Out,OUT}/**/*{test,Test,TEST}*",
     "files.associations": {
         "__bit_reference": "cpp",
         "__bits": "cpp",

@@ -16,7 +16,6 @@
 #include "html/form.h"
 #include "etc.h"
 #include "url.h"
-#include "w3m.h"
 #include "istream.h"
 #include "http_request.h"
 #include "linein.h"

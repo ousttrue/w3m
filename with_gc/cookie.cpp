@@ -16,7 +16,6 @@
 #include "html/html_quote.h"
 #include "matchattr.h"
 #include "rc.h"
-#include "w3m.h"
 #include "alloc.h"
 #include "mytime.h"
 #include "http_request.h"

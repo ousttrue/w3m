@@ -15,7 +15,6 @@
 #include "html/form.h"
 #include "http_response.h"
 #include "local_cgi.h"
-#include "w3m.h"
 #include "downloadlist.h"
 #include "tabbuffer.h"
 #include "buffer.h"
