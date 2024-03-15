@@ -1,5 +1,4 @@
 #include "lineprop.h"
-#include "alloc.h"
 #include "utf8.h"
 #include "myctype.h"
 #include <vector>

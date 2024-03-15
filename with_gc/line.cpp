@@ -1,6 +1,6 @@
 #include "line.h"
 #include "utf8.h"
-#include "html/lineprop.h"
+#include "lineprop.h"
 
 Line::Line(const char *buf, Lineprop *prop, int byteLen) {
   assign(buf, prop, byteLen);

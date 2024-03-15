@@ -1,6 +1,7 @@
 #include "utf8.h"
 #include "ctrlcode.h"
 #include "quote.h"
+#include "myctype.h"
 #include <sstream>
 #include <unordered_map>
 

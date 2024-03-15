@@ -1,5 +1,5 @@
 #pragma once
-#include "html/lineprop.h"
+#include "lineprop.h"
 #include <functional>
 #include <string>
 #include <memory>

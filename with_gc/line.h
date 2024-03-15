@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
 #include <stdint.h>
-#include "html/lineprop.h"
+#include "lineprop.h"
 
 class Line {
   std::vector<char> _lineBuf;
