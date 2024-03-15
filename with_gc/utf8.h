@@ -1,5 +1,5 @@
 #pragma once
-#include "line.h"
+#include "html/lineprop.h"
 #include <string_view>
 #include <string>
 #include <string.h>
@@ -19,16 +19,6 @@ int get_mcwidth(const char *c);
 
 // 文字列のcolumn幅
 int get_strwidth(std::string_view c);
-
-// 文字列のcolumn幅
-int get_Str_strwidth(struct Str *c);
-
-// TODO: for utf-8 or ISO-8859-1
-// #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-// #define get_mclen(c) 1
-// #define get_mcwidth(c) 1
-// #define get_strwidth(c) strlen(c)
-// #define get_Str_strwidth(c) ((c)->length)
 
 struct Utf8 {
   char8_t b0 = 0;

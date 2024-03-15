@@ -4,7 +4,6 @@
 #include <string>
 #include "myctype.h"
 #include "widechar_width.h"
-#include "Str.h"
 
 enum class Utf8Bytes {
   Invalid,
@@ -122,20 +121,6 @@ int get_strwidth(std::string_view _c) {
       break;
     }
     c += bytes;
-  }
-  return width;
-}
-
-int get_Str_strwidth(Str *c) {
-  int width = 0;
-  for (int i = 0; i < c->length;) {
-    auto [codepoint, bytes] =
-        Utf8::from((const char8_t *)c->ptr + i).codepoint();
-    if (bytes == 0) {
-      break;
-    }
-    width += codepoint_to_width(codepoint);
-    i += bytes;
   }
   return width;
 }

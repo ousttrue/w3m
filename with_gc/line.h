@@ -3,8 +3,6 @@
 #include <stdint.h>
 #include "html/lineprop.h"
 
-#define LINELEN 256 /* Initial line length */
-
 class Line {
   std::vector<char> _lineBuf;
   std::vector<Lineprop> _propBuf;

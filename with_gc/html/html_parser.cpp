@@ -458,7 +458,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
       int rest, rrest;
       int nspace, d, i;
 
-      rest = width - get_Str_strwidth(line);
+      rest = width - get_strwidth(line->ptr);
       if (rest > 1) {
         nspace = 0;
         for (p = line->ptr + indent; *p; p++) {
