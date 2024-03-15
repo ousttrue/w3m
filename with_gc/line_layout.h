@@ -67,8 +67,11 @@ public:
   RowCol cursor() const { return _cursor; }
   void cursorCol(int col) { _cursor.col = col; }
   int cursorPos() const {
-    auto l = data.lines[_cursor.row];
-    return l.columnPos(_cursor.col);
+    if (_cursor.row < data.lines.size()) {
+      auto l = data.lines[_cursor.row];
+      return l.columnPos(_cursor.col);
+    }
+    return _cursor.col;
   }
   void cursorPos(int pos) {
     auto l = data.lines[_cursor.row];
@@ -79,8 +82,10 @@ public:
   void cursorMoveRow(int row) { _cursor.row += row; }
   // int currentColumn = 0;
   Line *currentLine() {
-    //
-    return &data.lines[_cursor.row];
+    if (_cursor.row < data.lines.size()) {
+      return &data.lines[_cursor.row];
+    }
+    return {};
   }
   // {
   //   auto _currentLine = _topLine + cursor.row;

@@ -367,7 +367,7 @@ void table::print_item(int row, int col, int width, Str *buf) {
   AlignMode alignment;
 
   TextLine *lbuf;
-  if (this->tabdata[row].size()) {
+  if (this->tabdata[row][col]) {
     lbuf = this->tabdata[row][col]->popValue();
   } else {
     lbuf = NULL;

@@ -85,7 +85,6 @@ with_gc_lib = static_library(
         'matrix.cpp',
         'settings.cpp',
     ],
-    install: true,
     dependencies: deps + [without_gc_dep],
     c_args: defs,
     cpp_args: defs,

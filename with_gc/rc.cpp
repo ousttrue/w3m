@@ -956,7 +956,7 @@ static Str *to_str(struct param_ptr *p) {
   return NULL;
 }
 
-std::shared_ptr<Buffer> load_option_panel(void) {
+std::string load_option_panel() {
   Str *src;
   struct param_ptr *p;
   struct sel_c *s;
@@ -1012,8 +1012,7 @@ std::shared_ptr<Buffer> load_option_panel(void) {
     Strcat_charp(src, "</table><hr width=50%>");
   }
   Strcat_charp(src, "</table></form></body></html>");
-  buf = loadHTMLString(src->ptr);
-  return buf;
+  return src->ptr;
 }
 
 void panel_set_option(keyvalue *arg) {

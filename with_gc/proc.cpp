@@ -1086,7 +1086,9 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
 // OPTIONS
 //"Display options setting panel"
 std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
-  CurrentTab->pushBuffer(load_option_panel());
+  auto html = load_option_panel();
+  auto buf = loadHTMLString(html.c_str());
+  CurrentTab->pushBuffer(buf);
   co_return;
 }
 

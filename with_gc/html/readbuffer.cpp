@@ -532,6 +532,7 @@ void loadHTMLstream(LineLayout *layout, HttpResponse *res,
   layout->data.title = htmlenv1.title;
 
   res->trbyte = trbyte + linelen;
+  res->raw = {body.begin(), body.end()};
 
   //
   // render ?

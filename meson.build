@@ -42,6 +42,7 @@ subdir('with_gc')
 executable(
     'w3m',
     'main.cpp',
+    install: true,
     dependencies: [
         without_gc_dep,
         with_gc_dep,

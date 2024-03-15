@@ -1,6 +1,6 @@
 #pragma once
 #include <stdio.h>
-#include <memory>
+#include <string>
 
 extern const char *rc_dir;
 extern char *index_file;
@@ -40,8 +40,8 @@ const char *w3m_etc_dir();
 const char *w3m_conf_dir();
 const char *w3m_help_dir();
 void sync_with_option(void);
-struct Buffer;
-std::shared_ptr<Buffer> load_option_panel(void);
+
+std::string load_option_panel();
 
 #define KEYMAP_FILE "keymap"
 #define CGI_EXTENSION ".cgi"
