@@ -1,5 +1,5 @@
-istream_lib = static_library(
-    'istream',
+without_gc_lib = static_library(
+    'without_gc_lib',
     [
         'myctype.cpp',
         'quote.cpp',
@@ -13,8 +13,8 @@ istream_lib = static_library(
 
 ws2_dep = cpp.find_library('ws2_32', required: true)
 
-istream_dep = declare_dependency(
+without_gc_dep = declare_dependency(
     include_directories: include_directories('.'),
-    link_with: istream_lib,
+    link_with: without_gc_lib,
     dependencies: [ws2_dep],
 )

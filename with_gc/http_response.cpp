@@ -3,7 +3,7 @@
 #include "quote.h"
 #include "matchattr.h"
 #include "app.h"
-#include "input/readallbytes.h"
+#include "readallbytes.h"
 #include "content.h"
 #include "cookie.h"
 #include "Str.h"

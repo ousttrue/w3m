@@ -11,6 +11,7 @@ executable(
     dependencies: [
         gtest_dep,
         gtest_main_dep,
-        istream_dep,
+        without_gc_dep,
+        with_gc_dep,
     ],
 )
