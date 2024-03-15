@@ -1,14 +1,11 @@
 #include "http_request.h"
 #include "quote.h"
-#include "Str.h"
 #include "url.h"
 #include "rc.h"
 #include "cookie.h"
 #include "html/form.h"
 #include "http_auth.h"
 #include "auth_pass.h"
-#include "myctype.h"
-#include <string.h>
 #ifdef _MSC_VER
 #include <io.h>
 #endif
