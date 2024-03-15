@@ -2,7 +2,6 @@
 #include <locale>
 #include <codecvt>
 #include <string>
-#include "myctype.h"
 #include "widechar_width.h"
 
 enum class Utf8Bytes {
@@ -78,19 +77,6 @@ int Utf8::cols() const {
 }
 
 #define is_utf8_lead_byte(c) (((c) & 0xC0) != 0x80)
-
-// byte位置の属性
-Lineprop get_mctype(const char *_c) {
-  auto c = *_c;
-  if (c <= 0x7F) {
-    if (!IS_CNTRL(c)) {
-      return PC_ASCII;
-    }
-  }
-
-  // TODO
-  return PC_CTRL;
-}
 
 // 1文字のbytelength
 int get_mclen(const char *c) {

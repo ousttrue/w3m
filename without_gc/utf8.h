@@ -1,5 +1,4 @@
 #pragma once
-#include "html/lineprop.h"
 #include <string_view>
 #include <string>
 #include <string.h>
@@ -8,8 +7,6 @@
 
 std::string codepoint_to_utf8(char32_t codepoint);
 int codepoint_to_width(char32_t wc);
-
-Lineprop get_mctype(const char *c);
 
 // 1文字のbytelength
 int get_mclen(const char *c);

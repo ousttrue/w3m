@@ -1,6 +1,7 @@
 without_gc_lib = static_library(
     'without_gc_lib',
     [
+        'utf8.cpp',
         'myctype.cpp',
         'quote.cpp',
         'ioutil.cpp',

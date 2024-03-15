@@ -57,3 +57,6 @@ inline Lineprop CharEffect(Lineprop c) { return c & (P_EFFECT | PC_SYMBOL); }
 // byte pos to column
 int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos,
                     int bpos, bool forceCalc);
+
+// byte位置の属性
+Lineprop get_mctype(const char *c);

@@ -1,6 +1,7 @@
 #include "lineprop.h"
 #include "alloc.h"
 #include "utf8.h"
+#include "myctype.h"
 #include <vector>
 
 int Tabstop = 8;
@@ -51,4 +52,16 @@ int bytePosToColumn(const char *l, const Lineprop *pr, int len, int pos,
     return realColumn[pos];
   }
   return j;
+}
+
+Lineprop get_mctype(const char *_c) {
+  auto c = *_c;
+  if (c <= 0x7F) {
+    if (!IS_CNTRL(c)) {
+      return PC_ASCII;
+    }
+  }
+
+  // TODO
+  return PC_CTRL;
 }
