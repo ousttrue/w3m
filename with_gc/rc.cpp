@@ -48,6 +48,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <sstream>
+#include <unordered_map>
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"
@@ -116,7 +117,7 @@ enum ParamTypes {
 };
 
 struct param_ptr {
-  const char *name;
+  std::string name;
   ParamTypes type;
   int inputtype;
   void *varptr;
@@ -149,16 +150,9 @@ struct param_ptr {
 
 struct param_section {
   std::string name;
-  std::vector<param_ptr> params;
+  std::list<param_ptr> params;
 };
-
-struct rc_search_table {
-  struct param_ptr *param;
-  short uniq_pos;
-};
-
-static struct rc_search_table *RC_search_table;
-static int RC_table_size;
+std::unordered_map<std::string, param_ptr *> RC_search_table;
 
 /* FIXME: gettextize here */
 
@@ -361,7 +355,7 @@ static struct sel_c mailtooptionsstr[] = {
     {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
     {0, NULL, NULL}};
 
-std::vector<param_ptr> params1 = {
+std::list<param_ptr> params1 = {
     {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
     {"indent_incr", P_NZINT, PI_TEXT, (void *)&IndentIncr, CMT_INDENT_INCR,
      NULL},
@@ -414,7 +408,7 @@ std::vector<param_ptr> params1 = {
      CMT_NEXTPAGE_TOPLINE, NULL},
 };
 
-std::vector<param_ptr> params3 = {
+std::list<param_ptr> params3 = {
     {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY, NULL},
     {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
     {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST, NULL},
@@ -441,11 +435,11 @@ std::vector<param_ptr> params3 = {
      NULL},
 };
 
-std::vector<param_ptr> params4 = {
+std::list<param_ptr> params4 = {
     {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE, NULL},
 };
 
-std::vector<param_ptr> params5 = {
+std::list<param_ptr> params5 = {
     {"document_root", P_STRING, PI_TEXT, (void *)&document_root, CMT_DROOT,
      NULL},
     {"personal_document_root", P_STRING, PI_TEXT,
@@ -454,7 +448,7 @@ std::vector<param_ptr> params5 = {
     {"index_file", P_STRING, PI_TEXT, (void *)&index_file, CMT_IFILE, NULL},
 };
 
-std::vector<param_ptr> params6 = {
+std::list<param_ptr> params6 = {
     {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files, CMT_MIMETYPES,
      NULL},
     {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP, NULL},
@@ -474,7 +468,7 @@ std::vector<param_ptr> params6 = {
      CMT_BGEXTVIEW, NULL},
 };
 
-std::vector<param_ptr> params7 = {
+std::list<param_ptr> params7 = {
     {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
      CMT_SSL_FORBID_METHOD, NULL},
     {"ssl_min_version", P_STRING, PI_TEXT, (void *)&ssl_min_version,
@@ -495,7 +489,7 @@ std::vector<param_ptr> params7 = {
      CMT_SSL_CA_DEFAULT, NULL},
 };
 
-std::vector<param_ptr> params8 = {
+std::list<param_ptr> params8 = {
     {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE, NULL},
     {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie, CMT_SHOWCOOKIE,
      NULL},
@@ -512,7 +506,7 @@ std::vector<param_ptr> params8 = {
      CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
 };
 
-std::vector<param_ptr> params9 = {
+std::list<param_ptr> params9 = {
     {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file, CMT_PASSWDFILE,
      NULL},
     {"disable_secret_security_check", P_INT, PI_ONOFF,
@@ -560,77 +554,20 @@ std::vector<param_section> sections = {
     {N_("Cookie Settings"), params8},
 };
 
-static int compare_table(struct rc_search_table *a, struct rc_search_table *b) {
-  return strcmp(a->param->name, b->param->name);
-}
-
 static void create_option_search_table() {
-  /* count table size */
-  RC_table_size = 0;
-  for (auto &section : sections) {
-    RC_table_size += section.params.size();
-  }
-
-  RC_search_table =
-      (struct rc_search_table *)New_N(struct rc_search_table, RC_table_size);
-  int k = 0;
   for (auto &section : sections) {
     for (auto &param : section.params) {
-      RC_search_table[k].param = &param;
-      k++;
+      RC_search_table.insert({param.name, &param});
     }
-  }
-
-  qsort(RC_search_table, RC_table_size, sizeof(struct rc_search_table),
-        (int (*)(const void *, const void *))compare_table);
-
-  int diff2 = 0;
-  for (int i = 0; i < RC_table_size - 1; i++) {
-    auto p = RC_search_table[i].param->name;
-    auto q = RC_search_table[i + 1].param->name;
-    int j = 0;
-    for (; p[j] != '\0' && q[j] != '\0' && p[j] == q[j]; j++)
-      ;
-    int diff1 = j;
-    if (diff1 > diff2)
-      RC_search_table[i].uniq_pos = diff1 + 1;
-    else
-      RC_search_table[i].uniq_pos = diff2 + 1;
-    diff2 = diff1;
   }
 }
 
-static struct param_ptr *search_param(const char *name) {
-  size_t b, e, i;
-  int cmp;
-  int len = strlen(name);
-
-  for (b = 0, e = RC_table_size - 1; b <= e;) {
-    i = (b + e) / 2;
-    cmp = strncmp(name, RC_search_table[i].param->name, len);
-
-    if (!cmp) {
-      if (len >= RC_search_table[i].uniq_pos) {
-        return RC_search_table[i].param;
-      } else {
-        while ((cmp = strcmp(name, RC_search_table[i].param->name)) <= 0)
-          if (!cmp)
-            return RC_search_table[i].param;
-          else if (i == 0)
-            return NULL;
-          else
-            i--;
-        /* ambiguous */
-        return NULL;
-      }
-    } else if (cmp < 0) {
-      if (i == 0)
-        return NULL;
-      e = i - 1;
-    } else
-      b = i + 1;
+static param_ptr *search_param(const std::string &name) {
+  auto found = RC_search_table.find(name);
+  if (found != RC_search_table.end()) {
+    return found->second;
   }
-  return NULL;
+  return nullptr;
 }
 
 /* show parameter with bad options invokation */
@@ -641,14 +578,14 @@ void show_params(FILE *fp) {
     auto &section = sections[j];
     auto cmt = section.name;
     fprintf(fp, "  section[%zu]: %s\n", j, cmt.c_str());
-    int i = 0;
-    while (section.params[i].name) {
-      switch (section.params[i].type) {
+
+    for (auto &param : section.params) {
+      switch (param.type) {
       case P_INT:
       case P_SHORT:
       case P_CHARINT:
       case P_NZINT:
-        t = (section.params[i].inputtype == PI_ONOFF) ? "bool" : "number";
+        t = (param.inputtype == PI_ONOFF) ? "bool" : "number";
         break;
       case P_CHAR:
         t = "char";
@@ -656,11 +593,9 @@ void show_params(FILE *fp) {
       case P_STRING:
         t = "string";
         break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
       case P_SSLPATH:
         t = "path";
         break;
-#endif
       case P_PIXELS:
         t = "number";
         break;
@@ -668,13 +603,12 @@ void show_params(FILE *fp) {
         t = "percent";
         break;
       }
-      cmt = section.params[i].comment;
-      int l = 30 - (strlen(section.params[i].name) + strlen(t));
+      cmt = param.comment;
+      int l = 30 - (param.name.size() + strlen(t));
       if (l < 0)
         l = 1;
-      fprintf(fp, "    -o %s=<%s>%*s%s\n", section.params[i].name, t, l, " ",
+      fprintf(fp, "    -o %s=<%s>%*s%s\n", param.name.c_str(), t, l, " ",
               cmt.c_str());
-      i++;
     }
   }
 }
