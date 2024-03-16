@@ -67,7 +67,6 @@ int ftppass_hostnamegen = true;
 int WrapDefault = false;
 
 const char *BookmarkFile = nullptr;
-const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 
 struct auth_cookie *Auth_cookie = nullptr;
 struct Cookie *First_cookie = nullptr;
@@ -92,13 +91,7 @@ char *document_root = nullptr;
 #define CMT_DISP_IMAGE N_("Display inline images")
 #define CMT_PSEUDO_INLINES                                                     \
   N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
-#define CMT_MULTICOL N_("Display file names in multi-column format")
-#define CMT_ALT_ENTITY N_("Use ASCII equivalents to display entities")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
-#define CMT_DISP_BORDERS N_("Display table borders, ignore value of BORDER")
-#define CMT_DISABLE_CENTER N_("Disable center alignment")
-#define CMT_FOLD_TEXTAREA N_("Fold lines in TEXTAREA")
-#define CMT_DISP_INS_DEL N_("Display INS, DEL, S and STRIKE element")
 #define CMT_COLOR N_("Display with color")
 #define CMT_HINTENSITY_COLOR N_("Use high-intensity colors")
 #define CMT_B_COLOR N_("Color of normal character")
@@ -167,9 +160,6 @@ char *document_root = nullptr;
 #define CMT_AUTO_UNCOMPRESS                                                    \
   N_("Uncompress compressed data automatically when downloading")
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#define CMT_DIRLIST_CMD N_("URL of directory listing command")
-#define CMT_USE_DICTCOMMAND N_("Enable dictionary lookup through CGI")
-#define CMT_DICTCOMMAND N_("URL of dictionary lookup command")
 #define CMT_IGNORE_NULL_IMG_ALT N_("Display link name for images lacking ALT")
 #define CMT_IFILE N_("Index file for directories")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")

@@ -36,7 +36,6 @@ const char *w3m_conf_dir();
 const char *w3m_help_dir();
 void sync_with_option(void);
 #define KEYMAP_FILE "keymap"
-#define CGI_EXTENSION ".cgi"
 #define BOOKMARK "bookmark.html"
 
 extern const char *w3m_reqlog;
@@ -53,7 +52,6 @@ extern int ftppass_hostnamegen;
 extern int WrapDefault;
 
 extern const char *BookmarkFile;
-extern const char *DirBufferCommand;
 extern struct auth_cookie *Auth_cookie;
 extern struct Cookie *First_cookie;
 extern int no_rc_dir;

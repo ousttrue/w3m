@@ -9,7 +9,7 @@
 #include "utf8.h"
 
 int nextpage_topline = false;
-int FoldTextarea = false;
+bool FoldTextarea = false;
 
 LineLayout::LineLayout() {}
 

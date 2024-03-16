@@ -29,9 +29,13 @@ extern bool DisableCenter;
 extern int IndentIncr;
 #define INDENT_INCR IndentIncr
 extern bool DisplayBorders;
-#define DISPLAY_INS_DEL_SIMPLE 0
-#define DISPLAY_INS_DEL_NORMAL 1
-#define DISPLAY_INS_DEL_FONTIFY 2
+
+enum DisplayInsDelType {
+  DISPLAY_INS_DEL_SIMPLE = 0,
+  DISPLAY_INS_DEL_NORMAL = 1,
+  DISPLAY_INS_DEL_FONTIFY = 2,
+};
+
 extern int displayInsDel;
 extern bool view_unseenobject;
 extern bool MetaRefresh;
@@ -213,4 +217,3 @@ extern int is_boundary(unsigned char *, unsigned char *);
 struct Buffer;
 std::shared_ptr<Buffer> loadHTMLString(std::string_view html);
 std::shared_ptr<Buffer> getshell(const char *cmd);
-

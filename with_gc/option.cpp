@@ -14,6 +14,10 @@
 #include "url_decode.h"
 #include "http_session.h"
 #include "buffer.h"
+#include "dict.h"
+#include "loaddirectory.h"
+#include "entity.h"
+#include "html/html_feed_env.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -96,12 +100,12 @@ option_assigned:
 
 Option::Option() {
   std::list<std::shared_ptr<param_ptr>> params1 = {
-      std::make_shared<param_int>("tabstop", PI_TEXT, &Tabstop,
+      std::make_shared<param_int>("tabstop", &Tabstop,
                                   "Tab width in characters", true),
-      std::make_shared<param_int>("indent_incr", PI_TEXT, &IndentIncr,
+      std::make_shared<param_int>("indent_incr", &IndentIncr,
                                   "Indent for HTML rendering", true),
       std::make_shared<param_pixels>(
-          "pixel_per_char", PI_TEXT, &pixel_per_char,
+          "pixel_per_char", &pixel_per_char,
           "Number of pixels per character (4.0...32.0)"),
       std::make_shared<param_bool>(
           "open_tab_blank", &open_tab_blank,
@@ -119,26 +123,26 @@ Option::Option() {
       std::make_shared<param_bool>(
           "ext_dirlist", &UseExternalDirBuffer,
           "Use external program for directory listing"),
-      // {"dirlist_cmd", P_STRING, PI_TEXT, (void *)&DirBufferCommand,
-      //  CMT_DIRLIST_CMD, NULL},
-      // {"use_dictcommand", P_INT, PI_ONOFF, (void *)&UseDictCommand,
-      //  CMT_USE_DICTCOMMAND, NULL},
-      // {"dictcommand", P_STRING, PI_TEXT, (void *)&DictCommand,
-      // CMT_DICTCOMMAND,
-      //  NULL},
-      // {"multicol", P_INT, PI_ONOFF, (void *)&multicolList, CMT_MULTICOL,
-      // NULL},
-      // {"alt_entity", P_CHARINT, PI_ONOFF, (void *)&UseAltEntity,
-      // CMT_ALT_ENTITY,
-      //  NULL},
-      // {"display_borders", P_CHARINT, PI_ONOFF, (void *)&DisplayBorders,
-      //  CMT_DISP_BORDERS, NULL},
-      // {"disable_center", P_CHARINT, PI_ONOFF, (void *)&DisableCenter,
-      //  CMT_DISABLE_CENTER, NULL},
-      // {"fold_textarea", P_CHARINT, PI_ONOFF, (void *)&FoldTextarea,
-      //  CMT_FOLD_TEXTAREA, NULL},
-      // {"display_ins_del", P_INT, PI_SEL_C, (void *)&displayInsDel,
-      //  CMT_DISP_INS_DEL, displayinsdel},
+      std::make_shared<param_string>("dirlist_cmd", &DirBufferCommand,
+                                     "URL of directory listing command"),
+      std::make_shared<param_bool>("use_dictcommand", &UseDictCommand,
+                                   "Enable dictionary lookup through CGI"),
+      std::make_shared<param_string>("dictcommand", &DictCommand,
+                                     "URL of dictionary lookup command"),
+      std::make_shared<param_bool>("multicol", &multicolList,
+                                   "Display file names in multi-column format"),
+      std::make_shared<param_bool>("alt_entity", &UseAltEntity,
+                                   "Use ASCII equivalents to display entities"),
+      std::make_shared<param_bool>(
+          "display_borders", &DisplayBorders,
+          "Display table borders, ignore value of BORDER"),
+      std::make_shared<param_bool>("disable_center", &DisableCenter,
+                                   "Disable center alignment"),
+      std::make_shared<param_bool>("fold_textarea", &FoldTextarea,
+                                   "Fold lines in TEXTAREA"),
+      std::make_shared<param_int_select>(
+          "display_ins_del", &displayInsDel,
+          "Display INS, DEL, S and STRIKE element", displayinsdel),
       // {"ignore_null_img_alt", P_INT, PI_ONOFF, (void *)&ignore_null_img_alt,
       //  CMT_IGNORE_NULL_IMG_ALT, NULL},
       // {"view_unseenobject", P_INT, PI_ONOFF, (void *)&view_unseenobject,

@@ -5,7 +5,7 @@
 #include <sstream>
 #include <unordered_map>
 
-char UseAltEntity = false;
+bool UseAltEntity = false;
 
 static const char *alt_latin1[96] = {
     NBSP, "!",   "-c-", "-L-", "CUR", "=Y=", "|",   "S:",  "\"",  "(C)", "-a",

@@ -36,39 +36,13 @@ std::string param_ptr::toOptionPanelHtml() const {
   src << "<tr><td>" << this->comment;
   src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
 
-  switch (this->inputtype) {
-  case PI_TEXT:
-    src << "<input type=text name=" << this->name << " value=\""
-        << html_quote(this->to_str()) << "\">";
-    break;
+  // switch (this->inputtype) {
+  // case PI_TEXT:
+  src << "<input type=text name=" << this->name << " value=\""
+      << html_quote(this->to_str()) << "\">";
+  // break;
 
-  case PI_ONOFF: {
-    auto x = atoi(this->to_str().c_str());
-    src << "<input type=radio name=" << this->name << " value=1"
-        << (x ? " checked" : "")
-        << ">YES&nbsp;&nbsp;<input type=radio name=" << this->name << " value=0"
-        << (x ? "" : " checked") << ">NO";
-    break;
-  }
-
-  case PI_SEL_C: {
-    auto tmp = this->to_str();
-    src << "<select name=" << this->name << ">";
-    for (auto s = (struct sel_c *)this->select; s->text != NULL; s++) {
-      src << "<option value=";
-      src << Sprintf("%s\n", s->cvalue)->ptr;
-      // if ((this->type != P_CHAR && s->value == atoi(tmp->c_str())) ||
-      //     (this->type == P_CHAR && (char)s->value == *(tmp->c_str()))) {
-      if (this->isSelected()) {
-        src << " selected";
-      }
-      src << '>';
-      src << s->text;
-    }
-    src << "</select>";
-    break;
-  }
-  }
+  // }
   src << "</td></tr>\n";
   return src.str();
 }
@@ -88,11 +62,12 @@ int param_int::setParseValue(const std::string &src) {
   } else {
     //   case P_INT:
     if (value >= 0) {
-      if (this->inputtype == PI_ONOFF) {
-        *this->varptr = str_to_bool(src.c_str(), *this->varptr);
-      } else {
-        *this->varptr = value;
-      }
+      // if (this->inputtype == PI_ONOFF) {
+      //   *this->varptr = str_to_bool(src.c_str(), *this->varptr);
+      // } else
+      // {
+      *this->varptr = value;
+      // }
       //     break;
     }
   }
@@ -105,22 +80,35 @@ std::string param_int::to_str() const {
 }
 
 //
-// param_bool
+// param_int_select
 //
-int param_bool::setParseValue(const std::string &src) {
-  auto value = atoi(src.c_str());
+std::string param_int_select::toOptionPanelHtml() const {
+  std::stringstream src;
+  src << "<tr><td>" << this->comment;
+  src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
 
-  //   case P_INT:
-  if (value >= 0) {
-    if (this->inputtype == PI_ONOFF) {
-      *this->varptr = str_to_bool(src.c_str(), *this->varptr);
-    } //     break;
+  // switch (this->inputtype) {
+  // case PI_SEL_C: {
+  auto tmp = this->to_str();
+  src << "<select name=" << this->name << ">";
+  for (auto s = this->select; s->text != NULL; s++) {
+    src << "<option value=";
+    src << Sprintf("%s\n", s->cvalue)->ptr;
+    if (/*(this->type != P_CHAR &&*/ s->value == atoi(tmp.c_str()) /*||
+        (this->type == P_CHAR && (char)s->value == *(tmp->c_str()))*/) {
+      // if (this->isSelected()) {
+      src << " selected";
+    }
+    src << '>';
+    src << s->text;
   }
-
-  return 1;
+  src << "</select>";
+  //   break;
+  // }
+  // }
+  src << "</td></tr>\n";
+  return src.str();
 }
-
-std::string param_bool::to_str() const { return *this->varptr ? "1" : "0"; }
 
 //
 // param_pixels
@@ -143,6 +131,54 @@ std::string param_pixels::to_str() const {
   return Sprintf("%g", *this->varptr)->ptr;
 }
 
+//
+// param_bool
+//
+int param_bool::setParseValue(const std::string &src) {
+  auto value = atoi(src.c_str());
+
+  //   case P_INT:
+  if (value >= 0) {
+    // if (this->inputtype == PI_ONOFF) {
+    *this->varptr = str_to_bool(src.c_str(), *this->varptr);
+    // } //     break;
+  }
+
+  return 1;
+}
+
+std::string param_bool::to_str() const { return *this->varptr ? "1" : "0"; }
+
+std::string param_bool::toOptionPanelHtml() const {
+  std::stringstream src;
+  src << "<tr><td>" << this->comment;
+  src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
+
+  // case PI_ONOFF: {
+  auto x = atoi(this->to_str().c_str());
+  src << "<input type=radio name=" << this->name << " value=1"
+      << (x ? " checked" : "")
+      << ">YES&nbsp;&nbsp;<input type=radio name=" << this->name << " value=0"
+      << (x ? "" : " checked") << ">NO";
+  //   break;
+  src << "</td></tr>\n";
+  return src.str();
+}
+
+//
+// param_string
+//
+int param_string::setParseValue(const std::string &value) {
+
+  //   case P_STRING:
+  *this->varptr = value;
+  //     break;
+
+  return 1;
+}
+
+std::string param_string::to_str() const { return *this->varptr; }
+
 // int param_ptr::setParseValue(const std::string &value) {
 //   double ppc;
 //   switch (p->type) {
@@ -164,9 +200,6 @@ std::string param_pixels::to_str() const {
 //     *(char *)p->varptr = value[0];
 //     break;
 //
-//   case P_STRING:
-//     *(const char **)p->varptr = Strnew(value)->ptr;
-//     break;
 //
 // #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 //   case P_SSLPATH:

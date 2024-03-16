@@ -7,8 +7,8 @@
 #include "http_response.h"
 #include "tabbuffer.h"
 
-int UseDictCommand = true;
-const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
+bool UseDictCommand = true;
+std::string DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 
 #define DICTBUFFERNAME "*dictionary*"
 std::shared_ptr<Buffer> execdict(const char *word) {

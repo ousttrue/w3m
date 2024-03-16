@@ -7,7 +7,7 @@
 #include <optional>
 
 extern int nextpage_topline;
-extern int FoldTextarea;
+extern bool FoldTextarea;
 
 struct HtmlTag;
 

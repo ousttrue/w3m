@@ -2,10 +2,11 @@
 #include "http_request.h"
 #include <optional>
 #include <memory>
-#include <string_view>
 
 extern const char *DefaultType;
 extern bool UseExternalDirBuffer;
+#define CGI_EXTENSION ".cgi"
+extern std::string DirBufferCommand;
 
 struct Url;
 struct FormList;
