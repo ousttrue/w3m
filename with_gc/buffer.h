@@ -12,6 +12,13 @@ struct LinkList;
 struct AlarmEvent;
 struct HttpResponse;
 
+enum DefaultUrlStringType {
+  DEFAULT_URL_EMPTY = 0,
+  DEFAULT_URL_CURRENT = 1,
+  DEFAULT_URL_LINK = 2,
+};
+extern DefaultUrlStringType DefaultURLString;
+
 struct Buffer : std::enable_shared_from_this<Buffer> {
   std::shared_ptr<HttpResponse> res;
   LineLayout layout = {};

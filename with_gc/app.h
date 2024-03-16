@@ -15,7 +15,7 @@
 #include <sstream>
 
 extern bool displayLink;
-extern int displayLineInfo;
+extern bool displayLineInfo;
 extern int prev_key;
 extern const char *CurrentKeyData;
 extern const char *CurrentCmdData;

@@ -42,7 +42,6 @@ int DNS_order = DNS_ORDER_UNSPEC;
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
-bool TargetSelf = false;
 const char *rc_dir = nullptr;
 bool ArgvIsURL = true;
 bool LocalhostOnly = false;
@@ -59,7 +58,6 @@ bool PreserveTimestamp = true;
 const char *w3m_reqlog = {};
 int label_topline = false;
 int displayImage = false;
-int MailtoOptions = MAILTO_OPTIONS_IGNORE;
 
 int BackgroundExtViewer = true;
 
@@ -69,10 +67,8 @@ int ftppass_hostnamegen = true;
 int WrapDefault = false;
 
 const char *BookmarkFile = nullptr;
-int UseExternalDirBuffer = true;
 const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 
-int DefaultURLString = DEFAULT_URL_CURRENT;
 struct auth_cookie *Auth_cookie = nullptr;
 struct Cookie *First_cookie = nullptr;
 int no_rc_dir = false;
@@ -86,9 +82,6 @@ char *document_root = nullptr;
 /* FIXME: gettextize here */
 
 #define CMT_HELPER N_("External Viewer Setup")
-#define CMT_TABSTOP N_("Tab width in characters")
-#define CMT_INDENT_INCR N_("Indent for HTML rendering")
-#define CMT_PIXEL_PER_CHAR N_("Number of pixels per character (4.0...32.0)")
 #define CMT_PIXEL_PER_LINE N_("Number of pixels per line (4.0...64.0)")
 #define CMT_PAGERLINE N_("Number of remembered lines when used as a pager")
 #define CMT_HISTORY N_("Use URL history")
@@ -96,14 +89,6 @@ char *document_root = nullptr;
 #define CMT_SAVEHIST N_("Save URL history")
 #define CMT_FRAME N_("Render frames automatically")
 #define CMT_ARGV_IS_URL N_("Treat argument without scheme as URL")
-#define CMT_TSELF N_("Use _self as default target")
-#define CMT_OPEN_TAB_BLANK                                                     \
-  N_("Open link on new tab if target is _blank or _new")
-#define CMT_OPEN_TAB_DL_LIST N_("Open download list panel on new tab")
-#define CMT_DISPLINK N_("Display link URL automatically")
-#define CMT_DISPLINKNUMBER N_("Display link numbers")
-#define CMT_DECODE_URL N_("Display decoded URL")
-#define CMT_DISPLINEINFO N_("Display current line number")
 #define CMT_DISP_IMAGE N_("Display inline images")
 #define CMT_PSEUDO_INLINES                                                     \
   N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
@@ -182,7 +167,6 @@ char *document_root = nullptr;
 #define CMT_AUTO_UNCOMPRESS                                                    \
   N_("Uncompress compressed data automatically when downloading")
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#define CMT_EXT_DIRLIST N_("Use external program for directory listing")
 #define CMT_DIRLIST_CMD N_("URL of directory listing command")
 #define CMT_USE_DICTCOMMAND N_("Enable dictionary lookup through CGI")
 #define CMT_DICTCOMMAND N_("URL of dictionary lookup command")
@@ -229,112 +213,6 @@ char *document_root = nullptr;
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
 #define CMT_KEYMAP_FILE N_("keymap file")
-
-#if 1 /* ANSI-C ? */
-#define N_STR(x) #x
-#define N_S(x) (x), N_STR(x)
-#else /* for traditional cpp? */
-static char n_s[][2] = {
-    {'0', 0},
-    {'1', 0},
-    {'2', 0},
-};
-#define N_S(x) (x), n_s[(x)]
-#endif
-
-static struct sel_c defaulturls[] = {
-    {N_S(DEFAULT_URL_EMPTY), N_("none")},
-    {N_S(DEFAULT_URL_CURRENT), N_("current URL")},
-    {N_S(DEFAULT_URL_LINK), N_("link URL")},
-    {0, NULL, NULL}};
-
-static struct sel_c displayinsdel[] = {
-    {N_S(DISPLAY_INS_DEL_SIMPLE), N_("simple")},
-    {N_S(DISPLAY_INS_DEL_NORMAL), N_("use tag")},
-    {N_S(DISPLAY_INS_DEL_FONTIFY), N_("fontify")},
-    {0, NULL, NULL}};
-
-#ifdef INET6
-static struct sel_c dnsorders[] = {
-    {N_S(DNS_ORDER_UNSPEC), N_("unspecified")},
-    {N_S(DNS_ORDER_INET_INET6), N_("inet inet6")},
-    {N_S(DNS_ORDER_INET6_INET), N_("inet6 inet")},
-    {N_S(DNS_ORDER_INET_ONLY), N_("inet only")},
-    {N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only")},
-    {0, NULL, NULL}};
-#endif /* INET6 */
-
-static struct sel_c badcookiestr[] = {
-    {N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard")},
-    {N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask")},
-    {0, NULL, NULL}};
-
-static struct sel_c mailtooptionsstr[] = {
-    {N_S(MAILTO_OPTIONS_IGNORE), N_("ignore options and use only the address")},
-    {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
-    {0, NULL, NULL}};
-
-int str_to_bool(const char *value, int old) {
-  if (value == NULL)
-    return 1;
-  switch (TOLOWER(*value)) {
-  case '0':
-  case 'f': /* false */
-  case 'n': /* no */
-  case 'u': /* undef */
-    return 0;
-  case 'o':
-    if (TOLOWER(value[1]) == 'f') /* off */
-      return 0;
-    return 1; /* on */
-  case 't':
-    if (TOLOWER(value[1]) == 'o') /* toggle */
-      return !old;
-    return 1; /* true */
-  case '!':
-  case 'r': /* reverse */
-  case 'x': /* exchange */
-    return !old;
-  }
-  return 1;
-}
-
-int set_param_option(const char *option) {
-  Str *tmp = Strnew();
-  const char *p = option, *q;
-
-  while (*p && !IS_SPACE(*p) && *p != '=')
-    Strcat_char(tmp, *p++);
-  while (*p && IS_SPACE(*p))
-    p++;
-  if (*p == '=') {
-    p++;
-    while (*p && IS_SPACE(*p))
-      p++;
-  }
-  Strlower(tmp);
-  if (Option::instance().set_param(tmp->ptr, p))
-    goto option_assigned;
-  q = tmp->ptr;
-  if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
-    q += 2;
-    if (*q == '-' || *q == '_')
-      q++;
-  } else if (tmp->ptr[0] == '-') /* -o -xxx */
-    q++;
-  else
-    return 0;
-  if (Option::instance().set_param(q, "0"))
-    goto option_assigned;
-  return 0;
-option_assigned:
-  return 1;
-}
-
-std::string get_param_option(const char *name) {
-  auto p = Option::instance().search_param(name);
-  return p ? p->to_str() : "";
-}
 
 static void interpret_rc(FILE *f) {
   Str *line;

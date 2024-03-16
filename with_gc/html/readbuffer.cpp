@@ -15,7 +15,6 @@
 #include "textline.h"
 #include "html_tag.h"
 #include "proc.h"
-#include "utf8.h"
 #include <math.h>
 #include <string_view>
 
@@ -23,7 +22,7 @@ int squeezeBlankLine = false;
 bool pseudoInlines = true;
 bool ignore_null_img_alt = true;
 int pixel_per_char_i = static_cast<int>(DEFAULT_PIXEL_PER_CHAR);
-int displayLinkNumber = false;
+bool displayLinkNumber = false;
 bool DisableCenter = false;
 int IndentIncr = 4;
 bool DisplayBorders = false;

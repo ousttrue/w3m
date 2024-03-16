@@ -24,7 +24,7 @@ extern bool ignore_null_img_alt;
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 extern int pixel_per_char_i;
-extern int displayLinkNumber;
+extern bool displayLinkNumber;
 extern bool DisableCenter;
 extern int IndentIncr;
 #define INDENT_INCR IndentIncr

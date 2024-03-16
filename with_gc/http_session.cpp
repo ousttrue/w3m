@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 const char *DefaultType = nullptr;
+bool UseExternalDirBuffer = true;
 
 std::shared_ptr<HttpResponse> loadGeneralFile(const std::string &path,
                                               std::optional<Url> current,

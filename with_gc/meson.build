@@ -84,6 +84,7 @@ with_gc_lib = static_library(
         'dict.cpp',
         'matrix.cpp',
         'option.cpp',
+        'option_param.cpp',
     ],
     dependencies: deps + [without_gc_dep],
     c_args: defs,

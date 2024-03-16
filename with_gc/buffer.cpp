@@ -30,6 +30,8 @@
 #include <sys/stat.h>
 #include <sstream>
 
+DefaultUrlStringType DefaultURLString = DEFAULT_URL_CURRENT;
+
 Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
   // use default from -o mark_all_pages
   if (!res) {
@@ -38,11 +40,7 @@ Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res) : res(_res) {
   this->layout.check_url = MarkAllPages;
 }
 
-Buffer::~Buffer() {
-
-auto a=0;
-
-}
+Buffer::~Buffer() { auto a = 0; }
 
 /* append links */
 std::string Buffer::link_info() const {

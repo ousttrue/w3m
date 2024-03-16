@@ -2,116 +2,123 @@
 #define N_(Text) Text
 #include <sstream>
 #include "Str.h"
+#include "myctype.h"
+#include "option_param.h"
+#include "cookie.h"
 #include "html/table.h"
-#include "html/html_quote.h"
 
-int param_ptr::setParseValue(const std::string &value) {
-  //   double ppc;
-  //   switch (p->type) {
-  //   case P_INT:
-  //     if (atoi(value.c_str()) >= 0)
-  //       *(int *)p->varptr = (p->inputtype == PI_ONOFF)
-  //                               ? str_to_bool(value.c_str(), *(int
-  //                               *)p->varptr) : atoi(value.c_str());
-  //     break;
-  //
-  //   case P_NZINT:
-  //     if (atoi(value.c_str()) > 0)
-  //       *(int *)p->varptr = atoi(value.c_str());
-  //     break;
-  //
-  //   case P_SHORT:
-  //     *(short *)p->varptr = (p->inputtype == PI_ONOFF)
-  //                               ? str_to_bool(value.c_str(), *(short
-  //                               *)p->varptr) : atoi(value.c_str());
-  //     break;
-  //
-  //   case P_CHARINT:
-  //     *(char *)p->varptr = (p->inputtype == PI_ONOFF)
-  //                              ? str_to_bool(value.c_str(), *(char
-  //                              *)p->varptr) : atoi(value.c_str());
-  //     break;
-  //
-  //   case P_CHAR:
-  //     *(char *)p->varptr = value[0];
-  //     break;
-  //
-  //   case P_STRING:
-  //     *(const char **)p->varptr = Strnew(value)->ptr;
-  //     break;
-  //
-  // #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-  //   case P_SSLPATH:
-  //     if (value.size())
-  //       *(const char **)p->varptr = rcFile(value.c_str());
-  //     else
-  //       *(char **)p->varptr = NULL;
-  //     ssl_path_modified = 1;
-  //     break;
-  // #endif
-  //
-  //   case P_PIXELS:
-  //     ppc = atof(value.c_str());
-  //     if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2)
-  //       *(double *)p->varptr = ppc;
-  //     break;
-  //
-  //   case P_SCALE:
-  //     ppc = atof(value.c_str());
-  //     if (ppc >= 10 && ppc <= 1000)
-  //       *(double *)p->varptr = ppc;
-  //     break;
-  //   }
+// extern
+#include "html/readbuffer.h"
+#include "tabbuffer.h"
+#include "app.h"
+#include "url_decode.h"
+#include "http_session.h"
+#include "buffer.h"
 
+#if 1 /* ANSI-C ? */
+#define N_STR(x) #x
+#define N_S(x) (x), N_STR(x)
+#else /* for traditional cpp? */
+static char n_s[][2] = {
+    {'0', 0},
+    {'1', 0},
+    {'2', 0},
+};
+#define N_S(x) (x), n_s[(x)]
+#endif
+
+static struct sel_c defaulturls[] = {
+    {N_S(DEFAULT_URL_EMPTY), N_("none")},
+    {N_S(DEFAULT_URL_CURRENT), N_("current URL")},
+    {N_S(DEFAULT_URL_LINK), N_("link URL")},
+    {0, NULL, NULL}};
+
+static struct sel_c displayinsdel[] = {
+    {N_S(DISPLAY_INS_DEL_SIMPLE), N_("simple")},
+    {N_S(DISPLAY_INS_DEL_NORMAL), N_("use tag")},
+    {N_S(DISPLAY_INS_DEL_FONTIFY), N_("fontify")},
+    {0, NULL, NULL}};
+
+#ifdef INET6
+static struct sel_c dnsorders[] = {
+    {N_S(DNS_ORDER_UNSPEC), N_("unspecified")},
+    {N_S(DNS_ORDER_INET_INET6), N_("inet inet6")},
+    {N_S(DNS_ORDER_INET6_INET), N_("inet6 inet")},
+    {N_S(DNS_ORDER_INET_ONLY), N_("inet only")},
+    {N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only")},
+    {0, NULL, NULL}};
+#endif /* INET6 */
+
+static struct sel_c badcookiestr[] = {
+    {N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard")},
+    {N_S(ACCEPT_BAD_COOKIE_ASK), N_("ask")},
+    {0, NULL, NULL}};
+
+#define MAILTO_OPTIONS_IGNORE 1
+#define MAILTO_OPTIONS_USE_MAILTO_URL 2
+
+static struct sel_c mailtooptionsstr[] = {
+    {N_S(MAILTO_OPTIONS_IGNORE), N_("ignore options and use only the address")},
+    {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
+    {0, NULL, NULL}};
+
+int set_param_option(const char *option) {
+  Str *tmp = Strnew();
+  const char *p = option, *q;
+
+  while (*p && !IS_SPACE(*p) && *p != '=')
+    Strcat_char(tmp, *p++);
+  while (*p && IS_SPACE(*p))
+    p++;
+  if (*p == '=') {
+    p++;
+    while (*p && IS_SPACE(*p))
+      p++;
+  }
+  Strlower(tmp);
+  if (Option::instance().set_param(tmp->ptr, p))
+    goto option_assigned;
+  q = tmp->ptr;
+  if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
+    q += 2;
+    if (*q == '-' || *q == '_')
+      q++;
+  } else if (tmp->ptr[0] == '-') /* -o -xxx */
+    q++;
+  else
+    return 0;
+  if (Option::instance().set_param(q, "0"))
+    goto option_assigned;
+  return 0;
+option_assigned:
   return 1;
 }
 
-std::string param_ptr::to_str() const {
-  // switch (this->type) {
-  // case P_INT:
-  // case P_NZINT:
-  //   return Sprintf("%d", *(int *)this->varptr)->ptr;
-  // case P_SHORT:
-  //   return Sprintf("%d", *(short *)this->varptr)->ptr;
-  // case P_CHARINT:
-  //   return Sprintf("%d", *(char *)this->varptr)->ptr;
-  // case P_CHAR:
-  //   return Sprintf("%c", *(char *)this->varptr)->ptr;
-  // case P_STRING:
-  // case P_SSLPATH:
-  //   /*  SystemCharset -> InnerCharset */
-  //   return Strnew_charp(*(char **)this->varptr)->ptr;
-  // case P_PIXELS:
-  // case P_SCALE:
-  //   return Sprintf("%g", *(double *)this->varptr)->ptr;
-  // }
-  /* not reached */
-  return "";
-}
-
 Option::Option() {
-  std::list<param_ptr> params1 = {
-      // {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
-      // {"indent_incr", P_NZINT, PI_TEXT, (void *)&IndentIncr, CMT_INDENT_INCR,
-      //  NULL},
-      // {"pixel_per_char", P_PIXELS, PI_TEXT, (void *)&pixel_per_char,
-      //  CMT_PIXEL_PER_CHAR, NULL},
-      // {"target_self", P_CHARINT, PI_ONOFF, (void *)&TargetSelf, CMT_TSELF,
-      //  NULL},
-      // {"open_tab_blank", P_INT, PI_ONOFF, (void *)&open_tab_blank,
-      //  CMT_OPEN_TAB_BLANK, NULL},
-      // {"open_tab_dl_list", P_INT, PI_ONOFF, (void *)&open_tab_dl_list,
-      //  CMT_OPEN_TAB_DL_LIST, NULL},
-      // {"display_link", P_INT, PI_ONOFF, (void *)&displayLink, CMT_DISPLINK,
-      //  NULL},
-      // {"display_link_number", P_INT, PI_ONOFF, (void *)&displayLinkNumber,
-      //  CMT_DISPLINKNUMBER, NULL},
-      // {"decode_url", P_INT, PI_ONOFF, (void *)&DecodeURL, CMT_DECODE_URL,
-      // NULL},
-      // {"display_lineinfo", P_INT, PI_ONOFF, (void *)&displayLineInfo,
-      //  CMT_DISPLINEINFO, NULL},
-      // {"ext_dirlist", P_INT, PI_ONOFF, (void *)&UseExternalDirBuffer,
-      //  CMT_EXT_DIRLIST, NULL},
+  std::list<std::shared_ptr<param_ptr>> params1 = {
+      std::make_shared<param_int>("tabstop", PI_TEXT, &Tabstop,
+                                  "Tab width in characters", true),
+      std::make_shared<param_int>("indent_incr", PI_TEXT, &IndentIncr,
+                                  "Indent for HTML rendering", true),
+      std::make_shared<param_pixels>(
+          "pixel_per_char", PI_TEXT, &pixel_per_char,
+          "Number of pixels per character (4.0...32.0)"),
+      std::make_shared<param_bool>(
+          "open_tab_blank", &open_tab_blank,
+          "Open link on new tab if target is _blank or _new"),
+      std::make_shared<param_bool>("open_tab_dl_list", &open_tab_dl_list,
+                                   "Open download list panel on new tab"),
+      std::make_shared<param_bool>("display_link", &displayLink,
+                                   "Display link URL automatically"),
+      std::make_shared<param_bool>("display_link_number", &displayLinkNumber,
+                                   "Display link numbers"),
+      std::make_shared<param_bool>("decode_url", &DecodeURL,
+                                   "Display decoded URL"),
+      std::make_shared<param_bool>("display_lineinfo", &displayLineInfo,
+                                   "Display current line number"),
+      std::make_shared<param_bool>(
+          "ext_dirlist", &UseExternalDirBuffer,
+          "Use external program for directory listing"),
       // {"dirlist_cmd", P_STRING, PI_TEXT, (void *)&DirBufferCommand,
       //  CMT_DIRLIST_CMD, NULL},
       // {"use_dictcommand", P_INT, PI_ONOFF, (void *)&UseDictCommand,
@@ -151,7 +158,7 @@ Option::Option() {
       //  CMT_NEXTPAGE_TOPLINE, NULL},
   };
 
-  std::list<param_ptr> params3 = {
+  std::list<std::shared_ptr<param_ptr>> params3 = {
       // {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY,
       // NULL},
       // {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
@@ -181,12 +188,12 @@ Option::Option() {
       //  NULL},
   };
 
-  std::list<param_ptr> params4 = {
+  std::list<std::shared_ptr<param_ptr>> params4 = {
       // {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE,
       // NULL},
   };
 
-  std::list<param_ptr> params5 = {
+  std::list<std::shared_ptr<param_ptr>> params5 = {
       // {"document_root", P_STRING, PI_TEXT, (void *)&document_root, CMT_DROOT,
       //  NULL},
       // {"personal_document_root", P_STRING, PI_TEXT,
@@ -196,7 +203,7 @@ Option::Option() {
       // NULL},
   };
 
-  std::list<param_ptr> params6 = {
+  std::list<std::shared_ptr<param_ptr>> params6 = {
       // {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files,
       // CMT_MIMETYPES,
       //  NULL},
@@ -227,7 +234,7 @@ Option::Option() {
       //  CMT_BGEXTVIEW, NULL},
   };
 
-  std::list<param_ptr> params7 = {
+  std::list<std::shared_ptr<param_ptr>> params7 = {
       // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
       //  CMT_SSL_FORBID_METHOD, NULL},
       // {"ssl_min_version", P_STRING, PI_TEXT, (void *)&ssl_min_version,
@@ -250,7 +257,7 @@ Option::Option() {
       //  CMT_SSL_CA_DEFAULT, NULL},
   };
 
-  std::list<param_ptr> params8 = {
+  std::list<std::shared_ptr<param_ptr>> params8 = {
       // {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE,
       // NULL},
       // {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie, CMT_SHOWCOOKIE,
@@ -268,7 +275,7 @@ Option::Option() {
       //  CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
   };
 
-  std::list<param_ptr> params9 = {
+  std::list<std::shared_ptr<param_ptr>> params9 = {
       // {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file,
       // CMT_PASSWDFILE,
       //  NULL},
@@ -329,7 +336,7 @@ Option::Option() {
 void Option::create_option_search_table() {
   for (auto &section : sections) {
     for (auto &param : section.params) {
-      RC_search_table.insert({param.name, &param});
+      RC_search_table.insert({param->name, param});
     }
   }
 }
@@ -341,12 +348,17 @@ Option &Option::instance() {
   return s_instance;
 }
 
-param_ptr *Option::search_param(const std::string &name) {
+std::shared_ptr<param_ptr> Option::search_param(const std::string &name) const {
   auto found = RC_search_table.find(name);
   if (found != RC_search_table.end()) {
     return found->second;
   }
   return nullptr;
+}
+
+std::string Option::get_param_option(const char *name) const {
+  auto p = search_param(name);
+  return p ? p->to_str() : "";
 }
 
 int Option::set_param(const std::string &name, const std::string &value) {
@@ -382,42 +394,7 @@ std::string Option::load_option_panel() {
     src << "<h1>" << section.name << "</h1>";
     src << "<table width=100% cellpadding=0>";
     for (auto &p : section.params) {
-      src << "<tr><td>" << p.comment;
-      src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
-
-      switch (p.inputtype) {
-      case PI_TEXT:
-        src << "<input type=text name=" << p.name << " value=\""
-            << html_quote(p.to_str()) << "\">";
-        break;
-
-      case PI_ONOFF: {
-        auto x = atoi(p.to_str().c_str());
-        src << "<input type=radio name=" << p.name << " value=1"
-            << (x ? " checked" : "")
-            << ">YES&nbsp;&nbsp;<input type=radio name=" << p.name << " value=0"
-            << (x ? "" : " checked") << ">NO";
-        break;
-      }
-
-      case PI_SEL_C: {
-        auto tmp = p.to_str();
-        src << "<select name=" << p.name << ">";
-        for (auto s = (struct sel_c *)p.select; s->text != NULL; s++) {
-          src << "<option value=";
-          src << Sprintf("%s\n", s->cvalue)->ptr;
-          if ((p.type != P_CHAR && s->value == atoi(tmp.c_str())) ||
-              (p.type == P_CHAR && (char)s->value == *(tmp.c_str()))) {
-            src << " selected";
-          }
-          src << '>';
-          src << s->text;
-        }
-        src << "</select>";
-        break;
-      }
-      }
-      src << "</td></tr>\n";
+      src << p->toOptionPanelHtml();
     }
     src << "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>"
         << "</table><hr width=50%>";

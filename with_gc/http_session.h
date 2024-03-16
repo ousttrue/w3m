@@ -5,6 +5,7 @@
 #include <string_view>
 
 extern const char *DefaultType;
+extern bool UseExternalDirBuffer;
 
 struct Url;
 struct FormList;

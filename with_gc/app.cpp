@@ -1,4 +1,5 @@
 #include "app.h"
+#include "option_param.h"
 #include "ioutil.h"
 #include "url_decode.h"
 #include "etc.h"
@@ -34,7 +35,7 @@
 #endif
 
 bool displayLink = false;
-int displayLineInfo = false;
+bool displayLineInfo = false;
 
 const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
 
