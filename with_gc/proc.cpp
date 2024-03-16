@@ -1103,7 +1103,7 @@ std::shared_ptr<CoroutineState<void>> setOpt(const FuncContext &context) {
   if (opt == nullptr || *opt == '\0' || strchr(opt, '=') == nullptr) {
     if (opt != nullptr && *opt != '\0') {
       auto v = get_param_option(opt);
-      opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
+      opt = Sprintf("%s=%s", opt, v.c_str())->ptr;
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt == nullptr || *opt == '\0') {

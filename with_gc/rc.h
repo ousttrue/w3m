@@ -32,7 +32,7 @@ const char *auxbinFile(const char *base);
 const char *libFile(const char *base);
 const char *helpFile(const char *base);
 int set_param_option(const char *option);
-const char *get_param_option(const char *name);
+std::string get_param_option(const char *name);
 void init_rc();
 const char *w3m_auxbin_dir();
 const char *w3m_lib_dir();

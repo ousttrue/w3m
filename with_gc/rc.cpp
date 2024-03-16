@@ -103,18 +103,53 @@ int set_pixel_per_char = false;
 const char *keymap_file = KEYMAP_FILE;
 char *document_root = nullptr;
 
+enum ParamTypes {
+  P_INT = 0,
+  P_SHORT = 1,
+  P_CHARINT = 2,
+  P_CHAR = 3,
+  P_STRING = 4,
+  P_SSLPATH = 5,
+  P_PIXELS = 8,
+  P_NZINT = 9,
+  P_SCALE = 10,
+};
+
 struct param_ptr {
   const char *name;
-  int type;
+  ParamTypes type;
   int inputtype;
   void *varptr;
   const char *comment;
   void *select;
+
+  std::string to_str() const {
+    switch (this->type) {
+    case P_INT:
+    case P_NZINT:
+      return Sprintf("%d", *(int *)this->varptr)->ptr;
+    case P_SHORT:
+      return Sprintf("%d", *(short *)this->varptr)->ptr;
+    case P_CHARINT:
+      return Sprintf("%d", *(char *)this->varptr)->ptr;
+    case P_CHAR:
+      return Sprintf("%c", *(char *)this->varptr)->ptr;
+    case P_STRING:
+    case P_SSLPATH:
+      /*  SystemCharset -> InnerCharset */
+      return Strnew_charp(*(char **)this->varptr)->ptr;
+    case P_PIXELS:
+    case P_SCALE:
+      return Sprintf("%g", *(double *)this->varptr)->ptr;
+    }
+    /* not reached */
+    return "";
+  }
 };
 
 struct param_section {
-  const char *name;
-  struct param_ptr *params;
+  std::string name;
+  std::vector<param_ptr> params;
 };
 
 struct rc_search_table {
@@ -124,18 +159,6 @@ struct rc_search_table {
 
 static struct rc_search_table *RC_search_table;
 static int RC_table_size;
-
-#define P_INT 0
-#define P_SHORT 1
-#define P_CHARINT 2
-#define P_CHAR 3
-#define P_STRING 4
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-#define P_SSLPATH 5
-#endif
-#define P_PIXELS 8
-#define P_NZINT 9
-#define P_SCALE 10
 
 /* FIXME: gettextize here */
 
@@ -338,7 +361,7 @@ static struct sel_c mailtooptionsstr[] = {
     {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
     {0, NULL, NULL}};
 
-struct param_ptr params1[] = {
+std::vector<param_ptr> params1 = {
     {"tabstop", P_NZINT, PI_TEXT, (void *)&Tabstop, CMT_TABSTOP, NULL},
     {"indent_incr", P_NZINT, PI_TEXT, (void *)&IndentIncr, CMT_INDENT_INCR,
      NULL},
@@ -389,10 +412,9 @@ struct param_ptr params1[] = {
      CMT_LABEL_TOPLINE, NULL},
     {"nextpage_topline", P_INT, PI_ONOFF, (void *)&nextpage_topline,
      CMT_NEXTPAGE_TOPLINE, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params3[] = {
+std::vector<param_ptr> params3 = {
     {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY, NULL},
     {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
     {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST, NULL},
@@ -417,25 +439,22 @@ struct param_ptr params3[] = {
      CMT_PRESERVE_TIMESTAMP, NULL},
     {"keymap_file", P_STRING, PI_TEXT, (void *)&keymap_file, CMT_KEYMAP_FILE,
      NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params4[] = {
+std::vector<param_ptr> params4 = {
     {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params5[] = {
+std::vector<param_ptr> params5 = {
     {"document_root", P_STRING, PI_TEXT, (void *)&document_root, CMT_DROOT,
      NULL},
     {"personal_document_root", P_STRING, PI_TEXT,
      (void *)&personal_document_root, CMT_PDROOT, NULL},
     {"cgi_bin", P_STRING, PI_TEXT, (void *)&cgi_bin, CMT_CGIBIN, NULL},
     {"index_file", P_STRING, PI_TEXT, (void *)&index_file, CMT_IFILE, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params6[] = {
+std::vector<param_ptr> params6 = {
     {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files, CMT_MIMETYPES,
      NULL},
     {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP, NULL},
@@ -453,16 +472,13 @@ struct param_ptr params6[] = {
     {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9, NULL},
     {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
      CMT_BGEXTVIEW, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params7[] = {
+std::vector<param_ptr> params7 = {
     {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
      CMT_SSL_FORBID_METHOD, NULL},
-#ifdef SSL_CTX_set_min_proto_version
     {"ssl_min_version", P_STRING, PI_TEXT, (void *)&ssl_min_version,
      CMT_SSL_MIN_VERSION, NULL},
-#endif
     {"ssl_cipher", P_STRING, PI_TEXT, (void *)&ssl_cipher, CMT_SSL_CIPHER,
      NULL},
     {"ssl_verify_server", P_INT, PI_ONOFF, (void *)&ssl_verify_server,
@@ -477,10 +493,9 @@ struct param_ptr params7[] = {
      NULL},
     {"ssl_ca_default", P_INT, PI_ONOFF, (void *)&ssl_ca_default,
      CMT_SSL_CA_DEFAULT, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params8[] = {
+std::vector<param_ptr> params8 = {
     {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE, NULL},
     {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie, CMT_SHOWCOOKIE,
      NULL},
@@ -495,10 +510,9 @@ struct param_ptr params8[] = {
     {"cookie_avoid_wrong_number_of_dots", P_STRING, PI_TEXT,
      (void *)&cookie_avoid_wrong_number_of_dots,
      CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_ptr params9[] = {
+std::vector<param_ptr> params9 = {
     {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file, CMT_PASSWDFILE,
      NULL},
     {"disable_secret_security_check", P_INT, PI_ONOFF,
@@ -531,11 +545,8 @@ struct param_ptr params9[] = {
      CMT_META_REFRESH, NULL},
     {"localhost_only", P_CHARINT, PI_ONOFF, (void *)&LocalhostOnly,
      CMT_LOCALHOST_ONLY, NULL},
-#ifdef INET6
     {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
      (void *)dnsorders},
-#endif /* INET6 */
-    {NULL, 0, 0, NULL, NULL, NULL},
 };
 
 std::vector<param_section> sections = {
@@ -549,8 +560,6 @@ std::vector<param_section> sections = {
     {N_("Cookie Settings"), params8},
 };
 
-static Str *to_str(struct param_ptr *p);
-
 static int compare_table(struct rc_search_table *a, struct rc_search_table *b) {
   return strcmp(a->param->name, b->param->name);
 }
@@ -559,22 +568,16 @@ static void create_option_search_table() {
   /* count table size */
   RC_table_size = 0;
   for (auto &section : sections) {
-    int i = 0;
-    while (section.params[i].name) {
-      i++;
-      RC_table_size++;
-    }
+    RC_table_size += section.params.size();
   }
 
   RC_search_table =
       (struct rc_search_table *)New_N(struct rc_search_table, RC_table_size);
   int k = 0;
   for (auto &section : sections) {
-    int i = 0;
-    while (section.params[i].name) {
-      RC_search_table[k].param = &section.params[i];
+    for (auto &param : section.params) {
+      RC_search_table[k].param = &param;
       k++;
-      i++;
     }
   }
 
@@ -637,7 +640,7 @@ void show_params(FILE *fp) {
   for (size_t j = 0; j < sections.size(); ++j) {
     auto &section = sections[j];
     auto cmt = section.name;
-    fprintf(fp, "  section[%zu]: %s\n", j, cmt);
+    fprintf(fp, "  section[%zu]: %s\n", j, cmt.c_str());
     int i = 0;
     while (section.params[i].name) {
       switch (section.params[i].type) {
@@ -670,7 +673,7 @@ void show_params(FILE *fp) {
       if (l < 0)
         l = 1;
       fprintf(fp, "    -o %s=<%s>%*s%s\n", section.params[i].name, t, l, " ",
-              cmt);
+              cmt.c_str());
       i++;
     }
   }
@@ -803,11 +806,9 @@ option_assigned:
   return 1;
 }
 
-const char *get_param_option(const char *name) {
-  struct param_ptr *p;
-
-  p = search_param(name);
-  return p ? to_str(p)->ptr : NULL;
+std::string get_param_option(const char *name) {
+  auto p = search_param(name);
+  return p ? p->to_str() : "";
 }
 
 static void interpret_rc(FILE *f) {
@@ -926,67 +927,40 @@ static char optionpanel_src1[] =
 </form><br>\
 <form method=internal action=option>";
 
-static Str *to_str(struct param_ptr *p) {
-  switch (p->type) {
-  case P_INT:
-  case P_NZINT:
-    return Sprintf("%d", *(int *)p->varptr);
-  case P_SHORT:
-    return Sprintf("%d", *(short *)p->varptr);
-  case P_CHARINT:
-    return Sprintf("%d", *(char *)p->varptr);
-  case P_CHAR:
-    return Sprintf("%c", *(char *)p->varptr);
-  case P_STRING:
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-  case P_SSLPATH:
-#endif
-    /*  SystemCharset -> InnerCharset */
-    return Strnew_charp(*(char **)p->varptr);
-  case P_PIXELS:
-  case P_SCALE:
-    return Sprintf("%g", *(double *)p->varptr);
-  }
-  /* not reached */
-  return NULL;
-}
-
 std::string load_option_panel() {
   std::stringstream src;
   src << "<table><tr><td>";
 
   for (auto &section : sections) {
     src << "<h1>" << section.name << "</h1>";
-    auto p = section.params;
     src << "<table width=100% cellpadding=0>";
-    while (p->name) {
-      src << "<tr><td>" << p->comment;
+    for (auto &p : section.params) {
+      src << "<tr><td>" << p.comment;
       src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
 
-      switch (p->inputtype) {
+      switch (p.inputtype) {
       case PI_TEXT:
-        src << "<input type=text name=" << p->name << " value=\""
-            << html_quote(to_str(p)->ptr),
-            "\">";
+        src << "<input type=text name=" << p.name << " value=\""
+            << html_quote(p.to_str()) << "\">";
         break;
 
       case PI_ONOFF: {
-        auto x = atoi(to_str(p)->ptr);
-        src << "<input type=radio name=" << p->name << " value=1"
+        auto x = atoi(p.to_str().c_str());
+        src << "<input type=radio name=" << p.name << " value=1"
             << (x ? " checked" : "")
-            << ">YES&nbsp;&nbsp;<input type=radio name=" << p->name
-            << " value=0" << (x ? "" : " checked") << ">NO";
+            << ">YES&nbsp;&nbsp;<input type=radio name=" << p.name << " value=0"
+            << (x ? "" : " checked") << ">NO";
         break;
       }
 
       case PI_SEL_C: {
-        auto tmp = to_str(p);
-        src << "<select name=" << p->name << ">";
-        for (auto s = (struct sel_c *)p->select; s->text != NULL; s++) {
+        auto tmp = p.to_str();
+        src << "<select name=" << p.name << ">";
+        for (auto s = (struct sel_c *)p.select; s->text != NULL; s++) {
           src << "<option value=";
           src << Sprintf("%s\n", s->cvalue)->ptr;
-          if ((p->type != P_CHAR && s->value == atoi(tmp->ptr)) ||
-              (p->type == P_CHAR && (char)s->value == *(tmp->ptr))) {
+          if ((p.type != P_CHAR && s->value == atoi(tmp.c_str())) ||
+              (p.type == P_CHAR && (char)s->value == *(tmp.c_str()))) {
             src << " selected";
           }
           src << '>';
@@ -997,7 +971,6 @@ std::string load_option_panel() {
       }
       }
       src << "</td></tr>\n";
-      p++;
     }
     src << "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>"
         << "</table><hr width=50%>";
