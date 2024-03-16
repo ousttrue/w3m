@@ -112,176 +112,123 @@ Option::Option() {
   //
   // OPTION_DISPLAY
   //
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_int>("tabstop", &Tabstop,
-                                         "Tab width in characters", true));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_int>("indent_incr", &IndentIncr,
-                                         "Indent for HTML rendering", true));
+  push_param_int(OPTION_DISPLAY, "tabstop", &Tabstop, "Tab width in characters",
+                 true);
+  push_param_int(OPTION_DISPLAY, "indent_incr", &IndentIncr,
+                 "Indent for HTML rendering", true);
   push_param(OPTION_DISPLAY,
              std::make_shared<param_pixels>(
                  "pixel_per_char", &pixel_per_char,
                  "Number of pixels per character (4.0...32.0)"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>(
-                 "open_tab_blank", &open_tab_blank,
-                 "Open link on new tab if target is _blank or _new"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "open_tab_dl_list", &open_tab_dl_list,
-                                 "Open download list panel on new tab"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>("display_link", &displayLink,
-                                          "Display link URL automatically"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "display_link_number", &displayLinkNumber,
-                                 "Display link numbers"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>("decode_url", &DecodeURL,
-                                          "Display decoded URL"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>("display_lineinfo", &displayLineInfo,
-                                          "Display current line number"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "ext_dirlist", &UseExternalDirBuffer,
-                                 "Use external program for directory listing"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_string>(
-                                 "dirlist_cmd", &DirBufferCommand,
-                                 "URL of directory listing command"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "use_dictcommand", &UseDictCommand,
-                                 "Enable dictionary lookup through CGI"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_string>(
-                                 "dictcommand", &DictCommand,
-                                 "URL of dictionary lookup command"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "multicol", &multicolList,
-                                 "Display file names in multi-column format"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "alt_entity", &UseAltEntity,
-                                 "Use ASCII equivalents to display entities"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>(
-                 "display_borders", &DisplayBorders,
-                 "Display table borders, ignore value of BORDER"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>("disable_center", &DisableCenter,
-                                          "Disable center alignment"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>("fold_textarea", &FoldTextarea,
-                                          "Fold lines in TEXTAREA"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_int_select>(
-                 "display_ins_del", &displayInsDel,
-                 "Display INS, DEL, S and STRIKE element", displayinsdel));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "ignore_null_img_alt", &ignore_null_img_alt,
-                                 "Display link name for images lacking ALT"));
-  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
-                                 "view_unseenobject", &view_unseenobject,
-                                 "Display unseen objects (e.g. bgimage tag)"));
-  push_param(
-      OPTION_DISPLAY,
-      std::make_shared<param_bool>(
-          "pseudo_inlines", &pseudoInlines,
-          "Display pseudo-ALTs for inline images with no ALT or TITLE string"));
-  push_param(OPTION_DISPLAY,
-             std::make_shared<param_bool>("show_srch_str", &show_srch_str,
-                                          "Show search string"));
+  push_param_bool(OPTION_DISPLAY, "open_tab_blank", &open_tab_blank,
+                  "Open link on new tab if target is _blank or _new");
+  push_param_bool(OPTION_DISPLAY, "open_tab_dl_list", &open_tab_dl_list,
+                  "Open download list panel on new tab");
+  push_param_bool(OPTION_DISPLAY, "display_link", &displayLink,
+                  "Display link URL automatically");
+  push_param_bool(OPTION_DISPLAY, "display_link_number", &displayLinkNumber,
+                  "Display link numbers");
+  push_param_bool(OPTION_DISPLAY, "decode_url", &DecodeURL,
+                  "Display decoded URL");
+  push_param_bool(OPTION_DISPLAY, "display_lineinfo", &displayLineInfo,
+                  "Display current line number");
+  push_param_bool(OPTION_DISPLAY, "ext_dirlist", &UseExternalDirBuffer,
+                  "Use external program for directory listing");
+  push_param_string(OPTION_DISPLAY, "dirlist_cmd", &DirBufferCommand,
+                    "URL of directory listing command");
+  push_param_bool(OPTION_DISPLAY, "use_dictcommand", &UseDictCommand,
+                  "Enable dictionary lookup through CGI");
+  push_param_string(OPTION_DISPLAY, "dictcommand", &DictCommand,
+                    "URL of dictionary lookup command");
+  push_param_bool(OPTION_DISPLAY, "multicol", &multicolList,
+                  "Display file names in multi-column format");
+  push_param_bool(OPTION_DISPLAY, "alt_entity", &UseAltEntity,
+                  "Use ASCII equivalents to display entities");
+  push_param_bool(OPTION_DISPLAY, "display_borders", &DisplayBorders,
+                  "Display table borders, ignore value of BORDER");
+  push_param_bool(OPTION_DISPLAY, "disable_center", &DisableCenter,
+                  "Disable center alignment");
+  push_param_bool(OPTION_DISPLAY, "fold_textarea", &FoldTextarea,
+                  "Fold lines in TEXTAREA");
+  push_param_int_select(OPTION_DISPLAY, "display_ins_del", &displayInsDel,
+                        "Display INS, DEL, S and STRIKE element",
+                        displayinsdel);
+  push_param_bool(OPTION_DISPLAY, "ignore_null_img_alt", &ignore_null_img_alt,
+                  "Display link name for images lacking ALT");
+  push_param_bool(OPTION_DISPLAY, "view_unseenobject", &view_unseenobject,
+                  "Display unseen objects (e.g. bgimage tag)");
+  push_param_bool(
+      OPTION_DISPLAY, "pseudo_inlines", &pseudoInlines,
+      "Display pseudo-ALTs for inline images with no ALT or TITLE string");
+  push_param_bool(OPTION_DISPLAY, "show_srch_str", &show_srch_str,
+                  "Show search string");
 
   //
   // OPTION_MICC
   //
-  push_param(OPTION_MICC, std::make_shared<param_bool>(
-                              "use_history", &UseHistory, "Use URL history"));
-  push_param(OPTION_MICC,
-             std::make_shared<param_int>("history", &URLHistSize,
-                                         "Number of remembered URL", false));
-  push_param(OPTION_MICC, std::make_shared<param_bool>(
-                              "save_hist", &SaveURLHist, "Save URL history"));
-  push_param(OPTION_MICC, std::make_shared<param_bool>(
-                              "close_tab_back", &close_tab_back,
-                              "Close tab if buffer is last when back"));
-  push_param(OPTION_MICC, std::make_shared<param_bool>(
-                              "emacs_like_lineedit", &emacs_like_lineedit,
-                              "Enable Emacs-style line editing"));
-  push_param(OPTION_MICC,
-             std::make_shared<param_bool>(
-                 "space_autocomplete", &space_autocomplete,
-                 "Space key triggers file completion while editing URLs"));
-  push_param(OPTION_MICC, std::make_shared<param_bool>(
-                              "mark_all_pages", &MarkAllPages,
-                              "Treat URL-like strings as links in all pages"));
-  push_param(OPTION_MICC,
-             std::make_shared<param_bool>("ignorecase_search", &IgnoreCase,
-                                          "Search case-insensitively"));
-  push_param(OPTION_MICC, std::make_shared<param_bool>(
-                              "preserve_timestamp", &PreserveTimestamp,
-                              "Preserve timestamp when saving"));
-  push_param(OPTION_MICC, std::make_shared<param_string>(
-                              "keymap_file", &keymap_file, "keymap file"));
+  push_param_bool(OPTION_MICC, "use_history", &UseHistory, "Use URL history");
+  push_param_int(OPTION_MICC, "history", &URLHistSize,
+                 "Number of remembered URL", false);
+  push_param_bool(OPTION_MICC, "save_hist", &SaveURLHist, "Save URL history");
+  push_param_bool(OPTION_MICC, "close_tab_back", &close_tab_back,
+                  "Close tab if buffer is last when back");
+  push_param_bool(OPTION_MICC, "emacs_like_lineedit", &emacs_like_lineedit,
+                  "Enable Emacs-style line editing");
+  push_param_bool(OPTION_MICC, "space_autocomplete", &space_autocomplete,
+                  "Space key triggers file completion while editing URLs");
+  push_param_bool(OPTION_MICC, "mark_all_pages", &MarkAllPages,
+                  "Treat URL-like strings as links in all pages");
+  push_param_bool(OPTION_MICC, "ignorecase_search", &IgnoreCase,
+                  "Search case-insensitively");
+  push_param_bool(OPTION_MICC, "preserve_timestamp", &PreserveTimestamp,
+                  "Preserve timestamp when saving");
+  push_param_string(OPTION_MICC, "keymap_file", &keymap_file, "keymap file");
 
   //
   // OPTION_PROXY
   //
-  push_param(OPTION_PROXY, std::make_shared<param_bool>("no_cache", &NoCache,
-                                                        "Disable cache"));
+  push_param_bool(OPTION_PROXY, "no_cache", &NoCache, "Disable cache");
 
   //
   // OPTION_DIRECTORY
   //
-  push_param(OPTION_DIRECTORY,
-             std::make_shared<param_string>(
-                 "document_root", &document_root,
-                 "Directory corresponding to / (document root)"));
-  push_param(OPTION_DIRECTORY,
-             std::make_shared<param_string>(
-                 "personal_document_root", &ioutil::personal_document_root,
-                 "Directory corresponding to /~user"));
-  push_param(OPTION_DIRECTORY,
-             std::make_shared<param_string>(
-                 "cgi_bin", &cgi_bin, "Directory corresponding to /cgi-bin"));
-  push_param(OPTION_DIRECTORY,
-             std::make_shared<param_string>("index_file", &index_file,
-                                            "Index file for directories"));
+  push_param_string(OPTION_DIRECTORY, "document_root", &document_root,
+                    "Directory corresponding to / (document root)");
+  push_param_string(OPTION_DIRECTORY, "personal_document_root",
+                    &ioutil::personal_document_root,
+                    "Directory corresponding to /~user");
+  push_param_string(OPTION_DIRECTORY, "cgi_bin", &cgi_bin,
+                    "Directory corresponding to /cgi-bin");
+  push_param_string(OPTION_DIRECTORY, "index_file", &index_file,
+                    "Index file for directories");
 
   //
   // OPTION_EXTERNAL_PROGRAM
   //
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("mime_types", &mimetypes_files,
-                                            "List of mime.types files"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("mailcap", &mailcap_files,
-                                            "List of mailcap files"));
-  push_param(OPTION_EXTERNAL_PROGRAM, std::make_shared<param_string>(
-                                          "editor", &ioutil::editor, "Editor"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser", &ExtBrowser,
-                                            "External browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser2", &ExtBrowser2,
-                                            "2nd external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser3", &ExtBrowser3,
-                                            "3rd external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser4", &ExtBrowser4,
-                                            "4th external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser5", &ExtBrowser5,
-                                            "5th external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser6", &ExtBrowser6,
-                                            "6th external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser7", &ExtBrowser7,
-                                            "7th external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser8", &ExtBrowser8,
-                                            "8th external browser"));
-  push_param(OPTION_EXTERNAL_PROGRAM,
-             std::make_shared<param_string>("extbrowser9", &ExtBrowser9,
-                                            "9th external browser"));
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "mime_types", &mimetypes_files,
+                    "List of mime.types files");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "mailcap", &mailcap_files,
+                    "List of mailcap files");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "editor", &ioutil::editor,
+                    "Editor");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser", &ExtBrowser,
+                    "External browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser2", &ExtBrowser2,
+                    "2nd external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser3", &ExtBrowser3,
+                    "3rd external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser4", &ExtBrowser4,
+                    "4th external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser5", &ExtBrowser5,
+                    "5th external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser6", &ExtBrowser6,
+                    "6th external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser7", &ExtBrowser7,
+                    "7th external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser8", &ExtBrowser8,
+                    "8th external browser");
+  push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser9", &ExtBrowser9,
+                    "9th external browser");
 
   // std::list<std::shared_ptr<param_ptr>> params7 = {
   // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
@@ -388,6 +335,29 @@ void Option::push_param(const std::string &section,
   }
   found->params.push_back(param);
   RC_search_table.insert({param->name, param});
+}
+
+void Option::push_param_int(const std::string &section, const std::string &name,
+                            int *p, const std::string &comment, bool notZero) {
+  push_param(section, std::make_shared<param_int>(name, p, comment, notZero));
+}
+
+void Option::push_param_int_select(const std::string &section,
+                                   const std::string &name, int *p,
+                                   const std::string &comment,
+                                   struct sel_c *select) {
+  push_param(section,
+             std::make_shared<param_int_select>(name, p, comment, select));
+}
+void Option::push_param_bool(const std::string &section,
+                             const std::string &name, bool *p,
+                             const std::string &comment) {
+  push_param(section, std::make_shared<param_bool>(name, p, comment));
+}
+void Option::push_param_string(const std::string &section,
+                               const std::string &name, std::string *p,
+                               const std::string &comment) {
+  push_param(section, std::make_shared<param_string>(name, p, comment));
 }
 
 Option::~Option() {}

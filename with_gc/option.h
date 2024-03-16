@@ -37,8 +37,19 @@ public:
   Option &operator=(const Option &) = delete;
   static Option &instance();
   void create_option_search_table();
+
   void push_param(const std::string &section,
                   const std::shared_ptr<param_ptr> &param);
+  void push_param_int(const std::string &section, const std::string &name,
+                      int *p, const std::string &comment, bool notZero);
+  void push_param_int_select(const std::string &section,
+                             const std::string &name, int *p,
+                             const std::string &comment, struct sel_c *select);
+  void push_param_bool(const std::string &section, const std::string &name,
+                       bool *p, const std::string &comment);
+  void push_param_string(const std::string &section, const std::string &name,
+                         std::string *p, const std::string &comment);
+
   std::shared_ptr<param_ptr> search_param(const std::string &name) const;
   std::string get_param_option(const char *name) const;
   int set_param(const std::string &name, const std::string &value);
