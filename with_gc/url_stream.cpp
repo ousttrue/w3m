@@ -21,6 +21,7 @@
 #include "linein.h"
 #include "url_decode.h"
 #include "local_cgi.h"
+#include "cookie.h"
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -42,6 +43,8 @@
 #endif
 
 #define SAVE_BUF_SIZE 1536
+
+bool LocalhostOnly = false;
 
 class input_stream;
 struct Url;
@@ -561,7 +564,7 @@ std::shared_ptr<HttpRequest> UrlStream::openURL(const std::string &path,
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     this->openLocalCgi(hr, option, request);
-    if (!this->stream && retryAsHttp && path[0] != '/') {
+    if (!this->stream && path[0] != '/') {
       // auto u = url;
       // auto scheme = parseUrlSchema(&u);
       // if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {

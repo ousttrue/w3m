@@ -34,7 +34,6 @@
 #define RC_DIR "~/.w3m"
 #endif
 
-int DNS_order = DNS_ORDER_UNSPEC;
 
 #define HAVE_FACCESSAT 1
 #define W3MCONFIG "w3mconfig"
@@ -44,8 +43,6 @@ int DNS_order = DNS_ORDER_UNSPEC;
 
 std::string rc_dir;
 bool ArgvIsURL = true;
-bool LocalhostOnly = false;
-bool retryAsHttp = true;
 
 #define _(Text) Text
 #define N_(Text) Text
@@ -97,7 +94,6 @@ int set_pixel_per_char = false;
 #define CMT_FTP_PROXY N_("URL of FTP proxy host")
 #define CMT_NO_PROXY N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR N_("Check noproxy by network address")
-#define CMT_DNS_ORDER N_("Order of name resolution")
 #define CMT_TMP N_("Directory for temporary files")
 #define CMT_CONFIRM_QQ N_("Confirm when quitting with q")
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
@@ -105,29 +101,17 @@ int set_pixel_per_char = false;
 #define CMT_SHOW_NUM N_("Show line numbers")
 #define CMT_URIMETHODMAP N_("List of urimethodmap files")
 #define CMT_MAILER N_("Mailer")
-#define CMT_DISABLE_SECRET_SECURITY_CHECK                                      \
-  N_("Disable secret file security check")
-#define CMT_PASSWDFILE N_("Password file")
 #define CMT_PRE_FORM_FILE N_("File for setting form on loading")
 #define CMT_SITECONF_FILE N_("File for preferences for each site")
 #define CMT_FTPPASS N_("Password for anonymous FTP (your mail address)")
 #define CMT_FTPPASS_HOSTNAMEGEN N_("Generate domain part of password for FTP")
-#define CMT_USERAGENT N_("User-Agent identification string")
-#define CMT_ACCEPTENCODING N_("Accept-Encoding header")
-#define CMT_ACCEPTMEDIA N_("Accept header")
-#define CMT_ACCEPTLANG N_("Accept-Language header")
 #define CMT_WRAP N_("Wrap search")
 #define CMT_AUTO_UNCOMPRESS                                                    \
   N_("Uncompress compressed data automatically when downloading")
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
-#define CMT_DEFAULT_URL N_("Default value for open-URL command")
 #define CMT_DECODE_CTE N_("Decode Content-Transfer-Encoding when saving")
 #define CMT_CLEAR_BUF N_("Free memory of undisplayed buffers")
-#define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
-#define CMT_CROSSORIGINREFERER                                                 \
-  N_("Exclude pathname and query string from `Referer:' header when cross "    \
-     "domain communication")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
 #define CMT_SSL_KEY_FILE N_("PEM encoded private key file of client")
@@ -136,9 +120,6 @@ int set_pixel_per_char = false;
 #define CMT_SSL_CA_FILE N_("File consisting of PEM encoded certificates of CAs")
 #ifdef SSL_CTX_set_min_proto_version
 #endif
-#define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
-#define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
-#define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
 static void interpret_rc(FILE *f) {
   Str *line;
@@ -180,7 +161,7 @@ void sync_with_option(void) {
   initMimeTypes();
   loadPasswd();
 
-  if (AcceptLang == NULL || *AcceptLang == '\0') {
+  if (AcceptLang.empty()) {
     /* TRANSLATORS:
      * AcceptLang default: this is used in Accept-Language: HTTP request
      * header. For example, ja.po should translate it as
@@ -188,9 +169,9 @@ void sync_with_option(void) {
      */
     AcceptLang = _("en;q=1.0");
   }
-  if (AcceptEncoding == NULL || *AcceptEncoding == '\0')
+  if (AcceptEncoding.empty())
     AcceptEncoding = Strnew_charp(acceptableEncoding())->ptr;
-  if (AcceptMedia == NULL || *AcceptMedia == '\0')
+  if (AcceptMedia.empty())
     AcceptMedia = acceptableMimeTypes();
   App::instance().initKeymap(false);
 }

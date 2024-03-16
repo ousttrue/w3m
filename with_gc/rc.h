@@ -4,19 +4,9 @@
 
 extern std::string rc_dir;
 extern bool ArgvIsURL;
-extern bool LocalhostOnly;
-extern bool retryAsHttp;
 
 #define INET6 1
-#ifdef INET6
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
 extern int ai_family_order_table[7][3]; /* XXX */
-#endif                                  /* INET6 */
-extern int DNS_order;
 
 std::string rcFile(std::string_view base);
 std::string etcFile(const char *base);

@@ -19,7 +19,7 @@
 #define RC_DIR "~/.w3m"
 #endif
 #define PASSWD_FILE RC_DIR "/passwd"
-const char *passwd_file = PASSWD_FILE;
+std::string passwd_file = PASSWD_FILE;
 
 bool disable_secret_security_check = false;
 
@@ -258,7 +258,7 @@ FILE *openSecretFile(const char *fname) {
 void loadPasswd() {
 
   passwords = NULL;
-  auto fp = openSecretFile(passwd_file);
+  auto fp = openSecretFile(passwd_file.c_str());
   if (fp != NULL) {
     parsePasswd(fp, 0);
     fclose(fp);

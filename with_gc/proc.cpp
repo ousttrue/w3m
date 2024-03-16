@@ -355,11 +355,11 @@ std::shared_ptr<CoroutineState<void>> ldfile(const FuncContext &context) {
 //"Show help panel"
 std::shared_ptr<CoroutineState<void>> ldhelp(const FuncContext &context) {
   auto lang = AcceptLang;
-  auto n = strcspn(lang, ";, \t");
+  auto n = strcspn(lang.c_str(), ";, \t");
   auto tmp =
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
-              Str_form_quote(Strnew_charp_n(lang, n))->ptr);
+              Str_form_quote(Strnew_charp_n(lang.c_str(), n))->ptr);
   if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
           tmp->ptr, {}, {.no_referer = true}, nullptr)) {
     CurrentTab->pushBuffer(buf);

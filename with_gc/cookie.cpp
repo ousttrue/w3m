@@ -25,6 +25,7 @@
 #include "regex.h"
 #include "myctype.h"
 #include "proc.h"
+#include "dns_order.h"
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -61,6 +62,7 @@ struct portlist {
   struct portlist *next;
 };
 
+int DNS_order = DNS_ORDER_UNSPEC;
 bool default_use_cookie = true;
 bool use_cookie = true;
 bool show_cookie = false;

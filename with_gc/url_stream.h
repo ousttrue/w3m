@@ -3,6 +3,7 @@
 #include <memory>
 
 extern std::string index_file;
+extern bool LocalhostOnly;
 
 class input_stream;
 struct HttpRequest;

@@ -11,10 +11,10 @@ struct Url;
 struct FormList;
 
 extern bool override_user_agent;
-extern char *UserAgent;
-extern const char *AcceptLang;
-extern char *AcceptEncoding;
-extern char *AcceptMedia;
+extern std::string UserAgent;
+extern std::string AcceptLang;
+extern std::string AcceptEncoding;
+extern std::string AcceptMedia;
 extern bool NoCache;
 extern bool NoSendReferer;
 extern bool CrossOriginReferer;

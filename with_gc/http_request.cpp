@@ -11,10 +11,10 @@
 #endif
 
 bool override_user_agent = false;
-char *UserAgent = nullptr;
-const char *AcceptLang = nullptr;
-char *AcceptEncoding = nullptr;
-char *AcceptMedia = nullptr;
+std::string UserAgent;
+std::string AcceptLang;
+std::string AcceptEncoding;
+std::string AcceptMedia;
 bool NoCache = false;
 bool NoSendReferer = false;
 bool CrossOriginReferer = true;
@@ -49,16 +49,16 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
     Strcat_charp(s, "User-Agent: ");
     if (url_user_agent)
       Strcat_charp(s, url_user_agent);
-    else if (UserAgent == nullptr || *UserAgent == '\0')
+    else if (UserAgent.empty())
       Strcat_charp(s, w3m_version);
     else
-      Strcat_charp(s, UserAgent);
+      Strcat(s, UserAgent);
     Strcat_charp(s, "\r\n");
   }
 
-  Strcat_m_charp(s, "Accept: ", AcceptMedia, "\r\n", nullptr);
-  Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding, "\r\n", nullptr);
-  Strcat_m_charp(s, "Accept-Language: ", AcceptLang, "\r\n", nullptr);
+  Strcat_m_charp(s, "Accept: ", AcceptMedia.c_str(), "\r\n", nullptr);
+  Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding.c_str(), "\r\n", nullptr);
+  Strcat_m_charp(s, "Accept-Language: ", AcceptLang.c_str(), "\r\n", nullptr);
 
   if (target.host.size()) {
     Strcat_charp(s, "Host: ");

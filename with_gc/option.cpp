@@ -6,6 +6,7 @@
 #include "option_param.h"
 #include "cookie.h"
 #include "html/table.h"
+#include "dns_order.h"
 
 // extern
 #include "html/readbuffer.h"
@@ -30,6 +31,8 @@
 #include "etc.h"
 #include "ssl_util.h"
 #include "cookie.h"
+#include "auth_pass.h"
+#include "http_response.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -55,7 +58,6 @@ static struct sel_c displayinsdel[] = {
     {N_S(DISPLAY_INS_DEL_FONTIFY), N_("fontify")},
     {0, NULL, NULL}};
 
-#ifdef INET6
 static struct sel_c dnsorders[] = {
     {N_S(DNS_ORDER_UNSPEC), N_("unspecified")},
     {N_S(DNS_ORDER_INET_INET6), N_("inet inet6")},
@@ -63,7 +65,6 @@ static struct sel_c dnsorders[] = {
     {N_S(DNS_ORDER_INET_ONLY), N_("inet only")},
     {N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only")},
     {0, NULL, NULL}};
-#endif /* INET6 */
 
 static struct sel_c badcookiestr[] = {
     {N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard")},
@@ -277,49 +278,38 @@ Option::Option() {
                     &cookie_avoid_wrong_number_of_dots,
                     "Domains to avoid [wrong number of dots]");
 
-  // std::list<std::shared_ptr<param_ptr>> params9 = {
-  // {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file,
-  // CMT_PASSWDFILE,
-  //  NULL},
-  // {"disable_secret_security_check", P_INT, PI_ONOFF,
-  //  (void *)&disable_secret_security_check,
-  //  CMT_DISABLE_SECRET_SECURITY_CHECK, NULL},
-  // {"ftppasswd", P_STRING, PI_TEXT, (void *)&ftppasswd, CMT_FTPPASS,
-  // NULL},
-  // {"ftppass_hostnamegen", P_INT, PI_ONOFF, (void *)&ftppass_hostnamegen,
-  //  CMT_FTPPASS_HOSTNAMEGEN, NULL},
-  // {"siteconf_file", P_STRING, PI_TEXT, (void *)&siteconf_file,
-  //  CMT_SITECONF_FILE, NULL},
-  // {"user_agent", P_STRING, PI_TEXT, (void *)&UserAgent, CMT_USERAGENT,
-  //  NULL},
-  // {"no_referer", P_INT, PI_ONOFF, (void *)&NoSendReferer,
-  // CMT_NOSENDREFERER,
-  //  NULL},
-  // {"cross_origin_referer", P_INT, PI_ONOFF, (void *)&CrossOriginReferer,
-  //  CMT_CROSSORIGINREFERER, NULL},
-  // {"accept_language", P_STRING, PI_TEXT, (void *)&AcceptLang,
-  //  CMT_ACCEPTLANG, NULL},
-  // {"accept_encoding", P_STRING, PI_TEXT, (void *)&AcceptEncoding,
-  //  CMT_ACCEPTENCODING, NULL},
-  // {"accept_media", P_STRING, PI_TEXT, (void *)&AcceptMedia,
-  // CMT_ACCEPTMEDIA,
-  //  NULL},
-  // {"argv_is_url", P_CHARINT, PI_ONOFF, (void *)&ArgvIsURL,
-  // CMT_ARGV_IS_URL,
-  //  NULL},
-  // {"retry_http", P_INT, PI_ONOFF, (void *)&retryAsHttp, CMT_RETRY_HTTP,
-  //  NULL},
-  // {"default_url", P_INT, PI_SEL_C, (void *)&DefaultURLString,
-  //  CMT_DEFAULT_URL, (void *)defaulturls},
-  // {"follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
-  //  CMT_FOLLOW_REDIRECTION, NULL},
-  // {"meta_refresh", P_CHARINT, PI_ONOFF, (void *)&MetaRefresh,
-  //  CMT_META_REFRESH, NULL},
-  // {"localhost_only", P_CHARINT, PI_ONOFF, (void *)&LocalhostOnly,
-  //  CMT_LOCALHOST_ONLY, NULL},
-  // {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
-  //  (void *)dnsorders},
-  // };
+  //
+  // OPTION_NETWORK
+  //
+  push_param_string(OPTION_NETWORK, "passwd_file", &passwd_file,
+                    "Password file");
+  push_param_bool(OPTION_NETWORK, "disable_secret_security_check",
+                  &disable_secret_security_check,
+                  "Disable secret file security check");
+  push_param_string(OPTION_NETWORK, "user_agent", &UserAgent,
+                    "User-Agent identification string");
+  push_param_bool(OPTION_NETWORK, "no_referer", &NoSendReferer,
+                  "Suppress `Referer:' header");
+  push_param_bool(
+      OPTION_NETWORK, "cross_origin_referer", &CrossOriginReferer,
+      "Exclude pathname and query string from `Referer:' header when cross "
+      "domain communication");
+  push_param_string(OPTION_NETWORK, "accept_language", &AcceptLang,
+                    "Accept-Language header");
+  push_param_string(OPTION_NETWORK, "accept_encoding", &AcceptEncoding,
+                    "Accept-Encoding header");
+  push_param_string(OPTION_NETWORK, "accept_media", &AcceptMedia,
+                    "Accept header");
+  push_param_int_select(OPTION_NETWORK, "default_url", (int *)&DefaultURLString,
+                        "Default value for open-URL command", defaulturls);
+  push_param_int(OPTION_NETWORK, "follow_redirection", &FollowRedirection,
+                 "Number of redirections to follow", false);
+  push_param_bool(OPTION_NETWORK, "meta_refresh", &MetaRefresh,
+                  "Enable processing of meta-refresh tag");
+  push_param_bool(OPTION_NETWORK, "localhost_only", &LocalhostOnly,
+                  "Restrict connections only to localhost");
+  push_param_int_select(OPTION_NETWORK, "dns_order", &DNS_order,
+                        "Order of name resolution", dnsorders);
 }
 
 void Option::create_option_search_table() {

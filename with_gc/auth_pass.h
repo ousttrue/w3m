@@ -1,7 +1,8 @@
 #pragma once
 #include <stdio.h>
+#include <string>
 
-extern const char *passwd_file;
+extern std::string passwd_file;
 extern bool disable_secret_security_check;
 
 struct Str;

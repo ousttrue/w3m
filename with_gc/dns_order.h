@@ -1,0 +1,9 @@
+#pragma once
+
+enum DnsOrder {
+  DNS_ORDER_UNSPEC = 0,
+  DNS_ORDER_INET_INET6 = 1,
+  DNS_ORDER_INET6_INET = 2,
+  DNS_ORDER_INET_ONLY = 4,
+  DNS_ORDER_INET6_ONLY = 6,
+};
