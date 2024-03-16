@@ -316,28 +316,28 @@ std::string_view remove_space(std::string_view str) {
   return {p, q};
 }
 
-void make_domain_list(std::list<std::string> &list, const char *domain_list) {
+void make_domain_list(std::list<std::string> &list,
+                      const std::string &domain_list) {
   list.clear();
-  auto p = domain_list;
-  if (!p) {
+  if (domain_list.empty()) {
     return;
   }
-  while (*p) {
-    while (*p && IS_SPACE(*p))
+  for (auto p = domain_list.begin(); p != domain_list.end();) {
+    while (p != domain_list.end() && IS_SPACE(*p))
       p++;
     // Strclear(tmp);
     std::stringstream tmp;
-    while (*p && !IS_SPACE(*p) && *p != ',') {
+    while (p != domain_list.end() && !IS_SPACE(*p) && *p != ',') {
       tmp << *p++;
     }
     auto str = tmp.str();
     if (str.size()) {
       list.push_back(str);
     }
-    while (*p && IS_SPACE(*p)) {
+    while (p != domain_list.end() && IS_SPACE(*p)) {
       p++;
     }
-    if (*p == ',') {
+    if (p != domain_list.end() && *p == ',') {
       p++;
     }
   }

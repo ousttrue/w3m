@@ -26,6 +26,8 @@
 #include "ioutil.h"
 #include "url_stream.h"
 #include "mimetypes.h"
+#include "mailcap.h"
+#include "etc.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -248,31 +250,38 @@ Option::Option() {
   push_param(OPTION_EXTERNAL_PROGRAM,
              std::make_shared<param_string>("mime_types", &mimetypes_files,
                                             "List of mime.types files"));
-  // {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP,
-  // NULL},
-  // // {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
-  // {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
-  //  CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
-  // {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ,
-  // NULL},
-  // {"extbrowser2", P_STRING, PI_TEXT, (void *)&ExtBrowser2, CMT_EXTBRZ2,
-  //  NULL},
-  // {"extbrowser3", P_STRING, PI_TEXT, (void *)&ExtBrowser3, CMT_EXTBRZ3,
-  //  NULL},
-  // {"extbrowser4", P_STRING, PI_TEXT, (void *)&ExtBrowser4, CMT_EXTBRZ4,
-  //  NULL},
-  // {"extbrowser5", P_STRING, PI_TEXT, (void *)&ExtBrowser5, CMT_EXTBRZ5,
-  //  NULL},
-  // {"extbrowser6", P_STRING, PI_TEXT, (void *)&ExtBrowser6, CMT_EXTBRZ6,
-  //  NULL},
-  // {"extbrowser7", P_STRING, PI_TEXT, (void *)&ExtBrowser7, CMT_EXTBRZ7,
-  //  NULL},
-  // {"extbrowser8", P_STRING, PI_TEXT, (void *)&ExtBrowser8, CMT_EXTBRZ8,
-  //  NULL},
-  // {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9,
-  //  NULL},
-  // {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
-  //  CMT_BGEXTVIEW, NULL},
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("mailcap", &mailcap_files,
+                                            "List of mailcap files"));
+  push_param(OPTION_EXTERNAL_PROGRAM, std::make_shared<param_string>(
+                                          "editor", &ioutil::editor, "Editor"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser", &ExtBrowser,
+                                            "External browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser2", &ExtBrowser2,
+                                            "2nd external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser3", &ExtBrowser3,
+                                            "3rd external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser4", &ExtBrowser4,
+                                            "4th external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser5", &ExtBrowser5,
+                                            "5th external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser6", &ExtBrowser6,
+                                            "6th external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser7", &ExtBrowser7,
+                                            "7th external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser8", &ExtBrowser8,
+                                            "8th external browser"));
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("extbrowser9", &ExtBrowser9,
+                                            "9th external browser"));
 
   // std::list<std::shared_ptr<param_ptr>> params7 = {
   // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
@@ -358,19 +367,6 @@ Option::Option() {
   // {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
   //  (void *)dnsorders},
   // };
-
-  // sections = {
-  //     {N_("Display Settings"), params1},
-  //     {N_("Miscellaneous Settings"), params3},
-  //     {N_("Directory Settings"), params5},
-  //     {N_("External Program Settings"), params6},
-  //     {N_("Network Settings"), params9},
-  //     {N_("Proxy Settings"), params4},
-  //     {N_("SSL Settings"), params7},
-  //     {N_("Cookie Settings"), params8},
-  // };
-
-  // create_option_search_table();
 }
 
 void Option::create_option_search_table() {

@@ -15,9 +15,9 @@ extern int accept_cookie;
 #define ACCEPT_BAD_COOKIE_ACCEPT 1
 #define ACCEPT_BAD_COOKIE_ASK 2
 extern int accept_bad_cookie;
-extern const char *cookie_reject_domains;
-extern const char *cookie_accept_domains;
-extern const char *cookie_avoid_wrong_number_of_dots;
+extern std::string cookie_reject_domains;
+extern std::string cookie_accept_domains;
+extern std::string cookie_avoid_wrong_number_of_dots;
 extern std::list<std::string> Cookie_reject_domains;
 extern std::list<std::string> Cookie_accept_domains;
 extern std::list<std::string> Cookie_avoid_wrong_number_of_dots_domains;

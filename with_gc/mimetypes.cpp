@@ -84,7 +84,7 @@ static struct table2 *loadMimeTypes(const char *filename) {
 
 void initMimeTypes() {
   if (non_null(mimetypes_files)) {
-    make_domain_list(mimetypes_list, mimetypes_files.c_str());
+    make_domain_list(mimetypes_list, mimetypes_files);
   }
   if (mimetypes_list.empty()) {
     return;

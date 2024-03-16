@@ -56,7 +56,6 @@ bool retryAsHttp = true;
 const char *w3m_reqlog = {};
 int displayImage = false;
 
-int BackgroundExtViewer = true;
 
 const char *siteconf_file = SITECONF_FILE;
 const char *ftppasswd = nullptr;
@@ -105,20 +104,8 @@ int set_pixel_per_char = false;
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
 #define CMT_FOLD_LINE N_("Fold lines of plain text file")
 #define CMT_SHOW_NUM N_("Show line numbers")
-#define CMT_MAILCAP N_("List of mailcap files")
 #define CMT_URIMETHODMAP N_("List of urimethodmap files")
-#define CMT_EDITOR N_("Editor")
 #define CMT_MAILER N_("Mailer")
-#define CMT_MAILTO_OPTIONS N_("How to call Mailer for mailto URLs with options")
-#define CMT_EXTBRZ N_("External browser")
-#define CMT_EXTBRZ2 N_("2nd external browser")
-#define CMT_EXTBRZ3 N_("3rd external browser")
-#define CMT_EXTBRZ4 N_("4th external browser")
-#define CMT_EXTBRZ5 N_("5th external browser")
-#define CMT_EXTBRZ6 N_("6th external browser")
-#define CMT_EXTBRZ7 N_("7th external browser")
-#define CMT_EXTBRZ8 N_("8th external browser")
-#define CMT_EXTBRZ9 N_("9th external browser")
 #define CMT_DISABLE_SECRET_SECURITY_CHECK                                      \
   N_("Disable secret file security check")
 #define CMT_PASSWDFILE N_("Password file")

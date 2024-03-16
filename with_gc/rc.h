@@ -37,7 +37,6 @@ void sync_with_option(void);
 extern const char *w3m_reqlog;
 extern const char *w3m_version;
 
-extern int BackgroundExtViewer;
 extern const char *siteconf_file;
 extern const char *ftppasswd;
 extern int ftppass_hostnamegen;

@@ -80,7 +80,7 @@ static std::vector<Mailcap> UserMailcap;
 #endif
 #define USER_MAILCAP RC_DIR "/mailcap"
 #define SYS_MAILCAP CONF_DIR "/mailcap"
-const char *mailcap_files = USER_MAILCAP ", " SYS_MAILCAP;
+std::string mailcap_files = USER_MAILCAP ", " SYS_MAILCAP;
 
 int MailcapEntry::match(const char *type) const {
   auto cap = this->type;

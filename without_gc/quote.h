@@ -28,5 +28,6 @@ extern unsigned char QUOTE_MAP[];
 #define html_quote_char(c) HTML_QUOTE_MAP[(int)is_html_quote(c)]
 
 std::string_view remove_space(std::string_view str);
-void make_domain_list(std::list<std::string> &list, const char *domain_list);
+void make_domain_list(std::list<std::string> &list,
+                      const std::string &domain_list);
 std::string cleanupName(std::string_view name);

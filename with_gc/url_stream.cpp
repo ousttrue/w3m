@@ -125,7 +125,7 @@ std::string index_file;
 void UrlStream::add_index_file(Url *pu) {
   std::list<std::string> index_file_list;
   if (non_null(index_file)) {
-    make_domain_list(index_file_list, index_file.c_str());
+    make_domain_list(index_file_list, index_file);
   }
   if (index_file_list.empty()) {
     this->stream = nullptr;

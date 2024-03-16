@@ -20,7 +20,7 @@ namespace ioutil {
 std::string personal_document_root;
 std::string _currentDir;
 std::string _hostName = "localhost";
-std::string _editor = "/usr/bin/vim";
+std::string editor = "/usr/bin/vim";
 
 void initialize() {
 #ifdef MAXPATHLEN
@@ -33,9 +33,9 @@ void initialize() {
   _currentDir = getcwd(nullptr, 0);
 #endif
 
-  if (_editor.empty()) {
+  if (editor.empty()) {
     if (auto p = getenv("EDITOR")) {
-      _editor = p;
+      editor = p;
     }
   }
 
@@ -56,7 +56,7 @@ std::string myEditor(std::string_view file, int line) {
   std::stringstream tmp;
   bool set_file = false;
   bool set_line = false;
-  for (auto p = _editor.begin(); *p; p++) {
+  for (auto p = editor.begin(); *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_file) {
       tmp << file;
       set_file = true;
@@ -70,7 +70,7 @@ std::string myEditor(std::string_view file, int line) {
     }
   }
   if (!set_file) {
-    if (!set_line && line > 1 && strcasestr(_editor.c_str(), "vi")) {
+    if (!set_line && line > 1 && strcasestr(editor.c_str(), "vi")) {
       tmp << " +" << line;
     }
     tmp << " " << file;

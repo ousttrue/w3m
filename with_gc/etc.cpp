@@ -17,15 +17,15 @@
 
 bool IsForkChild = 0;
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
-const char *ExtBrowser = DEF_EXT_BROWSER;
-char *ExtBrowser2 = nullptr;
-char *ExtBrowser3 = nullptr;
-char *ExtBrowser4 = nullptr;
-char *ExtBrowser5 = nullptr;
-char *ExtBrowser6 = nullptr;
-char *ExtBrowser7 = nullptr;
-char *ExtBrowser8 = nullptr;
-char *ExtBrowser9 = nullptr;
+std::string ExtBrowser = DEF_EXT_BROWSER;
+std::string ExtBrowser2;
+std::string ExtBrowser3;
+std::string ExtBrowser4;
+std::string ExtBrowser5;
+std::string ExtBrowser6;
+std::string ExtBrowser7;
+std::string ExtBrowser8;
+std::string ExtBrowser9;
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -473,12 +473,10 @@ const char *getQWord(const char **str) {
 
 /* spawn external browser */
 void invoke_browser(const char *url) {
-  Str *cmd;
-  int bg = 0, len;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  auto browser = App::instance().searchKeyData();
-  if (browser == nullptr || *browser == '\0') {
+  std::string browser = App::instance().searchKeyData();
+  if (browser.empty()) {
     switch (prec_num) {
     case 0:
     case 1:
@@ -509,20 +507,22 @@ void invoke_browser(const char *url) {
       browser = ExtBrowser9;
       break;
     }
-    if (browser == nullptr || *browser == '\0') {
+    if (browser.empty()) {
       // browser = inputStr("Browse command: ", nullptr);
     }
   }
-  if (browser == nullptr || *browser == '\0') {
+  if (browser.empty()) {
     return;
   }
 
-  if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' &&
+  int bg = 0, len;
+  if ((len = browser.size()) >= 2 && browser[len - 1] == '&' &&
       browser[len - 2] != '\\') {
-    browser = allocStr(browser, len - 2);
+    browser.pop_back();
+    browser.pop_back();
     bg = 1;
   }
-  cmd = myExtCommand((char *)browser, shell_quote(url), false);
+  auto cmd = myExtCommand(browser.c_str(), shell_quote(url), false);
   Strremovetrailingspaces(cmd);
   App::instance().endRawMode();
   mySystem(cmd->ptr, bg);

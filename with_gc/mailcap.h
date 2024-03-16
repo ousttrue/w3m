@@ -1,9 +1,10 @@
 #pragma once
 #include "enum_template.h"
+#include <string>
 
-extern const char *mailcap_files;
+extern std::string mailcap_files;
 
-enum MailcapFlags  {
+enum MailcapFlags {
   MAILCAP_NEEDSTERMINAL = 0x01,
   MAILCAP_COPIOUSOUTPUT = 0x02,
   MAILCAP_HTMLOUTPUT = 0x04,

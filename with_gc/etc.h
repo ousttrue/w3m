@@ -3,15 +3,15 @@
 #include <string>
 
 extern bool IsForkChild;
-extern const char *ExtBrowser;
-extern char *ExtBrowser2;
-extern char *ExtBrowser3;
-extern char *ExtBrowser4;
-extern char *ExtBrowser5;
-extern char *ExtBrowser6;
-extern char *ExtBrowser7;
-extern char *ExtBrowser8;
-extern char *ExtBrowser9;
+extern std::string ExtBrowser;
+extern std::string ExtBrowser2;
+extern std::string ExtBrowser3;
+extern std::string ExtBrowser4;
+extern std::string ExtBrowser5;
+extern std::string ExtBrowser6;
+extern std::string ExtBrowser7;
+extern std::string ExtBrowser8;
+extern std::string ExtBrowser9;
 
 int open_pipe_rw(FILE **fr, FILE **fw);
 std::string file_to_url(std::string file);
