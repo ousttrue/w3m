@@ -1,4 +1,5 @@
 #include "proc.h"
+#include "option.h"
 #include "ioutil.h"
 #include "dict.h"
 #include "app.h"
@@ -1086,7 +1087,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
 // OPTIONS
 //"Display options setting panel"
 std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
-  auto html = load_option_panel();
+  auto html = Option::instance().load_option_panel();
   auto buf = loadHTMLString(html.c_str());
   CurrentTab->pushBuffer(buf);
   co_return;

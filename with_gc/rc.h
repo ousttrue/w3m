@@ -11,7 +11,6 @@ extern bool LocalhostOnly;
 extern bool retryAsHttp;
 
 struct Url;
-void show_params(FILE *fp);
 int str_to_bool(const char *value, int old);
 
 #define INET6 1
@@ -40,9 +39,6 @@ const char *w3m_etc_dir();
 const char *w3m_conf_dir();
 const char *w3m_help_dir();
 void sync_with_option(void);
-
-std::string load_option_panel();
-
 #define KEYMAP_FILE "keymap"
 #define CGI_EXTENSION ".cgi"
 #define BOOKMARK "bookmark.html"
