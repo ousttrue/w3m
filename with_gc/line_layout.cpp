@@ -8,7 +8,6 @@
 #include "alloc.h"
 #include "utf8.h"
 
-int nextpage_topline = false;
 bool FoldTextarea = false;
 
 LineLayout::LineLayout() {}

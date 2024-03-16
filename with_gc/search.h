@@ -3,7 +3,7 @@
 
 extern int IgnoreCase;
 extern int WrapSearch;
-extern int show_srch_str;
+extern bool show_srch_str;
 
 /* Search Result */
 #define SR_FOUND 0x1

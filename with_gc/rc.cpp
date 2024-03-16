@@ -56,7 +56,6 @@ bool PreserveTimestamp = true;
 #define SITECONF_FILE RC_DIR "/siteconf"
 
 const char *w3m_reqlog = {};
-int label_topline = false;
 int displayImage = false;
 
 int BackgroundExtViewer = true;
@@ -88,9 +87,6 @@ char *document_root = nullptr;
 #define CMT_SAVEHIST N_("Save URL history")
 #define CMT_FRAME N_("Render frames automatically")
 #define CMT_ARGV_IS_URL N_("Treat argument without scheme as URL")
-#define CMT_DISP_IMAGE N_("Display inline images")
-#define CMT_PSEUDO_INLINES                                                     \
-  N_("Display pseudo-ALTs for inline images with no ALT or TITLE string")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
 #define CMT_COLOR N_("Display with color")
 #define CMT_HINTENSITY_COLOR N_("Use high-intensity colors")
@@ -122,12 +118,8 @@ char *document_root = nullptr;
 #define CMT_SPACE_AUTOCOMPLETE                                                 \
   N_("Space key triggers file completion while editing URLs")
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
-#define CMT_LABEL_TOPLINE N_("Move cursor to top line when going to label")
-#define CMT_NEXTPAGE_TOPLINE                                                   \
-  N_("Move cursor to top line when moving to next page")
 #define CMT_FOLD_LINE N_("Fold lines of plain text file")
 #define CMT_SHOW_NUM N_("Show line numbers")
-#define CMT_SHOW_SRCH_STR N_("Show search string")
 #define CMT_MIMETYPES N_("List of mime.types files")
 #define CMT_MAILCAP N_("List of mailcap files")
 #define CMT_URIMETHODMAP N_("List of urimethodmap files")
@@ -156,11 +148,9 @@ char *document_root = nullptr;
 #define CMT_ACCEPTLANG N_("Accept-Language header")
 #define CMT_MARK_ALL_PAGES N_("Treat URL-like strings as links in all pages")
 #define CMT_WRAP N_("Wrap search")
-#define CMT_VIEW_UNSEENOBJECTS N_("Display unseen objects (e.g. bgimage tag)")
 #define CMT_AUTO_UNCOMPRESS                                                    \
   N_("Uncompress compressed data automatically when downloading")
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#define CMT_IGNORE_NULL_IMG_ALT N_("Display link name for images lacking ALT")
 #define CMT_IFILE N_("Index file for directories")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
 #define CMT_DEFAULT_URL N_("Default value for open-URL command")
@@ -242,7 +232,6 @@ void sync_with_option(void) {
   parse_cookie();
   initMailcap();
   initMimeTypes();
-  displayImage = false; /* XXX */
   loadPasswd();
 
   if (AcceptLang == NULL || *AcceptLang == '\0') {

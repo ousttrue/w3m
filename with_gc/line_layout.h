@@ -6,7 +6,6 @@
 #include <string>
 #include <optional>
 
-extern int nextpage_topline;
 extern bool FoldTextarea;
 
 struct HtmlTag;

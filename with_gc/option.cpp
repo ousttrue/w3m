@@ -18,6 +18,7 @@
 #include "loaddirectory.h"
 #include "entity.h"
 #include "html/html_feed_env.h"
+#include "search.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -143,23 +144,15 @@ Option::Option() {
       std::make_shared<param_int_select>(
           "display_ins_del", &displayInsDel,
           "Display INS, DEL, S and STRIKE element", displayinsdel),
-      // {"ignore_null_img_alt", P_INT, PI_ONOFF, (void *)&ignore_null_img_alt,
-      //  CMT_IGNORE_NULL_IMG_ALT, NULL},
-      // {"view_unseenobject", P_INT, PI_ONOFF, (void *)&view_unseenobject,
-      //  CMT_VIEW_UNSEENOBJECTS, NULL},
-      // /* XXX: emacs-w3m force to off display_image even if image options off
-      // */
-      // {"display_image", P_INT, PI_ONOFF, (void *)&displayImage,
-      // CMT_DISP_IMAGE,
-      //  NULL},
-      // {"pseudo_inlines", P_INT, PI_ONOFF, (void *)&pseudoInlines,
-      //  CMT_PSEUDO_INLINES, NULL},
-      // {"show_srch_str", P_INT, PI_ONOFF, (void *)&show_srch_str,
-      //  CMT_SHOW_SRCH_STR, NULL},
-      // {"label_topline", P_INT, PI_ONOFF, (void *)&label_topline,
-      //  CMT_LABEL_TOPLINE, NULL},
-      // {"nextpage_topline", P_INT, PI_ONOFF, (void *)&nextpage_topline,
-      //  CMT_NEXTPAGE_TOPLINE, NULL},
+      std::make_shared<param_bool>("ignore_null_img_alt", &ignore_null_img_alt,
+                                   "Display link name for images lacking ALT"),
+      std::make_shared<param_bool>("view_unseenobject", &view_unseenobject,
+                                   "Display unseen objects (e.g. bgimage tag)"),
+      std::make_shared<param_bool>(
+          "pseudo_inlines", &pseudoInlines,
+          "Display pseudo-ALTs for inline images with no ALT or TITLE string"),
+      std::make_shared<param_bool>("show_srch_str", &show_srch_str,
+                                   "Show search string"),
   };
 
   std::list<std::shared_ptr<param_ptr>> params3 = {

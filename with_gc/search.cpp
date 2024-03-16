@@ -9,7 +9,7 @@
 
 int IgnoreCase = true;
 int WrapSearch = false;
-int show_srch_str = true;
+bool show_srch_str = true;
 
 int forwardSearch(LineLayout *layout, const char *str) {
 
