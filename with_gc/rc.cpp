@@ -47,6 +47,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <sstream>
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"
@@ -537,15 +538,16 @@ struct param_ptr params9[] = {
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 
-struct param_section sections[] = {{N_("Display Settings"), params1},
-                                   {N_("Miscellaneous Settings"), params3},
-                                   {N_("Directory Settings"), params5},
-                                   {N_("External Program Settings"), params6},
-                                   {N_("Network Settings"), params9},
-                                   {N_("Proxy Settings"), params4},
-                                   {N_("SSL Settings"), params7},
-                                   {N_("Cookie Settings"), params8},
-                                   {NULL, NULL}};
+std::vector<param_section> sections = {
+    {N_("Display Settings"), params1},
+    {N_("Miscellaneous Settings"), params3},
+    {N_("Directory Settings"), params5},
+    {N_("External Program Settings"), params6},
+    {N_("Network Settings"), params9},
+    {N_("Proxy Settings"), params4},
+    {N_("SSL Settings"), params7},
+    {N_("Cookie Settings"), params8},
+};
 
 static Str *to_str(struct param_ptr *p);
 
@@ -554,15 +556,11 @@ static int compare_table(struct rc_search_table *a, struct rc_search_table *b) {
 }
 
 static void create_option_search_table() {
-  int i, j, k;
-  int diff1, diff2;
-  const char *p, *q;
-
   /* count table size */
   RC_table_size = 0;
-  for (j = 0; sections[j].name != NULL; j++) {
-    i = 0;
-    while (sections[j].params[i].name) {
+  for (auto &section : sections) {
+    int i = 0;
+    while (section.params[i].name) {
       i++;
       RC_table_size++;
     }
@@ -570,11 +568,11 @@ static void create_option_search_table() {
 
   RC_search_table =
       (struct rc_search_table *)New_N(struct rc_search_table, RC_table_size);
-  k = 0;
-  for (j = 0; sections[j].name != NULL; j++) {
-    i = 0;
-    while (sections[j].params[i].name) {
-      RC_search_table[k].param = &sections[j].params[i];
+  int k = 0;
+  for (auto &section : sections) {
+    int i = 0;
+    while (section.params[i].name) {
+      RC_search_table[k].param = &section.params[i];
       k++;
       i++;
     }
@@ -583,13 +581,14 @@ static void create_option_search_table() {
   qsort(RC_search_table, RC_table_size, sizeof(struct rc_search_table),
         (int (*)(const void *, const void *))compare_table);
 
-  diff2 = 0;
-  for (i = 0; i < RC_table_size - 1; i++) {
-    p = RC_search_table[i].param->name;
-    q = RC_search_table[i + 1].param->name;
-    for (j = 0; p[j] != '\0' && q[j] != '\0' && p[j] == q[j]; j++)
+  int diff2 = 0;
+  for (int i = 0; i < RC_table_size - 1; i++) {
+    auto p = RC_search_table[i].param->name;
+    auto q = RC_search_table[i + 1].param->name;
+    int j = 0;
+    for (; p[j] != '\0' && q[j] != '\0' && p[j] == q[j]; j++)
       ;
-    diff1 = j;
+    int diff1 = j;
     if (diff1 > diff2)
       RC_search_table[i].uniq_pos = diff1 + 1;
     else
@@ -633,22 +632,20 @@ static struct param_ptr *search_param(const char *name) {
 
 /* show parameter with bad options invokation */
 void show_params(FILE *fp) {
-  int i, j, l;
   const char *t = "";
-  const char *cmt;
-
   fputs("\nconfiguration parameters\n", fp);
-  for (j = 0; sections[j].name != NULL; j++) {
-    cmt = sections[j].name;
-    fprintf(fp, "  section[%d]: %s\n", j, cmt);
-    i = 0;
-    while (sections[j].params[i].name) {
-      switch (sections[j].params[i].type) {
+  for (size_t j = 0; j < sections.size(); ++j) {
+    auto &section = sections[j];
+    auto cmt = section.name;
+    fprintf(fp, "  section[%zu]: %s\n", j, cmt);
+    int i = 0;
+    while (section.params[i].name) {
+      switch (section.params[i].type) {
       case P_INT:
       case P_SHORT:
       case P_CHARINT:
       case P_NZINT:
-        t = (sections[j].params[i].inputtype == PI_ONOFF) ? "bool" : "number";
+        t = (section.params[i].inputtype == PI_ONOFF) ? "bool" : "number";
         break;
       case P_CHAR:
         t = "char";
@@ -668,12 +665,12 @@ void show_params(FILE *fp) {
         t = "percent";
         break;
       }
-      cmt = sections[j].params[i].comment;
-      l = 30 - (strlen(sections[j].params[i].name) + strlen(t));
+      cmt = section.params[i].comment;
+      int l = 30 - (strlen(section.params[i].name) + strlen(t));
       if (l < 0)
         l = 1;
-      fprintf(fp, "    -o %s=<%s>%*s%s\n", sections[j].params[i].name, t, l,
-              " ", cmt);
+      fprintf(fp, "    -o %s=<%s>%*s%s\n", section.params[i].name, t, l, " ",
+              cmt);
       i++;
     }
   }
@@ -929,8 +926,6 @@ static char optionpanel_src1[] =
 </form><br>\
 <form method=internal action=option>";
 
-static Str *optionpanel_str = NULL;
-
 static Str *to_str(struct param_ptr *p) {
   switch (p->type) {
   case P_INT:
@@ -957,62 +952,58 @@ static Str *to_str(struct param_ptr *p) {
 }
 
 std::string load_option_panel() {
-  Str *src;
-  struct param_ptr *p;
-  struct sel_c *s;
-  int x, i;
-  Str *tmp;
-  std::shared_ptr<Buffer> buf;
+  std::stringstream src;
+  src << "<table><tr><td>";
 
-  if (optionpanel_str == NULL)
-    optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
-                              html_quote(localCookie()->ptr), _(CMT_HELPER));
-  src = optionpanel_str->Strdup();
-
-  Strcat_charp(src, "<table><tr><td>");
-  for (i = 0; sections[i].name != NULL; i++) {
-    Strcat_m_charp(src, "<h1>", sections[i].name, "</h1>", NULL);
-    p = sections[i].params;
-    Strcat_charp(src, "<table width=100% cellpadding=0>");
+  for (auto &section : sections) {
+    src << "<h1>" << section.name << "</h1>";
+    auto p = section.params;
+    src << "<table width=100% cellpadding=0>";
     while (p->name) {
-      Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
-      Strcat(src, Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char)));
+      src << "<tr><td>" << p->comment;
+      src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
+
       switch (p->inputtype) {
       case PI_TEXT:
-        Strcat_m_charp(src, "<input type=text name=", p->name, " value=\"",
-                       html_quote(to_str(p)->ptr), "\">", NULL);
+        src << "<input type=text name=" << p->name << " value=\""
+            << html_quote(to_str(p)->ptr),
+            "\">";
         break;
-      case PI_ONOFF:
-        x = atoi(to_str(p)->ptr);
-        Strcat_m_charp(src, "<input type=radio name=", p->name, " value=1",
-                       (x ? " checked" : ""),
-                       ">YES&nbsp;&nbsp;<input type=radio name=", p->name,
-                       " value=0", (x ? "" : " checked"), ">NO", NULL);
-        break;
-      case PI_SEL_C:
-        tmp = to_str(p);
-        Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-        for (s = (struct sel_c *)p->select; s->text != NULL; s++) {
-          Strcat_charp(src, "<option value=");
-          Strcat(src, Sprintf("%s\n", s->cvalue));
-          if ((p->type != P_CHAR && s->value == atoi(tmp->ptr)) ||
-              (p->type == P_CHAR && (char)s->value == *(tmp->ptr)))
-            Strcat_charp(src, " selected");
-          Strcat_char(src, '>');
-          Strcat_charp(src, s->text);
-        }
-        Strcat_charp(src, "</select>");
+
+      case PI_ONOFF: {
+        auto x = atoi(to_str(p)->ptr);
+        src << "<input type=radio name=" << p->name << " value=1"
+            << (x ? " checked" : "")
+            << ">YES&nbsp;&nbsp;<input type=radio name=" << p->name
+            << " value=0" << (x ? "" : " checked") << ">NO";
         break;
       }
-      Strcat_charp(src, "</td></tr>\n");
+
+      case PI_SEL_C: {
+        auto tmp = to_str(p);
+        src << "<select name=" << p->name << ">";
+        for (auto s = (struct sel_c *)p->select; s->text != NULL; s++) {
+          src << "<option value=";
+          src << Sprintf("%s\n", s->cvalue)->ptr;
+          if ((p->type != P_CHAR && s->value == atoi(tmp->ptr)) ||
+              (p->type == P_CHAR && (char)s->value == *(tmp->ptr))) {
+            src << " selected";
+          }
+          src << '>';
+          src << s->text;
+        }
+        src << "</select>";
+        break;
+      }
+      }
+      src << "</td></tr>\n";
       p++;
     }
-    Strcat_charp(
-        src, "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>");
-    Strcat_charp(src, "</table><hr width=50%>");
+    src << "<tr><td></td><td><p><input type=submit value=\"OK\"></td></tr>"
+        << "</table><hr width=50%>";
   }
-  Strcat_charp(src, "</table></form></body></html>");
-  return src->ptr;
+  src << "</table></form></body></html>";
+  return src.str();
 }
 
 void panel_set_option(keyvalue *arg) {
