@@ -7,10 +7,10 @@
 #include <memory>
 #include <list>
 
-extern int default_use_cookie;
-extern int use_cookie;
-extern int show_cookie;
-extern int accept_cookie;
+extern bool default_use_cookie;
+extern bool use_cookie;
+extern bool show_cookie;
+extern bool accept_cookie;
 #define ACCEPT_BAD_COOKIE_DISCARD 0
 #define ACCEPT_BAD_COOKIE_ACCEPT 1
 #define ACCEPT_BAD_COOKIE_ASK 2

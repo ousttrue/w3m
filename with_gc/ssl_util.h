@@ -5,16 +5,16 @@
 #define USE_SSL 1
 #define USE_SSL_VERIFY 1
 
-extern const char *ssl_forbid_method;
+extern std::string ssl_forbid_method;
 extern bool ssl_path_modified;
-extern const char *ssl_cipher;
-extern const char *ssl_cert_file;
-extern const char *ssl_key_file;
-extern const char *ssl_ca_path;
-extern const char *ssl_ca_file;
+extern std::string ssl_cipher;
+extern std::string ssl_cert_file;
+extern std::string ssl_key_file;
+extern std::string ssl_ca_path;
+extern std::string ssl_ca_file;
 extern bool ssl_ca_default;
-extern int ssl_verify_server;
-extern char *ssl_min_version;
+extern bool ssl_verify_server;
+extern std::string ssl_min_version;
 
 struct SslConnection {
   SSL *handle = nullptr;

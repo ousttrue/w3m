@@ -56,7 +56,6 @@ bool retryAsHttp = true;
 const char *w3m_reqlog = {};
 int displayImage = false;
 
-
 const char *siteconf_file = SITECONF_FILE;
 const char *ftppasswd = nullptr;
 int ftppass_hostnamegen = true;
@@ -130,31 +129,13 @@ int set_pixel_per_char = false;
   N_("Exclude pathname and query string from `Referer:' header when cross "    \
      "domain communication")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
-#define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
 #define CMT_SSL_KEY_FILE N_("PEM encoded private key file of client")
 #define CMT_SSL_CA_PATH                                                        \
   N_("Path to directory for PEM encoded certificates of CAs")
 #define CMT_SSL_CA_FILE N_("File consisting of PEM encoded certificates of CAs")
-#define CMT_SSL_CA_DEFAULT                                                     \
-  N_("Use default locations for PEM encoded certificates of CAs")
-#define CMT_SSL_FORBID_METHOD                                                  \
-  N_("List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: "      \
-     "TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)")
 #ifdef SSL_CTX_set_min_proto_version
-#define CMT_SSL_MIN_VERSION                                                    \
-  N_("Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)")
 #endif
-#define CMT_SSL_CIPHER                                                         \
-  N_("SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)")
-#define CMT_USECOOKIE N_("Enable cookie processing")
-#define CMT_SHOWCOOKIE N_("Print a message when receiving a cookie")
-#define CMT_ACCEPTCOOKIE N_("Accept cookies")
-#define CMT_ACCEPTBADCOOKIE N_("Action to be taken on invalid cookie")
-#define CMT_COOKIE_REJECT_DOMAINS N_("Domains to reject cookies from")
-#define CMT_COOKIE_ACCEPT_DOMAINS N_("Domains to accept cookies from")
-#define CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS                                   \
-  N_("Domains to avoid [wrong number of dots]")
 #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")

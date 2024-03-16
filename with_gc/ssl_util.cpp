@@ -31,19 +31,19 @@ static long int mrand48(void) {
 static void srand48(long int seedval) { srand(seedval); }
 #endif
 
-const char *ssl_forbid_method = "2, 3, t, 5";
+std::string ssl_forbid_method = "2, 3, t, 5";
 bool ssl_path_modified = false;
 
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-const char *ssl_cipher "DEFAULT:!LOW:!RC4:!EXP";
+std::string ssl_cipher "DEFAULT:!LOW:!RC4:!EXP";
 #else
-const char *ssl_cipher = nullptr;
+std::string ssl_cipher;
 #endif
 
-const char *ssl_cert_file = nullptr;
-const char *ssl_key_file = nullptr;
-const char *ssl_ca_path = nullptr;
-const char *ssl_ca_file = DEF_CAFILE;
+std::string ssl_cert_file;
+std::string ssl_key_file;
+std::string ssl_ca_path;
+std::string ssl_ca_file = DEF_CAFILE;
 bool ssl_ca_default = true;
 
 static Str *accept_this_site;
@@ -55,9 +55,9 @@ void ssl_accept_this_site(const char *hostname) {
 }
 
 SSL_CTX *ssl_ctx = nullptr;
-int ssl_verify_server = true;
+bool ssl_verify_server = true;
 #ifdef SSL_CTX_set_min_proto_version
-char *ssl_min_version = NULL;
+std::string ssl_min_version;
 static int str_to_ssl_version(const char *name) {
   if (!strcasecmp(name, "all"))
     return 0;
@@ -362,12 +362,12 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
 
 SslConnection openSSLHandle(int sock, const char *hostname) {
   SslConnection con = {};
-  static const char *old_ssl_forbid_method = nullptr;
+  static std::string old_ssl_forbid_method;
   static int old_ssl_verify_server = -1;
 
   if (old_ssl_forbid_method != ssl_forbid_method &&
-      (!old_ssl_forbid_method || !ssl_forbid_method ||
-       strcmp(old_ssl_forbid_method, ssl_forbid_method))) {
+      (old_ssl_forbid_method.empty() || ssl_forbid_method.empty() ||
+       old_ssl_forbid_method != ssl_forbid_method)) {
     old_ssl_forbid_method = ssl_forbid_method;
     ssl_path_modified = 1;
   }
@@ -394,42 +394,42 @@ SslConnection openSSLHandle(int sock, const char *hostname) {
     if (!(ssl_ctx = SSL_CTX_new(SSLv23_client_method())))
       goto eend;
 #ifdef SSL_CTX_set_min_proto_version
-    if (ssl_min_version && *ssl_min_version != '\0') {
-      int sslver;
-      sslver = str_to_ssl_version(ssl_min_version);
+    if (ssl_min_version.size()) {
+      int sslver = str_to_ssl_version(ssl_min_version.c_str());
       if (sslver < 0 || !SSL_CTX_set_min_proto_version(ssl_ctx, sslver)) {
         free_ssl_ctx();
         goto eend;
       }
     }
 #endif
-    if (ssl_cipher && *ssl_cipher != '\0')
-      if (!SSL_CTX_set_cipher_list(ssl_ctx, ssl_cipher)) {
+    if (ssl_cipher.size()) {
+      if (!SSL_CTX_set_cipher_list(ssl_ctx, ssl_cipher.c_str())) {
         free_ssl_ctx();
         goto eend;
       }
+    }
     option = SSL_OP_ALL;
-    if (ssl_forbid_method) {
-      if (strchr(ssl_forbid_method, '2'))
+    if (ssl_forbid_method.size()) {
+      if (strchr(ssl_forbid_method.c_str(), '2'))
         option |= SSL_OP_NO_SSLv2;
-      if (strchr(ssl_forbid_method, '3'))
+      if (strchr(ssl_forbid_method.c_str(), '3'))
         option |= SSL_OP_NO_SSLv3;
-      if (strchr(ssl_forbid_method, 't'))
+      if (strchr(ssl_forbid_method.c_str(), 't'))
         option |= SSL_OP_NO_TLSv1;
-      if (strchr(ssl_forbid_method, 'T'))
+      if (strchr(ssl_forbid_method.c_str(), 'T'))
         option |= SSL_OP_NO_TLSv1;
-      if (strchr(ssl_forbid_method, '4'))
+      if (strchr(ssl_forbid_method.c_str(), '4'))
         option |= SSL_OP_NO_TLSv1;
 #ifdef SSL_OP_NO_TLSv1_1
-      if (strchr(ssl_forbid_method, '5'))
+      if (strchr(ssl_forbid_method.c_str(), '5'))
         option |= SSL_OP_NO_TLSv1_1;
 #endif
 #ifdef SSL_OP_NO_TLSv1_2
-      if (strchr(ssl_forbid_method, '6'))
+      if (strchr(ssl_forbid_method.c_str(), '6'))
         option |= SSL_OP_NO_TLSv1_2;
 #endif
 #ifdef SSL_OP_NO_TLSv1_3
-      if (strchr(ssl_forbid_method, '7'))
+      if (strchr(ssl_forbid_method.c_str(), '7'))
         option |= SSL_OP_NO_TLSv1_3;
 #endif
     }
@@ -449,15 +449,14 @@ SslConnection openSSLHandle(int sock, const char *hostname) {
     SSL_CTX_set_verify(
         ssl_ctx, ssl_verify_server ? SSL_VERIFY_PEER : SSL_VERIFY_NONE, NULL);
 #endif
-    if (ssl_cert_file != NULL && *ssl_cert_file != '\0') {
+    if (ssl_cert_file.size()) {
       int ng = 1;
-      if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file,
+      if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file.c_str(),
                                        SSL_FILETYPE_PEM) > 0) {
-        const char *key_file = (ssl_key_file == NULL || *ssl_key_file == '\0')
-                                   ? ssl_cert_file
-                                   : ssl_key_file;
-        if (SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM) >
-            0)
+        std::string key_file =
+            (ssl_key_file.empty()) ? ssl_cert_file : ssl_key_file;
+        if (SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file.c_str(),
+                                        SSL_FILETYPE_PEM) > 0)
           if (SSL_CTX_check_private_key(ssl_ctx))
             ng = 0;
       }
@@ -467,13 +466,14 @@ SslConnection openSSLHandle(int sock, const char *hostname) {
       }
     }
     if (ssl_verify_server) {
-      const char *file = NULL, *path = NULL;
-      if (ssl_ca_file && *ssl_ca_file != '\0')
+      std::string file;
+      std::string path;
+      if (ssl_ca_file.size())
         file = ssl_ca_file;
-      if (ssl_ca_path && *ssl_ca_path != '\0')
+      if (ssl_ca_path.size())
         path = ssl_ca_path;
-      if ((file || path) &&
-          !SSL_CTX_load_verify_locations(ssl_ctx, file, path)) {
+      if ((file.size() || path.size()) &&
+          !SSL_CTX_load_verify_locations(ssl_ctx, file.c_str(), path.c_str())) {
         free_ssl_ctx();
         goto eend;
       }

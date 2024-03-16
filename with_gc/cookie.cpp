@@ -61,10 +61,10 @@ struct portlist {
   struct portlist *next;
 };
 
-int default_use_cookie = true;
-int use_cookie = true;
-int show_cookie = false;
-int accept_cookie = true;
+bool default_use_cookie = true;
+bool use_cookie = true;
+bool show_cookie = false;
+bool accept_cookie = true;
 int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
 std::string cookie_reject_domains;
 std::string cookie_accept_domains;

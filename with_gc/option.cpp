@@ -28,6 +28,8 @@
 #include "mimetypes.h"
 #include "mailcap.h"
 #include "etc.h"
+#include "ssl_util.h"
+#include "cookie.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -230,46 +232,50 @@ Option::Option() {
   push_param_string(OPTION_EXTERNAL_PROGRAM, "extbrowser9", &ExtBrowser9,
                     "9th external browser");
 
-  // std::list<std::shared_ptr<param_ptr>> params7 = {
-  // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
-  //  CMT_SSL_FORBID_METHOD, NULL},
-  // {"ssl_min_version", P_STRING, PI_TEXT, (void *)&ssl_min_version,
-  //  CMT_SSL_MIN_VERSION, NULL},
-  // {"ssl_cipher", P_STRING, PI_TEXT, (void *)&ssl_cipher, CMT_SSL_CIPHER,
-  //  NULL},
-  // {"ssl_verify_server", P_INT, PI_ONOFF, (void *)&ssl_verify_server,
-  //  CMT_SSL_VERIFY_SERVER, NULL},
-  // {"ssl_cert_file", P_SSLPATH, PI_TEXT, (void *)&ssl_cert_file,
-  //  CMT_SSL_CERT_FILE, NULL},
-  // {"ssl_key_file", P_SSLPATH, PI_TEXT, (void *)&ssl_key_file,
-  //  CMT_SSL_KEY_FILE, NULL},
-  // {"ssl_ca_path", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_path,
-  // CMT_SSL_CA_PATH,
-  //  NULL},
-  // {"ssl_ca_file", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_file,
-  // CMT_SSL_CA_FILE,
-  //  NULL},
-  // {"ssl_ca_default", P_INT, PI_ONOFF, (void *)&ssl_ca_default,
-  //  CMT_SSL_CA_DEFAULT, NULL},
-  // };
+  //
+  // OPTION_SSL
+  //
+  push_param_string(
+      OPTION_SSL, "ssl_forbid_method", &ssl_forbid_method,
+      "List of forbidden SSL methods (2: SSLv2, 3: SSLv3, t: TLSv1.0, 5: "
+      "TLSv1.1, 6: TLSv1.2, 7: TLSv1.3)");
+  push_param_string(
+      OPTION_SSL, "ssl_min_version", &ssl_min_version,
+      "Minimum SSL version (all, TLSv1.0, TLSv1.1, TLSv1.2, or TLSv1.3)");
+  push_param_string(
+      OPTION_SSL, "ssl_cipher", &ssl_cipher,
+      "SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)");
+  push_param_bool(OPTION_SSL, "ssl_verify_server", &ssl_verify_server,
+                  "Perform SSL server verification");
+  // ("ssl_cert_file", P_SSLPATH, PI_TEXT, (void *)&ssl_cert_file,
+  // CMT_SSL_CERT_FILE);,
+  // ("ssl_key_file", P_SSLPATH, PI_TEXT, (void *)&ssl_key_file,
+  // CMT_SSL_KEY_FILE);,
+  // ("ssl_ca_path", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_path,
+  // CMT_SSL_CA_PATH);,
+  // ("ssl_ca_file", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_file,
+  // CMT_SSL_CA_FILE);,
+  push_param_bool(OPTION_SSL, "ssl_ca_default", &ssl_ca_default,
+                  "Use default locations for PEM encoded certificates of CAs");
 
-  // std::list<std::shared_ptr<param_ptr>> params8 = {
-  // {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE,
-  // NULL},
-  // {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie, CMT_SHOWCOOKIE,
-  //  NULL},
-  // {"accept_cookie", P_INT, PI_ONOFF, (void *)&accept_cookie,
-  //  CMT_ACCEPTCOOKIE, NULL},
-  // {"accept_bad_cookie", P_INT, PI_SEL_C, (void *)&accept_bad_cookie,
-  //  CMT_ACCEPTBADCOOKIE, (void *)badcookiestr},
-  // {"cookie_reject_domains", P_STRING, PI_TEXT,
-  //  (void *)&cookie_reject_domains, CMT_COOKIE_REJECT_DOMAINS, NULL},
-  // {"cookie_accept_domains", P_STRING, PI_TEXT,
-  //  (void *)&cookie_accept_domains, CMT_COOKIE_ACCEPT_DOMAINS, NULL},
-  // {"cookie_avoid_wrong_number_of_dots", P_STRING, PI_TEXT,
-  //  (void *)&cookie_avoid_wrong_number_of_dots,
-  //  CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
-  // };
+  //
+  // OPTION_COOKIE
+  //
+  push_param_bool(OPTION_COOKIE, "use_cookie", &use_cookie,
+                  "Enable cookie processing");
+  push_param_bool(OPTION_COOKIE, "show_cookie", &show_cookie,
+                  "Print a message when receiving a cookie");
+  push_param_bool(OPTION_COOKIE, "accept_cookie", &accept_cookie,
+                  "Accept cookies");
+  push_param_int_select(OPTION_COOKIE, "accept_bad_cookie", &accept_bad_cookie,
+                        "Action to be taken on invalid cookie", badcookiestr);
+  push_param_string(OPTION_COOKIE, "cookie_reject_domains",
+                    &cookie_reject_domains, "Domains to reject cookies from");
+  push_param_string(OPTION_COOKIE, "cookie_accept_domains",
+                    &cookie_accept_domains, "Domains to accept cookies from");
+  push_param_string(OPTION_COOKIE, "cookie_avoid_wrong_number_of_dots",
+                    &cookie_avoid_wrong_number_of_dots,
+                    "Domains to avoid [wrong number of dots]");
 
   // std::list<std::shared_ptr<param_ptr>> params9 = {
   // {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file,
