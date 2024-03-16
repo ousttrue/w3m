@@ -21,7 +21,7 @@ bool popAddDownloadList() {
 void addDownloadList(int pid, const char *url, const char *save,
                      const char *lock, long long size) {
 
-  auto d = (DownloadList *)New(DownloadList);
+  auto d = new DownloadList;
   d->pid = pid;
   d->url = url;
   if (save[0] != '/' && save[0] != '~') {

@@ -27,7 +27,6 @@ char *ExtBrowser7 = nullptr;
 char *ExtBrowser8 = nullptr;
 char *ExtBrowser9 = nullptr;
 
-
 #ifdef _MSC_VER
 #include <direct.h>
 #define mkdir _mkdir;
@@ -195,18 +194,18 @@ Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
   return tmp;
 }
 
-const char *expandPath(const char *name) {
-  if (!name) {
-    return {};
+std::string expandPath(std::string_view name) {
+  if (name.empty()) {
+    return "";
   }
 
-  auto p = name;
+  auto p = name.begin();
   if (*p == '~') {
     p++;
-    Str *extpath = {};
+    std::stringstream ss;
 #ifdef _MSC_VER
     if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-      extpath = Strnew_charp(getenv("USERPROFILE"));
+      ss << getenv("USERPROFILE");
     }
 #else
     if (IS_ALPHA(*p)) {
@@ -222,24 +221,25 @@ const char *expandPath(const char *name) {
       if (!passent) {
         return name;
       }
-      extpath = Strnew_charp(passent->pw_dir);
+      ss << passent->pw_dir;
     } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-      extpath = Strnew_charp(getenv("HOME"));
+      ss << getenv("HOME");
     }
 #endif
     else {
-      return name;
+      return {name.begin(), name.end()};
     }
-    if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+    if (ss.str() == "/" && *p == '/') {
       p++;
-    Strcat_charp(extpath, p);
-    return extpath->ptr;
+    }
+    ss << std::string_view{p, name.end()};
+    return ss.str();
   }
 
-  return name;
+  return {name.begin(), name.end()};
 }
 
-const char *file_to_url(const char *file) {
+std::string file_to_url(std::string file) {
   Str *tmp;
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
   char *drive = NULL;
@@ -247,8 +247,8 @@ const char *file_to_url(const char *file) {
 #ifdef SUPPORT_NETBIOS_SHARE
   char *host = NULL;
 #endif
-
-  if (!(file = expandPath(file)))
+  file = expandPath(file);
+  if (!file.empty())
     return NULL;
 #ifdef SUPPORT_NETBIOS_SHARE
   if (file[0] == '/' && file[1] == '/') {
@@ -273,7 +273,7 @@ const char *file_to_url(const char *file) {
     tmp = Strnew(ioutil::pwd());
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
-    Strcat_charp(tmp, file);
+    Strcat(tmp, file);
     file = tmp->ptr;
   }
   tmp = Strnew_charp("file://");

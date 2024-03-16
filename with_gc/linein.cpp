@@ -157,7 +157,7 @@ void LineInput::onBreak() {
     }
   }
   if (flag & IN_FILENAME) {
-    onInput(expandPath(p));
+    onInput(expandPath(p).c_str());
   } else {
     onInput(Strnew_charp(p)->ptr);
   }
@@ -626,7 +626,7 @@ disp_next:
       f = d->Strdup();
       Strcat_charp(f, CFileBuf[n]);
       _screen->addstr(pos, CFileBuf[n]);
-      if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode)) {
+      if (stat(expandPath(f->ptr).c_str(), &st) != -1 && S_ISDIR(st.st_mode)) {
         // _screen->addstr("/");
       }
     }

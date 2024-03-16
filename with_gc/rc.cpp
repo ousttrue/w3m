@@ -42,12 +42,10 @@ int DNS_order = DNS_ORDER_UNSPEC;
 
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
-const char *rc_dir = nullptr;
+std::string rc_dir;
 bool ArgvIsURL = true;
 bool LocalhostOnly = false;
 bool retryAsHttp = true;
-bool AutoUncompress = false;
-bool PreserveTimestamp = true;
 
 #define _(Text) Text
 #define N_(Text) Text
@@ -65,16 +63,15 @@ const char *ftppasswd = nullptr;
 int ftppass_hostnamegen = true;
 int WrapDefault = false;
 
-const char *BookmarkFile = nullptr;
+std::string BookmarkFile;
 
 struct auth_cookie *Auth_cookie = nullptr;
 struct Cookie *First_cookie = nullptr;
 int no_rc_dir = false;
-const char *config_file = nullptr;
+std::string config_file;
 int is_redisplay = false;
 int clear_buffer = true;
 int set_pixel_per_char = false;
-const char *keymap_file = KEYMAP_FILE;
 char *document_root = nullptr;
 
 /* FIXME: gettextize here */
@@ -82,9 +79,6 @@ char *document_root = nullptr;
 #define CMT_HELPER N_("External Viewer Setup")
 #define CMT_PIXEL_PER_LINE N_("Number of pixels per line (4.0...64.0)")
 #define CMT_PAGERLINE N_("Number of remembered lines when used as a pager")
-#define CMT_HISTORY N_("Use URL history")
-#define CMT_HISTSIZE N_("Number of remembered URL")
-#define CMT_SAVEHIST N_("Save URL history")
 #define CMT_FRAME N_("Render frames automatically")
 #define CMT_ARGV_IS_URL N_("Treat argument without scheme as URL")
 #define CMT_GRAPHIC_CHAR N_("Character type for border of table and menu")
@@ -113,10 +107,6 @@ char *document_root = nullptr;
 #define CMT_CGIBIN N_("Directory corresponding to /cgi-bin")
 #define CMT_TMP N_("Directory for temporary files")
 #define CMT_CONFIRM_QQ N_("Confirm when quitting with q")
-#define CMT_CLOSE_TAB_BACK N_("Close tab if buffer is last when back")
-#define CMT_EMACS_LIKE_LINEEDIT N_("Enable Emacs-style line editing")
-#define CMT_SPACE_AUTOCOMPLETE                                                 \
-  N_("Space key triggers file completion while editing URLs")
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
 #define CMT_FOLD_LINE N_("Fold lines of plain text file")
 #define CMT_SHOW_NUM N_("Show line numbers")
@@ -146,7 +136,6 @@ char *document_root = nullptr;
 #define CMT_ACCEPTENCODING N_("Accept-Encoding header")
 #define CMT_ACCEPTMEDIA N_("Accept header")
 #define CMT_ACCEPTLANG N_("Accept-Language header")
-#define CMT_MARK_ALL_PAGES N_("Treat URL-like strings as links in all pages")
 #define CMT_WRAP N_("Wrap search")
 #define CMT_AUTO_UNCOMPRESS                                                    \
   N_("Uncompress compressed data automatically when downloading")
@@ -155,13 +144,11 @@ char *document_root = nullptr;
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
 #define CMT_DEFAULT_URL N_("Default value for open-URL command")
 #define CMT_DECODE_CTE N_("Decode Content-Transfer-Encoding when saving")
-#define CMT_PRESERVE_TIMESTAMP N_("Preserve timestamp when saving")
 #define CMT_CLEAR_BUF N_("Free memory of undisplayed buffers")
 #define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
 #define CMT_CROSSORIGINREFERER                                                 \
   N_("Exclude pathname and query string from `Referer:' header when cross "    \
      "domain communication")
-#define CMT_IGNORE_CASE N_("Search case-insensitively")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
 #define CMT_SSL_VERIFY_SERVER N_("Perform SSL server verification")
 #define CMT_SSL_CERT_FILE N_("PEM encoded certificate file of client")
@@ -191,8 +178,6 @@ char *document_root = nullptr;
 #define CMT_FOLLOW_REDIRECTION N_("Number of redirections to follow")
 #define CMT_META_REFRESH N_("Enable processing of meta-refresh tag")
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
-
-#define CMT_KEYMAP_FILE N_("keymap file")
 
 static void interpret_rc(FILE *f) {
   Str *line;
@@ -252,42 +237,46 @@ void sync_with_option(void) {
 void init_rc(void) {
   int i;
   FILE *f;
+  const char *p;
 
-  if (rc_dir != NULL)
+  if (rc_dir.size())
     goto open_rc;
 
-  rc_dir = allocStr(getenv("W3M_DIR"), -1);
-  if (rc_dir == NULL || *rc_dir == '\0')
-    rc_dir = allocStr(RC_DIR, -1);
-  if (rc_dir == NULL || *rc_dir == '\0')
+  p = getenv("W3M_DIR");
+  rc_dir = p ? p : "";
+  if (rc_dir.empty())
+    rc_dir = RC_DIR;
+  if (rc_dir.empty())
     goto rc_dir_err;
   rc_dir = expandPath(rc_dir);
 
-  i = strlen(rc_dir);
-  if (i > 1 && rc_dir[i - 1] == '/')
-    ((char *)rc_dir)[i - 1] = '\0';
+  i = rc_dir.size();
+  if (i > 1 && rc_dir[i - 1] == '/') {
+    rc_dir.pop_back();
+  }
 
-  if (do_recursive_mkdir(rc_dir) == -1)
+  if (do_recursive_mkdir(rc_dir.c_str()) == -1)
     goto rc_dir_err;
 
   no_rc_dir = false;
 
-  if (config_file == NULL)
+  if (config_file.empty()) {
     config_file = rcFile(CONFIG_FILE);
+  }
 
   Option::instance().create_option_search_table();
 
 open_rc:
   /* open config file */
-  if ((f = fopen(etcFile(W3MCONFIG), "rt")) != NULL) {
+  if ((f = fopen(etcFile(W3MCONFIG).c_str(), "rt")) != NULL) {
     interpret_rc(f);
     fclose(f);
   }
-  if ((f = fopen(confFile(CONFIG_FILE), "rt")) != NULL) {
+  if ((f = fopen(confFile(CONFIG_FILE).c_str(), "rt")) != NULL) {
     interpret_rc(f);
     fclose(f);
   }
-  if (config_file && (f = fopen(config_file, "rt")) != NULL) {
+  if (config_file.size() && (f = fopen(config_file.c_str(), "rt")) != NULL) {
     interpret_rc(f);
     fclose(f);
   }
@@ -301,10 +290,10 @@ rc_dir_err:
 
 void panel_set_option(keyvalue *arg) {
   FILE *f = NULL;
-  if (config_file == NULL) {
+  if (config_file.empty()) {
     App::instance().disp_message("There's no config file... config not saved");
   } else {
-    f = fopen(config_file, "wt");
+    f = fopen(config_file.c_str(), "wt");
     if (f == NULL) {
     }
   }
@@ -330,25 +319,30 @@ void panel_set_option(keyvalue *arg) {
   backBf({});
 }
 
-const char *rcFile(const char *base) {
-  if (base && (base[0] == '/' ||
-               (base[0] == '.' &&
-                (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) ||
-               (base[0] == '~' && base[1] == '/')))
+std::string rcFile(std::string_view base) {
+  if (base.size() &&
+      (base[0] == '/' ||
+       (base[0] == '.' &&
+        (base[1] == '/' || (base[1] == '.' && base[2] == '/'))) ||
+       (base[0] == '~' && base[1] == '/'))) {
     /* /file, ./file, ../file, ~/file */
-    return expandPath((char *)base);
-  return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
+    return expandPath(base);
+  }
+
+  std::stringstream ss;
+  ss << rc_dir << "/" << base;
+  return expandPath(ss.str());
 }
 
-const char *auxbinFile(const char *base) {
+std::string auxbinFile(const char *base) {
   return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
-const char *etcFile(const char *base) {
+std::string etcFile(const char *base) {
   return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
 }
 
-const char *confFile(const char *base) {
+std::string confFile(const char *base) {
   return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }
 

@@ -513,7 +513,6 @@ static struct Cookie *nth_cookie(int n) {
 #define COOKIE_FILE "cookie"
 void save_cookies(void) {
   struct Cookie *p;
-  const char *cookie_file;
   FILE *fp;
 
   check_expired_cookies();
@@ -521,8 +520,8 @@ void save_cookies(void) {
   if (!First_cookie || is_saved || no_rc_dir)
     return;
 
-  cookie_file = rcFile(COOKIE_FILE);
-  if (!(fp = fopen(cookie_file, "w")))
+  auto cookie_file = rcFile(COOKIE_FILE);
+  if (!(fp = fopen(cookie_file.c_str(), "w")))
     return;
 
   for (p = First_cookie; p; p = p->next) {
@@ -554,10 +553,7 @@ static Str *readcol(char **p) {
 
 void load_cookies(void) {
   FILE *fp;
-  Str *line;
-  char *str;
-
-  if (!(fp = fopen(rcFile(COOKIE_FILE), "r")))
+  if (!(fp = fopen(rcFile(COOKIE_FILE).c_str(), "r")))
     return;
 
   Cookie *p;
@@ -568,6 +564,8 @@ void load_cookies(void) {
     p = NULL;
   }
 
+  Str *line;
+  char *str;
   for (;;) {
     line = Strfgets(fp);
 

@@ -7,8 +7,8 @@
 #include "proc.h"
 #include "tabbuffer.h"
 
-int IgnoreCase = true;
-int WrapSearch = false;
+bool IgnoreCase = true;
+bool WrapSearch = false;
 bool show_srch_str = true;
 
 int forwardSearch(LineLayout *layout, const char *str) {

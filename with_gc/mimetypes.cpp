@@ -37,7 +37,7 @@ static struct table2 DefaultGuess[] = {
     {"pdf", "application/pdf"},    {NULL, NULL}};
 
 static struct table2 *loadMimeTypes(const char *filename) {
-  auto f = fopen(expandPath(filename), "r");
+  auto f = fopen(expandPath(filename).c_str(), "r");
   if (f == NULL) {
     return NULL;
   }

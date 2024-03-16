@@ -20,6 +20,7 @@
 #define SAVE_BUF_SIZE 1536
 
 bool PermitSaveToPipe = false;
+bool PreserveTimestamp = true;
 
 int _MoveFile(const char *path1, const char *path2) {
 #ifdef _MSC_VER

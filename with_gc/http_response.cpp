@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 
 int FollowRedirection = 10;
-bool DecodeCTE = false;
 
 HttpResponse::HttpResponse() {}
 

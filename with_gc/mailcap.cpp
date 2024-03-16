@@ -223,7 +223,7 @@ void initMailcap() {
   //     mailcap_list->nitem);
   for (auto &tl : mailcap_list) {
     UserMailcap.push_back({});
-    if (auto f = fopen(expandPath(tl.c_str()), "r")) {
+    if (auto f = fopen(expandPath(tl).c_str(), "r")) {
       UserMailcap.back().load(f);
       fclose(f);
     }

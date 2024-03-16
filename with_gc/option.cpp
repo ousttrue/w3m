@@ -19,6 +19,9 @@
 #include "entity.h"
 #include "html/html_feed_env.h"
 #include "search.h"
+#include "history.h"
+#include "linein.h"
+#include "file_util.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -179,35 +182,37 @@ Option::Option() {
              std::make_shared<param_bool>("show_srch_str", &show_srch_str,
                                           "Show search string"));
 
-  // std::list<std::shared_ptr<param_ptr>> params3 = {
-  // {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY,
-  // NULL},
-  // {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
-  // {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST,
-  // NULL},
-  // {"close_tab_back", P_INT, PI_ONOFF, (void *)&close_tab_back,
-  //  CMT_CLOSE_TAB_BACK, NULL},
-  // {"emacs_like_lineedit", P_INT, PI_ONOFF, (void *)&emacs_like_lineedit,
-  //  CMT_EMACS_LIKE_LINEEDIT, NULL},
-  // {"space_autocomplete", P_INT, PI_ONOFF, (void *)&space_autocomplete,
-  //  CMT_SPACE_AUTOCOMPLETE, NULL},
-  // {"mark_all_pages", P_INT, PI_ONOFF, (void *)&MarkAllPages,
-  //  CMT_MARK_ALL_PAGES, NULL},
-  // {"wrap_search", P_INT, PI_ONOFF, (void *)&WrapDefault, CMT_WRAP, NULL},
-  // {"ignorecase_search", P_INT, PI_ONOFF, (void *)&IgnoreCase,
-  //  CMT_IGNORE_CASE, NULL},
-  // {"clear_buffer", P_INT, PI_ONOFF, (void *)&clear_buffer, CMT_CLEAR_BUF,
-  //  NULL},
-  // {"decode_cte", P_CHARINT, PI_ONOFF, (void *)&DecodeCTE, CMT_DECODE_CTE,
-  //  NULL},
-  // {"auto_uncompress", P_CHARINT, PI_ONOFF, (void *)&AutoUncompress,
-  //  CMT_AUTO_UNCOMPRESS, NULL},
-  // {"preserve_timestamp", P_CHARINT, PI_ONOFF, (void *)&PreserveTimestamp,
-  //  CMT_PRESERVE_TIMESTAMP, NULL},
-  // {"keymap_file", P_STRING, PI_TEXT, (void *)&keymap_file,
-  // CMT_KEYMAP_FILE,
-  //  NULL},
-  // };
+  //
+  // OPTION_MICC
+  //
+  push_param(OPTION_MICC, std::make_shared<param_bool>(
+                              "use_history", &UseHistory, "Use URL history"));
+  push_param(OPTION_MICC,
+             std::make_shared<param_int>("history", &URLHistSize,
+                                         "Number of remembered URL", false));
+  push_param(OPTION_MICC, std::make_shared<param_bool>(
+                              "save_hist", &SaveURLHist, "Save URL history"));
+  push_param(OPTION_MICC, std::make_shared<param_bool>(
+                              "close_tab_back", &close_tab_back,
+                              "Close tab if buffer is last when back"));
+  push_param(OPTION_MICC, std::make_shared<param_bool>(
+                              "emacs_like_lineedit", &emacs_like_lineedit,
+                              "Enable Emacs-style line editing"));
+  push_param(OPTION_MICC,
+             std::make_shared<param_bool>(
+                 "space_autocomplete", &space_autocomplete,
+                 "Space key triggers file completion while editing URLs"));
+  push_param(OPTION_MICC, std::make_shared<param_bool>(
+                              "mark_all_pages", &MarkAllPages,
+                              "Treat URL-like strings as links in all pages"));
+  push_param(OPTION_MICC,
+             std::make_shared<param_bool>("ignorecase_search", &IgnoreCase,
+                                          "Search case-insensitively"));
+  push_param(OPTION_MICC, std::make_shared<param_bool>(
+                              "preserve_timestamp", &PreserveTimestamp,
+                              "Preserve timestamp when saving"));
+  push_param(OPTION_MICC, std::make_shared<param_string>(
+                              "keymap_file", &keymap_file, "keymap file"));
 
   // std::list<std::shared_ptr<param_ptr>> params4 = {
   // {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE,
@@ -364,8 +369,9 @@ void Option::create_option_search_table() {
 
 void Option::push_param(const std::string &section,
                         const std::shared_ptr<param_ptr> &param) {
-  auto found = std::find_if(sections.begin(), sections.end(),
-                            [](const param_section &) { return true; });
+  auto found = std::find_if(
+      sections.begin(), sections.end(),
+      [section](const param_section &s) { return s.name == section; });
   if (found == sections.end()) {
     assert(false);
     return;

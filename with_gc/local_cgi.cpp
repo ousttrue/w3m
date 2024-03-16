@@ -156,15 +156,13 @@ static void set_cgi_environ(const char *name, const char *fn,
 }
 
 static Str *checkPath(const char *fn, const char *path) {
-  const char *p;
-  Str *tmp;
-  struct stat st;
   while (*path) {
-    p = strchr(path, ':');
-    tmp = Strnew_charp(expandPath(p ? allocStr(path, p - path) : (char *)path));
+    auto p = strchr(path, ':');
+    auto tmp = Strnew(expandPath(p ? allocStr(path, p - path) : (char *)path));
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, fn);
+    struct stat st;
     if (stat(tmp->ptr, &st) == 0)
       return tmp;
     if (!p)

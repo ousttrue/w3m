@@ -36,6 +36,8 @@
 
 bool displayLink = false;
 bool displayLineInfo = false;
+#define KEYMAP_FILE "keymap"
+std::string keymap_file = KEYMAP_FILE;
 
 const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
 
@@ -613,7 +615,7 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
 bool App::initialize() {
   init_rc();
 
-  if (!BookmarkFile) {
+  if (BookmarkFile.empty()) {
     BookmarkFile = rcFile(BOOKMARK);
   }
 
@@ -1650,14 +1652,13 @@ static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
 void App::initKeymap(bool force) {
-  FILE *kf;
 
-  if ((kf = fopen(confFile(KEYMAP_FILE), "rt")) != NULL) {
+  if (auto kf = fopen(confFile(KEYMAP_FILE).c_str(), "rt")) {
     interpret_keymap(kf, &sys_current_keymap_file,
                      force || !keymap_initialized);
     fclose(kf);
   }
-  if ((kf = fopen(rcFile(keymap_file), "rt")) != NULL) {
+  if (auto kf = fopen(rcFile(keymap_file).c_str(), "rt")) {
     interpret_keymap(kf, &current_keymap_file, force || !keymap_initialized);
     fclose(kf);
   }

@@ -2,6 +2,7 @@
 #include <time.h>
 
 extern bool PermitSaveToPipe;
+extern bool PreserveTimestamp;
 
 int _MoveFile(const char *path1, const char *path2);
 int _doFileCopy(const char *tmpf, const char *defstr, int download);

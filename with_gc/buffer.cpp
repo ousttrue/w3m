@@ -312,7 +312,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
 }
 
 void Buffer::saveBufferInfo() {
-  if (FILE *fp = fopen(rcFile("bufinfo"), "w")) {
+  if (FILE *fp = fopen(rcFile("bufinfo").c_str(), "w")) {
     fprintf(fp, "%s\n", this->res->currentURL.to_Str().c_str());
     fclose(fp);
   }

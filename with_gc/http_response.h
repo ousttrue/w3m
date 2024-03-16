@@ -9,7 +9,6 @@
 #include <string>
 
 extern int FollowRedirection;
-extern bool DecodeCTE;
 
 struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   int http_response_code = 0;

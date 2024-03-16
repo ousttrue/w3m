@@ -1,8 +1,7 @@
 #pragma once
-#include <functional>
 
-extern int IgnoreCase;
-extern int WrapSearch;
+extern bool IgnoreCase;
+extern bool WrapSearch;
 extern bool show_srch_str;
 
 /* Search Result */

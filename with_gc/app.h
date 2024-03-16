@@ -22,6 +22,7 @@ extern const char *CurrentCmdData;
 extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)
 extern bool on_target;
+extern std::string keymap_file;
 
 enum TmpfType {
   TMPF_DFL = 0,

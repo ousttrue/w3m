@@ -15,10 +15,10 @@ extern char *ExtBrowser8;
 extern char *ExtBrowser9;
 
 int open_pipe_rw(FILE **fr, FILE **fw);
-const char *file_to_url(const char *file);
+std::string file_to_url(std::string file);
 const char *lastFileName(const char *path);
 const char *mydirname(const char *s);
-const char *expandPath(const char *name);
+std::string expandPath(std::string_view name);
 void mySystem(const char *command, int background);
 struct Str;
 Str *myExtCommand(const char *cmd, const char *arg, int redirect);

@@ -1052,7 +1052,7 @@ std::shared_ptr<CoroutineState<void>> gorURL(const FuncContext &context) {
 //"View bookmarks"
 std::shared_ptr<CoroutineState<void>> ldBmark(const FuncContext &context) {
   if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
-          BookmarkFile, {}, {.no_referer = true}, nullptr)) {
+          BookmarkFile.c_str(), {}, {.no_referer = true}, nullptr)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1065,7 +1065,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
   auto tmp = Sprintf(
       "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
       (Str_form_quote(localCookie()))->ptr,
-      (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
+      (Str_form_quote(Strnew(BookmarkFile)))->ptr,
       (Str_form_quote(
            Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str())))
           ->ptr,

@@ -1,11 +1,12 @@
 #pragma once
 #include <time.h>
 #include <string>
+#include <gc_cpp.h>
 
-struct DownloadList {
+struct DownloadList : public gc_cleanup {
   int pid;
   const char *url;
-  const char *save;
+  std::string save;
   const char *lock;
   size_t size;
   time_t time;

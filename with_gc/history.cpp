@@ -57,7 +57,7 @@ std::string Hist::toHtml() const {
 }
 
 bool Hist::loadHistory() {
-  if (auto f = fopen(rcFile(HISTORY_FILE), "rt")) {
+  if (auto f = fopen(rcFile(HISTORY_FILE).c_str(), "rt")) {
     struct stat st;
     if (fstat(fileno(f), &st) == -1) {
       fclose(f);
@@ -84,7 +84,7 @@ bool Hist::loadHistory() {
 void Hist::saveHistory(int size) {
   auto histf = rcFile(HISTORY_FILE);
   struct stat st;
-  if (stat(histf, &st) == -1) {
+  if (stat(histf.c_str(), &st) == -1) {
     App::instance().disp_err_message("Can't open history");
     return;
   }
@@ -115,7 +115,7 @@ void Hist::saveHistory(int size) {
     App::instance().disp_err_message("Can't open history");
     return;
   }
-  auto rename_ret = rename(tmpf.c_str(), rcFile(HISTORY_FILE));
+  auto rename_ret = rename(tmpf.c_str(), rcFile(HISTORY_FILE).c_str());
   if (rename_ret != 0) {
     App::instance().disp_err_message("Can't open history");
     return;
