@@ -20,6 +20,7 @@
 #include "http_request.h"
 #include "linein.h"
 #include "url_decode.h"
+#include "local_cgi.h"
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
@@ -116,7 +117,7 @@ int ai_family_order_table[7][3] = {
 //   SIGNAL_RETURN;
 // }
 
-char *index_file = nullptr;
+std::string index_file;
 
 #define NOT_REGULAR(m) (((m) & S_IFMT) != S_IFREG)
 
@@ -124,7 +125,7 @@ char *index_file = nullptr;
 void UrlStream::add_index_file(Url *pu) {
   std::list<std::string> index_file_list;
   if (non_null(index_file)) {
-    make_domain_list(index_file_list, index_file);
+    make_domain_list(index_file_list, index_file.c_str());
   }
   if (index_file_list.empty()) {
     this->stream = nullptr;
@@ -204,8 +205,8 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
       if (!this->stream) {
         return;
       }
-    } else if (document_root != nullptr) {
-      auto tmp = Strnew_charp(document_root);
+    } else if (document_root.size()) {
+      auto tmp = Strnew_charp(document_root.c_str());
       if (Strlastchar(tmp) != '/' && hr->url.file[0] != '/')
         Strcat_char(tmp, '/');
       Strcat(tmp, hr->url.file);

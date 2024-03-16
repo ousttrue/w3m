@@ -72,7 +72,6 @@ std::string config_file;
 int is_redisplay = false;
 int clear_buffer = true;
 int set_pixel_per_char = false;
-char *document_root = nullptr;
 
 /* FIXME: gettextize here */
 
@@ -100,17 +99,12 @@ char *document_root = nullptr;
 #define CMT_FTP_PROXY N_("URL of FTP proxy host")
 #define CMT_NO_PROXY N_("Domains to be accessed directly (no proxy)")
 #define CMT_NOPROXY_NETADDR N_("Check noproxy by network address")
-#define CMT_NO_CACHE N_("Disable cache")
 #define CMT_DNS_ORDER N_("Order of name resolution")
-#define CMT_DROOT N_("Directory corresponding to / (document root)")
-#define CMT_PDROOT N_("Directory corresponding to /~user")
-#define CMT_CGIBIN N_("Directory corresponding to /cgi-bin")
 #define CMT_TMP N_("Directory for temporary files")
 #define CMT_CONFIRM_QQ N_("Confirm when quitting with q")
 #define CMT_VI_PREC_NUM N_("Enable vi-like numeric prefix")
 #define CMT_FOLD_LINE N_("Fold lines of plain text file")
 #define CMT_SHOW_NUM N_("Show line numbers")
-#define CMT_MIMETYPES N_("List of mime.types files")
 #define CMT_MAILCAP N_("List of mailcap files")
 #define CMT_URIMETHODMAP N_("List of urimethodmap files")
 #define CMT_EDITOR N_("Editor")
@@ -140,7 +134,6 @@ char *document_root = nullptr;
 #define CMT_AUTO_UNCOMPRESS                                                    \
   N_("Uncompress compressed data automatically when downloading")
 #define CMT_BGEXTVIEW N_("Run external viewer in the background")
-#define CMT_IFILE N_("Index file for directories")
 #define CMT_RETRY_HTTP N_("Prepend http:// to URL automatically")
 #define CMT_DEFAULT_URL N_("Default value for open-URL command")
 #define CMT_DECODE_CTE N_("Decode Content-Transfer-Encoding when saving")

@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 
 #define MYCTYPE_CNTRL 1
 #define MYCTYPE_SPACE 2
@@ -45,4 +46,4 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 
 inline int is_wordchar(int c) { return IS_ALNUM(c); }
 
-int non_null(const char *s);
+bool non_null(std::string_view s);

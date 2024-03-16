@@ -2,6 +2,8 @@
 #include "url.h"
 #include <memory>
 
+extern std::string index_file;
+
 class input_stream;
 struct HttpRequest;
 struct HttpOption;

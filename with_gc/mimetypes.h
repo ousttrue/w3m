@@ -1,6 +1,7 @@
 #pragma once
+#include <string>
 
-extern const char *mimetypes_files;
+extern std::string mimetypes_files;
 
 void initMimeTypes();
 const char *guessContentType(const char *filename);

@@ -34,8 +34,6 @@ char *ExtBrowser9 = nullptr;
 #include <pwd.h>
 #endif
 
-char *personal_document_root = nullptr;
-
 const char *lastFileName(const char *path) {
   const char *p, *q;
 

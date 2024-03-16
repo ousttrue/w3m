@@ -537,14 +537,15 @@ unsigned char MYCTYPE_DIGITMAP[0x100] = {
     255,
 };
 
-int non_null(const char *s) {
-  if (!s) {
+bool non_null(std::string_view s) {
+  if (s.empty()) {
     return false;
   }
-  while (*s) {
-    if (!IS_SPACE(*s))
+
+  for (auto c : s) {
+    if (!IS_SPACE(c)) {
       return true;
-    s++;
+    }
   }
   return false;
 }

@@ -18,7 +18,8 @@
 #define DEV_NULL_PATH "/dev/null"
 #define HAVE_LSTAT 1
 
-char *cgi_bin = nullptr;
+std::string document_root;
+std::string cgi_bin;
 
 #if !(_SVID_SOURCE || _XOPEN_SOURCE)
 // https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
@@ -183,11 +184,11 @@ static int cgi_filename(const char *uri, const char **fn, const char **name,
   *name = uri;
   *path_info = NULL;
 
-  if (cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
+  if (cgi_bin.size() && strncmp(uri, "/cgi-bin/", 9) == 0) {
     offset = 9;
     if ((*path_info = strchr(uri + offset, '/')))
       *name = allocStr(uri, *path_info - uri);
-    tmp = checkPath(*name + offset, cgi_bin);
+    tmp = checkPath(*name + offset, cgi_bin.c_str());
     if (tmp == NULL)
       return CGIFN_NORMAL;
     *fn = tmp->ptr;
@@ -201,8 +202,8 @@ static int cgi_filename(const char *uri, const char **fn, const char **name,
     offset = 6;
   else if (strncmp(uri, tmp->ptr, tmp->length) == 0)
     offset = tmp->length;
-  else if (*uri == '/' && document_root != NULL) {
-    Str *tmp2 = Strnew_charp(document_root);
+  else if (*uri == '/' && document_root.size()) {
+    Str *tmp2 = Strnew_charp(document_root.c_str());
     if (Strlastchar(tmp2) != '/')
       Strcat_char(tmp2, '/');
     Strcat_charp(tmp2, uri + 1);

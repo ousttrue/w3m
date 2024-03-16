@@ -3,7 +3,6 @@
 #include <string>
 
 extern std::string rc_dir;
-extern char *index_file;
 extern bool ArgvIsURL;
 extern bool LocalhostOnly;
 extern bool retryAsHttp;
@@ -37,7 +36,6 @@ void sync_with_option(void);
 
 extern const char *w3m_reqlog;
 extern const char *w3m_version;
-extern char *document_root;
 
 extern int BackgroundExtViewer;
 extern const char *siteconf_file;

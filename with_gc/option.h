@@ -12,7 +12,7 @@ struct param_section {
 
 #define OPTION_DISPLAY "Display Settings"
 #define OPTION_MICC "Miscellaneous Settings"
-#define OPTION_IDRECTORY "Directory Settings"
+#define OPTION_DIRECTORY "Directory Settings"
 #define OPTION_EXTERNAL_PROGRAM "External Program Settings"
 #define OPTION_NETWORK "Network Settings"
 #define OPTION_PROXY "Proxy Settings"
@@ -22,7 +22,7 @@ struct param_section {
 class Option {
   std::vector<param_section> sections = {
       {OPTION_DISPLAY},   {OPTION_MICC},
-      {OPTION_IDRECTORY}, {OPTION_EXTERNAL_PROGRAM},
+      {OPTION_DIRECTORY}, {OPTION_EXTERNAL_PROGRAM},
       {OPTION_NETWORK},   {OPTION_PROXY},
       {OPTION_SSL},       {OPTION_COOKIE},
   };

@@ -17,6 +17,7 @@
 
 namespace ioutil {
 
+std::string personal_document_root;
 std::string _currentDir;
 std::string _hostName = "localhost";
 std::string _editor = "/usr/bin/vim";

@@ -14,7 +14,7 @@
 #endif
 #define SYS_MIMETYPES ETC_DIR "/mime.types"
 
-const char *mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
+std::string mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
 
 static std::list<std::string> mimetypes_list;
 
@@ -84,7 +84,7 @@ static struct table2 *loadMimeTypes(const char *filename) {
 
 void initMimeTypes() {
   if (non_null(mimetypes_files)) {
-    make_domain_list(mimetypes_list, mimetypes_files);
+    make_domain_list(mimetypes_list, mimetypes_files.c_str());
   }
   if (mimetypes_list.empty()) {
     return;

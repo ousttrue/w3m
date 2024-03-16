@@ -1,9 +1,10 @@
 #pragma once
 #include <stdio.h>
-
+#include <string>
 #include <sys/types.h>
 
-extern char *cgi_bin;
+extern std::string document_root;
+extern std::string cgi_bin;
 
 // #ifndef S_IFMT
 // #define S_IFMT 0170000

@@ -22,6 +22,10 @@
 #include "history.h"
 #include "linein.h"
 #include "file_util.h"
+#include "local_cgi.h"
+#include "ioutil.h"
+#include "url_stream.h"
+#include "mimetypes.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x
@@ -214,25 +218,36 @@ Option::Option() {
   push_param(OPTION_MICC, std::make_shared<param_string>(
                               "keymap_file", &keymap_file, "keymap file"));
 
-  // std::list<std::shared_ptr<param_ptr>> params4 = {
-  // {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE,
-  // NULL},
-  // };
+  //
+  // OPTION_PROXY
+  //
+  push_param(OPTION_PROXY, std::make_shared<param_bool>("no_cache", &NoCache,
+                                                        "Disable cache"));
 
-  // std::list<std::shared_ptr<param_ptr>> params5 = {
-  // {"document_root", P_STRING, PI_TEXT, (void *)&document_root, CMT_DROOT,
-  //  NULL},
-  // {"personal_document_root", P_STRING, PI_TEXT,
-  //  (void *)&personal_document_root, CMT_PDROOT, NULL},
-  // {"cgi_bin", P_STRING, PI_TEXT, (void *)&cgi_bin, CMT_CGIBIN, NULL},
-  // {"index_file", P_STRING, PI_TEXT, (void *)&index_file, CMT_IFILE,
-  // NULL},
-  // };
+  //
+  // OPTION_DIRECTORY
+  //
+  push_param(OPTION_DIRECTORY,
+             std::make_shared<param_string>(
+                 "document_root", &document_root,
+                 "Directory corresponding to / (document root)"));
+  push_param(OPTION_DIRECTORY,
+             std::make_shared<param_string>(
+                 "personal_document_root", &ioutil::personal_document_root,
+                 "Directory corresponding to /~user"));
+  push_param(OPTION_DIRECTORY,
+             std::make_shared<param_string>(
+                 "cgi_bin", &cgi_bin, "Directory corresponding to /cgi-bin"));
+  push_param(OPTION_DIRECTORY,
+             std::make_shared<param_string>("index_file", &index_file,
+                                            "Index file for directories"));
 
-  // std::list<std::shared_ptr<param_ptr>> params6 = {
-  // {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files,
-  // CMT_MIMETYPES,
-  //  NULL},
+  //
+  // OPTION_EXTERNAL_PROGRAM
+  //
+  push_param(OPTION_EXTERNAL_PROGRAM,
+             std::make_shared<param_string>("mime_types", &mimetypes_files,
+                                            "List of mime.types files"));
   // {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP,
   // NULL},
   // // {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
@@ -258,7 +273,6 @@ Option::Option() {
   //  NULL},
   // {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
   //  CMT_BGEXTVIEW, NULL},
-  // };
 
   // std::list<std::shared_ptr<param_ptr>> params7 = {
   // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,

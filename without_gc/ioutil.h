@@ -4,6 +4,8 @@
 
 namespace ioutil {
 
+extern std::string personal_document_root;
+
 void initialize();
 std::string myEditor(std::string_view file, int line);
 std::string pwd();

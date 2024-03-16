@@ -3,7 +3,6 @@
 #include <string>
 
 extern bool IsForkChild;
-extern char *personal_document_root;
 extern const char *ExtBrowser;
 extern char *ExtBrowser2;
 extern char *ExtBrowser3;
