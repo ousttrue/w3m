@@ -100,234 +100,258 @@ option_assigned:
 }
 
 Option::Option() {
-  std::list<std::shared_ptr<param_ptr>> params1 = {
-      std::make_shared<param_int>("tabstop", &Tabstop,
-                                  "Tab width in characters", true),
-      std::make_shared<param_int>("indent_incr", &IndentIncr,
-                                  "Indent for HTML rendering", true),
-      std::make_shared<param_pixels>(
-          "pixel_per_char", &pixel_per_char,
-          "Number of pixels per character (4.0...32.0)"),
-      std::make_shared<param_bool>(
-          "open_tab_blank", &open_tab_blank,
-          "Open link on new tab if target is _blank or _new"),
-      std::make_shared<param_bool>("open_tab_dl_list", &open_tab_dl_list,
-                                   "Open download list panel on new tab"),
-      std::make_shared<param_bool>("display_link", &displayLink,
-                                   "Display link URL automatically"),
-      std::make_shared<param_bool>("display_link_number", &displayLinkNumber,
-                                   "Display link numbers"),
-      std::make_shared<param_bool>("decode_url", &DecodeURL,
-                                   "Display decoded URL"),
-      std::make_shared<param_bool>("display_lineinfo", &displayLineInfo,
-                                   "Display current line number"),
-      std::make_shared<param_bool>(
-          "ext_dirlist", &UseExternalDirBuffer,
-          "Use external program for directory listing"),
-      std::make_shared<param_string>("dirlist_cmd", &DirBufferCommand,
-                                     "URL of directory listing command"),
-      std::make_shared<param_bool>("use_dictcommand", &UseDictCommand,
-                                   "Enable dictionary lookup through CGI"),
-      std::make_shared<param_string>("dictcommand", &DictCommand,
-                                     "URL of dictionary lookup command"),
-      std::make_shared<param_bool>("multicol", &multicolList,
-                                   "Display file names in multi-column format"),
-      std::make_shared<param_bool>("alt_entity", &UseAltEntity,
-                                   "Use ASCII equivalents to display entities"),
-      std::make_shared<param_bool>(
-          "display_borders", &DisplayBorders,
-          "Display table borders, ignore value of BORDER"),
-      std::make_shared<param_bool>("disable_center", &DisableCenter,
-                                   "Disable center alignment"),
-      std::make_shared<param_bool>("fold_textarea", &FoldTextarea,
-                                   "Fold lines in TEXTAREA"),
-      std::make_shared<param_int_select>(
-          "display_ins_del", &displayInsDel,
-          "Display INS, DEL, S and STRIKE element", displayinsdel),
-      std::make_shared<param_bool>("ignore_null_img_alt", &ignore_null_img_alt,
-                                   "Display link name for images lacking ALT"),
-      std::make_shared<param_bool>("view_unseenobject", &view_unseenobject,
-                                   "Display unseen objects (e.g. bgimage tag)"),
+  //
+  // OPTION_DISPLAY
+  //
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_int>("tabstop", &Tabstop,
+                                         "Tab width in characters", true));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_int>("indent_incr", &IndentIncr,
+                                         "Indent for HTML rendering", true));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_pixels>(
+                 "pixel_per_char", &pixel_per_char,
+                 "Number of pixels per character (4.0...32.0)"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>(
+                 "open_tab_blank", &open_tab_blank,
+                 "Open link on new tab if target is _blank or _new"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "open_tab_dl_list", &open_tab_dl_list,
+                                 "Open download list panel on new tab"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>("display_link", &displayLink,
+                                          "Display link URL automatically"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "display_link_number", &displayLinkNumber,
+                                 "Display link numbers"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>("decode_url", &DecodeURL,
+                                          "Display decoded URL"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>("display_lineinfo", &displayLineInfo,
+                                          "Display current line number"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "ext_dirlist", &UseExternalDirBuffer,
+                                 "Use external program for directory listing"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_string>(
+                                 "dirlist_cmd", &DirBufferCommand,
+                                 "URL of directory listing command"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "use_dictcommand", &UseDictCommand,
+                                 "Enable dictionary lookup through CGI"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_string>(
+                                 "dictcommand", &DictCommand,
+                                 "URL of dictionary lookup command"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "multicol", &multicolList,
+                                 "Display file names in multi-column format"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "alt_entity", &UseAltEntity,
+                                 "Use ASCII equivalents to display entities"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>(
+                 "display_borders", &DisplayBorders,
+                 "Display table borders, ignore value of BORDER"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>("disable_center", &DisableCenter,
+                                          "Disable center alignment"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>("fold_textarea", &FoldTextarea,
+                                          "Fold lines in TEXTAREA"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_int_select>(
+                 "display_ins_del", &displayInsDel,
+                 "Display INS, DEL, S and STRIKE element", displayinsdel));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "ignore_null_img_alt", &ignore_null_img_alt,
+                                 "Display link name for images lacking ALT"));
+  push_param(OPTION_DISPLAY, std::make_shared<param_bool>(
+                                 "view_unseenobject", &view_unseenobject,
+                                 "Display unseen objects (e.g. bgimage tag)"));
+  push_param(
+      OPTION_DISPLAY,
       std::make_shared<param_bool>(
           "pseudo_inlines", &pseudoInlines,
-          "Display pseudo-ALTs for inline images with no ALT or TITLE string"),
-      std::make_shared<param_bool>("show_srch_str", &show_srch_str,
-                                   "Show search string"),
-  };
+          "Display pseudo-ALTs for inline images with no ALT or TITLE string"));
+  push_param(OPTION_DISPLAY,
+             std::make_shared<param_bool>("show_srch_str", &show_srch_str,
+                                          "Show search string"));
 
-  std::list<std::shared_ptr<param_ptr>> params3 = {
-      // {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY,
-      // NULL},
-      // {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
-      // {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST,
-      // NULL},
-      // {"close_tab_back", P_INT, PI_ONOFF, (void *)&close_tab_back,
-      //  CMT_CLOSE_TAB_BACK, NULL},
-      // {"emacs_like_lineedit", P_INT, PI_ONOFF, (void *)&emacs_like_lineedit,
-      //  CMT_EMACS_LIKE_LINEEDIT, NULL},
-      // {"space_autocomplete", P_INT, PI_ONOFF, (void *)&space_autocomplete,
-      //  CMT_SPACE_AUTOCOMPLETE, NULL},
-      // {"mark_all_pages", P_INT, PI_ONOFF, (void *)&MarkAllPages,
-      //  CMT_MARK_ALL_PAGES, NULL},
-      // {"wrap_search", P_INT, PI_ONOFF, (void *)&WrapDefault, CMT_WRAP, NULL},
-      // {"ignorecase_search", P_INT, PI_ONOFF, (void *)&IgnoreCase,
-      //  CMT_IGNORE_CASE, NULL},
-      // {"clear_buffer", P_INT, PI_ONOFF, (void *)&clear_buffer, CMT_CLEAR_BUF,
-      //  NULL},
-      // {"decode_cte", P_CHARINT, PI_ONOFF, (void *)&DecodeCTE, CMT_DECODE_CTE,
-      //  NULL},
-      // {"auto_uncompress", P_CHARINT, PI_ONOFF, (void *)&AutoUncompress,
-      //  CMT_AUTO_UNCOMPRESS, NULL},
-      // {"preserve_timestamp", P_CHARINT, PI_ONOFF, (void *)&PreserveTimestamp,
-      //  CMT_PRESERVE_TIMESTAMP, NULL},
-      // {"keymap_file", P_STRING, PI_TEXT, (void *)&keymap_file,
-      // CMT_KEYMAP_FILE,
-      //  NULL},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params3 = {
+  // {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY,
+  // NULL},
+  // {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
+  // {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST,
+  // NULL},
+  // {"close_tab_back", P_INT, PI_ONOFF, (void *)&close_tab_back,
+  //  CMT_CLOSE_TAB_BACK, NULL},
+  // {"emacs_like_lineedit", P_INT, PI_ONOFF, (void *)&emacs_like_lineedit,
+  //  CMT_EMACS_LIKE_LINEEDIT, NULL},
+  // {"space_autocomplete", P_INT, PI_ONOFF, (void *)&space_autocomplete,
+  //  CMT_SPACE_AUTOCOMPLETE, NULL},
+  // {"mark_all_pages", P_INT, PI_ONOFF, (void *)&MarkAllPages,
+  //  CMT_MARK_ALL_PAGES, NULL},
+  // {"wrap_search", P_INT, PI_ONOFF, (void *)&WrapDefault, CMT_WRAP, NULL},
+  // {"ignorecase_search", P_INT, PI_ONOFF, (void *)&IgnoreCase,
+  //  CMT_IGNORE_CASE, NULL},
+  // {"clear_buffer", P_INT, PI_ONOFF, (void *)&clear_buffer, CMT_CLEAR_BUF,
+  //  NULL},
+  // {"decode_cte", P_CHARINT, PI_ONOFF, (void *)&DecodeCTE, CMT_DECODE_CTE,
+  //  NULL},
+  // {"auto_uncompress", P_CHARINT, PI_ONOFF, (void *)&AutoUncompress,
+  //  CMT_AUTO_UNCOMPRESS, NULL},
+  // {"preserve_timestamp", P_CHARINT, PI_ONOFF, (void *)&PreserveTimestamp,
+  //  CMT_PRESERVE_TIMESTAMP, NULL},
+  // {"keymap_file", P_STRING, PI_TEXT, (void *)&keymap_file,
+  // CMT_KEYMAP_FILE,
+  //  NULL},
+  // };
 
-  std::list<std::shared_ptr<param_ptr>> params4 = {
-      // {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE,
-      // NULL},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params4 = {
+  // {"no_cache", P_CHARINT, PI_ONOFF, (void *)&NoCache, CMT_NO_CACHE,
+  // NULL},
+  // };
 
-  std::list<std::shared_ptr<param_ptr>> params5 = {
-      // {"document_root", P_STRING, PI_TEXT, (void *)&document_root, CMT_DROOT,
-      //  NULL},
-      // {"personal_document_root", P_STRING, PI_TEXT,
-      //  (void *)&personal_document_root, CMT_PDROOT, NULL},
-      // {"cgi_bin", P_STRING, PI_TEXT, (void *)&cgi_bin, CMT_CGIBIN, NULL},
-      // {"index_file", P_STRING, PI_TEXT, (void *)&index_file, CMT_IFILE,
-      // NULL},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params5 = {
+  // {"document_root", P_STRING, PI_TEXT, (void *)&document_root, CMT_DROOT,
+  //  NULL},
+  // {"personal_document_root", P_STRING, PI_TEXT,
+  //  (void *)&personal_document_root, CMT_PDROOT, NULL},
+  // {"cgi_bin", P_STRING, PI_TEXT, (void *)&cgi_bin, CMT_CGIBIN, NULL},
+  // {"index_file", P_STRING, PI_TEXT, (void *)&index_file, CMT_IFILE,
+  // NULL},
+  // };
 
-  std::list<std::shared_ptr<param_ptr>> params6 = {
-      // {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files,
-      // CMT_MIMETYPES,
-      //  NULL},
-      // {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP,
-      // NULL},
-      // // {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
-      // {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
-      //  CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
-      // {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ,
-      // NULL},
-      // {"extbrowser2", P_STRING, PI_TEXT, (void *)&ExtBrowser2, CMT_EXTBRZ2,
-      //  NULL},
-      // {"extbrowser3", P_STRING, PI_TEXT, (void *)&ExtBrowser3, CMT_EXTBRZ3,
-      //  NULL},
-      // {"extbrowser4", P_STRING, PI_TEXT, (void *)&ExtBrowser4, CMT_EXTBRZ4,
-      //  NULL},
-      // {"extbrowser5", P_STRING, PI_TEXT, (void *)&ExtBrowser5, CMT_EXTBRZ5,
-      //  NULL},
-      // {"extbrowser6", P_STRING, PI_TEXT, (void *)&ExtBrowser6, CMT_EXTBRZ6,
-      //  NULL},
-      // {"extbrowser7", P_STRING, PI_TEXT, (void *)&ExtBrowser7, CMT_EXTBRZ7,
-      //  NULL},
-      // {"extbrowser8", P_STRING, PI_TEXT, (void *)&ExtBrowser8, CMT_EXTBRZ8,
-      //  NULL},
-      // {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9,
-      //  NULL},
-      // {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
-      //  CMT_BGEXTVIEW, NULL},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params6 = {
+  // {"mime_types", P_STRING, PI_TEXT, (void *)&mimetypes_files,
+  // CMT_MIMETYPES,
+  //  NULL},
+  // {"mailcap", P_STRING, PI_TEXT, (void *)&mailcap_files, CMT_MAILCAP,
+  // NULL},
+  // // {"editor", P_STRING, PI_TEXT, (void *)&Editor, CMT_EDITOR, NULL},
+  // {"mailto_options", P_INT, PI_SEL_C, (void *)&MailtoOptions,
+  //  CMT_MAILTO_OPTIONS, (void *)mailtooptionsstr},
+  // {"extbrowser", P_STRING, PI_TEXT, (void *)&ExtBrowser, CMT_EXTBRZ,
+  // NULL},
+  // {"extbrowser2", P_STRING, PI_TEXT, (void *)&ExtBrowser2, CMT_EXTBRZ2,
+  //  NULL},
+  // {"extbrowser3", P_STRING, PI_TEXT, (void *)&ExtBrowser3, CMT_EXTBRZ3,
+  //  NULL},
+  // {"extbrowser4", P_STRING, PI_TEXT, (void *)&ExtBrowser4, CMT_EXTBRZ4,
+  //  NULL},
+  // {"extbrowser5", P_STRING, PI_TEXT, (void *)&ExtBrowser5, CMT_EXTBRZ5,
+  //  NULL},
+  // {"extbrowser6", P_STRING, PI_TEXT, (void *)&ExtBrowser6, CMT_EXTBRZ6,
+  //  NULL},
+  // {"extbrowser7", P_STRING, PI_TEXT, (void *)&ExtBrowser7, CMT_EXTBRZ7,
+  //  NULL},
+  // {"extbrowser8", P_STRING, PI_TEXT, (void *)&ExtBrowser8, CMT_EXTBRZ8,
+  //  NULL},
+  // {"extbrowser9", P_STRING, PI_TEXT, (void *)&ExtBrowser9, CMT_EXTBRZ9,
+  //  NULL},
+  // {"bgextviewer", P_INT, PI_ONOFF, (void *)&BackgroundExtViewer,
+  //  CMT_BGEXTVIEW, NULL},
+  // };
 
-  std::list<std::shared_ptr<param_ptr>> params7 = {
-      // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
-      //  CMT_SSL_FORBID_METHOD, NULL},
-      // {"ssl_min_version", P_STRING, PI_TEXT, (void *)&ssl_min_version,
-      //  CMT_SSL_MIN_VERSION, NULL},
-      // {"ssl_cipher", P_STRING, PI_TEXT, (void *)&ssl_cipher, CMT_SSL_CIPHER,
-      //  NULL},
-      // {"ssl_verify_server", P_INT, PI_ONOFF, (void *)&ssl_verify_server,
-      //  CMT_SSL_VERIFY_SERVER, NULL},
-      // {"ssl_cert_file", P_SSLPATH, PI_TEXT, (void *)&ssl_cert_file,
-      //  CMT_SSL_CERT_FILE, NULL},
-      // {"ssl_key_file", P_SSLPATH, PI_TEXT, (void *)&ssl_key_file,
-      //  CMT_SSL_KEY_FILE, NULL},
-      // {"ssl_ca_path", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_path,
-      // CMT_SSL_CA_PATH,
-      //  NULL},
-      // {"ssl_ca_file", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_file,
-      // CMT_SSL_CA_FILE,
-      //  NULL},
-      // {"ssl_ca_default", P_INT, PI_ONOFF, (void *)&ssl_ca_default,
-      //  CMT_SSL_CA_DEFAULT, NULL},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params7 = {
+  // {"ssl_forbid_method", P_STRING, PI_TEXT, (void *)&ssl_forbid_method,
+  //  CMT_SSL_FORBID_METHOD, NULL},
+  // {"ssl_min_version", P_STRING, PI_TEXT, (void *)&ssl_min_version,
+  //  CMT_SSL_MIN_VERSION, NULL},
+  // {"ssl_cipher", P_STRING, PI_TEXT, (void *)&ssl_cipher, CMT_SSL_CIPHER,
+  //  NULL},
+  // {"ssl_verify_server", P_INT, PI_ONOFF, (void *)&ssl_verify_server,
+  //  CMT_SSL_VERIFY_SERVER, NULL},
+  // {"ssl_cert_file", P_SSLPATH, PI_TEXT, (void *)&ssl_cert_file,
+  //  CMT_SSL_CERT_FILE, NULL},
+  // {"ssl_key_file", P_SSLPATH, PI_TEXT, (void *)&ssl_key_file,
+  //  CMT_SSL_KEY_FILE, NULL},
+  // {"ssl_ca_path", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_path,
+  // CMT_SSL_CA_PATH,
+  //  NULL},
+  // {"ssl_ca_file", P_SSLPATH, PI_TEXT, (void *)&ssl_ca_file,
+  // CMT_SSL_CA_FILE,
+  //  NULL},
+  // {"ssl_ca_default", P_INT, PI_ONOFF, (void *)&ssl_ca_default,
+  //  CMT_SSL_CA_DEFAULT, NULL},
+  // };
 
-  std::list<std::shared_ptr<param_ptr>> params8 = {
-      // {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE,
-      // NULL},
-      // {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie, CMT_SHOWCOOKIE,
-      //  NULL},
-      // {"accept_cookie", P_INT, PI_ONOFF, (void *)&accept_cookie,
-      //  CMT_ACCEPTCOOKIE, NULL},
-      // {"accept_bad_cookie", P_INT, PI_SEL_C, (void *)&accept_bad_cookie,
-      //  CMT_ACCEPTBADCOOKIE, (void *)badcookiestr},
-      // {"cookie_reject_domains", P_STRING, PI_TEXT,
-      //  (void *)&cookie_reject_domains, CMT_COOKIE_REJECT_DOMAINS, NULL},
-      // {"cookie_accept_domains", P_STRING, PI_TEXT,
-      //  (void *)&cookie_accept_domains, CMT_COOKIE_ACCEPT_DOMAINS, NULL},
-      // {"cookie_avoid_wrong_number_of_dots", P_STRING, PI_TEXT,
-      //  (void *)&cookie_avoid_wrong_number_of_dots,
-      //  CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params8 = {
+  // {"use_cookie", P_INT, PI_ONOFF, (void *)&use_cookie, CMT_USECOOKIE,
+  // NULL},
+  // {"show_cookie", P_INT, PI_ONOFF, (void *)&show_cookie, CMT_SHOWCOOKIE,
+  //  NULL},
+  // {"accept_cookie", P_INT, PI_ONOFF, (void *)&accept_cookie,
+  //  CMT_ACCEPTCOOKIE, NULL},
+  // {"accept_bad_cookie", P_INT, PI_SEL_C, (void *)&accept_bad_cookie,
+  //  CMT_ACCEPTBADCOOKIE, (void *)badcookiestr},
+  // {"cookie_reject_domains", P_STRING, PI_TEXT,
+  //  (void *)&cookie_reject_domains, CMT_COOKIE_REJECT_DOMAINS, NULL},
+  // {"cookie_accept_domains", P_STRING, PI_TEXT,
+  //  (void *)&cookie_accept_domains, CMT_COOKIE_ACCEPT_DOMAINS, NULL},
+  // {"cookie_avoid_wrong_number_of_dots", P_STRING, PI_TEXT,
+  //  (void *)&cookie_avoid_wrong_number_of_dots,
+  //  CMT_COOKIE_AVOID_WONG_NUMBER_OF_DOTS, NULL},
+  // };
 
-  std::list<std::shared_ptr<param_ptr>> params9 = {
-      // {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file,
-      // CMT_PASSWDFILE,
-      //  NULL},
-      // {"disable_secret_security_check", P_INT, PI_ONOFF,
-      //  (void *)&disable_secret_security_check,
-      //  CMT_DISABLE_SECRET_SECURITY_CHECK, NULL},
-      // {"ftppasswd", P_STRING, PI_TEXT, (void *)&ftppasswd, CMT_FTPPASS,
-      // NULL},
-      // {"ftppass_hostnamegen", P_INT, PI_ONOFF, (void *)&ftppass_hostnamegen,
-      //  CMT_FTPPASS_HOSTNAMEGEN, NULL},
-      // {"siteconf_file", P_STRING, PI_TEXT, (void *)&siteconf_file,
-      //  CMT_SITECONF_FILE, NULL},
-      // {"user_agent", P_STRING, PI_TEXT, (void *)&UserAgent, CMT_USERAGENT,
-      //  NULL},
-      // {"no_referer", P_INT, PI_ONOFF, (void *)&NoSendReferer,
-      // CMT_NOSENDREFERER,
-      //  NULL},
-      // {"cross_origin_referer", P_INT, PI_ONOFF, (void *)&CrossOriginReferer,
-      //  CMT_CROSSORIGINREFERER, NULL},
-      // {"accept_language", P_STRING, PI_TEXT, (void *)&AcceptLang,
-      //  CMT_ACCEPTLANG, NULL},
-      // {"accept_encoding", P_STRING, PI_TEXT, (void *)&AcceptEncoding,
-      //  CMT_ACCEPTENCODING, NULL},
-      // {"accept_media", P_STRING, PI_TEXT, (void *)&AcceptMedia,
-      // CMT_ACCEPTMEDIA,
-      //  NULL},
-      // {"argv_is_url", P_CHARINT, PI_ONOFF, (void *)&ArgvIsURL,
-      // CMT_ARGV_IS_URL,
-      //  NULL},
-      // {"retry_http", P_INT, PI_ONOFF, (void *)&retryAsHttp, CMT_RETRY_HTTP,
-      //  NULL},
-      // {"default_url", P_INT, PI_SEL_C, (void *)&DefaultURLString,
-      //  CMT_DEFAULT_URL, (void *)defaulturls},
-      // {"follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
-      //  CMT_FOLLOW_REDIRECTION, NULL},
-      // {"meta_refresh", P_CHARINT, PI_ONOFF, (void *)&MetaRefresh,
-      //  CMT_META_REFRESH, NULL},
-      // {"localhost_only", P_CHARINT, PI_ONOFF, (void *)&LocalhostOnly,
-      //  CMT_LOCALHOST_ONLY, NULL},
-      // {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
-      //  (void *)dnsorders},
-  };
+  // std::list<std::shared_ptr<param_ptr>> params9 = {
+  // {"passwd_file", P_STRING, PI_TEXT, (void *)&passwd_file,
+  // CMT_PASSWDFILE,
+  //  NULL},
+  // {"disable_secret_security_check", P_INT, PI_ONOFF,
+  //  (void *)&disable_secret_security_check,
+  //  CMT_DISABLE_SECRET_SECURITY_CHECK, NULL},
+  // {"ftppasswd", P_STRING, PI_TEXT, (void *)&ftppasswd, CMT_FTPPASS,
+  // NULL},
+  // {"ftppass_hostnamegen", P_INT, PI_ONOFF, (void *)&ftppass_hostnamegen,
+  //  CMT_FTPPASS_HOSTNAMEGEN, NULL},
+  // {"siteconf_file", P_STRING, PI_TEXT, (void *)&siteconf_file,
+  //  CMT_SITECONF_FILE, NULL},
+  // {"user_agent", P_STRING, PI_TEXT, (void *)&UserAgent, CMT_USERAGENT,
+  //  NULL},
+  // {"no_referer", P_INT, PI_ONOFF, (void *)&NoSendReferer,
+  // CMT_NOSENDREFERER,
+  //  NULL},
+  // {"cross_origin_referer", P_INT, PI_ONOFF, (void *)&CrossOriginReferer,
+  //  CMT_CROSSORIGINREFERER, NULL},
+  // {"accept_language", P_STRING, PI_TEXT, (void *)&AcceptLang,
+  //  CMT_ACCEPTLANG, NULL},
+  // {"accept_encoding", P_STRING, PI_TEXT, (void *)&AcceptEncoding,
+  //  CMT_ACCEPTENCODING, NULL},
+  // {"accept_media", P_STRING, PI_TEXT, (void *)&AcceptMedia,
+  // CMT_ACCEPTMEDIA,
+  //  NULL},
+  // {"argv_is_url", P_CHARINT, PI_ONOFF, (void *)&ArgvIsURL,
+  // CMT_ARGV_IS_URL,
+  //  NULL},
+  // {"retry_http", P_INT, PI_ONOFF, (void *)&retryAsHttp, CMT_RETRY_HTTP,
+  //  NULL},
+  // {"default_url", P_INT, PI_SEL_C, (void *)&DefaultURLString,
+  //  CMT_DEFAULT_URL, (void *)defaulturls},
+  // {"follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
+  //  CMT_FOLLOW_REDIRECTION, NULL},
+  // {"meta_refresh", P_CHARINT, PI_ONOFF, (void *)&MetaRefresh,
+  //  CMT_META_REFRESH, NULL},
+  // {"localhost_only", P_CHARINT, PI_ONOFF, (void *)&LocalhostOnly,
+  //  CMT_LOCALHOST_ONLY, NULL},
+  // {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
+  //  (void *)dnsorders},
+  // };
 
-  sections = {
-      {N_("Display Settings"), params1},
-      {N_("Miscellaneous Settings"), params3},
-      {N_("Directory Settings"), params5},
-      {N_("External Program Settings"), params6},
-      {N_("Network Settings"), params9},
-      {N_("Proxy Settings"), params4},
-      {N_("SSL Settings"), params7},
-      {N_("Cookie Settings"), params8},
-  };
+  // sections = {
+  //     {N_("Display Settings"), params1},
+  //     {N_("Miscellaneous Settings"), params3},
+  //     {N_("Directory Settings"), params5},
+  //     {N_("External Program Settings"), params6},
+  //     {N_("Network Settings"), params9},
+  //     {N_("Proxy Settings"), params4},
+  //     {N_("SSL Settings"), params7},
+  //     {N_("Cookie Settings"), params8},
+  // };
 
-  create_option_search_table();
+  // create_option_search_table();
 }
 
 void Option::create_option_search_table() {
@@ -336,6 +360,18 @@ void Option::create_option_search_table() {
       RC_search_table.insert({param->name, param});
     }
   }
+}
+
+void Option::push_param(const std::string &section,
+                        const std::shared_ptr<param_ptr> &param) {
+  auto found = std::find_if(sections.begin(), sections.end(),
+                            [](const param_section &) { return true; });
+  if (found == sections.end()) {
+    assert(false);
+    return;
+  }
+  found->params.push_back(param);
+  RC_search_table.insert({param->name, param});
 }
 
 Option::~Option() {}
