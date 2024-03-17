@@ -195,9 +195,11 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
 
 struct LineLayout;
 struct HttpResponse;
-void loadHTMLstream(LineLayout *layout, HttpResponse *res,
-                    std::string_view body, bool internal = false);
-void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view body);
+void loadHTMLstream(const std::shared_ptr<LineLayout> &layout,
+                    HttpResponse *res, std::string_view body,
+                    bool internal = false);
+void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
+                std::string_view body);
 
 enum CleanupMode {
   RAW_MODE = 0,

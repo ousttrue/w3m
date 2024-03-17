@@ -1,7 +1,5 @@
 #include "tabbuffer.h"
 #include "buffer.h"
-#include "utf8.h"
-#include "content.h"
 #include <sys/stat.h>
 
 bool open_tab_blank = false;
@@ -13,43 +11,43 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-int TabBuffer::draw(Content *screen, TabBuffer *current) {
-  if (this == current) {
-    screen->bold();
-  } else {
-    screen->boldend();
-  }
-  RowCol pos{.row = this->y, .col = this->x1};
-  screen->addch(pos, '[');
-  auto l = this->x2 - this->x1 - 1 -
-           get_strwidth(this->currentBuffer()->layout.data.title.c_str());
-  if (l < 0) {
-    l = 0;
-  }
-  if (l / 2 > 0) {
-    pos = screen->addnstr_sup(pos, " ", l / 2);
-  }
-
-  if (this == current) {
-    screen->underline();
-    // standout();
-  }
-  screen->addnstr(pos, this->currentBuffer()->layout.data.title.c_str(),
-                  this->x2 - this->x1 - l);
-  if (this == current) {
-    screen->underlineend();
-    // standend();
-  }
-
-  if ((l + 1) / 2 > 0) {
-    pos = screen->addnstr_sup(pos, " ", (l + 1) / 2);
-  }
-  screen->addch({.row = this->y, .col = this->x2}, ']');
-  if (this == current) {
-    screen->boldend();
-  }
-  return this->y;
-}
+// int TabBuffer::draw(Content *screen, TabBuffer *current) {
+//   if (this == current) {
+//     screen->bold();
+//   } else {
+//     screen->boldend();
+//   }
+//   RowCol pos{.row = this->y, .col = this->x1};
+//   screen->addch(pos, '[');
+//   auto l = this->x2 - this->x1 - 1 -
+//            get_strwidth(this->currentBuffer()->layout.data.title.c_str());
+//   if (l < 0) {
+//     l = 0;
+//   }
+//   if (l / 2 > 0) {
+//     pos = screen->addnstr_sup(pos, " ", l / 2);
+//   }
+//
+//   if (this == current) {
+//     screen->underline();
+//     // standout();
+//   }
+//   screen->addnstr(pos, this->currentBuffer()->layout.data.title.c_str(),
+//                   this->x2 - this->x1 - l);
+//   if (this == current) {
+//     screen->underlineend();
+//     // standend();
+//   }
+//
+//   if ((l + 1) / 2 > 0) {
+//     pos = screen->addnstr_sup(pos, " ", (l + 1) / 2);
+//   }
+//   screen->addch({.row = this->y, .col = this->x2}, ']');
+//   if (this == current) {
+//     screen->boldend();
+//   }
+//   return this->y;
+// }
 
 /*
  * deleteBuffer: delete buffer
@@ -92,11 +90,11 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
  */
 std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
                                     char *name) {
-  if (first->layout.data.title == name) {
+  if (first->layout->data.title == name) {
     return first;
   }
   for (auto buf = first; buf->backBuffer != nullptr; buf = buf->backBuffer) {
-    if (buf->backBuffer->layout.data.title == name) {
+    if (buf->backBuffer->layout->data.title == name) {
       return buf->backBuffer;
     }
   }

@@ -21,7 +21,7 @@ extern DefaultUrlStringType DefaultURLString;
 
 struct Buffer : std::enable_shared_from_this<Buffer> {
   std::shared_ptr<HttpResponse> res;
-  LineLayout layout = {};
+  std::shared_ptr<LineLayout> layout = {};
   std::shared_ptr<Buffer> backBuffer;
 
 private:
@@ -39,7 +39,7 @@ public:
 
   static std::shared_ptr<Buffer> nullBuffer(void) {
     auto b = Buffer::create();
-    b->layout.data.title = "*Null*";
+    b->layout->data.title = "*Null*";
     return b;
   }
 

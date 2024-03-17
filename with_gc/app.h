@@ -1,7 +1,6 @@
 #pragma once
 #include "rowcol.h"
 #include "func.h"
-#include "content.h"
 #include <string>
 #include <list>
 #include <memory>
@@ -42,7 +41,6 @@ struct Buffer;
 class App {
   RowCol _size = {};
 
-  std::shared_ptr<Content> _content;
   std::stringstream _lastKeyCmd;
   std::string _status;
   std::string _message;
@@ -79,14 +77,11 @@ public:
     return s_instance;
   }
 
-  int contentLines() const { return _content->LINES(); }
-  int contentCols() const { return _content->COLS(); }
   int LINES() const { return _size.row; }
   int COLS() const { return _size.col; }
   int LASTLINE() const { return (_size.row - 1); }
   int INIT_BUFFER_WIDTH() { return App::instance().COLS() - (1); }
 
-  std::shared_ptr<Content> screen() const { return _content; }
   bool initialize();
   void beginRawMode();
   void endRawMode();
@@ -163,7 +158,7 @@ public:
   }
   std::shared_ptr<TabBuffer> newTab(std::shared_ptr<Buffer> buf = {});
   std::shared_ptr<TabBuffer> numTab(int n) const;
-  void drawTabs();
+  // void drawTabs();
   void nextTab(int n);
   void prevTab(int n);
   void tabRight(int n);

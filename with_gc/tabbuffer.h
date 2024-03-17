@@ -55,7 +55,7 @@ public:
   std::shared_ptr<Buffer> replaceBuffer(const std::shared_ptr<Buffer> &delbuf,
                                         const std::shared_ptr<Buffer> &newbuf);
 
-  int draw(class Content *screen, TabBuffer *current);
+  // int draw(class Content *screen, TabBuffer *current);
 };
 
 // void followTab();

@@ -6,7 +6,6 @@
 #include "rc.h"
 #include "app.h"
 #include "alloc.h"
-#include "content.h"
 #include "istream.h"
 #include "myctype.h"
 #include "alloc.h"

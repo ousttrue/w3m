@@ -205,15 +205,15 @@ void srch_nxtprv(int reverse) {
     reverse ^= 1;
   }
   if (reverse == 0) {
-    CurrentTab->currentBuffer()->layout.cursorMoveCol(1);
+    CurrentTab->currentBuffer()->layout->cursorMoveCol(1);
   }
 
   auto result = srchcore(SearchString, routine[reverse]);
   if (result & SR_FOUND) {
-    clear_mark(CurrentTab->currentBuffer()->layout.currentLine());
+    clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
   } else {
     if (reverse == 0) {
-      CurrentTab->currentBuffer()->layout.cursorMoveCol(-1);
+      CurrentTab->currentBuffer()->layout->cursorMoveCol(-1);
     }
   }
   disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
@@ -246,14 +246,14 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
   if (do_next_search) {
     if (*str) {
       if (searchRoutine == forwardSearch)
-        CurrentTab->currentBuffer()->layout.cursorMoveCol(1);
+        CurrentTab->currentBuffer()->layout->cursorMoveCol(1);
       // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
       if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
-        CurrentTab->currentBuffer()->layout.cursorMoveCol(-1);
+        CurrentTab->currentBuffer()->layout->cursorMoveCol(-1);
         // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
       }
-      clear_mark(CurrentTab->currentBuffer()->layout.currentLine());
+      clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
       return -1;
     } else
       return 020; /* _prev completion for C-s C-s */
@@ -261,7 +261,7 @@ static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
     // CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf);
     srchcore(str, searchRoutine);
   }
-  clear_mark(CurrentTab->currentBuffer()->layout.currentLine());
+  clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
   return -1;
 }
 
@@ -291,15 +291,15 @@ void srch(SearchFunc func, const char *prompt) {
     disp = true;
   }
 
-  int col = CurrentTab->currentBuffer()->layout.cursor().col;
+  int col = CurrentTab->currentBuffer()->layout->cursor().col;
   if (func == forwardSearch)
-    CurrentTab->currentBuffer()->layout.cursorMoveCol(1);
+    CurrentTab->currentBuffer()->layout->cursorMoveCol(1);
 
   int result = srchcore(str, func);
   if (result & SR_FOUND)
-    clear_mark(CurrentTab->currentBuffer()->layout.currentLine());
+    clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
   else
-    CurrentTab->currentBuffer()->layout.cursorCol(col);
+    CurrentTab->currentBuffer()->layout->cursorCol(col);
   if (disp)
     disp_srchresult(result, prompt, str);
   searchRoutine = func;

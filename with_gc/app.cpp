@@ -11,7 +11,6 @@
 #include "html/anchorlist.h"
 #include "html/anchor.h"
 #include "html/html_quote.h"
-#include "content.h"
 #include "ssl_util.h"
 #include "html/form.h"
 #include "http_response.h"
@@ -130,7 +129,7 @@ uv_tty_t g_tty_in;
 uv_signal_t g_signal_resize;
 uv_timer_t g_timer;
 
-App::App() : _content(new Content) {
+App::App() {
 
   static int s_i = 0;
   assert(s_i == 0);
@@ -649,7 +648,8 @@ void App::beginRawMode(void) {
 
 void App::endRawMode(void) {
   if (_fmInitialized) {
-    _content->clrtoeolx({.row = LASTLINE(), .col = 0});
+    CurrentTab->currentBuffer()->layout->clrtoeolx(
+        {.row = LASTLINE(), .col = 0});
     // _screen->print();
     uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
     _fmInitialized = false;
@@ -667,41 +667,41 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->res->sourcefile.c_str());
     set_environ("W3M_FILENAME", buf->res->filename.c_str());
-    set_environ("W3M_TITLE", buf->layout.data.title.c_str());
+    set_environ("W3M_TITLE", buf->layout->data.title.c_str());
     set_environ("W3M_URL", buf->res->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",
                 buf->res->type.size() ? buf->res->type.c_str() : "unknown");
   }
-  l = buf->layout.currentLine();
+  l = buf->layout->currentLine();
   if (l && (buf != prev_buf || l != prev_line ||
-            buf->layout.cursorPos() != prev_pos)) {
-    auto s = buf->layout.getCurWord();
+            buf->layout->cursorPos() != prev_pos)) {
+    auto s = buf->layout->getCurWord();
     set_environ("W3M_CURRENT_WORD", s.c_str());
 
-    if (auto a = buf->layout.retrieveCurrentAnchor()) {
+    if (auto a = buf->layout->retrieveCurrentAnchor()) {
       Url pu(a->url, buf->res->getBaseURL());
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else {
       set_environ("W3M_CURRENT_LINK", "");
     }
 
-    if (auto a = buf->layout.retrieveCurrentImg()) {
+    if (auto a = buf->layout->retrieveCurrentImg()) {
       Url pu(a->url, buf->res->getBaseURL());
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else {
       set_environ("W3M_CURRENT_IMG", "");
     }
 
-    if (auto a = buf->layout.retrieveCurrentForm()) {
+    if (auto a = buf->layout->retrieveCurrentForm()) {
       set_environ("W3M_CURRENT_FORM", a->formItem->form2str().c_str());
     } else {
       set_environ("W3M_CURRENT_FORM", "");
     }
 
     set_environ("W3M_CURRENT_LINE",
-                Sprintf("%ld", buf->layout.linenumber(l))->ptr);
+                Sprintf("%ld", buf->layout->linenumber(l))->ptr);
     set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->layout.cursor().col + 1)->ptr);
+                Sprintf("%d", buf->layout->cursor().col + 1)->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -712,7 +712,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   }
   prev_buf = buf;
   prev_line = l;
-  prev_pos = buf->layout.cursorPos();
+  prev_pos = buf->layout->cursorPos();
 }
 
 static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
@@ -798,7 +798,7 @@ RowCol getTermSize() {
 
 void App::onResize() {
   _size = getTermSize();
-  _content->setupscreen(_size);
+  CurrentTab->currentBuffer()->layout->setupscreen(_size);
 }
 
 void App::exit(int) {
@@ -849,7 +849,7 @@ const char *App::searchKeyData() {
 }
 
 void App::peekURL() {
-  if (currentTab()->currentBuffer()->layout.empty()) {
+  if (currentTab()->currentBuffer()->layout->empty()) {
     return;
   }
 
@@ -865,21 +865,21 @@ void App::peekURL() {
   }
 
   _peekUrl = "";
-  if (auto a = currentTab()->currentBuffer()->layout.retrieveCurrentAnchor()) {
+  if (auto a = currentTab()->currentBuffer()->layout->retrieveCurrentAnchor()) {
     _peekUrl = a->url;
     if (_peekUrl.empty()) {
       Url pu(a->url, currentTab()->currentBuffer()->res->getBaseURL());
       _peekUrl = pu.to_Str();
     }
   } else if (auto a =
-                 currentTab()->currentBuffer()->layout.retrieveCurrentForm()) {
+                 currentTab()->currentBuffer()->layout->retrieveCurrentForm()) {
     _peekUrl = a->formItem->form2str();
     if (_peekUrl.empty()) {
       Url pu(a->url, currentTab()->currentBuffer()->res->getBaseURL());
       _peekUrl = pu.to_Str();
     }
   } else if (auto a =
-                 currentTab()->currentBuffer()->layout.retrieveCurrentImg()) {
+                 currentTab()->currentBuffer()->layout->retrieveCurrentImg()) {
     _peekUrl = a->url;
     if (_peekUrl.empty()) {
       Url pu(a->url, currentTab()->currentBuffer()->res->getBaseURL());
@@ -1000,10 +1000,10 @@ void App::onFrame() {
     ldDL(context());
   }
 
-  if (auto a = currentTab()->currentBuffer()->layout.data.submit) {
-    currentTab()->currentBuffer()->layout.data.submit = NULL;
-    currentTab()->currentBuffer()->layout.cursorRow(a->start.line);
-    currentTab()->currentBuffer()->layout.cursorPos(a->start.pos);
+  if (auto a = currentTab()->currentBuffer()->layout->data.submit) {
+    currentTab()->currentBuffer()->layout->data.submit = NULL;
+    currentTab()->currentBuffer()->layout->cursorRow(a->start.line);
+    currentTab()->currentBuffer()->layout->cursorPos(a->start.pos);
     if (auto buf = currentTab()
                        ->currentBuffer()
                        ->followForm(a, true)
@@ -1021,20 +1021,20 @@ void App::onFrame() {
   // if (buf->layout.height == 0)
   //   buf->layout.height = this->LASTLINE() + 1;
   if (/*(buf->layout.width != width && (buf->res->is_html_type())) ||*/
-      buf->layout.data.need_reshape) {
-    buf->layout.data.need_reshape = true;
-    if (buf->layout.data.need_reshape) {
+      buf->layout->data.need_reshape) {
+    buf->layout->data.need_reshape = true;
+    if (buf->layout->data.need_reshape) {
 
       auto body = buf->res->getBody();
 
-      LineLayout sbuf = buf->layout;
+      auto sbuf = buf->layout;
       if (buf->res->is_html_type()) {
-        loadHTMLstream(&buf->layout, buf->res.get(), body);
+        loadHTMLstream(buf->layout, buf->res.get(), body);
       } else {
-        loadBuffer(&buf->layout, buf->res.get(), body);
+        loadBuffer(buf->layout, buf->res.get(), body);
       }
 
-      buf->layout.reshape(width, sbuf);
+      buf->layout->reshape(width);
     }
   }
 
@@ -1058,7 +1058,7 @@ void App::cursor(const RowCol &pos) {
 void App::display() {
 
   auto buf = CurrentTab->currentBuffer();
-  auto layout = &buf->layout;
+  auto layout = buf->layout;
 
   // tabs
   int ny = App::instance().calcTabPos() + 2;
@@ -1116,7 +1116,8 @@ void App::display() {
 
   ftxui::Render(screen, dom());
 
-  auto cursor = _content->root() + layout->cursor() - layout->scroll();
+  auto cursor = CurrentTab->currentBuffer()->layout->root() + layout->cursor() -
+                layout->scroll();
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1143,25 +1144,24 @@ void App::display() {
 
 ftxui::Element App::dom() {
   auto buf = currentTab()->currentBuffer();
-  _content->layout = &buf->layout;
   auto msg = this->make_lastline_message(buf);
 
   std::stringstream ss;
-  ss << "[cursor]" << buf->layout.cursor().row << ","
-     << buf->layout.cursor().col
+  ss << "[cursor]" << buf->layout->cursor().row << ","
+     << buf->layout->cursor().col
      //
      << "(pos)"
-     << buf->layout.cursorPos()
+     << buf->layout->cursorPos()
      //
-     << "[scroll]" << buf->layout.scroll().row << ","
-     << buf->layout.scroll().col
+     << "[scroll]" << buf->layout->scroll().row << ","
+     << buf->layout->scroll().col
       //
       ;
 
-  if (auto a = buf->layout.retrieveCurrentAnchor()) {
+  if (auto a = buf->layout->retrieveCurrentAnchor()) {
     ss << ", [a]" << a->start.line << "," << a->start.pos << " " << a->title;
   }
-  if (auto f = buf->layout.retrieveCurrentForm()) {
+  if (auto f = buf->layout->retrieveCurrentForm()) {
     ss << ", [f]" << f->start.line << "," << f->start.pos << " " << f->title;
   }
 
@@ -1178,7 +1178,7 @@ ftxui::Element App::dom() {
       // address
       ftxui::text(buf->res->currentURL.to_Str()) | ftxui::inverted,
       // content
-      _content | ftxui::flex,
+      buf->layout | ftxui::flex,
       // status
       ftxui::text(_status) | ftxui::inverted,
       // input/ message
@@ -1195,10 +1195,10 @@ ftxui::Element App::tabs() {
       tabs.push_back(ftxui::separator());
     }
     if (tab == currentTab()) {
-      tabs.push_back(ftxui::text(tab->currentBuffer()->layout.data.title) |
+      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->data.title) |
                      ftxui::inverted);
     } else {
-      tabs.push_back(ftxui::text(tab->currentBuffer()->layout.data.title));
+      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->data.title));
     }
   }
 
@@ -1278,18 +1278,18 @@ std::shared_ptr<TabBuffer> App::numTab(int n) const {
   return *it ? *it : _tabs.back();
 }
 
-void App::drawTabs() {
-  _content->clrtoeolx({0, 0});
-  int y = 0;
-  for (auto t : _tabs) {
-    y = t->draw(_content.get(), currentTab().get());
-  }
-  RowCol pos{.row = y + 1, .col = 0};
-  for (int i = 0; i < COLS(); i++) {
-    _content->addch(pos, '~');
-    ++pos.col;
-  }
-}
+// void App::drawTabs() {
+//   CurrentTab->currentBuffer()->layout->clrtoeolx({0, 0});
+//   int y = 0;
+//   for (auto t : _tabs) {
+//     y = t->draw(_content.get(), currentTab().get());
+//   }
+//   RowCol pos{.row = y + 1, .col = 0};
+//   for (int i = 0; i < COLS(); i++) {
+//     _content->addch(pos, '~');
+//     ++pos.col;
+//   }
+// }
 
 void App::nextTab(int n) {
   assert(_tabs.size() > 0);
@@ -1441,13 +1441,13 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   } else {
     auto label = Strnew_m_charp("_", target, nullptr)->ptr;
     auto buf = CurrentTab->currentBuffer();
-    auto al = buf->layout.data._name->searchAnchor(label);
+    auto al = buf->layout->data._name->searchAnchor(label);
     if (al) {
-      buf->layout.cursorRow(al->start.line);
+      buf->layout->cursorRow(al->start.line);
       // if (label_topline) {
       //   buf->layout._topLine += buf->layout.cursor.row;
       // }
-      buf->layout.cursorPos(al->start.pos);
+      buf->layout->cursorPos(al->start.pos);
     }
   }
 }
@@ -1534,11 +1534,13 @@ void App::showProgress(long long *linelen, long long *trbyte,
 
   if (*linelen < 1024)
     return;
+
+  auto content = CurrentTab->currentBuffer()->layout;
   if (current_content_length > 0) {
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      _content->clrtoeolx({.row = LASTLINE(), .col = 0});
+      content->clrtoeolx({.row = LASTLINE(), .col = 0});
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -1563,24 +1565,24 @@ void App::showProgress(long long *linelen, long long *trbyte,
           Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
     }
     RowCol pixel{.row = LASTLINE(), .col = 0};
-    pixel = _content->addstr(pixel, messages->ptr);
+    pixel = content->addstr(pixel, messages->ptr);
     pos = 42;
     i = pos + (COLS() - pos - 1) * (*trbyte) / current_content_length;
-    _content->standout();
+    content->standout();
     pixel = {.row = LASTLINE(), .col = pos};
-    _content->addch(pixel, ' ');
+    content->addch(pixel, ' ');
     ++pixel.col;
     for (j = pos + 1; j <= i; j++) {
-      _content->addch(pixel, '|');
+      content->addch(pixel, '|');
       ++pixel.col;
     }
-    _content->standend();
+    content->standend();
     /* no_clrtoeol(); */
     // _screen->print();
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      _content->clrtoeolx({.row = LASTLINE(), .col = 0});
+      content->clrtoeolx({.row = LASTLINE(), .col = 0});
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -1715,12 +1717,12 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   std::string s;
   if (displayLink) {
 
-    Anchor *a = buf->layout.retrieveCurrentAnchor();
+    Anchor *a = buf->layout->retrieveCurrentAnchor();
     std::string p;
     if (a && a->title.size())
       p = a->title;
     else {
-      auto a_img = buf->layout.retrieveCurrentImg();
+      auto a_img = buf->layout->retrieveCurrentImg();
       if (a_img && a_img->title.size())
         p = a_img->title;
     }
@@ -1737,9 +1739,9 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
 
   std::stringstream ss;
   int sl = 0;
-  if (displayLineInfo && buf->layout.currentLine()) {
-    int cl = buf->layout.cursor().row;
-    int ll = buf->layout.linenumber(buf->layout.lastLine());
+  if (displayLineInfo && buf->layout->currentLine()) {
+    int cl = buf->layout->cursor().row;
+    int ll = buf->layout->linenumber(buf->layout->lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;
   } else {
@@ -1750,7 +1752,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
     ss << "[SSL]";
   }
 
-  ss << " <" << buf->layout.data.title;
+  ss << " <" << buf->layout->data.title;
 
   auto msg = ss.str();
   if (s.size()) {

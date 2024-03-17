@@ -486,8 +486,8 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
-void loadHTMLstream(LineLayout *layout, HttpResponse *res,
-                    std::string_view body, bool internal) {
+void loadHTMLstream(const std::shared_ptr<LineLayout> &layout,
+                    HttpResponse *res, std::string_view body, bool internal) {
 
   layout->clearBuffer();
 
@@ -651,7 +651,8 @@ static Str *checkType(Str *s, Lineprop **oprop) {
   return s;
 }
 
-void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
+void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
+                std::string_view page) {
   layout->clearBuffer();
   auto nlines = 0;
   // auto stream = newStrStream(page);
@@ -694,7 +695,7 @@ void loadBuffer(LineLayout *layout, HttpResponse *res, std::string_view page) {
 
 std::shared_ptr<Buffer> loadHTMLString(std::string_view html) {
   auto newBuf = Buffer::create();
-  loadHTMLstream(&newBuf->layout, newBuf->res.get(), html, true);
+  loadHTMLstream(newBuf->layout, newBuf->res.get(), html, true);
   return newBuf;
 }
 

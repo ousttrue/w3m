@@ -5,7 +5,6 @@
 #include "tabbuffer.h"
 #include "etc.h"
 #include "alloc.h"
-#include "content.h"
 #include "utf8.h"
 #include "buffer.h"
 #include "proc.h"
@@ -32,7 +31,7 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(const std::shared_ptr<Content> &screen, const char *prompt,
+LineInput::LineInput(const std::shared_ptr<LineLayout> &screen, const char *prompt,
                      const std::shared_ptr<Hist> &hist, const OnInput &_onInput,
                      IncFunc incrfunc)
     : _screen(screen), prompt(prompt), incrfunc(incrfunc), onInput(_onInput) {
@@ -92,7 +91,7 @@ LineInput::LineInput(const std::shared_ptr<Content> &screen, const char *prompt,
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputLineHistSearch(const std::shared_ptr<Content> &screen,
+LineInput::inputLineHistSearch(const std::shared_ptr<LineLayout> &screen,
                                const char *prompt, const char *def_str,
                                const std::shared_ptr<Hist> &hist,
                                InputFlags flag, IncFunc incrfunc) {
@@ -875,7 +874,7 @@ void LineInput::_editor(char) {
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputAnswer(const std::shared_ptr<Content> &screen) {
+LineInput::inputAnswer(const std::shared_ptr<LineLayout> &screen) {
   if (IsForkChild) {
     // onInput("n");
     return {};

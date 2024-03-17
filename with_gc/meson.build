@@ -59,7 +59,6 @@ with_gc_lib = static_library(
         'istream.cpp',
         'version.cpp',
         'downloadlist.cpp',
-        'content.cpp',
         'ssl_util.cpp',
         'mimetypes.cpp',
         'url_stream.cpp',

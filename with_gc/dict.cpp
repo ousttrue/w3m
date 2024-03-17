@@ -31,7 +31,7 @@ std::shared_ptr<Buffer> execdict(const char *word) {
 
   auto buf = Buffer::create(res);
   buf->res->filename = w;
-  buf->layout.data.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
+  buf->layout->data.title = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
   if (buf->res->type.empty()) {
     buf->res->type = "text/plain";
   }
