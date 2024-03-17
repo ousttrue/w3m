@@ -44,9 +44,9 @@ nulcmd(const FuncContext &context) { /* do nothing */
 //"Scroll down one page"
 std::shared_ptr<CoroutineState<void>> pgFore(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->nscroll(prec_num ? App::instance().searchKeyNum()
-                                : App::instance().searchKeyNum() *
-                                      buf->layout->LINES());
+  buf->layout->visual.scroll.row +=
+      (prec_num ? App::instance().searchKeyNum()
+                : App::instance().searchKeyNum() * buf->layout->LINES());
   co_return;
 }
 
@@ -55,9 +55,9 @@ std::shared_ptr<CoroutineState<void>> pgFore(const FuncContext &context) {
 //"Scroll up one page"
 std::shared_ptr<CoroutineState<void>> pgBack(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->nscroll(
-      -(prec_num ? App::instance().searchKeyNum()
-                 : App::instance().searchKeyNum() * buf->layout->LINES()));
+  buf->layout->visual.scroll.row +=
+      (-(prec_num ? App::instance().searchKeyNum()
+                  : App::instance().searchKeyNum() * buf->layout->LINES()));
   co_return;
 }
 
@@ -66,8 +66,8 @@ std::shared_ptr<CoroutineState<void>> pgBack(const FuncContext &context) {
 //"Scroll down half a page"
 std::shared_ptr<CoroutineState<void>> hpgFore(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->nscroll(App::instance().searchKeyNum() *
-                       (buf->layout->LINES() / 2));
+  buf->layout->visual.scroll.row +=
+      (App::instance().searchKeyNum() * (buf->layout->LINES() / 2));
   co_return;
 }
 
@@ -76,8 +76,8 @@ std::shared_ptr<CoroutineState<void>> hpgFore(const FuncContext &context) {
 //"Scroll up half a page"
 std::shared_ptr<CoroutineState<void>> hpgBack(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->nscroll(-App::instance().searchKeyNum() *
-                       (buf->layout->LINES() / 2));
+  buf->layout->visual.scroll.row +=
+      (-App::instance().searchKeyNum() * (buf->layout->LINES() / 2));
   co_return;
 }
 
@@ -85,7 +85,8 @@ std::shared_ptr<CoroutineState<void>> hpgBack(const FuncContext &context) {
 // UP
 //"Scroll the screen up one line"
 std::shared_ptr<CoroutineState<void>> lup1(const FuncContext &context) {
-  CurrentTab->currentBuffer()->layout->nscroll(App::instance().searchKeyNum());
+  CurrentTab->currentBuffer()->layout->visual.scroll.row +=
+      (App::instance().searchKeyNum());
   co_return;
 }
 
@@ -93,7 +94,8 @@ std::shared_ptr<CoroutineState<void>> lup1(const FuncContext &context) {
 // DOWN
 //"Scroll the screen down one line"
 std::shared_ptr<CoroutineState<void>> ldown1(const FuncContext &context) {
-  CurrentTab->currentBuffer()->layout->nscroll(-App::instance().searchKeyNum());
+  CurrentTab->currentBuffer()->layout->visual.scroll.row +=
+      (-App::instance().searchKeyNum());
   co_return;
 }
 
@@ -105,10 +107,9 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV(const FuncContext &context) {
   if (buf->layout->empty())
     co_return;
 
-  int offsety = buf->layout->LINES() / 2 -
-                CurrentTab->currentBuffer()->layout->cursor().row;
+  int offsety = buf->layout->LINES() / 2 - buf->layout->visual.cursor.row;
   if (offsety != 0) {
-    CurrentTab->currentBuffer()->layout->visual.scrollMoveRow(-offsety);
+    buf->layout->visual.scrollMoveRow(-offsety);
   }
 }
 
@@ -119,10 +120,9 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH(const FuncContext &context) {
   if (buf->layout->empty())
     co_return;
 
-  int offsetx = CurrentTab->currentBuffer()->layout->cursor().col -
-                buf->layout->LINES() / 2;
+  int offsetx = buf->layout->visual.cursor.col - buf->layout->LINES() / 2;
   if (offsetx != 0) {
-    CurrentTab->currentBuffer()->layout->cursorMoveCol(offsetx);
+    buf->layout->visual.cursorMoveCol(offsetx);
   }
 }
 
@@ -187,10 +187,10 @@ std::shared_ptr<CoroutineState<void>> shiftl(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
   if (buf->layout->empty())
     co_return;
-  int column = buf->layout->cursor().col;
-  buf->layout->cursorMoveCol(App::instance().searchKeyNum() *
-                             -buf->layout->COLS());
-  buf->layout->shiftvisualpos(buf->layout->cursor().col - column);
+  int column = buf->layout->visual.cursor.col;
+  buf->layout->visual.cursorMoveCol(App::instance().searchKeyNum() *
+                                    -buf->layout->COLS());
+  buf->layout->visual.cursor.col -= column;
 }
 
 /* Shift screen right */
@@ -375,120 +375,124 @@ std::shared_ptr<CoroutineState<void>> ldhelp(const FuncContext &context) {
 // MOVE_LEFT
 //"Cursor left"
 std::shared_ptr<CoroutineState<void>> movL(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveCol(-m);
+  buf->layout->visual.cursorMoveCol(-m);
   co_return;
 }
 
 // MOVE_LEFT1
 //"Cursor left. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>> movL1(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveCol(-m);
+  buf->layout->visual.cursorMoveCol(-m);
   co_return;
 }
 
 // MOVE_RIGHT
 //"Cursor right"
 std::shared_ptr<CoroutineState<void>> movR(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveCol(m);
+  buf->layout->visual.cursorMoveCol(m);
   co_return;
 }
 
 // MOVE_RIGHT1
 //"Cursor right. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>> movR1(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveCol(m);
+  buf->layout->visual.cursorMoveCol(m);
   co_return;
 }
 
 // MOVE_DOWN
 //"Cursor down"
 std::shared_ptr<CoroutineState<void>> movD(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveRow(m);
+  buf->layout->visual.cursorMoveRow(m);
   co_return;
 }
 
 // MOVE_DOWN1
 //"Cursor down. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>> movD1(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveRow(m);
+  buf->layout->visual.cursorMoveRow(m);
   co_return;
 }
 
 // MOVE_UP
 //"Cursor up"
 std::shared_ptr<CoroutineState<void>> movU(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveRow(-m);
+  buf->layout->visual.cursorMoveRow(-m);
   co_return;
 }
 
 // MOVE_UP1
 //"Cursor up. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>> movU1(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int m = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->cursorMoveRow(-m);
+  buf->layout->visual.cursorMoveRow(-m);
   co_return;
 }
 
 // PREV_WORD
 //"Move to the previous word"
 std::shared_ptr<CoroutineState<void>> movLW(const FuncContext &context) {
-  Line *pline;
-  int ppos;
+  auto buf = CurrentTab->currentBuffer();
   int i, n = App::instance().searchKeyNum();
 
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (buf->layout->empty())
     co_return;
 
   for (i = 0; i < n; i++) {
-    pline = CurrentTab->currentBuffer()->layout->currentLine();
-    ppos = CurrentTab->currentBuffer()->layout->cursorPos();
+    auto pline = buf->layout->currentLine();
+    auto ppos = buf->layout->cursorPos();
 
-    if (CurrentTab->currentBuffer()->layout->prev_nonnull_line(
-            CurrentTab->currentBuffer()->layout->currentLine()) < 0)
+    if (buf->layout->prev_nonnull_line(buf->layout->currentLine()) < 0)
       co_return;
 
     while (1) {
-      auto l = CurrentTab->currentBuffer()->layout->currentLine();
+      auto l = buf->layout->currentLine();
       auto lb = l->lineBuf();
-      while (CurrentTab->currentBuffer()->layout->cursorPos() > 0) {
-        int tmp = CurrentTab->currentBuffer()->layout->cursorPos();
+      while (buf->layout->cursorPos() > 0) {
+        int tmp = buf->layout->cursorPos();
         prevChar(tmp, l);
         if (is_wordchar(lb[tmp])) {
           break;
         }
-        CurrentTab->currentBuffer()->layout->cursorPos(tmp);
+        buf->layout->cursorPos(tmp);
       }
-      if (CurrentTab->currentBuffer()->layout->cursorPos() > 0)
+      if (buf->layout->cursorPos() > 0)
         break;
-      auto prev = CurrentTab->currentBuffer()->layout->currentLine();
+      auto prev = buf->layout->currentLine();
       --prev;
-      if (CurrentTab->currentBuffer()->layout->prev_nonnull_line(prev) < 0) {
-        CurrentTab->currentBuffer()->layout->cursorRow(
-            CurrentTab->currentBuffer()->layout->linenumber(pline));
-        CurrentTab->currentBuffer()->layout->cursorPos(ppos);
+      if (buf->layout->prev_nonnull_line(prev) < 0) {
+        buf->layout->visual.cursorRow(buf->layout->linenumber(pline));
+        buf->layout->cursorPos(ppos);
         co_return;
       }
-      CurrentTab->currentBuffer()->layout->cursorPos(
-          CurrentTab->currentBuffer()->layout->currentLine()->len());
+      buf->layout->cursorPos(buf->layout->currentLine()->len());
     }
 
     {
-      auto l = CurrentTab->currentBuffer()->layout->currentLine();
+      auto l = buf->layout->currentLine();
       auto lb = l->lineBuf();
-      while (CurrentTab->currentBuffer()->layout->cursorPos() > 0) {
-        int tmp = CurrentTab->currentBuffer()->layout->cursorPos();
+      while (buf->layout->cursorPos() > 0) {
+        int tmp = buf->layout->cursorPos();
         prevChar(tmp, l);
         if (!is_wordchar(lb[tmp])) {
           break;
         }
-        CurrentTab->currentBuffer()->layout->cursorPos(tmp);
+        buf->layout->cursorPos(tmp);
       }
     }
   }
@@ -664,30 +668,27 @@ std::shared_ptr<CoroutineState<void>> linend(const FuncContext &context) {
 // EDIT
 //"Edit local source"
 std::shared_ptr<CoroutineState<void>> editBf(const FuncContext &context) {
-  auto fn = CurrentTab->currentBuffer()->res->filename;
+  auto buf = CurrentTab->currentBuffer();
+  auto fn = buf->res->filename;
 
   if (fn.empty() || /* Behaving as a pager */
-      (CurrentTab->currentBuffer()->res->type.empty() &&
-       CurrentTab->currentBuffer()->res->edit == nullptr) || /* Reading shell */
-      CurrentTab->currentBuffer()->res->currentURL.scheme != SCM_LOCAL ||
-      CurrentTab->currentBuffer()->res->currentURL.file ==
-          "-" /* file is std input  */
+      (buf->res->type.empty() &&
+       buf->res->edit == nullptr) || /* Reading shell */
+      buf->res->currentURL.scheme != SCM_LOCAL ||
+      buf->res->currentURL.file == "-" /* file is std input  */
   ) {
     App::instance().disp_err_message("Can't edit other than local file");
     co_return;
   }
 
   std::string cmd;
-  if (CurrentTab->currentBuffer()->res->edit) {
-    cmd = unquote_mailcap(
-              CurrentTab->currentBuffer()->res->edit,
-              CurrentTab->currentBuffer()->res->type.c_str(), fn.c_str(),
-              CurrentTab->currentBuffer()->res->getHeader("Content-Type:"),
-              nullptr)
+  if (buf->res->edit) {
+    cmd = unquote_mailcap(buf->res->edit, buf->res->type.c_str(), fn.c_str(),
+                          buf->res->getHeader("Content-Type:"), nullptr)
               ->ptr;
   } else {
     cmd = ioutil::myEditor(shell_quote(fn.c_str()),
-                           CurrentTab->currentBuffer()->layout->cursor().row);
+                           buf->layout->visual.cursor.row);
   }
   exec_cmd(cmd);
 
@@ -707,8 +708,9 @@ std::shared_ptr<CoroutineState<void>> editScr(const FuncContext &context) {
   }
   CurrentTab->currentBuffer()->saveBuffer(f, true);
   fclose(f);
-  exec_cmd(ioutil::myEditor(shell_quote(tmpf.c_str()),
-                            CurrentTab->currentBuffer()->layout->cursor().row));
+  exec_cmd(
+      ioutil::myEditor(shell_quote(tmpf.c_str()),
+                       CurrentTab->currentBuffer()->layout->visual.cursor.row));
   unlink(tmpf.c_str());
 }
 
@@ -770,9 +772,10 @@ std::shared_ptr<CoroutineState<void>> submitForm(const FuncContext &context) {
 // LINK_BEGIN
 //"Move to the first hyperlink"
 std::shared_ptr<CoroutineState<void>> topA(const FuncContext &context) {
-  auto hl = CurrentTab->currentBuffer()->layout->data._hmarklist;
+  auto buf = CurrentTab->currentBuffer();
+  auto hl = buf->layout->data._hmarklist;
 
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (buf->layout->empty())
     co_return;
   if (hl->size() == 0)
     co_return;
@@ -789,28 +792,27 @@ std::shared_ptr<CoroutineState<void>> topA(const FuncContext &context) {
     if (hseq >= (int)hl->size())
       co_return;
     po = hl->get(hseq);
-    if (CurrentTab->currentBuffer()->layout->data._href) {
-      an = CurrentTab->currentBuffer()->layout->data._href->retrieveAnchor(
-          po->line, po->pos);
+    if (buf->layout->data._href) {
+      an = buf->layout->data._href->retrieveAnchor(po->line, po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout->data._formitem) {
-      an = CurrentTab->currentBuffer()->layout->data._formitem->retrieveAnchor(
-          po->line, po->pos);
+    if (an == nullptr && buf->layout->data._formitem) {
+      an = buf->layout->data._formitem->retrieveAnchor(po->line, po->pos);
     }
     hseq++;
   } while (an == nullptr);
 
-  CurrentTab->currentBuffer()->layout->cursorRow(po->line);
-  CurrentTab->currentBuffer()->layout->cursorPos(po->pos);
+  buf->layout->visual.cursorRow(po->line);
+  buf->layout->cursorPos(po->pos);
 }
 
 /* go to the last anchor */
 // LINK_END
 //"Move to the last hyperlink"
 std::shared_ptr<CoroutineState<void>> lastA(const FuncContext &context) {
-  auto hl = CurrentTab->currentBuffer()->layout->data._hmarklist;
+  auto buf = CurrentTab->currentBuffer();
+  auto hl = buf->layout->data._hmarklist;
 
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (buf->layout->empty())
     co_return;
   if (hl->size() == 0)
     co_return;
@@ -830,61 +832,59 @@ std::shared_ptr<CoroutineState<void>> lastA(const FuncContext &context) {
     if (hseq < 0)
       co_return;
     po = hl->get(hseq);
-    if (CurrentTab->currentBuffer()->layout->data._href) {
-      an = CurrentTab->currentBuffer()->layout->data._href->retrieveAnchor(
-          po->line, po->pos);
+    if (buf->layout->data._href) {
+      an = buf->layout->data._href->retrieveAnchor(po->line, po->pos);
     }
-    if (an == nullptr && CurrentTab->currentBuffer()->layout->data._formitem) {
-      an = CurrentTab->currentBuffer()->layout->data._formitem->retrieveAnchor(
-          po->line, po->pos);
+    if (an == nullptr && buf->layout->data._formitem) {
+      an = buf->layout->data._formitem->retrieveAnchor(po->line, po->pos);
     }
     hseq--;
   } while (an == nullptr);
 
-  CurrentTab->currentBuffer()->layout->cursorRow(po->line);
-  CurrentTab->currentBuffer()->layout->cursorPos(po->pos);
+  buf->layout->visual.cursorRow(po->line);
+  buf->layout->cursorPos(po->pos);
 }
 
 /* go to the nth anchor */
 // LINK_N
 //"Go to the nth link"
 std::shared_ptr<CoroutineState<void>> nthA(const FuncContext &context) {
-  auto hl = CurrentTab->currentBuffer()->layout->data._hmarklist;
+  auto buf = CurrentTab->currentBuffer();
+  auto hl = buf->layout->data._hmarklist;
 
   int n = App::instance().searchKeyNum();
   if (n < 0 || n > (int)hl->size()) {
     co_return;
   }
 
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (buf->layout->empty())
     co_return;
   if (!hl || hl->size() == 0)
     co_return;
 
   auto po = hl->get(n - 1);
   Anchor *an = nullptr;
-  if (CurrentTab->currentBuffer()->layout->data._href) {
-    an = CurrentTab->currentBuffer()->layout->data._href->retrieveAnchor(
-        po->line, po->pos);
+  if (buf->layout->data._href) {
+    an = buf->layout->data._href->retrieveAnchor(po->line, po->pos);
   }
-  if (an == nullptr && CurrentTab->currentBuffer()->layout->data._formitem) {
-    an = CurrentTab->currentBuffer()->layout->data._formitem->retrieveAnchor(
-        po->line, po->pos);
+  if (an == nullptr && buf->layout->data._formitem) {
+    an = buf->layout->data._formitem->retrieveAnchor(po->line, po->pos);
   }
   if (an == nullptr)
     co_return;
 
-  CurrentTab->currentBuffer()->layout->cursorRow(po->line);
-  CurrentTab->currentBuffer()->layout->cursorPos(po->pos);
+  buf->layout->visual.cursorRow(po->line);
+  buf->layout->cursorPos(po->pos);
 }
 
 /* go to the next anchor */
 // NEXT_LINK
 //"Move to the next hyperlink"
 std::shared_ptr<CoroutineState<void>> nextA(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int n = App::instance().searchKeyNum();
-  auto baseUrl = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout->_nextA(baseUrl, n);
+  auto baseUrl = buf->res->getBaseURL();
+  buf->layout->_nextA(baseUrl, n);
   co_return;
 }
 
@@ -1361,7 +1361,8 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
       sbuf->layout->data.form_submit;
   if (CurrentTab->currentBuffer()->layout->firstLine()) {
     // CurrentTab->currentBuffer()->layout->COPY_BUFROOT_FROM(sbuf->layout);
-    CurrentTab->currentBuffer()->layout->visual.restorePosition(sbuf->layout->visual);
+    CurrentTab->currentBuffer()->layout->visual.restorePosition(
+        sbuf->layout->visual);
   }
 }
 
@@ -1449,10 +1450,10 @@ std::shared_ptr<CoroutineState<void>> curlno(const FuncContext &context) {
   if (l != nullptr) {
     cur = layout->linenumber(l);
     ;
-    col = layout->cursor().col + 1;
+    col = layout->visual.cursor.col + 1;
     len = l->width();
   }
-  if (CurrentTab->currentBuffer()->layout->lastLine())
+  if (layout->lastLine())
     all = layout->linenumber(layout->lastLine());
   tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
                 (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
@@ -1703,7 +1704,8 @@ std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
   loadHTMLstream(buf->layout, buf->res.get(), html, true);
   if (replace) {
     // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
-    buf->layout->visual.restorePosition(CurrentTab->currentBuffer()->layout->visual);
+    buf->layout->visual.restorePosition(
+        CurrentTab->currentBuffer()->layout->visual);
   }
   if (!replace && open_tab_dl_list) {
     App::instance().newTab();
@@ -1744,7 +1746,7 @@ std::shared_ptr<CoroutineState<void>> cursorTop(const FuncContext &context) {
   if (CurrentTab->currentBuffer()->layout->empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout->cursorRow(0);
+  CurrentTab->currentBuffer()->layout->visual.cursorRow(0);
 }
 
 // CURSOR_MIDDLE
@@ -1755,7 +1757,7 @@ std::shared_ptr<CoroutineState<void>> cursorMiddle(const FuncContext &context) {
     co_return;
 
   int offsety = (buf->layout->LINES() - 1) / 2;
-  CurrentTab->currentBuffer()->layout->cursorMoveRow(offsety);
+  CurrentTab->currentBuffer()->layout->visual.cursorMoveRow(offsety);
 }
 
 // CURSOR_BOTTOM
@@ -1766,7 +1768,7 @@ std::shared_ptr<CoroutineState<void>> cursorBottom(const FuncContext &context) {
     co_return;
 
   int offsety = buf->layout->LINES() - 1;
-  CurrentTab->currentBuffer()->layout->cursorMoveRow(offsety);
+  CurrentTab->currentBuffer()->layout->visual.cursorMoveRow(offsety);
 }
 
 /* follow HREF link in the buffer */

@@ -1,5 +1,5 @@
 #pragma once
-#include "rowcol.h"
+#include "cursor_scroll.h"
 #include "line_data.h"
 #include "http_request.h"
 #include "url.h"
@@ -51,73 +51,11 @@ enum LineDirtyFlags : unsigned short {
   L_CLRTOEOL = 0x08,
 };
 
-// LineData
-// +--->Width
-// | ScrollView
-// |  row
-// |col+---->width
-// |   |
-// |   v
-// |  height
-// |
-// | Cursor
-// |  row
-// |col+
-// v
-// Height
-struct CursorAndScroll {
-  // equals LineData lines.size() & max.col
-  RowCol size = {0, 0};
-  // cursor in Size rect.
-  RowCol cursor = {0, 0};
-  // scroll origin in Size rect.
-  RowCol scroll = {0, 0};
-  // equals ftxui::Node::box_
-  RowCol view = {0, 0};
-
-  void cursorHome() {
-    // this->visualpos = 0;
-    this->scroll = {0, 0};
-    this->cursor = {0, 0};
-  }
-
-  void _fixCursor() {
-    if (scroll.row + view.row > size.row) {
-      scroll.row = size.row - view.row;
-    }
-    if (scroll.row < 0) {
-      scroll.row = 0;
-    }
-    if (scroll.col + view.col > size.col) {
-      scroll.col = size.col - view.col;
-    }
-    if (scroll.col < 0) {
-      scroll.col = 0;
-    }
-  }
-
-  void restorePosition(const CursorAndScroll &orig) {
-    this->cursor = orig.cursor;
-    this->scroll = orig.scroll;
-    _fixCursor();
-  }
-
-  void scrollMoveRow(int row) {
-    scroll.row += row;
-    _fixCursor();
-  }
-
-  void scrollMoveCol(int col) {
-    scroll.col += col;
-    _fixCursor();
-  }
-};
-
 struct LineLayout : public ftxui::Node {
   LineData data;
+  CursorAndScroll visual;
 
   LineLayout();
-  // LineLayout(int width);
 
   //
   // lines
@@ -131,92 +69,44 @@ struct LineLayout : public ftxui::Node {
   bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
   bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
 
-  CursorAndScroll visual;
-
-  // leftPos
-  // int scrollPos() const;
+  //
+  // data + visual
+  //
   Line *topLine() {
     //
     return &data.lines[visual.scroll.row];
   }
-  // {
-  //   if (_topLine < 0 || _topLine >= (int)data.lines.size()) {
-  //     return nullptr;
-  //   }
-  //   return &data.lines[_topLine];
-  // }
 
-  // cursor position
-private:
-  RowCol _cursor = {0, 0};
-
-public:
-  RowCol cursor() const { return _cursor; }
-  void cursorCol(int col) { _cursor.col = col; }
   int cursorPos() const {
-    if (_cursor.row < data.lines.size()) {
-      auto l = data.lines[_cursor.row];
-      return l.columnPos(_cursor.col);
+    if (visual.cursor.row < data.lines.size()) {
+      auto l = data.lines[visual.cursor.row];
+      return l.columnPos(visual.cursor.col);
     }
-    return _cursor.col;
+    return visual.cursor.col;
   }
   void cursorPos(int pos) {
-    auto l = data.lines[_cursor.row];
-    _cursor.col = l.bytePosToColumn(pos);
+    auto l = data.lines[visual.cursor.row];
+    visual.cursor.col = l.bytePosToColumn(pos);
   }
-  void cursorMoveCol(int col) { _cursor.col += col; }
-  void cursorRow(int row) { _cursor.row = row; }
-  void cursorMoveRow(int row) { _cursor.row += row; }
-  // int currentColumn = 0;
   Line *currentLine() {
-    if (_cursor.row < data.lines.size()) {
-      return &data.lines[_cursor.row];
+    if (visual.cursor.row < data.lines.size()) {
+      return &data.lines[visual.cursor.row];
     }
     return {};
   }
-  // {
-  //   auto _currentLine = _topLine + cursor.row;
-  //   if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
-  //     return nullptr;
-  //   }
-  //   return &data.lines[_currentLine];
-  // }
-
   const Line *currentLine() const {
     //
-    return &data.lines[_cursor.row];
+    return &data.lines[visual.cursor.row];
   }
-  // {
-  //   auto _currentLine = _topLine + cursor.row;
-  //   if (_currentLine < 0 || _currentLine >= (int)data.lines.size()) {
-  //     return nullptr;
-  //   }
-  //   return &data.lines[_currentLine];
-  // }
 
   bool check_url = false;
   void chkURLBuffer();
   void reshape(int width);
-
   void clearBuffer();
 
-  // void cursorUpDown(int n);
-  // void gotoLine(int n);
-  // void cursorUp0(int n);
-  // void cursorUp(int n);
-  // void cursorDown0(int n);
-  // void cursorDown(int n);
-
-  // int columnSkip(int offset);
-  // void cursorRight(int n);
-  // void cursorLeft(int n);
-  // void cursorXY(int x, int y);
-  void nscroll(int n);
-
   //
-  // viewport
+  // anchor
   //
-
   void nextY(int d, int n);
   void nextX(int d, int dy, int n);
   void _prevA(std::optional<Url> baseUrl, int n);
@@ -228,7 +118,6 @@ public:
   int prev_nonnull_line(Line *line);
   int next_nonnull_line(Line *line);
   void _goLine(const char *l, int prec_num);
-  void shiftvisualpos(int shift);
   std::string getCurWord(int *spos, int *epos) const;
   std::string getCurWord() const {
     int s, e;

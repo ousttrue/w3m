@@ -701,7 +701,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_CURRENT_LINE",
                 Sprintf("%ld", buf->layout->linenumber(l))->ptr);
     set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->layout->cursor().col + 1)->ptr);
+                Sprintf("%d", buf->layout->visual.cursor.col + 1)->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -1000,21 +1000,18 @@ void App::onFrame() {
     ldDL(context());
   }
 
-  if (auto a = currentTab()->currentBuffer()->layout->data.submit) {
-    currentTab()->currentBuffer()->layout->data.submit = NULL;
-    currentTab()->currentBuffer()->layout->cursorRow(a->start.line);
-    currentTab()->currentBuffer()->layout->cursorPos(a->start.pos);
-    if (auto buf = currentTab()
-                       ->currentBuffer()
-                       ->followForm(a, true)
-                       ->return_value()
-                       .value()) {
-      pushBuffer(buf, a->target);
+  auto buf = currentTab()->currentBuffer();
+  if (auto a = buf->layout->data.submit) {
+    buf->layout->data.submit = NULL;
+    buf->layout->visual.cursorRow(a->start.line);
+    buf->layout->cursorPos(a->start.pos);
+    if (auto newbuf = buf->followForm(a, true)->return_value().value()) {
+      pushBuffer(newbuf, a->target);
+      buf = newbuf;
     }
   }
 
   // reload
-  auto buf = currentTab()->currentBuffer();
   int width = INIT_BUFFER_WIDTH();
   // if (buf->layout.width == 0)
   //   buf->layout.width = width;
@@ -1116,8 +1113,8 @@ void App::display() {
 
   ftxui::Render(screen, dom());
 
-  auto cursor = CurrentTab->currentBuffer()->layout->root() + layout->cursor() -
-                layout->visual.scroll;
+  auto cursor =
+      buf->layout->root() + layout->visual.cursor - layout->visual.scroll;
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1147,8 +1144,8 @@ ftxui::Element App::dom() {
   auto msg = this->make_lastline_message(buf);
 
   std::stringstream ss;
-  ss << "[cursor]" << buf->layout->cursor().row << ","
-     << buf->layout->cursor().col
+  ss << "[cursor]" << buf->layout->visual.cursor.row << ","
+     << buf->layout->visual.cursor.col
      //
      << "(pos)"
      << buf->layout->cursorPos()
@@ -1443,7 +1440,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
     auto buf = CurrentTab->currentBuffer();
     auto al = buf->layout->data._name->searchAnchor(label);
     if (al) {
-      buf->layout->cursorRow(al->start.line);
+      buf->layout->visual.cursorRow(al->start.line);
       // if (label_topline) {
       //   buf->layout._topLine += buf->layout.cursor.row;
       // }
@@ -1740,7 +1737,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   std::stringstream ss;
   int sl = 0;
   if (displayLineInfo && buf->layout->currentLine()) {
-    int cl = buf->layout->cursor().row;
+    int cl = buf->layout->visual.cursor.row;
     int ll = buf->layout->linenumber(buf->layout->lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;
