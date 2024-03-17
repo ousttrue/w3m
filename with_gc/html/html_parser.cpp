@@ -1305,7 +1305,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         break;
       case HTML_N_TEXTAREA_INT:
         if (n_textarea >= 0) {
-          FormItem *item = a_textarea[n_textarea]->formItem;
+          auto item = a_textarea[n_textarea]->formItem;
           item->init_value = item->value = Strnew(textarea_str[n_textarea]);
         }
         break;

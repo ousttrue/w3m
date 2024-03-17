@@ -19,8 +19,8 @@ struct FormItem;
 struct HtmlTag;
 
 struct Form : public std::enable_shared_from_this<Form> {
-  FormItem *item;
-  FormItem *lastitem;
+  std::shared_ptr<FormItem> item;
+  std::shared_ptr<FormItem> lastitem;
   FormMethod method;
   Str *action;
   const char *target;
@@ -32,12 +32,12 @@ struct Form : public std::enable_shared_from_this<Form> {
   unsigned long length;
 
   ~Form();
-  FormItem *formList_addInput(struct html_feed_environ *h_env,
-                                  HtmlTag *tag);
+  std::shared_ptr<FormItem> formList_addInput(struct html_feed_environ *h_env,
+                                              HtmlTag *tag);
 };
 
 struct FormAnchor : public Anchor {
-  FormItem *formItem;
+  std::shared_ptr<FormItem> formItem;
 
   short y = 0;
   short rows = 0;

@@ -141,7 +141,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
   }
 
   if (auto a = this->layout->retrieveCurrentForm()) {
-    FormItem *fi = a->formItem;
+    auto fi = a->formItem;
     p = Strnew(fi->form2str())->ptr;
     p = html_quote(url_decode0(p));
     Strcat_m_charp(
@@ -404,9 +404,11 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   return buf;
 }
 
-static FormItem *save_submit_formlist(FormItem *src) {
-  if (src == nullptr)
+static std::shared_ptr<FormItem>
+save_submit_formlist(const std::shared_ptr<FormItem> &src) {
+  if (!src) {
     return nullptr;
+  }
   auto srclist = src->parent;
   auto list = std::make_shared<Form>();
   list->method = srclist->method;
@@ -417,9 +419,9 @@ static FormItem *save_submit_formlist(FormItem *src) {
   list->boundary = srclist->boundary;
   list->length = srclist->length;
 
-  FormItem *ret = nullptr;
+  std::shared_ptr<FormItem> ret;
   for (auto srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    auto item = new FormItem();
+    auto item = std::make_shared<FormItem>();
     item->type = srcitem->type;
     item->name = srcitem->name->Strdup();
     item->value = srcitem->value->Strdup();
@@ -468,7 +470,8 @@ static void do_internal(char *action, char *data) {
   }
 }
 
-std::shared_ptr<Buffer> Buffer::do_submit(FormItem *fi, Anchor *a) {
+std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
+                                          Anchor *a) {
   auto form = fi->parent;
   auto tmp2 = form->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
@@ -766,12 +769,12 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
 }
 
 void Buffer::formRecheckRadio(FormAnchor *a) {
-  FormItem *fi = a->formItem;
+  auto fi = a->formItem;
   for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
     auto a2 = &this->layout->data._formitem->anchors[i];
     auto f2 = a2->formItem;
-    if (f2->parent == fi->parent && f2 != fi &&
-        f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
+    if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
+        Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
       this->layout->formUpdateBuffer(a2);
     }

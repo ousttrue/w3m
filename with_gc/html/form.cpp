@@ -13,10 +13,7 @@
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 
-Form::~Form()
-{
-  auto a=0;
-}
+Form::~Form() { auto a = 0; }
 
 struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
                                          const char *charset,
@@ -55,13 +52,13 @@ struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItem *
-Form ::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
+std::shared_ptr<FormItem>
+Form::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
   //   return NULL;
 
-  auto item = new FormItem;
+  auto item = std::make_shared<FormItem>();
   item->type = FORM_UNKNOWN;
   item->size = -1;
   item->rows = 0;
@@ -167,7 +164,7 @@ Str *FormItem::query_from_followform() {
       continue;
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_IMAGE:
-      if (f2 != this || f2->value == nullptr)
+      if (f2.get() != this || f2->value == nullptr)
         continue;
       break;
     case FORM_INPUT_RADIO:
@@ -218,12 +215,12 @@ void FormItem ::query_from_followform_multipart() {
   if (body == nullptr) {
     return;
   }
-  auto form =  this->parent;
+  auto form = this->parent;
   form->body = tmpf->ptr;
-  form->boundary = Sprintf("------------------------------%d%ld%ld%ld",
-                                   App::instance().pid(), form,
-                                   form->body, form->boundary)
-                               ->ptr;
+  form->boundary =
+      Sprintf("------------------------------%d%ld%ld%ld",
+              App::instance().pid(), form, form->body, form->boundary)
+          ->ptr;
 
   // auto query = Strnew();
   for (auto f2 = form->item; f2; f2 = f2->next) {
@@ -238,7 +235,7 @@ void FormItem ::query_from_followform_multipart() {
       continue;
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_IMAGE:
-      if (f2 != this || f2->value == nullptr)
+      if (f2.get() != this || f2->value == nullptr)
         continue;
       break;
     case FORM_INPUT_RADIO:
@@ -272,8 +269,7 @@ void FormItem ::query_from_followform_multipart() {
             form_write_from_file(body, form->boundary, f2->name->ptr,
                                  query->ptr, f2->value->ptr);
           else
-            form_write_data(body, form->boundary, f2->name->ptr,
-                            query->ptr);
+            form_write_data(body, form->boundary, f2->name->ptr, query->ptr);
         }
       }
     }
