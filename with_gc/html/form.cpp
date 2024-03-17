@@ -37,13 +37,11 @@ struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
   }
 
   auto l = std::make_shared<Form>();
-  l->items = l->lastitem = NULL;
   l->action = Strnew_charp(action);
   l->method = m;
   l->enctype = e;
   l->target = target;
   l->name = name;
-  l->nitems = 0;
   l->body = NULL;
   l->length = 0;
   return l;
@@ -101,16 +99,10 @@ Form::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
   }
   item->parent = shared_from_this();
   item->next = NULL;
-  if (!this->items) {
-    this->items = this->lastitem = item;
-  } else {
-    this->lastitem->next = item;
-    this->lastitem = item;
-  }
   if (item->type == FORM_INPUT_HIDDEN) {
     return NULL;
   }
-  this->nitems++;
+  this->items.push_back(item);
   return item;
 }
 
@@ -152,7 +144,7 @@ write_end:
 
 Str *FormItem::query_from_followform() {
   auto query = Strnew();
-  for (auto f2 = this->parent->items; f2; f2 = f2->next) {
+  for (auto &f2 : this->parent->items) {
     if (f2->name == nullptr)
       continue;
     /* <ISINDEX> is translated into single text form */
@@ -223,7 +215,7 @@ void FormItem::query_from_followform_multipart() {
           ->ptr;
 
   // auto query = Strnew();
-  for (auto f2 = form->items; f2; f2 = f2->next) {
+  for (auto &f2 : form->items) {
     if (f2->name == nullptr)
       continue;
     /* <ISINDEX> is translated into single text form */

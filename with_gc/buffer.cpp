@@ -276,7 +276,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
       if (!fa)
         continue;
       // first item
-      auto fi = fa->formItem->parent->items;
+      auto fi = fa->formItem->parent->items.front();
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
           !Strcmp_charp(fi->parent->action, "map") && fi->value) {
         // MapList *ml = searchMapList(buf, fi->value->ptr);
@@ -414,13 +414,12 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
   list->method = srclist->method;
   list->action = srclist->action->Strdup();
   list->enctype = srclist->enctype;
-  list->nitems = srclist->nitems;
   list->body = srclist->body;
   list->boundary = srclist->boundary;
   list->length = srclist->length;
 
   std::shared_ptr<FormItem> ret;
-  for (auto srcitem = srclist->items; srcitem; srcitem = srcitem->next) {
+  for (auto &srcitem : srclist->items) {
     auto item = std::make_shared<FormItem>();
     item->type = srcitem->type;
     item->name = srcitem->name->Strdup();
@@ -434,15 +433,9 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
     item->parent = list;
     item->next = nullptr;
 
-    if (list->lastitem == nullptr) {
-      list->items = list->lastitem = item;
-    } else {
-      list->lastitem->next = item;
-      list->lastitem = item;
-    }
-
-    if (srcitem == src)
+    if (srcitem == src) {
       ret = item;
+    }
   }
 
   return ret;
@@ -564,7 +557,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       this->layout->formUpdateBuffer(a);
       this->layout->data.need_reshape = true;
       auto form = fi->parent;
-      if (fi->accept || form->nitems == 1) {
+      if (fi->accept || form->items.size() == 1) {
         co_return CurrentTab->currentBuffer()->do_submit(fi, a);
       }
     }
