@@ -4,7 +4,7 @@
 #include "html/anchorlist.h"
 #include <memory>
 
-struct FormList;
+struct Form;
 struct Anchor;
 struct FormItemList;
 struct MapList;
@@ -51,13 +51,13 @@ public:
   // shallow copy
   void saveBufferInfo();
   std::shared_ptr<Buffer> loadLink(const char *url, HttpOption option,
-                                   FormList *request);
+                                   Form *request);
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> cmd_loadURL(const char *url,
                                       std::optional<Url> current,
                                       const HttpOption &option,
-                                      FormList *request);
+                                      Form *request);
   std::shared_ptr<Buffer> goURL0(const char *url, const char *prompt,
                                  bool relative);
   std::shared_ptr<Buffer> sourceBuffer();

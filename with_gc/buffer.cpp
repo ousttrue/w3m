@@ -373,7 +373,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
 }
 
 std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
-                                         FormList *request) {
+                                         Form *request) {
   App::instance().message(Sprintf("loading %s", url)->ptr);
   // refresh(term_io());
 
@@ -405,8 +405,8 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
 }
 
 static FormItemList *save_submit_formlist(FormItemList *src) {
-  FormList *list;
-  FormList *srclist;
+  Form *list;
+  Form *srclist;
   FormItemList *srcitem;
   FormItemList *item;
   FormItemList *ret = nullptr;
@@ -414,7 +414,7 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   if (src == nullptr)
     return nullptr;
   srclist = src->parent;
-  list = (FormList *)New(FormList);
+  list = (Form *)New(Form);
   list->method = srclist->method;
   list->action = srclist->action->Strdup();
   list->enctype = srclist->enctype;
@@ -698,7 +698,7 @@ Buffer::followAnchor(bool check_target) {
 std::shared_ptr<Buffer> Buffer::cmd_loadURL(const char *url,
                                             std::optional<Url> current,
                                             const HttpOption &option,
-                                            FormList *request) {
+                                            Form *request) {
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;

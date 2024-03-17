@@ -10,7 +10,7 @@ extern bool close_tab_back;
 extern int TabCols;
 
 struct Buffer;
-struct FormList;
+struct Form;
 struct FormItemList;
 struct Anchor;
 struct HttpOption;

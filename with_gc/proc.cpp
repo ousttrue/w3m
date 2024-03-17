@@ -1315,7 +1315,7 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
   *sbuf = *CurrentTab->currentBuffer();
 
   bool multipart = false;
-  FormList *request;
+  Form *request;
   if (CurrentTab->currentBuffer()->layout->data.form_submit) {
     request = CurrentTab->currentBuffer()->layout->data.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&

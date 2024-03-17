@@ -16,7 +16,8 @@ enum FormEncoding {
 
 struct FormItemList;
 struct HtmlTag;
-struct FormList {
+
+struct Form {
   FormItemList *item;
   FormItemList *lastitem;
   FormMethod method;
@@ -24,7 +25,7 @@ struct FormList {
   const char *target;
   const char *name;
   FormEncoding enctype;
-  FormList *next;
+  Form *next;
   int nitems;
   char *body;
   char *boundary;
@@ -41,8 +42,8 @@ struct FormAnchor : public Anchor {
   short rows = 0;
 };
 
-FormList *newFormList(const char *action, const char *method,
+Form *newFormList(const char *action, const char *method,
                       const char *charset, const char *enctype,
-                      const char *target, const char *name, FormList *_next);
+                      const char *target, const char *name, Form *_next);
 
 Str *Str_form_quote(Str *x);

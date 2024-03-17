@@ -9,11 +9,11 @@ extern bool UseExternalDirBuffer;
 extern std::string DirBufferCommand;
 
 struct Url;
-struct FormList;
+struct Form;
 struct HttpOption;
 struct HttpResponse;
 
 std::shared_ptr<HttpResponse> loadGeneralFile(const std::string &path,
                                               std::optional<Url> current,
                                               const HttpOption &option,
-                                              FormList *request = {});
+                                              Form *request = {});

@@ -13,10 +13,10 @@
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 
-struct FormList *newFormList(const char *action, const char *method,
+struct Form *newFormList(const char *action, const char *method,
                              const char *charset, const char *enctype,
                              const char *target, const char *name,
-                             FormList *_next) {
+                             Form *_next) {
 
   FormMethod m = FORM_METHOD_GET;
   if (method == NULL || !strcasecmp(method, "get"))
@@ -33,7 +33,7 @@ struct FormList *newFormList(const char *action, const char *method,
     e = FORM_ENCTYPE_MULTIPART;
   }
 
-  auto l = (FormList *)New(FormList);
+  auto l = (Form *)New(Form);
   l->item = l->lastitem = NULL;
   l->action = Strnew_charp(action);
   l->method = m;
@@ -50,7 +50,7 @@ struct FormList *newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *FormList ::formList_addInput(html_feed_environ *h_env,
+FormItemList *Form ::formList_addInput(html_feed_environ *h_env,
                                            struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)

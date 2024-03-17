@@ -1152,7 +1152,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         a_img = nullptr;
         break;
       case HTML_INPUT_ALT: {
-        FormList *form;
+        Form *form;
         int top = 0, bottom = 0;
         int textareanumber = -1;
         auto hseq = 0;

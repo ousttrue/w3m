@@ -14,7 +14,7 @@ std::string DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 std::shared_ptr<HttpResponse> loadGeneralFile(const std::string &path,
                                               std::optional<Url> current,
                                               const HttpOption &option,
-                                              FormList *request) {
+                                              Form *request) {
   auto res = std::make_shared<HttpResponse>();
 
   auto [hr, stream] = openURL(path, current, option, request);

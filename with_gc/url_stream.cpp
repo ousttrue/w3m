@@ -47,7 +47,7 @@ bool LocalhostOnly = false;
 
 class input_stream;
 struct Url;
-struct FormList;
+struct Form;
 struct TextList;
 struct HttpRequest;
 struct HttpOption;
@@ -71,7 +71,7 @@ struct UrlStream {
   std::shared_ptr<HttpRequest> openURL(const std::string &url,
                                        std::optional<Url> current,
                                        const HttpOption &option,
-                                       FormList *request);
+                                       Form *request);
 
 private:
   void openFile(const std::string &path);
@@ -79,9 +79,9 @@ private:
   int doFileSave(const char *defstr);
 
   void openHttp(const std::shared_ptr<HttpRequest> &hr,
-                const HttpOption &option, FormList *request);
+                const HttpOption &option, Form *request);
   void openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
-                    const HttpOption &option, FormList *request);
+                    const HttpOption &option, Form *request);
   void openData(const Url &pu);
   void add_index_file(Url *pu);
 };
@@ -180,7 +180,7 @@ static void write_from_file(int sock, char *file) {
 }
 
 void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
-                             const HttpOption &option, FormList *request) {
+                             const HttpOption &option, Form *request) {
   if (request && request->body) {
     /* local CGI: POST */
     this->stream =
@@ -407,7 +407,7 @@ error:
 
 void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
 
-                         const HttpOption &option, FormList *request) {
+                         const HttpOption &option, Form *request) {
   hr->status = HTST_NORMAL;
   int sock = -1;
   Str *tmp = nullptr;
@@ -522,7 +522,7 @@ void UrlStream::openData(const Url &url) {
 std::shared_ptr<HttpRequest> UrlStream::openURL(const std::string &path,
                                                 std::optional<Url> current,
                                                 const HttpOption &option,
-                                                FormList *request) {
+                                                Form *request) {
   // auto u = path;
   // auto current_schema = parseUrlSchema(&u);
   // if (!current && current_schema == SCM_MISSING && !ArgvIsURL) {
@@ -866,7 +866,7 @@ int UrlStream::doFileSave(const char *defstr) {
 
 std::tuple<std::shared_ptr<HttpRequest>, std::shared_ptr<input_stream>>
 openURL(const std::string &url, std::optional<Url> current,
-        const HttpOption &option, FormList *request) {
+        const HttpOption &option, Form *request) {
   UrlStream f(SCM_UNKNOWN);
   auto res = f.openURL(url, current, option, request);
   return {res, f.stream};

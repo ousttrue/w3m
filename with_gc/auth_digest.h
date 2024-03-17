@@ -3,7 +3,7 @@
 struct Str;
 struct Url;
 struct HttpRequest;
-struct FormList;
+struct Form;
 Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
-                    HttpRequest *hr, FormList *request);
+                    HttpRequest *hr, Form *request);
 

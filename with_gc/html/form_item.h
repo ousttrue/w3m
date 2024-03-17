@@ -19,7 +19,7 @@ enum FormItemType {
 FormItemType formtype(const char *typestr);
 
 struct Str;
-struct FormList;
+struct Form;
 struct FormItemList {
   FormItemType type;
   Str *name;
@@ -32,7 +32,7 @@ struct FormItemList {
   int rows;
   int maxlength;
   int readonly;
-  FormList *parent;
+  Form *parent;
   FormItemList *next;
 
   Str *query_from_followform();

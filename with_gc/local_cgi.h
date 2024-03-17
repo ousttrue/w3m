@@ -27,9 +27,9 @@ extern std::string cgi_bin;
 void set_environ(const char *var, const char *value);
 struct Str;
 Str *localCookie(void);
-struct FormList;
+struct Form;
 
 struct HttpOption;
-FILE *localcgi_post(const char *uri, const char *qstr, FormList *request,
+FILE *localcgi_post(const char *uri, const char *qstr, Form *request,
                     const HttpOption &option);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))

@@ -8,7 +8,7 @@
 
 struct Str;
 struct Url;
-struct FormList;
+struct Form;
 
 extern bool override_user_agent;
 extern std::string UserAgent;
@@ -61,7 +61,7 @@ struct HttpRequest {
   HttpMethod method = {};
   HttpRequestFlags flag = {};
   HttpOption option = {};
-  FormList *request = {};
+  Form *request = {};
 
   Str *uname = NULL;
   Str *pwd = NULL;
@@ -71,7 +71,7 @@ struct HttpRequest {
   std::list<std::string> extra_headers;
 
   HttpRequest(const Url &url, std::optional<Url> &current,
-              const HttpOption option, FormList *request)
+              const HttpOption option, Form *request)
       : url(url), current(current), option(option), request(request) {}
   Str *getRequestURI() const;
   Str *to_Str() const;

@@ -27,7 +27,7 @@ struct LineData {
   std::shared_ptr<AnchorList<FormAnchor>> _formitem;
   std::shared_ptr<HmarkerList> _hmarklist;
   struct LinkList *linklist = nullptr;
-  std::vector<FormList *> formlist;
+  std::vector<Form *> formlist;
   struct FormItemList *form_submit = nullptr;
   struct FormAnchor *submit = nullptr;
 
@@ -51,7 +51,7 @@ struct LineData {
 
   Anchor *registerName(const char *url, int line, int pos);
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
-  FormAnchor *registerForm(struct html_feed_environ *h_env, FormList *flist,
+  FormAnchor *registerForm(struct html_feed_environ *h_env, Form *flist,
                            HtmlTag *tag, int line, int pos);
   void addMultirowsForm();
   void reseq_anchor();
