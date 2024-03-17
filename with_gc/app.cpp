@@ -1026,7 +1026,8 @@ void App::onFrame() {
 
       auto sbuf = buf->layout;
       if (buf->res->is_html_type()) {
-        loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(), buf->layout, buf->res.get(), body);
+        loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(), buf->layout,
+                       buf->res.get(), body);
       } else {
         loadBuffer(buf->layout, buf->res.get(), body);
       }
@@ -1141,7 +1142,7 @@ void App::display() {
 
 ftxui::Element App::dom() {
   auto buf = currentTab()->currentBuffer();
-  auto msg = this->make_lastline_message(buf);
+  auto msg = _message;
 
   std::stringstream ss;
   ss << buf->layout->visual;
@@ -1440,14 +1441,14 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   }
 }
 
-void App::message(const char *s) {
+void App::message(const std::string &s) {
   _message = s;
   if (!_fmInitialized) {
     // RowCol pos{.row = LASTLINE(), .col = 0};
     // pos = _content->addnstr(pos, s, COLS() - 1);
     // _content->clrtoeolx(pos);
     // this->cursor(cursor);
-    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, "%s\n", s.c_str());
   }
 }
 
@@ -1700,61 +1701,62 @@ std::string App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
   return s.str();
 }
 
-std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
-
-  std::string s;
-  if (displayLink) {
-
-    Anchor *a = buf->layout->retrieveCurrentAnchor();
-    std::string p;
-    if (a && a->title.size())
-      p = a->title;
-    else {
-      auto a_img = buf->layout->retrieveCurrentImg();
-      if (a_img && a_img->title.size())
-        p = a_img->title;
-    }
-
-    if (p.size() || a)
-      s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() : NULL);
-
-    if (s.size()) {
-      auto sl = get_strwidth(s.c_str());
-      if (sl >= this->COLS() - 3)
-        return s;
-    }
-  }
-
-  std::stringstream ss;
-  int sl = 0;
-  if (displayLineInfo && buf->layout->currentLine()) {
-    int cl = buf->layout->visual.cursor().row;
-    int ll = buf->layout->linenumber(buf->layout->lastLine());
-    int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
-    ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;
-  } else {
-    ss << "Viewing";
-  }
-
-  if (buf->res->ssl_certificate) {
-    ss << "[SSL]";
-  }
-
-  ss << " <" << buf->layout->data.title;
-
-  auto msg = ss.str();
-  if (s.size()) {
-    int l = this->COLS() - 3 - sl;
-    if (get_strwidth(msg.c_str()) > l) {
-      msg = msg.substr(0, l);
-    }
-    msg += "> ";
-    msg += s;
-  } else {
-    msg += ">";
-  }
-
-  ss << "::" << _message;
-
-  return msg;
-}
+// std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
+//
+//   std::string s;
+//   if (displayLink) {
+//
+//     Anchor *a = buf->layout->retrieveCurrentAnchor();
+//     std::string p;
+//     if (a && a->title.size())
+//       p = a->title;
+//     else {
+//       auto a_img = buf->layout->retrieveCurrentImg();
+//       if (a_img && a_img->title.size())
+//         p = a_img->title;
+//     }
+//
+//     if (p.size() || a)
+//       s = this->make_lastline_link(buf, p.c_str(), a ? a->url.c_str() :
+//       NULL);
+//
+//     if (s.size()) {
+//       auto sl = get_strwidth(s.c_str());
+//       if (sl >= this->COLS() - 3)
+//         return s;
+//     }
+//   }
+//
+//   std::stringstream ss;
+//   int sl = 0;
+//   if (displayLineInfo && buf->layout->currentLine()) {
+//     int cl = buf->layout->visual.cursor().row;
+//     int ll = buf->layout->linenumber(buf->layout->lastLine());
+//     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
+//     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;
+//   } else {
+//     ss << "Viewing";
+//   }
+//
+//   if (buf->res->ssl_certificate) {
+//     ss << "[SSL]";
+//   }
+//
+//   ss << " <" << buf->layout->data.title;
+//
+//   auto msg = ss.str();
+//   if (s.size()) {
+//     int l = this->COLS() - 3 - sl;
+//     if (get_strwidth(msg.c_str()) > l) {
+//       msg = msg.substr(0, l);
+//     }
+//     msg += "> ";
+//     msg += s;
+//   } else {
+//     msg += ">";
+//   }
+//
+//   ss << "::" << _message;
+//
+//   return msg;
+// }

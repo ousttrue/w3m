@@ -31,17 +31,16 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-LineInput::LineInput(const std::shared_ptr<LineLayout> &screen, const char *prompt,
-                     const std::shared_ptr<Hist> &hist, const OnInput &_onInput,
-                     IncFunc incrfunc)
-    : _screen(screen), prompt(prompt), incrfunc(incrfunc), onInput(_onInput) {
-  opos = get_strwidth(prompt);
-  epos = (_screen->COLS() - 2) - opos;
-  if (epos < 0) {
-    epos = 0;
-  }
-  lpos = epos / 3;
-  rpos = epos * 2 / 3;
+LineInput::LineInput(const char *prompt, const std::shared_ptr<Hist> &hist,
+                     const OnInput &_onInput, IncFunc incrfunc)
+    : prompt(prompt), incrfunc(incrfunc), onInput(_onInput) {
+  // opos = get_strwidth(prompt);
+  // epos = (_screen->COLS() - 2) - opos;
+  // if (epos < 0) {
+  //   epos = 0;
+  // }
+  // lpos = epos / 3;
+  // rpos = epos * 2 / 3;
 
   CurrentHist = hist;
   if (hist) {
@@ -91,13 +90,12 @@ LineInput::LineInput(const std::shared_ptr<LineLayout> &screen, const char *prom
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputLineHistSearch(const std::shared_ptr<LineLayout> &screen,
-                               const char *prompt, const char *def_str,
+LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
                                const std::shared_ptr<Hist> &hist,
                                InputFlags flag, IncFunc incrfunc) {
 
-  auto input = std::shared_ptr<LineInput>(
-      new LineInput(screen, prompt, hist, {}, incrfunc));
+  auto input =
+      std::shared_ptr<LineInput>(new LineInput(prompt, hist, {}, incrfunc));
 
   input->flag = flag;
   if (flag & IN_URL) {
@@ -144,7 +142,7 @@ void LineInput::onBreak() {
   }
 
   // _screen->print();
-  App::instance().cursor({.row = _screen->LASTLINE(), .col = 0});
+  // App::instance().cursor({.row = _screen->LASTLINE(), .col = 0});
   auto p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
@@ -176,12 +174,13 @@ void LineInput::draw() {
     else
       offset = 0;
   }
-  _screen->addstr(
-      {
-          .row = _screen->LASTLINE(),
-          .col = 0,
-      },
-      prompt.c_str());
+  // _screen->addstr(
+  //     {
+  //         .row = _screen->LASTLINE(),
+  //         .col = 0,
+  //     },
+  //     prompt.c_str());
+  App::instance().message(prompt + strBuf->ptr);
   if (is_passwd) {
     // TODO
     assert(false);
@@ -189,10 +188,10 @@ void LineInput::draw() {
   } else {
     // addStr(strBuf->ptr, strProp, CLen, offset, _screen->COLS() - opos);
   }
-  RowCol pos = {.row = _screen->LASTLINE(), .col = opos + x - offset};
-  _screen->clrtoeolx(pos);
+  // RowCol pos = {.row = _screen->LASTLINE(), .col = opos + x - offset};
+  // _screen->clrtoeolx(pos);
   // _screen->print();
-  App::instance().cursor(pos);
+  // App::instance().cursor(pos);
 }
 
 bool LineInput::dispatch(const char *buf, int len) {
@@ -535,15 +534,15 @@ void LineInput::next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  if (_screen->LASTLINE() >= 3) {
-    comment = true;
-    nline = _screen->LASTLINE() - 2;
-  } else if (_screen->LASTLINE()) {
-    comment = false;
-    nline = _screen->LASTLINE();
-  } else {
-    return;
-  }
+  // if (_screen->LASTLINE() >= 3) {
+  //   comment = true;
+  //   nline = _screen->LASTLINE() - 2;
+  // } else if (_screen->LASTLINE()) {
+  //   comment = false;
+  //   nline = _screen->LASTLINE();
+  // } else {
+  return;
+  // }
 
   if (cm_disp_next >= 0) {
     if (next == 1) {
@@ -585,10 +584,10 @@ void LineInput::next_dcompl(int next) {
     if (len < n)
       len = n;
   }
-  if (len > 0 && _screen->COLS() > static_cast<int>(len))
-    col = _screen->COLS() / len;
-  else
-    col = 1;
+  // if (len > 0 && _screen->COLS() > static_cast<int>(len))
+  //   col = _screen->COLS() / len;
+  // else
+  //   col = 1;
   row = (NCFileBuf + col - 1) / col;
 
 disp_next:
@@ -605,42 +604,43 @@ disp_next:
     } else
       y = nline - row - 1;
   }
-  if (y) {
-    _screen->clrtoeolx({.row = y - 1, .col = 0});
-  }
-  if (comment) {
-    _screen->clrtoeolx({.row = y, .col = 0});
-    _screen->bold();
-    _screen->addstr({.row = y, .col = 0}, "----- Completion list -----");
-    _screen->boldend();
-    y++;
-  }
-  for (i = 0; i < row; i++) {
-    for (j = 0; j < col; j++) {
-      auto n = cm_disp_next + j * row + i;
-      if (n >= NCFileBuf)
-        break;
-      RowCol pos{.row = y, .col = (int)(j * len)};
-      _screen->clrtoeolx(pos);
-      f = d->Strdup();
-      Strcat_charp(f, CFileBuf[n]);
-      _screen->addstr(pos, CFileBuf[n]);
-      if (stat(expandPath(f->ptr).c_str(), &st) != -1 && S_ISDIR(st.st_mode)) {
-        // _screen->addstr("/");
-      }
-    }
-    y++;
-  }
-  if (comment && y == _screen->LASTLINE() - 1) {
-    RowCol pos{.row = y, .col = 0};
-    _screen->clrtoeolx(pos);
-    _screen->bold();
-    if (emacs_like_lineedit)
-      _screen->addstr(pos, "----- Press TAB to continue -----");
-    else
-      _screen->addstr(pos, "----- Press CTRL-D to continue -----");
-    _screen->boldend();
-  }
+  // if (y) {
+  //   _screen->clrtoeolx({.row = y - 1, .col = 0});
+  // }
+  // if (comment) {
+  //   _screen->clrtoeolx({.row = y, .col = 0});
+  //   _screen->bold();
+  //   _screen->addstr({.row = y, .col = 0}, "----- Completion list -----");
+  //   _screen->boldend();
+  //   y++;
+  // }
+  // for (i = 0; i < row; i++) {
+  //   for (j = 0; j < col; j++) {
+  //     auto n = cm_disp_next + j * row + i;
+  //     if (n >= NCFileBuf)
+  //       break;
+  //     RowCol pos{.row = y, .col = (int)(j * len)};
+  //     _screen->clrtoeolx(pos);
+  //     f = d->Strdup();
+  //     Strcat_charp(f, CFileBuf[n]);
+  //     _screen->addstr(pos, CFileBuf[n]);
+  //     if (stat(expandPath(f->ptr).c_str(), &st) != -1 && S_ISDIR(st.st_mode))
+  //     {
+  //       // _screen->addstr("/");
+  //     }
+  //   }
+  //   y++;
+  // }
+  // if (comment && y == _screen->LASTLINE() - 1) {
+  //   RowCol pos{.row = y, .col = 0};
+  //   _screen->clrtoeolx(pos);
+  //   _screen->bold();
+  //   if (emacs_like_lineedit)
+  //     _screen->addstr(pos, "----- Press TAB to continue -----");
+  //   else
+  //     _screen->addstr(pos, "----- Press CTRL-D to continue -----");
+  //   _screen->boldend();
+  // }
 }
 
 static Str *escape_spaces(Str *s) {
@@ -873,8 +873,7 @@ void LineInput::_editor(char) {
   CLen = CPos = setStrType(strBuf, strProp);
 }
 
-std::shared_ptr<LineInput>
-LineInput::inputAnswer(const std::shared_ptr<LineLayout> &screen) {
+std::shared_ptr<LineInput> LineInput::inputAnswer() {
   if (IsForkChild) {
     // onInput("n");
     return {};
@@ -888,5 +887,5 @@ LineInput::inputAnswer(const std::shared_ptr<LineLayout> &screen) {
   // }
   // term_raw();
 
-  return inputChar(screen, "(y/n)?");
+  return inputChar("(y/n)?");
 }

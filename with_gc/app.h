@@ -169,7 +169,7 @@ public:
 
   std::list<std::string> message_list;
   char *delayed_msg = NULL;
-  void message(const char *s);
+  void message(const std::string &s);
   void record_err_message(const char *s);
   std::shared_ptr<Buffer> message_list_panel(int width);
   void disp_err_message(const char *s);
@@ -183,7 +183,7 @@ public:
                     long long current_content_length);
   std::string make_lastline_link(const std::shared_ptr<Buffer> &buf,
                                  const char *title, const char *url);
-  std::string make_lastline_message(const std::shared_ptr<Buffer> &buf);
+  // std::string make_lastline_message(const std::shared_ptr<Buffer> &buf);
 };
 #define CurrentTab App::instance().currentTab()
 

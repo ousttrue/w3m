@@ -191,7 +191,8 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
   }
 }
 
-std::shared_ptr<Buffer> link_list_panel(int width, const std::shared_ptr<Buffer> &buf) {
+std::shared_ptr<Buffer> link_list_panel(int width,
+                                        const std::shared_ptr<Buffer> &buf) {
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
@@ -536,11 +537,6 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
 
 std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>
 Buffer::followForm(FormAnchor *a, bool submit) {
-  // if (!currentBuffer()->layout.firstLine) {
-  //   return {};
-  // }
-
-  // auto a = currentBuffer()->layout.retrieveCurrentForm();
   if (!a) {
     co_return {};
   }
@@ -556,7 +552,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       co_return {};
     }
     auto input = LineInput::inputStrHist(
-        layout, "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist);
+        "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist);
     input->draw();
     App::instance().pushDispatcher(
         [input](const char *buf, size_t len) -> bool {
@@ -567,6 +563,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     if (p.size()) {
       fi->value = Strnew(p);
       this->layout->formUpdateBuffer(a);
+      this->layout->data.need_reshape = true;
       if (fi->accept || fi->parent->nitems == 1) {
         co_return CurrentTab->currentBuffer()->do_submit(fi, a);
       }
@@ -675,10 +672,6 @@ Buffer::followForm(FormAnchor *a, bool submit) {
 
 std::shared_ptr<CoroutineState<std::tuple<Anchor *, std::shared_ptr<Buffer>>>>
 Buffer::followAnchor(bool check_target) {
-  if (this->layout->empty()) {
-    co_return {};
-  }
-
   if (auto a = this->layout->retrieveCurrentAnchor()) {
     if (a->url.size() && a->url[0] == '#') { /* index within this buffer */
       co_return {a, this->gotoLabel(a->url.substr(1))};
