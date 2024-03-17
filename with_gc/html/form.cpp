@@ -37,7 +37,7 @@ struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
   }
 
   auto l = std::make_shared<Form>();
-  l->item = l->lastitem = NULL;
+  l->items = l->lastitem = NULL;
   l->action = Strnew_charp(action);
   l->method = m;
   l->enctype = e;
@@ -101,8 +101,8 @@ Form::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
   }
   item->parent = shared_from_this();
   item->next = NULL;
-  if (!this->item) {
-    this->item = this->lastitem = item;
+  if (!this->items) {
+    this->items = this->lastitem = item;
   } else {
     this->lastitem->next = item;
     this->lastitem = item;
@@ -152,7 +152,7 @@ write_end:
 
 Str *FormItem::query_from_followform() {
   auto query = Strnew();
-  for (auto f2 = this->parent->item; f2; f2 = f2->next) {
+  for (auto f2 = this->parent->items; f2; f2 = f2->next) {
     if (f2->name == nullptr)
       continue;
     /* <ISINDEX> is translated into single text form */
@@ -209,7 +209,7 @@ Str *FormItem::query_from_followform() {
   return query;
 }
 
-void FormItem ::query_from_followform_multipart() {
+void FormItem::query_from_followform_multipart() {
   auto tmpf = Strnew(App::instance().tmpfname(TMPF_DFL, {}));
   auto body = fopen(tmpf->ptr, "w");
   if (body == nullptr) {
@@ -219,11 +219,11 @@ void FormItem ::query_from_followform_multipart() {
   form->body = tmpf->ptr;
   form->boundary =
       Sprintf("------------------------------%d%ld%ld%ld",
-              App::instance().pid(), form, form->body, form->boundary)
+              App::instance().pid(), form.get(), form->body, form->boundary)
           ->ptr;
 
   // auto query = Strnew();
-  for (auto f2 = form->item; f2; f2 = f2->next) {
+  for (auto f2 = form->items; f2; f2 = f2->next) {
     if (f2->name == nullptr)
       continue;
     /* <ISINDEX> is translated into single text form */

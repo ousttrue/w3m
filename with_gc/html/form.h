@@ -19,7 +19,7 @@ struct FormItem;
 struct HtmlTag;
 
 struct Form : public std::enable_shared_from_this<Form> {
-  std::shared_ptr<FormItem> item;
+  std::shared_ptr<FormItem> items;
   std::shared_ptr<FormItem> lastitem;
   FormMethod method;
   Str *action;

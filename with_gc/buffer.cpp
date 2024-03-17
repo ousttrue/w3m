@@ -275,8 +275,8 @@ std::shared_ptr<Buffer> link_list_panel(int width,
                                                             a->start.pos);
       if (!fa)
         continue;
-      auto fi = fa->formItem;
-      fi = fi->parent->item;
+      // first item
+      auto fi = fa->formItem->parent->items;
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
           !Strcmp_charp(fi->parent->action, "map") && fi->value) {
         // MapList *ml = searchMapList(buf, fi->value->ptr);
@@ -420,7 +420,7 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
   list->length = srclist->length;
 
   std::shared_ptr<FormItem> ret;
-  for (auto srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
+  for (auto srcitem = srclist->items; srcitem; srcitem = srcitem->next) {
     auto item = std::make_shared<FormItem>();
     item->type = srcitem->type;
     item->name = srcitem->name->Strdup();
@@ -435,7 +435,7 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
     item->next = nullptr;
 
     if (list->lastitem == nullptr) {
-      list->item = list->lastitem = item;
+      list->items = list->lastitem = item;
     } else {
       list->lastitem->next = item;
       list->lastitem = item;
