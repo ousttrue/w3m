@@ -980,11 +980,6 @@ void HtmlParser::render(HttpResponse *res, html_feed_environ *h_env,
     renderLine(res, h_env, data, nlines, str);
   }
 
-  for (int form_id = 1; form_id < (int)forms.size(); form_id++) {
-    if (forms[form_id]) {
-      forms[form_id]->next = forms[form_id - 1];
-    }
-  }
   data->formlist = forms;
   if (n_textarea) {
     data->addMultirowsForm();
@@ -1152,7 +1147,6 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         a_img = nullptr;
         break;
       case HTML_INPUT_ALT: {
-        Form *form;
         int top = 0, bottom = 0;
         int textareanumber = -1;
         auto hseq = 0;
@@ -1166,7 +1160,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
             forms[form_id] == nullptr) {
           break; /* outside of <form>..</form> */
         }
-        form = forms[form_id];
+        auto form = forms[form_id];
         if (hseq > 0) {
           int hpos = line.len();
           if (*str == '[')

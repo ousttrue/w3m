@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <string>
+#include <memory>
 #include <sys/types.h>
 
 extern std::string document_root;
@@ -30,6 +31,7 @@ Str *localCookie(void);
 struct Form;
 
 struct HttpOption;
-FILE *localcgi_post(const char *uri, const char *qstr, Form *request,
+FILE *localcgi_post(const char *uri, const char *qstr,
+                    const std::shared_ptr<Form> &request,
                     const HttpOption &option);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))

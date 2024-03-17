@@ -1,6 +1,7 @@
 #pragma once
 #include "Str.h"
-#include "anchorlist.h"
+#include "anchor.h"
+#include <memory>
 
 enum FormMethod {
   FORM_METHOD_GET = 0,
@@ -17,7 +18,7 @@ enum FormEncoding {
 struct FormItemList;
 struct HtmlTag;
 
-struct Form {
+struct Form : public std::enable_shared_from_this<Form> {
   FormItemList *item;
   FormItemList *lastitem;
   FormMethod method;
@@ -25,12 +26,12 @@ struct Form {
   const char *target;
   const char *name;
   FormEncoding enctype;
-  Form *next;
   int nitems;
   char *body;
   char *boundary;
   unsigned long length;
 
+  ~Form();
   FormItemList *formList_addInput(struct html_feed_environ *h_env,
                                   HtmlTag *tag);
 };
@@ -42,8 +43,9 @@ struct FormAnchor : public Anchor {
   short rows = 0;
 };
 
-Form *newFormList(const char *action, const char *method,
-                      const char *charset, const char *enctype,
-                      const char *target, const char *name, Form *_next);
+std::shared_ptr<Form> newFormList(const char *action, const char *method,
+                                  const char *charset, const char *enctype,
+                                  const char *target, const char *name,
+                                  Form *_next);
 
 Str *Str_form_quote(Str *x);

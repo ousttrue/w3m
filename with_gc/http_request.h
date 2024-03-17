@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 #include <optional>
+#include <memory>
 
 struct Str;
 struct Url;
@@ -61,7 +62,7 @@ struct HttpRequest {
   HttpMethod method = {};
   HttpRequestFlags flag = {};
   HttpOption option = {};
-  Form *request = {};
+  std::shared_ptr<Form> request = {};
 
   Str *uname = NULL;
   Str *pwd = NULL;
@@ -71,7 +72,7 @@ struct HttpRequest {
   std::list<std::string> extra_headers;
 
   HttpRequest(const Url &url, std::optional<Url> &current,
-              const HttpOption option, Form *request)
+              const HttpOption option, const std::shared_ptr<Form> &request)
       : url(url), current(current), option(option), request(request) {}
   Str *getRequestURI() const;
   Str *to_Str() const;

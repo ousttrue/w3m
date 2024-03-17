@@ -82,7 +82,7 @@ public:
 
 private:
   // form
-  std::vector<struct Form *> forms;
+  std::vector<std::shared_ptr<struct Form>> forms;
   std::vector<int> form_stack;
   int forms_size = 0;
   int form_sp = -1;

@@ -51,13 +51,13 @@ public:
   // shallow copy
   void saveBufferInfo();
   std::shared_ptr<Buffer> loadLink(const char *url, HttpOption option,
-                                   Form *request);
+                                   const std::shared_ptr<Form> &request);
   std::shared_ptr<Buffer> do_submit(FormItemList *fi, Anchor *a);
   std::shared_ptr<Buffer> gotoLabel(std::string_view label);
   std::shared_ptr<Buffer> cmd_loadURL(const char *url,
                                       std::optional<Url> current,
                                       const HttpOption &option,
-                                      Form *request);
+                                      const std::shared_ptr<Form> &form);
   std::shared_ptr<Buffer> goURL0(const char *url, const char *prompt,
                                  bool relative);
   std::shared_ptr<Buffer> sourceBuffer();
@@ -69,4 +69,5 @@ public:
   void formRecheckRadio(FormAnchor *a);
 };
 
-std::shared_ptr<Buffer> link_list_panel(int width, const std::shared_ptr<Buffer> &buf);
+std::shared_ptr<Buffer> link_list_panel(int width,
+                                        const std::shared_ptr<Buffer> &buf);

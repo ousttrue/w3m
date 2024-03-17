@@ -373,7 +373,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
 }
 
 std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
-                                         Form *request) {
+                                         const std::shared_ptr<Form> &request) {
   App::instance().message(Sprintf("loading %s", url)->ptr);
   // refresh(term_io());
 
@@ -405,16 +405,10 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
 }
 
 static FormItemList *save_submit_formlist(FormItemList *src) {
-  Form *list;
-  Form *srclist;
-  FormItemList *srcitem;
-  FormItemList *item;
-  FormItemList *ret = nullptr;
-
   if (src == nullptr)
     return nullptr;
-  srclist = src->parent;
-  list = (Form *)New(Form);
+  auto srclist = src->parent;
+  auto list = std::make_shared<Form>();
   list->method = srclist->method;
   list->action = srclist->action->Strdup();
   list->enctype = srclist->enctype;
@@ -423,8 +417,9 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   list->boundary = srclist->boundary;
   list->length = srclist->length;
 
-  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    item = (FormItemList *)New(FormItemList);
+  FormItemList *ret = nullptr;
+  for (auto srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
+    auto item = new FormItemList();
     item->type = srcitem->type;
     item->name = srcitem->name->Strdup();
     item->value = srcitem->value->Strdup();
@@ -474,7 +469,8 @@ static void do_internal(char *action, char *data) {
 }
 
 std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
-  auto tmp2 = fi->parent->action->Strdup();
+  auto form = fi->parent;
+  auto tmp2 = form->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
     /* It means "current URL" */
     tmp2 = Strnew(this->res->currentURL.to_Str());
@@ -483,7 +479,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
       Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
   }
 
-  if (fi->parent->method == FORM_METHOD_GET) {
+  if (form->method == FORM_METHOD_GET) {
     auto tmp = fi->query_from_followform();
     char *p;
     if ((p = strchr(tmp2->ptr, '?')) != nullptr)
@@ -498,20 +494,20 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
     // if (buf) {
     //   App::instance().pushBuffer(buf);
     // }
-  } else if (fi->parent->method == FORM_METHOD_POST) {
-    if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
+  } else if (form->method == FORM_METHOD_POST) {
+    if (form->enctype == FORM_ENCTYPE_MULTIPART) {
       fi->query_from_followform_multipart();
       struct stat st;
-      stat(fi->parent->body, &st);
-      fi->parent->length = st.st_size;
+      stat(form->body, &st);
+      form->length = st.st_size;
     } else {
       auto tmp = fi->query_from_followform();
-      fi->parent->body = tmp->ptr;
-      fi->parent->length = tmp->length;
+      form->body = tmp->ptr;
+      form->length = tmp->length;
     }
-    auto buf = this->loadLink(tmp2->ptr, {}, fi->parent);
-    if (fi->parent->enctype == FORM_ENCTYPE_MULTIPART) {
-      unlink(fi->parent->body);
+    auto buf = this->loadLink(tmp2->ptr, {}, form);
+    if (form->enctype == FORM_ENCTYPE_MULTIPART) {
+      unlink(form->body);
     }
     if (buf &&
         !(buf->res->redirectins.size() > 1)) { /* buf must be Currentbuf */
@@ -522,9 +518,9 @@ std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
       buf->layout->data.form_submit = save_submit_formlist(fi);
     }
     return buf;
-  } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
-              (!Strcmp_charp(fi->parent->action, "map") ||
-               !Strcmp_charp(fi->parent->action, "none")))) { /* internal */
+  } else if ((form->method == FORM_METHOD_INTERNAL &&
+              (!Strcmp_charp(form->action, "map") ||
+               !Strcmp_charp(form->action, "none")))) { /* internal */
     auto tmp = fi->query_from_followform();
     do_internal(tmp2->ptr, tmp->ptr);
     return {};
@@ -564,7 +560,8 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       fi->value = Strnew(p);
       this->layout->formUpdateBuffer(a);
       this->layout->data.need_reshape = true;
-      if (fi->accept || fi->parent->nitems == 1) {
+      auto form = fi->parent;
+      if (fi->accept || form->nitems == 1) {
         co_return CurrentTab->currentBuffer()->do_submit(fi, a);
       }
     }
@@ -695,10 +692,10 @@ Buffer::followAnchor(bool check_target) {
   co_return {};
 }
 
-std::shared_ptr<Buffer> Buffer::cmd_loadURL(const char *url,
-                                            std::optional<Url> current,
-                                            const HttpOption &option,
-                                            Form *request) {
+std::shared_ptr<Buffer>
+Buffer::cmd_loadURL(const char *url, std::optional<Url> current,
+                    const HttpOption &option,
+                    const std::shared_ptr<Form> &request) {
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -773,8 +770,8 @@ void Buffer::formRecheckRadio(FormAnchor *a) {
   for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
     auto a2 = &this->layout->data._formitem->anchors[i];
     auto f2 = a2->formItem;
-    if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
-        Strcmp(f2->name, fi->name) == 0) {
+    if (f2->parent == fi->parent && f2 != fi &&
+        f2->type == FORM_INPUT_RADIO && Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
       this->layout->formUpdateBuffer(a2);
     }

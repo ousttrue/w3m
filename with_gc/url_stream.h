@@ -12,4 +12,4 @@ struct Form;
 ;
 std::tuple<std::shared_ptr<HttpRequest>, std::shared_ptr<input_stream>>
 openURL(const std::string &url, std::optional<Url> current,
-        const HttpOption &option, Form *request);
+        const HttpOption &option, const std::shared_ptr<Form> &form);

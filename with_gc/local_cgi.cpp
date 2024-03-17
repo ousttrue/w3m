@@ -221,7 +221,8 @@ static int cgi_filename(const char *uri, const char **fn, const char **name,
   return CGIFN_LIBDIR;
 }
 
-FILE *localcgi_post(const char *uri, const char *qstr, Form *request,
+FILE *localcgi_post(const char *uri, const char *qstr,
+                    const std::shared_ptr<Form> &request,
                     const HttpOption &option) {
 #ifdef _MSC_VER
   return {};

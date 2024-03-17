@@ -52,7 +52,7 @@ static Str *digest_hex(unsigned char *p) {
 }
 
 Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
-                    HttpRequest *hr, Form *request) {
+                    HttpRequest *hr, const std::shared_ptr<Form> &request) {
   Str *algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
   Str *nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
   Str *cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;

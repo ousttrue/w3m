@@ -1,4 +1,5 @@
 #pragma once
+#include <memory>
 
 struct Str;
 struct auth_param {
@@ -11,7 +12,7 @@ struct Form;
 struct Url;
 using HttpAuthFunc = Str *(*)(struct http_auth *ha, Str *uname, Str *pw,
                               const Url &pu, HttpRequest *hr,
-                              Form *request);
+                              const std::shared_ptr<Form> &form);
 struct http_auth {
   int pri = 0;
   const char *schema = nullptr;
@@ -26,5 +27,5 @@ Str *get_auth_param(auth_param *auth, const char *name);
 Str *qstr_unquote(Str *s);
 struct TextList;
 void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   const Url &pu, HttpRequest *hr, Form *request,
-                   Str **uname, Str **pwd);
+                   const Url &pu, HttpRequest *hr,
+                   const std::shared_ptr<Form> &form, Str **uname, Str **pwd);

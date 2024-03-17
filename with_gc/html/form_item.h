@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <memory>
+#include <gc_cpp.h>
 
 enum FormItemType {
   FORM_UNKNOWN = -1,
@@ -20,7 +22,7 @@ FormItemType formtype(const char *typestr);
 
 struct Str;
 struct Form;
-struct FormItemList {
+struct FormItemList : public gc_cleanup {
   FormItemType type;
   Str *name;
   Str *value;
@@ -32,7 +34,9 @@ struct FormItemList {
   int rows;
   int maxlength;
   int readonly;
-  Form *parent;
+
+  std::shared_ptr<Form> parent;
+
   FormItemList *next;
 
   Str *query_from_followform();

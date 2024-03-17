@@ -249,7 +249,8 @@ static Str *base64_encode(const char *src, int len) {
 }
 
 static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw,
-                          const Url &pu, HttpRequest *hr, Form *request) {
+                          const Url &pu, HttpRequest *hr,
+                          const std::shared_ptr<Form> &) {
   Str *s = uname->Strdup();
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -339,8 +340,9 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
 }
 
 void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   const Url &pu, HttpRequest *hr, Form *request,
-                   Str **uname, Str **pwd) {
+                   const Url &pu, HttpRequest *hr,
+                   const std::shared_ptr<Form> &request, Str **uname,
+                   Str **pwd) {
   char *realm = NULL;
   if (hauth) {
     realm = qstr_unquote(get_auth_param(hauth->param, "realm"))->ptr;

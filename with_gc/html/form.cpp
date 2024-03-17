@@ -13,10 +13,16 @@
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 
-struct Form *newFormList(const char *action, const char *method,
-                             const char *charset, const char *enctype,
-                             const char *target, const char *name,
-                             Form *_next) {
+Form::~Form()
+{
+  auto a=0;
+}
+
+struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
+                                         const char *charset,
+                                         const char *enctype,
+                                         const char *target, const char *name,
+                                         Form *_next) {
 
   FormMethod m = FORM_METHOD_GET;
   if (method == NULL || !strcasecmp(method, "get"))
@@ -33,14 +39,13 @@ struct Form *newFormList(const char *action, const char *method,
     e = FORM_ENCTYPE_MULTIPART;
   }
 
-  auto l = (Form *)New(Form);
+  auto l = std::make_shared<Form>();
   l->item = l->lastitem = NULL;
   l->action = Strnew_charp(action);
   l->method = m;
   l->enctype = e;
   l->target = target;
   l->name = name;
-  l->next = _next;
   l->nitems = 0;
   l->body = NULL;
   l->length = 0;
@@ -50,13 +55,13 @@ struct Form *newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *Form ::formList_addInput(html_feed_environ *h_env,
-                                           struct HtmlTag *tag) {
+FormItemList *
+Form ::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
   //   return NULL;
 
-  auto item = (FormItemList *)New(FormItemList);
+  auto item = new FormItemList;
   item->type = FORM_UNKNOWN;
   item->size = -1;
   item->rows = 0;
@@ -97,7 +102,7 @@ FormItemList *Form ::formList_addInput(html_feed_environ *h_env,
     /* security hole ! */
     return NULL;
   }
-  item->parent = this;
+  item->parent = shared_from_this();
   item->next = NULL;
   if (!this->item) {
     this->item = this->lastitem = item;
@@ -213,14 +218,15 @@ void FormItemList ::query_from_followform_multipart() {
   if (body == nullptr) {
     return;
   }
-  this->parent->body = tmpf->ptr;
-  this->parent->boundary = Sprintf("------------------------------%d%ld%ld%ld",
-                                   App::instance().pid(), this->parent,
-                                   this->parent->body, this->parent->boundary)
+  auto form =  this->parent;
+  form->body = tmpf->ptr;
+  form->boundary = Sprintf("------------------------------%d%ld%ld%ld",
+                                   App::instance().pid(), form,
+                                   form->body, form->boundary)
                                ->ptr;
 
   // auto query = Strnew();
-  for (auto f2 = this->parent->item; f2; f2 = f2->next) {
+  for (auto f2 = form->item; f2; f2 = f2->next) {
     if (f2->name == nullptr)
       continue;
     /* <ISINDEX> is translated into single text form */
@@ -249,13 +255,13 @@ void FormItemList ::query_from_followform_multipart() {
         {
           auto query = f2->name->Strdup();
           Strcat_charp(query, ".x");
-          form_write_data(body, this->parent->boundary, query->ptr,
+          form_write_data(body, form->boundary, query->ptr,
                           Sprintf("%d", x)->ptr);
         }
         {
           auto query = f2->name->Strdup();
           Strcat_charp(query, ".y");
-          form_write_data(body, this->parent->boundary, query->ptr,
+          form_write_data(body, form->boundary, query->ptr,
                           Sprintf("%d", y)->ptr);
         }
       } else if (f2->name && f2->name->length > 0 && f2->value != nullptr) {
@@ -263,17 +269,17 @@ void FormItemList ::query_from_followform_multipart() {
         {
           auto query = f2->value;
           if (f2->type == FORM_INPUT_FILE)
-            form_write_from_file(body, this->parent->boundary, f2->name->ptr,
+            form_write_from_file(body, form->boundary, f2->name->ptr,
                                  query->ptr, f2->value->ptr);
           else
-            form_write_data(body, this->parent->boundary, f2->name->ptr,
+            form_write_data(body, form->boundary, f2->name->ptr,
                             query->ptr);
         }
       }
     }
   }
   {
-    fprintf(body, "--%s--\r\n", this->parent->boundary);
+    fprintf(body, "--%s--\r\n", form->boundary);
     fclose(body);
   }
 }
