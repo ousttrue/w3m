@@ -51,6 +51,68 @@ enum LineDirtyFlags : unsigned short {
   L_CLRTOEOL = 0x08,
 };
 
+// LineData
+// +--->Width
+// | ScrollView
+// |  row
+// |col+---->width
+// |   |
+// |   v
+// |  height
+// |
+// | Cursor
+// |  row
+// |col+
+// v
+// Height
+struct CursorAndScroll {
+  // equals LineData lines.size() & max.col
+  RowCol size = {0, 0};
+  // cursor in Size rect.
+  RowCol cursor = {0, 0};
+  // scroll origin in Size rect.
+  RowCol scroll = {0, 0};
+  // equals ftxui::Node::box_
+  RowCol view = {0, 0};
+
+  void cursorHome() {
+    // this->visualpos = 0;
+    this->scroll = {0, 0};
+    this->cursor = {0, 0};
+  }
+
+  void _fixCursor() {
+    if (scroll.row + view.row > size.row) {
+      scroll.row = size.row - view.row;
+    }
+    if (scroll.row < 0) {
+      scroll.row = 0;
+    }
+    if (scroll.col + view.col > size.col) {
+      scroll.col = size.col - view.col;
+    }
+    if (scroll.col < 0) {
+      scroll.col = 0;
+    }
+  }
+
+  void restorePosition(const CursorAndScroll &orig) {
+    this->cursor = orig.cursor;
+    this->scroll = orig.scroll;
+    _fixCursor();
+  }
+
+  void scrollMoveRow(int row) {
+    scroll.row += row;
+    _fixCursor();
+  }
+
+  void scrollMoveCol(int col) {
+    scroll.col += col;
+    _fixCursor();
+  }
+};
+
 struct LineLayout : public ftxui::Node {
   LineData data;
 
@@ -69,28 +131,13 @@ struct LineLayout : public ftxui::Node {
   bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
   bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
 
-  // short COLS = 0;
-  // short LINES = 0;
-  // // COLS/LINES と width height の違いは？
-  // short width = 0;
-  // short height = 0;
+  CursorAndScroll visual;
 
-  // int pos = 0;
-  // int visualpos = 0;
-  // scroll position
-  // int _topLine = 0;
-private:
-  RowCol _scroll = {0, 0};
-
-public:
-  RowCol scroll() const { return _scroll; }
-  void scrollMoveRow(int row) { _scroll.row += row; }
-  void scrollMoveCol(int col) { _scroll.col += col; }
   // leftPos
   // int scrollPos() const;
   Line *topLine() {
     //
-    return &data.lines[_scroll.row];
+    return &data.lines[visual.scroll.row];
   }
   // {
   //   if (_topLine < 0 || _topLine >= (int)data.lines.size()) {
@@ -163,9 +210,7 @@ public:
   // int columnSkip(int offset);
   // void cursorRight(int n);
   // void cursorLeft(int n);
-  void cursorHome();
   // void cursorXY(int x, int y);
-  void restorePosition(const std::shared_ptr<LineLayout> &orig);
   void nscroll(int n);
 
   //

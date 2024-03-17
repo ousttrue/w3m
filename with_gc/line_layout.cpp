@@ -16,7 +16,7 @@ LineLayout::LineLayout() {}
 
 void LineLayout::clearBuffer() {
   data.clear();
-  _scroll = {0};
+  visual = {0};
 }
 
 // void LineLayout::arrangeLine() {
@@ -232,12 +232,6 @@ void LineLayout::clearBuffer() {
 //   // this->cursor.col = this->visualpos - l->width();
 // }
 
-void LineLayout::cursorHome() {
-  // this->visualpos = 0;
-  this->_scroll = {0, 0};
-  this->_cursor = {0, 0};
-}
-
 // void LineLayout::cursorXY(int x, int y) {
 //   // this->cursorUpDown(y - this->cursor.row);
 //   //
@@ -260,15 +254,6 @@ void LineLayout::cursorHome() {
 //   //   }
 //   // }
 // }
-
-void LineLayout::restorePosition(const std::shared_ptr<LineLayout> &orig) {
-  this->_cursor = orig->_cursor;
-  this->_scroll = orig->_scroll;
-  // this->cursorRow(orig._topLine + orig.cursor.row);
-  // this->pos = orig.pos;
-  // this->currentColumn = orig.currentColumn;
-  // this->arrangeCursor();
-}
 
 /* go to the next downward/upward anchor */
 void LineLayout::nextY(int d, int n) {
@@ -557,10 +542,10 @@ void LineLayout::_goLine(const char *l, int prec_num) {
   if (((*l == '^') || (*l == '$')) && prec_num) {
     this->cursorRow(prec_num);
   } else if (*l == '^') {
-    this->_scroll.row = this->_cursor.row = 0;
+    this->visual.cursorHome();
   } else if (*l == '$') {
     // this->_scroll.row = linenumber(this->lastLine()) - (this->LINES + 1) / 2;
-    this->_cursor.row = linenumber(this->lastLine());
+    this->visual.cursor.row = linenumber(this->lastLine());
   } else {
     this->cursorRow(atoi(l));
   }
@@ -1135,7 +1120,7 @@ void LineLayout::Render(ftxui::Screen &screen) {
   //
   _screen = std::make_shared<ftxui::Screen>(box_.x_max - box_.x_min + 1,
                                             box_.y_max - box_.y_min + 1);
-  auto l = this->scroll().row;
+  auto l = this->visual.scroll.row;
   int i = 0;
   int height = box_.y_max - box_.y_min + 1;
   int width = box_.x_max - box_.x_min + 1;
@@ -1145,7 +1130,7 @@ void LineLayout::Render(ftxui::Screen &screen) {
             .row = i,
             .col = 0,
         },
-        l, width, this->scroll().col);
+        l, width, this->visual.scroll.col);
     this->clrtoeolx(pixel);
   }
   // clear remain

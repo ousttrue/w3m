@@ -108,7 +108,7 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV(const FuncContext &context) {
   int offsety = buf->layout->LINES() / 2 -
                 CurrentTab->currentBuffer()->layout->cursor().row;
   if (offsety != 0) {
-    CurrentTab->currentBuffer()->layout->scrollMoveRow(-offsety);
+    CurrentTab->currentBuffer()->layout->visual.scrollMoveRow(-offsety);
   }
 }
 
@@ -1361,7 +1361,7 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
       sbuf->layout->data.form_submit;
   if (CurrentTab->currentBuffer()->layout->firstLine()) {
     // CurrentTab->currentBuffer()->layout->COPY_BUFROOT_FROM(sbuf->layout);
-    CurrentTab->currentBuffer()->layout->restorePosition(sbuf->layout);
+    CurrentTab->currentBuffer()->layout->visual.restorePosition(sbuf->layout->visual);
   }
 }
 
@@ -1703,7 +1703,7 @@ std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
   loadHTMLstream(buf->layout, buf->res.get(), html, true);
   if (replace) {
     // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
-    buf->layout->restorePosition(CurrentTab->currentBuffer()->layout);
+    buf->layout->visual.restorePosition(CurrentTab->currentBuffer()->layout->visual);
   }
   if (!replace && open_tab_dl_list) {
     App::instance().newTab();

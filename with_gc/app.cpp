@@ -1117,7 +1117,7 @@ void App::display() {
   ftxui::Render(screen, dom());
 
   auto cursor = CurrentTab->currentBuffer()->layout->root() + layout->cursor() -
-                layout->scroll();
+                layout->visual.scroll;
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1153,8 +1153,8 @@ ftxui::Element App::dom() {
      << "(pos)"
      << buf->layout->cursorPos()
      //
-     << "[scroll]" << buf->layout->scroll().row << ","
-     << buf->layout->scroll().col
+     << "[scroll]" << buf->layout->visual.scroll.row << ","
+     << buf->layout->visual.scroll.col
       //
       ;
 
