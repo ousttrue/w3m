@@ -141,7 +141,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
   }
 
   if (auto a = this->layout->retrieveCurrentForm()) {
-    FormItemList *fi = a->formItem;
+    FormItem *fi = a->formItem;
     p = Strnew(fi->form2str())->ptr;
     p = html_quote(url_decode0(p));
     Strcat_m_charp(
@@ -404,7 +404,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   return buf;
 }
 
-static FormItemList *save_submit_formlist(FormItemList *src) {
+static FormItem *save_submit_formlist(FormItem *src) {
   if (src == nullptr)
     return nullptr;
   auto srclist = src->parent;
@@ -417,9 +417,9 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   list->boundary = srclist->boundary;
   list->length = srclist->length;
 
-  FormItemList *ret = nullptr;
+  FormItem *ret = nullptr;
   for (auto srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    auto item = new FormItemList();
+    auto item = new FormItem();
     item->type = srcitem->type;
     item->name = srcitem->name->Strdup();
     item->value = srcitem->value->Strdup();
@@ -468,7 +468,7 @@ static void do_internal(char *action, char *data) {
   }
 }
 
-std::shared_ptr<Buffer> Buffer::do_submit(FormItemList *fi, Anchor *a) {
+std::shared_ptr<Buffer> Buffer::do_submit(FormItem *fi, Anchor *a) {
   auto form = fi->parent;
   auto tmp2 = form->action->Strdup();
   if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
@@ -766,7 +766,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
 }
 
 void Buffer::formRecheckRadio(FormAnchor *a) {
-  FormItemList *fi = a->formItem;
+  FormItem *fi = a->formItem;
   for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
     auto a2 = &this->layout->data._formitem->anchors[i];
     auto f2 = a2->formItem;

@@ -15,12 +15,12 @@ enum FormEncoding {
   FORM_ENCTYPE_MULTIPART = 1,
 };
 
-struct FormItemList;
+struct FormItem;
 struct HtmlTag;
 
 struct Form : public std::enable_shared_from_this<Form> {
-  FormItemList *item;
-  FormItemList *lastitem;
+  FormItem *item;
+  FormItem *lastitem;
   FormMethod method;
   Str *action;
   const char *target;
@@ -32,12 +32,12 @@ struct Form : public std::enable_shared_from_this<Form> {
   unsigned long length;
 
   ~Form();
-  FormItemList *formList_addInput(struct html_feed_environ *h_env,
+  FormItem *formList_addInput(struct html_feed_environ *h_env,
                                   HtmlTag *tag);
 };
 
 struct FormAnchor : public Anchor {
-  FormItemList *formItem;
+  FormItem *formItem;
 
   short y = 0;
   short rows = 0;

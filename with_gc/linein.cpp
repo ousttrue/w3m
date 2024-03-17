@@ -857,7 +857,7 @@ void LineInput::_editor(char) {
   if (is_passwd)
     return;
 
-  FormItemList fi;
+  FormItem fi;
   fi.readonly = false;
   fi.value = strBuf->Strdup();
   Strcat_char(fi.value, '\n');

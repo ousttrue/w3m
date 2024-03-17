@@ -22,7 +22,7 @@ FormItemType formtype(const char *typestr);
 
 struct Str;
 struct Form;
-struct FormItemList : public gc_cleanup {
+struct FormItem : public gc_cleanup {
   FormItemType type;
   Str *name;
   Str *value;
@@ -37,7 +37,7 @@ struct FormItemList : public gc_cleanup {
 
   std::shared_ptr<Form> parent;
 
-  FormItemList *next;
+  FormItem *next;
 
   Str *query_from_followform();
   void query_from_followform_multipart();

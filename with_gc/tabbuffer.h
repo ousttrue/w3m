@@ -11,7 +11,7 @@ extern int TabCols;
 
 struct Buffer;
 struct Form;
-struct FormItemList;
+struct FormItem;
 struct Anchor;
 struct HttpOption;
 

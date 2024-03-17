@@ -55,13 +55,13 @@ struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
 /*
  * add <input> element to FormList
  */
-FormItemList *
+FormItem *
 Form ::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
   //   return NULL;
 
-  auto item = new FormItemList;
+  auto item = new FormItem;
   item->type = FORM_UNKNOWN;
   item->size = -1;
   item->rows = 0;
@@ -153,7 +153,7 @@ write_end:
 #endif
 }
 
-Str *FormItemList::query_from_followform() {
+Str *FormItem::query_from_followform() {
   auto query = Strnew();
   for (auto f2 = this->parent->item; f2; f2 = f2->next) {
     if (f2->name == nullptr)
@@ -212,7 +212,7 @@ Str *FormItemList::query_from_followform() {
   return query;
 }
 
-void FormItemList ::query_from_followform_multipart() {
+void FormItem ::query_from_followform_multipart() {
   auto tmpf = Strnew(App::instance().tmpfname(TMPF_DFL, {}));
   auto body = fopen(tmpf->ptr, "w");
   if (body == nullptr) {

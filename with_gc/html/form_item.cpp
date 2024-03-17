@@ -22,7 +22,7 @@ FormItemType formtype(const char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-std::string FormItemList::form2str() const {
+std::string FormItem::form2str() const {
   std::stringstream tmp;
   if (this->type != FORM_SELECT && this->type != FORM_TEXTAREA)
     tmp << "input type=";
@@ -57,7 +57,7 @@ static void form_fputs_decode(Str *s, FILE *f) {
   Strfputs(z, f);
 }
 
-void FormItemList::input_textarea() {
+void FormItem::input_textarea() {
   auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == NULL) {
