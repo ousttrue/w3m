@@ -13,7 +13,7 @@ LineLayout::LineLayout() {}
 
 void LineLayout::clearBuffer() {
   data.clear();
-  visual = {0};
+  visual = {};
 }
 
 /* go to the next downward/upward anchor */
@@ -33,7 +33,7 @@ void LineLayout::nextY(int d, int n) {
   }
 
   int x = this->cursorPos();
-  int y = this->visual.cursor.row + d;
+  int y = this->visual.cursor().row + d;
   Anchor *pan = nullptr;
   int hseq = -1;
   for (int i = 0; i < n; i++) {
@@ -128,7 +128,7 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
     an = this->retrieveCurrentForm();
   }
 
-  int y = this->visual.cursor.row;
+  int y = this->visual.cursor().row;
   int x = this->cursorPos();
 
   for (int i = 0; i < n; i++) {
@@ -186,7 +186,7 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
     an = this->retrieveCurrentForm();
   }
 
-  auto y = visual.cursor.row;
+  auto y = visual.cursor().row;
   auto x = this->cursorPos();
 
   Anchor *pan = nullptr;
@@ -236,7 +236,7 @@ int LineLayout::prev_nonnull_line(Line *line) {
   if (l == nullptr || l->len() == 0)
     return -1;
 
-  this->visual.cursor.row = linenumber(l);
+  this->visual.cursorRow(linenumber(l));
   if (l != line)
     this->cursorPos(this->currentLine()->len());
   return 0;
@@ -249,9 +249,9 @@ int LineLayout::next_nonnull_line(Line *line) {
   if (l == nullptr || l->len() == 0)
     return -1;
 
-  this->visual.cursor.row = linenumber(l);
+  this->visual.cursorRow(linenumber(l));
   if (l != line)
-    this->visual.cursor.col = 0;
+    this->visual.cursorCol(0);
   return 0;
 }
 
@@ -261,14 +261,14 @@ void LineLayout::_goLine(const char *l, int prec_num) {
     return;
   }
 
-  this->visual.cursor.col = 0;
+  this->visual.cursorCol(0);
   if (((*l == '^') || (*l == '$')) && prec_num) {
     this->visual.cursorRow(prec_num);
   } else if (*l == '^') {
     this->visual.cursorHome();
   } else if (*l == '$') {
     // this->_scroll.row = linenumber(this->lastLine()) - (this->LINES + 1) / 2;
-    this->visual.cursor.row = linenumber(this->lastLine());
+    this->visual.cursorRow(linenumber(this->lastLine()));
   } else {
     this->visual.cursorRow(atoi(l));
   }
@@ -326,48 +326,50 @@ void LineLayout::chkURLBuffer() {
   this->check_url = true;
 }
 
-void LineLayout::reshape(int width) {
-  if (!this->data.need_reshape) {
-    return;
-  }
-  // this->data.need_reshape = false;
-  // this->width = width;
-  //
-  // this->height = App::instance().LASTLINE() + 1;
-  // if (!empty() && !sbuf.empty()) {
-  //   const Line *cur = sbuf.currentLine();
-  //   this->pos = sbuf.pos;
-  //   this->cursorRow(sbuf.linenumber(cur));
-  //   int n = cursor.row - (sbuf.linenumber(cur) - sbuf._topLine);
-  //   if (n) {
-  //     this->_topLine += n;
-  //     this->cursorRow(sbuf.linenumber(cur));
-  //   }
-  //   this->currentColumn = sbuf.currentColumn;
-  //   this->arrangeCursor();
-  // }
-  // if (this->check_url) {
-  //   this->chkURLBuffer();
-  // }
-  // this->formResetBuffer(sbuf.data._formitem.get());
-}
+// void LineLayout::reshape(int width) {
+//   if (!this->data.need_reshape) {
+//     return;
+//   }
+//   // this->data.need_reshape = false;
+//   // this->width = width;
+//   //
+//   // this->height = App::instance().LASTLINE() + 1;
+//   // if (!empty() && !sbuf.empty()) {
+//   //   const Line *cur = sbuf.currentLine();
+//   //   this->pos = sbuf.pos;
+//   //   this->cursorRow(sbuf.linenumber(cur));
+//   //   int n = cursor.row - (sbuf.linenumber(cur) - sbuf._topLine);
+//   //   if (n) {
+//   //     this->_topLine += n;
+//   //     this->cursorRow(sbuf.linenumber(cur));
+//   //   }
+//   //   this->currentColumn = sbuf.currentColumn;
+//   //   this->arrangeCursor();
+//   // }
+//   // if (this->check_url) {
+//   //   this->chkURLBuffer();
+//   // }
+//   // this->formResetBuffer(sbuf.data._formitem.get());
+// }
 
 Anchor *LineLayout::retrieveCurrentAnchor() {
   if (!this->currentLine() || !this->data._href)
     return NULL;
-  return this->data._href->retrieveAnchor(visual.cursor.row, this->cursorPos());
+  return this->data._href->retrieveAnchor(visual.cursor().row,
+                                          this->cursorPos());
 }
 
 Anchor *LineLayout::retrieveCurrentImg() {
   if (!this->currentLine() || !this->data._img)
     return NULL;
-  return this->data._img->retrieveAnchor(visual.cursor.row, this->cursorPos());
+  return this->data._img->retrieveAnchor(visual.cursor().row,
+                                         this->cursorPos());
 }
 
 FormAnchor *LineLayout::retrieveCurrentForm() {
   if (!this->currentLine() || !this->data._formitem)
     return NULL;
-  return this->data._formitem->retrieveAnchor(visual.cursor.row,
+  return this->data._formitem->retrieveAnchor(visual.cursor().row,
                                               this->cursorPos());
 }
 
@@ -496,12 +498,13 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
 
   return pos;
 }
+
 void LineLayout::formUpdateBuffer(FormAnchor *a) {
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   Line *l;
 
-  // LineLayout save = *this;
+  CursorAndScroll backup = this->visual;
   this->visual.cursorRow(a->start.line);
   auto form = a->formItem;
   switch (form->type) {
@@ -542,7 +545,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
     if (!l)
       break;
     if (form->type == FORM_TEXTAREA) {
-      int n = a->y - this->visual.cursor.row;
+      int n = a->y - this->visual.cursor().row;
       if (n > 0)
         for (; !this->isNull(l) && n; --l, n--)
           ;
@@ -587,7 +590,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
   default:
     break;
   }
-  // *this = save;
+  this->visual = backup;
 }
 
 // class ActiveAnchorDrawer {
@@ -789,12 +792,12 @@ void LineLayout::Render(ftxui::Screen &screen) {
   //
   _screen = std::make_shared<ftxui::Screen>(box_.x_max - box_.x_min + 1,
                                             box_.y_max - box_.y_min + 1);
-  auto l = this->visual.scroll.row;
+  auto l = this->visual.scroll().row;
   int i = 0;
   int height = box_.y_max - box_.y_min + 1;
   int width = box_.x_max - box_.x_min + 1;
 
-  visual.size = {.row = height, .col = width};
+  visual.view({.row = height, .col = width});
 
   for (; i < height; ++i, ++l) {
     auto pixel = this->redrawLine(
@@ -802,7 +805,7 @@ void LineLayout::Render(ftxui::Screen &screen) {
             .row = i,
             .col = 0,
         },
-        l, width, this->visual.scroll.col);
+        l, width, this->visual.scroll().col);
     this->clrtoeolx(pixel);
   }
   // clear remain

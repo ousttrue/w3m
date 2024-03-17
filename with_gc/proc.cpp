@@ -44,9 +44,9 @@ nulcmd(const FuncContext &context) { /* do nothing */
 //"Scroll down one page"
 std::shared_ptr<CoroutineState<void>> pgFore(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->visual.scroll.row +=
+  buf->layout->visual.scrollMoveRow(
       (prec_num ? App::instance().searchKeyNum()
-                : App::instance().searchKeyNum() * buf->layout->LINES());
+                : App::instance().searchKeyNum() * buf->layout->LINES()));
   co_return;
 }
 
@@ -55,9 +55,9 @@ std::shared_ptr<CoroutineState<void>> pgFore(const FuncContext &context) {
 //"Scroll up one page"
 std::shared_ptr<CoroutineState<void>> pgBack(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->visual.scroll.row +=
+  buf->layout->visual.scrollMoveRow(
       (-(prec_num ? App::instance().searchKeyNum()
-                  : App::instance().searchKeyNum() * buf->layout->LINES()));
+                  : App::instance().searchKeyNum() * buf->layout->LINES())));
   co_return;
 }
 
@@ -66,8 +66,8 @@ std::shared_ptr<CoroutineState<void>> pgBack(const FuncContext &context) {
 //"Scroll down half a page"
 std::shared_ptr<CoroutineState<void>> hpgFore(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->visual.scroll.row +=
-      (App::instance().searchKeyNum() * (buf->layout->LINES() / 2));
+  buf->layout->visual.scrollMoveRow(
+      (App::instance().searchKeyNum() * (buf->layout->LINES() / 2)));
   co_return;
 }
 
@@ -76,8 +76,8 @@ std::shared_ptr<CoroutineState<void>> hpgFore(const FuncContext &context) {
 //"Scroll up half a page"
 std::shared_ptr<CoroutineState<void>> hpgBack(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
-  buf->layout->visual.scroll.row +=
-      (-App::instance().searchKeyNum() * (buf->layout->LINES() / 2));
+  buf->layout->visual.scrollMoveRow(
+      (-App::instance().searchKeyNum() * (buf->layout->LINES() / 2)));
   co_return;
 }
 
@@ -85,8 +85,8 @@ std::shared_ptr<CoroutineState<void>> hpgBack(const FuncContext &context) {
 // UP
 //"Scroll the screen up one line"
 std::shared_ptr<CoroutineState<void>> lup1(const FuncContext &context) {
-  CurrentTab->currentBuffer()->layout->visual.scroll.row +=
-      (App::instance().searchKeyNum());
+  CurrentTab->currentBuffer()->layout->visual.scrollMoveRow(
+      (App::instance().searchKeyNum()));
   co_return;
 }
 
@@ -94,8 +94,8 @@ std::shared_ptr<CoroutineState<void>> lup1(const FuncContext &context) {
 // DOWN
 //"Scroll the screen down one line"
 std::shared_ptr<CoroutineState<void>> ldown1(const FuncContext &context) {
-  CurrentTab->currentBuffer()->layout->visual.scroll.row +=
-      (-App::instance().searchKeyNum());
+  CurrentTab->currentBuffer()->layout->visual.scrollMoveRow(
+      (-App::instance().searchKeyNum()));
   co_return;
 }
 
@@ -107,7 +107,7 @@ std::shared_ptr<CoroutineState<void>> ctrCsrV(const FuncContext &context) {
   if (buf->layout->empty())
     co_return;
 
-  int offsety = buf->layout->LINES() / 2 - buf->layout->visual.cursor.row;
+  int offsety = buf->layout->LINES() / 2 - buf->layout->visual.cursor().row;
   if (offsety != 0) {
     buf->layout->visual.scrollMoveRow(-offsety);
   }
@@ -120,7 +120,7 @@ std::shared_ptr<CoroutineState<void>> ctrCsrH(const FuncContext &context) {
   if (buf->layout->empty())
     co_return;
 
-  int offsetx = buf->layout->visual.cursor.col - buf->layout->LINES() / 2;
+  int offsetx = buf->layout->visual.cursor().col - buf->layout->LINES() / 2;
   if (offsetx != 0) {
     buf->layout->visual.cursorMoveCol(offsetx);
   }
@@ -187,10 +187,10 @@ std::shared_ptr<CoroutineState<void>> shiftl(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
   if (buf->layout->empty())
     co_return;
-  int column = buf->layout->visual.cursor.col;
+  int column = buf->layout->visual.cursor().col;
   buf->layout->visual.cursorMoveCol(App::instance().searchKeyNum() *
                                     -buf->layout->COLS());
-  buf->layout->visual.cursor.col -= column;
+  buf->layout->visual.cursorMoveCol(-column);
 }
 
 /* Shift screen right */
@@ -688,7 +688,7 @@ std::shared_ptr<CoroutineState<void>> editBf(const FuncContext &context) {
               ->ptr;
   } else {
     cmd = ioutil::myEditor(shell_quote(fn.c_str()),
-                           buf->layout->visual.cursor.row);
+                           buf->layout->visual.cursor().row);
   }
   exec_cmd(cmd);
 
@@ -708,9 +708,9 @@ std::shared_ptr<CoroutineState<void>> editScr(const FuncContext &context) {
   }
   CurrentTab->currentBuffer()->saveBuffer(f, true);
   fclose(f);
-  exec_cmd(
-      ioutil::myEditor(shell_quote(tmpf.c_str()),
-                       CurrentTab->currentBuffer()->layout->visual.cursor.row));
+  exec_cmd(ioutil::myEditor(
+      shell_quote(tmpf.c_str()),
+      CurrentTab->currentBuffer()->layout->visual.cursor().row));
   unlink(tmpf.c_str());
 }
 
@@ -1092,8 +1092,9 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
 //"Display options setting panel"
 std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
   auto html = Option::instance().load_option_panel();
-  auto buf = loadHTMLString(html.c_str());
-  CurrentTab->pushBuffer(buf);
+  auto newbuf =
+      loadHTMLString(App::instance().INIT_BUFFER_WIDTH(), html.c_str());
+  CurrentTab->pushBuffer(newbuf);
   co_return;
 }
 
@@ -1123,7 +1124,8 @@ std::shared_ptr<CoroutineState<void>> setOpt(const FuncContext &context) {
 // MSGS
 //"Display error messages"
 std::shared_ptr<CoroutineState<void>> msgs(const FuncContext &context) {
-  auto buf = App::instance().message_list_panel();
+  auto buf =
+      App::instance().message_list_panel(App::instance().INIT_BUFFER_WIDTH());
   CurrentTab->pushBuffer(buf);
   co_return;
 }
@@ -1132,7 +1134,8 @@ std::shared_ptr<CoroutineState<void>> msgs(const FuncContext &context) {
 // INFO
 //"Display information about the current document"
 std::shared_ptr<CoroutineState<void>> pginfo(const FuncContext &context) {
-  auto buf = CurrentTab->currentBuffer()->page_info_panel();
+  auto buf = CurrentTab->currentBuffer()->page_info_panel(
+      App::instance().INIT_BUFFER_WIDTH());
   CurrentTab->pushBuffer(buf);
   co_return;
 }
@@ -1141,7 +1144,8 @@ std::shared_ptr<CoroutineState<void>> pginfo(const FuncContext &context) {
 // LIST
 //"Show all URLs referenced"
 std::shared_ptr<CoroutineState<void>> linkLst(const FuncContext &context) {
-  if (auto buf = link_list_panel(CurrentTab->currentBuffer())) {
+  if (auto buf = link_list_panel(App::instance().INIT_BUFFER_WIDTH(),
+                                 CurrentTab->currentBuffer())) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1151,7 +1155,7 @@ std::shared_ptr<CoroutineState<void>> linkLst(const FuncContext &context) {
 // COOKIE
 //"View cookie list"
 std::shared_ptr<CoroutineState<void>> cooLst(const FuncContext &context) {
-  if (auto buf = cookie_list_panel()) {
+  if (auto buf = cookie_list_panel(App::instance().INIT_BUFFER_WIDTH())) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1162,7 +1166,7 @@ std::shared_ptr<CoroutineState<void>> cooLst(const FuncContext &context) {
 //"Show browsing history"
 std::shared_ptr<CoroutineState<void>> ldHist(const FuncContext &context) {
   auto html = URLHist->toHtml();
-  if (auto buf = loadHTMLString(html)) {
+  if (auto buf = loadHTMLString(App::instance().INIT_BUFFER_WIDTH(), html)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1376,15 +1380,16 @@ std::shared_ptr<CoroutineState<void>> reshape(const FuncContext &context) {
     auto sbuf = CurrentTab->currentBuffer()->layout;
     auto body = CurrentTab->currentBuffer()->res->getBody();
     if (CurrentTab->currentBuffer()->res->is_html_type()) {
-      loadHTMLstream(CurrentTab->currentBuffer()->layout,
+      loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
+                     CurrentTab->currentBuffer()->layout,
                      CurrentTab->currentBuffer()->res.get(), body);
     } else {
       loadBuffer(CurrentTab->currentBuffer()->layout,
                  CurrentTab->currentBuffer()->res.get(), body);
     }
 
-    CurrentTab->currentBuffer()->layout->reshape(
-        App::instance().INIT_BUFFER_WIDTH());
+    // CurrentTab->currentBuffer()->layout->reshape(
+    //     App::instance().INIT_BUFFER_WIDTH());
   }
   co_return;
 }
@@ -1450,7 +1455,7 @@ std::shared_ptr<CoroutineState<void>> curlno(const FuncContext &context) {
   if (l != nullptr) {
     cur = layout->linenumber(l);
     ;
-    col = layout->visual.cursor.col + 1;
+    col = layout->visual.cursor().col + 1;
     len = l->width();
   }
   if (layout->lastLine())
@@ -1701,7 +1706,8 @@ std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
     co_return;
   }
   auto buf = Buffer::create();
-  loadHTMLstream(buf->layout, buf->res.get(), html, true);
+  loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(), buf->layout,
+                 buf->res.get(), html, true);
   if (replace) {
     // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
     buf->layout->visual.restorePosition(

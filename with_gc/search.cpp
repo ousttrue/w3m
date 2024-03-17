@@ -291,7 +291,7 @@ void srch(SearchFunc func, const char *prompt) {
     disp = true;
   }
 
-  int col = CurrentTab->currentBuffer()->layout->visual.cursor.col;
+  int col = CurrentTab->currentBuffer()->layout->visual.cursor().col;
   if (func == forwardSearch)
     CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(1);
 

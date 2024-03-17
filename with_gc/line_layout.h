@@ -57,6 +57,13 @@ struct LineLayout : public ftxui::Node {
 
   LineLayout();
 
+  void fix_size(int width) {
+    visual.size({
+        .row = static_cast<int>(data.lines.size()),
+        .col = width,
+    });
+  }
+
   //
   // lines
   //
@@ -74,34 +81,34 @@ struct LineLayout : public ftxui::Node {
   //
   Line *topLine() {
     //
-    return &data.lines[visual.scroll.row];
+    return &data.lines[visual.scroll().row];
   }
 
   int cursorPos() const {
-    if (visual.cursor.row < data.lines.size()) {
-      auto l = data.lines[visual.cursor.row];
-      return l.columnPos(visual.cursor.col);
+    if (visual.cursor().row < data.lines.size()) {
+      auto l = data.lines[visual.cursor().row];
+      return l.columnPos(visual.cursor().col);
     }
-    return visual.cursor.col;
+    return visual.cursor().col;
   }
   void cursorPos(int pos) {
-    auto l = data.lines[visual.cursor.row];
-    visual.cursor.col = l.bytePosToColumn(pos);
+    auto l = data.lines[visual.cursor().row];
+    visual.cursorCol(l.bytePosToColumn(pos));
   }
   Line *currentLine() {
-    if (visual.cursor.row < data.lines.size()) {
-      return &data.lines[visual.cursor.row];
+    if (visual.cursor().row < data.lines.size()) {
+      return &data.lines[visual.cursor().row];
     }
     return {};
   }
   const Line *currentLine() const {
     //
-    return &data.lines[visual.cursor.row];
+    return &data.lines[visual.cursor().row];
   }
 
   bool check_url = false;
   void chkURLBuffer();
-  void reshape(int width);
+  // void reshape(int width);
   void clearBuffer();
 
   //

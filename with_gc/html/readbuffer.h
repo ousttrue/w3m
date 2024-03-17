@@ -195,7 +195,7 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
 
 struct LineLayout;
 struct HttpResponse;
-void loadHTMLstream(const std::shared_ptr<LineLayout> &layout,
+void loadHTMLstream(int width, const std::shared_ptr<LineLayout> &layout,
                     HttpResponse *res, std::string_view body,
                     bool internal = false);
 void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
@@ -217,5 +217,5 @@ inline void cleanup_line(Str *s, CleanupMode mode) {
 extern int is_boundary(unsigned char *, unsigned char *);
 
 struct Buffer;
-std::shared_ptr<Buffer> loadHTMLString(std::string_view html);
+std::shared_ptr<Buffer> loadHTMLString(int width, std::string_view html);
 std::shared_ptr<Buffer> getshell(const char *cmd);

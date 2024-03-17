@@ -1,4 +1,5 @@
 #pragma once
+#include <ostream>
 
 struct RowCol {
   int row = 0;
@@ -18,3 +19,8 @@ struct RowCol {
     };
   }
 };
+
+inline std::ostream &operator<<(std::ostream &os, const RowCol &rc) {
+  os << "{row:" << rc.row << ",col:" << rc.col << "}";
+  return os;
+}

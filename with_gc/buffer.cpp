@@ -88,7 +88,7 @@ std::string Buffer::link_info() const {
 /*
  * information of current page and link
  */
-std::shared_ptr<Buffer> Buffer::page_info_panel() {
+std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
   Str *tmp = Strnew_size(1024);
 
   Strcat_charp(tmp, "<html><head>\
@@ -174,7 +174,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel() {
                    html_quote(this->res->ssl_certificate), "</pre>\n", nullptr);
 
   Strcat_charp(tmp, "</body></html>");
-  auto newbuf = loadHTMLString(tmp->ptr);
+  auto newbuf = loadHTMLString(width, tmp->ptr);
   return newbuf;
 }
 
@@ -191,7 +191,7 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
   }
 }
 
-std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
+std::shared_ptr<Buffer> link_list_panel(int width, const std::shared_ptr<Buffer> &buf) {
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
@@ -308,7 +308,7 @@ std::shared_ptr<Buffer> link_list_panel(const std::shared_ptr<Buffer> &buf) {
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  return loadHTMLString(tmp->ptr);
+  return loadHTMLString(width, tmp->ptr);
 }
 
 void Buffer::saveBufferInfo() {

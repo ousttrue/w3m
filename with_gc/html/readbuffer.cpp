@@ -2,7 +2,7 @@
 #include "html_feed_env.h"
 #include "etc.h"
 #include "html/form_item.h"
-#include "app.h"
+// #include "app.h"
 #include "buffer.h"
 #include "line_layout.h"
 #include "http_response.h"
@@ -486,18 +486,17 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
-void loadHTMLstream(const std::shared_ptr<LineLayout> &layout,
+void loadHTMLstream(int width, const std::shared_ptr<LineLayout> &layout,
                     HttpResponse *res, std::string_view body, bool internal) {
 
-  layout->clearBuffer();
+  layout->data.clear();
 
   long long linelen = 0;
   long long trbyte = 0;
 
   symbol_width = 1;
 
-  html_feed_environ htmlenv1(MAX_ENV_LEVEL, App::instance().INIT_BUFFER_WIDTH(),
-                             0);
+  html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0);
 
   htmlenv1.buf = GeneralList<TextLine>::newGeneralList();
 
@@ -537,6 +536,7 @@ void loadHTMLstream(const std::shared_ptr<LineLayout> &layout,
   // render ?
   //
   htmlenv1.render(res, &layout->data);
+  layout->fix_size(width);
 
   // layout->_scroll.row = 0;
   // layout->_cursor.row = 0;
@@ -693,9 +693,9 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
   res->type = "text/plain";
 }
 
-std::shared_ptr<Buffer> loadHTMLString(std::string_view html) {
+std::shared_ptr<Buffer> loadHTMLString(int width, std::string_view html) {
   auto newBuf = Buffer::create();
-  loadHTMLstream(newBuf->layout, newBuf->res.get(), html, true);
+  loadHTMLstream(width, newBuf->layout, newBuf->res.get(), html, true);
   return newBuf;
 }
 

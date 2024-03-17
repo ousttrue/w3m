@@ -701,7 +701,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_CURRENT_LINE",
                 Sprintf("%ld", buf->layout->linenumber(l))->ptr);
     set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->layout->visual.cursor.col + 1)->ptr);
+                Sprintf("%d", buf->layout->visual.cursor().col + 1)->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -1012,7 +1012,7 @@ void App::onFrame() {
   }
 
   // reload
-  int width = INIT_BUFFER_WIDTH();
+  // int width = INIT_BUFFER_WIDTH();
   // if (buf->layout.width == 0)
   //   buf->layout.width = width;
   // if (buf->layout.height == 0)
@@ -1026,12 +1026,12 @@ void App::onFrame() {
 
       auto sbuf = buf->layout;
       if (buf->res->is_html_type()) {
-        loadHTMLstream(buf->layout, buf->res.get(), body);
+        loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(), buf->layout, buf->res.get(), body);
       } else {
         loadBuffer(buf->layout, buf->res.get(), body);
       }
 
-      buf->layout->reshape(width);
+      // buf->layout->reshape(width);
     }
   }
 
@@ -1114,7 +1114,7 @@ void App::display() {
   ftxui::Render(screen, dom());
 
   auto cursor =
-      buf->layout->root() + layout->visual.cursor - layout->visual.scroll;
+      buf->layout->root() + layout->visual.cursor() - layout->visual.scroll();
 
   auto rendered = screen.ToString();
   if (rendered != _last) {
@@ -1144,16 +1144,7 @@ ftxui::Element App::dom() {
   auto msg = this->make_lastline_message(buf);
 
   std::stringstream ss;
-  ss << "[cursor]" << buf->layout->visual.cursor.row << ","
-     << buf->layout->visual.cursor.col
-     //
-     << "(pos)"
-     << buf->layout->cursorPos()
-     //
-     << "[scroll]" << buf->layout->visual.scroll.row << ","
-     << buf->layout->visual.scroll.col
-      //
-      ;
+  ss << buf->layout->visual;
 
   if (auto a = buf->layout->retrieveCurrentAnchor()) {
     ss << ", [a]" << a->start.line << "," << a->start.pos << " " << a->title;
@@ -1473,7 +1464,7 @@ void App::record_err_message(const char *s) {
 /*
  * List of error messages
  */
-std::shared_ptr<Buffer> App::message_list_panel(void) {
+std::shared_ptr<Buffer> App::message_list_panel(int width) {
   std::stringstream tmp;
   tmp << "<html><head><title>List of error messages</title></head><body>"
          "<h1>List of error messages</h1><table cellpadding=0>\n";
@@ -1484,7 +1475,7 @@ std::shared_ptr<Buffer> App::message_list_panel(void) {
     tmp << "<tr><td>(no message recorded)</td></tr>\n";
   }
   tmp << "</table></body></html>";
-  return loadHTMLString(tmp.str());
+  return loadHTMLString(width, tmp.str());
 }
 
 void App::disp_err_message(const char *s) {
@@ -1737,7 +1728,7 @@ std::string App::make_lastline_message(const std::shared_ptr<Buffer> &buf) {
   std::stringstream ss;
   int sl = 0;
   if (displayLineInfo && buf->layout->currentLine()) {
-    int cl = buf->layout->visual.cursor.row;
+    int cl = buf->layout->visual.cursor().row;
     int ll = buf->layout->linenumber(buf->layout->lastLine());
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     ss << Sprintf("%d/%d (%d%%)", cl, ll, r)->ptr;

@@ -633,7 +633,7 @@ void initCookie(void) {
   check_expired_cookies();
 }
 
-std::shared_ptr<Buffer> cookie_list_panel(void) {
+std::shared_ptr<Buffer> cookie_list_panel(int width) {
   /* FIXME: gettextize? */
   Str *src = Strnew_charp("<html><head><title>Cookies</title></head>"
                           "<body><center><b>Cookies</b></center>"
@@ -740,7 +740,7 @@ std::shared_ptr<Buffer> cookie_list_panel(void) {
         src, "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
   }
   Strcat_charp(src, "</ol></form></body></html>");
-  return loadHTMLString(src->ptr);
+  return loadHTMLString(width, src->ptr);
 }
 
 void set_cookie_flag(struct keyvalue *arg) {
