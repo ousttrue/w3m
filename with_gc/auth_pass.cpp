@@ -1,12 +1,12 @@
 #include "auth_pass.h"
 #include "etc.h"
 #include "alloc.h"
-#include "quote.h"
 #include "url.h"
 #include "Str.h"
 #include "myctype.h"
 #include <string.h>
 #include <sys/stat.h>
+#include <list>
 #ifdef _MSC_VER
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -39,7 +39,8 @@ std::list<auth_pass> passwords = {};
 
 static void add_auth_pass_entry(const auth_pass &ent, int netrc, int override) {
   if ((ent.host.size() || netrc) /* netrc accept default (host == NULL) */
-      && (ent.is_proxy || ent.realm.size() || netrc) && ent.uname && ent.pwd) {
+      && (ent.is_proxy || ent.realm.size() || netrc) && ent.uname.size() &&
+      ent.pwd.size()) {
     if (override) {
       passwords.push_front(ent);
     } else {
@@ -65,8 +66,9 @@ static void add_auth_pass_entry(const auth_pass &ent, int netrc, int override) {
   /* ignore invalid entries */
 }
 
-void add_auth_user_passwd(const Url &pu, const std::string &realm, Str *uname,
-                          Str *pwd, bool is_proxy) {
+void add_auth_user_passwd(const Url &pu, const std::string &realm,
+                          const std::string &uname, const std::string &pwd,
+                          bool is_proxy) {
   auth_pass ent{
       .is_proxy = is_proxy,
       .host = pu.host,
@@ -155,10 +157,10 @@ static void parsePasswd(FILE *fp, int netrc) {
       ent.realm = arg->ptr;
     } else if (!strcmp(p, "login")) {
       line = next_token(arg);
-      ent.uname = arg;
+      ent.uname = arg->ptr;
     } else if (!strcmp(p, "password") || !strcmp(p, "passwd")) {
       line = next_token(arg);
-      ent.pwd = arg;
+      ent.pwd = arg->ptr;
     } else if (netrc && !strcmp(p, "machdef")) {
       while ((line = Strfgets(fp))->length != 0) {
         if (*line->ptr == '\n')
@@ -184,7 +186,7 @@ static struct auth_pass *find_auth_pass_entry(const char *host, int port,
     if (ent.is_proxy == is_proxy && (ent.bad != true) &&
         (ent.host.empty() || ent.host == host) &&
         (!ent.port || ent.port == port) &&
-        (!ent.uname || uname.empty() || uname == ent.uname->ptr) &&
+        (ent.uname.empty() || uname.empty() || uname == ent.uname) &&
         (ent.realm.empty() || realm.empty() || ent.realm == realm))
       return &ent;
   }
@@ -215,8 +217,8 @@ find_auth_user_passwd(const Url &pu, const std::string &realm, bool is_proxy) {
       find_auth_pass_entry(pu.host.c_str(), pu.port, realm, pu.user, is_proxy);
   if (ent) {
     return {
-        ent->uname->ptr,
-        ent->pwd->ptr,
+        ent->uname,
+        ent->pwd,
     };
   }
 

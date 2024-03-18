@@ -177,10 +177,11 @@ std::string HttpRequest::to_Str() const {
 }
 
 void HttpRequest::add_auth_cookie() {
-  if (this->add_auth_cookie_flag && this->realm && this->uname && this->pwd) {
+  if (this->add_auth_cookie_flag && this->realm.size() && this->uname.size() &&
+      this->pwd.size()) {
     /* If authorization is required and passed */
-    add_auth_user_passwd(url, qstr_unquote(this->realm)->ptr, this->uname,
-                         this->pwd, 0);
+    add_auth_user_passwd(url, qstr_unquote(Strnew(this->realm))->ptr,
+                         this->uname, this->pwd, 0);
     this->add_auth_cookie_flag = false;
   }
 }

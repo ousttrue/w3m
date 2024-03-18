@@ -5,7 +5,6 @@
 extern std::string passwd_file;
 extern bool disable_secret_security_check;
 
-struct Str;
 struct Url;
 struct auth_pass {
   bool bad = false;
@@ -13,12 +12,13 @@ struct auth_pass {
   std::string host;
   int port = {};
   std::string realm = {};
-  Str *uname = {};
-  Str *pwd = {};
+  std::string uname = {};
+  std::string pwd = {};
 };
 
-void add_auth_user_passwd(const Url &pu, const std::string &realm, Str *uname,
-                          Str *pwd, bool is_proxy);
+void add_auth_user_passwd(const Url &pu, const std::string &realm,
+                          const std::string &uname, const std::string &pwd,
+                          bool is_proxy);
 
 void invalidate_auth_user_passwd(const Url &pu, const std::string &realm,
                                  bool is_proxy);

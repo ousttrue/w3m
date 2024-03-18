@@ -99,18 +99,20 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
         http_response_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
-      if (findAuthentication(&hauth, *res, "WWW-Authenticate:") &&
-          (hr->realm = get_auth_param(hauth.param, "realm"))) {
-        auto [uname, pwd] =
-            getAuthCookie(&hauth, "Authorization:", hr->url, hr.get(), request);
-        hr->uname = Strnew(uname);
-        hr->pwd = Strnew(pwd);
-        if (hr->uname == nullptr) {
-          res->page_loaded(hr->url, stream);
-          return res;
+      if (findAuthentication(&hauth, *res, "WWW-Authenticate:")) {
+        hr->realm = get_auth_param(hauth.param, "realm")->ptr;
+        if (hr->realm.size()) {
+          auto [uname, pwd] = getAuthCookie(&hauth, "Authorization:", hr->url,
+                                            hr.get(), request);
+          hr->uname = uname;
+          hr->pwd = pwd;
+          if (hr->uname.empty()) {
+            res->page_loaded(hr->url, stream);
+            return res;
+          }
+          hr->add_auth_cookie_flag = true;
+          return loadGeneralFile(path, current, option, request);
         }
-        hr->add_auth_cookie_flag = true;
-        return loadGeneralFile(path, current, option, request);
       }
     }
 

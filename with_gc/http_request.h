@@ -64,9 +64,9 @@ struct HttpRequest {
   HttpOption option = {};
   std::shared_ptr<Form> request = {};
 
-  Str *uname = NULL;
-  Str *pwd = NULL;
-  Str *realm = NULL;
+  std::string uname;
+  std::string pwd;
+  std::string realm;
   bool add_auth_cookie_flag = false;
 
   std::list<std::string> extra_headers;
