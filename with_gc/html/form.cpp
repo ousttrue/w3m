@@ -159,21 +159,21 @@ Str *FormItem::query_from_followform() {
       /* not multipart */
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
-        Strcat(query, Str_form_quote(f2->name));
+        Strcat(query, form_quote(f2->name->ptr));
         Strcat(query, Sprintf(".x=%d&", x));
-        Strcat(query, Str_form_quote(f2->name));
+        Strcat(query, form_quote(f2->name->ptr));
         Strcat(query, Sprintf(".y=%d", y));
       } else {
         /* not IMAGE */
         if (f2->name && f2->name->length > 0) {
-          Strcat(query, Str_form_quote(f2->name));
+          Strcat(query, form_quote(f2->name->ptr));
           Strcat_char(query, '=');
         }
         if (f2->value != nullptr) {
           if (this->parent->method == FORM_METHOD_INTERNAL)
-            Strcat(query, Str_form_quote(f2->value));
+            Strcat(query, form_quote(f2->value->ptr));
           else {
-            Strcat(query, Str_form_quote(f2->value));
+            Strcat(query, form_quote(f2->value->ptr));
           }
         }
       }
@@ -260,27 +260,20 @@ void FormItem::query_from_followform_multipart() {
   }
 }
 
-Str *Str_form_quote(Str *x) {
-  Str *tmp = {};
-  char *p = x->ptr, *ep = x->ptr + x->length;
-  char buf[4];
-
+std::string form_quote(std::string_view x) {
+  std::stringstream tmp;
+  auto p = x.begin();
+  auto ep = x.end();
   for (; p < ep; p++) {
     if (*p == ' ') {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
-      Strcat_char(tmp, '+');
+      tmp << '+';
     } else if (is_url_unsafe(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      char buf[4];
       snprintf(buf, sizeof(buf), "%%%02X", (unsigned char)*p);
-      Strcat_charp(tmp, buf);
+      tmp << buf;
     } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
+      tmp << *p;
     }
   }
-  if (tmp)
-    return tmp;
-  return x;
+  return tmp.str();
 }

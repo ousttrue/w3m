@@ -22,7 +22,7 @@ std::shared_ptr<Buffer> execdict(const char *word) {
   }
 
   auto dictcmd =
-      Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
+      Sprintf("%s?%s", DictCommand.c_str(), form_quote(w).c_str())->ptr;
   auto res = loadGeneralFile(dictcmd, {}, {.no_referer = true});
   if (!res) {
     // App::instance().disp_message("Execution failed");

@@ -362,8 +362,8 @@ std::shared_ptr<CoroutineState<void>> ldhelp(const FuncContext &context) {
   auto n = strcspn(lang.c_str(), ";, \t");
   auto tmp =
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
-              Str_form_quote(Strnew_charp(w3m_version))->ptr,
-              Str_form_quote(Strnew_charp_n(lang.c_str(), n))->ptr);
+              form_quote(w3m_version).c_str(),
+              form_quote(std::string_view(lang.c_str(), n)).c_str());
   if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
           tmp->ptr, {}, {.no_referer = true}, nullptr)) {
     CurrentTab->pushBuffer(buf);
@@ -1068,13 +1068,12 @@ std::shared_ptr<CoroutineState<void>> ldBmark(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
   auto tmp = Sprintf(
       "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
-      (Str_form_quote(localCookie()))->ptr,
-      (Str_form_quote(Strnew(BookmarkFile)))->ptr,
-      (Str_form_quote(
-           Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str())))
-          ->ptr,
-      (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout->data.title)))
-          ->ptr);
+      (form_quote(localCookie()->ptr)).c_str(),
+      (form_quote(BookmarkFile)).c_str(),
+      (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
+          .c_str(),
+      (form_quote(CurrentTab->currentBuffer()->layout->data.title))
+          .c_str());
   auto request = std::make_shared<Form>("", "post", "", "", "");
   request->body = tmp->ptr;
   request->length = tmp->length;

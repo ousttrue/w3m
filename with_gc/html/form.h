@@ -47,4 +47,4 @@ struct FormAnchor : public Anchor {
   short rows = 0;
 };
 
-Str *Str_form_quote(Str *x);
+std::string form_quote(std::string_view x);
