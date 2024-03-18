@@ -1075,8 +1075,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
           ->ptr,
       (Str_form_quote(Strnew(CurrentTab->currentBuffer()->layout->data.title)))
           ->ptr);
-  auto request =
-      newFormList(nullptr, "post", nullptr, nullptr, nullptr, nullptr, nullptr);
+  auto request = std::make_shared<Form>("", "post", "", "", "");
   request->body = tmp->ptr;
   request->length = tmp->length;
   if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
@@ -1317,8 +1316,7 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
   bool multipart = false;
   std::shared_ptr<Form> request;
   if (CurrentTab->currentBuffer()->layout->data.form_submit) {
-    request =
-        CurrentTab->currentBuffer()->layout->data.form_submit->parent;
+    request = CurrentTab->currentBuffer()->layout->data.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       multipart = true;

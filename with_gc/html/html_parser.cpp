@@ -878,19 +878,16 @@ void HtmlParser::feed_textarea(const char *str) {
 }
 
 Str *HtmlParser::process_form_int(struct HtmlTag *tag, int fid) {
-  const char *p, *q, *r, *s, *tg, *n;
-
-  p = "get";
+  auto p = "get";
   tag->parsedtag_get_value(ATTR_METHOD, &p);
-  q = "!CURRENT_URL!";
+  auto q = "!CURRENT_URL!";
   tag->parsedtag_get_value(ATTR_ACTION, &q);
   q = Strnew(url_quote(remove_space(q)))->ptr;
-  r = nullptr;
-  s = nullptr;
+  auto s = "";
   tag->parsedtag_get_value(ATTR_ENCTYPE, &s);
-  tg = nullptr;
+  auto tg = "";
   tag->parsedtag_get_value(ATTR_TARGET, &tg);
-  n = nullptr;
+  auto n = "";
   tag->parsedtag_get_value(ATTR_NAME, &n);
 
   if (fid < 0) {
@@ -907,7 +904,7 @@ Str *HtmlParser::process_form_int(struct HtmlTag *tag, int fid) {
   }
   form_stack[form_sp] = fid;
 
-  forms[fid] = newFormList(q, p, r, s, tg, n, nullptr);
+  forms[fid] = std::make_shared<Form>(q, p, s, tg, n);
   return nullptr;
 }
 
@@ -1176,8 +1173,8 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
           }
         }
 
-        if (!form->target) {
-          form->target = Strnew(res->baseTarget)->ptr;
+        if (form->target.empty()) {
+          form->target = res->baseTarget;
         }
         if (a_textarea.size() &&
             tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {

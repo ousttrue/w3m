@@ -19,15 +19,21 @@ struct FormItem;
 struct HtmlTag;
 
 struct Form : public std::enable_shared_from_this<Form> {
+  std::string action;
+  FormMethod method = FORM_METHOD_GET;
+  FormEncoding enctype = FORM_ENCTYPE_URLENCODED;
+  std::string target;
+  std::string name;
   std::vector<std::shared_ptr<FormItem>> items;
-  FormMethod method;
-  Str *action;
-  const char *target;
-  const char *name;
-  FormEncoding enctype;
-  char *body;
+
   char *boundary;
-  unsigned long length;
+  char *body = nullptr;
+  unsigned long length = 0;
+
+  Form(){};
+  Form(const std::string &action, const std::string &method,
+       const std::string &enctype, const std::string &target,
+       const std::string &name);
 
   ~Form();
   std::shared_ptr<FormItem> formList_addInput(struct html_feed_environ *h_env,
@@ -40,10 +46,5 @@ struct FormAnchor : public Anchor {
   short y = 0;
   short rows = 0;
 };
-
-std::shared_ptr<Form> newFormList(const char *action, const char *method,
-                                  const char *charset, const char *enctype,
-                                  const char *target, const char *name,
-                                  Form *_next);
 
 Str *Str_form_quote(Str *x);

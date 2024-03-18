@@ -34,7 +34,7 @@ std::string FormItem::form2str() const {
       this->value)
     tmp << " value=\"" << this->value->ptr << "\"";
   tmp << " (" << _formmethodtbl[this->parent->method] << " "
-      << this->parent->action->ptr << ")";
+      << this->parent->action << ")";
   return tmp.str();
 }
 

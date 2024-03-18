@@ -1,5 +1,4 @@
 #include "form.h"
-#include "mimetypes.h"
 #include "form_item.h"
 #include "quote.h"
 #include "app.h"
@@ -8,50 +7,39 @@
 #include "alloc.h"
 #include "html_tag.h"
 #include "html_feed_env.h"
-#include "http_response.h"
 #include <sys/stat.h>
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 
-Form::~Form() { auto a = 0; }
+Form::~Form() {}
 
-struct std::shared_ptr<Form> newFormList(const char *action, const char *method,
-                                         const char *charset,
-                                         const char *enctype,
-                                         const char *target, const char *name,
-                                         Form *_next) {
+Form::Form(const std::string &action, const std::string &method,
+           const std::string &enctype, const std::string &target,
+           const std::string &name)
+    : action(action), target(target), name(name)
 
-  FormMethod m = FORM_METHOD_GET;
-  if (method == NULL || !strcasecmp(method, "get"))
-    m = FORM_METHOD_GET;
-  else if (!strcasecmp(method, "post"))
-    m = FORM_METHOD_POST;
-  else if (!strcasecmp(method, "internal"))
-    m = FORM_METHOD_INTERNAL;
-  /* unknown method is regarded as 'get' */
-
-  FormEncoding e = FORM_ENCTYPE_URLENCODED;
-  if (m != FORM_METHOD_GET && enctype != NULL &&
-      !strcasecmp(enctype, "multipart/form-data")) {
-    e = FORM_ENCTYPE_MULTIPART;
+{
+  if (method.size()) {
+    if (method == "get") {
+      this->method = FORM_METHOD_GET;
+    } else if (method == "post") {
+      this->method = FORM_METHOD_POST;
+    } else if (method == "internal") {
+      this->method = FORM_METHOD_INTERNAL;
+    } else {
+      assert(false);
+    }
   }
-
-  auto l = std::make_shared<Form>();
-  l->action = Strnew_charp(action);
-  l->method = m;
-  l->enctype = e;
-  l->target = target;
-  l->name = name;
-  l->body = NULL;
-  l->length = 0;
-  return l;
+  if (this->method != FORM_METHOD_GET && enctype == "multipart/form-data") {
+    this->enctype = FORM_ENCTYPE_MULTIPART;
+  }
 }
 
 /*
  * add <input> element to FormList
  */
-std::shared_ptr<FormItem>
-Form::formList_addInput(html_feed_environ *h_env, struct HtmlTag *tag) {
+std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
+                                                  struct HtmlTag *tag) {
   /* if not in <form>..</form> environment, just ignore <input> tag */
   // if (fl == NULL)
   //   return NULL;

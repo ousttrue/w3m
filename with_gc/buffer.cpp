@@ -278,7 +278,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
       // first item
       auto fi = fa->formItem->parent->items.front();
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
-          !Strcmp_charp(fi->parent->action, "map") && fi->value) {
+          fi->parent->action == "map" && fi->value) {
         // MapList *ml = searchMapList(buf, fi->value->ptr);
         // ListItem *mi;
         // MapArea *m;
@@ -412,7 +412,7 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
   auto srclist = src->parent;
   auto list = std::make_shared<Form>();
   list->method = srclist->method;
-  list->action = srclist->action->Strdup();
+  list->action = srclist->action;
   list->enctype = srclist->enctype;
   list->body = srclist->body;
   list->boundary = srclist->boundary;
@@ -453,7 +453,7 @@ InternalAction internal_action[] = {
     {.action = "none", .rout = {}},
 };
 
-static void do_internal(char *action, char *data) {
+static void do_internal(const char *action, const char *data) {
   for (int i = 0; internal_action[i].action.size(); i++) {
     if (internal_action[i].action == action) {
       if (internal_action[i].rout)
@@ -466,23 +466,27 @@ static void do_internal(char *action, char *data) {
 std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
                                           Anchor *a) {
   auto form = fi->parent;
-  auto tmp2 = form->action->Strdup();
-  if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
+  auto tmp2 = form->action;
+  if (tmp2 == "!CURRENT_URL!") {
     /* It means "current URL" */
-    tmp2 = Strnew(this->res->currentURL.to_Str());
-    char *p;
-    if ((p = strchr(tmp2->ptr, '?')) != nullptr)
-      Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    tmp2 = this->res->currentURL.to_Str();
+    // char *p;
+    // if ((p = strchr(tmp2->ptr, '?')) != nullptr)
+    //   Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
   }
 
   if (form->method == FORM_METHOD_GET) {
-    auto tmp = fi->query_from_followform();
-    char *p;
-    if ((p = strchr(tmp2->ptr, '?')) != nullptr)
-      Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-    Strcat_charp(tmp2, "?");
-    Strcat(tmp2, tmp);
-    return this->loadLink(tmp2->ptr, {}, nullptr);
+    std::string tmp = fi->query_from_followform()->ptr;
+    // char *p;
+    // if ((p = strchr(tmp2->ptr, '?')) != nullptr)
+    //   Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    auto found = tmp2.find('?');
+    if (found != std::string::npos) {
+      tmp2 = tmp2.substr(0, found);
+    }
+    tmp2 += "?";
+    tmp2 += tmp;
+    return this->loadLink(tmp2.c_str(), {}, nullptr);
     // if (buf) {
     //   App::instance().pushBuffer(buf, a->target);
     // }
@@ -501,7 +505,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
       form->body = tmp->ptr;
       form->length = tmp->length;
     }
-    auto buf = this->loadLink(tmp2->ptr, {}, form);
+    auto buf = this->loadLink(tmp2.c_str(), {}, form);
     if (form->enctype == FORM_ENCTYPE_MULTIPART) {
       unlink(form->body);
     }
@@ -515,10 +519,10 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
     }
     return buf;
   } else if ((form->method == FORM_METHOD_INTERNAL &&
-              (!Strcmp_charp(form->action, "map") ||
-               !Strcmp_charp(form->action, "none")))) { /* internal */
+              (form->action == "map" ||
+               form->action == "none"))) { /* internal */
     auto tmp = fi->query_from_followform();
-    do_internal(tmp2->ptr, tmp->ptr);
+    do_internal(tmp2.c_str(), tmp->ptr);
     return {};
   } else {
     App::instance().disp_err_message(
