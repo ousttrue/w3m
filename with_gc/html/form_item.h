@@ -23,7 +23,7 @@ struct Str;
 struct Form;
 struct FormItem {
   FormItemType type;
-  Str *name;
+  std::string name;
   Str *value;
   Str *init_value;
   int checked;

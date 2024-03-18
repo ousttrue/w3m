@@ -50,7 +50,6 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   item->rows = 0;
   item->checked = item->init_checked = 0;
   item->accept = 0;
-  item->name = NULL;
   item->value = item->init_value = NULL;
   item->readonly = 0;
   char *p;
@@ -62,7 +61,7 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
       item->size = FORM_I_TEXT_DEFAULT_SIZE;
   }
   if (tag->parsedtag_get_value(ATTR_NAME, &p))
-    item->name = Strnew_charp(p);
+    item->name = p;
   if (tag->parsedtag_get_value(ATTR_VALUE, &p))
     item->value = item->init_value = Strnew_charp(p);
   item->checked = item->init_checked = tag->parsedtag_exists(ATTR_CHECKED);
@@ -94,13 +93,14 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   return item;
 }
 
-static void form_write_data(FILE *f, char *boundary, char *name, char *value) {
+static void form_write_data(FILE *f, char *boundary, const char *name,
+                            char *value) {
   fprintf(f, "--%s\r\n", boundary);
   fprintf(f, "Content-Disposition: form-data; name=\"%s\"\r\n\r\n", name);
   fprintf(f, "%s\r\n", value);
 }
 
-static void form_write_from_file(FILE *f, char *boundary, char *name,
+static void form_write_from_file(FILE *f, char *boundary, const char *name,
                                  char *filename, char *file) {
 #ifdef _MSC_VER
 #else
@@ -133,10 +133,7 @@ write_end:
 Str *FormItem::query_from_followform() {
   auto query = Strnew();
   for (auto &f2 : this->parent->items) {
-    if (f2->name == nullptr)
-      continue;
-    /* <ISINDEX> is translated into single text form */
-    if (f2->name->length == 0 && f2->type != FORM_INPUT_TEXT)
+    if (f2->name.empty())
       continue;
     switch (f2->type) {
     case FORM_INPUT_RESET:
@@ -159,14 +156,14 @@ Str *FormItem::query_from_followform() {
       /* not multipart */
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
-        Strcat(query, form_quote(f2->name->ptr));
+        Strcat(query, form_quote(f2->name));
         Strcat(query, Sprintf(".x=%d&", x));
-        Strcat(query, form_quote(f2->name->ptr));
+        Strcat(query, form_quote(f2->name));
         Strcat(query, Sprintf(".y=%d", y));
       } else {
         /* not IMAGE */
-        if (f2->name && f2->name->length > 0) {
-          Strcat(query, form_quote(f2->name->ptr));
+        if (f2->name.size()) {
+          Strcat(query, form_quote(f2->name));
           Strcat_char(query, '=');
         }
         if (f2->value != nullptr) {
@@ -204,10 +201,7 @@ void FormItem::query_from_followform_multipart() {
 
   // auto query = Strnew();
   for (auto &f2 : form->items) {
-    if (f2->name == nullptr)
-      continue;
-    /* <ISINDEX> is translated into single text form */
-    if (f2->name->length == 0)
+    if (f2->name.empty())
       continue;
     switch (f2->type) {
     case FORM_INPUT_RESET:
@@ -230,26 +224,26 @@ void FormItem::query_from_followform_multipart() {
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
         {
-          auto query = f2->name->Strdup();
-          Strcat_charp(query, ".x");
-          form_write_data(body, form->boundary, query->ptr,
+          auto query = f2->name;
+          query += ".x";
+          form_write_data(body, form->boundary, query.c_str(),
                           Sprintf("%d", x)->ptr);
         }
         {
-          auto query = f2->name->Strdup();
-          Strcat_charp(query, ".y");
-          form_write_data(body, form->boundary, query->ptr,
+          auto query = f2->name;
+          query += ".y";
+          form_write_data(body, form->boundary, query.c_str(),
                           Sprintf("%d", y)->ptr);
         }
-      } else if (f2->name && f2->name->length > 0 && f2->value != nullptr) {
+      } else if (f2->name.size() && f2->value != nullptr) {
         /* not IMAGE */
         {
           auto query = f2->value;
           if (f2->type == FORM_INPUT_FILE)
-            form_write_from_file(body, form->boundary, f2->name->ptr,
+            form_write_from_file(body, form->boundary, f2->name.c_str(),
                                  query->ptr, f2->value->ptr);
           else
-            form_write_data(body, form->boundary, f2->name->ptr, query->ptr);
+            form_write_data(body, form->boundary, f2->name.c_str(), query->ptr);
         }
       }
     }

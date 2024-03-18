@@ -8,6 +8,7 @@
 #include "html/form.h"
 #include "alloc.h"
 #include "proc.h"
+#include "Str.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

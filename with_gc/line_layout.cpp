@@ -1,4 +1,5 @@
 #include "line_layout.h"
+#include "Str.h"
 #include "myctype.h"
 #include "url.h"
 #include "html/form.h"
@@ -386,9 +387,7 @@ void LineLayout::formResetBuffer(const AnchorList<FormAnchor> *formitem) {
 
     auto f1 = a->formItem;
     auto f2 = formitem->anchors[i].formItem;
-    if (f1->type != f2->type ||
-        strcmp(((f1->name == NULL) ? "" : f1->name->ptr),
-               ((f2->name == NULL) ? "" : f2->name->ptr)))
+    if (f1->type != f2->type || f1->name != f2->name)
       break; /* What's happening */
     switch (f1->type) {
     case FORM_INPUT_TEXT:

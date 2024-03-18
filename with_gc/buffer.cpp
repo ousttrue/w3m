@@ -422,7 +422,7 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
   for (auto &srcitem : srclist->items) {
     auto item = std::make_shared<FormItem>();
     item->type = srcitem->type;
-    item->name = srcitem->name->Strdup();
+    item->name = srcitem->name;
     item->value = srcitem->value->Strdup();
     item->checked = srcitem->checked;
     item->accept = srcitem->accept;
@@ -649,7 +649,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
       auto a2 = &this->layout->data._formitem->anchors[i];
       auto f2 = a2->formItem;
-      if (f2->parent == fi->parent && f2->name && f2->value &&
+      if (f2->parent == fi->parent && f2->name.size() && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
           f2->type != FORM_INPUT_RESET) {
         f2->value = f2->init_value;
@@ -771,7 +771,7 @@ void Buffer::formRecheckRadio(FormAnchor *a) {
     auto a2 = &this->layout->data._formitem->anchors[i];
     auto f2 = a2->formItem;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
-        Strcmp(f2->name, fi->name) == 0) {
+        f2->name == fi->name) {
       f2->checked = 0;
       this->layout->formUpdateBuffer(a2);
     }

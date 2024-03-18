@@ -1,4 +1,5 @@
 #include "line_data.h"
+#include "Str.h"
 #include "linklist.h"
 #include "myctype.h"
 #include "html/form.h"

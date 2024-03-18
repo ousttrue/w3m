@@ -27,8 +27,8 @@ std::string FormItem::form2str() const {
   if (this->type != FORM_SELECT && this->type != FORM_TEXTAREA)
     tmp << "input type=";
   tmp << _formtypetbl[this->type];
-  if (this->name && this->name->length)
-    tmp << " name=\"" << this->name->ptr << "\"";
+  if (this->name.size())
+    tmp << " name=\"" << this->name << "\"";
   if ((this->type == FORM_INPUT_RADIO || this->type == FORM_INPUT_CHECKBOX ||
        this->type == FORM_SELECT) &&
       this->value)
