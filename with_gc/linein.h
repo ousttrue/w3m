@@ -131,12 +131,12 @@ public:
   void onBreak();
 
   static std::shared_ptr<LineInput>
-  inputLineHistSearch(const char *prompt, const char *def_str,
+  inputLineHistSearch(const char *prompt, std::string_view def_str,
                       const std::shared_ptr<Hist> &hist, InputFlags flag,
                       IncFunc incrfunc = {});
 
   static std::shared_ptr<LineInput>
-  inputLineHist(const char *prompt, const char *def_str,
+  inputLineHist(const char *prompt, std::string_view def_str,
                 const std::shared_ptr<Hist> &hist, InputFlags f) {
     return inputLineHistSearch(prompt, def_str, hist, f);
   }
@@ -152,7 +152,7 @@ public:
   }
 
   static std::shared_ptr<LineInput>
-  inputStrHist(const char *prompt, const char *d,
+  inputStrHist(const char *prompt, std::string_view d,
                const std::shared_ptr<Hist> &hist) {
     return inputLineHist(prompt, d, hist, IN_STRING);
   }

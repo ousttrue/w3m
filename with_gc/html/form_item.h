@@ -24,8 +24,8 @@ struct Form;
 struct FormItem {
   FormItemType type;
   std::string name;
-  Str *value;
-  Str *init_value;
+  std::string value;
+  std::string init_value;
   int checked;
   int init_checked;
   int accept;
@@ -36,9 +36,6 @@ struct FormItem {
 
   std::shared_ptr<Form> parent;
 
-  std::shared_ptr<FormItem> next;
-
-  Str *query_from_followform();
   void query_from_followform_multipart();
   std::string form2str() const;
 

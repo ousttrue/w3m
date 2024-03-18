@@ -31,8 +31,8 @@ std::string FormItem::form2str() const {
     tmp << " name=\"" << this->name << "\"";
   if ((this->type == FORM_INPUT_RADIO || this->type == FORM_INPUT_CHECKBOX ||
        this->type == FORM_SELECT) &&
-      this->value)
-    tmp << " value=\"" << this->value->ptr << "\"";
+      this->value.size())
+    tmp << " value=\"" << this->value << "\"";
   tmp << " (" << _formmethodtbl[this->parent->method] << " "
       << this->parent->action << ")";
   return tmp.str();
@@ -64,8 +64,8 @@ void FormItem::input_textarea() {
     App::instance().disp_err_message("Can't open temporary file");
     return;
   }
-  if (this->value) {
-    form_fputs_decode(this->value, f);
+  if (this->value.size()) {
+    form_fputs_decode(Strnew(this->value), f);
   }
   fclose(f);
 
@@ -82,7 +82,7 @@ void FormItem::input_textarea() {
     App::instance().disp_err_message("Can't open temporary file");
     goto input_end;
   }
-  this->value = Strnew();
+  this->value.clear();
   Str *tmp;
   while (tmp = Strfgets(f), tmp->length > 0) {
     if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
@@ -94,7 +94,7 @@ void FormItem::input_textarea() {
       Strcat_charp(tmp, "\r\n");
     }
     cleanup_line(tmp, RAW_MODE);
-    Strcat(this->value, tmp);
+    this->value += tmp->ptr;
   }
   fclose(f);
 input_end:

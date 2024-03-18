@@ -13,8 +13,6 @@
 #include <functional>
 #include <memory>
 
-extern bool FoldTextarea;
-
 struct HtmlTag;
 
 struct Utf8;

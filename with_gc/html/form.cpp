@@ -50,7 +50,7 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   item->rows = 0;
   item->checked = item->init_checked = 0;
   item->accept = 0;
-  item->value = item->init_value = NULL;
+  item->value = item->init_value = "";
   item->readonly = 0;
   char *p;
   if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
@@ -63,7 +63,7 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   if (tag->parsedtag_get_value(ATTR_NAME, &p))
     item->name = p;
   if (tag->parsedtag_get_value(ATTR_VALUE, &p))
-    item->value = item->init_value = Strnew_charp(p);
+    item->value = item->init_value = p;
   item->checked = item->init_checked = tag->parsedtag_exists(ATTR_CHECKED);
   item->accept = tag->parsedtag_exists(ATTR_ACCEPT);
   tag->parsedtag_get_value(ATTR_SIZE, &item->size);
@@ -72,7 +72,7 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   int i;
   if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
       i < (int)h_env->parser.textarea_str.size()) {
-    item->value = item->init_value = Strnew(h_env->parser.textarea_str[i]);
+    item->value = item->init_value = h_env->parser.textarea_str[i];
   }
   if (tag->parsedtag_get_value(ATTR_ROWS, &p))
     item->rows = atoi(p);
@@ -80,12 +80,11 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
     /* type attribute is missing. Ignore the tag. */
     return NULL;
   }
-  if (item->type == FORM_INPUT_FILE && item->value && item->value->length) {
+  if (item->type == FORM_INPUT_FILE && item->value.size()) {
     /* security hole ! */
     return NULL;
   }
   item->parent = shared_from_this();
-  item->next = NULL;
   if (item->type == FORM_INPUT_HIDDEN) {
     return NULL;
   }
@@ -93,15 +92,16 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   return item;
 }
 
-static void form_write_data(FILE *f, char *boundary, const char *name,
-                            char *value) {
+static void form_write_data(FILE *f, const char *boundary, const char *name,
+                            const char *value) {
   fprintf(f, "--%s\r\n", boundary);
   fprintf(f, "Content-Disposition: form-data; name=\"%s\"\r\n\r\n", name);
   fprintf(f, "%s\r\n", value);
 }
 
-static void form_write_from_file(FILE *f, char *boundary, const char *name,
-                                 char *filename, char *file) {
+static void form_write_from_file(FILE *f, const char *boundary,
+                                 const char *name, const char *filename,
+                                 const char *file) {
 #ifdef _MSC_VER
 #else
   FILE *fd;
@@ -130,9 +130,9 @@ write_end:
 #endif
 }
 
-Str *FormItem::query_from_followform() {
-  auto query = Strnew();
-  for (auto &f2 : this->parent->items) {
+std::string Form::query(const std::shared_ptr<FormItem> &item) const {
+  std::stringstream query;
+  for (auto &f2 : this->items) {
     if (f2->name.empty())
       continue;
     switch (f2->type) {
@@ -141,7 +141,7 @@ Str *FormItem::query_from_followform() {
       continue;
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_IMAGE:
-      if (f2.get() != this || f2->value == nullptr)
+      if (f2 != item || f2->value.empty())
         continue;
       break;
     case FORM_INPUT_RADIO:
@@ -156,34 +156,30 @@ Str *FormItem::query_from_followform() {
       /* not multipart */
       if (f2->type == FORM_INPUT_IMAGE) {
         int x = 0, y = 0;
-        Strcat(query, form_quote(f2->name));
-        Strcat(query, Sprintf(".x=%d&", x));
-        Strcat(query, form_quote(f2->name));
-        Strcat(query, Sprintf(".y=%d", y));
+        query << form_quote(f2->name);
+        query << Sprintf(".x=%d&", x);
+        query << form_quote(f2->name);
+        query << Sprintf(".y=%d", y);
       } else {
         /* not IMAGE */
         if (f2->name.size()) {
-          Strcat(query, form_quote(f2->name));
-          Strcat_char(query, '=');
+          query << form_quote(f2->name);
+          query << '=';
         }
-        if (f2->value != nullptr) {
-          if (this->parent->method == FORM_METHOD_INTERNAL)
-            Strcat(query, form_quote(f2->value->ptr));
-          else {
-            Strcat(query, form_quote(f2->value->ptr));
-          }
+        if (f2->value.size()) {
+          query << form_quote(f2->value);
         }
       }
-      if (f2->next)
-        Strcat_char(query, '&');
+      query << '&';
     }
   }
+  auto str = query.str();
   {
     /* remove trailing & */
-    while (Strlastchar(query) == '&')
-      Strshrink(query, 1);
+    while (str.size() && str.back() == '&')
+      str.pop_back();
   }
-  return query;
+  return str;
 }
 
 void FormItem::query_from_followform_multipart() {
@@ -209,7 +205,7 @@ void FormItem::query_from_followform_multipart() {
       continue;
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_IMAGE:
-      if (f2.get() != this || f2->value == nullptr)
+      if (f2.get() != this || f2->value.empty())
         continue;
       break;
     case FORM_INPUT_RADIO:
@@ -235,15 +231,16 @@ void FormItem::query_from_followform_multipart() {
           form_write_data(body, form->boundary, query.c_str(),
                           Sprintf("%d", y)->ptr);
         }
-      } else if (f2->name.size() && f2->value != nullptr) {
+      } else if (f2->name.size() && f2->value.size()) {
         /* not IMAGE */
         {
           auto query = f2->value;
           if (f2->type == FORM_INPUT_FILE)
             form_write_from_file(body, form->boundary, f2->name.c_str(),
-                                 query->ptr, f2->value->ptr);
+                                 query.c_str(), f2->value.c_str());
           else
-            form_write_data(body, form->boundary, f2->name.c_str(), query->ptr);
+            form_write_data(body, form->boundary, f2->name.c_str(),
+                            query.c_str());
         }
       }
     }

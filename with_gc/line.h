@@ -1,7 +1,10 @@
 #pragma once
 #include <vector>
 #include <stdint.h>
+#include <string_view>
 #include "lineprop.h"
+
+extern bool FoldTextarea;
 
 class Line {
   std::vector<char> _lineBuf;
@@ -55,6 +58,7 @@ public:
     _update();
     return _posEndColMap.back().end;
   }
+
   // byte pos to column
   int bytePosToColumn(int pos) const {
     _update();
@@ -73,6 +77,7 @@ public:
     // return 0;
     return _posEndColMap[pos].begin;
   }
+
   // column to byte pos
   int columnPos(int col) const {
     _update();
@@ -86,4 +91,7 @@ public:
     }
     return _posEndColMap.size() - 1;
   }
+
+  int form_update_line(std::string_view str, int spos, int epos, int width,
+                       int newline, int password);
 };

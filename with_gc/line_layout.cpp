@@ -8,8 +8,6 @@
 #include "alloc.h"
 #include "utf8.h"
 
-bool FoldTextarea = false;
-
 LineLayout::LineLayout() {}
 
 void LineLayout::clearBuffer() {
@@ -412,101 +410,13 @@ void LineLayout::formResetBuffer(const AnchorList<FormAnchor> *formitem) {
   }
 }
 
-static int form_update_line(Line *line, char **str, int spos, int epos,
-                            int width, int newline, int password) {
-  int c_len = 1, c_width = 1, w, i, len, pos;
-  char *p, *buf;
-  Lineprop c_type, effect, *prop;
-
-  for (p = *str, w = 0, pos = 0; *p && w < width;) {
-    c_type = get_mctype(p);
-    if (c_type == PC_CTRL) {
-      if (newline && *p == '\n')
-        break;
-      if (*p != '\r') {
-        w++;
-        pos++;
-      }
-    } else if (password) {
-      w += c_width;
-      pos += c_width;
-      w += c_width;
-      pos += c_len;
-    }
-    p += c_len;
-  }
-  pos += width - w;
-
-  len = line->len() + pos + spos - epos;
-  buf = (char *)New_N(char, len + 1);
-  buf[len] = '\0';
-  prop = (Lineprop *)New_N(Lineprop, len);
-  memcpy(buf, line->lineBuf(), spos * sizeof(char));
-  memcpy(prop, line->propBuf(), spos * sizeof(Lineprop));
-
-  effect = CharEffect(line->propBuf()[spos]);
-  for (p = *str, w = 0, pos = spos; *p && w < width;) {
-    c_type = get_mctype(p);
-    if (c_type == PC_CTRL) {
-      if (newline && *p == '\n')
-        break;
-      if (*p != '\r') {
-        buf[pos] = password ? '*' : ' ';
-        prop[pos] = effect | PC_ASCII;
-        pos++;
-        w++;
-      }
-    } else if (password) {
-      for (i = 0; i < c_width; i++) {
-        buf[pos] = '*';
-        prop[pos] = effect | PC_ASCII;
-        pos++;
-        w++;
-      }
-    } else {
-      buf[pos] = *p;
-      prop[pos] = effect | c_type;
-      pos++;
-      w += c_width;
-    }
-    p += c_len;
-  }
-  for (; w < width; w++) {
-    buf[pos] = ' ';
-    prop[pos] = effect | PC_ASCII;
-    pos++;
-  }
-  if (newline) {
-    if (!FoldTextarea) {
-      while (*p && *p != '\r' && *p != '\n')
-        p++;
-    }
-    if (*p == '\r')
-      p++;
-    if (*p == '\n')
-      p++;
-  }
-  *str = p;
-
-  memcpy(&buf[pos], &line->lineBuf()[epos],
-         (line->len() - epos) * sizeof(char));
-  memcpy(&prop[pos], &line->propBuf()[epos],
-         (line->len() - epos) * sizeof(Lineprop));
-
-  line->assign(buf, prop, len);
-
-  return pos;
-}
-
 void LineLayout::formUpdateBuffer(FormAnchor *a) {
-  char *p;
-  int spos, epos, rows, c_rows, pos, col = 0;
-  Line *l;
 
+  int spos, epos;
   CursorAndScroll backup = this->visual;
   this->visual.cursorRow(a->start.line);
-  auto form = a->formItem;
-  switch (form->type) {
+  auto item = a->formItem;
+  switch (item->type) {
   case FORM_TEXTAREA:
   case FORM_INPUT_TEXT:
   case FORM_INPUT_FILE:
@@ -521,13 +431,16 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
     epos = a->end.pos - 1;
   }
 
-  switch (form->type) {
+  // char *p;
+  // int rows, c_rows, pos, col = 0;
+  // Line *l;
+  switch (item->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
     if (this->currentLine() == NULL || spos >= this->currentLine()->len() ||
         spos < 0)
       break;
-    if (form->checked)
+    if (item->checked)
       this->currentLine()->lineBuf(spos, '*');
     else
       this->currentLine()->lineBuf(spos, ' ');
@@ -536,14 +449,14 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
   case FORM_INPUT_FILE:
   case FORM_INPUT_PASSWORD:
   case FORM_TEXTAREA: {
-    if (!form->value)
+    if (item->value.empty())
       break;
-    p = form->value->ptr;
+    std::string p = item->value;
 
-    l = this->currentLine();
+    auto l = this->currentLine();
     if (!l)
       break;
-    if (form->type == FORM_TEXTAREA) {
+    if (item->type == FORM_TEXTAREA) {
       int n = a->y - this->visual.cursor().row;
       if (n > 0)
         for (; !this->isNull(l) && n; --l, n--)
@@ -554,13 +467,13 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
       if (!l)
         break;
     }
-    rows = form->rows ? form->rows : 1;
-    col = l->bytePosToColumn(a->start.pos);
-    for (c_rows = 0; c_rows < rows; c_rows++, ++l) {
+    auto rows = item->rows ? item->rows : 1;
+    auto col = l->bytePosToColumn(a->start.pos);
+    for (int c_rows = 0; c_rows < rows; c_rows++, ++l) {
       if (this->isNull(l))
         break;
       if (rows > 1 && this->data._formitem) {
-        pos = l->columnPos(col);
+        int pos = l->columnPos(col);
         a = this->data._formitem->retrieveAnchor(this->linenumber(l), pos);
         if (a == NULL)
           break;
@@ -570,8 +483,9 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
       if (a->start.line != a->end.line || spos > epos || epos >= l->len() ||
           spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
         break;
-      pos = form_update_line(l, &p, spos, epos, l->bytePosToColumn(epos) - col,
-                             rows > 1, form->type == FORM_INPUT_PASSWORD);
+
+      auto pos = l->form_update_line(p, spos, epos, l->bytePosToColumn(epos) - col,
+                                rows > 1, item->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
         this->data._href->shiftAnchorPosition(this->data._hmarklist.get(),
                                               a->start.line, spos, pos - epos);

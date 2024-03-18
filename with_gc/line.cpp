@@ -2,6 +2,8 @@
 #include "utf8.h"
 #include "lineprop.h"
 
+bool FoldTextarea = false;
+
 Line::Line(const char *buf, Lineprop *prop, int byteLen) {
   assign(buf, prop, byteLen);
 }
@@ -58,4 +60,98 @@ void Line::_update() const {
       }
     }
   }
+}
+
+int Line::form_update_line(std::string_view str, int spos, int epos, int width,
+                           int newline, int password) {
+  if(str.size()){
+    auto a=0;
+  }
+  int c_len = 1;
+  int c_width = 1;
+  int w = 0;
+  int pos = 0;
+  for (auto p = str.begin(); p != str.end() && w < width;) {
+    auto c_type = get_mctype(&*p);
+    if (c_type == PC_CTRL) {
+      if (newline && *p == '\n')
+        break;
+      if (*p != '\r') {
+        w++;
+        pos++;
+      }
+    } else if (password) {
+      w += c_width;
+      pos += c_width;
+      w += c_width;
+      pos += c_len;
+    }
+    p += c_len;
+  }
+  pos += width - w;
+
+  int len = this->len() + pos + spos - epos;
+  // buf = (char *)New_N(char, len + 1);
+  // buf[len] = '\0';
+  // std::vector<Lineprop> prop(len);
+  // memcpy(buf, line->lineBuf(), spos * sizeof(char));
+  // memcpy(prop, line->propBuf(), spos * sizeof(Lineprop));
+  auto buf = this->_lineBuf;
+  auto prop = this->_propBuf;
+
+  auto effect = CharEffect(this->propBuf()[spos]);
+  w = 0;
+  pos = spos;
+  for (auto p = str.begin(); p != str.end() && w < width;) {
+    auto c_type = get_mctype(&*p);
+    if (c_type == PC_CTRL) {
+      if (newline && *p == '\n')
+        break;
+      if (*p != '\r') {
+        buf[pos] = password ? '*' : ' ';
+        prop[pos] = effect | PC_ASCII;
+        pos++;
+        w++;
+      }
+    } else if (password) {
+      for (int i = 0; i < c_width; i++) {
+        buf[pos] = '*';
+        prop[pos] = effect | PC_ASCII;
+        pos++;
+        w++;
+      }
+    } else {
+      buf[pos] = *p;
+      prop[pos] = effect | c_type;
+      pos++;
+      w += c_width;
+    }
+    p += c_len;
+  }
+  for (; w < width; w++) {
+    buf[pos] = ' ';
+    prop[pos] = effect | PC_ASCII;
+    pos++;
+  }
+  if (newline) {
+    assert(false);
+    // if (!FoldTextarea) {
+    //   while (*p && *p != '\r' && *p != '\n')
+    //     p++;
+    // }
+    // if (*p == '\r')
+    //   p++;
+    // if (*p == '\n')
+    //   p++;
+  }
+  // *str = p;
+
+  // memcpy(&buf[pos], &line->lineBuf()[epos],
+  //        (line->len() - epos) * sizeof(char));
+  // memcpy(&prop[pos], &line->propBuf()[epos],
+  //        (line->len() - epos) * sizeof(Lineprop));
+
+  this->assign(buf.data(), prop.data(), len);
+
+  return pos;
 }

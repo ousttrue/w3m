@@ -91,7 +91,7 @@ LineInput::LineInput(const char *prompt, const std::shared_ptr<Hist> &hist,
 }
 
 std::shared_ptr<LineInput>
-LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
+LineInput::inputLineHistSearch(const char *prompt, std::string_view def_str,
                                const std::shared_ptr<Hist> &hist,
                                InputFlags flag, IncFunc incrfunc) {
 
@@ -113,8 +113,8 @@ LineInput::inputLineHistSearch(const char *prompt, const char *def_str,
     input->cm_mode = CPL_OFF;
   }
 
-  if (def_str) {
-    input->strBuf = Strnew_charp(def_str);
+  if (def_str.size()) {
+    input->strBuf = Strnew_charp_n(def_str.data(), def_str.size());
     input->CLen = input->CPos =
         input->setStrType(input->strBuf, input->strProp);
   } else {
@@ -860,16 +860,16 @@ void LineInput::_editor(char) {
 
   FormItem fi;
   fi.readonly = false;
-  fi.value = strBuf->Strdup();
-  Strcat_char(fi.value, '\n');
+  fi.value = strBuf->ptr;
+  fi.value += '\n';
 
   fi.input_textarea();
 
   strBuf = Strnew();
-  for (auto p = fi.value->ptr; *p; p++) {
-    if (*p == '\r' || *p == '\n')
+  for (auto p : fi.value) {
+    if (p == '\r' || p == '\n')
       continue;
-    Strcat_char(strBuf, *p);
+    Strcat_char(strBuf, p);
   }
   CLen = CPos = setStrType(strBuf, strProp);
 }

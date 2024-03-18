@@ -37,6 +37,8 @@ struct Form : public std::enable_shared_from_this<Form> {
   ~Form();
   std::shared_ptr<FormItem> formList_addInput(struct html_feed_environ *h_env,
                                               HtmlTag *tag);
+
+  std::string query(const std::shared_ptr<FormItem> &item) const;
 };
 
 struct FormAnchor : public Anchor {

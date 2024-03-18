@@ -278,7 +278,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
       // first item
       auto fi = fa->formItem->parent->items.front();
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
-          fi->parent->action == "map" && fi->value) {
+          fi->parent->action == "map" && fi->value.size()) {
         // MapList *ml = searchMapList(buf, fi->value->ptr);
         // ListItem *mi;
         // MapArea *m;
@@ -423,7 +423,7 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
     auto item = std::make_shared<FormItem>();
     item->type = srcitem->type;
     item->name = srcitem->name;
-    item->value = srcitem->value->Strdup();
+    item->value = srcitem->value;
     item->checked = srcitem->checked;
     item->accept = srcitem->accept;
     item->size = srcitem->size;
@@ -431,8 +431,6 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
     item->maxlength = srcitem->maxlength;
     item->readonly = srcitem->readonly;
     item->parent = list;
-    item->next = nullptr;
-
     if (srcitem == src) {
       ret = item;
     }
@@ -476,7 +474,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
   }
 
   if (form->method == FORM_METHOD_GET) {
-    std::string tmp = fi->query_from_followform()->ptr;
+    std::string tmp = fi->parent->query(fi);
     // char *p;
     // if ((p = strchr(tmp2->ptr, '?')) != nullptr)
     //   Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -501,9 +499,9 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
       stat(form->body, &st);
       form->length = st.st_size;
     } else {
-      auto tmp = fi->query_from_followform();
-      form->body = tmp->ptr;
-      form->length = tmp->length;
+      auto tmp = fi->parent->query(fi);
+      form->body = Strnew(tmp)->ptr;
+      form->length = tmp.size();
     }
     auto buf = this->loadLink(tmp2.c_str(), {}, form);
     if (form->enctype == FORM_ENCTYPE_MULTIPART) {
@@ -521,8 +519,8 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
   } else if ((form->method == FORM_METHOD_INTERNAL &&
               (form->action == "map" ||
                form->action == "none"))) { /* internal */
-    auto tmp = fi->query_from_followform();
-    do_internal(tmp2.c_str(), tmp->ptr);
+    auto tmp = fi->parent->query(fi);
+    do_internal(tmp2.c_str(), tmp.c_str());
     return {};
   } else {
     App::instance().disp_err_message(
@@ -547,8 +545,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       App::instance().disp_message_nsec("Read only field!", 1, true);
       co_return {};
     }
-    auto input = LineInput::inputStrHist(
-        "TEXT:", fi->value ? fi->value->ptr : nullptr, TextHist);
+    auto input = LineInput::inputStrHist("TEXT:", fi->value, TextHist);
     input->draw();
     App::instance().pushDispatcher(
         [input](const char *buf, size_t len) -> bool {
@@ -557,7 +554,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
 
     auto p = co_await input;
     if (p.size()) {
-      fi->value = Strnew(p);
+      fi->value = p;
       this->layout->formUpdateBuffer(a);
       this->layout->data.need_reshape = true;
       auto form = fi->parent;
@@ -649,7 +646,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
       auto a2 = &this->layout->data._formitem->anchors[i];
       auto f2 = a2->formItem;
-      if (f2->parent == fi->parent && f2->name.size() && f2->value &&
+      if (f2->parent == fi->parent && f2->name.size() && f2->value.size() &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
           f2->type != FORM_INPUT_RESET) {
         f2->value = f2->init_value;
