@@ -6,6 +6,7 @@
 #include "html/form.h"
 #include "http_auth.h"
 #include "auth_pass.h"
+#include <sstream>
 #ifdef _MSC_VER
 #include <io.h>
 #endif
@@ -57,7 +58,8 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   }
 
   Strcat_m_charp(s, "Accept: ", AcceptMedia.c_str(), "\r\n", nullptr);
-  Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding.c_str(), "\r\n", nullptr);
+  Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding.c_str(), "\r\n",
+                 nullptr);
   Strcat_m_charp(s, "Accept-Language: ", AcceptLang.c_str(), "\r\n", nullptr);
 
   if (target.host.size()) {
@@ -108,16 +110,17 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
   return s->ptr;
 }
 
-Str *HttpRequest::to_Str() const {
+std::string HttpRequest::to_Str() const {
 
-  auto tmp = Strnew(to_str(this->method));
-  Strcat_charp(tmp, " ");
-  Strcat_charp(tmp, this->getRequestURI()->ptr);
-  Strcat_charp(tmp, " HTTP/1.0\r\n");
+  std::stringstream tmp;
+  tmp << to_str(this->method);
+  tmp << " ";
+  tmp << this->getRequestURI()->ptr;
+  tmp << " HTTP/1.0\r\n";
   if (this->option.no_referer) {
-    Strcat_charp(tmp, otherinfo(url, {}, this->option));
+    tmp << otherinfo(url, {}, this->option);
   } else {
-    Strcat_charp(tmp, otherinfo(url, current, this->option));
+    tmp << otherinfo(url, current, this->option);
   }
   for (auto &i : extra_headers) {
     if (strncasecmp(i.c_str(),
@@ -130,47 +133,47 @@ Str *HttpRequest::to_Str() const {
       if (url.scheme == SCM_HTTPS && this->method != HttpMethod::CONNECT)
         continue;
     }
-    Strcat_charp(tmp, i.c_str());
+    tmp << i;
   }
 
   Str *cookie = {};
   if (this->method != HttpMethod::CONNECT && use_cookie &&
       (cookie = find_cookie(url))) {
-    Strcat_charp(tmp, "Cookie: ");
-    Strcat(tmp, cookie);
-    Strcat_charp(tmp, "\r\n");
+    tmp << "Cookie: ";
+    tmp << cookie->ptr;
+    tmp << "\r\n";
     /* [DRAFT 12] s. 10.1 */
-    if (cookie->ptr[0] != '$')
-      Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
+    if (cookie->ptr[0] != '$') {
+      tmp << "Cookie2: $Version=\"1\"\r\n";
+    }
   }
+
   if (this->method == HttpMethod::POST) {
     if (this->request->enctype == FORM_ENCTYPE_MULTIPART) {
-      Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
-      Strcat_charp(tmp, this->request->boundary);
-      Strcat_charp(tmp, "\r\n");
-      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", this->request->length));
-      Strcat_charp(tmp, "\r\n");
+      tmp << "Content-Type: multipart/form-data; boundary=";
+      tmp << this->request->boundary;
+      tmp << "\r\n";
+      tmp << Sprintf("Content-Length: %ld\r\n", this->request->length);
+      tmp << "\r\n";
     } else {
       if (!override_content_type) {
-        Strcat_charp(tmp,
-                     "Content-Type: application/x-www-form-urlencoded\r\n");
+        tmp << "Content-Type: application/x-www-form-urlencoded\r\n";
       }
-      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", this->request->length));
-      if (header_string)
-        Strcat(tmp, header_string);
-      Strcat_charp(tmp, "\r\n");
-      Strcat_charp_n(tmp, this->request->body, this->request->length);
-      Strcat_charp(tmp, "\r\n");
+      tmp << Sprintf("Content-Length: %ld\r\n", this->request->length)->ptr;
+      if (header_string) {
+        tmp << header_string;
+      }
+      tmp << "\r\n";
+      tmp << std::string_view(this->request->body, this->request->length);
+      tmp << "\r\n";
     }
   } else {
     if (header_string)
-      Strcat(tmp, header_string);
-    Strcat_charp(tmp, "\r\n");
+      tmp << header_string;
+    tmp << "\r\n";
   }
-#ifdef DEBUG
-  fprintf(stderr, "HTTPrequest: [ %s ]\n\n", tmp->ptr);
-#endif /* DEBUG */
-  return tmp;
+
+  return tmp.str();
 }
 
 void HttpRequest::add_auth_cookie() {

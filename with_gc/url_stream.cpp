@@ -413,7 +413,6 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
                          const std::shared_ptr<Form> &request) {
   hr->status = HTST_NORMAL;
   int sock = -1;
-  Str *tmp = nullptr;
   if (hr->url.file.empty()) {
     hr->url.file = "/";
   }
@@ -424,6 +423,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     hr->method = HttpMethod::HEAD;
   }
 
+  std::string tmp;
   SslConnection sslh = {};
   {
     sock = openSocket(hr->url.host.c_str(),
@@ -446,12 +446,12 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
   if (hr->url.scheme == SCM_HTTPS) {
     this->stream = newSSLStream(sslh.handle, sock);
     if (sslh.handle)
-      SSL_write(sslh.handle, tmp->ptr, tmp->length);
+      SSL_write(sslh.handle, tmp.c_str(), tmp.size());
     else {
 #ifdef _MSC_VER
-      send(sock, tmp->ptr, tmp->length, {});
+      send(sock, tmp.c_str(), tmp.size(), {});
 #else
-      write(sock, tmp->ptr, tmp->length);
+      write(sock, tmp.c_str(), tmp.size());
 #endif
     }
     if (w3m_reqlog) {
@@ -463,7 +463,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
         fputs("HTTPS: request via SSL\n", ff);
       else
         fputs("HTTPS: request without SSL\n", ff);
-      fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
+      fwrite(tmp.c_str(), 1, tmp.size(), ff);
       fclose(ff);
     }
     if (hr->method == HttpMethod::POST &&
@@ -476,16 +476,16 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     return;
   } else {
 #ifdef _MSC_VER
-    send(sock, tmp->ptr, tmp->length, {});
+    send(sock, tmp.c_str(), tmp.size(), {});
 #else
-    write(sock, tmp->ptr, tmp->length);
+    write(sock, tmp.c_str(), tmp.size());
 #endif
     if (w3m_reqlog) {
       FILE *ff = fopen(w3m_reqlog, "a");
       if (ff == nullptr) {
         return;
       }
-      fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
+      fwrite(tmp.c_str(), 1, tmp.size(), ff);
       fclose(ff);
     }
     if (hr->method == HttpMethod::POST &&
