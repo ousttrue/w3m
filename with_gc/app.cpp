@@ -9,7 +9,7 @@
 #include "html/readbuffer.h"
 #include "html/form_item.h"
 #include "html/anchorlist.h"
-#include "html/anchor.h"
+#include "anchor.h"
 #include "html/html_quote.h"
 #include "ssl_util.h"
 #include "html/form.h"

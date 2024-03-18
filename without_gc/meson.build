@@ -11,6 +11,8 @@ without_gc_lib = static_library(
         'url_decode.cpp',
         'lineprop.cpp',
         'entity.cpp',
+        'anchor.cpp',
+        'line.cpp',
     ],
 )
 

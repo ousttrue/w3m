@@ -1,6 +1,4 @@
 #include "anchor.h"
-#include "regex.h"
-#include "alloc.h"
 
 int Anchor::onAnchor(int line, int pos) {
   BufferPoint bp;
