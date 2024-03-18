@@ -248,13 +248,13 @@ static Str *base64_encode(const char *src, int len) {
   return dest;
 }
 
-static Str *AuthBasicCred(struct http_auth *ha, Str *uname, Str *pw,
-                          const Url &pu, HttpRequest *hr,
+static Str *AuthBasicCred(struct http_auth *ha, const std::string &uname,
+                          const std::string &pw, const Url &pu, HttpRequest *hr,
                           const std::shared_ptr<Form> &) {
-  Str *s = uname->Strdup();
-  Strcat_char(s, ':');
-  Strcat(s, pw);
-  return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr,
+  std::string s = uname;
+  s += ':';
+  s += pw;
+  return Strnew_m_charp("Basic ", base64_encode(s.c_str(), s.size())->ptr,
                         nullptr);
 }
 
@@ -339,16 +339,15 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
   return hauth->schema ? hauth : nullptr;
 }
 
-void getAuthCookie(struct http_auth *hauth, const char *auth_header,
-                   const Url &pu, HttpRequest *hr,
-                   const std::shared_ptr<Form> &request, Str **uname,
-                   Str **pwd) {
+std::tuple<std::string, std::string>
+getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
+              HttpRequest *hr, const std::shared_ptr<Form> &request) {
   char *realm = NULL;
   if (hauth) {
     realm = qstr_unquote(get_auth_param(hauth->param, "realm"))->ptr;
   }
   if (!realm) {
-    return;
+    return {};
   }
 
   auto a_found = false;
@@ -371,33 +370,39 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
     // sleep(1);
     /* delete Authenticate: header from extra_header */
     hr->extra_headers.erase(i);
-    invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
+    invalidate_auth_user_passwd(pu, realm, proxy);
   }
-  *uname = NULL;
-  *pwd = NULL;
 
-  if (!a_found &&
-      find_auth_user_passwd(pu, realm, (Str **)uname, (Str **)pwd, proxy)) {
+  std::string uname;
+  std::string pwd;
+
+  if (!a_found) {
+    auto [_uname, _pwd] = find_auth_user_passwd(pu, realm, proxy);
+    if (_uname.size()) {
+      uname = _uname;
+      pwd = _pwd;
+    }
     /* found username & password in passwd file */;
-  } else {
+  }
+
+  if (uname.empty() || pwd.empty()) {
     if (IsForkChild)
-      return;
+      return {};
     /* input username and password */
     // sleep(2);
     if (true /*fmInitialized*/) {
-      const char *pp = {};
+      std::string pp = {};
       // term_raw();
       // if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
       //     NULL)
       //   return;
-      *uname = Strnew_charp(pp);
+      uname = pp;
       // if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
       //                     IN_PASSWORD)) == NULL)
-      if (!pp) {
-        *uname = NULL;
-        return;
+      if (pp.empty()) {
+        return {};
       }
-      *pwd = Strnew_charp(pp);
+      pwd = pp;
       // term_cbreak();
     } else {
       /*
@@ -414,11 +419,10 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
 
       printf(proxy ? "Proxy Username for %s: " : "Username for %s: ", realm);
       fflush(stdout);
-      *uname = Strfgets(stdin);
-      Strchop(*uname);
+      uname = Strfgets(stdin)->ptr;
+      // Strchop(*uname);
 #ifdef HAVE_GETPASSPHRASE
-      *pwd = Strnew_charp(
-          getpassphrase(proxy ? "Proxy Password: " : "Password: "));
+      pwd = getpassphrase(proxy ? "Proxy Password: " : "Password: ");
 #else
       assert(false);
       // *pwd = Strnew_charp(getpass(proxy ? "Proxy Password: " : "Password:
@@ -426,14 +430,16 @@ void getAuthCookie(struct http_auth *hauth, const char *auth_header,
 #endif
     }
   }
-  auto ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
+  auto ss = hauth->cred(hauth, uname, pwd, pu, hr, request);
   if (ss) {
     auto tmp = Strnew_charp(auth_header);
     Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
     hr->extra_headers.push_back(tmp->ptr);
+    return {
+        uname,
+        pwd,
+    };
   } else {
-    *uname = NULL;
-    *pwd = NULL;
+    return {};
   }
-  return;
 }

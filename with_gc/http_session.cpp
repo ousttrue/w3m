@@ -5,16 +5,17 @@
 #include "http_auth.h"
 #include "mimetypes.h"
 #include "url_stream.h"
+#include "Str.h"
 #include <sys/stat.h>
 
 const char *DefaultType = nullptr;
 bool UseExternalDirBuffer = true;
 std::string DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 
-std::shared_ptr<HttpResponse> loadGeneralFile(const std::string &path,
-                                              std::optional<Url> current,
-                                              const HttpOption &option,
-                                              const std::shared_ptr<Form> &request) {
+std::shared_ptr<HttpResponse>
+loadGeneralFile(const std::string &path, std::optional<Url> current,
+                const HttpOption &option,
+                const std::shared_ptr<Form> &request) {
   auto res = std::make_shared<HttpResponse>();
 
   auto [hr, stream] = openURL(path, current, option, request);
@@ -100,8 +101,10 @@ std::shared_ptr<HttpResponse> loadGeneralFile(const std::string &path,
       struct http_auth hauth;
       if (findAuthentication(&hauth, *res, "WWW-Authenticate:") &&
           (hr->realm = get_auth_param(hauth.param, "realm"))) {
-        getAuthCookie(&hauth, "Authorization:", hr->url, hr.get(), request,
-                      &hr->uname, &hr->pwd);
+        auto [uname, pwd] =
+            getAuthCookie(&hauth, "Authorization:", hr->url, hr.get(), request);
+        hr->uname = Strnew(uname);
+        hr->pwd = Strnew(pwd);
         if (hr->uname == nullptr) {
           res->page_loaded(hr->url, stream);
           return res;

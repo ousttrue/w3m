@@ -22,21 +22,21 @@ bool CrossOriginReferer = true;
 bool override_content_type = false;
 Str *header_string = nullptr;
 
-Str *HttpRequest::getRequestURI() const {
-  Str *tmp = Strnew();
+std::string HttpRequest::getRequestURI() const {
+  std::stringstream tmp;
   if (this->method == HttpMethod::CONNECT) {
-    Strcat(tmp, url.host);
-    Strcat(tmp, Sprintf(":%d", url.port));
+    tmp << url.host;
+    tmp << ":" << url.port;
   } else if (this->flag & HR_FLAG_LOCAL) {
-    Strcat(tmp, url.file);
+    tmp << url.file;
     if (url.query.size()) {
-      Strcat_char(tmp, '?');
-      Strcat(tmp, url.query);
+      tmp << '?';
+      tmp << url.query;
     }
   } else {
-    Strcat(tmp, url.to_Str(true, true, false));
+    tmp << url.to_Str(true, true, false);
   }
-  return tmp;
+  return tmp.str();
 }
 
 static char *otherinfo(const Url &target, std::optional<Url> current,
@@ -115,7 +115,7 @@ std::string HttpRequest::to_Str() const {
   std::stringstream tmp;
   tmp << to_str(this->method);
   tmp << " ";
-  tmp << this->getRequestURI()->ptr;
+  tmp << this->getRequestURI();
   tmp << " HTTP/1.0\r\n";
   if (this->option.no_referer) {
     tmp << otherinfo(url, {}, this->option);

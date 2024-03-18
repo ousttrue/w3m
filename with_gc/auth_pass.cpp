@@ -35,39 +35,43 @@ bool disable_secret_security_check = false;
  *
  */
 
-auth_pass *passwords = {};
+std::list<auth_pass> passwords = {};
 
 static void add_auth_pass_entry(const auth_pass &ent, int netrc, int override) {
-  if ((ent.host || netrc) /* netrc accept default (host == NULL) */
-      && (ent.is_proxy || ent.realm || netrc) && ent.uname && ent.pwd) {
-    auto newent = (struct auth_pass *)New(auth_pass);
-    memcpy(newent, &ent, sizeof(auth_pass));
+  if ((ent.host.size() || netrc) /* netrc accept default (host == NULL) */
+      && (ent.is_proxy || ent.realm.size() || netrc) && ent.uname && ent.pwd) {
     if (override) {
-      newent->next = passwords;
-      passwords = newent;
+      passwords.push_front(ent);
     } else {
-      if (passwords == NULL)
-        passwords = newent;
-      else if (passwords->next == NULL)
-        passwords->next = newent;
-      else {
-        struct auth_pass *ep = passwords;
-        for (; ep->next; ep = ep->next)
-          ;
-        ep->next = newent;
-      }
+      passwords.push_back(ent);
     }
+    // auto newent = &passwords.back();
+    // if (override) {
+    //   newent->next = passwords;
+    //   passwords = newent;
+    // } else {
+    //   if (passwords == NULL)
+    //     passwords = newent;
+    //   else if (passwords->next == NULL)
+    //     passwords->next = newent;
+    //   else {
+    //     struct auth_pass *ep = passwords;
+    //     for (; ep->next; ep = ep->next)
+    //       ;
+    //     ep->next = newent;
+    //   }
+    // }
   }
   /* ignore invalid entries */
 }
 
-void add_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
+void add_auth_user_passwd(const Url &pu, const std::string &realm, Str *uname,
                           Str *pwd, bool is_proxy) {
   auth_pass ent{
       .is_proxy = is_proxy,
-      .host = Strnew(pu.host),
+      .host = pu.host,
       .port = pu.port,
-      .realm = Strnew_charp(realm),
+      .realm = realm,
       .uname = uname,
       .pwd = pwd,
   };
@@ -132,7 +136,7 @@ static void parsePasswd(FILE *fp, int netrc) {
         ent.port = 21; /* XXX: getservbyname("ftp"); ? */
       if (strcmp(p, "default") != 0) {
         line = next_token(arg);
-        ent.host = arg;
+        ent.host = arg->ptr;
       } else {
         line = arg;
       }
@@ -148,7 +152,7 @@ static void parsePasswd(FILE *fp, int netrc) {
     } else if (!netrc && !strcmp(p, "realm")) {
       /* XXX: rest of line becomes arg for realm */
       line = NULL;
-      ent.realm = arg;
+      ent.realm = arg->ptr;
     } else if (!strcmp(p, "login")) {
       line = next_token(arg);
       ent.uname = arg;
@@ -173,23 +177,22 @@ static void parsePasswd(FILE *fp, int netrc) {
 }
 
 static struct auth_pass *find_auth_pass_entry(const char *host, int port,
-                                              const char *realm,
+                                              const std::string &realm,
                                               std::string_view uname,
                                               bool is_proxy) {
-  struct auth_pass *ent;
-  for (ent = passwords; ent != NULL; ent = ent->next) {
-    if (ent->is_proxy == is_proxy && (ent->bad != true) &&
-        (!ent->host || !Strcasecmp_charp(ent->host, host)) &&
-        (!ent->port || ent->port == port) &&
-        (!ent->uname || uname.empty() || uname == ent->uname->ptr) &&
-        (!ent->realm || !realm || !Strcmp_charp(ent->realm, realm)))
-      return ent;
+  for (auto &ent : passwords) {
+    if (ent.is_proxy == is_proxy && (ent.bad != true) &&
+        (ent.host.empty() || ent.host == host) &&
+        (!ent.port || ent.port == port) &&
+        (!ent.uname || uname.empty() || uname == ent.uname->ptr) &&
+        (ent.realm.empty() || realm.empty() || ent.realm == realm))
+      return &ent;
   }
   return NULL;
 }
 
-void invalidate_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
-                                 Str *pwd, bool is_proxy) {
+void invalidate_auth_user_passwd(const Url &pu, const std::string &realm,
+                                 bool is_proxy) {
   auto ent =
       find_auth_pass_entry(pu.host.c_str(), pu.port, realm, {}, is_proxy);
   if (ent) {
@@ -198,23 +201,26 @@ void invalidate_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
   return;
 }
 
-int find_auth_user_passwd(const Url &pu, const char *realm, Str **uname,
-                          Str **pwd, bool is_proxy) {
-  struct auth_pass *ent;
+std::pair<std::string, std::string>
+find_auth_user_passwd(const Url &pu, const std::string &realm, bool is_proxy) {
 
   if (pu.user.size() && pu.pass.size()) {
-    *uname = Strnew(pu.user);
-    *pwd = Strnew(pu.pass);
-    return 1;
+    return {
+        pu.user,
+        pu.pass,
+    };
   }
-  ent =
+
+  auto ent =
       find_auth_pass_entry(pu.host.c_str(), pu.port, realm, pu.user, is_proxy);
   if (ent) {
-    *uname = ent->uname;
-    *pwd = ent->pwd;
-    return 1;
+    return {
+        ent->uname->ptr,
+        ent->pwd->ptr,
+    };
   }
-  return 0;
+
+  return {};
 }
 
 #define FILE_IS_READABLE_MSG                                                   \
@@ -257,7 +263,7 @@ FILE *openSecretFile(const char *fname) {
 
 void loadPasswd() {
 
-  passwords = NULL;
+  passwords.clear();
   auto fp = openSecretFile(passwd_file.c_str());
   if (fp != NULL) {
     parsePasswd(fp, 0);

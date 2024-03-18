@@ -9,22 +9,21 @@ struct Str;
 struct Url;
 struct auth_pass {
   bool bad = false;
-  bool is_proxy = {};
-  Str *host = {};
+  bool is_proxy = false;
+  std::string host;
   int port = {};
-  Str *realm = {};
+  std::string realm = {};
   Str *uname = {};
   Str *pwd = {};
-  auth_pass *next = {};
 };
 
-void add_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
+void add_auth_user_passwd(const Url &pu, const std::string &realm, Str *uname,
                           Str *pwd, bool is_proxy);
 
-void invalidate_auth_user_passwd(const Url &pu, const char *realm, Str *uname,
-                                 Str *pwd, bool is_proxy);
-int find_auth_user_passwd(const Url &pu, const char *realm, Str **uname,
-                          Str **pwd, bool is_proxy);
+void invalidate_auth_user_passwd(const Url &pu, const std::string &realm,
+                                 bool is_proxy);
+std::pair<std::string, std::string>
+find_auth_user_passwd(const Url &pu, const std::string &realm, bool is_proxy);
 void loadPasswd();
 
 FILE *openSecretFile(const char *fname);

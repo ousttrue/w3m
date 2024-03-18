@@ -51,8 +51,9 @@ static Str *digest_hex(unsigned char *p) {
   return tmp;
 }
 
-Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
-                    HttpRequest *hr, const std::shared_ptr<Form> &request) {
+Str *AuthDigestCred(struct http_auth *ha, const std::string &uname,
+                    const std::string &pw, const Url &pu, HttpRequest *hr,
+                    const std::shared_ptr<Form> &request) {
   Str *algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
   Str *nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
   Str *cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;
@@ -103,8 +104,8 @@ Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
 
   /* A1 = unq(username-value) ":" unq(realm-value) ":" passwd */
   auto tmp = Strnew_m_charp(
-      uname->ptr, ":", qstr_unquote(get_auth_param(ha->param, "realm"))->ptr,
-      ":", pw->ptr, nullptr);
+      uname.c_str(), ":", qstr_unquote(get_auth_param(ha->param, "realm"))->ptr,
+      ":", pw.c_str(), nullptr);
   MD5((unsigned char *)tmp->ptr, strlen(tmp->ptr), md5);
   auto a1buf = digest_hex(md5);
 
@@ -129,7 +130,7 @@ Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
 
   /* A2 = Method ":" digest-uri-value */
   auto uri = hr->getRequestURI();
-  tmp = Strnew_m_charp(to_str(hr->method).c_str(), ":", uri->ptr, nullptr);
+  tmp = Strnew_m_charp(to_str(hr->method).c_str(), ":", uri.c_str(), nullptr);
   if (qop_i == QOP_AUTH_INT) {
     /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
     if (request && request->body) {
@@ -193,13 +194,13 @@ Str *AuthDigestCred(struct http_auth *ha, Str *uname, Str *pw, const Url &pu,
    *                          [nonce-count]  | [auth-param] )
    */
 
-  tmp = Strnew_m_charp("Digest username=\"", uname->ptr, "\"", nullptr);
+  tmp = Strnew_m_charp("Digest username=\"", uname.c_str(), "\"", nullptr);
   Str *s;
   if ((s = get_auth_param(ha->param, "realm")) != nullptr)
     Strcat_m_charp(tmp, ", realm=", s->ptr, nullptr);
   if ((s = get_auth_param(ha->param, "nonce")) != nullptr)
     Strcat_m_charp(tmp, ", nonce=", s->ptr, nullptr);
-  Strcat_m_charp(tmp, ", uri=\"", uri->ptr, "\"", nullptr);
+  Strcat_m_charp(tmp, ", uri=\"", uri.c_str(), "\"", nullptr);
   Strcat_m_charp(tmp, ", response=\"", rd->ptr, "\"", nullptr);
 
   if (algorithm && (s = get_auth_param(ha->param, "algorithm")))
