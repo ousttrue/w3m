@@ -1021,18 +1021,15 @@ void App::onFrame() {
       buf->layout->data.need_reshape) {
     buf->layout->data.need_reshape = true;
     if (buf->layout->data.need_reshape) {
-
       auto body = buf->res->getBody();
-
-      auto sbuf = buf->layout;
+      auto visual = buf->layout->visual;
       if (buf->res->is_html_type()) {
-        loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(), buf->layout,
-                       buf->res.get(), body);
+        buf->layout = loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
+                                     buf->res.get(), body);
       } else {
         loadBuffer(buf->layout, buf->res.get(), body);
       }
-
-      // buf->layout->reshape(width);
+      buf->layout->visual = visual;
     }
   }
 

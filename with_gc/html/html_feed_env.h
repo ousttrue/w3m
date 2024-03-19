@@ -45,7 +45,8 @@ struct html_feed_environ {
 
   HtmlParser parser;
 
-  html_feed_environ(int envc, int, int, GeneralList<TextLine> *_buf = nullptr);
+  html_feed_environ(int nenv, int limit_width, int indent,
+                    GeneralList<TextLine> *_buf = nullptr);
   void purgeline();
 
   void POP_ENV() {
@@ -85,8 +86,8 @@ struct html_feed_environ {
     parser.flushline(this, indent, force, width);
   }
 
-  void render(HttpResponse *res, LineData *layout) {
-    parser.render(res, this, layout);
+  std::shared_ptr<LineLayout> render(HttpResponse *res) {
+    return parser.render(res, this);
   }
 
   int HTML_B_enter() {

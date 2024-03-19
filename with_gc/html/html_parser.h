@@ -175,7 +175,8 @@ private:
                   int nlines, const char *str);
 
 public:
-  void render(HttpResponse *res, html_feed_environ *h_env, LineData *layout);
+  std::shared_ptr<LineLayout> render(HttpResponse *res,
+                                     html_feed_environ *h_env);
 };
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri);

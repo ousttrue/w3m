@@ -7,6 +7,7 @@
 #include "form.h"
 #include "etc.h"
 #include "line_data.h"
+#include "line_layout.h"
 #include "http_response.h"
 #include "symbol.h"
 #include "url_quote.h"
@@ -963,9 +964,12 @@ static Str *textfieldrep(Str *s, int width) {
   return n;
 }
 
-void HtmlParser::render(HttpResponse *res, html_feed_environ *h_env,
-                        LineData *data) {
+std::shared_ptr<LineLayout> HtmlParser::render(HttpResponse *res,
+                                               html_feed_environ *h_env) {
   n_textarea = -1;
+
+  auto layout = std::make_shared<LineLayout>();
+  layout->data.title = h_env->title;
 
   LineFeed feed(h_env->buf);
   for (int nlines = 0; auto str = feed.textlist_feed(); ++nlines) {
@@ -974,13 +978,18 @@ void HtmlParser::render(HttpResponse *res, html_feed_environ *h_env,
       continue;
     }
 
-    renderLine(res, h_env, data, nlines, str);
+    renderLine(res, h_env, &layout->data, nlines, str);
   }
 
-  data->formlist = forms;
+  layout->data.formlist = forms;
   if (n_textarea) {
-    data->addMultirowsForm();
+    layout->data.addMultirowsForm();
   }
+
+  layout->fix_size(h_env->limit);
+  layout->formResetBuffer(layout->data._formitem.get());
+
+  return layout;
 }
 
 void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,

@@ -486,10 +486,9 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
-void loadHTMLstream(int width, const std::shared_ptr<LineLayout> &layout,
-                    HttpResponse *res, std::string_view body, bool internal) {
-
-  layout->data.clear();
+std::shared_ptr<LineLayout> loadHTMLstream(int width, HttpResponse *res,
+                                           std::string_view body,
+                                           bool internal) {
 
   long long linelen = 0;
   long long trbyte = 0;
@@ -527,21 +526,14 @@ void loadHTMLstream(int width, const std::shared_ptr<LineLayout> &layout,
   htmlenv1.completeHTMLstream();
   htmlenv1.flushline(0, 2, htmlenv1.limit);
 
-  layout->data.title = htmlenv1.title;
-
   res->trbyte = trbyte + linelen;
   res->raw = {body.begin(), body.end()};
+  res->type = "text/html";
 
   //
   // render ?
   //
-  htmlenv1.render(res, &layout->data);
-  layout->fix_size(width);
-
-  // layout->_scroll.row = 0;
-  // layout->_cursor.row = 0;
-  res->type = "text/html";
-  layout->formResetBuffer(layout->data._formitem.get());
+  return htmlenv1.render(res);
 }
 
 std::string cleanup_line(std::string_view _s, CleanupMode mode) {
@@ -695,7 +687,7 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
 
 std::shared_ptr<Buffer> loadHTMLString(int width, std::string_view html) {
   auto newBuf = Buffer::create();
-  loadHTMLstream(width, newBuf->layout, newBuf->res.get(), html, true);
+  newBuf->layout = loadHTMLstream(width, newBuf->res.get(), html, true);
   return newBuf;
 }
 

@@ -1072,8 +1072,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
       (form_quote(BookmarkFile)).c_str(),
       (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
           .c_str(),
-      (form_quote(CurrentTab->currentBuffer()->layout->data.title))
-          .c_str());
+      (form_quote(CurrentTab->currentBuffer()->layout->data.title)).c_str());
   auto request = std::make_shared<Form>("", "post", "", "", "");
   request->body = tmp->ptr;
   request->length = tmp->length;
@@ -1372,22 +1371,19 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
 // RESHAPE
 //"Re-render document"
 std::shared_ptr<CoroutineState<void>> reshape(const FuncContext &context) {
-  CurrentTab->currentBuffer()->layout->data.need_reshape = true;
-  if (CurrentTab->currentBuffer()->layout->data.need_reshape) {
+  auto buf = CurrentTab->currentBuffer();
+  buf->layout->data.need_reshape = true;
+  if (buf->layout->data.need_reshape) {
 
-    auto sbuf = CurrentTab->currentBuffer()->layout;
-    auto body = CurrentTab->currentBuffer()->res->getBody();
-    if (CurrentTab->currentBuffer()->res->is_html_type()) {
-      loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
-                     CurrentTab->currentBuffer()->layout,
-                     CurrentTab->currentBuffer()->res.get(), body);
+    auto sbuf = buf->layout;
+    auto body = buf->res->getBody();
+    if (buf->res->is_html_type()) {
+      buf->layout =
+          loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
+                         CurrentTab->currentBuffer()->res.get(), body);
     } else {
-      loadBuffer(CurrentTab->currentBuffer()->layout,
-                 CurrentTab->currentBuffer()->res.get(), body);
+      loadBuffer(buf->layout, buf->res.get(), body);
     }
-
-    // CurrentTab->currentBuffer()->layout->reshape(
-    //     App::instance().INIT_BUFFER_WIDTH());
   }
   co_return;
 }
@@ -1704,8 +1700,8 @@ std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
     co_return;
   }
   auto buf = Buffer::create();
-  loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(), buf->layout,
-                 buf->res.get(), html, true);
+  buf->layout = loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
+                               buf->res.get(), html, true);
   if (replace) {
     // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
     buf->layout->visual.restorePosition(
