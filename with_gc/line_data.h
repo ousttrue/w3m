@@ -60,7 +60,7 @@ struct LineData {
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
   FormAnchor *registerForm(struct html_feed_environ *h_env,
                            const std::shared_ptr<Form> &flist, HtmlTag *tag,
-                           int line, int pos);
+                           const BufferPoint &bp);
   void addMultirowsForm();
   void reseq_anchor();
   // const char *reAnchorPos(Line *l, const char *p1, const char *p2,

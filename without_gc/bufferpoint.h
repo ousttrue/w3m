@@ -17,6 +17,13 @@ private:
   int prevhseq = -1;
 
 public:
+  const BufferPoint *get(int hseq) const {
+    if (hseq >= 0 && hseq < (int)this->size()) {
+      return &this->marks[hseq];
+    } else {
+      return nullptr;
+    }
+  }
   BufferPoint *get(int hseq) {
     if (hseq >= 0 && hseq < (int)this->size()) {
       return &this->marks[hseq];

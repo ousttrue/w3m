@@ -1,9 +1,6 @@
 #include "anchor.h"
 
-int Anchor::onAnchor(int line, int pos) {
-  BufferPoint bp;
-  bp.line = line;
-  bp.pos = pos;
+int Anchor::onAnchor(const BufferPoint &bp) const {
   if (bp.cmp(this->start) < 0) {
     return -1;
   }

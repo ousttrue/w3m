@@ -31,7 +31,7 @@ public:
     return {};
   }
 
-  T *retrieveAnchor(int line, int pos) {
+  T *retrieveAnchor(const BufferPoint &bp) {
     if (this->size() == 0)
       return NULL;
 
@@ -40,7 +40,7 @@ public:
 
     for (int b = 0, e = this->size() - 1; b <= e; this->acache = (b + e) / 2) {
       auto a = &this->anchors[this->acache];
-      auto cmp = a->onAnchor(line, pos);
+      auto cmp = a->onAnchor(bp);
       if (cmp == 0)
         return a;
       else if (cmp > 0)
@@ -96,7 +96,7 @@ public:
     size_t b, e;
     for (b = 0, e = this->size() - 1; b <= e; s = (b + e + 1) / 2) {
       auto a = &this->anchors[s];
-      auto cmp = a->onAnchor(line, pos);
+      auto cmp = a->onAnchor({.line = line, .pos = pos});
       if (cmp == 0)
         break;
       else if (cmp > 0)

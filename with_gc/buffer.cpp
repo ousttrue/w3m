@@ -269,8 +269,7 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
         continue;
       }
 
-      auto fa = buf->layout->data._formitem->retrieveAnchor(a->start.line,
-                                                            a->start.pos);
+      auto fa = buf->layout->data._formitem->retrieveAnchor(a->start);
       if (!fa)
         continue;
       // first item

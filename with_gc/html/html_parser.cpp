@@ -1201,7 +1201,11 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
             tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
         }
 
-        a_form = data->registerForm(h_env, form, tag, nlines, line.len());
+        BufferPoint bp{
+            .line = nlines,
+            .pos = line.len(),
+        };
+        a_form = data->registerForm(h_env, form, tag, bp);
         if (textareanumber >= 0) {
           while (textareanumber >= (int)a_textarea.size()) {
             textarea_str.push_back({});
@@ -1213,8 +1217,7 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         if (a_form) {
 
           {
-            auto aa =
-                old->retrieveAnchor(a_form->start.line, a_form->start.pos);
+            auto aa = old->retrieveAnchor(a_form->start);
             if (aa) {
               if (auto fi = aa->formItem) {
                 a_form->formItem->value = fi->value;

@@ -29,7 +29,7 @@ void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
 
 FormAnchor *LineData::registerForm(html_feed_environ *h_env,
                                    const std::shared_ptr<Form> &flist,
-                                   HtmlTag *tag, int line, int pos) {
+                                   HtmlTag *tag, const BufferPoint &bp) {
   auto fi = FormItem::createFromInput(h_env, tag);
   if (!fi) {
     return NULL;
@@ -40,11 +40,6 @@ FormAnchor *LineData::registerForm(html_feed_environ *h_env,
     return NULL;
   }
   flist->items.push_back(fi);
-
-  BufferPoint bp{
-      .line = line,
-      .pos = pos,
-  };
   return this->_formitem->putAnchor(FormAnchor(bp, fi));
 }
 

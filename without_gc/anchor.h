@@ -13,5 +13,5 @@ struct Anchor {
   int hseq = 0;
   bool slave = false;
 
-  int onAnchor(int line, int pos);
+  int onAnchor(const BufferPoint &bp) const;
 };

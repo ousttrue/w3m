@@ -41,10 +41,10 @@ void LineLayout::nextY(int d, int n) {
     an = nullptr;
     for (; y >= 0 && y <= linenumber(this->lastLine()); y += d) {
       if (this->data._href) {
-        an = this->data._href->retrieveAnchor(y, x);
+        an = this->data._href->retrieveAnchor({.line = y, .pos = x});
       }
       if (!an && this->data._formitem) {
-        an = this->data._formitem->retrieveAnchor(y, x);
+        an = this->data._formitem->retrieveAnchor({.line = y, .pos = x});
       }
       if (an && hseq != abs(an->hseq)) {
         pan = an;
@@ -85,10 +85,10 @@ void LineLayout::nextX(int d, int dy, int n) {
     while (1) {
       for (; x >= 0 && x < l->len(); x += d) {
         if (this->data._href) {
-          an = this->data._href->retrieveAnchor(y, x);
+          an = this->data._href->retrieveAnchor({.line = y, .pos = x});
         }
         if (!an && this->data._formitem) {
-          an = this->data._formitem->retrieveAnchor(y, x);
+          an = this->data._formitem->retrieveAnchor({.line = y, .pos = x});
         }
         if (an) {
           pan = an;
@@ -141,10 +141,10 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
         }
         auto po = hl->get(hseq);
         if (this->data._href) {
-          an = this->data._href->retrieveAnchor(po->line, po->pos);
+          an = this->data._href->retrieveAnchor(*po);
         }
         if (an == nullptr && this->data._formitem) {
-          an = this->data._formitem->retrieveAnchor(po->line, po->pos);
+          an = this->data._formitem->retrieveAnchor(*po);
         }
         hseq--;
       } while (an == nullptr || an == pan);
@@ -200,10 +200,10 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
         }
         auto po = hl->get(hseq);
         if (this->data._href) {
-          an = this->data._href->retrieveAnchor(po->line, po->pos);
+          an = this->data._href->retrieveAnchor(*po);
         }
         if (an == nullptr && this->data._formitem) {
-          an = this->data._formitem->retrieveAnchor(po->line, po->pos);
+          an = this->data._formitem->retrieveAnchor(*po);
         }
         hseq++;
       } while (an == nullptr || an == pan);
@@ -354,22 +354,22 @@ static const char *url_like_pat[] = {
 Anchor *LineLayout::retrieveCurrentAnchor() {
   if (!this->currentLine() || !this->data._href)
     return NULL;
-  return this->data._href->retrieveAnchor(visual.cursor().row,
-                                          this->cursorPos());
+  return this->data._href->retrieveAnchor(
+      {.line = visual.cursor().row, .pos = this->cursorPos()});
 }
 
 Anchor *LineLayout::retrieveCurrentImg() {
   if (!this->currentLine() || !this->data._img)
     return NULL;
-  return this->data._img->retrieveAnchor(visual.cursor().row,
-                                         this->cursorPos());
+  return this->data._img->retrieveAnchor(
+      {.line = visual.cursor().row, .pos = this->cursorPos()});
 }
 
 FormAnchor *LineLayout::retrieveCurrentForm() {
   if (!this->currentLine() || !this->data._formitem)
     return NULL;
-  return this->data._formitem->retrieveAnchor(visual.cursor().row,
-                                              this->cursorPos());
+  return this->data._formitem->retrieveAnchor(
+      {.line = visual.cursor().row, .pos = this->cursorPos()});
 }
 
 void LineLayout::formResetBuffer(const AnchorList<FormAnchor> *formitem) {
@@ -416,7 +416,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
   CursorAndScroll backup = this->visual;
   this->visual.cursorRow(a->start.line);
   auto item = a->formItem;
-  if(!item){
+  if (!item) {
     return;
   }
   switch (item->type) {
@@ -477,7 +477,8 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
         break;
       if (rows > 1 && this->data._formitem) {
         int pos = l->columnPos(col);
-        a = this->data._formitem->retrieveAnchor(this->linenumber(l), pos);
+        a = this->data._formitem->retrieveAnchor(
+            {.line = this->linenumber(l), .pos = pos});
         if (a == NULL)
           break;
         spos = a->start.pos;
@@ -487,8 +488,9 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
           spos < 0 || epos < 0 || l->bytePosToColumn(epos) < col)
         break;
 
-      auto pos = l->form_update_line(p, spos, epos, l->bytePosToColumn(epos) - col,
-                                rows > 1, item->type == FORM_INPUT_PASSWORD);
+      auto pos =
+          l->form_update_line(p, spos, epos, l->bytePosToColumn(epos) - col,
+                              rows > 1, item->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
         this->data._href->shiftAnchorPosition(this->data._hmarklist.get(),
                                               a->start.line, spos, pos - epos);

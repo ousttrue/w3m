@@ -793,10 +793,10 @@ std::shared_ptr<CoroutineState<void>> topA(const FuncContext &context) {
       co_return;
     po = hl->get(hseq);
     if (buf->layout->data._href) {
-      an = buf->layout->data._href->retrieveAnchor(po->line, po->pos);
+      an = buf->layout->data._href->retrieveAnchor(*po);
     }
     if (an == nullptr && buf->layout->data._formitem) {
-      an = buf->layout->data._formitem->retrieveAnchor(po->line, po->pos);
+      an = buf->layout->data._formitem->retrieveAnchor(*po);
     }
     hseq++;
   } while (an == nullptr);
@@ -833,10 +833,10 @@ std::shared_ptr<CoroutineState<void>> lastA(const FuncContext &context) {
       co_return;
     po = hl->get(hseq);
     if (buf->layout->data._href) {
-      an = buf->layout->data._href->retrieveAnchor(po->line, po->pos);
+      an = buf->layout->data._href->retrieveAnchor(*po);
     }
     if (an == nullptr && buf->layout->data._formitem) {
-      an = buf->layout->data._formitem->retrieveAnchor(po->line, po->pos);
+      an = buf->layout->data._formitem->retrieveAnchor(*po);
     }
     hseq--;
   } while (an == nullptr);
@@ -865,10 +865,10 @@ std::shared_ptr<CoroutineState<void>> nthA(const FuncContext &context) {
   auto po = hl->get(n - 1);
   Anchor *an = nullptr;
   if (buf->layout->data._href) {
-    an = buf->layout->data._href->retrieveAnchor(po->line, po->pos);
+    an = buf->layout->data._href->retrieveAnchor(*po);
   }
   if (an == nullptr && buf->layout->data._formitem) {
-    an = buf->layout->data._formitem->retrieveAnchor(po->line, po->pos);
+    an = buf->layout->data._formitem->retrieveAnchor(*po);
   }
   if (an == nullptr)
     co_return;
