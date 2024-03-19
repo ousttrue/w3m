@@ -1016,20 +1016,17 @@ void App::onFrame() {
   //   buf->layout.width = width;
   // if (buf->layout.height == 0)
   //   buf->layout.height = this->LASTLINE() + 1;
-  if (/*(buf->layout.width != width && (buf->res->is_html_type())) ||*/
-      buf->layout->data.need_reshape) {
-    buf->layout->data.need_reshape = true;
-    if (buf->layout->data.need_reshape) {
-      auto body = buf->res->getBody();
-      auto visual = buf->layout->visual;
-      if (buf->res->is_html_type()) {
-        loadHTMLstream(buf->layout, App::instance().INIT_BUFFER_WIDTH(),
-                       buf->res->currentURL, body);
-      } else {
-        loadBuffer(buf->layout, buf->res.get(), body);
-      }
-      buf->layout->visual = visual;
-    }
+  if (buf->layout->data.need_reshape) {
+    buf->layout->data.need_reshape = false;
+    auto body = buf->res->getBody();
+    auto visual = buf->layout->visual;
+    // if (buf->res->is_html_type()) {
+    loadHTMLstream(buf->layout, App::instance().INIT_BUFFER_WIDTH(),
+                   buf->res->currentURL, body);
+    // } else {
+    //   loadBuffer(buf->layout, buf->res.get(), body);
+    // }
+    buf->layout->visual = visual;
   }
 
   display();
