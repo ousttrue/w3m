@@ -318,12 +318,12 @@ static const char *url_like_pat[] = {
     "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
 #endif /* INET6 */
     nullptr};
-void LineLayout::chkURLBuffer() {
-  for (int i = 0; url_like_pat[i]; i++) {
-    this->data.reAnchor(topLine(), url_like_pat[i]);
-  }
-  this->check_url = true;
-}
+// void LineLayout::chkURLBuffer() {
+//   for (int i = 0; url_like_pat[i]; i++) {
+//     this->data.reAnchor(topLine(), url_like_pat[i]);
+//   }
+//   this->check_url = true;
+// }
 
 // void LineLayout::reshape(int width) {
 //   if (!this->data.need_reshape) {

@@ -104,8 +104,8 @@ struct LineLayout : public ftxui::Node {
     return &data.lines[visual.cursor().row];
   }
 
-  bool check_url = false;
-  void chkURLBuffer();
+  // bool check_url = false;
+  // void chkURLBuffer();
   // void reshape(int width);
   void clearBuffer();
 

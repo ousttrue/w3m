@@ -15,6 +15,9 @@ struct HtmlTag;
 using AnchorFunc = Anchor *(*)(struct LineData *, const char *, const char *,
                                int, int);
 
+// Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
+//                         int line, int pos);
+
 struct LineData {
   std::string title;
 
@@ -60,11 +63,17 @@ struct LineData {
                            int line, int pos);
   void addMultirowsForm();
   void reseq_anchor();
-  const char *reAnchorPos(Line *l, const char *p1, const char *p2,
-                          AnchorFunc anchorproc);
-  const char *reAnchorAny(Line *topLine, const char *re, AnchorFunc anchorproc);
-  const char *reAnchor(Line *topLine, const char *re);
-  const char *reAnchorWord(Line *l, int spos, int epos);
+  // const char *reAnchorPos(Line *l, const char *p1, const char *p2,
+  //                         AnchorFunc anchorproc);
+  // const char *reAnchorAny(Line *topLine, const char *re, AnchorFunc anchorproc);
+  // const char *reAnchor(Line *topLine, const char *re) {
+  //   return this->reAnchorAny(topLine, re, _put_anchor_all);
+  // }
+  // const char *reAnchorWord(Line *l, int spos, int epos) {
+  //   return this->reAnchorPos(l, &l->lineBuf()[spos], &l->lineBuf()[epos],
+  //                            _put_anchor_all);
+  // }
+
   const char *getAnchorText(Anchor *a);
 
   void addLink(struct HtmlTag *tag);

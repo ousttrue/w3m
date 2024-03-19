@@ -37,7 +37,7 @@ Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res)
   if (!res) {
     res = std::make_shared<HttpResponse>();
   }
-  this->layout->check_url = MarkAllPages;
+  // this->layout->check_url = MarkAllPages;
 }
 
 Buffer::~Buffer() { auto a = 0; }

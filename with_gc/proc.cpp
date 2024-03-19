@@ -1389,21 +1389,21 @@ std::shared_ptr<CoroutineState<void>> reshape(const FuncContext &context) {
 
 // MARK_URL
 //"Turn URL-like strings into hyperlinks"
-std::shared_ptr<CoroutineState<void>> chkURL(const FuncContext &context) {
-  CurrentTab->currentBuffer()->layout->chkURLBuffer();
-  co_return;
-}
+// std::shared_ptr<CoroutineState<void>> chkURL(const FuncContext &context) {
+//   CurrentTab->currentBuffer()->layout->chkURLBuffer();
+//   co_return;
+// }
 
 // MARK_WORD
 //"Turn current word into hyperlink"
-std::shared_ptr<CoroutineState<void>> chkWORD(const FuncContext &context) {
-  int spos, epos;
-  auto p = CurrentTab->currentBuffer()->layout->getCurWord(&spos, &epos);
-  if (p.empty())
-    co_return;
-  CurrentTab->currentBuffer()->layout->data.reAnchorWord(
-      CurrentTab->currentBuffer()->layout->currentLine(), spos, epos);
-}
+// std::shared_ptr<CoroutineState<void>> chkWORD(const FuncContext &context) {
+//   int spos, epos;
+//   auto p = CurrentTab->currentBuffer()->layout->getCurWord(&spos, &epos);
+//   if (p.empty())
+//     co_return;
+//   CurrentTab->currentBuffer()->layout->data.reAnchorWord(
+//       CurrentTab->currentBuffer()->layout->currentLine(), spos, epos);
+// }
 
 /* render frames */
 // FRAME

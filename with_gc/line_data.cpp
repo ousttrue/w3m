@@ -163,94 +163,87 @@ void LineData::reseq_anchor() {
   this->_formitem->reseq_anchor0(seqmap.data());
 }
 
-const char *LineData ::reAnchorPos(
-    Line *l, const char *p1, const char *p2,
-    Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int)) {
-  Anchor *a;
-  int i;
-  int hseq = -2;
-
-  auto spos = p1 - l->lineBuf();
-  auto epos = p2 - l->lineBuf();
-  for (i = spos; i < epos; i++) {
-    if (l->propBuf()[i] & (PE_ANCHOR | PE_FORM))
-      return p2;
-  }
-  for (i = spos; i < epos; i++) {
-    l->propBufAdd(i, PE_ANCHOR);
-  }
-
-  while (1) {
-    a = anchorproc(this, p1, p2, linenumber(l), spos);
-    a->hseq = hseq;
-    if (hseq == -2) {
-      this->reseq_anchor();
-      hseq = a->hseq;
-    }
-    a->end.line = linenumber(l);
-    a->end.pos = epos;
-    break;
-  }
-  return p2;
-}
+// const char *LineData ::reAnchorPos(
+//     Line *l, const char *p1, const char *p2,
+//     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int)) {
+//   Anchor *a;
+//   int i;
+//   int hseq = -2;
+//
+//   auto spos = p1 - l->lineBuf();
+//   auto epos = p2 - l->lineBuf();
+//   for (i = spos; i < epos; i++) {
+//     if (l->propBuf()[i] & (PE_ANCHOR | PE_FORM))
+//       return p2;
+//   }
+//   for (i = spos; i < epos; i++) {
+//     l->propBufAdd(i, PE_ANCHOR);
+//   }
+//
+//   while (1) {
+//     a = anchorproc(this, p1, p2, linenumber(l), spos);
+//     a->hseq = hseq;
+//     if (hseq == -2) {
+//       this->reseq_anchor();
+//       hseq = a->hseq;
+//     }
+//     a->end.line = linenumber(l);
+//     a->end.pos = epos;
+//     break;
+//   }
+//   return p2;
+// }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-const char *LineData::reAnchorAny(
-    Line *topLine, const char *re,
-    Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int)) {
+// const char *LineData::reAnchorAny(
+//     Line *topLine, const char *re,
+//     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int))
+//     {
+//
+//   if (re == NULL || *re == '\0') {
+//     return NULL;
+//   }
+//   if ((re = regexCompile(re, 1)) != NULL) {
+//     return re;
+//   }
+//
+//   Line *l;
+//   for (l = MarkAllPages ? this->firstLine() : topLine;
+//        l != NULL &&
+//        (MarkAllPages ||
+//         linenumber(l) < linenumber(topLine) + App::instance().LASTLINE());
+//        ++l) {
+//     auto p = l->lineBuf();
+//     for (;;) {
+//       if (regexMatch(p, &l->lineBuf()[l->len()] - p, p == l->lineBuf()) == 1)
+//       {
+//         const char *p1, *p2;
+//         matchedPosition(&p1, &p2);
+//         p = this->reAnchorPos(l, p1, p2, anchorproc);
+//       } else
+//         break;
+//     }
+//   }
+//   return NULL;
+// }
 
-  if (re == NULL || *re == '\0') {
-    return NULL;
-  }
-  if ((re = regexCompile(re, 1)) != NULL) {
-    return re;
-  }
-
-  Line *l;
-  for (l = MarkAllPages ? this->firstLine() : topLine;
-       l != NULL &&
-       (MarkAllPages ||
-        linenumber(l) < linenumber(topLine) + App::instance().LASTLINE());
-       ++l) {
-    auto p = l->lineBuf();
-    for (;;) {
-      if (regexMatch(p, &l->lineBuf()[l->len()] - p, p == l->lineBuf()) == 1) {
-        const char *p1, *p2;
-        matchedPosition(&p1, &p2);
-        p = this->reAnchorPos(l, p1, p2, anchorproc);
-      } else
-        break;
-    }
-  }
-  return NULL;
-}
-
-static Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
-                               int line, int pos) {
-  auto tmp = Strnew_charp_n(p1, p2 - p1);
-  return layout->_href->putAnchor(
-      {
-          .line = line,
-          .pos = pos,
-      },
-      Anchor{
-          .url = url_quote(tmp->ptr).c_str(),
-          .target = "",
-          .option = {.no_referer = true},
-          .title = "",
-          .accesskey = '\0',
-      });
-}
-
-const char *LineData::reAnchor(Line *topLine, const char *re) {
-  return this->reAnchorAny(topLine, re, _put_anchor_all);
-}
-
-const char *LineData::reAnchorWord(Line *l, int spos, int epos) {
-  return this->reAnchorPos(l, &l->lineBuf()[spos], &l->lineBuf()[epos],
-                           _put_anchor_all);
-}
+// Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
+//                         int line, int pos) {
+//   auto tmp = Strnew_charp_n(p1, p2 - p1);
+//   return layout->_href->putAnchor(
+//       {
+//           .line = line,
+//           .pos = pos,
+//       },
+//       Anchor{
+//           .url = url_quote(tmp->ptr).c_str(),
+//           .target = "",
+//           .option = {.no_referer = true},
+//           .title = "",
+//           .accesskey = '\0',
+//       });
+// }
 
 const char *LineData::getAnchorText(Anchor *a) {
   if (!a || a->hseq < 0)
