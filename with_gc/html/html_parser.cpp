@@ -1104,20 +1104,21 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         }
         if (p) {
           effect |= PE_ANCHOR;
-          a_href = data->_href->putAnchor(
-              BufferPoint{
-                  .line = nlines,
-                  .pos = line.len(),
-              },
-              Anchor{
-                  .url = p,
-                  .target = q ? q : "",
-                  .option = {.referer = r ? r : ""},
-                  .title = s ? s : "",
-                  .accesskey = (unsigned char)*t,
-                  .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
-                  .slave = (hseq > 0) ? false : true,
-              });
+          auto bp = BufferPoint{
+              .line = nlines,
+              .pos = line.len(),
+          };
+          a_href = data->_href->putAnchor(Anchor{
+              .url = p,
+              .target = q ? q : "",
+              .option = {.referer = r ? r : ""},
+              .title = s ? s : "",
+              .accesskey = (unsigned char)*t,
+              .start = bp,
+              .end = bp,
+              .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
+              .slave = (hseq > 0) ? false : true,
+          });
         }
         break;
       }
@@ -1212,7 +1213,8 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         if (a_form) {
 
           {
-            auto aa = old->retrieveAnchor(a_form->start.line, a_form->start.pos);
+            auto aa =
+                old->retrieveAnchor(a_form->start.line, a_form->start.pos);
             if (aa) {
               if (auto fi = aa->formItem) {
                 a_form->formItem->value = fi->value;

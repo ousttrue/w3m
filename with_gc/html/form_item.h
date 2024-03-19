@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <memory>
+#include "anchor.h"
 
 enum FormItemType {
   FORM_UNKNOWN = -1,
@@ -19,8 +20,9 @@ enum FormItemType {
 };
 FormItemType formtype(const char *typestr);
 
-struct Str;
 struct Form;
+struct html_feed_environ;
+struct HtmlTag;
 struct FormItem {
   FormItemType type;
   std::string name;
@@ -34,10 +36,26 @@ struct FormItem {
   int maxlength;
   int readonly;
 
+  static std::shared_ptr<FormItem> createFromInput(html_feed_environ *h_env,
+                                                   HtmlTag *tag);
+
   std::shared_ptr<Form> parent;
 
   void query_from_followform_multipart();
   std::string form2str() const;
 
   void input_textarea();
+};
+
+struct FormAnchor : public Anchor {
+  std::shared_ptr<FormItem> formItem;
+  short y = 0;
+  short rows = 0;
+
+  FormAnchor() {}
+  FormAnchor(const BufferPoint &bp, const std::shared_ptr<FormItem> &item)
+      : formItem(item) {
+    start = bp;
+    end = bp;
+  }
 };

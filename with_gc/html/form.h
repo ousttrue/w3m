@@ -1,6 +1,7 @@
 #pragma once
-#include "anchor.h"
 #include <memory>
+#include <string>
+#include <vector>
 
 enum FormMethod {
   FORM_METHOD_GET = 0,
@@ -33,19 +34,9 @@ struct Form : public std::enable_shared_from_this<Form> {
   Form(const std::string &action, const std::string &method,
        const std::string &enctype, const std::string &target,
        const std::string &name);
-
   ~Form();
-  std::shared_ptr<FormItem> formList_addInput(struct html_feed_environ *h_env,
-                                              HtmlTag *tag);
 
   std::string query(const std::shared_ptr<FormItem> &item) const;
-};
-
-struct FormAnchor : public Anchor {
-  std::shared_ptr<FormItem> formItem;
-
-  short y = 0;
-  short rows = 0;
 };
 
 std::string form_quote(std::string_view x);

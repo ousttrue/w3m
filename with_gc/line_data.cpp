@@ -3,6 +3,7 @@
 #include "linklist.h"
 #include "myctype.h"
 #include "html/form.h"
+#include "html/form_item.h"
 #include "quote.h"
 #include "etc.h"
 #include "html/html_tag.h"
@@ -29,22 +30,22 @@ void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
 FormAnchor *LineData::registerForm(html_feed_environ *h_env,
                                    const std::shared_ptr<Form> &flist,
                                    HtmlTag *tag, int line, int pos) {
-  auto fi = flist->formList_addInput(h_env, tag);
+  auto fi = FormItem::createFromInput(h_env, tag);
   if (!fi) {
     return NULL;
   }
-  return this->_formitem->putAnchor(
-      {
-          .line = line,
-          .pos = pos,
-      },
-      FormAnchor{
-          // .target = flist->target ? flist->target : "",
-          // .option = {},
-          // .title = "",
-          // .accesskey = '\0',
-          .formItem = fi,
-      });
+
+  fi->parent = flist;
+  if (fi->type == FORM_INPUT_HIDDEN) {
+    return NULL;
+  }
+  flist->items.push_back(fi);
+
+  BufferPoint bp{
+      .line = line,
+      .pos = pos,
+  };
+  return this->_formitem->putAnchor(FormAnchor(bp, fi));
 }
 
 void LineData::addMultirowsForm() {
@@ -88,21 +89,11 @@ void LineData::addMultirowsForm() {
       if (a_form.start.line == linenumber(l))
         continue;
 
-      auto a = this->_formitem->putAnchor(
-          {
-              .line = linenumber(l),
-              .pos = pos,
-          },
-          FormAnchor{
-              .formItem = a_form.formItem,
-              // .url = a_form.url,
-              // .target = a_form.target,
-              // .option = {},
-              // .title = "",
-              // .accesskey = '\0',
-              // .hseq = a_form.hseq,
-              // .y = a_form.y,
-          });
+      BufferPoint bp{
+          .line = linenumber(l),
+          .pos = pos,
+      };
+      auto a = this->_formitem->putAnchor(FormAnchor(bp, a_form.formItem));
       a->end.pos = pos + ecol - col;
       if (pos < 1 || a->end.pos >= l->len())
         continue;
@@ -165,7 +156,8 @@ void LineData::reseq_anchor() {
 
 // const char *LineData ::reAnchorPos(
 //     Line *l, const char *p1, const char *p2,
-//     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int)) {
+//     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int))
+//     {
 //   Anchor *a;
 //   int i;
 //   int hseq = -2;
@@ -330,32 +322,34 @@ void LineData::clear() {
 }
 
 Anchor *LineData::registerName(const char *url, int line, int pos) {
-  return this->_name->putAnchor(
-      {
-          .line = line,
-          .pos = pos,
-      },
-      Anchor{
-          .url = url,
-          .target = "",
-          .option = {},
-          .title = "",
-          .accesskey = '\0',
-      });
+  BufferPoint bp{
+      .line = line,
+      .pos = pos,
+  };
+  return this->_name->putAnchor(Anchor{
+      .url = url,
+      .target = "",
+      .option = {},
+      .title = "",
+      .accesskey = '\0',
+      .start = bp,
+      .end = bp,
+  });
 }
 
 Anchor *LineData::registerImg(const char *url, const char *title, int line,
                               int pos) {
-  return this->_img->putAnchor(
-      {
-          .line = line,
-          .pos = pos,
-      },
-      Anchor{
-          .url = url,
-          .target = "",
-          .option = {},
-          .title = title ? title : "",
-          .accesskey = '\0',
-      });
+  BufferPoint bp{
+      .line = line,
+      .pos = pos,
+  };
+  return this->_img->putAnchor(Anchor{
+      .url = url,
+      .target = "",
+      .option = {},
+      .title = title ? title : "",
+      .accesskey = '\0',
+      .start = bp,
+      .end = bp,
+  });
 }

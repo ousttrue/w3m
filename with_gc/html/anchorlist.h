@@ -5,13 +5,11 @@ struct HttpOption;
 
 template <typename T> struct AnchorList {
 
-  using Anchor = T;
-
 private:
   int acache = -1;
 
 public:
-  std::vector<Anchor> anchors;
+  std::vector<T> anchors;
   size_t size() const { return anchors.size(); }
   void clear() { anchors.clear(); }
 
@@ -20,7 +18,7 @@ public:
   // AnchorList(const AnchorList &) = delete;
   // AnchorList &operator=(const AnchorList &) = delete;
 
-  Anchor *searchAnchor(std::string_view str) {
+  T *searchAnchor(std::string_view str) {
     for (size_t i = 0; i < this->size(); i++) {
       auto a = &this->anchors[i];
       if (a->hseq < 0) {
@@ -33,7 +31,7 @@ public:
     return {};
   }
 
-  Anchor *retrieveAnchor(int line, int pos) {
+  T *retrieveAnchor(int line, int pos) {
     if (this->size() == 0)
       return NULL;
 
@@ -136,7 +134,8 @@ public:
     }
   }
 
-  Anchor *putAnchor(const BufferPoint &bp, const Anchor &a) {
+  T *putAnchor(const T &a) {
+    auto bp = a.start;
     size_t n = this->size();
     size_t i;
     if (!n || this->anchors[n - 1].start.cmp(bp) < 0) {
@@ -158,8 +157,6 @@ public:
       this->anchors.push_back({});
     }
     this->anchors[i] = a;
-    this->anchors[i].start = bp;
-    this->anchors[i].end = bp;
     return &this->anchors[i];
   }
 };
