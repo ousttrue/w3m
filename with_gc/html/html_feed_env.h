@@ -89,8 +89,9 @@ struct html_feed_environ {
     parser.flushline(this, indent, force, width);
   }
 
-  std::shared_ptr<LineLayout> render(const Url &currentUrl) {
-    return parser.render(currentUrl, this);
+  std::shared_ptr<LineLayout> render(const std::shared_ptr<LineLayout> &layout,
+                                     const Url &currentUrl) {
+    return parser.render(layout, currentUrl, this);
   }
 
   int HTML_B_enter() {

@@ -416,6 +416,9 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
   CursorAndScroll backup = this->visual;
   this->visual.cursorRow(a->start.line);
   auto item = a->formItem;
+  if(!item){
+    return;
+  }
   switch (item->type) {
   case FORM_TEXTAREA:
   case FORM_INPUT_TEXT:

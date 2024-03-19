@@ -82,6 +82,7 @@ std::shared_ptr<FormItem> Form::formList_addInput(html_feed_environ *h_env,
   }
   if (item->type == FORM_INPUT_FILE && item->value.size()) {
     /* security hole ! */
+    assert(false);
     return NULL;
   }
   item->parent = shared_from_this();

@@ -1023,8 +1023,8 @@ void App::onFrame() {
       auto body = buf->res->getBody();
       auto visual = buf->layout->visual;
       if (buf->res->is_html_type()) {
-        buf->layout = loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
-                                     buf->res->currentURL, body);
+        loadHTMLstream(buf->layout, App::instance().INIT_BUFFER_WIDTH(),
+                       buf->res->currentURL, body);
       } else {
         loadBuffer(buf->layout, buf->res.get(), body);
       }
@@ -1461,7 +1461,7 @@ void App::record_err_message(const char *s) {
 /*
  * List of error messages
  */
-std::shared_ptr<Buffer> App::message_list_panel(int width) {
+std::string App::message_list_panel() {
   std::stringstream tmp;
   tmp << "<html><head><title>List of error messages</title></head><body>"
          "<h1>List of error messages</h1><table cellpadding=0>\n";
@@ -1472,7 +1472,7 @@ std::shared_ptr<Buffer> App::message_list_panel(int width) {
     tmp << "<tr><td>(no message recorded)</td></tr>\n";
   }
   tmp << "</table></body></html>";
-  return loadHTMLString(width, {}, tmp.str());
+  return tmp.str();
 }
 
 void App::disp_err_message(const char *s) {

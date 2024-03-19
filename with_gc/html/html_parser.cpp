@@ -964,10 +964,12 @@ static Str *textfieldrep(Str *s, int width) {
   return n;
 }
 
-std::shared_ptr<LineLayout> HtmlParser::render(const Url &currentUrl,
-                                               html_feed_environ *h_env) {
+std::shared_ptr<LineLayout>
+HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
+                   const Url &currentUrl, html_feed_environ *h_env) {
 
-  auto layout = std::make_shared<LineLayout>();
+  auto old = *layout->data._formitem;
+  layout->data.clear();
   layout->data.title = h_env->title;
 
   LineFeed feed(h_env->buf);
@@ -977,7 +979,7 @@ std::shared_ptr<LineLayout> HtmlParser::render(const Url &currentUrl,
       continue;
     }
 
-    auto line = renderLine(currentUrl, h_env, &layout->data, nlines, str);
+    auto line = renderLine(currentUrl, h_env, &layout->data, nlines, str, &old);
 
     /* end of processing for one line */
     if (!internal) {
@@ -1001,7 +1003,8 @@ std::shared_ptr<LineLayout> HtmlParser::render(const Url &currentUrl,
 }
 
 Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
-                            LineData *data, int nlines, const char *str) {
+                            LineData *data, int nlines, const char *str,
+                            AnchorList<FormAnchor> *old) {
 
   Line line;
 
@@ -1196,6 +1199,7 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         if (a_textarea.size() &&
             tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
         }
+
         a_form = data->registerForm(h_env, form, tag, nlines, line.len());
         if (textareanumber >= 0) {
           while (textareanumber >= (int)a_textarea.size()) {
@@ -1204,7 +1208,19 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
           }
           a_textarea[textareanumber] = a_form;
         }
+
         if (a_form) {
+
+          {
+            auto aa = old->retrieveAnchor(a_form->start.line, a_form->start.pos);
+            if (aa) {
+              if (auto fi = aa->formItem) {
+                a_form->formItem->value = fi->value;
+                ;
+              }
+            }
+          }
+
           a_form->hseq = hseq - 1;
           a_form->y = nlines - top;
           a_form->rows = 1 + top + bottom;

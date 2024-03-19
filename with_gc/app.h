@@ -171,7 +171,7 @@ public:
   char *delayed_msg = NULL;
   void message(const std::string &s);
   void record_err_message(const char *s);
-  std::shared_ptr<Buffer> message_list_panel(int width);
+  std::string message_list_panel();
   void disp_err_message(const char *s);
   void disp_message_nsec(const char *s, int sec, int purge);
   void disp_message(const char *s);

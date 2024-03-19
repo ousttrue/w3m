@@ -171,10 +171,12 @@ private:
   FormAnchor *a_form = nullptr;
   HtmlCommand internal = {};
   Line renderLine(const Url &url, html_feed_environ *h_env, LineData *data,
-                  int nlines, const char *str);
+                  int nlines, const char *str,
+                  AnchorList<FormAnchor> *forms);
 
 public:
-  std::shared_ptr<LineLayout> render(const Url &currentUrl,
+  std::shared_ptr<LineLayout> render(const std::shared_ptr<LineLayout> &layout,
+                                     const Url &currentUrl,
                                      html_feed_environ *h_env);
 };
 

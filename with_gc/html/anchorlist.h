@@ -17,8 +17,8 @@ public:
 
   AnchorList() {}
   ~AnchorList() {}
-  AnchorList(const AnchorList &) = delete;
-  AnchorList &operator=(const AnchorList &) = delete;
+  // AnchorList(const AnchorList &) = delete;
+  // AnchorList &operator=(const AnchorList &) = delete;
 
   Anchor *searchAnchor(std::string_view str) {
     for (size_t i = 0; i < this->size(); i++) {

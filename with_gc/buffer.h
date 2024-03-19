@@ -65,10 +65,9 @@ public:
   std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>
   followForm(FormAnchor *a, bool submit);
   std::string link_info() const;
-  std::shared_ptr<Buffer> page_info_panel(int width);
+  std::string page_info_panel() const;
   void saveBuffer(FILE *f, bool cont);
   void formRecheckRadio(FormAnchor *a);
 };
 
-std::shared_ptr<Buffer> link_list_panel(int width,
-                                        const std::shared_ptr<Buffer> &buf);
+std::string link_list_panel(const std::shared_ptr<Buffer> &buf);
