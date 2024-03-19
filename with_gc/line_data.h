@@ -1,5 +1,5 @@
 #pragma once
-
+#include "url.h"
 #include "line.h"
 #include "html/anchorlist.h"
 #include "html/form.h"
@@ -17,6 +17,10 @@ using AnchorFunc = Anchor *(*)(struct LineData *, const char *, const char *,
 
 struct LineData {
   std::string title;
+
+  Url baseURL;
+  std::string baseTarget;
+
   // always reshape new buffers to mark URLs
   bool need_reshape = true;
   int refresh_interval = 0;

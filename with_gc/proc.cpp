@@ -738,8 +738,8 @@ std::shared_ptr<CoroutineState<void>> followI(const FuncContext &context) {
     co_return;
   App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr);
 
-  auto res = loadGeneralFile(
-      a->url, CurrentTab->currentBuffer()->res->getBaseURL(), {});
+  auto res =
+      loadGeneralFile(a->url, CurrentTab->currentBuffer()->res->currentURL, {});
   if (!res) {
     char *emsg = Sprintf("Can't load %s", a->url.c_str())->ptr;
     App::instance().disp_err_message(emsg);
@@ -883,8 +883,7 @@ std::shared_ptr<CoroutineState<void>> nthA(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> nextA(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
   int n = App::instance().searchKeyNum();
-  auto baseUrl = buf->res->getBaseURL();
-  buf->layout->_nextA(baseUrl, n);
+  buf->layout->_nextA(buf->layout->data.baseURL, n);
   co_return;
 }
 
@@ -892,9 +891,9 @@ std::shared_ptr<CoroutineState<void>> nextA(const FuncContext &context) {
 // PREV_LINK
 //"Move to the previous hyperlink"
 std::shared_ptr<CoroutineState<void>> prevA(const FuncContext &context) {
+  auto buf = CurrentTab->currentBuffer();
   int n = App::instance().searchKeyNum();
-  auto baseUr = CurrentTab->currentBuffer()->res->getBaseURL();
-  CurrentTab->currentBuffer()->layout->_prevA(baseUr, n);
+  buf->layout->_prevA(buf->layout->data.baseURL, n);
   co_return;
 }
 
@@ -1428,12 +1427,15 @@ std::shared_ptr<CoroutineState<void>> extbrz(const FuncContext &context) {
 // EXTERN_LINK
 //"Display target using an external browser"
 std::shared_ptr<CoroutineState<void>> linkbrz(const FuncContext &context) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  auto buf = CurrentTab->currentBuffer();
+  if (buf->layout->empty())
     co_return;
-  auto a = CurrentTab->currentBuffer()->layout->retrieveCurrentAnchor();
+
+  auto a = buf->layout->retrieveCurrentAnchor();
   if (a == nullptr)
     co_return;
-  Url pu(a->url, CurrentTab->currentBuffer()->res->getBaseURL());
+
+  Url pu(a->url, buf->layout->data.baseURL);
   invoke_browser(pu.to_Str().c_str());
 }
 

@@ -679,14 +679,14 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_CURRENT_WORD", s.c_str());
 
     if (auto a = buf->layout->retrieveCurrentAnchor()) {
-      Url pu(a->url, buf->res->getBaseURL());
+      Url pu(a->url, buf->layout->data.baseURL);
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else {
       set_environ("W3M_CURRENT_LINK", "");
     }
 
     if (auto a = buf->layout->retrieveCurrentImg()) {
-      Url pu(a->url, buf->res->getBaseURL());
+      Url pu(a->url, buf->layout->data.baseURL);
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else {
       set_environ("W3M_CURRENT_IMG", "");
@@ -849,7 +849,8 @@ const char *App::searchKeyData() {
 }
 
 void App::peekURL() {
-  if (currentTab()->currentBuffer()->layout->empty()) {
+  auto buf = currentTab()->currentBuffer();
+  if (buf->layout->empty()) {
     return;
   }
 
@@ -865,24 +866,22 @@ void App::peekURL() {
   }
 
   _peekUrl = "";
-  if (auto a = currentTab()->currentBuffer()->layout->retrieveCurrentAnchor()) {
+  if (auto a = buf->layout->retrieveCurrentAnchor()) {
     _peekUrl = a->url;
     if (_peekUrl.empty()) {
-      Url pu(a->url, currentTab()->currentBuffer()->res->getBaseURL());
+      Url pu(a->url, buf->layout->data.baseURL);
       _peekUrl = pu.to_Str();
     }
-  } else if (auto a =
-                 currentTab()->currentBuffer()->layout->retrieveCurrentForm()) {
+  } else if (auto a = buf->layout->retrieveCurrentForm()) {
     _peekUrl = a->formItem->form2str();
     if (_peekUrl.empty()) {
-      Url pu(a->url, currentTab()->currentBuffer()->res->getBaseURL());
+      Url pu(a->url, buf->layout->data.baseURL);
       _peekUrl = pu.to_Str();
     }
-  } else if (auto a =
-                 currentTab()->currentBuffer()->layout->retrieveCurrentImg()) {
+  } else if (auto a = buf->layout->retrieveCurrentImg()) {
     _peekUrl = a->url;
     if (_peekUrl.empty()) {
-      Url pu(a->url, currentTab()->currentBuffer()->res->getBaseURL());
+      Url pu(a->url, buf->layout->data.baseURL);
       _peekUrl = pu.to_Str();
     }
   } else {
@@ -1676,7 +1675,7 @@ std::string App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
     return s.str();
   }
 
-  Url pu(url, buf->res->getBaseURL());
+  Url pu(url, buf->layout->data.baseURL);
   auto u = pu.to_Str();
   if (DecodeURL) {
     u = url_decode0(u);

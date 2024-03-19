@@ -1183,7 +1183,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         }
 
         if (form->target.empty()) {
-          form->target = res->baseTarget;
+          form->target = data->baseTarget;
         }
         if (a_textarea.size() &&
             tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
@@ -1264,10 +1264,10 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         const char *p;
         if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
           p = Strnew(url_quote(remove_space(p)))->ptr;
-          res->baseURL = {p, res->currentURL};
+          data->baseURL = {p, res->currentURL};
         }
         if (tag->parsedtag_get_value(ATTR_TARGET, &p))
-          res->baseTarget = url_quote(p);
+          data->baseTarget = url_quote(p);
         break;
       }
 

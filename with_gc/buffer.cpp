@@ -58,7 +58,7 @@ std::string Buffer::link_info() const {
     Url pu;
     std::string url;
     if (l->url) {
-      pu = {l->url, this->res->getBaseURL()};
+      pu = {l->url, this->layout->data.baseURL};
       url = html_quote(pu.to_Str().c_str());
     } else {
       url = "(empty)";
@@ -115,7 +115,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
                  nullptr);
 
   if (auto a = this->layout->retrieveCurrentAnchor()) {
-    Url pu(a->url.c_str(), this->res->getBaseURL());
+    Url pu(a->url.c_str(), this->layout->data.baseURL);
     auto p = pu.to_Str();
     auto q = html_quote(p);
     if (DecodeURL)
@@ -128,7 +128,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
   }
 
   if (auto a = this->layout->retrieveCurrentImg()) {
-    Url pu(a->url.c_str(), this->res->getBaseURL());
+    Url pu(a->url.c_str(), this->layout->data.baseURL);
     auto p = pu.to_Str();
     auto q = html_quote(p);
     if (DecodeURL)
@@ -202,7 +202,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
       std::string p;
       std::string u;
       if (l->url) {
-        Url pu(l->url, buf->res->getBaseURL());
+        Url pu(l->url, buf->layout->data.baseURL);
         p = pu.to_Str();
         u = html_quote(p);
         if (DecodeURL)
@@ -231,7 +231,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
       auto a = &buf->layout->data._href->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      Url pu(a->url.c_str(), buf->res->getBaseURL());
+      Url pu(a->url.c_str(), buf->layout->data.baseURL);
       auto p = pu.to_Str();
       auto u = html_quote(p);
       if (DecodeURL)
@@ -253,7 +253,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
       auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      Url pu(a->url.c_str(), buf->res->getBaseURL());
+      Url pu(a->url.c_str(), buf->layout->data.baseURL);
       auto p = pu.to_Str();
       auto u = html_quote(p);
       if (DecodeURL)
@@ -378,18 +378,17 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
-  auto base = this->res->getBaseURL();
+  auto base = this->layout->data.baseURL;
 
-  if ((no_referer_ptr && *no_referer_ptr) || !base ||
-      base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
-      base->scheme == SCM_DATA) {
+  if ((no_referer_ptr && *no_referer_ptr) || base.scheme == SCM_LOCAL ||
+      base.scheme == SCM_LOCAL_CGI || base.scheme == SCM_DATA) {
     option.no_referer = true;
   }
   if (option.referer.empty()) {
     option.referer = this->res->currentURL.to_RefererStr();
   }
 
-  auto res = loadGeneralFile(url, this->res->getBaseURL(), option, request);
+  auto res = loadGeneralFile(url, this->layout->data.baseURL, option, request);
   if (!res) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     App::instance().disp_err_message(emsg);
@@ -671,7 +670,7 @@ Buffer::followAnchor(bool check_target) {
       co_return {a, this->gotoLabel(a->url.substr(1))};
     }
 
-    Url u(a->url.c_str(), this->res->getBaseURL());
+    Url u(a->url.c_str(), this->layout->data.baseURL);
     if (u.to_Str() == this->res->currentURL.to_Str()) {
       // index within this buffer
       if (u.label.size()) {
@@ -710,7 +709,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
   if (!_url) {
     auto hist = URLHist->copyHist();
 
-    current = this->res->getBaseURL();
+    current = this->layout->data.baseURL;
     if (current) {
       auto c_url = current->to_Str();
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -736,7 +735,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
   HttpOption option = {};
   if (relative) {
     const int *no_referer_ptr = nullptr;
-    current = this->res->getBaseURL();
+    current = this->layout->data.baseURL;
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
         current->scheme == SCM_DATA)
