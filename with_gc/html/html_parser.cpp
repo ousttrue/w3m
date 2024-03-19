@@ -964,9 +964,8 @@ static Str *textfieldrep(Str *s, int width) {
   return n;
 }
 
-std::shared_ptr<LineLayout> HtmlParser::render(HttpResponse *res,
+std::shared_ptr<LineLayout> HtmlParser::render(const Url &currentUrl,
                                                html_feed_environ *h_env) {
-  n_textarea = -1;
 
   auto layout = std::make_shared<LineLayout>();
   layout->data.title = h_env->title;
@@ -978,7 +977,16 @@ std::shared_ptr<LineLayout> HtmlParser::render(HttpResponse *res,
       continue;
     }
 
-    renderLine(res, h_env, &layout->data, nlines, str);
+    auto line = renderLine(currentUrl, h_env, &layout->data, nlines, str);
+
+    /* end of processing for one line */
+    if (!internal) {
+      line.PPUSH(0, 0);
+      layout->data.lines.push_back(line);
+    }
+    if (internal == HTML_N_INTERNAL) {
+      internal = {};
+    }
   }
 
   layout->data.formlist = forms;
@@ -992,7 +1000,7 @@ std::shared_ptr<LineLayout> HtmlParser::render(HttpResponse *res,
   return layout;
 }
 
-void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
+Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
                             LineData *data, int nlines, const char *str) {
 
   Line line;
@@ -1264,7 +1272,7 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
         const char *p;
         if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
           p = Strnew(url_quote(remove_space(p)))->ptr;
-          data->baseURL = {p, res->currentURL};
+          data->baseURL = {p, url};
         }
         if (tag->parsedtag_get_value(ATTR_TARGET, &p))
           data->baseTarget = url_quote(p);
@@ -1340,17 +1348,8 @@ void HtmlParser::renderLine(HttpResponse *res, html_feed_environ *h_env,
       }
     }
   }
-  /* end of processing for one line */
-  if (!internal) {
-    line.PPUSH(0, 0);
-    data->lines.push_back(line);
-  }
-  if (internal == HTML_N_INTERNAL) {
-    internal = {};
-  }
-  // if (str != endp) {
-  //   line = Strsubstr(line, str - line.ptr, endp - str);
-  // }
+
+  return line;
 }
 
 int getMetaRefreshParam(const char *q, Str **refresh_uri) {

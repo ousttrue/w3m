@@ -108,11 +108,11 @@ std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
       this->res->type.size() ? html_quote(this->res->type.c_str()) : "unknown",
       "<tr valign=top><td nowrap>Last Modified<td>",
       html_quote(this->res->last_modified().c_str()), nullptr);
-  Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
-                 Sprintf("%d", all)->ptr,
-                 "<tr valign=top><td nowrap>Transferred bytes<td>",
-                 Sprintf("%lu", (unsigned long)this->res->trbyte)->ptr,
-                 nullptr);
+  // Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
+  //                Sprintf("%d", all)->ptr,
+  //                "<tr valign=top><td nowrap>Transferred bytes<td>",
+  //                Sprintf("%lu", (unsigned long)this->res->trbyte)->ptr,
+  //                nullptr);
 
   if (auto a = this->layout->retrieveCurrentAnchor()) {
     Url pu(a->url.c_str(), this->layout->data.baseURL);
@@ -174,7 +174,7 @@ std::shared_ptr<Buffer> Buffer::page_info_panel(int width) {
                    html_quote(this->res->ssl_certificate), "</pre>\n", nullptr);
 
   Strcat_charp(tmp, "</body></html>");
-  auto newbuf = loadHTMLString(width, tmp->ptr);
+  auto newbuf = loadHTMLString(width, {}, tmp->ptr);
   return newbuf;
 }
 
@@ -309,7 +309,7 @@ std::shared_ptr<Buffer> link_list_panel(int width,
     Strcat_charp(tmp, "</ol>\n");
   }
 
-  return loadHTMLString(width, tmp->ptr);
+  return loadHTMLString(width, {}, tmp->ptr);
 }
 
 void Buffer::saveBufferInfo() {

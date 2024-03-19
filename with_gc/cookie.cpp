@@ -740,7 +740,7 @@ std::shared_ptr<Buffer> cookie_list_panel(int width) {
         src, "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
   }
   Strcat_charp(src, "</ol></form></body></html>");
-  return loadHTMLString(width, src->ptr);
+  return loadHTMLString(width, {}, src->ptr);
 }
 
 void set_cookie_flag(struct keyvalue *arg) {

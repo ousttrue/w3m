@@ -1089,7 +1089,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
   auto html = Option::instance().load_option_panel();
   auto newbuf =
-      loadHTMLString(App::instance().INIT_BUFFER_WIDTH(), html.c_str());
+      loadHTMLString(App::instance().INIT_BUFFER_WIDTH(), {}, html.c_str());
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }
@@ -1162,7 +1162,8 @@ std::shared_ptr<CoroutineState<void>> cooLst(const FuncContext &context) {
 //"Show browsing history"
 std::shared_ptr<CoroutineState<void>> ldHist(const FuncContext &context) {
   auto html = URLHist->toHtml();
-  if (auto buf = loadHTMLString(App::instance().INIT_BUFFER_WIDTH(), html)) {
+  if (auto buf =
+          loadHTMLString(App::instance().INIT_BUFFER_WIDTH(), {}, html)) {
     CurrentTab->pushBuffer(buf);
   }
   co_return;
@@ -1373,16 +1374,15 @@ std::shared_ptr<CoroutineState<void>> reshape(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
   buf->layout->data.need_reshape = true;
   if (buf->layout->data.need_reshape) {
-
-    auto sbuf = buf->layout;
+    auto visual = buf->layout->visual;
     auto body = buf->res->getBody();
     if (buf->res->is_html_type()) {
-      buf->layout =
-          loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
-                         CurrentTab->currentBuffer()->res.get(), body);
+      buf->layout = loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
+                                   buf->res->currentURL, body);
     } else {
       loadBuffer(buf->layout, buf->res.get(), body);
     }
+    buf->layout->visual = visual;
   }
   co_return;
 }
@@ -1703,7 +1703,7 @@ std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
   }
   auto buf = Buffer::create();
   buf->layout = loadHTMLstream(App::instance().INIT_BUFFER_WIDTH(),
-                               buf->res.get(), html, true);
+                               buf->res->currentURL, html, true);
   if (replace) {
     // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
     buf->layout->visual.restorePosition(

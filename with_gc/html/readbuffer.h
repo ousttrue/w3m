@@ -1,4 +1,5 @@
 #pragma once
+#include "url.h"
 #include "lineprop.h"
 #include "enum_template.h"
 #include "Str.h"
@@ -195,7 +196,7 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
 
 struct LineLayout;
 struct HttpResponse;
-std::shared_ptr<LineLayout> loadHTMLstream(int width, HttpResponse *res,
+std::shared_ptr<LineLayout> loadHTMLstream(int width, const Url &currentUrl,
                                            std::string_view body,
                                            bool internal = false);
 void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
@@ -217,5 +218,6 @@ inline void cleanup_line(Str *s, CleanupMode mode) {
 extern int is_boundary(unsigned char *, unsigned char *);
 
 struct Buffer;
-std::shared_ptr<Buffer> loadHTMLString(int width, std::string_view html);
+std::shared_ptr<Buffer> loadHTMLString(int width, const Url &currentUrl,
+                                       std::string_view html);
 std::shared_ptr<Buffer> getshell(const char *cmd);

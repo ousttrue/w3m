@@ -9,6 +9,9 @@
 #include "ctrlcode.h"
 #include "symbol.h"
 #include "utf8.h"
+#include "quote.h"
+#include "http_response.h"
+// strcasecmp
 #include <stdio.h>
 #include <vector>
 
@@ -86,8 +89,8 @@ struct html_feed_environ {
     parser.flushline(this, indent, force, width);
   }
 
-  std::shared_ptr<LineLayout> render(HttpResponse *res) {
-    return parser.render(res, this);
+  std::shared_ptr<LineLayout> render(const Url &currentUrl) {
+    return parser.render(currentUrl, this);
   }
 
   int HTML_B_enter() {

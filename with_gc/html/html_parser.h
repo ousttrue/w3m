@@ -1,11 +1,10 @@
 #pragma once
-// #include "html_html_feed_env.h"
+#include "url.h"
 #include "html_command.h"
 #include "lineprop.h"
 #include "table.h"
 #include "readbuffer_status.h"
 #include "readbuffer.h"
-#include "quote.h"
 
 struct Str;
 struct HtmlTag;
@@ -92,7 +91,7 @@ private:
   int cur_textarea_size = {};
   int cur_textarea_rows = {};
   int cur_textarea_readonly = {};
-  int n_textarea = 0;
+  int n_textarea = -1;
   int ignore_nl_textarea = {};
 
 public:
@@ -171,11 +170,11 @@ private:
   Anchor *a_img = nullptr;
   FormAnchor *a_form = nullptr;
   HtmlCommand internal = {};
-  void renderLine(HttpResponse *res, html_feed_environ *h_env, LineData *data,
+  Line renderLine(const Url &url, html_feed_environ *h_env, LineData *data,
                   int nlines, const char *str);
 
 public:
-  std::shared_ptr<LineLayout> render(HttpResponse *res,
+  std::shared_ptr<LineLayout> render(const Url &currentUrl,
                                      html_feed_environ *h_env);
 };
 

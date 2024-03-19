@@ -486,7 +486,7 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
-std::shared_ptr<LineLayout> loadHTMLstream(int width, HttpResponse *res,
+std::shared_ptr<LineLayout> loadHTMLstream(int width, const Url &currentURL,
                                            std::string_view body,
                                            bool internal) {
 
@@ -526,14 +526,10 @@ std::shared_ptr<LineLayout> loadHTMLstream(int width, HttpResponse *res,
   htmlenv1.completeHTMLstream();
   htmlenv1.flushline(0, 2, htmlenv1.limit);
 
-  res->trbyte = trbyte + linelen;
-  res->raw = {body.begin(), body.end()};
-  res->type = "text/html";
-
   //
   // render ?
   //
-  return htmlenv1.render(res);
+  return htmlenv1.render(currentURL);
 }
 
 std::string cleanup_line(std::string_view _s, CleanupMode mode) {
@@ -685,9 +681,12 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
   res->type = "text/plain";
 }
 
-std::shared_ptr<Buffer> loadHTMLString(int width, std::string_view html) {
+std::shared_ptr<Buffer> loadHTMLString(int width, const Url &currentUrl,
+                                       std::string_view html) {
   auto newBuf = Buffer::create();
-  newBuf->layout = loadHTMLstream(width, newBuf->res.get(), html, true);
+  newBuf->layout = loadHTMLstream(width, currentUrl, html, true);
+  newBuf->res->raw = {html.begin(), html.end()};
+  newBuf->res->type = "text/html";
   return newBuf;
 }
 
