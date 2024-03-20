@@ -513,7 +513,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
   if (h_env.limit > maxlimit)
     h_env.limit = maxlimit;
   if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
-    parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+    obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
   for (auto l = orgdata->first; l != NULL; l = l->next) {
     if (TAG_IS(l->ptr->line->ptr, "<table_alt", 10)) {
       int id = -1;
@@ -530,7 +530,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         parser->save_fonteffect(&h_env);
         obuf.flushline(h_env.buf, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
-          parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+          obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
         if (h_env.obuf.RB_GET_ALIGN() == RB_CENTER) {
           alignment = ALIGN_CENTER;
         } else if (h_env.obuf.RB_GET_ALIGN() == RB_RIGHT) {
@@ -551,7 +551,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         obuf.flag &= ~RB_IGNORE_P;
         h_env.obuf.blank_lines = 0;
         if (t->vspace > 0) {
-          parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+          obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
           obuf.flag |= RB_IGNORE_P;
         }
       }
@@ -568,7 +568,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     int rowspan = this->table_rowspan(row, col);
     if (row + rowspan <= this->maxrow) {
       if (this->vcellpadding > 0 && !(obuf.flag & RB_IGNORE_P))
-        parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+        obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
     } else {
       if (this->vspace > 0) {
         h_env.purgeline();
@@ -577,7 +577,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
   } else {
     if (this->vcellpadding > 0) {
       if (!(obuf.flag & RB_IGNORE_P))
-        parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
+        obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
     } else {
       h_env.purgeline();
     }

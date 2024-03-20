@@ -104,8 +104,6 @@ public:
   void completeHTMLstream(html_feed_environ *);
   void push_render_image(Str *str, int width, int limit,
                          html_feed_environ *h_env);
-  void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,
-                    int indent, int indent_incr, int width);
 
 public:
   int cur_hseq = 1;
@@ -117,8 +115,6 @@ public:
   void HTMLlineproc1(const char *x, struct html_feed_environ *y);
 
   void CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env);
-
-  void CLOSE_P(readbuffer *obuf, html_feed_environ *h_env);
 
   void CLOSE_A(readbuffer *obuf, html_feed_environ *h_env);
 

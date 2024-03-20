@@ -80,10 +80,6 @@ struct html_feed_environ {
 
   void completeHTMLstream() { parser.completeHTMLstream(this); }
 
-  void flushline(int indent, int force, int width) {
-    this->obuf.flushline(this->buf, indent, force, width);
-  }
-
   std::shared_ptr<LineLayout> render(const std::shared_ptr<LineLayout> &layout,
                                      const Url &currentUrl) {
     return parser.render(layout, currentUrl, this);
@@ -93,8 +89,8 @@ struct html_feed_environ {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 1, this->limit);
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
     }
     this->obuf.flag |= RB_IGNORE_P;
     if (tag->tagid == HTML_P) {
@@ -107,8 +103,8 @@ struct html_feed_environ {
   int HTML_H_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (!(this->obuf.flag & (RB_PREMODE | RB_IGNORE_P))) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
     }
     this->parser.HTMLlineproc1("<b>", this);
     this->obuf.set_alignment(tag);
@@ -120,8 +116,7 @@ struct html_feed_environ {
     if (!(this->obuf.flag & RB_PREMODE)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
     }
-    this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                              this->limit);
+    this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0, this->limit);
     this->obuf.RB_RESTORE_FLAG();
     this->parser.close_anchor(this);
     this->obuf.flag |= RB_IGNORE_P;
@@ -134,8 +129,8 @@ struct html_feed_environ {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
       if (!(this->obuf.flag & RB_PREMODE) &&
           (this->envc == 0 || tag->tagid == HTML_BLQ))
-        this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                  this->limit);
+        this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                                this->limit);
     }
     this->PUSH_ENV(tag->tagid);
     if (tag->tagid == HTML_UL || tag->tagid == HTML_OL) {
@@ -162,12 +157,13 @@ struct html_feed_environ {
     this->parser.CLOSE_DT(&this->obuf, this);
     this->parser.CLOSE_A(&this->obuf, this);
     if (this->envc > 0) {
-      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0, this->limit);
+      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
+                           this->limit);
       this->POP_ENV();
       if (!(this->obuf.flag & RB_PREMODE) &&
           (this->envc == 0 || tag->tagid == HTML_N_BLQ)) {
-        this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent,
-                                  INDENT_INCR, this->limit);
+        this->obuf.do_blankline(this->buf, envs[this->envc].indent, INDENT_INCR,
+                                this->limit);
         this->obuf.flag |= RB_IGNORE_P;
       }
     }
@@ -182,8 +178,8 @@ struct html_feed_environ {
       if (!(this->obuf.flag & RB_PREMODE) && envs[this->envc].env != HTML_DL &&
           envs[this->envc].env != HTML_DL_COMPACT &&
           envs[this->envc].env != HTML_DD)
-        this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                  this->limit);
+        this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                                this->limit);
     }
     this->PUSH_ENV_NOINDENT(tag->tagid);
     if (tag->parsedtag_exists(ATTR_COMPACT))
@@ -197,7 +193,8 @@ struct html_feed_environ {
     this->parser.CLOSE_DT(&this->obuf, this);
     if (this->envc > 0) {
       Str *num;
-      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0, this->limit);
+      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
+                           this->limit);
       envs[this->envc].count++;
       const char *p;
       if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
@@ -286,7 +283,8 @@ struct html_feed_environ {
       this->PUSH_ENV_NOINDENT(HTML_DL);
     }
     if (this->envc > 0) {
-      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0, this->limit);
+      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
+                           this->limit);
     }
     if (!(this->obuf.flag & RB_IN_DT)) {
       this->parser.HTMLlineproc1("<b>", this);
@@ -303,7 +301,8 @@ struct html_feed_environ {
     this->obuf.flag &= ~RB_IN_DT;
     this->parser.HTMLlineproc1("</b>", this);
     if (this->envc > 0 && envs[this->envc].env == HTML_DL)
-      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0, this->limit);
+      this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
+                           this->limit);
     return 1;
   }
 
@@ -317,7 +316,8 @@ struct html_feed_environ {
 
     if (this->envc > 0 && envs[this->envc - 1].env == HTML_DL_COMPACT) {
       if (this->obuf.pos > envs[this->envc].indent)
-        this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
+        this->obuf.flushline(this->buf, envs[this->envc].indent, 0,
+                             this->limit);
       else
         this->obuf.push_spaces(1, envs[this->envc].indent - this->obuf.pos);
     } else
@@ -417,8 +417,8 @@ struct html_feed_environ {
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
       if (!x)
-        this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                  this->limit);
+        this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                                this->limit);
     } else
       this->obuf.fillline(envs[this->envc].indent);
     this->obuf.flag |= (RB_PRE | RB_IGNORE_P);
@@ -429,8 +429,8 @@ struct html_feed_environ {
   int HTML_PRE_exit() {
     this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
       this->obuf.flag |= RB_IGNORE_P;
       this->obuf.blank_lines++;
     }
@@ -439,46 +439,12 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_PRE_INT_enter() {
-    int i = this->obuf.line->length;
-    this->obuf.append_tags();
-    if (!(this->obuf.flag & RB_SPECIAL)) {
-      this->obuf.set_breakpoint(this->obuf.line->length - i);
-    }
-    this->obuf.flag |= RB_PRE_INT;
-    return 0;
-  }
-
-  int HTML_PRE_INT_exit() {
-    this->obuf.push_tag("</pre_int>", HTML_N_PRE_INT);
-    this->obuf.flag &= ~RB_PRE_INT;
-    if (!(this->obuf.flag & RB_SPECIAL) && this->obuf.pos > this->obuf.bp.pos) {
-      set_prevchar(this->obuf.prevchar, "", 0);
-      this->obuf.prev_ctype = PC_CTRL;
-    }
-    return 1;
-  }
-
-  int HTML_NOBR_enter() {
-    this->obuf.flag |= RB_NOBR;
-    this->obuf.nobr_level++;
-    return 0;
-  }
-
-  int HTML_NOBR_exit() {
-    if (this->obuf.nobr_level > 0)
-      this->obuf.nobr_level--;
-    if (this->obuf.nobr_level == 0)
-      this->obuf.flag &= ~RB_NOBR;
-    return 0;
-  }
-
   int HTML_PRE_PLAIN_enter() {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
     }
     this->obuf.flag |= (RB_PRE | RB_IGNORE_P);
     return 1;
@@ -488,8 +454,8 @@ struct html_feed_environ {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
       this->obuf.flag |= RB_IGNORE_P;
     }
     this->obuf.flag &= ~RB_PRE;
@@ -500,8 +466,8 @@ struct html_feed_environ {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
     }
     this->obuf.flag |= (RB_PLAIN | RB_IGNORE_P);
     switch (tag->tagid) {
@@ -525,8 +491,8 @@ struct html_feed_environ {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
-      this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                this->limit);
+      this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                              this->limit);
       this->obuf.flag |= RB_IGNORE_P;
     }
     this->obuf.flag &= ~RB_PLAIN;
@@ -588,52 +554,6 @@ struct html_feed_environ {
       if (!this->obuf.close_effect0(HTML_IMG_ALT))
         this->obuf.push_tag("</img_alt>", HTML_N_IMG_ALT);
       this->obuf.img_alt = nullptr;
-    }
-    return 1;
-  }
-
-  int HTML_INPUT_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
-    int i = 0;
-    if (tag->parsedtag_get_value(ATTR_TOP_MARGIN, &i)) {
-      if ((short)i > this->obuf.top_margin)
-        this->obuf.top_margin = (short)i;
-    }
-    i = 0;
-    if (tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &i)) {
-      if ((short)i > this->obuf.bottom_margin)
-        this->obuf.bottom_margin = (short)i;
-    }
-    int hseq;
-    if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq)) {
-      this->obuf.input_alt.hseq = hseq;
-    }
-    if (tag->parsedtag_get_value(ATTR_FID, &i)) {
-      this->obuf.input_alt.fid = i;
-    }
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-      this->obuf.input_alt.type = Strnew_charp(p);
-    }
-    if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
-      this->obuf.input_alt.value = Strnew_charp(p);
-    }
-    if (tag->parsedtag_get_value(ATTR_NAME, &p)) {
-      this->obuf.input_alt.name = Strnew_charp(p);
-    }
-    this->obuf.input_alt.in = 1;
-    return 0;
-  }
-
-  int HTML_INPUT_ALT_exit() {
-    if (this->obuf.input_alt.in) {
-      if (!this->obuf.close_effect0(HTML_INPUT_ALT))
-        this->obuf.push_tag("</input_alt>", HTML_N_INPUT_ALT);
-      this->obuf.input_alt.hseq = 0;
-      this->obuf.input_alt.fid = -1;
-      this->obuf.input_alt.in = 0;
-      this->obuf.input_alt.type = nullptr;
-      this->obuf.input_alt.name = nullptr;
-      this->obuf.input_alt.value = nullptr;
     }
     return 1;
   }
@@ -737,7 +657,7 @@ struct html_feed_environ {
   }
 
   int HTML_DIV_INT_enter(const std::shared_ptr<HtmlTag> &tag) {
-    this->parser.CLOSE_P(&this->obuf, this);
+    this->obuf.CLOSE_P(this);
     if (!(this->obuf.flag & RB_IGNORE_P))
       this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
     this->obuf.set_alignment(tag);
@@ -745,7 +665,7 @@ struct html_feed_environ {
   }
 
   int HTML_DIV_INT_exit() {
-    this->parser.CLOSE_P(&this->obuf, this);
+    this->obuf.CLOSE_P(this);
     this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
     this->obuf.RB_RESTORE_FLAG();
     return 1;
@@ -861,8 +781,8 @@ struct html_feed_environ {
         tmp = Sprintf("Refresh (%d sec)", refresh_interval);
       if (tmp) {
         this->parser.HTMLlineproc1(tmp->ptr, this);
-        this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
-                                  this->limit);
+        this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
+                                this->limit);
       }
     }
     return 1;

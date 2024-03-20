@@ -10,6 +10,7 @@
 #include "html_command.h"
 #include "textline.h"
 #include <memory>
+#include "html_tag.h"
 #include <string_view>
 
 extern int squeezeBlankLine;
@@ -279,6 +280,88 @@ struct readbuffer {
     return 1;
   }
 
+  int HTML_PRE_INT_enter() {
+    int i = this->line->length;
+    this->append_tags();
+    if (!(this->flag & RB_SPECIAL)) {
+      this->set_breakpoint(this->line->length - i);
+    }
+    this->flag |= RB_PRE_INT;
+    return 0;
+  }
+
+  int HTML_PRE_INT_exit() {
+    this->push_tag("</pre_int>", HTML_N_PRE_INT);
+    this->flag &= ~RB_PRE_INT;
+    if (!(this->flag & RB_SPECIAL) && this->pos > this->bp.pos) {
+      set_prevchar(this->prevchar, "", 0);
+      this->prev_ctype = PC_CTRL;
+    }
+    return 1;
+  }
+
+  int HTML_NOBR_enter() {
+    this->flag |= RB_NOBR;
+    this->nobr_level++;
+    return 0;
+  }
+
+  int HTML_NOBR_exit() {
+    if (this->nobr_level > 0)
+      this->nobr_level--;
+    if (this->nobr_level == 0)
+      this->flag &= ~RB_NOBR;
+    return 0;
+  }
+
+  int HTML_INPUT_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
+    int i = 0;
+    if (tag->parsedtag_get_value(ATTR_TOP_MARGIN, &i)) {
+      if ((short)i > this->top_margin)
+        this->top_margin = (short)i;
+    }
+    i = 0;
+    if (tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &i)) {
+      if ((short)i > this->bottom_margin)
+        this->bottom_margin = (short)i;
+    }
+    int hseq;
+    if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq)) {
+      this->input_alt.hseq = hseq;
+    }
+    if (tag->parsedtag_get_value(ATTR_FID, &i)) {
+      this->input_alt.fid = i;
+    }
+    const char *p;
+    if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
+      this->input_alt.type = Strnew_charp(p);
+    }
+    if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
+      this->input_alt.value = Strnew_charp(p);
+    }
+    if (tag->parsedtag_get_value(ATTR_NAME, &p)) {
+      this->input_alt.name = Strnew_charp(p);
+    }
+    this->input_alt.in = 1;
+    return 0;
+  }
+
+  int HTML_INPUT_ALT_exit() {
+    if (this->input_alt.in) {
+      if (!this->close_effect0(HTML_INPUT_ALT))
+        this->push_tag("</input_alt>", HTML_N_INPUT_ALT);
+      this->input_alt.hseq = 0;
+      this->input_alt.fid = -1;
+      this->input_alt.in = 0;
+      this->input_alt.type = nullptr;
+      this->input_alt.name = nullptr;
+      this->input_alt.value = nullptr;
+    }
+    return 1;
+  }
+
+  void CLOSE_P(struct html_feed_environ *h_env);
+
   void append_tags();
   void push_tag(const char *cmdname, HtmlCommand cmd);
   void push_nchars(int width, const char *str, int len, Lineprop mode);
@@ -330,6 +413,12 @@ struct readbuffer {
   void passthrough(char *str, int back);
 
   void flushline(GeneralList<TextLine> *buf, int indent, int force, int width);
+  void do_blankline(GeneralList<TextLine> *buf, int indent, int indent_incr,
+                    int width) {
+    if (this->blank_lines == 0) {
+      this->flushline(buf, indent, 1, width);
+    }
+  }
 };
 
 Str *romanNumeral(int n);

@@ -547,7 +547,7 @@ void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
 
   htmlenv1.obuf.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();
-  htmlenv1.flushline(0, 2, htmlenv1.limit);
+  htmlenv1.obuf.flushline(htmlenv1.buf, 0, 2, htmlenv1.limit);
 
   //
   // render ?
@@ -892,8 +892,8 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
   this->flag |= RB_NFLUSHED;
 }
 
-void readbuffer::flushline(GeneralList<TextLine> *buf, int indent,
-                           int force, int width) {
+void readbuffer::flushline(GeneralList<TextLine> *buf, int indent, int force,
+                           int width) {
   Str *line = this->line;
   Str *pass = nullptr;
   // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
@@ -1212,4 +1212,13 @@ void readbuffer::flushline(GeneralList<TextLine> *buf, int indent,
     this->push_tag("<S>", HTML_S);
   if (!hidden_ins && this->fontstat.in_ins)
     this->push_tag("<INS>", HTML_INS);
+}
+
+void readbuffer::CLOSE_P(struct html_feed_environ *h_env) {
+  if (this->flag & RB_P) {
+    struct environment *envs = h_env->envs.data();
+    this->flushline(h_env->buf, envs[h_env->envc].indent, 0, h_env->limit);
+    this->RB_RESTORE_FLAG();
+    this->flag &= ~RB_P;
+  }
 }
