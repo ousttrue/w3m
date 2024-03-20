@@ -1646,52 +1646,62 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
 
     if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE |
                     RB_TITLE)) {
+      bool goto_proc_normal = false;
       if (is_tag) {
         p = str;
         if (auto tag = HtmlTag::parse(&p, internal)) {
           if (tag->tagid == end_tag ||
               (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM) ||
               (pre_mode & RB_TITLE &&
-               (tag->tagid == HTML_N_HEAD || tag->tagid == HTML_BODY)))
-            goto proc_normal;
+               (tag->tagid == HTML_N_HEAD || tag->tagid == HTML_BODY))) {
+            goto_proc_normal = true;
+          }
         }
       }
-      /* title */
-      if (pre_mode & RB_TITLE) {
-        feed_title(str);
-        continue;
-      }
-      /* select */
-      if (pre_mode & RB_INSELECT) {
-        if (h_env->obuf.table_level >= 0)
-          goto proc_normal;
-        this->feed_select(str);
-        continue;
-      }
-      if (is_tag) {
-        if (strncmp(str, "<!--", 4) && (p = strchr(str + 1, '<'))) {
-          str = Strnew_charp_n(str, p - str)->ptr;
-          line = Strnew_m_charp(p, line, nullptr)->ptr;
+      if (goto_proc_normal) {
+        // goto proc_normal;
+      } else {
+        /* title */
+        if (pre_mode & RB_TITLE) {
+          feed_title(str);
+          continue;
         }
-        is_tag = false;
-        continue;
+        /* select */
+        if (pre_mode & RB_INSELECT) {
+          if (h_env->obuf.table_level >= 0) {
+            // goto proc_normal;
+          } else {
+            this->feed_select(str);
+            continue;
+          }
+        } else {
+          if (is_tag) {
+            if (strncmp(str, "<!--", 4) && (p = strchr(str + 1, '<'))) {
+              str = Strnew_charp_n(str, p - str)->ptr;
+              line = Strnew_m_charp(p, line, nullptr)->ptr;
+            }
+            is_tag = false;
+            continue;
+          }
+          if (h_env->obuf.table_level >= 0) {
+            // goto proc_normal;
+          } else {
+            /* textarea */
+            if (pre_mode & RB_INTXTA) {
+              feed_textarea(str);
+              continue;
+            }
+            /* script */
+            if (pre_mode & RB_SCRIPT)
+              continue;
+            /* style */
+            if (pre_mode & RB_STYLE)
+              continue;
+          }
+        }
       }
-      if (h_env->obuf.table_level >= 0)
-        goto proc_normal;
-      /* textarea */
-      if (pre_mode & RB_INTXTA) {
-        feed_textarea(str);
-        continue;
-      }
-      /* script */
-      if (pre_mode & RB_SCRIPT)
-        continue;
-      /* style */
-      if (pre_mode & RB_STYLE)
-        continue;
     }
 
-  proc_normal:
     if (t.is_active(h_env)) {
       /*
        * within table: in <table>..</table>, all input tokens
