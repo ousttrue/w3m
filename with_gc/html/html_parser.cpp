@@ -107,38 +107,6 @@ void HtmlParser::push_link(int cmd, int offset, int pos) {
   link_stack = p;
 }
 
-void HtmlParser::append_tags(struct readbuffer *obuf) {
-  int i;
-  int len = obuf->line->length;
-  int set_bp = 0;
-
-  for (i = 0; i < obuf->tag_sp; i++) {
-    switch (obuf->tag_stack[i]->cmd) {
-    case HTML_A:
-    case HTML_IMG_ALT:
-    case HTML_B:
-    case HTML_U:
-    case HTML_I:
-    case HTML_S:
-      this->push_link(obuf->tag_stack[i]->cmd, obuf->line->length, obuf->pos);
-      break;
-    }
-    Strcat_charp(obuf->line, obuf->tag_stack[i]->cmdname);
-    switch (obuf->tag_stack[i]->cmd) {
-    case HTML_NOBR:
-      if (obuf->nobr_level > 1)
-        break;
-    case HTML_WBR:
-      set_bp = 1;
-      break;
-    }
-  }
-  obuf->tag_sp = 0;
-  if (set_bp) {
-    obuf->set_breakpoint(obuf->line->length - len);
-  }
-}
-
 void HtmlParser::push_tag(struct readbuffer *obuf, const char *cmdname,
                           int cmd) {
   obuf->tag_stack[obuf->tag_sp] = (struct cmdtable *)New(struct cmdtable);
@@ -146,13 +114,13 @@ void HtmlParser::push_tag(struct readbuffer *obuf, const char *cmdname,
   obuf->tag_stack[obuf->tag_sp]->cmd = cmd;
   obuf->tag_sp++;
   if (obuf->tag_sp >= TAG_STACK_SIZE || obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
-    this->append_tags(obuf);
+    obuf->append_tags(this);
   }
 }
 
 void HtmlParser::push_nchars(struct readbuffer *obuf, int width,
                              const char *str, int len, Lineprop mode) {
-  this->append_tags(obuf);
+  obuf->append_tags(this);
   Strcat_charp_n(obuf->line, str, len);
   obuf->pos += width;
   if (width > 0) {
@@ -176,7 +144,7 @@ void HtmlParser::check_breakpoint(struct readbuffer *obuf, int pre_mode,
                                   const char *ch) {
   int tlen, len = obuf->line->length;
 
-  this->append_tags(obuf);
+  obuf->append_tags(this);
   if (pre_mode)
     return;
   tlen = obuf->line->length - len;
@@ -327,7 +295,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     h_env->obuf.pos--;
   }
 
-  append_tags(&h_env->obuf);
+  h_env->obuf.append_tags(this);
 
   auto obuf = &h_env->obuf;
   if (obuf->anchor.url.size()) {
@@ -2458,7 +2426,7 @@ table_start:
         int indent = h_env->envs[h_env->envc].indent;
         if (h_env->obuf.bp.pos - i > indent) {
           Str *line;
-          append_tags(&h_env->obuf); /* may reallocate the buffer */
+          h_env->obuf.append_tags(this); /* may reallocate the buffer */
           bp = h_env->obuf.line->ptr + h_env->obuf.bp.len;
           line = Strnew_charp(bp);
           Strshrink(h_env->obuf.line,

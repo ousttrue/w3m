@@ -187,6 +187,8 @@ struct readbuffer {
       this->nobr_level = this->bp.nobr_level;
     }
   }
+
+  void append_tags(class HtmlParser *parser);
 };
 
 Str *romanNumeral(int n);

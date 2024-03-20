@@ -730,3 +730,33 @@ void readbuffer::set_breakpoint(int tag_length) {
   this->bp.prev_ctype = this->prev_ctype;
   this->bp.init_flag = 0;
 }
+
+void readbuffer::append_tags(HtmlParser *parser) {
+  int len = this->line->length;
+  bool set_bp = false;
+  for (int i = 0; i < this->tag_sp; i++) {
+    switch (this->tag_stack[i]->cmd) {
+    case HTML_A:
+    case HTML_IMG_ALT:
+    case HTML_B:
+    case HTML_U:
+    case HTML_I:
+    case HTML_S:
+      parser->push_link(this->tag_stack[i]->cmd, this->line->length, this->pos);
+      break;
+    }
+    Strcat_charp(this->line, this->tag_stack[i]->cmdname);
+    switch (this->tag_stack[i]->cmd) {
+    case HTML_NOBR:
+      if (this->nobr_level > 1)
+        break;
+    case HTML_WBR:
+      set_bp = 1;
+      break;
+    }
+  }
+  this->tag_sp = 0;
+  if (set_bp) {
+    this->set_breakpoint(this->line->length - len);
+  }
+}

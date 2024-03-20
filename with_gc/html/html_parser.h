@@ -52,7 +52,6 @@ class HtmlParser {
   struct link_stack *link_stack = nullptr;
   char *has_hidden_link(struct readbuffer *obuf, int cmd) const;
   void passthrough(struct readbuffer *obuf, char *str, int back);
-  void append_tags(struct readbuffer *obuf);
 
   // title
   Str *pre_title = nullptr;
