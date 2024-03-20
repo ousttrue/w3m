@@ -325,6 +325,9 @@ struct readbuffer {
   void push_link(HtmlCommand cmd, int offset, int pos);
   char *has_hidden_link(HtmlCommand cmd) const;
   void passthrough(char *str, int back);
+
+  void flushline(struct html_feed_environ *h_env, int indent, int force,
+                 int width);
 };
 
 Str *romanNumeral(int n);

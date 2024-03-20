@@ -97,7 +97,6 @@ public:
   Str *process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
   Str *process_n_textarea();
   void feed_textarea(const char *str);
-  void flushline(html_feed_environ *h_env, int indent, int force, int width);
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);

@@ -528,7 +528,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
         parser->save_fonteffect(&h_env);
-        parser->flushline(&h_env, 0, 2, h_env.limit);
+        obuf.flushline(&h_env, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
           parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
         if (h_env.obuf.RB_GET_ALIGN() == RB_CENTER) {
@@ -563,7 +563,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     parser->HTMLlineproc1("\n", &h_env);
   }
   parser->completeHTMLstream(&h_env);
-  parser->flushline(&h_env, 0, 2, h_env.limit);
+  obuf.flushline(&h_env, 0, 2, h_env.limit);
   if (this->border_mode == BORDER_NONE) {
     int rowspan = this->table_rowspan(row, col);
     if (row + rowspan <= this->maxrow) {

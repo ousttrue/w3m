@@ -891,3 +891,326 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
   (*str) += get_mclen(*str);
   this->flag |= RB_NFLUSHED;
 }
+
+void readbuffer::flushline(struct html_feed_environ *h_env, int indent,
+                           int force, int width) {
+  auto buf = h_env->buf;
+  Str *line = this->line;
+  Str *pass = nullptr;
+  // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
+  // nullptr,
+  //      *hidden_under = nullptr, *hidden_italic = nullptr, *hidden_strike =
+  //      nullptr, *hidden_ins = nullptr, *hidden_input = nullptr, *hidden =
+  //      nullptr;
+  char *hidden = nullptr;
+  char *hidden_anchor = nullptr;
+
+  if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && Strlastchar(line) == ' ') {
+    Strshrink(line, 1);
+    this->pos--;
+  }
+
+  this->append_tags();
+
+  if (this->anchor.url.size()) {
+    hidden = hidden_anchor = this->has_hidden_link(HTML_A);
+  }
+
+  char *hidden_img = nullptr;
+  if (this->img_alt) {
+    if ((hidden_img = this->has_hidden_link(HTML_IMG_ALT))) {
+      if (!hidden || hidden_img < hidden)
+        hidden = hidden_img;
+    }
+  }
+
+  char *hidden_input = nullptr;
+  if (this->input_alt.in) {
+    if ((hidden_input = this->has_hidden_link(HTML_INPUT_ALT))) {
+      if (!hidden || hidden_input < hidden) {
+        hidden = hidden_input;
+      }
+    }
+  }
+
+  char *hidden_bold = nullptr;
+  if (this->fontstat.in_bold) {
+    if ((hidden_bold = this->has_hidden_link(HTML_B))) {
+      if (!hidden || hidden_bold < hidden) {
+        hidden = hidden_bold;
+      }
+    }
+  }
+
+  char *hidden_italic = nullptr;
+  if (this->fontstat.in_italic) {
+    if ((hidden_italic = this->has_hidden_link(HTML_I))) {
+      if (!hidden || hidden_italic < hidden) {
+        hidden = hidden_italic;
+      }
+    }
+  }
+
+  char *hidden_under = nullptr;
+  if (this->fontstat.in_under) {
+    if ((hidden_under = this->has_hidden_link(HTML_U))) {
+      if (!hidden || hidden_under < hidden) {
+        hidden = hidden_under;
+      }
+    }
+  }
+
+  char *hidden_strike = nullptr;
+  if (this->fontstat.in_strike) {
+    if ((hidden_strike = this->has_hidden_link(HTML_S))) {
+      if (!hidden || hidden_strike < hidden) {
+        hidden = hidden_strike;
+      }
+    }
+  }
+
+  char *hidden_ins = nullptr;
+  if (this->fontstat.in_ins) {
+    if ((hidden_ins = this->has_hidden_link(HTML_INS))) {
+      if (!hidden || hidden_ins < hidden) {
+        hidden = hidden_ins;
+      }
+    }
+  }
+
+  if (hidden) {
+    pass = Strnew_charp(hidden);
+    Strshrink(line, line->ptr + line->length - hidden);
+  }
+
+  if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && this->pos > width) {
+    char *tp = &line->ptr[this->bp.len - this->bp.tlen];
+    char *ep = &line->ptr[line->length];
+
+    if (this->bp.pos == this->pos && tp <= ep && tp > line->ptr &&
+        tp[-1] == ' ') {
+      memcpy(tp - 1, tp, ep - tp + 1);
+      line->length--;
+      this->pos--;
+    }
+  }
+
+  if (this->anchor.url.size() && !hidden_anchor)
+    Strcat_charp(line, "</a>");
+  if (this->img_alt && !hidden_img)
+    Strcat_charp(line, "</img_alt>");
+  if (this->input_alt.in && !hidden_input)
+    Strcat_charp(line, "</input_alt>");
+  if (this->fontstat.in_bold && !hidden_bold)
+    Strcat_charp(line, "</b>");
+  if (this->fontstat.in_italic && !hidden_italic)
+    Strcat_charp(line, "</i>");
+  if (this->fontstat.in_under && !hidden_under)
+    Strcat_charp(line, "</u>");
+  if (this->fontstat.in_strike && !hidden_strike)
+    Strcat_charp(line, "</s>");
+  if (this->fontstat.in_ins && !hidden_ins)
+    Strcat_charp(line, "</ins>");
+
+  if (this->top_margin > 0) {
+    int i;
+
+    struct html_feed_environ h(1, width, indent);
+    h.obuf.line = Strnew_size(width + 20);
+    h.obuf.pos = this->pos;
+    h.obuf.flag = this->flag;
+    h.obuf.top_margin = -1;
+    h.obuf.bottom_margin = -1;
+    Strcat_charp(h.obuf.line, "<pre_int>");
+    for (i = 0; i < h.obuf.pos; i++)
+      Strcat_char(h.obuf.line, ' ');
+    Strcat_charp(h.obuf.line, "</pre_int>");
+    for (i = 0; i < this->top_margin; i++) {
+      flushline(h_env, indent, force, width);
+    }
+  }
+
+  if (force == 1 || this->flag & RB_NFLUSHED) {
+    TextLine *lbuf = TextLine::newTextLine(line, this->pos);
+    if (this->RB_GET_ALIGN() == RB_CENTER) {
+      lbuf->align(width, ALIGN_CENTER);
+    } else if (this->RB_GET_ALIGN() == RB_RIGHT) {
+      lbuf->align(width, ALIGN_RIGHT);
+    } else if (this->RB_GET_ALIGN() == RB_LEFT && this->flag & RB_INTABLE) {
+      lbuf->align(width, ALIGN_LEFT);
+    } else if (this->flag & RB_FILL) {
+      char *p;
+      int rest, rrest;
+      int nspace, d, i;
+
+      rest = width - get_strwidth(line->ptr);
+      if (rest > 1) {
+        nspace = 0;
+        for (p = line->ptr + indent; *p; p++) {
+          if (*p == ' ')
+            nspace++;
+        }
+        if (nspace > 0) {
+          int indent_here = 0;
+          d = rest / nspace;
+          p = line->ptr;
+          while (IS_SPACE(*p)) {
+            p++;
+            indent_here++;
+          }
+          rrest = rest - d * nspace;
+          line = Strnew_size(width + 1);
+          for (i = 0; i < indent_here; i++)
+            Strcat_char(line, ' ');
+          for (; *p; p++) {
+            Strcat_char(line, *p);
+            if (*p == ' ') {
+              for (i = 0; i < d; i++)
+                Strcat_char(line, ' ');
+              if (rrest > 0) {
+                Strcat_char(line, ' ');
+                rrest--;
+              }
+            }
+          }
+          lbuf = TextLine::newTextLine(line, width);
+        }
+      }
+    }
+
+    if (lbuf->pos() > h_env->maxlimit) {
+      h_env->maxlimit = lbuf->pos();
+    }
+
+    if (buf) {
+      buf->pushValue(lbuf);
+    }
+    if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED)
+      h_env->blank_lines = 0;
+    else
+      h_env->blank_lines++;
+  } else {
+    const char *p = line->ptr;
+    Str *tmp = Strnew(), *tmp2 = Strnew();
+
+    while (*p) {
+      stringtoken st(p);
+      auto token = st.sloppy_parse_line();
+      p = st.ptr();
+      if (token) {
+        Strcat(tmp, *token);
+        if (force == 2) {
+          if (buf) {
+            appendTextLine(buf, tmp, 0);
+          }
+        } else
+          Strcat(tmp2, tmp);
+        Strclear(tmp);
+      }
+    }
+    if (force == 2) {
+      if (pass) {
+        if (buf) {
+          appendTextLine(buf, pass, 0);
+        }
+      }
+      pass = nullptr;
+    } else {
+      if (pass)
+        Strcat(tmp2, pass);
+      pass = tmp2;
+    }
+  }
+
+  if (this->bottom_margin > 0) {
+    int i;
+
+    struct html_feed_environ h(1, width, indent);
+    h.obuf.line = Strnew_size(width + 20);
+    h.obuf.pos = this->pos;
+    h.obuf.flag = this->flag;
+    h.obuf.top_margin = -1;
+    h.obuf.bottom_margin = -1;
+    Strcat_charp(h.obuf.line, "<pre_int>");
+    for (i = 0; i < h.obuf.pos; i++)
+      Strcat_char(h.obuf.line, ' ');
+    Strcat_charp(h.obuf.line, "</pre_int>");
+    for (i = 0; i < this->bottom_margin; i++) {
+      flushline(h_env, indent, force, width);
+    }
+  }
+  if (this->top_margin < 0 || this->bottom_margin < 0) {
+    return;
+  }
+
+  this->line = Strnew_size(256);
+  this->pos = 0;
+  this->top_margin = 0;
+  this->bottom_margin = 0;
+  set_space_to_prevchar(this->prevchar);
+  this->bp.init_flag = 1;
+  this->flag &= ~RB_NFLUSHED;
+  this->set_breakpoint(0);
+  this->prev_ctype = PC_ASCII;
+  this->link_stack = nullptr;
+  this->fillline(indent);
+  if (pass)
+    this->passthrough(pass->ptr, 0);
+  if (!hidden_anchor && this->anchor.url.size()) {
+    Str *tmp;
+    if (this->anchor.hseq > 0)
+      this->anchor.hseq = -this->anchor.hseq;
+    tmp = Sprintf("<A HSEQ=\"%d\" HREF=\"", this->anchor.hseq);
+    Strcat_charp(tmp, html_quote(this->anchor.url.c_str()));
+    if (this->anchor.target.size()) {
+      Strcat_charp(tmp, "\" TARGET=\"");
+      Strcat_charp(tmp, html_quote(this->anchor.target.c_str()));
+    }
+    if (this->anchor.option.use_referer()) {
+      Strcat_charp(tmp, "\" REFERER=\"");
+      Strcat_charp(tmp, html_quote(this->anchor.option.referer.c_str()));
+    }
+    if (this->anchor.title.size()) {
+      Strcat_charp(tmp, "\" TITLE=\"");
+      Strcat_charp(tmp, html_quote(this->anchor.title.c_str()));
+    }
+    if (this->anchor.accesskey) {
+      auto c = html_quote_char(this->anchor.accesskey);
+      Strcat_charp(tmp, "\" ACCESSKEY=\"");
+      if (c)
+        Strcat_charp(tmp, c);
+      else
+        Strcat_char(tmp, this->anchor.accesskey);
+    }
+    Strcat_charp(tmp, "\">");
+    this->push_tag(tmp->ptr, HTML_A);
+  }
+  if (!hidden_img && this->img_alt) {
+    Str *tmp = Strnew_charp("<IMG_ALT SRC=\"");
+    Strcat_charp(tmp, html_quote(this->img_alt->ptr));
+    Strcat_charp(tmp, "\">");
+    this->push_tag(tmp->ptr, HTML_IMG_ALT);
+  }
+  if (!hidden_input && this->input_alt.in) {
+    Str *tmp;
+    if (this->input_alt.hseq > 0)
+      this->input_alt.hseq = -this->input_alt.hseq;
+    tmp = Sprintf("<INPUT_ALT hseq=\"%d\" fid=\"%d\" name=\"%s\" type=\"%s\" "
+                  "value=\"%s\">",
+                  this->input_alt.hseq, this->input_alt.fid,
+                  this->input_alt.name ? this->input_alt.name->ptr : "",
+                  this->input_alt.type ? this->input_alt.type->ptr : "",
+                  this->input_alt.value ? this->input_alt.value->ptr : "");
+    this->push_tag(tmp->ptr, HTML_INPUT_ALT);
+  }
+  if (!hidden_bold && this->fontstat.in_bold)
+    this->push_tag("<B>", HTML_B);
+  if (!hidden_italic && this->fontstat.in_italic)
+    this->push_tag("<I>", HTML_I);
+  if (!hidden_under && this->fontstat.in_under)
+    this->push_tag("<U>", HTML_U);
+  if (!hidden_strike && this->fontstat.in_strike)
+    this->push_tag("<S>", HTML_S);
+  if (!hidden_ins && this->fontstat.in_ins)
+    this->push_tag("<INS>", HTML_INS);
+}
