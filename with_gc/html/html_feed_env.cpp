@@ -1,7 +1,7 @@
 #include "html_feed_env.h"
 #include "readbuffer.h"
 #include "textline.h"
-#include "Str.h"
+#include "stringtoken.h"
 #include <assert.h>
 
 html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
@@ -14,36 +14,22 @@ html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
   envs[0].indent = indent;
 }
 
-int sloppy_parse_line(char **str) {
-  if (**str == '<') {
-    while (**str && **str != '>')
-      (*str)++;
-    if (**str == '>')
-      (*str)++;
-    return 1;
-  } else {
-    while (**str && **str != '<')
-      (*str)++;
-    return 0;
-  }
-}
-
 void html_feed_environ::purgeline() {
-  char *p, *q;
-  Str *tmp;
-  TextLine *tl;
-
   if (this->buf == NULL || this->blank_lines == 0)
     return;
 
+  TextLine *tl;
   if (!(tl = this->buf->rpopValue()))
     return;
-  p = tl->line->ptr;
-  tmp = Strnew();
+
+  const char *p = tl->line->ptr;
+  auto tmp = Strnew();
   while (*p) {
-    q = p;
-    if (sloppy_parse_line(&p)) {
-      Strcat_charp_n(tmp, q, p - q);
+    stringtoken st(p);
+    auto token = st.sloppy_parse_line();
+    p = st.ptr();
+    if (token) {
+      Strcat(tmp, *token);
     }
   }
   appendTextLine(this->buf, tmp, 0);

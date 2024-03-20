@@ -20,6 +20,7 @@
 #include "hash.h"
 #include "table.h"
 #include "utf8.h"
+#include "stringtoken.h"
 
 #define MAX_CMD_LEN 128
 #define HR_ATTR_WIDTH_MAX 65535
@@ -269,7 +270,6 @@ int gethtmlcmd(const char **s) {
 void HtmlParser::passthrough(struct readbuffer *obuf, char *str, int back) {
   int cmd;
   Str *tok = Strnew();
-  char *str_bak;
 
   if (back) {
     Str *str_save = Strnew_charp(str);
@@ -277,8 +277,11 @@ void HtmlParser::passthrough(struct readbuffer *obuf, char *str, int back) {
     str = str_save->ptr;
   }
   while (*str) {
-    str_bak = str;
-    if (sloppy_parse_line(&str)) {
+    auto str_bak = str;
+    stringtoken st(str);
+    auto token = st.sloppy_parse_line();
+    str = (char *)st.ptr();
+    if (token) {
       const char *q = str_bak;
       cmd = gethtmlcmd(&q);
       if (back) {
@@ -291,7 +294,7 @@ void HtmlParser::passthrough(struct readbuffer *obuf, char *str, int back) {
         }
         back = 0;
       } else {
-        Strcat_charp_n(tok, str_bak, str - str_bak);
+        Strcat(tok, *token);
         push_tag(obuf, tok->ptr, cmd);
         Strclear(tok);
       }
@@ -505,13 +508,15 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     else
       h_env->blank_lines++;
   } else {
-    char *p = line->ptr, *q;
+    const char *p = line->ptr;
     Str *tmp = Strnew(), *tmp2 = Strnew();
 
     while (*p) {
-      q = p;
-      if (sloppy_parse_line(&p)) {
-        Strcat_charp_n(tmp, q, p - q);
+      stringtoken st(p);
+      auto token = st.sloppy_parse_line();
+      p = st.ptr();
+      if (token) {
+        Strcat(tmp, *token);
         if (force == 2) {
           if (buf) {
             appendTextLine(buf, tmp, 0);
@@ -781,7 +786,8 @@ void HtmlParser::feed_title(const char *str) {
   }
 }
 
-Str *HtmlParser::process_textarea(const std::shared_ptr<HtmlTag> &tag, int width) {
+Str *HtmlParser::process_textarea(const std::shared_ptr<HtmlTag> &tag,
+                                  int width) {
   Str *tmp = nullptr;
 
   if (cur_form_id() < 0) {
@@ -876,7 +882,8 @@ void HtmlParser::feed_textarea(const char *str) {
   }
 }
 
-Str *HtmlParser::process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid) {
+Str *HtmlParser::process_form_int(const std::shared_ptr<HtmlTag> &tag,
+                                  int fid) {
   auto p = "get";
   tag->parsedtag_get_value(ATTR_METHOD, &p);
   auto q = "!CURRENT_URL!";
@@ -1552,7 +1559,8 @@ img_end:
   return tmp;
 }
 
-Str *HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag, const char *tagbuf) {
+Str *HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
+                                const char *tagbuf) {
   if (tag->parsedtag_need_reconstruct()) {
     tag->parsedtag_set_value(ATTR_HSEQ, Sprintf("%d", this->cur_hseq++)->ptr);
     return tag->parsedtag2str();
@@ -1805,7 +1813,8 @@ Str *HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
   return tmp;
 }
 
-Str *HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag, int width, int indent_width) {
+Str *HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
+                            int indent_width) {
   Str *tmp = Strnew_charp("<nobr>");
   int w = 0;
   int x = ALIGN_CENTER;

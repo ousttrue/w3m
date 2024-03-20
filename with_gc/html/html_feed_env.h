@@ -154,7 +154,8 @@ struct html_feed_environ {
     return 1;
   }
 
-  static void set_alignment(struct readbuffer *obuf, const std::shared_ptr<HtmlTag> &tag) {
+  static void set_alignment(struct readbuffer *obuf,
+                            const std::shared_ptr<HtmlTag> &tag) {
     auto flag = (ReadBufferFlags)-1;
     int align;
 
@@ -1137,5 +1138,3 @@ struct html_feed_environ {
     return 1;
   }
 };
-
-int sloppy_parse_line(char **str);
