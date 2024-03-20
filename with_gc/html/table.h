@@ -4,6 +4,7 @@
 #include "generallist.h"
 #include "textline.h"
 #include <stdint.h>
+#include <memory>
 
 extern int symbol_width;
 extern double pixel_per_char;
@@ -152,7 +153,8 @@ public:
 
 private:
   int feed_table_tag(class HtmlParser *parser, const char *line,
-                     struct table_mode *mode, int width, struct HtmlTag *tag);
+                     struct table_mode *mode, int width,
+                     const std::shared_ptr<struct HtmlTag> &tag);
 
   int table_rule_width() const;
   int get_table_width(const short *orgwidth, const short *cellwidth,

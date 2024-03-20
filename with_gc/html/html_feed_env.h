@@ -154,7 +154,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  static void set_alignment(struct readbuffer *obuf, struct HtmlTag *tag) {
+  static void set_alignment(struct readbuffer *obuf, const std::shared_ptr<HtmlTag> &tag) {
     auto flag = (ReadBufferFlags)-1;
     int align;
 
@@ -179,7 +179,7 @@ struct html_feed_environ {
     }
   }
 
-  int HTML_Paragraph(HtmlTag *tag) {
+  int HTML_Paragraph(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->parser.flushline(this, envs[this->envc].indent, 1, this->limit);
@@ -194,7 +194,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_H_enter(HtmlTag *tag) {
+  int HTML_H_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (!(this->obuf.flag & (RB_PREMODE | RB_IGNORE_P))) {
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
       this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
@@ -218,7 +218,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_List_enter(HtmlTag *tag) {
+  int HTML_List_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -248,7 +248,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_List_exit(HtmlTag *tag) {
+  int HTML_List_exit(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_DT(&this->obuf, this);
     this->parser.CLOSE_A(&this->obuf, this);
     if (this->envc > 0) {
@@ -265,7 +265,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_DL_enter(HtmlTag *tag) {
+  int HTML_DL_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -282,7 +282,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_LI_enter(HtmlTag *tag) {
+  int HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     this->parser.CLOSE_DT(&this->obuf, this);
     if (this->envc > 0) {
@@ -417,7 +417,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_TITLE_enter(HtmlTag *tag) {
+  int HTML_TITLE_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
     this->parser.process_title(tag);
     this->obuf.flag |= RB_TITLE;
@@ -425,7 +425,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_TITLE_exit(HtmlTag *tag) {
+  int HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag) {
     if (!(this->obuf.flag & RB_TITLE))
       return 1;
     this->obuf.flag &= ~RB_TITLE;
@@ -436,14 +436,14 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_TITLE_ALT(HtmlTag *tag) {
+  int HTML_TITLE_ALT(const std::shared_ptr<HtmlTag> &tag) {
     const char *p;
     if (tag->parsedtag_get_value(ATTR_TITLE, &p))
       this->title = html_unquote(p);
     return 0;
   }
 
-  int HTML_FRAMESET_enter(HtmlTag *tag) {
+  int HTML_FRAMESET_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->PUSH_ENV(tag->tagid);
     this->parser.push_charp(&this->obuf, 9, "--FRAME--", PC_ASCII);
     this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -473,7 +473,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_FRAME(HtmlTag *tag) {
+  int HTML_FRAME(const std::shared_ptr<HtmlTag> &tag) {
     const char *q = nullptr;
     const char *r = nullptr;
     tag->parsedtag_get_value(ATTR_SRC, &q);
@@ -494,7 +494,7 @@ struct html_feed_environ {
     return 0;
   }
 
-  int HTML_HR(HtmlTag *tag) {
+  int HTML_HR(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
     auto tmp =
         this->parser.process_hr(tag, this->limit, envs[this->envc].indent);
@@ -503,7 +503,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_PRE_enter(HtmlTag *tag) {
+  int HTML_PRE_enter(const std::shared_ptr<HtmlTag> &tag) {
     int x = tag->parsedtag_exists(ATTR_FOR_TABLE);
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
@@ -588,7 +588,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_PLAINTEXT_enter(HtmlTag *tag) {
+  int HTML_PLAINTEXT_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -626,7 +626,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_A_enter(HtmlTag *tag) {
+  int HTML_A_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (this->obuf.anchor.url.size()) {
       this->parser.close_anchor(this);
     }
@@ -655,7 +655,7 @@ struct html_feed_environ {
     return 0;
   }
 
-  int HTML_IMG_enter(HtmlTag *tag) {
+  int HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (tag->parsedtag_exists(ATTR_USEMAP))
       this->parser.HTML5_CLOSE_A(&this->obuf, this);
     auto tmp = this->parser.process_img(tag, this->limit);
@@ -668,7 +668,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_IMG_ALT_enter(HtmlTag *tag) {
+  int HTML_IMG_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
     const char *p;
     if (tag->parsedtag_get_value(ATTR_SRC, &p))
       this->obuf.img_alt = Strnew_charp(p);
@@ -684,7 +684,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_INPUT_ALT_enter(HtmlTag *tag) {
+  int HTML_INPUT_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
     int i = 0;
     if (tag->parsedtag_get_value(ATTR_TOP_MARGIN, &i)) {
       if ((short)i > this->obuf.top_margin)
@@ -730,7 +730,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_TABLE_enter(HtmlTag *tag) {
+  int HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
     if (this->obuf.table_level + 1 >= MAX_TABLE) {
       return -1;
@@ -812,7 +812,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_DIV_enter(HtmlTag *tag) {
+  int HTML_DIV_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P)) {
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -828,7 +828,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_DIV_INT_enter(HtmlTag *tag) {
+  int HTML_DIV_INT_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_P(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P))
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -843,7 +843,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_FORM_enter(HtmlTag *tag) {
+  int HTML_FORM_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.CLOSE_A(&this->obuf, this);
     if (!(this->obuf.flag & RB_IGNORE_P))
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -861,7 +861,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_INPUT_enter(HtmlTag *tag) {
+  int HTML_INPUT_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
     auto tmp = this->parser.process_input(tag);
     if (tmp)
@@ -869,7 +869,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_BUTTON_enter(HtmlTag *tag) {
+  int HTML_BUTTON_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.HTML5_CLOSE_A(&this->obuf, this);
     auto tmp = this->parser.process_button(tag);
     if (tmp)
@@ -884,7 +884,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_SELECT_enter(HtmlTag *tag) {
+  int HTML_SELECT_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
     auto tmp = this->parser.process_select(tag);
     if (tmp)
@@ -903,7 +903,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_TEXTAREA_enter(HtmlTag *tag) {
+  int HTML_TEXTAREA_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
     auto tmp = this->parser.process_textarea(tag, this->limit);
     if (tmp) {
@@ -924,7 +924,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_ISINDEX_enter(HtmlTag *tag) {
+  int HTML_ISINDEX_enter(const std::shared_ptr<HtmlTag> &tag) {
     auto p = "";
     auto q = "!CURRENT_URL!";
     tag->parsedtag_get_value(ATTR_PROMPT, &p);
@@ -936,7 +936,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_META_enter(HtmlTag *tag) {
+  int HTML_META_enter(const std::shared_ptr<HtmlTag> &tag) {
     const char *p = nullptr;
     const char *q = nullptr;
     tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
@@ -1088,7 +1088,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_BGSOUND_enter(HtmlTag *tag) {
+  int HTML_BGSOUND_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (view_unseenobject) {
       const char *p;
       if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
@@ -1100,7 +1100,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_EMBED_enter(HtmlTag *tag) {
+  int HTML_EMBED_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.HTML5_CLOSE_A(&this->obuf, this);
     if (view_unseenobject) {
       const char *p;
@@ -1113,7 +1113,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_APPLET_enter(HtmlTag *tag) {
+  int HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (view_unseenobject) {
       const char *p;
       if (tag->parsedtag_get_value(ATTR_ARCHIVE, &p)) {
@@ -1125,7 +1125,7 @@ struct html_feed_environ {
     return 1;
   }
 
-  int HTML_BODY_enter(HtmlTag *tag) {
+  int HTML_BODY_enter(const std::shared_ptr<HtmlTag> &tag) {
     if (view_unseenobject) {
       const char *p;
       if (tag->parsedtag_get_value(ATTR_BACKGROUND, &p)) {

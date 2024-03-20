@@ -36,8 +36,9 @@ struct FormItem {
   int maxlength;
   int readonly;
 
-  static std::shared_ptr<FormItem> createFromInput(html_feed_environ *h_env,
-                                                   HtmlTag *tag);
+  static std::shared_ptr<FormItem>
+  createFromInput(html_feed_environ *h_env,
+                  const std::shared_ptr<HtmlTag> &tag);
 
   std::shared_ptr<Form> parent;
 

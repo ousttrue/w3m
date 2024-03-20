@@ -29,7 +29,8 @@ void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
 
 FormAnchor *LineData::registerForm(html_feed_environ *h_env,
                                    const std::shared_ptr<Form> &flist,
-                                   HtmlTag *tag, const BufferPoint &bp) {
+                                   const std::shared_ptr<HtmlTag> &tag,
+                                   const BufferPoint &bp) {
   auto fi = FormItem::createFromInput(h_env, tag);
   if (!fi) {
     return NULL;
@@ -264,7 +265,7 @@ const char *LineData::getAnchorText(Anchor *a) {
   return tmp ? tmp->ptr : NULL;
 }
 
-void LineData::addLink(struct HtmlTag *tag) {
+void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
   const char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL,
              *rev = NULL;
   char type = LINK_TYPE_NONE;

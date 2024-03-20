@@ -8,7 +8,6 @@
 #include "etc.h"
 #include "line_data.h"
 #include "line_layout.h"
-#include "http_response.h"
 #include "symbol.h"
 #include "url_quote.h"
 #include "form.h"
@@ -743,14 +742,14 @@ void HtmlParser::restore_fonteffect(struct html_feed_environ *h_env) {
     push_tag(obuf, "<ins>", HTML_INS);
 }
 
-void HtmlParser::process_title(struct HtmlTag *tag) {
+void HtmlParser::process_title(const std::shared_ptr<HtmlTag> &tag) {
   if (pre_title) {
     return;
   }
   cur_title = Strnew();
 }
 
-Str *HtmlParser::process_n_title(struct HtmlTag *tag) {
+Str *HtmlParser::process_n_title(const std::shared_ptr<HtmlTag> &tag) {
   Str *tmp;
 
   if (pre_title)
@@ -782,16 +781,15 @@ void HtmlParser::feed_title(const char *str) {
   }
 }
 
-Str *HtmlParser::process_textarea(struct HtmlTag *tag, int width) {
+Str *HtmlParser::process_textarea(const std::shared_ptr<HtmlTag> &tag, int width) {
   Str *tmp = nullptr;
-  const char *p;
 
   if (cur_form_id() < 0) {
     auto s = "<form_int method=internal action=none>";
     tmp = process_form(HtmlTag::parse(&s, true));
   }
 
-  p = "";
+  auto p = "";
   tag->parsedtag_get_value(ATTR_NAME, &p);
   cur_textarea = Strnew_charp(p);
   cur_textarea_size = 20;
@@ -878,7 +876,7 @@ void HtmlParser::feed_textarea(const char *str) {
   }
 }
 
-Str *HtmlParser::process_form_int(struct HtmlTag *tag, int fid) {
+Str *HtmlParser::process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid) {
   auto p = "get";
   tag->parsedtag_get_value(ATTR_METHOD, &p);
   auto q = "!CURRENT_URL!";
@@ -1037,7 +1035,7 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
       }
     } else {
       /* tag processing */
-      struct HtmlTag *tag;
+      std::shared_ptr<HtmlTag> tag;
       if (!(tag = HtmlTag::parse(&str, true)))
         continue;
       switch (tag->tagid) {
@@ -1415,7 +1413,7 @@ int getMetaRefreshParam(const char *q, Str **refresh_uri) {
   return refresh_interval;
 }
 
-Str *HtmlParser::process_img(struct HtmlTag *tag, int width) {
+Str *HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag, int width) {
   const char *p, *q, *r, *r2 = nullptr, *s, *t;
   int w, i, nw, n;
   int pre_int = false, ext_pre_int = false;
@@ -1554,7 +1552,7 @@ img_end:
   return tmp;
 }
 
-Str *HtmlParser::process_anchor(struct HtmlTag *tag, const char *tagbuf) {
+Str *HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag, const char *tagbuf) {
   if (tag->parsedtag_need_reconstruct()) {
     tag->parsedtag_set_value(ATTR_HSEQ, Sprintf("%d", this->cur_hseq++)->ptr);
     return tag->parsedtag2str();
@@ -1565,7 +1563,7 @@ Str *HtmlParser::process_anchor(struct HtmlTag *tag, const char *tagbuf) {
   }
 }
 
-Str *HtmlParser::process_input(struct HtmlTag *tag) {
+Str *HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   int i = 20, v, x, y, z, iw, ih, size = 20;
   const char *q, *p, *r, *p2, *s;
   Str *tmp = nullptr;
@@ -1750,7 +1748,7 @@ Str *HtmlParser::process_input(struct HtmlTag *tag) {
   return tmp;
 }
 
-Str *HtmlParser::process_button(struct HtmlTag *tag) {
+Str *HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
   Str *tmp = nullptr;
   const char *p, *q, *r, *qq = "";
   int v;
@@ -1807,7 +1805,7 @@ Str *HtmlParser::process_button(struct HtmlTag *tag) {
   return tmp;
 }
 
-Str *HtmlParser::process_hr(struct HtmlTag *tag, int width, int indent_width) {
+Str *HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag, int width, int indent_width) {
   Str *tmp = Strnew_charp("<nobr>");
   int w = 0;
   int x = ALIGN_CENTER;
@@ -1843,7 +1841,7 @@ Str *HtmlParser::process_hr(struct HtmlTag *tag, int width, int indent_width) {
   return tmp;
 }
 
-int HtmlParser::pushHtmlTag(struct HtmlTag *tag,
+int HtmlParser::pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
                             struct html_feed_environ *h_env) {
 
   struct environment *envs = h_env->envs.data();
@@ -2346,7 +2344,7 @@ table_start:
     if (is_tag) {
       /*** Beginning of a new tag ***/
       HtmlCommand cmd;
-      HtmlTag *tag = nullptr;
+      std::shared_ptr<HtmlTag> tag;
       if ((tag = HtmlTag::parse(&str, internal)))
         cmd = tag->tagid;
       else
@@ -2494,7 +2492,7 @@ Str *HtmlParser::process_n_button() {
   return tmp;
 }
 
-Str *HtmlParser::process_select(struct HtmlTag *tag) {
+Str *HtmlParser::process_select(const std::shared_ptr<HtmlTag> &tag) {
   Str *tmp = nullptr;
 
   if (cur_form_id() < 0) {
@@ -2537,7 +2535,7 @@ void HtmlParser::feed_select(const char *str) {
       continue;
     p = tmp->ptr;
     if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
-      struct HtmlTag *tag;
+      std::shared_ptr<HtmlTag> tag;
       char *q;
       if (!(tag = HtmlTag::parse(&p, false)))
         continue;

@@ -1,6 +1,6 @@
 #pragma once
 #include "html_command.h"
-#include <gc_cpp.h>
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -80,7 +80,7 @@ enum HtmlTagAttr {
 };
 
 struct Str;
-struct HtmlTag : public gc_cleanup {
+struct HtmlTag {
   HtmlCommand tagid = {};
   unsigned char *attrid = {};
   char **value = {};
@@ -93,7 +93,8 @@ private:
 public:
   HtmlTag(const HtmlTag &) = delete;
   HtmlTag &operator=(const HtmlTag &) = delete;
-  static HtmlTag *parse(const char **s, int internal);
+  static std::shared_ptr<HtmlTag> parse(const char **s, int internal);
+
   bool parsedtag_accepts(HtmlTagAttr id) const {
     return (this->map && this->map[id] != MAX_TAGATTR);
   }

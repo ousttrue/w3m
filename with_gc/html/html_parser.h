@@ -57,8 +57,8 @@ class HtmlParser {
   // title
   Str *pre_title = nullptr;
   Str *cur_title = nullptr;
-  void process_title(HtmlTag *tag);
-  Str *process_n_title(HtmlTag *tag);
+  void process_title(const std::shared_ptr<HtmlTag> &tag);
+  Str *process_n_title(const std::shared_ptr<HtmlTag> &tag);
   void feed_title(const char *str);
 
   // select
@@ -74,7 +74,7 @@ class HtmlParser {
 
 public:
   HtmlParser();
-  Str *process_select(HtmlTag *tag);
+  Str *process_select(const std::shared_ptr<HtmlTag> &tag);
   Str *process_n_select();
   void process_option();
   void feed_select(const char *str);
@@ -98,14 +98,16 @@ public:
   std::vector<std::string> textarea_str;
   std::vector<struct FormAnchor *> a_textarea;
 
-  Str *process_form_int(struct HtmlTag *tag, int fid);
+  Str *process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid);
   Str *process_n_form();
-  Str *process_form(struct HtmlTag *tag) { return process_form_int(tag, -1); }
+  Str *process_form(const std::shared_ptr<HtmlTag> &tag) {
+    return process_form_int(tag, -1);
+  }
   int cur_form_id() const {
     return ((form_sp >= 0) ? form_stack[form_sp] : -1);
   }
 
-  Str *process_textarea(struct HtmlTag *tag, int width);
+  Str *process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
   Str *process_n_textarea();
   void feed_textarea(const char *str);
 
@@ -153,15 +155,15 @@ public:
 
   Str *getLinkNumberStr(int correction) const;
 
-  Str *process_img(HtmlTag *tag, int width);
-  Str *process_anchor(HtmlTag *tag, const char *tagbuf);
-  Str *process_input(HtmlTag *tag);
-  Str *process_button(HtmlTag *tag);
+  Str *process_img(const std::shared_ptr<HtmlTag> &tag, int width);
+  Str *process_anchor(const std::shared_ptr<HtmlTag> &tag, const char *tagbuf);
+  Str *process_input(const std::shared_ptr<HtmlTag> &tag);
+  Str *process_button(const std::shared_ptr<HtmlTag> &tag);
   Str *process_n_button();
-  Str *process_hr(struct HtmlTag *tag, int width, int indent_width);
+  Str *process_hr(const std::shared_ptr<HtmlTag> &tag, int width, int indent_width);
 
 private:
-  int pushHtmlTag(HtmlTag *tag, struct html_feed_environ *h_env);
+  int pushHtmlTag(const std::shared_ptr<HtmlTag> &tag, struct html_feed_environ *h_env);
 
   Lineprop effect = 0;
   Lineprop ex_effect = 0;
@@ -171,8 +173,7 @@ private:
   FormAnchor *a_form = nullptr;
   HtmlCommand internal = {};
   Line renderLine(const Url &url, html_feed_environ *h_env, LineData *data,
-                  int nlines, const char *str,
-                  AnchorList<FormAnchor> *forms);
+                  int nlines, const char *str, AnchorList<FormAnchor> *forms);
 
 public:
   std::shared_ptr<LineLayout> render(const std::shared_ptr<LineLayout> &layout,

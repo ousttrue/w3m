@@ -26,8 +26,9 @@ FormItemType formtype(const char *typestr) {
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 
-std::shared_ptr<FormItem> FormItem::createFromInput(html_feed_environ *h_env,
-                                                    struct HtmlTag *tag) {
+std::shared_ptr<FormItem>
+FormItem::createFromInput(html_feed_environ *h_env,
+                          const std::shared_ptr<HtmlTag> &tag) {
   auto item = std::make_shared<FormItem>();
   item->type = FORM_UNKNOWN;
   item->size = -1;

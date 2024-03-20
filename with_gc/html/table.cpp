@@ -518,7 +518,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     if (TAG_IS(l->ptr->line->ptr, "<table_alt", 10)) {
       int id = -1;
       const char *p = l->ptr->line->ptr;
-      struct HtmlTag *tag;
+      std::shared_ptr<HtmlTag> tag;
       if ((tag = HtmlTag::parse(&p, true)) != NULL)
         tag->parsedtag_get_value(ATTR_TID, &id);
       if (id >= 0 && id < this->ntable && this->tables[id].ptr) {
@@ -1938,7 +1938,7 @@ void table::table_close_anchor0(struct table_mode *mode) {
 
 int table::feed_table_tag(HtmlParser *parser, const char *line,
                           struct table_mode *mode, int width,
-                          struct HtmlTag *tag) {
+                          const std::shared_ptr<HtmlTag> &tag) {
   int cmd;
   struct table_cell *cell = &this->cell;
   int colspan, rowspan;

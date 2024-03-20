@@ -88,11 +88,10 @@ static int toVAlign(char *oval, int *valign) {
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-HtmlTag *HtmlTag::parse(const char **s, int internal) {
-  char tagname[MAX_TAG_LEN];
-  char attrname[MAX_TAG_LEN];
+std::shared_ptr<HtmlTag> HtmlTag::parse(const char **s, int internal) {
 
   /* Parse tag name */
+  char tagname[MAX_TAG_LEN];
   tagname[0] = '\0';
   auto q = (*s) + 1;
   auto p = tagname;
@@ -111,12 +110,12 @@ HtmlTag *HtmlTag::parse(const char **s, int internal) {
 
   auto tag_id = (HtmlCommand)getHash_si(&tagtable, tagname, HTML_UNKNOWN);
 
-  HtmlTag *tag = nullptr;
+  std::shared_ptr<HtmlTag> tag;
   int attr_id = 0;
   if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
     goto skip_parse_tagarg;
 
-  tag = new HtmlTag(tag_id);
+  tag = std::shared_ptr<HtmlTag>(new HtmlTag(tag_id));
 
   int nattr;
   if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
@@ -132,6 +131,7 @@ HtmlTag *HtmlTag::parse(const char **s, int internal) {
 
   /* Parse tag arguments */
   SKIP_BLANKS(q);
+  char attrname[MAX_TAG_LEN];
   while (1) {
     Str *value = NULL, *value_tmp = NULL;
     if (*q == '>' || *q == '\0')
