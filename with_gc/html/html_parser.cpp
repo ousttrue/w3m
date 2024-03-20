@@ -1607,14 +1607,6 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
 
   TableStatus t;
 
-table_start:
-  if (h_env->obuf.table_level >= 0) {
-    int level = std::min<short>(h_env->obuf.table_level, MAX_TABLE - 1);
-    t.tbl = tables[level];
-    t.tbl_mode = &table_mode[level];
-    t.tbl_width = table_width(h_env, level);
-  }
-
   while (*line != '\0') {
     const char *str, *p;
     int is_tag = false;
@@ -1771,11 +1763,15 @@ table_start:
       }
       h_env->obuf.bp.init_flag = 1;
       clear_ignore_p_flag(cmd, &h_env->obuf);
-      if (cmd == HTML_TABLE)
-        goto table_start;
-      else {
-        continue;
+      if (cmd == HTML_TABLE) {
+        if (h_env->obuf.table_level >= 0) {
+          int level = std::min<short>(h_env->obuf.table_level, MAX_TABLE - 1);
+          t.tbl = tables[level];
+          t.tbl_mode = &table_mode[level];
+          t.tbl_width = table_width(h_env, level);
+        }
       }
+      continue;
     }
 
     if (h_env->obuf.flag & (RB_DEL | RB_S))
