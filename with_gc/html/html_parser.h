@@ -98,10 +98,6 @@ public:
   Str *process_n_textarea();
   void feed_textarea(const char *str);
 
-  void push_tag(struct readbuffer *obuf, const char *cmdname, int cmd);
-
-  void push_nchars(struct readbuffer *obuf, int width, const char *str, int len,
-                   Lineprop mode);
   void push_charp(readbuffer *obuf, int width, const char *str, Lineprop mode);
   void push_str(readbuffer *obuf, int width, Str *str, Lineprop mode);
   void check_breakpoint(struct readbuffer *obuf, int pre_mode, const char *ch);
@@ -111,7 +107,7 @@ public:
                   const char **str, Lineprop mode);
   void fillline(struct readbuffer *obuf, int indent);
   void flushline(html_feed_environ *h_env, int indent, int force, int width);
-  int close_effect0(struct readbuffer *obuf, int cmd);
+  int close_effect0(struct readbuffer *obuf, HtmlCommand cmd);
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);

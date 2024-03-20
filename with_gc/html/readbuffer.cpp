@@ -733,7 +733,7 @@ void readbuffer::set_breakpoint(int tag_length) {
   this->bp.init_flag = 0;
 }
 
-void readbuffer::push_link(int cmd, int offset, int pos) {
+void readbuffer::push_link(HtmlCommand cmd, int offset, int pos) {
   auto p = (struct link_stack *)New(struct link_stack);
   p->cmd = cmd;
   p->offset = (short)offset;
@@ -776,7 +776,7 @@ void readbuffer::append_tags() {
   }
 }
 
-char *readbuffer::has_hidden_link(int cmd) const {
+char *readbuffer::has_hidden_link(HtmlCommand cmd) const {
   Str *line = this->line;
   if (Strlastchar(line) != '>')
     return nullptr;
@@ -794,8 +794,8 @@ char *readbuffer::has_hidden_link(int cmd) const {
   return nullptr;
 }
 
-void readbuffer::passthrough(HtmlParser *parser, char *str, int back) {
-  int cmd;
+void readbuffer::passthrough(char *str, int back) {
+  HtmlCommand cmd;
   Str *tok = Strnew();
 
   if (back) {
@@ -822,11 +822,33 @@ void readbuffer::passthrough(HtmlParser *parser, char *str, int back) {
         back = 0;
       } else {
         Strcat(tok, *token);
-        parser->push_tag(this, tok->ptr, cmd);
+        this->push_tag(tok->ptr, cmd);
         Strclear(tok);
       }
     } else {
-      parser->push_nchars(this, 0, str_bak, str - str_bak, this->prev_ctype);
+      this->push_nchars(0, str_bak, str - str_bak, this->prev_ctype);
     }
   }
+}
+
+void readbuffer::push_tag(const char *cmdname, HtmlCommand cmd) {
+  this->tag_stack[this->tag_sp] = (struct cmdtable *)New(struct cmdtable);
+  this->tag_stack[this->tag_sp]->cmdname = allocStr(cmdname, -1);
+  this->tag_stack[this->tag_sp]->cmd = cmd;
+  this->tag_sp++;
+  if (this->tag_sp >= TAG_STACK_SIZE || this->flag & (RB_SPECIAL & ~RB_NOBR)) {
+    this->append_tags();
+  }
+}
+
+void readbuffer::push_nchars(int width, const char *str, int len,
+                             Lineprop mode) {
+  this->append_tags();
+  Strcat_charp_n(this->line, str, len);
+  this->pos += width;
+  if (width > 0) {
+    set_prevchar(this->prevchar, str, len);
+    this->prev_ctype = mode;
+  }
+  this->flag |= RB_NFLUSHED;
 }

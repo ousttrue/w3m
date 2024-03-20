@@ -481,15 +481,14 @@ struct html_feed_environ {
     tag->parsedtag_get_value(ATTR_NAME, &r);
     if (q) {
       q = html_quote(q);
-      this->parser.push_tag(
-          &this->obuf,
+      this->obuf.push_tag(
           Sprintf("<a hseq=\"%d\" href=\"%s\">", this->parser.cur_hseq++, q)
               ->ptr,
           HTML_A);
       if (r)
         q = html_quote(r);
       this->parser.push_charp(&this->obuf, get_strwidth(q), q, PC_ASCII);
-      this->parser.push_tag(&this->obuf, "</a>", HTML_N_A);
+      this->obuf.push_tag("</a>", HTML_N_A);
     }
     this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
     return 0;
@@ -543,7 +542,7 @@ struct html_feed_environ {
   }
 
   int HTML_PRE_INT_exit() {
-    this->parser.push_tag(&this->obuf, "</pre_int>", HTML_N_PRE_INT);
+    this->obuf.push_tag("</pre_int>", HTML_N_PRE_INT);
     this->obuf.flag &= ~RB_PRE_INT;
     if (!(this->obuf.flag & RB_SPECIAL) && this->obuf.pos > this->obuf.bp.pos) {
       set_prevchar(this->obuf.prevchar, "", 0);
@@ -650,7 +649,7 @@ struct html_feed_environ {
     if (hseq == 0 && this->obuf.anchor.url.size()) {
       this->obuf.anchor.hseq = this->parser.cur_hseq;
       auto tmp = this->parser.process_anchor(tag, this->tagbuf->ptr);
-      this->parser.push_tag(&this->obuf, tmp->ptr, HTML_A);
+      this->obuf.push_tag(tmp->ptr, HTML_A);
       return 1;
     }
     return 0;
@@ -679,7 +678,7 @@ struct html_feed_environ {
   int HTML_IMG_ALT_exit() {
     if (this->obuf.img_alt) {
       if (!this->parser.close_effect0(&this->obuf, HTML_IMG_ALT))
-        this->parser.push_tag(&this->obuf, "</img_alt>", HTML_N_IMG_ALT);
+        this->obuf.push_tag("</img_alt>", HTML_N_IMG_ALT);
       this->obuf.img_alt = nullptr;
     }
     return 1;
@@ -720,7 +719,7 @@ struct html_feed_environ {
   int HTML_INPUT_ALT_exit() {
     if (this->obuf.input_alt.in) {
       if (!this->parser.close_effect0(&this->obuf, HTML_INPUT_ALT))
-        this->parser.push_tag(&this->obuf, "</input_alt>", HTML_N_INPUT_ALT);
+        this->obuf.push_tag("</input_alt>", HTML_N_INPUT_ALT);
       this->obuf.input_alt.hseq = 0;
       this->obuf.input_alt.fid = -1;
       this->obuf.input_alt.in = 0;
@@ -973,7 +972,7 @@ struct html_feed_environ {
       if (this->obuf.fontstat.in_strike < FONTSTAT_MAX)
         this->obuf.fontstat.in_strike++;
       if (this->obuf.fontstat.in_strike == 1) {
-        this->parser.push_tag(&this->obuf, "<s>", HTML_S);
+        this->obuf.push_tag( "<s>", HTML_S);
       }
       break;
     }
@@ -996,7 +995,7 @@ struct html_feed_environ {
       if (this->obuf.fontstat.in_strike > 0) {
         this->obuf.fontstat.in_strike--;
         if (this->obuf.fontstat.in_strike == 0) {
-          this->parser.push_tag(&this->obuf, "</s>", HTML_N_S);
+          this->obuf.push_tag( "</s>", HTML_N_S);
         }
       }
       break;
@@ -1016,7 +1015,7 @@ struct html_feed_environ {
       if (this->obuf.fontstat.in_strike < FONTSTAT_MAX)
         this->obuf.fontstat.in_strike++;
       if (this->obuf.fontstat.in_strike == 1) {
-        this->parser.push_tag(&this->obuf, "<s>", HTML_S);
+        this->obuf.push_tag( "<s>", HTML_S);
       }
       break;
     }
@@ -1040,7 +1039,7 @@ struct html_feed_environ {
       if (this->obuf.fontstat.in_strike > 0) {
         this->obuf.fontstat.in_strike--;
         if (this->obuf.fontstat.in_strike == 0) {
-          this->parser.push_tag(&this->obuf, "</s>", HTML_N_S);
+          this->obuf.push_tag( "</s>", HTML_N_S);
         }
       }
     }
@@ -1058,7 +1057,7 @@ struct html_feed_environ {
       if (this->obuf.fontstat.in_ins < FONTSTAT_MAX)
         this->obuf.fontstat.in_ins++;
       if (this->obuf.fontstat.in_ins == 1) {
-        this->parser.push_tag(&this->obuf, "<ins>", HTML_INS);
+        this->obuf.push_tag( "<ins>", HTML_INS);
       }
       break;
     }
@@ -1081,7 +1080,7 @@ struct html_feed_environ {
       if (this->obuf.fontstat.in_ins > 0) {
         this->obuf.fontstat.in_ins--;
         if (this->obuf.fontstat.in_ins == 0) {
-          this->parser.push_tag(&this->obuf, "</ins>", HTML_N_INS);
+          this->obuf.push_tag( "</ins>", HTML_N_INS);
         }
       }
       break;

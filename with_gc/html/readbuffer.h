@@ -125,7 +125,7 @@ struct Breakpoint {
 
 struct cmdtable {
   const char *cmdname;
-  int cmd;
+  HtmlCommand cmd;
 };
 
 struct link_stack {
@@ -197,11 +197,13 @@ struct readbuffer {
   }
 
   void append_tags();
+  void push_tag(const char *cmdname, HtmlCommand cmd);
+  void push_nchars(int width, const char *str, int len, Lineprop mode);
 
   // link
-  void push_link(int cmd, int offset, int pos);
-  char *has_hidden_link(int cmd) const;
-  void passthrough(class HtmlParser *parser, char *str, int back);
+  void push_link(HtmlCommand cmd, int offset, int pos);
+  char *has_hidden_link(HtmlCommand cmd) const;
+  void passthrough(char *str, int back);
 };
 
 Str *romanNumeral(int n);
