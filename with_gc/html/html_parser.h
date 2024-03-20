@@ -107,7 +107,6 @@ public:
                   const char **str, Lineprop mode);
   void fillline(struct readbuffer *obuf, int indent);
   void flushline(html_feed_environ *h_env, int indent, int force, int width);
-  int close_effect0(struct readbuffer *obuf, HtmlCommand cmd);
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);

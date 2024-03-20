@@ -488,6 +488,31 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
+void readbuffer::set_alignment(const std::shared_ptr<HtmlTag> &tag) {
+  auto flag = (ReadBufferFlags)-1;
+  int align;
+
+  if (tag->parsedtag_get_value(ATTR_ALIGN, &align)) {
+    switch (align) {
+    case ALIGN_CENTER:
+      if (DisableCenter)
+        flag = RB_LEFT;
+      else
+        flag = RB_CENTER;
+      break;
+    case ALIGN_RIGHT:
+      flag = RB_RIGHT;
+      break;
+    case ALIGN_LEFT:
+      flag = RB_LEFT;
+    }
+  }
+  this->RB_SAVE_FLAG();
+  if (flag != (ReadBufferFlags)-1) {
+    this->RB_SET_ALIGN(flag);
+  }
+}
+
 void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
                     const Url &currentURL, std::string_view body,
                     bool internal) {

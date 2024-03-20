@@ -181,6 +181,7 @@ struct readbuffer {
       RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
   }
 
+  void set_alignment(const std::shared_ptr<HtmlTag> &tag);
   void set_breakpoint(int tag_length);
   void back_to_breakpoint() {
     this->flag = this->bp.flag;
@@ -194,6 +195,83 @@ struct readbuffer {
     if (this->flag & RB_NOBR) {
       this->nobr_level = this->bp.nobr_level;
     }
+  }
+
+  int close_effect0(HtmlCommand cmd) {
+    int i;
+    char *p;
+
+    for (i = this->tag_sp - 1; i >= 0; i--) {
+      if (this->tag_stack[i]->cmd == cmd)
+        break;
+    }
+    if (i >= 0) {
+      this->tag_sp--;
+      memcpy(&this->tag_stack[i], &this->tag_stack[i + 1],
+             (this->tag_sp - i) * sizeof(struct cmdtable *));
+      return 1;
+    } else if ((p = this->has_hidden_link(cmd)) != nullptr) {
+      this->passthrough(p, 1);
+      return 1;
+    }
+    return 0;
+  }
+
+  int HTML_B_enter() {
+    if (this->fontstat.in_bold < FONTSTAT_MAX)
+      this->fontstat.in_bold++;
+    if (this->fontstat.in_bold > 1)
+      return 1;
+    return 0;
+  }
+
+  int HTML_B_exit() {
+    if (this->fontstat.in_bold == 1 && this->close_effect0(HTML_B))
+      this->fontstat.in_bold = 0;
+    if (this->fontstat.in_bold > 0) {
+      this->fontstat.in_bold--;
+      if (this->fontstat.in_bold == 0)
+        return 0;
+    }
+    return 1;
+  }
+
+  int HTML_I_enter() {
+    if (this->fontstat.in_italic < FONTSTAT_MAX)
+      this->fontstat.in_italic++;
+    if (this->fontstat.in_italic > 1)
+      return 1;
+    return 0;
+  }
+
+  int HTML_I_exit() {
+    if (this->fontstat.in_italic == 1 && this->close_effect0(HTML_I))
+      this->fontstat.in_italic = 0;
+    if (this->fontstat.in_italic > 0) {
+      this->fontstat.in_italic--;
+      if (this->fontstat.in_italic == 0)
+        return 0;
+    }
+    return 1;
+  }
+
+  int HTML_U_enter() {
+    if (this->fontstat.in_under < FONTSTAT_MAX)
+      this->fontstat.in_under++;
+    if (this->fontstat.in_under > 1)
+      return 1;
+    return 0;
+  }
+
+  int HTML_U_exit() {
+    if (this->fontstat.in_under == 1 && this->close_effect0(HTML_U))
+      this->fontstat.in_under = 0;
+    if (this->fontstat.in_under > 0) {
+      this->fontstat.in_under--;
+      if (this->fontstat.in_under == 0)
+        return 0;
+    }
+    return 1;
   }
 
   void append_tags();

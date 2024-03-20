@@ -481,26 +481,6 @@ void HtmlParser::do_blankline(struct html_feed_environ *h_env,
   }
 }
 
-int HtmlParser::close_effect0(struct readbuffer *obuf, HtmlCommand cmd) {
-  int i;
-  char *p;
-
-  for (i = obuf->tag_sp - 1; i >= 0; i--) {
-    if (obuf->tag_stack[i]->cmd == cmd)
-      break;
-  }
-  if (i >= 0) {
-    obuf->tag_sp--;
-    memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1],
-           (obuf->tag_sp - i) * sizeof(struct cmdtable *));
-    return 1;
-  } else if ((p = obuf->has_hidden_link(cmd)) != nullptr) {
-    obuf->passthrough(p, 1);
-    return 1;
-  }
-  return 0;
-}
-
 void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
   auto obuf = &h_env->obuf;
   if (obuf->anchor.url.size()) {
@@ -1712,17 +1692,17 @@ int HtmlParser::pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
 
   switch (cmd) {
   case HTML_B:
-    return h_env->HTML_B_enter();
+    return h_env->obuf.HTML_B_enter();
   case HTML_N_B:
-    return h_env->HTML_B_exit();
+    return h_env->obuf.HTML_B_exit();
   case HTML_I:
-    return h_env->HTML_I_enter();
+    return h_env->obuf.HTML_I_enter();
   case HTML_N_I:
-    return h_env->HTML_I_exit();
+    return h_env->obuf.HTML_I_exit();
   case HTML_U:
-    return h_env->HTML_U_enter();
+    return h_env->obuf.HTML_U_enter();
   case HTML_N_U:
-    return h_env->HTML_U_exit();
+    return h_env->obuf.HTML_U_exit();
   case HTML_EM:
     HTMLlineproc1("<i>", h_env);
     return 1;
