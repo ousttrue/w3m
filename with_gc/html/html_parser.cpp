@@ -1658,10 +1658,6 @@ table_start:
       if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
         h_env->obuf.status = R_ST_NORMAL;
       str = tokbuf->ptr;
-      if (need_number) {
-        str = Strnew_m_charp(getLinkNumberStr(-1)->ptr, str, nullptr)->ptr;
-        need_number = 0;
-      }
     }
 
     if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE |
@@ -1786,10 +1782,6 @@ table_start:
       if (cmd == HTML_TABLE)
         goto table_start;
       else {
-        if (displayLinkNumber && cmd == HTML_A && !internal)
-          if (h_env->obuf.anchor.url.size()) {
-            need_number = 1;
-          }
         continue;
       }
     }

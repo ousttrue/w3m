@@ -35,8 +35,6 @@ struct Anchor;
 class HtmlParser {
   friend struct html_feed_environ;
 
-  int need_number = 0;
-
   struct table *tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(struct html_feed_environ *h_env, int table_level);

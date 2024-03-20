@@ -533,11 +533,6 @@ struct html_feed_environ {
     if (tag->parsedtag_exists(ATTR_USEMAP))
       this->parser.HTML5_CLOSE_A(&this->obuf, this);
     auto tmp = this->parser.process_img(tag, this->limit);
-    if (this->parser.need_number) {
-      tmp = Strnew_m_charp(this->parser.getLinkNumberStr(-1)->ptr, tmp->ptr,
-                           nullptr);
-      this->parser.need_number = 0;
-    }
     this->parser.HTMLlineproc1(tmp->ptr, this);
     return 1;
   }
