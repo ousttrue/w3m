@@ -74,79 +74,16 @@ Str *HtmlParser::getLinkNumberStr(int correction) const {
   return Sprintf("[%d]", cur_hseq + correction);
 }
 
-void HtmlParser::push_charp(readbuffer *obuf, int width, const char *str,
-                            Lineprop mode) {
-  obuf->push_nchars(width, str, strlen(str), mode);
-}
-
-void HtmlParser::push_str(readbuffer *obuf, int width, Str *str,
-                          Lineprop mode) {
-  obuf->push_nchars(width, str->ptr, str->length, mode);
-}
-
-void HtmlParser::check_breakpoint(struct readbuffer *obuf, int pre_mode,
-                                  const char *ch) {
-  int tlen, len = obuf->line->length;
-
-  obuf->append_tags();
-  if (pre_mode)
-    return;
-  tlen = obuf->line->length - len;
-  if (tlen > 0 ||
-      is_boundary((unsigned char *)obuf->prevchar->ptr, (unsigned char *)ch))
-    obuf->set_breakpoint(tlen);
-}
-
-void HtmlParser::push_char(struct readbuffer *obuf, int pre_mode, char ch) {
-  this->check_breakpoint(obuf, pre_mode, &ch);
-  Strcat_char(obuf->line, ch);
-  obuf->pos++;
-  set_prevchar(obuf->prevchar, &ch, 1);
-  if (ch != ' ')
-    obuf->prev_ctype = PC_ASCII;
-  obuf->flag |= RB_NFLUSHED;
-}
-
-void HtmlParser::push_spaces(struct readbuffer *obuf, int pre_mode, int width) {
-  if (width <= 0)
-    return;
-  this->check_breakpoint(obuf, pre_mode, " ");
-  for (int i = 0; i < width; i++)
-    Strcat_char(obuf->line, ' ');
-  obuf->pos += width;
-  set_space_to_prevchar(obuf->prevchar);
-  obuf->flag |= RB_NFLUSHED;
-}
-
-void HtmlParser::proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
-                            const char **str, Lineprop mode) {
-  this->check_breakpoint(obuf, pre_mode, *str);
-  obuf->pos += width;
-  Strcat_charp_n(obuf->line, *str, get_mclen(*str));
-  if (width > 0) {
-    set_prevchar(obuf->prevchar, *str, 1);
-    if (**str != ' ')
-      obuf->prev_ctype = mode;
-  }
-  (*str) += get_mclen(*str);
-  obuf->flag |= RB_NFLUSHED;
-}
-
 void HtmlParser::push_render_image(Str *str, int width, int limit,
                                    struct html_feed_environ *h_env) {
   struct readbuffer *obuf = &h_env->obuf;
   int indent = h_env->envs[h_env->envc].indent;
 
-  this->push_spaces(obuf, 1, (limit - width) / 2);
-  this->push_str(obuf, width, str, PC_ASCII);
-  this->push_spaces(obuf, 1, (limit - width + 1) / 2);
+  obuf->push_spaces(1, (limit - width) / 2);
+  obuf->push_str(width, str, PC_ASCII);
+  obuf->push_spaces(1, (limit - width + 1) / 2);
   if (width > 0)
     flushline(h_env, indent, 0, h_env->limit);
-}
-
-void HtmlParser::fillline(struct readbuffer *obuf, int indent) {
-  this->push_spaces(obuf, 1, indent - obuf->pos);
-  obuf->flag &= ~RB_NFLUSHED;
 }
 
 void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
@@ -411,7 +348,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   obuf->set_breakpoint(0);
   obuf->prev_ctype = PC_ASCII;
   obuf->link_stack = nullptr;
-  fillline(obuf, indent);
+  obuf->fillline(indent);
   if (pass)
     obuf->passthrough(pass->ptr, 0);
   if (!hidden_anchor && obuf->anchor.url.size()) {
@@ -1941,19 +1878,19 @@ void HtmlParser::proc_escape(struct readbuffer *obuf, const char **str_return) {
 
   if (ech < 0) {
     *str_return = str;
-    proc_mchar(obuf, obuf->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
+    obuf->proc_mchar(obuf->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
     return;
   }
   mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
   auto estr = conv_entity(ech);
-  check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr.c_str());
+  obuf->check_breakpoint(obuf->flag & RB_SPECIAL, estr.c_str());
   auto width = get_strwidth(estr.c_str());
   if (width == 1 && ech == (char32_t)estr[0] && ech != '&' && ech != '<' &&
       ech != '>') {
     if (IS_CNTRL(ech))
       mode = PC_CTRL;
-    push_charp(obuf, width, estr.c_str(), mode);
+    obuf->push_charp(width, estr.c_str(), mode);
   } else {
     obuf->push_nchars(width, str, n_add, mode);
   }
@@ -2225,12 +2162,12 @@ table_start:
             continue;
           }
           if (h_env->obuf.flag & RB_PRE_INT)
-            push_char(&h_env->obuf, h_env->obuf.flag & RB_SPECIAL, ' ');
+            h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
           else
             flushline(h_env, h_env->envs[h_env->envc].indent, 1, h_env->limit);
         } else if (ch == '\t') {
           do {
-            push_char(&h_env->obuf, h_env->obuf.flag & RB_SPECIAL, ' ');
+            h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
           } while ((h_env->envs[h_env->envc].indent + h_env->obuf.pos) %
                        Tabstop !=
                    0);
@@ -2238,16 +2175,16 @@ table_start:
         } else if (h_env->obuf.flag & RB_PLAIN) {
           auto p = html_quote_char(*str);
           if (p) {
-            push_charp(&h_env->obuf, 1, p, PC_ASCII);
+            h_env->obuf.push_charp(1, p, PC_ASCII);
             str++;
           } else {
-            proc_mchar(&h_env->obuf, 1, delta, &str, mode);
+            h_env->obuf.proc_mchar(1, delta, &str, mode);
           }
         } else {
           if (*str == '&')
             proc_escape(&h_env->obuf, &str);
           else
-            proc_mchar(&h_env->obuf, 1, delta, &str, mode);
+            h_env->obuf.proc_mchar(1, delta, &str, mode);
         }
         if (h_env->obuf.flag & (RB_SPECIAL & ~RB_PRE_INT))
           continue;
@@ -2256,15 +2193,15 @@ table_start:
           h_env->obuf.flag &= ~RB_IGNORE_P;
         if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*str)) {
           if (*h_env->obuf.prevchar->ptr != ' ') {
-            push_char(&h_env->obuf, h_env->obuf.flag & RB_SPECIAL, ' ');
+            h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
           }
           str++;
         } else {
           if (*str == '&')
             proc_escape(&h_env->obuf, &str);
           else
-            proc_mchar(&h_env->obuf, h_env->obuf.flag & RB_SPECIAL, delta, &str,
-                       mode);
+            h_env->obuf.proc_mchar(h_env->obuf.flag & RB_SPECIAL, delta, &str,
+                                   mode);
         }
       }
       if (need_flushline(h_env, &h_env->obuf, mode)) {

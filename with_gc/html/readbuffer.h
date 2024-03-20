@@ -13,6 +13,8 @@
 
 extern int squeezeBlankLine;
 
+int is_boundary(unsigned char *, unsigned char *);
+
 #define N_GRAPH_SYMBOL 32
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
 #define UL_SYMBOL_DISC UL_SYMBOL(9)
@@ -277,6 +279,47 @@ struct readbuffer {
   void append_tags();
   void push_tag(const char *cmdname, HtmlCommand cmd);
   void push_nchars(int width, const char *str, int len, Lineprop mode);
+  void push_charp(int width, const char *str, Lineprop mode) {
+    this->push_nchars(width, str, strlen(str), mode);
+  }
+  void push_str(int width, Str *str, Lineprop mode) {
+    this->push_nchars(width, str->ptr, str->length, mode);
+  }
+  void push_char(int pre_mode, char ch) {
+    this->check_breakpoint(pre_mode, &ch);
+    Strcat_char(this->line, ch);
+    this->pos++;
+    set_prevchar(this->prevchar, &ch, 1);
+    if (ch != ' ')
+      this->prev_ctype = PC_ASCII;
+    this->flag |= RB_NFLUSHED;
+  }
+  void check_breakpoint(int pre_mode, const char *ch) {
+    int tlen, len = this->line->length;
+
+    this->append_tags();
+    if (pre_mode)
+      return;
+    tlen = this->line->length - len;
+    if (tlen > 0 ||
+        is_boundary((unsigned char *)this->prevchar->ptr, (unsigned char *)ch))
+      this->set_breakpoint(tlen);
+  }
+  void push_spaces(int pre_mode, int width) {
+    if (width <= 0)
+      return;
+    this->check_breakpoint(pre_mode, " ");
+    for (int i = 0; i < width; i++)
+      Strcat_char(this->line, ' ');
+    this->pos += width;
+    set_space_to_prevchar(this->prevchar);
+    this->flag |= RB_NFLUSHED;
+  }
+  void proc_mchar(int pre_mode, int width, const char **str, Lineprop mode);
+  void fillline(int indent) {
+    this->push_spaces(1, indent - this->pos);
+    this->flag &= ~RB_NFLUSHED;
+  }
 
   // link
   void push_link(HtmlCommand cmd, int offset, int pos);
@@ -311,8 +354,6 @@ inline void cleanup_line(Str *s, CleanupMode mode) {
   Strclear(s);
   Strcat(s, tmp);
 }
-
-extern int is_boundary(unsigned char *, unsigned char *);
 
 struct Buffer;
 // std::shared_ptr<Buffer>

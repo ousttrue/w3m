@@ -97,15 +97,6 @@ public:
   Str *process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
   Str *process_n_textarea();
   void feed_textarea(const char *str);
-
-  void push_charp(readbuffer *obuf, int width, const char *str, Lineprop mode);
-  void push_str(readbuffer *obuf, int width, Str *str, Lineprop mode);
-  void check_breakpoint(struct readbuffer *obuf, int pre_mode, const char *ch);
-  void push_char(struct readbuffer *obuf, int pre_mode, char ch);
-  void push_spaces(struct readbuffer *obuf, int pre_mode, int width);
-  void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
-                  const char **str, Lineprop mode);
-  void fillline(struct readbuffer *obuf, int indent);
   void flushline(html_feed_environ *h_env, int indent, int force, int width);
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
@@ -141,10 +132,12 @@ public:
   Str *process_input(const std::shared_ptr<HtmlTag> &tag);
   Str *process_button(const std::shared_ptr<HtmlTag> &tag);
   Str *process_n_button();
-  Str *process_hr(const std::shared_ptr<HtmlTag> &tag, int width, int indent_width);
+  Str *process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
+                  int indent_width);
 
 private:
-  int pushHtmlTag(const std::shared_ptr<HtmlTag> &tag, struct html_feed_environ *h_env);
+  int pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
+                  struct html_feed_environ *h_env);
 
   Lineprop effect = 0;
   Lineprop ex_effect = 0;

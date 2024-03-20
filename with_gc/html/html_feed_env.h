@@ -213,7 +213,7 @@ struct html_feed_environ {
       case HTML_UL: {
         envs[this->envc].type = tag->ul_type(envs[this->envc].type);
         for (int i = 0; i < INDENT_INCR - 3; i++)
-          this->parser.push_charp(&this->obuf, 1, NBSP, PC_ASCII);
+          this->obuf.push_charp(1, NBSP, PC_ASCII);
         auto tmp = Strnew();
         switch (envs[this->envc].type) {
         case 'd':
@@ -231,9 +231,9 @@ struct html_feed_environ {
           break;
         }
         if (symbol_width == 1)
-          this->parser.push_charp(&this->obuf, 1, NBSP, PC_ASCII);
-        this->parser.push_str(&this->obuf, symbol_width, tmp, PC_ASCII);
-        this->parser.push_charp(&this->obuf, 1, NBSP, PC_ASCII);
+          this->obuf.push_charp(1, NBSP, PC_ASCII);
+        this->obuf.push_str(symbol_width, tmp, PC_ASCII);
+        this->obuf.push_charp(1, NBSP, PC_ASCII);
         set_space_to_prevchar(this->obuf.prevchar);
         break;
       }
@@ -264,13 +264,13 @@ struct html_feed_environ {
           Strcat_charp(num, ". ");
         else
           Strcat_char(num, '.');
-        this->parser.push_spaces(&this->obuf, 1, INDENT_INCR - num->length);
-        this->parser.push_str(&this->obuf, num->length, num, PC_ASCII);
+        this->obuf.push_spaces(1, INDENT_INCR - num->length);
+        this->obuf.push_str(num->length, num, PC_ASCII);
         if (INDENT_INCR >= 4)
           set_space_to_prevchar(this->obuf.prevchar);
         break;
       default:
-        this->parser.push_spaces(&this->obuf, 1, INDENT_INCR);
+        this->obuf.push_spaces(1, INDENT_INCR);
         break;
       }
     } else {
@@ -321,8 +321,7 @@ struct html_feed_environ {
       if (this->obuf.pos > envs[this->envc].indent)
         this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
       else
-        this->parser.push_spaces(&this->obuf, 1,
-                                 envs[this->envc].indent - this->obuf.pos);
+        this->obuf.push_spaces(1, envs[this->envc].indent - this->obuf.pos);
     } else
       this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
     /* this->obuf.flag |= RB_IGNORE_P; */
@@ -357,7 +356,7 @@ struct html_feed_environ {
 
   int HTML_FRAMESET_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->PUSH_ENV(tag->tagid);
-    this->parser.push_charp(&this->obuf, 9, "--FRAME--", PC_ASCII);
+    this->obuf.push_charp(9, "--FRAME--", PC_ASCII);
     this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
     return 0;
   }
@@ -398,7 +397,7 @@ struct html_feed_environ {
           HTML_A);
       if (r)
         q = html_quote(r);
-      this->parser.push_charp(&this->obuf, get_strwidth(q), q, PC_ASCII);
+      this->obuf.push_charp(get_strwidth(q), q, PC_ASCII);
       this->obuf.push_tag("</a>", HTML_N_A);
     }
     this->parser.flushline(this, envs[this->envc].indent, 0, this->limit);
@@ -423,7 +422,7 @@ struct html_feed_environ {
         this->parser.do_blankline(this, &this->obuf, envs[this->envc].indent, 0,
                                   this->limit);
     } else
-      this->parser.fillline(&this->obuf, envs[this->envc].indent);
+      this->obuf.fillline(envs[this->envc].indent);
     this->obuf.flag |= (RB_PRE | RB_IGNORE_P);
     /* istr = str; */
     return 1;

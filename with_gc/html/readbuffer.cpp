@@ -877,3 +877,17 @@ void readbuffer::push_nchars(int width, const char *str, int len,
   }
   this->flag |= RB_NFLUSHED;
 }
+
+void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
+                            Lineprop mode) {
+  this->check_breakpoint(pre_mode, *str);
+  this->pos += width;
+  Strcat_charp_n(this->line, *str, get_mclen(*str));
+  if (width > 0) {
+    set_prevchar(this->prevchar, *str, 1);
+    if (**str != ' ')
+      this->prev_ctype = mode;
+  }
+  (*str) += get_mclen(*str);
+  this->flag |= RB_NFLUSHED;
+}
