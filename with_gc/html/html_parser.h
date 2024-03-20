@@ -5,6 +5,7 @@
 #include "table.h"
 #include "readbuffer_status.h"
 #include "readbuffer.h"
+#include "line.h"
 
 struct Str;
 struct HtmlTag;

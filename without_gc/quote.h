@@ -31,3 +31,16 @@ std::string_view remove_space(std::string_view str);
 void make_domain_list(std::list<std::string> &list,
                       const std::string &domain_list);
 std::string cleanupName(std::string_view name);
+
+enum CleanupMode {
+  RAW_MODE = 0,
+  PAGER_MODE = 1,
+  HTML_MODE = 2,
+  HEADER_MODE = 3,
+};
+std::string cleanup_line(std::string_view s, CleanupMode mode);
+// inline void cleanup_line(Str *s, CleanupMode mode) {
+//   auto tmp = cleanup_line(s->ptr, mode);
+//   Strclear(s);
+//   Strcat(s, tmp);
+// }

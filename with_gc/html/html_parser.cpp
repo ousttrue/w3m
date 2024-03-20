@@ -16,7 +16,6 @@
 #include "ctrlcode.h"
 #include "myctype.h"
 #include "Str.h"
-#include "readbuffer.h"
 #include "table.h"
 #include "utf8.h"
 #include "stringtoken.h"

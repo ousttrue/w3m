@@ -1,9 +1,7 @@
 #include "loaddirectory.h"
-#include "html/readbuffer.h"
 #include "Str.h"
 #include "etc.h"
 #include "alloc.h"
-#include "app.h"
 
 typedef struct direct Directory;
 #include <sys/stat.h>

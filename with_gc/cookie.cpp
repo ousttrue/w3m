@@ -12,7 +12,6 @@
 #include "cookie.h"
 #include "app.h"
 #include "quote.h"
-#include "html/readbuffer.h"
 #include "html/html_quote.h"
 #include "matchattr.h"
 #include "rc.h"

@@ -17,7 +17,6 @@
 #include "etc.h"
 #include "rc.h"
 #include "linklist.h"
-#include "html/readbuffer.h"
 #include "html/form.h"
 #include "html/form_item.h"
 #include "html/anchorlist.h"

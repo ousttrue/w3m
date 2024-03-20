@@ -1,6 +1,5 @@
 #include "form_item.h"
 #include "ioutil.h"
-#include "readbuffer.h"
 #include "etc.h"
 #include "app.h"
 #include "form.h"
@@ -144,8 +143,7 @@ void FormItem::input_textarea() {
       Strshrink(tmp, 1);
       Strcat_charp(tmp, "\r\n");
     }
-    cleanup_line(tmp, RAW_MODE);
-    this->value += tmp->ptr;
+    this->value = cleanup_line(tmp->ptr, RAW_MODE);
   }
   fclose(f);
 input_end:

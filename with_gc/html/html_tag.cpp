@@ -1,7 +1,5 @@
 #include "html_tag.h"
 #include "html_quote.h"
-#include "readbuffer.h"
-#include "entity.h"
 #include "quote.h"
 #include "html_command.h"
 #include "myctype.h"
@@ -11,7 +9,6 @@
 #include "alloc.h"
 #include "html.c"
 #include "textline.h"
-#include <sstream>
 
 /* parse HTML tag */
 

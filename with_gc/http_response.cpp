@@ -8,7 +8,6 @@
 #include "cookie.h"
 #include "Str.h"
 #include "myctype.h"
-#include "html/readbuffer.h"
 #include "mimehead.h"
 #include "etc.h"
 #include <assert.h>

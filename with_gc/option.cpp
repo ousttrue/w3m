@@ -9,7 +9,6 @@
 #include "dns_order.h"
 
 // extern
-#include "html/readbuffer.h"
 #include "tabbuffer.h"
 #include "app.h"
 #include "url_decode.h"

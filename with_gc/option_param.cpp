@@ -1,6 +1,6 @@
 #include "option_param.h"
 #include "myctype.h"
-#include "html/readbuffer.h"
+#include "html/table.h"
 #include <sstream>
 #include <Str.h>
 #include <html/html_quote.h>

@@ -1,6 +1,5 @@
 #include "symbol.h"
 #include "Str.h"
-#include "html/readbuffer.h"
 #include "ctrlcode.h"
 #include "Symbols/alt.sym"
 #include "Symbols/graph.sym"
@@ -24,6 +23,8 @@ void push_symbol(Str *str, char symbol, int width, int n) {
     Strcat_char(str, '*');
   }
 }
+
+#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 
 Str *conv_symbol(Line *l) {
   Str *tmp = NULL;

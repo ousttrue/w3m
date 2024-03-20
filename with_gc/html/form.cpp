@@ -3,7 +3,6 @@
 #include "quote.h"
 #include "app.h"
 #include "etc.h"
-#include "readbuffer.h"
 #include "alloc.h"
 #include "html_tag.h"
 #include "html_feed_env.h"

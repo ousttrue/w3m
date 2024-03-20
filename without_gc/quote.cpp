@@ -394,3 +394,32 @@ std::string cleanupName(std::string_view name) {
   }
   return buf;
 }
+
+std::string cleanup_line(std::string_view _s, CleanupMode mode) {
+  std::string s{_s.begin(), _s.end()};
+  if (s.empty()) {
+    return s;
+  }
+  if (mode == RAW_MODE) {
+    return s;
+  }
+
+  if (s.size() >= 2 && s[s.size() - 2] == '\r' && s[s.size() - 1] == '\n') {
+    s.pop_back();
+    s.pop_back();
+    s += '\n';
+  } else if (s.back() == '\r') {
+    s[s.size() - 1] = '\n';
+  } else if (s.back() != '\n') {
+    s += '\n';
+  }
+
+  if (mode != PAGER_MODE) {
+    for (size_t i = 0; i < s.size(); i++) {
+      if (s[i] == '\0') {
+        s[i] = ' ';
+      }
+    }
+  }
+  return s;
+}

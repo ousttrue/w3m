@@ -17,19 +17,13 @@ extern int squeezeBlankLine;
 
 int is_boundary(unsigned char *, unsigned char *);
 
-#define N_GRAPH_SYMBOL 32
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
 #define UL_SYMBOL_DISC UL_SYMBOL(9)
 #define UL_SYMBOL_CIRCLE UL_SYMBOL(10)
 #define UL_SYMBOL_SQUARE UL_SYMBOL(11)
 
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-
 extern bool pseudoInlines;
 extern bool ignore_null_img_alt;
-#define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
-#define MINIMUM_PIXEL_PER_CHAR 4.0
-#define MAXIMUM_PIXEL_PER_CHAR 32.0
 extern int pixel_per_char_i;
 extern bool displayLinkNumber;
 extern bool DisableCenter;
@@ -432,19 +426,6 @@ struct LineLayout;
 struct HttpResponse;
 void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
                 std::string_view body);
-
-enum CleanupMode {
-  RAW_MODE = 0,
-  PAGER_MODE = 1,
-  HTML_MODE = 2,
-  HEADER_MODE = 3,
-};
-std::string cleanup_line(std::string_view s, CleanupMode mode);
-inline void cleanup_line(Str *s, CleanupMode mode) {
-  auto tmp = cleanup_line(s->ptr, mode);
-  Strclear(s);
-  Strcat(s, tmp);
-}
 
 struct Buffer;
 // std::shared_ptr<Buffer>

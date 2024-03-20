@@ -1,6 +1,5 @@
 #include "downloadlist.h"
 #include "keyvalue.h"
-#include "html/readbuffer.h"
 #include "etc.h"
 #include "alloc.h"
 #include "Str.h"

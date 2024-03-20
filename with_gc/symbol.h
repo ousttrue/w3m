@@ -1,5 +1,6 @@
 #pragma once
 
+#define N_GRAPH_SYMBOL 32
 #define SYMBOL_BASE 0x20
 
 extern const char *graph_symbol[];

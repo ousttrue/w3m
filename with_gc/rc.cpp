@@ -13,7 +13,6 @@
 #include "alloc.h"
 #include "mimetypes.h"
 #include "compression.h"
-#include "html/readbuffer.h"
 #include "linein.h"
 #include "cookie.h"
 #include "http_request.h"

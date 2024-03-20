@@ -4,7 +4,6 @@
 #include "file_util.h"
 #include "ctrlcode.h"
 #include "app.h"
-#include "html/readbuffer.h"
 #include "myctype.h"
 #include "local_cgi.h"
 #include "proc.h"
