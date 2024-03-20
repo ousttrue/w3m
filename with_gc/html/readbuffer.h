@@ -430,9 +430,6 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
 
 struct LineLayout;
 struct HttpResponse;
-void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
-                    const Url &currentUrl, std::string_view body,
-                    bool internal = false);
 void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
                 std::string_view body);
 

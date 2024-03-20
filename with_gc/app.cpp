@@ -6,7 +6,7 @@
 #include "ctrlcode.h"
 #include "proc.h"
 #include "quote.h"
-#include "html/readbuffer.h"
+#include "html/html_feed_env.h"
 #include "html/form_item.h"
 #include "html/anchorlist.h"
 #include "anchor.h"

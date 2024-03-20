@@ -5,7 +5,7 @@
 #include "app.h"
 #include "html/form_item.h"
 #include "file_util.h"
-#include "html/readbuffer.h"
+#include "html/html_feed_env.h"
 #include "http_response.h"
 #include "url_quote.h"
 #include "search.h"
@@ -1089,8 +1089,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
   auto html = Option::instance().load_option_panel();
   auto newbuf = Buffer::create();
-  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {},
-                 html.c_str());
+  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }

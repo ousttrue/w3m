@@ -212,22 +212,21 @@ struct html_feed_environ {
         auto tmp = Strnew();
         switch (envs[this->envc].type) {
         case 'd':
-          push_symbol(tmp, UL_SYMBOL_DISC, symbol_width, 1);
+          push_symbol(tmp, UL_SYMBOL_DISC, 1, 1);
           break;
         case 'c':
-          push_symbol(tmp, UL_SYMBOL_CIRCLE, symbol_width, 1);
+          push_symbol(tmp, UL_SYMBOL_CIRCLE, 1, 1);
           break;
         case 's':
-          push_symbol(tmp, UL_SYMBOL_SQUARE, symbol_width, 1);
+          push_symbol(tmp, UL_SYMBOL_SQUARE, 1, 1);
           break;
         default:
-          push_symbol(tmp, UL_SYMBOL((this->envc_real - 1) % MAX_UL_LEVEL),
-                      symbol_width, 1);
+          push_symbol(tmp, UL_SYMBOL((this->envc_real - 1) % MAX_UL_LEVEL), 1,
+                      1);
           break;
         }
-        if (symbol_width == 1)
-          this->obuf.push_charp(1, NBSP, PC_ASCII);
-        this->obuf.push_str(symbol_width, tmp, PC_ASCII);
+        this->obuf.push_charp(1, NBSP, PC_ASCII);
+        this->obuf.push_str(1, tmp, PC_ASCII);
         this->obuf.push_charp(1, NBSP, PC_ASCII);
         set_space_to_prevchar(this->obuf.prevchar);
         break;
@@ -959,3 +958,16 @@ struct html_feed_environ {
     return 1;
   }
 };
+
+#define MAX_ENV_LEVEL 20
+inline void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
+                           const Url &currentURL, std::string_view body,
+                           bool internal = false) {
+  html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0);
+  htmlenv1.buf = GeneralList<TextLine>::newGeneralList();
+  htmlenv1.parseLine(body, internal);
+  htmlenv1.obuf.status = R_ST_NORMAL;
+  htmlenv1.completeHTMLstream();
+  htmlenv1.obuf.flushline(htmlenv1.buf, 0, 2, htmlenv1.limit);
+  htmlenv1.render(layout, currentURL);
+}

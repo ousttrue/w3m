@@ -23,10 +23,9 @@
 #include "matrix.h"
 #include "utf8.h"
 
-int symbol_width = 0;
 double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 
-#define RULE_WIDTH symbol_width
+#define RULE_WIDTH 1
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))
 #define TK_VERTICALBAR(mode) RULE(mode, 5)
 
@@ -425,7 +424,7 @@ void table::print_sep(int row, int type, int maxcol, Str *buf) {
     forbid |= 4;
   }
   if (this->border_mode != BORDER_NOWIN) {
-    push_symbol(buf, RULE(this->border_mode, forbid), symbol_width, 1);
+    push_symbol(buf, RULE(this->border_mode, forbid), 1, 1);
   }
   for (i = 0; i <= maxcol; i++) {
     forbid = 10;
@@ -446,7 +445,7 @@ void table::print_sep(int row, int type, int maxcol, Str *buf) {
       int w = this->tabwidth[i] + 2 * this->cellpadding;
       if (RULE_WIDTH == 2)
         w = (w + 1) / RULE_WIDTH;
-      push_symbol(buf, RULE(rule_mode, forbid), symbol_width, w);
+      push_symbol(buf, RULE(rule_mode, forbid), 1, w);
     }
   do_last_sep:
     if (i < maxcol) {
@@ -470,7 +469,7 @@ void table::print_sep(int row, int type, int maxcol, Str *buf) {
         }
       }
       if (forbid != 15) /* forbid==15 means 'no rule at all' */
-        push_symbol(buf, RULE(rule_mode, forbid), symbol_width, 1);
+        push_symbol(buf, RULE(rule_mode, forbid), 1, 1);
     }
   }
   forbid = 4;
@@ -482,7 +481,7 @@ void table::print_sep(int row, int type, int maxcol, Str *buf) {
     forbid |= 1;
   }
   if (this->border_mode != BORDER_NOWIN)
-    push_symbol(buf, RULE(this->border_mode, forbid), symbol_width, 1);
+    push_symbol(buf, RULE(this->border_mode, forbid), 1, 1);
 }
 
 int table::get_spec_cell_width(int row, int col) {
@@ -1447,15 +1446,15 @@ void table::renderTable(HtmlParser *parser, int max_width,
   case BORDER_THICK:
     vrulea = Strnew();
     vrulec = Strnew();
-    push_symbol(vrulea, TK_VERTICALBAR(this->border_mode), symbol_width, 1);
+    push_symbol(vrulea, TK_VERTICALBAR(this->border_mode), 1, 1);
     for (i = 0; i < this->cellpadding; i++) {
       Strcat_char(vrulea, ' ');
       Strcat_char(vruleb, ' ');
       Strcat_char(vrulec, ' ');
     }
-    push_symbol(vrulec, TK_VERTICALBAR(this->border_mode), symbol_width, 1);
+    push_symbol(vrulec, TK_VERTICALBAR(this->border_mode), 1, 1);
   case BORDER_NOWIN:
-    push_symbol(vruleb, TK_VERTICALBAR(BORDER_THIN), symbol_width, 1);
+    push_symbol(vruleb, TK_VERTICALBAR(BORDER_THIN), 1, 1);
     for (i = 0; i < this->cellpadding; i++)
       Strcat_char(vruleb, ' ');
     break;

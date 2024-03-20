@@ -6,7 +6,6 @@
 #include <stdint.h>
 #include <memory>
 
-extern int symbol_width;
 extern double pixel_per_char;
 
 #define VALIGN_MIDDLE 0

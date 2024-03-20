@@ -513,48 +513,6 @@ void readbuffer::set_alignment(const std::shared_ptr<HtmlTag> &tag) {
   }
 }
 
-void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
-                    const Url &currentURL, std::string_view body,
-                    bool internal) {
-
-  symbol_width = 1;
-
-  html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0);
-
-  htmlenv1.buf = GeneralList<TextLine>::newGeneralList();
-
-  auto begin = body.begin();
-  while (begin != body.end()) {
-    auto it = begin;
-    for (; it != body.end(); ++it) {
-      if (*it == '\n') {
-        break;
-      }
-    }
-    std::string_view l(begin, it);
-    begin = it;
-    if (begin != body.end()) {
-      ++begin;
-    }
-
-    auto line = cleanup_line(l, HTML_MODE);
-    htmlenv1.parseLine(line, internal);
-  }
-
-  if (htmlenv1.obuf.status != R_ST_NORMAL) {
-    htmlenv1.parseLine("\n", internal);
-  }
-
-  htmlenv1.obuf.status = R_ST_NORMAL;
-  htmlenv1.completeHTMLstream();
-  htmlenv1.obuf.flushline(htmlenv1.buf, 0, 2, htmlenv1.limit);
-
-  //
-  // render ?
-  //
-  htmlenv1.render(layout, currentURL);
-}
-
 std::string cleanup_line(std::string_view _s, CleanupMode mode) {
   std::string s{_s.begin(), _s.end()};
   if (s.empty()) {

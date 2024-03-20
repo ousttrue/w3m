@@ -434,7 +434,7 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
     auto mode = get_mctype(str);
     if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
       line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
-      str += symbol_width;
+      str += 1;
     } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
       line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
       str++;
@@ -923,8 +923,8 @@ Str *HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag, int width) {
             Strcat_charp(tmp, "<pre_int>");
             pre_int = true;
           }
-          push_symbol(tmp, IMG_SYMBOL, symbol_width, 1);
-          n = symbol_width;
+          push_symbol(tmp, IMG_SYMBOL, 1, 1);
+          n = 1;
         }
       }
       goto img_end;
@@ -935,11 +935,11 @@ Str *HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag, int width) {
         Strcat_charp(tmp, "<pre_int>");
         pre_int = true;
       }
-      w = static_cast<int>(w / pixel_per_char / symbol_width);
+      w = static_cast<int>(w / pixel_per_char);
       if (w <= 0)
         w = 1;
-      push_symbol(tmp, HR_SYMBOL, symbol_width, w);
-      n = w * symbol_width;
+      push_symbol(tmp, HR_SYMBOL, 1, w);
+      n = w;
       goto img_end;
     }
   }
@@ -1257,10 +1257,9 @@ Str *HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
     Strcat_charp(tmp, "<div_int align=left>");
     break;
   }
-  w /= symbol_width;
   if (w <= 0)
     w = 1;
-  push_symbol(tmp, HR_SYMBOL, symbol_width, w);
+  push_symbol(tmp, HR_SYMBOL, 1, w);
   Strcat_charp(tmp, "</div_int></nobr>");
   return tmp;
 }
