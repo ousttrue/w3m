@@ -892,9 +892,8 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
   this->flag |= RB_NFLUSHED;
 }
 
-void readbuffer::flushline(struct html_feed_environ *h_env, int indent,
+void readbuffer::flushline(GeneralList<TextLine> *buf, int indent,
                            int force, int width) {
-  auto buf = h_env->buf;
   Str *line = this->line;
   Str *pass = nullptr;
   // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
@@ -1026,7 +1025,7 @@ void readbuffer::flushline(struct html_feed_environ *h_env, int indent,
       Strcat_char(h.obuf.line, ' ');
     Strcat_charp(h.obuf.line, "</pre_int>");
     for (i = 0; i < this->top_margin; i++) {
-      flushline(h_env, indent, force, width);
+      flushline(buf, indent, force, width);
     }
   }
 
@@ -1078,17 +1077,17 @@ void readbuffer::flushline(struct html_feed_environ *h_env, int indent,
       }
     }
 
-    if (lbuf->pos() > h_env->maxlimit) {
-      h_env->maxlimit = lbuf->pos();
+    if (lbuf->pos() > this->maxlimit) {
+      this->maxlimit = lbuf->pos();
     }
 
     if (buf) {
       buf->pushValue(lbuf);
     }
     if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED)
-      h_env->blank_lines = 0;
+      this->blank_lines = 0;
     else
-      h_env->blank_lines++;
+      this->blank_lines++;
   } else {
     const char *p = line->ptr;
     Str *tmp = Strnew(), *tmp2 = Strnew();
@@ -1136,7 +1135,7 @@ void readbuffer::flushline(struct html_feed_environ *h_env, int indent,
       Strcat_char(h.obuf.line, ' ');
     Strcat_charp(h.obuf.line, "</pre_int>");
     for (i = 0; i < this->bottom_margin; i++) {
-      flushline(h_env, indent, force, width);
+      flushline(buf, indent, force, width);
     }
   }
   if (this->top_margin < 0 || this->bottom_margin < 0) {

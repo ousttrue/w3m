@@ -8,6 +8,7 @@
 #include "anchor.h"
 #include "readbuffer_status.h"
 #include "html_command.h"
+#include "textline.h"
 #include <memory>
 #include <string_view>
 
@@ -163,6 +164,8 @@ struct readbuffer {
   short top_margin = 0;
   short bottom_margin = 0;
   struct link_stack *link_stack = nullptr;
+  int maxlimit = 0;
+  int blank_lines = 0;
 
   readbuffer();
 
@@ -326,8 +329,7 @@ struct readbuffer {
   char *has_hidden_link(HtmlCommand cmd) const;
   void passthrough(char *str, int back);
 
-  void flushline(struct html_feed_environ *h_env, int indent, int force,
-                 int width);
+  void flushline(GeneralList<TextLine> *buf, int indent, int force, int width);
 };
 
 Str *romanNumeral(int n);

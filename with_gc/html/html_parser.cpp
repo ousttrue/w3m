@@ -17,7 +17,6 @@
 #include "myctype.h"
 #include "Str.h"
 #include "readbuffer.h"
-#include "hash.h"
 #include "table.h"
 #include "utf8.h"
 #include "stringtoken.h"
@@ -47,7 +46,7 @@ void HtmlParser::CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env) {
 void HtmlParser::CLOSE_P(readbuffer *obuf, html_feed_environ *h_env) {
   if (obuf->flag & RB_P) {
     struct environment *envs = h_env->envs.data();
-    obuf->flushline(h_env, envs[h_env->envc].indent, 0, h_env->limit);
+    obuf->flushline(h_env->buf, envs[h_env->envc].indent, 0, h_env->limit);
     obuf->RB_RESTORE_FLAG();
     obuf->flag &= ~RB_P;
   }
@@ -83,14 +82,14 @@ void HtmlParser::push_render_image(Str *str, int width, int limit,
   obuf->push_str(width, str, PC_ASCII);
   obuf->push_spaces(1, (limit - width + 1) / 2);
   if (width > 0)
-    obuf->flushline(h_env, indent, 0, h_env->limit);
+    obuf->flushline(h_env->buf, indent, 0, h_env->limit);
 }
 
 void HtmlParser::do_blankline(struct html_feed_environ *h_env,
                               struct readbuffer *obuf, int indent,
                               int indent_incr, int width) {
-  if (h_env->blank_lines == 0) {
-    obuf->flushline(h_env, indent, 1, width);
+  if (h_env->obuf.blank_lines == 0) {
+    obuf->flushline(h_env->buf, indent, 1, width);
   }
 }
 
@@ -1342,8 +1341,8 @@ int HtmlParser::pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
   case HTML_FIGCAPTION:
   case HTML_N_FIGCAPTION:
   case HTML_BR:
-    h_env->obuf.flushline(h_env, envs[h_env->envc].indent, 1, h_env->limit);
-    h_env->blank_lines = 0;
+    h_env->obuf.flushline(h_env->buf, envs[h_env->envc].indent, 1, h_env->limit);
+    h_env->obuf.blank_lines = 0;
     return 1;
   case HTML_H:
     return h_env->HTML_H_enter(tag);
@@ -1760,7 +1759,7 @@ table_start:
         /* all tables have been read */
         if (tbl->vspace > 0 && !(h_env->obuf.flag & RB_IGNORE_P)) {
           int indent = h_env->envs[h_env->envc].indent;
-          h_env->obuf.flushline(h_env, indent, 0, h_env->limit);
+          h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
           do_blankline(h_env, &h_env->obuf, indent, 0, h_env->limit);
         }
         save_fonteffect(h_env);
@@ -1840,7 +1839,7 @@ table_start:
           if (h_env->obuf.flag & RB_PRE_INT)
             h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
           else
-            h_env->obuf.flushline(h_env, h_env->envs[h_env->envc].indent, 1,
+            h_env->obuf.flushline(h_env->buf, h_env->envs[h_env->envc].indent, 1,
                                   h_env->limit);
         } else if (ch == '\t') {
           do {
@@ -1900,7 +1899,7 @@ table_start:
           if (h_env->obuf.pos - i > h_env->limit)
             h_env->obuf.flag |= RB_FILL;
           h_env->obuf.back_to_breakpoint();
-          h_env->obuf.flushline(h_env, indent, 0, h_env->limit);
+          h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
           h_env->obuf.flag &= ~RB_FILL;
           HTMLlineproc1(line->ptr, h_env);
         }
@@ -1922,7 +1921,7 @@ table_start:
     int indent = h_env->envs[h_env->envc].indent;
     if (h_env->obuf.pos - i > h_env->limit) {
       h_env->obuf.flag |= RB_FILL;
-      h_env->obuf.flushline(h_env, indent, 0, h_env->limit);
+      h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
       h_env->obuf.flag &= ~RB_FILL;
     }
   }

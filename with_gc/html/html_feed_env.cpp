@@ -15,7 +15,7 @@ html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
 }
 
 void html_feed_environ::purgeline() {
-  if (this->buf == NULL || this->blank_lines == 0)
+  if (this->buf == NULL || this->obuf.blank_lines == 0)
     return;
 
   TextLine *tl;
@@ -33,5 +33,5 @@ void html_feed_environ::purgeline() {
     }
   }
   appendTextLine(this->buf, tmp, 0);
-  this->blank_lines--;
+  this->obuf.blank_lines--;
 }

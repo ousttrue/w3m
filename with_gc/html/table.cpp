@@ -528,7 +528,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
         parser->save_fonteffect(&h_env);
-        obuf.flushline(&h_env, 0, 2, h_env.limit);
+        obuf.flushline(h_env.buf, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
           parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
         if (h_env.obuf.RB_GET_ALIGN() == RB_CENTER) {
@@ -545,11 +545,11 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
           }
         }
         h_env.buf->appendGeneralList(this->tables[id].buf);
-        if (h_env.maxlimit < limit)
-          h_env.maxlimit = limit;
+        if (h_env.obuf.maxlimit < limit)
+          h_env.obuf.maxlimit = limit;
         parser->restore_fonteffect(&h_env);
         obuf.flag &= ~RB_IGNORE_P;
-        h_env.blank_lines = 0;
+        h_env.obuf.blank_lines = 0;
         if (t->vspace > 0) {
           parser->do_blankline(&h_env, &obuf, 0, 0, h_env.limit);
           obuf.flag |= RB_IGNORE_P;
@@ -563,7 +563,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     parser->HTMLlineproc1("\n", &h_env);
   }
   parser->completeHTMLstream(&h_env);
-  obuf.flushline(&h_env, 0, 2, h_env.limit);
+  obuf.flushline(h_env.buf, 0, 2, h_env.limit);
   if (this->border_mode == BORDER_NONE) {
     int rowspan = this->table_rowspan(row, col);
     if (row + rowspan <= this->maxrow) {
@@ -589,11 +589,11 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     k = bsearch_2short(colspan, cell->colspan, col, cell->col, MAXCOL,
                        cell->index, cell->maxcell + 1);
     icell = cell->index[k];
-    if (cell->minimum_width[icell] < h_env.maxlimit)
-      cell->minimum_width[icell] = h_env.maxlimit;
+    if (cell->minimum_width[icell] < h_env.obuf.maxlimit)
+      cell->minimum_width[icell] = h_env.obuf.maxlimit;
   } else {
-    if (this->minimum_width[col] < h_env.maxlimit)
-      this->minimum_width[col] = h_env.maxlimit;
+    if (this->minimum_width[col] < h_env.obuf.maxlimit)
+      this->minimum_width[col] = h_env.obuf.maxlimit;
   }
 }
 
@@ -1289,8 +1289,8 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   parser->parseLine(this->caption->ptr, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);
 
-  if (this->total_width < henv.maxlimit)
-    this->total_width = henv.maxlimit;
+  if (this->total_width < henv.obuf.maxlimit)
+    this->total_width = henv.obuf.maxlimit;
   limit = h_env->limit;
   h_env->limit = this->total_width;
   parser->HTMLlineproc1("<center>", h_env);
