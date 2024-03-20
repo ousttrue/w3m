@@ -9,8 +9,8 @@
 #include "readbuffer_status.h"
 #include "html_command.h"
 #include "textline.h"
-#include <memory>
 #include "html_tag.h"
+#include <memory>
 #include <string_view>
 
 extern int squeezeBlankLine;
@@ -76,6 +76,8 @@ enum ReadBufferFlags {
   RB_DEL = 0x100000,
   RB_S = 0x200000,
   RB_HTML5 = 0x400000,
+
+  TBLM_ANCHOR = 0x1000000,
 };
 ENUM_OP_INSTANCE(ReadBufferFlags);
 
@@ -142,7 +144,7 @@ struct readbuffer {
   ReadBufferFlags flag_stack[RB_STACK_SIZE];
   int flag_sp = 0;
   ReadBufferStatus status = {};
-  unsigned char end_tag;
+  HtmlCommand end_tag;
   unsigned char q_level = 0;
   short table_level = -1;
   short nobr_level = 0;

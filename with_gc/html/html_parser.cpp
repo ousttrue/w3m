@@ -32,7 +32,7 @@
 HtmlParser::HtmlParser() {}
 
 void HtmlParser::HTMLlineproc1(const char *x, struct html_feed_environ *y) {
-  parseLine(x, y, true);
+  parse(x, y, true);
 }
 
 void HtmlParser::CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env) {
@@ -1401,11 +1401,11 @@ int HtmlParser::pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
     return 1;
   case HTML_N_SCRIPT:
     h_env->obuf.flag &= ~RB_SCRIPT;
-    h_env->obuf.end_tag = 0;
+    h_env->obuf.end_tag = HTML_UNKNOWN;
     return 1;
   case HTML_N_STYLE:
     h_env->obuf.flag &= ~RB_STYLE;
-    h_env->obuf.end_tag = 0;
+    h_env->obuf.end_tag = HTML_UNKNOWN;
     return 1;
   case HTML_A:
     return h_env->HTML_A_enter(tag);
@@ -1599,33 +1599,27 @@ static int need_flushline(struct html_feed_environ *h_env,
   return 0;
 }
 
-void HtmlParser::parseLine(std::string_view _line,
-                           struct html_feed_environ *h_env, bool internal) {
-  struct table *tbl = nullptr;
-  struct table_mode *tbl_mode = nullptr;
-  int tbl_width = 0;
+void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
+                       bool internal) {
 
   std::string __line{_line.begin(), _line.end()};
   auto line = __line.c_str();
 
+  TableStatus t;
+
 table_start:
   if (h_env->obuf.table_level >= 0) {
     int level = std::min<short>(h_env->obuf.table_level, MAX_TABLE - 1);
-    tbl = tables[level];
-    tbl_mode = &table_mode[level];
-    tbl_width = table_width(h_env, level);
+    t.tbl = tables[level];
+    t.tbl_mode = &table_mode[level];
+    t.tbl_width = table_width(h_env, level);
   }
 
   while (*line != '\0') {
     const char *str, *p;
     int is_tag = false;
-    int pre_mode = (h_env->obuf.table_level >= 0 && tbl_mode)
-                       ? tbl_mode->pre_mode
-                       : h_env->obuf.flag;
-    int end_tag = (h_env->obuf.table_level >= 0 && tbl_mode)
-                      ? tbl_mode->end_tag
-                      : h_env->obuf.end_tag;
-
+    auto pre_mode = t.pre_mode(h_env);
+    int end_tag = t.end_tag(h_env);
     if (*line == '<' || h_env->obuf.status != R_ST_NORMAL) {
       /*
        * Tag processing
@@ -1706,46 +1700,46 @@ table_start:
     }
 
   proc_normal:
-    if (h_env->obuf.table_level >= 0 && tbl && tbl_mode) {
+    if (t.is_active(h_env)) {
       /*
        * within table: in <table>..</table>, all input tokens
        * are fed to the table renderer, and then the renderer
        * makes HTML output.
        */
-      switch (tbl->feed_table(this, str, tbl_mode, tbl_width, internal)) {
+      switch (t.feed(this, str, internal)) {
       case 0:
         /* </table> tag */
         h_env->obuf.table_level--;
         if (h_env->obuf.table_level >= MAX_TABLE - 1)
           continue;
-        tbl->end_table();
+        t.tbl->end_table();
         if (h_env->obuf.table_level >= 0) {
-          struct table *tbl0 = tables[h_env->obuf.table_level];
+          auto tbl0 = tables[h_env->obuf.table_level];
           str = Sprintf("<table_alt tid=%d>", tbl0->ntable)->ptr;
           if (tbl0->row < 0)
             continue;
-          tbl0->pushTable(tbl);
-          tbl = tbl0;
-          tbl_mode = &table_mode[h_env->obuf.table_level];
-          tbl_width = table_width(h_env, h_env->obuf.table_level);
-          tbl->feed_table(this, str, tbl_mode, tbl_width, true);
+          tbl0->pushTable(t.tbl);
+          t.tbl = tbl0;
+          t.tbl_mode = &table_mode[h_env->obuf.table_level];
+          t.tbl_width = table_width(h_env, h_env->obuf.table_level);
+          t.feed(this, str, true);
           continue;
           /* continue to the next */
         }
         if (h_env->obuf.flag & RB_DEL)
           continue;
         /* all tables have been read */
-        if (tbl->vspace > 0 && !(h_env->obuf.flag & RB_IGNORE_P)) {
+        if (t.tbl->vspace > 0 && !(h_env->obuf.flag & RB_IGNORE_P)) {
           int indent = h_env->envs[h_env->envc].indent;
           h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
           h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
         }
         save_fonteffect(h_env);
         initRenderTable();
-        tbl->renderTable(this, tbl_width, h_env);
+        t.tbl->renderTable(this, t.tbl_width, h_env);
         restore_fonteffect(h_env);
         h_env->obuf.flag &= ~RB_IGNORE_P;
-        if (tbl->vspace > 0) {
+        if (t.tbl->vspace > 0) {
           int indent = h_env->envs[h_env->envc].indent;
           h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
           h_env->obuf.flag |= RB_IGNORE_P;

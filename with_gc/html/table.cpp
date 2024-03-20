@@ -1285,7 +1285,7 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
                          GeneralList<TextLine>::newGeneralList());
   parser->HTMLlineproc1("<center>", &henv);
-  parser->parseLine(this->caption->ptr, &henv, false);
+  parser->parse(this->caption->ptr, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);
 
   if (this->total_width < henv.obuf.maxlimit)
@@ -1293,7 +1293,7 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   limit = h_env->limit;
   h_env->limit = this->total_width;
   parser->HTMLlineproc1("<center>", h_env);
-  parser->parseLine(this->caption->ptr, h_env, false);
+  parser->parse(this->caption->ptr, h_env, false);
   parser->HTMLlineproc1("</center>", h_env);
   h_env->limit = limit;
 }
@@ -1709,7 +1709,7 @@ void table::begin_cell(struct table_mode *mode) {
   this->clearcontentssize(mode);
   mode->indent_level = 0;
   mode->nobr_level = 0;
-  mode->pre_mode = 0;
+  mode->pre_mode = {};
   this->indent = 0;
   this->flag |= TBL_IN_COL;
 
@@ -1881,7 +1881,7 @@ void table::table_close_select(HtmlParser *parser, struct table_mode *mode,
                                int width) {
   Str *tmp = parser->process_n_select();
   mode->pre_mode &= ~TBLM_INSELECT;
-  mode->end_tag = 0;
+  mode->end_tag = HTML_UNKNOWN;
   this->feed_table1(parser, tmp, mode, width);
 }
 
@@ -1889,14 +1889,14 @@ void table::table_close_textarea(HtmlParser *parser, struct table_mode *mode,
                                  int width) {
   Str *tmp = parser->process_n_textarea();
   mode->pre_mode &= ~TBLM_INTXTA;
-  mode->end_tag = 0;
+  mode->end_tag = HTML_UNKNOWN;
   this->feed_table1(parser, tmp, mode, width);
 }
 
 void table::table_close_anchor0(struct table_mode *mode) {
   if (!(mode->pre_mode & TBLM_ANCHOR))
     return;
-  mode->pre_mode &= ~TBLM_ANCHOR;
+  mode->pre_mode &= (ReadBufferFlags)~TBLM_ANCHOR;
   if (this->tabcontentssize == mode->anchor_offset) {
     this->check_minimum0(1);
     this->addcontentssize(1);
@@ -1951,7 +1951,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   if (mode->pre_mode & TBLM_PLAIN) {
     if (mode->end_tag == cmd) {
       mode->pre_mode &= ~TBLM_PLAIN;
-      mode->end_tag = 0;
+      mode->end_tag = {};
       this->feed_table_block_tag(line, mode, 0, cmd);
       return TAG_ACTION_NONE;
     }
@@ -1972,7 +1972,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   if (mode->pre_mode & TBLM_SCRIPT) {
     if (mode->end_tag == cmd) {
       mode->pre_mode &= ~TBLM_SCRIPT;
-      mode->end_tag = 0;
+      mode->end_tag = {};
       return TAG_ACTION_NONE;
     }
     return TAG_ACTION_PLAIN;
@@ -1980,7 +1980,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   if (mode->pre_mode & TBLM_STYLE) {
     if (mode->end_tag == cmd) {
       mode->pre_mode &= ~TBLM_STYLE;
-      mode->end_tag = 0;
+      mode->end_tag = {};
       return TAG_ACTION_NONE;
     }
     return TAG_ACTION_PLAIN;
@@ -3081,4 +3081,22 @@ void table::set_table_matrix(int width) {
     b = sigma_table_nw(width);
   }
   this->correct_table_matrix(0, size, width, b);
+}
+
+ReadBufferFlags TableStatus::pre_mode(html_feed_environ *h_env) {
+  return (h_env->obuf.table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode
+                                                    : h_env->obuf.flag;
+}
+
+HtmlCommand TableStatus::end_tag(html_feed_environ *h_env) {
+  return (h_env->obuf.table_level >= 0 && tbl_mode) ? tbl_mode->end_tag
+                                                    : h_env->obuf.end_tag;
+}
+
+bool TableStatus::is_active(html_feed_environ *h_env) {
+  return h_env->obuf.table_level >= 0 && tbl && tbl_mode;
+}
+
+int TableStatus::feed(HtmlParser *parser, const char *str, bool internal) {
+  return tbl->feed_table(parser, str, tbl_mode, tbl_width, internal);
 }

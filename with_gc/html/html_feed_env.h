@@ -75,7 +75,7 @@ struct html_feed_environ {
   }
 
   void parseLine(std::string_view istr, bool internal) {
-    parser.parseLine(istr, this, internal);
+    parser.parse(istr, this, internal);
   }
 
   void completeHTMLstream() { parser.completeHTMLstream(this); }
@@ -337,7 +337,7 @@ struct html_feed_environ {
     if (!(this->obuf.flag & RB_TITLE))
       return 1;
     this->obuf.flag &= ~RB_TITLE;
-    this->obuf.end_tag = 0;
+    this->obuf.end_tag = {};
     auto tmp = this->parser.process_n_title(tag);
     if (tmp)
       this->parser.HTMLlineproc1(tmp->ptr, this);
@@ -495,7 +495,7 @@ struct html_feed_environ {
       this->obuf.flag |= RB_IGNORE_P;
     }
     this->obuf.flag &= ~RB_PLAIN;
-    this->obuf.end_tag = 0;
+    this->obuf.end_tag = {};
     return 1;
   }
 
@@ -602,12 +602,11 @@ struct html_feed_environ {
       z = MAX_VSPACE;
     this->parser.tables[this->obuf.table_level] =
         table::begin_table(w, x, y, z);
-    this->parser.table_mode[this->obuf.table_level].pre_mode = 0;
+    this->parser.table_mode[this->obuf.table_level].pre_mode = {};
     this->parser.table_mode[this->obuf.table_level].indent_level = 0;
     this->parser.table_mode[this->obuf.table_level].nobr_level = 0;
     this->parser.table_mode[this->obuf.table_level].caption = 0;
-    this->parser.table_mode[this->obuf.table_level].end_tag =
-        0; /* HTML_UNKNOWN */
+    this->parser.table_mode[this->obuf.table_level].end_tag = HTML_UNKNOWN;
     this->parser.tables[this->obuf.table_level]->total_width = width;
     return 1;
   }
@@ -718,7 +717,7 @@ struct html_feed_environ {
 
   int HTML_SELECT_exit() {
     this->obuf.flag &= ~RB_INSELECT;
-    this->obuf.end_tag = 0;
+    this->obuf.end_tag = HTML_UNKNOWN;
     auto tmp = this->parser.process_n_select();
     if (tmp)
       this->parser.HTMLlineproc1(tmp->ptr, this);
@@ -738,7 +737,7 @@ struct html_feed_environ {
 
   int HTML_TEXTAREA_exit() {
     this->obuf.flag &= ~RB_INTXTA;
-    this->obuf.end_tag = 0;
+    this->obuf.end_tag = HTML_UNKNOWN;
     auto tmp = this->parser.process_n_textarea();
     if (tmp) {
       this->parser.HTMLlineproc1(tmp->ptr, this);

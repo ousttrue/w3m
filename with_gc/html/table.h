@@ -3,6 +3,7 @@
 #include "enum_template.h"
 #include "generallist.h"
 #include "textline.h"
+#include "readbuffer.h"
 #include <stdint.h>
 #include <memory>
 
@@ -72,13 +73,13 @@ struct table_linfo {
 };
 
 struct table_mode {
-  unsigned int pre_mode;
+  ReadBufferFlags pre_mode;
   char indent_level;
   char caption;
   short nobr_offset;
   char nobr_level;
   short anchor_offset;
-  unsigned char end_tag;
+  HtmlCommand end_tag;
 };
 
 enum TableWidthFlags {
@@ -246,7 +247,6 @@ private:
   (TBLM_PRE | TBLM_PRE_INT | TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN | TBLM_NOBR)
 #define TBLM_DEL RB_DEL
 #define TBLM_S RB_S
-#define TBLM_ANCHOR 0x1000000
 
 class HtmlParser;
 extern int visible_length(const char *str);
@@ -257,3 +257,14 @@ extern int minimum_length(char *line);
 inline int REAL_WIDTH(int w, int limit) {
   return (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100);
 }
+
+struct TableStatus {
+  table *tbl = nullptr;
+  table_mode *tbl_mode = nullptr;
+  int tbl_width = 0;
+
+  ReadBufferFlags pre_mode(html_feed_environ *h_env);
+  HtmlCommand end_tag(html_feed_environ *h_env);
+  bool is_active(html_feed_environ *h_env);
+  int feed(HtmlParser *parser, const char *str, bool internal);
+};
