@@ -19,6 +19,7 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
   auto res = std::make_shared<HttpResponse>();
 
   auto [hr, stream] = openURL(path, current, option, request);
+  assert(stream);
 
   // Directory Open ?
   // if (f.stream == nullptr) {

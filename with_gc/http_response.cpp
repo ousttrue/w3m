@@ -259,6 +259,8 @@ FILE *HttpResponse::createSourceFile() {
 
 void HttpResponse::page_loaded(Url url,
                                const std::shared_ptr<input_stream> &stream) {
+  assert(stream);
+                                
   const char *p;
   if ((p = this->getHeader("Content-Length:"))) {
     this->current_content_length = strtoclen(p);

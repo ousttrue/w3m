@@ -970,6 +970,7 @@ HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
 
   auto old = *layout->data._formitem;
   layout->data.clear();
+  layout->data.baseURL = currentUrl;
   layout->data.title = h_env->title;
 
   LineFeed feed(h_env->buf);

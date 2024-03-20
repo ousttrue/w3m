@@ -128,7 +128,7 @@ uncompressed_file_type(const std::string &path) {
   auto fn = Strnew(path);
   Strshrink(fn, slen);
   auto t0 = guessContentType(fn->ptr);
-  if (t0 == nullptr) {
+  if (t0.empty()) {
     t0 = "text/plain";
   }
   auto ext = filename_extension(fn->ptr, 0);

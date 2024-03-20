@@ -4,4 +4,4 @@
 extern std::string mimetypes_files;
 
 void initMimeTypes();
-const char *guessContentType(const char *filename);
+std::string guessContentType(std::string_view filename);

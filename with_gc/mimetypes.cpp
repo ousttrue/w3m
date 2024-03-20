@@ -97,15 +97,16 @@ void initMimeTypes() {
   }
 }
 
-static const char *guessContentTypeFromTable(struct table2 *table,
-                                             const char *filename) {
-  if (table == NULL)
-    return NULL;
-  auto p = &filename[strlen(filename) - 1];
+static std::string guessContentTypeFromTable(struct table2 *table,
+                                             std::string_view filename) {
+  if (table == NULL) {
+    return "";
+  }
+  auto p = &filename.back();
   while (filename < p && *p != '.')
     p--;
   if (p == filename)
-    return NULL;
+    return "";
   p++;
 
   for (auto t = table; t->item1; t++) {
@@ -116,16 +117,17 @@ static const char *guessContentTypeFromTable(struct table2 *table,
     if (!strcasecmp(p, t->item1))
       return t->item2;
   }
-  return NULL;
+  return "";
 }
 
-const char *guessContentType(const char *filename) {
-  if (!filename) {
+std::string guessContentType(std::string_view filename) {
+  if (filename.empty()) {
     return {};
   }
 
   for (size_t i = 0; i < mimetypes_list.size(); i++) {
-    if (auto ret = guessContentTypeFromTable(UserMimeTypes[i], filename)) {
+    auto ret = guessContentTypeFromTable(UserMimeTypes[i], filename);
+    if (ret.size()) {
       return ret;
     }
   }
