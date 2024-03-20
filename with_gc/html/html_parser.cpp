@@ -22,7 +22,6 @@
 #include "utf8.h"
 #include "stringtoken.h"
 
-#define MAX_CMD_LEN 128
 #define HR_ATTR_WIDTH_MAX 65535
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
@@ -75,38 +74,6 @@ Str *HtmlParser::getLinkNumberStr(int correction) const {
   return Sprintf("[%d]", cur_hseq + correction);
 }
 
-char *HtmlParser::has_hidden_link(struct readbuffer *obuf, int cmd) const {
-  Str *line = obuf->line;
-  struct link_stack *p;
-
-  if (Strlastchar(line) != '>')
-    return nullptr;
-
-  for (p = link_stack; p; p = p->next)
-    if (p->cmd == cmd)
-      break;
-  if (!p)
-    return nullptr;
-
-  if (obuf->pos == p->pos)
-    return line->ptr + p->offset;
-
-  return nullptr;
-}
-
-void HtmlParser::push_link(int cmd, int offset, int pos) {
-  auto p = (struct link_stack *)New(struct link_stack);
-  p->cmd = cmd;
-  p->offset = (short)offset;
-  if (p->offset < 0)
-    p->offset = 0;
-  p->pos = (short)pos;
-  if (p->pos < 0)
-    p->pos = 0;
-  p->next = link_stack;
-  link_stack = p;
-}
-
 void HtmlParser::push_tag(struct readbuffer *obuf, const char *cmdname,
                           int cmd) {
   obuf->tag_stack[obuf->tag_sp] = (struct cmdtable *)New(struct cmdtable);
@@ -114,13 +81,13 @@ void HtmlParser::push_tag(struct readbuffer *obuf, const char *cmdname,
   obuf->tag_stack[obuf->tag_sp]->cmd = cmd;
   obuf->tag_sp++;
   if (obuf->tag_sp >= TAG_STACK_SIZE || obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
-    obuf->append_tags(this);
+    obuf->append_tags();
   }
 }
 
 void HtmlParser::push_nchars(struct readbuffer *obuf, int width,
                              const char *str, int len, Lineprop mode) {
-  obuf->append_tags(this);
+  obuf->append_tags();
   Strcat_charp_n(obuf->line, str, len);
   obuf->pos += width;
   if (width > 0) {
@@ -144,7 +111,7 @@ void HtmlParser::check_breakpoint(struct readbuffer *obuf, int pre_mode,
                                   const char *ch) {
   int tlen, len = obuf->line->length;
 
-  obuf->append_tags(this);
+  obuf->append_tags();
   if (pre_mode)
     return;
   tlen = obuf->line->length - len;
@@ -200,78 +167,6 @@ void HtmlParser::push_render_image(Str *str, int width, int limit,
     flushline(h_env, indent, 0, h_env->limit);
 }
 
-int gethtmlcmd(const char **s) {
-  extern Hash_si tagtable;
-  char cmdstr[MAX_CMD_LEN];
-  const char *p = cmdstr;
-  const char *save = *s;
-  int cmd;
-
-  (*s)++;
-  /* first character */
-  if (IS_ALNUM(**s) || **s == '_' || **s == '/') {
-    *(char *)(p++) = TOLOWER(**s);
-    (*s)++;
-  } else
-    return HTML_UNKNOWN;
-  if (p[-1] == '/')
-    SKIP_BLANKS(*s);
-  while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
-    *(char *)(p++) = TOLOWER(**s);
-    (*s)++;
-  }
-  if (p - cmdstr == MAX_CMD_LEN) {
-    /* buffer overflow: perhaps caused by bad HTML source */
-    *s = save + 1;
-    return HTML_UNKNOWN;
-  }
-  *(char *)p = '\0';
-
-  /* hash search */
-  cmd = getHash_si(&tagtable, cmdstr, HTML_UNKNOWN);
-  while (**s && **s != '>')
-    (*s)++;
-  if (**s == '>')
-    (*s)++;
-  return cmd;
-}
-void HtmlParser::passthrough(struct readbuffer *obuf, char *str, int back) {
-  int cmd;
-  Str *tok = Strnew();
-
-  if (back) {
-    Str *str_save = Strnew_charp(str);
-    Strshrink(obuf->line, obuf->line->ptr + obuf->line->length - str);
-    str = str_save->ptr;
-  }
-  while (*str) {
-    auto str_bak = str;
-    stringtoken st(str);
-    auto token = st.sloppy_parse_line();
-    str = (char *)st.ptr();
-    if (token) {
-      const char *q = str_bak;
-      cmd = gethtmlcmd(&q);
-      if (back) {
-        struct link_stack *p;
-        for (p = link_stack; p; p = p->next) {
-          if (p->cmd == cmd) {
-            link_stack = p->next;
-            break;
-          }
-        }
-        back = 0;
-      } else {
-        Strcat(tok, *token);
-        push_tag(obuf, tok->ptr, cmd);
-        Strclear(tok);
-      }
-    } else {
-      push_nchars(obuf, 0, str_bak, str - str_bak, obuf->prev_ctype);
-    }
-  }
-}
-
 void HtmlParser::fillline(struct readbuffer *obuf, int indent) {
   this->push_spaces(obuf, 1, indent - obuf->pos);
   obuf->flag &= ~RB_NFLUSHED;
@@ -295,16 +190,16 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
     h_env->obuf.pos--;
   }
 
-  h_env->obuf.append_tags(this);
+  h_env->obuf.append_tags();
 
   auto obuf = &h_env->obuf;
   if (obuf->anchor.url.size()) {
-    hidden = hidden_anchor = has_hidden_link(obuf, HTML_A);
+    hidden = hidden_anchor = obuf->has_hidden_link(HTML_A);
   }
 
   char *hidden_img = nullptr;
   if (obuf->img_alt) {
-    if ((hidden_img = has_hidden_link(obuf, HTML_IMG_ALT))) {
+    if ((hidden_img = obuf->has_hidden_link(HTML_IMG_ALT))) {
       if (!hidden || hidden_img < hidden)
         hidden = hidden_img;
     }
@@ -312,7 +207,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   char *hidden_input = nullptr;
   if (obuf->input_alt.in) {
-    if ((hidden_input = has_hidden_link(obuf, HTML_INPUT_ALT))) {
+    if ((hidden_input = obuf->has_hidden_link(HTML_INPUT_ALT))) {
       if (!hidden || hidden_input < hidden) {
         hidden = hidden_input;
       }
@@ -321,7 +216,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   char *hidden_bold = nullptr;
   if (obuf->fontstat.in_bold) {
-    if ((hidden_bold = has_hidden_link(obuf, HTML_B))) {
+    if ((hidden_bold = obuf->has_hidden_link(HTML_B))) {
       if (!hidden || hidden_bold < hidden) {
         hidden = hidden_bold;
       }
@@ -330,7 +225,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   char *hidden_italic = nullptr;
   if (obuf->fontstat.in_italic) {
-    if ((hidden_italic = has_hidden_link(obuf, HTML_I))) {
+    if ((hidden_italic = obuf->has_hidden_link(HTML_I))) {
       if (!hidden || hidden_italic < hidden) {
         hidden = hidden_italic;
       }
@@ -339,7 +234,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   char *hidden_under = nullptr;
   if (obuf->fontstat.in_under) {
-    if ((hidden_under = has_hidden_link(obuf, HTML_U))) {
+    if ((hidden_under = obuf->has_hidden_link(HTML_U))) {
       if (!hidden || hidden_under < hidden) {
         hidden = hidden_under;
       }
@@ -348,7 +243,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   char *hidden_strike = nullptr;
   if (obuf->fontstat.in_strike) {
-    if ((hidden_strike = has_hidden_link(obuf, HTML_S))) {
+    if ((hidden_strike = obuf->has_hidden_link(HTML_S))) {
       if (!hidden || hidden_strike < hidden) {
         hidden = hidden_strike;
       }
@@ -357,7 +252,7 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
 
   char *hidden_ins = nullptr;
   if (obuf->fontstat.in_ins) {
-    if ((hidden_ins = has_hidden_link(obuf, HTML_INS))) {
+    if ((hidden_ins = obuf->has_hidden_link(HTML_INS))) {
       if (!hidden || hidden_ins < hidden) {
         hidden = hidden_ins;
       }
@@ -538,10 +433,10 @@ void HtmlParser::flushline(struct html_feed_environ *h_env, int indent,
   obuf->flag &= ~RB_NFLUSHED;
   obuf->set_breakpoint(0);
   obuf->prev_ctype = PC_ASCII;
-  link_stack = nullptr;
+  obuf->link_stack = nullptr;
   fillline(obuf, indent);
   if (pass)
-    passthrough(obuf, pass->ptr, 0);
+    obuf->passthrough(this, pass->ptr, 0);
   if (!hidden_anchor && obuf->anchor.url.size()) {
     Str *tmp;
     if (obuf->anchor.hseq > 0)
@@ -622,8 +517,8 @@ int HtmlParser::close_effect0(struct readbuffer *obuf, int cmd) {
     memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1],
            (obuf->tag_sp - i) * sizeof(struct cmdtable *));
     return 1;
-  } else if ((p = this->has_hidden_link(obuf, cmd)) != nullptr) {
-    this->passthrough(obuf, p, 1);
+  } else if ((p = obuf->has_hidden_link(cmd)) != nullptr) {
+    obuf->passthrough(this, p, 1);
     return 1;
   }
   return 0;
@@ -646,7 +541,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
       is_erased = 1;
     }
 
-    if (i >= 0 || (p = has_hidden_link(obuf, HTML_A))) {
+    if (i >= 0 || (p = obuf->has_hidden_link(HTML_A))) {
       if (obuf->anchor.hseq > 0) {
         this->HTMLlineproc1(ANSP, h_env);
         set_space_to_prevchar(obuf->prevchar);
@@ -656,7 +551,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
           memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1],
                  (obuf->tag_sp - i) * sizeof(struct cmdtable *));
         } else {
-          passthrough(obuf, p, 1);
+          obuf->passthrough(this, p, 1);
         }
         obuf->anchor = {};
         return;
@@ -2426,7 +2321,7 @@ table_start:
         int indent = h_env->envs[h_env->envc].indent;
         if (h_env->obuf.bp.pos - i > indent) {
           Str *line;
-          h_env->obuf.append_tags(this); /* may reallocate the buffer */
+          h_env->obuf.append_tags(); /* may reallocate the buffer */
           bp = h_env->obuf.line->ptr + h_env->obuf.bp.len;
           line = Strnew_charp(bp);
           Strshrink(h_env->obuf.line,

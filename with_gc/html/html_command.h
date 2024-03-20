@@ -181,3 +181,5 @@ enum HtmlCommand : int {
 
   MAX_HTMLTAG = 185,
 };
+
+HtmlCommand gethtmlcmd(const char **s);

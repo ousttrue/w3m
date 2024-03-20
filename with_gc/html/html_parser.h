@@ -9,13 +9,6 @@
 struct Str;
 struct HtmlTag;
 
-struct link_stack {
-  int cmd = 0;
-  short offset = 0;
-  short pos = 0;
-  link_stack *next = nullptr;
-};
-
 using FeedFunc = Str *(*)();
 
 class LineFeed {
@@ -47,11 +40,6 @@ class HtmlParser {
   struct table *tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(struct html_feed_environ *h_env, int table_level);
-
-  // link
-  struct link_stack *link_stack = nullptr;
-  char *has_hidden_link(struct readbuffer *obuf, int cmd) const;
-  void passthrough(struct readbuffer *obuf, char *str, int back);
 
   // title
   Str *pre_title = nullptr;
@@ -135,7 +123,6 @@ public:
                     int indent, int indent_incr, int width);
 
 public:
-  void push_link(int cmd, int offset, int pos);
   int cur_hseq = 1;
 
   // HTML processing first pass

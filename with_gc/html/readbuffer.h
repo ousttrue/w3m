@@ -128,6 +128,13 @@ struct cmdtable {
   int cmd;
 };
 
+struct link_stack {
+  int cmd = 0;
+  short offset = 0;
+  short pos = 0;
+  link_stack *next = nullptr;
+};
+
 struct readbuffer {
   Str *line;
   Lineprop cprop = 0;
@@ -153,6 +160,7 @@ struct readbuffer {
   int tag_sp = 0;
   short top_margin = 0;
   short bottom_margin = 0;
+  struct link_stack *link_stack = nullptr;
 
   readbuffer();
 
@@ -188,7 +196,12 @@ struct readbuffer {
     }
   }
 
-  void append_tags(class HtmlParser *parser);
+  void append_tags();
+
+  // link
+  void push_link(int cmd, int offset, int pos);
+  char *has_hidden_link(int cmd) const;
+  void passthrough(class HtmlParser *parser, char *str, int back);
 };
 
 Str *romanNumeral(int n);

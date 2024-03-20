@@ -15,8 +15,10 @@
 #include "textline.h"
 #include "html_tag.h"
 #include "proc.h"
+#include "stringtoken.h"
 #include <math.h>
 #include <string_view>
+#include "html_parser.h"
 
 int squeezeBlankLine = false;
 bool pseudoInlines = true;
@@ -731,7 +733,20 @@ void readbuffer::set_breakpoint(int tag_length) {
   this->bp.init_flag = 0;
 }
 
-void readbuffer::append_tags(HtmlParser *parser) {
+void readbuffer::push_link(int cmd, int offset, int pos) {
+  auto p = (struct link_stack *)New(struct link_stack);
+  p->cmd = cmd;
+  p->offset = (short)offset;
+  if (p->offset < 0)
+    p->offset = 0;
+  p->pos = (short)pos;
+  if (p->pos < 0)
+    p->pos = 0;
+  p->next = link_stack;
+  link_stack = p;
+}
+
+void readbuffer::append_tags() {
   int len = this->line->length;
   bool set_bp = false;
   for (int i = 0; i < this->tag_sp; i++) {
@@ -742,7 +757,7 @@ void readbuffer::append_tags(HtmlParser *parser) {
     case HTML_U:
     case HTML_I:
     case HTML_S:
-      parser->push_link(this->tag_stack[i]->cmd, this->line->length, this->pos);
+      this->push_link(this->tag_stack[i]->cmd, this->line->length, this->pos);
       break;
     }
     Strcat_charp(this->line, this->tag_stack[i]->cmdname);
@@ -758,5 +773,60 @@ void readbuffer::append_tags(HtmlParser *parser) {
   this->tag_sp = 0;
   if (set_bp) {
     this->set_breakpoint(this->line->length - len);
+  }
+}
+
+char *readbuffer::has_hidden_link(int cmd) const {
+  Str *line = this->line;
+  if (Strlastchar(line) != '>')
+    return nullptr;
+
+  struct link_stack *p;
+  for (p = link_stack; p; p = p->next)
+    if (p->cmd == cmd)
+      break;
+  if (!p)
+    return nullptr;
+
+  if (this->pos == p->pos)
+    return line->ptr + p->offset;
+
+  return nullptr;
+}
+
+void readbuffer::passthrough(HtmlParser *parser, char *str, int back) {
+  int cmd;
+  Str *tok = Strnew();
+
+  if (back) {
+    Str *str_save = Strnew_charp(str);
+    Strshrink(this->line, this->line->ptr + this->line->length - str);
+    str = str_save->ptr;
+  }
+  while (*str) {
+    auto str_bak = str;
+    stringtoken st(str);
+    auto token = st.sloppy_parse_line();
+    str = (char *)st.ptr();
+    if (token) {
+      const char *q = str_bak;
+      cmd = gethtmlcmd(&q);
+      if (back) {
+        struct link_stack *p;
+        for (p = link_stack; p; p = p->next) {
+          if (p->cmd == cmd) {
+            link_stack = p->next;
+            break;
+          }
+        }
+        back = 0;
+      } else {
+        Strcat(tok, *token);
+        parser->push_tag(this, tok->ptr, cmd);
+        Strclear(tok);
+      }
+    } else {
+      parser->push_nchars(this, 0, str_bak, str - str_bak, this->prev_ctype);
+    }
   }
 }

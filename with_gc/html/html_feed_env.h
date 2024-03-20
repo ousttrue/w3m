@@ -534,7 +534,7 @@ struct html_feed_environ {
 
   int HTML_PRE_INT_enter() {
     int i = this->obuf.line->length;
-    this->obuf.append_tags(&this->parser);
+    this->obuf.append_tags();
     if (!(this->obuf.flag & RB_SPECIAL)) {
       this->obuf.set_breakpoint(this->obuf.line->length - i);
     }

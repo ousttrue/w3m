@@ -38,6 +38,7 @@ with_gc_lib = static_library(
         'html/tagtable.cpp',
         'html/html_parser.cpp',
         'html/html_quote.cpp',
+        'html/html_command.cpp',
         'Str.cpp',
         'regex.cpp',
         'generallist.cpp',
