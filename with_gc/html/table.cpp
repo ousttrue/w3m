@@ -12,7 +12,6 @@
 #include <string.h>
 #include <math.h>
 #include "table.h"
-#include "html.h"
 #include "html_tag.h"
 #include "Str.h"
 #include "myctype.h"
@@ -2430,13 +2429,13 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     if (anchor) {
       this->check_rowcol(mode);
       if (i == 0) {
-        Str *tmp = parser->process_anchor(tag, line);
+        auto tmp = parser->process_anchor(tag, line);
         if (displayLinkNumber) {
           Str *t = parser->getLinkNumberStr(-1);
           this->feed_table_inline_tag(NULL, mode, t->length);
-          Strcat(tmp, t);
+          tmp += t->ptr;
         }
-        this->pushdata(this->row, this->col, tmp->ptr);
+        this->pushdata(this->row, this->col, tmp.c_str());
       } else
         this->pushdata(this->row, this->col, line);
       if (i >= 0) {
@@ -2604,7 +2603,7 @@ int table::feed_table(HtmlParser *parser, const char *line,
       case TAG_ACTION_FEED:
       default:
         if (tag->parsedtag_need_reconstruct()) {
-          line = tag->parsedtag2str()->ptr;
+          line = Strnew(tag->parsedtag2str())->ptr;
         }
       }
     } else {

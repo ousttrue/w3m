@@ -19,6 +19,7 @@
 #include "table.h"
 #include "utf8.h"
 #include "stringtoken.h"
+#include <sstream>
 
 #define HR_ATTR_WIDTH_MAX 65535
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
@@ -973,15 +974,16 @@ img_end:
   return tmp;
 }
 
-Str *HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
-                                const char *tagbuf) {
+std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
+                                       const char *tagbuf) {
   if (tag->parsedtag_need_reconstruct()) {
     tag->parsedtag_set_value(ATTR_HSEQ, Sprintf("%d", this->cur_hseq++)->ptr);
     return tag->parsedtag2str();
   } else {
-    Str *tmp = Sprintf("<a hseq=\"%d\"", this->cur_hseq++);
-    Strcat_charp(tmp, tagbuf + 2);
-    return tmp;
+    std::stringstream tmp;
+    tmp << Sprintf("<a hseq=\"%d\"", this->cur_hseq++)->ptr;
+    tmp << (tagbuf + 2);
+    return tmp.str();
   }
 }
 
@@ -1768,7 +1770,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       if (pushHtmlTag(tag, h_env) == 0) {
         /* preserve the tag for second-stage processing */
         if (tag->parsedtag_need_reconstruct())
-          h_env->tagbuf = tag->parsedtag2str();
+          h_env->tagbuf = Strnew(tag->parsedtag2str());
         h_env->obuf.push_tag(h_env->tagbuf->ptr, cmd);
       }
       h_env->obuf.bp.init_flag = 1;

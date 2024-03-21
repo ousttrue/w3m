@@ -522,7 +522,7 @@ struct html_feed_environ {
     if (hseq == 0 && this->obuf.anchor.url.size()) {
       this->obuf.anchor.hseq = this->parser.cur_hseq;
       auto tmp = this->parser.process_anchor(tag, this->tagbuf->ptr);
-      this->obuf.push_tag(tmp->ptr, HTML_A);
+      this->obuf.push_tag(tmp.c_str(), HTML_A);
       return 1;
     }
     return 0;

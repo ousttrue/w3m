@@ -122,7 +122,7 @@ public:
   Str *getLinkNumberStr(int correction) const;
 
   Str *process_img(const std::shared_ptr<HtmlTag> &tag, int width);
-  Str *process_anchor(const std::shared_ptr<HtmlTag> &tag, const char *tagbuf);
+  std::string process_anchor(const std::shared_ptr<HtmlTag> &tag, const char *tagbuf);
   Str *process_input(const std::shared_ptr<HtmlTag> &tag);
   Str *process_button(const std::shared_ptr<HtmlTag> &tag);
   Str *process_n_button();

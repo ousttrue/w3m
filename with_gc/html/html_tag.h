@@ -79,7 +79,6 @@ enum HtmlTagAttr {
   MAX_TAGATTR = 75,
 };
 
-struct Str;
 struct HtmlTag {
   HtmlCommand tagid = {};
   unsigned char *attrid = {};
@@ -106,6 +105,6 @@ public:
 
   bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
   bool parsedtag_set_value(HtmlTagAttr id, char *value);
-  Str *parsedtag2str() const;
+  std::string parsedtag2str() const;
   int ul_type(int default_type) const;
 };
