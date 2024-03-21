@@ -8,8 +8,8 @@
 #include "table.h"
 #include "alloc.h"
 #include "textline.h"
+#include <sstream>
 
-#define AFLG_INT 1
 #define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))
 
 #define TFLG_END 1
@@ -17,17 +17,19 @@
 
 /* HTML Tag Attribute Information Table */
 
-#define VTYPE_NONE 0
-#define VTYPE_STR 1
-#define VTYPE_NUMBER 2
-#define VTYPE_LENGTH 3
-#define VTYPE_ALIGN 4
-#define VTYPE_VALIGN 5
-#define VTYPE_ACTION 6
-#define VTYPE_ENCTYPE 7
-#define VTYPE_METHOD 8
-#define VTYPE_MLENGTH 9
-#define VTYPE_TYPE 10
+enum ValueType {
+  VTYPE_NONE = 0,
+  VTYPE_STR = 1,
+  VTYPE_NUMBER = 2,
+  VTYPE_LENGTH = 3,
+  VTYPE_ALIGN = 4,
+  VTYPE_VALIGN = 5,
+  VTYPE_ACTION = 6,
+  VTYPE_ENCTYPE = 7,
+  VTYPE_METHOD = 8,
+  VTYPE_MLENGTH = 9,
+  VTYPE_TYPE = 10,
+};
 
 /* Define HTML Tag Infomation Table */
 
@@ -314,9 +316,10 @@ TagInfo TagMAP[MAX_HTMLTAG] = {
     {"/div_int", NULL, 0, TFLG_INT | TFLG_END},    /* 184 HTML_N_DIV_INT      */
 };
 
+#define AFLG_INT 1
 struct TagAttrInfo {
   const char *name;
-  unsigned char vtype;
+  ValueType vtype;
   unsigned char flag;
 };
 TagAttrInfo AttrMAP[MAX_TAGATTR] = {
@@ -399,12 +402,45 @@ TagAttrInfo AttrMAP[MAX_TAGATTR] = {
     {"pre_int", VTYPE_NONE, AFLG_INT},          /* 74 ATTR_PRE_INT        */
 };
 
-static int noConv(char *, char **);
-static int toNumber(char *, int *);
-static int toLength(char *, int *);
-static int toVAlign(char *, int *);
-
-/* *INDENT-OFF* */
+static int noConv(char *oval, char **str) {
+  *str = oval;
+  return 1;
+}
+static int toNumber(char *oval, int *num) {
+  char *ep;
+  int x = strtol(oval, &ep, 10);
+  if (ep > oval) {
+    *num = x;
+    return 1;
+  } else {
+    return 0;
+  }
+}
+static int toLength(char *oval, int *len) {
+  if (!IS_DIGIT(oval[0]))
+    return 0;
+  int w = atoi(oval);
+  if (w < 0)
+    return 0;
+  if (w == 0)
+    w = 1;
+  if (oval[strlen(oval) - 1] == '%')
+    *len = -w;
+  else
+    *len = w;
+  return 1;
+}
+static int toVAlign(char *oval, int *valign) {
+  if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
+    *valign = VALIGN_TOP;
+  else if (strcasecmp(oval, "bottom") == 0)
+    *valign = VALIGN_BOTTOM;
+  else if (strcasecmp(oval, "middle") == 0)
+    *valign = VALIGN_MIDDLE;
+  else
+    return 0;
+  return 1;
+}
 using toValFuncType = int (*)(char *, int *);
 static toValFuncType toValFunc[] = {
     (toValFuncType)noConv, /* VTYPE_NONE    */
@@ -421,53 +457,6 @@ static toValFuncType toValFunc[] = {
     (toValFuncType)noConv, /* VTYPE_MLENGTH */
     (toValFuncType)noConv, /* VTYPE_TYPE    */
 };
-/* *INDENT-ON* */
-
-static int noConv(char *oval, char **str) {
-  *str = oval;
-  return 1;
-}
-
-static int toNumber(char *oval, int *num) {
-  char *ep;
-  int x;
-
-  x = strtol(oval, &ep, 10);
-
-  if (ep > oval) {
-    *num = x;
-    return 1;
-  } else
-    return 0;
-}
-
-static int toLength(char *oval, int *len) {
-  int w;
-  if (!IS_DIGIT(oval[0]))
-    return 0;
-  w = atoi(oval);
-  if (w < 0)
-    return 0;
-  if (w == 0)
-    w = 1;
-  if (oval[strlen(oval) - 1] == '%')
-    *len = -w;
-  else
-    *len = w;
-  return 1;
-}
-
-static int toVAlign(char *oval, int *valign) {
-  if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
-    *valign = VALIGN_TOP;
-  else if (strcasecmp(oval, "bottom") == 0)
-    *valign = VALIGN_BOTTOM;
-  else if (strcasecmp(oval, "middle") == 0)
-    *valign = VALIGN_MIDDLE;
-  else
-    return 0;
-  return 1;
-}
 
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
@@ -650,19 +639,20 @@ bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
 std::string HtmlTag::parsedtag2str() const {
   int tag_id = this->tagid;
   int nattr = TagMAP[tag_id].max_attribute;
-  Str *tagstr = Strnew();
-  Strcat_char(tagstr, '<');
-  Strcat_charp(tagstr, TagMAP[tag_id].name);
+  std::stringstream tagstr;
+  tagstr << '<';
+  tagstr << TagMAP[tag_id].name;
   for (int i = 0; i < nattr; i++) {
     if (this->attrid[i] != ATTR_UNKNOWN) {
-      Strcat_char(tagstr, ' ');
-      Strcat_charp(tagstr, AttrMAP[this->attrid[i]].name);
-      if (this->value[i])
-        Strcat(tagstr, Sprintf("=\"%s\"", html_quote(this->value[i])));
+      tagstr << ' ';
+      tagstr << AttrMAP[this->attrid[i]].name;
+      if (this->value[i]) {
+        tagstr << "=\"" << html_quote(this->value[i]) << "\"";
+      }
     }
   }
-  Strcat_char(tagstr, '>');
-  return tagstr->ptr;
+  tagstr << '>';
+  return tagstr.str();
 }
 
 int HtmlTag::ul_type(int default_type) const {
