@@ -1535,7 +1535,7 @@ void HtmlParser::proc_escape(struct readbuffer *obuf, const char **str_return) {
   int n_add = *str_return - str;
   Lineprop mode = PC_ASCII;
 
-  if (ech < 0) {
+  if (ech == -1) {
     *str_return = str;
     obuf->proc_mchar(obuf->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
     return;

@@ -64,9 +64,6 @@ void Line::_update() const {
 
 int Line::form_update_line(std::string_view str, int spos, int epos, int width,
                            int newline, int password) {
-  if(str.size()){
-    auto a=0;
-  }
   int c_len = 1;
   int c_width = 1;
   int w = 0;
