@@ -17,10 +17,13 @@ cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
 gc_dep = dependency('gc', default_options: ['default_library=static'])
-ssl_dep = subproject('openssl').get_variable('openssl_dep')
+ssl_dep = subproject(
+    'openssl',
+    default_options: ['default_library=static'],
+).get_variable('openssl_dep')
 nkf_dep = dependency('nkf')
 lua_dep = dependency('lua')
-libuv_dep = dependency('libuv')
+libuv_dep = dependency('libuv', default_options: ['default_library=static'])
 zlib_dep = dependency('zlib', default_options: ['default_library=static'])
 screen_dep = dependency('ftxui-screen')
 dom_dep = dependency('ftxui-dom')

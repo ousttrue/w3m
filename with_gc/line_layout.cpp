@@ -1,11 +1,8 @@
 #include "line_layout.h"
-#include "Str.h"
 #include "myctype.h"
 #include "url.h"
 #include "html/form.h"
 #include "html/form_item.h"
-#include "regex.h"
-#include "alloc.h"
 #include "utf8.h"
 
 LineLayout::LineLayout() {}
@@ -302,55 +299,6 @@ std::string LineLayout::getCurWord(int *spos, int *epos) const {
   return {p + b, p + e};
 }
 
-/* mark URL-like patterns as anchors */
-static const char *url_like_pat[] = {
-    "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/=\\-]",
-    "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-    "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
-    "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
-#endif
-#ifdef INET6
-    "https?://[a-zA-Z0-9:%\\-\\./"
-    "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
-    "?=~_\\&+@#,\\$;]*",
-    "ftp://[a-zA-Z0-9:%\\-\\./"
-    "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-#endif /* INET6 */
-    nullptr};
-// void LineLayout::chkURLBuffer() {
-//   for (int i = 0; url_like_pat[i]; i++) {
-//     this->data.reAnchor(topLine(), url_like_pat[i]);
-//   }
-//   this->check_url = true;
-// }
-
-// void LineLayout::reshape(int width) {
-//   if (!this->data.need_reshape) {
-//     return;
-//   }
-//   // this->data.need_reshape = false;
-//   // this->width = width;
-//   //
-//   // this->height = App::instance().LASTLINE() + 1;
-//   // if (!empty() && !sbuf.empty()) {
-//   //   const Line *cur = sbuf.currentLine();
-//   //   this->pos = sbuf.pos;
-//   //   this->cursorRow(sbuf.linenumber(cur));
-//   //   int n = cursor.row - (sbuf.linenumber(cur) - sbuf._topLine);
-//   //   if (n) {
-//   //     this->_topLine += n;
-//   //     this->cursorRow(sbuf.linenumber(cur));
-//   //   }
-//   //   this->currentColumn = sbuf.currentColumn;
-//   //   this->arrangeCursor();
-//   // }
-//   // if (this->check_url) {
-//   //   this->chkURLBuffer();
-//   // }
-//   // this->formResetBuffer(sbuf.data._formitem.get());
-// }
-
 Anchor *LineLayout::retrieveCurrentAnchor() {
   if (!this->currentLine() || !this->data._href)
     return NULL;
@@ -511,88 +459,6 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
   this->visual = backup;
 }
 
-// class ActiveAnchorDrawer {
-//
-//   Screen *_screen;
-//   RowCol _root;
-//   LineLayout *_layout;
-//
-// public:
-//   ActiveAnchorDrawer(Screen *screen, const RowCol &root, LineLayout *layout)
-//       : _screen(screen), _root(root), _layout(layout) {}
-//
-//   void drawAnchorCursor() {
-//     int hseq = -1;
-//     auto an = _layout->retrieveCurrentAnchor();
-//     if (an) {
-//       hseq = an->hseq;
-//     }
-//     int tline = _layout->linenumber(_layout->topLine);
-//     int eline = tline + _layout->LINES;
-//     int prevhseq = _layout->data._hmarklist->prevhseq;
-//
-//     if (_layout->data._href) {
-//       this->drawAnchorCursor0(_layout->data._href.get(), hseq, prevhseq,
-//       tline,
-//                               eline, true);
-//       this->drawAnchorCursor0(_layout->data._href.get(), hseq, -1, tline,
-//       eline,
-//                               false);
-//     }
-//     if (_layout->data._formitem) {
-//       this->drawAnchorCursor0(_layout->data._formitem.get(), hseq, prevhseq,
-//                               tline, eline, true);
-//       this->drawAnchorCursor0(_layout->data._formitem.get(), hseq, -1, tline,
-//                               eline, false);
-//     }
-//     _layout->data._hmarklist->prevhseq = hseq;
-//   }
-//
-// private:
-//   template <typename T>
-//   void drawAnchorCursor0(AnchorList<T> *al, int hseq, int prevhseq, int
-//   tline,
-//                          int eline, int active) {
-//     auto l = _layout->topLine;
-//     for (size_t j = 0; j < al->size(); j++) {
-//       auto an = &al->anchors[j];
-//       if (an->start.line < tline)
-//         continue;
-//       if (an->start.line >= eline)
-//         return;
-//       for (;; ++l) {
-//         if (_layout->isNull(l))
-//           return;
-//         if (_layout->linenumber(l) == an->start.line)
-//           break;
-//       }
-//       if (hseq >= 0 && an->hseq == hseq) {
-//         int start_pos = an->start.pos;
-//         int end_pos = an->end.pos;
-//         for (int i = an->start.pos; i < an->end.pos; i++) {
-//           if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
-//             if (active)
-//               l->propBuf[i] |= PE_ACTIVE;
-//             else
-//               l->propBuf[i] &= ~PE_ACTIVE;
-//           }
-//         }
-//         if (active && start_pos < end_pos) {
-//           _screen->redrawLineRegion(_root, _layout, l,
-//                                     _layout->linenumber(l) - tline +
-//                                     _root.row, start_pos, end_pos);
-//         }
-//       } else if (prevhseq >= 0 && an->hseq == prevhseq) {
-//         if (active) {
-//           _screen->redrawLineRegion(_root, _layout, l,
-//                                     _layout->linenumber(l) - tline +
-//                                     _root.row, an->start.pos, an->end.pos);
-//         }
-//       }
-//     }
-//   }
-// };
-
 void LineLayout::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
 }
@@ -668,41 +534,6 @@ void LineLayout::addmch(const RowCol &pos, const Utf8 &utf8, ScreenFlags mode) {
   pixel.bold = (int)(mode & ScreenFlags::BOLD);
   pixel.underlined = (int)(mode & ScreenFlags::UNDERLINE);
 }
-
-// std::string LineLayout::str(const RowCol &root, LineLayout *layout) {
-//   // draw lines
-//   int i = 0;
-//   int height = box_.y_max - box_.y_min + 1;
-//   int width = box_.x_max - box_.x_min + 1;
-//   for (auto l = layout->_scroll.row;
-//        i < height && l < (int)layout->data.lines.size(); ++i, ++l) {
-//     auto pixel = this->redrawLine(
-//         {
-//             .row = i + root.row,
-//             .col = root.col,
-//         },
-//         l, width, layout->_scroll.col);
-//     this->clrtoeolx(pixel);
-//   }
-//   // clear remain
-//   this->clrtobotx({
-//       .row = i + root.row,
-//       .col = 0,
-//   });
-//   // cline = layout->_topLine;
-//   // ccolumn = layout->currentColumn;
-//
-//   // highlight active anchor
-//   // if (!layout->empty() && layout->data._hmarklist) {
-//   //   if (layout->data._href || layout->data._formitem) {
-//   //     class ActiveAnchorDrawer d(this, root, layout);
-//   //     d.drawAnchorCursor();
-//   //   }
-//   // }
-//
-//   // toStr
-//   return this->_screen->ToString();
-// }
 
 void LineLayout::Render(ftxui::Screen &screen) {
   //
@@ -852,92 +683,3 @@ RowCol LineLayout::redrawLine(RowCol pixel, int _l, int cols, int scrollLeft) {
   }
   return pixel;
 }
-
-// int LineLayout::redrawLineRegion(const RowCol &root, LineLayout *layout, Line
-// *l,
-//                              int i, int bpos, int epos) {
-//   int j, pos, rcol, ncol, delta = 1;
-//   int column = layout->currentColumn;
-//   int bcol, ecol;
-//
-//   if (l == NULL)
-//     return 0;
-//   pos = l->columnPos(column);
-//   auto p = &(l->lineBuf[pos]);
-//   auto pr = &(l->propBuf[pos]);
-//   rcol = l->bytePosToColumn(pos);
-//   bcol = bpos - pos;
-//   ecol = epos - pos;
-//
-//   for (j = 0; rcol - column < layout->COLS && pos + j < l->len(); j += delta)
-//   {
-//     delta = get_mclen(&p[j]);
-//     ncol = l->bytePosToColumn(pos + j + delta);
-//     if (ncol - column > layout->COLS)
-//       break;
-//     if (j >= bcol && j < ecol) {
-//       if (rcol < column) {
-//         RowCol pixel{.row = i, .col = root.col};
-//         for (rcol = column; rcol < ncol; rcol++) {
-//           this->addch(pixel, ' ');
-//           ++pixel.col;
-//         }
-//         continue;
-//       }
-//       RowCol pixel{.row = i, .col = rcol - column + root.col};
-//       if (p[j] == '\t') {
-//         for (; rcol < ncol; rcol++) {
-//           this->addch(pixel, ' ');
-//           ++pixel.col;
-//         }
-//       } else
-//         pixel = this->addnstr(pixel, &p[j], delta);
-//     }
-//     rcol = ncol;
-//   }
-//   if (somode) {
-//     somode = false;
-//     this->standend();
-//   }
-//   if (ulmode) {
-//     ulmode = false;
-//     this->underlineend();
-//   }
-//   if (bomode) {
-//     bomode = false;
-//     this->boldend();
-//   }
-//   if (emph_mode) {
-//     emph_mode = false;
-//     this->boldend();
-//   }
-//
-//   if (anch_mode) {
-//     anch_mode = false;
-//     this->underlineend();
-//   }
-//   if (imag_mode) {
-//     imag_mode = false;
-//     this->standend();
-//   }
-//   if (form_mode) {
-//     form_mode = false;
-//     this->standend();
-//   }
-//   if (visited_mode) {
-//     visited_mode = false;
-//   }
-//   if (active_mode) {
-//     active_mode = false;
-//     this->boldend();
-//   }
-//   if (mark_mode) {
-//     mark_mode = false;
-//     this->standend();
-//   }
-//   if (graph_mode) {
-//     graph_mode = false;
-//     this->graphend();
-//   }
-//   return rcol - column;
-// }

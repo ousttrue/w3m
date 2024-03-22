@@ -24,13 +24,12 @@
 #include "history.h"
 #include <iostream>
 #include <sstream>
-// #include <uv.h>
 #include <chrono>
 #include <algorithm>
 
-#include "ftxui/component/component.hpp" // for Slider, Renderer, Vertical
+#include "ftxui/component/component.hpp"          // for Renderer
 #include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive, Component
-#include "ftxui/dom/elements.hpp" // for text, Decorator, focus, focusCursorBar, focusCursorBarBlinking, focusCursorBlock, focusCursorBlockBlinking, focusCursorUnderline, focusCursorUnderlineBlinking, hbox, Element
+#include "ftxui/dom/elements.hpp"
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -49,31 +48,6 @@ const char *CurrentCmdData;
 int prec_num = 0;
 bool on_target = true;
 #define PREC_LIMIT 10000
-
-// static void sig_chld(int signo) {
-//   int p_stat;
-//   pid_t pid;
-//
-//   while ((pid = waitpid(-1, &p_stat, WNOHANG)) > 0) {
-//     DownloadList *d;
-//
-//     if (WIFEXITED(p_stat)) {
-//       for (d = FirstDL; d != nullptr; d = d->next) {
-//         if (d->pid == pid) {
-//           d->err = WEXITSTATUS(p_stat);
-//           break;
-//         }
-//       }
-//     }
-//   }
-//   mySignal(SIGCHLD, sig_chld);
-//   return;
-// }
-
-// static void SigPipe(SIGNAL_ARG) {
-//   mySignal(SIGPIPE, SigPipe);
-//   SIGNAL_RETURN;
-// }
 
 static GC_warn_proc orig_GC_warn_proc = nullptr;
 #define GC_WARN_KEEP_MAX (20)
@@ -128,10 +102,6 @@ static void *die_oom(size_t bytes) {
    */
   return nullptr;
 }
-
-// uv_tty_t g_tty_in;
-// uv_signal_t g_signal_resize;
-// uv_timer_t g_timer;
 
 App::App() {
 
@@ -615,14 +585,7 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
   keyData.insert({f, s});
 }
 
-WSADATA wsaData;
 bool App::initialize() {
-  // Initialize Winsock
-  int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
-  if (iResult != 0) {
-    printf("WSAStartup failed: %d\n", iResult);
-    return 1;
-  }
 
   init_rc();
 

@@ -206,11 +206,6 @@ public:
   void standend(void) { CurrentMode &= ~ScreenFlags::STANDOUT; }
 
   RowCol redrawLine(RowCol pixel, int l, int cols, int scrollLeft);
-  // int redrawLineRegion(const RowCol &root, LineLayout *layout, Line *l, int
-  // i,
-  //                      int bpos, int epos);
-
-  // std::string str(const RowCol &root, LineLayout *layout);
 };
 
 inline void nextChar(int &s, const Line *l) { s++; }
