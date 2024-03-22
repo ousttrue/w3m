@@ -17,7 +17,7 @@ cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
 gc_dep = dependency('gc', default_options: ['default_library=static'])
-ssl_dep = dependency('openssl')
+ssl_dep = subproject('openssl').get_variable('openssl_dep')
 nkf_dep = dependency('nkf')
 lua_dep = dependency('lua')
 libuv_dep = dependency('libuv')
