@@ -7,6 +7,12 @@ project(
     ],
 )
 
+add_project_arguments(
+    '-DNOMINMAX',
+    '-D_USE_MATH_DEFINES',
+    language: 'cpp',
+)
+
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
@@ -26,8 +32,10 @@ deps = [
     lua_dep,
     libuv_dep,
     zlib_dep,
+    # ftxui
     screen_dep,
     dom_dep,
+    component_dep,
 ]
 if host_machine.system() != 'windows'
     m_dep = cc.find_library('m', required: false)

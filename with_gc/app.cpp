@@ -24,9 +24,13 @@
 #include "history.h"
 #include <iostream>
 #include <sstream>
-#include <uv.h>
+// #include <uv.h>
 #include <chrono>
 #include <algorithm>
+
+#include "ftxui/component/component.hpp" // for Slider, Renderer, Vertical
+#include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive, Component
+#include "ftxui/dom/elements.hpp" // for text, Decorator, focus, focusCursorBar, focusCursorBarBlinking, focusCursorBlock, focusCursorBlockBlinking, focusCursorUnderline, focusCursorUnderlineBlinking, hbox, Element
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -125,9 +129,9 @@ static void *die_oom(size_t bytes) {
   return nullptr;
 }
 
-uv_tty_t g_tty_in;
-uv_signal_t g_signal_resize;
-uv_timer_t g_timer;
+// uv_tty_t g_tty_in;
+// uv_signal_t g_signal_resize;
+// uv_timer_t g_timer;
 
 App::App() {
 
@@ -441,7 +445,7 @@ App::App() {
       {},
   };
 
-  uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
+  // uv_tty_init(uv_default_loop(), &g_tty_in, 0, 1);
 
   //
   // process
@@ -611,7 +615,15 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
   keyData.insert({f, s});
 }
 
+WSADATA wsaData;
 bool App::initialize() {
+  // Initialize Winsock
+  int iResult = WSAStartup(MAKEWORD(2, 2), &wsaData);
+  if (iResult != 0) {
+    printf("WSAStartup failed: %d\n", iResult);
+    return 1;
+  }
+
   init_rc();
 
   if (BookmarkFile.empty()) {
@@ -637,23 +649,23 @@ bool App::initialize() {
  * Initialize routine.
  */
 void App::beginRawMode(void) {
-  if (!_fmInitialized) {
-    // initscr();
-    uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
-    // term_raw();
-    // term_noecho();
-    _fmInitialized = true;
-  }
+  // if (!_fmInitialized) {
+  //   // initscr();
+  //   uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
+  //   // term_raw();
+  //   // term_noecho();
+  //   _fmInitialized = true;
+  // }
 }
 
 void App::endRawMode(void) {
-  if (_fmInitialized) {
-    CurrentTab->currentBuffer()->layout->clrtoeolx(
-        {.row = LASTLINE(), .col = 0});
-    // _screen->print();
-    uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
-    _fmInitialized = false;
-  }
+  // if (_fmInitialized) {
+  //   CurrentTab->currentBuffer()->layout->clrtoeolx(
+  //       {.row = LASTLINE(), .col = 0});
+  //   // _screen->print();
+  //   uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
+  //   _fmInitialized = false;
+  // }
 }
 
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
@@ -715,55 +727,83 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   prev_pos = buf->layout->cursorPos();
 }
 
-static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
-                         uv_buf_t *buf) {
-  *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
-}
+// static void alloc_buffer(uv_handle_t *handle, size_t suggested_size,
+//                          uv_buf_t *buf) {
+//   *buf = uv_buf_init((char *)malloc(suggested_size), suggested_size);
+// }
 
 int App::mainLoop() {
-  App::instance().beginRawMode();
+  // App::instance().beginRawMode();
+  _fmInitialized = true;
   onResize();
 
+  // //
+  // // stdin tty read
+  // //
+  // uv_read_start((uv_stream_t *)&g_tty_in, &alloc_buffer,
+  //               [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
+  //                 if (nread < 0) {
+  //                   if (nread == UV_EOF) {
+  //                     // end of file
+  //                     uv_close((uv_handle_t *)&g_tty_in, NULL);
+  //                   }
+  //                 } else if (nread > 0) {
+  //                   // process key input
+  //                   App::instance().dispatch(buf->base, nread);
+  //                 }
   //
-  // stdin tty read
+  //                 // OK to free buffer as write_data copies it.
+  //                 if (buf->base) {
+  //                   free(buf->base);
+  //                 }
+  //               });
   //
-  uv_read_start((uv_stream_t *)&g_tty_in, &alloc_buffer,
-                [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-                  if (nread < 0) {
-                    if (nread == UV_EOF) {
-                      // end of file
-                      uv_close((uv_handle_t *)&g_tty_in, NULL);
-                    }
-                  } else if (nread > 0) {
-                    // process key input
-                    App::instance().dispatch(buf->base, nread);
-                  }
+  // //
+  // // SIGWINCH
+  // //
+  // uv_signal_init(uv_default_loop(), &g_signal_resize);
+  // uv_signal_start(
+  //     &g_signal_resize,
+  //     [](uv_signal_t *handle, int signum) { App::instance().onResize(); },
+  //     SIGWINCH);
+  //
+  // //
+  // // timer
+  // //
+  // uv_timer_init(uv_default_loop(), &g_timer);
+  // uv_timer_start(
+  //     &g_timer, [](uv_timer_t *handle) { App::instance().onFrame(); }, 0,
+  //     FRAME_INTERVAL_MS.count());
+  //
+  // uv_run(uv_default_loop(), UV_RUN_DEFAULT);
+  // uv_loop_close(uv_default_loop());
 
-                  // OK to free buffer as write_data copies it.
-                  if (buf->base) {
-                    free(buf->base);
-                  }
-                });
+  using namespace ftxui;
 
-  //
-  // SIGWINCH
-  //
-  uv_signal_init(uv_default_loop(), &g_signal_resize);
-  uv_signal_start(
-      &g_signal_resize,
-      [](uv_signal_t *handle, int signum) { App::instance().onResize(); },
-      SIGWINCH);
+  auto screen = ScreenInteractive::Fullscreen();
 
-  //
-  // timer
-  //
-  uv_timer_init(uv_default_loop(), &g_timer);
-  uv_timer_start(
-      &g_timer, [](uv_timer_t *handle) { App::instance().onFrame(); }, 0,
-      FRAME_INTERVAL_MS.count());
+  auto r = Renderer([this] { return this->dom(); });
 
-  uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-  uv_loop_close(uv_default_loop());
+  auto component = CatchEvent(r, [&](Event event) {
+    onFrame();
+
+    // if (event == Event::Character('q')) {
+    //   screen.ExitLoopClosure()();
+    //   return true;
+    // }
+
+    if (event.is_character()) {
+      // && !std::isdigit(event.character()[0]);
+      auto c = event.character();
+      dispatchPtyIn(c.c_str(), c.size());
+      return true;
+    }
+
+    return false;
+  });
+
+  screen.Loop(component);
+
   return 0;
 }
 
@@ -819,9 +859,9 @@ void App::exit(int) {
   // App::instance().exit(0);
   // stop libuv
   // exit(i);
-  uv_read_stop((uv_stream_t *)&g_tty_in);
-  uv_signal_stop(&g_signal_resize);
-  uv_timer_stop(&g_timer);
+  // uv_read_stop((uv_stream_t *)&g_tty_in);
+  // uv_signal_stop(&g_signal_resize);
+  // uv_timer_stop(&g_timer);
 }
 
 int App::searchKeyNum() {
@@ -1029,7 +1069,7 @@ void App::onFrame() {
     buf->layout->visual = visual;
   }
 
-  display();
+  // display();
 }
 
 static void cursor(const RowCol p) {

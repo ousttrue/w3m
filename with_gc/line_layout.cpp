@@ -749,6 +749,14 @@ void LineLayout::Render(ftxui::Screen &screen) {
       screen.PixelAt(x + col, y + row) = p;
     }
   }
+
+  auto cursor = visual.cursor();
+  auto scroll = visual.scroll();
+  screen.SetCursor(ftxui::Screen::Cursor{
+      .x = x + cursor.col - scroll.col,
+      .y = y + cursor.row - scroll.row,
+      .shape = ftxui::Screen::Cursor::Shape::Block,
+  });
 }
 
 static ScreenFlags propToFlag(Lineprop prop) {
