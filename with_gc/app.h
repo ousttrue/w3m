@@ -138,8 +138,6 @@ public:
     _dispatcher.push(dispatcher);
   }
   void onFrame();
-  void cursor(const RowCol &pos);
-  void display();
   ftxui::Element dom();
   ftxui::Element tabs();
   void task(int sec, const std::string &cmd, const char *data = nullptr,
@@ -179,8 +177,6 @@ public:
 
   void refresh_message();
 
-  void showProgress(long long *linelen, long long *trbyte,
-                    long long current_content_length);
   std::string make_lastline_link(const std::shared_ptr<Buffer> &buf,
                                  const char *title, const char *url);
   // std::string make_lastline_message(const std::shared_ptr<Buffer> &buf);
