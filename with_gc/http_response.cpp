@@ -131,7 +131,7 @@ void HttpResponse::pushHeader(const Url &url, Str *lineBuf2) {
              (!strncasecmp(lineBuf2->ptr, "Set-Cookie:", 11) ||
               !strncasecmp(lineBuf2->ptr, "Set-Cookie2:", 12))) {
 
-    process_http_cookie(&url, lineBuf2);
+    process_http_cookie(&url, lineBuf2->ptr);
 
   } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
              url.scheme == SCM_LOCAL_CGI) {

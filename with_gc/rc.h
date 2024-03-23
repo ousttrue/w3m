@@ -33,7 +33,6 @@ extern int WrapDefault;
 
 extern std::string BookmarkFile;
 extern struct auth_cookie *Auth_cookie;
-extern struct Cookie *First_cookie;
 extern int no_rc_dir;
 extern std::string config_file;
 extern int is_redisplay;

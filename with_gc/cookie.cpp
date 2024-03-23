@@ -7,7 +7,6 @@
  *   [DRAFT 12]
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
-#include <fcntl.h>
 
 #include "cookie.h"
 #include "app.h"
@@ -28,11 +27,34 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <gc_cpp.h>
+// #include <fcntl.h>
+#include <time.h>
 #ifdef _MSC_VER
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <io.h>
 #endif
+
+struct Cookie : public gc_cleanup {
+  Url url = {};
+  std::string name;
+  std::string value;
+  time_t expires = {};
+  std::string path;
+  std::string domain;
+  std::string comment = {};
+  std::string commentURL = {};
+  struct portlist *portl = {};
+  char version = {};
+  CookieFlags flag = {};
+  Cookie *next = {};
+
+  std::string make_cookie() const { return name + '=' + value; }
+  bool match_cookie(const Url &pu, const char *domainname) const;
+};
+
+struct Cookie *First_cookie = nullptr;
 
 #define COO_OVERRIDE_OK 32 /* flag to specify that an error is overridable */
 /* version 0 refers to the original cookie_spec.html */
@@ -291,16 +313,16 @@ static void check_expired_cookies(void) {
   }
 }
 
-static struct Cookie *get_cookie_info(Str *domain, Str *path, Str *name) {
+static struct Cookie *get_cookie_info(Str *domain, Str *path,
+                                      std::string_view name) {
   for (auto p = First_cookie; p; p = p->next) {
-    if (p->domain == domain->ptr && p->path == path->ptr &&
-        p->name == name->ptr)
+    if (p->domain == domain->ptr && p->path == path->ptr && p->name == name)
       return p;
   }
   return {};
 }
 
-Str *find_cookie(const Url &pu) {
+std::optional<std::string> find_cookie(const Url &pu) {
   Str *tmp;
   struct Cookie *p, *p1, *fco = NULL;
   int version = 0;
@@ -325,7 +347,7 @@ Str *find_cookie(const Url &pu) {
   }
 
   if (!fco)
-    return NULL;
+    return {};
 
   tmp = Strnew();
   if (version > 0)
@@ -344,7 +366,7 @@ Str *find_cookie(const Url &pu) {
         Strcat(tmp, Sprintf("; $Port=\"%s\"", portlist2str(p1->portl)->ptr));
     }
   }
-  return tmp;
+  return std::string(tmp->ptr);
 }
 
 static bool check_avoid_wrong_number_of_dots_domain(Str *domain) {
@@ -363,9 +385,9 @@ static bool check_avoid_wrong_number_of_dots_domain(Str *domain) {
   }
 }
 
-int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
-               Str *domain, Str *path, CookieFlags flag, Str *comment,
-               int version, Str *port, Str *commentURL) {
+int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
+               Str *domain, Str *path, CookieFlags flag, std::string_view comment,
+               int version, Str *port, std::string_view commentURL) {
   struct Cookie *p;
   std::string domainname = (version == 0) ? FQDN(pu->host.c_str()) : pu->host;
   Str *odomain = domain;
@@ -463,15 +485,15 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
   }
 
   p->url = *pu;
-  p->name = name->ptr;
+  p->name = name;
   p->value = value->ptr;
   p->expires = expires;
   p->domain = domain->ptr;
   p->path = path->ptr;
-  p->comment = comment->ptr;
+  p->comment = comment;
   p->version = version;
   p->portl = portlist;
-  p->commentURL = commentURL->ptr;
+  p->commentURL = commentURL;
 
   if (flag & COO_SECURE)
     p->flag = (CookieFlags)(p->flag | COO_SECURE);
@@ -783,13 +805,10 @@ const char *violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"};
 
-void process_http_cookie(const Url *pu, Str *lineBuf2) {
-  Str *name = Strnew();
+void process_http_cookie(const Url *pu, std::string_view lineBuf2) {
   Str *value = Strnew();
   Str *domain = NULL;
   Str *path = NULL;
-  Str *comment = NULL;
-  Str *commentURL = NULL;
   Str *port = NULL;
   Str *tmp2;
   int version;
@@ -799,11 +818,11 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
 
   const char *q = {};
   const char *p = {};
-  if (lineBuf2->ptr[10] == '2') {
-    p = lineBuf2->ptr + 12;
+  if (lineBuf2[10] == '2') {
+    p = lineBuf2.data() + 12;
     version = 1;
   } else {
-    p = lineBuf2->ptr + 11;
+    p = lineBuf2.data() + 11;
     version = 0;
   }
 
@@ -812,9 +831,12 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
 #endif /* DEBUG */
 
   SKIP_BLANKS(p);
+  std::string name;
   while (*p != '=' && !IS_ENDT(*p))
-    Strcat_char(name, *(p++));
-  Strremovetrailingspaces(name);
+    name += *(p++);
+  while (name.size() && IS_SPACE(name.back())) {
+    name.pop_back();
+  }
   if (*p == '=') {
     p++;
     SKIP_BLANKS(p);
@@ -829,6 +851,8 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
     if (q)
       Strshrink(value, p - q - 1);
   }
+  std::string comment;
+  std::string commentURL;
   while (*p == ';') {
     p++;
     SKIP_BLANKS(p);
@@ -846,7 +870,7 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
     } else if (matchattr(p, "secure", 6, NULL)) {
       flag = (CookieFlags)(flag | COO_SECURE);
     } else if (matchattr(p, "comment", 7, &tmp2)) {
-      comment = tmp2;
+      comment = tmp2->ptr;
     } else if (matchattr(p, "version", 7, &tmp2)) {
       version = atoi(tmp2->ptr);
     } else if (matchattr(p, "port", 4, &tmp2)) {
@@ -854,7 +878,7 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
       port = tmp2;
     } else if (matchattr(p, "commentURL", 10, &tmp2)) {
       /* version 1, Set-Cookie2 */
-      commentURL = tmp2;
+      commentURL = tmp2->ptr;
     } else if (matchattr(p, "discard", 7, NULL)) {
       /* version 1, Set-Cookie2 */
       flag = (CookieFlags)(flag | COO_DISCARD);
@@ -866,14 +890,14 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
       p++;
     }
   }
-  if (pu && name->length > 0) {
+  if (pu && name.size() > 0) {
     int err;
     if (show_cookie) {
       if (flag & COO_SECURE)
         App::instance().disp_message_nsec("Received a secured cookie", 1, true);
       else
         App::instance().disp_message_nsec(
-            Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr, 1,
+            Sprintf("Received cookie: %s=%s", name.c_str(), value->ptr)->ptr, 1,
             true);
     }
     err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
@@ -911,7 +935,7 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
           App::instance().disp_message_nsec(emsg, 1, true);
       } else if (show_cookie)
         App::instance().disp_message_nsec(
-            Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)
+            Sprintf("Accepting invalid cookie: %s=%s", name.c_str(), value->ptr)
                 ->ptr,
             1, true);
     }

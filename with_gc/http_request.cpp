@@ -137,14 +137,14 @@ std::string HttpRequest::to_Str() const {
     tmp << i;
   }
 
-  Str *cookie = {};
+  std::optional<std::string> cookie;
   if (this->method != HttpMethod::CONNECT && use_cookie &&
-      (cookie = find_cookie(url))) {
+      (cookie = find_cookie(url)) && cookie->size()) {
     tmp << "Cookie: ";
-    tmp << cookie->ptr;
+    tmp << *cookie;
     tmp << "\r\n";
     /* [DRAFT 12] s. 10.1 */
-    if (cookie->ptr[0] != '$') {
+    if ((*cookie)[0] != '$') {
       tmp << "Cookie2: $Version=\"1\"\r\n";
     }
   }
