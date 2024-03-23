@@ -9,9 +9,8 @@
 #include "html/html_tag.h"
 #include "linklist.h"
 #include "url_quote.h"
-#include "regex.h"
-#include "app.h"
 #include "alloc.h"
+#include <sstream>
 
 bool MarkAllPages = false;
 

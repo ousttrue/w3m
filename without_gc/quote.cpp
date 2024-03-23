@@ -468,3 +468,16 @@ std::string expandPath(std::string_view name) {
 
   return {name.begin(), name.end()};
 }
+
+unsigned int total_dot_number(std::string_view v, unsigned int max_count) {
+  unsigned int count = 0;
+  for (auto c : v) {
+    if (count >= max_count) {
+      break;
+    }
+    if (c == '.') {
+      count++;
+    }
+  }
+  return count;
+}

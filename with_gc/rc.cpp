@@ -20,7 +20,6 @@
 #include "proc.h"
 #include "keyvalue.h"
 #include "local_cgi.h"
-#include "regex.h"
 #include "mailcap.h"
 #include "Str.h"
 #include <stdio.h>

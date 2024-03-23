@@ -9,19 +9,13 @@
  */
 
 #include "cookie.h"
-// #include "app.h"
 #include "quote.h"
 #include "html/html_quote.h"
 #include "matchattr.h"
-// #include "rc.h"
 #include "alloc.h"
-// #include "http_request.h"
-// #include "http_session.h"
 #include "keyvalue.h"
-// #include "local_cgi.h"
 #include "regex.h"
 #include "myctype.h"
-// #include "proc.h"
 #include "Str.h"
 #include "dns_order.h"
 #include <time.h>
@@ -94,8 +88,6 @@ std::list<std::string> Cookie_accept_domains;
 std::list<std::string> Cookie_avoid_wrong_number_of_dots_domains;
 
 static bool is_saved = 1;
-
-#define contain_no_dots(p, ep) (total_dot_number((p), (ep), 1) == 0)
 
 #ifdef INET6
 #ifdef _MSC_VER
@@ -172,58 +164,33 @@ static const char *FQDN(const char *host) {
 #endif /* INET6 */
 }
 
-static unsigned int total_dot_number(const char *p, const char *ep,
-                                     unsigned int max_count) {
-  unsigned int count = 0;
-  if (!ep)
-    ep = p + strlen(p);
-
-  for (; p < ep && count < max_count; p++) {
-    if (*p == '.')
-      count++;
-  }
-  return count;
-}
-
-// static int domain_match(const char *pat, const char *domain) {
-//   if (domain == NULL)
-//     return 0;
-//   if (*pat == '.')
-//     pat++;
-//   for (;;) {
-//     if (!strcasecmp(pat, domain))
-//       return 1;
-//     domain = strchr(domain, '.');
-//     if (domain == NULL)
-//       return 0;
-//     domain++;
-//   }
-// }
-
-const char *domain_match(const char *host, const char *domain) {
-  int m0, m1;
+/// if match, return host.substr
+static std::optional<std::string_view> domain_match(std::string_view host,
+                                                    std::string_view _domain) {
+  // std::string host(_host.begin(), _host.end());
+  std::string domain(_domain.begin(), _domain.end());
 
   /* [RFC 2109] s. 2, "domain-match", case 1
    * (both are IP and identical)
    */
   regexCompile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", 0);
-  m0 = regexMatch(host, -1, 1);
-  m1 = regexMatch(domain, -1, 1);
+  auto m0 = regexMatch(host.data(), host.size(), 1);
+  auto m1 = regexMatch(domain.c_str(), -1, 1);
   if (m0 && m1) {
-    if (strcasecmp(host, domain) == 0)
+    if (strcasecmp(host, domain.c_str()) == 0)
       return host;
   } else if (!m0 && !m1) {
     int offset;
-    const char *domain_p;
     /*
      * "." match all domains (w3m only),
      * and ".local" match local domains ([DRAFT 12] s. 2)
      */
-    if (strcasecmp(domain, ".") == 0 || strcasecmp(domain, ".local") == 0) {
-      offset = strlen(host);
-      domain_p = &host[offset];
-      if (domain[1] == '\0' || contain_no_dots(host, domain_p))
-        return domain_p;
+    if (strcasecmp(domain.c_str(), ".") == 0 ||
+        strcasecmp(domain.c_str(), ".local") == 0) {
+      offset = host.size();
+      auto domain_p = &host[offset];
+      if (domain[1] == '\0' || contain_no_dots({host.data(), domain_p}))
+        return host.substr(offset);
     }
     /*
      * special case for domainName = .hostName
@@ -234,22 +201,20 @@ const char *domain_match(const char *host, const char *domain) {
     }
     /* [RFC 2109] s. 2, cases 2, 3 */
     else {
-      offset = (domain[0] != '.') ? 0 : strlen(host) - strlen(domain);
-      domain_p = &host[offset];
-      if (offset >= 0 && strcasecmp(domain_p, domain) == 0)
-        return domain_p;
+      offset = (domain[0] != '.') ? 0 : host.size() - domain.size();
+      auto domain_p = &host[offset];
+      if (offset >= 0 && strcasecmp(domain_p, domain.c_str()) == 0)
+        return host.substr(offset);
     }
   }
-  return NULL;
+  return {};
 }
 
-static struct portlist *make_portlist(Str *port) {
-  struct portlist *first = NULL, *pl;
-  char *p;
+static struct portlist *make_portlist(std::string_view port) {
+  struct portlist *first = NULL;
   Str *tmp = Strnew();
-
-  p = port->ptr;
-  while (*p) {
+  auto p = port.begin();
+  while (p != port.end()) {
     while (*p && !IS_DIGIT(*p))
       p++;
     Strclear(tmp);
@@ -257,7 +222,7 @@ static struct portlist *make_portlist(Str *port) {
       Strcat_char(tmp, *(p++));
     if (tmp->length == 0)
       break;
-    pl = (struct portlist *)New(struct portlist);
+    auto pl = (struct portlist *)New(struct portlist);
     pl->port = atoi(tmp->ptr);
     pl->next = first;
     first = pl;
@@ -310,10 +275,11 @@ static void check_expired_cookies(void) {
   }
 }
 
-static struct Cookie *get_cookie_info(Str *domain, Str *path,
+static struct Cookie *get_cookie_info(std::string_view domain,
+                                      std::string_view path,
                                       std::string_view name) {
   for (auto p = First_cookie; p; p = p->next) {
-    if (p->domain == domain->ptr && p->path == path->ptr && p->name == name)
+    if (p->domain == domain && p->path == path && p->name == name)
       return p;
   }
   return {};
@@ -366,10 +332,10 @@ std::optional<std::string> find_cookie(const Url &pu) {
   return std::string(tmp->ptr);
 }
 
-static bool check_avoid_wrong_number_of_dots_domain(Str *domain) {
+static bool check_avoid_wrong_number_of_dots_domain(std::string_view domain) {
   bool avoid_wrong_number_of_dots_domain = false;
   for (auto &tl : Cookie_avoid_wrong_number_of_dots_domains) {
-    if (domain_match(domain->ptr, tl.c_str())) {
+    if (domain_match(domain, tl)) {
       avoid_wrong_number_of_dots_domain = true;
       break;
     }
@@ -382,14 +348,15 @@ static bool check_avoid_wrong_number_of_dots_domain(Str *domain) {
   }
 }
 
-int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
-               Str *domain, Str *path, CookieFlags flag,
-               std::string_view comment, int version, Str *port,
-               std::string_view commentURL) {
+int add_cookie(const Url *pu, std::string_view name, std::string_view value,
+               time_t expires, std::string_view domain, std::string_view _path,
+               CookieFlags flag, std::string_view comment, int version,
+               std::string_view port, std::string_view commentURL) {
   struct Cookie *p;
   std::string domainname = (version == 0) ? FQDN(pu->host.c_str()) : pu->host;
-  Str *odomain = domain;
-  Str *opath = path;
+  std::string odomain(domain.begin(), domain.end());
+  std::string path(_path.begin(), _path.end());
+  std::string opath = path;
   struct portlist *portlist = NULL;
   int use_security = !(flag & COO_OVERRIDE);
 
@@ -397,38 +364,24 @@ int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
   if (!((err) & COO_OVERRIDE_OK) || use_security)                              \
   return (err)
 
-#ifdef DEBUG
-  fprintf(stderr, "host: [%s, %s] %d\n", pu->host, pu->file, flag);
-  fprintf(stderr, "cookie: [%s=%s]\n", name->ptr, value->ptr);
-  fprintf(stderr, "expires: [%s]\n", asctime(gmtime(&expires)));
-  if (domain)
-    fprintf(stderr, "domain: [%s]\n", domain->ptr);
-  if (path)
-    fprintf(stderr, "path: [%s]\n", path->ptr);
-  fprintf(stderr, "version: [%d]\n", version);
-  if (port)
-    fprintf(stderr, "port: [%s]\n", port->ptr);
-#endif /* DEBUG */
   /* [RFC 2109] s. 4.3.2 case 2; but this (no request-host) shouldn't happen */
   if (domainname.empty()) {
     return COO_ENODOT;
   }
 
-  if (domain) {
-    const char *dp;
+  if (domain.size()) {
     /* [DRAFT 12] s. 4.2.2 (does not apply in the case that
      * host name is the same as domain attribute for version 0
      * cookie)
      * I think that this rule has almost the same effect as the
      * tail match of [NETSCAPE].
      */
-    if (domain->ptr[0] != '.' && (version > 0 || domainname != domain->ptr))
-      domain = Sprintf(".%s", domain->ptr);
+    if (domain[0] != '.' && (version > 0 || domainname != domain))
+      domain = std::string(".") + std::string(domain.begin(), domain.end());
 
     if (version == 0) {
       /* [NETSCAPE] rule */
-      unsigned int n =
-          total_dot_number(domain->ptr, domain->ptr + domain->length, 3);
+      unsigned int n = total_dot_number(domain, 3);
       if (n < 2) {
         if (!check_avoid_wrong_number_of_dots_domain(domain)) {
           COOKIE_ERROR(COO_ESPECIAL);
@@ -436,39 +389,40 @@ int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
       }
     } else {
       /* [DRAFT 12] s. 4.3.2 case 2 */
-      if (strcasecmp(domain->ptr, ".local") != 0 &&
-          contain_no_dots(&domain->ptr[1], &domain->ptr[domain->length]))
+      if (strcasecmp(domain, ".local") != 0 &&
+          contain_no_dots(domain.substr(1)))
         COOKIE_ERROR(COO_ENODOT);
     }
 
     /* [RFC 2109] s. 4.3.2 case 3 */
-    if (!(dp = domain_match(domainname.c_str(), domain->ptr)))
+    std::optional<std::string> dp;
+    if (!(dp = domain_match(domainname, domain)))
       COOKIE_ERROR(COO_EDOM);
     /* [RFC 2409] s. 4.3.2 case 4 */
     /* Invariant: dp contains matched domain */
-    if (version > 0 && !contain_no_dots(domainname.c_str(), dp))
+    if (version > 0 && !contain_no_dots({domainname.c_str(), dp->data()}))
       COOKIE_ERROR(COO_EBADHOST);
   }
-  if (path) {
+  if (path.size()) {
     /* [RFC 2109] s. 4.3.2 case 1 */
-    if (version > 0 && !pu->file.starts_with(path->ptr))
+    if (version > 0 && !pu->file.starts_with(path))
       COOKIE_ERROR(COO_EPATH);
   }
-  if (port) {
+  if (port.size()) {
     /* [DRAFT 12] s. 4.3.2 case 5 */
     portlist = make_portlist(port);
     if (portlist && !port_match(portlist, pu->port))
       COOKIE_ERROR(COO_EPORT);
   }
 
-  if (!domain)
-    domain = Strnew(domainname);
-  if (!path) {
-    path = Strnew(pu->file);
-    while (path->length > 0 && Strlastchar(path) != '/')
-      Strshrink(path, 1);
-    if (Strlastchar(path) == '/')
-      Strshrink(path, 1);
+  if (domain.empty()) {
+    domain = domainname;
+  }
+  if (path.empty()) {
+    path = pu->file;
+    while (path.size() && path.back() != '/') {
+      path.pop_back();
+    }
   }
 
   p = get_cookie_info(domain, path, name);
@@ -484,10 +438,10 @@ int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
 
   p->url = *pu;
   p->name = name;
-  p->value = value->ptr;
+  p->value = value;
   p->expires = expires;
-  p->domain = domain->ptr;
-  p->path = path->ptr;
+  p->domain = domain;
+  p->path = path;
   p->comment = comment;
   p->version = version;
   p->portl = portlist;
@@ -498,12 +452,12 @@ int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
   else
     p->flag = (CookieFlags)(p->flag & ~COO_SECURE);
 
-  if (odomain)
+  if (odomain.size())
     p->flag = (CookieFlags)(p->flag | COO_DOMAIN);
   else
     p->flag = (CookieFlags)(p->flag & ~COO_DOMAIN);
 
-  if (opath)
+  if (opath.size())
     p->flag = (CookieFlags)(p->flag | COO_PATH);
   else
     p->flag = (CookieFlags)(p->flag & ~COO_PATH);
@@ -624,7 +578,7 @@ void load_cookies(const std::string &cookie_file) {
     cookie->comment = readcol(&str)->ptr;
     if (!*str)
       break;
-    cookie->portl = make_portlist(readcol(&str));
+    cookie->portl = make_portlist(readcol(&str)->ptr);
     if (!*str)
       break;
     cookie->commentURL = readcol(&str)->ptr;
@@ -645,7 +599,6 @@ void initCookie(const std::string &cookie_file) {
 }
 
 std::string cookie_list_panel() {
-  /* FIXME: gettextize? */
   Str *src = Strnew_charp("<html><head><title>Cookies</title></head>"
                           "<body><center><b>Cookies</b></center>"
                           "<p><form method=internal action=cookie>");

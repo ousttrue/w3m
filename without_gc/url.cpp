@@ -128,7 +128,7 @@ void Url::parse(const char *__src, std::optional<Url> current) {
 
 analyze_url:
   q = p;
-#ifdef INET6
+
   if (*q == '[') { /* rfc2732,rfc2373 compliance */
     p++;
     while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
@@ -136,7 +136,7 @@ analyze_url:
     if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == nullptr))
       p = q;
   }
-#endif
+
   while (*p && strchr(":/@?#", *p) == nullptr)
     p++;
   switch (*p) {

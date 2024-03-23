@@ -1,6 +1,5 @@
 #include "buffer.h"
 #include "keyvalue.h"
-#include "regex.h"
 #include "url_quote.h"
 #include "linein.h"
 #include "symbol.h"

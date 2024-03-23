@@ -33,7 +33,7 @@ enum CookieFlags {
   COO_DISCARD = 16,
   COO_EPORT = 9, /* Port match failed (version 1' case 5) */
   COO_EMAX = COO_EPORT,
-  COO_OVERRIDE = 32, /* user chose to override security checks */
+  COO_OVERRIDE = 32,    /* user chose to override security checks */
   COO_OVERRIDE_OK = 32, /* flag to specify that an error is overridable */
 };
 
@@ -43,9 +43,9 @@ void save_cookies(const std::string &cookie_file);
 void load_cookies(const std::string &cookie_file);
 void initCookie(const std::string &cookie_file);
 bool check_cookie_accept_domain(const char *domain);
-struct Str;
-int add_cookie(const Url *pu, std::string_view name, Str *value, time_t expires,
-               Str *domain, Str *path, CookieFlags flag,
-               std::string_view comment, int version, Str *port,
-               std::string_view commentURL);
+int add_cookie(const Url *pu, std::string_view name, std::string_view value,
+               time_t expires, std::string_view domain, std::string_view path,
+               CookieFlags flag, std::string_view comment, int version,
+               std::string_view port, std::string_view commentURL);
+
 std::string cookie_list_panel();
