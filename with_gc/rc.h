@@ -1,6 +1,6 @@
 #pragma once
-#include <stdio.h>
 #include <string>
+#include <list>
 
 #define COOKIE_FILE "cookie"
 
@@ -38,3 +38,5 @@ extern std::string config_file;
 extern int is_redisplay;
 extern int clear_buffer;
 extern int set_pixel_per_char;
+
+void panel_set_option(const std::list<std::pair<std::string, std::string>> &);

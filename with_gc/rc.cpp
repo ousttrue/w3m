@@ -19,7 +19,6 @@
 #include "http_request.h"
 #include "myctype.h"
 #include "proc.h"
-#include "keyvalue.h"
 #include "local_cgi.h"
 #include "mailcap.h"
 #include "Str.h"
@@ -227,7 +226,8 @@ rc_dir_err:
   goto open_rc;
 }
 
-void panel_set_option(keyvalue *arg) {
+void
+panel_set_option(const std::list<std::pair<std::string, std::string>> &arg) {
   FILE *f = NULL;
   if (config_file.empty()) {
     App::instance().disp_message("There's no config file... config not saved");
@@ -238,17 +238,15 @@ void panel_set_option(keyvalue *arg) {
   }
 
   Str *s = nullptr;
-  while (arg) {
+  for (auto [key, value] : arg) {
     /*  InnerCharset -> SystemCharset */
-    if (arg->value.size()) {
-      auto p = arg->value;
-      if (Option::instance().set_param(arg->arg, p)) {
-        auto tmp = Sprintf("%s %s\n", arg->arg.c_str(), p.c_str());
+    if (value.size()) {
+      if (Option::instance().set_param(key, value)) {
+        auto tmp = Sprintf("%s %s\n", key.c_str(), value.c_str());
         Strcat(tmp, s);
         s = tmp;
       }
     }
-    arg = arg->next;
   }
   if (f) {
     fputs(s->ptr, f);

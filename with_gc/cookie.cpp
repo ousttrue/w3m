@@ -80,8 +80,6 @@ static std::vector<uint16_t> make_portlist(std::string_view port) {
   return list;
 }
 
-#include "keyvalue.h"
-
 class CookieManager {
   Cookie *First_cookie = nullptr;
   bool is_saved = true;
@@ -440,11 +438,11 @@ public:
     return src->ptr;
   }
 
-  void setFlag(const keyvalue *arg) {
-    while (arg) {
-      if (arg->arg.size() && arg->value.size()) {
-        int n = atoi(arg->arg.c_str());
-        int v = atoi(arg->value.c_str());
+  void setFlag(const std::list<std::pair<std::string, std::string>> &list) {
+    for (auto [key, value] : list) {
+      if (key.size() && value.size()) {
+        int n = atoi(key.c_str());
+        int v = atoi(value.c_str());
         if (auto p = nth_cookie(n)) {
           if (v && !(p->flag & COO_USE))
             p->flag = (CookieFlags)(p->flag | COO_USE);
@@ -454,7 +452,6 @@ public:
             is_saved = 0;
         }
       }
-      arg = arg->next;
     }
   }
 };
@@ -615,7 +612,8 @@ void load_cookies(const std::string &cookie_file) {
 
 std::string cookie_list_panel() { return CookieManager::instance().panel(); }
 
-void set_cookie_flag(struct keyvalue *arg) {
+void set_cookie_flag(
+    const std::list<std::pair<std::string, std::string>> &arg) {
   CookieManager::instance().setFlag(arg);
   // backBf({});
 }

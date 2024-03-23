@@ -41,4 +41,4 @@ int add_cookie(const Url *pu, std::string_view name, std::string_view value,
                std::string_view port, std::string_view commentURL);
 
 std::string cookie_list_panel();
-void set_cookie_flag(struct keyvalue *arg);
+void set_cookie_flag(const std::list<std::pair<std::string, std::string>> &);

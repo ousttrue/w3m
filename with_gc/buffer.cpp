@@ -1,5 +1,5 @@
 #include "buffer.h"
-#include "keyvalue.h"
+#include "downloadlist.h"
 #include "url_quote.h"
 #include "linein.h"
 #include "symbol.h"
@@ -439,24 +439,45 @@ save_submit_formlist(const std::shared_ptr<FormItem> &src) {
   return ret;
 }
 
-struct InternalAction {
-  std::string action;
-  std::function<void(keyvalue *)> rout;
+std::list<std::pair<std::string, std::string>>
+cgistr2tagarg(const char *cgistr) {
+  std::list<std::pair<std::string, std::string>> t;
+  do {
+    std::stringstream tmp;
+    while (*cgistr && *cgistr != '=' && *cgistr != '&')
+      tmp << *cgistr++;
+    auto tag = tmp.str();
+    t.push_back({tag, {}});
+    if (*cgistr == '\0')
+      return t;
+    else if (*cgistr == '=') {
+      cgistr++;
+      std::stringstream value;
+      while (*cgistr && *cgistr != '&')
+        value << *cgistr++;
+      t.back() = {tag, Str_form_unquote(value.str())};
+    } else if (*cgistr == '&') {
+      cgistr++;
+    }
+  } while (*cgistr);
+  return t;
+}
+
+using Action =
+    std::function<void(const std::list<std::pair<std::string, std::string>> &)>;
+
+std::unordered_map<std::string, Action> internal_action = {
+    {"option", panel_set_option},
+    {"cookie", set_cookie_flag},
+    {"download", download_action},
+    {"none", {}},
 };
 
-InternalAction internal_action[] = {
-    {.action = "option", .rout = panel_set_option},
-    {.action = "cookie", .rout = set_cookie_flag},
-    {.action = "download", .rout = download_action},
-    {.action = "none", .rout = {}},
-};
-
-static void do_internal(const char *action, const char *data) {
-  for (int i = 0; internal_action[i].action.size(); i++) {
-    if (internal_action[i].action == action) {
-      if (internal_action[i].rout)
-        internal_action[i].rout(cgistr2tagarg(data));
-      return;
+static void do_internal(const std::string &action, const char *data) {
+  auto found = internal_action.find(action);
+  if (found != internal_action.end()) {
+    if (found->second) {
+      found->second(cgistr2tagarg(data));
     }
   }
 }

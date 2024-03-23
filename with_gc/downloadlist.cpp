@@ -1,6 +1,5 @@
 #include "downloadlist.h"
 #include "quote.h"
-#include "keyvalue.h"
 #include "etc.h"
 #include "alloc.h"
 #include "Str.h"
@@ -182,13 +181,14 @@ void stopDownload(void) {
   }
 }
 
-void download_action(struct keyvalue *arg) {
+void download_action(
+    const std::list<std::pair<std::string, std::string>> &list) {
 #ifdef _MSC_VER
 #else
   DownloadList *d;
   int pid;
 
-  for (; arg; arg = arg->next) {
+  for (auto [key, value] : list) {
     if (!strncmp(arg->arg, "stop", 4)) {
       pid = (pid_t)atoi(&arg->arg[4]);
       kill(pid, SIGKILL);

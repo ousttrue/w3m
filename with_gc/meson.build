@@ -25,7 +25,6 @@ with_gc_lib = static_library(
         'regex.cpp',
         'generallist.cpp',
         'textline.cpp',
-        'keyvalue.cpp',
         'hash.cpp',
         'buffer.cpp',
         'etc.cpp',

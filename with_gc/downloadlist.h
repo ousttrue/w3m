@@ -2,6 +2,7 @@
 #include <time.h>
 #include <string>
 #include <gc_cpp.h>
+#include <list>
 
 struct DownloadList : public gc_cleanup {
   int pid;
@@ -26,3 +27,4 @@ void stopDownload(void);
 int checkDownloadList(void);
 bool popAddDownloadList();
 std::string DownloadListBuffer(void);
+void download_action(const std::list<std::pair<std::string, std::string>> &);
