@@ -19,6 +19,7 @@ without_gc_lib = static_library(
         'mimetypes.cpp',
         'compression.cpp',
         'cookie_domain.cpp',
+        'matchattr.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

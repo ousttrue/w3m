@@ -1249,7 +1249,7 @@ std::shared_ptr<CoroutineState<void>> svSrc(const FuncContext &context) {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
 
-  const char *file;
+  std::string file;
   if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL) {
     file = guess_filename(
         CurrentTab->currentBuffer()->res->currentURL.real_file.c_str());
@@ -1257,7 +1257,7 @@ std::shared_ptr<CoroutineState<void>> svSrc(const FuncContext &context) {
     file = CurrentTab->currentBuffer()->res->guess_save_name(
         CurrentTab->currentBuffer()->res->currentURL.file.c_str());
   }
-  doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file);
+  doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file.c_str());
   PermitSaveToPipe = false;
 }
 

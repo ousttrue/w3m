@@ -108,7 +108,6 @@ const char *violations[COO_EMAX] = {
     "RFC XXXX 4.3.2 rule 5"};
 
 static void process_http_cookie(const Url *pu, std::string_view lineBuf2) {
-  Str *tmp2;
   int version;
   int quoted;
   CookieFlags flag = {};
@@ -161,30 +160,30 @@ static void process_http_cookie(const Url *pu, std::string_view lineBuf2) {
   while (*p == ';') {
     p++;
     SKIP_BLANKS(p);
-    if (matchattr(p, "expires", 7, &tmp2)) {
+    if (auto tmp2 = matchattr(p, "expires")) {
       /* version 0 */
-      expires = mymktime(tmp2->ptr);
-    } else if (matchattr(p, "max-age", 7, &tmp2)) {
+      expires = mymktime(tmp2->c_str());
+    } else if (auto tmp2 = matchattr(p, "max-age")) {
       /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2
        */
-      expires = time(NULL) + atol(tmp2->ptr);
-    } else if (matchattr(p, "domain", 6, &tmp2)) {
-      domain = tmp2->ptr;
-    } else if (matchattr(p, "path", 4, &tmp2)) {
-      path = tmp2->ptr;
-    } else if (matchattr(p, "secure", 6, NULL)) {
+      expires = time(NULL) + atol(tmp2->c_str());
+    } else if (auto temp2 = matchattr(p, "domain")) {
+      domain = *tmp2;
+    } else if (auto tmp2 = matchattr(p, "path")) {
+      path = *tmp2;
+    } else if (matchattr(p, "secure")) {
       flag = (CookieFlags)(flag | COO_SECURE);
-    } else if (matchattr(p, "comment", 7, &tmp2)) {
-      comment = tmp2->ptr;
-    } else if (matchattr(p, "version", 7, &tmp2)) {
-      version = atoi(tmp2->ptr);
-    } else if (matchattr(p, "port", 4, &tmp2)) {
+    } else if (auto tmp2 = matchattr(p, "comment")) {
+      comment = *tmp2;
+    } else if (auto tmp2 = matchattr(p, "version")) {
+      version = atoi(tmp2->c_str());
+    } else if (auto tmp2 = matchattr(p, "port")) {
       /* version 1, Set-Cookie2 */
-      port = tmp2->ptr;
-    } else if (matchattr(p, "commentURL", 10, &tmp2)) {
+      port = *tmp2;
+    } else if (auto tmp2 = matchattr(p, "commentURL")) {
       /* version 1, Set-Cookie2 */
-      commentURL = tmp2->ptr;
-    } else if (matchattr(p, "discard", 7, NULL)) {
+      commentURL = *tmp2;
+    } else if (matchattr(p, "discard")) {
       /* version 1, Set-Cookie2 */
       flag = (CookieFlags)(flag | COO_DISCARD);
     }
@@ -347,14 +346,14 @@ const char *mybasename(const char *s) {
 }
 
 #define DEF_SAVE_FILE "index.html"
-const char *guess_filename(const char *file) {
-  const char *p = NULL, *s;
-
+std::string guess_filename(const char *file) {
+  const char *p = NULL;
   if (file != NULL)
     p = mybasename(file);
   if (p == NULL || *p == '\0')
     return DEF_SAVE_FILE;
-  s = p;
+
+  auto s = p;
   if (*p == '#')
     p++;
   while (*p != '\0') {
@@ -367,22 +366,23 @@ const char *guess_filename(const char *file) {
   return s;
 }
 
-const char *HttpResponse::guess_save_name(const char *path) const {
+std::string HttpResponse::guess_save_name(std::string path) const {
   if (this->document_header.size()) {
-    Str *name = NULL;
+    std::optional<std::string> name;
     const char *p, *q;
     if ((p = this->getHeader("Content-Disposition:")) != NULL &&
         (q = strcasestr(p, "filename")) != NULL &&
         (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        matchattr(q, "filename", 8, &name))
-      path = name->ptr;
-    else if ((p = this->getHeader("Content-Type:")) != NULL &&
-             (q = strcasestr(p, "name")) != NULL &&
-             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             matchattr(q, "name", 4, &name))
-      path = name->ptr;
+        (name = matchattr(q, "filename"))) {
+      path = *name;
+    } else if ((p = this->getHeader("Content-Type:")) != NULL &&
+               (q = strcasestr(p, "name")) != NULL &&
+               (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+               (name = matchattr(q, "name"))) {
+      path = *name;
+    }
   }
-  return guess_filename(path);
+  return guess_filename(path.c_str());
 }
 
 FILE *HttpResponse::createSourceFile() {

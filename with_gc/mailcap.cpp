@@ -329,7 +329,7 @@ end:
 static Str *unquote_mailcap_loop(const char *qstr, const char *type,
                                  const char *name, const char *attr,
                                  MailcapStat *mc_stat, MCF_QuoteFlags flag0) {
-  Str *str, *tmp, *test, *then;
+  Str *str, *test, *then;
   const char *p;
   MC_UnquoteStatus status = MC_NORMAL, prev_status = MC_NORMAL;
   MCF_QuoteFlags flag;
@@ -343,12 +343,13 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
     return NULL;
 
   str = Strnew();
-  tmp = test = then = NULL;
+  test = then = NULL;
 
+  std::string tmp;
   for (flag = flag0, p = qstr; *p; p++) {
     if (status == MC_QUOTED) {
       if (prev_status == MC_PREC2)
-        Strcat_char(tmp, *p);
+        tmp += *p;
       else
         Strcat_char(str, *p);
       status = prev_status;
@@ -399,14 +400,14 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
       } else if (*p == '{') {
         status = MC_PREC2;
         test = then = NULL;
-        tmp = Strnew();
+        tmp = "";
       } else if (*p == '%') {
         Strcat_char(str, *p);
       }
       break;
     case MC_PREC2:
       if (sp > 0 || *p == '{') {
-        Strcat_char(tmp, *p);
+        tmp += *p;
 
         switch (*p) {
         case '{':
@@ -420,16 +421,18 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
         }
       } else if (*p == '}') {
         const char *q;
-        if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL &&
+        std::optional<std::string> _tmp;
+        if (attr && (q = strcasestr(attr, tmp.c_str())) != NULL &&
             (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-            matchattr(q, tmp->ptr, tmp->length, &tmp)) {
-          Strcat(str, quote_mailcap(tmp->ptr, flag));
+            (_tmp = matchattr(q, tmp))) {
+          tmp = *_tmp;
+          Strcat(str, quote_mailcap(tmp.c_str(), flag));
           if (mc_stat)
             *mc_stat |= MCSTAT_REPPARAM;
         }
         status = MC_NORMAL;
       } else {
-        Strcat_char(tmp, *p);
+        tmp += *p;
       }
       break;
 

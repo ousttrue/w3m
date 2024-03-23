@@ -43,7 +43,7 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   void pushHeader(const Url &url, struct Str *lineBuf2);
   const char *getHeader(const char *field) const;
   const char *checkContentType() const;
-  const char *guess_save_name(const char *file) const;
+  std::string guess_save_name(std::string) const;
   bool is_html_type() const {
     return type == "text/html" || type == "application/xhtml+xml";
   }
@@ -55,4 +55,4 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
 };
 
 const char *mybasename(const char *s);
-const char *guess_filename(const char *file);
+std::string guess_filename(const char *file);
