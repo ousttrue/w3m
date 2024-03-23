@@ -39,7 +39,12 @@ Buffer::Buffer(const std::shared_ptr<HttpResponse> &_res)
   // this->layout->check_url = MarkAllPages;
 }
 
-Buffer::~Buffer() { auto a = 0; }
+Buffer::~Buffer() {}
+
+std::shared_ptr<Buffer> Buffer::fromHtml(const std::string &html) {
+  auto res = HttpResponse::fromHtml(html);
+  return std::shared_ptr<Buffer>(new Buffer(res));
+}
 
 /* append links */
 std::string Buffer::link_info() const {

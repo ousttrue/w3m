@@ -1,6 +1,7 @@
 #include "app.h"
 #include "option_param.h"
 #include "ioutil.h"
+#include "event.h"
 #include "url_decode.h"
 #include "etc.h"
 #include "ctrlcode.h"
@@ -109,7 +110,7 @@ App::App() {
   assert(s_i == 0);
   ++s_i;
 
-  w3mFuncList = {
+  _w3mFuncList = {
       // /*0*/ {"@@@", nulcmd},
       /*1*/ {"ABORT", quitfm},
       /*2*/ {"ACCESSKEY", accessKey},
@@ -208,7 +209,7 @@ App::App() {
       /*95*/ {"NOTHING", nulcmd},
       /*96*/ {"NULL", nulcmd},
       /*97*/ {"OPTIONS", ldOpt},
-      /*98*/ {"PEEK", curURL},
+      /*98*/ {"PEEK", nulcmd},
       /*99*/ {"PEEK_IMG", nulcmd},
       /*100*/ {"PEEK_LINK", ::peekURL},
       /*101*/ {"PIPE_BUF", pipeBuf},
@@ -268,7 +269,7 @@ App::App() {
       /*155*/ {"WHEREIS", srchfor},
       /*156*/ {"WRAP_TOGGLE", wrapToggle},
   };
-  GlobalKeymap = {
+  _GlobalKeymap = {
       /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g      */
       "MARK",
       "LINE_BEGIN",
@@ -579,10 +580,10 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
       App::instance().disp_message_nsec(emsg, 1, true);
     return;
   }
-  auto map = GlobalKeymap;
+  auto map = _GlobalKeymap;
   map[c & 0x7F] = f;
   s = getQWord(&p);
-  keyData.insert({f, s});
+  _keyData.insert({f, s});
 }
 
 bool App::initialize() {
@@ -604,6 +605,8 @@ bool App::initialize() {
   if (UseHistory) {
     URLHist->loadHistory();
   }
+
+  onResize();
 
   return true;
 }
@@ -698,76 +701,69 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
 int App::mainLoop() {
   // App::instance().beginRawMode();
   _fmInitialized = true;
-  onResize();
-
-  // //
-  // // stdin tty read
-  // //
-  // uv_read_start((uv_stream_t *)&g_tty_in, &alloc_buffer,
-  //               [](uv_stream_t *stream, ssize_t nread, const uv_buf_t *buf) {
-  //                 if (nread < 0) {
-  //                   if (nread == UV_EOF) {
-  //                     // end of file
-  //                     uv_close((uv_handle_t *)&g_tty_in, NULL);
-  //                   }
-  //                 } else if (nread > 0) {
-  //                   // process key input
-  //                   App::instance().dispatch(buf->base, nread);
-  //                 }
-  //
-  //                 // OK to free buffer as write_data copies it.
-  //                 if (buf->base) {
-  //                   free(buf->base);
-  //                 }
-  //               });
-  //
-  // //
-  // // SIGWINCH
-  // //
-  // uv_signal_init(uv_default_loop(), &g_signal_resize);
-  // uv_signal_start(
-  //     &g_signal_resize,
-  //     [](uv_signal_t *handle, int signum) { App::instance().onResize(); },
-  //     SIGWINCH);
-  //
-  // //
-  // // timer
-  // //
-  // uv_timer_init(uv_default_loop(), &g_timer);
-  // uv_timer_start(
-  //     &g_timer, [](uv_timer_t *handle) { App::instance().onFrame(); }, 0,
-  //     FRAME_INTERVAL_MS.count());
-  //
-  // uv_run(uv_default_loop(), UV_RUN_DEFAULT);
-  // uv_loop_close(uv_default_loop());
 
   using namespace ftxui;
 
   auto screen = ScreenInteractive::Fullscreen();
 
   auto r = Renderer([this] { return this->dom(); });
-
-  auto component = CatchEvent(r, [&](Event event) {
-    onFrame();
-
-    // if (event == Event::Character('q')) {
-    //   screen.ExitLoopClosure()();
-    //   return true;
-    // }
-
-    if (event.is_character()) {
-      // && !std::isdigit(event.character()[0]);
-      auto c = event.character();
-      dispatchPtyIn(c.c_str(), c.size());
-      return true;
-    }
-
-    return false;
-  });
+  auto e = std::bind(&App::onEvent, this, std::placeholders::_1);
+  auto component = CatchEvent(r, e);
 
   screen.Loop(component);
 
   return 0;
+}
+
+bool App::onEvent(const ftxui::Event &event) {
+  // ScreenInteractive::EventLister 経由で別スレッド？
+
+  _event_status.push_front(ftxui::text(stringify(event)));
+  while (_event_status.size() > 4) {
+    _event_status.pop_back();
+  }
+
+  // [&](Event event) {
+  if (popAddDownloadList()) {
+    ldDL(context());
+  }
+
+  auto buf = currentTab()->currentBuffer();
+  if (auto a = buf->layout->data.submit) {
+    buf->layout->data.submit = NULL;
+    buf->layout->visual.cursorRow(a->start.line);
+    buf->layout->cursorPos(a->start.pos);
+    if (auto newbuf = buf->followForm(a, true)->return_value().value()) {
+      pushBuffer(newbuf, a->target);
+      buf = newbuf;
+    }
+  }
+
+  // reload
+  if (buf->layout->data.need_reshape) {
+    buf->layout->data.need_reshape = false;
+    auto body = buf->res->getBody();
+    auto visual = buf->layout->visual;
+    // if (buf->res->is_html_type()) {
+    loadHTMLstream(buf->layout, _size.col, buf->res->currentURL, body);
+    // } else {
+    //   loadBuffer(buf->layout, buf->res.get(), body);
+    // }
+    buf->layout->visual = visual;
+  }
+
+  if (event.is_mouse()) {
+  } else if (event == ftxui::Event::Custom) {
+    onResize();
+    return true;
+  } else {
+    // && !std::isdigit(event.character()[0]);
+    auto c = event.character();
+    dispatchPtyIn(c.c_str(), c.size());
+    return true;
+  }
+
+  return false;
 }
 
 #ifdef _MSC_VER
@@ -801,7 +797,14 @@ RowCol getTermSize() {
 
 void App::onResize() {
   _size = getTermSize();
-  CurrentTab->currentBuffer()->layout->setupscreen(_size);
+  auto buf = CurrentTab->currentBuffer();
+  if (!buf) {
+    return;
+  }
+  if (_size.col == buf->layout->data._cols) {
+    return;
+  }
+  buf->layout->setupscreen(_size);
 }
 
 void App::exit(int) {
@@ -857,7 +860,7 @@ void App::peekURL() {
     return;
   }
 
-  if (_currentKey == prev_key && _peekUrl.size()) {
+  if (_currentKey == _prev_key && _peekUrl.size()) {
     if (_peekUrl.size() - _peekUrlOffset >= COLS()) {
       _peekUrlOffset++;
     } else if (_peekUrl.size() <= _peekUrlOffset) { /* bug ? */
@@ -903,27 +906,6 @@ disp:
   disp_message(_peekUrl.substr(_peekUrlOffset).c_str());
 }
 
-std::string App::currentUrl() const {
-
-  if (_currentKey == prev_key && _currentUrl.size()) {
-    if (_currentUrl.size() - _currentUrlOffset >= COLS())
-      _currentUrlOffset++;
-    else if (_currentUrl.size() <= _currentUrlOffset) /* bug ? */
-      _currentUrlOffset = 0;
-  } else {
-    _currentUrlOffset = 0;
-    _currentUrl = currentTab()->currentBuffer()->res->currentURL.to_Str();
-    if (DecodeURL)
-      _currentUrl = url_decode0(_currentUrl);
-  }
-  auto n = App::instance().searchKeyNum();
-  if (n > 1 && _currentUrl.size() > (n - 1) * (COLS() - 1)) {
-    _currentUrlOffset = (n - 1) * (COLS() - 1);
-  }
-
-  return _currentUrl.substr(_currentUrlOffset);
-}
-
 void App::doCmd() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto data = searchKeyData();
@@ -951,8 +933,8 @@ void App::doCmd() {
 }
 
 void App::doCmd(const std::string &cmd, const char *data) {
-  auto found = w3mFuncList.find(cmd);
-  if (found != w3mFuncList.end()) {
+  auto found = _w3mFuncList.find(cmd);
+  if (found != _w3mFuncList.end()) {
     _currentKey = -1;
     CurrentKeyData = nullptr;
     CurrentCmdData = *data ? data : nullptr;
@@ -973,7 +955,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
     _lastKeyCmd << "0x" << std::hex << (int)c;
   }
   if (IS_ASCII(c)) { /* Ascii */
-    if (('0' <= c) && (c <= '9') && (prec_num || (GlobalKeymap[c].empty()))) {
+    if (('0' <= c) && (c <= '9') && (prec_num || (_GlobalKeymap[c].empty()))) {
       prec_num = prec_num * 10 + (int)(c - '0');
       if (prec_num > PREC_LIMIT)
         prec_num = PREC_LIMIT;
@@ -981,10 +963,10 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       set_buffer_environ(currentTab()->currentBuffer());
       // currentTab()->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
-      auto cmd = GlobalKeymap[c];
+      auto cmd = _GlobalKeymap[c];
       if (cmd.size()) {
         _lastKeyCmd << " => " << cmd;
-        auto callback = w3mFuncList[cmd];
+        auto callback = _w3mFuncList[cmd];
         callback(context());
       } else {
         _lastKeyCmd << " => not found";
@@ -992,67 +974,21 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       prec_num = 0;
     }
   }
-  prev_key = _currentKey;
+  _prev_key = _currentKey;
   _currentKey = -1;
   CurrentKeyData = NULL;
 }
 
-void App::onFrame() {
-  if (popAddDownloadList()) {
-    ldDL(context());
-  }
-
-  auto buf = currentTab()->currentBuffer();
-  if (auto a = buf->layout->data.submit) {
-    buf->layout->data.submit = NULL;
-    buf->layout->visual.cursorRow(a->start.line);
-    buf->layout->cursorPos(a->start.pos);
-    if (auto newbuf = buf->followForm(a, true)->return_value().value()) {
-      pushBuffer(newbuf, a->target);
-      buf = newbuf;
-    }
-  }
-
-  // reload
-  // int width = INIT_BUFFER_WIDTH();
-  // if (buf->layout.width == 0)
-  //   buf->layout.width = width;
-  // if (buf->layout.height == 0)
-  //   buf->layout.height = this->LASTLINE() + 1;
-  if (buf->layout->data.need_reshape) {
-    buf->layout->data.need_reshape = false;
-    auto body = buf->res->getBody();
-    auto visual = buf->layout->visual;
-    // if (buf->res->is_html_type()) {
-    loadHTMLstream(buf->layout, App::instance().INIT_BUFFER_WIDTH(),
-                   buf->res->currentURL, body);
-    // } else {
-    //   loadBuffer(buf->layout, buf->res.get(), body);
-    // }
-    buf->layout->visual = visual;
-  }
-}
-
 ftxui::Element App::dom() {
   auto buf = currentTab()->currentBuffer();
-  auto msg = _message;
 
-  std::stringstream ss;
-  ss << buf->layout->visual;
-
-  if (auto a = buf->layout->retrieveCurrentAnchor()) {
-    ss << ", [a]" << a->start.line << "," << a->start.pos << " " << a->title;
+  std::vector<ftxui::Element> events;
+  for (auto it = _event_status.begin(); it != _event_status.end(); ++it) {
+    if (it != _event_status.begin()) {
+      events.push_back(ftxui::separator());
+    }
+    events.push_back(*it);
   }
-  if (auto f = buf->layout->retrieveCurrentForm()) {
-    ss << ", [f]" << f->start.line << "," << f->start.pos << " " << f->title;
-  }
-
-  auto cmd = _lastKeyCmd.str();
-  if (cmd.size()) {
-    ss << ", " << cmd;
-  }
-
-  _status = ss.str();
 
   return ftxui::vbox({
       // tabs
@@ -1061,10 +997,13 @@ ftxui::Element App::dom() {
       ftxui::text(buf->res->currentURL.to_Str()) | ftxui::inverted,
       // content
       buf->layout | ftxui::flex,
+      // message
+      ftxui::text(_message) | ftxui::inverted,
       // status
-      ftxui::text(_status) | ftxui::inverted,
-      // input/ message
-      ftxui::text(msg),
+      ftxui::text(buf->layout->data.status()),
+      ftxui::text(buf->layout->row_status()),
+      ftxui::text(buf->layout->col_status()),
+      ftxui::hbox(events),
   });
 }
 

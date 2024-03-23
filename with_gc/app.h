@@ -11,6 +11,7 @@
 #include <ftxui/screen/terminal.hpp>
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/dom/elements.hpp>
+#include <ftxui/component/event.hpp>
 #include <sstream>
 
 extern bool displayLink;
@@ -42,7 +43,7 @@ class App {
   RowCol _size = {};
 
   std::stringstream _lastKeyCmd;
-  std::string _status;
+  std::list<ftxui::Element> _event_status;
   std::string _message;
 
   bool _fmInitialized = false;
@@ -51,19 +52,19 @@ class App {
 
   int _currentPid = -1;
 
-  std::unordered_map<std::string, Func> w3mFuncList;
+  std::unordered_map<std::string, Func> _w3mFuncList;
   char _currentKey = -1;
-  char prev_key = -1;
+  char _prev_key = -1;
 
   std::list<std::shared_ptr<TabBuffer>> _tabs;
   int _currentTab = 0;
 
   std::stack<Dispatcher> _dispatcher;
 
-  std::array<std::string, 128> GlobalKeymap;
-  std::unordered_map<std::string, std::string> keyData;
+  std::array<std::string, 128> _GlobalKeymap;
+  std::unordered_map<std::string, std::string> _keyData;
   std::string _last;
-  std::shared_ptr<Buffer> save_current_buf;
+  std::shared_ptr<Buffer> _save_current_buf;
 
   App();
   void onResize();
@@ -80,13 +81,12 @@ public:
   int LINES() const { return _size.row; }
   int COLS() const { return _size.col; }
   int LASTLINE() const { return (_size.row - 1); }
-  int INIT_BUFFER_WIDTH() { return App::instance().COLS() - (1); }
-
   bool initialize();
   void beginRawMode();
   void endRawMode();
   bool isRawMode() const { return _fmInitialized; }
   int mainLoop();
+  bool onEvent(const ftxui::Event &event);
   void exit(int rval = 0);
 
   int pid() const { return _currentPid; }
@@ -98,16 +98,6 @@ public:
   mutable int _peekUrlOffset = 0;
   void peekURL();
 
-  mutable std::string _currentUrl;
-  mutable int _currentUrlOffset = 0;
-  std::string currentUrl() const;
-  // FuncId getFuncList(const std::string &id) const {
-  //   auto found = _funcTable.find(id);
-  //   if (found != _funcTable.end()) {
-  //     return found->second;
-  //   }
-  //   return (FuncId)-1;
-  // }
   void doCmd();
   void doCmd(const std::string &cmd, const char *data);
   void dispatchPtyIn(const char *buf, size_t len);
@@ -120,9 +110,9 @@ public:
   void initKeymap(bool force);
   void setKeymap(const char *p, int lineno, int verbose);
   const char *getKeyData(char key) {
-    auto func = GlobalKeymap[key];
-    auto found = keyData.find(func);
-    if (found == keyData.end()) {
+    auto func = _GlobalKeymap[key];
+    auto found = _keyData.find(func);
+    if (found == _keyData.end()) {
       return {};
     }
     return found->second.c_str();
@@ -130,14 +120,13 @@ public:
 
   FuncContext context() {
     return {
-        .curretTab = currentTab(),
+        // .curretTab = currentTab(),
     };
   }
 
   void pushDispatcher(const Dispatcher &dispatcher) {
     _dispatcher.push(dispatcher);
   }
-  void onFrame();
   ftxui::Element dom();
   ftxui::Element tabs();
   void task(int sec, const std::string &cmd, const char *data = nullptr,
@@ -156,7 +145,6 @@ public:
   }
   std::shared_ptr<TabBuffer> newTab(std::shared_ptr<Buffer> buf = {});
   std::shared_ptr<TabBuffer> numTab(int n) const;
-  // void drawTabs();
   void nextTab(int n);
   void prevTab(int n);
   void tabRight(int n);
@@ -179,7 +167,6 @@ public:
 
   std::string make_lastline_link(const std::shared_ptr<Buffer> &buf,
                                  const char *title, const char *url);
-  // std::string make_lastline_message(const std::shared_ptr<Buffer> &buf);
 };
 #define CurrentTab App::instance().currentTab()
 

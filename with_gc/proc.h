@@ -92,7 +92,7 @@ std::shared_ptr<CoroutineState<void>> svBuf(const FuncContext &ctx);
 std::shared_ptr<CoroutineState<void>> svSrc(const FuncContext &ctx);
 std::shared_ptr<CoroutineState<void>> peekURL(const FuncContext &ctx);
 // std::shared_ptr<CoroutineState<void>> peekIMG(const FuncContext &ctx);
-std::shared_ptr<CoroutineState<void>> curURL(const FuncContext &ctx);
+// std::shared_ptr<CoroutineState<void>> curURL(const FuncContext &ctx);
 std::shared_ptr<CoroutineState<void>> vwSrc(const FuncContext &ctx);
 std::shared_ptr<CoroutineState<void>> reload(const FuncContext &ctx);
 std::shared_ptr<CoroutineState<void>> reshape(const FuncContext &ctx);

@@ -30,6 +30,14 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
 
   HttpResponse();
   ~HttpResponse();
+  static std::shared_ptr<HttpResponse> fromHtml(const std::string &html) {
+    auto res = std::make_shared<HttpResponse>();
+    auto p = (const uint8_t *)html.data();
+    res->raw.assign(p, p + html.size());
+    res->type = "text/html";
+    return res;
+  }
+
   bool checkRedirection(const Url &pu);
   int readHeader(const std::shared_ptr<class input_stream> &s, const Url &pu);
   void pushHeader(const Url &url, struct Str *lineBuf2);

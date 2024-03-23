@@ -6,7 +6,7 @@
 
 html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
                                      GeneralList<TextLine> *_buf)
-    : buf(_buf) {
+    : buf(_buf), parser(limit) {
   assert(nenv);
   envs.resize(nenv);
   this->tagbuf = Strnew();

@@ -590,9 +590,9 @@ static Str *checkType(Str *s, Lineprop **oprop) {
   return s;
 }
 
-void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
-                std::string_view page) {
-  layout->clearBuffer();
+void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
+                HttpResponse *res, std::string_view page) {
+  layout->clear();
   auto nlines = 0;
   // auto stream = newStrStream(page);
   char pre_lbuf = '\0';

@@ -30,7 +30,7 @@
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 #define INITIAL_FORM_SIZE 10
 
-HtmlParser::HtmlParser() {}
+HtmlParser::HtmlParser(int width) : _width(width) {}
 
 void HtmlParser::HTMLlineproc1(const char *x, struct html_feed_environ *y) {
   parse(x, y, true);
@@ -389,7 +389,7 @@ HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
                    const Url &currentUrl, html_feed_environ *h_env) {
 
   auto old = *layout->data._formitem;
-  layout->data.clear();
+  layout->data.clear(_width);
   layout->data.baseURL = currentUrl;
   layout->data.title = h_env->title;
 

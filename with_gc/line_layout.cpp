@@ -4,12 +4,21 @@
 #include "html/form.h"
 #include "html/form_item.h"
 #include "utf8.h"
+#include <sstream>
 
 LineLayout::LineLayout() {}
 
-void LineLayout::clearBuffer() {
-  data.clear();
-  visual = {};
+std::string LineLayout::row_status() const {
+  std::stringstream ss;
+  ss << "row:" << visual.cursor().row;
+  return ss.str();
+}
+
+std::string LineLayout::col_status() const {
+
+  std::stringstream ss;
+  ss << "col:" << visual.cursor().col;
+  return ss.str();
 }
 
 /* go to the next downward/upward anchor */
@@ -461,6 +470,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
 
 void LineLayout::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
+  this->data.clear(size.col);
 }
 
 void LineLayout::clear(void) {

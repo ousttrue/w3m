@@ -1088,8 +1088,7 @@ std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
 //"Display options setting panel"
 std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
   auto html = Option::instance().load_option_panel();
-  auto newbuf = Buffer::create();
-  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
+  auto newbuf = Buffer::fromHtml(html);
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }
@@ -1121,8 +1120,7 @@ std::shared_ptr<CoroutineState<void>> setOpt(const FuncContext &context) {
 //"Display error messages"
 std::shared_ptr<CoroutineState<void>> msgs(const FuncContext &context) {
   auto html = App::instance().message_list_panel();
-  auto newbuf = Buffer::create();
-  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
+  auto newbuf = Buffer::fromHtml(html);
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }
@@ -1133,8 +1131,7 @@ std::shared_ptr<CoroutineState<void>> msgs(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> pginfo(const FuncContext &context) {
   auto buf = CurrentTab->currentBuffer();
   auto html = buf->page_info_panel();
-  auto newBuf = Buffer::create();
-  loadHTMLstream(newBuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
+  auto newBuf = Buffer::fromHtml(html);
   CurrentTab->pushBuffer(newBuf);
   co_return;
 }
@@ -1144,8 +1141,7 @@ std::shared_ptr<CoroutineState<void>> pginfo(const FuncContext &context) {
 //"Show all URLs referenced"
 std::shared_ptr<CoroutineState<void>> linkLst(const FuncContext &context) {
   auto html = link_list_panel(CurrentTab->currentBuffer());
-  auto newbuf = Buffer::create();
-  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
+  auto newbuf = Buffer::fromHtml(html);
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }
@@ -1155,8 +1151,7 @@ std::shared_ptr<CoroutineState<void>> linkLst(const FuncContext &context) {
 //"View cookie list"
 std::shared_ptr<CoroutineState<void>> cooLst(const FuncContext &context) {
   auto html = cookie_list_panel();
-  auto newbuf = Buffer::create();
-  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
+  auto newbuf = Buffer::fromHtml(html);
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }
@@ -1166,8 +1161,7 @@ std::shared_ptr<CoroutineState<void>> cooLst(const FuncContext &context) {
 //"Show browsing history"
 std::shared_ptr<CoroutineState<void>> ldHist(const FuncContext &context) {
   auto html = URLHist->toHtml();
-  auto newbuf = Buffer::create();
-  loadHTMLstream(newbuf->layout, App::instance().INIT_BUFFER_WIDTH(), {}, html);
+  auto newbuf = Buffer::fromHtml(html);
   CurrentTab->pushBuffer(newbuf);
   co_return;
 }
@@ -1276,11 +1270,11 @@ std::shared_ptr<CoroutineState<void>> peekURL(const FuncContext &context) {
 
 // PEEK
 //"Show current address"
-std::shared_ptr<CoroutineState<void>> curURL(const FuncContext &context) {
-  auto url = App::instance().currentUrl();
-  App::instance().disp_message(url.c_str());
-  co_return;
-}
+// std::shared_ptr<CoroutineState<void>> curURL(const FuncContext &context) {
+//   auto url = App::instance().currentUrl();
+//   App::instance().disp_message(url.c_str());
+//   co_return;
+// }
 
 /* view HTML source */
 // SOURCE VIEW
@@ -1379,13 +1373,7 @@ std::shared_ptr<CoroutineState<void>> reshape(const FuncContext &context) {
   if (buf->layout->data.need_reshape) {
     auto visual = buf->layout->visual;
     auto body = buf->res->getBody();
-    if (buf->res->is_html_type()) {
-      loadHTMLstream(buf->layout, App::instance().INIT_BUFFER_WIDTH(),
-                     buf->res->currentURL, body);
-    } else {
-      loadBuffer(buf->layout, buf->res.get(), body);
-    }
-    buf->layout->visual = visual;
+    buf->layout->clear();
   }
   co_return;
 }
@@ -1704,9 +1692,7 @@ std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
   if (html.empty()) {
     co_return;
   }
-  auto buf = Buffer::create();
-  loadHTMLstream(buf->layout, App::instance().INIT_BUFFER_WIDTH(),
-                 buf->res->currentURL, html, true);
+  auto buf = Buffer::fromHtml(html);
   if (replace) {
     // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
     buf->layout->visual.restorePosition(

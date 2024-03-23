@@ -59,7 +59,8 @@ class HtmlParser {
   ReadBufferStatus cur_status = {};
 
 public:
-  HtmlParser();
+  int _width;
+  HtmlParser(int width);
   Str *process_select(const std::shared_ptr<HtmlTag> &tag);
   Str *process_n_select();
   void process_option();

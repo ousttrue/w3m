@@ -426,8 +426,8 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
 
 struct LineLayout;
 struct HttpResponse;
-void loadBuffer(const std::shared_ptr<LineLayout> &layout, HttpResponse *res,
-                std::string_view body);
+void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
+                HttpResponse *res, std::string_view body);
 
 struct Buffer;
 // std::shared_ptr<Buffer>

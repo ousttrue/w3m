@@ -23,6 +23,20 @@ LineData::LineData() {
   this->_hmarklist = std::make_shared<HmarkerList>();
 }
 
+std::string LineData::status() const {
+  std::stringstream ss;
+  ss << "#"
+     << _reshapeCount
+     //
+     << ", width: " << _cols
+     //
+     << ", lines: "
+     << lines.size()
+      //
+      ;
+  return ss.str();
+}
+
 void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
   lines.push_back({line, prop, byteLen});
 }
@@ -306,7 +320,8 @@ void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
     this->linklist = l;
 }
 
-void LineData::clear() {
+void LineData::clear(int cols) {
+  need_reshape = true;
   lines.clear();
   this->_href->clear();
   this->_name->clear();
@@ -315,6 +330,8 @@ void LineData::clear() {
   this->formlist.clear();
   this->linklist = nullptr;
   this->_hmarklist->clear();
+  ++_reshapeCount;
+  _cols = cols;
 }
 
 Anchor *LineData::registerName(const char *url, int line, int pos) {

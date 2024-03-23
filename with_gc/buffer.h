@@ -36,12 +36,7 @@ public:
   create(const std::shared_ptr<HttpResponse> &res = {}) {
     return std::shared_ptr<Buffer>(new Buffer(res));
   }
-
-  static std::shared_ptr<Buffer> nullBuffer(void) {
-    auto b = Buffer::create();
-    b->layout->data.title = "*Null*";
-    return b;
-  }
+  static std::shared_ptr<Buffer> fromHtml(const std::string &html);
 
   std::shared_ptr<CoroutineState<std::tuple<Anchor *, std::shared_ptr<Buffer>>>>
   followAnchor(bool check_target = true);

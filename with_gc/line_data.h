@@ -24,6 +24,9 @@ struct LineData {
   Url baseURL;
   std::string baseTarget;
 
+  int _reshapeCount = 0;
+  int _cols = 0;
+
   // always reshape new buffers to mark URLs
   bool need_reshape = true;
   int refresh_interval = 0;
@@ -53,8 +56,9 @@ struct LineData {
     assert(false);
     return -1;
   }
-  void clear();
+  void clear(int cols);
   void addnewline(const char *line, Lineprop *prop, int byteLen);
+  std::string status() const;
 
   Anchor *registerName(const char *url, int line, int pos);
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
