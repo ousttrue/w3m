@@ -1,4 +1,5 @@
 #include "form_item.h"
+#include "tmpfile.h"
 #include "ioutil.h"
 #include "etc.h"
 #include "app.h"
@@ -108,7 +109,7 @@ static void form_fputs_decode(Str *s, FILE *f) {
 }
 
 void FormItem::input_textarea() {
-  auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
+  auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == NULL) {
     App::instance().disp_err_message("Can't open temporary file");

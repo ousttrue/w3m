@@ -24,16 +24,6 @@ extern int prec_num;
 extern bool on_target;
 extern std::string keymap_file;
 
-enum TmpfType {
-  TMPF_DFL = 0,
-  TMPF_SRC = 1,
-  TMPF_FRAME = 2,
-  TMPF_CACHE = 3,
-  TMPF_COOKIE = 4,
-  TMPF_HIST = 5,
-  MAX_TMPF_TYPE = 6,
-};
-
 using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 
 class Content;
@@ -47,8 +37,6 @@ class App {
   std::string _message;
 
   bool _fmInitialized = false;
-
-  std::list<std::string> _fileToDelete;
 
   int _currentPid = -1;
 
@@ -131,7 +119,6 @@ public:
   ftxui::Element tabs();
   void task(int sec, const std::string &cmd, const char *data = nullptr,
             bool releat = false);
-  std::string tmpfname(TmpfType type, const std::string &ext);
 
   // tabs
   std::shared_ptr<TabBuffer> FirstTab() const { return _tabs.front(); }

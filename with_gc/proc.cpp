@@ -1,4 +1,5 @@
 #include "proc.h"
+#include "tmpfile.h"
 #include "option.h"
 #include "ioutil.h"
 #include "dict.h"
@@ -699,7 +700,7 @@ std::shared_ptr<CoroutineState<void>> editBf(const FuncContext &context) {
 // EDIT_SCREEN
 //"Edit rendered copy of document"
 std::shared_ptr<CoroutineState<void>> editScr(const FuncContext &context) {
-  auto tmpf = App::instance().tmpfname(TMPF_DFL, {});
+  auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
     App::instance().disp_err_message(

@@ -1,5 +1,6 @@
 #include "form.h"
 #include "form_item.h"
+#include "tmpfile.h"
 #include "quote.h"
 #include "app.h"
 #include "etc.h"
@@ -123,7 +124,7 @@ std::string Form::query(const std::shared_ptr<FormItem> &item) const {
 }
 
 void FormItem::query_from_followform_multipart() {
-  auto tmpf = Strnew(App::instance().tmpfname(TMPF_DFL, {}));
+  auto tmpf = Strnew(TmpFile::instance().tmpfname(TMPF_DFL, {}));
   auto body = fopen(tmpf->ptr, "w");
   if (body == nullptr) {
     return;

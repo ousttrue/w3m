@@ -2,6 +2,7 @@
 #include "istream.h"
 #include "quote.h"
 #include "matchattr.h"
+#include "tmpfile.h"
 #include "app.h"
 #include "readallbytes.h"
 // #include "content.h"
@@ -245,7 +246,7 @@ FILE *HttpResponse::createSourceFile() {
   //   return {};
   // }
 
-  auto tmp = App::instance().tmpfname(TMPF_SRC, ".html");
+  auto tmp = TmpFile::instance().tmpfname(TMPF_SRC, ".html");
   auto src = fopen(tmp.c_str(), "w");
   if (!src) {
     // fail to open file

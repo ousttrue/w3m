@@ -22,8 +22,8 @@ private:
 
 public:
   static std::shared_ptr<Hist> newHist();
-  bool loadHistory();
-  void saveHistory(int size);
+  bool loadHistory(const std::string &file);
+  void saveHistory(const std::string &file, int size);
   std::shared_ptr<Hist> copyHist() const;
   void mergeHistory(const Hist &theirs);
   std::string_view nextHist();

@@ -15,6 +15,7 @@ without_gc_lib = static_library(
         'anchor.cpp',
         'line.cpp',
         'event.cpp',
+        'tmpfile.cpp',
     ],
     dependencies: [
         screen_dep,

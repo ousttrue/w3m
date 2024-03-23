@@ -3,15 +3,14 @@
 #include "app.h"
 #include "html/html_quote.h"
 #include "url_quote.h"
-#include "rc.h"
 #include "Str.h"
+#include "tmpfile.h"
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sstream>
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
-#define HISTORY_FILE "history"
 
 bool UseHistory = true;
 int URLHistSize = 100;
@@ -55,8 +54,8 @@ std::string Hist::toHtml() const {
   return src.str();
 }
 
-bool Hist::loadHistory() {
-  if (auto f = fopen(rcFile(HISTORY_FILE).c_str(), "rt")) {
+bool Hist::loadHistory(const std::string &file) {
+  if (auto f = fopen(file.c_str(), "rt")) {
     struct stat st;
     if (fstat(fileno(f), &st) == -1) {
       fclose(f);
@@ -80,24 +79,23 @@ bool Hist::loadHistory() {
   }
 }
 
-void Hist::saveHistory(int size) {
-  auto histf = rcFile(HISTORY_FILE);
+void Hist::saveHistory(const std::string &histf, int size) {
   struct stat st;
   if (stat(histf.c_str(), &st) == -1) {
-    App::instance().disp_err_message("Can't open history");
+    // App::instance().disp_err_message("Can't open history");
     return;
   }
 
   if (this->mtime != (long long)st.st_mtime) {
     auto fhist = Hist::newHist();
-    if (fhist->loadHistory()) {
+    if (fhist->loadHistory(histf)) {
       this->mergeHistory(*fhist);
     } else {
-      App::instance().disp_err_message("Can't merge history");
+      // App::instance().disp_err_message("Can't merge history");
     }
   }
 
-  auto tmpf = App::instance().tmpfname(TMPF_HIST, {});
+  auto tmpf = TmpFile::instance().tmpfname(TMPF_HIST, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (!f) {
     App::instance().disp_err_message("Can't open history");
@@ -114,7 +112,7 @@ void Hist::saveHistory(int size) {
     App::instance().disp_err_message("Can't open history");
     return;
   }
-  auto rename_ret = rename(tmpf.c_str(), rcFile(HISTORY_FILE).c_str());
+  auto rename_ret = rename(tmpf.c_str(), histf.c_str());
   if (rename_ret != 0) {
     App::instance().disp_err_message("Can't open history");
     return;

@@ -1,4 +1,5 @@
 #include "app.h"
+#include "tmpfile.h"
 #include "option_param.h"
 #include "ioutil.h"
 #include "event.h"
@@ -454,6 +455,8 @@ App::App() {
   });
 }
 
+#define HISTORY_FILE "history"
+
 App::~App() {
   if (getpid() != _currentPid) {
     return;
@@ -467,14 +470,8 @@ App::~App() {
   // term_title(""); /* XXX */
   save_cookies();
   if (UseHistory && SaveURLHist) {
-    URLHist->saveHistory(URLHistSize);
+    URLHist->saveHistory(rcFile(HISTORY_FILE), URLHistSize);
   }
-
-  for (auto &f : _fileToDelete) {
-    std::cout << "fileToDelete: " << f << std::endl;
-    unlink(f.c_str());
-  }
-  _fileToDelete.clear();
 
   stopDownload();
   free_ssl_ctx();
@@ -588,6 +585,8 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
 
 bool App::initialize() {
 
+  TmpFile::instance().initialize(rc_dir, _currentPid);
+
   init_rc();
 
   if (BookmarkFile.empty()) {
@@ -603,7 +602,7 @@ bool App::initialize() {
   TextHist = Hist::newHist();
   URLHist = Hist::newHist();
   if (UseHistory) {
-    URLHist->loadHistory();
+    URLHist->loadHistory(rcFile(HISTORY_FILE));
   }
 
   onResize();
@@ -1071,20 +1070,6 @@ void App::task(int sec, const std::string &cmd, const char *data, bool repeat) {
     // cancel timer
     g_timers.clear();
   }
-}
-
-static const char *tmpf_base[MAX_TMPF_TYPE] = {
-    "tmp", "src", "frame", "cache", "cookie", "hist",
-};
-static unsigned int tmpf_seq[MAX_TMPF_TYPE];
-
-std::string App::tmpfname(TmpfType type, const std::string &ext) {
-  std::stringstream ss;
-  ss << rc_dir << "/w3m" << tmpf_base[type] << App::instance().pid()
-     << tmpf_seq[type]++ << ext;
-  auto tmpf = ss.str();
-  _fileToDelete.push_back(tmpf);
-  return tmpf;
 }
 
 std::shared_ptr<TabBuffer> App::numTab(int n) const {
