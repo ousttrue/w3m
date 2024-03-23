@@ -16,14 +16,14 @@
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <gc_cpp.h>
 #include <stdio.h>
 #include <span>
 #include <time.h>
 #include <vector>
 #include <sstream>
+#include <fstream>
 
-struct Cookie : public gc_cleanup {
+struct Cookie {
   Url url = {};
   std::string name;
   std::string value;
@@ -35,21 +35,20 @@ struct Cookie : public gc_cleanup {
   std::vector<uint16_t> portl;
   char version = {};
   CookieFlags flag = {};
-  Cookie *next = {};
+
+  std::shared_ptr<Cookie> next;
 
   std::string make_cookie() const { return name + '=' + value; }
   bool match_cookie(const Url &pu, std::string_view domainname) const;
 };
 
-#include "Str.h"
-
-static Str *readcol(char **p) {
-  Str *tmp = Strnew();
+static std::string readcol(char **p) {
+  std::stringstream tmp;
   while (**p && **p != '\n' && **p != '\r' && **p != '\t')
-    Strcat_char(tmp, *((*p)++));
+    tmp << *((*p)++);
   if (**p == '\t')
     (*p)++;
-  return tmp;
+  return tmp.str();
 }
 
 static std::string portlist2str(std::span<uint16_t> list) {
@@ -81,7 +80,7 @@ static std::vector<uint16_t> make_portlist(std::string_view port) {
 }
 
 class CookieManager {
-  Cookie *First_cookie = nullptr;
+  std::shared_ptr<Cookie> First_cookie;
   bool is_saved = true;
 
   CookieManager() {}
@@ -106,8 +105,7 @@ public:
     if (!(fp = fopen(cookie_file.c_str(), "w")))
       return;
 
-    struct Cookie *p;
-    for (p = First_cookie; p; p = p->next) {
+    for (auto p = First_cookie; p; p = p->next) {
       if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
         continue;
       fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
@@ -124,27 +122,21 @@ public:
   }
 
   void load(const std::string &cookie_file) {
-    FILE *fp;
-    if (!(fp = fopen(cookie_file.c_str(), "r")))
+    std::ifstream fp(expandPath(cookie_file), std::ios::binary);
+    if (!fp) {
       return;
+    }
 
-    Cookie *p;
+    std::shared_ptr<Cookie> p;
     if (First_cookie) {
       for (p = First_cookie; p->next; p = p->next)
         ;
-    } else {
-      p = NULL;
-    }
+    };
 
-    Str *line;
-    char *str;
-    for (;;) {
-      line = Strfgets(fp);
-
-      if (line->length == 0)
-        break;
-      str = line->ptr;
-      auto cookie = new struct Cookie;
+    std::string line;
+    while (std::getline(fp, line)) {
+      auto str = line.data();
+      auto cookie = std::make_shared<Cookie>();
       cookie->next = NULL;
       cookie->flag = {};
       cookie->version = 0;
@@ -152,37 +144,37 @@ public:
       cookie->comment = {};
       cookie->portl = {};
       cookie->commentURL = {};
-      cookie->url = {readcol(&str)->ptr};
+      cookie->url = {readcol(&str)};
       if (!*str)
         break;
-      cookie->name = readcol(&str)->ptr;
+      cookie->name = readcol(&str);
       if (!*str)
         break;
-      cookie->value = readcol(&str)->ptr;
+      cookie->value = readcol(&str);
       if (!*str)
         break;
-      cookie->expires = (time_t)atol(readcol(&str)->ptr);
+      cookie->expires = (time_t)atol(readcol(&str).c_str());
       if (!*str)
         break;
-      cookie->domain = readcol(&str)->ptr;
+      cookie->domain = readcol(&str);
       if (!*str)
         break;
-      cookie->path = readcol(&str)->ptr;
+      cookie->path = readcol(&str);
       if (!*str)
         break;
-      cookie->flag = (CookieFlags)atoi(readcol(&str)->ptr);
+      cookie->flag = (CookieFlags)atoi(readcol(&str).c_str());
       if (!*str)
         break;
-      cookie->version = atoi(readcol(&str)->ptr);
+      cookie->version = atoi(readcol(&str).c_str());
       if (!*str)
         break;
-      cookie->comment = readcol(&str)->ptr;
+      cookie->comment = readcol(&str);
       if (!*str)
         break;
-      cookie->portl = make_portlist(readcol(&str)->ptr);
+      cookie->portl = make_portlist(readcol(&str));
       if (!*str)
         break;
-      cookie->commentURL = readcol(&str)->ptr;
+      cookie->commentURL = readcol(&str);
 
       if (p)
         p->next = cookie;
@@ -191,13 +183,10 @@ public:
       p = cookie;
     }
 
-    fclose(fp);
-
     check_expired_cookies();
   }
 
   void check_expired_cookies() {
-    struct Cookie *p, *p1;
     time_t now = time(NULL);
 
     if (!First_cookie)
@@ -209,7 +198,8 @@ public:
       First_cookie = First_cookie->next;
     }
 
-    for (p = First_cookie; p && p->next; p = p1) {
+    std::shared_ptr<Cookie> p1;
+    for (auto p = First_cookie; p && p->next; p = p1) {
       p1 = p->next;
       if (p1->expires != (time_t)-1 && p1->expires < now) {
         if (!(p1->flag & COO_DISCARD))
@@ -221,20 +211,20 @@ public:
   }
 
   std::optional<std::string> find_cookie(const Url &pu) {
-    Str *tmp;
-    struct Cookie *p, *p1, *fco = NULL;
     int version = 0;
 
+    std::shared_ptr<Cookie> p1;
+    std::shared_ptr<Cookie> fco;
     auto fq_domainname = FQDN(pu.host);
     check_expired_cookies();
-    for (p = First_cookie; p; p = p->next) {
+    for (auto p = First_cookie; p; p = p->next) {
       auto domainname = (p->version == 0) ? fq_domainname : pu.host;
       if (p->flag & COO_USE && p->match_cookie(pu, domainname)) {
-        for (p1 = fco; p1 && p1->name != p->name; p1 = p1->next)
+        for (auto p1 = fco; p1 && p1->name != p->name; p1 = p1->next)
           ;
         if (p1)
           continue;
-        p1 = new Cookie;
+        p1 = std::make_shared<Cookie>();
         *p1 = *p;
         p1->next = fco;
         fco = p1;
@@ -246,29 +236,29 @@ public:
     if (!fco)
       return {};
 
-    tmp = Strnew();
+    std::stringstream tmp;
     if (version > 0)
-      Strcat(tmp, Sprintf("$Version=\"%d\"; ", version));
+      tmp << "$Version=\"" << version << "\"; ";
 
-    Strcat(tmp, fco->make_cookie());
+    tmp << fco->make_cookie();
     for (p1 = fco->next; p1; p1 = p1->next) {
-      Strcat_charp(tmp, "; ");
-      Strcat(tmp, p1->make_cookie());
+      tmp << "; ";
+      tmp << p1->make_cookie();
       if (version > 0) {
         if (p1->flag & COO_PATH)
-          Strcat(tmp, Sprintf("; $Path=\"%s\"", p1->path.c_str()));
+          tmp << "; $Path=\"" << p1->path << "\"";
         if (p1->flag & COO_DOMAIN)
-          Strcat(tmp, Sprintf("; $Domain=\"%s\"", p1->domain.c_str()));
+          tmp << "; $Domain=\"" << p1->domain << "\"";
         if (p1->portl.size())
-          Strcat(tmp,
-                 Sprintf("; $Port=\"%s\"", portlist2str(p1->portl).c_str()));
+          tmp << "; $Port=\"" << portlist2str(p1->portl) << "\"";
       }
     }
-    return std::string(tmp->ptr);
+    return tmp.str();
   }
 
-  Cookie *get_cookie_info(std::string_view domain, std::string_view path,
-                          std::string_view name) {
+  std::shared_ptr<Cookie> get_cookie_info(std::string_view domain,
+                                          std::string_view path,
+                                          std::string_view name) {
     for (auto p = First_cookie; p; p = p->next) {
       if (p->domain == domain && p->path == path && p->name == name)
         return p;
@@ -276,11 +266,12 @@ public:
     return {};
   }
 
-  Cookie *getOrCreate(std::string_view domain, std::string_view path,
-                      std::string_view name) {
+  std::shared_ptr<Cookie> getOrCreate(std::string_view domain,
+                                      std::string_view path,
+                                      std::string_view name) {
     auto p = get_cookie_info(domain, path, name);
     if (!p) {
-      p = new Cookie;
+      p = std::make_shared<Cookie>();
       p->flag = {};
       if (default_use_cookie) {
         p->flag = (CookieFlags)(p->flag | COO_USE);
@@ -291,7 +282,7 @@ public:
     return p;
   }
 
-  void updateFlag(Cookie *p, const std::string &odomain,
+  void updateFlag(const std::shared_ptr<Cookie> &p, const std::string &odomain,
                   const std::string &opath, CookieFlags flag) {
     if (flag & COO_SECURE)
       p->flag = (CookieFlags)(p->flag | COO_SECURE);
@@ -318,31 +309,29 @@ public:
     check_expired_cookies();
   }
 
-  struct Cookie *nth_cookie(int n) {
-    struct Cookie *p;
-    int i;
-    for (p = First_cookie, i = 0; p; p = p->next, i++) {
+  std::shared_ptr<Cookie> nth_cookie(int n) {
+    int i = 0;
+    for (auto p = First_cookie; p; p = p->next, i++) {
       if (i == n)
         return p;
     }
-    return NULL;
+    return {};
   }
 
   std::string panel() const {
-    Str *src = Strnew_charp("<html><head><title>Cookies</title></head>"
-                            "<body><center><b>Cookies</b></center>"
-                            "<p><form method=internal action=cookie>");
-    struct Cookie *p;
-    int i;
-    // const char *tmp;
-    char tmp2[80];
+    std::stringstream src;
+    src << "<html><head><title>Cookies</title></head>"
+           "<body><center><b>Cookies</b></center>"
+           "<p><form method=internal action=cookie>";
 
     if (!use_cookie || !First_cookie)
       return NULL;
 
-    Strcat_charp(src, "<ol>");
-    for (p = First_cookie, i = 0; p; p = p->next, i++) {
+    src << "<ol>";
+    int i = 0;
+    for (auto p = First_cookie; p; p = p->next, i++) {
       auto tmp = html_quote(p->url.to_Str());
+      char tmp2[80];
       if (p->expires != (time_t)-1) {
 #ifdef HAVE_STRFTIME
         strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&p->expires));
@@ -369,73 +358,78 @@ public:
       } else {
         tmp2[0] = '\0';
       }
-      Strcat_charp(src, "<li>");
-      Strcat_charp(src, "<h1><a href=\"");
-      Strcat(src, tmp);
-      Strcat_charp(src, "\">");
-      Strcat(src, tmp);
-      Strcat_charp(src, "</a></h1>");
 
-      Strcat_charp(src, "<table cellpadding=0>");
+      src << "<li>";
+      src << "<h1><a href=\"";
+      src << tmp;
+      src << "\">";
+      src << tmp;
+      src << "</a></h1>";
+
+      src << "<table cellpadding=0>";
       if (!(p->flag & COO_SECURE)) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Cookie:</b></td><td>");
-        Strcat(src, html_quote(p->make_cookie()));
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>Cookie:</b></td><td>";
+        src << html_quote(p->make_cookie());
+        src << "</td></tr>";
       }
       if (p->comment.size()) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Comment:</b></td><td>");
-        Strcat(src, html_quote(p->comment));
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>Comment:</b></td><td>";
+        src << html_quote(p->comment);
+        src << "</td></tr>";
       }
       if (p->commentURL.size()) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>CommentURL:</b></td><td>");
-        Strcat_charp(src, "<a href=\"");
-        Strcat(src, html_quote(p->commentURL));
-        Strcat_charp(src, "\">");
-        Strcat(src, html_quote(p->commentURL));
-        Strcat_charp(src, "</a>");
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>CommentURL:</b></td><td>";
+        src << "<a href=\"";
+        src << html_quote(p->commentURL);
+        src << "\">";
+        src << html_quote(p->commentURL);
+        src << "</a>";
+        src << "</td></tr>";
       }
       if (tmp2[0]) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Expires:</b></td><td>");
-        Strcat_charp(src, tmp2);
-        if (p->flag & COO_DISCARD)
-          Strcat_charp(src, " (Discard)");
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>Expires:</b></td><td>";
+        src << tmp2;
+        if (p->flag & COO_DISCARD) {
+          src << " (Discard)";
+        }
+        src << "</td></tr>";
       }
-      Strcat_charp(src, "<tr><td width=\"80\"><b>Version:</b></td><td>");
-      Strcat_charp(src, Sprintf("%d", p->version)->ptr);
-      Strcat_charp(src, "</td></tr><tr><td>");
+      src << "<tr><td width=\"80\"><b>Version:</b></td><td>";
+      src << p->version;
+      src << "</td></tr><tr><td>";
       if (p->domain.size()) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Domain:</b></td><td>");
-        Strcat(src, html_quote(p->domain));
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>Domain:</b></td><td>";
+        src << html_quote(p->domain);
+        src << "</td></tr>";
       }
       if (p->path.size()) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Path:</b></td><td>");
-        Strcat(src, html_quote(p->path));
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>Path:</b></td><td>";
+        src << html_quote(p->path);
+        src << "</td></tr>";
       }
       if (p->portl.size()) {
-        Strcat_charp(src, "<tr><td width=\"80\"><b>Port:</b></td><td>");
-        Strcat(src, html_quote(portlist2str(p->portl)));
-        Strcat_charp(src, "</td></tr>");
+        src << "<tr><td width=\"80\"><b>Port:</b></td><td>";
+        src << html_quote(portlist2str(p->portl));
+        src << "</td></tr>";
       }
-      Strcat_charp(src, "<tr><td width=\"80\"><b>Secure:</b></td><td>");
-      Strcat_charp(src, (p->flag & COO_SECURE) ? "Yes" : "No");
-      Strcat_charp(src, "</td></tr><tr><td>");
+      src << "<tr><td width=\"80\"><b>Secure:</b></td><td>";
+      src << (p->flag & COO_SECURE ? "Yes" : "No");
+      src << "</td></tr><tr><td>";
 
-      Strcat(src, Sprintf("<tr><td width=\"80\"><b>Use:</b></td><td>"
-                          "<input type=radio name=\"%d\" value=1%s>Yes"
-                          "&nbsp;&nbsp;"
-                          "<input type=radio name=\"%d\" value=0%s>No",
-                          i, (p->flag & COO_USE) ? " checked" : "", i,
-                          (!(p->flag & COO_USE)) ? " checked" : ""));
-      Strcat_charp(
-          src, "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
+      src << "<tr><td width=\"80\"><b>Use:</b></td><td>"
+             "<input type=radio name=\""
+          << i << "\" value=1" << ((p->flag & COO_USE) ? " checked" : "")
+          << ">Yes"
+             "&nbsp;&nbsp;"
+             "<input type=radio name=\""
+          << i << "\" value=0" << ((!(p->flag & COO_USE)) ? " checked" : "")
+          << ">No";
+
+      src << "</td></tr><tr><td><input type=submit "
+             "value=\"OK\"></table><p>";
     }
-    Strcat_charp(src, "</ol></form></body></html>");
-    return src->ptr;
+    src << "</ol></form></body></html>";
+    return src.str();
   }
 
   void setFlag(const std::list<std::pair<std::string, std::string>> &list) {
@@ -482,8 +476,6 @@ bool show_cookie = false;
 bool accept_cookie = true;
 int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
 
-#include "matchattr.h"
-
 static bool check_avoid_wrong_number_of_dots_domain(std::string_view domain) {
   bool avoid_wrong_number_of_dots_domain = false;
   for (auto &tl : Cookie_avoid_wrong_number_of_dots_domains) {
@@ -518,7 +510,8 @@ int add_cookie(const Url *pu, std::string_view name, std::string_view value,
   if (!((err) & COO_OVERRIDE_OK) || use_security)                              \
   return (err)
 
-  /* [RFC 2109] s. 4.3.2 case 2; but this (no request-host) shouldn't happen */
+  /* [RFC 2109] s. 4.3.2 case 2; but this (no request-host) shouldn't happen
+   */
   if (domainname.empty()) {
     return COO_ENODOT;
   }

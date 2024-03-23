@@ -167,7 +167,7 @@ static void process_http_cookie(const Url *pu, std::string_view lineBuf2) {
       /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2
        */
       expires = time(NULL) + atol(tmp2->c_str());
-    } else if (auto temp2 = matchattr(p, "domain")) {
+    } else if (auto tmp2 = matchattr(p, "domain")) {
       domain = *tmp2;
     } else if (auto tmp2 = matchattr(p, "path")) {
       path = *tmp2;

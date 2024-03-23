@@ -35,7 +35,6 @@ with_gc_lib = static_library(
         'mailcap.cpp',
         'symbol.cpp',
         'mimehead.cpp',
-        'cookie.cpp',
         'history.cpp',
         'istream.cpp',
         'version.cpp',
