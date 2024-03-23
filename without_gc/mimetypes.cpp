@@ -1,12 +1,11 @@
 #include "mimetypes.h"
 #include "quote.h"
 #include "myctype.h"
-#include "etc.h"
-#include "alloc.h"
-#include "Str.h"
 #include <string.h>
 #include <list>
 #include <string>
+#include <vector>
+#include <fstream>
 
 #define USER_MIMETYPES "~/.mime.types"
 #ifndef ETC_DIR
@@ -19,12 +18,12 @@ std::string mimetypes_files = USER_MIMETYPES ", " SYS_MIMETYPES;
 static std::list<std::string> mimetypes_list;
 
 struct table2 {
-  const char *item1;
-  const char *item2;
+  std::string item1;
+  std::string item2;
 };
-static struct table2 **UserMimeTypes;
+static std::list<std::vector<table2>> UserMimeTypes;
 
-static struct table2 DefaultGuess[] = {
+static std::vector<table2> DefaultGuess = {
     {"html", "text/html"},         {"htm", "text/html"},
     {"shtml", "text/html"},        {"xhtml", "application/xhtml+xml"},
     {"gif", "image/gif"},          {"jpeg", "image/jpeg"},
@@ -34,36 +33,38 @@ static struct table2 DefaultGuess[] = {
     {"bz2", "application/x-bzip"}, {"tar", "application/x-tar"},
     {"zip", "application/x-zip"},  {"lha", "application/x-lha"},
     {"lzh", "application/x-lha"},  {"ps", "application/postscript"},
-    {"pdf", "application/pdf"},    {NULL, NULL}};
+    {"pdf", "application/pdf"},
+};
 
-static struct table2 *loadMimeTypes(const char *filename) {
-  auto f = fopen(expandPath(filename).c_str(), "r");
-  if (f == NULL) {
-    return NULL;
+static std::vector<table2> loadMimeTypes(const char *filename) {
+  std::ifstream f(expandPath(filename), std::ios::binary);
+  if (!f) {
+    return {};
   }
-  int n = 0;
-  Str *tmp;
-  while (tmp = Strfgets(f), tmp->length > 0) {
-    auto d = tmp->ptr;
+
+  std::string tmp;
+  while (std::getline(f, tmp)) {
+    if (tmp.empty() || tmp[0] == '#')
+      continue;
+
+    auto d = tmp.data();
     if (d[0] != '#') {
       d = strtok(d, " \t\n\r");
       if (d != NULL) {
         d = strtok(NULL, " \t\n\r");
-        int i = 0;
-        for (; d != NULL; i++)
+        for (; d != NULL;)
           d = strtok(NULL, " \t\n\r");
-        n += i;
       }
     }
   }
-  fseek(f, 0, 0);
+  f.seekg(0, std::ios_base::beg);
 
-  auto mtypes = (struct table2 *)New_N(struct table2, n + 1);
-  int i = 0;
-  while (tmp = Strfgets(f), tmp->length > 0) {
-    auto d = tmp->ptr;
-    if (d[0] == '#')
+  std::vector<table2> mtypes;
+  while (std::getline(f, tmp)) {
+    if (tmp.empty() || tmp[0] == '#')
       continue;
+
+    auto d = tmp.data();
     auto type = strtok(d, " \t\n\r");
     if (type == NULL)
       continue;
@@ -71,14 +72,12 @@ static struct table2 *loadMimeTypes(const char *filename) {
       d = strtok(NULL, " \t\n\r");
       if (d == NULL)
         break;
-      mtypes[i].item1 = Strnew_charp(d)->ptr;
-      mtypes[i].item2 = Strnew_charp(type)->ptr;
-      i++;
+      mtypes.push_back({
+          .item1 = d,
+          .item2 = type,
+      });
     }
   }
-  mtypes[i].item1 = NULL;
-  mtypes[i].item2 = NULL;
-  fclose(f);
   return mtypes;
 }
 
@@ -89,19 +88,19 @@ void initMimeTypes() {
   if (mimetypes_list.empty()) {
     return;
   }
-  UserMimeTypes =
-      (struct table2 **)New_N(struct table2 *, mimetypes_list.size());
-  int i = 0;
+  UserMimeTypes.clear();
+  // int i = 0;
   for (auto &tl : mimetypes_list) {
-    UserMimeTypes[i++] = loadMimeTypes(tl.c_str());
+    UserMimeTypes.push_back(loadMimeTypes(tl.c_str()));
   }
 }
 
-static std::string guessContentTypeFromTable(struct table2 *table,
+static std::string guessContentTypeFromTable(const std::vector<table2> &table,
                                              std::string_view filename) {
-  if (table == NULL) {
+  if (table.empty()) {
     return "";
   }
+
   auto p = &filename.back();
   while (filename < p && *p != '.')
     p--;
@@ -109,14 +108,16 @@ static std::string guessContentTypeFromTable(struct table2 *table,
     return "";
   p++;
 
-  for (auto t = table; t->item1; t++) {
-    if (!strcmp(p, t->item1))
-      return t->item2;
+  for (auto &t : table) {
+    if (p == t.item1)
+      return t.item2;
   }
-  for (auto t = table; t->item1; t++) {
-    if (!strcasecmp(p, t->item1))
-      return t->item2;
+
+  for (auto &t : table) {
+    if (!strcasecmp(p, t.item1.c_str()))
+      return t.item2;
   }
+
   return "";
 }
 
@@ -125,8 +126,8 @@ std::string guessContentType(std::string_view filename) {
     return {};
   }
 
-  for (size_t i = 0; i < mimetypes_list.size(); i++) {
-    auto ret = guessContentTypeFromTable(UserMimeTypes[i], filename);
+  for (auto &table : UserMimeTypes) {
+    auto ret = guessContentTypeFromTable(table, filename);
     if (ret.size()) {
       return ret;
     }

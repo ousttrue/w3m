@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include "quote.h"
 #include <fcntl.h>
 #include "ioutil.h"
 #include "local_cgi.h"

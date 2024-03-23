@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "quote.h"
 #include "Str.h"
 #include "url_decode.h"
 #include "html/form_item.h"

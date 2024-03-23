@@ -44,3 +44,5 @@ std::string cleanup_line(std::string_view s, CleanupMode mode);
 //   Strclear(s);
 //   Strcat(s, tmp);
 // }
+
+std::string expandPath(std::string_view name);

@@ -60,7 +60,6 @@ with_gc_lib = static_library(
         'version.cpp',
         'downloadlist.cpp',
         'ssl_util.cpp',
-        'mimetypes.cpp',
         'url_stream.cpp',
         'compression.cpp',
         'mytime.cpp',

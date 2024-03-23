@@ -423,3 +423,48 @@ std::string cleanup_line(std::string_view _s, CleanupMode mode) {
   }
   return s;
 }
+
+std::string expandPath(std::string_view name) {
+  if (name.empty()) {
+    return "";
+  }
+
+  auto p = name.begin();
+  if (*p == '~') {
+    p++;
+    std::stringstream ss;
+#ifdef _MSC_VER
+    if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+      ss << getenv("USERPROFILE");
+    }
+#else
+    if (IS_ALPHA(*p)) {
+      auto q = strchr(p, '/');
+      struct passwd *passent;
+      if (q) { /* ~user/dir... */
+        passent = getpwnam(allocStr(p, q - p));
+        p = q;
+      } else { /* ~user */
+        passent = getpwnam(p);
+        p = "";
+      }
+      if (!passent) {
+        return name;
+      }
+      ss << passent->pw_dir;
+    } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+      ss << getenv("HOME");
+    }
+#endif
+    else {
+      return {name.begin(), name.end()};
+    }
+    if (ss.str() == "/" && *p == '/') {
+      p++;
+    }
+    ss << std::string_view{p, name.end()};
+    return ss.str();
+  }
+
+  return {name.begin(), name.end()};
+}

@@ -16,6 +16,7 @@ without_gc_lib = static_library(
         'line.cpp',
         'event.cpp',
         'tmpfile.cpp',
+        'mimetypes.cpp',
     ],
     dependencies: [
         screen_dep,

@@ -1,11 +1,5 @@
 #include "compression.h"
-#include "etc.h"
 #include "quote.h"
-#include "rc.h"
-#include "mimetypes.h"
-#include "myctype.h"
-#include "Str.h"
-#include "alloc.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -103,6 +97,11 @@ const compression_decoder *check_compression(const std::string &path) {
   }
   return {};
 }
+
+#include "rc.h"
+#include "mimetypes.h"
+#include "myctype.h"
+#include "Str.h"
 
 std::tuple<std::string, std::string>
 uncompressed_file_type(const std::string &path) {

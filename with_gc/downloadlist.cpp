@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "quote.h"
 #include "keyvalue.h"
 #include "etc.h"
 #include "alloc.h"
