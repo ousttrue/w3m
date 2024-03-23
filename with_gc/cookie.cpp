@@ -468,10 +468,10 @@ int add_cookie(const Url *pu, Str *name, Str *value, time_t expires,
   p->expires = expires;
   p->domain = domain->ptr;
   p->path = path->ptr;
-  p->comment = comment;
+  p->comment = comment->ptr;
   p->version = version;
   p->portl = portlist;
-  p->commentURL = commentURL;
+  p->commentURL = commentURL->ptr;
 
   if (flag & COO_SECURE)
     p->flag = (CookieFlags)(p->flag | COO_SECURE);
@@ -509,8 +509,6 @@ static struct Cookie *nth_cookie(int n) {
   return NULL;
 }
 
-#define str2charp(str) ((str) ? (str)->ptr : "")
-
 #define COOKIE_FILE "cookie"
 void save_cookies(void) {
   struct Cookie *p;
@@ -531,9 +529,9 @@ void save_cookies(void) {
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
             p->url.to_Str().c_str(), p->name.c_str(), p->value.c_str(),
             (long)p->expires, p->domain.c_str(), p->path.c_str(), p->flag,
-            p->version, str2charp(p->comment),
+            p->version, p->comment.c_str(),
             (p->portl) ? portlist2str(p->portl)->ptr : "",
-            str2charp(p->commentURL));
+            p->commentURL.c_str());
   }
   fclose(fp);
 
@@ -578,9 +576,9 @@ void load_cookies(void) {
     cookie->flag = {};
     cookie->version = 0;
     cookie->expires = (time_t)-1;
-    cookie->comment = NULL;
+    cookie->comment = {};
     cookie->portl = NULL;
-    cookie->commentURL = NULL;
+    cookie->commentURL = {};
     cookie->url = {readcol(&str)->ptr};
     if (!*str)
       break;
@@ -605,17 +603,13 @@ void load_cookies(void) {
     cookie->version = atoi(readcol(&str)->ptr);
     if (!*str)
       break;
-    cookie->comment = readcol(&str);
-    if (cookie->comment->length == 0)
-      cookie->comment = NULL;
+    cookie->comment = readcol(&str)->ptr;
     if (!*str)
       break;
     cookie->portl = make_portlist(readcol(&str));
     if (!*str)
       break;
-    cookie->commentURL = readcol(&str);
-    if (cookie->commentURL->length == 0)
-      cookie->commentURL = NULL;
+    cookie->commentURL = readcol(&str)->ptr;
 
     if (p)
       p->next = cookie;
@@ -686,17 +680,17 @@ std::string cookie_list_panel() {
       Strcat_charp(src, html_quote(p->make_cookie().c_str()));
       Strcat_charp(src, "</td></tr>");
     }
-    if (p->comment) {
+    if (p->comment.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Comment:</b></td><td>");
-      Strcat_charp(src, html_quote(p->comment->ptr));
+      Strcat_charp(src, html_quote(p->comment.c_str()));
       Strcat_charp(src, "</td></tr>");
     }
-    if (p->commentURL) {
+    if (p->commentURL.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>CommentURL:</b></td><td>");
       Strcat_charp(src, "<a href=\"");
-      Strcat_charp(src, html_quote(p->commentURL->ptr));
+      Strcat_charp(src, html_quote(p->commentURL.c_str()));
       Strcat_charp(src, "\">");
-      Strcat_charp(src, html_quote(p->commentURL->ptr));
+      Strcat_charp(src, html_quote(p->commentURL.c_str()));
       Strcat_charp(src, "</a>");
       Strcat_charp(src, "</td></tr>");
     }
@@ -922,4 +916,20 @@ void process_http_cookie(const Url *pu, Str *lineBuf2) {
             1, true);
     }
   }
+}
+
+bool Cookie::match_cookie(const Url &pu, const char *domainname) const {
+  if (!domainname) {
+    return 0;
+  }
+  if (!domain_match(domainname, this->domain.c_str()))
+    return 0;
+  if (!pu.file.starts_with(this->path))
+    return 0;
+  if (this->flag & COO_SECURE && pu.scheme != SCM_HTTPS)
+    return 0;
+  if (this->portl && !port_match(this->portl, pu.port))
+    return 0;
+
+  return 1;
 }

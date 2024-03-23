@@ -21,6 +21,7 @@
 #include "url_decode.h"
 #include "local_cgi.h"
 #include "cookie.h"
+#include "Str.h"
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>

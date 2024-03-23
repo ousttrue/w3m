@@ -6,6 +6,7 @@
 #include "html/form.h"
 #include "http_auth.h"
 #include "auth_pass.h"
+#include "Str.h"
 #include <sstream>
 #ifdef _MSC_VER
 #include <io.h>
