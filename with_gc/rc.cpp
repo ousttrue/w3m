@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "option.h"
+#include "cookie_domain.h"
 #include "search.h"
 #include "quote.h"
 #include "app.h"

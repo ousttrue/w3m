@@ -594,7 +594,7 @@ bool App::initialize() {
   }
 
   sync_with_option();
-  initCookie(rcFile(COOKIE_FILE));
+  load_cookies(rcFile(COOKIE_FILE));
 
   LoadHist = Hist::newHist();
   SaveHist = Hist::newHist();

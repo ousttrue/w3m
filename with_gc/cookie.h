@@ -9,12 +9,6 @@ extern bool use_cookie;
 extern bool show_cookie;
 extern bool accept_cookie;
 extern int accept_bad_cookie;
-extern std::string cookie_reject_domains;
-extern std::string cookie_accept_domains;
-extern std::string cookie_avoid_wrong_number_of_dots;
-extern std::list<std::string> Cookie_reject_domains;
-extern std::list<std::string> Cookie_accept_domains;
-extern std::list<std::string> Cookie_avoid_wrong_number_of_dots_domains;
 extern bool no_rc_dir;
 
 enum AcceptBadCookieMode {
@@ -40,7 +34,6 @@ std::optional<std::string> find_cookie(const Url &pu);
 
 void save_cookies(const std::string &cookie_file);
 void load_cookies(const std::string &cookie_file);
-void initCookie(const std::string &cookie_file);
 bool check_cookie_accept_domain(const char *domain);
 int add_cookie(const Url *pu, std::string_view name, std::string_view value,
                time_t expires, std::string_view domain, std::string_view path,
@@ -48,3 +41,4 @@ int add_cookie(const Url *pu, std::string_view name, std::string_view value,
                std::string_view port, std::string_view commentURL);
 
 std::string cookie_list_panel();
+void set_cookie_flag(struct keyvalue *arg);

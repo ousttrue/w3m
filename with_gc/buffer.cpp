@@ -24,6 +24,7 @@
 #include "line.h"
 #include "proc.h"
 #include "alloc.h"
+#include "cookie.h"
 #include <sys/stat.h>
 #include <sstream>
 

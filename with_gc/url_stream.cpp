@@ -1,6 +1,6 @@
 #include "url_stream.h"
 #include "ioutil.h"
-#include "domain.h"
+#include "cookie_domain.h"
 #include "file_util.h"
 #include "quote.h"
 #include "http_session.h"
@@ -21,7 +21,6 @@
 #include "linein.h"
 #include "url_decode.h"
 #include "local_cgi.h"
-#include "cookie.h"
 #include "Str.h"
 #include <string.h>
 #include <fcntl.h>

@@ -1537,7 +1537,7 @@ std::shared_ptr<CoroutineState<void>> reinit(const FuncContext &context) {
   if (resource == nullptr) {
     init_rc();
     sync_with_option();
-    initCookie(rcFile(COOKIE_FILE));
+    load_cookies(rcFile(COOKIE_FILE));
     co_return;
   }
 
@@ -1548,7 +1548,7 @@ std::shared_ptr<CoroutineState<void>> reinit(const FuncContext &context) {
   }
 
   if (!strcasecmp(resource, "COOKIE")) {
-    initCookie(rcFile(COOKIE_FILE));
+    load_cookies(rcFile(COOKIE_FILE));
     co_return;
   }
 
