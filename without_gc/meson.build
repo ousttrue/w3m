@@ -18,6 +18,7 @@ without_gc_lib = static_library(
         'tmpfile.cpp',
         'mimetypes.cpp',
         'compression.cpp',
+        'domain.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

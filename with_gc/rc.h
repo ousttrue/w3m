@@ -8,7 +8,6 @@ extern std::string rc_dir;
 extern bool ArgvIsURL;
 
 #define INET6 1
-extern int ai_family_order_table[7][3]; /* XXX */
 
 std::string rcFile(std::string_view base);
 std::string etcFile(const char *base);

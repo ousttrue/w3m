@@ -10,24 +10,15 @@
 
 #include "cookie.h"
 #include "quote.h"
-#include "html/html_quote.h"
-#include "matchattr.h"
-#include "alloc.h"
-#include "keyvalue.h"
-#include "regex.h"
 #include "myctype.h"
-#include "Str.h"
-#include "dns_order.h"
+#include "domain.h"
+
 #include <time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <gc_cpp.h>
 #include <time.h>
-#ifdef _MSC_VER
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#include <io.h>
-#endif
+#include <regex>
 
 struct Cookie : public gc_cleanup {
   Url url = {};
@@ -44,7 +35,7 @@ struct Cookie : public gc_cleanup {
   Cookie *next = {};
 
   std::string make_cookie() const { return name + '=' + value; }
-  bool match_cookie(const Url &pu, const char *domainname) const;
+  bool match_cookie(const Url &pu, std::string_view domainname) const;
 };
 
 struct Cookie *First_cookie = nullptr;
@@ -74,7 +65,6 @@ struct portlist {
 };
 
 bool no_rc_dir = false;
-int DNS_order = DNS_ORDER_UNSPEC;
 bool default_use_cookie = true;
 bool use_cookie = true;
 bool show_cookie = false;
@@ -89,80 +79,10 @@ std::list<std::string> Cookie_avoid_wrong_number_of_dots_domains;
 
 static bool is_saved = 1;
 
-#ifdef INET6
-#ifdef _MSC_VER
-#else
-#include <sys/socket.h>
-#endif
-#endif /* INET6 */
-
-#ifdef _MSC_VER
-#include <winsock2.h>
-#else
-#include <netdb.h>
-#endif
-static const char *FQDN(const char *host) {
-  const char *p;
-#ifndef INET6
-  struct hostent *entry;
-#else  /* INET6 */
-  int *af;
-#endif /* INET6 */
-
-  if (host == NULL)
-    return NULL;
-
-  if (strcasecmp(host, "localhost") == 0)
-    return host;
-
-  for (p = host; *p && *p != '.'; p++)
-    ;
-
-  if (*p == '.')
-    return host;
-
-#ifndef INET6
-  if (!(entry = gethostbyname(host)))
-    return NULL;
-
-  return allocStr(entry->h_name, -1);
-#else  /* INET6 */
-  for (af = ai_family_order_table[DNS_order];; af++) {
-    int error;
-    struct addrinfo hints;
-    struct addrinfo *res, *res0;
-    char *namebuf;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_flags = AI_CANONNAME;
-    hints.ai_family = *af;
-    hints.ai_socktype = SOCK_STREAM;
-    error = getaddrinfo(host, NULL, &hints, &res0);
-    if (error) {
-      if (*af == PF_UNSPEC) {
-        /* all done */
-        break;
-      }
-      /* try next address family */
-      continue;
-    }
-    for (res = res0; res != NULL; res = res->ai_next) {
-      if (res->ai_canonname) {
-        /* found */
-        namebuf = strdup(res->ai_canonname);
-        freeaddrinfo(res0);
-        return namebuf;
-      }
-    }
-    freeaddrinfo(res0);
-    if (*af == PF_UNSPEC) {
-      break;
-    }
-  }
-  /* all failed */
-  return NULL;
-#endif /* INET6 */
-}
+#include "matchattr.h"
+#include "alloc.h"
+#include "keyvalue.h"
+#include "Str.h"
 
 /// if match, return host.substr
 static std::optional<std::string_view> domain_match(std::string_view host,
@@ -173,9 +93,12 @@ static std::optional<std::string_view> domain_match(std::string_view host,
   /* [RFC 2109] s. 2, "domain-match", case 1
    * (both are IP and identical)
    */
-  regexCompile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", 0);
-  auto m0 = regexMatch(host.data(), host.size(), 1);
-  auto m1 = regexMatch(domain.c_str(), -1, 1);
+  std::regex re(R"([0-9]+.[0-9]+.[0-9]+.[0-9]+)");
+  auto m0 = std::regex_match(std::string(host.begin(), host.end()), re);
+  auto m1 = std::regex_match(domain, re);
+  // regexCompile("[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+", 0);
+  // auto m0 = regexMatch(host.data(), host.size(), 1);
+  // auto m1 = regexMatch(domain.c_str(), -1, 1);
   if (m0 && m1) {
     if (strcasecmp(host, domain.c_str()) == 0)
       return host;
@@ -289,12 +212,11 @@ std::optional<std::string> find_cookie(const Url &pu) {
   Str *tmp;
   struct Cookie *p, *p1, *fco = NULL;
   int version = 0;
-  const char *fq_domainname, *domainname;
 
-  fq_domainname = FQDN(pu.host.c_str());
+  auto fq_domainname = FQDN(pu.host);
   check_expired_cookies();
   for (p = First_cookie; p; p = p->next) {
-    domainname = (p->version == 0) ? fq_domainname : pu.host.c_str();
+    auto domainname = (p->version == 0) ? fq_domainname : pu.host;
     if (p->flag & COO_USE && p->match_cookie(pu, domainname)) {
       for (p1 = fco; p1 && p1->name != p->name; p1 = p1->next)
         ;
@@ -604,7 +526,7 @@ std::string cookie_list_panel() {
                           "<p><form method=internal action=cookie>");
   struct Cookie *p;
   int i;
-  const char *tmp;
+  // const char *tmp;
   char tmp2[80];
 
   if (!use_cookie || !First_cookie)
@@ -612,7 +534,7 @@ std::string cookie_list_panel() {
 
   Strcat_charp(src, "<ol>");
   for (p = First_cookie, i = 0; p; p = p->next, i++) {
-    tmp = html_quote(p->url.to_Str().c_str());
+    auto tmp = html_quote(p->url.to_Str());
     if (p->expires != (time_t)-1) {
 #ifdef HAVE_STRFTIME
       strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&p->expires));
@@ -640,28 +562,28 @@ std::string cookie_list_panel() {
     }
     Strcat_charp(src, "<li>");
     Strcat_charp(src, "<h1><a href=\"");
-    Strcat_charp(src, tmp);
+    Strcat(src, tmp);
     Strcat_charp(src, "\">");
-    Strcat_charp(src, tmp);
+    Strcat(src, tmp);
     Strcat_charp(src, "</a></h1>");
 
     Strcat_charp(src, "<table cellpadding=0>");
     if (!(p->flag & COO_SECURE)) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Cookie:</b></td><td>");
-      Strcat_charp(src, html_quote(p->make_cookie().c_str()));
+      Strcat(src, html_quote(p->make_cookie()));
       Strcat_charp(src, "</td></tr>");
     }
     if (p->comment.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Comment:</b></td><td>");
-      Strcat_charp(src, html_quote(p->comment.c_str()));
+      Strcat(src, html_quote(p->comment));
       Strcat_charp(src, "</td></tr>");
     }
     if (p->commentURL.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>CommentURL:</b></td><td>");
       Strcat_charp(src, "<a href=\"");
-      Strcat_charp(src, html_quote(p->commentURL.c_str()));
+      Strcat(src, html_quote(p->commentURL));
       Strcat_charp(src, "\">");
-      Strcat_charp(src, html_quote(p->commentURL.c_str()));
+      Strcat(src, html_quote(p->commentURL));
       Strcat_charp(src, "</a>");
       Strcat_charp(src, "</td></tr>");
     }
@@ -677,17 +599,17 @@ std::string cookie_list_panel() {
     Strcat_charp(src, "</td></tr><tr><td>");
     if (p->domain.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Domain:</b></td><td>");
-      Strcat_charp(src, html_quote(p->domain.c_str()));
+      Strcat(src, html_quote(p->domain));
       Strcat_charp(src, "</td></tr>");
     }
     if (p->path.size()) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Path:</b></td><td>");
-      Strcat_charp(src, html_quote(p->path.c_str()));
+      Strcat(src, html_quote(p->path));
       Strcat_charp(src, "</td></tr>");
     }
     if (p->portl) {
       Strcat_charp(src, "<tr><td width=\"80\"><b>Port:</b></td><td>");
-      Strcat_charp(src, html_quote(portlist2str(p->portl)->ptr));
+      Strcat(src, html_quote(portlist2str(p->portl)->ptr));
       Strcat_charp(src, "</td></tr>");
     }
     Strcat_charp(src, "<tr><td width=\"80\"><b>Secure:</b></td><td>");
@@ -746,8 +668,8 @@ bool check_cookie_accept_domain(const char *domain) {
   return true;
 }
 
-bool Cookie::match_cookie(const Url &pu, const char *domainname) const {
-  if (!domainname) {
+bool Cookie::match_cookie(const Url &pu, std::string_view domainname) const {
+  if (domainname.empty()) {
     return 0;
   }
   if (!domain_match(domainname, this->domain.c_str()))

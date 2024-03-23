@@ -77,3 +77,6 @@ unsigned int total_dot_number(std::string_view v, unsigned int max_count);
 inline bool contain_no_dots(std::string_view v) {
   return total_dot_number(v, 1) == 0;
 };
+
+std::string html_quote(std::string_view str);
+std::string html_unquote(std::string_view str);

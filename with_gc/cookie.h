@@ -15,7 +15,6 @@ extern std::string cookie_avoid_wrong_number_of_dots;
 extern std::list<std::string> Cookie_reject_domains;
 extern std::list<std::string> Cookie_accept_domains;
 extern std::list<std::string> Cookie_avoid_wrong_number_of_dots_domains;
-extern int DNS_order;
 extern bool no_rc_dir;
 
 enum AcceptBadCookieMode {
