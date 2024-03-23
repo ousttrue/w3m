@@ -17,12 +17,11 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <gc_cpp.h>
+#include <stdio.h>
+#include <span>
 #include <time.h>
-
-struct portlist {
-  unsigned short port;
-  struct portlist *next;
-};
+#include <vector>
+#include <sstream>
 
 struct Cookie : public gc_cleanup {
   Url url = {};
@@ -33,7 +32,7 @@ struct Cookie : public gc_cleanup {
   std::string domain;
   std::string comment = {};
   std::string commentURL = {};
-  portlist *portl = {};
+  std::vector<uint16_t> portl;
   char version = {};
   CookieFlags flag = {};
   Cookie *next = {};
@@ -53,34 +52,32 @@ static Str *readcol(char **p) {
   return tmp;
 }
 
-static Str *portlist2str(struct portlist *first) {
-  auto tmp = Sprintf("%d", first->port);
-  for (auto pl = first->next; pl; pl = pl->next)
-    Strcat(tmp, Sprintf(", %d", pl->port));
-  return tmp;
+static std::string portlist2str(std::span<uint16_t> list) {
+  std::stringstream tmp;
+  for (size_t i = 0; i < list.size(); ++i) {
+    if (i) {
+      tmp << ", ";
+    }
+    tmp << list[i];
+  }
+  return tmp.str();
 }
 
-#include "alloc.h"
-
-static struct portlist *make_portlist(std::string_view port) {
-  struct portlist *first = NULL;
-  Str *tmp = Strnew();
+static std::vector<uint16_t> make_portlist(std::string_view port) {
+  std::vector<uint16_t> list;
   auto p = port.begin();
   while (p != port.end()) {
-    while (*p && !IS_DIGIT(*p))
+    while (p != port.end() && !IS_DIGIT(*p))
       p++;
-    Strclear(tmp);
+    std::string tmp;
     while (*p && IS_DIGIT(*p))
-      Strcat_char(tmp, *(p++));
-    if (tmp->length == 0)
+      tmp += *(p++);
+    if (tmp.empty()) {
       break;
-    auto pl = (struct portlist *)New(struct portlist);
-    pl->port = atoi(tmp->ptr);
-    pl->next = first;
-    first = pl;
+    }
+    list.push_back(atoi(tmp.c_str()));
   }
-  Strfree(tmp);
-  return first;
+  return list;
 }
 
 #include "keyvalue.h"
@@ -118,8 +115,7 @@ public:
       fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",
               p->url.to_Str().c_str(), p->name.c_str(), p->value.c_str(),
               (long)p->expires, p->domain.c_str(), p->path.c_str(), p->flag,
-              p->version, p->comment.c_str(),
-              (p->portl) ? portlist2str(p->portl)->ptr : "",
+              p->version, p->comment.c_str(), portlist2str(p->portl).c_str(),
               p->commentURL.c_str());
     }
     fclose(fp);
@@ -156,7 +152,7 @@ public:
       cookie->version = 0;
       cookie->expires = (time_t)-1;
       cookie->comment = {};
-      cookie->portl = NULL;
+      cookie->portl = {};
       cookie->commentURL = {};
       cookie->url = {readcol(&str)->ptr};
       if (!*str)
@@ -265,8 +261,9 @@ public:
           Strcat(tmp, Sprintf("; $Path=\"%s\"", p1->path.c_str()));
         if (p1->flag & COO_DOMAIN)
           Strcat(tmp, Sprintf("; $Domain=\"%s\"", p1->domain.c_str()));
-        if (p1->portl)
-          Strcat(tmp, Sprintf("; $Port=\"%s\"", portlist2str(p1->portl)->ptr));
+        if (p1->portl.size())
+          Strcat(tmp,
+                 Sprintf("; $Port=\"%s\"", portlist2str(p1->portl).c_str()));
       }
     }
     return std::string(tmp->ptr);
@@ -421,9 +418,9 @@ public:
         Strcat(src, html_quote(p->path));
         Strcat_charp(src, "</td></tr>");
       }
-      if (p->portl) {
+      if (p->portl.size()) {
         Strcat_charp(src, "<tr><td width=\"80\"><b>Port:</b></td><td>");
-        Strcat(src, html_quote(portlist2str(p->portl)->ptr));
+        Strcat(src, html_quote(portlist2str(p->portl)));
         Strcat_charp(src, "</td></tr>");
       }
       Strcat_charp(src, "<tr><td width=\"80\"><b>Secure:</b></td><td>");
@@ -490,16 +487,6 @@ int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
 
 #include "matchattr.h"
 
-static int port_match(struct portlist *first, int port) {
-  struct portlist *pl;
-
-  for (pl = first; pl; pl = pl->next) {
-    if (pl->port == port)
-      return 1;
-  }
-  return 0;
-}
-
 static bool check_avoid_wrong_number_of_dots_domain(std::string_view domain) {
   bool avoid_wrong_number_of_dots_domain = false;
   for (auto &tl : Cookie_avoid_wrong_number_of_dots_domains) {
@@ -528,7 +515,6 @@ int add_cookie(const Url *pu, std::string_view name, std::string_view value,
   std::string odomain(domain.begin(), domain.end());
   std::string path(_path.begin(), _path.end());
   std::string opath = path;
-  struct portlist *portlist = NULL;
   int use_security = !(flag & COO_OVERRIDE);
 
 #define COOKIE_ERROR(err)                                                      \
@@ -579,11 +565,16 @@ int add_cookie(const Url *pu, std::string_view name, std::string_view value,
     if (version > 0 && !pu->file.starts_with(path))
       COOKIE_ERROR(COO_EPATH);
   }
+
+  std::vector<uint16_t> portlist;
   if (port.size()) {
     /* [DRAFT 12] s. 4.3.2 case 5 */
     portlist = make_portlist(port);
-    if (portlist && !port_match(portlist, pu->port))
+    if (std::find(portlist.begin(), portlist.end(), pu->port) ==
+        portlist.end()) {
+      // not found
       COOKIE_ERROR(COO_EPORT);
+    }
   }
 
   if (domain.empty()) {
@@ -659,7 +650,8 @@ bool Cookie::match_cookie(const Url &pu, std::string_view domainname) const {
     return 0;
   if (this->flag & COO_SECURE && pu.scheme != SCM_HTTPS)
     return 0;
-  if (this->portl && !port_match(this->portl, pu.port))
+  if (this->portl.size() &&
+      std::find(portl.begin(), portl.end(), pu.port) == portl.end())
     return 0;
 
   return 1;
