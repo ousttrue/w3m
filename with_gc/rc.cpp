@@ -33,7 +33,6 @@
 #define RC_DIR "~/.w3m"
 #endif
 
-
 #define HAVE_FACCESSAT 1
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
@@ -275,10 +274,6 @@ std::string rcFile(std::string_view base) {
   return expandPath(ss.str());
 }
 
-std::string auxbinFile(const char *base) {
-  return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
-}
-
 std::string etcFile(const char *base) {
   return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
 }
@@ -295,9 +290,7 @@ static const char *w3m_dir(const char *name, const char *dft) {
   return dft;
 #endif
 }
-const char *w3m_auxbin_dir(void) {
-  return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR);
-}
+
 const char *w3m_lib_dir(void) { return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR); }
 const char *w3m_etc_dir(void) { return w3m_dir("W3M_ETC_DIR", ETC_DIR); }
 const char *w3m_conf_dir(void) { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }

@@ -1,21 +1,4 @@
-PACKAGE = meson.project_name()
-prefix = get_option('prefix')
-exec_prefix = prefix
-datarootdir = prefix + '/share'
-datadir = datarootdir
-localedir = datadir + '/locale'
-libexecdir = exec_prefix + '/libexec'
-sysconfdir = prefix + '/etc'
-
-CGIBIN_DIR = libexecdir + '/' + PACKAGE + '/cgi-bin'
-AUXBIN_DIR = libexecdir + '/' + PACKAGE
-HELP_DIR = datarootdir + '/w3m'
-RC_DIR = '~/.w3m'
-ETC_DIR = sysconfdir
-CONF_DIR = sysconfdir + '/' + PACKAGE
-
 defs = [
-    '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
     '-DCGIBIN_DIR="' + CGIBIN_DIR + '"',
     '-DHELP_DIR="' + HELP_DIR + '"',
     '-DETC_DIR="' + ETC_DIR + '"',
@@ -61,7 +44,6 @@ with_gc_lib = static_library(
         'downloadlist.cpp',
         'ssl_util.cpp',
         'url_stream.cpp',
-        'compression.cpp',
         'mytime.cpp',
         'app.cpp',
         'http_auth.cpp',

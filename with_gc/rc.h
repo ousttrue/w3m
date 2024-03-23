@@ -11,12 +11,10 @@ extern int ai_family_order_table[7][3]; /* XXX */
 std::string rcFile(std::string_view base);
 std::string etcFile(const char *base);
 std::string confFile(const char *base);
-std::string auxbinFile(const char *base);
 const char *libFile(const char *base);
 const char *helpFile(const char *base);
 int set_param_option(const char *option);
 void init_rc();
-const char *w3m_auxbin_dir();
 const char *w3m_lib_dir();
 const char *w3m_etc_dir();
 const char *w3m_conf_dir();

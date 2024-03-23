@@ -17,8 +17,14 @@ without_gc_lib = static_library(
         'event.cpp',
         'tmpfile.cpp',
         'mimetypes.cpp',
+        'compression.cpp',
+    ],
+    cpp_args: [
+        '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
     ],
     dependencies: [
+        zlib_dep,
+        # ftxui
         screen_dep,
         dom_dep,
         component_dep,

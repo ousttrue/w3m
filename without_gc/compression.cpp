@@ -1,5 +1,7 @@
 #include "compression.h"
 #include "quote.h"
+#include "mimetypes.h"
+#include "myctype.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
@@ -8,6 +10,7 @@
 #include <assert.h>
 #include <array>
 #include <algorithm>
+#include <sstream>
 
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -98,10 +101,7 @@ const compression_decoder *check_compression(const std::string &path) {
   return {};
 }
 
-#include "rc.h"
-#include "mimetypes.h"
-#include "myctype.h"
-#include "Str.h"
+// #include "Str.h"
 
 std::tuple<std::string, std::string>
 uncompressed_file_type(const std::string &path) {
@@ -124,49 +124,63 @@ uncompressed_file_type(const std::string &path) {
     return {};
   }
 
-  auto fn = Strnew(path);
-  Strshrink(fn, slen);
-  auto t0 = guessContentType(fn->ptr);
+  std::string fn = path;
+  fn = fn.substr(0, fn.size() - slen);
+  auto t0 = guessContentType(fn);
   if (t0.empty()) {
     t0 = "text/plain";
   }
-  auto ext = filename_extension(fn->ptr, 0);
+  auto ext = filename_extension(fn.c_str(), 0);
   return {t0, ext};
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
 
-static int check_command(const char *cmd, bool auxbin_p) {
-  static char *path = nullptr;
-  if (!path) {
+static const char *w3m_dir(const char *name, const char *dft) {
+#ifdef USE_PATH_ENVVAR
+  char *value = getenv(name);
+  return value ? value : dft;
+#else
+  return dft;
+#endif
+}
+
+static const char *w3m_auxbin_dir(void) {
+  return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR);
+}
+
+static bool check_command(const char *cmd, bool auxbin_p) {
+  static std::string path;
+  if (path.empty()) {
     path = getenv("PATH");
   }
 
-  Str *dirs;
+  std::string dirs;
   if (auxbin_p) {
-    dirs = Strnew_charp(w3m_auxbin_dir());
+    dirs = w3m_auxbin_dir();
   } else {
-    dirs = Strnew_charp(path);
+    dirs = path;
   }
 
-  char *np;
-  for (auto p = dirs->ptr; p != nullptr; p = np) {
-    np = strchr(p, PATH_SEPARATOR);
-    if (np) {
-      *np++ = '\0';
-    }
-    auto pathname = Strnew();
-    Strcat_charp(pathname, p);
-    Strcat_char(pathname, '/');
-    Strcat_charp(pathname, cmd);
+  std::string_view view = dirs;
+  while (view.size()) {
+    auto np = view.find(PATH_SEPARATOR);
+    std::stringstream pathname;
+    pathname << (np != std::string::npos ? view.substr(0, np) : view);
+    pathname << '/';
+    pathname << cmd;
     struct stat st;
-    if (stat(pathname->ptr, &st) == 0 && S_ISREG(st.st_mode)
+    if (stat(pathname.str().c_str(), &st) == 0 && S_ISREG(st.st_mode)
 #ifndef _MSC_VER
         && (st.st_mode & S_IXANY) != 0
 #endif
     ) {
       return true;
     }
+    if (np == std::string::npos) {
+      break;
+    }
+    view = view.substr(np + 1);
   }
   return false;
 }
