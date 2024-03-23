@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string>
 
+#define COOKIE_FILE "cookie"
+
 extern std::string rc_dir;
 extern bool ArgvIsURL;
 
@@ -33,7 +35,6 @@ extern int WrapDefault;
 
 extern std::string BookmarkFile;
 extern struct auth_cookie *Auth_cookie;
-extern int no_rc_dir;
 extern std::string config_file;
 extern int is_redisplay;
 extern int clear_buffer;

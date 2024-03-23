@@ -5,11 +5,11 @@
 #include "tmpfile.h"
 #include "app.h"
 #include "readallbytes.h"
-// #include "content.h"
 #include "cookie.h"
 #include "Str.h"
 #include "myctype.h"
 #include "mimehead.h"
+#include "mytime.h"
 #include "etc.h"
 #include <assert.h>
 #include <sys/stat.h>
@@ -97,6 +97,151 @@ int HttpResponse::readHeader(const std::shared_ptr<input_stream> &stream,
   }
 
   return http_response_code;
+}
+
+/* This array should be somewhere else */
+const char *violations[COO_EMAX] = {
+    "internal error",          "tail match failed",
+    "wrong number of dots",    "RFC 2109 4.3.2 rule 1",
+    "RFC 2109 4.3.2 rule 2.1", "RFC 2109 4.3.2 rule 2.2",
+    "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
+    "RFC XXXX 4.3.2 rule 5"};
+
+static void process_http_cookie(const Url *pu, std::string_view lineBuf2) {
+  Str *value = Strnew();
+  Str *domain = NULL;
+  Str *path = NULL;
+  Str *port = NULL;
+  Str *tmp2;
+  int version;
+  int quoted;
+  CookieFlags flag = {};
+  time_t expires = (time_t)-1;
+
+  const char *q = {};
+  const char *p = {};
+  if (lineBuf2[10] == '2') {
+    p = lineBuf2.data() + 12;
+    version = 1;
+  } else {
+    p = lineBuf2.data() + 11;
+    version = 0;
+  }
+
+#ifdef DEBUG
+  fprintf(stderr, "Set-Cookie: [%s]\n", p);
+#endif /* DEBUG */
+
+  SKIP_BLANKS(p);
+  std::string name;
+  while (*p != '=' && !IS_ENDT(*p))
+    name += *(p++);
+  while (name.size() && IS_SPACE(name.back())) {
+    name.pop_back();
+  }
+  if (*p == '=') {
+    p++;
+    SKIP_BLANKS(p);
+    quoted = 0;
+    while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+      if (!IS_SPACE(*p))
+        q = p;
+      if (*p == '"')
+        quoted = (quoted) ? 0 : 1;
+      Strcat_char(value, *(p++));
+    }
+    if (q)
+      Strshrink(value, p - q - 1);
+  }
+  std::string comment;
+  std::string commentURL;
+  while (*p == ';') {
+    p++;
+    SKIP_BLANKS(p);
+    if (matchattr(p, "expires", 7, &tmp2)) {
+      /* version 0 */
+      expires = mymktime(tmp2->ptr);
+    } else if (matchattr(p, "max-age", 7, &tmp2)) {
+      /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2
+       */
+      expires = time(NULL) + atol(tmp2->ptr);
+    } else if (matchattr(p, "domain", 6, &tmp2)) {
+      domain = tmp2;
+    } else if (matchattr(p, "path", 4, &tmp2)) {
+      path = tmp2;
+    } else if (matchattr(p, "secure", 6, NULL)) {
+      flag = (CookieFlags)(flag | COO_SECURE);
+    } else if (matchattr(p, "comment", 7, &tmp2)) {
+      comment = tmp2->ptr;
+    } else if (matchattr(p, "version", 7, &tmp2)) {
+      version = atoi(tmp2->ptr);
+    } else if (matchattr(p, "port", 4, &tmp2)) {
+      /* version 1, Set-Cookie2 */
+      port = tmp2;
+    } else if (matchattr(p, "commentURL", 10, &tmp2)) {
+      /* version 1, Set-Cookie2 */
+      commentURL = tmp2->ptr;
+    } else if (matchattr(p, "discard", 7, NULL)) {
+      /* version 1, Set-Cookie2 */
+      flag = (CookieFlags)(flag | COO_DISCARD);
+    }
+    quoted = 0;
+    while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+      if (*p == '"')
+        quoted = (quoted) ? 0 : 1;
+      p++;
+    }
+  }
+  if (pu && name.size() > 0) {
+    int err;
+    if (show_cookie) {
+      if (flag & COO_SECURE) {
+        App::instance().disp_message_nsec("Received a secured cookie", 1, true);
+      } else
+        App::instance().disp_message_nsec(
+            Sprintf("Received cookie: %s=%s", name.c_str(), value->ptr)->ptr, 1,
+            true);
+    }
+    err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
+                     version, port, commentURL);
+    if (err) {
+      const char *ans =
+          (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
+      if (/*fmInitialized &&*/ (err & COO_OVERRIDE_OK) &&
+          accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
+        Str *msg =
+            Sprintf("Accept bad cookie from %s for %s?", pu->host.c_str(),
+                    ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
+        if (msg->length > App::instance().COLS() - 10)
+          Strshrink(msg, msg->length - (App::instance().COLS() - 10));
+        Strcat_charp(msg, " (y/n)");
+        // ans = inputAnswer(msg->ptr);
+        ans = "y";
+      }
+
+      if (ans == NULL || TOLOWER(*ans) != 'y' ||
+          (err = add_cookie(pu, name, value, expires, domain, path,
+                            (CookieFlags)(flag | COO_OVERRIDE), comment,
+                            version, port, commentURL))) {
+        err = (err & ~COO_OVERRIDE_OK) - 1;
+        const char *emsg;
+        if (err >= 0 && err < COO_EMAX)
+          emsg = Sprintf("This cookie was rejected "
+                         "to prevent security violation. [%s]",
+                         violations[err])
+                     ->ptr;
+        else
+          emsg = "This cookie was rejected to prevent security violation.";
+        App::instance().App::instance().record_err_message(emsg);
+        if (show_cookie)
+          App::instance().disp_message_nsec(emsg, 1, true);
+      } else if (show_cookie)
+        App::instance().disp_message_nsec(
+            Sprintf("Accepting invalid cookie: %s=%s", name.c_str(), value->ptr)
+                ->ptr,
+            1, true);
+    }
+  }
 }
 
 void HttpResponse::pushHeader(const Url &url, Str *lineBuf2) {
@@ -260,7 +405,7 @@ FILE *HttpResponse::createSourceFile() {
 void HttpResponse::page_loaded(Url url,
                                const std::shared_ptr<input_stream> &stream) {
   assert(stream);
-                                
+
   const char *p;
   if ((p = this->getHeader("Content-Length:"))) {
     this->current_content_length = strtoclen(p);

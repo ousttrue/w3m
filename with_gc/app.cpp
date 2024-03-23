@@ -468,7 +468,7 @@ App::~App() {
 
   // exit
   // term_title(""); /* XXX */
-  save_cookies();
+  save_cookies(rcFile(COOKIE_FILE));
   if (UseHistory && SaveURLHist) {
     URLHist->saveHistory(rcFile(HISTORY_FILE), URLHistSize);
   }
@@ -594,7 +594,7 @@ bool App::initialize() {
   }
 
   sync_with_option();
-  initCookie();
+  initCookie(rcFile(COOKIE_FILE));
 
   LoadHist = Hist::newHist();
   SaveHist = Hist::newHist();

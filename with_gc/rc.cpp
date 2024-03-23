@@ -60,7 +60,6 @@ int WrapDefault = false;
 std::string BookmarkFile;
 
 struct auth_cookie *Auth_cookie = nullptr;
-int no_rc_dir = false;
 std::string config_file;
 int is_redisplay = false;
 int clear_buffer = true;
