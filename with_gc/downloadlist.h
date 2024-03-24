@@ -1,10 +1,9 @@
 #pragma once
 #include <time.h>
 #include <string>
-#include <gc_cpp.h>
 #include <list>
 
-struct DownloadList : public gc_cleanup {
+struct DownloadList {
   int pid;
   const char *url;
   std::string save;
@@ -17,9 +16,6 @@ struct DownloadList : public gc_cleanup {
   DownloadList *prev;
 };
 #define DOWNLOAD_LIST_TITLE "Download List Panel"
-
-extern DownloadList *FirstDL;
-extern DownloadList *LastDL;
 
 void addDownloadList(int pid, const char *url, const char *save,
                      const char *lock, long long size);

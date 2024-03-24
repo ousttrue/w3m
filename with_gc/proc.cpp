@@ -1676,42 +1676,43 @@ std::shared_ptr<CoroutineState<void>> tabL(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> ldDL(const FuncContext &context) {
   int replace = false, new_tab = false;
 
-  if (!FirstDL) {
-    if (replace) {
-      if (CurrentTab->currentBuffer() == CurrentTab->firstBuffer &&
-          CurrentTab->currentBuffer()->backBuffer == nullptr) {
-        if (App::instance().nTab() > 1)
-          App::instance().deleteTab(CurrentTab);
-      } else
-        CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
-    }
-    co_return;
-  }
-
-  auto reload = checkDownloadList();
-  auto html = DownloadListBuffer();
-  if (html.empty()) {
-    co_return;
-  }
-  auto buf = Buffer::fromHtml(html);
-  if (replace) {
-    // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
-    buf->layout->visual.restorePosition(
-        CurrentTab->currentBuffer()->layout->visual);
-  }
-  if (!replace && open_tab_dl_list) {
-    App::instance().newTab();
-    new_tab = true;
-  }
-  CurrentTab->pushBuffer(buf);
-  if (replace || new_tab)
-    deletePrevBuf(context);
-  if (reload) {
-    // CurrentTab->currentBuffer()->layout->event =
-    //     setAlarmEvent(CurrentTab->currentBuffer()->layout->event, 1,
-    //     AL_IMPLICIT,
-    //                   FUNCNAME_reload, nullptr);
-  }
+  // if (!FirstDL) {
+  //   if (replace) {
+  //     if (CurrentTab->currentBuffer() == CurrentTab->firstBuffer &&
+  //         CurrentTab->currentBuffer()->backBuffer == nullptr) {
+  //       if (App::instance().nTab() > 1)
+  //         App::instance().deleteTab(CurrentTab);
+  //     } else
+  //       CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
+  //   }
+  //   co_return;
+  // }
+  //
+  // auto reload = checkDownloadList();
+  // auto html = DownloadListBuffer();
+  // if (html.empty()) {
+  //   co_return;
+  // }
+  // auto buf = Buffer::fromHtml(html);
+  // if (replace) {
+  //   // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
+  //   buf->layout->visual.restorePosition(
+  //       CurrentTab->currentBuffer()->layout->visual);
+  // }
+  // if (!replace && open_tab_dl_list) {
+  //   App::instance().newTab();
+  //   new_tab = true;
+  // }
+  // CurrentTab->pushBuffer(buf);
+  // if (replace || new_tab)
+  //   deletePrevBuf(context);
+  // if (reload) {
+  //   // CurrentTab->currentBuffer()->layout->event =
+  //   //     setAlarmEvent(CurrentTab->currentBuffer()->layout->event, 1,
+  //   //     AL_IMPLICIT,
+  //   //                   FUNCNAME_reload, nullptr);
+  // }
+  co_return;
 }
 
 // UNDO

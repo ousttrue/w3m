@@ -8,8 +8,8 @@
 #include "proc.h"
 
 static bool add_download_list = false;
-DownloadList *FirstDL = nullptr;
-DownloadList *LastDL = nullptr;
+
+std::list<std::shared_ptr<DownloadList>> g_list;
 
 bool popAddDownloadList() {
   auto ret = add_download_list;
@@ -20,7 +20,8 @@ bool popAddDownloadList() {
 void addDownloadList(int pid, const char *url, const char *save,
                      const char *lock, long long size) {
 
-  auto d = new DownloadList;
+  auto d = std::make_shared<DownloadList>();
+  g_list.push_back(d);
   d->pid = pid;
   d->url = url;
   if (save[0] != '/' && save[0] != '~') {
@@ -32,13 +33,6 @@ void addDownloadList(int pid, const char *url, const char *save,
   d->time = time(0);
   d->running = true;
   d->err = 0;
-  d->next = NULL;
-  d->prev = LastDL;
-  if (LastDL)
-    LastDL->next = d;
-  else
-    FirstDL = d;
-  LastDL = d;
   add_download_list = true;
 }
 
@@ -166,11 +160,7 @@ std::string DownloadListBuffer(void) {
 }
 
 void stopDownload(void) {
-  DownloadList *d;
-
-  if (!FirstDL)
-    return;
-  for (d = FirstDL; d != nullptr; d = d->next) {
+  for (auto d : g_list) {
     if (!d->running)
       continue;
 #ifdef _MSC_VER

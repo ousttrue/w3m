@@ -1,7 +1,4 @@
 #pragma once
-#include "url.h"
-#include <optional>
-#include <gc_cpp.h>
 #include <memory>
 
 extern bool open_tab_blank;

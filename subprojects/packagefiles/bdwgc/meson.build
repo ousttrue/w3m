@@ -1,6 +1,9 @@
 project(
     'bdwgc',
-    ['c', 'cpp'],
+    [
+        'c',
+        # 'cpp'
+    ],
     version: '8.2.2',
     meson_version: '>=0.47.0',
     license: 'custom',
@@ -32,10 +35,10 @@ gc_src = files(
     'typd_mlc.c',
 )
 
-gc_src += [
-    'gc_badalc.cc',
-    'gc_cpp.cc',
-]
+# gc_src += [
+#     'gc_badalc.cc',
+#     'gc_cpp.cc',
+# ]
 
 if host_machine.cpu().contains('sparc')
     gc_src += files('sparc_mach_dep.S')
@@ -50,7 +53,7 @@ gclib = library(
     gc_src,
     include_directories: 'include',
     c_args: args,
-    cpp_args: args,
+    # cpp_args: args,
 )
 
 bdwgc_dep = declare_dependency(
