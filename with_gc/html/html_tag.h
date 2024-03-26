@@ -2,7 +2,6 @@
 #include "html_command.h"
 #include <memory>
 #include <string>
-#include <string_view>
 
 // Parsed Tag structure
 enum HtmlTagAttr {
@@ -79,14 +78,17 @@ enum HtmlTagAttr {
   MAX_TAGATTR = 75,
 };
 
-struct HtmlTag {
-  HtmlCommand tagid = {};
+class HtmlTag {
+
+public:
+  const HtmlCommand tagid;
+
+private:
   unsigned char *attrid = {};
   char **value = {};
   unsigned char *map = {};
-  char need_reconstruct = {};
+  bool need_reconstruct = false;
 
-private:
   HtmlTag(HtmlCommand id) : tagid(id) {}
 
 public:

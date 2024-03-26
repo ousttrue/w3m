@@ -16,8 +16,6 @@ enum FormEncoding {
 };
 
 struct FormItem;
-struct HtmlTag;
-
 struct Form : public std::enable_shared_from_this<Form> {
   std::string action;
   FormMethod method = FORM_METHOD_GET;

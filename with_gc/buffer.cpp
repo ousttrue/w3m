@@ -15,7 +15,6 @@
 #include "local_cgi.h"
 #include "etc.h"
 #include "rc.h"
-#include "linklist.h"
 #include "html/form.h"
 #include "html/form_item.h"
 #include "html/anchorlist.h"
@@ -23,7 +22,6 @@
 #include "ctrlcode.h"
 #include "line.h"
 #include "proc.h"
-#include "alloc.h"
 #include "cookie.h"
 #include <sys/stat.h>
 #include <sstream>
@@ -48,40 +46,33 @@ std::shared_ptr<Buffer> Buffer::fromHtml(const std::string &html) {
 
 /* append links */
 std::string Buffer::link_info() const {
-  auto link = this->layout->data.linklist;
-  if (!link) {
-    return {};
-  }
-
-  // LinkList *l;
-
   std::stringstream html;
   html << "<hr width=50%><h1>Link information</h1><table>\n";
 
-  for (auto l = link; l; l = l->next) {
+  for (auto &l : this->layout->data.linklist) {
     Url pu;
     std::string url;
-    if (l->url) {
-      pu = {l->url, this->layout->data.baseURL};
+    if (l.url.size()) {
+      pu = {l.url, this->layout->data.baseURL};
       url = html_quote(pu.to_Str().c_str());
     } else {
       url = "(empty)";
     }
     html << "<tr valign=top><td><a href=\"" << url << "\">"
-         << (l->title ? html_quote(l->title) : "(empty)") << "</a><td>";
-    if (l->type == LINK_TYPE_REL) {
+         << (l.title.size() ? html_quote(l.title) : "(empty)") << "</a><td>";
+    if (l.type == LINK_TYPE_REL) {
       html << "[Rel]";
-    } else if (l->type == LINK_TYPE_REV) {
+    } else if (l.type == LINK_TYPE_REV) {
       html << "[Rev]";
     }
-    if (!l->url) {
+    if (l.url.empty()) {
       url = "(empty)";
     } else {
-      url = html_quote(url_decode0(l->url));
+      url = html_quote(url_decode0(l.url));
     }
     html << "<td>" << url;
-    if (l->ctype) {
-      html << " (" << html_quote(l->ctype) << ")";
+    if (l.ctype.size()) {
+      html << " (" << html_quote(l.ctype) << ")";
     }
     html << "\n";
   }
@@ -198,13 +189,13 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
   Str *tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");
 
-  if (buf->layout->data.linklist) {
+  if (buf->layout->data.linklist.size()) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-    for (auto l = buf->layout->data.linklist; l; l = l->next) {
+    for (auto &l : buf->layout->data.linklist) {
       std::string p;
       std::string u;
-      if (l->url) {
-        Url pu(l->url, buf->layout->data.baseURL);
+      if (l.url.size()) {
+        Url pu(l.url, buf->layout->data.baseURL);
         p = pu.to_Str();
         u = html_quote(p);
         if (DecodeURL)
@@ -214,11 +205,12 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
       } else
         u = p = "";
       std::string t = "";
-      if (l->type == LINK_TYPE_REL)
+      if (l.type == LINK_TYPE_REL)
         t = " [Rel]";
-      else if (l->type == LINK_TYPE_REV)
+      else if (l.type == LINK_TYPE_REV)
         t = " [Rev]";
-      t = Sprintf("%s%s\n", l->title ? l->title : "", t.c_str())->ptr;
+      t = Sprintf("%s%s\n", l.title.size() ? l.title.c_str() : "", t.c_str())
+              ->ptr;
       t = html_quote(t);
       Strcat_m_charp(tmp, "<li><a href=\"", u.c_str(), "\">", t.c_str(),
                      "</a><br>", p.c_str(), "\n", NULL);

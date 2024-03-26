@@ -13,8 +13,6 @@
 #include <functional>
 #include <memory>
 
-struct HtmlTag;
-
 struct Utf8;
 
 // Screen properties

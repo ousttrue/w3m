@@ -8,7 +8,7 @@
 #include "line.h"
 
 struct Str;
-struct HtmlTag;
+class HtmlTag;
 
 using FeedFunc = Str *(*)();
 

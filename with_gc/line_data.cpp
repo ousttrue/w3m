@@ -1,13 +1,11 @@
 #include "line_data.h"
 #include "Str.h"
-#include "linklist.h"
 #include "myctype.h"
 #include "html/form.h"
 #include "html/form_item.h"
 #include "quote.h"
 #include "etc.h"
 #include "html/html_tag.h"
-#include "linklist.h"
 #include "url_quote.h"
 #include "alloc.h"
 #include <sstream>
@@ -27,10 +25,10 @@ std::string LineData::status() const {
   ss << "#"
      << _reshapeCount
      //
-     << ", width: " << _cols
+     << ", width: "
+     << _cols
      //
-     << ", lines: "
-     << lines.size()
+     << ", lines: " << lines.size()
       //
       ;
   return ss.str();
@@ -279,10 +277,13 @@ const char *LineData::getAnchorText(Anchor *a) {
 }
 
 void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
-  const char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL,
-             *rev = NULL;
-  char type = LINK_TYPE_NONE;
-  LinkList *l;
+  const char *href = NULL;
+  const char *title = NULL;
+  const char *ctype = NULL;
+  const char *rel = NULL;
+  const char *rev = NULL;
+  LinkType type = LINK_TYPE_NONE;
+  // LinkList *l;
 
   tag->parsedtag_get_value(ATTR_HREF, &href);
   if (href)
@@ -304,19 +305,12 @@ void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
       title = rev;
   }
 
-  l = (LinkList *)New(LinkList);
-  l->url = href;
-  l->title = title;
-  l->ctype = ctype;
-  l->type = type;
-  l->next = NULL;
-  if (this->linklist) {
-    LinkList *i;
-    for (i = this->linklist; i->next; i = i->next)
-      ;
-    i->next = l;
-  } else
-    this->linklist = l;
+  linklist.push_back({
+      .url = href,
+      .title = title,
+      .ctype = ctype,
+      .type = type,
+  });
 }
 
 void LineData::clear(int cols) {
@@ -327,7 +321,7 @@ void LineData::clear(int cols) {
   this->_img->clear();
   this->_formitem->clear();
   this->formlist.clear();
-  this->linklist = nullptr;
+  this->linklist.clear();
   this->_hmarklist->clear();
   ++_reshapeCount;
   _cols = cols;

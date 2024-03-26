@@ -22,7 +22,7 @@ FormItemType formtype(const char *typestr);
 
 struct Form;
 struct html_feed_environ;
-struct HtmlTag;
+class HtmlTag;
 struct FormItem {
   FormItemType type;
   std::string name;

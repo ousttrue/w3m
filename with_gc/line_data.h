@@ -6,17 +6,28 @@
 #include <memory>
 #include <string>
 #include <assert.h>
+#include <list>
 
 extern bool MarkAllPages;
 
 struct HmarkerList;
-struct HtmlTag;
+class HtmlTag;
 
 using AnchorFunc = Anchor *(*)(struct LineData *, const char *, const char *,
                                int, int);
 
-// Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
-//                         int line, int pos);
+enum LinkType {
+  LINK_TYPE_NONE = 0,
+  LINK_TYPE_REL = 1,
+  LINK_TYPE_REV = 2,
+};
+
+struct LinkList {
+  std::string url;
+  std::string title; /* Next, Contents, ... */
+  std::string ctype; /* Content-Type */
+  LinkType type;     /* Rel, Rev */
+};
 
 struct LineData {
   std::string title;
@@ -36,7 +47,7 @@ struct LineData {
   std::shared_ptr<AnchorList<Anchor>> _img;
   std::shared_ptr<AnchorList<FormAnchor>> _formitem;
   std::shared_ptr<HmarkerList> _hmarklist;
-  struct LinkList *linklist = nullptr;
+  std::list<LinkList> linklist;
   std::vector<std::shared_ptr<Form>> formlist;
   std::shared_ptr<struct FormItem> form_submit;
   struct FormAnchor *submit = nullptr;
@@ -81,5 +92,5 @@ struct LineData {
 
   const char *getAnchorText(Anchor *a);
 
-  void addLink(const std::shared_ptr<struct HtmlTag> &tag);
+  void addLink(const std::shared_ptr<HtmlTag> &tag);
 };
