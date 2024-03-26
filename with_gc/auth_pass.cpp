@@ -1,6 +1,7 @@
 #include "auth_pass.h"
 #include "etc.h"
 #include "alloc.h"
+#include "quote.h"
 #include "url.h"
 #include "Str.h"
 #include "myctype.h"
@@ -238,7 +239,7 @@ FILE *openSecretFile(const char *fname) {
 
   auto efname = expandPath(fname);
   struct stat st;
-  if (stat(efname, &st) < 0) {
+  if (stat(efname.c_str(), &st) < 0) {
     return {};
   }
 
@@ -259,7 +260,7 @@ FILE *openSecretFile(const char *fname) {
     return NULL;
   }
 
-  return fopen(efname, "r");
+  return fopen(efname.c_str(), "r");
 #endif
 }
 

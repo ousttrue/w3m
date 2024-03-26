@@ -1,4 +1,6 @@
 #include "url_stream.h"
+#include "downloadlist.h"
+#include "tmpfile.h"
 #include "ioutil.h"
 #include "cookie_domain.h"
 #include "file_util.h"
@@ -101,19 +103,6 @@ static void sock_log(char *message, ...) {
   fclose(f);
 }
 #endif
-
-#ifdef INET6
-/* see rc.c, "dns_order" and dnsorders[] */
-static int ai_family_order_table[7][3] = {
-    {PF_UNSPEC, PF_UNSPEC, PF_UNSPEC}, /* 0:unspec */
-    {PF_INET, PF_INET6, PF_UNSPEC},    /* 1:inet inet6 */
-    {PF_INET6, PF_INET, PF_UNSPEC},    /* 2:inet6 inet */
-    {PF_UNSPEC, PF_UNSPEC, PF_UNSPEC}, /* 3: --- */
-    {PF_INET, PF_UNSPEC, PF_UNSPEC},   /* 4:inet */
-    {PF_UNSPEC, PF_UNSPEC, PF_UNSPEC}, /* 5: --- */
-    {PF_INET6, PF_UNSPEC, PF_UNSPEC},  /* 6:inet6 */
-};
-#endif /* INET6 */
 
 // static JMP_BUF AbortLoading;
 // static void KeyAbort(SIGNAL_ARG) {
@@ -718,7 +707,7 @@ int UrlStream::doFileSave(const char *defstr) {
       App::instance().disp_err_message(msg->ptr);
       return -1;
     }
-    auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");
+    auto lock = TmpFile::instance().tmpfname(TMPF_DFL, ".lock");
     symlink(p, lock.c_str());
 
     // flush_tty();
@@ -758,7 +747,7 @@ int UrlStream::doFileSave(const char *defstr) {
     *(char *)(p + 1) = '\0';
     if (*q == '\0')
       return -1;
-    p = expandPath((char *)q);
+    p = Strnew(expandPath(q))->ptr;
     if (!couldWrite(p))
       return -1;
     if (checkSaveFile(this->stream, p) < 0) {

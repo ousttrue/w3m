@@ -28,6 +28,8 @@ char *strcasestr(const char *str, const char *pattern) {
   }
   return NULL;
 }
+#else
+#include <pwd.h>
 #endif
 
 unsigned char QUOTE_MAP[0x100] = {
@@ -443,14 +445,14 @@ std::string expandPath(std::string_view name) {
       auto q = strchr(p, '/');
       struct passwd *passent;
       if (q) { /* ~user/dir... */
-        passent = getpwnam(allocStr(p, q - p));
+        passent = getpwnam(std::string(p).substr(0, q - p).c_str());
         p = q;
       } else { /* ~user */
         passent = getpwnam(p);
         p = "";
       }
       if (!passent) {
-        return name;
+        return {name.begin(), name.end()};
       }
       ss << passent->pw_dir;
     } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */

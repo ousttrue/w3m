@@ -1,11 +1,14 @@
 #include "ioutil.h"
 #include "quote.h"
 #include "url_decode.h"
+#include "myctype.h"
 #include <sstream>
 #ifdef _MSC_VER
 #include <winsock2.h>
 #include <direct.h>
-// #define getcwd _getcwd
+#else
+#include <pwd.h>
+#include <unistd.h>
 #endif
 // HOST_NAME_MAX is recommended by POSIX, but not required.
 // FreeBSD and OSX (as of 10.9) are known to not define it.
@@ -117,40 +120,44 @@ std::string expandName(std::string_view name) {
 #ifdef _MSC_VER
   return {};
 #else
-  struct passwd *passent, *getpwnam(const char *);
-  Str *extpath = NULL;
 
   if (name.empty()) {
     return {};
   }
   auto p = name.begin();
   if (*p == '/') {
-    if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2))) && personal_document_root) {
+    std::stringstream extpath;
+    if ((*(p + 1) == '~' && IS_ALPHA(*(p + 2))) &&
+        ioutil::personal_document_root.size()) {
       p += 2;
       auto q = strchr(p, '/');
+
+      struct passwd *passent;
       if (q) { /* /~user/dir... */
-        passent = getpwnam(allocStr(p, q - p));
+        passent = getpwnam(std::string(p).substr(0, q - p).c_str());
         p = q;
       } else { /* /~user */
         passent = getpwnam(p);
         p = "";
       }
+
       if (!passent)
-        goto rest;
-      extpath =
-          Strnew_m_charp(passent->pw_dir, "/", personal_document_root, NULL);
-      if (*personal_document_root == '\0' && *p == '/')
+        return {name.begin(), name.end()};
+
+      extpath << passent->pw_dir << "/" << ioutil::personal_document_root;
+      if (ioutil::personal_document_root.empty() && *p == '/') {
         p++;
-    } else
-      goto rest;
-    if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+      }
+    } else {
+      return {name.begin(), name.end()};
+    }
+    if (extpath.str() == "/" && *p == '/')
       p++;
-    Strcat_charp(extpath, p);
-    return extpath->ptr;
-  } else
+    extpath << p;
+    return extpath.str();
+  } else {
     return expandPath(p);
-rest:
-  return {name.begin(), name.end()};
+  }
 #endif
 }
 std::string hostname() { return _hostName; }

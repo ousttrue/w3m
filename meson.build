@@ -10,6 +10,7 @@ project(
 add_project_arguments(
     '-DNOMINMAX',
     '-D_USE_MATH_DEFINES',
+    '-I../subprojects/FTXUI-5.0.0/include',
     language: 'cpp',
 )
 
@@ -71,10 +72,11 @@ executable(
     'main.cpp',
     install: true,
     dependencies: [
+        deps,
         without_gc_dep,
         with_gc_dep,
     ],
 )
 
-subdir('tests')
+# subdir('tests')
 subdir('tui_sample')

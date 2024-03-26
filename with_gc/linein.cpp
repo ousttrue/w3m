@@ -703,7 +703,7 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
     if (Strlastchar(CompleteBuf) == '/' && CompleteBuf->length > 1) {
       Strshrink(CompleteBuf, 1);
     }
-    auto d = opendir(expandPath(CompleteBuf->ptr));
+    auto d = opendir(expandPath(CompleteBuf->ptr).c_str());
     if (d == NULL) {
       CompleteBuf = ifn->Strdup();
       *status = CPL_FAIL;
@@ -770,7 +770,7 @@ Str *LineInput::doComplete(Str *ifn, int *status, int next) {
       else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
         p = &p[5];
     }
-    if (stat(expandPath((char *)p), &st) != -1 && S_ISDIR(st.st_mode))
+    if (stat(expandPath(p).c_str(), &st) != -1 && S_ISDIR(st.st_mode))
       Strcat_char(CompleteBuf, '/');
   }
   if (cm_mode & CPL_ON)

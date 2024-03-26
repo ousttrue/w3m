@@ -84,7 +84,7 @@ struct LineLayout : public ftxui::Node {
   }
 
   int cursorPos() const {
-    if (visual.cursor().row < data.lines.size()) {
+    if (visual.cursor().row < (int)data.lines.size()) {
       auto l = data.lines[visual.cursor().row];
       return l.columnPos(visual.cursor().col);
     }
@@ -95,7 +95,7 @@ struct LineLayout : public ftxui::Node {
     visual.cursorCol(l.bytePosToColumn(pos));
   }
   Line *currentLine() {
-    if (visual.cursor().row < data.lines.size()) {
+    if (visual.cursor().row < (int)data.lines.size()) {
       return &data.lines[visual.cursor().row];
     }
     return {};

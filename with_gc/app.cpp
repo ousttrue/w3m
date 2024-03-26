@@ -24,6 +24,7 @@
 #include "rc.h"
 #include "cookie.h"
 #include "history.h"
+#include <sys/stat.h>
 #include <iostream>
 #include <sstream>
 #include <chrono>
@@ -1025,51 +1026,51 @@ ftxui::Element App::tabs() {
   return ftxui::vbox(tabs);
 }
 
-struct TimerTask {
-  std::string cmd;
-  std::string data;
-  uv_timer_t handle;
-};
-std::list<std::shared_ptr<TimerTask>> g_timers;
+// struct TimerTask {
+//   std::string cmd;
+//   std::string data;
+//   uv_timer_t handle;
+// };
+// std::list<std::shared_ptr<TimerTask>> g_timers;
 
 void App::task(int sec, const std::string &cmd, const char *data, bool repeat) {
-  if (cmd.size()) {
-    auto t = std::make_shared<TimerTask>();
-    t->cmd = cmd;
-    t->data = data ? data : "";
-    t->handle.data = t.get();
-    g_timers.push_back(t);
-
-    uv_timer_init(uv_default_loop(), &t->handle);
-    if (repeat) {
-      uv_timer_start(
-          &t->handle,
-          [](uv_timer_t *handle) {
-            auto _t = (TimerTask *)handle->data;
-            App::instance().doCmd(_t->cmd, _t->data.c_str());
-          },
-          0, sec * 1000);
-    } else {
-      uv_timer_start(
-          &t->handle,
-          [](uv_timer_t *handle) {
-            auto _t = (TimerTask *)handle->data;
-            App::instance().doCmd(_t->cmd, _t->data.c_str());
-            for (auto it = g_timers.begin(); it != g_timers.end(); ++it) {
-              if (it->get() == _t) {
-                g_timers.erase(it);
-                break;
-              }
-            }
-          },
-          sec * 1000, 0);
-    }
-    disp_message_nsec(Sprintf("%dsec %s %s", sec, cmd.c_str(), data)->ptr, 1,
-                      false);
-  } else {
-    // cancel timer
-    g_timers.clear();
-  }
+  // if (cmd.size()) {
+  //   auto t = std::make_shared<TimerTask>();
+  //   t->cmd = cmd;
+  //   t->data = data ? data : "";
+  //   t->handle.data = t.get();
+  //   g_timers.push_back(t);
+  //
+  //   uv_timer_init(uv_default_loop(), &t->handle);
+  //   if (repeat) {
+  //     uv_timer_start(
+  //         &t->handle,
+  //         [](uv_timer_t *handle) {
+  //           auto _t = (TimerTask *)handle->data;
+  //           App::instance().doCmd(_t->cmd, _t->data.c_str());
+  //         },
+  //         0, sec * 1000);
+  //   } else {
+  //     uv_timer_start(
+  //         &t->handle,
+  //         [](uv_timer_t *handle) {
+  //           auto _t = (TimerTask *)handle->data;
+  //           App::instance().doCmd(_t->cmd, _t->data.c_str());
+  //           for (auto it = g_timers.begin(); it != g_timers.end(); ++it) {
+  //             if (it->get() == _t) {
+  //               g_timers.erase(it);
+  //               break;
+  //             }
+  //           }
+  //         },
+  //         sec * 1000, 0);
+  //   }
+  //   disp_message_nsec(Sprintf("%dsec %s %s", sec, cmd.c_str(), data)->ptr, 1,
+  //                     false);
+  // } else {
+  //   // cancel timer
+  //   g_timers.clear();
+  // }
 }
 
 std::shared_ptr<TabBuffer> App::numTab(int n) const {

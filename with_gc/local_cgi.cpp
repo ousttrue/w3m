@@ -3,8 +3,10 @@
 #include <fcntl.h>
 #include "ioutil.h"
 #include "local_cgi.h"
+#include "tmpfile.h"
 #include "rc.h"
 #include "http_request.h"
+#include "http_response.h"
 #include "etc.h"
 #include "html/form.h"
 #include "alloc.h"
@@ -47,19 +49,19 @@ static std::string Local_cookie_file;
 static void writeLocalCookie() {
 #ifdef _MSC_VER
 #else
-  if (Local_cookie_file.size()) {
-    return;
-  }
-  Local_cookie_file = App::instance().tmpfname(TMPF_COOKIE, {});
-  set_environ("LOCAL_COOKIE_FILE", Local_cookie_file.c_str());
-  auto f = fopen(Local_cookie_file.c_str(), "wb");
-  if (!f) {
-    return;
-  }
-  localCookie();
-  fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
-  fclose(f);
-  chmod(Local_cookie_file.c_str(), S_IRUSR | S_IWUSR);
+  // if (Local_cookie_file.size()) {
+  //   return;
+  // }
+  // Local_cookie_file = App::instance().tmpfname(TMPF_COOKIE, {});
+  // set_environ("LOCAL_COOKIE_FILE", Local_cookie_file.c_str());
+  // auto f = fopen(Local_cookie_file.c_str(), "wb");
+  // if (!f) {
+  //   return;
+  // }
+  // localCookie();
+  // fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
+  // fclose(f);
+  // chmod(Local_cookie_file.c_str(), S_IRUSR | S_IWUSR);
 #endif
 }
 
@@ -244,7 +246,7 @@ FILE *localcgi_post(const char *uri, const char *qstr,
   writeLocalCookie();
   std::string tmpf;
   if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
-    tmpf = App::instance().tmpfname(TMPF_DFL, {});
+    tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
     fw = fopen(tmpf.c_str(), "w");
     if (!fw)
       return NULL;

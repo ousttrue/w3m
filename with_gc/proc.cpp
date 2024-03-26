@@ -1215,7 +1215,7 @@ std::shared_ptr<CoroutineState<void>> svBuf(const FuncContext &context) {
     if (qfile) {
       file = unescape_spaces(Strnew_charp(qfile))->ptr;
     }
-    file = expandPath((char *)file);
+    file = Strnew(expandPath(file))->ptr;
     // if (checkOverWrite(file) < 0) {
     if (false) {
       co_return;

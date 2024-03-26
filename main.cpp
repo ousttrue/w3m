@@ -4,6 +4,7 @@
 #include "tabbuffer.h"
 #include "buffer.h"
 
+#ifdef _MSC_VER
 WSADATA wsaData;
 int main(int argc, char **argv) {
   // Initialize Winsock
@@ -12,6 +13,9 @@ int main(int argc, char **argv) {
     printf("WSAStartup failed: %d\n", iResult);
     return 1;
   }
+#else
+int main(int argc, char **argv) {
+#endif
 
   if (!App::instance().initialize()) {
     return 2;

@@ -26,6 +26,7 @@ without_gc_lib = static_library(
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
     ],
     dependencies: [
+        deps,
         zlib_dep,
         # ftxui
         screen_dep,
@@ -34,12 +35,13 @@ without_gc_lib = static_library(
     ],
 )
 
-ws2_dep = cpp.find_library('ws2_32', required: true)
+deps = []
+if host_machine.system() == 'windows'
+    deps += cpp.find_library('ws2_32', required: true)
+endif
 
 without_gc_dep = declare_dependency(
     include_directories: include_directories('.'),
     link_with: without_gc_lib,
-    dependencies: [
-        ws2_dep,
-    ],
+    dependencies: deps,
 )

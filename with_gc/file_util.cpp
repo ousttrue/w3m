@@ -2,6 +2,7 @@
 #include "myctype.h"
 #include "downloadlist.h"
 #include "app.h"
+#include "tmpfile.h"
 #include "rc.h"
 #include "istream.h"
 #include "quote.h"
@@ -103,7 +104,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       if (q) {
         p = unescape_spaces(Strnew_charp(q))->ptr;
       }
-      p = expandPath(p);
+      p = Strnew(expandPath(p))->ptr;
       if (!couldWrite(p))
         return -1;
     }
@@ -119,7 +120,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
       }
       return -1;
     }
-    auto lock = App::instance().tmpfname(TMPF_DFL, ".lock");
+    auto lock = TmpFile::instance().tmpfname(TMPF_DFL, ".lock");
     symlink(p, lock.c_str());
     // flush_tty();
     pid = fork();
@@ -153,7 +154,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
     if (*p == '|' && PermitSaveToPipe)
       is_pipe = true;
     else {
-      p = expandPath((char *)p);
+      p = Strnew(expandPath(p))->ptr;
       if (!couldWrite(p))
         return -1;
     }

@@ -1,7 +1,9 @@
 #include "loaddirectory.h"
 #include "Str.h"
 #include "etc.h"
+#include "quote.h"
 #include "alloc.h"
+#include "ioutil.h"
 
 typedef struct direct Directory;
 #include <sys/stat.h>
@@ -23,10 +25,9 @@ Str *loadLocalDir(const char *dname) {
   return {};
 
 #else
-  Str *tmp;
   struct stat st;
   char **flist;
-  const char *p, *qdir;
+  const char *p;
   Str *fbuf = Strnew();
 #ifdef HAVE_LSTAT
   struct stat lst;
@@ -44,12 +45,12 @@ Str *loadLocalDir(const char *dname) {
   dirname = Strnew_charp(dname);
   if (Strlastchar(dirname) != '/')
     Strcat_char(dirname, '/');
-  qdir = html_quote(dirname->ptr);
-  tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
-                       html_quote(file_quote(dirname->ptr).c_str()),
+  auto qdir = html_quote(dirname->ptr);
+  auto tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
+                       html_quote(ioutil::file_quote(dirname->ptr).c_str()),
                        "\">\n<TITLE>Directory list of ", qdir,
                        "</TITLE>\n</HEAD>\n<BODY>\n<H1>Directory list of ",
-                       qdir, "</H1>\n", NULL);
+                       qdir.c_str(), "</H1>\n", NULL);
   flist = (char **)New_N(char *, nfile_max);
   nfile = 0;
   while (auto dir = readdir(d)) {
@@ -68,11 +69,11 @@ Str *loadLocalDir(const char *dname) {
   closedir(d);
 
   if (multicolList) {
-    l = App::instance().COLS() / (maxlen + 2);
-    if (!l)
-      l = 1;
-    nrow = (n + l - 1) / l;
-    n = 1;
+    // l = App::instance().COLS() / (maxlen + 2);
+    // if (!l)
+    //   l = 1;
+    // nrow = (n + l - 1) / l;
+    // n = 1;
     Strcat_charp(tmp, "<TABLE CELLPADDING=0>\n<TR VALIGN=TOP>\n");
   }
   qsort((void *)flist, nfile, sizeof(char *), strCmp);
@@ -104,10 +105,10 @@ Str *loadLocalDir(const char *dname) {
         else
           Strcat_charp(tmp, "[FILE] ");
     }
-    Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p).c_str()), NULL);
+    Strcat_m_charp(tmp, "<A HREF=\"", html_quote(ioutil::file_quote(p)).c_str(), NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
-    Strcat_m_charp(tmp, "\">", html_quote(p), NULL);
+    Strcat_m_charp(tmp, "\">", html_quote(p).c_str(), NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, "</A>");

@@ -22,6 +22,10 @@
 #include <vector>
 #include <sstream>
 #include <fstream>
+#include <memory>
+#ifndef _MSC_VER
+#include <sys/stat.h>
+#endif
 
 struct Cookie {
   Url url = {};
@@ -117,7 +121,7 @@ public:
     fclose(fp);
 
 #ifndef _MSC_VER
-    chmod(cookie_file, S_IRUSR | S_IWUSR);
+    chmod(cookie_file.c_str(), S_IRUSR | S_IWUSR);
 #endif
   }
 

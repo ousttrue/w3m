@@ -3,6 +3,10 @@
 #include <iostream>
 #include <assert.h>
 
+#ifndef _MSC_VER
+#include <unistd.h>
+#endif
+
 static const char *tmpf_base[MAX_TMPF_TYPE] = {
     "tmp", "src", "frame", "cache", "cookie", "hist",
 };

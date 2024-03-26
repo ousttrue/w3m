@@ -5,8 +5,9 @@
 #include "app.h"
 #include "etc.h"
 #include "alloc.h"
-#include "html_tag.h"
+#include "mimetypes.h"
 #include "html_feed_env.h"
+#include "http_response.h"
 #include <sys/stat.h>
 
 Form::~Form() {}
@@ -54,7 +55,7 @@ static void form_write_from_file(FILE *f, const char *boundary,
           name, mybasename(filename));
   auto type = guessContentType(file);
   fprintf(f, "Content-Type: %s\r\n\r\n",
-          type ? type : "application/octet-stream");
+          type.size() ? type.c_str() : "application/octet-stream");
 
   if (lstat(file, &st) < 0)
     goto write_end;

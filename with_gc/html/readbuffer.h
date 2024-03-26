@@ -12,6 +12,7 @@
 #include "html_tag.h"
 #include <memory>
 #include <string_view>
+#include <string.h>
 
 extern int squeezeBlankLine;
 
