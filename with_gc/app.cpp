@@ -24,10 +24,10 @@
 #include "rc.h"
 #include "cookie.h"
 #include "history.h"
+#include "alloc.h"
 #include <sys/stat.h>
 #include <iostream>
 #include <sstream>
-#include <chrono>
 #include <algorithm>
 
 #include "ftxui/component/component.hpp"          // for Renderer
@@ -43,8 +43,6 @@ bool displayLink = false;
 bool displayLineInfo = false;
 #define KEYMAP_FILE "keymap"
 std::string keymap_file = KEYMAP_FILE;
-
-const auto FRAME_INTERVAL_MS = std::chrono::milliseconds(1000 / 15);
 
 const char *CurrentKeyData;
 const char *CurrentCmdData;

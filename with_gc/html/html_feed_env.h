@@ -31,7 +31,7 @@ struct environment {
 
 struct html_feed_environ {
   readbuffer obuf;
-  GeneralList *buf;
+  std::shared_ptr<GeneralList> buf;
   Str *tagbuf;
   int limit;
 
@@ -44,7 +44,7 @@ struct html_feed_environ {
   HtmlParser parser;
 
   html_feed_environ(int nenv, int limit_width, int indent,
-                    GeneralList *_buf = nullptr);
+                    const std::shared_ptr<GeneralList> &_buf = {});
   void purgeline();
 
   void POP_ENV();

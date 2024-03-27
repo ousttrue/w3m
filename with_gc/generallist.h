@@ -1,5 +1,6 @@
 #pragma once
-#include "alloc.h"
+#include <list>
+#include <memory>
 #include "Str.h"
 
 #define GENERAL_LIST_MAX (INT_MAX / 32)
@@ -14,43 +15,61 @@ enum AlignMode {
 bool toAlign(char *oval, AlignMode *align);
 
 struct GeneralList;
+struct Str;
 struct TextLine {
-
-  struct Str *line;
-
-// private:
-  int _pos;
-
-public:
+  Str *line = nullptr;
+  int _pos = 0;
+  TextLine() {}
+  TextLine(Str *line, int pos) : line(line), _pos(pos) {}
+  TextLine(const char *line) : line(Strnew_charp(line ? line : "")) {}
   int pos() const { return _pos; }
-  static TextLine *newTextLine(Str *line, int pos);
-  static TextLine *newTextLine(const char *line);
   void align(int width, AlignMode mode);
 };
 
-struct ListItem {
-  struct TextLine *ptr;
-  ListItem *next;
-  ListItem *prev;
-  static ListItem *newListItem(struct TextLine *s, ListItem *n, ListItem *p) {
-    auto it = (ListItem *)New(ListItem);
-    it->ptr = s;
-    it->next = n;
-    it->prev = p;
-    return it;
-  }
-};
-
 struct GeneralList {
-  ListItem *first;
-  ListItem *last;
-  int nitem;
+  std::list<std::shared_ptr<TextLine>> _list;
 
-  static GeneralList *newGeneralList();
-  void pushValue(TextLine *s);
-  TextLine *popValue();
-  TextLine *rpopValue();
-  void delValue(ListItem *it);
-  void appendGeneralList(GeneralList *tl2);
-  void appendTextLine(Str *line, int pos);
+  static std::shared_ptr<GeneralList> newGeneralList() {
+    return std::make_shared<GeneralList>();
+  }
+
+  std::shared_ptr<TextLine> popValue() {
+    if (_list.empty()) {
+      return {};
+    }
+    auto f = _list.front();
+    _list.pop_front();
+    return f;
+  }
+
+  std::shared_ptr<TextLine> rpopValue() {
+    if (_list.empty()) {
+      return {};
+    }
+    auto f = _list.back();
+    _list.pop_back();
+    return f;
+  }
+
+  void delValue(const std::shared_ptr<TextLine> &item) {
+    for (auto it = _list.begin(); it != _list.end(); ++it) {
+      if (*it == item) {
+        _list.erase(it);
+        return;
+      }
+    }
+  }
+
+  void appendGeneralList(const std::shared_ptr<GeneralList> &tl2) {
+    if (/*tl &&*/ tl2) {
+      for (auto &item : tl2->_list) {
+        _list.push_back(item);
+      }
+      tl2->_list.clear();
+    }
+  }
+
+  void appendTextLine(Str *line, int pos) {
+    _list.push_back(std::make_shared<TextLine>(line, pos));
+  }
 };

@@ -61,7 +61,7 @@ struct table_in {
   short row;
   short cell;
   short indent;
-  GeneralList *buf;
+  std::shared_ptr<GeneralList> buf;
 };
 
 struct table_linfo {
@@ -127,7 +127,7 @@ private:
   int vcellpadding;
   int flag;
   Str *caption;
-  std::vector<std::vector<GeneralList *>> tabdata;
+  std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
   std::vector<std::vector<table_attr>> tabattr;
   table_attr trattr;
   short tabwidth[MAXCOL];
@@ -137,7 +137,7 @@ private:
   std::vector<int> tabheight;
   struct table_in *tables;
   short tables_size;
-  GeneralList *suspended_data;
+  std::shared_ptr<GeneralList> suspended_data;
   /* use for counting skipped spaces */
   struct table_linfo linfo;
   Matrix matrix;

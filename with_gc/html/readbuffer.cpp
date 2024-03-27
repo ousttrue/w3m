@@ -14,6 +14,7 @@
 #include "html_tag.h"
 #include "proc.h"
 #include "stringtoken.h"
+#include "alloc.h"
 #include <math.h>
 #include <string_view>
 #include "html_parser.h"
@@ -819,7 +820,8 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
   this->flag |= RB_NFLUSHED;
 }
 
-void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
+void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
+                           int force, int width) {
   Str *line = this->line;
   Str *pass = nullptr;
   // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
@@ -956,7 +958,7 @@ void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
   }
 
   if (force == 1 || this->flag & RB_NFLUSHED) {
-    TextLine *lbuf = TextLine::newTextLine(line, this->pos);
+    auto lbuf = std::make_shared<TextLine>(line, this->pos);
     if (this->RB_GET_ALIGN() == RB_CENTER) {
       lbuf->align(width, ALIGN_CENTER);
     } else if (this->RB_GET_ALIGN() == RB_RIGHT) {
@@ -998,7 +1000,7 @@ void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
               }
             }
           }
-          lbuf = TextLine::newTextLine(line, width);
+          lbuf = std::make_shared<TextLine>(line, width);
         }
       }
     }
@@ -1008,7 +1010,7 @@ void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
     }
 
     if (buf) {
-      buf->pushValue(lbuf);
+      buf->_list.push_back(lbuf);
     }
     if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED)
       this->blank_lines = 0;

@@ -9,7 +9,7 @@
 #include <assert.h>
 
 html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
-                                     GeneralList *_buf)
+                                     const std::shared_ptr<GeneralList> &_buf)
     : buf(_buf), parser(limit) {
   assert(nenv);
   envs.resize(nenv);
@@ -22,7 +22,7 @@ void html_feed_environ::purgeline() {
   if (this->buf == NULL || this->obuf.blank_lines == 0)
     return;
 
-  TextLine *tl;
+  std::shared_ptr<TextLine> tl;
   if (!(tl = this->buf->rpopValue()))
     return;
 

@@ -14,6 +14,7 @@
 #include "utf8.h"
 #include "myctype.h"
 #include "cmp.h"
+#include "alloc.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -199,7 +200,7 @@ std::shared_ptr<table> table::newTable() {
 
 void table::check_row(int row) {
   int i, r;
-  std::vector<std::vector<GeneralList *>> tabdata;
+  std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
   std::vector<std::vector<table_attr>> tabattr;
   std::vector<int> tabheight;
 
@@ -241,7 +242,7 @@ void table::pushdata(int row, int col, const char *data) {
   if (this->tabdata[row][col] == NULL)
     this->tabdata[row][col] = GeneralList::newGeneralList();
 
-  this->tabdata[row][col]->pushValue(TextLine::newTextLine(data));
+  this->tabdata[row][col]->_list.push_back(std::make_shared<TextLine>(data));
 }
 
 void table::suspend_or_pushdata(const char *line) {
@@ -250,7 +251,7 @@ void table::suspend_or_pushdata(const char *line) {
   else {
     if (!this->suspended_data)
       this->suspended_data = GeneralList::newGeneralList();
-    this->suspended_data->pushValue(TextLine::newTextLine(line));
+    this->suspended_data->_list.push_back(std::make_shared<TextLine>(line));
   }
 }
 
@@ -357,7 +358,7 @@ static int maximum_visible_length_plain(const char *str, int offset) {
 void table::print_item(int row, int col, int width, Str *buf) {
   AlignMode alignment;
 
-  TextLine *lbuf;
+  std::shared_ptr<TextLine> lbuf;
   if (this->tabdata[row][col]) {
     lbuf = this->tabdata[row][col]->popValue();
   } else {
@@ -378,7 +379,7 @@ void table::print_item(int row, int col, int width, Str *buf) {
     lbuf->align(width, alignment);
     Strcat(buf, lbuf->line);
   } else {
-    lbuf = TextLine::newTextLine(NULL, 0);
+    lbuf = std::make_shared<TextLine>((Str*)NULL, 0);
     if (DisableCenter)
       lbuf->align(width, ALIGN_LEFT);
     else
@@ -506,16 +507,15 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     h_env.limit = maxlimit;
   if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
     obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
-  for (auto l = orgdata->first; l != NULL; l = l->next) {
-    if (TAG_IS(l->ptr->line->ptr, "<table_alt", 10)) {
+  for (auto &l : orgdata->_list) {
+    if (TAG_IS(l->line->ptr, "<table_alt", 10)) {
       int id = -1;
-      const char *p = l->ptr->line->ptr;
+      const char *p = l->line->ptr;
       std::shared_ptr<HtmlTag> tag;
       if ((tag = HtmlTag::parse(&p, true)) != NULL)
         tag->parsedtag_get_value(ATTR_TID, &id);
       if (id >= 0 && id < this->ntable && this->tables[id].ptr) {
         AlignMode alignment;
-        ListItem *ti;
         auto t = this->tables[id].ptr;
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
@@ -531,9 +531,10 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
           alignment = ALIGN_LEFT;
         }
 
+        // ListItem *ti;
         if (alignment != ALIGN_LEFT) {
-          for (ti = this->tables[id].buf->first; ti != NULL; ti = ti->next) {
-            ti->ptr->align(h_env.limit, alignment);
+          for (auto &ti : this->tables[id].buf->_list) {
+            ti->align(h_env.limit, alignment);
           }
         }
         h_env.buf->appendGeneralList(this->tables[id].buf);
@@ -548,7 +549,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         }
       }
     } else
-      parser->HTMLlineproc1(l->ptr->line->ptr, &h_env);
+      parser->HTMLlineproc1(l->line->ptr, &h_env);
   }
   if (obuf.status != R_ST_NORMAL) {
     obuf.status = R_ST_EOL;
@@ -1115,7 +1116,7 @@ void table::check_table_height() {
       if (this->tabdata[j][i] == NULL)
         t_dep = 0;
       else
-        t_dep = this->tabdata[j][i]->nitem;
+        t_dep = this->tabdata[j][i]->_list.size();
 
       rowspan = this->table_rowspan(j, i);
       if (rowspan > 1) {
@@ -1401,16 +1402,15 @@ void table::renderTable(HtmlParser *parser, int max_width,
           break;
         }
       }
-      h -= this->tabdata[j][i]->nitem;
+      h -= this->tabdata[j][i]->_list.size();
       if (this->tabattr[j][i] & HTT_MIDDLE)
         h /= 2;
       if (h <= 0)
         continue;
 
-      GeneralList *l;
-      l = GeneralList::newGeneralList();
+      auto l = GeneralList::newGeneralList();
       for (k = 0; k < h; k++) {
-        l->pushValue(TextLine::newTextLine(NULL, 0));
+        l->_list.push_back(std::make_shared<TextLine>((Str *)NULL, 0));
       }
       l->appendGeneralList(this->tabdata[j][i]);
       this->tabdata[j][i] = l;

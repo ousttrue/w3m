@@ -14,16 +14,15 @@ class HtmlTag;
 using FeedFunc = Str *(*)();
 
 class LineFeed {
-  ListItem *_tl_lp2 = nullptr;
+  std::shared_ptr<GeneralList> _tl_lp2;
 
 public:
-  LineFeed(GeneralList *tl) : _tl_lp2(tl->first) {}
+  LineFeed(const std::shared_ptr<GeneralList> &tl) : _tl_lp2(tl) {}
 
   const char *textlist_feed(void) {
-    TextLine *p;
-    if (_tl_lp2 != NULL) {
-      p = _tl_lp2->ptr;
-      _tl_lp2 = _tl_lp2->next;
+    if (_tl_lp2 && _tl_lp2->_list.size()) {
+      auto p = _tl_lp2->_list.front();
+      _tl_lp2->_list.pop_front();
       return p->line->ptr;
     }
     return NULL;
