@@ -1,10 +1,10 @@
 #include "app.h"
-// #include "http_request.h"
 #include "http_session.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 
 #ifdef _MSC_VER
+#include <winsock2.h>
 WSADATA wsaData;
 int main(int argc, char **argv) {
   // Initialize Winsock

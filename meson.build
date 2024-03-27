@@ -78,5 +78,5 @@ executable(
     ],
 )
 
-# subdir('tests')
+subdir('tests')
 subdir('tui_sample')

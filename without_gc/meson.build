@@ -35,7 +35,6 @@ without_gc_lib = static_library(
     ],
 )
 
-deps = []
 if host_machine.system() == 'windows'
     deps += cpp.find_library('ws2_32', required: true)
 endif
