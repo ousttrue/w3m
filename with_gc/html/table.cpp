@@ -126,11 +126,12 @@ static int floor_at_intervals(int x, int step) {
 #define round(x) ((int)floor((x) + 0.5))
 
 int table::table_rowspan(int row, int col) {
-  int i;
-  if (!this->tabattr[row])
+  if (this->tabattr[row].empty())
     return 0;
-  for (i = row + 1;
-       i <= this->maxrow && this->tabattr[i] && (this->tabattr[i][col] & HTT_Y);
+
+  int i;
+  for (i = row + 1; i <= this->maxrow && this->tabattr[i].size() &&
+                    (this->tabattr[i][col] & HTT_Y);
        i++)
     ;
   return i - row;
@@ -165,21 +166,17 @@ int table::table_border_width() const {
   }
 }
 
-table *table::newTable() {
-  struct table *t;
-  int i, j;
-
-  t = (struct table *)New(struct table);
+std::shared_ptr<table> table::newTable() {
+  auto t = std::make_shared<struct table>();
   t->max_rowsize = MAXROW;
   t->tabdata.resize(MAXROW);
-  t->tabattr = (table_attr **)New_N(table_attr *, MAXROW);
-  t->tabheight = (int *)NewAtom_N(int, MAXROW);
+  t->tabattr.resize(MAXROW);
+  t->tabheight.resize(MAXROW);
 
-  for (i = 0; i < MAXROW; i++) {
-    t->tabattr[i] = 0;
+  for (int i = 0; i < MAXROW; i++) {
     t->tabheight[i] = 0;
   }
-  for (j = 0; j < MAXCOL; j++) {
+  for (int j = 0; j < MAXCOL; j++) {
     t->tabwidth[j] = 0;
     t->minimum_width[j] = 0;
     t->fixed_width[j] = 0;
@@ -203,8 +200,8 @@ table *table::newTable() {
 void table::check_row(int row) {
   int i, r;
   std::vector<std::vector<GeneralList *>> tabdata;
-  table_attr **tabattr;
-  int *tabheight;
+  std::vector<std::vector<table_attr>> tabattr;
+  std::vector<int> tabheight;
 
   if (row < 0 || row >= MAXROW_LIMIT)
     return;
@@ -213,15 +210,14 @@ void table::check_row(int row) {
     if (r <= 0 || r > MAXROW_LIMIT)
       r = MAXROW_LIMIT;
     tabdata.resize(r);
-    tabattr = (table_attr **)New_N(table_attr *, r);
-    tabheight = (int *)NewAtom_N(int, r);
+    tabattr.resize(r);
+    tabheight.resize(r);
     for (i = 0; i < this->max_rowsize; i++) {
       tabdata[i] = this->tabdata[i];
       tabattr[i] = this->tabattr[i];
       tabheight[i] = this->tabheight[i];
     }
     for (; i < r; i++) {
-      tabattr[i] = NULL;
       tabheight[i] = 0;
     }
     this->tabdata = tabdata;
@@ -232,7 +228,7 @@ void table::check_row(int row) {
 
   if (this->tabdata[row].empty()) {
     this->tabdata[row].resize(MAXCOL);
-    this->tabattr[row] = (table_attr *)NewAtom_N(table_attr, MAXCOL);
+    this->tabattr[row].resize(MAXCOL);
     for (i = 0; i < MAXCOL; i++) {
       this->tabdata[row][i] = NULL;
       this->tabattr[row][i] = {};
@@ -429,7 +425,8 @@ void table::print_sep(int row, int type, int maxcol, Str *buf) {
         goto do_last_sep;
       } else {
         for (k = row;
-             k >= 0 && this->tabattr[k] && (this->tabattr[k][i] & HTT_Y); k--)
+             k >= 0 && this->tabattr[k].size() && (this->tabattr[k][i] & HTT_Y);
+             k--)
           ;
         m = this->tabwidth[i] + 2 * this->cellpadding;
         for (l = i + 1; l <= this->maxcol && (this->tabattr[row][l] & HTT_X);
@@ -519,7 +516,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
       if (id >= 0 && id < this->ntable && this->tables[id].ptr) {
         AlignMode alignment;
         ListItem *ti;
-        struct table *t = this->tables[id].ptr;
+        auto t = this->tables[id].ptr;
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
         parser->save_fonteffect(&h_env);
@@ -1108,7 +1105,7 @@ void table::check_table_height() {
   cell.maxcell = -1;
 
   for (j = 0; j <= this->maxrow; j++) {
-    if (!this->tabattr[j])
+    if (this->tabattr[j].empty())
       continue;
     for (i = 0; i <= this->maxcol; i++) {
       int t_dep, rowspan;
@@ -1179,7 +1176,7 @@ void table::check_table_height() {
   case BORDER_NONE:
     space = 0;
   }
-  check_cell_height(this->tabheight, cell.height, cell.row, cell.rowspan,
+  check_cell_height(this->tabheight.data(), cell.height, cell.row, cell.rowspan,
                     cell.maxcell, cell.indexarray, space, 1);
 }
 
@@ -1236,7 +1233,6 @@ static int cotable_level;
 void initRenderTable(void) { cotable_level = 0; }
 
 void table::renderCoTable(HtmlParser *parser, int maxlimit) {
-  struct table *t;
   int i, col, row;
   int indent, maxwidth;
 
@@ -1245,7 +1241,7 @@ void table::renderCoTable(HtmlParser *parser, int maxlimit) {
   cotable_level++;
 
   for (i = 0; i < this->ntable; i++) {
-    t = this->tables[i].ptr;
+    auto t = this->tables[i].ptr;
     if (t == NULL)
       continue;
     col = this->tables[i].col;
@@ -1472,8 +1468,8 @@ void table::renderTable(HtmlParser *parser, int max_width,
                j++)
             w += this->tabwidth[j] + this->cellspacing;
           if (this->tabattr[r][i] & HTT_Y) {
-            for (j = r - 1;
-                 j >= 0 && this->tabattr[j] && (this->tabattr[j][i] & HTT_Y);
+            for (j = r - 1; j >= 0 && this->tabattr[j].size() &&
+                            (this->tabattr[j][i] & HTT_Y);
                  j--)
               ;
             this->print_item(j, i, w, renderbuf);
@@ -1523,8 +1519,8 @@ void table::renderTable(HtmlParser *parser, int max_width,
 #define THR_PADDING 4
 #endif
 
-struct table *table::begin_table(int border, int spacing, int padding,
-                                 int vspace) {
+std::shared_ptr<table> table::begin_table(int border, int spacing, int padding,
+                                          int vspace) {
   int mincell = minimum_cellspacing(border);
   int rcellspacing;
   int mincell_pixels = round(mincell * pixel_per_char);
@@ -2518,7 +2514,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     id = -1;
     tag->parsedtag_get_value(ATTR_TID, &id);
     if (id >= 0 && id < this->ntable) {
-      struct table *tbl1 = this->tables[id].ptr;
+      auto tbl1 = this->tables[id].ptr;
       this->feed_table_block_tag(line, mode, 0, cmd);
       this->addcontentssize(tbl1->maximum_table_width());
       this->check_minimum0(tbl1->sloppy_width);
@@ -2750,7 +2746,7 @@ void table::feed_table1(HtmlParser *parser, Str *tok, struct table_mode *mode,
     this->feed_table(parser, tokbuf->ptr, mode, width, true);
 }
 
-void table::pushTable(struct table *tbl1) {
+void table::pushTable(const std::shared_ptr<table> &tbl1) {
   int col;
   int row;
 

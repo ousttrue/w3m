@@ -37,7 +37,7 @@ struct Anchor;
 class HtmlParser {
   friend struct html_feed_environ;
 
-  struct table *tables[MAX_TABLE];
+  std::shared_ptr<table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(struct html_feed_environ *h_env, int table_level);
 
@@ -111,7 +111,7 @@ public:
 
   // HTML processing first pass
   void parse(std::string_view istr, struct html_feed_environ *h_env,
-                 bool internal);
+             bool internal);
 
   void HTMLlineproc1(const char *x, struct html_feed_environ *y);
 
@@ -124,7 +124,8 @@ public:
   Str *getLinkNumberStr(int correction) const;
 
   Str *process_img(const std::shared_ptr<HtmlTag> &tag, int width);
-  std::string process_anchor(const std::shared_ptr<HtmlTag> &tag, const char *tagbuf);
+  std::string process_anchor(const std::shared_ptr<HtmlTag> &tag,
+                             const char *tagbuf);
   Str *process_input(const std::shared_ptr<HtmlTag> &tag);
   Str *process_button(const std::shared_ptr<HtmlTag> &tag);
   Str *process_n_button();

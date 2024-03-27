@@ -56,7 +56,7 @@ struct table_cell {
 };
 
 struct table_in {
-  struct table *ptr;
+  std::shared_ptr<struct table> ptr;
   short col;
   short row;
   short cell;
@@ -128,13 +128,13 @@ private:
   int flag;
   Str *caption;
   std::vector<std::vector<GeneralList *>> tabdata;
-  table_attr **tabattr;
+  std::vector<std::vector<table_attr>> tabattr;
   table_attr trattr;
   short tabwidth[MAXCOL];
   short minimum_width[MAXCOL];
   short fixed_width[MAXCOL];
   struct table_cell cell;
-  int *tabheight;
+  std::vector<int> tabheight;
   struct table_in *tables;
   short tables_size;
   GeneralList *suspended_data;
@@ -145,12 +145,13 @@ private:
   int sloppy_width;
 
 public:
-  static table *newTable();
-  static table *begin_table(int border, int spacing, int padding, int vspace);
+  static std::shared_ptr<table> newTable();
+  static std::shared_ptr<table> begin_table(int border, int spacing,
+                                            int padding, int vspace);
   int feed_table(class HtmlParser *parser, const char *line,
                  struct table_mode *mode, int width, int internal);
   void end_table();
-  void pushTable(struct table *);
+  void pushTable(const std::shared_ptr<table> &);
   void renderTable(HtmlParser *parser, int max_width,
                    struct html_feed_environ *h_env);
 
@@ -258,7 +259,7 @@ inline int REAL_WIDTH(int w, int limit) {
 }
 
 struct TableStatus {
-  table *tbl = nullptr;
+  std::shared_ptr<table> tbl;
   table_mode *tbl_mode = nullptr;
   int tbl_width = 0;
 
