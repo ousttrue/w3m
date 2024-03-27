@@ -36,7 +36,7 @@ void html_feed_environ::purgeline() {
       Strcat(tmp, *token);
     }
   }
-  appendTextLine(this->buf, tmp, 0);
+  this->buf->appendTextLine(tmp, 0);
   this->obuf.blank_lines--;
 }
 

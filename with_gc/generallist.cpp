@@ -19,19 +19,6 @@ bool toAlign(char *oval, AlignMode *align) {
   return true;
 }
 
-void appendTextLine(GeneralList *tl, Str *line, int pos) {
-  if (tl->last == NULL) {
-    tl->pushValue(TextLine::newTextLine(line->Strdup(), pos));
-  } else {
-    auto lbuf = tl->last->ptr;
-    if (lbuf->line)
-      Strcat(lbuf->line, line);
-    else
-      lbuf->line = line;
-    lbuf->_pos += pos;
-  }
-}
-
 TextLine *TextLine::newTextLine(Str *line, int pos) {
   auto lbuf = (TextLine *)New(TextLine);
   if (line)
@@ -167,5 +154,18 @@ void GeneralList::appendGeneralList(GeneralList *tl2) {
     }
     tl2->first = tl2->last = NULL;
     tl2->nitem = 0;
+  }
+}
+
+void GeneralList::appendTextLine(Str *line, int pos) {
+  if (this->last == NULL) {
+    this->pushValue(TextLine::newTextLine(line->Strdup(), pos));
+  } else {
+    auto lbuf = this->last->ptr;
+    if (lbuf->line)
+      Strcat(lbuf->line, line);
+    else
+      lbuf->line = line;
+    lbuf->_pos += pos;
   }
 }

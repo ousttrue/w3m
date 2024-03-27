@@ -1026,7 +1026,7 @@ void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
         Strcat(tmp, *token);
         if (force == 2) {
           if (buf) {
-            appendTextLine(buf, tmp, 0);
+            buf->appendTextLine(tmp, 0);
           }
         } else
           Strcat(tmp2, tmp);
@@ -1036,7 +1036,7 @@ void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
     if (force == 2) {
       if (pass) {
         if (buf) {
-          appendTextLine(buf, pass, 0);
+          buf->appendTextLine(pass, 0);
         }
       }
       pass = nullptr;

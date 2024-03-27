@@ -15,11 +15,10 @@ bool toAlign(char *oval, AlignMode *align);
 
 struct GeneralList;
 struct TextLine {
-  friend void appendTextLine(GeneralList *tl, Str *line, int pos);
 
   struct Str *line;
 
-private:
+// private:
   int _pos;
 
 public:
@@ -29,7 +28,6 @@ public:
   void align(int width, AlignMode mode);
 };
 
-extern void appendTextLine(GeneralList *tl, Str *line, int pos);
 struct ListItem {
   struct TextLine *ptr;
   ListItem *next;
@@ -54,4 +52,5 @@ struct GeneralList {
   TextLine *rpopValue();
   void delValue(ListItem *it);
   void appendGeneralList(GeneralList *tl2);
+  void appendTextLine(Str *line, int pos);
 };
