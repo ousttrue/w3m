@@ -10,6 +10,7 @@
 
 #include "cookie.h"
 #include "quote.h"
+#include "cmp.h"
 #include "myctype.h"
 #include "cookie_domain.h"
 

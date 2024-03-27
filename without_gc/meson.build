@@ -5,6 +5,7 @@ without_gc_lib = static_library(
         'utf8.cpp',
         'myctype.cpp',
         'quote.cpp',
+        'cmp.cpp',
         'ioutil.cpp',
         'url_quote.cpp',
         'url_scheme.cpp',

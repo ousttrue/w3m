@@ -1,6 +1,7 @@
 #include "http_response.h"
 #include "istream.h"
 #include "quote.h"
+#include "cmp.h"
 #include "matchattr.h"
 #include "tmpfile.h"
 #include "app.h"

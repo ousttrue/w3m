@@ -1,5 +1,5 @@
 #include "auth_digest.h"
-#include "quote.h"
+#include "cmp.h"
 #include "http_request.h"
 #include "html/form.h"
 #include "http_auth.h"

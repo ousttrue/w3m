@@ -4,34 +4,6 @@
 #include <sstream>
 #include <string.h>
 
-#ifdef _MSC_VER
-#include <ctype.h>
-char *strcasestr(const char *str, const char *pattern) {
-  size_t i;
-  unsigned char c0 = *pattern, c1, c2;
-
-  if (c0 == '\0')
-    return (char *)str;
-
-  c0 = toupper(c0);
-  for (; (c1 = *str) != '\0'; str++) {
-    if (toupper(c1) == c0) {
-      for (i = 1;; i++) {
-        c2 = pattern[i];
-        if (c2 != '\0')
-          return (char *)str;
-        c1 = str[i];
-        if (toupper(c1) != toupper(c2))
-          break;
-      }
-    }
-  }
-  return NULL;
-}
-#else
-#include <pwd.h>
-#endif
-
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
     24,

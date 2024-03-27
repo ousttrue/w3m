@@ -1,7 +1,7 @@
 #include "ioutil.h"
 #include "quote.h"
 #include "url_decode.h"
-#include "myctype.h"
+#include "cmp.h"
 #include <sstream>
 #ifdef _MSC_VER
 #include <winsock2.h>

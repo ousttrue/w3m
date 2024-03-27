@@ -3,7 +3,7 @@
 #include "Str.h"
 #include "myctype.h"
 #include "alloc.h"
-#include "quote.h"
+#include "cmp.h"
 
 #define DEF_CAFILE ""
 #include <openssl/bio.h>

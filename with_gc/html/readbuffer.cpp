@@ -1,8 +1,8 @@
 #include "readbuffer.h"
+#include "quote.h"
 #include "html_feed_env.h"
 #include "etc.h"
 #include "html/form_item.h"
-// #include "app.h"
 #include "buffer.h"
 #include "line_layout.h"
 #include "http_response.h"
@@ -1088,18 +1088,18 @@ void readbuffer::flushline(GeneralList<TextLine> *buf, int indent, int force,
     if (this->anchor.hseq > 0)
       this->anchor.hseq = -this->anchor.hseq;
     tmp = Sprintf("<A HSEQ=\"%d\" HREF=\"", this->anchor.hseq);
-    Strcat_charp(tmp, html_quote(this->anchor.url.c_str()));
+    Strcat(tmp, html_quote(this->anchor.url.c_str()));
     if (this->anchor.target.size()) {
       Strcat_charp(tmp, "\" TARGET=\"");
-      Strcat_charp(tmp, html_quote(this->anchor.target.c_str()));
+      Strcat(tmp, html_quote(this->anchor.target.c_str()));
     }
     if (this->anchor.option.use_referer()) {
       Strcat_charp(tmp, "\" REFERER=\"");
-      Strcat_charp(tmp, html_quote(this->anchor.option.referer.c_str()));
+      Strcat(tmp, html_quote(this->anchor.option.referer.c_str()));
     }
     if (this->anchor.title.size()) {
       Strcat_charp(tmp, "\" TITLE=\"");
-      Strcat_charp(tmp, html_quote(this->anchor.title.c_str()));
+      Strcat(tmp, html_quote(this->anchor.title.c_str()));
     }
     if (this->anchor.accesskey) {
       auto c = html_quote_char(this->anchor.accesskey);
@@ -1114,7 +1114,7 @@ void readbuffer::flushline(GeneralList<TextLine> *buf, int indent, int force,
   }
   if (!hidden_img && this->img_alt) {
     Str *tmp = Strnew_charp("<IMG_ALT SRC=\"");
-    Strcat_charp(tmp, html_quote(this->img_alt->ptr));
+    Strcat(tmp, html_quote(this->img_alt->ptr));
     Strcat_charp(tmp, "\">");
     this->push_tag(tmp->ptr, HTML_IMG_ALT);
   }

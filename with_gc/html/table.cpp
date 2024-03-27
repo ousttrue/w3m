@@ -1,16 +1,8 @@
-/*
- * HTML table
- */
 #include "readbuffer.h"
 #include "app.h"
-#include "quote.h"
 #include "html_feed_env.h"
 #include "symbol.h"
 #include "html_command.h"
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
 #include "table.h"
 #include "html_tag.h"
 #include "Str.h"
@@ -21,6 +13,12 @@
 #include "generallist.h"
 #include "matrix.h"
 #include "utf8.h"
+#include "myctype.h"
+#include "cmp.h"
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 

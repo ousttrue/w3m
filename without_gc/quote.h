@@ -2,41 +2,6 @@
 #include <string>
 #include <string_view>
 #include <list>
-#include <assert.h>
-#include <optional>
-
-#ifdef _MSC_VER
-
-inline int strncasecmp(const char *l, const char *r, size_t n) {
-  return _strnicmp(l, r, n);
-}
-inline int strcasecmp(const char *l, const char *r) { return _stricmp(l, r); }
-
-char *strcasestr(const char *str, const char *pattern);
-#else
-#include <string.h>
-#endif
-
-inline int strcasecmp(std::string_view l, std::string_view r) {
-  auto ll = l.begin();
-  auto rr = r.begin();
-  for (; ll != l.end() && rr != r.end(); ++ll, ++rr) {
-    auto cmp = *ll - *rr;
-    if (cmp) {
-      return cmp;
-    }
-  }
-  if (ll == l.end() && rr == r.end()) {
-    return 0;
-  } else if (ll == l.end()) {
-    return 1;
-  } else if (rr == r.end()) {
-    return -1;
-  } else {
-    assert(false);
-    return 0;
-  }
-}
 
 extern const char *HTML_QUOTE_MAP[];
 extern unsigned char QUOTE_MAP[];
@@ -65,11 +30,6 @@ enum CleanupMode {
   HEADER_MODE = 3,
 };
 std::string cleanup_line(std::string_view s, CleanupMode mode);
-// inline void cleanup_line(Str *s, CleanupMode mode) {
-//   auto tmp = cleanup_line(s->ptr, mode);
-//   Strclear(s);
-//   Strcat(s, tmp);
-// }
 
 std::string expandPath(std::string_view name);
 

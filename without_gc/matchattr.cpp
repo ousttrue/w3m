@@ -1,5 +1,5 @@
 #include "matchattr.h"
-#include "quote.h"
+#include "cmp.h"
 #include "myctype.h"
 #include <sstream>
 

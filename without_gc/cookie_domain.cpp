@@ -1,5 +1,6 @@
 #include "cookie_domain.h"
 #include "quote.h"
+#include "cmp.h"
 #include "dns_order.h"
 #include <regex>
 

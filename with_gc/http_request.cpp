@@ -1,5 +1,5 @@
 #include "http_request.h"
-#include "quote.h"
+#include "cmp.h"
 #include "url.h"
 #include "rc.h"
 #include "cookie.h"

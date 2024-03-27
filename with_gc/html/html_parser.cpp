@@ -18,7 +18,7 @@
 #include "Str.h"
 #include "table.h"
 #include "utf8.h"
-#include "stringtoken.h"
+#include "cmp.h"
 #include <sstream>
 
 #define HR_ATTR_WIDTH_MAX 65535
@@ -253,7 +253,7 @@ Str *HtmlParser::process_n_textarea() {
                       "type=textarea name=\"%s\" size=%d rows=%d "
                       "top_margin=%d textareanumber=%d",
                       this->cur_hseq, cur_form_id(),
-                      html_quote(cur_textarea->ptr), cur_textarea_size,
+                      html_quote(cur_textarea->ptr).c_str(), cur_textarea_size,
                       cur_textarea_rows, cur_textarea_rows - 1, n_textarea));
   if (cur_textarea_readonly)
     Strcat_charp(tmp, " readonly");
@@ -877,7 +877,7 @@ Str *HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag, int width) {
     Strcat(tmp, Sprintf("<input_alt fid=\"%d\" "
                         "type=hidden name=link value=\"",
                         this->cur_form_id()));
-    Strcat_charp(tmp, html_quote((r2) ? r2 + 1 : r));
+    Strcat(tmp, html_quote((r2) ? r2 + 1 : r));
     Strcat(tmp, Sprintf("\"><input_alt hseq=\"%d\" fid=\"%d\" "
                         "type=submit no_effect=true>",
                         this->cur_hseq++, this->cur_form_id()));
@@ -893,11 +893,11 @@ Str *HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag, int width) {
     }
     Strcat_charp(tmp, "<img_alt src=\"");
   }
-  Strcat_charp(tmp, html_quote(p));
+  Strcat(tmp, html_quote(p));
   Strcat_charp(tmp, "\"");
   if (t) {
     Strcat_charp(tmp, " title=\"");
-    Strcat_charp(tmp, html_quote(t));
+    Strcat(tmp, html_quote(t));
     Strcat_charp(tmp, "\"");
   }
   Strcat_charp(tmp, ">");
@@ -905,7 +905,7 @@ Str *HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag, int width) {
     q = nullptr;
   if (q != nullptr) {
     n = get_strwidth(q);
-    Strcat_charp(tmp, html_quote(q));
+    Strcat(tmp, html_quote(q));
     goto img_end;
   }
   if (w > 0 && i > 0) {
@@ -1044,7 +1044,7 @@ Str *HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   if (v == FORM_INPUT_FILE)
     q = nullptr;
   if (q) {
-    qq = html_quote(q);
+    qq = Strnew(html_quote(q))->ptr;
     qlen = get_strwidth(q);
   }
 
@@ -1063,10 +1063,11 @@ Str *HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
       Strcat(tmp, this->getLinkNumberStr(0));
     Strcat_char(tmp, '(');
   }
-  Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
-                      "name=\"%s\" width=%d maxlength=%d value=\"%s\"",
-                      this->cur_hseq++, this->cur_form_id(), html_quote(p),
-                      html_quote(r), size, i, qq));
+  Strcat(tmp,
+         Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
+                 "name=\"%s\" width=%d maxlength=%d value=\"%s\"",
+                 this->cur_hseq++, this->cur_form_id(), html_quote(p).c_str(),
+                 html_quote(r).c_str(), size, i, qq));
   if (x)
     Strcat_charp(tmp, " checked");
   if (y)
@@ -1129,7 +1130,7 @@ Str *HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
       if (p2)
-        Strcat_charp(tmp, html_quote(p2));
+        Strcat(tmp, html_quote(p2));
       else
         Strcat_charp(tmp, qq);
       break;
@@ -1218,14 +1219,14 @@ Str *HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
     }
   }
   if (q) {
-    qq = html_quote(q);
+    qq = Strnew(html_quote(q))->ptr;
   }
 
   /*    Strcat_charp(tmp, "<pre_int>"); */
   Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
                       "name=\"%s\" value=\"%s\">",
-                      this->cur_hseq++, this->cur_form_id(), html_quote(p),
-                      html_quote(r), qq));
+                      this->cur_hseq++, this->cur_form_id(),
+                      html_quote(p).c_str(), html_quote(r).c_str(), qq));
   return tmp;
 }
 
@@ -2019,14 +2020,14 @@ void HtmlParser::process_option() {
                              "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
                              begin_char, this->cur_hseq++, cur_form_id(),
                              select_is_multiple ? "checkbox" : "radio",
-                             html_quote(cur_select->ptr),
-                             html_quote(cur_option_value->ptr)));
+                             html_quote(cur_select->ptr).c_str(),
+                             html_quote(cur_option_value->ptr).c_str()));
   if (cur_option_selected)
     Strcat_charp(select_str, " checked>*</input_alt>");
   else
     Strcat_charp(select_str, "> </input_alt>");
   Strcat_char(select_str, end_char);
-  Strcat_charp(select_str, html_quote(cur_option_label->ptr));
+  Strcat(select_str, html_quote(cur_option_label->ptr));
   Strcat_charp(select_str, "</pre_int>");
   n_selectitem++;
 }

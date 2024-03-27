@@ -1,6 +1,7 @@
 #include "html_tag.h"
 #include "html_quote.h"
 #include "quote.h"
+#include "cmp.h"
 #include "html_command.h"
 #include "myctype.h"
 #include "Str.h"

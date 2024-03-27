@@ -7,6 +7,7 @@
 #include "quote.h"
 #include "html_tag.h"
 #include "html_feed_env.h"
+#include "cmp.h"
 #include <sstream>
 
 static const char *_formtypetbl[] = {

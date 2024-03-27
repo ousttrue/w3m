@@ -1,5 +1,5 @@
 #include "compression.h"
-#include "quote.h"
+#include "cmp.h"
 #include "mimetypes.h"
 #include "myctype.h"
 #include <stdio.h>
@@ -11,6 +11,7 @@
 #include <array>
 #include <algorithm>
 #include <sstream>
+#include <list>
 
 #ifdef _MSC_VER
 #include <winsock2.h>

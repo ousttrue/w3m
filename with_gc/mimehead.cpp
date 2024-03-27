@@ -3,7 +3,7 @@
  * MIME header support by Akinori ITO
  */
 #include "mimehead.h"
-#include "quote.h"
+#include "cmp.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "Str.h"

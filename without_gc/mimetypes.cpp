@@ -1,5 +1,6 @@
 #include "mimetypes.h"
 #include "quote.h"
+#include "cmp.h"
 #include "myctype.h"
 #include <string.h>
 #include <list>

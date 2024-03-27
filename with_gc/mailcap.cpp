@@ -2,7 +2,7 @@
 #include "quote.h"
 #include "matchattr.h"
 #include "etc.h"
-#include "url.h"
+#include "cmp.h"
 #include "Str.h"
 #include "myctype.h"
 #include "local_cgi.h"
