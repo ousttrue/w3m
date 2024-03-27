@@ -31,7 +31,7 @@ struct environment {
 
 struct html_feed_environ {
   readbuffer obuf;
-  GeneralList<TextLine> *buf;
+  GeneralList *buf;
   Str *tagbuf;
   int limit;
 
@@ -44,7 +44,7 @@ struct html_feed_environ {
   HtmlParser parser;
 
   html_feed_environ(int nenv, int limit_width, int indent,
-                    GeneralList<TextLine> *_buf = nullptr);
+                    GeneralList *_buf = nullptr);
   void purgeline();
 
   void POP_ENV();
@@ -180,7 +180,7 @@ inline void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
                            const Url &currentURL, std::string_view body,
                            bool internal = false) {
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0);
-  htmlenv1.buf = GeneralList<TextLine>::newGeneralList();
+  htmlenv1.buf = GeneralList::newGeneralList();
   htmlenv1.parseLine(body, internal);
   htmlenv1.obuf.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();

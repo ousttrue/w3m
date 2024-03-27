@@ -404,8 +404,8 @@ struct readbuffer {
   char *has_hidden_link(HtmlCommand cmd) const;
   void passthrough(char *str, int back);
 
-  void flushline(GeneralList<TextLine> *buf, int indent, int force, int width);
-  void do_blankline(GeneralList<TextLine> *buf, int indent, int indent_incr,
+  void flushline(GeneralList *buf, int indent, int force, int width);
+  void do_blankline(GeneralList *buf, int indent, int indent_incr,
                     int width) {
     if (this->blank_lines == 0) {
       this->flushline(buf, indent, 1, width);

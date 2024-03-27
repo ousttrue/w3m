@@ -4,7 +4,7 @@
 #include "Str.h"
 #include "generallist.h"
 
-void appendTextLine(GeneralList<TextLine> *tl, Str *line, int pos) {
+void appendTextLine(GeneralList *tl, Str *line, int pos) {
   if (tl->last == NULL) {
     tl->pushValue(TextLine::newTextLine(line->Strdup(), pos));
   } else {

@@ -820,8 +820,7 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
   this->flag |= RB_NFLUSHED;
 }
 
-void readbuffer::flushline(GeneralList<TextLine> *buf, int indent, int force,
-                           int width) {
+void readbuffer::flushline(GeneralList *buf, int indent, int force, int width) {
   Str *line = this->line;
   Str *pass = nullptr;
   // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =

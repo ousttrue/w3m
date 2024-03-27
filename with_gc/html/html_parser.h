@@ -13,10 +13,10 @@ class HtmlTag;
 using FeedFunc = Str *(*)();
 
 class LineFeed {
-  GeneralList<TextLine>::ListItem *_tl_lp2 = nullptr;
+  ListItem *_tl_lp2 = nullptr;
 
 public:
-  LineFeed(GeneralList<TextLine> *tl) : _tl_lp2(tl->first) {}
+  LineFeed(GeneralList *tl) : _tl_lp2(tl->first) {}
 
   const char *textlist_feed(void) {
     TextLine *p;

@@ -13,7 +13,7 @@ enum AlignMode {
 bool toAlign(char *oval, AlignMode *align);
 
 struct TextLine {
-  friend void appendTextLine(GeneralList<TextLine> *tl, Str *line, int pos);
+  friend void appendTextLine(GeneralList *tl, Str *line, int pos);
 
   struct Str *line;
 
@@ -77,4 +77,4 @@ public:
   }
 };
 
-extern void appendTextLine(GeneralList<TextLine> *tl, Str *line, int pos);
+extern void appendTextLine(GeneralList *tl, Str *line, int pos);
