@@ -1,7 +1,6 @@
 #include "html_feed_env.h"
 #include "readbuffer.h"
 #include "cmp.h"
-#include "textline.h"
 #include "stringtoken.h"
 #include "html_quote.h"
 #include "ctrlcode.h"

@@ -9,7 +9,6 @@
 #include "myctype.h"
 #include "entity.h"
 #include "proc.h"
-#include "textline.h"
 #include "generallist.h"
 #include "matrix.h"
 #include "utf8.h"

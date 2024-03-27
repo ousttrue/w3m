@@ -2,7 +2,6 @@
 #include "lineprop.h"
 #include "enum_template.h"
 #include "generallist.h"
-#include "textline.h"
 #include "readbuffer.h"
 #include <stdint.h>
 #include <memory>

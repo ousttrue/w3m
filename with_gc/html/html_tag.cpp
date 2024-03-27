@@ -8,7 +8,6 @@
 #include "hash.h"
 #include "table.h"
 #include "alloc.h"
-#include "textline.h"
 #include <sstream>
 
 #define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))

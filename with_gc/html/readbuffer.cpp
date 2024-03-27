@@ -11,7 +11,6 @@
 #include "myctype.h"
 #include "ctrlcode.h"
 #include "table.h"
-#include "textline.h"
 #include "html_tag.h"
 #include "proc.h"
 #include "stringtoken.h"

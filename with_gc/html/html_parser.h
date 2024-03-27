@@ -6,6 +6,7 @@
 #include "readbuffer_status.h"
 #include "readbuffer.h"
 #include "line.h"
+#include "anchorlist.h"
 
 struct Str;
 class HtmlTag;
