@@ -25,6 +25,7 @@ without_gc_lib = static_library(
         'generallist.cpp',
         'downloadlist.cpp',
         'form.cpp',
+        'auth_pass.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

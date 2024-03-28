@@ -25,5 +25,3 @@ void invalidate_auth_user_passwd(const Url &pu, const std::string &realm,
 std::pair<std::string, std::string>
 find_auth_user_passwd(const Url &pu, const std::string &realm, bool is_proxy);
 void loadPasswd();
-
-FILE *openSecretFile(const char *fname);

@@ -42,7 +42,6 @@ with_gc_lib = static_library(
         'http_request.cpp',
         'http_response.cpp',
         'http_session.cpp',
-        'auth_pass.cpp',
         'auth_digest.cpp',
         'loaddirectory.cpp',
         'alloc.cpp',
