@@ -39,7 +39,6 @@ with_gc_lib = static_library(
         'mytime.cpp',
         'app.cpp',
         'http_auth.cpp',
-        'http_request.cpp',
         'http_response.cpp',
         'http_session.cpp',
         'auth_digest.cpp',
