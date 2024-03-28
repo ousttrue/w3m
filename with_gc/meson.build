@@ -23,7 +23,6 @@ with_gc_lib = static_library(
         'html/html_command.cpp',
         'Str.cpp',
         'regex.cpp',
-        'generallist.cpp',
         'hash.cpp',
         'buffer.cpp',
         'etc.cpp',

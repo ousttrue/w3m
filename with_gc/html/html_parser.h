@@ -7,11 +7,7 @@
 #include "readbuffer.h"
 #include "line.h"
 #include "anchorlist.h"
-
-struct Str;
-class HtmlTag;
-
-using FeedFunc = Str *(*)();
+#include <optional>
 
 class LineFeed {
   std::shared_ptr<GeneralList> _tl_lp2;
@@ -19,16 +15,18 @@ class LineFeed {
 public:
   LineFeed(const std::shared_ptr<GeneralList> &tl) : _tl_lp2(tl) {}
 
-  const char *textlist_feed(void) {
+  std::optional<std::string> textlist_feed() {
     if (_tl_lp2 && _tl_lp2->_list.size()) {
       auto p = _tl_lp2->_list.front();
       _tl_lp2->_list.pop_front();
-      return p->line->ptr;
+      return p->line;
     }
-    return NULL;
+    return {};
   }
 };
 
+struct Str;
+class HtmlTag;
 struct HttpResponse;
 struct LineData;
 struct FormAnchor;

@@ -393,13 +393,15 @@ HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
   layout->data.title = h_env->title;
 
   LineFeed feed(h_env->buf);
-  for (int nlines = 0; auto str = feed.textlist_feed(); ++nlines) {
-    if (n_textarea >= 0 && *str != '<') {
+  for (int nlines = 0; auto _str = feed.textlist_feed(); ++nlines) {
+    auto &str = *_str;
+    if (n_textarea >= 0 && str.size() && str[0] != '<') {
       textarea_str[n_textarea] += str;
       continue;
     }
 
-    auto line = renderLine(currentUrl, h_env, &layout->data, nlines, str, &old);
+    auto line =
+        renderLine(currentUrl, h_env, &layout->data, nlines, str.c_str(), &old);
 
     /* end of processing for one line */
     if (!internal) {

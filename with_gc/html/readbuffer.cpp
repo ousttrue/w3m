@@ -15,9 +15,10 @@
 #include "proc.h"
 #include "stringtoken.h"
 #include "alloc.h"
+#include "html_parser.h"
 #include <math.h>
 #include <string_view>
-#include "html_parser.h"
+#include <sstream>
 
 int squeezeBlankLine = false;
 bool pseudoInlines = true;
@@ -958,7 +959,7 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
   }
 
   if (force == 1 || this->flag & RB_NFLUSHED) {
-    auto lbuf = std::make_shared<TextLine>(line, this->pos);
+    auto lbuf = std::make_shared<TextLine>(line->ptr, this->pos);
     if (this->RB_GET_ALIGN() == RB_CENTER) {
       lbuf->align(width, ALIGN_CENTER);
     } else if (this->RB_GET_ALIGN() == RB_RIGHT) {
@@ -1000,13 +1001,13 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
               }
             }
           }
-          lbuf = std::make_shared<TextLine>(line, width);
+          lbuf = std::make_shared<TextLine>(line->ptr, width);
         }
       }
     }
 
-    if (lbuf->pos() > this->maxlimit) {
-      this->maxlimit = lbuf->pos();
+    if (lbuf->pos > this->maxlimit) {
+      this->maxlimit = lbuf->pos;
     }
 
     if (buf) {
@@ -1018,34 +1019,35 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
       this->blank_lines++;
   } else {
     const char *p = line->ptr;
-    Str *tmp = Strnew(), *tmp2 = Strnew();
+    std::stringstream tmp;
+    std::stringstream tmp2;
 
     while (*p) {
       stringtoken st(p);
       auto token = st.sloppy_parse_line();
       p = st.ptr();
       if (token) {
-        Strcat(tmp, *token);
+        tmp << *token;
         if (force == 2) {
           if (buf) {
-            buf->appendTextLine(tmp, 0);
+            buf->appendTextLine(tmp.str(), 0);
           }
         } else
-          Strcat(tmp2, tmp);
-        Strclear(tmp);
+          tmp2 << tmp.str();
+        tmp.str("");
       }
     }
     if (force == 2) {
       if (pass) {
         if (buf) {
-          buf->appendTextLine(pass, 0);
+          buf->appendTextLine(pass->ptr, 0);
         }
       }
       pass = nullptr;
     } else {
       if (pass)
-        Strcat(tmp2, pass);
-      pass = tmp2;
+        tmp2 << pass->ptr;
+      pass = Strnew(tmp2.str());
     }
   }
 

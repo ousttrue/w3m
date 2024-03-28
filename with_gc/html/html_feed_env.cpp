@@ -7,6 +7,7 @@
 #include "symbol.h"
 #include "utf8.h"
 #include <assert.h>
+#include <sstream>
 
 html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
                                      const std::shared_ptr<GeneralList> &_buf)
@@ -26,17 +27,17 @@ void html_feed_environ::purgeline() {
   if (!(tl = this->buf->rpopValue()))
     return;
 
-  const char *p = tl->line->ptr;
-  auto tmp = Strnew();
+  const char *p = tl->line.c_str();
+  std::stringstream tmp;
   while (*p) {
     stringtoken st(p);
     auto token = st.sloppy_parse_line();
     p = st.ptr();
     if (token) {
-      Strcat(tmp, *token);
+      tmp << *token;
     }
   }
-  this->buf->appendTextLine(tmp, 0);
+  this->buf->appendTextLine(tmp.str(), 0);
   this->obuf.blank_lines--;
 }
 

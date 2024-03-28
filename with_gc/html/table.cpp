@@ -379,7 +379,7 @@ void table::print_item(int row, int col, int width, Str *buf) {
     lbuf->align(width, alignment);
     Strcat(buf, lbuf->line);
   } else {
-    lbuf = std::make_shared<TextLine>((Str*)NULL, 0);
+    lbuf = std::make_shared<TextLine>("", 0);
     if (DisableCenter)
       lbuf->align(width, ALIGN_LEFT);
     else
@@ -508,9 +508,9 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
   if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
     obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
   for (auto &l : orgdata->_list) {
-    if (TAG_IS(l->line->ptr, "<table_alt", 10)) {
+    if (TAG_IS(l->line.c_str(), "<table_alt", 10)) {
       int id = -1;
-      const char *p = l->line->ptr;
+      const char *p = l->line.c_str();
       std::shared_ptr<HtmlTag> tag;
       if ((tag = HtmlTag::parse(&p, true)) != NULL)
         tag->parsedtag_get_value(ATTR_TID, &id);
@@ -549,7 +549,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         }
       }
     } else
-      parser->HTMLlineproc1(l->line->ptr, &h_env);
+      parser->HTMLlineproc1(l->line.c_str(), &h_env);
   }
   if (obuf.status != R_ST_NORMAL) {
     obuf.status = R_ST_EOL;
@@ -1410,7 +1410,7 @@ void table::renderTable(HtmlParser *parser, int max_width,
 
       auto l = GeneralList::newGeneralList();
       for (k = 0; k < h; k++) {
-        l->_list.push_back(std::make_shared<TextLine>((Str *)NULL, 0));
+        l->_list.push_back(std::make_shared<TextLine>("", 0));
       }
       l->appendGeneralList(this->tabdata[j][i]);
       this->tabdata[j][i] = l;

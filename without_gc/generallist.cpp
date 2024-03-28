@@ -1,5 +1,6 @@
 #include "generallist.h"
 #include "cmp.h"
+#include <sstream>
 
 bool toAlign(char *oval, AlignMode *align) {
   if (strcasecmp(oval, "left") == 0)
@@ -20,41 +21,40 @@ bool toAlign(char *oval, AlignMode *align) {
 }
 
 void TextLine::align(int width, AlignMode mode) {
-  Str *line = this->line;
-  if (line->length == 0) {
+  if (line.size()) {
     for (int i = 0; i < width; i++)
-      Strcat_char(line, ' ');
-    this->_pos = width;
+      line += ' ';
+    this->pos = width;
     return;
   }
 
-  auto buf = Strnew();
-  int l = width - this->_pos;
+  std::stringstream buf;
+  int l = width - this->pos;
   switch (mode) {
   case ALIGN_CENTER: {
     int l1 = l / 2;
     int l2 = l - l1;
     for (int i = 0; i < l1; i++)
-      Strcat_char(buf, ' ');
-    Strcat(buf, line);
+      buf << ' ';
+    buf << line;
     for (int i = 0; i < l2; i++)
-      Strcat_char(buf, ' ');
+      buf << ' ';
     break;
   }
   case ALIGN_LEFT:
-    Strcat(buf, line);
+    buf << line;
     for (int i = 0; i < l; i++)
-      Strcat_char(buf, ' ');
+      buf << ' ';
     break;
   case ALIGN_RIGHT:
     for (int i = 0; i < l; i++)
-      Strcat_char(buf, ' ');
-    Strcat(buf, line);
+      buf << ' ';
+    buf << line;
     break;
   default:
     return;
   }
-  this->line = buf;
-  if (this->_pos < width)
-    this->_pos = width;
+  this->line = buf.str();
+  if (this->pos < width)
+    this->pos = width;
 }

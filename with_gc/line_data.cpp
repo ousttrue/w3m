@@ -308,7 +308,7 @@ void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
   linklist.push_back({
       .url = href,
       .title = title,
-      .ctype = ctype,
+      .ctype = ctype ? ctype : "",
       .type = type,
   });
 }

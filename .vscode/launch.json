@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/prefix/bin/w3m.exe",
             "args": [
-                // "http://www.yahoo.co.jp",
-                "http://www.google.com",
+                "http://www.yahoo.co.jp",
+                // "http://www.google.com",
             ],
             "environment": [
                 {

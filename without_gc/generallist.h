@@ -1,7 +1,8 @@
 #pragma once
 #include <list>
 #include <memory>
-#include "Str.h"
+#include <string>
+#include <string_view>
 
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 enum AlignMode {
@@ -17,12 +18,10 @@ bool toAlign(char *oval, AlignMode *align);
 struct GeneralList;
 struct Str;
 struct TextLine {
-  Str *line = nullptr;
-  int _pos = 0;
-  TextLine() {}
-  TextLine(Str *line, int pos) : line(line), _pos(pos) {}
-  TextLine(const char *line) : line(Strnew_charp(line ? line : "")) {}
-  int pos() const { return _pos; }
+  std::string line;
+  int pos = 0;
+  TextLine(std::string_view line = {}, int pos = 0)
+      : line(line.begin(), line.end()), pos(pos) {}
   void align(int width, AlignMode mode);
 };
 
@@ -69,7 +68,7 @@ struct GeneralList {
     }
   }
 
-  void appendTextLine(Str *line, int pos) {
+  void appendTextLine(std::string_view line, int pos) {
     _list.push_back(std::make_shared<TextLine>(line, pos));
   }
 };
