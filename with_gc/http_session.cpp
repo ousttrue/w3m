@@ -122,11 +122,10 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
     if ((p = res->getHeader("WWW-Authenticate:")).size() &&
         http_response_code == 401) {
       /* Authentication needed */
-      struct http_auth hauth;
-      if (findAuthentication(&hauth, *res, "WWW-Authenticate:")) {
-        hr->realm = get_auth_param(hauth.param, "realm");
+      if (auto hauth = findAuthentication(*res, "WWW-Authenticate:")) {
+        hr->realm = hauth->get_auth_param("realm");
         if (hr->realm.size()) {
-          auto [uname, pwd] = getAuthCookie(&hauth, "Authorization:", hr->url,
+          auto [uname, pwd] = getAuthCookie(&*hauth, "Authorization:", hr->url,
                                             hr.get(), request);
           hr->uname = uname;
           hr->pwd = pwd;

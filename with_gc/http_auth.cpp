@@ -14,6 +14,11 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 
+struct auth_param {
+  std::string name;
+  std::string val;
+};
+
 enum AuthChrType {
   AUTHCHR_NUL,
   AUTHCHR_SEP,
@@ -119,7 +124,7 @@ end_token:
 
 static const char *extract_auth_param(const char *q, struct auth_param *auth) {
   // clear
-  for (auto ap = auth; ap->name; ap++) {
+  for (auto ap = auth; ap->name.size(); ap++) {
     ap->val = nullptr;
   }
 
@@ -127,22 +132,20 @@ static const char *extract_auth_param(const char *q, struct auth_param *auth) {
     SKIP_BLANKS(q);
 
     struct auth_param *ap;
-    for (ap = auth; ap->name != nullptr; ap++) {
-      size_t len;
-
-      len = strlen(ap->name);
-      if (strncasecmp(q, ap->name, len) == 0 &&
+    for (ap = auth; ap->name.size(); ap++) {
+      size_t len = ap->name.size();
+      if (strncasecmp(q, ap->name.c_str(), len) == 0 &&
           (IS_SPACE(q[len]) || q[len] == '=')) {
         auto p = q + len;
         SKIP_BLANKS(p);
         if (*p != '=')
           return q;
         q = p + 1;
-        ap->val = extract_auth_val(&q);
+        ap->val = extract_auth_val(&q)->ptr;
         break;
       }
     }
-    if (ap->name == nullptr) {
+    if (ap->name.empty()) {
       /* skip unknown param */
       int token_type;
       auto p = q;
@@ -167,12 +170,13 @@ static const char *extract_auth_param(const char *q, struct auth_param *auth) {
   return q;
 }
 
-std::string get_auth_param(auth_param *auth, const char *name) {
-  for (auto ap = auth; ap->name != nullptr; ap++) {
-    if (strcasecmp(name, ap->name) == 0)
-      return ap->val->ptr;
+std::string http_auth::get_auth_param(const char *name) {
+  for (auto ap = this->param; ap->name.size(); ap++) {
+    if (strcasecmp(name, ap->name) == 0) {
+      return ap->val;
+    }
   }
-  return nullptr;
+  return {};
 }
 
 static auto Base64Table =
@@ -275,26 +279,23 @@ struct http_auth www_auth[] = {
         nullptr,
     }};
 
-http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
-                              const char *auth_field) {
-  struct http_auth *ha;
-  int len = strlen(auth_field), slen;
-  const char *p0, *p;
-
-  *hauth = {0};
+std::optional<http_auth> findAuthentication(const HttpResponse &res,
+                                            const char *auth_field) {
+  int len = strlen(auth_field);
+  http_auth hauth = {0};
   for (auto &i : res.document_header) {
     if (strncasecmp(i.c_str(), auth_field, len) == 0) {
-      for (p = i.c_str() + len; p != nullptr && *p != '\0';) {
+      for (auto p = i.c_str() + len; p != nullptr && *p != '\0';) {
         SKIP_BLANKS(p);
-        p0 = p;
-        for (ha = &www_auth[0]; ha->schema != nullptr; ha++) {
-          slen = strlen(ha->schema);
-          if (strncasecmp(p, ha->schema, slen) == 0) {
+        auto p0 = p;
+        for (auto ha = &www_auth[0]; ha->schema.size(); ha++) {
+          auto slen = ha->schema.size();
+          if (strncasecmp(p, ha->schema.c_str(), slen) == 0) {
             p += slen;
             SKIP_BLANKS(p);
-            if (hauth->pri < ha->pri) {
-              *hauth = *ha;
-              p = extract_auth_param(p, hauth->param);
+            if (hauth.pri < ha->pri) {
+              hauth = *ha;
+              p = extract_auth_param(p, hauth.param);
               break;
             } else {
               /* weak auth */
@@ -315,7 +316,10 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
       }
     }
   }
-  return hauth->schema ? hauth : nullptr;
+  if (hauth.schema.empty()) {
+    return {};
+  }
+  return hauth;
 }
 
 std::tuple<std::string, std::string>
@@ -323,7 +327,7 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
               HttpRequest *hr, const std::shared_ptr<Form> &request) {
   std::string realm;
   if (hauth) {
-    realm = qstr_unquote(get_auth_param(hauth->param, "realm"));
+    realm = qstr_unquote(hauth->get_auth_param("realm"));
   }
   if (realm.empty()) {
     return {};

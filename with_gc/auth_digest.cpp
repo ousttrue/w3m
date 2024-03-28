@@ -57,11 +57,11 @@ std::string AuthDigestCred(struct http_auth *ha, const std::string &uname,
                            const std::string &pw, const Url &pu,
                            HttpRequest *hr,
                            const std::shared_ptr<Form> &request) {
-  auto algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
-  auto nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
+  auto algorithm = qstr_unquote(ha->get_auth_param("algorithm"));
+  auto nonce = qstr_unquote(ha->get_auth_param("nonce"));
   Str *cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;
   /* cnonce is what client should generate. */
-  auto qop = qstr_unquote(get_auth_param(ha->param, "qop"));
+  auto qop = qstr_unquote(ha->get_auth_param("qop"));
 
   static union {
     int r[4];
@@ -105,10 +105,9 @@ std::string AuthDigestCred(struct http_auth *ha, const std::string &uname,
   }
 
   /* A1 = unq(username-value) ":" unq(realm-value) ":" passwd */
-  auto tmp =
-      Strnew_m_charp(uname.c_str(), ":",
-                     qstr_unquote(get_auth_param(ha->param, "realm")).c_str(),
-                     ":", pw.c_str(), nullptr);
+  auto tmp = Strnew_m_charp(uname.c_str(), ":",
+                            qstr_unquote(ha->get_auth_param("realm")).c_str(),
+                            ":", pw.c_str(), nullptr);
   MD5((unsigned char *)tmp->ptr, strlen(tmp->ptr), md5);
   auto a1buf = digest_hex(md5);
 
@@ -183,10 +182,9 @@ std::string AuthDigestCred(struct http_auth *ha, const std::string &uname,
     /* compatibility with RFC 2069
      * request_digest = KD(H(A1),  unq(nonce), H(A2))
      */
-    tmp =
-        Strnew_m_charp(a1buf->ptr, ":",
-                       qstr_unquote(get_auth_param(ha->param, "nonce")).c_str(),
-                       ":", a2buf->ptr, nullptr);
+    tmp = Strnew_m_charp(a1buf->ptr, ":",
+                         qstr_unquote(ha->get_auth_param("nonce")).c_str(), ":",
+                         a2buf->ptr, nullptr);
     MD5((unsigned char *)tmp->ptr, strlen(tmp->ptr), md5);
     rd = digest_hex(md5);
   }
@@ -200,20 +198,20 @@ std::string AuthDigestCred(struct http_auth *ha, const std::string &uname,
 
   tmp = Strnew_m_charp("Digest username=\"", uname.c_str(), "\"", nullptr);
   std::string s;
-  if ((s = get_auth_param(ha->param, "realm")).size())
+  if ((s = ha->get_auth_param("realm")).size())
     Strcat_m_charp(tmp, ", realm=", s.c_str(), nullptr);
-  if ((s = get_auth_param(ha->param, "nonce")).size())
+  if ((s = ha->get_auth_param("nonce")).size())
     Strcat_m_charp(tmp, ", nonce=", s.c_str(), nullptr);
   Strcat_m_charp(tmp, ", uri=\"", uri.c_str(), "\"", nullptr);
   Strcat_m_charp(tmp, ", response=\"", rd->ptr, "\"", nullptr);
 
-  if (algorithm.size() && (s = get_auth_param(ha->param, "algorithm")).size())
+  if (algorithm.size() && (s = ha->get_auth_param("algorithm")).size())
     Strcat_m_charp(tmp, ", algorithm=", s.c_str(), nullptr);
 
   if (cnonce)
     Strcat_m_charp(tmp, ", cnonce=\"", cnonce->ptr, "\"", nullptr);
 
-  if ((s = get_auth_param(ha->param, "opaque")).size())
+  if ((s = ha->get_auth_param("opaque")).size())
     Strcat_m_charp(tmp, ", opaque=", s.c_str(), nullptr);
 
   if (qop_i >= QOP_AUTH) {
