@@ -1,14 +1,11 @@
-/* $Id: mimehead.c,v 1.10 2003/10/05 18:52:51 ukai Exp $ */
 /*
  * MIME header support by Akinori ITO
  */
 #include "mimehead.h"
 #include "cmp.h"
-#include "alloc.h"
 #include "myctype.h"
-#include "Str.h"
 #include <sys/types.h>
-#include <string.h>
+#include <sstream>
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18
@@ -20,7 +17,7 @@
 
 #define BAD_BASE64 255
 
-void w3m_GC_free(void *ptr) { GC_FREE(ptr); }
+// void w3m_GC_free(void *ptr) { GC_FREE(ptr); }
 
 static unsigned char c2e(char x) {
   if ('A' <= x && x <= 'Z')
@@ -58,12 +55,10 @@ static int ha2d(char x, char y) {
   return r;
 }
 
-Str *decodeB(char **ww) {
-  struct growbuf gb;
-
-  growbuf_init(&gb);
+std::string decodeB(const char **ww) {
+  growbuf gb;
   decodeB_to_growbuf(&gb, ww);
-  return growbuf_to_Str(&gb);
+  return gb.to_Str();
 }
 
 void decodeB_to_growbuf(struct growbuf *gb, char **ww) {
@@ -72,7 +67,7 @@ void decodeB_to_growbuf(struct growbuf *gb, char **ww) {
   char d[3];
   int i, n_pad;
 
-  growbuf_reserve(gb, strlen(wp) + 1);
+  // gb->reserve(strlen(wp) + 1);
   n_pad = 0;
   while (1) {
     for (i = 0; i < 4; i++) {
@@ -103,39 +98,35 @@ void decodeB_to_growbuf(struct growbuf *gb, char **ww) {
     d[1] = ((c[1] << 4) | (c[2] >> 2));
     d[2] = ((c[2] << 6) | c[3]);
     for (i = 0; i < 3 - n_pad; i++) {
-      GROWBUF_ADD_CHAR(gb, d[i]);
+      gb->GROWBUF_ADD_CHAR(d[i]);
     }
     if (n_pad || *wp == '\0' || *wp == '?')
       break;
   }
 last:
-  growbuf_reserve(gb, gb->length + 1);
-  gb->ptr[gb->length] = '\0';
+  // gb->reserve(gb->length + 1);
+  // gb->ptr[gb->length] = '\0';
   *ww = wp;
   return;
 }
 
-Str *decodeU(char **ww) {
+std::string decodeU(const char **ww) {
   struct growbuf gb;
-
-  growbuf_init(&gb);
   decodeU_to_growbuf(&gb, ww);
-  return growbuf_to_Str(&gb);
+  return gb.to_Str();
 }
 
 void decodeU_to_growbuf(struct growbuf *gb, char **ww) {
-  unsigned char c1, c2;
   char *w = *ww;
-  int n, i;
-
   if (*w <= 0x20 || *w >= 0x60)
     return;
-  n = *w - 0x20;
-  growbuf_reserve(gb, n + 1);
+
+  int n = *w - 0x20;
+  int i;
   for (w++, i = 2; *w != '\0' && n; n--) {
-    c1 = (w[0] - 0x20) % 0x40;
-    c2 = (w[1] - 0x20) % 0x40;
-    gb->ptr[gb->length++] = (c1 << i) | (c2 >> (6 - i));
+    unsigned char c1 = (w[0] - 0x20) % 0x40;
+    unsigned char c2 = (w[1] - 0x20) % 0x40;
+    gb->_buf.push_back((c1 << i) | (c2 >> (6 - i)));
     if (i == 6) {
       w += 2;
       i = 2;
@@ -144,42 +135,38 @@ void decodeU_to_growbuf(struct growbuf *gb, char **ww) {
       i += 2;
     }
   }
-  gb->ptr[gb->length] = '\0';
+  // gb->ptr[gb->length] = '\0';
   return;
 }
 
 /* RFC2047 (4.2. The "Q" encoding) */
-Str *decodeQ(char **ww) {
-  char *w = *ww;
-  Str *a = Strnew_size(strlen(w));
-
+std::string decodeQ(const char **ww) {
+  const char *w = *ww;
+  std::stringstream a;
   for (; *w != '\0' && *w != '?'; w++) {
     if (*w == '=') {
       w++;
-      Strcat_char(a, ha2d(*w, *(w + 1)));
+      a << ha2d(*w, *(w + 1));
       w++;
     } else if (*w == '_') {
-      Strcat_char(a, ' ');
-    } else
-      Strcat_char(a, *w);
+      a << ' ';
+    } else {
+      a << *w;
+    }
   }
   *ww = w;
-  return a;
+  return a.str();
 }
 
 /* RFC2045 (6.7. Quoted-Printable Content-Transfer-Encoding) */
-Str *decodeQP(char **ww) {
+std::string decodeQP(const char **ww) {
   struct growbuf gb;
-
-  growbuf_init(&gb);
   decodeQP_to_growbuf(&gb, ww);
-  return growbuf_to_Str(&gb);
+  return gb.to_Str();
 }
 
 void decodeQP_to_growbuf(struct growbuf *gb, char **ww) {
   char *w = *ww;
-
-  growbuf_reserve(gb, strlen(w) + 1);
   for (; *w != '\0'; w++) {
     if (*w == '=') {
       w++;
@@ -191,22 +178,24 @@ void decodeQP_to_growbuf(struct growbuf *gb, char **ww) {
       } else {
         if (*w == '\0' || *(w + 1) == '\0')
           break;
-        gb->ptr[gb->length++] = ha2d(*w, *(w + 1));
+        gb->_buf.push_back(ha2d(*w, *(w + 1)));
         w++;
       }
-    } else
-      gb->ptr[gb->length++] = *w;
+    } else {
+      gb->_buf.push_back(*w);
+    }
   }
-  gb->ptr[gb->length] = '\0';
+  // gb->ptr[gb->length] = '\0';
   *ww = w;
   return;
 }
 
-Str *decodeWord0(char **ow) {
-  char *p, *w = *ow;
+static std::string decodeWord0(const char **ow) {
+  const char *p;
+  const char *w = *ow;
   char method;
-  Str *a = Strnew();
-  Str *tmp = Strnew();
+  std::string a;
+  std::string tmp;
 
   if (*w != '=' || *(w + 1) != '?')
     goto convert_fail;
@@ -214,10 +203,9 @@ Str *decodeWord0(char **ow) {
   for (; *w != '?'; w++) {
     if (*w == '\0')
       goto convert_fail;
-    Strcat_char(tmp, *w);
+    tmp += *w;
   }
-  if (strcasecmp(tmp->ptr, "ISO-8859-1") != 0 &&
-      strcasecmp(tmp->ptr, "US_ASCII") != 0)
+  if (strcasecmp(tmp, "ISO-8859-1") != 0 && strcasecmp(tmp, "US_ASCII") != 0)
     /* NOT ISO-8859-1 encoding ... don't convert */
     goto convert_fail;
   w++;
@@ -247,29 +235,27 @@ Str *decodeWord0(char **ow) {
   return a;
 
 convert_fail:
-  return Strnew();
+  return {};
 }
 
 /*
  * convert MIME encoded string to the original one
  */
-Str *decodeMIME0(Str *orgstr) {
-  char *org = orgstr->ptr, *endp = org + orgstr->length;
-  char *org0, *p;
-  Str *cnv = NULL;
+std::string decodeMIME0(const std::string &orgstr) {
+  auto org = orgstr.data();
+  auto endp = orgstr.data() + orgstr.size();
+  const char *org0;
+  const char *p;
+  std::stringstream cnv;
 
   while (org < endp) {
     if (*org == '=' && *(org + 1) == '?') {
-      if (cnv == NULL) {
-        cnv = Strnew_size(orgstr->length);
-        Strcat_charp_n(cnv, orgstr->ptr, org - orgstr->ptr);
-      }
     nextEncodeWord:
       p = org;
-      Strcat(cnv, decodeWord0(&org));
+      cnv << decodeWord0(&org);
       if (org == p) { /* Convert failure */
-        Strcat_charp(cnv, org);
-        return cnv;
+        cnv << org;
+        return cnv.str();
       }
       org0 = org;
     SPCRLoop:
@@ -289,78 +275,67 @@ Str *decodeMIME0(Str *orgstr) {
         break;
       }
     } else {
-      if (cnv != NULL)
-        Strcat_char(cnv, *org);
+      cnv << *org;
       org++;
     }
   }
-  if (cnv == NULL)
-    return orgstr;
-  return cnv;
+  return cnv.str();
 }
 
-static void *w3m_GC_realloc_atomic(void *ptr, size_t size) {
-  return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
-}
+// static void *w3m_GC_realloc_atomic(void *ptr, size_t size) {
+//   return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
+// }
 
-void growbuf_init(struct growbuf *gb) {
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-  gb->realloc_proc = &w3m_GC_realloc_atomic;
-  gb->free_proc = &w3m_GC_free;
-}
+// void growbuf_init(struct growbuf *gb) {
+//   gb->realloc_proc = &w3m_GC_realloc_atomic;
+//   gb->free_proc = &w3m_GC_free;
+// }
+//
+// void growbuf_init_without_GC(struct growbuf *gb) {
+//   gb->realloc_proc = &xrealloc;
+//   gb->free_proc = &xfree;
+// }
 
-void growbuf_init_without_GC(struct growbuf *gb) {
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-  gb->realloc_proc = &xrealloc;
-  gb->free_proc = &xfree;
-}
+// void growbuf::clear() {
+//   (*this->free_proc)(this->ptr);
+//   this->ptr = NULL;
+//   this->length = 0;
+//   this->area_size = 0;
+// }
 
-void growbuf_clear(struct growbuf *gb) {
-  (*gb->free_proc)(gb->ptr);
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-}
+// Str *growbuf::to_Str() {
+//   Str *s;
+//
+//   if (this->free_proc == &w3m_GC_free) {
+//     this->reserve(this->length + 1);
+//     this->ptr[this->length] = '\0';
+//     s = (Str *)New(Str);
+//     s->ptr = this->ptr;
+//     s->length = this->length;
+//     s->area_size = this->area_size;
+//   } else {
+//     s = Strnew_charp_n(this->ptr, this->length);
+//     (*this->free_proc)(this->ptr);
+//   }
+//   this->ptr = NULL;
+//   this->length = 0;
+//   this->area_size = 0;
+//   return s;
+// }
 
-Str *growbuf_to_Str(struct growbuf *gb) {
-  Str *s;
+// void growbuf::reserve(int leastarea) {
+//   if (this->area_size < leastarea) {
+//     int newarea = this->area_size * 3 / 2;
+//     if (newarea < leastarea)
+//       newarea = leastarea;
+//     newarea += 16;
+//     this->ptr = (char *)(*this->realloc_proc)(this->ptr, newarea);
+//     this->area_size = newarea;
+//   }
+// }
 
-  if (gb->free_proc == &w3m_GC_free) {
-    growbuf_reserve(gb, gb->length + 1);
-    gb->ptr[gb->length] = '\0';
-    s = (Str *)New(Str);
-    s->ptr = gb->ptr;
-    s->length = gb->length;
-    s->area_size = gb->area_size;
-  } else {
-    s = Strnew_charp_n(gb->ptr, gb->length);
-    (*gb->free_proc)(gb->ptr);
-  }
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-  return s;
-}
-
-void growbuf_reserve(struct growbuf *gb, int leastarea) {
-  int newarea;
-
-  if (gb->area_size < leastarea) {
-    newarea = gb->area_size * 3 / 2;
-    if (newarea < leastarea)
-      newarea = leastarea;
-    newarea += 16;
-    gb->ptr = (char *)(*gb->realloc_proc)(gb->ptr, newarea);
-    gb->area_size = newarea;
-  }
-}
-
-void growbuf_append(struct growbuf *gb, const unsigned char *src, int len) {
-  growbuf_reserve(gb, gb->length + len);
-  memcpy(&gb->ptr[gb->length], src, len);
-  gb->length += len;
-}
+// void growbuf::append(const unsigned char *src, int len) {
+//   this->reserve(this->length + len);
+//   memcpy(&this->ptr[this->length], src, len);
+//   this->length += len;
+// }

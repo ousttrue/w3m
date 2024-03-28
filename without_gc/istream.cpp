@@ -1,11 +1,11 @@
 #include "istream.h"
-#include "Str.h"
 #include "mimehead.h"
 #include <functional>
 #include <openssl/ssl.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <vector>
+#include <assert.h>
 
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -189,50 +189,50 @@ struct encoded_stream : public input_stream {
   EncodingType encoding;
 
   encoded_stream(const std::shared_ptr<input_stream> &is, EncodingType encoding)
-      : input_stream(STREAM_BUF_SIZE), is(is), encoding(encoding) {
-    growbuf_init_without_GC(&this->gb);
-  }
+      : input_stream(STREAM_BUF_SIZE), is(is), encoding(encoding) {}
   StreamType IStype() const override { return IST_ENCODED; }
   int ISfileno() const override { return is->ISfileno(); }
   void close() override {
     this->is->close();
-    growbuf_clear(&this->gb);
+    this->gb.clear();
   }
   int read(unsigned char *buf, int len) override {
-    if (this->pos == this->gb.length) {
-      this->is->ISgets_to_growbuf(&this->gb, true);
-      if (this->gb.length == 0) {
-        return 0;
-      }
-      if (this->encoding == ENC_BASE64) {
-        memchop(this->gb.ptr, &this->gb.length);
-      } else if (this->encoding == ENC_UUENCODE) {
-        if (this->gb.length >= 5 && !strncmp(this->gb.ptr, "begin", 5)) {
-          this->is->ISgets_to_growbuf(&this->gb, true);
-        }
-        memchop(this->gb.ptr, &this->gb.length);
-      }
-
-      struct growbuf gbtmp;
-      growbuf_init_without_GC(&gbtmp);
-      auto p = this->gb.ptr;
-      if (this->encoding == ENC_QUOTE)
-        decodeQP_to_growbuf(&gbtmp, &p);
-      else if (this->encoding == ENC_BASE64)
-        decodeB_to_growbuf(&gbtmp, &p);
-      else if (this->encoding == ENC_UUENCODE)
-        decodeU_to_growbuf(&gbtmp, &p);
-      growbuf_clear(&this->gb);
-      this->gb = gbtmp;
-      this->pos = 0;
-    }
-
-    if (len > this->gb.length - this->pos)
-      len = this->gb.length - this->pos;
-
-    memcpy(buf, &this->gb.ptr[this->pos], len);
-    this->pos += len;
-    return len;
+    assert(false);
+    // if (this->pos == this->gb.length) {
+    //   this->is->ISgets_to_growbuf(&this->gb, true);
+    //   if (this->gb.length == 0) {
+    //     return 0;
+    //   }
+    //   if (this->encoding == ENC_BASE64) {
+    //     memchop(this->gb.ptr, &this->gb.length);
+    //   } else if (this->encoding == ENC_UUENCODE) {
+    //     if (this->gb.length >= 5 && !strncmp(this->gb.ptr, "begin", 5)) {
+    //       this->is->ISgets_to_growbuf(&this->gb, true);
+    //     }
+    //     memchop(this->gb.ptr, &this->gb.length);
+    //   }
+    //
+    //   struct growbuf gbtmp;
+    //   growbuf_init_without_GC(&gbtmp);
+    //   auto p = this->gb.ptr;
+    //   if (this->encoding == ENC_QUOTE)
+    //     decodeQP_to_growbuf(&gbtmp, &p);
+    //   else if (this->encoding == ENC_BASE64)
+    //     decodeB_to_growbuf(&gbtmp, &p);
+    //   else if (this->encoding == ENC_UUENCODE)
+    //     decodeU_to_growbuf(&gbtmp, &p);
+    //   this->gb.clear();
+    //   this->gb = gbtmp;
+    //   this->pos = 0;
+    // }
+    //
+    // if (len > this->gb.length - this->pos)
+    //   len = this->gb.length - this->pos;
+    //
+    // memcpy(buf, &this->gb.ptr[this->pos], len);
+    // this->pos += len;
+    // return len;
+    return {};
   }
 };
 
@@ -271,13 +271,12 @@ int input_stream::ISundogetc() {
 
 std::string input_stream::StrISgets2(bool crnl) {
   struct growbuf gb;
-  growbuf_init(&gb);
   this->ISgets_to_growbuf(&gb, crnl);
-  return growbuf_to_Str(&gb)->ptr;
+  return gb.to_Str();
 }
 
 void input_stream::ISgets_to_growbuf(struct growbuf *gb, char crnl) {
-  gb->length = 0;
+  gb->clear();
   while (!this->_iseos) {
     if (this->_buffer->MUST_BE_UPDATED()) {
       if (this->_buffer->do_update(std::bind(&input_stream::read, this,
@@ -287,9 +286,9 @@ void input_stream::ISgets_to_growbuf(struct growbuf *gb, char crnl) {
       }
       continue;
     }
-    if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
+    if (crnl && gb->length() > 0 && gb->_buf[gb->length() - 1] == '\r') {
       if (this->_buffer->buf[this->_buffer->cur] == '\n') {
-        GROWBUF_ADD_CHAR(gb, '\n');
+        gb->GROWBUF_ADD_CHAR('\n');
         ++this->_buffer->cur;
       }
       break;
@@ -302,15 +301,13 @@ void input_stream::ISgets_to_growbuf(struct growbuf *gb, char crnl) {
         break;
       }
     }
-    growbuf_append(gb, &this->_buffer->buf[this->_buffer->cur],
-                   i - this->_buffer->cur);
+    gb->append(&this->_buffer->buf[this->_buffer->cur], i - this->_buffer->cur);
     this->_buffer->cur = i;
-    if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
+    if (gb->length() > 0 && gb->_buf[gb->length() - 1] == '\n')
       break;
   }
-  growbuf_reserve(gb, gb->length + 1);
-  gb->ptr[gb->length] = '\0';
-  return;
+  // gb->reserve(gb->length + 1);
+  // gb->ptr[gb->length] = '\0';
 }
 
 static int buffer_read(stream_buffer *sb, char *obuf, int count) {

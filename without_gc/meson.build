@@ -18,6 +18,7 @@ without_gc_lib = static_library(
         'event.cpp',
         'tmpfile.cpp',
         'mimetypes.cpp',
+        'mimehead.cpp',
         'compression.cpp',
         'cookie_domain.cpp',
         'cookie.cpp',
@@ -29,6 +30,7 @@ without_gc_lib = static_library(
         'http_request.cpp',
         'mytime.cpp',
         'http_response.cpp',
+        'istream.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
