@@ -29,12 +29,9 @@
 #include <string.h>
 
 #ifdef _MSC_VER
-// #include <windows.h>
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <mstcpip.h>
-// #include <stdlib.h>
-// #include <stdio.h>
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -87,26 +84,6 @@ private:
   void openData(const Url &pu);
   void add_index_file(Url *pu);
 };
-
-#ifdef SOCK_DEBUG
-#include <stdarg.h>
-static void sock_log(char *message, ...) {
-  FILE *f = fopen("zzzsocklog", "a");
-  va_list va;
-
-  if (f == nullptr)
-    return;
-  va_start(va, message);
-  vfprintf(f, message, va);
-  fclose(f);
-}
-#endif
-
-// static JMP_BUF AbortLoading;
-// static void KeyAbort(SIGNAL_ARG) {
-//   LONGJMP(AbortLoading, 1);
-//   SIGNAL_RETURN;
-// }
 
 std::string index_file;
 
@@ -250,20 +227,21 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
   //   }
   //   TRAP_ON;
   if (hostname == nullptr) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
-#endif
-    goto error;
+    // #ifdef SOCK_DEBUG
+    //     sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n",
+    //     hostname);
+    // #endif
+    return -1;
   }
 
-#ifdef INET6
   /* rfc2732 compliance */
   hname = hostname;
   if (hname != nullptr && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
     hname = allocStr(hostname + 1, -1);
     ((char *)hname)[strlen(hname) - 1] = '\0';
-    if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
-      goto error;
+    if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname)) {
+      return -1;
+    }
   }
   for (af = ai_family_order_table[DNS_order];; af++) {
     memset(&hints, 0, sizeof(hints));
@@ -281,7 +259,7 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
     }
     if (error) {
       if (*af == PF_UNSPEC) {
-        goto error;
+        return -1;
       }
       /* try next ai family */
       continue;
@@ -306,7 +284,7 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
     if (sock < 0) {
       freeaddrinfo(res0);
       if (*af == PF_UNSPEC) {
-        goto error;
+        return -1;
       }
       /* try next ai family */
       continue;
@@ -314,85 +292,8 @@ static int openSocket(const char *const hostname, const char *remoteport_name,
     freeaddrinfo(res0);
     break;
   }
-#else /* not INET6 */
-  s_port = htons(remoteport_num);
-  memset(&hostaddr, 0, sizeof(struct sockaddr_in));
-  if ((proto = getprotobyname("tcp")) == nullptr) {
-    /* protocol number of TCP is 6 */
-    proto = New(struct protoent);
-    proto->p_proto = 6;
-  }
-  if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
-    goto error;
-  }
-  regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-  if (regexMatch(hostname, -1, 1)) {
-    sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-    adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-    memcpy(&hostaddr.sin_addr, &adr, sizeof(long));
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    if (fmInitialized) {
-      message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-      refresh();
-    }
-    if (connect(sock, (struct sockaddr *)&hostaddr,
-                sizeof(struct sockaddr_in)) < 0) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-#endif
-      goto error;
-    }
-  } else {
-    char **h_addr_list;
-    int result = -1;
-    if (fmInitialized) {
-      message(Sprintf("Performing hostname lookup on %s", hostname)->ptr, 0, 0);
-      refresh();
-    }
-    if ((entry = gethostbyname(hostname)) == nullptr) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-               strerror(errno));
-#endif
-      goto error;
-    }
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-      memcpy(&hostaddr.sin_addr, h_addr_list[0], entry->h_length);
-#ifdef SOCK_DEBUG
-      adr = ntohl(*(long *)&hostaddr.sin_addr);
-      sock_log("openSocket: connecting %d.%d.%d.%d\n", (adr >> 24) & 0xff,
-               (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
-      if (fmInitialized) {
-        message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-        refresh();
-      }
-      if ((result = connect(sock, (struct sockaddr *)&hostaddr,
-                            sizeof(struct sockaddr_in))) == 0) {
-        break;
-      }
-#ifdef SOCK_DEBUG
-      else {
-        sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-      }
-#endif
-    }
-    if (result < 0) {
-      goto error;
-    }
-  }
-#endif /* not INET6 */
 
   return sock;
-
-error:
-  return -1;
 }
 
 void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
@@ -533,9 +434,9 @@ UrlStream::openURL(const std::string &path, std::optional<Url> current,
       url.label = {};
     } else {
       /* given URL must be null string */
-#ifdef SOCK_DEBUG
-      sock_log("given URL must be null string\n");
-#endif
+      // #ifdef SOCK_DEBUG
+      //       sock_log("given URL must be null string\n");
+      // #endif
       // hr->status = HTST_NORMAL;
       return std::make_shared<HttpRequest>(url, current, option, request);
     }
@@ -768,92 +669,6 @@ int UrlStream::doFileSave(const char *defstr) {
   return 0;
 #endif
 }
-
-// std::string UrlStream::uncompress_stream() {
-// #ifdef _MSC_VER
-//   return {};
-// #else
-//   if (this->stream->IStype() != IST_ENCODED) {
-//     this->stream = newEncodedStream(this->stream, this->encoding);
-//     this->encoding = ENC_7BIT;
-//   }
-//
-//   const char *expand_cmd = GUNZIP_CMDNAME;
-//   const char *expand_name = GUNZIP_NAME;
-//   int use_d_arg = 0;
-//   for (auto &d : compression_decoders) {
-//     if (this->compression == d.type) {
-//       if (d.auxbin_p)
-//         expand_cmd = auxbinFile(d.cmd);
-//       else
-//         expand_cmd = d.cmd;
-//       expand_name = d.name;
-//       ext = d.ext;
-//       use_d_arg = d.use_d_arg;
-//       break;
-//     }
-//   }
-//   this->compression = CMP_NOCOMPRESS;
-//
-//   std::string tmpf;
-//   if (this->scheme != SCM_LOCAL) {
-//     tmpf = App::instance().tmpfname(TMPF_DFL, ext);
-//   }
-//
-//   /* child1 -- stdout|f1=uf -> parent */
-//   FILE *f1;
-//   auto pid1 = open_pipe_rw(&f1, nullptr);
-//   if (pid1 < 0) {
-//     return {};
-//   }
-//   if (pid1 == 0) {
-//     /* child */
-//     FILE *f2 = stdin;
-//
-//     /* uf -> child2 -- stdout|stdin -> child1 */
-//     auto pid2 = open_pipe_rw(&f2, nullptr);
-//     if (pid2 < 0) {
-//       exit(1);
-//     }
-//     if (pid2 == 0) {
-//       /* child2 */
-//       char *buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-//       int count;
-//       FILE *f = nullptr;
-//
-//       // int UrlStream::fileno() const { return this->stream->ISfileno(); }
-//
-//       setup_child(true, 2, this->stream->ISfileno());
-//       if (tmpf.size()) {
-//         f = fopen(tmpf.c_str(), "wb");
-//       }
-//       while ((count = this->stream->ISread_n(buf, SAVE_BUF_SIZE)) > 0) {
-//         if (static_cast<int>(fwrite(buf, 1, count, stdout)) != count)
-//           break;
-//         if (f && static_cast<int>(fwrite(buf, 1, count, f)) != count)
-//           break;
-//       }
-//       if (f)
-//         fclose(f);
-//       xfree(buf);
-//       exit(0);
-//     }
-//     /* child1 */
-//     dup2(1, 2); /* stderr>&stdout */
-//     setup_child(true, -1, -1);
-//     if (use_d_arg)
-//       execlp(expand_cmd, expand_name, "-d", nullptr);
-//     else
-//       execlp(expand_cmd, expand_name, nullptr);
-//     exit(1);
-//   }
-//   this->stream = newFileStream(f1, fclose);
-//   if (tmpf.size()) {
-//     this->scheme = SCM_LOCAL;
-//   }
-//   return tmpf;
-// #endif
-// }
 
 std::tuple<std::shared_ptr<HttpRequest>, std::shared_ptr<input_stream>>
 openURL(const std::string &url, std::optional<Url> current,

@@ -1,11 +1,9 @@
 #include "http_session.h"
 #include "url_quote.h"
 #include "http_response.h"
-#include "mytime.h"
-#include "http_auth.h"
+// #include "http_auth.h"
 #include "mimetypes.h"
 #include "url_stream.h"
-#include "Str.h"
 #include "istream.h"
 #include <sys/stat.h>
 
@@ -122,21 +120,25 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
     if ((p = res->getHeader("WWW-Authenticate:")).size() &&
         http_response_code == 401) {
       /* Authentication needed */
-      if (auto hauth = findAuthentication(*res, "WWW-Authenticate:")) {
-        hr->realm = hauth->get_auth_param("realm");
-        if (hr->realm.size()) {
-          auto [uname, pwd] = getAuthCookie(&*hauth, "Authorization:", hr->url,
-                                            hr.get(), request);
-          hr->uname = uname;
-          hr->pwd = pwd;
-          if (hr->uname.empty()) {
-            res->raw = read_body(stream);
-            return res;
-          }
-          hr->add_auth_cookie_flag = true;
-          return loadGeneralFile(path, current, option, request);
-        }
-      }
+      assert(false);
+      res->raw = read_body(stream);
+      return res;
+      // if (auto hauth = findAuthentication(*res, "WWW-Authenticate:")) {
+      //   hr->realm = hauth->get_auth_param("realm");
+      //   if (hr->realm.size()) {
+      //     auto [uname, pwd] = getAuthCookie(&*hauth, "Authorization:",
+      //     hr->url,
+      //                                       hr.get(), request);
+      //     hr->uname = uname;
+      //     hr->pwd = pwd;
+      //     if (hr->uname.empty()) {
+      //       res->raw = read_body(stream);
+      //       return res;
+      //     }
+      //     hr->add_auth_cookie_flag = true;
+      //     return loadGeneralFile(path, current, option, request);
+      //   }
+      // }
     }
 
     if (hr && hr->status == HTST_CONNECT) {
