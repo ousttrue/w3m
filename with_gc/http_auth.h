@@ -11,10 +11,11 @@ struct auth_param {
 struct HttpRequest;
 struct Form;
 struct Url;
-using HttpAuthFunc = Str *(*)(struct http_auth *ha, const std::string &uname,
-                              const std::string &pw, const Url &pu,
-                              HttpRequest *hr,
-                              const std::shared_ptr<Form> &form);
+using HttpAuthFunc = std::string (*)(struct http_auth *ha,
+                                     const std::string &uname,
+                                     const std::string &pw, const Url &pu,
+                                     HttpRequest *hr,
+                                     const std::shared_ptr<Form> &form);
 struct http_auth {
   int pri = 0;
   const char *schema = nullptr;

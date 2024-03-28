@@ -53,9 +53,10 @@ static Str *digest_hex(unsigned char *p) {
   return tmp;
 }
 
-Str *AuthDigestCred(struct http_auth *ha, const std::string &uname,
-                    const std::string &pw, const Url &pu, HttpRequest *hr,
-                    const std::shared_ptr<Form> &request) {
+std::string AuthDigestCred(struct http_auth *ha, const std::string &uname,
+                           const std::string &pw, const Url &pu,
+                           HttpRequest *hr,
+                           const std::shared_ptr<Form> &request) {
   auto algorithm = qstr_unquote(get_auth_param(ha->param, "algorithm"));
   auto nonce = qstr_unquote(get_auth_param(ha->param, "nonce"));
   Str *cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;
@@ -224,5 +225,5 @@ Str *AuthDigestCred(struct http_auth *ha, const std::string &uname,
     Strcat_m_charp(tmp, ", nc=", nc, nullptr);
   }
 
-  return tmp;
+  return tmp->ptr;
 }

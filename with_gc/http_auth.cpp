@@ -178,7 +178,7 @@ std::string get_auth_param(auth_param *auth, const char *name) {
 static auto Base64Table =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static Str *base64_encode(const char *src, int len) {
+static std::string base64_encode(const char *src, int len) {
 
   auto k = len;
   if (k % 3)
@@ -186,28 +186,23 @@ static Str *base64_encode(const char *src, int len) {
   k = k / 3 * 4;
 
   if (!len || k + 1 < len)
-    return Strnew();
-
-  auto dest = Strnew_size(k);
-  if (dest->area_size <= k) {
-    Strfree(dest);
-    return Strnew();
-  }
+    return {};
 
   auto s = (unsigned char *)src;
   auto in = s;
 
   auto endw = s + len - 2;
 
+  std::stringstream dest;
   while (in < endw) {
     uint32_t j = *in++;
     j = j << 8 | *in++;
     j = j << 8 | *in++;
 
-    Strcatc(dest, Base64Table[(j >> 18) & 0x3f]);
-    Strcatc(dest, Base64Table[(j >> 12) & 0x3f]);
-    Strcatc(dest, Base64Table[(j >> 6) & 0x3f]);
-    Strcatc(dest, Base64Table[j & 0x3f]);
+    dest << Base64Table[(j >> 18) & 0x3f];
+    dest << Base64Table[(j >> 12) & 0x3f];
+    dest << Base64Table[(j >> 6) & 0x3f];
+    dest << Base64Table[j & 0x3f];
   }
 
   if (s + len - in) {
@@ -215,30 +210,31 @@ static Str *base64_encode(const char *src, int len) {
     if (s + len - in) {
       j = j << 8 | *in++;
       j = j << 8;
-      Strcatc(dest, Base64Table[(j >> 18) & 0x3f]);
-      Strcatc(dest, Base64Table[(j >> 12) & 0x3f]);
-      Strcatc(dest, Base64Table[(j >> 6) & 0x3f]);
+      dest << Base64Table[(j >> 18) & 0x3f];
+      dest << Base64Table[(j >> 12) & 0x3f];
+      dest << Base64Table[(j >> 6) & 0x3f];
     } else {
       j = j << 8;
       j = j << 8;
-      Strcatc(dest, Base64Table[(j >> 18) & 0x3f]);
-      Strcatc(dest, Base64Table[(j >> 12) & 0x3f]);
-      Strcatc(dest, '=');
+      dest << Base64Table[(j >> 18) & 0x3f];
+      dest << Base64Table[(j >> 12) & 0x3f];
+      dest << '=';
     }
-    Strcatc(dest, '=');
+    dest << '=';
   }
-  Strnulterm(dest);
-  return dest;
+  return dest.str();
 }
 
-static Str *AuthBasicCred(struct http_auth *ha, const std::string &uname,
-                          const std::string &pw, const Url &pu, HttpRequest *hr,
-                          const std::shared_ptr<Form> &) {
+static std::string AuthBasicCred(struct http_auth *ha, const std::string &uname,
+                                 const std::string &pw, const Url &pu,
+                                 HttpRequest *hr,
+                                 const std::shared_ptr<Form> &) {
   std::string s = uname;
   s += ':';
   s += pw;
-  return Strnew_m_charp("Basic ", base64_encode(s.c_str(), s.size())->ptr,
-                        nullptr);
+  std::stringstream ss;
+  ss << "Basic " << base64_encode(s.c_str(), s.size());
+  return ss.str();
 }
 
 struct auth_param none_auth_param[] = {{nullptr, nullptr}};
@@ -396,11 +392,12 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
        * (This is same behavior as lwp-request.)
        */
       if (feof(stdin) || ferror(stdin)) {
-        fprintf(stderr, "w3m: Authorization required for %s\n", realm);
+        fprintf(stderr, "w3m: Authorization required for %s\n", realm.c_str());
         exit(1);
       }
 
-      printf(proxy ? "Proxy Username for %s: " : "Username for %s: ", realm);
+      printf(proxy ? "Proxy Username for %s: " : "Username for %s: ",
+             realm.c_str());
       fflush(stdout);
       uname = Strfgets(stdin)->ptr;
       // Strchop(*uname);
@@ -414,9 +411,9 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
     }
   }
   auto ss = hauth->cred(hauth, uname, pwd, pu, hr, request);
-  if (ss) {
+  if (ss.size()) {
     auto tmp = Strnew_charp(auth_header);
-    Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
+    Strcat_m_charp(tmp, " ", ss.c_str(), "\r\n", NULL);
     hr->extra_headers.push_back(tmp->ptr);
     return {
         uname,
