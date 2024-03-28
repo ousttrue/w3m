@@ -1,11 +1,24 @@
 #pragma once
-#include "encoding.h"
-#include "input_stream.h"
 #include <stdio.h>
 #include <memory>
 #include <openssl/types.h>
 #include <string>
 #include <string_view>
+
+enum StreamType {
+  IST_BASIC = 0,
+  IST_FILE = 1,
+  IST_STR = 2,
+  IST_SSL = 3,
+  IST_ENCODED = 4,
+};
+
+enum EncodingType : char {
+  ENC_7BIT = 0,
+  ENC_BASE64 = 1,
+  ENC_QUOTE = 2,
+  ENC_UUENCODE = 3,
+};
 
 struct stream_buffer;
 class input_stream {
