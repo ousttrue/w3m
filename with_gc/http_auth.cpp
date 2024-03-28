@@ -1,18 +1,22 @@
 #include "http_auth.h"
 #include "quote.h"
-#include "app.h"
 #include "cmp.h"
 #include "auth_pass.h"
 #include "http_response.h"
 #include "http_request.h"
-#include "auth_digest.h"
-#include "form.h"
 #include "Str.h"
 #include "myctype.h"
-#include "buffer.h"
 #include "etc.h"
+#include "form.h"
+#include "readallbytes.h"
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <sstream>
+#include <stdlib.h>
+#include <string.h>
+#include <openssl/md5.h>
+#include <string>
+#include <sstream>
 
 struct auth_param {
   std::string name;
@@ -71,19 +75,19 @@ endoftoken:
   return first;
 }
 
-static Str *extract_auth_val(const char **q) {
+static std::string extract_auth_val(const char **q) {
   unsigned char *qq = *(unsigned char **)q;
   int quoted = 0;
-  Str *val = Strnew();
+  std::stringstream val;
 
   SKIP_BLANKS(qq);
   if (*qq == '"') {
     quoted = true;
-    Strcat_char(val, *qq++);
+    val << *qq++;
   }
   while (*qq != '\0') {
     if (quoted && *qq == '"') {
-      Strcat_char(val, *qq++);
+      val << *qq++;
       break;
     }
     if (!quoted) {
@@ -113,13 +117,14 @@ static Str *extract_auth_val(const char **q) {
           goto end_token;
         }
       }
-    } else if (quoted && *qq == '\\')
-      Strcat_char(val, *qq++);
-    Strcat_char(val, *qq++);
+    } else if (quoted && *qq == '\\') {
+      val << *qq++;
+    }
+    val << *qq++;
   }
 end_token:
   *q = (char *)qq;
-  return val;
+  return val.str();
 }
 
 static const char *extract_auth_param(const char *q, struct auth_param *auth) {
@@ -141,7 +146,7 @@ static const char *extract_auth_param(const char *q, struct auth_param *auth) {
         if (*p != '=')
           return q;
         q = p + 1;
-        ap->val = extract_auth_val(&q)->ptr;
+        ap->val = extract_auth_val(&q);
         break;
       }
     }
@@ -268,6 +273,228 @@ struct auth_param digest_auth_param[] = {
     {"opaque", nullptr}, {"stale", nullptr},  {"algorithm", nullptr},
     {"qop", nullptr},    {nullptr, nullptr}};
 
+/* RFC2617: 3.2.2 The Authorization Request Header
+ *
+ * credentials      = "Digest" digest-response
+ * digest-response  = 1#( username | realm | nonce | digest-uri
+ *                    | response | [ algorithm ] | [cnonce] |
+ *                     [opaque] | [message-qop] |
+ *                         [nonce-count]  | [auth-param] )
+ *
+ * username         = "username" "=" username-value
+ * username-value   = quoted-string
+ * digest-uri       = "uri" "=" digest-uri-value
+ * digest-uri-value = request-uri   ; As specified by HTTP/1.1
+ * message-qop      = "qop" "=" qop-value
+ * cnonce           = "cnonce" "=" cnonce-value
+ * cnonce-value     = nonce-value
+ * nonce-count      = "nc" "=" nc-value
+ * nc-value         = 8LHEX
+ * response         = "response" "=" request-digest
+ * request-digest = <"> 32LHEX <">
+ * LHEX             =  "0" | "1" | "2" | "3" |
+ *                     "4" | "5" | "6" | "7" |
+ *                     "8" | "9" | "a" | "b" |
+ *                     "c" | "d" | "e" | "f"
+ */
+
+enum {
+  QOP_NONE,
+  QOP_AUTH,
+  QOP_AUTH_INT,
+};
+
+static std::string digest_hex(unsigned char *p) {
+  auto h = "0123456789abcdef";
+  std::stringstream tmp;
+  int i;
+  for (i = 0; i < MD5_DIGEST_LENGTH; i++, p++) {
+    tmp << h[(*p >> 4) & 0x0f];
+    tmp << h[*p & 0x0f];
+  }
+  return tmp.str();
+}
+
+std::string AuthDigestCred(struct http_auth *ha, const std::string &uname,
+                           const std::string &pw, const Url &pu,
+                           HttpRequest *hr,
+                           const std::shared_ptr<Form> &request) {
+  auto algorithm = qstr_unquote(ha->get_auth_param("algorithm"));
+  auto nonce = qstr_unquote(ha->get_auth_param("nonce"));
+  // Str *cnonce /* = qstr_unquote(get_auth_param(ha->param, "cnonce")) */;
+  /* cnonce is what client should generate. */
+  auto qop = qstr_unquote(ha->get_auth_param("qop"));
+
+  static union {
+    int r[4];
+    unsigned char s[sizeof(int) * 4];
+  } cnonce_seed;
+
+  cnonce_seed.r[0] = rand();
+  cnonce_seed.r[1] = rand();
+  cnonce_seed.r[2] = rand();
+  unsigned char md5[MD5_DIGEST_LENGTH + 1];
+  MD5(cnonce_seed.s, sizeof(cnonce_seed.s), md5);
+  auto cnonce = digest_hex(md5);
+  cnonce_seed.r[3]++;
+
+  int qop_i = QOP_NONE;
+  if (qop.size()) {
+    size_t i;
+
+    auto p = qop.c_str();
+    SKIP_BLANKS(p);
+
+    for (;;) {
+      if ((i = strcspn(p, " \t,")) > 0) {
+        if (i == sizeof("auth-int") - sizeof("") &&
+            !strncasecmp(p, "auth-int", i)) {
+          if (qop_i < QOP_AUTH_INT)
+            qop_i = QOP_AUTH_INT;
+        } else if (i == sizeof("auth") - sizeof("") &&
+                   !strncasecmp(p, "auth", i)) {
+          if (qop_i < QOP_AUTH)
+            qop_i = QOP_AUTH;
+        }
+      }
+
+      if (p[i]) {
+        p += i + 1;
+        SKIP_BLANKS(p);
+      } else
+        break;
+    }
+  }
+
+  /* A1 = unq(username-value) ":" unq(realm-value) ":" passwd */
+  std::stringstream tmp0;
+  tmp0 << uname << ":" << qstr_unquote(ha->get_auth_param("realm")) << ":"
+       << pw;
+  auto str0 = tmp0.str();
+  MD5((unsigned char *)str0.c_str(), str0.size(), md5);
+  auto a1buf = digest_hex(md5);
+
+  if (algorithm.size()) {
+    if (strcasecmp(algorithm, "MD5-sess") == 0) {
+      /* A1 = H(unq(username-value) ":" unq(realm-value) ":" passwd)
+       *      ":" unq(nonce-value) ":" unq(cnonce-value)
+       */
+      if (nonce.empty()) {
+        return nullptr;
+      }
+      std::stringstream tmp1;
+      tmp1 << a1buf << ":" << qstr_unquote(nonce) << ":"
+           << qstr_unquote(cnonce);
+      auto str1 = tmp1.str();
+      MD5((unsigned char *)str1.c_str(), str1.size(), md5);
+      a1buf = digest_hex(md5);
+    } else if (strcasecmp(algorithm, "MD5") == 0) {
+      /* ok default */
+      ;
+    } else {
+      /* unknown algorithm */
+      return nullptr;
+    }
+  }
+
+  /* A2 = Method ":" digest-uri-value */
+  auto uri = hr->getRequestURI();
+  std::stringstream tmp2;
+  tmp2 << to_str(hr->method) << ":" << uri;
+  if (qop_i == QOP_AUTH_INT) {
+    /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
+    if (request && request->body.size()) {
+      if (request->method == FORM_METHOD_POST &&
+          request->enctype == FORM_ENCTYPE_MULTIPART) {
+        auto ebody = ReadAllBytes(request->body);
+        if (ebody.size()) {
+          MD5((unsigned char *)ebody.data(), ebody.size(), md5);
+        } else {
+          MD5((unsigned char *)"", 0, md5);
+        }
+      } else {
+        MD5((unsigned char *)request->body.c_str(), request->length, md5);
+      }
+    } else {
+      MD5((unsigned char *)"", 0, md5);
+    }
+    tmp2 << ':';
+    tmp2 << digest_hex(md5);
+  }
+  auto str2 = tmp2.str();
+  MD5((unsigned char *)str2.c_str(), str2.size(), md5);
+
+  auto a2buf = digest_hex(md5);
+
+  auto nc = "00000001";
+  std::string rd;
+  if (qop_i >= QOP_AUTH) {
+    /* request-digest  = <"> < KD ( H(A1),     unq(nonce-value)
+     *                      ":" nc-value
+     *                      ":" unq(cnonce-value)
+     *                      ":" unq(qop-value)
+     *                      ":" H(A2)
+     *                      ) <">
+     */
+    if (nonce.empty())
+      return nullptr;
+    std::stringstream tmp3;
+    tmp3 << a1buf << ":" << qstr_unquote(nonce) << ":" << nc << ":"
+         << qstr_unquote(cnonce) << ":"
+         << (qop_i == QOP_AUTH ? "auth" : "auth-int") << ":" << a2buf;
+    auto str3 = tmp3.str();
+    MD5((unsigned char *)str3.c_str(), str3.size(), md5);
+    rd = digest_hex(md5);
+  } else {
+    /* compatibility with RFC 2069
+     * request_digest = KD(H(A1),  unq(nonce), H(A2))
+     */
+    std::stringstream tmp3;
+    tmp3 << a1buf << ":" << qstr_unquote(ha->get_auth_param("nonce")) << ":"
+         << a2buf;
+    auto str3 = tmp3.str();
+    MD5((unsigned char *)str3.c_str(), str3.size(), md5);
+    rd = digest_hex(md5);
+  }
+
+  /*
+   * digest-response  = 1#( username | realm | nonce | digest-uri
+   *                          | response | [ algorithm ] | [cnonce] |
+   *                          [opaque] | [message-qop] |
+   *                          [nonce-count]  | [auth-param] )
+   */
+
+  std::stringstream tmp4;
+  tmp4 << "Digest username=\"" << uname << "\"";
+
+  std::string s;
+  if ((s = ha->get_auth_param("realm")).size())
+    tmp4 << ", realm=" << s;
+  if ((s = ha->get_auth_param("nonce")).size())
+    tmp4 << ", nonce=" << s;
+  tmp4 << ", uri=\"" << uri << "\"";
+  tmp4 << ", response=\"" << rd << "\"";
+
+  if (algorithm.size() && (s = ha->get_auth_param("algorithm")).size())
+    tmp4 << ", algorithm=" << s;
+
+  if (cnonce.size())
+    tmp4 << ", cnonce=\"" << cnonce << "\"";
+
+  if ((s = ha->get_auth_param("opaque")).size())
+    tmp4 << ", opaque=" << s;
+
+  if (qop_i >= QOP_AUTH) {
+    tmp4 << ", qop=" << (qop_i == QOP_AUTH ? "auth" : "auth-int");
+    /* XXX how to count? */
+    /* Since nonce is unique up to each *-Authenticate and w3m does not re-use
+     *-Authenticate: headers, nonce-count should be always "00000001". */
+    tmp4 << ", nc=" << nc;
+  }
+
+  return tmp4.str();
+}
+
 /* for RFC2617: HTTP Authentication */
 struct http_auth www_auth[] = {
     {1, "Basic ", basic_auth_param, AuthBasicCred},
@@ -349,7 +576,7 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
     /* This means that *-Authenticate: header is received after
      * Authorization: header is sent to the server.
      */
-    App::instance().message("Wrong username or password");
+    // App::instance().message("Wrong username or password");
     // sleep(1);
     /* delete Authenticate: header from extra_header */
     hr->extra_headers.erase(i);

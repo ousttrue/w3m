@@ -37,7 +37,6 @@ with_gc_lib = static_library(
         'app.cpp',
         'http_auth.cpp',
         'http_session.cpp',
-        'auth_digest.cpp',
         'loaddirectory.cpp',
         'alloc.cpp',
         'tabbuffer.cpp',
