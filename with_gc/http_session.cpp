@@ -6,11 +6,33 @@
 #include "mimetypes.h"
 #include "url_stream.h"
 #include "Str.h"
+#include "istream.h"
 #include <sys/stat.h>
 
 const char *DefaultType = nullptr;
 bool UseExternalDirBuffer = true;
 std::string DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
+
+static std::vector<uint8_t>
+read_body(const std::shared_ptr<input_stream> &stream) {
+  std::vector<uint8_t> raw;
+
+  while (true) {
+    char buf[4096];
+    auto readSize = stream->ISread_n(buf, sizeof(buf));
+    if (readSize == 0) {
+      break;
+    }
+    // auto lineBuf2 = Strnew(_lineBuf2);
+    auto before = raw.size();
+    raw.resize(before + readSize);
+    memcpy(raw.data() + before, buf, readSize);
+
+    // if (src)
+    //   Strfputs(lineBuf2, src);
+  }
+  return raw;
+}
 
 std::shared_ptr<HttpResponse>
 loadGeneralFile(const std::string &path, std::optional<Url> current,
@@ -72,11 +94,12 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
     //       hr->url.host.c_str())->ptr, 0, 0);
     //   refresh(term_io());
     // }
-    auto http_response_code = res->readHeader(stream, hr->url);
-    const char *p;
+    auto http_response_code =
+        res->readHeader([stream]() { return stream->StrmyISgets(); }, hr->url);
+    std::string p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
-        (p = res->getHeader("Location:")) != nullptr &&
+        (p = res->getHeader("Location:")).size() &&
         res->checkRedirection(hr->url)) {
       /* document moved */
       /* 301: Moved Permanently */
@@ -96,7 +119,7 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
       res->type = "text/plain";
     }
     hr->add_auth_cookie();
-    if ((p = res->getHeader("WWW-Authenticate:")) &&
+    if ((p = res->getHeader("WWW-Authenticate:")).size() &&
         http_response_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
@@ -108,7 +131,7 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
           hr->uname = uname;
           hr->pwd = pwd;
           if (hr->uname.empty()) {
-            res->page_loaded(hr->url, stream);
+            res->raw = read_body(stream);
             return res;
           }
           hr->add_auth_cookie_flag = true;
@@ -121,7 +144,7 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
       return loadGeneralFile(path, current, option, request);
     }
 
-    /*f.modtime =*/mymktime(res->getHeader("Last-Modified:"));
+    // /*f.modtime =*/mymktime(res->getHeader("Last-Modified:"));
   } else if (hr->url.scheme == SCM_DATA) {
     // res->type = f.guess_type;
   } else if (DefaultType) {
@@ -142,6 +165,6 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
   // f.guess_type = res->type;
 
   // res->ssl_certificate = f.ssl_certificate;
-  res->page_loaded(hr->url, stream);
+  res->raw = read_body(stream);
   return res;
 }

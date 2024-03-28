@@ -3,6 +3,8 @@
 #include "entity.h"
 #include <sstream>
 #include <string.h>
+#include <charconv>
+#include <assert.h>
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
@@ -505,4 +507,22 @@ std::string qstr_unquote(std::string_view s) {
   } else {
     return {s.begin(), s.end()};
   }
+}
+
+std::string mybasename(std::string_view s) {
+  auto p = s.end();
+  while (s.begin() <= p && *p != '/')
+    p--;
+  if (*p == '/')
+    p++;
+  else
+    p = s.begin();
+  return {p, s.end()};
+}
+
+int stoi(std::string_view s) {
+  int value;
+  auto [ptr, ec] = std::from_chars(s.data(), s.data() + s.size(), value);
+  assert(ec == std::errc{});
+  return value;
 }

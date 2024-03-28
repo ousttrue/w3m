@@ -1,14 +1,16 @@
 #pragma once
 #include "url.h"
-#include "optional"
 #include "compression.h"
 #include <stdint.h>
 #include <vector>
 #include <memory>
 #include <list>
 #include <string>
+#include <functional>
 
 extern int FollowRedirection;
+
+using GetsFunc = std::function<std::string()>;
 
 struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   int http_response_code = 0;
@@ -39,20 +41,19 @@ struct HttpResponse : std::enable_shared_from_this<HttpResponse> {
   }
 
   bool checkRedirection(const Url &pu);
-  int readHeader(const std::shared_ptr<class input_stream> &s, const Url &pu);
-  void pushHeader(const Url &url, struct Str *lineBuf2);
-  const char *getHeader(const char *field) const;
-  const char *checkContentType() const;
+  int readHeader(const GetsFunc &s, const Url &pu);
+  void pushHeader(const Url &url, std::string_view lineBuf2);
+  std::string getHeader(std::string_view field) const;
+  std::string checkContentType() const;
   std::string guess_save_name(std::string) const;
   bool is_html_type() const {
     return type == "text/html" || type == "application/xhtml+xml";
   }
   FILE *createSourceFile();
-  void page_loaded(Url url, const std::shared_ptr<input_stream> &stream);
+  // void page_loaded(Url url, const std::string &body);
   std::string last_modified() const;
   std::string_view getBody();
   CompressionType contentEncoding() const;
 };
 
-const char *mybasename(const char *s);
 std::string guess_filename(const char *file);

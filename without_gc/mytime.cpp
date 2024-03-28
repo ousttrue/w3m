@@ -1,25 +1,22 @@
 #include "mytime.h"
 #include "myctype.h"
-#include "Str.h"
 #include <stdlib.h>
 #include <string.h>
+#include <sstream>
 
 static const char *monthtbl[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
 static int get_day(const char **s) {
-  Str *tmp = Strnew();
-  int day;
-  const char *ss = *s;
-
   if (!**s)
     return -1;
 
+  std::stringstream tmp;
+  const char *ss = *s;
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
+    tmp << *((*s)++);
 
-  day = atoi(tmp->ptr);
-
+  int day = stoi(tmp.str());
   if (day < 1 || day > 31) {
     *s = ss;
     return -1;
@@ -28,22 +25,22 @@ static int get_day(const char **s) {
 }
 
 static int get_month(const char **s) {
-  Str *tmp = Strnew();
-  int mon;
-  const char *ss = *s;
-
   if (!**s)
     return -1;
 
+  const char *ss = *s;
+  std::string tmp;
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
-  if (tmp->length > 0) {
-    mon = atoi(tmp->ptr);
+    tmp += *((*s)++);
+
+  int mon;
+  if (tmp.size() > 0) {
+    mon = stoi(tmp);
   } else {
     while (**s && IS_ALPHA(**s))
-      Strcat_char(tmp, *((*s)++));
+      tmp += *((*s)++);
     for (mon = 1; mon <= 12; mon++) {
-      if (strncmp(tmp->ptr, monthtbl[mon - 1], 3) == 0)
+      if (strncmp(tmp.c_str(), monthtbl[mon - 1], 3) == 0)
         break;
     }
   }
@@ -55,22 +52,21 @@ static int get_month(const char **s) {
 }
 
 static int get_year(const char **s) {
-  Str *tmp = Strnew();
-  int year;
-  const char *ss = *s;
-
   if (!**s)
     return -1;
 
+  std::string tmp;
+  const char *ss = *s;
+
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
-  if (tmp->length != 2 && tmp->length != 4) {
+    tmp += *((*s)++);
+  if (tmp.size() != 2 && tmp.size() != 4) {
     *s = ss;
     return -1;
   }
 
-  year = atoi(tmp->ptr);
-  if (tmp->length == 2) {
+  int year = stoi(tmp);
+  if (tmp.size() == 2) {
     if (year >= 70)
       year += 1900;
     else
@@ -80,35 +76,34 @@ static int get_year(const char **s) {
 }
 
 static int get_time(const char **s, int *hour, int *min, int *sec) {
-  Str *tmp = Strnew();
-  const char *ss = *s;
-
   if (!**s)
     return -1;
 
+  std::string tmp;
+  const char *ss = *s;
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
+    tmp += *((*s)++);
   if (**s != ':') {
     *s = ss;
     return -1;
   }
-  *hour = atoi(tmp->ptr);
+  *hour = stoi(tmp);
 
   (*s)++;
-  Strclear(tmp);
+  tmp.clear();
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
+    tmp += *((*s)++);
   if (**s != ':') {
     *s = ss;
     return -1;
   }
-  *min = atoi(tmp->ptr);
+  *min = stoi(tmp);
 
   (*s)++;
-  Strclear(tmp);
+  tmp.clear();
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
-  *sec = atoi(tmp->ptr);
+    tmp += *((*s)++);
+  *sec = stoi(tmp);
 
   if (*hour < 0 || *hour >= 24 || *min < 0 || *min >= 60 || *sec < 0 ||
       *sec >= 60) {
@@ -119,24 +114,23 @@ static int get_time(const char **s, int *hour, int *min, int *sec) {
 }
 
 static int get_zone(const char **s, int *z_hour, int *z_min) {
-  Str *tmp = Strnew();
-  int zone;
-  const char *ss = *s;
-
   if (!**s)
     return -1;
 
+  std::string tmp;
+  const char *ss = *s;
+
   if (**s == '+' || **s == '-')
-    Strcat_char(tmp, *((*s)++));
+    tmp += *((*s)++);
   while (**s && IS_DIGIT(**s))
-    Strcat_char(tmp, *((*s)++));
-  if (!(tmp->length == 4 && IS_DIGIT(*ss)) &&
-      !(tmp->length == 5 && (*ss == '+' || *ss == '-'))) {
+    tmp += *((*s)++);
+  if (!(tmp.size() == 4 && IS_DIGIT(*ss)) &&
+      !(tmp.size() == 5 && (*ss == '+' || *ss == '-'))) {
     *s = ss;
     return -1;
   }
 
-  zone = atoi(tmp->ptr);
+  int zone = stoi(tmp);
   *z_hour = zone / 100;
   *z_min = zone - (zone / 100) * 100;
   return 0;

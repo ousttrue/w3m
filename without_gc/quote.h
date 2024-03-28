@@ -42,3 +42,7 @@ std::string html_quote(std::string_view str);
 std::string html_unquote(std::string_view str);
 
 std::string qstr_unquote(std::string_view s);
+
+std::string mybasename(std::string_view s);
+
+int stoi(std::string_view s);

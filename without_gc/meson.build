@@ -27,6 +27,8 @@ without_gc_lib = static_library(
         'form.cpp',
         'auth_pass.cpp',
         'http_request.cpp',
+        'mytime.cpp',
+        'http_response.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
