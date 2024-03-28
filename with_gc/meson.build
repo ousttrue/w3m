@@ -36,7 +36,6 @@ with_gc_lib = static_library(
         'history.cpp',
         'istream.cpp',
         'version.cpp',
-        'downloadlist.cpp',
         'ssl_util.cpp',
         'url_stream.cpp',
         'mytime.cpp',

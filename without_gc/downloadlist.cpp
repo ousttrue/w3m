@@ -1,11 +1,26 @@
 #include "downloadlist.h"
 #include "quote.h"
-#include "etc.h"
-#include "alloc.h"
-#include "Str.h"
 #include "ioutil.h"
 #include <sys/stat.h>
-#include "proc.h"
+#include <time.h>
+#include <list>
+#include <memory>
+#include <string>
+#include <sstream>
+
+struct DownloadList {
+  int pid;
+  const char *url;
+  std::string save;
+  const char *lock;
+  size_t size;
+  time_t time;
+  int running;
+  int err;
+  DownloadList *next;
+  DownloadList *prev;
+};
+#define DOWNLOAD_LIST_TITLE "Download List Panel"
 
 static bool add_download_list = false;
 
@@ -17,15 +32,18 @@ bool popAddDownloadList() {
   return ret;
 }
 
-void addDownloadList(int pid, const char *url, const char *save,
+void addDownloadList(int pid, const char *url, const char *_save,
                      const char *lock, long long size) {
 
   auto d = std::make_shared<DownloadList>();
   g_list.push_back(d);
   d->pid = pid;
   d->url = url;
-  if (save[0] != '/' && save[0] != '~') {
-    save = Strnew_m_charp(ioutil::pwd().c_str(), "/", save, NULL)->ptr;
+  std::string save = _save;
+  if (save.size() && save[0] != '/' && save[0] != '~') {
+    std::stringstream ss;
+    ss << ioutil::pwd() << "/" << save;
+    save = ss.str();
   }
   d->save = expandPath(save);
   d->lock = lock;
@@ -49,16 +67,16 @@ int checkDownloadList() {
 #endif
 }
 
-static char *convert_size3(long long size) {
-  Str *tmp = Strnew();
-  int n;
-
+static std::string convert_size3(long long size) {
+  std::string tmp;
   do {
-    n = size % 1000;
+    int n = size % 1000;
     size /= 1000;
-    tmp = Sprintf(size ? ",%.3d%s" : "%d%s", n, tmp->ptr);
+    char buf[1024];
+    snprintf(buf, sizeof(buf), size ? ",%.3d%s" : "%d%s", n, tmp.c_str());
+    tmp = buf;
   } while (size);
-  return tmp->ptr;
+  return tmp;
 }
 
 std::string DownloadListBuffer(void) {
@@ -78,7 +96,8 @@ std::string DownloadListBuffer(void) {
   // cur_time = time(0);
   // src = Strnew_charp(
   //     "<html><head><title>" DOWNLOAD_LIST_TITLE
-  //     "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"
+  //     "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE
+  //     "</h1>\n"
   //     "<form method=internal action=download><hr>\n");
   // for (d = LastDL; d != nullptr; d = d->prev) {
   //   if (lstat(d->lock, &st))
@@ -117,7 +136,8 @@ std::string DownloadListBuffer(void) {
   //     Strcat(src, Sprintf("  %s bytes loaded", convert_size3(size)));
   //   if (duration > 0) {
   //     rate = size / duration;
-  //     Strcat(src, Sprintf("  %02d:%02d:%02d  rate %s/sec", duration / (60 * 60),
+  //     Strcat(src, Sprintf("  %02d:%02d:%02d  rate %s/sec", duration / (60 *
+  //     60),
   //                         (duration / 60) % 60, duration % 60,
   //                         convert_size(rate, 1)));
   //     if (d->running && size < d->size && rate) {
@@ -162,7 +182,7 @@ void stopDownload(void) {
       continue;
 #ifdef _MSC_VER
 #else
-    // kill(d->pid, SIGKILL);
+      // kill(d->pid, SIGKILL);
 #endif
     unlink(d->lock);
   }

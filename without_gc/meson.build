@@ -23,6 +23,7 @@ without_gc_lib = static_library(
         'cookie.cpp',
         'matchattr.cpp',
         'generallist.cpp',
+        'downloadlist.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
