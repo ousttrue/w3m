@@ -428,7 +428,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
       }
     }
     hr->flag |= HR_FLAG_LOCAL;
-    tmp = hr->to_Str();
+    tmp = hr->to_Str(w3m_version);
     hr->status = HTST_NORMAL;
   }
   if (hr->url.scheme == SCM_HTTPS) {

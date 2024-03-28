@@ -40,3 +40,5 @@ inline bool contain_no_dots(std::string_view v) {
 
 std::string html_quote(std::string_view str);
 std::string html_unquote(std::string_view str);
+
+std::string qstr_unquote(std::string_view s);

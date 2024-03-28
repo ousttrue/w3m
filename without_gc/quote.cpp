@@ -485,3 +485,24 @@ std::string html_unquote(std::string_view str) {
   }
   return tmp.str();
 }
+
+std::string qstr_unquote(std::string_view s) {
+  if (s.empty())
+    return {};
+
+  auto p = s.data();
+  if (*p == '"') {
+    std::stringstream tmp;
+    for (p++; *p != '\0'; p++) {
+      if (*p == '\\')
+        p++;
+      tmp << *p;
+    }
+    auto str = tmp.str();
+    if (str.back() == '"')
+      str.pop_back();
+    return str;
+  } else {
+    return {s.begin(), s.end()};
+  }
+}

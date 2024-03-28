@@ -73,6 +73,6 @@ struct HttpRequest {
               const HttpOption option, const std::shared_ptr<Form> &request)
       : url(url), current(current), option(option), request(request) {}
   std::string getRequestURI() const;
-  std::string to_Str() const;
+  std::string to_Str(const char *w3m_version) const;
   void add_auth_cookie();
 };

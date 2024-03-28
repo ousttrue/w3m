@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "quote.h"
 #include "app.h"
 #include "cmp.h"
 #include "auth_pass.h"
@@ -116,24 +117,6 @@ end_token:
   return val;
 }
 
-Str *qstr_unquote(Str *s) {
-  if (s == nullptr)
-    return nullptr;
-  auto p = s->ptr;
-  if (*p == '"') {
-    Str *tmp = Strnew();
-    for (p++; *p != '\0'; p++) {
-      if (*p == '\\')
-        p++;
-      Strcat_char(tmp, *p);
-    }
-    if (Strlastchar(tmp) == '"')
-      Strshrink(tmp, 1);
-    return tmp;
-  } else
-    return s;
-}
-
 static const char *extract_auth_param(const char *q, struct auth_param *auth) {
   // clear
   for (auto ap = auth; ap->name; ap++) {
@@ -184,10 +167,10 @@ static const char *extract_auth_param(const char *q, struct auth_param *auth) {
   return q;
 }
 
-Str *get_auth_param(auth_param *auth, const char *name) {
+std::string get_auth_param(auth_param *auth, const char *name) {
   for (auto ap = auth; ap->name != nullptr; ap++) {
     if (strcasecmp(name, ap->name) == 0)
-      return ap->val;
+      return ap->val->ptr;
   }
   return nullptr;
 }
@@ -342,11 +325,11 @@ http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
 std::tuple<std::string, std::string>
 getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
               HttpRequest *hr, const std::shared_ptr<Form> &request) {
-  char *realm = NULL;
+  std::string realm;
   if (hauth) {
-    realm = qstr_unquote(get_auth_param(hauth->param, "realm"))->ptr;
+    realm = qstr_unquote(get_auth_param(hauth->param, "realm"));
   }
-  if (!realm) {
+  if (realm.empty()) {
     return {};
   }
 

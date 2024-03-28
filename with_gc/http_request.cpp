@@ -1,12 +1,10 @@
 #include "http_request.h"
 #include "cmp.h"
 #include "form.h"
+#include "quote.h"
 #include "url.h"
-#include "rc.h"
 #include "cookie.h"
-#include "http_auth.h"
 #include "auth_pass.h"
-#include "Str.h"
 #include <sstream>
 #ifdef _MSC_VER
 #include <io.h>
@@ -40,43 +38,41 @@ std::string HttpRequest::getRequestURI() const {
   return tmp.str();
 }
 
-static char *otherinfo(const Url &target, std::optional<Url> current,
-                       const HttpOption &option) {
-  Str *s = Strnew();
-  const int *no_referer_ptr;
-  int no_referer;
-  const char *url_user_agent = nullptr;
-
+static std::string otherinfo(const Url &target, std::optional<Url> current,
+                             const HttpOption &option,
+                             const char *w3m_version) {
+  std::stringstream s;
+  // const char *url_user_agent = nullptr;
   if (!override_user_agent) {
-    Strcat_charp(s, "User-Agent: ");
-    if (url_user_agent)
-      Strcat_charp(s, url_user_agent);
-    else if (UserAgent.empty())
-      Strcat_charp(s, w3m_version);
+    s << "User-Agent: ";
+    // if (url_user_agent)
+    //   s << url_user_agent;
+    if (UserAgent.empty())
+      s << w3m_version;
     else
-      Strcat(s, UserAgent);
-    Strcat_charp(s, "\r\n");
+      s << UserAgent;
+    s << "\r\n";
   }
 
-  Strcat_m_charp(s, "Accept: ", AcceptMedia.c_str(), "\r\n", nullptr);
-  Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding.c_str(), "\r\n",
-                 nullptr);
-  Strcat_m_charp(s, "Accept-Language: ", AcceptLang.c_str(), "\r\n", nullptr);
+  s << "Accept: " << AcceptMedia << "\r\n";
+  s << "Accept-Encoding: " << AcceptEncoding << "\r\n";
+  s << "Accept-Language: " << AcceptLang << "\r\n";
 
   if (target.host.size()) {
-    Strcat_charp(s, "Host: ");
-    Strcat(s, target.host);
+    s << "Host: " << target.host;
     if (target.port != getDefaultPort(target.scheme)) {
-      Strcat(s, Sprintf(":%d", target.port));
+      s << ":" << target.port;
     }
-    Strcat_charp(s, "\r\n");
+    s << "\r\n";
   }
+
   if (option.no_cache || NoCache) {
-    Strcat_charp(s, "Pragma: no-cache\r\n");
-    Strcat_charp(s, "Cache-control: no-cache\r\n");
+    s << "Pragma: no-cache\r\n";
+    s << "Cache-control: no-cache\r\n";
   }
-  no_referer = NoSendReferer;
-  no_referer_ptr = nullptr;
+
+  auto no_referer = NoSendReferer;
+  const int *no_referer_ptr = nullptr;
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
   no_referer_ptr = nullptr;
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
@@ -93,25 +89,25 @@ static char *otherinfo(const Url &target, std::optional<Url> current,
                current->scheme != SCM_LOCAL &&
                current->scheme != SCM_LOCAL_CGI &&
                current->scheme != SCM_DATA) {
-      Strcat_charp(s, "Referer: ");
+      s << "Referer: ";
       if (cross_origin)
-        Strcat(s, current->RefererOriginStr());
+        s << current->RefererOriginStr();
       else
-        Strcat(s, current->to_RefererStr());
-      Strcat_charp(s, "\r\n");
+        s << current->to_RefererStr();
+      s << "\r\n";
     } else if (option.referer.size() && !option.no_referer) {
-      Strcat_charp(s, "Referer: ");
+      s << "Referer: ";
       if (cross_origin)
-        Strcat(s, current->RefererOriginStr());
+        s << current->RefererOriginStr();
       else
-        Strcat(s, option.referer);
-      Strcat_charp(s, "\r\n");
+        s << option.referer;
+      s << "\r\n";
     }
   }
-  return s->ptr;
+  return s.str();
 }
 
-std::string HttpRequest::to_Str() const {
+std::string HttpRequest::to_Str(const char *w3m_version) const {
 
   std::stringstream tmp;
   tmp << to_str(this->method);
@@ -119,9 +115,9 @@ std::string HttpRequest::to_Str() const {
   tmp << this->getRequestURI();
   tmp << " HTTP/1.0\r\n";
   if (this->option.no_referer) {
-    tmp << otherinfo(url, {}, this->option);
+    tmp << otherinfo(url, {}, this->option, w3m_version);
   } else {
-    tmp << otherinfo(url, current, this->option);
+    tmp << otherinfo(url, current, this->option, w3m_version);
   }
   for (auto &i : extra_headers) {
     if (strncasecmp(i.c_str(),
@@ -154,13 +150,13 @@ std::string HttpRequest::to_Str() const {
       tmp << "Content-Type: multipart/form-data; boundary=";
       tmp << this->request->boundary;
       tmp << "\r\n";
-      tmp << Sprintf("Content-Length: %ld\r\n", this->request->length);
+      tmp << "Content-Length: " << this->request->length << "\r\n";
       tmp << "\r\n";
     } else {
       if (!override_content_type) {
         tmp << "Content-Type: application/x-www-form-urlencoded\r\n";
       }
-      tmp << Sprintf("Content-Length: %ld\r\n", this->request->length)->ptr;
+      tmp << "Content-Length: " << this->request->length << "\r\n";
       if (header_string.size()) {
         tmp << header_string;
       }
@@ -181,8 +177,8 @@ void HttpRequest::add_auth_cookie() {
   if (this->add_auth_cookie_flag && this->realm.size() && this->uname.size() &&
       this->pwd.size()) {
     /* If authorization is required and passed */
-    add_auth_user_passwd(url, qstr_unquote(Strnew(this->realm))->ptr,
-                         this->uname, this->pwd, 0);
+    add_auth_user_passwd(url, qstr_unquote(this->realm), this->uname, this->pwd,
+                         0);
     this->add_auth_cookie_flag = false;
   }
 }

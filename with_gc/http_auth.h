@@ -25,8 +25,7 @@ struct http_auth {
 struct HttpResponse;
 http_auth *findAuthentication(http_auth *hauth, const HttpResponse &res,
                               const char *auth_field);
-Str *get_auth_param(auth_param *auth, const char *name);
-Str *qstr_unquote(Str *s);
+std::string get_auth_param(auth_param *auth, const char *name);
 struct TextList;
 std::tuple<std::string, std::string>
 getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,

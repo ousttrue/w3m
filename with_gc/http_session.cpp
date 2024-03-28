@@ -101,7 +101,7 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
       /* Authentication needed */
       struct http_auth hauth;
       if (findAuthentication(&hauth, *res, "WWW-Authenticate:")) {
-        hr->realm = get_auth_param(hauth.param, "realm")->ptr;
+        hr->realm = get_auth_param(hauth.param, "realm");
         if (hr->realm.size()) {
           auto [uname, pwd] = getAuthCookie(&hauth, "Authorization:", hr->url,
                                             hr.get(), request);
