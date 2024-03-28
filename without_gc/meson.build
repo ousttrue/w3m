@@ -31,6 +31,7 @@ without_gc_lib = static_library(
         'mytime.cpp',
         'http_response.cpp',
         'istream.cpp',
+        'opensocket.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

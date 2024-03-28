@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "opensocket.h"
 #include "form.h"
 #include "ioutil.h"
 #include "cookie_domain.h"
@@ -199,103 +200,6 @@ void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
   }
 }
 
-static int openSocket(const char *const hostname, const char *remoteport_name,
-                      unsigned short remoteport_num) {
-  int sock = -1;
-#ifdef INET6
-  int *af;
-  struct addrinfo hints, *res0, *res;
-  int error;
-  const char *hname;
-#else  /* not INET6 */
-  struct sockaddr_in hostaddr;
-  struct hostent *entry;
-  struct protoent *proto;
-  unsigned short s_port;
-  int a1, a2, a3, a4;
-  unsigned long adr;
-#endif /* not INET6 */
-
-  App::instance().message(Sprintf("Opening socket...")->ptr);
-  //   if (SETJMP(AbortLoading) != 0) {
-  // #ifdef SOCK_DEBUG
-  //     sock_log("openSocket() failed. reason: user abort\n");
-  // #endif
-  //     if (sock >= 0)
-  //       close(sock);
-  //     goto error;
-  //   }
-  //   TRAP_ON;
-  if (hostname == nullptr) {
-    // #ifdef SOCK_DEBUG
-    //     sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n",
-    //     hostname);
-    // #endif
-    return -1;
-  }
-
-  /* rfc2732 compliance */
-  hname = hostname;
-  if (hname != nullptr && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
-    hname = allocStr(hostname + 1, -1);
-    ((char *)hname)[strlen(hname) - 1] = '\0';
-    if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname)) {
-      return -1;
-    }
-  }
-  for (af = ai_family_order_table[DNS_order];; af++) {
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = *af;
-    hints.ai_socktype = SOCK_STREAM;
-    if (remoteport_num != 0) {
-      Str *portbuf = Sprintf("%d", remoteport_num);
-      error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
-    } else {
-      error = -1;
-    }
-    if (error && remoteport_name && remoteport_name[0] != '\0') {
-      /* try default port */
-      error = getaddrinfo(hname, remoteport_name, &hints, &res0);
-    }
-    if (error) {
-      if (*af == PF_UNSPEC) {
-        return -1;
-      }
-      /* try next ai family */
-      continue;
-    }
-    sock = -1;
-    for (res = res0; res; res = res->ai_next) {
-      sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-      if (sock < 0) {
-        continue;
-      }
-      if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-#ifdef _MSC_VER
-        closesocket(sock);
-#else
-        close(sock);
-#endif
-        sock = -1;
-        continue;
-      }
-      break;
-    }
-    if (sock < 0) {
-      freeaddrinfo(res0);
-      if (*af == PF_UNSPEC) {
-        return -1;
-      }
-      /* try next ai family */
-      continue;
-    }
-    freeaddrinfo(res0);
-    break;
-  }
-
-  return sock;
-}
-
 void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
 
                          const HttpOption &option,
@@ -312,79 +216,78 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     hr->method = HttpMethod::HEAD;
   }
 
-  std::string tmp;
-  SslConnection sslh = {};
-  {
-    sock = openSocket(hr->url.host.c_str(),
-                      schemeNumToName(hr->url.scheme).c_str(), hr->url.port);
-    if (sock < 0) {
-      hr->status = HTST_MISSING;
-      return;
-    }
+  if (auto sock = openSocket(hr->url.host, schemeNumToName(hr->url.scheme),
+                             hr->url.port)) {
+
+    SslConnection sslh = {};
     if (hr->url.scheme == SCM_HTTPS) {
-      sslh = openSSLHandle(sock, hr->url.host.c_str());
+      sslh = openSSLHandle(*sock, hr->url.host.c_str());
       if (!sslh.handle) {
         hr->status = HTST_MISSING;
         return;
       }
     }
     hr->flag |= HR_FLAG_LOCAL;
+    std::string tmp;
     tmp = hr->to_Str(w3m_version);
     hr->status = HTST_NORMAL;
-  }
-  if (hr->url.scheme == SCM_HTTPS) {
-    this->stream = newSSLStream(sslh.handle, sock);
-    if (sslh.handle)
-      SSL_write(sslh.handle, tmp.c_str(), tmp.size());
-    else {
-#ifdef _MSC_VER
-      send(sock, tmp.c_str(), tmp.size(), {});
-#else
-      write(sock, tmp.c_str(), tmp.size());
-#endif
-    }
-    if (w3m_reqlog) {
-      FILE *ff = fopen(w3m_reqlog, "a");
-      if (ff == nullptr) {
-        return;
-      }
-      if (sslh.handle)
-        fputs("HTTPS: request via SSL\n", ff);
-      else
-        fputs("HTTPS: request without SSL\n", ff);
-      fwrite(tmp.c_str(), 1, tmp.size(), ff);
-      fclose(ff);
-    }
-    if (hr->method == HttpMethod::POST &&
-        request->enctype == FORM_ENCTYPE_MULTIPART) {
-      if (sslh.handle)
-        SSL_write_from_file(sslh.handle, request->body.c_str());
-      else
-        write_from_file(sock, request->body.c_str());
-    }
-    return;
-  } else {
-#ifdef _MSC_VER
-    send(sock, tmp.c_str(), tmp.size(), {});
-#else
-    write(sock, tmp.c_str(), tmp.size());
-#endif
-    if (w3m_reqlog) {
-      FILE *ff = fopen(w3m_reqlog, "a");
-      if (ff == nullptr) {
-        return;
-      }
-      fwrite(tmp.c_str(), 1, tmp.size(), ff);
-      fclose(ff);
-    }
-    if (hr->method == HttpMethod::POST &&
-        request->enctype == FORM_ENCTYPE_MULTIPART) {
-      write_from_file(sock, request->body.c_str());
-    }
-  }
 
-  this->stream = newInputStream(sock);
-  return;
+    if (hr->url.scheme == SCM_HTTPS) {
+      this->stream = newSSLStream(sslh.handle, *sock);
+      if (sslh.handle)
+        SSL_write(sslh.handle, tmp.c_str(), tmp.size());
+      else {
+#ifdef _MSC_VER
+        send(*sock, tmp.c_str(), tmp.size(), {});
+#else
+        write(*sock, tmp.c_str(), tmp.size());
+#endif
+      }
+      if (w3m_reqlog) {
+        FILE *ff = fopen(w3m_reqlog, "a");
+        if (ff == nullptr) {
+          return;
+        }
+        if (sslh.handle)
+          fputs("HTTPS: request via SSL\n", ff);
+        else
+          fputs("HTTPS: request without SSL\n", ff);
+        fwrite(tmp.c_str(), 1, tmp.size(), ff);
+        fclose(ff);
+      }
+      if (hr->method == HttpMethod::POST &&
+          request->enctype == FORM_ENCTYPE_MULTIPART) {
+        if (sslh.handle)
+          SSL_write_from_file(sslh.handle, request->body.c_str());
+        else
+          write_from_file(*sock, request->body.c_str());
+      }
+      return;
+    } else {
+#ifdef _MSC_VER
+      send(*sock, tmp.c_str(), tmp.size(), {});
+#else
+      write(*sock, tmp.c_str(), tmp.size());
+#endif
+      if (w3m_reqlog) {
+        FILE *ff = fopen(w3m_reqlog, "a");
+        if (ff == nullptr) {
+          return;
+        }
+        fwrite(tmp.c_str(), 1, tmp.size(), ff);
+        fclose(ff);
+      }
+      if (hr->method == HttpMethod::POST &&
+          request->enctype == FORM_ENCTYPE_MULTIPART) {
+        write_from_file(*sock, request->body.c_str());
+      }
+    }
+
+    this->stream = newInputStream(*sock);
+
+  } else {
+    hr->status = HTST_MISSING;
+  }
 }
 
 void UrlStream::openData(const Url &url) {
