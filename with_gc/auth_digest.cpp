@@ -1,7 +1,7 @@
 #include "auth_digest.h"
+#include "form.h"
 #include "cmp.h"
 #include "http_request.h"
-#include "html/form.h"
 #include "http_auth.h"
 #include "Str.h"
 #include "myctype.h"
@@ -133,10 +133,10 @@ Str *AuthDigestCred(struct http_auth *ha, const std::string &uname,
   tmp = Strnew_m_charp(to_str(hr->method).c_str(), ":", uri.c_str(), nullptr);
   if (qop_i == QOP_AUTH_INT) {
     /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
-    if (request && request->body) {
+    if (request && request->body.size()) {
       if (request->method == FORM_METHOD_POST &&
           request->enctype == FORM_ENCTYPE_MULTIPART) {
-        auto fp = fopen(request->body, "r");
+        auto fp = fopen(request->body.c_str(), "r");
         if (fp != nullptr) {
           Str *ebody;
           ebody = Strfgetall(fp);
@@ -146,7 +146,7 @@ Str *AuthDigestCred(struct http_auth *ha, const std::string &uname,
           MD5((unsigned char *)"", 0, md5);
         }
       } else {
-        MD5((unsigned char *)request->body, request->length, md5);
+        MD5((unsigned char *)request->body.c_str(), request->length, md5);
       }
     } else {
       MD5((unsigned char *)"", 0, md5);

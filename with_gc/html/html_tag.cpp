@@ -8,6 +8,8 @@
 #include "hash.h"
 #include "table.h"
 #include "alloc.h"
+#include "html_feed_env.h"
+#include "form.h"
 #include <sstream>
 
 #define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))
@@ -666,4 +668,50 @@ int HtmlTag::ul_type(int default_type) const {
       return (int)'s';
   }
   return default_type;
+}
+
+#define FORM_I_TEXT_DEFAULT_SIZE 40
+std::shared_ptr<FormItem> HtmlTag::createFormItem(html_feed_environ *h_env) {
+  auto item = std::make_shared<FormItem>();
+  item->type = FORM_UNKNOWN;
+  item->size = -1;
+  item->rows = 0;
+  item->checked = item->init_checked = 0;
+  item->accept = 0;
+  item->value = item->init_value = "";
+  item->readonly = 0;
+  char *p;
+  if (this->parsedtag_get_value(ATTR_TYPE, &p)) {
+    item->type = formtype(p);
+    if (item->size < 0 &&
+        (item->type == FORM_INPUT_TEXT || item->type == FORM_INPUT_FILE ||
+         item->type == FORM_INPUT_PASSWORD))
+      item->size = FORM_I_TEXT_DEFAULT_SIZE;
+  }
+  if (this->parsedtag_get_value(ATTR_NAME, &p))
+    item->name = p;
+  if (this->parsedtag_get_value(ATTR_VALUE, &p))
+    item->value = item->init_value = p;
+  item->checked = item->init_checked = this->parsedtag_exists(ATTR_CHECKED);
+  item->accept = this->parsedtag_exists(ATTR_ACCEPT);
+  this->parsedtag_get_value(ATTR_SIZE, &item->size);
+  this->parsedtag_get_value(ATTR_MAXLENGTH, &item->maxlength);
+  item->readonly = this->parsedtag_exists(ATTR_READONLY);
+  int i;
+  if (this->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
+      i < (int)h_env->parser.textarea_str.size()) {
+    item->value = item->init_value = h_env->parser.textarea_str[i];
+  }
+  if (this->parsedtag_get_value(ATTR_ROWS, &p))
+    item->rows = atoi(p);
+  if (item->type == FORM_UNKNOWN) {
+    /* type attribute is missing. Ignore the tag. */
+    return NULL;
+  }
+  if (item->type == FORM_INPUT_FILE && item->value.size()) {
+    /* security hole ! */
+    assert(false);
+    return NULL;
+  }
+  return item;
 }

@@ -1,4 +1,7 @@
 #pragma once
+#include <memory>
+#include <string>
+#include <vector>
 #include <string>
 #include <memory>
 #include "anchor.h"
@@ -36,16 +39,10 @@ struct FormItem {
   int maxlength;
   int readonly;
 
-  static std::shared_ptr<FormItem>
-  createFromInput(html_feed_environ *h_env,
-                  const std::shared_ptr<HtmlTag> &tag);
-
   std::shared_ptr<Form> parent;
 
-  void query_from_followform_multipart();
+  void query_from_followform_multipart(int pid);
   std::string form2str() const;
-
-  void input_textarea();
 };
 
 struct FormAnchor : public Anchor {
@@ -60,3 +57,38 @@ struct FormAnchor : public Anchor {
     end = bp;
   }
 };
+enum FormMethod {
+  FORM_METHOD_GET = 0,
+  FORM_METHOD_POST = 1,
+  FORM_METHOD_INTERNAL = 2,
+  FORM_METHOD_HEAD = 3,
+};
+
+enum FormEncoding {
+  FORM_ENCTYPE_URLENCODED = 0,
+  FORM_ENCTYPE_MULTIPART = 1,
+};
+
+struct FormItem;
+struct Form : public std::enable_shared_from_this<Form> {
+  std::string action;
+  FormMethod method = FORM_METHOD_GET;
+  FormEncoding enctype = FORM_ENCTYPE_URLENCODED;
+  std::string target;
+  std::string name;
+  std::vector<std::shared_ptr<FormItem>> items;
+
+  std::string boundary;
+  std::string body;
+  unsigned long length = 0;
+
+  Form(){};
+  Form(const std::string &action, const std::string &method,
+       const std::string &enctype, const std::string &target,
+       const std::string &name);
+  ~Form();
+
+  std::string query(const std::shared_ptr<FormItem> &item) const;
+};
+
+std::string form_quote(std::string_view x);

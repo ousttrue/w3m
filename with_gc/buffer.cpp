@@ -1,5 +1,4 @@
 #include "buffer.h"
-#include "downloadlist.h"
 #include "url_quote.h"
 #include "linein.h"
 #include "symbol.h"
@@ -15,14 +14,13 @@
 #include "local_cgi.h"
 #include "etc.h"
 #include "rc.h"
-#include "html/form.h"
-#include "html/form_item.h"
 #include "html/anchorlist.h"
 #include "html/html_quote.h"
 #include "ctrlcode.h"
 #include "line.h"
 #include "proc.h"
 #include "cookie.h"
+#include "downloadlist.h"
 #include <sys/stat.h>
 #include <sstream>
 
@@ -507,9 +505,9 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
     // }
   } else if (form->method == FORM_METHOD_POST) {
     if (form->enctype == FORM_ENCTYPE_MULTIPART) {
-      fi->query_from_followform_multipart();
+      fi->query_from_followform_multipart(App::instance().pid());
       struct stat st;
-      stat(form->body, &st);
+      stat(form->body.c_str(), &st);
       form->length = st.st_size;
     } else {
       auto tmp = fi->parent->query(fi);
@@ -518,7 +516,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
     }
     auto buf = this->loadLink(tmp2.c_str(), {}, form);
     if (form->enctype == FORM_ENCTYPE_MULTIPART) {
-      unlink(form->body);
+      unlink(form->body.c_str());
     }
     if (buf &&
         !(buf->res->redirectins.size() > 1)) { /* buf must be Currentbuf */
@@ -623,7 +621,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     }
     if (fi->readonly)
       App::instance().disp_message_nsec("Read only field!", 1, true);
-    fi->input_textarea();
+    input_textarea(fi.get());
     this->layout->formUpdateBuffer(a);
     break;
 

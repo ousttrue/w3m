@@ -7,10 +7,6 @@
 #include <optional>
 #include <memory>
 
-struct Str;
-struct Url;
-struct Form;
-
 extern bool override_user_agent;
 extern std::string UserAgent;
 extern std::string AcceptLang;
@@ -20,7 +16,7 @@ extern bool NoCache;
 extern bool NoSendReferer;
 extern bool CrossOriginReferer;
 extern bool override_content_type;
-extern Str *header_string;
+extern std::string header_string;
 
 enum HttpStreamStatus {
   HTST_NORMAL = 0,
@@ -55,6 +51,8 @@ enum HttpRequestFlags {
 };
 ENUM_OP_INSTANCE(HttpRequestFlags);
 
+struct Url;
+struct Form;
 struct HttpRequest {
   Url url;
   std::optional<Url> current;

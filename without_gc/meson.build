@@ -24,6 +24,7 @@ without_gc_lib = static_library(
         'matchattr.cpp',
         'generallist.cpp',
         'downloadlist.cpp',
+        'form.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

@@ -173,3 +173,5 @@ public:
 
   static std::shared_ptr<LineInput> inputAnswer();
 };
+
+void input_textarea(struct FormItem *fi);

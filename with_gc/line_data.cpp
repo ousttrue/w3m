@@ -1,9 +1,8 @@
 #include "line_data.h"
 #include "Str.h"
 #include "myctype.h"
-#include "html/form.h"
-#include "html/form_item.h"
 #include "quote.h"
+#include "form.h"
 #include "etc.h"
 #include "html/html_tag.h"
 #include "url_quote.h"
@@ -42,7 +41,7 @@ FormAnchor *LineData::registerForm(html_feed_environ *h_env,
                                    const std::shared_ptr<Form> &flist,
                                    const std::shared_ptr<HtmlTag> &tag,
                                    const BufferPoint &bp) {
-  auto fi = FormItem::createFromInput(h_env, tag);
+  auto fi = tag->createFormItem(h_env);
   if (!fi) {
     return NULL;
   }

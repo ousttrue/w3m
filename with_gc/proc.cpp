@@ -4,7 +4,6 @@
 #include "ioutil.h"
 #include "dict.h"
 #include "app.h"
-#include "html/form_item.h"
 #include "file_util.h"
 #include "html/html_feed_env.h"
 #include "http_response.h"
@@ -14,7 +13,7 @@
 #include "linein.h"
 #include "cookie.h"
 #include "rc.h"
-#include "html/form.h"
+#include "form.h"
 #include "history.h"
 #include "html/anchorlist.h"
 #include "etc.h"
@@ -1256,7 +1255,8 @@ std::shared_ptr<CoroutineState<void>> svSrc(const FuncContext &context) {
     file = CurrentTab->currentBuffer()->res->guess_save_name(
         CurrentTab->currentBuffer()->res->currentURL.file.c_str());
   }
-  doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(), file.c_str());
+  doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(),
+             file.c_str());
   PermitSaveToPipe = false;
 }
 
@@ -1316,9 +1316,10 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       multipart = true;
       CurrentTab->currentBuffer()
-          ->layout->data.form_submit->query_from_followform_multipart();
+          ->layout->data.form_submit->query_from_followform_multipart(
+              App::instance().pid());
       struct stat st;
-      stat(request->body, &st);
+      stat(request->body.c_str(), &st);
       request->length = st.st_size;
     }
   } else {
@@ -1334,7 +1335,7 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
   DefaultType = nullptr;
 
   if (multipart) {
-    unlink(request->body);
+    unlink(request->body.c_str());
   }
   if (!res) {
     App::instance().disp_err_message("Can't reload...");

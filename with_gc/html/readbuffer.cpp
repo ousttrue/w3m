@@ -2,7 +2,7 @@
 #include "quote.h"
 #include "html_feed_env.h"
 #include "etc.h"
-#include "html/form_item.h"
+#include "form.h"
 #include "buffer.h"
 #include "line_layout.h"
 #include "http_response.h"

@@ -1,8 +1,6 @@
 #include "line_layout.h"
 #include "myctype.h"
 #include "url.h"
-#include "html/form.h"
-#include "html/form_item.h"
 #include "utf8.h"
 #include <sstream>
 

@@ -1,16 +1,16 @@
 #include "linein.h"
+#include "ioutil.h"
+#include "tmpfile.h"
 #include "quote.h"
 #include "Str.h"
 #include "url_decode.h"
-#include "html/form_item.h"
 #include "app.h"
 #include "tabbuffer.h"
 #include "etc.h"
 #include "alloc.h"
-#include "utf8.h"
 #include "buffer.h"
 #include "proc.h"
-#include "html/form.h"
+#include "form.h"
 #include "ctrlcode.h"
 #include "local_cgi.h"
 #include "myctype.h"
@@ -864,7 +864,7 @@ void LineInput::_editor(char) {
   fi.value = strBuf->ptr;
   fi.value += '\n';
 
-  fi.input_textarea();
+  input_textarea(&fi);
 
   strBuf = Strnew();
   for (auto p : fi.value) {
@@ -890,4 +890,65 @@ std::shared_ptr<LineInput> LineInput::inputAnswer() {
   // term_raw();
 
   return inputChar("(y/n)?");
+}
+
+static void form_fputs_decode(const char *p, FILE *f) {
+  std::stringstream z;
+  for (; *p;) {
+    switch (*p) {
+
+    case '\r':
+      if (*(p + 1) == '\n')
+        p++;
+    default:
+      z << *p;
+      p++;
+      break;
+    }
+  }
+
+  auto str = z.str();
+  fwrite(str.data(), str.size(), 1, f);
+}
+void input_textarea(FormItem *fi) {
+  auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
+  auto f = fopen(tmpf.c_str(), "w");
+  if (f == NULL) {
+    App::instance().disp_err_message("Can't open temporary file");
+    return;
+  }
+  if (fi->value.size()) {
+    form_fputs_decode(fi->value.c_str(), f);
+  }
+  fclose(f);
+
+  if (exec_cmd(ioutil::myEditor(tmpf, 1))) {
+    goto input_end;
+  }
+
+  if (fi->readonly) {
+    goto input_end;
+  }
+
+  f = fopen(tmpf.c_str(), "r");
+  if (f == NULL) {
+    App::instance().disp_err_message("Can't open temporary file");
+    goto input_end;
+  }
+  fi->value.clear();
+  Str *tmp;
+  while (tmp = Strfgets(f), tmp->length > 0) {
+    if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
+      /* null line with bare LF */
+      tmp = Strnew_charp("\r\n");
+    } else if (tmp->length > 1 && tmp->ptr[tmp->length - 1] == '\n' &&
+               tmp->ptr[tmp->length - 2] != '\r') {
+      Strshrink(tmp, 1);
+      Strcat_charp(tmp, "\r\n");
+    }
+    fi->value = cleanup_line(tmp->ptr, RAW_MODE);
+  }
+  fclose(f);
+input_end:
+  unlink(tmpf.c_str());
 }

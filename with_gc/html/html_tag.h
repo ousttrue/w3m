@@ -109,4 +109,7 @@ public:
   bool parsedtag_set_value(HtmlTagAttr id, char *value);
   std::string parsedtag2str() const;
   int ul_type(int default_type) const;
+
+  std::shared_ptr<struct FormItem>
+  createFormItem(struct html_feed_environ *h_env);
 };

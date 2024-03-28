@@ -1,11 +1,9 @@
 #include "dict.h"
-#include "rc.h"
 #include "Str.h"
-#include "html/form.h"
 #include "http_session.h"
 #include "buffer.h"
-#include "http_response.h"
 #include "tabbuffer.h"
+#include "http_response.h"
 
 bool UseDictCommand = true;
 std::string DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;

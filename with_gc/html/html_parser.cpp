@@ -2,8 +2,6 @@
 #include "html_feed_env.h"
 #include "entity.h"
 #include "anchorlist.h"
-#include "form_item.h"
-#include "form.h"
 #include "etc.h"
 #include "line_data.h"
 #include "line_layout.h"

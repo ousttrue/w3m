@@ -3,12 +3,10 @@
 #include <fcntl.h>
 #include "ioutil.h"
 #include "local_cgi.h"
-#include "tmpfile.h"
 #include "rc.h"
 #include "http_request.h"
-#include "http_response.h"
 #include "etc.h"
-#include "html/form.h"
+#include "form.h"
 #include "alloc.h"
 #include "proc.h"
 #include "Str.h"

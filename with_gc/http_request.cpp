@@ -1,9 +1,9 @@
 #include "http_request.h"
 #include "cmp.h"
+#include "form.h"
 #include "url.h"
 #include "rc.h"
 #include "cookie.h"
-#include "html/form.h"
 #include "http_auth.h"
 #include "auth_pass.h"
 #include "Str.h"
@@ -21,7 +21,7 @@ bool NoCache = false;
 bool NoSendReferer = false;
 bool CrossOriginReferer = true;
 bool override_content_type = false;
-Str *header_string = nullptr;
+std::string header_string;
 
 std::string HttpRequest::getRequestURI() const {
   std::stringstream tmp;
@@ -161,15 +161,15 @@ std::string HttpRequest::to_Str() const {
         tmp << "Content-Type: application/x-www-form-urlencoded\r\n";
       }
       tmp << Sprintf("Content-Length: %ld\r\n", this->request->length)->ptr;
-      if (header_string) {
+      if (header_string.size()) {
         tmp << header_string;
       }
       tmp << "\r\n";
-      tmp << std::string_view(this->request->body, this->request->length);
+      tmp << this->request->body.substr(0, this->request->length);
       tmp << "\r\n";
     }
   } else {
-    if (header_string)
+    if (header_string.size())
       tmp << header_string;
     tmp << "\r\n";
   }

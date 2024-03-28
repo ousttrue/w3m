@@ -1,6 +1,5 @@
 #include "url_stream.h"
-#include "downloadlist.h"
-#include "tmpfile.h"
+#include "form.h"
 #include "ioutil.h"
 #include "cookie_domain.h"
 #include "file_util.h"
@@ -15,7 +14,6 @@
 #include "compression.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
-#include "html/form.h"
 #include "etc.h"
 #include "url.h"
 #include "istream.h"
@@ -153,7 +151,7 @@ static bool dir_exist(const std::string &path) {
   return IS_DIRECTORY(stbuf.st_mode);
 }
 
-static void write_from_file(int sock, char *file) {
+static void write_from_file(int sock, const char *file) {
 #ifdef _MSC_VER
 #else
   FILE *fd;
@@ -173,7 +171,7 @@ static void write_from_file(int sock, char *file) {
 void UrlStream::openLocalCgi(const std::shared_ptr<HttpRequest> &hr,
                              const HttpOption &option,
                              const std::shared_ptr<Form> &request) {
-  if (request && request->body) {
+  if (request && request->body.size()) {
     /* local CGI: POST */
     this->stream =
         newFileStream(localcgi_post(hr->url.real_file.c_str(),
@@ -406,7 +404,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
   if (hr->url.file.empty()) {
     hr->url.file = "/";
   }
-  if (request && request->method == FORM_METHOD_POST && request->body) {
+  if (request && request->method == FORM_METHOD_POST && request->body.size()) {
     hr->method = HttpMethod::POST;
   }
   if (request && request->method == FORM_METHOD_HEAD) {
@@ -459,9 +457,9 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     if (hr->method == HttpMethod::POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       if (sslh.handle)
-        SSL_write_from_file(sslh.handle, request->body);
+        SSL_write_from_file(sslh.handle, request->body.c_str());
       else
-        write_from_file(sock, request->body);
+        write_from_file(sock, request->body.c_str());
     }
     return;
   } else {
@@ -480,7 +478,7 @@ void UrlStream::openHttp(const std::shared_ptr<HttpRequest> &hr,
     }
     if (hr->method == HttpMethod::POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
-      write_from_file(sock, request->body);
+      write_from_file(sock, request->body.c_str());
     }
   }
 

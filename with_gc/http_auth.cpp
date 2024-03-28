@@ -5,7 +5,7 @@
 #include "http_response.h"
 #include "http_request.h"
 #include "auth_digest.h"
-#include "html/form.h"
+#include "form.h"
 #include "Str.h"
 #include "myctype.h"
 #include "buffer.h"
