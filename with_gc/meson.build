@@ -30,7 +30,6 @@ with_gc_lib = static_library(
         'mailcap.cpp',
         'symbol.cpp',
         'history.cpp',
-        'ssl_util.cpp',
         'url_stream.cpp',
         'app.cpp',
         'http_session.cpp',

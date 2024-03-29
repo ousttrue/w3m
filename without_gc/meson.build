@@ -35,6 +35,7 @@ without_gc_lib = static_library(
         'http_option.cpp',
         'http_auth.cpp',
         'local_cgi.cpp',
+        'ssl_util.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

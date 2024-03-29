@@ -1,9 +1,7 @@
 #include "ssl_util.h"
-#include "app.h"
-#include "Str.h"
 #include "myctype.h"
-#include "alloc.h"
 #include "cmp.h"
+#include <sstream>
 
 #define DEF_CAFILE ""
 #include <openssl/bio.h>
@@ -46,16 +44,18 @@ std::string ssl_ca_path;
 std::string ssl_ca_file = DEF_CAFILE;
 bool ssl_ca_default = true;
 
-static Str *accept_this_site;
+static std::string accept_this_site;
 void ssl_accept_this_site(const char *hostname) {
-  if (hostname)
-    accept_this_site = Strnew_charp(hostname);
-  else
-    accept_this_site = nullptr;
+  if (hostname) {
+    accept_this_site = hostname;
+  } else {
+    accept_this_site = {};
+  }
 }
 
 SSL_CTX *ssl_ctx = nullptr;
 int ssl_verify_server = true;
+
 #ifdef SSL_CTX_set_min_proto_version
 std::string ssl_min_version;
 static int str_to_ssl_version(const char *name) {
@@ -144,9 +144,8 @@ static int ssl_match_cert_ident(const char *ident, int ilen,
   return *hostname == '\0';
 }
 
-static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
-  int i;
-  Str *ret = NULL;
+static std::string ssl_check_cert_ident(X509 *x, const char *hostname) {
+  std::string ret;
   int match_ident = false;
   /*
    * All we need to do here is check that the CN matches.
@@ -158,7 +157,7 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
    * the use of the Common Name is existing practice, it is deprecated and
    * Certification Authorities are encouraged to use the dNSName instead.
    */
-  i = X509_get_ext_by_NID(x, NID_subject_alt_name, -1);
+  int i = X509_get_ext_by_NID(x, NID_subject_alt_name, -1);
   if (i >= 0) {
     X509_EXTENSION *ex;
     STACK_OF(GENERAL_NAME) * alt;
@@ -168,7 +167,7 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
     if (alt) {
       int n;
       GENERAL_NAME *gn;
-      Str *seen_dnsname = NULL;
+      std::string seen_dnsname;
 
       n = sk_GENERAL_NAME_num(alt);
       for (i = 0; i < n; i++) {
@@ -186,24 +185,20 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
            * be null terminated. Ensure we have a null terminated
            * string that we can modify.
            */
-          auto asn = (char *)GC_MALLOC(sl + 1);
-          if (!asn)
-            exit(1);
-          memcpy(asn, sn, sl);
-          asn[sl] = '\0';
+          std::string asn(sn, sn + sl);
 
-          if (!seen_dnsname)
-            seen_dnsname = Strnew();
           /* replace \0 to make full string visible to user */
-          if (sl != strlen(asn)) {
+          if (sl != asn.size()) {
             for (size_t i = 0; i < sl; ++i) {
-              if (!asn[i])
+              if (asn[i] == 0) {
                 asn[i] = '!';
+              }
             }
           }
-          Strcat_m_charp(seen_dnsname, asn, " ", NULL);
-          if (sl == strlen(asn) /* catch \0 in SAN */
-              && ssl_match_cert_ident(asn, sl, hostname))
+          seen_dnsname += asn;
+          seen_dnsname.push_back(' ');
+          if (sl == asn.size() /* catch \0 in SAN */
+              && ssl_match_cert_ident(asn.c_str(), sl, hostname))
             break;
         }
       }
@@ -211,20 +206,23 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
       sk_GENERAL_NAME_free(alt);
       if (i < n) /* Found a match */
         match_ident = true;
-      else if (seen_dnsname)
-        ret = Sprintf("Bad cert ident from %s: dNSName=%s", hostname,
-                      seen_dnsname->ptr);
+      else if (seen_dnsname.size()) {
+        std::stringstream ss;
+        ss << "Bad cert ident from " << hostname
+           << ": dNSName=" << seen_dnsname;
+        ret = ss.str();
+      }
     }
   }
 
-  if (match_ident == false && ret == NULL) {
+  if (match_ident == false && ret.empty()) {
     char buf[2048];
 
     auto xn = X509_get_subject_name(x);
 
     auto slen = X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf));
     if (slen == -1)
-      ret = Strnew_charp("Unable to get common name from peer cert");
+      ret = "Unable to get common name from peer cert";
     else if (static_cast<size_t>(slen) != strlen(buf) ||
              !ssl_match_cert_ident(buf, strlen(buf), hostname)) {
       /* replace \0 to make full string visible to user */
@@ -234,21 +232,23 @@ static Str *ssl_check_cert_ident(X509 *x, const char *hostname) {
             buf[i] = '!';
         }
       }
-      ret = Sprintf("Bad cert ident %s from %s", buf, hostname);
+      std::stringstream ss;
+      ss << "Bad cert ident " << buf << " from " << hostname;
+      ret = ss.str();
     }
   }
   return ret;
 }
 
-static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
+static std::string ssl_get_certificate(SSL *ssl, const char *hostname) {
   if (!ssl) {
-    return NULL;
+    return {};
   }
 
   auto x = SSL_get_peer_certificate(ssl);
   if (x == NULL) {
     const char *ans;
-    if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
+    if (strcasecmp(accept_this_site, hostname) == 0)
       ans = "y";
     else {
       // emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
@@ -256,21 +256,22 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
       ans = "y";
     }
 
-    Str *amsg = NULL;
+    std::string amsg;
     if (ans && TOLOWER(*ans) == 'y')
-      amsg = Strnew_charp("Accept SSL session without any peer certificate");
+      amsg = "Accept SSL session without any peer certificate";
     else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation: no peer certificate";
-      App::instance().disp_err_message(e);
+      // App::instance().disp_err_message(e);
       free_ssl_ctx();
       return NULL;
     }
-    if (amsg)
-      App::instance().disp_err_message(amsg->ptr);
+    if (amsg.size()) {
+      // App::instance().disp_err_message(amsg->ptr);
+    }
     ssl_accept_this_site(hostname);
 
-    auto s = amsg ? amsg : Strnew_charp("valid certificate");
+    std::string s = amsg.size() ? amsg : "valid certificate";
     return s;
   }
 
@@ -278,13 +279,13 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
    * The chain length is automatically checked by OpenSSL when we
    * set the verify depth in the ctx.
    */
-  Str *amsg = NULL;
+  std::string amsg;
   if (ssl_verify_server) {
     long verr;
     if ((verr = SSL_get_verify_result(ssl)) != X509_V_OK) {
       const char *em = X509_verify_cert_error_string(verr);
       const char *ans;
-      if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
+      if (strcasecmp(accept_this_site, hostname) == 0)
         ans = "y";
       else {
         // emsg = Sprintf("%s: accept? (y/n)", em);
@@ -292,12 +293,13 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
         ans = "y";
       }
       if (ans && TOLOWER(*ans) == 'y') {
-        amsg = Sprintf("Accept unsecure SSL session: "
-                       "unverified: %s",
-                       em);
+        std::stringstream ss;
+        ss << "Accept unsecure SSL session: "
+           << "unverified: " << em;
+        amsg = ss.str();
       } else {
-        char *e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-        App::instance().disp_err_message(e);
+        // char *e = Sprintf("This SSL session was rejected: %s", em)->ptr;
+        // App::instance().disp_err_message(e);
         free_ssl_ctx();
         return NULL;
       }
@@ -305,9 +307,9 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
   }
 
   auto emsg = ssl_check_cert_ident(x, hostname);
-  if (emsg != NULL) {
+  if (emsg.size()) {
     const char *ans;
-    if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
+    if (strcasecmp(accept_this_site, hostname) == 0)
       ans = "y";
     else {
       // Str *ep = Strdup(emsg);
@@ -319,45 +321,46 @@ static Str *ssl_get_certificate(SSL *ssl, const char *hostname) {
     }
 
     if (ans && TOLOWER(*ans) == 'y') {
-      amsg = Strnew_charp("Accept unsecure SSL session:");
-      Strcat(amsg, emsg);
+      amsg = "Accept unsecure SSL session:";
+      amsg += emsg;
     } else {
       const char *e = "This SSL session was rejected "
                       "to prevent security violation";
-      App::instance().disp_err_message(e);
+      // App::instance().disp_err_message(e);
       free_ssl_ctx();
       return NULL;
     }
   }
-  if (amsg) {
-    App::instance().disp_err_message(amsg->ptr);
+  if (amsg.size()) {
+    // App::instance().disp_err_message(amsg->ptr);
   }
 
   ssl_accept_this_site(hostname);
-  auto s = amsg ? amsg : Strnew_charp("valid certificate");
-  Strcat_charp(s, "\n");
+  std::stringstream s;
+  s << (amsg.size() ? amsg : "valid certificate");
+  s << "\n";
   auto xn = X509_get_subject_name(x);
 
   char buf[2048];
   if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
-    Strcat_charp(s, " subject=<unknown>");
+    s << " subject=<unknown>";
   else
-    Strcat_m_charp(s, " subject=", buf, NULL);
+    s << " subject=" << buf;
   xn = X509_get_issuer_name(x);
   if (X509_NAME_get_text_by_NID(xn, NID_commonName, buf, sizeof(buf)) == -1)
-    Strcat_charp(s, ": issuer=<unknown>");
+    s << ": issuer=<unknown>";
   else
-    Strcat_m_charp(s, ": issuer=", buf, NULL);
-  Strcat_charp(s, "\n\n");
+    s << ": issuer=" << buf;
+  s << "\n\n";
 
   auto bp = BIO_new(BIO_s_mem());
   X509_print(bp, x);
   char *p;
   auto len = (int)BIO_ctrl(bp, BIO_CTRL_INFO, 0, (char *)&p);
-  Strcat_charp_n(s, p, len);
+  s << std::string_view(p, len);
   BIO_free_all(bp);
   X509_free(x);
-  return s;
+  return s.str();
 }
 
 SslConnection openSSLHandle(int sock, const char *hostname) {
@@ -492,9 +495,9 @@ SslConnection openSSLHandle(int sock, const char *hostname) {
 #endif /* (SSLEAY_VERSION_NUMBER >= 0x00908070) && !defined(OPENSSL_NO_TLSEXT) \
         */
   if (SSL_connect(con.handle) > 0) {
-    Str *serv_cert = ssl_get_certificate(con.handle, hostname);
-    if (serv_cert) {
-      con.cert = serv_cert->ptr;
+    auto serv_cert = ssl_get_certificate(con.handle, hostname);
+    if (serv_cert.size()) {
+      con.cert = serv_cert;
       return con;
     }
     close(sock);
@@ -506,10 +509,10 @@ eend:
   close(sock);
   if (con.handle)
     SSL_free(con.handle);
-  App::instance().disp_err_message(
-      Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
-              ERR_error_string(ERR_get_error(), NULL))
-          ->ptr);
+  // App::instance().disp_err_message(
+  //     Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+  //             ERR_error_string(ERR_get_error(), NULL))
+  //         ->ptr);
   return {};
 }
 
