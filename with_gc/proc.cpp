@@ -1066,7 +1066,7 @@ std::shared_ptr<CoroutineState<void>> ldBmark(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
   auto tmp = Sprintf(
       "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
-      (form_quote(localCookie()->ptr)).c_str(),
+      (form_quote(localCookie())).c_str(),
       (form_quote(BookmarkFile)).c_str(),
       (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
           .c_str(),

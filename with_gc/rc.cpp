@@ -288,7 +288,6 @@ static const char *w3m_dir(const char *name, const char *dft) {
 #endif
 }
 
-const char *w3m_lib_dir(void) { return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR); }
 const char *w3m_etc_dir(void) { return w3m_dir("W3M_ETC_DIR", ETC_DIR); }
 const char *w3m_conf_dir(void) { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }
 const char *w3m_help_dir(void) { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }

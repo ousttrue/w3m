@@ -1,21 +1,17 @@
-#include <sys/types.h>
-#include "quote.h"
-#include <fcntl.h>
-#include "ioutil.h"
 #include "local_cgi.h"
-#include "rc.h"
+#include "quote.h"
+#include "ioutil.h"
 #include "http_request.h"
-#include "etc.h"
 #include "form.h"
-#include "alloc.h"
-#include "proc.h"
-#include "Str.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
+#include <sstream>
+
 #define HAVE_DIRENT_H 1
 #define DEV_NULL_PATH "/dev/null"
 #define HAVE_LSTAT 1
@@ -23,52 +19,73 @@
 std::string document_root;
 std::string cgi_bin;
 
+static long seed() {
+  auto p = std::make_shared<char>();
+  return (long)(uint64_t)p.get() + (long)time(NULL);
+}
+
+// #ifndef S_IFMT
+// #define S_IFMT 0170000
+// #endif /* not S_IFMT */
+// #ifndef S_IFREG
+// #define S_IFREG 0100000
+// #endif /* not S_IFREG */
+
+// #ifdef HAVE_READLINK
+// #ifndef S_IFLNK
+// #define S_IFLNK 0120000
+// #endif /* not S_IFLNK */
+// #ifndef S_ISLNK
+// #define S_ISLNK(m) (((m) & S_IFMT) == S_IFLNK)
+// #endif /* not S_ISLNK */
+// #endif /* not HAVE_READLINK */
+
 #if !(_SVID_SOURCE || _XOPEN_SOURCE)
 // https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
-static double drand48(void) { return rand() / (RAND_MAX + 1.0); }
+// static double drand48(void) { return rand() / (RAND_MAX + 1.0); }
 static long int lrand48(void) { return rand(); }
-static long int mrand48(void) {
-  return rand() > RAND_MAX / 2 ? rand() : -rand();
-}
+// static long int mrand48(void) {
+//   return rand() > RAND_MAX / 2 ? rand() : -rand();
+// }
 static void srand48(long int seedval) { srand(seedval); }
 #endif
 
-#define CGIFN_NORMAL 0
-#define CGIFN_LIBDIR 1
-#define CGIFN_CGIBIN 2
 #define HAVE_CHDIR 1
 #define HAVE_PUTENV 1
 #define HAVE_SETENV 1
 #define HAVE_READLINK 1
 
-static Str *Local_cookie = NULL;
+static std::string Local_cookie;
 static std::string Local_cookie_file;
 
-static void writeLocalCookie() {
+static void writeLocalCookie(){
 #ifdef _MSC_VER
 #else
-  // if (Local_cookie_file.size()) {
-  //   return;
-  // }
-  // Local_cookie_file = App::instance().tmpfname(TMPF_COOKIE, {});
-  // set_environ("LOCAL_COOKIE_FILE", Local_cookie_file.c_str());
-  // auto f = fopen(Local_cookie_file.c_str(), "wb");
-  // if (!f) {
-  //   return;
-  // }
-  // localCookie();
-  // fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
-  // fclose(f);
-  // chmod(Local_cookie_file.c_str(), S_IRUSR | S_IWUSR);
+// if (Local_cookie_file.size()) {
+//   return;
+// }
+// Local_cookie_file = App::instance().tmpfname(TMPF_COOKIE, {});
+// set_environ("LOCAL_COOKIE_FILE", Local_cookie_file.c_str());
+// auto f = fopen(Local_cookie_file.c_str(), "wb");
+// if (!f) {
+//   return;
+// }
+// localCookie();
+// fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
+// fclose(f);
+// chmod(Local_cookie_file.c_str(), S_IRUSR | S_IWUSR);
 #endif
 }
 
-/* setup cookie for local CGI */
-Str *localCookie() {
-  if (Local_cookie)
+// setup cookie for local CGI
+std::string localCookie() {
+  if (Local_cookie.size()) {
     return Local_cookie;
-  srand48((long)(uint64_t)New(char) + (long)time(NULL));
-  Local_cookie = Sprintf("%ld@%s", lrand48(), ioutil::hostname().c_str());
+  }
+  srand48(seed());
+  std::stringstream ss;
+  ss << lrand48() << "@" << ioutil::hostname();
+  Local_cookie = ss.str();
   return Local_cookie;
 }
 
@@ -158,70 +175,112 @@ static void set_cgi_environ(const char *name, const char *fn,
   set_environ("REQUEST_URI", req_uri);
 }
 
-static Str *checkPath(const char *fn, const char *path) {
+static std::string checkPath(const char *fn, const char *path) {
   while (*path) {
+    std::string tmp;
     auto p = strchr(path, ':');
-    auto tmp = Strnew(expandPath(p ? allocStr(path, p - path) : (char *)path));
-    if (Strlastchar(tmp) != '/')
-      Strcat_char(tmp, '/');
-    Strcat_charp(tmp, fn);
+    if (p) {
+      tmp = expandPath(std::string(path, p - path));
+    } else {
+      tmp = expandPath(path);
+    }
+    if (tmp.back() != '/') {
+      tmp += '/';
+    }
+    tmp += fn;
+
     struct stat st;
-    if (stat(tmp->ptr, &st) == 0)
+    if (stat(tmp.c_str(), &st) == 0) {
       return tmp;
-    if (!p)
+    }
+
+    if (!p) {
       break;
+    }
     path = p + 1;
-    while (*path == ':')
+    while (*path == ':') {
       path++;
+    }
   }
-  return NULL;
+  return {};
 }
 
-static int cgi_filename(const char *uri, const char **fn, const char **name,
-                        const char **path_info) {
-  Str *tmp;
-  int offset;
+enum CgiFileName {
+  CGIFN_NORMAL = 0,
+  CGIFN_LIBDIR = 1,
+  CGIFN_CGIBIN = 2,
+};
 
-  *fn = uri;
-  *name = uri;
-  *path_info = NULL;
+struct CgiFilename {
+  CgiFileName status;
+  std::string fn;
+  std::string name;
+  std::string path_info;
 
-  if (cgi_bin.size() && strncmp(uri, "/cgi-bin/", 9) == 0) {
-    offset = 9;
-    if ((*path_info = strchr(uri + offset, '/')))
-      *name = allocStr(uri, *path_info - uri);
-    tmp = checkPath(*name + offset, cgi_bin.c_str());
-    if (tmp == NULL)
-      return CGIFN_NORMAL;
-    *fn = tmp->ptr;
-    return CGIFN_CGIBIN;
+  static CgiFilename get(const char *uri) {
+    CgiFilename ret{
+        .fn = uri,
+        .name = uri,
+    };
+
+    if (cgi_bin.size() && strncmp(uri, "/cgi-bin/", 9) == 0) {
+      auto offset = 9;
+      if (auto path_info = strchr(uri + offset, '/')) {
+        ret.path_info = path_info;
+        ret.name = std::string(uri, path_info - uri);
+      }
+      auto tmp = checkPath(uri + offset, cgi_bin.c_str());
+      if (tmp.empty()) {
+        ret.status = CGIFN_NORMAL;
+        return ret;
+      }
+
+      ret.fn = tmp;
+      ret.status = CGIFN_CGIBIN;
+      return ret;
+    }
+
+    {
+      std::string tmp = CGIBIN_DIR;
+      if (auto e = getenv("W3M_LIB_DIR")) {
+        tmp = e;
+      };
+      if (tmp.back() != '/') {
+        tmp.push_back('/');
+      }
+      int offset;
+      if (strncmp(uri, "/$LIB/", 6) == 0)
+        offset = 6;
+      else if (strncmp(uri, tmp.c_str(), tmp.size()) == 0)
+        offset = tmp.size();
+      else if (*uri == '/' && document_root.size()) {
+        std::string tmp2 = document_root;
+        if (tmp2.back() != '/') {
+          tmp2.push_back('/');
+        }
+        tmp2 += (uri + 1);
+        if (strncmp(tmp2.c_str(), tmp.c_str(), tmp.size()) != 0) {
+          ret.status = CGIFN_NORMAL;
+          return ret;
+        }
+        ret.name = tmp2;
+        offset = tmp.size();
+      } else {
+        ret.status = CGIFN_NORMAL;
+        return ret;
+      }
+
+      if (auto path_info = strchr(uri + offset, '/')) {
+        ret.path_info = path_info;
+        ret.name = std::string(uri, path_info - uri);
+      }
+      tmp += ret.name.c_str() + offset;
+      ret.fn = tmp;
+      ret.status = CGIFN_LIBDIR;
+      return ret;
+    }
   }
-
-  tmp = Strnew_charp(w3m_lib_dir());
-  if (Strlastchar(tmp) != '/')
-    Strcat_char(tmp, '/');
-  if (strncmp(uri, "/$LIB/", 6) == 0)
-    offset = 6;
-  else if (strncmp(uri, tmp->ptr, tmp->length) == 0)
-    offset = tmp->length;
-  else if (*uri == '/' && document_root.size()) {
-    Str *tmp2 = Strnew_charp(document_root.c_str());
-    if (Strlastchar(tmp2) != '/')
-      Strcat_char(tmp2, '/');
-    Strcat_charp(tmp2, uri + 1);
-    if (strncmp(tmp2->ptr, tmp->ptr, tmp->length) != 0)
-      return CGIFN_NORMAL;
-    uri = tmp2->ptr;
-    *name = uri;
-    offset = tmp->length;
-  } else
-    return CGIFN_NORMAL;
-  if ((*path_info = strchr(uri + offset, '/')))
-    *name = allocStr(uri, *path_info - uri);
-  Strcat_charp(tmp, *name + offset);
-  *fn = tmp->ptr;
-  return CGIFN_LIBDIR;
-}
+};
 
 FILE *localcgi_post(const char *uri, const char *qstr,
                     const std::shared_ptr<Form> &request,

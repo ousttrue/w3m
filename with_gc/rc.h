@@ -16,7 +16,6 @@ const char *libFile(const char *base);
 const char *helpFile(const char *base);
 int set_param_option(const char *option);
 void init_rc();
-const char *w3m_lib_dir();
 const char *w3m_etc_dir();
 const char *w3m_conf_dir();
 const char *w3m_help_dir();

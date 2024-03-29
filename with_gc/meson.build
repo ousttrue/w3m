@@ -26,7 +26,6 @@ with_gc_lib = static_library(
         'etc.cpp',
         'search.cpp',
         'linein.cpp',
-        'local_cgi.cpp',
         'rc.cpp',
         'mailcap.cpp',
         'symbol.cpp',

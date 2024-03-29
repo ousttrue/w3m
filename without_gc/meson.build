@@ -34,9 +34,11 @@ without_gc_lib = static_library(
         'opensocket.cpp',
         'http_option.cpp',
         'http_auth.cpp',
+        'local_cgi.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
+        '-DCGIBIN_DIR="' + CGIBIN_DIR + '"',
     ],
     dependencies: [
         deps,

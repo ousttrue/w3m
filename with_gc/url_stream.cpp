@@ -40,6 +40,8 @@
 #include <netdb.h>
 #endif
 
+#define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
+
 #define SAVE_BUF_SIZE 1536
 
 bool LocalhostOnly = false;
