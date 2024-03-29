@@ -1,4 +1,6 @@
 #pragma once
+#include <unordered_map>
+#include <string>
 
 enum HtmlCommand : int {
   HTML_UNKNOWN = 0,
@@ -181,5 +183,7 @@ enum HtmlCommand : int {
 
   MAX_HTMLTAG = 185,
 };
+
+extern std::unordered_map<std::string, HtmlCommand> tagtable;
 
 HtmlCommand gethtmlcmd(const char **s);

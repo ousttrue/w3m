@@ -5,7 +5,6 @@
 #include "html_command.h"
 #include "myctype.h"
 #include "Str.h"
-#include "hash.h"
 #include "table.h"
 #include "alloc.h"
 #include "html_feed_env.h"
@@ -460,7 +459,6 @@ static toValFuncType toValFunc[] = {
     (toValFuncType)noConv, /* VTYPE_TYPE    */
 };
 
-extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
 std::shared_ptr<HtmlTag> HtmlTag::parse(const char **s, int internal) {
@@ -483,7 +481,11 @@ std::shared_ptr<HtmlTag> HtmlTag::parse(const char **s, int internal) {
   while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
     q++;
 
-  auto tag_id = (HtmlCommand)getHash_si(&tagtable, tagname, HTML_UNKNOWN);
+  auto tag_id = HTML_UNKNOWN;
+  auto found = tagtable.find(tagname);
+  if (found != tagtable.end()) {
+    tag_id = found->second;
+  }
 
   std::shared_ptr<HtmlTag> tag;
   int attr_id = 0;
