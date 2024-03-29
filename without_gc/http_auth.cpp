@@ -4,11 +4,10 @@
 #include "auth_pass.h"
 #include "http_response.h"
 #include "http_request.h"
-#include "Str.h"
 #include "myctype.h"
-#include "etc.h"
 #include "form.h"
 #include "readallbytes.h"
+
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <sstream>
@@ -596,8 +595,8 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
   }
 
   if (uname.empty() || pwd.empty()) {
-    if (IsForkChild)
-      return {};
+    // if (IsForkChild)
+    //   return {};
     /* input username and password */
     // sleep(2);
     if (true /*fmInitialized*/) {
@@ -627,10 +626,11 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
         exit(1);
       }
 
-      printf(proxy ? "Proxy Username for %s: " : "Username for %s: ",
-             realm.c_str());
-      fflush(stdout);
-      uname = Strfgets(stdin)->ptr;
+      // printf(proxy ? "Proxy Username for %s: " : "Username for %s: ",
+      //        realm.c_str());
+      // fflush(stdout);
+      // uname = Strfgets(stdin)->ptr;
+
       // Strchop(*uname);
 #ifdef HAVE_GETPASSPHRASE
       pwd = getpassphrase(proxy ? "Proxy Password: " : "Password: ");
@@ -643,9 +643,9 @@ getAuthCookie(struct http_auth *hauth, const char *auth_header, const Url &pu,
   }
   auto ss = hauth->cred(hauth, uname, pwd, pu, hr, request);
   if (ss.size()) {
-    auto tmp = Strnew_charp(auth_header);
-    Strcat_m_charp(tmp, " ", ss.c_str(), "\r\n", NULL);
-    hr->extra_headers.push_back(tmp->ptr);
+    std::stringstream tmp;
+    tmp << auth_header << " " << ss << "\r\n";
+    hr->extra_headers.push_back(tmp.str());
     return {
         uname,
         pwd,

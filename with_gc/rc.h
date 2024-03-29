@@ -24,7 +24,6 @@ void sync_with_option(void);
 #define BOOKMARK "bookmark.html"
 
 extern const char *w3m_reqlog;
-extern const char *w3m_version;
 
 extern const char *siteconf_file;
 extern const char *ftppasswd;

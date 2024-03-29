@@ -32,6 +32,8 @@ without_gc_lib = static_library(
         'http_response.cpp',
         'istream.cpp',
         'opensocket.cpp',
+        'http_option.cpp',
+        'http_auth.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
