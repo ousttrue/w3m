@@ -48,7 +48,6 @@ bool ArgvIsURL = true;
 #define DEFAULT_COLS 80
 #define SITECONF_FILE RC_DIR "/siteconf"
 
-const char *w3m_reqlog = {};
 int displayImage = false;
 
 const char *siteconf_file = SITECONF_FILE;

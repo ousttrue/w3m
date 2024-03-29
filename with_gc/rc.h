@@ -22,8 +22,6 @@ const char *w3m_help_dir();
 void sync_with_option(void);
 #define BOOKMARK "bookmark.html"
 
-extern const char *w3m_reqlog;
-
 extern const char *siteconf_file;
 extern const char *ftppasswd;
 extern int ftppass_hostnamegen;

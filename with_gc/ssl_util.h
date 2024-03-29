@@ -13,7 +13,7 @@ extern std::string ssl_key_file;
 extern std::string ssl_ca_path;
 extern std::string ssl_ca_file;
 extern bool ssl_ca_default;
-extern bool ssl_verify_server;
+extern int ssl_verify_server;
 extern std::string ssl_min_version;
 
 struct SslConnection {

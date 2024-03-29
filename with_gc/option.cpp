@@ -246,8 +246,8 @@ Option::Option() {
   push_param_string(
       OPTION_SSL, "ssl_cipher", &ssl_cipher,
       "SSL ciphers for TLSv1.2 and below (e.g. DEFAULT:@SECLEVEL=2)");
-  push_param_bool(OPTION_SSL, "ssl_verify_server", &ssl_verify_server,
-                  "Perform SSL server verification");
+  push_param_int(OPTION_SSL, "ssl_verify_server", &ssl_verify_server,
+                 "Perform SSL server verification", false);
   // ("ssl_cert_file", P_SSLPATH, PI_TEXT, (void *)&ssl_cert_file,
   // CMT_SSL_CERT_FILE);,
   // ("ssl_key_file", P_SSLPATH, PI_TEXT, (void *)&ssl_key_file,

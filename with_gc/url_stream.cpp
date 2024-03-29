@@ -2,32 +2,21 @@
 #include "opensocket.h"
 #include "form.h"
 #include "ioutil.h"
-#include "cookie_domain.h"
-#include "file_util.h"
 #include "quote.h"
 #include "http_session.h"
-#include "rc.h"
-#include "app.h"
-#include "alloc.h"
 #include "istream.h"
 #include "myctype.h"
-#include "alloc.h"
 #include "compression.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
-#include "etc.h"
-#include "url.h"
-#include "istream.h"
-#include "http_request.h"
-#include "linein.h"
 #include "url_decode.h"
-#include "local_cgi.h"
-#include "Str.h"
+
 #include <string.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
+#include <sstream>
 
 #ifdef _MSC_VER
 #include <winsock2.h>
@@ -128,9 +117,10 @@ struct UrlStream {
     if (url.scheme == SCM_LOCAL && url.file.empty()) {
       if (url.label.size()) {
         /* #hogege is not a label but a filename */
-        auto tmp2 = Strnew_charp("#");
-        Strcat(tmp2, url.label);
-        url.file = tmp2->ptr;
+        std::stringstream tmp2;
+        tmp2 << "#";
+        tmp2 << url.label;
+        url.file = tmp2.str();
         url.real_file = cleanupName(ioutil::file_unquote(url.file));
         url.label = {};
       } else {
@@ -256,18 +246,7 @@ private:
           write(*sock, tmp.c_str(), tmp.size());
 #endif
         }
-        if (w3m_reqlog) {
-          FILE *ff = fopen(w3m_reqlog, "a");
-          if (ff == nullptr) {
-            return;
-          }
-          if (sslh.handle)
-            fputs("HTTPS: request via SSL\n", ff);
-          else
-            fputs("HTTPS: request without SSL\n", ff);
-          fwrite(tmp.c_str(), 1, tmp.size(), ff);
-          fclose(ff);
-        }
+
         if (hr->method == HttpMethod::POST &&
             request->enctype == FORM_ENCTYPE_MULTIPART) {
           if (sslh.handle)
@@ -282,14 +261,7 @@ private:
 #else
         write(*sock, tmp.c_str(), tmp.size());
 #endif
-        if (w3m_reqlog) {
-          FILE *ff = fopen(w3m_reqlog, "a");
-          if (ff == nullptr) {
-            return;
-          }
-          fwrite(tmp.c_str(), 1, tmp.size(), ff);
-          fclose(ff);
-        }
+
         if (hr->method == HttpMethod::POST &&
             request->enctype == FORM_ENCTYPE_MULTIPART) {
           write_from_file(*sock, request->body.c_str());
@@ -333,11 +305,11 @@ private:
           return;
         }
       } else if (document_root.size()) {
-        auto tmp = Strnew_charp(document_root.c_str());
-        if (Strlastchar(tmp) != '/' && hr->url.file[0] != '/')
-          Strcat_char(tmp, '/');
-        Strcat(tmp, hr->url.file);
-        auto p = cleanupName(tmp->ptr);
+        std::string tmp = document_root;
+        if (tmp.back() != '/' && hr->url.file[0] != '/')
+          tmp.push_back('/');
+        tmp += hr->url.file;
+        auto p = cleanupName(tmp);
         auto q = cleanupName(ioutil::file_unquote(p));
         if (dir_exist(q)) {
           hr->url.file = p;
@@ -362,7 +334,7 @@ private:
       return;
     }
 
-    auto p = Strnew(url.file)->ptr;
+    auto p = url.file.c_str();
     auto q = strchr(p, ',');
     if (q == nullptr) {
       return;
@@ -393,10 +365,9 @@ private:
     }
 
     for (auto &ti : index_file_list) {
-      std::string p = Strnew_m_charp(pu->file.c_str(), "/",
-                                     ioutil::file_quote(ti).c_str(), nullptr)
-                          ->ptr;
-      p = cleanupName(p);
+      std::stringstream ss;
+      ss << pu->file << "/" << ioutil::file_quote(ti);
+      auto p = cleanupName(ss.str());
       auto q = cleanupName(ioutil::file_unquote(p));
       this->openFile(q);
       if (this->stream) {

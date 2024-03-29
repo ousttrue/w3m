@@ -1,7 +1,6 @@
 #include "http_session.h"
 #include "url_quote.h"
 #include "http_response.h"
-// #include "http_auth.h"
 #include "mimetypes.h"
 #include "url_stream.h"
 #include "istream.h"
