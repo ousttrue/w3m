@@ -4,7 +4,7 @@
 #include "quote.h"
 #include "form.h"
 #include "etc.h"
-#include "html/html_tag.h"
+#include "html_tag.h"
 #include "url_quote.h"
 #include "alloc.h"
 #include "html/html_feed_env.h"

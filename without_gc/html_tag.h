@@ -84,14 +84,17 @@ class HtmlTag {
 public:
   const HtmlCommand tagid;
 
+private:
   std::vector<unsigned char> attrid;
-  std::vector<char *> value;
+  std::vector<std::string> value;
   std::vector<unsigned char> map;
   bool need_reconstruct = false;
 
-public:
-  HtmlTag(HtmlCommand id) : tagid(id) {}
+  HtmlTag(HtmlCommand id);
+  const char *parseAttr(const char *q, bool internal);
+  static std::shared_ptr<HtmlTag> parseTag(const char **s, bool internal);
 
+public:
   HtmlTag(const HtmlTag &) = delete;
   HtmlTag &operator=(const HtmlTag &) = delete;
   static std::shared_ptr<HtmlTag> parse(const char **s, bool internal);
@@ -104,9 +107,8 @@ public:
             (this->attrid[this->map[id]] != ATTR_UNKNOWN));
   }
   bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
-
   bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
-  bool parsedtag_set_value(HtmlTagAttr id, char *value);
+  bool parsedtag_set_value(HtmlTagAttr id, const char *value);
   std::string parsedtag2str() const;
   int ul_type(int default_type) const;
 };

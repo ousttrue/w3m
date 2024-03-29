@@ -456,14 +456,25 @@ static toValFuncType toValFunc[] = {
 
 #define MAX_TAG_LEN 64
 
-#include "Str.h"
+HtmlTag::HtmlTag(HtmlCommand id) : tagid(id) {
+  int nattr = TagMAP[id].max_attribute;
+  if (nattr > 0) {
+    this->attrid.resize(nattr);
+    this->value.resize(nattr);
+    this->map.resize(MAX_TAGATTR);
+    memset(this->map.data(), MAX_TAGATTR, MAX_TAGATTR);
+    memset(this->attrid.data(), ATTR_UNKNOWN, nattr);
+    for (int i = 0; i < nattr; i++) {
+      this->map[TagMAP[id].accept_attribute[i]] = i;
+    }
+  }
+}
 
-static std::shared_ptr<HtmlTag> parseTag(const char **s, bool internal) {
-
-  /* Parse tag name */
+// Parse tag name
+static std::tuple<HtmlCommand, const char *> parseTagName(const char *s) {
   char tagname[MAX_TAG_LEN];
   tagname[0] = '\0';
-  auto q = (*s) + 1;
+  auto q = s + 1;
   auto p = tagname;
   if (*q == '/') {
     *(char *)(p++) = *(q++);
@@ -484,6 +495,113 @@ static std::shared_ptr<HtmlTag> parseTag(const char **s, bool internal) {
     tag_id = found->second;
   }
 
+  return {tag_id, q};
+}
+
+const char *HtmlTag::parseAttr(const char *q, bool internal) {
+  std::string attrname;
+  while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>') {
+    attrname.push_back(TOLOWER(*q));
+    q++;
+  }
+
+  while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
+    q++;
+  SKIP_BLANKS(q);
+
+  std::stringstream value_tmp;
+  if (*q == '=') {
+    /* get value */
+    q++;
+    SKIP_BLANKS(q);
+    if (*q == '"') {
+      q++;
+      while (*q && *q != '"') {
+        value_tmp << *q;
+        if (!this->need_reconstruct && is_html_quote(*q))
+          this->need_reconstruct = true;
+        q++;
+      }
+      if (*q == '"')
+        q++;
+    } else if (*q == '\'') {
+      q++;
+      while (*q && *q != '\'') {
+        value_tmp << *q;
+        if (!this->need_reconstruct && is_html_quote(*q))
+          this->need_reconstruct = true;
+        q++;
+      }
+      if (*q == '\'')
+        q++;
+    } else if (*q) {
+      while (*q && !IS_SPACE(*q) && *q != '>') {
+        value_tmp << *q;
+        if (!this->need_reconstruct && is_html_quote(*q))
+          this->need_reconstruct = true;
+        q++;
+      }
+    }
+  }
+
+  int i = 0;
+  unsigned char attr_id = 0;
+  for (; i < this->attrid.size(); ++i) {
+    if (this->attrid[i] == ATTR_UNKNOWN &&
+        strcmp(AttrMAP[TagMAP[this->tagid].accept_attribute[i]].name,
+               attrname.c_str()) == 0) {
+      attr_id = TagMAP[this->tagid].accept_attribute[i];
+      break;
+    }
+  }
+
+  auto value_str = value_tmp.str();
+  std::string value;
+  if (value_str.size()) {
+    int hidden = false;
+    for (int j = 0; j < i; j++) {
+      if (this->attrid[j] == ATTR_TYPE && this->value[j].size() &&
+          strcmp("hidden", this->value[j].c_str()) == 0) {
+        hidden = true;
+        break;
+      }
+    }
+    if ((this->tagid == HTML_INPUT || this->tagid == HTML_INPUT_ALT) &&
+        attr_id == ATTR_VALUE && hidden) {
+      value = value_str;
+    } else {
+      for (auto x = value_str.c_str(); *x; x++) {
+        if (*x != '\n') {
+          value += *x;
+        }
+      }
+    }
+  }
+
+  if (i != this->attrid.size()) {
+    if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) ||
+                      (value.size() && AttrMAP[attr_id].vtype == VTYPE_METHOD &&
+                       !strcasecmp(value.c_str(), "internal")))) {
+      this->need_reconstruct = true;
+      return q;
+    }
+
+    this->attrid[i] = attr_id;
+    if (value.size()) {
+      this->value[i] = html_unquote(value);
+    } else {
+      this->value[i] = {};
+    }
+  } else {
+    this->need_reconstruct = true;
+  }
+
+  return q;
+}
+
+std::shared_ptr<HtmlTag> HtmlTag::parseTag(const char **s, bool internal) {
+
+  auto [tag_id, q] = parseTagName(*s);
   if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT)) {
     while (*q != '>' && *q)
       q++;
@@ -491,122 +609,19 @@ static std::shared_ptr<HtmlTag> parseTag(const char **s, bool internal) {
     return {};
   }
 
-  int attr_id = 0;
   auto tag = std::shared_ptr<HtmlTag>(new HtmlTag(tag_id));
 
-  int nattr;
-  if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
-    tag->attrid.resize(nattr);
-    tag->value.resize(nattr);
-    tag->map.resize(MAX_TAGATTR);
-    memset(tag->map.data(), MAX_TAGATTR, MAX_TAGATTR);
-    memset(tag->attrid.data(), ATTR_UNKNOWN, nattr);
-    for (int i = 0; i < nattr; i++) {
-      tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
-    }
-  }
-
-  /* Parse tag arguments */
+  // Parse tag arguments
   SKIP_BLANKS(q);
-  char attrname[MAX_TAG_LEN];
+
+  // int attr_id = 0;
   while (1) {
-    Str *value = NULL;
-    Str *value_tmp = NULL;
     if (*q == '>' || *q == '\0') {
       *s = q;
       return tag;
     }
-    p = attrname;
-    while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>' &&
-           p - attrname < MAX_TAG_LEN - 1) {
-      *(char *)(p++) = TOLOWER(*q);
-      q++;
-    }
-    *(char *)p = '\0';
-    while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
-      q++;
-    SKIP_BLANKS(q);
-    if (*q == '=') {
-      /* get value */
-      value_tmp = Strnew();
-      q++;
-      SKIP_BLANKS(q);
-      if (*q == '"') {
-        q++;
-        while (*q && *q != '"') {
-          Strcat_char(value_tmp, *q);
-          if (!tag->need_reconstruct && is_html_quote(*q))
-            tag->need_reconstruct = true;
-          q++;
-        }
-        if (*q == '"')
-          q++;
-      } else if (*q == '\'') {
-        q++;
-        while (*q && *q != '\'') {
-          Strcat_char(value_tmp, *q);
-          if (!tag->need_reconstruct && is_html_quote(*q))
-            tag->need_reconstruct = true;
-          q++;
-        }
-        if (*q == '\'')
-          q++;
-      } else if (*q) {
-        while (*q && !IS_SPACE(*q) && *q != '>') {
-          Strcat_char(value_tmp, *q);
-          if (!tag->need_reconstruct && is_html_quote(*q))
-            tag->need_reconstruct = true;
-          q++;
-        }
-      }
-    }
-    int i;
-    for (i = 0; i < nattr; i++) {
-      if ((tag)->attrid[i] == ATTR_UNKNOWN &&
-          strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) ==
-              0) {
-        attr_id = TagMAP[tag_id].accept_attribute[i];
-        break;
-      }
-    }
 
-    if (value_tmp) {
-      int hidden = false;
-      for (int j = 0; j < i; j++) {
-        if (tag->attrid[j] == ATTR_TYPE && tag->value[j] &&
-            strcmp("hidden", tag->value[j]) == 0) {
-          hidden = true;
-          break;
-        }
-      }
-      if ((tag_id == HTML_INPUT || tag_id == HTML_INPUT_ALT) &&
-          attr_id == ATTR_VALUE && hidden) {
-        value = value_tmp;
-      } else {
-        char *x;
-        value = Strnew();
-        for (x = value_tmp->ptr; *x; x++) {
-          if (*x != '\n')
-            Strcat_char(value, *x);
-        }
-      }
-    }
-
-    if (i != nattr) {
-      if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) ||
-                        (value && AttrMAP[attr_id].vtype == VTYPE_METHOD &&
-                         !strcasecmp(value->ptr, "internal")))) {
-        tag->need_reconstruct = true;
-        continue;
-      }
-      tag->attrid[i] = attr_id;
-      if (value)
-        tag->value[i] = Strnew(html_unquote(value->ptr))->ptr;
-      else
-        tag->value[i] = NULL;
-    } else {
-      tag->need_reconstruct = true;
-    }
+    q = tag->parseAttr(q, internal);
   }
 
   while (*q != '>' && *q)
@@ -628,15 +643,16 @@ std::shared_ptr<HtmlTag> HtmlTag::parse(const char **s, bool internal) {
   return tag;
 }
 
-bool HtmlTag::parsedtag_set_value(HtmlTagAttr id, char *value) {
+bool HtmlTag::parsedtag_set_value(HtmlTagAttr id, const char *value) {
   if (!this->parsedtag_accepts(id))
     return false;
   auto i = this->map[id];
   this->attrid[i] = id;
-  if (value)
-    this->value[i] = allocStr(value, -1);
-  else
-    this->value[i] = NULL;
+  if (value) {
+    this->value[i] = value;
+  } else {
+    this->value[i] = {};
+  }
   this->need_reconstruct = true;
   return true;
 }
@@ -646,10 +662,11 @@ bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
     return false;
   }
   int i = this->map[id];
-  if (!this->parsedtag_exists(id) || !this->value[i]) {
+  if (!this->parsedtag_exists(id) || this->value[i].empty()) {
     return false;
   }
-  return toValFunc[AttrMAP[id].vtype](this->value[i], (int *)value);
+  return toValFunc[AttrMAP[id].vtype]((char *)this->value[i].c_str(),
+                                      (int *)value);
 }
 
 std::string HtmlTag::parsedtag2str() const {
@@ -662,7 +679,7 @@ std::string HtmlTag::parsedtag2str() const {
     if (this->attrid[i] != ATTR_UNKNOWN) {
       tagstr << ' ';
       tagstr << AttrMAP[this->attrid[i]].name;
-      if (this->value[i]) {
+      if (this->value[i].size()) {
         tagstr << "=\"" << html_quote(this->value[i]) << "\"";
       }
     }
