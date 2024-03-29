@@ -1,15 +1,5 @@
 #pragma once
 #include "html_parser.h"
-// #include "html_command.h"
-// #include "html_tag.h"
-// #include "html_quote.h"
-// #include "readbuffer.h"
-// #include "textline.h"
-// #include "generallist.h"
-// #include "ctrlcode.h"
-// #include "symbol.h"
-// #include "utf8.h"
-// #include "quote.h"
 #include <vector>
 
 #define MAX_INDENT_LEVEL 10

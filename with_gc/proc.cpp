@@ -15,7 +15,7 @@
 #include "rc.h"
 #include "form.h"
 #include "history.h"
-#include "html/anchorlist.h"
+#include "anchorlist.h"
 #include "etc.h"
 #include "mailcap.h"
 #include "cmp.h"

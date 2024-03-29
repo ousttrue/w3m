@@ -14,7 +14,7 @@
 #include "local_cgi.h"
 #include "etc.h"
 #include "rc.h"
-#include "html/anchorlist.h"
+#include "anchorlist.h"
 #include "html/html_quote.h"
 #include "ctrlcode.h"
 #include "line.h"

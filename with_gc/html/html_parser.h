@@ -3,7 +3,6 @@
 #include "html_command.h"
 #include "lineprop.h"
 #include "table.h"
-#include "readbuffer_status.h"
 #include "readbuffer.h"
 #include "line.h"
 #include "anchorlist.h"
