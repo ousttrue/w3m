@@ -73,9 +73,8 @@ struct LineData {
 
   Anchor *registerName(const char *url, int line, int pos);
   Anchor *registerImg(const char *url, const char *title, int line, int pos);
-  FormAnchor *registerForm(struct html_feed_environ *h_env,
+  FormAnchor *registerForm(const std::shared_ptr<FormItem> &fi,
                            const std::shared_ptr<Form> &flist,
-                           const std::shared_ptr<HtmlTag> &tag,
                            const BufferPoint &bp);
   void addMultirowsForm();
   void reseq_anchor();
@@ -90,7 +89,7 @@ struct LineData {
   //                            _put_anchor_all);
   // }
 
-  const char *getAnchorText(Anchor *a);
+  std::string getAnchorText(Anchor *a);
 
   void addLink(const std::shared_ptr<HtmlTag> &tag);
 };

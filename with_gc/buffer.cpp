@@ -230,10 +230,9 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
         p = html_quote(url_decode0(p));
       else
         p = u;
-      auto t = buf->layout->data.getAnchorText(a);
-      t = t ? html_quote(t) : "";
-      Strcat_m_charp(tmp, "<li><a href=\"", u.c_str(), "\">", t, "</a><br>",
-                     p.c_str(), "\n", NULL);
+      auto t = html_quote(buf->layout->data.getAnchorText(a));
+      Strcat_m_charp(tmp, "<li><a href=\"", u.c_str(), "\">", t.c_str(),
+                     "</a><br>", p.c_str(), "\n", NULL);
     }
     Strcat_charp(tmp, "</ol>\n");
   }

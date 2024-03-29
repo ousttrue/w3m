@@ -1,13 +1,10 @@
 #include "line_data.h"
-#include "Str.h"
 #include "myctype.h"
 #include "quote.h"
 #include "form.h"
-#include "etc.h"
 #include "html_tag.h"
 #include "url_quote.h"
-#include "alloc.h"
-#include "html/html_feed_env.h"
+// #include "Str.h"
 #include <sstream>
 
 bool MarkAllPages = false;
@@ -38,11 +35,9 @@ void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
   lines.push_back({line, prop, byteLen});
 }
 
-FormAnchor *LineData::registerForm(html_feed_environ *h_env,
+FormAnchor *LineData::registerForm(const std::shared_ptr<FormItem> &fi,
                                    const std::shared_ptr<Form> &flist,
-                                   const std::shared_ptr<HtmlTag> &tag,
                                    const BufferPoint &bp) {
-  auto fi = h_env->createFormItem(tag);
   if (!fi) {
     return NULL;
   }
@@ -161,94 +156,12 @@ void LineData::reseq_anchor() {
   this->_formitem->reseq_anchor0(seqmap.data());
 }
 
-// const char *LineData ::reAnchorPos(
-//     Line *l, const char *p1, const char *p2,
-//     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int))
-//     {
-//   Anchor *a;
-//   int i;
-//   int hseq = -2;
-//
-//   auto spos = p1 - l->lineBuf();
-//   auto epos = p2 - l->lineBuf();
-//   for (i = spos; i < epos; i++) {
-//     if (l->propBuf()[i] & (PE_ANCHOR | PE_FORM))
-//       return p2;
-//   }
-//   for (i = spos; i < epos; i++) {
-//     l->propBufAdd(i, PE_ANCHOR);
-//   }
-//
-//   while (1) {
-//     a = anchorproc(this, p1, p2, linenumber(l), spos);
-//     a->hseq = hseq;
-//     if (hseq == -2) {
-//       this->reseq_anchor();
-//       hseq = a->hseq;
-//     }
-//     a->end.line = linenumber(l);
-//     a->end.pos = epos;
-//     break;
-//   }
-//   return p2;
-// }
+std::string LineData::getAnchorText(Anchor *a) {
+  if (!a || a->hseq < 0) {
+    return {};
+  }
 
-/* search regexp and register them as anchors */
-/* returns error message if any               */
-// const char *LineData::reAnchorAny(
-//     Line *topLine, const char *re,
-//     Anchor *(*anchorproc)(LineData *, const char *, const char *, int, int))
-//     {
-//
-//   if (re == NULL || *re == '\0') {
-//     return NULL;
-//   }
-//   if ((re = regexCompile(re, 1)) != NULL) {
-//     return re;
-//   }
-//
-//   Line *l;
-//   for (l = MarkAllPages ? this->firstLine() : topLine;
-//        l != NULL &&
-//        (MarkAllPages ||
-//         linenumber(l) < linenumber(topLine) + App::instance().LASTLINE());
-//        ++l) {
-//     auto p = l->lineBuf();
-//     for (;;) {
-//       if (regexMatch(p, &l->lineBuf()[l->len()] - p, p == l->lineBuf()) == 1)
-//       {
-//         const char *p1, *p2;
-//         matchedPosition(&p1, &p2);
-//         p = this->reAnchorPos(l, p1, p2, anchorproc);
-//       } else
-//         break;
-//     }
-//   }
-//   return NULL;
-// }
-
-// Anchor *_put_anchor_all(LineData *layout, const char *p1, const char *p2,
-//                         int line, int pos) {
-//   auto tmp = Strnew_charp_n(p1, p2 - p1);
-//   return layout->_href->putAnchor(
-//       {
-//           .line = line,
-//           .pos = pos,
-//       },
-//       Anchor{
-//           .url = url_quote(tmp->ptr).c_str(),
-//           .target = "",
-//           .option = {.no_referer = true},
-//           .title = "",
-//           .accesskey = '\0',
-//       });
-// }
-
-const char *LineData::getAnchorText(Anchor *a) {
-  if (!a || a->hseq < 0)
-    return NULL;
-
-  Str *tmp = NULL;
+  std::stringstream tmp;
   auto hseq = a->hseq;
   auto l = this->lines.begin();
   for (size_t i = 0; i < _href->size(); i++) {
@@ -267,48 +180,61 @@ const char *LineData::getAnchorText(Anchor *a) {
       ;
     if (p == ep)
       continue;
-    if (!tmp)
-      tmp = Strnew_size(ep - p);
-    else
-      Strcat_char(tmp, ' ');
-    Strcat_charp_n(tmp, p, ep - p);
+    tmp << ' ';
+    tmp << std::string_view(p, ep - p);
   }
-  return tmp ? tmp->ptr : NULL;
+  return tmp.str();
 }
 
 void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
-  const char *href = NULL;
-  const char *title = NULL;
-  const char *ctype = NULL;
-  const char *rel = NULL;
-  const char *rev = NULL;
-  LinkType type = LINK_TYPE_NONE;
-  // LinkList *l;
+  std::string href;
+  if (auto value = tag->parsedtag_get_value(ATTR_HREF)) {
+    href = *value;
+  }
+  if (href.size()) {
+    href = url_quote(remove_space(href));
+  }
 
-  tag->parsedtag_get_value(ATTR_HREF, &href);
-  if (href)
-    href = Strnew(url_quote(remove_space(href)))->ptr;
-  tag->parsedtag_get_value(ATTR_TITLE, &title);
-  tag->parsedtag_get_value(ATTR_TYPE, &ctype);
-  tag->parsedtag_get_value(ATTR_REL, &rel);
-  if (rel != NULL) {
+  std::string title;
+  if (auto value = tag->parsedtag_get_value(ATTR_TITLE)) {
+    title = *value;
+  }
+
+  std::string ctype;
+  if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+    ctype = *value;
+  }
+
+  std::string rel;
+  if (auto value = tag->parsedtag_get_value(ATTR_REL)) {
+    rel = *value;
+  }
+
+  LinkType type = LINK_TYPE_NONE;
+  if (rel.size()) {
     /* forward link type */
     type = LINK_TYPE_REL;
-    if (title == NULL)
+    if (title.empty()) {
       title = rel;
+    }
   }
-  tag->parsedtag_get_value(ATTR_REV, &rev);
-  if (rev != NULL) {
+
+  std::string rev;
+  if (auto value = tag->parsedtag_get_value(ATTR_REV)) {
+    rev = *value;
+  }
+  if (rev.size()) {
     /* reverse link type */
     type = LINK_TYPE_REV;
-    if (title == NULL)
+    if (title.empty()) {
       title = rev;
+    }
   }
 
   linklist.push_back({
       .url = href,
       .title = title,
-      .ctype = ctype ? ctype : "",
+      .ctype = ctype,
       .type = type,
   });
 }

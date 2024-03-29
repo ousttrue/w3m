@@ -625,7 +625,8 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
             .line = nlines,
             .pos = line.len(),
         };
-        a_form = data->registerForm(h_env, form, tag, bp);
+
+        a_form = data->registerForm(h_env->createFormItem(tag), form, bp);
         if (textareanumber >= 0) {
           while (textareanumber >= (int)a_textarea.size()) {
             textarea_str.push_back({});

@@ -669,6 +669,17 @@ bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
                                       (int *)value);
 }
 
+std::optional<std::string> HtmlTag::parsedtag_get_value(HtmlTagAttr id) const {
+  if (this->map.empty()) {
+    return {};
+  }
+  int i = this->map[id];
+  if (!this->parsedtag_exists(id) || this->value[i].empty()) {
+    return {};
+  }
+  return this->value[i];
+}
+
 std::string HtmlTag::parsedtag2str() const {
   int tag_id = this->tagid;
   int nattr = TagMAP[tag_id].max_attribute;

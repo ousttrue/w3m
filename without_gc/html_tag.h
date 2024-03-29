@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <optional>
 
 // Parsed Tag structure
 enum HtmlTagAttr {
@@ -108,6 +109,7 @@ public:
   }
   bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
   bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
+  std::optional<std::string> parsedtag_get_value(HtmlTagAttr id) const;
   bool parsedtag_set_value(HtmlTagAttr id, const char *value);
   std::string parsedtag2str() const;
   int ul_type(int default_type) const;
