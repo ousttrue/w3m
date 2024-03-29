@@ -845,7 +845,7 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
   }
 
   char *hidden_img = nullptr;
-  if (this->img_alt) {
+  if (this->img_alt.size()) {
     if ((hidden_img = this->has_hidden_link(HTML_IMG_ALT))) {
       if (!hidden || hidden_img < hidden)
         hidden = hidden_img;
@@ -925,7 +925,7 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
 
   if (this->anchor.url.size() && !hidden_anchor)
     Strcat_charp(line, "</a>");
-  if (this->img_alt && !hidden_img)
+  if (this->img_alt.size() && !hidden_img)
     Strcat_charp(line, "</img_alt>");
   if (this->input_alt.in && !hidden_input)
     Strcat_charp(line, "</input_alt>");
@@ -1114,9 +1114,9 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
     Strcat_charp(tmp, "\">");
     this->push_tag(tmp->ptr, HTML_A);
   }
-  if (!hidden_img && this->img_alt) {
+  if (!hidden_img && this->img_alt.size()) {
     Str *tmp = Strnew_charp("<IMG_ALT SRC=\"");
-    Strcat(tmp, html_quote(this->img_alt->ptr));
+    Strcat(tmp, html_quote(this->img_alt));
     Strcat_charp(tmp, "\">");
     this->push_tag(tmp->ptr, HTML_IMG_ALT);
   }

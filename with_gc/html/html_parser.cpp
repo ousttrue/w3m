@@ -2035,7 +2035,7 @@ void HtmlParser::process_option() {
 void HtmlParser::completeHTMLstream(struct html_feed_environ *h_env) {
   auto obuf = &h_env->obuf;
   this->close_anchor(h_env);
-  if (obuf->img_alt) {
+  if (obuf->img_alt.size()) {
     obuf->push_tag("</img_alt>", HTML_N_IMG_ALT);
     obuf->img_alt = nullptr;
   }

@@ -512,8 +512,11 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
       int id = -1;
       const char *p = l->line.c_str();
       std::shared_ptr<HtmlTag> tag;
-      if ((tag = HtmlTag::parse(&p, true)) != NULL)
-        tag->parsedtag_get_value(ATTR_TID, &id);
+      if ((tag = HtmlTag::parse(&p, true)) != NULL) {
+        if (auto value = tag->parsedtag_get_value(ATTR_TID)) {
+          id = stoi(*value);
+        }
+      }
       if (id >= 0 && id < this->ntable && this->tables[id].ptr) {
         AlignMode alignment;
         auto t = this->tables[id].ptr;
@@ -2033,7 +2036,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     this->flag &= ~TBL_IN_COL;
     align = {};
     valign = {};
-    if (tag->parsedtag_get_value(ATTR_ALIGN, &i)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_ALIGN)) {
+      i = stoi(*value);
       switch (i) {
       case ALIGN_LEFT:
         align = (HTT_LEFT | HTT_TRSET);
@@ -2046,7 +2050,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
         break;
       }
     }
-    if (tag->parsedtag_get_value(ATTR_VALIGN, &i)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_VALIGN)) {
+      i = stoi(*value);
       switch (i) {
       case VALIGN_TOP:
         valign = (HTT_TOP | HTT_VTRSET);
@@ -2105,7 +2110,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
       valign = (this->trattr & HTT_VALIGN);
     else
       valign = HTT_MIDDLE;
-    if (tag->parsedtag_get_value(ATTR_ROWSPAN, &rowspan)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_ROWSPAN)) {
+      rowspan = stoi(*value);
       if (rowspan < 0 || rowspan > ATTR_ROWSPAN_MAX)
         rowspan = ATTR_ROWSPAN_MAX;
       if ((this->row + rowspan - 1) >= MAXROW_LIMIT)
@@ -2115,7 +2121,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     }
     if (rowspan < 1)
       rowspan = 1;
-    if (tag->parsedtag_get_value(ATTR_COLSPAN, &colspan)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_COLSPAN)) {
+      colspan = stoi(*value);
       if ((this->col + colspan) >= MAXCOL) {
         /* Can't expand column */
         colspan = MAXCOL - this->col;
@@ -2123,7 +2130,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     }
     if (colspan < 1)
       colspan = 1;
-    if (tag->parsedtag_get_value(ATTR_ALIGN, &i)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_ALIGN)) {
+      i = stoi(*value);
       switch (i) {
       case ALIGN_LEFT:
         align = HTT_LEFT;
@@ -2136,7 +2144,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
         break;
       }
     }
-    if (tag->parsedtag_get_value(ATTR_VALIGN, &i)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_VALIGN)) {
+      i = stoi(*value);
       switch (i) {
       case VALIGN_TOP:
         valign = HTT_TOP;
@@ -2154,8 +2163,8 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
       this->tabattr[this->row][this->col] |= HTT_NOWRAP;
 #endif /* NOWRAP */
     v = 0;
-    if (tag->parsedtag_get_value(ATTR_WIDTH, &v)) {
-      v = RELATIVE_WIDTH(v);
+    if (auto value = tag->parsedtag_get_value(ATTR_WIDTH)) {
+      v = RELATIVE_WIDTH(stoi(*value));
     }
 #ifdef NOWRAP
     if (v != 0) {
@@ -2416,8 +2425,10 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     this->table_close_anchor0(mode);
     anchor = NULL;
     i = 0;
-    tag->parsedtag_get_value(ATTR_HREF, &anchor);
-    tag->parsedtag_get_value(ATTR_HSEQ, &i);
+    if (auto value = tag->parsedtag_get_value(ATTR_HREF))
+      anchor = Strnew(*value);
+    if (auto value = tag->parsedtag_get_value(ATTR_HSEQ))
+      i = stoi(*value);
     if (anchor) {
       this->check_rowcol(mode);
       if (i == 0) {
@@ -2512,7 +2523,9 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     break;
   case HTML_TABLE_ALT:
     id = -1;
-    tag->parsedtag_get_value(ATTR_TID, &id);
+    if (auto value = tag->parsedtag_get_value(ATTR_TID)) {
+      id = stoi(*value);
+    }
     if (id >= 0 && id < this->ntable) {
       auto tbl1 = this->tables[id].ptr;
       this->feed_table_block_tag(line, mode, 0, cmd);

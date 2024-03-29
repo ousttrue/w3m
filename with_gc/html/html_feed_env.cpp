@@ -130,16 +130,14 @@ int html_feed_environ::HTML_List_enter(const std::shared_ptr<HtmlTag> &tag) {
   }
   this->PUSH_ENV(tag->tagid);
   if (tag->tagid == HTML_UL || tag->tagid == HTML_OL) {
-    int count;
-    if (tag->parsedtag_get_value(ATTR_START, &count)) {
-      envs[this->envc].count = count - 1;
+    if (auto value = tag->parsedtag_get_value(ATTR_START)) {
+      envs[this->envc].count = stoi(*value) - 1;
     }
   }
   if (tag->tagid == HTML_OL) {
     envs[this->envc].type = '1';
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-      envs[this->envc].type = (int)*p;
+    if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+      envs[this->envc].type = (*value)[0];
     }
   }
   if (tag->tagid == HTML_UL) {
@@ -192,9 +190,8 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
                          this->limit);
     envs[this->envc].count++;
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
-      int count = atoi(p);
+    if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+      int count = stoi(*value);
       if (count > 0)
         envs[this->envc].count = count;
       else
@@ -228,8 +225,8 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
     }
 
     case HTML_OL:
-      if (tag->parsedtag_get_value(ATTR_TYPE, &p))
-        envs[this->envc].type = (int)*p;
+      if (auto value = tag->parsedtag_get_value(ATTR_TYPE))
+        envs[this->envc].type = (*value)[0];
       switch ((envs[this->envc].count > 0) ? envs[this->envc].type : '1') {
       case 'i':
         num = romanNumeral(envs[this->envc].count);
@@ -339,9 +336,8 @@ int html_feed_environ::HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 int html_feed_environ::HTML_TITLE_ALT(const std::shared_ptr<HtmlTag> &tag) {
-  const char *p;
-  if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-    this->title = html_unquote(p);
+  if (auto value = tag->parsedtag_get_value(ATTR_TITLE))
+    this->title = html_unquote(*value);
   return 0;
 }
 
@@ -377,18 +373,21 @@ int html_feed_environ::HTML_NOFRAMES_exit() {
 }
 
 int html_feed_environ::HTML_FRAME(const std::shared_ptr<HtmlTag> &tag) {
-  const char *q = nullptr;
-  const char *r = nullptr;
-  tag->parsedtag_get_value(ATTR_SRC, &q);
-  tag->parsedtag_get_value(ATTR_NAME, &r);
-  if (q) {
+  std::string q;
+  if (auto value = tag->parsedtag_get_value(ATTR_SRC))
+    q = *value;
+  std::string r;
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME))
+    r = *value;
+  if (q.size()) {
     q = html_quote(q);
-    this->obuf.push_tag(
-        Sprintf("<a hseq=\"%d\" href=\"%s\">", this->parser.cur_hseq++, q)->ptr,
-        HTML_A);
-    if (r)
+    this->obuf.push_tag(Sprintf("<a hseq=\"%d\" href=\"%s\">",
+                                this->parser.cur_hseq++, q.c_str())
+                            ->ptr,
+                        HTML_A);
+    if (r.size())
       q = html_quote(r);
-    this->obuf.push_charp(get_strwidth(q), q, PC_ASCII);
+    this->obuf.push_charp(get_strwidth(q), q.c_str(), PC_ASCII);
     this->obuf.push_tag("</a>", HTML_N_A);
   }
   this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
@@ -492,23 +491,21 @@ int html_feed_environ::HTML_A_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (this->obuf.anchor.url.size()) {
     this->parser.close_anchor(this);
   }
-  int hseq = 0;
 
-  const char *p;
-  if (tag->parsedtag_get_value(ATTR_HREF, &p))
-    this->obuf.anchor.url = Strnew_charp(p)->ptr;
-  if (tag->parsedtag_get_value(ATTR_TARGET, &p))
-    this->obuf.anchor.target = Strnew_charp(p)->ptr;
-  if (tag->parsedtag_get_value(ATTR_REFERER, &p))
-    this->obuf.anchor.option = {.referer = p};
-  if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-    this->obuf.anchor.title = Strnew_charp(p)->ptr;
-  if (tag->parsedtag_get_value(ATTR_ACCESSKEY, &p))
-    this->obuf.anchor.accesskey = (unsigned char)*p;
-  if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq))
-    this->obuf.anchor.hseq = hseq;
+  if (auto value = tag->parsedtag_get_value(ATTR_HREF))
+    this->obuf.anchor.url = *value;
+  if (auto value = tag->parsedtag_get_value(ATTR_TARGET))
+    this->obuf.anchor.target = *value;
+  if (auto value = tag->parsedtag_get_value(ATTR_REFERER))
+    this->obuf.anchor.option = {.referer = *value};
+  if (auto value = tag->parsedtag_get_value(ATTR_TITLE))
+    this->obuf.anchor.title = *value;
+  if (auto value = tag->parsedtag_get_value(ATTR_ACCESSKEY))
+    this->obuf.anchor.accesskey = (*value)[0];
+  if (auto value = tag->parsedtag_get_value(ATTR_HSEQ))
+    this->obuf.anchor.hseq = stoi(*value);
 
-  if (hseq == 0 && this->obuf.anchor.url.size()) {
+  if (this->obuf.anchor.hseq == 0 && this->obuf.anchor.url.size()) {
     this->obuf.anchor.hseq = this->parser.cur_hseq;
     auto tmp = this->parser.process_anchor(tag, this->tagbuf->ptr);
     this->obuf.push_tag(tmp.c_str(), HTML_A);
@@ -526,17 +523,16 @@ int html_feed_environ::HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 int html_feed_environ::HTML_IMG_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
-  const char *p;
-  if (tag->parsedtag_get_value(ATTR_SRC, &p))
-    this->obuf.img_alt = Strnew_charp(p);
+  if (auto value = tag->parsedtag_get_value(ATTR_SRC))
+    this->obuf.img_alt = *value;
   return 0;
 }
 
 int html_feed_environ::HTML_IMG_ALT_exit() {
-  if (this->obuf.img_alt) {
+  if (this->obuf.img_alt.size()) {
     if (!this->obuf.close_effect0(HTML_IMG_ALT))
       this->obuf.push_tag("</img_alt>", HTML_N_IMG_ALT);
-    this->obuf.img_alt = nullptr;
+    this->obuf.img_alt = {};
   }
   return 1;
 }

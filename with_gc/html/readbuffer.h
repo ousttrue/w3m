@@ -125,7 +125,7 @@ struct Breakpoint {
   int len = 0;
   int tlen = 0;
   ReadBufferFlags flag = {};
-  Str *img_alt = nullptr;
+  std::string img_alt;
   struct input_alt_attr input_alt = {};
   FontStat fontstat = {};
   short nobr_level = 0;
@@ -161,7 +161,7 @@ struct readbuffer {
   short table_level = -1;
   short nobr_level = 0;
   Anchor anchor = {};
-  Str *img_alt = 0;
+  std::string img_alt;
   struct input_alt_attr input_alt = {};
   FontStat fontstat = {};
   FontStat fontstat_stack[FONT_STACK_SIZE];
