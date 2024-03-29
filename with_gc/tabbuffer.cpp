@@ -11,44 +11,6 @@ TabBuffer::TabBuffer() {}
 
 TabBuffer::~TabBuffer() {}
 
-// int TabBuffer::draw(Content *screen, TabBuffer *current) {
-//   if (this == current) {
-//     screen->bold();
-//   } else {
-//     screen->boldend();
-//   }
-//   RowCol pos{.row = this->y, .col = this->x1};
-//   screen->addch(pos, '[');
-//   auto l = this->x2 - this->x1 - 1 -
-//            get_strwidth(this->currentBuffer()->layout.data.title.c_str());
-//   if (l < 0) {
-//     l = 0;
-//   }
-//   if (l / 2 > 0) {
-//     pos = screen->addnstr_sup(pos, " ", l / 2);
-//   }
-//
-//   if (this == current) {
-//     screen->underline();
-//     // standout();
-//   }
-//   screen->addnstr(pos, this->currentBuffer()->layout.data.title.c_str(),
-//                   this->x2 - this->x1 - l);
-//   if (this == current) {
-//     screen->underlineend();
-//     // standend();
-//   }
-//
-//   if ((l + 1) / 2 > 0) {
-//     pos = screen->addnstr_sup(pos, " ", (l + 1) / 2);
-//   }
-//   screen->addch({.row = this->y, .col = this->x2}, ']');
-//   if (this == current) {
-//     screen->boldend();
-//   }
-//   return this->y;
-// }
-
 /*
  * deleteBuffer: delete buffer
  */
@@ -82,7 +44,8 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
     b->backBuffer = buf;
   }
   _currentBuffer = buf;
-  this->currentBuffer()->saveBufferInfo();
+// rcFile("bufinfo").c_str(), "w"
+  // this->currentBuffer()->saveBufferInfo();
 }
 
 /*

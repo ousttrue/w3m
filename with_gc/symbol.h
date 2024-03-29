@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 
 #define N_GRAPH_SYMBOL 32
 #define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
@@ -15,4 +16,4 @@ struct Str;
 extern void push_symbol(Str *str, char symbol, int width, int n);
 
 class Line;
-Str *conv_symbol(Line *l);
+std::string conv_symbol(Line *l);

@@ -26,7 +26,7 @@ void push_symbol(Str *str, char symbol, int width, int n) {
 
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 
-Str *conv_symbol(Line *l) {
+std::string conv_symbol(Line *l) {
   Str *tmp = NULL;
   auto p = l->lineBuf();
   auto ep = p + l->len();
@@ -45,7 +45,7 @@ Str *conv_symbol(Line *l) {
       Strcat_char(tmp, *p);
   }
   if (tmp)
-    return tmp;
+    return tmp->ptr;
   else
-    return Strnew_charp_n(l->lineBuf(), l->len());
+    return Strnew_charp_n(l->lineBuf(), l->len())->ptr;
 }

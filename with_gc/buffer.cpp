@@ -174,12 +174,12 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
   auto is_html = this->res->is_html_type();
   auto l = this->layout->firstLine();
   for (; !layout->isNull(l); ++l) {
-    Str *tmp;
+    std::string tmp;
     if (is_html)
       tmp = conv_symbol(l);
     else
-      tmp = Strnew_charp_n(l->lineBuf(), l->len());
-    Strfputs(tmp, f);
+      tmp = std::string(l->lineBuf(), l->len());
+    fwrite(tmp.c_str(), 1, tmp.size(), f);
   }
 }
 
