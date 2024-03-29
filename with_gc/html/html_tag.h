@@ -84,15 +84,14 @@ class HtmlTag {
 public:
   const HtmlCommand tagid;
 
-private:
   std::vector<unsigned char> attrid;
   std::vector<char *> value;
   std::vector<unsigned char> map;
   bool need_reconstruct = false;
 
+public:
   HtmlTag(HtmlCommand id) : tagid(id) {}
 
-public:
   HtmlTag(const HtmlTag &) = delete;
   HtmlTag &operator=(const HtmlTag &) = delete;
   static std::shared_ptr<HtmlTag> parse(const char **s, bool internal);
