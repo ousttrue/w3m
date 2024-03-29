@@ -12,10 +12,6 @@
 
 extern double pixel_per_char;
 
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
-
 #include "matrix.h"
 
 #include "Str.h"

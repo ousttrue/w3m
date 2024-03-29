@@ -2,6 +2,7 @@
 #include "html_command.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 // Parsed Tag structure
 enum HtmlTagAttr {
@@ -84,9 +85,9 @@ public:
   const HtmlCommand tagid;
 
 private:
-  unsigned char *attrid = {};
-  char **value = {};
-  unsigned char *map = {};
+  std::vector<unsigned char> attrid;
+  std::vector<char *> value;
+  std::vector<unsigned char> map;
   bool need_reconstruct = false;
 
   HtmlTag(HtmlCommand id) : tagid(id) {}
@@ -94,10 +95,10 @@ private:
 public:
   HtmlTag(const HtmlTag &) = delete;
   HtmlTag &operator=(const HtmlTag &) = delete;
-  static std::shared_ptr<HtmlTag> parse(const char **s, int internal);
+  static std::shared_ptr<HtmlTag> parse(const char **s, bool internal);
 
   bool parsedtag_accepts(HtmlTagAttr id) const {
-    return (this->map && this->map[id] != MAX_TAGATTR);
+    return (this->map.size() && this->map[id] != MAX_TAGATTR);
   }
   bool parsedtag_exists(HtmlTagAttr id) const {
     return (this->parsedtag_accepts(id) &&
@@ -109,7 +110,4 @@ public:
   bool parsedtag_set_value(HtmlTagAttr id, char *value);
   std::string parsedtag2str() const;
   int ul_type(int default_type) const;
-
-  std::shared_ptr<struct FormItem>
-  createFormItem(struct html_feed_environ *h_env);
 };

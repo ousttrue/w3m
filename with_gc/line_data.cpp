@@ -7,6 +7,7 @@
 #include "html/html_tag.h"
 #include "url_quote.h"
 #include "alloc.h"
+#include "html/html_feed_env.h"
 #include <sstream>
 
 bool MarkAllPages = false;
@@ -41,7 +42,7 @@ FormAnchor *LineData::registerForm(html_feed_environ *h_env,
                                    const std::shared_ptr<Form> &flist,
                                    const std::shared_ptr<HtmlTag> &tag,
                                    const BufferPoint &bp) {
-  auto fi = tag->createFormItem(h_env);
+  auto fi = h_env->createFormItem(tag);
   if (!fi) {
     return NULL;
   }

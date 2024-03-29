@@ -163,6 +163,9 @@ struct html_feed_environ {
   int HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag);
 
   int HTML_BODY_enter(const std::shared_ptr<HtmlTag> &tag);
+
+  std::shared_ptr<struct FormItem>
+  createFormItem(const std::shared_ptr<HtmlTag> &tag);
 };
 
 #define MAX_ENV_LEVEL 20

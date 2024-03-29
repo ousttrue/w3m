@@ -1,19 +1,11 @@
 #pragma once
+#include "html_command.h"
 #include <list>
 #include <memory>
 #include <string>
 #include <string_view>
 
 #define GENERAL_LIST_MAX (INT_MAX / 32)
-enum AlignMode {
-  ALIGN_CENTER = 0,
-  ALIGN_LEFT = 1,
-  ALIGN_RIGHT = 2,
-  ALIGN_MIDDLE = 4,
-  ALIGN_TOP = 5,
-  ALIGN_BOTTOM = 6,
-};
-bool toAlign(char *oval, AlignMode *align);
 
 struct GeneralList;
 struct Str;

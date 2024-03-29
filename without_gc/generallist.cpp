@@ -2,24 +2,6 @@
 #include "cmp.h"
 #include <sstream>
 
-bool toAlign(char *oval, AlignMode *align) {
-  if (strcasecmp(oval, "left") == 0)
-    *align = ALIGN_LEFT;
-  else if (strcasecmp(oval, "right") == 0)
-    *align = ALIGN_RIGHT;
-  else if (strcasecmp(oval, "center") == 0)
-    *align = ALIGN_CENTER;
-  else if (strcasecmp(oval, "top") == 0)
-    *align = ALIGN_TOP;
-  else if (strcasecmp(oval, "bottom") == 0)
-    *align = ALIGN_BOTTOM;
-  else if (strcasecmp(oval, "middle") == 0)
-    *align = ALIGN_MIDDLE;
-  else
-    return false;
-  return true;
-}
-
 void TextLine::align(int width, AlignMode mode) {
   if (line.size()) {
     for (int i = 0; i < width; i++)
