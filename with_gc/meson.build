@@ -32,7 +32,6 @@ with_gc_lib = static_library(
         'alloc.cpp',
         'tabbuffer.cpp',
         'proc.cpp',
-        'line_layout.cpp',
         'file_util.cpp',
         'dict.cpp',
         'matrix.cpp',
