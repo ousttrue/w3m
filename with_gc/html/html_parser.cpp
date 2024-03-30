@@ -1,4 +1,5 @@
 #include "html_parser.h"
+#include "push_symbol.h"
 #include "option_param.h"
 #include "html_feed_env.h"
 #include "entity.h"

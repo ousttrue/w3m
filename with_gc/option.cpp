@@ -5,7 +5,6 @@
 #include "myctype.h"
 #include "option_param.h"
 #include "cookie.h"
-#include "html/table.h"
 #include "dns_order.h"
 
 // extern
@@ -27,7 +26,6 @@
 #include "url_stream.h"
 #include "mimetypes.h"
 #include "mailcap.h"
-#include "etc.h"
 #include "ssl_util.h"
 #include "cookie.h"
 #include "auth_pass.h"

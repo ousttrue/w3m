@@ -25,7 +25,6 @@
 #include "http_response.h"
 #include "http_session.h"
 #include "local_cgi.h"
-#include "Str.h"
 #include "search.h"
 #include "app.h"
 #include "myctype.h"

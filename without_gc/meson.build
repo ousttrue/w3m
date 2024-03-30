@@ -51,6 +51,7 @@ without_gc_lib = static_library(
         'mailcap.cpp',
         'matrix.cpp',
         'option_param.cpp',
+        'symbol.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
