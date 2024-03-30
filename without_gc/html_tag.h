@@ -109,7 +109,7 @@ public:
   }
   bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
   std::optional<std::string> parsedtag_get_value(HtmlTagAttr id) const;
-  bool parsedtag_set_value(HtmlTagAttr id, const char *value);
+  bool parsedtag_set_value(HtmlTagAttr id, const std::string &value);
   std::string parsedtag2str() const;
   int ul_type(int default_type) const;
 };

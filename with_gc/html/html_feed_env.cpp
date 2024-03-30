@@ -188,7 +188,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.CLOSE_A(&this->obuf, this);
   this->parser.CLOSE_DT(&this->obuf, this);
   if (this->envc > 0) {
-    Str *num;
+    std::string num;
     this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
                          this->limit);
     envs[this->envc].count++;
@@ -244,16 +244,19 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
         num = romanAlphabet(envs[this->envc].count);
         Strupper(num);
         break;
-      default:
-        num = Sprintf("%d", envs[this->envc].count);
+      default: {
+        std::stringstream ss;
+        ss << envs[this->envc].count;
+        num = ss.str();
         break;
       }
+      }
       if (INDENT_INCR >= 4)
-        Strcat_charp(num, ". ");
+        num += ". ";
       else
-        Strcat_char(num, '.');
-      this->obuf.push_spaces(1, INDENT_INCR - num->length);
-      this->obuf.push_str(num->length, num->ptr, PC_ASCII);
+        num.push_back('.');
+      this->obuf.push_spaces(1, INDENT_INCR - num.size());
+      this->obuf.push_str(num.size(), num, PC_ASCII);
       if (INDENT_INCR >= 4)
         this->obuf.prevchar = " ";
       break;

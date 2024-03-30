@@ -426,11 +426,12 @@ struct readbuffer {
   }
 };
 
-struct Str;
-Str *romanNumeral(int n);
-Str *romanAlphabet(int n);
+std::string romanNumeral(int n);
+std::string romanAlphabet(int n);
+
 // extern int next_status(char c, int *status);
 int next_status(char c, ReadBufferStatus *status);
+struct Str;
 int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
                int append);
 

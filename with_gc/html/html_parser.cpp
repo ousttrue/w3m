@@ -1051,11 +1051,13 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
 std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
                                        const char *tagbuf) {
   if (tag->parsedtag_need_reconstruct()) {
-    tag->parsedtag_set_value(ATTR_HSEQ, Sprintf("%d", this->cur_hseq++)->ptr);
+    std::stringstream ss;
+    ss << this->cur_hseq++;
+    tag->parsedtag_set_value(ATTR_HSEQ, ss.str());
     return tag->parsedtag2str();
   } else {
     std::stringstream tmp;
-    tmp << Sprintf("<a hseq=\"%d\"", this->cur_hseq++)->ptr;
+    tmp << "<a hseq=\"" << this->cur_hseq++ << "\"";
     tmp << (tagbuf + 2);
     return tmp.str();
   }
@@ -1063,7 +1065,6 @@ std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
 
 std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   int v, x, y, z;
-  auto qq = "";
   int qlen = 0;
 
   std::stringstream tmp;
@@ -1134,8 +1135,10 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   /* VALUE attribute is not allowed in <INPUT TYPE=FILE> tag. */
   if (v == FORM_INPUT_FILE)
     q = nullptr;
+
+  std::string qq = "";
   if (q.size()) {
-    qq = Strnew(html_quote(q))->ptr;
+    qq = html_quote(q);
     qlen = get_strwidth(q);
   }
 
@@ -1267,7 +1270,6 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
-  const char *qq = "";
   int v;
 
   std::stringstream tmp;
@@ -1317,8 +1319,10 @@ std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
       break;
     }
   }
+
+  std::string qq = "";
   if (q.size()) {
-    qq = Strnew(html_quote(q))->ptr;
+    qq = html_quote(q);
   }
 
   /*    Strcat_charp(tmp, "<pre_int>"); */

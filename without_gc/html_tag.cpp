@@ -643,16 +643,12 @@ std::shared_ptr<HtmlTag> HtmlTag::parse(const char **s, bool internal) {
   return tag;
 }
 
-bool HtmlTag::parsedtag_set_value(HtmlTagAttr id, const char *value) {
+bool HtmlTag::parsedtag_set_value(HtmlTagAttr id, const std::string &value) {
   if (!this->parsedtag_accepts(id))
     return false;
   auto i = this->map[id];
   this->attrid[i] = id;
-  if (value) {
-    this->value[i] = value;
-  } else {
-    this->value[i] = {};
-  }
+  this->value[i] = value;
   this->need_reconstruct = true;
   return true;
 }

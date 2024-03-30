@@ -72,41 +72,42 @@ static Str *romanNum2(int l, int n) {
   return s;
 }
 
-Str *romanNumeral(int n) {
-  Str *r = Strnew();
-
-  if (n <= 0)
-    return r;
-  if (n >= 4000) {
-    Strcat_charp(r, "**");
-    return r;
+std::string romanNumeral(int n) {
+  if (n <= 0) {
+    return {};
   }
-  Strcat(r, romanNum2(3, n / 1000));
-  Strcat(r, romanNum2(2, (n % 1000) / 100));
-  Strcat(r, romanNum2(1, (n % 100) / 10));
-  Strcat(r, romanNum2(0, n % 10));
 
-  return r;
+  if (n >= 4000) {
+    return "**";
+  }
+
+  std::stringstream r;
+  r << romanNum2(3, n / 1000);
+  r << romanNum2(2, (n % 1000) / 100);
+  r << romanNum2(1, (n % 100) / 10);
+  r << romanNum2(0, n % 10);
+
+  return r.str();
 }
 
-Str *romanAlphabet(int n) {
-  Str *r = Strnew();
-  int l;
+std::string romanAlphabet(int n) {
+  if (n <= 0) {
+    return {};
+  }
+
   char buf[14];
-
-  if (n <= 0)
-    return r;
-
-  l = 0;
+  int l = 0;
   while (n) {
     buf[l++] = 'a' + (n - 1) % 26;
     n = (n - 1) / 26;
   }
-  l--;
-  for (; l >= 0; l--)
-    Strcat_char(r, buf[l]);
 
-  return r;
+  l--;
+  std::stringstream r;
+  for (; l >= 0; l--)
+    r << buf[l];
+
+  return r.str();
 }
 
 int next_status(char c, ReadBufferStatus *status) {
@@ -697,7 +698,7 @@ void readbuffer::push_link(HtmlCommand cmd, int offset, int pos) {
 void readbuffer::append_tags() {
   int len = this->line.size();
   bool set_bp = false;
-  for (auto &tag: this->tag_stack) {
+  for (auto &tag : this->tag_stack) {
     switch (tag->cmd) {
     case HTML_A:
     case HTML_IMG_ALT:
@@ -786,7 +787,7 @@ void readbuffer::push_tag(const std::string &cmdname, HtmlCommand cmd) {
   tag->cmdname = cmdname;
   tag->cmd = cmd;
   tag_stack.push_front(tag);
-  if ( this->flag & (RB_SPECIAL & ~RB_NOBR)) {
+  if (this->flag & (RB_SPECIAL & ~RB_NOBR)) {
     this->append_tags();
   }
 }
