@@ -287,7 +287,9 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
         if (pre)
           Strcat_char(buf, *p);
         p++;
-        goto proc_end;
+
+        *instr = p;
+        return 1;
       }
       Strcat_char(buf, (!pre && IS_SPACE(*p)) ? ' ' : *p);
       if (ST_IS_REAL_TAG(prev_status)) {
@@ -343,7 +345,7 @@ int read_token(Str *buf, const char **instr, ReadBufferStatus *status, int pre,
       break;
     }
   }
-proc_end:
+
   *instr = p;
   return 1;
 }
