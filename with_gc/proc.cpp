@@ -1066,8 +1066,7 @@ std::shared_ptr<CoroutineState<void>> ldBmark(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
   auto tmp = Sprintf(
       "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
-      (form_quote(localCookie())).c_str(),
-      (form_quote(BookmarkFile)).c_str(),
+      (form_quote(localCookie())).c_str(), (form_quote(BookmarkFile)).c_str(),
       (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
           .c_str(),
       (form_quote(CurrentTab->currentBuffer()->layout->data.title)).c_str());
@@ -1490,7 +1489,8 @@ std::shared_ptr<CoroutineState<void>> dictword(const FuncContext &context) {
 //"Execute dictionary command for word at cursor"
 std::shared_ptr<CoroutineState<void>> dictwordat(const FuncContext &context) {
   auto word = CurrentTab->currentBuffer()->layout->getCurWord();
-  if (auto buf = execdict(word.c_str())) {
+  if (auto res = execdict(word.c_str())) {
+    auto buf = Buffer::create(res);
     CurrentTab->pushBuffer(buf);
   }
   co_return;

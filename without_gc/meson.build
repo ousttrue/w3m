@@ -42,6 +42,7 @@ without_gc_lib = static_library(
         'html_tag.cpp',
         'line_data.cpp',
         'line_layout.cpp',
+        'dict.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

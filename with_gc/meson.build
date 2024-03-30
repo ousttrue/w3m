@@ -33,7 +33,6 @@ with_gc_lib = static_library(
         'tabbuffer.cpp',
         'proc.cpp',
         'file_util.cpp',
-        'dict.cpp',
         'matrix.cpp',
         'option.cpp',
         'option_param.cpp',
