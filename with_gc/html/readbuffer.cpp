@@ -6,14 +6,12 @@
 #include "buffer.h"
 #include "line_layout.h"
 #include "http_response.h"
-#include "symbol.h"
 #include "Str.h"
 #include "myctype.h"
 #include "ctrlcode.h"
 #include "html_tag.h"
 #include "proc.h"
 #include "stringtoken.h"
-#include "alloc.h"
 #include "html_parser.h"
 #include <math.h>
 #include <string_view>
@@ -517,19 +515,17 @@ void readbuffer::set_alignment(const std::shared_ptr<HtmlTag> &tag) {
  */
 #define LINELEN 256 /* Initial line length */
 
-static Str *checkType(Str *s, Lineprop **oprop) {
-  static Lineprop *prop_buffer = NULL;
-  static int prop_size = 0;
+static Str *checkType(Str *s, std::vector<Lineprop> *oprop) {
+  static std::vector<Lineprop> prop_buffer;
 
   char *str = s->ptr;
   char *endp = &s->ptr[s->length];
   char *bs = NULL;
 
-  if (prop_size < s->length) {
-    prop_size = (s->length > LINELEN) ? s->length : LINELEN;
-    prop_buffer = (Lineprop *)New_Reuse(Lineprop, prop_buffer, prop_size);
+  if (prop_buffer.size() < s->length) {
+    prop_buffer.resize(s->length > LINELEN ? s->length : LINELEN);
   }
-  auto prop = prop_buffer;
+  auto prop = prop_buffer.data();
 
   bool do_copy = false;
   if (!do_copy) {
@@ -540,7 +536,7 @@ static Str *checkType(Str *s, Lineprop **oprop) {
 
   Lineprop effect = PE_NORMAL;
   while (str < endp) {
-    if (prop - prop_buffer >= prop_size)
+    if (prop - prop_buffer.data() >= prop_buffer.size())
       break;
     if (bs != NULL) {
       if (str == bs - 1 && *str == '_') {
@@ -623,7 +619,7 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
     auto lineBuf2 = Strnew(line);
     Strchop(lineBuf2);
 
-    Lineprop *propBuffer = nullptr;
+    std::vector<Lineprop> propBuffer;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
     layout->data.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
   }
@@ -690,16 +686,16 @@ void readbuffer::set_breakpoint(int tag_length) {
 }
 
 void readbuffer::push_link(HtmlCommand cmd, int offset, int pos) {
-  auto p = (struct link_stack *)New(struct link_stack);
-  p->cmd = cmd;
-  p->offset = (short)offset;
+  link_stack.push_front({
+      .cmd = cmd,
+      .offset = (short)offset,
+      .pos = (short)pos,
+  });
+  auto p = &link_stack.front();
   if (p->offset < 0)
     p->offset = 0;
-  p->pos = (short)pos;
   if (p->pos < 0)
     p->pos = 0;
-  p->next = link_stack;
-  link_stack = p;
 }
 
 void readbuffer::append_tags() {
@@ -737,11 +733,11 @@ char *readbuffer::has_hidden_link(HtmlCommand cmd) const {
   if (Strlastchar(line) != '>')
     return nullptr;
 
-  struct link_stack *p;
-  for (p = link_stack; p; p = p->next)
+  auto p = link_stack.begin();
+  for (; p != link_stack.end(); ++p)
     if (p->cmd == cmd)
       break;
-  if (!p)
+  if (p == link_stack.end())
     return nullptr;
 
   if (this->pos == p->pos)
@@ -768,10 +764,12 @@ void readbuffer::passthrough(char *str, int back) {
       const char *q = str_bak;
       cmd = gethtmlcmd(&q);
       if (back) {
-        struct link_stack *p;
-        for (p = link_stack; p; p = p->next) {
+        for (auto p = link_stack.begin(); p != link_stack.end(); ++p) {
           if (p->cmd == cmd) {
-            link_stack = p->next;
+            for (auto i = link_stack.begin(); i != p;) {
+              i = link_stack.erase(i);
+            }
+            // link_stack = p->next;
             break;
           }
         }
@@ -788,7 +786,7 @@ void readbuffer::passthrough(char *str, int back) {
 }
 
 void readbuffer::push_tag(const char *cmdname, HtmlCommand cmd) {
-  this->tag_stack[this->tag_sp] = (struct cmdtable *)New(struct cmdtable);
+  this->tag_stack[this->tag_sp] = std::make_shared<cmdtable>();
   this->tag_stack[this->tag_sp]->cmdname = allocStr(cmdname, -1);
   this->tag_stack[this->tag_sp]->cmd = cmd;
   this->tag_sp++;
@@ -1083,7 +1081,7 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
   this->flag &= ~RB_NFLUSHED;
   this->set_breakpoint(0);
   this->prev_ctype = PC_ASCII;
-  this->link_stack = nullptr;
+  this->link_stack.clear();
   this->fillline(indent);
   if (pass)
     this->passthrough(pass->ptr, 0);

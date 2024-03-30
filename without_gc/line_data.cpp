@@ -31,8 +31,8 @@ std::string LineData::status() const {
   return ss.str();
 }
 
-void LineData::addnewline(const char *line, Lineprop *prop, int byteLen) {
-  lines.push_back({line, prop, byteLen});
+void LineData::addnewline(const char *line, const std::vector<Lineprop> &prop, int byteLen) {
+  lines.push_back({line, prop.data(), byteLen});
 }
 
 FormAnchor *LineData::registerForm(const std::shared_ptr<FormItem> &fi,

@@ -140,11 +140,10 @@ struct cmdtable {
   HtmlCommand cmd;
 };
 
-struct link_stack {
+struct LinkStack {
   int cmd = 0;
   short offset = 0;
   short pos = 0;
-  link_stack *next = nullptr;
 };
 
 struct readbuffer {
@@ -168,11 +167,11 @@ struct readbuffer {
   int fontstat_sp = 0;
   Lineprop prev_ctype;
   Breakpoint bp;
-  struct cmdtable *tag_stack[TAG_STACK_SIZE];
+  std::shared_ptr<cmdtable> tag_stack[TAG_STACK_SIZE];
   int tag_sp = 0;
   short top_margin = 0;
   short bottom_margin = 0;
-  struct link_stack *link_stack = nullptr;
+  std::list<LinkStack> link_stack;
   int maxlimit = 0;
   int blank_lines = 0;
 

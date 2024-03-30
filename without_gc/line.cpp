@@ -4,7 +4,7 @@
 
 bool FoldTextarea = false;
 
-Line::Line(const char *buf, Lineprop *prop, int byteLen) {
+Line::Line(const char *buf, const Lineprop *prop, int byteLen) {
   assign(buf, prop, byteLen);
 }
 

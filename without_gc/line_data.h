@@ -68,7 +68,8 @@ struct LineData {
     return -1;
   }
   void clear(int cols);
-  void addnewline(const char *line, Lineprop *prop, int byteLen);
+  void addnewline(const char *line, const std::vector<Lineprop> &prop,
+                  int byteLen);
   std::string status() const;
 
   Anchor *registerName(const char *url, int line, int pos);

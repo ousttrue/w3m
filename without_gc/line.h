@@ -12,7 +12,7 @@ class Line {
 
 public:
   Line() {}
-  Line(const char *line, Lineprop *prop, int byteLen);
+  Line(const char *line, const Lineprop *prop, int byteLen);
   ~Line() {}
   int len() const { return static_cast<int>(_lineBuf.size()); }
   const char *lineBuf() const { return _lineBuf.data(); }
