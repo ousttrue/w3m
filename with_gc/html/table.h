@@ -3,12 +3,10 @@
 #include "enum_template.h"
 #include "generallist.h"
 #include "readbuffer.h"
-#include <stdint.h>
-#include <memory>
-
 #include "matrix.h"
 
-#include "Str.h"
+#include <stdint.h>
+#include <memory>
 
 #define MAX_TABLE 20 /* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000

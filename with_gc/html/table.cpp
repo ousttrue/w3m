@@ -6,7 +6,6 @@
 #include "html_command.h"
 #include "table.h"
 #include "html_tag.h"
-#include "Str.h"
 #include "myctype.h"
 #include "entity.h"
 #include "proc.h"
