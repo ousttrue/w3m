@@ -179,26 +179,6 @@ int doFileMove(const char *tmpf, const char *defstr) {
   return ret;
 }
 
-const char *shell_quote(const char *str) {
-  Str *tmp = nullptr;
-  const char *p;
-
-  for (p = str; *p; p++) {
-    if (is_shell_unsafe(*p)) {
-      if (tmp == nullptr)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      Strcat_char(tmp, '\\');
-      Strcat_char(tmp, *p);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
-
 int setModtime(const char *path, time_t modtime) {
 #ifdef _MSC_VER
   return {};

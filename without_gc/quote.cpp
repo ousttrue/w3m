@@ -526,3 +526,16 @@ int stoi(std::string_view s) {
   assert(ec == std::errc{});
   return value;
 }
+
+std::string shell_quote(std::string_view str) {
+  std::stringstream tmp;
+  for (auto p = str.begin(); p != str.end(); p++) {
+    if (is_shell_unsafe(*p)) {
+      tmp << '\\';
+      tmp << *p;
+    } else {
+      tmp << *p;
+    }
+  }
+  return tmp.str();
+}

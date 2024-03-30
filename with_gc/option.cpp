@@ -33,6 +33,7 @@
 #include "auth_pass.h"
 #include "http_response.h"
 #include "cookie_domain.h"
+#include "invoke.h"
 
 #if 1 /* ANSI-C ? */
 #define N_STR(x) #x

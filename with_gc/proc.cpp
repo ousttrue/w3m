@@ -1,4 +1,6 @@
 #include "proc.h"
+#include "invoke.h"
+#include "quote.h"
 #include "tmpfile.h"
 #include "option.h"
 #include "ioutil.h"
@@ -1412,7 +1414,11 @@ std::shared_ptr<CoroutineState<void>> extbrz(const FuncContext &context) {
     App::instance().disp_err_message("Can't browse stdin");
     co_return;
   }
-  invoke_browser(CurrentTab->currentBuffer()->res->currentURL.to_Str().c_str());
+
+  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
+  std::string browser = App::instance().searchKeyData();
+  invoke_browser(CurrentTab->currentBuffer()->res->currentURL.to_Str(), browser,
+                 prec_num);
 }
 
 // EXTERN_LINK
@@ -1427,7 +1433,10 @@ std::shared_ptr<CoroutineState<void>> linkbrz(const FuncContext &context) {
     co_return;
 
   Url pu(a->url, buf->layout->data.baseURL);
-  invoke_browser(pu.to_Str().c_str());
+
+  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
+  std::string browser = App::instance().searchKeyData();
+  invoke_browser(pu.to_Str(), browser, prec_num);
 }
 
 /* show current line number and number of lines in the entire document */

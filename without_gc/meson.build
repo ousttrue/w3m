@@ -43,6 +43,7 @@ without_gc_lib = static_library(
         'line_data.cpp',
         'line_layout.cpp',
         'dict.cpp',
+        'invoke.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

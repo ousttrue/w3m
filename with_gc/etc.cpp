@@ -15,16 +15,6 @@
 #define HAVE_STRERROR 1
 
 bool IsForkChild = 0;
-#define DEF_EXT_BROWSER "/usr/bin/firefox"
-std::string ExtBrowser = DEF_EXT_BROWSER;
-std::string ExtBrowser2;
-std::string ExtBrowser3;
-std::string ExtBrowser4;
-std::string ExtBrowser5;
-std::string ExtBrowser6;
-std::string ExtBrowser7;
-std::string ExtBrowser8;
-std::string ExtBrowser9;
 
 #ifdef _MSC_VER
 #include <direct.h>
@@ -149,46 +139,6 @@ err1:
 err0:
   return (pid_t)-1;
 #endif
-}
-
-void mySystem(const char *command, int background) {
-#ifdef _MSC_VER
-#else
-  if (background) {
-    // flush_tty();
-    if (!fork()) {
-      setup_child(false, 0, -1);
-      myExec(command);
-    }
-  } else
-    system(command);
-#endif
-}
-
-Str *myExtCommand(const char *cmd, const char *arg, int redirect) {
-  Str *tmp = NULL;
-  const char *p;
-  int set_arg = false;
-
-  for (p = cmd; *p; p++) {
-    if (*p == '%' && *(p + 1) == 's' && !set_arg) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(cmd, (int)(p - cmd));
-      Strcat_charp(tmp, arg);
-      set_arg = true;
-      p++;
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (!set_arg) {
-    if (redirect)
-      tmp = Strnew_m_charp("(", cmd, ") < ", arg, NULL);
-    else
-      tmp = Strnew_m_charp(cmd, " ", arg, NULL);
-  }
-  return tmp;
 }
 
 std::string file_to_url(std::string file) {
@@ -358,14 +308,6 @@ void setup_child(int child, int i, int f) {
   // fmInitialized = false;
 }
 
-void myExec(const char *command) {
-#ifdef _MSC_VER
-#else
-  // mySignal(SIGINT, SIG_DFL);
-  execl("/bin/sh", "sh", "-c", command, 0);
-  exit(127);
-#endif
-}
 const char *getWord(const char **str) {
   const char *p, *s;
 
@@ -423,62 +365,4 @@ const char *getQWord(const char **str) {
   }
   *str = p;
   return tmp->ptr;
-}
-
-/* spawn external browser */
-void invoke_browser(const char *url) {
-
-  CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  std::string browser = App::instance().searchKeyData();
-  if (browser.empty()) {
-    switch (prec_num) {
-    case 0:
-    case 1:
-      browser = ExtBrowser;
-      break;
-    case 2:
-      browser = ExtBrowser2;
-      break;
-    case 3:
-      browser = ExtBrowser3;
-      break;
-    case 4:
-      browser = ExtBrowser4;
-      break;
-    case 5:
-      browser = ExtBrowser5;
-      break;
-    case 6:
-      browser = ExtBrowser6;
-      break;
-    case 7:
-      browser = ExtBrowser7;
-      break;
-    case 8:
-      browser = ExtBrowser8;
-      break;
-    case 9:
-      browser = ExtBrowser9;
-      break;
-    }
-    if (browser.empty()) {
-      // browser = inputStr("Browse command: ", nullptr);
-    }
-  }
-  if (browser.empty()) {
-    return;
-  }
-
-  int bg = 0, len;
-  if ((len = browser.size()) >= 2 && browser[len - 1] == '&' &&
-      browser[len - 2] != '\\') {
-    browser.pop_back();
-    browser.pop_back();
-    bg = 1;
-  }
-  auto cmd = myExtCommand(browser.c_str(), shell_quote(url), false);
-  Strremovetrailingspaces(cmd);
-  App::instance().endRawMode();
-  mySystem(cmd->ptr, bg);
-  App::instance().beginRawMode();
 }
