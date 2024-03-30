@@ -6,14 +6,12 @@
 #include "buffer.h"
 #include "line_layout.h"
 #include "http_response.h"
-#include "Str.h"
 #include "myctype.h"
 #include "ctrlcode.h"
 #include "html_tag.h"
 #include "proc.h"
 #include "stringtoken.h"
 #include "html_parser.h"
-#include <math.h>
 #include <string_view>
 #include <sstream>
 
@@ -42,34 +40,34 @@ static char roman_num5[] = {
     '*',
 };
 
-static Str *romanNum2(int l, int n) {
-  Str *s = Strnew();
+static std::string romanNum2(int l, int n) {
+  std::stringstream s;
 
   switch (n) {
   case 1:
   case 2:
   case 3:
     for (; n > 0; n--)
-      Strcat_char(s, roman_num1[l]);
+      s << roman_num1[l];
     break;
   case 4:
-    Strcat_char(s, roman_num1[l]);
-    Strcat_char(s, roman_num5[l]);
+    s << roman_num1[l];
+    s << roman_num5[l];
     break;
   case 5:
   case 6:
   case 7:
   case 8:
-    Strcat_char(s, roman_num5[l]);
+    s << roman_num5[l];
     for (n -= 5; n > 0; n--)
-      Strcat_char(s, roman_num1[l]);
+      s << roman_num1[l];
     break;
   case 9:
-    Strcat_char(s, roman_num1[l]);
-    Strcat_char(s, roman_num1[l + 1]);
+    s << roman_num1[l];
+    s << roman_num1[l + 1];
     break;
   }
-  return s;
+  return s.str();
 }
 
 std::string romanNumeral(int n) {
@@ -206,36 +204,36 @@ int is_boundary(unsigned char *ch1, unsigned char *ch2) {
 static const char *_size_unit[] = {"b",  "kb", "Mb", "Gb", "Tb", "Pb",
                                    "Eb", "Zb", "Bb", "Yb", NULL};
 
-char *convert_size(long long size, int usefloat) {
-  float csize;
-  int sizepos = 0;
-  auto sizes = _size_unit;
+// char *convert_size(long long size, int usefloat) {
+//   float csize;
+//   int sizepos = 0;
+//   auto sizes = _size_unit;
+//
+//   csize = (float)size;
+//   while (csize >= 999.495 && sizes[sizepos + 1]) {
+//     csize = csize / 1024.0;
+//     sizepos++;
+//   }
+//   return Sprintf(usefloat ? "%.3g%s" : "%.0f%s",
+//                  floor(csize * 100.0 + 0.5) / 100.0, sizes[sizepos])
+//       ->ptr;
+// }
 
-  csize = (float)size;
-  while (csize >= 999.495 && sizes[sizepos + 1]) {
-    csize = csize / 1024.0;
-    sizepos++;
-  }
-  return Sprintf(usefloat ? "%.3g%s" : "%.0f%s",
-                 floor(csize * 100.0 + 0.5) / 100.0, sizes[sizepos])
-      ->ptr;
-}
-
-char *convert_size2(long long size1, long long size2, int usefloat) {
-  auto sizes = _size_unit;
-  float csize, factor = 1;
-  int sizepos = 0;
-
-  csize = (float)((size1 > size2) ? size1 : size2);
-  while (csize / factor >= 999.495 && sizes[sizepos + 1]) {
-    factor *= 1024.0;
-    sizepos++;
-  }
-  return Sprintf(usefloat ? "%.3g/%.3g%s" : "%.0f/%.0f%s",
-                 floor(size1 / factor * 100.0 + 0.5) / 100.0,
-                 floor(size2 / factor * 100.0 + 0.5) / 100.0, sizes[sizepos])
-      ->ptr;
-}
+// char *convert_size2(long long size1, long long size2, int usefloat) {
+//   auto sizes = _size_unit;
+//   float csize, factor = 1;
+//   int sizepos = 0;
+//
+//   csize = (float)((size1 > size2) ? size1 : size2);
+//   while (csize / factor >= 999.495 && sizes[sizepos + 1]) {
+//     factor *= 1024.0;
+//     sizepos++;
+//   }
+//   return Sprintf(usefloat ? "%.3g/%.3g%s" : "%.0f/%.0f%s",
+//                  floor(size1 / factor * 100.0 + 0.5) / 100.0,
+//                  floor(size2 / factor * 100.0 + 0.5) / 100.0, sizes[sizepos])
+//       ->ptr;
+// }
 
 readbuffer::readbuffer() {
   this->prevchar = " ";
@@ -274,15 +272,15 @@ void readbuffer::set_alignment(const std::shared_ptr<HtmlTag> &tag) {
  */
 #define LINELEN 256 /* Initial line length */
 
-static Str *checkType(Str *s, std::vector<Lineprop> *oprop) {
+static std::string checkType(std::string s, std::vector<Lineprop> *oprop) {
   static std::vector<Lineprop> prop_buffer;
 
-  char *str = s->ptr;
-  char *endp = &s->ptr[s->length];
-  char *bs = NULL;
+  auto str = s.data();
+  auto endp = s.data() + s.size();
+  const char *bs = NULL;
 
-  if (prop_buffer.size() < s->length) {
-    prop_buffer.resize(s->length > LINELEN ? s->length : LINELEN);
+  if (prop_buffer.size() < s.size()) {
+    prop_buffer.resize(s.size() > LINELEN ? s.size() : LINELEN);
   }
   auto prop = prop_buffer.data();
 
@@ -306,19 +304,19 @@ static Str *checkType(Str *s, std::vector<Lineprop> *oprop) {
         continue;
       } else if (str == bs) {
         if (*(str + 1) == '_') {
-          if (s->length) {
+          if (s.size()) {
             str += 2;
             *(prop - 1) |= PE_UNDER;
           } else {
             str++;
           }
         } else {
-          if (s->length) {
+          if (s.size()) {
             if (*(str - 1) == *(str + 1)) {
               *(prop - 1) |= PE_BOLD;
               str += 2;
             } else {
-              Strshrink(s, 1);
+              s.pop_back();
               prop--;
               str++;
             }
@@ -336,7 +334,7 @@ static Str *checkType(Str *s, std::vector<Lineprop> *oprop) {
     *(prop++) = mode;
     {
       if (do_copy)
-        Strcat_char(s, (char)*str);
+        s.push_back((char)*str);
       str++;
     }
     effect = PE_NORMAL;
@@ -375,12 +373,12 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
       pre_lbuf = line[0];
     }
     ++nlines;
-    auto lineBuf2 = Strnew(line);
+    auto lineBuf2 = line;
     Strchop(lineBuf2);
 
     std::vector<Lineprop> propBuffer;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    layout->data.addnewline(lineBuf2->ptr, propBuffer, lineBuf2->length);
+    layout->data.addnewline(lineBuf2.c_str(), propBuffer, lineBuf2.size());
   }
   // layout->_scroll.row = 0;
   // layout->_cursor.row = 0;
@@ -505,15 +503,16 @@ const char *readbuffer::has_hidden_link(HtmlCommand cmd) const {
   return nullptr;
 }
 
-void readbuffer::passthrough(const char *str, int back) {
-  HtmlCommand cmd;
-  Str *tok = Strnew();
+void readbuffer::passthrough(const std::string &_str, bool back) {
 
-  if (back) {
-    Str *str_save = Strnew_charp(str);
-    Strshrink(this->line, this->line.c_str() + this->line.size() - str);
-    str = str_save->ptr;
-  }
+  // if (back) {
+  //   std::string str_save = str;
+  //   Strshrink(this->line, this->line.c_str() + this->line.size() - str);
+  //   str = str_save;
+  // }
+
+  HtmlCommand cmd;
+  auto str = _str.c_str();
   while (*str) {
     auto str_bak = str;
     stringtoken st(str);
@@ -534,9 +533,7 @@ void readbuffer::passthrough(const char *str, int back) {
         }
         back = 0;
       } else {
-        Strcat(tok, *token);
-        this->push_tag(tok->ptr, cmd);
-        Strclear(tok);
+        this->push_tag(*token, cmd);
       }
     } else {
       this->push_nchars(0, str_bak, str - str_bak, this->prev_ctype);
@@ -544,7 +541,7 @@ void readbuffer::passthrough(const char *str, int back) {
   }
 }
 
-void readbuffer::push_tag(const std::string &cmdname, HtmlCommand cmd) {
+void readbuffer::push_tag(std::string_view cmdname, HtmlCommand cmd) {
   auto tag = std::make_shared<cmdtable>();
   tag->cmdname = cmdname;
   tag->cmd = cmd;
@@ -583,7 +580,6 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
 void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
                            int force, int width) {
   // Str *line = this->line;
-  Str *pass = nullptr;
   // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
   // nullptr,
   //      *hidden_under = nullptr, *hidden_italic = nullptr, *hidden_strike =
@@ -666,8 +662,9 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
     }
   }
 
+  std::string pass;
   if (hidden) {
-    pass = Strnew_charp(hidden);
+    pass = hidden;
     Strshrink(line, line.c_str() + line.size() - hidden);
   }
 
@@ -798,16 +795,16 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
       }
     }
     if (force == 2) {
-      if (pass) {
+      if (pass.size()) {
         if (buf) {
-          buf->appendTextLine(pass->ptr, 0);
+          buf->appendTextLine(pass, 0);
         }
       }
-      pass = nullptr;
+      pass = {};
     } else {
-      if (pass)
-        tmp2 << pass->ptr;
-      pass = Strnew(tmp2.str());
+      if (pass.size())
+        tmp2 << pass;
+      pass = tmp2.str();
     }
   }
 
@@ -843,42 +840,42 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
   this->prev_ctype = PC_ASCII;
   this->link_stack.clear();
   this->fillline(indent);
-  if (pass)
-    this->passthrough(pass->ptr, 0);
+  if (pass.size())
+    this->passthrough(pass, 0);
   if (!hidden_anchor && this->anchor.url.size()) {
-    Str *tmp;
     if (this->anchor.hseq > 0)
       this->anchor.hseq = -this->anchor.hseq;
-    tmp = Sprintf("<A HSEQ=\"%d\" HREF=\"", this->anchor.hseq);
-    Strcat(tmp, html_quote(this->anchor.url.c_str()));
+    std::stringstream tmp;
+    tmp << "<A HSEQ=\"" << this->anchor.hseq << "\" HREF=\"";
+    tmp << html_quote(this->anchor.url);
     if (this->anchor.target.size()) {
-      Strcat_charp(tmp, "\" TARGET=\"");
-      Strcat(tmp, html_quote(this->anchor.target.c_str()));
+      tmp << "\" TARGET=\"";
+      tmp << html_quote(this->anchor.target);
     }
     if (this->anchor.option.use_referer()) {
-      Strcat_charp(tmp, "\" REFERER=\"");
-      Strcat(tmp, html_quote(this->anchor.option.referer.c_str()));
+      tmp << "\" REFERER=\"";
+      tmp << html_quote(this->anchor.option.referer);
     }
     if (this->anchor.title.size()) {
-      Strcat_charp(tmp, "\" TITLE=\"");
-      Strcat(tmp, html_quote(this->anchor.title.c_str()));
+      tmp << "\" TITLE=\"";
+      tmp << html_quote(this->anchor.title);
     }
     if (this->anchor.accesskey) {
       auto c = html_quote_char(this->anchor.accesskey);
-      Strcat_charp(tmp, "\" ACCESSKEY=\"");
+      tmp << "\" ACCESSKEY=\"";
       if (c)
-        Strcat_charp(tmp, c);
+        tmp << c;
       else
-        Strcat_char(tmp, this->anchor.accesskey);
+        tmp << this->anchor.accesskey;
     }
-    Strcat_charp(tmp, "\">");
-    this->push_tag(tmp->ptr, HTML_A);
+    tmp << "\">";
+    this->push_tag(tmp.str(), HTML_A);
   }
   if (!hidden_img && this->img_alt.size()) {
-    Str *tmp = Strnew_charp("<IMG_ALT SRC=\"");
-    Strcat(tmp, html_quote(this->img_alt));
-    Strcat_charp(tmp, "\">");
-    this->push_tag(tmp->ptr, HTML_IMG_ALT);
+    std::string tmp = "<IMG_ALT SRC=\"";
+    tmp += html_quote(this->img_alt);
+    tmp += "\">";
+    this->push_tag(tmp, HTML_IMG_ALT);
   }
   if (!hidden_input && this->input_alt.in) {
     if (this->input_alt.hseq > 0)

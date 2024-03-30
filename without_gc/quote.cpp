@@ -589,3 +589,9 @@ void Strupper(std::string &s) {
     c = TOUPPER(c);
   }
 }
+
+void Strchop(std::string &s) {
+  while (s.size() > 0 && (s.back() == '\n' || s.back() == '\r')) {
+    s.pop_back();
+  }
+}

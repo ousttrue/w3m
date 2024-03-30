@@ -339,7 +339,7 @@ struct readbuffer {
   void CLOSE_P(struct html_feed_environ *h_env);
 
   void append_tags();
-  void push_tag(const std::string &cmdname, HtmlCommand cmd);
+  void push_tag(std::string_view cmdname, HtmlCommand cmd);
   void push_nchars(int width, const char *str, int len, Lineprop mode);
   void push_charp(int width, const char *str, Lineprop mode) {
     this->push_nchars(width, str, strlen(str), mode);
@@ -387,7 +387,7 @@ struct readbuffer {
   // link
   void push_link(HtmlCommand cmd, int offset, int pos);
   const char *has_hidden_link(HtmlCommand cmd) const;
-  void passthrough(const char *str, int back);
+  void passthrough(const std::string &str, bool back);
 
   void flushline(const std::shared_ptr<GeneralList> &buf, int indent, int force,
                  int width);

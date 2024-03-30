@@ -56,3 +56,4 @@ std::string_view Strremovetrailingspaces(std::string_view s);
 void Strshrink(std::string &s, int n);
 void Strlower(std::string &);
 void Strupper(std::string &);
+void Strchop(std::string &s);

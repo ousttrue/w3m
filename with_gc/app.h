@@ -156,6 +156,3 @@ public:
                                  const char *title, const char *url);
 };
 #define CurrentTab App::instance().currentTab()
-
-char *convert_size(long long size, int usefloat);
-char *convert_size2(long long size1, long long size2, int usefloat);
