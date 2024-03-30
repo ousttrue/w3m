@@ -553,3 +553,21 @@ std::string unescape_spaces(std::string_view s) {
   }
   return tmp.str();
 }
+
+std::string_view Strremovefirstspaces(std::string_view s) {
+  auto p = s.begin();
+  for (; p != s.end() && IS_SPACE(*p); p++)
+    ;
+  return {p, s.end()};
+}
+
+std::string_view Strremovetrailingspaces(std::string_view s) {
+  if (s.empty()) {
+    return s;
+  }
+
+  auto p = s.begin() + s.size() - 1;
+  for (; p != s.begin() && IS_SPACE(*p); p--)
+    ;
+  return {s.begin(), p};
+}

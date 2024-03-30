@@ -1,13 +1,12 @@
 #include "history.h"
+#include "quote.h"
 #include "url_decode.h"
-#include "app.h"
-#include "html/html_quote.h"
 #include "url_quote.h"
-#include "Str.h"
 #include "tmpfile.h"
 #include <stdio.h>
 #include <sys/stat.h>
 #include <sstream>
+#include <fstream>
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
@@ -38,7 +37,7 @@ std::string Hist::toHtml() const {
   src << "<ol>\n";
 
   for (auto &item : this->list) {
-    auto q = html_quote(item.c_str());
+    auto q = html_quote(item);
     std::string p;
     if (DecodeURL)
       p = html_quote(url_decode0(item));
@@ -55,24 +54,25 @@ std::string Hist::toHtml() const {
 }
 
 bool Hist::loadHistory(const std::string &file) {
-  if (auto f = fopen(file.c_str(), "rt")) {
+  std::ifstream f(file);
+  if (f) {
     struct stat st;
-    if (fstat(fileno(f), &st) == -1) {
-      fclose(f);
+    if (stat(file.c_str(), &st) == -1) {
+      // fclose(f);
       return false;
     }
     this->mtime = (long long)st.st_mtime;
 
-    while (!feof(f)) {
-      auto line = Strfgets(f);
-      Strchop(line);
-      Strremovefirstspaces(line);
-      Strremovetrailingspaces(line);
-      if (line->length == 0)
+    std::string _line;
+    while (std::getline(f, _line)) {
+      // auto line = Strfgets(f);
+      // Strchop(line);
+      auto line = Strremovefirstspaces(_line);
+      line = Strremovetrailingspaces(line);
+      if (line.empty())
         continue;
-      this->push(url_quote(line->ptr));
+      this->push(url_quote(line));
     }
-    fclose(f);
     return true;
   } else {
     return false;
@@ -98,7 +98,7 @@ void Hist::saveHistory(const std::string &histf, int size) {
   auto tmpf = TmpFile::instance().tmpfname(TMPF_HIST, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (!f) {
-    App::instance().disp_err_message("Can't open history");
+    // App::instance().disp_err_message("Can't open history");
     return;
   }
 
@@ -109,12 +109,12 @@ void Hist::saveHistory(const std::string &histf, int size) {
     fprintf(f, "%s\n", item.c_str());
   }
   if (fclose(f) == EOF) {
-    App::instance().disp_err_message("Can't open history");
+    // App::instance().disp_err_message("Can't open history");
     return;
   }
   auto rename_ret = rename(tmpf.c_str(), histf.c_str());
   if (rename_ret != 0) {
-    App::instance().disp_err_message("Can't open history");
+    // App::instance().disp_err_message("Can't open history");
     return;
   }
 }

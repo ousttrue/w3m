@@ -50,3 +50,6 @@ int stoi(std::string_view s);
 std::string shell_quote(std::string_view str);
 
 std::string unescape_spaces(std::string_view s);
+
+std::string_view Strremovefirstspaces(std::string_view s);
+std::string_view Strremovetrailingspaces(std::string_view s);

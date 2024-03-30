@@ -1,18 +1,6 @@
 #include "file_util.h"
-#include "myctype.h"
-#include "downloadlist.h"
-#include "app.h"
-#include "tmpfile.h"
-#include "rc.h"
-#include "istream.h"
-#include "quote.h"
-#include "etc.h"
-#include "linein.h"
-#include "Str.h"
-#include "alloc.h"
 #include <stdio.h>
 #include <sys/stat.h>
-#include <string.h>
 #ifdef _MSC_VER
 #else
 #include <utime.h>
