@@ -17,8 +17,8 @@
 extern bool displayLink;
 extern bool displayLineInfo;
 extern int prev_key;
-extern const char *CurrentKeyData;
-extern const char *CurrentCmdData;
+extern std::string CurrentKeyData;
+extern std::string CurrentCmdData;
 extern int prec_num;
 #define PREC_NUM (prec_num ? prec_num : 1)
 extern bool on_target;
@@ -79,7 +79,7 @@ public:
 
   int pid() const { return _currentPid; }
 
-  const char *searchKeyData();
+  std::string searchKeyData();
   int searchKeyNum();
 
   mutable std::string _peekUrl;
@@ -87,7 +87,7 @@ public:
   void peekURL();
 
   void doCmd();
-  void doCmd(const std::string &cmd, const char *data);
+  void doCmd(const std::string &cmd, const std::string_view data);
   void dispatchPtyIn(const char *buf, size_t len);
   void dispatch(const char *buf, size_t len) {
     if (!_dispatcher.top()(buf, len)) {
@@ -96,14 +96,14 @@ public:
   }
 
   void initKeymap(bool force);
-  void setKeymap(const char *p, int lineno, int verbose);
-  const char *getKeyData(char key) {
+  void setKeymap(const std::string &p, int lineno, int verbose);
+  std::string getKeyData(char key) {
     auto func = _GlobalKeymap[key];
     auto found = _keyData.find(func);
     if (found == _keyData.end()) {
       return {};
     }
-    return found->second.c_str();
+    return found->second;
   }
 
   FuncContext context() {
@@ -117,7 +117,7 @@ public:
   }
   ftxui::Element dom();
   ftxui::Element tabs();
-  void task(int sec, const std::string &cmd, const char *data = nullptr,
+  void task(int sec, const std::string &cmd, std::string_view data = {},
             bool releat = false);
 
   // tabs

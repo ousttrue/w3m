@@ -248,23 +248,23 @@ std::shared_ptr<CoroutineState<void>> col1L(const FuncContext &context) {
 // SETENV
 //"Set environment variable"
 std::shared_ptr<CoroutineState<void>> setEnv(const FuncContext &context) {
-  const char *env;
-  const char *var, *value;
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  env = App::instance().searchKeyData();
-  if (env == nullptr || *env == '\0' || strchr(env, '=') == nullptr) {
-    if (env != nullptr && *env != '\0')
-      env = Sprintf("%s=", env)->ptr;
+  auto env = App::instance().searchKeyData();
+  if (env.empty() || strchr(env.c_str(), '=') == nullptr) {
+    if (env.size())
+      env += "=";
     // env = inputStrHist("Set environ: ", env, TextHist);
-    if (env == nullptr || *env == '\0') {
+    if (env.empty()) {
       co_return;
     }
   }
-  if ((value = strchr(env, '=')) != nullptr && value > env) {
-    var = allocStr(env, value - env);
+
+  const char *value;
+  if ((value = strchr(env.c_str(), '=')) != nullptr && value > env) {
+    auto var = env.substr(0, value - env.c_str());
     value++;
-    set_environ(var, value);
+    set_environ(var.c_str(), value);
   }
 }
 
@@ -287,27 +287,25 @@ std::shared_ptr<CoroutineState<void>> pipesh(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> readsh(const FuncContext &context) {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto cmd = App::instance().searchKeyData();
-  if (cmd == nullptr || *cmd == '\0') {
+  if (cmd.empty()) {
     // cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
-  if (cmd == nullptr || *cmd == '\0') {
+  if (cmd.empty()) {
     co_return;
   }
   // MySignalHandler prevtrap = {};
   // prevtrap = mySignal(SIGINT, intTrap);
   // crmode();
-  auto buf = getshell(cmd);
+  auto res = getshell(cmd);
   // mySignal(SIGINT, prevtrap);
   // term_raw();
-  if (buf == nullptr) {
+  if (!res) {
     App::instance().disp_message("Execution failed");
     co_return;
-  } else {
-    if (buf->res->type.empty()) {
-      buf->res->type = "text/plain";
-    }
-    CurrentTab->pushBuffer(buf);
   }
+
+  auto buf = Buffer::create(res);
+  CurrentTab->pushBuffer(buf);
 }
 
 /* Execute shell command */
@@ -316,13 +314,13 @@ std::shared_ptr<CoroutineState<void>> readsh(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> execsh(const FuncContext &context) {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto cmd = App::instance().searchKeyData();
-  if (cmd == nullptr || *cmd == '\0') {
+  if (cmd.empty()) {
     // cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
-  if (cmd != nullptr && *cmd != '\0') {
+  if (cmd.empty()) {
     App::instance().endRawMode();
     printf("\n");
-    (void)!system(cmd); /* We do not care about the exit code here! */
+    system(cmd.c_str()); /* We do not care about the exit code here! */
     printf("\n[Hit any key]");
     fflush(stdout);
     App::instance().beginRawMode();
@@ -339,15 +337,14 @@ std::shared_ptr<CoroutineState<void>> ldfile(const FuncContext &context) {
   // if (fn == nullptr || *fn == '\0') {
   //   fn = inputFilenameHist("(Load)Filename? ", nullptr, LoadHist);
   // }
-  if (fn == nullptr || *fn == '\0') {
+  if (fn.empty()) {
     co_return;
   }
-  if (auto res =
-          loadGeneralFile(file_to_url((char *)fn), {}, {.no_referer = true})) {
+  if (auto res = loadGeneralFile(file_to_url(fn), {}, {.no_referer = true})) {
     auto buf = Buffer::create(res);
     CurrentTab->pushBuffer(buf);
   } else {
-    char *emsg = Sprintf("%s not found", fn)->ptr;
+    char *emsg = Sprintf("%s not found", fn.c_str())->ptr;
     App::instance().disp_err_message(emsg);
   }
 }
@@ -624,7 +621,7 @@ std::shared_ptr<CoroutineState<void>> goLine(const FuncContext &context) {
   auto str = App::instance().searchKeyData();
   if (prec_num)
     CurrentTab->currentBuffer()->layout->_goLine("^", prec_num);
-  else if (str)
+  else if (str.size())
     CurrentTab->currentBuffer()->layout->_goLine(str, prec_num);
   else {
     // _goLine(inputStr("Goto line: ", ""));
@@ -1097,17 +1094,15 @@ std::shared_ptr<CoroutineState<void>> ldOpt(const FuncContext &context) {
 // SET_OPTION
 //"Set option"
 std::shared_ptr<CoroutineState<void>> setOpt(const FuncContext &context) {
-  const char *opt;
-
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  opt = App::instance().searchKeyData();
-  if (opt == nullptr || *opt == '\0' || strchr(opt, '=') == nullptr) {
-    if (opt != nullptr && *opt != '\0') {
+  auto opt = App::instance().searchKeyData();
+  if (opt.empty() || strchr(opt.c_str(), '=') == nullptr) {
+    if (opt.empty()) {
       auto v = Option::instance().get_param_option(opt);
-      opt = Sprintf("%s=%s", opt, v.c_str())->ptr;
+      opt = Sprintf("%s=%s", opt.c_str(), v.c_str())->ptr;
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
-    if (opt == nullptr || *opt == '\0') {
+    if (opt.empty()) {
       co_return;
     }
   }
@@ -1517,24 +1512,20 @@ std::shared_ptr<CoroutineState<void>> execCmd(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> setAlarm(const FuncContext &context) {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   auto data = App::instance().searchKeyData();
-  if (data == nullptr || *data == '\0') {
+  if (data.empty()) {
     // data = inputStrHist("(Alarm)sec command: ", "", TextHist);
-    if (data == nullptr) {
+    if (data.empty()) {
       co_return;
     }
   }
 
   std::string cmd = "";
-  int sec = 0;
-  if (*data != '\0') {
-    sec = atoi(getWord(&data));
-    if (sec > 0) {
-      cmd = getWord(&data);
-    }
+  auto p = data.c_str();
+  int sec = stoi(getWord(&p));
+  if (sec > 0) {
+    cmd = getWord(&p);
   }
-
-  data = getQWord(&data);
-
+  data = getQWord(&p);
   App::instance().task(sec, cmd, data);
 }
 
@@ -1543,7 +1534,7 @@ std::shared_ptr<CoroutineState<void>> setAlarm(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> reinit(const FuncContext &context) {
   auto resource = App::instance().searchKeyData();
 
-  if (resource == nullptr) {
+  if (resource.empty()) {
     init_rc();
     sync_with_option();
     load_cookies(rcFile(COOKIE_FILE));
@@ -1583,17 +1574,15 @@ std::shared_ptr<CoroutineState<void>> reinit(const FuncContext &context) {
 // DEFINE_KEY
 //"Define a binding between a key stroke combination and a command"
 std::shared_ptr<CoroutineState<void>> defKey(const FuncContext &context) {
-  const char *data;
-
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  data = App::instance().searchKeyData();
-  if (data == nullptr || *data == '\0') {
+  auto data = App::instance().searchKeyData();
+  if (data.empty()) {
     // data = inputStrHist("Key definition: ", "", TextHist);
-    if (data == nullptr || *data == '\0') {
+    if (data.empty()) {
       co_return;
     }
   }
-  App::instance().setKeymap(allocStr(data, -1), -1, true);
+  App::instance().setKeymap(data, -1, true);
 }
 
 // NEW_TAB

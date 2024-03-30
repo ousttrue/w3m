@@ -713,11 +713,11 @@ Buffer::cmd_loadURL(const char *url, std::optional<Url> current,
   return Buffer::create(res);
 }
 
-std::shared_ptr<Buffer> Buffer::goURL0(const char *_url, const char *prompt,
+std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url, const char *prompt,
                                        bool relative) {
   std::optional<Url> current;
   std::string url;
-  if (!_url) {
+  if (_url.empty()) {
     auto hist = URLHist->copyHist();
 
     current = this->layout->data.baseURL;

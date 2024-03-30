@@ -50,8 +50,10 @@ public:
   void push_param_string(const std::string &section, const std::string &name,
                          std::string *p, const std::string &comment);
 
-  std::shared_ptr<param_ptr> search_param(const std::string &name) const;
-  std::string get_param_option(const char *name) const;
+  std::shared_ptr<param_ptr> search_param(std::string_view name) const;
+  std::string get_param_option(std::string_view name) const;
   int set_param(const std::string &name, const std::string &value);
   std::string load_option_panel();
 };
+
+int set_param_option(std::string_view option);

@@ -644,26 +644,29 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
 // }
 
 #define SHELLBUFFERNAME "*Shellout*"
-std::shared_ptr<Buffer> getshell(const char *cmd) {
+std::shared_ptr<HttpResponse> getshell(const std::string &cmd) {
 #ifdef _MSC_VER
   return {};
 #else
-  if (cmd == nullptr || *cmd == '\0') {
-    return nullptr;
+  if (cmd.empty()) {
+    return {};
   }
 
   auto f = popen(cmd, "r");
   if (f == nullptr) {
-    return nullptr;
+    return {};
   }
 
-  auto buf = Buffer::create();
+  // auto buf = Buffer::create();
   // UrlStream uf(SCM_UNKNOWN, newFileStream(f, pclose));
   // TODO:
   // loadBuffer(buf->res.get(), &buf->layout);
-  buf->res->filename = cmd;
-  buf->layout->data.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
-  return buf;
+  // buf->res->filename = cmd;
+  // buf->layout->data.title = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
+  // if (res->type.empty()) {
+  //   buf->res->type = "text/plain";
+  // }
+  return {};
 #endif
 }
 

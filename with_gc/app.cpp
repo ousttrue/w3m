@@ -41,8 +41,8 @@ bool displayLineInfo = false;
 #define KEYMAP_FILE "keymap"
 std::string keymap_file = KEYMAP_FILE;
 
-const char *CurrentKeyData;
-const char *CurrentCmdData;
+std::string CurrentKeyData;
+std::string CurrentCmdData;
 int prec_num = 0;
 bool on_target = true;
 #define PREC_LIMIT 10000
@@ -547,8 +547,10 @@ int getKey(const char *s) {
   return c;
 }
 
-void App::setKeymap(const char *p, int lineno, int verbose) {
-  auto s = getQWord(&p);
+void App::setKeymap(const std::string &_p, int lineno, int verbose) {
+  auto p = _p.c_str();
+  auto _s = getQWord(&p);
+  auto s = _s.c_str();
   auto c = getKey(s);
   if (c < 0) { /* error */
     const char *emsg;
@@ -575,8 +577,7 @@ void App::setKeymap(const char *p, int lineno, int verbose) {
   }
   auto map = _GlobalKeymap;
   map[c & 0x7F] = f;
-  s = getQWord(&p);
-  _keyData.insert({f, s});
+  _keyData.insert({f, getQWord(&p)});
 }
 
 bool App::initialize() {
@@ -827,26 +828,25 @@ void App::exit(int) {
 
 int App::searchKeyNum() {
   int n = 1;
-  if (auto d = searchKeyData()) {
-    n = atoi(d);
+  std::string d;
+  if ((d = searchKeyData()).size()) {
+    n = stoi(d);
   }
   return n * PREC_NUM;
 }
 
-const char *App::searchKeyData() {
-  const char *data = NULL;
-  if (CurrentKeyData != NULL && *CurrentKeyData != '\0') {
+std::string App::searchKeyData() {
+  std::string data;
+  if (CurrentKeyData.size()) {
     data = CurrentKeyData;
-  } else if (CurrentCmdData != NULL && *CurrentCmdData != '\0') {
+  } else if (CurrentCmdData.size()) {
     data = CurrentCmdData;
   } else {
     data = getKeyData(_currentKey);
   }
-  CurrentKeyData = NULL;
-  CurrentCmdData = NULL;
-  if (data == NULL || *data == '\0')
-    return NULL;
-  return allocStr(data, -1);
+  CurrentKeyData = {};
+  CurrentCmdData = {};
+  return data;
 }
 
 void App::peekURL() {
@@ -903,15 +903,16 @@ disp:
 
 void App::doCmd() {
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
-  auto data = searchKeyData();
-  if (data == nullptr || *data == '\0') {
+  auto _data = searchKeyData();
+  if (_data.empty()) {
     // data = inputStrHist("command [; ...]: ", "", TextHist);
-    if (data == nullptr) {
+    if (_data.empty()) {
       return;
     }
   }
   /* data: FUNC [DATA] [; FUNC [DATA] ...] */
-  while (*data) {
+  auto end = _data.data() + _data.size();
+  for (const char *data = _data.data(); data != end;) {
     SKIP_BLANKS(data);
     if (*data == ';') {
       data++;
@@ -927,14 +928,14 @@ void App::doCmd() {
   }
 }
 
-void App::doCmd(const std::string &cmd, const char *data) {
+void App::doCmd(const std::string &cmd, std::string_view data) {
   auto found = _w3mFuncList.find(cmd);
   if (found != _w3mFuncList.end()) {
     _currentKey = -1;
-    CurrentKeyData = nullptr;
-    CurrentCmdData = *data ? data : nullptr;
+    CurrentKeyData = {};
+    CurrentCmdData = data;
     found->second(context());
-    CurrentCmdData = nullptr;
+    CurrentCmdData = {};
   }
 }
 
@@ -971,7 +972,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
   }
   _prev_key = _currentKey;
   _currentKey = -1;
-  CurrentKeyData = NULL;
+  CurrentKeyData = {};
 }
 
 ftxui::Element App::dom() {
@@ -1028,7 +1029,8 @@ ftxui::Element App::tabs() {
 // };
 // std::list<std::shared_ptr<TimerTask>> g_timers;
 
-void App::task(int sec, const std::string &cmd, const char *data, bool repeat) {
+void App::task(int sec, const std::string &cmd, const std::string_view data,
+               bool repeat) {
   // if (cmd.size()) {
   //   auto t = std::make_shared<TimerTask>();
   //   t->cmd = cmd;
@@ -1326,7 +1328,7 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   int fd;
   struct stat kstat;
   Str *line;
-  const char *p, *s, *emsg;
+  const char *p, *emsg;
   int lineno;
   int verbose = 1;
 
@@ -1346,18 +1348,18 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
     if (line->length == 0)
       continue;
     p = line->ptr;
-    s = getWord(&p);
-    if (*s == '#') /* comment */
+    auto s = getWord(&p);
+    if (s.size() && s[0] == '#') /* comment */
       continue;
-    if (!strcmp(s, "keymap"))
+    if (!strcmp(s.c_str(), "keymap"))
       ;
-    else if (!strcmp(s, "verbose")) {
+    else if (!strcmp(s.c_str(), "verbose")) {
       s = getWord(&p);
-      if (*s)
-        verbose = str_to_bool(s, verbose);
+      if (s.size())
+        verbose = str_to_bool(s.c_str(), verbose);
       continue;
     } else { /* error */
-      emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
+      emsg = Sprintf("line %d: syntax error '%s'", lineno, s.c_str())->ptr;
       App::instance().record_err_message(emsg);
       if (verbose)
         App::instance().disp_message_nsec(emsg, 1, true);

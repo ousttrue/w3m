@@ -156,7 +156,7 @@ static void clear_mark(Line *l) {
 }
 
 /* search by regular expression */
-int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
+static int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
   int result = SR_NOTFOUND;
 
   if (str != nullptr && str != SearchString)
@@ -178,16 +178,16 @@ int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
   return result;
 }
 
-static void disp_srchresult(int result, const char *prompt, const char *str) {
-  if (str == nullptr)
-    str = "";
-  if (result & SR_NOTFOUND)
-    App::instance().disp_message(Sprintf("Not found: %s", str)->ptr);
-  else if (result & SR_WRAPPED)
-    App::instance().disp_message(Sprintf("Search wrapped: %s", str)->ptr);
-  else if (show_srch_str)
-    App::instance().disp_message(Sprintf("%s%s", prompt, str)->ptr);
-}
+// static void disp_srchresult(int result, const char *prompt, const char *str) {
+//   if (str == nullptr)
+//     str = "";
+//   if (result & SR_NOTFOUND)
+//     App::instance().disp_message(Sprintf("Not found: %s", str)->ptr);
+//   else if (result & SR_WRAPPED)
+//     App::instance().disp_message(Sprintf("Search wrapped: %s", str)->ptr);
+//   else if (show_srch_str)
+//     App::instance().disp_message(Sprintf("%s%s", prompt, str)->ptr);
+// }
 
 /* Search regular expression forward */
 
@@ -216,7 +216,7 @@ void srch_nxtprv(int reverse) {
       CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(-1);
     }
   }
-  disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
+  // disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }
 
 static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
@@ -281,11 +281,11 @@ void isrch(SearchFunc func, const char *prompt) {
 void srch(SearchFunc func, const char *prompt) {
   bool disp = false;
   auto str = App::instance().searchKeyData();
-  if (str == nullptr || *str == '\0') {
+  if (str.empty()) {
     // str = inputStrHist(prompt, nullptr, TextHist);
-    if (str != nullptr && *str == '\0')
+    if (str.empty())
       str = SearchString;
-    if (str == nullptr) {
+    if (str.empty()) {
       return;
     }
     disp = true;
@@ -295,12 +295,12 @@ void srch(SearchFunc func, const char *prompt) {
   if (func == forwardSearch)
     CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(1);
 
-  int result = srchcore(str, func);
+  int result = srchcore(str.c_str(), func);
   if (result & SR_FOUND)
     clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
   else
     CurrentTab->currentBuffer()->layout->visual.cursorCol(col);
-  if (disp)
-    disp_srchresult(result, prompt, str);
+  // if (disp)
+  //   disp_srchresult(result, prompt, str);
   searchRoutine = func;
 }

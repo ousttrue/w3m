@@ -1,13 +1,10 @@
 #include "etc.h"
 #include "ioutil.h"
 #include "quote.h"
-#include "file_util.h"
 #include "ctrlcode.h"
-#include "app.h"
 #include "myctype.h"
-#include "local_cgi.h"
-#include "proc.h"
-#include "Str.h"
+
+#include <sstream>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
@@ -23,17 +20,15 @@ bool IsForkChild = 0;
 #include <pwd.h>
 #endif
 
-const char *lastFileName(const char *path) {
-  const char *p, *q;
-
-  p = q = path;
-  while (*p != '\0') {
+std::string lastFileName(std::string_view path) {
+  auto p = path.begin();
+  auto q = p;
+  while (p != path.end()) {
     if (*p == '/')
       q = p + 1;
     p++;
   }
-
-  return allocStr(q, -1);
+  return std::string(q, path.end());
 }
 
 #ifdef USE_INCLUDED_SRAND48
@@ -55,21 +50,21 @@ long lrand48(void) {
 }
 #endif
 
-const char *mydirname(const char *s) {
-  const char *p = s;
-  while (*p)
+std::string mydirname(std::string_view s) {
+  auto p = s.begin();
+  while (p != s.end())
     p++;
-  if (s != p)
+  if (p != s.begin())
     p--;
-  while (s != p && *p == '/')
+  while (s.begin() != p && *p == '/')
     p--;
-  while (s != p && *p != '/')
+  while (s.begin() != p && *p != '/')
     p--;
   if (*p != '/')
     return ".";
-  while (s != p && *p == '/')
+  while (s.begin() != p && *p == '/')
     p--;
-  return allocStr(s, strlen(s) - strlen(p) + 1);
+  return std::string(s.begin(), p);
 }
 
 #ifndef HAVE_STRERROR
@@ -142,53 +137,34 @@ err0:
 }
 
 std::string file_to_url(std::string file) {
-  Str *tmp;
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-  char *drive = NULL;
-#endif
-#ifdef SUPPORT_NETBIOS_SHARE
-  char *host = NULL;
-#endif
   file = expandPath(file);
-  if (!file.empty())
-    return NULL;
-#ifdef SUPPORT_NETBIOS_SHARE
-  if (file[0] == '/' && file[1] == '/') {
-    char *p;
-    file += 2;
-    if (*file) {
-      p = strchr(file, '/');
-      if (p != NULL && p != file) {
-        host = allocStr(file, (p - file));
-        file = p;
-      }
+  if (!file.empty()) {
+    return {};
+  }
+
+  std::string drive;
+  {
+    std::string tmp;
+    if (IS_ALPHA(file[0]) && file[1] == ':') {
+      drive = file.substr(0, 2);
+      file += 2;
+    } else if (file[0] != '/') {
+      tmp = ioutil::pwd();
+      if (tmp.empty() || tmp.back() != '/')
+        tmp.push_back('/');
+      tmp += file;
+      file = tmp;
     }
   }
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-  if (IS_ALPHA(file[0]) && file[1] == ':') {
-    drive = allocStr(file, 2);
-    file += 2;
-  } else
-#endif
-      if (file[0] != '/') {
-    tmp = Strnew(ioutil::pwd());
-    if (Strlastchar(tmp) != '/')
-      Strcat_char(tmp, '/');
-    Strcat(tmp, file);
-    file = tmp->ptr;
+
+  std::stringstream tmp;
+  tmp << "file://";
+  if (drive.size()) {
+    tmp << drive;
   }
-  tmp = Strnew_charp("file://");
-#ifdef SUPPORT_NETBIOS_SHARE
-  if (host)
-    Strcat_charp(tmp, host);
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-  if (drive)
-    Strcat_charp(tmp, drive);
-#endif
-  Strcat(tmp, ioutil::file_quote(cleanupName(file)));
-  return tmp->ptr;
+  // #endif
+  tmp << ioutil::file_quote(cleanupName(file));
+  return tmp.str();
 }
 
 int do_recursive_mkdir(const char *dir) {
@@ -242,39 +218,6 @@ int do_recursive_mkdir(const char *dir) {
 #endif
 }
 
-int exec_cmd(const std::string &cmd) {
-  App::instance().endRawMode();
-  if (auto rv = system(cmd.c_str())) {
-    printf("\n[Hit any key]");
-    fflush(stdout);
-    App::instance().beginRawMode();
-    // getch();
-    return rv;
-  }
-  App::instance().endRawMode();
-  return 0;
-}
-
-Str *unescape_spaces(Str *s) {
-  Str *tmp = NULL;
-  char *p;
-
-  if (s == NULL)
-    return s;
-  for (p = s->ptr; *p; p++) {
-    if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp;
-  return s;
-}
-
 static void close_all_fds_except(int i, int f) {
 #ifdef _MSC_VER
 #else
@@ -308,38 +251,38 @@ void setup_child(int child, int i, int f) {
   // fmInitialized = false;
 }
 
-const char *getWord(const char **str) {
-  const char *p, *s;
-
-  p = *str;
+std::string getWord(const char **str) {
+  auto p = *str;
   SKIP_BLANKS(p);
+
+  const char *s;
   for (s = p; *p && !IS_SPACE(*p) && *p != ';'; p++)
     ;
   *str = p;
-  return Strnew_charp_n(s, p - s)->ptr;
+
+  return std::string(s, p - s);
 }
 
-const char *getQWord(const char **str) {
-  Str *tmp = Strnew();
-  const char *p;
+std::string getQWord(const char **str) {
+  std::stringstream tmp;
   int in_q = 0, in_dq = 0, esc = 0;
 
-  p = *str;
+  auto p = *str;
   SKIP_BLANKS(p);
   for (; *p; p++) {
     if (esc) {
       if (in_q) {
         if (*p != '\\' && *p != '\'') /* '..\\..', '..\'..' */
-          Strcat_char(tmp, '\\');
+          tmp << '\\';
       } else if (in_dq) {
         if (*p != '\\' && *p != '"') /* "..\\..", "..\".." */
-          Strcat_char(tmp, '\\');
+          tmp << '\\';
       } else {
         if (*p != '\\' && *p != '\'' && /* ..\\.., ..\'.. */
             *p != '"' && !IS_SPACE(*p)) /* ..\".., ..\.. */
-          Strcat_char(tmp, '\\');
+          tmp << '\\';
       }
-      Strcat_char(tmp, *p);
+      tmp << *p;
       esc = 0;
     } else if (*p == '\\') {
       esc = 1;
@@ -347,12 +290,12 @@ const char *getQWord(const char **str) {
       if (*p == '\'')
         in_q = 0;
       else
-        Strcat_char(tmp, *p);
+        tmp << *p;
     } else if (in_dq) {
       if (*p == '"')
         in_dq = 0;
       else
-        Strcat_char(tmp, *p);
+        tmp << *p;
     } else if (*p == '\'') {
       in_q = 1;
     } else if (*p == '"') {
@@ -360,9 +303,9 @@ const char *getQWord(const char **str) {
     } else if (IS_SPACE(*p) || *p == ';') {
       break;
     } else {
-      Strcat_char(tmp, *p);
+      tmp << *p;
     }
   }
   *str = p;
-  return tmp->ptr;
+  return tmp.str();
 }

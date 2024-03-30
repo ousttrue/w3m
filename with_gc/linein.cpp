@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "invoke.h"
 #include "ioutil.h"
 #include "tmpfile.h"
 #include "quote.h"

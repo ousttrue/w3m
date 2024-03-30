@@ -54,7 +54,7 @@ public:
                                       std::optional<Url> current,
                                       const HttpOption &option,
                                       const std::shared_ptr<Form> &form);
-  std::shared_ptr<Buffer> goURL0(const char *url, const char *prompt,
+  std::shared_ptr<Buffer> goURL0(std::string_view url, const char *prompt,
                                  bool relative);
   std::shared_ptr<Buffer> sourceBuffer();
   std::shared_ptr<CoroutineState<std::shared_ptr<Buffer>>>

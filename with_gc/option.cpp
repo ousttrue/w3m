@@ -80,21 +80,23 @@ static struct sel_c mailtooptionsstr[] = {
     {N_S(MAILTO_OPTIONS_USE_MAILTO_URL), N_("use full mailto URL")},
     {0, NULL, NULL}};
 
-int set_param_option(const char *option) {
+int set_param_option(std::string_view option) {
   Str *tmp = Strnew();
-  const char *p = option, *q;
+  auto p = option.begin();
 
-  while (*p && !IS_SPACE(*p) && *p != '=')
+  while (p != option.end() && !IS_SPACE(*p) && *p != '=')
     Strcat_char(tmp, *p++);
-  while (*p && IS_SPACE(*p))
+  while (p != option.end() && IS_SPACE(*p))
     p++;
-  if (*p == '=') {
+  if (p != option.end() && *p == '=') {
     p++;
-    while (*p && IS_SPACE(*p))
+    while (p != option.end() && IS_SPACE(*p))
       p++;
   }
   Strlower(tmp);
-  if (Option::instance().set_param(tmp->ptr, p))
+
+  const char *q;
+  if (Option::instance().set_param(tmp->ptr, &*p))
     goto option_assigned;
   q = tmp->ptr;
   if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
@@ -364,15 +366,15 @@ Option &Option::instance() {
   return s_instance;
 }
 
-std::shared_ptr<param_ptr> Option::search_param(const std::string &name) const {
-  auto found = RC_search_table.find(name);
+std::shared_ptr<param_ptr> Option::search_param(std::string_view name) const {
+  auto found = RC_search_table.find({name.begin(), name.end()});
   if (found != RC_search_table.end()) {
     return found->second;
   }
   return nullptr;
 }
 
-std::string Option::get_param_option(const char *name) const {
+std::string Option::get_param_option(std::string_view name) const {
   auto p = search_param(name);
   return p ? p->to_str() : "";
 }

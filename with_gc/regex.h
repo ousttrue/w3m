@@ -1,5 +1,6 @@
 #define REGEX_MAX 64
 #define STORAGE_MAX 256
+#include <string>
 
 struct longchar {
   char type;
@@ -37,4 +38,4 @@ int regexMatch(const char *str, int len, int firstp);
 
 void matchedPosition(const char **first, const char **last);
 
-const char *getRegexWord(const char **str, Regex **regex_ret);
+std::string getRegexWord(const char **str, Regex **regex_ret);

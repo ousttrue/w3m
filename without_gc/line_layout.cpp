@@ -1,4 +1,5 @@
 #include "line_layout.h"
+#include "quote.h"
 #include "myctype.h"
 #include "url.h"
 #include "utf8.h"
@@ -259,21 +260,21 @@ int LineLayout::next_nonnull_line(Line *line) {
 }
 
 /* Go to specified line */
-void LineLayout::_goLine(const char *l, int prec_num) {
-  if (l == nullptr || *l == '\0' || this->currentLine() == nullptr) {
+void LineLayout::_goLine(std::string_view l, int prec_num) {
+  if (l.empty() || this->currentLine() == nullptr) {
     return;
   }
 
   this->visual.cursorCol(0);
-  if (((*l == '^') || (*l == '$')) && prec_num) {
+  if (((l[0] == '^') || (l[0] == '$')) && prec_num) {
     this->visual.cursorRow(prec_num);
-  } else if (*l == '^') {
+  } else if (l[0] == '^') {
     this->visual.cursorHome();
-  } else if (*l == '$') {
+  } else if (l[0] == '$') {
     // this->_scroll.row = linenumber(this->lastLine()) - (this->LINES + 1) / 2;
     this->visual.cursorRow(linenumber(this->lastLine()));
   } else {
-    this->visual.cursorRow(atoi(l));
+    this->visual.cursorRow(stoi(l));
   }
 }
 

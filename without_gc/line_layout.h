@@ -118,7 +118,7 @@ struct LineLayout : public ftxui::Node {
   // void _movR(int n, int m);
   int prev_nonnull_line(Line *line);
   int next_nonnull_line(Line *line);
-  void _goLine(const char *l, int prec_num);
+  void _goLine(std::string_view l, int prec_num);
   std::string getCurWord(int *spos, int *epos) const;
   std::string getCurWord() const {
     int s, e;

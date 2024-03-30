@@ -442,8 +442,7 @@ struct HttpResponse;
 void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
                 HttpResponse *res, std::string_view body);
 
-struct Buffer;
 // std::shared_ptr<Buffer>
 // loadHTMLString(int width, const Url &currentUrl, std::string_view html,
 //                const std::shared_ptr<AnchorList<FormAnchor>> &forms = {});
-std::shared_ptr<Buffer> getshell(const char *cmd);
+std::shared_ptr<HttpResponse> getshell(const std::string &cmd);

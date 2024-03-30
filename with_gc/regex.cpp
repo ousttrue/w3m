@@ -742,8 +742,8 @@ int main(int argc, char **argv) {
  *
  * XXX: Actually this is unrelated to func.c.
  */
-const char *getRegexWord(const char **str, Regex **regex_ret) {
-  const char *word = NULL;
+std::string getRegexWord(const char **str, Regex **regex_ret) {
+  std::string word;
   const char *p, *headp, *bodyp, *tailp;
   char delimiter;
   int esc;
@@ -798,10 +798,10 @@ const char *getRegexWord(const char **str, Regex **regex_ret) {
   /* Compile */
   if (regex_ret) {
     if (*tailp == delimiter)
-      ((char *)word)[tailp - headp] = 0;
-    *regex_ret = newRegex(word + (bodyp - headp), igncase, NULL, NULL);
+      word[tailp - headp] = 0;
+    *regex_ret = newRegex(word.c_str() + (bodyp - headp), igncase, NULL, NULL);
     if (*tailp == delimiter)
-      ((char *)word)[tailp - headp] = delimiter;
+      word[tailp - headp] = delimiter;
   }
   goto last;
 

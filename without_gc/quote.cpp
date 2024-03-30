@@ -1,4 +1,5 @@
 #include "quote.h"
+#include "ctrlcode.h"
 #include "myctype.h"
 #include "entity.h"
 #include <sstream>
@@ -532,6 +533,19 @@ std::string shell_quote(std::string_view str) {
   for (auto p = str.begin(); p != str.end(); p++) {
     if (is_shell_unsafe(*p)) {
       tmp << '\\';
+      tmp << *p;
+    } else {
+      tmp << *p;
+    }
+  }
+  return tmp.str();
+}
+
+std::string unescape_spaces(std::string_view s) {
+  std::stringstream tmp;
+  for (auto p = s.begin(); p != s.end(); p++) {
+    if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
+      // ?
       tmp << *p;
     } else {
       tmp << *p;
