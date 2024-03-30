@@ -19,20 +19,20 @@ enum MailcapStat {
 // ENUM_OP_INSTANCE(MailcapStat);
 
 struct MailcapEntry {
-  const char *type = 0;
-  const char *viewer = 0;
+  std::string type;
+  std::string viewer;
   MailcapFlags flags = {};
-  char *test = 0;
-  char *nametemplate = 0;
-  char *edit = 0;
+  std::string test;
+  std::string nametemplate;
+  std::string edit;
 
-  bool extract(const char *mcap_entry);
+  bool extract(const std::string &mcap_entry);
   int match(const char *type) const;
 };
 
-struct Str;
-Str *unquote_mailcap(const char *qstr, const char *type, const char *name,
-                     const char *attr, MailcapStat *mc_stat);
+std::string unquote_mailcap(const std::string &qstr, const std::string &type,
+                            const std::string &name, const std::string &attr,
+                            MailcapStat *mc_stat);
 // MailcapEntry *searchExtViewer(const char *type);
 void initMailcap();
-char *acceptableMimeTypes();
+std::string acceptableMimeTypes();

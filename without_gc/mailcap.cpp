@@ -1,19 +1,18 @@
 #include "mailcap.h"
 #include "quote.h"
 #include "matchattr.h"
-#include "etc.h"
 #include "cmp.h"
-#include "Str.h"
 #include "myctype.h"
-#include "local_cgi.h"
-#include "hash.h"
-#include "proc.h"
+
 #include <string.h>
 #include <cstdlib>
 #include <stdio.h>
 #include <vector>
 #include <string>
 #include <list>
+#include <unordered_map>
+#include <sstream>
+#include <fstream>
 
 #define DEF_AUDIO_PLAYER "showaudio"
 #define DEF_IMAGE_VIEWER "display"
@@ -21,23 +20,34 @@
 struct Mailcap {
   std::vector<MailcapEntry> entries;
 
-  void load(FILE *f) {
-    Str *tmp;
-    while (tmp = Strfgets(f), tmp->length > 0) {
-      if (tmp->ptr[0] == '#')
+  void load(const std::string &file) {
+    std::ifstream ifs(file);
+    if (!ifs) {
+      return;
+    }
+
+    std::string tmp;
+    while (std::getline(ifs, tmp)) {
+      if (tmp.empty()) {
         continue;
+      }
+      if (tmp[0] == '#') {
+        continue;
+      }
     redo:
-      while (IS_SPACE(Strlastchar(tmp)))
-        Strshrink(tmp, 1);
-      if (Strlastchar(tmp) == '\\') {
+      while (IS_SPACE(tmp.back()))
+        tmp.pop_back();
+      if (tmp.back() == '\\') {
         /* continuation */
-        Strshrink(tmp, 1);
-        Strcat(tmp, Strfgets(f));
+        tmp.pop_back();
+        std::string tmp2;
+        std::getline(ifs, tmp2);
+        tmp += tmp2;
         goto redo;
       }
 
       entries.push_back({});
-      if (!entries.back().extract(tmp->ptr)) {
+      if (!entries.back().extract(tmp)) {
         entries.pop_back();
       }
     }
@@ -49,9 +59,9 @@ struct Mailcap {
     for (auto entry : this->entries) {
       int i = entry.match(type);
       if (i > level) {
-        if (entry.test) {
-          Str *command = unquote_mailcap(entry.test, type, NULL, NULL, NULL);
-          if (system(command->ptr) != 0)
+        if (entry.test.size()) {
+          auto command = unquote_mailcap(entry.test, type, NULL, NULL, NULL);
+          if (system(command.c_str()) != 0)
             continue;
         }
         level = i;
@@ -63,10 +73,12 @@ struct Mailcap {
 };
 
 static Mailcap DefaultMailcap = {
-    .entries = {
-        {"image/*", DEF_IMAGE_VIEWER " %s", {}, NULL, NULL, NULL}, /* */
-        {"audio/basic", DEF_AUDIO_PLAYER " %s", {}, NULL, NULL, NULL},
-    }};
+    .entries =
+        {
+            {"image/*", DEF_IMAGE_VIEWER " %s"},
+            {"audio/basic", DEF_AUDIO_PLAYER " %s"},
+        },
+};
 
 static std::list<std::string> mailcap_list;
 
@@ -83,9 +95,9 @@ static std::vector<Mailcap> UserMailcap;
 std::string mailcap_files = USER_MAILCAP ", " SYS_MAILCAP;
 
 int MailcapEntry::match(const char *type) const {
-  auto cap = this->type;
+  auto cap = this->type.begin();
   auto p = cap;
-  for (; *p != '/'; p++) {
+  for (; p != this->type.end() && *p != '/'; p++) {
     if (TOLOWER(*p) != TOLOWER(*type))
       return 0;
     type++;
@@ -114,45 +126,42 @@ int MailcapEntry::match(const char *type) const {
   return 20 + level;
 }
 
-static int matchMailcapAttr(const char *p, const char *attr, size_t len,
-                            Str **value) {
-  int quoted;
-  const char *q = NULL;
+static std::optional<std::string> matchMailcapAttr(const char *p,
+                                                   std::string_view attr) {
+  if (strncasecmp(p, attr.data(), attr.size()) != 0) {
+    return {};
+  }
 
-  if (strncasecmp(p, attr, len) == 0) {
-    p += len;
+  p += attr.size();
+  SKIP_BLANKS(p);
+
+  std::string value;
+  if (*p == '=') {
+    p++;
     SKIP_BLANKS(p);
-    if (value) {
-      *value = Strnew();
-      if (*p == '=') {
-        p++;
-        SKIP_BLANKS(p);
+    bool quoted = 0;
+    const char *q = nullptr;
+    while (*p && (quoted || *p != ';')) {
+      if (quoted || !IS_SPACE(*p))
+        q = p;
+      if (quoted)
         quoted = 0;
-        while (*p && (quoted || *p != ';')) {
-          if (quoted || !IS_SPACE(*p))
-            q = p;
-          if (quoted)
-            quoted = 0;
-          else if (*p == '\\')
-            quoted = 1;
-          Strcat_char(*value, *p);
-          p++;
-        }
-        if (q)
-          Strshrink(*value, p - q - 1);
-      }
-      return 1;
-    } else {
-      if (*p == '\0' || *p == ';') {
-        return 1;
+      else if (*p == '\\')
+        quoted = 1;
+      value += *p;
+      p++;
+    }
+    if (q) {
+      for (int i = 0; i < p - q - 1; ++i) {
+        value.pop_back();
       }
     }
   }
-  return 0;
+  return value;
 }
 
-bool MailcapEntry::extract(const char *mcap_entry) {
-  auto p = mcap_entry;
+bool MailcapEntry::extract(const std::string &mcap_entry) {
+  auto p = mcap_entry.data();
   SKIP_BLANKS(p);
   int k = -1;
   int j = 0;
@@ -161,7 +170,7 @@ bool MailcapEntry::extract(const char *mcap_entry) {
       k = j;
   }
 
-  this->type = allocStr(p, (k >= 0) ? k + 1 : j);
+  this->type = std::string(p, (k >= 0) ? k + 1 : j);
   if (!p[j])
     return 0;
   p += j + 1;
@@ -177,26 +186,26 @@ bool MailcapEntry::extract(const char *mcap_entry) {
     else if (p[j] == '\\')
       quoted = 1;
   }
-  this->viewer = allocStr(p, (k >= 0) ? k + 1 : j);
+  this->viewer = std::string(p, (k >= 0) ? k + 1 : j);
   p += j;
 
-  Str *tmp;
   while (*p == ';') {
     p++;
     SKIP_BLANKS(p);
-    if (matchMailcapAttr(p, "needsterminal", 13, NULL)) {
+    if (auto value = matchMailcapAttr(p, "needsterminal")) {
       this->flags |= MAILCAP_NEEDSTERMINAL;
-    } else if (matchMailcapAttr(p, "copiousoutput", 13, NULL)) {
+    } else if (auto value = matchMailcapAttr(p, "copiousoutput")) {
       this->flags |= MAILCAP_COPIOUSOUTPUT;
-    } else if (matchMailcapAttr(p, "x-htmloutput", 12, NULL) ||
-               matchMailcapAttr(p, "htmloutput", 10, NULL)) {
+    } else if (auto value = matchMailcapAttr(p, "x-htmloutput")) {
       this->flags |= MAILCAP_HTMLOUTPUT;
-    } else if (matchMailcapAttr(p, "test", 4, &tmp)) {
-      this->test = allocStr(tmp->ptr, tmp->length);
-    } else if (matchMailcapAttr(p, "nametemplate", 12, &tmp)) {
-      this->nametemplate = allocStr(tmp->ptr, tmp->length);
-    } else if (matchMailcapAttr(p, "edit", 4, &tmp)) {
-      this->edit = allocStr(tmp->ptr, tmp->length);
+    } else if (auto value = matchMailcapAttr(p, "htmloutput")) {
+      this->flags |= MAILCAP_HTMLOUTPUT;
+    } else if (auto value = matchMailcapAttr(p, "test")) {
+      this->test = *value;
+    } else if (auto value = matchMailcapAttr(p, "nametemplate")) {
+      this->nametemplate = *value;
+    } else if (auto value = matchMailcapAttr(p, "edit")) {
+      this->edit = *value;
     }
     quoted = 0;
     while (*p && (quoted || *p != ';')) {
@@ -223,51 +232,46 @@ void initMailcap() {
   //     mailcap_list->nitem);
   for (auto &tl : mailcap_list) {
     UserMailcap.push_back({});
-    if (auto f = fopen(expandPath(tl).c_str(), "r")) {
-      UserMailcap.back().load(f);
-      fclose(f);
-    }
+    UserMailcap.back().load(expandPath(tl));
   }
 }
 
-char *acceptableMimeTypes(void) {
-  static Str *types = NULL;
-  if (types) {
-    return types->ptr;
-  }
-
-  /* generate acceptable media types */
-  std::list<std::string> l;
-  auto mhash = newHash_si(16); /* XXX */
-  /* pushText(l, "text"); */
-  putHash_si(mhash, "text", 1);
-  l.push_back("image");
-  putHash_si(mhash, "image", 1);
-  for (size_t i = 0; i < mailcap_list.size(); i++) {
-    auto &mailcap = UserMailcap[i];
-    // if (mp == NULL)
-    //   continue;
-    for (auto &e : mailcap.entries) {
-      auto p = strchr(e.type, '/');
-      if (p == NULL)
-        continue;
-      auto mt = allocStr(e.type, p - e.type);
-      if (getHash_si(mhash, mt, 0) == 0) {
-        l.push_back(mt);
-        putHash_si(mhash, mt, 1);
+std::string acceptableMimeTypes(void) {
+  static std::string types;
+  if (types.empty()) {
+    /* generate acceptable media types */
+    std::list<std::string> l;
+    std::unordered_map<std::string, int> mhash; /* XXX */
+    /* pushText(l, "text"); */
+    mhash.insert({"text", 1});
+    l.push_back("image");
+    mhash.insert({"image", 1});
+    for (size_t i = 0; i < mailcap_list.size(); i++) {
+      auto &mailcap = UserMailcap[i];
+      // if (mp == NULL)
+      //   continue;
+      for (auto &e : mailcap.entries) {
+        auto p = strchr(e.type.c_str(), '/');
+        if (!p)
+          continue;
+        std::string mt(e.type.c_str(), p - e.type.c_str());
+        if (mhash.find(mt) == mhash.end()) {
+          l.push_back(mt);
+          mhash.insert({mt, 1});
+        }
       }
     }
+
+    types += "text/html, text/*;q=0.5";
+    while (l.size()) {
+      auto p = l.back();
+      l.pop_back();
+      types += ", ";
+      types += p;
+      types += "/*";
+    }
   }
-  types = Strnew();
-  Strcat_charp(types, "text/html, text/*;q=0.5");
-  while (l.size()) {
-    auto p = l.back();
-    l.pop_back();
-    Strcat_charp(types, ", ");
-    Strcat(types, p);
-    Strcat_charp(types, "/*");
-  }
-  return types->ptr;
+  return types;
 }
 
 struct MailcapEntry *searchExtViewer(const char *type) {
@@ -292,9 +296,9 @@ enum MCF_QuoteFlags {
 };
 ENUM_OP_INSTANCE(MCF_QuoteFlags);
 
-static std::string quote_mailcap(const char *s, int flag) {
+static std::string quote_mailcap(const std::string &_s, int flag) {
   std::string d;
-  for (;; ++s)
+  for (auto s = _s.begin(); s != _s.end(); ++s)
     switch (*s) {
     case '\0':
       goto end;
@@ -326,32 +330,31 @@ end:
   return d;
 }
 
-static Str *unquote_mailcap_loop(const char *qstr, const char *type,
-                                 const char *name, const char *attr,
-                                 MailcapStat *mc_stat, MCF_QuoteFlags flag0) {
-  Str *str, *test, *then;
-  const char *p;
-  MC_UnquoteStatus status = MC_NORMAL, prev_status = MC_NORMAL;
-  MCF_QuoteFlags flag;
-  int sp = 0;
+static std::string
+unquote_mailcap_loop(const std::string &qstr, const std::string &type,
+                     const std::string &name, const std::string &attr,
+                     MailcapStat *mc_stat, MCF_QuoteFlags flag0) {
 
   if (mc_stat) {
     *mc_stat = {};
   }
 
-  if (qstr == NULL)
-    return NULL;
+  if (qstr.empty()) {
+    return {};
+  }
 
-  str = Strnew();
-  test = then = NULL;
-
+  std::stringstream str;
   std::string tmp;
-  for (flag = flag0, p = qstr; *p; p++) {
+  MCF_QuoteFlags flag = flag0;
+  MC_UnquoteStatus status = MC_NORMAL;
+  MC_UnquoteStatus prev_status = MC_NORMAL;
+  int sp = 0;
+  for (auto p = qstr.begin(); p != qstr.end(); p++) {
     if (status == MC_QUOTED) {
       if (prev_status == MC_PREC2)
         tmp += *p;
       else
-        Strcat_char(str, *p);
+        str << *p;
       status = prev_status;
       continue;
     } else if (*p == '\\') {
@@ -375,22 +378,22 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
           else if (!flag)
             flag |= MCF_DQUOTED;
         }
-        Strcat_char(str, *p);
+        str << *p;
       }
       break;
     case MC_PREC:
       if (IS_ALPHA(*p)) {
         switch (*p) {
         case 's':
-          if (name) {
-            Strcat(str, quote_mailcap(name, flag));
+          if (name.size()) {
+            str << quote_mailcap(name, flag);
             if (mc_stat)
               *mc_stat |= MCSTAT_REPNAME;
           }
           break;
         case 't':
-          if (type) {
-            Strcat(str, quote_mailcap(type, flag));
+          if (type.size()) {
+            str << quote_mailcap(type, flag);
             if (mc_stat)
               *mc_stat |= MCSTAT_REPTYPE;
           }
@@ -399,10 +402,9 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
         status = MC_NORMAL;
       } else if (*p == '{') {
         status = MC_PREC2;
-        test = then = NULL;
         tmp = "";
       } else if (*p == '%') {
-        Strcat_char(str, *p);
+        str << *p;
       }
       break;
     case MC_PREC2:
@@ -422,11 +424,12 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
       } else if (*p == '}') {
         const char *q;
         std::optional<std::string> _tmp;
-        if (attr && (q = strcasestr(attr, tmp.c_str())) != NULL &&
+        if (attr.size() &&
+            (q = strcasestr(attr.c_str(), tmp.c_str())) != NULL &&
             (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
             (_tmp = matchattr(q, tmp))) {
           tmp = *_tmp;
-          Strcat(str, quote_mailcap(tmp.c_str(), flag));
+          str << quote_mailcap(tmp.c_str(), flag);
           if (mc_stat)
             *mc_stat |= MCSTAT_REPPARAM;
         }
@@ -440,10 +443,11 @@ static Str *unquote_mailcap_loop(const char *qstr, const char *type,
       break;
     }
   }
-  return str;
+  return str.str();
 }
 
-Str *unquote_mailcap(const char *qstr, const char *type, const char *name,
-                     const char *attr, MailcapStat *mc_stat) {
+std::string unquote_mailcap(const std::string &qstr, const std::string &type,
+                            const std::string &name, const std::string &attr,
+                            MailcapStat *mc_stat) {
   return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, {});
 }

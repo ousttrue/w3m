@@ -23,7 +23,6 @@ with_gc_lib = static_library(
         'search.cpp',
         'linein.cpp',
         'rc.cpp',
-        'mailcap.cpp',
         'symbol.cpp',
         'app.cpp',
         'alloc.cpp',

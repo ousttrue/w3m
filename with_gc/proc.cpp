@@ -681,9 +681,9 @@ std::shared_ptr<CoroutineState<void>> editBf(const FuncContext &context) {
 
   std::string cmd;
   if (buf->res->edit) {
-    cmd = unquote_mailcap(buf->res->edit, buf->res->type.c_str(), fn.c_str(),
-                          buf->res->getHeader("Content-Type:").c_str(), nullptr)
-              ->ptr;
+    cmd =
+        unquote_mailcap(buf->res->edit, buf->res->type.c_str(), fn.c_str(),
+                        buf->res->getHeader("Content-Type:").c_str(), nullptr);
   } else {
     cmd = ioutil::myEditor(shell_quote(fn.c_str()),
                            buf->layout->visual.cursor().row);

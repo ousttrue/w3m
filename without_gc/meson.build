@@ -48,6 +48,7 @@ without_gc_lib = static_library(
         'file_util.cpp',
         'history.cpp',
         'loaddirectory.cpp',
+        'mailcap.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
