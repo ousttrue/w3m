@@ -4,7 +4,6 @@
 #include "form.h"
 #include "html_tag.h"
 #include "url_quote.h"
-// #include "Str.h"
 #include <sstream>
 
 bool MarkAllPages = false;

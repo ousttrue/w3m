@@ -577,3 +577,15 @@ void Strshrink(std::string &s, int n) {
     s.pop_back();
   }
 }
+
+void Strlower(std::string &s) {
+  for (auto &c : s) {
+    c = TOLOWER(c);
+  }
+}
+
+void Strupper(std::string &s) {
+  for (auto &c : s) {
+    c = TOUPPER(c);
+  }
+}

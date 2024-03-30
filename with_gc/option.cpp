@@ -3,7 +3,7 @@
 #include "option_param.h"
 #include "cookie.h"
 #include "dns_order.h"
-#include "Str.h"
+#include "quote.h"
 
 #define N_(Text) Text
 #include <sstream>
@@ -80,11 +80,11 @@ static struct sel_c mailtooptionsstr[] = {
     {0, NULL, NULL}};
 
 int set_param_option(std::string_view option) {
-  Str *tmp = Strnew();
   auto p = option.begin();
 
+  std::stringstream ss;
   while (p != option.end() && !IS_SPACE(*p) && *p != '=')
-    Strcat_char(tmp, *p++);
+    ss << *p++;
   while (p != option.end() && IS_SPACE(*p))
     p++;
   if (p != option.end() && *p == '=') {
@@ -92,25 +92,27 @@ int set_param_option(std::string_view option) {
     while (p != option.end() && IS_SPACE(*p))
       p++;
   }
+  auto tmp = ss.str();
   Strlower(tmp);
 
-  const char *q;
-  if (Option::instance().set_param(tmp->ptr, &*p))
-    goto option_assigned;
-  q = tmp->ptr;
+  if (Option::instance().set_param(tmp, &*p)) {
+    return 1;
+  }
+
+  auto q = tmp.c_str();
   if (!strncmp(q, "no", 2)) { /* -o noxxx, -o no-xxx, -o no_xxx */
     q += 2;
     if (*q == '-' || *q == '_')
       q++;
-  } else if (tmp->ptr[0] == '-') /* -o -xxx */
+  } else if (tmp[0] == '-') /* -o -xxx */
     q++;
   else
     return 0;
-  if (Option::instance().set_param(q, "0"))
-    goto option_assigned;
+  if (Option::instance().set_param(q, "0")) {
+    return 1;
+  }
+
   return 0;
-option_assigned:
-  return 1;
 }
 
 Option::Option() {

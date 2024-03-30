@@ -54,3 +54,5 @@ std::string unescape_spaces(std::string_view s);
 std::string_view Strremovefirstspaces(std::string_view s);
 std::string_view Strremovetrailingspaces(std::string_view s);
 void Strshrink(std::string &s, int n);
+void Strlower(std::string &);
+void Strupper(std::string &);

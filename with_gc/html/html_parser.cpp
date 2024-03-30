@@ -304,17 +304,26 @@ void HtmlParser::feed_textarea(const char *str) {
 
 std::string HtmlParser::process_form_int(const std::shared_ptr<HtmlTag> &tag,
                                          int fid) {
-  auto p = "get";
-  tag->parsedtag_get_value(ATTR_METHOD, &p);
-  auto q = "!CURRENT_URL!";
-  tag->parsedtag_get_value(ATTR_ACTION, &q);
-  q = Strnew(url_quote(remove_space(q)))->ptr;
-  auto s = "";
-  tag->parsedtag_get_value(ATTR_ENCTYPE, &s);
-  auto tg = "";
-  tag->parsedtag_get_value(ATTR_TARGET, &tg);
-  auto n = "";
-  tag->parsedtag_get_value(ATTR_NAME, &n);
+  std::string p = "get";
+  if (auto value = tag->parsedtag_get_value(ATTR_METHOD)) {
+    p = *value;
+  }
+  std::string q = "!CURRENT_URL!";
+  if (auto value = tag->parsedtag_get_value(ATTR_ACTION)) {
+    q = url_quote(remove_space(*value));
+  }
+  std::string s = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_ENCTYPE)) {
+    s = *value;
+  }
+  std::string tg = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_TARGET)) {
+    tg = *value;
+  }
+  std::string n = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+    n = *value;
+  }
 
   if (fid < 0) {
     forms.push_back({});
@@ -358,35 +367,35 @@ static int ex_efct(int ex) {
   return effect;
 }
 
-static Str *textfieldrep(Str *s, int width) {
+static std::string textfieldrep(const std::string &s, int width) {
   Lineprop c_type;
-  Str *n = Strnew_size(width + 2);
+  std::stringstream n;
   int i, j, k, c_len;
 
   j = 0;
-  for (i = 0; i < s->length; i += c_len) {
-    c_type = get_mctype(&s->ptr[i]);
-    c_len = get_mclen(&s->ptr[i]);
-    if (s->ptr[i] == '\r')
+  for (i = 0; i < s.size(); i += c_len) {
+    c_type = get_mctype(&s[i]);
+    c_len = get_mclen(&s[i]);
+    if (s[i] == '\r')
       continue;
-    k = j + get_mcwidth(&s->ptr[i]);
+    k = j + get_mcwidth(&s[i]);
     if (k > width)
       break;
     if (c_type == PC_CTRL)
-      Strcat_char(n, ' ');
-    else if (s->ptr[i] == '&')
-      Strcat_charp(n, "&amp;");
-    else if (s->ptr[i] == '<')
-      Strcat_charp(n, "&lt;");
-    else if (s->ptr[i] == '>')
-      Strcat_charp(n, "&gt;");
+      n << ' ';
+    else if (s[i] == '&')
+      n << "&amp;";
+    else if (s[i] == '<')
+      n << "&lt;";
+    else if (s[i] == '>')
+      n << "&gt;";
     else
-      Strcat_charp_n(n, &s->ptr[i], c_len);
+      n << std::string_view(&s[i], c_len);
     j = k;
   }
   for (; j < width; j++)
-    Strcat_char(n, ' ');
-  return n;
+    n << ' ';
+  return n.str();
 }
 
 std::shared_ptr<LineLayout>
@@ -499,29 +508,39 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         ex_effect &= ~PE_EX_STRIKE;
         break;
       case HTML_A: {
-        const char *p = nullptr;
-        const char *r = nullptr;
-        const char *s = nullptr;
+        // const char *s = nullptr;
         // auto q = res->baseTarget;
-        auto t = "";
-        auto hseq = 0;
-        char *id = nullptr;
-        if (tag->parsedtag_get_value(ATTR_NAME, &id)) {
-          auto _id = url_quote(id);
+        // char *id = nullptr;
+        if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+          auto _id = url_quote(*value);
           data->registerName(_id.c_str(), nlines, line.len());
         }
-        if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
-          p = Strnew(url_quote(remove_space(p)))->ptr;
+        std::string p;
+        if (auto value = tag->parsedtag_get_value(ATTR_HREF)) {
+          p = url_quote(remove_space(*value));
         }
-        const char *q = nullptr;
-        if (tag->parsedtag_get_value(ATTR_TARGET, &q)) {
-          q = Strnew(url_quote(q))->ptr;
+        std::string q;
+        if (auto value = tag->parsedtag_get_value(ATTR_TARGET)) {
+          q = url_quote(*value);
         }
-        if (tag->parsedtag_get_value(ATTR_REFERER, &r))
-          r = Strnew(url_quote(r))->ptr;
-        tag->parsedtag_get_value(ATTR_TITLE, &s);
-        tag->parsedtag_get_value(ATTR_ACCESSKEY, &t);
-        tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
+        std::string r;
+        if (auto value = tag->parsedtag_get_value(ATTR_REFERER)) {
+          r = url_quote(*value);
+        }
+        std::string s;
+        if (auto value = tag->parsedtag_get_value(ATTR_TITLE)) {
+          s = *value;
+        }
+        std::string t;
+        if (auto value = tag->parsedtag_get_value(ATTR_ACCESSKEY)) {
+          t = *value;
+        } else {
+          t.push_back(0);
+        }
+        auto hseq = 0;
+        if (auto value = tag->parsedtag_get_value(ATTR_HSEQ)) {
+          hseq = stoi(*value);
+        }
         if (hseq > 0) {
           data->_hmarklist->putHmarker(nlines, line.len(), hseq - 1);
         } else if (hseq < 0) {
@@ -530,7 +549,7 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
             hseq = -hseq;
           }
         }
-        if (p) {
+        if (p.size()) {
           effect |= PE_ANCHOR;
           auto bp = BufferPoint{
               .line = nlines,
@@ -538,10 +557,10 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
           };
           a_href = data->_href->putAnchor(Anchor{
               .url = p,
-              .target = q ? q : "",
-              .option = {.referer = r ? r : ""},
-              .title = s ? s : "",
-              .accesskey = (unsigned char)*t,
+              .target = q,
+              .option = {.referer = r},
+              .title = s,
+              .accesskey = (unsigned char)t[0],
               .start = bp,
               .end = bp,
               .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
@@ -719,13 +738,12 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         // }
         break;
       case HTML_BASE: {
-        const char *p;
-        if (tag->parsedtag_get_value(ATTR_HREF, &p)) {
-          p = Strnew(url_quote(remove_space(p)))->ptr;
-          data->baseURL = {p, url};
+        if (auto value = tag->parsedtag_get_value(ATTR_HREF)) {
+          data->baseURL = {url_quote(remove_space(*value)), url};
         }
-        if (tag->parsedtag_get_value(ATTR_TARGET, &p))
-          data->baseTarget = url_quote(p);
+        if (auto value = tag->parsedtag_get_value(ATTR_TARGET)) {
+          data->baseTarget = url_quote(*value);
+        }
         break;
       }
 
@@ -1122,7 +1140,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
       if (q)
-        tmp << textfieldrep(Strnew_charp(q), size);
+        tmp << textfieldrep(q, size);
       else {
         for (i = 0; i < size; i++)
           tmp << ' ';
