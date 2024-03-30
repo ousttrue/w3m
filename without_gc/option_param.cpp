@@ -1,10 +1,10 @@
 #include "option_param.h"
+#include "quote.h"
 #include "myctype.h"
-#include "html/table.h"
+
 #include <sstream>
-#include <Str.h>
-#include <html/html_quote.h>
-#include <html/table.h>
+
+double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 
 int str_to_bool(const char *value, int old) {
   if (value == NULL)
@@ -34,7 +34,7 @@ int str_to_bool(const char *value, int old) {
 std::string param_ptr::toOptionPanelHtml() const {
   std::stringstream src;
   src << "<tr><td>" << this->comment;
-  src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
+  src << "</td><td width=" << static_cast<int>(28 * pixel_per_char) << ">";
 
   // switch (this->inputtype) {
   // case PI_TEXT:
@@ -76,7 +76,9 @@ int param_int::setParseValue(const std::string &src) {
 }
 
 std::string param_int::to_str() const {
-  return Sprintf("%d", *this->varptr)->ptr;
+  std::stringstream ss;
+  ss << this->varptr;
+  return ss.str();
 }
 
 //
@@ -85,7 +87,7 @@ std::string param_int::to_str() const {
 std::string param_int_select::toOptionPanelHtml() const {
   std::stringstream src;
   src << "<tr><td>" << this->comment;
-  src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
+  src << "</td><td width=" << static_cast<int>(28 * pixel_per_char) << ">";
 
   // switch (this->inputtype) {
   // case PI_SEL_C: {
@@ -93,7 +95,7 @@ std::string param_int_select::toOptionPanelHtml() const {
   src << "<select name=" << this->name << ">";
   for (auto s = this->select; s->text != NULL; s++) {
     src << "<option value=";
-    src << Sprintf("%s\n", s->cvalue)->ptr;
+    src << s->cvalue << "\n";
     if (/*(this->type != P_CHAR &&*/ s->value == atoi(tmp.c_str()) /*||
         (this->type == P_CHAR && (char)s->value == *(tmp->c_str()))*/) {
       // if (this->isSelected()) {
@@ -126,9 +128,9 @@ int param_pixels::setParseValue(const std::string &value) {
 }
 
 std::string param_pixels::to_str() const {
-  // case P_PIXELS:
-  // case P_SCALE:
-  return Sprintf("%g", *this->varptr)->ptr;
+  std::stringstream ss;
+  ss << *this->varptr;
+  return ss.str();
 }
 
 //
@@ -152,7 +154,7 @@ std::string param_bool::to_str() const { return *this->varptr ? "1" : "0"; }
 std::string param_bool::toOptionPanelHtml() const {
   std::stringstream src;
   src << "<tr><td>" << this->comment;
-  src << Sprintf("</td><td width=%d>", (int)(28 * pixel_per_char))->ptr;
+  src << "</td><td width=" << static_cast<int>(28 * pixel_per_char) << ">";
 
   // case PI_ONOFF: {
   auto x = atoi(this->to_str().c_str());

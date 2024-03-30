@@ -29,7 +29,6 @@ with_gc_lib = static_library(
         'tabbuffer.cpp',
         'proc.cpp',
         'option.cpp',
-        'option_param.cpp',
     ],
     dependencies: deps + [without_gc_dep],
     c_args: defs,

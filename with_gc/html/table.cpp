@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "option_param.h"
 #include "app.h"
 #include "html_feed_env.h"
 #include "symbol.h"
@@ -19,8 +20,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
-double pixel_per_char = DEFAULT_PIXEL_PER_CHAR;
 
 #define RULE_WIDTH 1
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))

@@ -1,4 +1,5 @@
 #include "html_feed_env.h"
+#include "option_param.h"
 #include "form.h"
 #include "readbuffer.h"
 #include "cmp.h"
