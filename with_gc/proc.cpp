@@ -32,6 +32,14 @@
 #include "buffer.h"
 #include <sys/stat.h>
 
+static std::string SearchString;
+// if (str != nullptr && str != SearchString)
+//   SearchString = str;
+// if (SearchString == nullptr || *SearchString == '\0')
+//   return SR_NOTFOUND;
+//
+// str = SearchString;
+
 // NOTHING nullptr @ @ @
 //"Do nothing"
 std::shared_ptr<CoroutineState<void>>
@@ -137,14 +145,29 @@ std::shared_ptr<CoroutineState<void>> rdrwSc(const FuncContext &context) {
 // SEARCH SEARCH_FORE WHEREIS
 //"Search forward"
 std::shared_ptr<CoroutineState<void>> srchfor(const FuncContext &context) {
-  srch(forwardSearch, "Forward: ");
+  auto buf = CurrentTab->currentBuffer();
+
+  bool disp = false;
+  auto str = App::instance().searchKeyData();
+  if (str.empty()) {
+    // str = inputStrHist(prompt, nullptr, TextHist);
+    if (str.empty())
+      str = SearchString;
+    if (str.empty()) {
+      co_return;
+    }
+    disp = true;
+  }
+
+  srch(buf->layout, forwardSearch, "Forward: ");
   co_return;
 }
 
 // ISEARCH
 //"Incremental search forward"
 std::shared_ptr<CoroutineState<void>> isrchfor(const FuncContext &context) {
-  isrch(forwardSearch, "I-search: ");
+  auto buf = CurrentTab->currentBuffer();
+  isrch(buf->layout, forwardSearch, "I-search: ");
   co_return;
 }
 
@@ -153,14 +176,16 @@ std::shared_ptr<CoroutineState<void>> isrchfor(const FuncContext &context) {
 // SEARCH_BACK
 //"Search backward"
 std::shared_ptr<CoroutineState<void>> srchbak(const FuncContext &context) {
-  srch(backwardSearch, "Backward: ");
+  auto buf = CurrentTab->currentBuffer();
+  srch(buf->layout, backwardSearch, "Backward: ");
   co_return;
 }
 
 // ISEARCH_BACK
 //"Incremental search backward"
 std::shared_ptr<CoroutineState<void>> isrchbak(const FuncContext &context) {
-  isrch(backwardSearch, "I-search backward: ");
+  auto buf = CurrentTab->currentBuffer();
+  isrch(buf->layout, backwardSearch, "I-search backward: ");
   co_return;
 }
 
@@ -168,7 +193,8 @@ std::shared_ptr<CoroutineState<void>> isrchbak(const FuncContext &context) {
 // SEARCH_NEXT
 //"Continue search forward"
 std::shared_ptr<CoroutineState<void>> srchnxt(const FuncContext &context) {
-  srch_nxtprv(0);
+  auto buf = CurrentTab->currentBuffer();
+  srch_nxtprv(buf->layout, SearchString, 0);
   co_return;
 }
 
@@ -176,7 +202,8 @@ std::shared_ptr<CoroutineState<void>> srchnxt(const FuncContext &context) {
 // SEARCH_PREV
 //"Continue search backward"
 std::shared_ptr<CoroutineState<void>> srchprv(const FuncContext &context) {
-  srch_nxtprv(1);
+  auto buf = CurrentTab->currentBuffer();
+  srch_nxtprv(buf->layout, SearchString, 1);
   co_return;
 }
 

@@ -1,20 +1,26 @@
 #include "search.h"
-#include "buffer.h"
 #include "line_layout.h"
-#include "Str.h"
-#include "app.h"
-#include "regex.h"
-#include "proc.h"
-#include "tabbuffer.h"
 
 bool IgnoreCase = true;
 bool WrapSearch = false;
 bool show_srch_str = true;
 
-int forwardSearch(LineLayout *layout, const char *str) {
+static const char *regexCompile(const char *ex, int igncase)
+{
+  return nullptr;
+}
+static int regexMatch(const char *str, int len, int firstp)
+{
+  return -1;
+}
+static void matchedPosition(const char **first, const char **last)
+{
+}
 
-  if (auto p = regexCompile(str, IgnoreCase)) {
-    App::instance().message(p);
+int forwardSearch(LineLayout *layout, const std::string &str) {
+
+  if (auto p = regexCompile(str.c_str(), IgnoreCase)) {
+    // App::instance().message(p);
     return SR_NOTFOUND;
   }
 
@@ -64,9 +70,9 @@ int forwardSearch(LineLayout *layout, const char *str) {
   return SR_NOTFOUND;
 }
 
-int backwardSearch(LineLayout *layout, const char *str) {
-  if (auto p = regexCompile(str, IgnoreCase)) {
-    App::instance().message(p);
+int backwardSearch(LineLayout *layout, const std::string &str) {
+  if (auto p = regexCompile(str.c_str(), IgnoreCase)) {
+    // App::instance().message(p);
     return SR_NOTFOUND;
   }
 
@@ -143,7 +149,6 @@ int backwardSearch(LineLayout *layout, const char *str) {
   return SR_NOTFOUND;
 }
 
-static const char *SearchString = nullptr;
 static SearchFunc searchRoutine;
 
 static void clear_mark(Line *l) {
@@ -156,15 +161,10 @@ static void clear_mark(Line *l) {
 }
 
 /* search by regular expression */
-static int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
+static int srchcore(const std::shared_ptr<LineLayout> &layout,
+                    const std::string &str, const SearchFunc &func) {
   int result = SR_NOTFOUND;
 
-  if (str != nullptr && str != SearchString)
-    SearchString = str;
-  if (SearchString == nullptr || *SearchString == '\0')
-    return SR_NOTFOUND;
-
-  str = SearchString;
   // crmode();
   // if (SETJMP(IntReturn) == 0) {
   //   for (i = 0; i < PREC_NUM; i++) {
@@ -178,7 +178,8 @@ static int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
   return result;
 }
 
-// static void disp_srchresult(int result, const char *prompt, const char *str) {
+// static void disp_srchresult(int result, const char *prompt, const char *str)
+// {
 //   if (str == nullptr)
 //     str = "";
 //   if (result & SR_NOTFOUND)
@@ -191,11 +192,12 @@ static int srchcore(const char *str, int (*func)(LineLayout *, const char *)) {
 
 /* Search regular expression forward */
 
-void srch_nxtprv(int reverse) {
+void srch_nxtprv(const std::shared_ptr<LineLayout> &layout,
+                 const std::string &str, int reverse) {
   static SearchFunc routine[2] = {forwardSearch, backwardSearch};
 
   if (searchRoutine == nullptr) {
-    App::instance().disp_message("No previous regular expression");
+    // App::instance().disp_message("No previous regular expression");
     return;
   }
   if (reverse != 0) {
@@ -205,70 +207,74 @@ void srch_nxtprv(int reverse) {
     reverse ^= 1;
   }
   if (reverse == 0) {
-    CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(1);
+    layout->visual.cursorMoveCol(1);
   }
 
-  auto result = srchcore(SearchString, routine[reverse]);
+  auto result = srchcore(layout, str, routine[reverse]);
   if (result & SR_FOUND) {
-    clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
+    clear_mark(layout->currentLine());
   } else {
     if (reverse == 0) {
-      CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(-1);
+      layout->visual.cursorMoveCol(-1);
     }
   }
-  // disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
+  // disp_srchresult(result, (reverse ? "Backward: " : "Forward: "),
+  // SearchString);
 }
 
-static int dispincsrch(int ch, Str *buf, Lineprop *prop) {
+// static int dispincsrch(const std::shared_ptr<LineLayout> &layout, int ch,
+//                        Str *buf, Lineprop *prop) {
+//
+//   // static LineLayout sbuf();
+//   if (ch == 0 && !buf) {
+//     return -1;
+//   }
+//
+//   bool do_next_search = false;
+//   auto str = buf->ptr;
+//   switch (ch) {
+//   case 022: /* C-r */
+//     searchRoutine = backwardSearch;
+//     do_next_search = true;
+//     break;
+//   case 023: /* C-s */
+//     searchRoutine = forwardSearch;
+//     do_next_search = true;
+//     break;
+//
+//   default:
+//     if (ch >= 0)
+//       return ch; /* use InputKeymap */
+//   }
+//
+//   if (do_next_search) {
+//     if (*str) {
+//       if (searchRoutine == forwardSearch)
+//         layout->visual.cursorMoveCol(1);
+//       // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
+//       if (srchcore(layout, str, searchRoutine) == SR_NOTFOUND &&
+//           searchRoutine == forwardSearch) {
+//         layout->visual.cursorMoveCol(-1);
+//         // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
+//       }
+//       clear_mark(layout->currentLine());
+//       return -1;
+//     } else
+//       return 020; /* _prev completion for C-s C-s */
+//   } else if (*str) {
+//     // CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf);
+//     srchcore(layout, str, searchRoutine);
+//   }
+//   clear_mark(layout->currentLine());
+//   return -1;
+// }
 
-  // static LineLayout sbuf();
-  if (ch == 0 && !buf) {
-    return -1;
-  }
-
-  bool do_next_search = false;
-  auto str = buf->ptr;
-  switch (ch) {
-  case 022: /* C-r */
-    searchRoutine = backwardSearch;
-    do_next_search = true;
-    break;
-  case 023: /* C-s */
-    searchRoutine = forwardSearch;
-    do_next_search = true;
-    break;
-
-  default:
-    if (ch >= 0)
-      return ch; /* use InputKeymap */
-  }
-
-  if (do_next_search) {
-    if (*str) {
-      if (searchRoutine == forwardSearch)
-        CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(1);
-      // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
-      if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
-          searchRoutine == forwardSearch) {
-        CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(-1);
-        // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
-      }
-      clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
-      return -1;
-    } else
-      return 020; /* _prev completion for C-s C-s */
-  } else if (*str) {
-    // CurrentTab->currentBuffer()->layout.COPY_BUFROOT_FROM(sbuf);
-    srchcore(str, searchRoutine);
-  }
-  clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
-  return -1;
-}
-
-void isrch(SearchFunc func, const char *prompt) {
+void isrch(const std::shared_ptr<LineLayout> &layout, const SearchFunc &func,
+           const std::string &str) {
   // LineLayout sbuf(0);
   // sbuf.COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
-  dispincsrch(0, nullptr, nullptr); /* initialize incremental search state */
+  // dispincsrch(layout, 0, nullptr,
+  //             nullptr); /* initialize incremental search state */
 
   searchRoutine = func;
   // auto str =
@@ -278,28 +284,18 @@ void isrch(SearchFunc func, const char *prompt) {
   // }
 }
 
-void srch(SearchFunc func, const char *prompt) {
-  bool disp = false;
-  auto str = App::instance().searchKeyData();
-  if (str.empty()) {
-    // str = inputStrHist(prompt, nullptr, TextHist);
-    if (str.empty())
-      str = SearchString;
-    if (str.empty()) {
-      return;
-    }
-    disp = true;
-  }
+void srch(const std::shared_ptr<LineLayout> &layout, const SearchFunc &func,
+          const std::string &str) {
 
-  int col = CurrentTab->currentBuffer()->layout->visual.cursor().col;
+  int col = layout->visual.cursor().col;
   if (func == forwardSearch)
-    CurrentTab->currentBuffer()->layout->visual.cursorMoveCol(1);
+    layout->visual.cursorMoveCol(1);
 
-  int result = srchcore(str.c_str(), func);
+  int result = srchcore(layout, str, func);
   if (result & SR_FOUND)
-    clear_mark(CurrentTab->currentBuffer()->layout->currentLine());
+    clear_mark(layout->currentLine());
   else
-    CurrentTab->currentBuffer()->layout->visual.cursorCol(col);
+    layout->visual.cursorCol(col);
   // if (disp)
   //   disp_srchresult(result, prompt, str);
   searchRoutine = func;

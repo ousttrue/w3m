@@ -52,6 +52,7 @@ without_gc_lib = static_library(
         'matrix.cpp',
         'option_param.cpp',
         'symbol.cpp',
+        'search.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
