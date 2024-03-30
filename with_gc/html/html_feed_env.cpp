@@ -5,10 +5,11 @@
 #include "readbuffer.h"
 #include "cmp.h"
 #include "stringtoken.h"
-#include "html_quote.h"
 #include "ctrlcode.h"
 #include "symbol.h"
 #include "utf8.h"
+#include "quote.h"
+#include "Str.h"
 #include <assert.h>
 #include <sstream>
 
@@ -204,7 +205,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
       envs[this->envc].type = tag->ul_type(envs[this->envc].type);
       for (int i = 0; i < INDENT_INCR - 3; i++)
         this->obuf.push_charp(1, NBSP, PC_ASCII);
-      auto tmp = Strnew();
+      std::stringstream tmp;
       switch (envs[this->envc].type) {
       case 'd':
         push_symbol(tmp, UL_SYMBOL_DISC, 1, 1);
@@ -220,7 +221,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
         break;
       }
       this->obuf.push_charp(1, NBSP, PC_ASCII);
-      this->obuf.push_str(1, tmp->ptr, PC_ASCII);
+      this->obuf.push_str(1, tmp.str(), PC_ASCII);
       this->obuf.push_charp(1, NBSP, PC_ASCII);
       this->obuf.prevchar = " ";
       break;
@@ -386,10 +387,9 @@ int html_feed_environ::HTML_FRAME(const std::shared_ptr<HtmlTag> &tag) {
     r = *value;
   if (q.size()) {
     q = html_quote(q);
-    this->obuf.push_tag(Sprintf("<a hseq=\"%d\" href=\"%s\">",
-                                this->parser.cur_hseq++, q.c_str())
-                            ->ptr,
-                        HTML_A);
+    std::stringstream ss;
+    ss << "<a hseq=\"" << this->parser.cur_hseq++ << "\" href=\"" << q << "\">";
+    this->obuf.push_tag(ss.str(), HTML_A);
     if (r.size())
       q = html_quote(r);
     this->obuf.push_charp(get_strwidth(q), q.c_str(), PC_ASCII);

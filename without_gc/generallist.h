@@ -8,7 +8,6 @@
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 
 struct GeneralList;
-struct Str;
 struct TextLine {
   std::string line;
   int pos = 0;
