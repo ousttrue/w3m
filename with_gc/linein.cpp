@@ -8,7 +8,6 @@
 #include "app.h"
 #include "tabbuffer.h"
 #include "etc.h"
-#include "alloc.h"
 #include "buffer.h"
 #include "form.h"
 #include "ctrlcode.h"

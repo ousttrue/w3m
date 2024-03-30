@@ -125,7 +125,7 @@ private:
   short fixed_width[MAXCOL];
   struct table_cell cell;
   std::vector<int> tabheight;
-  struct table_in *tables;
+  std::vector<table_in> tables;
   short tables_size;
   std::shared_ptr<GeneralList> suspended_data;
   /* use for counting skipped spaces */

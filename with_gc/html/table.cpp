@@ -15,11 +15,11 @@
 #include "utf8.h"
 #include "myctype.h"
 #include "cmp.h"
-#include "alloc.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <vector>
 
 #define RULE_WIDTH 1
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))
@@ -697,8 +697,8 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
   struct table_cell *cell = &this->cell;
   int rulewidth = this->table_rule_width();
 
-  auto indexarray = (short *)NewAtom_N(short, this->maxcol + 1);
-  auto mod = (double *)NewAtom_N(double, this->maxcol + 1);
+  std::vector<short> indexarray(this->maxcol + 1);
+  std::vector<double> mod(this->maxcol + 1);
   for (i = 0; i <= this->maxcol; i++) {
     iwidth[i] = static_cast<short>(
         ceil_at_intervals(static_cast<int>(ceil(dwidth[i])), rulewidth));
@@ -710,7 +710,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
   for (int k = 0; k <= this->maxcol; k++) {
     x = mod[k];
     sum += x;
-    i = bsearch_double(x, mod, indexarray, k);
+    i = bsearch_double(x, mod.data(), indexarray.data(), k);
     if (k > i) {
       int ii;
       for (ii = k; ii > i; ii--)
@@ -719,12 +719,11 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
     indexarray[i] = k;
   }
 
-  auto fixed = (char *)NewAtom_N(char, this->maxcol + 1);
-  memset(fixed, 0, this->maxcol + 1);
+  std::vector<char> fixed(this->maxcol + 1);
+  memset(fixed.data(), 0, this->maxcol + 1);
   for (step = 0; step < 2; step++) {
     for (i = 0; i <= this->maxcol; i += n) {
       int nn;
-      short *idx;
       double nsum;
       if (sum < 0.5)
         return;
@@ -743,7 +742,7 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
             (double)rulewidth - mod[ii] > 0.5)
           fixed[ii] = 1;
       }
-      idx = (short *)NewAtom_N(short, n);
+      std::vector<short> idx(n);
       for (int k = 0; k < cell->maxcell; k++) {
         int kk, w, width, m;
         j = cell->index[k];
@@ -975,7 +974,7 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
   short cwidth[MAXCELL];
   double swidth[MAXCELL];
 #endif /* __GNUC__ */
-  double twidth, sxy, *Sxx, stotal;
+  double twidth, sxy, stotal;
 
   twidth = 0.;
   stotal = 0.;
@@ -987,7 +986,7 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
     }
   }
 
-  Sxx = (double *)NewAtom_N(double, cell->maxcell + 1);
+  std::vector<double> Sxx(cell->maxcell + 1);
   for (k = 0; k <= cell->maxcell; k++) {
     j = cell->index[k];
     bcol = cell->col[j];
@@ -1008,7 +1007,7 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
 
   /* compress table */
   corr = this->check_compressible_cell(minv, newwidth, swidth, cwidth, twidth,
-                                       Sxx, -1, -1, stotal, corr);
+                                       Sxx.data(), -1, -1, stotal, corr);
   if (itr < MAX_ITERATION && corr > 0)
     return corr;
 
@@ -1016,7 +1015,7 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
   for (k = cell->maxcell; k >= 0; k--) {
     j = cell->index[k];
     corr = this->check_compressible_cell(minv, newwidth, swidth, cwidth, twidth,
-                                         Sxx, -1, j, Sxx[j], corr);
+                                         Sxx.data(), -1, j, Sxx[j], corr);
     if (itr < MAX_ITERATION && corr > 0)
       return corr;
   }
@@ -1024,7 +1023,8 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
   /* compress single column cell */
   for (i = 0; i <= this->maxcol; i++) {
     corr = this->check_compressible_cell(minv, newwidth, swidth, cwidth, twidth,
-                                         Sxx, i, -1, minv->m_entry(i, i), corr);
+                                         Sxx.data(), i, -1, minv->m_entry(i, i),
+                                         corr);
     if (itr < MAX_ITERATION && corr > 0)
       return corr;
   }
@@ -1092,21 +1092,37 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
     return corr;
 }
 
+struct Cell {
+  std::vector<short> row;
+  std::vector<short> rowspan;
+  std::vector<short> indexarray;
+  short maxcell = -1;
+  short size = 0;
+  std::vector<int> height;
+
+  void resize(size_t c) {
+    // if (cell.size == 0) {
+    //   cell.size = max(MAXCELL, c + 1);
+    //   cell.row = (short *)NewAtom_N(short, cell.size);
+    //   cell.rowspan = (short *)NewAtom_N(short, cell.size);
+    //   cell.indexarray = (short *)NewAtom_N(short, cell.size);
+    //   cell.height = (int *)NewAtom_N(int, cell.size);
+    // } else
+    {
+      this->size = max(this->size + MAXCELL, c + 1);
+      this->row.resize(this->size);
+      this->rowspan.resize(this->size);
+      this->indexarray.resize(this->size);
+      this->height.resize(this->size);
+    }
+  }
+};
+
 void table::check_table_height() {
-  int i, j, k;
-  struct {
-    short *row;
-    short *rowspan;
-    short *indexarray;
-    short maxcell;
-    short size;
-    int *height;
-  } cell = {0};
+  Cell cell = {};
+
   int space = 0;
-
-  cell.size = 0;
-  cell.maxcell = -1;
-
+  int i, j, k;
   for (j = 0; j <= this->maxrow; j++) {
     if (this->tabattr[j].empty())
       continue;
@@ -1123,8 +1139,8 @@ void table::check_table_height() {
       rowspan = this->table_rowspan(j, i);
       if (rowspan > 1) {
         int c = cell.maxcell + 1;
-        k = bsearch_2short(rowspan, cell.rowspan, j, cell.row, this->maxrow + 1,
-                           cell.indexarray, c);
+        k = bsearch_2short(rowspan, cell.rowspan.data(), j, cell.row.data(),
+                           this->maxrow + 1, cell.indexarray.data(), c);
         if (k <= cell.maxcell) {
           int idx = cell.indexarray[k];
           if (cell.row[idx] == j && cell.rowspan[idx] == rowspan)
@@ -1133,20 +1149,7 @@ void table::check_table_height() {
         if (c >= MAXROWCELL)
           continue;
         if (c >= cell.size) {
-          if (cell.size == 0) {
-            cell.size = max(MAXCELL, c + 1);
-            cell.row = (short *)NewAtom_N(short, cell.size);
-            cell.rowspan = (short *)NewAtom_N(short, cell.size);
-            cell.indexarray = (short *)NewAtom_N(short, cell.size);
-            cell.height = (int *)NewAtom_N(int, cell.size);
-          } else {
-            cell.size = max(cell.size + MAXCELL, c + 1);
-            cell.row = (short *)New_Reuse(short, cell.row, cell.size);
-            cell.rowspan = (short *)New_Reuse(short, cell.rowspan, cell.size);
-            cell.indexarray =
-                (short *)New_Reuse(short, cell.indexarray, cell.size);
-            cell.height = (int *)New_Reuse(int, cell.height, cell.size);
-          }
+          cell.resize(c);
         }
         if (c > cell.maxcell) {
           cell.maxcell++;
@@ -1179,8 +1182,9 @@ void table::check_table_height() {
   case BORDER_NONE:
     space = 0;
   }
-  check_cell_height(this->tabheight.data(), cell.height, cell.row, cell.rowspan,
-                    cell.maxcell, cell.indexarray, space, 1);
+  check_cell_height(this->tabheight.data(), cell.height.data(), cell.row.data(),
+                    cell.rowspan.data(), cell.maxcell, cell.indexarray.data(),
+                    space, 1);
 }
 
 int table::get_table_width(const short *orgwidth, const short *cellwidth,
@@ -2768,13 +2772,14 @@ void table::pushTable(const std::shared_ptr<table> &tbl1) {
   row = this->row;
 
   if (this->ntable >= this->tables_size) {
-    struct table_in *tmp;
     this->tables_size += MAX_TABLE_N;
     if (this->tables_size <= 0 || this->tables_size > MAX_TABLE_N_LIMIT)
       this->tables_size = MAX_TABLE_N_LIMIT;
-    tmp = (struct table_in *)New_N(struct table_in, this->tables_size);
-    if (this->tables)
-      memcpy(tmp, this->tables, this->ntable * sizeof(struct table_in));
+    std::vector<table_in> tmp(this->tables_size);
+    if (this->tables.size()) {
+      memcpy(tmp.data(), this->tables.data(),
+             this->ntable * sizeof(struct table_in));
+    }
     this->tables = tmp;
   }
 
@@ -2959,7 +2964,7 @@ void table::check_relative_width(int maxwidth) {
   int i;
   double rel_total = 0;
   int size = this->maxcol + 1;
-  double *rcolwidth = (double *)New_N(double, size);
+  std::vector<double> rcolwidth(size);
   struct table_cell *cell = &this->cell;
   int n_leftcol = 0;
 
