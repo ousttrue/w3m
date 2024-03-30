@@ -25,7 +25,6 @@ public:
   }
 };
 
-struct Str;
 class HtmlTag;
 struct HttpResponse;
 struct LineData;
@@ -149,4 +148,8 @@ public:
                                      html_feed_environ *h_env);
 };
 
-int getMetaRefreshParam(const char *q, Str **refresh_uri);
+struct MetaRefreshInfo {
+  int interval = 0;
+  std::string url;
+};
+MetaRefreshInfo getMetaRefreshParam(const char *q);

@@ -734,14 +734,13 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
         tag->parsedtag_get_value(ATTR_CONTENT, &q);
         if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
-          Str *tmp = nullptr;
-          int refresh_interval = getMetaRefreshParam(q, &tmp);
-          if (tmp) {
-            p = Strnew(url_quote(remove_space(tmp->ptr)))->ptr;
+          auto meta = getMetaRefreshParam(q);
+          if (meta.url.size()) {
+            // p = Strnew(url_quote(remove_space(meta.url)))->ptr;
             // TODO:
             // App::instance().task(refresh_interval, FUNCNAME_gorURL, p);
-          } else if (refresh_interval > 0) {
-            data->refresh_interval = refresh_interval;
+          } else if (meta.interval > 0) {
+            data->refresh_interval = meta.interval;
           }
         }
         break;
@@ -801,33 +800,31 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
   return line;
 }
 
-int getMetaRefreshParam(const char *q, Str **refresh_uri) {
-  int refresh_interval;
-  const char *r;
-  Str *s_tmp = nullptr;
+MetaRefreshInfo getMetaRefreshParam(const char *q) {
+  if (q == nullptr) {
+    return {};
+  }
 
-  if (q == nullptr || refresh_uri == nullptr)
-    return 0;
+  auto refresh_interval = atoi(q);
+  if (refresh_interval < 0) {
+    return {};
+  }
 
-  refresh_interval = atoi(q);
-  if (refresh_interval < 0)
-    return 0;
-
+  std::string s_tmp;
   while (*q) {
     if (!strncasecmp(q, "url=", 4)) {
       q += 4;
       if (*q == '\"' || *q == '\'') /* " or ' */
         q++;
-      r = q;
+      auto r = q;
       while (*r && !IS_SPACE(*r) && *r != ';')
         r++;
-      s_tmp = Strnew_charp_n(q, r - q);
 
-      if (s_tmp->length > 0 &&
-          (s_tmp->ptr[s_tmp->length - 1] == '\"' ||  /* " */
-           s_tmp->ptr[s_tmp->length - 1] == '\'')) { /* ' */
-        s_tmp->length--;
-        s_tmp->ptr[s_tmp->length] = '\0';
+      s_tmp = std::string(q, r - q);
+
+      if (s_tmp.size() > 0 && (s_tmp.back() == '\"' ||  /* " */
+                               s_tmp.back() == '\'')) { /* ' */
+        s_tmp.pop_back();
       }
       q = r;
     }
@@ -838,8 +835,11 @@ int getMetaRefreshParam(const char *q, Str **refresh_uri) {
     while (*q && *q == ' ')
       q++;
   }
-  *refresh_uri = s_tmp;
-  return refresh_interval;
+
+  return {
+      .interval = refresh_interval,
+      .url = s_tmp,
+  };
 }
 
 std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,

@@ -746,21 +746,22 @@ int html_feed_environ::HTML_ISINDEX_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_META_enter(const std::shared_ptr<HtmlTag> &tag) {
   const char *p = nullptr;
-  const char *q = nullptr;
   tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
+  const char *q = nullptr;
   tag->parsedtag_get_value(ATTR_CONTENT, &q);
   if (p && q && !strcasecmp(p, "refresh")) {
-    int refresh_interval;
-    Str *tmp = nullptr;
-    refresh_interval = getMetaRefreshParam(q, &tmp);
-    if (tmp) {
-      q = html_quote(tmp->ptr);
-      tmp = Sprintf("Refresh (%d sec) <a href=\"%s\">%s</a>", refresh_interval,
-                    q, q);
-    } else if (refresh_interval > 0)
-      tmp = Sprintf("Refresh (%d sec)", refresh_interval);
-    if (tmp) {
-      this->parser.HTMLlineproc1(tmp->ptr, this);
+    auto meta = getMetaRefreshParam(q);
+    std::stringstream ss;
+    if (meta.url.size()) {
+      auto qq = html_quote(meta.url);
+      ss << "Refresh (" << meta.interval << " sec) <a href=\"" << qq << "\">"
+         << qq << "</a>";
+    } else if (meta.interval > 0) {
+      ss << "Refresh (" << meta.interval << " sec)";
+    }
+    auto tmp = ss.str();
+    if (tmp.size()) {
+      this->parser.HTMLlineproc1(tmp, this);
       this->obuf.do_blankline(this->buf, envs[this->envc].indent, 0,
                               this->limit);
     }
