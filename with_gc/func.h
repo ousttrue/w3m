@@ -124,7 +124,7 @@ template <typename T> struct CoroutinePromiseBase {
     ValueAwaiter<std::string> awaiter;
 
     awaiter.onSuspend = [input](auto a) {
-      input->onInput = [a](const char *p) { a->resume(p); };
+      input->onInput = [a](const std::string &p) { a->resume(p); };
     };
 
     return awaiter;

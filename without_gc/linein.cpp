@@ -1,20 +1,17 @@
 #include "linein.h"
-#include "invoke.h"
-#include "ioutil.h"
-#include "tmpfile.h"
 #include "quote.h"
-#include "Str.h"
 #include "url_decode.h"
-#include "app.h"
-#include "tabbuffer.h"
 #include "etc.h"
-#include "buffer.h"
 #include "form.h"
 #include "ctrlcode.h"
 #include "myctype.h"
 #include "history.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <assert.h>
+#include <sstream>
+
 #ifdef _MSC_VER
 #else
 #include <dirent.h>
@@ -113,11 +110,10 @@ LineInput::inputLineHistSearch(const char *prompt, std::string_view def_str,
   }
 
   if (def_str.size()) {
-    input->strBuf = Strnew_charp_n(def_str.data(), def_str.size());
+    input->strBuf = def_str;
     input->CLen = input->CPos =
         input->setStrType(input->strBuf, input->strProp);
   } else {
-    input->strBuf = Strnew();
     input->CLen = input->CPos = 0;
   }
 
@@ -143,7 +139,7 @@ void LineInput::onBreak() {
 
   // _screen->print();
   // App::instance().cursor({.row = _screen->LASTLINE(), .col = 0});
-  auto p = strBuf->ptr;
+  auto p = this->strBuf.c_str();
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);
   }
@@ -156,14 +152,14 @@ void LineInput::onBreak() {
   if (flag & IN_FILENAME) {
     onInput(expandPath(p).c_str());
   } else {
-    onInput(Strnew_charp(p)->ptr);
+    onInput(p);
   }
 }
 
 void LineInput::draw() {
-  int x = bytePosToColumn(strBuf->ptr, strProp, CLen, CPos, 0, true);
+  int x = bytePosToColumn(strBuf.c_str(), strProp, CLen, CPos, 0, true);
   if (x - rpos > offset) {
-    int y = bytePosToColumn(strBuf->ptr, strProp, CLen, CLen, 0, false);
+    int y = bytePosToColumn(strBuf.c_str(), strProp, CLen, CLen, 0, false);
     if (y - epos > x - rpos)
       offset = x - rpos;
     else if (y - epos > 0)
@@ -180,7 +176,7 @@ void LineInput::draw() {
   //         .col = 0,
   //     },
   //     prompt.c_str());
-  App::instance().message(prompt + strBuf->ptr);
+  // App::instance().message(prompt + strBuf);
   if (is_passwd) {
     // TODO
     assert(false);
@@ -239,7 +235,7 @@ bool LineInput::dispatch(const char *buf, int len) {
     cm_disp_next = -1;
     if (CLen < STR_LEN) {
       insC({});
-      strBuf->ptr[CPos] = c;
+      strBuf[CPos] = c;
       if (!is_passwd && get_mctype((const char *)&c) == PC_CTRL)
         strProp[CPos] = PC_CTRL;
       else
@@ -363,11 +359,9 @@ bool LineInput::dispatch(const char *buf, int len) {
 // }
 
 void LineInput::insC(char) {
-  int i;
-
-  Strinsert_char(strBuf, CPos, ' ');
-  CLen = strBuf->length;
-  for (i = CLen; i > CPos; i--) {
+  strBuf.insert(strBuf.begin() + CPos, ' ');
+  CLen = strBuf.size();
+  for (int i = CLen; i > CPos; i--) {
     strProp[i] = strProp[i - 1];
   }
 }
@@ -381,7 +375,7 @@ void LineInput::delC(char) {
   for (i = CPos; i < CLen; i++) {
     strProp[i] = strProp[i + delta];
   }
-  Strdelete(strBuf, CPos, delta);
+  strBuf.erase(strBuf.begin() + CPos, strBuf.begin() + CPos + delta);
   CLen -= delta;
 }
 
@@ -392,7 +386,7 @@ void LineInput::_mvL(char) {
 
 void LineInput::_mvLw(char) {
   int first = 1;
-  while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
+  while (CPos > 0 && (first || !terminated(strBuf[CPos - 1]))) {
     CPos--;
     first = 0;
     if (!move_word)
@@ -402,7 +396,7 @@ void LineInput::_mvLw(char) {
 
 void LineInput::_mvRw(char) {
   int first = 1;
-  while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
+  while (CPos < CLen && (first || !terminated(strBuf[CPos - 1]))) {
     CPos++;
     first = 0;
     if (!move_word)
@@ -426,7 +420,7 @@ void LineInput::_bsw(char) {
   int t = 0;
   while (CPos > 0 && !t) {
     _mvL({});
-    t = (move_word && terminated(strBuf->ptr[CPos - 1]));
+    t = (move_word && terminated(strBuf[CPos - 1]));
     delC({});
   }
 }
@@ -437,7 +431,7 @@ void LineInput::insertself(char c) {
   if (CLen >= STR_LEN)
     return;
   insC({});
-  strBuf->ptr[CPos] = c;
+  strBuf.insert(strBuf.begin() + CPos, c);
   strProp[CPos] = (is_passwd) ? PC_ASCII : PC_CTRL;
   CPos++;
 }
@@ -450,7 +444,7 @@ void LineInput::_mvE(char) { CPos = CLen; }
 
 void LineInput::killn(char) {
   CLen = CPos;
-  Strtruncate(strBuf, CLen);
+  strBuf = strBuf.substr(0, CLen);
 }
 
 void LineInput::killb(char) {
@@ -477,8 +471,8 @@ void LineInput::_tcompl(char) {
 void LineInput::next_compl(int next) {
   int status;
   int b, a;
-  Str *buf;
-  Str *s;
+  std::string buf;
+  std::string s;
 
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
@@ -488,16 +482,16 @@ void LineInput::next_compl(int next) {
       b = 0;
     } else {
       for (b = CPos - 1; b >= 0; b--) {
-        if ((strBuf->ptr[b] == ' ' || strBuf->ptr[b] == CTRL_I) &&
-            !((b > 0) && strBuf->ptr[b - 1] == '\\'))
+        if ((strBuf[b] == ' ' || strBuf[b] == CTRL_I) &&
+            !((b > 0) && strBuf[b - 1] == '\\'))
           break;
       }
       b++;
     }
     a = CPos;
-    CBeforeBuf = Strsubstr(strBuf, 0, b);
-    buf = Strsubstr(strBuf, b, a - b);
-    CAfterBuf = Strsubstr(strBuf, a, strBuf->length - a);
+    CBeforeBuf = strBuf.substr(0, b);
+    buf = strBuf.substr(b, a - b);
+    CAfterBuf = strBuf.substr(a, strBuf.size() - a);
     s = doComplete(buf, &status, next);
   } else {
     s = doComplete(strBuf, &status, next);
@@ -510,11 +504,12 @@ void LineInput::next_compl(int next) {
   if (status == CPL_FAIL)
     return;
 
-  strBuf = Strnew_m_charp(CBeforeBuf->ptr, s->ptr, CAfterBuf->ptr, NULL);
+  strBuf = CBeforeBuf + s + CAfterBuf;
   CLen = setStrType(strBuf, strProp);
-  CPos = CBeforeBuf->length + s->length;
-  if (CPos > CLen)
+  CPos = CBeforeBuf.size() + s.size();
+  if (CPos > CLen) {
     CPos = CLen;
+  }
 }
 
 void LineInput::_dcompl(char) { next_dcompl(1); }
@@ -524,10 +519,9 @@ void LineInput::_rdcompl(char) { next_dcompl(-1); }
 void LineInput::next_dcompl(int next) {
   static int col, row;
   static unsigned int len;
-  static Str *d;
+  static std::string d;
   int i, j, y;
   Str *f;
-  char *p;
   struct stat st;
   int comment, nline;
 
@@ -564,18 +558,18 @@ void LineInput::next_dcompl(int next) {
     return;
   cm_disp_next = 0;
 
-  d = CDirBuf->Strdup();
-  if (d->length > 0 && Strlastchar(d) != '/')
-    Strcat_char(d, '/');
-  if (cm_mode & CPL_URL && d->ptr[0] == 'f') {
-    p = d->ptr;
+  d = CDirBuf;
+  if (d.size() && d.back() != '/')
+    d += '/';
+  if (cm_mode & CPL_URL && d[0] == 'f') {
+    auto p = d.c_str();
     if (strncmp(p, "file://localhost/", 17) == 0)
       p = &p[16];
     else if (strncmp(p, "file:///", 8) == 0)
       p = &p[7];
     else if (strncmp(p, "file:/", 6) == 0 && p[6] != '/')
       p = &p[5];
-    d = Strnew_charp(p);
+    d = p;
   }
 
   len = 0;
@@ -643,27 +637,19 @@ disp_next:
   // }
 }
 
-static Str *escape_spaces(Str *s) {
-  Str *tmp = NULL;
-  char *p;
-
-  if (s == NULL)
-    return s;
-  for (p = s->ptr; *p; p++) {
+static std::string escape_spaces(const std::string &s) {
+  std::stringstream tmp;
+  for (auto p = s.begin(); p != s.end(); p++) {
     if (*p == ' ' || *p == CTRL_I) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-      Strcat_char(tmp, '\\');
+      tmp << '\\';
     }
-    if (tmp)
-      Strcat_char(tmp, *p);
+    tmp << *p;
   }
-  if (tmp)
-    return tmp;
-  return s;
+  return tmp.str();
 }
 
-Str *LineInput::doComplete(Str *ifn, int *status, int next) {
+std::string LineInput::doComplete(const std::string &ifn, int *status,
+                                  int next) {
 #ifdef _MSC_VER
   return {};
 #else
@@ -783,7 +769,7 @@ void LineInput::_prev(char) {
 
   auto hist = CurrentHist;
   std::string_view p;
-  if (strCurrentBuf) {
+  if (strCurrentBuf.size()) {
     p = hist->prevHist();
     if (p.empty())
       return;
@@ -794,8 +780,8 @@ void LineInput::_prev(char) {
     strCurrentBuf = strBuf;
   }
   if (DecodeURL && (cm_mode & CPL_URL))
-    p = url_decode0(Strnew(p)->ptr);
-  strBuf = Strnew(p);
+    p = url_decode0(p);
+  strBuf = p;
   CLen = CPos = setStrType(strBuf, strProp);
   offset = 0;
 }
@@ -804,32 +790,33 @@ void LineInput::_next(char) {
   if (!use_hist)
     return;
 
-  if (strCurrentBuf == NULL)
+  if (strCurrentBuf.empty())
     return;
 
   auto hist = CurrentHist;
   auto p = hist->nextHist();
   if (p.size()) {
     if (DecodeURL && (cm_mode & CPL_URL))
-      p = url_decode0(Strnew(p)->ptr);
-    strBuf = Strnew(p);
+      p = url_decode0(p);
+    strBuf = p;
   } else {
     strBuf = strCurrentBuf;
-    strCurrentBuf = NULL;
+    strCurrentBuf = {};
   }
   CLen = CPos = setStrType(strBuf, strProp);
   offset = 0;
 }
 
-int LineInput::setStrType(Str *str, Lineprop *prop) {
+int LineInput::setStrType(const std::string &str, Lineprop *prop) {
   Lineprop ctype;
-  char *p = str->ptr, *ep = p + str->length;
+  auto p = str.begin();
+  auto ep = str.end();
   int i, len = 1;
 
   for (i = 0; p < ep;) {
     if (i + len > STR_LEN)
       break;
-    ctype = get_mctype(p);
+    ctype = get_mctype(&*p);
     if (is_passwd) {
       if (ctype & PC_CTRL)
         ctype = PC_ASCII;
@@ -859,16 +846,16 @@ void LineInput::_editor(char) {
 
   FormItem fi;
   fi.readonly = false;
-  fi.value = strBuf->ptr;
+  fi.value = strBuf;
   fi.value += '\n';
 
   input_textarea(&fi);
 
-  strBuf = Strnew();
+  strBuf = {};
   for (auto p : fi.value) {
     if (p == '\r' || p == '\n')
       continue;
-    Strcat_char(strBuf, p);
+    strBuf += p;
   }
   CLen = CPos = setStrType(strBuf, strProp);
 }
@@ -908,45 +895,48 @@ static void form_fputs_decode(const char *p, FILE *f) {
   auto str = z.str();
   fwrite(str.data(), str.size(), 1, f);
 }
+
 void input_textarea(FormItem *fi) {
-  auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
-  auto f = fopen(tmpf.c_str(), "w");
-  if (f == NULL) {
-    App::instance().disp_err_message("Can't open temporary file");
-    return;
-  }
-  if (fi->value.size()) {
-    form_fputs_decode(fi->value.c_str(), f);
-  }
-  fclose(f);
-
-  if (exec_cmd(ioutil::myEditor(tmpf, 1))) {
-    goto input_end;
-  }
-
-  if (fi->readonly) {
-    goto input_end;
-  }
-
-  f = fopen(tmpf.c_str(), "r");
-  if (f == NULL) {
-    App::instance().disp_err_message("Can't open temporary file");
-    goto input_end;
-  }
-  fi->value.clear();
-  Str *tmp;
-  while (tmp = Strfgets(f), tmp->length > 0) {
-    if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
-      /* null line with bare LF */
-      tmp = Strnew_charp("\r\n");
-    } else if (tmp->length > 1 && tmp->ptr[tmp->length - 1] == '\n' &&
-               tmp->ptr[tmp->length - 2] != '\r') {
-      Strshrink(tmp, 1);
-      Strcat_charp(tmp, "\r\n");
-    }
-    fi->value = cleanup_line(tmp->ptr, RAW_MODE);
-  }
-  fclose(f);
-input_end:
-  unlink(tmpf.c_str());
+  assert(false);
+//   auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
+//   auto f = fopen(tmpf.c_str(), "w");
+//   if (f == NULL) {
+//     App::instance().disp_err_message("Can't open temporary file");
+//     return;
+//   }
+//   if (fi->value.size()) {
+//     form_fputs_decode(fi->value.c_str(), f);
+//   }
+//   fclose(f);
+//
+//   if (exec_cmd(ioutil::myEditor(tmpf, 1))) {
+//     goto input_end;
+//   }
+//
+//   if (fi->readonly) {
+//     goto input_end;
+//   }
+//
+//   f = fopen(tmpf.c_str(), "r");
+//   if (f == NULL) {
+//     App::instance().disp_err_message("Can't open temporary file");
+//     goto input_end;
+//   }
+//
+//   fi->value.clear();
+//   std::string tmp;
+//   while (tmp = Strfgets(f), tmp->length > 0) {
+//     if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
+//       /* null line with bare LF */
+//       tmp = Strnew_charp("\r\n");
+//     } else if (tmp->length > 1 && tmp->ptr[tmp->length - 1] == '\n' &&
+//                tmp->ptr[tmp->length - 2] != '\r') {
+//       Strshrink(tmp, 1);
+//       Strcat_charp(tmp, "\r\n");
+//     }
+//     fi->value = cleanup_line(tmp->ptr, RAW_MODE);
+//   }
+//   fclose(f);
+// input_end:
+//   unlink(tmpf.c_str());
 }

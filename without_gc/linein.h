@@ -37,8 +37,8 @@ enum CompletionModes {
 
 struct Hist;
 struct Str;
-using IncFunc = int (*)(int ch, Str *buf, Lineprop *prop);
-using OnInput = std::function<void(const char *input)>;
+using IncFunc = int (*)(int ch, const std::string &buf, Lineprop *prop);
+using OnInput = std::function<void(const std::string &input)>;
 
 using KeyCallback = std::function<void(char)>;
 
@@ -54,7 +54,7 @@ class LineInput {
   std::shared_ptr<Hist> CurrentHist;
   IncFunc incrfunc = nullptr;
 
-  Str *strCurrentBuf = nullptr;
+  std::string strCurrentBuf;
   bool move_word = true;
   bool need_redraw = false;
   bool is_passwd = false;
@@ -70,7 +70,7 @@ class LineInput {
   bool i_broken = false;
   bool i_quote = false;
 
-  Str *strBuf;
+  std::string strBuf;
   int CPos = {};
   int CLen = {};
 
@@ -78,9 +78,9 @@ class LineInput {
   Lineprop strProp[STR_LEN];
   Str *CompleteBuf;
   Str *CFileName;
-  Str *CBeforeBuf;
-  Str *CAfterBuf;
-  Str *CDirBuf;
+  std::string CBeforeBuf;
+  std::string CAfterBuf;
+  std::string CDirBuf;
   char **CFileBuf = NULL;
   int NCFileBuf;
   int NCFileOffset;
@@ -111,8 +111,8 @@ class LineInput {
   void _dcompl(char);
   void _rdcompl(char);
 
-  Str *doComplete(Str *ifn, int *status, int next);
-  int setStrType(Str *str, Lineprop *prop);
+  std::string doComplete(const std::string &ifn, int *status, int next);
+  int setStrType(const std::string &str, Lineprop *prop);
   void next_compl(int next);
   void next_dcompl(int next);
   // void addPasswd(char *p, Lineprop *pr, int len, int pos, int limit);

@@ -19,7 +19,6 @@ with_gc_lib = static_library(
         'Str.cpp',
         'hash.cpp',
         'buffer.cpp',
-        'linein.cpp',
         'rc.cpp',
         'app.cpp',
         'alloc.cpp',

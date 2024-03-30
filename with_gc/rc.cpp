@@ -9,9 +9,7 @@
 #include "app.h"
 #include "loaddirectory.h"
 #include "auth_pass.h"
-#include "http_auth.h"
 #include "etc.h"
-#include "alloc.h"
 #include "mimetypes.h"
 #include "compression.h"
 #include "linein.h"
@@ -19,7 +17,6 @@
 #include "http_request.h"
 #include "myctype.h"
 #include "proc.h"
-#include "local_cgi.h"
 #include "mailcap.h"
 #include "Str.h"
 #include <stdio.h>

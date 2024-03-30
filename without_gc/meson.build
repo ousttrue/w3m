@@ -53,6 +53,7 @@ without_gc_lib = static_library(
         'option_param.cpp',
         'symbol.cpp',
         'search.cpp',
+        'linein.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
