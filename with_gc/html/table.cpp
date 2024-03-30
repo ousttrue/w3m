@@ -14,6 +14,7 @@
 #include "utf8.h"
 #include "myctype.h"
 #include "cmp.h"
+#include "readtoken.h"
 #include "Str.h"
 #include <sys/types.h>
 #include <stdio.h>
@@ -2760,7 +2761,7 @@ void table::feed_table1(HtmlParser *parser, const std::string &line,
   status = R_ST_NORMAL;
   // auto line = tok->ptr;
   while (read_token(tokbuf, (const char **)&line, &status,
-                    mode->pre_mode & TBLM_PREMODE, 0))
+                    mode->pre_mode & TBLM_PREMODE))
     this->feed_table(parser, tokbuf->ptr, mode, width, true);
 }
 

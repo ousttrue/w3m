@@ -17,6 +17,7 @@
 #include "utf8.h"
 #include "cmp.h"
 #include "Str.h"
+#include "readtoken.h"
 #include <sstream>
 
 #define HR_ATTR_WIDTH_MAX 65535
@@ -1727,8 +1728,13 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       if (h_env->obuf.status == R_ST_EOL)
         h_env->obuf.status = R_ST_NORMAL;
       else {
-        read_token(h_env->tagbuf, &line, &h_env->obuf.status,
-                   pre_mode & RB_PREMODE, h_env->obuf.status != R_ST_NORMAL);
+        if (h_env->obuf.status != R_ST_NORMAL) {
+          append_token(h_env->tagbuf, &line, &h_env->obuf.status,
+                       pre_mode & RB_PREMODE);
+        } else {
+          read_token(h_env->tagbuf, &line, &h_env->obuf.status,
+                     pre_mode & RB_PREMODE);
+        }
         if (h_env->obuf.status != R_ST_NORMAL)
           return;
       }
@@ -1746,7 +1752,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       }
     } else {
       auto tokbuf = Strnew();
-      read_token(tokbuf, &line, &h_env->obuf.status, pre_mode & RB_PREMODE, 0);
+      read_token(tokbuf, &line, &h_env->obuf.status, pre_mode & RB_PREMODE);
       if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
         h_env->obuf.status = R_ST_NORMAL;
       str = tokbuf->ptr;
@@ -2051,7 +2057,7 @@ void HtmlParser::feed_select(const char *str) {
 
   if (cur_select.empty())
     return;
-  while (read_token(tmp, &str, &cur_status, 0, 0)) {
+  while (read_token(tmp, &str, &cur_status, 0)) {
     if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
       continue;
     p = tmp->ptr;

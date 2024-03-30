@@ -13,6 +13,7 @@ with_gc_lib = static_library(
     'with_gc',
     [
         'html/readbuffer.cpp',
+        'html/readtoken.cpp',
         'html/html_feed_env.cpp',
         'html/table.cpp',
         'html/html_parser.cpp',

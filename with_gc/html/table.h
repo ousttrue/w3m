@@ -43,6 +43,7 @@ struct table_cell {
   short fixed_width[MAXCELL];
 };
 
+struct Str;
 struct table_in {
   std::shared_ptr<struct table> ptr;
   short col;
