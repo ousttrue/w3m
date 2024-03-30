@@ -547,12 +547,10 @@ int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->obuf.table_level++;
   int w = BORDER_NONE;
   /* x: cellspacing, y: cellpadding */
-  int x = 2;
-  int y = 1;
-  int z = 0;
   int width = 0;
   if (tag->parsedtag_exists(ATTR_BORDER)) {
-    if (tag->parsedtag_get_value(ATTR_BORDER, &w)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_BORDER)) {
+      w = stoi(*value);
       if (w > 2)
         w = BORDER_THICK;
       else if (w < 0) { /* weird */
@@ -563,18 +561,27 @@ int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag) {
   }
   if (DisplayBorders && w == BORDER_NONE)
     w = BORDER_THIN;
-  int i;
-  if (tag->parsedtag_get_value(ATTR_WIDTH, &i)) {
+  if (auto value = tag->parsedtag_get_value(ATTR_WIDTH)) {
     if (this->obuf.table_level == 0)
-      width = REAL_WIDTH(i, this->limit - envs[this->envc].indent);
+      width = REAL_WIDTH(stoi(*value), this->limit - envs[this->envc].indent);
     else
-      width = RELATIVE_WIDTH(i);
+      width = RELATIVE_WIDTH(stoi(*value));
   }
   if (tag->parsedtag_exists(ATTR_HBORDER))
     w = BORDER_NOWIN;
-  tag->parsedtag_get_value(ATTR_CELLSPACING, &x);
-  tag->parsedtag_get_value(ATTR_CELLPADDING, &y);
-  tag->parsedtag_get_value(ATTR_VSPACE, &z);
+
+  int x = 2;
+  if (auto value = tag->parsedtag_get_value(ATTR_CELLSPACING)) {
+    x = stoi(*value);
+  }
+  int y = 1;
+  if (auto value = tag->parsedtag_get_value(ATTR_CELLPADDING)) {
+    y = stoi(*value);
+  }
+  int z = 0;
+  if (auto value = tag->parsedtag_get_value(ATTR_VSPACE)) {
+    z = stoi(*value);
+  }
   if (x < 0)
     x = 0;
   if (y < 0)
@@ -733,23 +740,31 @@ int html_feed_environ::HTML_TEXTAREA_exit() {
 }
 
 int html_feed_environ::HTML_ISINDEX_enter(const std::shared_ptr<HtmlTag> &tag) {
-  auto p = "";
-  auto q = "!CURRENT_URL!";
-  tag->parsedtag_get_value(ATTR_PROMPT, &p);
-  tag->parsedtag_get_value(ATTR_ACTION, &q);
-  auto tmp = Strnew_m_charp(
-      "<form method=get action=\"", html_quote(q), "\">", html_quote(p),
-      "<input type=text name=\"\" accept></form>", nullptr);
-  this->parser.HTMLlineproc1(tmp->ptr, this);
+  std::string p = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_PROMPT)) {
+    p = *value;
+  }
+  std::string q = "!CURRENT_URL!";
+  if (auto value = tag->parsedtag_get_value(ATTR_ACTION)) {
+    q = *value;
+  }
+  std::stringstream tmp;
+  tmp << "<form method=get action=\"" << html_quote(q) << "\">" << html_quote(p)
+      << "<input type=text name=\"\" accept></form>";
+  this->parser.HTMLlineproc1(tmp.str(), this);
   return 1;
 }
 
 int html_feed_environ::HTML_META_enter(const std::shared_ptr<HtmlTag> &tag) {
-  const char *p = nullptr;
-  tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
-  const char *q = nullptr;
-  tag->parsedtag_get_value(ATTR_CONTENT, &q);
-  if (p && q && !strcasecmp(p, "refresh")) {
+  std::string p;
+  if (auto value = tag->parsedtag_get_value(ATTR_HTTP_EQUIV)) {
+    p = *value;
+  }
+  std::string q;
+  if (auto value = tag->parsedtag_get_value(ATTR_CONTENT)) {
+    q = *value;
+  }
+  if (p.size() && q.size() && !strcasecmp(p, "refresh")) {
     auto meta = getMetaRefreshParam(q);
     std::stringstream ss;
     if (meta.url.size()) {
@@ -896,11 +911,11 @@ int html_feed_environ::HTML_INS_exit() {
 
 int html_feed_environ::HTML_BGSOUND_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (view_unseenobject) {
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
-      auto q = html_quote(p);
-      auto s = Sprintf("<A HREF=\"%s\">bgsound(%s)</A>", q, q);
-      this->parser.HTMLlineproc1(s->ptr, this);
+    if (auto value = tag->parsedtag_get_value(ATTR_SRC)) {
+      auto q = html_quote(*value);
+      std::stringstream s;
+      s << "<A HREF=\"" << q << "\">bgsound(" << q << ")</A>";
+      this->parser.HTMLlineproc1(s.str(), this);
     }
   }
   return 1;
@@ -909,11 +924,11 @@ int html_feed_environ::HTML_BGSOUND_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_EMBED_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.HTML5_CLOSE_A(&this->obuf, this);
   if (view_unseenobject) {
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
-      auto q = html_quote(p);
-      auto s = Sprintf("<A HREF=\"%s\">embed(%s)</A>", q, q);
-      this->parser.HTMLlineproc1(s->ptr, this);
+    if (auto value = tag->parsedtag_get_value(ATTR_SRC)) {
+      auto q = html_quote(*value);
+      std::stringstream s;
+      s << "<A HREF=\"" << q << "\">embed(" << q << ")</A>";
+      this->parser.HTMLlineproc1(s.str(), this);
     }
   }
   return 1;
@@ -921,11 +936,11 @@ int html_feed_environ::HTML_EMBED_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (view_unseenobject) {
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_ARCHIVE, &p)) {
-      auto q = html_quote(p);
-      auto s = Sprintf("<A HREF=\"%s\">applet archive(%s)</A>", q, q);
-      this->parser.HTMLlineproc1(s->ptr, this);
+    if (auto value = tag->parsedtag_get_value(ATTR_ARCHIVE)) {
+      auto q = html_quote(*value);
+      std::stringstream s;
+      s << "<A HREF=\"" << q << "\">applet archive(" << q << ")</A>";
+      this->parser.HTMLlineproc1(s.str(), this);
     }
   }
   return 1;
@@ -933,11 +948,11 @@ int html_feed_environ::HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_BODY_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (view_unseenobject) {
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_BACKGROUND, &p)) {
-      auto q = html_quote(p);
-      auto s = Sprintf("<IMG SRC=\"%s\" ALT=\"bg image(%s)\"><BR>", q, q);
-      this->parser.HTMLlineproc1(s->ptr, this);
+    if (auto value = tag->parsedtag_get_value(ATTR_BACKGROUND)) {
+      auto q = html_quote(*value);
+      std::stringstream s;
+      s << "<IMG SRC=\"" << q << "\" ALT=\"bg image(" << q << ")\"><BR>";
+      this->parser.HTMLlineproc1(s.str(), this);
     }
   }
   return 1;
@@ -954,30 +969,39 @@ html_feed_environ::createFormItem(const std::shared_ptr<HtmlTag> &tag) {
   item->accept = 0;
   item->value = item->init_value = "";
   item->readonly = 0;
-  char *p;
-  if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-    item->type = formtype(p);
+
+  if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+    item->type = formtype(*value);
     if (item->size < 0 &&
         (item->type == FORM_INPUT_TEXT || item->type == FORM_INPUT_FILE ||
          item->type == FORM_INPUT_PASSWORD))
       item->size = FORM_I_TEXT_DEFAULT_SIZE;
   }
-  if (tag->parsedtag_get_value(ATTR_NAME, &p))
-    item->name = p;
-  if (tag->parsedtag_get_value(ATTR_VALUE, &p))
-    item->value = item->init_value = p;
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+    item->name = *value;
+  }
+  if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+    item->value = item->init_value = *value;
+  }
   item->checked = item->init_checked = tag->parsedtag_exists(ATTR_CHECKED);
   item->accept = tag->parsedtag_exists(ATTR_ACCEPT);
-  tag->parsedtag_get_value(ATTR_SIZE, &item->size);
-  tag->parsedtag_get_value(ATTR_MAXLENGTH, &item->maxlength);
-  item->readonly = tag->parsedtag_exists(ATTR_READONLY);
-  int i;
-  if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &i) && i >= 0 &&
-      i < (int)this->parser.textarea_str.size()) {
-    item->value = item->init_value = this->parser.textarea_str[i];
+  if (auto value = tag->parsedtag_get_value(ATTR_SIZE)) {
+    item->size = stoi(*value);
   }
-  if (tag->parsedtag_get_value(ATTR_ROWS, &p))
-    item->rows = atoi(p);
+  if (auto value = tag->parsedtag_get_value(ATTR_MAXLENGTH)) {
+    item->maxlength = stoi(*value);
+  }
+  item->readonly = tag->parsedtag_exists(ATTR_READONLY);
+
+  if (auto value = tag->parsedtag_get_value(ATTR_TEXTAREANUMBER)) {
+    auto i = stoi(*value);
+    if (i >= 0 && i < (int)this->parser.textarea_str.size()) {
+      item->value = item->init_value = this->parser.textarea_str[i];
+    }
+  }
+  if (auto value = tag->parsedtag_get_value(ATTR_ROWS)) {
+    item->rows = stoi(*value);
+  }
   if (item->type == FORM_UNKNOWN) {
     /* type attribute is missing. Ignore the tag. */
     return NULL;

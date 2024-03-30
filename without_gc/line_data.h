@@ -73,7 +73,7 @@ struct LineData {
   std::string status() const;
 
   Anchor *registerName(const char *url, int line, int pos);
-  Anchor *registerImg(const char *url, const char *title, int line, int pos);
+  Anchor *registerImg(const std::string &url, const std::string &title, int line, int pos);
   FormAnchor *registerForm(const std::shared_ptr<FormItem> &fi,
                            const std::shared_ptr<Form> &flist,
                            const BufferPoint &bp);

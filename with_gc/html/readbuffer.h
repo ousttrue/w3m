@@ -319,32 +319,30 @@ struct readbuffer {
   }
 
   int HTML_INPUT_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
-    int i = 0;
-    if (tag->parsedtag_get_value(ATTR_TOP_MARGIN, &i)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_TOP_MARGIN)) {
+      int i = stoi(*value);
       if ((short)i > this->top_margin)
         this->top_margin = (short)i;
     }
-    i = 0;
-    if (tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &i)) {
+    if (auto value = tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN)) {
+      int i = stoi(*value);
       if ((short)i > this->bottom_margin)
         this->bottom_margin = (short)i;
     }
-    int hseq;
-    if (tag->parsedtag_get_value(ATTR_HSEQ, &hseq)) {
-      this->input_alt.hseq = hseq;
+    if (auto value = tag->parsedtag_get_value(ATTR_HSEQ)) {
+      this->input_alt.hseq = stoi(*value);
     }
-    if (tag->parsedtag_get_value(ATTR_FID, &i)) {
-      this->input_alt.fid = i;
+    if (auto value = tag->parsedtag_get_value(ATTR_FID)) {
+      this->input_alt.fid = stoi(*value);
     }
-    const char *p;
-    if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-      this->input_alt.type = p;
+    if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+      this->input_alt.type = *value;
     }
-    if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
-      this->input_alt.value = p;
+    if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+      this->input_alt.value = *value;
     }
-    if (tag->parsedtag_get_value(ATTR_NAME, &p)) {
-      this->input_alt.name = p;
+    if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+      this->input_alt.name = *value;
     }
     this->input_alt.in = 1;
     return 0;

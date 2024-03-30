@@ -15,7 +15,7 @@ static const char *_formtypetbl[] = {
 
 static const char *_formmethodtbl[] = {"GET", "POST", "INTERNAL", "HEAD"};
 
-FormItemType formtype(const char *typestr) {
+FormItemType formtype(const std::string &typestr) {
   int i;
   for (i = 0; _formtypetbl[i]; i++) {
     if (!strcasecmp(typestr, _formtypetbl[i]))

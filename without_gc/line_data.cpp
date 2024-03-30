@@ -30,7 +30,8 @@ std::string LineData::status() const {
   return ss.str();
 }
 
-void LineData::addnewline(const char *line, const std::vector<Lineprop> &prop, int byteLen) {
+void LineData::addnewline(const char *line, const std::vector<Lineprop> &prop,
+                          int byteLen) {
   lines.push_back({line, prop.data(), byteLen});
 }
 
@@ -268,8 +269,8 @@ Anchor *LineData::registerName(const char *url, int line, int pos) {
   });
 }
 
-Anchor *LineData::registerImg(const char *url, const char *title, int line,
-                              int pos) {
+Anchor *LineData::registerImg(const std::string &url, const std::string &title,
+                              int line, int pos) {
   BufferPoint bp{
       .line = line,
       .pos = pos,
@@ -278,7 +279,7 @@ Anchor *LineData::registerImg(const char *url, const char *title, int line,
       .url = url,
       .target = "",
       .option = {},
-      .title = title ? title : "",
+      .title = title,
       .accesskey = '\0',
       .start = bp,
       .end = bp,

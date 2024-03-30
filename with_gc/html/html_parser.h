@@ -152,4 +152,4 @@ struct MetaRefreshInfo {
   int interval = 0;
   std::string url;
 };
-MetaRefreshInfo getMetaRefreshParam(const char *q);
+MetaRefreshInfo getMetaRefreshParam(const std::string &q);

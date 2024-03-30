@@ -212,13 +212,14 @@ std::string HtmlParser::process_textarea(const std::shared_ptr<HtmlTag> &tag,
     tmp << process_form(HtmlTag::parse(&s, true));
   }
 
-  auto p = "";
-  tag->parsedtag_get_value(ATTR_NAME, &p);
-  cur_textarea = p;
+  cur_textarea = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+    cur_textarea = *value;
+  }
   cur_textarea_size = 20;
-  if (tag->parsedtag_get_value(ATTR_COLS, &p)) {
-    cur_textarea_size = atoi(p);
-    if (strlen(p) > 0 && p[strlen(p) - 1] == '%')
+  if (auto value = tag->parsedtag_get_value(ATTR_COLS)) {
+    cur_textarea_size = stoi(*value);
+    if (cur_textarea.size() && cur_textarea.back() == '%')
       cur_textarea_size = width * cur_textarea_size / 100 - 2;
     if (cur_textarea_size <= 0) {
       cur_textarea_size = 20;
@@ -227,8 +228,8 @@ std::string HtmlParser::process_textarea(const std::shared_ptr<HtmlTag> &tag,
     }
   }
   cur_textarea_rows = 1;
-  if (tag->parsedtag_get_value(ATTR_ROWS, &p)) {
-    cur_textarea_rows = atoi(p);
+  if (auto value = tag->parsedtag_get_value(ATTR_ROWS)) {
+    cur_textarea_rows = stoi(*value);
     if (cur_textarea_rows <= 0) {
       cur_textarea_rows = 1;
     } else if (cur_textarea_rows > TEXTAREA_ATTR_ROWS_MAX) {
@@ -592,12 +593,13 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         break;
 
       case HTML_IMG_ALT: {
-        const char *p;
-        if (tag->parsedtag_get_value(ATTR_SRC, &p)) {
-          const char *s = nullptr;
-          tag->parsedtag_get_value(ATTR_TITLE, &s);
-          auto pp = url_quote(remove_space(p));
-          a_img = data->registerImg(pp.c_str(), s, nlines, line.len());
+        if (auto value = tag->parsedtag_get_value(ATTR_SRC)) {
+          std::string s;
+          if (auto value = tag->parsedtag_get_value(ATTR_TITLE)) {
+            s = *value;
+          }
+          auto pp = url_quote(remove_space(*value));
+          a_img = data->registerImg(pp, s, nlines, line.len());
         }
         effect |= PE_IMAGE;
         break;
@@ -612,15 +614,22 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         a_img = nullptr;
         break;
       case HTML_INPUT_ALT: {
-        int top = 0, bottom = 0;
-        int textareanumber = -1;
         auto hseq = 0;
+        if (auto value = tag->parsedtag_get_value(ATTR_HSEQ)) {
+          hseq = stoi(*value);
+        }
         auto form_id = -1;
-
-        tag->parsedtag_get_value(ATTR_HSEQ, &hseq);
-        tag->parsedtag_get_value(ATTR_FID, &form_id);
-        tag->parsedtag_get_value(ATTR_TOP_MARGIN, &top);
-        tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN, &bottom);
+        if (auto value = tag->parsedtag_get_value(ATTR_FID)) {
+          form_id = stoi(*value);
+        }
+        int top = 0;
+        if (auto value = tag->parsedtag_get_value(ATTR_TOP_MARGIN)) {
+          top = stoi(*value);
+        }
+        int bottom = 0;
+        if (auto value = tag->parsedtag_get_value(ATTR_BOTTOM_MARGIN)) {
+          bottom = stoi(*value);
+        }
         if (form_id < 0 || form_id >= (int)forms.size() ||
             forms[form_id] == nullptr) {
           break; /* outside of <form>..</form> */
@@ -644,8 +653,12 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         if (form->target.empty()) {
           form->target = data->baseTarget;
         }
-        if (a_textarea.size() &&
-            tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &textareanumber)) {
+
+        int textareanumber = -1;
+        if (a_textarea.size()) {
+          if (auto value = tag->parsedtag_get_value(ATTR_TEXTAREANUMBER)) {
+            textareanumber = stoi(*value);
+          }
         }
 
         BufferPoint bp{
@@ -748,11 +761,15 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
       }
 
       case HTML_META: {
-        const char *p = nullptr;
-        const char *q = nullptr;
-        tag->parsedtag_get_value(ATTR_HTTP_EQUIV, &p);
-        tag->parsedtag_get_value(ATTR_CONTENT, &q);
-        if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
+        std::string p;
+        if (auto value = tag->parsedtag_get_value(ATTR_HTTP_EQUIV)) {
+          p = *value;
+        }
+        std::string q;
+        if (auto value = tag->parsedtag_get_value(ATTR_CONTENT)) {
+          q = *value;
+        }
+        if (p.size() && q.size() && !strcasecmp(p, "refresh") && MetaRefresh) {
           auto meta = getMetaRefreshParam(q);
           if (meta.url.size()) {
             // p = Strnew(url_quote(remove_space(meta.url)))->ptr;
@@ -772,16 +789,18 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         internal = HTML_N_INTERNAL;
         break;
       case HTML_FORM_INT: {
-        int form_id;
-        if (tag->parsedtag_get_value(ATTR_FID, &form_id))
-          process_form_int(tag, form_id);
+        if (auto value = tag->parsedtag_get_value(ATTR_FID)) {
+          process_form_int(tag, stoi(*value));
+        }
         break;
       }
       case HTML_TEXTAREA_INT:
-        if (tag->parsedtag_get_value(ATTR_TEXTAREANUMBER, &n_textarea) &&
-            n_textarea >= 0) {
-        } else {
-          n_textarea = -1;
+        if (auto value = tag->parsedtag_get_value(ATTR_TEXTAREANUMBER)) {
+          n_textarea = stoi(*value);
+          if (n_textarea >= 0) {
+          } else {
+            n_textarea = -1;
+          }
         }
         break;
       case HTML_N_TEXTAREA_INT:
@@ -792,9 +811,9 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
         break;
 
       case HTML_TITLE_ALT: {
-        const char *p;
-        if (tag->parsedtag_get_value(ATTR_TITLE, &p))
-          data->title = html_unquote(p);
+        if (auto value = tag->parsedtag_get_value(ATTR_TITLE)) {
+          data->title = html_unquote(*value);
+        }
         break;
       }
 
@@ -819,19 +838,20 @@ Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
   return line;
 }
 
-MetaRefreshInfo getMetaRefreshParam(const char *q) {
-  if (q == nullptr) {
+MetaRefreshInfo getMetaRefreshParam(const std::string &_q) {
+  if (_q.empty()) {
     return {};
   }
 
-  auto refresh_interval = atoi(q);
+  auto refresh_interval = stoi(_q);
   if (refresh_interval < 0) {
     return {};
   }
 
   std::string s_tmp;
-  while (*q) {
-    if (!strncasecmp(q, "url=", 4)) {
+  auto q = _q.data();
+  while (q != _q.data() + _q.size()) {
+    if (!strncasecmp(&*q, "url=", 4)) {
       q += 4;
       if (*q == '\"' || *q == '\'') /* " or ' */
         q++;
@@ -863,21 +883,29 @@ MetaRefreshInfo getMetaRefreshParam(const char *q) {
 
 std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
                                     int width) {
-  const char *p, *q, *r, *r2 = nullptr, *s, *t;
-  int w, i, nw, n;
   int pre_int = false, ext_pre_int = false;
 
-  if (!tag->parsedtag_get_value(ATTR_SRC, &p))
+  auto value = tag->parsedtag_get_value(ATTR_SRC);
+  if (!value)
     return {};
-  p = Strnew(url_quote(remove_space(p)))->ptr;
-  q = nullptr;
-  tag->parsedtag_get_value(ATTR_ALT, &q);
-  if (!pseudoInlines && (q == nullptr || (*q == '\0' && ignore_null_img_alt)))
+  auto _p = url_quote(remove_space(*value));
+
+  std::string _q;
+  if (auto value = tag->parsedtag_get_value(ATTR_ALT)) {
+    _q = *value;
+  }
+  if (!pseudoInlines && (_q.empty() && ignore_null_img_alt)) {
     return {};
-  t = q;
-  tag->parsedtag_get_value(ATTR_TITLE, &t);
-  w = -1;
-  if (tag->parsedtag_get_value(ATTR_WIDTH, &w)) {
+  }
+
+  auto t = _q;
+  if (auto value = tag->parsedtag_get_value(ATTR_TITLE)) {
+    t = *value;
+  }
+
+  int w = -1;
+  if (auto value = tag->parsedtag_get_value(ATTR_WIDTH)) {
+    w = stoi(*value);
     if (w < 0) {
       if (width > 0)
         w = (int)(-width * pixel_per_char * w / 100 + 0.5);
@@ -885,17 +913,24 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
         w = -1;
     }
   }
-  i = -1;
-  tag->parsedtag_get_value(ATTR_HEIGHT, &i);
-  r = nullptr;
-  tag->parsedtag_get_value(ATTR_USEMAP, &r);
+
+  int i = -1;
+  if (auto value = tag->parsedtag_get_value(ATTR_HEIGHT)) {
+    i = stoi(*value);
+  }
+
+  std::string r;
+  if (auto value = tag->parsedtag_get_value(ATTR_USEMAP)) {
+    r = *value;
+  }
+
   if (tag->parsedtag_exists(ATTR_PRE_INT))
     ext_pre_int = true;
 
   std::stringstream tmp;
-  if (r) {
-    r2 = strchr(r, '#');
-    s = "<form_int method=internal action=map>";
+  if (r.size()) {
+    auto r2 = strchr(r.c_str(), '#');
+    auto s = "<form_int method=internal action=map>";
     tmp << this->process_form(HtmlTag::parse(&s, true));
     tmp << "<input_alt fid=\"" << this->cur_form_id() << "\" "
         << "type=hidden name=link value=\"";
@@ -904,38 +939,45 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
         << this->cur_form_id() << "\" "
         << "type=submit no_effect=true>";
   }
+  int nw = 0;
   {
     if (w < 0) {
       w = static_cast<int>(12 * pixel_per_char);
     }
     nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
-    if (r) {
+    if (r.size()) {
       tmp << "<pre_int>";
       pre_int = true;
     }
     tmp << "<img_alt src=\"";
   }
-  tmp << html_quote(p);
+  tmp << html_quote(_p);
   tmp << "\"";
-  if (t) {
+  if (t.size()) {
     tmp << " title=\"";
     tmp << html_quote(t);
     tmp << "\"";
   }
   tmp << ">";
-  if (q != nullptr && *q == '\0' && ignore_null_img_alt)
-    q = nullptr;
-  if (q != nullptr) {
-    n = get_strwidth(q);
-    tmp << html_quote(q);
-    goto img_end;
+  int n = 1;
+  if (_q.size()) {
+    n = get_strwidth(_q);
+    tmp << html_quote(_q);
+    tmp << "</img_alt>";
+    if (pre_int && !ext_pre_int)
+      tmp << "</pre_int>";
+    if (r.size()) {
+      tmp << "</input_alt>";
+      this->process_n_form();
+    }
+    return tmp.str();
   }
   if (w > 0 && i > 0) {
     /* guess what the image is! */
     if (w < 32 && i < 48) {
       /* must be an icon or space */
       n = 1;
-      if (strcasestr(p, "space") || strcasestr(p, "blank"))
+      if (strcasestr(_p.c_str(), "space") || strcasestr(_p.c_str(), "blank"))
         tmp << "_";
       else {
         if (w * i < 8 * 16)
@@ -949,7 +991,13 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
           n = 1;
         }
       }
-      goto img_end;
+      if (pre_int && !ext_pre_int)
+        tmp << "</pre_int>";
+      if (r.size()) {
+        tmp << "</input_alt>";
+        this->process_n_form();
+      }
+      return tmp.str();
     }
     if (w > 200 && i < 13) {
       /* must be a horizontal line */
@@ -962,10 +1010,19 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
         w = 1;
       push_symbol(tmp, HR_SYMBOL, 1, w);
       n = w;
-      goto img_end;
+      tmp << "</img_alt>";
+      if (pre_int && !ext_pre_int)
+        tmp << "</pre_int>";
+      if (r.size()) {
+        tmp << "</input_alt>";
+        this->process_n_form();
+      }
+      return tmp.str();
     }
   }
-  for (q = p; *q; q++)
+  const char *p = _p.data();
+  const char *q;
+  for (q = _p.data(); *q; q++)
     ;
   while (q > p && *q != '/')
     q--;
@@ -985,11 +1042,10 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
   }
   tmp << ']';
   n++;
-img_end:
   tmp << "</img_alt>";
   if (pre_int && !ext_pre_int)
     tmp << "</pre_int>";
-  if (r) {
+  if (r.size()) {
     tmp << "</input_alt>";
     this->process_n_form();
   }
@@ -1010,8 +1066,7 @@ std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
 }
 
 std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
-  int i = 20, v, x, y, z, iw, ih, size = 20;
-  const char *q, *p, *r, *p2, *s;
+  int v, x, y, z;
   auto qq = "";
   int qlen = 0;
 
@@ -1021,18 +1076,38 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
     tmp << this->process_form(HtmlTag::parse(&s, true));
   }
 
-  p = "text";
-  tag->parsedtag_get_value(ATTR_TYPE, &p);
-  q = nullptr;
-  tag->parsedtag_get_value(ATTR_VALUE, &q);
-  r = "";
-  tag->parsedtag_get_value(ATTR_NAME, &r);
-  tag->parsedtag_get_value(ATTR_SIZE, &size);
+  std::string p = "text";
+  if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+    p = *value;
+  }
+
+  std::string q;
+  if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+    q = *value;
+  }
+
+  std::string r = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+    r = *value;
+  }
+
+  int size = 20;
+  if (auto value = tag->parsedtag_get_value(ATTR_SIZE)) {
+    size = stoi(*value);
+  }
   if (size > MAX_INPUT_SIZE)
     size = MAX_INPUT_SIZE;
-  tag->parsedtag_get_value(ATTR_MAXLENGTH, &i);
-  p2 = nullptr;
-  tag->parsedtag_get_value(ATTR_ALT, &p2);
+
+  int i = 20;
+  if (auto value = tag->parsedtag_get_value(ATTR_MAXLENGTH)) {
+    i = stoi(*value);
+  }
+
+  std::string p2;
+  if (auto value = tag->parsedtag_get_value(ATTR_ALT)) {
+    p2 = *value;
+  }
+
   x = tag->parsedtag_exists(ATTR_CHECKED);
   y = tag->parsedtag_exists(ATTR_ACCEPT);
   z = tag->parsedtag_exists(ATTR_READONLY);
@@ -1041,7 +1116,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   if (v == FORM_UNKNOWN)
     return nullptr;
 
-  if (!q) {
+  if (q.empty()) {
     switch (v) {
     case FORM_INPUT_IMAGE:
     case FORM_INPUT_SUBMIT:
@@ -1063,7 +1138,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   /* VALUE attribute is not allowed in <INPUT TYPE=FILE> tag. */
   if (v == FORM_INPUT_FILE)
     q = nullptr;
-  if (q) {
+  if (q.size()) {
     qq = Strnew(html_quote(q))->ptr;
     qlen = get_strwidth(q);
   }
@@ -1104,21 +1179,24 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
     case FORM_INPUT_FILE:
       tmp << "<u>";
       break;
-    case FORM_INPUT_IMAGE:
-      s = nullptr;
-      tag->parsedtag_get_value(ATTR_SRC, &s);
-      if (s) {
+    case FORM_INPUT_IMAGE: {
+      std::string s;
+      if (auto value = tag->parsedtag_get_value(ATTR_SRC)) {
+        s = *value;
+      }
+      if (s.size()) {
         tmp << "<img src=\"" << html_quote(s) << "\"";
-        if (p2)
+        if (p2.size())
           tmp << " alt=\"" << html_quote(p2) << "\"";
-        if (tag->parsedtag_get_value(ATTR_WIDTH, &iw))
-          tmp << " width=\"" << iw << "\"";
-        if (tag->parsedtag_get_value(ATTR_HEIGHT, &ih))
-          tmp << " height=\"" << ih << "\"";
+        if (auto value = tag->parsedtag_get_value(ATTR_WIDTH))
+          tmp << " width=\"" << stoi(*value) << "\"";
+        if (auto value = tag->parsedtag_get_value(ATTR_HEIGHT))
+          tmp << " height=\"" << stoi(*value) << "\"";
         tmp << " pre_int>";
         tmp << "</input_alt></pre_int>";
         return tmp.str();
       }
+    }
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
     case FORM_INPUT_RESET:
@@ -1130,7 +1208,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
     switch (v) {
     case FORM_INPUT_PASSWORD:
       i = 0;
-      if (q) {
+      if (q.size()) {
         for (; i < qlen && i < size; i++)
           tmp << '*';
       }
@@ -1139,7 +1217,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
       break;
     case FORM_INPUT_TEXT:
     case FORM_INPUT_FILE:
-      if (q)
+      if (q.size())
         tmp << textfieldrep(q, size);
       else {
         for (i = 0; i < size; i++)
@@ -1148,7 +1226,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
       break;
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
-      if (p2)
+      if (p2.size())
         tmp << html_quote(p2);
       else
         tmp << qq;
@@ -1193,7 +1271,7 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
-  const char *p, *q, *r, *qq = "";
+  const char *qq = "";
   int v;
 
   std::stringstream tmp;
@@ -1202,12 +1280,20 @@ std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
     tmp << this->process_form(HtmlTag::parse(&s, true));
   }
 
-  p = "submit";
-  tag->parsedtag_get_value(ATTR_TYPE, &p);
-  q = nullptr;
-  tag->parsedtag_get_value(ATTR_VALUE, &q);
-  r = "";
-  tag->parsedtag_get_value(ATTR_NAME, &r);
+  std::string p = "submit";
+  if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+    p = *value;
+  }
+
+  std::string q;
+  if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+    q = *value;
+  }
+
+  std::string r = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+    r = *value;
+  }
 
   v = formtype(p);
   if (v == FORM_UNKNOWN)
@@ -1224,7 +1310,7 @@ std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
     break;
   }
 
-  if (!q) {
+  if (q.empty()) {
     switch (v) {
     case FORM_INPUT_SUBMIT:
     case FORM_INPUT_BUTTON:
@@ -1235,7 +1321,7 @@ std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
       break;
     }
   }
-  if (q) {
+  if (q.size()) {
     qq = Strnew(html_quote(q))->ptr;
   }
 
@@ -1250,12 +1336,13 @@ std::string HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag,
                                    int width, int indent_width) {
   std::stringstream tmp;
   tmp << "<nobr>";
-  int w = 0;
-  int x = ALIGN_CENTER;
 
   if (width > indent_width)
     width -= indent_width;
-  if (tag->parsedtag_get_value(ATTR_WIDTH, &w)) {
+
+  int w = 0;
+  if (auto value = tag->parsedtag_get_value(ATTR_WIDTH)) {
+    w = stoi(*value);
     if (w > HR_ATTR_WIDTH_MAX) {
       w = HR_ATTR_WIDTH_MAX;
     }
@@ -1264,7 +1351,10 @@ std::string HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag,
     w = width;
   }
 
-  tag->parsedtag_get_value(ATTR_ALIGN, &x);
+  int x = ALIGN_CENTER;
+  if (auto value = tag->parsedtag_get_value(ATTR_ALIGN)) {
+    x = stoi(*value);
+  }
   switch (x) {
   case ALIGN_CENTER:
     tmp << "<div_int align=center>";
@@ -1929,8 +2019,10 @@ std::string HtmlParser::process_select(const std::shared_ptr<HtmlTag> &tag) {
     tmp << process_form(HtmlTag::parse(&s, true));
   }
 
-  auto p = "";
-  tag->parsedtag_get_value(ATTR_NAME, &p);
+  std::string p = "";
+  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+    p = *value;
+  }
   cur_select = p;
   select_is_multiple = tag->parsedtag_exists(ATTR_MULTIPLE);
 
@@ -1965,19 +2057,19 @@ void HtmlParser::feed_select(const char *str) {
     p = tmp->ptr;
     if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
       std::shared_ptr<HtmlTag> tag;
-      char *q;
+
       if (!(tag = HtmlTag::parse(&p, false)))
         continue;
       switch (tag->tagid) {
       case HTML_OPTION:
         this->process_option();
         cur_option = {};
-        if (tag->parsedtag_get_value(ATTR_VALUE, &q))
-          cur_option_value = q;
+        if (auto value = tag->parsedtag_get_value(ATTR_VALUE))
+          cur_option_value = *value;
         else
           cur_option_value = {};
-        if (tag->parsedtag_get_value(ATTR_LABEL, &q))
-          cur_option_label = q;
+        if (auto value = tag->parsedtag_get_value(ATTR_LABEL))
+          cur_option_label = *value;
         else
           cur_option_label = {};
         cur_option_selected = tag->parsedtag_exists(ATTR_SELECTED);

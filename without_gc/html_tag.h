@@ -108,7 +108,6 @@ public:
             (this->attrid[this->map[id]] != ATTR_UNKNOWN));
   }
   bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
-  bool parsedtag_get_value(HtmlTagAttr id, void *value) const;
   std::optional<std::string> parsedtag_get_value(HtmlTagAttr id) const;
   bool parsedtag_set_value(HtmlTagAttr id, const char *value);
   std::string parsedtag2str() const;

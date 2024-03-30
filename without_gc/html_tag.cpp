@@ -657,18 +657,6 @@ bool HtmlTag::parsedtag_set_value(HtmlTagAttr id, const char *value) {
   return true;
 }
 
-bool HtmlTag::parsedtag_get_value(HtmlTagAttr id, void *value) const {
-  if (this->map.empty()) {
-    return false;
-  }
-  int i = this->map[id];
-  if (!this->parsedtag_exists(id) || this->value[i].empty()) {
-    return false;
-  }
-  return toValFunc[AttrMAP[id].vtype]((char *)this->value[i].c_str(),
-                                      (int *)value);
-}
-
 std::optional<std::string> HtmlTag::parsedtag_get_value(HtmlTagAttr id) const {
   if (this->map.empty()) {
     return {};
@@ -700,13 +688,12 @@ std::string HtmlTag::parsedtag2str() const {
 }
 
 int HtmlTag::ul_type(int default_type) const {
-  char *p;
-  if (this->parsedtag_get_value(ATTR_TYPE, &p)) {
-    if (!strcasecmp(p, "disc"))
+  if (auto value = this->parsedtag_get_value(ATTR_TYPE)) {
+    if (!strcasecmp(*value, "disc"))
       return (int)'d';
-    else if (!strcasecmp(p, "circle"))
+    else if (!strcasecmp(*value, "circle"))
       return (int)'c';
-    else if (!strcasecmp(p, "square"))
+    else if (!strcasecmp(*value, "square"))
       return (int)'s';
   }
   return default_type;

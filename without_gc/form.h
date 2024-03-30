@@ -21,7 +21,7 @@ enum FormItemType {
   FORM_INPUT_BUTTON = 10,
   FORM_INPUT_FILE = 11,
 };
-FormItemType formtype(const char *typestr);
+FormItemType formtype(const std::string &typestr);
 
 struct Form;
 struct html_feed_environ;
