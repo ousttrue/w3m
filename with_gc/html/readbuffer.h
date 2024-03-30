@@ -8,6 +8,7 @@
 #include <memory>
 #include <string_view>
 #include <string.h>
+#include <functional>
 
 extern int squeezeBlankLine;
 
@@ -33,7 +34,6 @@ extern bool view_unseenobject;
 extern bool MetaRefresh;
 
 #define RB_STACK_SIZE 10
-#define TAG_STACK_SIZE 10
 #define FONT_STACK_SIZE 5
 #define FONTSTAT_MAX 127
 
@@ -165,8 +165,15 @@ struct readbuffer {
   int fontstat_sp = 0;
   Lineprop prev_ctype;
   Breakpoint bp;
-  std::shared_ptr<cmdtable> tag_stack[TAG_STACK_SIZE];
-  int tag_sp = 0;
+
+  // push front
+  // pop front
+  std::list<std::shared_ptr<cmdtable>> tag_stack;
+  std::list<std::shared_ptr<cmdtable>>::iterator find_stack(
+      const std::function<bool(const std::shared_ptr<cmdtable> &)> &pred) {
+    return std::find_if(tag_stack.begin(), tag_stack.end(), pred);
+  }
+
   short top_margin = 0;
   short bottom_margin = 0;
   std::list<LinkStack> link_stack;
@@ -209,16 +216,10 @@ struct readbuffer {
   }
 
   int close_effect0(HtmlCommand cmd) {
-    int i;
-
-    for (i = this->tag_sp - 1; i >= 0; i--) {
-      if (this->tag_stack[i]->cmd == cmd)
-        break;
-    }
-    if (i >= 0) {
-      this->tag_sp--;
-      memcpy(&this->tag_stack[i], &this->tag_stack[i + 1],
-             (this->tag_sp - i) * sizeof(struct cmdtable *));
+    auto found = std::find_if(tag_stack.begin(), tag_stack.end(),
+                              [cmd](auto tag) { return tag->cmd == cmd; });
+    if (found != tag_stack.end()) {
+      tag_stack.erase(found);
       return 1;
     } else if (auto p = this->has_hidden_link(cmd)) {
       this->passthrough(p, 1);

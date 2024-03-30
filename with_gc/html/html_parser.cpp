@@ -80,29 +80,25 @@ void HtmlParser::push_render_image(const std::string &str, int width, int limit,
 void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
   auto obuf = &h_env->obuf;
   if (obuf->anchor.url.size()) {
-    int i;
     const char *p = nullptr;
     int is_erased = 0;
 
-    for (i = obuf->tag_sp - 1; i >= 0; i--) {
-      if (obuf->tag_stack[i]->cmd == HTML_A)
-        break;
-    }
-    if (i < 0 && obuf->anchor.hseq > 0 && obuf->line.back() == ' ') {
+    auto found = obuf->find_stack([](auto tag) { return tag->cmd == HTML_A; });
+
+    if (found == obuf->tag_stack.end() && obuf->anchor.hseq > 0 &&
+        obuf->line.back() == ' ') {
       Strshrink(obuf->line, 1);
       obuf->pos--;
       is_erased = 1;
     }
 
-    if (i >= 0 || (p = obuf->has_hidden_link(HTML_A))) {
+    if (found != obuf->tag_stack.end() || (p = obuf->has_hidden_link(HTML_A))) {
       if (obuf->anchor.hseq > 0) {
         this->HTMLlineproc1(ANSP, h_env);
         obuf->prevchar = " ";
       } else {
-        if (i >= 0) {
-          obuf->tag_sp--;
-          memcpy(&obuf->tag_stack[i], &obuf->tag_stack[i + 1],
-                 (obuf->tag_sp - i) * sizeof(struct cmdtable *));
+        if (found != obuf->tag_stack.end()) {
+          obuf->tag_stack.erase(found);
         } else {
           obuf->passthrough(p, 1);
         }

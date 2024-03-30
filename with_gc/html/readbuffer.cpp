@@ -697,19 +697,19 @@ void readbuffer::push_link(HtmlCommand cmd, int offset, int pos) {
 void readbuffer::append_tags() {
   int len = this->line.size();
   bool set_bp = false;
-  for (int i = 0; i < this->tag_sp; i++) {
-    switch (this->tag_stack[i]->cmd) {
+  for (auto &tag: this->tag_stack) {
+    switch (tag->cmd) {
     case HTML_A:
     case HTML_IMG_ALT:
     case HTML_B:
     case HTML_U:
     case HTML_I:
     case HTML_S:
-      this->push_link(this->tag_stack[i]->cmd, this->line.size(), this->pos);
+      this->push_link(tag->cmd, this->line.size(), this->pos);
       break;
     }
-    this->line += this->tag_stack[i]->cmdname;
-    switch (this->tag_stack[i]->cmd) {
+    this->line += tag->cmdname;
+    switch (tag->cmd) {
     case HTML_NOBR:
       if (this->nobr_level > 1)
         break;
@@ -718,7 +718,7 @@ void readbuffer::append_tags() {
       break;
     }
   }
-  this->tag_sp = 0;
+  this->tag_stack.clear();
   if (set_bp) {
     this->set_breakpoint(this->line.size() - len);
   }
@@ -782,11 +782,11 @@ void readbuffer::passthrough(const char *str, int back) {
 }
 
 void readbuffer::push_tag(const std::string &cmdname, HtmlCommand cmd) {
-  this->tag_stack[this->tag_sp] = std::make_shared<cmdtable>();
-  this->tag_stack[this->tag_sp]->cmdname = cmdname;
-  this->tag_stack[this->tag_sp]->cmd = cmd;
-  this->tag_sp++;
-  if (this->tag_sp >= TAG_STACK_SIZE || this->flag & (RB_SPECIAL & ~RB_NOBR)) {
+  auto tag = std::make_shared<cmdtable>();
+  tag->cmdname = cmdname;
+  tag->cmd = cmd;
+  tag_stack.push_front(tag);
+  if ( this->flag & (RB_SPECIAL & ~RB_NOBR)) {
     this->append_tags();
   }
 }
