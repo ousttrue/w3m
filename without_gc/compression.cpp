@@ -186,7 +186,7 @@ static bool check_command(const char *cmd, bool auxbin_p) {
   return false;
 }
 
-const char *acceptableEncoding() {
+std::string acceptableEncoding() {
   static std::string encodings;
   if (encodings.empty()) {
     std::list<std::string> l;

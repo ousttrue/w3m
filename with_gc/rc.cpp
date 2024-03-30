@@ -6,25 +6,22 @@
 #include "cookie_domain.h"
 #include "search.h"
 #include "quote.h"
-#include "app.h"
-#include "loaddirectory.h"
 #include "auth_pass.h"
 #include "etc.h"
 #include "mimetypes.h"
 #include "compression.h"
-#include "linein.h"
 #include "cookie.h"
 #include "http_request.h"
 #include "myctype.h"
-#include "proc.h"
 #include "mailcap.h"
-#include "Str.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
 #include <fcntl.h>
 #include <string.h>
 #include <sys/stat.h>
+#include <fstream>
+#include <sstream>
 
 #ifndef RC_DIR
 #define RC_DIR "~/.w3m"
@@ -113,29 +110,33 @@ int set_pixel_per_char = false;
 #ifdef SSL_CTX_set_min_proto_version
 #endif
 
-static void interpret_rc(FILE *f) {
-  Str *line;
-  Str *tmp;
-  char *p;
+static void interpret_rc(const std::string &file) {
+  std::ifstream f(file);
+  if (!f) {
+    return;
+  }
 
-  for (;;) {
-    line = Strfgets(f);
-    if (line->length == 0) /* end of file */
-      break;
-    Strchop(line);
-    if (line->length == 0) /* blank line */
+  std::string line;
+  while (std::getline(f, line)) {
+    if (line.empty()) {
       continue;
-    Strremovefirstspaces(line);
-    if (line->ptr[0] == '#') /* comment */
+    }
+
+    // Strchop(line);
+    // if (line->length == 0) /* blank line */
+    //   continue;
+    // Strremovefirstspaces(line);
+
+    if (line[0] == '#') /* comment */
       continue;
-    tmp = Strnew();
-    p = line->ptr;
+    std::stringstream tmp;
+    auto p = line.c_str();
     while (*p && !IS_SPACE(*p))
-      Strcat_char(tmp, *p++);
+      tmp << *p++;
     while (*p && IS_SPACE(*p))
       p++;
-    Strlower(tmp);
-    Option::instance().set_param(tmp->ptr, p);
+    // Strlower(tmp);
+    Option::instance().set_param(tmp.str(), p);
   }
 }
 
@@ -162,10 +163,10 @@ void sync_with_option(void) {
     AcceptLang = _("en;q=1.0");
   }
   if (AcceptEncoding.empty())
-    AcceptEncoding = Strnew_charp(acceptableEncoding())->ptr;
+    AcceptEncoding = acceptableEncoding();
   if (AcceptMedia.empty())
     AcceptMedia = acceptableMimeTypes();
-  App::instance().initKeymap(false);
+  // App::instance().initKeymap(false);
 }
 
 void init_rc(void) {
@@ -202,18 +203,9 @@ void init_rc(void) {
 
 open_rc:
   /* open config file */
-  if ((f = fopen(etcFile(W3MCONFIG).c_str(), "rt")) != NULL) {
-    interpret_rc(f);
-    fclose(f);
-  }
-  if ((f = fopen(confFile(CONFIG_FILE).c_str(), "rt")) != NULL) {
-    interpret_rc(f);
-    fclose(f);
-  }
-  if (config_file.size() && (f = fopen(config_file.c_str(), "rt")) != NULL) {
-    interpret_rc(f);
-    fclose(f);
-  }
+  interpret_rc(etcFile(W3MCONFIG));
+  interpret_rc(confFile(CONFIG_FILE));
+  interpret_rc(config_file);
   return;
 
 rc_dir_err:
@@ -222,34 +214,34 @@ rc_dir_err:
   goto open_rc;
 }
 
-void
-panel_set_option(const std::list<std::pair<std::string, std::string>> &arg) {
+void panel_set_option(
+    const std::list<std::pair<std::string, std::string>> &arg) {
   FILE *f = NULL;
   if (config_file.empty()) {
-    App::instance().disp_message("There's no config file... config not saved");
+    // App::instance().disp_message("There's no config file... config not saved");
   } else {
     f = fopen(config_file.c_str(), "wt");
     if (f == NULL) {
     }
   }
 
-  Str *s = nullptr;
+  std::string s;
   for (auto [key, value] : arg) {
     /*  InnerCharset -> SystemCharset */
     if (value.size()) {
       if (Option::instance().set_param(key, value)) {
-        auto tmp = Sprintf("%s %s\n", key.c_str(), value.c_str());
-        Strcat(tmp, s);
-        s = tmp;
+        std::stringstream tmp;
+        tmp << key << " " << value << "\n" << s;
+        s = tmp.str();
       }
     }
   }
   if (f) {
-    fputs(s->ptr, f);
+    fputs(s.c_str(), f);
     fclose(f);
   }
   sync_with_option();
-  backBf({});
+  // backBf({});
 }
 
 std::string rcFile(std::string_view base) {
@@ -268,11 +260,15 @@ std::string rcFile(std::string_view base) {
 }
 
 std::string etcFile(const char *base) {
-  return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
+  std::stringstream ss;
+  ss << w3m_etc_dir() << "/" << base;
+  return expandPath(ss.str());
 }
 
 std::string confFile(const char *base) {
-  return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
+  std::stringstream ss;
+  ss << w3m_conf_dir() << "/" << base;
+  return expandPath(ss.str());
 }
 
 static const char *w3m_dir(const char *name, const char *dft) {

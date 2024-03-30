@@ -50,10 +50,10 @@ without_gc_lib = static_library(
         'loaddirectory.cpp',
         'mailcap.cpp',
         'matrix.cpp',
-        'option_param.cpp',
         'symbol.cpp',
         'search.cpp',
         'linein.cpp',
+        'option_param.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
