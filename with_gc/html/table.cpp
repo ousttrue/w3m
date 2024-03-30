@@ -1431,7 +1431,7 @@ void table::renderTable(HtmlParser *parser, int max_width,
   case BORDER_THICK:
     renderbuf = Strnew();
     this->print_sep(-1, T_TOP, this->maxcol, renderbuf);
-    parser->push_render_image(renderbuf, width, this->total_width, h_env);
+    parser->push_render_image(renderbuf->ptr, width, this->total_width, h_env);
     this->total_height += 1;
     break;
   }
@@ -1489,12 +1489,14 @@ void table::renderTable(HtmlParser *parser, int max_width,
         this->total_height += 1;
         break;
       }
-      parser->push_render_image(renderbuf, width, this->total_width, h_env);
+      parser->push_render_image(renderbuf->ptr, width, this->total_width,
+                                h_env);
     }
     if (r < this->maxrow && this->border_mode != BORDER_NONE) {
       renderbuf = Strnew();
       this->print_sep(r, T_MIDDLE, this->maxcol, renderbuf);
-      parser->push_render_image(renderbuf, width, this->total_width, h_env);
+      parser->push_render_image(renderbuf->ptr, width, this->total_width,
+                                h_env);
     }
     this->total_height += this->tabheight[r];
   }
@@ -1503,7 +1505,7 @@ void table::renderTable(HtmlParser *parser, int max_width,
   case BORDER_THICK:
     renderbuf = Strnew();
     this->print_sep(this->maxrow, T_BOTTOM, this->maxcol, renderbuf);
-    parser->push_render_image(renderbuf, width, this->total_width, h_env);
+    parser->push_render_image(renderbuf->ptr, width, this->total_width, h_env);
     this->total_height += 1;
     break;
   }
@@ -1511,7 +1513,7 @@ void table::renderTable(HtmlParser *parser, int max_width,
     renderbuf = Strnew_charp(" ");
     this->total_height++;
     this->total_width = 1;
-    parser->push_render_image(renderbuf, 1, this->total_width, h_env);
+    parser->push_render_image(renderbuf->ptr, 1, this->total_width, h_env);
   }
   parser->HTMLlineproc1("</pre>", h_env);
 }
@@ -1882,7 +1884,7 @@ void table::table_close_textarea(HtmlParser *parser, struct table_mode *mode,
                                  int width) {
   mode->pre_mode &= ~TBLM_INTXTA;
   mode->end_tag = HTML_UNKNOWN;
-  this->feed_table1(parser, parser->process_n_textarea()->ptr, mode, width);
+  this->feed_table1(parser, parser->process_n_textarea(), mode, width);
 }
 
 void table::table_close_anchor0(struct table_mode *mode) {
@@ -1935,7 +1937,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   int colspan, rowspan;
   int col, prev_col;
   int i, j, k, v, v0, w, id;
-  Str *tok, *tmp, *anchor;
+  Str *anchor;
   table_attr align, valign;
 
   cmd = tag->tagid;
@@ -2350,7 +2352,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     this->feed_table_inline_tag(line, mode, -1);
     mode->pre_mode &= ~TBLM_PRE_INT;
     break;
-  case HTML_IMG:
+  case HTML_IMG: {
     this->check_rowcol(mode);
     w = this->fixed_width[this->col];
     if (w < 0) {
@@ -2366,31 +2368,36 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
       else if (width > 0)
         w = width;
     }
-    tok = parser->process_img(tag, w);
-    this->feed_table1(parser, tok->ptr, mode, width);
+    auto tok = parser->process_img(tag, w);
+    this->feed_table1(parser, tok, mode, width);
     break;
-  case HTML_FORM:
+  }
+  case HTML_FORM: {
     this->feed_table_block_tag("", mode, 0, cmd);
-    tmp = parser->process_form(tag);
-    if (tmp)
-      this->feed_table1(parser, tmp->ptr, mode, width);
+    auto tmp = parser->process_form(tag);
+    if (tmp.size())
+      this->feed_table1(parser, tmp, mode, width);
     break;
+  }
   case HTML_N_FORM:
     this->feed_table_block_tag("", mode, 0, cmd);
     parser->process_n_form();
     break;
-  case HTML_INPUT:
-    tmp = parser->process_input(tag);
-    this->feed_table1(parser, tmp->ptr, mode, width);
+  case HTML_INPUT: {
+    auto tmp = parser->process_input(tag);
+    this->feed_table1(parser, tmp, mode, width);
     break;
-  case HTML_BUTTON:
-    tmp = parser->process_button(tag);
-    this->feed_table1(parser, tmp->ptr, mode, width);
+  }
+  case HTML_BUTTON: {
+    auto tmp = parser->process_button(tag);
+    this->feed_table1(parser, tmp, mode, width);
     break;
-  case HTML_N_BUTTON:
-    tmp = parser->process_n_button();
-    this->feed_table1(parser, tmp->ptr, mode, width);
+  }
+  case HTML_N_BUTTON: {
+    auto tmp = parser->process_n_button();
+    this->feed_table1(parser, tmp, mode, width);
     break;
+  }
   case HTML_SELECT: {
     auto tmp = parser->process_select(tag);
     if (tmp.size())
@@ -2403,7 +2410,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   case HTML_OPTION:
     /* nothing */
     break;
-  case HTML_TEXTAREA:
+  case HTML_TEXTAREA: {
     w = 0;
     this->check_rowcol(mode);
     if (this->col + 1 <= this->maxcol &&
@@ -2414,12 +2421,13 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
       if (this->fixed_width[this->col] > 0)
         w = this->fixed_width[this->col];
     }
-    tmp = parser->process_textarea(tag, w);
-    if (tmp)
-      this->feed_table1(parser, tmp->ptr, mode, width);
+    auto tmp = parser->process_textarea(tag, w);
+    if (tmp.size())
+      this->feed_table1(parser, tmp, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
     mode->end_tag = HTML_N_TEXTAREA;
     break;
+  }
   case HTML_A:
     this->table_close_anchor0(mode);
     anchor = NULL;
@@ -2433,9 +2441,9 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
       if (i == 0) {
         auto tmp = parser->process_anchor(tag, line);
         if (displayLinkNumber) {
-          Str *t = parser->getLinkNumberStr(-1);
-          this->feed_table_inline_tag(NULL, mode, t->length);
-          tmp += t->ptr;
+          auto t = parser->getLinkNumberStr(-1);
+          this->feed_table_inline_tag(NULL, mode, t.size());
+          tmp += t;
         }
         this->pushdata(this->row, this->col, tmp.c_str());
       } else
@@ -2744,8 +2752,8 @@ int table::feed_table(HtmlParser *parser, const char *line,
   return -1;
 }
 
-void table::feed_table1(HtmlParser *parser, const char *line, struct table_mode *mode,
-                        int width) {
+void table::feed_table1(HtmlParser *parser, const std::string &line,
+                        struct table_mode *mode, int width) {
   Str *tokbuf;
   ReadBufferStatus status;
   // if (!tok)

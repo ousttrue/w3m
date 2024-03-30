@@ -220,7 +220,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
         break;
       }
       this->obuf.push_charp(1, NBSP, PC_ASCII);
-      this->obuf.push_str(1, tmp, PC_ASCII);
+      this->obuf.push_str(1, tmp->ptr, PC_ASCII);
       this->obuf.push_charp(1, NBSP, PC_ASCII);
       set_space_to_prevchar(this->obuf.prevchar);
       break;
@@ -253,7 +253,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
       else
         Strcat_char(num, '.');
       this->obuf.push_spaces(1, INDENT_INCR - num->length);
-      this->obuf.push_str(num->length, num, PC_ASCII);
+      this->obuf.push_str(num->length, num->ptr, PC_ASCII);
       if (INDENT_INCR >= 4)
         set_space_to_prevchar(this->obuf.prevchar);
       break;
@@ -399,7 +399,7 @@ int html_feed_environ::HTML_FRAME(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_HR(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.close_anchor(this);
   auto tmp = this->parser.process_hr(tag, this->limit, envs[this->envc].indent);
-  this->parser.HTMLlineproc1(tmp->ptr, this);
+  this->parser.HTMLlineproc1(tmp, this);
   set_space_to_prevchar(this->obuf.prevchar);
   return 1;
 }
@@ -520,7 +520,7 @@ int html_feed_environ::HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (tag->parsedtag_exists(ATTR_USEMAP))
     this->parser.HTML5_CLOSE_A(&this->obuf, this);
   auto tmp = this->parser.process_img(tag, this->limit);
-  this->parser.HTMLlineproc1(tmp->ptr, this);
+  this->parser.HTMLlineproc1(tmp, this);
   return 1;
 }
 
@@ -655,8 +655,8 @@ int html_feed_environ::HTML_FORM_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (!(this->obuf.flag & RB_IGNORE_P))
     this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
   auto tmp = this->parser.process_form(tag);
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp, this);
   return 1;
 }
 
@@ -671,23 +671,23 @@ int html_feed_environ::HTML_FORM_exit() {
 int html_feed_environ::HTML_INPUT_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.close_anchor(this);
   auto tmp = this->parser.process_input(tag);
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp, this);
   return 1;
 }
 
 int html_feed_environ::HTML_BUTTON_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.HTML5_CLOSE_A(&this->obuf, this);
   auto tmp = this->parser.process_button(tag);
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp, this);
   return 1;
 }
 
 int html_feed_environ::HTML_BUTTON_exit() {
   auto tmp = this->parser.process_n_button();
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp, this);
   return 1;
 }
 
@@ -695,7 +695,7 @@ int html_feed_environ::HTML_SELECT_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.close_anchor(this);
   auto tmp = this->parser.process_select(tag);
   if (tmp.size())
-    this->parser.HTMLlineproc1(tmp.c_str(), this);
+    this->parser.HTMLlineproc1(tmp, this);
   this->obuf.flag |= RB_INSELECT;
   this->obuf.end_tag = HTML_N_SELECT;
   return 1;
@@ -706,7 +706,7 @@ int html_feed_environ::HTML_SELECT_exit() {
   this->obuf.end_tag = HTML_UNKNOWN;
   auto tmp = this->parser.process_n_select();
   if (tmp.size())
-    this->parser.HTMLlineproc1(tmp.c_str(), this);
+    this->parser.HTMLlineproc1(tmp, this);
   return 1;
 }
 
@@ -714,8 +714,8 @@ int html_feed_environ::HTML_TEXTAREA_enter(
     const std::shared_ptr<HtmlTag> &tag) {
   this->parser.close_anchor(this);
   auto tmp = this->parser.process_textarea(tag, this->limit);
-  if (tmp) {
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size()) {
+    this->parser.HTMLlineproc1(tmp, this);
   }
   this->obuf.flag |= RB_INTXTA;
   this->obuf.end_tag = HTML_N_TEXTAREA;
@@ -726,8 +726,8 @@ int html_feed_environ::HTML_TEXTAREA_exit() {
   this->obuf.flag &= ~RB_INTXTA;
   this->obuf.end_tag = HTML_UNKNOWN;
   auto tmp = this->parser.process_n_textarea();
-  if (tmp) {
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size()) {
+    this->parser.HTMLlineproc1(tmp, this);
   }
   return 1;
 }

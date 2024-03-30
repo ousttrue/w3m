@@ -17,3 +17,9 @@ void push_symbol(Str *str, char symbol, int width, int n) {
     Strcat_char(str, '*');
   }
 }
+
+void push_symbol(std::ostream &os, char symbol, int width, int n) {
+  for (int i = 0; i < n; ++i) {
+    os << '*';
+  }
+}

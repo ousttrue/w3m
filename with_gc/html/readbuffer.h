@@ -375,8 +375,8 @@ struct readbuffer {
   void push_charp(int width, const char *str, Lineprop mode) {
     this->push_nchars(width, str, strlen(str), mode);
   }
-  void push_str(int width, Str *str, Lineprop mode) {
-    this->push_nchars(width, str->ptr, str->length, mode);
+  void push_str(int width, std::string_view str, Lineprop mode) {
+    this->push_nchars(width, str.data(), str.size(), mode);
   }
   void push_char(int pre_mode, char ch) {
     this->check_breakpoint(pre_mode, &ch);

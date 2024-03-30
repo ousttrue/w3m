@@ -72,7 +72,7 @@ private:
   int form_sp = -1;
 
   // textarea
-  Str *cur_textarea = {};
+  std::string cur_textarea = {};
   int cur_textarea_size = {};
   int cur_textarea_rows = {};
   int cur_textarea_readonly = {};
@@ -83,24 +83,24 @@ public:
   std::vector<std::string> textarea_str;
   std::vector<struct FormAnchor *> a_textarea;
 
-  Str *process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid);
-  Str *process_n_form();
-  Str *process_form(const std::shared_ptr<HtmlTag> &tag) {
+  std::string process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid);
+  std::string process_n_form();
+  std::string process_form(const std::shared_ptr<HtmlTag> &tag) {
     return process_form_int(tag, -1);
   }
   int cur_form_id() const {
     return ((form_sp >= 0) ? form_stack[form_sp] : -1);
   }
 
-  Str *process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
-  Str *process_n_textarea();
+  std::string process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
+  std::string process_n_textarea();
   void feed_textarea(const char *str);
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);
   void proc_escape(struct readbuffer *obuf, const char **str_return);
   void completeHTMLstream(html_feed_environ *);
-  void push_render_image(Str *str, int width, int limit,
+  void push_render_image(const std::string &str, int width, int limit,
                          html_feed_environ *h_env);
 
 public:
@@ -110,7 +110,7 @@ public:
   void parse(std::string_view istr, struct html_feed_environ *h_env,
              bool internal);
 
-  void HTMLlineproc1(const char *x, struct html_feed_environ *y);
+  void HTMLlineproc1(const std::string &x, struct html_feed_environ *y);
 
   void CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env);
 
@@ -118,16 +118,16 @@ public:
 
   void HTML5_CLOSE_A(readbuffer *obuf, html_feed_environ *h_env);
 
-  Str *getLinkNumberStr(int correction) const;
+  std::string getLinkNumberStr(int correction) const;
 
-  Str *process_img(const std::shared_ptr<HtmlTag> &tag, int width);
+  std::string process_img(const std::shared_ptr<HtmlTag> &tag, int width);
   std::string process_anchor(const std::shared_ptr<HtmlTag> &tag,
                              const char *tagbuf);
-  Str *process_input(const std::shared_ptr<HtmlTag> &tag);
-  Str *process_button(const std::shared_ptr<HtmlTag> &tag);
-  Str *process_n_button();
-  Str *process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
-                  int indent_width);
+  std::string process_input(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_button(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_n_button();
+  std::string process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
+                         int indent_width);
 
 private:
   int pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,

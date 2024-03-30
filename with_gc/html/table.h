@@ -190,7 +190,7 @@ private:
   void suspend_or_pushdata(const char *line);
   void table_close_textarea(HtmlParser *parser, struct table_mode *mode,
                             int width);
-  void feed_table1(HtmlParser *parser, const char *tok, struct table_mode *mode,
+  void feed_table1(HtmlParser *parser, const std::string &tok, struct table_mode *mode,
                    int width);
   void table_close_select(HtmlParser *parser, struct table_mode *mode,
                           int width);
