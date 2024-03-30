@@ -55,7 +55,7 @@ struct table_in {
 struct table_linfo {
   Lineprop prev_ctype;
   signed char prev_spaces;
-  Str *prevchar;
+  std::string prevchar;
   short length;
 };
 
@@ -114,7 +114,7 @@ private:
   int cellpadding;
   int vcellpadding;
   int flag;
-  Str *caption;
+  std::string caption;
   std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
   std::vector<std::vector<table_attr>> tabattr;
   table_attr trattr;

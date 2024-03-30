@@ -475,8 +475,7 @@ char *convert_size2(long long size1, long long size2, int usefloat) {
 }
 
 readbuffer::readbuffer() {
-  this->prevchar = Strnew_size(8);
-  set_space_to_prevchar(this->prevchar);
+  this->prevchar = " ";
   this->flag = RB_IGNORE_P;
   this->status = R_ST_NORMAL;
   this->prev_ctype = PC_ASCII;
@@ -800,7 +799,7 @@ void readbuffer::push_nchars(int width, const char *str, int len,
   this->line += std::string(str, len);
   this->pos += width;
   if (width > 0) {
-    set_prevchar(this->prevchar, str, len);
+    this->prevchar = std::string(str, len);
     this->prev_ctype = mode;
   }
   this->flag |= RB_NFLUSHED;
@@ -812,7 +811,7 @@ void readbuffer::proc_mchar(int pre_mode, int width, const char **str,
   this->pos += width;
   this->line += std::string(*str, get_mclen(*str));
   if (width > 0) {
-    set_prevchar(this->prevchar, *str, 1);
+    this->prevchar = std::string(*str, 1);
     if (**str != ' ')
       this->prev_ctype = mode;
   }
@@ -1076,7 +1075,7 @@ void readbuffer::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
   this->pos = 0;
   this->top_margin = 0;
   this->bottom_margin = 0;
-  set_space_to_prevchar(this->prevchar);
+  this->prevchar = " ";
   this->bp.init_flag = 1;
   this->flag &= ~RB_NFLUSHED;
   this->set_breakpoint(0);

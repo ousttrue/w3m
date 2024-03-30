@@ -2,7 +2,6 @@
 #include "lineprop.h"
 #include "generallist.h"
 #include "enum_template.h"
-#include "Str.h"
 #include "anchor.h"
 #include "html_command.h"
 #include "html_tag.h"
@@ -145,12 +144,11 @@ struct LinkStack {
   short pos = 0;
 };
 
-struct Str;
 struct readbuffer {
   std::string line;
   Lineprop cprop = 0;
   short pos = 0;
-  Str *prevchar;
+  std::string prevchar;
   ReadBufferFlags flag = {};
   ReadBufferFlags flag_stack[RB_STACK_SIZE];
   int flag_sp = 0;
@@ -300,7 +298,7 @@ struct readbuffer {
     this->push_tag("</pre_int>", HTML_N_PRE_INT);
     this->flag &= ~RB_PRE_INT;
     if (!(this->flag & RB_SPECIAL) && this->pos > this->bp.pos) {
-      set_prevchar(this->prevchar, "", 0);
+      this->prevchar = "";
       this->prev_ctype = PC_CTRL;
     }
     return 1;
@@ -381,7 +379,7 @@ struct readbuffer {
     this->check_breakpoint(pre_mode, &ch);
     this->line += ch;
     this->pos++;
-    set_prevchar(this->prevchar, &ch, 1);
+    this->prevchar = std::string(&ch, 1);
     if (ch != ' ')
       this->prev_ctype = PC_ASCII;
     this->flag |= RB_NFLUSHED;
@@ -394,8 +392,8 @@ struct readbuffer {
     if (pre_mode)
       return;
     tlen = this->line.size() - len;
-    if (tlen > 0 ||
-        is_boundary((unsigned char *)this->prevchar->ptr, (unsigned char *)ch))
+    if (tlen > 0 || is_boundary((unsigned char *)this->prevchar.c_str(),
+                                (unsigned char *)ch))
       this->set_breakpoint(tlen);
   }
   void push_spaces(int pre_mode, int width) {
@@ -405,7 +403,7 @@ struct readbuffer {
     for (int i = 0; i < width; i++)
       this->line.push_back(' ');
     this->pos += width;
-    set_space_to_prevchar(this->prevchar);
+    this->prevchar = " ";
     this->flag |= RB_NFLUSHED;
   }
   void proc_mchar(int pre_mode, int width, const char **str, Lineprop mode);
@@ -429,6 +427,7 @@ struct readbuffer {
   }
 };
 
+struct Str;
 Str *romanNumeral(int n);
 Str *romanAlphabet(int n);
 // extern int next_status(char c, int *status);

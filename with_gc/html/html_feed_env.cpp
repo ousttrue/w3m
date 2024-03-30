@@ -222,7 +222,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
       this->obuf.push_charp(1, NBSP, PC_ASCII);
       this->obuf.push_str(1, tmp->ptr, PC_ASCII);
       this->obuf.push_charp(1, NBSP, PC_ASCII);
-      set_space_to_prevchar(this->obuf.prevchar);
+      this->obuf.prevchar = " ";
       break;
     }
 
@@ -255,7 +255,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
       this->obuf.push_spaces(1, INDENT_INCR - num->length);
       this->obuf.push_str(num->length, num->ptr, PC_ASCII);
       if (INDENT_INCR >= 4)
-        set_space_to_prevchar(this->obuf.prevchar);
+        this->obuf.prevchar = " ";
       break;
     default:
       this->obuf.push_spaces(1, INDENT_INCR);
@@ -400,7 +400,7 @@ int html_feed_environ::HTML_HR(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.close_anchor(this);
   auto tmp = this->parser.process_hr(tag, this->limit, envs[this->envc].indent);
   this->parser.HTMLlineproc1(tmp, this);
-  set_space_to_prevchar(this->obuf.prevchar);
+  this->obuf.prevchar = " ";
   return 1;
 }
 

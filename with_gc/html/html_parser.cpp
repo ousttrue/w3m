@@ -16,6 +16,7 @@
 #include "table.h"
 #include "utf8.h"
 #include "cmp.h"
+#include "Str.h"
 #include <sstream>
 
 #define HR_ATTR_WIDTH_MAX 65535
@@ -96,7 +97,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
     if (i >= 0 || (p = obuf->has_hidden_link(HTML_A))) {
       if (obuf->anchor.hseq > 0) {
         this->HTMLlineproc1(ANSP, h_env);
-        set_space_to_prevchar(obuf->prevchar);
+        obuf->prevchar = " ";
       } else {
         if (i >= 0) {
           obuf->tag_sp--;
@@ -1552,7 +1553,7 @@ void HtmlParser::proc_escape(struct readbuffer *obuf, const char **str_return) {
   } else {
     obuf->push_nchars(width, str, n_add, mode);
   }
-  set_prevchar(obuf->prevchar, estr.c_str(), estr.size());
+  obuf->prevchar = estr;
   obuf->prev_ctype = mode;
 }
 
@@ -1745,7 +1746,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
           h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
           h_env->obuf.flag |= RB_IGNORE_P;
         }
-        set_space_to_prevchar(h_env->obuf.prevchar);
+        h_env->obuf.prevchar = " ";
         continue;
       case 1:
         /* <table> tag */
@@ -1841,7 +1842,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
         if (!IS_SPACE(*str))
           h_env->obuf.flag &= ~RB_IGNORE_P;
         if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*str)) {
-          if (*h_env->obuf.prevchar->ptr != ' ') {
+          if (h_env->obuf.prevchar[0] != ' ') {
             h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
           }
           str++;

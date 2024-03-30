@@ -1,4 +1,5 @@
 #include "proc.h"
+#include "Str.h"
 #include "invoke.h"
 #include "quote.h"
 #include "tmpfile.h"

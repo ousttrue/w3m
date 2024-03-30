@@ -14,6 +14,7 @@
 #include "utf8.h"
 #include "myctype.h"
 #include "cmp.h"
+#include "Str.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -187,11 +188,9 @@ std::shared_ptr<table> table::newTable() {
   t->tables = {};
   t->matrix = {};
   t->vector = {};
-  t->linfo.prevchar = Strnew_size(8);
-  set_prevchar(t->linfo.prevchar, "", 0);
+  t->linfo.prevchar = "";
   t->trattr = {};
-
-  t->caption = Strnew();
+  t->caption = {};
   t->suspended_data = NULL;
   return t;
 }
@@ -1268,11 +1267,10 @@ void table::renderCoTable(HtmlParser *parser, int maxlimit) {
 }
 
 void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
-  int limit;
-
-  if (this->caption->length <= 0)
+  if (this->caption.size() <= 0)
     return;
 
+  int limit;
   if (this->total_width > 0)
     limit = this->total_width;
   else
@@ -1281,7 +1279,7 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
                          GeneralList::newGeneralList());
   parser->HTMLlineproc1("<center>", &henv);
-  parser->parse(this->caption->ptr, &henv, false);
+  parser->parse(this->caption, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);
 
   if (this->total_width < henv.obuf.maxlimit)
@@ -1289,7 +1287,7 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   limit = h_env->limit;
   h_env->limit = this->total_width;
   parser->HTMLlineproc1("<center>", h_env);
-  parser->parse(this->caption->ptr, h_env, false);
+  parser->parse(this->caption, h_env, false);
   parser->HTMLlineproc1("</center>", h_env);
   h_env->limit = limit;
 }
@@ -1696,7 +1694,7 @@ void table::clearcontentssize(struct table_mode *mode) {
   this->table_close_anchor0(mode);
   mode->nobr_offset = 0;
   this->linfo.prev_spaces = -1;
-  set_space_to_prevchar(this->linfo.prevchar);
+  this->linfo.prevchar = " ";
   this->linfo.prev_ctype = PC_ASCII;
   this->linfo.length = 0;
   this->tabcontentssize = 0;
@@ -1762,7 +1760,7 @@ int table::skip_space(const char *line, struct table_linfo *linfo,
                       int checkminimum) {
   int skip = 0, s = linfo->prev_spaces;
   Lineprop ctype, prev_ctype = linfo->prev_ctype;
-  Str *prevchar = linfo->prevchar;
+  // Str *prevchar = linfo->prevchar;
   int w = linfo->length;
   int min = 1;
 
@@ -1795,8 +1793,9 @@ int table::skip_space(const char *line, struct table_linfo *linfo,
           plen = get_mclen(e.c_str());
         }
       }
-      if (prevchar->length &&
-          is_boundary((unsigned char *)prevchar->ptr, (unsigned char *)c)) {
+      if (linfo->prevchar.size() &&
+          is_boundary((unsigned char *)linfo->prevchar.c_str(),
+                      (unsigned char *)c)) {
         w = len;
       } else {
         w += len;
@@ -1807,7 +1806,7 @@ int table::skip_space(const char *line, struct table_linfo *linfo,
       s = 0;
       prev_ctype = ctype;
     }
-    set_prevchar(prevchar, c, plen);
+    linfo->prevchar = std::string(c, plen);
     line = save + wlen;
   }
   if (s > 1) {
@@ -1817,7 +1816,6 @@ int table::skip_space(const char *line, struct table_linfo *linfo,
     linfo->prev_spaces = s;
   }
   linfo->prev_ctype = prev_ctype;
-  linfo->prevchar = prevchar;
 
   if (checkminimum) {
     if (min < w)
@@ -2628,7 +2626,7 @@ int table::feed_table(HtmlParser *parser, const char *line,
       return -1;
   }
   if (mode->caption) {
-    Strcat_charp(this->caption, line);
+    this->caption += line;
     return -1;
   }
   if (mode->pre_mode & TBLM_SCRIPT)

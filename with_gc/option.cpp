@@ -3,6 +3,7 @@
 #include "option_param.h"
 #include "cookie.h"
 #include "dns_order.h"
+#include "Str.h"
 
 #define N_(Text) Text
 #include <sstream>
