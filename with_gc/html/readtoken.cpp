@@ -244,11 +244,8 @@ std::optional<std::string> read_token(const char **instr,
   return buf;
 }
 
-int append_token(Str *buf, const char **instr, ReadBufferStatus *status,
-                 int pre) {
-  const bool append = true;
-  if (!append)
-    Strclear(buf);
+int append_token(std::string &buf, const char **instr, ReadBufferStatus *status,
+                 bool pre) {
   if (**instr == '\0')
     return 0;
 
@@ -273,20 +270,17 @@ int append_token(Str *buf, const char **instr, ReadBufferStatus *status,
       }
       if (prev_status == R_ST_NCMNT2 || prev_status == R_ST_NCMNT3 ||
           prev_status == R_ST_IRRTAG || prev_status == R_ST_CMNT1) {
-        if (prev_status == R_ST_CMNT1 && !append && !pre)
-          Strclear(buf);
         if (pre)
-          Strcat_char(buf, *p);
+          buf.push_back(*p);
         p++;
 
         *instr = p;
         return 1;
       }
-      Strcat_char(buf, (!pre && IS_SPACE(*p)) ? ' ' : *p);
+      buf.push_back((!pre && IS_SPACE(*p)) ? ' ' : *p);
       if (ST_IS_REAL_TAG(prev_status)) {
         *instr = p + 1;
-        if (buf->length < 2 || buf->ptr[buf->length - 2] != '<' ||
-            buf->ptr[buf->length - 1] != '>')
+        if (buf.size() < 2 || buf[buf.size() - 2] != '<' || buf.back() != '>')
           return 1;
         Strshrink(buf, 2);
       }
@@ -303,24 +297,23 @@ int append_token(Str *buf, const char **instr, ReadBufferStatus *status,
         /*
          * Strcat_charp(buf, "&lt;");
          */
-        Strcat_char(buf, '<');
+        buf.push_back('<');
         *status = R_ST_NORMAL;
-      } else
-        Strcat_char(buf, *p);
+      } else {
+        buf.push_back(*p);
+      }
       break;
     case R_ST_EQL:
     case R_ST_QUOTE:
     case R_ST_DQUOTE:
     case R_ST_VALUE:
     case R_ST_AMP:
-      Strcat_char(buf, *p);
+      buf.push_back(*p);
       break;
     case R_ST_CMNT:
     case R_ST_IRRTAG:
       if (pre)
-        Strcat_char(buf, *p);
-      else if (!append)
-        Strclear(buf);
+        buf.push_back(*p);
       break;
     case R_ST_CMNT1:
     case R_ST_CMNT2:
@@ -329,7 +322,7 @@ int append_token(Str *buf, const char **instr, ReadBufferStatus *status,
     case R_ST_NCMNT3:
       /* do nothing */
       if (pre)
-        Strcat_char(buf, *p);
+        buf.push_back(*p);
       break;
 
     case R_ST_EOL:

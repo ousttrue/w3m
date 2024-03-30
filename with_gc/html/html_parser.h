@@ -121,7 +121,7 @@ public:
 
   std::string process_img(const std::shared_ptr<HtmlTag> &tag, int width);
   std::string process_anchor(const std::shared_ptr<HtmlTag> &tag,
-                             const char *tagbuf);
+                             const std::string &tagbuf);
   std::string process_input(const std::shared_ptr<HtmlTag> &tag);
   std::string process_button(const std::shared_ptr<HtmlTag> &tag);
   std::string process_n_button();

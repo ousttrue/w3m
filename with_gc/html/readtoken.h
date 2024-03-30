@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <optional>
+#include <functional>
 
 #define ST_IS_REAL_TAG(s)                                                      \
   ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
@@ -35,6 +36,5 @@ int next_status(char c, ReadBufferStatus *status);
 std::optional<std::string> read_token(const char **instr,
                                       ReadBufferStatus *status, bool pre);
 
-struct Str;
-int append_token(Str *buf, const char **instr, ReadBufferStatus *status,
-                 int pre);
+int append_token(std::string &buf, const char **instr,
+                 ReadBufferStatus *status, bool pre);

@@ -9,7 +9,6 @@
 #include "symbol.h"
 #include "utf8.h"
 #include "quote.h"
-#include "Str.h"
 #include <assert.h>
 #include <sstream>
 
@@ -18,7 +17,6 @@ html_feed_environ::html_feed_environ(int nenv, int limit, int indent,
     : buf(_buf), parser(limit) {
   assert(nenv);
   envs.resize(nenv);
-  this->tagbuf = Strnew();
   this->limit = limit;
   envs[0].indent = indent;
 }
@@ -512,7 +510,7 @@ int html_feed_environ::HTML_A_enter(const std::shared_ptr<HtmlTag> &tag) {
 
   if (this->obuf.anchor.hseq == 0 && this->obuf.anchor.url.size()) {
     this->obuf.anchor.hseq = this->parser.cur_hseq;
-    auto tmp = this->parser.process_anchor(tag, this->tagbuf->ptr);
+    auto tmp = this->parser.process_anchor(tag, this->tagbuf);
     this->obuf.push_tag(tmp.c_str(), HTML_A);
     return 1;
   }

@@ -17,7 +17,6 @@
 #include "table.h"
 #include "utf8.h"
 #include "cmp.h"
-#include "Str.h"
 #include "readtoken.h"
 #include <sstream>
 
@@ -1054,7 +1053,7 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
 }
 
 std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
-                                       const char *tagbuf) {
+                                       const std::string &tagbuf) {
   if (tag->parsedtag_need_reconstruct()) {
     std::stringstream ss;
     ss << this->cur_hseq++;
@@ -1063,7 +1062,7 @@ std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
   } else {
     std::stringstream tmp;
     tmp << "<a hseq=\"" << this->cur_hseq++ << "\"";
-    tmp << (tagbuf + 2);
+    tmp << tagbuf.substr(2);
     return tmp.str();
   }
 }
@@ -1715,17 +1714,16 @@ static int need_flushline(struct html_feed_environ *h_env,
 void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
                        bool internal) {
 
-  std::string __line{_line.begin(), _line.end()};
-  auto line = __line.c_str();
+  std::string line{_line.begin(), _line.end()};
 
   TableStatus t;
 
-  while (*line != '\0') {
+  while (line.size()) {
     int is_tag = false;
     auto pre_mode = t.pre_mode(h_env);
     int end_tag = t.end_tag(h_env);
     std::string str;
-    if (*line == '<' || h_env->obuf.status != R_ST_NORMAL) {
+    if (line[0] == '<' || h_env->obuf.status != R_ST_NORMAL) {
       /*
        * Tag processing
        */
@@ -1733,35 +1731,41 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
         h_env->obuf.status = R_ST_NORMAL;
       else {
         if (h_env->obuf.status != R_ST_NORMAL) {
-          append_token(h_env->tagbuf, &line, &h_env->obuf.status,
+          auto p = line.c_str();
+          append_token(h_env->tagbuf, &p, &h_env->obuf.status,
                        pre_mode & RB_PREMODE);
+          line = p;
         } else {
-          if (auto buf = read_token(&line, &h_env->obuf.status,
-                                    pre_mode & RB_PREMODE)) {
-            h_env->tagbuf = Strnew(*buf);
+          auto p = line.c_str();
+          if (auto buf =
+                  read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
+            h_env->tagbuf = *buf;
           }
+          line = p;
         }
         if (h_env->obuf.status != R_ST_NORMAL)
           return;
       }
-      if (h_env->tagbuf->length == 0)
+      if (h_env->tagbuf.empty())
         continue;
-      str = h_env->tagbuf->Strdup()->ptr;
+      str = h_env->tagbuf;
       if (str[0] == '<') {
         if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
           is_tag = true;
         else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
                                RB_STYLE | RB_TITLE))) {
-          line = Strnew_m_charp(str.c_str() + 1, line, nullptr)->ptr;
+          line = str.substr(1) + line;
           str = "&lt;";
         }
       }
     } else {
       std::string tokbuf;
+      auto p = line.c_str();
       if (auto value =
-              read_token(&line, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
+              read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
         tokbuf = *value;
       }
+      line = p;
       if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
         h_env->obuf.status = R_ST_NORMAL;
       str = tokbuf;
@@ -1803,7 +1807,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
             if (strncmp(str.c_str(), "<!--", 4) &&
                 (p = strchr(str.c_str() + 1, '<'))) {
               str = std::string(str, p - str.c_str());
-              line = Strnew_m_charp(p, line, nullptr)->ptr;
+              line = std::string(p) + line;
             }
             is_tag = false;
             continue;
@@ -1842,7 +1846,9 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
         t.tbl->end_table();
         if (h_env->obuf.table_level >= 0) {
           auto tbl0 = tables[h_env->obuf.table_level];
-          str = Sprintf("<table_alt tid=%d>", tbl0->ntable)->ptr;
+          std::stringstream ss;
+          ss <<"<table_alt tid=" << tbl0->ntable << ">";
+          str = ss.str();
           if (tbl0->row < 0)
             continue;
           tbl0->pushTable(t.tbl);
@@ -1895,8 +1901,8 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       if (pushHtmlTag(tag, h_env) == 0) {
         /* preserve the tag for second-stage processing */
         if (tag->parsedtag_need_reconstruct())
-          h_env->tagbuf = Strnew(tag->parsedtag2str());
-        h_env->obuf.push_tag(h_env->tagbuf->ptr, cmd);
+          h_env->tagbuf = tag->parsedtag2str();
+        h_env->obuf.push_tag(h_env->tagbuf, cmd);
       }
       h_env->obuf.bp.init_flag = 1;
       clear_ignore_p_flag(cmd, &h_env->obuf);
@@ -1993,10 +1999,9 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
 
         int indent = h_env->envs[h_env->envc].indent;
         if (h_env->obuf.bp.pos - i > indent) {
-          Str *line;
           h_env->obuf.append_tags(); /* may reallocate the buffer */
           bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
-          line = Strnew_charp(bp);
+          std::string line = bp;
           Strshrink(h_env->obuf.line,
                     h_env->obuf.line.size() - h_env->obuf.bp.len);
           if (h_env->obuf.pos - i > h_env->limit)
@@ -2004,7 +2009,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
           h_env->obuf.back_to_breakpoint();
           h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
           h_env->obuf.flag &= ~RB_FILL;
-          HTMLlineproc1(line->ptr, h_env);
+          HTMLlineproc1(line, h_env);
         }
       }
     }

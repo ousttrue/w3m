@@ -8,7 +8,6 @@
 #define MAX_CELLPADDING 1000
 #define MAX_VSPACE 1000
 
-struct Str;
 struct TextLineList;
 struct readbuffer;
 
@@ -22,7 +21,7 @@ struct environment {
 struct html_feed_environ {
   readbuffer obuf;
   std::shared_ptr<GeneralList> buf;
-  Str *tagbuf;
+  std::string tagbuf;
   int limit;
 
   std::vector<environment> envs;
