@@ -47,6 +47,7 @@ without_gc_lib = static_library(
         'etc.cpp',
         'file_util.cpp',
         'history.cpp',
+        'loaddirectory.cpp',
     ],
     cpp_args: [
         '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',

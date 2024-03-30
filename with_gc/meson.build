@@ -26,7 +26,6 @@ with_gc_lib = static_library(
         'mailcap.cpp',
         'symbol.cpp',
         'app.cpp',
-        'loaddirectory.cpp',
         'alloc.cpp',
         'tabbuffer.cpp',
         'proc.cpp',

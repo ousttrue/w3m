@@ -10,10 +10,8 @@
 #include "etc.h"
 #include "alloc.h"
 #include "buffer.h"
-#include "proc.h"
 #include "form.h"
 #include "ctrlcode.h"
-#include "local_cgi.h"
 #include "myctype.h"
 #include "history.h"
 #include <sys/stat.h>

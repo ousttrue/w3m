@@ -1,9 +1,4 @@
 #include "loaddirectory.h"
-#include "Str.h"
-#include "etc.h"
-#include "quote.h"
-#include "alloc.h"
-#include "ioutil.h"
 
 typedef struct direct Directory;
 #include <sys/stat.h>
