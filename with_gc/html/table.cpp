@@ -2753,16 +2753,11 @@ int table::feed_table(HtmlParser *parser, const char *line,
 
 void table::feed_table1(HtmlParser *parser, const std::string &line,
                         struct table_mode *mode, int width) {
-  Str *tokbuf;
-  ReadBufferStatus status;
-  // if (!tok)
-  //   return;
-  tokbuf = Strnew();
-  status = R_ST_NORMAL;
-  // auto line = tok->ptr;
-  while (read_token(tokbuf, (const char **)&line, &status,
-                    mode->pre_mode & TBLM_PREMODE))
-    this->feed_table(parser, tokbuf->ptr, mode, width, true);
+  auto status = R_ST_NORMAL;
+  while (auto tokbuf = read_token((const char **)&line, &status,
+                                  mode->pre_mode & TBLM_PREMODE)) {
+    feed_table(parser, tokbuf->c_str(), mode, width, true);
+  }
 }
 
 void table::pushTable(const std::shared_ptr<table> &tbl1) {
@@ -3108,6 +3103,6 @@ bool TableStatus::is_active(html_feed_environ *h_env) {
   return h_env->obuf.table_level >= 0 && tbl && tbl_mode;
 }
 
-int TableStatus::feed(HtmlParser *parser, const char *str, bool internal) {
-  return tbl->feed_table(parser, str, tbl_mode, tbl_width, internal);
+int TableStatus::feed(HtmlParser *parser, const std::string &str, bool internal) {
+  return tbl->feed_table(parser, str.c_str(), tbl_mode, tbl_width, internal);
 }

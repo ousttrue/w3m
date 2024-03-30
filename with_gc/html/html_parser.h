@@ -42,7 +42,7 @@ class HtmlParser {
   std::string cur_title;
   void process_title(const std::shared_ptr<HtmlTag> &tag);
   std::string process_n_title(const std::shared_ptr<HtmlTag> &tag);
-  void feed_title(const char *str);
+  void feed_title(const std::string &str);
 
   // select
   std::string cur_select = {};
@@ -61,7 +61,7 @@ public:
   std::string process_select(const std::shared_ptr<HtmlTag> &tag);
   std::string process_n_select();
   void process_option();
-  void feed_select(const char *str);
+  void feed_select(const std::string &str);
 
 private:
   // form
@@ -93,7 +93,7 @@ public:
 
   std::string process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
   std::string process_n_textarea();
-  void feed_textarea(const char *str);
+  void feed_textarea(const std::string &str);
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);

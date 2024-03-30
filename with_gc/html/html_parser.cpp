@@ -1,4 +1,5 @@
 #include "html_parser.h"
+#include "cmp.h"
 #include "push_symbol.h"
 #include "option_param.h"
 #include "html_feed_env.h"
@@ -183,11 +184,12 @@ std::string HtmlParser::process_n_title(const std::shared_ptr<HtmlTag> &tag) {
   return tmp.str();
 }
 
-void HtmlParser::feed_title(const char *str) {
+void HtmlParser::feed_title(const std::string &_str) {
   if (pre_title.size())
     return;
   if (cur_title.empty())
     return;
+  auto str = _str.c_str();
   while (*str) {
     if (*str == '&') {
       cur_title += getescapecmd(&str);
@@ -274,9 +276,11 @@ std::string HtmlParser::process_n_textarea() {
   return tmp.str();
 }
 
-void HtmlParser::feed_textarea(const char *str) {
+void HtmlParser::feed_textarea(const std::string &_str) {
   if (cur_textarea.empty())
     return;
+
+  auto str = _str.c_str();
   if (ignore_nl_textarea) {
     if (*str == '\r') {
       str++;
@@ -1717,10 +1721,10 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
   TableStatus t;
 
   while (*line != '\0') {
-    const char *str, *p;
     int is_tag = false;
     auto pre_mode = t.pre_mode(h_env);
     int end_tag = t.end_tag(h_env);
+    std::string str;
     if (*line == '<' || h_env->obuf.status != R_ST_NORMAL) {
       /*
        * Tag processing
@@ -1732,8 +1736,10 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
           append_token(h_env->tagbuf, &line, &h_env->obuf.status,
                        pre_mode & RB_PREMODE);
         } else {
-          read_token(h_env->tagbuf, &line, &h_env->obuf.status,
-                     pre_mode & RB_PREMODE);
+          if (auto buf = read_token(&line, &h_env->obuf.status,
+                                    pre_mode & RB_PREMODE)) {
+            h_env->tagbuf = Strnew(*buf);
+          }
         }
         if (h_env->obuf.status != R_ST_NORMAL)
           return;
@@ -1741,28 +1747,31 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       if (h_env->tagbuf->length == 0)
         continue;
       str = h_env->tagbuf->Strdup()->ptr;
-      if (*str == '<') {
+      if (str[0] == '<') {
         if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
           is_tag = true;
         else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
                                RB_STYLE | RB_TITLE))) {
-          line = Strnew_m_charp(str + 1, line, nullptr)->ptr;
+          line = Strnew_m_charp(str.c_str() + 1, line, nullptr)->ptr;
           str = "&lt;";
         }
       }
     } else {
-      auto tokbuf = Strnew();
-      read_token(tokbuf, &line, &h_env->obuf.status, pre_mode & RB_PREMODE);
+      std::string tokbuf;
+      if (auto value =
+              read_token(&line, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
+        tokbuf = *value;
+      }
       if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
         h_env->obuf.status = R_ST_NORMAL;
-      str = tokbuf->ptr;
+      str = tokbuf;
     }
 
     if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE |
                     RB_TITLE)) {
       bool goto_proc_normal = false;
       if (is_tag) {
-        p = str;
+        auto p = str.c_str();
         if (auto tag = HtmlTag::parse(&p, internal)) {
           if (tag->tagid == end_tag ||
               (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM) ||
@@ -1790,8 +1799,10 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
           }
         } else {
           if (is_tag) {
-            if (strncmp(str, "<!--", 4) && (p = strchr(str + 1, '<'))) {
-              str = Strnew_charp_n(str, p - str)->ptr;
+            const char *p;
+            if (strncmp(str.c_str(), "<!--", 4) &&
+                (p = strchr(str.c_str() + 1, '<'))) {
+              str = std::string(str, p - str.c_str());
               line = Strnew_m_charp(p, line, nullptr)->ptr;
             }
             is_tag = false;
@@ -1874,10 +1885,12 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       /*** Beginning of a new tag ***/
       HtmlCommand cmd;
       std::shared_ptr<HtmlTag> tag;
-      if ((tag = HtmlTag::parse(&str, internal)))
+      auto p = str.c_str();
+      if ((tag = HtmlTag::parse(&p, internal)))
         cmd = tag->tagid;
       else
         continue;
+      str = p;
       /* process tags */
       if (pushHtmlTag(tag, h_env) == 0) {
         /* preserve the tag for second-stage processing */
@@ -1900,26 +1913,28 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
 
     if (h_env->obuf.flag & (RB_DEL | RB_S))
       continue;
-    while (*str) {
-      auto mode = get_mctype(str);
-      int delta = get_mcwidth(str);
+
+    auto pp = str.c_str();
+    while (*pp) {
+      auto mode = get_mctype(pp);
+      int delta = get_mcwidth(pp);
       if (h_env->obuf.flag & (RB_SPECIAL & ~RB_NOBR)) {
-        char ch = *str;
-        if (!(h_env->obuf.flag & RB_PLAIN) && (*str == '&')) {
-          const char *p = str;
+        char ch = *pp;
+        if (!(h_env->obuf.flag & RB_PLAIN) && (*pp == '&')) {
+          const char *p = pp;
           int ech = getescapechar(&p);
           if (ech == '\n' || ech == '\r') {
             ch = '\n';
-            str = p - 1;
+            pp = p - 1;
           } else if (ech == '\t') {
             ch = '\t';
-            str = p - 1;
+            pp = p - 1;
           }
         }
         if (ch != '\n')
           h_env->obuf.flag &= ~RB_IGNORE_P;
         if (ch == '\n') {
-          str++;
+          pp++;
           if (h_env->obuf.flag & RB_IGNORE_P) {
             h_env->obuf.flag &= ~RB_IGNORE_P;
             continue;
@@ -1935,36 +1950,36 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
           } while ((h_env->envs[h_env->envc].indent + h_env->obuf.pos) %
                        Tabstop !=
                    0);
-          str++;
+          pp++;
         } else if (h_env->obuf.flag & RB_PLAIN) {
-          auto p = html_quote_char(*str);
+          auto p = html_quote_char(*pp);
           if (p) {
             h_env->obuf.push_charp(1, p, PC_ASCII);
-            str++;
+            pp++;
           } else {
-            h_env->obuf.proc_mchar(1, delta, &str, mode);
+            h_env->obuf.proc_mchar(1, delta, &pp, mode);
           }
         } else {
-          if (*str == '&')
-            proc_escape(&h_env->obuf, &str);
+          if (*pp == '&')
+            proc_escape(&h_env->obuf, &pp);
           else
-            h_env->obuf.proc_mchar(1, delta, &str, mode);
+            h_env->obuf.proc_mchar(1, delta, &pp, mode);
         }
         if (h_env->obuf.flag & (RB_SPECIAL & ~RB_PRE_INT))
           continue;
       } else {
-        if (!IS_SPACE(*str))
+        if (!IS_SPACE(*pp))
           h_env->obuf.flag &= ~RB_IGNORE_P;
-        if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*str)) {
+        if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*pp)) {
           if (h_env->obuf.prevchar[0] != ' ') {
             h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
           }
-          str++;
+          pp++;
         } else {
-          if (*str == '&')
-            proc_escape(&h_env->obuf, &str);
+          if (*pp == '&')
+            proc_escape(&h_env->obuf, &pp);
           else
-            h_env->obuf.proc_mchar(h_env->obuf.flag & RB_SPECIAL, delta, &str,
+            h_env->obuf.proc_mchar(h_env->obuf.flag & RB_SPECIAL, delta, &pp,
                                    mode);
         }
       }
@@ -2049,19 +2064,18 @@ std::string HtmlParser::process_n_select() {
   return select_str;
 }
 
-void HtmlParser::feed_select(const char *str) {
-  Str *tmp = Strnew();
+void HtmlParser::feed_select(const std::string &_str) {
   int prev_status = cur_status;
   static int prev_spaces = -1;
-  const char *p;
 
   if (cur_select.empty())
     return;
-  while (read_token(tmp, &str, &cur_status, 0)) {
+  auto str = _str.c_str();
+  while (auto tmp = read_token(&str, &cur_status, 0)) {
     if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
       continue;
-    p = tmp->ptr;
-    if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
+    auto p = tmp->c_str();
+    if ((*tmp)[0] == '<' && tmp->back() == '>') {
       std::shared_ptr<HtmlTag> tag;
 
       if (!(tag = HtmlTag::parse(&p, false)))
