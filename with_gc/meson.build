@@ -28,7 +28,6 @@ with_gc_lib = static_library(
         'alloc.cpp',
         'tabbuffer.cpp',
         'proc.cpp',
-        'matrix.cpp',
         'option.cpp',
         'option_param.cpp',
     ],
