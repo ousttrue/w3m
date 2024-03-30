@@ -13,7 +13,6 @@
 #include "quote.h"
 #include "ctrlcode.h"
 #include "myctype.h"
-#include "Str.h"
 #include "table.h"
 #include "utf8.h"
 #include "cmp.h"
@@ -161,41 +160,42 @@ void HtmlParser::restore_fonteffect(struct html_feed_environ *h_env) {
 }
 
 void HtmlParser::process_title(const std::shared_ptr<HtmlTag> &tag) {
-  if (pre_title) {
+  if (pre_title.size()) {
     return;
   }
-  cur_title = Strnew();
+  cur_title = "";
 }
 
-Str *HtmlParser::process_n_title(const std::shared_ptr<HtmlTag> &tag) {
-  Str *tmp;
+std::string HtmlParser::process_n_title(const std::shared_ptr<HtmlTag> &tag) {
+  if (pre_title.size())
+    return {};
+  if (cur_title.empty())
+    return {};
 
-  if (pre_title)
-    return nullptr;
-  if (!cur_title)
-    return nullptr;
   Strremovefirstspaces(cur_title);
   Strremovetrailingspaces(cur_title);
-  tmp = Strnew_m_charp("<title_alt title=\"", html_quote(cur_title->ptr), "\">",
-                       nullptr);
+
+  std::stringstream tmp;
+  tmp << "<title_alt title=\"" << html_quote(cur_title) << "\">";
   pre_title = cur_title;
   cur_title = nullptr;
-  return tmp;
+  return tmp.str();
 }
 
 void HtmlParser::feed_title(const char *str) {
-  if (pre_title)
+  if (pre_title.size())
     return;
-  if (!cur_title)
+  if (cur_title.empty())
     return;
   while (*str) {
-    if (*str == '&')
-      Strcat(cur_title, getescapecmd(&str));
-    else if (*str == '\n' || *str == '\r') {
-      Strcat_char(cur_title, ' ');
+    if (*str == '&') {
+      cur_title += getescapecmd(&str);
+    } else if (*str == '\n' || *str == '\r') {
+      cur_title.push_back(' ');
       str++;
-    } else
-      Strcat_char(cur_title, *(str++));
+    } else {
+      cur_title += *(str++);
+    }
   }
 }
 
@@ -1912,32 +1912,32 @@ Str *HtmlParser::process_n_button() {
   return tmp;
 }
 
-Str *HtmlParser::process_select(const std::shared_ptr<HtmlTag> &tag) {
-  Str *tmp = nullptr;
+std::string HtmlParser::process_select(const std::shared_ptr<HtmlTag> &tag) {
+  std::stringstream tmp;
 
   if (cur_form_id() < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp = process_form(HtmlTag::parse(&s, true));
+    tmp << process_form(HtmlTag::parse(&s, true));
   }
 
   auto p = "";
   tag->parsedtag_get_value(ATTR_NAME, &p);
-  cur_select = Strnew_charp(p);
+  cur_select = p;
   select_is_multiple = tag->parsedtag_exists(ATTR_MULTIPLE);
 
-  select_str = Strnew();
+  select_str = {};
   cur_option = nullptr;
   cur_status = R_ST_NORMAL;
   n_selectitem = 0;
-  return tmp;
+  return tmp.str();
 }
 
-Str *HtmlParser::process_n_select() {
-  if (cur_select == nullptr)
-    return nullptr;
+std::string HtmlParser::process_n_select() {
+  if (cur_select.empty())
+    return {};
   this->process_option();
-  Strcat_charp(select_str, "<br>");
-  cur_select = nullptr;
+  select_str += "<br>";
+  cur_select = {};
   n_selectitem = 0;
   return select_str;
 }
@@ -1948,7 +1948,7 @@ void HtmlParser::feed_select(const char *str) {
   static int prev_spaces = -1;
   const char *p;
 
-  if (cur_select == nullptr)
+  if (cur_select.empty())
     return;
   while (read_token(tmp, &str, &cur_status, 0, 0)) {
     if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
@@ -1962,15 +1962,15 @@ void HtmlParser::feed_select(const char *str) {
       switch (tag->tagid) {
       case HTML_OPTION:
         this->process_option();
-        cur_option = Strnew();
+        cur_option = {};
         if (tag->parsedtag_get_value(ATTR_VALUE, &q))
-          cur_option_value = Strnew_charp(q);
+          cur_option_value = q;
         else
-          cur_option_value = nullptr;
+          cur_option_value = {};
         if (tag->parsedtag_get_value(ATTR_LABEL, &q))
-          cur_option_label = Strnew_charp(q);
+          cur_option_label = q;
         else
-          cur_option_label = nullptr;
+          cur_option_label = {};
         cur_option_selected = tag->parsedtag_exists(ATTR_SELECTED);
         prev_spaces = -1;
         break;
@@ -1981,7 +1981,7 @@ void HtmlParser::feed_select(const char *str) {
         /* never happen */
         break;
       }
-    } else if (cur_option) {
+    } else if (cur_option.size()) {
       while (*p) {
         if (IS_SPACE(*p) && prev_spaces != 0) {
           p++;
@@ -1993,9 +1993,9 @@ void HtmlParser::feed_select(const char *str) {
           else
             prev_spaces = 0;
           if (*p == '&')
-            Strcat(cur_option, getescapecmd(&p));
+            cur_option += getescapecmd(&p);
           else
-            Strcat_char(cur_option, *(p++));
+            cur_option += *(p++);
         }
       }
     }
@@ -2005,31 +2005,37 @@ void HtmlParser::feed_select(const char *str) {
 void HtmlParser::process_option() {
   char begin_char = '[', end_char = ']';
 
-  if (cur_select == nullptr || cur_option == nullptr)
+  if (cur_select.empty() || cur_option.empty())
     return;
-  while (cur_option->length > 0 && IS_SPACE(Strlastchar(cur_option)))
+  while (cur_option.size() && IS_SPACE(cur_option.back()))
     Strshrink(cur_option, 1);
-  if (cur_option_value == nullptr)
+  if (cur_option_value.empty())
     cur_option_value = cur_option;
-  if (cur_option_label == nullptr)
+  if (cur_option_label.empty())
     cur_option_label = cur_option;
   if (!select_is_multiple) {
     begin_char = '(';
     end_char = ')';
   }
-  Strcat(select_str, Sprintf("<br><pre_int>%c<input_alt hseq=\"%d\" "
-                             "fid=\"%d\" type=%s name=\"%s\" value=\"%s\"",
-                             begin_char, this->cur_hseq++, cur_form_id(),
-                             select_is_multiple ? "checkbox" : "radio",
-                             html_quote(cur_select->ptr).c_str(),
-                             html_quote(cur_option_value->ptr).c_str()));
+  std::stringstream ss;
+  ss << "<br><pre_int>" << begin_char << "<input_alt hseq=\""
+     << this->cur_hseq++
+     << "\" "
+        "fid=\""
+     << cur_form_id()
+     << "\" type=" << (select_is_multiple ? "checkbox" : "radio") << " name=\""
+     << html_quote(cur_select) << "\" value=\"" << html_quote(cur_option_value)
+     << "\"";
+
   if (cur_option_selected)
-    Strcat_charp(select_str, " checked>*</input_alt>");
+    ss << " checked>*</input_alt>";
   else
-    Strcat_charp(select_str, "> </input_alt>");
-  Strcat_char(select_str, end_char);
-  Strcat(select_str, html_quote(cur_option_label->ptr));
-  Strcat_charp(select_str, "</pre_int>");
+    ss << "> </input_alt>";
+  ss << end_char;
+  ss << html_quote(cur_option_label);
+  ss << "</pre_int>";
+
+  select_str += ss.str();
   n_selectitem++;
 }
 

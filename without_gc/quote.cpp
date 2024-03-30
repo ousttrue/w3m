@@ -571,3 +571,9 @@ std::string_view Strremovetrailingspaces(std::string_view s) {
     ;
   return {s.begin(), p};
 }
+
+void Strshrink(std::string &s, int n) {
+  for (int i = 0; i < n && s.size(); ++i) {
+    s.pop_back();
+  }
+}

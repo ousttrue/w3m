@@ -332,8 +332,8 @@ int html_feed_environ::HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->obuf.flag &= ~RB_TITLE;
   this->obuf.end_tag = {};
   auto tmp = this->parser.process_n_title(tag);
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp.c_str(), this);
   return 1;
 }
 
@@ -694,8 +694,8 @@ int html_feed_environ::HTML_BUTTON_exit() {
 int html_feed_environ::HTML_SELECT_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.close_anchor(this);
   auto tmp = this->parser.process_select(tag);
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp.c_str(), this);
   this->obuf.flag |= RB_INSELECT;
   this->obuf.end_tag = HTML_N_SELECT;
   return 1;
@@ -705,8 +705,8 @@ int html_feed_environ::HTML_SELECT_exit() {
   this->obuf.flag &= ~RB_INSELECT;
   this->obuf.end_tag = HTML_UNKNOWN;
   auto tmp = this->parser.process_n_select();
-  if (tmp)
-    this->parser.HTMLlineproc1(tmp->ptr, this);
+  if (tmp.size())
+    this->parser.HTMLlineproc1(tmp.c_str(), this);
   return 1;
 }
 

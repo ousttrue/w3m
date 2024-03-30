@@ -253,15 +253,14 @@ void table::suspend_or_pushdata(const char *line) {
   }
 }
 
-#define PUSH_TAG(str, n) Strcat_char(tagbuf, *str), (void)n
+// #define PUSH_TAG(str, n) Strcat_char(tagbuf, *str), (void)n
 
 int visible_length_offset = 0;
 int visible_length(const char *str) {
   int len = 0, n, max_len = 0;
   auto status = R_ST_NORMAL;
   int prev_status = status;
-  Str *tagbuf = Strnew();
-  const char *t, *r2;
+  std::string tagbuf;
   // int amp_len = 0;
 
   while (*str) {
@@ -270,26 +269,25 @@ int visible_length(const char *str) {
       len++;
     }
     if (status == R_ST_TAG0) {
-      Strclear(tagbuf);
-      PUSH_TAG(str, n);
+      tagbuf = *str;
     } else if (status == R_ST_TAG || status == R_ST_DQUOTE ||
                status == R_ST_QUOTE || status == R_ST_EQL ||
                status == R_ST_VALUE) {
-      PUSH_TAG(str, n);
+      tagbuf += *str;
     } else if (status == R_ST_AMP) {
       if (prev_status == R_ST_NORMAL) {
-        Strclear(tagbuf);
+        tagbuf.clear();
         len--;
         // amp_len = 0;
       } else {
-        PUSH_TAG(str, n);
+        tagbuf += *str;
         // amp_len++;
       }
     } else if (status == R_ST_NORMAL && prev_status == R_ST_AMP) {
-      PUSH_TAG(str, n);
-      r2 = tagbuf->ptr;
+      tagbuf += *str;
+      auto r2 = tagbuf.c_str();
       auto _t = getescapecmd(&r2);
-      t = _t.c_str();
+      auto t = _t.c_str();
       if (!*r2 && (*t == '\r' || *t == '\n')) {
         if (len > max_len)
           max_len = len;
@@ -312,9 +310,9 @@ int visible_length(const char *str) {
     str++;
   }
   if (status == R_ST_AMP) {
-    r2 = tagbuf->ptr;
+    auto r2 = tagbuf.c_str();
     auto _t = getescapecmd(&r2);
-    t = _t.c_str();
+    auto t = _t.c_str();
     if (*t != '\r' && *t != '\n')
       len += get_strwidth(t) + get_strwidth(r2);
   }
@@ -1875,18 +1873,16 @@ void table::feed_table_block_tag(const char *line, struct table_mode *mode,
 
 void table::table_close_select(HtmlParser *parser, struct table_mode *mode,
                                int width) {
-  Str *tmp = parser->process_n_select();
   mode->pre_mode &= ~TBLM_INSELECT;
   mode->end_tag = HTML_UNKNOWN;
-  this->feed_table1(parser, tmp, mode, width);
+  this->feed_table1(parser, parser->process_n_select().c_str(), mode, width);
 }
 
 void table::table_close_textarea(HtmlParser *parser, struct table_mode *mode,
                                  int width) {
-  Str *tmp = parser->process_n_textarea();
   mode->pre_mode &= ~TBLM_INTXTA;
   mode->end_tag = HTML_UNKNOWN;
-  this->feed_table1(parser, tmp, mode, width);
+  this->feed_table1(parser, parser->process_n_textarea()->ptr, mode, width);
 }
 
 void table::table_close_anchor0(struct table_mode *mode) {
@@ -2371,13 +2367,13 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
         w = width;
     }
     tok = parser->process_img(tag, w);
-    this->feed_table1(parser, tok, mode, width);
+    this->feed_table1(parser, tok->ptr, mode, width);
     break;
   case HTML_FORM:
     this->feed_table_block_tag("", mode, 0, cmd);
     tmp = parser->process_form(tag);
     if (tmp)
-      this->feed_table1(parser, tmp, mode, width);
+      this->feed_table1(parser, tmp->ptr, mode, width);
     break;
   case HTML_N_FORM:
     this->feed_table_block_tag("", mode, 0, cmd);
@@ -2385,23 +2381,24 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     break;
   case HTML_INPUT:
     tmp = parser->process_input(tag);
-    this->feed_table1(parser, tmp, mode, width);
+    this->feed_table1(parser, tmp->ptr, mode, width);
     break;
   case HTML_BUTTON:
     tmp = parser->process_button(tag);
-    this->feed_table1(parser, tmp, mode, width);
+    this->feed_table1(parser, tmp->ptr, mode, width);
     break;
   case HTML_N_BUTTON:
     tmp = parser->process_n_button();
-    this->feed_table1(parser, tmp, mode, width);
+    this->feed_table1(parser, tmp->ptr, mode, width);
     break;
-  case HTML_SELECT:
-    tmp = parser->process_select(tag);
-    if (tmp)
-      this->feed_table1(parser, tmp, mode, width);
+  case HTML_SELECT: {
+    auto tmp = parser->process_select(tag);
+    if (tmp.size())
+      this->feed_table1(parser, tmp.c_str(), mode, width);
     mode->pre_mode |= TBLM_INSELECT;
     mode->end_tag = HTML_N_SELECT;
     break;
+  }
   case HTML_N_SELECT:
   case HTML_OPTION:
     /* nothing */
@@ -2419,7 +2416,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     }
     tmp = parser->process_textarea(tag, w);
     if (tmp)
-      this->feed_table1(parser, tmp, mode, width);
+      this->feed_table1(parser, tmp->ptr, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
     mode->end_tag = HTML_N_TEXTAREA;
     break;
@@ -2747,15 +2744,15 @@ int table::feed_table(HtmlParser *parser, const char *line,
   return -1;
 }
 
-void table::feed_table1(HtmlParser *parser, Str *tok, struct table_mode *mode,
+void table::feed_table1(HtmlParser *parser, const char *line, struct table_mode *mode,
                         int width) {
   Str *tokbuf;
   ReadBufferStatus status;
-  if (!tok)
-    return;
+  // if (!tok)
+  //   return;
   tokbuf = Strnew();
   status = R_ST_NORMAL;
-  auto line = tok->ptr;
+  // auto line = tok->ptr;
   while (read_token(tokbuf, (const char **)&line, &status,
                     mode->pre_mode & TBLM_PREMODE, 0))
     this->feed_table(parser, tokbuf->ptr, mode, width, true);

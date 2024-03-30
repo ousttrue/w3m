@@ -7,6 +7,7 @@
 #include "line.h"
 #include "anchorlist.h"
 #include <optional>
+#include <string>
 
 class LineFeed {
   std::shared_ptr<GeneralList> _tl_lp2;
@@ -38,28 +39,28 @@ class HtmlParser {
   int table_width(struct html_feed_environ *h_env, int table_level);
 
   // title
-  Str *pre_title = nullptr;
-  Str *cur_title = nullptr;
+  std::string pre_title;
+  std::string cur_title;
   void process_title(const std::shared_ptr<HtmlTag> &tag);
-  Str *process_n_title(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_n_title(const std::shared_ptr<HtmlTag> &tag);
   void feed_title(const char *str);
 
   // select
-  Str *cur_select = {};
-  Str *select_str = {};
+  std::string cur_select = {};
+  std::string select_str = {};
   int select_is_multiple = {};
   int n_selectitem = {};
-  Str *cur_option = {};
-  Str *cur_option_value = {};
-  Str *cur_option_label = {};
+  std::string cur_option = {};
+  std::string cur_option_value = {};
+  std::string cur_option_label = {};
   int cur_option_selected = {};
   ReadBufferStatus cur_status = {};
 
 public:
   int _width;
   HtmlParser(int width);
-  Str *process_select(const std::shared_ptr<HtmlTag> &tag);
-  Str *process_n_select();
+  std::string process_select(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_n_select();
   void process_option();
   void feed_select(const char *str);
 
