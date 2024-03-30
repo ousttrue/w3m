@@ -3,7 +3,7 @@
 #include <optional>
 #include <memory>
 
-extern const char *DefaultType;
+extern std::string DefaultType;
 extern bool UseExternalDirBuffer;
 #define CGI_EXTENSION ".cgi"
 extern std::string DirBufferCommand;

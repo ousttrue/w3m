@@ -6,7 +6,7 @@
 #include "istream.h"
 #include <sys/stat.h>
 
-const char *DefaultType = nullptr;
+std::string DefaultType;
 bool UseExternalDirBuffer = true;
 std::string DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 
@@ -147,7 +147,7 @@ loadGeneralFile(const std::string &path, std::optional<Url> current,
     // /*f.modtime =*/mymktime(res->getHeader("Last-Modified:"));
   } else if (hr->url.scheme == SCM_DATA) {
     // res->type = f.guess_type;
-  } else if (DefaultType) {
+  } else if (DefaultType.size()) {
     res->type = DefaultType;
     DefaultType = nullptr;
   } else {

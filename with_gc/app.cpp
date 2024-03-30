@@ -1267,7 +1267,7 @@ void App::message(const std::string &s) {
   }
 }
 
-void App::record_err_message(const char *s) {
+void App::record_err_message(const std::string &s) {
   if (!_fmInitialized) {
     return;
   }
@@ -1294,12 +1294,12 @@ std::string App::message_list_panel() {
   return tmp.str();
 }
 
-void App::disp_err_message(const char *s) {
+void App::disp_err_message(const std::string &s) {
   record_err_message(s);
   disp_message(s);
 }
 
-void App::disp_message_nsec(const char *s, int sec, int purge) {
+void App::disp_message_nsec(const std::string &s, int sec, int purge) {
   if (IsForkChild)
     return;
   if (!_fmInitialized) {
@@ -1312,7 +1312,7 @@ void App::disp_message_nsec(const char *s, int sec, int purge) {
   // sleep_till_anykey(sec, purge);
 }
 
-void App::disp_message(const char *s) { disp_message_nsec(s, 10, false); }
+void App::disp_message(const std::string &s) { disp_message_nsec(s, 10, false); }
 
 void App::set_delayed_message(const char *s) { delayed_msg = allocStr(s, -1); }
 

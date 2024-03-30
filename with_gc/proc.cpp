@@ -1,5 +1,4 @@
 #include "proc.h"
-#include "Str.h"
 #include "invoke.h"
 #include "quote.h"
 #include "tmpfile.h"
@@ -371,8 +370,8 @@ std::shared_ptr<CoroutineState<void>> ldfile(const FuncContext &context) {
     auto buf = Buffer::create(res);
     CurrentTab->pushBuffer(buf);
   } else {
-    char *emsg = Sprintf("%s not found", fn.c_str())->ptr;
-    App::instance().disp_err_message(emsg);
+    // char *emsg = Sprintf("%s not found", fn.c_str())->ptr;
+    // App::instance().disp_err_message(emsg);
   }
 }
 
@@ -385,12 +384,12 @@ std::shared_ptr<CoroutineState<void>> ldfile(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> ldhelp(const FuncContext &context) {
   auto lang = AcceptLang;
   auto n = strcspn(lang.c_str(), ";, \t");
-  auto tmp =
-      Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
-              form_quote(w3m_version).c_str(),
-              form_quote(std::string_view(lang.c_str(), n)).c_str());
+  std::stringstream tmp;
+  tmp << "file:///$LIB/" HELP_CGI CGI_EXTENSION "?version="
+      << form_quote(w3m_version)
+      << "&lang=" << form_quote(std::string_view(lang.c_str(), n));
   if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
-          tmp->ptr, {}, {.no_referer = true}, nullptr)) {
+          tmp.str().c_str(), {}, {.no_referer = true}, nullptr)) {
     CurrentTab->pushBuffer(buf);
   }
 
@@ -727,8 +726,8 @@ std::shared_ptr<CoroutineState<void>> editScr(const FuncContext &context) {
   auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
   auto f = fopen(tmpf.c_str(), "w");
   if (f == nullptr) {
-    App::instance().disp_err_message(
-        Sprintf("Can't open %s", tmpf.c_str())->ptr);
+    // App::instance().disp_err_message(
+    //     Sprintf("Can't open %s", tmpf.c_str())->ptr);
     co_return;
   }
   CurrentTab->currentBuffer()->saveBuffer(f, true);
@@ -761,13 +760,13 @@ std::shared_ptr<CoroutineState<void>> followI(const FuncContext &context) {
   auto a = CurrentTab->currentBuffer()->layout->retrieveCurrentImg();
   if (a == nullptr)
     co_return;
-  App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr);
+  // App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr);
 
   auto res =
       loadGeneralFile(a->url, CurrentTab->currentBuffer()->res->currentURL, {});
   if (!res) {
-    char *emsg = Sprintf("Can't load %s", a->url.c_str())->ptr;
-    App::instance().disp_err_message(emsg);
+    // char *emsg = Sprintf("Can't load %s", a->url.c_str())->ptr;
+    // App::instance().disp_err_message(emsg);
     co_return;
   }
 
@@ -1090,15 +1089,16 @@ std::shared_ptr<CoroutineState<void>> ldBmark(const FuncContext &context) {
 // ADD_BOOKMARK
 //"Add current page to bookmarks"
 std::shared_ptr<CoroutineState<void>> adBmark(const FuncContext &context) {
-  auto tmp = Sprintf(
-      "mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
-      (form_quote(localCookie())).c_str(), (form_quote(BookmarkFile)).c_str(),
-      (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
-          .c_str(),
-      (form_quote(CurrentTab->currentBuffer()->layout->data.title)).c_str());
+  std::stringstream ss;
+  ss << "mode=panel&cookie=" << (form_quote(localCookie()))
+     << "&bmark=" << (form_quote(BookmarkFile)) << "&url="
+     << (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
+     << "&title="
+     << (form_quote(CurrentTab->currentBuffer()->layout->data.title));
+  auto tmp = ss.str();
   auto request = std::make_shared<Form>("", "post", "", "", "");
-  request->body = tmp->ptr;
-  request->length = tmp->length;
+  request->body = tmp;
+  request->length = tmp.size();
   if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
           "file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, {.no_referer = true},
           request)) {
@@ -1126,7 +1126,7 @@ std::shared_ptr<CoroutineState<void>> setOpt(const FuncContext &context) {
   if (opt.empty() || strchr(opt.c_str(), '=') == nullptr) {
     if (opt.empty()) {
       auto v = Option::instance().get_param_option(opt);
-      opt = Sprintf("%s=%s", opt.c_str(), v.c_str())->ptr;
+      opt = opt + "=" + v;
     }
     // opt = inputStrHist("Set option: ", opt, TextHist);
     if (opt.empty()) {
@@ -1349,12 +1349,12 @@ std::shared_ptr<CoroutineState<void>> reload(const FuncContext &context) {
     request = nullptr;
   }
 
-  auto url = Strnew(CurrentTab->currentBuffer()->res->currentURL.to_Str());
+  auto url = CurrentTab->currentBuffer()->res->currentURL.to_Str();
   App::instance().message("Reloading...");
-  DefaultType = Strnew(CurrentTab->currentBuffer()->res->type)->ptr;
+  DefaultType = CurrentTab->currentBuffer()->res->type;
 
-  auto res = loadGeneralFile(url->ptr, {},
-                             {.no_referer = true, .no_cache = true}, request);
+  auto res =
+      loadGeneralFile(url, {}, {.no_referer = true, .no_cache = true}, request);
   DefaultType = nullptr;
 
   if (multipart) {
@@ -1467,7 +1467,6 @@ std::shared_ptr<CoroutineState<void>> linkbrz(const FuncContext &context) {
 std::shared_ptr<CoroutineState<void>> curlno(const FuncContext &context) {
   auto layout = CurrentTab->currentBuffer()->layout;
   Line *l = layout->currentLine();
-  Str *tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
   if (l != nullptr) {
@@ -1478,18 +1477,19 @@ std::shared_ptr<CoroutineState<void>> curlno(const FuncContext &context) {
   }
   if (layout->lastLine())
     all = layout->linenumber(layout->lastLine());
-  tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-                (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
-                len);
 
-  App::instance().disp_message(tmp->ptr);
+  std::stringstream tmp;
+  tmp << "line " << cur << "/" << all << " ("
+      << static_cast<int>((double)cur * 100.0 / (double)(all ? all : 1) + 0.5)
+      << "%%) col " << col << "/" << len;
+  App::instance().disp_message(tmp.str());
   co_return;
 }
 
 // VERSION
 //"Display the version of w3m"
 std::shared_ptr<CoroutineState<void>> dispVer(const FuncContext &context) {
-  App::instance().disp_message(Sprintf("w3m version %s", w3m_version)->ptr);
+  App::instance().disp_message(std::string("w3m version ") + w3m_version);
   co_return;
 }
 
@@ -1595,7 +1595,7 @@ std::shared_ptr<CoroutineState<void>> reinit(const FuncContext &context) {
   }
 
   App::instance().disp_err_message(
-      Sprintf("Don't know how to reinitialize '%s'", resource)->ptr);
+      std::string("Don't know how to reinitialize '") + resource + "'");
 }
 
 // DEFINE_KEY

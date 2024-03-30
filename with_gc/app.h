@@ -143,11 +143,11 @@ public:
   std::list<std::string> message_list;
   char *delayed_msg = NULL;
   void message(const std::string &s);
-  void record_err_message(const char *s);
+  void record_err_message(const std::string &s);
   std::string message_list_panel();
-  void disp_err_message(const char *s);
-  void disp_message_nsec(const char *s, int sec, int purge);
-  void disp_message(const char *s);
+  void disp_err_message(const std::string &s);
+  void disp_message_nsec(const std::string &s, int sec, int purge);
+  void disp_message(const std::string &s);
   void set_delayed_message(const char *s);
 
   void refresh_message();
