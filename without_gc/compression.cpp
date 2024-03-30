@@ -102,8 +102,6 @@ const compression_decoder *check_compression(const std::string &path) {
   return {};
 }
 
-// #include "Str.h"
-
 std::tuple<std::string, std::string>
 uncompressed_file_type(const std::string &path) {
   if (path.empty()) {

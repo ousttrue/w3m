@@ -110,14 +110,13 @@ struct FontStat {
   char in_stand = 0;
 };
 
-struct Str;
 struct input_alt_attr {
   int hseq = 0;
   int fid = -1;
   int in = 0;
-  Str *type = nullptr;
-  Str *name = nullptr;
-  Str *value = nullptr;
+  std::string type;
+  std::string name;
+  std::string value;
 };
 
 struct Breakpoint {
@@ -136,7 +135,7 @@ struct Breakpoint {
 };
 
 struct cmdtable {
-  const char *cmdname;
+  std::string cmdname;
   HtmlCommand cmd;
 };
 
@@ -146,8 +145,9 @@ struct LinkStack {
   short pos = 0;
 };
 
+struct Str;
 struct readbuffer {
-  Str *line;
+  std::string line;
   Lineprop cprop = 0;
   short pos = 0;
   Str *prevchar;
@@ -212,7 +212,6 @@ struct readbuffer {
 
   int close_effect0(HtmlCommand cmd) {
     int i;
-    char *p;
 
     for (i = this->tag_sp - 1; i >= 0; i--) {
       if (this->tag_stack[i]->cmd == cmd)
@@ -223,7 +222,7 @@ struct readbuffer {
       memcpy(&this->tag_stack[i], &this->tag_stack[i + 1],
              (this->tag_sp - i) * sizeof(struct cmdtable *));
       return 1;
-    } else if ((p = this->has_hidden_link(cmd)) != nullptr) {
+    } else if (auto p = this->has_hidden_link(cmd)) {
       this->passthrough(p, 1);
       return 1;
     }
@@ -288,10 +287,10 @@ struct readbuffer {
   }
 
   int HTML_PRE_INT_enter() {
-    int i = this->line->length;
+    int i = this->line.size();
     this->append_tags();
     if (!(this->flag & RB_SPECIAL)) {
-      this->set_breakpoint(this->line->length - i);
+      this->set_breakpoint(this->line.size() - i);
     }
     this->flag |= RB_PRE_INT;
     return 0;
@@ -341,13 +340,13 @@ struct readbuffer {
     }
     const char *p;
     if (tag->parsedtag_get_value(ATTR_TYPE, &p)) {
-      this->input_alt.type = Strnew_charp(p);
+      this->input_alt.type = p;
     }
     if (tag->parsedtag_get_value(ATTR_VALUE, &p)) {
-      this->input_alt.value = Strnew_charp(p);
+      this->input_alt.value = p;
     }
     if (tag->parsedtag_get_value(ATTR_NAME, &p)) {
-      this->input_alt.name = Strnew_charp(p);
+      this->input_alt.name = p;
     }
     this->input_alt.in = 1;
     return 0;
@@ -360,9 +359,9 @@ struct readbuffer {
       this->input_alt.hseq = 0;
       this->input_alt.fid = -1;
       this->input_alt.in = 0;
-      this->input_alt.type = nullptr;
-      this->input_alt.name = nullptr;
-      this->input_alt.value = nullptr;
+      this->input_alt.type = {};
+      this->input_alt.name = {};
+      this->input_alt.value = {};
     }
     return 1;
   }
@@ -370,7 +369,7 @@ struct readbuffer {
   void CLOSE_P(struct html_feed_environ *h_env);
 
   void append_tags();
-  void push_tag(const char *cmdname, HtmlCommand cmd);
+  void push_tag(const std::string &cmdname, HtmlCommand cmd);
   void push_nchars(int width, const char *str, int len, Lineprop mode);
   void push_charp(int width, const char *str, Lineprop mode) {
     this->push_nchars(width, str, strlen(str), mode);
@@ -380,7 +379,7 @@ struct readbuffer {
   }
   void push_char(int pre_mode, char ch) {
     this->check_breakpoint(pre_mode, &ch);
-    Strcat_char(this->line, ch);
+    this->line += ch;
     this->pos++;
     set_prevchar(this->prevchar, &ch, 1);
     if (ch != ' ')
@@ -388,12 +387,13 @@ struct readbuffer {
     this->flag |= RB_NFLUSHED;
   }
   void check_breakpoint(int pre_mode, const char *ch) {
-    int tlen, len = this->line->length;
+    int tlen;
+    int len = this->line.size();
 
     this->append_tags();
     if (pre_mode)
       return;
-    tlen = this->line->length - len;
+    tlen = this->line.size() - len;
     if (tlen > 0 ||
         is_boundary((unsigned char *)this->prevchar->ptr, (unsigned char *)ch))
       this->set_breakpoint(tlen);
@@ -403,7 +403,7 @@ struct readbuffer {
       return;
     this->check_breakpoint(pre_mode, " ");
     for (int i = 0; i < width; i++)
-      Strcat_char(this->line, ' ');
+      this->line.push_back(' ');
     this->pos += width;
     set_space_to_prevchar(this->prevchar);
     this->flag |= RB_NFLUSHED;
@@ -416,8 +416,8 @@ struct readbuffer {
 
   // link
   void push_link(HtmlCommand cmd, int offset, int pos);
-  char *has_hidden_link(HtmlCommand cmd) const;
-  void passthrough(char *str, int back);
+  const char *has_hidden_link(HtmlCommand cmd) const;
+  void passthrough(const char *str, int back);
 
   void flushline(const std::shared_ptr<GeneralList> &buf, int indent, int force,
                  int width);

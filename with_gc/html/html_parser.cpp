@@ -80,14 +80,14 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
   auto obuf = &h_env->obuf;
   if (obuf->anchor.url.size()) {
     int i;
-    char *p = nullptr;
+    const char *p = nullptr;
     int is_erased = 0;
 
     for (i = obuf->tag_sp - 1; i >= 0; i--) {
       if (obuf->tag_stack[i]->cmd == HTML_A)
         break;
     }
-    if (i < 0 && obuf->anchor.hseq > 0 && Strlastchar(obuf->line) == ' ') {
+    if (i < 0 && obuf->anchor.hseq > 0 && obuf->line.back() == ' ') {
       Strshrink(obuf->line, 1);
       obuf->pos--;
       is_erased = 1;
@@ -111,7 +111,7 @@ void HtmlParser::close_anchor(struct html_feed_environ *h_env) {
       is_erased = 0;
     }
     if (is_erased) {
-      Strcat_char(obuf->line, ' ');
+      obuf->line.push_back(' ');
       obuf->pos++;
     }
 
@@ -1580,8 +1580,6 @@ static void clear_ignore_p_flag(int cmd, struct readbuffer *obuf) {
 
 static int need_flushline(struct html_feed_environ *h_env,
                           struct readbuffer *obuf, Lineprop mode) {
-  char ch;
-
   if (obuf->flag & RB_PRE_INT) {
     if (obuf->pos > h_env->limit)
       return 1;
@@ -1589,7 +1587,7 @@ static int need_flushline(struct html_feed_environ *h_env,
       return 0;
   }
 
-  ch = Strlastchar(obuf->line);
+  auto ch = obuf->line.back();
   /* if (ch == ' ' && obuf->tag_sp > 0) */
   if (ch == ' ')
     return 0;
@@ -1856,21 +1854,21 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
         }
       }
       if (need_flushline(h_env, &h_env->obuf, mode)) {
-        char *bp = h_env->obuf.line->ptr + h_env->obuf.bp.len;
-        char *tp = bp - h_env->obuf.bp.tlen;
+        auto bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
+        auto tp = bp - h_env->obuf.bp.tlen;
         int i = 0;
 
-        if (tp > h_env->obuf.line->ptr && tp[-1] == ' ')
+        if (tp > h_env->obuf.line.c_str() && tp[-1] == ' ')
           i = 1;
 
         int indent = h_env->envs[h_env->envc].indent;
         if (h_env->obuf.bp.pos - i > indent) {
           Str *line;
           h_env->obuf.append_tags(); /* may reallocate the buffer */
-          bp = h_env->obuf.line->ptr + h_env->obuf.bp.len;
+          bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
           line = Strnew_charp(bp);
           Strshrink(h_env->obuf.line,
-                    h_env->obuf.line->length - h_env->obuf.bp.len);
+                    h_env->obuf.line.size() - h_env->obuf.bp.len);
           if (h_env->obuf.pos - i > h_env->limit)
             h_env->obuf.flag |= RB_FILL;
           h_env->obuf.back_to_breakpoint();
@@ -1886,12 +1884,12 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
     int i = 0;
 
     if (h_env->obuf.bp.pos == h_env->obuf.pos) {
-      tp = &h_env->obuf.line->ptr[h_env->obuf.bp.len - h_env->obuf.bp.tlen];
+      tp = &h_env->obuf.line[h_env->obuf.bp.len - h_env->obuf.bp.tlen];
     } else {
-      tp = &h_env->obuf.line->ptr[h_env->obuf.line->length];
+      tp = &h_env->obuf.line[h_env->obuf.line.size()];
     }
 
-    if (tp > h_env->obuf.line->ptr && tp[-1] == ' ')
+    if (tp > h_env->obuf.line.c_str() && tp[-1] == ' ')
       i = 1;
     int indent = h_env->envs[h_env->envc].indent;
     if (h_env->obuf.pos - i > h_env->limit) {
