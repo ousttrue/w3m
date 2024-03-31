@@ -351,7 +351,7 @@ static int maximum_visible_length_plain(const char *str, int offset) {
   return visible_length_plain(str);
 }
 
-void table::print_item(int row, int col, int width, Str *buf) {
+void table::print_item(int row, int col, int width, std::ostream &buf) {
   AlignMode alignment;
 
   std::shared_ptr<TextLine> lbuf;
@@ -373,14 +373,14 @@ void table::print_item(int row, int col, int width, Str *buf) {
     if (DisableCenter && alignment == ALIGN_CENTER)
       alignment = ALIGN_LEFT;
     lbuf->align(width, alignment);
-    Strcat(buf, lbuf->line);
+    buf << lbuf->line;
   } else {
     lbuf = std::make_shared<TextLine>("", 0);
     if (DisableCenter)
       lbuf->align(width, ALIGN_LEFT);
     else
       lbuf->align(width, ALIGN_CENTER);
-    Strcat(buf, lbuf->line);
+    buf << lbuf->line;
   }
 }
 
@@ -388,7 +388,7 @@ void table::print_item(int row, int col, int width, Str *buf) {
 #define T_MIDDLE 1
 #define T_BOTTOM 2
 
-void table::print_sep(int row, int type, int maxcol, Str *buf) {
+void table::print_sep(int row, int type, int maxcol, std::ostream &buf) {
   int forbid;
   int rule_mode;
   int i, k, l, m;
@@ -1300,7 +1300,6 @@ void table::renderTable(HtmlParser *parser, int max_width,
   short new_tabwidth[MAXCOL] = {0};
   int itr;
   int width;
-  Str *vrulea = NULL, *vruleb = NULL, *vrulec = NULL;
 
   this->total_height = 0;
   if (this->maxcol < 0) {
@@ -1427,41 +1426,43 @@ void table::renderTable(HtmlParser *parser, int max_width,
   parser->HTMLlineproc1("<pre for_table>", h_env);
   switch (this->border_mode) {
   case BORDER_THIN:
-  case BORDER_THICK:
-    renderbuf = Strnew();
+  case BORDER_THICK: {
+    std::stringstream renderbuf;
     this->print_sep(-1, T_TOP, this->maxcol, renderbuf);
-    parser->push_render_image(renderbuf->ptr, width, this->total_width, h_env);
+    parser->push_render_image(renderbuf.str(), width, this->total_width, h_env);
     this->total_height += 1;
     break;
   }
-  vruleb = Strnew();
+  }
+
+  std::stringstream vrulea;
+  std::stringstream vruleb;
+  std::stringstream vrulec;
   switch (this->border_mode) {
   case BORDER_THIN:
   case BORDER_THICK:
-    vrulea = Strnew();
-    vrulec = Strnew();
     push_symbol(vrulea, TK_VERTICALBAR(this->border_mode), 1, 1);
     for (i = 0; i < this->cellpadding; i++) {
-      Strcat_char(vrulea, ' ');
-      Strcat_char(vruleb, ' ');
-      Strcat_char(vrulec, ' ');
+      vrulea << ' ';
+      vruleb << ' ';
+      vrulec << ' ';
     }
     push_symbol(vrulec, TK_VERTICALBAR(this->border_mode), 1, 1);
   case BORDER_NOWIN:
     push_symbol(vruleb, TK_VERTICALBAR(BORDER_THIN), 1, 1);
     for (i = 0; i < this->cellpadding; i++)
-      Strcat_char(vruleb, ' ');
+      vruleb << ' ';
     break;
   case BORDER_NONE:
     for (i = 0; i < this->cellspacing; i++)
-      Strcat_char(vruleb, ' ');
+      vruleb << ' ';
   }
 
   for (r = 0; r <= this->maxrow; r++) {
     for (h = 0; h < this->tabheight[r]; h++) {
-      renderbuf = Strnew();
+      std::stringstream renderbuf;
       if (this->border_mode == BORDER_THIN || this->border_mode == BORDER_THICK)
-        Strcat(renderbuf, vrulea);
+        renderbuf << vrulea.str();
       for (i = 0; i <= this->maxcol; i++) {
         this->check_row(r);
         if (!(this->tabattr[r][i] & HTT_X)) {
@@ -1479,22 +1480,22 @@ void table::renderTable(HtmlParser *parser, int max_width,
             this->print_item(r, i, w, renderbuf);
         }
         if (i < this->maxcol && !(this->tabattr[r][i + 1] & HTT_X))
-          Strcat(renderbuf, vruleb);
+          renderbuf << vruleb.str();
       }
       switch (this->border_mode) {
       case BORDER_THIN:
       case BORDER_THICK:
-        Strcat(renderbuf, vrulec);
+        renderbuf << vrulec.str();
         this->total_height += 1;
         break;
       }
-      parser->push_render_image(renderbuf->ptr, width, this->total_width,
+      parser->push_render_image(renderbuf.str(), width, this->total_width,
                                 h_env);
     }
     if (r < this->maxrow && this->border_mode != BORDER_NONE) {
-      renderbuf = Strnew();
+      std::stringstream renderbuf;
       this->print_sep(r, T_MIDDLE, this->maxcol, renderbuf);
-      parser->push_render_image(renderbuf->ptr, width, this->total_width,
+      parser->push_render_image(renderbuf.str(), width, this->total_width,
                                 h_env);
     }
     this->total_height += this->tabheight[r];
@@ -1502,17 +1503,18 @@ void table::renderTable(HtmlParser *parser, int max_width,
   switch (this->border_mode) {
   case BORDER_THIN:
   case BORDER_THICK:
-    renderbuf = Strnew();
+    std::stringstream renderbuf;
     this->print_sep(this->maxrow, T_BOTTOM, this->maxcol, renderbuf);
-    parser->push_render_image(renderbuf->ptr, width, this->total_width, h_env);
+    parser->push_render_image(renderbuf.str(), width, this->total_width, h_env);
     this->total_height += 1;
     break;
   }
   if (this->total_height == 0) {
-    renderbuf = Strnew_charp(" ");
+    std::stringstream renderbuf;
+    renderbuf << " ";
     this->total_height++;
     this->total_width = 1;
-    parser->push_render_image(renderbuf->ptr, 1, this->total_width, h_env);
+    parser->push_render_image(renderbuf.str(), 1, this->total_width, h_env);
   }
   parser->HTMLlineproc1("</pre>", h_env);
 }
@@ -3103,6 +3105,7 @@ bool TableStatus::is_active(html_feed_environ *h_env) {
   return h_env->obuf.table_level >= 0 && tbl && tbl_mode;
 }
 
-int TableStatus::feed(HtmlParser *parser, const std::string &str, bool internal) {
+int TableStatus::feed(HtmlParser *parser, const std::string &str,
+                      bool internal) {
   return tbl->feed_table(parser, str.c_str(), tbl_mode, tbl_width, internal);
 }

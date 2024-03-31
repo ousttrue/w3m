@@ -191,12 +191,12 @@ private:
   void suspend_or_pushdata(const char *line);
   void table_close_textarea(HtmlParser *parser, struct table_mode *mode,
                             int width);
-  void feed_table1(HtmlParser *parser, const std::string &tok, struct table_mode *mode,
-                   int width);
+  void feed_table1(HtmlParser *parser, const std::string &tok,
+                   struct table_mode *mode, int width);
   void table_close_select(HtmlParser *parser, struct table_mode *mode,
                           int width);
-  void print_item(int row, int col, int width, Str *buf);
-  void print_sep(int row, int type, int maxcol, Str *buf);
+  void print_item(int row, int col, int width, std::ostream &buf);
+  void print_sep(int row, int type, int maxcol, std::ostream &buf);
   void make_caption(HtmlParser *parser, struct html_feed_environ *h_env);
   void renderCoTable(HtmlParser *parser, int maxlimit);
   void check_table_height();
