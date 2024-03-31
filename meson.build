@@ -33,7 +33,6 @@ CONF_DIR = sysconfdir + '/' + PACKAGE
 cc = meson.get_compiler('c')
 cpp = meson.get_compiler('cpp')
 
-gc_dep = dependency('gc', default_options: ['default_library=static'])
 ssl_dep = subproject(
     'openssl',
     default_options: ['default_library=static'],
@@ -46,7 +45,6 @@ screen_dep = dependency('ftxui-screen')
 dom_dep = dependency('ftxui-dom')
 component_dep = dependency('ftxui-component')
 deps = [
-    gc_dep,
     ssl_dep,
     nkf_dep,
     lua_dep,

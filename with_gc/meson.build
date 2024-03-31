@@ -19,7 +19,6 @@ with_gc_lib = static_library(
         'html/html_parser.cpp',
         'buffer.cpp',
         'app.cpp',
-        'alloc.cpp',
         'tabbuffer.cpp',
         'proc.cpp',
         'push_symbol.cpp',
