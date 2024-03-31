@@ -1,3 +1,15 @@
+defs = [
+    '-DCGIBIN_DIR="' + CGIBIN_DIR + '"',
+    '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
+    '-DHELP_DIR="' + HELP_DIR + '"',
+    '-DETC_DIR="' + ETC_DIR + '"',
+    '-DCONF_DIR="' + CONF_DIR + '"',
+    '-DRC_DIR="' + RC_DIR + '"',
+    '-DLOCALEDIR="' + localedir + '"',
+    '-DWIN32_LEAN_AND_MEAN=1',
+    # '-w',
+]
+
 without_gc_lib = static_library(
     'without_gc_lib',
     [
@@ -54,11 +66,20 @@ without_gc_lib = static_library(
         'search.cpp',
         'linein.cpp',
         'option_param.cpp',
+        'readbuffer.cpp',
+        'readtoken.cpp',
+        'html_feed_env.cpp',
+        'table.cpp',
+        'html_parser.cpp',
+        'buffer.cpp',
+        'app.cpp',
+        'tabbuffer.cpp',
+        'proc.cpp',
+        'push_symbol.cpp',
+        'option.cpp',
+        'rc.cpp',
     ],
-    cpp_args: [
-        '-DAUXBIN_DIR="' + AUXBIN_DIR + '"',
-        '-DCGIBIN_DIR="' + CGIBIN_DIR + '"',
-    ],
+    cpp_args: defs,
     dependencies: [
         deps,
         zlib_dep,

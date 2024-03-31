@@ -17,7 +17,7 @@
 #include "dict.h"
 #include "loaddirectory.h"
 #include "entity.h"
-#include "html/html_feed_env.h"
+#include "html_feed_env.h"
 #include "search.h"
 #include "history.h"
 #include "linein.h"

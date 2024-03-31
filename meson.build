@@ -62,8 +62,8 @@ if host_machine.system() != 'windows'
     ]
 endif
 
-subdir('without_gc')
-subdir('with_gc')
+subdir('src')
+# subdir('with_gc')
 
 executable(
     'w3m',
@@ -72,7 +72,7 @@ executable(
     dependencies: [
         deps,
         without_gc_dep,
-        with_gc_dep,
+        # with_gc_dep,
     ],
 )
 

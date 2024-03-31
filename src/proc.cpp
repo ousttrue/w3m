@@ -7,7 +7,7 @@
 #include "dict.h"
 #include "app.h"
 #include "file_util.h"
-#include "html/html_feed_env.h"
+#include "html_feed_env.h"
 #include "http_response.h"
 #include "url_quote.h"
 #include "search.h"

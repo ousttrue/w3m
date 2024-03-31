@@ -9,7 +9,7 @@
 #include "ctrlcode.h"
 #include "proc.h"
 #include "cmp.h"
-#include "html/html_feed_env.h"
+#include "html_feed_env.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
 #include "downloadlist.h"
