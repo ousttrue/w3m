@@ -108,7 +108,7 @@ static int check_local_cgi(const char *file, int status) {
 #endif
 }
 
-void set_environ(const char *var, const char *value) {
+void set_environ(const std::string &var, const std::string &value) {
 #ifdef _MSC_VER
 #else
 #ifdef HAVE_SETENV

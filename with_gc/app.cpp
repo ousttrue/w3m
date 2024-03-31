@@ -20,7 +20,6 @@
 #include "cookie.h"
 #include "history.h"
 #include "alloc.h"
-#include "Str.h"
 #include "http_response.h"
 #include <sys/stat.h>
 #include <iostream>
@@ -553,26 +552,27 @@ void App::setKeymap(const std::string &_p, int lineno, int verbose) {
   auto s = _s.c_str();
   auto c = getKey(s);
   if (c < 0) { /* error */
-    const char *emsg;
+    std::stringstream emsg;
     if (lineno > 0)
-      emsg = Sprintf("line %d: unknown key '%s'", lineno, s)->ptr;
+      emsg << "line " << lineno << ": unknown key '" << s << "'";
     else
-      emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-    App::instance().App::instance().record_err_message(emsg);
+      emsg << "defkey: unknown key '" << s << "'";
+    App::instance().App::instance().record_err_message(emsg.str());
     if (verbose)
-      App::instance().disp_message_nsec(emsg, 1, true);
+      App::instance().disp_message_nsec(emsg.str(), 1, true);
     return;
   }
+
   std::string f = getWord(&p);
   if (f.empty()) {
-    const char *emsg;
+    std::stringstream emsg;
     if (lineno > 0)
-      emsg = Sprintf("line %d: invalid command '%s'", lineno, s)->ptr;
+      emsg << "line " << lineno << ": invalid command '" << s << "'";
     else
-      emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-    App::instance().record_err_message(emsg);
+      emsg << "defkey: invalid command '" << s << "'";
+    App::instance().record_err_message(emsg.str());
     if (verbose)
-      App::instance().disp_message_nsec(emsg, 1, true);
+      App::instance().disp_message_nsec(emsg.str(), 1, true);
     return;
   }
   auto map = _GlobalKeymap;
@@ -672,10 +672,9 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
       set_environ("W3M_CURRENT_FORM", "");
     }
 
-    set_environ("W3M_CURRENT_LINE",
-                Sprintf("%ld", buf->layout->linenumber(l))->ptr);
+    set_environ("W3M_CURRENT_LINE", to_str(buf->layout->linenumber(l)));
     set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->layout->visual.cursor().col + 1)->ptr);
+                to_str(buf->layout->visual.cursor().col + 1));
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -1243,7 +1242,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   ) {
     CurrentTab->pushBuffer(buf);
   } else {
-    auto label = Strnew_m_charp("_", target, nullptr)->ptr;
+    auto label = std::string("_") + to_str(target);
     auto buf = CurrentTab->currentBuffer();
     auto al = buf->layout->data._name->searchAnchor(label);
     if (al) {
@@ -1312,61 +1311,62 @@ void App::disp_message_nsec(const std::string &s, int sec, int purge) {
   // sleep_till_anykey(sec, purge);
 }
 
-void App::disp_message(const std::string &s) { disp_message_nsec(s, 10, false); }
+void App::disp_message(const std::string &s) {
+  disp_message_nsec(s, 10, false);
+}
 
-void App::set_delayed_message(const char *s) { delayed_msg = allocStr(s, -1); }
+void App::set_delayed_message(std::string_view s) { delayed_msg = to_str(s); }
 
 void App::refresh_message() {
-  if (delayed_msg != NULL) {
+  if (delayed_msg.size()) {
     disp_message(delayed_msg);
-    delayed_msg = NULL;
+    delayed_msg = {};
     // _screen->print();
   }
 }
 
 static void interpret_keymap(FILE *kf, struct stat *current, int force) {
-  int fd;
-  struct stat kstat;
-  Str *line;
-  const char *p, *emsg;
-  int lineno;
-  int verbose = 1;
-
-  if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) ||
-      (!force && kstat.st_mtime == current->st_mtime &&
-       kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino &&
-       kstat.st_size == current->st_size))
-    return;
-  *current = kstat;
-
-  lineno = 0;
-  while (!feof(kf)) {
-    line = Strfgets(kf);
-    lineno++;
-    Strchop(line);
-    Strremovefirstspaces(line);
-    if (line->length == 0)
-      continue;
-    p = line->ptr;
-    auto s = getWord(&p);
-    if (s.size() && s[0] == '#') /* comment */
-      continue;
-    if (!strcmp(s.c_str(), "keymap"))
-      ;
-    else if (!strcmp(s.c_str(), "verbose")) {
-      s = getWord(&p);
-      if (s.size())
-        verbose = str_to_bool(s.c_str(), verbose);
-      continue;
-    } else { /* error */
-      emsg = Sprintf("line %d: syntax error '%s'", lineno, s.c_str())->ptr;
-      App::instance().record_err_message(emsg);
-      if (verbose)
-        App::instance().disp_message_nsec(emsg, 1, true);
-      continue;
-    }
-    App::instance().setKeymap(p, lineno, verbose);
-  }
+  // int fd;
+  // struct stat kstat;
+  // const char *p, *emsg;
+  // int lineno;
+  // int verbose = 1;
+  //
+  // if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) ||
+  //     (!force && kstat.st_mtime == current->st_mtime &&
+  //      kstat.st_dev == current->st_dev && kstat.st_ino == current->st_ino &&
+  //      kstat.st_size == current->st_size))
+  //   return;
+  // *current = kstat;
+  //
+  // lineno = 0;
+  // while (!feof(kf)) {
+  //   line = Strfgets(kf);
+  //   lineno++;
+  //   Strchop(line);
+  //   Strremovefirstspaces(line);
+  //   if (line->length == 0)
+  //     continue;
+  //   p = line->ptr;
+  //   auto s = getWord(&p);
+  //   if (s.size() && s[0] == '#') /* comment */
+  //     continue;
+  //   if (!strcmp(s.c_str(), "keymap"))
+  //     ;
+  //   else if (!strcmp(s.c_str(), "verbose")) {
+  //     s = getWord(&p);
+  //     if (s.size())
+  //       verbose = str_to_bool(s.c_str(), verbose);
+  //     continue;
+  //   } else { /* error */
+  //     emsg = Sprintf("line %d: syntax error '%s'", lineno, s.c_str())->ptr;
+  //     App::instance().record_err_message(emsg);
+  //     if (verbose)
+  //       App::instance().disp_message_nsec(emsg, 1, true);
+  //     continue;
+  //   }
+  //   App::instance().setKeymap(p, lineno, verbose);
+  // }
 }
 
 static char keymap_initialized = false;

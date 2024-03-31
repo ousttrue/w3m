@@ -6,7 +6,7 @@
 extern std::string document_root;
 extern std::string cgi_bin;
 
-void set_environ(const char *var, const char *value);
+void set_environ(const std::string &var, const std::string &value);
 std::string localCookie();
 
 struct Form;

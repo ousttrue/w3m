@@ -2,6 +2,7 @@
 #include <string>
 #include <string_view>
 #include <list>
+#include <sstream>
 
 extern const char *HTML_QUOTE_MAP[];
 extern unsigned char QUOTE_MAP[];
@@ -57,3 +58,10 @@ void Strshrink(std::string &s, int n);
 void Strlower(std::string &);
 void Strupper(std::string &);
 void Strchop(std::string &s);
+
+inline std::string to_str(int n) {
+  std::stringstream ss;
+  ss << n;
+  return ss.str();
+}
+inline std::string to_str(std::string_view s) { return {s.begin(), s.end()}; }
