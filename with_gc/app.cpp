@@ -1,6 +1,5 @@
 #include "app.h"
-#include "form.h"
-#include "http_response.h"
+#include "quote.h"
 #include "tmpfile.h"
 #include "option_param.h"
 #include "ioutil.h"
@@ -11,7 +10,6 @@
 #include "proc.h"
 #include "cmp.h"
 #include "html/html_feed_env.h"
-#include "html/html_quote.h"
 #include "ssl_util.h"
 #include "local_cgi.h"
 #include "downloadlist.h"
@@ -22,6 +20,8 @@
 #include "cookie.h"
 #include "history.h"
 #include "alloc.h"
+#include "Str.h"
+#include "http_response.h"
 #include <sys/stat.h>
 #include <iostream>
 #include <sstream>
@@ -1286,7 +1286,7 @@ std::string App::message_list_panel() {
          "<h1>List of error messages</h1><table cellpadding=0>\n";
   if (message_list.size()) {
     for (auto p = message_list.rbegin(); p != message_list.rend(); ++p)
-      tmp << "<tr><td><pre>" << html_quote(p->c_str()) << "</pre></td></tr>\n";
+      tmp << "<tr><td><pre>" << html_quote(*p) << "</pre></td></tr>\n";
   } else {
     tmp << "<tr><td>(no message recorded)</td></tr>\n";
   }
@@ -1303,7 +1303,7 @@ void App::disp_message_nsec(const std::string &s, int sec, int purge) {
   if (IsForkChild)
     return;
   if (!_fmInitialized) {
-    fprintf(stderr, "%s\n", s);
+    fprintf(stderr, "%s\n", s.c_str());
     return;
   }
 
