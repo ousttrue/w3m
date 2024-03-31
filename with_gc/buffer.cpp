@@ -16,7 +16,6 @@
 #include "ctrlcode.h"
 #include "line.h"
 #include "proc.h"
-#include "Str.h"
 #include "history.h"
 #include "cookie.h"
 #include "downloadlist.h"
@@ -81,30 +80,33 @@ std::string Buffer::link_info() const {
  * information of current page and link
  */
 std::string Buffer::page_info_panel() const {
-  Str *tmp = Strnew_size(1024);
+  std::stringstream tmp;
 
-  Strcat_charp(tmp, "<html><head>\
+  {
+    tmp << "<html><head>\
 <title>Information about current page</title>\
 </head><body>\
-<h1>Information about current page</h1>\n");
+<h1>Information about current page</h1>\n";
 
-  int all = this->layout->data.lines.size();
-  if (all == 0 && this->layout->lastLine())
-    all = this->layout->linenumber(this->layout->lastLine());
-  auto p = url_decode0(this->res->currentURL.to_Str());
-  Strcat_m_charp(
-      tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-      html_quote(this->layout->data.title.c_str()),
-      "<tr valign=top><td nowrap>Current URL<td>", html_quote(p).c_str(),
-      "<tr valign=top><td nowrap>Document Type<td>",
-      this->res->type.size() ? html_quote(this->res->type.c_str()) : "unknown",
-      "<tr valign=top><td nowrap>Last Modified<td>",
-      html_quote(this->res->last_modified().c_str()), nullptr);
-  // Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
-  //                Sprintf("%d", all)->ptr,
-  //                "<tr valign=top><td nowrap>Transferred bytes<td>",
-  //                Sprintf("%lu", (unsigned long)this->res->trbyte)->ptr,
-  //                nullptr);
+    int all = this->layout->data.lines.size();
+    if (all == 0 && this->layout->lastLine())
+      all = this->layout->linenumber(this->layout->lastLine());
+    auto p = url_decode0(this->res->currentURL.to_Str());
+    tmp << "<table cellpadding=0>"
+        << "<tr valign=top><td nowrap>Title<td>"
+        << html_quote(this->layout->data.title.c_str())
+        << "<tr valign=top><td nowrap>Current URL<td>" << html_quote(p)
+        << "<tr valign=top><td nowrap>Document Type<td>"
+        << (this->res->type.size() ? html_quote(this->res->type.c_str())
+                                   : "unknown")
+        << "<tr valign=top><td nowrap>Last Modified<td>"
+        << html_quote(this->res->last_modified().c_str());
+    // Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
+    //                Sprintf("%d", all)->ptr,
+    //                "<tr valign=top><td nowrap>Transferred bytes<td>",
+    //                Sprintf("%lu", (unsigned long)this->res->trbyte)->ptr,
+    //                nullptr);
+  }
 
   if (auto a = this->layout->retrieveCurrentAnchor()) {
     Url pu(a->url.c_str(), this->layout->data.baseURL);
@@ -114,9 +116,8 @@ std::string Buffer::page_info_panel() const {
       p = html_quote(url_decode0(p));
     else
       p = q;
-    Strcat_m_charp(
-        tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"",
-        q.c_str(), "\">", p.c_str(), "</a>", nullptr);
+    tmp << "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"" << q
+        << "\">" << p << "</a>";
   }
 
   if (auto a = this->layout->retrieveCurrentImg()) {
@@ -127,34 +128,30 @@ std::string Buffer::page_info_panel() const {
       p = html_quote(url_decode0(p));
     else
       p = q;
-    Strcat_m_charp(
-        tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"",
-        q.c_str(), "\">", p.c_str(), "</a>", nullptr);
+    tmp << "<tr valign=top><td nowrap>URL of current image<td><a href=\"" << q
+        << "\">" << p << "</a>";
   }
 
   if (auto a = this->layout->retrieveCurrentForm()) {
     auto fi = a->formItem;
-    p = Strnew(fi->form2str())->ptr;
-    p = html_quote(url_decode0(p));
-    Strcat_m_charp(
-        tmp, "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
-        p.c_str(), nullptr);
+    auto p = html_quote(url_decode0(fi->form2str()));
+    tmp << "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>"
+        << p;
     // if (fi->parent->method == FORM_METHOD_INTERNAL &&
     //     !Strcmp_charp(fi->parent->action, "map"))
     //   append_map_info(buf, tmp, fi->parent->item);
   }
 
-  Strcat_charp(tmp, "</table>\n");
+  tmp << "</table>\n";
 
-  Strcat(tmp, this->link_info());
+  tmp << this->link_info();
 
   if (this->res->document_header.size()) {
-    Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
+    tmp << "<hr width=50%><h1>Header information</h1><pre>\n";
     for (auto &ti : this->res->document_header) {
-      Strcat_m_charp(tmp, "<pre_int>", html_quote(ti.c_str()), "</pre_int>\n",
-                     nullptr);
+      tmp << "<pre_int>" << html_quote(ti) << "</pre_int>\n";
     }
-    Strcat_charp(tmp, "</pre>\n");
+    tmp << "</pre>\n";
   }
 
   // if (f_set) {
@@ -162,11 +159,11 @@ std::string Buffer::page_info_panel() const {
   //   // append_frame_info(buf, tmp, f_set, 0);
   // }
   if (this->res->ssl_certificate)
-    Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-                   html_quote(this->res->ssl_certificate), "</pre>\n", nullptr);
+    tmp << "<h1>SSL certificate</h1><pre>\n"
+        << html_quote(this->res->ssl_certificate) << "</pre>\n";
 
-  Strcat_charp(tmp, "</body></html>");
-  return tmp->ptr;
+  tmp << "</body></html>";
+  return tmp.str();
 }
 
 void Buffer::saveBuffer(FILE *f, bool cont) {
@@ -183,11 +180,12 @@ void Buffer::saveBuffer(FILE *f, bool cont) {
 }
 
 std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
-  Str *tmp = Strnew_charp("<title>Link List</title>\
-<h1 align=center>Link List</h1>\n");
+  std::stringstream tmp;
+  tmp << "<title>Link List</title>\
+<h1 align=center>Link List</h1>\n";
 
   if (buf->layout->data.linklist.size()) {
-    Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
+    tmp << "<hr><h2>Links</h2>\n<ol>\n";
     for (auto &l : buf->layout->data.linklist) {
       std::string p;
       std::string u;
@@ -201,22 +199,23 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
           p = u;
       } else
         u = p = "";
+
       std::string t = "";
       if (l.type == LINK_TYPE_REL)
         t = " [Rel]";
       else if (l.type == LINK_TYPE_REV)
         t = " [Rev]";
-      t = Sprintf("%s%s\n", l.title.size() ? l.title.c_str() : "", t.c_str())
-              ->ptr;
-      t = html_quote(t);
-      Strcat_m_charp(tmp, "<li><a href=\"", u.c_str(), "\">", t.c_str(),
-                     "</a><br>", p.c_str(), "\n", NULL);
+
+      std::stringstream ss;
+      ss << l.title << t << "\n";
+      t = html_quote(ss.str());
+      tmp << "<li><a href=\"" << u << "\">" << t << "</a><br>" << p << "\n";
     }
-    Strcat_charp(tmp, "</ol>\n");
+    tmp << "</ol>\n";
   }
 
   if (buf->layout->data._href) {
-    Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
+    tmp << "<hr><h2>Anchors</h2>\n<ol>\n";
     // auto al = buf->layout.data._href;
     for (size_t i = 0; i < buf->layout->data._href->size(); i++) {
       auto a = &buf->layout->data._href->anchors[i];
@@ -230,14 +229,13 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
       else
         p = u;
       auto t = html_quote(buf->layout->data.getAnchorText(a));
-      Strcat_m_charp(tmp, "<li><a href=\"", u.c_str(), "\">", t.c_str(),
-                     "</a><br>", p.c_str(), "\n", NULL);
+      tmp << "<li><a href=\"" << u << "\">" << t << "</a><br>" << p << "\n";
     }
-    Strcat_charp(tmp, "</ol>\n");
+    tmp << "</ol>\n";
   }
 
   if (buf->layout->data._img) {
-    Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
+    tmp << "<hr><h2>Images</h2>\n<ol>\n";
     auto al = buf->layout->data._img;
     for (size_t i = 0; i < al->size(); i++) {
       auto a = &al->anchors[i];
@@ -255,8 +253,7 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
         t = html_quote(a->title.c_str());
       else
         t = html_quote(url_decode0(a->url.c_str()));
-      Strcat_m_charp(tmp, "<li><a href=\"", u.c_str(), "\">", t.c_str(),
-                     "</a><br>", p.c_str(), "\n", NULL);
+      tmp << "<li><a href=\"" << u << "\">" << t << "</a><br>" << p << "\n";
       if (!buf->layout->data._formitem) {
         continue;
       }
@@ -295,10 +292,10 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
         // Strcat_charp(tmp, "</ol>\n");
       }
     }
-    Strcat_charp(tmp, "</ol>\n");
+    tmp << "</ol>\n";
   }
 
-  return tmp->ptr;
+  return tmp.str();
 }
 
 void Buffer::saveBufferInfo() {
@@ -309,42 +306,37 @@ void Buffer::saveBufferInfo() {
 }
 
 std::shared_ptr<Buffer> Buffer::sourceBuffer() {
-
   if (this->res->is_html_type()) {
     auto buf = Buffer::create();
     buf->res->type = "text/plain";
     buf->layout->data.title =
-        Sprintf("source of %s", this->layout->data.title.c_str())->ptr;
-
+        std::string("source of ") + this->layout->data.title;
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
     buf->layout->data.need_reshape = true;
-
     return buf;
-  } else if (CurrentTab->currentBuffer()->res->type == "text/plain") {
+  }
+
+  if (CurrentTab->currentBuffer()->res->type == "text/plain") {
     auto buf = Buffer::create();
     buf->res->type = "text/html";
-    buf->layout->data.title =
-        Sprintf("HTML view of %s",
-                CurrentTab->currentBuffer()->layout->data.title.c_str())
-            ->ptr;
-
+    buf->layout->data.title = std::string("HTML view of ") +
+                              CurrentTab->currentBuffer()->layout->data.title;
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
     buf->layout->data.need_reshape = true;
-
     return buf;
   }
 
   return {};
 }
 
-std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
+std::shared_ptr<Buffer> Buffer::gotoLabel(const std::string &label) {
   auto a = this->layout->data._name->searchAnchor(label);
   if (!a) {
-    App::instance().disp_message(Sprintf("%s is not found", label)->ptr);
+    App::instance().disp_message(label + " is not found");
     return {};
   }
 
@@ -363,7 +355,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(std::string_view label) {
 
 std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
                                          const std::shared_ptr<Form> &request) {
-  App::instance().message(Sprintf("loading %s", url)->ptr);
+  App::instance().message(std::string("loading ") + url);
   // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
@@ -379,7 +371,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
 
   auto res = loadGeneralFile(url, this->layout->data.baseURL, option, request);
   if (!res) {
-    char *emsg = Sprintf("Can't load %s", url)->ptr;
+    auto emsg = std::string("Can't load ") + url;
     App::instance().disp_err_message(emsg);
     return {};
   }
@@ -509,7 +501,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
       form->length = st.st_size;
     } else {
       auto tmp = fi->parent->query(fi);
-      form->body = Strnew(tmp)->ptr;
+      form->body = tmp;
       form->length = tmp.size();
     }
     auto buf = this->loadLink(tmp2.c_str(), {}, form);
@@ -704,7 +696,7 @@ Buffer::cmd_loadURL(const char *url, std::optional<Url> current,
                     const std::shared_ptr<Form> &request) {
   auto res = loadGeneralFile(url, current, option, request);
   if (!res) {
-    char *emsg = Sprintf("Can't load %s", url)->ptr;
+    auto emsg = std::string("Can't load ") + url;
     App::instance().disp_err_message(emsg);
     return {};
   }
@@ -712,8 +704,8 @@ Buffer::cmd_loadURL(const char *url, std::optional<Url> current,
   return Buffer::create(res);
 }
 
-std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url, const char *prompt,
-                                       bool relative) {
+std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url,
+                                       const char *prompt, bool relative) {
   std::optional<Url> current;
   std::string url;
   if (_url.empty()) {
@@ -752,10 +744,10 @@ std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url, const char *prompt
       option.no_referer = true;
     else
       option.referer = this->res->currentURL.to_RefererStr();
-    url = Strnew(url_quote(url))->ptr;
+    url = url_quote(url);
   } else {
     current = {};
-    url = Strnew(url_quote(url))->ptr;
+    url = url_quote(url);
   }
 
   if (url.empty()) {
