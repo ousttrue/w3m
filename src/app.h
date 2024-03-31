@@ -1,6 +1,5 @@
 #pragma once
 #include "rowcol.h"
-#include "quote.h"
 #include "func.h"
 #include <string>
 #include <list>
@@ -14,6 +13,7 @@
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/component/event.hpp>
 #include <sstream>
+#include <iomanip>
 #include <plog/Log.h> // Step1: include the header.
 #include <plog/Formatters/FuncMessageFormatter.h>
 #include <ftxui/dom/table.hpp>
@@ -35,6 +35,33 @@ struct TabBuffer;
 struct Buffer;
 
 namespace plog {
+
+inline ftxui::Color::Palette256 serverityColor(Severity s) {
+  switch (s) {
+  case none:
+    return ftxui::Color::Palette256::NavajoWhite1;
+  case fatal:
+    return ftxui::Color::Palette256::Magenta1;
+  case error:
+    return ftxui::Color::Palette256::Red1;
+  case warning:
+    return ftxui::Color::Palette256::Orange1;
+  case info:
+    return ftxui::Color::Palette256::NavajoWhite1;
+  case debug:
+    return ftxui::Color::Palette256::DarkSlateGray1;
+  case verbose:
+    return ftxui::Color::Palette256::DarkSlateGray2;
+  }
+
+  return ftxui::Color::Palette256::Purple;
+}
+// color;
+// enum Severity
+// {
+//     none = 0,
+// };
+
 template <class Formatter> // Typically a formatter is passed as a template
                            // parameter.
 class MyAppender
@@ -46,27 +73,61 @@ class MyAppender
   // std::list<util::nstring> m_messageList;
   std::vector<std::vector<std::string>> _data = {{
       "servirty",
-      "file",
+      // "time",
+      "func",
       "message",
   }};
+  std::vector<Severity> _records;
 
 public:
   MyAppender() {}
 
+  int _height = 0;
+
   virtual void write(const Record &record)
       PLOG_OVERRIDE // This is a method from IAppender that MUST be implemented.
   {
+    _records.push_back(record.getSeverity());
+
     // util::nstring str = Formatter::format(
     //     record); // Use the formatter to get a string from a record.
     //
     // m_messageList.push_back(str); // Store a log message in a list.
 
+    tm t;
+    util::localtime_s(&t, &record.getTime().time);
+
+    // auto t= record.getTime();
+    std::stringstream ss;
+    // ss //<< t.tm_year + 1900 << "-" << std::setfill(PLOG_NSTR('0'))
+    // << std::setw(2) << t.tm_mon + 1 << PLOG_NSTR("-")
+    //    << std::setfill(PLOG_NSTR('0')) << std::setw(2) << t.tm_mday
+    //    << PLOG_NSTR(" ");
+    ss << std::setfill(PLOG_NSTR('0')) << std::setw(2) << t.tm_hour
+       << PLOG_NSTR(":") << std::setfill(PLOG_NSTR('0')) << std::setw(2)
+       << t.tm_min << PLOG_NSTR(":") << std::setfill(PLOG_NSTR('0'))
+       << std::setw(2) << t.tm_sec
+        // << PLOG_NSTR(".")
+        // << std::setfill(PLOG_NSTR('0')) << std::setw(3)
+        //    << static_cast<int>(record.getTime().millitm) << PLOG_NSTR(" ");
+        // ss << std::setfill(PLOG_NSTR(' ')) << std::setw(5) << std::left
+        //    << severityToString(record.getSeverity()) << PLOG_NSTR(" ");
+        ;
+
     std::vector<std::string> row = {
         severityToString(record.getSeverity()),
-        std::string(record.getFile()),
+        // ss.str(),
+        std::string(record.getFunc()),
         std::string(record.getMessage()),
     };
     _data.push_back(row);
+    if (_height) {
+      auto d = (int)_data.size() - _height;
+      if (d > 0) {
+        _data.erase(_data.begin() + 1, _data.begin() + 1 + d);
+        _records.erase(_records.begin(), _records.begin() + d);
+      }
+    }
 
     _table = ftxui::Table(_data);
 
@@ -75,8 +136,12 @@ public:
     // _table.SelectRow(0).Border(ftxui::DOUBLE);
 
     auto content = _table.SelectRows(1, -1);
-    content.DecorateCellsAlternateRow(color(ftxui::Color::Blue), 2, 0);
-    content.DecorateCellsAlternateRow(color(ftxui::Color::Cyan), 2, 1);
+    // content.DecorateCellsAlternateRow(color(ftxui::Color::Blue), 2, 0);
+    // content.DecorateCellsAlternateRow(color(ftxui::Color::Cyan), 2, 1);
+
+    for (int i = 0; i < _records.size(); ++i) {
+      _table.SelectRow(i + 1).Decorate(color(serverityColor(_records[i])));
+    }
 
     _dom = _table.Render();
   }
@@ -92,8 +157,6 @@ class App {
 
   RowCol _size = {};
 
-  std::stringstream _lastKeyCmd;
-  std::list<ftxui::Element> _event_status;
   std::string _message;
 
   bool _fmInitialized = false;

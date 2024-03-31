@@ -24,6 +24,7 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#include <cctype>
 
 #include "ftxui/component/component.hpp"          // for Renderer
 #include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive, Component
@@ -64,9 +65,12 @@ App::App() {
   plog::init(plog::debug,
              &_appender); // Initialize the logger with our appender.
 
-  PLOGD << "Hello log!";             // short macro
-  PLOG_DEBUG << "Hello log!";        // long macro
-  PLOG(plog::debug) << "Hello log!"; // function-style macro
+  PLOGV << w3m_version;
+  PLOGD << w3m_version;
+  PLOGI << w3m_version;
+  PLOGW << w3m_version;
+  PLOGE << w3m_version;
+  PLOGF << w3m_version;
 
   static int s_i = 0;
   assert(s_i == 0);
@@ -662,13 +666,6 @@ int App::mainLoop() {
 }
 
 bool App::onEvent(const ftxui::Event &event) {
-  // ScreenInteractive::EventLister 経由で別スレッド？
-
-  _event_status.push_front(ftxui::text(stringify(event)));
-  while (_event_status.size() > 4) {
-    _event_status.pop_back();
-  }
-
   // [&](Event event) {
   if (popAddDownloadList()) {
     ldDL(context());
@@ -699,11 +696,12 @@ bool App::onEvent(const ftxui::Event &event) {
   }
 
   if (event.is_mouse()) {
+    PLOGD << "[ftxui::Event]mouse";
   } else if (event == ftxui::Event::Custom) {
+    PLOGD << "[ftxui::Event]custom";
     onResize();
     return true;
   } else {
-    // && !std::isdigit(event.character()[0]);
     auto c = event.character();
     dispatchPtyIn(c.c_str(), c.size());
     return true;
@@ -744,6 +742,7 @@ RowCol getTermSize() {
 void App::onResize() {
   _size = getTermSize();
   _splitSize = _size.col / 2;
+  _appender._height = _size.row;
   auto buf = CurrentTab->currentBuffer();
   if (!buf) {
     return;
@@ -752,7 +751,6 @@ void App::onResize() {
     return;
   }
   buf->layout->setupscreen(_size);
-
 }
 
 void App::exit(int) {
@@ -896,32 +894,35 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
     return;
   }
   auto c = buf[0];
-  _lastKeyCmd.str("");
+  std::stringstream _lastKeyCmd;
   if (std::isalnum(c) || std::ispunct(c)) {
     _lastKeyCmd << c;
   } else {
     _lastKeyCmd << "0x" << std::hex << (int)c;
   }
-  if (IS_ASCII(c)) { /* Ascii */
-    if (('0' <= c) && (c <= '9') && (prec_num || (_GlobalKeymap[c].empty()))) {
-      prec_num = prec_num * 10 + (int)(c - '0');
-      if (prec_num > PREC_LIMIT)
-        prec_num = PREC_LIMIT;
-    } else {
+  // if (IS_ASCII(c)) { /* Ascii */
+    // if (('0' <= c) && (c <= '9') && (prec_num || (_GlobalKeymap[c].empty()))) {
+    //   prec_num = prec_num * 10 + (int)(c - '0');
+    //   if (prec_num > PREC_LIMIT)
+    //     prec_num = PREC_LIMIT;
+    // } else 
+    {
       set_buffer_environ(currentTab()->currentBuffer());
       // currentTab()->currentBuffer()->layout.save_buffer_position();
       _currentKey = c;
       auto cmd = _GlobalKeymap[c];
       if (cmd.size()) {
         _lastKeyCmd << " => " << cmd;
+        PLOGI << _lastKeyCmd.str();
         auto callback = _w3mFuncList[cmd];
         callback(context());
       } else {
         _lastKeyCmd << " => not found";
+        PLOGW << _lastKeyCmd.str();
       }
       prec_num = 0;
     }
-  }
+  // }
   _prev_key = _currentKey;
   _currentKey = -1;
   CurrentKeyData = {};
@@ -929,14 +930,6 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
 
 ftxui::Element App::dom() {
   auto buf = currentTab()->currentBuffer();
-
-  std::vector<ftxui::Element> events;
-  for (auto it = _event_status.begin(); it != _event_status.end(); ++it) {
-    if (it != _event_status.begin()) {
-      events.push_back(ftxui::separator());
-    }
-    events.push_back(*it);
-  }
 
   return ftxui::vbox({
       // tabs
@@ -951,7 +944,7 @@ ftxui::Element App::dom() {
       ftxui::text(buf->layout->data.status()),
       ftxui::text(buf->layout->row_status()),
       ftxui::text(buf->layout->col_status()),
-      ftxui::hbox(events),
+      // ftxui::hbox(events),
   });
 }
 
