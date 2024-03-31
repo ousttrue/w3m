@@ -17,8 +17,6 @@ with_gc_lib = static_library(
         'html/html_feed_env.cpp',
         'html/table.cpp',
         'html/html_parser.cpp',
-        'Str.cpp',
-        'hash.cpp',
         'buffer.cpp',
         'app.cpp',
         'alloc.cpp',

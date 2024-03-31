@@ -1,6 +1,5 @@
 #include "readtoken.h"
 #include "myctype.h"
-#include "Str.h"
 #include "quote.h"
 
 int next_status(char c, ReadBufferStatus *status) {
