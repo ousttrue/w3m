@@ -15,7 +15,6 @@
 #include "myctype.h"
 #include "cmp.h"
 #include "readtoken.h"
-#include "Str.h"
 #include <sys/types.h>
 #include <stdio.h>
 #include <string.h>
@@ -235,7 +234,7 @@ void table::check_row(int row) {
   }
 }
 
-void table::pushdata(int row, int col, const char *data) {
+void table::pushdata(int row, int col, const std::string &data) {
   this->check_row(row);
   if (this->tabdata[row][col] == NULL)
     this->tabdata[row][col] = GeneralList::newGeneralList();
@@ -243,7 +242,7 @@ void table::pushdata(int row, int col, const char *data) {
   this->tabdata[row][col]->_list.push_back(std::make_shared<TextLine>(data));
 }
 
-void table::suspend_or_pushdata(const char *line) {
+void table::suspend_or_pushdata(const std::string &line) {
   if (this->flag & TBL_IN_COL)
     this->pushdata(this->row, this->col, line);
   else {
@@ -1829,8 +1828,8 @@ int table::skip_space(const char *line, struct table_linfo *linfo,
   return skip;
 }
 
-void table::feed_table_inline_tag(const char *line, struct table_mode *mode,
-                                  int width) {
+void table::feed_table_inline_tag(const std::string &line,
+                                  struct table_mode *mode, int width) {
   this->check_rowcol(mode);
   this->pushdata(this->row, this->col, line);
   if (width >= 0) {
@@ -1840,8 +1839,8 @@ void table::feed_table_inline_tag(const char *line, struct table_mode *mode,
   }
 }
 
-void table::feed_table_block_tag(const char *line, struct table_mode *mode,
-                                 int indent, int cmd) {
+void table::feed_table_block_tag(const std::string &line,
+                                 struct table_mode *mode, int indent, int cmd) {
   int offset;
   if (mode->indent_level <= 0 && indent == -1)
     return;
@@ -1930,7 +1929,7 @@ void table::table_close_anchor0(struct table_mode *mode) {
 
 #define ATTR_ROWSPAN_MAX 32766
 
-int table::feed_table_tag(HtmlParser *parser, const char *line,
+int table::feed_table_tag(HtmlParser *parser, const std::string &line,
                           struct table_mode *mode, int width,
                           const std::shared_ptr<HtmlTag> &tag) {
   int cmd;
@@ -1938,7 +1937,6 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   int colspan, rowspan;
   int col, prev_col;
   int i, j, k, v, v0, w, id;
-  Str *anchor;
   table_attr align, valign;
 
   cmd = tag->tagid;
@@ -2429,15 +2427,15 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     mode->end_tag = HTML_N_TEXTAREA;
     break;
   }
-  case HTML_A:
+  case HTML_A: {
     this->table_close_anchor0(mode);
-    anchor = NULL;
+    std::string anchor;
     i = 0;
     if (auto value = tag->parsedtag_get_value(ATTR_HREF))
-      anchor = Strnew(*value);
+      anchor = *value;
     if (auto value = tag->parsedtag_get_value(ATTR_HSEQ))
       i = stoi(*value);
-    if (anchor) {
+    if (anchor.size()) {
       this->check_rowcol(mode);
       if (i == 0) {
         auto tmp = parser->process_anchor(tag, line);
@@ -2456,6 +2454,7 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
     } else
       this->suspend_or_pushdata(line);
     break;
+  }
   case HTML_DEL:
     switch (displayInsDel) {
     case DISPLAY_INS_DEL_SIMPLE:
@@ -2593,15 +2592,14 @@ int table::feed_table_tag(HtmlParser *parser, const char *line,
   return TAG_ACTION_NONE;
 }
 
-int table::feed_table(HtmlParser *parser, const char *line,
+int table::feed_table(HtmlParser *parser, std::string line,
                       struct table_mode *mode, int width, int internal) {
   int i;
-  const char *p;
   Str *tmp;
   struct table_linfo *linfo = &this->linfo;
 
-  if (*line == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
-    p = line;
+  if (line[0] == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
+    auto p = line.c_str();
     auto tag = HtmlTag::parse(&p, internal);
     if (tag) {
       switch (this->feed_table_tag(parser, line, mode, width, tag)) {
@@ -2616,7 +2614,7 @@ int table::feed_table(HtmlParser *parser, const char *line,
       case TAG_ACTION_FEED:
       default:
         if (tag->parsedtag_need_reconstruct()) {
-          line = Strnew(tag->parsedtag2str())->ptr;
+          line = tag->parsedtag2str();
         }
       }
     } else {
@@ -2645,98 +2643,102 @@ int table::feed_table(HtmlParser *parser, const char *line,
     return -1;
   }
   if (!(mode->pre_mode & TBLM_PLAIN) &&
-      !(*line == '<' && line[strlen(line) - 1] == '>') &&
-      strchr(line, '&') != NULL) {
-    tmp = Strnew();
-    for (p = line; *p;) {
+      !(line[0] == '<' && line.back() == '>') &&
+      strchr(line.c_str(), '&') != NULL) {
+    std::stringstream tmp;
+    for (auto p = line.c_str(); *p;) {
       const char *q;
       if (*p == '&') {
         if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) ||
             !strncasecmp(p, "&lt;", 4)) {
           /* do not convert */
-          Strcat_char(tmp, *p);
+          tmp << *p;
           p++;
         } else {
           int ec;
           q = p;
           switch (ec = getescapechar(&p)) {
           case '<':
-            Strcat_charp(tmp, "&lt;");
+            tmp << "&lt;";
             break;
           case '>':
-            Strcat_charp(tmp, "&gt;");
+            tmp << "&gt;";
             break;
           case '&':
-            Strcat_charp(tmp, "&amp;");
+            tmp << "&amp;";
             break;
           case '\r':
-            Strcat_char(tmp, '\n');
+            tmp << '\n';
             break;
           default: {
             auto e = conv_entity(ec);
             if (e.empty())
               break;
             if (e.size() == 1 && ec == e[0]) {
-              Strcat_char(tmp, e[0]);
+              tmp << e[0];
               break;
             }
           }
 
           case -1:
-            Strcat_char(tmp, *q);
+            tmp << *q;
             p = q + 1;
             break;
           }
         }
       } else {
-        Strcat_char(tmp, *p);
+        tmp << *p;
         p++;
       }
     }
-    line = tmp->ptr;
+    line = tmp.str();
   }
   if (!(mode->pre_mode & (TBLM_SPECIAL & ~TBLM_NOBR))) {
     if (!(this->flag & TBL_IN_COL) || linfo->prev_spaces != 0)
-      while (IS_SPACE(*line))
-        line++;
-    if (*line == '\0')
+      while (line.size() && IS_SPACE(line[0]))
+        line = line.substr();
+    if (line.empty())
       return -1;
     this->check_rowcol(mode);
     if (mode->pre_mode & TBLM_NOBR && mode->nobr_offset < 0)
       mode->nobr_offset = this->tabcontentssize;
 
     /* count of number of spaces skipped in normal mode */
-    i = this->skip_space(line, linfo, !(mode->pre_mode & TBLM_NOBR));
-    this->addcontentssize(visible_length(line) - i);
+    i = this->skip_space(line.c_str(), linfo, !(mode->pre_mode & TBLM_NOBR));
+    this->addcontentssize(visible_length(line.c_str()) - i);
     this->setwidth(mode);
     this->pushdata(this->row, this->col, line);
   } else if (mode->pre_mode & TBLM_PRE_INT) {
     this->check_rowcol(mode);
     if (mode->nobr_offset < 0)
       mode->nobr_offset = this->tabcontentssize;
-    this->addcontentssize(maximum_visible_length(line, this->tabcontentssize));
+    this->addcontentssize(
+        maximum_visible_length(line.c_str(), this->tabcontentssize));
     this->setwidth(mode);
     this->pushdata(this->row, this->col, line);
   } else {
     /* <pre> mode or something like it */
     this->check_rowcol(mode);
-    while (*line) {
+    while (line.size()) {
       int nl = false;
-      if ((p = strchr(line, '\r')) || (p = strchr(line, '\n'))) {
+      const char *p;
+      std::string pp;
+      if ((p = strchr(line.c_str(), '\r')) ||
+          (p = strchr(line.c_str(), '\n'))) {
         if (*p == '\r' && p[1] == '\n')
           p++;
         if (p[1]) {
           p++;
-          tmp = Strnew_charp_n(line, p - line);
+          std::string tmp(line, p - line.c_str());
           line = p;
-          p = tmp->ptr;
+          pp = tmp;
         } else {
-          p = line;
+          pp = line;
           line = "";
         }
         nl = true;
       } else {
-        p = line;
+        pp = line;
         line = "";
       }
       if (mode->pre_mode & TBLM_PLAIN)

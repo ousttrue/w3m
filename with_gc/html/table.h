@@ -137,7 +137,7 @@ public:
   static std::shared_ptr<table> newTable();
   static std::shared_ptr<table> begin_table(int border, int spacing,
                                             int padding, int vspace);
-  int feed_table(class HtmlParser *parser, const char *line,
+  int feed_table(class HtmlParser *parser, std::string line,
                  struct table_mode *mode, int width, int internal);
   void end_table();
   void pushTable(const std::shared_ptr<table> &);
@@ -145,7 +145,7 @@ public:
                    struct html_feed_environ *h_env);
 
 private:
-  int feed_table_tag(class HtmlParser *parser, const char *line,
+  int feed_table_tag(class HtmlParser *parser, const std::string &line,
                      struct table_mode *mode, int width,
                      const std::shared_ptr<HtmlTag> &tag);
 
@@ -167,7 +167,7 @@ private:
                                   CHECK_MINIMUM));
   }
 
-  void pushdata(int row, int col, const char *data);
+  void pushdata(int row, int col, const std::string &data);
   void check_rowcol(table_mode *mode);
   void check_row(int row);
   int table_colspan(int row, int col) const {
@@ -184,11 +184,11 @@ private:
   void clearcontentssize(struct table_mode *mode);
   void begin_cell(struct table_mode *mode);
   int skip_space(const char *line, struct table_linfo *linfo, int checkminimum);
-  void feed_table_block_tag(const char *line, struct table_mode *mode,
+  void feed_table_block_tag(const std::string &line, struct table_mode *mode,
                             int indent, int cmd);
-  void feed_table_inline_tag(const char *line, struct table_mode *mode,
+  void feed_table_inline_tag(const std::string &line, struct table_mode *mode,
                              int width);
-  void suspend_or_pushdata(const char *line);
+  void suspend_or_pushdata(const std::string &line);
   void table_close_textarea(HtmlParser *parser, struct table_mode *mode,
                             int width);
   void feed_table1(HtmlParser *parser, const std::string &tok,
