@@ -1,5 +1,6 @@
 #pragma once
 #include "rowcol.h"
+#include "quote.h"
 #include "func.h"
 #include <string>
 #include <list>
@@ -13,6 +14,9 @@
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/component/event.hpp>
 #include <sstream>
+#include <plog/Log.h> // Step1: include the header.
+#include <plog/Formatters/FuncMessageFormatter.h>
+#include <ftxui/dom/table.hpp>
 
 extern bool displayLink;
 extern bool displayLineInfo;
@@ -29,7 +33,63 @@ using Dispatcher = std::function<bool(const char *buf, size_t len)>;
 class Content;
 struct TabBuffer;
 struct Buffer;
+
+namespace plog {
+template <class Formatter> // Typically a formatter is passed as a template
+                           // parameter.
+class MyAppender
+    : public IAppender // All appenders MUST inherit IAppender interface.
+{
+  ftxui::Table _table;
+  ftxui::Element _dom;
+
+  // std::list<util::nstring> m_messageList;
+  std::vector<std::vector<std::string>> _data = {{
+      "servirty",
+      "file",
+      "message",
+  }};
+
+public:
+  MyAppender() {}
+
+  virtual void write(const Record &record)
+      PLOG_OVERRIDE // This is a method from IAppender that MUST be implemented.
+  {
+    // util::nstring str = Formatter::format(
+    //     record); // Use the formatter to get a string from a record.
+    //
+    // m_messageList.push_back(str); // Store a log message in a list.
+
+    std::vector<std::string> row = {
+        severityToString(record.getSeverity()),
+        std::string(record.getFile()),
+        std::string(record.getMessage()),
+    };
+    _data.push_back(row);
+
+    _table = ftxui::Table(_data);
+
+    _table.SelectRow(0).Decorate(ftxui::bold);
+    _table.SelectRow(0).SeparatorVertical(ftxui::LIGHT);
+    // _table.SelectRow(0).Border(ftxui::DOUBLE);
+
+    auto content = _table.SelectRows(1, -1);
+    content.DecorateCellsAlternateRow(color(ftxui::Color::Blue), 2, 0);
+    content.DecorateCellsAlternateRow(color(ftxui::Color::Cyan), 2, 1);
+
+    _dom = _table.Render();
+  }
+
+  ftxui::Element dom() { return _dom; }
+};
+} // namespace plog
+
 class App {
+  int _splitSize = 20;
+  plog::MyAppender<plog::FuncMessageFormatter>
+      _appender; // Create our custom appender.
+
   RowCol _size = {};
 
   std::stringstream _lastKeyCmd;

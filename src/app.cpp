@@ -29,6 +29,9 @@
 #include "ftxui/component/screen_interactive.hpp" // for ScreenInteractive, Component
 #include "ftxui/dom/elements.hpp"
 
+#include <plog/Init.h>
+#include <list>
+
 #ifdef _MSC_VER
 #include <direct.h>
 // #define getcwd _getcwd
@@ -57,6 +60,13 @@ static void *die_oom(size_t bytes) {
 }
 
 App::App() {
+
+  plog::init(plog::debug,
+             &_appender); // Initialize the logger with our appender.
+
+  PLOGD << "Hello log!";             // short macro
+  PLOG_DEBUG << "Hello log!";        // long macro
+  PLOG(plog::debug) << "Hello log!"; // function-style macro
 
   static int s_i = 0;
   assert(s_i == 0);
@@ -638,9 +648,13 @@ int App::mainLoop() {
 
   auto screen = ScreenInteractive::Fullscreen();
 
+  auto l = Renderer([this] { return this->_appender.dom(); });
   auto r = Renderer([this] { return this->dom(); });
+
+  auto split = ResizableSplitLeft(l, r, &_splitSize);
+
   auto e = std::bind(&App::onEvent, this, std::placeholders::_1);
-  auto component = CatchEvent(r, e);
+  auto component = CatchEvent(split, e);
 
   screen.Loop(component);
 
@@ -729,6 +743,7 @@ RowCol getTermSize() {
 
 void App::onResize() {
   _size = getTermSize();
+  _splitSize = _size.col / 2;
   auto buf = CurrentTab->currentBuffer();
   if (!buf) {
     return;
@@ -737,6 +752,7 @@ void App::onResize() {
     return;
   }
   buf->layout->setupscreen(_size);
+
 }
 
 void App::exit(int) {

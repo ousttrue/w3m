@@ -1,0 +1,6 @@
+﻿2024-03-31 22:40:37.959 DEBUG [3160] [main@28] Hello log!
+2024-03-31 22:40:37.960 DEBUG [3160] [main@29] Hello log!
+2024-03-31 22:40:37.960 DEBUG [3160] [main@30] Hello log!
+2024-03-31 22:41:50.228 DEBUG [12352] [App::mainLoop@638] Hello log!
+2024-03-31 22:41:50.229 DEBUG [12352] [App::mainLoop@639] Hello log!
+2024-03-31 22:41:50.230 DEBUG [12352] [App::mainLoop@640] Hello log!

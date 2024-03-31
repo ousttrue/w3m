@@ -52,3 +52,4 @@ Makefile
 !/subprojects/openssl.wrap
 !/subprojects/bdwgc.wrap
 !/subprojects/zlib.wrap
+!/subprojects/sergiusthebest-plog.wrap

@@ -8,6 +8,7 @@ project(
 )
 
 add_project_arguments(
+    '-DPLOG_CHAR_IS_UTF8',
     '-DNOMINMAX',
     '-D_USE_MATH_DEFINES',
     '-I../subprojects/FTXUI-5.0.0/include',
@@ -44,12 +45,15 @@ zlib_dep = dependency('zlib', default_options: ['default_library=static'])
 screen_dep = dependency('ftxui-screen')
 dom_dep = dependency('ftxui-dom')
 component_dep = dependency('ftxui-component')
+plog_dep = dependency('plog')
+
 deps = [
     ssl_dep,
     nkf_dep,
     lua_dep,
     libuv_dep,
     zlib_dep,
+    plog_dep,
     # ftxui
     screen_dep,
     dom_dep,
