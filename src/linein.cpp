@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <assert.h>
 #include <sstream>
+#include <string.h>
 
 #ifdef _MSC_VER
 #else
@@ -650,7 +651,8 @@ static std::string escape_spaces(const std::string &s) {
 
 std::string LineInput::doComplete(const std::string &ifn, int *status,
                                   int next) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
   return {};
 #else
   int fl, i;

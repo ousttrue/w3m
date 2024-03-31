@@ -18,6 +18,7 @@ bool IsForkChild = 0;
 #define mkdir _mkdir;
 #else
 #include <pwd.h>
+#include <unistd.h>
 #endif
 
 std::string lastFileName(std::string_view path) {
@@ -168,7 +169,8 @@ std::string file_to_url(std::string file) {
 }
 
 int do_recursive_mkdir(const char *dir) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
   return {};
 #else
   const char *ch, *dircpy;

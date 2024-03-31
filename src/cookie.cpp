@@ -24,6 +24,7 @@
 #include <sstream>
 #include <fstream>
 #include <memory>
+#include <string.h>
 #ifndef _MSC_VER
 #include <sys/stat.h>
 #endif

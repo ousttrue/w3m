@@ -90,7 +90,9 @@ std::string localCookie() {
 }
 
 static int check_local_cgi(const char *file, int status) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
+  return 0;
 #else
   struct stat st;
 
@@ -112,8 +114,8 @@ void set_environ(const std::string &var, const std::string &value) {
 #ifdef _MSC_VER
 #else
 #ifdef HAVE_SETENV
-  if (var != NULL && value != NULL)
-    setenv(var, value, 1);
+  if (var.size() && value.size())
+    setenv(var.c_str(), value.c_str(), 1);
 #else /* not HAVE_SETENV */
   static Hash_sv *env_hash = NULL;
   Str *tmp = Strnew_m_charp(var, "=", value, NULL);
@@ -285,7 +287,8 @@ struct CgiFilename {
 FILE *localcgi_post(const char *uri, const char *qstr,
                     const std::shared_ptr<Form> &request,
                     const HttpOption &option) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
   return {};
 #else
   FILE *fr = NULL, *fw = NULL;

@@ -17,6 +17,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <io.h>
+#else
+#include <unistd.h>
 #endif
 
 #if !(_SVID_SOURCE || _XOPEN_SOURCE)

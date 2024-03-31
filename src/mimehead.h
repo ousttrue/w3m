@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <string.h>
 
 struct growbuf {
   std::vector<char> _buf;

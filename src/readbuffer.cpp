@@ -397,7 +397,8 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
 
 #define SHELLBUFFERNAME "*Shellout*"
 std::shared_ptr<HttpResponse> getshell(const std::string &cmd) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
   return {};
 #else
   if (cmd.empty()) {

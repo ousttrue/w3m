@@ -2,7 +2,10 @@
 #include "quote.h"
 #include "url_decode.h"
 #include "cmp.h"
+#include "myctype.h"
 #include <sstream>
+#include <string.h>
+
 #ifdef _MSC_VER
 #include <winsock2.h>
 #include <direct.h>

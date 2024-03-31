@@ -1218,7 +1218,8 @@ std::shared_ptr<CoroutineState<void>> svBuf(const FuncContext &context) {
   FILE *f;
   int is_pipe;
 
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
 #else
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   file = App::instance().searchKeyData();

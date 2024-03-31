@@ -6,6 +6,8 @@ int strcasecmp(std::string_view l, std::string_view r);
 #if defined(_MSC_VER)
 int strncasecmp(const char *l, const char *r, size_t n);
 int strcasecmp(const char *l, const char *r);
+#else
+#include <strings.h>
 #endif
 
 #if defined(_MSC_VER) || defined(__MINGW32__)

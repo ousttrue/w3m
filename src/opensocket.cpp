@@ -12,6 +12,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <unistd.h>
 #endif
 
 std::optional<int> openSocket(const std::string &hostname,

@@ -1,6 +1,6 @@
 #pragma once
+#include <string>
 
 extern bool multicolList;
 
-struct Str;
-Str *loadLocalDir(const char *dname);
+std::string loadLocalDir(const char *dname);

@@ -15,8 +15,9 @@ static int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
-Str *loadLocalDir(const char *dname) {
-#ifdef _MSC_VER
+std::string loadLocalDir(const char *dname) {
+#if 1
+// #ifdef _MSC_VER
   return {};
 
 #else

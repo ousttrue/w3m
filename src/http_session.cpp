@@ -4,7 +4,9 @@
 #include "mimetypes.h"
 #include "url_stream.h"
 #include "istream.h"
+
 #include <sys/stat.h>
+#include <string.h>
 
 std::string DefaultType;
 bool UseExternalDirBuffer = true;

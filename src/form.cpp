@@ -4,6 +4,7 @@
 #include "form.h"
 #include "cmp.h"
 #include "tmpfile.h"
+#include "mimetypes.h"
 
 #include <sys/stat.h>
 #include <assert.h>
@@ -58,7 +59,7 @@ static void form_write_from_file(FILE *f, const char *boundary,
 
   fprintf(f, "--%s\r\n", boundary);
   fprintf(f, "Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\n",
-          name, mybasename(filename));
+          name, mybasename(filename).c_str());
   auto type = guessContentType(file);
   fprintf(f, "Content-Type: %s\r\n\r\n",
           type.size() ? type.c_str() : "application/octet-stream");

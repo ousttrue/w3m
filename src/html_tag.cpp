@@ -4,6 +4,7 @@
 #include "myctype.h"
 #include "form.h"
 
+#include <string.h>
 #include <sstream>
 
 #define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))

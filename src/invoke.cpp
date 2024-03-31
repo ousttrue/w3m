@@ -4,6 +4,11 @@
 #include <assert.h>
 #include <sstream>
 
+#ifdef _MSC_VER
+#else
+#include <unistd.h>
+#endif
+
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 std::string ExtBrowser = DEF_EXT_BROWSER;
 std::string ExtBrowser2;
@@ -55,7 +60,8 @@ std::string myExtCommand(std::string_view cmd, std::string_view arg,
   return tmp.str();
 }
 
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
 static void mySystem(const std::string &command, bool background) {
   assert(false);
 }

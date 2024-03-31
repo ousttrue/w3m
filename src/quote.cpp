@@ -6,6 +6,10 @@
 #include <string.h>
 #include <charconv>
 #include <assert.h>
+#ifdef _MSC_VER
+#else
+#include <pwd.h>
+#endif
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */

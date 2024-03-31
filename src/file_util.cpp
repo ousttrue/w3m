@@ -1,6 +1,7 @@
 #include "file_util.h"
 #include <stdio.h>
 #include <sys/stat.h>
+#include "istream.h"
 #ifdef _MSC_VER
 #else
 #include <utime.h>
@@ -12,7 +13,8 @@ bool PermitSaveToPipe = false;
 bool PreserveTimestamp = true;
 
 int _MoveFile(const char *path1, const char *path2) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
   return {};
 #else
   FILE *f2;
@@ -66,7 +68,8 @@ int checkCopyFile(const char *path1, const char *path2) {
 }
 
 int _doFileCopy(const char *tmpf, const char *defstr, int download) {
-#ifdef _MSC_VER
+// #ifdef _MSC_VER
+#if 1
   return {};
 #else
   Str *msg;
