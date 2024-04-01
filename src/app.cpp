@@ -394,9 +394,7 @@ App::App() {
 
   // default dispatcher
   _dispatcher.push([this](const char *buf, size_t len) {
-    this->dispatchPtyIn(buf, len);
-    // never exit
-    return true;
+    return this->dispatchPtyIn(buf, len);
   });
 }
 
@@ -404,21 +402,20 @@ App::App() {
 
 App::~App() {
   if (getpid() != _currentPid) {
+    // fork child
     return;
   }
-  endRawMode();
 
   // clean up only not fork process
   std::cout << "App::~App" << std::endl;
 
   // exit
-  // term_title(""); /* XXX */
-  save_cookies(rcFile(COOKIE_FILE));
-  if (UseHistory && SaveURLHist) {
-    URLHist->saveHistory(rcFile(HISTORY_FILE), URLHistSize);
-  }
-
-  stopDownload();
+  // save_cookies(rcFile(COOKIE_FILE));
+  // if (UseHistory && SaveURLHist) {
+  //   URLHist->saveHistory(rcFile(HISTORY_FILE), URLHistSize);
+  // }
+  //
+  // stopDownload();
   free_ssl_ctx();
 }
 
@@ -560,26 +557,6 @@ bool App::initialize() {
 /*
  * Initialize routine.
  */
-void App::beginRawMode(void) {
-  // if (!_fmInitialized) {
-  //   // initscr();
-  //   uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_RAW);
-  //   // term_raw();
-  //   // term_noecho();
-  //   _fmInitialized = true;
-  // }
-}
-
-void App::endRawMode(void) {
-  // if (_fmInitialized) {
-  //   CurrentTab->currentBuffer()->layout->clrtoeolx(
-  //       {.row = LASTLINE(), .col = 0});
-  //   // _screen->print();
-  //   uv_tty_set_mode(&g_tty_in, UV_TTY_MODE_NORMAL);
-  //   _fmInitialized = false;
-  // }
-}
-
 static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   static std::shared_ptr<Buffer> prev_buf;
   static Line *prev_line = nullptr;
@@ -656,7 +633,7 @@ int App::mainLoop() {
 
   auto split = ResizableSplitLeft(l, r, &_splitSize);
 
-  auto e = std::bind(&App::onEvent, this, std::placeholders::_1);
+  auto e = std::bind(&App::onEvent, this, &screen, std::placeholders::_1);
   auto component = CatchEvent(split, e);
 
   screen.Loop(component);
@@ -664,7 +641,7 @@ int App::mainLoop() {
   return 0;
 }
 
-bool App::onEvent(const ftxui::Event &event) {
+bool App::onEvent(ftxui::ScreenInteractive *screen, const ftxui::Event &event) {
   // [&](Event event) {
   if (popAddDownloadList()) {
     ldDL(std::make_shared<Platform>());
@@ -702,7 +679,11 @@ bool App::onEvent(const ftxui::Event &event) {
     return true;
   } else {
     auto c = event.character();
-    dispatchPtyIn(c.c_str(), c.size());
+    dispatch(c.c_str(), c.size());
+    if (_dispatcher.empty()) {
+      PLOGI << "exit loop";
+      screen->ExitLoopClosure()();
+    }
     return true;
   }
 
@@ -750,29 +731,6 @@ void App::onResize() {
     return;
   }
   buf->layout->setupscreen(_size);
-}
-
-void App::exit(int) {
-  // const char *ans = "y";
-  // if (checkDownloadList()) {
-  //   ans = inputChar("Download process retains. "
-  //                   "Do you want to exit w3m? (y/n)");
-  // } else if (confirm) {
-  //   ans = inputChar("Do you want to exit w3m? (y/n)");
-  // }
-
-  // if (!(ans && TOLOWER(*ans) == 'y')) {
-  //   // cancel
-  //   App::instance().invalidate();
-  //   return;
-  // }
-
-  // App::instance().exit(0);
-  // stop libuv
-  // exit(i);
-  // uv_read_stop((uv_stream_t *)&g_tty_in);
-  // uv_signal_stop(&g_signal_resize);
-  // uv_timer_stop(&g_timer);
 }
 
 std::string App::searchKeyData() {
@@ -880,9 +838,10 @@ void App::doCmd(const std::string &cmd, std::string_view data) {
   }
 }
 
-void App::dispatchPtyIn(const char *buf, size_t len) {
+// return false if dispather is exit
+bool App::dispatchPtyIn(const char *buf, size_t len) {
   if (len == 0) {
-    return;
+    return true;
   }
   auto c = buf[0];
   std::stringstream _lastKeyCmd;
@@ -897,6 +856,8 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
   //   if (prec_num > PREC_LIMIT)
   //     prec_num = PREC_LIMIT;
   // } else
+
+  auto platform = std::make_shared<Platform>();
   {
     set_buffer_environ(currentTab()->currentBuffer());
     // currentTab()->currentBuffer()->layout.save_buffer_position();
@@ -906,7 +867,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       _lastKeyCmd << " => " << cmd;
       PLOGI << _lastKeyCmd.str();
       auto callback = _w3mFuncList[cmd];
-      callback(std::make_shared<Platform>());
+      callback(platform);
     } else {
       _lastKeyCmd << " => not found";
       PLOGW << _lastKeyCmd.str();
@@ -916,6 +877,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
   _prev_key = _currentKey;
   _currentKey = -1;
   CurrentKeyData = {};
+  return platform->isRunning();
 }
 
 ftxui::Element App::dom() {

@@ -172,7 +172,7 @@ protected:
 
 public:
   virtual ~IPlatform() {}
-
+  virtual void quit() = 0;
   virtual std::shared_ptr<TabBuffer> currentTab() const = 0;
   virtual int exec(std::string_view cmd) = 0;
   virtual void invokeBrowser(std::string_view url,

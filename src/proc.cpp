@@ -363,12 +363,12 @@ execsh(const std::shared_ptr<IPlatform> &platform) {
     // cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
   if (cmd.empty()) {
-    App::instance().endRawMode();
+    // App::instance().endRawMode();
     printf("\n");
     system(cmd.c_str()); /* We do not care about the exit code here! */
     printf("\n[Hit any key]");
     fflush(stdout);
-    App::instance().beginRawMode();
+    // App::instance().beginRawMode();
     // getch();
   }
   co_return;
@@ -608,12 +608,35 @@ movRW(const std::shared_ptr<IPlatform> &platform) {
   co_return;
 }
 
+// void App::exit(int) {
+// const char *ans = "y";
+// if (checkDownloadList()) {
+//   ans = inputChar("Download process retains. "
+//                   "Do you want to exit w3m? (y/n)");
+// } else if (confirm) {
+//   ans = inputChar("Do you want to exit w3m? (y/n)");
+// }
+
+// if (!(ans && TOLOWER(*ans) == 'y')) {
+//   // cancel
+//   App::instance().invalidate();
+//   return;
+// }
+
+// App::instance().exit(0);
+// stop libuv
+// exit(i);
+// uv_read_stop((uv_stream_t *)&g_tty_in);
+// uv_signal_stop(&g_signal_resize);
+// uv_timer_stop(&g_timer);
+// }
+
 /* Quit */
 // ABORT EXIT
 //"Quit without confirmation"
 std::shared_ptr<CoroutineState<void>>
 quitfm(const std::shared_ptr<IPlatform> &platform) {
-  App::instance().exit(0);
+  platform->quit();
   co_return;
 }
 
@@ -622,7 +645,7 @@ quitfm(const std::shared_ptr<IPlatform> &platform) {
 //"Quit with confirmation request"
 std::shared_ptr<CoroutineState<void>>
 qquitfm(const std::shared_ptr<IPlatform> &platform) {
-  App::instance().exit(0);
+  platform->quit();
   co_return;
 }
 

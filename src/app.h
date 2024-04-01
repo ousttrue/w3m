@@ -191,12 +191,9 @@ public:
   int COLS() const { return _size.col; }
   int LASTLINE() const { return (_size.row - 1); }
   bool initialize();
-  void beginRawMode();
-  void endRawMode();
   bool isRawMode() const { return _fmInitialized; }
   int mainLoop();
-  bool onEvent(const ftxui::Event &event);
-  void exit(int rval = 0);
+  bool onEvent(ftxui::ScreenInteractive *screen, const ftxui::Event &event);
 
   int pid() const { return _currentPid; }
 
@@ -208,7 +205,7 @@ public:
 
   void doCmd();
   void doCmd(const std::string &cmd, const std::string_view data);
-  void dispatchPtyIn(const char *buf, size_t len);
+  bool dispatchPtyIn(const char *buf, size_t len);
   void dispatch(const char *buf, size_t len) {
     if (!_dispatcher.top()(buf, len)) {
       _dispatcher.pop();
