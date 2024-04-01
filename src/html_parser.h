@@ -141,12 +141,13 @@ private:
   HtmlCommand internal = {};
   Line renderLine(const Url &url, html_feed_environ *h_env,
                   const std::shared_ptr<LineData> &data, int nlines,
-                  const char *str, AnchorList<FormAnchor> *forms);
+                  const char *str,
+                  const std::shared_ptr<AnchorList<FormAnchor>> &forms);
 
 public:
-  std::shared_ptr<LineLayout> render(const std::shared_ptr<LineLayout> &layout,
-                                     const Url &currentUrl,
-                                     html_feed_environ *h_env);
+  std::shared_ptr<LineData>
+  render(const Url &currentUrl, html_feed_environ *h_env,
+         const std::shared_ptr<AnchorList<FormAnchor>> &old);
 };
 
 struct MetaRefreshInfo {

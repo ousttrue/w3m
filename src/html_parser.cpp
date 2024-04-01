@@ -399,14 +399,14 @@ static std::string textfieldrep(const std::string &s, int width) {
   return n.str();
 }
 
-std::shared_ptr<LineLayout>
-HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
-                   const Url &currentUrl, html_feed_environ *h_env) {
+std::shared_ptr<LineData>
+HtmlParser::render(const Url &currentUrl, html_feed_environ *h_env,
+                   const std::shared_ptr<AnchorList<FormAnchor>> &old) {
 
-  auto old = *layout->formated->_formitem;
-  layout->formated->clear(_width);
-  layout->formated->baseURL = currentUrl;
-  layout->formated->title = h_env->title;
+  auto formated = std::make_shared<LineData>();
+  formated->clear(_width);
+  formated->baseURL = currentUrl;
+  formated->title = h_env->title;
 
   LineFeed feed(h_env->buf);
   for (int nlines = 0; auto _str = feed.textlist_feed(); ++nlines) {
@@ -417,32 +417,30 @@ HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
     }
 
     auto line =
-        renderLine(currentUrl, h_env, layout->formated, nlines, str.c_str(), &old);
+        renderLine(currentUrl, h_env, formated, nlines, str.c_str(), old);
 
     /* end of processing for one line */
     if (!internal) {
       line.PPUSH(0, 0);
-      layout->formated->lines.push_back(line);
+      formated->lines.push_back(line);
     }
     if (internal == HTML_N_INTERNAL) {
       internal = {};
     }
   }
 
-  layout->formated->formlist = forms;
+  formated->formlist = forms;
   if (n_textarea) {
-    layout->formated->addMultirowsForm();
+    formated->addMultirowsForm();
   }
 
-  layout->fix_size(h_env->limit);
-  layout->formResetBuffer(layout->formated->_formitem.get());
-
-  return layout;
+  return formated;
 }
 
-Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
-                            const std::shared_ptr<LineData> &data, int nlines, const char *str,
-                            AnchorList<FormAnchor> *old) {
+Line HtmlParser::renderLine(
+    const Url &url, html_feed_environ *h_env,
+    const std::shared_ptr<LineData> &data, int nlines, const char *str,
+    const std::shared_ptr<AnchorList<FormAnchor>> &old) {
 
   Line line;
 
@@ -1847,7 +1845,7 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
         if (h_env->obuf.table_level >= 0) {
           auto tbl0 = tables[h_env->obuf.table_level];
           std::stringstream ss;
-          ss <<"<table_alt tid=" << tbl0->ntable << ">";
+          ss << "<table_alt tid=" << tbl0->ntable << ">";
           str = ss.str();
           if (tbl0->row < 0)
             continue;

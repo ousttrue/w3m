@@ -46,8 +46,9 @@ struct html_feed_environ {
 
   void completeHTMLstream();
 
-  std::shared_ptr<LineLayout> render(const std::shared_ptr<LineLayout> &layout,
-                                     const Url &currentUrl);
+  std::shared_ptr<LineData>
+  render(const Url &currentUrl,
+         const std::shared_ptr<AnchorList<FormAnchor>> &old);
 
   int HTML_Paragraph(const std::shared_ptr<HtmlTag> &tag);
 
@@ -167,15 +168,6 @@ struct html_feed_environ {
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
 };
 
-#define MAX_ENV_LEVEL 20
-inline void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
-                           const Url &currentURL, std::string_view body,
-                           bool internal = false) {
-  html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0);
-  htmlenv1.buf = GeneralList::newGeneralList();
-  htmlenv1.parseLine(body, internal);
-  htmlenv1.obuf.status = R_ST_NORMAL;
-  htmlenv1.completeHTMLstream();
-  htmlenv1.obuf.flushline(htmlenv1.buf, 0, 2, htmlenv1.limit);
-  htmlenv1.render(layout, currentURL);
-}
+void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
+                    const Url &currentURL, std::string_view body,
+                    bool internal = false);
