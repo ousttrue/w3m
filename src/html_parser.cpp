@@ -6,7 +6,6 @@
 #include "entity.h"
 #include "anchorlist.h"
 #include "line_data.h"
-#include "line_layout.h"
 #include "symbol.h"
 #include "url_quote.h"
 #include "form.h"

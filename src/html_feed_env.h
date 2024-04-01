@@ -168,6 +168,8 @@ struct html_feed_environ {
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
 };
 
-void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
-                    const Url &currentURL, std::string_view body,
-                    bool internal = false);
+#define MAX_ENV_LEVEL 20
+std::shared_ptr<LineData>
+loadHTMLstream(int width, const Url &currentURL, std::string_view body,
+               const std::shared_ptr<AnchorList<FormAnchor>> &old,
+               bool internal = false);

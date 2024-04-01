@@ -9,7 +9,6 @@
 #include "symbol.h"
 #include "utf8.h"
 #include "quote.h"
-#include "line_layout.h"
 #include <assert.h>
 #include <sstream>
 
@@ -1018,17 +1017,15 @@ html_feed_environ::createFormItem(const std::shared_ptr<HtmlTag> &tag) {
   return item;
 }
 
-#define MAX_ENV_LEVEL 20
-void loadHTMLstream(const std::shared_ptr<LineLayout> &layout, int width,
-                    const Url &currentURL, std::string_view body,
-                    bool internal) {
+std::shared_ptr<LineData>
+loadHTMLstream(int width, const Url &currentURL, std::string_view body,
+               const std::shared_ptr<AnchorList<FormAnchor>> &old,
+               bool internal) {
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0);
   htmlenv1.buf = GeneralList::newGeneralList();
   htmlenv1.parseLine(body, internal);
   htmlenv1.obuf.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();
   htmlenv1.obuf.flushline(htmlenv1.buf, 0, 2, htmlenv1.limit);
-  layout->formated = htmlenv1.render(currentURL, layout->formated->_formitem);
-  layout->fix_size(htmlenv1.limit);
-  layout->formResetBuffer(layout->formated->_formitem.get());
+  return htmlenv1.render(currentURL, old);
 }

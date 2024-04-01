@@ -664,7 +664,11 @@ bool App::onEvent(ftxui::ScreenInteractive *screen, const ftxui::Event &event) {
     auto body = buf->res->getBody();
     auto visual = buf->layout->visual;
     // if (buf->res->is_html_type()) {
-    loadHTMLstream(buf->layout, _size.col, buf->res->currentURL, body);
+    buf->layout->formated =
+        loadHTMLstream(_size.col, buf->res->currentURL, body,
+                       buf->layout->formated->_formitem);
+    // buf->layout->fix_size(htmlenv1.limit);
+    // buf->layout->formResetBuffer(layout->formated->_formitem.get());
     // } else {
     //   loadBuffer(buf->layout, buf->res.get(), body);
     // }
@@ -909,10 +913,12 @@ ftxui::Element App::tabs() {
       tabs.push_back(ftxui::separator());
     }
     if (tab == currentTab()) {
-      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->formated->title) |
-                     ftxui::inverted);
+      tabs.push_back(
+          ftxui::text(tab->currentBuffer()->layout->formated->title) |
+          ftxui::inverted);
     } else {
-      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->formated->title));
+      tabs.push_back(
+          ftxui::text(tab->currentBuffer()->layout->formated->title));
     }
   }
 
