@@ -23,8 +23,6 @@ extern bool displayLineInfo;
 extern int prev_key;
 extern std::string CurrentKeyData;
 extern std::string CurrentCmdData;
-extern int prec_num;
-#define PREC_NUM (prec_num ? prec_num : 1)
 extern bool on_target;
 extern std::string keymap_file;
 

@@ -44,7 +44,7 @@ std::string keymap_file = KEYMAP_FILE;
 
 std::string CurrentKeyData;
 std::string CurrentCmdData;
-int prec_num = 0;
+// int prec_num = 0;
 bool on_target = true;
 #define PREC_LIMIT 10000
 
@@ -781,7 +781,7 @@ int App::searchKeyNum() {
   if ((d = searchKeyData()).size()) {
     n = stoi(d);
   }
-  return n * PREC_NUM;
+  return n;
 }
 
 std::string App::searchKeyData() {
@@ -919,7 +919,6 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
       _lastKeyCmd << " => not found";
       PLOGW << _lastKeyCmd.str();
     }
-    prec_num = 0;
   }
   // }
   _prev_key = _currentKey;

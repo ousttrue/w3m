@@ -260,15 +260,13 @@ int LineLayout::next_nonnull_line(Line *line) {
 }
 
 /* Go to specified line */
-void LineLayout::_goLine(std::string_view l, int prec_num) {
+void LineLayout::_goLine(std::string_view l) {
   if (l.empty() || this->currentLine() == nullptr) {
     return;
   }
 
   this->visual.cursorCol(0);
-  if (((l[0] == '^') || (l[0] == '$')) && prec_num) {
-    this->visual.cursorRow(prec_num);
-  } else if (l[0] == '^') {
+  if (l[0] == '^') {
     this->visual.cursorHome();
   } else if (l[0] == '$') {
     // this->_scroll.row = linenumber(this->lastLine()) - (this->LINES + 1) / 2;
