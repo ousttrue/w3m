@@ -229,12 +229,6 @@ public:
     return found->second;
   }
 
-  FuncContext context() {
-    return {
-        // .curretTab = currentTab(),
-    };
-  }
-
   void pushDispatcher(const Dispatcher &dispatcher) {
     _dispatcher.push(dispatcher);
   }

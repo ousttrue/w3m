@@ -1,9 +1,7 @@
 #include "app.h"
 #include "quote.h"
 #include "tmpfile.h"
-#include "option_param.h"
 #include "ioutil.h"
-#include "event.h"
 #include "url_decode.h"
 #include "etc.h"
 #include "ctrlcode.h"
@@ -59,6 +57,10 @@ static void *die_oom(size_t bytes) {
    */
   return nullptr;
 }
+
+class Platform: public IPlatform
+{
+};
 
 App::App() {
 
@@ -668,7 +670,7 @@ int App::mainLoop() {
 bool App::onEvent(const ftxui::Event &event) {
   // [&](Event event) {
   if (popAddDownloadList()) {
-    ldDL(context());
+    ldDL(std::make_shared<Platform>());
   }
 
   auto buf = currentTab()->currentBuffer();
@@ -884,7 +886,7 @@ void App::doCmd(const std::string &cmd, std::string_view data) {
     _currentKey = -1;
     CurrentKeyData = {};
     CurrentCmdData = data;
-    found->second(context());
+    found->second(std::make_shared<Platform>());
     CurrentCmdData = {};
   }
 }
@@ -915,7 +917,7 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
         _lastKeyCmd << " => " << cmd;
         PLOGI << _lastKeyCmd.str();
         auto callback = _w3mFuncList[cmd];
-        callback(context());
+        callback(std::make_shared<Platform>());
       } else {
         _lastKeyCmd << " => not found";
         PLOGW << _lastKeyCmd.str();
