@@ -4,7 +4,6 @@
 #include "symbol.h"
 #include "url_decode.h"
 #include "quote.h"
-#include "app.h"
 #include "search.h"
 #include "search.h"
 #include "tabbuffer.h"
@@ -15,12 +14,14 @@
 #include "anchorlist.h"
 #include "ctrlcode.h"
 #include "line.h"
-#include "proc.h"
 #include "history.h"
 #include "cookie.h"
 #include "downloadlist.h"
+#include "app.h"
+
 #include <sys/stat.h>
 #include <sstream>
+#include <plog/Log.h>
 
 DefaultUrlStringType DefaultURLString = DEFAULT_URL_CURRENT;
 
@@ -318,11 +319,11 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
     return buf;
   }
 
-  if (CurrentTab->currentBuffer()->res->type == "text/plain") {
+  if (this->res->type == "text/plain") {
     auto buf = Buffer::create();
     buf->res->type = "text/html";
-    buf->layout->data.title = std::string("HTML view of ") +
-                              CurrentTab->currentBuffer()->layout->data.title;
+    buf->layout->data.title =
+        std::string("HTML view of ") + this->layout->data.title;
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
@@ -336,7 +337,7 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
 std::shared_ptr<Buffer> Buffer::gotoLabel(const std::string &label) {
   auto a = this->layout->data._name->searchAnchor(label);
   if (!a) {
-    App::instance().disp_message(label + " is not found");
+    PLOGE << label << ": not found";
     return {};
   }
 
@@ -355,7 +356,7 @@ std::shared_ptr<Buffer> Buffer::gotoLabel(const std::string &label) {
 
 std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
                                          const std::shared_ptr<Form> &request) {
-  App::instance().message(std::string("loading ") + url);
+  PLOGI << "loading: " << url;
   // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
@@ -371,8 +372,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
 
   auto res = loadGeneralFile(url, this->layout->data.baseURL, option, request);
   if (!res) {
-    auto emsg = std::string("Can't load ") + url;
-    App::instance().disp_err_message(emsg);
+    PLOGE << "Can't load: " << url;
     return {};
   }
 

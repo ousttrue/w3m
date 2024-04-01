@@ -1,14 +1,12 @@
 #include "readbuffer.h"
 #include "push_symbol.h"
 #include "option_param.h"
-#include "app.h"
 #include "html_feed_env.h"
 #include "html_command.h"
 #include "table.h"
 #include "html_tag.h"
 #include "myctype.h"
 #include "entity.h"
-#include "proc.h"
 #include "generallist.h"
 #include "matrix.h"
 #include "utf8.h"
@@ -20,6 +18,7 @@
 #include <string.h>
 #include <math.h>
 #include <vector>
+#include <sstream>
 
 #define RULE_WIDTH 1
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))
@@ -43,21 +42,6 @@
 #define abs(a) ((a) >= 0. ? (a) : -(a))
 #endif /* not abs */
 
-static double weight(int x) {
-
-  if (x < App::instance().COLS())
-    return (double)x;
-  else
-    return App::instance().COLS() *
-           (log((double)x / App::instance().COLS()) + 1.);
-}
-
-static double weight2(int a) {
-  return (double)a / App::instance().COLS() * 4 + 1.;
-}
-
-#define sigma_td(a) (0.5 * weight2(a))     /* <td width=...> */
-#define sigma_td_nw(a) (32 * weight2(a))   /* <td ...> */
 #define sigma_table(a) (0.25 * weight2(a)) /* <table width=...> */
 #define sigma_table_nw(a) (2 * weight2(a)) /* <table...> */
 
@@ -166,8 +150,9 @@ int table::table_border_width() const {
   }
 }
 
-std::shared_ptr<table> table::newTable() {
-  auto t = std::make_shared<struct table>();
+std::shared_ptr<table> table::newTable(int cols) {
+  auto t = std::shared_ptr<table>(new table);
+  t->_cols = cols;
   t->max_rowsize = MAXROW;
   t->tabdata.resize(MAXROW);
   t->tabattr.resize(MAXROW);
@@ -1525,13 +1510,13 @@ void table::renderTable(HtmlParser *parser, int max_width,
 #endif
 
 std::shared_ptr<table> table::begin_table(int border, int spacing, int padding,
-                                          int vspace) {
+                                          int vspace, int cols) {
   int mincell = minimum_cellspacing(border);
   int rcellspacing;
   int mincell_pixels = round(mincell * pixel_per_char);
   int ppc = round(pixel_per_char);
 
-  auto t = table::newTable();
+  auto t = table::newTable(cols);
   t->row = t->col = -1;
   t->maxcol = -1;
   t->maxrow = -1;

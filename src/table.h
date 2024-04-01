@@ -97,6 +97,17 @@ enum table_attr : uint16_t {
 ENUM_OP_INSTANCE(table_attr);
 
 struct table {
+  int _cols;
+  double weight(int x) {
+    if (x < _cols)
+      return (double)x;
+    else
+      return _cols * (log((double)x / _cols) + 1.);
+  }
+  double weight2(int a) { return (double)a / _cols * 4 + 1.; }
+  double sigma_td(int a) { return (0.5 * weight2(a)); /* <td width=...> */ }
+  double sigma_td_nw(int a) { return 32 * weight2(a); /* <td ...> */ }
+
   int total_width;
   int row;
   int col;
@@ -104,6 +115,7 @@ struct table {
   int vspace;
 
 private:
+  table() {}
   int maxrow;
   int maxcol;
   int max_rowsize;
@@ -134,9 +146,9 @@ private:
   int sloppy_width;
 
 public:
-  static std::shared_ptr<table> newTable();
+  static std::shared_ptr<table> newTable(int cols);
   static std::shared_ptr<table> begin_table(int border, int spacing,
-                                            int padding, int vspace);
+                                            int padding, int vspace, int cols);
   int feed_table(class HtmlParser *parser, std::string line,
                  struct table_mode *mode, int width, int internal);
   void end_table();

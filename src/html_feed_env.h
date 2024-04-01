@@ -107,7 +107,7 @@ struct html_feed_environ {
 
   int HTML_IMG_ALT_exit();
 
-  int HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag, int cols);
 
   int HTML_CENTER_enter();
 

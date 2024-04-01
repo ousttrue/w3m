@@ -540,7 +540,8 @@ int html_feed_environ::HTML_IMG_ALT_exit() {
   return 1;
 }
 
-int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag) {
+int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag,
+                                        int cols) {
   this->parser.close_anchor(this);
   if (this->obuf.table_level + 1 >= MAX_TABLE) {
     return -1;
@@ -595,7 +596,8 @@ int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag) {
     y = MAX_CELLPADDING;
   if (z > MAX_VSPACE)
     z = MAX_VSPACE;
-  this->parser.tables[this->obuf.table_level] = table::begin_table(w, x, y, z);
+  this->parser.tables[this->obuf.table_level] =
+      table::begin_table(w, x, y, z, cols);
   this->parser.table_mode[this->obuf.table_level].pre_mode = {};
   this->parser.table_mode[this->obuf.table_level].indent_level = 0;
   this->parser.table_mode[this->obuf.table_level].nobr_level = 0;

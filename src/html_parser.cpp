@@ -1537,7 +1537,7 @@ int HtmlParser::pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
   case HTML_N_INPUT_ALT:
     return h_env->obuf.HTML_INPUT_ALT_exit();
   case HTML_TABLE:
-    return h_env->HTML_TABLE_enter(tag);
+    return h_env->HTML_TABLE_enter(tag, _width);
   case HTML_N_TABLE:
     // should be processed in HTMLlineproc()
     return 1;

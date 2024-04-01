@@ -26,7 +26,6 @@
 #include "http_session.h"
 #include "local_cgi.h"
 #include "search.h"
-#include "app.h"
 #include "myctype.h"
 #include "tabbuffer.h"
 #include "buffer.h"
