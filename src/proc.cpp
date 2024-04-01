@@ -2,35 +2,7 @@
 #include "tabbuffer.h"
 #include "buffer.h"
 
-#include "quote.h"
-#include "option.h"
-#include "ioutil.h"
-#include "dict.h"
-#include "app.h"
-#include "file_util.h"
-#include "html_feed_env.h"
-#include "http_response.h"
-#include "url_quote.h"
-#include "search.h"
-#include "mimetypes.h"
-#include "linein.h"
-#include "cookie.h"
-#include "rc.h"
-#include "form.h"
-#include "history.h"
-#include "anchorlist.h"
-#include "etc.h"
-#include "mailcap.h"
-#include "cmp.h"
-#include "http_request.h"
-#include "http_response.h"
-#include "http_session.h"
-#include "local_cgi.h"
-#include "search.h"
-#include "myctype.h"
-#include <sys/stat.h>
-
-static std::string SearchString;
+static std::string s_searchString;
 // if (str != nullptr && str != SearchString)
 //   SearchString = str;
 // if (SearchString == nullptr || *SearchString == '\0')
@@ -141,23 +113,52 @@ rdrwSc(const std::shared_ptr<IPlatform> &platform) {
   co_return;
 }
 
+#include "quote.h"
+#include "option.h"
+#include "ioutil.h"
+#include "dict.h"
+#include "app.h"
+#include "file_util.h"
+#include "html_feed_env.h"
+#include "http_response.h"
+#include "url_quote.h"
+#include "search.h"
+#include "mimetypes.h"
+#include "linein.h"
+#include "cookie.h"
+#include "rc.h"
+#include "form.h"
+#include "history.h"
+#include "anchorlist.h"
+#include "etc.h"
+#include "mailcap.h"
+#include "cmp.h"
+#include "http_request.h"
+#include "http_response.h"
+#include "http_session.h"
+#include "local_cgi.h"
+#include "search.h"
+#include "myctype.h"
+// #include <sys/stat.h>
+
 // SEARCH SEARCH_FORE WHEREIS
 //"Search forward"
 std::shared_ptr<CoroutineState<void>>
 srchfor(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
 
-  bool disp = false;
+  // bool disp = false;
   auto str = App::instance().searchKeyData();
   if (str.empty()) {
     // str = inputStrHist(prompt, nullptr, TextHist);
-    if (str.empty())
-      str = SearchString;
-    if (str.empty()) {
-      co_return;
-    }
-    disp = true;
   }
+  if (str.empty()) {
+    str = s_searchString;
+  }
+  if (str.empty()) {
+    co_return;
+  }
+  // disp = true;
 
   srch(buf->layout, forwardSearch, "Forward: ");
   co_return;
@@ -198,7 +199,7 @@ isrchbak(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 srchnxt(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  srch_nxtprv(buf->layout, SearchString, 0);
+  srch_nxtprv(buf->layout, s_searchString, 0);
   co_return;
 }
 
@@ -208,7 +209,7 @@ srchnxt(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 srchprv(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  srch_nxtprv(buf->layout, SearchString, 1);
+  srch_nxtprv(buf->layout, s_searchString, 1);
   co_return;
 }
 
