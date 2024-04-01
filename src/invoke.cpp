@@ -20,9 +20,9 @@ std::string ExtBrowser7;
 std::string ExtBrowser8;
 std::string ExtBrowser9;
 
-int exec_cmd(const std::string &cmd) {
+int exec_cmd(std::string_view cmd) {
   // App::instance().endRawMode();
-  if (auto rv = system(cmd.c_str())) {
+  if (auto rv = system(to_str(cmd).c_str())) {
     printf("\n[Hit any key]");
     fflush(stdout);
     // App::instance().beginRawMode();

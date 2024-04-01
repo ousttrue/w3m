@@ -78,6 +78,7 @@ without_gc_lib = static_library(
         'push_symbol.cpp',
         'option.cpp',
         'rc.cpp',
+        'platform.cpp',
     ],
     cpp_args: defs,
     dependencies: [

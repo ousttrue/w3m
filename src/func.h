@@ -169,6 +169,9 @@ protected:
 
 public:
   virtual ~IPlatform() {}
+  virtual int exec(std::string_view cmd) = 0;
+  virtual void invokeBrowser(std::string_view url, std::string_view browser,
+                             int prec_num) = 0;
 };
 
 using Func = std::function<std::shared_ptr<CoroutineState<void>>(

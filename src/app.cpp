@@ -18,6 +18,7 @@
 #include "cookie.h"
 #include "history.h"
 #include "http_response.h"
+#include "platform.h"
 #include <sys/stat.h>
 #include <iostream>
 #include <sstream>
@@ -57,10 +58,6 @@ static void *die_oom(size_t bytes) {
    */
   return nullptr;
 }
-
-class Platform: public IPlatform
-{
-};
 
 App::App() {
 
@@ -903,27 +900,27 @@ void App::dispatchPtyIn(const char *buf, size_t len) {
     _lastKeyCmd << "0x" << std::hex << (int)c;
   }
   // if (IS_ASCII(c)) { /* Ascii */
-    // if (('0' <= c) && (c <= '9') && (prec_num || (_GlobalKeymap[c].empty()))) {
-    //   prec_num = prec_num * 10 + (int)(c - '0');
-    //   if (prec_num > PREC_LIMIT)
-    //     prec_num = PREC_LIMIT;
-    // } else 
-    {
-      set_buffer_environ(currentTab()->currentBuffer());
-      // currentTab()->currentBuffer()->layout.save_buffer_position();
-      _currentKey = c;
-      auto cmd = _GlobalKeymap[c];
-      if (cmd.size()) {
-        _lastKeyCmd << " => " << cmd;
-        PLOGI << _lastKeyCmd.str();
-        auto callback = _w3mFuncList[cmd];
-        callback(std::make_shared<Platform>());
-      } else {
-        _lastKeyCmd << " => not found";
-        PLOGW << _lastKeyCmd.str();
-      }
-      prec_num = 0;
+  // if (('0' <= c) && (c <= '9') && (prec_num || (_GlobalKeymap[c].empty()))) {
+  //   prec_num = prec_num * 10 + (int)(c - '0');
+  //   if (prec_num > PREC_LIMIT)
+  //     prec_num = PREC_LIMIT;
+  // } else
+  {
+    set_buffer_environ(currentTab()->currentBuffer());
+    // currentTab()->currentBuffer()->layout.save_buffer_position();
+    _currentKey = c;
+    auto cmd = _GlobalKeymap[c];
+    if (cmd.size()) {
+      _lastKeyCmd << " => " << cmd;
+      PLOGI << _lastKeyCmd.str();
+      auto callback = _w3mFuncList[cmd];
+      callback(std::make_shared<Platform>());
+    } else {
+      _lastKeyCmd << " => not found";
+      PLOGW << _lastKeyCmd.str();
     }
+    prec_num = 0;
+  }
   // }
   _prev_key = _currentKey;
   _currentKey = -1;

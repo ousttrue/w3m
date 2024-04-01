@@ -11,7 +11,7 @@ extern std::string ExtBrowser7;
 extern std::string ExtBrowser8;
 extern std::string ExtBrowser9;
 
-int exec_cmd(const std::string &cmd);
+int exec_cmd(std::string_view cmd);
 
 std::string myExtCommand(std::string_view cmd, std::string_view arg,
                          bool redirect);
