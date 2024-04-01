@@ -1,3 +1,5 @@
+// http://jla1.linux.or.jp/JF/JFdocs/archive/Keyboard-and-Console-HOWTO.html
+// https://www.microfocus.co.jp/manuals/SE40SP2/ghakey.htm
 #pragma once
 #include "linein.h"
 #include <coroutine>
@@ -163,12 +165,15 @@ struct std::coroutine_traits<std::shared_ptr<CoroutineState<T>>, ArgTypes...> {
   using promise_type = CoroutinePromise<T>;
 };
 
+struct TabBuffer;
 class IPlatform {
 protected:
   IPlatform() {}
 
 public:
   virtual ~IPlatform() {}
+
+  virtual std::shared_ptr<TabBuffer> currentTab() const = 0;
   virtual int exec(std::string_view cmd) = 0;
   virtual void invokeBrowser(std::string_view url, std::string_view browser,
                              int prec_num) = 0;

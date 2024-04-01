@@ -742,7 +742,7 @@ void App::onResize() {
   _size = getTermSize();
   _splitSize = _size.col / 2;
   _appender._height = _size.row;
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = currentTab()->currentBuffer();
   if (!buf) {
     return;
   }
@@ -1185,10 +1185,10 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
       target == "_top"  /* this link is specified to be opened as an
                                    indivisual * page */
   ) {
-    CurrentTab->pushBuffer(buf);
+    currentTab()->pushBuffer(buf);
   } else {
     auto label = std::string("_") + to_str(target);
-    auto buf = CurrentTab->currentBuffer();
+    auto buf = currentTab()->currentBuffer();
     auto al = buf->layout->data._name->searchAnchor(label);
     if (al) {
       buf->layout->visual.cursorRow(al->start.line);

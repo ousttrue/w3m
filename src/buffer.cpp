@@ -560,7 +560,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
       this->layout->data.need_reshape = true;
       auto form = fi->parent;
       if (fi->accept || form->items.size() == 1) {
-        co_return CurrentTab->currentBuffer()->do_submit(fi, a);
+        co_return App::instance().currentTab()->currentBuffer()->do_submit(fi, a);
       }
     }
 

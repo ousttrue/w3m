@@ -1,6 +1,5 @@
 #include "proc.h"
 #include "quote.h"
-#include "tmpfile.h"
 #include "option.h"
 #include "ioutil.h"
 #include "dict.h"
@@ -50,7 +49,7 @@ nulcmd(const std::shared_ptr<IPlatform> &platform) { /* do nothing */
 //"Scroll down one page"
 std::shared_ptr<CoroutineState<void>>
 pgFore(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   buf->layout->visual.scrollMoveRow(
       (prec_num ? App::instance().searchKeyNum()
                 : App::instance().searchKeyNum() * buf->layout->LINES()));
@@ -62,7 +61,7 @@ pgFore(const std::shared_ptr<IPlatform> &platform) {
 //"Scroll up one page"
 std::shared_ptr<CoroutineState<void>>
 pgBack(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   buf->layout->visual.scrollMoveRow(
       (-(prec_num ? App::instance().searchKeyNum()
                   : App::instance().searchKeyNum() * buf->layout->LINES())));
@@ -74,7 +73,7 @@ pgBack(const std::shared_ptr<IPlatform> &platform) {
 //"Scroll down half a page"
 std::shared_ptr<CoroutineState<void>>
 hpgFore(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   buf->layout->visual.scrollMoveRow(
       (App::instance().searchKeyNum() * (buf->layout->LINES() / 2)));
   co_return;
@@ -85,7 +84,7 @@ hpgFore(const std::shared_ptr<IPlatform> &platform) {
 //"Scroll up half a page"
 std::shared_ptr<CoroutineState<void>>
 hpgBack(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   buf->layout->visual.scrollMoveRow(
       (-App::instance().searchKeyNum() * (buf->layout->LINES() / 2)));
   co_return;
@@ -96,7 +95,7 @@ hpgBack(const std::shared_ptr<IPlatform> &platform) {
 //"Scroll the screen up one line"
 std::shared_ptr<CoroutineState<void>>
 lup1(const std::shared_ptr<IPlatform> &platform) {
-  CurrentTab->currentBuffer()->layout->visual.scrollMoveRow(
+  platform->currentTab()->currentBuffer()->layout->visual.scrollMoveRow(
       (App::instance().searchKeyNum()));
   co_return;
 }
@@ -106,7 +105,7 @@ lup1(const std::shared_ptr<IPlatform> &platform) {
 //"Scroll the screen down one line"
 std::shared_ptr<CoroutineState<void>>
 ldown1(const std::shared_ptr<IPlatform> &platform) {
-  CurrentTab->currentBuffer()->layout->visual.scrollMoveRow(
+  platform->currentTab()->currentBuffer()->layout->visual.scrollMoveRow(
       (-App::instance().searchKeyNum()));
   co_return;
 }
@@ -116,7 +115,7 @@ ldown1(const std::shared_ptr<IPlatform> &platform) {
 //"Center on cursor line"
 std::shared_ptr<CoroutineState<void>>
 ctrCsrV(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
 
@@ -130,7 +129,7 @@ ctrCsrV(const std::shared_ptr<IPlatform> &platform) {
 //"Center on cursor column"
 std::shared_ptr<CoroutineState<void>>
 ctrCsrH(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
 
@@ -153,7 +152,7 @@ rdrwSc(const std::shared_ptr<IPlatform> &platform) {
 //"Search forward"
 std::shared_ptr<CoroutineState<void>>
 srchfor(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
 
   bool disp = false;
   auto str = App::instance().searchKeyData();
@@ -175,7 +174,7 @@ srchfor(const std::shared_ptr<IPlatform> &platform) {
 //"Incremental search forward"
 std::shared_ptr<CoroutineState<void>>
 isrchfor(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   isrch(buf->layout, forwardSearch, "I-search: ");
   co_return;
 }
@@ -186,7 +185,7 @@ isrchfor(const std::shared_ptr<IPlatform> &platform) {
 //"Search backward"
 std::shared_ptr<CoroutineState<void>>
 srchbak(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   srch(buf->layout, backwardSearch, "Backward: ");
   co_return;
 }
@@ -195,7 +194,7 @@ srchbak(const std::shared_ptr<IPlatform> &platform) {
 //"Incremental search backward"
 std::shared_ptr<CoroutineState<void>>
 isrchbak(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   isrch(buf->layout, backwardSearch, "I-search backward: ");
   co_return;
 }
@@ -205,7 +204,7 @@ isrchbak(const std::shared_ptr<IPlatform> &platform) {
 //"Continue search forward"
 std::shared_ptr<CoroutineState<void>>
 srchnxt(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   srch_nxtprv(buf->layout, SearchString, 0);
   co_return;
 }
@@ -215,7 +214,7 @@ srchnxt(const std::shared_ptr<IPlatform> &platform) {
 //"Continue search backward"
 std::shared_ptr<CoroutineState<void>>
 srchprv(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   srch_nxtprv(buf->layout, SearchString, 1);
   co_return;
 }
@@ -225,7 +224,7 @@ srchprv(const std::shared_ptr<IPlatform> &platform) {
 //"Shift screen left"
 std::shared_ptr<CoroutineState<void>>
 shiftl(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
   int column = buf->layout->visual.cursor().col;
@@ -239,23 +238,23 @@ shiftl(const std::shared_ptr<IPlatform> &platform) {
 //"Shift screen right"
 std::shared_ptr<CoroutineState<void>>
 shiftr(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
-  // int column = CurrentTab->currentBuffer()->layout->currentColumn;
-  // CurrentTab->currentBuffer()->layout->columnSkip(
+  // int column = platform->currentTab()->currentBuffer()->layout->currentColumn;
+  // platform->currentTab()->currentBuffer()->layout->columnSkip(
   //     App::instance().searchKeyNum() *
   //         (App::instance().contentCols() - 1) -
   //     1);
-  // CurrentTab->currentBuffer()->layout->shiftvisualpos(
-  //     CurrentTab->currentBuffer()->layout->currentColumn - column);
+  // platform->currentTab()->currentBuffer()->layout->shiftvisualpos(
+  //     platform->currentTab()->currentBuffer()->layout->currentColumn - column);
 }
 
 // RIGHT
 //"Shift screen one column right"
 std::shared_ptr<CoroutineState<void>>
 col1R(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   Line *l = buf->layout->currentLine();
   int j, column, n = App::instance().searchKeyNum();
 
@@ -263,10 +262,10 @@ col1R(const std::shared_ptr<IPlatform> &platform) {
     co_return;
   for (j = 0; j < n; j++) {
     // column = buf->layout->currentColumn;
-    // CurrentTab->currentBuffer()->layout->columnSkip(1);
+    // platform->currentTab()->currentBuffer()->layout->columnSkip(1);
     // if (column == buf->layout->currentColumn)
     //   break;
-    // CurrentTab->currentBuffer()->layout->shiftvisualpos(1);
+    // platform->currentTab()->currentBuffer()->layout->shiftvisualpos(1);
   }
 }
 
@@ -274,7 +273,7 @@ col1R(const std::shared_ptr<IPlatform> &platform) {
 //"Shift screen one column left"
 std::shared_ptr<CoroutineState<void>>
 col1L(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   Line *l = buf->layout->currentLine();
   int j, n = App::instance().searchKeyNum();
 
@@ -283,8 +282,8 @@ col1L(const std::shared_ptr<IPlatform> &platform) {
   for (j = 0; j < n; j++) {
     // if (buf->layout->currentColumn == 0)
     //   break;
-    // CurrentTab->currentBuffer()->layout->columnSkip(-1);
-    // CurrentTab->currentBuffer()->layout->shiftvisualpos(-1);
+    // platform->currentTab()->currentBuffer()->layout->columnSkip(-1);
+    // platform->currentTab()->currentBuffer()->layout->shiftvisualpos(-1);
   }
 }
 
@@ -352,7 +351,7 @@ readsh(const std::shared_ptr<IPlatform> &platform) {
   }
 
   auto buf = Buffer::create(res);
-  CurrentTab->pushBuffer(buf);
+  platform->currentTab()->pushBuffer(buf);
 }
 
 /* Execute shell command */
@@ -391,7 +390,7 @@ ldfile(const std::shared_ptr<IPlatform> &platform) {
   }
   if (auto res = loadGeneralFile(file_to_url(fn), {}, {.no_referer = true})) {
     auto buf = Buffer::create(res);
-    CurrentTab->pushBuffer(buf);
+    platform->currentTab()->pushBuffer(buf);
   } else {
     // char *emsg = Sprintf("%s not found", fn.c_str())->ptr;
     // App::instance().disp_err_message(emsg);
@@ -412,9 +411,9 @@ ldhelp(const std::shared_ptr<IPlatform> &platform) {
   tmp << "file:///$LIB/" HELP_CGI CGI_EXTENSION "?version="
       << form_quote(w3m_version)
       << "&lang=" << form_quote(std::string_view(lang.c_str(), n));
-  if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
+  if (auto buf = platform->currentTab()->currentBuffer()->cmd_loadURL(
           tmp.str().c_str(), {}, {.no_referer = true}, nullptr)) {
-    CurrentTab->pushBuffer(buf);
+    platform->currentTab()->pushBuffer(buf);
   }
 
   co_return;
@@ -424,7 +423,7 @@ ldhelp(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor left"
 std::shared_ptr<CoroutineState<void>>
 movL(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveCol(-m);
   co_return;
@@ -434,7 +433,7 @@ movL(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor left. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>>
 movL1(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveCol(-m);
   co_return;
@@ -444,7 +443,7 @@ movL1(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor right"
 std::shared_ptr<CoroutineState<void>>
 movR(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveCol(m);
   co_return;
@@ -454,7 +453,7 @@ movR(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor right. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>>
 movR1(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveCol(m);
   co_return;
@@ -464,7 +463,7 @@ movR1(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor down"
 std::shared_ptr<CoroutineState<void>>
 movD(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveRow(m);
   co_return;
@@ -474,7 +473,7 @@ movD(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor down. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>>
 movD1(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveRow(m);
   co_return;
@@ -484,7 +483,7 @@ movD1(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor up"
 std::shared_ptr<CoroutineState<void>>
 movU(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveRow(-m);
   co_return;
@@ -494,7 +493,7 @@ movU(const std::shared_ptr<IPlatform> &platform) {
 //"Cursor up. With edge touched, slide"
 std::shared_ptr<CoroutineState<void>>
 movU1(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int m = App::instance().searchKeyNum();
   buf->layout->visual.cursorMoveRow(-m);
   co_return;
@@ -504,7 +503,7 @@ movU1(const std::shared_ptr<IPlatform> &platform) {
 //"Move to the previous word"
 std::shared_ptr<CoroutineState<void>>
 movLW(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int i, n = App::instance().searchKeyNum();
 
   if (buf->layout->empty())
@@ -563,51 +562,51 @@ movRW(const std::shared_ptr<IPlatform> &platform) {
   //   int ppos;
   //   int i, n = App::instance().searchKeyNum();
   //
-  //   if (CurrentTab->currentBuffer()->layout->empty())
+  //   if (platform->currentTab()->currentBuffer()->layout->empty())
   //     co_return;
   //
   //   for (i = 0; i < n; i++) {
-  //     pline = CurrentTab->currentBuffer()->layout->currentLine();
-  //     ppos = CurrentTab->currentBuffer()->layout->cursorPos();
+  //     pline = platform->currentTab()->currentBuffer()->layout->currentLine();
+  //     ppos = platform->currentTab()->currentBuffer()->layout->cursorPos();
   //
-  //     if (CurrentTab->currentBuffer()->layout->next_nonnull_line(
-  //             CurrentTab->currentBuffer()->layout->currentLine()) < 0)
+  //     if (platform->currentTab()->currentBuffer()->layout->next_nonnull_line(
+  //             platform->currentTab()->currentBuffer()->layout->currentLine()) < 0)
   //       goto end;
   //
-  //     auto l = CurrentTab->currentBuffer()->layout->currentLine();
+  //     auto l = platform->currentTab()->currentBuffer()->layout->currentLine();
   //     auto lb = l->lineBuf();
-  //     while (CurrentTab->currentBuffer()->layout->cursorPos() < l->len() &&
-  //            is_wordchar(lb[CurrentTab->currentBuffer()->layout->cursorPos()]))
+  //     while (platform->currentTab()->currentBuffer()->layout->cursorPos() < l->len() &&
+  //            is_wordchar(lb[platform->currentTab()->currentBuffer()->layout->cursorPos()]))
   //            {
-  //       nextChar(CurrentTab->currentBuffer()->layout->cursorPos(), l);
+  //       nextChar(platform->currentTab()->currentBuffer()->layout->cursorPos(), l);
   //     }
   //
   //     while (1) {
   //       while (
-  //           CurrentTab->currentBuffer()->layout->cursorPos() < l->len() &&
-  //           !is_wordchar(lb[CurrentTab->currentBuffer()->layout->cursorPos()]))
+  //           platform->currentTab()->currentBuffer()->layout->cursorPos() < l->len() &&
+  //           !is_wordchar(lb[platform->currentTab()->currentBuffer()->layout->cursorPos()]))
   //           {
-  //         nextChar(CurrentTab->currentBuffer()->layout->cursorPos(), l);
+  //         nextChar(platform->currentTab()->currentBuffer()->layout->cursorPos(), l);
   //       }
-  //       if (CurrentTab->currentBuffer()->layout->cursorPos() < l->len())
+  //       if (platform->currentTab()->currentBuffer()->layout->cursorPos() < l->len())
   //         break;
-  //       auto next = CurrentTab->currentBuffer()->layout->currentLine();
+  //       auto next = platform->currentTab()->currentBuffer()->layout->currentLine();
   //       ++next;
-  //       if (CurrentTab->currentBuffer()->layout->next_nonnull_line(next) < 0)
+  //       if (platform->currentTab()->currentBuffer()->layout->next_nonnull_line(next) < 0)
   //       {
-  //         CurrentTab->currentBuffer()->layout->cursor.row =
-  //             CurrentTab->currentBuffer()->layout->linenumber(pline) -
-  //             CurrentTab->currentBuffer()->layout->_topLine;
-  //         CurrentTab->currentBuffer()->layout->cursorPos() = ppos;
+  //         platform->currentTab()->currentBuffer()->layout->cursor.row =
+  //             platform->currentTab()->currentBuffer()->layout->linenumber(pline) -
+  //             platform->currentTab()->currentBuffer()->layout->_topLine;
+  //         platform->currentTab()->currentBuffer()->layout->cursorPos() = ppos;
   //         goto end;
   //       }
-  //       CurrentTab->currentBuffer()->layout->cursorPos() = 0;
-  //       l = CurrentTab->currentBuffer()->layout->currentLine();
+  //       platform->currentTab()->currentBuffer()->layout->cursorPos() = 0;
+  //       l = platform->currentTab()->currentBuffer()->layout->currentLine();
   //       lb = l->lineBuf();
   //     }
   //   }
   // end:
-  //   CurrentTab->currentBuffer()->layout->arrangeCursor();
+  //   platform->currentTab()->currentBuffer()->layout->arrangeCursor();
   co_return;
 }
 
@@ -638,9 +637,9 @@ selBuf(const std::shared_ptr<IPlatform> &platform) {
   // auto ok = false;
   // do {
   //   char cmd;
-  //   auto buf = selectBuffer(CurrentTab->firstBuffer,
-  //                           CurrentTab->currentBuffer(), &cmd);
-  //   ok = CurrentTab->select(cmd, buf);
+  //   auto buf = selectBuffer(platform->currentTab()->firstBuffer,
+  //                           platform->currentTab()->currentBuffer(), &cmd);
+  //   ok = platform->currentTab()->select(cmd, buf);
   // } while (!ok);
   //
   // App::instance().invalidate();
@@ -685,9 +684,9 @@ goLine(const std::shared_ptr<IPlatform> &platform) {
 
   auto str = App::instance().searchKeyData();
   if (prec_num)
-    CurrentTab->currentBuffer()->layout->_goLine("^", prec_num);
+    platform->currentTab()->currentBuffer()->layout->_goLine("^", prec_num);
   else if (str.size())
-    CurrentTab->currentBuffer()->layout->_goLine(str, prec_num);
+    platform->currentTab()->currentBuffer()->layout->_goLine(str, prec_num);
   else {
     // _goLine(inputStr("Goto line: ", ""));
   }
@@ -698,7 +697,7 @@ goLine(const std::shared_ptr<IPlatform> &platform) {
 //"Go to the first line"
 std::shared_ptr<CoroutineState<void>>
 goLineF(const std::shared_ptr<IPlatform> &platform) {
-  CurrentTab->currentBuffer()->layout->_goLine("^", prec_num);
+  platform->currentTab()->currentBuffer()->layout->_goLine("^", prec_num);
   co_return;
 }
 
@@ -706,7 +705,7 @@ goLineF(const std::shared_ptr<IPlatform> &platform) {
 //"Go to the last line"
 std::shared_ptr<CoroutineState<void>>
 goLineL(const std::shared_ptr<IPlatform> &platform) {
-  CurrentTab->currentBuffer()->layout->_goLine("$", prec_num);
+  platform->currentTab()->currentBuffer()->layout->_goLine("$", prec_num);
   co_return;
 }
 
@@ -715,9 +714,9 @@ goLineL(const std::shared_ptr<IPlatform> &platform) {
 //"Go to the beginning of the line"
 std::shared_ptr<CoroutineState<void>>
 linbeg(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (platform->currentTab()->currentBuffer()->layout->empty())
     co_return;
-  CurrentTab->currentBuffer()->layout->cursorPos(0);
+  platform->currentTab()->currentBuffer()->layout->cursorPos(0);
 }
 
 /* Go to the bottom of the line */
@@ -725,10 +724,10 @@ linbeg(const std::shared_ptr<IPlatform> &platform) {
 //"Go to the end of the line"
 std::shared_ptr<CoroutineState<void>>
 linend(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (platform->currentTab()->currentBuffer()->layout->empty())
     co_return;
-  CurrentTab->currentBuffer()->layout->cursorPos(
-      CurrentTab->currentBuffer()->layout->currentLine()->len() - 1);
+  platform->currentTab()->currentBuffer()->layout->cursorPos(
+      platform->currentTab()->currentBuffer()->layout->currentLine()->len() - 1);
 }
 
 /* Run editor on the current buffer */
@@ -736,7 +735,7 @@ linend(const std::shared_ptr<IPlatform> &platform) {
 //"Edit local source"
 std::shared_ptr<CoroutineState<void>>
 editBf(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   auto fn = buf->res->filename;
 
   if (fn.empty() || /* Behaving as a pager */
@@ -769,19 +768,20 @@ editBf(const std::shared_ptr<IPlatform> &platform) {
 //"Edit rendered copy of document"
 std::shared_ptr<CoroutineState<void>>
 editScr(const std::shared_ptr<IPlatform> &platform) {
-  auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
-  auto f = fopen(tmpf.c_str(), "w");
-  if (f == nullptr) {
-    // App::instance().disp_err_message(
-    //     Sprintf("Can't open %s", tmpf.c_str())->ptr);
-    co_return;
-  }
-  CurrentTab->currentBuffer()->saveBuffer(f, true);
-  fclose(f);
-  platform->exec(ioutil::myEditor(
-      shell_quote(tmpf.c_str()),
-      CurrentTab->currentBuffer()->layout->visual.cursor().row));
-  unlink(tmpf.c_str());
+  // auto tmpf = TmpFile::instance().tmpfname(TMPF_DFL, {});
+  // auto f = fopen(tmpf.c_str(), "w");
+  // if (f == nullptr) {
+  //   // App::instance().disp_err_message(
+  //   //     Sprintf("Can't open %s", tmpf.c_str())->ptr);
+  //   co_return;
+  // }
+  // platform->platform->currentTab()()->currentBuffer()->saveBuffer(f, true);
+  // fclose(f);
+  // platform->exec(ioutil::myEditor(
+  //     shell_quote(tmpf.c_str()),
+  //     platform->currentTab()->currentBuffer()->layout->visual.cursor().row));
+  // unlink(tmpf.c_str());
+  co_return;
 }
 
 /* follow HREF link */
@@ -789,7 +789,7 @@ editScr(const std::shared_ptr<IPlatform> &platform) {
 //"Follow current hyperlink in a new buffer"
 std::shared_ptr<CoroutineState<void>>
 followA(const std::shared_ptr<IPlatform> &platform) {
-  auto [a, buf] = co_await CurrentTab->currentBuffer()->followAnchor();
+  auto [a, buf] = co_await platform->currentTab()->currentBuffer()->followAnchor();
   if (buf) {
     App::instance().pushBuffer(buf, a->target);
   }
@@ -802,16 +802,16 @@ followA(const std::shared_ptr<IPlatform> &platform) {
 //"Display image in viewer"
 std::shared_ptr<CoroutineState<void>>
 followI(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (platform->currentTab()->currentBuffer()->layout->empty())
     co_return;
 
-  auto a = CurrentTab->currentBuffer()->layout->retrieveCurrentImg();
+  auto a = platform->currentTab()->currentBuffer()->layout->retrieveCurrentImg();
   if (a == nullptr)
     co_return;
   // App::instance().message(Sprintf("loading %s", a->url.c_str())->ptr);
 
   auto res =
-      loadGeneralFile(a->url, CurrentTab->currentBuffer()->res->currentURL, {});
+      loadGeneralFile(a->url, platform->currentTab()->currentBuffer()->res->currentURL, {});
   if (!res) {
     // char *emsg = Sprintf("Can't load %s", a->url.c_str())->ptr;
     // App::instance().disp_err_message(emsg);
@@ -820,7 +820,7 @@ followI(const std::shared_ptr<IPlatform> &platform) {
 
   auto buf = Buffer::create(res);
   // if (buf != NO_BUFFER)
-  { CurrentTab->pushBuffer(buf); }
+  { platform->currentTab()->pushBuffer(buf); }
 }
 
 /* submit form */
@@ -828,8 +828,8 @@ followI(const std::shared_ptr<IPlatform> &platform) {
 //"Submit form"
 std::shared_ptr<CoroutineState<void>>
 submitForm(const std::shared_ptr<IPlatform> &platform) {
-  if (auto f = CurrentTab->currentBuffer()->layout->retrieveCurrentForm()) {
-    auto buf = CurrentTab->currentBuffer()
+  if (auto f = platform->currentTab()->currentBuffer()->layout->retrieveCurrentForm()) {
+    auto buf = platform->currentTab()->currentBuffer()
                    ->followForm(f, true)
                    ->return_value()
                    .value();
@@ -846,7 +846,7 @@ submitForm(const std::shared_ptr<IPlatform> &platform) {
 //"Move to the first hyperlink"
 std::shared_ptr<CoroutineState<void>>
 topA(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   auto hl = buf->layout->data._hmarklist;
 
   if (buf->layout->empty())
@@ -884,7 +884,7 @@ topA(const std::shared_ptr<IPlatform> &platform) {
 //"Move to the last hyperlink"
 std::shared_ptr<CoroutineState<void>>
 lastA(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   auto hl = buf->layout->data._hmarklist;
 
   if (buf->layout->empty())
@@ -925,7 +925,7 @@ lastA(const std::shared_ptr<IPlatform> &platform) {
 //"Go to the nth link"
 std::shared_ptr<CoroutineState<void>>
 nthA(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   auto hl = buf->layout->data._hmarklist;
 
   int n = App::instance().searchKeyNum();
@@ -958,7 +958,7 @@ nthA(const std::shared_ptr<IPlatform> &platform) {
 //"Move to the next hyperlink"
 std::shared_ptr<CoroutineState<void>>
 nextA(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int n = App::instance().searchKeyNum();
   buf->layout->_nextA(buf->layout->data.baseURL, n);
   co_return;
@@ -969,7 +969,7 @@ nextA(const std::shared_ptr<IPlatform> &platform) {
 //"Move to the previous hyperlink"
 std::shared_ptr<CoroutineState<void>>
 prevA(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   int n = App::instance().searchKeyNum();
   buf->layout->_prevA(buf->layout->data.baseURL, n);
   co_return;
@@ -981,7 +981,7 @@ prevA(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextL(const std::shared_ptr<IPlatform> &platform) {
   int n = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->nextX(-1, 0, n);
+  platform->currentTab()->currentBuffer()->layout->nextX(-1, 0, n);
   co_return;
 }
 
@@ -991,7 +991,7 @@ nextL(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextLU(const std::shared_ptr<IPlatform> &platform) {
   int n = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->nextX(-1, -1, n);
+  platform->currentTab()->currentBuffer()->layout->nextX(-1, -1, n);
   co_return;
 }
 
@@ -1001,7 +1001,7 @@ nextLU(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextR(const std::shared_ptr<IPlatform> &platform) {
   int n = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->nextX(1, 0, n);
+  platform->currentTab()->currentBuffer()->layout->nextX(1, 0, n);
   co_return;
 }
 
@@ -1011,7 +1011,7 @@ nextR(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextRD(const std::shared_ptr<IPlatform> &platform) {
   int n = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->nextX(1, 1, n);
+  platform->currentTab()->currentBuffer()->layout->nextX(1, 1, n);
   co_return;
 }
 
@@ -1021,7 +1021,7 @@ nextRD(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextD(const std::shared_ptr<IPlatform> &platform) {
   int n = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->nextY(1, n);
+  platform->currentTab()->currentBuffer()->layout->nextY(1, n);
   co_return;
 }
 
@@ -1031,7 +1031,7 @@ nextD(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextU(const std::shared_ptr<IPlatform> &platform) {
   int n = App::instance().searchKeyNum();
-  CurrentTab->currentBuffer()->layout->nextY(-1, n);
+  platform->currentTab()->currentBuffer()->layout->nextY(-1, n);
   co_return;
 }
 
@@ -1041,13 +1041,13 @@ nextU(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextBf(const std::shared_ptr<IPlatform> &platform) {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf = CurrentTab->forwardBuffer(CurrentTab->currentBuffer());
+    auto buf = platform->currentTab()->forwardBuffer(platform->currentTab()->currentBuffer());
     if (!buf) {
       if (i == 0)
         co_return;
       break;
     }
-    CurrentTab->currentBuffer(buf);
+    platform->currentTab()->currentBuffer(buf);
   }
 }
 
@@ -1057,13 +1057,13 @@ nextBf(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 prevBf(const std::shared_ptr<IPlatform> &platform) {
   for (int i = 0; i < PREC_NUM; i++) {
-    auto buf = CurrentTab->currentBuffer()->backBuffer;
+    auto buf = platform->currentTab()->currentBuffer()->backBuffer;
     if (!buf) {
       if (i == 0)
         co_return;
       break;
     }
-    CurrentTab->currentBuffer(buf);
+    platform->currentTab()->currentBuffer(buf);
   }
 }
 
@@ -1072,26 +1072,26 @@ prevBf(const std::shared_ptr<IPlatform> &platform) {
 //"Close current buffer and return to the one below in stack"
 std::shared_ptr<CoroutineState<void>>
 backBf(const std::shared_ptr<IPlatform> &platform) {
-  // Buffer *buf = CurrentTab->currentBuffer()->linkBuffer[LB_N_FRAME];
+  // Buffer *buf = platform->currentTab()->currentBuffer()->linkBuffer[LB_N_FRAME];
 
-  if (!CurrentTab->currentBuffer()->checkBackBuffer()) {
+  if (!platform->currentTab()->currentBuffer()->checkBackBuffer()) {
     if (close_tab_back && App::instance().nTab() >= 1) {
-      App::instance().deleteTab(CurrentTab);
+      App::instance().deleteTab(platform->currentTab());
     } else
       App::instance().disp_message("Can't go back...");
     co_return;
   }
 
-  CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
+  platform->currentTab()->deleteBuffer(platform->currentTab()->currentBuffer());
 }
 
 // DELETE_PREVBUF
 //"Delete previous buffer (mainly for local CGI-scripts)"
 std::shared_ptr<CoroutineState<void>>
 deletePrevBuf(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer()->backBuffer;
+  auto buf = platform->currentTab()->currentBuffer()->backBuffer;
   if (buf) {
-    CurrentTab->deleteBuffer(buf);
+    platform->currentTab()->deleteBuffer(buf);
   }
   co_return;
 }
@@ -1102,8 +1102,8 @@ std::shared_ptr<CoroutineState<void>>
 goURL(const std::shared_ptr<IPlatform> &platform) {
   auto url = App::instance().searchKeyData();
   if (auto buf =
-          CurrentTab->currentBuffer()->goURL0(url, "Goto URL: ", false)) {
-    CurrentTab->pushBuffer(buf);
+          platform->currentTab()->currentBuffer()->goURL0(url, "Goto URL: ", false)) {
+    platform->currentTab()->pushBuffer(buf);
   }
   co_return;
 }
@@ -1115,13 +1115,13 @@ goHome(const std::shared_ptr<IPlatform> &platform) {
   const char *url = nullptr;
   if ((url = getenv("HTTP_HOME")) != nullptr ||
       (url = getenv("WWW_HOME")) != nullptr) {
-    auto cur_buf = CurrentTab->currentBuffer();
+    auto cur_buf = platform->currentTab()->currentBuffer();
     SKIP_BLANKS(url);
     Url p_url(url_quote(url));
     URLHist->push(p_url.to_Str());
     if (auto buf =
-            CurrentTab->currentBuffer()->cmd_loadURL(url, {}, {}, nullptr)) {
-      CurrentTab->pushBuffer(buf);
+            platform->currentTab()->currentBuffer()->cmd_loadURL(url, {}, {}, nullptr)) {
+      platform->currentTab()->pushBuffer(buf);
       URLHist->push(buf->res->currentURL.to_Str());
     }
   }
@@ -1133,9 +1133,9 @@ goHome(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 gorURL(const std::shared_ptr<IPlatform> &platform) {
   auto url = App::instance().searchKeyData();
-  if (auto buf = CurrentTab->currentBuffer()->goURL0(
+  if (auto buf = platform->currentTab()->currentBuffer()->goURL0(
           url, "Goto relative URL: ", true)) {
-    CurrentTab->pushBuffer(buf);
+    platform->currentTab()->pushBuffer(buf);
   }
   co_return;
 }
@@ -1145,9 +1145,9 @@ gorURL(const std::shared_ptr<IPlatform> &platform) {
 //"View bookmarks"
 std::shared_ptr<CoroutineState<void>>
 ldBmark(const std::shared_ptr<IPlatform> &platform) {
-  if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
+  if (auto buf = platform->currentTab()->currentBuffer()->cmd_loadURL(
           BookmarkFile.c_str(), {}, {.no_referer = true}, nullptr)) {
-    CurrentTab->pushBuffer(buf);
+    platform->currentTab()->pushBuffer(buf);
   }
   co_return;
 }
@@ -1160,17 +1160,17 @@ adBmark(const std::shared_ptr<IPlatform> &platform) {
   std::stringstream ss;
   ss << "mode=panel&cookie=" << (form_quote(localCookie()))
      << "&bmark=" << (form_quote(BookmarkFile)) << "&url="
-     << (form_quote(CurrentTab->currentBuffer()->res->currentURL.to_Str()))
+     << (form_quote(platform->currentTab()->currentBuffer()->res->currentURL.to_Str()))
      << "&title="
-     << (form_quote(CurrentTab->currentBuffer()->layout->data.title));
+     << (form_quote(platform->currentTab()->currentBuffer()->layout->data.title));
   auto tmp = ss.str();
   auto request = std::make_shared<Form>("", "post", "", "", "");
   request->body = tmp;
   request->length = tmp.size();
-  if (auto buf = CurrentTab->currentBuffer()->cmd_loadURL(
+  if (auto buf = platform->currentTab()->currentBuffer()->cmd_loadURL(
           "file:///$LIB/" W3MBOOKMARK_CMDNAME, {}, {.no_referer = true},
           request)) {
-    CurrentTab->pushBuffer(buf);
+    platform->currentTab()->pushBuffer(buf);
   }
   co_return;
 }
@@ -1182,7 +1182,7 @@ std::shared_ptr<CoroutineState<void>>
 ldOpt(const std::shared_ptr<IPlatform> &platform) {
   auto html = Option::instance().load_option_panel();
   auto newbuf = Buffer::fromHtml(html);
-  CurrentTab->pushBuffer(newbuf);
+  platform->currentTab()->pushBuffer(newbuf);
   co_return;
 }
 
@@ -1214,7 +1214,7 @@ std::shared_ptr<CoroutineState<void>>
 msgs(const std::shared_ptr<IPlatform> &platform) {
   auto html = App::instance().message_list_panel();
   auto newbuf = Buffer::fromHtml(html);
-  CurrentTab->pushBuffer(newbuf);
+  platform->currentTab()->pushBuffer(newbuf);
   co_return;
 }
 
@@ -1223,10 +1223,10 @@ msgs(const std::shared_ptr<IPlatform> &platform) {
 //"Display information about the current document"
 std::shared_ptr<CoroutineState<void>>
 pginfo(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   auto html = buf->page_info_panel();
   auto newBuf = Buffer::fromHtml(html);
-  CurrentTab->pushBuffer(newBuf);
+  platform->currentTab()->pushBuffer(newBuf);
   co_return;
 }
 
@@ -1235,9 +1235,9 @@ pginfo(const std::shared_ptr<IPlatform> &platform) {
 //"Show all URLs referenced"
 std::shared_ptr<CoroutineState<void>>
 linkLst(const std::shared_ptr<IPlatform> &platform) {
-  auto html = link_list_panel(CurrentTab->currentBuffer());
+  auto html = link_list_panel(platform->currentTab()->currentBuffer());
   auto newbuf = Buffer::fromHtml(html);
-  CurrentTab->pushBuffer(newbuf);
+  platform->currentTab()->pushBuffer(newbuf);
   co_return;
 }
 
@@ -1248,7 +1248,7 @@ std::shared_ptr<CoroutineState<void>>
 cooLst(const std::shared_ptr<IPlatform> &platform) {
   auto html = cookie_list_panel();
   auto newbuf = Buffer::fromHtml(html);
-  CurrentTab->pushBuffer(newbuf);
+  platform->currentTab()->pushBuffer(newbuf);
   co_return;
 }
 
@@ -1259,7 +1259,7 @@ std::shared_ptr<CoroutineState<void>>
 ldHist(const std::shared_ptr<IPlatform> &platform) {
   auto html = URLHist->toHtml();
   auto newbuf = Buffer::fromHtml(html);
-  CurrentTab->pushBuffer(newbuf);
+  platform->currentTab()->pushBuffer(newbuf);
   co_return;
 }
 
@@ -1328,7 +1328,7 @@ svBuf(const std::shared_ptr<IPlatform> &platform) {
     App::instance().disp_err_message(emsg);
     co_return;
   }
-  CurrentTab->currentBuffer()->saveBuffer(f, true);
+  platform->currentTab()->currentBuffer()->saveBuffer(f, true);
   if (is_pipe)
     pclose(f);
   else
@@ -1344,21 +1344,21 @@ svBuf(const std::shared_ptr<IPlatform> &platform) {
 //"Save document source"
 std::shared_ptr<CoroutineState<void>>
 svSrc(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
+  if (platform->currentTab()->currentBuffer()->res->sourcefile.empty()) {
     co_return;
   }
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
 
   std::string file;
-  if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL) {
+  if (platform->currentTab()->currentBuffer()->res->currentURL.scheme == SCM_LOCAL) {
     file = guess_filename(
-        CurrentTab->currentBuffer()->res->currentURL.real_file.c_str());
+        platform->currentTab()->currentBuffer()->res->currentURL.real_file.c_str());
   } else {
-    file = CurrentTab->currentBuffer()->res->guess_save_name(
-        CurrentTab->currentBuffer()->res->currentURL.file.c_str());
+    file = platform->currentTab()->currentBuffer()->res->guess_save_name(
+        platform->currentTab()->currentBuffer()->res->currentURL.file.c_str());
   }
-  doFileCopy(CurrentTab->currentBuffer()->res->sourcefile.c_str(),
+  doFileCopy(platform->currentTab()->currentBuffer()->res->sourcefile.c_str(),
              file.c_str());
   PermitSaveToPipe = false;
 }
@@ -1387,16 +1387,16 @@ peekURL(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 vwSrc(const std::shared_ptr<IPlatform> &platform) {
 
-  if (CurrentTab->currentBuffer()->res->type.empty()) {
+  if (platform->currentTab()->currentBuffer()->res->type.empty()) {
     co_return;
   }
 
-  if (CurrentTab->currentBuffer()->res->sourcefile.empty()) {
+  if (platform->currentTab()->currentBuffer()->res->sourcefile.empty()) {
     co_return;
   }
 
-  auto buf = CurrentTab->currentBuffer()->sourceBuffer();
-  CurrentTab->pushBuffer(buf);
+  auto buf = platform->currentTab()->currentBuffer()->sourceBuffer();
+  platform->currentTab()->pushBuffer(buf);
 }
 
 /* reload */
@@ -1405,24 +1405,24 @@ vwSrc(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 reload(const std::shared_ptr<IPlatform> &platform) {
 
-  if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL &&
-      CurrentTab->currentBuffer()->res->currentURL.file == "-") {
+  if (platform->currentTab()->currentBuffer()->res->currentURL.scheme == SCM_LOCAL &&
+      platform->currentTab()->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     App::instance().disp_err_message("Can't reload stdin");
     co_return;
   }
 
   auto sbuf = Buffer::create(0);
-  *sbuf = *CurrentTab->currentBuffer();
+  *sbuf = *platform->currentTab()->currentBuffer();
 
   bool multipart = false;
   std::shared_ptr<Form> request;
-  if (CurrentTab->currentBuffer()->layout->data.form_submit) {
-    request = CurrentTab->currentBuffer()->layout->data.form_submit->parent;
+  if (platform->currentTab()->currentBuffer()->layout->data.form_submit) {
+    request = platform->currentTab()->currentBuffer()->layout->data.form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       multipart = true;
-      CurrentTab->currentBuffer()
+      platform->currentTab()->currentBuffer()
           ->layout->data.form_submit->query_from_followform_multipart(
               App::instance().pid());
       struct stat st;
@@ -1433,9 +1433,9 @@ reload(const std::shared_ptr<IPlatform> &platform) {
     request = nullptr;
   }
 
-  auto url = CurrentTab->currentBuffer()->res->currentURL.to_Str();
+  auto url = platform->currentTab()->currentBuffer()->res->currentURL.to_Str();
   App::instance().message("Reloading...");
-  DefaultType = CurrentTab->currentBuffer()->res->type;
+  DefaultType = platform->currentTab()->currentBuffer()->res->type;
 
   auto res =
       loadGeneralFile(url, {}, {.no_referer = true, .no_cache = true}, request);
@@ -1451,23 +1451,23 @@ reload(const std::shared_ptr<IPlatform> &platform) {
 
   auto buf = Buffer::create(res);
   // if (buf == NO_BUFFER) {
-  //   App::instance().invalidate(CurrentTab->currentBuffer(), B_NORMAL);
+  //   App::instance().invalidate(platform->currentTab()->currentBuffer(), B_NORMAL);
   //   return;
   // }
-  CurrentTab->repBuffer(CurrentTab->currentBuffer(), buf);
+  platform->currentTab()->repBuffer(platform->currentTab()->currentBuffer(), buf);
   if ((buf->res->type.size()) && (sbuf->res->type.size()) &&
       ((buf->res->type == "text/plain" && sbuf->res->is_html_type()) ||
        (buf->res->is_html_type() && sbuf->res->type == "text/plain"))) {
     vwSrc(platform);
-    if (CurrentTab->currentBuffer() != buf) {
-      CurrentTab->deleteBuffer(buf);
+    if (platform->currentTab()->currentBuffer() != buf) {
+      platform->currentTab()->deleteBuffer(buf);
     }
   }
-  CurrentTab->currentBuffer()->layout->data.form_submit =
+  platform->currentTab()->currentBuffer()->layout->data.form_submit =
       sbuf->layout->data.form_submit;
-  if (CurrentTab->currentBuffer()->layout->firstLine()) {
-    // CurrentTab->currentBuffer()->layout->COPY_BUFROOT_FROM(sbuf->layout);
-    CurrentTab->currentBuffer()->layout->visual.restorePosition(
+  if (platform->currentTab()->currentBuffer()->layout->firstLine()) {
+    // platform->currentTab()->currentBuffer()->layout->COPY_BUFROOT_FROM(sbuf->layout);
+    platform->currentTab()->currentBuffer()->layout->visual.restorePosition(
         sbuf->layout->visual);
   }
 }
@@ -1477,7 +1477,7 @@ reload(const std::shared_ptr<IPlatform> &platform) {
 //"Re-render document"
 std::shared_ptr<CoroutineState<void>>
 reshape(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   buf->layout->data.need_reshape = true;
   if (buf->layout->data.need_reshape) {
     auto visual = buf->layout->visual;
@@ -1491,7 +1491,7 @@ reshape(const std::shared_ptr<IPlatform> &platform) {
 //"Turn URL-like strings into hyperlinks"
 // std::shared_ptr<CoroutineState<void>> chkURL(const std::shared_ptr<IPlatform>
 // &platform) {
-//   CurrentTab->currentBuffer()->layout->chkURLBuffer();
+//   platform->currentTab()->currentBuffer()->layout->chkURLBuffer();
 //   co_return;
 // }
 
@@ -1500,11 +1500,11 @@ reshape(const std::shared_ptr<IPlatform> &platform) {
 // std::shared_ptr<CoroutineState<void>> chkWORD(const
 // std::shared_ptr<IPlatform> &platform) {
 //   int spos, epos;
-//   auto p = CurrentTab->currentBuffer()->layout->getCurWord(&spos, &epos);
+//   auto p = platform->currentTab()->currentBuffer()->layout->getCurWord(&spos, &epos);
 //   if (p.empty())
 //     co_return;
-//   CurrentTab->currentBuffer()->layout->data.reAnchorWord(
-//       CurrentTab->currentBuffer()->layout->currentLine(), spos, epos);
+//   platform->currentTab()->currentBuffer()->layout->data.reAnchorWord(
+//       platform->currentTab()->currentBuffer()->layout->currentLine(), spos, epos);
 // }
 
 /* render frames */
@@ -1519,8 +1519,8 @@ rFrame(const std::shared_ptr<IPlatform> &platform) {
 //"Display using an external browser"
 std::shared_ptr<CoroutineState<void>>
 extbrz(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->res->currentURL.scheme == SCM_LOCAL &&
-      CurrentTab->currentBuffer()->res->currentURL.file == "-") {
+  if (platform->currentTab()->currentBuffer()->res->currentURL.scheme == SCM_LOCAL &&
+      platform->currentTab()->currentBuffer()->res->currentURL.file == "-") {
     /* file is std input */
     App::instance().disp_err_message("Can't browse stdin");
     co_return;
@@ -1528,7 +1528,7 @@ extbrz(const std::shared_ptr<IPlatform> &platform) {
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   std::string browser = App::instance().searchKeyData();
-  platform->invokeBrowser(CurrentTab->currentBuffer()->res->currentURL.to_Str(),
+  platform->invokeBrowser(platform->currentTab()->currentBuffer()->res->currentURL.to_Str(),
                           browser, prec_num);
 }
 
@@ -1536,7 +1536,7 @@ extbrz(const std::shared_ptr<IPlatform> &platform) {
 //"Display target using an external browser"
 std::shared_ptr<CoroutineState<void>>
 linkbrz(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
 
@@ -1556,7 +1556,7 @@ linkbrz(const std::shared_ptr<IPlatform> &platform) {
 //"Display current position in document"
 std::shared_ptr<CoroutineState<void>>
 curlno(const std::shared_ptr<IPlatform> &platform) {
-  auto layout = CurrentTab->currentBuffer()->layout;
+  auto layout = platform->currentTab()->currentBuffer()->layout;
   Line *l = layout->currentLine();
   int cur = 0, all = 0, col = 0, len = 0;
 
@@ -1604,7 +1604,7 @@ wrapToggle(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 dictword(const std::shared_ptr<IPlatform> &platform) {
   // auto buf = execdict(inputStr("(dictionary)!", ""));
-  // CurrentTab->pushBuffer(buf);
+  // platform->currentTab()->pushBuffer(buf);
   // App::instance().invalidate();
 
   co_return;
@@ -1614,10 +1614,10 @@ dictword(const std::shared_ptr<IPlatform> &platform) {
 //"Execute dictionary command for word at cursor"
 std::shared_ptr<CoroutineState<void>>
 dictwordat(const std::shared_ptr<IPlatform> &platform) {
-  auto word = CurrentTab->currentBuffer()->layout->getCurWord();
+  auto word = platform->currentTab()->currentBuffer()->layout->getCurWord();
   if (auto res = execdict(word.c_str())) {
     auto buf = Buffer::create(res);
-    CurrentTab->pushBuffer(buf);
+    platform->currentTab()->pushBuffer(buf);
   }
   co_return;
 }
@@ -1731,7 +1731,7 @@ closeT(const std::shared_ptr<IPlatform> &platform) {
   if (prec_num)
     tab = App::instance().numTab(PREC_NUM);
   else
-    tab = CurrentTab;
+    tab = platform->currentTab();
   if (tab)
     App::instance().deleteTab(tab);
 }
@@ -1756,7 +1756,7 @@ prevT(const std::shared_ptr<IPlatform> &platform) {
 //"Follow current hyperlink in a new tab"
 std::shared_ptr<CoroutineState<void>>
 tabA(const std::shared_ptr<IPlatform> &platform) {
-  auto [a, buf] = co_await CurrentTab->currentBuffer()->followAnchor(false);
+  auto [a, buf] = co_await platform->currentTab()->currentBuffer()->followAnchor(false);
   if (buf) {
     App::instance().newTab(buf);
   }
@@ -1768,7 +1768,7 @@ tabA(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 tabURL(const std::shared_ptr<IPlatform> &platform) {
   auto url = App::instance().searchKeyData();
-  if (auto buf = CurrentTab->currentBuffer()->goURL0(
+  if (auto buf = platform->currentTab()->currentBuffer()->goURL0(
           url, "Goto URL on new tab: ", false)) {
     App::instance().newTab(buf);
   }
@@ -1780,7 +1780,7 @@ tabURL(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 tabrURL(const std::shared_ptr<IPlatform> &platform) {
   auto url = App::instance().searchKeyData();
-  if (auto buf = CurrentTab->currentBuffer()->goURL0(
+  if (auto buf = platform->currentTab()->currentBuffer()->goURL0(
           url, "Goto relative URL on new tab: ", true)) {
     App::instance().newTab(buf);
   }
@@ -1812,12 +1812,12 @@ ldDL(const std::shared_ptr<IPlatform> &platform) {
 
   // if (!FirstDL) {
   //   if (replace) {
-  //     if (CurrentTab->currentBuffer() == CurrentTab->firstBuffer &&
-  //         CurrentTab->currentBuffer()->backBuffer == nullptr) {
+  //     if (platform->currentTab()->currentBuffer() == platform->currentTab()->firstBuffer &&
+  //         platform->currentTab()->currentBuffer()->backBuffer == nullptr) {
   //       if (App::instance().nTab() > 1)
-  //         App::instance().deleteTab(CurrentTab);
+  //         App::instance().deleteTab(platform->currentTab());
   //     } else
-  //       CurrentTab->deleteBuffer(CurrentTab->currentBuffer());
+  //       platform->currentTab()->deleteBuffer(platform->currentTab()->currentBuffer());
   //   }
   //   co_return;
   // }
@@ -1829,20 +1829,20 @@ ldDL(const std::shared_ptr<IPlatform> &platform) {
   // }
   // auto buf = Buffer::fromHtml(html);
   // if (replace) {
-  //   // buf->layout->COPY_BUFROOT_FROM(CurrentTab->currentBuffer()->layout);
+  //   // buf->layout->COPY_BUFROOT_FROM(platform->currentTab()->currentBuffer()->layout);
   //   buf->layout->visual.restorePosition(
-  //       CurrentTab->currentBuffer()->layout->visual);
+  //       platform->currentTab()->currentBuffer()->layout->visual);
   // }
   // if (!replace && open_tab_dl_list) {
   //   App::instance().newTab();
   //   new_tab = true;
   // }
-  // CurrentTab->pushBuffer(buf);
+  // platform->currentTab()->pushBuffer(buf);
   // if (replace || new_tab)
   //   deletePrevBuf(platform);
   // if (reload) {
-  //   // CurrentTab->currentBuffer()->layout->event =
-  //   //     setAlarmEvent(CurrentTab->currentBuffer()->layout->event, 1,
+  //   // platform->currentTab()->currentBuffer()->layout->event =
+  //   //     setAlarmEvent(platform->currentTab()->currentBuffer()->layout->event, 1,
   //   //     AL_IMPLICIT,
   //   //                   FUNCNAME_reload, nullptr);
   // }
@@ -1853,54 +1853,54 @@ ldDL(const std::shared_ptr<IPlatform> &platform) {
 //"Cancel the last cursor movement"
 std::shared_ptr<CoroutineState<void>>
 undoPos(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (platform->currentTab()->currentBuffer()->layout->empty())
     co_return;
 
-  // CurrentTab->currentBuffer()->layout->undoPos(PREC_NUM);
+  // platform->currentTab()->currentBuffer()->layout->undoPos(PREC_NUM);
 }
 
 // REDO
 //"Cancel the last undo"
 std::shared_ptr<CoroutineState<void>>
 redoPos(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (platform->currentTab()->currentBuffer()->layout->empty())
     co_return;
 
-  // CurrentTab->currentBuffer()->layout->redoPos(PREC_NUM);
+  // platform->currentTab()->currentBuffer()->layout->redoPos(PREC_NUM);
 }
 
 // CURSOR_TOP
 //"Move cursor to the top of the screen"
 std::shared_ptr<CoroutineState<void>>
 cursorTop(const std::shared_ptr<IPlatform> &platform) {
-  if (CurrentTab->currentBuffer()->layout->empty())
+  if (platform->currentTab()->currentBuffer()->layout->empty())
     co_return;
 
-  CurrentTab->currentBuffer()->layout->visual.cursorRow(0);
+  platform->currentTab()->currentBuffer()->layout->visual.cursorRow(0);
 }
 
 // CURSOR_MIDDLE
 //"Move cursor to the middle of the screen"
 std::shared_ptr<CoroutineState<void>>
 cursorMiddle(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
 
   int offsety = (buf->layout->LINES() - 1) / 2;
-  CurrentTab->currentBuffer()->layout->visual.cursorMoveRow(offsety);
+  platform->currentTab()->currentBuffer()->layout->visual.cursorMoveRow(offsety);
 }
 
 // CURSOR_BOTTOM
 //"Move cursor to the bottom of the screen"
 std::shared_ptr<CoroutineState<void>>
 cursorBottom(const std::shared_ptr<IPlatform> &platform) {
-  auto buf = CurrentTab->currentBuffer();
+  auto buf = platform->currentTab()->currentBuffer();
   if (buf->layout->empty())
     co_return;
 
   int offsety = buf->layout->LINES() - 1;
-  CurrentTab->currentBuffer()->layout->visual.cursorMoveRow(offsety);
+  platform->currentTab()->currentBuffer()->layout->visual.cursorMoveRow(offsety);
 }
 
 /* follow HREF link in the buffer */

@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
       return 3;
     }
     auto newbuf = Buffer::create(res);
-    CurrentTab->pushBuffer(newbuf);
+    App::instance().currentTab()->pushBuffer(newbuf);
   }
 
   return App::instance().mainLoop();

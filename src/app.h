@@ -272,4 +272,3 @@ public:
   std::string make_lastline_link(const std::shared_ptr<Buffer> &buf,
                                  const char *title, const char *url);
 };
-#define CurrentTab App::instance().currentTab()
