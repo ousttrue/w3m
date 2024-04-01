@@ -775,15 +775,6 @@ void App::exit(int) {
   // uv_timer_stop(&g_timer);
 }
 
-int App::searchKeyNum() {
-  int n = 1;
-  std::string d;
-  if ((d = searchKeyData()).size()) {
-    n = stoi(d);
-  }
-  return n;
-}
-
 std::string App::searchKeyData() {
   std::string data;
   if (CurrentKeyData.size()) {
@@ -843,11 +834,12 @@ void App::peekURL() {
   }
 
 disp:
-  int n = searchKeyNum();
-  if (n > 1 && _peekUrl.size() > (n - 1) * (COLS() - 1)) {
-    _peekUrlOffset = (n - 1) * (COLS() - 1);
-  }
-  disp_message(_peekUrl.substr(_peekUrlOffset).c_str());
+  // int n = searchKeyNum();
+  // if (n > 1 && _peekUrl.size() > (n - 1) * (COLS() - 1)) {
+  //   _peekUrlOffset = (n - 1) * (COLS() - 1);
+  // }
+  // disp_message(_peekUrl.substr(_peekUrlOffset).c_str());
+  return;
 }
 
 void App::doCmd() {

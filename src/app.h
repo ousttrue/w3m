@@ -201,7 +201,6 @@ public:
   int pid() const { return _currentPid; }
 
   std::string searchKeyData();
-  int searchKeyNum();
 
   mutable std::string _peekUrl;
   mutable int _peekUrlOffset = 0;
