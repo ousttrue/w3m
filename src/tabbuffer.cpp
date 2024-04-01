@@ -53,11 +53,11 @@ void TabBuffer::pushBuffer(const std::shared_ptr<Buffer> &buf) {
  */
 std::shared_ptr<Buffer> namedBuffer(const std::shared_ptr<Buffer> &first,
                                     char *name) {
-  if (first->layout->data.title == name) {
+  if (first->layout->formated->title == name) {
     return first;
   }
   for (auto buf = first; buf->backBuffer != nullptr; buf = buf->backBuffer) {
-    if (buf->backBuffer->layout->data.title == name) {
+    if (buf->backBuffer->layout->formated->title == name) {
       return buf->backBuffer;
     }
   }

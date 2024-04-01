@@ -46,11 +46,11 @@ std::string Buffer::link_info() const {
   std::stringstream html;
   html << "<hr width=50%><h1>Link information</h1><table>\n";
 
-  for (auto &l : this->layout->data.linklist) {
+  for (auto &l : this->layout->formated->linklist) {
     Url pu;
     std::string url;
     if (l.url.size()) {
-      pu = {l.url, this->layout->data.baseURL};
+      pu = {l.url, this->layout->formated->baseURL};
       url = html_quote(pu.to_Str().c_str());
     } else {
       url = "(empty)";
@@ -89,13 +89,13 @@ std::string Buffer::page_info_panel() const {
 </head><body>\
 <h1>Information about current page</h1>\n";
 
-    int all = this->layout->data.lines.size();
+    int all = this->layout->formated->lines.size();
     if (all == 0 && this->layout->lastLine())
       all = this->layout->linenumber(this->layout->lastLine());
     auto p = url_decode0(this->res->currentURL.to_Str());
     tmp << "<table cellpadding=0>"
         << "<tr valign=top><td nowrap>Title<td>"
-        << html_quote(this->layout->data.title.c_str())
+        << html_quote(this->layout->formated->title.c_str())
         << "<tr valign=top><td nowrap>Current URL<td>" << html_quote(p)
         << "<tr valign=top><td nowrap>Document Type<td>"
         << (this->res->type.size() ? html_quote(this->res->type.c_str())
@@ -110,7 +110,7 @@ std::string Buffer::page_info_panel() const {
   }
 
   if (auto a = this->layout->retrieveCurrentAnchor()) {
-    Url pu(a->url.c_str(), this->layout->data.baseURL);
+    Url pu(a->url.c_str(), this->layout->formated->baseURL);
     auto p = pu.to_Str();
     auto q = html_quote(p);
     if (DecodeURL)
@@ -122,7 +122,7 @@ std::string Buffer::page_info_panel() const {
   }
 
   if (auto a = this->layout->retrieveCurrentImg()) {
-    Url pu(a->url.c_str(), this->layout->data.baseURL);
+    Url pu(a->url.c_str(), this->layout->formated->baseURL);
     auto p = pu.to_Str();
     auto q = html_quote(p);
     if (DecodeURL)
@@ -185,13 +185,13 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
   tmp << "<title>Link List</title>\
 <h1 align=center>Link List</h1>\n";
 
-  if (buf->layout->data.linklist.size()) {
+  if (buf->layout->formated->linklist.size()) {
     tmp << "<hr><h2>Links</h2>\n<ol>\n";
-    for (auto &l : buf->layout->data.linklist) {
+    for (auto &l : buf->layout->formated->linklist) {
       std::string p;
       std::string u;
       if (l.url.size()) {
-        Url pu(l.url, buf->layout->data.baseURL);
+        Url pu(l.url, buf->layout->formated->baseURL);
         p = pu.to_Str();
         u = html_quote(p);
         if (DecodeURL)
@@ -215,34 +215,34 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
     tmp << "</ol>\n";
   }
 
-  if (buf->layout->data._href) {
+  if (buf->layout->formated->_href) {
     tmp << "<hr><h2>Anchors</h2>\n<ol>\n";
     // auto al = buf->layout.data._href;
-    for (size_t i = 0; i < buf->layout->data._href->size(); i++) {
-      auto a = &buf->layout->data._href->anchors[i];
+    for (size_t i = 0; i < buf->layout->formated->_href->size(); i++) {
+      auto a = &buf->layout->formated->_href->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      Url pu(a->url.c_str(), buf->layout->data.baseURL);
+      Url pu(a->url.c_str(), buf->layout->formated->baseURL);
       auto p = pu.to_Str();
       auto u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));
       else
         p = u;
-      auto t = html_quote(buf->layout->data.getAnchorText(a));
+      auto t = html_quote(buf->layout->formated->getAnchorText(a));
       tmp << "<li><a href=\"" << u << "\">" << t << "</a><br>" << p << "\n";
     }
     tmp << "</ol>\n";
   }
 
-  if (buf->layout->data._img) {
+  if (buf->layout->formated->_img) {
     tmp << "<hr><h2>Images</h2>\n<ol>\n";
-    auto al = buf->layout->data._img;
+    auto al = buf->layout->formated->_img;
     for (size_t i = 0; i < al->size(); i++) {
       auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      Url pu(a->url.c_str(), buf->layout->data.baseURL);
+      Url pu(a->url.c_str(), buf->layout->formated->baseURL);
       auto p = pu.to_Str();
       auto u = html_quote(p);
       if (DecodeURL)
@@ -255,11 +255,11 @@ std::string link_list_panel(const std::shared_ptr<Buffer> &buf) {
       else
         t = html_quote(url_decode0(a->url.c_str()));
       tmp << "<li><a href=\"" << u << "\">" << t << "</a><br>" << p << "\n";
-      if (!buf->layout->data._formitem) {
+      if (!buf->layout->formated->_formitem) {
         continue;
       }
 
-      auto fa = buf->layout->data._formitem->retrieveAnchor(a->start);
+      auto fa = buf->layout->formated->_formitem->retrieveAnchor(a->start);
       if (!fa)
         continue;
       // first item
@@ -310,24 +310,24 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
   if (this->res->is_html_type()) {
     auto buf = Buffer::create();
     buf->res->type = "text/plain";
-    buf->layout->data.title =
-        std::string("source of ") + this->layout->data.title;
+    buf->layout->formated->title =
+        std::string("source of ") + this->layout->formated->title;
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
-    buf->layout->data.need_reshape = true;
+    buf->layout->formated->need_reshape = true;
     return buf;
   }
 
   if (this->res->type == "text/plain") {
     auto buf = Buffer::create();
     buf->res->type = "text/html";
-    buf->layout->data.title =
-        std::string("HTML view of ") + this->layout->data.title;
+    buf->layout->formated->title =
+        std::string("HTML view of ") + this->layout->formated->title;
     buf->res->currentURL = this->res->currentURL;
     buf->res->filename = this->res->filename;
     buf->res->sourcefile = this->res->sourcefile;
-    buf->layout->data.need_reshape = true;
+    buf->layout->formated->need_reshape = true;
     return buf;
   }
 
@@ -335,7 +335,7 @@ std::shared_ptr<Buffer> Buffer::sourceBuffer() {
 }
 
 std::shared_ptr<Buffer> Buffer::gotoLabel(const std::string &label) {
-  auto a = this->layout->data._name->searchAnchor(label);
+  auto a = this->layout->formated->_name->searchAnchor(label);
   if (!a) {
     PLOGE << label << ": not found";
     return {};
@@ -360,7 +360,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
   // refresh(term_io());
 
   const int *no_referer_ptr = nullptr;
-  auto base = this->layout->data.baseURL;
+  auto base = this->layout->formated->baseURL;
 
   if ((no_referer_ptr && *no_referer_ptr) || base.scheme == SCM_LOCAL ||
       base.scheme == SCM_LOCAL_CGI || base.scheme == SCM_DATA) {
@@ -370,7 +370,7 @@ std::shared_ptr<Buffer> Buffer::loadLink(const char *url, HttpOption option,
     option.referer = this->res->currentURL.to_RefererStr();
   }
 
-  auto res = loadGeneralFile(url, this->layout->data.baseURL, option, request);
+  auto res = loadGeneralFile(url, this->layout->formated->baseURL, option, request);
   if (!res) {
     PLOGE << "Can't load: " << url;
     return {};
@@ -514,7 +514,7 @@ std::shared_ptr<Buffer> Buffer::do_submit(const std::shared_ptr<FormItem> &fi,
        * Location: header. In this case, buf->form_submit must not be set
        * because the page is not loaded by POST method but GET method.
        */
-      buf->layout->data.form_submit = save_submit_formlist(fi);
+      buf->layout->formated->form_submit = save_submit_formlist(fi);
     }
     return buf;
   } else if ((form->method == FORM_METHOD_INTERNAL &&
@@ -557,7 +557,7 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     if (p.size()) {
       fi->value = p;
       this->layout->formUpdateBuffer(a);
-      this->layout->data.need_reshape = true;
+      this->layout->formated->need_reshape = true;
       auto form = fi->parent;
       if (fi->accept || form->items.size() == 1) {
         co_return App::instance().currentTab()->currentBuffer()->do_submit(fi, a);
@@ -644,8 +644,8 @@ Buffer::followForm(FormAnchor *a, bool submit) {
     co_return this->do_submit(fi, a);
 
   case FORM_INPUT_RESET:
-    for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
-      auto a2 = &this->layout->data._formitem->anchors[i];
+    for (size_t i = 0; i < this->layout->formated->_formitem->size(); i++) {
+      auto a2 = &this->layout->formated->_formitem->anchors[i];
       auto f2 = a2->formItem;
       if (f2->parent == fi->parent && f2->name.size() && f2->value.size() &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
@@ -672,7 +672,7 @@ Buffer::followAnchor(bool check_target) {
       co_return {a, this->gotoLabel(a->url.substr(1))};
     }
 
-    Url u(a->url.c_str(), this->layout->data.baseURL);
+    Url u(a->url.c_str(), this->layout->formated->baseURL);
     if (u.to_Str() == this->res->currentURL.to_Str()) {
       // index within this buffer
       if (u.label.size()) {
@@ -711,7 +711,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url,
   if (_url.empty()) {
     auto hist = URLHist->copyHist();
 
-    current = this->layout->data.baseURL;
+    current = this->layout->formated->baseURL;
     if (current) {
       auto c_url = current->to_Str();
       if (DefaultURLString == DEFAULT_URL_CURRENT)
@@ -737,7 +737,7 @@ std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url,
   HttpOption option = {};
   if (relative) {
     const int *no_referer_ptr = nullptr;
-    current = this->layout->data.baseURL;
+    current = this->layout->formated->baseURL;
     if ((no_referer_ptr && *no_referer_ptr) || !current ||
         current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
         current->scheme == SCM_DATA)
@@ -765,8 +765,8 @@ std::shared_ptr<Buffer> Buffer::goURL0(std::string_view _url,
 
 void Buffer::formRecheckRadio(FormAnchor *a) {
   auto fi = a->formItem;
-  for (size_t i = 0; i < this->layout->data._formitem->size(); i++) {
-    auto a2 = &this->layout->data._formitem->anchors[i];
+  for (size_t i = 0; i < this->layout->formated->_formitem->size(); i++) {
+    auto a2 = &this->layout->formated->_formitem->anchors[i];
     auto f2 = a2->formItem;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         f2->name == fi->name) {

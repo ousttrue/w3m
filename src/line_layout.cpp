@@ -5,7 +5,7 @@
 #include "utf8.h"
 #include <sstream>
 
-LineLayout::LineLayout() {}
+LineLayout::LineLayout() : formated(new LineData) {}
 
 std::string LineLayout::row_status() const {
   std::stringstream ss;
@@ -26,7 +26,7 @@ void LineLayout::nextY(int d, int n) {
     return;
   }
 
-  auto hl = this->data._hmarklist;
+  auto hl = this->formated->_hmarklist;
   if (hl->size() == 0) {
     return;
   }
@@ -45,11 +45,11 @@ void LineLayout::nextY(int d, int n) {
       hseq = abs(an->hseq);
     an = nullptr;
     for (; y >= 0 && y <= linenumber(this->lastLine()); y += d) {
-      if (this->data._href) {
-        an = this->data._href->retrieveAnchor({.line = y, .pos = x});
+      if (this->formated->_href) {
+        an = this->formated->_href->retrieveAnchor({.line = y, .pos = x});
       }
-      if (!an && this->data._formitem) {
-        an = this->data._formitem->retrieveAnchor({.line = y, .pos = x});
+      if (!an && this->formated->_formitem) {
+        an = this->formated->_formitem->retrieveAnchor({.line = y, .pos = x});
       }
       if (an && hseq != abs(an->hseq)) {
         pan = an;
@@ -70,7 +70,7 @@ void LineLayout::nextX(int d, int dy, int n) {
   if (empty())
     return;
 
-  auto hl = this->data._hmarklist;
+  auto hl = this->formated->_hmarklist;
   if (hl->size() == 0)
     return;
 
@@ -89,11 +89,11 @@ void LineLayout::nextX(int d, int dy, int n) {
     an = nullptr;
     while (1) {
       for (; x >= 0 && x < l->len(); x += d) {
-        if (this->data._href) {
-          an = this->data._href->retrieveAnchor({.line = y, .pos = x});
+        if (this->formated->_href) {
+          an = this->formated->_href->retrieveAnchor({.line = y, .pos = x});
         }
-        if (!an && this->data._formitem) {
-          an = this->data._formitem->retrieveAnchor({.line = y, .pos = x});
+        if (!an && this->formated->_formitem) {
+          an = this->formated->_formitem->retrieveAnchor({.line = y, .pos = x});
         }
         if (an) {
           pan = an;
@@ -123,7 +123,7 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
   if (empty())
     return;
 
-  auto hl = this->data._hmarklist;
+  auto hl = this->formated->_hmarklist;
   if (hl->size() == 0)
     return;
 
@@ -145,17 +145,17 @@ void LineLayout::_prevA(std::optional<Url> baseUrl, int n) {
           goto _end;
         }
         auto po = hl->get(hseq);
-        if (this->data._href) {
-          an = this->data._href->retrieveAnchor(*po);
+        if (this->formated->_href) {
+          an = this->formated->_href->retrieveAnchor(*po);
         }
-        if (an == nullptr && this->data._formitem) {
-          an = this->data._formitem->retrieveAnchor(*po);
+        if (an == nullptr && this->formated->_formitem) {
+          an = this->formated->_formitem->retrieveAnchor(*po);
         }
         hseq--;
       } while (an == nullptr || an == pan);
     } else {
-      an = this->data._href->closest_prev_anchor((Anchor *)nullptr, x, y);
-      an = this->data._formitem->closest_prev_anchor(an, x, y);
+      an = this->formated->_href->closest_prev_anchor((Anchor *)nullptr, x, y);
+      an = this->formated->_formitem->closest_prev_anchor(an, x, y);
       if (an == nullptr) {
         an = pan;
         break;
@@ -181,7 +181,7 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
   if (empty())
     return;
 
-  auto hl = this->data._hmarklist;
+  auto hl = this->formated->_hmarklist;
   if (hl->size() == 0)
     return;
 
@@ -204,17 +204,17 @@ void LineLayout::_nextA(std::optional<Url> baseUrl, int n) {
           goto _end;
         }
         auto po = hl->get(hseq);
-        if (this->data._href) {
-          an = this->data._href->retrieveAnchor(*po);
+        if (this->formated->_href) {
+          an = this->formated->_href->retrieveAnchor(*po);
         }
-        if (an == nullptr && this->data._formitem) {
-          an = this->data._formitem->retrieveAnchor(*po);
+        if (an == nullptr && this->formated->_formitem) {
+          an = this->formated->_formitem->retrieveAnchor(*po);
         }
         hseq++;
       } while (an == nullptr || an == pan);
     } else {
-      an = this->data._href->closest_next_anchor((Anchor *)nullptr, x, y);
-      an = this->data._formitem->closest_next_anchor(an, x, y);
+      an = this->formated->_href->closest_next_anchor((Anchor *)nullptr, x, y);
+      an = this->formated->_formitem->closest_next_anchor(an, x, y);
       if (an == nullptr) {
         an = pan;
         break;
@@ -306,34 +306,34 @@ std::string LineLayout::getCurWord(int *spos, int *epos) const {
 }
 
 Anchor *LineLayout::retrieveCurrentAnchor() {
-  if (!this->currentLine() || !this->data._href)
+  if (!this->currentLine() || !this->formated->_href)
     return NULL;
-  return this->data._href->retrieveAnchor(
+  return this->formated->_href->retrieveAnchor(
       {.line = visual.cursor().row, .pos = this->cursorPos()});
 }
 
 Anchor *LineLayout::retrieveCurrentImg() {
-  if (!this->currentLine() || !this->data._img)
+  if (!this->currentLine() || !this->formated->_img)
     return NULL;
-  return this->data._img->retrieveAnchor(
+  return this->formated->_img->retrieveAnchor(
       {.line = visual.cursor().row, .pos = this->cursorPos()});
 }
 
 FormAnchor *LineLayout::retrieveCurrentForm() {
-  if (!this->currentLine() || !this->data._formitem)
+  if (!this->currentLine() || !this->formated->_formitem)
     return NULL;
-  return this->data._formitem->retrieveAnchor(
+  return this->formated->_formitem->retrieveAnchor(
       {.line = visual.cursor().row, .pos = this->cursorPos()});
 }
 
 void LineLayout::formResetBuffer(const AnchorList<FormAnchor> *formitem) {
 
-  if (this->data._formitem == NULL || formitem == NULL)
+  if (this->formated->_formitem == NULL || formitem == NULL)
     return;
 
-  for (size_t i = 0; i < this->data._formitem->size() && i < formitem->size();
-       i++) {
-    auto a = &this->data._formitem->anchors[i];
+  for (size_t i = 0;
+       i < this->formated->_formitem->size() && i < formitem->size(); i++) {
+    auto a = &this->formated->_formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
 
@@ -429,9 +429,9 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
     for (int c_rows = 0; c_rows < rows; c_rows++, ++l) {
       if (this->isNull(l))
         break;
-      if (rows > 1 && this->data._formitem) {
+      if (rows > 1 && this->formated->_formitem) {
         int pos = l->columnPos(col);
-        a = this->data._formitem->retrieveAnchor(
+        a = this->formated->_formitem->retrieveAnchor(
             {.line = this->linenumber(l), .pos = pos});
         if (a == NULL)
           break;
@@ -446,14 +446,14 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
           l->form_update_line(p, spos, epos, l->bytePosToColumn(epos) - col,
                               rows > 1, item->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        this->data._href->shiftAnchorPosition(this->data._hmarklist.get(),
-                                              a->start.line, spos, pos - epos);
-        this->data._name->shiftAnchorPosition(this->data._hmarklist.get(),
-                                              a->start.line, spos, pos - epos);
-        this->data._img->shiftAnchorPosition(this->data._hmarklist.get(),
-                                             a->start.line, spos, pos - epos);
-        this->data._formitem->shiftAnchorPosition(
-            this->data._hmarklist.get(), a->start.line, spos, pos - epos);
+        this->formated->_href->shiftAnchorPosition(
+            this->formated->_hmarklist.get(), a->start.line, spos, pos - epos);
+        this->formated->_name->shiftAnchorPosition(
+            this->formated->_hmarklist.get(), a->start.line, spos, pos - epos);
+        this->formated->_img->shiftAnchorPosition(
+            this->formated->_hmarklist.get(), a->start.line, spos, pos - epos);
+        this->formated->_formitem->shiftAnchorPosition(
+            this->formated->_hmarklist.get(), a->start.line, spos, pos - epos);
       }
     }
     break;
@@ -467,7 +467,7 @@ void LineLayout::formUpdateBuffer(FormAnchor *a) {
 
 void LineLayout::setupscreen(const RowCol &size) {
   _screen = std::make_shared<ftxui::Screen>(size.col, size.row);
-  this->data.clear(size.col);
+  this->formated->clear(size.col);
 }
 
 void LineLayout::clear(void) {
@@ -606,11 +606,11 @@ static ScreenFlags propToFlag(Lineprop prop) {
 }
 
 RowCol LineLayout::redrawLine(RowCol pixel, int _l, int cols, int scrollLeft) {
-  if (_l < 0 || _l >= (int)this->data.lines.size()) {
+  if (_l < 0 || _l >= (int)this->formated->lines.size()) {
     return pixel;
   }
 
-  auto l = &this->data.lines[_l];
+  auto l = &this->formated->lines[_l];
   int pos = l->columnPos(pixel.col);
   auto p = l->lineBuf() + pos;
   auto pr = l->propBuf() + pos;

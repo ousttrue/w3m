@@ -870,7 +870,7 @@ submitForm(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 topA(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  auto hl = buf->layout->data._hmarklist;
+  auto hl = buf->layout->formated->_hmarklist;
 
   if (buf->layout->empty())
     co_return;
@@ -884,11 +884,11 @@ topA(const std::shared_ptr<IPlatform> &platform) {
     if (hseq >= (int)hl->size())
       co_return;
     po = hl->get(hseq);
-    if (buf->layout->data._href) {
-      an = buf->layout->data._href->retrieveAnchor(*po);
+    if (buf->layout->formated->_href) {
+      an = buf->layout->formated->_href->retrieveAnchor(*po);
     }
-    if (an == nullptr && buf->layout->data._formitem) {
-      an = buf->layout->data._formitem->retrieveAnchor(*po);
+    if (an == nullptr && buf->layout->formated->_formitem) {
+      an = buf->layout->formated->_formitem->retrieveAnchor(*po);
     }
     hseq++;
   } while (an == nullptr);
@@ -903,7 +903,7 @@ topA(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 lastA(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  auto hl = buf->layout->data._hmarklist;
+  auto hl = buf->layout->formated->_hmarklist;
 
   if (buf->layout->empty())
     co_return;
@@ -918,11 +918,11 @@ lastA(const std::shared_ptr<IPlatform> &platform) {
     if (hseq < 0)
       co_return;
     po = hl->get(hseq);
-    if (buf->layout->data._href) {
-      an = buf->layout->data._href->retrieveAnchor(*po);
+    if (buf->layout->formated->_href) {
+      an = buf->layout->formated->_href->retrieveAnchor(*po);
     }
-    if (an == nullptr && buf->layout->data._formitem) {
-      an = buf->layout->data._formitem->retrieveAnchor(*po);
+    if (an == nullptr && buf->layout->formated->_formitem) {
+      an = buf->layout->formated->_formitem->retrieveAnchor(*po);
     }
     hseq--;
   } while (an == nullptr);
@@ -937,7 +937,7 @@ lastA(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nthA(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  auto hl = buf->layout->data._hmarklist;
+  auto hl = buf->layout->formated->_hmarklist;
 
   // int n = App::instance().searchKeyNum();
   // if (n < 0 || n > (int)hl->size()) {
@@ -971,7 +971,7 @@ nthA(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 nextA(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  buf->layout->_nextA(buf->layout->data.baseURL, 1);
+  buf->layout->_nextA(buf->layout->formated->baseURL, 1);
   co_return;
 }
 
@@ -981,7 +981,7 @@ nextA(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 prevA(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  buf->layout->_prevA(buf->layout->data.baseURL, 1);
+  buf->layout->_prevA(buf->layout->formated->baseURL, 1);
   co_return;
 }
 
@@ -1162,7 +1162,7 @@ adBmark(const std::shared_ptr<IPlatform> &platform) {
             platform->currentTab()->currentBuffer()->res->currentURL.to_Str()))
      << "&title="
      << (form_quote(
-            platform->currentTab()->currentBuffer()->layout->data.title));
+            platform->currentTab()->currentBuffer()->layout->formated->title));
   auto tmp = ss.str();
   auto request = std::make_shared<Form>("", "post", "", "", "");
   request->body = tmp;
@@ -1420,16 +1420,16 @@ reload(const std::shared_ptr<IPlatform> &platform) {
 
   bool multipart = false;
   std::shared_ptr<Form> request;
-  if (platform->currentTab()->currentBuffer()->layout->data.form_submit) {
+  if (platform->currentTab()->currentBuffer()->layout->formated->form_submit) {
     request = platform->currentTab()
                   ->currentBuffer()
-                  ->layout->data.form_submit->parent;
+                  ->layout->formated->form_submit->parent;
     if (request->method == FORM_METHOD_POST &&
         request->enctype == FORM_ENCTYPE_MULTIPART) {
       multipart = true;
       platform->currentTab()
           ->currentBuffer()
-          ->layout->data.form_submit->query_from_followform_multipart(
+          ->layout->formated->form_submit->query_from_followform_multipart(
               App::instance().pid());
       struct stat st;
       stat(request->body.c_str(), &st);
@@ -1470,8 +1470,8 @@ reload(const std::shared_ptr<IPlatform> &platform) {
       platform->currentTab()->deleteBuffer(buf);
     }
   }
-  platform->currentTab()->currentBuffer()->layout->data.form_submit =
-      sbuf->layout->data.form_submit;
+  platform->currentTab()->currentBuffer()->layout->formated->form_submit =
+      sbuf->layout->formated->form_submit;
   if (platform->currentTab()->currentBuffer()->layout->firstLine()) {
     // platform->currentTab()->currentBuffer()->layout->COPY_BUFROOT_FROM(sbuf->layout);
     platform->currentTab()->currentBuffer()->layout->visual.restorePosition(
@@ -1485,8 +1485,8 @@ reload(const std::shared_ptr<IPlatform> &platform) {
 std::shared_ptr<CoroutineState<void>>
 reshape(const std::shared_ptr<IPlatform> &platform) {
   auto buf = platform->currentTab()->currentBuffer();
-  buf->layout->data.need_reshape = true;
-  if (buf->layout->data.need_reshape) {
+  buf->layout->formated->need_reshape = true;
+  if (buf->layout->formated->need_reshape) {
     auto visual = buf->layout->visual;
     auto body = buf->res->getBody();
     buf->layout->clear();
@@ -1554,7 +1554,7 @@ linkbrz(const std::shared_ptr<IPlatform> &platform) {
   if (a == nullptr)
     co_return;
 
-  Url pu(a->url, buf->layout->data.baseURL);
+  Url pu(a->url, buf->layout->formated->baseURL);
 
   CurrentKeyData = nullptr; /* not allowed in w3m-control: */
   std::string browser = App::instance().searchKeyData();

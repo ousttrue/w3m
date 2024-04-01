@@ -48,14 +48,14 @@ enum LineDirtyFlags : unsigned short {
 };
 
 struct LineLayout : public ftxui::Node {
-  LineData data;
+  std::shared_ptr<LineData> formated;
   CursorAndScroll visual;
 
   LineLayout();
 
   void fix_size(int width) {
     visual.size({
-        .row = static_cast<int>(data.lines.size()),
+        .row = static_cast<int>(formated->lines.size()),
         .col = width,
     });
   }
@@ -66,11 +66,11 @@ struct LineLayout : public ftxui::Node {
   //
   // lines
   //
-  Line *firstLine() { return data.firstLine(); }
-  Line *lastLine() { return data.lastLine(); }
-  const Line *lastLine() const { return data.lastLine(); }
-  bool empty() const { return data.lines.empty(); }
-  int linenumber(const Line *t) const { return data.linenumber(t); }
+  Line *firstLine() { return formated->firstLine(); }
+  Line *lastLine() { return formated->lastLine(); }
+  const Line *lastLine() const { return formated->lastLine(); }
+  bool empty() const { return formated->lines.empty(); }
+  int linenumber(const Line *t) const { return formated->linenumber(t); }
   bool isNull(Line *l) const { return linenumber(l) < 0; }
   bool hasNext(const Line *l) const { return linenumber(++l) >= 0; }
   bool hasPrev(const Line *l) const { return linenumber(--l) >= 0; }
@@ -80,29 +80,29 @@ struct LineLayout : public ftxui::Node {
   //
   Line *topLine() {
     //
-    return &data.lines[visual.scroll().row];
+    return &formated->lines[visual.scroll().row];
   }
 
   int cursorPos() const {
-    if (visual.cursor().row < (int)data.lines.size()) {
-      auto l = data.lines[visual.cursor().row];
+    if (visual.cursor().row < (int)formated->lines.size()) {
+      auto l = formated->lines[visual.cursor().row];
       return l.columnPos(visual.cursor().col);
     }
     return visual.cursor().col;
   }
   void cursorPos(int pos) {
-    auto l = data.lines[visual.cursor().row];
+    auto l = formated->lines[visual.cursor().row];
     visual.cursorCol(l.bytePosToColumn(pos));
   }
   Line *currentLine() {
-    if (visual.cursor().row < (int)data.lines.size()) {
-      return &data.lines[visual.cursor().row];
+    if (visual.cursor().row < (int)formated->lines.size()) {
+      return &formated->lines[visual.cursor().row];
     }
     return {};
   }
   const Line *currentLine() const {
     //
-    return &data.lines[visual.cursor().row];
+    return &formated->lines[visual.cursor().row];
   }
 
   //

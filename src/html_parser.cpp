@@ -403,10 +403,10 @@ std::shared_ptr<LineLayout>
 HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
                    const Url &currentUrl, html_feed_environ *h_env) {
 
-  auto old = *layout->data._formitem;
-  layout->data.clear(_width);
-  layout->data.baseURL = currentUrl;
-  layout->data.title = h_env->title;
+  auto old = *layout->formated->_formitem;
+  layout->formated->clear(_width);
+  layout->formated->baseURL = currentUrl;
+  layout->formated->title = h_env->title;
 
   LineFeed feed(h_env->buf);
   for (int nlines = 0; auto _str = feed.textlist_feed(); ++nlines) {
@@ -417,31 +417,31 @@ HtmlParser::render(const std::shared_ptr<LineLayout> &layout,
     }
 
     auto line =
-        renderLine(currentUrl, h_env, &layout->data, nlines, str.c_str(), &old);
+        renderLine(currentUrl, h_env, layout->formated, nlines, str.c_str(), &old);
 
     /* end of processing for one line */
     if (!internal) {
       line.PPUSH(0, 0);
-      layout->data.lines.push_back(line);
+      layout->formated->lines.push_back(line);
     }
     if (internal == HTML_N_INTERNAL) {
       internal = {};
     }
   }
 
-  layout->data.formlist = forms;
+  layout->formated->formlist = forms;
   if (n_textarea) {
-    layout->data.addMultirowsForm();
+    layout->formated->addMultirowsForm();
   }
 
   layout->fix_size(h_env->limit);
-  layout->formResetBuffer(layout->data._formitem.get());
+  layout->formResetBuffer(layout->formated->_formitem.get());
 
   return layout;
 }
 
 Line HtmlParser::renderLine(const Url &url, html_feed_environ *h_env,
-                            LineData *data, int nlines, const char *str,
+                            const std::shared_ptr<LineData> &data, int nlines, const char *str,
                             AnchorList<FormAnchor> *old) {
 
   Line line;

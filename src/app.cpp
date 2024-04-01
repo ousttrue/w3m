@@ -568,7 +568,7 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->res->sourcefile.c_str());
     set_environ("W3M_FILENAME", buf->res->filename.c_str());
-    set_environ("W3M_TITLE", buf->layout->data.title.c_str());
+    set_environ("W3M_TITLE", buf->layout->formated->title.c_str());
     set_environ("W3M_URL", buf->res->currentURL.to_Str().c_str());
     set_environ("W3M_TYPE",
                 buf->res->type.size() ? buf->res->type.c_str() : "unknown");
@@ -580,14 +580,14 @@ static void set_buffer_environ(const std::shared_ptr<Buffer> &buf) {
     set_environ("W3M_CURRENT_WORD", s.c_str());
 
     if (auto a = buf->layout->retrieveCurrentAnchor()) {
-      Url pu(a->url, buf->layout->data.baseURL);
+      Url pu(a->url, buf->layout->formated->baseURL);
       set_environ("W3M_CURRENT_LINK", pu.to_Str().c_str());
     } else {
       set_environ("W3M_CURRENT_LINK", "");
     }
 
     if (auto a = buf->layout->retrieveCurrentImg()) {
-      Url pu(a->url, buf->layout->data.baseURL);
+      Url pu(a->url, buf->layout->formated->baseURL);
       set_environ("W3M_CURRENT_IMG", pu.to_Str().c_str());
     } else {
       set_environ("W3M_CURRENT_IMG", "");
@@ -648,8 +648,8 @@ bool App::onEvent(ftxui::ScreenInteractive *screen, const ftxui::Event &event) {
   }
 
   auto buf = currentTab()->currentBuffer();
-  if (auto a = buf->layout->data.submit) {
-    buf->layout->data.submit = NULL;
+  if (auto a = buf->layout->formated->submit) {
+    buf->layout->formated->submit = NULL;
     buf->layout->visual.cursorRow(a->start.line);
     buf->layout->cursorPos(a->start.pos);
     if (auto newbuf = buf->followForm(a, true)->return_value().value()) {
@@ -659,8 +659,8 @@ bool App::onEvent(ftxui::ScreenInteractive *screen, const ftxui::Event &event) {
   }
 
   // reload
-  if (buf->layout->data.need_reshape) {
-    buf->layout->data.need_reshape = false;
+  if (buf->layout->formated->need_reshape) {
+    buf->layout->formated->need_reshape = false;
     auto body = buf->res->getBody();
     auto visual = buf->layout->visual;
     // if (buf->res->is_html_type()) {
@@ -727,7 +727,7 @@ void App::onResize() {
   if (!buf) {
     return;
   }
-  if (_size.col == buf->layout->data._cols) {
+  if (_size.col == buf->layout->formated->_cols) {
     return;
   }
   buf->layout->setupscreen(_size);
@@ -768,19 +768,19 @@ void App::peekURL() {
   if (auto a = buf->layout->retrieveCurrentAnchor()) {
     _peekUrl = a->url;
     if (_peekUrl.empty()) {
-      Url pu(a->url, buf->layout->data.baseURL);
+      Url pu(a->url, buf->layout->formated->baseURL);
       _peekUrl = pu.to_Str();
     }
   } else if (auto a = buf->layout->retrieveCurrentForm()) {
     _peekUrl = a->formItem->form2str();
     if (_peekUrl.empty()) {
-      Url pu(a->url, buf->layout->data.baseURL);
+      Url pu(a->url, buf->layout->formated->baseURL);
       _peekUrl = pu.to_Str();
     }
   } else if (auto a = buf->layout->retrieveCurrentImg()) {
     _peekUrl = a->url;
     if (_peekUrl.empty()) {
-      Url pu(a->url, buf->layout->data.baseURL);
+      Url pu(a->url, buf->layout->formated->baseURL);
       _peekUrl = pu.to_Str();
     }
   } else {
@@ -893,7 +893,7 @@ ftxui::Element App::dom() {
       // message
       ftxui::text(_message) | ftxui::inverted,
       // status
-      ftxui::text(buf->layout->data.status()),
+      ftxui::text(buf->layout->formated->status()),
       ftxui::text(buf->layout->row_status()),
       ftxui::text(buf->layout->col_status()),
       // ftxui::hbox(events),
@@ -909,10 +909,10 @@ ftxui::Element App::tabs() {
       tabs.push_back(ftxui::separator());
     }
     if (tab == currentTab()) {
-      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->data.title) |
+      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->formated->title) |
                      ftxui::inverted);
     } else {
-      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->data.title));
+      tabs.push_back(ftxui::text(tab->currentBuffer()->layout->formated->title));
     }
   }
 
@@ -1142,7 +1142,7 @@ void App::pushBuffer(const std::shared_ptr<Buffer> &buf,
   } else {
     auto label = std::string("_") + to_str(target);
     auto buf = currentTab()->currentBuffer();
-    auto al = buf->layout->data._name->searchAnchor(label);
+    auto al = buf->layout->formated->_name->searchAnchor(label);
     if (al) {
       buf->layout->visual.cursorRow(al->start.line);
       // if (label_topline) {
@@ -1308,7 +1308,7 @@ std::string App::make_lastline_link(const std::shared_ptr<Buffer> &buf,
     return s.str();
   }
 
-  Url pu(url, buf->layout->data.baseURL);
+  Url pu(url, buf->layout->formated->baseURL);
   auto u = pu.to_Str();
   if (DecodeURL) {
     u = url_decode0(u);

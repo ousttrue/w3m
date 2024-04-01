@@ -377,7 +377,7 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
 
     std::vector<Lineprop> propBuffer;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    layout->data.addnewline(lineBuf2.c_str(), propBuffer, lineBuf2.size());
+    layout->formated->addnewline(lineBuf2.c_str(), propBuffer, lineBuf2.size());
   }
   // layout->_scroll.row = 0;
   // layout->_cursor.row = 0;
