@@ -599,3 +599,83 @@ void Strchop(std::string &s) {
     s.pop_back();
   }
 }
+
+static char roman_num1[] = {
+    'i', 'x', 'c', 'm', '*',
+};
+static char roman_num5[] = {
+    'v',
+    'l',
+    'd',
+    '*',
+};
+
+static std::string romanNum2(int l, int n) {
+  std::stringstream s;
+
+  switch (n) {
+  case 1:
+  case 2:
+  case 3:
+    for (; n > 0; n--)
+      s << roman_num1[l];
+    break;
+  case 4:
+    s << roman_num1[l];
+    s << roman_num5[l];
+    break;
+  case 5:
+  case 6:
+  case 7:
+  case 8:
+    s << roman_num5[l];
+    for (n -= 5; n > 0; n--)
+      s << roman_num1[l];
+    break;
+  case 9:
+    s << roman_num1[l];
+    s << roman_num1[l + 1];
+    break;
+  }
+  return s.str();
+}
+
+std::string romanNumeral(int n) {
+  if (n <= 0) {
+    return {};
+  }
+
+  if (n >= 4000) {
+    return "**";
+  }
+
+  std::stringstream r;
+  r << romanNum2(3, n / 1000);
+  r << romanNum2(2, (n % 1000) / 100);
+  r << romanNum2(1, (n % 100) / 10);
+  r << romanNum2(0, n % 10);
+
+  return r.str();
+}
+
+std::string romanAlphabet(int n) {
+  if (n <= 0) {
+    return {};
+  }
+
+  char buf[14];
+  int l = 0;
+  while (n) {
+    buf[l++] = 'a' + (n - 1) % 26;
+    n = (n - 1) / 26;
+  }
+
+  l--;
+  std::stringstream r;
+  for (; l >= 0; l--)
+    r << buf[l];
+
+  return r.str();
+}
+
+

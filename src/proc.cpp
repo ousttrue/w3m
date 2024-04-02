@@ -1,6 +1,7 @@
 #include "proc.h"
 #include "tabbuffer.h"
 #include "buffer.h"
+#include "load_buffer.h"
 
 static std::string s_searchString;
 // if (str != nullptr && str != SearchString)

@@ -79,6 +79,7 @@ without_gc_lib = static_library(
         'option.cpp',
         'rc.cpp',
         'platform.cpp',
+        'load_buffer.cpp',
     ],
     cpp_args: defs,
     dependencies: [

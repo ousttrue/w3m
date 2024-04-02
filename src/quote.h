@@ -65,3 +65,6 @@ inline std::string to_str(int n) {
   return ss.str();
 }
 inline std::string to_str(std::string_view s) { return {s.begin(), s.end()}; }
+
+std::string romanNumeral(int n);
+std::string romanAlphabet(int n);

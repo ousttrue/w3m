@@ -23,8 +23,6 @@ struct environment {
   char indent;
 };
 
-extern int squeezeBlankLine;
-
 int is_boundary(unsigned char *, unsigned char *);
 
 extern bool pseudoInlines;
@@ -488,19 +486,6 @@ std::shared_ptr<LineData>
 loadHTMLstream(int width, const Url &currentURL, std::string_view body,
                const std::shared_ptr<AnchorList<FormAnchor>> &old,
                bool internal = false);
-
-std::string romanNumeral(int n);
-std::string romanAlphabet(int n);
-
-struct LineLayout;
-struct HttpResponse;
-void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
-                HttpResponse *res, std::string_view body);
-
-// std::shared_ptr<Buffer>
-// loadHTMLString(int width, const Url &currentUrl, std::string_view html,
-//                const std::shared_ptr<AnchorList<FormAnchor>> &forms = {});
-std::shared_ptr<HttpResponse> getshell(const std::string &cmd);
 
 struct MetaRefreshInfo {
   int interval = 0;
