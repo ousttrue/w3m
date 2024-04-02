@@ -71,7 +71,6 @@ without_gc_lib = static_library(
         'readtoken.cpp',
         'html_feed_env.cpp',
         'table.cpp',
-        'html_parser.cpp',
         'buffer.cpp',
         'app.cpp',
         'tabbuffer.cpp',

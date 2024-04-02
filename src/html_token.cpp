@@ -90,7 +90,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
           if (h_env->table_level >= 0) {
             // goto proc_normal;
           } else {
-            h_env->parser.feed_select(str);
+            h_env->feed_select(str);
             continue;
           }
         } else {
@@ -109,7 +109,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
           } else {
             /* textarea */
             if (pre_mode & RB_INTXTA) {
-              h_env->parser.feed_textarea(str);
+              h_env->feed_textarea(str);
               continue;
             }
             /* script */

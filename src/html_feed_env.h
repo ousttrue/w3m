@@ -1,7 +1,14 @@
 #pragma once
-#include "html_parser.h"
 #include <vector>
 #include <functional>
+#include "url.h"
+#include "html_command.h"
+#include "lineprop.h"
+#include "table.h"
+#include "line.h"
+#include "anchorlist.h"
+#include "readtoken.h"
+#include <string>
 
 #define MAX_INDENT_LEVEL 10
 #define MAX_UL_LEVEL 9
@@ -334,16 +341,124 @@ struct html_feed_environ {
                  int indent);
   std::shared_ptr<GeneralList> buf;
   std::string tagbuf;
-  int limit;
+  // int limit;
+  int _width;
   std::vector<environment> envs;
   int envc = 0;
   int envc_real = 0;
   std::string title;
-  HtmlParser parser;
+  friend struct html_feed_environ;
+
+public:
+  std::shared_ptr<table> tables[MAX_TABLE];
+  struct table_mode table_mode[MAX_TABLE];
+  int table_width(struct html_feed_environ *h_env, int table_level);
+
+private:
+  // select
+  std::string cur_select = {};
+  std::string select_str = {};
+  int select_is_multiple = {};
+  int n_selectitem = {};
+  std::string cur_option = {};
+  std::string cur_option_value = {};
+  std::string cur_option_label = {};
+  int cur_option_selected = {};
+  ReadBufferStatus cur_status = {};
+
+public:
+  std::string process_select(const HtmlTag *tag);
+  std::string process_n_select();
+  void process_option();
+  void feed_select(const std::string &str);
+
+private:
+  // form
+  std::vector<std::shared_ptr<struct Form>> forms;
+  std::vector<int> form_stack;
+  int forms_size = 0;
+  int form_sp = -1;
+
+  // textarea
+  std::string cur_textarea = {};
+  int cur_textarea_size = {};
+  int cur_textarea_rows = {};
+  int cur_textarea_readonly = {};
+  int n_textarea = -1;
+  int ignore_nl_textarea = {};
+
+public:
+  std::vector<std::string> textarea_str;
+  std::vector<struct FormAnchor *> a_textarea;
+
+  std::string process_form_int(const HtmlTag *tag, int fid);
+  std::string process_n_form();
+  std::string process_form(const HtmlTag *tag) {
+    return process_form_int(tag, -1);
+  }
+  int cur_form_id() const {
+    return ((form_sp >= 0) ? form_stack[form_sp] : -1);
+  }
+
+  std::string process_textarea(const HtmlTag *tag, int width);
+  std::string process_n_textarea();
+  void feed_textarea(const std::string &str);
+  void close_anchor(struct html_feed_environ *h_env);
+  void save_fonteffect(html_feed_environ *h_env);
+  void restore_fonteffect(html_feed_environ *h_env);
+  void proc_escape(html_feed_environ *h_env, const char **str_return);
+  void completeHTMLstream(html_feed_environ *);
+  void push_render_image(const std::string &str, int width, int limit,
+                         html_feed_environ *h_env);
+
+  void process_token(TableStatus &t, const struct Token &token,
+                     html_feed_environ *h_env);
+
+public:
+  int cur_hseq = 1;
+
+  // HTML processing first pass
+  void parse(std::string_view istr, struct html_feed_environ *h_env,
+             bool internal);
+
+  void HTMLlineproc1(const std::string &x, struct html_feed_environ *y);
+
+  void CLOSE_DT(html_feed_environ *h_env);
+
+  void CLOSE_A(html_feed_environ *h_env);
+
+  void HTML5_CLOSE_A(html_feed_environ *h_env);
+
+  std::string getLinkNumberStr(int correction) const;
+
+  std::string process_img(const HtmlTag *tag, int width);
+  std::string process_anchor(HtmlTag *tag, const std::string &tagbuf);
+  std::string process_input(const HtmlTag *tag);
+  std::string process_button(const HtmlTag *tag);
+  std::string process_n_button();
+  std::string process_hr(const HtmlTag *tag, int width, int indent_width);
+
+private:
+  Lineprop effect = 0;
+  Lineprop ex_effect = 0;
+  char symbol = '\0';
+  Anchor *a_href = nullptr;
+  Anchor *a_img = nullptr;
+  FormAnchor *a_form = nullptr;
+  HtmlCommand internal = {};
+  Line renderLine(const Url &url, html_feed_environ *h_env,
+                  const std::shared_ptr<struct LineData> &data, int nlines,
+                  const char *str,
+                  const std::shared_ptr<AnchorList<FormAnchor>> &forms);
+
+public:
+  std::shared_ptr<LineData>
+  render(const Url &currentUrl, html_feed_environ *h_env,
+         const std::shared_ptr<AnchorList<FormAnchor>> &old);
 
   html_feed_environ(int nenv, int limit_width, int indent,
                     const std::shared_ptr<GeneralList> &_buf = {})
-      : buf(_buf), limit(limit_width), parser(limit_width) {
+      : buf(_buf), _width(limit_width) {
     assert(nenv);
     envs.resize(nenv);
     envs[0].indent = indent;
@@ -386,3 +501,9 @@ void loadBuffer(const std::shared_ptr<LineLayout> &layout, int width,
 // loadHTMLString(int width, const Url &currentUrl, std::string_view html,
 //                const std::shared_ptr<AnchorList<FormAnchor>> &forms = {});
 std::shared_ptr<HttpResponse> getshell(const std::string &cmd);
+
+struct MetaRefreshInfo {
+  int interval = 0;
+  std::string url;
+};
+MetaRefreshInfo getMetaRefreshParam(const std::string &q);
