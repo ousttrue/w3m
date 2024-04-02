@@ -25,11 +25,6 @@ public:
   }
 };
 
-struct Token {
-  bool is_tag;
-  std::string str;
-};
-
 class HtmlTag;
 struct HttpResponse;
 struct LineData;
@@ -110,7 +105,7 @@ public:
   void push_render_image(const std::string &str, int width, int limit,
                          html_feed_environ *h_env);
 
-  void process_token(TableStatus &t, const Token &token,
+  void process_token(TableStatus &t, const struct Token &token,
                      html_feed_environ *h_env);
 
 public:

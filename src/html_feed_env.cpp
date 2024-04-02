@@ -142,7 +142,18 @@ int html_feed_environ::HTML_List_enter(const std::shared_ptr<HtmlTag> &tag) {
     }
   }
   if (tag->tagid == HTML_UL) {
-    envs[this->envc].type = tag->ul_type(0);
+    // envs[this->envc].type = tag->ul_type(0);
+    // int HtmlTag::ul_type(int default_type) const {
+    //   if (auto value = this->getAttr(ATTR_TYPE)) {
+    //     if (!strcasecmp(*value, "disc"))
+    //       return (int)'d';
+    //     else if (!strcasecmp(*value, "circle"))
+    //       return (int)'c';
+    //     else if (!strcasecmp(*value, "square"))
+    //       return (int)'s';
+    //   }
+    //   return default_type;
+    // }
   }
   this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
   return 1;
@@ -200,7 +211,18 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
     }
     switch (envs[this->envc].env) {
     case HTML_UL: {
-      envs[this->envc].type = tag->ul_type(envs[this->envc].type);
+      // envs[this->envc].type = tag->ul_type(envs[this->envc].type);
+      // int HtmlTag::ul_type(int default_type) const {
+      //   if (auto value = this->getAttr(ATTR_TYPE)) {
+      //     if (!strcasecmp(*value, "disc"))
+      //       return (int)'d';
+      //     else if (!strcasecmp(*value, "circle"))
+      //       return (int)'c';
+      //     else if (!strcasecmp(*value, "square"))
+      //       return (int)'s';
+      //   }
+      //   return default_type;
+      // }
       for (int i = 0; i < INDENT_INCR - 3; i++)
         this->obuf.push_charp(1, NBSP, PC_ASCII);
       std::stringstream tmp;

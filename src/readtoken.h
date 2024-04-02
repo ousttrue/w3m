@@ -1,15 +1,6 @@
 #pragma once
 #include <string>
 #include <optional>
-#include <functional>
-
-#define ST_IS_REAL_TAG(s)                                                      \
-  ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
-
-/* is this '<' really means the beginning of a tag? */
-#define REALLY_THE_BEGINNING_OF_A_TAG(p)                                       \
-  (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' ||              \
-   p[1] == '\0' || p[1] == '_')
 
 /* state of token scanning finite state machine */
 enum ReadBufferStatus {

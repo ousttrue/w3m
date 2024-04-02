@@ -1,5 +1,4 @@
 #include "html_tag.h"
-#include "cmp.h"
 #include "form.h"
 
 bool HtmlTag::setAttr(HtmlTagAttr id, const std::string &value) {
@@ -21,16 +20,4 @@ std::optional<std::string> HtmlTag::getAttr(HtmlTagAttr id) const {
     return {};
   }
   return this->value[i];
-}
-
-int HtmlTag::ul_type(int default_type) const {
-  if (auto value = this->getAttr(ATTR_TYPE)) {
-    if (!strcasecmp(*value, "disc"))
-      return (int)'d';
-    else if (!strcasecmp(*value, "circle"))
-      return (int)'c';
-    else if (!strcasecmp(*value, "square"))
-      return (int)'s';
-  }
-  return default_type;
 }

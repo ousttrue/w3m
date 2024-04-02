@@ -84,7 +84,6 @@ class HtmlTag {
   friend const char *parseAttr(const std::shared_ptr<HtmlTag> &tag,
                                const char *q, bool internal);
 
-  std::string attrname;
   std::vector<unsigned char> attrid;
   std::vector<std::string> value;
   std::vector<unsigned char> map;
@@ -106,5 +105,4 @@ public:
   std::optional<std::string> getAttr(HtmlTagAttr id) const;
   bool setAttr(HtmlTagAttr id, const std::string &value);
   std::string to_str() const;
-  int ul_type(int default_type) const;
 };

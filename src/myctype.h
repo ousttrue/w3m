@@ -47,3 +47,13 @@ extern unsigned char MYCTYPE_DIGITMAP[];
 inline int is_wordchar(int c) { return IS_ALNUM(c); }
 
 bool non_null(std::string_view s);
+
+#define ST_IS_REAL_TAG(s)                                                      \
+  ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
+
+/* is this '<' really means the beginning of a tag? */
+#define REALLY_THE_BEGINNING_OF_A_TAG(p)                                       \
+  (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' ||              \
+   p[1] == '\0' || p[1] == '_')
+
+

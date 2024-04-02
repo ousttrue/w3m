@@ -53,6 +53,7 @@ without_gc_lib = static_library(
         'html_command.cpp',
         'html_tag.cpp',
         'html_tag_parse.cpp',
+        'html_token.cpp',
         'line_data.cpp',
         'line_layout.cpp',
         'dict.cpp',
