@@ -131,13 +131,13 @@ int html_feed_environ::HTML_List_enter(const std::shared_ptr<HtmlTag> &tag) {
   }
   this->PUSH_ENV(tag->tagid);
   if (tag->tagid == HTML_UL || tag->tagid == HTML_OL) {
-    if (auto value = tag->parsedtag_get_value(ATTR_START)) {
+    if (auto value = tag->getAttr(ATTR_START)) {
       envs[this->envc].count = stoi(*value) - 1;
     }
   }
   if (tag->tagid == HTML_OL) {
     envs[this->envc].type = '1';
-    if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+    if (auto value = tag->getAttr(ATTR_TYPE)) {
       envs[this->envc].type = (*value)[0];
     }
   }
@@ -177,7 +177,7 @@ int html_feed_environ::HTML_DL_enter(const std::shared_ptr<HtmlTag> &tag) {
                               this->limit);
   }
   this->PUSH_ENV_NOINDENT(tag->tagid);
-  if (tag->parsedtag_exists(ATTR_COMPACT))
+  if (tag->existsAttr(ATTR_COMPACT))
     envs[this->envc].env = HTML_DL_COMPACT;
   this->obuf.flag |= RB_IGNORE_P;
   return 1;
@@ -191,7 +191,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->obuf.flushline(this->buf, envs[this->envc - 1].indent, 0,
                          this->limit);
     envs[this->envc].count++;
-    if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+    if (auto value = tag->getAttr(ATTR_VALUE)) {
       int count = stoi(*value);
       if (count > 0)
         envs[this->envc].count = count;
@@ -226,7 +226,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
     }
 
     case HTML_OL:
-      if (auto value = tag->parsedtag_get_value(ATTR_TYPE))
+      if (auto value = tag->getAttr(ATTR_TYPE))
         envs[this->envc].type = (*value)[0];
       switch ((envs[this->envc].count > 0) ? envs[this->envc].type : '1') {
       case 'i':
@@ -340,7 +340,7 @@ int html_feed_environ::HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 int html_feed_environ::HTML_TITLE_ALT(const std::shared_ptr<HtmlTag> &tag) {
-  if (auto value = tag->parsedtag_get_value(ATTR_TITLE))
+  if (auto value = tag->getAttr(ATTR_TITLE))
     this->title = html_unquote(*value);
   return 0;
 }
@@ -378,10 +378,10 @@ int html_feed_environ::HTML_NOFRAMES_exit() {
 
 int html_feed_environ::HTML_FRAME(const std::shared_ptr<HtmlTag> &tag) {
   std::string q;
-  if (auto value = tag->parsedtag_get_value(ATTR_SRC))
+  if (auto value = tag->getAttr(ATTR_SRC))
     q = *value;
   std::string r;
-  if (auto value = tag->parsedtag_get_value(ATTR_NAME))
+  if (auto value = tag->getAttr(ATTR_NAME))
     r = *value;
   if (q.size()) {
     q = html_quote(q);
@@ -406,7 +406,7 @@ int html_feed_environ::HTML_HR(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 int html_feed_environ::HTML_PRE_enter(const std::shared_ptr<HtmlTag> &tag) {
-  int x = tag->parsedtag_exists(ATTR_FOR_TABLE);
+  int x = tag->existsAttr(ATTR_FOR_TABLE);
   this->parser.CLOSE_A(&this->obuf, this);
   if (!(this->obuf.flag & RB_IGNORE_P)) {
     this->obuf.flushline(this->buf, envs[this->envc].indent, 0, this->limit);
@@ -495,17 +495,17 @@ int html_feed_environ::HTML_A_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parser.close_anchor(this);
   }
 
-  if (auto value = tag->parsedtag_get_value(ATTR_HREF))
+  if (auto value = tag->getAttr(ATTR_HREF))
     this->obuf.anchor.url = *value;
-  if (auto value = tag->parsedtag_get_value(ATTR_TARGET))
+  if (auto value = tag->getAttr(ATTR_TARGET))
     this->obuf.anchor.target = *value;
-  if (auto value = tag->parsedtag_get_value(ATTR_REFERER))
+  if (auto value = tag->getAttr(ATTR_REFERER))
     this->obuf.anchor.option = {.referer = *value};
-  if (auto value = tag->parsedtag_get_value(ATTR_TITLE))
+  if (auto value = tag->getAttr(ATTR_TITLE))
     this->obuf.anchor.title = *value;
-  if (auto value = tag->parsedtag_get_value(ATTR_ACCESSKEY))
+  if (auto value = tag->getAttr(ATTR_ACCESSKEY))
     this->obuf.anchor.accesskey = (*value)[0];
-  if (auto value = tag->parsedtag_get_value(ATTR_HSEQ))
+  if (auto value = tag->getAttr(ATTR_HSEQ))
     this->obuf.anchor.hseq = stoi(*value);
 
   if (this->obuf.anchor.hseq == 0 && this->obuf.anchor.url.size()) {
@@ -518,7 +518,7 @@ int html_feed_environ::HTML_A_enter(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 int html_feed_environ::HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag) {
-  if (tag->parsedtag_exists(ATTR_USEMAP))
+  if (tag->existsAttr(ATTR_USEMAP))
     this->parser.HTML5_CLOSE_A(&this->obuf, this);
   auto tmp = this->parser.process_img(tag, this->limit);
   this->parser.HTMLlineproc1(tmp, this);
@@ -526,7 +526,7 @@ int html_feed_environ::HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag) {
 }
 
 int html_feed_environ::HTML_IMG_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
-  if (auto value = tag->parsedtag_get_value(ATTR_SRC))
+  if (auto value = tag->getAttr(ATTR_SRC))
     this->obuf.img_alt = *value;
   return 0;
 }
@@ -550,8 +550,8 @@ int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag,
   int w = BORDER_NONE;
   /* x: cellspacing, y: cellpadding */
   int width = 0;
-  if (tag->parsedtag_exists(ATTR_BORDER)) {
-    if (auto value = tag->parsedtag_get_value(ATTR_BORDER)) {
+  if (tag->existsAttr(ATTR_BORDER)) {
+    if (auto value = tag->getAttr(ATTR_BORDER)) {
       w = stoi(*value);
       if (w > 2)
         w = BORDER_THICK;
@@ -563,25 +563,25 @@ int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag,
   }
   if (DisplayBorders && w == BORDER_NONE)
     w = BORDER_THIN;
-  if (auto value = tag->parsedtag_get_value(ATTR_WIDTH)) {
+  if (auto value = tag->getAttr(ATTR_WIDTH)) {
     if (this->obuf.table_level == 0)
       width = REAL_WIDTH(stoi(*value), this->limit - envs[this->envc].indent);
     else
       width = RELATIVE_WIDTH(stoi(*value));
   }
-  if (tag->parsedtag_exists(ATTR_HBORDER))
+  if (tag->existsAttr(ATTR_HBORDER))
     w = BORDER_NOWIN;
 
   int x = 2;
-  if (auto value = tag->parsedtag_get_value(ATTR_CELLSPACING)) {
+  if (auto value = tag->getAttr(ATTR_CELLSPACING)) {
     x = stoi(*value);
   }
   int y = 1;
-  if (auto value = tag->parsedtag_get_value(ATTR_CELLPADDING)) {
+  if (auto value = tag->getAttr(ATTR_CELLPADDING)) {
     y = stoi(*value);
   }
   int z = 0;
-  if (auto value = tag->parsedtag_get_value(ATTR_VSPACE)) {
+  if (auto value = tag->getAttr(ATTR_VSPACE)) {
     z = stoi(*value);
   }
   if (x < 0)
@@ -744,11 +744,11 @@ int html_feed_environ::HTML_TEXTAREA_exit() {
 
 int html_feed_environ::HTML_ISINDEX_enter(const std::shared_ptr<HtmlTag> &tag) {
   std::string p = "";
-  if (auto value = tag->parsedtag_get_value(ATTR_PROMPT)) {
+  if (auto value = tag->getAttr(ATTR_PROMPT)) {
     p = *value;
   }
   std::string q = "!CURRENT_URL!";
-  if (auto value = tag->parsedtag_get_value(ATTR_ACTION)) {
+  if (auto value = tag->getAttr(ATTR_ACTION)) {
     q = *value;
   }
   std::stringstream tmp;
@@ -760,11 +760,11 @@ int html_feed_environ::HTML_ISINDEX_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_META_enter(const std::shared_ptr<HtmlTag> &tag) {
   std::string p;
-  if (auto value = tag->parsedtag_get_value(ATTR_HTTP_EQUIV)) {
+  if (auto value = tag->getAttr(ATTR_HTTP_EQUIV)) {
     p = *value;
   }
   std::string q;
-  if (auto value = tag->parsedtag_get_value(ATTR_CONTENT)) {
+  if (auto value = tag->getAttr(ATTR_CONTENT)) {
     q = *value;
   }
   if (p.size() && q.size() && !strcasecmp(p, "refresh")) {
@@ -914,7 +914,7 @@ int html_feed_environ::HTML_INS_exit() {
 
 int html_feed_environ::HTML_BGSOUND_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (view_unseenobject) {
-    if (auto value = tag->parsedtag_get_value(ATTR_SRC)) {
+    if (auto value = tag->getAttr(ATTR_SRC)) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<A HREF=\"" << q << "\">bgsound(" << q << ")</A>";
@@ -927,7 +927,7 @@ int html_feed_environ::HTML_BGSOUND_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_EMBED_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->parser.HTML5_CLOSE_A(&this->obuf, this);
   if (view_unseenobject) {
-    if (auto value = tag->parsedtag_get_value(ATTR_SRC)) {
+    if (auto value = tag->getAttr(ATTR_SRC)) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<A HREF=\"" << q << "\">embed(" << q << ")</A>";
@@ -939,7 +939,7 @@ int html_feed_environ::HTML_EMBED_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (view_unseenobject) {
-    if (auto value = tag->parsedtag_get_value(ATTR_ARCHIVE)) {
+    if (auto value = tag->getAttr(ATTR_ARCHIVE)) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<A HREF=\"" << q << "\">applet archive(" << q << ")</A>";
@@ -951,7 +951,7 @@ int html_feed_environ::HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_BODY_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (view_unseenobject) {
-    if (auto value = tag->parsedtag_get_value(ATTR_BACKGROUND)) {
+    if (auto value = tag->getAttr(ATTR_BACKGROUND)) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<IMG SRC=\"" << q << "\" ALT=\"bg image(" << q << ")\"><BR>";
@@ -973,36 +973,36 @@ html_feed_environ::createFormItem(const std::shared_ptr<HtmlTag> &tag) {
   item->value = item->init_value = "";
   item->readonly = 0;
 
-  if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+  if (auto value = tag->getAttr(ATTR_TYPE)) {
     item->type = formtype(*value);
     if (item->size < 0 &&
         (item->type == FORM_INPUT_TEXT || item->type == FORM_INPUT_FILE ||
          item->type == FORM_INPUT_PASSWORD))
       item->size = FORM_I_TEXT_DEFAULT_SIZE;
   }
-  if (auto value = tag->parsedtag_get_value(ATTR_NAME)) {
+  if (auto value = tag->getAttr(ATTR_NAME)) {
     item->name = *value;
   }
-  if (auto value = tag->parsedtag_get_value(ATTR_VALUE)) {
+  if (auto value = tag->getAttr(ATTR_VALUE)) {
     item->value = item->init_value = *value;
   }
-  item->checked = item->init_checked = tag->parsedtag_exists(ATTR_CHECKED);
-  item->accept = tag->parsedtag_exists(ATTR_ACCEPT);
-  if (auto value = tag->parsedtag_get_value(ATTR_SIZE)) {
+  item->checked = item->init_checked = tag->existsAttr(ATTR_CHECKED);
+  item->accept = tag->existsAttr(ATTR_ACCEPT);
+  if (auto value = tag->getAttr(ATTR_SIZE)) {
     item->size = stoi(*value);
   }
-  if (auto value = tag->parsedtag_get_value(ATTR_MAXLENGTH)) {
+  if (auto value = tag->getAttr(ATTR_MAXLENGTH)) {
     item->maxlength = stoi(*value);
   }
-  item->readonly = tag->parsedtag_exists(ATTR_READONLY);
+  item->readonly = tag->existsAttr(ATTR_READONLY);
 
-  if (auto value = tag->parsedtag_get_value(ATTR_TEXTAREANUMBER)) {
+  if (auto value = tag->getAttr(ATTR_TEXTAREANUMBER)) {
     auto i = stoi(*value);
     if (i >= 0 && i < (int)this->parser.textarea_str.size()) {
       item->value = item->init_value = this->parser.textarea_str[i];
     }
   }
-  if (auto value = tag->parsedtag_get_value(ATTR_ROWS)) {
+  if (auto value = tag->getAttr(ATTR_ROWS)) {
     item->rows = stoi(*value);
   }
   if (item->type == FORM_UNKNOWN) {

@@ -245,7 +245,7 @@ readbuffer::readbuffer() {
 
 void readbuffer::set_alignment(const std::shared_ptr<HtmlTag> &tag) {
   auto flag = (ReadBufferFlags)-1;
-  if (auto value = tag->parsedtag_get_value(ATTR_ALIGN)) {
+  if (auto value = tag->getAttr(ATTR_ALIGN)) {
     switch (stoi(*value)) {
     case ALIGN_CENTER:
       if (DisableCenter)

@@ -1,11 +1,10 @@
 #pragma once
 #include "html_command.h"
-#include <memory>
 #include <string>
 #include <vector>
 #include <optional>
+#include <memory>
 
-// Parsed Tag structure
 enum HtmlTagAttr {
   ATTR_UNKNOWN = 0,
   ATTR_ACCEPT = 1,
@@ -81,40 +80,31 @@ enum HtmlTagAttr {
 };
 
 class HtmlTag {
+  friend std::shared_ptr<HtmlTag> parseHtmlTag(const char **s, bool internal);
+  friend const char *parseAttr(const std::shared_ptr<HtmlTag> &tag,
+                               const char *q, bool internal);
 
-public:
-  const HtmlCommand tagid;
-
-private:
+  std::string attrname;
   std::vector<unsigned char> attrid;
   std::vector<std::string> value;
   std::vector<unsigned char> map;
   bool need_reconstruct = false;
 
-  HtmlTag(HtmlCommand id);
-  const char *parseAttr(const char *q, bool internal);
-  static std::shared_ptr<HtmlTag> parseTag(const char **s, bool internal);
-
 public:
+  const HtmlCommand tagid;
+  HtmlTag(HtmlCommand id) : tagid(id) {}
   HtmlTag(const HtmlTag &) = delete;
   HtmlTag &operator=(const HtmlTag &) = delete;
-  static std::shared_ptr<HtmlTag> parse(const char **s, bool internal);
-  static std::shared_ptr<HtmlTag> parse(std::string_view v, bool internal) {
-    std::string s(v.begin(), v.end());
-    auto p = s.c_str();
-    return parse(&p, internal);
-  }
-
-  bool parsedtag_accepts(HtmlTagAttr id) const {
+  bool needRreconstruct() const { return this->need_reconstruct; }
+  bool acceptsAttr(HtmlTagAttr id) const {
     return (this->map.size() && this->map[id] != MAX_TAGATTR);
   }
-  bool parsedtag_exists(HtmlTagAttr id) const {
-    return (this->parsedtag_accepts(id) &&
+  bool existsAttr(HtmlTagAttr id) const {
+    return (this->acceptsAttr(id) &&
             (this->attrid[this->map[id]] != ATTR_UNKNOWN));
   }
-  bool parsedtag_need_reconstruct() const { return this->need_reconstruct; }
-  std::optional<std::string> parsedtag_get_value(HtmlTagAttr id) const;
-  bool parsedtag_set_value(HtmlTagAttr id, const std::string &value);
-  std::string parsedtag2str() const;
+  std::optional<std::string> getAttr(HtmlTagAttr id) const;
+  bool setAttr(HtmlTagAttr id, const std::string &value);
+  std::string to_str() const;
   int ul_type(int default_type) const;
 };

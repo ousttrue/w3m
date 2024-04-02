@@ -5,6 +5,7 @@
 #include "html_command.h"
 #include "table.h"
 #include "html_tag.h"
+#include "html_tag_parse.h"
 #include "myctype.h"
 #include "entity.h"
 #include "generallist.h"
@@ -492,8 +493,8 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
       int id = -1;
       const char *p = l->line.c_str();
       std::shared_ptr<HtmlTag> tag;
-      if ((tag = HtmlTag::parse(&p, true)) != NULL) {
-        if (auto value = tag->parsedtag_get_value(ATTR_TID)) {
+      if ((tag = parseHtmlTag(&p, true)) != NULL) {
+        if (auto value = tag->getAttr(ATTR_TID)) {
           id = stoi(*value);
         }
       }
@@ -2020,7 +2021,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     this->flag &= ~TBL_IN_COL;
     align = {};
     valign = {};
-    if (auto value = tag->parsedtag_get_value(ATTR_ALIGN)) {
+    if (auto value = tag->getAttr(ATTR_ALIGN)) {
       i = stoi(*value);
       switch (i) {
       case ALIGN_LEFT:
@@ -2034,7 +2035,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
         break;
       }
     }
-    if (auto value = tag->parsedtag_get_value(ATTR_VALIGN)) {
+    if (auto value = tag->getAttr(ATTR_VALIGN)) {
       i = stoi(*value);
       switch (i) {
       case VALIGN_TOP:
@@ -2048,6 +2049,17 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
         break;
       }
     }
+    // static int toVAlign(char *oval, int *valign) {
+    //   if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
+    //     *valign = VALIGN_TOP;
+    //   else if (strcasecmp(oval, "bottom") == 0)
+    //     *valign = VALIGN_BOTTOM;
+    //   else if (strcasecmp(oval, "middle") == 0)
+    //     *valign = VALIGN_MIDDLE;
+    //   else
+    //     return 0;
+    //   return 1;
+    // }
     this->trattr = align | valign;
     break;
   case HTML_TH:
@@ -2094,7 +2106,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
       valign = (this->trattr & HTT_VALIGN);
     else
       valign = HTT_MIDDLE;
-    if (auto value = tag->parsedtag_get_value(ATTR_ROWSPAN)) {
+    if (auto value = tag->getAttr(ATTR_ROWSPAN)) {
       rowspan = stoi(*value);
       if (rowspan < 0 || rowspan > ATTR_ROWSPAN_MAX)
         rowspan = ATTR_ROWSPAN_MAX;
@@ -2105,7 +2117,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     }
     if (rowspan < 1)
       rowspan = 1;
-    if (auto value = tag->parsedtag_get_value(ATTR_COLSPAN)) {
+    if (auto value = tag->getAttr(ATTR_COLSPAN)) {
       colspan = stoi(*value);
       if ((this->col + colspan) >= MAXCOL) {
         /* Can't expand column */
@@ -2114,7 +2126,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     }
     if (colspan < 1)
       colspan = 1;
-    if (auto value = tag->parsedtag_get_value(ATTR_ALIGN)) {
+    if (auto value = tag->getAttr(ATTR_ALIGN)) {
       i = stoi(*value);
       switch (i) {
       case ALIGN_LEFT:
@@ -2128,7 +2140,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
         break;
       }
     }
-    if (auto value = tag->parsedtag_get_value(ATTR_VALIGN)) {
+    if (auto value = tag->getAttr(ATTR_VALIGN)) {
       i = stoi(*value);
       switch (i) {
       case VALIGN_TOP:
@@ -2143,11 +2155,11 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
       }
     }
 #ifdef NOWRAP
-    if (tag->parsedtag_exists(ATTR_NOWRAP))
+    if (tag->existsAttr(ATTR_NOWRAP))
       this->tabattr[this->row][this->col] |= HTT_NOWRAP;
 #endif /* NOWRAP */
     v = 0;
-    if (auto value = tag->parsedtag_get_value(ATTR_WIDTH)) {
+    if (auto value = tag->getAttr(ATTR_WIDTH)) {
       v = RELATIVE_WIDTH(stoi(*value));
     }
 #ifdef NOWRAP
@@ -2416,9 +2428,9 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     this->table_close_anchor0(mode);
     std::string anchor;
     i = 0;
-    if (auto value = tag->parsedtag_get_value(ATTR_HREF))
+    if (auto value = tag->getAttr(ATTR_HREF))
       anchor = *value;
-    if (auto value = tag->parsedtag_get_value(ATTR_HSEQ))
+    if (auto value = tag->getAttr(ATTR_HSEQ))
       i = stoi(*value);
     if (anchor.size()) {
       this->check_rowcol(mode);
@@ -2515,7 +2527,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     break;
   case HTML_TABLE_ALT:
     id = -1;
-    if (auto value = tag->parsedtag_get_value(ATTR_TID)) {
+    if (auto value = tag->getAttr(ATTR_TID)) {
       id = stoi(*value);
     }
     if (id >= 0 && id < this->ntable) {
@@ -2585,7 +2597,7 @@ int table::feed_table(HtmlParser *parser, std::string line,
 
   if (line[0] == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
     auto p = line.c_str();
-    auto tag = HtmlTag::parse(&p, internal);
+    auto tag = parseHtmlTag(&p, internal);
     if (tag) {
       switch (this->feed_table_tag(parser, line, mode, width, tag)) {
       case TAG_ACTION_NONE:
@@ -2598,8 +2610,8 @@ int table::feed_table(HtmlParser *parser, std::string line,
         break;
       case TAG_ACTION_FEED:
       default:
-        if (tag->parsedtag_need_reconstruct()) {
-          line = tag->parsedtag2str();
+        if (tag->needRreconstruct()) {
+          line = tag->to_str();
         }
       }
     } else {

@@ -188,7 +188,7 @@ std::string LineData::getAnchorText(Anchor *a) {
 
 void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
   std::string href;
-  if (auto value = tag->parsedtag_get_value(ATTR_HREF)) {
+  if (auto value = tag->getAttr(ATTR_HREF)) {
     href = *value;
   }
   if (href.size()) {
@@ -196,17 +196,17 @@ void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
   }
 
   std::string title;
-  if (auto value = tag->parsedtag_get_value(ATTR_TITLE)) {
+  if (auto value = tag->getAttr(ATTR_TITLE)) {
     title = *value;
   }
 
   std::string ctype;
-  if (auto value = tag->parsedtag_get_value(ATTR_TYPE)) {
+  if (auto value = tag->getAttr(ATTR_TYPE)) {
     ctype = *value;
   }
 
   std::string rel;
-  if (auto value = tag->parsedtag_get_value(ATTR_REL)) {
+  if (auto value = tag->getAttr(ATTR_REL)) {
     rel = *value;
   }
 
@@ -220,7 +220,7 @@ void LineData::addLink(const std::shared_ptr<HtmlTag> &tag) {
   }
 
   std::string rev;
-  if (auto value = tag->parsedtag_get_value(ATTR_REV)) {
+  if (auto value = tag->getAttr(ATTR_REV)) {
     rev = *value;
   }
   if (rev.size()) {
