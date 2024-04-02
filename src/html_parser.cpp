@@ -1419,7 +1419,7 @@ void HtmlParser::process_token(TableStatus &t, const Token &token,
      * are fed to the table renderer, and then the renderer
      * makes HTML output.
      */
-    switch (t.feed(this, token.str, internal)) {
+    switch (t.feed(h_env, token.str, internal)) {
     case 0:
       /* </table> tag */
       h_env->table_level--;
@@ -1436,7 +1436,7 @@ void HtmlParser::process_token(TableStatus &t, const Token &token,
         t.tbl = tbl0;
         t.tbl_mode = &table_mode[h_env->table_level];
         t.tbl_width = table_width(h_env, h_env->table_level);
-        t.feed(this, ss.str(), true);
+        t.feed(h_env, ss.str(), true);
         return;
         /* continue to the next */
       }
@@ -1450,7 +1450,7 @@ void HtmlParser::process_token(TableStatus &t, const Token &token,
       }
       save_fonteffect(h_env);
       initRenderTable();
-      t.tbl->renderTable(this, t.tbl_width, h_env);
+      t.tbl->renderTable(h_env, t.tbl_width, h_env);
       restore_fonteffect(h_env);
       h_env->flag &= ~RB_IGNORE_P;
       if (t.tbl->vspace > 0) {

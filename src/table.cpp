@@ -472,7 +472,7 @@ int table::get_spec_cell_width(int row, int col) {
   return w;
 }
 
-void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
+void table::do_refill(html_feed_environ *parser, int row, int col, int maxlimit) {
   if (this->tabdata[row].empty() || this->tabdata[row][col] == NULL) {
     return;
   }
@@ -501,7 +501,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         auto t = this->tables[id].ptr;
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
-        parser->save_fonteffect(&h_env);
+        parser->parser.save_fonteffect(&h_env);
         h_env.flushline(h_env.buf, 0, 2, h_env.limit);
         if (t->vspace > 0 && !(h_env.flag & RB_IGNORE_P))
           h_env.do_blankline(h_env.buf, 0, 0, h_env.limit);
@@ -522,7 +522,7 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         h_env.buf->appendGeneralList(this->tables[id].buf);
         if (h_env.maxlimit < limit)
           h_env.maxlimit = limit;
-        parser->restore_fonteffect(&h_env);
+        parser->parser.restore_fonteffect(&h_env);
         h_env.flag &= ~RB_IGNORE_P;
         h_env.blank_lines = 0;
         if (t->vspace > 0) {
@@ -531,13 +531,13 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         }
       }
     } else
-      parser->HTMLlineproc1(l->line.c_str(), &h_env);
+      parser->parser.HTMLlineproc1(l->line.c_str(), &h_env);
   }
   if (h_env.status != R_ST_NORMAL) {
     h_env.status = R_ST_EOL;
-    parser->HTMLlineproc1("\n", &h_env);
+    parser->parser.HTMLlineproc1("\n", &h_env);
   }
-  parser->completeHTMLstream(&h_env);
+  parser->parser.completeHTMLstream(&h_env);
   h_env.flushline(h_env.buf, 0, 2, h_env.limit);
   if (this->border_mode == BORDER_NONE) {
     int rowspan = this->table_rowspan(row, col);
@@ -1219,7 +1219,7 @@ static int cotable_level;
 
 void initRenderTable(void) { cotable_level = 0; }
 
-void table::renderCoTable(HtmlParser *parser, int maxlimit) {
+void table::renderCoTable(html_feed_environ *parser, int maxlimit) {
   int i, col, row;
   int indent, maxwidth;
 
@@ -1250,7 +1250,7 @@ void table::renderCoTable(HtmlParser *parser, int maxlimit) {
   }
 }
 
-void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
+void table::make_caption(html_feed_environ *parser, struct html_feed_environ *h_env) {
   if (this->caption.size() <= 0)
     return;
 
@@ -1262,21 +1262,21 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
 
   html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
                          GeneralList::newGeneralList());
-  parser->HTMLlineproc1("<center>", &henv);
-  parser->parse(this->caption, &henv, false);
-  parser->HTMLlineproc1("</center>", &henv);
+  parser->parser.HTMLlineproc1("<center>", &henv);
+  parser->parser.parse(this->caption, &henv, false);
+  parser->parser.HTMLlineproc1("</center>", &henv);
 
   if (this->total_width < henv.maxlimit)
     this->total_width = henv.maxlimit;
   limit = h_env->limit;
   h_env->limit = this->total_width;
-  parser->HTMLlineproc1("<center>", h_env);
-  parser->parse(this->caption, h_env, false);
-  parser->HTMLlineproc1("</center>", h_env);
+  parser->parser.HTMLlineproc1("<center>", h_env);
+  parser->parser.parse(this->caption, h_env, false);
+  parser->parser.HTMLlineproc1("</center>", h_env);
   h_env->limit = limit;
 }
 
-void table::renderTable(HtmlParser *parser, int max_width,
+void table::renderTable(html_feed_environ *parser, int max_width,
                         struct html_feed_environ *h_env) {
   int i, j, w, r, h;
   Str *renderbuf;
@@ -1406,13 +1406,13 @@ void table::renderTable(HtmlParser *parser, int max_width,
 
   this->make_caption(parser, h_env);
 
-  parser->HTMLlineproc1("<pre for_table>", h_env);
+  parser->parser.HTMLlineproc1("<pre for_table>", h_env);
   switch (this->border_mode) {
   case BORDER_THIN:
   case BORDER_THICK: {
     std::stringstream renderbuf;
     this->print_sep(-1, T_TOP, this->maxcol, renderbuf);
-    parser->push_render_image(renderbuf.str(), width, this->total_width, h_env);
+    parser->parser.push_render_image(renderbuf.str(), width, this->total_width, h_env);
     this->total_height += 1;
     break;
   }
@@ -1472,13 +1472,13 @@ void table::renderTable(HtmlParser *parser, int max_width,
         this->total_height += 1;
         break;
       }
-      parser->push_render_image(renderbuf.str(), width, this->total_width,
+      parser->parser.push_render_image(renderbuf.str(), width, this->total_width,
                                 h_env);
     }
     if (r < this->maxrow && this->border_mode != BORDER_NONE) {
       std::stringstream renderbuf;
       this->print_sep(r, T_MIDDLE, this->maxcol, renderbuf);
-      parser->push_render_image(renderbuf.str(), width, this->total_width,
+      parser->parser.push_render_image(renderbuf.str(), width, this->total_width,
                                 h_env);
     }
     this->total_height += this->tabheight[r];
@@ -1488,7 +1488,7 @@ void table::renderTable(HtmlParser *parser, int max_width,
   case BORDER_THICK:
     std::stringstream renderbuf;
     this->print_sep(this->maxrow, T_BOTTOM, this->maxcol, renderbuf);
-    parser->push_render_image(renderbuf.str(), width, this->total_width, h_env);
+    parser->parser.push_render_image(renderbuf.str(), width, this->total_width, h_env);
     this->total_height += 1;
     break;
   }
@@ -1497,9 +1497,9 @@ void table::renderTable(HtmlParser *parser, int max_width,
     renderbuf << " ";
     this->total_height++;
     this->total_width = 1;
-    parser->push_render_image(renderbuf.str(), 1, this->total_width, h_env);
+    parser->parser.push_render_image(renderbuf.str(), 1, this->total_width, h_env);
   }
-  parser->HTMLlineproc1("</pre>", h_env);
+  parser->parser.HTMLlineproc1("</pre>", h_env);
 }
 
 #ifdef TABLE_NO_COMPACT
@@ -1857,18 +1857,18 @@ void table::feed_table_block_tag(const std::string &line,
   }
 }
 
-void table::table_close_select(HtmlParser *parser, struct table_mode *mode,
+void table::table_close_select(html_feed_environ *parser, struct table_mode *mode,
                                int width) {
   mode->pre_mode &= ~TBLM_INSELECT;
   mode->end_tag = HTML_UNKNOWN;
-  this->feed_table1(parser, parser->process_n_select().c_str(), mode, width);
+  this->feed_table1(parser, parser->parser.process_n_select().c_str(), mode, width);
 }
 
-void table::table_close_textarea(HtmlParser *parser, struct table_mode *mode,
+void table::table_close_textarea(html_feed_environ *parser, struct table_mode *mode,
                                  int width) {
   mode->pre_mode &= ~TBLM_INTXTA;
   mode->end_tag = HTML_UNKNOWN;
-  this->feed_table1(parser, parser->process_n_textarea(), mode, width);
+  this->feed_table1(parser, parser->parser.process_n_textarea(), mode, width);
 }
 
 void table::table_close_anchor0(struct table_mode *mode) {
@@ -1913,7 +1913,7 @@ void table::table_close_anchor0(struct table_mode *mode) {
 
 #define ATTR_ROWSPAN_MAX 32766
 
-int table::feed_table_tag(HtmlParser *parser, const std::string &line,
+int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
                           struct table_mode *mode, int width,
                           const std::shared_ptr<HtmlTag> &tag) {
   int cmd;
@@ -2362,38 +2362,38 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
       else if (width > 0)
         w = width;
     }
-    auto tok = parser->process_img(tag.get(), w);
+    auto tok = parser->parser.process_img(tag.get(), w);
     this->feed_table1(parser, tok, mode, width);
     break;
   }
   case HTML_FORM: {
     this->feed_table_block_tag("", mode, 0, cmd);
-    auto tmp = parser->process_form(tag.get());
+    auto tmp = parser->parser.process_form(tag.get());
     if (tmp.size())
       this->feed_table1(parser, tmp, mode, width);
     break;
   }
   case HTML_N_FORM:
     this->feed_table_block_tag("", mode, 0, cmd);
-    parser->process_n_form();
+    parser->parser.process_n_form();
     break;
   case HTML_INPUT: {
-    auto tmp = parser->process_input(tag.get());
+    auto tmp = parser->parser.process_input(tag.get());
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
   case HTML_BUTTON: {
-    auto tmp = parser->process_button(tag.get());
+    auto tmp = parser->parser.process_button(tag.get());
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
   case HTML_N_BUTTON: {
-    auto tmp = parser->process_n_button();
+    auto tmp = parser->parser.process_n_button();
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
   case HTML_SELECT: {
-    auto tmp = parser->process_select(tag.get());
+    auto tmp = parser->parser.process_select(tag.get());
     if (tmp.size())
       this->feed_table1(parser, tmp.c_str(), mode, width);
     mode->pre_mode |= TBLM_INSELECT;
@@ -2415,7 +2415,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
       if (this->fixed_width[this->col] > 0)
         w = this->fixed_width[this->col];
     }
-    auto tmp = parser->process_textarea(tag.get(), w);
+    auto tmp = parser->parser.process_textarea(tag.get(), w);
     if (tmp.size())
       this->feed_table1(parser, tmp, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
@@ -2433,9 +2433,9 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     if (anchor.size()) {
       this->check_rowcol(mode);
       if (i == 0) {
-        auto tmp = parser->process_anchor(tag.get(), line);
+        auto tmp = parser->parser.process_anchor(tag.get(), line);
         if (displayLinkNumber) {
-          auto t = parser->getLinkNumberStr(-1);
+          auto t = parser->parser.getLinkNumberStr(-1);
           this->feed_table_inline_tag(NULL, mode, t.size());
           tmp += t;
         }
@@ -2587,7 +2587,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
   return TAG_ACTION_NONE;
 }
 
-int table::feed_table(HtmlParser *parser, std::string line,
+int table::feed_table(html_feed_environ *parser, std::string line,
                       struct table_mode *mode, int width, int internal) {
   int i;
   Str *tmp;
@@ -2630,11 +2630,11 @@ int table::feed_table(HtmlParser *parser, std::string line,
   if (mode->pre_mode & TBLM_STYLE)
     return -1;
   if (mode->pre_mode & TBLM_INTXTA) {
-    parser->feed_textarea(line);
+    parser->parser.feed_textarea(line);
     return -1;
   }
   if (mode->pre_mode & TBLM_INSELECT) {
-    parser->feed_select(line);
+    parser->parser.feed_select(line);
     return -1;
   }
   if (!(mode->pre_mode & TBLM_PLAIN) &&
@@ -2750,7 +2750,7 @@ int table::feed_table(HtmlParser *parser, std::string line,
   return -1;
 }
 
-void table::feed_table1(HtmlParser *parser, const std::string &line,
+void table::feed_table1(html_feed_environ *parser, const std::string &line,
                         struct table_mode *mode, int width) {
   auto status = R_ST_NORMAL;
   while (auto tokbuf = read_token((const char **)&line, &status,
@@ -3102,7 +3102,7 @@ bool TableStatus::is_active(html_feed_environ *h_env) {
   return h_env->table_level >= 0 && tbl && tbl_mode;
 }
 
-int TableStatus::feed(HtmlParser *parser, const std::string &str,
+int TableStatus::feed(html_feed_environ *parser, const std::string &str,
                       bool internal) {
   return tbl->feed_table(parser, str.c_str(), tbl_mode, tbl_width, internal);
 }

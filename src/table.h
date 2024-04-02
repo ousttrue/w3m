@@ -149,15 +149,15 @@ public:
   static std::shared_ptr<table> newTable(int cols);
   static std::shared_ptr<table> begin_table(int border, int spacing,
                                             int padding, int vspace, int cols);
-  int feed_table(class HtmlParser *parser, std::string line,
+  int feed_table(struct html_feed_environ *parser, std::string line,
                  struct table_mode *mode, int width, int internal);
   void end_table();
   void pushTable(const std::shared_ptr<table> &);
-  void renderTable(HtmlParser *parser, int max_width,
+  void renderTable(html_feed_environ *parser, int max_width,
                    struct html_feed_environ *h_env);
 
 private:
-  int feed_table_tag(class HtmlParser *parser, const std::string &line,
+  int feed_table_tag(html_feed_environ *parser, const std::string &line,
                      struct table_mode *mode, int width,
                      const std::shared_ptr<class HtmlTag> &tag);
 
@@ -201,16 +201,16 @@ private:
   void feed_table_inline_tag(const std::string &line, struct table_mode *mode,
                              int width);
   void suspend_or_pushdata(const std::string &line);
-  void table_close_textarea(HtmlParser *parser, struct table_mode *mode,
+  void table_close_textarea(html_feed_environ *parser, struct table_mode *mode,
                             int width);
-  void feed_table1(HtmlParser *parser, const std::string &tok,
+  void feed_table1(html_feed_environ *parser, const std::string &tok,
                    struct table_mode *mode, int width);
-  void table_close_select(HtmlParser *parser, struct table_mode *mode,
+  void table_close_select(html_feed_environ *parser, struct table_mode *mode,
                           int width);
   void print_item(int row, int col, int width, std::ostream &buf);
   void print_sep(int row, int type, int maxcol, std::ostream &buf);
-  void make_caption(HtmlParser *parser, struct html_feed_environ *h_env);
-  void renderCoTable(HtmlParser *parser, int maxlimit);
+  void make_caption(html_feed_environ *parser, struct html_feed_environ *h_env);
+  void renderCoTable(html_feed_environ *parser, int maxlimit);
   void check_table_height();
   int table_rowspan(int row, int col);
   void set_table_width(short *newwidth, int maxwidth);
@@ -221,7 +221,7 @@ private:
                               int corr);
   void set_integered_width(double *dwidth, short *iwidth);
   void check_maximum_width();
-  void do_refill(HtmlParser *parser, int row, int col, int maxlimit);
+  void do_refill(html_feed_environ *parser, int row, int col, int maxlimit);
   int get_spec_cell_width(int row, int col);
   int correct_table_matrix(int col, int cspan, int a, double b);
   void correct_table_matrix2(int col, int cspan, double s, double b);
@@ -249,7 +249,6 @@ private:
 #define TBLM_DEL RB_DEL
 #define TBLM_S RB_S
 
-class HtmlParser;
 extern int visible_length(const char *str);
 
 extern void initRenderTable(void);
@@ -263,5 +262,5 @@ struct TableStatus {
   ReadBufferFlags pre_mode(html_feed_environ *h_env);
   HtmlCommand end_tag(html_feed_environ *h_env);
   bool is_active(html_feed_environ *h_env);
-  int feed(HtmlParser *parser, const std::string &str, bool internal);
+  int feed(html_feed_environ *parser, const std::string &str, bool internal);
 };
