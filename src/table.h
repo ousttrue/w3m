@@ -159,7 +159,7 @@ public:
 private:
   int feed_table_tag(class HtmlParser *parser, const std::string &line,
                      struct table_mode *mode, int width,
-                     const std::shared_ptr<HtmlTag> &tag);
+                     const std::shared_ptr<class HtmlTag> &tag);
 
   int table_rule_width() const;
   int get_table_width(const short *orgwidth, const short *cellwidth,

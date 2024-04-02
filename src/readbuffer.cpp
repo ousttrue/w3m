@@ -243,23 +243,7 @@ readbuffer::readbuffer() {
   this->set_breakpoint(0);
 }
 
-void readbuffer::set_alignment(const std::shared_ptr<HtmlTag> &tag) {
-  auto flag = (ReadBufferFlags)-1;
-  if (auto value = tag->getAttr(ATTR_ALIGN)) {
-    switch (stoi(*value)) {
-    case ALIGN_CENTER:
-      if (DisableCenter)
-        flag = RB_LEFT;
-      else
-        flag = RB_CENTER;
-      break;
-    case ALIGN_RIGHT:
-      flag = RB_RIGHT;
-      break;
-    case ALIGN_LEFT:
-      flag = RB_LEFT;
-    }
-  }
+void readbuffer::set_alignment(ReadBufferFlags flag) {
   this->RB_SAVE_FLAG();
   if (flag != (ReadBufferFlags)-1) {
     this->RB_SET_ALIGN(flag);

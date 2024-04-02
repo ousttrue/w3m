@@ -2,6 +2,7 @@
 #include "table.h"
 #include "html_feed_env.h"
 #include "readtoken.h"
+#include "html_tag.h"
 #include "html_tag_parse.h"
 #include "myctype.h"
 

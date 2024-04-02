@@ -2364,13 +2364,13 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
       else if (width > 0)
         w = width;
     }
-    auto tok = parser->process_img(tag, w);
+    auto tok = parser->process_img(tag.get(), w);
     this->feed_table1(parser, tok, mode, width);
     break;
   }
   case HTML_FORM: {
     this->feed_table_block_tag("", mode, 0, cmd);
-    auto tmp = parser->process_form(tag);
+    auto tmp = parser->process_form(tag.get());
     if (tmp.size())
       this->feed_table1(parser, tmp, mode, width);
     break;
@@ -2380,12 +2380,12 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     parser->process_n_form();
     break;
   case HTML_INPUT: {
-    auto tmp = parser->process_input(tag);
+    auto tmp = parser->process_input(tag.get());
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
   case HTML_BUTTON: {
-    auto tmp = parser->process_button(tag);
+    auto tmp = parser->process_button(tag.get());
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
@@ -2395,7 +2395,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     break;
   }
   case HTML_SELECT: {
-    auto tmp = parser->process_select(tag);
+    auto tmp = parser->process_select(tag.get());
     if (tmp.size())
       this->feed_table1(parser, tmp.c_str(), mode, width);
     mode->pre_mode |= TBLM_INSELECT;
@@ -2417,7 +2417,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
       if (this->fixed_width[this->col] > 0)
         w = this->fixed_width[this->col];
     }
-    auto tmp = parser->process_textarea(tag, w);
+    auto tmp = parser->process_textarea(tag.get(), w);
     if (tmp.size())
       this->feed_table1(parser, tmp, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
@@ -2435,7 +2435,7 @@ int table::feed_table_tag(HtmlParser *parser, const std::string &line,
     if (anchor.size()) {
       this->check_rowcol(mode);
       if (i == 0) {
-        auto tmp = parser->process_anchor(tag, line);
+        auto tmp = parser->process_anchor(tag.get(), line);
         if (displayLinkNumber) {
           auto t = parser->getLinkNumberStr(-1);
           this->feed_table_inline_tag(NULL, mode, t.size());
@@ -2598,7 +2598,7 @@ int table::feed_table(HtmlParser *parser, std::string line,
   if (line[0] == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
     auto p = line.c_str();
     auto tag = parseHtmlTag(&p, internal);
-    if (tag) {
+    if (tag.get()) {
       switch (this->feed_table_tag(parser, line, mode, width, tag)) {
       case TAG_ACTION_NONE:
         return -1;

@@ -33,6 +33,7 @@ struct Anchor;
 class HtmlParser {
   friend struct html_feed_environ;
 
+public:
   std::shared_ptr<table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(struct html_feed_environ *h_env, int table_level);
@@ -40,10 +41,10 @@ class HtmlParser {
   // title
   std::string pre_title;
   std::string cur_title;
-  void process_title(const std::shared_ptr<HtmlTag> &tag);
-  std::string process_n_title(const std::shared_ptr<HtmlTag> &tag);
 
 public:
+  void process_title();
+  std::string process_n_title();
   void feed_title(const std::string &str);
 
 private:
@@ -61,7 +62,7 @@ private:
 public:
   int _width;
   HtmlParser(int width);
-  std::string process_select(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_select(const HtmlTag *tag);
   std::string process_n_select();
   void process_option();
   void feed_select(const std::string &str);
@@ -85,16 +86,16 @@ public:
   std::vector<std::string> textarea_str;
   std::vector<struct FormAnchor *> a_textarea;
 
-  std::string process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid);
+  std::string process_form_int(const HtmlTag *tag, int fid);
   std::string process_n_form();
-  std::string process_form(const std::shared_ptr<HtmlTag> &tag) {
+  std::string process_form(const HtmlTag *tag) {
     return process_form_int(tag, -1);
   }
   int cur_form_id() const {
     return ((form_sp >= 0) ? form_stack[form_sp] : -1);
   }
 
-  std::string process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
+  std::string process_textarea(const HtmlTag *tag, int width);
   std::string process_n_textarea();
   void feed_textarea(const std::string &str);
   void close_anchor(struct html_feed_environ *h_env);
@@ -125,19 +126,14 @@ public:
 
   std::string getLinkNumberStr(int correction) const;
 
-  std::string process_img(const std::shared_ptr<HtmlTag> &tag, int width);
-  std::string process_anchor(const std::shared_ptr<HtmlTag> &tag,
-                             const std::string &tagbuf);
-  std::string process_input(const std::shared_ptr<HtmlTag> &tag);
-  std::string process_button(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_img(const HtmlTag *tag, int width);
+  std::string process_anchor(HtmlTag *tag, const std::string &tagbuf);
+  std::string process_input(const HtmlTag *tag);
+  std::string process_button(const HtmlTag *tag);
   std::string process_n_button();
-  std::string process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
-                         int indent_width);
+  std::string process_hr(const HtmlTag *tag, int width, int indent_width);
 
 private:
-  int pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
-                  struct html_feed_environ *h_env);
-
   Lineprop effect = 0;
   Lineprop ex_effect = 0;
   char symbol = '\0';

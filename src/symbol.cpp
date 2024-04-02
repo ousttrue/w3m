@@ -7,6 +7,7 @@
 
 const char **get_symbol() { return alt_symbol; }
 
+const int N_GRAPH_SYMBOL = 32;
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 
 std::string conv_symbol(Line *l) {

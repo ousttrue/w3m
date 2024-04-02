@@ -1,5 +1,6 @@
 #pragma once
 #include "html_command.h"
+#include "readbuffer.h"
 #include <string>
 #include <vector>
 #include <optional>
@@ -79,6 +80,7 @@ enum HtmlTagAttr {
   MAX_TAGATTR = 75,
 };
 
+struct html_feed_environ;
 class HtmlTag {
   friend std::shared_ptr<HtmlTag> parseHtmlTag(const char **s, bool internal);
   friend const char *parseAttr(const std::shared_ptr<HtmlTag> &tag,
@@ -105,4 +107,68 @@ public:
   std::optional<std::string> getAttr(HtmlTagAttr id) const;
   bool setAttr(HtmlTagAttr id, const std::string &value);
   std::string to_str() const;
+  ReadBufferFlags alignFlag() const;
+
+  int process(html_feed_environ *h_env);
+
+private:
+  int HTML_Paragraph(html_feed_environ *h_env);
+  int HTML_H_enter(html_feed_environ *h_env);
+  int HTML_H_exit(html_feed_environ *h_env);
+  int HTML_List_enter(html_feed_environ *h_env);
+  int HTML_List_exit(html_feed_environ *h_env);
+  int HTML_DL_enter(html_feed_environ *h_env);
+  int HTML_LI_enter(html_feed_environ *h_env);
+  int HTML_DT_enter(html_feed_environ *h_env);
+  int HTML_DT_exit(html_feed_environ *h_env);
+  int HTML_DD_enter(html_feed_environ *h_env);
+  int HTML_TITLE_enter(html_feed_environ *h_env);
+  int HTML_TITLE_exit(html_feed_environ *h_env);
+  int HTML_TITLE_ALT_enter(html_feed_environ *h_env);
+  int HTML_FRAMESET_enter(html_feed_environ *h_env);
+  int HTML_FRAMESET_exit(html_feed_environ *h_env);
+  int HTML_NOFRAMES_enter(html_feed_environ *h_env);
+  int HTML_NOFRAMES_exit(html_feed_environ *h_env);
+  int HTML_FRAME_enter(html_feed_environ *h_env);
+  int HTML_HR_enter(html_feed_environ *h_env);
+  int HTML_PRE_enter(html_feed_environ *h_env);
+  int HTML_PRE_exit(html_feed_environ *h_env);
+  int HTML_PRE_PLAIN_enter(html_feed_environ *h_env);
+  int HTML_PRE_PLAIN_exit(html_feed_environ *h_env);
+  int HTML_PLAINTEXT_enter(html_feed_environ *h_env);
+  int HTML_LISTING_exit(html_feed_environ *h_env);
+  int HTML_A_enter(html_feed_environ *h_env);
+  int HTML_IMG_enter(html_feed_environ *h_env);
+  int HTML_IMG_ALT_enter(html_feed_environ *h_env);
+  int HTML_IMG_ALT_exit(html_feed_environ *h_env);
+  int HTML_TABLE_enter(html_feed_environ *h_env);
+  int HTML_CENTER_enter(html_feed_environ *h_env);
+  int HTML_CENTER_exit(html_feed_environ *h_env);
+  int HTML_DIV_enter(html_feed_environ *h_env);
+  int HTML_DIV_exit(html_feed_environ *h_env);
+  int HTML_DIV_INT_enter(html_feed_environ *h_env);
+  int HTML_DIV_INT_exit(html_feed_environ *h_env);
+  int HTML_FORM_enter(html_feed_environ *h_env);
+  int HTML_FORM_exit(html_feed_environ *h_env);
+  int HTML_INPUT_enter(html_feed_environ *h_env);
+  int HTML_BUTTON_enter(html_feed_environ *h_env);
+  int HTML_BUTTON_exit(html_feed_environ *h_env);
+  int HTML_SELECT_enter(html_feed_environ *h_env);
+  int HTML_SELECT_exit(html_feed_environ *h_env);
+  int HTML_TEXTAREA_enter(html_feed_environ *h_env);
+  int HTML_TEXTAREA_exit(html_feed_environ *h_env);
+  int HTML_ISINDEX_enter(html_feed_environ *h_env);
+  int HTML_META_enter(html_feed_environ *h_env);
+  int HTML_DEL_enter(html_feed_environ *h_env);
+  int HTML_DEL_exit(html_feed_environ *h_env);
+  int HTML_S_enter(html_feed_environ *h_env);
+  int HTML_S_exit(html_feed_environ *h_env);
+  int HTML_INS_enter(html_feed_environ *h_env);
+  int HTML_INS_exit(html_feed_environ *h_env);
+  int HTML_BGSOUND_enter(html_feed_environ *h_env);
+  int HTML_EMBED_enter(html_feed_environ *h_env);
+  int HTML_APPLET_enter(html_feed_environ *h_env);
+  int HTML_BODY_enter(html_feed_environ *h_env);
+  int HTML_INPUT_ALT_enter(html_feed_environ *h_env);
+  int HTML_INPUT_ALT_exit(html_feed_environ *h_env);
 };

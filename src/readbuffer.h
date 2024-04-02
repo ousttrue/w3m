@@ -5,7 +5,7 @@
 #include "enum_template.h"
 #include "anchor.h"
 #include "html_command.h"
-#include "html_tag.h"
+// #include "html_tag.h"
 #include <memory>
 #include <string_view>
 #include <string.h>
@@ -172,7 +172,7 @@ struct readbuffer {
       RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
   }
 
-  void set_alignment(const std::shared_ptr<HtmlTag> &tag);
+  void set_alignment(ReadBufferFlags flag);
   void set_breakpoint(int tag_length);
   void back_to_breakpoint() {
     this->flag = this->bp.flag;
@@ -292,49 +292,7 @@ struct readbuffer {
     return 0;
   }
 
-  int HTML_INPUT_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
-    if (auto value = tag->getAttr(ATTR_TOP_MARGIN)) {
-      int i = stoi(*value);
-      if ((short)i > this->top_margin)
-        this->top_margin = (short)i;
-    }
-    if (auto value = tag->getAttr(ATTR_BOTTOM_MARGIN)) {
-      int i = stoi(*value);
-      if ((short)i > this->bottom_margin)
-        this->bottom_margin = (short)i;
-    }
-    if (auto value = tag->getAttr(ATTR_HSEQ)) {
-      this->input_alt.hseq = stoi(*value);
-    }
-    if (auto value = tag->getAttr(ATTR_FID)) {
-      this->input_alt.fid = stoi(*value);
-    }
-    if (auto value = tag->getAttr(ATTR_TYPE)) {
-      this->input_alt.type = *value;
-    }
-    if (auto value = tag->getAttr(ATTR_VALUE)) {
-      this->input_alt.value = *value;
-    }
-    if (auto value = tag->getAttr(ATTR_NAME)) {
-      this->input_alt.name = *value;
-    }
-    this->input_alt.in = 1;
-    return 0;
-  }
 
-  int HTML_INPUT_ALT_exit() {
-    if (this->input_alt.in) {
-      if (!this->close_effect0(HTML_INPUT_ALT))
-        this->push_tag("</input_alt>", HTML_N_INPUT_ALT);
-      this->input_alt.hseq = 0;
-      this->input_alt.fid = -1;
-      this->input_alt.in = 0;
-      this->input_alt.type = {};
-      this->input_alt.name = {};
-      this->input_alt.value = {};
-    }
-    return 1;
-  }
 
   void CLOSE_P(struct html_feed_environ *h_env);
 

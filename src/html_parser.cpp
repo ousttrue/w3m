@@ -24,7 +24,7 @@
 #define HR_ATTR_WIDTH_MAX 65535
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
-#define IMG_SYMBOL UL_SYMBOL(12)
+#define IMG_SYMBOL 32 + (12)
 #define HR_SYMBOL 26
 #define TEXTAREA_ATTR_COL_MAX 4096
 #define TEXTAREA_ATTR_ROWS_MAX 4096
@@ -161,14 +161,14 @@ void HtmlParser::restore_fonteffect(struct html_feed_environ *h_env) {
     obuf->push_tag("<ins>", HTML_INS);
 }
 
-void HtmlParser::process_title(const std::shared_ptr<HtmlTag> &tag) {
+void HtmlParser::process_title() {
   if (pre_title.size()) {
     return;
   }
   cur_title = "";
 }
 
-std::string HtmlParser::process_n_title(const std::shared_ptr<HtmlTag> &tag) {
+std::string HtmlParser::process_n_title() {
   if (pre_title.size())
     return {};
   if (cur_title.empty())
@@ -202,13 +202,12 @@ void HtmlParser::feed_title(const std::string &_str) {
   }
 }
 
-std::string HtmlParser::process_textarea(const std::shared_ptr<HtmlTag> &tag,
-                                         int width) {
+std::string HtmlParser::process_textarea(const HtmlTag *tag, int width) {
   std::stringstream tmp;
 
   if (cur_form_id() < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp << process_form(parseHtmlTag(&s, true));
+    tmp << process_form(parseHtmlTag(&s, true).get());
   }
 
   cur_textarea = "";
@@ -304,8 +303,7 @@ void HtmlParser::feed_textarea(const std::string &_str) {
   }
 }
 
-std::string HtmlParser::process_form_int(const std::shared_ptr<HtmlTag> &tag,
-                                         int fid) {
+std::string HtmlParser::process_form_int(const HtmlTag *tag, int fid) {
   std::string p = "get";
   if (auto value = tag->getAttr(ATTR_METHOD)) {
     p = *value;
@@ -789,7 +787,7 @@ Line HtmlParser::renderLine(
         break;
       case HTML_FORM_INT: {
         if (auto value = tag->getAttr(ATTR_FID)) {
-          process_form_int(tag, stoi(*value));
+          process_form_int(tag.get(), stoi(*value));
         }
         break;
       }
@@ -880,8 +878,7 @@ MetaRefreshInfo getMetaRefreshParam(const std::string &_q) {
   };
 }
 
-std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
-                                    int width) {
+std::string HtmlParser::process_img(const HtmlTag *tag, int width) {
   int pre_int = false, ext_pre_int = false;
 
   auto value = tag->getAttr(ATTR_SRC);
@@ -930,7 +927,7 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
   if (r.size()) {
     auto r2 = strchr(r.c_str(), '#');
     auto s = "<form_int method=internal action=map>";
-    tmp << this->process_form(parseHtmlTag(&s, true));
+    tmp << this->process_form(parseHtmlTag(&s, true).get());
     tmp << "<input_alt fid=\"" << this->cur_form_id() << "\" "
         << "type=hidden name=link value=\"";
     tmp << html_quote((r2) ? r2 + 1 : r);
@@ -1051,7 +1048,7 @@ std::string HtmlParser::process_img(const std::shared_ptr<HtmlTag> &tag,
   return tmp.str();
 }
 
-std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
+std::string HtmlParser::process_anchor(HtmlTag *tag,
                                        const std::string &tagbuf) {
   if (tag->needRreconstruct()) {
     std::stringstream ss;
@@ -1066,14 +1063,14 @@ std::string HtmlParser::process_anchor(const std::shared_ptr<HtmlTag> &tag,
   }
 }
 
-std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
+std::string HtmlParser::process_input(const HtmlTag *tag) {
   int v, x, y, z;
   int qlen = 0;
 
   std::stringstream tmp;
   if (this->cur_form_id() < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp << this->process_form(parseHtmlTag(&s, true));
+    tmp << this->process_form(parseHtmlTag(&s, true).get());
   }
 
   std::string p = "text";
@@ -1272,13 +1269,13 @@ std::string HtmlParser::process_input(const std::shared_ptr<HtmlTag> &tag) {
   return tmp.str();
 }
 
-std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
+std::string HtmlParser::process_button(const HtmlTag *tag) {
   int v;
 
   std::stringstream tmp;
   if (this->cur_form_id() < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp << this->process_form(parseHtmlTag(&s, true));
+    tmp << this->process_form(parseHtmlTag(&s, true).get());
   }
 
   std::string p = "submit";
@@ -1335,8 +1332,8 @@ std::string HtmlParser::process_button(const std::shared_ptr<HtmlTag> &tag) {
   return tmp.str();
 }
 
-std::string HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag,
-                                   int width, int indent_width) {
+std::string HtmlParser::process_hr(const HtmlTag *tag, int width,
+                                   int indent_width) {
   std::stringstream tmp;
   tmp << "<nobr>";
 
@@ -1374,270 +1371,6 @@ std::string HtmlParser::process_hr(const std::shared_ptr<HtmlTag> &tag,
   push_symbol(tmp, HR_SYMBOL, 1, w);
   tmp << "</div_int></nobr>";
   return tmp.str();
-}
-
-int HtmlParser::pushHtmlTag(const std::shared_ptr<HtmlTag> &tag,
-                            struct html_feed_environ *h_env) {
-
-  struct environment *envs = h_env->envs.data();
-
-  HtmlCommand cmd = tag->tagid;
-
-  if (h_env->obuf.flag & RB_PRE) {
-    switch (cmd) {
-    case HTML_NOBR:
-    case HTML_N_NOBR:
-    case HTML_PRE_INT:
-    case HTML_N_PRE_INT:
-      return 1;
-
-    default:
-      break;
-    }
-  }
-
-  switch (cmd) {
-  case HTML_B:
-    return h_env->obuf.HTML_B_enter();
-  case HTML_N_B:
-    return h_env->obuf.HTML_B_exit();
-  case HTML_I:
-    return h_env->obuf.HTML_I_enter();
-  case HTML_N_I:
-    return h_env->obuf.HTML_I_exit();
-  case HTML_U:
-    return h_env->obuf.HTML_U_enter();
-  case HTML_N_U:
-    return h_env->obuf.HTML_U_exit();
-  case HTML_EM:
-    HTMLlineproc1("<i>", h_env);
-    return 1;
-  case HTML_N_EM:
-    HTMLlineproc1("</i>", h_env);
-    return 1;
-  case HTML_STRONG:
-    HTMLlineproc1("<b>", h_env);
-    return 1;
-  case HTML_N_STRONG:
-    HTMLlineproc1("</b>", h_env);
-    return 1;
-  case HTML_Q:
-    HTMLlineproc1("`", h_env);
-    return 1;
-  case HTML_N_Q:
-    HTMLlineproc1("'", h_env);
-    return 1;
-  case HTML_FIGURE:
-  case HTML_N_FIGURE:
-  case HTML_P:
-  case HTML_N_P:
-    return h_env->HTML_Paragraph(tag);
-  case HTML_FIGCAPTION:
-  case HTML_N_FIGCAPTION:
-  case HTML_BR:
-    h_env->obuf.flushline(h_env->buf, envs[h_env->envc].indent, 1,
-                          h_env->limit);
-    h_env->obuf.blank_lines = 0;
-    return 1;
-  case HTML_H:
-    return h_env->HTML_H_enter(tag);
-  case HTML_N_H:
-    return h_env->HTML_H_exit();
-  case HTML_UL:
-  case HTML_OL:
-  case HTML_BLQ:
-    return h_env->HTML_List_enter(tag);
-  case HTML_N_UL:
-  case HTML_N_OL:
-  case HTML_N_DL:
-  case HTML_N_BLQ:
-  case HTML_N_DD:
-    return h_env->HTML_List_exit(tag);
-  case HTML_DL:
-    return h_env->HTML_DL_enter(tag);
-  case HTML_LI:
-    return h_env->HTML_LI_enter(tag);
-  case HTML_DT:
-    return h_env->HTML_DT_enter();
-  case HTML_N_DT:
-    return h_env->HTML_DT_exit();
-  case HTML_DD:
-    return h_env->HTML_DD_enter();
-  case HTML_TITLE:
-    return h_env->HTML_TITLE_enter(tag);
-  case HTML_N_TITLE:
-    return h_env->HTML_TITLE_exit(tag);
-  case HTML_TITLE_ALT:
-    return h_env->HTML_TITLE_ALT(tag);
-  case HTML_FRAMESET:
-    return h_env->HTML_FRAMESET_enter(tag);
-  case HTML_N_FRAMESET:
-    return h_env->HTML_FRAMESET_exit();
-  case HTML_NOFRAMES:
-    return h_env->HTML_NOFRAMES_enter();
-  case HTML_N_NOFRAMES:
-    return h_env->HTML_NOFRAMES_exit();
-  case HTML_FRAME:
-    return h_env->HTML_FRAME(tag);
-  case HTML_HR:
-    return h_env->HTML_HR(tag);
-  case HTML_PRE:
-    return h_env->HTML_PRE_enter(tag);
-  case HTML_N_PRE:
-    return h_env->HTML_PRE_exit();
-  case HTML_PRE_INT:
-    return h_env->obuf.HTML_PRE_INT_enter();
-  case HTML_N_PRE_INT:
-    return h_env->obuf.HTML_PRE_INT_exit();
-  case HTML_NOBR:
-    return h_env->obuf.HTML_NOBR_enter();
-  case HTML_N_NOBR:
-    return h_env->obuf.HTML_NOBR_exit();
-  case HTML_PRE_PLAIN:
-    return h_env->HTML_PRE_PLAIN_enter();
-  case HTML_N_PRE_PLAIN:
-    return h_env->HTML_PRE_PLAIN_exit();
-  case HTML_LISTING:
-  case HTML_XMP:
-  case HTML_PLAINTEXT:
-    return h_env->HTML_PLAINTEXT_enter(tag);
-  case HTML_N_LISTING:
-  case HTML_N_XMP:
-    return h_env->HTML_LISTING_exit();
-  case HTML_SCRIPT:
-    h_env->obuf.flag |= RB_SCRIPT;
-    h_env->obuf.end_tag = HTML_N_SCRIPT;
-    return 1;
-  case HTML_STYLE:
-    h_env->obuf.flag |= RB_STYLE;
-    h_env->obuf.end_tag = HTML_N_STYLE;
-    return 1;
-  case HTML_N_SCRIPT:
-    h_env->obuf.flag &= ~RB_SCRIPT;
-    h_env->obuf.end_tag = HTML_UNKNOWN;
-    return 1;
-  case HTML_N_STYLE:
-    h_env->obuf.flag &= ~RB_STYLE;
-    h_env->obuf.end_tag = HTML_UNKNOWN;
-    return 1;
-  case HTML_A:
-    return h_env->HTML_A_enter(tag);
-  case HTML_N_A:
-    this->close_anchor(h_env);
-    return 1;
-  case HTML_IMG:
-    return h_env->HTML_IMG_enter(tag);
-  case HTML_IMG_ALT:
-    return h_env->HTML_IMG_ALT_enter(tag);
-  case HTML_N_IMG_ALT:
-    return h_env->HTML_IMG_ALT_exit();
-  case HTML_INPUT_ALT:
-    return h_env->obuf.HTML_INPUT_ALT_enter(tag);
-  case HTML_N_INPUT_ALT:
-    return h_env->obuf.HTML_INPUT_ALT_exit();
-  case HTML_TABLE:
-    return h_env->HTML_TABLE_enter(tag, _width);
-  case HTML_N_TABLE:
-    // should be processed in HTMLlineproc()
-    return 1;
-  case HTML_CENTER:
-    return h_env->HTML_CENTER_enter();
-  case HTML_N_CENTER:
-    return h_env->HTML_CENTER_exit();
-  case HTML_DIV:
-    return h_env->HTML_DIV_enter(tag);
-  case HTML_N_DIV:
-    return h_env->HTML_DIV_exit();
-  case HTML_DIV_INT:
-    return h_env->HTML_DIV_INT_enter(tag);
-  case HTML_N_DIV_INT:
-    return h_env->HTML_DIV_INT_exit();
-  case HTML_FORM:
-    return h_env->HTML_FORM_enter(tag);
-  case HTML_N_FORM:
-    return h_env->HTML_FORM_exit();
-  case HTML_INPUT:
-    return h_env->HTML_INPUT_enter(tag);
-  case HTML_BUTTON:
-    return h_env->HTML_BUTTON_enter(tag);
-  case HTML_N_BUTTON:
-    return h_env->HTML_BUTTON_exit();
-  case HTML_SELECT:
-    return h_env->HTML_SELECT_enter(tag);
-  case HTML_N_SELECT:
-    return h_env->HTML_SELECT_exit();
-  case HTML_OPTION:
-    /* nothing */
-    return 1;
-  case HTML_TEXTAREA:
-    return h_env->HTML_TEXTAREA_enter(tag);
-  case HTML_N_TEXTAREA:
-    return h_env->HTML_TEXTAREA_exit();
-  case HTML_ISINDEX:
-    return h_env->HTML_ISINDEX_enter(tag);
-  case HTML_DOCTYPE:
-    if (!tag->existsAttr(ATTR_PUBLIC)) {
-      h_env->obuf.flag |= RB_HTML5;
-    }
-    return 1;
-  case HTML_META:
-    return h_env->HTML_META_enter(tag);
-  case HTML_BASE:
-  case HTML_MAP:
-  case HTML_N_MAP:
-  case HTML_AREA:
-    return 0;
-  case HTML_DEL:
-    return h_env->HTML_DEL_enter();
-  case HTML_N_DEL:
-    return h_env->HTML_DEL_exit();
-  case HTML_S:
-    return h_env->HTML_S_enter();
-  case HTML_N_S:
-    return h_env->HTML_S_exit();
-  case HTML_INS:
-    return h_env->HTML_INS_enter();
-  case HTML_N_INS:
-    return h_env->HTML_INS_exit();
-  case HTML_SUP:
-    if (!(h_env->obuf.flag & (RB_DEL | RB_S)))
-      HTMLlineproc1("^", h_env);
-    return 1;
-  case HTML_N_SUP:
-    return 1;
-  case HTML_SUB:
-    if (!(h_env->obuf.flag & (RB_DEL | RB_S)))
-      HTMLlineproc1("[", h_env);
-    return 1;
-  case HTML_N_SUB:
-    if (!(h_env->obuf.flag & (RB_DEL | RB_S)))
-      HTMLlineproc1("]", h_env);
-    return 1;
-  case HTML_FONT:
-  case HTML_N_FONT:
-  case HTML_NOP:
-    return 1;
-  case HTML_BGSOUND:
-    return h_env->HTML_BGSOUND_enter(tag);
-  case HTML_EMBED:
-    return h_env->HTML_EMBED_enter(tag);
-  case HTML_APPLET:
-    return h_env->HTML_APPLET_enter(tag);
-  case HTML_BODY:
-    return h_env->HTML_BODY_enter(tag);
-  case HTML_N_HEAD:
-    if (h_env->obuf.flag & RB_TITLE)
-      HTMLlineproc1("</title>", h_env);
-    return 1;
-  case HTML_HEAD:
-  case HTML_N_BODY:
-    return 1;
-  default:
-    /* h_env->obuf.prevchar = '\0'; */
-    return 0;
-  }
-
-  return 0;
 }
 
 void HtmlParser::proc_escape(struct readbuffer *obuf, const char **str_return) {
@@ -1788,7 +1521,7 @@ void HtmlParser::process_token(TableStatus &t, const Token &token,
     }
 
     // process tags
-    if (pushHtmlTag(tag, h_env) == 0) {
+    if (tag->process(h_env) == 0) {
       // preserve the tag for second-stage processing
       if (tag->needRreconstruct())
         h_env->tagbuf = tag->to_str();
@@ -1907,12 +1640,12 @@ void HtmlParser::process_token(TableStatus &t, const Token &token,
 
 std::string HtmlParser::process_n_button() { return "</input_alt>"; }
 
-std::string HtmlParser::process_select(const std::shared_ptr<HtmlTag> &tag) {
+std::string HtmlParser::process_select(const HtmlTag *tag) {
   std::stringstream tmp;
 
   if (cur_form_id() < 0) {
     auto s = "<form_int method=internal action=none>";
-    tmp << process_form(parseHtmlTag(&s, true));
+    tmp << process_form(parseHtmlTag(&s, true).get());
   }
 
   std::string p = "";
