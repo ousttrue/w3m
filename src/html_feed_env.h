@@ -109,6 +109,14 @@ struct html_feed_environ {
   Lineprop prev_ctype;
   Breakpoint bp;
 
+  // title
+  std::string pre_title;
+  std::string cur_title;
+
+  void process_title();
+  std::string process_n_title();
+  void feed_title(const std::string &str);
+
   // push front
   // pop front
   std::list<std::shared_ptr<cmdtable>> tag_stack;

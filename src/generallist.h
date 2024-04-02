@@ -4,6 +4,7 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <optional>
 
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 
@@ -61,5 +62,21 @@ struct GeneralList {
 
   void appendTextLine(std::string_view line, int pos) {
     _list.push_back(std::make_shared<TextLine>(line, pos));
+  }
+};
+
+class LineFeed {
+  std::shared_ptr<GeneralList> _tl_lp2;
+
+public:
+  LineFeed(const std::shared_ptr<GeneralList> &tl) : _tl_lp2(tl) {}
+
+  std::optional<std::string> textlist_feed() {
+    if (_tl_lp2 && _tl_lp2->_list.size()) {
+      auto p = _tl_lp2->_list.front();
+      _tl_lp2->_list.pop_front();
+      return p->line;
+    }
+    return {};
   }
 };

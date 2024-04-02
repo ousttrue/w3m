@@ -82,7 +82,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
       } else {
         /* title */
         if (pre_mode & RB_TITLE) {
-          h_env->parser.feed_title(str);
+          h_env->feed_title(str);
           continue;
         }
         /* select */

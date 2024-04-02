@@ -6,24 +6,7 @@
 #include "line.h"
 #include "anchorlist.h"
 #include "readtoken.h"
-#include <optional>
 #include <string>
-
-class LineFeed {
-  std::shared_ptr<GeneralList> _tl_lp2;
-
-public:
-  LineFeed(const std::shared_ptr<GeneralList> &tl) : _tl_lp2(tl) {}
-
-  std::optional<std::string> textlist_feed() {
-    if (_tl_lp2 && _tl_lp2->_list.size()) {
-      auto p = _tl_lp2->_list.front();
-      _tl_lp2->_list.pop_front();
-      return p->line;
-    }
-    return {};
-  }
-};
 
 class HtmlTag;
 struct HttpResponse;
@@ -37,15 +20,6 @@ public:
   std::shared_ptr<table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(struct html_feed_environ *h_env, int table_level);
-
-  // title
-  std::string pre_title;
-  std::string cur_title;
-
-public:
-  void process_title();
-  std::string process_n_title();
-  void feed_title(const std::string &str);
 
 private:
   // select

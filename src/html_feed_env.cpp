@@ -8,6 +8,7 @@
 #include "line_layout.h"
 #include "quote.h"
 #include "http_response.h"
+#include "entity.h"
 #include <assert.h>
 #include <sstream>
 
@@ -656,7 +657,7 @@ void html_feed_environ::push_tag(std::string_view cmdname, HtmlCommand cmd) {
 }
 
 void html_feed_environ::push_nchars(int width, const char *str, int len,
-                             Lineprop mode) {
+                                    Lineprop mode) {
   this->append_tags();
   this->line += std::string(str, len);
   this->pos += width;
@@ -668,7 +669,7 @@ void html_feed_environ::push_nchars(int width, const char *str, int len,
 }
 
 void html_feed_environ::proc_mchar(int pre_mode, int width, const char **str,
-                            Lineprop mode) {
+                                   Lineprop mode) {
   this->check_breakpoint(pre_mode, *str);
   this->pos += width;
   this->line += std::string(*str, get_mclen(*str));
@@ -681,8 +682,8 @@ void html_feed_environ::proc_mchar(int pre_mode, int width, const char **str,
   this->flag |= RB_NFLUSHED;
 }
 
-void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf, int indent,
-                           int force, int width) {
+void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
+                                  int indent, int force, int width) {
   // Str *line = this->line;
   // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
   // nullptr,
@@ -1012,8 +1013,8 @@ void html_feed_environ::CLOSE_P(struct html_feed_environ *h_env) {
   }
 }
 
-void html_feed_environ::parse_end(const std::shared_ptr<GeneralList> &buf, int limit,
-                           int indent) {
+void html_feed_environ::parse_end(const std::shared_ptr<GeneralList> &buf,
+                                  int limit, int indent) {
   if (!(this->flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
     char *tp;
     if (this->bp.pos == this->pos) {
@@ -1029,6 +1030,47 @@ void html_feed_environ::parse_end(const std::shared_ptr<GeneralList> &buf, int l
       this->flag |= RB_FILL;
       this->flushline(buf, indent, 0, limit);
       this->flag &= ~RB_FILL;
+    }
+  }
+}
+
+void html_feed_environ::process_title() {
+  if (pre_title.size()) {
+    return;
+  }
+  cur_title = "";
+}
+
+std::string html_feed_environ::process_n_title() {
+  if (pre_title.size())
+    return {};
+  if (cur_title.empty())
+    return {};
+
+  Strremovefirstspaces(cur_title);
+  Strremovetrailingspaces(cur_title);
+
+  std::stringstream tmp;
+  tmp << "<title_alt title=\"" << html_quote(cur_title) << "\">";
+  pre_title = cur_title;
+  cur_title = nullptr;
+  return tmp.str();
+}
+
+void html_feed_environ::feed_title(const std::string &_str) {
+  if (pre_title.size())
+    return;
+  if (cur_title.empty())
+    return;
+  auto str = _str.c_str();
+  while (*str) {
+    if (*str == '&') {
+      cur_title += getescapecmd(&str);
+    } else if (*str == '\n' || *str == '\r') {
+      cur_title.push_back(' ');
+      str++;
+    } else {
+      cur_title += *(str++);
     }
   }
 }

@@ -158,47 +158,6 @@ void HtmlParser::restore_fonteffect(struct html_feed_environ *h_env) {
     h_env->push_tag("<ins>", HTML_INS);
 }
 
-void HtmlParser::process_title() {
-  if (pre_title.size()) {
-    return;
-  }
-  cur_title = "";
-}
-
-std::string HtmlParser::process_n_title() {
-  if (pre_title.size())
-    return {};
-  if (cur_title.empty())
-    return {};
-
-  Strremovefirstspaces(cur_title);
-  Strremovetrailingspaces(cur_title);
-
-  std::stringstream tmp;
-  tmp << "<title_alt title=\"" << html_quote(cur_title) << "\">";
-  pre_title = cur_title;
-  cur_title = nullptr;
-  return tmp.str();
-}
-
-void HtmlParser::feed_title(const std::string &_str) {
-  if (pre_title.size())
-    return;
-  if (cur_title.empty())
-    return;
-  auto str = _str.c_str();
-  while (*str) {
-    if (*str == '&') {
-      cur_title += getescapecmd(&str);
-    } else if (*str == '\n' || *str == '\r') {
-      cur_title.push_back(' ');
-      str++;
-    } else {
-      cur_title += *(str++);
-    }
-  }
-}
-
 std::string HtmlParser::process_textarea(const HtmlTag *tag, int width) {
   std::stringstream tmp;
 

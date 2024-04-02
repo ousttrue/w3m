@@ -595,7 +595,7 @@ int HtmlTag::HTML_DD_enter(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_TITLE_enter(html_feed_environ *h_env) {
   h_env->parser.close_anchor(h_env);
-  h_env->parser.process_title();
+  h_env->process_title();
   h_env->flag |= RB_TITLE;
   h_env->end_tag = HTML_N_TITLE;
   return 1;
@@ -606,7 +606,7 @@ int HtmlTag::HTML_TITLE_exit(html_feed_environ *h_env) {
     return 1;
   h_env->flag &= ~RB_TITLE;
   h_env->end_tag = {};
-  auto tmp = h_env->parser.process_n_title();
+  auto tmp = h_env->process_n_title();
   if (tmp.size())
     h_env->parser.HTMLlineproc1(tmp.c_str(), h_env);
   return 1;
