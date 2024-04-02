@@ -99,6 +99,11 @@ public:
   HtmlTag(const HtmlTag &) = delete;
   HtmlTag &operator=(const HtmlTag &) = delete;
   static std::shared_ptr<HtmlTag> parse(const char **s, bool internal);
+  static std::shared_ptr<HtmlTag> parse(std::string_view v, bool internal) {
+    std::string s(v.begin(), v.end());
+    auto p = s.c_str();
+    return parse(&p, internal);
+  }
 
   bool parsedtag_accepts(HtmlTagAttr id) const {
     return (this->map.size() && this->map[id] != MAX_TAGATTR);

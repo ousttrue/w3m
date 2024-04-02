@@ -1708,15 +1708,15 @@ static int need_flushline(struct html_feed_environ *h_env,
   return 0;
 }
 
-void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
+void HtmlParser::parse(std::string_view html, struct html_feed_environ *h_env,
                        bool internal) {
 
-  std::string line{_line.begin(), _line.end()};
+  std::string line{html.begin(), html.end()};
 
   TableStatus t;
 
   while (line.size()) {
-    int is_tag = false;
+    bool is_tag = false;
     auto pre_mode = t.pre_mode(h_env);
     int end_tag = t.end_tag(h_env);
     std::string str;
@@ -1828,189 +1828,9 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       }
     }
 
-    if (t.is_active(h_env)) {
-      /*
-       * within table: in <table>..</table>, all input tokens
-       * are fed to the table renderer, and then the renderer
-       * makes HTML output.
-       */
-      switch (t.feed(this, str, internal)) {
-      case 0:
-        /* </table> tag */
-        h_env->obuf.table_level--;
-        if (h_env->obuf.table_level >= MAX_TABLE - 1)
-          continue;
-        t.tbl->end_table();
-        if (h_env->obuf.table_level >= 0) {
-          auto tbl0 = tables[h_env->obuf.table_level];
-          std::stringstream ss;
-          ss << "<table_alt tid=" << tbl0->ntable << ">";
-          str = ss.str();
-          if (tbl0->row < 0)
-            continue;
-          tbl0->pushTable(t.tbl);
-          t.tbl = tbl0;
-          t.tbl_mode = &table_mode[h_env->obuf.table_level];
-          t.tbl_width = table_width(h_env, h_env->obuf.table_level);
-          t.feed(this, str, true);
-          continue;
-          /* continue to the next */
-        }
-        if (h_env->obuf.flag & RB_DEL)
-          continue;
-        /* all tables have been read */
-        if (t.tbl->vspace > 0 && !(h_env->obuf.flag & RB_IGNORE_P)) {
-          int indent = h_env->envs[h_env->envc].indent;
-          h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
-          h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
-        }
-        save_fonteffect(h_env);
-        initRenderTable();
-        t.tbl->renderTable(this, t.tbl_width, h_env);
-        restore_fonteffect(h_env);
-        h_env->obuf.flag &= ~RB_IGNORE_P;
-        if (t.tbl->vspace > 0) {
-          int indent = h_env->envs[h_env->envc].indent;
-          h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
-          h_env->obuf.flag |= RB_IGNORE_P;
-        }
-        h_env->obuf.prevchar = " ";
-        continue;
-      case 1:
-        /* <table> tag */
-        break;
-      default:
-        continue;
-      }
-    }
-
-    if (is_tag) {
-      /*** Beginning of a new tag ***/
-      HtmlCommand cmd;
-      std::shared_ptr<HtmlTag> tag;
-      auto p = str.c_str();
-      if ((tag = HtmlTag::parse(&p, internal)))
-        cmd = tag->tagid;
-      else
-        continue;
-      str = p;
-      /* process tags */
-      if (pushHtmlTag(tag, h_env) == 0) {
-        /* preserve the tag for second-stage processing */
-        if (tag->parsedtag_need_reconstruct())
-          h_env->tagbuf = tag->parsedtag2str();
-        h_env->obuf.push_tag(h_env->tagbuf, cmd);
-      }
-      h_env->obuf.bp.init_flag = 1;
-      clear_ignore_p_flag(cmd, &h_env->obuf);
-      if (cmd == HTML_TABLE) {
-        if (h_env->obuf.table_level >= 0) {
-          int level = std::min<short>(h_env->obuf.table_level, MAX_TABLE - 1);
-          t.tbl = tables[level];
-          t.tbl_mode = &table_mode[level];
-          t.tbl_width = table_width(h_env, level);
-        }
-      }
-      continue;
-    }
-
-    if (h_env->obuf.flag & (RB_DEL | RB_S))
-      continue;
-
-    auto pp = str.c_str();
-    while (*pp) {
-      auto mode = get_mctype(pp);
-      int delta = get_mcwidth(pp);
-      if (h_env->obuf.flag & (RB_SPECIAL & ~RB_NOBR)) {
-        char ch = *pp;
-        if (!(h_env->obuf.flag & RB_PLAIN) && (*pp == '&')) {
-          const char *p = pp;
-          int ech = getescapechar(&p);
-          if (ech == '\n' || ech == '\r') {
-            ch = '\n';
-            pp = p - 1;
-          } else if (ech == '\t') {
-            ch = '\t';
-            pp = p - 1;
-          }
-        }
-        if (ch != '\n')
-          h_env->obuf.flag &= ~RB_IGNORE_P;
-        if (ch == '\n') {
-          pp++;
-          if (h_env->obuf.flag & RB_IGNORE_P) {
-            h_env->obuf.flag &= ~RB_IGNORE_P;
-            continue;
-          }
-          if (h_env->obuf.flag & RB_PRE_INT)
-            h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
-          else
-            h_env->obuf.flushline(h_env->buf, h_env->envs[h_env->envc].indent,
-                                  1, h_env->limit);
-        } else if (ch == '\t') {
-          do {
-            h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
-          } while ((h_env->envs[h_env->envc].indent + h_env->obuf.pos) %
-                       Tabstop !=
-                   0);
-          pp++;
-        } else if (h_env->obuf.flag & RB_PLAIN) {
-          auto p = html_quote_char(*pp);
-          if (p) {
-            h_env->obuf.push_charp(1, p, PC_ASCII);
-            pp++;
-          } else {
-            h_env->obuf.proc_mchar(1, delta, &pp, mode);
-          }
-        } else {
-          if (*pp == '&')
-            proc_escape(&h_env->obuf, &pp);
-          else
-            h_env->obuf.proc_mchar(1, delta, &pp, mode);
-        }
-        if (h_env->obuf.flag & (RB_SPECIAL & ~RB_PRE_INT))
-          continue;
-      } else {
-        if (!IS_SPACE(*pp))
-          h_env->obuf.flag &= ~RB_IGNORE_P;
-        if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*pp)) {
-          if (h_env->obuf.prevchar[0] != ' ') {
-            h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
-          }
-          pp++;
-        } else {
-          if (*pp == '&')
-            proc_escape(&h_env->obuf, &pp);
-          else
-            h_env->obuf.proc_mchar(h_env->obuf.flag & RB_SPECIAL, delta, &pp,
-                                   mode);
-        }
-      }
-      if (need_flushline(h_env, &h_env->obuf, mode)) {
-        auto bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
-        auto tp = bp - h_env->obuf.bp.tlen;
-        int i = 0;
-
-        if (tp > h_env->obuf.line.c_str() && tp[-1] == ' ')
-          i = 1;
-
-        int indent = h_env->envs[h_env->envc].indent;
-        if (h_env->obuf.bp.pos - i > indent) {
-          h_env->obuf.append_tags(); /* may reallocate the buffer */
-          bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
-          std::string line = bp;
-          Strshrink(h_env->obuf.line,
-                    h_env->obuf.line.size() - h_env->obuf.bp.len);
-          if (h_env->obuf.pos - i > h_env->limit)
-            h_env->obuf.flag |= RB_FILL;
-          h_env->obuf.back_to_breakpoint();
-          h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
-          h_env->obuf.flag &= ~RB_FILL;
-          HTMLlineproc1(line, h_env);
-        }
-      }
-    }
+    process_token(t, {is_tag, str}, h_env);
   }
+
   if (!(h_env->obuf.flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
     char *tp;
     int i = 0;
@@ -2028,6 +1848,188 @@ void HtmlParser::parse(std::string_view _line, struct html_feed_environ *h_env,
       h_env->obuf.flag |= RB_FILL;
       h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
       h_env->obuf.flag &= ~RB_FILL;
+    }
+  }
+}
+
+void HtmlParser::process_token(TableStatus &t, const Token &token,
+                               html_feed_environ *h_env) {
+  if (t.is_active(h_env)) {
+    /*
+     * within table: in <table>..</table>, all input tokens
+     * are fed to the table renderer, and then the renderer
+     * makes HTML output.
+     */
+    switch (t.feed(this, token.str, internal)) {
+    case 0:
+      /* </table> tag */
+      h_env->obuf.table_level--;
+      if (h_env->obuf.table_level >= MAX_TABLE - 1)
+        return;
+      t.tbl->end_table();
+      if (h_env->obuf.table_level >= 0) {
+        auto tbl0 = tables[h_env->obuf.table_level];
+        std::stringstream ss;
+        ss << "<table_alt tid=" << tbl0->ntable << ">";
+        if (tbl0->row < 0)
+          return;
+        tbl0->pushTable(t.tbl);
+        t.tbl = tbl0;
+        t.tbl_mode = &table_mode[h_env->obuf.table_level];
+        t.tbl_width = table_width(h_env, h_env->obuf.table_level);
+        t.feed(this, ss.str(), true);
+        return;
+        /* continue to the next */
+      }
+      if (h_env->obuf.flag & RB_DEL)
+        return;
+      /* all tables have been read */
+      if (t.tbl->vspace > 0 && !(h_env->obuf.flag & RB_IGNORE_P)) {
+        int indent = h_env->envs[h_env->envc].indent;
+        h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
+        h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
+      }
+      save_fonteffect(h_env);
+      initRenderTable();
+      t.tbl->renderTable(this, t.tbl_width, h_env);
+      restore_fonteffect(h_env);
+      h_env->obuf.flag &= ~RB_IGNORE_P;
+      if (t.tbl->vspace > 0) {
+        int indent = h_env->envs[h_env->envc].indent;
+        h_env->obuf.do_blankline(h_env->buf, indent, 0, h_env->limit);
+        h_env->obuf.flag |= RB_IGNORE_P;
+      }
+      h_env->obuf.prevchar = " ";
+      return;
+    case 1:
+      /* <table> tag */
+      break;
+    default:
+      return;
+    }
+  }
+
+  if (token.is_tag) {
+    /*** Beginning of a new tag ***/
+    std::shared_ptr<HtmlTag> tag = HtmlTag::parse(token.str, internal);
+    if (!tag) {
+      return;
+    }
+
+    // process tags
+    if (pushHtmlTag(tag, h_env) == 0) {
+      // preserve the tag for second-stage processing
+      if (tag->parsedtag_need_reconstruct())
+        h_env->tagbuf = tag->parsedtag2str();
+      h_env->obuf.push_tag(h_env->tagbuf, tag->tagid);
+    }
+    h_env->obuf.bp.init_flag = 1;
+    clear_ignore_p_flag(tag->tagid, &h_env->obuf);
+    if (tag->tagid == HTML_TABLE) {
+      if (h_env->obuf.table_level >= 0) {
+        int level = std::min<short>(h_env->obuf.table_level, MAX_TABLE - 1);
+        t.tbl = tables[level];
+        t.tbl_mode = &table_mode[level];
+        t.tbl_width = table_width(h_env, level);
+      }
+    }
+    return;
+  }
+
+  if (h_env->obuf.flag & (RB_DEL | RB_S)) {
+    return;
+  }
+
+  auto pp = token.str.c_str();
+  while (*pp) {
+    auto mode = get_mctype(pp);
+    int delta = get_mcwidth(pp);
+    if (h_env->obuf.flag & (RB_SPECIAL & ~RB_NOBR)) {
+      char ch = *pp;
+      if (!(h_env->obuf.flag & RB_PLAIN) && (*pp == '&')) {
+        const char *p = pp;
+        int ech = getescapechar(&p);
+        if (ech == '\n' || ech == '\r') {
+          ch = '\n';
+          pp = p - 1;
+        } else if (ech == '\t') {
+          ch = '\t';
+          pp = p - 1;
+        }
+      }
+      if (ch != '\n')
+        h_env->obuf.flag &= ~RB_IGNORE_P;
+      if (ch == '\n') {
+        pp++;
+        if (h_env->obuf.flag & RB_IGNORE_P) {
+          h_env->obuf.flag &= ~RB_IGNORE_P;
+          return;
+        }
+        if (h_env->obuf.flag & RB_PRE_INT)
+          h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
+        else
+          h_env->obuf.flushline(h_env->buf, h_env->envs[h_env->envc].indent, 1,
+                                h_env->limit);
+      } else if (ch == '\t') {
+        do {
+          h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
+        } while (
+            (h_env->envs[h_env->envc].indent + h_env->obuf.pos) % Tabstop != 0);
+        pp++;
+      } else if (h_env->obuf.flag & RB_PLAIN) {
+        auto p = html_quote_char(*pp);
+        if (p) {
+          h_env->obuf.push_charp(1, p, PC_ASCII);
+          pp++;
+        } else {
+          h_env->obuf.proc_mchar(1, delta, &pp, mode);
+        }
+      } else {
+        if (*pp == '&')
+          proc_escape(&h_env->obuf, &pp);
+        else
+          h_env->obuf.proc_mchar(1, delta, &pp, mode);
+      }
+      if (h_env->obuf.flag & (RB_SPECIAL & ~RB_PRE_INT))
+        return;
+    } else {
+      if (!IS_SPACE(*pp))
+        h_env->obuf.flag &= ~RB_IGNORE_P;
+      if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*pp)) {
+        if (h_env->obuf.prevchar[0] != ' ') {
+          h_env->obuf.push_char(h_env->obuf.flag & RB_SPECIAL, ' ');
+        }
+        pp++;
+      } else {
+        if (*pp == '&')
+          proc_escape(&h_env->obuf, &pp);
+        else
+          h_env->obuf.proc_mchar(h_env->obuf.flag & RB_SPECIAL, delta, &pp,
+                                 mode);
+      }
+    }
+    if (need_flushline(h_env, &h_env->obuf, mode)) {
+      auto bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
+      auto tp = bp - h_env->obuf.bp.tlen;
+      int i = 0;
+
+      if (tp > h_env->obuf.line.c_str() && tp[-1] == ' ')
+        i = 1;
+
+      int indent = h_env->envs[h_env->envc].indent;
+      if (h_env->obuf.bp.pos - i > indent) {
+        h_env->obuf.append_tags(); /* may reallocate the buffer */
+        bp = h_env->obuf.line.c_str() + h_env->obuf.bp.len;
+        std::string line = bp;
+        Strshrink(h_env->obuf.line,
+                  h_env->obuf.line.size() - h_env->obuf.bp.len);
+        if (h_env->obuf.pos - i > h_env->limit)
+          h_env->obuf.flag |= RB_FILL;
+        h_env->obuf.back_to_breakpoint();
+        h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
+        h_env->obuf.flag &= ~RB_FILL;
+        HTMLlineproc1(line, h_env);
+      }
     }
   }
 }

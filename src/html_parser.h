@@ -102,6 +102,13 @@ public:
   void push_render_image(const std::string &str, int width, int limit,
                          html_feed_environ *h_env);
 
+  struct Token {
+    bool is_tag;
+    std::string str;
+  };
+
+  void process_token(TableStatus &t, const Token &token, html_feed_environ *h_env);
+
 public:
   int cur_hseq = 1;
 
