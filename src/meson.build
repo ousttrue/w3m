@@ -68,7 +68,6 @@ without_gc_lib = static_library(
         'search.cpp',
         'linein.cpp',
         'option_param.cpp',
-        'readbuffer.cpp',
         'readtoken.cpp',
         'html_feed_env.cpp',
         'table.cpp',

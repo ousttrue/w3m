@@ -1,0 +1,37 @@
+#pragma once
+#include "enum_template.h"
+
+enum ReadBufferFlags {
+  RB_NONE = 0,
+  RB_PRE = 0x01,
+  RB_SCRIPT = 0x02,
+  RB_STYLE = 0x04,
+  RB_PLAIN = 0x08,
+  RB_LEFT = 0x10,
+  RB_CENTER = 0x20,
+  RB_RIGHT = 0x40,
+  RB_ALIGN = (RB_LEFT | RB_CENTER | RB_RIGHT),
+  RB_NOBR = 0x80,
+  RB_P = 0x100,
+  RB_PRE_INT = 0x200,
+  RB_IN_DT = 0x400,
+  RB_INTXTA = 0x800,
+  RB_INSELECT = 0x1000,
+  RB_IGNORE_P = 0x2000,
+  RB_TITLE = 0x4000,
+  RB_NFLUSHED = 0x8000,
+  RB_NOFRAMES = 0x10000,
+  RB_INTABLE = 0x20000,
+  RB_PREMODE =
+      (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA),
+  RB_SPECIAL =
+      (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_NOBR),
+  RB_PLAIN_PRE = 0x40000,
+  RB_FILL = 0x80000,
+  RB_DEL = 0x100000,
+  RB_S = 0x200000,
+  RB_HTML5 = 0x400000,
+
+  TBLM_ANCHOR = 0x1000000,
+};
+ENUM_OP_INSTANCE(ReadBufferFlags);

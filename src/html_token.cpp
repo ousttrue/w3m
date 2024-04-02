@@ -13,27 +13,27 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
     auto pre_mode = t.pre_mode(h_env);
     int end_tag = t.end_tag(h_env);
     std::string str;
-    if (line[0] == '<' || h_env->obuf.status != R_ST_NORMAL) {
+    if (line[0] == '<' || h_env->status != R_ST_NORMAL) {
       /*
        * Tag processing
        */
-      if (h_env->obuf.status == R_ST_EOL)
-        h_env->obuf.status = R_ST_NORMAL;
+      if (h_env->status == R_ST_EOL)
+        h_env->status = R_ST_NORMAL;
       else {
-        if (h_env->obuf.status != R_ST_NORMAL) {
+        if (h_env->status != R_ST_NORMAL) {
           auto p = line.c_str();
-          append_token(h_env->tagbuf, &p, &h_env->obuf.status,
+          append_token(h_env->tagbuf, &p, &h_env->status,
                        pre_mode & RB_PREMODE);
           line = p;
         } else {
           auto p = line.c_str();
           if (auto buf =
-                  read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
+                  read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
             h_env->tagbuf = *buf;
           }
           line = p;
         }
-        if (h_env->obuf.status != R_ST_NORMAL) {
+        if (h_env->status != R_ST_NORMAL) {
           // exit
           return {};
         }
@@ -54,12 +54,12 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
       std::string tokbuf;
       auto p = line.c_str();
       if (auto value =
-              read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
+              read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
         tokbuf = *value;
       }
       line = p;
-      if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
-        h_env->obuf.status = R_ST_NORMAL;
+      if (h_env->status != R_ST_NORMAL) /* R_ST_AMP ? */
+        h_env->status = R_ST_NORMAL;
       str = tokbuf;
     }
 
@@ -87,7 +87,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
         }
         /* select */
         if (pre_mode & RB_INSELECT) {
-          if (h_env->obuf.table_level >= 0) {
+          if (h_env->table_level >= 0) {
             // goto proc_normal;
           } else {
             h_env->parser.feed_select(str);
@@ -104,7 +104,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
             is_tag = false;
             continue;
           }
-          if (h_env->obuf.table_level >= 0) {
+          if (h_env->table_level >= 0) {
             // goto proc_normal;
           } else {
             /* textarea */

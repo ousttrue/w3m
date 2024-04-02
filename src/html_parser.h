@@ -3,9 +3,9 @@
 #include "html_command.h"
 #include "lineprop.h"
 #include "table.h"
-#include "readbuffer.h"
 #include "line.h"
 #include "anchorlist.h"
+#include "readtoken.h"
 #include <optional>
 #include <string>
 
@@ -101,7 +101,7 @@ public:
   void close_anchor(struct html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);
-  void proc_escape(struct readbuffer *obuf, const char **str_return);
+  void proc_escape(html_feed_environ *h_env, const char **str_return);
   void completeHTMLstream(html_feed_environ *);
   void push_render_image(const std::string &str, int width, int limit,
                          html_feed_environ *h_env);
@@ -118,11 +118,11 @@ public:
 
   void HTMLlineproc1(const std::string &x, struct html_feed_environ *y);
 
-  void CLOSE_DT(readbuffer *obuf, html_feed_environ *h_env);
+  void CLOSE_DT(html_feed_environ *h_env);
 
-  void CLOSE_A(readbuffer *obuf, html_feed_environ *h_env);
+  void CLOSE_A(html_feed_environ *h_env);
 
-  void HTML5_CLOSE_A(readbuffer *obuf, html_feed_environ *h_env);
+  void HTML5_CLOSE_A(html_feed_environ *h_env);
 
   std::string getLinkNumberStr(int correction) const;
 

@@ -1,6 +1,6 @@
 #pragma once
 #include "html_command.h"
-#include "readbuffer.h"
+#include "html_readbuffer_flags.h"
 #include <string>
 #include <vector>
 #include <optional>

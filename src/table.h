@@ -2,8 +2,8 @@
 #include "lineprop.h"
 #include "enum_template.h"
 #include "generallist.h"
-#include "readbuffer.h"
 #include "matrix.h"
+#include "html_readbuffer_flags.h"
 
 #include <stdint.h>
 #include <memory>

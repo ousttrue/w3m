@@ -1,4 +1,3 @@
-#include "readbuffer.h"
 #include "push_symbol.h"
 #include "option_param.h"
 #include "html_feed_env.h"
@@ -482,12 +481,11 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
 
   html_feed_environ h_env(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col), 0,
                           this->tabdata[row][col]);
-  auto &obuf = h_env.obuf;
-  obuf.flag |= RB_INTABLE;
+  h_env.flag |= RB_INTABLE;
   if (h_env.limit > maxlimit)
     h_env.limit = maxlimit;
   if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
-    obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
+    h_env.do_blankline(h_env.buf, 0, 0, h_env.limit);
   for (auto &l : orgdata->_list) {
     if (TAG_IS(l->line.c_str(), "<table_alt", 10)) {
       int id = -1;
@@ -504,12 +502,12 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
         parser->save_fonteffect(&h_env);
-        obuf.flushline(h_env.buf, 0, 2, h_env.limit);
-        if (t->vspace > 0 && !(obuf.flag & RB_IGNORE_P))
-          obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
-        if (h_env.obuf.RB_GET_ALIGN() == RB_CENTER) {
+        h_env.flushline(h_env.buf, 0, 2, h_env.limit);
+        if (t->vspace > 0 && !(h_env.flag & RB_IGNORE_P))
+          h_env.do_blankline(h_env.buf, 0, 0, h_env.limit);
+        if (h_env.RB_GET_ALIGN() == RB_CENTER) {
           alignment = ALIGN_CENTER;
-        } else if (h_env.obuf.RB_GET_ALIGN() == RB_RIGHT) {
+        } else if (h_env.RB_GET_ALIGN() == RB_RIGHT) {
           alignment = ALIGN_RIGHT;
         } else {
           alignment = ALIGN_LEFT;
@@ -522,30 +520,30 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
           }
         }
         h_env.buf->appendGeneralList(this->tables[id].buf);
-        if (h_env.obuf.maxlimit < limit)
-          h_env.obuf.maxlimit = limit;
+        if (h_env.maxlimit < limit)
+          h_env.maxlimit = limit;
         parser->restore_fonteffect(&h_env);
-        obuf.flag &= ~RB_IGNORE_P;
-        h_env.obuf.blank_lines = 0;
+        h_env.flag &= ~RB_IGNORE_P;
+        h_env.blank_lines = 0;
         if (t->vspace > 0) {
-          obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
-          obuf.flag |= RB_IGNORE_P;
+          h_env.do_blankline(h_env.buf, 0, 0, h_env.limit);
+          h_env.flag |= RB_IGNORE_P;
         }
       }
     } else
       parser->HTMLlineproc1(l->line.c_str(), &h_env);
   }
-  if (obuf.status != R_ST_NORMAL) {
-    obuf.status = R_ST_EOL;
+  if (h_env.status != R_ST_NORMAL) {
+    h_env.status = R_ST_EOL;
     parser->HTMLlineproc1("\n", &h_env);
   }
   parser->completeHTMLstream(&h_env);
-  obuf.flushline(h_env.buf, 0, 2, h_env.limit);
+  h_env.flushline(h_env.buf, 0, 2, h_env.limit);
   if (this->border_mode == BORDER_NONE) {
     int rowspan = this->table_rowspan(row, col);
     if (row + rowspan <= this->maxrow) {
-      if (this->vcellpadding > 0 && !(obuf.flag & RB_IGNORE_P))
-        obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
+      if (this->vcellpadding > 0 && !(h_env.flag & RB_IGNORE_P))
+        h_env.do_blankline(h_env.buf, 0, 0, h_env.limit);
     } else {
       if (this->vspace > 0) {
         h_env.purgeline();
@@ -553,8 +551,8 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     }
   } else {
     if (this->vcellpadding > 0) {
-      if (!(obuf.flag & RB_IGNORE_P))
-        obuf.do_blankline(h_env.buf, 0, 0, h_env.limit);
+      if (!(h_env.flag & RB_IGNORE_P))
+        h_env.do_blankline(h_env.buf, 0, 0, h_env.limit);
     } else {
       h_env.purgeline();
     }
@@ -566,11 +564,11 @@ void table::do_refill(HtmlParser *parser, int row, int col, int maxlimit) {
     k = bsearch_2short(colspan, cell->colspan, col, cell->col, MAXCOL,
                        cell->index, cell->maxcell + 1);
     icell = cell->index[k];
-    if (cell->minimum_width[icell] < h_env.obuf.maxlimit)
-      cell->minimum_width[icell] = h_env.obuf.maxlimit;
+    if (cell->minimum_width[icell] < h_env.maxlimit)
+      cell->minimum_width[icell] = h_env.maxlimit;
   } else {
-    if (this->minimum_width[col] < h_env.obuf.maxlimit)
-      this->minimum_width[col] = h_env.obuf.maxlimit;
+    if (this->minimum_width[col] < h_env.maxlimit)
+      this->minimum_width[col] = h_env.maxlimit;
   }
 }
 
@@ -1268,8 +1266,8 @@ void table::make_caption(HtmlParser *parser, struct html_feed_environ *h_env) {
   parser->parse(this->caption, &henv, false);
   parser->HTMLlineproc1("</center>", &henv);
 
-  if (this->total_width < henv.obuf.maxlimit)
-    this->total_width = henv.obuf.maxlimit;
+  if (this->total_width < henv.maxlimit)
+    this->total_width = henv.maxlimit;
   limit = h_env->limit;
   h_env->limit = this->total_width;
   parser->HTMLlineproc1("<center>", h_env);
@@ -3091,17 +3089,17 @@ void table::set_table_matrix(int width) {
 }
 
 ReadBufferFlags TableStatus::pre_mode(html_feed_environ *h_env) {
-  return (h_env->obuf.table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode
-                                                    : h_env->obuf.flag;
+  return (h_env->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode
+                                               : h_env->flag;
 }
 
 HtmlCommand TableStatus::end_tag(html_feed_environ *h_env) {
-  return (h_env->obuf.table_level >= 0 && tbl_mode) ? tbl_mode->end_tag
-                                                    : h_env->obuf.end_tag;
+  return (h_env->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag
+                                               : h_env->end_tag;
 }
 
 bool TableStatus::is_active(html_feed_environ *h_env) {
-  return h_env->obuf.table_level >= 0 && tbl && tbl_mode;
+  return h_env->table_level >= 0 && tbl && tbl_mode;
 }
 
 int TableStatus::feed(HtmlParser *parser, const std::string &str,
