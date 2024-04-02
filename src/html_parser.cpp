@@ -1708,148 +1708,147 @@ static int need_flushline(struct html_feed_environ *h_env,
   return 0;
 }
 
+struct Tokenizer {
+  std::string line;
+  Tokenizer(std::string_view html) {
+    line = std::string{html.begin(), html.end()};
+  }
+
+  std::optional<Token> getToken(html_feed_environ *h_env, TableStatus &t,
+                                bool internal) {
+    while (line.size()) {
+      bool is_tag = false;
+      auto pre_mode = t.pre_mode(h_env);
+      int end_tag = t.end_tag(h_env);
+      std::string str;
+      if (line[0] == '<' || h_env->obuf.status != R_ST_NORMAL) {
+        /*
+         * Tag processing
+         */
+        if (h_env->obuf.status == R_ST_EOL)
+          h_env->obuf.status = R_ST_NORMAL;
+        else {
+          if (h_env->obuf.status != R_ST_NORMAL) {
+            auto p = line.c_str();
+            append_token(h_env->tagbuf, &p, &h_env->obuf.status,
+                         pre_mode & RB_PREMODE);
+            line = p;
+          } else {
+            auto p = line.c_str();
+            if (auto buf = read_token(&p, &h_env->obuf.status,
+                                      pre_mode & RB_PREMODE)) {
+              h_env->tagbuf = *buf;
+            }
+            line = p;
+          }
+          if (h_env->obuf.status != R_ST_NORMAL) {
+            // exit
+            return {};
+          }
+        }
+        if (h_env->tagbuf.empty())
+          continue;
+        str = h_env->tagbuf;
+        if (str[0] == '<') {
+          if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
+            is_tag = true;
+          else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT |
+                                 RB_SCRIPT | RB_STYLE | RB_TITLE))) {
+            line = str.substr(1) + line;
+            str = "&lt;";
+          }
+        }
+      } else {
+        std::string tokbuf;
+        auto p = line.c_str();
+        if (auto value =
+                read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
+          tokbuf = *value;
+        }
+        line = p;
+        if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
+          h_env->obuf.status = R_ST_NORMAL;
+        str = tokbuf;
+      }
+
+      if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
+                      RB_STYLE | RB_TITLE)) {
+        bool goto_proc_normal = false;
+        if (is_tag) {
+          auto p = str.c_str();
+          if (auto tag = HtmlTag::parse(&p, internal)) {
+            if (tag->tagid == end_tag ||
+                (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM) ||
+                (pre_mode & RB_TITLE &&
+                 (tag->tagid == HTML_N_HEAD || tag->tagid == HTML_BODY))) {
+              goto_proc_normal = true;
+            }
+          }
+        }
+        if (goto_proc_normal) {
+          // goto proc_normal;
+        } else {
+          /* title */
+          if (pre_mode & RB_TITLE) {
+            h_env->parser.feed_title(str);
+            continue;
+          }
+          /* select */
+          if (pre_mode & RB_INSELECT) {
+            if (h_env->obuf.table_level >= 0) {
+              // goto proc_normal;
+            } else {
+              h_env->parser.feed_select(str);
+              continue;
+            }
+          } else {
+            if (is_tag) {
+              const char *p;
+              if (strncmp(str.c_str(), "<!--", 4) &&
+                  (p = strchr(str.c_str() + 1, '<'))) {
+                str = std::string(str, p - str.c_str());
+                line = std::string(p) + line;
+              }
+              is_tag = false;
+              continue;
+            }
+            if (h_env->obuf.table_level >= 0) {
+              // goto proc_normal;
+            } else {
+              /* textarea */
+              if (pre_mode & RB_INTXTA) {
+                h_env->parser.feed_textarea(str);
+                continue;
+              }
+              /* script */
+              if (pre_mode & RB_SCRIPT)
+                continue;
+              /* style */
+              if (pre_mode & RB_STYLE)
+                continue;
+            }
+          }
+        }
+      }
+
+      return Token{is_tag, str};
+    }
+
+    return {};
+  }
+};
+
 void HtmlParser::parse(std::string_view html, struct html_feed_environ *h_env,
                        bool internal) {
 
-  std::string line{html.begin(), html.end()};
-
+  Tokenizer tokenizer(html);
   TableStatus t;
-
-  while (line.size()) {
-    bool is_tag = false;
-    auto pre_mode = t.pre_mode(h_env);
-    int end_tag = t.end_tag(h_env);
-    std::string str;
-    if (line[0] == '<' || h_env->obuf.status != R_ST_NORMAL) {
-      /*
-       * Tag processing
-       */
-      if (h_env->obuf.status == R_ST_EOL)
-        h_env->obuf.status = R_ST_NORMAL;
-      else {
-        if (h_env->obuf.status != R_ST_NORMAL) {
-          auto p = line.c_str();
-          append_token(h_env->tagbuf, &p, &h_env->obuf.status,
-                       pre_mode & RB_PREMODE);
-          line = p;
-        } else {
-          auto p = line.c_str();
-          if (auto buf =
-                  read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
-            h_env->tagbuf = *buf;
-          }
-          line = p;
-        }
-        if (h_env->obuf.status != R_ST_NORMAL)
-          return;
-      }
-      if (h_env->tagbuf.empty())
-        continue;
-      str = h_env->tagbuf;
-      if (str[0] == '<') {
-        if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
-          is_tag = true;
-        else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
-                               RB_STYLE | RB_TITLE))) {
-          line = str.substr(1) + line;
-          str = "&lt;";
-        }
-      }
-    } else {
-      std::string tokbuf;
-      auto p = line.c_str();
-      if (auto value =
-              read_token(&p, &h_env->obuf.status, pre_mode & RB_PREMODE)) {
-        tokbuf = *value;
-      }
-      line = p;
-      if (h_env->obuf.status != R_ST_NORMAL) /* R_ST_AMP ? */
-        h_env->obuf.status = R_ST_NORMAL;
-      str = tokbuf;
-    }
-
-    if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE |
-                    RB_TITLE)) {
-      bool goto_proc_normal = false;
-      if (is_tag) {
-        auto p = str.c_str();
-        if (auto tag = HtmlTag::parse(&p, internal)) {
-          if (tag->tagid == end_tag ||
-              (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM) ||
-              (pre_mode & RB_TITLE &&
-               (tag->tagid == HTML_N_HEAD || tag->tagid == HTML_BODY))) {
-            goto_proc_normal = true;
-          }
-        }
-      }
-      if (goto_proc_normal) {
-        // goto proc_normal;
-      } else {
-        /* title */
-        if (pre_mode & RB_TITLE) {
-          feed_title(str);
-          continue;
-        }
-        /* select */
-        if (pre_mode & RB_INSELECT) {
-          if (h_env->obuf.table_level >= 0) {
-            // goto proc_normal;
-          } else {
-            this->feed_select(str);
-            continue;
-          }
-        } else {
-          if (is_tag) {
-            const char *p;
-            if (strncmp(str.c_str(), "<!--", 4) &&
-                (p = strchr(str.c_str() + 1, '<'))) {
-              str = std::string(str, p - str.c_str());
-              line = std::string(p) + line;
-            }
-            is_tag = false;
-            continue;
-          }
-          if (h_env->obuf.table_level >= 0) {
-            // goto proc_normal;
-          } else {
-            /* textarea */
-            if (pre_mode & RB_INTXTA) {
-              feed_textarea(str);
-              continue;
-            }
-            /* script */
-            if (pre_mode & RB_SCRIPT)
-              continue;
-            /* style */
-            if (pre_mode & RB_STYLE)
-              continue;
-          }
-        }
-      }
-    }
-
-    process_token(t, {is_tag, str}, h_env);
+  while (auto token = tokenizer.getToken(h_env, t, internal)) {
+    process_token(t, *token, h_env);
   }
 
-  if (!(h_env->obuf.flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
-    char *tp;
-    int i = 0;
-
-    if (h_env->obuf.bp.pos == h_env->obuf.pos) {
-      tp = &h_env->obuf.line[h_env->obuf.bp.len - h_env->obuf.bp.tlen];
-    } else {
-      tp = &h_env->obuf.line[h_env->obuf.line.size()];
-    }
-
-    if (tp > h_env->obuf.line.c_str() && tp[-1] == ' ')
-      i = 1;
-    int indent = h_env->envs[h_env->envc].indent;
-    if (h_env->obuf.pos - i > h_env->limit) {
-      h_env->obuf.flag |= RB_FILL;
-      h_env->obuf.flushline(h_env->buf, indent, 0, h_env->limit);
-      h_env->obuf.flag &= ~RB_FILL;
-    }
-  }
+  h_env->obuf.parse_end(h_env->buf, h_env->limit,
+                        h_env->envs[h_env->envc].indent);
 }
 
 void HtmlParser::process_token(TableStatus &t, const Token &token,

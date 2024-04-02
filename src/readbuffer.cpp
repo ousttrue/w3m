@@ -907,3 +907,24 @@ void readbuffer::CLOSE_P(struct html_feed_environ *h_env) {
     this->flag &= ~RB_P;
   }
 }
+
+void readbuffer::parse_end(const std::shared_ptr<GeneralList> &buf, int limit,
+                           int indent) {
+  if (!(this->flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
+    char *tp;
+    if (this->bp.pos == this->pos) {
+      tp = &this->line[this->bp.len - this->bp.tlen];
+    } else {
+      tp = &this->line[this->line.size()];
+    }
+
+    int i = 0;
+    if (tp > this->line.c_str() && tp[-1] == ' ')
+      i = 1;
+    if (this->pos - i > limit) {
+      this->flag |= RB_FILL;
+      this->flushline(buf, indent, 0, limit);
+      this->flag &= ~RB_FILL;
+    }
+  }
+}

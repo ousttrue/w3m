@@ -25,6 +25,11 @@ public:
   }
 };
 
+struct Token {
+  bool is_tag;
+  std::string str;
+};
+
 class HtmlTag;
 struct HttpResponse;
 struct LineData;
@@ -42,8 +47,11 @@ class HtmlParser {
   std::string cur_title;
   void process_title(const std::shared_ptr<HtmlTag> &tag);
   std::string process_n_title(const std::shared_ptr<HtmlTag> &tag);
+
+public:
   void feed_title(const std::string &str);
 
+private:
   // select
   std::string cur_select = {};
   std::string select_str = {};
@@ -102,12 +110,8 @@ public:
   void push_render_image(const std::string &str, int width, int limit,
                          html_feed_environ *h_env);
 
-  struct Token {
-    bool is_tag;
-    std::string str;
-  };
-
-  void process_token(TableStatus &t, const Token &token, html_feed_environ *h_env);
+  void process_token(TableStatus &t, const Token &token,
+                     html_feed_environ *h_env);
 
 public:
   int cur_hseq = 1;

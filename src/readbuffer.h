@@ -397,6 +397,8 @@ struct readbuffer {
       this->flushline(buf, indent, 1, width);
     }
   }
+
+  void parse_end(const std::shared_ptr<GeneralList> &buf, int limit, int indent);
 };
 
 std::string romanNumeral(int n);
