@@ -15,6 +15,7 @@
 #include "push_symbol.h"
 #include "html_token.h"
 #include "html_meta.h"
+#include "html_renderer.h"
 #include <assert.h>
 #include <sstream>
 
@@ -75,12 +76,6 @@ void html_feed_environ::parseLine(std::string_view istr, bool internal) {
 }
 
 void html_feed_environ::completeHTMLstream() { this->completeHTMLstream(this); }
-
-std::shared_ptr<LineData>
-html_feed_environ::render(const Url &currentUrl,
-                          const std::shared_ptr<AnchorList<FormAnchor>> &old) {
-  return this->render(currentUrl, this, old);
-}
 
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 std::shared_ptr<FormItem>
@@ -145,7 +140,7 @@ loadHTMLstream(int width, const Url &currentURL, std::string_view body,
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
                              GeneralList::newGeneralList());
   htmlenv1.parseLine(body, internal);
-  return htmlenv1.render(currentURL, old);
+  return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }
 
 bool pseudoInlines = true;
@@ -796,8 +791,7 @@ std::string html_feed_environ::getLinkNumberStr(int correction) const {
 }
 
 void html_feed_environ::push_render_image(const std::string &str, int width,
-                                          int limit,
-                                          html_feed_environ *h_env) {
+                                          int limit, html_feed_environ *h_env) {
   int indent = h_env->envs[h_env->envc].indent;
 
   h_env->push_spaces(1, (limit - width) / 2);
@@ -1034,24 +1028,6 @@ std::string html_feed_environ::process_n_form(void) {
   return {};
 }
 
-static int ex_efct(int ex) {
-  int effect = 0;
-
-  if (!ex)
-    return 0;
-
-  if (ex & PE_EX_ITALIC)
-    effect |= PE_EX_ITALIC_E;
-
-  if (ex & PE_EX_INSERT)
-    effect |= PE_EX_INSERT_E;
-
-  if (ex & PE_EX_STRIKE)
-    effect |= PE_EX_STRIKE_E;
-
-  return effect;
-}
-
 static std::string textfieldrep(const std::string &s, int width) {
   Lineprop c_type;
   std::stringstream n;
@@ -1081,443 +1057,6 @@ static std::string textfieldrep(const std::string &s, int width) {
   for (; j < width; j++)
     n << ' ';
   return n.str();
-}
-
-std::shared_ptr<LineData>
-html_feed_environ::render(const Url &currentUrl, html_feed_environ *h_env,
-                          const std::shared_ptr<AnchorList<FormAnchor>> &old) {
-
-  auto formated = std::make_shared<LineData>();
-  formated->clear(_width);
-  formated->baseURL = currentUrl;
-  formated->title = h_env->title;
-
-  LineFeed feed(h_env->buf);
-  for (int nlines = 0; auto _str = feed.textlist_feed(); ++nlines) {
-    auto &str = *_str;
-    if (n_textarea >= 0 && str.size() && str[0] != '<') {
-      textarea_str[n_textarea] += str;
-      continue;
-    }
-
-    auto line =
-        renderLine(currentUrl, h_env, formated, nlines, str.c_str(), old);
-
-    /* end of processing for one line */
-    if (!internal) {
-      line.PPUSH(0, 0);
-      formated->lines.push_back(line);
-    }
-    if (internal == HTML_N_INTERNAL) {
-      internal = {};
-    }
-  }
-
-  formated->formlist = forms;
-  if (n_textarea) {
-    formated->addMultirowsForm();
-  }
-
-  return formated;
-}
-
-Line html_feed_environ::renderLine(
-    const Url &url, html_feed_environ *h_env,
-    const std::shared_ptr<LineData> &data, int nlines, const char *str,
-    const std::shared_ptr<AnchorList<FormAnchor>> &old) {
-
-  Line line;
-
-  auto endp = str + strlen(str);
-  while (str < endp) {
-    auto mode = get_mctype(str);
-    if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-      line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
-      str += 1;
-    } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-      line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
-      str++;
-    } else if (*str != '<' && *str != '&') {
-      str += line.push_mc(effect | ex_efct(ex_effect), str);
-    } else if (*str == '&') {
-      /*
-       * & escape processing
-       */
-      auto _p = getescapecmd(&str);
-      auto p = _p.c_str();
-      while (*p) {
-        mode = get_mctype(p);
-        if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-          line.PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
-          p++;
-        } else {
-          p += line.push_mc(mode | effect | ex_efct(ex_effect), p);
-        }
-      }
-    } else {
-      /* tag processing */
-      std::shared_ptr<HtmlTag> tag;
-      if (!(tag = parseHtmlTag(&str, true)))
-        continue;
-      switch (tag->tagid) {
-      case HTML_B:
-        effect |= PE_BOLD;
-        break;
-      case HTML_N_B:
-        effect &= ~PE_BOLD;
-        break;
-      case HTML_I:
-        ex_effect |= PE_EX_ITALIC;
-        break;
-      case HTML_N_I:
-        ex_effect &= ~PE_EX_ITALIC;
-        break;
-      case HTML_INS:
-        ex_effect |= PE_EX_INSERT;
-        break;
-      case HTML_N_INS:
-        ex_effect &= ~PE_EX_INSERT;
-        break;
-      case HTML_U:
-        effect |= PE_UNDER;
-        break;
-      case HTML_N_U:
-        effect &= ~PE_UNDER;
-        break;
-      case HTML_S:
-        ex_effect |= PE_EX_STRIKE;
-        break;
-      case HTML_N_S:
-        ex_effect &= ~PE_EX_STRIKE;
-        break;
-      case HTML_A: {
-        // const char *s = nullptr;
-        // auto q = res->baseTarget;
-        // char *id = nullptr;
-        if (auto value = tag->getAttr(ATTR_NAME)) {
-          auto _id = url_quote(*value);
-          data->registerName(_id.c_str(), nlines, line.len());
-        }
-        std::string p;
-        if (auto value = tag->getAttr(ATTR_HREF)) {
-          p = url_quote(remove_space(*value));
-        }
-        std::string q;
-        if (auto value = tag->getAttr(ATTR_TARGET)) {
-          q = url_quote(*value);
-        }
-        std::string r;
-        if (auto value = tag->getAttr(ATTR_REFERER)) {
-          r = url_quote(*value);
-        }
-        std::string s;
-        if (auto value = tag->getAttr(ATTR_TITLE)) {
-          s = *value;
-        }
-        std::string t;
-        if (auto value = tag->getAttr(ATTR_ACCESSKEY)) {
-          t = *value;
-        } else {
-          t.push_back(0);
-        }
-        auto hseq = 0;
-        if (auto value = tag->getAttr(ATTR_HSEQ)) {
-          hseq = stoi(*value);
-        }
-        if (hseq > 0) {
-          data->_hmarklist->putHmarker(nlines, line.len(), hseq - 1);
-        } else if (hseq < 0) {
-          int h = -hseq - 1;
-          if (data->_hmarklist->tryMark(h, nlines, line.len())) {
-            hseq = -hseq;
-          }
-        }
-        if (p.size()) {
-          effect |= PE_ANCHOR;
-          auto bp = BufferPoint{
-              .line = nlines,
-              .pos = line.len(),
-          };
-          a_href = data->_href->putAnchor(Anchor{
-              .url = p,
-              .target = q,
-              .option = {.referer = r},
-              .title = s,
-              .accesskey = (unsigned char)t[0],
-              .start = bp,
-              .end = bp,
-              .hseq = ((hseq > 0) ? hseq : -hseq) - 1,
-              .slave = (hseq > 0) ? false : true,
-          });
-        }
-        break;
-      }
-
-      case HTML_N_A:
-        effect &= ~PE_ANCHOR;
-        if (a_href) {
-          a_href->end.line = nlines;
-          a_href->end.pos = line.len();
-          if (a_href->start.line == a_href->end.line &&
-              a_href->start.pos == a_href->end.pos) {
-            if (a_href->hseq >= 0 &&
-                a_href->hseq < (int)data->_hmarklist->size()) {
-              data->_hmarklist->invalidate(a_href->hseq);
-            }
-            a_href->hseq = -1;
-          }
-          a_href = nullptr;
-        }
-        break;
-
-      case HTML_LINK:
-        data->addLink(tag);
-        break;
-
-      case HTML_IMG_ALT: {
-        if (auto value = tag->getAttr(ATTR_SRC)) {
-          std::string s;
-          if (auto value = tag->getAttr(ATTR_TITLE)) {
-            s = *value;
-          }
-          auto pp = url_quote(remove_space(*value));
-          a_img = data->registerImg(pp, s, nlines, line.len());
-        }
-        effect |= PE_IMAGE;
-        break;
-      }
-
-      case HTML_N_IMG_ALT:
-        effect &= ~PE_IMAGE;
-        if (a_img) {
-          a_img->end.line = nlines;
-          a_img->end.pos = line.len();
-        }
-        a_img = nullptr;
-        break;
-      case HTML_INPUT_ALT: {
-        auto hseq = 0;
-        if (auto value = tag->getAttr(ATTR_HSEQ)) {
-          hseq = stoi(*value);
-        }
-        auto form_id = -1;
-        if (auto value = tag->getAttr(ATTR_FID)) {
-          form_id = stoi(*value);
-        }
-        int top = 0;
-        if (auto value = tag->getAttr(ATTR_TOP_MARGIN)) {
-          top = stoi(*value);
-        }
-        int bottom = 0;
-        if (auto value = tag->getAttr(ATTR_BOTTOM_MARGIN)) {
-          bottom = stoi(*value);
-        }
-        if (form_id < 0 || form_id >= (int)forms.size() ||
-            forms[form_id] == nullptr) {
-          break; /* outside of <form>..</form> */
-        }
-        auto form = forms[form_id];
-        if (hseq > 0) {
-          int hpos = line.len();
-          if (*str == '[')
-            hpos++;
-          data->_hmarklist->putHmarker(nlines, hpos, hseq - 1);
-        } else if (hseq < 0) {
-          int h = -hseq - 1;
-          int hpos = line.len();
-          if (*str == '[')
-            hpos++;
-          if (data->_hmarklist->tryMark(h, nlines, hpos)) {
-            hseq = -hseq;
-          }
-        }
-
-        if (form->target.empty()) {
-          form->target = data->baseTarget;
-        }
-
-        int textareanumber = -1;
-        if (a_textarea.size()) {
-          if (auto value = tag->getAttr(ATTR_TEXTAREANUMBER)) {
-            textareanumber = stoi(*value);
-          }
-        }
-
-        BufferPoint bp{
-            .line = nlines,
-            .pos = line.len(),
-        };
-
-        a_form = data->registerForm(h_env->createFormItem(tag), form, bp);
-        if (textareanumber >= 0) {
-          while (textareanumber >= (int)a_textarea.size()) {
-            textarea_str.push_back({});
-            a_textarea.push_back({});
-          }
-          a_textarea[textareanumber] = a_form;
-        }
-
-        if (a_form) {
-
-          {
-            auto aa = old->retrieveAnchor(a_form->start);
-            if (aa) {
-              if (auto fi = aa->formItem) {
-                a_form->formItem->value = fi->value;
-                ;
-              }
-            }
-          }
-
-          a_form->hseq = hseq - 1;
-          a_form->y = nlines - top;
-          a_form->rows = 1 + top + bottom;
-          if (!tag->existsAttr(ATTR_NO_EFFECT))
-            effect |= PE_FORM;
-          break;
-        }
-      }
-      case HTML_N_INPUT_ALT:
-        effect &= ~PE_FORM;
-        if (a_form) {
-          a_form->end.line = nlines;
-          a_form->end.pos = line.len();
-          if (a_form->start.line == a_form->end.line &&
-              a_form->start.pos == a_form->end.pos)
-            a_form->hseq = -1;
-        }
-        a_form = nullptr;
-        break;
-      case HTML_MAP:
-        // if (tag->parsedtag_get_value( ATTR_NAME, &p)) {
-        //   MapList *m = (MapList *)New(MapList);
-        //   m->name = Strnew_charp(p);
-        //   m->area = newGeneralList();
-        //   m->next = buf->maplist;
-        //   buf->maplist = m;
-        // }
-        break;
-      case HTML_N_MAP:
-        /* nothing to do */
-        break;
-      case HTML_AREA:
-        // if (buf->maplist == nullptr) /* outside of <map>..</map> */
-        //   break;
-        // if (tag->parsedtag_get_value( ATTR_HREF, &p)) {
-        //   MapArea *a;
-        //   p = url_encode(remove_space(p), base, buf->document_charset);
-        //   t = nullptr;
-        //   tag->parsedtag_get_value( ATTR_TARGET, &t);
-        //   q = "";
-        //   tag->parsedtag_get_value( ATTR_ALT, &q);
-        //   r = nullptr;
-        //   s = nullptr;
-        //   a = newMapArea(p, t, q, r, s);
-        //   pushValue(buf->maplist->area, (void *)a);
-        // }
-        break;
-      case HTML_FRAMESET:
-        // frameset_sp++;
-        // if (frameset_sp >= FRAMESTACK_SIZE)
-        //   break;
-        // frameset_s[frameset_sp] = newFrameSet(tag);
-        // if (frameset_s[frameset_sp] == nullptr)
-        //   break;
-        break;
-      case HTML_N_FRAMESET:
-        // if (frameset_sp >= 0)
-        //   frameset_sp--;
-        break;
-      case HTML_FRAME:
-        // if (frameset_sp >= 0 && frameset_sp < FRAMESTACK_SIZE) {
-        // }
-        break;
-      case HTML_BASE: {
-        if (auto value = tag->getAttr(ATTR_HREF)) {
-          data->baseURL = {url_quote(remove_space(*value)), url};
-        }
-        if (auto value = tag->getAttr(ATTR_TARGET)) {
-          data->baseTarget = url_quote(*value);
-        }
-        break;
-      }
-
-      case HTML_META: {
-        std::string p;
-        if (auto value = tag->getAttr(ATTR_HTTP_EQUIV)) {
-          p = *value;
-        }
-        std::string q;
-        if (auto value = tag->getAttr(ATTR_CONTENT)) {
-          q = *value;
-        }
-        if (p.size() && q.size() && !strcasecmp(p, "refresh") && MetaRefresh) {
-          auto meta = getMetaRefreshParam(q);
-          if (meta.url.size()) {
-            // p = Strnew(url_quote(remove_space(meta.url)))->ptr;
-            // TODO:
-            // App::instance().task(refresh_interval, FUNCNAME_gorURL, p);
-          } else if (meta.interval > 0) {
-            data->refresh_interval = meta.interval;
-          }
-        }
-        break;
-      }
-
-      case HTML_INTERNAL:
-        internal = HTML_INTERNAL;
-        break;
-      case HTML_N_INTERNAL:
-        internal = HTML_N_INTERNAL;
-        break;
-      case HTML_FORM_INT: {
-        if (auto value = tag->getAttr(ATTR_FID)) {
-          process_form_int(tag.get(), stoi(*value));
-        }
-        break;
-      }
-      case HTML_TEXTAREA_INT:
-        if (auto value = tag->getAttr(ATTR_TEXTAREANUMBER)) {
-          n_textarea = stoi(*value);
-          if (n_textarea >= 0) {
-          } else {
-            n_textarea = -1;
-          }
-        }
-        break;
-      case HTML_N_TEXTAREA_INT:
-        if (n_textarea >= 0) {
-          auto item = a_textarea[n_textarea]->formItem;
-          item->init_value = item->value = textarea_str[n_textarea];
-        }
-        break;
-
-      case HTML_TITLE_ALT: {
-        if (auto value = tag->getAttr(ATTR_TITLE)) {
-          data->title = html_unquote(*value);
-        }
-        break;
-      }
-
-      case HTML_SYMBOL: {
-        // effect |= PC_SYMBOL;
-        // const char *p;
-        // if (tag->parsedtag_get_value(ATTR_TYPE, &p))
-        //   symbol = (char)atoi(p);
-        break;
-      }
-
-      case HTML_N_SYMBOL:
-        // effect &= ~PC_SYMBOL;
-        break;
-
-      default:
-        break;
-      }
-    }
-  }
-
-  return line;
 }
 
 std::string html_feed_environ::process_img(const HtmlTag *tag, int width) {
@@ -2044,8 +1583,7 @@ void html_feed_environ::proc_escape(html_feed_environ *h_env,
   h_env->prev_ctype = mode;
 }
 
-int html_feed_environ::table_width(html_feed_environ *h_env,
-                                   int table_level) {
+int html_feed_environ::table_width(html_feed_environ *h_env, int table_level) {
   int width;
   if (table_level < 0)
     return 0;
@@ -2075,10 +1613,10 @@ static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
       return 0;
   }
 
-  auto ch = h_env->line.back();
   /* if (ch == ' ' && h_env->tag_sp > 0) */
-  if (ch == ' ')
+  if (h_env->line.size() && h_env->line.back() == ' '){
     return 0;
+  }
 
   if (h_env->pos > h_env->_width)
     return 1;
@@ -2086,20 +1624,20 @@ static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
   return 0;
 }
 
-void html_feed_environ::parse(std::string_view html,
-                              html_feed_environ *h_env, bool internal) {
+void html_feed_environ::parse(std::string_view html, html_feed_environ *h_env,
+                              bool internal) {
 
   Tokenizer tokenizer(html);
   TableStatus t;
   while (auto token = tokenizer.getToken(h_env, t, internal)) {
-    process_token(t, *token, h_env);
+    process_token(t, *token, h_env, internal);
   }
 
   h_env->parse_end(h_env->buf, h_env->_width, h_env->envs[h_env->envc].indent);
 }
 
 void html_feed_environ::process_token(TableStatus &t, const Token &token,
-                                      html_feed_environ *h_env) {
+                                      html_feed_environ *h_env, bool internal) {
   if (t.is_active(h_env)) {
     /*
      * within table: in <table>..</table>, all input tokens

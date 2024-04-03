@@ -266,7 +266,6 @@ public:
   void process_option();
   void feed_select(const std::string &str);
 
-private:
   // form
   std::vector<std::shared_ptr<struct Form>> forms;
   std::vector<int> form_stack;
@@ -306,7 +305,7 @@ public:
                          html_feed_environ *h_env);
 
   void process_token(TableStatus &t, const struct Token &token,
-                     html_feed_environ *h_env);
+                     html_feed_environ *h_env, bool internal);
 
 public:
   int cur_hseq = 1;
@@ -331,24 +330,7 @@ public:
   std::string process_n_button();
   std::string process_hr(const HtmlTag *tag, int width, int indent_width);
 
-private:
-  Lineprop effect = 0;
-  Lineprop ex_effect = 0;
-  char symbol = '\0';
-  Anchor *a_href = nullptr;
-  Anchor *a_img = nullptr;
-  FormAnchor *a_form = nullptr;
-  HtmlCommand internal = {};
-  Line renderLine(const Url &url, html_feed_environ *h_env,
-                  const std::shared_ptr<struct LineData> &data, int nlines,
-                  const char *str,
-                  const std::shared_ptr<AnchorList<FormAnchor>> &forms);
-
 public:
-  std::shared_ptr<LineData>
-  render(const Url &currentUrl, html_feed_environ *h_env,
-         const std::shared_ptr<AnchorList<FormAnchor>> &old);
-
   html_feed_environ(int nenv, int limit_width, int indent,
                     const std::shared_ptr<GeneralList> &_buf = {})
       : buf(_buf), _width(limit_width) {
@@ -369,14 +351,12 @@ public:
   void PUSH_ENV(HtmlCommand cmd);
   void parseLine(std::string_view istr, bool internal);
   void completeHTMLstream();
-  std::shared_ptr<LineData>
-  render(const Url &currentUrl,
-         const std::shared_ptr<AnchorList<FormAnchor>> &old);
   std::shared_ptr<struct FormItem>
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
 };
 
 #define MAX_ENV_LEVEL 20
+struct LineData;
 std::shared_ptr<LineData>
 loadHTMLstream(int width, const Url &currentURL, std::string_view body,
                const std::shared_ptr<AnchorList<FormAnchor>> &old,
