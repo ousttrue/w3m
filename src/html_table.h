@@ -114,15 +114,23 @@ struct table {
   short ntable;
   int vspace;
 
+  struct tableimpl *_impl;
+
 private:
-  table() {}
+  table();
+
+public:
+  ~table();
+  table(const table &) = delete;
+  table &operator=(const table &) = delete;
+
+private:
   int maxrow;
   int maxcol;
   int max_rowsize;
   int border_mode;
   int total_height;
   int tabcontentssize;
-  int indent;
   int cellspacing;
   int cellpadding;
   int vcellpadding;

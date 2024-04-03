@@ -109,6 +109,13 @@ static int floor_at_intervals(int x, int step) {
 
 #define round(x) ((int)floor((x) + 0.5))
 
+struct tableimpl {
+  int indent;
+};
+
+table::table() : _impl(new tableimpl) {}
+table::~table() { delete _impl; }
+
 int table::table_rowspan(int row, int col) {
   if (this->tabattr[row].empty())
     return 0;
@@ -472,7 +479,8 @@ int table::get_spec_cell_width(int row, int col) {
   return w;
 }
 
-void table::do_refill(html_feed_environ *parser, int row, int col, int maxlimit) {
+void table::do_refill(html_feed_environ *parser, int row, int col,
+                      int maxlimit) {
   if (this->tabdata[row].empty() || this->tabdata[row][col] == NULL) {
     return;
   }
@@ -1614,7 +1622,7 @@ void table::check_minimum0(int min) {
     return;
   this->check_row(this->row);
   int w = this->table_colspan(this->row, this->col);
-  min += this->indent;
+  min += this->_impl->indent;
   int ww;
   if (w == 1)
     ww = min;
@@ -1691,7 +1699,7 @@ void table::begin_cell(struct table_mode *mode) {
   mode->indent_level = 0;
   mode->nobr_level = 0;
   mode->pre_mode = {};
-  this->indent = 0;
+  this->_impl->indent = 0;
   this->flag |= TBL_IN_COL;
 
   if (this->suspended_data) {
@@ -1836,36 +1844,37 @@ void table::feed_table_block_tag(const std::string &line,
   if (indent == 1) {
     mode->indent_level++;
     if (mode->indent_level <= MAX_INDENT_LEVEL)
-      this->indent += INDENT_INCR;
+      this->_impl->indent += INDENT_INCR;
   } else if (indent == -1) {
     mode->indent_level--;
     if (mode->indent_level < MAX_INDENT_LEVEL)
-      this->indent -= INDENT_INCR;
+      this->_impl->indent -= INDENT_INCR;
   }
-  if (this->indent < 0)
-    this->indent = 0;
-  offset = this->indent;
+  if (this->_impl->indent < 0) {
+    this->_impl->indent = 0;
+  }
+  offset = this->_impl->indent;
   if (cmd == HTML_DT) {
     if (mode->indent_level > 0 && mode->indent_level <= MAX_INDENT_LEVEL)
       offset -= INDENT_INCR;
     if (offset < 0)
       offset = 0;
   }
-  if (this->indent > 0) {
+  if (this->_impl->indent > 0) {
     this->check_minimum0(0);
     this->addcontentssize(offset);
   }
 }
 
-void table::table_close_select(html_feed_environ *parser, struct table_mode *mode,
-                               int width) {
+void table::table_close_select(html_feed_environ *parser,
+                               struct table_mode *mode, int width) {
   mode->pre_mode &= ~TBLM_INSELECT;
   mode->end_tag = HTML_UNKNOWN;
   this->feed_table1(parser, parser->process_n_select().c_str(), mode, width);
 }
 
-void table::table_close_textarea(html_feed_environ *parser, struct table_mode *mode,
-                                 int width) {
+void table::table_close_textarea(html_feed_environ *parser,
+                                 struct table_mode *mode, int width) {
   mode->pre_mode &= ~TBLM_INTXTA;
   mode->end_tag = HTML_UNKNOWN;
   this->feed_table1(parser, parser->process_n_textarea(), mode, width);
@@ -2048,7 +2057,8 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
       }
     }
     // static int toVAlign(char *oval, int *valign) {
-    //   if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
+    //   if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") ==
+    //   0)
     //     *valign = VALIGN_TOP;
     //   else if (strcasecmp(oval, "bottom") == 0)
     //     *valign = VALIGN_BOTTOM;
@@ -2760,13 +2770,10 @@ void table::feed_table1(html_feed_environ *parser, const std::string &line,
 }
 
 void table::pushTable(const std::shared_ptr<table> &tbl1) {
-  int col;
-  int row;
-
   if (this->ntable < 0 || this->ntable >= MAX_TABLE_N_LIMIT)
     return;
-  col = this->col;
-  row = this->row;
+  int col = this->col;
+  int row = this->row;
 
   if (this->ntable >= this->tables_size) {
     this->tables_size += MAX_TABLE_N;
@@ -2783,7 +2790,7 @@ void table::pushTable(const std::shared_ptr<table> &tbl1) {
   this->tables[this->ntable].ptr = tbl1;
   this->tables[this->ntable].col = col;
   this->tables[this->ntable].row = row;
-  this->tables[this->ntable].indent = this->indent;
+  this->tables[this->ntable].indent = this->_impl->indent;
   this->tables[this->ntable].buf = GeneralList::newGeneralList();
   this->check_row(row);
   if (col + 1 <= this->maxcol && this->tabattr[row][col + 1] & HTT_X)
