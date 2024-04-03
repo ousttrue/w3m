@@ -5,7 +5,6 @@
 #include "html_command.h"
 #include "lineprop.h"
 #include "html_table.h"
-#include "line.h"
 #include "anchorlist.h"
 #include "readtoken.h"
 #include "line_break.h"
@@ -99,6 +98,7 @@ public:
   // title
   std::string pre_title;
   std::string cur_title;
+  HtmlCommand internal = {};
 
   void process_title();
   std::string process_n_title();
@@ -164,7 +164,7 @@ public:
     return 0;
   }
 
-  void CLOSE_P(html_feed_environ *h_env);
+  void CLOSE_P();
 
   void append_tags();
   void push_tag(std::string_view cmdname, HtmlCommand cmd);
@@ -246,7 +246,7 @@ public:
 public:
   std::shared_ptr<table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
-  int table_width(html_feed_environ *h_env, int table_level);
+  int table_width(int table_level);
 
 private:
   // select
@@ -296,30 +296,26 @@ public:
   std::string process_textarea(const HtmlTag *tag, int width);
   std::string process_n_textarea();
   void feed_textarea(const std::string &str);
-  void close_anchor(html_feed_environ *h_env);
-  void save_fonteffect(html_feed_environ *h_env);
-  void restore_fonteffect(html_feed_environ *h_env);
-  void proc_escape(html_feed_environ *h_env, const char **str_return);
-  void completeHTMLstream(html_feed_environ *);
-  void push_render_image(const std::string &str, int width, int limit,
-                         html_feed_environ *h_env);
+  void close_anchor();
+  void save_fonteffect();
+  void restore_fonteffect();
+  void proc_escape(const char **str_return);
+  void completeHTMLstream();
+  void push_render_image(const std::string &str, int width, int limit);
 
-  void process_token(TableStatus &t, const struct Token &token,
-                     html_feed_environ *h_env, bool internal);
+  void process_token(TableStatus &t, const struct Token &token);
 
 public:
   int cur_hseq = 1;
 
   // HTML processing first pass
-  void parse(std::string_view istr, html_feed_environ *h_env, bool internal);
+  void parse(std::string_view istr, bool internal = true);
 
-  void HTMLlineproc1(const std::string &x, html_feed_environ *y);
+  void CLOSE_DT();
 
-  void CLOSE_DT(html_feed_environ *h_env);
+  void CLOSE_A();
 
-  void CLOSE_A(html_feed_environ *h_env);
-
-  void HTML5_CLOSE_A(html_feed_environ *h_env);
+  void HTML5_CLOSE_A();
 
   std::string getLinkNumberStr(int correction) const;
 
@@ -349,8 +345,6 @@ public:
   void POP_ENV();
   void PUSH_ENV_NOINDENT(HtmlCommand cmd);
   void PUSH_ENV(HtmlCommand cmd);
-  void parseLine(std::string_view istr, bool internal);
-  void completeHTMLstream();
   std::shared_ptr<struct FormItem>
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
 };

@@ -68,15 +68,6 @@ void html_feed_environ::PUSH_ENV(HtmlCommand cmd) {
   }
 }
 
-void html_feed_environ::parseLine(std::string_view istr, bool internal) {
-  this->parse(istr, this, internal);
-  this->status = R_ST_NORMAL;
-  this->completeHTMLstream();
-  this->flushline(this->buf, 0, 2, this->_width);
-}
-
-void html_feed_environ::completeHTMLstream() { this->completeHTMLstream(this); }
-
 #define FORM_I_TEXT_DEFAULT_SIZE 40
 std::shared_ptr<FormItem>
 html_feed_environ::createFormItem(const std::shared_ptr<HtmlTag> &tag) {
@@ -139,7 +130,10 @@ loadHTMLstream(int width, const Url &currentURL, std::string_view body,
                bool internal) {
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
                              GeneralList::newGeneralList());
-  htmlenv1.parseLine(body, internal);
+  htmlenv1.parse(body, internal);
+  htmlenv1.status = R_ST_NORMAL;
+  htmlenv1.completeHTMLstream();
+  htmlenv1.flushline(htmlenv1.buf, 0, 2, htmlenv1._width);
   return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }
 
@@ -675,10 +669,10 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
     this->push_tag("<INS>", HTML_INS);
 }
 
-void html_feed_environ::CLOSE_P(html_feed_environ *h_env) {
+void html_feed_environ::CLOSE_P() {
   if (this->flag & RB_P) {
-    struct environment *envs = h_env->envs.data();
-    this->flushline(h_env->buf, envs[h_env->envc].indent, 0, h_env->_width);
+    struct environment *envs = this->envs.data();
+    this->flushline(this->buf, envs[this->envc].indent, 0, this->_width);
     this->RB_RESTORE_FLAG();
     this->flag &= ~RB_P;
   }
@@ -755,33 +749,24 @@ void html_feed_environ::feed_title(const std::string &_str) {
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 #define INITIAL_FORM_SIZE 10
 
-void html_feed_environ::HTMLlineproc1(const std::string &x,
-                                      html_feed_environ *y) {
-  parse(x, y, true);
-}
-
-void html_feed_environ::CLOSE_DT(html_feed_environ *h_env) {
-  if (h_env->flag & RB_IN_DT) {
-    h_env->flag &= ~RB_IN_DT;
-    HTMLlineproc1("</b>", h_env);
+void html_feed_environ::CLOSE_DT() {
+  if (this->flag & RB_IN_DT) {
+    this->flag &= ~RB_IN_DT;
+    parse("</b>");
   }
 }
 
-void html_feed_environ::CLOSE_A(html_feed_environ *h_env) {
-  do {
-    h_env->CLOSE_P(h_env);
-    if (!(h_env->flag & RB_HTML5)) {
-      this->close_anchor(h_env);
-    }
-  } while (0);
+void html_feed_environ::CLOSE_A() {
+  this->CLOSE_P();
+  if (!(this->flag & RB_HTML5)) {
+    this->close_anchor();
+  }
 }
 
-void html_feed_environ::HTML5_CLOSE_A(html_feed_environ *h_env) {
-  do {
-    if (h_env->flag & RB_HTML5) {
-      this->close_anchor(h_env);
-    }
-  } while (0);
+void html_feed_environ::HTML5_CLOSE_A() {
+  if (this->flag & RB_HTML5) {
+    this->close_anchor();
+  }
 }
 
 std::string html_feed_environ::getLinkNumberStr(int correction) const {
@@ -791,94 +776,93 @@ std::string html_feed_environ::getLinkNumberStr(int correction) const {
 }
 
 void html_feed_environ::push_render_image(const std::string &str, int width,
-                                          int limit, html_feed_environ *h_env) {
-  int indent = h_env->envs[h_env->envc].indent;
+                                          int limit) {
+  int indent = this->envs[this->envc].indent;
 
-  h_env->push_spaces(1, (limit - width) / 2);
-  h_env->push_str(width, str, PC_ASCII);
-  h_env->push_spaces(1, (limit - width + 1) / 2);
+  this->push_spaces(1, (limit - width) / 2);
+  this->push_str(width, str, PC_ASCII);
+  this->push_spaces(1, (limit - width + 1) / 2);
   if (width > 0)
-    h_env->flushline(h_env->buf, indent, 0, h_env->_width);
+    this->flushline(this->buf, indent, 0, this->_width);
 }
 
-void html_feed_environ::close_anchor(html_feed_environ *h_env) {
-  if (h_env->anchor.url.size()) {
+void html_feed_environ::close_anchor() {
+  if (this->anchor.url.size()) {
     const char *p = nullptr;
     int is_erased = 0;
 
-    auto found = h_env->find_stack([](auto tag) { return tag->cmd == HTML_A; });
+    auto found = this->find_stack([](auto tag) { return tag->cmd == HTML_A; });
 
-    if (found == h_env->tag_stack.end() && h_env->anchor.hseq > 0 &&
-        h_env->line.back() == ' ') {
-      Strshrink(h_env->line, 1);
-      h_env->pos--;
+    if (found == this->tag_stack.end() && this->anchor.hseq > 0 &&
+        this->line.back() == ' ') {
+      Strshrink(this->line, 1);
+      this->pos--;
       is_erased = 1;
     }
 
-    if (found != h_env->tag_stack.end() ||
-        (p = h_env->has_hidden_link(HTML_A))) {
-      if (h_env->anchor.hseq > 0) {
-        this->HTMLlineproc1(ANSP, h_env);
-        h_env->prevchar = " ";
+    if (found != this->tag_stack.end() || (p = this->has_hidden_link(HTML_A))) {
+      if (this->anchor.hseq > 0) {
+        this->parse(ANSP);
+        this->prevchar = " ";
       } else {
-        if (found != h_env->tag_stack.end()) {
-          h_env->tag_stack.erase(found);
+        if (found != this->tag_stack.end()) {
+          this->tag_stack.erase(found);
         } else {
-          h_env->passthrough(p, 1);
+          this->passthrough(p, 1);
         }
-        h_env->anchor = {};
+        this->anchor = {};
         return;
       }
       is_erased = 0;
     }
     if (is_erased) {
-      h_env->line.push_back(' ');
-      h_env->pos++;
+      this->line.push_back(' ');
+      this->pos++;
     }
 
-    h_env->push_tag("</a>", HTML_N_A);
+    this->push_tag("</a>", HTML_N_A);
   }
-  h_env->anchor = {};
+  this->anchor = {};
 }
 
-void html_feed_environ::save_fonteffect(html_feed_environ *h_env) {
-  if (h_env->fontstat_sp < FONT_STACK_SIZE) {
-    h_env->fontstat_stack[h_env->fontstat_sp] = h_env->fontstat;
+void html_feed_environ::save_fonteffect() {
+  if (this->fontstat_sp < FONT_STACK_SIZE) {
+    this->fontstat_stack[this->fontstat_sp] = this->fontstat;
   }
-  if (h_env->fontstat_sp < INT_MAX) {
-    h_env->fontstat_sp++;
+  if (this->fontstat_sp < INT_MAX) {
+    this->fontstat_sp++;
   }
 
-  if (h_env->fontstat.in_bold)
-    h_env->push_tag("</b>", HTML_N_B);
-  if (h_env->fontstat.in_italic)
-    h_env->push_tag("</i>", HTML_N_I);
-  if (h_env->fontstat.in_under)
-    h_env->push_tag("</u>", HTML_N_U);
-  if (h_env->fontstat.in_strike)
-    h_env->push_tag("</s>", HTML_N_S);
-  if (h_env->fontstat.in_ins)
-    h_env->push_tag("</ins>", HTML_N_INS);
-  h_env->fontstat = {};
+  if (this->fontstat.in_bold)
+    this->push_tag("</b>", HTML_N_B);
+  if (this->fontstat.in_italic)
+    this->push_tag("</i>", HTML_N_I);
+  if (this->fontstat.in_under)
+    this->push_tag("</u>", HTML_N_U);
+  if (this->fontstat.in_strike)
+    this->push_tag("</s>", HTML_N_S);
+  if (this->fontstat.in_ins)
+    this->push_tag("</ins>", HTML_N_INS);
+  this->fontstat = {};
 }
 
-void html_feed_environ::restore_fonteffect(html_feed_environ *h_env) {
-  if (h_env->fontstat_sp > 0)
-    h_env->fontstat_sp--;
-  if (h_env->fontstat_sp < FONT_STACK_SIZE) {
-    h_env->fontstat = h_env->fontstat_stack[h_env->fontstat_sp];
+void html_feed_environ::restore_fonteffect() {
+  if (this->fontstat_sp > 0)
+    this->fontstat_sp--;
+  if (this->fontstat_sp < FONT_STACK_SIZE) {
+    this->fontstat = this->fontstat_stack[this->fontstat_sp];
   }
 
-  if (h_env->fontstat.in_bold)
-    h_env->push_tag("<b>", HTML_B);
-  if (h_env->fontstat.in_italic)
-    h_env->push_tag("<i>", HTML_I);
-  if (h_env->fontstat.in_under)
-    h_env->push_tag("<u>", HTML_U);
-  if (h_env->fontstat.in_strike)
-    h_env->push_tag("<s>", HTML_S);
-  if (h_env->fontstat.in_ins)
-    h_env->push_tag("<ins>", HTML_INS);
+  if (this->fontstat.in_bold)
+    this->push_tag("<b>", HTML_B);
+  if (this->fontstat.in_italic)
+    this->push_tag("<i>", HTML_I);
+  if (this->fontstat.in_under)
+    this->push_tag("<u>", HTML_U);
+  if (this->fontstat.in_strike)
+    this->push_tag("<s>", HTML_S);
+  if (this->fontstat.in_ins)
+    this->push_tag("<ins>", HTML_INS);
 }
 
 std::string html_feed_environ::process_textarea(const HtmlTag *tag, int width) {
@@ -1554,8 +1538,7 @@ std::string html_feed_environ::process_hr(const HtmlTag *tag, int width,
   return tmp.str();
 }
 
-void html_feed_environ::proc_escape(html_feed_environ *h_env,
-                                    const char **str_return) {
+void html_feed_environ::proc_escape(const char **str_return) {
   const char *str = *str_return;
   char32_t ech = getescapechar(str_return);
   int n_add = *str_return - str;
@@ -1563,34 +1546,35 @@ void html_feed_environ::proc_escape(html_feed_environ *h_env,
 
   if (ech == -1) {
     *str_return = str;
-    h_env->proc_mchar(h_env->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
+    this->proc_mchar(this->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
     return;
   }
   mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
   auto estr = conv_entity(ech);
-  h_env->check_breakpoint(h_env->flag & RB_SPECIAL, estr.c_str());
+  this->check_breakpoint(this->flag & RB_SPECIAL, estr.c_str());
   auto width = get_strwidth(estr.c_str());
   if (width == 1 && ech == (char32_t)estr[0] && ech != '&' && ech != '<' &&
       ech != '>') {
     if (IS_CNTRL(ech))
       mode = PC_CTRL;
-    h_env->push_charp(width, estr.c_str(), mode);
+    this->push_charp(width, estr.c_str(), mode);
   } else {
-    h_env->push_nchars(width, str, n_add, mode);
+    this->push_nchars(width, str, n_add, mode);
   }
-  h_env->prevchar = estr;
-  h_env->prev_ctype = mode;
+  this->prevchar = estr;
+  this->prev_ctype = mode;
 }
 
-int html_feed_environ::table_width(html_feed_environ *h_env, int table_level) {
-  int width;
+int html_feed_environ::table_width(int table_level) {
   if (table_level < 0)
     return 0;
-  width = tables[table_level]->total_width;
+
+  int width = this->tables[table_level]->total_width;
   if (table_level > 0 || width > 0)
     return width;
-  return h_env->_width - h_env->envs[h_env->envc].indent;
+
+  return this->_width - this->envs[this->envc].indent;
 }
 
 static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
@@ -1614,7 +1598,7 @@ static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
   }
 
   /* if (ch == ' ' && h_env->tag_sp > 0) */
-  if (h_env->line.size() && h_env->line.back() == ' '){
+  if (h_env->line.size() && h_env->line.back() == ' ') {
     return 0;
   }
 
@@ -1624,66 +1608,64 @@ static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
   return 0;
 }
 
-void html_feed_environ::parse(std::string_view html, html_feed_environ *h_env,
-                              bool internal) {
+void html_feed_environ::parse(std::string_view html, bool internal) {
 
   Tokenizer tokenizer(html);
   TableStatus t;
-  while (auto token = tokenizer.getToken(h_env, t, internal)) {
-    process_token(t, *token, h_env, internal);
+  while (auto token = tokenizer.getToken(this, t, internal)) {
+    process_token(t, *token);
   }
 
-  h_env->parse_end(h_env->buf, h_env->_width, h_env->envs[h_env->envc].indent);
+  this->parse_end(this->buf, this->_width, this->envs[this->envc].indent);
 }
 
-void html_feed_environ::process_token(TableStatus &t, const Token &token,
-                                      html_feed_environ *h_env, bool internal) {
-  if (t.is_active(h_env)) {
+void html_feed_environ::process_token(TableStatus &t, const Token &token) {
+  if (t.is_active(this)) {
     /*
      * within table: in <table>..</table>, all input tokens
      * are fed to the table renderer, and then the renderer
      * makes HTML output.
      */
-    switch (t.feed(h_env, token.str, internal)) {
+    switch (t.feed(this, token.str, internal)) {
     case 0:
       /* </table> tag */
-      h_env->table_level--;
-      if (h_env->table_level >= MAX_TABLE - 1)
+      this->table_level--;
+      if (this->table_level >= MAX_TABLE - 1)
         return;
       t.tbl->end_table();
-      if (h_env->table_level >= 0) {
-        auto tbl0 = tables[h_env->table_level];
+      if (this->table_level >= 0) {
+        auto tbl0 = tables[this->table_level];
         std::stringstream ss;
         ss << "<table_alt tid=" << tbl0->ntable << ">";
         if (tbl0->row < 0)
           return;
         tbl0->pushTable(t.tbl);
         t.tbl = tbl0;
-        t.tbl_mode = &table_mode[h_env->table_level];
-        t.tbl_width = table_width(h_env, h_env->table_level);
-        t.feed(h_env, ss.str(), true);
+        t.tbl_mode = &table_mode[this->table_level];
+        t.tbl_width = table_width(this->table_level);
+        t.feed(this, ss.str(), true);
         return;
         /* continue to the next */
       }
-      if (h_env->flag & RB_DEL)
+      if (this->flag & RB_DEL)
         return;
       /* all tables have been read */
-      if (t.tbl->vspace > 0 && !(h_env->flag & RB_IGNORE_P)) {
-        int indent = h_env->envs[h_env->envc].indent;
-        h_env->flushline(h_env->buf, indent, 0, h_env->_width);
-        h_env->do_blankline(h_env->buf, indent, 0, h_env->_width);
+      if (t.tbl->vspace > 0 && !(this->flag & RB_IGNORE_P)) {
+        int indent = this->envs[this->envc].indent;
+        this->flushline(this->buf, indent, 0, this->_width);
+        this->do_blankline(this->buf, indent, 0, this->_width);
       }
-      save_fonteffect(h_env);
+      this->save_fonteffect();
       initRenderTable();
-      t.tbl->renderTable(h_env, t.tbl_width, h_env);
-      restore_fonteffect(h_env);
-      h_env->flag &= ~RB_IGNORE_P;
+      t.tbl->renderTable(this, t.tbl_width, this);
+      this->restore_fonteffect();
+      this->flag &= ~RB_IGNORE_P;
       if (t.tbl->vspace > 0) {
-        int indent = h_env->envs[h_env->envc].indent;
-        h_env->do_blankline(h_env->buf, indent, 0, h_env->_width);
-        h_env->flag |= RB_IGNORE_P;
+        int indent = this->envs[this->envc].indent;
+        this->do_blankline(this->buf, indent, 0, this->_width);
+        this->flag |= RB_IGNORE_P;
       }
-      h_env->prevchar = " ";
+      this->prevchar = " ";
       return;
     case 1:
       /* <table> tag */
@@ -1701,26 +1683,26 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token,
     }
 
     // process tags
-    if (tag->process(h_env) == 0) {
+    if (tag->process(this) == 0) {
       // preserve the tag for second-stage processing
       if (tag->needRreconstruct())
-        h_env->tagbuf = tag->to_str();
-      h_env->push_tag(h_env->tagbuf, tag->tagid);
+        this->tagbuf = tag->to_str();
+      this->push_tag(this->tagbuf, tag->tagid);
     }
-    h_env->bp.init_flag = 1;
-    clear_ignore_p_flag(h_env, tag->tagid);
+    this->bp.init_flag = 1;
+    clear_ignore_p_flag(this, tag->tagid);
     if (tag->tagid == HTML_TABLE) {
-      if (h_env->table_level >= 0) {
-        int level = std::min<short>(h_env->table_level, MAX_TABLE - 1);
+      if (this->table_level >= 0) {
+        int level = std::min<short>(this->table_level, MAX_TABLE - 1);
         t.tbl = tables[level];
         t.tbl_mode = &table_mode[level];
-        t.tbl_width = table_width(h_env, level);
+        t.tbl_width = this->table_width(level);
       }
     }
     return;
   }
 
-  if (h_env->flag & (RB_DEL | RB_S)) {
+  if (this->flag & (RB_DEL | RB_S)) {
     return;
   }
 
@@ -1728,9 +1710,9 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token,
   while (*pp) {
     auto mode = get_mctype(pp);
     int delta = get_mcwidth(pp);
-    if (h_env->flag & (RB_SPECIAL & ~RB_NOBR)) {
+    if (this->flag & (RB_SPECIAL & ~RB_NOBR)) {
       char ch = *pp;
-      if (!(h_env->flag & RB_PLAIN) && (*pp == '&')) {
+      if (!(this->flag & RB_PLAIN) && (*pp == '&')) {
         const char *p = pp;
         int ech = getescapechar(&p);
         if (ech == '\n' || ech == '\r') {
@@ -1742,74 +1724,74 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token,
         }
       }
       if (ch != '\n')
-        h_env->flag &= ~RB_IGNORE_P;
+        this->flag &= ~RB_IGNORE_P;
       if (ch == '\n') {
         pp++;
-        if (h_env->flag & RB_IGNORE_P) {
-          h_env->flag &= ~RB_IGNORE_P;
+        if (this->flag & RB_IGNORE_P) {
+          this->flag &= ~RB_IGNORE_P;
           return;
         }
-        if (h_env->flag & RB_PRE_INT)
-          h_env->push_char(h_env->flag & RB_SPECIAL, ' ');
+        if (this->flag & RB_PRE_INT)
+          this->push_char(this->flag & RB_SPECIAL, ' ');
         else
-          h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 1,
-                           h_env->_width);
+          this->flushline(this->buf, this->envs[this->envc].indent, 1,
+                          this->_width);
       } else if (ch == '\t') {
         do {
-          h_env->push_char(h_env->flag & RB_SPECIAL, ' ');
-        } while ((h_env->envs[h_env->envc].indent + h_env->pos) % Tabstop != 0);
+          this->push_char(this->flag & RB_SPECIAL, ' ');
+        } while ((this->envs[this->envc].indent + this->pos) % Tabstop != 0);
         pp++;
-      } else if (h_env->flag & RB_PLAIN) {
+      } else if (this->flag & RB_PLAIN) {
         auto p = html_quote_char(*pp);
         if (p) {
-          h_env->push_charp(1, p, PC_ASCII);
+          this->push_charp(1, p, PC_ASCII);
           pp++;
         } else {
-          h_env->proc_mchar(1, delta, &pp, mode);
+          this->proc_mchar(1, delta, &pp, mode);
         }
       } else {
         if (*pp == '&')
-          proc_escape(h_env, &pp);
+          this->proc_escape(&pp);
         else
-          h_env->proc_mchar(1, delta, &pp, mode);
+          this->proc_mchar(1, delta, &pp, mode);
       }
-      if (h_env->flag & (RB_SPECIAL & ~RB_PRE_INT))
+      if (this->flag & (RB_SPECIAL & ~RB_PRE_INT))
         return;
     } else {
       if (!IS_SPACE(*pp))
-        h_env->flag &= ~RB_IGNORE_P;
+        this->flag &= ~RB_IGNORE_P;
       if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*pp)) {
-        if (h_env->prevchar[0] != ' ') {
-          h_env->push_char(h_env->flag & RB_SPECIAL, ' ');
+        if (this->prevchar[0] != ' ') {
+          this->push_char(this->flag & RB_SPECIAL, ' ');
         }
         pp++;
       } else {
         if (*pp == '&')
-          proc_escape(h_env, &pp);
+          this->proc_escape(&pp);
         else
-          h_env->proc_mchar(h_env->flag & RB_SPECIAL, delta, &pp, mode);
+          this->proc_mchar(this->flag & RB_SPECIAL, delta, &pp, mode);
       }
     }
-    if (need_flushline(h_env, mode)) {
-      auto bp = h_env->line.c_str() + h_env->bp.len;
-      auto tp = bp - h_env->bp.tlen;
+    if (need_flushline(this, mode)) {
+      auto bp = this->line.c_str() + this->bp.len;
+      auto tp = bp - this->bp.tlen;
       int i = 0;
 
-      if (tp > h_env->line.c_str() && tp[-1] == ' ')
+      if (tp > this->line.c_str() && tp[-1] == ' ')
         i = 1;
 
-      int indent = h_env->envs[h_env->envc].indent;
-      if (h_env->bp.pos - i > indent) {
-        h_env->append_tags(); /* may reallocate the buffer */
-        bp = h_env->line.c_str() + h_env->bp.len;
+      int indent = this->envs[this->envc].indent;
+      if (this->bp.pos - i > indent) {
+        this->append_tags(); /* may reallocate the buffer */
+        bp = this->line.c_str() + this->bp.len;
         std::string line = bp;
-        Strshrink(h_env->line, h_env->line.size() - h_env->bp.len);
-        if (h_env->pos - i > h_env->_width)
-          h_env->flag |= RB_FILL;
-        h_env->back_to_breakpoint();
-        h_env->flushline(h_env->buf, indent, 0, h_env->_width);
-        h_env->flag &= ~RB_FILL;
-        HTMLlineproc1(line, h_env);
+        Strshrink(this->line, this->line.size() - this->bp.len);
+        if (this->pos - i > this->_width)
+          this->flag |= RB_FILL;
+        this->back_to_breakpoint();
+        this->flushline(this->buf, indent, 0, this->_width);
+        this->flag &= ~RB_FILL;
+        parse(line);
       }
     }
   }
@@ -1945,59 +1927,59 @@ void html_feed_environ::process_option() {
   n_selectitem++;
 }
 
-void html_feed_environ::completeHTMLstream(html_feed_environ *h_env) {
-  this->close_anchor(h_env);
-  if (h_env->img_alt.size()) {
-    h_env->push_tag("</img_alt>", HTML_N_IMG_ALT);
-    h_env->img_alt = nullptr;
+void html_feed_environ::completeHTMLstream() {
+  this->close_anchor();
+  if (this->img_alt.size()) {
+    this->push_tag("</img_alt>", HTML_N_IMG_ALT);
+    this->img_alt = nullptr;
   }
-  if (h_env->input_alt.in) {
-    h_env->push_tag("</input_alt>", HTML_N_INPUT_ALT);
-    h_env->input_alt.hseq = 0;
-    h_env->input_alt.fid = -1;
-    h_env->input_alt.in = 0;
-    h_env->input_alt.type = nullptr;
-    h_env->input_alt.name = nullptr;
-    h_env->input_alt.value = nullptr;
+  if (this->input_alt.in) {
+    this->push_tag("</input_alt>", HTML_N_INPUT_ALT);
+    this->input_alt.hseq = 0;
+    this->input_alt.fid = -1;
+    this->input_alt.in = 0;
+    this->input_alt.type = nullptr;
+    this->input_alt.name = nullptr;
+    this->input_alt.value = nullptr;
   }
-  if (h_env->fontstat.in_bold) {
-    h_env->push_tag("</b>", HTML_N_B);
-    h_env->fontstat.in_bold = 0;
+  if (this->fontstat.in_bold) {
+    this->push_tag("</b>", HTML_N_B);
+    this->fontstat.in_bold = 0;
   }
-  if (h_env->fontstat.in_italic) {
-    h_env->push_tag("</i>", HTML_N_I);
-    h_env->fontstat.in_italic = 0;
+  if (this->fontstat.in_italic) {
+    this->push_tag("</i>", HTML_N_I);
+    this->fontstat.in_italic = 0;
   }
-  if (h_env->fontstat.in_under) {
-    h_env->push_tag("</u>", HTML_N_U);
-    h_env->fontstat.in_under = 0;
+  if (this->fontstat.in_under) {
+    this->push_tag("</u>", HTML_N_U);
+    this->fontstat.in_under = 0;
   }
-  if (h_env->fontstat.in_strike) {
-    h_env->push_tag("</s>", HTML_N_S);
-    h_env->fontstat.in_strike = 0;
+  if (this->fontstat.in_strike) {
+    this->push_tag("</s>", HTML_N_S);
+    this->fontstat.in_strike = 0;
   }
-  if (h_env->fontstat.in_ins) {
-    h_env->push_tag("</ins>", HTML_N_INS);
-    h_env->fontstat.in_ins = 0;
+  if (this->fontstat.in_ins) {
+    this->push_tag("</ins>", HTML_N_INS);
+    this->fontstat.in_ins = 0;
   }
-  if (h_env->flag & RB_INTXTA)
-    this->HTMLlineproc1("</textarea>", h_env);
+  if (this->flag & RB_INTXTA)
+    this->parse("</textarea>");
   /* for unbalanced select tag */
-  if (h_env->flag & RB_INSELECT)
-    this->HTMLlineproc1("</select>", h_env);
-  if (h_env->flag & RB_TITLE)
-    this->HTMLlineproc1("</title>", h_env);
+  if (this->flag & RB_INSELECT)
+    this->parse("</select>");
+  if (this->flag & RB_TITLE)
+    this->parse("</title>");
 
   /* for unbalanced table tag */
-  if (h_env->table_level >= MAX_TABLE)
-    h_env->table_level = MAX_TABLE - 1;
+  if (this->table_level >= MAX_TABLE)
+    this->table_level = MAX_TABLE - 1;
 
-  while (h_env->table_level >= 0) {
-    int tmp = h_env->table_level;
-    table_mode[h_env->table_level].pre_mode &=
+  while (this->table_level >= 0) {
+    int tmp = this->table_level;
+    table_mode[this->table_level].pre_mode &=
         ~(TBLM_SCRIPT | TBLM_STYLE | TBLM_PLAIN);
-    this->HTMLlineproc1("</table>", h_env);
-    if (h_env->table_level >= tmp)
+    this->parse("</table>");
+    if (this->table_level >= tmp)
       break;
   }
 }

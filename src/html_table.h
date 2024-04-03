@@ -99,6 +99,9 @@ enum table_attr : uint16_t {
 ENUM_OP_INSTANCE(table_attr);
 
 struct table {
+private:
+
+public:
   int total_width;
   int row;
   int col;
@@ -142,7 +145,7 @@ public:
   static std::shared_ptr<table> newTable(int cols);
   static std::shared_ptr<table> begin_table(HtmlTableBorderMode border,
                                             int spacing, int padding,
-                                            int vspace, int cols);
+                                            int vspace, int cols, int width);
   int feed_table(class html_feed_environ *parser, std::string line,
                  struct table_mode *mode, int width, int internal);
   void end_table();

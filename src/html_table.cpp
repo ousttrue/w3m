@@ -535,7 +535,7 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
         auto t = this->tables[id].ptr;
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
-        parser->save_fonteffect(&h_env);
+        parser->save_fonteffect();
         h_env.flushline(h_env.buf, 0, 2, h_env._width);
         if (t->vspace > 0 && !(h_env.flag & RB_IGNORE_P))
           h_env.do_blankline(h_env.buf, 0, 0, h_env._width);
@@ -556,7 +556,7 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
         h_env.buf->appendGeneralList(this->tables[id].buf);
         if (h_env.maxlimit < limit)
           h_env.maxlimit = limit;
-        parser->restore_fonteffect(&h_env);
+        parser->restore_fonteffect();
         h_env.flag &= ~RB_IGNORE_P;
         h_env.blank_lines = 0;
         if (t->vspace > 0) {
@@ -564,14 +564,15 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
           h_env.flag |= RB_IGNORE_P;
         }
       }
-    } else
-      parser->HTMLlineproc1(l->line.c_str(), &h_env);
+    } else {
+      parser->parse(l->line.c_str());
+    }
   }
   if (h_env.status != R_ST_NORMAL) {
     h_env.status = R_ST_EOL;
-    parser->HTMLlineproc1("\n", &h_env);
+    parser->parse("\n");
   }
-  parser->completeHTMLstream(&h_env);
+  parser->completeHTMLstream();
   h_env.flushline(h_env.buf, 0, 2, h_env._width);
   if (this->_impl->border_mode == BORDER_NONE) {
     int rowspan = this->_impl->table_rowspan(row, col);
@@ -1297,17 +1298,17 @@ void table::make_caption(html_feed_environ *parser, html_feed_environ *h_env) {
 
   html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
                          GeneralList::newGeneralList());
-  parser->HTMLlineproc1("<center>", &henv);
-  parser->parse(this->caption, &henv, false);
-  parser->HTMLlineproc1("</center>", &henv);
+  parser->parse("<center>");
+  parser->parse(this->caption, false);
+  parser->parse("</center>");
 
   if (this->total_width < henv.maxlimit)
     this->total_width = henv.maxlimit;
   limit = h_env->_width;
   h_env->_width = this->total_width;
-  parser->HTMLlineproc1("<center>", h_env);
-  parser->parse(this->caption, h_env, false);
-  parser->HTMLlineproc1("</center>", h_env);
+  parser->parse("<center>");
+  parser->parse(this->caption, false);
+  parser->parse("</center>");
   h_env->_width = limit;
 }
 
@@ -1442,13 +1443,13 @@ void table::renderTable(html_feed_environ *parser, int max_width,
 
   this->make_caption(parser, h_env);
 
-  parser->HTMLlineproc1("<pre for_table>", h_env);
+  parser->parse("<pre for_table>");
   switch (this->_impl->border_mode) {
   case BORDER_THIN:
   case BORDER_THICK: {
     std::stringstream renderbuf;
     this->print_sep(-1, T_TOP, this->_impl->maxcol, renderbuf);
-    parser->push_render_image(renderbuf.str(), width, this->total_width, h_env);
+    parser->push_render_image(renderbuf.str(), width, this->total_width);
     this->total_height += 1;
     break;
   }
@@ -1511,14 +1512,12 @@ void table::renderTable(html_feed_environ *parser, int max_width,
         this->total_height += 1;
         break;
       }
-      parser->push_render_image(renderbuf.str(), width, this->total_width,
-                                h_env);
+      parser->push_render_image(renderbuf.str(), width, this->total_width);
     }
     if (r < this->_impl->maxrow && this->_impl->border_mode != BORDER_NONE) {
       std::stringstream renderbuf;
       this->print_sep(r, T_MIDDLE, this->_impl->maxcol, renderbuf);
-      parser->push_render_image(renderbuf.str(), width, this->total_width,
-                                h_env);
+      parser->push_render_image(renderbuf.str(), width, this->total_width);
     }
     this->total_height += this->tabheight[r];
   }
@@ -1528,7 +1527,7 @@ void table::renderTable(html_feed_environ *parser, int max_width,
     std::stringstream renderbuf;
     this->print_sep(this->_impl->maxrow, T_BOTTOM, this->_impl->maxcol,
                     renderbuf);
-    parser->push_render_image(renderbuf.str(), width, this->total_width, h_env);
+    parser->push_render_image(renderbuf.str(), width, this->total_width);
     this->total_height += 1;
     break;
   }
@@ -1537,9 +1536,9 @@ void table::renderTable(html_feed_environ *parser, int max_width,
     renderbuf << " ";
     this->total_height++;
     this->total_width = 1;
-    parser->push_render_image(renderbuf.str(), 1, this->total_width, h_env);
+    parser->push_render_image(renderbuf.str(), 1, this->total_width);
   }
-  parser->HTMLlineproc1("</pre>", h_env);
+  parser->parse("</pre>");
 }
 
 #ifdef TABLE_NO_COMPACT
@@ -1550,7 +1549,7 @@ void table::renderTable(html_feed_environ *parser, int max_width,
 
 std::shared_ptr<table> table::begin_table(HtmlTableBorderMode border,
                                           int spacing, int padding, int vspace,
-                                          int cols) {
+                                          int cols, int width) {
   int mincell = minimum_cellspacing(border);
   int rcellspacing;
   int mincell_pixels = _round(mincell * pixel_per_char);
@@ -1564,6 +1563,7 @@ std::shared_ptr<table> table::begin_table(HtmlTableBorderMode border,
   t->flag = 0;
   if (border == BORDER_NOWIN)
     t->flag |= TBL_EXPAND_OK;
+  t->total_width = width;
 
   rcellspacing = spacing + 2 * padding;
   switch (border) {

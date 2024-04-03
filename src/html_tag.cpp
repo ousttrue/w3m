@@ -64,22 +64,22 @@ int HtmlTag::process(html_feed_environ *h_env) {
   case HTML_N_U:
     return this->HTML_U_exit(h_env);
   case HTML_EM:
-    h_env->HTMLlineproc1("<i>", h_env);
+    h_env->parse("<i>");
     return 1;
   case HTML_N_EM:
-    h_env->HTMLlineproc1("</i>", h_env);
+    h_env->parse("</i>");
     return 1;
   case HTML_STRONG:
-    h_env->HTMLlineproc1("<b>", h_env);
+    h_env->parse("<b>");
     return 1;
   case HTML_N_STRONG:
-    h_env->HTMLlineproc1("</b>", h_env);
+    h_env->parse("</b>");
     return 1;
   case HTML_Q:
-    h_env->HTMLlineproc1("`", h_env);
+    h_env->parse("`");
     return 1;
   case HTML_N_Q:
-    h_env->HTMLlineproc1("'", h_env);
+    h_env->parse("'");
     return 1;
   case HTML_FIGURE:
   case HTML_N_FIGURE:
@@ -177,7 +177,7 @@ int HtmlTag::process(html_feed_environ *h_env) {
   case HTML_A:
     return this->HTML_A_enter(h_env);
   case HTML_N_A:
-    h_env->close_anchor(h_env);
+    h_env->close_anchor();
     return 1;
   case HTML_IMG:
     return this->HTML_IMG_enter(h_env);
@@ -255,17 +255,17 @@ int HtmlTag::process(html_feed_environ *h_env) {
     return this->HTML_INS_exit(h_env);
   case HTML_SUP:
     if (!(h_env->flag & (RB_DEL | RB_S)))
-      h_env->HTMLlineproc1("^", h_env);
+      h_env->parse("^");
     return 1;
   case HTML_N_SUP:
     return 1;
   case HTML_SUB:
     if (!(h_env->flag & (RB_DEL | RB_S)))
-      h_env->HTMLlineproc1("[", h_env);
+      h_env->parse("[");
     return 1;
   case HTML_N_SUB:
     if (!(h_env->flag & (RB_DEL | RB_S)))
-      h_env->HTMLlineproc1("]", h_env);
+      h_env->parse("]");
     return 1;
   case HTML_FONT:
   case HTML_N_FONT:
@@ -281,7 +281,7 @@ int HtmlTag::process(html_feed_environ *h_env) {
     return this->HTML_BODY_enter(h_env);
   case HTML_N_HEAD:
     if (h_env->flag & RB_TITLE)
-      h_env->HTMLlineproc1("</title>", h_env);
+      h_env->parse("</title>");
     return 1;
   case HTML_HEAD:
   case HTML_N_BODY:
@@ -315,7 +315,7 @@ ReadBufferFlags HtmlTag::alignFlag() const {
 }
 
 int HtmlTag::HTML_Paragraph(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 1,
                      h_env->_width);
@@ -337,13 +337,13 @@ int HtmlTag::HTML_H_enter(html_feed_environ *h_env) {
     h_env->do_blankline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                         h_env->_width);
   }
-  h_env->HTMLlineproc1("<b>", h_env);
+  h_env->parse("<b>");
   h_env->set_alignment(this->alignFlag());
   return 1;
 }
 
 int HtmlTag::HTML_H_exit(html_feed_environ *h_env) {
-  h_env->HTMLlineproc1("</b>", h_env);
+  h_env->parse("</b>");
   if (!(h_env->flag & RB_PREMODE)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -351,13 +351,13 @@ int HtmlTag::HTML_H_exit(html_feed_environ *h_env) {
   h_env->do_blankline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                       h_env->_width);
   h_env->RB_RESTORE_FLAG();
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   h_env->flag |= RB_IGNORE_P;
   return 1;
 }
 
 int HtmlTag::HTML_List_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -398,8 +398,8 @@ int HtmlTag::HTML_List_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_List_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_DT(h_env);
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_DT();
+  h_env->CLOSE_A();
   if (h_env->envc > 0) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc - 1].indent, 0,
                      h_env->_width);
@@ -411,12 +411,12 @@ int HtmlTag::HTML_List_exit(html_feed_environ *h_env) {
       h_env->flag |= RB_IGNORE_P;
     }
   }
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   return 1;
 }
 
 int HtmlTag::HTML_DL_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -443,8 +443,8 @@ enum UlSymbolType {
 };
 
 int HtmlTag::HTML_LI_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
-  h_env->CLOSE_DT(h_env);
+  h_env->CLOSE_A();
+  h_env->CLOSE_DT();
   if (h_env->envc > 0) {
     std::string num;
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc - 1].indent, 0,
@@ -545,7 +545,7 @@ int HtmlTag::HTML_LI_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_DT_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (h_env->envc == 0 || (h_env->envc_real < (int)h_env->envs.size() &&
                            h_env->envs[h_env->envc].env != HTML_DL &&
                            h_env->envs[h_env->envc].env != HTML_DL_COMPACT)) {
@@ -556,7 +556,7 @@ int HtmlTag::HTML_DT_enter(html_feed_environ *h_env) {
                      h_env->_width);
   }
   if (!(h_env->flag & RB_IN_DT)) {
-    h_env->HTMLlineproc1("<b>", h_env);
+    h_env->parse("<b>");
     h_env->flag |= RB_IN_DT;
   }
   h_env->flag |= RB_IGNORE_P;
@@ -568,7 +568,7 @@ int HtmlTag::HTML_DT_exit(html_feed_environ *h_env) {
     return 1;
   }
   h_env->flag &= ~RB_IN_DT;
-  h_env->HTMLlineproc1("</b>", h_env);
+  h_env->parse("</b>");
   if (h_env->envc > 0 && h_env->envs[h_env->envc].env == HTML_DL)
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc - 1].indent, 0,
                      h_env->_width);
@@ -576,8 +576,8 @@ int HtmlTag::HTML_DT_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_DD_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
-  h_env->CLOSE_DT(h_env);
+  h_env->CLOSE_A();
+  h_env->CLOSE_DT();
   if (h_env->envs[h_env->envc].env == HTML_DL ||
       h_env->envs[h_env->envc].env == HTML_DL_COMPACT) {
     h_env->PUSH_ENV(HTML_DD);
@@ -597,7 +597,7 @@ int HtmlTag::HTML_DD_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_TITLE_enter(html_feed_environ *h_env) {
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   h_env->process_title();
   h_env->flag |= RB_TITLE;
   h_env->end_tag = HTML_N_TITLE;
@@ -611,7 +611,7 @@ int HtmlTag::HTML_TITLE_exit(html_feed_environ *h_env) {
   h_env->end_tag = {};
   auto tmp = h_env->process_n_title();
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp.c_str(), h_env);
+    h_env->parse(tmp);
   return 1;
 }
 
@@ -639,7 +639,7 @@ int HtmlTag::HTML_FRAMESET_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_NOFRAMES_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                    h_env->_width);
   h_env->flag |= (RB_NOFRAMES | RB_IGNORE_P);
@@ -648,7 +648,7 @@ int HtmlTag::HTML_NOFRAMES_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_NOFRAMES_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                    h_env->_width);
   h_env->flag &= ~RB_NOFRAMES;
@@ -678,17 +678,17 @@ int HtmlTag::HTML_FRAME_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_HR_enter(html_feed_environ *h_env) {
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   auto tmp =
       h_env->process_hr(this, h_env->_width, h_env->envs[h_env->envc].indent);
-  h_env->HTMLlineproc1(tmp, h_env);
+  h_env->parse(tmp);
   h_env->prevchar = " ";
   return 1;
 }
 
 int HtmlTag::HTML_PRE_enter(html_feed_environ *h_env) {
   int x = this->existsAttr(ATTR_FOR_TABLE);
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -712,12 +712,12 @@ int HtmlTag::HTML_PRE_exit(html_feed_environ *h_env) {
     h_env->blank_lines++;
   }
   h_env->flag &= ~RB_PRE;
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   return 1;
 }
 
 int HtmlTag::HTML_PRE_PLAIN_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -729,7 +729,7 @@ int HtmlTag::HTML_PRE_PLAIN_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_PRE_PLAIN_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -742,7 +742,7 @@ int HtmlTag::HTML_PRE_PLAIN_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_PLAINTEXT_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -768,7 +768,7 @@ int HtmlTag::HTML_PLAINTEXT_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_LISTING_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -783,7 +783,7 @@ int HtmlTag::HTML_LISTING_exit(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_A_enter(html_feed_environ *h_env) {
   if (h_env->anchor.url.size()) {
-    h_env->close_anchor(h_env);
+    h_env->close_anchor();
   }
 
   if (auto value = this->getAttr(ATTR_HREF))
@@ -810,9 +810,9 @@ int HtmlTag::HTML_A_enter(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_IMG_enter(html_feed_environ *h_env) {
   if (this->existsAttr(ATTR_USEMAP))
-    h_env->HTML5_CLOSE_A(h_env);
+    h_env->HTML5_CLOSE_A();
   auto tmp = h_env->process_img(this, h_env->_width);
-  h_env->HTMLlineproc1(tmp, h_env);
+  h_env->parse(tmp);
   return 1;
 }
 
@@ -833,7 +833,7 @@ int HtmlTag::HTML_IMG_ALT_exit(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_TABLE_enter(html_feed_environ *h_env) {
   int cols = h_env->_width;
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   if (h_env->table_level + 1 >= MAX_TABLE) {
     return -1;
   }
@@ -889,18 +889,18 @@ int HtmlTag::HTML_TABLE_enter(html_feed_environ *h_env) {
     y = MAX_CELLPADDING;
   if (z > MAX_VSPACE)
     z = MAX_VSPACE;
-  h_env->tables[h_env->table_level] = table::begin_table(w, x, y, z, cols);
+
+  h_env->tables[h_env->table_level] = table::begin_table(w, x, y, z, cols, width);
   h_env->table_mode[h_env->table_level].pre_mode = {};
   h_env->table_mode[h_env->table_level].indent_level = 0;
   h_env->table_mode[h_env->table_level].nobr_level = 0;
   h_env->table_mode[h_env->table_level].caption = 0;
   h_env->table_mode[h_env->table_level].end_tag = HTML_UNKNOWN;
-  h_env->tables[h_env->table_level]->total_width = width;
   return 1;
 }
 
 int HtmlTag::HTML_CENTER_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & (RB_PREMODE | RB_IGNORE_P)))
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -914,7 +914,7 @@ int HtmlTag::HTML_CENTER_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_CENTER_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_PREMODE)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -924,7 +924,7 @@ int HtmlTag::HTML_CENTER_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_DIV_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -934,7 +934,7 @@ int HtmlTag::HTML_DIV_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_DIV_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                    h_env->_width);
   h_env->RB_RESTORE_FLAG();
@@ -942,7 +942,7 @@ int HtmlTag::HTML_DIV_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_DIV_INT_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_P(h_env);
+  h_env->CLOSE_P();
   if (!(h_env->flag & RB_IGNORE_P))
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
@@ -951,7 +951,7 @@ int HtmlTag::HTML_DIV_INT_enter(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_DIV_INT_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_P(h_env);
+  h_env->CLOSE_P();
   h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                    h_env->_width);
   h_env->RB_RESTORE_FLAG();
@@ -959,18 +959,18 @@ int HtmlTag::HTML_DIV_INT_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_FORM_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   if (!(h_env->flag & RB_IGNORE_P))
     h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                      h_env->_width);
   auto tmp = h_env->process_form(this);
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   return 1;
 }
 
 int HtmlTag::HTML_FORM_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A(h_env);
+  h_env->CLOSE_A();
   h_env->flushline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                    h_env->_width);
   h_env->flag |= RB_IGNORE_P;
@@ -979,33 +979,33 @@ int HtmlTag::HTML_FORM_exit(html_feed_environ *h_env) {
 }
 
 int HtmlTag::HTML_INPUT_enter(html_feed_environ *h_env) {
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   auto tmp = h_env->process_input(this);
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   return 1;
 }
 
 int HtmlTag::HTML_BUTTON_enter(html_feed_environ *h_env) {
-  h_env->HTML5_CLOSE_A(h_env);
+  h_env->HTML5_CLOSE_A();
   auto tmp = h_env->process_button(this);
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   return 1;
 }
 
 int HtmlTag::HTML_BUTTON_exit(html_feed_environ *h_env) {
   auto tmp = h_env->process_n_button();
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   return 1;
 }
 
 int HtmlTag::HTML_SELECT_enter(html_feed_environ *h_env) {
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   auto tmp = h_env->process_select(this);
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   h_env->flag |= RB_INSELECT;
   h_env->end_tag = HTML_N_SELECT;
   return 1;
@@ -1016,15 +1016,15 @@ int HtmlTag::HTML_SELECT_exit(html_feed_environ *h_env) {
   h_env->end_tag = HTML_UNKNOWN;
   auto tmp = h_env->process_n_select();
   if (tmp.size())
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   return 1;
 }
 
 int HtmlTag::HTML_TEXTAREA_enter(html_feed_environ *h_env) {
-  h_env->close_anchor(h_env);
+  h_env->close_anchor();
   auto tmp = h_env->process_textarea(this, h_env->_width);
   if (tmp.size()) {
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   }
   h_env->flag |= RB_INTXTA;
   h_env->end_tag = HTML_N_TEXTAREA;
@@ -1036,7 +1036,7 @@ int HtmlTag::HTML_TEXTAREA_exit(html_feed_environ *h_env) {
   h_env->end_tag = HTML_UNKNOWN;
   auto tmp = h_env->process_n_textarea();
   if (tmp.size()) {
-    h_env->HTMLlineproc1(tmp, h_env);
+    h_env->parse(tmp);
   }
   return 1;
 }
@@ -1053,7 +1053,7 @@ int HtmlTag::HTML_ISINDEX_enter(html_feed_environ *h_env) {
   std::stringstream tmp;
   tmp << "<form method=get action=\"" << html_quote(q) << "\">" << html_quote(p)
       << "<input type=text name=\"\" accept></form>";
-  h_env->HTMLlineproc1(tmp.str(), h_env);
+  h_env->parse(tmp.str());
   return 1;
 }
 
@@ -1078,7 +1078,7 @@ int HtmlTag::HTML_META_enter(html_feed_environ *h_env) {
     }
     auto tmp = ss.str();
     if (tmp.size()) {
-      h_env->HTMLlineproc1(tmp, h_env);
+      h_env->parse(tmp);
       h_env->do_blankline(h_env->buf, h_env->envs[h_env->envc].indent, 0,
                           h_env->_width);
     }
@@ -1092,7 +1092,7 @@ int HtmlTag::HTML_DEL_enter(html_feed_environ *h_env) {
     h_env->flag |= RB_DEL;
     break;
   case DISPLAY_INS_DEL_NORMAL:
-    h_env->HTMLlineproc1("<U>[DEL:</U>", h_env);
+    h_env->parse("<U>[DEL:</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
     if (h_env->fontstat.in_strike < FONTSTAT_MAX)
@@ -1111,7 +1111,7 @@ int HtmlTag::HTML_DEL_exit(html_feed_environ *h_env) {
     h_env->flag &= ~RB_DEL;
     break;
   case DISPLAY_INS_DEL_NORMAL:
-    h_env->HTMLlineproc1("<U>:DEL]</U>", h_env);
+    h_env->parse("<U>:DEL]</U>");
   case DISPLAY_INS_DEL_FONTIFY:
     if (h_env->fontstat.in_strike == 0)
       return 1;
@@ -1134,7 +1134,7 @@ int HtmlTag::HTML_S_enter(html_feed_environ *h_env) {
     h_env->flag |= RB_S;
     break;
   case DISPLAY_INS_DEL_NORMAL:
-    h_env->HTMLlineproc1("<U>[S:</U>", h_env);
+    h_env->parse("<U>[S:</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
     if (h_env->fontstat.in_strike < FONTSTAT_MAX)
@@ -1153,7 +1153,7 @@ int HtmlTag::HTML_S_exit(html_feed_environ *h_env) {
     h_env->flag &= ~RB_S;
     break;
   case DISPLAY_INS_DEL_NORMAL:
-    h_env->HTMLlineproc1("<U>:S]</U>", h_env);
+    h_env->parse("<U>:S]</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
     if (h_env->fontstat.in_strike == 0)
@@ -1175,7 +1175,7 @@ int HtmlTag::HTML_INS_enter(html_feed_environ *h_env) {
   case DISPLAY_INS_DEL_SIMPLE:
     break;
   case DISPLAY_INS_DEL_NORMAL:
-    h_env->HTMLlineproc1("<U>[INS:</U>", h_env);
+    h_env->parse("<U>[INS:</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
     if (h_env->fontstat.in_ins < FONTSTAT_MAX)
@@ -1193,7 +1193,7 @@ int HtmlTag::HTML_INS_exit(html_feed_environ *h_env) {
   case DISPLAY_INS_DEL_SIMPLE:
     break;
   case DISPLAY_INS_DEL_NORMAL:
-    h_env->HTMLlineproc1("<U>:INS]</U>", h_env);
+    h_env->parse("<U>:INS]</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
     if (h_env->fontstat.in_ins == 0)
@@ -1217,20 +1217,20 @@ int HtmlTag::HTML_BGSOUND_enter(html_feed_environ *h_env) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<A HREF=\"" << q << "\">bgsound(" << q << ")</A>";
-      h_env->HTMLlineproc1(s.str(), h_env);
+      h_env->parse(s.str());
     }
   }
   return 1;
 }
 
 int HtmlTag::HTML_EMBED_enter(html_feed_environ *h_env) {
-  h_env->HTML5_CLOSE_A(h_env);
+  h_env->HTML5_CLOSE_A();
   if (view_unseenobject) {
     if (auto value = this->getAttr(ATTR_SRC)) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<A HREF=\"" << q << "\">embed(" << q << ")</A>";
-      h_env->HTMLlineproc1(s.str(), h_env);
+      h_env->parse(s.str());
     }
   }
   return 1;
@@ -1242,7 +1242,7 @@ int HtmlTag::HTML_APPLET_enter(html_feed_environ *h_env) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<A HREF=\"" << q << "\">applet archive(" << q << ")</A>";
-      h_env->HTMLlineproc1(s.str(), h_env);
+      h_env->parse(s.str());
     }
   }
   return 1;
@@ -1254,7 +1254,7 @@ int HtmlTag::HTML_BODY_enter(html_feed_environ *h_env) {
       auto q = html_quote(*value);
       std::stringstream s;
       s << "<IMG SRC=\"" << q << "\" ALT=\"bg image(" << q << ")\"><BR>";
-      h_env->HTMLlineproc1(s.str(), h_env);
+      h_env->parse(s.str());
     }
   }
   return 1;
