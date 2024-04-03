@@ -4,7 +4,7 @@
 #include "url.h"
 #include "html_command.h"
 #include "lineprop.h"
-#include "table.h"
+#include "html_table.h"
 #include "line.h"
 #include "anchorlist.h"
 #include "readtoken.h"
