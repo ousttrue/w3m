@@ -149,12 +149,12 @@ public:
   static std::shared_ptr<table> newTable(int cols);
   static std::shared_ptr<table> begin_table(int border, int spacing,
                                             int padding, int vspace, int cols);
-  int feed_table(struct html_feed_environ *parser, std::string line,
+  int feed_table(class html_feed_environ *parser, std::string line,
                  struct table_mode *mode, int width, int internal);
   void end_table();
   void pushTable(const std::shared_ptr<table> &);
   void renderTable(html_feed_environ *parser, int max_width,
-                   struct html_feed_environ *h_env);
+                   html_feed_environ *h_env);
 
 private:
   int feed_table_tag(html_feed_environ *parser, const std::string &line,
@@ -209,7 +209,7 @@ private:
                           int width);
   void print_item(int row, int col, int width, std::ostream &buf);
   void print_sep(int row, int type, int maxcol, std::ostream &buf);
-  void make_caption(html_feed_environ *parser, struct html_feed_environ *h_env);
+  void make_caption(html_feed_environ *parser, html_feed_environ *h_env);
   void renderCoTable(html_feed_environ *parser, int maxlimit);
   void check_table_height();
   int table_rowspan(int row, int col);

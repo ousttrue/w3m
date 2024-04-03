@@ -6,6 +6,12 @@
 #include <optional>
 #include <memory>
 
+enum DisplayInsDelType {
+  DISPLAY_INS_DEL_SIMPLE = 0,
+  DISPLAY_INS_DEL_NORMAL = 1,
+  DISPLAY_INS_DEL_FONTIFY = 2,
+};
+
 enum HtmlTagAttr {
   ATTR_UNKNOWN = 0,
   ATTR_ACCEPT = 1,
@@ -80,7 +86,7 @@ enum HtmlTagAttr {
   MAX_TAGATTR = 75,
 };
 
-struct html_feed_environ;
+class html_feed_environ;
 class HtmlTag {
   friend std::shared_ptr<HtmlTag> parseHtmlTag(const char **s, bool internal);
   friend const char *parseAttr(const std::shared_ptr<HtmlTag> &tag,

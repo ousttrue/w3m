@@ -7,7 +7,6 @@
 #include "myctype.h"
 #include "line_layout.h"
 #include "quote.h"
-#include "http_response.h"
 #include "entity.h"
 #include "html_tag_parse.h"
 #include "url_quote.h"
@@ -15,6 +14,7 @@
 #include "cmp.h"
 #include "push_symbol.h"
 #include "html_token.h"
+#include "html_meta.h"
 #include <assert.h>
 #include <sstream>
 
@@ -161,99 +161,6 @@ bool MetaRefresh = false;
 
 #define FORMSTACK_SIZE 10
 #define FRAMESTACK_SIZE 10
-
-static int is_period_char(unsigned char *ch) {
-  switch (*ch) {
-  case ',':
-  case '.':
-  case ':':
-  case ';':
-  case '?':
-  case '!':
-  case ')':
-  case ']':
-  case '}':
-  case '>':
-    return 1;
-  default:
-    return 0;
-  }
-}
-
-static int is_beginning_char(unsigned char *ch) {
-  switch (*ch) {
-  case '(':
-  case '[':
-  case '{':
-  case '`':
-  case '<':
-    return 1;
-  default:
-    return 0;
-  }
-}
-
-static int is_word_char(unsigned char *ch) {
-  Lineprop ctype = get_mctype((const char *)ch);
-
-  if (ctype == PC_CTRL)
-    return 0;
-
-  if (IS_ALNUM(*ch))
-    return 1;
-
-  switch (*ch) {
-  case ',':
-  case '.':
-  case ':':
-  case '\"': /* " */
-  case '\'':
-  case '$':
-  case '%':
-  case '*':
-  case '+':
-  case '-':
-  case '@':
-  case '~':
-  case '_':
-    return 1;
-  }
-  if (*ch == TIMES_CODE || *ch == DIVIDE_CODE || *ch == ANSP_CODE)
-    return 0;
-  if (*ch >= AGRAVE_CODE || *ch == NBSP_CODE)
-    return 1;
-  return 0;
-}
-
-static int is_combining_char(const char *ch) {
-  Lineprop ctype = get_mctype(ch);
-
-  if (ctype & PC_WCHAR2)
-    return 1;
-  return 0;
-}
-
-int is_boundary(unsigned char *ch1, unsigned char *ch2) {
-  if (!*ch1 || !*ch2)
-    return 1;
-
-  if (*ch1 == ' ' && *ch2 == ' ')
-    return 0;
-
-  if (*ch1 != ' ' && is_period_char(ch2))
-    return 0;
-
-  if (*ch2 != ' ' && is_beginning_char(ch1))
-    return 0;
-
-  if (is_combining_char((const char *)ch2))
-    return 0;
-
-  if (is_word_char(ch1) && is_word_char(ch2))
-    return 0;
-
-  return 1;
-}
 
 static const char *_size_unit[] = {"b",  "kb", "Mb", "Gb", "Tb", "Pb",
                                    "Eb", "Zb", "Bb", "Yb", NULL};
@@ -574,7 +481,7 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
   if (this->top_margin > 0) {
     int i;
 
-    struct html_feed_environ h(1, width, indent);
+    html_feed_environ h(1, width, indent);
     h.line = {};
     h.pos = this->pos;
     h.flag = this->flag;
@@ -685,7 +592,7 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
   if (this->bottom_margin > 0) {
     int i;
 
-    struct html_feed_environ h(1, width, indent);
+    html_feed_environ h(1, width, indent);
     h.line = {};
     h.pos = this->pos;
     h.flag = this->flag;
@@ -773,7 +680,7 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
     this->push_tag("<INS>", HTML_INS);
 }
 
-void html_feed_environ::CLOSE_P(struct html_feed_environ *h_env) {
+void html_feed_environ::CLOSE_P(html_feed_environ *h_env) {
   if (this->flag & RB_P) {
     struct environment *envs = h_env->envs.data();
     this->flushline(h_env->buf, envs[h_env->envc].indent, 0, h_env->_width);
@@ -854,7 +761,7 @@ void html_feed_environ::feed_title(const std::string &_str) {
 #define INITIAL_FORM_SIZE 10
 
 void html_feed_environ::HTMLlineproc1(const std::string &x,
-                                      struct html_feed_environ *y) {
+                                      html_feed_environ *y) {
   parse(x, y, true);
 }
 
@@ -890,7 +797,7 @@ std::string html_feed_environ::getLinkNumberStr(int correction) const {
 
 void html_feed_environ::push_render_image(const std::string &str, int width,
                                           int limit,
-                                          struct html_feed_environ *h_env) {
+                                          html_feed_environ *h_env) {
   int indent = h_env->envs[h_env->envc].indent;
 
   h_env->push_spaces(1, (limit - width) / 2);
@@ -900,7 +807,7 @@ void html_feed_environ::push_render_image(const std::string &str, int width,
     h_env->flushline(h_env->buf, indent, 0, h_env->_width);
 }
 
-void html_feed_environ::close_anchor(struct html_feed_environ *h_env) {
+void html_feed_environ::close_anchor(html_feed_environ *h_env) {
   if (h_env->anchor.url.size()) {
     const char *p = nullptr;
     int is_erased = 0;
@@ -940,7 +847,7 @@ void html_feed_environ::close_anchor(struct html_feed_environ *h_env) {
   h_env->anchor = {};
 }
 
-void html_feed_environ::save_fonteffect(struct html_feed_environ *h_env) {
+void html_feed_environ::save_fonteffect(html_feed_environ *h_env) {
   if (h_env->fontstat_sp < FONT_STACK_SIZE) {
     h_env->fontstat_stack[h_env->fontstat_sp] = h_env->fontstat;
   }
@@ -961,7 +868,7 @@ void html_feed_environ::save_fonteffect(struct html_feed_environ *h_env) {
   h_env->fontstat = {};
 }
 
-void html_feed_environ::restore_fonteffect(struct html_feed_environ *h_env) {
+void html_feed_environ::restore_fonteffect(html_feed_environ *h_env) {
   if (h_env->fontstat_sp > 0)
     h_env->fontstat_sp--;
   if (h_env->fontstat_sp < FONT_STACK_SIZE) {
@@ -1613,49 +1520,6 @@ Line html_feed_environ::renderLine(
   return line;
 }
 
-MetaRefreshInfo getMetaRefreshParam(const std::string &_q) {
-  if (_q.empty()) {
-    return {};
-  }
-
-  auto refresh_interval = stoi(_q);
-  if (refresh_interval < 0) {
-    return {};
-  }
-
-  std::string s_tmp;
-  auto q = _q.data();
-  while (q != _q.data() + _q.size()) {
-    if (!strncasecmp(&*q, "url=", 4)) {
-      q += 4;
-      if (*q == '\"' || *q == '\'') /* " or ' */
-        q++;
-      auto r = q;
-      while (*r && !IS_SPACE(*r) && *r != ';')
-        r++;
-
-      s_tmp = std::string(q, r - q);
-
-      if (s_tmp.size() > 0 && (s_tmp.back() == '\"' ||  /* " */
-                               s_tmp.back() == '\'')) { /* ' */
-        s_tmp.pop_back();
-      }
-      q = r;
-    }
-    while (*q && *q != ';')
-      q++;
-    if (*q == ';')
-      q++;
-    while (*q && *q == ' ')
-      q++;
-  }
-
-  return {
-      .interval = refresh_interval,
-      .url = s_tmp,
-  };
-}
-
 std::string html_feed_environ::process_img(const HtmlTag *tag, int width) {
   int pre_int = false, ext_pre_int = false;
 
@@ -2180,7 +2044,7 @@ void html_feed_environ::proc_escape(html_feed_environ *h_env,
   h_env->prev_ctype = mode;
 }
 
-int html_feed_environ::table_width(struct html_feed_environ *h_env,
+int html_feed_environ::table_width(html_feed_environ *h_env,
                                    int table_level) {
   int width;
   if (table_level < 0)
@@ -2203,7 +2067,7 @@ static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
   }
 }
 
-static int need_flushline(struct html_feed_environ *h_env, Lineprop mode) {
+static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
   if (h_env->flag & RB_PRE_INT) {
     if (h_env->pos > h_env->_width)
       return 1;
@@ -2223,7 +2087,7 @@ static int need_flushline(struct html_feed_environ *h_env, Lineprop mode) {
 }
 
 void html_feed_environ::parse(std::string_view html,
-                              struct html_feed_environ *h_env, bool internal) {
+                              html_feed_environ *h_env, bool internal) {
 
   Tokenizer tokenizer(html);
   TableStatus t;
@@ -2543,7 +2407,7 @@ void html_feed_environ::process_option() {
   n_selectitem++;
 }
 
-void html_feed_environ::completeHTMLstream(struct html_feed_environ *h_env) {
+void html_feed_environ::completeHTMLstream(html_feed_environ *h_env) {
   this->close_anchor(h_env);
   if (h_env->img_alt.size()) {
     h_env->push_tag("</img_alt>", HTML_N_IMG_ALT);

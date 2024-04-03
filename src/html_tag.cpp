@@ -7,7 +7,13 @@
 #include "cmp.h"
 #include "utf8.h"
 #include "option_param.h"
+#include "html_meta.h"
 #include <sstream>
+
+#define MAX_UL_LEVEL 9
+#define MAX_CELLSPACING 1000
+#define MAX_CELLPADDING 1000
+#define MAX_VSPACE 1000
 
 bool HtmlTag::setAttr(HtmlTagAttr id, const std::string &value) {
   if (!this->acceptsAttr(id))
@@ -30,7 +36,7 @@ std::optional<std::string> HtmlTag::getAttr(HtmlTagAttr id) const {
   return this->value[i];
 }
 
-int HtmlTag::process(struct html_feed_environ *h_env) {
+int HtmlTag::process(html_feed_environ *h_env) {
 
   // struct environment *envs = h_env->envs.data();
 

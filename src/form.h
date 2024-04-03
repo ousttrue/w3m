@@ -24,7 +24,6 @@ enum FormItemType {
 FormItemType formtype(const std::string &typestr);
 
 struct Form;
-struct html_feed_environ;
 class HtmlTag;
 struct FormItem {
   FormItemType type;

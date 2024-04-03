@@ -7,7 +7,7 @@ struct Token {
   std::string str;
 };
 
-struct html_feed_environ;
+class html_feed_environ;
 struct TableStatus;
 struct Tokenizer {
   std::string line;

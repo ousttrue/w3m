@@ -1250,7 +1250,7 @@ void table::renderCoTable(html_feed_environ *parser, int maxlimit) {
   }
 }
 
-void table::make_caption(html_feed_environ *parser, struct html_feed_environ *h_env) {
+void table::make_caption(html_feed_environ *parser, html_feed_environ *h_env) {
   if (this->caption.size() <= 0)
     return;
 
@@ -1277,7 +1277,7 @@ void table::make_caption(html_feed_environ *parser, struct html_feed_environ *h_
 }
 
 void table::renderTable(html_feed_environ *parser, int max_width,
-                        struct html_feed_environ *h_env) {
+                        html_feed_environ *h_env) {
   int i, j, w, r, h;
   Str *renderbuf;
   short new_tabwidth[MAXCOL] = {0};

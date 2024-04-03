@@ -1,5 +1,4 @@
 #include "html_token.h"
-#include "table.h"
 #include "html_feed_env.h"
 #include "readtoken.h"
 #include "html_tag.h"

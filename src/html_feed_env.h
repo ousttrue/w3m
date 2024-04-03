@@ -8,22 +8,10 @@
 #include "line.h"
 #include "anchorlist.h"
 #include "readtoken.h"
+#include "line_break.h"
 #include <string>
 
 #define MAX_INDENT_LEVEL 10
-#define MAX_UL_LEVEL 9
-#define MAX_CELLSPACING 1000
-#define MAX_CELLPADDING 1000
-#define MAX_VSPACE 1000
-
-struct environment {
-  HtmlCommand env;
-  int type;
-  int count;
-  char indent;
-};
-
-int is_boundary(unsigned char *, unsigned char *);
 
 extern bool pseudoInlines;
 extern bool ignore_null_img_alt;
@@ -33,13 +21,6 @@ extern bool DisableCenter;
 extern int IndentIncr;
 #define INDENT_INCR IndentIncr
 extern bool DisplayBorders;
-
-enum DisplayInsDelType {
-  DISPLAY_INS_DEL_SIMPLE = 0,
-  DISPLAY_INS_DEL_NORMAL = 1,
-  DISPLAY_INS_DEL_FONTIFY = 2,
-};
-
 extern int displayInsDel;
 extern bool view_unseenobject;
 extern bool MetaRefresh;
@@ -92,7 +73,8 @@ struct LinkStack {
   short pos = 0;
 };
 
-struct html_feed_environ {
+class html_feed_environ {
+public:
   std::string line;
   Lineprop cprop = 0;
   short pos = 0;
@@ -273,7 +255,7 @@ struct html_feed_environ {
     return 0;
   }
 
-  void CLOSE_P(struct html_feed_environ *h_env);
+  void CLOSE_P(html_feed_environ *h_env);
 
   void append_tags();
   void push_tag(std::string_view cmdname, HtmlCommand cmd);
@@ -341,16 +323,21 @@ struct html_feed_environ {
   std::string tagbuf;
   // int limit;
   int _width;
+  struct environment {
+    HtmlCommand env;
+    int type;
+    int count;
+    char indent;
+  };
   std::vector<environment> envs;
   int envc = 0;
   int envc_real = 0;
   std::string title;
-  friend struct html_feed_environ;
 
 public:
   std::shared_ptr<table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
-  int table_width(struct html_feed_environ *h_env, int table_level);
+  int table_width(html_feed_environ *h_env, int table_level);
 
 private:
   // select
@@ -401,7 +388,7 @@ public:
   std::string process_textarea(const HtmlTag *tag, int width);
   std::string process_n_textarea();
   void feed_textarea(const std::string &str);
-  void close_anchor(struct html_feed_environ *h_env);
+  void close_anchor(html_feed_environ *h_env);
   void save_fonteffect(html_feed_environ *h_env);
   void restore_fonteffect(html_feed_environ *h_env);
   void proc_escape(html_feed_environ *h_env, const char **str_return);
@@ -416,10 +403,10 @@ public:
   int cur_hseq = 1;
 
   // HTML processing first pass
-  void parse(std::string_view istr, struct html_feed_environ *h_env,
+  void parse(std::string_view istr, html_feed_environ *h_env,
              bool internal);
 
-  void HTMLlineproc1(const std::string &x, struct html_feed_environ *y);
+  void HTMLlineproc1(const std::string &x, html_feed_environ *y);
 
   void CLOSE_DT(html_feed_environ *h_env);
 
@@ -486,9 +473,3 @@ std::shared_ptr<LineData>
 loadHTMLstream(int width, const Url &currentURL, std::string_view body,
                const std::shared_ptr<AnchorList<FormAnchor>> &old,
                bool internal = false);
-
-struct MetaRefreshInfo {
-  int interval = 0;
-  std::string url;
-};
-MetaRefreshInfo getMetaRefreshParam(const std::string &q);

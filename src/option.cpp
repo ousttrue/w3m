@@ -18,6 +18,7 @@
 #include "loaddirectory.h"
 #include "entity.h"
 #include "html_feed_env.h"
+#include "html_tag.h"
 #include "search.h"
 #include "history.h"
 #include "linein.h"
