@@ -14,7 +14,6 @@ public:
   ~table();
   table(const table &) = delete;
   table &operator=(const table &) = delete;
-  static std::shared_ptr<table> newTable(int cols);
   static std::shared_ptr<table> begin_table(HtmlTableBorderMode border,
                                             int spacing, int padding,
                                             int vspace, int cols, int width);

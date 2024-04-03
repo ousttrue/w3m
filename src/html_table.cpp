@@ -440,14 +440,16 @@ struct tableimpl {
   int indent = 0;
   HtmlTableBorderMode border_mode = {};
   std::vector<std::vector<table_attr>> tabattr;
-  int maxrow = 0;
-  int maxcol = 0;
+  int maxrow = -1;
+  int maxcol = -1;
+  int row = -1;
+  int col = -1;
   int _cols;
   int max_rowsize = MAXROW;
   int total_height;
   int tabcontentssize;
   int vcellpadding;
-  TableFlags flag;
+  TableFlags flag = {};
   std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
   table_attr trattr = {};
   short tabwidth[MAXCOL];
@@ -464,8 +466,6 @@ struct tableimpl {
   Vector vector = {};
   int sloppy_width;
   int total_width;
-  int row;
-  int col;
   short ntable = 0;
   int vspace;
 
@@ -1930,11 +1930,6 @@ static int minimum_cellspacing(int border_mode) {
   }
 }
 
-std::shared_ptr<table> table::newTable(int cols) {
-  auto t = std::shared_ptr<table>(new table(cols));
-  return t;
-}
-
 static int visible_length_plain(const char *str) {
   int len = 0, max_len = 0;
 
@@ -2215,22 +2210,17 @@ std::shared_ptr<table> table::begin_table(HtmlTableBorderMode border,
                                           int spacing, int padding, int vspace,
                                           int cols, int width) {
   int mincell = minimum_cellspacing(border);
-  int rcellspacing;
   int mincell_pixels = _round(mincell * pixel_per_char);
   int ppc = _round(pixel_per_char);
 
-  auto t = table::newTable(cols);
-  t->_impl->row = t->_impl->col = -1;
-  t->_impl->maxcol = -1;
-  t->_impl->maxrow = -1;
+  auto t = std::shared_ptr<table>(new table(cols));
   t->_impl->border_mode = border;
-  t->_impl->flag = {};
   if (border == BORDER_NOWIN) {
     t->_impl->flag |= TBL_EXPAND_OK;
   }
   t->_impl->total_width = width;
 
-  rcellspacing = spacing + 2 * padding;
+  int rcellspacing = spacing + 2 * padding;
   switch (border) {
   case BORDER_THIN:
   case BORDER_THICK:
