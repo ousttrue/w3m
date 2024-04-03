@@ -42,9 +42,6 @@
 #define abs(a) ((a) >= 0. ? (a) : -(a))
 #endif /* not abs */
 
-#define sigma_table(a) (0.25 * weight2(a)) /* <table width=...> */
-#define sigma_table_nw(a) (2 * weight2(a)) /* <table...> */
-
 static int bsearch_2short(short e1, short *ent1, short e2, short *ent2,
                           int base, short *indexarray, int nent) {
   int n = nent;
@@ -117,7 +114,25 @@ struct tableimpl {
   std::vector<std::vector<table_attr>> tabattr;
   int maxrow = 0;
   int maxcol = 0;
-  int table_rowspan(int row, int col) {
+  int _cols;
+
+  tableimpl(int cols) : _cols(cols) {}
+
+  double weight(int x) const {
+    if (x < _cols)
+      return (double)x;
+    else
+      return _cols * (log((double)x / _cols) + 1.);
+  }
+  double weight2(int a) const { return (double)a / _cols * 4 + 1.; }
+  double sigma_td(int a) const { return 0.5 * weight2(a); /* <td width=...> */ }
+  double sigma_td_nw(int a) const { return 32 * weight2(a); /* <td ...> */ }
+  double sigma_table(int a) const {
+    return 0.25 * weight2(a); /* <table width=...> */
+  }
+  double sigma_table_nw(int a) const { return 2 * weight2(a); /* <table...> */ }
+
+  int table_rowspan(int row, int col) const {
     // if (this->tabattr[row].empty())
     //   return 0;
     int i;
@@ -127,6 +142,7 @@ struct tableimpl {
       ;
     return i - row;
   }
+
   int table_colspan(int row, int col) const {
     int i;
     for (i = col + 1; i <= this->maxcol && (this->tabattr[row][i] & HTT_X); i++)
@@ -150,7 +166,7 @@ struct tableimpl {
   }
 };
 
-table::table() : _impl(new tableimpl) {}
+table::table(int cols) : _impl(new tableimpl(cols)) {}
 table::~table() { delete _impl; }
 
 static int minimum_cellspacing(int border_mode) {
@@ -168,8 +184,7 @@ static int minimum_cellspacing(int border_mode) {
 }
 
 std::shared_ptr<table> table::newTable(int cols) {
-  auto t = std::shared_ptr<table>(new table);
-  t->_cols = cols;
+  auto t = std::shared_ptr<table>(new table(cols));
   t->max_rowsize = MAXROW;
   t->tabdata.resize(MAXROW);
   t->_impl->tabattr.resize(MAXROW);
@@ -2916,7 +2931,7 @@ void table::set_table_matrix0(int maxwidth) {
 
   double w0 = 0.;
   for (size_t i = 0; i < size; i++) {
-    we[i] = weight(this->tabwidth[i]);
+    we[i] = this->_impl->weight(this->tabwidth[i]);
     w0 += we[i];
   }
   if (w0 <= 0.)
@@ -2925,7 +2940,7 @@ void table::set_table_matrix0(int maxwidth) {
   if (cell->necell == 0) {
     for (size_t i = 0; i < size; i++) {
       double s = we[i] / w0;
-      double b = sigma_td_nw((int)(s * maxwidth));
+      double b = this->_impl->sigma_td_nw((int)(s * maxwidth));
       this->correct_table_matrix2(i, 1, s, b);
     }
     return;
@@ -2943,7 +2958,8 @@ void table::set_table_matrix0(int maxwidth) {
       expand[i]++;
     }
     for (size_t i = bcol; i < ecol; i++) {
-      auto w = weight(static_cast<int>(width * (this->tabwidth[i] + 0.1) / w1));
+      auto w = this->_impl->weight(
+          static_cast<int>(width * (this->tabwidth[i] + 0.1) / w1));
       if (w > we[i])
         we[i] = w;
     }
@@ -2965,9 +2981,9 @@ void table::set_table_matrix0(int maxwidth) {
       int bcol = cell->col[j];
       int width =
           cell->width[j] - (cell->colspan[j] - 1) * this->_impl->cellspacing;
-      auto w = weight(width);
+      auto w = this->_impl->weight(width);
       double s = w / (w1 + w);
-      double b = sigma_td_nw((int)(s * maxwidth));
+      double b = this->_impl->sigma_td_nw((int)(s * maxwidth));
       this->correct_table_matrix4(bcol, cell->colspan[j], expand, s, b);
     }
 
@@ -2975,10 +2991,10 @@ void table::set_table_matrix0(int maxwidth) {
       double s, b;
       if (expand[i] == 0) {
         s = we[i] / max(w1, 1.);
-        b = sigma_td_nw((int)(s * maxwidth));
+        b = this->_impl->sigma_td_nw((int)(s * maxwidth));
       } else {
         s = we[i] / max(w0 - w1, 1.);
-        b = sigma_td_nw(maxwidth);
+        b = this->_impl->sigma_td_nw(maxwidth);
       }
       this->correct_table_matrix3(i, expand, s, b);
     }
@@ -3082,11 +3098,11 @@ void table::set_table_matrix(int width) {
   for (int i = 0; i < size; i++) {
     if (this->fixed_width[i] > 0) {
       auto a = max(this->fixed_width[i], this->minimum_width[i]);
-      auto b = sigma_td(a);
+      auto b = this->_impl->sigma_td(a);
       this->correct_table_matrix(i, 1, a, b);
     } else if (this->fixed_width[i] < 0) {
       auto s = -(double)this->fixed_width[i] / 100.;
-      auto b = sigma_td((int)(s * width));
+      auto b = this->_impl->sigma_td((int)(s * width));
       this->correct_table_matrix2(i, 1, s, b);
     }
   }
@@ -3095,11 +3111,11 @@ void table::set_table_matrix(int width) {
   for (int j = 0; j <= cell->maxcell; j++) {
     if (cell->fixed_width[j] > 0) {
       auto a = max(cell->fixed_width[j], cell->minimum_width[j]);
-      auto b = sigma_td(a);
+      auto b = this->_impl->sigma_td(a);
       this->correct_table_matrix(cell->col[j], cell->colspan[j], a, b);
     } else if (cell->fixed_width[j] < 0) {
       auto s = -(double)cell->fixed_width[j] / 100.;
-      auto b = sigma_td((int)(s * width));
+      auto b = this->_impl->sigma_td((int)(s * width));
       this->correct_table_matrix2(cell->col[j], cell->colspan[j], s, b);
     }
   }
@@ -3108,9 +3124,9 @@ void table::set_table_matrix(int width) {
 
   double b;
   if (this->total_width > 0) {
-    b = sigma_table(width);
+    b = this->_impl->sigma_table(width);
   } else {
-    b = sigma_table_nw(width);
+    b = this->_impl->sigma_table_nw(width);
   }
   this->correct_table_matrix(0, size, width, b);
 }
