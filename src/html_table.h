@@ -150,8 +150,7 @@ public:
                  struct table_mode *mode, int width, int internal);
   void end_table();
   void pushTable(const std::shared_ptr<table> &);
-  void renderTable(html_feed_environ *parser, int max_width,
-                   html_feed_environ *h_env);
+  void renderTable(html_feed_environ *parser, int max_width);
 
 private:
   int feed_table_tag(html_feed_environ *parser, const std::string &line,
@@ -199,7 +198,7 @@ private:
                           int width);
   void print_item(int row, int col, int width, std::ostream &buf);
   void print_sep(int row, int type, int maxcol, std::ostream &buf);
-  void make_caption(html_feed_environ *parser, html_feed_environ *h_env);
+  void make_caption(html_feed_environ *parser);
   void renderCoTable(html_feed_environ *parser, int maxlimit);
   void check_table_height();
   void set_table_width(short *newwidth, int maxwidth);

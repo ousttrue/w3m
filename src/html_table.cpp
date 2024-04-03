@@ -513,13 +513,13 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
   auto orgdata = this->tabdata[row][col];
   this->tabdata[row][col] = GeneralList::newGeneralList();
 
-  html_feed_environ h_env(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col), 0,
+  html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col), 0,
                           this->tabdata[row][col]);
-  h_env.flag |= RB_INTABLE;
-  if (h_env._width > maxlimit)
-    h_env._width = maxlimit;
+  henv.flag |= RB_INTABLE;
+  if (henv._width > maxlimit)
+    henv._width = maxlimit;
   if (this->_impl->border_mode != BORDER_NONE && this->vcellpadding > 0)
-    h_env.do_blankline(h_env.buf, 0, 0, h_env._width);
+    henv.do_blankline(henv.buf, 0, 0, henv._width);
   for (auto &l : orgdata->_list) {
     if (TAG_IS(l->line.c_str(), "<table_alt", 10)) {
       int id = -1;
@@ -535,13 +535,13 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
         auto t = this->tables[id].ptr;
         int limit = this->tables[id].indent + t->total_width;
         this->tables[id].ptr = NULL;
-        parser->save_fonteffect();
-        h_env.flushline(h_env.buf, 0, 2, h_env._width);
-        if (t->vspace > 0 && !(h_env.flag & RB_IGNORE_P))
-          h_env.do_blankline(h_env.buf, 0, 0, h_env._width);
-        if (h_env.RB_GET_ALIGN() == RB_CENTER) {
+        henv.save_fonteffect();
+        henv.flushline(henv.buf, 0, 2, henv._width);
+        if (t->vspace > 0 && !(henv.flag & RB_IGNORE_P))
+          henv.do_blankline(henv.buf, 0, 0, henv._width);
+        if (henv.RB_GET_ALIGN() == RB_CENTER) {
           alignment = ALIGN_CENTER;
-        } else if (h_env.RB_GET_ALIGN() == RB_RIGHT) {
+        } else if (henv.RB_GET_ALIGN() == RB_RIGHT) {
           alignment = ALIGN_RIGHT;
         } else {
           alignment = ALIGN_LEFT;
@@ -550,46 +550,46 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
         // ListItem *ti;
         if (alignment != ALIGN_LEFT) {
           for (auto &ti : this->tables[id].buf->_list) {
-            ti->align(h_env._width, alignment);
+            ti->align(henv._width, alignment);
           }
         }
-        h_env.buf->appendGeneralList(this->tables[id].buf);
-        if (h_env.maxlimit < limit)
-          h_env.maxlimit = limit;
-        parser->restore_fonteffect();
-        h_env.flag &= ~RB_IGNORE_P;
-        h_env.blank_lines = 0;
+        henv.buf->appendGeneralList(this->tables[id].buf);
+        if (henv.maxlimit < limit)
+          henv.maxlimit = limit;
+        henv.restore_fonteffect();
+        henv.flag &= ~RB_IGNORE_P;
+        henv.blank_lines = 0;
         if (t->vspace > 0) {
-          h_env.do_blankline(h_env.buf, 0, 0, h_env._width);
-          h_env.flag |= RB_IGNORE_P;
+          henv.do_blankline(henv.buf, 0, 0, henv._width);
+          henv.flag |= RB_IGNORE_P;
         }
       }
     } else {
-      parser->parse(l->line.c_str());
+      henv.parse(l->line.c_str());
     }
   }
-  if (h_env.status != R_ST_NORMAL) {
-    h_env.status = R_ST_EOL;
-    parser->parse("\n");
+  if (henv.status != R_ST_NORMAL) {
+    henv.status = R_ST_EOL;
+    henv.parse("\n");
   }
-  parser->completeHTMLstream();
-  h_env.flushline(h_env.buf, 0, 2, h_env._width);
+  henv.completeHTMLstream();
+  henv.flushline(henv.buf, 0, 2, henv._width);
   if (this->_impl->border_mode == BORDER_NONE) {
     int rowspan = this->_impl->table_rowspan(row, col);
     if (row + rowspan <= this->_impl->maxrow) {
-      if (this->vcellpadding > 0 && !(h_env.flag & RB_IGNORE_P))
-        h_env.do_blankline(h_env.buf, 0, 0, h_env._width);
+      if (this->vcellpadding > 0 && !(henv.flag & RB_IGNORE_P))
+        henv.do_blankline(henv.buf, 0, 0, henv._width);
     } else {
       if (this->vspace > 0) {
-        h_env.purgeline();
+        henv.purgeline();
       }
     }
   } else {
     if (this->vcellpadding > 0) {
-      if (!(h_env.flag & RB_IGNORE_P))
-        h_env.do_blankline(h_env.buf, 0, 0, h_env._width);
+      if (!(henv.flag & RB_IGNORE_P))
+        henv.do_blankline(henv.buf, 0, 0, henv._width);
     } else {
-      h_env.purgeline();
+      henv.purgeline();
     }
   }
   int colspan, icell;
@@ -599,11 +599,11 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
     k = bsearch_2short(colspan, cell->colspan, col, cell->col, MAXCOL,
                        cell->index, cell->maxcell + 1);
     icell = cell->index[k];
-    if (cell->minimum_width[icell] < h_env.maxlimit)
-      cell->minimum_width[icell] = h_env.maxlimit;
+    if (cell->minimum_width[icell] < henv.maxlimit)
+      cell->minimum_width[icell] = henv.maxlimit;
   } else {
-    if (this->minimum_width[col] < h_env.maxlimit)
-      this->minimum_width[col] = h_env.maxlimit;
+    if (this->minimum_width[col] < henv.maxlimit)
+      this->minimum_width[col] = henv.maxlimit;
   }
 }
 
@@ -1271,22 +1271,22 @@ void table::renderCoTable(html_feed_environ *parser, int maxlimit) {
     row = this->tables[i].row;
     indent = this->tables[i].indent;
 
-    html_feed_environ h_env(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
+    html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
                             indent, this->tables[i].buf);
     this->check_row(row);
-    if (h_env._width > maxlimit)
-      h_env._width = maxlimit;
+    if (henv._width > maxlimit)
+      henv._width = maxlimit;
     if (t->total_width == 0)
-      maxwidth = h_env._width - indent;
+      maxwidth = henv._width - indent;
     else if (t->total_width > 0)
       maxwidth = t->total_width;
     else
-      maxwidth = t->total_width = -t->total_width * h_env._width / 100;
-    t->renderTable(parser, maxwidth, &h_env);
+      maxwidth = t->total_width = -t->total_width * henv._width / 100;
+    t->renderTable(&henv, maxwidth);
   }
 }
 
-void table::make_caption(html_feed_environ *parser, html_feed_environ *h_env) {
+void table::make_caption(html_feed_environ *parser) {
   if (this->caption.size() <= 0)
     return;
 
@@ -1294,9 +1294,10 @@ void table::make_caption(html_feed_environ *parser, html_feed_environ *h_env) {
   if (this->total_width > 0)
     limit = this->total_width;
   else
-    limit = h_env->_width;
+    limit = parser->_width;
 
-  html_feed_environ henv(MAX_ENV_LEVEL, limit, h_env->envs[h_env->envc].indent,
+  html_feed_environ henv(MAX_ENV_LEVEL, limit,
+                         parser->envs[parser->envc].indent,
                          GeneralList::newGeneralList());
   parser->parse("<center>");
   parser->parse(this->caption, false);
@@ -1304,16 +1305,16 @@ void table::make_caption(html_feed_environ *parser, html_feed_environ *h_env) {
 
   if (this->total_width < henv.maxlimit)
     this->total_width = henv.maxlimit;
-  limit = h_env->_width;
-  h_env->_width = this->total_width;
+
+  limit = parser->_width;
+  parser->_width = this->total_width;
   parser->parse("<center>");
   parser->parse(this->caption, false);
   parser->parse("</center>");
-  h_env->_width = limit;
+  parser->_width = limit;
 }
 
-void table::renderTable(html_feed_environ *parser, int max_width,
-                        html_feed_environ *h_env) {
+void table::renderTable(html_feed_environ *parser, int max_width) {
   int i, j, w, r, h;
   Str *renderbuf;
   short new_tabwidth[MAXCOL] = {0};
@@ -1322,7 +1323,7 @@ void table::renderTable(html_feed_environ *parser, int max_width,
 
   this->total_height = 0;
   if (this->_impl->maxcol < 0) {
-    this->make_caption(parser, h_env);
+    this->make_caption(parser);
     return;
   }
 
@@ -1381,14 +1382,14 @@ void table::renderTable(html_feed_environ *parser, int max_width,
   for (i = 0; i <= this->_impl->maxcol; i++)
     this->tabwidth[i] = ceil_at_intervals(this->tabwidth[i], rulewidth);
 
-  this->renderCoTable(parser, h_env->_width);
+  this->renderCoTable(parser, parser->_width);
 
   for (i = 0; i <= this->_impl->maxcol; i++) {
     for (j = 0; j <= this->_impl->maxrow; j++) {
       this->check_row(j);
       if (this->_impl->tabattr[j][i] & HTT_Y)
         continue;
-      this->do_refill(parser, j, i, h_env->_width);
+      this->do_refill(parser, j, i, parser->_width);
     }
   }
 
@@ -1441,7 +1442,7 @@ void table::renderTable(html_feed_environ *parser, int max_width,
   /* table output */
   width = this->total_width;
 
-  this->make_caption(parser, h_env);
+  this->make_caption(parser);
 
   parser->parse("<pre for_table>");
   switch (this->_impl->border_mode) {

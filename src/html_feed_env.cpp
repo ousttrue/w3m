@@ -1657,7 +1657,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       }
       this->save_fonteffect();
       initRenderTable();
-      t.tbl->renderTable(this, t.tbl_width, this);
+      t.tbl->renderTable(this, t.tbl_width);
       this->restore_fonteffect();
       this->flag &= ~RB_IGNORE_P;
       if (t.tbl->vspace > 0) {
