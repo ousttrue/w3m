@@ -177,4 +177,15 @@ private:
   int HTML_BODY_enter(html_feed_environ *h_env);
   int HTML_INPUT_ALT_enter(html_feed_environ *h_env);
   int HTML_INPUT_ALT_exit(html_feed_environ *h_env);
+
+  int HTML_B_enter(html_feed_environ *h_env);
+  int HTML_B_exit(html_feed_environ *h_env);
+  int HTML_I_enter(html_feed_environ *h_env);
+  int HTML_I_exit(html_feed_environ *h_env);
+  int HTML_U_enter(html_feed_environ *h_env);
+  int HTML_U_exit(html_feed_environ *h_env);
+  int HTML_PRE_INT_enter(html_feed_environ *h_env);
+  int HTML_PRE_INT_exit(html_feed_environ *h_env);
+  int HTML_NOBR_enter(html_feed_environ *h_env);
+  int HTML_NOBR_exit(html_feed_environ *h_env);
 };

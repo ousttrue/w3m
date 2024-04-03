@@ -164,97 +164,6 @@ public:
     return 0;
   }
 
-  int HTML_B_enter() {
-    if (this->fontstat.in_bold < FONTSTAT_MAX)
-      this->fontstat.in_bold++;
-    if (this->fontstat.in_bold > 1)
-      return 1;
-    return 0;
-  }
-
-  int HTML_B_exit() {
-    if (this->fontstat.in_bold == 1 && this->close_effect0(HTML_B))
-      this->fontstat.in_bold = 0;
-    if (this->fontstat.in_bold > 0) {
-      this->fontstat.in_bold--;
-      if (this->fontstat.in_bold == 0)
-        return 0;
-    }
-    return 1;
-  }
-
-  int HTML_I_enter() {
-    if (this->fontstat.in_italic < FONTSTAT_MAX)
-      this->fontstat.in_italic++;
-    if (this->fontstat.in_italic > 1)
-      return 1;
-    return 0;
-  }
-
-  int HTML_I_exit() {
-    if (this->fontstat.in_italic == 1 && this->close_effect0(HTML_I))
-      this->fontstat.in_italic = 0;
-    if (this->fontstat.in_italic > 0) {
-      this->fontstat.in_italic--;
-      if (this->fontstat.in_italic == 0)
-        return 0;
-    }
-    return 1;
-  }
-
-  int HTML_U_enter() {
-    if (this->fontstat.in_under < FONTSTAT_MAX)
-      this->fontstat.in_under++;
-    if (this->fontstat.in_under > 1)
-      return 1;
-    return 0;
-  }
-
-  int HTML_U_exit() {
-    if (this->fontstat.in_under == 1 && this->close_effect0(HTML_U))
-      this->fontstat.in_under = 0;
-    if (this->fontstat.in_under > 0) {
-      this->fontstat.in_under--;
-      if (this->fontstat.in_under == 0)
-        return 0;
-    }
-    return 1;
-  }
-
-  int HTML_PRE_INT_enter() {
-    int i = this->line.size();
-    this->append_tags();
-    if (!(this->flag & RB_SPECIAL)) {
-      this->set_breakpoint(this->line.size() - i);
-    }
-    this->flag |= RB_PRE_INT;
-    return 0;
-  }
-
-  int HTML_PRE_INT_exit() {
-    this->push_tag("</pre_int>", HTML_N_PRE_INT);
-    this->flag &= ~RB_PRE_INT;
-    if (!(this->flag & RB_SPECIAL) && this->pos > this->bp.pos) {
-      this->prevchar = "";
-      this->prev_ctype = PC_CTRL;
-    }
-    return 1;
-  }
-
-  int HTML_NOBR_enter() {
-    this->flag |= RB_NOBR;
-    this->nobr_level++;
-    return 0;
-  }
-
-  int HTML_NOBR_exit() {
-    if (this->nobr_level > 0)
-      this->nobr_level--;
-    if (this->nobr_level == 0)
-      this->flag &= ~RB_NOBR;
-    return 0;
-  }
-
   void CLOSE_P(html_feed_environ *h_env);
 
   void append_tags();
@@ -403,8 +312,7 @@ public:
   int cur_hseq = 1;
 
   // HTML processing first pass
-  void parse(std::string_view istr, html_feed_environ *h_env,
-             bool internal);
+  void parse(std::string_view istr, html_feed_environ *h_env, bool internal);
 
   void HTMLlineproc1(const std::string &x, html_feed_environ *y);
 

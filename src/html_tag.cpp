@@ -37,9 +37,6 @@ std::optional<std::string> HtmlTag::getAttr(HtmlTagAttr id) const {
 }
 
 int HtmlTag::process(html_feed_environ *h_env) {
-
-  // struct environment *envs = h_env->envs.data();
-
   if (h_env->flag & RB_PRE) {
     switch (this->tagid) {
     case HTML_NOBR:
@@ -55,17 +52,17 @@ int HtmlTag::process(html_feed_environ *h_env) {
 
   switch (this->tagid) {
   case HTML_B:
-    return h_env->HTML_B_enter();
+    return this->HTML_B_enter(h_env);
   case HTML_N_B:
-    return h_env->HTML_B_exit();
+    return this->HTML_B_exit(h_env);
   case HTML_I:
-    return h_env->HTML_I_enter();
+    return this->HTML_I_enter(h_env);
   case HTML_N_I:
-    return h_env->HTML_I_exit();
+    return this->HTML_I_exit(h_env);
   case HTML_U:
-    return h_env->HTML_U_enter();
+    return this->HTML_U_enter(h_env);
   case HTML_N_U:
-    return h_env->HTML_U_exit();
+    return this->HTML_U_exit(h_env);
   case HTML_EM:
     h_env->HTMLlineproc1("<i>", h_env);
     return 1;
@@ -143,13 +140,13 @@ int HtmlTag::process(html_feed_environ *h_env) {
   case HTML_N_PRE:
     return this->HTML_PRE_exit(h_env);
   case HTML_PRE_INT:
-    return h_env->HTML_PRE_INT_enter();
+    return this->HTML_PRE_INT_enter(h_env);
   case HTML_N_PRE_INT:
-    return h_env->HTML_PRE_INT_exit();
+    return this->HTML_PRE_INT_exit(h_env);
   case HTML_NOBR:
-    return h_env->HTML_NOBR_enter();
+    return this->HTML_NOBR_enter(h_env);
   case HTML_N_NOBR:
-    return h_env->HTML_NOBR_exit();
+    return this->HTML_NOBR_exit(h_env);
   case HTML_PRE_PLAIN:
     return this->HTML_PRE_PLAIN_enter(h_env);
   case HTML_N_PRE_PLAIN:
@@ -668,8 +665,7 @@ int HtmlTag::HTML_FRAME_enter(html_feed_environ *h_env) {
   if (q.size()) {
     q = html_quote(q);
     std::stringstream ss;
-    ss << "<a hseq=\"" << h_env->cur_hseq++ << "\" href=\"" << q
-       << "\">";
+    ss << "<a hseq=\"" << h_env->cur_hseq++ << "\" href=\"" << q << "\">";
     h_env->push_tag(ss.str(), HTML_A);
     if (r.size())
       q = html_quote(r);
@@ -683,8 +679,8 @@ int HtmlTag::HTML_FRAME_enter(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_HR_enter(html_feed_environ *h_env) {
   h_env->close_anchor(h_env);
-  auto tmp = h_env->process_hr(this, h_env->_width,
-                                      h_env->envs[h_env->envc].indent);
+  auto tmp =
+      h_env->process_hr(this, h_env->_width, h_env->envs[h_env->envc].indent);
   h_env->HTMLlineproc1(tmp, h_env);
   h_env->prevchar = " ";
   return 1;
@@ -892,8 +888,7 @@ int HtmlTag::HTML_TABLE_enter(html_feed_environ *h_env) {
     y = MAX_CELLPADDING;
   if (z > MAX_VSPACE)
     z = MAX_VSPACE;
-  h_env->tables[h_env->table_level] =
-      table::begin_table(w, x, y, z, cols);
+  h_env->tables[h_env->table_level] = table::begin_table(w, x, y, z, cols);
   h_env->table_mode[h_env->table_level].pre_mode = {};
   h_env->table_mode[h_env->table_level].indent_level = 0;
   h_env->table_mode[h_env->table_level].nobr_level = 0;
@@ -1306,4 +1301,95 @@ int HtmlTag::HTML_INPUT_ALT_exit(html_feed_environ *h_env) {
     h_env->input_alt.value = {};
   }
   return 1;
+}
+
+int HtmlTag::HTML_B_enter(html_feed_environ *h_env) {
+  if (h_env->fontstat.in_bold < FONTSTAT_MAX)
+    h_env->fontstat.in_bold++;
+  if (h_env->fontstat.in_bold > 1)
+    return 1;
+  return 0;
+}
+
+int HtmlTag::HTML_B_exit(html_feed_environ *h_env) {
+  if (h_env->fontstat.in_bold == 1 && h_env->close_effect0(HTML_B))
+    h_env->fontstat.in_bold = 0;
+  if (h_env->fontstat.in_bold > 0) {
+    h_env->fontstat.in_bold--;
+    if (h_env->fontstat.in_bold == 0)
+      return 0;
+  }
+  return 1;
+}
+
+int HtmlTag::HTML_I_enter(html_feed_environ *h_env) {
+  if (h_env->fontstat.in_italic < FONTSTAT_MAX)
+    h_env->fontstat.in_italic++;
+  if (h_env->fontstat.in_italic > 1)
+    return 1;
+  return 0;
+}
+
+int HtmlTag::HTML_I_exit(html_feed_environ *h_env) {
+  if (h_env->fontstat.in_italic == 1 && h_env->close_effect0(HTML_I))
+    h_env->fontstat.in_italic = 0;
+  if (h_env->fontstat.in_italic > 0) {
+    h_env->fontstat.in_italic--;
+    if (h_env->fontstat.in_italic == 0)
+      return 0;
+  }
+  return 1;
+}
+
+int HtmlTag::HTML_U_enter(html_feed_environ *h_env) {
+  if (h_env->fontstat.in_under < FONTSTAT_MAX)
+    h_env->fontstat.in_under++;
+  if (h_env->fontstat.in_under > 1)
+    return 1;
+  return 0;
+}
+
+int HtmlTag::HTML_U_exit(html_feed_environ *h_env) {
+  if (h_env->fontstat.in_under == 1 && h_env->close_effect0(HTML_U))
+    h_env->fontstat.in_under = 0;
+  if (h_env->fontstat.in_under > 0) {
+    h_env->fontstat.in_under--;
+    if (h_env->fontstat.in_under == 0)
+      return 0;
+  }
+  return 1;
+}
+
+int HtmlTag::HTML_PRE_INT_enter(html_feed_environ *h_env) {
+  int i = h_env->line.size();
+  h_env->append_tags();
+  if (!(h_env->flag & RB_SPECIAL)) {
+    h_env->set_breakpoint(h_env->line.size() - i);
+  }
+  h_env->flag |= RB_PRE_INT;
+  return 0;
+}
+
+int HtmlTag::HTML_PRE_INT_exit(html_feed_environ *h_env) {
+  h_env->push_tag("</pre_int>", HTML_N_PRE_INT);
+  h_env->flag &= ~RB_PRE_INT;
+  if (!(h_env->flag & RB_SPECIAL) && h_env->pos > h_env->bp.pos) {
+    h_env->prevchar = "";
+    h_env->prev_ctype = PC_CTRL;
+  }
+  return 1;
+}
+
+int HtmlTag::HTML_NOBR_enter(html_feed_environ *h_env) {
+  h_env->flag |= RB_NOBR;
+  h_env->nobr_level++;
+  return 0;
+}
+
+int HtmlTag::HTML_NOBR_exit(html_feed_environ *h_env) {
+  if (h_env->nobr_level > 0)
+    h_env->nobr_level--;
+  if (h_env->nobr_level == 0)
+    h_env->flag &= ~RB_NOBR;
+  return 0;
 }
