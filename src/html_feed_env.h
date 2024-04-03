@@ -1,16 +1,19 @@
 #pragma once
-#include <vector>
-#include <functional>
 #include "url.h"
 #include "html_command.h"
 #include "lineprop.h"
-#include "html_table.h"
 #include "anchorlist.h"
 #include "readtoken.h"
 #include "line_break.h"
+#include "generallist.h"
+#include "html_readbuffer_flags.h"
+#include "html_table_mode.h"
 #include <string>
+#include <vector>
+#include <functional>
 
 #define MAX_INDENT_LEVEL 10
+#define MAX_TABLE 20 /* maximum nest level of table */
 
 extern bool pseudoInlines;
 extern bool ignore_null_img_alt;
@@ -244,7 +247,7 @@ public:
   std::string title;
 
 public:
-  std::shared_ptr<table> tables[MAX_TABLE];
+  std::shared_ptr<struct table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(int table_level);
 
@@ -261,7 +264,7 @@ private:
   ReadBufferStatus cur_status = {};
 
 public:
-  std::string process_select(const HtmlTag *tag);
+  std::string process_select(const class HtmlTag *tag);
   std::string process_n_select();
   void process_option();
   void feed_select(const std::string &str);
@@ -303,7 +306,7 @@ public:
   void completeHTMLstream();
   void push_render_image(const std::string &str, int width, int limit);
 
-  void process_token(TableStatus &t, const struct Token &token);
+  void process_token(struct TableStatus &t, const struct Token &token);
 
 public:
   int cur_hseq = 1;

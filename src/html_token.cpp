@@ -1,9 +1,10 @@
 #include "html_token.h"
-#include "html_feed_env.h"
+#include "myctype.h"
 #include "readtoken.h"
+#include "html_feed_env.h"
 #include "html_tag.h"
 #include "html_tag_parse.h"
-#include "myctype.h"
+#include "html_table_status.h"
 
 std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
                                          TableStatus &t, bool internal) {
@@ -52,8 +53,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
     } else {
       std::string tokbuf;
       auto p = line.c_str();
-      if (auto value =
-              read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
+      if (auto value = read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
         tokbuf = *value;
       }
       line = p;

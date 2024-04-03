@@ -83,6 +83,7 @@ without_gc_lib = static_library(
         'html_meta.cpp',
         'line_break.cpp',
         'html_renderer.cpp',
+        'html_table_status.cpp',
     ],
     cpp_args: defs,
     dependencies: [

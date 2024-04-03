@@ -8,6 +8,8 @@
 #include "utf8.h"
 #include "option_param.h"
 #include "html_meta.h"
+#include "html_table_border_mode.h"
+#include "html_table.h"
 #include <sstream>
 
 #define MAX_UL_LEVEL 9

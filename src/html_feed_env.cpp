@@ -10,12 +10,12 @@
 #include "entity.h"
 #include "html_tag_parse.h"
 #include "url_quote.h"
-#include "symbol.h"
 #include "cmp.h"
 #include "push_symbol.h"
 #include "html_token.h"
-#include "html_meta.h"
 #include "html_renderer.h"
+#include "html_table_status.h"
+#include "html_table.h"
 #include <assert.h>
 #include <sstream>
 
@@ -1570,7 +1570,7 @@ int html_feed_environ::table_width(int table_level) {
   if (table_level < 0)
     return 0;
 
-  int width = this->tables[table_level]->total_width;
+  int width = this->tables[table_level]->total_width();
   if (table_level > 0 || width > 0)
     return width;
 
@@ -1636,8 +1636,8 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       if (this->table_level >= 0) {
         auto tbl0 = tables[this->table_level];
         std::stringstream ss;
-        ss << "<table_alt tid=" << tbl0->ntable << ">";
-        if (tbl0->row < 0)
+        ss << "<table_alt tid=" << tbl0->ntable() << ">";
+        if (tbl0->row() < 0)
           return;
         tbl0->pushTable(t.tbl);
         t.tbl = tbl0;
@@ -1650,7 +1650,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       if (this->flag & RB_DEL)
         return;
       /* all tables have been read */
-      if (t.tbl->vspace > 0 && !(this->flag & RB_IGNORE_P)) {
+      if (t.tbl->vspace() > 0 && !(this->flag & RB_IGNORE_P)) {
         int indent = this->envs[this->envc].indent;
         this->flushline(this->buf, indent, 0, this->_width);
         this->do_blankline(this->buf, indent, 0, this->_width);
@@ -1660,7 +1660,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       t.tbl->renderTable(this, t.tbl_width);
       this->restore_fonteffect();
       this->flag &= ~RB_IGNORE_P;
-      if (t.tbl->vspace > 0) {
+      if (t.tbl->vspace() > 0) {
         int indent = this->envs[this->envc].indent;
         this->do_blankline(this->buf, indent, 0, this->_width);
         this->flag |= RB_IGNORE_P;

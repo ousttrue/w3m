@@ -6,6 +6,9 @@
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 
 extern double pixel_per_char;
+inline int RELATIVE_WIDTH(double w) {
+  return static_cast<int>(((w) >= 0) ? (int)((w) / pixel_per_char) : (w));
+}
 
 inline int REAL_WIDTH(int w, int limit) {
   return (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100);
