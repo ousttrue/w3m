@@ -16,10 +16,12 @@
 #define MAXROW 50
 #define MAXCOL 256
 
-#define BORDER_NONE 0
-#define BORDER_THIN 1
-#define BORDER_THICK 2
-#define BORDER_NOWIN 3
+enum HtmlTableBorderMode {
+  BORDER_NONE = 0,
+  BORDER_THIN = 1,
+  BORDER_THICK = 2,
+  BORDER_NOWIN = 3,
+};
 
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
@@ -125,19 +127,13 @@ public:
   table &operator=(const table &) = delete;
 
 private:
-  int maxrow;
-  int maxcol;
   int max_rowsize;
-  int border_mode;
   int total_height;
   int tabcontentssize;
-  int cellspacing;
-  int cellpadding;
   int vcellpadding;
   int flag;
   std::string caption;
   std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
-  std::vector<std::vector<table_attr>> tabattr;
   table_attr trattr;
   short tabwidth[MAXCOL];
   short minimum_width[MAXCOL];
@@ -155,7 +151,7 @@ private:
 
 public:
   static std::shared_ptr<table> newTable(int cols);
-  static std::shared_ptr<table> begin_table(int border, int spacing,
+  static std::shared_ptr<table> begin_table(HtmlTableBorderMode border, int spacing,
                                             int padding, int vspace, int cols);
   int feed_table(class html_feed_environ *parser, std::string line,
                  struct table_mode *mode, int width, int internal);
@@ -173,7 +169,6 @@ private:
   int get_table_width(const short *orgwidth, const short *cellwidth,
                       TableWidthFlags flag) const;
   void check_minimum_width(short *tabwidth) const;
-  int table_border_width() const;
   int minimum_table_width() const {
     return (this->get_table_width(this->minimum_width, this->cell.minimum_width,
                                   {}));
@@ -190,12 +185,6 @@ private:
   void pushdata(int row, int col, const std::string &data);
   void check_rowcol(table_mode *mode);
   void check_row(int row);
-  int table_colspan(int row, int col) const {
-    int i;
-    for (i = col + 1; i <= this->maxcol && (this->tabattr[row][i] & HTT_X); i++)
-      ;
-    return i - col;
-  }
   void table_close_anchor0(struct table_mode *mode);
   void check_minimum0(int min);
   void addcontentssize(int width);
@@ -220,7 +209,6 @@ private:
   void make_caption(html_feed_environ *parser, html_feed_environ *h_env);
   void renderCoTable(html_feed_environ *parser, int maxlimit);
   void check_table_height();
-  int table_rowspan(int row, int col);
   void set_table_width(short *newwidth, int maxwidth);
   int check_table_width(double *newwidth, struct Matrix *minv, int itr);
   int check_compressible_cell(struct Matrix *minv, double *newwidth,

@@ -838,12 +838,13 @@ int HtmlTag::HTML_TABLE_enter(html_feed_environ *h_env) {
     return -1;
   }
   h_env->table_level++;
-  int w = BORDER_NONE;
+
+  HtmlTableBorderMode w = BORDER_NONE;
   /* x: cellspacing, y: cellpadding */
   int width = 0;
   if (this->existsAttr(ATTR_BORDER)) {
     if (auto value = this->getAttr(ATTR_BORDER)) {
-      w = stoi(*value);
+      w = (HtmlTableBorderMode)stoi(*value);
       if (w > 2)
         w = BORDER_THICK;
       else if (w < 0) { /* weird */
