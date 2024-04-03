@@ -26,9 +26,12 @@ enum HtmlTableBorderMode {
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
 /* flag */
-#define TBL_IN_ROW 1
-#define TBL_EXPAND_OK 2
-#define TBL_IN_COL 4
+enum TableFlags {
+  TBL_IN_ROW = 1,
+  TBL_EXPAND_OK = 2,
+  TBL_IN_COL = 4,
+};
+ENUM_OP_INSTANCE(TableFlags);
 
 #define MAXCELL 20
 #define MAXROWCELL 1000
@@ -100,7 +103,6 @@ ENUM_OP_INSTANCE(table_attr);
 
 struct table {
 private:
-
 public:
   int total_width;
   int row;
@@ -119,18 +121,6 @@ public:
   table &operator=(const table &) = delete;
 
 private:
-  int max_rowsize;
-  int total_height;
-  int tabcontentssize;
-  int vcellpadding;
-  int flag;
-  std::string caption;
-  std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
-  table_attr trattr;
-  short tabwidth[MAXCOL];
-  short minimum_width[MAXCOL];
-  short fixed_width[MAXCOL];
-  struct table_cell cell;
   std::vector<int> tabheight;
   std::vector<table_in> tables;
   short tables_size;
@@ -156,23 +146,6 @@ private:
   int feed_table_tag(html_feed_environ *parser, const std::string &line,
                      struct table_mode *mode, int width,
                      const std::shared_ptr<class HtmlTag> &tag);
-
-  int table_rule_width() const;
-  int get_table_width(const short *orgwidth, const short *cellwidth,
-                      TableWidthFlags flag) const;
-  void check_minimum_width(short *tabwidth) const;
-  int minimum_table_width() const {
-    return (this->get_table_width(this->minimum_width, this->cell.minimum_width,
-                                  {}));
-  }
-  int maximum_table_width() const {
-    return (
-        this->get_table_width(this->tabwidth, this->cell.width, CHECK_FIXED));
-  }
-  int fixed_table_width() const {
-    return (this->get_table_width(this->fixed_width, this->cell.fixed_width,
-                                  CHECK_MINIMUM));
-  }
 
   void pushdata(int row, int col, const std::string &data);
   void check_rowcol(table_mode *mode);

@@ -106,7 +106,40 @@ static int floor_at_intervals(int x, int step) {
 
 static int _round(double x) { return static_cast<int>(floor(x + 0.5)); }
 
+static void check_cell_width(short *tabwidth, const short *cellwidth,
+                             const short *col, const short *colspan,
+                             short maxcell, const short *indexarray, int space,
+                             int dir) {
+  int i, j, k, bcol, ecol;
+  int swidth, width;
+
+  for (k = 0; k <= maxcell; k++) {
+    j = indexarray[k];
+    if (cellwidth[j] <= 0)
+      continue;
+    bcol = col[j];
+    ecol = bcol + colspan[j];
+    swidth = 0;
+    for (i = bcol; i < ecol; i++)
+      swidth += tabwidth[i];
+
+    width = cellwidth[j] - (colspan[j] - 1) * space;
+    if (width > swidth) {
+      int w = (width - swidth) / colspan[j];
+      int r = (width - swidth) % colspan[j];
+      for (i = bcol; i < ecol; i++)
+        tabwidth[i] += w;
+      /* dir {0: horizontal, 1: vertical} */
+      if (dir == 1 && r > 0)
+        r = colspan[j];
+      for (i = 1; i <= r; i++)
+        tabwidth[ecol - i]++;
+    }
+  }
+}
+
 struct tableimpl {
+  std::string caption;
   int cellspacing = 0;
   int cellpadding = 0;
   int indent = 0;
@@ -115,8 +148,98 @@ struct tableimpl {
   int maxrow = 0;
   int maxcol = 0;
   int _cols;
+  int max_rowsize = MAXROW;
+  int total_height;
+  int tabcontentssize;
+  int vcellpadding;
+  TableFlags flag;
+  std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
+  table_attr trattr = {};
+  short tabwidth[MAXCOL];
+  table_cell cell;
+  short fixed_width[MAXCOL];
+  short minimum_width[MAXCOL];
 
-  tableimpl(int cols) : _cols(cols) {}
+  tableimpl(int cols) : tabattr(MAXROW), _cols(cols), tabdata(MAXROW) {
+    for (int j = 0; j < MAXCOL; j++) {
+      this->tabwidth[j] = 0;
+      this->minimum_width[j] = 0;
+      this->fixed_width[j] = 0;
+    }
+    this->cell.maxcell = -1;
+    this->cell.icell = -1;
+  }
+  int table_rule_width() const {
+    if (this->border_mode == BORDER_NONE)
+      return 1;
+    return RULE_WIDTH;
+  }
+  void check_minimum_width(short *tabwidth) const {
+    for (int i = 0; i <= this->maxcol; i++) {
+      if (tabwidth[i] < this->minimum_width[i])
+        tabwidth[i] = this->minimum_width[i];
+    }
+    check_cell_width(tabwidth, cell.minimum_width, cell.col, cell.colspan,
+                     cell.maxcell, cell.index, this->cellspacing, 0);
+  }
+  int get_table_width(const short *orgwidth, const short *cellwidth,
+                      TableWidthFlags flag) const {
+#ifdef __GNUC__
+    short newwidth[this->maxcol >= 0 ? this->maxcol + 1 : 1];
+#else  /* not __GNUC__ */
+    short newwidth[MAXCOL];
+#endif /* not __GNUC__ */
+    int i;
+    int swidth;
+    // struct table_cell *cell = &this->cell;
+    int rulewidth = this->table_rule_width();
+
+    for (i = 0; i <= this->maxcol; i++)
+      newwidth[i] = max(orgwidth[i], 0);
+
+    if (flag & CHECK_FIXED) {
+#ifdef __GNUC__
+      short ccellwidth[cell.maxcell >= 0 ? cell.maxcell + 1 : 1];
+#else  /* not __GNUC__ */
+      short ccellwidth[MAXCELL];
+#endif /* not __GNUC__ */
+      for (i = 0; i <= this->maxcol; i++) {
+        if (newwidth[i] < this->fixed_width[i])
+          newwidth[i] = this->fixed_width[i];
+      }
+      for (i = 0; i <= cell.maxcell; i++) {
+        ccellwidth[i] = cellwidth[i];
+        if (ccellwidth[i] < cell.fixed_width[i])
+          ccellwidth[i] = cell.fixed_width[i];
+      }
+      check_cell_width(newwidth, ccellwidth, cell.col, cell.colspan,
+                       cell.maxcell, cell.index, this->cellspacing, 0);
+    } else {
+      check_cell_width(newwidth, cellwidth, cell.col, cell.colspan,
+                       cell.maxcell, cell.index, this->cellspacing, 0);
+    }
+    if (flag & CHECK_MINIMUM)
+      this->check_minimum_width(newwidth);
+
+    swidth = 0;
+    for (i = 0; i <= this->maxcol; i++) {
+      swidth += ceil_at_intervals(newwidth[i], rulewidth);
+    }
+    swidth += this->table_border_width();
+    return swidth;
+  }
+  int minimum_table_width() const {
+    return (this->get_table_width(this->minimum_width, this->cell.minimum_width,
+                                  {}));
+  }
+  int maximum_table_width() const {
+    return (
+        this->get_table_width(this->tabwidth, this->cell.width, CHECK_FIXED));
+  }
+  int fixed_table_width() const {
+    return (this->get_table_width(this->fixed_width, this->cell.fixed_width,
+                                  CHECK_MINIMUM));
+  }
 
   double weight(int x) const {
     if (x < _cols)
@@ -185,67 +308,55 @@ static int minimum_cellspacing(int border_mode) {
 
 std::shared_ptr<table> table::newTable(int cols) {
   auto t = std::shared_ptr<table>(new table(cols));
-  t->max_rowsize = MAXROW;
-  t->tabdata.resize(MAXROW);
-  t->_impl->tabattr.resize(MAXROW);
   t->tabheight.resize(MAXROW);
 
   for (int i = 0; i < MAXROW; i++) {
     t->tabheight[i] = 0;
   }
-  for (int j = 0; j < MAXCOL; j++) {
-    t->tabwidth[j] = 0;
-    t->minimum_width[j] = 0;
-    t->fixed_width[j] = 0;
-  }
-  t->cell.maxcell = -1;
-  t->cell.icell = -1;
   t->ntable = 0;
   t->tables_size = 0;
   t->tables = {};
   t->matrix = {};
   t->vector = {};
   t->linfo.prevchar = "";
-  t->trattr = {};
-  t->caption = {};
   t->suspended_data = NULL;
   return t;
 }
 
 void table::check_row(int row) {
-  int i, r;
-  std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
-  std::vector<std::vector<table_attr>> tabattr;
-  std::vector<int> tabheight;
-
-  if (row < 0 || row >= MAXROW_LIMIT)
+  if (row < 0 || row >= MAXROW_LIMIT) {
     return;
-  if (row >= this->max_rowsize) {
-    r = max(this->max_rowsize * 2, row + 1);
-    if (r <= 0 || r > MAXROW_LIMIT)
+  }
+  if (row >= this->_impl->max_rowsize) {
+    int r = max(this->_impl->max_rowsize * 2, row + 1);
+    if (r <= 0 || r > MAXROW_LIMIT) {
       r = MAXROW_LIMIT;
+    }
+    std::vector<std::vector<std::shared_ptr<GeneralList>>> tabdata;
+    std::vector<std::vector<table_attr>> tabattr;
+    std::vector<int> tabheight;
     tabdata.resize(r);
     tabattr.resize(r);
     tabheight.resize(r);
-    for (i = 0; i < this->max_rowsize; i++) {
-      tabdata[i] = this->tabdata[i];
+    int i;
+    for (i = 0; i < this->_impl->max_rowsize; i++) {
+      tabdata[i] = this->_impl->tabdata[i];
       tabattr[i] = this->_impl->tabattr[i];
       tabheight[i] = this->tabheight[i];
     }
     for (; i < r; i++) {
       tabheight[i] = 0;
     }
-    this->tabdata = tabdata;
+    this->_impl->tabdata = tabdata;
     this->_impl->tabattr = tabattr;
     this->tabheight = tabheight;
-    this->max_rowsize = r;
+    this->_impl->max_rowsize = r;
   }
-
-  if (this->tabdata[row].empty()) {
-    this->tabdata[row].resize(MAXCOL);
+  if (this->_impl->tabdata[row].empty()) {
+    this->_impl->tabdata[row].resize(MAXCOL);
     this->_impl->tabattr[row].resize(MAXCOL);
-    for (i = 0; i < MAXCOL; i++) {
-      this->tabdata[row][i] = NULL;
+    for (int i = 0; i < MAXCOL; i++) {
+      this->_impl->tabdata[row][i] = NULL;
       this->_impl->tabattr[row][i] = {};
     }
   }
@@ -253,14 +364,15 @@ void table::check_row(int row) {
 
 void table::pushdata(int row, int col, const std::string &data) {
   this->check_row(row);
-  if (this->tabdata[row][col] == NULL)
-    this->tabdata[row][col] = GeneralList::newGeneralList();
-
-  this->tabdata[row][col]->_list.push_back(std::make_shared<TextLine>(data));
+  if (this->_impl->tabdata[row][col] == NULL) {
+    this->_impl->tabdata[row][col] = GeneralList::newGeneralList();
+  }
+  this->_impl->tabdata[row][col]->_list.push_back(
+      std::make_shared<TextLine>(data));
 }
 
 void table::suspend_or_pushdata(const std::string &line) {
-  if (this->flag & TBL_IN_COL)
+  if (this->_impl->flag & TBL_IN_COL)
     this->pushdata(this->row, this->col, line);
   else {
     if (!this->suspended_data)
@@ -273,7 +385,9 @@ void table::suspend_or_pushdata(const std::string &line) {
 
 int visible_length_offset = 0;
 int visible_length(const char *str) {
-  int len = 0, n, max_len = 0;
+  int len = 0;
+  int n;
+  int max_len = 0;
   auto status = R_ST_NORMAL;
   int prev_status = status;
   std::string tagbuf;
@@ -368,17 +482,17 @@ static int maximum_visible_length_plain(const char *str, int offset) {
 }
 
 void table::print_item(int row, int col, int width, std::ostream &buf) {
-  AlignMode alignment;
 
   std::shared_ptr<TextLine> lbuf;
-  if (this->tabdata[row][col]) {
-    lbuf = this->tabdata[row][col]->popValue();
+  if (this->_impl->tabdata[row][col]) {
+    lbuf = this->_impl->tabdata[row][col]->popValue();
   } else {
     lbuf = NULL;
   }
 
   if (lbuf != NULL) {
     this->check_row(row);
+    AlignMode alignment;
     alignment = ALIGN_CENTER;
     if ((this->_impl->tabattr[row][col] & HTT_ALIGN) == HTT_LEFT)
       alignment = ALIGN_LEFT;
@@ -441,15 +555,15 @@ void table::print_sep(int row, int type, int maxcol, std::ostream &buf) {
                       (this->_impl->tabattr[k][i] & HTT_Y);
              k--)
           ;
-        m = this->tabwidth[i] + 2 * this->_impl->cellpadding;
+        m = this->_impl->tabwidth[i] + 2 * this->_impl->cellpadding;
         for (l = i + 1;
              l <= this->_impl->maxcol && (this->_impl->tabattr[row][l] & HTT_X);
              l++)
-          m += this->tabwidth[l] + this->_impl->cellspacing;
+          m += this->_impl->tabwidth[l] + this->_impl->cellspacing;
         this->print_item(k, i, m, buf);
       }
     } else {
-      int w = this->tabwidth[i] + 2 * this->_impl->cellpadding;
+      int w = this->_impl->tabwidth[i] + 2 * this->_impl->cellpadding;
       if (RULE_WIDTH == 2)
         w = (w + 1) / RULE_WIDTH;
       push_symbol(buf, RULE(rule_mode, forbid), 1, w);
@@ -494,11 +608,11 @@ void table::print_sep(int row, int type, int maxcol, std::ostream &buf) {
 int table::get_spec_cell_width(int row, int col) {
   int i, w;
 
-  w = this->tabwidth[col];
+  w = this->_impl->tabwidth[col];
   for (i = col + 1; i <= this->_impl->maxcol; i++) {
     this->check_row(row);
     if (this->_impl->tabattr[row][i] & HTT_X)
-      w += this->tabwidth[i] + this->_impl->cellspacing;
+      w += this->_impl->tabwidth[i] + this->_impl->cellspacing;
     else
       break;
   }
@@ -507,18 +621,19 @@ int table::get_spec_cell_width(int row, int col) {
 
 void table::do_refill(html_feed_environ *parser, int row, int col,
                       int maxlimit) {
-  if (this->tabdata[row].empty() || this->tabdata[row][col] == NULL) {
+  if (this->_impl->tabdata[row].empty() ||
+      this->_impl->tabdata[row][col] == NULL) {
     return;
   }
-  auto orgdata = this->tabdata[row][col];
-  this->tabdata[row][col] = GeneralList::newGeneralList();
+  auto orgdata = this->_impl->tabdata[row][col];
+  this->_impl->tabdata[row][col] = GeneralList::newGeneralList();
 
   html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col), 0,
-                          this->tabdata[row][col]);
+                         this->_impl->tabdata[row][col]);
   henv.flag |= RB_INTABLE;
   if (henv._width > maxlimit)
     henv._width = maxlimit;
-  if (this->_impl->border_mode != BORDER_NONE && this->vcellpadding > 0)
+  if (this->_impl->border_mode != BORDER_NONE && this->_impl->vcellpadding > 0)
     henv.do_blankline(henv.buf, 0, 0, henv._width);
   for (auto &l : orgdata->_list) {
     if (TAG_IS(l->line.c_str(), "<table_alt", 10)) {
@@ -577,7 +692,7 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
   if (this->_impl->border_mode == BORDER_NONE) {
     int rowspan = this->_impl->table_rowspan(row, col);
     if (row + rowspan <= this->_impl->maxrow) {
-      if (this->vcellpadding > 0 && !(henv.flag & RB_IGNORE_P))
+      if (this->_impl->vcellpadding > 0 && !(henv.flag & RB_IGNORE_P))
         henv.do_blankline(henv.buf, 0, 0, henv._width);
     } else {
       if (this->vspace > 0) {
@@ -585,7 +700,7 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
       }
     }
   } else {
-    if (this->vcellpadding > 0) {
+    if (this->_impl->vcellpadding > 0) {
       if (!(henv.flag & RB_IGNORE_P))
         henv.do_blankline(henv.buf, 0, 0, henv._width);
     } else {
@@ -594,7 +709,7 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
   }
   int colspan, icell;
   if ((colspan = this->_impl->table_colspan(row, col)) > 1) {
-    struct table_cell *cell = &this->cell;
+    struct table_cell *cell = &this->_impl->cell;
     int k;
     k = bsearch_2short(colspan, cell->colspan, col, cell->col, MAXCOL,
                        cell->index, cell->maxcell + 1);
@@ -602,15 +717,9 @@ void table::do_refill(html_feed_environ *parser, int row, int col,
     if (cell->minimum_width[icell] < henv.maxlimit)
       cell->minimum_width[icell] = henv.maxlimit;
   } else {
-    if (this->minimum_width[col] < henv.maxlimit)
-      this->minimum_width[col] = henv.maxlimit;
+    if (this->_impl->minimum_width[col] < henv.maxlimit)
+      this->_impl->minimum_width[col] = henv.maxlimit;
   }
-}
-
-int table::table_rule_width() const {
-  if (this->_impl->border_mode == BORDER_NONE)
-    return 1;
-  return RULE_WIDTH;
 }
 
 static void check_cell_height(int *tabheight, int *cellheight, short *row,
@@ -644,50 +753,8 @@ static void check_cell_height(int *tabheight, int *cellheight, short *row,
   }
 }
 
-static void check_cell_width(short *tabwidth, const short *cellwidth,
-                             const short *col, const short *colspan,
-                             short maxcell, const short *indexarray, int space,
-                             int dir) {
-  int i, j, k, bcol, ecol;
-  int swidth, width;
-
-  for (k = 0; k <= maxcell; k++) {
-    j = indexarray[k];
-    if (cellwidth[j] <= 0)
-      continue;
-    bcol = col[j];
-    ecol = bcol + colspan[j];
-    swidth = 0;
-    for (i = bcol; i < ecol; i++)
-      swidth += tabwidth[i];
-
-    width = cellwidth[j] - (colspan[j] - 1) * space;
-    if (width > swidth) {
-      int w = (width - swidth) / colspan[j];
-      int r = (width - swidth) % colspan[j];
-      for (i = bcol; i < ecol; i++)
-        tabwidth[i] += w;
-      /* dir {0: horizontal, 1: vertical} */
-      if (dir == 1 && r > 0)
-        r = colspan[j];
-      for (i = 1; i <= r; i++)
-        tabwidth[ecol - i]++;
-    }
-  }
-}
-
-void table::check_minimum_width(short *tabwidth) const {
-  for (int i = 0; i <= this->_impl->maxcol; i++) {
-    if (tabwidth[i] < this->minimum_width[i])
-      tabwidth[i] = this->minimum_width[i];
-  }
-
-  check_cell_width(tabwidth, cell.minimum_width, cell.col, cell.colspan,
-                   cell.maxcell, cell.index, this->_impl->cellspacing, 0);
-}
-
 void table::check_maximum_width() {
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
   int i, j, bcol, ecol;
   int swidth, width;
 
@@ -697,7 +764,7 @@ void table::check_maximum_width() {
     ecol = bcol + cell->colspan[j];
     swidth = 0;
     for (i = bcol; i < ecol; i++)
-      swidth += this->tabwidth[i];
+      swidth += this->_impl->tabwidth[i];
 
     width = cell->width[j] - (cell->colspan[j] - 1) * this->_impl->cellspacing;
     if (width > swidth) {
@@ -709,8 +776,8 @@ void table::check_maximum_width() {
 
 void table::set_integered_width(double *dwidth, short *iwidth) {
   int i, j, n, bcol, ecol, step;
-  struct table_cell *cell = &this->cell;
-  int rulewidth = this->table_rule_width();
+  struct table_cell *cell = &this->_impl->cell;
+  int rulewidth = this->_impl->table_rule_width();
 
   std::vector<short> indexarray(this->_impl->maxcol + 1);
   std::vector<double> mod(this->_impl->maxcol + 1);
@@ -751,9 +818,9 @@ void table::set_integered_width(double *dwidth, short *iwidth) {
       }
       for (int k = 0; k < n; k++) {
         int ii = indexarray[i + k];
-        if (fixed[ii] < 2 && iwidth[ii] - rulewidth < this->minimum_width[ii])
+        if (fixed[ii] < 2 && iwidth[ii] - rulewidth < this->_impl->minimum_width[ii])
           fixed[ii] = 2;
-        if (fixed[ii] < 1 && iwidth[ii] - rulewidth < this->tabwidth[ii] &&
+        if (fixed[ii] < 1 && iwidth[ii] - rulewidth < this->_impl->tabwidth[ii] &&
             (double)rulewidth - mod[ii] > 0.5)
           fixed[ii] = 1;
       }
@@ -889,18 +956,18 @@ int table::check_compressible_cell(Matrix *minv, double *newwidth,
                                    double *swidth, short *cwidth,
                                    double totalwidth, double *Sxx, int icol,
                                    int icell, double sxx, int corr) {
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
   int i, j, k, m, bcol, ecol, span;
   double delta, owidth;
   double dmax, dmin, sxy;
-  int rulewidth = this->table_rule_width();
+  int rulewidth = this->_impl->table_rule_width();
 
   if (sxx < 10.)
     return corr;
 
   if (icol >= 0) {
     owidth = newwidth[icol];
-    delta = newwidth[icol] - (double)this->tabwidth[icol];
+    delta = newwidth[icol] - (double)this->_impl->tabwidth[icol];
     bcol = icol;
     ecol = bcol + 1;
   } else if (icell >= 0) {
@@ -955,10 +1022,10 @@ int table::check_compressible_cell(Matrix *minv, double *newwidth,
       is_inclusive = 1;
     }
     if (sxy > 0.)
-      dmin = recalc_width(dmin, newwidth[m], this->tabwidth[m], sxx,
+      dmin = recalc_width(dmin, newwidth[m], this->_impl->tabwidth[m], sxx,
                           minv->m_entry(m, m), sxy, is_inclusive);
     else
-      dmax = recalc_width(dmax, newwidth[m], this->tabwidth[m], sxx,
+      dmax = recalc_width(dmax, newwidth[m], this->_impl->tabwidth[m], sxx,
                           minv->m_entry(m, m), sxy, is_inclusive);
   }
 _end:
@@ -978,7 +1045,7 @@ _end:
 int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
   int i, j, k, m, bcol, ecol;
   int corr = 0;
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
 #ifdef __GNUC__
   short orgwidth[this->maxcol >= 0 ? this->maxcol + 1 : 1];
   short corwidth[this->maxcol >= 0 ? this->maxcol + 1 : 1];
@@ -1048,14 +1115,14 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
   for (i = 0; i <= this->_impl->maxcol; i++)
     corwidth[i] = orgwidth[i] = _round(newwidth[i]);
 
-  this->check_minimum_width(corwidth);
+  this->_impl->check_minimum_width(corwidth);
 
   for (i = 0; i <= this->_impl->maxcol; i++) {
     double sx = sqrt(minv->m_entry(i, i));
     if (sx < 0.1)
       continue;
-    if (orgwidth[i] < this->minimum_width[i] &&
-        corwidth[i] == this->minimum_width[i]) {
+    if (orgwidth[i] < this->_impl->minimum_width[i] &&
+        corwidth[i] == this->_impl->minimum_width[i]) {
       double w = (sx > 0.5) ? 0.5 : sx * 0.2;
       sxy = 0.;
       for (m = 0; m <= this->_impl->maxcol; m++) {
@@ -1064,7 +1131,7 @@ int table::check_table_width(double *newwidth, Matrix *minv, int itr) {
         sxy += minv->m_entry(i, m);
       }
       if (sxy <= 0.) {
-        this->correct_table_matrix(i, 1, this->minimum_width[i], w);
+        this->correct_table_matrix(i, 1, this->_impl->minimum_width[i], w);
         corr++;
       }
     }
@@ -1147,10 +1214,10 @@ void table::check_table_height() {
       if (this->_impl->tabattr[j][i] & (HTT_X | HTT_Y))
         continue;
 
-      if (this->tabdata[j][i] == NULL)
+      if (this->_impl->tabdata[j][i] == NULL)
         t_dep = 0;
       else
-        t_dep = this->tabdata[j][i]->_list.size();
+        t_dep = this->_impl->tabdata[j][i]->_list.size();
 
       rowspan = this->_impl->table_rowspan(j, i);
       if (rowspan > 1) {
@@ -1203,53 +1270,6 @@ void table::check_table_height() {
                     space, 1);
 }
 
-int table::get_table_width(const short *orgwidth, const short *cellwidth,
-                           TableWidthFlags flag) const {
-#ifdef __GNUC__
-  short newwidth[this->maxcol >= 0 ? this->maxcol + 1 : 1];
-#else  /* not __GNUC__ */
-  short newwidth[MAXCOL];
-#endif /* not __GNUC__ */
-  int i;
-  int swidth;
-  // struct table_cell *cell = &this->cell;
-  int rulewidth = this->table_rule_width();
-
-  for (i = 0; i <= this->_impl->maxcol; i++)
-    newwidth[i] = max(orgwidth[i], 0);
-
-  if (flag & CHECK_FIXED) {
-#ifdef __GNUC__
-    short ccellwidth[cell.maxcell >= 0 ? cell.maxcell + 1 : 1];
-#else  /* not __GNUC__ */
-    short ccellwidth[MAXCELL];
-#endif /* not __GNUC__ */
-    for (i = 0; i <= this->_impl->maxcol; i++) {
-      if (newwidth[i] < this->fixed_width[i])
-        newwidth[i] = this->fixed_width[i];
-    }
-    for (i = 0; i <= cell.maxcell; i++) {
-      ccellwidth[i] = cellwidth[i];
-      if (ccellwidth[i] < cell.fixed_width[i])
-        ccellwidth[i] = cell.fixed_width[i];
-    }
-    check_cell_width(newwidth, ccellwidth, cell.col, cell.colspan, cell.maxcell,
-                     cell.index, this->_impl->cellspacing, 0);
-  } else {
-    check_cell_width(newwidth, cellwidth, cell.col, cell.colspan, cell.maxcell,
-                     cell.index, this->_impl->cellspacing, 0);
-  }
-  if (flag & CHECK_MINIMUM)
-    this->check_minimum_width(newwidth);
-
-  swidth = 0;
-  for (i = 0; i <= this->_impl->maxcol; i++) {
-    swidth += ceil_at_intervals(newwidth[i], rulewidth);
-  }
-  swidth += this->_impl->table_border_width();
-  return swidth;
-}
-
 #define MAX_COTABLE_LEVEL 100
 static int cotable_level;
 
@@ -1272,7 +1292,7 @@ void table::renderCoTable(html_feed_environ *parser, int maxlimit) {
     indent = this->tables[i].indent;
 
     html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
-                            indent, this->tables[i].buf);
+                           indent, this->tables[i].buf);
     this->check_row(row);
     if (henv._width > maxlimit)
       henv._width = maxlimit;
@@ -1287,7 +1307,7 @@ void table::renderCoTable(html_feed_environ *parser, int maxlimit) {
 }
 
 void table::make_caption(html_feed_environ *parser) {
-  if (this->caption.size() <= 0)
+  if (this->_impl->caption.empty())
     return;
 
   int limit;
@@ -1300,7 +1320,7 @@ void table::make_caption(html_feed_environ *parser) {
                          parser->envs[parser->envc].indent,
                          GeneralList::newGeneralList());
   parser->parse("<center>");
-  parser->parse(this->caption, false);
+  parser->parse(this->_impl->caption, false);
   parser->parse("</center>");
 
   if (this->total_width < henv.maxlimit)
@@ -1309,19 +1329,14 @@ void table::make_caption(html_feed_environ *parser) {
   limit = parser->_width;
   parser->_width = this->total_width;
   parser->parse("<center>");
-  parser->parse(this->caption, false);
+  parser->parse(this->_impl->caption, false);
   parser->parse("</center>");
   parser->_width = limit;
 }
 
 void table::renderTable(html_feed_environ *parser, int max_width) {
-  int i, j, w, r, h;
-  Str *renderbuf;
-  short new_tabwidth[MAXCOL] = {0};
-  int itr;
-  int width;
 
-  this->total_height = 0;
+  this->_impl->total_height = 0;
   if (this->_impl->maxcol < 0) {
     this->make_caption(parser);
     return;
@@ -1330,7 +1345,7 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
   if (this->sloppy_width > max_width)
     max_width = this->sloppy_width;
 
-  int rulewidth = this->table_rule_width();
+  int rulewidth = this->_impl->table_rule_width();
 
   max_width -= this->_impl->table_border_width();
 
@@ -1346,15 +1361,21 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
 
   this->check_maximum_width();
 
+  short new_tabwidth[MAXCOL] = {0};
+  int i, j, w, r, h;
+  Str *renderbuf;
+  int itr;
+  int width;
+
   if (this->_impl->maxcol == 0) {
-    if (this->tabwidth[0] > max_width)
-      this->tabwidth[0] = max_width;
+    if (this->_impl->tabwidth[0] > max_width)
+      this->_impl->tabwidth[0] = max_width;
     if (this->total_width > 0)
-      this->tabwidth[0] = max_width;
-    else if (this->fixed_width[0] > 0)
-      this->tabwidth[0] = this->fixed_width[0];
-    if (this->tabwidth[0] < this->minimum_width[0])
-      this->tabwidth[0] = this->minimum_width[0];
+      this->_impl->tabwidth[0] = max_width;
+    else if (this->_impl->fixed_width[0] > 0)
+      this->_impl->tabwidth[0] = this->_impl->fixed_width[0];
+    if (this->_impl->tabwidth[0] < this->_impl->minimum_width[0])
+      this->_impl->tabwidth[0] = this->_impl->minimum_width[0];
   } else {
     this->set_table_matrix(max_width);
 
@@ -1372,15 +1393,15 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
       itr++;
     } while (this->check_table_width(newwidth.ve.data(), &minv, itr));
     this->set_integered_width(newwidth.ve.data(), new_tabwidth);
-    this->check_minimum_width(new_tabwidth);
+    this->_impl->check_minimum_width(new_tabwidth);
     for (int i = 0; i <= this->_impl->maxcol; i++) {
-      this->tabwidth[i] = new_tabwidth[i];
+      this->_impl->tabwidth[i] = new_tabwidth[i];
     }
   }
 
-  this->check_minimum_width(this->tabwidth);
+  this->_impl->check_minimum_width(this->_impl->tabwidth);
   for (i = 0; i <= this->_impl->maxcol; i++)
-    this->tabwidth[i] = ceil_at_intervals(this->tabwidth[i], rulewidth);
+    this->_impl->tabwidth[i] = ceil_at_intervals(this->_impl->tabwidth[i], rulewidth);
 
   this->renderCoTable(parser, parser->_width);
 
@@ -1393,11 +1414,11 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
     }
   }
 
-  this->check_minimum_width(this->tabwidth);
+  this->_impl->check_minimum_width(this->_impl->tabwidth);
   this->total_width = 0;
   for (i = 0; i <= this->_impl->maxcol; i++) {
-    this->tabwidth[i] = ceil_at_intervals(this->tabwidth[i], rulewidth);
-    this->total_width += this->tabwidth[i];
+    this->_impl->tabwidth[i] = ceil_at_intervals(this->_impl->tabwidth[i], rulewidth);
+    this->total_width += this->_impl->tabwidth[i];
   }
 
   this->total_width += this->_impl->table_border_width();
@@ -1409,7 +1430,7 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
       int k;
       if ((this->_impl->tabattr[j][i] & HTT_Y) ||
           (this->_impl->tabattr[j][i] & HTT_TOP) ||
-          (this->tabdata[j][i] == NULL))
+          (this->_impl->tabdata[j][i] == NULL))
         continue;
       h = this->tabheight[j];
       for (k = j + 1; k <= this->_impl->maxrow; k++) {
@@ -1424,7 +1445,7 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
           break;
         }
       }
-      h -= this->tabdata[j][i]->_list.size();
+      h -= this->_impl->tabdata[j][i]->_list.size();
       if (this->_impl->tabattr[j][i] & HTT_MIDDLE)
         h /= 2;
       if (h <= 0)
@@ -1434,8 +1455,8 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
       for (k = 0; k < h; k++) {
         l->_list.push_back(std::make_shared<TextLine>("", 0));
       }
-      l->appendGeneralList(this->tabdata[j][i]);
-      this->tabdata[j][i] = l;
+      l->appendGeneralList(this->_impl->tabdata[j][i]);
+      this->_impl->tabdata[j][i] = l;
     }
   }
 
@@ -1451,7 +1472,7 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
     std::stringstream renderbuf;
     this->print_sep(-1, T_TOP, this->_impl->maxcol, renderbuf);
     parser->push_render_image(renderbuf.str(), width, this->total_width);
-    this->total_height += 1;
+    this->_impl->total_height += 1;
     break;
   }
   }
@@ -1488,11 +1509,11 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
       for (i = 0; i <= this->_impl->maxcol; i++) {
         this->check_row(r);
         if (!(this->_impl->tabattr[r][i] & HTT_X)) {
-          w = this->tabwidth[i];
+          w = this->_impl->tabwidth[i];
           for (j = i + 1;
                j <= this->_impl->maxcol && (this->_impl->tabattr[r][j] & HTT_X);
                j++)
-            w += this->tabwidth[j] + this->_impl->cellspacing;
+            w += this->_impl->tabwidth[j] + this->_impl->cellspacing;
           if (this->_impl->tabattr[r][i] & HTT_Y) {
             for (j = r - 1; j >= 0 && this->_impl->tabattr[j].size() &&
                             (this->_impl->tabattr[j][i] & HTT_Y);
@@ -1510,7 +1531,7 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
       case BORDER_THIN:
       case BORDER_THICK:
         renderbuf << vrulec.str();
-        this->total_height += 1;
+        this->_impl->total_height += 1;
         break;
       }
       parser->push_render_image(renderbuf.str(), width, this->total_width);
@@ -1520,7 +1541,7 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
       this->print_sep(r, T_MIDDLE, this->_impl->maxcol, renderbuf);
       parser->push_render_image(renderbuf.str(), width, this->total_width);
     }
-    this->total_height += this->tabheight[r];
+    this->_impl->total_height += this->tabheight[r];
   }
   switch (this->_impl->border_mode) {
   case BORDER_THIN:
@@ -1529,13 +1550,13 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
     this->print_sep(this->_impl->maxrow, T_BOTTOM, this->_impl->maxcol,
                     renderbuf);
     parser->push_render_image(renderbuf.str(), width, this->total_width);
-    this->total_height += 1;
+    this->_impl->total_height += 1;
     break;
   }
-  if (this->total_height == 0) {
+  if (this->_impl->total_height == 0) {
     std::stringstream renderbuf;
     renderbuf << " ";
-    this->total_height++;
+    this->_impl->total_height++;
     this->total_width = 1;
     parser->push_render_image(renderbuf.str(), 1, this->total_width);
   }
@@ -1561,9 +1582,10 @@ std::shared_ptr<table> table::begin_table(HtmlTableBorderMode border,
   t->_impl->maxcol = -1;
   t->_impl->maxrow = -1;
   t->_impl->border_mode = border;
-  t->flag = 0;
-  if (border == BORDER_NOWIN)
-    t->flag |= TBL_EXPAND_OK;
+  t->_impl->flag = {};
+  if (border == BORDER_NOWIN) {
+    t->_impl->flag |= TBL_EXPAND_OK;
+  }
   t->total_width = width;
 
   rcellspacing = spacing + 2 * padding;
@@ -1607,33 +1629,33 @@ std::shared_ptr<table> table::begin_table(HtmlTableBorderMode border,
 
   if (border == BORDER_NONE) {
     if (rcellspacing <= THR_PADDING)
-      t->vcellpadding = 0;
+      t->_impl->vcellpadding = 0;
     else
-      t->vcellpadding = 1;
+      t->_impl->vcellpadding = 1;
   } else {
     if (padding < 2 * ppc - 2)
-      t->vcellpadding = 0;
+      t->_impl->vcellpadding = 0;
     else
-      t->vcellpadding = 1;
+      t->_impl->vcellpadding = 1;
   }
 
   return t;
 }
 
 void table::end_table() {
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
   int i;
-  int rulewidth = this->table_rule_width();
+  int rulewidth = this->_impl->table_rule_width();
   if (rulewidth > 1) {
     if (this->total_width > 0)
       this->total_width = ceil_at_intervals(this->total_width, rulewidth);
     for (i = 0; i <= this->_impl->maxcol; i++) {
-      this->minimum_width[i] =
-          ceil_at_intervals(this->minimum_width[i], rulewidth);
-      this->tabwidth[i] = ceil_at_intervals(this->tabwidth[i], rulewidth);
-      if (this->fixed_width[i] > 0)
-        this->fixed_width[i] =
-            ceil_at_intervals(this->fixed_width[i], rulewidth);
+      this->_impl->minimum_width[i] =
+          ceil_at_intervals(this->_impl->minimum_width[i], rulewidth);
+      this->_impl->tabwidth[i] = ceil_at_intervals(this->_impl->tabwidth[i], rulewidth);
+      if (this->_impl->fixed_width[i] > 0)
+        this->_impl->fixed_width[i] =
+            ceil_at_intervals(this->_impl->fixed_width[i], rulewidth);
     }
     for (i = 0; i <= cell->maxcell; i++) {
       cell->minimum_width[i] =
@@ -1644,7 +1666,7 @@ void table::end_table() {
             ceil_at_intervals(cell->fixed_width[i], rulewidth);
     }
   }
-  this->sloppy_width = this->fixed_table_width();
+  this->sloppy_width = this->_impl->fixed_table_width();
   if (this->total_width > this->sloppy_width)
     this->sloppy_width = this->total_width;
 }
@@ -1652,7 +1674,7 @@ void table::end_table() {
 void table::check_minimum0(int min) {
   if (this->col < 0)
     return;
-  if (this->tabwidth[this->col] < 0)
+  if (this->_impl->tabwidth[this->col] < 0)
     return;
   this->check_row(this->row);
   int w = this->_impl->table_colspan(this->row, this->col);
@@ -1661,7 +1683,7 @@ void table::check_minimum0(int min) {
   if (w == 1)
     ww = min;
   else {
-    auto cell = &this->cell;
+    auto cell = &this->_impl->cell;
     ww = 0;
     if (cell->icell >= 0 && cell->minimum_width[cell->icell] < min)
       cell->minimum_width[cell->icell] = min;
@@ -1670,18 +1692,18 @@ void table::check_minimum0(int min) {
        i <= this->_impl->maxcol &&
        (i == this->col || (this->_impl->tabattr[this->row][i] & HTT_X));
        i++) {
-    if (this->minimum_width[i] < ww)
-      this->minimum_width[i] = ww;
+    if (this->_impl->minimum_width[i] < ww)
+      this->_impl->minimum_width[i] = ww;
   }
 }
 
 int table::setwidth0(struct table_mode *mode) {
-  int width = this->tabcontentssize;
-  struct table_cell *cell = &this->cell;
+  int width = this->_impl->tabcontentssize;
+  struct table_cell *cell = &this->_impl->cell;
 
   if (this->col < 0)
     return -1;
-  if (this->tabwidth[this->col] < 0)
+  if (this->_impl->tabwidth[this->col] < 0)
     return -1;
 
   this->check_row(this->row);
@@ -1689,8 +1711,8 @@ int table::setwidth0(struct table_mode *mode) {
     width -= this->linfo.prev_spaces;
   int w = this->_impl->table_colspan(this->row, this->col);
   if (w == 1) {
-    if (this->tabwidth[this->col] < width)
-      this->tabwidth[this->col] = width;
+    if (this->_impl->tabwidth[this->col] < width)
+      this->_impl->tabwidth[this->col] = width;
   } else if (cell->icell >= 0) {
     if (cell->width[cell->icell] < width)
       cell->width[cell->icell] = width;
@@ -1712,10 +1734,10 @@ void table::setwidth(struct table_mode *mode) {
 void table::addcontentssize(int width) {
   if (this->col < 0)
     return;
-  if (this->tabwidth[this->col] < 0)
+  if (this->_impl->tabwidth[this->col] < 0)
     return;
   this->check_row(this->row);
-  this->tabcontentssize += width;
+  this->_impl->tabcontentssize += width;
 }
 
 void table::clearcontentssize(struct table_mode *mode) {
@@ -1725,7 +1747,7 @@ void table::clearcontentssize(struct table_mode *mode) {
   this->linfo.prevchar = " ";
   this->linfo.prev_ctype = PC_ASCII;
   this->linfo.length = 0;
-  this->tabcontentssize = 0;
+  this->_impl->tabcontentssize = 0;
 }
 
 void table::begin_cell(struct table_mode *mode) {
@@ -1734,23 +1756,25 @@ void table::begin_cell(struct table_mode *mode) {
   mode->nobr_level = 0;
   mode->pre_mode = {};
   this->_impl->indent = 0;
-  this->flag |= TBL_IN_COL;
+  this->_impl->flag |= TBL_IN_COL;
 
   if (this->suspended_data) {
     this->check_row(this->row);
-    if (this->tabdata[this->row][this->col] == NULL)
-      this->tabdata[this->row][this->col] = GeneralList::newGeneralList();
-    this->tabdata[this->row][this->col]->appendGeneralList(
+    if (this->_impl->tabdata[this->row][this->col] == NULL)
+      this->_impl->tabdata[this->row][this->col] =
+          GeneralList::newGeneralList();
+    this->_impl->tabdata[this->row][this->col]->appendGeneralList(
         this->suspended_data);
     this->suspended_data = NULL;
   }
 }
 
 void table::check_rowcol(table_mode *mode) {
-  int row = this->row, col = this->col;
+  int row = this->row;
+  int col = this->col;
 
-  if (!(this->flag & TBL_IN_ROW)) {
-    this->flag |= TBL_IN_ROW;
+  if (!(this->_impl->flag & TBL_IN_ROW)) {
+    this->_impl->flag |= TBL_IN_ROW;
     if (this->row + 1 < MAXROW_LIMIT)
       this->row++;
     if (this->row > this->_impl->maxrow)
@@ -1781,7 +1805,7 @@ void table::check_rowcol(table_mode *mode) {
 
   if (this->row != row || this->col != col)
     this->begin_cell(mode);
-  this->flag |= TBL_IN_COL;
+  this->_impl->flag |= TBL_IN_COL;
 }
 
 int table::skip_space(const char *line, struct table_linfo *linfo,
@@ -1918,12 +1942,12 @@ void table::table_close_anchor0(struct table_mode *mode) {
   if (!(mode->pre_mode & TBLM_ANCHOR))
     return;
   mode->pre_mode &= (ReadBufferFlags)~TBLM_ANCHOR;
-  if (this->tabcontentssize == mode->anchor_offset) {
+  if (this->_impl->tabcontentssize == mode->anchor_offset) {
     this->check_minimum0(1);
     this->addcontentssize(1);
     this->setwidth(mode);
   } else if (this->linfo.prev_spaces > 0 &&
-             this->tabcontentssize - 1 == mode->anchor_offset) {
+             this->_impl->tabcontentssize - 1 == mode->anchor_offset) {
     if (this->linfo.prev_spaces > 0)
       this->linfo.prev_spaces = -1;
   }
@@ -1960,7 +1984,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
                           struct table_mode *mode, int width,
                           const std::shared_ptr<HtmlTag> &tag) {
   int cmd;
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
   int colspan, rowspan;
   int col, prev_col;
   int i, j, k, v, v0, w, id;
@@ -2054,12 +2078,12 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
   case HTML_TR:
     if (this->row + 1 >= MAXROW_LIMIT)
       return TAG_ACTION_NONE;
-    if (this->col >= 0 && this->tabcontentssize > 0)
+    if (this->col >= 0 && this->_impl->tabcontentssize > 0)
       this->setwidth(mode);
     this->col = -1;
     this->row++;
-    this->flag |= TBL_IN_ROW;
-    this->flag &= ~TBL_IN_COL;
+    this->_impl->flag |= TBL_IN_ROW;
+    this->_impl->flag &= ~TBL_IN_COL;
     align = {};
     valign = {};
     if (auto value = tag->getAttr(ATTR_ALIGN)) {
@@ -2102,12 +2126,12 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     //     return 0;
     //   return 1;
     // }
-    this->trattr = align | valign;
+    this->_impl->trattr = align | valign;
     break;
   case HTML_TH:
   case HTML_TD:
     prev_col = this->col;
-    if (this->col >= 0 && this->tabcontentssize > 0)
+    if (this->col >= 0 && this->_impl->tabcontentssize > 0)
       this->setwidth(mode);
     if (this->row == -1) {
       /* for broken HTML... */
@@ -2116,11 +2140,11 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
       this->_impl->maxrow = this->row;
     }
     if (this->col == -1) {
-      if (!(this->flag & TBL_IN_ROW)) {
+      if (!(this->_impl->flag & TBL_IN_ROW)) {
         if (this->row + 1 >= MAXROW_LIMIT)
           return TAG_ACTION_NONE;
         this->row++;
-        this->flag |= TBL_IN_ROW;
+        this->_impl->flag |= TBL_IN_ROW;
       }
       if (this->row > this->_impl->maxrow)
         this->_impl->maxrow = this->row;
@@ -2138,14 +2162,14 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
       this->_impl->maxcol = this->col;
     }
     colspan = rowspan = 1;
-    if (this->trattr & HTT_TRSET)
-      align = (this->trattr & HTT_ALIGN);
+    if (this->_impl->trattr & HTT_TRSET)
+      align = (this->_impl->trattr & HTT_ALIGN);
     else if (cmd == HTML_TH)
       align = HTT_CENTER;
     else
       align = HTT_LEFT;
-    if (this->trattr & HTT_VTRSET)
-      valign = (this->trattr & HTT_VALIGN);
+    if (this->_impl->trattr & HTT_VTRSET)
+      valign = (this->_impl->trattr & HTT_VALIGN);
     else
       valign = HTT_MIDDLE;
     if (auto value = tag->getAttr(ATTR_ROWSPAN)) {
@@ -2154,7 +2178,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
         rowspan = ATTR_ROWSPAN_MAX;
       if ((this->row + rowspan - 1) >= MAXROW_LIMIT)
         rowspan = MAXROW_LIMIT - this->row;
-      if ((this->row + rowspan) > this->max_rowsize)
+      if ((this->row + rowspan) > this->_impl->max_rowsize)
         this->check_row(this->row + rowspan - 1);
     }
     if (rowspan < 1)
@@ -2242,12 +2266,12 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     }
     if (v != 0) {
       if (colspan == 1) {
-        v0 = this->fixed_width[this->col];
+        v0 = this->_impl->fixed_width[this->col];
         if (v0 == 0 || (v0 > 0 && v > v0) || (v0 < 0 && v < v0)) {
 #ifdef FEED_TABLE_DEBUG
           fprintf(stderr, "width(%d) = %d\n", this->col, v);
 #endif /* TABLE_DEBUG */
-          this->fixed_width[this->col] = v;
+          this->_impl->fixed_width[this->col] = v;
         }
       } else if (cell->icell >= 0) {
         v0 = cell->fixed_width[cell->icell];
@@ -2277,12 +2301,12 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
   case HTML_N_TR:
     this->setwidth(mode);
     this->col = -1;
-    this->flag &= ~(TBL_IN_ROW | TBL_IN_COL);
+    this->_impl->flag &= ~(TBL_IN_ROW | TBL_IN_COL);
     return TAG_ACTION_NONE;
   case HTML_N_TH:
   case HTML_N_TD:
     this->setwidth(mode);
-    this->flag &= ~TBL_IN_COL;
+    this->_impl->flag &= ~TBL_IN_COL;
 #ifdef FEED_TABLE_DEBUG
     {
       TextListItem *it;
@@ -2301,7 +2325,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
   case HTML_N_CENTER:
   case HTML_DIV:
   case HTML_N_DIV:
-    if (!(this->flag & TBL_IN_ROW))
+    if (!(this->_impl->flag & TBL_IN_ROW))
       break;
   case HTML_DT:
   case HTML_DD:
@@ -2354,7 +2378,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     break;
   case HTML_NOBR:
   case HTML_WBR:
-    if (!(this->flag & TBL_IN_ROW))
+    if (!(this->_impl->flag & TBL_IN_ROW))
       break;
   case HTML_PRE_INT:
     this->feed_table_inline_tag(line, mode, -1);
@@ -2379,7 +2403,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     }
     break;
   case HTML_N_NOBR:
-    if (!(this->flag & TBL_IN_ROW))
+    if (!(this->_impl->flag & TBL_IN_ROW))
       break;
     this->feed_table_inline_tag(line, mode, -1);
     if (mode->nobr_level > 0)
@@ -2393,7 +2417,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     break;
   case HTML_IMG: {
     this->check_rowcol(mode);
-    w = this->fixed_width[this->col];
+    w = this->_impl->fixed_width[this->col];
     if (w < 0) {
       if (this->total_width > 0)
         w = -this->total_width * w / 100;
@@ -2457,8 +2481,8 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
       if (cell->icell >= 0 && cell->fixed_width[cell->icell] > 0)
         w = cell->fixed_width[cell->icell];
     } else {
-      if (this->fixed_width[this->col] > 0)
-        w = this->fixed_width[this->col];
+      if (this->_impl->fixed_width[this->col] > 0)
+        w = this->_impl->fixed_width[this->col];
     }
     auto tmp = parser->process_textarea(tag.get(), w);
     if (tmp.size())
@@ -2489,7 +2513,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
         this->pushdata(this->row, this->col, line);
       if (i >= 0) {
         mode->pre_mode |= TBLM_ANCHOR;
-        mode->anchor_offset = this->tabcontentssize;
+        mode->anchor_offset = this->_impl->tabcontentssize;
       }
     } else
       this->suspend_or_pushdata(line);
@@ -2576,7 +2600,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     if (id >= 0 && id < this->ntable) {
       auto tbl1 = this->tables[id].ptr;
       this->feed_table_block_tag(line, mode, 0, cmd);
-      this->addcontentssize(tbl1->maximum_table_width());
+      this->addcontentssize(tbl1->_impl->maximum_table_width());
       this->check_minimum0(tbl1->sloppy_width);
       this->setwidth0(mode);
       this->clearcontentssize(mode);
@@ -2667,7 +2691,7 @@ int table::feed_table(html_feed_environ *parser, std::string line,
       return -1;
   }
   if (mode->caption) {
-    this->caption += line;
+    this->_impl->caption += line;
     return -1;
   }
   if (mode->pre_mode & TBLM_SCRIPT)
@@ -2734,14 +2758,14 @@ int table::feed_table(html_feed_environ *parser, std::string line,
     line = tmp.str();
   }
   if (!(mode->pre_mode & (TBLM_SPECIAL & ~TBLM_NOBR))) {
-    if (!(this->flag & TBL_IN_COL) || linfo->prev_spaces != 0)
+    if (!(this->_impl->flag & TBL_IN_COL) || linfo->prev_spaces != 0)
       while (line.size() && IS_SPACE(line[0]))
         line = line.substr();
     if (line.empty())
       return -1;
     this->check_rowcol(mode);
     if (mode->pre_mode & TBLM_NOBR && mode->nobr_offset < 0)
-      mode->nobr_offset = this->tabcontentssize;
+      mode->nobr_offset = this->_impl->tabcontentssize;
 
     /* count of number of spaces skipped in normal mode */
     i = this->skip_space(line.c_str(), linfo, !(mode->pre_mode & TBLM_NOBR));
@@ -2751,9 +2775,9 @@ int table::feed_table(html_feed_environ *parser, std::string line,
   } else if (mode->pre_mode & TBLM_PRE_INT) {
     this->check_rowcol(mode);
     if (mode->nobr_offset < 0)
-      mode->nobr_offset = this->tabcontentssize;
+      mode->nobr_offset = this->_impl->tabcontentssize;
     this->addcontentssize(
-        maximum_visible_length(line.c_str(), this->tabcontentssize));
+        maximum_visible_length(line.c_str(), this->_impl->tabcontentssize));
     this->setwidth(mode);
     this->pushdata(this->row, this->col, line);
   } else {
@@ -2782,9 +2806,9 @@ int table::feed_table(html_feed_environ *parser, std::string line,
         line = "";
       }
       if (mode->pre_mode & TBLM_PLAIN)
-        i = maximum_visible_length_plain(p, this->tabcontentssize);
+        i = maximum_visible_length_plain(p, this->_impl->tabcontentssize);
       else
-        i = maximum_visible_length(p, this->tabcontentssize);
+        i = maximum_visible_length(p, this->_impl->tabcontentssize);
       this->addcontentssize(i);
       this->setwidth(mode);
       if (nl)
@@ -2830,7 +2854,7 @@ void table::pushTable(const std::shared_ptr<table> &tbl1) {
   this->check_row(row);
   if (col + 1 <= this->_impl->maxcol &&
       this->_impl->tabattr[row][col + 1] & HTT_X)
-    this->tables[this->ntable].cell = this->cell.icell;
+    this->tables[this->ntable].cell = this->_impl->cell.icell;
   else
     this->tables[this->ntable].cell = -1;
   this->ntable++;
@@ -2928,11 +2952,11 @@ void table::set_table_matrix0(int maxwidth) {
   double we[MAXCOL];
   char expand[MAXCOL] = {0};
 #endif /* not __GNUC__ */
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
 
   double w0 = 0.;
   for (size_t i = 0; i < size; i++) {
-    we[i] = this->_impl->weight(this->tabwidth[i]);
+    we[i] = this->_impl->weight(this->_impl->tabwidth[i]);
     w0 += we[i];
   }
   if (w0 <= 0.)
@@ -2955,12 +2979,12 @@ void table::set_table_matrix0(int maxwidth) {
         cell->width[j] - (cell->colspan[j] - 1) * this->_impl->cellspacing;
     double w1 = 0.;
     for (size_t i = bcol; i < ecol; i++) {
-      w1 += this->tabwidth[i] + 0.1;
+      w1 += this->_impl->tabwidth[i] + 0.1;
       expand[i]++;
     }
     for (size_t i = bcol; i < ecol; i++) {
       auto w = this->_impl->weight(
-          static_cast<int>(width * (this->tabwidth[i] + 0.1) / w1));
+          static_cast<int>(width * (this->_impl->tabwidth[i] + 0.1) / w1));
       if (w > we[i])
         we[i] = w;
     }
@@ -3006,17 +3030,17 @@ void table::check_relative_width(int maxwidth) {
   double rel_total = 0;
   int size = this->_impl->maxcol + 1;
   std::vector<double> rcolwidth(size);
-  struct table_cell *cell = &this->cell;
+  struct table_cell *cell = &this->_impl->cell;
   int n_leftcol = 0;
 
   for (int i = 0; i < size; i++)
     rcolwidth[i] = 0;
 
   for (int i = 0; i < size; i++) {
-    if (this->fixed_width[i] < 0)
-      rcolwidth[i] = -(double)this->fixed_width[i] / 100.0;
-    else if (this->fixed_width[i] > 0)
-      rcolwidth[i] = (double)this->fixed_width[i] / maxwidth;
+    if (this->_impl->fixed_width[i] < 0)
+      rcolwidth[i] = -(double)this->_impl->fixed_width[i] / 100.0;
+    else if (this->_impl->fixed_width[i] > 0)
+      rcolwidth[i] = (double)this->_impl->fixed_width[i] / maxwidth;
     else
       n_leftcol++;
   }
@@ -3064,8 +3088,8 @@ void table::check_relative_width(int maxwidth) {
       rcolwidth[i] /= rel_total;
     }
     for (int i = 0; i < size; i++) {
-      if (this->fixed_width[i] < 0)
-        this->fixed_width[i] = static_cast<short>(-rcolwidth[i] * 100);
+      if (this->_impl->fixed_width[i] < 0)
+        this->_impl->fixed_width[i] = static_cast<short>(-rcolwidth[i] * 100);
     }
     for (int i = 0; i <= cell->maxcell; i++) {
       if (cell->fixed_width[i] < 0) {
@@ -3097,18 +3121,18 @@ void table::set_table_matrix(int width) {
   this->check_relative_width(width);
 
   for (int i = 0; i < size; i++) {
-    if (this->fixed_width[i] > 0) {
-      auto a = max(this->fixed_width[i], this->minimum_width[i]);
+    if (this->_impl->fixed_width[i] > 0) {
+      auto a = max(this->_impl->fixed_width[i], this->_impl->minimum_width[i]);
       auto b = this->_impl->sigma_td(a);
       this->correct_table_matrix(i, 1, a, b);
-    } else if (this->fixed_width[i] < 0) {
-      auto s = -(double)this->fixed_width[i] / 100.;
+    } else if (this->_impl->fixed_width[i] < 0) {
+      auto s = -(double)this->_impl->fixed_width[i] / 100.;
       auto b = this->_impl->sigma_td((int)(s * width));
       this->correct_table_matrix2(i, 1, s, b);
     }
   }
 
-  auto cell = &this->cell;
+  auto cell = &this->_impl->cell;
   for (int j = 0; j <= cell->maxcell; j++) {
     if (cell->fixed_width[j] > 0) {
       auto a = max(cell->fixed_width[j], cell->minimum_width[j]);
