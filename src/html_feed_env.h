@@ -75,6 +75,12 @@ struct LinkStack {
   short pos = 0;
 };
 
+enum class FlushLineMode {
+  None,
+  Force,
+  Append,
+};
+
 class html_feed_environ {
 public:
   std::string line;
@@ -217,15 +223,160 @@ public:
 
   // link
   void push_link(HtmlCommand cmd, int offset, int pos);
-  const char *has_hidden_link(HtmlCommand cmd) const;
   void passthrough(const std::string &str, bool back);
 
-  void flushline(const std::shared_ptr<GeneralList> &buf, int indent, int force,
-                 int width);
+  void flushline(const std::shared_ptr<GeneralList> &buf, int indent, int width,
+                 FlushLineMode force = {});
+
+private:
+  const char *has_hidden_link(HtmlCommand cmd) const {
+    if (line.back() != '>') {
+      return nullptr;
+    }
+    auto p = std::find_if(link_stack.begin(), link_stack.end(),
+                          [cmd, pos = this->pos](auto x) {
+                            return x.cmd == cmd && x.pos == pos;
+                          });
+    if (p == link_stack.end()) {
+      return nullptr;
+    }
+    return line.c_str() + p->offset;
+  }
+
+  struct Hidden {
+    const char *str = nullptr;
+    const char *anchor = nullptr;
+    const char *img = nullptr;
+    const char *input = nullptr;
+    const char *bold = nullptr;
+    const char *italic = nullptr;
+    const char *under = nullptr;
+    const char *strike = nullptr;
+    const char *ins = nullptr;
+    std::string suffix;
+  };
+
+  Hidden pop_hidden() {
+    Hidden hidden;
+
+    if (this->anchor.url.size()) {
+      hidden.str = hidden.anchor = this->has_hidden_link(HTML_A);
+    }
+    if (this->img_alt.size()) {
+      if ((hidden.img = this->has_hidden_link(HTML_IMG_ALT))) {
+        if (!hidden.str || hidden.img < hidden.str)
+          hidden.str = hidden.img;
+      }
+    }
+    if (this->input_alt.in) {
+      if ((hidden.input = this->has_hidden_link(HTML_INPUT_ALT))) {
+        if (!hidden.str || hidden.input < hidden.str) {
+          hidden.str = hidden.input;
+        }
+      }
+    }
+    if (this->fontstat.in_bold) {
+      if ((hidden.bold = this->has_hidden_link(HTML_B))) {
+        if (!hidden.str || hidden.bold < hidden.str) {
+          hidden.str = hidden.bold;
+        }
+      }
+    }
+    if (this->fontstat.in_italic) {
+      if ((hidden.italic = this->has_hidden_link(HTML_I))) {
+        if (!hidden.str || hidden.italic < hidden.str) {
+          hidden.str = hidden.italic;
+        }
+      }
+    }
+    if (this->fontstat.in_under) {
+      if ((hidden.under = this->has_hidden_link(HTML_U))) {
+        if (!hidden.str || hidden.under < hidden.str) {
+          hidden.str = hidden.under;
+        }
+      }
+    }
+    if (this->fontstat.in_strike) {
+      if ((hidden.strike = this->has_hidden_link(HTML_S))) {
+        if (!hidden.str || hidden.strike < hidden.str) {
+          hidden.str = hidden.strike;
+        }
+      }
+    }
+    if (this->fontstat.in_ins) {
+      if ((hidden.ins = this->has_hidden_link(HTML_INS))) {
+        if (!hidden.str || hidden.ins < hidden.str) {
+          hidden.str = hidden.ins;
+        }
+      }
+    }
+
+    if (this->anchor.url.size() && !hidden.anchor)
+      hidden.suffix += "</a>";
+    if (this->img_alt.size() && !hidden.img)
+      hidden.suffix += "</img_alt>";
+    if (this->input_alt.in && !hidden.input)
+      hidden.suffix += "</input_alt>";
+    if (this->fontstat.in_bold && !hidden.bold)
+      hidden.suffix += "</b>";
+    if (this->fontstat.in_italic && !hidden.italic)
+      hidden.suffix += "</i>";
+    if (this->fontstat.in_under && !hidden.under)
+      hidden.suffix += "</u>";
+    if (this->fontstat.in_strike && !hidden.strike)
+      hidden.suffix += "</s>";
+    if (this->fontstat.in_ins && !hidden.ins)
+      hidden.suffix += "</ins>";
+
+    return hidden;
+  }
+
+  void flush_top_margin(int indent, int width, FlushLineMode force) {
+    if (this->top_margin <= 0) {
+      return;
+    }
+    html_feed_environ h(1, width, indent);
+    h.line = {};
+    h.pos = this->pos;
+    h.flag = this->flag;
+    h.top_margin = -1;
+    h.bottom_margin = -1;
+    h.line += "<pre_int>";
+    for (int i = 0; i < h.pos; i++)
+      h.line += ' ';
+    h.line += "</pre_int>";
+    for (int i = 0; i < this->top_margin; i++) {
+      h.flushline(buf, indent, width, force);
+    }
+  }
+
+  void flush_bottom_margin(int indent, int width, FlushLineMode force) {
+    if (this->bottom_margin <= 0) {
+      return;
+    }
+    html_feed_environ h(1, width, indent);
+    h.pos = this->pos;
+    h.flag = this->flag;
+    h.top_margin = -1;
+    h.bottom_margin = -1;
+    h.line += "<pre_int>";
+    for (int i = 0; i < h.pos; i++)
+      h.line += ' ';
+    h.line += "</pre_int>";
+    for (int i = 0; i < this->bottom_margin; i++) {
+      h.flushline(buf, indent, width, force);
+    }
+  }
+
+  std::shared_ptr<TextLine> make_textline(int indent, int width);
+
+  void flush_end(int indent, const Hidden &hidden, const std::string &pass);
+
+public:
   void do_blankline(const std::shared_ptr<GeneralList> &buf, int indent,
                     int indent_incr, int width) {
     if (this->blank_lines == 0) {
-      this->flushline(buf, indent, 1, width);
+      this->flushline(buf, indent, width, FlushLineMode::Force);
     }
   }
 

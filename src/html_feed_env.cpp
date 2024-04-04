@@ -37,7 +37,7 @@ void html_feed_environ::purgeline() {
       tmp << *token;
     }
   }
-  this->buf->appendTextLine(tmp.str(), 0);
+  this->buf->_list.push_back(std::make_shared<TextLine>(tmp.str()));
   this->blank_lines--;
 }
 
@@ -133,7 +133,7 @@ loadHTMLstream(int width, const Url &currentURL, std::string_view body,
   htmlenv1.parse(body, internal);
   htmlenv1.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();
-  htmlenv1.flushline(htmlenv1.buf, 0, 2, htmlenv1._width);
+  htmlenv1.flushline(htmlenv1.buf, 0, htmlenv1._width, FlushLineMode::Append);
   return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }
 
@@ -255,24 +255,6 @@ void html_feed_environ::append_tags() {
   }
 }
 
-const char *html_feed_environ::has_hidden_link(HtmlCommand cmd) const {
-  // Str *line = this->line;
-  if (line.back() != '>')
-    return nullptr;
-
-  auto p = link_stack.begin();
-  for (; p != link_stack.end(); ++p)
-    if (p->cmd == cmd)
-      break;
-  if (p == link_stack.end())
-    return nullptr;
-
-  if (this->pos == p->pos)
-    return line.c_str() + p->offset;
-
-  return nullptr;
-}
-
 void html_feed_environ::passthrough(const std::string &_str, bool back) {
 
   // if (back) {
@@ -348,16 +330,7 @@ void html_feed_environ::proc_mchar(int pre_mode, int width, const char **str,
 }
 
 void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
-                                  int indent, int force, int width) {
-  // Str *line = this->line;
-  // char *hidden_anchor = nullptr, *hidden_img = nullptr, *hidden_bold =
-  // nullptr,
-  //      *hidden_under = nullptr, *hidden_italic = nullptr, *hidden_strike =
-  //      nullptr, *hidden_ins = nullptr, *hidden_input = nullptr, *hidden =
-  //      nullptr;
-  const char *hidden = nullptr;
-  const char *hidden_anchor = nullptr;
-
+                                  int indent, int width, FlushLineMode force) {
   if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && line.size() &&
       line.back() == ' ') {
     line.pop_back();
@@ -366,76 +339,12 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
 
   this->append_tags();
 
-  if (this->anchor.url.size()) {
-    hidden = hidden_anchor = this->has_hidden_link(HTML_A);
-  }
-
-  const char *hidden_img = nullptr;
-  if (this->img_alt.size()) {
-    if ((hidden_img = this->has_hidden_link(HTML_IMG_ALT))) {
-      if (!hidden || hidden_img < hidden)
-        hidden = hidden_img;
-    }
-  }
-
-  const char *hidden_input = nullptr;
-  if (this->input_alt.in) {
-    if ((hidden_input = this->has_hidden_link(HTML_INPUT_ALT))) {
-      if (!hidden || hidden_input < hidden) {
-        hidden = hidden_input;
-      }
-    }
-  }
-
-  const char *hidden_bold = nullptr;
-  if (this->fontstat.in_bold) {
-    if ((hidden_bold = this->has_hidden_link(HTML_B))) {
-      if (!hidden || hidden_bold < hidden) {
-        hidden = hidden_bold;
-      }
-    }
-  }
-
-  const char *hidden_italic = nullptr;
-  if (this->fontstat.in_italic) {
-    if ((hidden_italic = this->has_hidden_link(HTML_I))) {
-      if (!hidden || hidden_italic < hidden) {
-        hidden = hidden_italic;
-      }
-    }
-  }
-
-  const char *hidden_under = nullptr;
-  if (this->fontstat.in_under) {
-    if ((hidden_under = this->has_hidden_link(HTML_U))) {
-      if (!hidden || hidden_under < hidden) {
-        hidden = hidden_under;
-      }
-    }
-  }
-
-  const char *hidden_strike = nullptr;
-  if (this->fontstat.in_strike) {
-    if ((hidden_strike = this->has_hidden_link(HTML_S))) {
-      if (!hidden || hidden_strike < hidden) {
-        hidden = hidden_strike;
-      }
-    }
-  }
-
-  const char *hidden_ins = nullptr;
-  if (this->fontstat.in_ins) {
-    if ((hidden_ins = this->has_hidden_link(HTML_INS))) {
-      if (!hidden || hidden_ins < hidden) {
-        hidden = hidden_ins;
-      }
-    }
-  }
+  auto hidden = pop_hidden();
 
   std::string pass;
-  if (hidden) {
-    pass = hidden;
-    Strshrink(line, line.c_str() + line.size() - hidden);
+  if (hidden.str) {
+    pass = hidden.str;
+    Strshrink(line, line.c_str() + line.size() - hidden.str);
   }
 
   if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && this->pos > width) {
@@ -450,124 +359,38 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
     }
   }
 
-  if (this->anchor.url.size() && !hidden_anchor)
-    line += "</a>";
-  if (this->img_alt.size() && !hidden_img)
-    line += "</img_alt>";
-  if (this->input_alt.in && !hidden_input)
-    line += "</input_alt>";
-  if (this->fontstat.in_bold && !hidden_bold)
-    line += "</b>";
-  if (this->fontstat.in_italic && !hidden_italic)
-    line += "</i>";
-  if (this->fontstat.in_under && !hidden_under)
-    line += "</u>";
-  if (this->fontstat.in_strike && !hidden_strike)
-    line += "</s>";
-  if (this->fontstat.in_ins && !hidden_ins)
-    line += "</ins>";
+  line += hidden.suffix;
 
-  if (this->top_margin > 0) {
-    int i;
+  flush_top_margin(indent, width, force);
 
-    html_feed_environ h(1, width, indent);
-    h.line = {};
-    h.pos = this->pos;
-    h.flag = this->flag;
-    h.top_margin = -1;
-    h.bottom_margin = -1;
-    h.line += "<pre_int>";
-    for (i = 0; i < h.pos; i++)
-      h.line += ' ';
-    h.line += "</pre_int>";
-    for (i = 0; i < this->top_margin; i++) {
-      flushline(buf, indent, force, width);
-    }
-  }
-
-  if (force == 1 || this->flag & RB_NFLUSHED) {
-    auto lbuf = std::make_shared<TextLine>(line.c_str(), this->pos);
-    if (this->RB_GET_ALIGN() == RB_CENTER) {
-      lbuf->align(width, ALIGN_CENTER);
-    } else if (this->RB_GET_ALIGN() == RB_RIGHT) {
-      lbuf->align(width, ALIGN_RIGHT);
-    } else if (this->RB_GET_ALIGN() == RB_LEFT && this->flag & RB_INTABLE) {
-      lbuf->align(width, ALIGN_LEFT);
-    } else if (this->flag & RB_FILL) {
-      const char *p;
-      int rest, rrest;
-      int nspace, d, i;
-
-      rest = width - get_strwidth(line.c_str());
-      if (rest > 1) {
-        nspace = 0;
-        for (p = line.c_str() + indent; *p; p++) {
-          if (*p == ' ')
-            nspace++;
-        }
-        if (nspace > 0) {
-          int indent_here = 0;
-          d = rest / nspace;
-          p = line.c_str();
-          while (IS_SPACE(*p)) {
-            p++;
-            indent_here++;
-          }
-          rrest = rest - d * nspace;
-          line = {};
-          for (i = 0; i < indent_here; i++)
-            line += ' ';
-          for (; *p; p++) {
-            line += *p;
-            if (*p == ' ') {
-              for (i = 0; i < d; i++)
-                line += ' ';
-              if (rrest > 0) {
-                line += ' ';
-                rrest--;
-              }
-            }
-          }
-          lbuf = std::make_shared<TextLine>(line.c_str(), width);
-        }
+  if (force == FlushLineMode::Force || this->flag & RB_NFLUSHED) {
+    // line completed
+    if (auto textline = make_textline(indent, width)) {
+      if (this->buf) {
+        this->buf->_list.push_back(textline);
       }
     }
-
-    if (lbuf->pos > this->maxlimit) {
-      this->maxlimit = lbuf->pos;
-    }
-
-    if (buf) {
-      buf->_list.push_back(lbuf);
-    }
-    if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED)
-      this->blank_lines = 0;
-    else
-      this->blank_lines++;
   } else {
-    const char *p = line.c_str();
-    std::stringstream tmp;
     std::stringstream tmp2;
-
-    while (*p) {
+    for (const char *p = line.c_str(); *p;) {
       stringtoken st(p);
       auto token = st.sloppy_parse_line();
       p = st.ptr();
       if (token) {
-        tmp << *token;
-        if (force == 2) {
+        if (force == FlushLineMode::Append) {
           if (buf) {
-            buf->appendTextLine(tmp.str(), 0);
+            buf->_list.push_back(std::make_shared<TextLine>(*token, 0));
           }
-        } else
-          tmp2 << tmp.str();
-        tmp.str("");
+        } else {
+          tmp2 << *token;
+        }
       }
     }
-    if (force == 2) {
+
+    if (force == FlushLineMode::Append) {
       if (pass.size()) {
         if (buf) {
-          buf->appendTextLine(pass, 0);
+          buf->_list.push_back(std::make_shared<TextLine>(pass));
         }
       }
       pass = {};
@@ -578,26 +401,79 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
     }
   }
 
-  if (this->bottom_margin > 0) {
-    int i;
+  flush_bottom_margin(indent, width, force);
 
-    html_feed_environ h(1, width, indent);
-    h.line = {};
-    h.pos = this->pos;
-    h.flag = this->flag;
-    h.top_margin = -1;
-    h.bottom_margin = -1;
-    h.line += "<pre_int>";
-    for (i = 0; i < h.pos; i++)
-      h.line += ' ';
-    h.line += "</pre_int>";
-    for (i = 0; i < this->bottom_margin; i++) {
-      flushline(buf, indent, force, width);
-    }
-  }
   if (this->top_margin < 0 || this->bottom_margin < 0) {
     return;
   }
+
+  flush_end(indent, hidden, pass);
+}
+
+std::shared_ptr<TextLine> html_feed_environ::make_textline(int indent,
+                                                           int width) {
+  auto lbuf = std::make_shared<TextLine>(this->line, this->pos);
+  if (this->RB_GET_ALIGN() == RB_CENTER) {
+    lbuf->align(width, ALIGN_CENTER);
+  } else if (this->RB_GET_ALIGN() == RB_RIGHT) {
+    lbuf->align(width, ALIGN_RIGHT);
+  } else if (this->RB_GET_ALIGN() == RB_LEFT && this->flag & RB_INTABLE) {
+    lbuf->align(width, ALIGN_LEFT);
+  } else if (this->flag & RB_FILL) {
+    const char *p;
+    int rest, rrest;
+    int nspace, d, i;
+
+    rest = width - get_strwidth(line.c_str());
+    if (rest > 1) {
+      nspace = 0;
+      for (p = line.c_str() + indent; *p; p++) {
+        if (*p == ' ')
+          nspace++;
+      }
+      if (nspace > 0) {
+        int indent_here = 0;
+        d = rest / nspace;
+        p = line.c_str();
+        while (IS_SPACE(*p)) {
+          p++;
+          indent_here++;
+        }
+        rrest = rest - d * nspace;
+        line = {};
+        for (i = 0; i < indent_here; i++)
+          line += ' ';
+        for (; *p; p++) {
+          line += *p;
+          if (*p == ' ') {
+            for (i = 0; i < d; i++)
+              line += ' ';
+            if (rrest > 0) {
+              line += ' ';
+              rrest--;
+            }
+          }
+        }
+        lbuf = std::make_shared<TextLine>(line.c_str(), width);
+      }
+    }
+  }
+
+  if (lbuf->pos > this->maxlimit) {
+    this->maxlimit = lbuf->pos;
+  }
+
+  if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED) {
+    this->blank_lines = 0;
+  } else {
+    this->blank_lines++;
+  }
+
+  return lbuf;
+}
+
+void html_feed_environ::flush_end(int indent, const Hidden &hidden,
+                                  const std::string &pass) {
 
   this->line = {};
   this->pos = 0;
@@ -612,7 +488,7 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
   this->fillline(indent);
   if (pass.size())
     this->passthrough(pass, 0);
-  if (!hidden_anchor && this->anchor.url.size()) {
+  if (!hidden.anchor && this->anchor.url.size()) {
     if (this->anchor.hseq > 0)
       this->anchor.hseq = -this->anchor.hseq;
     std::stringstream tmp;
@@ -641,13 +517,13 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
     tmp << "\">";
     this->push_tag(tmp.str(), HTML_A);
   }
-  if (!hidden_img && this->img_alt.size()) {
+  if (!hidden.img && this->img_alt.size()) {
     std::string tmp = "<IMG_ALT SRC=\"";
     tmp += html_quote(this->img_alt);
     tmp += "\">";
     this->push_tag(tmp, HTML_IMG_ALT);
   }
-  if (!hidden_input && this->input_alt.in) {
+  if (!hidden.input && this->input_alt.in) {
     if (this->input_alt.hseq > 0)
       this->input_alt.hseq = -this->input_alt.hseq;
     std::stringstream tmp;
@@ -657,22 +533,22 @@ void html_feed_environ::flushline(const std::shared_ptr<GeneralList> &buf,
         << "value=\"" << this->input_alt.value << "\">";
     this->push_tag(tmp.str(), HTML_INPUT_ALT);
   }
-  if (!hidden_bold && this->fontstat.in_bold)
+  if (!hidden.bold && this->fontstat.in_bold)
     this->push_tag("<B>", HTML_B);
-  if (!hidden_italic && this->fontstat.in_italic)
+  if (!hidden.italic && this->fontstat.in_italic)
     this->push_tag("<I>", HTML_I);
-  if (!hidden_under && this->fontstat.in_under)
+  if (!hidden.under && this->fontstat.in_under)
     this->push_tag("<U>", HTML_U);
-  if (!hidden_strike && this->fontstat.in_strike)
+  if (!hidden.strike && this->fontstat.in_strike)
     this->push_tag("<S>", HTML_S);
-  if (!hidden_ins && this->fontstat.in_ins)
+  if (!hidden.ins && this->fontstat.in_ins)
     this->push_tag("<INS>", HTML_INS);
 }
 
 void html_feed_environ::CLOSE_P() {
   if (this->flag & RB_P) {
     struct environment *envs = this->envs.data();
-    this->flushline(this->buf, envs[this->envc].indent, 0, this->_width);
+    this->flushline(this->buf, envs[this->envc].indent, this->_width);
     this->RB_RESTORE_FLAG();
     this->flag &= ~RB_P;
   }
@@ -693,7 +569,7 @@ void html_feed_environ::parse_end(const std::shared_ptr<GeneralList> &buf,
       i = 1;
     if (this->pos - i > limit) {
       this->flag |= RB_FILL;
-      this->flushline(buf, indent, 0, limit);
+      this->flushline(buf, indent, limit);
       this->flag &= ~RB_FILL;
     }
   }
@@ -777,13 +653,12 @@ std::string html_feed_environ::getLinkNumberStr(int correction) const {
 
 void html_feed_environ::push_render_image(const std::string &str, int width,
                                           int limit) {
-  int indent = this->envs[this->envc].indent;
-
   this->push_spaces(1, (limit - width) / 2);
   this->push_str(width, str, PC_ASCII);
   this->push_spaces(1, (limit - width + 1) / 2);
-  if (width > 0)
-    this->flushline(this->buf, indent, 0, this->_width);
+  if (width > 0) {
+    this->flushline(this->buf, this->envs[this->envc].indent, this->_width);
+  }
 }
 
 void html_feed_environ::close_anchor() {
@@ -1652,7 +1527,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       /* all tables have been read */
       if (t.tbl->vspace() > 0 && !(this->flag & RB_IGNORE_P)) {
         int indent = this->envs[this->envc].indent;
-        this->flushline(this->buf, indent, 0, this->_width);
+        this->flushline(this->buf, indent, this->_width);
         this->do_blankline(this->buf, indent, 0, this->_width);
       }
       this->save_fonteffect();
@@ -1731,11 +1606,12 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
           this->flag &= ~RB_IGNORE_P;
           return;
         }
-        if (this->flag & RB_PRE_INT)
+        if (this->flag & RB_PRE_INT) {
           this->push_char(this->flag & RB_SPECIAL, ' ');
-        else
-          this->flushline(this->buf, this->envs[this->envc].indent, 1,
-                          this->_width);
+        } else {
+          this->flushline(this->buf, this->envs[this->envc].indent,
+                          this->_width, FlushLineMode::Force);
+        }
       } else if (ch == '\t') {
         do {
           this->push_char(this->flag & RB_SPECIAL, ' ');
@@ -1789,7 +1665,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         if (this->pos - i > this->_width)
           this->flag |= RB_FILL;
         this->back_to_breakpoint();
-        this->flushline(this->buf, indent, 0, this->_width);
+        this->flushline(this->buf, indent, this->_width);
         this->flag &= ~RB_FILL;
         parse(line);
       }

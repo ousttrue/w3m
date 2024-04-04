@@ -59,10 +59,6 @@ struct GeneralList {
       tl2->_list.clear();
     }
   }
-
-  void appendTextLine(std::string_view line, int pos) {
-    _list.push_back(std::make_shared<TextLine>(line, pos));
-  }
 };
 
 class LineFeed {

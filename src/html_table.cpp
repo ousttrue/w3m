@@ -1542,7 +1542,7 @@ struct tableimpl {
           int limit = this->tables[id].indent + t->_impl->total_width;
           this->tables[id].ptr = NULL;
           henv.save_fonteffect();
-          henv.flushline(henv.buf, 0, 2, henv._width);
+          henv.flushline(henv.buf, 0, henv._width, FlushLineMode::Append);
           if (t->_impl->vspace > 0 && !(henv.flag & RB_IGNORE_P))
             henv.do_blankline(henv.buf, 0, 0, henv._width);
           if (henv.RB_GET_ALIGN() == RB_CENTER) {
@@ -1579,7 +1579,7 @@ struct tableimpl {
       henv.parse("\n");
     }
     henv.completeHTMLstream();
-    henv.flushline(henv.buf, 0, 2, henv._width);
+    henv.flushline(henv.buf, 0, henv._width, FlushLineMode::Append);
     if (this->border_mode == BORDER_NONE) {
       int rowspan = this->table_rowspan(row, col);
       if (row + rowspan <= this->maxrow) {
