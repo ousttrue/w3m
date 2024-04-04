@@ -1525,7 +1525,7 @@ struct tableimpl {
     if (henv._width > maxlimit)
       henv._width = maxlimit;
     if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
-      henv.do_blankline(0, 0, henv._width);
+      henv.do_blankline(0, 0);
     for (auto &l : orgdata->_list) {
       if (TAG_IS(l->line.c_str(), "<table_alt", 10)) {
         int id = -1;
@@ -1542,9 +1542,9 @@ struct tableimpl {
           int limit = this->tables[id].indent + t->_impl->total_width;
           this->tables[id].ptr = NULL;
           henv.save_fonteffect();
-          henv.flushline(0, henv._width, FlushLineMode::Append);
+          henv.flushline(0, FlushLineMode::Append);
           if (t->_impl->vspace > 0 && !(henv.flag & RB_IGNORE_P))
-            henv.do_blankline(0, 0, henv._width);
+            henv.do_blankline(0, 0);
           if (henv.RB_GET_ALIGN() == RB_CENTER) {
             alignment = ALIGN_CENTER;
           } else if (henv.RB_GET_ALIGN() == RB_RIGHT) {
@@ -1566,7 +1566,7 @@ struct tableimpl {
           henv.flag &= ~RB_IGNORE_P;
           henv.blank_lines = 0;
           if (t->_impl->vspace > 0) {
-            henv.do_blankline(0, 0, henv._width);
+            henv.do_blankline(0, 0);
             henv.flag |= RB_IGNORE_P;
           }
         }
@@ -1579,12 +1579,12 @@ struct tableimpl {
       henv.parse("\n");
     }
     henv.completeHTMLstream();
-    henv.flushline(0, henv._width, FlushLineMode::Append);
+    henv.flushline(0, FlushLineMode::Append);
     if (this->border_mode == BORDER_NONE) {
       int rowspan = this->table_rowspan(row, col);
       if (row + rowspan <= this->maxrow) {
         if (this->vcellpadding > 0 && !(henv.flag & RB_IGNORE_P))
-          henv.do_blankline(0, 0, henv._width);
+          henv.do_blankline(0, 0);
       } else {
         if (this->vspace > 0) {
           henv.purgeline();
@@ -1593,7 +1593,7 @@ struct tableimpl {
     } else {
       if (this->vcellpadding > 0) {
         if (!(henv.flag & RB_IGNORE_P))
-          henv.do_blankline(0, 0, henv._width);
+          henv.do_blankline(0, 0);
       } else {
         henv.purgeline();
       }

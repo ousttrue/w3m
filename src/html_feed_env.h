@@ -240,7 +240,7 @@ public:
   void push_link(HtmlCommand cmd, int offset, int pos);
   void passthrough(const std::string &str, bool back);
 
-  void flushline(int indent, int width, FlushLineMode force = {});
+  void flushline(int indent, FlushLineMode force = {});
 
 private:
   const char *has_hidden_link(HtmlCommand cmd) const {
@@ -345,11 +345,11 @@ private:
     return hidden;
   }
 
-  void flush_top_margin(int indent, int width, FlushLineMode force) {
+  void flush_top_margin(int indent, FlushLineMode force) {
     if (this->top_margin <= 0) {
       return;
     }
-    html_feed_environ h(1, width, indent, this->buf);
+    html_feed_environ h(1, this->_width, indent, this->buf);
     h.pos = this->pos;
     h.flag = this->flag;
     h.top_margin = -1;
@@ -359,15 +359,15 @@ private:
       h.line += ' ';
     h.line += "</pre_int>";
     for (int i = 0; i < this->top_margin; i++) {
-      h.flushline(indent, width, force);
+      h.flushline(indent, force);
     }
   }
 
-  void flush_bottom_margin(int indent, int width, FlushLineMode force) {
+  void flush_bottom_margin(int indent, FlushLineMode force) {
     if (this->bottom_margin <= 0) {
       return;
     }
-    html_feed_environ h(1, width, indent, this->buf);
+    html_feed_environ h(1, this->_width, indent, this->buf);
     h.pos = this->pos;
     h.flag = this->flag;
     h.top_margin = -1;
@@ -377,7 +377,7 @@ private:
       h.line += ' ';
     h.line += "</pre_int>";
     for (int i = 0; i < this->bottom_margin; i++) {
-      h.flushline(indent, width, force);
+      h.flushline(indent, force);
     }
   }
 
@@ -386,13 +386,13 @@ private:
   void flush_end(int indent, const Hidden &hidden, const std::string &pass);
 
 public:
-  void do_blankline(int indent, int indent_incr, int width) {
+  void do_blankline(int indent, int indent_incr) {
     if (this->blank_lines == 0) {
-      this->flushline(indent, width, FlushLineMode::Force);
+      this->flushline(indent, FlushLineMode::Force);
     }
   }
 
-  void parse_end(int limit, int indent);
+  void parse_end(int indent);
   std::shared_ptr<GeneralList> buf;
   std::string tagbuf;
   // int limit;
