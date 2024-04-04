@@ -19,6 +19,25 @@
 #include <assert.h>
 #include <sstream>
 
+struct html_impl {};
+
+html_feed_environ::html_feed_environ(int nenv, int limit_width, int indent,
+                                     const std::shared_ptr<GeneralList> &_buf)
+    : _impl(new html_impl), buf(_buf), _width(limit_width) {
+  assert(nenv);
+  envs.resize(nenv);
+  envs[0].indent = indent;
+
+  this->prevchar = " ";
+  this->flag = RB_IGNORE_P;
+  this->status = R_ST_NORMAL;
+  this->prev_ctype = PC_ASCII;
+  this->bp.init_flag = 1;
+  this->set_breakpoint(0);
+}
+
+html_feed_environ::~html_feed_environ() { delete _impl; }
+
 void html_feed_environ::purgeline() {
   if (this->buf == NULL || this->blank_lines == 0)
     return;

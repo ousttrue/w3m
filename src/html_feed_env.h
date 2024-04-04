@@ -82,6 +82,8 @@ enum class FlushLineMode {
 };
 
 class html_feed_environ {
+  struct html_impl *_impl;
+
 public:
   std::string line;
   Lineprop cprop = 0;
@@ -105,29 +107,12 @@ public:
   Breakpoint bp;
 
   html_feed_environ(int nenv, int limit_width, int indent,
-                    const std::shared_ptr<GeneralList> &_buf = {})
-      : buf(_buf), _width(limit_width) {
-    assert(nenv);
-    envs.resize(nenv);
-    envs[0].indent = indent;
+                    const std::shared_ptr<GeneralList> &_buf = {});
+  ~html_feed_environ();
+  html_feed_environ(const html_feed_environ &) = delete;
+  html_feed_environ &operator=(const html_feed_environ &) = delete;
 
-    this->prevchar = " ";
-    this->flag = RB_IGNORE_P;
-    this->status = R_ST_NORMAL;
-    this->prev_ctype = PC_ASCII;
-    this->bp.init_flag = 1;
-    this->set_breakpoint(0);
-  }
-
-  // title
-  std::string pre_title;
-  std::string cur_title;
-  HtmlCommand internal = {};
-
-  void process_title();
-  std::string process_n_title();
-  void feed_title(const std::string &str);
-
+private:
   // push front
   // pop front
   std::list<std::shared_ptr<cmdtable>> tag_stack;
@@ -136,31 +121,22 @@ public:
     return std::find_if(tag_stack.begin(), tag_stack.end(), pred);
   }
 
-  short top_margin = 0;
-  short bottom_margin = 0;
-  std::list<LinkStack> link_stack;
-  int maxlimit = 0;
-  int blank_lines = 0;
+  // title
+  std::string pre_title;
+  std::string cur_title;
+  HtmlCommand internal = {};
 
-  ReadBufferFlags RB_GET_ALIGN() const { return (this->flag & RB_ALIGN); }
+  // select
+  std::string cur_select = {};
+  std::string select_str = {};
+  int select_is_multiple = {};
+  int n_selectitem = {};
+  std::string cur_option = {};
+  std::string cur_option_value = {};
+  std::string cur_option_label = {};
+  int cur_option_selected = {};
+  ReadBufferStatus cur_status = {};
 
-  void RB_SET_ALIGN(ReadBufferFlags align) {
-    this->flag &= ~RB_ALIGN;
-    this->flag |= (align);
-  }
-
-  void RB_SAVE_FLAG() {
-    if (this->flag_sp < RB_STACK_SIZE)
-      this->flag_stack[this->flag_sp++] = RB_GET_ALIGN();
-  }
-
-  void RB_RESTORE_FLAG() {
-    if (this->flag_sp > 0)
-      RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
-  }
-
-  void set_alignment(ReadBufferFlags flag);
-  void set_breakpoint(int tag_length);
   void back_to_breakpoint() {
     this->flag = this->bp.flag;
     this->img_alt = this->bp.img_alt;
@@ -175,58 +151,6 @@ public:
     }
   }
 
-  int close_effect0(HtmlCommand cmd) {
-    auto found = std::find_if(tag_stack.begin(), tag_stack.end(),
-                              [cmd](auto tag) { return tag->cmd == cmd; });
-    if (found != tag_stack.end()) {
-      tag_stack.erase(found);
-      return 1;
-    } else if (auto p = this->has_hidden_link(cmd)) {
-      this->passthrough(p, 1);
-      return 1;
-    }
-    return 0;
-  }
-
-  void CLOSE_P();
-
-  void append_tags();
-  void push_tag(std::string_view cmdname, HtmlCommand cmd);
-  void push_nchars(int width, const char *str, int len, Lineprop mode);
-  void push_charp(int width, const char *str, Lineprop mode) {
-    this->push_nchars(width, str, strlen(str), mode);
-  }
-  void push_str(int width, std::string_view str, Lineprop mode) {
-    this->push_nchars(width, str.data(), str.size(), mode);
-  }
-  void push_char(int pre_mode, char ch) {
-    this->check_breakpoint(pre_mode, &ch);
-    this->line += ch;
-    this->pos++;
-    this->prevchar = std::string(&ch, 1);
-    if (ch != ' ')
-      this->prev_ctype = PC_ASCII;
-    this->flag |= RB_NFLUSHED;
-  }
-
-  void push_spaces(int pre_mode, int width) {
-    if (width <= 0)
-      return;
-    this->check_breakpoint(pre_mode, " ");
-    for (int i = 0; i < width; i++)
-      this->line.push_back(' ');
-    this->pos += width;
-    this->prevchar = " ";
-    this->flag |= RB_NFLUSHED;
-  }
-  void fillline() {
-    this->push_spaces(1, this->envs[this->envc].indent - this->pos);
-    this->flag &= ~RB_NFLUSHED;
-  }
-
-  void flushline(FlushLineMode force = {});
-
-private:
   void check_breakpoint(int pre_mode, const char *ch) {
     int tlen;
     int len = this->line.size();
@@ -389,7 +313,100 @@ private:
 
   void flush_end(const Hidden &hidden, const std::string &pass);
 
+  int top_margin = 0;
+  int bottom_margin = 0;
+
 public:
+  void setTopMargin(int i) {
+    if (i > this->top_margin) {
+      this->top_margin = i;
+    }
+  }
+  void setBottomMargin(int i) {
+    if (i > this->bottom_margin) {
+      this->bottom_margin = i;
+    }
+  }
+
+  void process_title();
+  std::string process_n_title();
+  void feed_title(const std::string &str);
+
+  std::list<LinkStack> link_stack;
+  int maxlimit = 0;
+  int blank_lines = 0;
+
+  ReadBufferFlags RB_GET_ALIGN() const { return (this->flag & RB_ALIGN); }
+
+  void RB_SET_ALIGN(ReadBufferFlags align) {
+    this->flag &= ~RB_ALIGN;
+    this->flag |= (align);
+  }
+
+  void RB_SAVE_FLAG() {
+    if (this->flag_sp < RB_STACK_SIZE)
+      this->flag_stack[this->flag_sp++] = RB_GET_ALIGN();
+  }
+
+  void RB_RESTORE_FLAG() {
+    if (this->flag_sp > 0)
+      RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
+  }
+
+  void set_alignment(ReadBufferFlags flag);
+  void set_breakpoint(int tag_length);
+
+  int close_effect0(HtmlCommand cmd) {
+    auto found = std::find_if(tag_stack.begin(), tag_stack.end(),
+                              [cmd](auto tag) { return tag->cmd == cmd; });
+    if (found != tag_stack.end()) {
+      tag_stack.erase(found);
+      return 1;
+    } else if (auto p = this->has_hidden_link(cmd)) {
+      this->passthrough(p, 1);
+      return 1;
+    }
+    return 0;
+  }
+
+  void CLOSE_P();
+
+  void append_tags();
+  void push_tag(std::string_view cmdname, HtmlCommand cmd);
+  void push_nchars(int width, const char *str, int len, Lineprop mode);
+  void push_charp(int width, const char *str, Lineprop mode) {
+    this->push_nchars(width, str, strlen(str), mode);
+  }
+  void push_str(int width, std::string_view str, Lineprop mode) {
+    this->push_nchars(width, str.data(), str.size(), mode);
+  }
+  void push_char(int pre_mode, char ch) {
+    this->check_breakpoint(pre_mode, &ch);
+    this->line += ch;
+    this->pos++;
+    this->prevchar = std::string(&ch, 1);
+    if (ch != ' ')
+      this->prev_ctype = PC_ASCII;
+    this->flag |= RB_NFLUSHED;
+  }
+
+  void push_spaces(int pre_mode, int width) {
+    if (width <= 0)
+      return;
+    this->check_breakpoint(pre_mode, " ");
+    for (int i = 0; i < width; i++)
+      this->line.push_back(' ');
+    this->pos += width;
+    this->prevchar = " ";
+    this->flag |= RB_NFLUSHED;
+  }
+  void fillline() {
+    this->push_spaces(1, this->envs[this->envc].indent - this->pos);
+    this->flag &= ~RB_NFLUSHED;
+  }
+
+  void flushline(FlushLineMode force = {});
+
   void do_blankline() {
     if (this->blank_lines == 0) {
       this->flushline(FlushLineMode::Force);
@@ -412,24 +429,10 @@ public:
   int envc_real = 0;
   std::string title;
 
-public:
   std::shared_ptr<struct table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(int table_level);
 
-private:
-  // select
-  std::string cur_select = {};
-  std::string select_str = {};
-  int select_is_multiple = {};
-  int n_selectitem = {};
-  std::string cur_option = {};
-  std::string cur_option_value = {};
-  std::string cur_option_label = {};
-  int cur_option_selected = {};
-  ReadBufferStatus cur_status = {};
-
-public:
   std::string process_select(const class HtmlTag *tag);
   std::string process_n_select();
   void process_option();
@@ -449,7 +452,6 @@ public:
   int n_textarea = -1;
   int ignore_nl_textarea = {};
 
-public:
   std::vector<std::string> textarea_str;
   std::vector<struct FormAnchor *> a_textarea;
 
@@ -473,7 +475,6 @@ public:
   void push_render_image(const std::string &str, int width, int limit);
   void process_token(struct TableStatus &t, const struct Token &token);
 
-public:
   int cur_hseq = 1;
 
   // HTML processing first pass
@@ -489,7 +490,6 @@ public:
   std::string process_n_button();
   std::string process_hr(const HtmlTag *tag, int width, int indent_width);
 
-public:
   void purgeline();
   void POP_ENV();
   void PUSH_ENV_NOINDENT(HtmlCommand cmd);

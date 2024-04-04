@@ -1231,14 +1231,10 @@ int HtmlTag::HTML_BODY_enter(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_INPUT_ALT_enter(html_feed_environ *h_env) {
   if (auto value = this->getAttr(ATTR_TOP_MARGIN)) {
-    int i = stoi(*value);
-    if ((short)i > h_env->top_margin)
-      h_env->top_margin = (short)i;
+    h_env->setTopMargin(stoi(*value));
   }
   if (auto value = this->getAttr(ATTR_BOTTOM_MARGIN)) {
-    int i = stoi(*value);
-    if ((short)i > h_env->bottom_margin)
-      h_env->bottom_margin = (short)i;
+    h_env->setBottomMargin(stoi(*value));
   }
   if (auto value = this->getAttr(ATTR_HSEQ)) {
     h_env->input_alt.hseq = stoi(*value);
