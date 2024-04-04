@@ -104,6 +104,21 @@ public:
   Lineprop prev_ctype;
   Breakpoint bp;
 
+  html_feed_environ(int nenv, int limit_width, int indent,
+                    const std::shared_ptr<GeneralList> &_buf = {})
+      : buf(_buf), _width(limit_width) {
+    assert(nenv);
+    envs.resize(nenv);
+    envs[0].indent = indent;
+
+    this->prevchar = " ";
+    this->flag = RB_IGNORE_P;
+    this->status = R_ST_NORMAL;
+    this->prev_ctype = PC_ASCII;
+    this->bp.init_flag = 1;
+    this->set_breakpoint(0);
+  }
+
   // title
   std::string pre_title;
   std::string cur_title;
@@ -225,8 +240,7 @@ public:
   void push_link(HtmlCommand cmd, int offset, int pos);
   void passthrough(const std::string &str, bool back);
 
-  void flushline(const std::shared_ptr<GeneralList> &buf, int indent, int width,
-                 FlushLineMode force = {});
+  void flushline(int indent, int width, FlushLineMode force = {});
 
 private:
   const char *has_hidden_link(HtmlCommand cmd) const {
@@ -335,8 +349,7 @@ private:
     if (this->top_margin <= 0) {
       return;
     }
-    html_feed_environ h(1, width, indent);
-    h.line = {};
+    html_feed_environ h(1, width, indent, this->buf);
     h.pos = this->pos;
     h.flag = this->flag;
     h.top_margin = -1;
@@ -346,7 +359,7 @@ private:
       h.line += ' ';
     h.line += "</pre_int>";
     for (int i = 0; i < this->top_margin; i++) {
-      h.flushline(buf, indent, width, force);
+      h.flushline(indent, width, force);
     }
   }
 
@@ -354,7 +367,7 @@ private:
     if (this->bottom_margin <= 0) {
       return;
     }
-    html_feed_environ h(1, width, indent);
+    html_feed_environ h(1, width, indent, this->buf);
     h.pos = this->pos;
     h.flag = this->flag;
     h.top_margin = -1;
@@ -364,7 +377,7 @@ private:
       h.line += ' ';
     h.line += "</pre_int>";
     for (int i = 0; i < this->bottom_margin; i++) {
-      h.flushline(buf, indent, width, force);
+      h.flushline(indent, width, force);
     }
   }
 
@@ -373,15 +386,13 @@ private:
   void flush_end(int indent, const Hidden &hidden, const std::string &pass);
 
 public:
-  void do_blankline(const std::shared_ptr<GeneralList> &buf, int indent,
-                    int indent_incr, int width) {
+  void do_blankline(int indent, int indent_incr, int width) {
     if (this->blank_lines == 0) {
-      this->flushline(buf, indent, width, FlushLineMode::Force);
+      this->flushline(indent, width, FlushLineMode::Force);
     }
   }
 
-  void parse_end(const std::shared_ptr<GeneralList> &buf, int limit,
-                 int indent);
+  void parse_end(int limit, int indent);
   std::shared_ptr<GeneralList> buf;
   std::string tagbuf;
   // int limit;
@@ -481,20 +492,6 @@ public:
   std::string process_hr(const HtmlTag *tag, int width, int indent_width);
 
 public:
-  html_feed_environ(int nenv, int limit_width, int indent,
-                    const std::shared_ptr<GeneralList> &_buf = {})
-      : buf(_buf), _width(limit_width) {
-    assert(nenv);
-    envs.resize(nenv);
-    envs[0].indent = indent;
-
-    this->prevchar = " ";
-    this->flag = RB_IGNORE_P;
-    this->status = R_ST_NORMAL;
-    this->prev_ctype = PC_ASCII;
-    this->bp.init_flag = 1;
-    this->set_breakpoint(0);
-  }
   void purgeline();
   void POP_ENV();
   void PUSH_ENV_NOINDENT(HtmlCommand cmd);
