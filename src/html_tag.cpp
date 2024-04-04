@@ -92,7 +92,7 @@ int HtmlTag::process(html_feed_environ *h_env) {
   case HTML_N_FIGCAPTION:
   case HTML_BR:
     h_env->flushline(FlushLineMode::Force);
-    h_env->blank_lines = 0;
+    h_env->clearBlankLines();
     return 1;
   case HTML_H:
     return this->HTML_H_enter(h_env);
@@ -651,7 +651,8 @@ int HtmlTag::HTML_FRAME_enter(html_feed_environ *h_env) {
   if (q.size()) {
     q = html_quote(q);
     std::stringstream ss;
-    ss << "<a hseq=\"" << h_env->cur_hseq++ << "\" href=\"" << q << "\">";
+    ss << "<a hseq=\"" << h_env->hseqAndIncrement() << "\" href=\"" << q
+       << "\">";
     h_env->push_tag(ss.str(), HTML_A);
     if (r.size())
       q = html_quote(r);
@@ -692,7 +693,7 @@ int HtmlTag::HTML_PRE_exit(html_feed_environ *h_env) {
   if (!(h_env->flag & RB_IGNORE_P)) {
     h_env->do_blankline();
     h_env->flag |= RB_IGNORE_P;
-    h_env->blank_lines++;
+    h_env->incrementBlankLines();
   }
   h_env->flag &= ~RB_PRE;
   h_env->close_anchor();
@@ -775,8 +776,8 @@ int HtmlTag::HTML_A_enter(html_feed_environ *h_env) {
     h_env->anchor.hseq = stoi(*value);
 
   if (h_env->anchor.hseq == 0 && h_env->anchor.url.size()) {
-    h_env->anchor.hseq = h_env->cur_hseq;
-    auto tmp = h_env->process_anchor(this, h_env->tagbuf);
+    h_env->anchor.hseq = h_env->cur_hseq();
+    auto tmp = h_env->process_anchor(this, h_env->tagbuf());
     h_env->push_tag(tmp.c_str(), HTML_A);
     return 1;
   }
@@ -1328,7 +1329,7 @@ int HtmlTag::HTML_U_exit(html_feed_environ *h_env) {
 
 int HtmlTag::HTML_PRE_INT_enter(html_feed_environ *h_env) {
   int i = h_env->line.size();
-  h_env->append_tags();
+  // h_env->append_tags();
   if (!(h_env->flag & RB_SPECIAL)) {
     h_env->set_breakpoint(h_env->line.size() - i);
   }

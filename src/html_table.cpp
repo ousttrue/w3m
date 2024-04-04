@@ -1047,8 +1047,9 @@ struct tableimpl {
     parser->parse(this->caption, false);
     parser->parse("</center>");
 
-    if (this->total_width < henv.maxlimit)
-      this->total_width = henv.maxlimit;
+    if (this->total_width < henv.maxlimit()) {
+      this->total_width = henv.maxlimit();
+    }
 
     limit = parser->_width;
     parser->_width = this->total_width;
@@ -1559,12 +1560,11 @@ struct tableimpl {
               ti->align(henv._width, alignment);
             }
           }
-          henv.buf->appendGeneralList(this->tables[id].buf);
-          if (henv.maxlimit < limit)
-            henv.maxlimit = limit;
+          henv.appendGeneralList(this->tables[id].buf);
+          henv.setMaxLimit(limit);
           henv.restore_fonteffect();
           henv.flag &= ~RB_IGNORE_P;
-          henv.blank_lines = 0;
+          henv.clearBlankLines();
           if (t->_impl->vspace > 0) {
             henv.do_blankline();
             henv.flag |= RB_IGNORE_P;
@@ -1605,11 +1605,14 @@ struct tableimpl {
       k = bsearch_2short(colspan, cell->colspan, col, cell->col, MAXCOL,
                          cell->index, cell->maxcell + 1);
       icell = cell->index[k];
-      if (cell->minimum_width[icell] < henv.maxlimit)
-        cell->minimum_width[icell] = henv.maxlimit;
+
+      if (cell->minimum_width[icell] < henv.maxlimit()) {
+        cell->minimum_width[icell] = henv.maxlimit();
+      }
     } else {
-      if (this->minimum_width[col] < henv.maxlimit)
-        this->minimum_width[col] = henv.maxlimit;
+      if (this->minimum_width[col] < henv.maxlimit()) {
+        this->minimum_width[col] = henv.maxlimit();
+      }
     }
   }
   int get_spec_cell_width(int row, int col) {

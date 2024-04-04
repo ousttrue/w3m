@@ -493,9 +493,7 @@ std::shared_ptr<TextLine> html_feed_environ::make_textline(int indent,
     }
   }
 
-  if (lbuf->pos > this->maxlimit) {
-    this->maxlimit = lbuf->pos;
-  }
+  setMaxLimit(lbuf->pos);
 
   if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED) {
     this->blank_lines = 0;
@@ -679,7 +677,7 @@ void html_feed_environ::HTML5_CLOSE_A() {
 
 std::string html_feed_environ::getLinkNumberStr(int correction) const {
   std::stringstream ss;
-  ss << "[" << (cur_hseq + correction) << "]";
+  ss << "[" << (cur_hseq() + correction) << "]";
   return ss.str();
 }
 
@@ -820,7 +818,7 @@ std::string html_feed_environ::process_n_textarea() {
   }
 
   std::stringstream tmp;
-  tmp << "<pre_int>[<input_alt hseq=\"" << this->cur_hseq << "\" fid=\""
+  tmp << "<pre_int>[<input_alt hseq=\"" << this->cur_hseq() << "\" fid=\""
       << cur_form_id()
       << "\" "
          "type=textarea name=\""
@@ -836,7 +834,7 @@ std::string html_feed_environ::process_n_textarea() {
     tmp << ' ';
   }
   tmp << "</u></input_alt>]</pre_int>\n";
-  this->cur_hseq++;
+  this->hseqAndIncrement();
   textarea_str.push_back({});
   a_textarea.push_back({});
   n_textarea++;
@@ -1003,7 +1001,7 @@ std::string html_feed_environ::process_img(const HtmlTag *tag, int width) {
     tmp << "<input_alt fid=\"" << this->cur_form_id() << "\" "
         << "type=hidden name=link value=\"";
     tmp << html_quote((r2) ? r2 + 1 : r);
-    tmp << "\"><input_alt hseq=\"" << this->cur_hseq++ << "\" fid=\""
+    tmp << "\"><input_alt hseq=\"" << this->hseqAndIncrement() << "\" fid=\""
         << this->cur_form_id() << "\" "
         << "type=submit no_effect=true>";
   }
@@ -1124,12 +1122,12 @@ std::string html_feed_environ::process_anchor(HtmlTag *tag,
                                               const std::string &tagbuf) {
   if (tag->needRreconstruct()) {
     std::stringstream ss;
-    ss << this->cur_hseq++;
+    ss << this->hseqAndIncrement();
     tag->setAttr(ATTR_HSEQ, ss.str());
     return tag->to_str();
   } else {
     std::stringstream tmp;
-    tmp << "<a hseq=\"" << this->cur_hseq++ << "\"";
+    tmp << "<a hseq=\"" << this->hseqAndIncrement() << "\"";
     tmp << tagbuf.substr(2);
     return tmp.str();
   }
@@ -1229,7 +1227,7 @@ std::string html_feed_environ::process_input(const HtmlTag *tag) {
       tmp << this->getLinkNumberStr(0);
     tmp << '(';
   }
-  tmp << "<input_alt hseq=\"" << this->cur_hseq++ << "\" fid=\""
+  tmp << "<input_alt hseq=\"" << this->hseqAndIncrement() << "\" fid=\""
       << this->cur_form_id() << "\" type=\"" << html_quote(p) << "\" "
       << "name=\"" << html_quote(r) << "\" width=" << size << " maxlength=" << i
       << " value=\"" << qq << "\"";
@@ -1398,7 +1396,7 @@ std::string html_feed_environ::process_button(const HtmlTag *tag) {
   }
 
   /*    Strcat_charp(tmp, "<pre_int>"); */
-  tmp << "<input_alt hseq=\"" << this->cur_hseq++ << "\" fid=\""
+  tmp << "<input_alt hseq=\"" << this->hseqAndIncrement() << "\" fid=\""
       << this->cur_form_id() << "\" type=\"" << html_quote(p) << "\" "
       << "name=\"" << html_quote(r) << "\" value=\"" << qq << "\">";
   return tmp.str();
@@ -1590,9 +1588,10 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
     // process tags
     if (tag->process(this) == 0) {
       // preserve the tag for second-stage processing
-      if (tag->needRreconstruct())
-        this->tagbuf = tag->to_str();
-      this->push_tag(this->tagbuf, tag->tagid);
+      if (tag->needRreconstruct()) {
+        this->setToken(tag->to_str());
+      }
+      this->push_tag(this->tagbuf(), tag->tagid);
     }
     this->bp.init_flag = 1;
     clear_ignore_p_flag(this, tag->tagid);
@@ -1812,7 +1811,7 @@ void html_feed_environ::process_option() {
   }
   std::stringstream ss;
   ss << "<br><pre_int>" << begin_char << "<input_alt hseq=\""
-     << this->cur_hseq++
+     << this->hseqAndIncrement()
      << "\" "
         "fid=\""
      << cur_form_id()
@@ -1887,4 +1886,95 @@ void html_feed_environ::completeHTMLstream() {
     if (this->table_level >= tmp)
       break;
   }
+}
+
+int html_feed_environ::append_token(const char **instr, bool pre) {
+  if (**instr == '\0')
+    return 0;
+
+  ReadBufferStatus prev_status;
+  const char *p;
+  for (p = *instr; *p; p++) {
+    /* Drop Unicode soft hyphen */
+    if (*(unsigned char *)p == 0210 && *(unsigned char *)(p + 1) == 0200 &&
+        *(unsigned char *)(p + 2) == 0201 &&
+        *(unsigned char *)(p + 3) == 0255) {
+      p += 3;
+      continue;
+    }
+
+    prev_status = this->status;
+    next_status(*p, &this->status);
+    switch (this->status) {
+    case R_ST_NORMAL:
+      if (prev_status == R_ST_AMP && *p != ';') {
+        p--;
+        break;
+      }
+      if (prev_status == R_ST_NCMNT2 || prev_status == R_ST_NCMNT3 ||
+          prev_status == R_ST_IRRTAG || prev_status == R_ST_CMNT1) {
+        if (pre) {
+          _tagbuf.push_back(*p);
+        }
+        p++;
+
+        *instr = p;
+        return 1;
+      }
+      _tagbuf.push_back((!pre && IS_SPACE(*p)) ? ' ' : *p);
+      if (ST_IS_REAL_TAG(prev_status)) {
+        *instr = p + 1;
+        if (_tagbuf.size() < 2 || _tagbuf[_tagbuf.size() - 2] != '<' ||
+            _tagbuf.back() != '>')
+          return 1;
+        Strshrink(_tagbuf, 2);
+      }
+      break;
+    case R_ST_TAG0:
+    case R_ST_TAG:
+      if (prev_status == R_ST_NORMAL && p != *instr) {
+        *instr = p;
+        this->status = prev_status;
+        return 1;
+      }
+      if (this->status == R_ST_TAG0 && !REALLY_THE_BEGINNING_OF_A_TAG(p)) {
+        /* it seems that this '<' is not a beginning of a tag */
+        /*
+         * Strcat_charp(buf, "&lt;");
+         */
+        _tagbuf.push_back('<');
+        this->status = R_ST_NORMAL;
+      } else {
+        _tagbuf.push_back(*p);
+      }
+      break;
+    case R_ST_EQL:
+    case R_ST_QUOTE:
+    case R_ST_DQUOTE:
+    case R_ST_VALUE:
+    case R_ST_AMP:
+      _tagbuf.push_back(*p);
+      break;
+    case R_ST_CMNT:
+    case R_ST_IRRTAG:
+      if (pre)
+        _tagbuf.push_back(*p);
+      break;
+    case R_ST_CMNT1:
+    case R_ST_CMNT2:
+    case R_ST_NCMNT1:
+    case R_ST_NCMNT2:
+    case R_ST_NCMNT3:
+      /* do nothing */
+      if (pre)
+        _tagbuf.push_back(*p);
+      break;
+
+    case R_ST_EOL:
+      break;
+    }
+  }
+
+  *instr = p;
+  return 1;
 }

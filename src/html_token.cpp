@@ -22,14 +22,13 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
       else {
         if (h_env->status != R_ST_NORMAL) {
           auto p = line.c_str();
-          append_token(h_env->tagbuf, &p, &h_env->status,
-                       pre_mode & RB_PREMODE);
+          h_env->append_token(&p, pre_mode & RB_PREMODE);
           line = p;
         } else {
           auto p = line.c_str();
           if (auto buf =
                   read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
-            h_env->tagbuf = *buf;
+            h_env->setToken(*buf);
           }
           line = p;
         }
@@ -38,9 +37,10 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
           return {};
         }
       }
-      if (h_env->tagbuf.empty())
+      if (h_env->tagbuf().empty()){
         continue;
-      str = h_env->tagbuf;
+      }
+      str = h_env->tagbuf();
       if (str[0] == '<') {
         if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
           is_tag = true;

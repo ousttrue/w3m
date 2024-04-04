@@ -26,6 +26,3 @@ int next_status(char c, ReadBufferStatus *status);
 
 std::optional<std::string> read_token(const char **instr,
                                       ReadBufferStatus *status, bool pre);
-
-int append_token(std::string &buf, const char **instr,
-                 ReadBufferStatus *status, bool pre);

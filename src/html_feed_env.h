@@ -137,6 +137,11 @@ private:
   int cur_option_selected = {};
   ReadBufferStatus cur_status = {};
 
+  int top_margin = 0;
+  int bottom_margin = 0;
+  std::list<LinkStack> link_stack;
+  int blank_lines = 0;
+
   void back_to_breakpoint() {
     this->flag = this->bp.flag;
     this->img_alt = this->bp.img_alt;
@@ -313,10 +318,48 @@ private:
 
   void flush_end(const Hidden &hidden, const std::string &pass);
 
-  int top_margin = 0;
-  int bottom_margin = 0;
+  int _maxlimit = 0;
+
+  void push_nchars(int width, const char *str, int len, Lineprop mode);
+
+  int _cur_hseq = 1;
+
+  void append_tags();
+
+  void push_char(int pre_mode, char ch) {
+    this->check_breakpoint(pre_mode, &ch);
+    this->line += ch;
+    this->pos++;
+    this->prevchar = std::string(&ch, 1);
+    if (ch != ' ')
+      this->prev_ctype = PC_ASCII;
+    this->flag |= RB_NFLUSHED;
+  }
+
+  void parse_end();
+
+  std::shared_ptr<GeneralList> buf;
+
+  std::string _tagbuf;
 
 public:
+  const std::string &tagbuf() const { return _tagbuf; }
+  void setToken(const std::string &str) { _tagbuf = str; }
+  int append_token(const char **instr, bool pre);
+  void appendGeneralList(const std::shared_ptr<GeneralList> &buf) {
+    this->buf->appendGeneralList(buf);
+  }
+  LineFeed feed() { return LineFeed(this->buf); }
+  int cur_hseq() const { return _cur_hseq; }
+  int hseqAndIncrement() { return _cur_hseq++; }
+  int maxlimit() const { return _maxlimit; }
+  void setMaxLimit(int limit) {
+    if (limit > this->_maxlimit) {
+      this->_maxlimit = limit;
+    }
+  }
+  void clearBlankLines() { this->blank_lines = 0; }
+  void incrementBlankLines() { ++this->blank_lines; }
   void setTopMargin(int i) {
     if (i > this->top_margin) {
       this->top_margin = i;
@@ -331,10 +374,6 @@ public:
   void process_title();
   std::string process_n_title();
   void feed_title(const std::string &str);
-
-  std::list<LinkStack> link_stack;
-  int maxlimit = 0;
-  int blank_lines = 0;
 
   ReadBufferFlags RB_GET_ALIGN() const { return (this->flag & RB_ALIGN); }
 
@@ -371,23 +410,12 @@ public:
 
   void CLOSE_P();
 
-  void append_tags();
   void push_tag(std::string_view cmdname, HtmlCommand cmd);
-  void push_nchars(int width, const char *str, int len, Lineprop mode);
   void push_charp(int width, const char *str, Lineprop mode) {
     this->push_nchars(width, str, strlen(str), mode);
   }
   void push_str(int width, std::string_view str, Lineprop mode) {
     this->push_nchars(width, str.data(), str.size(), mode);
-  }
-  void push_char(int pre_mode, char ch) {
-    this->check_breakpoint(pre_mode, &ch);
-    this->line += ch;
-    this->pos++;
-    this->prevchar = std::string(&ch, 1);
-    if (ch != ' ')
-      this->prev_ctype = PC_ASCII;
-    this->flag |= RB_NFLUSHED;
   }
 
   void push_spaces(int pre_mode, int width) {
@@ -400,6 +428,7 @@ public:
     this->prevchar = " ";
     this->flag |= RB_NFLUSHED;
   }
+
   void fillline() {
     this->push_spaces(1, this->envs[this->envc].indent - this->pos);
     this->flag &= ~RB_NFLUSHED;
@@ -413,9 +442,6 @@ public:
     }
   }
 
-  void parse_end();
-  std::shared_ptr<GeneralList> buf;
-  std::string tagbuf;
   // int limit;
   int _width;
   struct environment {
@@ -474,8 +500,6 @@ public:
   void completeHTMLstream();
   void push_render_image(const std::string &str, int width, int limit);
   void process_token(struct TableStatus &t, const struct Token &token);
-
-  int cur_hseq = 1;
 
   // HTML processing first pass
   void parse(std::string_view istr, bool internal = true);

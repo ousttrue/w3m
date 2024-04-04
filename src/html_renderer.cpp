@@ -438,7 +438,8 @@ HtmlRenderer::render(const Url &currentUrl, html_feed_environ *h_env,
   formated->baseURL = currentUrl;
   formated->title = h_env->title;
 
-  LineFeed feed(h_env->buf);
+  auto feed = h_env->feed();
+
   for (int nlines = 0; auto _str = feed.textlist_feed(); ++nlines) {
     auto &str = *_str;
     if (h_env->n_textarea >= 0 && str.size() && str[0] != '<') {
