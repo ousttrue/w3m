@@ -208,6 +208,25 @@ public:
       this->prev_ctype = PC_ASCII;
     this->flag |= RB_NFLUSHED;
   }
+
+  void push_spaces(int pre_mode, int width) {
+    if (width <= 0)
+      return;
+    this->check_breakpoint(pre_mode, " ");
+    for (int i = 0; i < width; i++)
+      this->line.push_back(' ');
+    this->pos += width;
+    this->prevchar = " ";
+    this->flag |= RB_NFLUSHED;
+  }
+  void fillline() {
+    this->push_spaces(1, this->envs[this->envc].indent - this->pos);
+    this->flag &= ~RB_NFLUSHED;
+  }
+
+  void flushline(FlushLineMode force = {});
+
+private:
   void check_breakpoint(int pre_mode, const char *ch) {
     int tlen;
     int len = this->line.size();
@@ -220,29 +239,12 @@ public:
                                 (unsigned char *)ch))
       this->set_breakpoint(tlen);
   }
-  void push_spaces(int pre_mode, int width) {
-    if (width <= 0)
-      return;
-    this->check_breakpoint(pre_mode, " ");
-    for (int i = 0; i < width; i++)
-      this->line.push_back(' ');
-    this->pos += width;
-    this->prevchar = " ";
-    this->flag |= RB_NFLUSHED;
-  }
-  void proc_mchar(int pre_mode, int width, const char **str, Lineprop mode);
-  void fillline(int indent) {
-    this->push_spaces(1, indent - this->pos);
-    this->flag &= ~RB_NFLUSHED;
-  }
 
-  // link
+  void proc_mchar(int pre_mode, int width, const char **str, Lineprop mode);
   void push_link(HtmlCommand cmd, int offset, int pos);
+
   void passthrough(const std::string &str, bool back);
 
-  void flushline(int indent, FlushLineMode force = {});
-
-private:
   const char *has_hidden_link(HtmlCommand cmd) const {
     if (line.back() != '>') {
       return nullptr;
@@ -345,11 +347,12 @@ private:
     return hidden;
   }
 
-  void flush_top_margin(int indent, FlushLineMode force) {
+  void flush_top_margin(FlushLineMode force) {
     if (this->top_margin <= 0) {
       return;
     }
-    html_feed_environ h(1, this->_width, indent, this->buf);
+    html_feed_environ h(1, this->_width, this->envs[this->envc].indent,
+                        this->buf);
     h.pos = this->pos;
     h.flag = this->flag;
     h.top_margin = -1;
@@ -359,15 +362,16 @@ private:
       h.line += ' ';
     h.line += "</pre_int>";
     for (int i = 0; i < this->top_margin; i++) {
-      h.flushline(indent, force);
+      h.flushline(force);
     }
   }
 
-  void flush_bottom_margin(int indent, FlushLineMode force) {
+  void flush_bottom_margin(FlushLineMode force) {
     if (this->bottom_margin <= 0) {
       return;
     }
-    html_feed_environ h(1, this->_width, indent, this->buf);
+    html_feed_environ h(1, this->_width, this->envs[this->envc].indent,
+                        this->buf);
     h.pos = this->pos;
     h.flag = this->flag;
     h.top_margin = -1;
@@ -377,22 +381,22 @@ private:
       h.line += ' ';
     h.line += "</pre_int>";
     for (int i = 0; i < this->bottom_margin; i++) {
-      h.flushline(indent, force);
+      h.flushline(force);
     }
   }
 
   std::shared_ptr<TextLine> make_textline(int indent, int width);
 
-  void flush_end(int indent, const Hidden &hidden, const std::string &pass);
+  void flush_end(const Hidden &hidden, const std::string &pass);
 
 public:
-  void do_blankline(int indent, int indent_incr) {
+  void do_blankline() {
     if (this->blank_lines == 0) {
-      this->flushline(indent, FlushLineMode::Force);
+      this->flushline(FlushLineMode::Force);
     }
   }
 
-  void parse_end(int indent);
+  void parse_end();
   std::shared_ptr<GeneralList> buf;
   std::string tagbuf;
   // int limit;
@@ -467,7 +471,6 @@ public:
   void proc_escape(const char **str_return);
   void completeHTMLstream();
   void push_render_image(const std::string &str, int width, int limit);
-
   void process_token(struct TableStatus &t, const struct Token &token);
 
 public:
@@ -475,15 +478,10 @@ public:
 
   // HTML processing first pass
   void parse(std::string_view istr, bool internal = true);
-
   void CLOSE_DT();
-
   void CLOSE_A();
-
   void HTML5_CLOSE_A();
-
   std::string getLinkNumberStr(int correction) const;
-
   std::string process_img(const HtmlTag *tag, int width);
   std::string process_anchor(HtmlTag *tag, const std::string &tagbuf);
   std::string process_input(const HtmlTag *tag);

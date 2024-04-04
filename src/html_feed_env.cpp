@@ -133,7 +133,7 @@ loadHTMLstream(int width, const Url &currentURL, std::string_view body,
   htmlenv1.parse(body, internal);
   htmlenv1.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();
-  htmlenv1.flushline(0, FlushLineMode::Append);
+  htmlenv1.flushline(FlushLineMode::Append);
   return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }
 
@@ -329,7 +329,7 @@ void html_feed_environ::proc_mchar(int pre_mode, int width, const char **str,
   this->flag |= RB_NFLUSHED;
 }
 
-void html_feed_environ::flushline(int indent, FlushLineMode force) {
+void html_feed_environ::flushline(FlushLineMode force) {
   if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && line.size() &&
       line.back() == ' ') {
     line.pop_back();
@@ -360,11 +360,12 @@ void html_feed_environ::flushline(int indent, FlushLineMode force) {
 
   line += hidden.suffix;
 
-  flush_top_margin(indent, force);
+  flush_top_margin(force);
 
   if (force == FlushLineMode::Force || this->flag & RB_NFLUSHED) {
     // line completed
-    if (auto textline = make_textline(indent, this->_width)) {
+    if (auto textline =
+            make_textline(this->envs[this->envc].indent, this->_width)) {
       if (buf) {
         buf->_list.push_back(textline);
       }
@@ -415,13 +416,13 @@ void html_feed_environ::flushline(int indent, FlushLineMode force) {
     }
   }
 
-  flush_bottom_margin(indent, force);
+  flush_bottom_margin(force);
 
   if (this->top_margin < 0 || this->bottom_margin < 0) {
     return;
   }
 
-  flush_end(indent, hidden, pass);
+  flush_end(hidden, pass);
 }
 
 std::shared_ptr<TextLine> html_feed_environ::make_textline(int indent,
@@ -486,7 +487,7 @@ std::shared_ptr<TextLine> html_feed_environ::make_textline(int indent,
   return lbuf;
 }
 
-void html_feed_environ::flush_end(int indent, const Hidden &hidden,
+void html_feed_environ::flush_end(const Hidden &hidden,
                                   const std::string &pass) {
 
   this->line = {};
@@ -499,7 +500,7 @@ void html_feed_environ::flush_end(int indent, const Hidden &hidden,
   this->set_breakpoint(0);
   this->prev_ctype = PC_ASCII;
   this->link_stack.clear();
-  this->fillline(indent);
+  this->fillline();
   if (pass.size())
     this->passthrough(pass, 0);
   if (!hidden.anchor && this->anchor.url.size()) {
@@ -561,14 +562,13 @@ void html_feed_environ::flush_end(int indent, const Hidden &hidden,
 
 void html_feed_environ::CLOSE_P() {
   if (this->flag & RB_P) {
-    struct environment *envs = this->envs.data();
-    this->flushline(envs[this->envc].indent);
+    this->flushline();
     this->RB_RESTORE_FLAG();
     this->flag &= ~RB_P;
   }
 }
 
-void html_feed_environ::parse_end(int indent) {
+void html_feed_environ::parse_end() {
   if (!(this->flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
     char *tp;
     if (this->bp.pos == this->pos) {
@@ -582,7 +582,7 @@ void html_feed_environ::parse_end(int indent) {
       i = 1;
     if (this->pos - i > this->_width) {
       this->flag |= RB_FILL;
-      this->flushline(indent);
+      this->flushline();
       this->flag &= ~RB_FILL;
     }
   }
@@ -670,7 +670,7 @@ void html_feed_environ::push_render_image(const std::string &str, int width,
   this->push_str(width, str, PC_ASCII);
   this->push_spaces(1, (limit - width + 1) / 2);
   if (width > 0) {
-    this->flushline(this->envs[this->envc].indent);
+    this->flushline();
   }
 }
 
@@ -1504,7 +1504,7 @@ void html_feed_environ::parse(std::string_view html, bool internal) {
     process_token(t, *token);
   }
 
-  this->parse_end(this->envs[this->envc].indent);
+  this->parse_end();
 }
 
 void html_feed_environ::process_token(TableStatus &t, const Token &token) {
@@ -1539,9 +1539,8 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         return;
       /* all tables have been read */
       if (t.tbl->vspace() > 0 && !(this->flag & RB_IGNORE_P)) {
-        int indent = this->envs[this->envc].indent;
-        this->flushline(indent);
-        this->do_blankline(indent, 0);
+        this->flushline();
+        this->do_blankline();
       }
       this->save_fonteffect();
       initRenderTable();
@@ -1549,8 +1548,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       this->restore_fonteffect();
       this->flag &= ~RB_IGNORE_P;
       if (t.tbl->vspace() > 0) {
-        int indent = this->envs[this->envc].indent;
-        this->do_blankline(indent, 0);
+        this->do_blankline();
         this->flag |= RB_IGNORE_P;
       }
       this->prevchar = " ";
@@ -1622,7 +1620,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         if (this->flag & RB_PRE_INT) {
           this->push_char(this->flag & RB_SPECIAL, ' ');
         } else {
-          this->flushline(this->envs[this->envc].indent, FlushLineMode::Force);
+          this->flushline(FlushLineMode::Force);
         }
       } else if (ch == '\t') {
         do {
@@ -1677,7 +1675,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         if (this->pos - i > this->_width)
           this->flag |= RB_FILL;
         this->back_to_breakpoint();
-        this->flushline(indent);
+        this->flushline();
         this->flag &= ~RB_FILL;
         parse(line);
       }
