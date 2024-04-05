@@ -1,5 +1,4 @@
 #include "push_symbol.h"
-// #include "option_param.h"
 #include "html_feed_env.h"
 #include "html_command.h"
 #include "html_table.h"
@@ -1029,34 +1028,14 @@ struct tableimpl {
     if (this->border_mode != BORDER_NOWIN)
       push_symbol(buf, RULE(this->border_mode, forbid), 1, 1);
   }
+
   void make_caption(html_feed_environ *parser) {
     if (this->caption.empty())
       return;
 
-    int limit;
-    if (this->total_width > 0)
-      limit = this->total_width;
-    else
-      limit = parser->_width;
-
-    html_feed_environ henv(MAX_ENV_LEVEL, limit,
-                           parser->envs[parser->envc].indent,
-                           GeneralList::newGeneralList());
-    parser->parse("<center>");
-    parser->parse(this->caption, false);
-    parser->parse("</center>");
-
-    if (this->total_width < henv.maxlimit()) {
-      this->total_width = henv.maxlimit();
-    }
-
-    limit = parser->_width;
-    parser->_width = this->total_width;
-    parser->parse("<center>");
-    parser->parse(this->caption, false);
-    parser->parse("</center>");
-    parser->_width = limit;
+    parser->make_caption(this->total_width, this->caption);
   }
+
   void renderCoTable(html_feed_environ *parser, int maxlimit) {
     int i, col, row;
     int indent, maxwidth;
@@ -1521,7 +1500,7 @@ struct tableimpl {
 
     html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
                            0, this->tabdata[row][col]);
-    henv.flag |= RB_INTABLE;
+    henv.addFlag(RB_INTABLE);
     if (henv._width > maxlimit)
       henv._width = maxlimit;
     if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
@@ -1543,7 +1522,7 @@ struct tableimpl {
           this->tables[id].ptr = NULL;
           henv.save_fonteffect();
           henv.flushline(FlushLineMode::Append);
-          if (t->_impl->vspace > 0 && !(henv.flag & RB_IGNORE_P))
+          if (t->_impl->vspace > 0 && !(henv.flag() & RB_IGNORE_P))
             henv.do_blankline();
           if (henv.RB_GET_ALIGN() == RB_CENTER) {
             alignment = ALIGN_CENTER;
@@ -1562,11 +1541,11 @@ struct tableimpl {
           henv.appendGeneralList(this->tables[id].buf);
           henv.setMaxLimit(limit);
           henv.restore_fonteffect();
-          henv.flag &= ~RB_IGNORE_P;
+          henv.removeFlag(RB_IGNORE_P);
           henv.clearBlankLines();
           if (t->_impl->vspace > 0) {
             henv.do_blankline();
-            henv.flag |= RB_IGNORE_P;
+            henv.addFlag(RB_IGNORE_P);
           }
         }
       } else {
@@ -1582,7 +1561,7 @@ struct tableimpl {
     if (this->border_mode == BORDER_NONE) {
       int rowspan = this->table_rowspan(row, col);
       if (row + rowspan <= this->maxrow) {
-        if (this->vcellpadding > 0 && !(henv.flag & RB_IGNORE_P))
+        if (this->vcellpadding > 0 && !(henv.flag() & RB_IGNORE_P))
           henv.do_blankline();
       } else {
         if (this->vspace > 0) {
@@ -1591,7 +1570,7 @@ struct tableimpl {
       }
     } else {
       if (this->vcellpadding > 0) {
-        if (!(henv.flag & RB_IGNORE_P))
+        if (!(henv.flag() & RB_IGNORE_P))
           henv.do_blankline();
       } else {
         henv.purgeline();

@@ -91,30 +91,26 @@ class html_feed_environ {
 public:
   std::string line;
   Lineprop cprop = 0;
-  short pos = 0;
   std::string prevchar;
-  ReadBufferFlags flag = {};
   ReadBufferFlags flag_stack[RB_STACK_SIZE];
   int flag_sp = 0;
   ReadBufferStatus status = {};
   HtmlCommand end_tag;
   unsigned char q_level = 0;
   short table_level = -1;
-  short nobr_level = 0;
   Anchor anchor = {};
-  std::string img_alt;
-  struct input_alt_attr input_alt = {};
-  FontStat fontstat = {};
-  FontStat fontstat_stack[FONT_STACK_SIZE];
-  int fontstat_sp = 0;
-  Lineprop prev_ctype;
-  Breakpoint bp;
 
   html_feed_environ(int nenv, int limit_width, int indent,
                     const std::shared_ptr<GeneralList> &_buf = {});
   ~html_feed_environ();
   html_feed_environ(const html_feed_environ &) = delete;
   html_feed_environ &operator=(const html_feed_environ &) = delete;
+
+  int pos()const;
+  ReadBufferFlags flag() const;
+  void addFlag(ReadBufferFlags flag);
+  void removeFlag(ReadBufferFlags flag);
+  ReadBufferFlags RB_GET_ALIGN() const;
 
 private:
   // push front
@@ -141,56 +137,17 @@ private:
   int cur_option_selected = {};
   ReadBufferStatus cur_status = {};
 
-  int top_margin = 0;
-  int bottom_margin = 0;
   std::list<LinkStack> link_stack;
   int blank_lines = 0;
 
-  void back_to_breakpoint() {
-    this->flag = this->bp.flag;
-    this->img_alt = this->bp.img_alt;
-    this->input_alt = this->bp.input_alt;
-    this->fontstat = this->bp.fontstat;
-    this->prev_ctype = this->bp.prev_ctype;
-    this->pos = this->bp.pos;
-    this->top_margin = this->bp.top_margin;
-    this->bottom_margin = this->bp.bottom_margin;
-    if (this->flag & RB_NOBR) {
-      this->nobr_level = this->bp.nobr_level;
-    }
-  }
-
-  void check_breakpoint(int pre_mode, const char *ch) {
-    int tlen;
-    int len = this->line.size();
-
-    this->append_tags();
-    if (pre_mode)
-      return;
-    tlen = this->line.size() - len;
-    if (tlen > 0 || is_boundary((unsigned char *)this->prevchar.c_str(),
-                                (unsigned char *)ch))
-      this->set_breakpoint(tlen);
-  }
+  void check_breakpoint(int pre_mode, const char *ch);
 
   void proc_mchar(int pre_mode, int width, const char **str, Lineprop mode);
   void push_link(HtmlCommand cmd, int offset, int pos);
 
   void passthrough(const std::string &str, bool back);
 
-  const char *has_hidden_link(HtmlCommand cmd) const {
-    if (line.back() != '>') {
-      return nullptr;
-    }
-    auto p = std::find_if(link_stack.begin(), link_stack.end(),
-                          [cmd, pos = this->pos](auto x) {
-                            return x.cmd == cmd && x.pos == pos;
-                          });
-    if (p == link_stack.end()) {
-      return nullptr;
-    }
-    return line.c_str() + p->offset;
-  }
+  const char *has_hidden_link(HtmlCommand cmd) const;
 
   struct Hidden {
     const char *str = nullptr;
@@ -205,118 +162,11 @@ private:
     std::string suffix;
   };
 
-  Hidden pop_hidden() {
-    Hidden hidden;
+  Hidden pop_hidden();
 
-    if (this->anchor.url.size()) {
-      hidden.str = hidden.anchor = this->has_hidden_link(HTML_A);
-    }
-    if (this->img_alt.size()) {
-      if ((hidden.img = this->has_hidden_link(HTML_IMG_ALT))) {
-        if (!hidden.str || hidden.img < hidden.str)
-          hidden.str = hidden.img;
-      }
-    }
-    if (this->input_alt.in) {
-      if ((hidden.input = this->has_hidden_link(HTML_INPUT_ALT))) {
-        if (!hidden.str || hidden.input < hidden.str) {
-          hidden.str = hidden.input;
-        }
-      }
-    }
-    if (this->fontstat.in_bold) {
-      if ((hidden.bold = this->has_hidden_link(HTML_B))) {
-        if (!hidden.str || hidden.bold < hidden.str) {
-          hidden.str = hidden.bold;
-        }
-      }
-    }
-    if (this->fontstat.in_italic) {
-      if ((hidden.italic = this->has_hidden_link(HTML_I))) {
-        if (!hidden.str || hidden.italic < hidden.str) {
-          hidden.str = hidden.italic;
-        }
-      }
-    }
-    if (this->fontstat.in_under) {
-      if ((hidden.under = this->has_hidden_link(HTML_U))) {
-        if (!hidden.str || hidden.under < hidden.str) {
-          hidden.str = hidden.under;
-        }
-      }
-    }
-    if (this->fontstat.in_strike) {
-      if ((hidden.strike = this->has_hidden_link(HTML_S))) {
-        if (!hidden.str || hidden.strike < hidden.str) {
-          hidden.str = hidden.strike;
-        }
-      }
-    }
-    if (this->fontstat.in_ins) {
-      if ((hidden.ins = this->has_hidden_link(HTML_INS))) {
-        if (!hidden.str || hidden.ins < hidden.str) {
-          hidden.str = hidden.ins;
-        }
-      }
-    }
+  void flush_top_margin(FlushLineMode force);
 
-    if (this->anchor.url.size() && !hidden.anchor)
-      hidden.suffix += "</a>";
-    if (this->img_alt.size() && !hidden.img)
-      hidden.suffix += "</img_alt>";
-    if (this->input_alt.in && !hidden.input)
-      hidden.suffix += "</input_alt>";
-    if (this->fontstat.in_bold && !hidden.bold)
-      hidden.suffix += "</b>";
-    if (this->fontstat.in_italic && !hidden.italic)
-      hidden.suffix += "</i>";
-    if (this->fontstat.in_under && !hidden.under)
-      hidden.suffix += "</u>";
-    if (this->fontstat.in_strike && !hidden.strike)
-      hidden.suffix += "</s>";
-    if (this->fontstat.in_ins && !hidden.ins)
-      hidden.suffix += "</ins>";
-
-    return hidden;
-  }
-
-  void flush_top_margin(FlushLineMode force) {
-    if (this->top_margin <= 0) {
-      return;
-    }
-    html_feed_environ h(1, this->_width, this->envs[this->envc].indent,
-                        this->buf);
-    h.pos = this->pos;
-    h.flag = this->flag;
-    h.top_margin = -1;
-    h.bottom_margin = -1;
-    h.line += "<pre_int>";
-    for (int i = 0; i < h.pos; i++)
-      h.line += ' ';
-    h.line += "</pre_int>";
-    for (int i = 0; i < this->top_margin; i++) {
-      h.flushline(force);
-    }
-  }
-
-  void flush_bottom_margin(FlushLineMode force) {
-    if (this->bottom_margin <= 0) {
-      return;
-    }
-    html_feed_environ h(1, this->_width, this->envs[this->envc].indent,
-                        this->buf);
-    h.pos = this->pos;
-    h.flag = this->flag;
-    h.top_margin = -1;
-    h.bottom_margin = -1;
-    h.line += "<pre_int>";
-    for (int i = 0; i < h.pos; i++)
-      h.line += ' ';
-    h.line += "</pre_int>";
-    for (int i = 0; i < this->bottom_margin; i++) {
-      h.flushline(force);
-    }
-  }
+  void flush_bottom_margin(FlushLineMode force);
 
   std::shared_ptr<TextLine> make_textline(int indent, int width);
 
@@ -330,15 +180,7 @@ private:
 
   void append_tags();
 
-  void push_char(int pre_mode, char ch) {
-    this->check_breakpoint(pre_mode, &ch);
-    this->line += ch;
-    this->pos++;
-    this->prevchar = std::string(&ch, 1);
-    if (ch != ' ')
-      this->prev_ctype = PC_ASCII;
-    this->flag |= RB_NFLUSHED;
-  }
+  void push_char(int pre_mode, char ch);
 
   void parse_end();
 
@@ -369,40 +211,16 @@ private:
   }
   void clearBlankLines() { this->blank_lines = 0; }
   void incrementBlankLines() { ++this->blank_lines; }
-  void setTopMargin(int i) {
-    if (i > this->top_margin) {
-      this->top_margin = i;
-    }
-  }
-  void setBottomMargin(int i) {
-    if (i > this->bottom_margin) {
-      this->bottom_margin = i;
-    }
-  }
 
   void process_title();
   std::string process_n_title();
   void feed_title(const std::string &str);
 
-  ReadBufferFlags RB_GET_ALIGN() const { return (this->flag & RB_ALIGN); }
+  void RB_SAVE_FLAG();
 
-  void RB_SET_ALIGN(ReadBufferFlags align) {
-    this->flag &= ~RB_ALIGN;
-    this->flag |= (align);
-  }
-
-  void RB_SAVE_FLAG() {
-    if (this->flag_sp < RB_STACK_SIZE)
-      this->flag_stack[this->flag_sp++] = RB_GET_ALIGN();
-  }
-
-  void RB_RESTORE_FLAG() {
-    if (this->flag_sp > 0)
-      RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
-  }
+  void RB_RESTORE_FLAG();
 
   void set_alignment(ReadBufferFlags flag);
-  void set_breakpoint(int tag_length);
 
   int close_effect0(HtmlCommand cmd) {
     auto found = std::find_if(tag_stack.begin(), tag_stack.end(),
@@ -427,21 +245,9 @@ private:
     this->push_nchars(width, str.data(), str.size(), mode);
   }
 
-  void push_spaces(int pre_mode, int width) {
-    if (width <= 0)
-      return;
-    this->check_breakpoint(pre_mode, " ");
-    for (int i = 0; i < width; i++)
-      this->line.push_back(' ');
-    this->pos += width;
-    this->prevchar = " ";
-    this->flag |= RB_NFLUSHED;
-  }
+  void push_spaces(int pre_mode, int width);
 
-  void fillline() {
-    this->push_spaces(1, this->envs[this->envc].indent - this->pos);
-    this->flag &= ~RB_NFLUSHED;
-  }
+  void fillline();
 
   void flushline(FlushLineMode force = {});
 
@@ -542,6 +348,7 @@ private:
 
   std::shared_ptr<struct FormItem>
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
+  void make_caption(int table_width, const std::string &caption);
 
 private:
   int process(const std::shared_ptr<HtmlTag> &tag);

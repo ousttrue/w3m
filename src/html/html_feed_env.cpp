@@ -23,7 +23,78 @@
 #define MAX_CELLPADDING 1000
 #define MAX_VSPACE 1000
 
-struct html_impl {};
+struct html_impl {
+  Breakpoint bp;
+  short pos = 0;
+  ReadBufferFlags flag = RB_IGNORE_P;
+  std::string img_alt;
+  struct input_alt_attr input_alt = {};
+  FontStat fontstat = {};
+  FontStat fontstat_stack[FONT_STACK_SIZE];
+  int fontstat_sp = 0;
+  Lineprop prev_ctype = PC_ASCII;
+  int top_margin = 0;
+  int bottom_margin = 0;
+  short nobr_level = 0;
+
+  html_impl() {
+    this->bp.init_flag = 1;
+    this->set_breakpoint(0, 0);
+  }
+
+  ReadBufferFlags RB_GET_ALIGN() const { return (this->flag & RB_ALIGN); }
+
+  void RB_SET_ALIGN(ReadBufferFlags align) {
+    this->flag &= ~RB_ALIGN;
+    this->flag |= (align);
+  }
+
+  void setTopMargin(int i) {
+    if (i > this->top_margin) {
+      this->top_margin = i;
+    }
+  }
+
+  void setBottomMargin(int i) {
+    if (i > this->bottom_margin) {
+      this->bottom_margin = i;
+    }
+  }
+
+  void set_breakpoint(int line_length, int tag_length) {
+    this->bp.len = line_length; // this->line.size();
+    this->bp.pos = this->pos;
+    this->bp.tlen = tag_length;
+    this->bp.flag = this->flag;
+    this->bp.flag &= ~RB_FILL;
+    this->bp.top_margin = this->top_margin;
+    this->bp.bottom_margin = this->bottom_margin;
+
+    if (!this->bp.init_flag)
+      return;
+
+    this->bp.img_alt = this->img_alt;
+    this->bp.input_alt = this->input_alt;
+    this->bp.fontstat = this->fontstat;
+    this->bp.nobr_level = this->nobr_level;
+    this->bp.prev_ctype = this->prev_ctype;
+    this->bp.init_flag = 0;
+  }
+
+  void back_to_breakpoint() {
+    this->flag = this->bp.flag;
+    this->img_alt = this->bp.img_alt;
+    this->input_alt = this->bp.input_alt;
+    this->fontstat = this->bp.fontstat;
+    this->prev_ctype = this->bp.prev_ctype;
+    this->pos = this->bp.pos;
+    this->top_margin = this->bp.top_margin;
+    this->bottom_margin = this->bp.bottom_margin;
+    if (this->flag & RB_NOBR) {
+      this->nobr_level = this->bp.nobr_level;
+    }
+  }
+};
 
 html_feed_environ::html_feed_environ(int nenv, int limit_width, int indent,
                                      const std::shared_ptr<GeneralList> &_buf)
@@ -33,14 +104,197 @@ html_feed_environ::html_feed_environ(int nenv, int limit_width, int indent,
   envs[0].indent = indent;
 
   this->prevchar = " ";
-  this->flag = RB_IGNORE_P;
   this->status = R_ST_NORMAL;
-  this->prev_ctype = PC_ASCII;
-  this->bp.init_flag = 1;
-  this->set_breakpoint(0);
 }
 
 html_feed_environ::~html_feed_environ() { delete _impl; }
+
+int html_feed_environ::pos() const { return _impl->pos; }
+ReadBufferFlags html_feed_environ::flag() const { return _impl->flag; }
+void html_feed_environ::addFlag(ReadBufferFlags flag) { _impl->flag |= flag; }
+void html_feed_environ::removeFlag(ReadBufferFlags flag) {
+  _impl->flag &= ~flag;
+}
+ReadBufferFlags html_feed_environ::RB_GET_ALIGN() const {
+  return _impl->RB_GET_ALIGN();
+}
+
+void html_feed_environ::check_breakpoint(int pre_mode, const char *ch) {
+  int tlen;
+  int len = this->line.size();
+
+  this->append_tags();
+  if (pre_mode)
+    return;
+  tlen = this->line.size() - len;
+  if (tlen > 0 || is_boundary((unsigned char *)this->prevchar.c_str(),
+                              (unsigned char *)ch)) {
+    _impl->set_breakpoint(line.size(), tlen);
+  }
+}
+
+void html_feed_environ::RB_SAVE_FLAG() {
+  if (this->flag_sp < RB_STACK_SIZE)
+    this->flag_stack[this->flag_sp++] = _impl->RB_GET_ALIGN();
+}
+
+void html_feed_environ::RB_RESTORE_FLAG() {
+  if (this->flag_sp > 0)
+    _impl->RB_SET_ALIGN(this->flag_stack[--this->flag_sp]);
+}
+
+void html_feed_environ::push_spaces(int pre_mode, int width) {
+  if (width <= 0)
+    return;
+  this->check_breakpoint(pre_mode, " ");
+  for (int i = 0; i < width; i++)
+    this->line.push_back(' ');
+  _impl->pos += width;
+  this->prevchar = " ";
+  _impl->flag |= RB_NFLUSHED;
+}
+
+void html_feed_environ::fillline() {
+  this->push_spaces(1, this->envs[this->envc].indent - _impl->pos);
+  _impl->flag &= ~RB_NFLUSHED;
+}
+
+const char *html_feed_environ::has_hidden_link(HtmlCommand cmd) const {
+  if (line.back() != '>') {
+    return nullptr;
+  }
+  auto p = std::find_if(link_stack.begin(), link_stack.end(),
+                        [cmd, pos = this->_impl->pos](auto x) {
+                          return x.cmd == cmd && x.pos == pos;
+                        });
+  if (p == link_stack.end()) {
+    return nullptr;
+  }
+  return line.c_str() + p->offset;
+}
+
+html_feed_environ::Hidden html_feed_environ::pop_hidden() {
+  Hidden hidden;
+
+  if (this->anchor.url.size()) {
+    hidden.str = hidden.anchor = this->has_hidden_link(HTML_A);
+  }
+  if (this->_impl->img_alt.size()) {
+    if ((hidden.img = this->has_hidden_link(HTML_IMG_ALT))) {
+      if (!hidden.str || hidden.img < hidden.str)
+        hidden.str = hidden.img;
+    }
+  }
+  if (this->_impl->input_alt.in) {
+    if ((hidden.input = this->has_hidden_link(HTML_INPUT_ALT))) {
+      if (!hidden.str || hidden.input < hidden.str) {
+        hidden.str = hidden.input;
+      }
+    }
+  }
+  if (this->_impl->fontstat.in_bold) {
+    if ((hidden.bold = this->has_hidden_link(HTML_B))) {
+      if (!hidden.str || hidden.bold < hidden.str) {
+        hidden.str = hidden.bold;
+      }
+    }
+  }
+  if (this->_impl->fontstat.in_italic) {
+    if ((hidden.italic = this->has_hidden_link(HTML_I))) {
+      if (!hidden.str || hidden.italic < hidden.str) {
+        hidden.str = hidden.italic;
+      }
+    }
+  }
+  if (this->_impl->fontstat.in_under) {
+    if ((hidden.under = this->has_hidden_link(HTML_U))) {
+      if (!hidden.str || hidden.under < hidden.str) {
+        hidden.str = hidden.under;
+      }
+    }
+  }
+  if (this->_impl->fontstat.in_strike) {
+    if ((hidden.strike = this->has_hidden_link(HTML_S))) {
+      if (!hidden.str || hidden.strike < hidden.str) {
+        hidden.str = hidden.strike;
+      }
+    }
+  }
+  if (this->_impl->fontstat.in_ins) {
+    if ((hidden.ins = this->has_hidden_link(HTML_INS))) {
+      if (!hidden.str || hidden.ins < hidden.str) {
+        hidden.str = hidden.ins;
+      }
+    }
+  }
+
+  if (this->anchor.url.size() && !hidden.anchor)
+    hidden.suffix += "</a>";
+  if (this->_impl->img_alt.size() && !hidden.img)
+    hidden.suffix += "</img_alt>";
+  if (this->_impl->input_alt.in && !hidden.input)
+    hidden.suffix += "</input_alt>";
+  if (this->_impl->fontstat.in_bold && !hidden.bold)
+    hidden.suffix += "</b>";
+  if (this->_impl->fontstat.in_italic && !hidden.italic)
+    hidden.suffix += "</i>";
+  if (this->_impl->fontstat.in_under && !hidden.under)
+    hidden.suffix += "</u>";
+  if (this->_impl->fontstat.in_strike && !hidden.strike)
+    hidden.suffix += "</s>";
+  if (this->_impl->fontstat.in_ins && !hidden.ins)
+    hidden.suffix += "</ins>";
+
+  return hidden;
+}
+
+void html_feed_environ::flush_top_margin(FlushLineMode force) {
+  if (this->_impl->top_margin <= 0) {
+    return;
+  }
+  html_feed_environ h(1, this->_width, this->envs[this->envc].indent,
+                      this->buf);
+  h._impl->pos = this->_impl->pos;
+  h._impl->flag = this->_impl->flag;
+  h._impl->top_margin = -1;
+  h._impl->bottom_margin = -1;
+  h.line += "<pre_int>";
+  for (int i = 0; i < h._impl->pos; i++)
+    h.line += ' ';
+  h.line += "</pre_int>";
+  for (int i = 0; i < this->_impl->top_margin; i++) {
+    h.flushline(force);
+  }
+}
+
+void html_feed_environ::push_char(int pre_mode, char ch) {
+  this->check_breakpoint(pre_mode, &ch);
+  this->line += ch;
+  this->_impl->pos++;
+  this->prevchar = std::string(&ch, 1);
+  if (ch != ' ')
+    this->_impl->prev_ctype = PC_ASCII;
+  this->_impl->flag |= RB_NFLUSHED;
+}
+
+void html_feed_environ::flush_bottom_margin(FlushLineMode force) {
+  if (this->_impl->bottom_margin <= 0) {
+    return;
+  }
+  html_feed_environ h(1, this->_width, this->envs[this->envc].indent,
+                      this->buf);
+  h._impl->pos = this->_impl->pos;
+  h._impl->flag = this->_impl->flag;
+  h._impl->top_margin = -1;
+  h._impl->bottom_margin = -1;
+  h.line += "<pre_int>";
+  for (int i = 0; i < h._impl->pos; i++)
+    h.line += ' ';
+  h.line += "</pre_int>";
+  for (int i = 0; i < this->_impl->bottom_margin; i++) {
+    h.flushline(force);
+  }
+}
 
 void html_feed_environ::purgeline() {
   if (this->buf == NULL || this->blank_lines == 0)
@@ -209,28 +463,8 @@ static const char *_size_unit[] = {"b",  "kb", "Mb", "Gb", "Tb", "Pb",
 void html_feed_environ::set_alignment(ReadBufferFlags flag) {
   this->RB_SAVE_FLAG();
   if (flag != (ReadBufferFlags)-1) {
-    this->RB_SET_ALIGN(flag);
+    _impl->RB_SET_ALIGN(flag);
   }
-}
-
-void html_feed_environ::set_breakpoint(int tag_length) {
-  this->bp.len = this->line.size();
-  this->bp.pos = this->pos;
-  this->bp.tlen = tag_length;
-  this->bp.flag = this->flag;
-  this->bp.flag &= ~RB_FILL;
-  this->bp.top_margin = this->top_margin;
-  this->bp.bottom_margin = this->bottom_margin;
-
-  if (!this->bp.init_flag)
-    return;
-
-  this->bp.img_alt = this->img_alt;
-  this->bp.input_alt = this->input_alt;
-  this->bp.fontstat = this->fontstat;
-  this->bp.nobr_level = this->nobr_level;
-  this->bp.prev_ctype = this->prev_ctype;
-  this->bp.init_flag = 0;
 }
 
 void html_feed_environ::push_link(HtmlCommand cmd, int offset, int pos) {
@@ -257,13 +491,13 @@ void html_feed_environ::append_tags() {
     case HTML_U:
     case HTML_I:
     case HTML_S:
-      this->push_link(tag->cmd, this->line.size(), this->pos);
+      this->push_link(tag->cmd, this->line.size(), _impl->pos);
       break;
     }
     this->line += tag->cmdname;
     switch (tag->cmd) {
     case HTML_NOBR:
-      if (this->nobr_level > 1)
+      if (_impl->nobr_level > 1)
         break;
     case HTML_WBR:
       set_bp = 1;
@@ -272,7 +506,7 @@ void html_feed_environ::append_tags() {
   }
   this->tag_stack.clear();
   if (set_bp) {
-    this->set_breakpoint(this->line.size() - len);
+    _impl->set_breakpoint(this->line.size(), this->line.size() - len);
   }
 }
 
@@ -309,7 +543,7 @@ void html_feed_environ::passthrough(const std::string &_str, bool back) {
         this->push_tag(*token, cmd);
       }
     } else {
-      this->push_nchars(0, str_bak, str - str_bak, this->prev_ctype);
+      this->push_nchars(0, str_bak, str - str_bak, _impl->prev_ctype);
     }
   }
 }
@@ -319,7 +553,7 @@ void html_feed_environ::push_tag(std::string_view cmdname, HtmlCommand cmd) {
   tag->cmdname = cmdname;
   tag->cmd = cmd;
   tag_stack.push_front(tag);
-  if (this->flag & (RB_SPECIAL & ~RB_NOBR)) {
+  if (_impl->flag & (RB_SPECIAL & ~RB_NOBR)) {
     this->append_tags();
   }
 }
@@ -328,33 +562,33 @@ void html_feed_environ::push_nchars(int width, const char *str, int len,
                                     Lineprop mode) {
   this->append_tags();
   this->line += std::string(str, len);
-  this->pos += width;
+  _impl->pos += width;
   if (width > 0) {
     this->prevchar = std::string(str, len);
-    this->prev_ctype = mode;
+    _impl->prev_ctype = mode;
   }
-  this->flag |= RB_NFLUSHED;
+  _impl->flag |= RB_NFLUSHED;
 }
 
 void html_feed_environ::proc_mchar(int pre_mode, int width, const char **str,
                                    Lineprop mode) {
   this->check_breakpoint(pre_mode, *str);
-  this->pos += width;
+  _impl->pos += width;
   this->line += std::string(*str, get_mclen(*str));
   if (width > 0) {
     this->prevchar = std::string(*str, 1);
     if (**str != ' ')
-      this->prev_ctype = mode;
+      _impl->prev_ctype = mode;
   }
   (*str) += get_mclen(*str);
-  this->flag |= RB_NFLUSHED;
+  _impl->flag |= RB_NFLUSHED;
 }
 
 void html_feed_environ::flushline(FlushLineMode force) {
-  if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && line.size() &&
+  if (!(_impl->flag & (RB_SPECIAL & ~RB_NOBR)) && line.size() &&
       line.back() == ' ') {
     line.pop_back();
-    this->pos--;
+    _impl->pos--;
   }
 
   this->append_tags();
@@ -367,15 +601,15 @@ void html_feed_environ::flushline(FlushLineMode force) {
     Strshrink(line, line.c_str() + line.size() - hidden.str);
   }
 
-  if (!(this->flag & (RB_SPECIAL & ~RB_NOBR)) && this->pos > this->_width) {
-    char *tp = &line[this->bp.len - this->bp.tlen];
+  if (!(_impl->flag & (RB_SPECIAL & ~RB_NOBR)) && _impl->pos > this->_width) {
+    char *tp = &line[_impl->bp.len - _impl->bp.tlen];
     char *ep = &line[line.size()];
 
-    if (this->bp.pos == this->pos && tp <= ep && tp > line.c_str() &&
+    if (_impl->bp.pos == _impl->pos && tp <= ep && tp > line.c_str() &&
         tp[-1] == ' ') {
       memcpy(tp - 1, tp, ep - tp + 1);
       line.pop_back();
-      this->pos--;
+      _impl->pos--;
     }
   }
 
@@ -383,7 +617,7 @@ void html_feed_environ::flushline(FlushLineMode force) {
 
   flush_top_margin(force);
 
-  if (force == FlushLineMode::Force || this->flag & RB_NFLUSHED) {
+  if (force == FlushLineMode::Force || _impl->flag & RB_NFLUSHED) {
     // line completed
     if (auto textline =
             make_textline(this->envs[this->envc].indent, this->_width)) {
@@ -439,7 +673,7 @@ void html_feed_environ::flushline(FlushLineMode force) {
 
   flush_bottom_margin(force);
 
-  if (this->top_margin < 0 || this->bottom_margin < 0) {
+  if (_impl->top_margin < 0 || _impl->bottom_margin < 0) {
     return;
   }
 
@@ -448,14 +682,14 @@ void html_feed_environ::flushline(FlushLineMode force) {
 
 std::shared_ptr<TextLine> html_feed_environ::make_textline(int indent,
                                                            int width) {
-  auto lbuf = std::make_shared<TextLine>(this->line, this->pos);
+  auto lbuf = std::make_shared<TextLine>(this->line, _impl->pos);
   if (this->RB_GET_ALIGN() == RB_CENTER) {
     lbuf->align(width, ALIGN_CENTER);
   } else if (this->RB_GET_ALIGN() == RB_RIGHT) {
     lbuf->align(width, ALIGN_RIGHT);
-  } else if (this->RB_GET_ALIGN() == RB_LEFT && this->flag & RB_INTABLE) {
+  } else if (this->RB_GET_ALIGN() == RB_LEFT && _impl->flag & RB_INTABLE) {
     lbuf->align(width, ALIGN_LEFT);
-  } else if (this->flag & RB_FILL) {
+  } else if (_impl->flag & RB_FILL) {
     const char *p;
     int rest, rrest;
     int nspace, d, i;
@@ -497,7 +731,7 @@ std::shared_ptr<TextLine> html_feed_environ::make_textline(int indent,
 
   setMaxLimit(lbuf->pos);
 
-  if (this->flag & RB_SPECIAL || this->flag & RB_NFLUSHED) {
+  if (_impl->flag & RB_SPECIAL || _impl->flag & RB_NFLUSHED) {
     this->blank_lines = 0;
   } else {
     this->blank_lines++;
@@ -510,14 +744,14 @@ void html_feed_environ::flush_end(const Hidden &hidden,
                                   const std::string &pass) {
 
   this->line = {};
-  this->pos = 0;
-  this->top_margin = 0;
-  this->bottom_margin = 0;
+  _impl->pos = 0;
+  _impl->top_margin = 0;
+  _impl->bottom_margin = 0;
   this->prevchar = " ";
-  this->bp.init_flag = 1;
-  this->flag &= ~RB_NFLUSHED;
-  this->set_breakpoint(0);
-  this->prev_ctype = PC_ASCII;
+  _impl->bp.init_flag = 1;
+  _impl->flag &= ~RB_NFLUSHED;
+  _impl->set_breakpoint(0, 0);
+  _impl->prev_ctype = PC_ASCII;
   this->link_stack.clear();
   this->fillline();
   if (pass.size())
@@ -551,47 +785,47 @@ void html_feed_environ::flush_end(const Hidden &hidden,
     tmp << "\">";
     this->push_tag(tmp.str(), HTML_A);
   }
-  if (!hidden.img && this->img_alt.size()) {
+  if (!hidden.img && _impl->img_alt.size()) {
     std::string tmp = "<IMG_ALT SRC=\"";
-    tmp += html_quote(this->img_alt);
+    tmp += html_quote(_impl->img_alt);
     tmp += "\">";
     this->push_tag(tmp, HTML_IMG_ALT);
   }
-  if (!hidden.input && this->input_alt.in) {
-    if (this->input_alt.hseq > 0)
-      this->input_alt.hseq = -this->input_alt.hseq;
+  if (!hidden.input && _impl->input_alt.in) {
+    if (_impl->input_alt.hseq > 0)
+      _impl->input_alt.hseq = -_impl->input_alt.hseq;
     std::stringstream tmp;
-    tmp << "<INPUT_ALT hseq=\"" << this->input_alt.hseq << "\" fid=\""
-        << this->input_alt.fid << "\" name=\"" << this->input_alt.name
-        << "\" type=\"" << this->input_alt.type << "\" "
-        << "value=\"" << this->input_alt.value << "\">";
+    tmp << "<INPUT_ALT hseq=\"" << _impl->input_alt.hseq << "\" fid=\""
+        << _impl->input_alt.fid << "\" name=\"" << _impl->input_alt.name
+        << "\" type=\"" << _impl->input_alt.type << "\" "
+        << "value=\"" << _impl->input_alt.value << "\">";
     this->push_tag(tmp.str(), HTML_INPUT_ALT);
   }
-  if (!hidden.bold && this->fontstat.in_bold)
+  if (!hidden.bold && _impl->fontstat.in_bold)
     this->push_tag("<B>", HTML_B);
-  if (!hidden.italic && this->fontstat.in_italic)
+  if (!hidden.italic && _impl->fontstat.in_italic)
     this->push_tag("<I>", HTML_I);
-  if (!hidden.under && this->fontstat.in_under)
+  if (!hidden.under && _impl->fontstat.in_under)
     this->push_tag("<U>", HTML_U);
-  if (!hidden.strike && this->fontstat.in_strike)
+  if (!hidden.strike && _impl->fontstat.in_strike)
     this->push_tag("<S>", HTML_S);
-  if (!hidden.ins && this->fontstat.in_ins)
+  if (!hidden.ins && _impl->fontstat.in_ins)
     this->push_tag("<INS>", HTML_INS);
 }
 
 void html_feed_environ::CLOSE_P() {
-  if (this->flag & RB_P) {
+  if (_impl->flag & RB_P) {
     this->flushline();
     this->RB_RESTORE_FLAG();
-    this->flag &= ~RB_P;
+    _impl->flag &= ~RB_P;
   }
 }
 
 void html_feed_environ::parse_end() {
-  if (!(this->flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
+  if (!(_impl->flag & (RB_SPECIAL | RB_INTXTA | RB_INSELECT))) {
     char *tp;
-    if (this->bp.pos == this->pos) {
-      tp = &this->line[this->bp.len - this->bp.tlen];
+    if (_impl->bp.pos == _impl->pos) {
+      tp = &this->line[_impl->bp.len - _impl->bp.tlen];
     } else {
       tp = &this->line[this->line.size()];
     }
@@ -599,10 +833,10 @@ void html_feed_environ::parse_end() {
     int i = 0;
     if (tp > this->line.c_str() && tp[-1] == ' ')
       i = 1;
-    if (this->pos - i > this->_width) {
-      this->flag |= RB_FILL;
+    if (_impl->pos - i > this->_width) {
+      _impl->flag |= RB_FILL;
       this->flushline();
-      this->flag &= ~RB_FILL;
+      _impl->flag &= ~RB_FILL;
     }
   }
 }
@@ -658,21 +892,21 @@ void html_feed_environ::feed_title(const std::string &_str) {
 #define INITIAL_FORM_SIZE 10
 
 void html_feed_environ::CLOSE_DT() {
-  if (this->flag & RB_IN_DT) {
-    this->flag &= ~RB_IN_DT;
+  if (_impl->flag & RB_IN_DT) {
+    _impl->flag &= ~RB_IN_DT;
     parse("</b>");
   }
 }
 
 void html_feed_environ::CLOSE_A() {
   this->CLOSE_P();
-  if (!(this->flag & RB_HTML5)) {
+  if (!(_impl->flag & RB_HTML5)) {
     this->close_anchor();
   }
 }
 
 void html_feed_environ::HTML5_CLOSE_A() {
-  if (this->flag & RB_HTML5) {
+  if (_impl->flag & RB_HTML5) {
     this->close_anchor();
   }
 }
@@ -703,7 +937,7 @@ void html_feed_environ::close_anchor() {
     if (found == this->tag_stack.end() && this->anchor.hseq > 0 &&
         this->line.back() == ' ') {
       Strshrink(this->line, 1);
-      this->pos--;
+      _impl->pos--;
       is_erased = 1;
     }
 
@@ -724,7 +958,7 @@ void html_feed_environ::close_anchor() {
     }
     if (is_erased) {
       this->line.push_back(' ');
-      this->pos++;
+      _impl->pos++;
     }
 
     this->push_tag("</a>", HTML_N_A);
@@ -733,42 +967,42 @@ void html_feed_environ::close_anchor() {
 }
 
 void html_feed_environ::save_fonteffect() {
-  if (this->fontstat_sp < FONT_STACK_SIZE) {
-    this->fontstat_stack[this->fontstat_sp] = this->fontstat;
+  if (_impl->fontstat_sp < FONT_STACK_SIZE) {
+    _impl->fontstat_stack[_impl->fontstat_sp] = _impl->fontstat;
   }
-  if (this->fontstat_sp < INT_MAX) {
-    this->fontstat_sp++;
+  if (_impl->fontstat_sp < INT_MAX) {
+    _impl->fontstat_sp++;
   }
 
-  if (this->fontstat.in_bold)
+  if (_impl->fontstat.in_bold)
     this->push_tag("</b>", HTML_N_B);
-  if (this->fontstat.in_italic)
+  if (_impl->fontstat.in_italic)
     this->push_tag("</i>", HTML_N_I);
-  if (this->fontstat.in_under)
+  if (_impl->fontstat.in_under)
     this->push_tag("</u>", HTML_N_U);
-  if (this->fontstat.in_strike)
+  if (_impl->fontstat.in_strike)
     this->push_tag("</s>", HTML_N_S);
-  if (this->fontstat.in_ins)
+  if (_impl->fontstat.in_ins)
     this->push_tag("</ins>", HTML_N_INS);
-  this->fontstat = {};
+  _impl->fontstat = {};
 }
 
 void html_feed_environ::restore_fonteffect() {
-  if (this->fontstat_sp > 0)
-    this->fontstat_sp--;
-  if (this->fontstat_sp < FONT_STACK_SIZE) {
-    this->fontstat = this->fontstat_stack[this->fontstat_sp];
+  if (_impl->fontstat_sp > 0)
+    _impl->fontstat_sp--;
+  if (_impl->fontstat_sp < FONT_STACK_SIZE) {
+    _impl->fontstat = _impl->fontstat_stack[_impl->fontstat_sp];
   }
 
-  if (this->fontstat.in_bold)
+  if (_impl->fontstat.in_bold)
     this->push_tag("<b>", HTML_B);
-  if (this->fontstat.in_italic)
+  if (_impl->fontstat.in_italic)
     this->push_tag("<i>", HTML_I);
-  if (this->fontstat.in_under)
+  if (_impl->fontstat.in_under)
     this->push_tag("<u>", HTML_U);
-  if (this->fontstat.in_strike)
+  if (_impl->fontstat.in_strike)
     this->push_tag("<s>", HTML_S);
-  if (this->fontstat.in_ins)
+  if (_impl->fontstat.in_ins)
     this->push_tag("<ins>", HTML_INS);
 }
 
@@ -1461,13 +1695,13 @@ void html_feed_environ::proc_escape(const char **str_return) {
 
   if (ech == -1) {
     *str_return = str;
-    this->proc_mchar(this->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
+    this->proc_mchar(_impl->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
     return;
   }
   mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
   auto estr = conv_entity(ech);
-  this->check_breakpoint(this->flag & RB_SPECIAL, estr.c_str());
+  this->check_breakpoint(_impl->flag & RB_SPECIAL, estr.c_str());
   auto width = get_strwidth(estr.c_str());
   if (width == 1 && ech == (char32_t)estr[0] && ech != '&' && ech != '<' &&
       ech != '>') {
@@ -1478,7 +1712,7 @@ void html_feed_environ::proc_escape(const char **str_return) {
     this->push_nchars(width, str, n_add, mode);
   }
   this->prevchar = estr;
-  this->prev_ctype = mode;
+  _impl->prev_ctype = mode;
 }
 
 int html_feed_environ::table_width(int table_level) {
@@ -1498,15 +1732,15 @@ static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
 
   for (i = 0; clear_flag_cmd[i] != HTML_UNKNOWN; i++) {
     if (cmd == clear_flag_cmd[i]) {
-      h_env->flag &= ~RB_IGNORE_P;
+      h_env->removeFlag(RB_IGNORE_P);
       return;
     }
   }
 }
 
 static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
-  if (h_env->flag & RB_PRE_INT) {
-    if (h_env->pos > h_env->width())
+  if (h_env->flag() & RB_PRE_INT) {
+    if (h_env->pos() > h_env->width())
       return 1;
     else
       return 0;
@@ -1517,7 +1751,7 @@ static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
     return 0;
   }
 
-  if (h_env->pos > h_env->width())
+  if (h_env->pos() > h_env->width())
     return 1;
 
   return 0;
@@ -1562,10 +1796,10 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         return;
         /* continue to the next */
       }
-      if (this->flag & RB_DEL)
+      if (this->flag() & RB_DEL)
         return;
       /* all tables have been read */
-      if (t.tbl->vspace() > 0 && !(this->flag & RB_IGNORE_P)) {
+      if (t.tbl->vspace() > 0 && !(this->flag() & RB_IGNORE_P)) {
         this->flushline();
         this->do_blankline();
       }
@@ -1573,10 +1807,10 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       initRenderTable();
       t.tbl->renderTable(this, t.tbl_width);
       this->restore_fonteffect();
-      this->flag &= ~RB_IGNORE_P;
+      this->removeFlag(RB_IGNORE_P);
       if (t.tbl->vspace() > 0) {
         this->do_blankline();
-        this->flag |= RB_IGNORE_P;
+        this->addFlag(RB_IGNORE_P);
       }
       this->prevchar = " ";
       return;
@@ -1603,7 +1837,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       }
       this->push_tag(this->tagbuf(), tag->tagid);
     }
-    this->bp.init_flag = 1;
+    _impl->bp.init_flag = 1;
     clear_ignore_p_flag(this, tag->tagid);
     if (tag->tagid == HTML_TABLE) {
       if (this->table_level >= 0) {
@@ -1616,7 +1850,7 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
     return;
   }
 
-  if (this->flag & (RB_DEL | RB_S)) {
+  if (_impl->flag & (RB_DEL | RB_S)) {
     return;
   }
 
@@ -1624,9 +1858,9 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
   while (*pp) {
     auto mode = get_mctype(pp);
     int delta = get_mcwidth(pp);
-    if (this->flag & (RB_SPECIAL & ~RB_NOBR)) {
+    if (_impl->flag & (RB_SPECIAL & ~RB_NOBR)) {
       char ch = *pp;
-      if (!(this->flag & RB_PLAIN) && (*pp == '&')) {
+      if (!(_impl->flag & RB_PLAIN) && (*pp == '&')) {
         const char *p = pp;
         int ech = getescapechar(&p);
         if (ech == '\n' || ech == '\r') {
@@ -1638,24 +1872,24 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         }
       }
       if (ch != '\n')
-        this->flag &= ~RB_IGNORE_P;
+        _impl->flag &= ~RB_IGNORE_P;
       if (ch == '\n') {
         pp++;
-        if (this->flag & RB_IGNORE_P) {
-          this->flag &= ~RB_IGNORE_P;
+        if (_impl->flag & RB_IGNORE_P) {
+          _impl->flag &= ~RB_IGNORE_P;
           return;
         }
-        if (this->flag & RB_PRE_INT) {
-          this->push_char(this->flag & RB_SPECIAL, ' ');
+        if (_impl->flag & RB_PRE_INT) {
+          this->push_char(_impl->flag & RB_SPECIAL, ' ');
         } else {
           this->flushline(FlushLineMode::Force);
         }
       } else if (ch == '\t') {
         do {
-          this->push_char(this->flag & RB_SPECIAL, ' ');
-        } while ((this->envs[this->envc].indent + this->pos) % Tabstop != 0);
+          this->push_char(_impl->flag & RB_SPECIAL, ' ');
+        } while ((this->envs[this->envc].indent + _impl->pos) % Tabstop != 0);
         pp++;
-      } else if (this->flag & RB_PLAIN) {
+      } else if (_impl->flag & RB_PLAIN) {
         auto p = html_quote_char(*pp);
         if (p) {
           this->push_charp(1, p, PC_ASCII);
@@ -1669,42 +1903,42 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
         else
           this->proc_mchar(1, delta, &pp, mode);
       }
-      if (this->flag & (RB_SPECIAL & ~RB_PRE_INT))
+      if (_impl->flag & (RB_SPECIAL & ~RB_PRE_INT))
         return;
     } else {
       if (!IS_SPACE(*pp))
-        this->flag &= ~RB_IGNORE_P;
+        _impl->flag &= ~RB_IGNORE_P;
       if ((mode == PC_ASCII || mode == PC_CTRL) && IS_SPACE(*pp)) {
         if (this->prevchar[0] != ' ') {
-          this->push_char(this->flag & RB_SPECIAL, ' ');
+          this->push_char(_impl->flag & RB_SPECIAL, ' ');
         }
         pp++;
       } else {
         if (*pp == '&')
           this->proc_escape(&pp);
         else
-          this->proc_mchar(this->flag & RB_SPECIAL, delta, &pp, mode);
+          this->proc_mchar(_impl->flag & RB_SPECIAL, delta, &pp, mode);
       }
     }
     if (need_flushline(this, mode)) {
-      auto bp = this->line.c_str() + this->bp.len;
-      auto tp = bp - this->bp.tlen;
+      auto bp = this->line.c_str() + _impl->bp.len;
+      auto tp = bp - _impl->bp.tlen;
       int i = 0;
 
       if (tp > this->line.c_str() && tp[-1] == ' ')
         i = 1;
 
       int indent = this->envs[this->envc].indent;
-      if (this->bp.pos - i > indent) {
+      if (_impl->bp.pos - i > indent) {
         this->append_tags(); /* may reallocate the buffer */
-        bp = this->line.c_str() + this->bp.len;
+        bp = this->line.c_str() + _impl->bp.len;
         std::string line = bp;
-        Strshrink(this->line, this->line.size() - this->bp.len);
-        if (this->pos - i > this->_width)
-          this->flag |= RB_FILL;
-        this->back_to_breakpoint();
+        Strshrink(this->line, this->line.size() - _impl->bp.len);
+        if (_impl->pos - i > this->_width)
+          _impl->flag |= RB_FILL;
+        _impl->back_to_breakpoint();
         this->flushline();
-        this->flag &= ~RB_FILL;
+        _impl->flag &= ~RB_FILL;
         parse(line);
       }
     }
@@ -1844,45 +2078,45 @@ void html_feed_environ::process_option() {
 
 void html_feed_environ::completeHTMLstream() {
   this->close_anchor();
-  if (this->img_alt.size()) {
+  if (_impl->img_alt.size()) {
     this->push_tag("</img_alt>", HTML_N_IMG_ALT);
-    this->img_alt = nullptr;
+    _impl->img_alt = nullptr;
   }
-  if (this->input_alt.in) {
+  if (_impl->input_alt.in) {
     this->push_tag("</input_alt>", HTML_N_INPUT_ALT);
-    this->input_alt.hseq = 0;
-    this->input_alt.fid = -1;
-    this->input_alt.in = 0;
-    this->input_alt.type = nullptr;
-    this->input_alt.name = nullptr;
-    this->input_alt.value = nullptr;
+    _impl->input_alt.hseq = 0;
+    _impl->input_alt.fid = -1;
+    _impl->input_alt.in = 0;
+    _impl->input_alt.type = nullptr;
+    _impl->input_alt.name = nullptr;
+    _impl->input_alt.value = nullptr;
   }
-  if (this->fontstat.in_bold) {
+  if (_impl->fontstat.in_bold) {
     this->push_tag("</b>", HTML_N_B);
-    this->fontstat.in_bold = 0;
+    _impl->fontstat.in_bold = 0;
   }
-  if (this->fontstat.in_italic) {
+  if (_impl->fontstat.in_italic) {
     this->push_tag("</i>", HTML_N_I);
-    this->fontstat.in_italic = 0;
+    _impl->fontstat.in_italic = 0;
   }
-  if (this->fontstat.in_under) {
+  if (_impl->fontstat.in_under) {
     this->push_tag("</u>", HTML_N_U);
-    this->fontstat.in_under = 0;
+    _impl->fontstat.in_under = 0;
   }
-  if (this->fontstat.in_strike) {
+  if (_impl->fontstat.in_strike) {
     this->push_tag("</s>", HTML_N_S);
-    this->fontstat.in_strike = 0;
+    _impl->fontstat.in_strike = 0;
   }
-  if (this->fontstat.in_ins) {
+  if (_impl->fontstat.in_ins) {
     this->push_tag("</ins>", HTML_N_INS);
-    this->fontstat.in_ins = 0;
+    _impl->fontstat.in_ins = 0;
   }
-  if (this->flag & RB_INTXTA)
+  if (_impl->flag & RB_INTXTA)
     this->parse("</textarea>");
   /* for unbalanced select tag */
-  if (this->flag & RB_INSELECT)
+  if (_impl->flag & RB_INSELECT)
     this->parse("</select>");
-  if (this->flag & RB_TITLE)
+  if (_impl->flag & RB_TITLE)
     this->parse("</title>");
 
   /* for unbalanced table tag */
@@ -1993,7 +2227,7 @@ int html_feed_environ::append_token(const char **instr, bool pre) {
 }
 
 int html_feed_environ::process(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->flag & RB_PRE) {
+  if (_impl->flag & RB_PRE) {
     switch (tag->tagid) {
     case HTML_NOBR:
     case HTML_N_NOBR:
@@ -2114,19 +2348,19 @@ int html_feed_environ::process(const std::shared_ptr<HtmlTag> &tag) {
   case HTML_N_XMP:
     return this->HTML_LISTING_exit(tag);
   case HTML_SCRIPT:
-    this->flag |= RB_SCRIPT;
+    this->addFlag(RB_SCRIPT);
     this->end_tag = HTML_N_SCRIPT;
     return 1;
   case HTML_STYLE:
-    this->flag |= RB_STYLE;
+    this->addFlag(RB_STYLE);
     this->end_tag = HTML_N_STYLE;
     return 1;
   case HTML_N_SCRIPT:
-    this->flag &= ~RB_SCRIPT;
+    this->removeFlag(RB_SCRIPT);
     this->end_tag = HTML_UNKNOWN;
     return 1;
   case HTML_N_STYLE:
-    this->flag &= ~RB_STYLE;
+    this->removeFlag(RB_STYLE);
     this->end_tag = HTML_UNKNOWN;
     return 1;
   case HTML_A:
@@ -2186,7 +2420,7 @@ int html_feed_environ::process(const std::shared_ptr<HtmlTag> &tag) {
     return this->HTML_ISINDEX_enter(tag);
   case HTML_DOCTYPE:
     if (!tag->existsAttr(ATTR_PUBLIC)) {
-      this->flag |= RB_HTML5;
+      this->addFlag(RB_HTML5);
     }
     return 1;
   case HTML_META:
@@ -2209,17 +2443,17 @@ int html_feed_environ::process(const std::shared_ptr<HtmlTag> &tag) {
   case HTML_N_INS:
     return this->HTML_INS_exit(tag);
   case HTML_SUP:
-    if (!(this->flag & (RB_DEL | RB_S)))
+    if (!(this->flag() & (RB_DEL | RB_S)))
       this->parse("^");
     return 1;
   case HTML_N_SUP:
     return 1;
   case HTML_SUB:
-    if (!(this->flag & (RB_DEL | RB_S)))
+    if (!(this->flag() & (RB_DEL | RB_S)))
       this->parse("[");
     return 1;
   case HTML_N_SUB:
-    if (!(this->flag & (RB_DEL | RB_S)))
+    if (!(this->flag() & (RB_DEL | RB_S)))
       this->parse("]");
     return 1;
   case HTML_FONT:
@@ -2235,7 +2469,7 @@ int html_feed_environ::process(const std::shared_ptr<HtmlTag> &tag) {
   case HTML_BODY:
     return this->HTML_BODY_enter(tag);
   case HTML_N_HEAD:
-    if (this->flag & RB_TITLE)
+    if (this->flag() & RB_TITLE)
       this->parse("</title>");
     return 1;
   case HTML_HEAD:
@@ -2251,20 +2485,20 @@ int html_feed_environ::process(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_Paragraph(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline(FlushLineMode::Force);
     this->do_blankline();
   }
-  this->flag |= RB_IGNORE_P;
+  this->addFlag(RB_IGNORE_P);
   if (tag->tagid == HTML_P) {
     this->set_alignment(tag->alignFlag());
-    this->flag |= RB_P;
+    this->addFlag(RB_P);
   }
   return 1;
 }
 
 int html_feed_environ::HTML_H_enter(const std::shared_ptr<HtmlTag> &tag) {
-  if (!(this->flag & (RB_PREMODE | RB_IGNORE_P))) {
+  if (!(this->flag() & (RB_PREMODE | RB_IGNORE_P))) {
     this->flushline();
     this->do_blankline();
   }
@@ -2275,21 +2509,21 @@ int html_feed_environ::HTML_H_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_H_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->parse("</b>");
-  if (!(this->flag & RB_PREMODE)) {
+  if (!(this->flag() & RB_PREMODE)) {
     this->flushline();
   }
   this->do_blankline();
   this->RB_RESTORE_FLAG();
   this->close_anchor();
-  this->flag |= RB_IGNORE_P;
+  this->addFlag(RB_IGNORE_P);
   return 1;
 }
 
 int html_feed_environ::HTML_List_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
-    if (!(this->flag & RB_PREMODE) &&
+    if (!(this->flag() & RB_PREMODE) &&
         (this->envc == 0 || tag->tagid == HTML_BLQ)) {
       this->do_blankline();
     }
@@ -2330,10 +2564,10 @@ int html_feed_environ::HTML_List_exit(const std::shared_ptr<HtmlTag> &tag) {
   if (this->envc > 0) {
     this->flushline();
     this->POP_ENV();
-    if (!(this->flag & RB_PREMODE) &&
+    if (!(this->flag() & RB_PREMODE) &&
         (this->envc == 0 || tag->tagid == HTML_N_BLQ)) {
       this->do_blankline();
-      this->flag |= RB_IGNORE_P;
+      this->addFlag(RB_IGNORE_P);
     }
   }
   this->close_anchor();
@@ -2342,9 +2576,9 @@ int html_feed_environ::HTML_List_exit(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_DL_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
-    if (!(this->flag & RB_PREMODE) && this->envs[this->envc].env != HTML_DL &&
+    if (!(this->flag() & RB_PREMODE) && this->envs[this->envc].env != HTML_DL &&
         this->envs[this->envc].env != HTML_DL_COMPACT &&
         this->envs[this->envc].env != HTML_DD) {
       this->do_blankline();
@@ -2354,7 +2588,7 @@ int html_feed_environ::HTML_DL_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (tag->existsAttr(ATTR_COMPACT)) {
     this->envs[this->envc].env = HTML_DL_COMPACT;
   }
-  this->flag |= RB_IGNORE_P;
+  this->addFlag(RB_IGNORE_P);
   return 1;
 }
 
@@ -2462,7 +2696,7 @@ int html_feed_environ::HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag) {
   } else {
     this->flushline();
   }
-  this->flag |= RB_IGNORE_P;
+  this->addFlag(RB_IGNORE_P);
   return 1;
 }
 
@@ -2476,19 +2710,19 @@ int html_feed_environ::HTML_DT_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (this->envc > 0) {
     this->flushline();
   }
-  if (!(this->flag & RB_IN_DT)) {
+  if (!(this->flag() & RB_IN_DT)) {
     this->parse("<b>");
-    this->flag |= RB_IN_DT;
+    this->addFlag(RB_IN_DT);
   }
-  this->flag |= RB_IGNORE_P;
+  this->addFlag(RB_IGNORE_P);
   return 1;
 }
 
 int html_feed_environ::HTML_DT_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (!(this->flag & RB_IN_DT)) {
+  if (!(this->flag() & RB_IN_DT)) {
     return 1;
   }
-  this->flag &= ~RB_IN_DT;
+  this->removeFlag(RB_IN_DT);
   this->parse("</b>");
   if (this->envc > 0 && this->envs[this->envc].env == HTML_DL) {
     this->flushline();
@@ -2505,10 +2739,10 @@ int html_feed_environ::HTML_DD_enter(const std::shared_ptr<HtmlTag> &tag) {
   }
 
   if (this->envc > 0 && this->envs[this->envc - 1].env == HTML_DL_COMPACT) {
-    if (this->pos > this->envs[this->envc].indent) {
+    if (this->pos() > this->envs[this->envc].indent) {
       this->flushline();
     } else {
-      this->push_spaces(1, this->envs[this->envc].indent - this->pos);
+      this->push_spaces(1, this->envs[this->envc].indent - this->pos());
     }
   } else {
     this->flushline();
@@ -2520,15 +2754,15 @@ int html_feed_environ::HTML_DD_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_TITLE_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->close_anchor();
   this->process_title();
-  this->flag |= RB_TITLE;
+  this->addFlag(RB_TITLE);
   this->end_tag = HTML_N_TITLE;
   return 1;
 }
 
 int html_feed_environ::HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (!(this->flag & RB_TITLE))
+  if (!(this->flag() & RB_TITLE))
     return 1;
-  this->flag &= ~RB_TITLE;
+  this->removeFlag(RB_TITLE);
   this->end_tag = {};
   auto tmp = this->process_n_title();
   if (tmp.size())
@@ -2563,7 +2797,7 @@ int html_feed_environ::HTML_NOFRAMES_enter(
     const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
   this->flushline();
-  this->flag |= (RB_NOFRAMES | RB_IGNORE_P);
+  this->addFlag(RB_NOFRAMES | RB_IGNORE_P);
   /* istr = str; */
   return 1;
 }
@@ -2571,7 +2805,7 @@ int html_feed_environ::HTML_NOFRAMES_enter(
 int html_feed_environ::HTML_NOFRAMES_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
   this->flushline();
-  this->flag &= ~RB_NOFRAMES;
+  this->removeFlag(RB_NOFRAMES);
   return 1;
 }
 
@@ -2608,7 +2842,7 @@ int html_feed_environ::HTML_HR_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_PRE_enter(const std::shared_ptr<HtmlTag> &tag) {
   int x = tag->existsAttr(ATTR_FOR_TABLE);
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
     if (!x) {
       this->do_blankline();
@@ -2616,19 +2850,19 @@ int html_feed_environ::HTML_PRE_enter(const std::shared_ptr<HtmlTag> &tag) {
   } else {
     this->fillline();
   }
-  this->flag |= (RB_PRE | RB_IGNORE_P);
+  this->addFlag(RB_PRE | RB_IGNORE_P);
   /* istr = str; */
   return 1;
 }
 
 int html_feed_environ::HTML_PRE_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->flushline();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->do_blankline();
-    this->flag |= RB_IGNORE_P;
+    this->addFlag(RB_IGNORE_P);
     this->incrementBlankLines();
   }
-  this->flag &= ~RB_PRE;
+  this->removeFlag(RB_PRE);
   this->close_anchor();
   return 1;
 }
@@ -2636,34 +2870,34 @@ int html_feed_environ::HTML_PRE_exit(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_PRE_PLAIN_enter(
     const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
     this->do_blankline();
   }
-  this->flag |= (RB_PRE | RB_IGNORE_P);
+  this->addFlag(RB_PRE | RB_IGNORE_P);
   return 1;
 }
 
 int html_feed_environ::HTML_PRE_PLAIN_exit(
     const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
     this->do_blankline();
-    this->flag |= RB_IGNORE_P;
+    this->addFlag(RB_IGNORE_P);
   }
-  this->flag &= ~RB_PRE;
+  this->removeFlag(RB_PRE);
   return 1;
 }
 
 int html_feed_environ::HTML_PLAINTEXT_enter(
     const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
     this->do_blankline();
   }
-  this->flag |= (RB_PLAIN | RB_IGNORE_P);
+  this->addFlag(RB_PLAIN | RB_IGNORE_P);
   switch (tag->tagid) {
   case HTML_LISTING:
     this->end_tag = HTML_N_LISTING;
@@ -2683,12 +2917,12 @@ int html_feed_environ::HTML_PLAINTEXT_enter(
 
 int html_feed_environ::HTML_LISTING_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
     this->do_blankline();
-    this->flag |= RB_IGNORE_P;
+    this->addFlag(RB_IGNORE_P);
   }
-  this->flag &= ~RB_PLAIN;
+  this->removeFlag(RB_PLAIN);
   this->end_tag = {};
   return 1;
 }
@@ -2730,15 +2964,15 @@ int html_feed_environ::HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_IMG_ALT_enter(const std::shared_ptr<HtmlTag> &tag) {
   if (auto value = tag->getAttr(ATTR_SRC))
-    this->img_alt = *value;
+    _impl->img_alt = *value;
   return 0;
 }
 
 int html_feed_environ::HTML_IMG_ALT_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->img_alt.size()) {
+  if (_impl->img_alt.size()) {
     if (!this->close_effect0(HTML_IMG_ALT))
       this->push_tag("</img_alt>", HTML_N_IMG_ALT);
-    this->img_alt = {};
+    _impl->img_alt = {};
   }
   return 1;
 }
@@ -2813,20 +3047,20 @@ int html_feed_environ::HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_CENTER_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & (RB_PREMODE | RB_IGNORE_P)))
+  if (!(this->flag() & (RB_PREMODE | RB_IGNORE_P)))
     this->flushline();
   this->RB_SAVE_FLAG();
   if (DisableCenter) {
-    this->RB_SET_ALIGN(RB_LEFT);
+    _impl->RB_SET_ALIGN(RB_LEFT);
   } else {
-    this->RB_SET_ALIGN(RB_CENTER);
+    _impl->RB_SET_ALIGN(RB_CENTER);
   }
   return 1;
 }
 
 int html_feed_environ::HTML_CENTER_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_PREMODE)) {
+  if (!(this->flag() & RB_PREMODE)) {
     this->flushline();
   }
   this->RB_RESTORE_FLAG();
@@ -2835,7 +3069,7 @@ int html_feed_environ::HTML_CENTER_exit(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_DIV_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
   }
   this->set_alignment(tag->alignFlag());
@@ -2851,7 +3085,7 @@ int html_feed_environ::HTML_DIV_exit(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_DIV_INT_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_P();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
   }
   this->set_alignment(tag->alignFlag());
@@ -2867,7 +3101,7 @@ int html_feed_environ::HTML_DIV_INT_exit(const std::shared_ptr<HtmlTag> &tag) {
 
 int html_feed_environ::HTML_FORM_enter(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
-  if (!(this->flag & RB_IGNORE_P)) {
+  if (!(this->flag() & RB_IGNORE_P)) {
     this->flushline();
   }
   auto tmp = this->process_form(tag);
@@ -2879,7 +3113,7 @@ int html_feed_environ::HTML_FORM_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_FORM_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->CLOSE_A();
   this->flushline();
-  this->flag |= RB_IGNORE_P;
+  this->addFlag(RB_IGNORE_P);
   this->process_n_form();
   return 1;
 }
@@ -2912,13 +3146,13 @@ int html_feed_environ::HTML_SELECT_enter(const std::shared_ptr<HtmlTag> &tag) {
   auto tmp = this->process_select(tag);
   if (tmp.size())
     this->parse(tmp);
-  this->flag |= RB_INSELECT;
+  this->addFlag(RB_INSELECT);
   this->end_tag = HTML_N_SELECT;
   return 1;
 }
 
 int html_feed_environ::HTML_SELECT_exit(const std::shared_ptr<HtmlTag> &tag) {
-  this->flag &= ~RB_INSELECT;
+  this->removeFlag(RB_INSELECT);
   this->end_tag = HTML_UNKNOWN;
   auto tmp = this->process_n_select();
   if (tmp.size())
@@ -2933,13 +3167,13 @@ int html_feed_environ::HTML_TEXTAREA_enter(
   if (tmp.size()) {
     this->parse(tmp);
   }
-  this->flag |= RB_INTXTA;
+  this->addFlag(RB_INTXTA);
   this->end_tag = HTML_N_TEXTAREA;
   return 1;
 }
 
 int html_feed_environ::HTML_TEXTAREA_exit(const std::shared_ptr<HtmlTag> &tag) {
-  this->flag &= ~RB_INTXTA;
+  this->removeFlag(RB_INTXTA);
   this->end_tag = HTML_UNKNOWN;
   auto tmp = this->process_n_textarea();
   if (tmp.size()) {
@@ -2995,15 +3229,15 @@ int html_feed_environ::HTML_META_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_DEL_enter(const std::shared_ptr<HtmlTag> &tag) {
   switch (displayInsDel) {
   case DISPLAY_INS_DEL_SIMPLE:
-    this->flag |= RB_DEL;
+    this->addFlag(RB_DEL);
     break;
   case DISPLAY_INS_DEL_NORMAL:
     this->parse("<U>[DEL:</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
-    if (this->fontstat.in_strike < FONTSTAT_MAX)
-      this->fontstat.in_strike++;
-    if (this->fontstat.in_strike == 1) {
+    if (_impl->fontstat.in_strike < FONTSTAT_MAX)
+      _impl->fontstat.in_strike++;
+    if (_impl->fontstat.in_strike == 1) {
       this->push_tag("<s>", HTML_S);
     }
     break;
@@ -3014,18 +3248,18 @@ int html_feed_environ::HTML_DEL_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_DEL_exit(const std::shared_ptr<HtmlTag> &tag) {
   switch (displayInsDel) {
   case DISPLAY_INS_DEL_SIMPLE:
-    this->flag &= ~RB_DEL;
+    this->removeFlag(RB_DEL);
     break;
   case DISPLAY_INS_DEL_NORMAL:
     this->parse("<U>:DEL]</U>");
   case DISPLAY_INS_DEL_FONTIFY:
-    if (this->fontstat.in_strike == 0)
+    if (_impl->fontstat.in_strike == 0)
       return 1;
-    if (this->fontstat.in_strike == 1 && this->close_effect0(HTML_S))
-      this->fontstat.in_strike = 0;
-    if (this->fontstat.in_strike > 0) {
-      this->fontstat.in_strike--;
-      if (this->fontstat.in_strike == 0) {
+    if (_impl->fontstat.in_strike == 1 && this->close_effect0(HTML_S))
+      _impl->fontstat.in_strike = 0;
+    if (_impl->fontstat.in_strike > 0) {
+      _impl->fontstat.in_strike--;
+      if (_impl->fontstat.in_strike == 0) {
         this->push_tag("</s>", HTML_N_S);
       }
     }
@@ -3037,15 +3271,15 @@ int html_feed_environ::HTML_DEL_exit(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_S_enter(const std::shared_ptr<HtmlTag> &tag) {
   switch (displayInsDel) {
   case DISPLAY_INS_DEL_SIMPLE:
-    this->flag |= RB_S;
+    this->addFlag(RB_S);
     break;
   case DISPLAY_INS_DEL_NORMAL:
     this->parse("<U>[S:</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
-    if (this->fontstat.in_strike < FONTSTAT_MAX)
-      this->fontstat.in_strike++;
-    if (this->fontstat.in_strike == 1) {
+    if (_impl->fontstat.in_strike < FONTSTAT_MAX)
+      _impl->fontstat.in_strike++;
+    if (_impl->fontstat.in_strike == 1) {
       this->push_tag("<s>", HTML_S);
     }
     break;
@@ -3056,19 +3290,19 @@ int html_feed_environ::HTML_S_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_S_exit(const std::shared_ptr<HtmlTag> &tag) {
   switch (displayInsDel) {
   case DISPLAY_INS_DEL_SIMPLE:
-    this->flag &= ~RB_S;
+    this->removeFlag(RB_S);
     break;
   case DISPLAY_INS_DEL_NORMAL:
     this->parse("<U>:S]</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
-    if (this->fontstat.in_strike == 0)
+    if (_impl->fontstat.in_strike == 0)
       return 1;
-    if (this->fontstat.in_strike == 1 && this->close_effect0(HTML_S))
-      this->fontstat.in_strike = 0;
-    if (this->fontstat.in_strike > 0) {
-      this->fontstat.in_strike--;
-      if (this->fontstat.in_strike == 0) {
+    if (_impl->fontstat.in_strike == 1 && this->close_effect0(HTML_S))
+      _impl->fontstat.in_strike = 0;
+    if (_impl->fontstat.in_strike > 0) {
+      _impl->fontstat.in_strike--;
+      if (_impl->fontstat.in_strike == 0) {
         this->push_tag("</s>", HTML_N_S);
       }
     }
@@ -3084,9 +3318,9 @@ int html_feed_environ::HTML_INS_enter(const std::shared_ptr<HtmlTag> &tag) {
     this->parse("<U>[INS:</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
-    if (this->fontstat.in_ins < FONTSTAT_MAX)
-      this->fontstat.in_ins++;
-    if (this->fontstat.in_ins == 1) {
+    if (_impl->fontstat.in_ins < FONTSTAT_MAX)
+      _impl->fontstat.in_ins++;
+    if (_impl->fontstat.in_ins == 1) {
       this->push_tag("<ins>", HTML_INS);
     }
     break;
@@ -3102,13 +3336,13 @@ int html_feed_environ::HTML_INS_exit(const std::shared_ptr<HtmlTag> &tag) {
     this->parse("<U>:INS]</U>");
     break;
   case DISPLAY_INS_DEL_FONTIFY:
-    if (this->fontstat.in_ins == 0)
+    if (_impl->fontstat.in_ins == 0)
       return 1;
-    if (this->fontstat.in_ins == 1 && this->close_effect0(HTML_INS))
-      this->fontstat.in_ins = 0;
-    if (this->fontstat.in_ins > 0) {
-      this->fontstat.in_ins--;
-      if (this->fontstat.in_ins == 0) {
+    if (_impl->fontstat.in_ins == 1 && this->close_effect0(HTML_INS))
+      _impl->fontstat.in_ins = 0;
+    if (_impl->fontstat.in_ins > 0) {
+      _impl->fontstat.in_ins--;
+      if (_impl->fontstat.in_ins == 0) {
         this->push_tag("</ins>", HTML_N_INS);
       }
     }
@@ -3169,97 +3403,97 @@ int html_feed_environ::HTML_BODY_enter(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_INPUT_ALT_enter(
     const std::shared_ptr<HtmlTag> &tag) {
   if (auto value = tag->getAttr(ATTR_TOP_MARGIN)) {
-    this->setTopMargin(stoi(*value));
+    _impl->setTopMargin(stoi(*value));
   }
   if (auto value = tag->getAttr(ATTR_BOTTOM_MARGIN)) {
-    this->setBottomMargin(stoi(*value));
+    _impl->setBottomMargin(stoi(*value));
   }
   if (auto value = tag->getAttr(ATTR_HSEQ)) {
-    this->input_alt.hseq = stoi(*value);
+    _impl->input_alt.hseq = stoi(*value);
   }
   if (auto value = tag->getAttr(ATTR_FID)) {
-    this->input_alt.fid = stoi(*value);
+    _impl->input_alt.fid = stoi(*value);
   }
   if (auto value = tag->getAttr(ATTR_TYPE)) {
-    this->input_alt.type = *value;
+    _impl->input_alt.type = *value;
   }
   if (auto value = tag->getAttr(ATTR_VALUE)) {
-    this->input_alt.value = *value;
+    _impl->input_alt.value = *value;
   }
   if (auto value = tag->getAttr(ATTR_NAME)) {
-    this->input_alt.name = *value;
+    _impl->input_alt.name = *value;
   }
-  this->input_alt.in = 1;
+  _impl->input_alt.in = 1;
   return 0;
 }
 
 int html_feed_environ::HTML_INPUT_ALT_exit(
     const std::shared_ptr<HtmlTag> &tag) {
-  if (this->input_alt.in) {
+  if (_impl->input_alt.in) {
     if (!this->close_effect0(HTML_INPUT_ALT))
       this->push_tag("</input_alt>", HTML_N_INPUT_ALT);
-    this->input_alt.hseq = 0;
-    this->input_alt.fid = -1;
-    this->input_alt.in = 0;
-    this->input_alt.type = {};
-    this->input_alt.name = {};
-    this->input_alt.value = {};
+    _impl->input_alt.hseq = 0;
+    _impl->input_alt.fid = -1;
+    _impl->input_alt.in = 0;
+    _impl->input_alt.type = {};
+    _impl->input_alt.name = {};
+    _impl->input_alt.value = {};
   }
   return 1;
 }
 
 int html_feed_environ::HTML_B_enter(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->fontstat.in_bold < FONTSTAT_MAX)
-    this->fontstat.in_bold++;
-  if (this->fontstat.in_bold > 1)
+  if (_impl->fontstat.in_bold < FONTSTAT_MAX)
+    _impl->fontstat.in_bold++;
+  if (_impl->fontstat.in_bold > 1)
     return 1;
   return 0;
 }
 
 int html_feed_environ::HTML_B_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->fontstat.in_bold == 1 && this->close_effect0(HTML_B))
-    this->fontstat.in_bold = 0;
-  if (this->fontstat.in_bold > 0) {
-    this->fontstat.in_bold--;
-    if (this->fontstat.in_bold == 0)
+  if (_impl->fontstat.in_bold == 1 && this->close_effect0(HTML_B))
+    _impl->fontstat.in_bold = 0;
+  if (_impl->fontstat.in_bold > 0) {
+    _impl->fontstat.in_bold--;
+    if (_impl->fontstat.in_bold == 0)
       return 0;
   }
   return 1;
 }
 
 int html_feed_environ::HTML_I_enter(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->fontstat.in_italic < FONTSTAT_MAX)
-    this->fontstat.in_italic++;
-  if (this->fontstat.in_italic > 1)
+  if (_impl->fontstat.in_italic < FONTSTAT_MAX)
+    _impl->fontstat.in_italic++;
+  if (_impl->fontstat.in_italic > 1)
     return 1;
   return 0;
 }
 
 int html_feed_environ::HTML_I_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->fontstat.in_italic == 1 && this->close_effect0(HTML_I))
-    this->fontstat.in_italic = 0;
-  if (this->fontstat.in_italic > 0) {
-    this->fontstat.in_italic--;
-    if (this->fontstat.in_italic == 0)
+  if (_impl->fontstat.in_italic == 1 && this->close_effect0(HTML_I))
+    _impl->fontstat.in_italic = 0;
+  if (_impl->fontstat.in_italic > 0) {
+    _impl->fontstat.in_italic--;
+    if (_impl->fontstat.in_italic == 0)
       return 0;
   }
   return 1;
 }
 
 int html_feed_environ::HTML_U_enter(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->fontstat.in_under < FONTSTAT_MAX)
-    this->fontstat.in_under++;
-  if (this->fontstat.in_under > 1)
+  if (_impl->fontstat.in_under < FONTSTAT_MAX)
+    _impl->fontstat.in_under++;
+  if (_impl->fontstat.in_under > 1)
     return 1;
   return 0;
 }
 
 int html_feed_environ::HTML_U_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->fontstat.in_under == 1 && this->close_effect0(HTML_U))
-    this->fontstat.in_under = 0;
-  if (this->fontstat.in_under > 0) {
-    this->fontstat.in_under--;
-    if (this->fontstat.in_under == 0)
+  if (_impl->fontstat.in_under == 1 && this->close_effect0(HTML_U))
+    _impl->fontstat.in_under = 0;
+  if (_impl->fontstat.in_under > 0) {
+    _impl->fontstat.in_under--;
+    if (_impl->fontstat.in_under == 0)
       return 0;
   }
   return 1;
@@ -3268,33 +3502,55 @@ int html_feed_environ::HTML_U_exit(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_PRE_INT_enter(const std::shared_ptr<HtmlTag> &tag) {
   int i = this->line.size();
   // this->append_tags();
-  if (!(this->flag & RB_SPECIAL)) {
-    this->set_breakpoint(this->line.size() - i);
+  if (!(_impl->flag & RB_SPECIAL)) {
+    _impl->set_breakpoint(line.size(), this->line.size() - i);
   }
-  this->flag |= RB_PRE_INT;
+  _impl->flag |= RB_PRE_INT;
   return 0;
 }
 
 int html_feed_environ::HTML_PRE_INT_exit(const std::shared_ptr<HtmlTag> &tag) {
   this->push_tag("</pre_int>", HTML_N_PRE_INT);
-  this->flag &= ~RB_PRE_INT;
-  if (!(this->flag & RB_SPECIAL) && this->pos > this->bp.pos) {
+  _impl->flag &= ~RB_PRE_INT;
+  if (!(_impl->flag & RB_SPECIAL) && _impl->pos > _impl->bp.pos) {
     this->prevchar = "";
-    this->prev_ctype = PC_CTRL;
+    _impl->prev_ctype = PC_CTRL;
   }
   return 1;
 }
 
 int html_feed_environ::HTML_NOBR_enter(const std::shared_ptr<HtmlTag> &tag) {
-  this->flag |= RB_NOBR;
-  this->nobr_level++;
+  this->addFlag(RB_NOBR);
+  _impl->nobr_level++;
   return 0;
 }
 
 int html_feed_environ::HTML_NOBR_exit(const std::shared_ptr<HtmlTag> &tag) {
-  if (this->nobr_level > 0)
-    this->nobr_level--;
-  if (this->nobr_level == 0)
-    this->flag &= ~RB_NOBR;
+  if (_impl->nobr_level > 0)
+    _impl->nobr_level--;
+  if (_impl->nobr_level == 0)
+    _impl->flag &= ~RB_NOBR;
   return 0;
+}
+
+// table->total_width
+void html_feed_environ::make_caption(int table_width,
+                                     const std::string &caption) {
+  html_feed_environ henv(
+      MAX_ENV_LEVEL, table_width > 0 ? table_width : this->_width,
+      this->envs[this->envc].indent, GeneralList::newGeneralList());
+  this->parse("<center>");
+  this->parse(caption, false);
+  this->parse("</center>");
+
+  if (table_width < henv.maxlimit()) {
+    table_width = henv.maxlimit();
+  }
+
+  auto limit = this->_width;
+  this->_width = table_width;
+  this->parse("<center>");
+  this->parse(caption, false);
+  this->parse("</center>");
+  this->_width = limit;
 }

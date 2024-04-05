@@ -4,7 +4,7 @@
 
 ReadBufferFlags TableStatus::pre_mode(html_feed_environ *h_env) {
   return (h_env->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode
-                                               : h_env->flag;
+                                               : h_env->flag();
 }
 
 HtmlCommand TableStatus::end_tag(html_feed_environ *h_env) {
