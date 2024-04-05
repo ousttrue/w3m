@@ -4,6 +4,7 @@
 #include "cookie.h"
 #include "dns_order.h"
 #include "quote.h"
+#include "html_command.h"
 
 #define N_(Text) Text
 #include <sstream>

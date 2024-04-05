@@ -1,7 +1,7 @@
 #pragma once
 #include "cursor_scroll.h"
 #include "line_data.h"
-#include "http_request.h"
+// #include "http_request.h"
 #include "url.h"
 #include "utf8.h"
 #include "enum_template.h"

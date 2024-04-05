@@ -1,6 +1,7 @@
 #include "option_param.h"
 #include "quote.h"
 #include "myctype.h"
+#include "html_command.h"
 
 #include <sstream>
 

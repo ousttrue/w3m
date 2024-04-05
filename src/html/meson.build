@@ -1,0 +1,36 @@
+html_lib = static_library(
+    'html',
+    [
+        'matrix.cpp',
+        'symbol.cpp',
+        'push_symbol.cpp',
+        'html_command.cpp',
+        'generallist.cpp',
+        'lineprop.cpp',
+        'http_option.cpp',
+        'readtoken.cpp',
+        'anchor.cpp',
+        'mimetypes.cpp',
+        'form.cpp',
+        'line_break.cpp',
+        'html_tag.cpp',
+        'stringtoken.cpp',
+        'line.cpp',
+        'line_data.cpp',
+        'line_layout.cpp',
+        'html_feed_env.cpp',
+        'html_token.cpp',
+        'html_table.cpp',
+        'html_meta.cpp',
+        'html_renderer.cpp',
+        'html_table_status.cpp',
+    ],
+    dependencies: [
+        core_dep,
+    ],
+)
+html_dep = declare_dependency(
+    link_with: html_lib,
+    include_directories: include_directories('.'),
+    dependencies: [core_dep],
+)

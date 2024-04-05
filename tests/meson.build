@@ -15,5 +15,6 @@ executable(
         gtest_main_dep,
         without_gc_dep,
         # with_gc_dep,
+        html_dep,
     ],
 )
