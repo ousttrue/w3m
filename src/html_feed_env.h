@@ -82,7 +82,11 @@ enum class FlushLineMode {
 
 class HtmlTag;
 class html_feed_environ {
+  friend struct table;
+  friend struct tableimpl;
+  friend struct Tokenizer;
   struct html_impl *_impl;
+  friend class HtmlRenderer;
 
 public:
   std::string line;
@@ -342,16 +346,21 @@ private:
 
   std::string _tagbuf;
 
-public:
   const std::string &tagbuf() const { return _tagbuf; }
   void setToken(const std::string &str) { _tagbuf = str; }
+
   int append_token(const char **instr, bool pre);
   void appendGeneralList(const std::shared_ptr<GeneralList> &buf) {
     this->buf->appendGeneralList(buf);
   }
-  LineFeed feed() { return LineFeed(this->buf); }
+
   int cur_hseq() const { return _cur_hseq; }
   int hseqAndIncrement() { return _cur_hseq++; }
+
+public:
+  LineFeed feed() { return LineFeed(this->buf); }
+
+private:
   int maxlimit() const { return _maxlimit; }
   void setMaxLimit(int limit) {
     if (limit > this->_maxlimit) {
@@ -453,8 +462,13 @@ public:
   std::vector<environment> envs;
   int envc = 0;
   int envc_real = 0;
-  std::string title;
+  std::string _title;
 
+public:
+  int width() { return _width; }
+  const std::string &title() const { return _title; }
+
+private:
   std::shared_ptr<struct table> tables[MAX_TABLE];
   struct table_mode table_mode[MAX_TABLE];
   int table_width(int table_level);
@@ -497,12 +511,17 @@ public:
   void save_fonteffect();
   void restore_fonteffect();
   void proc_escape(const char **str_return);
+
+public:
   void completeHTMLstream();
-  void push_render_image(const std::string &str, int width, int limit);
-  void process_token(struct TableStatus &t, const struct Token &token);
 
   // HTML processing first pass
   void parse(std::string_view istr, bool internal = true);
+
+private:
+  void push_render_image(const std::string &str, int width, int limit);
+  void process_token(struct TableStatus &t, const struct Token &token);
+
   void CLOSE_DT();
   void CLOSE_A();
   void HTML5_CLOSE_A();
@@ -520,6 +539,7 @@ public:
   void POP_ENV();
   void PUSH_ENV_NOINDENT(HtmlCommand cmd);
   void PUSH_ENV(HtmlCommand cmd);
+
   std::shared_ptr<struct FormItem>
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
 

@@ -157,7 +157,6 @@ loadHTMLstream(int width, const Url &currentURL, std::string_view body,
   htmlenv1.parse(body, internal);
   htmlenv1.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();
-  htmlenv1.flushline(FlushLineMode::Append);
   return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }
 
@@ -1508,7 +1507,7 @@ static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
 
 static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
   if (h_env->flag & RB_PRE_INT) {
-    if (h_env->pos > h_env->_width)
+    if (h_env->pos > h_env->width())
       return 1;
     else
       return 0;
@@ -1519,7 +1518,7 @@ static int need_flushline(html_feed_environ *h_env, Lineprop mode) {
     return 0;
   }
 
-  if (h_env->pos > h_env->_width)
+  if (h_env->pos > h_env->width())
     return 1;
 
   return 0;
@@ -1899,6 +1898,8 @@ void html_feed_environ::completeHTMLstream() {
     if (this->table_level >= tmp)
       break;
   }
+
+  flushline(FlushLineMode::Append);
 }
 
 int html_feed_environ::append_token(const char **instr, bool pre) {
@@ -2539,7 +2540,7 @@ int html_feed_environ::HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag) {
 int html_feed_environ::HTML_TITLE_ALT_enter(
     const std::shared_ptr<HtmlTag> &tag) {
   if (auto value = tag->getAttr(ATTR_TITLE))
-    this->title = html_unquote(*value);
+    this->_title = html_unquote(*value);
   return 0;
 }
 

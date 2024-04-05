@@ -433,9 +433,9 @@ HtmlRenderer::render(const Url &currentUrl, html_feed_environ *h_env,
                     const std::shared_ptr<AnchorList<FormAnchor>> &old) {
 
   auto formated = std::make_shared<LineData>();
-  formated->clear(h_env->_width);
+  formated->clear(h_env->width());
   formated->baseURL = currentUrl;
-  formated->title = h_env->title;
+  formated->title = h_env->title();
 
   auto feed = h_env->feed();
 
