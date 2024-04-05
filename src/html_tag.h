@@ -5,6 +5,9 @@
 #include <vector>
 #include <optional>
 #include <memory>
+#include <string_view>
+
+extern bool DisableCenter;
 
 enum DisplayInsDelType {
   DISPLAY_INS_DEL_SIMPLE = 0,
@@ -114,78 +117,13 @@ public:
   bool setAttr(HtmlTagAttr id, const std::string &value);
   std::string to_str() const;
   ReadBufferFlags alignFlag() const;
-
-  int process(html_feed_environ *h_env);
-
-private:
-  int HTML_Paragraph(html_feed_environ *h_env);
-  int HTML_H_enter(html_feed_environ *h_env);
-  int HTML_H_exit(html_feed_environ *h_env);
-  int HTML_List_enter(html_feed_environ *h_env);
-  int HTML_List_exit(html_feed_environ *h_env);
-  int HTML_DL_enter(html_feed_environ *h_env);
-  int HTML_LI_enter(html_feed_environ *h_env);
-  int HTML_DT_enter(html_feed_environ *h_env);
-  int HTML_DT_exit(html_feed_environ *h_env);
-  int HTML_DD_enter(html_feed_environ *h_env);
-  int HTML_TITLE_enter(html_feed_environ *h_env);
-  int HTML_TITLE_exit(html_feed_environ *h_env);
-  int HTML_TITLE_ALT_enter(html_feed_environ *h_env);
-  int HTML_FRAMESET_enter(html_feed_environ *h_env);
-  int HTML_FRAMESET_exit(html_feed_environ *h_env);
-  int HTML_NOFRAMES_enter(html_feed_environ *h_env);
-  int HTML_NOFRAMES_exit(html_feed_environ *h_env);
-  int HTML_FRAME_enter(html_feed_environ *h_env);
-  int HTML_HR_enter(html_feed_environ *h_env);
-  int HTML_PRE_enter(html_feed_environ *h_env);
-  int HTML_PRE_exit(html_feed_environ *h_env);
-  int HTML_PRE_PLAIN_enter(html_feed_environ *h_env);
-  int HTML_PRE_PLAIN_exit(html_feed_environ *h_env);
-  int HTML_PLAINTEXT_enter(html_feed_environ *h_env);
-  int HTML_LISTING_exit(html_feed_environ *h_env);
-  int HTML_A_enter(html_feed_environ *h_env);
-  int HTML_IMG_enter(html_feed_environ *h_env);
-  int HTML_IMG_ALT_enter(html_feed_environ *h_env);
-  int HTML_IMG_ALT_exit(html_feed_environ *h_env);
-  int HTML_TABLE_enter(html_feed_environ *h_env);
-  int HTML_CENTER_enter(html_feed_environ *h_env);
-  int HTML_CENTER_exit(html_feed_environ *h_env);
-  int HTML_DIV_enter(html_feed_environ *h_env);
-  int HTML_DIV_exit(html_feed_environ *h_env);
-  int HTML_DIV_INT_enter(html_feed_environ *h_env);
-  int HTML_DIV_INT_exit(html_feed_environ *h_env);
-  int HTML_FORM_enter(html_feed_environ *h_env);
-  int HTML_FORM_exit(html_feed_environ *h_env);
-  int HTML_INPUT_enter(html_feed_environ *h_env);
-  int HTML_BUTTON_enter(html_feed_environ *h_env);
-  int HTML_BUTTON_exit(html_feed_environ *h_env);
-  int HTML_SELECT_enter(html_feed_environ *h_env);
-  int HTML_SELECT_exit(html_feed_environ *h_env);
-  int HTML_TEXTAREA_enter(html_feed_environ *h_env);
-  int HTML_TEXTAREA_exit(html_feed_environ *h_env);
-  int HTML_ISINDEX_enter(html_feed_environ *h_env);
-  int HTML_META_enter(html_feed_environ *h_env);
-  int HTML_DEL_enter(html_feed_environ *h_env);
-  int HTML_DEL_exit(html_feed_environ *h_env);
-  int HTML_S_enter(html_feed_environ *h_env);
-  int HTML_S_exit(html_feed_environ *h_env);
-  int HTML_INS_enter(html_feed_environ *h_env);
-  int HTML_INS_exit(html_feed_environ *h_env);
-  int HTML_BGSOUND_enter(html_feed_environ *h_env);
-  int HTML_EMBED_enter(html_feed_environ *h_env);
-  int HTML_APPLET_enter(html_feed_environ *h_env);
-  int HTML_BODY_enter(html_feed_environ *h_env);
-  int HTML_INPUT_ALT_enter(html_feed_environ *h_env);
-  int HTML_INPUT_ALT_exit(html_feed_environ *h_env);
-
-  int HTML_B_enter(html_feed_environ *h_env);
-  int HTML_B_exit(html_feed_environ *h_env);
-  int HTML_I_enter(html_feed_environ *h_env);
-  int HTML_I_exit(html_feed_environ *h_env);
-  int HTML_U_enter(html_feed_environ *h_env);
-  int HTML_U_exit(html_feed_environ *h_env);
-  int HTML_PRE_INT_enter(html_feed_environ *h_env);
-  int HTML_PRE_INT_exit(html_feed_environ *h_env);
-  int HTML_NOBR_enter(html_feed_environ *h_env);
-  int HTML_NOBR_exit(html_feed_environ *h_env);
 };
+
+std::shared_ptr<HtmlTag> parseHtmlTag(const char **p, bool internal);
+
+inline std::shared_ptr<HtmlTag> parseHtmlTag(std::string_view v,
+                                             bool internal) {
+  std::string s(v.begin(), v.end());
+  auto p = s.c_str();
+  return parseHtmlTag(&p, internal);
+}

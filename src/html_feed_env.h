@@ -19,7 +19,6 @@ extern bool pseudoInlines;
 extern bool ignore_null_img_alt;
 extern int pixel_per_char_i;
 extern bool displayLinkNumber;
-extern bool DisableCenter;
 extern int IndentIncr;
 #define INDENT_INCR IndentIncr
 extern bool DisplayBorders;
@@ -81,6 +80,7 @@ enum class FlushLineMode {
   Append,
 };
 
+class HtmlTag;
 class html_feed_environ {
   struct html_impl *_impl;
 
@@ -459,7 +459,7 @@ public:
   struct table_mode table_mode[MAX_TABLE];
   int table_width(int table_level);
 
-  std::string process_select(const class HtmlTag *tag);
+  std::string process_select(const class std::shared_ptr<HtmlTag> &tag);
   std::string process_n_select();
   void process_option();
   void feed_select(const std::string &str);
@@ -481,16 +481,16 @@ public:
   std::vector<std::string> textarea_str;
   std::vector<struct FormAnchor *> a_textarea;
 
-  std::string process_form_int(const HtmlTag *tag, int fid);
+  std::string process_form_int(const std::shared_ptr<HtmlTag> &tag, int fid);
   std::string process_n_form();
-  std::string process_form(const HtmlTag *tag) {
+  std::string process_form(const std::shared_ptr<HtmlTag> &tag) {
     return process_form_int(tag, -1);
   }
   int cur_form_id() const {
     return ((form_sp >= 0) ? form_stack[form_sp] : -1);
   }
 
-  std::string process_textarea(const HtmlTag *tag, int width);
+  std::string process_textarea(const std::shared_ptr<HtmlTag> &tag, int width);
   std::string process_n_textarea();
   void feed_textarea(const std::string &str);
   void close_anchor();
@@ -507,12 +507,14 @@ public:
   void CLOSE_A();
   void HTML5_CLOSE_A();
   std::string getLinkNumberStr(int correction) const;
-  std::string process_img(const HtmlTag *tag, int width);
-  std::string process_anchor(HtmlTag *tag, const std::string &tagbuf);
-  std::string process_input(const HtmlTag *tag);
-  std::string process_button(const HtmlTag *tag);
+  std::string process_img(const std::shared_ptr<HtmlTag> &tag, int width);
+  std::string process_anchor(const std::shared_ptr<HtmlTag> &tag,
+                             const std::string &tagbuf);
+  std::string process_input(const std::shared_ptr<HtmlTag> &tag);
+  std::string process_button(const std::shared_ptr<HtmlTag> &tag);
   std::string process_n_button();
-  std::string process_hr(const HtmlTag *tag, int width, int indent_width);
+  std::string process_hr(const std::shared_ptr<HtmlTag> &tag, int width,
+                         int indent_width);
 
   void purgeline();
   void POP_ENV();
@@ -520,6 +522,79 @@ public:
   void PUSH_ENV(HtmlCommand cmd);
   std::shared_ptr<struct FormItem>
   createFormItem(const std::shared_ptr<HtmlTag> &tag);
+
+private:
+  int process(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_Paragraph(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_H_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_H_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_List_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_List_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DL_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_LI_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DT_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DD_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TITLE_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TITLE_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TITLE_ALT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_FRAMESET_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_FRAMESET_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_NOFRAMES_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_NOFRAMES_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_FRAME_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_HR_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PRE_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PRE_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PRE_PLAIN_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PRE_PLAIN_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PLAINTEXT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_LISTING_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_A_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_IMG_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_IMG_ALT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_IMG_ALT_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TABLE_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_CENTER_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_CENTER_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DIV_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DIV_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DIV_INT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DIV_INT_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_FORM_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_FORM_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_INPUT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_BUTTON_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_BUTTON_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_SELECT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_SELECT_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TEXTAREA_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_TEXTAREA_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_ISINDEX_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_META_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DEL_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_DEL_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_S_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_S_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_INS_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_INS_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_BGSOUND_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_EMBED_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_APPLET_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_BODY_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_INPUT_ALT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_INPUT_ALT_exit(const std::shared_ptr<HtmlTag> &tag);
+
+  int HTML_B_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_B_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_I_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_I_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_U_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_U_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PRE_INT_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_PRE_INT_exit(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_NOBR_enter(const std::shared_ptr<HtmlTag> &tag);
+  int HTML_NOBR_exit(const std::shared_ptr<HtmlTag> &tag);
 };
 
 #define MAX_ENV_LEVEL 20

@@ -1,21 +1,12 @@
 #include "html_tag.h"
 #include "form.h"
-#include "html_feed_env.h"
 #include "ctrlcode.h"
-#include "push_symbol.h"
+#include "myctype.h"
 #include "quote.h"
 #include "cmp.h"
-#include "utf8.h"
-#include "option_param.h"
-#include "html_meta.h"
-#include "html_table_border_mode.h"
-#include "html_table.h"
 #include <sstream>
 
-#define MAX_UL_LEVEL 9
-#define MAX_CELLSPACING 1000
-#define MAX_CELLPADDING 1000
-#define MAX_VSPACE 1000
+bool DisableCenter = false;
 
 bool HtmlTag::setAttr(HtmlTagAttr id, const std::string &value) {
   if (!this->acceptsAttr(id))
@@ -38,263 +29,6 @@ std::optional<std::string> HtmlTag::getAttr(HtmlTagAttr id) const {
   return this->value[i];
 }
 
-int HtmlTag::process(html_feed_environ *h_env) {
-  if (h_env->flag & RB_PRE) {
-    switch (this->tagid) {
-    case HTML_NOBR:
-    case HTML_N_NOBR:
-    case HTML_PRE_INT:
-    case HTML_N_PRE_INT:
-      return 1;
-
-    default:
-      break;
-    }
-  }
-
-  switch (this->tagid) {
-  case HTML_B:
-    return this->HTML_B_enter(h_env);
-  case HTML_N_B:
-    return this->HTML_B_exit(h_env);
-  case HTML_I:
-    return this->HTML_I_enter(h_env);
-  case HTML_N_I:
-    return this->HTML_I_exit(h_env);
-  case HTML_U:
-    return this->HTML_U_enter(h_env);
-  case HTML_N_U:
-    return this->HTML_U_exit(h_env);
-  case HTML_EM:
-    h_env->parse("<i>");
-    return 1;
-  case HTML_N_EM:
-    h_env->parse("</i>");
-    return 1;
-  case HTML_STRONG:
-    h_env->parse("<b>");
-    return 1;
-  case HTML_N_STRONG:
-    h_env->parse("</b>");
-    return 1;
-  case HTML_Q:
-    h_env->parse("`");
-    return 1;
-  case HTML_N_Q:
-    h_env->parse("'");
-    return 1;
-  case HTML_FIGURE:
-  case HTML_N_FIGURE:
-  case HTML_P:
-  case HTML_N_P:
-    return this->HTML_Paragraph(h_env);
-  case HTML_FIGCAPTION:
-  case HTML_N_FIGCAPTION:
-  case HTML_BR:
-    h_env->flushline(FlushLineMode::Force);
-    h_env->clearBlankLines();
-    return 1;
-  case HTML_H:
-    return this->HTML_H_enter(h_env);
-  case HTML_N_H:
-    return this->HTML_H_exit(h_env);
-  case HTML_UL:
-  case HTML_OL:
-  case HTML_BLQ:
-    return this->HTML_List_enter(h_env);
-  case HTML_N_UL:
-  case HTML_N_OL:
-  case HTML_N_DL:
-  case HTML_N_BLQ:
-  case HTML_N_DD:
-    return this->HTML_List_exit(h_env);
-  case HTML_DL:
-    return this->HTML_DL_enter(h_env);
-  case HTML_LI:
-    return this->HTML_LI_enter(h_env);
-  case HTML_DT:
-    return this->HTML_DT_enter(h_env);
-  case HTML_N_DT:
-    return this->HTML_DT_exit(h_env);
-  case HTML_DD:
-    return this->HTML_DD_enter(h_env);
-  case HTML_TITLE:
-    return this->HTML_TITLE_enter(h_env);
-  case HTML_N_TITLE:
-    return this->HTML_TITLE_exit(h_env);
-  case HTML_TITLE_ALT:
-    return this->HTML_TITLE_ALT_enter(h_env);
-  case HTML_FRAMESET:
-    return this->HTML_FRAMESET_enter(h_env);
-  case HTML_N_FRAMESET:
-    return this->HTML_FRAMESET_exit(h_env);
-  case HTML_NOFRAMES:
-    return this->HTML_NOFRAMES_enter(h_env);
-  case HTML_N_NOFRAMES:
-    return this->HTML_NOFRAMES_exit(h_env);
-  case HTML_FRAME:
-    return this->HTML_FRAME_enter(h_env);
-  case HTML_HR:
-    return this->HTML_HR_enter(h_env);
-  case HTML_PRE:
-    return this->HTML_PRE_enter(h_env);
-  case HTML_N_PRE:
-    return this->HTML_PRE_exit(h_env);
-  case HTML_PRE_INT:
-    return this->HTML_PRE_INT_enter(h_env);
-  case HTML_N_PRE_INT:
-    return this->HTML_PRE_INT_exit(h_env);
-  case HTML_NOBR:
-    return this->HTML_NOBR_enter(h_env);
-  case HTML_N_NOBR:
-    return this->HTML_NOBR_exit(h_env);
-  case HTML_PRE_PLAIN:
-    return this->HTML_PRE_PLAIN_enter(h_env);
-  case HTML_N_PRE_PLAIN:
-    return this->HTML_PRE_PLAIN_exit(h_env);
-  case HTML_LISTING:
-  case HTML_XMP:
-  case HTML_PLAINTEXT:
-    return this->HTML_PLAINTEXT_enter(h_env);
-  case HTML_N_LISTING:
-  case HTML_N_XMP:
-    return this->HTML_LISTING_exit(h_env);
-  case HTML_SCRIPT:
-    h_env->flag |= RB_SCRIPT;
-    h_env->end_tag = HTML_N_SCRIPT;
-    return 1;
-  case HTML_STYLE:
-    h_env->flag |= RB_STYLE;
-    h_env->end_tag = HTML_N_STYLE;
-    return 1;
-  case HTML_N_SCRIPT:
-    h_env->flag &= ~RB_SCRIPT;
-    h_env->end_tag = HTML_UNKNOWN;
-    return 1;
-  case HTML_N_STYLE:
-    h_env->flag &= ~RB_STYLE;
-    h_env->end_tag = HTML_UNKNOWN;
-    return 1;
-  case HTML_A:
-    return this->HTML_A_enter(h_env);
-  case HTML_N_A:
-    h_env->close_anchor();
-    return 1;
-  case HTML_IMG:
-    return this->HTML_IMG_enter(h_env);
-  case HTML_IMG_ALT:
-    return this->HTML_IMG_ALT_enter(h_env);
-  case HTML_N_IMG_ALT:
-    return this->HTML_IMG_ALT_exit(h_env);
-  case HTML_INPUT_ALT:
-    return this->HTML_INPUT_ALT_enter(h_env);
-  case HTML_N_INPUT_ALT:
-    return this->HTML_INPUT_ALT_exit(h_env);
-  case HTML_TABLE:
-    return this->HTML_TABLE_enter(h_env);
-  case HTML_N_TABLE:
-    // should be processed in HTMLlineproc()
-    return 1;
-  case HTML_CENTER:
-    return this->HTML_CENTER_enter(h_env);
-  case HTML_N_CENTER:
-    return this->HTML_CENTER_exit(h_env);
-  case HTML_DIV:
-    return this->HTML_DIV_enter(h_env);
-  case HTML_N_DIV:
-    return this->HTML_DIV_exit(h_env);
-  case HTML_DIV_INT:
-    return this->HTML_DIV_INT_enter(h_env);
-  case HTML_N_DIV_INT:
-    return this->HTML_DIV_INT_exit(h_env);
-  case HTML_FORM:
-    return this->HTML_FORM_enter(h_env);
-  case HTML_N_FORM:
-    return this->HTML_FORM_exit(h_env);
-  case HTML_INPUT:
-    return this->HTML_INPUT_enter(h_env);
-  case HTML_BUTTON:
-    return this->HTML_BUTTON_enter(h_env);
-  case HTML_N_BUTTON:
-    return this->HTML_BUTTON_exit(h_env);
-  case HTML_SELECT:
-    return this->HTML_SELECT_enter(h_env);
-  case HTML_N_SELECT:
-    return this->HTML_SELECT_exit(h_env);
-  case HTML_OPTION:
-    /* nothing */
-    return 1;
-  case HTML_TEXTAREA:
-    return this->HTML_TEXTAREA_enter(h_env);
-  case HTML_N_TEXTAREA:
-    return this->HTML_TEXTAREA_exit(h_env);
-  case HTML_ISINDEX:
-    return this->HTML_ISINDEX_enter(h_env);
-  case HTML_DOCTYPE:
-    if (!this->existsAttr(ATTR_PUBLIC)) {
-      h_env->flag |= RB_HTML5;
-    }
-    return 1;
-  case HTML_META:
-    return this->HTML_META_enter(h_env);
-  case HTML_BASE:
-  case HTML_MAP:
-  case HTML_N_MAP:
-  case HTML_AREA:
-    return 0;
-  case HTML_DEL:
-    return this->HTML_DEL_enter(h_env);
-  case HTML_N_DEL:
-    return this->HTML_DEL_exit(h_env);
-  case HTML_S:
-    return this->HTML_S_enter(h_env);
-  case HTML_N_S:
-    return this->HTML_S_exit(h_env);
-  case HTML_INS:
-    return this->HTML_INS_enter(h_env);
-  case HTML_N_INS:
-    return this->HTML_INS_exit(h_env);
-  case HTML_SUP:
-    if (!(h_env->flag & (RB_DEL | RB_S)))
-      h_env->parse("^");
-    return 1;
-  case HTML_N_SUP:
-    return 1;
-  case HTML_SUB:
-    if (!(h_env->flag & (RB_DEL | RB_S)))
-      h_env->parse("[");
-    return 1;
-  case HTML_N_SUB:
-    if (!(h_env->flag & (RB_DEL | RB_S)))
-      h_env->parse("]");
-    return 1;
-  case HTML_FONT:
-  case HTML_N_FONT:
-  case HTML_NOP:
-    return 1;
-  case HTML_BGSOUND:
-    return this->HTML_BGSOUND_enter(h_env);
-  case HTML_EMBED:
-    return this->HTML_EMBED_enter(h_env);
-  case HTML_APPLET:
-    return this->HTML_APPLET_enter(h_env);
-  case HTML_BODY:
-    return this->HTML_BODY_enter(h_env);
-  case HTML_N_HEAD:
-    if (h_env->flag & RB_TITLE)
-      h_env->parse("</title>");
-    return 1;
-  case HTML_HEAD:
-  case HTML_N_BODY:
-    return 1;
-  default:
-    /* h_env->prevchar = '\0'; */
-    return 0;
-  }
-
-  return 0;
-}
-
 ReadBufferFlags HtmlTag::alignFlag() const {
   ReadBufferFlags flag = (ReadBufferFlags)-1;
   if (auto value = this->getAttr(ATTR_ALIGN)) {
@@ -315,1048 +49,601 @@ ReadBufferFlags HtmlTag::alignFlag() const {
   return flag;
 }
 
-int HtmlTag::HTML_Paragraph(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline(FlushLineMode::Force);
-    h_env->do_blankline();
-  }
-  h_env->flag |= RB_IGNORE_P;
-  if (this->tagid == HTML_P) {
-    h_env->set_alignment(this->alignFlag());
-    h_env->flag |= RB_P;
-  }
-  return 1;
-}
+#define MAX_TAG_LEN 64
 
-int HtmlTag::HTML_H_enter(html_feed_environ *h_env) {
-  if (!(h_env->flag & (RB_PREMODE | RB_IGNORE_P))) {
-    h_env->flushline();
-    h_env->do_blankline();
-  }
-  h_env->parse("<b>");
-  h_env->set_alignment(this->alignFlag());
-  return 1;
-}
+/* Define HTML Tag Infomation Table */
 
-int HtmlTag::HTML_H_exit(html_feed_environ *h_env) {
-  h_env->parse("</b>");
-  if (!(h_env->flag & RB_PREMODE)) {
-    h_env->flushline();
-  }
-  h_env->do_blankline();
-  h_env->RB_RESTORE_FLAG();
-  h_env->close_anchor();
-  h_env->flag |= RB_IGNORE_P;
-  return 1;
-}
+#define ATTR_CORE ATTR_ID
+unsigned char ALST_ID[] = {ATTR_CORE};
+unsigned char ALST_A[] = {ATTR_NAME,      ATTR_HREF,      ATTR_REL,
+                          ATTR_CHARSET,   ATTR_TARGET,    ATTR_HSEQ,
+                          ATTR_REFERER,   ATTR_FRAMENAME, ATTR_TITLE,
+                          ATTR_ACCESSKEY, ATTR_CORE};
+unsigned char ALST_P[] = {ATTR_ALIGN, ATTR_CORE};
+unsigned char ALST_UL[] = {ATTR_START, ATTR_TYPE, ATTR_CORE};
+unsigned char ALST_LI[] = {ATTR_TYPE, ATTR_VALUE, ATTR_CORE};
+unsigned char ALST_HR[] = {ATTR_WIDTH, ATTR_ALIGN, ATTR_CORE};
+unsigned char ALST_LINK[] = {ATTR_HREF,  ATTR_HSEQ, ATTR_REL, ATTR_REV,
+                             ATTR_TITLE, ATTR_TYPE, ATTR_CORE};
+unsigned char ALST_DL[] = {ATTR_COMPACT, ATTR_CORE};
+unsigned char ALST_PRE[] = {ATTR_FOR_TABLE, ATTR_CORE};
+unsigned char ALST_IMG[] = {ATTR_SRC,     ATTR_ALT,    ATTR_WIDTH, ATTR_HEIGHT,
+                            ATTR_ALIGN,   ATTR_USEMAP, ATTR_ISMAP, ATTR_TITLE,
+                            ATTR_PRE_INT, ATTR_CORE};
+unsigned char ALST_TABLE[] = {ATTR_BORDER,      ATTR_WIDTH,       ATTR_HBORDER,
+                              ATTR_CELLSPACING, ATTR_CELLPADDING, ATTR_VSPACE,
+                              ATTR_CORE};
+unsigned char ALST_DOCTYPE[] = {
+    ATTR_PUBLIC}; /* only (html and) public should be checked */
+unsigned char ALST_META[] = {ATTR_HTTP_EQUIV, ATTR_CONTENT, ATTR_CHARSET,
+                             ATTR_CORE};
+unsigned char ALST_FRAME[] = {ATTR_SRC, ATTR_NAME, ATTR_CORE};
+unsigned char ALST_FRAMESET[] = {ATTR_COLS, ATTR_ROWS, ATTR_CORE};
+unsigned char ALST_NOFRAMES[] = {ATTR_CORE};
+unsigned char ALST_FORM[] = {ATTR_METHOD,         ATTR_ACTION,  ATTR_CHARSET,
+                             ATTR_ACCEPT_CHARSET, ATTR_ENCTYPE, ATTR_TARGET,
+                             ATTR_NAME,           ATTR_CORE};
+unsigned char ALST_INPUT[] = {
+    ATTR_TYPE,  ATTR_VALUE,     ATTR_NAME, ATTR_CHECKED,  ATTR_ACCEPT,
+    ATTR_SIZE,  ATTR_MAXLENGTH, ATTR_ALT,  ATTR_READONLY, ATTR_SRC,
+    ATTR_WIDTH, ATTR_HEIGHT,    ATTR_CORE};
+unsigned char ALST_BUTTON[] = {ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CORE};
+unsigned char ALST_TEXTAREA[] = {ATTR_COLS, ATTR_ROWS, ATTR_NAME, ATTR_READONLY,
+                                 ATTR_CORE};
+unsigned char ALST_SELECT[] = {ATTR_NAME, ATTR_MULTIPLE, ATTR_CORE};
+unsigned char ALST_OPTION[] = {ATTR_VALUE, ATTR_LABEL, ATTR_SELECTED,
+                               ATTR_CORE};
+unsigned char ALST_ISINDEX[] = {ATTR_ACTION, ATTR_PROMPT, ATTR_CORE};
+unsigned char ALST_MAP[] = {ATTR_NAME, ATTR_CORE};
+unsigned char ALST_AREA[] = {ATTR_HREF,  ATTR_TARGET, ATTR_ALT,
+                             ATTR_SHAPE, ATTR_COORDS, ATTR_CORE};
+unsigned char ALST_BASE[] = {ATTR_HREF, ATTR_TARGET, ATTR_CORE};
+unsigned char ALST_BODY[] = {ATTR_BACKGROUND, ATTR_CORE};
+unsigned char ALST_TR[] = {ATTR_ALIGN, ATTR_VALIGN, ATTR_CORE};
+unsigned char ALST_TD[] = {ATTR_COLSPAN, ATTR_ROWSPAN, ATTR_ALIGN, ATTR_VALIGN,
+                           ATTR_WIDTH,   ATTR_NOWRAP,  ATTR_CORE};
+unsigned char ALST_BGSOUND[] = {ATTR_SRC, ATTR_CORE};
+unsigned char ALST_APPLET[] = {ATTR_ARCHIVE, ATTR_CORE};
+unsigned char ALST_EMBED[] = {ATTR_SRC, ATTR_CORE};
 
-int HtmlTag::HTML_List_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    if (!(h_env->flag & RB_PREMODE) &&
-        (h_env->envc == 0 || this->tagid == HTML_BLQ)) {
-      h_env->do_blankline();
-    }
-  }
-  h_env->PUSH_ENV(this->tagid);
-  if (this->tagid == HTML_UL || this->tagid == HTML_OL) {
-    if (auto value = this->getAttr(ATTR_START)) {
-      h_env->envs[h_env->envc].count = stoi(*value) - 1;
-    }
-  }
-  if (this->tagid == HTML_OL) {
-    h_env->envs[h_env->envc].type = '1';
-    if (auto value = this->getAttr(ATTR_TYPE)) {
-      h_env->envs[h_env->envc].type = (*value)[0];
-    }
-  }
-  if (this->tagid == HTML_UL) {
-    // h_env->envs[this->envc].type = tag->ul_type(0);
-    //  int HtmlTag::ul_type(int default_type) const {
-    //    if (auto value = this->getAttr(ATTR_TYPE)) {
-    //      if (!strcasecmp(*value, "disc"))
-    //        return (int)'d';
-    //      else if (!strcasecmp(*value, "circle"))
-    //        return (int)'c';
-    //      else if (!strcasecmp(*value, "square"))
-    //        return (int)'s';
-    //    }
-    //    return default_type;
-    //  }
-  }
-  h_env->flushline();
-  return 1;
-}
+unsigned char ALST_TEXTAREA_INT[] = {ATTR_TEXTAREANUMBER};
+unsigned char ALST_SELECT_INT[] = {ATTR_SELECTNUMBER};
+unsigned char ALST_TABLE_ALT[] = {ATTR_TID};
+unsigned char ALST_SYMBOL[] = {ATTR_TYPE};
+unsigned char ALST_TITLE_ALT[] = {ATTR_TITLE};
+unsigned char ALST_FORM_INT[] = {
+    ATTR_METHOD,  ATTR_ACTION, ATTR_CHARSET, ATTR_ACCEPT_CHARSET,
+    ATTR_ENCTYPE, ATTR_TARGET, ATTR_NAME,    ATTR_FID};
+unsigned char ALST_INPUT_ALT[] = {
+    ATTR_HSEQ,         ATTR_FID,       ATTR_NO_EFFECT,  ATTR_TYPE,
+    ATTR_NAME,         ATTR_VALUE,     ATTR_CHECKED,    ATTR_ACCEPT,
+    ATTR_SIZE,         ATTR_MAXLENGTH, ATTR_READONLY,   ATTR_TEXTAREANUMBER,
+    ATTR_SELECTNUMBER, ATTR_ROWS,      ATTR_TOP_MARGIN, ATTR_BOTTOM_MARGIN};
+unsigned char ALST_IMG_ALT[] = {
+    ATTR_SRC,        ATTR_WIDTH,         ATTR_HEIGHT,  ATTR_USEMAP,
+    ATTR_ISMAP,      ATTR_HSEQ,          ATTR_XOFFSET, ATTR_YOFFSET,
+    ATTR_TOP_MARGIN, ATTR_BOTTOM_MARGIN, ATTR_TITLE};
+unsigned char ALST_NOP[] = {ATTR_CORE};
 
-int HtmlTag::HTML_List_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_DT();
-  h_env->CLOSE_A();
-  if (h_env->envc > 0) {
-    h_env->flushline();
-    h_env->POP_ENV();
-    if (!(h_env->flag & RB_PREMODE) &&
-        (h_env->envc == 0 || this->tagid == HTML_N_BLQ)) {
-      h_env->do_blankline();
-      h_env->flag |= RB_IGNORE_P;
-    }
-  }
-  h_env->close_anchor();
-  return 1;
-}
+#define TFLG_END 1
+#define TFLG_INT 2
 
-int HtmlTag::HTML_DL_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    if (!(h_env->flag & RB_PREMODE) &&
-        h_env->envs[h_env->envc].env != HTML_DL &&
-        h_env->envs[h_env->envc].env != HTML_DL_COMPACT &&
-        h_env->envs[h_env->envc].env != HTML_DD) {
-      h_env->do_blankline();
-    }
-  }
-  h_env->PUSH_ENV_NOINDENT(this->tagid);
-  if (this->existsAttr(ATTR_COMPACT)) {
-    h_env->envs[h_env->envc].env = HTML_DL_COMPACT;
-  }
-  h_env->flag |= RB_IGNORE_P;
-  return 1;
-}
+#define ARR_SZ(arr) (sizeof(arr) / sizeof(arr[0]))
+struct TagInfo {
+  const char *name;
+  unsigned char *accept_attribute;
+  unsigned char max_attribute;
+  unsigned char flag;
+};
+TagInfo TagMAP[MAX_HTMLTAG] = {
+    {NULL, NULL, 0, 0},                            /*   0 HTML_UNKNOWN    */
+    {"a", ALST_A, ARR_SZ(ALST_A), 0},              /*   1 HTML_A          */
+    {"/a", NULL, 0, TFLG_END},                     /*   2 HTML_N_A        */
+    {"h", ALST_P, ARR_SZ(ALST_P), 0},              /*   3 HTML_H          */
+    {"/h", NULL, 0, TFLG_END},                     /*   4 HTML_N_H        */
+    {"p", ALST_P, ARR_SZ(ALST_P), 0},              /*   5 HTML_P          */
+    {"br", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /*   6 HTML_BR         */
+    {"b", ALST_NOP, ARR_SZ(ALST_NOP), 0},          /*   7 HTML_B          */
+    {"/b", NULL, 0, TFLG_END},                     /*   8 HTML_N_B        */
+    {"ul", ALST_UL, ARR_SZ(ALST_UL), 0},           /*   9 HTML_UL         */
+    {"/ul", NULL, 0, TFLG_END},                    /*  10 HTML_N_UL       */
+    {"li", ALST_LI, ARR_SZ(ALST_LI), 0},           /*  11 HTML_LI         */
+    {"ol", ALST_UL, ARR_SZ(ALST_UL), 0},           /*  12 HTML_OL         */
+    {"/ol", NULL, 0, TFLG_END},                    /*  13 HTML_N_OL       */
+    {"title", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /*  14 HTML_TITLE      */
+    {"/title", NULL, 0, TFLG_END},                 /*  15 HTML_N_TITLE    */
+    {"hr", ALST_HR, ARR_SZ(ALST_HR), 0},           /*  16 HTML_HR         */
+    {"dl", ALST_DL, ARR_SZ(ALST_DL), 0},           /*  17 HTML_DL         */
+    {"/dl", NULL, 0, TFLG_END},                    /*  18 HTML_N_DL       */
+    {"dt", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /*  19 HTML_DT         */
+    {"dd", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /*  20 HTML_DD         */
+    {"pre", ALST_PRE, ARR_SZ(ALST_PRE), 0},        /*  21 HTML_PRE        */
+    {"/pre", NULL, 0, TFLG_END},                   /*  22 HTML_N_PRE      */
+    {"blockquote", ALST_NOP, ARR_SZ(ALST_NOP), 0}, /*  23 HTML_BLQ        */
+    {"/blockquote", NULL, 0, TFLG_END},            /*  24 HTML_N_BLQ      */
+    {"img", ALST_IMG, ARR_SZ(ALST_IMG), 0},        /*  25 HTML_IMG        */
+    {"listing", ALST_NOP, ARR_SZ(ALST_NOP), 0},    /*  26 HTML_LISTING    */
+    {"/listing", NULL, 0, TFLG_END},               /*  27 HTML_N_LISTING  */
+    {"xmp", ALST_NOP, ARR_SZ(ALST_NOP), 0},        /*  28 HTML_XMP        */
+    {"/xmp", NULL, 0, TFLG_END},                   /*  29 HTML_N_XMP      */
+    {"plaintext", ALST_NOP, ARR_SZ(ALST_NOP), 0},  /*  30 HTML_PLAINTEXT  */
+    {"table", ALST_TABLE, ARR_SZ(ALST_TABLE), 0},  /*  31 HTML_TABLE      */
+    {"/table", NULL, 0, TFLG_END},                 /*  32 HTML_N_TABLE    */
+    {"meta", ALST_META, ARR_SZ(ALST_META), 0},     /*  33 HTML_META       */
+    {"/p", NULL, 0, TFLG_END},                     /*  34 HTML_N_P        */
+    {"frame", ALST_FRAME, ARR_SZ(ALST_FRAME), 0},  /*  35 HTML_FRAME      */
+    {"frameset", ALST_FRAMESET, ARR_SZ(ALST_FRAMESET),
+     0},                                          /*  36 HTML_FRAMESET   */
+    {"/frameset", NULL, 0, TFLG_END},             /*  37 HTML_N_FRAMESET */
+    {"center", ALST_NOP, ARR_SZ(ALST_NOP), 0},    /*  38 HTML_CENTER     */
+    {"/center", NULL, 0, TFLG_END},               /*  39 HTML_N_CENTER   */
+    {"font", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /*  40 HTML_FONT       */
+    {"/font", NULL, 0, TFLG_END},                 /*  41 HTML_N_FONT     */
+    {"form", ALST_FORM, ARR_SZ(ALST_FORM), 0},    /*  42 HTML_FORM       */
+    {"/form", NULL, 0, TFLG_END},                 /*  43 HTML_N_FORM     */
+    {"input", ALST_INPUT, ARR_SZ(ALST_INPUT), 0}, /*  44 HTML_INPUT      */
+    {"textarea", ALST_TEXTAREA, ARR_SZ(ALST_TEXTAREA),
+     0},                                             /*  45 HTML_TEXTAREA   */
+    {"/textarea", NULL, 0, TFLG_END},                /*  46 HTML_N_TEXTAREA */
+    {"select", ALST_SELECT, ARR_SZ(ALST_SELECT), 0}, /*  47 HTML_SELECT     */
+    {"/select", NULL, 0, TFLG_END},                  /*  48 HTML_N_SELECT   */
+    {"option", ALST_OPTION, ARR_SZ(ALST_OPTION), 0}, /*  49 HTML_OPTION     */
+    {"nobr", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /*  50 HTML_NOBR       */
+    {"/nobr", NULL, 0, TFLG_END},                    /*  51 HTML_N_NOBR     */
+    {"div", ALST_P, ARR_SZ(ALST_P), 0},              /*  52 HTML_DIV        */
+    {"/div", NULL, 0, TFLG_END},                     /*  53 HTML_N_DIV      */
+    {"isindex", ALST_ISINDEX, ARR_SZ(ALST_ISINDEX), 0}, /*  54 HTML_ISINDEX */
+    {"map", ALST_MAP, ARR_SZ(ALST_MAP), 0},      /*  55 HTML_MAP        */
+    {"/map", NULL, 0, TFLG_END},                 /*  56 HTML_N_MAP      */
+    {"area", ALST_AREA, ARR_SZ(ALST_AREA), 0},   /*  57 HTML_AREA       */
+    {"script", ALST_NOP, ARR_SZ(ALST_NOP), 0},   /*  58 HTML_SCRIPT     */
+    {"/script", NULL, 0, TFLG_END},              /*  59 HTML_N_SCRIPT   */
+    {"base", ALST_BASE, ARR_SZ(ALST_BASE), 0},   /*  60 HTML_BASE       */
+    {"del", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /*  61 HTML_DEL        */
+    {"/del", NULL, 0, TFLG_END},                 /*  62 HTML_N_DEL      */
+    {"ins", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /*  63 HTML_INS        */
+    {"/ins", NULL, 0, TFLG_END},                 /*  64 HTML_N_INS      */
+    {"u", ALST_NOP, ARR_SZ(ALST_NOP), 0},        /*  65 HTML_U          */
+    {"/u", NULL, 0, TFLG_END},                   /*  66 HTML_N_U        */
+    {"style", ALST_NOP, ARR_SZ(ALST_NOP), 0},    /*  67 HTML_STYLE      */
+    {"/style", NULL, 0, TFLG_END},               /*  68 HTML_N_STYLE    */
+    {"wbr", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /*  69 HTML_WBR        */
+    {"em", ALST_NOP, ARR_SZ(ALST_NOP), 0},       /*  70 HTML_EM         */
+    {"/em", NULL, 0, TFLG_END},                  /*  71 HTML_N_EM       */
+    {"body", ALST_BODY, ARR_SZ(ALST_BODY), 0},   /*  72 HTML_BODY       */
+    {"/body", NULL, 0, TFLG_END},                /*  73 HTML_N_BODY     */
+    {"tr", ALST_TR, ARR_SZ(ALST_TR), 0},         /*  74 HTML_TR         */
+    {"/tr", NULL, 0, TFLG_END},                  /*  75 HTML_N_TR       */
+    {"td", ALST_TD, ARR_SZ(ALST_TD), 0},         /*  76 HTML_TD         */
+    {"/td", NULL, 0, TFLG_END},                  /*  77 HTML_N_TD       */
+    {"caption", ALST_NOP, ARR_SZ(ALST_NOP), 0},  /*  78 HTML_CAPTION    */
+    {"/caption", NULL, 0, TFLG_END},             /*  79 HTML_N_CAPTION  */
+    {"th", ALST_TD, ARR_SZ(ALST_TD), 0},         /*  80 HTML_TH         */
+    {"/th", NULL, 0, TFLG_END},                  /*  81 HTML_N_TH       */
+    {"thead", ALST_NOP, ARR_SZ(ALST_NOP), 0},    /*  82 HTML_THEAD      */
+    {"/thead", NULL, 0, TFLG_END},               /*  83 HTML_N_THEAD    */
+    {"tbody", ALST_NOP, ARR_SZ(ALST_NOP), 0},    /*  84 HTML_TBODY      */
+    {"/tbody", NULL, 0, TFLG_END},               /*  85 HTML_N_TBODY    */
+    {"tfoot", ALST_NOP, ARR_SZ(ALST_NOP), 0},    /*  86 HTML_TFOOT      */
+    {"/tfoot", NULL, 0, TFLG_END},               /*  87 HTML_N_TFOOT    */
+    {"colgroup", ALST_NOP, ARR_SZ(ALST_NOP), 0}, /*  88 HTML_COLGROUP   */
+    {"/colgroup", NULL, 0, TFLG_END},            /*  89 HTML_N_COLGROUP */
+    {"col", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /*  90 HTML_COL        */
+    {"bgsound", ALST_BGSOUND, ARR_SZ(ALST_BGSOUND), 0}, /*  91 HTML_BGSOUND */
+    {"applet", ALST_APPLET, ARR_SZ(ALST_APPLET), 0}, /*  92 HTML_APPLET     */
+    {"embed", ALST_EMBED, ARR_SZ(ALST_EMBED), 0},    /*  93 HTML_EMBED      */
+    {"/option", NULL, 0, TFLG_END},                  /*  94 HTML_N_OPTION   */
+    {"head", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /*  95 HTML_HEAD       */
+    {"/head", NULL, 0, TFLG_END},                    /*  96 HTML_N_HEAD     */
+    {"doctype", ALST_DOCTYPE, ARR_SZ(ALST_DOCTYPE), 0}, /*  97 HTML_DOCTYPE */
+    {"noframes", ALST_NOFRAMES, ARR_SZ(ALST_NOFRAMES),
+     0},                              /*  98 HTML_NOFRAMES   */
+    {"/noframes", NULL, 0, TFLG_END}, /*  99 HTML_N_NOFRAMES */
 
-const int N_GRAPH_SYMBOL = 32;
-#define UL_SYMBOL(x) (N_GRAPH_SYMBOL + (x))
-enum UlSymbolType {
-  UL_SYMBOL_DISC = 32 + 9,
-  UL_SYMBOL_CIRCLE = 32 + 10,
-  UL_SYMBOL_SQUARE = 32 + 11,
+    {"sup", ALST_NOP, ARR_SZ(ALST_NOP), 0},          /* 100 HTML_SUP        */
+    {"/sup", NULL, 0, TFLG_END},                     /* 101 HTML_N_SUP      */
+    {"sub", ALST_NOP, ARR_SZ(ALST_NOP), 0},          /* 102 HTML_SUB        */
+    {"/sub", NULL, 0, TFLG_END},                     /* 103 HTML_N_SUB      */
+    {"link", ALST_LINK, ARR_SZ(ALST_LINK), 0},       /* 104 HTML_LINK       */
+    {"s", ALST_NOP, ARR_SZ(ALST_NOP), 0},            /* 105 HTML_S          */
+    {"/s", NULL, 0, TFLG_END},                       /* 106 HTML_N_S        */
+    {"q", ALST_NOP, ARR_SZ(ALST_NOP), 0},            /* 107 HTML_Q          */
+    {"/q", NULL, 0, TFLG_END},                       /* 108 HTML_N_Q        */
+    {"i", ALST_NOP, ARR_SZ(ALST_NOP), 0},            /* 109 HTML_I          */
+    {"/i", NULL, 0, TFLG_END},                       /* 110 HTML_N_I        */
+    {"strong", ALST_NOP, ARR_SZ(ALST_NOP), 0},       /* 111 HTML_STRONG     */
+    {"/strong", NULL, 0, TFLG_END},                  /* 112 HTML_N_STRONG   */
+    {"span", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /* 113 HTML_SPAN       */
+    {"/span", NULL, 0, TFLG_END},                    /* 114 HTML_N_SPAN     */
+    {"abbr", ALST_NOP, ARR_SZ(ALST_NOP), 0},         /* 115 HTML_ABBR       */
+    {"/abbr", NULL, 0, TFLG_END},                    /* 116 HTML_N_ABBR     */
+    {"acronym", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /* 117 HTML_ACRONYM    */
+    {"/acronym", NULL, 0, TFLG_END},                 /* 118 HTML_N_ACRONYM  */
+    {"basefont", ALST_NOP, ARR_SZ(ALST_NOP), 0},     /* 119 HTML_BASEFONT   */
+    {"bdo", ALST_NOP, ARR_SZ(ALST_NOP), 0},          /* 120 HTML_BDO        */
+    {"/bdo", NULL, 0, TFLG_END},                     /* 121 HTML_N_BDO      */
+    {"big", ALST_NOP, ARR_SZ(ALST_NOP), 0},          /* 122 HTML_BIG        */
+    {"/big", NULL, 0, TFLG_END},                     /* 123 HTML_N_BIG      */
+    {"button", ALST_BUTTON, ARR_SZ(ALST_BUTTON), 0}, /* 124 HTML_BUTTON     */
+    {"/button", NULL, 0, TFLG_END},                  /* 125 HTML_N_BUTTON   */
+    {"fieldset", ALST_NOP, ARR_SZ(ALST_NOP), 0},     /* 126 HTML_FIELDSET   */
+    {"/fieldset", NULL, 0, TFLG_END},                /* 127 HTML_N_FIELDSET */
+    {"iframe", ALST_NOP, ARR_SZ(ALST_NOP), 0},       /* 128 HTML_IFRAME     */
+    {"label", ALST_NOP, ARR_SZ(ALST_NOP), 0},        /* 129 HTML_LABEL      */
+    {"/label", NULL, 0, TFLG_END},                   /* 130 HTML_N_LABEL    */
+    {"legend", ALST_NOP, ARR_SZ(ALST_NOP), 0},       /* 131 HTML_LEGEND     */
+    {"/legend", NULL, 0, TFLG_END},                  /* 132 HTML_N_LEGEND   */
+    {"noscript", ALST_NOP, ARR_SZ(ALST_NOP), 0},     /* 133 HTML_NOSCRIPT   */
+    {"/noscript", NULL, 0, TFLG_END},                /* 134 HTML_N_NOSCRIPT */
+    {"object", ALST_NOP, ARR_SZ(ALST_NOP), 0},       /* 135 HTML_OBJECT     */
+    {"optgroup", ALST_NOP, ARR_SZ(ALST_NOP), 0},     /* 136 HTML_OPTGROUP   */
+    {"/optgroup", NULL, 0, TFLG_END},                /* 137 HTML_N_OPTGROUP */
+    {"param", ALST_NOP, ARR_SZ(ALST_NOP), 0},        /* 138 HTML_PARAM      */
+    {"small", ALST_NOP, ARR_SZ(ALST_NOP), 0},        /* 139 HTML_SMALL      */
+    {"/small", NULL, 0, TFLG_END},                   /* 140 HTML_N_SMALL    */
+    {"figure", ALST_P, ARR_SZ(ALST_P), 0},           /* 141 HTML_FIGURE     */
+    {"/figure", NULL, 0, TFLG_END},                  /* 142 HTML_N_FIGURE   */
+    {"figcaption", ALST_P, ARR_SZ(ALST_P), 0},       /* 143 HTML_FIGCAPTION */
+    {"/figcaption", NULL, 0, TFLG_END},              /* 144 HTML_N_FIGCAPTION */
+    {"section", ALST_NOP, ARR_SZ(ALST_NOP), 0},      /* 145 HTML_SECTION    */
+    {"/section", NULL, 0, TFLG_END},                 /* 146 HTML_N_SECTION  */
+    {"/dt", NULL, 0, TFLG_END},                      /* 147 HTML_N_DT       */
+    {"/dd", NULL, 0, TFLG_END},                      /* 148 HTML_N_DD       */
+    {"dfn", ALST_ID, ARR_SZ(ALST_ID), 0},            /* 149 HTML_DFN */
+    {"/dfn", NULL, 0, TFLG_END},                     /* 150 HTML_N_DFN */
+
+    {NULL, NULL, 0, 0}, /* 151 Undefined */
+    {NULL, NULL, 0, 0}, /* 152 Undefined */
+    {NULL, NULL, 0, 0}, /* 153 Undefined */
+    {NULL, NULL, 0, 0}, /* 154 Undefined */
+    {NULL, NULL, 0, 0}, /* 155 Undefined */
+    {NULL, NULL, 0, 0}, /* 156 Undefined */
+    {NULL, NULL, 0, 0}, /* 157 Undefined */
+    {NULL, NULL, 0, 0}, /* 158 Undefined */
+    {NULL, NULL, 0, 0}, /* 159 Undefined */
+
+    /* pseudo tag */
+    {"select_int", ALST_SELECT_INT, ARR_SZ(ALST_SELECT_INT),
+     TFLG_INT},                                    /* 160 HTML_SELECT_INT     */
+    {"/select_int", NULL, 0, TFLG_INT | TFLG_END}, /* 161 HTML_N_SELECT_INT   */
+    {"option_int", ALST_OPTION, ARR_SZ(ALST_OPTION),
+     TFLG_INT}, /* 162 HTML_OPTION_INT     */
+    {"textarea_int", ALST_TEXTAREA_INT, ARR_SZ(ALST_TEXTAREA_INT),
+     TFLG_INT}, /* 163 HTML_TEXTAREA_INT   */
+    {"/textarea_int", NULL, 0,
+     TFLG_INT | TFLG_END}, /* 164 HTML_N_TEXTAREA_INT */
+    {"table_alt", ALST_TABLE_ALT, ARR_SZ(ALST_TABLE_ALT),
+     TFLG_INT}, /* 165 HTML_TABLE_ALT      */
+    {"symbol", ALST_SYMBOL, ARR_SZ(ALST_SYMBOL),
+     TFLG_INT},                                 /* 166 HTML_SYMBOL         */
+    {"/symbol", NULL, 0, TFLG_INT | TFLG_END},  /* 167 HTML_N_SYMBOL       */
+    {"pre_int", NULL, 0, TFLG_INT},             /* 168 HTML_PRE_INT        */
+    {"/pre_int", NULL, 0, TFLG_INT | TFLG_END}, /* 169 HTML_N_PRE_INT      */
+    {"title_alt", ALST_TITLE_ALT, ARR_SZ(ALST_TITLE_ALT),
+     TFLG_INT}, /* 170 HTML_TITLE_ALT      */
+    {"form_int", ALST_FORM_INT, ARR_SZ(ALST_FORM_INT),
+     TFLG_INT},                                  /* 171 HTML_FORM_INT       */
+    {"/form_int", NULL, 0, TFLG_INT | TFLG_END}, /* 172 HTML_N_FORM_INT     */
+    {"dl_compact", NULL, 0, TFLG_INT},           /* 173 HTML_DL_COMPACT     */
+    {"input_alt", ALST_INPUT_ALT, ARR_SZ(ALST_INPUT_ALT),
+     TFLG_INT},                                   /* 174 HTML_INPUT_ALT      */
+    {"/input_alt", NULL, 0, TFLG_INT | TFLG_END}, /* 175 HTML_N_INPUT_ALT    */
+    {"img_alt", ALST_IMG_ALT, ARR_SZ(ALST_IMG_ALT),
+     TFLG_INT},                                    /* 176 HTML_IMG_ALT        */
+    {"/img_alt", NULL, 0, TFLG_INT | TFLG_END},    /* 177 HTML_N_IMG_ALT      */
+    {" ", ALST_NOP, ARR_SZ(ALST_NOP), TFLG_INT},   /* 178 HTML_NOP            */
+    {"pre_plain", NULL, 0, TFLG_INT},              /* 179 HTML_PRE_PLAIN      */
+    {"/pre_plain", NULL, 0, TFLG_INT | TFLG_END},  /* 180 HTML_N_PRE_PLAIN    */
+    {"internal", NULL, 0, TFLG_INT},               /* 181 HTML_INTERNAL       */
+    {"/internal", NULL, 0, TFLG_INT | TFLG_END},   /* 182 HTML_N_INTERNAL     */
+    {"div_int", ALST_P, ARR_SZ(ALST_P), TFLG_INT}, /* 183 HTML_DIV_INT        */
+    {"/div_int", NULL, 0, TFLG_INT | TFLG_END},    /* 184 HTML_N_DIV_INT      */
 };
 
-int HtmlTag::HTML_LI_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  h_env->CLOSE_DT();
-  if (h_env->envc > 0) {
-    h_env->flushline();
-    h_env->envs[h_env->envc].count++;
-    if (auto value = this->getAttr(ATTR_VALUE)) {
-      int count = stoi(*value);
-      if (count > 0)
-        h_env->envs[h_env->envc].count = count;
-      else
-        h_env->envs[h_env->envc].count = 0;
-    }
+/* HTML Tag Attribute Information Table */
 
-    std::string num;
-    switch (h_env->envs[h_env->envc].env) {
-    case HTML_UL: {
-      // h_env->envs[h_env->envc].type =
-      // h_env->ul_type(h_env->envs[h_env->envc].type);
-      //  int HtmlTag::ul_type(int default_type) const {
-      //    if (auto value = this->getAttr(ATTR_TYPE)) {
-      //      if (!strcasecmp(*value, "disc"))
-      //        return (int)'d';
-      //      else if (!strcasecmp(*value, "circle"))
-      //        return (int)'c';
-      //      else if (!strcasecmp(*value, "square"))
-      //        return (int)'s';
-      //    }
-      //    return default_type;
-      //  }
-      for (int i = 0; i < INDENT_INCR - 3; i++)
-        h_env->push_charp(1, NBSP, PC_ASCII);
-      std::stringstream tmp;
-      switch (h_env->envs[h_env->envc].type) {
-      case 'd':
-        push_symbol(tmp, UL_SYMBOL_DISC, 1, 1);
-        break;
-      case 'c':
-        push_symbol(tmp, UL_SYMBOL_CIRCLE, 1, 1);
-        break;
-      case 's':
-        push_symbol(tmp, UL_SYMBOL_SQUARE, 1, 1);
-        break;
-      default:
-        push_symbol(tmp, UL_SYMBOL((h_env->envc_real - 1) % MAX_UL_LEVEL), 1,
-                    1);
-        break;
-      }
-      h_env->push_charp(1, NBSP, PC_ASCII);
-      h_env->push_str(1, tmp.str(), PC_ASCII);
-      h_env->push_charp(1, NBSP, PC_ASCII);
-      h_env->prevchar = " ";
-      break;
-    }
+enum ValueType {
+  VTYPE_NONE = 0,
+  VTYPE_STR = 1,
+  VTYPE_NUMBER = 2,
+  VTYPE_LENGTH = 3,
+  VTYPE_ALIGN = 4,
+  VTYPE_VALIGN = 5,
+  VTYPE_ACTION = 6,
+  VTYPE_ENCTYPE = 7,
+  VTYPE_METHOD = 8,
+  VTYPE_MLENGTH = 9,
+  VTYPE_TYPE = 10,
+};
 
-    case HTML_OL:
-      if (auto value = this->getAttr(ATTR_TYPE))
-        h_env->envs[h_env->envc].type = (*value)[0];
-      switch ((h_env->envs[h_env->envc].count > 0)
-                  ? h_env->envs[h_env->envc].type
-                  : '1') {
-      case 'i':
-        num = romanNumeral(h_env->envs[h_env->envc].count);
-        break;
-      case 'I':
-        num = romanNumeral(h_env->envs[h_env->envc].count);
-        Strupper(num);
-        break;
-      case 'a':
-        num = romanAlphabet(h_env->envs[h_env->envc].count);
-        break;
-      case 'A':
-        num = romanAlphabet(h_env->envs[h_env->envc].count);
-        Strupper(num);
-        break;
-      default: {
-        std::stringstream ss;
-        ss << h_env->envs[h_env->envc].count;
-        num = ss.str();
-        break;
-      }
-      }
-      if (INDENT_INCR >= 4)
-        num += ". ";
-      else
-        num.push_back('.');
-      h_env->push_spaces(1, INDENT_INCR - num.size());
-      h_env->push_str(num.size(), num, PC_ASCII);
-      if (INDENT_INCR >= 4)
-        h_env->prevchar = " ";
-      break;
-    default:
-      h_env->push_spaces(1, INDENT_INCR);
-      break;
-    }
-  } else {
-    h_env->flushline();
+#define AFLG_INT 1
+struct TagAttrInfo {
+  const char *name;
+  ValueType vtype;
+  unsigned char flag;
+};
+TagAttrInfo AttrMAP[MAX_TAGATTR] = {
+    {NULL, VTYPE_NONE, 0},            /*  0 ATTR_UNKNOWN        */
+    {"accept", VTYPE_NONE, 0},        /*  1 ATTR_ACCEPT         */
+    {"accept-charset", VTYPE_STR, 0}, /*  2 ATTR_ACCEPT_CHARSET */
+    {"action", VTYPE_ACTION, 0},      /*  3 ATTR_ACTION         */
+    {"align", VTYPE_ALIGN, 0},        /*  4 ATTR_ALIGN          */
+    {"alt", VTYPE_STR, 0},            /*  5 ATTR_ALT            */
+    {"archive", VTYPE_STR, 0},        /*  6 ATTR_ARCHIVE        */
+    {"background", VTYPE_STR, 0},     /*  7 ATTR_BACKGROUND     */
+    {"border", VTYPE_NUMBER, 0},      /*  8 ATTR_BORDER         */
+    {"cellpadding", VTYPE_NUMBER, 0}, /*  9 ATTR_CELLPADDING    */
+    {"cellspacing", VTYPE_NUMBER, 0}, /* 10 ATTR_CELLSPACING    */
+    {"charset", VTYPE_STR, 0},        /* 11 ATTR_CHARSET        */
+    {"checked", VTYPE_NONE, 0},       /* 12 ATTR_CHECKED        */
+    {"cols", VTYPE_MLENGTH, 0},       /* 13 ATTR_COLS           */
+    {"colspan", VTYPE_NUMBER, 0},     /* 14 ATTR_COLSPAN        */
+    {"content", VTYPE_STR, 0},        /* 15 ATTR_CONTENT        */
+    {"enctype", VTYPE_ENCTYPE, 0},    /* 16 ATTR_ENCTYPE        */
+    {"height", VTYPE_LENGTH, 0},      /* 17 ATTR_HEIGHT         */
+    {"href", VTYPE_STR, 0},           /* 18 ATTR_HREF           */
+    {"http-equiv", VTYPE_STR, 0},     /* 19 ATTR_HTTP_EQUIV     */
+    {"id", VTYPE_STR, 0},             /* 20 ATTR_ID             */
+    {"link", VTYPE_STR, 0},           /* 21 ATTR_LINK           */
+    {"maxlength", VTYPE_NUMBER, 0},   /* 22 ATTR_MAXLENGTH      */
+    {"method", VTYPE_METHOD, 0},      /* 23 ATTR_METHOD         */
+    {"multiple", VTYPE_NONE, 0},      /* 24 ATTR_MULTIPLE       */
+    {"name", VTYPE_STR, 0},           /* 25 ATTR_NAME           */
+    {"nowrap", VTYPE_NONE, 0},        /* 26 ATTR_NOWRAP         */
+    {"prompt", VTYPE_STR, 0},         /* 27 ATTR_PROMPT         */
+    {"rows", VTYPE_MLENGTH, 0},       /* 28 ATTR_ROWS           */
+    {"rowspan", VTYPE_NUMBER, 0},     /* 29 ATTR_ROWSPAN        */
+    {"size", VTYPE_NUMBER, 0},        /* 30 ATTR_SIZE           */
+    {"src", VTYPE_STR, 0},            /* 31 ATTR_SRC            */
+    {"target", VTYPE_STR, 0},         /* 32 ATTR_TARGET         */
+    {"type", VTYPE_TYPE, 0},          /* 33 ATTR_TYPE           */
+    {"usemap", VTYPE_STR, 0},         /* 34 ATTR_USEMAP         */
+    {"valign", VTYPE_VALIGN, 0},      /* 35 ATTR_VALIGN         */
+    {"value", VTYPE_STR, 0},          /* 36 ATTR_VALUE          */
+    {"vspace", VTYPE_NUMBER, 0},      /* 37 ATTR_VSPACE         */
+    {"width", VTYPE_LENGTH, 0},       /* 38 ATTR_WIDTH          */
+    {"compact", VTYPE_NONE, 0},       /* 39 ATTR_COMPACT        */
+    {"start", VTYPE_NUMBER, 0},       /* 40 ATTR_START          */
+    {"selected", VTYPE_NONE, 0},      /* 41 ATTR_SELECTED       */
+    {"label", VTYPE_STR, 0},          /* 42 ATTR_LABEL          */
+    {"readonly", VTYPE_NONE, 0},      /* 43 ATTR_READONLY       */
+    {"shape", VTYPE_STR, 0},          /* 44 ATTR_SHAPE          */
+    {"coords", VTYPE_STR, 0},         /* 45 ATTR_COORDS         */
+    {"ismap", VTYPE_NONE, 0},         /* 46 ATTR_ISMAP          */
+    {"rel", VTYPE_STR, 0},            /* 47 ATTR_REL            */
+    {"rev", VTYPE_STR, 0},            /* 48 ATTR_REV            */
+    {"title", VTYPE_STR, 0},          /* 49 ATTR_TITLE          */
+    {"accesskey", VTYPE_STR, 0},      /* 50 ATTR_ACCESSKEY      */
+    {"public", VTYPE_NONE, 0},        /* 51 ATTR_PUBLIC         */
+    {NULL, VTYPE_NONE, 0},            /* 52 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 53 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 54 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 55 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 56 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 57 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 58 Undefined           */
+    {NULL, VTYPE_NONE, 0},            /* 59 Undefined           */
+
+    /* Internal attribute */
+    {"xoffset", VTYPE_NUMBER, AFLG_INT},        /* 60 ATTR_XOFFSET        */
+    {"yoffset", VTYPE_NUMBER, AFLG_INT},        /* 61 ATTR_YOFFSET        */
+    {"top_margin", VTYPE_NUMBER, AFLG_INT},     /* 62 ATTR_TOP_MARGIN,    */
+    {"bottom_margin", VTYPE_NUMBER, AFLG_INT},  /* 63 ATTR_BOTTOM_MARGIN, */
+    {"tid", VTYPE_NUMBER, AFLG_INT},            /* 64 ATTR_TID            */
+    {"fid", VTYPE_NUMBER, AFLG_INT},            /* 65 ATTR_FID            */
+    {"for_table", VTYPE_NONE, AFLG_INT},        /* 66 ATTR_FOR_TABLE      */
+    {"framename", VTYPE_STR, AFLG_INT},         /* 67 ATTR_FRAMENAME      */
+    {"hborder", VTYPE_NONE, 0},                 /* 68 ATTR_HBORDER        */
+    {"hseq", VTYPE_NUMBER, AFLG_INT},           /* 69 ATTR_HSEQ           */
+    {"no_effect", VTYPE_NONE, AFLG_INT},        /* 70 ATTR_NO_EFFECT      */
+    {"referer", VTYPE_STR, AFLG_INT},           /* 71 ATTR_REFERER        */
+    {"selectnumber", VTYPE_NUMBER, AFLG_INT},   /* 72 ATTR_SELECTNUMBER   */
+    {"textareanumber", VTYPE_NUMBER, AFLG_INT}, /* 73 ATTR_TEXTAREANUMBER */
+    {"pre_int", VTYPE_NONE, AFLG_INT},          /* 74 ATTR_PRE_INT        */
+};
+
+// Parse tag name
+static std::tuple<HtmlCommand, const char *> parseTagName(const char *s) {
+  char tagname[MAX_TAG_LEN];
+  tagname[0] = '\0';
+  auto q = s + 1;
+  auto p = tagname;
+  if (*q == '/') {
+    *(char *)(p++) = *(q++);
+    SKIP_BLANKS(q);
   }
-  h_env->flag |= RB_IGNORE_P;
-  return 1;
+  while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') &&
+         *q != '>' && p - tagname < MAX_TAG_LEN - 1) {
+    *(char *)(p++) = TOLOWER(*q);
+    q++;
+  }
+  *(char *)p = '\0';
+  while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
+    q++;
+
+  auto tag_id = HTML_UNKNOWN;
+  auto found = tagtable.find(tagname);
+  if (found != tagtable.end()) {
+    tag_id = found->second;
+  }
+
+  return {tag_id, q};
 }
 
-int HtmlTag::HTML_DT_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (h_env->envc == 0 || (h_env->envc_real < (int)h_env->envs.size() &&
-                           h_env->envs[h_env->envc].env != HTML_DL &&
-                           h_env->envs[h_env->envc].env != HTML_DL_COMPACT)) {
-    h_env->PUSH_ENV_NOINDENT(HTML_DL);
-  }
-  if (h_env->envc > 0) {
-    h_env->flushline();
-  }
-  if (!(h_env->flag & RB_IN_DT)) {
-    h_env->parse("<b>");
-    h_env->flag |= RB_IN_DT;
-  }
-  h_env->flag |= RB_IGNORE_P;
-  return 1;
-}
-
-int HtmlTag::HTML_DT_exit(html_feed_environ *h_env) {
-  if (!(h_env->flag & RB_IN_DT)) {
-    return 1;
-  }
-  h_env->flag &= ~RB_IN_DT;
-  h_env->parse("</b>");
-  if (h_env->envc > 0 && h_env->envs[h_env->envc].env == HTML_DL) {
-    h_env->flushline();
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_DD_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  h_env->CLOSE_DT();
-  if (h_env->envs[h_env->envc].env == HTML_DL ||
-      h_env->envs[h_env->envc].env == HTML_DL_COMPACT) {
-    h_env->PUSH_ENV(HTML_DD);
+static const char *parseAttr(const std::shared_ptr<HtmlTag> &tag, const char *q,
+                             bool internal) {
+  std::string attrname;
+  while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>') {
+    attrname.push_back(TOLOWER(*q));
+    q++;
   }
 
-  if (h_env->envc > 0 && h_env->envs[h_env->envc - 1].env == HTML_DL_COMPACT) {
-    if (h_env->pos > h_env->envs[h_env->envc].indent) {
-      h_env->flushline();
+  while (*q && *q != '=' && !IS_SPACE(*q) && *q != '>')
+    q++;
+  SKIP_BLANKS(q);
+
+  std::stringstream value_tmp;
+  if (*q == '=') {
+    /* get value */
+    q++;
+    SKIP_BLANKS(q);
+    if (*q == '"') {
+      q++;
+      while (*q && *q != '"') {
+        value_tmp << *q;
+        if (!tag->need_reconstruct && is_html_quote(*q))
+          tag->need_reconstruct = true;
+        q++;
+      }
+      if (*q == '"')
+        q++;
+    } else if (*q == '\'') {
+      q++;
+      while (*q && *q != '\'') {
+        value_tmp << *q;
+        if (!tag->need_reconstruct && is_html_quote(*q))
+          tag->need_reconstruct = true;
+        q++;
+      }
+      if (*q == '\'')
+        q++;
+    } else if (*q) {
+      while (*q && !IS_SPACE(*q) && *q != '>') {
+        value_tmp << *q;
+        if (!tag->need_reconstruct && is_html_quote(*q))
+          tag->need_reconstruct = true;
+        q++;
+      }
+    }
+  }
+
+  int i = 0;
+  unsigned char attr_id = 0;
+  for (; i < tag->attrid.size(); ++i) {
+    if (tag->attrid[i] == ATTR_UNKNOWN &&
+        strcmp(AttrMAP[TagMAP[tag->tagid].accept_attribute[i]].name,
+               attrname.c_str()) == 0) {
+      attr_id = TagMAP[tag->tagid].accept_attribute[i];
+      break;
+    }
+  }
+
+  auto value_str = value_tmp.str();
+  std::string value;
+  if (value_str.size()) {
+    int hidden = false;
+    for (int j = 0; j < i; j++) {
+      if (tag->attrid[j] == ATTR_TYPE && tag->value[j].size() &&
+          strcmp("hidden", tag->value[j].c_str()) == 0) {
+        hidden = true;
+        break;
+      }
+    }
+    if ((tag->tagid == HTML_INPUT || tag->tagid == HTML_INPUT_ALT) &&
+        attr_id == ATTR_VALUE && hidden) {
+      value = value_str;
     } else {
-      h_env->push_spaces(1, h_env->envs[h_env->envc].indent - h_env->pos);
+      for (auto x = value_str.c_str(); *x; x++) {
+        if (*x != '\n') {
+          value += *x;
+        }
+      }
+    }
+  }
+
+  if (i != tag->attrid.size()) {
+    if (!internal && ((AttrMAP[attr_id].flag & AFLG_INT) ||
+                      (value.size() && AttrMAP[attr_id].vtype == VTYPE_METHOD &&
+                       !strcasecmp(value.c_str(), "internal")))) {
+      tag->need_reconstruct = true;
+      return q;
+    }
+
+    tag->attrid[i] = attr_id;
+    if (value.size()) {
+      tag->value[i] = html_unquote(value);
+    } else {
+      tag->value[i] = {};
     }
   } else {
-    h_env->flushline();
+    tag->need_reconstruct = true;
   }
-  /* h_env->flag |= RB_IGNORE_P; */
-  return 1;
+
+  return q;
 }
 
-int HtmlTag::HTML_TITLE_enter(html_feed_environ *h_env) {
-  h_env->close_anchor();
-  h_env->process_title();
-  h_env->flag |= RB_TITLE;
-  h_env->end_tag = HTML_N_TITLE;
-  return 1;
-}
+std::shared_ptr<HtmlTag> parseTag(const char **s, bool internal) {
 
-int HtmlTag::HTML_TITLE_exit(html_feed_environ *h_env) {
-  if (!(h_env->flag & RB_TITLE))
-    return 1;
-  h_env->flag &= ~RB_TITLE;
-  h_env->end_tag = {};
-  auto tmp = h_env->process_n_title();
-  if (tmp.size())
-    h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_TITLE_ALT_enter(html_feed_environ *h_env) {
-  if (auto value = this->getAttr(ATTR_TITLE))
-    h_env->title = html_unquote(*value);
-  return 0;
-}
-
-int HtmlTag::HTML_FRAMESET_enter(html_feed_environ *h_env) {
-  h_env->PUSH_ENV(this->tagid);
-  h_env->push_charp(9, "--FRAME--", PC_ASCII);
-  h_env->flushline();
-  return 0;
-}
-
-int HtmlTag::HTML_FRAMESET_exit(html_feed_environ *h_env) {
-  if (h_env->envc > 0) {
-    h_env->POP_ENV();
-    h_env->flushline();
+  auto [tag_id, q] = parseTagName(*s);
+  if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT)) {
+    while (*q != '>' && *q)
+      q++;
+    *s = q;
+    return {};
   }
-  return 0;
-}
 
-int HtmlTag::HTML_NOFRAMES_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  h_env->flushline();
-  h_env->flag |= (RB_NOFRAMES | RB_IGNORE_P);
-  /* istr = str; */
-  return 1;
-}
+  auto tag = std::shared_ptr<HtmlTag>(new HtmlTag(tag_id));
 
-int HtmlTag::HTML_NOFRAMES_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  h_env->flushline();
-  h_env->flag &= ~RB_NOFRAMES;
-  return 1;
-}
+  // Parse tag arguments
+  SKIP_BLANKS(q);
 
-int HtmlTag::HTML_FRAME_enter(html_feed_environ *h_env) {
-  std::string q;
-  if (auto value = this->getAttr(ATTR_SRC))
-    q = *value;
-  std::string r;
-  if (auto value = this->getAttr(ATTR_NAME))
-    r = *value;
-  if (q.size()) {
-    q = html_quote(q);
-    std::stringstream ss;
-    ss << "<a hseq=\"" << h_env->hseqAndIncrement() << "\" href=\"" << q
-       << "\">";
-    h_env->push_tag(ss.str(), HTML_A);
-    if (r.size())
-      q = html_quote(r);
-    h_env->push_charp(get_strwidth(q), q.c_str(), PC_ASCII);
-    h_env->push_tag("</a>", HTML_N_A);
-  }
-  h_env->flushline();
-  return 0;
-}
-
-int HtmlTag::HTML_HR_enter(html_feed_environ *h_env) {
-  h_env->close_anchor();
-  auto tmp =
-      h_env->process_hr(this, h_env->_width, h_env->envs[h_env->envc].indent);
-  h_env->parse(tmp);
-  h_env->prevchar = " ";
-  return 1;
-}
-
-int HtmlTag::HTML_PRE_enter(html_feed_environ *h_env) {
-  int x = this->existsAttr(ATTR_FOR_TABLE);
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    if (!x) {
-      h_env->do_blankline();
+  // int attr_id = 0;
+  while (1) {
+    if (*q == '>' || *q == '\0') {
+      *s = q;
+      return tag;
     }
-  } else {
-    h_env->fillline();
-  }
-  h_env->flag |= (RB_PRE | RB_IGNORE_P);
-  /* istr = str; */
-  return 1;
-}
 
-int HtmlTag::HTML_PRE_exit(html_feed_environ *h_env) {
-  h_env->flushline();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->do_blankline();
-    h_env->flag |= RB_IGNORE_P;
-    h_env->incrementBlankLines();
-  }
-  h_env->flag &= ~RB_PRE;
-  h_env->close_anchor();
-  return 1;
-}
-
-int HtmlTag::HTML_PRE_PLAIN_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    h_env->do_blankline();
-  }
-  h_env->flag |= (RB_PRE | RB_IGNORE_P);
-  return 1;
-}
-
-int HtmlTag::HTML_PRE_PLAIN_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    h_env->do_blankline();
-    h_env->flag |= RB_IGNORE_P;
-  }
-  h_env->flag &= ~RB_PRE;
-  return 1;
-}
-
-int HtmlTag::HTML_PLAINTEXT_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    h_env->do_blankline();
-  }
-  h_env->flag |= (RB_PLAIN | RB_IGNORE_P);
-  switch (this->tagid) {
-  case HTML_LISTING:
-    h_env->end_tag = HTML_N_LISTING;
-    break;
-  case HTML_XMP:
-    h_env->end_tag = HTML_N_XMP;
-    break;
-  case HTML_PLAINTEXT:
-    h_env->end_tag = MAX_HTMLTAG;
-    break;
-
-  default:
-    break;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_LISTING_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-    h_env->do_blankline();
-    h_env->flag |= RB_IGNORE_P;
-  }
-  h_env->flag &= ~RB_PLAIN;
-  h_env->end_tag = {};
-  return 1;
-}
-
-int HtmlTag::HTML_A_enter(html_feed_environ *h_env) {
-  if (h_env->anchor.url.size()) {
-    h_env->close_anchor();
+    q = parseAttr(tag, q, internal);
   }
 
-  if (auto value = this->getAttr(ATTR_HREF))
-    h_env->anchor.url = *value;
-  if (auto value = this->getAttr(ATTR_TARGET))
-    h_env->anchor.target = *value;
-  if (auto value = this->getAttr(ATTR_REFERER))
-    h_env->anchor.option = {.referer = *value};
-  if (auto value = this->getAttr(ATTR_TITLE))
-    h_env->anchor.title = *value;
-  if (auto value = this->getAttr(ATTR_ACCESSKEY))
-    h_env->anchor.accesskey = (*value)[0];
-  if (auto value = this->getAttr(ATTR_HSEQ))
-    h_env->anchor.hseq = stoi(*value);
+  while (*q != '>' && *q)
+    q++;
+  *s = q;
 
-  if (h_env->anchor.hseq == 0 && h_env->anchor.url.size()) {
-    h_env->anchor.hseq = h_env->cur_hseq();
-    auto tmp = h_env->process_anchor(this, h_env->tagbuf());
-    h_env->push_tag(tmp.c_str(), HTML_A);
-    return 1;
-  }
-  return 0;
+  return tag;
 }
 
-int HtmlTag::HTML_IMG_enter(html_feed_environ *h_env) {
-  if (this->existsAttr(ATTR_USEMAP))
-    h_env->HTML5_CLOSE_A();
-  auto tmp = h_env->process_img(this, h_env->_width);
-  h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_IMG_ALT_enter(html_feed_environ *h_env) {
-  if (auto value = this->getAttr(ATTR_SRC))
-    h_env->img_alt = *value;
-  return 0;
-}
-
-int HtmlTag::HTML_IMG_ALT_exit(html_feed_environ *h_env) {
-  if (h_env->img_alt.size()) {
-    if (!h_env->close_effect0(HTML_IMG_ALT))
-      h_env->push_tag("</img_alt>", HTML_N_IMG_ALT);
-    h_env->img_alt = {};
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_TABLE_enter(html_feed_environ *h_env) {
-  int cols = h_env->_width;
-  h_env->close_anchor();
-  if (h_env->table_level + 1 >= MAX_TABLE) {
-    return -1;
-  }
-  h_env->table_level++;
-
-  HtmlTableBorderMode w = BORDER_NONE;
-  /* x: cellspacing, y: cellpadding */
-  int width = 0;
-  if (this->existsAttr(ATTR_BORDER)) {
-    if (auto value = this->getAttr(ATTR_BORDER)) {
-      w = (HtmlTableBorderMode)stoi(*value);
-      if (w > 2)
-        w = BORDER_THICK;
-      else if (w < 0) { /* weird */
-        w = BORDER_THIN;
-      }
-    } else
-      w = BORDER_THIN;
-  }
-  if (DisplayBorders && w == BORDER_NONE)
-    w = BORDER_THIN;
-  if (auto value = this->getAttr(ATTR_WIDTH)) {
-    if (h_env->table_level == 0)
-      width = REAL_WIDTH(stoi(*value),
-                         h_env->_width - h_env->envs[h_env->envc].indent);
-    else
-      width = RELATIVE_WIDTH(stoi(*value));
-  }
-  if (this->existsAttr(ATTR_HBORDER))
-    w = BORDER_NOWIN;
-
-  int x = 2;
-  if (auto value = this->getAttr(ATTR_CELLSPACING)) {
-    x = stoi(*value);
-  }
-  int y = 1;
-  if (auto value = this->getAttr(ATTR_CELLPADDING)) {
-    y = stoi(*value);
-  }
-  int z = 0;
-  if (auto value = this->getAttr(ATTR_VSPACE)) {
-    z = stoi(*value);
-  }
-  if (x < 0)
-    x = 0;
-  if (y < 0)
-    y = 0;
-  if (z < 0)
-    z = 0;
-  if (x > MAX_CELLSPACING)
-    x = MAX_CELLSPACING;
-  if (y > MAX_CELLPADDING)
-    y = MAX_CELLPADDING;
-  if (z > MAX_VSPACE)
-    z = MAX_VSPACE;
-
-  h_env->tables[h_env->table_level] =
-      table::begin_table(w, x, y, z, cols, width);
-  h_env->table_mode[h_env->table_level].pre_mode = {};
-  h_env->table_mode[h_env->table_level].indent_level = 0;
-  h_env->table_mode[h_env->table_level].nobr_level = 0;
-  h_env->table_mode[h_env->table_level].caption = 0;
-  h_env->table_mode[h_env->table_level].end_tag = HTML_UNKNOWN;
-  return 1;
-}
-
-int HtmlTag::HTML_CENTER_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & (RB_PREMODE | RB_IGNORE_P)))
-    h_env->flushline();
-  h_env->RB_SAVE_FLAG();
-  if (DisableCenter) {
-    h_env->RB_SET_ALIGN(RB_LEFT);
-  } else {
-    h_env->RB_SET_ALIGN(RB_CENTER);
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_CENTER_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_PREMODE)) {
-    h_env->flushline();
-  }
-  h_env->RB_RESTORE_FLAG();
-  return 1;
-}
-
-int HtmlTag::HTML_DIV_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-  }
-  h_env->set_alignment(this->alignFlag());
-  return 1;
-}
-
-int HtmlTag::HTML_DIV_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  h_env->flushline();
-  h_env->RB_RESTORE_FLAG();
-  return 1;
-}
-
-int HtmlTag::HTML_DIV_INT_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_P();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-  }
-  h_env->set_alignment(this->alignFlag());
-  return 1;
-}
-
-int HtmlTag::HTML_DIV_INT_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_P();
-  h_env->flushline();
-  h_env->RB_RESTORE_FLAG();
-  return 1;
-}
-
-int HtmlTag::HTML_FORM_enter(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  if (!(h_env->flag & RB_IGNORE_P)) {
-    h_env->flushline();
-  }
-  auto tmp = h_env->process_form(this);
-  if (tmp.size())
-    h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_FORM_exit(html_feed_environ *h_env) {
-  h_env->CLOSE_A();
-  h_env->flushline();
-  h_env->flag |= RB_IGNORE_P;
-  h_env->process_n_form();
-  return 1;
-}
-
-int HtmlTag::HTML_INPUT_enter(html_feed_environ *h_env) {
-  h_env->close_anchor();
-  auto tmp = h_env->process_input(this);
-  if (tmp.size())
-    h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_BUTTON_enter(html_feed_environ *h_env) {
-  h_env->HTML5_CLOSE_A();
-  auto tmp = h_env->process_button(this);
-  if (tmp.size())
-    h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_BUTTON_exit(html_feed_environ *h_env) {
-  auto tmp = h_env->process_n_button();
-  if (tmp.size())
-    h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_SELECT_enter(html_feed_environ *h_env) {
-  h_env->close_anchor();
-  auto tmp = h_env->process_select(this);
-  if (tmp.size())
-    h_env->parse(tmp);
-  h_env->flag |= RB_INSELECT;
-  h_env->end_tag = HTML_N_SELECT;
-  return 1;
-}
-
-int HtmlTag::HTML_SELECT_exit(html_feed_environ *h_env) {
-  h_env->flag &= ~RB_INSELECT;
-  h_env->end_tag = HTML_UNKNOWN;
-  auto tmp = h_env->process_n_select();
-  if (tmp.size())
-    h_env->parse(tmp);
-  return 1;
-}
-
-int HtmlTag::HTML_TEXTAREA_enter(html_feed_environ *h_env) {
-  h_env->close_anchor();
-  auto tmp = h_env->process_textarea(this, h_env->_width);
-  if (tmp.size()) {
-    h_env->parse(tmp);
-  }
-  h_env->flag |= RB_INTXTA;
-  h_env->end_tag = HTML_N_TEXTAREA;
-  return 1;
-}
-
-int HtmlTag::HTML_TEXTAREA_exit(html_feed_environ *h_env) {
-  h_env->flag &= ~RB_INTXTA;
-  h_env->end_tag = HTML_UNKNOWN;
-  auto tmp = h_env->process_n_textarea();
-  if (tmp.size()) {
-    h_env->parse(tmp);
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_ISINDEX_enter(html_feed_environ *h_env) {
-  std::string p = "";
-  if (auto value = this->getAttr(ATTR_PROMPT)) {
-    p = *value;
-  }
-  std::string q = "!CURRENT_URL!";
-  if (auto value = this->getAttr(ATTR_ACTION)) {
-    q = *value;
-  }
-  std::stringstream tmp;
-  tmp << "<form method=get action=\"" << html_quote(q) << "\">" << html_quote(p)
-      << "<input type=text name=\"\" accept></form>";
-  h_env->parse(tmp.str());
-  return 1;
-}
-
-int HtmlTag::HTML_META_enter(html_feed_environ *h_env) {
-  std::string p;
-  if (auto value = this->getAttr(ATTR_HTTP_EQUIV)) {
-    p = *value;
-  }
-  std::string q;
-  if (auto value = this->getAttr(ATTR_CONTENT)) {
-    q = *value;
-  }
-  if (p.size() && q.size() && !strcasecmp(p, "refresh")) {
-    auto meta = getMetaRefreshParam(q);
-    std::stringstream ss;
-    if (meta.url.size()) {
-      auto qq = html_quote(meta.url);
-      ss << "Refresh (" << meta.interval << " sec) <a href=\"" << qq << "\">"
-         << qq << "</a>";
-    } else if (meta.interval > 0) {
-      ss << "Refresh (" << meta.interval << " sec)";
-    }
-    auto tmp = ss.str();
-    if (tmp.size()) {
-      h_env->parse(tmp);
-      h_env->do_blankline();
-    }
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_DEL_enter(html_feed_environ *h_env) {
-  switch (displayInsDel) {
-  case DISPLAY_INS_DEL_SIMPLE:
-    h_env->flag |= RB_DEL;
-    break;
-  case DISPLAY_INS_DEL_NORMAL:
-    h_env->parse("<U>[DEL:</U>");
-    break;
-  case DISPLAY_INS_DEL_FONTIFY:
-    if (h_env->fontstat.in_strike < FONTSTAT_MAX)
-      h_env->fontstat.in_strike++;
-    if (h_env->fontstat.in_strike == 1) {
-      h_env->push_tag("<s>", HTML_S);
-    }
-    break;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_DEL_exit(html_feed_environ *h_env) {
-  switch (displayInsDel) {
-  case DISPLAY_INS_DEL_SIMPLE:
-    h_env->flag &= ~RB_DEL;
-    break;
-  case DISPLAY_INS_DEL_NORMAL:
-    h_env->parse("<U>:DEL]</U>");
-  case DISPLAY_INS_DEL_FONTIFY:
-    if (h_env->fontstat.in_strike == 0)
-      return 1;
-    if (h_env->fontstat.in_strike == 1 && h_env->close_effect0(HTML_S))
-      h_env->fontstat.in_strike = 0;
-    if (h_env->fontstat.in_strike > 0) {
-      h_env->fontstat.in_strike--;
-      if (h_env->fontstat.in_strike == 0) {
-        h_env->push_tag("</s>", HTML_N_S);
-      }
-    }
-    break;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_S_enter(html_feed_environ *h_env) {
-  switch (displayInsDel) {
-  case DISPLAY_INS_DEL_SIMPLE:
-    h_env->flag |= RB_S;
-    break;
-  case DISPLAY_INS_DEL_NORMAL:
-    h_env->parse("<U>[S:</U>");
-    break;
-  case DISPLAY_INS_DEL_FONTIFY:
-    if (h_env->fontstat.in_strike < FONTSTAT_MAX)
-      h_env->fontstat.in_strike++;
-    if (h_env->fontstat.in_strike == 1) {
-      h_env->push_tag("<s>", HTML_S);
-    }
-    break;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_S_exit(html_feed_environ *h_env) {
-  switch (displayInsDel) {
-  case DISPLAY_INS_DEL_SIMPLE:
-    h_env->flag &= ~RB_S;
-    break;
-  case DISPLAY_INS_DEL_NORMAL:
-    h_env->parse("<U>:S]</U>");
-    break;
-  case DISPLAY_INS_DEL_FONTIFY:
-    if (h_env->fontstat.in_strike == 0)
-      return 1;
-    if (h_env->fontstat.in_strike == 1 && h_env->close_effect0(HTML_S))
-      h_env->fontstat.in_strike = 0;
-    if (h_env->fontstat.in_strike > 0) {
-      h_env->fontstat.in_strike--;
-      if (h_env->fontstat.in_strike == 0) {
-        h_env->push_tag("</s>", HTML_N_S);
+std::string HtmlTag::to_str() const {
+  int tag_id = this->tagid;
+  int nattr = TagMAP[tag_id].max_attribute;
+  std::stringstream tagstr;
+  tagstr << '<';
+  tagstr << TagMAP[tag_id].name;
+  for (int i = 0; i < nattr; i++) {
+    if (this->attrid[i] != ATTR_UNKNOWN) {
+      tagstr << ' ';
+      tagstr << AttrMAP[this->attrid[i]].name;
+      if (this->value[i].size()) {
+        tagstr << "=\"" << html_quote(this->value[i]) << "\"";
       }
     }
   }
-  return 1;
+  tagstr << '>';
+  return tagstr.str();
 }
 
-int HtmlTag::HTML_INS_enter(html_feed_environ *h_env) {
-  switch (displayInsDel) {
-  case DISPLAY_INS_DEL_SIMPLE:
-    break;
-  case DISPLAY_INS_DEL_NORMAL:
-    h_env->parse("<U>[INS:</U>");
-    break;
-  case DISPLAY_INS_DEL_FONTIFY:
-    if (h_env->fontstat.in_ins < FONTSTAT_MAX)
-      h_env->fontstat.in_ins++;
-    if (h_env->fontstat.in_ins == 1) {
-      h_env->push_tag("<ins>", HTML_INS);
-    }
-    break;
-  }
-  return 1;
-}
+std::shared_ptr<HtmlTag> parseHtmlTag(const char **s, bool internal) {
 
-int HtmlTag::HTML_INS_exit(html_feed_environ *h_env) {
-  switch (displayInsDel) {
-  case DISPLAY_INS_DEL_SIMPLE:
-    break;
-  case DISPLAY_INS_DEL_NORMAL:
-    h_env->parse("<U>:INS]</U>");
-    break;
-  case DISPLAY_INS_DEL_FONTIFY:
-    if (h_env->fontstat.in_ins == 0)
-      return 1;
-    if (h_env->fontstat.in_ins == 1 && h_env->close_effect0(HTML_INS))
-      h_env->fontstat.in_ins = 0;
-    if (h_env->fontstat.in_ins > 0) {
-      h_env->fontstat.in_ins--;
-      if (h_env->fontstat.in_ins == 0) {
-        h_env->push_tag("</ins>", HTML_N_INS);
+  auto tag = parseTag(s, internal);
+  if (tag) {
+    int nattr = TagMAP[tag->tagid].max_attribute;
+    if (nattr > 0) {
+      tag->attrid.resize(nattr);
+      tag->value.resize(nattr);
+      tag->map.resize(MAX_TAGATTR);
+      memset(tag->map.data(), MAX_TAGATTR, MAX_TAGATTR);
+      memset(tag->attrid.data(), ATTR_UNKNOWN, nattr);
+      for (int i = 0; i < nattr; i++) {
+        tag->map[TagMAP[tag->tagid].accept_attribute[i]] = i;
       }
     }
-    break;
   }
-  return 1;
-}
 
-int HtmlTag::HTML_BGSOUND_enter(html_feed_environ *h_env) {
-  if (view_unseenobject) {
-    if (auto value = this->getAttr(ATTR_SRC)) {
-      auto q = html_quote(*value);
-      std::stringstream s;
-      s << "<A HREF=\"" << q << "\">bgsound(" << q << ")</A>";
-      h_env->parse(s.str());
-    }
-  }
-  return 1;
-}
+  auto q = *s;
+  if (*q == '>')
+    q++;
+  *s = q;
 
-int HtmlTag::HTML_EMBED_enter(html_feed_environ *h_env) {
-  h_env->HTML5_CLOSE_A();
-  if (view_unseenobject) {
-    if (auto value = this->getAttr(ATTR_SRC)) {
-      auto q = html_quote(*value);
-      std::stringstream s;
-      s << "<A HREF=\"" << q << "\">embed(" << q << ")</A>";
-      h_env->parse(s.str());
-    }
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_APPLET_enter(html_feed_environ *h_env) {
-  if (view_unseenobject) {
-    if (auto value = this->getAttr(ATTR_ARCHIVE)) {
-      auto q = html_quote(*value);
-      std::stringstream s;
-      s << "<A HREF=\"" << q << "\">applet archive(" << q << ")</A>";
-      h_env->parse(s.str());
-    }
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_BODY_enter(html_feed_environ *h_env) {
-  if (view_unseenobject) {
-    if (auto value = this->getAttr(ATTR_BACKGROUND)) {
-      auto q = html_quote(*value);
-      std::stringstream s;
-      s << "<IMG SRC=\"" << q << "\" ALT=\"bg image(" << q << ")\"><BR>";
-      h_env->parse(s.str());
-    }
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_INPUT_ALT_enter(html_feed_environ *h_env) {
-  if (auto value = this->getAttr(ATTR_TOP_MARGIN)) {
-    h_env->setTopMargin(stoi(*value));
-  }
-  if (auto value = this->getAttr(ATTR_BOTTOM_MARGIN)) {
-    h_env->setBottomMargin(stoi(*value));
-  }
-  if (auto value = this->getAttr(ATTR_HSEQ)) {
-    h_env->input_alt.hseq = stoi(*value);
-  }
-  if (auto value = this->getAttr(ATTR_FID)) {
-    h_env->input_alt.fid = stoi(*value);
-  }
-  if (auto value = this->getAttr(ATTR_TYPE)) {
-    h_env->input_alt.type = *value;
-  }
-  if (auto value = this->getAttr(ATTR_VALUE)) {
-    h_env->input_alt.value = *value;
-  }
-  if (auto value = this->getAttr(ATTR_NAME)) {
-    h_env->input_alt.name = *value;
-  }
-  h_env->input_alt.in = 1;
-  return 0;
-}
-
-int HtmlTag::HTML_INPUT_ALT_exit(html_feed_environ *h_env) {
-  if (h_env->input_alt.in) {
-    if (!h_env->close_effect0(HTML_INPUT_ALT))
-      h_env->push_tag("</input_alt>", HTML_N_INPUT_ALT);
-    h_env->input_alt.hseq = 0;
-    h_env->input_alt.fid = -1;
-    h_env->input_alt.in = 0;
-    h_env->input_alt.type = {};
-    h_env->input_alt.name = {};
-    h_env->input_alt.value = {};
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_B_enter(html_feed_environ *h_env) {
-  if (h_env->fontstat.in_bold < FONTSTAT_MAX)
-    h_env->fontstat.in_bold++;
-  if (h_env->fontstat.in_bold > 1)
-    return 1;
-  return 0;
-}
-
-int HtmlTag::HTML_B_exit(html_feed_environ *h_env) {
-  if (h_env->fontstat.in_bold == 1 && h_env->close_effect0(HTML_B))
-    h_env->fontstat.in_bold = 0;
-  if (h_env->fontstat.in_bold > 0) {
-    h_env->fontstat.in_bold--;
-    if (h_env->fontstat.in_bold == 0)
-      return 0;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_I_enter(html_feed_environ *h_env) {
-  if (h_env->fontstat.in_italic < FONTSTAT_MAX)
-    h_env->fontstat.in_italic++;
-  if (h_env->fontstat.in_italic > 1)
-    return 1;
-  return 0;
-}
-
-int HtmlTag::HTML_I_exit(html_feed_environ *h_env) {
-  if (h_env->fontstat.in_italic == 1 && h_env->close_effect0(HTML_I))
-    h_env->fontstat.in_italic = 0;
-  if (h_env->fontstat.in_italic > 0) {
-    h_env->fontstat.in_italic--;
-    if (h_env->fontstat.in_italic == 0)
-      return 0;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_U_enter(html_feed_environ *h_env) {
-  if (h_env->fontstat.in_under < FONTSTAT_MAX)
-    h_env->fontstat.in_under++;
-  if (h_env->fontstat.in_under > 1)
-    return 1;
-  return 0;
-}
-
-int HtmlTag::HTML_U_exit(html_feed_environ *h_env) {
-  if (h_env->fontstat.in_under == 1 && h_env->close_effect0(HTML_U))
-    h_env->fontstat.in_under = 0;
-  if (h_env->fontstat.in_under > 0) {
-    h_env->fontstat.in_under--;
-    if (h_env->fontstat.in_under == 0)
-      return 0;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_PRE_INT_enter(html_feed_environ *h_env) {
-  int i = h_env->line.size();
-  // h_env->append_tags();
-  if (!(h_env->flag & RB_SPECIAL)) {
-    h_env->set_breakpoint(h_env->line.size() - i);
-  }
-  h_env->flag |= RB_PRE_INT;
-  return 0;
-}
-
-int HtmlTag::HTML_PRE_INT_exit(html_feed_environ *h_env) {
-  h_env->push_tag("</pre_int>", HTML_N_PRE_INT);
-  h_env->flag &= ~RB_PRE_INT;
-  if (!(h_env->flag & RB_SPECIAL) && h_env->pos > h_env->bp.pos) {
-    h_env->prevchar = "";
-    h_env->prev_ctype = PC_CTRL;
-  }
-  return 1;
-}
-
-int HtmlTag::HTML_NOBR_enter(html_feed_environ *h_env) {
-  h_env->flag |= RB_NOBR;
-  h_env->nobr_level++;
-  return 0;
-}
-
-int HtmlTag::HTML_NOBR_exit(html_feed_environ *h_env) {
-  if (h_env->nobr_level > 0)
-    h_env->nobr_level--;
-  if (h_env->nobr_level == 0)
-    h_env->flag &= ~RB_NOBR;
-  return 0;
+  return tag;
 }

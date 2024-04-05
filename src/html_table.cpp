@@ -4,7 +4,6 @@
 #include "html_command.h"
 #include "html_table.h"
 #include "html_tag.h"
-#include "html_tag_parse.h"
 #include "myctype.h"
 #include "entity.h"
 #include "generallist.h"
@@ -2324,7 +2323,7 @@ int table::feed_table(html_feed_environ *parser, std::string line,
   if (line[0] == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
     auto p = line.c_str();
     auto tag = parseHtmlTag(&p, internal);
-    if (tag.get()) {
+    if (tag) {
       switch (this->feed_table_tag(parser, line, mode, width, tag)) {
       case TAG_ACTION_NONE:
         return -1;
@@ -2968,13 +2967,13 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
       else if (width > 0)
         w = width;
     }
-    auto tok = parser->process_img(tag.get(), w);
+    auto tok = parser->process_img(tag, w);
     this->feed_table1(parser, tok, mode, width);
     break;
   }
   case HTML_FORM: {
     this->_impl->feed_table_block_tag("", mode, 0, cmd);
-    auto tmp = parser->process_form(tag.get());
+    auto tmp = parser->process_form(tag);
     if (tmp.size())
       this->feed_table1(parser, tmp, mode, width);
     break;
@@ -2984,12 +2983,12 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     parser->process_n_form();
     break;
   case HTML_INPUT: {
-    auto tmp = parser->process_input(tag.get());
+    auto tmp = parser->process_input(tag);
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
   case HTML_BUTTON: {
-    auto tmp = parser->process_button(tag.get());
+    auto tmp = parser->process_button(tag);
     this->feed_table1(parser, tmp, mode, width);
     break;
   }
@@ -2999,7 +2998,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     break;
   }
   case HTML_SELECT: {
-    auto tmp = parser->process_select(tag.get());
+    auto tmp = parser->process_select(tag);
     if (tmp.size())
       this->feed_table1(parser, tmp.c_str(), mode, width);
     mode->pre_mode |= TBLM_INSELECT;
@@ -3021,7 +3020,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
       if (this->_impl->fixed_width[this->_impl->col] > 0)
         w = this->_impl->fixed_width[this->_impl->col];
     }
-    auto tmp = parser->process_textarea(tag.get(), w);
+    auto tmp = parser->process_textarea(tag, w);
     if (tmp.size())
       this->feed_table1(parser, tmp, mode, width);
     mode->pre_mode |= TBLM_INTXTA;
@@ -3039,7 +3038,7 @@ int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
     if (anchor.size()) {
       this->_impl->check_rowcol(mode);
       if (i == 0) {
-        auto tmp = parser->process_anchor(tag.get(), line);
+        auto tmp = parser->process_anchor(tag, line);
         if (displayLinkNumber) {
           auto t = parser->getLinkNumberStr(-1);
           this->_impl->feed_table_inline_tag(NULL, mode, t.size());

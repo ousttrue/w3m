@@ -5,7 +5,6 @@
 #include "myctype.h"
 #include "entity.h"
 #include "html_tag.h"
-#include "html_tag_parse.h"
 #include "url_quote.h"
 #include "quote.h"
 #include "cmp.h"
@@ -380,7 +379,7 @@ Line HtmlRenderer::renderLine(
         break;
       case HTML_FORM_INT: {
         if (auto value = tag->getAttr(ATTR_FID)) {
-          h_env->process_form_int(tag.get(), stoi(*value));
+          h_env->process_form_int(tag, stoi(*value));
         }
         break;
       }
