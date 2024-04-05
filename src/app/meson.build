@@ -15,6 +15,7 @@ without_gc_lib = static_library(
     [
         'option_param.cpp',
         'option.cpp',
+        'line_layout.cpp',
         'event.cpp',
         'mimehead.cpp',
         'compression.cpp',

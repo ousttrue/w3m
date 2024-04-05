@@ -17,7 +17,6 @@ html_lib = static_library(
         'stringtoken.cpp',
         'line.cpp',
         'line_data.cpp',
-        'line_layout.cpp',
         'html_feed_env.cpp',
         'html_token.cpp',
         'html_table.cpp',
