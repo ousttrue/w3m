@@ -1055,15 +1055,15 @@ struct tableimpl {
       html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
                              indent, this->tables[i].buf);
       this->check_row(row);
-      if (henv._width > maxlimit)
-        henv._width = maxlimit;
+      if (henv.width() > maxlimit)
+        henv.setWidth(maxlimit);
       if (t->_impl->total_width == 0)
-        maxwidth = henv._width - indent;
+        maxwidth = henv.width() - indent;
       else if (t->_impl->total_width > 0)
         maxwidth = t->_impl->total_width;
       else
         maxwidth = t->_impl->total_width =
-            -t->_impl->total_width * henv._width / 100;
+            -t->_impl->total_width * henv.width() / 100;
       t->renderTable(&henv, maxwidth);
     }
   }
@@ -1501,8 +1501,8 @@ struct tableimpl {
     html_feed_environ henv(MAX_ENV_LEVEL, this->get_spec_cell_width(row, col),
                            0, this->tabdata[row][col]);
     henv.addFlag(RB_INTABLE);
-    if (henv._width > maxlimit)
-      henv._width = maxlimit;
+    if (henv.width() > maxlimit)
+      henv.setWidth(maxlimit);
     if (this->border_mode != BORDER_NONE && this->vcellpadding > 0)
       henv.do_blankline();
     for (auto &l : orgdata->_list) {
@@ -1535,7 +1535,7 @@ struct tableimpl {
           // ListItem *ti;
           if (alignment != ALIGN_LEFT) {
             for (auto &ti : this->tables[id].buf->_list) {
-              ti->align(henv._width, alignment);
+              ti->align(henv.width(), alignment);
             }
           }
           henv.appendGeneralList(this->tables[id].buf);
@@ -2012,14 +2012,14 @@ void table::renderTable(html_feed_environ *parser, int max_width) {
     this->_impl->tabwidth[i] =
         ceil_at_intervals(this->_impl->tabwidth[i], rulewidth);
 
-  this->_impl->renderCoTable(parser, parser->_width);
+  this->_impl->renderCoTable(parser, parser->width());
 
   for (i = 0; i <= this->_impl->maxcol; i++) {
     for (j = 0; j <= this->_impl->maxrow; j++) {
       this->_impl->check_row(j);
       if (this->_impl->tabattr[j][i] & HTT_Y)
         continue;
-      this->_impl->do_refill(parser, j, i, parser->_width);
+      this->_impl->do_refill(parser, j, i, parser->width());
     }
   }
 

@@ -89,7 +89,6 @@ class html_feed_environ {
   friend class HtmlRenderer;
 
 public:
-  std::string line;
   Lineprop cprop = 0;
   std::string prevchar;
   ReadBufferFlags flag_stack[RB_STACK_SIZE];
@@ -106,6 +105,8 @@ public:
   html_feed_environ(const html_feed_environ &) = delete;
   html_feed_environ &operator=(const html_feed_environ &) = delete;
 
+  int width()const;
+  void setWidth(int width);
   int pos()const;
   ReadBufferFlags flag() const;
   void addFlag(ReadBufferFlags flag);
@@ -258,7 +259,6 @@ private:
   }
 
   // int limit;
-  int _width;
   struct environment {
     HtmlCommand env;
     int type;
@@ -271,7 +271,6 @@ private:
   std::string _title;
 
 public:
-  int width() { return _width; }
   const std::string &title() const { return _title; }
 
 private:
