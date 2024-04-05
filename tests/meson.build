@@ -8,6 +8,7 @@ executable(
         'url_test.cpp',
         'entity_test.cpp',
         'token_test.cpp',
+        'html_test.cpp',
     ],
     install: true,
     dependencies: [

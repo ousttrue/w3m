@@ -132,6 +132,8 @@ html_feed_environ::html_feed_environ(int nenv, int limit_width, int indent,
 
 html_feed_environ::~html_feed_environ() { delete _impl; }
 
+int html_feed_environ::width() const { return _impl->_width; }
+void html_feed_environ::setWidth(int width) { _impl->_width = width; }
 int html_feed_environ::pos() const { return _impl->pos; }
 ReadBufferFlags html_feed_environ::flag() const { return _impl->flag; }
 void html_feed_environ::addFlag(ReadBufferFlags flag) { _impl->flag |= flag; }
