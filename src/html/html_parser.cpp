@@ -51,7 +51,7 @@ HtmlParserState::Result dataState(std::string_view src,
 //
 // generator
 //
-html_token_generator tokenize(std::string_view v) {
+html_token_generator html_tokenize(std::string_view v) {
   HtmlParserState state{dataState};
   HtmlParserState::Context c;
   while (v.size()) {

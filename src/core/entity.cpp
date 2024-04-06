@@ -1,3 +1,4 @@
+#include "entity.h"
 #include "utf8.h"
 #include "cmp.h"
 #include "ctrlcode.h"
@@ -2084,8 +2085,9 @@ std::unordered_map<std::string, uint32_t> g_entity_map = {
     /* 2031 */ {"Fcy", 0x424},
 };
 
-char32_t getescapechar(const char **str) {
-  const char *p = *str;
+std::tuple<std::optional<char32_t>, std::string_view>
+getescapechar(std::string_view str) {
+  auto p = str.begin();
   if (*p == '&') {
     p++;
   }
@@ -2095,43 +2097,38 @@ char32_t getescapechar(const char **str) {
     if (*p == 'x' || *p == 'X') {
       p++;
       if (!IS_XDIGIT(*p)) {
-        *str = p;
-        return -1;
+        return {{}, {p, str.end()}};
       }
       char32_t dummy = -1;
       for (dummy = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++)
         dummy = dummy * 0x10 + GET_MYCDIGIT(*p);
       if (*p == ';')
         p++;
-      *str = p;
-      return dummy;
+      return {dummy, std::string_view{p, str.end()}};
     } else {
       if (!IS_DIGIT(*p)) {
-        *str = p;
-        return -1;
+        return {{}, {p, str.end()}};
       }
       char32_t dummy = -1;
       for (dummy = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++)
         dummy = dummy * 10 + GET_MYCDIGIT(*p);
       if (*p == ';')
         p++;
-      *str = p;
-      return dummy;
+      return {dummy, {p, str.end()}};
     }
   }
   if (!IS_ALPHA(*p)) {
-    *str = p;
-    return -1;
+    return {{}, std::string_view{p, str.end()}};
   }
 
   auto q = p;
-  for (p++; IS_ALNUM(*p); p++) {
+  for (q++; IS_ALNUM(*q); q++) {
     ;
   }
 
-  std::string qq(q, p - q);
+  std::string qq(p, q);
   auto strict_entity = true;
-  if (strcasestr("lt gt amp quot apos nbsp", q) && *p != '=') {
+  if (strcasestr("lt gt amp quot apos nbsp", qq.c_str()) && *q != '=') {
     /* a character entity MUST be terminated with ";". However,
      * there's MANY web pages which uses &lt , &gt or something
      * like them as &lt;, &gt;, etc. Therefore, we treat the most
@@ -2142,34 +2139,26 @@ char32_t getescapechar(const char **str) {
      */
     strict_entity = false;
   }
-  if (*p == ';') {
-    p++;
+  if (*q == ';') {
+    q++;
   } else if (strict_entity) {
-    *str = p;
-    return -1;
+    return {{}, {q, str.end()}};
   }
-  *str = p;
 
   auto found = g_entity_map.find(qq);
   if (found == g_entity_map.end()) {
-    return -1;
+    return {{}, {q, str.end()}};
   }
-  return found->second;
+  return {found->second, {q, str.end()}};
 }
 
-std::string getescapecmd(const char **s) {
-  const char *save = *s;
-
-  int ch = getescapechar(s);
-  if (ch >= 0) {
-    return conv_entity(ch);
+std::tuple<std::string, std::string_view> getescapecmd(std::string_view s) {
+  auto [ch, s2] = getescapechar(s);
+  if (ch) {
+    return {conv_entity(*ch), s2};
   }
 
-  std::stringstream tmp;
-  if (*save != '&')
-    tmp << "&";
-  tmp << save << (*s - save);
-  return tmp.str();
+  return {{}, s};
 }
 
 std::tuple<std::string_view, std::string_view>

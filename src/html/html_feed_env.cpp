@@ -898,7 +898,9 @@ void html_feed_environ::feed_title(const std::string &_str) {
   auto str = _str.c_str();
   while (*str) {
     if (*str == '&') {
-      cur_title += getescapecmd(&str);
+      auto [p, pp] = getescapecmd(str);
+      str = pp.data();
+      cur_title += p;
     } else if (*str == '\n' || *str == '\r') {
       cur_title.push_back(' ');
       str++;
@@ -1123,7 +1125,9 @@ void html_feed_environ::feed_textarea(const std::string &_str) {
   ignore_nl_textarea = false;
   while (*str) {
     if (*str == '&') {
-      textarea_str[n_textarea] += getescapecmd(&str);
+      auto [p, pp] = getescapecmd(str);
+      str = pp.data();
+      textarea_str[n_textarea] += p;
     } else if (*str == '\n') {
       textarea_str[n_textarea] += "\r\n";
       str++;
@@ -1715,7 +1719,8 @@ std::string html_feed_environ::process_hr(const std::shared_ptr<HtmlTag> &tag,
 
 void html_feed_environ::proc_escape(const char **str_return) {
   const char *str = *str_return;
-  char32_t ech = getescapechar(str_return);
+  auto [ech, pp] = getescapechar(*str_return);
+  *str_return = pp.data();
   int n_add = *str_return - str;
   Lineprop mode = PC_ASCII;
 
@@ -1724,14 +1729,14 @@ void html_feed_environ::proc_escape(const char **str_return) {
     this->proc_mchar(_impl->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
     return;
   }
-  mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
+  mode = IS_CNTRL(*ech) ? PC_CTRL : PC_ASCII;
 
-  auto estr = conv_entity(ech);
+  auto estr = conv_entity(*ech);
   this->check_breakpoint(_impl->flag & RB_SPECIAL, estr.c_str());
   auto width = get_strwidth(estr.c_str());
   if (width == 1 && ech == (char32_t)estr[0] && ech != '&' && ech != '<' &&
       ech != '>') {
-    if (IS_CNTRL(ech))
+    if (IS_CNTRL(*ech))
       mode = PC_CTRL;
     this->push_charp(width, estr.c_str(), mode);
   } else {
@@ -1869,8 +1874,9 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
       char ch = *pp;
       if (!(_impl->flag & RB_PLAIN) && (*pp == '&')) {
         const char *p = pp;
-        int ech = getescapechar(&p);
-        if (ech == '\n' || ech == '\r') {
+        auto [ech, ppp] = getescapechar(p);
+        p = ppp.data();
+        if (*ech == '\n' || *ech == '\r') {
           ch = '\n';
           pp = p - 1;
         } else if (ech == '\t') {
@@ -2036,9 +2042,11 @@ void html_feed_environ::feed_select(const std::string &_str) {
             prev_spaces = 1;
           else
             prev_spaces = 0;
-          if (*p == '&')
-            cur_option += getescapecmd(&p);
-          else
+          if (*p == '&') {
+            auto [_p, pp] = getescapecmd(p);
+            p = pp.data();
+            cur_option += _p;
+          } else
             cur_option += *(p++);
         }
       }

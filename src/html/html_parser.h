@@ -114,4 +114,4 @@ consume(std::string_view src, size_t n) {
   return {{src.begin(), it}, {it, src.end()}};
 }
 
-html_token_generator tokenize(std::string_view v);
+html_token_generator html_tokenize(std::string_view v);

@@ -50,7 +50,8 @@ Line HtmlRenderer::renderLine(
       /*
        * & escape processing
        */
-      auto _p = getescapecmd(&str);
+      auto [_p, pp] = getescapecmd(str);
+      str = pp.data();
       auto p = _p.c_str();
       while (*p) {
         mode = get_mctype(p);

@@ -194,7 +194,8 @@ static int visible_length(const char *str) {
     } else if (status == R_ST_NORMAL && prev_status == R_ST_AMP) {
       tagbuf += *str;
       auto r2 = tagbuf.c_str();
-      auto _t = getescapecmd(&r2);
+      auto [_t, tt] = getescapecmd(r2);
+      r2 = tt.data();
       auto t = _t.c_str();
       if (!*r2 && (*t == '\r' || *t == '\n')) {
         if (len > max_len)
@@ -219,7 +220,8 @@ static int visible_length(const char *str) {
   }
   if (status == R_ST_AMP) {
     auto r2 = tagbuf.c_str();
-    auto _t = getescapecmd(&r2);
+    auto [_t, tt] = getescapecmd(r2);
+    r2 = tt.data();
     auto t = _t.c_str();
     if (*t != '\r' && *t != '\n')
       len += get_strwidth(t) + get_strwidth(r2);
@@ -806,7 +808,7 @@ struct tableimpl {
 
     while (*line) {
       const char *save = line, *c = line;
-      int ec, len, wlen, plen;
+      int len, wlen, plen;
       ctype = get_mctype(line);
       len = get_mcwidth(line);
       wlen = plen = get_mclen(line);
@@ -818,9 +820,10 @@ struct tableimpl {
         s++;
       } else {
         if (*c == '&') {
-          ec = getescapechar(&line);
-          if (ec >= 0) {
-            auto e = conv_entity(ec);
+          auto [ec, pp] = getescapechar(line);
+          line = pp.data();
+          if (ec) {
+            auto e = conv_entity(*ec);
             ctype = get_mctype(e.c_str());
             len = get_strwidth(e.c_str());
             wlen = line - save;
@@ -2356,9 +2359,10 @@ int table::feed_table(html_feed_environ *parser, std::string line,
           tmp << *p;
           p++;
         } else {
-          int ec;
           q = p;
-          switch (ec = getescapechar(&p)) {
+          auto [ec, pp] = getescapechar(p);
+          p = pp.data();
+          switch (*ec) {
           case '<':
             tmp << "&lt;";
             break;
@@ -2372,10 +2376,10 @@ int table::feed_table(html_feed_environ *parser, std::string line,
             tmp << '\n';
             break;
           default: {
-            auto e = conv_entity(ec);
+            auto e = conv_entity(*ec);
             if (e.empty())
               break;
-            if (e.size() == 1 && ec == e[0]) {
+            if (e.size() == 1 && *ec == e[0]) {
               tmp << e[0];
               break;
             }

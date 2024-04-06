@@ -483,7 +483,8 @@ std::string html_unquote(std::string_view str) {
   auto end = str.data() + str.size();
   for (auto p = str.data(); p != end;) {
     if (*p == '&') {
-      auto q = getescapecmd(&p);
+      auto [q, pp] = getescapecmd(p);
+      p = pp.data();
       tmp << q;
     } else {
       tmp << *p;

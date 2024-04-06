@@ -5,7 +5,7 @@
 TEST(HtmlTest, tokenizer) {
   {
     auto src = " ";
-    auto g = tokenize(src);
+    auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Character, src), token);
@@ -13,7 +13,7 @@ TEST(HtmlTest, tokenizer) {
   }
   {
     auto src = "a b";
-    auto g = tokenize(src);
+    auto g = html_tokenize(src);
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
@@ -45,7 +45,7 @@ TEST(HtmlTest, named) {
 TEST(HtmlTest, reference) {
   {
     auto src = "&amp;";
-    auto g = tokenize(src);
+    auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ("&amp;", token.view);

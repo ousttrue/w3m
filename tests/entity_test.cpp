@@ -11,29 +11,29 @@ TEST(EntityTest, conv_entity) {
 TEST(EntityTest, getescapechar) {
   {
     const char *p = "&amp;";
-    auto q = p;
-    EXPECT_EQ('&', getescapechar(&p));
-    EXPECT_EQ(q + 5, p);
+    auto [e, pp] = getescapechar(p);
+    EXPECT_EQ('&', *e);
+    EXPECT_EQ(p + 5, pp.data());
   }
   {
     const char *p = "&#9312;";
-    auto q = p;
-    EXPECT_EQ(U'①', getescapechar(&p));
-    EXPECT_EQ(q + 7, p);
+    auto [e, pp] = getescapechar(p);
+    EXPECT_EQ(U'①', *e);
+    EXPECT_EQ(p + 7, pp.data());
   }
 }
 
 TEST(EntityTest, getescapecmd) {
   {
     const char *p = "&amp;";
-    auto q = p;
-    EXPECT_EQ("&", getescapecmd(&p));
-    EXPECT_EQ(q + 5, p);
+    auto [e, pp] = getescapecmd(p);
+    EXPECT_EQ("&", e);
+    EXPECT_EQ(p + 5, pp.data());
   }
   {
     const char *p = "&#9312;";
-    auto q = p;
-    EXPECT_EQ("①", getescapecmd(&p));
-    EXPECT_EQ(q + 7, p);
+    auto [e, pp] = getescapecmd(p);
+    EXPECT_EQ("①", e);
+    EXPECT_EQ(p + 7, pp.data());
   }
 }
