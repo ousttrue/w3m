@@ -1,9 +1,11 @@
 #include "html_parser.h"
 #include "entity.h"
 #include "utf8.h"
+#include "cmp.h"
 #include <assert.h>
 #include <cctype>
 #include <algorithm>
+#include <regex>
 
 // https://html.spec.whatwg.org/multipage/parsing.html
 
@@ -519,6 +521,17 @@ html_token_generator html_tokenize(std::string_view v) {
     if (token.size()) {
       // emit
       co_yield {Character, token};
+
+      if (strncasecmp("<script", token.data(), 7) == 0) {
+        // search "</script>";
+        std::regex re(R"(</script>)", std::regex_constants::icase);
+        // std::match_results<std::list<char>::const_iterator> m;
+        std::cmatch m;
+        if (std::regex_search(v.data(), v.data() + v.size(), m, re)) {
+          co_yield {Character, {v.data(), m[0].first}};
+          v = {m[0].first, v.data() + v.size()};
+        }
+      };
     }
   }
 }
