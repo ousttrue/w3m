@@ -52,3 +52,54 @@ TEST(HtmlTest, reference) {
     EXPECT_FALSE(g.move_next());
   }
 }
+
+TEST(HtmlTest, tag) {
+  {
+    auto src = "<p>";
+    auto g = html_tokenize(src);
+    EXPECT_TRUE(g.move_next());
+    auto token = g.current_value();
+    EXPECT_EQ("<p>", token.view);
+    EXPECT_FALSE(g.move_next());
+  }
+  {
+    auto src = "</h1>";
+    auto g = html_tokenize(src);
+    EXPECT_TRUE(g.move_next());
+    auto token = g.current_value();
+    EXPECT_EQ("</h1>", token.view);
+    EXPECT_FALSE(g.move_next());
+  }
+  {
+    auto src = "<a href='http://hoge.fuga' >";
+    auto g = html_tokenize(src);
+    EXPECT_TRUE(g.move_next());
+    auto token = g.current_value();
+    EXPECT_EQ(src, token.view);
+    EXPECT_FALSE(g.move_next());
+  }
+}
+
+TEST(HtmlTest, html) {
+  {
+    auto src = "<a href=nan>なんだってー</a>";
+    auto g = html_tokenize(src);
+    {
+      EXPECT_TRUE(g.move_next());
+      auto token = g.current_value();
+      EXPECT_EQ("<a href=nan>", token.view);
+    }
+    {
+      EXPECT_TRUE(g.move_next());
+      auto token = g.current_value();
+      EXPECT_EQ("なんだってー", token.view);
+    }
+    {
+      EXPECT_TRUE(g.move_next());
+      auto token = g.current_value();
+      EXPECT_EQ("</a>", token.view);
+    }
+
+    EXPECT_FALSE(g.move_next());
+  }
+}

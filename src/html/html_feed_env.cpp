@@ -15,6 +15,8 @@
 #include "html_table.h"
 #include "html_meta.h"
 #include "utf8.h"
+#include "html_parser.h"
+#include <plog/log.h>
 #include <assert.h>
 #include <sstream>
 
@@ -424,18 +426,6 @@ html_feed_environ::createFormItem(const std::shared_ptr<HtmlTag> &tag) {
     return NULL;
   }
   return item;
-}
-
-std::shared_ptr<LineData>
-loadHTMLstream(int width, const Url &currentURL, std::string_view body,
-               const std::shared_ptr<AnchorList<FormAnchor>> &old,
-               bool internal) {
-  html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
-                             GeneralList::newGeneralList());
-  htmlenv1.parse(body, internal);
-  htmlenv1.status = R_ST_NORMAL;
-  htmlenv1.completeHTMLstream();
-  return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }
 
 bool pseudoInlines = true;
@@ -3569,4 +3559,23 @@ void html_feed_environ::make_caption(int table_width,
   this->parse(caption, false);
   this->parse("</center>");
   _impl->_width = limit;
+}
+
+std::shared_ptr<LineData>
+loadHTMLstream(int width, const Url &currentURL, std::string_view body,
+               const std::shared_ptr<AnchorList<FormAnchor>> &old,
+               bool internal) {
+
+  auto g = html_tokenize(body);
+  while (g.move_next()) {
+    auto token = g.current_value();
+    LOGD << token.view;
+  }
+
+  html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
+                             GeneralList::newGeneralList());
+  htmlenv1.parse(body, internal);
+  htmlenv1.status = R_ST_NORMAL;
+  htmlenv1.completeHTMLstream();
+  return HtmlRenderer().render(currentURL, &htmlenv1, old);
 }

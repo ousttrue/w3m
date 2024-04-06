@@ -27,6 +27,7 @@ html_lib = static_library(
     ],
     dependencies: [
         core_dep,
+        plog_dep,
     ],
 )
 html_dep = declare_dependency(

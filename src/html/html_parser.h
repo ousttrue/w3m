@@ -3,6 +3,7 @@
 #include <ostream>
 #include <functional>
 #include <coroutine>
+#include <assert.h>
 
 // https://cpprefjp.github.io/lang/cpp20/coroutines.html
 
@@ -47,13 +48,47 @@ inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
 }
 
 struct HtmlParserState {
-  struct Context;
+  class Context;
   using Result =
       std::tuple<std::string_view, std::string_view, HtmlParserState>;
   using StateFunc = std::function<Result(std::string_view, Context &)>;
-  struct Context {
-    // std::string tmp;
+  class Context {
+    const char *_tag = nullptr;
+    const char *_comment = nullptr;
+
+  public:
     StateFunc return_state;
+
+    void newTag(std::string_view src) {
+      auto begin = src.data() - 1;
+      if (*begin == '<') {
+        _tag = begin;
+      } else if (*begin == '/') {
+        --begin;
+        if (*begin == '<') {
+          _tag = begin;
+        } else {
+          assert(false);
+        }
+      } else {
+        assert(false);
+      }
+    }
+    std::string_view emitTag(std::string_view car) {
+      auto begin = _tag;
+      _tag = {};
+      return {begin, car.data() + car.size()};
+    }
+
+    void newComment(std::string_view src) {
+      _comment = src.data() - 1;
+      assert(*_comment == '<');
+    }
+    std::string_view emitComment(std::string_view car) {
+      auto begin = _comment;
+      _comment = {};
+      return {begin, car.data() + car.size()};
+    }
   };
   StateFunc parse;
 };
