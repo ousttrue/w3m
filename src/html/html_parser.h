@@ -1,7 +1,6 @@
 #pragma once
 #include <string_view>
 #include <ostream>
-#include <functional>
 #include <coroutine>
 #include <assert.h>
 
@@ -43,15 +42,49 @@ inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
   return os;
 }
 
+/// 13.2.4.1 The insertion mode
+enum HtmlDomInsertionMode {
+  Initial,
+  BeforeHtml,
+  BeforeHead,
+  InHead,
+  InHeadNoscript,
+  AfterHead,
+  InBody,
+  Text,
+  InTable,
+  InTableText,
+  InCaption,
+  InColumnGroup,
+  InTableBody,
+  InRow,
+  InCell,
+  InSelect,
+  InSelectInTable,
+  InTemplate,
+  AfterBody,
+  InFrameset,
+  AfterFrameset,
+  AfterAfterBody,
+  AfterAfterFrameset,
+};
+
 struct HtmlParserState {
   class Context;
   using Result = std::tuple<HtmlToken, std::string_view, HtmlParserState>;
-  using StateFunc = std::function<Result(std::string_view, Context &)>;
+  using StateFunc = Result (*)(std::string_view, Context &);
   class Context {
-    const char *_lastOpen = nullptr;
+    const char *_lastOpen = {};
+    StateFunc _returnState = {};
 
   public:
-    StateFunc return_state;
+    void setReturnState(StateFunc returnState) { _returnState = returnState; }
+    StateFunc returnState() {
+      auto p = _returnState;
+      assert(p);
+      _returnState = {};
+      return p;
+    }
 
     void open(std::string_view src) {
       _lastOpen = src.data();

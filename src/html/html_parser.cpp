@@ -128,7 +128,7 @@ HtmlParserState::Result dataState(std::string_view src,
   auto [car, cdr] = consume(src);
   auto ch = src.front();
   if (ch == '&') {
-    c.return_state = &dataState;
+    c.setReturnState(&dataState);
     return {{}, cdr, {characterReferenceState}};
   } else if (ch == '<') {
     c.open(src);
@@ -274,7 +274,7 @@ attributeValueDoubleQuatedState(std::string_view src,
   if (ch == '"') {
     return {{}, cdr, {afterAttributeValueQuotedState}};
   } else if (ch == '&') {
-    c.return_state = attributeValueDoubleQuatedState;
+    c.setReturnState(attributeValueDoubleQuatedState);
     return {{}, cdr, {characterReferenceState}};
   } else {
     return {{}, cdr, {}};
@@ -290,7 +290,7 @@ attributeValueSingleQuotedState(std::string_view src,
   if (ch == '\'') {
     return {{}, cdr, {afterAttributeValueQuotedState}};
   } else if (ch == '&') {
-    c.return_state = attributeValueSingleQuotedState;
+    c.setReturnState(attributeValueSingleQuotedState);
     return {{}, cdr, {characterReferenceState}};
   } else {
     return {{}, cdr, {}};
@@ -305,7 +305,7 @@ attributeValueUnquotedState(std::string_view src, HtmlParserState::Context &c) {
   if (ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x20) {
     return {{}, cdr, {beforeAttributeNameState}};
   } else if (ch == '&') {
-    c.return_state = attributeValueUnquotedState;
+    c.setReturnState(attributeValueUnquotedState);
     return {{}, cdr, {characterReferenceState}};
   } else if (ch == '>') {
     return {{Tag, c.emit(car)}, cdr, {dataState}};
@@ -535,7 +535,7 @@ namedCharacterReferenceState(std::string_view src,
   if (car.size()) {
     auto begin = car.data() - 1;
     assert(*begin == '&');
-    return {{Character, {begin, car.size() + 1}}, cdr, {c.return_state}};
+    return {{Character, {begin, car.size() + 1}}, cdr, {c.returnState()}};
   } else {
     return {{Unknown, src}, {}, {}};
   }
