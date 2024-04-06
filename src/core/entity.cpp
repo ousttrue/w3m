@@ -2171,3 +2171,17 @@ std::string getescapecmd(const char **s) {
   tmp << save << (*s - save);
   return tmp.str();
 }
+
+std::tuple<std::string_view, std::string_view>
+matchNamedCharacterReference(std::string_view src) {
+  auto pos = src.find(';');
+  if (pos != std::string::npos) {
+    auto end = src.begin() + pos;
+    auto found = g_entity_map.find(std::string(src.begin(), end));
+    if (found != g_entity_map.end()) {
+      return {{src.begin(), end + 1}, {end + 1, src.end()}};
+    }
+  }
+  // not match
+  return {{}, src};
+}

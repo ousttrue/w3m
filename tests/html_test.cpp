@@ -1,16 +1,36 @@
 #include <gtest/gtest.h>
-#include <optional>
 #include <functional>
 #include <coroutine>
+#include "entity.h"
 
 // https://html.spec.whatwg.org/multipage/parsing.html
 // https://cpprefjp.github.io/lang/cpp20/coroutines.html
 
+// DOCTYPE, start tag, end tag, comment, character, end-of-file
 enum HtmlTokenTypes {
   Unknown,
+  Doctype,
+  StartTag,
+  EndTag,
+  Comment,
   Character,
-  Reference,
 };
+inline const char *str(const HtmlTokenTypes t) {
+  switch (t) {
+  case Unknown:
+    return "Unknown";
+  case Doctype:
+    return "Doctype";
+  case StartTag:
+    return "StartTag";
+  case EndTag:
+    return "EndTag";
+  case Comment:
+    return "Comment";
+  case Character:
+    return "Character";
+  }
+}
 
 struct HtmlToken {
   HtmlTokenTypes type;
@@ -21,34 +41,27 @@ struct HtmlToken {
            view.begin() == rhs.view.begin();
   }
 };
-
 inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
-  os << "[";
-  switch (token.type) {
-  case Unknown:
-    os << "Unknown";
-    break;
-  case Character:
-    os << "Character";
-    break;
-  case Reference:
-    os << "Reference";
-    break;
-  }
-  os << "] '" << token.view << "'";
+  os << "[" << str(token.type) << "] '" << token.view << "'";
   return os;
 }
 
 enum HtmlParserStateType {
-  Data,
+  DataStateType,
+  CharacterReferenceStateType,
 };
 
-using HtmlParserResult =
-    std::tuple<std::optional<HtmlParserStateType>, std::optional<HtmlToken>>;
-
-using HtmlParseStateFunc =
-    std::function<std::tuple<std::string_view::iterator, HtmlParserResult>(
-        std::string_view::iterator)>;
+struct HtmlParserState {
+  struct Context;
+  using Result =
+      std::tuple<std::string_view, std::string_view, HtmlParserState>;
+  using StateFunc = std::function<Result(std::string_view, Context &)>;
+  struct Context {
+    // std::string tmp;
+    StateFunc return_state;
+  };
+  StateFunc parse;
+};
 
 struct generator {
   struct promise_type;
@@ -96,26 +109,71 @@ public:
   }
 };
 
-struct DataState {
-  std::tuple<std::string_view::iterator, HtmlParserResult>
-  operator()(std::string_view::iterator it) {
-    auto next = it + 1;
-    std::string_view view = {it, next};
-    return {next, {Data, HtmlToken{.type = Character, .view = view}}};
-  }
-};
+inline std::tuple<std::string_view, std::string_view>
+consume(std::string_view src, size_t n) {
+  auto it = src.begin() + n;
+  return {{src.begin(), it}, {it, src.end()}};
+}
 
+// 13.2.5.73 Named character reference state
+HtmlParserState::Result
+namedCharacterReferenceState(std::string_view src,
+                             HtmlParserState::Context &c) {
+  auto [car, cdr] = matchNamedCharacterReference(src);
+  if (car.size()) {
+    auto begin = car.data() - 1;
+    assert(*begin == '&');
+    return {{begin, car.size() + 1}, cdr, {c.return_state}};
+  } else {
+    return {src, {}, {}};
+  }
+}
+
+// 13.2.5.72 Character reference state
+HtmlParserState::Result characterReferenceState(std::string_view src,
+                                                HtmlParserState::Context &c) {
+  auto ch = src.front();
+  if (std::isalnum(ch)) {
+    return {{}, src, {namedCharacterReferenceState}};
+  } else if (ch == '#') {
+    return {src, {}, {}};
+  } else {
+    return {src, {}, {}};
+  }
+}
+
+// 13.2.5.1 Data state
+HtmlParserState::Result dataState(std::string_view src,
+                                  HtmlParserState::Context &c) {
+  auto [car, cdr] = consume(src, 1);
+  auto ch = src.front();
+  if (ch == '&') {
+    c.return_state = &dataState;
+    return {{}, cdr, {characterReferenceState}};
+  } else if (ch == '<') {
+    return {src, {}, {}};
+  } else if (ch == 0) {
+    return {src, {}, {}};
+  } else {
+    return {car, cdr, {}};
+  }
+}
+
+//
+// generator
+//
 generator tokenize(std::string_view v) {
-  HtmlParseStateFunc state = DataState();
-  for (auto it = v.begin(); it != v.end();) {
-    auto [next, result] = state(it);
-    it = next;
-    auto [next_state, value] = result;
-    if (next_state) {
-      // _state = next_state;
+  HtmlParserState state{dataState};
+  HtmlParserState::Context c;
+  while (v.size()) {
+    auto [token, next, next_state] = state.parse(v, c);
+    v = next;
+    if (next_state.parse) {
+      state = next_state;
     }
-    if (value) {
-      co_yield *value;
+    if (token.size()) {
+      // emit
+      co_yield {Character, token};
     }
   }
 }
@@ -151,13 +209,22 @@ TEST(HtmlTest, tokenizer) {
   }
 }
 
+TEST(HtmlTest, named) {
+  {
+    auto src = "&amp;";
+    auto [found, remain] = matchNamedCharacterReference(src + 1);
+    EXPECT_EQ("amp;", found);
+    EXPECT_EQ("", remain);
+  }
+}
+
 TEST(HtmlTest, reference) {
   {
     auto src = "&amp;";
     auto g = tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
-    EXPECT_EQ(HtmlToken(Reference, src), token);
+    EXPECT_EQ("&amp;", token.view);
     EXPECT_FALSE(g.move_next());
   }
 }
