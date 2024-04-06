@@ -55,6 +55,7 @@ struct HtmlParserState {
   class Context {
     const char *_tag = nullptr;
     const char *_comment = nullptr;
+    const char *_docutype = nullptr;
 
   public:
     StateFunc return_state;
@@ -77,6 +78,16 @@ struct HtmlParserState {
     std::string_view emitTag(std::string_view car) {
       auto begin = _tag;
       _tag = {};
+      return {begin, car.data() + car.size()};
+    }
+
+    void newDocutype(std::string_view src) {
+      _docutype = src.data() - 10;
+      // assert(*_docutype == '<');
+    }
+    std::string_view emitDocutype(std::string_view car) {
+      auto begin = _docutype;
+      _docutype = {};
       return {begin, car.data() + car.size()};
     }
 
@@ -142,11 +153,5 @@ public:
       coro.destroy();
   }
 };
-
-inline std::tuple<std::string_view, std::string_view>
-consume(std::string_view src, size_t n) {
-  auto it = src.begin() + n;
-  return {{src.begin(), it}, {it, src.end()}};
-}
 
 html_token_generator html_tokenize(std::string_view v);

@@ -82,7 +82,7 @@ TEST(HtmlTest, tag) {
 
 TEST(HtmlTest, html) {
   {
-    auto src = "<a href=nan>なんだってー</a>";
+    auto src = "<a href=nan>なん</a>";
     auto g = html_tokenize(src);
     {
       EXPECT_TRUE(g.move_next());
@@ -92,7 +92,12 @@ TEST(HtmlTest, html) {
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("なんだってー", token.view);
+      EXPECT_EQ("な", token.view);
+    }
+    {
+      EXPECT_TRUE(g.move_next());
+      auto token = g.current_value();
+      EXPECT_EQ("ん", token.view);
     }
     {
       EXPECT_TRUE(g.move_next());
@@ -100,6 +105,17 @@ TEST(HtmlTest, html) {
       EXPECT_EQ("</a>", token.view);
     }
 
+    EXPECT_FALSE(g.move_next());
+  }
+}
+
+TEST(HtmlTest, doctype) {
+  {
+    auto src = "<!DOCTYPE html>";
+    auto g = html_tokenize(src);
+    EXPECT_TRUE(g.move_next());
+    auto token = g.current_value();
+    EXPECT_EQ(src, token.view);
     EXPECT_FALSE(g.move_next());
   }
 }
