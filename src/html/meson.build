@@ -23,6 +23,7 @@ html_lib = static_library(
         'html_meta.cpp',
         'html_renderer.cpp',
         'html_table_status.cpp',
+        'html_parser.cpp',
     ],
     dependencies: [
         core_dep,
