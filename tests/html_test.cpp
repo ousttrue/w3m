@@ -17,17 +17,17 @@ TEST(HtmlTest, tokenizer) {
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("a", token.view);
+      EXPECT_EQ(HtmlToken(Character, "a"), token);
     }
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ(" ", token.view);
+      EXPECT_EQ(HtmlToken(Character, " "), token);
     }
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("b", token.view);
+      EXPECT_EQ(HtmlToken(Character, "b"), token);
     }
     EXPECT_FALSE(g.move_next());
   }
@@ -48,7 +48,7 @@ TEST(HtmlTest, reference) {
     auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
-    EXPECT_EQ("&amp;", token.view);
+    EXPECT_EQ(HtmlToken(Character, "&amp;"), token);
     EXPECT_FALSE(g.move_next());
   }
 }
@@ -59,7 +59,7 @@ TEST(HtmlTest, tag) {
     auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
-    EXPECT_EQ("<p>", token.view);
+    EXPECT_EQ(HtmlToken(Tag, "<p>"), token);
     EXPECT_FALSE(g.move_next());
   }
   {
@@ -67,7 +67,7 @@ TEST(HtmlTest, tag) {
     auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
-    EXPECT_EQ("</h1>", token.view);
+    EXPECT_EQ(HtmlToken(Tag, "</h1>"), token);
     EXPECT_FALSE(g.move_next());
   }
   {
@@ -75,7 +75,7 @@ TEST(HtmlTest, tag) {
     auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
-    EXPECT_EQ(src, token.view);
+    EXPECT_EQ(HtmlToken(Tag, src), token);
     EXPECT_FALSE(g.move_next());
   }
 }
@@ -87,22 +87,22 @@ TEST(HtmlTest, html) {
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("<a href=nan>", token.view);
+      EXPECT_EQ(HtmlToken(Tag, "<a href=nan>"), token);
     }
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("な", token.view);
+      EXPECT_EQ(HtmlToken(Character, "な"), token);
     }
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("ん", token.view);
+      EXPECT_EQ(HtmlToken(Character, "ん"), token);
     }
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
-      EXPECT_EQ("</a>", token.view);
+      EXPECT_EQ(HtmlToken(Tag, "</a>"), token);
     }
 
     EXPECT_FALSE(g.move_next());
@@ -115,7 +115,18 @@ TEST(HtmlTest, doctype) {
     auto g = html_tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
-    EXPECT_EQ(src, token.view);
+    EXPECT_EQ(HtmlToken(Doctype, src), token);
+    EXPECT_FALSE(g.move_next());
+  }
+}
+
+TEST(HtmlTest, comment) {
+  {
+    auto src = "<!-- comment -->";
+    auto g = html_tokenize(src);
+    EXPECT_TRUE(g.move_next());
+    auto token = g.current_value();
+    EXPECT_EQ(HtmlToken(Comment, src), token);
     EXPECT_FALSE(g.move_next());
   }
 }

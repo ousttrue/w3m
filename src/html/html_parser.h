@@ -11,8 +11,7 @@
 enum HtmlTokenTypes {
   Unknown,
   Doctype,
-  StartTag,
-  EndTag,
+  Tag,
   Comment,
   Character,
 };
@@ -22,10 +21,8 @@ inline const char *str(const HtmlTokenTypes t) {
     return "Unknown";
   case Doctype:
     return "Doctype";
-  case StartTag:
-    return "StartTag";
-  case EndTag:
-    return "EndTag";
+  case Tag:
+    return "Tag";
   case Comment:
     return "Comment";
   case Character:
@@ -38,8 +35,7 @@ struct HtmlToken {
   std::string_view view;
 
   bool operator==(const HtmlToken &rhs) const {
-    return type == rhs.type && view.size() == rhs.view.size() &&
-           view.begin() == rhs.view.begin();
+    return type == rhs.type && view == rhs.view;
   }
 };
 inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
@@ -49,55 +45,24 @@ inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
 
 struct HtmlParserState {
   class Context;
-  using Result =
-      std::tuple<std::string_view, std::string_view, HtmlParserState>;
+  using Result = std::tuple<HtmlToken, std::string_view, HtmlParserState>;
   using StateFunc = std::function<Result(std::string_view, Context &)>;
   class Context {
-    const char *_tag = nullptr;
-    const char *_comment = nullptr;
-    const char *_docutype = nullptr;
+    const char *_lastOpen = nullptr;
 
   public:
     StateFunc return_state;
 
-    void newTag(std::string_view src) {
-      auto begin = src.data() - 1;
-      if (*begin == '<') {
-        _tag = begin;
-      } else if (*begin == '/') {
-        --begin;
-        if (*begin == '<') {
-          _tag = begin;
-        } else {
-          assert(false);
-        }
-      } else {
-        assert(false);
-      }
+    void open(std::string_view src) {
+      _lastOpen = src.data();
+      assert(*_lastOpen == '<');
     }
-    std::string_view emitTag(std::string_view car) {
-      auto begin = _tag;
-      _tag = {};
-      return {begin, car.data() + car.size()};
-    }
-
-    void newDocutype(std::string_view src) {
-      _docutype = src.data() - 10;
-      // assert(*_docutype == '<');
-    }
-    std::string_view emitDocutype(std::string_view car) {
-      auto begin = _docutype;
-      _docutype = {};
-      return {begin, car.data() + car.size()};
-    }
-
-    void newComment(std::string_view src) {
-      _comment = src.data() - 1;
-      assert(*_comment == '<');
-    }
-    std::string_view emitComment(std::string_view car) {
-      auto begin = _comment;
-      _comment = {};
+    void newTag(std::string_view src) { assert(*_lastOpen == '<'); }
+    void newDocutype(std::string_view src) { assert(*_lastOpen == '<'); }
+    void newComment(std::string_view src) { assert(*_lastOpen == '<'); }
+    std::string_view emit(std::string_view car) {
+      auto begin = _lastOpen;
+      _lastOpen = {};
       return {begin, car.data() + car.size()};
     }
   };

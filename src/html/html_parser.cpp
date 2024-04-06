@@ -82,7 +82,11 @@ HtmlParserState::Result commentState(std::string_view src,
 /// 13.2.5.47 Comment less-than sign bang next_state
 /// 13.2.5.48 Comment less-than sign bang dash state
 /// 13.2.5.50 Comment end dash state
+HtmlParserState::Result commentEndDashState(std::string_view src,
+                                            HtmlParserState::Context &c);
 /// 13.2.5.51 Comment end state
+HtmlParserState::Result commentEndState(std::string_view src,
+                                        HtmlParserState::Context &c);
 /// 13.2.5.52 Comment end bang state
 /// 13.2.5.53 DOCTYPE state
 HtmlParserState::Result doctypeState(std::string_view src,
@@ -127,9 +131,10 @@ HtmlParserState::Result dataState(std::string_view src,
     c.return_state = &dataState;
     return {{}, cdr, {characterReferenceState}};
   } else if (ch == '<') {
+    c.open(src);
     return {{}, cdr, {tagOpenState}};
   } else {
-    return {car, cdr, {}};
+    return {{Character, car}, cdr, {}};
   }
 }
 
@@ -147,10 +152,10 @@ HtmlParserState::Result tagOpenState(std::string_view src,
     return {{}, src, {tagNameState}};
   } else if (ch == '?') {
     assert(false);
-    return {src, {}, {}};
+    return {{Character, src}, {}, {}};
   } else {
     //  invalid-first-character-of-tag-name parse error
-    return {"<", src, {dataState}};
+    return {{Character, c.emit(car)}, src, {dataState}};
   }
 }
 
@@ -181,7 +186,7 @@ HtmlParserState::Result tagNameState(std::string_view src,
   } else if (ch == '/') {
     return {{}, cdr, {selfClosingStartTagState}};
   } else if (ch == '>') {
-    return {c.emitTag(car), cdr, {dataState}};
+    return {{Tag, c.emit(car)}, cdr, {dataState}};
   } else {
     return {{}, cdr, {}};
   }
@@ -217,7 +222,7 @@ HtmlParserState::Result attributeNameState(std::string_view src,
   } else if (ch == '"' || ch == '\'' || ch == '<') {
     // unexpected-null-character parse error.
     assert(false);
-    return {src, {}, {}};
+    return {{Unknown, src}, {}, {}};
   } else {
     // push attribute name
     return {{}, cdr, {}};
@@ -236,7 +241,7 @@ HtmlParserState::Result afterAttributeNameState(std::string_view src,
   } else if (ch == '=') {
     return {{}, cdr, {beforeAttributeValueState}};
   } else if (ch == '>') {
-    return {c.emitTag(car), {cdr}, {dataState}};
+    return {{Tag, c.emit(car)}, {cdr}, {dataState}};
   } else {
     return {{}, src, {attributeNameState}};
   }
@@ -254,7 +259,7 @@ HtmlParserState::Result beforeAttributeValueState(std::string_view src,
   } else if (ch == '\'') {
     return {{}, cdr, {attributeValueSingleQuotedState}};
   } else if (ch == '>') {
-    return {c.emitTag(car), cdr, {dataState}};
+    return {{Tag, c.emit(car)}, cdr, {dataState}};
   } else {
     return {{}, src, {attributeValueUnquotedState}};
   }
@@ -303,7 +308,7 @@ attributeValueUnquotedState(std::string_view src, HtmlParserState::Context &c) {
     c.return_state = attributeValueUnquotedState;
     return {{}, cdr, {characterReferenceState}};
   } else if (ch == '>') {
-    return {c.emitTag(car), cdr, {dataState}};
+    return {{Tag, c.emit(car)}, cdr, {dataState}};
   } else if (ch == '"' || ch == '\'' || ch == '<' || ch == '=' || ch == '`') {
     // unexpected-character-in-unquoted-attribute-value parse error.
     return {{}, cdr, {}};
@@ -323,7 +328,7 @@ afterAttributeValueQuotedState(std::string_view src,
   } else if (ch == '/') {
     return {{}, cdr, {selfClosingStartTagState}};
   } else if (ch == '>') {
-    return {c.emitTag(car), cdr, {dataState}};
+    return {{Tag, c.emit(car)}, cdr, {dataState}};
   } else {
     // missing-whitespace-between-attributes parse error
     return {{}, src, {beforeAttributeNameState}};
@@ -338,7 +343,7 @@ HtmlParserState::Result selfClosingStartTagState(std::string_view src,
   auto ch = src.front();
   if (ch == '>') {
     // c.selfClosing=true;
-    return {c.emitTag(car), {cdr}, {dataState}};
+    return {{Tag, c.emit(car)}, {cdr}, {dataState}};
   } else {
     // unexpected-solidus-in-tag parse error.
     return {{}, src, {beforeAttributeNameState}};
@@ -351,7 +356,7 @@ HtmlParserState::Result bogusCommentState(std::string_view src,
   auto [car, cdr] = consume(src);
   auto ch = src.front();
   if (ch == '>') {
-    return {c.emitComment(car), {cdr}, {dataState}};
+    return {{Comment, c.emit(car)}, {cdr}, {dataState}};
   } else {
     c.newComment(src);
     return {{}, cdr, {}};
@@ -387,7 +392,7 @@ HtmlParserState::Result commentStartState(std::string_view src,
     return {{}, cdr, {commentStartDashState}};
   } else if (ch == '>') {
     // abrupt-closing-of-empty-comment parse error.
-    return {c.emitComment(car), cdr, {dataState}};
+    return {{Comment, c.emit(car)}, cdr, {dataState}};
   } else {
     return {{}, src, {commentState}};
   }
@@ -400,11 +405,11 @@ HtmlParserState::Result commentStartDashState(std::string_view src,
   auto ch = src.front();
   if (ch == '-') {
     assert(false);
-    return {src, {}, {}};
+    return {{Unknown, src}, {}, {}};
     // return {{}, cdr, {commentEndState}};
   } else if (ch == '>') {
     // abrupt-closing-of-empty-comment parse error.
-    return {c.emitComment(car), cdr, {dataState}};
+    return {{Comment, c.emit(car)}, cdr, {dataState}};
   } else {
     return {{}, src, {commentState}};
   }
@@ -417,14 +422,41 @@ HtmlParserState::Result commentState(std::string_view src,
   auto ch = src.front();
   if (ch == '<') {
     assert(false);
-    return {src, {}, {}};
+    return {{Unknown, src}, {}, {}};
     // return {{}, cdr, {commentLessThanSignState}};
   } else if (ch == '-') {
-    assert(false);
-    return {src, {}, {}};
-    // return {{}, cdr, {commentEndDashState}};
+    return {{}, cdr, {commentEndDashState}};
   } else {
     return {{}, cdr, {}};
+  }
+}
+
+// 50
+HtmlParserState::Result commentEndDashState(std::string_view src,
+                                            HtmlParserState::Context &c) {
+  auto [car, cdr] = consume(src);
+  auto ch = src.front();
+  if (ch == '-') {
+    return {{}, cdr, {commentEndState}};
+  } else {
+    return {{}, src, {commentState}};
+  }
+}
+
+// 51
+HtmlParserState::Result commentEndState(std::string_view src,
+                                        HtmlParserState::Context &c) {
+  auto [car, cdr] = consume(src);
+  auto ch = src.front();
+  if (ch == '>') {
+    return {{Comment, c.emit(car)}, cdr, {dataState}};
+  } else if (ch == '!') {
+    assert(false);
+    return {{Unknown, src}, {}, {}};
+  } else if (ch == '-') {
+    return {{}, cdr, {}};
+  } else {
+    return {{}, src, {commentState}};
   }
 }
 
@@ -457,7 +489,7 @@ HtmlParserState::Result beforeDoctypeNameState(std::string_view src,
   } else if (ch == '>') {
     // missing-doctype-name parse error.
     c.newDocutype(src);
-    return {c.emitDocutype(car), cdr, {dataState}};
+    return {{Doctype, c.emit(car)}, cdr, {dataState}};
   } else {
     c.newDocutype(src);
     return {{}, cdr, {doctypeNameState}};
@@ -474,7 +506,7 @@ HtmlParserState::Result doctypeNameState(std::string_view src,
     return {{}, {src}, {}};
     // return {{}, cdr, {afterDoctypeNameState}};
   } else if (ch == '>') {
-    return {c.emitDocutype(car), cdr, {dataState}};
+    return {{Doctype, c.emit(car)}, cdr, {dataState}};
   } else {
     return {{}, cdr, {}};
   }
@@ -488,10 +520,10 @@ HtmlParserState::Result characterReferenceState(std::string_view src,
     return {{}, src, {namedCharacterReferenceState}};
   } else if (ch == '#') {
     assert(false);
-    return {src, {}, {}};
+    return {{Unknown, src}, {}, {}};
   } else {
     assert(false);
-    return {src, {}, {}};
+    return {{Unknown, src}, {}, {}};
   }
 }
 
@@ -503,9 +535,9 @@ namedCharacterReferenceState(std::string_view src,
   if (car.size()) {
     auto begin = car.data() - 1;
     assert(*begin == '&');
-    return {{begin, car.size() + 1}, cdr, {c.return_state}};
+    return {{Character, {begin, car.size() + 1}}, cdr, {c.return_state}};
   } else {
-    return {src, {}, {}};
+    return {{Unknown, src}, {}, {}};
   }
 }
 
@@ -518,11 +550,11 @@ html_token_generator html_tokenize(std::string_view v) {
     if (next_state.parse) {
       state = next_state;
     }
-    if (token.size()) {
+    if (token.view.size()) {
       // emit
-      co_yield {Character, token};
+      co_yield token;
 
-      if (strncasecmp("<script", token.data(), 7) == 0) {
+      if (strncasecmp("<script", token.view.data(), 7) == 0) {
         // search "</script>";
         std::regex re(R"(</script>)", std::regex_constants::icase);
         // std::match_results<std::list<char>::const_iterator> m;

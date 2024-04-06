@@ -24,7 +24,8 @@ stack を使った flag 管理とかの煩雑な処理が簡単になる。
 
 - [HTML parser を書いてるときに出会った Web 標準仕様の話 | blog.bokken.io ](https://blog.bokken.io/articles/2020-09-30/html-parser-good-story.html)
 
-https://html.spec.whatwg.org/multipage/parsing.html
+- https://html.spec.whatwg.org/multipage/parsing.html
+- https://triple-underscore.github.io/HTML-parsing-ja.html
 
 に仕様が書いてあって、わかりやすかった。
 
@@ -66,3 +67,11 @@ html_token_generator html_tokenize(std::string_view v) {
 
 `std::string_view` や `coroutine`を駆使したわりと今風の実装である。
 HTML parse 仕様を、ほぼそのままコードに書き下せそう。
+
+## script の閉じタグ
+
+- [<script>要素の構文](https://zenn.dev/qnighy/articles/4f6c728d452295)
+
+## tree 構築
+
+
