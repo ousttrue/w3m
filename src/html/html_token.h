@@ -2,6 +2,8 @@
 #include <string>
 #include <optional>
 #include <ostream>
+#include <vector>
+#include <array>
 
 struct Token {
   bool is_tag;
@@ -27,6 +29,7 @@ enum HtmlTokenTypes {
   Tag,
   Comment,
   Character,
+  Eof,
 };
 inline const char *str(const HtmlTokenTypes t) {
   switch (t) {
@@ -40,7 +43,11 @@ inline const char *str(const HtmlTokenTypes t) {
     return "Comment";
   case Character:
     return "Character";
+  case Eof:
+    return "Eof";
   }
+
+  return "invalid value";
 }
 
 struct HtmlToken {
@@ -51,7 +58,28 @@ struct HtmlToken {
     return type == rhs.type && view == rhs.view;
   }
 
+  bool isStartTag() const;
   bool isStartTag(std::string_view tag) const;
+
+  bool isAnyStartTag(const char *tag) const { return isStartTag(tag); }
+  template <typename... ARGS>
+  bool isAnyStartTag(const char *tag, ARGS... args) const {
+    if (isStartTag(tag)) {
+      return true;
+    }
+    return isAnyStartTag(args...);
+  }
+
+  bool isEndTag() const;
+  bool isEndTag(std::string_view tag) const;
+  bool isAnyEndTag(const char *tag) const { return isEndTag(tag); }
+  template <typename... ARGS>
+  bool isAnyEndTag(const char *tag, ARGS... args) const {
+    if (isEndTag(tag)) {
+      return true;
+    }
+    return isAnyEndTag(args...);
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
   os << "[" << str(token.type) << "] '" << token.view << "'";

@@ -4,18 +4,20 @@ date: 2024-04-06
 tags: [html]
 ---
 
-html rendering 回りの改修が難航。
+html parse 回りの改修が難航。
 
 <!-- truncate -->
 
 単純にコード量が多くて手に負えない感じです。
 この際、HtmlをパースしてDOMを構築することにした。
-レイアウトする際に line break と table layout のロジックだけ復活させよう。
+で、DOM を描画の入力にする。
+レイアウトする際に line break と table layout のロジックだけ
+なるべく w3m を再現させたい。
 木ができていると親を辿れるので、
 stack を使った flag 管理とかの煩雑な処理が簡単になる。
-あと都度やっている閉じタグが無いときの対応を、木構築の責務に移動できる。
+閉じタグを補う処理は、DOM構築で処理済みになる。 
 
-あと form の入力データなどを DOM の方に持たせる。
+あと form の input の保持するデータを DOM の方に持たせる。
 再レイアウト時に form の内容を持ち越すのに都合が良い。
 
 ## HTML parse 仕様
@@ -28,6 +30,8 @@ stack を使った flag 管理とかの煩雑な処理が簡単になる。
 - https://triple-underscore.github.io/HTML-parsing-ja.html
 
 に仕様が書いてあって、わかりやすかった。
+
+## 13.2.5 Tokenization
 
 80 個の state があるのだけど、
 1 state 1関数になるようにデザインできた。
@@ -68,10 +72,20 @@ html_token_generator html_tokenize(std::string_view v) {
 `std::string_view` や `coroutine`を駆使したわりと今風の実装である。
 HTML parse 仕様を、ほぼそのままコードに書き下せそう。
 
-## script の閉じタグ
+## 13.2.6 Tree construction
 
-- [<script>要素の構文](https://zenn.dev/qnighy/articles/4f6c728d452295)
+token から DOM を構築する仕様。
 
-## tree 構築
+`13.2.6.4.7 The "in body" insertion mode`
 
+が本丸なのだけど tag 別の例外処理が列挙されていて一朝一夕には終わらない感じです。
+タグの開閉が釣り合わないとか、中に入っちいけないタグとか、改行コードの例外処理とか
+事細かに書いてある。
+素直な push/pop で綺麗な HTML では、全部やらなくても問題無さそうである。
+w3m の長大な html 処理は、これに対応しようと努力していたのかもしれない…。。
 
+ひとつ `<script>` に入ったときに、tokenizer の state 変更
+に逆流するというのを見つけた。
+他にも逆流があるかもしれない。
+
+-- [<script>要素の構文](https://zenn.dev/qnighy/articles/4f6c728d452295)

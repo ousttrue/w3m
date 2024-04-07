@@ -1,6 +1,6 @@
 #include "html_dom.h"
 
-// 1
+// 1 expect DOCTYPE
 HtmlInsersionMode::Result initialInsertionMode(const HtmlToken &token,
                                                HtmlInsersionMode::Context &c) {
   switch (token.type) {
@@ -13,29 +13,36 @@ HtmlInsersionMode::Result initialInsertionMode(const HtmlToken &token,
   }
 
   case Comment: {
-    c.document()->children.push_back(HtmlNode::create(token));
+    c.insertComment(token);
     return {true, {}};
   }
 
   case Doctype: {
-    return {true, {}};
-  }
+    // TODO:
+    return {true, {beforeHtmlMode}};
   }
 
+  } // switch
+
+  // Anything else
   return {false, {beforeHtmlMode}};
 }
 
-// 2
+// 2 expect <html>
 HtmlInsersionMode::Result beforeHtmlMode(const HtmlToken &token,
                                          HtmlInsersionMode::Context &c) {
   //
   switch (token.type) {
-  case Doctype:
-    return {true, {}};
-  case Comment: {
-    c.document()->children.push_back(HtmlNode::create(token));
+  case Doctype: {
+    c.parseError(token);
     return {true, {}};
   }
+
+  case Comment: {
+    c.insertComment(token);
+    return {true, {}};
+  }
+
   case Character: {
     auto ch = token.view.front();
     if (ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x20) {
@@ -43,24 +50,35 @@ HtmlInsersionMode::Result beforeHtmlMode(const HtmlToken &token,
     }
     break;
   }
-  case Tag:
+
+  case Tag: {
     if (token.isStartTag("html")) {
-      c.pushOpenElement(token);
+      c.insertHtmlElement(token);
       return {true, {beforeHeadMode}};
+    }
+    if (token.isAnyEndTag("head", "body", "html", "br")) {
+      break;
+    }
+    if (token.isEndTag()) {
+      c.parseError(token);
+      return {true, {}};
     }
     break;
   }
 
-  // fallback
-  c.pushOpenElement(HtmlNode::create(HtmlToken(Tag, "<html>")));
+  } // switch
+
+  // Anything else
+  c.insertHtmlElement(HtmlToken(Tag, "<html> inserted"));
   return {false, {beforeHeadMode}};
 }
 
-// 3
+// 3 expect <head>
 HtmlInsersionMode::Result beforeHeadMode(const HtmlToken &token,
                                          HtmlInsersionMode::Context &c) {
 
   switch (token.type) {
+
   case Character: {
     auto ch = token.view.front();
     if (ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x20) {
@@ -68,33 +86,47 @@ HtmlInsersionMode::Result beforeHeadMode(const HtmlToken &token,
     }
     break;
   }
+
   case Comment: {
-    c.document()->children.push_back(HtmlNode::create(token));
+    c.insertComment(token);
     return {true, {}};
   }
+
   case Doctype: {
+    c.parseError(token);
     return {true, {}};
   }
+
   case Tag: {
     if (token.isStartTag("html")) {
       return inBodyMode(token, c);
     }
     if (token.isStartTag("head")) {
-      c.pushOpenElement(token);
+      c.insertHtmlElement(token);
       return {true, {inHeadMode}};
+    }
+    if (token.isAnyEndTag("head", "body", "html", "br")) {
+      break;
+    }
+    if (token.isEndTag()) {
+      c.parseError(token);
+      return {true, {}};
     }
     break;
   }
-  }
 
-  c.pushOpenElement(HtmlNode::create(HtmlToken(Tag, "<head>")));
+  } // switch
+
+  // Anything else
+  c.insertHtmlElement(HtmlToken(Tag, "<head> inserted"));
   return {false, {inHeadMode}};
 }
 
-// 4
+// 4 expect </head>
 HtmlInsersionMode::Result inHeadMode(const HtmlToken &token,
                                      HtmlInsersionMode::Context &c) {
   switch (token.type) {
+
   case Character: {
     auto ch = token.view.front();
     if (ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x20) {
@@ -109,27 +141,125 @@ HtmlInsersionMode::Result inHeadMode(const HtmlToken &token,
     return {true, {}};
   }
 
-  case Doctype:
+  case Doctype: {
+    c.parseError(token);
     return {true, {}};
+  }
 
   case Tag: {
     if (token.isStartTag("html")) {
       return inBodyMode(token, c);
+    }
+    if (token.isAnyStartTag("base", "basefont", "bgsound", "link")) {
+      c.insertHtmlElement(token);
+      c.closeHtmlElement(token);
+    }
+    if (token.isStartTag("meta")) {
+      c.insertHtmlElement(token);
+      c.closeHtmlElement(token);
+      // TODO:
+    }
+    if (token.isStartTag("title")) {
+      // TODO: RCDATA
+      c.insertHtmlElement(token);
+    }
+    if (token.isStartTag("noscript")) {
+      // scripting flag is disabled
+      c.insertHtmlElement(token);
+      return {true, {inHeadNoscriptMode}};
+    }
+    if (token.isStartTag("script")) {
+      c.insertHtmlElement(token);
+      // TODO: Switch the tokenizer to the script data state.
+      c.setOriginalInsertionMode(&inHeadMode);
+      return {true, {textMode}};
+    }
+    if (token.isEndTag("head")) {
+      c.closeHtmlElement(token);
+      return {true, {afterHeadMode}};
+    }
+    if (token.isAnyEndTag("body", "html", "br")) {
+      break;
+    }
+    if (token.isStartTag("template")) {
+      // ignore
+      return {true, {}};
+    }
+    if (token.isEndTag("template")) {
+      // ignore
+      return {true, {}};
+    }
+    if (token.isStartTag("head")) {
+      c.parseError(token);
+      return {true, {}};
+    }
+    if (token.isEndTag()) {
+      c.parseError(token);
+      return {true, {}};
     }
     break;
   }
 
   } // switch
 
-  c.popOpenElement();
+  // Anything else
+  c.popOpenElement("head");
   return {false, {afterHeadMode}};
 }
 
 /// 13.2.6.4.5 The "in head noscript" insertion mode
 HtmlInsersionMode::Result inHeadNoscriptMode(const HtmlToken &token,
-                                             HtmlInsersionMode::Context &c)
-{
-  return {true, {}};
+                                             HtmlInsersionMode::Context &c) {
+  switch (token.type) {
+  case Doctype: {
+    c.parseError(token);
+    return {true, {}};
+  }
+
+  case Tag: {
+    if (token.isStartTag("html")) {
+      return inBodyMode(token, c);
+    }
+    if (token.isEndTag("noscript")) {
+      c.popOpenElement("noscript");
+      return {true, {inHeadMode}};
+    }
+    if (token.isAnyStartTag("basefont", "bgsound", "link", "meta", "noframes",
+                            "style")) {
+      return inHeadMode(token, c);
+    }
+    if (token.isEndTag("br")) {
+      break;
+    }
+    if (token.isAnyStartTag("head", "noscript")) {
+      c.parseError(token);
+      return {true, {}};
+    }
+    if (token.isEndTag()) {
+      c.parseError(token);
+      return {true, {}};
+    }
+    break;
+  }
+
+  case Character: {
+    auto ch = token.view.front();
+    if (ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x20) {
+      return inHeadMode(token, c);
+    }
+    break;
+  }
+
+  case Comment: {
+    return inHeadMode(token, c);
+  }
+
+  } // switch
+
+  // Anything else
+  c.parseError(token);
+  c.popOpenElement("noscript");
+  return {false, {inHeadMode}};
 }
 
 // 6
@@ -145,29 +275,169 @@ HtmlInsersionMode::Result afterHeadMode(const HtmlToken &token,
     break;
   }
 
+  case Comment: {
+    c.insertComment(token);
+    return {true, {}};
+  }
+
+  case Doctype: {
+    c.parseError(token);
+    return {true, {}};
+  }
+
+  case Tag: {
+    if (token.isStartTag("html")) {
+      return inBodyMode(token, c);
+    }
+    if (token.isStartTag("body")) {
+      c.insertHtmlElement(token);
+      c.setFramesetOk(false);
+      return {true, {inBodyMode}};
+    }
+    if (token.isStartTag("frameset")) {
+      c.insertHtmlElement(token);
+      return {true, {inFramesetMode}};
+    }
+    if (token.isAnyStartTag("base", "basefont", "bgsound", "link", "meta",
+                            "noframes", "script", "style", "template",
+                            "title")) {
+      c.parseError(token);
+      // TODO: head element pointer
+      return {true, {}};
+    }
+    if (token.isEndTag("template")) {
+      return inHeadMode(token, c);
+    }
+    if (token.isAnyEndTag("body", "html", "br")) {
+      break;
+    }
+    if (token.isStartTag("head")) {
+      c.parseError(token);
+      return {true, {}};
+    }
+    if (token.isEndTag()) {
+      c.parseError(token);
+      return {true, {}};
+    }
+
+    break;
+  }
+
   } // switch
 
-  return {true, {}};
+  // Anything else
+  c.insertHtmlElement(HtmlToken(Tag, "<body> inserted"));
+  return {false, {inBodyMode}};
 }
 
 // 7
 HtmlInsersionMode::Result inBodyMode(const HtmlToken &token,
                                      HtmlInsersionMode::Context &c) {
   switch (token.type) {
+
   case Character: {
     auto ch = token.view.front();
     if (ch == 0x09 || ch == 0x0a || ch == 0x0c || ch == 0x20) {
-      if (auto e = c.activeFormattingElement()) {
-        e->reconstruct();
-      }
+      c.reconstructActiveFormattingElements();
       c.insertCharacter(token);
+      return {true, {}};
+    } else {
+      c.reconstructActiveFormattingElements();
+      c.insertCharacter(token);
+      c.setFramesetOk(false);
       return {true, {}};
     }
     break;
   }
 
+  case Comment: {
+    c.insertComment(token);
+    return {true, {}};
+  }
+
+  case Doctype: {
+    c.parseError(token);
+    return {true, {}};
+  }
+
+  case Tag: {
+    if (token.isStartTag("html")) {
+      c.parseError(token);
+      c.mergeAttribute(token);
+      return {true, {}};
+    }
+    if (token.isAnyStartTag("base", "basefont", "bgsound", "link", "meta",
+                            "noframes", "script", "style", "template",
+                            "title")) {
+      return inHeadMode(token, c);
+    }
+    if (token.isEndTag("template")) {
+      return inHeadMode(token, c);
+    }
+    if (token.isStartTag("body")) {
+      c.parseError(token);
+      // TODO:
+      c.mergeAttribute(token);
+      return {true, {}};
+    }
+    if (token.isStartTag("frameset")) {
+      c.parseError(token);
+      // TODO:
+      return {true, {}};
+    }
+    if (token.isEndTag("body")) {
+      // TODO:
+      return {true, {afterBodyMode}};
+    }
+    if (token.isEndTag("html")) {
+      // TODO:
+      return {false, {afterBodyMode}};
+    }
+    if (token.isAnyStartTag("address", "article", "aside", "blockquote",
+                            "center", "details", "dialog", "dir", "div", "dl",
+                            "fieldset", "figcaption", "figure", "footer",
+                            "header", "hgroup", "main", "menu", "nav", "ol",
+                            "p", "search", "section", "summary", "ul")) {
+      // TODO: close p in button scope
+      c.insertHtmlElement(token);
+    }
+    if (token.isAnyStartTag("h1", "h2", "h3", "h4", "h5", "h6")) {
+      // TODO: close p in button scope
+      // TODO: nested hx
+      c.insertHtmlElement(token);
+    }
+    if (token.isAnyStartTag("pre", "listing")) {
+      // TODO: close p in button scope
+      c.insertHtmlElement(token);
+      // TODO: ignore next 0x0A
+      c.setFramesetOk(false);
+    }
+    // if(token.isStartTag("form")){
+    // }
+
+    // Any other start tag
+    if (token.isStartTag()) {
+      c.reconstructActiveFormattingElements();
+      c.insertHtmlElement(token);
+      return {true, {}};
+    }
+    if (token.isEndTag()) {
+      c.closeHtmlElement(token);
+      return {true, {}};
+    }
+
+    break;
+  }
+
+  case Eof: {
+    c.stop();
+    return {true, {}};
+  }
+
   } // switch
 
+  // not reach here
+  assert(false);
   return {true, {}};
 }
 

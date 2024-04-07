@@ -129,12 +129,45 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
   return {};
 }
 
+bool HtmlToken::isStartTag() const {
+  if (this->type != Tag) {
+    return false;
+  }
+
+  return !this->view.starts_with("</");
+}
+
 bool HtmlToken::isStartTag(std::string_view tag) const {
   if (this->type != Tag) {
     return false;
   }
 
   std::string pattern("<");
+  pattern += tag;
+  pattern += R"(\b)";
+
+  std::regex re(pattern, std::regex_constants::icase);
+  if (!std::regex_match(this->view.begin(), this->view.end(), re)) {
+    return false;
+  }
+
+  return true;
+}
+
+bool HtmlToken::isEndTag() const {
+  if (this->type != Tag) {
+    return false;
+  }
+
+  return this->view.starts_with("</");
+}
+
+bool HtmlToken::isEndTag(std::string_view tag) const {
+  if (this->type != Tag) {
+    return false;
+  }
+
+  std::string pattern("</");
   pattern += tag;
   pattern += R"(\b)";
 

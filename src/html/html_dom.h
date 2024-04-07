@@ -12,7 +12,6 @@ struct HtmlNode {
   static std::shared_ptr<HtmlNode> create(const HtmlToken &token) {
     return std::make_shared<HtmlNode>(token);
   }
-  void reconstruct() {}
   void print(std::ostream &os, const std::string &indent = "") {
     os << indent << token.view << std::endl;
     for (auto &child : children) {
@@ -23,9 +22,25 @@ struct HtmlNode {
 
 struct HtmlInsersionMode {
   using Result = std::tuple<bool, HtmlInsersionMode>;
+  class Context;
+  using HtmlTreeConstructionModeFunc = Result (*)(const HtmlToken &, Context &);
+  HtmlTreeConstructionModeFunc insert;
+
   class Context {
-    std::shared_ptr<HtmlNode> _document;
+    /// 13.2.4.2 The stack of open elements
     std::stack<std::shared_ptr<HtmlNode>> _stack;
+    /// 13.2.4.3 The list of active formatting elements
+
+    /// 13.2.4.4 The element pointers
+
+    /// 13.2.4.5 Other parsing state flags
+    bool _scripting = false;
+    bool _framesetOk = true;
+
+    HtmlTreeConstructionModeFunc _originalInsertionMode;
+
+    // output
+    std::shared_ptr<HtmlNode> _document;
 
   public:
     Context() : _document(new HtmlNode(HtmlToken(Tag, "[document]"))) {
@@ -35,6 +50,8 @@ struct HtmlInsersionMode {
     Context(const Context &) = delete;
     Context &operator=(const Context &) = delete;
     std::shared_ptr<HtmlNode> document() const { return _document; }
+
+  private:
     void pushOpenElement(const std::shared_ptr<HtmlNode> &node) {
       _stack.top()->children.push_back(node);
       _stack.push(node);
@@ -42,13 +59,24 @@ struct HtmlInsersionMode {
     void pushOpenElement(const HtmlToken &token) {
       pushOpenElement(HtmlNode::create(token));
     }
-    void popOpenElement() { _stack.pop(); }
+
+  public:
+    void setFramesetOk(bool enable) { _framesetOk = enable; }
+    void popOpenElement(std::string_view validate = {}) { _stack.pop(); }
     void insertComment(const HtmlToken &token) {}
     void insertCharacter(const HtmlToken &token) {}
-    std::shared_ptr<HtmlNode> activeFormattingElement() const { return {}; }
+    void insertHtmlElement(const HtmlToken &token) {}
+    void closeHtmlElement(const HtmlToken &token) {}
+    void setOriginalInsertionMode(HtmlTreeConstructionModeFunc mode) {
+      _originalInsertionMode = mode;
+    }
+    void parseError(const HtmlToken &token) {}
+    void mergeAttribute(const HtmlToken &token) {}
+    void reconstructActiveFormattingElements() {}
+    void stop(){
+      // TODO:
+    }
   };
-  using HtmlTreeConstructionModeFunc = Result (*)(const HtmlToken &, Context &);
-  HtmlTreeConstructionModeFunc insert;
 };
 
 // https://html.spec.whatwg.org/multipage/parsing.html
@@ -124,6 +152,7 @@ HtmlInsersionMode::Result afterAfterFramesetMode(const HtmlToken &token,
                                                  HtmlInsersionMode::Context &c);
 
 struct TreeConstruction {
+  /// 13.2.4.1 The insertion mode
   HtmlInsersionMode insertionMode;
   HtmlInsersionMode::Context context;
 
