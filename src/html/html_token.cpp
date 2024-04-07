@@ -4,6 +4,8 @@
 #include "html_feed_env.h"
 #include "html_tag.h"
 #include "html_table_status.h"
+#include "cmp.h"
+#include <regex>
 
 std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
                                          TableStatus &t, bool internal) {
@@ -36,7 +38,7 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
           return {};
         }
       }
-      if (h_env->tagbuf().empty()){
+      if (h_env->tagbuf().empty()) {
         continue;
       }
       str = h_env->tagbuf();
@@ -125,4 +127,21 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
   }
 
   return {};
+}
+
+bool HtmlToken::isStartTag(std::string_view tag) const {
+  if (this->type != Tag) {
+    return false;
+  }
+
+  std::string pattern("<");
+  pattern += tag;
+  pattern += R"(\b)";
+
+  std::regex re(pattern, std::regex_constants::icase);
+  if (!std::regex_match(this->view.begin(), this->view.end(), re)) {
+    return false;
+  }
+
+  return true;
 }

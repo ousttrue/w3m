@@ -1,46 +1,10 @@
 #pragma once
+#include "html_token.h"
 #include <string_view>
-#include <ostream>
 #include <coroutine>
 #include <assert.h>
 
 // https://cpprefjp.github.io/lang/cpp20/coroutines.html
-
-// DOCTYPE, start tag, end tag, comment, character, end-of-file
-enum HtmlTokenTypes {
-  Unknown,
-  Doctype,
-  Tag,
-  Comment,
-  Character,
-};
-inline const char *str(const HtmlTokenTypes t) {
-  switch (t) {
-  case Unknown:
-    return "Unknown";
-  case Doctype:
-    return "Doctype";
-  case Tag:
-    return "Tag";
-  case Comment:
-    return "Comment";
-  case Character:
-    return "Character";
-  }
-}
-
-struct HtmlToken {
-  HtmlTokenTypes type;
-  std::string_view view;
-
-  bool operator==(const HtmlToken &rhs) const {
-    return type == rhs.type && view == rhs.view;
-  }
-};
-inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
-  os << "[" << str(token.type) << "] '" << token.view << "'";
-  return os;
-}
 
 /// 13.2.4.1 The insertion mode
 enum HtmlDomInsertionMode {

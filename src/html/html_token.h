@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <optional>
+#include <ostream>
 
 struct Token {
   bool is_tag;
@@ -18,3 +19,41 @@ struct Tokenizer {
   std::optional<Token> getToken(html_feed_environ *h_env, TableStatus &t,
                                 bool internal);
 };
+
+// DOCTYPE, start tag, end tag, comment, character, end-of-file
+enum HtmlTokenTypes {
+  Unknown,
+  Doctype,
+  Tag,
+  Comment,
+  Character,
+};
+inline const char *str(const HtmlTokenTypes t) {
+  switch (t) {
+  case Unknown:
+    return "Unknown";
+  case Doctype:
+    return "Doctype";
+  case Tag:
+    return "Tag";
+  case Comment:
+    return "Comment";
+  case Character:
+    return "Character";
+  }
+}
+
+struct HtmlToken {
+  HtmlTokenTypes type;
+  std::string_view view;
+
+  bool operator==(const HtmlToken &rhs) const {
+    return type == rhs.type && view == rhs.view;
+  }
+
+  bool isStartTag(std::string_view tag) const;
+};
+inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
+  os << "[" << str(token.type) << "] '" << token.view << "'";
+  return os;
+}
