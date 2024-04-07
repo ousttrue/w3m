@@ -80,6 +80,28 @@ struct HtmlToken {
     }
     return isAnyEndTag(args...);
   }
+
+  std::string tag() const {
+    if (type != Tag) {
+      return {};
+    }
+    auto it = view.begin();
+    if (*it != '<') {
+      return {};
+    }
+    ++it;
+    if (it == view.end()) {
+      return {};
+    }
+    if (*it == '/') {
+      ++it;
+    }
+    std::string tag;
+    for (; std::isalpha(*it); ++it) {
+      tag.push_back(std::tolower(*it));
+    }
+    return tag;
+  }
 };
 inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {
   os << "[" << str(token.type) << "] '" << token.view << "'";

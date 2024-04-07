@@ -4,7 +4,7 @@
 
 TEST(HtmlTest, dom) {
   {
-    auto src = "<p>a</p>";
+    auto src = "<p>a</p><div>あ</div>";
     auto g = html_tokenize(src);
     TreeConstruction t;
     while (g.move_next()) {

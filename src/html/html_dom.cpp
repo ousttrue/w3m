@@ -1,4 +1,5 @@
 #include "html_dom.h"
+#include <assert.h>
 
 // 1 expect DOCTYPE
 HtmlInsersionMode::Result initialInsertionMode(const HtmlToken &token,
