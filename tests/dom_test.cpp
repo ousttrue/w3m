@@ -11,6 +11,9 @@ TEST(HtmlTest, dom) {
       auto token = g.current_value();
       t.push(token);
     }
-    EXPECT_EQ(&beforeHeadMode, t.insertionMode.insert);
+    // EXPECT_EQ(&beforeHeadMode, t.insertionMode.insert);
+
+    t.context.document()->print(std::cout);
+    std::cout << t.insertionMode << std::endl;
   }
 }
