@@ -1761,10 +1761,12 @@ static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
 
 void html_feed_environ::parse(std::string_view html, bool internal) {
 
-  Tokenizer tokenizer(html);
   TableStatus t;
-  while (auto token = tokenizer.getToken(this, t, internal)) {
-    process_token(t, token->str);
+
+  auto g = html_tokenize(html);
+  while (g.move_next()) {
+    auto token = g.current_value();
+    process_token(t, token.view);
   }
 
   this->parse_end();
@@ -3569,12 +3571,6 @@ std::shared_ptr<LineData>
 loadHTMLstream(int width, const Url &currentURL, std::string_view body,
                const std::shared_ptr<AnchorList<FormAnchor>> &old,
                bool internal) {
-
-  // auto g = html_tokenize(body);
-  // while (g.move_next()) {
-  //   auto token = g.current_value();
-  //   LOGD << token.view;
-  // }
 
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
                              GeneralList::newGeneralList());

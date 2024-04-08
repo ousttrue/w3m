@@ -560,7 +560,10 @@ html_token_generator html_tokenize(std::string_view v) {
         // std::match_results<std::list<char>::const_iterator> m;
         std::cmatch m;
         if (std::regex_search(v.data(), v.data() + v.size(), m, re)) {
-          co_yield {Character, {v.data(), m[0].first}};
+          std::string_view data{v.data(), m[0].first};
+          if(data.size()){
+          co_yield {Character, data};
+          }
           v = {m[0].first, v.data() + v.size()};
         }
       };
