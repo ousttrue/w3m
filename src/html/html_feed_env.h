@@ -325,7 +325,7 @@ public:
 
 private:
   void push_render_image(const std::string &str, int width, int limit);
-  void process_token(struct TableStatus &t, const struct Token &token);
+  void process_token(struct TableStatus &t, std::string_view token);
 
   void CLOSE_DT();
   void CLOSE_A();

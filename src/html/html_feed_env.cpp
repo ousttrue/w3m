@@ -1764,20 +1764,20 @@ void html_feed_environ::parse(std::string_view html, bool internal) {
   Tokenizer tokenizer(html);
   TableStatus t;
   while (auto token = tokenizer.getToken(this, t, internal)) {
-    process_token(t, *token);
+    process_token(t, token->str);
   }
 
   this->parse_end();
 }
 
-void html_feed_environ::process_token(TableStatus &t, const Token &token) {
+void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
   if (t.is_active(this)) {
     /*
      * within table: in <table>..</table>, all input tokens
      * are fed to the table renderer, and then the renderer
      * makes HTML output.
      */
-    switch (t.feed(this, token.str, internal)) {
+    switch (t.feed(this, std::string(token.begin(), token.end()), internal)) {
     case 0:
       /* </table> tag */
       this->table_level--;
@@ -1824,9 +1824,9 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
     }
   }
 
-  if (token.is_tag) {
+  if (token.front() == '<') {
     /*** Beginning of a new tag ***/
-    std::shared_ptr<HtmlTag> tag = parseHtmlTag(token.str, internal);
+    std::shared_ptr<HtmlTag> tag = parseHtmlTag(token, internal);
     if (!tag) {
       return;
     }
@@ -1856,8 +1856,11 @@ void html_feed_environ::process_token(TableStatus &t, const Token &token) {
     return;
   }
 
-  auto pp = token.str.c_str();
-  while (*pp) {
+  // std::string x(token.begin(), token.end());
+  // auto pp = x.c_str();;
+  auto pp = token.data();
+  auto end = pp + token.size();
+  while (pp!=end) {
     auto mode = get_mctype(pp);
     int delta = get_mcwidth(pp);
     if (_impl->flag & (RB_SPECIAL & ~RB_NOBR)) {
@@ -3566,11 +3569,11 @@ loadHTMLstream(int width, const Url &currentURL, std::string_view body,
                const std::shared_ptr<AnchorList<FormAnchor>> &old,
                bool internal) {
 
-  auto g = html_tokenize(body);
-  while (g.move_next()) {
-    auto token = g.current_value();
-    LOGD << token.view;
-  }
+  // auto g = html_tokenize(body);
+  // while (g.move_next()) {
+  //   auto token = g.current_value();
+  //   LOGD << token.view;
+  // }
 
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
                              GeneralList::newGeneralList());
