@@ -26,12 +26,12 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
           h_env->append_token(&p, pre_mode & RB_PREMODE);
           line = p;
         } else {
-          auto p = line.c_str();
-          if (auto buf =
-                  read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
+          auto [buf, pp] =
+              read_token(line, &h_env->status, pre_mode & RB_PREMODE);
+          line = pp;
+          if (buf) {
             h_env->setToken(*buf);
           }
-          line = p;
         }
         if (h_env->status != R_ST_NORMAL) {
           // exit
@@ -52,15 +52,12 @@ std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,
         }
       }
     } else {
-      std::string tokbuf;
-      auto p = line.c_str();
-      if (auto value = read_token(&p, &h_env->status, pre_mode & RB_PREMODE)) {
-        tokbuf = *value;
-      }
-      line = p;
+      auto [value, pp] =
+          read_token(line, &h_env->status, pre_mode & RB_PREMODE);
+      line = pp;
       if (h_env->status != R_ST_NORMAL) /* R_ST_AMP ? */
         h_env->status = R_ST_NORMAL;
-      str = tokbuf;
+      str = *value;
     }
 
     if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE |

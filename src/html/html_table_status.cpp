@@ -16,7 +16,7 @@ bool TableStatus::is_active(html_feed_environ *h_env) {
   return h_env->table_level >= 0 && tbl && tbl_mode;
 }
 
-int TableStatus::feed(html_feed_environ *parser, const std::string &str,
+int TableStatus::feed(html_feed_environ *parser, std::string_view str,
                       bool internal) {
-  return tbl->feed_table(parser, str.c_str(), tbl_mode, tbl_width, internal);
+  return tbl->feed_table(parser, str, tbl_mode, tbl_width, internal);
 }

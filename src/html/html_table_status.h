@@ -11,5 +11,5 @@ struct TableStatus {
   ReadBufferFlags pre_mode(class html_feed_environ *h_env);
   HtmlCommand end_tag(html_feed_environ *h_env);
   bool is_active(html_feed_environ *h_env);
-  int feed(html_feed_environ *parser, const std::string &str, bool internal);
+  int feed(html_feed_environ *parser, std::string_view str, bool internal);
 };

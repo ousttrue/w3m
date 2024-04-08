@@ -164,7 +164,7 @@ struct Cell {
 int visible_length_offset = 0;
 static int visible_length(const char *str) {
   int len = 0;
-  int n;
+  // int n;
   int max_len = 0;
   auto status = R_ST_NORMAL;
   int prev_status = status;
@@ -603,7 +603,7 @@ struct tableimpl {
     }
   }
 
-  void pushdata(int row, int col, const std::string &data) {
+  void pushdata(int row, int col, std::string_view data) {
     this->check_row(row);
     if (this->tabdata[row][col] == NULL) {
       this->tabdata[row][col] = GeneralList::newGeneralList();
@@ -862,7 +862,7 @@ struct tableimpl {
     }
     return skip;
   }
-  void feed_table_block_tag(const std::string &line, struct table_mode *mode,
+  void feed_table_block_tag(std::string_view line, struct table_mode *mode,
                             int indent, int cmd) {
     int offset;
     if (mode->indent_level <= 0 && indent == -1)
@@ -896,7 +896,7 @@ struct tableimpl {
       this->addcontentssize(offset);
     }
   }
-  void feed_table_inline_tag(const std::string &line, struct table_mode *mode,
+  void feed_table_inline_tag(std::string_view line, struct table_mode *mode,
                              int width) {
     this->check_rowcol(mode);
     this->pushdata(this->row, this->col, line);
@@ -906,7 +906,7 @@ struct tableimpl {
       this->setwidth(mode);
     }
   }
-  void suspend_or_pushdata(const std::string &line) {
+  void suspend_or_pushdata(std::string_view line) {
     if (this->flag & TBL_IN_COL)
       this->pushdata(this->row, this->col, line);
     else {
@@ -2289,24 +2289,29 @@ void table::end_table() {
     this->_impl->sloppy_width = this->_impl->total_width;
 }
 
-void table::feed_table1(html_feed_environ *parser, const std::string &line,
+void table::feed_table1(html_feed_environ *parser, std::string_view line,
                         struct table_mode *mode, int width) {
   auto status = R_ST_NORMAL;
-  auto p = line.c_str();
-  while (auto tokbuf = read_token(&p, &status, mode->pre_mode & TBLM_PREMODE)) {
-    feed_table(parser, tokbuf->c_str(), mode, width, true);
+  while (line.size()) {
+    auto [tokbuf, pp] =
+        read_token(line, &status, mode->pre_mode & TBLM_PREMODE);
+    line = pp;
+    if (tokbuf) {
+      feed_table(parser, *tokbuf, mode, width, true);
+    }
   }
 }
 
-int table::feed_table(html_feed_environ *parser, std::string line,
+int table::feed_table(html_feed_environ *parser, std::string_view line,
                       struct table_mode *mode, int width, int internal) {
   auto linfo = &this->_impl->linfo;
 
+  std::string x(line.begin(), line.end());
   if (line[0] == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
-    auto p = line.c_str();
+    auto p = x.c_str();
     auto tag = parseHtmlTag(&p, internal);
     if (tag) {
-      switch (this->feed_table_tag(parser, line, mode, width, tag)) {
+      switch (this->feed_table_tag(parser, x, mode, width, tag)) {
       case TAG_ACTION_NONE:
         return -1;
       case TAG_ACTION_N_TABLE:
@@ -2339,18 +2344,18 @@ int table::feed_table(html_feed_environ *parser, std::string line,
   if (mode->pre_mode & TBLM_STYLE)
     return -1;
   if (mode->pre_mode & TBLM_INTXTA) {
-    parser->feed_textarea(line);
+    parser->feed_textarea(x);
     return -1;
   }
   if (mode->pre_mode & TBLM_INSELECT) {
-    parser->feed_select(line);
+    parser->feed_select(x);
     return -1;
   }
   if (!(mode->pre_mode & TBLM_PLAIN) &&
       !(line[0] == '<' && line.back() == '>') &&
-      strchr(line.c_str(), '&') != NULL) {
+      strchr(x.c_str(), '&') != NULL) {
     std::stringstream tmp;
-    for (auto p = line.c_str(); *p;) {
+    for (auto p = x.c_str(); *p;) {
       const char *q;
       if (*p == '&') {
         if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) ||
@@ -2409,19 +2414,19 @@ int table::feed_table(html_feed_environ *parser, std::string line,
       mode->nobr_offset = this->_impl->tabcontentssize;
 
     /* count of number of spaces skipped in normal mode */
-    int i = this->_impl->skip_space(line.c_str(), linfo,
+    int i = this->_impl->skip_space(x.c_str(), linfo,
                                     !(mode->pre_mode & TBLM_NOBR));
-    this->_impl->addcontentssize(visible_length(line.c_str()) - i);
+    this->_impl->addcontentssize(visible_length(x.c_str()) - i);
     this->_impl->setwidth(mode);
-    this->_impl->pushdata(this->_impl->row, this->_impl->col, line);
+    this->_impl->pushdata(this->_impl->row, this->_impl->col, x);
   } else if (mode->pre_mode & TBLM_PRE_INT) {
     this->_impl->check_rowcol(mode);
     if (mode->nobr_offset < 0)
       mode->nobr_offset = this->_impl->tabcontentssize;
     this->_impl->addcontentssize(
-        maximum_visible_length(line.c_str(), this->_impl->tabcontentssize));
+        maximum_visible_length(x.c_str(), this->_impl->tabcontentssize));
     this->_impl->setwidth(mode);
-    this->_impl->pushdata(this->_impl->row, this->_impl->col, line);
+    this->_impl->pushdata(this->_impl->row, this->_impl->col, x);
   } else {
     /* <pre> mode or something like it */
     this->_impl->check_rowcol(mode);
@@ -2429,13 +2434,12 @@ int table::feed_table(html_feed_environ *parser, std::string line,
       int nl = false;
       const char *p;
       std::string pp;
-      if ((p = strchr(line.c_str(), '\r')) ||
-          (p = strchr(line.c_str(), '\n'))) {
+      if ((p = strchr(x.c_str(), '\r')) || (p = strchr(x.c_str(), '\n'))) {
         if (*p == '\r' && p[1] == '\n')
           p++;
         if (p[1]) {
           p++;
-          std::string tmp(line, p - line.c_str());
+          std::string tmp(x, p - x.c_str());
           line = p;
           pp = tmp;
         } else {
@@ -2496,7 +2500,7 @@ void table::pushTable(const std::shared_ptr<table> &tbl1) {
   this->_impl->ntable++;
 }
 
-int table::feed_table_tag(html_feed_environ *parser, const std::string &line,
+int table::feed_table_tag(html_feed_environ *parser, std::string_view line,
                           struct table_mode *mode, int width,
                           const std::shared_ptr<class HtmlTag> &tag) {
   auto cell = &this->_impl->cell;

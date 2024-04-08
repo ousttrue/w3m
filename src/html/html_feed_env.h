@@ -281,7 +281,7 @@ private:
   std::string process_select(const class std::shared_ptr<HtmlTag> &tag);
   std::string process_n_select();
   void process_option();
-  void feed_select(const std::string &str);
+  void feed_select(std::string_view str);
 
   // form
   std::vector<std::shared_ptr<struct Form>> forms;
@@ -333,7 +333,7 @@ private:
   std::string getLinkNumberStr(int correction) const;
   std::string process_img(const std::shared_ptr<HtmlTag> &tag, int width);
   std::string process_anchor(const std::shared_ptr<HtmlTag> &tag,
-                             const std::string &tagbuf);
+                             std::string_view tagbuf);
   std::string process_input(const std::shared_ptr<HtmlTag> &tag);
   std::string process_button(const std::shared_ptr<HtmlTag> &tag);
   std::string process_n_button();

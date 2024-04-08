@@ -22,16 +22,16 @@ public:
   int row() const;
   int col() const;
   int vspace() const;
-  int feed_table(html_feed_environ *parser, std::string line,
+  int feed_table(html_feed_environ *parser, std::string_view line,
                  struct table_mode *mode, int width, int internal);
   void end_table();
   void pushTable(const std::shared_ptr<table> &);
   void renderTable(html_feed_environ *parser, int max_width);
 
 private:
-  void feed_table1(html_feed_environ *parser, const std::string &line,
+  void feed_table1(html_feed_environ *parser, std::string_view line,
                    table_mode *mode, int width);
-  int feed_table_tag(html_feed_environ *parser, const std::string &line,
+  int feed_table_tag(html_feed_environ *parser, std::string_view line,
                      table_mode *mode, int width,
                      const std::shared_ptr<class HtmlTag> &tag);
   void table_close_textarea(html_feed_environ *parser, table_mode *mode,

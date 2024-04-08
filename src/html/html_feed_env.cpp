@@ -1381,7 +1381,7 @@ std::string html_feed_environ::process_img(const std::shared_ptr<HtmlTag> &tag,
 
 std::string
 html_feed_environ::process_anchor(const std::shared_ptr<HtmlTag> &tag,
-                                  const std::string &tagbuf) {
+                                  std::string_view tagbuf) {
   if (tag->needRreconstruct()) {
     std::stringstream ss;
     ss << this->hseqAndIncrement();
@@ -1860,7 +1860,7 @@ void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
   // auto pp = x.c_str();;
   auto pp = token.data();
   auto end = pp + token.size();
-  while (pp!=end) {
+  while (pp != end) {
     auto mode = get_mctype(pp);
     int delta = get_mcwidth(pp);
     if (_impl->flag & (RB_SPECIAL & ~RB_NOBR)) {
@@ -1986,14 +1986,15 @@ std::string html_feed_environ::process_n_select() {
   return select_str;
 }
 
-void html_feed_environ::feed_select(const std::string &_str) {
+void html_feed_environ::feed_select(std::string_view _str) {
   int prev_status = cur_status;
   static int prev_spaces = -1;
 
   if (cur_select.empty())
     return;
-  auto str = _str.c_str();
-  while (auto tmp = read_token(&str, &cur_status, 0)) {
+  while (_str.size()) {
+    auto [tmp, pp] = read_token(_str, &cur_status, 0);
+    _str = pp;
     if (cur_status != R_ST_NORMAL || prev_status != R_ST_NORMAL)
       continue;
     auto p = tmp->c_str();

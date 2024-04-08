@@ -24,5 +24,5 @@ enum ReadBufferStatus {
 
 int next_status(char c, ReadBufferStatus *status);
 
-std::optional<std::string> read_token(const char **instr,
-                                      ReadBufferStatus *status, bool pre);
+std::tuple<std::optional<std::string>, std::string_view>
+read_token(std::string_view, ReadBufferStatus *status, bool pre);

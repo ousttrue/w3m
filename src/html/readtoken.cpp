@@ -146,19 +146,19 @@ int next_status(char c, ReadBufferStatus *status) {
   return 0;
 }
 
-std::optional<std::string> read_token(const char **instr,
-                                      ReadBufferStatus *status, bool pre) {
-  if (**instr == '\0')
+std::tuple<std::optional<std::string>, std::string_view>
+read_token(std::string_view instr, ReadBufferStatus *status, bool pre) {
+  if (instr.empty()) {
     return {};
+  }
 
   ReadBufferStatus prev_status;
-  const char *p;
   std::string buf;
-  for (p = *instr; *p; p++) {
+  auto p = instr.begin();
+  for (; p != instr.end(); p++) {
     /* Drop Unicode soft hyphen */
-    if (*(unsigned char *)p == 0210 && *(unsigned char *)(p + 1) == 0200 &&
-        *(unsigned char *)(p + 2) == 0201 &&
-        *(unsigned char *)(p + 3) == 0255) {
+    if (*p == 0210 && *(p + 1) == 0200 && *(p + 2) == 0201 &&
+        *(p + 3) == 0255) {
       p += 3;
       continue;
     }
@@ -179,23 +179,20 @@ std::optional<std::string> read_token(const char **instr,
           buf.push_back(*p);
         p++;
 
-        *instr = p;
-        return buf;
+        return {buf, {p, instr.end()}};
       }
       buf.push_back((!pre && IS_SPACE(*p)) ? ' ' : *p);
       if (ST_IS_REAL_TAG(prev_status)) {
-        *instr = p + 1;
         if (buf.size() < 2 || buf[buf.size() - 2] != '<' || buf.back() != '>')
-          return buf;
+          return {buf, {p + 1, instr.end()}};
         Strshrink(buf, 2);
       }
       break;
     case R_ST_TAG0:
     case R_ST_TAG:
-      if (prev_status == R_ST_NORMAL && p != *instr) {
-        *instr = p;
+      if (prev_status == R_ST_NORMAL && p != instr.begin()) {
         *status = prev_status;
-        return buf;
+        return {buf, {p, instr.end()}};
       }
       if (*status == R_ST_TAG0 && !REALLY_THE_BEGINNING_OF_A_TAG(p)) {
         /* it seems that this '<' is not a beginning of a tag */
@@ -239,6 +236,5 @@ std::optional<std::string> read_token(const char **instr,
     }
   }
 
-  *instr = p;
-  return buf;
+  return {buf, {p, instr.end()}};
 }
