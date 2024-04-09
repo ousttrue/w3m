@@ -1,3 +1,7 @@
+#ifdef _MSC_VER
+#include <windows.h>
+#endif
+
 #include "html_feed_env.h"
 #include "form.h"
 #include "stringtoken.h"
@@ -16,6 +20,7 @@
 #include "html_meta.h"
 #include "utf8.h"
 #include "html_parser.h"
+#include "html_dom.h"
 #include <plog/log.h>
 #include <assert.h>
 #include <sstream>
@@ -1759,20 +1764,51 @@ static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
   }
 }
 
-void html_feed_environ::parse(std::string_view html, bool internal) {
-
-  TableStatus t;
-
+void html_feed_environ::parse(std::string_view html) {
   auto g = html_tokenize(html);
+  TreeConstruction tree;
   while (g.move_next()) {
     auto token = g.current_value();
-    process_token(t, token.view);
+    tree.push(token);
   }
+  tree.push(HtmlToken(Eof));
 
+#ifdef _MSC_VER
+  {
+    std::stringstream ss;
+    tree.context.document()->print(ss);
+    OutputDebugStringA(std::string(html).c_str());
+  }
+  {
+    std::stringstream ss;
+    tree.context.document()->print(ss);
+    OutputDebugStringA(ss.str().c_str());
+  }
+#endif
+
+  TableStatus t;
+  for (auto &node : tree.context.document()->children) {
+    // <html>
+    process_node(t, node);
+  }
   this->parse_end();
 }
 
-void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
+void html_feed_environ::process_node(TableStatus &t,
+                                     const std::shared_ptr<HtmlNode> &node) {
+
+  if (!process_table(t, node->token.view)) {
+    if (!process_tag(t, node->token.view)) {
+      process_text(node);
+    }
+  }
+
+  for (auto &child : node->children) {
+    process_node(t, child);
+  }
+}
+
+bool html_feed_environ::process_table(TableStatus &t, std::string_view token) {
   if (t.is_active(this)) {
     /*
      * within table: in <table>..</table>, all input tokens
@@ -1784,24 +1820,24 @@ void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
       /* </table> tag */
       this->table_level--;
       if (this->table_level >= MAX_TABLE - 1)
-        return;
+        return true;
       t.tbl->end_table();
       if (this->table_level >= 0) {
         auto tbl0 = tables[this->table_level];
         std::stringstream ss;
         ss << "<table_alt tid=" << tbl0->ntable() << ">";
         if (tbl0->row() < 0)
-          return;
+          return true;
         tbl0->pushTable(t.tbl);
         t.tbl = tbl0;
         t.tbl_mode = &table_mode[this->table_level];
         t.tbl_width = table_width(this->table_level);
         t.feed(this, ss.str(), true);
-        return;
+        return true;
         /* continue to the next */
       }
       if (this->flag() & RB_DEL)
-        return;
+        return true;
       /* all tables have been read */
       if (t.tbl->vspace() > 0 && !(this->flag() & RB_IGNORE_P)) {
         this->flushline();
@@ -1817,20 +1853,26 @@ void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
         this->addFlag(RB_IGNORE_P);
       }
       this->prevchar = " ";
-      return;
+      return true;
     case 1:
       /* <table> tag */
       break;
     default:
-      return;
+      return true;
     }
   }
 
+  return false;
+}
+
+bool html_feed_environ::process_tag(struct TableStatus &t,
+                                    std::string_view token) {
   if (token.front() == '<') {
     /*** Beginning of a new tag ***/
     std::shared_ptr<HtmlTag> tag = parseHtmlTag(token, internal);
     if (!tag) {
-      return;
+      // assert(false);
+      return true;
     }
 
     // process tags
@@ -1851,6 +1893,13 @@ void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
         t.tbl_width = this->table_width(level);
       }
     }
+    return true;
+  }
+  return false;
+}
+
+void html_feed_environ::process_text(const std::shared_ptr<HtmlNode> &node) {
+  if (node->hasParentTag("script")) {
     return;
   }
 
@@ -1858,61 +1907,62 @@ void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
     return;
   }
 
-  // std::string x(token.begin(), token.end());
-  // auto pp = x.c_str();;
+  auto token = node->token.view;
   auto pp = token.data();
   auto end = pp + token.size();
   while (pp != end) {
     auto mode = get_mctype(pp);
     int delta = get_mcwidth(pp);
     if (_impl->flag & (RB_SPECIAL & ~RB_NOBR)) {
-      char ch = *pp;
-      if (!(_impl->flag & RB_PLAIN) && (*pp == '&')) {
-        const char *p = pp;
-        auto [ech, ppp] = getescapechar(p);
-        p = ppp.data();
-        if (*ech == '\n' || *ech == '\r') {
-          ch = '\n';
-          pp = p - 1;
-        } else if (ech == '\t') {
-          ch = '\t';
-          pp = p - 1;
-        }
-      }
-      if (ch != '\n')
-        _impl->flag &= ~RB_IGNORE_P;
-      if (ch == '\n') {
-        pp++;
-        if (_impl->flag & RB_IGNORE_P) {
-          _impl->flag &= ~RB_IGNORE_P;
-          return;
-        }
-        if (_impl->flag & RB_PRE_INT) {
-          this->push_char(_impl->flag & RB_SPECIAL, ' ');
-        } else {
-          this->flushline(FlushLineMode::Force);
-        }
-      } else if (ch == '\t') {
-        do {
-          this->push_char(_impl->flag & RB_SPECIAL, ' ');
-        } while ((this->envs[this->envc].indent + _impl->pos) % Tabstop != 0);
-        pp++;
-      } else if (_impl->flag & RB_PLAIN) {
-        auto p = html_quote_char(*pp);
-        if (p) {
-          this->push_charp(1, p, PC_ASCII);
-          pp++;
-        } else {
-          this->proc_mchar(1, delta, &pp, mode);
-        }
-      } else {
-        if (*pp == '&')
-          this->proc_escape(&pp);
-        else
-          this->proc_mchar(1, delta, &pp, mode);
-      }
-      if (_impl->flag & (RB_SPECIAL & ~RB_PRE_INT))
-        return;
+      node->hasParentTag("script");
+      assert(false);
+      // char ch = *pp;
+      // if (!(_impl->flag & RB_PLAIN) && (*pp == '&')) {
+      //   const char *p = pp;
+      //   auto [ech, ppp] = getescapechar(p);
+      //   p = ppp.data();
+      //   if (*ech == '\n' || *ech == '\r') {
+      //     ch = '\n';
+      //     pp = p - 1;
+      //   } else if (ech == '\t') {
+      //     ch = '\t';
+      //     pp = p - 1;
+      //   }
+      // }
+      // if (ch != '\n')
+      //   _impl->flag &= ~RB_IGNORE_P;
+      // if (ch == '\n') {
+      //   pp++;
+      //   if (_impl->flag & RB_IGNORE_P) {
+      //     _impl->flag &= ~RB_IGNORE_P;
+      //     return;
+      //   }
+      //   if (_impl->flag & RB_PRE_INT) {
+      //     this->push_char(_impl->flag & RB_SPECIAL, ' ');
+      //   } else {
+      //     this->flushline(FlushLineMode::Force);
+      //   }
+      // } else if (ch == '\t') {
+      //   do {
+      //     this->push_char(_impl->flag & RB_SPECIAL, ' ');
+      //   } while ((this->envs[this->envc].indent + _impl->pos) % Tabstop !=
+      //   0); pp++;
+      // } else if (_impl->flag & RB_PLAIN) {
+      //   auto p = html_quote_char(*pp);
+      //   if (p) {
+      //     this->push_charp(1, p, PC_ASCII);
+      //     pp++;
+      //   } else {
+      //     this->proc_mchar(1, delta, &pp, mode);
+      //   }
+      // } else {
+      //   if (*pp == '&')
+      //     this->proc_escape(&pp);
+      //   else
+      //     this->proc_mchar(1, delta, &pp, mode);
+      // }
+      // if (_impl->flag & (RB_SPECIAL & ~RB_PRE_INT))
+      //   return;
     } else {
       if (!IS_SPACE(*pp))
         _impl->flag &= ~RB_IGNORE_P;
@@ -1922,27 +1972,27 @@ void html_feed_environ::process_token(TableStatus &t, std::string_view token) {
         }
         pp++;
       } else {
-        if (*pp == '&')
+        if (*pp == '&') {
           this->proc_escape(&pp);
-        else
+        } else {
           this->proc_mchar(_impl->flag & RB_SPECIAL, delta, &pp, mode);
+        }
       }
     }
     if (_impl->need_flushline(mode)) {
-      auto bp = _impl->line.c_str() + _impl->bp.len;
-      auto tp = bp - _impl->bp.tlen;
-      int i = 0;
-
-      if (tp > _impl->line.c_str() && tp[-1] == ' ')
-        i = 1;
+      // auto bp = _impl->line.c_str() + _impl->bp.len;
+      // auto tp = bp - _impl->bp.tlen;
+      // int i = 0;
+      // if (tp > _impl->line.c_str() && tp[-1] == ' ')
+      //   i = 1;
 
       int indent = this->envs[this->envc].indent;
-      if (_impl->bp.pos - i > indent) {
+      if (indent < _impl->bp.pos /*- i*/) {
         this->append_tags(); /* may reallocate the buffer */
-        bp = _impl->line.c_str() + _impl->bp.len;
+        auto bp = _impl->line.c_str() + _impl->bp.len;
         std::string line = bp;
         Strshrink(_impl->line, _impl->line.size() - _impl->bp.len);
-        if (_impl->pos - i > this->width())
+        if (_impl->pos /*- i*/ > this->width())
           _impl->flag |= RB_FILL;
         _impl->back_to_breakpoint();
         this->flushline();
@@ -3552,7 +3602,7 @@ void html_feed_environ::make_caption(int table_width,
       MAX_ENV_LEVEL, table_width > 0 ? table_width : this->width(),
       this->envs[this->envc].indent, GeneralList::newGeneralList());
   this->parse("<center>");
-  this->parse(caption, false);
+  this->parse(caption);
   this->parse("</center>");
 
   if (table_width < henv.maxlimit()) {
@@ -3562,19 +3612,18 @@ void html_feed_environ::make_caption(int table_width,
   auto limit = this->width();
   _impl->_width = table_width;
   this->parse("<center>");
-  this->parse(caption, false);
+  this->parse(caption);
   this->parse("</center>");
   _impl->_width = limit;
 }
 
 std::shared_ptr<LineData>
 loadHTMLstream(int width, const Url &currentURL, std::string_view body,
-               const std::shared_ptr<AnchorList<FormAnchor>> &old,
-               bool internal) {
+               const std::shared_ptr<AnchorList<FormAnchor>> &old) {
 
   html_feed_environ htmlenv1(MAX_ENV_LEVEL, width, 0,
                              GeneralList::newGeneralList());
-  htmlenv1.parse(body, internal);
+  htmlenv1.parse(body);
   htmlenv1.status = R_ST_NORMAL;
   htmlenv1.completeHTMLstream();
   return HtmlRenderer().render(currentURL, &htmlenv1, old);

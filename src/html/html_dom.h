@@ -26,8 +26,22 @@ struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
 
   void print(std::ostream &os, const std::string &indent = "") {
     os << indent << token.view << std::endl;
+    if (token.isStartTag("script")) {
+      return;
+    }
     for (auto &child : children) {
       child->print(os, indent + "  ");
+    }
+  }
+
+  bool hasParentTag(std::string_view tag) const {
+    if (token.isStartTag(tag)) {
+      return true;
+    }
+    if (auto p = parent.lock()) {
+      return p->hasParentTag(tag);
+    } else {
+      return false;
     }
   }
 };
@@ -89,10 +103,9 @@ struct HtmlInsersionMode {
       pushOpenElement(HtmlNode::create(token));
     }
     void closeHtmlElement(const HtmlToken &token) {
-      auto found =
-          std::find_if(_stack.begin(), _stack.end(), [tag=token.tag()](auto node) {
-            return node->token.tag() == tag;
-          });
+      auto found = std::find_if(
+          _stack.begin(), _stack.end(),
+          [tag = token.tag()](auto node) { return node->token.tag() == tag; });
       if (found != _stack.end()) {
         ++found;
         _stack.erase(_stack.begin(), found);

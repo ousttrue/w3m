@@ -24,7 +24,7 @@ struct Tokenizer {
 
 // DOCTYPE, start tag, end tag, comment, character, end-of-file
 enum HtmlTokenTypes {
-  Unknown,
+  HtmlToken_Unknown,
   Doctype,
   Tag,
   Comment,
@@ -33,8 +33,8 @@ enum HtmlTokenTypes {
 };
 inline const char *str(const HtmlTokenTypes t) {
   switch (t) {
-  case Unknown:
-    return "Unknown";
+  case HtmlToken_Unknown:
+    return "HtmlToken_Unknown";
   case Doctype:
     return "Doctype";
   case Tag:

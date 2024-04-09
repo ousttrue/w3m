@@ -222,7 +222,7 @@ HtmlParserState::Result attributeNameState(std::string_view src,
   } else if (ch == '"' || ch == '\'' || ch == '<') {
     // unexpected-null-character parse error.
     assert(false);
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
   } else {
     // push attribute name
     return {{}, cdr, {}};
@@ -405,7 +405,7 @@ HtmlParserState::Result commentStartDashState(std::string_view src,
   auto ch = src.front();
   if (ch == '-') {
     assert(false);
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
     // return {{}, cdr, {commentEndState}};
   } else if (ch == '>') {
     // abrupt-closing-of-empty-comment parse error.
@@ -422,7 +422,7 @@ HtmlParserState::Result commentState(std::string_view src,
   auto ch = src.front();
   if (ch == '<') {
     assert(false);
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
     // return {{}, cdr, {commentLessThanSignState}};
   } else if (ch == '-') {
     return {{}, cdr, {commentEndDashState}};
@@ -452,7 +452,7 @@ HtmlParserState::Result commentEndState(std::string_view src,
     return {{Comment, c.emit(car)}, cdr, {dataState}};
   } else if (ch == '!') {
     assert(false);
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
   } else if (ch == '-') {
     return {{}, cdr, {}};
   } else {
@@ -520,10 +520,10 @@ HtmlParserState::Result characterReferenceState(std::string_view src,
     return {{}, src, {namedCharacterReferenceState}};
   } else if (ch == '#') {
     assert(false);
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
   } else {
     assert(false);
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
   }
 }
 
@@ -537,7 +537,7 @@ namedCharacterReferenceState(std::string_view src,
     assert(*begin == '&');
     return {{Character, {begin, car.size() + 1}}, cdr, {c.returnState()}};
   } else {
-    return {{Unknown, src}, {}, {}};
+    return {{{}, src}, {}, {}};
   }
 }
 
@@ -554,19 +554,21 @@ html_token_generator html_tokenize(std::string_view v) {
       // emit
       co_yield token;
 
-      if (strncasecmp("<script", token.view.data(), 7) == 0) {
+      if (token.isStartTag("script")) {
         // search "</script>";
         std::regex re(R"(</script>)", std::regex_constants::icase);
         // std::match_results<std::list<char>::const_iterator> m;
         std::cmatch m;
         if (std::regex_search(v.data(), v.data() + v.size(), m, re)) {
           std::string_view data{v.data(), m[0].first};
-          if(data.size()){
-          co_yield {Character, data};
+          if (data.size()) {
+            co_yield {Character, data};
           }
           v = {m[0].first, v.data() + v.size()};
+        } else {
+          assert(false);
         }
-      };
+      }
     }
   }
 }

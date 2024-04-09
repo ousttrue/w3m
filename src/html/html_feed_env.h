@@ -105,9 +105,9 @@ public:
   html_feed_environ(const html_feed_environ &) = delete;
   html_feed_environ &operator=(const html_feed_environ &) = delete;
 
-  int width()const;
+  int width() const;
   void setWidth(int width);
-  int pos()const;
+  int pos() const;
   ReadBufferFlags flag() const;
   void addFlag(ReadBufferFlags flag);
   void removeFlag(ReadBufferFlags flag);
@@ -321,11 +321,16 @@ public:
   void completeHTMLstream();
 
   // HTML processing first pass
-  void parse(std::string_view istr, bool internal = true);
+  void parse(std::string_view istr);
 
 private:
   void push_render_image(const std::string &str, int width, int limit);
-  void process_token(struct TableStatus &t, std::string_view token);
+  void process_node(struct TableStatus &t,
+                    const std::shared_ptr<struct HtmlNode> &node);
+
+  bool process_table(struct TableStatus &t, std::string_view token);
+  bool process_tag(struct TableStatus &t, std::string_view token);
+  void process_text(const std::shared_ptr<struct HtmlNode> &node);
 
   void CLOSE_DT();
   void CLOSE_A();
@@ -427,5 +432,4 @@ private:
 struct LineData;
 std::shared_ptr<LineData>
 loadHTMLstream(int width, const Url &currentURL, std::string_view body,
-               const std::shared_ptr<AnchorList<FormAnchor>> &old,
-               bool internal = false);
+               const std::shared_ptr<AnchorList<FormAnchor>> &old);
