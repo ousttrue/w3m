@@ -1,51 +1,9 @@
 #pragma once
 #include "html_token.h"
-#include <memory>
-#include <stack>
 #include <list>
 #include <ostream>
 
-struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
-  HtmlToken token;
-  std::weak_ptr<HtmlNode> parent;
-  std::list<std::shared_ptr<HtmlNode>> children;
-
-  HtmlNode(const HtmlToken &token) : token(token) {}
-  HtmlNode() {}
-  HtmlNode(const HtmlNode &) = delete;
-  HtmlNode &operator=(const HtmlNode &) = delete;
-
-  static std::shared_ptr<HtmlNode> create(const HtmlToken &token) {
-    return std::make_shared<HtmlNode>(token);
-  }
-
-  void addChild(const std::shared_ptr<HtmlNode> &child) {
-    child->parent = shared_from_this();
-    this->children.push_back(child);
-  }
-
-  void print(std::ostream &os, const std::string &indent = "") {
-    os << indent << token.view << std::endl;
-    if (token.isStartTag("script")) {
-      return;
-    }
-    for (auto &child : children) {
-      child->print(os, indent + "  ");
-    }
-  }
-
-  bool hasParentTag(std::string_view tag) const {
-    if (token.isStartTag(tag)) {
-      return true;
-    }
-    if (auto p = parent.lock()) {
-      return p->hasParentTag(tag);
-    } else {
-      return false;
-    }
-  }
-};
-
+struct HtmlNode;
 struct HtmlInsersionMode {
   using Result = std::tuple<bool, HtmlInsersionMode>;
   class Context;
@@ -71,46 +29,21 @@ struct HtmlInsersionMode {
     std::shared_ptr<HtmlNode> _document;
 
   public:
-    Context() : _document(new HtmlNode(HtmlToken(Tag, "[document]"))) {
-      // pushOpenElement(_document);
-      _stack.push_front(_document);
-    }
+    Context();
     Context(const Context &) = delete;
     Context &operator=(const Context &) = delete;
     std::shared_ptr<HtmlNode> document() const { return _document; }
 
   private:
-    void pushOpenElement(const std::shared_ptr<HtmlNode> &node) {
-      _stack.front()->addChild(node);
-      _stack.push_front(node);
-    }
-    // void pushOpenElement(const HtmlToken &token) {
-    //   pushOpenElement(HtmlNode::create(token));
-    // }
+    void pushOpenElement(const std::shared_ptr<HtmlNode> &node);
 
   public:
     void setFramesetOk(bool enable) { _framesetOk = enable; }
-    void popOpenElement(std::string_view validate = {}) {
-      //
-      _stack.pop_front();
-    }
+    void popOpenElement(std::string_view validate = {}) { _stack.pop_front(); }
     void insertComment(const HtmlToken &token) {}
-    void insertCharacter(const HtmlToken &token) {
-      // TextNode
-      _stack.front()->addChild(HtmlNode::create(token));
-    }
-    void insertHtmlElement(const HtmlToken &token) {
-      pushOpenElement(HtmlNode::create(token));
-    }
-    void closeHtmlElement(const HtmlToken &token) {
-      auto found = std::find_if(
-          _stack.begin(), _stack.end(),
-          [tag = token.tag()](auto node) { return node->token.tag() == tag; });
-      if (found != _stack.end()) {
-        ++found;
-        _stack.erase(_stack.begin(), found);
-      }
-    }
+    void insertCharacter(const HtmlToken &token);
+    void insertHtmlElement(const HtmlToken &token);
+    void closeHtmlElement(const HtmlToken &token);
     void setOriginalInsertionMode(HtmlTreeConstructionModeFunc mode) {
       _originalInsertionMode = mode;
     }

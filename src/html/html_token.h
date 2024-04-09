@@ -2,8 +2,8 @@
 #include <string>
 #include <optional>
 #include <ostream>
-#include <vector>
-#include <array>
+#include <algorithm>
+#include <cctype>
 
 struct Token {
   bool is_tag;
@@ -101,6 +101,13 @@ struct HtmlToken {
       tag.push_back(std::tolower(*it));
     }
     return tag;
+  }
+
+  bool isspace() const {
+    return this->type == Character &&
+           std::all_of(this->view.begin(), this->view.end(), [](auto c) {
+             return c >= -1 && c <= 255 && std::isspace(c);
+           });
   }
 };
 inline std::ostream &operator<<(std::ostream &os, const HtmlToken &token) {

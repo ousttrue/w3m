@@ -1,6 +1,48 @@
 #include "html_dom.h"
+#include "html_node.h"
 #include <assert.h>
 
+//
+// HtmlInsersionMode::Context
+//
+HtmlInsersionMode::Context::Context()
+    : _document(new HtmlNode(HtmlToken(Tag, "[document]"))) {
+  // pushOpenElement(_document);
+  _stack.push_front(_document);
+}
+
+void HtmlInsersionMode::Context::pushOpenElement(
+    const std::shared_ptr<HtmlNode> &node) {
+  _stack.front()->addChild(node);
+  _stack.push_front(node);
+}
+
+void HtmlInsersionMode::Context::insertCharacter(const HtmlToken &token) {
+  auto current = _stack.front();
+  if (current->extendCharacter(token)) {
+    // extended
+  } else {
+    current->addChild(HtmlNode::create(token));
+  }
+}
+
+void HtmlInsersionMode::Context::insertHtmlElement(const HtmlToken &token) {
+  pushOpenElement(HtmlNode::create(token));
+}
+
+void HtmlInsersionMode::Context::closeHtmlElement(const HtmlToken &token) {
+  auto found = std::find_if(
+      _stack.begin(), _stack.end(),
+      [tag = token.tag()](auto node) { return node->token.tag() == tag; });
+  if (found != _stack.end()) {
+    ++found;
+    _stack.erase(_stack.begin(), found);
+  }
+}
+
+//
+// impl InsersionMode
+//
 // 1 expect DOCTYPE
 HtmlInsersionMode::Result initialInsertionMode(const HtmlToken &token,
                                                HtmlInsersionMode::Context &c) {
@@ -154,15 +196,18 @@ HtmlInsersionMode::Result inHeadMode(const HtmlToken &token,
     if (token.isAnyStartTag("base", "basefont", "bgsound", "link")) {
       c.insertHtmlElement(token);
       c.closeHtmlElement(token);
+      return {true, {}};
     }
     if (token.isStartTag("meta")) {
       c.insertHtmlElement(token);
       c.closeHtmlElement(token);
       // TODO:
+      return {true, {}};
     }
     if (token.isStartTag("title")) {
       // TODO: RCDATA
       c.insertHtmlElement(token);
+      return {true, {}};
     }
     if (token.isStartTag("noscript")) {
       // scripting flag is disabled
@@ -401,17 +446,20 @@ HtmlInsersionMode::Result inBodyMode(const HtmlToken &token,
                             "p", "search", "section", "summary", "ul")) {
       // TODO: close p in button scope
       c.insertHtmlElement(token);
+      return {true, {}};
     }
     if (token.isAnyStartTag("h1", "h2", "h3", "h4", "h5", "h6")) {
       // TODO: close p in button scope
       // TODO: nested hx
       c.insertHtmlElement(token);
+      return {true, {}};
     }
     if (token.isAnyStartTag("pre", "listing")) {
       // TODO: close p in button scope
       c.insertHtmlElement(token);
       // TODO: ignore next 0x0A
       c.setFramesetOk(false);
+      return {true, {}};
     }
     // if(token.isStartTag("form")){
     // }

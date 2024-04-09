@@ -21,6 +21,7 @@
 #include "utf8.h"
 #include "html_parser.h"
 #include "html_dom.h"
+#include "html_node.h"
 #include <plog/log.h>
 #include <assert.h>
 #include <sstream>

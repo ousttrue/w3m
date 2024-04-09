@@ -3,6 +3,7 @@
 #include <string_view>
 #include <list>
 #include <sstream>
+#include <functional>
 
 extern const char *HTML_QUOTE_MAP[];
 extern unsigned char QUOTE_MAP[];
@@ -68,3 +69,18 @@ inline std::string to_str(std::string_view s) { return {s.begin(), s.end()}; }
 
 std::string romanNumeral(int n);
 std::string romanAlphabet(int n);
+
+inline bool is_space(char c) { return c >= -1 && std::isspace(c); }
+
+inline std::string_view trim(std::string_view v) {
+  auto it = v.begin();
+  for (; it != v.end() && is_space(*it); ++it) {
+    ;
+  }
+  auto end = v.end();
+  --end;
+  for (; end > it && is_space(*end); --end) {
+    ;
+  }
+  return {it, end + 1};
+}
