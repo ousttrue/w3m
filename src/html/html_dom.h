@@ -36,10 +36,10 @@ struct HtmlInsersionMode {
     std::shared_ptr<HtmlNode> document() const { return _document; }
 
   private:
-    InsertionMode currentMode() const;
     void pushOpenElement(const std::shared_ptr<HtmlNode> &node);
 
   public:
+    InsertionMode currentMode() const;
     bool process(const HtmlToken &token) {
       auto [consumed, next_mode] = this->_insertionMode(token, *this);
       if (next_mode.insert) {
@@ -143,58 +143,3 @@ struct TreeConstruction {
   TreeConstruction();
   void push(const HtmlToken &token);
 };
-
-// inline std::ostream &operator<<(std::ostream &os,
-//                                 const HtmlInsersionMode &mode) {
-//   if (mode.insert == initialInsertionMode) {
-//     os << "initialInsertionMode";
-//   } else if (mode.insert == beforeHtmlMode) {
-//     os << "beforeHtmlMode";
-//   } else if (mode.insert == beforeHeadMode) {
-//     os << "beforeHeadMode";
-//   } else if (mode.insert == inHeadMode) {
-//     os << "inHeadMode";
-//   } else if (mode.insert == inHeadNoscriptMode) {
-//     os << "inHeadNoscriptMode";
-//   } else if (mode.insert == afterHeadMode) {
-//     os << "afterHeadMode";
-//   } else if (mode.insert == inBodyMode) {
-//     os << "inBodyMode";
-//   } else if (mode.insert == textMode) {
-//     os << "textMode";
-//   } else if (mode.insert == tableMode) {
-//     os << "tableMode";
-//   } else if (mode.insert == tableTextMode) {
-//     os << "tableTextMode";
-//   } else if (mode.insert == captionMode) {
-//     os << "captionMode";
-//   } else if (mode.insert == inColumnMode) {
-//     os << "inColumnMode";
-//   } else if (mode.insert == inTableBodyMode) {
-//     os << "inTableBodyMode";
-//   } else if (mode.insert == inRowMode) {
-//     os << "inRowMode";
-//   } else if (mode.insert == inCellMode) {
-//     os << "inCellMode";
-//   } else if (mode.insert == inSelectMode) {
-//     os << "inSelectMode";
-//   } else if (mode.insert == inSelectInTableMode) {
-//     os << "inSelectInTableMode";
-//   } else if (mode.insert == inTemplateMode) {
-//     os << "inTemplateMode";
-//   } else if (mode.insert == afterBodyMode) {
-//     os << "afterBodyMode";
-//   } else if (mode.insert == inFramesetMode) {
-//     os << "inFramesetMode";
-//   } else if (mode.insert == afterFramesetMode) {
-//     os << "afterFramesetMode";
-//   } else if (mode.insert == afterAfterBodyMode) {
-//     os << "afterAfterBodyMode";
-//   } else if (mode.insert == afterAfterFramesetMode) {
-//     os << "afterAfterFramesetMode";
-//   } else {
-//     os << "unknown";
-//   }
-//
-//   return os;
-// }

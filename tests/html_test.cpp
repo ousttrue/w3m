@@ -2,6 +2,12 @@
 #include "html_parser.h"
 #include "entity.h"
 
+TEST(HtmlTest, token) {
+  EXPECT_TRUE(HtmlToken(Tag, R"(<html>)").isStartTag("html"));
+  EXPECT_TRUE(HtmlToken(Tag, R"(<html lang="ja">)").isStartTag("html"));
+  EXPECT_TRUE(HtmlToken(Tag, R"(</html>)").isEndTag("html"));
+}
+
 TEST(HtmlTest, tokenizer) {
   {
     auto src = " ";

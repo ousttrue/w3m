@@ -2,36 +2,114 @@
 #include "html_token.h"
 #include "quote.h"
 #include <memory>
-#include <list>
 #include <algorithm>
 #include <iomanip>
 
 enum class InsertionMode {
   None = 0,
-  initialInsertionMode = 1,
-  beforeHtmlMode = 2,
-  beforeHeadMode = 3,
-  inHeadMode = 4,
-  inHeadNoscriptMode = 5,
-  afterHeadMode = 6,
-  inBodyMode = 7,
-  textMode = 8,
-  tableMode = 9,
-  tableTextMode = 10,
-  captionMode = 11,
-  inColumnMode = 12,
-  inTableBodyMode = 13,
-  inRowMode = 14,
-  inCellMode = 15,
-  inSelectMode = 16,
-  inSelectInTableMode = 17,
-  inTemplateMode = 18,
-  afterBodyMode = 19,
-  inFramesetMode = 20,
-  afterFramesetMode = 21,
-  afterAfterBodyMode = 22,
-  afterAfterFramesetMode = 23,
+  InitialInsertionMode = 1,
+  BeforeHtmlMode = 2,
+  BeforeHeadMode = 3,
+  InHeadMode = 4,
+  InHeadNoscriptMode = 5,
+  AfterHeadMode = 6,
+  InBodyMode = 7,
+  TextMode = 8,
+  TableMode = 9,
+  TableTextMode = 10,
+  CaptionMode = 11,
+  InColumnMode = 12,
+  InTableBodyMode = 13,
+  InRowMode = 14,
+  InCellMode = 15,
+  InSelectMode = 16,
+  InSelectInTableMode = 17,
+  InTemplateMode = 18,
+  AfterBodyMode = 19,
+  InFramesetMode = 20,
+  AfterFramesetMode = 21,
+  AfterAfterBodyMode = 22,
+  AfterAfterFramesetMode = 23,
 };
+inline std::ostream &operator<<(std::ostream &os, InsertionMode mode) {
+  switch (mode) {
+  case InsertionMode::None:
+    os << "None";
+    break;
+  case InsertionMode::InitialInsertionMode:
+    os << "initialInsertionMode";
+    break;
+  case InsertionMode::BeforeHtmlMode:
+    os << "BeforeHtmlMode";
+    break;
+  case InsertionMode::BeforeHeadMode:
+    os << "BeforeHeadMode";
+    break;
+  case InsertionMode::InHeadMode:
+    os << "InHeadMode";
+    break;
+  case InsertionMode::InHeadNoscriptMode:
+    os << "InHeadNoscriptMode";
+    break;
+  case InsertionMode::AfterHeadMode:
+    os << "AfterHeadMode";
+    break;
+  case InsertionMode::InBodyMode:
+    os << "InBodyMode";
+    break;
+  case InsertionMode::TextMode:
+    os << "TextMode";
+    break;
+  case InsertionMode::TableMode:
+    os << "TableMode";
+    break;
+  case InsertionMode::TableTextMode:
+    os << "TableTextMode";
+    break;
+  case InsertionMode::CaptionMode:
+    os << "CaptionMode";
+    break;
+  case InsertionMode::InColumnMode:
+    os << "InColumnMode";
+    break;
+  case InsertionMode::InTableBodyMode:
+    os << "InTableBodyMode";
+    break;
+  case InsertionMode::InRowMode:
+    os << "InRowMode";
+    break;
+  case InsertionMode::InCellMode:
+    os << "InCellMode";
+    break;
+  case InsertionMode::InSelectMode:
+    os << "InSelectMode";
+    break;
+  case InsertionMode::InSelectInTableMode:
+    os << "InSelectInTableMode";
+    break;
+  case InsertionMode::InTemplateMode:
+    os << "InTemplateMode";
+    break;
+  case InsertionMode::AfterBodyMode:
+    os << "AfterBodyMode";
+    break;
+  case InsertionMode::InFramesetMode:
+    os << "InFramesetMode";
+    break;
+  case InsertionMode::AfterFramesetMode:
+    os << "AfterFramesetMode";
+    break;
+  case InsertionMode::AfterAfterBodyMode:
+    os << "AfterAfterBodyMode";
+    break;
+  case InsertionMode::AfterAfterFramesetMode:
+    os << "AfterAfterFramesetMode";
+    break;
+    break;
+  }
+
+  return os;
+}
 
 struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
   InsertionMode mode;

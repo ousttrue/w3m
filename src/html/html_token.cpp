@@ -139,12 +139,11 @@ bool HtmlToken::isStartTag(std::string_view tag) const {
     return false;
   }
 
-  std::string pattern("<");
+  std::string pattern("^<");
   pattern += tag;
-  pattern += R"([^\w])";
-
+  pattern += R"([^a-zA-Z0-9])";
   std::regex re(pattern, std::regex_constants::icase);
-  if (!std::regex_match(this->view.begin(), this->view.end(), re)) {
+  if (!std::regex_search(this->view.begin(), this->view.end(), re)) {
     return false;
   }
 
@@ -164,12 +163,11 @@ bool HtmlToken::isEndTag(std::string_view tag) const {
     return false;
   }
 
-  std::string pattern("</");
+  std::string pattern("^</");
   pattern += tag;
-  pattern += R"([^\w])";
-
+  pattern += R"([^a-zA-Z0-9])";
   std::regex re(pattern, std::regex_constants::icase);
-  if (!std::regex_match(this->view.begin(), this->view.end(), re)) {
+  if (!std::regex_search(this->view.begin(), this->view.end(), re)) {
     return false;
   }
 
