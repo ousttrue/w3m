@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <iomanip>
 
+/// 13.2.4.1 The insertion mode
 enum class InsertionMode {
   None = 0,
   InitialInsertionMode = 1,
@@ -31,6 +32,31 @@ enum class InsertionMode {
   AfterAfterBodyMode = 22,
   AfterAfterFramesetMode = 23,
 };
+// enum HtmlDomInsertionMode {
+//   Initial,
+//   BeforeHtml,
+//   BeforeHead,
+//   InHead,
+//   InHeadNoscript,
+//   AfterHead,
+//   InBody,
+//   Text,
+//   InTable,
+//   InTableText,
+//   InCaption,
+//   InColumnGroup,
+//   InTableBody,
+//   InRow,
+//   InCell,
+//   InSelect,
+//   InSelectInTable,
+//   InTemplate,
+//   AfterBody,
+//   InFrameset,
+//   AfterFrameset,
+//   AfterAfterBody,
+//   AfterAfterFrameset,
+// };
 inline std::ostream &operator<<(std::ostream &os, InsertionMode mode) {
   switch (mode) {
   case InsertionMode::None:

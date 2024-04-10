@@ -4,7 +4,6 @@
 #include "html_feed_env.h"
 #include "html_tag.h"
 #include "html_table_status.h"
-#include "cmp.h"
 #include <regex>
 
 std::optional<Token> Tokenizer::getToken(html_feed_environ *h_env,

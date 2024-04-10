@@ -1766,8 +1766,10 @@ static void clear_ignore_p_flag(html_feed_environ *h_env, int cmd) {
 }
 
 void html_feed_environ::parse(std::string_view html) {
-  auto g = html_tokenize(html);
-  TreeConstruction tree;
+  HtmlParser tokenizer;
+  auto g = tokenizer.tokenize(html);
+  TreeConstruction tree(
+      [&tokenizer](auto state) { tokenizer.state = {state}; });
   while (g.move_next()) {
     auto token = g.current_value();
     tree.push(token);

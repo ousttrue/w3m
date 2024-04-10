@@ -1,5 +1,4 @@
 #include "html_dom.h"
-#include "html_node.h"
 #include <assert.h>
 
 inline InsertionMode getInsertionMode(intptr_t func) {
@@ -94,7 +93,14 @@ void HtmlInsersionMode::Context::closeHtmlElement(const HtmlToken &token) {
   if (found != _stack.end()) {
     ++found;
     _stack.erase(_stack.begin(), found);
+  } else {
+    assert(false);
   }
+}
+
+void HtmlInsersionMode::Context::setParserState(
+    HtmlParserState::StateFunc state) {
+  //
 }
 
 //
@@ -262,9 +268,10 @@ HtmlInsersionMode::Result inHeadMode(const HtmlToken &token,
       return {true, {}};
     }
     if (token.isStartTag("title")) {
-      // TODO: RCDATA
       c.insertHtmlElement(token);
-      return {true, {}};
+      c.setParserState(rcdataState);
+      c.setOriginalInsertionMode(&inHeadMode);
+      return {true, {textMode}};
     }
     if (token.isStartTag("noscript")) {
       // scripting flag is disabled
@@ -550,6 +557,25 @@ HtmlInsersionMode::Result inBodyMode(const HtmlToken &token,
 // 8
 HtmlInsersionMode::Result textMode(const HtmlToken &token,
                                    HtmlInsersionMode::Context &c) {
+  switch (token.type) {
+
+  case Character: {
+    c.insertCharacter(token);
+    return {true, {}};
+  }
+
+  case Tag: {
+    if (token.isEndTag()) {
+      c.closeHtmlElement(token);
+    }
+    return {true, {c.originalInsertionMode()}};
+    break;
+  }
+
+  } // switch
+
+  // TODO:
+  assert(false);
   return {true, {}};
 }
 
@@ -632,7 +658,7 @@ afterAfterFramesetMode(const HtmlToken &token, HtmlInsersionMode::Context &c) {
 //
 // TreeConstruction
 //
-TreeConstruction::TreeConstruction() {}
+TreeConstruction::TreeConstruction(const SetHtmlTokenizerStateFunc &func) {}
 
 void TreeConstruction::push(const HtmlToken &token) {
   while (true) {

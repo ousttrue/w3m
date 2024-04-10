@@ -1,5 +1,6 @@
 #pragma once
 #include "html_node.h"
+#include "html_parser.h"
 #include <list>
 
 struct HtmlInsersionMode {
@@ -56,12 +57,16 @@ struct HtmlInsersionMode {
     void setOriginalInsertionMode(HtmlTreeConstructionModeFunc mode) {
       _originalInsertionMode = mode;
     }
+    HtmlTreeConstructionModeFunc originalInsertionMode() const {
+      return _originalInsertionMode;
+    }
     void parseError(const HtmlToken &token) {}
     void mergeAttribute(const HtmlToken &token) {}
     void reconstructActiveFormattingElements() {}
     void stop() {
       // TODO:
     }
+    void setParserState(HtmlParserState::StateFunc state);
   };
 };
 
@@ -140,6 +145,6 @@ HtmlInsersionMode::Result afterAfterFramesetMode(const HtmlToken &token,
 struct TreeConstruction {
   HtmlInsersionMode::Context context;
 
-  TreeConstruction();
+  TreeConstruction(const SetHtmlTokenizerStateFunc &func);
   void push(const HtmlToken &token);
 };

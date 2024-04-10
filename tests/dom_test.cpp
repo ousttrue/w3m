@@ -6,8 +6,9 @@
 TEST(HtmlDomTest, partial) {
   {
     auto src = "<p>a</p><div>あ</div>";
-    auto g = html_tokenize(src);
-    TreeConstruction t;
+    HtmlParser tokenizer;
+    auto g = tokenizer.tokenize(src);
+    TreeConstruction t([&tokenizer](auto state) { tokenizer.state = {state}; });
     while (g.move_next()) {
       auto token = g.current_value();
       t.push(token);
@@ -36,8 +37,9 @@ TEST(HtmlDomTest, full) {
 </html>
 )";
 
-    auto g = html_tokenize(src);
-    TreeConstruction t;
+    HtmlParser tokenizer;
+    auto g = tokenizer.tokenize(src);
+    TreeConstruction t([&tokenizer](auto state) { tokenizer.state = {state}; });
     while (g.move_next()) {
       auto token = g.current_value();
       t.push(token);

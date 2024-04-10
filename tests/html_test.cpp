@@ -11,7 +11,7 @@ TEST(HtmlTest, token) {
 TEST(HtmlTest, tokenizer) {
   {
     auto src = " ";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Character, src), token);
@@ -19,7 +19,7 @@ TEST(HtmlTest, tokenizer) {
   }
   {
     auto src = "a b";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
@@ -51,7 +51,7 @@ TEST(HtmlTest, named) {
 TEST(HtmlTest, reference) {
   {
     auto src = "&amp;";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Character, "&amp;"), token);
@@ -62,7 +62,7 @@ TEST(HtmlTest, reference) {
 TEST(HtmlTest, tag) {
   {
     auto src = "<p>";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Tag, "<p>"), token);
@@ -70,7 +70,7 @@ TEST(HtmlTest, tag) {
   }
   {
     auto src = "</h1>";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Tag, "</h1>"), token);
@@ -78,7 +78,7 @@ TEST(HtmlTest, tag) {
   }
   {
     auto src = "<a href='http://hoge.fuga' >";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Tag, src), token);
@@ -89,7 +89,7 @@ TEST(HtmlTest, tag) {
 TEST(HtmlTest, html) {
   {
     auto src = "<a href=nan>なん</a>";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     {
       EXPECT_TRUE(g.move_next());
       auto token = g.current_value();
@@ -118,7 +118,7 @@ TEST(HtmlTest, html) {
 TEST(HtmlTest, doctype) {
   {
     auto src = "<!DOCTYPE html>";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Doctype, src), token);
@@ -129,7 +129,7 @@ TEST(HtmlTest, doctype) {
 TEST(HtmlTest, comment) {
   {
     auto src = "<!-- comment -->";
-    auto g = html_tokenize(src);
+    auto g = HtmlParser().tokenize(src);
     EXPECT_TRUE(g.move_next());
     auto token = g.current_value();
     EXPECT_EQ(HtmlToken(Comment, src), token);
