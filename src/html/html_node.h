@@ -4,6 +4,7 @@
 #include <memory>
 #include <list>
 #include <algorithm>
+#include <iomanip>
 
 struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
   HtmlToken token;
@@ -47,7 +48,12 @@ struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
   }
 
   void print(std::ostream &os, const std::string &indent = "") {
-    os << indent;
+    os
+        //
+        << std::setw(2) << std::setfill('0')
+        << this->token.insertionMode
+        //
+        << indent;
     if (token.type == Character) {
       os << "|";
     }

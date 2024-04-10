@@ -572,13 +572,66 @@ afterAfterFramesetMode(const HtmlToken &token, HtmlInsersionMode::Context &c) {
   return {true, {}};
 }
 
+inline int getInsertionModeIndex(intptr_t func) {
+  if (func == (intptr_t)&initialInsertionMode) {
+    return 1;
+  } else if (func == (intptr_t)&beforeHtmlMode) {
+    return 2;
+  } else if (func == (intptr_t)&beforeHeadMode) {
+    return 3;
+  } else if (func == (intptr_t)&inHeadMode) {
+    return 4;
+  } else if (func == (intptr_t)&inHeadNoscriptMode) {
+    return 5;
+  } else if (func == (intptr_t)&afterHeadMode) {
+    return 6;
+  } else if (func == (intptr_t)&inBodyMode) {
+    return 7;
+  } else if (func == (intptr_t)&textMode) {
+    return 8;
+  } else if (func == (intptr_t)&tableMode) {
+    return 9;
+  } else if (func == (intptr_t)&tableTextMode) {
+    return 10;
+  } else if (func == (intptr_t)&captionMode) {
+    return 11;
+  } else if (func == (intptr_t)&inColumnMode) {
+    return 12;
+  } else if (func == (intptr_t)&inTableBodyMode) {
+    return 13;
+  } else if (func == (intptr_t)&inRowMode) {
+    return 14;
+  } else if (func == (intptr_t)&inCellMode) {
+    return 15;
+  } else if (func == (intptr_t)&inSelectMode) {
+    return 16;
+  } else if (func == (intptr_t)&inSelectInTableMode) {
+    return 17;
+  } else if (func == (intptr_t)&inTemplateMode) {
+    return 18;
+  } else if (func == (intptr_t)&afterBodyMode) {
+    return 19;
+  } else if (func == (intptr_t)&inFramesetMode) {
+    return 20;
+  } else if (func == (intptr_t)&afterFramesetMode) {
+    return 21;
+  } else if (func == (intptr_t)&afterAfterBodyMode) {
+    return 22;
+  } else if (func == (intptr_t)&afterAfterFramesetMode) {
+    return 23;
+  }
+
+  return -1;
+}
+
 //
 // TreeConstruction
 //
 TreeConstruction::TreeConstruction() : insertionMode(initialInsertionMode) {}
 
-void TreeConstruction::push(const HtmlToken &token) {
+void TreeConstruction::push(HtmlToken token) {
   while (true) {
+    token.insertionMode = getInsertionModeIndex((intptr_t)insertionMode.insert);
     auto [consumed, next_mode] = insertionMode.insert(token, context);
     if (next_mode.insert) {
       insertionMode = next_mode;

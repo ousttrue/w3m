@@ -134,7 +134,7 @@ struct TreeConstruction {
   HtmlInsersionMode::Context context;
 
   TreeConstruction();
-  void push(const HtmlToken &token);
+  void push(HtmlToken token);
 };
 
 inline std::ostream &operator<<(std::ostream &os,
