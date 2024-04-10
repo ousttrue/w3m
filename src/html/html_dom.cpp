@@ -2,13 +2,70 @@
 #include "html_node.h"
 #include <assert.h>
 
+inline InsertionMode getInsertionMode(intptr_t func) {
+  if (func == (intptr_t)&initialInsertionMode) {
+    return (InsertionMode)1;
+  } else if (func == (intptr_t)&beforeHtmlMode) {
+    return (InsertionMode)2;
+  } else if (func == (intptr_t)&beforeHeadMode) {
+    return (InsertionMode)3;
+  } else if (func == (intptr_t)&inHeadMode) {
+    return (InsertionMode)4;
+  } else if (func == (intptr_t)&inHeadNoscriptMode) {
+    return (InsertionMode)5;
+  } else if (func == (intptr_t)&afterHeadMode) {
+    return (InsertionMode)6;
+  } else if (func == (intptr_t)&inBodyMode) {
+    return (InsertionMode)7;
+  } else if (func == (intptr_t)&textMode) {
+    return (InsertionMode)8;
+  } else if (func == (intptr_t)&tableMode) {
+    return (InsertionMode)9;
+  } else if (func == (intptr_t)&tableTextMode) {
+    return (InsertionMode)10;
+  } else if (func == (intptr_t)&captionMode) {
+    return (InsertionMode)11;
+  } else if (func == (intptr_t)&inColumnMode) {
+    return (InsertionMode)12;
+  } else if (func == (intptr_t)&inTableBodyMode) {
+    return (InsertionMode)13;
+  } else if (func == (intptr_t)&inRowMode) {
+    return (InsertionMode)14;
+  } else if (func == (intptr_t)&inCellMode) {
+    return (InsertionMode)15;
+  } else if (func == (intptr_t)&inSelectMode) {
+    return (InsertionMode)16;
+  } else if (func == (intptr_t)&inSelectInTableMode) {
+    return (InsertionMode)17;
+  } else if (func == (intptr_t)&inTemplateMode) {
+    return (InsertionMode)18;
+  } else if (func == (intptr_t)&afterBodyMode) {
+    return (InsertionMode)19;
+  } else if (func == (intptr_t)&inFramesetMode) {
+    return (InsertionMode)20;
+  } else if (func == (intptr_t)&afterFramesetMode) {
+    return (InsertionMode)21;
+  } else if (func == (intptr_t)&afterAfterBodyMode) {
+    return (InsertionMode)22;
+  } else if (func == (intptr_t)&afterAfterFramesetMode) {
+    return (InsertionMode)23;
+  }
+
+  return {};
+}
+
 //
 // HtmlInsersionMode::Context
 //
 HtmlInsersionMode::Context::Context()
-    : _document(new HtmlNode(HtmlToken(Tag, "[document]"))) {
+    : _insertionMode(initialInsertionMode),
+      _document(new HtmlNode({}, HtmlToken(Tag, "[document]"))) {
   // pushOpenElement(_document);
   _stack.push_front(_document);
+}
+
+InsertionMode HtmlInsersionMode::Context::currentMode() const {
+  return getInsertionMode(reinterpret_cast<intptr_t>(this->_insertionMode));
 }
 
 void HtmlInsersionMode::Context::pushOpenElement(
@@ -22,12 +79,12 @@ void HtmlInsersionMode::Context::insertCharacter(const HtmlToken &token) {
   if (current->extendCharacter(token)) {
     // extended
   } else {
-    current->addChild(HtmlNode::create(token));
+    current->addChild(HtmlNode::create(currentMode(), token));
   }
 }
 
 void HtmlInsersionMode::Context::insertHtmlElement(const HtmlToken &token) {
-  pushOpenElement(HtmlNode::create(token));
+  pushOpenElement(HtmlNode::create(currentMode(), token));
 }
 
 void HtmlInsersionMode::Context::closeHtmlElement(const HtmlToken &token) {
@@ -572,70 +629,16 @@ afterAfterFramesetMode(const HtmlToken &token, HtmlInsersionMode::Context &c) {
   return {true, {}};
 }
 
-inline int getInsertionModeIndex(intptr_t func) {
-  if (func == (intptr_t)&initialInsertionMode) {
-    return 1;
-  } else if (func == (intptr_t)&beforeHtmlMode) {
-    return 2;
-  } else if (func == (intptr_t)&beforeHeadMode) {
-    return 3;
-  } else if (func == (intptr_t)&inHeadMode) {
-    return 4;
-  } else if (func == (intptr_t)&inHeadNoscriptMode) {
-    return 5;
-  } else if (func == (intptr_t)&afterHeadMode) {
-    return 6;
-  } else if (func == (intptr_t)&inBodyMode) {
-    return 7;
-  } else if (func == (intptr_t)&textMode) {
-    return 8;
-  } else if (func == (intptr_t)&tableMode) {
-    return 9;
-  } else if (func == (intptr_t)&tableTextMode) {
-    return 10;
-  } else if (func == (intptr_t)&captionMode) {
-    return 11;
-  } else if (func == (intptr_t)&inColumnMode) {
-    return 12;
-  } else if (func == (intptr_t)&inTableBodyMode) {
-    return 13;
-  } else if (func == (intptr_t)&inRowMode) {
-    return 14;
-  } else if (func == (intptr_t)&inCellMode) {
-    return 15;
-  } else if (func == (intptr_t)&inSelectMode) {
-    return 16;
-  } else if (func == (intptr_t)&inSelectInTableMode) {
-    return 17;
-  } else if (func == (intptr_t)&inTemplateMode) {
-    return 18;
-  } else if (func == (intptr_t)&afterBodyMode) {
-    return 19;
-  } else if (func == (intptr_t)&inFramesetMode) {
-    return 20;
-  } else if (func == (intptr_t)&afterFramesetMode) {
-    return 21;
-  } else if (func == (intptr_t)&afterAfterBodyMode) {
-    return 22;
-  } else if (func == (intptr_t)&afterAfterFramesetMode) {
-    return 23;
-  }
-
-  return -1;
-}
-
 //
 // TreeConstruction
 //
-TreeConstruction::TreeConstruction() : insertionMode(initialInsertionMode) {}
+TreeConstruction::TreeConstruction() {}
 
-void TreeConstruction::push(HtmlToken token) {
+void TreeConstruction::push(const HtmlToken &token) {
   while (true) {
-    token.insertionMode = getInsertionModeIndex((intptr_t)insertionMode.insert);
-    auto [consumed, next_mode] = insertionMode.insert(token, context);
-    if (next_mode.insert) {
-      insertionMode = next_mode;
-    }
+    // token.insertionMode =
+    // getInsertionModeIndex((intptr_t)insertionMode.insert);
+    auto consumed = context.process(token);
     if (consumed) {
       break;
     }

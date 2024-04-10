@@ -1,9 +1,7 @@
 #pragma once
-#include "html_token.h"
+#include "html_node.h"
 #include <list>
-#include <ostream>
 
-struct HtmlNode;
 struct HtmlInsersionMode {
   using Result = std::tuple<bool, HtmlInsersionMode>;
   class Context;
@@ -11,6 +9,9 @@ struct HtmlInsersionMode {
   HtmlTreeConstructionModeFunc insert;
 
   class Context {
+    /// 13.2.4.1 The insertion mode
+    HtmlTreeConstructionModeFunc _insertionMode;
+
     /// 13.2.4.2 The stack of open elements
     /// push_front
     /// pop_front
@@ -35,9 +36,17 @@ struct HtmlInsersionMode {
     std::shared_ptr<HtmlNode> document() const { return _document; }
 
   private:
+    InsertionMode currentMode() const;
     void pushOpenElement(const std::shared_ptr<HtmlNode> &node);
 
   public:
+    bool process(const HtmlToken &token) {
+      auto [consumed, next_mode] = this->_insertionMode(token, *this);
+      if (next_mode.insert) {
+        _insertionMode = next_mode.insert;
+      }
+      return consumed;
+    }
     void setFramesetOk(bool enable) { _framesetOk = enable; }
     void popOpenElement(std::string_view validate = {}) { _stack.pop_front(); }
     void insertComment(const HtmlToken &token) {}
@@ -129,65 +138,63 @@ HtmlInsersionMode::Result afterAfterFramesetMode(const HtmlToken &token,
                                                  HtmlInsersionMode::Context &c);
 
 struct TreeConstruction {
-  /// 13.2.4.1 The insertion mode
-  HtmlInsersionMode insertionMode;
   HtmlInsersionMode::Context context;
 
   TreeConstruction();
-  void push(HtmlToken token);
+  void push(const HtmlToken &token);
 };
 
-inline std::ostream &operator<<(std::ostream &os,
-                                const HtmlInsersionMode &mode) {
-  if (mode.insert == initialInsertionMode) {
-    os << "initialInsertionMode";
-  } else if (mode.insert == beforeHtmlMode) {
-    os << "beforeHtmlMode";
-  } else if (mode.insert == beforeHeadMode) {
-    os << "beforeHeadMode";
-  } else if (mode.insert == inHeadMode) {
-    os << "inHeadMode";
-  } else if (mode.insert == inHeadNoscriptMode) {
-    os << "inHeadNoscriptMode";
-  } else if (mode.insert == afterHeadMode) {
-    os << "afterHeadMode";
-  } else if (mode.insert == inBodyMode) {
-    os << "inBodyMode";
-  } else if (mode.insert == textMode) {
-    os << "textMode";
-  } else if (mode.insert == tableMode) {
-    os << "tableMode";
-  } else if (mode.insert == tableTextMode) {
-    os << "tableTextMode";
-  } else if (mode.insert == captionMode) {
-    os << "captionMode";
-  } else if (mode.insert == inColumnMode) {
-    os << "inColumnMode";
-  } else if (mode.insert == inTableBodyMode) {
-    os << "inTableBodyMode";
-  } else if (mode.insert == inRowMode) {
-    os << "inRowMode";
-  } else if (mode.insert == inCellMode) {
-    os << "inCellMode";
-  } else if (mode.insert == inSelectMode) {
-    os << "inSelectMode";
-  } else if (mode.insert == inSelectInTableMode) {
-    os << "inSelectInTableMode";
-  } else if (mode.insert == inTemplateMode) {
-    os << "inTemplateMode";
-  } else if (mode.insert == afterBodyMode) {
-    os << "afterBodyMode";
-  } else if (mode.insert == inFramesetMode) {
-    os << "inFramesetMode";
-  } else if (mode.insert == afterFramesetMode) {
-    os << "afterFramesetMode";
-  } else if (mode.insert == afterAfterBodyMode) {
-    os << "afterAfterBodyMode";
-  } else if (mode.insert == afterAfterFramesetMode) {
-    os << "afterAfterFramesetMode";
-  } else {
-    os << "unknown";
-  }
-
-  return os;
-}
+// inline std::ostream &operator<<(std::ostream &os,
+//                                 const HtmlInsersionMode &mode) {
+//   if (mode.insert == initialInsertionMode) {
+//     os << "initialInsertionMode";
+//   } else if (mode.insert == beforeHtmlMode) {
+//     os << "beforeHtmlMode";
+//   } else if (mode.insert == beforeHeadMode) {
+//     os << "beforeHeadMode";
+//   } else if (mode.insert == inHeadMode) {
+//     os << "inHeadMode";
+//   } else if (mode.insert == inHeadNoscriptMode) {
+//     os << "inHeadNoscriptMode";
+//   } else if (mode.insert == afterHeadMode) {
+//     os << "afterHeadMode";
+//   } else if (mode.insert == inBodyMode) {
+//     os << "inBodyMode";
+//   } else if (mode.insert == textMode) {
+//     os << "textMode";
+//   } else if (mode.insert == tableMode) {
+//     os << "tableMode";
+//   } else if (mode.insert == tableTextMode) {
+//     os << "tableTextMode";
+//   } else if (mode.insert == captionMode) {
+//     os << "captionMode";
+//   } else if (mode.insert == inColumnMode) {
+//     os << "inColumnMode";
+//   } else if (mode.insert == inTableBodyMode) {
+//     os << "inTableBodyMode";
+//   } else if (mode.insert == inRowMode) {
+//     os << "inRowMode";
+//   } else if (mode.insert == inCellMode) {
+//     os << "inCellMode";
+//   } else if (mode.insert == inSelectMode) {
+//     os << "inSelectMode";
+//   } else if (mode.insert == inSelectInTableMode) {
+//     os << "inSelectInTableMode";
+//   } else if (mode.insert == inTemplateMode) {
+//     os << "inTemplateMode";
+//   } else if (mode.insert == afterBodyMode) {
+//     os << "afterBodyMode";
+//   } else if (mode.insert == inFramesetMode) {
+//     os << "inFramesetMode";
+//   } else if (mode.insert == afterFramesetMode) {
+//     os << "afterFramesetMode";
+//   } else if (mode.insert == afterAfterBodyMode) {
+//     os << "afterAfterBodyMode";
+//   } else if (mode.insert == afterAfterFramesetMode) {
+//     os << "afterAfterFramesetMode";
+//   } else {
+//     os << "unknown";
+//   }
+//
+//   return os;
+// }

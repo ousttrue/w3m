@@ -6,18 +6,48 @@
 #include <algorithm>
 #include <iomanip>
 
+enum class InsertionMode {
+  None = 0,
+  initialInsertionMode = 1,
+  beforeHtmlMode = 2,
+  beforeHeadMode = 3,
+  inHeadMode = 4,
+  inHeadNoscriptMode = 5,
+  afterHeadMode = 6,
+  inBodyMode = 7,
+  textMode = 8,
+  tableMode = 9,
+  tableTextMode = 10,
+  captionMode = 11,
+  inColumnMode = 12,
+  inTableBodyMode = 13,
+  inRowMode = 14,
+  inCellMode = 15,
+  inSelectMode = 16,
+  inSelectInTableMode = 17,
+  inTemplateMode = 18,
+  afterBodyMode = 19,
+  inFramesetMode = 20,
+  afterFramesetMode = 21,
+  afterAfterBodyMode = 22,
+  afterAfterFramesetMode = 23,
+};
+
 struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
+  InsertionMode mode;
   HtmlToken token;
   std::weak_ptr<HtmlNode> parent;
   std::list<std::shared_ptr<HtmlNode>> children;
 
-  HtmlNode(const HtmlToken &token) : token(token) {}
+  HtmlNode(InsertionMode mode, const HtmlToken &token)
+      : mode(mode), token(token) {}
   HtmlNode() {}
   HtmlNode(const HtmlNode &) = delete;
   HtmlNode &operator=(const HtmlNode &) = delete;
 
-  static std::shared_ptr<HtmlNode> create(const HtmlToken &token) {
-    return std::make_shared<HtmlNode>(token);
+  static std::shared_ptr<HtmlNode> create(InsertionMode mode,
+                                          const HtmlToken &token) {
+    return std::make_shared<HtmlNode>(mode, token);
   }
 
   void addChild(const std::shared_ptr<HtmlNode> &child) {
@@ -51,7 +81,7 @@ struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
     os
         //
         << std::setw(2) << std::setfill('0')
-        << this->token.insertionMode
+        << (int)this->mode
         //
         << indent;
     if (token.type == Character) {

@@ -53,8 +53,6 @@ inline const char *str(const HtmlTokenTypes t) {
 struct HtmlToken {
   HtmlTokenTypes type;
   std::string_view view;
-  // for debug
-  int insertionMode = -1;
 
   bool operator==(const HtmlToken &rhs) const {
     return type == rhs.type && view == rhs.view;

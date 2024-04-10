@@ -16,7 +16,7 @@ TEST(HtmlDomTest, partial) {
     // EXPECT_EQ(&beforeHeadMode, t.insertionMode.insert);
 
     t.context.document()->print(std::cout);
-    std::cout << t.insertionMode << std::endl;
+    // std::cout << t.insertionMode << std::endl;
   }
 }
 
@@ -45,6 +45,6 @@ TEST(HtmlDomTest, full) {
     // EXPECT_EQ(&beforeHeadMode, t.insertionMode.insert);
 
     t.context.document()->print(std::cout);
-    std::cout << t.insertionMode << std::endl;
+    // std::cout << t.insertionMode << std::endl;
   }
 }
