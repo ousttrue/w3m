@@ -50,13 +50,13 @@ HtmlParserState::Result rcdataState(std::string_view src,
                                     HtmlParserState::Context &c);
 /// 13.2.5.3 RAWTEXT state
 HtmlParserState::Result rawtextState(std::string_view src,
-                                    HtmlParserState::Context &c);
+                                     HtmlParserState::Context &c);
 /// 13.2.5.4 Script data state
 HtmlParserState::Result scriptDataState(std::string_view src,
-                                    HtmlParserState::Context &c);
+                                        HtmlParserState::Context &c);
 /// 13.2.5.5 PLAINTEXT state
 HtmlParserState::Result plaintextState(std::string_view src,
-                                    HtmlParserState::Context &c);
+                                       HtmlParserState::Context &c);
 /// 13.2.5.6 Tag open state
 HtmlParserState::Result tagOpenState(std::string_view src,
                                      HtmlParserState::Context &c);
@@ -147,13 +147,26 @@ HtmlParserState::Result doctypeNameState(std::string_view src,
 /// 13.2.5.66 DOCTYPE system identifier (single-quoted) state
 /// 13.2.5.67 After DOCTYPE system identifier state
 /// 13.2.5.68 Bogus DOCTYPE state
-
+/// 13.2.5.69 CDATA section state
+/// 13.2.5.70 CDATA section bracket state
+/// 13.2.5.71 CDATA section end state
 /// 13.2.5.72 Character reference state
 HtmlParserState::Result characterReferenceState(std::string_view src,
                                                 HtmlParserState::Context &c);
 /// 13.2.5.73 Named character reference state
 HtmlParserState::Result
 namedCharacterReferenceState(std::string_view src, HtmlParserState::Context &c);
+
+/// 13.2.5.74 Ambiguous ampersand state
+HtmlParserState::Result ambiguousAmpersandState(std::string_view src,
+                                                HtmlParserState::Context &c);
+
+/// 13.2.5.75 Numeric character reference state
+/// 13.2.5.76 Hexadecimal character reference start state
+/// 13.2.5.77 Decimal character reference start state
+/// 13.2.5.78 Hexadecimal character reference state
+/// 13.2.5.79 Decimal character reference state
+/// 13.2.5.80 Numeric character reference end state
 
 struct html_token_generator {
   struct promise_type;

@@ -190,8 +190,10 @@ struct HtmlNode : std::enable_shared_from_this<HtmlNode> {
         << indent;
     if (token.type == Character) {
       os << "|";
+      os << trim(token.view) << std::endl;
+    } else {
+      os << trim(token.view) << std::endl;
     }
-    os << trim(token.view) << std::endl;
     // if (token.isStartTag("script")) {
     //   return;
     // }

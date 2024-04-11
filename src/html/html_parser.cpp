@@ -483,10 +483,24 @@ namedCharacterReferenceState(std::string_view src,
     auto begin = car.data() - 1;
     assert(*begin == '&');
     return {{Character, {begin, car.size() + 1}}, cdr, {c.returnState()}};
-  } else {
-    assert(false);
-    return {{{}, src}, {}, {}};
   }
+
+  return {{Character, car}, cdr, {ambiguousAmpersandState}};
+}
+
+// 74
+HtmlParserState::Result ambiguousAmpersandState(std::string_view src,
+                                                HtmlParserState::Context &c) {
+  auto [car, cdr] = consume(src);
+  auto ch = src.front();
+  if (std::isalnum(ch)) {
+    return {{Character, car}, cdr, {}};
+  }
+
+  if (ch == ';') {
+  }
+
+  return {{}, src, {c.returnState()}};
 }
 
 html_token_generator HtmlParser::tokenize(std::string_view v) {

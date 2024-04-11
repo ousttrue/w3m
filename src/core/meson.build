@@ -14,6 +14,7 @@ core_lib = static_library(
         'entity.cpp',
         'tmpfile.cpp',
         'url_decode.cpp',
+        'dbgstream.cpp',
     ],
 )
 core_dep = declare_dependency(

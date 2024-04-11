@@ -318,7 +318,7 @@ HtmlInsersionMode::Result inHeadMode(const HtmlToken &token,
   return {false, {afterHeadMode}};
 }
 
-/// 13.2.6.4.5 The "in head noscript" insertion mode
+// 5
 HtmlInsersionMode::Result inHeadNoscriptMode(const HtmlToken &token,
                                              HtmlInsersionMode::Context &c) {
   switch (token.type) {

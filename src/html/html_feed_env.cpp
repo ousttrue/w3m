@@ -2,6 +2,7 @@
 #include <windows.h>
 #endif
 
+#include "dbgstream.h"
 #include "html_feed_env.h"
 #include "form.h"
 #include "stringtoken.h"
@@ -1776,18 +1777,8 @@ void html_feed_environ::parse(std::string_view html) {
   }
   tree.push(HtmlToken(Eof));
 
-#ifdef _MSC_VER
-  {
-    std::stringstream ss;
-    tree.context.document()->print(ss);
-    OutputDebugStringA(std::string(html).c_str());
-  }
-  {
-    std::stringstream ss;
-    tree.context.document()->print(ss);
-    OutputDebugStringA(ss.str().c_str());
-  }
-#endif
+  cdbg << html;
+  tree.context.document()->print(cdbg);
 
   TableStatus t;
   for (auto &node : tree.context.document()->children) {
