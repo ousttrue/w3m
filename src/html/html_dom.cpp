@@ -94,7 +94,7 @@ void HtmlInsersionMode::Context::closeHtmlElement(const HtmlToken &token) {
     ++found;
     _stack.erase(_stack.begin(), found);
   } else {
-    assert(false);
+    // assert(false);
   }
 }
 
@@ -281,6 +281,7 @@ HtmlInsersionMode::Result inHeadMode(const HtmlToken &token,
     if (token.isStartTag("script")) {
       c.insertHtmlElement(token);
       // TODO: Switch the tokenizer to the script data state.
+      c.setParserState(scriptDataState);
       c.setOriginalInsertionMode(&inHeadMode);
       return {true, {textMode}};
     }
@@ -565,10 +566,14 @@ HtmlInsersionMode::Result textMode(const HtmlToken &token,
   }
 
   case Tag: {
+    if (token.isEndTag("script")) {
+      c.closeHtmlElement(token);
+      return {true, {c.originalInsertionMode()}};
+    }
     if (token.isEndTag()) {
       c.closeHtmlElement(token);
+      return {true, {c.originalInsertionMode()}};
     }
-    return {true, {c.originalInsertionMode()}};
     break;
   }
 

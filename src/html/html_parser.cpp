@@ -52,6 +52,36 @@ HtmlParserState::Result rcdataState(std::string_view src,
   } else {
     return {{Character, car}, cdr, {}};
   }
+}
+
+/// 13.2.5.3 RAWTEXT state
+HtmlParserState::Result rawtextState(std::string_view src,
+                                     HtmlParserState::Context &c) {
+  // TODO:
+  assert(false);
+  return {};
+}
+
+/// 13.2.5.4 Script data state
+HtmlParserState::Result scriptDataState(std::string_view src,
+                                        HtmlParserState::Context &c) {
+  auto [car, cdr] = consume(src);
+  auto ch = src.front();
+  if (ch == '<') {
+    // TODO:
+    assert(false);
+    return {};
+  } else {
+    //  invalid-first-character-of-tag-name parse error
+    return {{Character, c.emit(car)}, src, {dataState}};
+  }
+}
+
+/// 13.2.5.5 PLAINTEXT state
+HtmlParserState::Result plaintextState(std::string_view src,
+                                       HtmlParserState::Context &c) {
+  // TODO:
+  assert(false);
   return {};
 }
 
@@ -454,6 +484,7 @@ namedCharacterReferenceState(std::string_view src,
     assert(*begin == '&');
     return {{Character, {begin, car.size() + 1}}, cdr, {c.returnState()}};
   } else {
+    assert(false);
     return {{{}, src}, {}, {}};
   }
 }
@@ -462,6 +493,7 @@ html_token_generator HtmlParser::tokenize(std::string_view v) {
   HtmlParserState::Context c;
   while (v.size()) {
     auto [token, next, next_state] = state.parse(v, c);
+    assert(token.view.empty() || token.type != HtmlToken_Unknown);
     v = next;
     if (next_state.parse) {
       state = next_state;
@@ -470,21 +502,22 @@ html_token_generator HtmlParser::tokenize(std::string_view v) {
       // emit
       co_yield token;
 
-      if (token.isStartTag("script")) {
-        // search "</script>";
-        std::regex re(R"(</script>)", std::regex_constants::icase);
-        // std::match_results<std::list<char>::const_iterator> m;
-        std::cmatch m;
-        if (std::regex_search(v.data(), v.data() + v.size(), m, re)) {
-          std::string_view data{v.data(), m[0].first};
-          if (data.size()) {
-            co_yield {Character, data};
-          }
-          v = {m[0].first, v.data() + v.size()};
-        } else {
-          assert(false);
-        }
-      }
+      // skip script
+      // if (token.isStartTag("script")) {
+      //   // search "</script>";
+      //   std::regex re(R"(</script>)", std::regex_constants::icase);
+      //   // std::match_results<std::list<char>::const_iterator> m;
+      //   std::cmatch m;
+      //   if (std::regex_search(v.data(), v.data() + v.size(), m, re)) {
+      //     std::string_view data{v.data(), m[0].first};
+      //     if (data.size()) {
+      //       co_yield {Character, data};
+      //     }
+      //     v = {m[0].first, v.data() + v.size()};
+      //   } else {
+      //     assert(false);
+      //   }
+      // }
     }
   }
 }

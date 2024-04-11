@@ -45,15 +45,18 @@ using SetHtmlTokenizerStateFunc =
 /// 13.2.5.1 Data state
 HtmlParserState::Result dataState(std::string_view src,
                                   HtmlParserState::Context &c);
-
 /// 13.2.5.2 RCDATA state
 HtmlParserState::Result rcdataState(std::string_view src,
                                     HtmlParserState::Context &c);
-
 /// 13.2.5.3 RAWTEXT state
+HtmlParserState::Result rawtextState(std::string_view src,
+                                    HtmlParserState::Context &c);
 /// 13.2.5.4 Script data state
+HtmlParserState::Result scriptDataState(std::string_view src,
+                                    HtmlParserState::Context &c);
 /// 13.2.5.5 PLAINTEXT state
-
+HtmlParserState::Result plaintextState(std::string_view src,
+                                    HtmlParserState::Context &c);
 /// 13.2.5.6 Tag open state
 HtmlParserState::Result tagOpenState(std::string_view src,
                                      HtmlParserState::Context &c);
