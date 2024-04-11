@@ -1777,8 +1777,9 @@ void html_feed_environ::parse(std::string_view html) {
   }
   tree.push(HtmlToken(Eof));
 
-  cdbg << html;
+  cdbg << html << std::endl;
   tree.context.document()->print(cdbg);
+  cdbg << std::endl;
 
   TableStatus t;
   for (auto &node : tree.context.document()->children) {

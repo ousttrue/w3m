@@ -1,11 +1,11 @@
 #include "html_parser.h"
 #include "entity.h"
 #include "utf8.h"
-#include "cmp.h"
+#include "dbgstream.h"
+#include "html_parser_state.h"
 #include <assert.h>
 #include <cctype>
 #include <algorithm>
-#include <regex>
 
 // https://html.spec.whatwg.org/multipage/parsing.html
 
@@ -510,6 +510,8 @@ html_token_generator HtmlParser::tokenize(std::string_view v) {
     assert(token.view.empty() || token.type != HtmlToken_Unknown);
     v = next;
     if (next_state.parse) {
+      auto stateName = getParserStateName((intptr_t)next_state.parse);
+      cdbg << token << " => " << stateName << std::endl;
       state = next_state;
     }
     if (token.view.size()) {
