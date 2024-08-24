@@ -215,6 +215,7 @@ static int OptionEncode = FALSE;
 #define CMT_NOSENDREFERER N_("Suppress `Referer:' header")
 #define CMT_CROSSORIGINREFERER N_("Exclude pathname and query string from `Referer:' header when cross domain communication")
 #define CMT_IGNORE_CASE N_("Search case-insensitively")
+#define CMT_SMART_CASE N_("Use vim-like smartcase for searching")
 #define CMT_USE_LESSOPEN N_("Use LESSOPEN")
 #ifdef USE_SSL
 #ifdef USE_SSL_VERIFY
@@ -536,6 +537,8 @@ struct param_ptr params3[] = {
     {"wrap_search", P_INT, PI_ONOFF, (void *)&WrapDefault, CMT_WRAP, NULL},
     {"ignorecase_search", P_INT, PI_ONOFF, (void *)&IgnoreCase,
      CMT_IGNORE_CASE, NULL},
+    {"smartcase_search", P_INT, PI_ONOFF, (void *)&SmartCase, CMT_SMART_CASE,
+     NULL},
 #ifdef USE_MIGEMO
     {"use_migemo", P_INT, PI_ONOFF, (void *)&use_migemo, CMT_USE_MIGEMO,
      NULL},

@@ -988,6 +988,7 @@ global char *AcceptEncoding init(NULL);
 global char *AcceptMedia init(NULL);
 global int WrapDefault init(FALSE);
 global int IgnoreCase init(TRUE);
+global int SmartCase init(FALSE);
 global int WrapSearch init(FALSE);
 global int squeezeBlankLine init(FALSE);
 global char *BookmarkFile init(NULL);

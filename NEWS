@@ -6,6 +6,7 @@ Unreleased
 * new features
   - Add command to change directory (CD)
   - Add keybinding to insert word under cursor when inserting text (C-])
+  - Add vim-like smartcase option for search
 
 * bug fixes
   - Fix version number in some place, e.g. make dist

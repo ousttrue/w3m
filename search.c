@@ -3,6 +3,7 @@
 #include "fm.h"
 #include "regex.h"
 
+#include <ctype.h>
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -95,25 +96,40 @@ conv_search_string(const char *str, wc_ces f_ces)
 }
 #endif
 
+static int
+ignorecase(const char *str)
+{
+    const char *c;
+
+    if (!SmartCase)
+	return IgnoreCase;
+
+    for (c = str; *c; c++)
+	if (isupper(*c)) return 0;
+    return 1;
+}
+
 int
 forwardSearch(Buffer *buf, const char *str)
 {
     const char *p, *first, *last;
     Line *l, *begin;
     int wrapped = FALSE;
-    int pos;
+    int icase, pos;
+
+    icase = ignorecase(str);
 
 #ifdef USE_MIGEMO
     if (migemo_active > 0) {
-	if (((p = regexCompile(migemostr(str), IgnoreCase)) != NULL)
-	    && ((p = regexCompile(str, IgnoreCase)) != NULL)) {
+	if (((p = regexCompile(migemostr(str), icase)) != NULL)
+	    && ((p = regexCompile(str, icase)) != NULL)) {
 	    message(p, 0, 0);
 	    return SR_NOTFOUND;
 	}
     }
     else
 #endif
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    if ((p = regexCompile(str, icase)) != NULL) {
 	message(p, 0, 0);
 	return SR_NOTFOUND;
     }
@@ -196,19 +212,21 @@ backwardSearch(Buffer *buf, const char *str)
     const char *p, *q, *found, *found_last, *first, *last;
     Line *l, *begin;
     int wrapped = FALSE;
-    int pos;
+    int icase, pos;
+
+    icase = ignorecase(str);
 
 #ifdef USE_MIGEMO
     if (migemo_active > 0) {
-	if (((p = regexCompile(migemostr(str), IgnoreCase)) != NULL)
-	    && ((p = regexCompile(str, IgnoreCase)) != NULL)) {
+	if (((p = regexCompile(migemostr(str), icase)) != NULL)
+	    && ((p = regexCompile(str, icase)) != NULL)) {
 	    message(p, 0, 0);
 	    return SR_NOTFOUND;
 	}
     }
     else
 #endif
-    if ((p = regexCompile(str, IgnoreCase)) != NULL) {
+    if ((p = regexCompile(str, icase)) != NULL) {
 	message(p, 0, 0);
 	return SR_NOTFOUND;
     }
