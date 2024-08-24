@@ -8,6 +8,7 @@ Unreleased
   - Add keybinding to insert word under cursor when inserting text (C-])
   - Add vim-like smartcase option for search
   - Add keybinding to insert current search term (C-\)
+  - Add option for CTRL Y to insert deleted text (rl_paste)
 
 * bug fixes
   - Fix version number in some place, e.g. make dist
