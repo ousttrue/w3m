@@ -10,6 +10,7 @@ Unreleased
   - Fix version number in some place, e.g. make dist
   - Ignore C-i, C-l, C-s, C-z, C-\, C-], C-^ and C-_ key presses when
     inserting text
+  - Show all link numbers
 
 w3m 0.5.5 - 2025-08-20
 
