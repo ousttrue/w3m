@@ -1,0 +1,19 @@
+.{
+    .name = "w3m",
+    .version = "0.5.3",
+    .dependencies = .{
+        .gc = .{
+            .url = "git+https://github.com/ivmai/bdwgc.git#c3c44d85081044707eb8fa4f0db39e1fe6834853",
+            .hash = "1220487dbde9952d0f112b0cf6e3dd36332077e61c0cdbae20f9bf8631b7108cfcd3",
+        },
+        .openssl = .{
+            .url = "git+https://github.com/allyourcodebase/openssl.git#cfb071de062624d8acbfad4c995e8092f4f6bc7a",
+            .hash = "12207c40cefa38fe90e4230dfba2e5c76b37e1ee36602512cad8ff0501f892002a65",
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}

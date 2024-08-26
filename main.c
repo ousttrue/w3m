@@ -290,7 +290,7 @@ static GC_warn_proc orig_GC_warn_proc = NULL;
 #define GC_WARN_KEEP_MAX (20)
 
 static void
-wrap_GC_warn_proc(char *msg, GC_word arg)
+wrap_GC_warn_proc(const char *msg, GC_word arg)
 {
     if (fmInitialized) {
 	/* *INDENT-OFF* */
