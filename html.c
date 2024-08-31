@@ -44,7 +44,7 @@ unsigned char ALST_INPUT[] =
     ATTR_CORE
 };
 unsigned char ALST_BUTTON[] =
-    { ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CORE };
+    { ATTR_TYPE, ATTR_VALUE, ATTR_NAME, ATTR_CORE, ATTR_ARIALBL };
 unsigned char ALST_TEXTAREA[] =
     { ATTR_COLS, ATTR_ROWS, ATTR_NAME, ATTR_READONLY, ATTR_CORE };
 unsigned char ALST_SELECT[] = { ATTR_NAME, ATTR_MULTIPLE, ATTR_CORE };
@@ -332,7 +332,7 @@ TagAttrInfo AttrMAP[MAX_TAGATTR] = {
     {"title", VTYPE_STR, 0},			/* 49 ATTR_TITLE          */
     {"accesskey", VTYPE_STR, 0},		/* 50 ATTR_ACCESSKEY      */
     {"public", VTYPE_NONE, 0},			/* 51 ATTR_PUBLIC         */
-    {NULL, VTYPE_NONE, 0},			/* 52 Undefined           */
+    {"aria-label", VTYPE_STR, 0},		/* 52 ATTR_ARIALBL        */
     {NULL, VTYPE_NONE, 0},			/* 53 Undefined           */
     {NULL, VTYPE_NONE, 0},			/* 54 Undefined           */
     {NULL, VTYPE_NONE, 0},			/* 55 Undefined           */

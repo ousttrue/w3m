@@ -328,6 +328,7 @@ typedef struct {
 #define ATTR_TITLE		49
 #define ATTR_ACCESSKEY		50
 #define ATTR_PUBLIC		51
+#define ATTR_ARIALBL		52
 
 /* Internal attribute */
 #define ATTR_XOFFSET		60

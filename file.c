@@ -3702,7 +3702,7 @@ Str
 process_button(struct parsed_tag *tag)
 {
     Str tmp = NULL;
-    char *p, *q, *r, *qq = "";
+    char *l, *p, *q, *r, *qq = "";
     int v;
 
     if (cur_form_id < 0) {
@@ -3718,6 +3718,9 @@ process_button(struct parsed_tag *tag)
     parsedtag_get_value(tag, ATTR_VALUE, &q);
     r = "";
     parsedtag_get_value(tag, ATTR_NAME, &r);
+    l = "";
+    if (parsedtag_get_value(tag, ATTR_ARIALBL, &l))
+	l = Strnew_m_charp("(", l, ")", NULL)->ptr;
 
     v = formtype(p);
     if (v == FORM_UNKNOWN)
@@ -3752,9 +3755,9 @@ process_button(struct parsed_tag *tag)
     if (displayLinkNumber)
 	Strcat(tmp, getLinkNumberStr(0));
     Strcat(tmp, Sprintf("<input_alt hseq=\"%d\" fid=\"%d\" type=\"%s\" "
-                       "name=\"%s\" value=\"%s\">",
+                       "name=\"%s\" value=\"%s\">%s",
                        cur_hseq++, cur_form_id, html_quote(p),
-                       html_quote(r), qq));
+                       html_quote(r), qq, l));
     return tmp;
 }
 
