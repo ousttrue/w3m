@@ -87,7 +87,7 @@ static void SigPipe(SIGNAL_ARG);
 #ifdef USE_MARK
 static const char *MarkString = NULL;
 #endif
-static const char *SearchString = NULL;
+const char *SearchString = NULL;
 int (*searchRoutine) (Buffer *, const char *);
 
 #ifndef __MINGW32_VERSION

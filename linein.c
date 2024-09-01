@@ -41,6 +41,7 @@ static void _editor(void);
 static void _enter(void);
 static void _esc(void);
 static void _inbrk(void);
+static void _isrch(void);
 static void _iword(void);
 static void _mvB(void);
 static void _mvE(void);
@@ -79,7 +80,7 @@ void (*InputKeymap[32]) (void) = {
 /*  C-p     C-q     C-r     C-s     C-t     C-u     C-v     C-w     */
     _prev,  _quo,   _bsw,   _noop,  _mvLw,  killb,  _quo,   _bsw,
 /*  C-x     C-y     C-z     C-[     C-\     C-]     C-^     C-_     */
-    _tcompl,_mvRw,  _noop,  _esc,   _noop,  _iword, _noop,  _noop,
+    _tcompl,_mvRw,  _noop,  _esc,   _isrch, _iword, _noop,  _noop,
 };
 /* *INDENT-ON* */
 
@@ -616,6 +617,13 @@ static void
 _noop(void)
 {
     return;
+}
+
+extern const char *SearchString; /* TODO(rkta): No forward decl here, but menu.c has it also as static. */
+static void
+_isrch(void)
+{
+    ins_char(Strnew_charp(SearchString));
 }
 
 static void
