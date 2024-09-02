@@ -230,7 +230,6 @@ fn build_exe(
             "func.c",
             "cookie.c",
             "history.c",
-            "backend.c",
 
             "anchor.c",
             "parsetagx.c",

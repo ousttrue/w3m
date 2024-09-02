@@ -417,16 +417,8 @@ int main(int argc, char **argv, char **envp) {
       } else if (!strcmp("-halfload", argv[i])) {
         w3m_halfload = TRUE;
         DefaultType = default_type = "text/html";
-      } else if (!strcmp("-backend", argv[i])) {
-        w3m_backend = TRUE;
-      } else if (!strcmp("-backend_batch", argv[i])) {
-        w3m_backend = TRUE;
-        if (++i >= argc)
-          usage();
-        if (!backend_batch_commands)
-          backend_batch_commands = newTextList();
-        pushText(backend_batch_commands, argv[i]);
-      } else if (!strcmp("-ppc", argv[i])) {
+      } 
+      else if (!strcmp("-ppc", argv[i])) {
         double ppc;
         if (++i >= argc)
           usage();
@@ -543,18 +535,14 @@ int main(int argc, char **argv, char **envp) {
   if (BookmarkFile == NULL)
     BookmarkFile = rcFile(BOOKMARK);
 
-  if (!w3m_backend) {
-    fmInit();
-    mySignal(SIGWINCH, resize_hook);
-  }
+  fmInit();
+  mySignal(SIGWINCH, resize_hook);
 
   sync_with_option();
   initCookie();
   if (UseHistory)
     loadHistory(URLHist);
 
-  if (w3m_backend)
-    backend();
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
   if (getimage_args) {
     char *image_url = conv_from_system(getimage_args[0]);

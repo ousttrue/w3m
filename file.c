@@ -1796,8 +1796,6 @@ page_loaded:
     proc = loadHTMLBuffer;
   else if (is_plain_text_type(t))
     proc = loadBuffer;
-  else if (w3m_backend)
-    ;
   else if (is_dump_text_type(t)) {
     if (!do_download && searchExtViewer(t) != NULL) {
       proc = DO_EXTERNAL;
@@ -1841,8 +1839,6 @@ page_loaded:
   if (b && b != NO_BUFFER) {
     b->real_scheme = f.scheme;
     b->real_type = real_type;
-    if (w3m_backend)
-      b->type = allocStr(t, -1);
     if (pu.label) {
       if (proc == loadHTMLBuffer) {
         Anchor *a;
@@ -5840,12 +5836,6 @@ void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
 #endif
   if (htmlenv1.title)
     newBuf->buffername = htmlenv1.title;
-  if (w3m_backend) {
-    TRAP_OFF;
-    print_internal_information(&htmlenv1);
-    backend_halfdump_buf = htmlenv1.buf;
-    return;
-  }
 phase2:
   newBuf->trbyte = trbyte + linelen;
   TRAP_OFF;
