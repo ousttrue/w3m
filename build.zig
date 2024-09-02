@@ -204,6 +204,7 @@ fn build_exe(
             "keybind.c",
 
             "main.c",
+            "defun.c",
             "file.c",
             "buffer.c",
             "display.c",
