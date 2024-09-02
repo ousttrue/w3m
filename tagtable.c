@@ -314,4 +314,4 @@ static HashItem_si *MyHashItemTbl[] = {
     &MyHashItem[204],
 };
 
-Hash_si tagtable = { 100, MyHashItemTbl };
+Hash_si tagtable = {100, MyHashItemTbl};

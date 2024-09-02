@@ -7,6 +7,4 @@ extern int LINES, COLS;
 extern int LASTLINE;
 #endif
 
-
-
-#endif				/* not TERMS_H */
+#endif /* not TERMS_H */

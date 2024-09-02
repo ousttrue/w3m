@@ -11,28 +11,28 @@
 #define PACKAGE "w3m"
 
 #define HELP_FILE "w3mhelp-w3m_en.html"
-#define HELP_CGI     "w3mhelp"
-#define W3MCONFIG    "w3mconfig"
-#define IMGDISPLAY   "w3mimgdisplay"
-#define XFACE2XPM    "xface2xpm"
+#define HELP_CGI "w3mhelp"
+#define W3MCONFIG "w3mconfig"
+#define IMGDISPLAY "w3mimgdisplay"
+#define XFACE2XPM "xface2xpm"
 
-#define BOOKMARK     "bookmark.html"
-#define CONFIG_FILE  "config"
-#define KEYMAP_FILE  "keymap"
-#define MENU_FILE    "menu"
-#define MOUSE_FILE   "mouse"
-#define COOKIE_FILE  "cookie"
+#define BOOKMARK "bookmark.html"
+#define CONFIG_FILE "config"
+#define KEYMAP_FILE "keymap"
+#define MENU_FILE "menu"
+#define MOUSE_FILE "mouse"
+#define COOKIE_FILE "cookie"
 #define HISTORY_FILE "history"
 
-#define PASSWD_FILE	RC_DIR "/passwd"
-#define PRE_FORM_FILE	RC_DIR "/pre_form"
-#define SITECONF_FILE	RC_DIR "/siteconf"
-#define USER_MAILCAP	RC_DIR "/mailcap"
-#define SYS_MAILCAP	CONF_DIR "/mailcap"
-#define USER_MIMETYPES	"~/.mime.types"
-#define SYS_MIMETYPES	ETC_DIR "/mime.types"
-#define USER_URIMETHODMAP	RC_DIR "/urimethodmap"
-#define SYS_URIMETHODMAP	CONF_DIR "/urimethodmap"
+#define PASSWD_FILE RC_DIR "/passwd"
+#define PRE_FORM_FILE RC_DIR "/pre_form"
+#define SITECONF_FILE RC_DIR "/siteconf"
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
+#define USER_MIMETYPES "~/.mime.types"
+#define SYS_MIMETYPES ETC_DIR "/mime.types"
+#define USER_URIMETHODMAP RC_DIR "/urimethodmap"
+#define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
 
 #define DEF_SAVE_FILE "index.html"
 
@@ -102,8 +102,8 @@
 #define DEF_EXT_BROWSER "/usr/bin/firefox"
 
 /* fallback viewer. mailcap override these configuration */
-#define DEF_IMAGE_VIEWER	"display"
-#define DEF_AUDIO_PLAYER	"showaudio"
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
 
 /* for USE_MIGEMO */
 #define DEF_MIGEMO_COMMAND ""
@@ -155,7 +155,7 @@ typedef long clen_t;
 #ifdef SETPGRP_VOID
 #define SETPGRP() setpgrp()
 #else
-#define SETPGRP() setpgrp(0,0)
+#define SETPGRP() setpgrp(0, 0)
 #endif
 #else /* no HAVE_SETPGRP; OS/2 EMX */
 #define SETPGRP() setpgid(0, 0)
@@ -167,18 +167,18 @@ typedef long clen_t;
 
 #define RETSIGTYPE void
 typedef RETSIGTYPE MySignalHandler;
-#define SIGNAL_ARG int _dummy	/* XXX */
-#define SIGNAL_ARGLIST 0	/* XXX */
+#define SIGNAL_ARG int _dummy /* XXX */
+#define SIGNAL_ARGLIST 0      /* XXX */
 #define SIGNAL_RETURN return
 
 #ifdef HAVE_SIGSETJMP
-# define SETJMP(env) sigsetjmp(env,1)
-# define LONGJMP(env,val) siglongjmp(env,val)
-# define JMP_BUF sigjmp_buf
+#define SETJMP(env) sigsetjmp(env, 1)
+#define LONGJMP(env, val) siglongjmp(env, val)
+#define JMP_BUF sigjmp_buf
 #else
-# define SETJMP(env) setjmp(env)
-# define LONGJMP(env,val) longjmp(env, val)
-# define JMP_BUF jmp_buf
+#define SETJMP(env) setjmp(env)
+#define LONGJMP(env, val) longjmp(env, val)
+#define JMP_BUF jmp_buf
 #endif
 
 #ifndef HAVE_SRAND48
@@ -194,15 +194,15 @@ typedef RETSIGTYPE MySignalHandler;
 #define lstat stat
 #endif
 
-#if defined( __CYGWIN32__ ) && !defined( __CYGWIN__ )
+#if defined(__CYGWIN32__) && !defined(__CYGWIN__)
 #define __CYGWIN__
 #endif
 
-#if defined( __CYGWIN__ ) || defined( __EMX__ )
+#if defined(__CYGWIN__) || defined(__EMX__)
 #define SUPPORT_DOS_DRIVE_PREFIX 1
 #endif
 
-#if defined( __CYGWIN__ )
+#if defined(__CYGWIN__)
 #define SUPPORT_NETBIOS_SHARE 1
 #define SUPPORT_WIN9X_CONSOLE_MBCS 1
 #endif
@@ -212,38 +212,37 @@ typedef RETSIGTYPE MySignalHandler;
 #endif
 
 #if defined(__DJGPP__)
-#define DEFAULT_TERM	"dosansi"
+#define DEFAULT_TERM "dosansi"
 #else
-#define DEFAULT_TERM	0	/* XXX */
+#define DEFAULT_TERM 0 /* XXX */
 #endif
 
 #if defined(__EMX__) /* use $extension? */
-#define GUNZIP_CMDNAME  "gzip"
+#define GUNZIP_CMDNAME "gzip"
 #define BUNZIP2_CMDNAME "bzip2"
-#define INFLATE_CMDNAME  "inflate.exe"
-#define W3MBOOKMARK_CMDNAME	"w3mbookmark.exe"
-#define W3MHELPERPANEL_CMDNAME	"w3mhelperpanel.exe"
-#define DEV_NULL_PATH	"nul"
-#define DEV_TTY_PATH	"con"
-#define CGI_EXTENSION	".cmd"
+#define INFLATE_CMDNAME "inflate.exe"
+#define W3MBOOKMARK_CMDNAME "w3mbookmark.exe"
+#define W3MHELPERPANEL_CMDNAME "w3mhelperpanel.exe"
+#define DEV_NULL_PATH "nul"
+#define DEV_TTY_PATH "con"
+#define CGI_EXTENSION ".cmd"
 #define USE_PATH_ENVVAR
 #else
-#define GUNZIP_CMDNAME  "gunzip"
+#define GUNZIP_CMDNAME "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
-#define INFLATE_CMDNAME	"inflate"
-#define W3MBOOKMARK_CMDNAME	"w3mbookmark"
-#define W3MHELPERPANEL_CMDNAME	"w3mhelperpanel"
-#define DEV_NULL_PATH	"/dev/null"
-#define DEV_TTY_PATH	"/dev/tty"
-#define CGI_EXTENSION	".cgi"
+#define INFLATE_CMDNAME "inflate"
+#define W3MBOOKMARK_CMDNAME "w3mbookmark"
+#define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
+#define DEV_NULL_PATH "/dev/null"
+#define DEV_TTY_PATH "/dev/tty"
+#define CGI_EXTENSION ".cgi"
 #endif
 #define BROTLI_CMDNAME "brotli"
 
-#define PATH_SEPARATOR	':'
-#define GUNZIP_NAME  "gunzip"
+#define PATH_SEPARATOR ':'
+#define GUNZIP_NAME "gunzip"
 #define BUNZIP2_NAME "bunzip2"
 #define INFLATE_NAME "inflate"
 #define BROTLI_NAME "brotli"
-
 
 #endif /* CONFIG_H_SEEN */

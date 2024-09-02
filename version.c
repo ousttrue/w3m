@@ -3,4 +3,4 @@
 
 #ifndef FM_H
 char *w3m_version = CURRENT_VERSION;
-#endif				/* not FM_H */
+#endif /* not FM_H */

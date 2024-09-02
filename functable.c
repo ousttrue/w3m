@@ -265,4 +265,4 @@ static HashItem_si *MyHashItemTbl[] = {
     &MyHashItem[156],
 };
 
-Hash_si functable = { 100, MyHashItemTbl };
+Hash_si functable = {100, MyHashItemTbl};

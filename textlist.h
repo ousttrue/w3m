@@ -8,15 +8,15 @@
 /* General doubly linked list */
 
 typedef struct _listitem {
-    void *ptr;
-    struct _listitem *next;
-    struct _listitem *prev;
+  void *ptr;
+  struct _listitem *next;
+  struct _listitem *prev;
 } ListItem;
 
 typedef struct _generallist {
-    ListItem *first;
-    ListItem *last;
-    int nitem;
+  ListItem *first;
+  ListItem *last;
+  int nitem;
 } GeneralList;
 
 extern ListItem *newListItem(void *s, ListItem *n, ListItem *p);
@@ -30,49 +30,52 @@ extern GeneralList *appendGeneralList(GeneralList *, GeneralList *);
 /* Text list */
 
 typedef struct _textlistitem {
-    char *ptr;
-    struct _textlistitem *next;
-    struct _textlistitem *prev;
+  char *ptr;
+  struct _textlistitem *next;
+  struct _textlistitem *prev;
 } TextListItem;
 
 typedef struct _textlist {
-    TextListItem *first;
-    TextListItem *last;
-    int nitem;
+  TextListItem *first;
+  TextListItem *last;
+  int nitem;
 } TextList;
 
 #define newTextList() ((TextList *)newGeneralList())
-#define pushText(tl, s) pushValue((GeneralList *)(tl), (void *)allocStr((s),-1))
+#define pushText(tl, s)                                                        \
+  pushValue((GeneralList *)(tl), (void *)allocStr((s), -1))
 #define popText(tl) ((char *)popValue((GeneralList *)(tl)))
 #define rpopText(tl) ((char *)rpopValue((GeneralList *)(tl)))
 #define delText(tl, i) delValue((GeneralList *)(tl), (void *)(i))
-#define appendTextList(tl, tl2) ((TextList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
+#define appendTextList(tl, tl2)                                                \
+  ((TextList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
 
 /* Line text list */
 
 typedef struct _TextLine {
-    Str line;
-    int pos;
+  Str line;
+  int pos;
 } TextLine;
 
 typedef struct _textlinelistitem {
-    TextLine *ptr;
-    struct _textlinelistitem *next;
-    struct _textlinelistitem *prev;
+  TextLine *ptr;
+  struct _textlinelistitem *next;
+  struct _textlinelistitem *prev;
 } TextLineListItem;
 
 typedef struct _textlinelist {
-    TextLineListItem *first;
-    TextLineListItem *last;
-    int nitem;
+  TextLineListItem *first;
+  TextLineListItem *last;
+  int nitem;
 } TextLineList;
 
 extern TextLine *newTextLine(Str line, int pos);
 extern void appendTextLine(TextLineList *tl, Str line, int pos);
 #define newTextLineList() ((TextLineList *)newGeneralList())
-#define pushTextLine(tl,lbuf) pushValue((GeneralList *)(tl),(void *)(lbuf))
+#define pushTextLine(tl, lbuf) pushValue((GeneralList *)(tl), (void *)(lbuf))
 #define popTextLine(tl) ((TextLine *)popValue((GeneralList *)(tl)))
 #define rpopTextLine(tl) ((TextLine *)rpopValue((GeneralList *)(tl)))
-#define appendTextLineList(tl, tl2) ((TextLineList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
+#define appendTextLineList(tl, tl2)                                            \
+  ((TextLineList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
 
-#endif				/* not TEXTLIST_H */
+#endif /* not TEXTLIST_H */
