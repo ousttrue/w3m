@@ -6,12 +6,6 @@
 #undef USE_M17N
 #else				/* DUMMY */
 #include "fm.h"
-#ifdef USE_M17N
-#ifdef USE_UNICODE
-#include "ucs.h"
-#include "utf8.h"
-#endif
-#endif
 #endif				/* DUMMY */
 
 /* *INDENT-OFF* */
@@ -49,25 +43,8 @@ conv_entity(unsigned int c)
     if (c < 0x100) {		/* Latin1 (ISO 8859-1) */
 	if (UseAltEntity)
 	    return alt_latin1[c - 0xa0];
-#ifdef USE_M17N
-	return wc_conv_n(&b, 1, WC_CES_ISO_8859_1, InnerCharset)->ptr;
-#else
 	return Strnew_charp_n(&b, 1)->ptr;
-#endif
     }
-#ifdef USE_M17N
-#ifdef USE_UNICODE
-    if (c <= WC_C_UCS4_END) {	/* Unicode */
-	char *chk;
-	wc_uchar utf8[7];
-	wc_ucs_to_utf8(c, utf8);
-	/* we eventually need to display it so check DisplayCharset */
-	chk = wc_conv((char *)utf8, WC_CES_UTF_8, DisplayCharset ? DisplayCharset : WC_CES_US_ASCII)->ptr;
-	if (strcmp(chk, "?") != 0)
-	    return wc_conv((char *)utf8, WC_CES_UTF_8, InnerCharset)->ptr;
-    }
-#endif
-#endif
     if (c == 0x201c || c == 0x201f || c == 0x201d || c == 0x2033)
 	return "\"";
     if (c == 0x2018 || c == 0x201b || c == 0x2019 || c == 0x2032)

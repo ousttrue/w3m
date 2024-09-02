@@ -19,166 +19,6 @@ searchMapList(Buffer *buf, char *name)
     return ml;
 }
 
-#ifdef USE_IMAGE
-static int
-inMapArea(MapArea * a, int x, int y)
-{
-    int i;
-    double r1, r2, s, c, t;
-
-    if (!a)
-	return FALSE;
-    switch (a->shape) {
-    case SHAPE_RECT:
-	if (x >= a->coords[0] && y >= a->coords[1] &&
-	    x <= a->coords[2] && y <= a->coords[3])
-	    return TRUE;
-	break;
-    case SHAPE_CIRCLE:
-	if ((x - a->coords[0]) * (x - a->coords[0])
-	    + (y - a->coords[1]) * (y - a->coords[1])
-	    <= a->coords[2] * a->coords[2])
-	    return TRUE;
-	break;
-    case SHAPE_POLY:
-	for (t = 0, i = 0; i < a->ncoords; i += 2) {
-	    r1 = sqrt((double)(x - a->coords[i]) * (x - a->coords[i])
-		      + (double)(y - a->coords[i + 1]) * (y -
-							  a->coords[i + 1]));
-	    r2 = sqrt((double)(x - a->coords[i + 2]) * (x - a->coords[i + 2])
-		      + (double)(y - a->coords[i + 3]) * (y -
-							  a->coords[i + 3]));
-	    if (r1 == 0 || r2 == 0)
-		return TRUE;
-	    s = ((double)(x - a->coords[i]) * (y - a->coords[i + 3])
-		 - (double)(x - a->coords[i + 2]) * (y -
-						     a->coords[i +
-							       1])) / r1 / r2;
-	    c = ((double)(x - a->coords[i]) * (x - a->coords[i + 2])
-		 + (double)(y - a->coords[i + 1]) * (y -
-						     a->coords[i +
-							       3])) / r1 / r2;
-	    t += atan2(s, c);
-	}
-	if (fabs(t) > 2 * 3.14)
-	    return TRUE;
-	break;
-    case SHAPE_DEFAULT:
-	return TRUE;
-    default:
-	break;
-    }
-    return FALSE;
-}
-
-static int
-nearestMapArea(MapList *ml, int x, int y)
-{
-    ListItem *al;
-    MapArea *a;
-    int i, l, n = -1, min = -1, limit = pixel_per_char * pixel_per_char
-	+ pixel_per_line * pixel_per_line;
-
-    if (!ml || !ml->area)
-	return n;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-	a = (MapArea *) al->ptr;
-	if (a) {
-	    l = (a->center_x - x) * (a->center_x - x)
-		+ (a->center_y - y) * (a->center_y - y);
-	    if ((min < 0 || l < min) && l < limit) {
-		n = i;
-		min = l;
-	    }
-	}
-    }
-    return n;
-}
-
-static int
-searchMapArea(Buffer *buf, MapList *ml, Anchor *a_img)
-{
-    ListItem *al;
-    MapArea *a;
-    int i, n;
-    int px, py;
-
-    if (!(ml && ml->area && ml->area->nitem))
-	return -1;
-    if (!getMapXY(buf, a_img, &px, &py))
-	return -1;
-    n = -ml->area->nitem;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-	a = (MapArea *) al->ptr;
-	if (!a)
-	    continue;
-	if (n < 0 && inMapArea(a, px, py)) {
-	    if (a->shape == SHAPE_DEFAULT) {
-		if (n == -ml->area->nitem)
-		    n = -i;
-	    }
-	    else
-		n = i;
-	}
-    }
-    if (n == -ml->area->nitem)
-	return nearestMapArea(ml, px, py);
-    else if (n < 0)
-	return -n;
-    return n;
-}
-
-MapArea *
-retrieveCurrentMapArea(Buffer *buf)
-{
-    Anchor *a_img, *a_form;
-    FormItemList *fi;
-    MapList *ml;
-    ListItem *al;
-    MapArea *a;
-    int i, n;
-
-    a_img = retrieveCurrentImg(buf);
-    if (!(a_img && a_img->image && a_img->image->map))
-	return NULL;
-    a_form = retrieveCurrentForm(buf);
-    if (!(a_form && a_form->url))
-	return NULL;
-    fi = (FormItemList *)a_form->url;
-    if (!(fi && fi->parent && fi->parent->item))
-	return NULL;
-    fi = fi->parent->item;
-    ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
-    if (!ml)
-	return NULL;
-    n = searchMapArea(buf, ml, a_img);
-    if (n < 0)
-	return NULL;
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-	a = (MapArea *) al->ptr;
-	if (a && i == n)
-	    return a;
-    }
-    return NULL;
-}
-
-int
-getMapXY(Buffer *buf, Anchor *a, int *x, int *y)
-{
-    if (!buf || !a || !a->image || !x || !y)
-	return 0;
-    *x = (int)((buf->currentColumn + buf->cursorX
-		- COLPOS(buf->currentLine, a->start.pos) + 0.5)
-	       * pixel_per_char) - a->image->xoffset;
-    *y = (int)((buf->currentLine->linenumber - a->image->y + 0.5)
-	       * pixel_per_line) - a->image->yoffset;
-    if (*x <= 0)
-	*x = 1;
-    if (*y <= 0)
-	*y = 1;
-    return 1;
-}
-#endif
 
 Anchor *
 retrieveCurrentMap(Buffer *buf)
@@ -204,42 +44,13 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
     ListItem *al;
     int i, selected = -1;
     int initial = 0;
-#ifdef MENU_MAP
-    MapArea *a;
-    char **label;
-#endif
 
     ml = searchMapList(buf, name);
     if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
 	return NULL;
 
-#ifdef USE_IMAGE
-    initial = searchMapArea(buf, ml, a_img);
-    if (initial < 0)
-	initial = 0;
-    else if (!image_map_list) {
-	selected = initial;
-	goto map_end;
-    }
-#endif
 
-#ifdef MENU_MAP
-    label = New_N(char *, ml->area->nitem + 1);
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
-	a = (MapArea *) al->ptr;
-	if (a)
-	    label[i] = *a->alt ? a->alt : a->url;
-	else
-	    label[i] = "";
-    }
-    label[ml->area->nitem] = NULL;
 
-    optionMenu(x, y, label, &selected, initial, NULL);
-#endif
-
-#ifdef USE_IMAGE
-  map_end:
-#endif
     if (selected >= 0) {
 	for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
 	    if (al->ptr && i == selected)
@@ -250,7 +61,6 @@ follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y)
 }
 #endif
 
-#ifndef MENU_MAP
 char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
@@ -289,108 +99,17 @@ follow_map_panel(Buffer *buf, char *name)
     Strcat_charp(mappage, "</table></body></html>");
 
     newbuf = loadHTMLString(mappage);
-#ifdef USE_M17N
-    if (newbuf)
-	newbuf->document_charset = buf->document_charset;
-#endif
     return newbuf;
 }
-#endif
 
 MapArea *
 newMapArea(char *url, char *target, char *alt, char *shape, char *coords)
 {
     MapArea *a = New(MapArea);
-#ifdef USE_IMAGE
-    char *p;
-    int i, max;
-#endif
 
     a->url = url;
     a->target = target;
     a->alt = alt ? alt : "";
-#ifdef USE_IMAGE
-    a->shape = SHAPE_RECT;
-    if (shape) {
-	if (!strcasecmp(shape, "default"))
-	    a->shape = SHAPE_DEFAULT;
-	else if (!strncasecmp(shape, "rect", 4))
-	    a->shape = SHAPE_RECT;
-	else if (!strncasecmp(shape, "circ", 4))
-	    a->shape = SHAPE_CIRCLE;
-	else if (!strncasecmp(shape, "poly", 4))
-	    a->shape = SHAPE_POLY;
-	else
-	    a->shape = SHAPE_UNKNOWN;
-    }
-    a->coords = NULL;
-    a->ncoords = 0;
-    a->center_x = 0;
-    a->center_y = 0;
-    if (a->shape == SHAPE_UNKNOWN || a->shape == SHAPE_DEFAULT)
-	return a;
-    if (!coords) {
-	a->shape = SHAPE_UNKNOWN;
-	return a;
-    }
-    if (a->shape == SHAPE_RECT) {
-	a->coords = New_N(short, 4);
-	a->ncoords = 4;
-    }
-    else if (a->shape == SHAPE_CIRCLE) {
-	a->coords = New_N(short, 3);
-	a->ncoords = 3;
-    }
-    max = a->ncoords;
-    for (i = 0, p = coords; (a->shape == SHAPE_POLY || i < a->ncoords) && *p;) {
-	while (IS_SPACE(*p))
-	    p++;
-	if (!IS_DIGIT(*p) && *p != '-' && *p != '+')
-	    break;
-	if (a->shape == SHAPE_POLY) {
-	    if (max <= i) {
-		max = i ? i * 2 : 6;
-		a->coords = New_Reuse(short, a->coords, max + 2);
-	    }
-	    a->ncoords++;
-	}
-	a->coords[i] = (short)atoi(p);
-	i++;
-	if (*p == '-' || *p == '+')
-	    p++;
-	while (IS_DIGIT(*p))
-	    p++;
-	if (*p != ',' && !IS_SPACE(*p))
-	    break;
-	while (IS_SPACE(*p))
-	    p++;
-	if (*p == ',')
-	    p++;
-    }
-    if (i != a->ncoords || (a->shape == SHAPE_POLY && a->ncoords < 6)) {
-	a->shape = SHAPE_UNKNOWN;
-	a->coords = NULL;
-	a->ncoords = 0;
-	return a;
-    }
-    if (a->shape == SHAPE_POLY) {
-	a->ncoords = a->ncoords / 2 * 2;
-	a->coords[a->ncoords] = a->coords[0];
-	a->coords[a->ncoords + 1] = a->coords[1];
-    }
-    if (a->shape == SHAPE_CIRCLE) {
-	a->center_x = a->coords[0];
-	a->center_y = a->coords[1];
-    }
-    else {
-	for (i = 0; i < a->ncoords / 2; i++) {
-	    a->center_x += a->coords[2 * i];
-	    a->center_y += a->coords[2 * i + 1];
-	}
-	a->center_x /= a->ncoords / 2;
-	a->center_y /= a->ncoords / 2;
-    }
-#endif
     return a;
 }
 
@@ -497,13 +216,11 @@ append_frame_info(Buffer *buf, Str html, struct frameset *set, int level)
 		else
 		    p = q;
 		Strcat_m_charp(html, " ", p, "</a></pre_int><br>\n", NULL);
-#ifdef USE_SSL
 		if (frame.body->ssl_certificate)
 		    Strcat_m_charp(html,
 				   "<blockquote><h2>SSL certificate</h2><pre>\n",
 				   html_quote(frame.body->ssl_certificate),
 				   "</pre></blockquote>\n", NULL);
-#endif
 		break;
 	    case F_FRAMESET:
 		append_frame_info(buf, html, frame.set, level + 1);
@@ -526,10 +243,6 @@ page_info_panel(Buffer *buf)
     struct frameset *f_set = NULL;
     int all;
     char *p, *q;
-#ifdef USE_M17N
-    wc_ces_list *list;
-    char charset[16];
-#endif
     Buffer *newbuf;
 
     Strcat_charp(tmp, "<html><head>\
@@ -541,9 +254,6 @@ page_info_panel(Buffer *buf)
     all = buf->allLine;
     if (all == 0 && buf->lastLine)
 	all = buf->lastLine->linenumber;
-#ifdef USE_M17N
-    Strcat_charp(tmp, "<form method=internal action=charset>");
-#endif
     p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
 		   "<tr valign=top><td nowrap>Title<td>",
@@ -554,21 +264,6 @@ page_info_panel(Buffer *buf)
 		   buf->real_type ? html_quote(buf->real_type) : "unknown",
 		   "<tr valign=top><td nowrap>Last Modified<td>",
 		   html_quote(last_modified(buf)), NULL);
-#ifdef USE_M17N
-    if (buf->document_charset != InnerCharset) {
-	list = wc_get_ces_list();
-	Strcat_charp(tmp,
-		     "<tr><td nowrap>Document Charset<td><select name=charset>");
-	for (; list->name != NULL; list++) {
-	    sprintf(charset, "%d", (unsigned int)list->id);
-	    Strcat_m_charp(tmp, "<option value=", charset,
-			   (buf->document_charset == list->id) ? " selected>"
-			   : ">", list->desc, NULL);
-	}
-	Strcat_charp(tmp, "</select>");
-	Strcat_charp(tmp, "<tr><td><td><input type=submit value=Change>");
-    }
-#endif
     Strcat_m_charp(tmp,
 		   "<tr valign=top><td nowrap>Number of lines<td>",
 		   Sprintf("%d", all)->ptr,
@@ -614,9 +309,6 @@ page_info_panel(Buffer *buf)
 	    append_map_info(buf, tmp, fi->parent->item);
     }
     Strcat_charp(tmp, "</table>\n");
-#ifdef USE_M17N
-    Strcat_charp(tmp, "</form>");
-#endif
 
     append_link_info(buf, tmp, buf->linklist);
 
@@ -638,17 +330,11 @@ page_info_panel(Buffer *buf)
 	Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
 	append_frame_info(buf, tmp, f_set, 0);
     }
-#ifdef USE_SSL
     if (buf->ssl_certificate)
 	Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
 		       html_quote(buf->ssl_certificate), "</pre>\n", NULL);
-#endif
   end:
     Strcat_charp(tmp, "</body></html>");
     newbuf = loadHTMLString(tmp);
-#ifdef USE_M17N
-    if (newbuf)
-	newbuf->document_charset = buf->document_charset;
-#endif
     return newbuf;
 }

@@ -11,11 +11,6 @@
 
 extern Str *textarea_str;
 extern int max_textarea;
-#ifdef MENU_SELECT
-extern FormSelectOption *select_option;
-extern int max_select;
-#include "menu.h"
-#endif				/* MENU_SELECT */
 
 /* *INDENT-OFF* */
 struct {
@@ -24,13 +19,8 @@ struct {
 } internal_action[] = {
     {"map", follow_map}, 
     {"option", panel_set_option},
-#ifdef USE_COOKIE
     {"cookie", set_cookie_flag},
-#endif				/* USE_COOKIE */
     {"download", download_action},
-#ifdef USE_M17N
-    { "charset", change_charset },
-#endif
     {"none", NULL},
     {NULL, NULL},
 };
@@ -44,9 +34,6 @@ newFormList(char *action, char *method, char *charset, char *enctype,
     Str a = Strnew_charp(action);
     int m = FORM_METHOD_GET;
     int e = FORM_ENCTYPE_URLENCODED;
-#ifdef USE_M17N
-    wc_ces c = 0;
-#endif
 
     if (method == NULL || !strcasecmp(method, "get"))
 	m = FORM_METHOD_GET;
@@ -61,18 +48,11 @@ newFormList(char *action, char *method, char *charset, char *enctype,
 	e = FORM_ENCTYPE_MULTIPART;
     }
 
-#ifdef USE_M17N
-    if (charset != NULL)
-	c = wc_guess_charset(charset, 0);
-#endif
 
     l = New(struct form_list);
     l->item = l->lastitem = NULL;
     l->action = a;
     l->method = m;
-#ifdef USE_M17N
-    l->charset = c;
-#endif
     l->enctype = e;
     l->target = target;
     l->name = name;
@@ -126,25 +106,12 @@ formList_addInput(struct form_list *fl, struct parsed_tag *tag)
     if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &i)
 	&& i >= 0 && i < max_textarea)
 	item->value = item->init_value = textarea_str[i];
-#ifdef MENU_SELECT
-    if (parsedtag_get_value(tag, ATTR_SELECTNUMBER, &i)
-	&& i >= 0 && i < max_select)
-	item->select_option = select_option[i].first;
-#endif				/* MENU_SELECT */
     if (parsedtag_get_value(tag, ATTR_ROWS, &p))
 	item->rows = atoi(p);
     if (item->type == FORM_UNKNOWN) {
 	/* type attribute is missing. Ignore the tag. */
 	return NULL;
     }
-#ifdef MENU_SELECT
-    if (item->type == FORM_SELECT) {
-	chooseSelectOption(item, item->select_option);
-	item->init_selected = item->selected;
-	item->init_value = item->value;
-	item->init_label = item->label;
-    }
-#endif				/* MENU_SELECT */
     if (item->type == FORM_INPUT_FILE && item->value && item->value->length) {
 	/* security hole ! */
 	return NULL;
@@ -255,15 +222,6 @@ formResetBuffer(Buffer *buf, AnchorList *formitem)
 	    f1->init_checked = f2->init_checked;
 	    break;
 	case FORM_SELECT:
-#ifdef MENU_SELECT
-	    f1->select_option = f2->select_option;
-	    f1->value = f2->value;
-	    f1->label = f2->label;
-	    f1->selected = f2->selected;
-	    f1->init_value = f2->init_value;
-	    f1->init_label = f2->init_label;
-	    f1->init_selected = f2->init_selected;
-#endif				/* MENU_SELECT */
 	    break;
 	default:
 	    continue;
@@ -282,10 +240,6 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
 
     for (p = *str, w = 0, pos = 0; *p && w < width;) {
 	c_type = get_mctype((unsigned char *)p);
-#ifdef USE_M17N
-	c_len = get_mclen(p);
-	c_width = get_mcwidth(p);
-#endif
 	if (c_type == PC_CTRL) {
 	    if (newline && *p == '\n')
 		break;
@@ -295,22 +249,8 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
 	    }
 	}
 	else if (password) {
-#ifdef USE_M17N
-	    if (w + c_width > width)
-		break;
-#endif
 	    w += c_width;
 	    pos += c_width;
-#ifdef USE_M17N
-	}
-	else if (c_type & PC_UNKNOWN) {
-	    w++;
-	    pos++;
-	}
-	else {
-	    if (w + c_width > width)
-		break;
-#endif
 	    w += c_width;
 	    pos += c_len;
 	}
@@ -328,10 +268,6 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
     effect = CharEffect(line->propBuf[spos]);
     for (p = *str, w = 0, pos = spos; *p && w < width;) {
 	c_type = get_mctype((unsigned char *)p);
-#ifdef USE_M17N
-	c_len = get_mclen(p);
-	c_width = get_mcwidth(p);
-#endif
 	if (c_type == PC_CTRL) {
 	    if (newline && *p == '\n')
 		break;
@@ -343,42 +279,17 @@ form_update_line(Line *line, char **str, int spos, int epos, int width,
 	    }
 	}
 	else if (password) {
-#ifdef USE_M17N
-	    if (w + c_width > width)
-		break;
-#endif
 	    for (i = 0; i < c_width; i++) {
 		buf[pos] = '*';
 		prop[pos] = effect | PC_ASCII;
 		pos++;
 		w++;
 	    }
-#ifdef USE_M17N
-	}
-	else if (c_type & PC_UNKNOWN) {
-	    buf[pos] = ' ';
-	    prop[pos] = effect | PC_ASCII;
-	    pos++;
-	    w++;
 	}
 	else {
-	    if (w + c_width > width)
-		break;
-#else
-	}
-	else {
-#endif
 	    buf[pos] = *p;
 	    prop[pos] = effect | c_type;
 	    pos++;
-#ifdef USE_M17N
-	    c_type = (c_type & ~PC_WCHAR1) | PC_WCHAR2;
-	    for (i = 1; i < c_len; i++) {
-		buf[pos] = p[i];
-		prop[pos] = effect | c_type;
-		pos++;
-	    }
-#endif
 	    w += c_width;
 	}
 	p += c_len;
@@ -429,9 +340,6 @@ formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form)
     case FORM_INPUT_PASSWORD:
     case FORM_INPUT_CHECKBOX:
     case FORM_INPUT_RADIO:
-#ifdef MENU_SELECT
-    case FORM_SELECT:
-#endif				/* MENU_SELECT */
 	spos = a->start.pos;
 	epos = a->end.pos;
 	break;
@@ -454,14 +362,6 @@ formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form)
     case FORM_INPUT_FILE:
     case FORM_INPUT_PASSWORD:
     case FORM_TEXTAREA:
-#ifdef MENU_SELECT
-    case FORM_SELECT:
-	if (form->type == FORM_SELECT) {
-	    p = form->label->ptr;
-	    updateSelectOption(form, form->select_option);
-	}
-	else
-#endif				/* MENU_SELECT */
 	{
 	    if (!form->value)
 		break;
@@ -534,10 +434,6 @@ textfieldrep(Str s, int width)
 	    break;
 	if (c_type == PC_CTRL)
 	    Strcat_char(n, ' ');
-#ifdef USE_M17N
-	else if (c_type & PC_UNKNOWN)
-	    Strcat_char(n, ' ');
-#endif
 	else if (s->ptr[i] == '&')
 	    Strcat_charp(n, "&amp;");
 	else if (s->ptr[i] == '<')
@@ -574,9 +470,6 @@ form_fputs_decode(Str s, FILE * f)
 	    break;
 	}
     }
-#ifdef USE_M17N
-    z = wc_Str_conv_strict(z, InnerCharset, DisplayCharset);
-#endif
     Strfputs(z, f);
 }
 
@@ -587,10 +480,6 @@ input_textarea(FormItemList *fi)
     char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     Str tmp;
     FILE *f;
-#ifdef USE_M17N
-    wc_ces charset = DisplayCharset;
-    wc_uint8 auto_detect;
-#endif
 
     f = fopen(tmpf, "w");
     if (f == NULL) {
@@ -615,10 +504,6 @@ input_textarea(FormItemList *fi)
 	goto input_end;
     }
     fi->value = Strnew();
-#ifdef USE_M17N
-    auto_detect = WcOption.auto_detect;
-    WcOption.auto_detect = WC_OPT_DETECT_ON;
-#endif
     while (tmp = Strfgets(f), tmp->length > 0) {
 	if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
 	    /* null line with bare LF */
@@ -632,9 +517,6 @@ input_textarea(FormItemList *fi)
 	tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
 	Strcat(fi->value, tmp);
     }
-#ifdef USE_M17N
-    WcOption.auto_detect = auto_detect;
-#endif
     fclose(f);
   input_end:
     unlink(tmpf);
@@ -654,97 +536,6 @@ do_internal(char *action, char *data)
     }
 }
 
-#ifdef MENU_SELECT
-void
-addSelectOption(FormSelectOption *fso, Str value, Str label, int chk)
-{
-    FormSelectOptionItem *o;
-    o = New(FormSelectOptionItem);
-    if (value == NULL)
-	value = label;
-    o->value = value;
-    Strremovefirstspaces(label);
-    Strremovetrailingspaces(label);
-    o->label = label;
-    o->checked = chk;
-    o->next = NULL;
-    if (fso->first == NULL)
-	fso->first = fso->last = o;
-    else {
-	fso->last->next = o;
-	fso->last = o;
-    }
-}
-
-void
-chooseSelectOption(FormItemList *fi, FormSelectOptionItem *item)
-{
-    FormSelectOptionItem *opt;
-    int i;
-
-    fi->selected = 0;
-    if (item == NULL) {
-	fi->value = Strnew_size(0);
-	fi->label = Strnew_size(0);
-	return;
-    }
-    fi->value = item->value;
-    fi->label = item->label;
-    for (i = 0, opt = item; opt != NULL; i++, opt = opt->next) {
-	if (opt->checked) {
-	    fi->value = opt->value;
-	    fi->label = opt->label;
-	    fi->selected = i;
-	    break;
-	}
-    }
-    updateSelectOption(fi, item);
-}
-
-void
-updateSelectOption(FormItemList *fi, FormSelectOptionItem *item)
-{
-    int i;
-
-    if (fi == NULL || item == NULL)
-	return;
-    for (i = 0; item != NULL; i++, item = item->next) {
-	if (i == fi->selected)
-	    item->checked = TRUE;
-	else
-	    item->checked = FALSE;
-    }
-}
-
-int
-formChooseOptionByMenu(struct form_item_list *fi, int x, int y)
-{
-    int i, n, selected = -1, init_select = fi->selected;
-    FormSelectOptionItem *opt;
-    char **label;
-
-    for (n = 0, opt = fi->select_option; opt != NULL; n++, opt = opt->next) ;
-    label = New_N(char *, n + 1);
-    for (i = 0, opt = fi->select_option; opt != NULL; i++, opt = opt->next)
-	label[i] = opt->label->ptr;
-    label[n] = NULL;
-
-    optionMenu(x, y, label, &selected, init_select, NULL);
-
-    if (selected < 0)
-	return 0;
-    for (i = 0, opt = fi->select_option; opt != NULL; i++, opt = opt->next) {
-	if (i == selected) {
-	    fi->selected = selected;
-	    fi->value = opt->value;
-	    fi->label = opt->label;
-	    break;
-	}
-    }
-    updateSelectOption(fi, fi->select_option);
-    return 1;
-}
-#endif				/* MENU_SELECT */
 
 void
 form_write_data(FILE * f, char *boundary, char *name, char *value)
@@ -983,10 +774,6 @@ preFormUpdateBuffer(Buffer *buf)
     Anchor *a;
     FormList *fl;
     FormItemList *fi;
-#ifdef MENU_SELECT
-    FormSelectOptionItem *opt;
-    int j;
-#endif
 
     if (!buf || !buf->formitem || !PreForm)
 	return;
@@ -1046,22 +833,6 @@ preFormUpdateBuffer(Buffer *buf)
 			!Strcmp_charp(fi->value, pi->value))
 			formRecheckRadio(a, buf, fi);
 		    break;
-#ifdef MENU_SELECT
-		case FORM_SELECT:
-		    for (j = 0, opt = fi->select_option; opt != NULL;
-			 j++, opt = opt->next) {
-			if (pi->value && opt->value &&
-			    !Strcmp_charp(opt->value, pi->value)) {
-			    fi->selected = j;
-			    fi->value = opt->value;
-			    fi->label = opt->label;
-			    updateSelectOption(fi, fi->select_option);
-			    formUpdateBuffer(a, buf, fi);
-			    break;
-			}
-		    }
-		    break;
-#endif
 		}
 	    }
 	}

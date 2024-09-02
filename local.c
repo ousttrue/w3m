@@ -10,15 +10,9 @@
 #ifdef HAVE_READLINK
 #include <unistd.h>
 #endif				/* HAVE_READLINK */
-#ifdef __EMX__
-#include <limits.h>		/* _MAX_PATH ? */
-#endif				/* __EMX__ */
 #include "local.h"
 #include "hash.h"
 
-#ifdef __MINGW32_VERSION
-#include <winsock.h>
-#endif
 
 #define CGIFN_NORMAL     0
 #define CGIFN_LIBDIR     1
@@ -196,10 +190,8 @@ check_local_cgi(char *file, int status)
 	return -1;
     if (S_ISDIR(st.st_mode))
 	return -1;
-#ifndef __MINGW32_VERSION
     if ((st.st_uid == geteuid() && (st.st_mode & S_IXUSR)) || (st.st_gid == getegid() && (st.st_mode & S_IXGRP)) || (st.st_mode & S_IXOTH))	/* executable */
 	return 0;
-#endif
     return -1;
 }
 
@@ -314,15 +306,7 @@ cgi_filename(char *uri, char **fn, char **name, char **path_info)
 	return CGIFN_CGIBIN;
     }
 
-#ifdef __EMX__
-    {
-	char lib[_MAX_PATH];
-	_abspath(lib, w3m_lib_dir(), _MAX_PATH);	/* Translate '\\' to '/' */
-	tmp = Strnew_charp(lib);
-    }
-#else
     tmp = Strnew_charp(w3m_lib_dir());
-#endif
     if (Strlastchar(tmp) != '/')
 	Strcat_char(tmp, '/');
     if (strncmp(uri, "/$LIB/", 6) == 0)
@@ -361,9 +345,6 @@ localcgi_post(char *uri, char *qstr, FormList *request, char *referer)
 #endif
     char *cgi_basename;
 
-#ifdef __MINGW32_VERSION
-    return NULL;
-#else
     status = cgi_filename(uri, &file, &name, &path_info);
     if (check_local_cgi(file, status) < 0)
 	return NULL;
@@ -432,5 +413,4 @@ localcgi_post(char *uri, char *qstr, FormList *request, char *referer)
     fprintf(stderr, "execl(\"%s\", \"%s\", NULL): %s\n",
 	    file, cgi_basename, strerror(errno));
     exit(1);
-#endif
 }

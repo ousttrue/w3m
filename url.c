@@ -1,45 +1,29 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
 #include "fm.h"
-#ifndef __MINGW32_VERSION
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-#else
-#include <winsock.h>
-#endif /* __MINGW32_VERSION */
 
 #include <signal.h>
 #include <setjmp.h>
 #include <errno.h>
 
 #include <sys/stat.h>
-#ifdef __EMX__
-#include <io.h>			/* ?? */
-#endif				/* __EMX__ */
 
 #include "html.h"
 #include "Str.h"
 #include "myctype.h"
 #include "regex.h"
 
-#ifdef USE_SSL
 #ifndef SSLEAY_VERSION_NUMBER
 #include <openssl/crypto.h>		/* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
-#endif
 
-#ifdef	__WATT32__
-#define	write(a,b,c)	write_s(a,b,c)
-#endif				/* __WATT32__ */
 
-#ifdef __MINGW32_VERSION
-#define	write(a,b,c)	send(a,b,c, 0)
-#define close(fd)	closesocket(fd)
-#endif
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */
@@ -72,9 +56,7 @@ static int
     119,			/* news group */
     0,				/* data - not defined */
     0,				/* mailto - not defined */
-#ifdef USE_SSL
     443,			/* https */
-#endif				/* USE_SSL */
 };
 
 struct cmdtable schemetable[] = {
@@ -89,12 +71,8 @@ struct cmdtable schemetable[] = {
     {"news", SCM_NEWS},
     /*  {"news", SCM_NEWS_GROUP}, */
     {"data", SCM_DATA},
-#ifndef USE_W3MMAILER
     {"mailto", SCM_MAILTO},
-#endif
-#ifdef USE_SSL
     {"https", SCM_HTTPS},
-#endif				/* USE_SSL */
     {NULL, SCM_UNKNOWN},
 };
 
@@ -223,14 +201,8 @@ DefaultFile(int scheme)
 {
     switch (scheme) {
     case SCM_HTTP:
-#ifdef USE_SSL
     case SCM_HTTPS:
-#endif				/* USE_SSL */
 	return allocStr(HTTP_DEFAULT_FILE, -1);
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-	return allocStr("1", -1);
-#endif				/* USE_GOPHER */
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
     case SCM_FTP:
@@ -247,7 +219,6 @@ KeyAbort(SIGNAL_ARG)
     SIGNAL_RETURN;
 }
 
-#ifdef USE_SSL
 SSL_CTX *ssl_ctx = NULL;
 
 void
@@ -326,21 +297,14 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 {
     SSL *handle = NULL;
     static char *old_ssl_forbid_method = NULL;
-#ifdef USE_SSL_VERIFY
     static int old_ssl_verify_server = -1;
-#endif
 
     if (old_ssl_forbid_method != ssl_forbid_method
 	&& (!old_ssl_forbid_method || !ssl_forbid_method ||
 	    strcmp(old_ssl_forbid_method, ssl_forbid_method))) {
 	old_ssl_forbid_method = ssl_forbid_method;
-#ifdef USE_SSL_VERIFY
 	ssl_path_modified = 1;
-#else
-	free_ssl_ctx();
-#endif
     }
-#ifdef USE_SSL_VERIFY
     if (old_ssl_verify_server != ssl_verify_server) {
 	old_ssl_verify_server = ssl_verify_server;
 	ssl_path_modified = 1;
@@ -349,7 +313,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 	free_ssl_ctx();
 	ssl_path_modified = 0;
     }
-#endif				/* defined(USE_SSL_VERIFY) */
     if (ssl_ctx == NULL) {
 	int option;
 #if OPENSSL_VERSION_NUMBER < 0x0800
@@ -414,7 +377,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 	SSL_CTX_set_mode (ssl_ctx, SSL_MODE_RELEASE_BUFFERS);
 #endif
 
-#ifdef USE_SSL_VERIFY
 	/* derived from openssl-0.9.5/apps/s_{client,cb}.c */
 #if 1				/* use SSL_get_verify_result() to verify cert */
 	SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_NONE, NULL);
@@ -452,7 +414,6 @@ openSSLHandle(int sock, char *hostname, char **p_cert)
 	    if (ssl_ca_default)
 		SSL_CTX_set_default_verify_paths(ssl_ctx);
 	}
-#endif				/* defined(USE_SSL_VERIFY) */
 #endif				/* SSLEAY_VERSION_NUMBER >= 0x0800 */
     }
     handle = SSL_new(ssl_ctx);
@@ -500,7 +461,6 @@ SSL_write_from_file(SSL * ssl, char *file)
     }
 }
 
-#endif				/* USE_SSL */
 
 static void
 write_from_file(int sock, char *file)
@@ -807,16 +767,6 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
 	    case SCM_FTPDIR:
 		p_url->scheme = SCM_FTP;
 		break;
-#ifdef USE_NNTP
-	    case SCM_NNTP:
-	    case SCM_NNTP_GROUP:
-		p_url->scheme = SCM_NNTP;
-		break;
-	    case SCM_NEWS:
-	    case SCM_NEWS_GROUP:
-		p_url->scheme = SCM_NEWS;
-		break;
-#endif
 	    default:
 		p_url->scheme = current->scheme;
 		break;
@@ -850,10 +800,6 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
     }
     /* after here, p begins with // */
     if (p_url->scheme == SCM_LOCAL) {	/* file://foo           */
-#ifdef __EMX__
-	p += 2;
-	goto analyze_file;
-#else
 	if (p[2] == '/' || p[2] == '~'
 	    /* <A HREF="file:///foo">file:///foo</A>  or <A HREF="file://~user">file://~user</A> */
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
@@ -864,7 +810,6 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
 	    p += 2;
 	    goto analyze_file;
 	}
-#endif				/* __EMX__ */
     }
     p += 2;			/* scheme://foo         */
     /*          ^p is here  */
@@ -962,34 +907,12 @@ parseURL(char *url, ParsedURL *p_url, ParsedURL *current)
 #endif
 
     q = p;
-#ifdef USE_GOPHER
-    if (p_url->scheme == SCM_GOPHER) {
-	if (*q == '/')
-	    q++;
-	if (*q && q[0] != '/' && q[1] != '/' && q[2] == '/')
-	    q++;
-    }
-#endif				/* USE_GOPHER */
     if (*p == '/')
 	p++;
     if (*p == '\0' || *p == '#' || *p == '?') {	/* scheme://host[:port]/ */
 	p_url->file = DefaultFile(p_url->scheme);
 	goto do_query;
     }
-#ifdef USE_GOPHER
-    if (p_url->scheme == SCM_GOPHER && *p == 'R') {
-	p++;
-	tmp = Strnew();
-	Strcat_char(tmp, *(p++));
-	while (*p && *p != '/')
-	    p++;
-	Strcat_charp(tmp, p);
-	while (*p)
-	    p++;
-	p_url->file = copyPath(tmp->ptr, -1, COPYPATH_SPC_IGNORE);
-    }
-    else
-#endif				/* USE_GOPHER */
     {
 	char *cgi = strchr(p, '?');
       again:
@@ -1075,10 +998,8 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
     int relative_uri = FALSE;
 
     parseURL(url, pu, current);
-#ifndef USE_W3MMAILER
     if (pu->scheme == SCM_MAILTO)
 	return;
-#endif
     if (pu->scheme == SCM_DATA)
 	return;
     if (pu->scheme == SCM_NEWS || pu->scheme == SCM_NEWS_GROUP) {
@@ -1133,20 +1054,7 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	pu->host = current->host;
 	pu->port = current->port;
 	if (pu->file && *pu->file) {
-#ifdef USE_EXTERNAL_URI_LOADER
-	    if (pu->scheme == SCM_UNKNOWN
-		&& strchr(pu->file, ':') == NULL
-		&& current && (p = strchr(current->file, ':')) != NULL) {
-		pu->file = Sprintf("%s:%s",
-				   allocStr(current->file,
-					    p - current->file), pu->file)->ptr;
-	    }
-	    else
-#endif
 		if (
-#ifdef USE_GOPHER
-		       pu->scheme != SCM_GOPHER &&
-#endif				/* USE_GOPHER */
 		       pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
 		       && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0])
@@ -1167,12 +1075,6 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 		    relative_uri = TRUE;
 		}
 	    }
-#ifdef USE_GOPHER
-	    else if (pu->scheme == SCM_GOPHER && pu->file[0] == '/') {
-		p = pu->file;
-		pu->file = allocStr(p + 1, -1);
-	    }
-#endif				/* USE_GOPHER */
 	}
 	else {			/* scheme:[?query][#label] */
 	    pu->file = current->file;
@@ -1183,16 +1085,6 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	 * from the current URL. */
     }
     if (pu->file) {
-#ifdef __EMX__
-	if (pu->scheme == SCM_LOCAL) {
-	    if (strncmp(pu->file, "/$LIB/", 6)) {
-		char abs[_MAX_PATH];
-
-		_abspath(abs, file_unquote(pu->file), _MAX_PATH);
-		pu->file = file_quote(cleanupName(abs));
-	    }
-	}
-#else
 	if (pu->scheme == SCM_LOCAL && pu->file[0] != '/' &&
 #ifdef SUPPORT_DOS_DRIVE_PREFIX	/* for 'drive:' */
 	    !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':') &&
@@ -1205,11 +1097,8 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	    Strcat_charp(tmp, file_unquote(pu->file));
 	    pu->file = file_quote(cleanupName(tmp->ptr));
 	}
-#endif
 	else if (pu->scheme == SCM_HTTP
-#ifdef USE_SSL
 		 || pu->scheme == SCM_HTTPS
-#endif
 	    ) {
 	    if (relative_uri) {
 		/* In this case, pu->file is created by [process 1] above.
@@ -1223,9 +1112,6 @@ parseURL2(char *url, ParsedURL *pu, ParsedURL *current)
 	    }
 	}
 	else if (
-#ifdef USE_GOPHER
-		    pu->scheme != SCM_GOPHER &&
-#endif				/* USE_GOPHER */
 		    pu->file[0] == '/') {
 	    /*
 	     * this happens on the following conditions:
@@ -1257,9 +1143,7 @@ _parsedURL2Str(ParsedURL *pu, int pass, int user, int label)
     static char *scheme_str[] = {
 	"http", "gopher", "ftp", "ftp", "file", "file", "exec", "nntp", "nntp",
 	"news", "news", "data", "mailto",
-#ifdef USE_SSL
 	"https",
-#endif				/* USE_SSL */
     };
 
     if (pu->scheme == SCM_MISSING) {
@@ -1282,7 +1166,6 @@ _parsedURL2Str(ParsedURL *pu, int pass, int user, int label)
     }
     tmp = Strnew_charp(scheme_str[pu->scheme]);
     Strcat_char(tmp, ':');
-#ifndef USE_W3MMAILER
     if (pu->scheme == SCM_MAILTO) {
 	Strcat_charp(tmp, pu->file);
 	if (pu->query) {
@@ -1291,14 +1174,10 @@ _parsedURL2Str(ParsedURL *pu, int pass, int user, int label)
 	}
 	return tmp;
     }
-#endif
     if (pu->scheme == SCM_DATA) {
 	Strcat_charp(tmp, pu->file);
 	return tmp;
     }
-#ifdef USE_NNTP
-    if (pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP)
-#endif				/* USE_NNTP */
     {
 	Strcat_charp(tmp, "//");
     }
@@ -1318,9 +1197,6 @@ _parsedURL2Str(ParsedURL *pu, int pass, int user, int label)
 	}
     }
     if (
-#ifdef USE_NNTP
-	   pu->scheme != SCM_NEWS && pu->scheme != SCM_NEWS_GROUP &&
-#endif				/* USE_NNTP */
 	   (pu->file == NULL || (pu->file[0] != '/'
 #ifdef SUPPORT_DOS_DRIVE_PREFIX
 				 && !(IS_ALPHA(pu->file[0])
@@ -1452,12 +1328,10 @@ otherinfo(ParsedURL *target, ParsedURL *current, char *referer)
 	     current->port != target->port ||
 	     current->scheme != target->scheme))
 	    cross_origin = TRUE;
-#ifdef USE_SSL
         if (current && current->scheme == SCM_HTTPS && target->scheme != SCM_HTTPS) {
 	  /* Don't send Referer: if https:// -> http:// */
 	}
 	else
-#endif
 	if (referer == NULL && current && current->scheme != SCM_LOCAL &&
 	    current->scheme != SCM_LOCAL_CGI && current->scheme != SCM_DATA &&
 	    (current->scheme != SCM_FTP ||
@@ -1525,9 +1399,7 @@ HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr, TextList *extra)
 {
     Str tmp;
     TextListItem *i;
-#ifdef USE_COOKIE
     Str cookie;
-#endif				/* USE_COOKIE */
     tmp = HTTPrequestMethod(hr);
     Strcat_charp(tmp, " ");
     Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
@@ -1540,23 +1412,18 @@ HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr, TextList *extra)
 	for (i = extra->first; i != NULL; i = i->next) {
 	    if (strncasecmp(i->ptr, "Authorization:",
 			    sizeof("Authorization:") - 1) == 0) {
-#ifdef USE_SSL
 		if (hr->command == HR_COMMAND_CONNECT)
 		    continue;
-#endif
 	    }
 	    if (strncasecmp(i->ptr, "Proxy-Authorization:",
 			    sizeof("Proxy-Authorization:") - 1) == 0) {
-#ifdef USE_SSL
 		if (pu->scheme == SCM_HTTPS
 		    && hr->command != HR_COMMAND_CONNECT)
 		    continue;
-#endif
 	    }
 	    Strcat_charp(tmp, i->ptr);
 	}
 
-#ifdef USE_COOKIE
     if (hr->command != HR_COMMAND_CONNECT &&
 	use_cookie && (cookie = find_cookie(pu))) {
 	Strcat_charp(tmp, "Cookie: ");
@@ -1566,7 +1433,6 @@ HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr, TextList *extra)
 	if (cookie->ptr[0] != '$')
 	    Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
     }
-#endif				/* USE_COOKIE */
     if (hr->command == HR_COMMAND_POST) {
 	if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
 	    Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
@@ -1624,16 +1490,9 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
     Str tmp;
     int sock, scheme;
     char *p, *q, *u;
-#ifdef USE_GOPHER
-    Str gophertmp;
-    char type;
-    int n;
-#endif
     URLFile uf;
     HRequest hr0;
-#ifdef USE_SSL
     SSL *sslh = NULL;
-#endif				/* USE_SSL */
 
     if (hr == NULL)
 	hr = &hr0;
@@ -1765,9 +1624,7 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 	}
 	break;
     case SCM_HTTP:
-#ifdef USE_SSL
     case SCM_HTTPS:
-#endif				/* USE_SSL */
 	if (pu->file == NULL)
 	    pu->file = allocStr("/", -1);
 	if (request && request->method == FORM_METHOD_POST && request->body)
@@ -1775,13 +1632,10 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 	if (request && request->method == FORM_METHOD_HEAD)
 	    hr->command = HR_COMMAND_HEAD;
 	if ((
-#ifdef USE_SSL
 		(pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy) :
-#endif				/* USE_SSL */
 		non_null(HTTP_proxy)) && !Do_not_use_proxy &&
 	    pu->host != NULL && !check_no_proxy(pu->host)) {
 	    hr->flag |= HR_FLAG_PROXY;
-#ifdef USE_SSL
 	    if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
 		sock = ssl_socket_of(ouf->stream);
 		if (!(sslh = openSSLHandle(sock, pu->host,
@@ -1797,21 +1651,17 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		sslh = NULL;
 	    }
 	    else {
-#endif				/* USE_SSL */
 		sock = openSocket(HTTP_proxy_parsed.host,
 				  schemeNumToName(HTTP_proxy_parsed.scheme),
 				  HTTP_proxy_parsed.port);
-#ifdef USE_SSL
 		sslh = NULL;
 	    }
-#endif				/* USE_SSL */
 	    if (sock < 0) {
 #ifdef SOCK_DEBUG
 		sock_log("Can't open socket\n");
 #endif
 		return uf;
 	    }
-#ifdef USE_SSL
 	    if (pu->scheme == SCM_HTTPS) {
 		if (*status == HTST_NORMAL) {
 		    hr->command = HR_COMMAND_CONNECT;
@@ -1825,7 +1675,6 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		}
 	    }
 	    else
-#endif				/* USE_SSL */
 	    {
 		tmp = HTTPrequest(pu, current, hr, extra_header);
 		*status = HTST_NORMAL;
@@ -1837,7 +1686,6 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		*status = HTST_MISSING;
 		return uf;
 	    }
-#ifdef USE_SSL
 	    if (pu->scheme == SCM_HTTPS) {
 		if (!(sslh = openSSLHandle(sock, pu->host,
 					   &uf.ssl_certificate))) {
@@ -1845,12 +1693,10 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		    return uf;
 		}
 	    }
-#endif				/* USE_SSL */
 	    hr->flag |= HR_FLAG_LOCAL;
 	    tmp = HTTPrequest(pu, current, hr, extra_header);
 	    *status = HTST_NORMAL;
 	}
-#ifdef USE_SSL
 	if (pu->scheme == SCM_HTTPS) {
 	    uf.stream = newSSLStream(sslh, sock);
 	    if (sslh)
@@ -1878,7 +1724,6 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 	    return uf;
 	}
 	else
-#endif				/* USE_SSL */
 	{
 	    write(sock, tmp->ptr, tmp->length);
 	    if(w3m_reqlog){
@@ -1893,84 +1738,6 @@ openURL(char *url, ParsedURL *pu, ParsedURL *current,
 		write_from_file(sock, request->body);
 	}
 	break;
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-	p = pu->file;
-	n = 0;
-	while(*p == '/') {
-	  ++p;
-	  ++n;
-	}
-	if(*p != '\0') {
-	  type = pu->file[n];
-	  switch(type) {
-	    case '0':
-	    case '1':
-	    case 'm':
-	    case 's':
-	    case 'g':
-	    case 'h':
-	    case 'I':
-	    case '5':
-	    case '7':
-	    case '9':
-	      tmp = Strnew_charp(pu->file);
-	      gophertmp = Strdup(tmp);
-	      Strdelete(tmp, n, 1);
-	      pu->file = tmp->ptr;
-	      break;
-	    default:
-	      type = '\0';
-	      break;
-	  }
-	} else {
-	  type = '\0';
-	}
-	if(pu->query != NULL) {
-	  tmp = Strnew_charp(pu->file);
-	  Strcat_char(tmp, '\t');
-	  Strcat_charp(tmp, pu->query);
-	  pu->file = tmp->ptr;
-	}
-	if (non_null(GOPHER_proxy) &&
-	    !Do_not_use_proxy &&
-	    pu->host != NULL && !check_no_proxy(pu->host)) {
-	    hr->flag |= HR_FLAG_PROXY;
-	    sock = openSocket(GOPHER_proxy_parsed.host,
-			      schemeNumToName(GOPHER_proxy_parsed.scheme),
-			      GOPHER_proxy_parsed.port);
-	    if (sock < 0)
-		return uf;
-	    uf.scheme = SCM_HTTP;
-	    tmp = HTTPrequest(pu, current, hr, extra_header);
-	}
-	else {
-	    sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
-	    if (sock < 0)
-		return uf;
-	    if (pu->file == NULL)
-		pu->file = "1";
-	    tmp = Strnew_charp(file_unquote(pu->file));
-	    Strcat_char(tmp, '\n');
-	}
-	write(sock, tmp->ptr, tmp->length);
-	if(type != '\0') {
-	  pu->file = gophertmp->ptr;
-	}
-	break;
-#endif				/* USE_GOPHER */
-#ifdef USE_NNTP
-    case SCM_NNTP:
-    case SCM_NNTP_GROUP:
-    case SCM_NEWS:
-    case SCM_NEWS_GROUP:
-	if (pu->scheme == SCM_NNTP || pu->scheme == SCM_NEWS)
-	    uf.scheme = SCM_NEWS;
-	else
-	    uf.scheme = SCM_NEWS_GROUP;
-	uf.stream = openNewsStream(pu);
-	return uf;
-#endif				/* USE_NNTP */
     case SCM_DATA:
 	if (pu->file == NULL)
 	    return uf;
@@ -2248,152 +2015,6 @@ filename_extension(char *path, int is_url)
 	return last_dot;
 }
 
-#ifdef USE_EXTERNAL_URI_LOADER
-static struct table2 **urimethods;
-static struct table2 default_urimethods[] = {
-    {"mailto", "file:///$LIB/w3mmail.cgi?%s"},
-    {NULL, NULL}
-};
-
-static struct table2 *
-loadURIMethods(char *filename)
-{
-    FILE *f;
-    int i, n;
-    Str tmp;
-    struct table2 *um;
-    char *up, *p;
-
-    f = fopen(expandPath(filename), "r");
-    if (f == NULL)
-	return NULL;
-    i = 0;
-    while (tmp = Strfgets(f), tmp->length > 0) {
-	if (tmp->ptr[0] != '#')
-	    i++;
-    }
-    fseek(f, 0, 0);
-    n = i;
-    um = New_N(struct table2, n + 1);
-    i = 0;
-    while (tmp = Strfgets(f), tmp->length > 0) {
-	if (tmp->ptr[0] == '#')
-	    continue;
-	while (IS_SPACE(Strlastchar(tmp)))
-	    Strshrink(tmp, 1);
-	for (up = p = tmp->ptr; *p != '\0'; p++) {
-	    if (*p == ':') {
-		um[i].item1 = Strnew_charp_n(up, p - up)->ptr;
-		p++;
-		break;
-	    }
-	}
-	if (*p == '\0')
-	    continue;
-	while (*p != '\0' && IS_SPACE(*p))
-	    p++;
-	um[i].item2 = Strnew_charp(p)->ptr;
-	i++;
-    }
-    um[i].item1 = NULL;
-    um[i].item2 = NULL;
-    fclose(f);
-    return um;
-}
-
-void
-initURIMethods()
-{
-    TextList *methodmap_list = NULL;
-    TextListItem *tl;
-    int i;
-
-    if (non_null(urimethodmap_files))
-	methodmap_list = make_domain_list(urimethodmap_files);
-    if (methodmap_list == NULL)
-	return;
-    urimethods = New_N(struct table2 *, (methodmap_list->nitem + 1));
-    for (i = 0, tl = methodmap_list->first; tl; tl = tl->next) {
-	urimethods[i] = loadURIMethods(tl->ptr);
-	if (urimethods[i])
-	    i++;
-    }
-    urimethods[i] = NULL;
-}
-
-Str
-searchURIMethods(ParsedURL *pu)
-{
-    struct table2 *ump;
-    int i;
-    Str scheme = NULL;
-    Str url;
-    char *p;
-
-    if (pu->scheme != SCM_UNKNOWN)
-	return NULL;		/* use internal */
-    if (urimethods == NULL)
-	return NULL;
-    url = parsedURL2Str(pu);
-    for (p = url->ptr; *p != '\0'; p++) {
-	if (*p == ':') {
-	    scheme = Strnew_charp_n(url->ptr, p - url->ptr);
-	    break;
-	}
-    }
-    if (scheme == NULL)
-	return NULL;
-
-    /*
-     * RFC2396 3.1. Scheme Component
-     * For resiliency, programs interpreting URI should treat upper case
-     * letters as equivalent to lower case in scheme names (e.g., allow
-     * "HTTP" as well as "http").
-     */
-    for (i = 0; (ump = urimethods[i]) != NULL; i++) {
-	for (; ump->item1 != NULL; ump++) {
-	    if (strcasecmp(ump->item1, scheme->ptr) == 0) {
-		return Sprintf(ump->item2, url_quote(url->ptr));
-	    }
-	}
-    }
-    for (ump = default_urimethods; ump->item1 != NULL; ump++) {
-	if (strcasecmp(ump->item1, scheme->ptr) == 0) {
-	    return Sprintf(ump->item2, url_quote(url->ptr));
-	}
-    }
-    return NULL;
-}
-
-/*
- * RFC2396: Uniform Resource Identifiers (URI): Generic Syntax
- * Appendix A. Collected BNF for URI
- * uric          = reserved | unreserved | escaped
- * reserved      = ";" | "/" | "?" | ":" | "@" | "&" | "=" | "+" |
- *                 "$" | ","
- * unreserved    = alphanum | mark
- * mark          = "-" | "_" | "." | "!" | "~" | "*" | "'" |
- *                  "(" | ")"
- * escaped       = "%" hex hex
- */
-
-#define URI_PATTERN	"([-;/?:@&=+$,a-zA-Z0-9_.!~*'()]|%[0-9A-Fa-f][0-9A-Fa-f])*"
-void
-chkExternalURIBuffer(Buffer *buf)
-{
-    int i;
-    struct table2 *ump;
-
-    for (i = 0; (ump = urimethods[i]) != NULL; i++) {
-	for (; ump->item1 != NULL; ump++) {
-	    reAnchor(buf, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
-	}
-    }
-    for (ump = default_urimethods; ump->item1 != NULL; ump++) {
-	reAnchor(buf, Sprintf("%s:%s", ump->item1, URI_PATTERN)->ptr);
-    }
-}
-#endif
 
 ParsedURL *
 schemeToProxy(int scheme)
@@ -2403,19 +2024,12 @@ schemeToProxy(int scheme)
     case SCM_HTTP:
 	pu = &HTTP_proxy_parsed;
 	break;
-#ifdef USE_SSL
     case SCM_HTTPS:
 	pu = &HTTPS_proxy_parsed;
 	break;
-#endif
     case SCM_FTP:
 	pu = &FTP_proxy_parsed;
 	break;
-#ifdef USE_GOPHER
-    case SCM_GOPHER:
-	pu = &GOPHER_proxy_parsed;
-	break;
-#endif
 #ifdef DEBUG
     default:
 	abort();
@@ -2424,59 +2038,6 @@ schemeToProxy(int scheme)
     return pu;
 }
 
-#ifdef USE_M17N
-wc_ces
-url_to_charset(const char *url, const ParsedURL *base, wc_ces doc_charset)
-{
-    const ParsedURL *pu;
-    ParsedURL pu_buf;
-    const wc_ces *csptr;
-
-    if (url && *url && *url != '#') {
-	parseURL2((char *)url, &pu_buf, (ParsedURL *)base);
-	pu = &pu_buf;
-    } else {
-	pu = base;
-    }
-    if (pu && (pu->scheme == SCM_LOCAL || pu->scheme == SCM_LOCAL_CGI))
-	return SystemCharset;
-    csptr = query_SCONF_URL_CHARSET(pu);
-    return (csptr && *csptr) ? *csptr :
-	doc_charset ? doc_charset : DocumentCharset;
-}
-
-char *
-url_encode(const char *url, const ParsedURL *base, wc_ces doc_charset)
-{
-    return url_quote_conv((char *)url,
-			  url_to_charset(url, base, doc_charset));
-}
-
-#if 0 /* unused */
-char *
-url_decode(const char *url, const ParsedURL *base, wc_ces doc_charset)
-{
-    if (!DecodeURL)
-	return (char *)url;
-    return url_unquote_conv((char *)url,
-			    url_to_charset(url, base, doc_charset));
-}
-#endif
-
-char *
-url_decode2(const char *url, const Buffer *buf)
-{
-    wc_ces url_charset;
-
-    if (!DecodeURL)
-	return (char *)url;
-    url_charset = buf ?
-	url_to_charset(url, baseURL((Buffer *)buf), buf->document_charset) :
-	url_to_charset(url, NULL, 0);
-    return url_unquote_conv((char *)url, url_charset);
-}
-
-#else /* !defined(USE_M17N) */
 
 char *
 url_decode0(const char *url)
@@ -2485,4 +2046,3 @@ url_decode0(const char *url)
 	return (char *)url;
     return url_unquote_conv((char *)url, 0);
 }
-#endif /* !defined(USE_M17N) */

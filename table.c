@@ -54,18 +54,13 @@ int symbol_width0 = 0;
 #define set_prevchar(x,y,n) Strcopy_charp_n((x),(y),(n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x)," ",1)
 
-#ifdef MATRIX
 #ifndef MESCHACH
 #include "matrix.c"
 #endif				/* not MESCHACH */
-#endif				/* MATRIX */
 
-#ifdef MATRIX
 int correct_table_matrix(struct table *, int, int, int, double);
 void set_table_matrix(struct table *, int);
-#endif				/* MATRIX */
 
-#ifdef MATRIX
 static double
 weight(int x)
 {
@@ -86,19 +81,6 @@ weight2(int a)
 #define sigma_td_nw(a)    (32*weight2(a))	/* <td ...> */
 #define sigma_table(a)    (0.25*weight2(a))	/* <table width=...> */
 #define sigma_table_nw(a) (2*weight2(a))	/* <table...> */
-#else				/* not MATRIX */
-#define LOG_MIN 1.0
-static double
-weight3(int x)
-{
-    if (x < 0.1)
-	return 0.1;
-    if (x < LOG_MIN)
-	return (double)x;
-    else
-	return LOG_MIN * (log((double)x / LOG_MIN) + 1.);
-}
-#endif				/* not MATRIX */
 
 static int
 bsearch_2short(short e1, short *ent1, short e2, short *ent2, int base,
@@ -176,46 +158,6 @@ floor_at_intervals(int x, int step)
 
 #define round(x) ((int)floor((x)+0.5))
 
-#ifndef MATRIX
-static void
-dv2sv(double *dv, short *iv, int size)
-{
-    int i, k, iw;
-    short *indexarray;
-    double *edv;
-    double w = 0., x;
-
-    indexarray = NewAtom_N(short, size);
-    edv = NewAtom_N(double, size);
-    for (i = 0; i < size; i++) {
-	iv[i] = (short) ceil(dv[i]);
-	edv[i] = (double)iv[i] - dv[i];
-    }
-
-    w = 0.;
-    for (k = 0; k < size; k++) {
-	x = edv[k];
-	w += x;
-	i = bsearch_double(x, edv, indexarray, k);
-	if (k > i) {
-	    int ii;
-	    for (ii = k; ii > i; ii--)
-		indexarray[ii] = indexarray[ii - 1];
-	}
-	indexarray[i] = k;
-    }
-    iw = min((int)(w + 0.5), size);
-    if (iw <= 1)
-	return;
-    x = edv[(int)indexarray[iw - 1]];
-    for (i = 0; i < size; i++) {
-	k = indexarray[i];
-	if (i >= iw && abs(edv[k] - x) > 1e-6)
-	    break;
-	iv[k]--;
-    }
-}
-#endif
 
 static int
 table_colspan(struct table *t, int row, int col)
@@ -279,19 +221,11 @@ newTable()
     t->tabdata = New_N(GeneralList **, MAXROW);
     t->tabattr = New_N(table_attr *, MAXROW);
     t->tabheight = NewAtom_N(int, MAXROW);
-#ifdef ID_EXT
-    t->tabidvalue = New_N(Str *, MAXROW);
-    t->tridvalue = New_N(Str, MAXROW);
-#endif				/* ID_EXT */
 
     for (i = 0; i < MAXROW; i++) {
 	t->tabdata[i] = NULL;
 	t->tabattr[i] = 0;
 	t->tabheight[i] = 0;
-#ifdef ID_EXT
-	t->tabidvalue[i] = NULL;
-	t->tridvalue[i] = NULL;
-#endif				/* ID_EXT */
     }
     for (j = 0; j < MAXCOL; j++) {
 	t->tabwidth[j] = 0;
@@ -303,25 +237,14 @@ newTable()
     t->ntable = 0;
     t->tables_size = 0;
     t->tables = NULL;
-#ifdef MATRIX
     t->matrix = NULL;
     t->vector = NULL;
-#endif				/* MATRIX */
-#if 0
-    t->tabcontentssize = 0;
-    t->indent = 0;
-    t->linfo.prev_ctype = PC_ASCII;
-    t->linfo.prev_spaces = -1;
-#endif
     t->linfo.prevchar = Strnew_size(8);
     set_prevchar(t->linfo.prevchar, "", 0);
     t->trattr = 0;
 
     t->caption = Strnew();
     t->suspended_data = NULL;
-#ifdef ID_EXT
-    t->id = NULL;
-#endif
     return t;
 }
 
@@ -332,10 +255,6 @@ check_row(struct table *t, int row)
     GeneralList ***tabdata;
     table_attr **tabattr;
     int *tabheight;
-#ifdef ID_EXT
-    Str **tabidvalue;
-    Str *tridvalue;
-#endif				/* ID_EXT */
 
     if (row < 0 || row >= MAXROW_LIMIT)
 	return;
@@ -346,50 +265,28 @@ check_row(struct table *t, int row)
 	tabdata = New_N(GeneralList **, r);
 	tabattr = New_N(table_attr *, r);
 	tabheight = NewAtom_N(int, r);
-#ifdef ID_EXT
-	tabidvalue = New_N(Str *, r);
-	tridvalue = New_N(Str, r);
-#endif				/* ID_EXT */
 	for (i = 0; i < t->max_rowsize; i++) {
 	    tabdata[i] = t->tabdata[i];
 	    tabattr[i] = t->tabattr[i];
 	    tabheight[i] = t->tabheight[i];
-#ifdef ID_EXT
-	    tabidvalue[i] = t->tabidvalue[i];
-	    tridvalue[i] = t->tridvalue[i];
-#endif				/* ID_EXT */
 	}
 	for (; i < r; i++) {
 	    tabdata[i] = NULL;
 	    tabattr[i] = NULL;
 	    tabheight[i] = 0;
-#ifdef ID_EXT
-	    tabidvalue[i] = NULL;
-	    tridvalue[i] = NULL;
-#endif				/* ID_EXT */
 	}
 	t->tabdata = tabdata;
 	t->tabattr = tabattr;
 	t->tabheight = tabheight;
-#ifdef ID_EXT
-	t->tabidvalue = tabidvalue;
-	t->tridvalue = tridvalue;
-#endif				/* ID_EXT */
 	t->max_rowsize = r;
     }
 
     if (t->tabdata[row] == NULL) {
 	t->tabdata[row] = New_N(GeneralList *, MAXCOL);
 	t->tabattr[row] = NewAtom_N(table_attr, MAXCOL);
-#ifdef ID_EXT
-	t->tabidvalue[row] = New_N(Str, MAXCOL);
-#endif				/* ID_EXT */
 	for (i = 0; i < MAXCOL; i++) {
 	    t->tabdata[row][i] = NULL;
 	    t->tabattr[row][i] = 0;
-#ifdef ID_EXT
-	    t->tabidvalue[row][i] = NULL;
-#endif				/* ID_EXT */
 	}
     }
 }
@@ -416,11 +313,7 @@ suspend_or_pushdata(struct table *tbl, char *line)
     }
 }
 
-#ifdef USE_M17N
-#define PUSH_TAG(str,n) Strcat_charp_n(tagbuf, str, n)
-#else
 #define PUSH_TAG(str,n) Strcat_char(tagbuf, *str)
-#endif
 
 int visible_length_offset = 0;
 int
@@ -436,17 +329,8 @@ visible_length(char *str)
     while (*str) {
 	prev_status = status;
 	if (next_status(*str, &status)) {
-#ifdef USE_M17N
-	    len += get_mcwidth(str);
-	    n = get_mclen(str);
-	}
-	else {
-	    n = 1;
-	}
-#else
 	    len++;
 	}
-#endif
 	if (status == R_ST_TAG0) {
 	    Strclear(tagbuf);
 	    PUSH_TAG(str, n);
@@ -494,11 +378,7 @@ visible_length(char *str)
 		max_len = len;
 	    len = 0;
 	}
-#ifdef USE_M17N
-	str += n;
-#else
 	str++;
-#endif
     }
     if (status == R_ST_AMP) {
 	r2 = tagbuf->ptr;
@@ -528,13 +408,8 @@ visible_length_plain(char *str)
 	    str++;
 	}
 	else {
-#ifdef USE_M17N
-	    len += get_mcwidth(str);
-	    str += get_mclen(str);
-#else
 	    len++;
 	    str++;
-#endif
 	}
     }
     return len > max_len ? len : max_len;
@@ -941,7 +816,6 @@ void
 check_maximum_width(struct table *t)
 {
     struct table_cell *cell = &t->cell;
-#ifdef MATRIX
     int i, j, bcol, ecol;
     int swidth, width;
 
@@ -959,15 +833,9 @@ check_maximum_width(struct table *t)
 	    cell->necell++;
 	}
     }
-#else				/* not MATRIX */
-    check_cell_width(t->tabwidth, cell->width, cell->col, cell->colspan,
-		     cell->maxcell, cell->index, t->cellspacing, 0);
-    check_minimum_width(t, t->tabwidth);
-#endif				/* not MATRIX */
 }
 
 
-#ifdef MATRIX
 static void
 set_integered_width(struct table *t, double *dwidth, short *iwidth)
 {
@@ -1391,127 +1259,6 @@ check_table_width(struct table *t, double *newwidth, MAT * minv, int itr)
 	return corr;
 }
 
-#else				/* not MATRIX */
-void
-set_table_width(struct table *t, short *newwidth, int maxwidth)
-{
-    int i, j, k, bcol, ecol;
-    struct table_cell *cell = &t->cell;
-    char *fixed;
-    int swidth, fwidth, width, nvar;
-    double s;
-    double *dwidth;
-    int try_again;
-
-    fixed = NewAtom_N(char, t->maxcol + 1);
-    bzero(fixed, t->maxcol + 1);
-    dwidth = NewAtom_N(double, t->maxcol + 1);
-
-    for (i = 0; i <= t->maxcol; i++) {
-	dwidth[i] = 0.0;
-	if (t->fixed_width[i] < 0) {
-	    t->fixed_width[i] = -t->fixed_width[i] * maxwidth / 100;
-	}
-	if (t->fixed_width[i] > 0) {
-	    newwidth[i] = t->fixed_width[i];
-	    fixed[i] = 1;
-	}
-	else
-	    newwidth[i] = 0;
-	if (newwidth[i] < t->minimum_width[i])
-	    newwidth[i] = t->minimum_width[i];
-    }
-
-    for (k = 0; k <= cell->maxcell; k++) {
-	j = cell->indexarray[k];
-	bcol = cell->col[j];
-	ecol = bcol + cell->colspan[j];
-
-	if (cell->fixed_width[j] < 0)
-	    cell->fixed_width[j] = -cell->fixed_width[j] * maxwidth / 100;
-
-	swidth = 0;
-	fwidth = 0;
-	nvar = 0;
-	for (i = bcol; i < ecol; i++) {
-	    if (fixed[i]) {
-		fwidth += newwidth[i];
-	    }
-	    else {
-		swidth += newwidth[i];
-		nvar++;
-	    }
-	}
-	width = max(cell->fixed_width[j], cell->minimum_width[j])
-	    - (cell->colspan[j] - 1) * t->cellspacing;
-	if (nvar > 0 && width > fwidth + swidth) {
-	    s = 0.;
-	    for (i = bcol; i < ecol; i++) {
-		if (!fixed[i])
-		    s += weight3(t->tabwidth[i]);
-	    }
-	    for (i = bcol; i < ecol; i++) {
-		if (!fixed[i])
-		    dwidth[i] = (width - fwidth) * weight3(t->tabwidth[i]) / s;
-		else
-		    dwidth[i] = (double)newwidth[i];
-	    }
-	    dv2sv(dwidth, newwidth, cell->colspan[j]);
-	    if (cell->fixed_width[j] > 0) {
-		for (i = bcol; i < ecol; i++)
-		    fixed[i] = 1;
-	    }
-	}
-    }
-
-    do {
-	nvar = 0;
-	swidth = 0;
-	fwidth = 0;
-	for (i = 0; i <= t->maxcol; i++) {
-	    if (fixed[i]) {
-		fwidth += newwidth[i];
-	    }
-	    else {
-		swidth += newwidth[i];
-		nvar++;
-	    }
-	}
-	width = maxwidth - t->maxcol * t->cellspacing;
-	if (nvar == 0 || width <= fwidth + swidth)
-	    break;
-
-	s = 0.;
-	for (i = 0; i <= t->maxcol; i++) {
-	    if (!fixed[i])
-		s += weight3(t->tabwidth[i]);
-	}
-	for (i = 0; i <= t->maxcol; i++) {
-	    if (!fixed[i])
-		dwidth[i] = (width - fwidth) * weight3(t->tabwidth[i]) / s;
-	    else
-		dwidth[i] = (double)newwidth[i];
-	}
-	dv2sv(dwidth, newwidth, t->maxcol + 1);
-
-	try_again = 0;
-	for (i = 0; i <= t->maxcol; i++) {
-	    if (!fixed[i]) {
-		if (newwidth[i] > t->tabwidth[i]) {
-		    newwidth[i] = t->tabwidth[i];
-		    fixed[i] = 1;
-		    try_again = 1;
-		}
-		else if (newwidth[i] < t->minimum_width[i]) {
-		    newwidth[i] = t->minimum_width[i];
-		    fixed[i] = 1;
-		    try_again = 1;
-		}
-	    }
-	}
-    } while (try_again);
-}
-#endif				/* not MATRIX */
 
 void
 check_table_height(struct table *t)
@@ -1751,18 +1498,13 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
     int i, j, w, r, h;
     Str renderbuf;
     short new_tabwidth[MAXCOL] = { 0 };
-#ifdef MATRIX
     int itr;
     VEC *newwidth;
     MAT *mat, *minv;
     PERM *pivot;
-#endif				/* MATRIX */
     int width;
     int rulewidth;
     Str vrulea = NULL, vruleb = NULL, vrulec = NULL;
-#ifdef ID_EXT
-    Str idtag;
-#endif				/* ID_EXT */
 
     t->total_height = 0;
     if (t->maxcol < 0) {
@@ -1789,7 +1531,6 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
 
     check_maximum_width(t);
 
-#ifdef MATRIX
     if (t->maxcol == 0) {
 	if (t->tabwidth[0] > max_width)
 	    t->tabwidth[0] = max_width;
@@ -1843,12 +1584,6 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
 	    t->tabwidth[i] = new_tabwidth[i];
 	}
     }
-#else				/* not MATRIX */
-    set_table_width(t, new_tabwidth, max_width);
-    for (i = 0; i <= t->maxcol; i++) {
-	t->tabwidth[i] = new_tabwidth[i];
-    }
-#endif				/* not MATRIX */
 
     check_minimum_width(t, t->tabwidth);
     for (i = 0; i <= t->maxcol; i++)
@@ -1915,12 +1650,6 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
     make_caption(t, h_env);
 
     HTMLlineproc1("<pre for_table>", h_env);
-#ifdef ID_EXT
-    if (t->id != NULL) {
-	idtag = Sprintf("<_id id=\"%s\">", html_quote((t->id)->ptr));
-	HTMLlineproc1(idtag->ptr, h_env);
-    }
-#endif				/* ID_EXT */
     switch (t->border_mode) {
     case BORDER_THIN:
     case BORDER_THICK:
@@ -1959,22 +1688,8 @@ renderTable(struct table *t, int max_width, struct html_feed_environ *h_env)
 	    if (t->border_mode == BORDER_THIN
 		|| t->border_mode == BORDER_THICK)
 		Strcat(renderbuf, vrulea);
-#ifdef ID_EXT
-	    if (t->tridvalue[r] != NULL && h == 0) {
-		idtag = Sprintf("<_id id=\"%s\">",
-				html_quote((t->tridvalue[r])->ptr));
-		Strcat(renderbuf, idtag);
-	    }
-#endif				/* ID_EXT */
 	    for (i = 0; i <= t->maxcol; i++) {
 		check_row(t, r);
-#ifdef ID_EXT
-		if (t->tabidvalue[r][i] != NULL && h == 0) {
-		    idtag = Sprintf("<_id id=\"%s\">",
-				    html_quote((t->tabidvalue[r][i])->ptr));
-		    Strcat(renderbuf, idtag);
-		}
-#endif				/* ID_EXT */
 		if (!(t->tabattr[r][i] & HTT_X)) {
 		    w = t->tabwidth[i];
 		    for (j = i + 1;
@@ -2337,12 +2052,6 @@ skip_space(struct table *t, char *line, struct table_linfo *linfo,
 		w += len;
 	    }
 	    if (s > 0) {
-#ifdef USE_M17N
-		if (!SimplePreserveSpace &&
-		    ctype == PC_KANJI1 && prev_ctype == PC_KANJI1)
-		    skip += s;
-		else
-#endif
 		    skip += s - 1;
 	    }
 	    s = 0;
@@ -2488,9 +2197,6 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 	       int width, struct parsed_tag *tag)
 {
     int cmd;
-#ifdef ID_EXT
-    char *p;
-#endif
     struct table_cell *cell = &tbl->cell;
     int colspan, rowspan;
     int col, prev_col;
@@ -2620,12 +2326,6 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 		break;
 	    }
 	}
-#ifdef ID_EXT
-	if (parsedtag_get_value(tag, ATTR_ID, &p)) {
-	    check_row(tbl, tbl->row);
-	    tbl->tridvalue[tbl->row] = Strnew_charp(p);
-	}
-#endif				/* ID_EXT */
 	tbl->trattr = align | valign;
 	break;
     case HTML_TH:
@@ -2733,10 +2433,6 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 	    v = RELATIVE_WIDTH(v);
 #endif				/* not TABLE_EXPAND */
 	}
-#ifdef ID_EXT
-	if (parsedtag_get_value(tag, ATTR_ID, &p))
-	    tbl->tabidvalue[tbl->row][tbl->col] = Strnew_charp(p);
-#endif				/* ID_EXT */
 #ifdef NOWRAP
 	if (v != 0) {
 	    /* NOWRAP and WIDTH= conflicts each other */
@@ -2792,9 +2488,6 @@ feed_table_tag(struct table *tbl, char *line, struct table_mode *mode,
 	for (i = 0; i < rowspan; i++) {
 	    check_row(tbl, tbl->row + i);
 	    for (j = 0; j < colspan; j++) {
-#if 0
-		tbl->tabattr[tbl->row + i][tbl->col + j] &= ~(HTT_X | HTT_Y);
-#endif
 		if (!(tbl->tabattr[tbl->row + i][tbl->col + j] &
 		      (HTT_X | HTT_Y))) {
 		    tbl->tabattr[tbl->row + i][tbl->col + j] |=
@@ -3406,7 +3099,6 @@ pushTable(struct table *tbl, struct table *tbl1)
     tbl->ntable++;
 }
 
-#ifdef MATRIX
 int
 correct_table_matrix(struct table *t, int col, int cspan, int a, double b)
 {
@@ -3726,7 +3418,6 @@ set_table_matrix(struct table *t, int width)
     }
     correct_table_matrix(t, 0, size, width, b);
 }
-#endif				/* MATRIX */
 
 /* Local Variables:    */
 /* c-basic-offset: 4   */
