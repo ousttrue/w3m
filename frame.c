@@ -302,13 +302,11 @@ static struct frameset *frame_download_source(struct frame_body *b,
     b->flags = 0;
   default:
     is_redisplay = TRUE;
-    w3m_dump |= DUMP_FRAME;
     buf = loadGeneralFile(b->url, baseURL ? baseURL : currentURL, b->referer,
                           flag | RG_FRAME_SRC, b->request);
     /* XXX certificate? */
     if (buf && buf != NO_BUFFER)
       b->ssl_certificate = buf->ssl_certificate;
-    w3m_dump &= ~DUMP_FRAME;
     is_redisplay = FALSE;
     break;
   }

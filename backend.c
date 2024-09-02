@@ -244,7 +244,6 @@ static void call_command_function(char *str) {
 int backend(void) {
   char *str;
 
-  w3m_dump = 0;
   if (COLS == 0)
     COLS = DEFAULT_COLS;
 

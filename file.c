@@ -511,7 +511,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
         /* there is no header */
         break;
       /* last header */
-    } else if (!(w3m_dump & DUMP_HEAD)) {
+    } else {
       if (lineBuf2) {
         Strcat(lineBuf2, tmp);
       } else {
@@ -539,8 +539,6 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
       }
-      lineBuf2 = tmp;
-    } else {
       lineBuf2 = tmp;
     }
     if ((uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS) &&
@@ -1181,7 +1179,7 @@ static Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw,
                    NULL);
     /* XXX how to count? */
     /* Since nonce is unique up to each *-Authenticate and w3m does not re-use
-       *-Authenticate: headers, nonce-count should be always "00000001". */
+     *-Authenticate: headers, nonce-count should be always "00000001". */
     Strcat_m_charp(tmp, ", nc=", nc, NULL);
   }
 
@@ -1462,7 +1460,7 @@ Buffer *loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
 
   checkRedirection(NULL);
 
-load_doc : {
+load_doc: {
   const char *sc_redirect;
   parseURL2(tpath, &pu, current);
   sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
@@ -1780,12 +1778,10 @@ page_loaded:
     return NO_BUFFER;
   }
 
-  if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress &&
-      !(w3m_dump & DUMP_EXTRA)) {
+  if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
     uncompress_stream(&f, &pu.real_file);
   } else if (f.compression != CMP_NOCOMPRESS) {
-    if (!(w3m_dump & DUMP_SOURCE) &&
-        (w3m_dump & ~DUMP_FRAME || is_text_type(t) || searchExtViewer(t))) {
+    if (is_text_type(t) || searchExtViewer(t)) {
       if (t_buf == NULL)
         t_buf = newBuffer(INIT_BUFFER_WIDTH);
       uncompress_stream(&f, &t_buf->sourcefile);
@@ -1802,7 +1798,7 @@ page_loaded:
     proc = loadBuffer;
   else if (w3m_backend)
     ;
-  else if (!(w3m_dump & ~DUMP_FRAME) || is_dump_text_type(t)) {
+  else if (is_dump_text_type(t)) {
     if (!do_download && searchExtViewer(t) != NULL) {
       proc = DO_EXTERNAL;
     } else {
@@ -1822,8 +1818,7 @@ page_loaded:
       }
       return NO_BUFFER;
     }
-  } else if (w3m_dump & DUMP_FRAME)
-    return NULL;
+  }
 
   if (t_buf == NULL)
     t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -3385,19 +3380,6 @@ static Str process_form_int(struct parsed_tag *tag, int fid) {
     form_stack = New_Reuse(int, form_stack, forms_size);
   }
   form_stack[form_sp] = fid;
-
-  if (w3m_halfdump) {
-    Str tmp = Sprintf("<form_int fid=\"%d\" action=\"%s\" method=\"%s\"", fid,
-                      html_quote(q), html_quote(p));
-    if (s)
-      Strcat(tmp, Sprintf(" enctype=\"%s\"", html_quote(s)));
-    if (tg)
-      Strcat(tmp, Sprintf(" target=\"%s\"", html_quote(tg)));
-    if (n)
-      Strcat(tmp, Sprintf(" name=\"%s\"", html_quote(n)));
-    Strcat_charp(tmp, ">");
-    return tmp;
-  }
 
   forms[fid] = newFormList(q, p, r, s, tg, n, NULL);
   return NULL;
@@ -5826,10 +5808,7 @@ void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
 
   init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
 
-  if (w3m_halfdump)
-    htmlenv1.f = stdout;
-  else
-    htmlenv1.buf = newTextLineList();
+  htmlenv1.buf = newTextLineList();
 #if defined(USE_M17N) || defined(USE_IMAGE)
   cur_baseURL = baseURL(newBuf);
 #endif
@@ -5846,11 +5825,6 @@ void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    if (w3m_dump & DUMP_EXTRA)
-      printf("W3m-in-progress: %s\n",
-             convert_size2(linelen, current_content_length, TRUE));
-    if (w3m_dump & DUMP_SOURCE)
-      continue;
     showProgress(&linelen, &trbyte);
     /*
      * if (frame_source)
@@ -5870,11 +5844,6 @@ void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
 #endif
   if (htmlenv1.title)
     newBuf->buffername = htmlenv1.title;
-  if (w3m_halfdump) {
-    TRAP_OFF;
-    print_internal_information(&htmlenv1);
-    return;
-  }
   if (w3m_backend) {
     TRAP_OFF;
     print_internal_information(&htmlenv1);
@@ -5956,11 +5925,6 @@ Buffer *loadBuffer(URLFile *uf, Buffer *volatile newBuf) {
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    if (w3m_dump & DUMP_EXTRA)
-      printf("W3m-in-progress: %s\n",
-             convert_size2(linelen, current_content_length, TRUE));
-    if (w3m_dump & DUMP_SOURCE)
-      continue;
     showProgress(&linelen, &trbyte);
     if (frame_source)
       continue;
