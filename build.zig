@@ -62,6 +62,7 @@ pub fn build(b: *std.Build) void {
     const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
 
     const cflags = [_][]const u8{
+        "-std=c99",
         "-DHAVE_CONFIG_H",
         b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
         b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
