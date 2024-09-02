@@ -110,9 +110,6 @@ extern void curlno(void);
 extern void execCmd(void);
 #define dispI nulcmd
 #define stopI nulcmd
-extern void setAlarm(void);
-extern AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status,
-                                 int cmd, void *data);
 extern void reinit(void);
 extern void defKey(void);
 extern void newT(void);

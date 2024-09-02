@@ -3,7 +3,7 @@ FuncList w3mFuncList[] = {
     /*1*/ {"ABORT", quitfm},
     /*2*/ {"ACCESSKEY", accessKey},
     /*3*/ {"ADD_BOOKMARK", adBmark},
-    /*4*/ {"ALARM", setAlarm},
+    /*4*/ {"ALARM", nulcmd},
     /*5*/ {"BACK", backBf},
     /*6*/ {"BEGIN", goLineF},
     /*7*/ {"BOOKMARK", ldBmark},

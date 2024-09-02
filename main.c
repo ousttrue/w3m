@@ -35,8 +35,6 @@ typedef struct _Event {
 static Event *CurrentEvent = NULL;
 static Event *LastEvent = NULL;
 
-static AlarmEvent DefaultAlarm = {0, AL_UNSET, FUNCNAME_nulcmd, NULL};
-static AlarmEvent *CurrentAlarm = &DefaultAlarm;
 static MySignalHandler SigAlarm(SIGNAL_ARG);
 
 static int need_resize_screen = FALSE;
@@ -789,27 +787,6 @@ int main(int argc, char **argv, char **envp) {
       continue;
     }
     /* get keypress event */
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET) {
-        CurrentAlarm = Currentbuf->event;
-        if (CurrentAlarm->sec == 0) { /* refresh (0sec) */
-          Currentbuf->event = NULL;
-          CurrentKey = -1;
-          CurrentKeyData = NULL;
-          CurrentCmdData = (char *)CurrentAlarm->data;
-          w3mFuncList[CurrentAlarm->cmd].func();
-          CurrentCmdData = NULL;
-          continue;
-        }
-      } else
-        Currentbuf->event = NULL;
-    }
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
     mySignal(SIGWINCH, resize_hook);
     {
       do {
@@ -818,9 +795,6 @@ int main(int argc, char **argv, char **envp) {
       } while (sleep_till_anykey(1, 0) <= 0);
     }
     c = getch();
-    if (CurrentAlarm->sec > 0) {
-      alarm(0);
-    }
     if (IS_ASCII(c)) { /* Ascii */
       if (('0' <= c) && (c <= '9') &&
           (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
@@ -4154,74 +4128,8 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-static MySignalHandler SigAlarm(SIGNAL_ARG) {
-  char *data;
-
-  if (CurrentAlarm->sec > 0) {
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-    CurrentCmdData = data = (char *)CurrentAlarm->data;
-    w3mFuncList[CurrentAlarm->cmd].func();
-    CurrentCmdData = NULL;
-    if (CurrentAlarm->status == AL_IMPLICIT_ONCE) {
-      CurrentAlarm->sec = 0;
-      CurrentAlarm->status = AL_UNSET;
-    }
-    if (Currentbuf->event) {
-      if (Currentbuf->event->status != AL_UNSET)
-        CurrentAlarm = Currentbuf->event;
-      else
-        Currentbuf->event = NULL;
-    }
-    if (!Currentbuf->event)
-      CurrentAlarm = &DefaultAlarm;
-    if (CurrentAlarm->sec > 0) {
-      mySignal(SIGALRM, SigAlarm);
-      alarm(CurrentAlarm->sec);
-    }
-  }
-  SIGNAL_RETURN;
-}
-
 DEFUN(setAlarm, ALARM, "Set alarm") {
-  char *data;
-  int sec = 0, cmd = -1;
-
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  data = searchKeyData();
-  if (data == NULL || *data == '\0') {
-    data = inputStrHist("(Alarm)sec command: ", "", TextHist);
-    if (data == NULL) {
-      displayBuffer(Currentbuf, B_NORMAL);
-      return;
-    }
-  }
-  if (*data != '\0') {
-    sec = atoi(getWord(&data));
-    if (sec > 0)
-      cmd = getFuncList(getWord(&data));
-  }
-  if (cmd >= 0) {
-    data = getQWord(&data);
-    setAlarmEvent(&DefaultAlarm, sec, AL_EXPLICIT, cmd, data);
-    disp_message_nsec(
-        Sprintf("%dsec %s %s", sec, w3mFuncList[cmd].id, data)->ptr, FALSE, 1,
-        FALSE, TRUE);
-  } else {
-    setAlarmEvent(&DefaultAlarm, 0, AL_UNSET, FUNCNAME_nulcmd, NULL);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-}
-
-AlarmEvent *setAlarmEvent(AlarmEvent *event, int sec, short status, int cmd,
-                          void *data) {
-  if (event == NULL)
-    event = New(AlarmEvent);
-  event->sec = sec;
-  event->status = status;
-  event->cmd = cmd;
-  event->data = data;
-  return event;
+  // assert(false);
 }
 
 DEFUN(reinit, REINIT, "Reload configuration file") {
@@ -4821,9 +4729,6 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   pushBuffer(buf);
   if (replace || new_tab)
     deletePrevBuf();
-  if (reload)
-    Currentbuf->event =
-        setAlarmEvent(Currentbuf->event, 1, AL_IMPLICIT, FUNCNAME_reload, NULL);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
