@@ -1,8 +1,8 @@
-/* $Id: terms.c,v 1.63 2010/08/20 09:34:47 htrb Exp $ */
 /*
  * An original curses library for EUC-kanji by Akinori ITO,     December 1989
  * revised by Akinori ITO, January 1995
  */
+#include "terms.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -23,15 +23,12 @@ static char *title_str = NULL;
 
 static int tty;
 
-#include "terms.h"
 #include "fm.h"
 #include "myctype.h"
 
-char *getenv(const char *);
-MySignalHandler reset_exit(SIGNAL_ARG), reset_error_exit(SIGNAL_ARG),
-    error_dump(SIGNAL_ARG);
-void setlinescols(void);
-void flush_tty();
+MySignalHandler reset_exit(SIGNAL_ARG);
+MySignalHandler reset_error_exit(SIGNAL_ARG);
+MySignalHandler error_dump(SIGNAL_ARG);
 
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
@@ -80,7 +77,7 @@ typedef struct sgttyb TerminalMode;
 #define C_ASCII 0x00
 #define C_CTRL 0xc0
 
-#define CHMODE(c) ((c)&C_WHICHCHAR)
+#define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
 #define SETCH(var, ch, len) ((var) = (ch))
 
@@ -102,7 +99,7 @@ typedef struct sgttyb TerminalMode;
 
 #define S_DIRTY 0x20
 
-#define SETPROP(var, prop) (var = (((var)&S_DIRTY) | prop))
+#define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
 
 /* Line status */
 #define L_DIRTY 0x01
@@ -110,9 +107,9 @@ typedef struct sgttyb TerminalMode;
 #define L_NEED_CE 0x04
 #define L_CLRTOEOL 0x08
 
-#define ISDIRTY(d) ((d)&L_DIRTY)
-#define ISUNUSED(d) ((d)&L_UNUSED)
-#define NEED_CE(d) ((d)&L_NEED_CE)
+#define ISDIRTY(d) ((d) & L_DIRTY)
+#define ISUNUSED(d) ((d) & L_UNUSED)
+#define NEED_CE(d) ((d) & L_NEED_CE)
 
 typedef unsigned short l_prop;
 
@@ -144,27 +141,23 @@ static int graph_enabled = 0;
 
 static char gcmap[96];
 
-extern int tgetent(char *, char *);
-extern int tgetnum(char *);
-extern int tgetflag(char *);
-extern char *tgetstr(char *, char **);
-extern char *tgoto(char *, int, int);
-extern int tputs(char *, int, int (*)(char));
-void clear(), wrap(), touch_line(), touch_column(int);
-void clrtoeol(void); /* conflicts with curs_clear(3)? */
-
-static int write1(char);
+static int write1(char c) {
+  putc(c, ttyf);
+#ifdef SCREEN_DEBUG
+  flush_tty();
+#endif /* SCREEN_DEBUG */
+  return 0;
+}
 
 static void writestr(char *s) { tputs(s, 1, write1); }
 
-#define MOVE(line, column) writestr(tgoto(T_cm, column, line));
+static void MOVE(int line, int column) { writestr(tgoto(T_cm, column, line)); }
 
 #define W3M_TERM_INFO(name, title, mouse) name, title
 
 static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
 static char SCREEN_TITLE[] = "\033k%s\033\134";
 
-/* *INDENT-OFF* */
 static struct w3m_term_info {
   char *term;
   char *title_str;
@@ -177,7 +170,6 @@ static struct w3m_term_info {
     {W3M_TERM_INFO("screen", SCREEN_TITLE, 0)},
     {W3M_TERM_INFO(NULL, NULL, 0)}};
 #undef W3M_TERM_INFO
-/* *INDENT-ON * */
 
 int set_tty(void) {
   char *ttyn;
@@ -205,7 +197,7 @@ int set_tty(void) {
   return 0;
 }
 
-void ttymode_set(int mode, int imode) {
+static void ttymode_set(int mode, int imode) {
   TerminalMode ioval;
 
   TerminalGet(tty, &ioval);
@@ -222,7 +214,7 @@ void ttymode_set(int mode, int imode) {
   }
 }
 
-void ttymode_reset(int mode, int imode) {
+static void ttymode_reset(int mode, int imode) {
   TerminalMode ioval;
 
   TerminalGet(tty, &ioval);
@@ -240,7 +232,7 @@ void ttymode_reset(int mode, int imode) {
 }
 
 #ifndef HAVE_SGTTY_H
-void set_cc(int spec, int val) {
+static void set_cc(int spec, int val) {
   TerminalMode ioval;
 
   TerminalGet(tty, &ioval);
@@ -468,14 +460,6 @@ int initscr(void) {
   return 0;
 }
 
-static int write1(char c) {
-  putc(c, ttyf);
-#ifdef SCREEN_DEBUG
-  flush_tty();
-#endif /* SCREEN_DEBUG */
-  return 0;
-}
-
 void move(int line, int column) {
   if (line >= 0 && line < LINES)
     CurLine = line;
@@ -637,11 +621,11 @@ int graph_ok(void) {
   return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
 }
 
-void setfcolor(int color) {
-  CurrentMode &= ~COL_FCOLOR;
-  if ((color & 0xf) <= 7)
-    CurrentMode |= (((color & 7) | 8) << 8);
-}
+// void setfcolor(int color) {
+//   CurrentMode &= ~COL_FCOLOR;
+//   if ((color & 0xf) <= 7)
+//     CurrentMode |= (((color & 7) | 8) << 8);
+// }
 
 static char *color_seq(int colmode) {
   static char seqbuf[32];
@@ -834,7 +818,7 @@ void clrtoeol(void) { /* Clear to the end of line */
 
 void clrtoeolx(void) { clrtoeol(); }
 
-void clrtobot_eol(void (*clrtoeol)()) {
+static void clrtobot_eol(void (*clrtoeol)()) {
   int l, c;
 
   l = CurLine;
@@ -950,7 +934,7 @@ void term_cbreak(void) {
   term_noecho();
 }
 
-void term_title(char *s) {
+void term_title(const char *s) {
   if (!fmInitialized)
     return;
   if (title_str != NULL) {
@@ -958,7 +942,7 @@ void term_title(char *s) {
   }
 }
 
-char getch(void) {
+char getch() {
   char c;
 
   while (read(tty, &c, 1) < (int)1) {
@@ -973,7 +957,7 @@ char getch(void) {
 
 void bell(void) { write1(7); }
 
-void skip_escseq(void) {
+static void skip_escseq(void) {
   int c;
 
   c = getch();
