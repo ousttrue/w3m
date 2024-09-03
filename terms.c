@@ -134,9 +134,6 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc, *T_so,
     *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
 
 int LINES, COLS;
-#if defined(__CYGWIN__)
-int LASTLINE;
-#endif /* defined(__CYGWIN__) */
 
 static int max_LINES = 0, max_COLS = 0;
 static int tab_step = 8;
@@ -728,10 +725,10 @@ void refresh(void) {
            * avoid the scroll, I prohibit to draw character on
            * (COLS-1,LINES-1).
            */
-#if !defined(USE_BG_COLOR) || defined(__CYGWIN__)
+#if !defined(USE_BG_COLOR)
         if (line == LINES - 1 && col == COLS - 1)
           break;
-#endif /* !defined(USE_BG_COLOR) || defined(__CYGWIN__) */
+#endif /* !defined(USE_BG_COLOR)  */
         if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) ||
             (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) ||
             (!(pr[col] & S_BOLD) && (mode & S_BOLD)) ||

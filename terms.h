@@ -3,8 +3,5 @@
 #define TERMS_H
 
 extern int LINES, COLS;
-#if defined(__CYGWIN__)
-extern int LASTLINE;
-#endif
 
 #endif /* not TERMS_H */

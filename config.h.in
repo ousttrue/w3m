@@ -199,40 +199,12 @@ typedef RETSIGTYPE MySignalHandler;
 #define lstat stat
 #endif
 
-#if defined( __CYGWIN32__ ) && !defined( __CYGWIN__ )
-#define __CYGWIN__
-#endif
-
-#if defined( __CYGWIN__ ) || defined( __EMX__ )
-#define SUPPORT_DOS_DRIVE_PREFIX 1
-#endif
-
-#if defined( __CYGWIN__ )
-#define SUPPORT_NETBIOS_SHARE 1
-#define SUPPORT_WIN9X_CONSOLE_MBCS 1
-#endif
-
-#if defined(__CYGWIN__) && defined(__x86_64__)
-#define DONT_CALL_GC_AFTER_FORK
-#endif
-
 #if defined(__DJGPP__)
 #define DEFAULT_TERM	"dosansi"
 #else
 #define DEFAULT_TERM	0	/* XXX */
 #endif
 
-#if defined(__EMX__) /* use $extension? */
-#define GUNZIP_CMDNAME  "gzip"
-#define BUNZIP2_CMDNAME "bzip2"
-#define INFLATE_CMDNAME  "inflate.exe"
-#define W3MBOOKMARK_CMDNAME	"w3mbookmark.exe"
-#define W3MHELPERPANEL_CMDNAME	"w3mhelperpanel.exe"
-#define DEV_NULL_PATH	"nul"
-#define DEV_TTY_PATH	"con"
-#define CGI_EXTENSION	".cmd"
-#define USE_PATH_ENVVAR
-#else
 #define GUNZIP_CMDNAME  "gunzip"
 #define BUNZIP2_CMDNAME "bunzip2"
 #define INFLATE_CMDNAME	"inflate"
@@ -241,7 +213,7 @@ typedef RETSIGTYPE MySignalHandler;
 #define DEV_NULL_PATH	"/dev/null"
 #define DEV_TTY_PATH	"/dev/tty"
 #define CGI_EXTENSION	".cgi"
-#endif
+
 #define BROTLI_CMDNAME "brotli"
 
 #define PATH_SEPARATOR	':'

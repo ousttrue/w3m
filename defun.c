@@ -13,9 +13,6 @@
 #include <sys/wait.h>
 #endif
 #include <time.h>
-#if defined(__CYGWIN__) && defined(USE_BINMODE_STREAM)
-#include <io.h>
-#endif
 #include "terms.h"
 #include "myctype.h"
 #include "regex.h"
