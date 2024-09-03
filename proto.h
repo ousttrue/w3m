@@ -368,7 +368,6 @@ extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
 extern void getTCstr(void);
-extern void setupscreen(void);
 extern pid_t open_pipe_rw(FILE **fr, FILE **fw);
 
 extern void initMimeTypes();

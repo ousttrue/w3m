@@ -224,6 +224,7 @@ fn build_exe(
             "symbol.c",
             "entity.c",
             "terms.c",
+            "scr.c",
             "url.c",
             "ftp.c",
             "mimehead.c",

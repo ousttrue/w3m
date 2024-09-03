@@ -742,9 +742,6 @@ typedef struct http_request {
  * Globals.
  */
 
-extern int LINES, COLS;
-#define LASTLINE (LINES - 1)
-
 global int Tabstop init(8);
 global int IndentIncr init(4);
 global int ShowEffect init(TRUE);

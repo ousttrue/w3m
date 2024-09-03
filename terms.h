@@ -1,26 +1,29 @@
 #pragma once
 
+extern char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc,
+    *T_so, *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me, *T_ti,
+    *T_te, *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
+
+extern char gcmap[96];
+
 extern int LINES, COLS;
+#define LASTLINE (LINES - 1)
+
 void setlinescols();
+int initscr(void);
 
 extern int tgetent(char *, char *);
 extern int tgetnum(char *);
 extern int tgetflag(char *);
 extern char *tgetstr(char *, char **);
-extern char *tgoto(char *, int, int);
-extern int tputs(char *, int, int (*)(char));
+extern char *tgoto(const char *, int, int);
+extern int tputs(const char *, int, int (*)(char));
 
-// escape sequence
-void standout();
-void standend();
-void bold();
-void boldend();
-void underline();
-void underlineend();
-// graph
 int graph_ok();
-void graphend();
-void graphstart();
+void term_clear();
+void term_move(int line, int column);
+int term_putc(char c);
+void term_puts(const char *s);
 
 // tty
 void flush_tty();
@@ -31,27 +34,9 @@ int sleep_till_anykey(int sec, int purge);
 void term_cbreak();
 void term_title(const char *s);
 void bell();
-
-// screen
-void refresh();
-void clear();
-void move(int line, int column);
-void addch(char c);
-void touch_line();
-void touch_column(int);
-void wrap();
-void clrtoeol(); /* conflicts with curs_clear(3)? */
-int initscr(void);
-void clrtoeolx(void);
-void clrtobot(void);
-void clrtobotx(void);
-void addstr(char *s);
-void addnstr(char *s, int n);
-void addnstr_sup(char *s, int n);
 void crmode(void);
 void nocrmode(void);
 void term_echo(void);
 void term_noecho(void);
 void term_raw(void);
 void term_cooked(void);
-void toggle_stand(void);
