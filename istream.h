@@ -18,9 +18,12 @@ struct stream_buffer {
 
 typedef struct stream_buffer *StreamBuffer;
 
+typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
+typedef void (*CloseFunc)(void *handle);
+
 struct io_file_handle {
   FILE *f;
-  void (*close)();
+  CloseFunc close;
 };
 
 struct ssl_handle {
@@ -42,8 +45,8 @@ struct base_stream {
   void *handle;
   char type;
   char iseos;
-  int (*read)();
-  void (*close)();
+  ReadFunc read;
+  CloseFunc close;
 };
 
 struct file_stream {
@@ -51,8 +54,8 @@ struct file_stream {
   struct io_file_handle *handle;
   char type;
   char iseos;
-  int (*read)();
-  void (*close)();
+  ReadFunc read;
+  CloseFunc close;
 };
 
 struct str_stream {
@@ -60,8 +63,8 @@ struct str_stream {
   Str handle;
   char type;
   char iseos;
-  int (*read)();
-  void (*close)();
+  ReadFunc read;
+  CloseFunc close;
 };
 
 struct ssl_stream {
@@ -69,8 +72,8 @@ struct ssl_stream {
   struct ssl_handle *handle;
   char type;
   char iseos;
-  int (*read)();
-  void (*close)();
+  ReadFunc read;
+  CloseFunc close;
 };
 
 struct encoded_stream {
@@ -78,8 +81,8 @@ struct encoded_stream {
   struct ens_handle *handle;
   char type;
   char iseos;
-  int (*read)();
-  void (*close)();
+  ReadFunc read;
+  CloseFunc close;
 };
 
 union input_stream {

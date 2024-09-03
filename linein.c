@@ -18,21 +18,41 @@ static char **CFileBuf = NULL;
 static int NCFileBuf;
 static int NCFileOffset;
 
-static void insertself(char c), _mvR(void), _mvL(void), _mvRw(void),
-    _mvLw(void), delC(void), insC(void), _mvB(void), _mvE(void), _enter(void),
-    _quo(void), _bs(void), _bsw(void), killn(void), killb(void), _inbrk(void),
-    _esc(void), _editor(void), _prev(void), _next(void), _compl(void),
-    _tcompl(void), _dcompl(void), _rdcompl(void), _rcompl(void);
+typedef void (*InputKeymapFunc)(int);
+static void insertself(int c);
+static void _mvR(int);
+static void _mvL(int);
+static void _mvRw(int);
+static void _mvLw(int);
+static void delC(int);
+static void insC(void);
+static void _mvB(int);
+static void _mvE(int);
+static void _enter(int);
+static void _quo(int);
+static void _bs(int);
+static void _bsw(int);
+static void killn(int);
+static void killb(int);
+static void _inbrk(int);
+static void _esc(int);
+static void _editor(int);
+static void _prev(int);
+static void _next(int);
+static void _compl(int);
+static void _tcompl(int);
+static void _dcompl(void);
+static void _rdcompl(void);
+static void _rcompl(void);
 
 static int terminated(unsigned char c);
-#define iself ((void (*)())insertself)
+#define iself insertself
 
 static void next_compl(int next);
 static void next_dcompl(int next);
 static Str doComplete(Str ifn, int *status, int next);
 
-/* *INDENT-OFF* */
-void (*InputKeymap[32])() = {
+InputKeymapFunc InputKeymap[32] = {
     /*  C-@     C-a     C-b     C-c     C-d     C-e     C-f     C-g     */
     _compl,
     _mvB,
@@ -173,7 +193,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
         _dcompl();
         need_redraw = TRUE;
       } else {
-        _compl();
+        _compl(-1);
         cm_disp_next = -1;
       }
     } else if (!i_quote && CLen == CPos &&
@@ -183,7 +203,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
         need_redraw = TRUE;
       }
     } else if (!i_quote && c == DEL_CODE) {
-      _bs();
+      _bs(-1);
       cm_next = FALSE;
       cm_disp_next = -1;
     } else if (!i_quote && c < 0x20) { /* Control code */
@@ -285,7 +305,7 @@ static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
   }
 }
 
-static void _esc(void) {
+static void _esc(int) {
   char c;
 
   switch (c = getch()) {
@@ -293,16 +313,16 @@ static void _esc(void) {
   case 'O':
     switch (c = getch()) {
     case 'A':
-      _prev();
+      _prev(-1);
       break;
     case 'B':
-      _next();
+      _next(-1);
       break;
     case 'C':
-      _mvR();
+      _mvR(-1);
       break;
     case 'D':
-      _mvL();
+      _mvL(-1);
       break;
     }
     break;
@@ -322,15 +342,15 @@ static void _esc(void) {
     break;
   case 'f':
     if (emacs_like_lineedit)
-      _mvRw();
+      _mvRw(-1);
     break;
   case 'b':
     if (emacs_like_lineedit)
-      _mvLw();
+      _mvLw(-1);
     break;
   case CTRL_H:
     if (emacs_like_lineedit)
-      _bsw();
+      _bsw(-1);
     break;
   }
 }
@@ -345,7 +365,7 @@ static void insC(void) {
   }
 }
 
-static void delC(void) {
+static void delC(int) {
   int i = CPos;
   int delta = 1;
 
@@ -358,12 +378,12 @@ static void delC(void) {
   CLen -= delta;
 }
 
-static void _mvL(void) {
+static void _mvL(int) {
   if (CPos > 0)
     CPos--;
 }
 
-static void _mvLw(void) {
+static void _mvLw(int) {
   int first = 1;
   while (CPos > 0 && (first || !terminated(strBuf->ptr[CPos - 1]))) {
     CPos--;
@@ -373,7 +393,7 @@ static void _mvLw(void) {
   }
 }
 
-static void _mvRw(void) {
+static void _mvRw(int) {
   int first = 1;
   while (CPos < CLen && (first || !terminated(strBuf->ptr[CPos - 1]))) {
     CPos++;
@@ -383,30 +403,30 @@ static void _mvRw(void) {
   }
 }
 
-static void _mvR(void) {
+static void _mvR(int) {
   if (CPos < CLen)
     CPos++;
 }
 
-static void _bs(void) {
+static void _bs(int) {
   if (CPos > 0) {
-    _mvL();
-    delC();
+    _mvL(-1);
+    delC(-1);
   }
 }
 
-static void _bsw(void) {
+static void _bsw(int) {
   int t = 0;
   while (CPos > 0 && !t) {
-    _mvL();
+    _mvL(-1);
     t = (move_word && terminated(strBuf->ptr[CPos - 1]));
-    delC();
+    delC(-1);
   }
 }
 
-static void _enter(void) { i_cont = FALSE; }
+static void _enter(int) { i_cont = FALSE; }
 
-static void insertself(char c) {
+static void insertself(int c) {
   if (CLen >= STR_LEN)
     return;
   insC();
@@ -415,32 +435,32 @@ static void insertself(char c) {
   CPos++;
 }
 
-static void _quo(void) { i_quote = TRUE; }
+static void _quo(int) { i_quote = TRUE; }
 
-static void _mvB(void) { CPos = 0; }
+static void _mvB(int) { CPos = 0; }
 
-static void _mvE(void) { CPos = CLen; }
+static void _mvE(int) { CPos = CLen; }
 
-static void killn(void) {
+static void killn(int) {
   CLen = CPos;
   Strtruncate(strBuf, CLen);
 }
 
-static void killb(void) {
+static void killb(int) {
   while (CPos > 0)
-    _bs();
+    _bs(-1);
 }
 
-static void _inbrk(void) {
+static void _inbrk(int) {
   i_cont = FALSE;
   i_broken = TRUE;
 }
 
-static void _compl(void) { next_compl(1); }
+static void _compl(int) { next_compl(1); }
 
 static void _rcompl(void) { next_compl(-1); }
 
-static void _tcompl(void) {
+static void _tcompl(int) {
   if (cm_mode & CPL_OFF)
     cm_mode = CPL_ON;
   else if (cm_mode & CPL_ON)
@@ -770,7 +790,7 @@ static Str doComplete(Str ifn, int *status, int next) {
   return Str_conv_from_system(CompleteBuf);
 }
 
-static void _prev(void) {
+static void _prev(int) {
   Hist *hist = CurrentHist;
   char *p;
 
@@ -793,7 +813,7 @@ static void _prev(void) {
   offset = 0;
 }
 
-static void _next(void) {
+static void _next(int) {
   Hist *hist = CurrentHist;
   char *p;
 
@@ -846,7 +866,7 @@ static int terminated(unsigned char c) {
   return 0;
 }
 
-static void _editor(void) {
+static void _editor(int) {
   FormItemList fi;
   char *p;
 

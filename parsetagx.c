@@ -16,21 +16,20 @@ static int toLength(char *, int *);
 static int toAlign(char *, int *);
 static int toVAlign(char *, int *);
 
-/* *INDENT-OFF* */
-static int (*toValFunc[])() = {
-    noConv,   /* VTYPE_NONE    */
-    noConv,   /* VTYPE_STR     */
-    toNumber, /* VTYPE_NUMBER  */
-    toLength, /* VTYPE_LENGTH  */
-    toAlign,  /* VTYPE_ALIGN   */
-    toVAlign, /* VTYPE_VALIGN  */
-    noConv,   /* VTYPE_ACTION  */
-    noConv,   /* VTYPE_ENCTYPE */
-    noConv,   /* VTYPE_METHOD  */
-    noConv,   /* VTYPE_MLENGTH */
-    noConv,   /* VTYPE_TYPE    */
+typedef int (*ToValFunc)(char *, void *);
+static ToValFunc toValFunc[] = {
+    (ToValFunc)noConv,   /* VTYPE_NONE    */
+    (ToValFunc)noConv,   /* VTYPE_STR     */
+    (ToValFunc)toNumber, /* VTYPE_NUMBER  */
+    (ToValFunc)toLength, /* VTYPE_LENGTH  */
+    (ToValFunc)toAlign,  /* VTYPE_ALIGN   */
+    (ToValFunc)toVAlign, /* VTYPE_VALIGN  */
+    (ToValFunc)noConv,   /* VTYPE_ACTION  */
+    (ToValFunc)noConv,   /* VTYPE_ENCTYPE */
+    (ToValFunc)noConv,   /* VTYPE_METHOD  */
+    (ToValFunc)noConv,   /* VTYPE_MLENGTH */
+    (ToValFunc)noConv,   /* VTYPE_TYPE    */
 };
-/* *INDENT-ON* */
 
 static int noConv(char *oval, char **str) {
   *str = oval;
