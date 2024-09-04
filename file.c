@@ -1,6 +1,7 @@
 /* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
 /* vi: set sw=4 ts=8 ai sm noet : */
 #include "fm.h"
+#include "tty.h"
 #include "scr.h"
 #include <sys/types.h>
 #include "myctype.h"
@@ -552,7 +553,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       http_response_code = atoi(p);
       if (fmInitialized) {
         message(lineBuf2->ptr, 0, 0);
-        refresh();
+        term_refresh();
       }
     }
     if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
@@ -1306,7 +1307,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
      */
     if (fmInitialized) {
       message("Wrong username or password", 0, 0);
-      refresh();
+      term_refresh();
     } else
       fprintf(stderr, "Wrong username or password\n");
     sleep(1);
@@ -1551,7 +1552,7 @@ load_doc: {
       /* FIXME: gettextize? */
       message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0,
               0);
-      refresh();
+      term_refresh();
     }
     if (t_buf == NULL)
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -5599,7 +5600,7 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
       addch('|');
     standend();
     /* no_clrtoeol(); */
-    refresh();
+    term_refresh();
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
@@ -5622,7 +5623,7 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
     message(messages->ptr, 0, 0);
-    refresh();
+    term_refresh();
   }
 }
 

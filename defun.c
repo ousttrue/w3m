@@ -2,6 +2,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "scr.h"
+#include "tty.h"
 #include "defun.h"
 #include <stdio.h>
 #include <signal.h>
@@ -1190,7 +1191,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 #endif /* not SIGSTOP */
   move(LASTLINE, 0);
   clrtoeolx();
-  refresh();
+  term_refresh();
   fmTerm();
 #ifndef SIGSTOP
   shell = getenv("SHELL");
@@ -1349,7 +1350,7 @@ static Buffer *loadLink(char *url, char *target, char *referer,
   const int *no_referer_ptr;
 
   message(Sprintf("loading %s", url)->ptr, 0, 0);
-  refresh();
+  term_refresh();
 
   no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
   base = baseURL(Currentbuf);
@@ -1567,7 +1568,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     return;
   /* FIXME: gettextize? */
   message(Sprintf("loading %s", a->url)->ptr, 0, 0);
-  refresh();
+  term_refresh();
   buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
@@ -2408,7 +2409,7 @@ static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
   if (handleMailto(url))
     return;
 
-  refresh();
+  term_refresh();
   buf = loadGeneralFile(url, current, referer, 0, request);
   if (buf == NULL) {
     /* FIXME: gettextize? */
@@ -2919,7 +2920,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
       (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
     if (fmInitialized) {
       message("Rendering frame", 0, 0);
-      refresh();
+      term_refresh();
     }
     if (!(buf = renderFrame(fbuf, 1))) {
       displayBuffer(Currentbuf, B_NORMAL);
@@ -2961,7 +2962,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   url = parsedURL2Str(&Currentbuf->currentURL);
   /* FIXME: gettextize? */
   message("Reloading...", 0, 0);
-  refresh();
+  term_refresh();
   SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
   buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
@@ -3062,7 +3063,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
   }
   if (fmInitialized) {
     message("Rendering frame", 0, 0);
-    refresh();
+    term_refresh();
   }
   buf = renderFrame(Currentbuf, 0);
   if (buf == NULL) {

@@ -1,6 +1,7 @@
 /* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
 #include <signal.h>
 #include "fm.h"
+#include "tty.h"
 #include "scr.h"
 
 /* *INDENT-OFF* */
@@ -23,8 +24,8 @@ void fmTerm(void) {
   if (fmInitialized) {
     move(LASTLINE, 0);
     clrtoeolx();
-    refresh();
-    reset_tty();
+    term_refresh();
+    term_reset();
     fmInitialized = FALSE;
   }
 }
@@ -217,13 +218,13 @@ void displayBuffer(Buffer *buf, int mode) {
   if (delayed_msg != NULL) {
     disp_message(delayed_msg, FALSE);
     delayed_msg = NULL;
-    refresh();
+    term_refresh();
   }
   standout();
   message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
   standend();
   term_title(conv_to_system(buf->buffername));
-  refresh();
+  term_refresh();
   if (buf != save_current_buf) {
     saveBufferInfo();
     save_current_buf = buf;
@@ -704,7 +705,7 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
             Currentbuf->cursorY + Currentbuf->rootY);
   else
     message(s, LASTLINE, 0);
-  refresh();
+  term_refresh();
   sleep_till_anykey(sec, purge);
   if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
     displayBuffer(Currentbuf, B_NORMAL);

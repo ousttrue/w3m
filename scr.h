@@ -1,5 +1,7 @@
 #pragma once
 
+#define SPACE ' '
+
 enum CharactorColor {
   COL_FCOLOR = 0xf00,
   COL_FBLACK = 0x800,

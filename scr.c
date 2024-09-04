@@ -265,3 +265,11 @@ void underlineend(void) { CurrentMode &= ~S_UNDERLINE; }
 void graphstart(void) { CurrentMode |= S_GRAPHICS; }
 
 void graphend(void) { CurrentMode &= ~S_GRAPHICS; }
+
+// void setfcolor(int color) {
+//   CurrentMode &= ~COL_FCOLOR;
+//   if ((color & 0xf) <= 7)
+//     CurrentMode |= (((color & 7) | 8) << 8);
+// }
+
+

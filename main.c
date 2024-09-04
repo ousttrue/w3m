@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "defun.h"
+#include "tty.h"
 #include <signal.h>
 #include <sys/wait.h>
 #include <gc.h>

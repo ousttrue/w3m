@@ -1,5 +1,6 @@
 /* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
 #include "fm.h"
+#include "tty.h"
 #include "scr.h"
 
 char *NullLine = "";
@@ -311,7 +312,7 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
   /*
    * move(LASTLINE, COLS - 1); */
   move(c, 0);
-  refresh();
+  term_refresh();
   return buf->nextBuffer;
 }
 
@@ -415,7 +416,7 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
      * move(LASTLINE, COLS - 1);
      */
     move(spoint, 0);
-    refresh();
+    term_refresh();
   }
 }
 

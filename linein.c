@@ -1,5 +1,6 @@
 /* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
 #include "fm.h"
+#include "tty.h"
 #include "scr.h"
 #include "local.h"
 #include "myctype.h"
@@ -181,7 +182,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
       addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
     clrtoeolx();
     move(LASTLINE, opos + x - offset);
-    refresh();
+    term_refresh();
 
   next_char:
     c = getch();
@@ -245,7 +246,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
     return NULL;
 
   move(LASTLINE, 0);
-  refresh();
+  term_refresh();
   p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
     SKIP_BLANKS(p);

@@ -223,6 +223,7 @@ fn build_exe(
             "image.c",
             "symbol.c",
             "entity.c",
+            "tty.c",
             "terms.c",
             "scr.c",
             "url.c",

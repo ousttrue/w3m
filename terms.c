@@ -3,13 +3,13 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "tty.h"
 #include "scr.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <errno.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include "config.h"
@@ -20,12 +20,7 @@
 #endif
 #include <sys/ioctl.h>
 
-static char *title_str = NULL;
-
-static int tty;
-
 #include "fm.h"
-#include "myctype.h"
 
 MySignalHandler reset_exit(SIGNAL_ARG);
 MySignalHandler reset_error_exit(SIGNAL_ARG);
@@ -35,39 +30,8 @@ MySignalHandler error_dump(SIGNAL_ARG);
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
 
-#ifdef HAVE_TERMIO_H
-#include <termio.h>
-typedef struct termio TerminalMode;
-#define TerminalSet(fd, x) ioctl(fd, TCSETA, x)
-#define TerminalGet(fd, x) ioctl(fd, TCGETA, x)
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
-#endif /* HAVE_TERMIO_H */
-
-#ifdef HAVE_TERMIOS_H
-#include <termios.h>
-#include <unistd.h>
-typedef struct termios TerminalMode;
-#define TerminalSet(fd, x) tcsetattr(fd, TCSANOW, x)
-#define TerminalGet(fd, x) tcgetattr(fd, x)
-#define MODEFLAG(d) ((d).c_lflag)
-#define IMODEFLAG(d) ((d).c_iflag)
-#endif /* HAVE_TERMIOS_H */
-
-#ifdef HAVE_SGTTY_H
-#include <sgtty.h>
-typedef struct sgttyb TerminalMode;
-#define TerminalSet(fd, x) ioctl(fd, TIOCSETP, x)
-#define TerminalGet(fd, x) ioctl(fd, TIOCGETP, x)
-#define MODEFLAG(d) ((d).sg_flags)
-#endif /* HAVE_SGTTY_H */
-
 #define MAX_LINE 200
 #define MAX_COLUMN 400
-
-static TerminalMode d_ioval;
-static int tty = -1;
-static FILE *ttyf = NULL;
 
 static char bp[1024], funcstr[256];
 
@@ -78,14 +42,6 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc, *T_so,
 int LINES, COLS;
 
 char gcmap[96];
-
-int term_putc(char c) {
-  putc(c, ttyf);
-#ifdef SCREEN_DEBUG
-  flush_tty();
-#endif /* SCREEN_DEBUG */
-  return 0;
-}
 
 void term_puts(const char *s) { tputs(s, 1, term_putc); }
 
@@ -107,106 +63,8 @@ static struct w3m_term_info {
     {W3M_TERM_INFO(NULL, NULL, 0)}};
 #undef W3M_TERM_INFO
 
-int set_tty(void) {
-  char *ttyn;
-
-  if (isatty(0)) /* stdin */
-    ttyn = ttyname(0);
-  else
-    ttyn = DEV_TTY_PATH;
-  tty = open(ttyn, O_RDWR);
-  if (tty < 0) {
-    /* use stderr instead of stdin... is it OK???? */
-    tty = 2;
-  }
-  ttyf = fdopen(tty, "w");
-  TerminalGet(tty, &d_ioval);
-  if (displayTitleTerm != NULL) {
-    struct w3m_term_info *p;
-    for (p = w3m_term_info_list; p->term != NULL; p++) {
-      if (!strncmp(displayTitleTerm, p->term, strlen(p->term))) {
-        title_str = p->title_str;
-        break;
-      }
-    }
-  }
-  return 0;
-}
-
-static void ttymode_set(int mode, int imode) {
-  TerminalMode ioval;
-
-  TerminalGet(tty, &ioval);
-  MODEFLAG(ioval) |= mode;
-#ifndef HAVE_SGTTY_H
-  IMODEFLAG(ioval) |= imode;
-#endif /* not HAVE_SGTTY_H */
-
-  while (TerminalSet(tty, &ioval) == -1) {
-    if (errno == EINTR || errno == EAGAIN)
-      continue;
-    printf("Error occurred while set %x: errno=%d\n", mode, errno);
-    reset_error_exit(SIGNAL_ARGLIST);
-  }
-}
-
-static void ttymode_reset(int mode, int imode) {
-  TerminalMode ioval;
-
-  TerminalGet(tty, &ioval);
-  MODEFLAG(ioval) &= ~mode;
-#ifndef HAVE_SGTTY_H
-  IMODEFLAG(ioval) &= ~imode;
-#endif /* not HAVE_SGTTY_H */
-
-  while (TerminalSet(tty, &ioval) == -1) {
-    if (errno == EINTR || errno == EAGAIN)
-      continue;
-    printf("Error occurred while reset %x: errno=%d\n", mode, errno);
-    reset_error_exit(SIGNAL_ARGLIST);
-  }
-}
-
-#ifndef HAVE_SGTTY_H
-static void set_cc(int spec, int val) {
-  TerminalMode ioval;
-
-  TerminalGet(tty, &ioval);
-  ioval.c_cc[spec] = val;
-  while (TerminalSet(tty, &ioval) == -1) {
-    if (errno == EINTR || errno == EAGAIN)
-      continue;
-    printf("Error occurred: errno=%d\n", errno);
-    reset_error_exit(SIGNAL_ARGLIST);
-  }
-}
-#endif /* not HAVE_SGTTY_H */
-
-void close_tty(void) {
-  if (tty > 2)
-    close(tty);
-}
-
-char *ttyname_tty(void) { return ttyname(tty); }
-
-void reset_tty(void) {
-  term_puts(T_op); /* turn off */
-  term_puts(T_me);
-  if (!Do_not_use_ti_te) {
-    if (T_te && *T_te)
-      term_puts(T_te);
-    else
-      term_puts(T_cl);
-  }
-  term_puts(T_se); /* reset terminal */
-  flush_tty();
-  TerminalSet(tty, &d_ioval);
-  if (tty != 2)
-    close_tty();
-}
-
 static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval) {
-  reset_tty();
+  term_reset();
   w3m_exit(rval);
   SIGNAL_RETURN;
 }
@@ -221,9 +79,22 @@ MySignalHandler reset_exit(SIGNAL_ARG) {
 
 MySignalHandler error_dump(SIGNAL_ARG) {
   mySignal(SIGIOT, SIG_DFL);
-  reset_tty();
+  term_reset();
   abort();
   SIGNAL_RETURN;
+}
+void term_reset(void) {
+  term_puts(T_op); /* turn off */
+  term_puts(T_me);
+  if (!Do_not_use_ti_te) {
+    if (T_te && *T_te)
+      term_puts(T_te);
+    else
+      term_puts(T_cl);
+  }
+  term_puts(T_se); /* reset terminal */
+  flush_tty();
+  tty_close();
 }
 
 void set_int(void) {
@@ -355,9 +226,28 @@ void setlinescols(void) {
 /*
  * Screen initialize
  */
+static char *title_str = NULL;
+void term_title(const char *s) {
+  if (!fmInitialized)
+    return;
+  if (title_str != NULL) {
+    tty_printf(title_str, s);
+  }
+}
+
 int initscr(void) {
-  if (set_tty() < 0)
-    return -1;
+  tty_open();
+
+  if (displayTitleTerm != NULL) {
+    struct w3m_term_info *p;
+    for (p = w3m_term_info_list; p->term != NULL; p++) {
+      if (!strncmp(displayTitleTerm, p->term, strlen(p->term))) {
+        title_str = p->title_str;
+        break;
+      }
+    }
+  }
+
   set_int();
   getTCstr();
   if (T_ti && !Do_not_use_ti_te)
@@ -372,162 +262,11 @@ int graph_ok(void) {
   return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
 }
 
-// void setfcolor(int color) {
-//   CurrentMode &= ~COL_FCOLOR;
-//   if ((color & 0xf) <= 7)
-//     CurrentMode |= (((color & 7) | 8) << 8);
-// }
-
 void term_clear() { term_puts(T_cl); }
 
 void term_move(int line, int column) { term_puts(tgoto(T_cm, column, line)); }
 
-void crmode(void)
-#ifndef HAVE_SGTTY_H
-{
-  ttymode_reset(ICANON, IXON);
-  ttymode_set(ISIG, 0);
-#ifdef HAVE_TERMIOS_H
-  set_cc(VMIN, 1);
-#else  /* not HAVE_TERMIOS_H */
-  set_cc(VEOF, 1);
-#endif /* not HAVE_TERMIOS_H */
-}
-#else  /* HAVE_SGTTY_H */
-{
-  ttymode_set(CBREAK, 0);
-}
-#endif /* HAVE_SGTTY_H */
-
-void nocrmode(void)
-#ifndef HAVE_SGTTY_H
-{
-  ttymode_set(ICANON, 0);
-#ifdef HAVE_TERMIOS_H
-  set_cc(VMIN, 4);
-#else  /* not HAVE_TERMIOS_H */
-  set_cc(VEOF, 4);
-#endif /* not HAVE_TERMIOS_H */
-}
-#else  /* HAVE_SGTTY_H */
-{
-  ttymode_reset(CBREAK, 0);
-}
-#endif /* HAVE_SGTTY_H */
-
-void term_echo(void) { ttymode_set(ECHO, 0); }
-
-void term_noecho(void) { ttymode_reset(ECHO, 0); }
-
-void term_raw(void)
-#ifndef HAVE_SGTTY_H
-#ifdef IEXTEN
-#define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
-#else /* not IEXTEN */
-#define TTY_MODE ISIG | ICANON | ECHO
-#endif /* not IEXTEN */
-{
-  ttymode_reset(TTY_MODE, IXON | IXOFF);
-#ifdef HAVE_TERMIOS_H
-  set_cc(VMIN, 1);
-#else  /* not HAVE_TERMIOS_H */
-  set_cc(VEOF, 1);
-#endif /* not HAVE_TERMIOS_H */
-}
-#else  /* HAVE_SGTTY_H */
-{
-  ttymode_set(RAW, 0);
-}
-#endif /* HAVE_SGTTY_H */
-
-void term_cooked(void)
-#ifndef HAVE_SGTTY_H
-{
-  ttymode_set(TTY_MODE, 0);
-#ifdef HAVE_TERMIOS_H
-  set_cc(VMIN, 4);
-#else  /* not HAVE_TERMIOS_H */
-  set_cc(VEOF, 4);
-#endif /* not HAVE_TERMIOS_H */
-}
-#else  /* HAVE_SGTTY_H */
-{
-  ttymode_reset(RAW, 0);
-}
-#endif /* HAVE_SGTTY_H */
-
-void term_cbreak(void) {
-  term_cooked();
-  term_noecho();
-}
-
-void term_title(const char *s) {
-  if (!fmInitialized)
-    return;
-  if (title_str != NULL) {
-    fprintf(ttyf, title_str, s);
-  }
-}
-
-char getch() {
-  char c;
-
-  while (read(tty, &c, 1) < (int)1) {
-    if (errno == EINTR || errno == EAGAIN)
-      continue;
-    /* error happend on read(2) */
-    quitfm();
-    break; /* unreachable */
-  }
-  return c;
-}
-
 void bell(void) { term_putc(7); }
-
-static void skip_escseq(void) {
-  int c;
-
-  c = getch();
-  if (c == '[' || c == 'O') {
-    c = getch();
-    while (IS_DIGIT(c))
-      c = getch();
-  }
-}
-
-int sleep_till_anykey(int sec, int purge) {
-  fd_set rfd;
-  struct timeval tim;
-  int er, c, ret;
-  TerminalMode ioval;
-
-  TerminalGet(tty, &ioval);
-  term_raw();
-
-  tim.tv_sec = sec;
-  tim.tv_usec = 0;
-
-  FD_ZERO(&rfd);
-  FD_SET(tty, &rfd);
-
-  ret = select(tty + 1, &rfd, 0, 0, &tim);
-  if (ret > 0 && purge) {
-    c = getch();
-    if (c == ESC_CODE)
-      skip_escseq();
-  }
-  er = TerminalSet(tty, &ioval);
-  if (er == -1) {
-    printf("Error occurred: errno=%d\n", errno);
-    reset_error_exit(SIGNAL_ARGLIST);
-  }
-  return ret;
-}
-
-void flush_tty() {
-  if (ttyf)
-    fflush(ttyf);
-}
 
 enum {
   RF_NEED_TO_MOVE,
@@ -544,7 +283,7 @@ static char *color_seq(int colmode) {
 #define graphchar(c)                                                           \
   (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
 
-void refresh() {
+void term_refresh() {
   int line, col, pcol;
 
   auto scr = scr_get();
