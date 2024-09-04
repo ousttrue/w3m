@@ -207,6 +207,7 @@ fn build_exe(
             "main.c",
             "defun.c",
             "file.c",
+            "digest_auth.c",
             "buffer.c",
             "display.c",
             "etc.c",
