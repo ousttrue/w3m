@@ -1337,7 +1337,7 @@ static Buffer *loadLink(char *url, char *target, char *referer,
   ParsedURL *base, pu;
   const int *no_referer_ptr;
 
-  message(Sprintf("loading %s", url)->ptr, 0, 0);
+  scr_message(Sprintf("loading %s", url)->ptr, 0, 0);
   term_refresh();
 
   no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
@@ -1555,7 +1555,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   if (a == NULL)
     return;
   /* FIXME: gettextize? */
-  message(Sprintf("loading %s", a->url)->ptr, 0, 0);
+  scr_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   term_refresh();
   buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
   if (buf == NULL) {
@@ -2907,7 +2907,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   if (Currentbuf->bufferprop & BP_FRAME &&
       (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
     if (fmInitialized) {
-      message("Rendering frame", 0, 0);
+      scr_message("Rendering frame", 0, 0);
       term_refresh();
     }
     if (!(buf = renderFrame(fbuf, 1))) {
@@ -2949,7 +2949,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   }
   url = parsedURL2Str(&Currentbuf->currentURL);
   /* FIXME: gettextize? */
-  message("Reloading...", 0, 0);
+  scr_message("Reloading...", 0, 0);
   term_refresh();
   SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
@@ -3050,7 +3050,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
     return;
   }
   if (fmInitialized) {
-    message("Rendering frame", 0, 0);
+    scr_message("Rendering frame", 0, 0);
     term_refresh();
   }
   buf = renderFrame(Currentbuf, 0);

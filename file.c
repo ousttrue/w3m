@@ -552,7 +552,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
         p++;
       http_response_code = atoi(p);
       if (fmInitialized) {
-        message(lineBuf2->ptr, 0, 0);
+        scr_message(lineBuf2->ptr, 0, 0);
         term_refresh();
       }
     }
@@ -1308,7 +1308,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
      * Authorization: header is sent to the server.
      */
     if (fmInitialized) {
-      message("Wrong username or password", 0, 0);
+      scr_message("Wrong username or password", 0, 0);
       term_refresh();
     } else
       fprintf(stderr, "Wrong username or password\n");
@@ -1552,7 +1552,7 @@ load_doc: {
     if (fmInitialized) {
       tty_cbreak();
       /* FIXME: gettextize? */
-      message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0,
+      scr_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0,
               0);
       term_refresh();
     }
@@ -5624,7 +5624,7 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
     } else {
       messages = Sprintf("%7s loaded", fmtrbyte);
     }
-    message(messages->ptr, 0, 0);
+    scr_message(messages->ptr, 0, 0);
     term_refresh();
   }
 }

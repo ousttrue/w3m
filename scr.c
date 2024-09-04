@@ -228,18 +228,18 @@ void scr_addch(char pc) {
   }
 }
 
-void scr_addstr(char *s) {
+void scr_addstr(const char *s) {
   while (*s != '\0')
     scr_addch(*(s++));
 }
 
-void scr_addnstr(char *s, int n) {
+void scr_addnstr(const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++)
     scr_addch(*(s++));
 }
 
-void scr_addnstr_sup(char *s, int n) {
+void scr_addnstr_sup(const char *s, int n) {
   int i;
   for (i = 0; i < n && *s != '\0'; i++)
     scr_addch(*(s++));
@@ -273,3 +273,12 @@ void scr_graphend(void) { CurrentMode &= ~S_GRAPHICS; }
 //   if ((color & 0xf) <= 7)
 //     CurrentMode |= (((color & 7) | 8) << 8);
 // }
+
+void scr_message(const char *s, int return_x, int return_y) {
+  // if (!fmInitialized)
+  //   return;
+  scr_move(LASTLINE, 0);
+  scr_addnstr(s, COLS - 1);
+  scr_clrtoeolx();
+  scr_move(return_y, return_x);
+}

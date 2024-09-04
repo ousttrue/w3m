@@ -1,6 +1,7 @@
 /* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
 #include "tty.h"
+#include "scr.h"
 #include <pwd.h>
 #include "myctype.h"
 #include "html.h"
@@ -837,7 +838,7 @@ FILE *openSecretFile(char *fname) {
     /* do nothing */;
   else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
     if (fmInitialized) {
-      message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
+      scr_message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
       term_refresh();
     } else {
       fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);

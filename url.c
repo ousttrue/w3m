@@ -1,5 +1,6 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
 #include "fm.h"
+#include "scr.h"
 #include "tty.h"
 #include <unistd.h>
 #include <sys/types.h>
@@ -479,7 +480,7 @@ int openSocket(char *const hostname, char *remoteport_name,
 
   if (fmInitialized) {
     /* FIXME: gettextize? */
-    message(Sprintf("Opening socket...")->ptr, 0, 0);
+    scr_message(Sprintf("Opening socket...")->ptr, 0, 0);
     term_refresh();
   }
   if (SETJMP(AbortLoading) != 0) {

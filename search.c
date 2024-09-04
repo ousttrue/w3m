@@ -1,6 +1,7 @@
 /* $Id: search.c,v 1.31 2004/03/23 16:44:02 ukai Exp $ */
 #include "fm.h"
 #include "regex.h"
+#include "scr.h"
 #include <signal.h>
 #include <errno.h>
 #include <unistd.h>
@@ -17,7 +18,7 @@ int forwardSearch(Buffer *buf, char *str) {
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-    message(p, 0, 0);
+    scr_message(p, 0, 0);
     return SR_NOTFOUND;
   }
   l = buf->currentLine;
@@ -93,7 +94,7 @@ int backwardSearch(Buffer *buf, char *str) {
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
-    message(p, 0, 0);
+    scr_message(p, 0, 0);
     return SR_NOTFOUND;
   }
   l = buf->currentLine;

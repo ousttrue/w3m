@@ -9,6 +9,7 @@
 #include "fm.h"
 #include "tty.h"
 #include "html.h"
+#include "scr.h"
 #include "myctype.h"
 
 #ifdef DEBUG
@@ -163,7 +164,7 @@ static int ftp_login(FTP ftp) {
   if (status != 220)
     goto open_err;
   if (fmInitialized) {
-    message(
+    scr_message(
         Sprintf("Sending FTP username (%s) to remote server.", ftp->user)->ptr,
         0, 0);
     term_refresh();
@@ -177,7 +178,7 @@ static int ftp_login(FTP ftp) {
   if (status != 331)
     goto open_err;
   if (fmInitialized) {
-    message("Sending FTP password to remote server.", 0, 0);
+    scr_message("Sending FTP password to remote server.", 0, 0);
     term_refresh();
   }
   ftp_command(ftp, "PASS", ftp->pass, &status);

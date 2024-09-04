@@ -221,7 +221,7 @@ void displayBuffer(Buffer *buf, int mode) {
     term_refresh();
   }
   scr_standout();
-  message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+  scr_message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
   scr_standend();
   term_title(conv_to_system(buf->buffername));
   term_refresh();
@@ -678,15 +678,6 @@ Buffer *message_list_panel(void) {
   return loadHTMLString(tmp);
 }
 
-void message(char *s, int return_x, int return_y) {
-  if (!fmInitialized)
-    return;
-  scr_move(LASTLINE, 0);
-  scr_addnstr(s, COLS - 1);
-  scr_clrtoeolx();
-  scr_move(return_y, return_x);
-}
-
 void disp_err_message(char *s, int redraw_current) {
   record_err_message(s);
   disp_message(s, redraw_current);
@@ -701,10 +692,10 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
     return;
   }
   if (CurrentTab != NULL && Currentbuf != NULL)
-    message(s, Currentbuf->cursorX + Currentbuf->rootX,
+    scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
             Currentbuf->cursorY + Currentbuf->rootY);
   else
-    message(s, LASTLINE, 0);
+    scr_message(s, LASTLINE, 0);
   term_refresh();
   tty_sleep_till_anykey(sec, purge);
   if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)

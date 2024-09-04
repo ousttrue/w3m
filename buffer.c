@@ -307,7 +307,7 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
   }
   scr_standout();
   /* FIXME: gettextize? */
-  message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
+  scr_message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
   scr_standend();
   /*
    * scr_move(LASTLINE, COLS - 1); */
