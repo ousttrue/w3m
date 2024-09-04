@@ -174,14 +174,14 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
       else
         offset = 0;
     }
-    move(LASTLINE, 0);
-    addstr(prompt);
+    scr_move(LASTLINE, 0);
+    scr_addstr(prompt);
     if (is_passwd)
       addPasswd(strBuf->ptr, strProp, CLen, offset, COLS - opos);
     else
       addStr(strBuf->ptr, strProp, CLen, offset, COLS - opos);
-    clrtoeolx();
-    move(LASTLINE, opos + x - offset);
+    scr_clrtoeolx();
+    scr_move(LASTLINE, opos + x - offset);
     term_refresh();
 
   next_char:
@@ -245,7 +245,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
   if (i_broken)
     return NULL;
 
-  move(LASTLINE, 0);
+  scr_move(LASTLINE, 0);
   term_refresh();
   p = strBuf->ptr;
   if (flag & (IN_FILENAME | IN_COMMAND)) {
@@ -602,16 +602,16 @@ disp_next:
       y = nline - row - 1;
   }
   if (y) {
-    move(y - 1, 0);
-    clrtoeolx();
+    scr_move(y - 1, 0);
+    scr_clrtoeolx();
   }
   if (comment) {
-    move(y, 0);
-    clrtoeolx();
-    bold();
+    scr_move(y, 0);
+    scr_clrtoeolx();
+    scr_bold();
     /* FIXME: gettextize? */
-    addstr("----- Completion list -----");
-    boldend();
+    scr_addstr("----- Completion list -----");
+    scr_boldend();
     y++;
   }
   for (i = 0; i < row; i++) {
@@ -619,27 +619,27 @@ disp_next:
       n = cm_disp_next + j * row + i;
       if (n >= NCFileBuf)
         break;
-      move(y, j * len);
-      clrtoeolx();
+      scr_move(y, j * len);
+      scr_clrtoeolx();
       f = Strdup(d);
       Strcat_charp(f, CFileBuf[n]);
-      addstr(conv_from_system(CFileBuf[n]));
+      scr_addstr(conv_from_system(CFileBuf[n]));
       if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
-        addstr("/");
+        scr_addstr("/");
     }
     y++;
   }
   if (comment && y == LASTLINE - 1) {
-    move(y, 0);
-    clrtoeolx();
-    bold();
+    scr_move(y, 0);
+    scr_clrtoeolx();
+    scr_bold();
     if (emacs_like_lineedit)
       /* FIXME: gettextize? */
-      addstr("----- Press TAB to continue -----");
+      scr_addstr("----- Press TAB to continue -----");
     else
       /* FIXME: gettextize? */
-      addstr("----- Press CTRL-D to continue -----");
-    boldend();
+      scr_addstr("----- Press CTRL-D to continue -----");
+    scr_boldend();
   }
 }
 

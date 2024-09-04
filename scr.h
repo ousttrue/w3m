@@ -62,28 +62,27 @@ typedef struct Scr {
 } Scr;
 
 Scr *scr_get();
-
-void setupscreen(int LINES, int COLS);
+void scr_setup(int LINES, int COLS);
 void scr_clear();
-void move(int line, int column);
-void touch_line();
-void touch_column(int);
-void wrap();
-void clrtoeol(); /* conflicts with curs_clear(3)? */
-void clrtoeolx();
-void clrtobot();
-void clrtobotx();
+void scr_move(int line, int column);
+void scr_touch_line();
+void scr_touch_column(int);
+void scr_wrap();
+void scr_clrtoeol(); /* conflicts with curs_clear(3)? */
+void scr_clrtoeolx();
+void scr_clrtobot();
+void scr_clrtobotx();
 int scr_need_redraw(char c1, l_prop pr1, char c2, l_prop pr2);
-void addch(char c);
-void addstr(char *s);
-void addnstr(char *s, int n);
-void addnstr_sup(char *s, int n);
-void standout();
-void standend();
-void toggle_stand(void);
-void bold();
-void boldend();
-void underline();
-void underlineend();
-void graphend();
-void graphstart();
+void scr_addch(char c);
+void scr_addstr(char *s);
+void scr_addnstr(char *s, int n);
+void scr_addnstr_sup(char *s, int n);
+void scr_standout();
+void scr_standend();
+void scr_toggle_stand(void);
+void scr_bold();
+void scr_boldend();
+void scr_underline();
+void scr_underlineend();
+void scr_graphend();
+void scr_graphstart();

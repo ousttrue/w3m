@@ -5566,8 +5566,8 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
     double ratio;
     cur_time = time(0);
     if (*trbyte == 0) {
-      move(LASTLINE, 0);
-      clrtoeolx();
+      scr_move(LASTLINE, 0);
+      scr_clrtoeolx();
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -5575,7 +5575,7 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    move(LASTLINE, 0);
+    scr_move(LASTLINE, 0);
     ratio = 100.0 * (*trbyte) / current_content_length;
     fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
     duration = cur_time - start_time;
@@ -5592,22 +5592,22 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
       messages =
           Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
     }
-    addstr(messages->ptr);
+    scr_addstr(messages->ptr);
     pos = 42;
     i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-    move(LASTLINE, pos);
-    standout();
-    addch(' ');
+    scr_move(LASTLINE, pos);
+    scr_standout();
+    scr_addch(' ');
     for (j = pos + 1; j <= i; j++)
-      addch('|');
-    standend();
+      scr_addch('|');
+    scr_standend();
     /* no_clrtoeol(); */
     term_refresh();
   } else {
     cur_time = time(0);
     if (*trbyte == 0) {
-      move(LASTLINE, 0);
-      clrtoeolx();
+      scr_move(LASTLINE, 0);
+      scr_clrtoeolx();
       start_time = cur_time;
     }
     *trbyte += *linelen;
@@ -5615,7 +5615,7 @@ void showProgress(clen_t *linelen, clen_t *trbyte) {
     if (cur_time == last_time)
       return;
     last_time = cur_time;
-    move(LASTLINE, 0);
+    scr_move(LASTLINE, 0);
     fmtrbyte = convert_size(*trbyte, 1);
     duration = cur_time - start_time;
     if (duration) {

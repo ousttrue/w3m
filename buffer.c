@@ -170,7 +170,7 @@ static void writeBufferName(Buffer *buf, int n) {
   all = buf->allLine;
   if (all == 0 && buf->lastLine != NULL)
     all = buf->lastLine->linenumber;
-  move(n, 0);
+  scr_move(n, 0);
   /* FIXME: gettextize? */
   msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
   if (buf->filename != NULL) {
@@ -191,7 +191,7 @@ static void writeBufferName(Buffer *buf, int n) {
       break;
     }
   }
-  addnstr_sup(msg->ptr, COLS - 1);
+  scr_addnstr_sup(msg->ptr, COLS - 1);
 }
 
 /*
@@ -283,35 +283,35 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
   int i, c = 0;
   Buffer *buf = top;
 
-  move(0, 0);
-  clrtobotx();
+  scr_move(0, 0);
+  scr_clrtobotx();
   for (i = 0; i < LASTLINE; i++) {
     if (buf == current) {
       c = i;
-      standout();
+      scr_standout();
     }
     writeBufferName(buf, i);
     if (buf == current) {
-      standend();
-      clrtoeolx();
-      move(i, 0);
-      toggle_stand();
+      scr_standend();
+      scr_clrtoeolx();
+      scr_move(i, 0);
+      scr_toggle_stand();
     } else
-      clrtoeolx();
+      scr_clrtoeolx();
     if (buf->nextBuffer == NULL) {
-      move(i + 1, 0);
-      clrtobotx();
+      scr_move(i + 1, 0);
+      scr_clrtobotx();
       break;
     }
     buf = buf->nextBuffer;
   }
-  standout();
+  scr_standout();
   /* FIXME: gettextize? */
   message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
-  standend();
+  scr_standend();
   /*
-   * move(LASTLINE, COLS - 1); */
-  move(c, 0);
+   * scr_move(LASTLINE, COLS - 1); */
+  scr_move(c, 0);
   term_refresh();
   return buf->nextBuffer;
 }
@@ -373,11 +373,11 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
         currentbuf = currentbuf->nextBuffer;
         cpoint++;
         spoint++;
-        standout();
+        scr_standout();
         writeBufferName(currentbuf, spoint);
-        standend();
-        move(spoint, 0);
-        toggle_stand();
+        scr_standend();
+        scr_move(spoint, 0);
+        scr_toggle_stand();
       } else if (cpoint < maxbuf - 1) {
         topbuf = currentbuf;
         currentbuf = currentbuf->nextBuffer;
@@ -392,11 +392,11 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
         writeBufferName(currentbuf, spoint);
         currentbuf = nthBuffer(topbuf, --spoint);
         cpoint--;
-        standout();
+        scr_standout();
         writeBufferName(currentbuf, spoint);
-        standend();
-        move(spoint, 0);
-        toggle_stand();
+        scr_standend();
+        scr_move(spoint, 0);
+        scr_toggle_stand();
       } else if (cpoint > 0) {
         i = cpoint - sclimit;
         if (i < 0)
@@ -413,9 +413,9 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
       return currentbuf;
     }
     /*
-     * move(LASTLINE, COLS - 1);
+     * scr_move(LASTLINE, COLS - 1);
      */
-    move(spoint, 0);
+    scr_move(spoint, 0);
     term_refresh();
   }
 }

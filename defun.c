@@ -291,7 +291,7 @@ MySignalHandler resize_hook(SIGNAL_ARG) {
 static void resize_screen(void) {
   need_resize_screen = FALSE;
   setlinescols();
-  setupscreen(LINES, COLS);
+  scr_setup(LINES, COLS);
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1177,8 +1177,8 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 #ifndef SIGSTOP
   char *shell;
 #endif /* not SIGSTOP */
-  move(LASTLINE, 0);
-  clrtoeolx();
+  scr_move(LASTLINE, 0);
+  scr_clrtoeolx();
   term_refresh();
   fmTerm();
 #ifndef SIGSTOP

@@ -252,7 +252,7 @@ int initscr(void) {
   getTCstr();
   if (T_ti && !Do_not_use_ti_te)
     term_puts(T_ti);
-  setupscreen(LINES, COLS);
+  scr_setup(LINES, COLS);
   return 0;
 }
 

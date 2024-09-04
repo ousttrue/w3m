@@ -6,24 +6,24 @@
 
 /* *INDENT-OFF* */
 
-#define EFFECT_ANCHOR_START underline()
-#define EFFECT_ANCHOR_END underlineend()
-#define EFFECT_IMAGE_START standout()
-#define EFFECT_IMAGE_END standend()
-#define EFFECT_FORM_START standout()
-#define EFFECT_FORM_END standend()
-#define EFFECT_ACTIVE_START bold()
-#define EFFECT_ACTIVE_END boldend()
+#define EFFECT_ANCHOR_START scr_underline()
+#define EFFECT_ANCHOR_END scr_underlineend()
+#define EFFECT_IMAGE_START scr_standout()
+#define EFFECT_IMAGE_END scr_standend()
+#define EFFECT_FORM_START scr_standout()
+#define EFFECT_FORM_END scr_standend()
+#define EFFECT_ACTIVE_START scr_bold()
+#define EFFECT_ACTIVE_END scr_boldend()
 #define EFFECT_VISITED_START /**/
 #define EFFECT_VISITED_END   /**/
-#define EFFECT_MARK_START standout()
-#define EFFECT_MARK_END standend()
+#define EFFECT_MARK_START scr_standout()
+#define EFFECT_MARK_END scr_standend()
 /* *INDENT-ON* */
 
 void fmTerm(void) {
   if (fmInitialized) {
-    move(LASTLINE, 0);
-    clrtoeolx();
+    scr_move(LASTLINE, 0);
+    scr_clrtoeolx();
     term_refresh();
     term_reset();
     fmInitialized = FALSE;
@@ -220,9 +220,9 @@ void displayBuffer(Buffer *buf, int mode) {
     delayed_msg = NULL;
     term_refresh();
   }
-  standout();
+  scr_standout();
   message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
-  standend();
+  scr_standend();
   term_title(conv_to_system(buf->buffername));
   term_refresh();
   if (buf != save_current_buf) {
@@ -322,33 +322,33 @@ static void redrawNLine(Buffer *buf, int n) {
     TabBuffer *t;
     int l;
 
-    move(0, 0);
-    clrtoeolx();
+    scr_move(0, 0);
+    scr_clrtoeolx();
     for (t = FirstTab; t; t = t->nextTab) {
-      move(t->y, t->x1);
+      scr_move(t->y, t->x1);
       if (t == CurrentTab)
-        bold();
-      addch('[');
+        scr_bold();
+      scr_addch('[');
       l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
       if (l < 0)
         l = 0;
       if (l / 2 > 0)
-        addnstr_sup(" ", l / 2);
+        scr_addnstr_sup(" ", l / 2);
       if (t == CurrentTab)
         EFFECT_ACTIVE_START;
-      addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
+      scr_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
       if (t == CurrentTab)
         EFFECT_ACTIVE_END;
       if ((l + 1) / 2 > 0)
-        addnstr_sup(" ", (l + 1) / 2);
-      move(t->y, t->x2);
-      addch(']');
+        scr_addnstr_sup(" ", (l + 1) / 2);
+      scr_move(t->y, t->x2);
+      scr_addch(']');
       if (t == CurrentTab)
-        boldend();
+        scr_boldend();
     }
-    move(LastTab->y + 1, 0);
+    scr_move(LastTab->y + 1, 0);
     for (i = 0; i < COLS; i++)
-      addch('~');
+      scr_addch('~');
   }
   for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
     if (i >= buf->LINES - n || i < -n)
@@ -357,8 +357,8 @@ static void redrawNLine(Buffer *buf, int n) {
       break;
   }
   if (n > 0) {
-    move(i + buf->rootY, 0);
-    clrtobotx();
+    scr_move(i + buf->rootY, 0);
+    scr_clrtobotx();
   }
 }
 
@@ -376,7 +376,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
     } else
       return NULL;
   }
-  move(i, 0);
+  scr_move(i, 0);
   if (showLineNum) {
     char tmp[16];
     if (!buf->rootX) {
@@ -393,13 +393,13 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
       sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
     else
       sprintf(tmp, "%*s ", buf->rootX - 1, "");
-    addstr(tmp);
+    scr_addstr(tmp);
   }
-  move(i, buf->rootX);
+  scr_move(i, buf->rootX);
   if (l->width < 0)
     l->width = COLPOS(l, l->len);
   if (l->len == 0 || l->width - 1 < column) {
-    clrtoeolx();
+    scr_clrtoeolx();
     return l;
   }
   /* need_clrtoeol(); */
@@ -427,19 +427,19 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   }
   if (somode) {
     somode = FALSE;
-    standend();
+    scr_standend();
   }
   if (ulmode) {
     ulmode = FALSE;
-    underlineend();
+    scr_underlineend();
   }
   if (bomode) {
     bomode = FALSE;
-    boldend();
+    scr_boldend();
   }
   if (emph_mode) {
     emph_mode = FALSE;
-    boldend();
+    scr_boldend();
   }
 
   if (anch_mode) {
@@ -468,10 +468,10 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   }
   if (graph_mode) {
     graph_mode = FALSE;
-    graphend();
+    scr_graphend();
   }
   if (rcol - column < buf->COLS)
-    clrtoeolx();
+    scr_clrtoeolx();
   return l;
 }
 
@@ -497,12 +497,12 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        move(i, buf->rootX);
+        scr_move(i, buf->rootX);
         for (rcol = column; rcol < ncol; rcol++)
           addChar(' ', 0);
         continue;
       }
-      move(i, rcol - column + buf->rootX);
+      scr_move(i, rcol - column + buf->rootX);
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++)
           addChar(' ', 0);
@@ -513,19 +513,19 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
   }
   if (somode) {
     somode = FALSE;
-    standend();
+    scr_standend();
   }
   if (ulmode) {
     ulmode = FALSE;
-    underlineend();
+    scr_underlineend();
   }
   if (bomode) {
     bomode = FALSE;
-    boldend();
+    scr_boldend();
   }
   if (emph_mode) {
     emph_mode = FALSE;
-    boldend();
+    scr_boldend();
   }
 
   if (anch_mode) {
@@ -554,7 +554,7 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
   }
   if (graph_mode) {
     graph_mode = FALSE;
-    graphend();
+    scr_graphend();
   }
   return rcol - column;
 }
@@ -575,10 +575,10 @@ static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
 
 static void do_effects(Lineprop m) {
   /* effect end */
-  do_effect2(PE_UNDER, ulmode, underline(), underlineend());
-  do_effect2(PE_STAND, somode, standout(), standend());
-  do_effect2(PE_BOLD, bomode, bold(), boldend());
-  do_effect2(PE_EMPH, emph_mode, bold(), boldend());
+  do_effect2(PE_UNDER, ulmode, underline(), scr_underlineend());
+  do_effect2(PE_STAND, somode, standout(), scr_standend());
+  do_effect2(PE_BOLD, bomode, bold(), scr_boldend());
+  do_effect2(PE_EMPH, emph_mode, bold(), scr_boldend());
   do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
   do_effect2(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
   do_effect2(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
@@ -587,15 +587,15 @@ static void do_effects(Lineprop m) {
   do_effect2(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
   do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
   if (graph_mode) {
-    graphend();
+    scr_graphend();
     graph_mode = FALSE;
   }
 
   /* effect start */
-  do_effect1(PE_UNDER, ulmode, underline(), underlineend());
-  do_effect1(PE_STAND, somode, standout(), standend());
-  do_effect1(PE_BOLD, bomode, bold(), boldend());
-  do_effect1(PE_EMPH, emph_mode, bold(), boldend());
+  do_effect1(PE_UNDER, ulmode, scr_underline(), underlineend());
+  do_effect1(PE_STAND, somode, scr_standout(), standend());
+  do_effect1(PE_BOLD, bomode, scr_bold(), boldend());
+  do_effect1(PE_EMPH, emph_mode, scr_bold(), boldend());
   do_effect1(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
   do_effect1(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
   do_effect1(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
@@ -613,36 +613,36 @@ void addChar(char c, Lineprop mode) {
     c -= SYMBOL_BASE;
     if (graph_ok() && c < N_GRAPH_SYMBOL) {
       if (!graph_mode) {
-        graphstart();
+        scr_graphstart();
         graph_mode = TRUE;
       }
-      addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+      scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
     } else {
       symbol = get_symbol();
-      addch(*symbol[(unsigned char)c % N_SYMBOL]);
+      scr_addch(*symbol[(unsigned char)c % N_SYMBOL]);
     }
   } else if (mode & PC_CTRL) {
     switch (c) {
     case '\t':
-      addch(c);
+      scr_addch(c);
       break;
     case '\n':
-      addch(' ');
+      scr_addch(' ');
       break;
     case '\r':
       break;
     case DEL_CODE:
-      addstr("^?");
+      scr_addstr("^?");
       break;
     default:
-      addch('^');
-      addch(c + '@');
+      scr_addch('^');
+      scr_addch(c + '@');
       break;
     }
   } else if (0x80 <= (unsigned char)c && (unsigned char)c <= NBSP_CODE)
-    addch(' ');
+    scr_addch(' ');
   else
-    addch(c);
+    scr_addch(c);
 }
 
 static GeneralList *message_list = NULL;
@@ -681,10 +681,10 @@ Buffer *message_list_panel(void) {
 void message(char *s, int return_x, int return_y) {
   if (!fmInitialized)
     return;
-  move(LASTLINE, 0);
-  addnstr(s, COLS - 1);
-  clrtoeolx();
-  move(return_y, return_x);
+  scr_move(LASTLINE, 0);
+  scr_addnstr(s, COLS - 1);
+  scr_clrtoeolx();
+  scr_move(return_y, return_x);
 }
 
 void disp_err_message(char *s, int redraw_current) {
