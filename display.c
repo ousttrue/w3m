@@ -36,8 +36,8 @@ void fmTerm(void) {
 void fmInit(void) {
   if (!fmInitialized) {
     initscr();
-    term_raw();
-    term_noecho();
+    tty_raw();
+    tty_noecho();
   }
   fmInitialized = TRUE;
 }
@@ -706,7 +706,7 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
   else
     message(s, LASTLINE, 0);
   term_refresh();
-  sleep_till_anykey(sec, purge);
+  tty_sleep_till_anykey(sec, purge);
   if (CurrentTab != NULL && Currentbuf != NULL && redraw_current)
     displayBuffer(Currentbuf, B_NORMAL);
 }

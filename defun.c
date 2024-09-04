@@ -114,9 +114,9 @@ void mainloop(char *line_str) {
       do {
         if (need_resize_screen)
           resize_screen();
-      } while (sleep_till_anykey(1, 0) <= 0);
+      } while (tty_sleep_till_anykey(1, 0) <= 0);
     }
-    char c = getch();
+    char c = tty_getch();
     if (IS_ASCII(c)) { /* Ascii */
       if (('0' <= c) && (c <= '9') &&
           (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
@@ -190,15 +190,13 @@ static void escKeyProc(int c, int esc, unsigned char *map) {
 }
 
 DEFUN(escmap, ESCMAP, "ESC map") {
-  char c;
-  c = getch();
+  char c = tty_getch();
   if (IS_ASCII(c))
     escKeyProc((int)c, K_ESC, EscKeymap);
 }
 
 DEFUN(escbmap, ESCBMAP, "ESC [ map") {
-  char c;
-  c = getch();
+  char c = tty_getch();
   if (IS_DIGIT(c)) {
     escdmap(c);
     return;
@@ -210,18 +208,17 @@ DEFUN(escbmap, ESCBMAP, "ESC [ map") {
 void escdmap(char c) {
   int d;
   d = (int)c - (int)'0';
-  c = getch();
+  c = tty_getch();
   if (IS_DIGIT(c)) {
     d = d * 10 + (int)c - (int)'0';
-    c = getch();
+    c = tty_getch();
   }
   if (c == '~')
     escKeyProc((int)d, K_ESCD, EscDKeymap);
 }
 
 DEFUN(multimap, MULTIMAP, "multimap") {
-  char c;
-  c = getch();
+  char c = tty_getch();
   if (IS_ASCII(c)) {
     CurrentKey = K_MULTI | (CurrentKey << 16) | c;
     escKeyProc((int)c, 0, NULL);
@@ -423,7 +420,8 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column") {
 
 /* Redraw screen */
 DEFUN(rdrwSc, REDRAW, "Draw the screen anew") {
-  clear();
+  scr_clear();
+  term_clear();
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -447,7 +445,7 @@ static int srchcore(char *volatile str, int (*func)(Buffer *, char *)) {
 
   str = conv_search_string(SearchString, DisplayCharset);
   auto prevtrap = mySignal(SIGINT, intTrap);
-  crmode();
+  tty_crmode();
   if (SETJMP(IntReturn) == 0) {
     for (i = 0; i < PREC_NUM; i++) {
       result = func(Currentbuf, str);
@@ -456,7 +454,7 @@ static int srchcore(char *volatile str, int (*func)(Buffer *, char *)) {
     }
   }
   mySignal(SIGINT, prevtrap);
-  term_raw();
+  tty_raw();
   return result;
 }
 
@@ -811,10 +809,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     return;
   }
   auto prevtrap = mySignal(SIGINT, intTrap);
-  crmode();
+  tty_crmode();
   buf = getshell(cmd);
   mySignal(SIGINT, prevtrap);
-  term_raw();
+  tty_raw();
   if (buf == NULL) {
     /* FIXME: gettextize? */
     disp_message("Execution failed", TRUE);
@@ -830,10 +828,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
 
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
-  char *cmd;
-
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
+  char *cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
@@ -847,16 +843,14 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
     printf("\n[Hit any key]");
     fflush(stdout);
     fmInit();
-    getch();
+    tty_getch();
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Load file */
 DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
-  char *fn;
-
-  fn = searchKeyData();
+  char *fn = searchKeyData();
   if (fn == NULL || *fn == '\0') {
     /* FIXME: gettextize? */
     fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
@@ -872,22 +866,16 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel") {
-  char *lang;
-  int n;
-  Str tmp;
-
-  lang = AcceptLang;
-  n = strcspn(lang, ";, \t");
-  tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+  char *lang = AcceptLang;
+  int n = strcspn(lang, ";, \t");
+  Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
                 Str_form_quote(Strnew_charp(w3m_version))->ptr,
                 Str_form_quote(Strnew_charp_n(lang, n))->ptr);
   cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
 static void cmd_loadfile(char *fn) {
-  Buffer *buf;
-
-  buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+  Buffer *buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
     char *emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;

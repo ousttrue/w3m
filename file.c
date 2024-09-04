@@ -967,7 +967,9 @@ static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw, ParsedURL *pu,
   Str s = Strdup(uname);
   Strcat_char(s, ':');
   Strcat(s, pw);
-  return Strnew_m_charp("Basic ", base64_encode(s->ptr, s->length)->ptr, NULL);
+  return Strnew_m_charp(
+      "Basic ", base64_encode((const unsigned char *)s->ptr, s->length)->ptr,
+      NULL);
 }
 
 #ifdef USE_DIGEST_AUTH
@@ -1328,7 +1330,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
     sleep(2);
     if (fmInitialized) {
       char *pp;
-      term_raw();
+      tty_raw();
       /* FIXME: gettextize? */
       if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
           NULL)
@@ -1340,7 +1342,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
         return;
       }
       *pwd = Str_conv_to_system(Strnew_charp(pp));
-      term_cbreak();
+      tty_cbreak();
     } else {
       /*
        * If post file is specified as '-', stdin is closed at this
@@ -1548,7 +1550,7 @@ load_doc: {
        !check_no_proxy(pu.host))) {
 
     if (fmInitialized) {
-      term_cbreak();
+      tty_cbreak();
       /* FIXME: gettextize? */
       message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr, 0,
               0);
@@ -6294,7 +6296,7 @@ Buffer *doExternal(URLFile uf, char *type, Buffer *defaultbuf) {
 #ifdef HAVE_SETPGRP
   if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
       !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
-    flush_tty();
+    tty_flush();
     if (!fork()) {
       setup_child(FALSE, 0, UFfileno(&uf));
       if (save2tmp(uf, tmpf->ptr) < 0)
@@ -6451,7 +6453,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
     if (f)
       fclose(f);
 #endif
-    flush_tty();
+    tty_flush();
     pid = fork();
     if (!pid) {
       setup_child(FALSE, 0, -1);
@@ -6554,7 +6556,7 @@ int doFileSave(URLFile uf, char *defstr) {
     if (f)
       fclose(f);
 #endif
-    flush_tty();
+    tty_flush();
     pid = fork();
     if (!pid) {
       int err;
@@ -6659,7 +6661,7 @@ char *inputAnswer(char *prompt) {
   if (QuietMessage)
     return "n";
   if (fmInitialized) {
-    term_raw();
+    tty_raw();
     ans = inputChar(prompt);
   } else {
     printf("%s", prompt);

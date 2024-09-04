@@ -1,12 +1,12 @@
 #include "tty.h"
 #include "config.h"
+#include "ctrlcode.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/select.h>
 #include <stdarg.h>
-#include "ctrlcode.h"
 
 #define DEV_TTY_PATH "/dev/tty"
 
@@ -64,7 +64,7 @@ void tty_close() {
     close(g_tty);
 }
 
-void flush_tty() {
+void tty_flush() {
   if (g_ttyf)
     fflush(g_ttyf);
 }
@@ -127,17 +127,17 @@ void tty_printf(const char *fmt, ...) {
   vfprintf(g_ttyf, fmt, ap);
 }
 
-int term_putc(char c) {
+int tty_putc(char c) {
   putc(c, g_ttyf);
 #ifdef SCREEN_DEBUG
-  flush_tty();
+  tty_flush();
 #endif /* SCREEN_DEBUG */
   return 0;
 }
 
 char *ttyname_tty(void) { return ttyname(g_tty); }
 
-void crmode(void)
+void tty_crmode(void)
 #ifndef HAVE_SGTTY_H
 {
   ttymode_reset(ICANON, IXON);
@@ -154,7 +154,7 @@ void crmode(void)
 }
 #endif /* HAVE_SGTTY_H */
 
-void nocrmode(void)
+void tty_nocrmode(void)
 #ifndef HAVE_SGTTY_H
 {
   ttymode_set(ICANON, 0);
@@ -170,11 +170,11 @@ void nocrmode(void)
 }
 #endif /* HAVE_SGTTY_H */
 
-void term_echo(void) { ttymode_set(ECHO, 0); }
+void tty_echo(void) { ttymode_set(ECHO, 0); }
 
-void term_noecho(void) { ttymode_reset(ECHO, 0); }
+void tty_noecho(void) { ttymode_reset(ECHO, 0); }
 
-void term_raw(void)
+void tty_raw(void)
 #ifndef HAVE_SGTTY_H
 #ifdef IEXTEN
 #define TTY_MODE ISIG | ICANON | ECHO | IEXTEN
@@ -195,7 +195,7 @@ void term_raw(void)
 }
 #endif /* HAVE_SGTTY_H */
 
-void term_cooked(void)
+void tty_cooked(void)
 #ifndef HAVE_SGTTY_H
 {
   ttymode_set(TTY_MODE, 0);
@@ -211,14 +211,13 @@ void term_cooked(void)
 }
 #endif /* HAVE_SGTTY_H */
 
-void term_cbreak(void) {
-  term_cooked();
-  term_noecho();
+void tty_cbreak(void) {
+  tty_cooked();
+  tty_noecho();
 }
 
-char getch() {
+char tty_getch() {
   char c;
-
   while (read(g_tty, &c, 1) < (int)1) {
     if (errno == EINTR || errno == EAGAIN)
       continue;
@@ -231,22 +230,22 @@ char getch() {
 }
 
 static void skip_escseq(void) {
-  int c = getch();
+  int c = tty_getch();
   if (c == '[' || c == 'O') {
-    c = getch();
+    c = tty_getch();
     while (IS_DIGIT(c))
-      c = getch();
+      c = tty_getch();
   }
 }
 
-int sleep_till_anykey(int sec, int purge) {
+int tty_sleep_till_anykey(int sec, int purge) {
   fd_set rfd;
   struct timeval tim;
   int er, c, ret;
   TerminalMode ioval;
 
   TerminalGet(g_tty, &ioval);
-  term_raw();
+  tty_raw();
 
   tim.tv_sec = sec;
   tim.tv_usec = 0;
@@ -256,7 +255,7 @@ int sleep_till_anykey(int sec, int purge) {
 
   ret = select(g_tty + 1, &rfd, 0, 0, &tim);
   if (ret > 0 && purge) {
-    c = getch();
+    c = tty_getch();
     if (c == ESC_CODE)
       skip_escseq();
   }

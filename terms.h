@@ -22,10 +22,4 @@ void term_reset();
 // tty
 void term_title(const char *s);
 void bell();
-void crmode(void);
-void nocrmode(void);
-void term_echo(void);
-void term_noecho(void);
-void term_raw(void);
-void term_cooked(void);
 void term_refresh();

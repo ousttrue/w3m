@@ -345,9 +345,9 @@ Buffer *selectBuffer(Buffer *firstbuf, Buffer *currentbuf, char *selectchar) {
   listBuffer(topbuf, currentbuf);
 
   for (;;) {
-    if ((c = getch()) == ESC_CODE) {
-      if ((c = getch()) == '[' || c == 'O') {
-        switch (c = getch()) {
+    if ((c = tty_getch()) == ESC_CODE) {
+      if ((c = tty_getch()) == '[' || c == 'O') {
+        switch (c = tty_getch()) {
         case 'A':
           c = 'k';
           break;

@@ -2,10 +2,18 @@
 
 void tty_open();
 void tty_close();
-int term_putc(char c);
-void tty_printf(const char *fmt, ...);
-void flush_tty();
-char getch();
-int sleep_till_anykey(int sec, int purge);
-void term_cbreak();
 
+void tty_cbreak();
+void tty_crmode();
+void tty_nocrmode();
+void tty_echo();
+void tty_noecho();
+void tty_raw();
+void tty_cooked();
+
+void tty_flush();
+int tty_putc(char c);
+void tty_printf(const char *fmt, ...);
+
+char tty_getch();
+int tty_sleep_till_anykey(int sec, int purge);

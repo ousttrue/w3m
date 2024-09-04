@@ -64,7 +64,7 @@ typedef struct Scr {
 Scr *scr_get();
 
 void setupscreen(int LINES, int COLS);
-void clear();
+void scr_clear();
 void move(int line, int column);
 void touch_line();
 void touch_column(int);

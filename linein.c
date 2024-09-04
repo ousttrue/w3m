@@ -185,7 +185,7 @@ char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
     term_refresh();
 
   next_char:
-    c = getch();
+    c = tty_getch();
     cm_clear = TRUE;
     cm_disp_clear = TRUE;
     if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
@@ -310,10 +310,10 @@ static void addStr(char *p, Lineprop *pr, int len, int offset, int limit) {
 static void _esc(int) {
   char c;
 
-  switch (c = getch()) {
+  switch (c = tty_getch()) {
   case '[':
   case 'O':
-    switch (c = getch()) {
+    switch (c = tty_getch()) {
     case 'A':
       _prev(-1);
       break;

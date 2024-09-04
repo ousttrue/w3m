@@ -40,7 +40,7 @@ static void wrap_GC_warn_proc(const char *msg, GC_word arg) {
         i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
 
         printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-        sleep_till_anykey(1, 1);
+        tty_sleep_till_anykey(1, 1);
       }
 
       lock = 0;

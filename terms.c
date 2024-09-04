@@ -43,7 +43,7 @@ int LINES, COLS;
 
 char gcmap[96];
 
-void term_puts(const char *s) { tputs(s, 1, term_putc); }
+void term_puts(const char *s) { tputs(s, 1, tty_putc); }
 
 #define W3M_TERM_INFO(name, title, mouse) name, title
 
@@ -93,7 +93,7 @@ void term_reset(void) {
       term_puts(T_cl);
   }
   term_puts(T_se); /* reset terminal */
-  flush_tty();
+  tty_flush();
   tty_close();
 }
 
@@ -266,7 +266,7 @@ void term_clear() { term_puts(T_cl); }
 
 void term_move(int line, int column) { term_puts(tgoto(T_cm, column, line)); }
 
-void bell(void) { term_putc(7); }
+void bell(void) { tty_putc(7); }
 
 enum {
   RF_NEED_TO_MOVE,
@@ -327,8 +327,8 @@ void term_refresh() {
           moved = RF_CR_OK;
           break;
         case RF_CR_OK:
-          term_putc('\n');
-          term_putc('\r');
+          tty_putc('\n');
+          tty_putc('\r');
           break;
         case RF_NONEED_TO_MOVE:
           moved = RF_CR_OK;
@@ -408,7 +408,7 @@ void term_refresh() {
             term_puts(T_as);
             mode |= S_GRAPHICS;
           }
-          term_putc((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
+          tty_putc((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
           pcol = col + 1;
         }
       }
@@ -429,5 +429,5 @@ void term_refresh() {
     }
   }
   term_move(scr->CurLine, scr->CurColumn);
-  flush_tty();
+  tty_flush();
 }

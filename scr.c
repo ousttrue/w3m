@@ -46,11 +46,10 @@ void setupscreen(int LINES, int COLS) {
     ScreenElem[i].isdirty = L_UNUSED;
   }
 
-  clear();
+  scr_clear();
 }
 
-void clear(void) {
-  term_clear();
+void scr_clear(void) {
   move(0, 0);
   for (int i = 0; i < LINES; i++) {
     g_scr.ScreenImage[i]->isdirty = 0;
