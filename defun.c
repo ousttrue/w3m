@@ -290,7 +290,7 @@ MySignalHandler resize_hook(SIGNAL_ARG) {
 
 static void resize_screen(void) {
   need_resize_screen = FALSE;
-  setlinescols();
+  term_setlinescols();
   scr_setup(LINES, COLS);
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -836,13 +836,13 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   if (cmd != NULL)
     cmd = conv_to_system(cmd);
   if (cmd != NULL && *cmd != '\0') {
-    fmTerm();
+    term_fmTerm();
     printf("\n");
     system(cmd);
     /* FIXME: gettextize? */
     printf("\n[Hit any key]");
     fflush(stdout);
-    fmInit();
+    term_fmInit();
     tty_getch();
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -1113,7 +1113,7 @@ static void _quitfm(int confirm) {
   }
 
   term_title(""); /* XXX */
-  fmTerm();
+  term_fmTerm();
   save_cookies();
   if (UseHistory && SaveURLHist)
     saveHistory(URLHist, URLHistSize);
@@ -1180,7 +1180,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
   scr_move(LASTLINE, 0);
   scr_clrtoeolx();
   term_refresh();
-  fmTerm();
+  term_fmTerm();
 #ifndef SIGSTOP
   shell = getenv("SHELL");
   if (shell == NULL)
@@ -1195,7 +1195,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
    */
   kill(0, SIGTSTP); /* stop whole job, not a single process */
 #endif /* SIGSTOP */
-  fmInit();
+  term_fmInit();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -1292,9 +1292,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
                           checkHeader(Currentbuf, "Content-Type:"), NULL);
   else
     cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
-  fmTerm();
+  term_fmTerm();
   system(cmd->ptr);
-  fmInit();
+  term_fmInit();
 
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   reload();
@@ -1314,10 +1314,10 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
   }
   saveBuffer(Currentbuf, f, TRUE);
   fclose(f);
-  fmTerm();
+  term_fmTerm();
   system(myEditor(Editor, shell_quote(tmpf), cur_real_linenumber(Currentbuf))
              ->ptr);
-  fmInit();
+  term_fmInit();
   unlink(tmpf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -1475,9 +1475,9 @@ static int handleMailto(char *url) {
     if ((pos = strchr(to->ptr, '?')) != NULL)
       Strtruncate(to, pos - to->ptr);
   }
-  fmTerm();
+  term_fmTerm();
   system(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), FALSE)->ptr);
-  fmInit();
+  term_fmInit();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   pushHashHist(URLHist, url);
   return 1;
@@ -3124,9 +3124,9 @@ static void invoke_browser(char *url) {
   }
   cmd = myExtCommand(browser, shell_quote(url), FALSE);
   Strremovetrailingspaces(cmd);
-  fmTerm();
+  term_fmTerm();
   mySystem(cmd->ptr, bg);
-  fmInit();
+  term_fmInit();
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

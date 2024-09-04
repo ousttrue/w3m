@@ -6055,9 +6055,9 @@ Buffer *doExternal(URLFile uf, char *type, Buffer *defaultbuf) {
     }
   } else {
     if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-      fmTerm();
+      term_fmTerm();
       mySystem(command->ptr, 0);
-      fmInit();
+      term_fmInit();
       if (CurrentTab && Currentbuf)
         displayBuffer(Currentbuf, B_FORCE_REDRAW);
     } else {

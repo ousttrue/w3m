@@ -760,9 +760,10 @@ global char MetaRefresh init(FALSE);
 global char LocalhostOnly init(FALSE);
 global char *HostName init(NULL);
 
-global char fmInitialized init(FALSE);
 global char QuietMessage init(FALSE);
 global char TrapSignal init(TRUE);
+
+extern bool fmInitialized;
 #define TRAP_ON                                                                \
   if (TrapSignal) {                                                            \
     prevtrap = mySignal(SIGINT, KeyAbort);                                     \

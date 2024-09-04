@@ -20,28 +20,6 @@
 #define EFFECT_MARK_END scr_standend()
 /* *INDENT-ON* */
 
-void fmTerm(void) {
-  if (fmInitialized) {
-    scr_move(LASTLINE, 0);
-    scr_clrtoeolx();
-    term_refresh();
-    term_reset();
-    fmInitialized = FALSE;
-  }
-}
-
-/*
- * Initialize routine.
- */
-void fmInit(void) {
-  if (!fmInitialized) {
-    initscr();
-    tty_raw();
-    tty_noecho();
-  }
-  fmInitialized = TRUE;
-}
-
 /*
  * Display some lines.
  */
@@ -201,7 +179,9 @@ void displayBuffer(Buffer *buf, int mode) {
   }
   if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
       cline != buf->topLine || ccolumn != buf->currentColumn) {
-    { redrawBuffer(buf); }
+    {
+      redrawBuffer(buf);
+    }
     cline = buf->topLine;
     ccolumn = buf->currentColumn;
   }
@@ -611,7 +591,7 @@ void addChar(char c, Lineprop mode) {
   if (mode & PC_SYMBOL) {
     char **symbol;
     c -= SYMBOL_BASE;
-    if (graph_ok() && c < N_GRAPH_SYMBOL) {
+    if (term_graph_ok() && c < N_GRAPH_SYMBOL) {
       if (!graph_mode) {
         scr_graphstart();
         graph_mode = TRUE;
@@ -693,7 +673,7 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
   }
   if (CurrentTab != NULL && Currentbuf != NULL)
     scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
-            Currentbuf->cursorY + Currentbuf->rootY);
+                Currentbuf->cursorY + Currentbuf->rootY);
   else
     scr_message(s, LASTLINE, 0);
   term_refresh();

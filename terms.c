@@ -63,6 +63,20 @@ static struct w3m_term_info {
     {W3M_TERM_INFO(NULL, NULL, 0)}};
 #undef W3M_TERM_INFO
 
+void term_reset() {
+  term_puts(T_op); /* turn off */
+  term_puts(T_me);
+  if (!Do_not_use_ti_te) {
+    if (T_te && *T_te)
+      term_puts(T_te);
+    else
+      term_puts(T_cl);
+  }
+  term_puts(T_se); /* reset terminal */
+  tty_flush();
+  tty_close();
+}
+
 static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval) {
   term_reset();
   w3m_exit(rval);
@@ -83,21 +97,10 @@ MySignalHandler error_dump(SIGNAL_ARG) {
   abort();
   SIGNAL_RETURN;
 }
-void term_reset(void) {
-  term_puts(T_op); /* turn off */
-  term_puts(T_me);
-  if (!Do_not_use_ti_te) {
-    if (T_te && *T_te)
-      term_puts(T_te);
-    else
-      term_puts(T_cl);
-  }
-  term_puts(T_se); /* reset terminal */
-  tty_flush();
-  tty_close();
-}
 
-void set_int(void) {
+bool fmInitialized = false;
+
+void set_int() {
   mySignal(SIGHUP, reset_exit);
   mySignal(SIGINT, reset_exit);
   mySignal(SIGQUIT, reset_exit);
@@ -111,7 +114,7 @@ void set_int(void) {
        /* mySignal(SIGSEGV, error_dump); */
 }
 
-static void setgraphchar(void) {
+static void term_setgraphchar() {
   int c, i, n;
 
   for (c = 0; c < 96; c++)
@@ -138,7 +141,7 @@ static void setgraphchar(void) {
       v = allocStr(suc, -1);                                                   \
   }
 
-void getTCstr(void) {
+void getTCstr() {
   char *ent;
   char *suc;
   char *pt = funcstr;
@@ -202,11 +205,11 @@ void getTCstr(void) {
 #endif /* CYGWIN */
 
   LINES = COLS = 0;
-  setlinescols();
-  setgraphchar();
+  term_setlinescols();
+  term_setgraphchar();
 }
 
-void setlinescols(void) {
+void term_setlinescols() {
   char *p;
   int i;
   if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
@@ -235,7 +238,7 @@ void term_title(const char *s) {
   }
 }
 
-int initscr(void) {
+int term_init() {
   tty_open();
 
   if (displayTitleTerm != NULL) {
@@ -256,9 +259,9 @@ int initscr(void) {
   return 0;
 }
 
-int graph_ok(void) {
+bool term_graph_ok() {
   if (UseGraphicChar != GRAPHIC_CHAR_DEC)
-    return 0;
+    return false;
   return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
 }
 
@@ -266,7 +269,7 @@ void term_clear() { term_puts(T_cl); }
 
 void term_move(int line, int column) { term_puts(tgoto(T_cm, column, line)); }
 
-void bell(void) { tty_putc(7); }
+void term_bell() { tty_putc(7); }
 
 enum {
   RF_NEED_TO_MOVE,
@@ -430,4 +433,23 @@ void term_refresh() {
   }
   term_move(scr->CurLine, scr->CurColumn);
   tty_flush();
+}
+
+void term_fmInit() {
+  if (!fmInitialized) {
+    term_init();
+    tty_raw();
+    tty_noecho();
+  }
+  fmInitialized = TRUE;
+}
+
+void term_fmTerm() {
+  if (fmInitialized) {
+    scr_move(LASTLINE, 0);
+    scr_clrtoeolx();
+    term_refresh();
+    term_reset();
+    fmInitialized = FALSE;
+  }
 }

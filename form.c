@@ -457,9 +457,9 @@ void input_textarea(FormItemList *fi) {
     form_fputs_decode(fi->value, f);
   fclose(f);
 
-  fmTerm();
+  term_fmTerm();
   system(myEditor(Editor, tmpf, 1)->ptr);
-  fmInit();
+  term_fmInit();
 
   if (fi->readonly)
     goto input_end;

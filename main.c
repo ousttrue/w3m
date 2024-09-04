@@ -462,7 +462,7 @@ int main(int argc, char **argv, char **envp) {
   if (BookmarkFile == NULL)
     BookmarkFile = rcFile(BOOKMARK);
 
-  fmInit();
+  term_fmInit();
   mySignal(SIGWINCH, resize_hook);
 
   sync_with_option();
@@ -540,12 +540,12 @@ int main(int argc, char **argv, char **envp) {
         pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
     } else {
       if (fmInitialized)
-        fmTerm();
+        term_fmTerm();
       usage();
     }
     if (newbuf == NULL) {
       if (fmInitialized)
-        fmTerm();
+        term_fmTerm();
       if (err_msg->length)
         fprintf(stderr, "%s", err_msg->ptr);
       w3m_exit(2);
@@ -658,7 +658,7 @@ int main(int argc, char **argv, char **envp) {
         inputChar("Hit any key to quit w3m:");
     }
     if (fmInitialized)
-      fmTerm();
+      term_fmTerm();
     if (err_msg->length)
       fprintf(stderr, "%s", err_msg->ptr);
     if (newbuf == NO_BUFFER) {
