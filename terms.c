@@ -77,7 +77,6 @@ char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc, *T_so,
 
 int LINES, COLS;
 
-
 char gcmap[96];
 
 int term_putc(char c) {
@@ -528,4 +527,168 @@ int sleep_till_anykey(int sec, int purge) {
 void flush_tty() {
   if (ttyf)
     fflush(ttyf);
+}
+
+enum {
+  RF_NEED_TO_MOVE,
+  RF_CR_OK,
+  RF_NONEED_TO_MOVE,
+};
+
+static char *color_seq(int colmode) {
+  static char seqbuf[32];
+  sprintf(seqbuf, "\033[%dm", ((colmode >> 8) & 7) + 30);
+  return seqbuf;
+}
+
+#define graphchar(c)                                                           \
+  (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
+
+void refresh() {
+  int line, col, pcol;
+
+  auto scr = scr_get();
+
+  int pline = scr->CurLine;
+  int moved = RF_NEED_TO_MOVE;
+  char *pc;
+  l_prop *pr;
+  l_prop mode = 0;
+  l_prop color = COL_FTERM;
+  short *dirty;
+
+  for (line = 0; line <= LASTLINE; line++) {
+    dirty = &scr->ScreenImage[line]->isdirty;
+    if (*dirty & L_DIRTY) {
+      *dirty &= ~L_DIRTY;
+      pc = scr->ScreenImage[line]->lineimage;
+      pr = scr->ScreenImage[line]->lineprop;
+      for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
+        if (*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol) {
+          if (scr_need_redraw(pc[col], pr[col], SPACE, 0))
+            break;
+        } else {
+          if (pr[col] & S_DIRTY)
+            break;
+        }
+      }
+      if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
+        pcol = scr->ScreenImage[line]->eol;
+        if (pcol >= COLS) {
+          *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
+          pcol = col;
+        }
+      } else {
+        pcol = col;
+      }
+      if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
+        switch (moved) {
+        case RF_NEED_TO_MOVE:
+          term_move(line, 0);
+          moved = RF_CR_OK;
+          break;
+        case RF_CR_OK:
+          term_putc('\n');
+          term_putc('\r');
+          break;
+        case RF_NONEED_TO_MOVE:
+          moved = RF_CR_OK;
+          break;
+        }
+      } else {
+        term_move(line, pcol);
+        moved = RF_CR_OK;
+      }
+      if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
+        term_puts(T_ce);
+        if (col != pcol)
+          term_move(line, col);
+      }
+      pline = line;
+      pcol = col;
+      for (; col < COLS; col++) {
+        if (pr[col] & S_EOL)
+          break;
+
+          /*
+           * some terminal emulators do linefeed when a
+           * character is put on COLS-th column. this behavior
+           * is different from one of vt100, but such terminal
+           * emulators are used as vt100-compatible
+           * emulators. This behaviour causes scroll when a
+           * character is drawn on (COLS-1,LINES-1) point.  To
+           * avoid the scroll, I prohibit to draw character on
+           * (COLS-1,LINES-1).
+           */
+#if !defined(USE_BG_COLOR)
+        if (line == LINES - 1 && col == COLS - 1)
+          break;
+#endif /* !defined(USE_BG_COLOR)  */
+        if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) ||
+            (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) ||
+            (!(pr[col] & S_BOLD) && (mode & S_BOLD)) ||
+            (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
+            (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
+          if ((mode & S_COLORED))
+            term_puts(T_op);
+          if (mode & S_GRAPHICS)
+            term_puts(T_ae);
+          term_puts(T_me);
+          mode &= ~M_MEND;
+        }
+        if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
+                ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
+                : (pr[col] & S_DIRTY)) {
+          if (pcol == col - 1)
+            term_puts(T_nd);
+          else if (pcol != col)
+            term_move(line, col);
+
+          if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
+            term_puts(T_so);
+            mode |= S_STANDOUT;
+          }
+          if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
+            term_puts(T_us);
+            mode |= S_UNDERLINE;
+          }
+          if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
+            term_puts(T_md);
+            mode |= S_BOLD;
+          }
+          if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
+            color = (pr[col] & COL_FCOLOR);
+            mode = ((mode & ~COL_FCOLOR) | color);
+            term_puts(color_seq(color));
+          }
+          if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
+            if (!scr->graph_enabled) {
+              scr->graph_enabled = 1;
+              term_puts(T_eA);
+            }
+            term_puts(T_as);
+            mode |= S_GRAPHICS;
+          }
+          term_putc((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
+          pcol = col + 1;
+        }
+      }
+      if (col == COLS)
+        moved = RF_NEED_TO_MOVE;
+      for (; col < COLS && !(pr[col] & S_EOL); col++)
+        pr[col] |= S_EOL;
+    }
+    *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
+    if (mode & M_MEND) {
+      if (mode & (S_COLORED))
+        term_puts(T_op);
+      if (mode & S_GRAPHICS) {
+        term_puts(T_ae);
+      }
+      term_puts(T_me);
+      mode &= ~M_MEND;
+    }
+  }
+  term_move(scr->CurLine, scr->CurColumn);
+  flush_tty();
 }
