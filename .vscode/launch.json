@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/zig-out/bin/w3m",
+            "program": "${workspaceFolder}/zig-out/bin/termcap_entry",
             "args": [
                 "http://www.google.com"
             ],

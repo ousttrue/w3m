@@ -186,6 +186,30 @@ pub fn build(b: *std.Build) void {
     zcc.createStep(b, "zcc", .{
         .targets = targets.toOwnedSlice() catch @panic("OOM"),
     });
+
+    build_termcap_entry(b, target, optimize);
+}
+
+fn build_termcap_entry(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+) void {
+    const exe = b.addExecutable(.{
+        .name = "termcap_entry",
+        .target = target,
+        .optimize = optimize,
+        .root_source_file = b.path("termcap_entry.zig"),
+        .link_libc = true,
+    });
+    exe.linkSystemLibrary("ncurses");
+    const install = b.addInstallArtifact(exe, .{});
+    b.getInstallStep().dependOn(&install.step);
+
+    const run = b.addRunArtifact(exe);
+    run.step.dependOn(&install.step);
+
+    b.step("run-termcap", "run termcap_entry").dependOn(&run.step);
 }
 
 fn build_exe(
