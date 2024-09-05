@@ -1,6 +1,10 @@
 #pragma once
 
+extern int LINES, COLS;
+#define LASTLINE (LINES - 1)
+
 typedef struct TermCap {
+  char bp[1024];
   char *T_cd;
   char *T_ce;
   char *T_kr;
@@ -28,6 +32,13 @@ typedef struct TermCap {
   char *T_eA;
   char *T_ac;
   char *T_op;
+  int LINES;
+  int COLS;
 } TermCap;
 
-TermCap* termcap_get();
+bool termcap_load(const char *ent);
+TermCap *termcap_get();
+void termcap_setlinescols();
+
+extern int tputs(const char *, int, int (*)(char));
+extern char *tgoto(const char *, int, int);

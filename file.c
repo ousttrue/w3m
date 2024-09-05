@@ -4,6 +4,7 @@
 #include "tty.h"
 #include "scr.h"
 #include "digest_auth.h"
+#include "termcap_entry.h"
 #include <sys/types.h>
 #include "myctype.h"
 #include <signal.h>

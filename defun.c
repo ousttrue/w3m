@@ -4,6 +4,7 @@
 #include "scr.h"
 #include "tty.h"
 #include "defun.h"
+#include "termcap_entry.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -290,7 +291,7 @@ MySignalHandler resize_hook(SIGNAL_ARG) {
 
 static void resize_screen(void) {
   need_resize_screen = FALSE;
-  term_setlinescols();
+  termcap_setlinescols();
   scr_setup(LINES, COLS);
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);

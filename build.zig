@@ -228,7 +228,7 @@ fn build_exe(
             "tty.c",
             "terms.c",
             "scr.c",
-            "vt100.c",
+            "termcap_entry.c",
 
             "url.c",
             "ftp.c",

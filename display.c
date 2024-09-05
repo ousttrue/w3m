@@ -3,6 +3,7 @@
 #include "fm.h"
 #include "tty.h"
 #include "scr.h"
+#include "termcap_entry.h"
 
 /* *INDENT-OFF* */
 

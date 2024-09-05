@@ -3,6 +3,7 @@
 #include "tty.h"
 #include "scr.h"
 #include "local.h"
+#include "termcap_entry.h"
 #include "myctype.h"
 
 #define STR_LEN 1024

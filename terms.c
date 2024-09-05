@@ -5,7 +5,7 @@
 #include "terms.h"
 #include "tty.h"
 #include "scr.h"
-#include "vt100.h"
+#include "termcap_entry.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -30,13 +30,6 @@ MySignalHandler error_dump(SIGNAL_ARG);
 #ifndef SIGIOT
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
-
-#define MAX_LINE 200
-#define MAX_COLUMN 400
-
-static char bp[1024], funcstr[256];
-
-int LINES, COLS;
 
 char gcmap[96];
 
@@ -130,16 +123,6 @@ static void term_setgraphchar() {
   }
 }
 
-#define GETSTR(v, s)                                                           \
-  {                                                                            \
-    v = pt;                                                                    \
-    suc = tgetstr(s, &pt);                                                     \
-    if (!suc)                                                                  \
-      v = "";                                                                  \
-    else                                                                       \
-      v = allocStr(suc, -1);                                                   \
-  }
-
 void getTCstr() {
 
   auto ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
@@ -148,73 +131,15 @@ void getTCstr() {
     reset_error_exit(SIGNAL_ARGLIST);
   }
 
-  int r = tgetent(bp, ent);
-  if (r != 1) {
+  if(!termcap_load(ent)){
     /* Can't find termcap entry */
     fprintf(stderr, "Can't find termcap entry %s\n", ent);
     reset_error_exit(SIGNAL_ARGLIST);
   }
 
-  auto t = termcap_get();
-  char *pt = funcstr;
-  char *suc;
-  GETSTR(t->T_ce, "ce"); /* clear to the end of line */
-  GETSTR(t->T_cd, "cd"); /* clear to the end of display */
-  GETSTR(t->T_kr, "nd"); /* cursor right */
-  if (suc == NULL)
-    GETSTR(t->T_kr, "kr");
-  if (tgetflag("bs"))
-    t->T_kl = "\b"; /* cursor left */
-  else {
-    GETSTR(t->T_kl, "le");
-    if (suc == NULL)
-      GETSTR(t->T_kl, "kb");
-    if (suc == NULL)
-      GETSTR(t->T_kl, "kl");
-  }
-  GETSTR(t->T_cr, "cr"); /* carriage return */
-  GETSTR(t->T_ta, "ta"); /* tab */
-  GETSTR(t->T_sc, "sc"); /* save cursor */
-  GETSTR(t->T_rc, "rc"); /* restore cursor */
-  GETSTR(t->T_so, "so"); /* standout mode */
-  GETSTR(t->T_se, "se"); /* standout mode end */
-  GETSTR(t->T_us, "us"); /* underline mode */
-  GETSTR(t->T_ue, "ue"); /* underline mode end */
-  GETSTR(t->T_md, "md"); /* bold mode */
-  GETSTR(t->T_me, "me"); /* bold mode end */
-  GETSTR(t->T_cl, "cl"); /* clear screen */
-  GETSTR(t->T_cm, "cm"); /* cursor move */
-  GETSTR(t->T_al, "al"); /* append line */
-  GETSTR(t->T_sr, "sr"); /* scroll reverse */
-  GETSTR(t->T_ti, "ti"); /* terminal init */
-  GETSTR(t->T_te, "te"); /* terminal end */
-  GETSTR(t->T_nd, "nd"); /* move right one space */
-  GETSTR(t->T_eA, "eA"); /* enable alternative charset */
-  GETSTR(t->T_as, "as"); /* alternative (graphic) charset start */
-  GETSTR(t->T_ae, "ae"); /* alternative (graphic) charset end */
-  GETSTR(t->T_ac, "ac"); /* graphics charset pairs */
-  GETSTR(t->T_op, "op"); /* set default color pair to its original value */
-
   LINES = COLS = 0;
-  term_setlinescols();
+  termcap_setlinescols();
   term_setgraphchar();
-}
-
-void term_setlinescols() {
-  char *p;
-  int i;
-  if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-    LINES = i;
-  if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-    COLS = i;
-  if (LINES <= 0)
-    LINES = tgetnum("li"); /* number of line */
-  if (COLS <= 0)
-    COLS = tgetnum("co"); /* number of column */
-  if (COLS > MAX_COLUMN)
-    COLS = MAX_COLUMN;
-  if (LINES > MAX_LINE)
-    LINES = MAX_LINE;
 }
 
 /*

@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"
+#include "termcap_entry.h"
 #include <signal.h>
 #include <openssl/x509v3.h>
 
