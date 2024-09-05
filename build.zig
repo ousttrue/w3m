@@ -224,9 +224,12 @@ fn build_exe(
             "image.c",
             "symbol.c",
             "entity.c",
+
             "tty.c",
             "terms.c",
             "scr.c",
+            "vt100.c",
+
             "url.c",
             "ftp.c",
             "mimehead.c",

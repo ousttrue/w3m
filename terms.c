@@ -5,6 +5,7 @@
 #include "terms.h"
 #include "tty.h"
 #include "scr.h"
+#include "vt100.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -35,10 +36,6 @@ MySignalHandler error_dump(SIGNAL_ARG);
 
 static char bp[1024], funcstr[256];
 
-char *T_cd, *T_ce, *T_kr, *T_kl, *T_cr, *T_bt, *T_ta, *T_sc, *T_rc, *T_so,
-    *T_se, *T_us, *T_ue, *T_cl, *T_cm, *T_al, *T_sr, *T_md, *T_me, *T_ti, *T_te,
-    *T_nd, *T_as, *T_ae, *T_eA, *T_ac, *T_op;
-
 int LINES, COLS;
 
 char gcmap[96];
@@ -64,15 +61,16 @@ static struct w3m_term_info {
 #undef W3M_TERM_INFO
 
 void term_reset() {
-  term_puts(T_op); /* turn off */
-  term_puts(T_me);
+  auto t = termcap_get();
+  term_puts(t->T_op); /* turn off */
+  term_puts(t->T_me);
   if (!Do_not_use_ti_te) {
-    if (T_te && *T_te)
-      term_puts(T_te);
+    if (t->T_te && *t->T_te)
+      term_puts(t->T_te);
     else
-      term_puts(T_cl);
+      term_puts(t->T_cl);
   }
-  term_puts(T_se); /* reset terminal */
+  term_puts(t->T_se); /* reset terminal */
   tty_flush();
   tty_close();
 }
@@ -115,19 +113,20 @@ void set_int() {
 }
 
 static void term_setgraphchar() {
-  int c, i, n;
-
-  for (c = 0; c < 96; c++)
+  for (int c = 0; c < 96; c++) {
     gcmap[c] = (char)(c + ' ');
+  }
 
-  if (!T_ac)
+  auto t = termcap_get();
+  if (!t->T_ac) {
     return;
+  }
 
-  n = strlen(T_ac);
-  for (i = 0; i < n - 1; i += 2) {
-    c = (unsigned)T_ac[i] - ' ';
+  int n = strlen(t->T_ac);
+  for (int i = 0; i < n - 1; i += 2) {
+    auto c = (unsigned)t->T_ac[i] - ' ';
     if (c >= 0 && c < 96)
-      gcmap[c] = T_ac[i + 1];
+      gcmap[c] = t->T_ac[i + 1];
   }
 }
 
@@ -142,67 +141,59 @@ static void term_setgraphchar() {
   }
 
 void getTCstr() {
-  char *ent;
-  char *suc;
-  char *pt = funcstr;
-  int r;
 
-  ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
+  auto ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
   if (ent == NULL) {
     fprintf(stderr, "TERM is not set\n");
     reset_error_exit(SIGNAL_ARGLIST);
   }
 
-  r = tgetent(bp, ent);
+  int r = tgetent(bp, ent);
   if (r != 1) {
     /* Can't find termcap entry */
     fprintf(stderr, "Can't find termcap entry %s\n", ent);
     reset_error_exit(SIGNAL_ARGLIST);
   }
 
-  GETSTR(T_ce, "ce"); /* clear to the end of line */
-  GETSTR(T_cd, "cd"); /* clear to the end of display */
-  GETSTR(T_kr, "nd"); /* cursor right */
+  auto t = termcap_get();
+  char *pt = funcstr;
+  char *suc;
+  GETSTR(t->T_ce, "ce"); /* clear to the end of line */
+  GETSTR(t->T_cd, "cd"); /* clear to the end of display */
+  GETSTR(t->T_kr, "nd"); /* cursor right */
   if (suc == NULL)
-    GETSTR(T_kr, "kr");
+    GETSTR(t->T_kr, "kr");
   if (tgetflag("bs"))
-    T_kl = "\b"; /* cursor left */
+    t->T_kl = "\b"; /* cursor left */
   else {
-    GETSTR(T_kl, "le");
+    GETSTR(t->T_kl, "le");
     if (suc == NULL)
-      GETSTR(T_kl, "kb");
+      GETSTR(t->T_kl, "kb");
     if (suc == NULL)
-      GETSTR(T_kl, "kl");
+      GETSTR(t->T_kl, "kl");
   }
-  GETSTR(T_cr, "cr"); /* carriage return */
-  GETSTR(T_ta, "ta"); /* tab */
-  GETSTR(T_sc, "sc"); /* save cursor */
-  GETSTR(T_rc, "rc"); /* restore cursor */
-  GETSTR(T_so, "so"); /* standout mode */
-  GETSTR(T_se, "se"); /* standout mode end */
-  GETSTR(T_us, "us"); /* underline mode */
-  GETSTR(T_ue, "ue"); /* underline mode end */
-  GETSTR(T_md, "md"); /* bold mode */
-  GETSTR(T_me, "me"); /* bold mode end */
-  GETSTR(T_cl, "cl"); /* clear screen */
-  GETSTR(T_cm, "cm"); /* cursor move */
-  GETSTR(T_al, "al"); /* append line */
-  GETSTR(T_sr, "sr"); /* scroll reverse */
-  GETSTR(T_ti, "ti"); /* terminal init */
-  GETSTR(T_te, "te"); /* terminal end */
-  GETSTR(T_nd, "nd"); /* move right one space */
-  GETSTR(T_eA, "eA"); /* enable alternative charset */
-  GETSTR(T_as, "as"); /* alternative (graphic) charset start */
-  GETSTR(T_ae, "ae"); /* alternative (graphic) charset end */
-  GETSTR(T_ac, "ac"); /* graphics charset pairs */
-  GETSTR(T_op, "op"); /* set default color pair to its original value */
-#if defined(CYGWIN) && CYGWIN < 1
-  /* for TERM=pcansi on MS-DOS prompt. */
-  T_eA = "";
-  T_as = "";
-  T_ae = "";
-  T_ac = "";
-#endif /* CYGWIN */
+  GETSTR(t->T_cr, "cr"); /* carriage return */
+  GETSTR(t->T_ta, "ta"); /* tab */
+  GETSTR(t->T_sc, "sc"); /* save cursor */
+  GETSTR(t->T_rc, "rc"); /* restore cursor */
+  GETSTR(t->T_so, "so"); /* standout mode */
+  GETSTR(t->T_se, "se"); /* standout mode end */
+  GETSTR(t->T_us, "us"); /* underline mode */
+  GETSTR(t->T_ue, "ue"); /* underline mode end */
+  GETSTR(t->T_md, "md"); /* bold mode */
+  GETSTR(t->T_me, "me"); /* bold mode end */
+  GETSTR(t->T_cl, "cl"); /* clear screen */
+  GETSTR(t->T_cm, "cm"); /* cursor move */
+  GETSTR(t->T_al, "al"); /* append line */
+  GETSTR(t->T_sr, "sr"); /* scroll reverse */
+  GETSTR(t->T_ti, "ti"); /* terminal init */
+  GETSTR(t->T_te, "te"); /* terminal end */
+  GETSTR(t->T_nd, "nd"); /* move right one space */
+  GETSTR(t->T_eA, "eA"); /* enable alternative charset */
+  GETSTR(t->T_as, "as"); /* alternative (graphic) charset start */
+  GETSTR(t->T_ae, "ae"); /* alternative (graphic) charset end */
+  GETSTR(t->T_ac, "ac"); /* graphics charset pairs */
+  GETSTR(t->T_op, "op"); /* set default color pair to its original value */
 
   LINES = COLS = 0;
   term_setlinescols();
@@ -253,8 +244,9 @@ int term_init() {
 
   set_int();
   getTCstr();
-  if (T_ti && !Do_not_use_ti_te)
-    term_puts(T_ti);
+  auto t = termcap_get();
+  if (t->T_ti && !Do_not_use_ti_te)
+    term_puts(t->T_ti);
   scr_setup(LINES, COLS);
   return 0;
 }
@@ -262,12 +254,15 @@ int term_init() {
 bool term_graph_ok() {
   if (UseGraphicChar != GRAPHIC_CHAR_DEC)
     return false;
-  return T_as[0] != 0 && T_ae[0] != 0 && T_ac[0] != 0;
+  auto t = termcap_get();
+  return t->T_as[0] != 0 && t->T_ae[0] != 0 && t->T_ac[0] != 0;
 }
 
-void term_clear() { term_puts(T_cl); }
+void term_clear() { term_puts(termcap_get()->T_cl); }
 
-void term_move(int line, int column) { term_puts(tgoto(T_cm, column, line)); }
+void term_move(int line, int column) {
+  term_puts(tgoto(termcap_get()->T_cm, column, line));
+}
 
 void term_bell() { tty_putc(7); }
 
@@ -299,6 +294,7 @@ void term_refresh() {
   l_prop color = COL_FTERM;
   short *dirty;
 
+  auto t = termcap_get();
   for (line = 0; line <= LASTLINE; line++) {
     dirty = &scr->ScreenImage[line]->isdirty;
     if (*dirty & L_DIRTY) {
@@ -342,7 +338,7 @@ void term_refresh() {
         moved = RF_CR_OK;
       }
       if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-        term_puts(T_ce);
+        term_puts(t->T_ce);
         if (col != pcol)
           term_move(line, col);
       }
@@ -372,30 +368,30 @@ void term_refresh() {
             (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
             (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
           if ((mode & S_COLORED))
-            term_puts(T_op);
+            term_puts(t->T_op);
           if (mode & S_GRAPHICS)
-            term_puts(T_ae);
-          term_puts(T_me);
+            term_puts(t->T_ae);
+          term_puts(t->T_me);
           mode &= ~M_MEND;
         }
         if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
                 ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
                 : (pr[col] & S_DIRTY)) {
           if (pcol == col - 1)
-            term_puts(T_nd);
+            term_puts(t->T_nd);
           else if (pcol != col)
             term_move(line, col);
 
           if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-            term_puts(T_so);
+            term_puts(t->T_so);
             mode |= S_STANDOUT;
           }
           if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-            term_puts(T_us);
+            term_puts(t->T_us);
             mode |= S_UNDERLINE;
           }
           if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-            term_puts(T_md);
+            term_puts(t->T_md);
             mode |= S_BOLD;
           }
           if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
@@ -406,9 +402,9 @@ void term_refresh() {
           if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
             if (!scr->graph_enabled) {
               scr->graph_enabled = 1;
-              term_puts(T_eA);
+              term_puts(t->T_eA);
             }
-            term_puts(T_as);
+            term_puts(t->T_as);
             mode |= S_GRAPHICS;
           }
           tty_putc((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
@@ -423,11 +419,11 @@ void term_refresh() {
     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
     if (mode & M_MEND) {
       if (mode & (S_COLORED))
-        term_puts(T_op);
+        term_puts(t->T_op);
       if (mode & S_GRAPHICS) {
-        term_puts(T_ae);
+        term_puts(t->T_ae);
       }
-      term_puts(T_me);
+      term_puts(t->T_me);
       mode &= ~M_MEND;
     }
   }
