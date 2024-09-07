@@ -1320,9 +1320,6 @@ popupMenu(int x, int y, Menu *menu)
 {
     set_menu_frame();
 
-    initSelectMenu();
-    initSelTabMenu();
-
     menu->cursorX = Currentbuf->cursorX + Currentbuf->rootX;
     menu->cursorY = Currentbuf->cursorY + Currentbuf->rootY;
     menu->x = x + FRAME_WIDTH + 1;
@@ -1370,6 +1367,7 @@ DEFUN(selMn, SELECT_MENU, "Pop up buffer-stack menu")
 	y = mouse_action.cursorY;
     }
 #endif
+    initSelectMenu();
     popupMenu(x, y, &SelectMenu);
 }
 
@@ -1589,6 +1587,7 @@ DEFUN(tabMn, TAB_MENU, "Pop up tab selection menu")
 	y = mouse_action.cursorY;
     }
 #endif
+    initSelTabMenu();
     popupMenu(x, y, &SelTabMenu);
 }
 
