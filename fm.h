@@ -60,11 +60,6 @@ typedef int wc_ces; /* XXX: not used */
 #include "terms.h"
 #include "istream.h"
 
-#ifndef HAVE_BCOPY
-void bcopy(const void *, void *, int);
-void bzero(void *, int);
-#endif /* HAVE_BCOPY */
-
 #ifdef MAINPROGRAM
 #define global
 #define init(x) = (x)

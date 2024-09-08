@@ -83,7 +83,7 @@ Str Strnew_charp(const char *p) {
     exit(1);
   x->area_size = n;
   x->length = len;
-  bcopy((void *)p, (void *)x->ptr, len);
+  memcpy((void *)x->ptr, (const void *)p, len);
   x->ptr[x->length] = '\0';
   return x;
 }
@@ -119,7 +119,7 @@ Str Strnew_charp_n(const char *p, int n) {
     exit(1);
   x->area_size = n + 1;
   x->length = len;
-  bcopy((void *)p, (void *)x->ptr, len);
+  memcpy((void *)x->ptr, (const void *)p, len);
   x->ptr[x->length] = '\0';
   return x;
 }
@@ -150,7 +150,7 @@ void Strcopy(Str x, Str y) {
       exit(1);
     x->area_size = y->length + 1;
   }
-  bcopy((void *)y->ptr, (void *)x->ptr, y->length + 1);
+  memcpy((void *)x->ptr, (const void *)y->ptr, y->length + 1);
   x->length = y->length;
 }
 
@@ -172,7 +172,7 @@ void Strcopy_charp(Str x, const char *y) {
       exit(1);
     x->area_size = len + 1;
   }
-  bcopy((void *)y, (void *)x->ptr, len);
+  memcpy((void *)x->ptr, (const void *)y, len);
   x->ptr[len] = '\0';
   x->length = len;
 }
@@ -194,7 +194,7 @@ void Strcopy_charp_n(Str x, const char *y, int n) {
       exit(1);
     x->area_size = len + 1;
   }
-  bcopy((void *)y, (void *)x->ptr, len);
+  memcpy((void *)x->ptr, (const void *)y, len);
   x->ptr[len] = '\0';
   x->length = len;
 }
@@ -223,7 +223,7 @@ void Strcat_charp_n(Str x, const char *y, int n) {
       exit(1);
     x->area_size = newlen;
   }
-  bcopy((void *)y, (void *)&x->ptr[x->length], n);
+  memcpy((void *)&x->ptr[x->length], (const void *)y, n);
   x->length += n;
   x->ptr[x->length] = '\0';
 }

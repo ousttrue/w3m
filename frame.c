@@ -146,7 +146,7 @@ static struct frame_body *copyFrame(struct frame_body *ob) {
   struct frame_body *rb;
 
   rb = New(struct frame_body);
-  bcopy((const void *)ob, (void *)rb, sizeof(struct frame_body));
+  memcpy((void *)rb, (const void *)ob, sizeof(struct frame_body));
   return rb;
 }
 
@@ -156,11 +156,11 @@ struct frameset *copyFrameSet(struct frameset *of) {
 
   rf = New(struct frameset);
   n = of->col * of->row;
-  bcopy((const void *)of, (void *)rf, sizeof(struct frameset));
+  memcpy((void *)rf, (const void *)of, sizeof(struct frameset));
   rf->width = New_N(char *, rf->col);
-  bcopy((const void *)of->width, (void *)rf->width, sizeof(char *) * rf->col);
+  memcpy((void *)rf->width, (const void *)of->width, sizeof(char *) * rf->col);
   rf->height = New_N(char *, rf->row);
-  bcopy((const void *)of->height, (void *)rf->height, sizeof(char *) * rf->row);
+  memcpy((void *)rf->height, (const void *)of->height, sizeof(char *) * rf->row);
   rf->frame = New_N(union frameset_element, n);
   while (n) {
     n--;

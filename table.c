@@ -2895,7 +2895,7 @@ void pushTable(struct table *tbl, struct table *tbl1) {
       tbl->tables_size = MAX_TABLE_N_LIMIT;
     tmp = New_N(struct table_in, tbl->tables_size);
     if (tbl->tables)
-      bcopy(tbl->tables, tmp, tbl->ntable * sizeof(struct table_in));
+      memcpy(tmp, tbl->tables, tbl->ntable * sizeof(struct table_in));
     tbl->tables = tmp;
   }
 

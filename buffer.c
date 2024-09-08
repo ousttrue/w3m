@@ -513,7 +513,7 @@ void reshapeBuffer(Buffer *buf) {
 /* shallow copy */
 void copyBuffer(Buffer *a, Buffer *b) {
   readBufferCache(b);
-  bcopy((void *)b, (void *)a, sizeof(Buffer));
+  memcpy((void *)a, (const void *)b, sizeof(Buffer));
 }
 
 Buffer *prevBuffer(Buffer *first, Buffer *buf) {
