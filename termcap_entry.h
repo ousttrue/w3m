@@ -40,5 +40,3 @@ bool termcap_load(const char *ent);
 TermCap *termcap_get();
 void termcap_setlinescols();
 
-extern int tputs(const char *, int, int (*)(char));
-extern char *tgoto(const char *, int, int);

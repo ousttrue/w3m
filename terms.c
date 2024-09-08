@@ -6,6 +6,7 @@
 #include "tty.h"
 #include "scr.h"
 #include "termcap_entry.h"
+#include "termcap.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
@@ -374,3 +375,4 @@ void term_fmTerm() {
     fmInitialized = FALSE;
   }
 }
+

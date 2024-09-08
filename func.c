@@ -4,7 +4,7 @@
  */
 
 #include <stdio.h>
-
+#include <strings.h>
 #include "fm.h"
 #include "func.h"
 #include "myctype.h"

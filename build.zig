@@ -62,7 +62,7 @@ pub fn build(b: *std.Build) void {
     const CONF_DIR = b.fmt("{s}/{s}", .{ sysconfdir, PACKAGE });
 
     const cflags = [_][]const u8{
-        "-std=c23",
+        "-std=gnu23",
         "-DHAVE_CONFIG_H",
         b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
         b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
@@ -82,7 +82,6 @@ pub fn build(b: *std.Build) void {
     exe.linkLibrary(gc_dep.artifact("gc"));
     const ssl_dep = b.dependency("openssl", .{ .target = target, .optimize = optimize });
     exe.linkLibrary(ssl_dep.artifact("openssl"));
-    exe.linkSystemLibrary("ncurses");
 
     // // code generation
     // const wf = b.addWriteFiles();
@@ -202,9 +201,7 @@ fn build_termcap_entry(
         .root_source_file = b.path("termcap_entry.zig"),
         .link_libc = true,
     });
-    exe.linkSystemLibrary("ncurses");
     const install = b.addInstallArtifact(exe, .{});
-    b.getInstallStep().dependOn(&install.step);
 
     const run = b.addRunArtifact(exe);
     run.step.dependOn(&install.step);
@@ -253,6 +250,7 @@ fn build_exe(
             "terms.c",
             "scr.c",
             "termcap_entry.c",
+            "termcap.c",
 
             "url.c",
             "ftp.c",

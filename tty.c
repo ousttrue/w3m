@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <sys/select.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 #define DEV_TTY_PATH "/dev/tty"
 

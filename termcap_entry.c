@@ -1,5 +1,6 @@
 #include "termcap_entry.h"
 #include "indep.h"
+#include "termcap.h"
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400
@@ -9,11 +10,6 @@ int COLS;
 
 static TermCap s_termcap;
 TermCap *termcap_get() { return &s_termcap; };
-
-extern int tgetent(char *, const char *);
-extern int tgetnum(const char *);
-extern int tgetflag(char *);
-extern char *tgetstr(char *, char **);
 
 #define GETSTR(v, s)                                                           \
   {                                                                            \
