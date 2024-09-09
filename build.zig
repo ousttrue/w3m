@@ -77,8 +77,9 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");
 
-    const termseq = build_termseq(b, target, optimize, &cflags);
-    exe.linkLibrary(termseq);
+    // const termseq = build_termseq(b, target, optimize, &cflags);
+    // exe.linkLibrary(termseq);
+    exe.linkSystemLibrary("ncurses");
 
     // link libs
     const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
@@ -207,13 +208,11 @@ fn build_termseq(
     lib.addCSourceFiles(.{
         .root = b.path("termseq"),
         .files = &.{
-            "termcap_entry.c",
             // "termcap.c",
             // "termcap_getentry.c",
         },
         .flags = cflags,
     });
-    lib.linkSystemLibrary("ncurses");
     return lib;
 }
 

@@ -8,9 +8,8 @@
 #include <stdio.h>
 #include <errno.h>
 #include "parsetag.h"
-#include "local.h"
 #include "regex.h"
-#include "termseq/termcap_entry.h"
+#include "terms.h"
 #include <stdlib.h>
 #include <stddef.h>
 

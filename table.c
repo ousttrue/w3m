@@ -12,7 +12,7 @@
 #include "parsetagx.h"
 #include "Str.h"
 #include "myctype.h"
-#include "termseq/termcap_entry.h"
+#include "terms.h"
 
 int symbol_width = 0;
 int symbol_width0 = 0;

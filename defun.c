@@ -291,7 +291,7 @@ MySignalHandler resize_hook(SIGNAL_ARG) {
 
 static void resize_screen(void) {
   need_resize_screen = FALSE;
-  termcap_setlinescols();
+  term_setlinescols();
   scr_setup(LINES, COLS);
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);

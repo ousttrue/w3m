@@ -9,3 +9,6 @@ void term_title(const char *s);
 void term_bell();
 void term_refresh();
 
+extern int LINES, COLS;
+#define LASTLINE (LINES - 1)
+void term_setlinescols();

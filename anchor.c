@@ -2,7 +2,7 @@
 #include "fm.h"
 #include "myctype.h"
 #include "regex.h"
-#include "termseq/termcap_entry.h"
+#include "terms.h"
 
 #define FIRST_ANCHOR_SIZE 30
 

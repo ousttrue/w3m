@@ -1,6 +1,6 @@
 #include "scr.h"
 #include "alloc.h"
-#include "termseq/termcap_entry.h"
+#include "terms.h"
 #include "myctype.h"
 
 static int tab_step = 8;
