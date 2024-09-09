@@ -4,7 +4,7 @@
 #include "scr.h"
 #include "tty.h"
 #include "defun.h"
-#include "termcap_entry.h"
+#include "termseq/termcap_entry.h"
 #include <stdio.h>
 #include <signal.h>
 #include <setjmp.h>

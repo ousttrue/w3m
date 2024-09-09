@@ -1,6 +1,7 @@
 /* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
 #include "fm.h"
 #include "scr.h"
+#include "terms.h"
 #include "tty.h"
 #include <unistd.h>
 #include <sys/types.h>

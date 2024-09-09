@@ -5,7 +5,7 @@
 #include "terms.h"
 #include "tty.h"
 #include "scr.h"
-#include "termcap_entry.h"
+#include "termseq/termcap_entry.h"
 #include "termcap.h"
 #include <stdio.h>
 #include <signal.h>

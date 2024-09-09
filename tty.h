@@ -12,7 +12,7 @@ void tty_raw();
 void tty_cooked();
 
 void tty_flush();
-int tty_putc(char c);
+int tty_putc(int c);
 void tty_printf(const char *fmt, ...);
 
 char tty_getch();

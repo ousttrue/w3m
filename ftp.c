@@ -11,6 +11,7 @@
 #include "html.h"
 #include "scr.h"
 #include "myctype.h"
+#include "terms.h"
 
 #ifdef DEBUG
 #include <malloc.h>

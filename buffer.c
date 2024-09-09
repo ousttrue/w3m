@@ -2,7 +2,8 @@
 #include "fm.h"
 #include "tty.h"
 #include "scr.h"
-#include "termcap_entry.h"
+#include "termseq/termcap_entry.h"
+#include "terms.h"
 
 char *NullLine = "";
 Lineprop NullProp[] = {0};

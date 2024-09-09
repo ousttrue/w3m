@@ -1,9 +1,10 @@
 /* $Id: linein.c,v 1.35 2007/05/23 12:14:24 inu Exp $ */
 #include "fm.h"
+#include "terms.h"
 #include "tty.h"
 #include "scr.h"
 #include "local.h"
-#include "termcap_entry.h"
+#include "termseq/termcap_entry.h"
 #include "myctype.h"
 
 #define STR_LEN 1024

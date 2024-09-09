@@ -8,6 +8,7 @@
 #include "myctype.h"
 #include "local.h"
 #include "regex.h"
+#include "terms.h"
 
 extern Str *textarea_str;
 extern int max_textarea;

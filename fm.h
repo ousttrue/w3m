@@ -57,7 +57,6 @@ typedef int wc_ces; /* XXX: not used */
 #include "menu.h"
 #include "textlist.h"
 #include "funcname1.h"
-#include "terms.h"
 #include "istream.h"
 
 #ifdef MAINPROGRAM

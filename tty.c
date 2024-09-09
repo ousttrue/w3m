@@ -128,7 +128,7 @@ void tty_printf(const char *fmt, ...) {
   vfprintf(g_ttyf, fmt, ap);
 }
 
-int tty_putc(char c) {
+int tty_putc(int c) {
   putc(c, g_ttyf);
 #ifdef SCREEN_DEBUG
   tty_flush();

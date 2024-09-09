@@ -10,7 +10,7 @@
 #include "parsetag.h"
 #include "local.h"
 #include "regex.h"
-#include "termcap_entry.h"
+#include "termseq/termcap_entry.h"
 #include <stdlib.h>
 #include <stddef.h>
 

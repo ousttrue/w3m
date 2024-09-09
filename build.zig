@@ -77,6 +77,9 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");
 
+    const termseq = build_termseq(b, target, optimize, &cflags);
+    exe.linkLibrary(termseq);
+
     // link libs
     const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
     exe.linkLibrary(gc_dep.artifact("gc"));
@@ -189,6 +192,31 @@ pub fn build(b: *std.Build) void {
     build_termcap_entry(b, target, optimize);
 }
 
+fn build_termseq(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    cflags: []const []const u8,
+) *std.Build.Step.Compile {
+    const lib = b.addStaticLibrary(.{
+        .name = "termseq",
+        .target = target,
+        .optimize = optimize,
+        .link_libc = true,
+    });
+    lib.addCSourceFiles(.{
+        .root = b.path("termseq"),
+        .files = &.{
+            "termcap_entry.c",
+            // "termcap.c",
+            // "termcap_getentry.c",
+        },
+        .flags = cflags,
+    });
+    lib.linkSystemLibrary("ncurses");
+    return lib;
+}
+
 fn build_termcap_entry(
     b: *std.Build,
     target: std.Build.ResolvedTarget,
@@ -247,11 +275,8 @@ fn build_exe(
             "entity.c",
 
             "tty.c",
-            "terms.c",
             "scr.c",
-            "termcap_entry.c",
-            "termcap.c",
-            "termcap_loader.c",
+            "terms.c",
 
             "url.c",
             "ftp.c",

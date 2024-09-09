@@ -1,7 +1,8 @@
 #include "fm.h"
 #include "defun.h"
+#include "terms.h"
+#include "termseq/termcap_entry.h"
 #include "tty.h"
-#include "termcap_entry.h"
 #include <signal.h>
 #include <sys/wait.h>
 #include <gc.h>
