@@ -1,6 +1,6 @@
 #include "termcap_entry.h"
 #include "indep.h"
-#include "termcap.h"
+#include "termcap_loader.h"
 
 #define MAX_LINE 200
 #define MAX_COLUMN 400

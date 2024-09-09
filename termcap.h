@@ -1,11 +1,5 @@
 #pragma once
 
-int tputs(const char *, int, int (*)(char));
+void tputs(const char *str, int nlines, int (*outfun)(char)) ;
 char *tgoto(const char *, int, int);
-
-int tgetent(char *, const char *);
-int tgetnum(const char *);
-int tgetflag(char *);
-char *tgetstr(char *, char **);
-
 

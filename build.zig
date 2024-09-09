@@ -251,6 +251,7 @@ fn build_exe(
             "scr.c",
             "termcap_entry.c",
             "termcap.c",
+            "termcap_loader.c",
 
             "url.c",
             "ftp.c",
