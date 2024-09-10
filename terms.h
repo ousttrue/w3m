@@ -1,6 +1,10 @@
 #pragma once
 #include <stdbool.h>
 
+extern int LINES, COLS;
+#define LASTLINE (LINES - 1)
+void term_setlinescols();
+
 void term_fmTerm();
 void term_fmInit();
 bool term_graph_ok();
@@ -8,7 +12,6 @@ void term_clear();
 void term_title(const char *s);
 void term_bell();
 void term_refresh();
+void term_message(const char *msg);
 
-extern int LINES, COLS;
-#define LASTLINE (LINES - 1)
-void term_setlinescols();
+void setup_child(int child, int i, int f);

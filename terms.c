@@ -449,3 +449,63 @@ void term_fmTerm() {
     fmInitialized = FALSE;
   }
 }
+
+void term_message(const char *msg) {
+  if (fmInitialized) {
+    scr_message(msg, 0, 0);
+    term_refresh();
+  } else {
+    fputs(msg, stderr);
+    fputc('\n', stderr);
+  }
+}
+
+static void reset_signals(void) {
+#ifdef SIGHUP
+  mySignal(SIGHUP, SIG_DFL); /* terminate process */
+#endif
+  mySignal(SIGINT, SIG_DFL); /* terminate process */
+#ifdef SIGQUIT
+  mySignal(SIGQUIT, SIG_DFL); /* terminate process */
+#endif
+  mySignal(SIGTERM, SIG_DFL); /* terminate process */
+  mySignal(SIGILL, SIG_DFL);  /* create core image */
+  mySignal(SIGIOT, SIG_DFL);  /* create core image */
+  mySignal(SIGFPE, SIG_DFL);  /* create core image */
+#ifdef SIGBUS
+  mySignal(SIGBUS, SIG_DFL); /* create core image */
+#endif                       /* SIGBUS */
+  mySignal(SIGCHLD, SIG_IGN);
+  mySignal(SIGPIPE, SIG_IGN);
+}
+
+static void close_all_fds_except(int i, int f) {
+  switch (i) { /* fall through */
+  case 0:
+    dup2(open(DEV_NULL_PATH, O_RDONLY), 0);
+  case 1:
+    dup2(open(DEV_NULL_PATH, O_WRONLY), 1);
+  case 2:
+    dup2(open(DEV_NULL_PATH, O_WRONLY), 2);
+  }
+  /* close all other file descriptors (socket, ...) */
+  for (i = 3; i < FOPEN_MAX; i++) {
+    if (i != f)
+      close(i);
+  }
+}
+
+void setup_child(int child, int i, int f) {
+  reset_signals();
+  mySignal(SIGINT, SIG_IGN);
+  if (!child)
+    SETPGRP();
+  /*
+   * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in
+   * loadImage() and corrupt image data can be cached in ~/.w3m.
+   */
+  close_all_fds_except(i, f);
+  QuietMessage = TRUE;
+  fmInitialized = FALSE;
+  TrapSignal = FALSE;
+}

@@ -1,14 +1,10 @@
-/* $Id: etc.c,v 1.81 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
 #include "tty.h"
-#include "scr.h"
-#include <pwd.h>
 #include "myctype.h"
 #include "html.h"
-#include "local.h"
 #include "hash.h"
 #include "terms.h"
-
+#include <pwd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
@@ -838,13 +834,7 @@ FILE *openSecretFile(char *fname) {
   if (disable_secret_security_check)
     /* do nothing */;
   else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
-    if (fmInitialized) {
-      scr_message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, 0, 0);
-      term_refresh();
-    } else {
-      fputs(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr, stderr);
-      fputc('\n', stderr);
-    }
+    term_message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
     sleep(2);
     return NULL;
   }
@@ -972,59 +962,9 @@ Str romanAlphabet(int n) {
 #define SIGIOT SIGABRT
 #endif /* not SIGIOT */
 
-static void reset_signals(void) {
-#ifdef SIGHUP
-  mySignal(SIGHUP, SIG_DFL); /* terminate process */
-#endif
-  mySignal(SIGINT, SIG_DFL); /* terminate process */
-#ifdef SIGQUIT
-  mySignal(SIGQUIT, SIG_DFL); /* terminate process */
-#endif
-  mySignal(SIGTERM, SIG_DFL); /* terminate process */
-  mySignal(SIGILL, SIG_DFL);  /* create core image */
-  mySignal(SIGIOT, SIG_DFL);  /* create core image */
-  mySignal(SIGFPE, SIG_DFL);  /* create core image */
-#ifdef SIGBUS
-  mySignal(SIGBUS, SIG_DFL); /* create core image */
-#endif                       /* SIGBUS */
-  mySignal(SIGCHLD, SIG_IGN);
-  mySignal(SIGPIPE, SIG_IGN);
-}
-
 #ifndef FOPEN_MAX
 #define FOPEN_MAX 1024 /* XXX */
 #endif
-
-static void close_all_fds_except(int i, int f) {
-  switch (i) { /* fall through */
-  case 0:
-    dup2(open(DEV_NULL_PATH, O_RDONLY), 0);
-  case 1:
-    dup2(open(DEV_NULL_PATH, O_WRONLY), 1);
-  case 2:
-    dup2(open(DEV_NULL_PATH, O_WRONLY), 2);
-  }
-  /* close all other file descriptors (socket, ...) */
-  for (i = 3; i < FOPEN_MAX; i++) {
-    if (i != f)
-      close(i);
-  }
-}
-
-void setup_child(int child, int i, int f) {
-  reset_signals();
-  mySignal(SIGINT, SIG_IGN);
-  if (!child)
-    SETPGRP();
-  /*
-   * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in
-   * loadImage() and corrupt image data can be cached in ~/.w3m.
-   */
-  close_all_fds_except(i, f);
-  QuietMessage = TRUE;
-  fmInitialized = FALSE;
-  TrapSignal = FALSE;
-}
 
 pid_t open_pipe_rw(FILE **fr, FILE **fw) {
   int fdr[2];

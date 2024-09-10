@@ -469,7 +469,6 @@ extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str uname,
 extern char *last_modified(Buffer *buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
-extern void setup_child(int child, int i, int f);
 extern void myExec(char *command);
 extern void mySystem(char *command, int background);
 extern Str myExtCommand(char *cmd, char *arg, int redirect);
