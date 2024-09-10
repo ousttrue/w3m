@@ -444,7 +444,7 @@ typedef struct _DownloadList {
   char *url;
   char *save;
   char *lock;
-  clen_t size;
+  int64_t size;
   time_t time;
   int running;
   int err;

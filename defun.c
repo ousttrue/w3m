@@ -3811,7 +3811,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
 }
 
 void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                     clen_t size) {
+                     int64_t size) {
   DownloadList *d;
 
   d = New(DownloadList);
@@ -3848,7 +3848,7 @@ int checkDownloadList(void) {
   return FALSE;
 }
 
-static char *convert_size3(clen_t size) {
+static char *convert_size3(int64_t size) {
   Str tmp = Strnew();
   int n;
 

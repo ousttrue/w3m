@@ -283,7 +283,7 @@ char *HTML_QUOTE_MAP[] = {
     NULL, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", NULL, NULL,
 };
 
-clen_t strtoclen(const char *s) {
+int64_t strtoclen(const char *s) {
 #ifdef HAVE_STRTOLL
   return strtoll(s, NULL, 10);
 #elif defined(HAVE_STRTOQ)
