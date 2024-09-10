@@ -134,7 +134,7 @@ typedef int wc_ces; /* XXX: not used */
 #define PE_EX_INSERT_E PE_UNDER
 #define PE_EX_STRIKE_E PE_STAND
 
-#define CharType(c) ((c)&P_CHARTYPE)
+#define CharType(c) ((c) & P_CHARTYPE)
 #define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
 #define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
 
@@ -757,17 +757,14 @@ global char *HostName init(NULL);
 global char QuietMessage init(FALSE);
 global char TrapSignal init(TRUE);
 
-extern bool fmInitialized;
 #define TRAP_ON                                                                \
   if (TrapSignal) {                                                            \
     prevtrap = mySignal(SIGINT, KeyAbort);                                     \
-    if (fmInitialized)                                                         \
-      tty_cbreak();                                                           \
+    term_cbreak();                                                             \
   }
 #define TRAP_OFF                                                               \
   if (TrapSignal) {                                                            \
-    if (fmInitialized)                                                         \
-      tty_raw();                                                              \
+    term_raw();                                                                \
     if (prevtrap)                                                              \
       mySignal(SIGINT, prevtrap);                                              \
   }

@@ -1104,29 +1104,29 @@ Str getLinkNumberStr(int correction) {
  * loadGeneralFile: load file to buffer
  */
 #define DO_EXTERNAL ((Buffer * (*)(URLFile *, Buffer *)) doExternal)
-Buffer *loadGeneralFile(char *path, ParsedURL *volatile current, char *referer,
-                        int flag, FormList *volatile request) {
-  URLFile f, *volatile of = NULL;
+Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer, int flag,
+                        FormList *request) {
+  URLFile f, *of = NULL;
   ParsedURL pu;
   Buffer *b = NULL;
-  Buffer *(*volatile proc)(URLFile *, Buffer *) = loadBuffer;
-  char *volatile tpath;
-  char *volatile t = "text/plain", *p, *volatile real_type = NULL;
-  Buffer *volatile t_buf = NULL;
-  int volatile searchHeader = SearchHeader;
-  int volatile searchHeader_through = TRUE;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+  Buffer *(*proc)(URLFile *, Buffer *) = loadBuffer;
+  char *tpath;
+  char *t = "text/plain", *p, *real_type = NULL;
+  Buffer *t_buf = NULL;
+  int searchHeader = SearchHeader;
+  int searchHeader_through = TRUE;
+  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   TextList *extra_header = newTextList();
-  volatile Str uname = NULL;
-  volatile Str pwd = NULL;
-  volatile Str realm = NULL;
-  int volatile add_auth_cookie_flag;
+  Str uname = NULL;
+  Str pwd = NULL;
+  Str realm = NULL;
+  int add_auth_cookie_flag;
   unsigned char status = HTST_NORMAL;
   URLOption url_option;
   Str tmp;
-  Str volatile page = NULL;
+  Str page = NULL;
   HRequest hr;
-  ParsedURL *volatile auth_pu;
+  ParsedURL *auth_pu;
 
   tpath = path;
   prevtrap = NULL;
@@ -5365,7 +5365,7 @@ void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
   Str lineBuf2 = Strnew();
   struct html_feed_environ htmlenv1;
   struct readbuffer obuf;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
 
   symbol_width = symbol_width0 = 1;
 
@@ -5438,7 +5438,7 @@ phase2:
  */
 Buffer *loadHTMLString(Str page) {
   URLFile f;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   Buffer *newBuf;
 
   init_stream(&f, SCM_LOCAL, newStrStream(page));
@@ -5469,15 +5469,15 @@ Buffer *loadHTMLString(Str page) {
 /*
  * loadBuffer: read file and make new buffer
  */
-Buffer *loadBuffer(URLFile *uf, Buffer *volatile newBuf) {
-  FILE *volatile src = NULL;
+Buffer *loadBuffer(URLFile *uf, Buffer *newBuf) {
+  FILE *src = NULL;
   Str lineBuf2;
-  volatile char pre_lbuf = '\0';
+  char pre_lbuf = '\0';
   int nlines;
   Str tmpf;
   int64_t linelen = 0, trbyte = 0;
   Lineprop *propBuffer = NULL;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
 
   if (newBuf == NULL)
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
@@ -5716,18 +5716,17 @@ Buffer *openGeneralPagerBuffer(InputStream stream) {
 }
 
 Line *getNextPage(Buffer *buf, int plen) {
-  Line *volatile top = buf->topLine, *volatile last = buf->lastLine,
-                 *volatile cur = buf->currentLine;
+  Line *top = buf->topLine, *last = buf->lastLine, *cur = buf->currentLine;
   int i;
-  int volatile nlines = 0;
+  int nlines = 0;
   int64_t linelen = 0, trbyte = buf->trbyte;
   Str lineBuf2;
-  char volatile pre_lbuf = '\0';
+  char pre_lbuf = '\0';
   URLFile uf;
-  int volatile squeeze_flag = FALSE;
+  int squeeze_flag = FALSE;
   Lineprop *propBuffer = NULL;
 
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
 
   if (buf->pagerSource == NULL)
     return NULL;
@@ -5814,10 +5813,10 @@ int save2tmp(URLFile uf, char *tmpf) {
   FILE *ff;
   int check;
   int64_t linelen = 0, trbyte = 0;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
+  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   static JMP_BUF env_bak;
-  volatile int retval = 0;
-  char *volatile buf = NULL;
+  int retval = 0;
+  char *buf = NULL;
 
   ff = fopen(tmpf, "wb");
   if (ff == NULL) {
@@ -5996,7 +5995,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   int64_t size = 0;
   int is_pipe = FALSE;
 
-  if (fmInitialized) {
+  if (term_is_initialized()) {
     p = searchKeyData();
     if (p == NULL || *p == '\0') {
       /* FIXME: gettextize? */
@@ -6110,7 +6109,7 @@ int doFileSave(URLFile uf, char *defstr) {
   FILE *f;
 #endif
 
-  if (fmInitialized) {
+  if (term_is_initialized()) {
     p = searchKeyData();
     if (p == NULL || *p == '\0') {
       /* FIXME: gettextize? */

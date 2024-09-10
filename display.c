@@ -668,24 +668,23 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
   if (QuietMessage)
     return;
 
-  term_message(s);
-  // if (fmInitialized) {
-  //   if (CurrentTab != NULL && Currentbuf != NULL) {
-  //     scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
-  //                 Currentbuf->cursorY + Currentbuf->rootY);
-  //   } else {
-  //     scr_message(s, LASTLINE, 0);
-  //   }
-  //   term_refresh();
-  //
-  //   // nsec
-  //   tty_sleep_till_anykey(sec, purge);
-  //   if (CurrentTab != NULL && Currentbuf != NULL && redraw_current) {
-  //     displayBuffer(Currentbuf, B_NORMAL);
-  //   }
-  // } else {
-  //   fprintf(stderr, "%s\n", conv_to_system(s));
-  // }
+  if (term_is_initialized()) {
+    if (CurrentTab != NULL && Currentbuf != NULL) {
+      scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
+                  Currentbuf->cursorY + Currentbuf->rootY);
+    } else {
+      scr_message(s, LASTLINE, 0);
+    }
+    term_refresh();
+
+    // nsec
+    tty_sleep_till_anykey(sec, purge);
+    if (CurrentTab != NULL && Currentbuf != NULL && redraw_current) {
+      displayBuffer(Currentbuf, B_NORMAL);
+    }
+  } else {
+    fprintf(stderr, "%s\n", conv_to_system(s));
+  }
 }
 
 void disp_message(char *s, int redraw_current) {

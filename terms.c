@@ -440,6 +440,8 @@ void term_fmInit() {
   fmInitialized = TRUE;
 }
 
+bool term_is_initialized() { return fmInitialized; }
+
 void term_fmTerm() {
   if (fmInitialized) {
     scr_move(LASTLINE, 0);
@@ -448,6 +450,16 @@ void term_fmTerm() {
     term_reset();
     fmInitialized = FALSE;
   }
+}
+
+void term_raw() {
+  if (fmInitialized)
+    tty_raw();
+}
+
+void term_cbreak() {
+  if (fmInitialized)
+    tty_cbreak();
 }
 
 void term_message(const char *msg) {

@@ -1,7 +1,7 @@
 /* $Id: frame.c,v 1.34 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
-#include "tty.h"
 #include "parsetagx.h"
+#include "terms.h"
 #include "myctype.h"
 #include <signal.h>
 #include <setjmp.h>
@@ -160,7 +160,8 @@ struct frameset *copyFrameSet(struct frameset *of) {
   rf->width = New_N(char *, rf->col);
   memcpy((void *)rf->width, (const void *)of->width, sizeof(char *) * rf->col);
   rf->height = New_N(char *, rf->row);
-  memcpy((void *)rf->height, (const void *)of->height, sizeof(char *) * rf->row);
+  memcpy((void *)rf->height, (const void *)of->height,
+         sizeof(char *) * rf->row);
   rf->frame = New_N(union frameset_element, n);
   while (n) {
     n--;
