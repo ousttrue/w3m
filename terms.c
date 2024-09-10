@@ -148,7 +148,6 @@ void term_reset() {
 static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval) {
   term_reset();
   w3m_exit(rval);
-  SIGNAL_RETURN;
 }
 
 MySignalHandler reset_error_exit(SIGNAL_ARG) {
@@ -163,7 +162,6 @@ MySignalHandler error_dump(SIGNAL_ARG) {
   mySignal(SIGIOT, SIG_DFL);
   term_reset();
   abort();
-  SIGNAL_RETURN;
 }
 
 bool fmInitialized = false;

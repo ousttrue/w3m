@@ -280,13 +280,11 @@ static void repBuffer(Buffer *oldbuf, Buffer *buf) {
 
 MySignalHandler intTrap(SIGNAL_ARG) { /* Interrupt catcher */
   LONGJMP(IntReturn, 0);
-  SIGNAL_RETURN;
 }
 
 MySignalHandler resize_hook(SIGNAL_ARG) {
   need_resize_screen = TRUE;
   mySignal(SIGWINCH, resize_hook);
-  SIGNAL_RETURN;
 }
 
 static void resize_screen(void) {

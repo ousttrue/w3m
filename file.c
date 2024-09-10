@@ -187,7 +187,6 @@ static struct compression_decoder {
 
 static MySignalHandler KeyAbort(SIGNAL_ARG) {
   LONGJMP(AbortLoading, 1);
-  SIGNAL_RETURN;
 }
 
 static void UFhalfclose(URLFile *f) {

@@ -186,7 +186,6 @@ static void sig_chld(int signo) {
 
 static MySignalHandler SigPipe(SIGNAL_ARG) {
   mySignal(SIGPIPE, SigPipe);
-  SIGNAL_RETURN;
 }
 
 int main(int argc, char **argv, char **envp) {

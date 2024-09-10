@@ -195,7 +195,6 @@ static char *DefaultFile(int scheme) {
 
 static MySignalHandler KeyAbort(SIGNAL_ARG) {
   LONGJMP(AbortLoading, 1);
-  SIGNAL_RETURN;
 }
 
 SSL_CTX *ssl_ctx = NULL;

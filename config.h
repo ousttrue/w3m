@@ -169,7 +169,6 @@ typedef long clen_t;
 typedef RETSIGTYPE MySignalHandler;
 #define SIGNAL_ARG int _dummy /* XXX */
 #define SIGNAL_ARGLIST 0      /* XXX */
-#define SIGNAL_RETURN return
 
 #ifdef HAVE_SIGSETJMP
 #define SETJMP(env) sigsetjmp(env, 1)
