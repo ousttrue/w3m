@@ -14,43 +14,44 @@ static int show_params_p = 0;
 static GC_warn_proc orig_GC_warn_proc = NULL;
 
 static void wrap_GC_warn_proc(const char *msg, GC_word arg) {
-  if (fmInitialized) {
-    /* *INDENT-OFF* */
-    static struct {
-      const char *msg;
-      GC_word arg;
-    } msg_ring[GC_WARN_KEEP_MAX];
-    /* *INDENT-ON* */
-    static int i = 0;
-    static int n = 0;
-    static int lock = 0;
-    int j;
 
-    j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
-    msg_ring[j].msg = msg;
-    msg_ring[j].arg = arg;
+  /* *INDENT-OFF* */
+  static struct {
+    const char *msg;
+    GC_word arg;
+  } msg_ring[GC_WARN_KEEP_MAX];
+  /* *INDENT-ON* */
+  static int i = 0;
+  static int n = 0;
+  static int lock = 0;
+  int j;
 
-    if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
-      ++n;
-    else
-      ++i;
+  j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
+  msg_ring[j].msg = msg;
+  msg_ring[j].arg = arg;
 
-    if (!lock) {
-      lock = 1;
-
-      for (; n > 0; --n, ++i) {
-        i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
-
-        printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-        tty_sleep_till_anykey(1, 1);
-      }
-
-      lock = 0;
-    }
-  } else if (orig_GC_warn_proc)
-    orig_GC_warn_proc(msg, arg);
+  if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
+    ++n;
   else
-    fprintf(stderr, msg, (unsigned long)arg);
+    ++i;
+
+  if (!lock) {
+    lock = 1;
+
+    for (; n > 0; --n, ++i) {
+      i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
+
+      printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
+      tty_sleep_till_anykey(1, 1);
+    }
+
+    lock = 0;
+  }
+
+  // else if (orig_GC_warn_proc)
+  //   orig_GC_warn_proc(msg, arg);
+  // else
+  //   fprintf(stderr, msg, (unsigned long)arg);
 }
 
 static void *die_oom(size_t bytes) {
@@ -184,9 +185,7 @@ static void sig_chld(int signo) {
   return;
 }
 
-static MySignalHandler SigPipe(SIGNAL_ARG) {
-  mySignal(SIGPIPE, SigPipe);
-}
+static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 
 int main(int argc, char **argv, char **envp) {
   Buffer *newbuf = NULL;
@@ -540,13 +539,11 @@ int main(int argc, char **argv, char **envp) {
       else if (newbuf != NO_BUFFER)
         pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
     } else {
-      if (fmInitialized)
-        term_fmTerm();
+      term_fmTerm();
       usage();
     }
     if (newbuf == NULL) {
-      if (fmInitialized)
-        term_fmTerm();
+      term_fmTerm();
       if (err_msg->length)
         fprintf(stderr, "%s", err_msg->ptr);
       w3m_exit(2);
@@ -654,12 +651,9 @@ int main(int argc, char **argv, char **envp) {
 
   if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
     if (newbuf == NO_BUFFER) {
-      if (fmInitialized)
-        /* FIXME: gettextize? */
-        inputChar("Hit any key to quit w3m:");
+      term_input("Hit any key to quit w3m:");
     }
-    if (fmInitialized)
-      term_fmTerm();
+    term_fmTerm();
     if (err_msg->length)
       fprintf(stderr, "%s", err_msg->ptr);
     if (newbuf == NO_BUFFER) {

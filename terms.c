@@ -522,3 +522,10 @@ Str term_inputpwd() {
   }
   return pwd;
 }
+
+void term_input(const char *msg) {
+  if (fmInitialized) {
+    /* FIXME: gettextize? */
+    inputChar(msg);
+  }
+}

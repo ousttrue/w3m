@@ -867,9 +867,10 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 DEFUN(ldhelp, HELP, "Show help panel") {
   char *lang = AcceptLang;
   int n = strcspn(lang, ";, \t");
-  Str tmp = Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
-                Str_form_quote(Strnew_charp(w3m_version))->ptr,
-                Str_form_quote(Strnew_charp_n(lang, n))->ptr);
+  Str tmp =
+      Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
+              Str_form_quote(Strnew_charp(w3m_version))->ptr,
+              Str_form_quote(Strnew_charp_n(lang, n))->ptr);
   cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
@@ -2905,10 +2906,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   copyBuffer(&sbuf, Currentbuf);
   if (Currentbuf->bufferprop & BP_FRAME &&
       (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
-    if (fmInitialized) {
-      scr_message("Rendering frame", 0, 0);
-      term_refresh();
-    }
+    term_message("Rendering frame");
     if (!(buf = renderFrame(fbuf, 1))) {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -3048,10 +3046,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
     }
     return;
   }
-  if (fmInitialized) {
-    scr_message("Rendering frame", 0, 0);
-    term_refresh();
-  }
+  term_message("Rendering frame");
   buf = renderFrame(Currentbuf, 0);
   if (buf == NULL) {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -3060,7 +3055,7 @@ DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
   buf->linkBuffer[LB_N_FRAME] = Currentbuf;
   Currentbuf->linkBuffer[LB_FRAME] = buf;
   pushBuffer(buf);
-  if (fmInitialized && display_ok)
+  if (display_ok)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
