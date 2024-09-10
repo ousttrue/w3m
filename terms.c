@@ -529,3 +529,145 @@ void term_input(const char *msg) {
     inputChar(msg);
   }
 }
+
+char *term_inputAnswer(char *prompt) {
+  char *ans;
+
+  if (QuietMessage)
+    return "n";
+  if (fmInitialized) {
+    tty_raw();
+    ans = inputChar(prompt);
+  } else {
+    printf("%s", prompt);
+    fflush(stdout);
+    ans = Strfgets(stdin)->ptr;
+  }
+  return ans;
+}
+
+void term_showProgress(int64_t *linelen, int64_t *trbyte,
+                       int64_t current_content_length) {
+  int i, j, rate, duration, eta, pos;
+  static time_t last_time, start_time;
+  time_t cur_time;
+  Str messages;
+  char *fmtrbyte, *fmrate;
+
+  if (!fmInitialized)
+    return;
+
+  if (*linelen < 1024)
+    return;
+  if (current_content_length > 0) {
+    double ratio;
+    cur_time = time(0);
+    if (*trbyte == 0) {
+      scr_move(LASTLINE, 0);
+      scr_clrtoeolx();
+      start_time = cur_time;
+    }
+    *trbyte += *linelen;
+    *linelen = 0;
+    if (cur_time == last_time)
+      return;
+    last_time = cur_time;
+    scr_move(LASTLINE, 0);
+    ratio = 100.0 * (*trbyte) / current_content_length;
+    fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
+    duration = cur_time - start_time;
+    if (duration) {
+      rate = *trbyte / duration;
+      fmrate = convert_size(rate, 1);
+      eta = rate ? (current_content_length - *trbyte) / rate : -1;
+      messages = Sprintf("%11s %3.0f%% "
+                         "%7s/s "
+                         "eta %02d:%02d:%02d     ",
+                         fmtrbyte, ratio, fmrate, eta / (60 * 60),
+                         (eta / 60) % 60, eta % 60);
+    } else {
+      messages =
+          Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
+    }
+    scr_addstr(messages->ptr);
+    pos = 42;
+    i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
+    scr_move(LASTLINE, pos);
+    scr_standout();
+    scr_addch(' ');
+    for (j = pos + 1; j <= i; j++)
+      scr_addch('|');
+    scr_standend();
+    /* no_clrtoeol(); */
+    term_refresh();
+  } else {
+    cur_time = time(0);
+    if (*trbyte == 0) {
+      scr_move(LASTLINE, 0);
+      scr_clrtoeolx();
+      start_time = cur_time;
+    }
+    *trbyte += *linelen;
+    *linelen = 0;
+    if (cur_time == last_time)
+      return;
+    last_time = cur_time;
+    scr_move(LASTLINE, 0);
+    fmtrbyte = convert_size(*trbyte, 1);
+    duration = cur_time - start_time;
+    if (duration) {
+      fmrate = convert_size(*trbyte / duration, 1);
+      messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
+    } else {
+      messages = Sprintf("%7s loaded", fmtrbyte);
+    }
+    scr_message(messages->ptr, 0, 0);
+    term_refresh();
+  }
+}
+
+bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd) {
+  if (fmInitialized) {
+    char *pp;
+    tty_raw();
+    /* FIXME: gettextize? */
+    if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) == NULL)
+      return false;
+    *uname = Str_conv_to_system(Strnew_charp(pp));
+    if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
+                        IN_PASSWORD)) == NULL) {
+      *uname = NULL;
+      return false;
+    }
+    *pwd = Str_conv_to_system(Strnew_charp(pp));
+    tty_cbreak();
+  } else {
+    /*
+     * If post file is specified as '-', stdin is closed at this
+     * point.
+     * In this case, w3m cannot read username from stdin.
+     * So exit with error message.
+     * (This is same behavior as lwp-request.)
+     */
+    if (feof(stdin) || ferror(stdin)) {
+      /* FIXME: gettextize? */
+      fprintf(stderr, "w3m: Authorization required for %s\n", realm);
+      exit(1);
+    }
+
+    /* FIXME: gettextize? */
+    printf(proxy ? "Proxy Username for %s: " : "Username for %s: ", realm);
+    fflush(stdout);
+    *uname = Strfgets(stdin);
+    Strchop(*uname);
+#ifdef HAVE_GETPASSPHRASE
+    *pwd = Strnew_charp(
+        (char *)getpassphrase(proxy ? "Proxy Password: " : "Password: "));
+#else
+    *pwd = Strnew_charp(
+        (char *)getpass(proxy ? "Proxy Password: " : "Password: "));
+#endif
+  }
+
+  return true;
+}

@@ -189,7 +189,6 @@ extern void HTMLlineproc0(char *istr, struct html_feed_environ *h_env,
 extern Buffer *loadHTMLBuffer(URLFile *f, Buffer *newBuf);
 extern char *convert_size(int64_t size, int usefloat);
 extern char *convert_size2(int64_t size1, int64_t size2, int usefloat);
-extern void showProgress(int64_t *linelen, int64_t *trbyte);
 extern void init_henv(struct html_feed_environ *, struct readbuffer *,
                       struct environment *, int, TextLineList *, int, int);
 extern void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
@@ -212,7 +211,6 @@ extern int doFileSave(URLFile uf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(InputStream stream, char *path);
 extern int checkOverWrite(char *path);
-extern char *inputAnswer(char *prompt);
 extern int matchattr(char *p, char *attr, int len, Str *value);
 extern void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(Buffer *buf, char *field);

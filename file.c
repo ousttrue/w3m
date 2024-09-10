@@ -185,9 +185,7 @@ static struct compression_decoder {
 
 #define SAVE_BUF_SIZE 1536
 
-static MySignalHandler KeyAbort(SIGNAL_ARG) {
-  LONGJMP(AbortLoading, 1);
-}
+static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 static void UFhalfclose(URLFile *f) {
   switch (f->scheme) {
@@ -553,10 +551,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
       while (*p && IS_SPACE(*p))
         p++;
       http_response_code = atoi(p);
-      if (fmInitialized) {
-        scr_message(lineBuf2->ptr, 0, 0);
-        term_refresh();
-      }
+      term_message(lineBuf2->ptr);
     }
     if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
       p = lineBuf2->ptr + 26;
@@ -680,7 +675,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
         if (err) {
           char *ans =
               (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
-          if (fmInitialized && (err & COO_OVERRIDE_OK) &&
+          if ((err & COO_OVERRIDE_OK) &&
               accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
             Str msg = Sprintf(
                 "Accept bad cookie from %s for %s?", pu->host,
@@ -688,7 +683,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
             if (msg->length > COLS - 10)
               Strshrink(msg, msg->length - (COLS - 10));
             Strcat_charp(msg, " (y/n)");
-            ans = inputAnswer(msg->ptr);
+            ans = term_inputAnswer(msg->ptr);
           }
           if (ans == NULL || TOLOWER(*ans) != 'y' ||
               (err = add_cookie(pu, name, value, expires, domain, path,
@@ -997,8 +992,7 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
 
 static void getAuthCookie(struct http_auth *hauth, char *auth_header,
                           TextList *extra_header, ParsedURL *pu, HRequest *hr,
-                          FormList *request, volatile Str *uname,
-                          volatile Str *pwd) {
+                          FormList *request, Str *uname, Str *pwd) {
   Str ss = NULL;
   Str tmp;
   TextListItem *i;
@@ -1025,11 +1019,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
     /* This means that *-Authenticate: header is received after
      * Authorization: header is sent to the server.
      */
-    if (fmInitialized) {
-      scr_message("Wrong username or password", 0, 0);
-      term_refresh();
-    } else
-      fprintf(stderr, "Wrong username or password\n");
+    term_message("Wrong username or password");
     sleep(1);
     /* delete Authenticate: header from extra_header */
     delText(extra_header, i);
@@ -1046,47 +1036,9 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
       return;
     /* input username and password */
     sleep(2);
-    if (fmInitialized) {
-      char *pp;
-      tty_raw();
-      /* FIXME: gettextize? */
-      if ((pp = inputStr(Sprintf("Username for %s: ", realm)->ptr, NULL)) ==
-          NULL)
-        return;
-      *uname = Str_conv_to_system(Strnew_charp(pp));
-      if ((pp = inputLine(Sprintf("Password for %s: ", realm)->ptr, NULL,
-                          IN_PASSWORD)) == NULL) {
-        *uname = NULL;
-        return;
-      }
-      *pwd = Str_conv_to_system(Strnew_charp(pp));
-      tty_cbreak();
-    } else {
-      /*
-       * If post file is specified as '-', stdin is closed at this
-       * point.
-       * In this case, w3m cannot read username from stdin.
-       * So exit with error message.
-       * (This is same behavior as lwp-request.)
-       */
-      if (feof(stdin) || ferror(stdin)) {
-        /* FIXME: gettextize? */
-        fprintf(stderr, "w3m: Authorization required for %s\n", realm);
-        exit(1);
-      }
 
-      /* FIXME: gettextize? */
-      printf(proxy ? "Proxy Username for %s: " : "Username for %s: ", realm);
-      fflush(stdout);
-      *uname = Strfgets(stdin);
-      Strchop(*uname);
-#ifdef HAVE_GETPASSPHRASE
-      *pwd = Strnew_charp(
-          (char *)getpassphrase(proxy ? "Proxy Password: " : "Password: "));
-#else
-      *pwd = Strnew_charp(
-          (char *)getpass(proxy ? "Proxy Password: " : "Password: "));
-#endif
+    if (!term_inputAuth(realm, proxy, uname, pwd)) {
+      return;
     }
   }
   ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
@@ -1267,13 +1219,7 @@ load_doc: {
       (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy &&
        !check_no_proxy(pu.host))) {
 
-    if (fmInitialized) {
-      tty_cbreak();
-      /* FIXME: gettextize? */
-      scr_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr,
-                  0, 0);
-      term_refresh();
-    }
+    term_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
     if (t_buf == NULL)
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
 #if 0 /* USE_SSL */
@@ -5270,85 +5216,6 @@ char *convert_size2(int64_t size1, int64_t size2, int usefloat) {
       ->ptr;
 }
 
-void showProgress(int64_t *linelen, int64_t *trbyte) {
-  int i, j, rate, duration, eta, pos;
-  static time_t last_time, start_time;
-  time_t cur_time;
-  Str messages;
-  char *fmtrbyte, *fmrate;
-
-  if (!fmInitialized)
-    return;
-
-  if (*linelen < 1024)
-    return;
-  if (current_content_length > 0) {
-    double ratio;
-    cur_time = time(0);
-    if (*trbyte == 0) {
-      scr_move(LASTLINE, 0);
-      scr_clrtoeolx();
-      start_time = cur_time;
-    }
-    *trbyte += *linelen;
-    *linelen = 0;
-    if (cur_time == last_time)
-      return;
-    last_time = cur_time;
-    scr_move(LASTLINE, 0);
-    ratio = 100.0 * (*trbyte) / current_content_length;
-    fmtrbyte = convert_size2(*trbyte, current_content_length, 1);
-    duration = cur_time - start_time;
-    if (duration) {
-      rate = *trbyte / duration;
-      fmrate = convert_size(rate, 1);
-      eta = rate ? (current_content_length - *trbyte) / rate : -1;
-      messages = Sprintf("%11s %3.0f%% "
-                         "%7s/s "
-                         "eta %02d:%02d:%02d     ",
-                         fmtrbyte, ratio, fmrate, eta / (60 * 60),
-                         (eta / 60) % 60, eta % 60);
-    } else {
-      messages =
-          Sprintf("%11s %3.0f%%                          ", fmtrbyte, ratio);
-    }
-    scr_addstr(messages->ptr);
-    pos = 42;
-    i = pos + (COLS - pos - 1) * (*trbyte) / current_content_length;
-    scr_move(LASTLINE, pos);
-    scr_standout();
-    scr_addch(' ');
-    for (j = pos + 1; j <= i; j++)
-      scr_addch('|');
-    scr_standend();
-    /* no_clrtoeol(); */
-    term_refresh();
-  } else {
-    cur_time = time(0);
-    if (*trbyte == 0) {
-      scr_move(LASTLINE, 0);
-      scr_clrtoeolx();
-      start_time = cur_time;
-    }
-    *trbyte += *linelen;
-    *linelen = 0;
-    if (cur_time == last_time)
-      return;
-    last_time = cur_time;
-    scr_move(LASTLINE, 0);
-    fmtrbyte = convert_size(*trbyte, 1);
-    duration = cur_time - start_time;
-    if (duration) {
-      fmrate = convert_size(*trbyte / duration, 1);
-      messages = Sprintf("%7s loaded %7s/s", fmtrbyte, fmrate);
-    } else {
-      messages = Sprintf("%7s loaded", fmtrbyte);
-    }
-    scr_message(messages->ptr, 0, 0);
-    term_refresh();
-  }
-}
-
 void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
                struct environment *envs, int nenv, TextLineList *buf, int limit,
                int indent) {
@@ -5541,7 +5408,7 @@ void loadHTMLstream(URLFile *f, Buffer *newBuf, FILE *src, int internal) {
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    showProgress(&linelen, &trbyte);
+    term_showProgress(&linelen, &trbyte, current_content_length);
     /*
      * if (frame_source)
      * continue;
@@ -5635,7 +5502,7 @@ Buffer *loadBuffer(URLFile *uf, Buffer *volatile newBuf) {
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    showProgress(&linelen, &trbyte);
+    term_showProgress(&linelen, &trbyte, current_content_length);
     if (frame_source)
       continue;
     lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
@@ -5893,7 +5760,7 @@ Line *getNextPage(Buffer *buf, int plen) {
       break;
     }
     linelen += lineBuf2->length;
-    showProgress(&linelen, &trbyte);
+    term_showProgress(&linelen, &trbyte, current_content_length);
     lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
     if (squeezeBlankLine) {
       squeeze_flag = FALSE;
@@ -5973,7 +5840,7 @@ int save2tmp(URLFile uf, char *tmpf) {
         goto _end;
       }
       linelen += count;
-      showProgress(&linelen, &trbyte);
+      term_showProgress(&linelen, &trbyte, current_content_length);
     }
   }
 _end:
@@ -6105,7 +5972,7 @@ static int _MoveFile(char *path1, char *path2) {
   while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
     fwrite(buf, 1, count, f2);
     linelen += count;
-    showProgress(&linelen, &trbyte);
+    term_showProgress(&linelen, &trbyte, current_content_length);
   }
   xfree(buf);
   ISclose(f1);
@@ -6368,27 +6235,11 @@ int checkOverWrite(char *path) {
   if (stat(path, &st) < 0)
     return 0;
   /* FIXME: gettextize? */
-  ans = inputAnswer("File exists. Overwrite? (y/n)");
+  ans = term_inputAnswer("File exists. Overwrite? (y/n)");
   if (ans && TOLOWER(*ans) == 'y')
     return 0;
   else
     return -1;
-}
-
-char *inputAnswer(char *prompt) {
-  char *ans;
-
-  if (QuietMessage)
-    return "n";
-  if (fmInitialized) {
-    tty_raw();
-    ans = inputChar(prompt);
-  } else {
-    printf("%s", prompt);
-    fflush(stdout);
-    ans = Strfgets(stdin)->ptr;
-  }
-  return ans;
 }
 
 static void uncompress_stream(URLFile *uf, char **src) {

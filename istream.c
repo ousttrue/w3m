@@ -461,7 +461,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
     else {
       /* FIXME: gettextize? */
       emsg = Strnew_charp("No SSL peer certificate: accept? (y/n)");
-      ans = inputAnswer(emsg->ptr);
+      ans = term_inputAnswer(emsg->ptr);
     }
     if (ans && TOLOWER(*ans) == 'y')
       /* FIXME: gettextize? */
@@ -494,7 +494,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
       else {
         /* FIXME: gettextize? */
         emsg = Sprintf("%s: accept? (y/n)", em);
-        ans = inputAnswer(emsg->ptr);
+        ans = term_inputAnswer(emsg->ptr);
       }
       if (ans && TOLOWER(*ans) == 'y') {
         /* FIXME: gettextize? */
@@ -519,7 +519,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
       if (ep->length > COLS - 16)
         Strshrink(ep, ep->length - (COLS - 16));
       Strcat_charp(ep, ": accept? (y/n)");
-      ans = inputAnswer(ep->ptr);
+      ans = term_inputAnswer(ep->ptr);
     }
     if (ans && TOLOWER(*ans) == 'y') {
       /* FIXME: gettextize? */
