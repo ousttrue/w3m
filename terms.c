@@ -509,3 +509,16 @@ void setup_child(int child, int i, int f) {
   fmInitialized = FALSE;
   TrapSignal = FALSE;
 }
+
+Str term_inputpwd() {
+  Str pwd = nullptr;
+  if (fmInitialized) {
+    tty_raw();
+    pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
+    pwd = Str_conv_to_system(pwd);
+    tty_cbreak();
+  } else {
+    pwd = Strnew_charp((char *)getpass("Password: "));
+  }
+  return pwd;
+}

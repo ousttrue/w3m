@@ -1,4 +1,5 @@
 #pragma once
+#include "Str.h"
 #include <stdbool.h>
 
 extern int LINES, COLS;
@@ -13,5 +14,6 @@ void term_title(const char *s);
 void term_bell();
 void term_refresh();
 void term_message(const char *msg);
+Str term_inputpwd();
 
 void setup_child(int child, int i, int f);

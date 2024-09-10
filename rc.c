@@ -817,9 +817,8 @@ void sync_with_option(void) {
     AcceptEncoding = acceptableEncoding();
   if (AcceptMedia == NULL || *AcceptMedia == '\0')
     AcceptMedia = acceptableMimeTypes();
-  if (fmInitialized) {
-    initKeymap(FALSE);
-  }
+
+  initKeymap(FALSE);
 }
 
 void init_rc(void) {
@@ -1080,9 +1079,9 @@ struct siteconf_rec {
   int no_referer_from;
   int no_referer_to;
 };
-#define SCONF_TEST(ent, f) ((ent)->mask[(f) >> 3] & (1U << ((f)&7)))
-#define SCONF_SET(ent, f) ((ent)->mask[(f) >> 3] |= (1U << ((f)&7)))
-#define SCONF_CLEAR(ent, f) ((ent)->mask[(f) >> 3] &= ~(1U << ((f)&7)))
+#define SCONF_TEST(ent, f) ((ent)->mask[(f) >> 3] & (1U << ((f) & 7)))
+#define SCONF_SET(ent, f) ((ent)->mask[(f) >> 3] |= (1U << ((f) & 7)))
+#define SCONF_CLEAR(ent, f) ((ent)->mask[(f) >> 3] &= ~(1U << ((f) & 7)))
 
 static struct siteconf_rec *siteconf_head = NULL;
 static struct siteconf_rec *newSiteconfRec(void);

@@ -163,12 +163,7 @@ static int ftp_login(FTP ftp) {
   ftp_command(ftp, NULL, NULL, &status);
   if (status != 220)
     goto open_err;
-  if (fmInitialized) {
-    scr_message(
-        Sprintf("Sending FTP username (%s) to remote server.", ftp->user)->ptr,
-        0, 0);
-    term_refresh();
-  }
+  term_message(Sprintf("Sending FTP username (%s) to remote server.", ftp->user)->ptr);
   ftp_command(ftp, "USER", ftp->user, &status);
   /*
    * Some ftp daemons(e.g. publicfile) return code 230 for user command.
@@ -177,10 +172,7 @@ static int ftp_login(FTP ftp) {
     goto succeed;
   if (status != 331)
     goto open_err;
-  if (fmInitialized) {
-    scr_message("Sending FTP password to remote server.", 0, 0);
-    term_refresh();
-  }
+  term_message("Sending FTP password to remote server.");
   ftp_command(ftp, "PASS", ftp->pass, &status);
   if (status != 230)
     goto open_err;
@@ -367,14 +359,7 @@ InputStream openFTPStream(ParsedURL *pu, URLFile *uf) {
     pwd = NULL;
     find_auth_user_passwd(pu, NULL, &uname, &pwd, 0);
     if (pwd == NULL) {
-      if (fmInitialized) {
-        tty_raw();
-        pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
-        pwd = Str_conv_to_system(pwd);
-        tty_cbreak();
-      } else {
-        pwd = Strnew_charp((char *)getpass("Password: "));
-      }
+      pwd = term_inputpwd();
       add_auth_cookie_flag = TRUE;
     }
     pass = pwd->ptr;

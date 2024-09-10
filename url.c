@@ -193,9 +193,7 @@ static char *DefaultFile(int scheme) {
   return NULL;
 }
 
-static MySignalHandler KeyAbort(SIGNAL_ARG) {
-  LONGJMP(AbortLoading, 1);
-}
+static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 SSL_CTX *ssl_ctx = NULL;
 
@@ -478,11 +476,7 @@ int openSocket(char *const hostname, char *remoteport_name,
 #endif /* not INET6 */
   MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
-  if (fmInitialized) {
-    /* FIXME: gettextize? */
-    scr_message(Sprintf("Opening socket...")->ptr, 0, 0);
-    term_refresh();
-  }
+  term_message(Sprintf("Opening socket...")->ptr);
   if (SETJMP(AbortLoading) != 0) {
 #ifdef SOCK_DEBUG
     sock_log("openSocket() failed. reason: user abort\n");
@@ -574,10 +568,7 @@ int openSocket(char *const hostname, char *remoteport_name,
     memcpy((void *)&hostaddr.sin_addr, (const void *)&adr, sizeof(long));
     hostaddr.sin_family = AF_INET;
     hostaddr.sin_port = s_port;
-    if (fmInitialized) {
-      message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-      refresh();
-    }
+    term_message(Sprintf("Connecting to %s", hostname)->ptr);
     if (connect(sock, (struct sockaddr *)&hostaddr,
                 sizeof(struct sockaddr_in)) < 0) {
 #ifdef SOCK_DEBUG
@@ -588,10 +579,7 @@ int openSocket(char *const hostname, char *remoteport_name,
   } else {
     char **h_addr_list;
     int result = -1;
-    if (fmInitialized) {
-      message(Sprintf("Performing hostname lookup on %s", hostname)->ptr, 0, 0);
-      refresh();
-    }
+    term_message(Sprintf("Performing hostname lookup on %s", hostname)->ptr);
     if ((entry = gethostbyname(hostname)) == NULL) {
 #ifdef SOCK_DEBUG
       sock_log("openSocket: gethostbyname() failed. reason: %s\n",
@@ -609,10 +597,7 @@ int openSocket(char *const hostname, char *remoteport_name,
       sock_log("openSocket: connecting %d.%d.%d.%d\n", (adr >> 24) & 0xff,
                (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
 #endif
-      if (fmInitialized) {
-        message(Sprintf("Connecting to %s", hostname)->ptr, 0, 0);
-        refresh();
-      }
+      term_message(Sprintf("Connecting to %s", hostname)->ptr);
       if ((result = connect(sock, (struct sockaddr *)&hostaddr,
                             sizeof(struct sockaddr_in))) == 0) {
         break;

@@ -275,8 +275,6 @@ void scr_graphend(void) { CurrentMode &= ~S_GRAPHICS; }
 // }
 
 void scr_message(const char *s, int return_x, int return_y) {
-  // if (!fmInitialized)
-  //   return;
   scr_move(LASTLINE, 0);
   scr_addnstr(s, COLS - 1);
   scr_clrtoeolx();
