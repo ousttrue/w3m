@@ -4523,16 +4523,15 @@ _strSession(char *sf)
     Buffer *buf;
     FILE *f;
     ParsedURL *url;
-    char *ans, *sep;
+    char *sep;
     struct stat st;
 
     if (!sf)
 	sf = session_file ? session_file : rcFile(SESSION_FILE);
 
     while (stat(sf, &st) == 0) {
-	Str msg = Strnew_charp(_("Session file exists. Overwrite? [N]"));
-	ans = inputAnswer(msg->ptr);
-	if (ans && TOLOWER(*ans) == 'y')
+	Str msg = Strnew_charp(_("Session file exists. Overwrite?"));
+	if (confirm(msg))
 	    break;
 	sf = inputFilenameHist(_("Session file (empty: Don't store)? "), sf,
 			       LoadHist);

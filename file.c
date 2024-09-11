@@ -852,8 +852,7 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
 		    add_cookie(pu, name, value, expires, domain, path, flag,
 			       comment, version, port, commentURL);
 		if (err) {
-		    const char *ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT)
-			? "y" : NULL;
+		    int ans = (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT);
 		    if (fmInitialized && (err & COO_OVERRIDE_OK) &&
 			accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
 			Str msg = Sprintf("Accept bad cookie from %s for %s?",
@@ -862,10 +861,9 @@ readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu)
 					   ? domain->ptr : "<localdomain>"));
 			if (msg->length > COLS - 10)
 			    Strshrink(msg, msg->length - (COLS - 10));
-			Strcat_charp(msg, " (y/n)");
-			ans = inputAnswer(msg->ptr);
+			ans = confirm(msg);
 		    }
-		    if (ans == NULL || TOLOWER(*ans) != 'y' ||
+		    if (!ans ||
 			(err =
 			 add_cookie(pu, name, value, expires, domain, path,
 				    flag | COO_OVERRIDE, comment, version,
@@ -8488,24 +8486,22 @@ int
 checkOverWrite(const char *path)
 {
     struct stat st;
-    char *ans;
 
     if (stat(path, &st) < 0)
 	return 0;
-    ans = inputAnswer(_("File exists. Overwrite? (y/n)"));
-    if (ans && TOLOWER(*ans) == 'y')
+    if (confirm(Strnew_charp(_("File exists. Overwrite?"))))
 	return 0;
     else
 	return -1;
 }
 
-char *
-inputAnswer(const char *prompt)
+char
+confirm_multi(const char *prompt)
 {
     char *ans;
 
     if (QuietMessage)
-	return "n";
+	return 'n';
     if (fmInitialized) {
 	term_raw();
 	ans = inputChar(prompt);
@@ -8515,7 +8511,20 @@ inputAnswer(const char *prompt)
 	fflush(stdout);
 	ans = Strfgets(stdin)->ptr;
     }
-    return ans;
+    if (!ans || !*ans)
+	return '\0';
+    *ans = TOLOWER(*ans);
+    return *ans;
+}
+
+int
+confirm(Str prompt)
+{
+    char ans;
+
+    Strcat_charp(prompt, " (y/N)");
+    ans = confirm_multi(prompt->ptr);
+    return ans == 'y';
 }
 
 static void

@@ -472,7 +472,7 @@ ssl_get_certificate(SSL * ssl, char *hostname)
     char buf[2048];
     Str amsg = NULL;
     Str emsg;
-    const char *ans;
+    int ans;
 
     if (ssl == NULL)
 	return NULL;
@@ -480,12 +480,10 @@ ssl_get_certificate(SSL * ssl, char *hostname)
     if (x == NULL) {
 	if (accept_this_site
 	    && strcasecmp(accept_this_site->ptr, hostname) == 0)
-	    ans = "y";
-	else {
-	    emsg = Strnew_charp(_("No SSL peer certificate: accept? (y/n)"));
-	    ans = inputAnswer(emsg->ptr);
-	}
-	if (ans && TOLOWER(*ans) == 'y')
+	    ans = 1;
+	else
+	    ans = confirm(Strnew_charp(_("No SSL peer certificate: accept?")));
+	if (ans)
 	    amsg = Strnew_charp
 		(_("Accept SSL session without any peer certificate"));
 	else {
@@ -514,13 +512,12 @@ ssl_get_certificate(SSL * ssl, char *hostname)
 	    const char *em = X509_verify_cert_error_string(verr);
 	    if (accept_this_site
 		&& strcasecmp(accept_this_site->ptr, hostname) == 0)
-		ans = "y";
+		ans = 1;
 	    else {
 		/* FIXME: gettextize? */
-		emsg = Sprintf("%s: accept? (y/n)", em);
-		ans = inputAnswer(emsg->ptr);
+		ans = confirm(Sprintf("%s: accept?", em));
 	    }
-	    if (ans && TOLOWER(*ans) == 'y') {
+	    if (ans) {
 		/* FIXME: gettextize? */
 		amsg = Sprintf("Accept unsecure SSL session: "
 			       "unverified: %s", em);
@@ -539,15 +536,15 @@ ssl_get_certificate(SSL * ssl, char *hostname)
     if (emsg != NULL) {
 	if (accept_this_site
 	    && strcasecmp(accept_this_site->ptr, hostname) == 0)
-	    ans = "y";
+	    ans = 1;
 	else {
 	    Str ep = Strdup(emsg);
 	    if (ep->length > COLS - 16)
 		Strshrink(ep, ep->length - (COLS - 16));
-	    Strcat_charp(ep, ": accept? (y/n)");
-	    ans = inputAnswer(ep->ptr);
+	    Strcat_charp(ep, ": accept?");
+	    ans = confirm(ep);
 	}
-	if (ans && TOLOWER(*ans) == 'y') {
+	if (ans) {
 	    amsg = Strnew_charp(_("Accept unsecure SSL session:"));
 	    Strcat(amsg, emsg);
 	}
