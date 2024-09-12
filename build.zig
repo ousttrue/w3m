@@ -204,11 +204,18 @@ fn build_exe(
     cflags: []const []const u8,
 ) *std.Build.Step.Compile {
     const exe = b.addExecutable(.{
-        .name = "w3m",
         .target = target,
         .optimize = optimize,
+        .name = "w3m",
         .link_libc = true,
     });
+    const lib = b.addStaticLibrary(.{
+        .target = target,
+        .optimize = optimize,
+        .name = "termseq",
+        .root_source_file = b.path("termseq/termcap_interface.zig"),
+    });
+    exe.linkLibrary(lib);
     exe.addCSourceFiles(.{
         .files = &.{
             "keybind.c",
@@ -238,7 +245,7 @@ fn build_exe(
             "scr.c",
             "terms.c",
             "termseq/termcap_load.c",
-            "termseq/termcap_interface.c",
+            // "termseq/termcap_interface.c",
 
             "url.c",
             "ftp.c",
