@@ -1,10 +1,6 @@
-/* $Id: file.c,v 1.266 2012/05/22 09:45:56 inu Exp $ */
-/* vi: set sw=4 ts=8 ai sm noet : */
 #include "fm.h"
 #include "tty.h"
-#include "scr.h"
 #include "digest_auth.h"
-#include "termseq/termcap_entry.h"
 #include "terms.h"
 #include <sys/types.h>
 #include "myctype.h"

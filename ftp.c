@@ -1,4 +1,3 @@
-/* $Id: ftp.c,v 1.42 2010/12/15 10:50:24 htrb Exp $ */
 #include <stdio.h>
 #include <pwd.h>
 #include <Str.h>
@@ -7,9 +6,7 @@
 #include <time.h>
 
 #include "fm.h"
-#include "tty.h"
 #include "html.h"
-#include "scr.h"
 #include "myctype.h"
 #include "terms.h"
 
@@ -34,15 +31,13 @@ typedef struct _FTP {
   InputStream rf;
   FILE *wf;
   FILE *data;
-} * FTP;
+} *FTP;
 
 static struct _FTP current_ftp = {NULL, 0, NULL, NULL, NULL, NULL, NULL};
 
 static JMP_BUF AbortLoading;
 
-static MySignalHandler KeyAbort(SIGNAL_ARG) {
-  LONGJMP(AbortLoading, 1);
-}
+static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 static Str ftp_command(FTP ftp, char *cmd, char *arg, int *status) {
   Str tmp;
@@ -163,7 +158,8 @@ static int ftp_login(FTP ftp) {
   ftp_command(ftp, NULL, NULL, &status);
   if (status != 220)
     goto open_err;
-  term_message(Sprintf("Sending FTP username (%s) to remote server.", ftp->user)->ptr);
+  term_message(
+      Sprintf("Sending FTP username (%s) to remote server.", ftp->user)->ptr);
   ftp_command(ftp, "USER", ftp->user, &status);
   /*
    * Some ftp daemons(e.g. publicfile) return code 230 for user command.

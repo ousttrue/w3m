@@ -1,8 +1,6 @@
-/* $Id: buffer.c,v 1.30 2010/07/18 14:10:09 htrb Exp $ */
 #include "fm.h"
 #include "tty.h"
 #include "scr.h"
-#include "termseq/termcap_entry.h"
 #include "terms.h"
 
 char *NullLine = "";
