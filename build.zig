@@ -186,15 +186,19 @@ fn build_termcap_entry(
         .name = "termcap_entry",
         .target = target,
         .optimize = optimize,
-        .root_source_file = b.path("termcap_entry.zig"),
+        .root_source_file = b.path("termseq/termcap_entry.zig"),
         .link_libc = true,
     });
+    exe.linkSystemLibrary("ncurses");
     const install = b.addInstallArtifact(exe, .{});
 
     const run = b.addRunArtifact(exe);
     run.step.dependOn(&install.step);
 
-    b.step("run-termcap", "run termcap_entry").dependOn(&run.step);
+    b.step(
+        "run-termcap_entry",
+        "run termcap_entry",
+    ).dependOn(&run.step);
 }
 
 fn build_exe(
