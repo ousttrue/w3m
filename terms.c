@@ -683,3 +683,69 @@ bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd) {
 
   return true;
 }
+
+static GeneralList *message_list = NULL;
+
+void term_err_message(const char *s) {
+  if (!message_list)
+    message_list = newGeneralList();
+  if (message_list->nitem >= LINES)
+    popValue(message_list);
+  pushValue(message_list, allocStr(s, -1));
+}
+
+const char *term_message_to_html() {
+  if (!message_list) {
+    return "<tr><td>(no message recorded)</td></tr>\n";
+  }
+
+  auto tmp = Strnew();
+  for (auto p = message_list->last; p; p = p->prev)
+    Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
+                   "</pre></td></tr>\n", NULL);
+  return tmp->ptr;
+}
+
+void disp_err_message(char *s, int redraw_current) {
+  term_err_message(s);
+  disp_message(s, redraw_current);
+}
+
+void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
+                       int mouse) {
+  if (QuietMessage)
+    return;
+
+  if (term_is_initialized()) {
+    if (CurrentTab != NULL && Currentbuf != NULL) {
+      scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
+                  Currentbuf->cursorY + Currentbuf->rootY);
+    } else {
+      scr_message(s, LASTLINE, 0);
+    }
+    term_refresh();
+
+    // nsec
+    tty_sleep_till_anykey(sec, purge);
+    if (CurrentTab != NULL && Currentbuf != NULL && redraw_current) {
+      displayBuffer(Currentbuf, B_NORMAL);
+    }
+  } else {
+    fprintf(stderr, "%s\n", conv_to_system(s));
+  }
+}
+
+void disp_message(char *s, int redraw_current) {
+  disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
+}
+
+static char *delayed_msg = NULL;
+void set_delayed_message(char *s) { delayed_msg = allocStr(s, -1); }
+
+void term_show_delayed_message() {
+  if (delayed_msg != NULL) {
+    disp_message(delayed_msg, FALSE);
+    delayed_msg = NULL;
+    term_refresh();
+  }
+}

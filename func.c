@@ -9,7 +9,7 @@
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
-
+#include "terms.h"
 #include "funcname.c"
 #include "functable.c"
 
@@ -33,7 +33,7 @@ void setKeymap(char *p, int lineno, int verbose) {
     else
       /* FIXME: gettextize? */
       emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-    record_err_message(emsg);
+    term_err_message(emsg);
     if (verbose)
       disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
     return;
@@ -47,7 +47,7 @@ void setKeymap(char *p, int lineno, int verbose) {
     else
       /* FIXME: gettextize? */
       emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-    record_err_message(emsg);
+    term_err_message(emsg);
     if (verbose)
       disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
     return;
@@ -147,7 +147,7 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
       continue;
     } else { /* error */
       emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
-      record_err_message(emsg);
+      term_err_message(emsg);
       if (verbose)
         disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
       continue;

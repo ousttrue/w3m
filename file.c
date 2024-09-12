@@ -697,7 +697,7 @@ void readHeader(URLFile *uf, Buffer *newBuf, int thru, ParsedURL *pu) {
                          ->ptr;
             else
               emsg = "This cookie was rejected to prevent security violation.";
-            record_err_message(emsg);
+            term_err_message(emsg);
             if (show_cookie)
               disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
           } else if (show_cookie)

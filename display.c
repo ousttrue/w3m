@@ -1,12 +1,6 @@
-/* $Id: display.c,v 1.71 2010/07/18 14:10:09 htrb Exp $ */
-#include <signal.h>
 #include "fm.h"
-#include "tty.h"
 #include "scr.h"
-#include "termseq/termcap_entry.h"
 #include "terms.h"
-
-/* *INDENT-OFF* */
 
 #define EFFECT_ANCHOR_START scr_underline()
 #define EFFECT_ANCHOR_END scr_underlineend()
@@ -20,7 +14,6 @@
 #define EFFECT_VISITED_END   /**/
 #define EFFECT_MARK_START scr_standout()
 #define EFFECT_MARK_END scr_standend()
-/* *INDENT-ON* */
 
 /*
  * Display some lines.
@@ -33,8 +26,6 @@ static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 
 static Buffer *save_current_buf = NULL;
-
-static char *delayed_msg = NULL;
 
 static void drawAnchorCursor(Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
@@ -197,11 +188,7 @@ void displayBuffer(Buffer *buf, int mode) {
     /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
   }
-  if (delayed_msg != NULL) {
-    disp_message(delayed_msg, FALSE);
-    delayed_msg = NULL;
-    term_refresh();
-  }
+  term_show_delayed_message();
   scr_standout();
   scr_message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
   scr_standend();
@@ -627,71 +614,22 @@ void addChar(char c, Lineprop mode) {
     scr_addch(c);
 }
 
-static GeneralList *message_list = NULL;
-
-void record_err_message(char *s) {
-  if (!message_list)
-    message_list = newGeneralList();
-  if (message_list->nitem >= LINES)
-    popValue(message_list);
-  pushValue(message_list, allocStr(s, -1));
-}
-
 /*
  * List of error messages
  */
 Buffer *message_list_panel(void) {
   Str tmp = Strnew_size(LINES * COLS);
-  ListItem *p;
 
   /* FIXME: gettextize? */
   Strcat_charp(tmp,
                "<html><head><title>List of error messages</title></head><body>"
                "<h1>List of error messages</h1><table cellpadding=0>\n");
-  if (message_list)
-    for (p = message_list->last; p; p = p->prev)
-      Strcat_m_charp(tmp, "<tr><td><pre>", html_quote(p->ptr),
-                     "</pre></td></tr>\n", NULL);
-  else
-    Strcat_charp(tmp, "<tr><td>(no message recorded)</td></tr>\n");
+
+  Strcat_m_charp(tmp, term_message_to_html());
+
   Strcat_charp(tmp, "</table></body></html>");
   return loadHTMLString(tmp);
 }
-
-void disp_err_message(char *s, int redraw_current) {
-  record_err_message(s);
-  disp_message(s, redraw_current);
-}
-
-void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
-                       int mouse) {
-  if (QuietMessage)
-    return;
-
-  if (term_is_initialized()) {
-    if (CurrentTab != NULL && Currentbuf != NULL) {
-      scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
-                  Currentbuf->cursorY + Currentbuf->rootY);
-    } else {
-      scr_message(s, LASTLINE, 0);
-    }
-    term_refresh();
-
-    // nsec
-    tty_sleep_till_anykey(sec, purge);
-    if (CurrentTab != NULL && Currentbuf != NULL && redraw_current) {
-      displayBuffer(Currentbuf, B_NORMAL);
-    }
-  } else {
-    fprintf(stderr, "%s\n", conv_to_system(s));
-  }
-}
-
-void disp_message(char *s, int redraw_current) {
-  disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
-}
-
-void set_delayed_message(char *s) { delayed_msg = allocStr(s, -1); }
 
 void cursorUp0(Buffer *buf, int n) {
   if (buf->cursorY > 0)
@@ -939,8 +877,3 @@ void restorePosition(Buffer *buf, Buffer *orig) {
   buf->currentColumn = orig->currentColumn;
   arrangeCursor(buf);
 }
-
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */

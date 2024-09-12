@@ -241,14 +241,7 @@ extern int writeBufferCache(Buffer *buf);
 extern int readBufferCache(Buffer *buf);
 extern void displayBuffer(Buffer *buf, int mode);
 extern void addChar(char c, Lineprop mode);
-extern void record_err_message(char *s);
 extern Buffer *message_list_panel(void);
-extern void disp_err_message(char *s, int redraw_current);
-extern void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
-                              int mouse);
-extern void disp_message(char *s, int redraw_current);
-#define disp_message_nomouse disp_message
-extern void set_delayed_message(char *s);
 extern void cursorUp0(Buffer *buf, int n);
 extern void cursorUp(Buffer *buf, int n);
 extern void cursorDown0(Buffer *buf, int n);
