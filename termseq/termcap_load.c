@@ -1,9 +1,12 @@
 #include "termcap_load.h"
 #include "termcap_getentry.h"
+#include "termcap_entry.h"
+
+static TermCap s_termcap;
 
 #define CSI "0x1b["
 
-bool termcap_load(const char *ent, TermCap *t) {
+bool termcap_load(TermCap *t, const char *ent) {
   if (tgetent(t->bp, ent) != 1) {
     return false;
   }
@@ -54,7 +57,6 @@ bool termcap_load(const char *ent, TermCap *t) {
 }
 
 void termcap_load_xterm(TermCap *entry) {
-  //
   entry->T_cd = CSI "J";
   entry->T_ce = CSI "K";
 }

@@ -5,7 +5,7 @@
 #include "terms.h"
 #include "tty.h"
 #include "scr.h"
-#include "termseq/termcap_load.h"
+#include "termseq/termcap_interface.h"
 #include "termcap.h"
 #include <stdio.h>
 #include <signal.h>
@@ -34,8 +34,6 @@ MySignalHandler error_dump(SIGNAL_ARG);
 
 char gcmap[96];
 
-static TermCap s_termcap;
-
 void term_puts(const char *s) { tputs(s, 1, tty_putc); }
 
 #define W3M_TERM_INFO(name, title, mouse) name, title
@@ -56,9 +54,9 @@ void term_setlinescols() {
   if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
     COLS = i;
   if (LINES <= 0)
-    LINES = s_termcap.LINES; /* number of line */
+    LINES = termcap_int_line();
   if (COLS <= 0)
-    COLS = s_termcap.COLS; /* number of column */
+    COLS = termcap_int_cols();
   if (COLS > MAX_COLUMN)
     COLS = MAX_COLUMN;
   if (LINES > MAX_LINE)
@@ -79,16 +77,12 @@ static struct w3m_term_info {
 #undef W3M_TERM_INFO
 
 void term_reset() {
-  auto t = &s_termcap;
-  term_puts(t->T_op); /* turn off */
-  term_puts(t->T_me);
+  term_puts(termcap_str_orig_pair());
+  term_puts(termcap_str_exit_attribute_mode());
   if (!Do_not_use_ti_te) {
-    if (t->T_te && *t->T_te)
-      term_puts(t->T_te);
-    else
-      term_puts(t->T_cl);
+    term_puts(termcap_str_te());
   }
-  term_puts(t->T_se); /* reset terminal */
+  term_puts(termcap_str_reset()); /* reset terminal */
   tty_flush();
   tty_close();
 }
@@ -133,16 +127,15 @@ static void term_setgraphchar() {
     gcmap[c] = (char)(c + ' ');
   }
 
-  auto t = &s_termcap;
-  if (!t->T_ac) {
-    return;
-  }
-
-  int n = strlen(t->T_ac);
-  for (int i = 0; i < n - 1; i += 2) {
-    auto c = (unsigned)t->T_ac[i] - ' ';
-    if (c >= 0 && c < 96)
-      gcmap[c] = t->T_ac[i + 1];
+  auto acs = termcap_str_acs_chars();
+  if (acs) {
+    int n = strlen(acs);
+    for (int i = 0; i < n - 1; i += 2) {
+      auto c = (unsigned)acs[i] - ' ';
+      if (c >= 0 && c < 96) {
+        gcmap[c] = acs[i + 1];
+      }
+    }
   }
 }
 
@@ -154,7 +147,7 @@ void getTCstr() {
     reset_error_exit(SIGNAL_ARGLIST);
   }
 
-  if (!termcap_load(ent, &s_termcap)) {
+  if (!termcap_interface_load(ent)) {
     /* Can't find termcap entry */
     fprintf(stderr, "Can't find termcap entry %s\n", ent);
     reset_error_exit(SIGNAL_ARGLIST);
@@ -192,9 +185,10 @@ int term_init() {
 
   set_int();
   getTCstr();
-  auto t = &s_termcap;
-  if (t->T_ti && !Do_not_use_ti_te)
-    term_puts(t->T_ti);
+  auto ti = termcap_str_enter_ca_mode();
+  if (ti && !Do_not_use_ti_te) {
+    term_puts(ti);
+  }
   scr_setup(LINES, COLS);
   return 0;
 }
@@ -202,14 +196,13 @@ int term_init() {
 bool term_graph_ok() {
   if (UseGraphicChar != GRAPHIC_CHAR_DEC)
     return false;
-  auto t = &s_termcap;
-  return t->T_as[0] != 0 && t->T_ae[0] != 0 && t->T_ac[0] != 0;
+  return termcap_graph_ok();
 }
 
-void term_clear() { term_puts(s_termcap.T_cl); }
+void term_clear() { term_puts(termcap_str_clear()); }
 
 void term_move(int line, int column) {
-  term_puts(tgoto(s_termcap.T_cm, column, line));
+  term_puts(tgoto(termcap_str_cursor_mv(), column, line));
 }
 
 void term_bell() { tty_putc(7); }
@@ -242,7 +235,6 @@ void term_refresh() {
   l_prop color = COL_FTERM;
   short *dirty;
 
-  auto t = &s_termcap;
   for (line = 0; line <= LASTLINE; line++) {
     dirty = &scr->ScreenImage[line]->isdirty;
     if (*dirty & L_DIRTY) {
@@ -286,7 +278,7 @@ void term_refresh() {
         moved = RF_CR_OK;
       }
       if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-        term_puts(t->T_ce);
+        term_puts(termcap_str_clr_eol());
         if (col != pcol)
           term_move(line, col);
       }
@@ -316,30 +308,30 @@ void term_refresh() {
             (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
             (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
           if ((mode & S_COLORED))
-            term_puts(t->T_op);
+            term_puts(termcap_str_orig_pair());
           if (mode & S_GRAPHICS)
-            term_puts(t->T_ae);
-          term_puts(t->T_me);
+            term_puts(termcap_str_exit_alt_charset_mode());
+          term_puts(termcap_str_exit_attribute_mode());
           mode &= ~M_MEND;
         }
         if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
                 ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
                 : (pr[col] & S_DIRTY)) {
           if (pcol == col - 1)
-            term_puts(t->T_nd);
+            term_puts(termcap_str_cursor_right());
           else if (pcol != col)
             term_move(line, col);
 
           if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
-            term_puts(t->T_so);
+            term_puts(termcap_str_enter_standout_mode());
             mode |= S_STANDOUT;
           }
           if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
-            term_puts(t->T_us);
+            term_puts(termcap_str_enter_underline_mode());
             mode |= S_UNDERLINE;
           }
           if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
-            term_puts(t->T_md);
+            term_puts(termcap_str_enter_bold_mode());
             mode |= S_BOLD;
           }
           if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
@@ -350,9 +342,9 @@ void term_refresh() {
           if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
             if (!scr->graph_enabled) {
               scr->graph_enabled = 1;
-              term_puts(t->T_eA);
+              term_puts(termcap_str_ena_acs());
             }
-            term_puts(t->T_as);
+            term_puts(termcap_str_enter_alt_charset_mode());
             mode |= S_GRAPHICS;
           }
           tty_putc((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
@@ -367,11 +359,11 @@ void term_refresh() {
     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
     if (mode & M_MEND) {
       if (mode & (S_COLORED))
-        term_puts(t->T_op);
+        term_puts(termcap_str_orig_pair());
       if (mode & S_GRAPHICS) {
-        term_puts(t->T_ae);
+        term_puts(termcap_str_exit_alt_charset_mode());
       }
-      term_puts(t->T_me);
+      term_puts(termcap_str_exit_attribute_mode());
       mode &= ~M_MEND;
     }
   }

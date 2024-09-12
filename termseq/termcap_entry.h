@@ -1,6 +1,9 @@
 #pragma once
 
+/// man 5 termcap
 /// https://man.archlinux.org/man/termcap.5
+/// https://nxmnpg.lemoda.net/ja/5/termcap
+///
 /// https://learn.microsoft.com/ja-jp/windows/console/console-virtual-terminal-sequences
 
 typedef struct TermCap {

@@ -238,6 +238,7 @@ fn build_exe(
             "scr.c",
             "terms.c",
             "termseq/termcap_load.c",
+            "termseq/termcap_interface.c",
 
             "url.c",
             "ftp.c",

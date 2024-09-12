@@ -16,13 +16,13 @@ void print_capability(const char *name, const char *cap) {
 int main(int argc, char **argv) {
   auto term = "xterm";
   TermCap entry;
-  if (!termcap_load(term, &entry)) {
+  if (!termcap_load(&entry, term)) {
     return 1;
   }
 
   printf("%s\n", term);
-  print_capability("cd", entry.T_cd);
-  print_capability("ce", entry.T_ce);
+  // print_capability("cd", entry.T_cd);
+  // print_capability("ce", entry.T_ce);
 
   return 0;
 }
