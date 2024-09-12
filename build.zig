@@ -84,87 +84,11 @@ pub fn build(b: *std.Build) void {
     // link libs
     const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
     exe.linkLibrary(gc_dep.artifact("gc"));
-    const ssl_dep = b.dependency("openssl", .{ .target = target, .optimize = optimize });
+    const ssl_dep = b.dependency("openssl", .{
+        .target = target,
+        .optimize = optimize,
+    });
     exe.linkLibrary(ssl_dep.artifact("openssl"));
-
-    // // code generation
-    // const wf = b.addWriteFiles();
-    // exe.step.dependOn(&wf.step);
-    // exe.addIncludePath(wf.getDirectory());
-    //
-    // // funcname.tab: $(DEFUNS)
-    // // 	(echo '#define DEFUN(x,y,z) x y';\
-    // // 	 sed -ne '/^DEFUN/{p;n;/^[ 	]/p;}' $(DEFUNS)) | $(CPP) $(CPPFLAGS) - | \
-    // // 	 awk '$$1 ~ /^[_A-Za-z]/ { \
-    // // 	       for (i=2;i<=NF;i++) { print $$i, $$1} \
-    // // 	 }' > $@.tmp
-    // {}
-    //
-    // // funcname1.h: funcname.tab
-    // // 	sort funcname.tab | $(AWK) -f $(top_srcdir)/funcname1.awk > $@
-    //
-    // const sort = b.addSystemCommand(&.{ "sort", "funcname.tab" });
-    // const sort_output = sort.captureStdOut();
-    //
-    // const mkTable = build_mktable.build(b, b.host, .Debug);
-    // mkTable.linkLibrary(gc_dep.artifact("gc"));
-    //
-    // // tagtable.c: tagtable.tab mktable$(EXT) html.h
-    // // 	./mktable$(EXT) 100 $(srcdir)/tagtable.tab > $@
-    // {
-    //     const run_mktable_tagtable_c = b.addRunArtifact(mkTable);
-    //     run_mktable_tagtable_c.addArg("100");
-    //     run_mktable_tagtable_c.addArg("tagtable.tab");
-    //     const tagtable_c_output = run_mktable_tagtable_c.captureStdOut();
-    //     exe.addCSourceFile(.{
-    //         // tagtable.c
-    //         .file = wf.addCopyFile(tagtable_c_output, "tagtable.c"),
-    //         .flags = &cflags,
-    //     });
-    // }
-    //
-    // // functable.c: funcname.tab mktable$(EXT)
-    // // 	sort funcname.tab | $(AWK) -f $(top_srcdir)/functable.awk > functable.tab
-    // // 	./mktable$(EXT) 100 functable.tab > $@
-    // {
-    //     const awk_functable = b.addSystemCommand(&.{ "gawk", "-f", "functable.awk" });
-    //     awk_functable.setStdIn(.{ .lazy_path = sort_output });
-    //     const awk_functable_output = awk_functable.captureStdOut();
-    //
-    //     const run_mktable_functable_c = b.addRunArtifact(mkTable);
-    //     run_mktable_functable_c.addArg("100");
-    //     run_mktable_functable_c.addFileArg(awk_functable_output);
-    //     const functalbe_c_output = run_mktable_functable_c.captureStdOut();
-    //     _ = wf.addCopyFile(functalbe_c_output, "functable.c");
-    // }
-    //
-    // // entity.h: entity.tab mktable$(EXT)
-    // // 	echo '/* $$I''d$$ */' > $@
-    // // 	./mktable$(EXT) 100 $(srcdir)/entity.tab >> $@
-    // {
-    //     const run_mktable_entity_h = b.addRunArtifact(mkTable);
-    //     run_mktable_entity_h.addArg("100");
-    //     run_mktable_entity_h.addArg("entity.tab");
-    //     const entity_h_output = run_mktable_entity_h.captureStdOut();
-    //     _ = wf.addCopyFile(entity_h_output, "entity.h");
-    // }
-    //
-    // // funcname2.h: funcname.tab
-    // const awk_funcname2_h = b.addSystemCommand(&.{
-    //     "gawk",
-    //     "-f",
-    //     "funcname2.awk",
-    // });
-    // awk_funcname2_h.setStdIn(.{ .lazy_path = sort_output });
-    // _ = wf.addCopyFile(awk_funcname2_h.captureStdOut(), "funcname2.h");
-    //
-    // // funcname.c: funcname.tab
-    // const awk_funcname_c = b.addSystemCommand(&.{
-    //     "gawk",
-    //     "-f",
-    //     "funcname0.awk",
-    // });
-    // _ = wf.addCopyFile(awk_funcname_c.captureStdOut(), "funcname.c");
 
     // run
     const run_cmd = b.addRunArtifact(exe);
@@ -190,7 +114,44 @@ pub fn build(b: *std.Build) void {
         .targets = targets.toOwnedSlice() catch @panic("OOM"),
     });
 
-    build_termcap_entry(b, target, optimize);
+    {
+        build_termcap_entry(b, target, optimize);
+        const artifact = build_termcap_print(b, target, optimize, &cflags);
+        const install = b.addInstallArtifact(artifact, .{});
+        b.getInstallStep().dependOn(&install.step);
+
+        const run = b.addRunArtifact(artifact);
+        run.step.dependOn(&install.step);
+
+        b.step(
+            "run-termcap_print",
+            "run termcap_print",
+        ).dependOn(&run.step);
+    }
+}
+
+fn build_termcap_print(
+    b: *std.Build,
+    target: std.Build.ResolvedTarget,
+    optimize: std.builtin.OptimizeMode,
+    cflags: []const []const u8,
+) *std.Build.Step.Compile {
+    const exe = b.addExecutable(.{
+        .target = target,
+        .optimize = optimize,
+        .name = "termcap_print",
+        .link_libc = true,
+    });
+    exe.addCSourceFiles(.{
+        .root = b.path("termseq"),
+        .files = &.{
+            "termcap_print.c",
+            "termcap_load.c",
+        },
+        .flags = cflags,
+    });
+    exe.linkSystemLibrary("ncurses");
+    return exe;
 }
 
 fn build_termseq(
@@ -276,6 +237,7 @@ fn build_exe(
             "tty.c",
             "scr.c",
             "terms.c",
+            "termseq/termcap_load.c",
 
             "url.c",
             "ftp.c",
