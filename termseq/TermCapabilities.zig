@@ -3,7 +3,7 @@ const std = @import("std");
 extern fn tgetent(bp: [*]u8, name: [*:0]const u8) c_int;
 extern fn tgetnum(cap: [*:0]const u8) c_int;
 extern fn tgetflag(cap: [*:0]const u8) c_int;
-extern fn tgetstr(cap: [*:0]const u8, buf: [*][*]u8) [*:0]u8;
+extern fn tgetstr(cap: [*:0]const u8, buf: [*][*]u8) ?[*:0]u8;
 
 fn print_seq(writer: anytype, _p: *const u8) void {
     var p = _p;
@@ -34,7 +34,9 @@ pub fn StringCapability(args: struct {
         value: ?[:0]const u8 = null,
 
         fn get(self: *@This(), p: **u8) ?[:0]const u8 {
-            self.value = std.mem.span(tgetstr(termcap, @ptrCast(p)));
+            if (tgetstr(termcap, @ptrCast(p))) |value| {
+                self.value = std.mem.span(value);
+            }
             return self.value;
         }
 
@@ -59,31 +61,6 @@ pub fn StringCapability(args: struct {
         }
     };
 }
-
-pub const IntCapability = struct {
-    desc: [:0]const u8,
-    termcap: [:0]const u8,
-    value: ?i32 = null,
-
-    fn get(self: *@This()) void {
-        self.value = tgetnum(self.termcap);
-    }
-
-    pub fn format(
-        self: @This(),
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = fmt;
-        _ = options;
-
-        writer.print(
-            "[int]{s}: {s} => {any}",
-            .{ self.termcap, self.desc, self.value },
-        ) catch unreachable;
-    }
-};
 
 pub const TermCapabilities = @This();
 
@@ -119,7 +96,7 @@ cursor_left: StringCapability(.{
     .termcap = "kl",
 }) = .{},
 // cursor local
-move_right_one_space: StringCapability(.{
+cursor_right_one_space: StringCapability(.{
     .desc = "move right one space",
     .termcap = "nd",
 }) = .{},
@@ -207,14 +184,6 @@ color_default: StringCapability(.{
     .termcap = "op",
 }) = .{},
 
-LINES: IntCapability = .{
-    .desc = "number of line",
-    .termcap = "li",
-},
-COLS: IntCapability = .{
-    .desc = "number of column",
-    .termcap = "co",
-},
 bp: [1024]u8 = undefined,
 funcstr: [256]u8 = undefined,
 
@@ -232,7 +201,7 @@ pub fn load(t: *@This(), name: [*:0]const u8) bool {
     var pt = &t.funcstr[0];
     _ = t.clear_to_eol.get(&pt);
     _ = t.clear_to_eod.get(&pt);
-    if (t.move_right_one_space.get(&pt)) |value| {
+    if (t.cursor_right_one_space.get(&pt)) |value| {
         t.cursor_right.value = value;
     } else {
         _ = t.cursor_right.get(&pt);
@@ -265,45 +234,40 @@ pub fn load(t: *@This(), name: [*:0]const u8) bool {
     _ = t.scroll_reverse.get(&pt);
     _ = t.term_init.get(&pt);
     _ = t.term_end.get(&pt);
-    _ = t.move_right_one_space.get(&pt);
+    _ = t.cursor_right_one_space.get(&pt);
     _ = t.alternative_charset_enable.get(&pt);
     _ = t.alternative_charset_start.get(&pt);
     _ = t.alternative_charset_end.get(&pt);
     _ = t.line_graphic.get(&pt);
     _ = t.color_default.get(&pt);
-    t.LINES.get();
-    t.COLS.get();
     return true;
 }
 
 pub const xterm = @This(){
     .term_init = .{ .value = "\x1b[?1049h\x1b[22;0;0t" },
-    // [str]te: terminal end => [esc][?1049l[esc][23;0;0t
-    // [str]cl: clear screen => [esc][H[esc][2J
-    // [str]cd: clear to the end of display => [esc][J
-    // [str]ce: clear to the end of line => [esc][K
-    // [str]kr: cursor right => [esc][C
-    // [str]kl: cursor left => 0x8
-    // [str]nd: move right one space => [esc][C
-    // [str]cr: carriage return => 0xd
-    // [str]bt: back tab => null
-    // [str]ta: tab => 0x9
-    // [str]cm: cursor move => [esc][%i%p1%d;%p2%dH
-    // [str]sc: save cursor => [esc]7
-    // [str]rc: restore cursor => [esc]8
-    // [str]so: standout mode => [esc][7m
-    // [str]se: standout mode end => [esc][27m
-    // [str]us: underline mode => [esc][4m
-    // [str]ue: underline mode end => [esc][24m
-    // [str]md: bold mode => [esc][1m
-    // [str]me: bold mode end => [esc][0m
-    // [str]al: append line => [esc][L
-    // [str]sr: scroll reverse => [esc]M
-    // [str]as: alternative (graphic) charset start => [esc](0
-    // [str]ae: alternative (graphic) charset end => [esc](B
-    // [str]eA: enable alternative charset => null
-    // [str]ac: graphics charset pairs => ``aaffggiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~
-    // [str]op: set default color pair to its original value => [esc][39;49m
-    // [int]li: number of line => 24
-    // [int]co: number of column => 80
+    .term_end = .{ .value = "\x1b[?1049l\x1b[23;0;0t" },
+    .clear_screen = .{ .value = "\x1b[H\x1b[2J" },
+    .clear_to_eod = .{ .value = "\x1b[J" },
+    .clear_to_eol = .{ .value = "\x1b[K" },
+    .cursor_right = .{ .value = "\x1b[C" },
+    .cursor_left = .{ .value = "0x8" },
+    .cursor_right_one_space = .{ .value = "\x1b[C" },
+    .carriage_return = .{ .value = "\x0d" },
+    .tab = .{ .value = "\x09" },
+    // https://gist.github.com/Orc/e1caee6695ebd3eab5320171c7073d33
+    .cursor_move = .{ .value = "\x1b[%i%p1%d;%p2%dH" },
+    .cursor_save = .{ .value = "\x1b7" },
+    .cursor_restore = .{ .value = "\x1b8" },
+    .standout_start = .{ .value = "\x1b[7m" },
+    .standout_end = .{ .value = "\x1b[27m" },
+    .underline_start = .{ .value = "\x1b[4m" },
+    .underline_end = .{ .value = "\x1b[24m" },
+    .bold_start = .{ .value = "\x1b[1m" },
+    .bold_end = .{ .value = "\x1b[0m" },
+    .append_line = .{ .value = "\x1b[L" },
+    .scroll_reverse = .{ .value = "\x1bM" },
+    .alternative_charset_start = .{ .value = "\x1b(0" },
+    .alternative_charset_end = .{ .value = "\x1b(B" },
+    .line_graphic = .{ .value = "``aaffggiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~" },
+    .color_default = .{ .value = "\x1b[39;49m" },
 };

@@ -1,4 +1,3 @@
-/* $Id: table.c,v 1.58 2010/08/09 11:59:19 htrb Exp $ */
 /*
  * HTML table
  */
@@ -12,7 +11,7 @@
 #include "parsetagx.h"
 #include "Str.h"
 #include "myctype.h"
-#include "terms.h"
+#include "termsize.h"
 
 int symbol_width = 0;
 int symbol_width0 = 0;

@@ -113,45 +113,6 @@ pub fn build(b: *std.Build) void {
     zcc.createStep(b, "zcc", .{
         .targets = targets.toOwnedSlice() catch @panic("OOM"),
     });
-
-    {
-        build_termcap_entry(b, target, optimize);
-        const artifact = build_termcap_print(b, target, optimize, &cflags);
-        const install = b.addInstallArtifact(artifact, .{});
-        b.getInstallStep().dependOn(&install.step);
-
-        const run = b.addRunArtifact(artifact);
-        run.step.dependOn(&install.step);
-
-        b.step(
-            "run-termcap_print",
-            "run termcap_print",
-        ).dependOn(&run.step);
-    }
-}
-
-fn build_termcap_print(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-    cflags: []const []const u8,
-) *std.Build.Step.Compile {
-    const exe = b.addExecutable(.{
-        .target = target,
-        .optimize = optimize,
-        .name = "termcap_print",
-        .link_libc = true,
-    });
-    exe.addCSourceFiles(.{
-        .root = b.path("termseq"),
-        .files = &.{
-            "termcap_print.c",
-            "termcap_load.c",
-        },
-        .flags = cflags,
-    });
-    exe.linkSystemLibrary("ncurses");
-    return exe;
 }
 
 fn build_termseq(
@@ -248,8 +209,7 @@ fn build_exe(
             "tty.c",
             "scr.c",
             "terms.c",
-            "termseq/termcap_load.c",
-            // "termseq/termcap_interface.c",
+            "termsize.c",
 
             "url.c",
             "ftp.c",

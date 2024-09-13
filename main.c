@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "defun.h"
 #include "terms.h"
+#include "termsize.h"
 #include "tty.h"
 #include <signal.h>
 #include <sys/wait.h>

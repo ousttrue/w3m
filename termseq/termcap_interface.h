@@ -2,8 +2,6 @@
 
 bool termcap_interface_load(const char *term);
 bool termcap_graph_ok();
-int termcap_int_line();
-int termcap_int_cols();
 const char *termcap_str_orig_pair();
 const char *termcap_str_exit_attribute_mode();
 const char *termcap_str_te();

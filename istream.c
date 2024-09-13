@@ -1,7 +1,7 @@
-/* $Id: istream.c,v 1.27 2010/07/18 13:43:23 htrb Exp $ */
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"
+#include "termsize.h"
 #include "terms.h"
 #include <signal.h>
 #include <openssl/x509v3.h>

@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "tty.h"
 #include "digest_auth.h"
+#include "termsize.h"
 #include "terms.h"
 #include <sys/types.h>
 #include "myctype.h"

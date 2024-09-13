@@ -15,6 +15,7 @@
 #endif
 #include <time.h>
 #include "terms.h"
+#include "termsize.h"
 #include "myctype.h"
 #include "regex.h"
 

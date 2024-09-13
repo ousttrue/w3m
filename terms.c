@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "termsize.h"
 #include "tty.h"
 #include "scr.h"
 #include "termseq/termcap_interface.h"
@@ -40,28 +41,6 @@ void term_puts(const char *s) { tputs(s, 1, tty_putc); }
 
 static char XTERM_TITLE[] = "\033]0;w3m: %s\007";
 static char SCREEN_TITLE[] = "\033k%s\033\134";
-
-#define MAX_LINE 200
-#define MAX_COLUMN 400
-int LINES;
-int COLS;
-
-void term_setlinescols() {
-  char *p;
-  int i;
-  if (LINES <= 0 && (p = getenv("LINES")) != NULL && (i = atoi(p)) >= 0)
-    LINES = i;
-  if (COLS <= 0 && (p = getenv("COLUMNS")) != NULL && (i = atoi(p)) >= 0)
-    COLS = i;
-  if (LINES <= 0)
-    LINES = termcap_int_line();
-  if (COLS <= 0)
-    COLS = termcap_int_cols();
-  if (COLS > MAX_COLUMN)
-    COLS = MAX_COLUMN;
-  if (LINES > MAX_LINE)
-    LINES = MAX_LINE;
-}
 
 static struct w3m_term_info {
   char *term;

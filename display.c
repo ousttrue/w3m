@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "scr.h"
+#include "termsize.h"
 #include "terms.h"
 
 #define EFFECT_ANCHOR_START scr_underline()

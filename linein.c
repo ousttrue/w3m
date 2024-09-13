@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "terms.h"
+#include "termsize.h"
 #include "tty.h"
 #include "scr.h"
 #include "local.h"

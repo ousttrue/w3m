@@ -1,21 +1,15 @@
 const TermCapabilities = @import("TermCapabilities.zig");
 
-var s_caps = TermCapabilities{};
+var s_caps = TermCapabilities.xterm;
 
 export fn termcap_interface_load(term: [*:0]const u8) bool {
-    return s_caps.load(term);
+    _ = term;
+    return true;
+    // return s_caps.load(term);
 }
 
 export fn termcap_graph_ok() bool {
     return s_caps.isGraphOk();
-}
-
-export fn termcap_int_line() c_int {
-    return s_caps.LINES.value orelse 0;
-}
-
-export fn termcap_int_cols() c_int {
-    return s_caps.COLS.value orelse 0;
 }
 
 export fn termcap_str_orig_pair() ?*const u8 {
@@ -63,7 +57,7 @@ export fn termcap_str_exit_alt_charset_mode() ?*const u8 {
 }
 
 export fn termcap_str_cursor_right() ?*const u8 {
-    return @ptrCast(s_caps.move_right_one_space.value);
+    return @ptrCast(s_caps.cursor_right_one_space.value);
 }
 
 export fn termcap_str_enter_standout_mode() ?*const u8 {

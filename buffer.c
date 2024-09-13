@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "tty.h"
 #include "scr.h"
+#include "termsize.h"
 #include "terms.h"
 
 char *NullLine = "";

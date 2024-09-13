@@ -10,6 +10,7 @@
 #include "parsetag.h"
 #include "regex.h"
 #include "terms.h"
+#include "termsize.h"
 #include <stdlib.h>
 #include <stddef.h>
 
