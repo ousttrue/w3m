@@ -210,6 +210,7 @@ fn build_exe(
             "scr.c",
             "terms.c",
             "termsize.c",
+            // "termseq/termcap.c",
 
             "url.c",
             "ftp.c",
