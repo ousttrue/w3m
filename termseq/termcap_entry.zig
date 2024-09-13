@@ -3,9 +3,10 @@ const TermCapabilities = @import("TermCapabilities.zig");
 
 pub fn main() void {
     var caps = TermCapabilities{};
-    if (!caps.load("xterm")) {
-        @panic("load");
-    }
+    // if (!caps.load("xterm")) {
+    //     @panic("load");
+    // }
+    caps = TermCapabilities.xterm;
 
     inline for (std.meta.fields(TermCapabilities)) |f| {
         if (@typeInfo(f.type) == .Struct) {

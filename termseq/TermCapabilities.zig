@@ -3,7 +3,7 @@ const std = @import("std");
 extern fn tgetent(bp: [*]u8, name: [*:0]const u8) c_int;
 extern fn tgetnum(cap: [*:0]const u8) c_int;
 extern fn tgetflag(cap: [*:0]const u8) c_int;
-extern fn tgetstr(cap: [*:0]const u8, buf: [*][*]u8) *u8;
+extern fn tgetstr(cap: [*:0]const u8, buf: [*][*]u8) [*:0]u8;
 
 fn print_seq(writer: anytype, _p: *const u8) void {
     var p = _p;
@@ -31,10 +31,10 @@ pub fn StringCapability(args: struct {
     return struct {
         var termcap = args.termcap;
         var desc = args.desc;
-        value: ?*const u8 = null,
+        value: ?[:0]const u8 = null,
 
-        fn get(self: *@This(), p: **u8) ?*const u8 {
-            self.value = @ptrCast(tgetstr(@ptrCast(&termcap[0]), @ptrCast(p)));
+        fn get(self: *@This(), p: **u8) ?[:0]const u8 {
+            self.value = std.mem.span(tgetstr(termcap, @ptrCast(p)));
             return self.value;
         }
 
@@ -239,14 +239,14 @@ pub fn load(t: *@This(), name: [*:0]const u8) bool {
     }
 
     if (tgetflag("bs") != 0) {
-        t.cursor_left.value = &("\x08")[0];
+        t.cursor_left.value = "\x08";
     } else {
-        t.cursor_left.value = tgetstr("le", @ptrCast(&pt));
+        t.cursor_left.value = std.mem.span(tgetstr("le", @ptrCast(&pt)));
         if (t.cursor_left.value == null) {
-            t.cursor_left.value = tgetstr("kb", @ptrCast(&pt));
+            t.cursor_left.value = std.mem.span(tgetstr("kb", @ptrCast(&pt)));
         }
         if (t.cursor_left.value == null) {
-            t.cursor_left.value = tgetstr("kl", @ptrCast(&pt));
+            t.cursor_left.value = std.mem.span(tgetstr("kl", @ptrCast(&pt)));
         }
     }
     _ = t.carriage_return.get(&pt);
@@ -275,3 +275,35 @@ pub fn load(t: *@This(), name: [*:0]const u8) bool {
     t.COLS.get();
     return true;
 }
+
+pub const xterm = @This(){
+    .term_init = .{ .value = "\x1b[?1049h\x1b[22;0;0t" },
+    // [str]te: terminal end => [esc][?1049l[esc][23;0;0t
+    // [str]cl: clear screen => [esc][H[esc][2J
+    // [str]cd: clear to the end of display => [esc][J
+    // [str]ce: clear to the end of line => [esc][K
+    // [str]kr: cursor right => [esc][C
+    // [str]kl: cursor left => 0x8
+    // [str]nd: move right one space => [esc][C
+    // [str]cr: carriage return => 0xd
+    // [str]bt: back tab => null
+    // [str]ta: tab => 0x9
+    // [str]cm: cursor move => [esc][%i%p1%d;%p2%dH
+    // [str]sc: save cursor => [esc]7
+    // [str]rc: restore cursor => [esc]8
+    // [str]so: standout mode => [esc][7m
+    // [str]se: standout mode end => [esc][27m
+    // [str]us: underline mode => [esc][4m
+    // [str]ue: underline mode end => [esc][24m
+    // [str]md: bold mode => [esc][1m
+    // [str]me: bold mode end => [esc][0m
+    // [str]al: append line => [esc][L
+    // [str]sr: scroll reverse => [esc]M
+    // [str]as: alternative (graphic) charset start => [esc](0
+    // [str]ae: alternative (graphic) charset end => [esc](B
+    // [str]eA: enable alternative charset => null
+    // [str]ac: graphics charset pairs => ``aaffggiijjkkllmmnnooppqqrrssttuuvvwwxxyyzz{{||}}~~
+    // [str]op: set default color pair to its original value => [esc][39;49m
+    // [int]li: number of line => 24
+    // [int]co: number of column => 80
+};
