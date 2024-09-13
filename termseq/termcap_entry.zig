@@ -8,8 +8,10 @@ pub fn main() void {
     }
 
     inline for (std.meta.fields(TermCapabilities)) |f| {
-        if (f.type == TermCapabilities.StringCapability or f.type == TermCapabilities.IntCapability) {
+        if (@typeInfo(f.type) == .Struct) {
             std.debug.print("{any}\n", .{@field(caps, f.name)});
+        } else {
+            std.debug.print("{s}\n", .{@typeName(f.type)});
         }
     }
 }

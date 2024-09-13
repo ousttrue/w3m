@@ -24,36 +24,41 @@ fn print_seq(writer: anytype, _p: *const u8) void {
     }
 }
 
-pub const StringCapability = struct {
-    desc: [:0]const u8,
+pub fn StringCapability(args: struct {
     termcap: [:0]const u8,
-    value: ?*const u8 = null,
+    desc: [:0]const u8,
+}) type {
+    return struct {
+        var termcap = args.termcap;
+        var desc = args.desc;
+        value: ?*const u8 = null,
 
-    fn get(self: *@This(), p: **u8) ?*const u8 {
-        self.value = @ptrCast(tgetstr(@ptrCast(&self.termcap[0]), @ptrCast(p)));
-        return self.value;
-    }
-
-    pub fn format(
-        self: @This(),
-        comptime fmt: []const u8,
-        options: std.fmt.FormatOptions,
-        writer: anytype,
-    ) !void {
-        _ = fmt;
-        _ = options;
-
-        writer.print(
-            "[str]{s}: {s} => ",
-            .{ self.termcap, self.desc },
-        ) catch unreachable;
-        if (self.value) |value| {
-            print_seq(writer, @ptrCast(value));
-        } else {
-            writer.print("null", .{}) catch @panic("null");
+        fn get(self: *@This(), p: **u8) ?*const u8 {
+            self.value = @ptrCast(tgetstr(@ptrCast(&termcap[0]), @ptrCast(p)));
+            return self.value;
         }
-    }
-};
+
+        pub fn format(
+            self: @This(),
+            comptime fmt: []const u8,
+            options: std.fmt.FormatOptions,
+            writer: anytype,
+        ) !void {
+            _ = fmt;
+            _ = options;
+
+            writer.print(
+                "[str]{s}: {s} => ",
+                .{ termcap, desc },
+            ) catch unreachable;
+            if (self.value) |value| {
+                print_seq(writer, @ptrCast(value));
+            } else {
+                writer.print("null", .{}) catch @panic("null");
+            }
+        }
+    };
+}
 
 pub const IntCapability = struct {
     desc: [:0]const u8,
@@ -83,124 +88,124 @@ pub const IntCapability = struct {
 pub const TermCapabilities = @This();
 
 // initialize
-term_init: StringCapability = .{
+term_init: StringCapability(.{
     .desc = "terminal init",
     .termcap = "ti",
-},
-term_end: StringCapability = .{
+}) = .{},
+term_end: StringCapability(.{
     .desc = "terminal end",
     .termcap = "te",
-},
+}) = .{},
 // clear
-clear_screen: StringCapability = .{
+clear_screen: StringCapability(.{
     .termcap = "cl",
     .desc = "clear screen",
-},
-clear_to_eod: StringCapability = .{
+}) = .{},
+clear_to_eod: StringCapability(.{
     .termcap = "cd",
     .desc = "clear to the end of display",
-},
-clear_to_eol: StringCapability = .{
+}) = .{},
+clear_to_eol: StringCapability(.{
     .desc = "clear to the end of line",
     .termcap = "ce",
-},
+}) = .{},
 // keypad
-cursor_right: StringCapability = .{
+cursor_right: StringCapability(.{
     .desc = "cursor right",
     .termcap = "kr",
-},
-cursor_left: StringCapability = .{
+}) = .{},
+cursor_left: StringCapability(.{
     .desc = "cursor left",
     .termcap = "kl",
-},
+}) = .{},
 // cursor local
-move_right_one_space: StringCapability = .{
+move_right_one_space: StringCapability(.{
     .desc = "move right one space",
     .termcap = "nd",
-},
-carriage_return: StringCapability = .{
+}) = .{},
+carriage_return: StringCapability(.{
     .desc = "carriage return",
     .termcap = "cr",
-},
+}) = .{},
 // tab
-back_tab: StringCapability = .{
+back_tab: StringCapability(.{
     .desc = "back tab",
     .termcap = "bt",
-},
-tab: StringCapability = .{
+}) = .{},
+tab: StringCapability(.{
     .desc = "tab",
     .termcap = "ta",
-},
+}) = .{},
 // cursor absolute
-cursor_move: StringCapability = .{
+cursor_move: StringCapability(.{
     .desc = "cursor move",
     .termcap = "cm",
-},
-cursor_save: StringCapability = .{
+}) = .{},
+cursor_save: StringCapability(.{
     .desc = "save cursor",
     .termcap = "sc",
-},
-cursor_restore: StringCapability = .{
+}) = .{},
+cursor_restore: StringCapability(.{
     .desc = "restore cursor",
     .termcap = "rc",
-},
+}) = .{},
 // effect
-standout_start: StringCapability = .{
+standout_start: StringCapability(.{
     .desc = "standout mode",
     .termcap = "so",
-},
-standout_end: StringCapability = .{
+}) = .{},
+standout_end: StringCapability(.{
     .desc = "standout mode end",
     .termcap = "se",
-},
-underline_start: StringCapability = .{
+}) = .{},
+underline_start: StringCapability(.{
     .desc = "underline mode",
     .termcap = "us",
-},
-underline_end: StringCapability = .{
+}) = .{},
+underline_end: StringCapability(.{
     .desc = "underline mode end",
     .termcap = "ue",
-},
-bold_start: StringCapability = .{
+}) = .{},
+bold_start: StringCapability(.{
     .desc = "bold mode",
     .termcap = "md",
-},
-bold_end: StringCapability = .{
+}) = .{},
+bold_end: StringCapability(.{
     .desc = "bold mode end",
     .termcap = "me",
-},
+}) = .{},
 // edit
-append_line: StringCapability = .{
+append_line: StringCapability(.{
     .desc = "append line",
     .termcap = "al",
-},
+}) = .{},
 // scroll
-scroll_reverse: StringCapability = .{
+scroll_reverse: StringCapability(.{
     .desc = "scroll reverse",
     .termcap = "sr",
-},
+}) = .{},
 // charset
-alternative_charset_start: StringCapability = .{
+alternative_charset_start: StringCapability(.{
     .desc = "alternative (graphic) charset start",
     .termcap = "as",
-},
-alternative_charset_end: StringCapability = .{
+}) = .{},
+alternative_charset_end: StringCapability(.{
     .desc = "alternative (graphic) charset end",
     .termcap = "ae",
-},
-alternative_charset_enable: StringCapability = .{
+}) = .{},
+alternative_charset_enable: StringCapability(.{
     .desc = "enable alternative charset",
     .termcap = "eA",
-},
-line_graphic: StringCapability = .{
+}) = .{},
+line_graphic: StringCapability(.{
     .desc = "graphics charset pairs",
     .termcap = "ac",
-},
+}) = .{},
 // color
-color_default: StringCapability = .{
+color_default: StringCapability(.{
     .desc = "set default color pair to its original value",
     .termcap = "op",
-},
+}) = .{},
 
 LINES: IntCapability = .{
     .desc = "number of line",
