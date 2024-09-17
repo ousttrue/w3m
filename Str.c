@@ -159,23 +159,20 @@ Strcat_charp_n(Str x, const char *y, int n)
 {
     int newlen;
 
-    if (y == NULL || n == 0)
+    if (!y || !n)
 	return;
     if (n < 0)
-	n = STR_LEN_MAX;
-    newlen = x->length + n + 1;
-    if (newlen <= 0 || newlen > STR_SIZE_MAX) {
-	newlen = STR_SIZE_MAX;
-	n = newlen - x->length - 1;
+	n = strlen(y);
+    newlen = x->length + n;
+    if (newlen > STR_LEN_MAX) {
+	newlen = STR_LEN_MAX;
+	n = newlen - x->length;
 	if (n <= 0)
 	    return;
     }
-    if (newlen >= x->area_size) {
-	newlen += newlen / 2;
-	if (newlen <= 0 || newlen > STR_SIZE_MAX)
-	    newlen = STR_SIZE_MAX;
+
+    if (newlen >= x->area_size)
 	Strgrow_n(x, newlen);
-    }
     memmove(&x->ptr[x->length], y, n);
     x->length += n;
     Strnulterm(x);
@@ -190,7 +187,7 @@ Strcat(Str x, Str y)
 void
 Strcat_charp(Str x, const char *y)
 {
-    if (y == NULL)
+    if (!y)
 	return;
     Strcat_charp_n(x, y, strlen(y));
 }
