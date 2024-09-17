@@ -190,8 +190,8 @@ ISclose(InputStream stream)
         stream->base.close(stream->base.handle);
         mySignal(SIGINT, prevtrap);
     }
-    xfree(stream->base.stream.buf);
-    xfree(stream);
+    free(stream->base.stream.buf);
+    free(stream);
     return 0;
 }
 
@@ -594,7 +594,7 @@ basic_close(int *handle)
 #else
     close(*handle);
 #endif
-    xfree(handle);
+    free(handle);
     return 0;
 }
 
@@ -627,7 +627,7 @@ ssl_close(struct ssl_handle *handle)
     close(handle->sock);
     if (handle->ssl)
 	SSL_free(handle->ssl);
-    xfree(handle);
+    free(handle);
     return 0;
 }
 
@@ -665,7 +665,7 @@ ens_close(struct ens_handle *handle)
 {
     ISclose(handle->is);
     growbuf_clear(&handle->gb);
-    xfree(handle);
+    free(handle);
     return 0;
 }
 

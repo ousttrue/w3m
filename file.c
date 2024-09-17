@@ -8087,7 +8087,7 @@ save2tmp(URLFile uf, const char *tmpf)
   _end:
     memmove(AbortLoading, env_bak, sizeof(JMP_BUF));
     TRAP_OFF;
-    xfree(buf);
+    free(buf);
     fclose(ff);
     current_content_length = 0;
     return retval;
@@ -8229,7 +8229,7 @@ _MoveFile(const char *path1, const char *path2)
 	linelen += count;
 	showProgress(&linelen, &trbyte);
     }
-    xfree(buf);
+    free(buf);
     ISclose(f1);
     if (is_pipe)
 	pclose(f2);
@@ -8600,7 +8600,7 @@ uncompress_stream(URLFile *uf, char **src)
 	    UFclose(uf);
 	    if (f)
 		fclose(f);
-	    xfree(buf);
+	    free(buf);
 	    exit(0);
 	}
 	/* child1 */

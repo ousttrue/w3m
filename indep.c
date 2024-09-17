@@ -663,14 +663,6 @@ xrealloc(void *ptr, size_t size)
     return newptr;
 }
 
-/* Define this as a separate function in case the free() has
- * an incompatible prototype. */
-void
-xfree(void *ptr)
-{
-    free(ptr);
-}
-
 void *
 w3m_GC_realloc_atomic(void *ptr, size_t size)
 {
@@ -700,7 +692,7 @@ growbuf_init_without_GC(struct growbuf *gb)
     gb->length = 0;
     gb->area_size = 0;
     gb->realloc_proc = &xrealloc;
-    gb->free_proc = &xfree;
+    gb->free_proc = &free;
 }
 
 void

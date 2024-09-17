@@ -74,7 +74,6 @@ extern Str Str_form_quote(Str x);
 extern const char *shell_quote(const char *str);
 #define xmalloc(s) xrealloc(NULL, s)
 extern void *xrealloc(void *ptr, size_t size);
-extern void xfree(void *ptr);
 extern void *w3m_GC_realloc_atomic(void *ptr, size_t size);
 extern void w3m_GC_free(void *ptr);
 extern void growbuf_init(struct growbuf *gb);
