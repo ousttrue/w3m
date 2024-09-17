@@ -396,14 +396,8 @@ Strtruncate(Str s, int pos)
 void
 Strshrink(Str s, int n)
 {
-    if (n >= s->length) {
-	s->length = 0;
-	Strnulterm(s);
-    }
-    else if (n > 0) {
-	s->length -= n;
-	Strnulterm(s);
-    }
+    s->length = (n >= s->length) ? 0 : (s->length - n);
+    Strnulterm(s);
 }
 
 void
