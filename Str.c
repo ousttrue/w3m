@@ -37,32 +37,24 @@ Strnulterm(Str x)
 Str
 Strnew(void)
 {
-    Str x = GC_MALLOC(sizeof(struct _Str));
-    if (x == NULL)
-	exit(1);
-    x->ptr = GC_MALLOC_ATOMIC(INITIAL_STR_SIZE);
-    if (x->ptr == NULL)
-	exit(1);
-    x->area_size = INITIAL_STR_SIZE;
-    x->length = 0;
-    Strnulterm(x);
-    return x;
+    return Strnew_size(INITIAL_STR_SIZE);
 }
 
 Str
 Strnew_size(int n)
 {
-    Str x = GC_MALLOC(sizeof(struct _Str));
-    if (x == NULL)
+    Str x;
+
+    if (!(x = GC_MALLOC(sizeof(struct _Str))))
 	exit(1);
+
     if (n < 0 || n > STR_LEN_MAX)
-	n = STR_LEN_MAX;
-    else if (n + 1 < INITIAL_STR_SIZE)
-	n = INITIAL_STR_SIZE - 1;
-    x->ptr = GC_MALLOC_ATOMIC(n + 1);
-    if (x->ptr == NULL)
+	n = STR_SIZE_MAX;
+    else if (n < INITIAL_STR_SIZE)
+	n = INITIAL_STR_SIZE;
+    if (!(x->ptr = GC_MALLOC_ATOMIC(n)))
 	exit(1);
-    x->area_size = n + 1;
+    x->area_size = n;
     x->length = 0;
     Strnulterm(x);
     return x;
@@ -71,28 +63,7 @@ Strnew_size(int n)
 Str
 Strnew_charp(const char *p)
 {
-    Str x;
-    int n, len;
-
-    if (p == NULL)
-	return Strnew();
-    x = GC_MALLOC(sizeof(struct _Str));
-    if (x == NULL)
-	exit(1);
-    n = strlen(p) + 1;
-    if (n <= 0 || n > STR_SIZE_MAX)
-	n = STR_SIZE_MAX;
-    len = n - 1;
-    if (n < INITIAL_STR_SIZE)
-	n = INITIAL_STR_SIZE;
-    x->ptr = GC_MALLOC_ATOMIC(n);
-    if (x->ptr == NULL)
-	exit(1);
-    x->area_size = n;
-    x->length = len;
-    memmove(x->ptr, p, len);
-    Strnulterm(x);
-    return x;
+    return p ? Strnew_charp_n(p, strlen(p)) : Strnew();
 }
 
 Str
@@ -114,25 +85,10 @@ Str
 Strnew_charp_n(const char *p, int n)
 {
     Str x;
-    int len;
 
-    if (p == NULL)
-	return Strnew_size(n);
-    x = GC_MALLOC(sizeof(struct _Str));
-    if (x == NULL)
-	exit(1);
-    if (n < 0 || n >= STR_SIZE_MAX)
-	n = STR_SIZE_MAX - 1;
-    len = n;
-    if (n + 1 < INITIAL_STR_SIZE)
-	n = INITIAL_STR_SIZE - 1;
-    x->ptr = GC_MALLOC_ATOMIC(n + 1);
-    if (x->ptr == NULL)
-	exit(1);
-    x->area_size = n + 1;
-    x->length = len;
-    memmove(x->ptr, p, len);
-    Strnulterm(x);
+    x = Strnew_size(n);
+    if (p)
+	Strcopy_charp_n(x, p, n);
     return x;
 }
 
