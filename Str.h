@@ -37,7 +37,7 @@ Str Strnew_m_charp(const char *, ...);
 Str Strdup(Str);
 void Strclear(Str);
 void Strfree(Str);
-void Strcopy(Str, Str);
+void Strcopy(Str dst, Str src);
 void Strcopy_charp(Str, const char *);
 void Strcopy_charp_n(Str, const char *, int);
 void Strcat_charp_n(Str, const char *, int);

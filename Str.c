@@ -118,12 +118,9 @@ Strfree(Str x)
 }
 
 void
-Strcopy(Str x, Str y)
+Strcopy(Str dst, Str src)
 {
-    if (y->length >= x->area_size)
-	Strgrow_n(x, y->length);
-    memmove(x->ptr, y->ptr, y->length + 1);
-    x->length = y->length;
+    Strcopy_charp_n(dst, src->ptr, src->length);
 }
 
 void
@@ -131,37 +128,29 @@ Strcopy_charp(Str x, const char *y)
 {
     int len;
 
-    if (y == NULL) {
-	x->length = 0;
-	Strnulterm(x);
+    if (!y) {
+	Strtruncate(x, 0);
 	return;
     }
+
     len = strlen(y);
-    if (len < 0 || len > STR_LEN_MAX)
-	len = STR_LEN_MAX;
-    if (x->area_size <= len)
-	Strgrow_n(x, len);
-    memmove(x->ptr, y, len);
-    x->length = len;
-    Strnulterm(x);
+    Strcopy_charp_n(x, y, len);
 }
 
 void
 Strcopy_charp_n(Str x, const char *y, int n)
 {
-    int len = n;
-
-    if (y == NULL) {
-	x->length = 0;
-	Strnulterm(x);
+    if (!y) {
+	Strtruncate(x, 0);
 	return;
     }
-    if (len < 0 || len > STR_LEN_MAX)
-	len = STR_LEN_MAX;
-    if (x->area_size <= len)
-	Strgrow_n(x, len);
-    memmove(x->ptr, y, len);
-    x->length = len;
+
+    if (n > STR_LEN_MAX)
+	n = STR_LEN_MAX;
+    if (x->area_size <= n)
+	Strgrow_n(x, n);
+    memmove(x->ptr, y, n);
+    x->length = n;
     Strnulterm(x);
 }
 
