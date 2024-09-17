@@ -284,12 +284,10 @@ void
 Strinsert_char(Str s, int pos, char c)
 {
     int i;
-    if (pos < 0 || s->length < pos)
+    if (pos < 0 || s->length < pos || s->length == STR_LEN_MAX)
 	return;
-    if (s->length + 2 > s->area_size)
+    if (s->length + 1 >= s->area_size)
 	Strgrow(s);
-    if (s->length < pos)
-	return;
     for (i = s->length; i > pos; i--)
 	s->ptr[i] = s->ptr[i - 1];
     s->length++;

@@ -67,7 +67,7 @@ Str Strfgetall(FILE *);
 void Strgrow(Str s);
 
 #define STR_LEN_MAX (INT_MAX / 32 - 1)
-#define Strcat_char(x,y) (((x)->length>=STR_LEN_MAX)?0:(((x)->length+1>=(x)->area_size)?Strgrow(x),0:0,(x)->ptr[(x)->length++]=(y),(x)->ptr[(x)->length]=0))
+#define Strcat_char(x,y)             Strinsert_char(x,(x)->length,y)
 #define Strcmp(x,y)                  strcmp((x)->ptr,(y)->ptr)
 #define Strcmp_charp(x,y)            strcmp((x)->ptr,(y))
 #define Strcasecmp(x,y)              strcasecmp((x)->ptr,(y)->ptr)
