@@ -25,6 +25,7 @@
 #include "myctype.h"
 
 #define INITIAL_STR_SIZE 32
+#define STR_SIZE_MAX (STR_LEN_MAX + 1)
 
 static Str
 Strnulterm(Str x)
@@ -54,8 +55,8 @@ Strnew_size(int n)
     Str x = GC_MALLOC(sizeof(struct _Str));
     if (x == NULL)
 	exit(1);
-    if (n < 0 || n >= STR_SIZE_MAX)
-	n = STR_SIZE_MAX - 1;
+    if (n < 0 || n > STR_LEN_MAX)
+	n = STR_LEN_MAX;
     else if (n + 1 < INITIAL_STR_SIZE)
 	n = INITIAL_STR_SIZE - 1;
     x->ptr = GC_MALLOC_ATOMIC(n + 1);
@@ -182,8 +183,8 @@ Strcopy_charp(Str x, const char *y)
 	return;
     }
     len = strlen(y);
-    if (len < 0 || len >= STR_SIZE_MAX)
-	len = STR_SIZE_MAX - 1;
+    if (len < 0 || len > STR_LEN_MAX)
+	len = STR_LEN_MAX;
     if (x->area_size < len + 1) {
 	x->ptr = GC_REALLOC(x->ptr, len + 1);
 	if (x->ptr == NULL)
@@ -205,8 +206,8 @@ Strcopy_charp_n(Str x, const char *y, int n)
 	Strnulterm(x);
 	return;
     }
-    if (len < 0 || len >= STR_SIZE_MAX)
-	len = STR_SIZE_MAX - 1;
+    if (len < 0 || len > STR_LEN_MAX)
+	len = STR_LEN_MAX;
     if (x->area_size < len + 1) {
 	x->ptr = GC_REALLOC(x->ptr, len + 1);
 	if (x->ptr == NULL)
@@ -226,7 +227,7 @@ Strcat_charp_n(Str x, const char *y, int n)
     if (y == NULL || n == 0)
 	return;
     if (n < 0)
-	n = STR_SIZE_MAX - 1;
+	n = STR_LEN_MAX;
     newlen = x->length + n + 1;
     if (newlen <= 0 || newlen > STR_SIZE_MAX) {
 	newlen = STR_SIZE_MAX;
@@ -371,7 +372,7 @@ Strdelete(Str s, int pos, int n)
     if (pos < 0 || s->length < pos)
 	return;
     if (n < 0)
-	n = STR_SIZE_MAX - pos - 1;
+	n = STR_LEN_MAX - pos;
     if (s->length <= pos + n) {
 	s->length = pos;
 	Strnulterm(s);
