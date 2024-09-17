@@ -146,6 +146,7 @@ Strclear(Str s)
 void
 Strfree(Str x)
 {
+    if (!x) return;
     GC_free(x->ptr);
     GC_free(x);
 }
