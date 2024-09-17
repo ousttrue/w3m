@@ -293,6 +293,14 @@ Strinsert_char(Str s, int pos, char c)
 }
 
 Str
+Strinsert_charp_n(Str s, int pos, const char *p, int n)
+{
+    while (n--)
+	Strinsert_char(s, pos++, *(p++));
+    return s;
+}
+
+Str
 Strinsert_charp(Str s, int pos, const char *p)
 {
     while (*p)

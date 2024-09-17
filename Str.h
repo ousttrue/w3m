@@ -47,6 +47,7 @@ Str Strcat_m_charp(Str, ...);
 Str Strsubstr(Str, int, int);
 Str Strinsert_char(Str, int, char);
 Str Strinsert_charp(Str, int, const char *);
+Str Strinsert_charp_n(Str s, int pos, const char *p, int n);
 Str Strdelete(Str, int, int);
 Str Strtruncate(Str, int);
 Str Strlower(Str);
