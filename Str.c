@@ -34,6 +34,8 @@ Strnulterm(Str x)
     return x;
 }
 
+static void Strgrow_n(Str s, int n);
+
 Str
 Strnew(void)
 {
@@ -118,12 +120,8 @@ Strfree(Str x)
 void
 Strcopy(Str x, Str y)
 {
-    if (x->area_size < y->length + 1) {
-	x->ptr = GC_REALLOC(x->ptr, y->length + 1);
-	if (x->ptr == NULL)
-	    exit(1);
-	x->area_size = y->length + 1;
-    }
+    if (y->length >= x->area_size)
+	Strgrow_n(x, y->length);
     memmove(x->ptr, y->ptr, y->length + 1);
     x->length = y->length;
 }
@@ -141,12 +139,8 @@ Strcopy_charp(Str x, const char *y)
     len = strlen(y);
     if (len < 0 || len > STR_LEN_MAX)
 	len = STR_LEN_MAX;
-    if (x->area_size < len + 1) {
-	x->ptr = GC_REALLOC(x->ptr, len + 1);
-	if (x->ptr == NULL)
-	    exit(1);
-	x->area_size = len + 1;
-    }
+    if (x->area_size <= len)
+	Strgrow_n(x, len);
     memmove(x->ptr, y, len);
     x->length = len;
     Strnulterm(x);
@@ -164,12 +158,8 @@ Strcopy_charp_n(Str x, const char *y, int n)
     }
     if (len < 0 || len > STR_LEN_MAX)
 	len = STR_LEN_MAX;
-    if (x->area_size < len + 1) {
-	x->ptr = GC_REALLOC(x->ptr, len + 1);
-	if (x->ptr == NULL)
-	    exit(1);
-	x->area_size = len + 1;
-    }
+    if (x->area_size <= len)
+	Strgrow_n(x, len);
     memmove(x->ptr, y, len);
     x->length = len;
     Strnulterm(x);
@@ -191,14 +181,11 @@ Strcat_charp_n(Str x, const char *y, int n)
 	if (n <= 0)
 	    return;
     }
-    if (x->area_size < newlen) {
+    if (newlen >= x->area_size) {
 	newlen += newlen / 2;
 	if (newlen <= 0 || newlen > STR_SIZE_MAX)
 	    newlen = STR_SIZE_MAX;
-	x->ptr = GC_REALLOC(x->ptr, newlen);
-	if (x->ptr == NULL)
-	    exit(1);
-	x->area_size = newlen;
+	Strgrow_n(x, newlen);
     }
     memmove(&x->ptr[x->length], y, n);
     x->length += n;
@@ -232,6 +219,22 @@ Strcat_m_charp(Str x, ...)
 }
 
 void
+Strgrow_n(Str x, int n)
+{
+    if (n < 0)
+	n = STR_SIZE_MAX;
+    else
+	n = (n >= STR_SIZE_MAX) ? STR_SIZE_MAX : n + 1;
+
+    if (x->area_size >= n)
+	return;
+
+    if (!(x->ptr = GC_REALLOC(x->ptr, n)))
+	exit(1);
+    x->area_size = n;
+}
+
+void
 Strgrow(Str x)
 {
     int newlen, addlen;
@@ -248,13 +251,7 @@ Strgrow(Str x)
 	if (x->length + 1 >= newlen)
 	    x->length = newlen - 2;
     }
-    if (x->area_size < newlen) {
-	x->ptr = GC_REALLOC(x->ptr, newlen);
-	if (x->ptr == NULL)
-	    exit(1);
-	x->area_size = newlen;
-    }
-    Strnulterm(x);
+    Strgrow_n(x, newlen - 1);
 }
 
 Str
