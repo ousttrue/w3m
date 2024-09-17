@@ -4362,8 +4362,7 @@ getMetaRefreshParam(const char *q, Str *refresh_uri)
 	    if (s_tmp->length > 0 &&
 	        (s_tmp->ptr[s_tmp->length - 1] == '\"' ||	/* " */
 		 s_tmp->ptr[s_tmp->length - 1] == '\'')) {	/* ' */
-		s_tmp->length--;
-		s_tmp->ptr[s_tmp->length] = '\0';
+		Strshrink(s_tmp, 1);
 	    }
 	    q = r;
 	}

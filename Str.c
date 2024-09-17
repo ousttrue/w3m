@@ -26,6 +26,13 @@
 
 #define INITIAL_STR_SIZE 32
 
+static Str
+Strnulterm(Str x)
+{
+    x->ptr[x->length] = '\0';
+    return x;
+}
+
 Str
 Strnew(void)
 {
@@ -35,9 +42,9 @@ Strnew(void)
     x->ptr = GC_MALLOC_ATOMIC(INITIAL_STR_SIZE);
     if (x->ptr == NULL)
 	exit(1);
-    x->ptr[0] = '\0';
     x->area_size = INITIAL_STR_SIZE;
     x->length = 0;
+    Strnulterm(x);
     return x;
 }
 
@@ -54,9 +61,9 @@ Strnew_size(int n)
     x->ptr = GC_MALLOC_ATOMIC(n + 1);
     if (x->ptr == NULL)
 	exit(1);
-    x->ptr[0] = '\0';
     x->area_size = n + 1;
     x->length = 0;
+    Strnulterm(x);
     return x;
 }
 
@@ -83,7 +90,7 @@ Strnew_charp(const char *p)
     x->area_size = n;
     x->length = len;
     memmove(x->ptr, p, len);
-    x->ptr[x->length] = '\0';
+    Strnulterm(x);
     return x;
 }
 
@@ -124,7 +131,7 @@ Strnew_charp_n(const char *p, int n)
     x->area_size = n + 1;
     x->length = len;
     memmove(x->ptr, p, len);
-    x->ptr[x->length] = '\0';
+    Strnulterm(x);
     return x;
 }
 
@@ -140,7 +147,7 @@ void
 Strclear(Str s)
 {
     s->length = 0;
-    s->ptr[0] = '\0';
+    Strnulterm(s);
 }
 
 void
@@ -171,7 +178,7 @@ Strcopy_charp(Str x, const char *y)
 
     if (y == NULL) {
 	x->length = 0;
-	x->ptr[0] = '\0';
+	Strnulterm(x);
 	return;
     }
     len = strlen(y);
@@ -184,8 +191,8 @@ Strcopy_charp(Str x, const char *y)
 	x->area_size = len + 1;
     }
     memmove(x->ptr, y, len);
-    x->ptr[len] = '\0';
     x->length = len;
+    Strnulterm(x);
 }
 
 void
@@ -195,7 +202,7 @@ Strcopy_charp_n(Str x, const char *y, int n)
 
     if (y == NULL) {
 	x->length = 0;
-	x->ptr[0] = '\0';
+	Strnulterm(x);
 	return;
     }
     if (len < 0 || len >= STR_SIZE_MAX)
@@ -207,8 +214,8 @@ Strcopy_charp_n(Str x, const char *y, int n)
 	x->area_size = len + 1;
     }
     memmove(x->ptr, y, len);
-    x->ptr[len] = '\0';
     x->length = len;
+    Strnulterm(x);
 }
 
 void
@@ -238,7 +245,7 @@ Strcat_charp_n(Str x, const char *y, int n)
     }
     memmove(&x->ptr[x->length], y, n);
     x->length += n;
-    x->ptr[x->length] = '\0';
+    Strnulterm(x);
 }
 
 void
@@ -290,7 +297,7 @@ Strgrow(Str x)
 	    exit(1);
 	x->area_size = newlen;
     }
-    x->ptr[x->length] = '\0';
+    Strnulterm(x);
 }
 
 Str
@@ -330,7 +337,7 @@ Strchop(Str s)
 	   (s->ptr[s->length - 1] == '\n' || s->ptr[s->length - 1] == '\r')) {
 	s->length--;
     }
-    s->ptr[s->length] = '\0';
+    Strnulterm(s);
 }
 
 void
@@ -345,7 +352,8 @@ Strinsert_char(Str s, int pos, char c)
 	return;
     for (i = s->length; i > pos; i--)
 	s->ptr[i] = s->ptr[i - 1];
-    s->ptr[++s->length] = '\0';
+    s->length++;
+    Strnulterm(s);
     s->ptr[pos] = c;
 }
 
@@ -365,14 +373,14 @@ Strdelete(Str s, int pos, int n)
     if (n < 0)
 	n = STR_SIZE_MAX - pos - 1;
     if (s->length <= pos + n) {
-	s->ptr[pos] = '\0';
 	s->length = pos;
+	Strnulterm(s);
 	return;
     }
     for (i = pos; i < s->length - n; i++)
 	s->ptr[i] = s->ptr[i + n];
-    s->ptr[i] = '\0';
     s->length = i;
+    Strnulterm(s);
 }
 
 void
@@ -380,8 +388,8 @@ Strtruncate(Str s, int pos)
 {
     if (pos < 0 || s->length < pos)
 	return;
-    s->ptr[pos] = '\0';
     s->length = pos;
+    Strnulterm(s);
 }
 
 void
@@ -389,11 +397,11 @@ Strshrink(Str s, int n)
 {
     if (n >= s->length) {
 	s->length = 0;
-	s->ptr[0] = '\0';
+	Strnulterm(s);
     }
     else if (n > 0) {
 	s->length -= n;
-	s->ptr[s->length] = '\0';
+	Strnulterm(s);
     }
 }
 
@@ -415,7 +423,7 @@ Strremovetrailingspaces(Str s)
 
     for (i = s->length - 1; i >= 0 && IS_SPACE(s->ptr[i]); i--) ;
     s->length = i + 1;
-    s->ptr[i + 1] = '\0';
+    Strnulterm(s);
 }
 
 Str

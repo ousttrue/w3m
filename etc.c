@@ -2084,7 +2084,7 @@ base64_encode(const char *src, size_t len)
 	}
 	Strcatc(dest, '=');
     }
-    Strnulterm(dest);
+    dest->ptr[dest->length]='\0';
     return dest;
 #undef Strcatc
 }
