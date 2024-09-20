@@ -34,7 +34,7 @@ Strnulterm(Str x)
     return x;
 }
 
-static void Strgrow_n(Str s, int n);
+static Str Strgrow_n(Str s, int n);
 
 Str
 Strnew(void)
@@ -58,8 +58,7 @@ Strnew_size(int n)
 	exit(1);
     x->area_size = n;
     x->length = 0;
-    Strnulterm(x);
-    return x;
+    return Strnulterm(x);
 }
 
 Str
@@ -102,11 +101,11 @@ Strdup(Str s)
     return n;
 }
 
-void
+Str
 Strclear(Str s)
 {
     s->length = 0;
-    Strnulterm(s);
+    return Strnulterm(s);
 }
 
 void
@@ -117,33 +116,29 @@ Strfree(Str x)
     GC_free(x);
 }
 
-void
+Str
 Strcopy(Str dst, Str src)
 {
-    Strcopy_charp_n(dst, src->ptr, src->length);
+    return Strcopy_charp_n(dst, src->ptr, src->length);
 }
 
-void
+Str
 Strcopy_charp(Str x, const char *y)
 {
     int len;
 
-    if (!y) {
-	Strtruncate(x, 0);
-	return;
-    }
+    if (!y)
+	return Strtruncate(x, 0);
 
     len = strlen(y);
-    Strcopy_charp_n(x, y, len);
+    return Strcopy_charp_n(x, y, len);
 }
 
-void
+Str
 Strcopy_charp_n(Str x, const char *y, int n)
 {
-    if (!y) {
-	Strtruncate(x, 0);
-	return;
-    }
+    if (!y)
+	return Strtruncate(x, 0);
 
     if (n > STR_LEN_MAX)
 	n = STR_LEN_MAX;
@@ -151,48 +146,47 @@ Strcopy_charp_n(Str x, const char *y, int n)
 	Strgrow_n(x, n);
     memmove(x->ptr, y, n);
     x->length = n;
-    Strnulterm(x);
+    return Strnulterm(x);
 }
 
-void
+Str
 Strcat_charp_n(Str x, const char *y, int n)
 {
     int newlen;
 
-    if (!y || !n)
-	return;
+    if (!y || !n || x->length == STR_LEN_MAX)
+	return x;
+
     if (n < 0)
 	n = strlen(y);
     newlen = x->length + n;
     if (newlen > STR_LEN_MAX) {
 	newlen = STR_LEN_MAX;
-	n = newlen - x->length;
-	if (n <= 0)
-	    return;
+	n = STR_LEN_MAX - x->length;
     }
 
     if (newlen >= x->area_size)
 	Strgrow_n(x, newlen);
     memmove(&x->ptr[x->length], y, n);
     x->length += n;
-    Strnulterm(x);
+    return Strnulterm(x);
 }
 
-void
+Str
 Strcat(Str x, Str y)
 {
-    Strcat_charp_n(x, y->ptr, y->length);
+    return Strcat_charp_n(x, y->ptr, y->length);
 }
 
-void
+Str
 Strcat_charp(Str x, const char *y)
 {
     if (!y)
-	return;
-    Strcat_charp_n(x, y, strlen(y));
+	return x;
+    return Strcat_charp_n(x, y, strlen(y));
 }
 
-void
+Str
 Strcat_m_charp(Str x, ...)
 {
     va_list ap;
@@ -202,9 +196,10 @@ Strcat_m_charp(Str x, ...)
     while ((p = va_arg(ap, char *)) != NULL)
 	 Strcat_charp_n(x, p, strlen(p));
     va_end(ap);
+    return x;
 }
 
-void
+Str
 Strgrow_n(Str x, int n)
 {
     if (n < 0)
@@ -213,14 +208,15 @@ Strgrow_n(Str x, int n)
 	n = (n >= STR_SIZE_MAX) ? STR_SIZE_MAX : n + 1;
 
     if (x->area_size >= n)
-	return;
+	return x;
 
     if (!(x->ptr = GC_REALLOC(x->ptr, n)))
 	exit(1);
     x->area_size = n;
+    return x;
 }
 
-void
+Str
 Strgrow(Str x)
 {
     int newlen, addlen;
@@ -237,7 +233,7 @@ Strgrow(Str x)
 	if (x->length + 1 >= newlen)
 	    x->length = newlen - 2;
     }
-    Strgrow_n(x, newlen - 1);
+    return Strgrow_n(x, newlen - 1);
 }
 
 Str
@@ -254,38 +250,40 @@ Strsubstr(Str s, int beg, int len)
     return new_s;
 }
 
-void
+Str
 Strlower(Str s)
 {
     int i;
     for (i = 0; i < s->length; i++)
 	s->ptr[i] = TOLOWER(s->ptr[i]);
+    return s;
 }
 
-void
+Str
 Strupper(Str s)
 {
     int i;
     for (i = 0; i < s->length; i++)
 	s->ptr[i] = TOUPPER(s->ptr[i]);
+    return s;
 }
 
-void
+Str
 Strchop(Str s)
 {
     while (s->length > 0 &&
 	   (s->ptr[s->length - 1] == '\n' || s->ptr[s->length - 1] == '\r')) {
 	s->length--;
     }
-    Strnulterm(s);
+    return Strnulterm(s);
 }
 
-void
+Str
 Strinsert_char(Str s, int pos, char c)
 {
     int i;
     if (pos < 0 || s->length < pos || s->length == STR_LEN_MAX)
-	return;
+	return s;
     if (s->length + 1 >= s->area_size)
 	Strgrow(s);
     for (i = s->length; i > pos; i--)
@@ -293,69 +291,70 @@ Strinsert_char(Str s, int pos, char c)
     s->length++;
     Strnulterm(s);
     s->ptr[pos] = c;
+    return s;
 }
 
-void
+Str
 Strinsert_charp(Str s, int pos, const char *p)
 {
     while (*p)
 	Strinsert_char(s, pos++, *(p++));
+    return s;
 }
 
-void
+Str
 Strdelete(Str s, int pos, int n)
 {
     int i;
     if (pos < 0 || s->length < pos)
-	return;
+	return s;
     if (n < 0)
 	n = STR_LEN_MAX - pos;
     if (s->length <= pos + n) {
 	s->length = pos;
-	Strnulterm(s);
-	return;
+	return Strnulterm(s);
     }
     for (i = pos; i < s->length - n; i++)
 	s->ptr[i] = s->ptr[i + n];
     s->length = i;
-    Strnulterm(s);
+    return Strnulterm(s);
 }
 
-void
+Str
 Strtruncate(Str s, int pos)
 {
     if (pos < 0 || s->length < pos)
-	return;
+	return s;
     s->length = pos;
-    Strnulterm(s);
+    return Strnulterm(s);
 }
 
-void
+Str
 Strshrink(Str s, int n)
 {
     s->length = (n >= s->length) ? 0 : (s->length - n);
-    Strnulterm(s);
+    return Strnulterm(s);
 }
 
-void
+Str
 Strremovefirstspaces(Str s)
 {
     int i;
 
     for (i = 0; i < s->length && IS_SPACE(s->ptr[i]); i++) ;
     if (i == 0)
-	return;
-    Strdelete(s, 0, i);
+	return s;
+    return Strdelete(s, 0, i);
 }
 
-void
+Str
 Strremovetrailingspaces(Str s)
 {
     int i;
 
     for (i = s->length - 1; i >= 0 && IS_SPACE(s->ptr[i]); i--) ;
     s->length = i + 1;
-    Strnulterm(s);
+    return Strnulterm(s);
 }
 
 Str
