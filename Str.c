@@ -27,13 +27,6 @@
 #define INITIAL_STR_SIZE 32
 #define STR_SIZE_MAX (STR_LEN_MAX + 1)
 
-static Str
-Strnulterm(Str x)
-{
-    x->ptr[x->length] = '\0';
-    return x;
-}
-
 static Str Strgrow_n(Str s, int n);
 
 Str
@@ -58,7 +51,8 @@ Strnew_size(int n)
 	exit(1);
     x->area_size = n;
     x->length = 0;
-    return Strnulterm(x);
+    x->ptr[x->length] = '\0';
+    return x;
 }
 
 Str
@@ -105,7 +99,8 @@ Str
 Strclear(Str s)
 {
     s->length = 0;
-    return Strnulterm(s);
+    s->ptr[s->length] = '\0';
+    return s;
 }
 
 void
@@ -146,7 +141,8 @@ Strcopy_charp_n(Str x, const char *y, int n)
 	Strgrow_n(x, n);
     memmove(x->ptr, y, n);
     x->length = n;
-    return Strnulterm(x);
+    x->ptr[x->length] = '\0';
+    return x;
 }
 
 Str
@@ -169,7 +165,8 @@ Strcat_charp_n(Str x, const char *y, int n)
 	Strgrow_n(x, newlen);
     memmove(&x->ptr[x->length], y, n);
     x->length += n;
-    return Strnulterm(x);
+    x->ptr[x->length] = '\0';
+    return x;
 }
 
 Str
@@ -275,7 +272,8 @@ Strchop(Str s)
 	   (s->ptr[s->length - 1] == '\n' || s->ptr[s->length - 1] == '\r')) {
 	s->length--;
     }
-    return Strnulterm(s);
+    s->ptr[s->length] = '\0';
+    return s;
 }
 
 Str
@@ -289,7 +287,7 @@ Strinsert_char(Str s, int pos, char c)
     for (i = s->length; i > pos; i--)
 	s->ptr[i] = s->ptr[i - 1];
     s->length++;
-    Strnulterm(s);
+    s->ptr[s->length] = '\0';
     s->ptr[pos] = c;
     return s;
 }
@@ -312,12 +310,14 @@ Strdelete(Str s, int pos, int n)
 	n = STR_LEN_MAX - pos;
     if (s->length <= pos + n) {
 	s->length = pos;
-	return Strnulterm(s);
+	s->ptr[s->length] = '\0';
+	return s;
     }
     for (i = pos; i < s->length - n; i++)
 	s->ptr[i] = s->ptr[i + n];
     s->length = i;
-    return Strnulterm(s);
+    s->ptr[s->length] = '\0';
+    return s;
 }
 
 Str
@@ -326,14 +326,16 @@ Strtruncate(Str s, int pos)
     if (pos < 0 || s->length < pos)
 	return s;
     s->length = pos;
-    return Strnulterm(s);
+    s->ptr[s->length] = '\0';
+    return s;
 }
 
 Str
 Strshrink(Str s, int n)
 {
     s->length = (n >= s->length) ? 0 : (s->length - n);
-    return Strnulterm(s);
+    s->ptr[s->length] = '\0';
+    return s;
 }
 
 Str
@@ -354,7 +356,8 @@ Strremovetrailingspaces(Str s)
 
     for (i = s->length - 1; i >= 0 && IS_SPACE(s->ptr[i]); i--) ;
     s->length = i + 1;
-    return Strnulterm(s);
+    s->ptr[s->length] = '\0';
+    return s;
 }
 
 Str
