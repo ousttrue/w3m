@@ -77,10 +77,6 @@ pub fn build(b: *std.Build) void {
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");
 
-    // const termseq = build_termseq(b, target, optimize, &cflags);
-    // exe.linkLibrary(termseq);
-    exe.linkSystemLibrary("ncurses");
-
     // link libs
     const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
     exe.linkLibrary(gc_dep.artifact("gc"));
@@ -113,53 +109,6 @@ pub fn build(b: *std.Build) void {
     zcc.createStep(b, "zcc", .{
         .targets = targets.toOwnedSlice() catch @panic("OOM"),
     });
-}
-
-fn build_termseq(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-    cflags: []const []const u8,
-) *std.Build.Step.Compile {
-    const lib = b.addStaticLibrary(.{
-        .name = "termseq",
-        .target = target,
-        .optimize = optimize,
-        .link_libc = true,
-    });
-    lib.addCSourceFiles(.{
-        .root = b.path("termseq"),
-        .files = &.{
-            // "termcap.c",
-            // "termcap_getentry.c",
-        },
-        .flags = cflags,
-    });
-    return lib;
-}
-
-fn build_termcap_entry(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-) void {
-    const exe = b.addExecutable(.{
-        .name = "termcap_entry",
-        .target = target,
-        .optimize = optimize,
-        .root_source_file = b.path("termseq/termcap_entry.zig"),
-        .link_libc = true,
-    });
-    exe.linkSystemLibrary("ncurses");
-    const install = b.addInstallArtifact(exe, .{});
-
-    const run = b.addRunArtifact(exe);
-    run.step.dependOn(&install.step);
-
-    b.step(
-        "run-termcap_entry",
-        "run termcap_entry",
-    ).dependOn(&run.step);
 }
 
 fn build_exe(
@@ -210,7 +159,6 @@ fn build_exe(
             "scr.c",
             "terms.c",
             "termsize.c",
-            // "termseq/termcap.c",
 
             "url.c",
             "ftp.c",
@@ -238,5 +186,11 @@ fn build_exe(
         .flags = cflags,
     });
     exe.addIncludePath(b.path("."));
+    exe.linkLibrary(b.addStaticLibrary(.{
+        .target = target,
+        .optimize = optimize,
+        .name = "tgoto",
+        .root_source_file = b.path("termseq/tgoto.zig"),
+    }));
     return exe;
 }
