@@ -107,7 +107,7 @@ static int extractMailcapEntry(char *mcap_entry, struct mailcap *mcap) {
   int quoted;
   Str tmp;
 
-  bzero(mcap, sizeof(struct mailcap));
+  memset(mcap, 0, sizeof(struct mailcap));
   p = mcap_entry;
   SKIP_BLANKS(p);
   k = -1;
@@ -196,7 +196,7 @@ static struct mailcap *loadMailcap(char *filename) {
     if (extractMailcapEntry(tmp->ptr, &mcap[i]))
       i++;
   }
-  bzero(&mcap[i], sizeof(struct mailcap));
+  memset(&mcap[i], 0, sizeof(struct mailcap));
   fclose(f);
   return mcap;
 }

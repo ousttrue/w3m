@@ -16,7 +16,7 @@ Buffer *newBuffer(int width) {
   n = New(Buffer);
   if (n == NULL)
     return NULL;
-  bzero((void *)n, sizeof(Buffer));
+  memset((void *)n, 0, sizeof(Buffer));
   n->width = width;
   n->COLS = COLS;
   n->LINES = LASTLINE;
@@ -308,7 +308,8 @@ static Buffer *listBuffer(Buffer *top, Buffer *current) {
   }
   scr_standout();
   /* FIXME: gettextize? */
-  scr_message("Buffer selection mode: SPC for select / D for delete buffer", 0, 0);
+  scr_message("Buffer selection mode: SPC for select / D for delete buffer", 0,
+              0);
   scr_standend();
   /*
    * scr_move(LASTLINE, COLS - 1); */

@@ -785,7 +785,7 @@ static void set_integered_width(struct table *t, double *dwidth,
   }
 
   fixed = NewAtom_N(char, t->maxcol + 1);
-  bzero(fixed, t->maxcol + 1);
+  memset(fixed, 0, t->maxcol + 1);
   for (step = 0; step < 2; step++) {
     for (i = 0; i <= t->maxcol; i += n) {
       int nn;
@@ -3029,7 +3029,7 @@ static void set_table_matrix0(struct table *t, int maxwidth) {
     return;
   }
 
-  bzero(expand, size);
+  memset(expand, 0, size);
 
   for (k = 0; k < cell->necell; k++) {
     j = cell->eindex[k];
