@@ -8,7 +8,7 @@ export fn tgoto(cap: [*c]const u8, col: c_int, row: c_int) *u8 {
         unreachable;
     }
     if (std.mem.eql(u8, cursor, std.mem.span(cap))) {
-        _ = std.fmt.bufPrintZ(&buf, "\x1b[{};{}H", .{ row, col }) catch {
+        _ = std.fmt.bufPrintZ(&buf, "\x1b[{};{}H", .{ row + 1, col + 1 }) catch {
             unreachable;
         };
     } else {

@@ -73,50 +73,6 @@ pub fn build(b: *std.Build) void {
         b.fmt("-DLOCALEDIR=\"{s}\"", .{localedir}),
     };
 
-    const exe = build_exe(b, target, optimize, &cflags);
-    b.installArtifact(exe);
-    targets.append(exe) catch @panic("OOM");
-
-    // link libs
-    const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
-    exe.linkLibrary(gc_dep.artifact("gc"));
-    const ssl_dep = b.dependency("openssl", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    exe.linkLibrary(ssl_dep.artifact("openssl"));
-
-    // run
-    const run_cmd = b.addRunArtifact(exe);
-    run_cmd.step.dependOn(b.getInstallStep());
-    if (b.args) |args| {
-        run_cmd.addArgs(args);
-    }
-    b.step("run", "Run the app").dependOn(&run_cmd.step);
-
-    const exe_unit_tests = b.addTest(.{
-        .root_source_file = b.path("src/main.zig"),
-        .target = target,
-        .optimize = optimize,
-    });
-    const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
-    const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&run_exe_unit_tests.step);
-
-    // add a step called "zcc" (Compile commands DataBase) for making
-    // compile_commands.json. could be named anything. cdb is just quick to type
-    const zcc = @import("compile_commands");
-    zcc.createStep(b, "zcc", .{
-        .targets = targets.toOwnedSlice() catch @panic("OOM"),
-    });
-}
-
-fn build_exe(
-    b: *std.Build,
-    target: std.Build.ResolvedTarget,
-    optimize: std.builtin.OptimizeMode,
-    cflags: []const []const u8,
-) *std.Build.Step.Compile {
     const exe = b.addExecutable(.{
         .target = target,
         .optimize = optimize,
@@ -183,7 +139,7 @@ fn build_exe(
 
             "version.c",
         },
-        .flags = cflags,
+        .flags = &cflags,
     });
     exe.addIncludePath(b.path("."));
     exe.linkLibrary(b.addStaticLibrary(.{
@@ -192,5 +148,40 @@ fn build_exe(
         .name = "tgoto",
         .root_source_file = b.path("termseq/tgoto.zig"),
     }));
-    return exe;
+
+    b.installArtifact(exe);
+    targets.append(exe) catch @panic("OOM");
+
+    // link libs
+    const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
+    exe.linkLibrary(gc_dep.artifact("gc"));
+    const ssl_dep = b.dependency("openssl", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.linkLibrary(ssl_dep.artifact("openssl"));
+
+    // run
+    const run_cmd = b.addRunArtifact(exe);
+    run_cmd.step.dependOn(b.getInstallStep());
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
+    b.step("run", "Run the app").dependOn(&run_cmd.step);
+
+    const exe_unit_tests = b.addTest(.{
+        .root_source_file = b.path("src/main.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
+    const test_step = b.step("test", "Run unit tests");
+    test_step.dependOn(&run_exe_unit_tests.step);
+
+    // add a step called "zcc" (Compile commands DataBase) for making
+    // compile_commands.json. could be named anything. cdb is just quick to type
+    const zcc = @import("compile_commands");
+    zcc.createStep(b, "zcc", .{
+        .targets = targets.toOwnedSlice() catch @panic("OOM"),
+    });
 }
