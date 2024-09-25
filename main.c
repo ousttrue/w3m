@@ -187,7 +187,7 @@ static void sig_chld(int signo) {
 
 static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 
-int main(int argc, char **argv, char **envp) {
+int main(int argc, char **argv) {
   Buffer *newbuf = NULL;
   char *p;
   int c, i;

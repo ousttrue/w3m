@@ -78,12 +78,13 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
         .name = "w3m",
         .link_libc = true,
+        // .root_source_file = b.path("main.zig"),
     });
     const lib = b.addStaticLibrary(.{
         .target = target,
         .optimize = optimize,
         .name = "termseq",
-        .root_source_file = b.path("termseq/termcap_interface.zig"),
+        .root_source_file = b.path("termseq/termseq.zig"),
     });
     exe.linkLibrary(lib);
     exe.addCSourceFiles(.{
@@ -142,12 +143,6 @@ pub fn build(b: *std.Build) void {
         .flags = &cflags,
     });
     exe.addIncludePath(b.path("."));
-    exe.linkLibrary(b.addStaticLibrary(.{
-        .target = target,
-        .optimize = optimize,
-        .name = "tgoto",
-        .root_source_file = b.path("termseq/tgoto.zig"),
-    }));
 
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");
