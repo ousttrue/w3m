@@ -160,6 +160,19 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     exe.linkLibrary(ssl_dep.artifact("openssl"));
+    const uv_dep = b.dependency("zig_uv", .{
+        .target = target,
+        .optimize = optimize,
+    });
+    exe.linkLibrary(uv_dep.artifact("zig_uv"));
+    const libuv_dep = uv_dep.builder.dependency(
+        "zig_uv",
+        .{},
+    ).builder.dependency(
+        "libuv",
+        .{},
+    );
+    exe.addIncludePath(libuv_dep.path("include"));
 
     // run
     const run_cmd = b.addRunArtifact(exe);

@@ -14,6 +14,10 @@
             .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
             .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",
         },
+        .zig_uv = .{
+            .url = "git+https://github.com/ousttrue/zig_uv.git#c438d486a7f0ad846fb82a89beb5112f8868b088",
+            .hash = "1220bd9d55670a492bd4f852ffd26fcdabc025b29c76d6a94e2ab12a8705eb575ca6",
+        },
     },
     .paths = .{
         "build.zig",
