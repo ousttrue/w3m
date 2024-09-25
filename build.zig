@@ -28,6 +28,7 @@
 //
 const std = @import("std");
 const build_mktable = @import("build_mktable.zig");
+const build_src = @import("build_src.zig");
 
 pub fn build(b: *std.Build) void {
     var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
@@ -87,61 +88,17 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("termseq/termseq.zig"),
     });
     exe.linkLibrary(lib);
-    exe.addCSourceFiles(.{
-        .files = &.{
-            "keybind.c",
-
-            "main.c",
-            "defun.c",
-            "file.c",
-            "digest_auth.c",
-            "buffer.c",
-            "display.c",
-            "etc.c",
-            "search.c",
-            "linein.c",
-            "table.c",
-            "local.c",
-            "form.c",
-            "map.c",
-            "frame.c",
-            "rc.c",
-            "menu.c",
-            "mailcap.c",
-            "image.c",
-            "symbol.c",
-            "entity.c",
-
-            "tty.c",
-            "scr.c",
-            "terms.c",
-            "termsize.c",
-
-            "url.c",
-            "ftp.c",
-            "mimehead.c",
-            "regex.c",
-            "news.c",
-            "func.c",
-            "cookie.c",
-            "history.c",
-
-            "anchor.c",
-            "parsetagx.c",
-            "tagtable.c",
-            "istream.c",
-
-            "Str.c",
-            "indep.c",
-            "textlist.c",
-            "parsetag.c",
-            "myctype.c",
-            "hash.c",
-
-            "version.c",
-        },
-        .flags = &cflags,
-    });
+    if (target.result.os.tag == .windows) {
+        exe.addCSourceFiles(.{
+            .files = &(build_src.SRCS ++ build_src.SRCS_WIN32),
+            .flags = &cflags,
+        });
+    } else {
+        exe.addCSourceFiles(.{
+            .files = &(build_src.SRCS ++ build_src.SRCS_POSIX),
+            .flags = &cflags,
+        });
+    }
     exe.addIncludePath(b.path("."));
 
     b.installArtifact(exe);

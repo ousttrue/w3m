@@ -1,0 +1,59 @@
+pub const SRCS = [_][]const u8{
+    "keybind.c",
+
+    "main.c",
+    "defun.c",
+    "file.c",
+    "digest_auth.c",
+    "buffer.c",
+    "display.c",
+    "etc.c",
+    "search.c",
+    "linein.c",
+    "table.c",
+    "local.c",
+    "form.c",
+    "map.c",
+    "frame.c",
+    "rc.c",
+    "menu.c",
+    "mailcap.c",
+    "image.c",
+    "symbol.c",
+    "entity.c",
+
+    "scr.c",
+    "terms.c",
+    "termsize.c",
+
+    "url.c",
+    "ftp.c",
+    "mimehead.c",
+    "regex.c",
+    "news.c",
+    "func.c",
+    "cookie.c",
+    "history.c",
+
+    "anchor.c",
+    "parsetagx.c",
+    "tagtable.c",
+    "istream.c",
+
+    "Str.c",
+    "indep.c",
+    "textlist.c",
+    "parsetag.c",
+    "myctype.c",
+    "hash.c",
+
+    "version.c",
+};
+
+pub const SRCS_POSIX = [_][]const u8{
+    "tty_posix.c",
+};
+
+pub const SRCS_WIN32 = [_][]const u8{
+    "tty_win32.c",
+};
