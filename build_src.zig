@@ -11,23 +11,18 @@ pub const SRCS = [_][]const u8{
     "search.c",
     "linein.c",
     "table.c",
-    "local.c",
     "form.c",
     "map.c",
     "frame.c",
     "rc.c",
     "menu.c",
     "mailcap.c",
-    "image.c",
     "symbol.c",
     "entity.c",
 
     "scr.c",
     "terms.c",
-    "termsize.c",
 
-    "url.c",
-    "ftp.c",
     "mimehead.c",
     "regex.c",
     "news.c",
@@ -52,8 +47,13 @@ pub const SRCS = [_][]const u8{
 
 pub const SRCS_POSIX = [_][]const u8{
     "tty_posix.c",
+    "termsize_posix.c",
+    "local_posix.c",
+    "ftp_posix.c",
+    "url_posix.c",
 };
 
 pub const SRCS_WIN32 = [_][]const u8{
     "tty_win32.c",
+    // "termsize_win32.c",
 };

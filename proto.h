@@ -278,7 +278,7 @@ extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
 extern char *
-inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
+inputLineHistSearch(const char *prompt, const char *def_str, int flag, Hist *hist,
                     int (*incfunc)(int ch, Str buf, Lineprop *prop));
 extern Str unescape_spaces(Str s);
 extern Buffer *historyBuffer(Hist *hist);

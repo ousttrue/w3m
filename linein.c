@@ -109,7 +109,7 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(char c);
 
-char *inputLineHistSearch(char *prompt, char *def_str, int flag, Hist *hist,
+char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, Hist *hist,
                           int (*incrfunc)(int ch, Str str, Lineprop *prop)) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;

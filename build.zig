@@ -65,6 +65,7 @@ pub fn build(b: *std.Build) void {
     const cflags = [_][]const u8{
         "-std=gnu23",
         "-DHAVE_CONFIG_H",
+        "-D_GNU_SOURCE=1",
         b.fmt("-DAUXBIN_DIR=\"{s}\"", .{AUXBIN_DIR}),
         b.fmt("-DCGIBIN_DIR=\"{s}\"", .{CGIBIN_DIR}),
         b.fmt("-DHELP_DIR=\"{s}\"", .{HELP_DIR}),
@@ -93,11 +94,21 @@ pub fn build(b: *std.Build) void {
             .files = &(build_src.SRCS ++ build_src.SRCS_WIN32),
             .flags = &cflags,
         });
+        const ssl_dep = b.dependency("openssl_prebuilt", .{});
+        exe.addIncludePath(ssl_dep.path("x64/include"));
+        exe.addLibraryPath(ssl_dep.path("x64/lib"));
+        exe.linkSystemLibrary("libcrypto");
+        exe.linkSystemLibrary("libssl");
     } else {
         exe.addCSourceFiles(.{
             .files = &(build_src.SRCS ++ build_src.SRCS_POSIX),
             .flags = &cflags,
         });
+        const ssl_dep = b.dependency("openssl", .{
+            .target = target,
+            .optimize = optimize,
+        });
+        exe.linkLibrary(ssl_dep.artifact("openssl"));
     }
     exe.addIncludePath(b.path("."));
 
@@ -107,11 +118,6 @@ pub fn build(b: *std.Build) void {
     // link libs
     const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
     exe.linkLibrary(gc_dep.artifact("gc"));
-    const ssl_dep = b.dependency("openssl", .{
-        .target = target,
-        .optimize = optimize,
-    });
-    exe.linkLibrary(ssl_dep.artifact("openssl"));
     const uv_dep = b.dependency("zig_uv", .{
         .target = target,
         .optimize = optimize,

@@ -1,20 +1,20 @@
-/* $Id: url.c,v 1.100 2010/12/15 10:50:24 htrb Exp $ */
 #include "fm.h"
 #include "scr.h"
 #include "terms.h"
 #include "tty.h"
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-
+// #include <sys/socket.h>
+// #include <netinet/in.h>
+// #include <arpa/inet.h>
+// #include <netdb.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <errno.h>
-
 #include <sys/stat.h>
+#ifdef _WIN32
+#else
+#endif
 
 #include "html.h"
 #include "Str.h"

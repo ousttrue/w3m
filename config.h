@@ -165,14 +165,14 @@ typedef RETSIGTYPE MySignalHandler;
 #define SIGNAL_ARG int _dummy /* XXX */
 #define SIGNAL_ARGLIST 0      /* XXX */
 
-#ifdef HAVE_SIGSETJMP
-#define SETJMP(env) sigsetjmp(env, 1)
-#define LONGJMP(env, val) siglongjmp(env, val)
-#define JMP_BUF sigjmp_buf
-#else
+#ifdef _WIN32
 #define SETJMP(env) setjmp(env)
 #define LONGJMP(env, val) longjmp(env, val)
 #define JMP_BUF jmp_buf
+#else
+#define SETJMP(env) sigsetjmp(env, 1)
+#define LONGJMP(env, val) siglongjmp(env, val)
+#define JMP_BUF sigjmp_buf
 #endif
 
 #ifndef HAVE_SRAND48

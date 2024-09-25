@@ -4,7 +4,10 @@
 #include "termsize.h"
 #include "tty.h"
 #include <signal.h>
+#ifdef _WIN32
+#else
 #include <sys/wait.h>
+#endif
 #include <gc.h>
 
 void show_params(FILE *fp);
@@ -158,6 +161,8 @@ Str make_optional_header_string(char *s) {
   return hs;
 }
 
+#ifdef _WIN32
+#else
 static void sig_chld(int signo) {
   int p_stat;
   pid_t pid;
@@ -186,6 +191,7 @@ static void sig_chld(int signo) {
 }
 
 static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
+#endif
 
 int main(int argc, char **argv) {
   Buffer *newbuf = NULL;
@@ -463,7 +469,9 @@ int main(int argc, char **argv) {
     BookmarkFile = rcFile(BOOKMARK);
 
   term_fmInit();
+#ifndef _WIN32
   mySignal(SIGWINCH, resize_hook);
+#endif
 
   sync_with_option();
   initCookie();
@@ -495,8 +503,10 @@ int main(int argc, char **argv) {
   }
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
 
+#ifndef _WIN32
   mySignal(SIGCHLD, sig_chld);
   mySignal(SIGPIPE, SigPipe);
+#endif
 
 #if (GC_VERSION_MAJOR > 7) ||                                                  \
     ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))

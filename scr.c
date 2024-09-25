@@ -41,7 +41,7 @@ void scr_setup(int LINES, int COLS) {
     int i;
     for (i = 0; i < LINES; i++) {
       g_scr.ScreenImage[i] = &ScreenElem[i];
-      g_scr.ScreenImage[i]->lineprop[0] = S_EOL;
+      g_scr.ScreenImage[i]->lineprop[0] = SCREEN_EOL;
       g_scr.ScreenImage[i]->isdirty = 0;
     }
     for (; i < max_LINES; i++) {
@@ -58,7 +58,7 @@ void scr_clear(void) {
     g_scr.ScreenImage[i]->isdirty = 0;
     auto p = g_scr.ScreenImage[i]->lineprop;
     for (int j = 0; j < COLS; j++) {
-      p[j] = S_EOL;
+      p[j] = SCREEN_EOL;
     }
   }
   CurrentMode = C_ASCII;
@@ -75,14 +75,14 @@ void scr_touch_line(void) {
   if (!(g_scr.ScreenImage[g_scr.CurLine]->isdirty & L_DIRTY)) {
     int i;
     for (i = 0; i < COLS; i++)
-      g_scr.ScreenImage[g_scr.CurLine]->lineprop[i] &= ~S_DIRTY;
+      g_scr.ScreenImage[g_scr.CurLine]->lineprop[i] &= ~SCREEN_DIRTY;
     g_scr.ScreenImage[g_scr.CurLine]->isdirty |= L_DIRTY;
   }
 }
 
 void scr_touch_column(int col) {
   if (col >= 0 && col < COLS)
-    g_scr.ScreenImage[g_scr.CurLine]->lineprop[col] |= S_DIRTY;
+    g_scr.ScreenImage[g_scr.CurLine]->lineprop[col] |= SCREEN_DIRTY;
 }
 
 void scr_wrap(void) {
@@ -109,7 +109,7 @@ void scr_clrtoeol(void) { /* Clear to the end of line */
   int i;
   l_prop *lprop = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
 
-  if (lprop[g_scr.CurColumn] & S_EOL)
+  if (lprop[g_scr.CurColumn] & SCREEN_EOL)
     return;
 
   if (!(g_scr.ScreenImage[g_scr.CurLine]->isdirty & (L_NEED_CE | L_CLRTOEOL)) ||
@@ -118,8 +118,8 @@ void scr_clrtoeol(void) { /* Clear to the end of line */
 
   g_scr.ScreenImage[g_scr.CurLine]->isdirty |= L_CLRTOEOL;
   scr_touch_line();
-  for (i = g_scr.CurColumn; i < COLS && !(lprop[i] & S_EOL); i++) {
-    lprop[i] = S_EOL | S_DIRTY;
+  for (i = g_scr.CurColumn; i < COLS && !(lprop[i] & SCREEN_EOL); i++) {
+    lprop[i] = SCREEN_EOL | SCREEN_DIRTY;
   }
 }
 
@@ -128,13 +128,16 @@ void scr_clrtobot(void) { scr_clrtobot_eol(scr_clrtoeol); }
 void scr_clrtobotx(void) { scr_clrtobot_eol(scr_clrtoeolx); }
 
 int scr_need_redraw(char c1, l_prop pr1, char c2, l_prop pr2) {
-  if (c1 != c2)
+  if (c1 != c2) {
     return 1;
-  if (c1 == ' ')
-    return (pr1 ^ pr2) & M_SPACE & ~S_DIRTY;
+  }
+  if (c1 == ' ') {
+    return (pr1 ^ pr2) & M_SPACE & ~SCREEN_DIRTY;
+  }
 
-  if ((pr1 ^ pr2) & ~S_DIRTY)
+  if ((pr1 ^ pr2) & ~SCREEN_DIRTY) {
     return 1;
+  }
 
   return 0;
 }
@@ -157,12 +160,12 @@ void scr_addch(char pc) {
   if (IS_INTSPACE(c))
     c = ' ';
 
-  if (pr[g_scr.CurColumn] & S_EOL) {
+  if (pr[g_scr.CurColumn] & SCREEN_EOL) {
     if (c == ' ' && !(CurrentMode & M_SPACE)) {
       g_scr.CurColumn++;
       return;
     }
-    for (i = g_scr.CurColumn; i >= 0 && (pr[i] & S_EOL); i--) {
+    for (i = g_scr.CurColumn; i >= 0 && (pr[i] & SCREEN_EOL); i--) {
       SETCH(p[i], SPACE, 1);
       SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
     }
@@ -179,13 +182,14 @@ void scr_addch(char pc) {
    * emulators. */
   i = g_scr.CurColumn;
   if (i < COLS &&
-      (((pr[i] & S_BOLD) && scr_need_redraw(p[i], pr[i], pc, CurrentMode)) ||
-       ((pr[i] & S_UNDERLINE) && !(CurrentMode & S_UNDERLINE)))) {
+      (((pr[i] & SCREEN_BOLD) &&
+        scr_need_redraw(p[i], pr[i], pc, CurrentMode)) ||
+       ((pr[i] & SCREEN_UNDERLINE) && !(CurrentMode & SCREEN_UNDERLINE)))) {
     scr_touch_line();
     i++;
     if (i < COLS) {
       scr_touch_column(i);
-      if (pr[i] & S_EOL) {
+      if (pr[i] & SCREEN_EOL) {
         SETCH(p[i], SPACE, 1);
         SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
       }
@@ -247,26 +251,26 @@ void scr_addnstr_sup(const char *s, int n) {
     scr_addch(' ');
 }
 
-void scr_standout(void) { CurrentMode |= S_STANDOUT; }
+void scr_standout(void) { CurrentMode |= SCREEN_STANDOUT; }
 
-void scr_standend(void) { CurrentMode &= ~S_STANDOUT; }
+void scr_standend(void) { CurrentMode &= ~SCREEN_STANDOUT; }
 
 void scr_toggle_stand(void) {
   l_prop *pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
-  pr[g_scr.CurColumn] ^= S_STANDOUT;
+  pr[g_scr.CurColumn] ^= SCREEN_STANDOUT;
 }
 
-void scr_bold(void) { CurrentMode |= S_BOLD; }
+void scr_bold(void) { CurrentMode |= SCREEN_BOLD; }
 
-void scr_boldend(void) { CurrentMode &= ~S_BOLD; }
+void scr_boldend(void) { CurrentMode &= ~SCREEN_BOLD; }
 
-void scr_underline(void) { CurrentMode |= S_UNDERLINE; }
+void scr_underline(void) { CurrentMode |= SCREEN_UNDERLINE; }
 
-void scr_underlineend(void) { CurrentMode &= ~S_UNDERLINE; }
+void scr_underlineend(void) { CurrentMode &= ~SCREEN_UNDERLINE; }
 
-void scr_graphstart(void) { CurrentMode |= S_GRAPHICS; }
+void scr_graphstart(void) { CurrentMode |= SCREEN_GRAPHICS; }
 
-void scr_graphend(void) { CurrentMode &= ~S_GRAPHICS; }
+void scr_graphend(void) { CurrentMode &= ~SCREEN_GRAPHICS; }
 
 // void setfcolor(int color) {
 //   CurrentMode &= ~COL_FCOLOR;

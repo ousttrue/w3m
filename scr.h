@@ -23,27 +23,28 @@ enum LineStatus {
 };
 
 enum ScreenProperties {
-  S_NORMAL = 0x00,
-  S_STANDOUT = 0x01,
-  S_UNDERLINE = 0x02,
-  S_BOLD = 0x04,
-  S_EOL = 0x08,
-  S_SCREENPROP = 0x0f,
+  SCREEN_NORMAL = 0x00,
+  SCREEN_STANDOUT = 0x01,
+  SCREEN_UNDERLINE = 0x02,
+  SCREEN_BOLD = 0x04,
+  SCREEN_EOL = 0x08,
+  SCREEN_SCREENPROP = 0x0f,
 
-  S_GRAPHICS = 0x10,
-  S_DIRTY = 0x20,
+  SCREEN_GRAPHICS = 0x10,
+  SCREEN_DIRTY = 0x20,
   C_ASCII = 0x00,
   C_WHICHCHAR = 0xc0,
   C_CTRL = 0xc0,
 
-  S_COLORED = 0xf00,
+  SCREEN_COLORED = 0xf00,
 
-  M_SPACE = (S_SCREENPROP | S_COLORED | S_GRAPHICS),
+  M_SPACE = (SCREEN_SCREENPROP | SCREEN_COLORED | SCREEN_GRAPHICS),
   M_CEOL = (~(M_SPACE | C_WHICHCHAR)),
-  M_MEND = (S_STANDOUT | S_UNDERLINE | S_BOLD | S_COLORED | S_GRAPHICS),
+  M_MEND = (SCREEN_STANDOUT | SCREEN_UNDERLINE | SCREEN_BOLD | SCREEN_COLORED |
+            SCREEN_GRAPHICS),
 };
 
-#define SETPROP(var, prop) (var = (((var) & S_DIRTY) | prop))
+#define SETPROP(var, prop) (var = (((var) & SCREEN_DIRTY) | prop))
 
 typedef unsigned short l_prop;
 

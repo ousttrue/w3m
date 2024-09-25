@@ -1,15 +1,14 @@
 /* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
+#include "indep.h"
+#include "Str.h"
+#include "myctype.h"
+#include "entity.h"
 #include <stdio.h>
-#include <pwd.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include "indep.h"
-#include "Str.h"
 #include <gc.h>
-#include "myctype.h"
-#include "entity.h"
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
@@ -404,40 +403,7 @@ char *cleanupName(char *name) {
   return buf;
 }
 
-char *expandPath(char *name) {
-  char *p;
-  struct passwd *passent, *getpwnam(const char *);
-  Str extpath = NULL;
 
-  if (name == NULL)
-    return NULL;
-  p = name;
-  if (*p == '~') {
-    p++;
-    if (IS_ALPHA(*p)) {
-      char *q = strchr(p, '/');
-      if (q) { /* ~user/dir... */
-        passent = getpwnam(allocStr(p, q - p));
-        p = q;
-      } else { /* ~user */
-        passent = getpwnam(p);
-        p = "";
-      }
-      if (!passent)
-        goto rest;
-      extpath = Strnew_charp(passent->pw_dir);
-    } else if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-      extpath = Strnew_charp(getenv("HOME"));
-    } else
-      goto rest;
-    if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
-      p++;
-    Strcat_charp(extpath, p);
-    return extpath->ptr;
-  }
-rest:
-  return name;
-}
 
 #ifndef HAVE_STRCHR
 char *strchr(const char *s, int c) {
@@ -477,7 +443,6 @@ int strncasecmp(const char *s1, const char *s2, size_t n) {
 }
 #endif /* not HAVE_STRCASECMP */
 
-#ifndef HAVE_STRCASESTR
 /* string search using the simplest algorithm */
 char *strcasestr(const char *s1, const char *s2) {
   int len1, len2;
@@ -495,7 +460,6 @@ char *strcasestr(const char *s1, const char *s2) {
   }
   return 0;
 }
-#endif
 
 static int strcasematch(char *s1, char *s2) {
   int x;

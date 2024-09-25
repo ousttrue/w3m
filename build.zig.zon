@@ -10,6 +10,9 @@
             .url = "git+https://github.com/allyourcodebase/openssl.git#cfb071de062624d8acbfad4c995e8092f4f6bc7a",
             .hash = "12207c40cefa38fe90e4230dfba2e5c76b37e1ee36602512cad8ff0501f892002a65",
         },
+        .openssl_prebuilt = .{
+            .path = "../openssl_prebuilt",
+        },
         .compile_commands = .{
             .url = "git+https://github.com/xxxbrian/zig-compile-commands.git#dd40e0ca2b453684f2e34410ec4b69ef3c568bd7",
             .hash = "12205f1bd27373077104440e39cbc388b2ebbc8938378cc261506588feed29fedf35",

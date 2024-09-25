@@ -7,21 +7,21 @@
 #include "tty.h"
 #include "scr.h"
 #include "termseq/termcap_interface.h"
-#include "termcap.h"
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <sys/time.h>
-#include <unistd.h>
 #include "config.h"
 #include <string.h>
+#ifdef _WIN32
+#else
+#include <sys/time.h>
+#include <unistd.h>
 #include <sys/wait.h>
-#ifdef HAVE_SYS_SELECT_H
 #include <sys/select.h>
-#endif
 #include <sys/ioctl.h>
+#endif
 
 #include "fm.h"
 
@@ -35,8 +35,8 @@ MySignalHandler error_dump(SIGNAL_ARG);
 
 char gcmap[96];
 
-void term_puts(const char *s) { 
-  for(auto p=s; *p; ++p){
+void term_puts(const char *s) {
+  for (auto p = s; *p; ++p) {
     tty_putc(*p);
   }
 }
@@ -92,9 +92,12 @@ MySignalHandler error_dump(SIGNAL_ARG) {
 bool fmInitialized = false;
 
 void set_int() {
+#if _WIN32
+#else
   mySignal(SIGHUP, reset_exit);
-  mySignal(SIGINT, reset_exit);
   mySignal(SIGQUIT, reset_exit);
+#endif
+  mySignal(SIGINT, reset_exit);
   mySignal(SIGTERM, reset_exit);
   mySignal(SIGILL, error_dump);
   mySignal(SIGIOT, error_dump);
@@ -184,6 +187,8 @@ bool term_graph_ok() {
 
 void term_clear() { term_puts(termcap_str_clear()); }
 
+extern char *tgoto(const char *cap, int col, int row);
+
 void term_move(int line, int column) {
   term_puts(tgoto(termcap_str_cursor_mv(), column, line));
 }
@@ -224,12 +229,12 @@ void term_refresh() {
       *dirty &= ~L_DIRTY;
       pc = scr->ScreenImage[line]->lineimage;
       pr = scr->ScreenImage[line]->lineprop;
-      for (col = 0; col < COLS && !(pr[col] & S_EOL); col++) {
+      for (col = 0; col < COLS && !(pr[col] & SCREEN_EOL); col++) {
         if (*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol) {
           if (scr_need_redraw(pc[col], pr[col], SPACE, 0))
             break;
         } else {
-          if (pr[col] & S_DIRTY)
+          if (pr[col] & SCREEN_DIRTY)
             break;
         }
       }
@@ -268,7 +273,7 @@ void term_refresh() {
       pline = line;
       pcol = col;
       for (; col < COLS; col++) {
-        if (pr[col] & S_EOL)
+        if (pr[col] & SCREEN_EOL)
           break;
 
           /*
@@ -285,65 +290,65 @@ void term_refresh() {
         if (line == LINES - 1 && col == COLS - 1)
           break;
 #endif /* !defined(USE_BG_COLOR)  */
-        if ((!(pr[col] & S_STANDOUT) && (mode & S_STANDOUT)) ||
-            (!(pr[col] & S_UNDERLINE) && (mode & S_UNDERLINE)) ||
-            (!(pr[col] & S_BOLD) && (mode & S_BOLD)) ||
-            (!(pr[col] & S_COLORED) && (mode & S_COLORED)) ||
-            (!(pr[col] & S_GRAPHICS) && (mode & S_GRAPHICS))) {
-          if ((mode & S_COLORED))
+        if ((!(pr[col] & SCREEN_STANDOUT) && (mode & SCREEN_STANDOUT)) ||
+            (!(pr[col] & SCREEN_UNDERLINE) && (mode & SCREEN_UNDERLINE)) ||
+            (!(pr[col] & SCREEN_BOLD) && (mode & SCREEN_BOLD)) ||
+            (!(pr[col] & SCREEN_COLORED) && (mode & SCREEN_COLORED)) ||
+            (!(pr[col] & SCREEN_GRAPHICS) && (mode & SCREEN_GRAPHICS))) {
+          if ((mode & SCREEN_COLORED))
             term_puts(termcap_str_orig_pair());
-          if (mode & S_GRAPHICS)
+          if (mode & SCREEN_GRAPHICS)
             term_puts(termcap_str_exit_alt_charset_mode());
           term_puts(termcap_str_exit_attribute_mode());
           mode &= ~M_MEND;
         }
         if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
                 ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
-                : (pr[col] & S_DIRTY)) {
+                : (pr[col] & SCREEN_DIRTY)) {
           if (pcol == col - 1)
             term_puts(termcap_str_cursor_right());
           else if (pcol != col)
             term_move(line, col);
 
-          if ((pr[col] & S_STANDOUT) && !(mode & S_STANDOUT)) {
+          if ((pr[col] & SCREEN_STANDOUT) && !(mode & SCREEN_STANDOUT)) {
             term_puts(termcap_str_enter_standout_mode());
-            mode |= S_STANDOUT;
+            mode |= SCREEN_STANDOUT;
           }
-          if ((pr[col] & S_UNDERLINE) && !(mode & S_UNDERLINE)) {
+          if ((pr[col] & SCREEN_UNDERLINE) && !(mode & SCREEN_UNDERLINE)) {
             term_puts(termcap_str_enter_underline_mode());
-            mode |= S_UNDERLINE;
+            mode |= SCREEN_UNDERLINE;
           }
-          if ((pr[col] & S_BOLD) && !(mode & S_BOLD)) {
+          if ((pr[col] & SCREEN_BOLD) && !(mode & SCREEN_BOLD)) {
             term_puts(termcap_str_enter_bold_mode());
-            mode |= S_BOLD;
+            mode |= SCREEN_BOLD;
           }
-          if ((pr[col] & S_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
+          if ((pr[col] & SCREEN_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
             color = (pr[col] & COL_FCOLOR);
             mode = ((mode & ~COL_FCOLOR) | color);
             term_puts(color_seq(color));
           }
-          if ((pr[col] & S_GRAPHICS) && !(mode & S_GRAPHICS)) {
+          if ((pr[col] & SCREEN_GRAPHICS) && !(mode & SCREEN_GRAPHICS)) {
             if (!scr->graph_enabled) {
               scr->graph_enabled = 1;
               term_puts(termcap_str_ena_acs());
             }
             term_puts(termcap_str_enter_alt_charset_mode());
-            mode |= S_GRAPHICS;
+            mode |= SCREEN_GRAPHICS;
           }
-          tty_putc((pr[col] & S_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
+          tty_putc((pr[col] & SCREEN_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
           pcol = col + 1;
         }
       }
       if (col == COLS)
         moved = RF_NEED_TO_MOVE;
-      for (; col < COLS && !(pr[col] & S_EOL); col++)
-        pr[col] |= S_EOL;
+      for (; col < COLS && !(pr[col] & SCREEN_EOL); col++)
+        pr[col] |= SCREEN_EOL;
     }
     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
     if (mode & M_MEND) {
-      if (mode & (S_COLORED))
+      if (mode & (SCREEN_COLORED))
         term_puts(termcap_str_orig_pair());
-      if (mode & S_GRAPHICS) {
+      if (mode & SCREEN_GRAPHICS) {
         term_puts(termcap_str_exit_alt_charset_mode());
       }
       term_puts(termcap_str_exit_attribute_mode());
@@ -410,8 +415,10 @@ static void reset_signals(void) {
 #ifdef SIGBUS
   mySignal(SIGBUS, SIG_DFL); /* create core image */
 #endif                       /* SIGBUS */
+#ifndef _WIN32
   mySignal(SIGCHLD, SIG_IGN);
   mySignal(SIGPIPE, SIG_IGN);
+#endif
 }
 
 static void close_all_fds_except(int i, int f) {
@@ -430,14 +437,15 @@ static void close_all_fds_except(int i, int f) {
   }
 }
 
+#ifndef _WIN32
 void setup_child(int child, int i, int f) {
   reset_signals();
   mySignal(SIGINT, SIG_IGN);
   if (!child)
     SETPGRP();
   /*
-   * I don't know why but close_tty() sometimes interrupts loadGeneralFile() in
-   * loadImage() and corrupt image data can be cached in ~/.w3m.
+   * I don't know why but close_tty() sometimes interrupts loadGeneralFile()
+   * in loadImage() and corrupt image data can be cached in ~/.w3m.
    */
   close_all_fds_except(i, f);
   QuietMessage = TRUE;
@@ -457,10 +465,10 @@ Str term_inputpwd() {
   }
   return pwd;
 }
+#endif
 
 void term_input(const char *msg) {
   if (fmInitialized) {
-    /* FIXME: gettextize? */
     inputChar(msg);
   }
 }
@@ -561,6 +569,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
   }
 }
 
+#ifndef _WIN32
 bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd) {
   if (fmInitialized) {
     char *pp;
@@ -606,6 +615,7 @@ bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd) {
 
   return true;
 }
+#endif
 
 static GeneralList *message_list = NULL;
 
