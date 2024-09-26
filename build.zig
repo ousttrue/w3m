@@ -99,6 +99,13 @@ pub fn build(b: *std.Build) void {
         exe.addLibraryPath(ssl_dep.path("x64/lib"));
         exe.linkSystemLibrary("libcrypto");
         exe.linkSystemLibrary("libssl");
+
+        const gc_dep = b.dependency("gc", .{
+            .target = target,
+            .optimize = optimize,
+            .BUILD_SHARED_LIBS = false,
+        });
+        exe.linkLibrary(gc_dep.artifact("gc"));
     } else {
         exe.addCSourceFiles(.{
             .files = &(build_src.SRCS ++ build_src.SRCS_POSIX),
@@ -109,6 +116,9 @@ pub fn build(b: *std.Build) void {
             .optimize = optimize,
         });
         exe.linkLibrary(ssl_dep.artifact("openssl"));
+
+        const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
+        exe.linkLibrary(gc_dep.artifact("gc"));
     }
     exe.addIncludePath(b.path("."));
 
@@ -116,8 +126,6 @@ pub fn build(b: *std.Build) void {
     targets.append(exe) catch @panic("OOM");
 
     // link libs
-    const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
-    exe.linkLibrary(gc_dep.artifact("gc"));
     const uv_dep = b.dependency("zig_uv", .{
         .target = target,
         .optimize = optimize,
