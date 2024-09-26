@@ -870,7 +870,7 @@ static int terminated(unsigned char c) {
 }
 
 static void _editor(int) {
-  FormItemList fi;
+  struct FormItemList fi;
   char *p;
 
   if (is_passwd)

@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "http_request.h"
 #include "localcgi.h"
 #include "tabbuffer.h"
 #include "buffer.h"
@@ -48,7 +49,7 @@ JMP_BUF IntReturn;
 
 static void cmd_loadfile(char *path);
 static void cmd_loadURL(char *url, struct Url *current, char *referer,
-                        FormList *request);
+                        struct FormList *request);
 static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 
@@ -1335,7 +1336,7 @@ static struct Buffer *loadNormalBuf(struct Buffer *buf, int renderframe) {
 }
 
 static struct Buffer *loadLink(char *url, char *target, char *referer,
-                        FormList *request) {
+                        struct FormList *request) {
   struct Buffer *buf, *nfbuf;
   union frameset_element *f_element = NULL;
   int flag = 0;
@@ -1573,17 +1574,17 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-static FormItemList *save_submit_formlist(FormItemList *src) {
-  FormList *list;
-  FormList *srclist;
-  FormItemList *srcitem;
-  FormItemList *item;
-  FormItemList *ret = NULL;
+static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
+  struct FormList *list;
+  struct FormList *srclist;
+  struct FormItemList *srcitem;
+  struct FormItemList *item;
+  struct FormItemList *ret = NULL;
 
   if (src == NULL)
     return NULL;
   srclist = src->parent;
-  list = New(FormList);
+  list = New(struct FormList);
   list->method = srclist->method;
   list->action = Strdup(srclist->action);
   list->enctype = srclist->enctype;
@@ -1593,7 +1594,7 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
   list->length = srclist->length;
 
   for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    item = New(FormItemList);
+    item = New(struct FormItemList);
     item->type = srcitem->type;
     item->name = Strdup(srcitem->name);
     item->value = Strdup(srcitem->value);
@@ -1622,8 +1623,8 @@ static FormItemList *save_submit_formlist(FormItemList *src) {
 
 #define conv_form_encoding(val, fi, buf) (val)
 
-static void query_from_followform(Str *query, FormItemList *fi, int multipart) {
-  FormItemList *f2;
+static void query_from_followform(Str *query, struct FormItemList *fi, int multipart) {
+  struct FormItemList *f2;
   FILE *body = NULL;
 
   if (multipart) {
@@ -1732,7 +1733,7 @@ void followForm(void) { _followForm(FALSE); }
 static void _followForm(int submit) {
   Anchor *a, *a2;
   char *p;
-  FormItemList *fi, *f2;
+  struct FormItemList *fi, *f2;
   Str tmp, tmp2;
   int multipart = 0, i;
 
@@ -1742,7 +1743,7 @@ static void _followForm(int submit) {
   a = retrieveCurrentForm(Currentbuf);
   if (a == NULL)
     return;
-  fi = (FormItemList *)a->url;
+  fi = (struct FormItemList *)a->url;
   switch (fi->type) {
   case FORM_INPUT_TEXT:
     if (submit)
@@ -1878,7 +1879,7 @@ static void _followForm(int submit) {
   case FORM_INPUT_RESET:
     for (i = 0; i < Currentbuf->formitem->nanchor; i++) {
       a2 = &Currentbuf->formitem->anchors[i];
-      f2 = (FormItemList *)a2->url;
+      f2 = (struct FormItemList *)a2->url;
       if (f2->parent == fi->parent && f2->name && f2->value &&
           f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
           f2->type != FORM_INPUT_RESET) {
@@ -2396,7 +2397,7 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
 }
 
 static void cmd_loadURL(char *url, struct Url *current, char *referer,
-                        FormList *request) {
+                        struct FormList *request) {
   struct Buffer *buf;
 
   if (handleMailto(url))
@@ -2528,7 +2529,7 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   Str tmp;
-  FormList *request;
+  struct FormList *request;
 
   tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
                 (Str_form_quote(localCookie()))->ptr,
@@ -2767,7 +2768,7 @@ static void _peekURL(int only_img) {
       if (a == NULL)
         return;
     } else
-      s = Strnew_charp(form2str((FormItemList *)a->url));
+      s = Strnew_charp(form2str((struct FormItemList *)a->url));
   }
   if (s == NULL) {
     parseURL2(a->url, &pu, baseURL(Currentbuf));
@@ -2889,7 +2890,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 DEFUN(reload, RELOAD, "Load current document anew") {
   struct Buffer *buf, *fbuf = NULL, sbuf;
   Str url;
-  FormList *request;
+  struct FormList *request;
   int multipart;
 
   if (Currentbuf->bufferprop & BP_INTERNAL) {
@@ -3314,7 +3315,7 @@ void set_buffer_environ(struct Buffer *buf) {
       set_environ("W3M_CURRENT_IMG", "");
     a = retrieveCurrentForm(buf);
     if (a)
-      set_environ("W3M_CURRENT_FORM", form2str((FormItemList *)a->url));
+      set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList *)a->url));
     else
       set_environ("W3M_CURRENT_FORM", "");
     set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);

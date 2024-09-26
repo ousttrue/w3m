@@ -1,4 +1,5 @@
 #include "map.h"
+#include "http_request.h"
 #include "buffer.h"
 #include "fm.h"
 #include "myctype.h"
@@ -76,10 +77,10 @@ Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line, int po
   return a;
 }
 
-Anchor *registerForm(struct Buffer *buf, FormList *flist, struct parsed_tag *tag,
+Anchor *registerForm(struct Buffer *buf, struct FormList *flist, struct parsed_tag *tag,
                      int line, int pos) {
   Anchor *a;
-  FormItemList *fi;
+  struct FormItemList *fi;
 
   fi = formList_addInput(flist, tag);
   if (fi == NULL)
@@ -519,7 +520,7 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
   LinkList *l;
   AnchorList *al;
   Anchor *a;
-  FormItemList *fi;
+  struct FormItemList *fi;
   int i;
   char *t, *u, *p;
   struct Url pu;
@@ -604,7 +605,7 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
       a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
       if (!a)
         continue;
-      fi = (FormItemList *)a->url;
+      fi = (struct FormItemList *)a->url;
       fi = fi->parent->item;
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
           !Strcmp_charp(fi->parent->action, "map") && fi->value) {

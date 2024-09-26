@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "buffer.h"
+#include "http_request.h"
 #include "termsize.h"
 #include "terms.h"
 #include <string.h>
@@ -273,7 +274,7 @@ static int cgi_filename(char *uri, char **fn, char **name, char **path_info) {
   return CGIFN_LIBDIR;
 }
 
-FILE *localcgi_post(char *uri, char *qstr, FormList *request, char *referer) {
+FILE *localcgi_post(char *uri, char *qstr, struct FormList *request, char *referer) {
   FILE *fr = NULL, *fw = NULL;
   int status;
   pid_t pid;

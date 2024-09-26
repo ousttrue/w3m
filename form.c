@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "form.h"
 #include "buffer.h"
 #include "parsetag.h"
 #include "parsetagx.h"
@@ -24,10 +25,10 @@ struct {
 };
 /* *INDENT-ON* */
 
-struct form_list *newFormList(char *action, char *method, char *charset,
+struct FormList *newFormList(char *action, char *method, char *charset,
                               char *enctype, char *target, char *name,
-                              struct form_list *_next) {
-  struct form_list *l;
+                              struct FormList *_next) {
+  struct FormList *l;
   Str a = Strnew_charp(action);
   int m = FORM_METHOD_GET;
   int e = FORM_ENCTYPE_URLENCODED;
@@ -45,7 +46,7 @@ struct form_list *newFormList(char *action, char *method, char *charset,
     e = FORM_ENCTYPE_MULTIPART;
   }
 
-  l = New(struct form_list);
+  l = New(struct FormList);
   l->item = l->lastitem = NULL;
   l->action = a;
   l->method = m;
@@ -60,11 +61,11 @@ struct form_list *newFormList(char *action, char *method, char *charset,
 }
 
 /*
- * add <input> element to form_list
+ * add <input> element to FormList
  */
-struct form_item_list *formList_addInput(struct form_list *fl,
+struct FormItemList *formList_addInput(struct FormList *fl,
                                          struct parsed_tag *tag) {
-  struct form_item_list *item;
+  struct FormItemList *item;
   char *p;
   int i;
 
@@ -72,7 +73,7 @@ struct form_item_list *formList_addInput(struct form_list *fl,
   if (fl == NULL)
     return NULL;
 
-  item = New(struct form_item_list);
+  item = New(struct FormItemList);
   item->type = FORM_UNKNOWN;
   item->size = -1;
   item->rows = 0;
@@ -130,7 +131,7 @@ static char *_formtypetbl[] = {
 
 static char *_formmethodtbl[] = {"GET", "POST", "INTERNAL", "HEAD"};
 
-char *form2str(FormItemList *fi) {
+char *form2str(struct FormItemList *fi) {
   Str tmp = Strnew();
 
   if (fi->type != FORM_SELECT && fi->type != FORM_TEXTAREA)
@@ -156,14 +157,14 @@ int formtype(char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(Anchor *a, struct Buffer *buf, FormItemList *fi) {
+void formRecheckRadio(Anchor *a, struct Buffer *buf, struct FormItemList *fi) {
   int i;
   Anchor *a2;
-  FormItemList *f2;
+  struct FormItemList *f2;
 
   for (i = 0; i < buf->formitem->nanchor; i++) {
     a2 = &buf->formitem->anchors[i];
-    f2 = (FormItemList *)a2->url;
+    f2 = (struct FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
@@ -177,7 +178,7 @@ void formRecheckRadio(Anchor *a, struct Buffer *buf, FormItemList *fi) {
 void formResetBuffer(struct Buffer *buf, AnchorList *formitem) {
   int i;
   Anchor *a;
-  FormItemList *f1, *f2;
+  struct FormItemList *f1, *f2;
 
   if (buf == NULL || buf->formitem == NULL || formitem == NULL)
     return;
@@ -185,8 +186,8 @@ void formResetBuffer(struct Buffer *buf, AnchorList *formitem) {
     a = &buf->formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
-    f1 = (FormItemList *)a->url;
-    f2 = (FormItemList *)formitem->anchors[i].url;
+    f1 = (struct FormItemList *)a->url;
+    f2 = (struct FormItemList *)formitem->anchors[i].url;
     if (f1->type != f2->type ||
         strcmp(((f1->name == NULL) ? "" : f1->name->ptr),
                ((f2->name == NULL) ? "" : f2->name->ptr)))
@@ -301,7 +302,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   return pos;
 }
 
-void formUpdateBuffer(Anchor *a, struct Buffer *buf, FormItemList *form) {
+void formUpdateBuffer(Anchor *a, struct Buffer *buf, struct FormItemList *form) {
   struct Buffer save;
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
@@ -440,7 +441,7 @@ static void form_fputs_decode(Str s, FILE *f) {
   Strfputs(z, f);
 }
 
-void input_textarea(FormItemList *fi) {
+void input_textarea(struct FormItemList *fi) {
   char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
   Str tmp;
   FILE *f;
@@ -690,8 +691,8 @@ void preFormUpdateBuffer(struct Buffer *buf) {
   struct pre_form_item *pi;
   int i;
   Anchor *a;
-  FormList *fl;
-  FormItemList *fi;
+  struct FormList *fl;
+  struct FormItemList *fi;
 
   if (!buf || !buf->formitem || !PreForm)
     return;
@@ -708,7 +709,7 @@ void preFormUpdateBuffer(struct Buffer *buf) {
       continue;
     for (i = 0; i < buf->formitem->nanchor; i++) {
       a = &buf->formitem->anchors[i];
-      fi = (FormItemList *)a->url;
+      fi = (struct FormItemList *)a->url;
       fl = fi->parent;
       if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
         continue;

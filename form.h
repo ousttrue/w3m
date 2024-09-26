@@ -37,22 +37,23 @@
   10 /* max number of <textarea>..</textarea>                                  \
       * within one document */
 
-typedef struct form_list {
-  struct form_item_list *item;
-  struct form_item_list *lastitem;
+struct FormItemList;
+struct FormList {
+  struct FormItemList *item;
+  struct FormItemList *lastitem;
   int method;
   Str action;
   char *target;
   char *name;
   int enctype;
-  struct form_list *next;
+  struct FormList *next;
   int nitems;
   char *body;
   char *boundary;
   unsigned long length;
-} FormList;
+};
 
-typedef struct form_item_list {
+struct FormItemList {
   int type;
   Str name;
   Str value, init_value;
@@ -62,8 +63,8 @@ typedef struct form_item_list {
   int rows;
   int maxlength;
   int readonly;
-  struct form_list *parent;
-  struct form_item_list *next;
-} FormItemList;
+  struct FormList *parent;
+  struct FormItemList *next;
+};
 
 #endif /* not FORM_H */

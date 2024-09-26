@@ -1,4 +1,5 @@
 #include "digest_auth.h"
+#include "http_request.h"
 #include <openssl/md5.h>
 
 /* RFC2617: 3.2.1 The WWW-Authenticate Response Header
@@ -95,7 +96,7 @@ Str get_auth_param(struct auth_param *auth, char *name) {
 }
 
 Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
-                   HRequest *hr, FormList *request) {
+                   struct HttpRequest *hr, struct FormList *request) {
   Str tmp, a1buf, a2buf, rd, s;
   unsigned char md5[MD5_DIGEST_LENGTH + 1];
   Str uri = HTTPrequestURI(pu, hr);

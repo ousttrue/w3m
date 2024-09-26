@@ -16,7 +16,6 @@
 #define MAX_LB 5
 extern int REV_LB[];
 
-#define NO_REFERER ((char *)-1)
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -69,7 +68,7 @@ struct Buffer {
   AnchorList *img;
   AnchorList *formitem;
   LinkList *linklist;
-  FormList *formlist;
+  struct FormList *formlist;
   struct MapList *maplist;
   HmarkerList *hmarklist;
   HmarkerList *imarklist;
@@ -84,7 +83,7 @@ struct Buffer {
   size_t trbyte;
   char check_url;
   TextList *document_header;
-  FormItemList *form_submit;
+  struct FormItemList *form_submit;
   char *savecache;
   char *edit;
   struct mailcap *mailcap;

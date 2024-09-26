@@ -1,5 +1,6 @@
+#pragma once
 
-struct _ParsedURL;
+struct Url;
 struct frame_element {
   char attr;
 #define F_UNLOADED 0x00
@@ -15,12 +16,12 @@ struct frame_body {
 #define FB_NO_BUFFER 0x01
   char *name;
   char *url;
-  struct _ParsedURL *baseURL;
+  struct Url *baseURL;
   char *source;
   char *type;
   char *referer;
   struct AnchorList *nameList;
-  FormList *request;
+  struct FormList *request;
   char *ssl_certificate;
 };
 
@@ -34,7 +35,7 @@ struct frameset {
   char attr;
   char dummy;
   char *name;
-  struct _ParsedURL *currentURL;
+  struct Url *currentURL;
   char **width;
   char **height;
   int col;

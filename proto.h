@@ -152,7 +152,7 @@ extern Str convertLine0(struct URLFile *uf, Str line, int mode);
   convertLine0(uf, line, mode)
 extern void push_symbol(Str str, char symbol, int width, int n);
 extern struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
-                               int flag, FormList *request);
+                               int flag, struct FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 extern void push_render_image(Str str, int width, int limit,
@@ -306,19 +306,19 @@ extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
 extern void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
                         int width);
 extern void pushTable(struct table *, struct table *);
-extern struct form_list *newFormList(char *action, char *method, char *charset,
+extern struct FormList *newFormList(char *action, char *method, char *charset,
                                      char *enctype, char *target, char *name,
-                                     struct form_list *_next);
-extern struct form_item_list *formList_addInput(struct form_list *fl,
+                                     struct FormList *_next);
+extern struct FormItemList *formList_addInput(struct FormList *fl,
                                                 struct parsed_tag *tag);
-extern char *form2str(FormItemList *fi);
+extern char *form2str(struct FormItemList *fi);
 extern int formtype(char *typestr);
-extern void formRecheckRadio(Anchor *a, struct Buffer *buf, FormItemList *form);
+extern void formRecheckRadio(Anchor *a, struct Buffer *buf, struct FormItemList *form);
 extern void formResetBuffer(struct Buffer *buf, AnchorList *formitem);
-extern void formUpdateBuffer(Anchor *a, struct Buffer *buf, FormItemList *form);
+extern void formUpdateBuffer(Anchor *a, struct Buffer *buf, struct FormItemList *form);
 extern void preFormUpdateBuffer(struct Buffer *buf);
 extern Str textfieldrep(Str s, int width);
-extern void input_textarea(FormItemList *fi);
+extern void input_textarea(struct FormItemList *fi);
 extern void do_internal(char *action, char *data);
 extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
 extern void form_write_from_file(FILE *f, char *boundary, char *name,
@@ -339,7 +339,7 @@ extern void pushFrameTree(struct frameset_queue **fqpp, struct frameset *fs,
                           struct Buffer *buf);
 extern struct frameset *popFrameTree(struct frameset_queue **fqpp);
 extern void resetFrameElement(union frameset_element *f_element, struct Buffer *buf,
-                              char *referer, FormList *request);
+                              char *referer, struct FormList *request);
 extern struct Buffer *renderFrame(struct Buffer *Cbuf, int force_reload);
 extern union frameset_element *search_frame(struct frameset *fset, char *name);
 extern char *ttyname_tty(void);
@@ -361,11 +361,10 @@ extern Str parsedURL2Str(struct Url *pu);
 extern Str parsedURL2RefererStr(struct Url *pu);
 extern int getURLScheme(char **url);
 extern void init_stream(struct URLFile *uf, int scheme, InputStream stream);
-Str HTTPrequestMethod(HRequest *hr);
-Str HTTPrequestURI(struct Url *pu, HRequest *hr);
+struct HttpRequest;
 extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
-                       URLOption *option, FormList *request,
-                       TextList *extra_header, struct URLFile *ouf, HRequest *hr,
+                       URLOption *option, struct FormList *request,
+                       TextList *extra_header, struct URLFile *ouf, struct HttpRequest *hr,
                        unsigned char *status);
 extern int mailcapMatch(struct mailcap *mcap, char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, char *type);
@@ -390,7 +389,7 @@ extern Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *r
 extern Anchor *registerName(struct Buffer *buf, char *url, int line, int pos);
 extern Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
                            int pos);
-extern Anchor *registerForm(struct Buffer *buf, FormList *flist,
+extern Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
                             struct parsed_tag *tag, int line, int pos);
 extern int onAnchor(Anchor *a, int line, int pos);
 extern Anchor *retrieveAnchor(AnchorList *al, int line, int pos);
@@ -437,7 +436,7 @@ extern char *helpFile(char *base);
 extern const void *querySiteconf(const struct Url *query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char *dirname);
-extern FILE *localcgi_post(char *, char *, FormList *, char *);
+extern FILE *localcgi_post(char *, char *, struct FormList *, char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);

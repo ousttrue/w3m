@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "http_request.h"
 #include "fm.h"
 #include "scr.h"
 #include "buffer.h"
@@ -1246,7 +1247,7 @@ static char *otherinfo(struct Url *target, struct Url *current, char *referer) {
   return s->ptr;
 }
 
-Str HTTPrequestMethod(HRequest *hr) {
+Str HTTPrequestMethod(struct HttpRequest *hr) {
   switch (hr->command) {
   case HR_COMMAND_CONNECT:
     return Strnew_charp("CONNECT");
@@ -1263,7 +1264,7 @@ Str HTTPrequestMethod(HRequest *hr) {
   return NULL;
 }
 
-Str HTTPrequestURI(struct Url *pu, HRequest *hr) {
+Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr) {
   Str tmp = Strnew();
   if (hr->command == HR_COMMAND_CONNECT) {
     Strcat_charp(tmp, pu->host);
@@ -1279,7 +1280,7 @@ Str HTTPrequestURI(struct Url *pu, HRequest *hr) {
   return tmp;
 }
 
-static Str HTTPrequest(struct Url *pu, struct Url *current, HRequest *hr,
+static Str HTTPrequest(struct Url *pu, struct Url *current, struct HttpRequest *hr,
                        TextList *extra) {
   Str tmp;
   TextListItem *i;
@@ -1360,13 +1361,13 @@ void init_stream(struct URLFile *uf, int scheme, InputStream stream) {
 }
 
 struct URLFile openURL(char *url, struct Url *pu, struct Url *current, URLOption *option,
-                FormList *request, TextList *extra_header, struct URLFile *ouf,
-                HRequest *hr, unsigned char *status) {
+                struct FormList *request, TextList *extra_header, struct URLFile *ouf,
+                struct HttpRequest *hr, unsigned char *status) {
   Str tmp;
   int sock, scheme;
   char *p, *q, *u;
   struct URLFile uf;
-  HRequest hr0;
+  struct HttpRequest hr0;
   SSL *sslh = NULL;
 
   if (hr == NULL)

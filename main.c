@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "http_request.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "defun.h"
@@ -207,7 +208,7 @@ int main(int argc, char **argv) {
   InputStream redin;
   char *line_str = NULL;
   char **load_argv;
-  FormList *request;
+  struct FormList *request;
   int load_argc = 0;
   int load_bookmark = FALSE;
   int visual_start = FALSE;
