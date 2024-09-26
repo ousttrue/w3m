@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "buffer.h"
 #include "scr.h"
 #include "termsize.h"
 #include "terms.h"
@@ -26,16 +27,16 @@ static int ulmode = 0, somode = 0, bomode = 0;
 static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
            active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
 
-static Buffer *save_current_buf = NULL;
+static struct Buffer *save_current_buf = NULL;
 
-static void drawAnchorCursor(Buffer *buf);
+static void drawAnchorCursor(struct Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
-static void redrawNLine(Buffer *buf, int n);
-static Line *redrawLine(Buffer *buf, Line *l, int i);
-static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos);
+static void redrawNLine(struct Buffer *buf, int n);
+static Line *redrawLine(struct Buffer *buf, Line *l, int i);
+static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos, int epos);
 static void do_effects(Lineprop m);
 
-static Str make_lastline_link(Buffer *buf, char *title, char *url) {
+static Str make_lastline_link(struct Buffer *buf, char *title, char *url) {
   Str s = NULL, u;
   ParsedURL pu;
   char *p;
@@ -75,7 +76,7 @@ static Str make_lastline_link(Buffer *buf, char *title, char *url) {
   return s;
 }
 
-static Str make_lastline_message(Buffer *buf) {
+static Str make_lastline_message(struct Buffer *buf) {
   Str msg, s = NULL;
   int sl = 0;
 

@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "buffer.h"
 #include "termsize.h"
 #include "terms.h"
 #include <string.h>

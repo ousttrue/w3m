@@ -1,4 +1,5 @@
 #include "map.h"
+#include "buffer.h"
 #include "fm.h"
 #include "myctype.h"
 #include "regex.h"
@@ -55,7 +56,7 @@ AnchorList *putAnchor(AnchorList *al, char *url, char *target,
   return al;
 }
 
-Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
+Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *referer,
                      char *title, unsigned char key, int line, int pos) {
   Anchor *a;
   buf->href =
@@ -63,19 +64,19 @@ Anchor *registerHref(Buffer *buf, char *url, char *target, char *referer,
   return a;
 }
 
-Anchor *registerName(Buffer *buf, char *url, int line, int pos) {
+Anchor *registerName(struct Buffer *buf, char *url, int line, int pos) {
   Anchor *a;
   buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
   return a;
 }
 
-Anchor *registerImg(Buffer *buf, char *url, char *title, int line, int pos) {
+Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line, int pos) {
   Anchor *a;
   buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
 }
 
-Anchor *registerForm(Buffer *buf, FormList *flist, struct parsed_tag *tag,
+Anchor *registerForm(struct Buffer *buf, FormList *flist, struct parsed_tag *tag,
                      int line, int pos) {
   Anchor *a;
   FormItemList *fi;
@@ -126,19 +127,19 @@ Anchor *retrieveAnchor(AnchorList *al, int line, int pos) {
   return NULL;
 }
 
-Anchor *retrieveCurrentAnchor(Buffer *buf) {
+Anchor *retrieveCurrentAnchor(struct Buffer *buf) {
   if (buf->currentLine == NULL)
     return NULL;
   return retrieveAnchor(buf->href, buf->currentLine->linenumber, buf->pos);
 }
 
-Anchor *retrieveCurrentImg(Buffer *buf) {
+Anchor *retrieveCurrentImg(struct Buffer *buf) {
   if (buf->currentLine == NULL)
     return NULL;
   return retrieveAnchor(buf->img, buf->currentLine->linenumber, buf->pos);
 }
 
-Anchor *retrieveCurrentForm(Buffer *buf) {
+Anchor *retrieveCurrentForm(struct Buffer *buf) {
   if (buf->currentLine == NULL)
     return NULL;
   return retrieveAnchor(buf->formitem, buf->currentLine->linenumber, buf->pos);
@@ -159,11 +160,11 @@ Anchor *searchAnchor(AnchorList *al, char *str) {
   return NULL;
 }
 
-Anchor *searchURLLabel(Buffer *buf, char *url) {
+Anchor *searchURLLabel(struct Buffer *buf, char *url) {
   return searchAnchor(buf->name, url);
 }
 
-static Anchor *_put_anchor_all(Buffer *buf, char *p1, char *p2, int line,
+static Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2, int line,
                                int pos) {
   Str tmp;
 
@@ -189,7 +190,7 @@ static void reseq_anchor0(AnchorList *al, short *seqmap) {
 }
 
 /* renumber anchor */
-static void reseq_anchor(Buffer *buf) {
+static void reseq_anchor(struct Buffer *buf) {
   int i, j, n, nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
   short *seqmap;
   Anchor *a, *a1;
@@ -240,8 +241,8 @@ static void reseq_anchor(Buffer *buf) {
   reseq_anchor0(buf->formitem, seqmap);
 }
 
-static char *reAnchorPos(Buffer *buf, Line *l, char *p1, char *p2,
-                         Anchor *(*anchorproc)(Buffer *, char *, char *, int,
+static char *reAnchorPos(struct Buffer *buf, Line *l, char *p1, char *p2,
+                         Anchor *(*anchorproc)(struct Buffer *, char *, char *, int,
                                                int)) {
   Anchor *a;
   int spos, epos;
@@ -281,14 +282,14 @@ static char *reAnchorPos(Buffer *buf, Line *l, char *p1, char *p2,
   return p2;
 }
 
-void reAnchorWord(Buffer *buf, Line *l, int spos, int epos) {
+void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos) {
   reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static char *reAnchorAny(Buffer *buf, char *re,
-                         Anchor *(*anchorproc)(Buffer *, char *, char *, int,
+static char *reAnchorAny(struct Buffer *buf, char *re,
+                         Anchor *(*anchorproc)(struct Buffer *, char *, char *, int,
                                                int)) {
   Line *l;
   char *p = NULL, *p1, *p2;
@@ -321,7 +322,7 @@ static char *reAnchorAny(Buffer *buf, char *re,
   return NULL;
 }
 
-char *reAnchor(Buffer *buf, char *re) {
+char *reAnchor(struct Buffer *buf, char *re) {
   return reAnchorAny(buf, re, _put_anchor_all);
 }
 
@@ -425,7 +426,7 @@ void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
   }
 }
 
-void addMultirowsForm(Buffer *buf, AnchorList *al) {
+void addMultirowsForm(struct Buffer *buf, AnchorList *al) {
   int i, j, k, col, ecol, pos;
   Anchor a_form, *a;
   Line *l, *ls;
@@ -479,7 +480,7 @@ void addMultirowsForm(Buffer *buf, AnchorList *al) {
   }
 }
 
-char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
+char *getAnchorText(struct Buffer *buf, AnchorList *al, Anchor *a) {
   int hseq, i;
   Line *l;
   Str tmp = NULL;
@@ -514,7 +515,7 @@ char *getAnchorText(Buffer *buf, AnchorList *al, Anchor *a) {
   return tmp ? tmp->ptr : NULL;
 }
 
-Buffer *link_list_panel(Buffer *buf) {
+struct Buffer *link_list_panel(struct Buffer *buf) {
   LinkList *l;
   AnchorList *al;
   Anchor *a;

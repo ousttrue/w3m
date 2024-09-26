@@ -1,8 +1,5 @@
-/* $Id: form.c,v 1.35 2010/07/18 13:48:48 htrb Exp $ */
-/*
- * HTML forms
- */
 #include "fm.h"
+#include "buffer.h"
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "myctype.h"
@@ -159,7 +156,7 @@ int formtype(char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(Anchor *a, Buffer *buf, FormItemList *fi) {
+void formRecheckRadio(Anchor *a, struct Buffer *buf, FormItemList *fi) {
   int i;
   Anchor *a2;
   FormItemList *f2;

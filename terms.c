@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "buffer.h"
 #include "termsize.h"
 #include "tty.h"
 #include "scr.h"

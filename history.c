@@ -1,7 +1,7 @@
 #include "fm.h"
 #include "terms.h"
 
-Buffer *historyBuffer(Hist *hist) {
+struct Buffer *historyBuffer(Hist *hist) {
   Str src = Strnew();
   HistItem *item;
   char *p, *q;

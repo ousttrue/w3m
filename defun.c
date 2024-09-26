@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "buffer.h"
 #include "map.h"
 #include "scr.h"
 #include "tty.h"
@@ -39,17 +40,17 @@ static int need_resize_screen = FALSE;
 static void resize_screen(void);
 
 static char *SearchString = NULL;
-int (*searchRoutine)(Buffer *, char *);
+int (*searchRoutine)(struct Buffer *, char *);
 
 JMP_BUF IntReturn;
 
 static void cmd_loadfile(char *path);
 static void cmd_loadURL(char *url, ParsedURL *current, char *referer,
                         FormList *request);
-static void cmd_loadBuffer(Buffer *buf, int prop, int linkid);
+static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 
-static char *getCurWord(Buffer *buf, int *spos, int *epos);
+static char *getCurWord(struct Buffer *buf, int *spos, int *epos);
 
 static int display_ok = FALSE;
 int prec_num = 0;
@@ -63,8 +64,8 @@ int do_add_download_list() {
   return ret;
 }
 
-void set_buffer_environ(Buffer *);
-static void save_buffer_position(Buffer *buf);
+void set_buffer_environ(struct Buffer *);
+static void save_buffer_position(struct Buffer *buf);
 
 static void _followForm(int);
 static void _goLine(char *);
@@ -225,7 +226,7 @@ DEFUN(multimap, MULTIMAP, "multimap") {
   }
 }
 
-void tmpClearBuffer(Buffer *buf) {
+void tmpClearBuffer(struct Buffer *buf) {
   if (buf->pagerSource == NULL && writeBufferCache(buf) == 0) {
     buf->firstLine = NULL;
     buf->topLine = NULL;

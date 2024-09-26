@@ -858,13 +858,13 @@ static Str to_str(struct param_ptr *p) {
   return NULL;
 }
 
-Buffer *load_option_panel(void) {
+struct Buffer *load_option_panel(void) {
   Str src;
   struct param_ptr *p;
   struct sel_c *s;
   int x, i;
   Str tmp;
-  Buffer *buf;
+  struct Buffer *buf;
 
   if (optionpanel_str == NULL)
     optionpanel_str = Sprintf(optionpanel_src1, w3m_version,

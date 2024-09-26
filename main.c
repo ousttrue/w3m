@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "buffer.h"
 #include "defun.h"
 #include "terms.h"
 #include "termsize.h"
@@ -194,7 +195,7 @@ static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 #endif
 
 int main(int argc, char **argv) {
-  Buffer *newbuf = NULL;
+  struct Buffer *newbuf = NULL;
   char *p;
   int c, i;
   InputStream redin;

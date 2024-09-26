@@ -1,6 +1,6 @@
-/* $Id: search.c,v 1.31 2004/03/23 16:44:02 ukai Exp $ */
 #include "fm.h"
 #include "regex.h"
+#include "buffer.h"
 #include "scr.h"
 #include <signal.h>
 #include <errno.h>
@@ -11,7 +11,7 @@ static void set_mark(Line *l, int pos, int epos) {
     l->propBuf[pos] |= PE_MARK;
 }
 
-int forwardSearch(Buffer *buf, char *str) {
+int forwardSearch(struct Buffer *buf, char *str) {
   char *p, *first, *last;
   Line *l, *begin;
   int wrapped = FALSE;

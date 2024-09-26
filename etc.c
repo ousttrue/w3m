@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "buffer.h"
 #include "tty.h"
 #include "myctype.h"
 #include "html.h"
@@ -23,7 +24,7 @@ struct auth_pass {
 
 struct auth_pass *passwords = NULL;
 
-int columnSkip(Buffer *buf, int offset) {
+int columnSkip(struct Buffer *buf, int offset) {
   int i, maxColumn;
   int column = buf->currentColumn + offset;
   int nlines = buf->LINES + 1;

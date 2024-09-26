@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "scr.h"
+#include "buffer.h"
 #include "terms.h"
 #include "tty.h"
 #include <unistd.h>
@@ -444,7 +445,7 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-ParsedURL *baseURL(Buffer *buf) {
+ParsedURL *baseURL(struct Buffer *buf) {
   if (buf->bufferprop & BP_NO_URL) {
     /* no URL is defined for the buffer */
     return NULL;

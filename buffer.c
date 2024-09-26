@@ -1,9 +1,13 @@
+#include "buffer.h"
 #include "fm.h"
 #include "tty.h"
 #include "scr.h"
 #include "termsize.h"
 #include "terms.h"
 
+int REV_LB[MAX_LB] = {
+    LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
+};
 char *NullLine = "";
 Lineprop NullProp[] = {0};
 

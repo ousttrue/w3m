@@ -27,7 +27,7 @@ static char *convert_size3(int64_t size) {
   return tmp->ptr;
 }
 
-static Buffer *DownloadListBuffer(void) {
+static struct Buffer *DownloadListBuffer(void) {
   DownloadList *d;
   Str src = NULL;
   struct stat st;

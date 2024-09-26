@@ -14,10 +14,10 @@ struct MapList {
   struct MapList *next;
 };
 
-struct MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x,
+struct MapArea *follow_map_menu(struct Buffer *buf, char *name, Anchor *a_img, int x,
                                 int y);
 
 struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
                            char *coords);
 
-struct MapList *searchMapList(Buffer *buf, char *name);
+struct MapList *searchMapList(struct Buffer *buf, char *name);

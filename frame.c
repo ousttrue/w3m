@@ -1,5 +1,5 @@
-/* $Id: frame.c,v 1.34 2003/09/26 17:59:51 ukai Exp $ */
 #include "fm.h"
+#include "buffer.h"
 #include "parsetagx.h"
 #include "terms.h"
 #include "myctype.h"
@@ -71,7 +71,7 @@ struct frameset *newFrameSet(struct parsed_tag *tag) {
   return f;
 }
 
-struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf) {
+struct frame_body *newFrame(struct parsed_tag *tag, struct Buffer *buf) {
   struct frame_body *body;
   char *p;
 
@@ -208,7 +208,7 @@ void flushFrameSet(struct frameset *fs) {
 }
 
 void pushFrameTree(struct frameset_queue **fqpp, struct frameset *fs,
-                   Buffer *buf) {
+                   struct Buffer *buf) {
   struct frameset_queue *rfq, *cfq = *fqpp;
 
   if (!fs)

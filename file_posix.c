@@ -1,4 +1,5 @@
 #include "file.h"
+#include "buffer.h"
 #include "tty.h"
 #include "terms.h"
 #include "termsize.h"
@@ -9,11 +10,11 @@
 
 static int64_t current_content_length;
 
-Buffer *doExternal(URLFile uf, char *type, Buffer *defaultbuf) {
+struct Buffer *doExternal(URLFile uf, char *type, struct Buffer *defaultbuf) {
   Str tmpf, command;
   struct mailcap *mcap;
   int mc_stat;
-  Buffer *buf = NULL;
+  struct Buffer *buf = NULL;
   char *header, *src = NULL, *ext = uf.ext;
 
   if (!(mcap = searchExtViewer(type)))
