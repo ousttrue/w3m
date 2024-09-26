@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "tabbuffer.h"
 #include "buffer.h"
 #include "defun.h"
 #include "terms.h"
@@ -10,6 +11,10 @@
 #include <sys/wait.h>
 #endif
 #include <gc.h>
+
+struct TabBuffer *CurrentTab = nullptr;
+struct TabBuffer *FirstTab = nullptr;
+struct TabBuffer *LastTab = nullptr;
 
 void show_params(FILE *fp);
 static int show_params_p = 0;

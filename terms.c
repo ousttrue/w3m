@@ -4,6 +4,7 @@
  */
 #include "terms.h"
 #include "buffer.h"
+#include "tabbuffer.h"
 #include "termsize.h"
 #include "tty.h"
 #include "scr.h"

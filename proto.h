@@ -101,7 +101,6 @@ extern void vwSrc(void);
 extern void reload(void);
 extern void reshape(void);
 extern void chkURL(void);
-extern void chkURLBuffer(struct Buffer *buf);
 extern void chkWORD(void);
 #define chkNMID nulcmd
 extern void rFrame(void);
@@ -134,6 +133,7 @@ extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
+struct Buffer;
 extern int currentLn(struct Buffer *buf);
 extern void tmpClearBuffer(struct Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
@@ -215,9 +215,6 @@ extern int checkOverWrite(char *path);
 extern int matchattr(char *p, char *attr, int len, Str *value);
 extern void readHeader(URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(struct Buffer *buf, char *field);
-extern TabBuffer *newTab(void);
-extern void calcTabPos(void);
-extern TabBuffer *deleteTab(TabBuffer *tab);
 extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                             int64_t size);
 extern void stopDownload(void);

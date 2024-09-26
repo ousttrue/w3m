@@ -87,7 +87,7 @@ int forwardSearch(struct Buffer *buf, char *str) {
   return SR_NOTFOUND;
 }
 
-int backwardSearch(Buffer *buf, char *str) {
+int backwardSearch(struct Buffer *buf, char *str) {
   char *p, *q, *found, *found_last, *first, *last;
   Line *l, *begin;
   int wrapped = FALSE;

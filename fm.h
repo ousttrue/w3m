@@ -164,7 +164,6 @@ typedef int wc_ces; /* XXX: not used */
 #define SR_NOTFOUND 0x2
 #define SR_WRAPPED 0x4
 
-
 /* mark URL, Message-ID */
 #define CHK_URL 1
 #define CHK_NMID 2
@@ -269,26 +268,6 @@ typedef int wc_ces; /* XXX: not used */
  * Types.
  */
 
-typedef struct _BufferPos {
-  long top_linenumber;
-  long cur_linenumber;
-  int currentColumn;
-  int pos;
-  int bpos;
-  struct _BufferPos *next;
-  struct _BufferPos *prev;
-} BufferPos;
-
-typedef struct _TabBuffer {
-  struct _TabBuffer *nextTab;
-  struct _TabBuffer *prevTab;
-  struct Buffer *currentBuffer;
-  struct Buffer *firstBuffer;
-  short x1;
-  short x2;
-  short y;
-} TabBuffer;
-
 typedef struct _DownloadList {
   pid_t pid;
   char *url;
@@ -327,7 +306,6 @@ typedef struct _DownloadList {
 #define CUR_LINENUMBER(buf)                                                    \
   ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
 
-#define NO_BUFFER ((Buffer *)1)
 
 #define RB_STACK_SIZE 10
 
@@ -612,17 +590,11 @@ global char *MyProgramName init("w3m");
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;
  */
-global TabBuffer *CurrentTab;
-global TabBuffer *FirstTab;
-global TabBuffer *LastTab;
 global int open_tab_blank init(FALSE);
 global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
 global int nTab;
 global int TabCols init(10);
-#define NO_TABBUFFER ((TabBuffer *)1)
-#define Currentbuf (CurrentTab->currentBuffer)
-#define Firstbuf (CurrentTab->firstBuffer)
 global DownloadList *FirstDL init(NULL);
 global DownloadList *LastDL init(NULL);
 global int CurrentKey;

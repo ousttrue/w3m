@@ -29,7 +29,17 @@ typedef struct _LinkList {
   struct _LinkList *next;
 } LinkList;
 
-typedef struct Buffer {
+struct BufferPos {
+  long top_linenumber;
+  long cur_linenumber;
+  int currentColumn;
+  int pos;
+  int bpos;
+  struct BufferPos *next;
+  struct BufferPos *prev;
+};
+
+struct Buffer {
   char *filename;
   char *buffername;
   struct Line *firstLine;
@@ -86,5 +96,9 @@ typedef struct Buffer {
   char image_loaded;
   char need_reshape;
   Anchor *submit;
-  struct _BufferPos *undo;
-} Buffer;
+  struct BufferPos *undo;
+};
+
+#define NO_BUFFER ((struct Buffer *)1)
+
+extern void chkURLBuffer(struct Buffer *buf);

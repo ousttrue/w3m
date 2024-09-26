@@ -174,7 +174,7 @@ void formRecheckRadio(Anchor *a, struct Buffer *buf, FormItemList *fi) {
   formUpdateBuffer(a, buf, fi);
 }
 
-void formResetBuffer(Buffer *buf, AnchorList *formitem) {
+void formResetBuffer(struct Buffer *buf, AnchorList *formitem) {
   int i;
   Anchor *a;
   FormItemList *f1, *f2;
@@ -301,8 +301,8 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   return pos;
 }
 
-void formUpdateBuffer(Anchor *a, Buffer *buf, FormItemList *form) {
-  Buffer save;
+void formUpdateBuffer(Anchor *a, struct Buffer *buf, FormItemList *form) {
+  struct Buffer save;
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   Line *l;
@@ -685,7 +685,7 @@ void loadPreForm(void) {
   fclose(fp);
 }
 
-void preFormUpdateBuffer(Buffer *buf) {
+void preFormUpdateBuffer(struct Buffer *buf) {
   struct pre_form *pf;
   struct pre_form_item *pi;
   int i;

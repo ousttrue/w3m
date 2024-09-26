@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "tabbuffer.h"
 #include "terms.h"
 #include "termsize.h"
 #include "tty.h"

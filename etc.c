@@ -59,7 +59,7 @@ int columnPos(Line *line, int column) {
   return i - 1;
 }
 
-Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
+Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
   int i;
   Line *l;
 
@@ -71,7 +71,7 @@ Line *lineSkip(Buffer *buf, Line *line, int offset, int last) {
   return l;
 }
 
-Line *currentLineSkip(Buffer *buf, Line *line, int offset, int last) {
+Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last) {
   int i, n;
   Line *l = line;
 
@@ -859,7 +859,7 @@ void loadPasswd(void) {
 }
 
 /* get last modified time */
-char *last_modified(Buffer *buf) {
+char *last_modified(struct Buffer *buf) {
   TextListItem *ti;
   struct stat st;
 

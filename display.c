@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "tabbuffer.h"
 #include "buffer.h"
 #include "scr.h"
 #include "termsize.h"
@@ -128,7 +129,7 @@ static Str make_lastline_message(struct Buffer *buf) {
   return msg;
 }
 
-void displayBuffer(Buffer *buf, int mode) {
+void displayBuffer(struct Buffer *buf, int mode) {
   Str msg;
   int ny = 0;
 
@@ -206,7 +207,7 @@ void displayBuffer(Buffer *buf, int mode) {
   }
 }
 
-static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
+static void drawAnchorCursor0(struct Buffer *buf, AnchorList *al, int hseq,
                               int prevhseq, int tline, int eline, int active) {
   int i, j;
   Line *l;
@@ -253,7 +254,7 @@ static void drawAnchorCursor0(Buffer *buf, AnchorList *al, int hseq,
   }
 }
 
-static void drawAnchorCursor(Buffer *buf) {
+static void drawAnchorCursor(struct Buffer *buf) {
   Anchor *an;
   int hseq, prevhseq;
   int tline, eline;
@@ -285,12 +286,12 @@ static void drawAnchorCursor(Buffer *buf) {
   buf->hmarklist->prevhseq = hseq;
 }
 
-static void redrawNLine(Buffer *buf, int n) {
+static void redrawNLine(struct Buffer *buf, int n) {
   Line *l;
   int i;
 
   if (nTab > 1) {
-    TabBuffer *t;
+    struct TabBuffer *t;
     int l;
 
     scr_move(0, 0);
@@ -333,7 +334,7 @@ static void redrawNLine(Buffer *buf, int n) {
   }
 }
 
-static Line *redrawLine(Buffer *buf, Line *l, int i) {
+static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->currentColumn;
   char *p;
@@ -446,7 +447,7 @@ static Line *redrawLine(Buffer *buf, Line *l, int i) {
   return l;
 }
 
-static int redrawLineRegion(Buffer *buf, Line *l, int i, int bpos, int epos) {
+static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos, int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->currentColumn;
   char *p;
@@ -619,7 +620,7 @@ void addChar(char c, Lineprop mode) {
 /*
  * List of error messages
  */
-Buffer *message_list_panel(void) {
+struct Buffer *message_list_panel(void) {
   Str tmp = Strnew_size(LINES * COLS);
 
   /* FIXME: gettextize? */
@@ -633,7 +634,7 @@ Buffer *message_list_panel(void) {
   return loadHTMLString(tmp);
 }
 
-void cursorUp0(Buffer *buf, int n) {
+void cursorUp0(struct Buffer *buf, int n) {
   if (buf->cursorY > 0)
     cursorUpDown(buf, -1);
   else {
@@ -644,7 +645,7 @@ void cursorUp0(Buffer *buf, int n) {
   }
 }
 
-void cursorUp(Buffer *buf, int n) {
+void cursorUp(struct Buffer *buf, int n) {
   Line *l = buf->currentLine;
   if (buf->firstLine == NULL)
     return;
@@ -661,7 +662,7 @@ void cursorUp(Buffer *buf, int n) {
     cursorUp0(buf, n);
 }
 
-void cursorDown0(Buffer *buf, int n) {
+void cursorDown0(struct Buffer *buf, int n) {
   if (buf->cursorY < buf->LINES - 1)
     cursorUpDown(buf, 1);
   else {
@@ -672,7 +673,7 @@ void cursorDown0(Buffer *buf, int n) {
   }
 }
 
-void cursorDown(Buffer *buf, int n) {
+void cursorDown(struct Buffer *buf, int n) {
   Line *l = buf->currentLine;
   if (buf->firstLine == NULL)
     return;
@@ -690,7 +691,7 @@ void cursorDown(Buffer *buf, int n) {
     cursorDown0(buf, n);
 }
 
-void cursorUpDown(Buffer *buf, int n) {
+void cursorUpDown(struct Buffer *buf, int n) {
   Line *cl = buf->currentLine;
 
   if (buf->firstLine == NULL)
@@ -700,7 +701,7 @@ void cursorUpDown(Buffer *buf, int n) {
   arrangeLine(buf);
 }
 
-void cursorRight(Buffer *buf, int n) {
+void cursorRight(struct Buffer *buf, int n) {
   int i, delta = 1, cpos, vpos2;
   Line *l = buf->currentLine;
   Lineprop *p;
@@ -734,7 +735,7 @@ void cursorRight(Buffer *buf, int n) {
   buf->cursorX = buf->visualpos - l->bwidth;
 }
 
-void cursorLeft(Buffer *buf, int n) {
+void cursorLeft(struct Buffer *buf, int n) {
   int i, delta = 1, cpos;
   Line *l = buf->currentLine;
   Lineprop *p;
@@ -762,7 +763,7 @@ void cursorLeft(Buffer *buf, int n) {
   buf->cursorX = buf->visualpos - l->bwidth;
 }
 
-void cursorHome(Buffer *buf) {
+void cursorHome(struct Buffer *buf) {
   buf->visualpos = 0;
   buf->cursorX = buf->cursorY = 0;
 }
@@ -771,7 +772,7 @@ void cursorHome(Buffer *buf) {
  * Arrange line,column and cursor position according to current line and
  * current position.
  */
-void arrangeCursor(Buffer *buf) {
+void arrangeCursor(struct Buffer *buf) {
   int col, col2, pos;
   int delta = 1;
   if (buf == NULL || buf->currentLine == NULL)
@@ -821,7 +822,7 @@ void arrangeCursor(Buffer *buf) {
 #endif
 }
 
-void arrangeLine(Buffer *buf) {
+void arrangeLine(struct Buffer *buf) {
   int i, cpos;
 
   if (buf->firstLine == NULL)
@@ -848,7 +849,7 @@ void arrangeLine(Buffer *buf) {
 #endif
 }
 
-void cursorXY(Buffer *buf, int x, int y) {
+void cursorXY(struct Buffer *buf, int x, int y) {
   int oldX;
 
   cursorUpDown(buf, y - buf->cursorY);
@@ -870,7 +871,7 @@ void cursorXY(Buffer *buf, int x, int y) {
   }
 }
 
-void restorePosition(Buffer *buf, Buffer *orig) {
+void restorePosition(struct Buffer *buf, struct Buffer *orig) {
   buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1, FALSE);
   gotoLine(buf, CUR_LINENUMBER(orig));
   buf->pos = orig->pos;

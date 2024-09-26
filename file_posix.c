@@ -1,4 +1,5 @@
 #include "file.h"
+#include "tabbuffer.h"
 #include "buffer.h"
 #include "tty.h"
 #include "terms.h"

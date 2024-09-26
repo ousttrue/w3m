@@ -254,7 +254,7 @@ struct frameset *popFrameTree(struct frameset_queue **fqpp) {
   return rfs;
 }
 
-void resetFrameElement(union frameset_element *f_element, Buffer *buf,
+void resetFrameElement(union frameset_element *f_element, struct Buffer *buf,
                        char *referer, FormList *request) {
   char *f_name;
   struct frame_body *f_body;
@@ -290,7 +290,7 @@ void resetFrameElement(union frameset_element *f_element, Buffer *buf,
 static struct frameset *frame_download_source(struct frame_body *b,
                                               ParsedURL *currentURL,
                                               ParsedURL *baseURL, int flag) {
-  Buffer *buf;
+  struct Buffer *buf;
   struct frameset *ret_frameset = NULL;
   ParsedURL url;
 
@@ -355,7 +355,7 @@ static struct frameset *frame_download_source(struct frame_body *b,
   case HTML_N_COLGROUP:                                                        \
   case HTML_COL
 
-static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
+static int createFrameFile(struct frameset *f, FILE *f1, struct Buffer *current,
                            int level, int force_reload) {
   int r, c, t_stack;
   URLFile f2;
@@ -763,10 +763,10 @@ static int createFrameFile(struct frameset *f, FILE *f1, Buffer *current,
   return 0;
 }
 
-Buffer *renderFrame(Buffer *Cbuf, int force_reload) {
+struct Buffer *renderFrame(struct Buffer *Cbuf, int force_reload) {
   Str tmp;
   FILE *f;
-  Buffer *buf;
+  struct Buffer *buf;
   int flag;
   struct frameset *fset;
 
