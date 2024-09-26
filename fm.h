@@ -285,12 +285,6 @@ extern int REV_LB[];
 
 typedef unsigned short Lineprop;
 
-typedef struct _MapList {
-  Str name;
-  GeneralList *area;
-  struct _MapList *next;
-} MapList;
-
 typedef struct _Line {
   char *lineBuf;
   Lineprop *propBuf;
@@ -386,7 +380,7 @@ typedef struct _Buffer {
   AnchorList *formitem;
   LinkList *linklist;
   FormList *formlist;
-  MapList *maplist;
+  struct MapList *maplist;
   HmarkerList *hmarklist;
   HmarkerList *imarklist;
   ParsedURL currentURL;

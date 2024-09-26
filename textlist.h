@@ -13,7 +13,7 @@ typedef struct _listitem {
   struct _listitem *prev;
 } ListItem;
 
-typedef struct _generallist {
+typedef struct GeneralList {
   ListItem *first;
   ListItem *last;
   int nitem;

@@ -4483,7 +4483,7 @@ static void HTMLlineproc2body(Buffer *buf, Str (*feed)(), int llimit) {
           break;
         case HTML_MAP:
           if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-            MapList *m = New(MapList);
+            struct MapList *m = New(struct MapList);
             m->name = Strnew_charp(p);
             m->area = newGeneralList();
             m->next = buf->maplist;

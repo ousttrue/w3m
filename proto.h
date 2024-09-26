@@ -323,7 +323,6 @@ extern void do_internal(char *action, char *data);
 extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
 extern void form_write_from_file(FILE *f, char *boundary, char *name,
                                  char *filename, char *file);
-extern MapList *searchMapList(Buffer *buf, char *name);
 extern void follow_map(struct parsed_tagarg *arg);
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(Buffer *buf);

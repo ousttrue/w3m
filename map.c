@@ -4,8 +4,8 @@
 #include "map.h"
 #include <math.h>
 
-MapList *searchMapList(Buffer *buf, char *name) {
-  MapList *ml;
+struct MapList *searchMapList(Buffer *buf, char *name) {
+  struct MapList *ml;
 
   if (name == NULL)
     return NULL;
@@ -32,7 +32,7 @@ Anchor *retrieveCurrentMap(Buffer *buf) {
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
 struct MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y) {
-  MapList *ml;
+  struct MapList *ml;
   ListItem *al;
   int i, selected = -1;
   int initial = 0;
@@ -57,7 +57,7 @@ char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 
 Buffer *follow_map_panel(Buffer *buf, char *name) {
   Str mappage;
-  MapList *ml;
+  struct MapList *ml;
   ListItem *al;
   struct MapArea *a;
   ParsedURL pu;
@@ -102,7 +102,7 @@ struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 
 /* append image map links */
 static void append_map_info(Buffer *buf, Str tmp, FormItemList *fi) {
-  MapList *ml;
+  struct MapList *ml;
   ListItem *al;
   struct MapArea *a;
   ParsedURL pu;
