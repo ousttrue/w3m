@@ -403,8 +403,6 @@ char *cleanupName(char *name) {
   return buf;
 }
 
-
-
 #ifndef HAVE_STRCHR
 char *strchr(const char *s, int c) {
   while (*s) {
@@ -927,3 +925,45 @@ char *w3m_help_dir() { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }
 /* c-basic-offset: 4   */
 /* tab-width: 8        */
 /* End:                */
+
+char *expandPath(char *name) {
+  if (!name) {
+    return nullptr;
+  }
+
+  // , *getpwnam(const char *);
+
+  auto p = name;
+  if (*p != '~') {
+    return name;
+  }
+  p++;
+
+  Str extpath = NULL;
+#ifndef _WIN32
+  if (!IS_ALPHA(*p)) {
+    char *q = strchr(p, '/');
+    struct passwd *passent;
+    if (q) { /* ~user/dir... */
+      passent = getpwnam(allocStr(p, q - p));
+      p = q;
+    } else { /* ~user */
+      passent = getpwnam(p);
+      p = "";
+    }
+    if (!passent) {
+      return name;
+    }
+    extpath = Strnew_charp(passent->pw_dir);
+  } else
+#endif
+      if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
+    extpath = Strnew_charp(getenv("HOME"));
+  } else {
+    return name;
+  }
+  if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+    p++;
+  Strcat_charp(extpath, p);
+  return extpath->ptr;
+}

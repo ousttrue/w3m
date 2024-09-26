@@ -55,7 +55,6 @@ pub const SRCS_POSIX = [_][]const u8{
     "ftp_posix.c",
     "etc_posix.c",
     "file_posix.c",
-    "indep_posix.c",
     "form_posix.c",
 };
 
