@@ -5,6 +5,7 @@
 #include "terms.h"
 #include "termsize.h"
 #include "tty.h"
+#include "localcgi.h"
 #include <signal.h>
 #ifdef _WIN32
 #else
@@ -218,8 +219,9 @@ int main(int argc, char **argv) {
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
   char **getimage_args = NULL;
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL"))
+  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")){
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
+  }
   GC_INIT();
 #if (GC_VERSION_MAJOR > 7) ||                                                  \
     ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))

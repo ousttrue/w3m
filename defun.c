@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "localcgi.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "map.h"

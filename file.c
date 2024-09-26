@@ -19,7 +19,7 @@
 
 #include "html.h"
 #include "parsetagx.h"
-#include "local.h"
+#include "localcgi.h"
 #include "regex.h"
 
 #ifndef max

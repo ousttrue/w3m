@@ -4,7 +4,7 @@
 #include "termsize.h"
 #include "tty.h"
 #include "scr.h"
-#include "local.h"
+#include "localcgi.h"
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)

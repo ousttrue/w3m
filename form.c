@@ -3,7 +3,7 @@
 #include "parsetag.h"
 #include "parsetagx.h"
 #include "myctype.h"
-#include "local.h"
+#include "localcgi.h"
 #include "regex.h"
 #include "terms.h"
 

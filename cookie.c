@@ -14,7 +14,7 @@
 #include "html.h"
 
 #include <time.h>
-#include "local.h"
+#include "localcgi.h"
 #include "regex.h"
 #include "myctype.h"
 
