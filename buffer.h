@@ -15,16 +15,18 @@
 #define MAX_LB 5
 extern int REV_LB[];
 
-#define LINK_TYPE_NONE 0
-#define LINK_TYPE_REL 1
-#define LINK_TYPE_REV 2
-typedef struct _LinkList {
+enum LINK_TYPE {
+  LINK_TYPE_NONE = 0,
+  LINK_TYPE_REL = 1,
+  LINK_TYPE_REV = 2,
+};
+struct LinkList {
   char *url;
-  char *title; /* Next, Contents, ... */
-  char *ctype; /* Content-Type */
-  char type;   /* Rel, Rev */
-  struct _LinkList *next;
-} LinkList;
+  char *title;         /* Next, Contents, ... */
+  char *ctype;         /* Content-Type */
+  enum LINK_TYPE type; /* Rel, Rev */
+  struct LinkList *next;
+};
 
 struct BufferPos {
   long top_linenumber;
@@ -64,7 +66,7 @@ struct Buffer {
   AnchorList *name;
   AnchorList *img;
   AnchorList *formitem;
-  LinkList *linklist;
+  struct LinkList *linklist;
   struct FormList *formlist;
   struct MapList *maplist;
   HmarkerList *hmarklist;

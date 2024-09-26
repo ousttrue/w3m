@@ -4635,8 +4635,6 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
 
 static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
   char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
-  char type = LINK_TYPE_NONE;
-  LinkList *l;
 
   parsedtag_get_value(tag, ATTR_HREF, &href);
   if (href)
@@ -4644,6 +4642,8 @@ static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
   parsedtag_get_value(tag, ATTR_TITLE, &title);
   parsedtag_get_value(tag, ATTR_TYPE, &ctype);
   parsedtag_get_value(tag, ATTR_REL, &rel);
+
+  char type = LINK_TYPE_NONE;
   if (rel != NULL) {
     /* forward link type */
     type = LINK_TYPE_REL;
@@ -4658,14 +4658,14 @@ static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
       title = rev;
   }
 
-  l = New(LinkList);
+  struct LinkList* l = New(struct LinkList);
   l->url = href;
   l->title = title;
   l->ctype = ctype;
   l->type = type;
   l->next = NULL;
   if (buf->linklist) {
-    LinkList *i;
+    struct LinkList *i;
     for (i = buf->linklist; i->next; i = i->next)
       ;
     i->next = l;

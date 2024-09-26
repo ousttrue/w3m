@@ -515,25 +515,20 @@ char *getAnchorText(struct Buffer *buf, AnchorList *al, Anchor *a) {
 }
 
 struct Buffer *link_list_panel(struct Buffer *buf) {
-  LinkList *l;
-  AnchorList *al;
-  Anchor *a;
-  struct FormItemList *fi;
-  int i;
-  char *t, *u, *p;
   struct Url pu;
   /* FIXME: gettextize? */
-  Str tmp = Strnew_charp("<title>Link List</title>\
-<h1 align=center>Link List</h1>\n");
+  Str tmp =
+      Strnew_charp("<title>Link List</title><h1 align=center>Link List</h1>\n");
 
   if (buf->bufferprop & BP_INTERNAL ||
       (buf->linklist == NULL && buf->href == NULL && buf->img == NULL)) {
     return NULL;
   }
 
+  char *t, *u, *p;
   if (buf->linklist) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-    for (l = buf->linklist; l; l = l->next) {
+    for (auto l = buf->linklist; l; l = l->next) {
       if (l->url) {
         parseURL2(l->url, &pu, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
@@ -560,9 +555,9 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
 
   if (buf->href) {
     Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-    al = buf->href;
-    for (i = 0; i < al->nanchor; i++) {
-      a = &al->anchors[i];
+    auto al = buf->href;
+    for (int i = 0; i < al->nanchor; i++) {
+      auto a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
       parseURL2(a->url, &pu, baseURL(buf));
@@ -582,9 +577,9 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
 
   if (buf->img) {
     Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-    al = buf->img;
-    for (i = 0; i < al->nanchor; i++) {
-      a = &al->anchors[i];
+    auto al = buf->img;
+    for (int i = 0; i < al->nanchor; i++) {
+      auto a = &al->anchors[i];
       if (a->slave)
         continue;
       parseURL2(a->url, &pu, baseURL(buf));
@@ -603,7 +598,7 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
       a = retrieveAnchor(buf->formitem, a->start.line, a->start.pos);
       if (!a)
         continue;
-      fi = (struct FormItemList *)a->url;
+      auto fi = (struct FormItemList *)a->url;
       fi = fi->parent->item;
       if (fi->parent->method == FORM_METHOD_INTERNAL &&
           !Strcmp_charp(fi->parent->action, "map") && fi->value) {

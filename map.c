@@ -32,7 +32,8 @@ Anchor *retrieveCurrentMap(struct Buffer *buf) {
 }
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
-struct MapArea *follow_map_menu(struct Buffer *buf, char *name, Anchor *a_img, int x, int y) {
+struct MapArea *follow_map_menu(struct Buffer *buf, char *name, Anchor *a_img,
+                                int x, int y) {
   struct MapList *ml;
   ListItem *al;
   int i, selected = -1;
@@ -92,7 +93,7 @@ struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
 }
 
 struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
-                    char *coords) {
+                           char *coords) {
   struct MapArea *a = New(struct MapArea);
 
   a->url = url;
@@ -102,7 +103,8 @@ struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 }
 
 /* append image map links */
-static void append_map_info(struct Buffer *buf, Str tmp, struct FormItemList *fi) {
+static void append_map_info(struct Buffer *buf, Str tmp,
+                            struct FormItemList *fi) {
   struct MapList *ml;
   ListItem *al;
   struct MapArea *a;
@@ -130,17 +132,16 @@ static void append_map_info(struct Buffer *buf, Str tmp, struct FormItemList *fi
 }
 
 /* append links */
-static void append_link_info(struct Buffer *buf, Str html, LinkList *link) {
-  LinkList *l;
-  struct Url pu;
-  char *url;
-
+static void append_link_info(struct Buffer *buf, Str html,
+                             struct LinkList *link) {
   if (!link)
     return;
 
   Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
-  for (l = link; l; l = l->next) {
+  for (auto l = link; l; l = l->next) {
+    char *url;
     if (l->url) {
+      struct Url pu;
       parseURL2(l->url, &pu, baseURL(buf));
       url = html_quote(parsedURL2Str(&pu)->ptr);
     } else
@@ -165,8 +166,8 @@ static void append_link_info(struct Buffer *buf, Str html, LinkList *link) {
 }
 
 /* append frame URL */
-static void append_frame_info(struct Buffer *buf, Str html, struct frameset *set,
-                              int level) {
+static void append_frame_info(struct Buffer *buf, Str html,
+                              struct frameset *set, int level) {
   char *p, *q;
   int i, j;
 
