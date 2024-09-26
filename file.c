@@ -1,4 +1,5 @@
 #include "file.h"
+#include "os.h"
 #include "http_request.h"
 #include "url_stream.h"
 #include "buffer.h"
@@ -5863,7 +5864,56 @@ char *guess_save_name(struct Buffer *buf, char *path) {
   return guess_filename(path);
 }
 
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
+static int setModtime(char *path, time_t modtime) {
+  struct utimbuf t;
+  struct stat st;
+
+  if (stat(path, &st) == 0)
+    t.actime = st.st_atime;
+  else
+    t.actime = time(NULL);
+  t.modtime = modtime;
+  return utime(path, &t);
+}
+
+static int _MoveFile(char *path1, char *path2) {
+  InputStream f1;
+  FILE *f2;
+  int is_pipe;
+  int64_t linelen = 0, trbyte = 0;
+  char *buf = NULL;
+  int count;
+
+  f1 = openIS(path1);
+  if (f1 == NULL)
+    return -1;
+  if (*path2 == '|' && PermitSaveToPipe) {
+    is_pipe = TRUE;
+    f2 = popen(path2 + 1, "w");
+  } else {
+    is_pipe = FALSE;
+    f2 = fopen(path2, "wb");
+  }
+  if (f2 == NULL) {
+    ISclose(f1);
+    return -1;
+  }
+  current_content_length = 0;
+  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+    fwrite(buf, 1, count, f2);
+    linelen += count;
+    term_showProgress(&linelen, &trbyte, current_content_length);
+  }
+  xfree(buf);
+  ISclose(f1);
+  if (is_pipe)
+    pclose(f2);
+  else
+    fclose(f2);
+  return 0;
+}
+
+
+
+

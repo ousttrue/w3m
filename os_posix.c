@@ -1,159 +1,17 @@
-#include "file.h"
-#include "url_stream.h"
-#include "tabbuffer.h"
-#include "buffer.h"
-#include "tty.h"
-#include "terms.h"
-#include "termsize.h"
-#include <sys/wait.h>
-#include <utime.h>
+#include "os.h"
 
-#define SAVE_BUF_SIZE 1536
-
-static int64_t current_content_length;
-
-struct Buffer *doExternal(struct URLFile uf, char *type, struct Buffer *defaultbuf) {
-  Str tmpf, command;
-  struct mailcap *mcap;
-  int mc_stat;
-  struct Buffer *buf = NULL;
-  char *header, *src = NULL, *ext = uf.ext;
-
-  if (!(mcap = searchExtViewer(type)))
-    return NULL;
-
-  if (mcap->nametemplate) {
-    tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
-    if (tmpf->ptr[0] == '.')
-      ext = tmpf->ptr;
-  }
-  tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
-
-  if (IStype(uf.stream) != IST_ENCODED)
-    uf.stream = newEncodedStream(uf.stream, uf.encoding);
-  header = checkHeader(defaultbuf, "Content-Type:");
-  if (header)
-    header = conv_to_system(header);
-  command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
-  if (!(mc_stat & MCSTAT_REPNAME)) {
-    Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
-    command = tmp;
-  }
-
-#ifdef HAVE_SETPGRP
-  if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
-      !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
+void mySystem(char *command, int background) {
+  if (background) {
     tty_flush();
     if (!fork()) {
-      setup_child(FALSE, 0, UFfileno(&uf));
-      if (save2tmp(uf, tmpf->ptr) < 0)
-        exit(1);
-      UFclose(&uf);
-      myExec(command->ptr);
-    }
-    return NO_BUFFER;
-  } else
-#endif
-  {
-    if (save2tmp(uf, tmpf->ptr) < 0) {
-      return NULL;
-    }
-  }
-  if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
-    if (defaultbuf == NULL)
-      defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
-    if (defaultbuf->sourcefile)
-      src = defaultbuf->sourcefile;
-    else
-      src = tmpf->ptr;
-    defaultbuf->sourcefile = NULL;
-    defaultbuf->mailcap = mcap;
-  }
-  if (mcap->flags & MAILCAP_HTMLOUTPUT) {
-    buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
-    if (buf && buf != NO_BUFFER) {
-      buf->type = "text/html";
-      buf->mailcap_source = buf->sourcefile;
-      buf->sourcefile = src;
-    }
-  } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
-    buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
-    if (buf && buf != NO_BUFFER) {
-      buf->type = "text/plain";
-      buf->mailcap_source = buf->sourcefile;
-      buf->sourcefile = src;
+      setup_child(FALSE, 0, -1);
+      myExec(command);
     }
   } else {
-    if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
-      term_fmTerm();
-      mySystem(command->ptr, 0);
-      term_fmInit();
-      if (CurrentTab && Currentbuf)
-        displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    } else {
-      mySystem(command->ptr, 1);
-    }
-    buf = NO_BUFFER;
+    system(command);
   }
-  if (buf && buf != NO_BUFFER) {
-    if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
-        buf->filename)
-      buf->buffername = conv_from_system(lastFileName(buf->filename));
-    buf->edit = mcap->edit;
-    buf->mailcap = mcap;
-  }
-  return buf;
 }
 
-static int setModtime(char *path, time_t modtime) {
-  struct utimbuf t;
-  struct stat st;
-
-  if (stat(path, &st) == 0)
-    t.actime = st.st_atime;
-  else
-    t.actime = time(NULL);
-  t.modtime = modtime;
-  return utime(path, &t);
-}
-
-static int _MoveFile(char *path1, char *path2) {
-  InputStream f1;
-  FILE *f2;
-  int is_pipe;
-  int64_t linelen = 0, trbyte = 0;
-  char *buf = NULL;
-  int count;
-
-  f1 = openIS(path1);
-  if (f1 == NULL)
-    return -1;
-  if (*path2 == '|' && PermitSaveToPipe) {
-    is_pipe = TRUE;
-    f2 = popen(path2 + 1, "w");
-  } else {
-    is_pipe = FALSE;
-    f2 = fopen(path2, "wb");
-  }
-  if (f2 == NULL) {
-    ISclose(f1);
-    return -1;
-  }
-  current_content_length = 0;
-  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
-    fwrite(buf, 1, count, f2);
-    linelen += count;
-    term_showProgress(&linelen, &trbyte, current_content_length);
-  }
-  xfree(buf);
-  ISclose(f1);
-  if (is_pipe)
-    pclose(f2);
-  else
-    fclose(f2);
-  return 0;
-}
 int _doFileCopy(char *tmpf, char *defstr, int download) {
   Str msg;
   Str filen;
@@ -264,6 +122,100 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   return 0;
 }
 
+struct Buffer *doExternal(struct URLFile uf, char *type,
+                          struct Buffer *defaultbuf) {
+  Str tmpf, command;
+  struct mailcap *mcap;
+  int mc_stat;
+  struct Buffer *buf = NULL;
+  char *header, *src = NULL, *ext = uf.ext;
+
+  if (!(mcap = searchExtViewer(type)))
+    return NULL;
+
+  if (mcap->nametemplate) {
+    tmpf = unquote_mailcap(mcap->nametemplate, NULL, "", NULL, NULL);
+    if (tmpf->ptr[0] == '.')
+      ext = tmpf->ptr;
+  }
+  tmpf = tmpfname(TMPF_DFL, (ext && *ext) ? ext : NULL);
+
+  if (IStype(uf.stream) != IST_ENCODED)
+    uf.stream = newEncodedStream(uf.stream, uf.encoding);
+  header = checkHeader(defaultbuf, "Content-Type:");
+  if (header)
+    header = conv_to_system(header);
+  command = unquote_mailcap(mcap->viewer, type, tmpf->ptr, header, &mc_stat);
+  if (!(mc_stat & MCSTAT_REPNAME)) {
+    Str tmp = Sprintf("(%s) < %s", command->ptr, shell_quote(tmpf->ptr));
+    command = tmp;
+  }
+
+#ifdef HAVE_SETPGRP
+  if (!(mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) &&
+      !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
+    tty_flush();
+    if (!fork()) {
+      setup_child(FALSE, 0, UFfileno(&uf));
+      if (save2tmp(uf, tmpf->ptr) < 0)
+        exit(1);
+      UFclose(&uf);
+      myExec(command->ptr);
+    }
+    return NO_BUFFER;
+  } else
+#endif
+  {
+    if (save2tmp(uf, tmpf->ptr) < 0) {
+      return NULL;
+    }
+  }
+  if (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)) {
+    if (defaultbuf == NULL)
+      defaultbuf = newBuffer(INIT_BUFFER_WIDTH);
+    if (defaultbuf->sourcefile)
+      src = defaultbuf->sourcefile;
+    else
+      src = tmpf->ptr;
+    defaultbuf->sourcefile = NULL;
+    defaultbuf->mailcap = mcap;
+  }
+  if (mcap->flags & MAILCAP_HTMLOUTPUT) {
+    buf = loadcmdout(command->ptr, loadHTMLBuffer, defaultbuf);
+    if (buf && buf != NO_BUFFER) {
+      buf->type = "text/html";
+      buf->mailcap_source = buf->sourcefile;
+      buf->sourcefile = src;
+    }
+  } else if (mcap->flags & MAILCAP_COPIOUSOUTPUT) {
+    buf = loadcmdout(command->ptr, loadBuffer, defaultbuf);
+    if (buf && buf != NO_BUFFER) {
+      buf->type = "text/plain";
+      buf->mailcap_source = buf->sourcefile;
+      buf->sourcefile = src;
+    }
+  } else {
+    if (mcap->flags & MAILCAP_NEEDSTERMINAL || !BackgroundExtViewer) {
+      term_fmTerm();
+      mySystem(command->ptr, 0);
+      term_fmInit();
+      if (CurrentTab && Currentbuf)
+        displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    } else {
+      mySystem(command->ptr, 1);
+    }
+    buf = NO_BUFFER;
+  }
+  if (buf && buf != NO_BUFFER) {
+    if ((buf->buffername == NULL || buf->buffername[0] == '\0') &&
+        buf->filename)
+      buf->buffername = conv_from_system(lastFileName(buf->filename));
+    buf->edit = mcap->edit;
+    buf->mailcap = mcap;
+  }
+  return buf;
+}
+
 int doFileSave(struct URLFile uf, char *defstr) {
   Str msg;
   Str filen;
@@ -271,9 +223,6 @@ int doFileSave(struct URLFile uf, char *defstr) {
   pid_t pid;
   char *lock;
   char *tmpf = NULL;
-#if !(defined(HAVE_SYMLINK) && defined(HAVE_LSTAT))
-  FILE *f;
-#endif
 
   if (term_is_initialized()) {
     p = searchKeyData();
@@ -301,10 +250,10 @@ int doFileSave(struct URLFile uf, char *defstr) {
      * }
      */
     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
+#ifndef _WIN32
     symlink(p, lock);
 #else
-    f = fopen(lock, "w");
+    auto f = fopen(lock, "w");
     if (f)
       fclose(f);
 #endif
@@ -366,16 +315,4 @@ int doFileSave(struct URLFile uf, char *defstr) {
       setModtime(p, uf.modtime);
   }
   return 0;
-}
-
-void mySystem(char *command, int background) {
-  if (background) {
-    tty_flush();
-    if (!fork()) {
-      setup_child(FALSE, 0, -1);
-      myExec(command);
-    }
-  } else {
-    system(command);
-  }
 }

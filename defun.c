@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "os.h"
 #include "downloadlist.h"
 #include "http_request.h"
 #include "localcgi.h"
