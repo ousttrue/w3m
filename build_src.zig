@@ -45,6 +45,7 @@ pub const SRCS = [_][]const u8{
     "version.c",
     "url_stream.c",
     "downloadlist.c",
+    "localcgi.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

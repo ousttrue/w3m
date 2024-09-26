@@ -20,37 +20,6 @@
 #define CGIFN_LIBDIR 1
 #define CGIFN_CGIBIN 2
 
-static Str Local_cookie = NULL;
-static char *Local_cookie_file = NULL;
-
-static void writeLocalCookie() {
-  FILE *f;
-
-  if (no_rc_dir)
-    return;
-  if (Local_cookie_file)
-    return;
-  Local_cookie_file = tmpfname(TMPF_COOKIE, NULL)->ptr;
-  set_environ("LOCAL_COOKIE_FILE", Local_cookie_file);
-  f = fopen(Local_cookie_file, "wb");
-  if (!f)
-    return;
-  localCookie();
-  fwrite(Local_cookie->ptr, sizeof(char), Local_cookie->length, f);
-  fclose(f);
-  chmod(Local_cookie_file, S_IRUSR | S_IWUSR);
-}
-
-/* setup cookie for local CGI */
-Str localCookie() {
-  if (Local_cookie)
-    return Local_cookie;
-  srand48((long)New(char) + (long)time(NULL));
-  Local_cookie =
-      Sprintf("%ld@%s", lrand48(), HostName ? HostName : "localhost");
-  return Local_cookie;
-}
-
 Str loadLocalDir(char *dname) {
   Str tmp;
   DIR *d;
@@ -274,7 +243,8 @@ static int cgi_filename(char *uri, char **fn, char **name, char **path_info) {
   return CGIFN_LIBDIR;
 }
 
-FILE *localcgi_post(char *uri, char *qstr, struct FormList *request, char *referer) {
+FILE *localcgi_post(char *uri, char *qstr, struct FormList *request,
+                    char *referer) {
   FILE *fr = NULL, *fw = NULL;
   int status;
   pid_t pid;
