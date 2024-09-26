@@ -4,3 +4,5 @@
 
 pid_t open_pipe_rw(FILE **fr, FILE **fw);
 
+char *expandName(char *name);
+

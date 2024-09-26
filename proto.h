@@ -421,8 +421,6 @@ extern char *libFile(char *base);
 extern char *helpFile(char *base);
 extern const void *querySiteconf(const struct Url *query_pu, int field);
 extern Str loadLocalDir(char *dirname);
-extern FILE *localcgi_post(char *, char *, struct FormList *, char *);
-#define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
@@ -442,7 +440,6 @@ extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
-extern char *expandName(char *name);
 extern Str tmpfname(int type, char *ext);
 extern time_t mymktime(char *timestr);
 extern void (*mySignal(int signal_number, void (*action)(int)))(int);

@@ -5,7 +5,7 @@
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 typedef struct dirent Directory;
-#else /* not HAVE_DIRENT_H */
+#else  /* not HAVE_DIRENT_H */
 // #include <sys/dir.h>
 typedef struct direct Directory;
 #endif /* not HAVE_DIRENT_H */
@@ -39,3 +39,7 @@ typedef struct direct Directory;
 
 void set_environ(const char *var, const char *value);
 Str localCookie(void);
+
+struct FormList;
+FILE *localcgi_post(char *, char *, struct FormList *, char *);
+FILE *localcgi_get(char *u, char *q, char *r);

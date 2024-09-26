@@ -1,5 +1,7 @@
 #include "url_stream.h"
+#include "etc.h"
 #include "http_request.h"
+#include "localcgi.h"
 #include "fm.h"
 #include "scr.h"
 #include "buffer.h"

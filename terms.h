@@ -20,7 +20,9 @@ void term_input(const char *msg);
 char *term_inputAnswer(char *prompt);
 void term_showProgress(int64_t *linelen, int64_t *trbyte,
                        int64_t current_content_length);
+#ifndef _WIN32
 bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd);
+#endif
 
 void setup_child(int child, int i, int f);
 

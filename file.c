@@ -1027,9 +1027,13 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
     /* input username and password */
     sleep(2);
 
+#ifdef _WIN32
+    return;
+#else
     if (!term_inputAuth(realm, proxy, uname, pwd)) {
       return;
     }
+#endif
   }
   ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
   if (ss) {

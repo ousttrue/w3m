@@ -441,7 +441,7 @@ static void close_all_fds_except(int i, int f) {
 
 #define SETPGRP_VOID 1
 #ifdef _WIN32
-#define SETPGRP() 
+#define SETPGRP()
 #else
 #ifdef HAVE_SETPGRP
 #ifdef SETPGRP_VOID
@@ -469,7 +469,6 @@ void setup_child(int child, int i, int f) {
   TrapSignal = FALSE;
 }
 
-#ifndef _WIN32
 Str term_inputpwd() {
   Str pwd = nullptr;
   if (fmInitialized) {
@@ -477,12 +476,14 @@ Str term_inputpwd() {
     pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
     pwd = Str_conv_to_system(pwd);
     tty_cbreak();
-  } else {
+  } 
+#ifndef _WIN32
+  else {
     pwd = Strnew_charp((char *)getpass("Password: "));
   }
+#endif
   return pwd;
 }
-#endif
 
 void term_input(const char *msg) {
   if (fmInitialized) {

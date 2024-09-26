@@ -4,3 +4,7 @@ pid_t open_pipe_rw(FILE **fr, FILE **fw) {
   return -1;
 }
 
+char *expandName(char *name)
+{
+  return name;
+}
