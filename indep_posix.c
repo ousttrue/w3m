@@ -1,3 +1,6 @@
+#include "Str.h"
+#include "myctype.h"
+#include "indep.h"
 #include <pwd.h>
 
 char *expandPath(char *name) {

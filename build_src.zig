@@ -51,6 +51,11 @@ pub const SRCS_POSIX = [_][]const u8{
     "local_posix.c",
     "ftp_posix.c",
     "url_posix.c",
+    "etc_posix.c",
+    "file_posix.c",
+    "defun_posix.c",
+    "indep_posix.c",
+    "form_posix.c",
 };
 
 pub const SRCS_WIN32 = [_][]const u8{

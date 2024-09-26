@@ -1,3 +1,8 @@
+#include <stdio.h>
+#include <sys/stat.h>
+#include "fm.h"
+#include "proto.h"
+
 void form_write_from_file(FILE *f, char *boundary, char *name, char *filename,
                           char *file) {
   FILE *fd;

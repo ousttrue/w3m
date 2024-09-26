@@ -1,4 +1,4 @@
-#include "fm.h"
+#include "file.h"
 #include "tty.h"
 #include "digest_auth.h"
 #include "termsize.h"
@@ -31,11 +31,7 @@
 static int frame_source = 0;
 
 static char *guess_filename(char *file);
-static int _MoveFile(char *path1, char *path2);
-static void uncompress_stream(URLFile *uf, char **src);
 static FILE *lessopen_stream(char *path);
-static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(URLFile *, Buffer *),
-                          Buffer *defaultbuf);
 #define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
 static void addnewline(Buffer *buf, char *line, Lineprop *prop,
                        Linecolor *color, int pos, int width, int nlines);
@@ -321,17 +317,7 @@ static char *uncompressed_file_type(char *path, char **ext) {
   return t0;
 }
 
-static int setModtime(char *path, time_t modtime) {
-  struct utimbuf t;
-  struct stat st;
 
-  if (stat(path, &st) == 0)
-    t.actime = st.st_atime;
-  else
-    t.actime = time(NULL);
-  t.modtime = modtime;
-  return utime(path, &t);
-}
 
 void examineFile(char *path, URLFile *uf) {
   struct stat stbuf;
@@ -5586,7 +5572,7 @@ void saveBufferBody(Buffer *buf, FILE *f, int cont) {
   _saveBuffer(buf, l, f, cont);
 }
 
-static Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(URLFile *, Buffer *),
+Buffer *loadcmdout(char *cmd, Buffer *(*loadproc)(URLFile *, Buffer *),
                           Buffer *defaultbuf) {
   FILE *f, *popen(const char *, const char *);
   Buffer *buf;
@@ -5845,43 +5831,7 @@ _end:
   return retval;
 }
 
-static int _MoveFile(char *path1, char *path2) {
-  InputStream f1;
-  FILE *f2;
-  int is_pipe;
-  int64_t linelen = 0, trbyte = 0;
-  char *buf = NULL;
-  int count;
 
-  f1 = openIS(path1);
-  if (f1 == NULL)
-    return -1;
-  if (*path2 == '|' && PermitSaveToPipe) {
-    is_pipe = TRUE;
-    f2 = popen(path2 + 1, "w");
-  } else {
-    is_pipe = FALSE;
-    f2 = fopen(path2, "wb");
-  }
-  if (f2 == NULL) {
-    ISclose(f1);
-    return -1;
-  }
-  current_content_length = 0;
-  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
-    fwrite(buf, 1, count, f2);
-    linelen += count;
-    term_showProgress(&linelen, &trbyte, current_content_length);
-  }
-  xfree(buf);
-  ISclose(f1);
-  if (is_pipe)
-    pclose(f2);
-  else
-    fclose(f2);
-  return 0;
-}
 
 int doFileMove(char *tmpf, char *defstr) {
   int ret = doFileCopy(tmpf, defstr);
@@ -5928,7 +5878,7 @@ int checkOverWrite(char *path) {
     return -1;
 }
 
-static void uncompress_stream(URLFile *uf, char **src) {
+void uncompress_stream(URLFile *uf, char **src) {
   pid_t pid1;
   FILE *f1;
   char *expand_cmd = GUNZIP_CMDNAME;

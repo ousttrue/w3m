@@ -1,6 +1,6 @@
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
+#include "fm.h"
 #include <sys/wait.h>
-#endif
+#include "termsize.h"
 
 int checkDownloadList(void) {
   DownloadList *d;
@@ -13,6 +13,18 @@ int checkDownloadList(void) {
       return TRUE;
   }
   return FALSE;
+}
+
+static char *convert_size3(int64_t size) {
+  Str tmp = Strnew();
+  int n;
+
+  do {
+    n = size % 1000;
+    size /= 1000;
+    tmp = Sprintf(size ? ",%.3d%s" : "%d%s", n, tmp->ptr);
+  } while (size);
+  return tmp->ptr;
 }
 
 static Buffer *DownloadListBuffer(void) {
@@ -147,5 +159,3 @@ void stopDownload(void) {
     unlink(d->lock);
   }
 }
-
-

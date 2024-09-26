@@ -1,7 +1,13 @@
-
-#if defined(HAVE_WAITPID) || defined(HAVE_WAIT3)
+#include "file.h"
+#include "tty.h"
+#include "terms.h"
+#include "termsize.h"
 #include <sys/wait.h>
-#endif
+#include <utime.h>
+
+#define SAVE_BUF_SIZE 1536
+
+static int64_t current_content_length;
 
 Buffer *doExternal(URLFile uf, char *type, Buffer *defaultbuf) {
   Str tmpf, command;
@@ -96,6 +102,55 @@ Buffer *doExternal(URLFile uf, char *type, Buffer *defaultbuf) {
   return buf;
 }
 
+static int setModtime(char *path, time_t modtime) {
+  struct utimbuf t;
+  struct stat st;
+
+  if (stat(path, &st) == 0)
+    t.actime = st.st_atime;
+  else
+    t.actime = time(NULL);
+  t.modtime = modtime;
+  return utime(path, &t);
+}
+
+static int _MoveFile(char *path1, char *path2) {
+  InputStream f1;
+  FILE *f2;
+  int is_pipe;
+  int64_t linelen = 0, trbyte = 0;
+  char *buf = NULL;
+  int count;
+
+  f1 = openIS(path1);
+  if (f1 == NULL)
+    return -1;
+  if (*path2 == '|' && PermitSaveToPipe) {
+    is_pipe = TRUE;
+    f2 = popen(path2 + 1, "w");
+  } else {
+    is_pipe = FALSE;
+    f2 = fopen(path2, "wb");
+  }
+  if (f2 == NULL) {
+    ISclose(f1);
+    return -1;
+  }
+  current_content_length = 0;
+  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+  while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
+    fwrite(buf, 1, count, f2);
+    linelen += count;
+    term_showProgress(&linelen, &trbyte, current_content_length);
+  }
+  xfree(buf);
+  ISclose(f1);
+  if (is_pipe)
+    pclose(f2);
+  else
+    fclose(f2);
+  return 0;
+}
 int _doFileCopy(char *tmpf, char *defstr, int download) {
   Str msg;
   Str filen;
@@ -310,4 +365,14 @@ int doFileSave(URLFile uf, char *defstr) {
   return 0;
 }
 
-
+void mySystem(char *command, int background) {
+  if (background) {
+    tty_flush();
+    if (!fork()) {
+      setup_child(FALSE, 0, -1);
+      myExec(command);
+    }
+  } else {
+    system(command);
+  }
+}

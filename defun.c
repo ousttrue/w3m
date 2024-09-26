@@ -3830,20 +3830,6 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
   add_download_list = TRUE;
 }
 
-static char *convert_size3(int64_t size) {
-  Str tmp = Strnew();
-  int n;
-
-  do {
-    n = size % 1000;
-    size /= 1000;
-    tmp = Sprintf(size ? ",%.3d%s" : "%d%s", n, tmp->ptr);
-  } while (size);
-  return tmp->ptr;
-}
-
-
-
 /* download panel */
 DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   // Buffer *buf;
