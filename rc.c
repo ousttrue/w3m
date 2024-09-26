@@ -1180,6 +1180,11 @@ url_found:
   return NULL;
 }
 
+#ifdef _WIN32
+#include <direct.h>
+#define mkdir(dir, mod) _mkdir(dir)
+#endif
+
 void init_rc(void) {
   int i;
   struct stat st;
@@ -1245,7 +1250,7 @@ rc_dir_err:
       ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') &&
       ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
     tmp_dir = "/tmp";
-#ifdef HAVE_MKDTEMP
+#ifndef _WIN32
   tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
   if (tmp_dir == NULL)
     tmp_dir = rc_dir;
