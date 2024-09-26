@@ -56,7 +56,6 @@ pub const SRCS_POSIX = [_][]const u8{
     //
     "ftp_posix.c",
     "etc_posix.c",
-    "form_posix.c",
 };
 
 pub const SRCS_WIN32 = [_][]const u8{
