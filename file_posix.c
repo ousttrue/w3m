@@ -1,4 +1,5 @@
 #include "file.h"
+#include "url_stream.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "tty.h"
@@ -11,7 +12,7 @@
 
 static int64_t current_content_length;
 
-struct Buffer *doExternal(URLFile uf, char *type, struct Buffer *defaultbuf) {
+struct Buffer *doExternal(struct URLFile uf, char *type, struct Buffer *defaultbuf) {
   Str tmpf, command;
   struct mailcap *mcap;
   int mc_stat;
@@ -263,7 +264,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   return 0;
 }
 
-int doFileSave(URLFile uf, char *defstr) {
+int doFileSave(struct URLFile uf, char *defstr) {
   Str msg;
   Str filen;
   char *p, *q;

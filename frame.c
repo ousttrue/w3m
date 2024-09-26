@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "url_stream.h"
 #include "buffer.h"
 #include "parsetagx.h"
 #include "terms.h"
@@ -358,7 +359,7 @@ static struct frameset *frame_download_source(struct frame_body *b,
 static int createFrameFile(struct frameset *f, FILE *f1, struct Buffer *current,
                            int level, int force_reload) {
   int r, c, t_stack;
-  URLFile f2;
+  struct URLFile f2;
   char *d_target, *p_target, *s_target, *t_target;
   ParsedURL *currentURL, base;
   MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;

@@ -43,6 +43,7 @@ pub const SRCS = [_][]const u8{
     "hash.c",
 
     "version.c",
+    "url_stream.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{
@@ -50,7 +51,6 @@ pub const SRCS_POSIX = [_][]const u8{
     "termsize_posix.c",
     "localcgi_posix.c",
     "ftp_posix.c",
-    "url_posix.c",
     "etc_posix.c",
     "file_posix.c",
     "defun_posix.c",

@@ -2,7 +2,7 @@
 #include "fm.h"
 
 struct Buffer *
-loadcmdout(char *cmd, struct Buffer *(*loadproc)(URLFile *, struct Buffer *),
+loadcmdout(char *cmd, struct Buffer *(*loadproc)(struct URLFile *, struct Buffer *),
            struct Buffer *defaultbuf);
 
-void uncompress_stream(URLFile *uf, char **src);
+void uncompress_stream(struct URLFile *uf, char **src);

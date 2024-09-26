@@ -1,4 +1,5 @@
 #include "file.h"
+#include "url_stream.h"
 #include "buffer.h"
 #include "map.h"
 #include "readbuffer.h"
@@ -180,7 +181,7 @@ static struct compression_decoder {
 
 static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
-static void UFhalfclose(URLFile *f) {
+static void UFhalfclose(struct URLFile *f) {
   switch (f->scheme) {
   case SCM_FTP:
     closeFTP();
@@ -199,8 +200,8 @@ int currentLn(struct Buffer *buf) {
     return 1;
 }
 
-static struct Buffer *loadSomething(URLFile *f,
-                             struct Buffer *(*loadproc)(URLFile *, struct Buffer *),
+static struct Buffer *loadSomething(struct URLFile *f,
+                             struct Buffer *(*loadproc)(struct URLFile *, struct Buffer *),
                              struct Buffer *defaultbuf) {
   struct Buffer *buf;
 
@@ -257,7 +258,7 @@ int is_html_type(char *type) {
                    strcasecmp(type, "application/xhtml+xml") == 0));
 }
 
-static void check_compression(char *path, URLFile *uf) {
+static void check_compression(char *path, struct URLFile *uf) {
   int len;
   struct compression_decoder *d;
 
@@ -322,7 +323,7 @@ static char *uncompressed_file_type(char *path, char **ext) {
 
 
 
-void examineFile(char *path, URLFile *uf) {
+void examineFile(char *path, struct URLFile *uf) {
   struct stat stbuf;
 
   uf->guess_type = NULL;
@@ -415,7 +416,7 @@ char *acceptableEncoding() {
 /*
  * convert line
  */
-Str convertLine0(URLFile *uf, Str line, int mode) {
+Str convertLine0(struct URLFile *uf, Str line, int mode) {
   if (mode != RAW_MODE)
     cleanup_line(line, mode);
   return line;
@@ -456,7 +457,7 @@ int matchattr(char *p, char *attr, int len, Str *value) {
   return 0;
 }
 
-void readHeader(URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu) {
+void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu) {
   char *p, *q;
   char *emsg;
   char c;
@@ -1086,13 +1087,13 @@ Str getLinkNumberStr(int correction) {
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((struct Buffer * (*)(URLFile *, struct Buffer *)) doExternal)
+#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile *, struct Buffer *)) doExternal)
 struct Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer, int flag,
                         FormList *request) {
-  URLFile f, *of = NULL;
+  struct URLFile f, *of = NULL;
   ParsedURL pu;
   struct Buffer *b = NULL;
-  struct Buffer *(*proc)(URLFile *, struct Buffer *) = loadBuffer;
+  struct Buffer *(*proc)(struct URLFile *, struct Buffer *) = loadBuffer;
   char *tpath;
   char *t = "text/plain", *p, *real_type = NULL;
   struct Buffer *t_buf = NULL;
@@ -5138,7 +5139,7 @@ static void addnewline(struct Buffer *buf, char *line, Lineprop *prop,
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
-struct Buffer *loadHTMLBuffer(URLFile *f, struct Buffer *newBuf) {
+struct Buffer *loadHTMLBuffer(struct URLFile *f, struct Buffer *newBuf) {
   FILE *src = NULL;
   Str tmp;
 
@@ -5341,7 +5342,7 @@ static void print_internal_information(struct html_feed_environ *henv) {
   }
 }
 
-void loadHTMLstream(URLFile *f, struct Buffer *newBuf, FILE *src, int internal) {
+void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   int64_t linelen = 0;
   int64_t trbyte = 0;
@@ -5420,7 +5421,7 @@ phase2:
  * loadHTMLString: read string and make new buffer
  */
 struct Buffer *loadHTMLString(Str page) {
-  URLFile f;
+  struct URLFile f;
   MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   struct Buffer *newBuf;
 
@@ -5452,7 +5453,7 @@ struct Buffer *loadHTMLString(Str page) {
 /*
  * loadBuffer: read file and make new buffer
  */
-struct Buffer *loadBuffer(URLFile *uf, struct Buffer *newBuf) {
+struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
   FILE *src = NULL;
   Str lineBuf2;
   char pre_lbuf = '\0';
@@ -5575,11 +5576,11 @@ void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
   _saveBuffer(buf, l, f, cont);
 }
 
-struct Buffer *loadcmdout(char *cmd, struct Buffer *(*loadproc)(URLFile *, struct Buffer *),
+struct Buffer *loadcmdout(char *cmd, struct Buffer *(*loadproc)(struct URLFile *, struct Buffer *),
                           struct Buffer *defaultbuf) {
   FILE *f, *popen(const char *, const char *);
   struct Buffer *buf;
-  URLFile uf;
+  struct URLFile uf;
 
   if (cmd == NULL || *cmd == '\0')
     return NULL;
@@ -5651,7 +5652,7 @@ struct Buffer *openGeneralPagerBuffer(InputStream stream) {
   struct Buffer *buf;
   char *t = "text/plain";
   struct Buffer *t_buf = NULL;
-  URLFile uf;
+  struct URLFile uf;
 
   init_stream(&uf, SCM_UNKNOWN, stream);
 
@@ -5705,7 +5706,7 @@ Line *getNextPage(struct Buffer *buf, int plen) {
   int64_t linelen = 0, trbyte = buf->trbyte;
   Str lineBuf2;
   char pre_lbuf = '\0';
-  URLFile uf;
+  struct URLFile uf;
   int squeeze_flag = FALSE;
   Lineprop *propBuffer = NULL;
 
@@ -5792,7 +5793,7 @@ pager_end:
   return last;
 }
 
-int save2tmp(URLFile uf, char *tmpf) {
+int save2tmp(struct URLFile uf, char *tmpf) {
   FILE *ff;
   int check;
   int64_t linelen = 0, trbyte = 0;
@@ -5881,7 +5882,7 @@ int checkOverWrite(char *path) {
     return -1;
 }
 
-void uncompress_stream(URLFile *uf, char **src) {
+void uncompress_stream(struct URLFile *uf, char **src) {
   pid_t pid1;
   FILE *f1;
   char *expand_cmd = GUNZIP_CMDNAME;

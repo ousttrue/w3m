@@ -6,6 +6,7 @@
 #include <time.h>
 
 #include "fm.h"
+#include "url_stream.h"
 #include "html.h"
 #include "myctype.h"
 #include "terms.h"
@@ -307,7 +308,7 @@ static void closeFTPdata(FILE *f) {
 
 void closeFTP(void) { ftp_close(&current_ftp); }
 
-InputStream openFTPStream(ParsedURL *pu, URLFile *uf) {
+InputStream openFTPStream(ParsedURL *pu, struct URLFile *uf) {
   Str tmp;
   int status;
   char *user = NULL;

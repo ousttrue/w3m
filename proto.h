@@ -141,12 +141,13 @@ extern ParsedURL *schemeToProxy(int scheme);
 #define url_encode(url, base, cs) url_quote(url)
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
-extern void examineFile(char *path, URLFile *uf);
+struct URLFile;
+extern void examineFile(char *path, struct URLFile *uf);
 extern char *acceptableEncoding();
 extern int dir_exist(char *path);
 extern int is_html_type(char *type);
 extern char **get_symbol(void);
-extern Str convertLine0(URLFile *uf, Str line, int mode);
+extern Str convertLine0(struct URLFile *uf, Str line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
 extern void push_symbol(Str str, char symbol, int width, int n);
@@ -187,15 +188,15 @@ extern void HTMLlineproc2(struct Buffer *buf, TextLineList *tl);
 extern void HTMLlineproc0(char *istr, struct html_feed_environ *h_env,
                           int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern struct Buffer *loadHTMLBuffer(URLFile *f, struct Buffer *newBuf);
+extern struct Buffer *loadHTMLBuffer(struct URLFile *f, struct Buffer *newBuf);
 extern char *convert_size(int64_t size, int usefloat);
 extern char *convert_size2(int64_t size1, int64_t size2, int usefloat);
 extern void init_henv(struct html_feed_environ *, struct readbuffer *,
                       struct environment *, int, TextLineList *, int, int);
 extern void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
-extern void loadHTMLstream(URLFile *f, struct Buffer *newBuf, FILE *src, int internal);
+extern void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src, int internal);
 extern struct Buffer *loadHTMLString(Str page);
-extern struct Buffer *loadBuffer(URLFile *uf, struct Buffer *newBuf);
+extern struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf);
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 extern struct Buffer *getshell(char *cmd);
@@ -203,17 +204,17 @@ extern struct Buffer *getpipe(char *cmd);
 extern struct Buffer *openPagerBuffer(InputStream stream, struct Buffer *buf);
 extern struct Buffer *openGeneralPagerBuffer(InputStream stream);
 extern Line *getNextPage(struct Buffer *buf, int plen);
-extern int save2tmp(URLFile uf, char *tmpf);
-extern struct Buffer *doExternal(URLFile uf, char *type, struct Buffer *defaultbuf);
+extern int save2tmp(struct URLFile uf, char *tmpf);
+extern struct Buffer *doExternal(struct URLFile uf, char *type, struct Buffer *defaultbuf);
 extern int _doFileCopy(char *tmpf, char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
 extern int doFileMove(char *tmpf, char *defstr);
-extern int doFileSave(URLFile uf, char *defstr);
+extern int doFileSave(struct URLFile uf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(InputStream stream, char *path);
 extern int checkOverWrite(char *path);
 extern int matchattr(char *p, char *attr, int len, Str *value);
-extern void readHeader(URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu);
+extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu);
 extern char *checkHeader(struct Buffer *buf, char *field);
 extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                             int64_t size);
@@ -359,12 +360,12 @@ extern void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
 extern Str parsedURL2Str(ParsedURL *pu);
 extern Str parsedURL2RefererStr(ParsedURL *pu);
 extern int getURLScheme(char **url);
-extern void init_stream(URLFile *uf, int scheme, InputStream stream);
+extern void init_stream(struct URLFile *uf, int scheme, InputStream stream);
 Str HTTPrequestMethod(HRequest *hr);
 Str HTTPrequestURI(ParsedURL *pu, HRequest *hr);
-extern URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
+extern struct URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
                        URLOption *option, FormList *request,
-                       TextList *extra_header, URLFile *ouf, HRequest *hr,
+                       TextList *extra_header, struct URLFile *ouf, HRequest *hr,
                        unsigned char *status);
 extern int mailcapMatch(struct mailcap *mcap, char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, char *type);
@@ -376,7 +377,7 @@ extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
 extern char *guessContentType(char *filename);
 extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
-extern InputStream openFTPStream(ParsedURL *pu, URLFile *uf);
+extern InputStream openFTPStream(ParsedURL *pu, struct URLFile *uf);
 extern Str loadFTPDir0(ParsedURL *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);

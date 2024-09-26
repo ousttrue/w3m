@@ -50,21 +50,6 @@ typedef struct {
   int flag;
 } URLOption;
 
-union input_stream;
-typedef struct {
-  unsigned char scheme;
-  char is_cgi;
-  char encoding;
-  union input_stream *stream;
-  char *ext;
-  int compression;
-  int content_encoding;
-  char *guess_type;
-  char *ssl_certificate;
-  char *url;
-  time_t modtime;
-} URLFile;
-
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
 #define CMP_GZIP 2
