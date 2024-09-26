@@ -9,6 +9,7 @@
 #include <sys/types.h>
 
 #ifdef _WIN32
+#include "rand48_win32.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
@@ -213,14 +214,6 @@ void free_ssl_ctx() {
   ssl_ctx = NULL;
   ssl_accept_this_site(NULL);
 }
-
-// https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
-#if !(_SVID_SOURCE || _XOPEN_SOURCE)
-double drand48(void) { return rand() / (RAND_MAX + 1.0); }
-long int lrand48(void) { return rand(); }
-long int mrand48(void) { return rand() > RAND_MAX / 2 ? rand() : -rand(); }
-void srand48(long int seedval) { srand(seedval); }
-#endif
 
 #if SSLEAY_VERSION_NUMBER >= 0x00905100
 #include <openssl/rand.h>

@@ -1,4 +1,5 @@
 #pragma once
+#include "Str.h"
 
 #include <sys/types.h>
 #ifdef HAVE_DIRENT_H
@@ -37,3 +38,4 @@ typedef struct direct Directory;
 #endif /* not HAVE_READLINK */
 
 void set_environ(const char *var, const char *value);
+Str localCookie(void);

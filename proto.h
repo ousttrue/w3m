@@ -424,7 +424,6 @@ extern char *auxbinFile(char *base);
 extern char *libFile(char *base);
 extern char *helpFile(char *base);
 extern const void *querySiteconf(const struct Url *query_pu, int field);
-extern Str localCookie(void);
 extern Str loadLocalDir(char *dirname);
 extern FILE *localcgi_post(char *, char *, struct FormList *, char *);
 #define localcgi_get(u, q, r) localcgi_post((u), (q), NULL, (r))

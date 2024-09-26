@@ -1,8 +1,8 @@
-/* $Id: rc.c,v 1.116 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * Initialization file etc.
  */
 #include "fm.h"
+#include "localcgi.h"
 #include "myctype.h"
 #include "proto.h"
 #include <stdio.h>
