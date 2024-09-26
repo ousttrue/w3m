@@ -7,10 +7,17 @@
 #include "tty.h"
 #include <unistd.h>
 #include <sys/types.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#endif
+
 #include <signal.h>
 #include <setjmp.h>
 #include <errno.h>
@@ -207,14 +214,22 @@ void free_ssl_ctx() {
   ssl_accept_this_site(NULL);
 }
 
+// https://stackoverflow.com/questions/74274179/i-cant-use-drand48-and-srand48-in-c
+#if !(_SVID_SOURCE || _XOPEN_SOURCE)
+double drand48(void) { return rand() / (RAND_MAX + 1.0); }
+long int lrand48(void) { return rand(); }
+long int mrand48(void) { return rand() > RAND_MAX / 2 ? rand() : -rand(); }
+void srand48(long int seedval) { srand(seedval); }
+#endif
+
 #if SSLEAY_VERSION_NUMBER >= 0x00905100
 #include <openssl/rand.h>
 static void init_PRNG() {
-  char buffer[256];
-  const char *file;
-  long l;
   if (RAND_status())
     return;
+
+  char buffer[256];
+  const char *file = nullptr;
   if ((file = RAND_file_name(buffer, sizeof(buffer)))) {
 #ifdef USE_EGD
     if (RAND_egd(file) > 0)
@@ -226,7 +241,7 @@ static void init_PRNG() {
     goto seeded;
   srand48((long)time(NULL));
   while (!RAND_status()) {
-    l = lrand48();
+    long l = lrand48();
     RAND_seed((unsigned char *)&l, sizeof(long));
   }
 seeded:
@@ -1280,8 +1295,8 @@ Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr) {
   return tmp;
 }
 
-static Str HTTPrequest(struct Url *pu, struct Url *current, struct HttpRequest *hr,
-                       TextList *extra) {
+static Str HTTPrequest(struct Url *pu, struct Url *current,
+                       struct HttpRequest *hr, TextList *extra) {
   Str tmp;
   TextListItem *i;
   Str cookie;
@@ -1360,9 +1375,10 @@ void init_stream(struct URLFile *uf, int scheme, InputStream stream) {
   uf->modtime = -1;
 }
 
-struct URLFile openURL(char *url, struct Url *pu, struct Url *current, URLOption *option,
-                struct FormList *request, TextList *extra_header, struct URLFile *ouf,
-                struct HttpRequest *hr, unsigned char *status) {
+struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
+                       URLOption *option, struct FormList *request,
+                       TextList *extra_header, struct URLFile *ouf,
+                       struct HttpRequest *hr, unsigned char *status) {
   Str tmp;
   int sock, scheme;
   char *p, *q, *u;

@@ -60,6 +60,6 @@ pub const SRCS_POSIX = [_][]const u8{
 
 pub const SRCS_WIN32 = [_][]const u8{
     "tty_win32.c",
+    "termsize_win32.c",
     "localcgi_win32.c",
-    // "termsize_win32.c",
 };

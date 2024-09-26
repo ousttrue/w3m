@@ -201,7 +201,28 @@ static void sig_chld(int signo) {
 static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 #endif
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#include <winsock2.h>
+WSADATA wsaData;
+#endif
+
 int main(int argc, char **argv) {
+
+#ifdef _WIN32
+  /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+  WORD wVersionRequested = MAKEWORD(2, 2);
+
+  int err = WSAStartup(wVersionRequested, &wsaData);
+  if (err != 0) {
+    /* Tell the user that we could not find a usable */
+    /* Winsock DLL.                                  */
+    printf("WSAStartup failed with error: %d\n", err);
+    return 1;
+  }
+#endif
+
   struct Buffer *newbuf = NULL;
   char *p;
   int c, i;
