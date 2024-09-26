@@ -1,6 +1,6 @@
 #pragma once
 
-typedef struct _ParsedURL {
+struct Url {
   int scheme;
   char *user;
   char *pass;
@@ -11,4 +11,4 @@ typedef struct _ParsedURL {
   char *query;
   char *label;
   int is_nocache;
-} ParsedURL;
+};

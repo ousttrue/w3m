@@ -90,7 +90,7 @@ static struct table2 DefaultGuess[] = {
     {"lzh", "application/x-lha"},  {"ps", "application/postscript"},
     {"pdf", "application/pdf"},    {NULL, NULL}};
 
-static void add_index_file(ParsedURL *pu, struct URLFile *uf);
+static void add_index_file(struct Url *pu, struct URLFile *uf);
 static char *schemeNumToName(int scheme);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
@@ -446,7 +446,7 @@ static void write_from_file(int sock, char *file) {
   }
 }
 
-ParsedURL *baseURL(struct Buffer *buf) {
+struct Url *baseURL(struct Buffer *buf) {
   if (buf->bufferprop & BP_NO_URL) {
     /* no URL is defined for the buffer */
     return NULL;
@@ -655,7 +655,7 @@ static char *copyPath(char *orgpath, int length, int option) {
   return tmp->ptr;
 }
 
-void parseURL(char *url, ParsedURL *p_url, ParsedURL *current) {
+void parseURL(char *url, struct Url *p_url, struct Url *current) {
   char *p, *q, *qq;
   Str tmp;
 
@@ -895,9 +895,9 @@ do_label:
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
 
-void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
+void copyParsedURL(struct Url *p, const struct Url *q) {
   if (q == NULL) {
-    memset(p, 0, sizeof(ParsedURL));
+    memset(p, 0, sizeof(struct Url));
     p->scheme = SCM_UNKNOWN;
     return;
   }
@@ -913,7 +913,7 @@ void copyParsedURL(ParsedURL *p, const ParsedURL *q) {
   p->query = ALLOC_STR(q->query);
 }
 
-void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
+void parseURL2(char *url, struct Url *pu, struct Url *current) {
   char *p;
   Str tmp;
   int relative_uri = FALSE;
@@ -1053,7 +1053,7 @@ static const char *scheme_str[] = {
     "nntp", "nntp",   "news", "news", "data", "mailto", "https",
 };
 
-static Str _parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
+static Str _parsedURL2Str(struct Url *pu, int pass, int user, int label) {
   if (pu->scheme == SCM_MISSING) {
     return Strnew_charp("???");
   } else if (pu->scheme == SCM_UNKNOWN) {
@@ -1124,11 +1124,11 @@ static Str _parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
   return tmp;
 }
 
-Str parsedURL2Str(ParsedURL *pu) {
+Str parsedURL2Str(struct Url *pu) {
   return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
 }
 
-static Str parsedURL2RefererOriginStr(ParsedURL *pu) {
+static Str parsedURL2RefererOriginStr(struct Url *pu) {
   Str s;
   char *f = pu->file, *q = pu->query;
 
@@ -1141,7 +1141,7 @@ static Str parsedURL2RefererOriginStr(ParsedURL *pu) {
   return s;
 }
 
-Str parsedURL2RefererStr(ParsedURL *pu) {
+Str parsedURL2RefererStr(struct Url *pu) {
   return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
 }
 
@@ -1176,7 +1176,7 @@ static char *schemeNumToName(int scheme) {
   return NULL;
 }
 
-static char *otherinfo(ParsedURL *target, ParsedURL *current, char *referer) {
+static char *otherinfo(struct Url *target, struct Url *current, char *referer) {
   Str s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -1263,7 +1263,7 @@ Str HTTPrequestMethod(HRequest *hr) {
   return NULL;
 }
 
-Str HTTPrequestURI(ParsedURL *pu, HRequest *hr) {
+Str HTTPrequestURI(struct Url *pu, HRequest *hr) {
   Str tmp = Strnew();
   if (hr->command == HR_COMMAND_CONNECT) {
     Strcat_charp(tmp, pu->host);
@@ -1279,7 +1279,7 @@ Str HTTPrequestURI(ParsedURL *pu, HRequest *hr) {
   return tmp;
 }
 
-static Str HTTPrequest(ParsedURL *pu, ParsedURL *current, HRequest *hr,
+static Str HTTPrequest(struct Url *pu, struct Url *current, HRequest *hr,
                        TextList *extra) {
   Str tmp;
   TextListItem *i;
@@ -1359,7 +1359,7 @@ void init_stream(struct URLFile *uf, int scheme, InputStream stream) {
   uf->modtime = -1;
 }
 
-struct URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current, URLOption *option,
+struct URLFile openURL(char *url, struct Url *pu, struct Url *current, URLOption *option,
                 FormList *request, TextList *extra_header, struct URLFile *ouf,
                 HRequest *hr, unsigned char *status) {
   Str tmp;
@@ -1623,7 +1623,7 @@ retry:
 }
 
 /* add index_file if exists */
-static void add_index_file(ParsedURL *pu, struct URLFile *uf) {
+static void add_index_file(struct Url *pu, struct URLFile *uf) {
   char *p, *q;
   TextList *index_file_list = NULL;
   TextListItem *ti;
@@ -1853,8 +1853,8 @@ char *filename_extension(char *path, int is_url) {
     return last_dot;
 }
 
-ParsedURL *schemeToProxy(int scheme) {
-  ParsedURL *pu = NULL; /* for gcc */
+struct Url *schemeToProxy(int scheme) {
+  struct Url *pu = NULL; /* for gcc */
   switch (scheme) {
   case SCM_HTTP:
     pu = &HTTP_proxy_parsed;

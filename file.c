@@ -47,7 +47,7 @@ static struct table *tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
 
 #if defined(USE_M17N) || defined(USE_IMAGE)
-static ParsedURL *cur_baseURL = NULL;
+static struct Url *cur_baseURL = NULL;
 #endif
 
 static Str cur_title;
@@ -457,7 +457,7 @@ int matchattr(char *p, char *attr, int len, Str *value) {
   return 0;
 }
 
-void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu) {
+void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, struct Url *pu) {
   char *p, *q;
   char *emsg;
   char c;
@@ -901,7 +901,7 @@ static char *extract_auth_param(char *q, struct auth_param *auth) {
   return q;
 }
 
-static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw, ParsedURL *pu,
+static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
                          HRequest *hr, FormList *request) {
   Str s = Strdup(uname);
   Strcat_char(s, ':');
@@ -975,7 +975,7 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
 }
 
 static void getAuthCookie(struct http_auth *hauth, char *auth_header,
-                          TextList *extra_header, ParsedURL *pu, HRequest *hr,
+                          TextList *extra_header, struct Url *pu, HRequest *hr,
                           FormList *request, Str *uname, Str *pwd) {
   Str ss = NULL;
   Str tmp;
@@ -1037,14 +1037,14 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
   return;
 }
 
-static int same_url_p(ParsedURL *pu1, ParsedURL *pu2) {
+static int same_url_p(struct Url *pu1, struct Url *pu2) {
   return (pu1->scheme == pu2->scheme && pu1->port == pu2->port &&
           (pu1->host ? pu2->host ? !strcasecmp(pu1->host, pu2->host) : 0 : 1) &&
           (pu1->file ? pu2->file ? !strcmp(pu1->file, pu2->file) : 0 : 1));
 }
 
-static int checkRedirection(ParsedURL *pu) {
-  static ParsedURL *puv = NULL;
+static int checkRedirection(struct Url *pu) {
+  static struct Url *puv = NULL;
   static int nredir = 0;
   static int nredir_size = 0;
   Str tmp;
@@ -1072,8 +1072,8 @@ static int checkRedirection(ParsedURL *pu) {
   }
   if (!puv) {
     nredir_size = FollowRedirection / 2 + 1;
-    puv = New_N(ParsedURL, nredir_size);
-    memset(puv, 0, sizeof(ParsedURL) * nredir_size);
+    puv = New_N(struct Url, nredir_size);
+    memset(puv, 0, sizeof(struct Url) * nredir_size);
   }
   copyParsedURL(&puv[nredir % nredir_size], pu);
   nredir++;
@@ -1088,10 +1088,10 @@ Str getLinkNumberStr(int correction) {
  * loadGeneralFile: load file to buffer
  */
 #define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile *, struct Buffer *)) doExternal)
-struct Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer, int flag,
+struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer, int flag,
                         FormList *request) {
   struct URLFile f, *of = NULL;
-  ParsedURL pu;
+  struct Url pu;
   struct Buffer *b = NULL;
   struct Buffer *(*proc)(struct URLFile *, struct Buffer *) = loadBuffer;
   char *tpath;
@@ -1110,7 +1110,7 @@ struct Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer, in
   Str tmp;
   Str page = NULL;
   HRequest hr;
-  ParsedURL *auth_pu;
+  struct Url *auth_pu;
 
   tpath = path;
   prevtrap = NULL;
@@ -1126,7 +1126,7 @@ load_doc: {
     tpath = (char *)sc_redirect;
     request = NULL;
     add_auth_cookie_flag = 0;
-    current = New(ParsedURL);
+    current = New(struct Url);
     *current = pu;
     status = HTST_NORMAL;
     goto load_doc;
@@ -1228,7 +1228,7 @@ load_doc: {
       tpath = url_encode(p, NULL, 0);
       request = NULL;
       UFclose(&f);
-      current = New(ParsedURL);
+      current = New(struct Url);
       copyParsedURL(current, &pu);
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop |= BP_REDIRECTED;
@@ -1326,7 +1326,7 @@ load_doc: {
       request = NULL;
       UFclose(&f);
       add_auth_cookie_flag = 0;
-      current = New(ParsedURL);
+      current = New(struct Url);
       copyParsedURL(current, &pu);
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop |= BP_REDIRECTED;
@@ -3963,7 +3963,7 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
 #if defined(USE_M17N) || defined(USE_IMAGE)
     p = NULL;
     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-      cur_baseURL = New(ParsedURL);
+      cur_baseURL = New(struct Url);
       parseURL(p, cur_baseURL, NULL);
     }
 #endif
@@ -4222,7 +4222,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
   int internal = 0;
   Anchor **a_textarea = NULL;
 #if defined(USE_M17N) || defined(USE_IMAGE)
-  ParsedURL *base = baseURL(buf);
+  struct Url *base = baseURL(buf);
 #endif
 
   if (out_size == 0) {
@@ -4545,7 +4545,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             p = url_encode(remove_space(p), NULL, buf->document_charset);
             if (!buf->baseURL)
-              buf->baseURL = New(ParsedURL);
+              buf->baseURL = New(struct Url);
             parseURL2(p, buf->baseURL, &buf->currentURL);
 #if defined(USE_M17N) || defined(USE_IMAGE)
             base = buf->baseURL;

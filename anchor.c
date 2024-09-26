@@ -522,7 +522,7 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
   FormItemList *fi;
   int i;
   char *t, *u, *p;
-  ParsedURL pu;
+  struct Url pu;
   /* FIXME: gettextize? */
   Str tmp = Strnew_charp("<title>Link List</title>\
 <h1 align=center>Link List</h1>\n");

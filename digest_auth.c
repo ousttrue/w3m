@@ -94,7 +94,7 @@ Str get_auth_param(struct auth_param *auth, char *name) {
   return NULL;
 }
 
-Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, ParsedURL *pu,
+Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
                    HRequest *hr, FormList *request) {
   Str tmp, a1buf, a2buf, rd, s;
   unsigned char md5[MD5_DIGEST_LENGTH + 1];

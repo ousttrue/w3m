@@ -39,7 +39,7 @@ static void do_effects(Lineprop m);
 
 static Str make_lastline_link(struct Buffer *buf, char *title, char *url) {
   Str s = NULL, u;
-  ParsedURL pu;
+  struct Url pu;
   char *p;
   int l = COLS - 1, i;
 

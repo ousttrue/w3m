@@ -426,7 +426,7 @@ struct portlist {
 };
 
 struct cookie {
-  ParsedURL url;
+  struct Url url;
   Str name;
   Str value;
   time_t expires;
@@ -556,9 +556,9 @@ extern FuncList w3mFuncList[];
 global char *HTTP_proxy init(NULL);
 global char *HTTPS_proxy init(NULL);
 global char *FTP_proxy init(NULL);
-global ParsedURL HTTP_proxy_parsed;
-global ParsedURL HTTPS_proxy_parsed;
-global ParsedURL FTP_proxy_parsed;
+global struct Url HTTP_proxy_parsed;
+global struct Url HTTPS_proxy_parsed;
+global struct Url FTP_proxy_parsed;
 global char *NO_proxy init(NULL);
 global int NOproxy_netaddr init(TRUE);
 #ifdef INET6

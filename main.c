@@ -490,7 +490,7 @@ int main(int argc, char **argv) {
   if (getimage_args) {
     char *image_url = conv_from_system(getimage_args[0]);
     char *base_url = conv_from_system(getimage_args[1]);
-    ParsedURL base_pu;
+    struct Url base_pu;
 
     parseURL2(base_url, &base_pu, NULL);
     image_source = getimage_args[2];

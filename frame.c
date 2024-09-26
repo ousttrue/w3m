@@ -265,7 +265,7 @@ void resetFrameElement(union frameset_element *f_element, struct Buffer *buf,
     /* frame cascade */
     deleteFrameSetElement(*f_element);
     f_element->set = buf->frameset;
-    f_element->set->currentURL = New(ParsedURL);
+    f_element->set->currentURL = New(struct Url);
     copyParsedURL(f_element->set->currentURL, &buf->currentURL);
     buf->frameset = popFrameTree(&(buf->frameQ));
     f_element->set->name = f_name;
@@ -289,11 +289,11 @@ void resetFrameElement(union frameset_element *f_element, struct Buffer *buf,
 }
 
 static struct frameset *frame_download_source(struct frame_body *b,
-                                              ParsedURL *currentURL,
-                                              ParsedURL *baseURL, int flag) {
+                                              struct Url *currentURL,
+                                              struct Url *baseURL, int flag) {
   struct Buffer *buf;
   struct frameset *ret_frameset = NULL;
-  ParsedURL url;
+  struct Url url;
 
   if (b == NULL || b->url == NULL || b->url[0] == '\0')
     return NULL;
@@ -331,7 +331,7 @@ static struct frameset *frame_download_source(struct frame_body *b,
   if (buf->frameset) {
     ret_frameset = buf->frameset;
     ret_frameset->name = b->name;
-    ret_frameset->currentURL = New(ParsedURL);
+    ret_frameset->currentURL = New(struct Url);
     copyParsedURL(ret_frameset->currentURL, &buf->currentURL);
     buf->frameset = popFrameTree(&(buf->frameQ));
   }
@@ -361,7 +361,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, struct Buffer *current,
   int r, c, t_stack;
   struct URLFile f2;
   char *d_target, *p_target, *s_target, *t_target;
-  ParsedURL *currentURL, base;
+  struct Url *currentURL, base;
   MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
   int flag;
 
@@ -558,7 +558,7 @@ static int createFrameFile(struct frameset *f, FILE *f1, struct Buffer *current,
           if (is_tag) {
             char *q = tok->ptr;
             int j, a_target = 0;
-            ParsedURL url;
+            struct Url url;
 
             if (!(tag = parse_tag(&q, FALSE)))
               goto token_end;

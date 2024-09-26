@@ -73,8 +73,8 @@ struct Buffer {
   struct MapList *maplist;
   HmarkerList *hmarklist;
   HmarkerList *imarklist;
-  ParsedURL currentURL;
-  ParsedURL *baseURL;
+  struct Url currentURL;
+  struct Url *baseURL;
   char *baseTarget;
   int real_scheme;
   char *sourcefile;

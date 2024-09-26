@@ -137,7 +137,7 @@ struct Buffer;
 extern int currentLn(struct Buffer *buf);
 extern void tmpClearBuffer(struct Buffer *buf);
 extern char *filename_extension(char *patch, int is_url);
-extern ParsedURL *schemeToProxy(int scheme);
+extern struct Url *schemeToProxy(int scheme);
 #define url_encode(url, base, cs) url_quote(url)
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
@@ -151,7 +151,7 @@ extern Str convertLine0(struct URLFile *uf, Str line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
 extern void push_symbol(Str str, char symbol, int width, int n);
-extern struct Buffer *loadGeneralFile(char *path, ParsedURL *current, char *referer,
+extern struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
                                int flag, FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
@@ -214,7 +214,7 @@ extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(InputStream stream, char *path);
 extern int checkOverWrite(char *path);
 extern int matchattr(char *p, char *attr, int len, Str *value);
-extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, ParsedURL *pu);
+extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, struct Url *pu);
 extern char *checkHeader(struct Buffer *buf, char *field);
 extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
                             int64_t size);
@@ -351,19 +351,19 @@ extern pid_t open_pipe_rw(FILE **fr, FILE **fw);
 
 extern void initMimeTypes();
 extern void free_ssl_ctx();
-extern ParsedURL *baseURL(struct Buffer *buf);
+extern struct Url *baseURL(struct Buffer *buf);
 extern int openSocket(char *hostname, char *remoteport_name,
                       unsigned short remoteport_num);
-extern void parseURL(char *url, ParsedURL *p_url, ParsedURL *current);
-extern void copyParsedURL(ParsedURL *p, const ParsedURL *q);
-extern void parseURL2(char *url, ParsedURL *pu, ParsedURL *current);
-extern Str parsedURL2Str(ParsedURL *pu);
-extern Str parsedURL2RefererStr(ParsedURL *pu);
+extern void parseURL(char *url, struct Url *p_url, struct Url *current);
+extern void copyParsedURL(struct Url *p, const struct Url *q);
+extern void parseURL2(char *url, struct Url *pu, struct Url *current);
+extern Str parsedURL2Str(struct Url *pu);
+extern Str parsedURL2RefererStr(struct Url *pu);
 extern int getURLScheme(char **url);
 extern void init_stream(struct URLFile *uf, int scheme, InputStream stream);
 Str HTTPrequestMethod(HRequest *hr);
-Str HTTPrequestURI(ParsedURL *pu, HRequest *hr);
-extern struct URLFile openURL(char *url, ParsedURL *pu, ParsedURL *current,
+Str HTTPrequestURI(struct Url *pu, HRequest *hr);
+extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                        URLOption *option, FormList *request,
                        TextList *extra_header, struct URLFile *ouf, HRequest *hr,
                        unsigned char *status);
@@ -377,8 +377,8 @@ extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
 extern char *guessContentType(char *filename);
 extern TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
-extern InputStream openFTPStream(ParsedURL *pu, struct URLFile *uf);
-extern Str loadFTPDir0(ParsedURL *pu);
+extern InputStream openFTPStream(struct Url *pu, struct URLFile *uf);
+extern Str loadFTPDir0(struct Url *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
@@ -434,7 +434,7 @@ extern char *confFile(char *base);
 extern char *auxbinFile(char *base);
 extern char *libFile(char *base);
 extern char *helpFile(char *base);
-extern const void *querySiteconf(const ParsedURL *query_pu, int field);
+extern const void *querySiteconf(const struct Url *query_pu, int field);
 extern Str localCookie(void);
 extern Str loadLocalDir(char *dirname);
 extern FILE *localcgi_post(char *, char *, FormList *, char *);
@@ -442,11 +442,11 @@ extern FILE *localcgi_post(char *, char *, FormList *, char *);
 extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(ParsedURL *pu, char *realm, Str *uname,
+extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
-extern void add_auth_user_passwd(ParsedURL *pu, char *realm, Str uname, Str pwd,
+extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname, Str pwd,
                                  int is_proxy);
-extern void invalidate_auth_user_passwd(ParsedURL *pu, char *realm, Str uname,
+extern void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                         Str pwd, int is_proxy);
 extern char *last_modified(struct Buffer *buf);
 extern Str romanNumeral(int n);
@@ -464,8 +464,8 @@ extern Str tmpfname(int type, char *ext);
 extern time_t mymktime(char *timestr);
 extern void (*mySignal(int signal_number, void (*action)(int)))(int);
 extern char *FQDN(char *host);
-extern Str find_cookie(ParsedURL *pu);
-extern int add_cookie(ParsedURL *pu, Str name, Str value, time_t expires,
+extern Str find_cookie(struct Url *pu);
+extern int add_cookie(struct Url *pu, Str name, Str value, time_t expires,
                       Str domain, Str path, int flag, Str comment, int version,
                       Str port, Str commentURL);
 extern void save_cookies(void);

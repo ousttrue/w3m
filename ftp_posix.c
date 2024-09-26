@@ -308,7 +308,7 @@ static void closeFTPdata(FILE *f) {
 
 void closeFTP(void) { ftp_close(&current_ftp); }
 
-InputStream openFTPStream(ParsedURL *pu, struct URLFile *uf) {
+InputStream openFTPStream(struct Url *pu, struct URLFile *uf) {
   Str tmp;
   int status;
   char *user = NULL;
@@ -404,7 +404,7 @@ ftp_dir:
   return NULL;
 }
 
-Str loadFTPDir0(ParsedURL *pu) {
+Str loadFTPDir0(struct Url *pu) {
   Str FTPDIRtmp;
   Str tmp;
   int status;
