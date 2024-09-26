@@ -268,20 +268,6 @@ typedef int wc_ces; /* XXX: not used */
  * Types.
  */
 
-typedef struct _DownloadList {
-  pid_t pid;
-  char *url;
-  char *save;
-  char *lock;
-  int64_t size;
-  time_t time;
-  int running;
-  int err;
-  struct _DownloadList *next;
-  struct _DownloadList *prev;
-} DownloadList;
-#define DOWNLOAD_LIST_TITLE "Download List Panel"
-
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \
   {                                                                            \
     (dstbuf)->rootX = (srcbuf)->rootX;                                         \
@@ -305,7 +291,6 @@ typedef struct _DownloadList {
 #define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf)                                                    \
   ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
-
 
 #define RB_STACK_SIZE 10
 
@@ -580,8 +565,6 @@ global int open_tab_dl_list init(FALSE);
 global int close_tab_back init(FALSE);
 global int nTab;
 global int TabCols init(10);
-global DownloadList *FirstDL init(NULL);
-global DownloadList *LastDL init(NULL);
 global int CurrentKey;
 global char *CurrentKeyData;
 global char *CurrentCmdData;

@@ -44,6 +44,7 @@ pub const SRCS = [_][]const u8{
 
     "version.c",
     "url_stream.c",
+    "downloadlist.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{
@@ -53,7 +54,6 @@ pub const SRCS_POSIX = [_][]const u8{
     "ftp_posix.c",
     "etc_posix.c",
     "file_posix.c",
-    "defun_posix.c",
     "indep_posix.c",
     "form_posix.c",
 };

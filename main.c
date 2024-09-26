@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "downloadlist.h"
 #include "http_request.h"
 #include "tabbuffer.h"
 #include "buffer.h"

@@ -210,11 +210,7 @@ extern int checkOverWrite(char *path);
 extern int matchattr(char *p, char *attr, int len, Str *value);
 extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, struct Url *pu);
 extern char *checkHeader(struct Buffer *buf, char *field);
-extern void addDownloadList(pid_t pid, char *url, char *save, char *lock,
-                            int64_t size);
-extern void stopDownload(void);
-extern int checkDownloadList(void);
-extern void download_action(struct parsed_tagarg *arg);
+
 extern struct Buffer *newBuffer(int width);
 extern struct Buffer *nullBuffer(void);
 extern void clearBuffer(struct Buffer *buf);

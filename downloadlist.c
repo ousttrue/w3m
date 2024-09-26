@@ -1,14 +1,81 @@
-#include "fm.h"
-#include <sys/wait.h>
+#include "downloadlist.h"
+#include "alloc.h"
+#include "Str.h"
 #include "termsize.h"
+#include "fm.h"
 
-int checkDownloadList(void) {
-  DownloadList *d;
-  struct stat st;
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
+#define SIGKILL 9
+#else
+#include <sys/wait.h>
+#endif
 
+struct DownloadList *FirstDL = nullptr;
+struct DownloadList *LastDL = nullptr;
+
+struct DownloadList {
+  pid_t pid;
+  char *url;
+  char *save;
+  char *lock;
+  int64_t size;
+  time_t time;
+  int running;
+  int err;
+  struct DownloadList *next;
+  struct DownloadList *prev;
+};
+
+static bool add_download_list = false;
+
+void download_update() {
+  if (add_download_list) {
+    add_download_list = FALSE;
+    ldDL();
+  }
+}
+
+bool do_add_download_list() {
+  int ret = add_download_list;
+  add_download_list = FALSE;
+  return ret;
+}
+
+void addDownloadList(pid_t pid, char *url, char *save, char *lock,
+                     int64_t size) {
+  struct DownloadList *d = New(struct DownloadList);
+  d->pid = pid;
+  d->url = url;
+  if (save[0] != '/' && save[0] != '~')
+    save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+  d->save = expandPath(save);
+  d->lock = lock;
+  d->size = size;
+  d->time = time(0);
+  d->running = TRUE;
+  d->err = 0;
+  d->next = NULL;
+  d->prev = LastDL;
+  if (LastDL)
+    LastDL->next = d;
+  else
+    FirstDL = d;
+  LastDL = d;
+  add_download_list = TRUE;
+}
+
+#ifdef _WIN32
+#define lstat stat
+#endif
+
+bool checkDownloadList() {
   if (!FirstDL)
     return FALSE;
-  for (d = FirstDL; d != NULL; d = d->next) {
+
+  for (auto d = FirstDL; d != NULL; d = d->next) {
+    struct stat st;
     if (d->running && !lstat(d->lock, &st))
       return TRUE;
   }
@@ -28,7 +95,7 @@ static char *convert_size3(int64_t size) {
 }
 
 static struct Buffer *DownloadListBuffer(void) {
-  DownloadList *d;
+  struct DownloadList *d;
   Str src = NULL;
   struct stat st;
   time_t cur_time;
@@ -117,19 +184,39 @@ static struct Buffer *DownloadListBuffer(void) {
   return loadHTMLString(src);
 }
 
+#ifdef _WIN32
+BOOL kill(DWORD dwProcessId, UINT uExitCode) {
+  DWORD dwDesiredAccess = PROCESS_TERMINATE;
+  BOOL bInheritHandle = FALSE;
+  HANDLE hProcess = OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
+  if (hProcess == NULL)
+    return FALSE;
+
+  BOOL result = TerminateProcess(hProcess, uExitCode);
+
+  CloseHandle(hProcess);
+
+  return result;
+}
+#endif
+
 void download_action(struct parsed_tagarg *arg) {
-  DownloadList *d;
-  pid_t pid;
 
   for (; arg; arg = arg->next) {
+    pid_t pid;
     if (!strncmp(arg->arg, "stop", 4)) {
       pid = (pid_t)atoi(&arg->arg[4]);
+#ifdef _WIN32
+#else
       kill(pid, SIGKILL);
-    } else if (!strncmp(arg->arg, "ok", 2))
+#endif
+    } else if (!strncmp(arg->arg, "ok", 2)) {
       pid = (pid_t)atoi(&arg->arg[2]);
-    else
+    } else {
       continue;
-    for (d = FirstDL; d; d = d->next) {
+    }
+
+    for (auto d = FirstDL; d; d = d->next) {
       if (d->pid == pid) {
         unlink(d->lock);
         if (d->prev)
@@ -144,11 +231,12 @@ void download_action(struct parsed_tagarg *arg) {
       }
     }
   }
+
   ldDL();
 }
 
 void stopDownload(void) {
-  DownloadList *d;
+  struct DownloadList *d;
 
   if (!FirstDL)
     return;
