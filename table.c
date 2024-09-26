@@ -6,6 +6,7 @@
 #include <string.h>
 #include <math.h>
 #include "fm.h"
+#include "readbuffer.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "Str.h"

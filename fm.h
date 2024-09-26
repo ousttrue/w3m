@@ -283,23 +283,6 @@ extern int REV_LB[];
  * Types.
  */
 
-typedef unsigned short Lineprop;
-
-typedef struct _Line {
-  char *lineBuf;
-  Lineprop *propBuf;
-  struct _Line *next;
-  struct _Line *prev;
-  int len;
-  int width;
-  long linenumber;      /* on buffer */
-  long real_linenumber; /* on file */
-  unsigned short usrflags;
-  int size;
-  int bpos;
-  int bwidth;
-} Line;
-
 typedef struct {
   int line;
   int pos;
@@ -352,10 +335,10 @@ typedef struct _LinkList {
 typedef struct _Buffer {
   char *filename;
   char *buffername;
-  Line *firstLine;
-  Line *topLine;
-  Line *currentLine;
-  Line *lastLine;
+  struct Line *firstLine;
+  struct Line *topLine;
+  struct Line *currentLine;
+  struct Line *lastLine;
   struct _Buffer *nextBuffer;
   struct _Buffer *linkBuffer[MAX_LB];
   short width;
@@ -482,55 +465,7 @@ typedef struct _DownloadList {
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 #define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
 
-struct input_alt_attr {
-  int hseq;
-  int fid;
-  int in;
-  Str type, name, value;
-};
-
-typedef struct {
-  int pos;
-  int len;
-  int tlen;
-  long flag;
-  Anchor anchor;
-  Str img_alt;
-  struct input_alt_attr input_alt;
-  char fontstat[FONTSTAT_SIZE];
-  short nobr_level;
-  Lineprop prev_ctype;
-  char init_flag;
-  short top_margin;
-  short bottom_margin;
-} Breakpoint;
-
-struct readbuffer {
-  Str line;
-  Lineprop cprop;
-  short pos;
-  Str prevchar;
-  long flag;
-  long flag_stack[RB_STACK_SIZE];
-  int flag_sp;
-  int status;
-  unsigned char end_tag;
-  unsigned char q_level;
-  short table_level;
-  short nobr_level;
-  Anchor anchor;
-  Str img_alt;
-  struct input_alt_attr input_alt;
-  char fontstat[FONTSTAT_SIZE];
-  char fontstat_stack[FONT_STACK_SIZE][FONTSTAT_SIZE];
-  int fontstat_sp;
-  Lineprop prev_ctype;
-  Breakpoint bp;
-  struct cmdtable *tag_stack[TAG_STACK_SIZE];
-  int tag_sp;
-  short top_margin;
-  short bottom_margin;
-};
+#include "line.h"
 
 #define in_bold fontstat[0]
 #define in_under fontstat[1]

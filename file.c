@@ -1,5 +1,6 @@
 #include "file.h"
 #include "map.h"
+#include "readbuffer.h"
 #include "tty.h"
 #include "digest_auth.h"
 #include "termsize.h"
