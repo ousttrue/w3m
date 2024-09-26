@@ -4497,7 +4497,7 @@ static void HTMLlineproc2body(Buffer *buf, Str (*feed)(), int llimit) {
           if (buf->maplist == NULL) /* outside of <map>..</map> */
             break;
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            MapArea *a;
+            struct MapArea *a;
             p = url_encode(remove_space(p), base, buf->document_charset);
             t = NULL;
             parsedtag_get_value(tag, ATTR_TARGET, &t);

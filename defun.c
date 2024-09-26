@@ -2588,7 +2588,7 @@ void follow_map(struct parsed_tagarg *arg) {
   char *name = tag_get_value(arg, "link");
 #if defined(MENU_MAP) || defined(USE_IMAGE)
   Anchor *an;
-  MapArea *a;
+  struct MapArea *a;
   int x, y;
   ParsedURL p_url;
 

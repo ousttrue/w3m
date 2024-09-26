@@ -1,7 +1,6 @@
 /*
  * client-side image maps
  */
-// #include "fm.h"
 #include "map.h"
 #include <math.h>
 
@@ -32,7 +31,7 @@ Anchor *retrieveCurrentMap(Buffer *buf) {
 }
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
-MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y) {
+struct MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y) {
   MapList *ml;
   ListItem *al;
   int i, selected = -1;
@@ -45,7 +44,7 @@ MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x, int y) {
   if (selected >= 0) {
     for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
       if (al->ptr && i == selected)
-        return (MapArea *)al->ptr;
+        return (struct MapArea *)al->ptr;
     }
   }
   return NULL;
@@ -60,7 +59,7 @@ Buffer *follow_map_panel(Buffer *buf, char *name) {
   Str mappage;
   MapList *ml;
   ListItem *al;
-  MapArea *a;
+  struct MapArea *a;
   ParsedURL pu;
   char *p, *q;
   Buffer *newbuf;
@@ -71,7 +70,7 @@ Buffer *follow_map_panel(Buffer *buf, char *name) {
 
   mappage = Strnew_charp(map1);
   for (al = ml->area->first; al != NULL; al = al->next) {
-    a = (MapArea *)al->ptr;
+    a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
     parseURL2(a->url, &pu, baseURL(buf));
@@ -91,9 +90,9 @@ Buffer *follow_map_panel(Buffer *buf, char *name) {
   return newbuf;
 }
 
-MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
+struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
                     char *coords) {
-  MapArea *a = New(MapArea);
+  struct MapArea *a = New(struct MapArea);
 
   a->url = url;
   a->target = target;
@@ -105,7 +104,7 @@ MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 static void append_map_info(Buffer *buf, Str tmp, FormItemList *fi) {
   MapList *ml;
   ListItem *al;
-  MapArea *a;
+  struct MapArea *a;
   ParsedURL pu;
   char *p, *q;
 
@@ -116,7 +115,7 @@ static void append_map_info(Buffer *buf, Str tmp, FormItemList *fi) {
   Strcat_m_charp(tmp, "<tr valign=top><td colspan=2>Links of current image map",
                  "<tr valign=top><td colspan=2><table>", NULL);
   for (al = ml->area->first; al != NULL; al = al->next) {
-    a = (MapArea *)al->ptr;
+    a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
     parseURL2(a->url, &pu, baseURL(buf));
