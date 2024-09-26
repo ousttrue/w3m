@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <pwd.h>
 #include <Str.h>
 #include <signal.h>
 #include <setjmp.h>
@@ -15,10 +14,19 @@
 #include <malloc.h>
 #endif /* DEBUG */
 
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#include <ws2tcpip.h>
+typedef int socklen_t;
+#else
+#include <pwd.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#endif
+
 
 #ifndef HAVE_SOCKLEN_T
 typedef int socklen_t;
@@ -362,12 +370,15 @@ InputStream openFTPStream(struct Url *pu, struct URLFile *uf) {
     pass = pwd->ptr;
   } else if (ftppasswd != NULL && *ftppasswd != '\0')
     pass = ftppasswd;
-  else {
+#ifndef _WIN32
+  else 
+  {
     struct passwd *mypw = getpwuid(getuid());
     tmp = Strnew_charp(mypw ? mypw->pw_name : "anonymous");
     Strcat_char(tmp, '@');
     pass = tmp->ptr;
   }
+#endif
 
   if (!current_ftp.host) {
     current_ftp.host = allocStr(pu->host, -1);
