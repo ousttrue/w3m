@@ -231,7 +231,7 @@ DEFUN(multimap, MULTIMAP, "multimap") {
 }
 
 void tmpClearBuffer(struct Buffer *buf) {
-  if (buf->pagerSource == NULL && writeBufferCache(buf) == 0) {
+  if (writeBufferCache(buf) == 0) {
     buf->firstLine = NULL;
     buf->topLine = NULL;
     buf->currentLine = NULL;
@@ -601,7 +601,8 @@ DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward") {
 static void srch_nxtprv(int reverse) {
   int result;
   /* *INDENT-OFF* */
-  static int (*routine[2])(struct Buffer *, char *) = {forwardSearch, backwardSearch};
+  static int (*routine[2])(struct Buffer *, char *) = {forwardSearch,
+                                                       backwardSearch};
   /* *INDENT-ON* */
 
   if (searchRoutine == NULL) {
@@ -724,79 +725,6 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(pipeBuf, PIPE_BUF,
-      "Pipe current buffer through a shell command and display output") {
-  struct Buffer *buf;
-  char *cmd, *tmpf;
-  FILE *f;
-
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
-  if (cmd == NULL || *cmd == '\0') {
-    /* FIXME: gettextize? */
-    cmd = inputLineHist("Pipe buffer to: ", "", IN_COMMAND, ShellHist);
-  }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
-  if (cmd == NULL || *cmd == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  f = fopen(tmpf, "w");
-  if (f == NULL) {
-    /* FIXME: gettextize? */
-    disp_message(Sprintf("Can't save buffer to %s", cmd)->ptr, TRUE);
-    return;
-  }
-  saveBuffer(Currentbuf, f, TRUE);
-  fclose(f);
-  buf = getpipe(myExtCommand(cmd, shell_quote(tmpf), TRUE)->ptr);
-  if (buf == NULL) {
-    disp_message("Execution failed", TRUE);
-    return;
-  } else {
-    buf->filename = cmd;
-    buf->buffername =
-        Sprintf("%s %s", PIPEBUFFERNAME, conv_from_system(cmd))->ptr;
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (buf->type == NULL)
-      buf->type = "text/plain";
-    buf->currentURL.file = "-";
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-/* Execute shell command and read output ac pipe. */
-DEFUN(pipesh, PIPE_SHELL, "Execute shell command and display output") {
-  struct Buffer *buf;
-  char *cmd;
-
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
-  if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist("(read shell[pipe])!", "", IN_COMMAND, ShellHist);
-  }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
-  if (cmd == NULL || *cmd == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  buf = getpipe(cmd);
-  if (buf == NULL) {
-    disp_message("Execution failed", TRUE);
-    return;
-  } else {
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (buf->type == NULL)
-      buf->type = "text/plain";
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
 /* Execute shell command and load entire output to buffer */
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   struct Buffer *buf;
@@ -881,7 +809,8 @@ DEFUN(ldhelp, HELP, "Show help panel") {
 }
 
 static void cmd_loadfile(char *fn) {
-  struct Buffer *buf = loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+  struct Buffer *buf =
+      loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
     char *emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
@@ -1284,7 +1213,7 @@ DEFUN(editBf, EDIT, "Edit local source") {
   char *fn = Currentbuf->filename;
   Str cmd;
 
-  if (fn == NULL || Currentbuf->pagerSource != NULL || /* Behaving as a pager */
+  if (fn == NULL ||
       (Currentbuf->type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
       Currentbuf->real_scheme != SCM_LOCAL ||
@@ -1336,7 +1265,7 @@ static struct Buffer *loadNormalBuf(struct Buffer *buf, int renderframe) {
 }
 
 static struct Buffer *loadLink(char *url, char *target, char *referer,
-                        struct FormList *request) {
+                               struct FormList *request) {
   struct Buffer *buf, *nfbuf;
   union frameset_element *f_element = NULL;
   int flag = 0;
@@ -1623,7 +1552,8 @@ static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
 
 #define conv_form_encoding(val, fi, buf) (val)
 
-static void query_from_followform(Str *query, struct FormItemList *fi, int multipart) {
+static void query_from_followform(Str *query, struct FormItemList *fi,
+                                  int multipart) {
   struct FormItemList *f2;
   FILE *body = NULL;
 
@@ -2832,19 +2762,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     return;
   }
   if (Currentbuf->sourcefile == NULL) {
-    if (Currentbuf->pagerSource &&
-        !strcasecmp(Currentbuf->type, "text/plain")) {
-      FILE *f;
-      Str tmpf = tmpfname(TMPF_SRC, NULL);
-      f = fopen(tmpf->ptr, "w");
-      if (f == NULL)
-        return;
-      saveBufferBody(Currentbuf, f, TRUE);
-      fclose(f);
-      Currentbuf->sourcefile = tmpf->ptr;
-    } else {
-      return;
-    }
+    return;
   }
 
   buf = newBuffer(INIT_BUFFER_WIDTH);
@@ -3176,12 +3094,9 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
   }
   if (Currentbuf->lastLine)
     all = Currentbuf->lastLine->real_linenumber;
-  if (Currentbuf->pagerSource && !(Currentbuf->bufferprop & BP_CLOSE))
-    tmp = Sprintf("line %d col %d/%d", cur, col, len);
-  else
-    tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
-                  (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5),
-                  col, len);
+  tmp = Sprintf("line %d/%d (%d%%) col %d/%d", cur, all,
+                (int)((double)cur * 100.0 / (double)(all ? all : 1) + 0.5), col,
+                len);
 
   disp_message(tmp->ptr, FALSE);
 }

@@ -202,8 +202,9 @@ int currentLn(struct Buffer *buf) {
 }
 
 static struct Buffer *loadSomething(struct URLFile *f,
-                             struct Buffer *(*loadproc)(struct URLFile *, struct Buffer *),
-                             struct Buffer *defaultbuf) {
+                                    struct Buffer *(*loadproc)(struct URLFile *,
+                                                               struct Buffer *),
+                                    struct Buffer *defaultbuf) {
   struct Buffer *buf;
 
   if ((buf = loadproc(f, defaultbuf)) == NULL)
@@ -321,8 +322,6 @@ static char *uncompressed_file_type(char *path, char **ext) {
     t0 = "text/plain";
   return t0;
 }
-
-
 
 void examineFile(char *path, struct URLFile *uf) {
   struct stat stbuf;
@@ -458,7 +457,8 @@ int matchattr(char *p, char *attr, int len, Str *value) {
   return 0;
 }
 
-void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, struct Url *pu) {
+void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
+                struct Url *pu) {
   char *p, *q;
   char *emsg;
   char c;
@@ -902,8 +902,9 @@ static char *extract_auth_param(char *q, struct auth_param *auth) {
   return q;
 }
 
-static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
-                         struct HttpRequest *hr, struct FormList *request) {
+static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw,
+                         struct Url *pu, struct HttpRequest *hr,
+                         struct FormList *request) {
   Str s = Strdup(uname);
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -932,7 +933,8 @@ struct http_auth www_auth[] = {
 /* *INDENT-ON* */
 
 static struct http_auth *findAuthentication(struct http_auth *hauth,
-                                            struct Buffer *buf, char *auth_field) {
+                                            struct Buffer *buf,
+                                            char *auth_field) {
   struct http_auth *ha;
   int len = strlen(auth_field), slen;
   TextListItem *i;
@@ -976,8 +978,9 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
 }
 
 static void getAuthCookie(struct http_auth *hauth, char *auth_header,
-                          TextList *extra_header, struct Url *pu, struct HttpRequest *hr,
-                          struct FormList *request, Str *uname, Str *pwd) {
+                          TextList *extra_header, struct Url *pu,
+                          struct HttpRequest *hr, struct FormList *request,
+                          Str *uname, Str *pwd) {
   Str ss = NULL;
   Str tmp;
   TextListItem *i;
@@ -1088,9 +1091,10 @@ Str getLinkNumberStr(int correction) {
 /*
  * loadGeneralFile: load file to buffer
  */
-#define DO_EXTERNAL ((struct Buffer * (*)(struct URLFile *, struct Buffer *)) doExternal)
-struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer, int flag,
-                        struct FormList *request) {
+#define DO_EXTERNAL                                                            \
+  ((struct Buffer * (*)(struct URLFile *, struct Buffer *)) doExternal)
+struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
+                               int flag, struct FormList *request) {
   struct URLFile f, *of = NULL;
   struct Url pu;
   struct Buffer *b = NULL;
@@ -4587,7 +4591,8 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           break;
         case HTML_N_TEXTAREA_INT:
           if (a_textarea && n_textarea >= 0) {
-            struct FormItemList *item = (struct FormItemList *)a_textarea[n_textarea]->url;
+            struct FormItemList *item =
+                (struct FormItemList *)a_textarea[n_textarea]->url;
             item->init_value = item->value = textarea_str[n_textarea];
           }
           break;
@@ -5343,7 +5348,8 @@ static void print_internal_information(struct html_feed_environ *henv) {
   }
 }
 
-void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src, int internal) {
+void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
+                    int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   int64_t linelen = 0;
   int64_t trbyte = 0;
@@ -5548,7 +5554,6 @@ static void _saveBuffer(struct Buffer *buf, Line *l, FILE *f, int cont) {
 
   is_html = is_html_type(buf->type);
 
-pager_next:
   for (; l != NULL; l = l->next) {
     if (is_html)
       tmp = conv_symbol(l);
@@ -5558,10 +5563,6 @@ pager_next:
     Strfputs(tmp, f);
     if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
       putc('\n', f);
-  }
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    l = getNextPage(buf, PagerMax);
-    goto pager_next;
   }
 }
 
@@ -5577,7 +5578,9 @@ void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
   _saveBuffer(buf, l, f, cont);
 }
 
-struct Buffer *loadcmdout(char *cmd, struct Buffer *(*loadproc)(struct URLFile *, struct Buffer *),
+struct Buffer *loadcmdout(char *cmd,
+                          struct Buffer *(*loadproc)(struct URLFile *,
+                                                     struct Buffer *),
                           struct Buffer *defaultbuf) {
   FILE *f, *popen(const char *, const char *);
   struct Buffer *buf;
@@ -5607,191 +5610,6 @@ struct Buffer *getshell(char *cmd) {
   buf->buffername =
       Sprintf("%s %s", SHELLBUFFERNAME, conv_from_system(cmd))->ptr;
   return buf;
-}
-
-/*
- * getpipe: execute shell command and connect pipe to the buffer
- */
-struct Buffer *getpipe(char *cmd) {
-  FILE *f, *popen(const char *, const char *);
-  struct Buffer *buf;
-
-  if (cmd == NULL || *cmd == '\0')
-    return NULL;
-  f = popen(cmd, "r");
-  if (f == NULL)
-    return NULL;
-  buf = newBuffer(INIT_BUFFER_WIDTH);
-  buf->pagerSource = newFileStream(f, (void (*)())pclose);
-  buf->filename = cmd;
-  buf->buffername =
-      Sprintf("%s %s", PIPEBUFFERNAME, conv_from_system(cmd))->ptr;
-  buf->bufferprop |= BP_PIPE;
-  return buf;
-}
-
-/*
- * Open pager buffer
- */
-struct Buffer *openPagerBuffer(InputStream stream, struct Buffer *buf) {
-
-  if (buf == NULL)
-    buf = newBuffer(INIT_BUFFER_WIDTH);
-  buf->pagerSource = stream;
-  buf->buffername = getenv("MAN_PN");
-  if (buf->buffername == NULL)
-    buf->buffername = PIPEBUFFERNAME;
-  else
-    buf->buffername = conv_from_system(buf->buffername);
-  buf->bufferprop |= BP_PIPE;
-  buf->currentLine = buf->firstLine;
-
-  return buf;
-}
-
-struct Buffer *openGeneralPagerBuffer(InputStream stream) {
-  struct Buffer *buf;
-  char *t = "text/plain";
-  struct Buffer *t_buf = NULL;
-  struct URLFile uf;
-
-  init_stream(&uf, SCM_UNKNOWN, stream);
-
-  t_buf = newBuffer(INIT_BUFFER_WIDTH);
-  copyParsedURL(&t_buf->currentURL, NULL);
-  t_buf->currentURL.scheme = SCM_LOCAL;
-  t_buf->currentURL.file = "-";
-  if (SearchHeader) {
-    readHeader(&uf, t_buf, TRUE, NULL);
-    t = checkContentType(t_buf);
-    if (t == NULL)
-      t = "text/plain";
-    if (t_buf) {
-      t_buf->topLine = t_buf->firstLine;
-      t_buf->currentLine = t_buf->lastLine;
-    }
-    SearchHeader = FALSE;
-  } else if (DefaultType) {
-    t = DefaultType;
-    DefaultType = NULL;
-  }
-  if (is_html_type(t)) {
-    buf = loadHTMLBuffer(&uf, t_buf);
-    buf->type = "text/html";
-  } else if (is_plain_text_type(t)) {
-    if (IStype(stream) != IST_ENCODED)
-      stream = newEncodedStream(stream, uf.encoding);
-    buf = openPagerBuffer(stream, t_buf);
-    buf->type = "text/plain";
-  } else {
-    if (searchExtViewer(t)) {
-      buf = doExternal(uf, t, t_buf);
-      UFclose(&uf);
-      if (buf == NULL || buf == NO_BUFFER)
-        return buf;
-    } else { /* unknown type is regarded as text/plain */
-      if (IStype(stream) != IST_ENCODED)
-        stream = newEncodedStream(stream, uf.encoding);
-      buf = openPagerBuffer(stream, t_buf);
-      buf->type = "text/plain";
-    }
-  }
-  buf->real_type = t;
-  return buf;
-}
-
-Line *getNextPage(struct Buffer *buf, int plen) {
-  Line *top = buf->topLine, *last = buf->lastLine, *cur = buf->currentLine;
-  int i;
-  int nlines = 0;
-  int64_t linelen = 0, trbyte = buf->trbyte;
-  Str lineBuf2;
-  char pre_lbuf = '\0';
-  struct URLFile uf;
-  int squeeze_flag = FALSE;
-  Lineprop *propBuffer = NULL;
-
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-
-  if (buf->pagerSource == NULL)
-    return NULL;
-
-  if (last != NULL) {
-    nlines = last->real_linenumber;
-    pre_lbuf = *(last->lineBuf);
-    if (pre_lbuf == '\0')
-      pre_lbuf = '\n';
-    buf->currentLine = last;
-  }
-
-  if (SETJMP(AbortLoading) != 0) {
-    goto pager_end;
-  }
-  TRAP_ON;
-
-  init_stream(&uf, SCM_UNKNOWN, NULL);
-  for (i = 0; i < plen; i++) {
-    lineBuf2 = StrmyISgets(buf->pagerSource);
-    if (lineBuf2->length == 0) {
-      /* Assume that `cmd == buf->filename' */
-      if (buf->filename)
-        buf->buffername =
-            Sprintf("%s %s", CPIPEBUFFERNAME, conv_from_system(buf->filename))
-                ->ptr;
-      else if (getenv("MAN_PN") == NULL)
-        buf->buffername = CPIPEBUFFERNAME;
-      buf->bufferprop |= BP_CLOSE;
-      break;
-    }
-    linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine(&uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
-    if (squeezeBlankLine) {
-      squeeze_flag = FALSE;
-      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-        ++nlines;
-        --i;
-        squeeze_flag = TRUE;
-        continue;
-      }
-      pre_lbuf = lineBuf2->ptr[0];
-    }
-    ++nlines;
-    Strchop(lineBuf2);
-    lineBuf2 = checkType(lineBuf2, &propBuffer, &colorBuffer);
-    addnewline(buf, lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length,
-               FOLD_BUFFER_WIDTH, nlines);
-    if (!top) {
-      top = buf->firstLine;
-      cur = top;
-    }
-    if (buf->lastLine->real_linenumber - buf->firstLine->real_linenumber >=
-        PagerMax) {
-      Line *l = buf->firstLine;
-      do {
-        if (top == l)
-          top = l->next;
-        if (cur == l)
-          cur = l->next;
-        if (last == l)
-          last = NULL;
-        l = l->next;
-      } while (l && l->bpos);
-      buf->firstLine = l;
-      buf->firstLine->prev = NULL;
-    }
-  }
-pager_end:
-  TRAP_OFF;
-
-  buf->trbyte = trbyte + linelen;
-  buf->topLine = top;
-  buf->currentLine = cur;
-  if (!last)
-    last = buf->firstLine;
-  else if (last && (last->next || !squeeze_flag))
-    last = last->next;
-  return last;
 }
 
 int save2tmp(struct URLFile uf, char *tmpf) {
@@ -5835,8 +5653,6 @@ _end:
   current_content_length = 0;
   return retval;
 }
-
-
 
 int doFileMove(char *tmpf, char *defstr) {
   int ret = doFileCopy(tmpf, defstr);

@@ -1,6 +1,5 @@
 #pragma once
 #include "anchor.h"
-#include "istream.h"
 #include "form.h"
 #include "url.h"
 #include "textlist.h"
@@ -15,7 +14,6 @@
 #define LB_N_SOURCE LB_SOURCE
 #define MAX_LB 5
 extern int REV_LB[];
-
 
 #define LINK_TYPE_NONE 0
 #define LINK_TYPE_REL 1
@@ -62,7 +60,6 @@ struct Buffer {
   short rootY;
   short COLS;
   short LINES;
-  InputStream pagerSource;
   AnchorList *href;
   AnchorList *name;
   AnchorList *img;

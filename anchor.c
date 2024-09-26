@@ -71,14 +71,15 @@ Anchor *registerName(struct Buffer *buf, char *url, int line, int pos) {
   return a;
 }
 
-Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line, int pos) {
+Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
+                    int pos) {
   Anchor *a;
   buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
 }
 
-Anchor *registerForm(struct Buffer *buf, struct FormList *flist, struct parsed_tag *tag,
-                     int line, int pos) {
+Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
+                     struct parsed_tag *tag, int line, int pos) {
   Anchor *a;
   struct FormItemList *fi;
 
@@ -243,8 +244,8 @@ static void reseq_anchor(struct Buffer *buf) {
 }
 
 static char *reAnchorPos(struct Buffer *buf, Line *l, char *p1, char *p2,
-                         Anchor *(*anchorproc)(struct Buffer *, char *, char *, int,
-                                               int)) {
+                         Anchor *(*anchorproc)(struct Buffer *, char *, char *,
+                                               int, int)) {
   Anchor *a;
   int spos, epos;
   int i, hseq = -2;
@@ -290,8 +291,8 @@ void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos) {
 /* search regexp and register them as anchors */
 /* returns error message if any               */
 static char *reAnchorAny(struct Buffer *buf, char *re,
-                         Anchor *(*anchorproc)(struct Buffer *, char *, char *, int,
-                                               int)) {
+                         Anchor *(*anchorproc)(struct Buffer *, char *, char *,
+                                               int, int)) {
   Line *l;
   char *p = NULL, *p1, *p2;
 
@@ -305,8 +306,9 @@ static char *reAnchorAny(struct Buffer *buf, char *re,
        l != NULL &&
        (MarkAllPages || l->linenumber < buf->topLine->linenumber + LASTLINE);
        l = l->next) {
-    if (p && l->bpos)
-      goto next_line;
+    if (p && l->bpos) {
+      continue;
+    }
     p = l->lineBuf;
     for (;;) {
       if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
@@ -315,10 +317,6 @@ static char *reAnchorAny(struct Buffer *buf, char *re,
       } else
         break;
     }
-  next_line:
-    if (MarkAllPages && l->next == NULL && buf->pagerSource &&
-        !(buf->bufferprop & BP_CLOSE))
-      getNextPage(buf, PagerMax);
   }
   return NULL;
 }

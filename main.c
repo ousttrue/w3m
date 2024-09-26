@@ -220,7 +220,7 @@ int main(int argc, char **argv) {
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
   char **getimage_args = NULL;
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")){
+  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
   }
   GC_INIT();
@@ -527,11 +527,7 @@ int main(int argc, char **argv) {
   err_msg = Strnew();
   if (load_argc == 0) {
     /* no URL specified */
-    if (!isatty(0)) {
-      redin = newFileStream(fdopen(dup(0), "rb"), (void (*)())pclose);
-      newbuf = openGeneralPagerBuffer(redin);
-      dup2(1, 0);
-    } else if (load_bookmark) {
+    if (load_bookmark) {
       newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
       if (newbuf == NULL)
         Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
@@ -625,8 +621,7 @@ int main(int argc, char **argv) {
       }
     } else if (newbuf == NO_BUFFER)
       continue;
-    if (newbuf->pagerSource ||
-        (newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
+    if ((newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
          newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
       newbuf->search_header = search_header;
     if (CurrentTab == NULL) {

@@ -72,27 +72,14 @@ Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
 }
 
 Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last) {
-  int i, n;
   Line *l = line;
-
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    n = line->linenumber + offset + buf->LINES;
-    if (buf->lastLine->linenumber < n)
-      getNextPage(buf, n - buf->lastLine->linenumber);
-    while ((last || (buf->lastLine->linenumber < n)) &&
-           (getNextPage(buf, 1) != NULL))
-      ;
-    if (last)
-      l = buf->lastLine;
-  }
-
   if (offset == 0)
     return l;
   if (offset > 0)
-    for (i = 0; i < offset && l->next != NULL; i++, l = l->next)
+    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
       ;
   else
-    for (i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
       ;
   return l;
 }

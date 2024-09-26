@@ -34,7 +34,8 @@ static void drawAnchorCursor(struct Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(struct Buffer *buf, int n);
 static Line *redrawLine(struct Buffer *buf, Line *l, int i);
-static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos, int epos);
+static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
+                            int epos);
 static void do_effects(Lineprop m);
 
 static Str make_lastline_link(struct Buffer *buf, char *title, char *url) {
@@ -341,12 +342,7 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   Lineprop *pr;
 
   if (l == NULL) {
-    if (buf->pagerSource) {
-      l = getNextPage(buf, buf->LINES + buf->rootY - i);
-      if (l == NULL)
-        return NULL;
-    } else
-      return NULL;
+    return NULL;
   }
   scr_move(i, 0);
   if (showLineNum) {
@@ -447,7 +443,8 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   return l;
 }
 
-static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos, int epos) {
+static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
+                            int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->currentColumn;
   char *p;

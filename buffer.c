@@ -77,8 +77,6 @@ void discardBuffer(struct Buffer *buf) {
     unlink(buf->savecache);
   if (--(*buf->clone))
     return;
-  if (buf->pagerSource)
-    ISclose(buf->pagerSource);
   if (buf->sourcefile &&
       (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
     if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
@@ -133,7 +131,8 @@ struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf) {
 /*
  * replaceBuffer: replace buffer
  */
-struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf, struct Buffer *newbuf) {
+struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
+                             struct Buffer *newbuf) {
   struct Buffer *buf;
 
   if (delbuf == NULL) {
@@ -209,12 +208,6 @@ void gotoLine(struct Buffer *buf, int n) {
 
   if (l == NULL)
     return;
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    if (buf->lastLine->linenumber < n)
-      getNextPage(buf, n - buf->lastLine->linenumber);
-    while ((buf->lastLine->linenumber < n) && (getNextPage(buf, 1) != NULL))
-      ;
-  }
   if (l->linenumber > n) {
     /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->linenumber);
@@ -251,13 +244,7 @@ void gotoRealLine(struct Buffer *buf, int n) {
 
   if (l == NULL)
     return;
-  if (buf->pagerSource && !(buf->bufferprop & BP_CLOSE)) {
-    if (buf->lastLine->real_linenumber < n)
-      getNextPage(buf, n - buf->lastLine->real_linenumber);
-    while ((buf->lastLine->real_linenumber < n) &&
-           (getNextPage(buf, 1) != NULL))
-      ;
-  }
+
   if (l->real_linenumber > n) {
     /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->real_linenumber);
@@ -326,7 +313,8 @@ static struct Buffer *listBuffer(struct Buffer *top, struct Buffer *current) {
 /*
  * Select buffer visually
  */
-struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf, char *selectchar) {
+struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
+                            char *selectchar) {
   int i, cpoint,                  /* Current Buffer Number */
       spoint,                     /* Current Line on Screen */
       maxbuf, sclimit = LASTLINE; /* Upper limit of line * number in
