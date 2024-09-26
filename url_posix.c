@@ -1047,13 +1047,12 @@ void parseURL2(char *url, ParsedURL *pu, ParsedURL *current) {
   }
 }
 
-static Str _parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
-  Str tmp;
-  static char *scheme_str[] = {
-      "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
-      "nntp", "nntp",   "news", "news", "data", "mailto", "https",
-  };
+static const char *scheme_str[] = {
+    "http", "gopher", "ftp",  "ftp",  "file", "file",   "exec",
+    "nntp", "nntp",   "news", "news", "data", "mailto", "https",
+};
 
+static Str _parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
   if (pu->scheme == SCM_MISSING) {
     return Strnew_charp("???");
   } else if (pu->scheme == SCM_UNKNOWN) {
@@ -1063,15 +1062,17 @@ static Str _parsedURL2Str(ParsedURL *pu, int pass, int user, int label) {
     /* local label */
     return Sprintf("#%s", pu->label);
   }
+
   if (pu->scheme == SCM_LOCAL && !strcmp(pu->file, "-")) {
-    tmp = Strnew_charp("-");
+    auto tmp = Strnew_charp("-");
     if (label && pu->label) {
       Strcat_char(tmp, '#');
       Strcat_charp(tmp, pu->label);
     }
     return tmp;
   }
-  tmp = Strnew_charp(scheme_str[pu->scheme]);
+
+  auto tmp = Strnew_charp(scheme_str[pu->scheme]);
   Strcat_char(tmp, ':');
   if (pu->scheme == SCM_MAILTO) {
     Strcat_charp(tmp, pu->file);

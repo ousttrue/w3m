@@ -5,7 +5,7 @@
 #include <dirent.h>
 typedef struct dirent Directory;
 #else /* not HAVE_DIRENT_H */
-#include <sys/dir.h>
+// #include <sys/dir.h>
 typedef struct direct Directory;
 #endif /* not HAVE_DIRENT_H */
 #include <sys/stat.h>
