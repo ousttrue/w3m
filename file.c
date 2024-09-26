@@ -1,4 +1,5 @@
 #include "file.h"
+#include "etc.h"
 #include "os.h"
 #include "http_request.h"
 #include "url_stream.h"

@@ -439,7 +439,21 @@ static void close_all_fds_except(int i, int f) {
   }
 }
 
-#ifndef _WIN32
+#define SETPGRP_VOID 1
+#ifdef _WIN32
+#define SETPGRP() 
+#else
+#ifdef HAVE_SETPGRP
+#ifdef SETPGRP_VOID
+#define SETPGRP() setpgrp()
+#else
+#define SETPGRP() setpgrp(0, 0)
+#endif
+#else /* no HAVE_SETPGRP; OS/2 EMX */
+#define SETPGRP() setpgid(0, 0)
+#endif
+#endif
+
 void setup_child(int child, int i, int f) {
   reset_signals();
   mySignal(SIGINT, SIG_IGN);
@@ -455,6 +469,7 @@ void setup_child(int child, int i, int f) {
   TrapSignal = FALSE;
 }
 
+#ifndef _WIN32
 Str term_inputpwd() {
   Str pwd = nullptr;
   if (fmInitialized) {

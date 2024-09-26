@@ -54,7 +54,6 @@ pub const SRCS_POSIX = [_][]const u8{
     "termsize_posix.c",
     "localcgi_posix.c",
     "os_posix.c",
-    //
     "etc_posix.c",
 };
 
@@ -63,6 +62,7 @@ pub const SRCS_WIN32 = [_][]const u8{
     "termsize_win32.c",
     "localcgi_win32.c",
     "os_win32.c",
+    "etc_win32.c",
     //
     "rand48_win32.c",
 };

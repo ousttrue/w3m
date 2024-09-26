@@ -145,16 +145,6 @@
 #define HAVE_SETLOCALE 1
 #define HAVE_LANGINFO_CODESET 1
 
-#define SETPGRP_VOID 1
-#ifdef HAVE_SETPGRP
-#ifdef SETPGRP_VOID
-#define SETPGRP() setpgrp()
-#else
-#define SETPGRP() setpgrp(0, 0)
-#endif
-#else /* no HAVE_SETPGRP; OS/2 EMX */
-#define SETPGRP() setpgid(0, 0)
-#endif
 #define HAVE_FLOAT_H 1
 #define HAVE_SYS_SELECT_H 1
 
