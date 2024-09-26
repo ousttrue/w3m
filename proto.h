@@ -325,14 +325,8 @@ extern void form_write_from_file(FILE *f, char *boundary, char *name,
                                  char *filename, char *file);
 extern MapList *searchMapList(Buffer *buf, char *name);
 extern void follow_map(struct parsed_tagarg *arg);
-#if defined(MENU_MAP) || defined(USE_IMAGE)
-extern MapArea *follow_map_menu(Buffer *buf, char *name, Anchor *a_img, int x,
-                                int y);
-#endif
 extern Buffer *follow_map_panel(Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(Buffer *buf);
-extern MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
-                           char *coords);
 extern Buffer *page_info_panel(Buffer *buf);
 extern struct frame_body *newFrame(struct parsed_tag *tag, Buffer *buf);
 extern struct frameset *newFrameSet(struct parsed_tag *tag);

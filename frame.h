@@ -1,5 +1,5 @@
-#include "url.h"
 
+struct _ParsedURL;
 struct frame_element {
   char attr;
 #define F_UNLOADED 0x00
@@ -15,7 +15,7 @@ struct frame_body {
 #define FB_NO_BUFFER 0x01
   char *name;
   char *url;
-  ParsedURL *baseURL;
+  struct _ParsedURL *baseURL;
   char *source;
   char *type;
   char *referer;
@@ -34,7 +34,7 @@ struct frameset {
   char attr;
   char dummy;
   char *name;
-  ParsedURL *currentURL;
+  struct _ParsedURL *currentURL;
   char **width;
   char **height;
   int col;

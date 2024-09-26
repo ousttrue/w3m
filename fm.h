@@ -285,12 +285,6 @@ extern int REV_LB[];
 
 typedef unsigned short Lineprop;
 
-typedef struct _MapArea {
-  char *url;
-  char *target;
-  char *alt;
-} MapArea;
-
 typedef struct _MapList {
   Str name;
   GeneralList *area;
@@ -358,6 +352,8 @@ typedef struct _LinkList {
   char type;   /* Rel, Rev */
   struct _LinkList *next;
 } LinkList;
+
+#include "url.h"
 
 typedef struct _Buffer {
   char *filename;

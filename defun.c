@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "map.h"
 #include "scr.h"
 #include "tty.h"
 #include "defun.h"

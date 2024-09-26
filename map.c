@@ -1,8 +1,8 @@
-/* $Id: map.c,v 1.30 2003/09/24 18:49:00 ukai Exp $ */
 /*
  * client-side image maps
  */
-#include "fm.h"
+// #include "fm.h"
+#include "map.h"
 #include <math.h>
 
 MapList *searchMapList(Buffer *buf, char *name) {
