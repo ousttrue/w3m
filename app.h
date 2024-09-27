@@ -1,6 +1,7 @@
 #pragma once
 #include "Str.h"
 
+extern const char *CurrentDir;
 extern int CurrentPid;
 struct TextList;
 extern struct TextList *fileToDelete;
@@ -17,5 +18,6 @@ enum TMPF_TYPE {
 void app_init();
 void app_no_rcdir(const char *rcdir);
 void app_set_tmpdir(const char *dir);
-const char* app_get_tmpdir();
+const char *app_get_tmpdir();
 Str tmpfname(enum TMPF_TYPE type, const char *ext);
+const char *app_currentdir();

@@ -447,7 +447,6 @@ global char *personal_document_root init(NULL);
 global char *cgi_bin init(NULL);
 global char *index_file init(NULL);
 
-global char *CurrentDir;
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */

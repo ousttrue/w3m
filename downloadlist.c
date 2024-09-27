@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "app.h"
 #include "readbuffer.h"
 #include "alloc.h"
 #include "Str.h"
@@ -51,7 +52,7 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
   d->pid = pid;
   d->url = url;
   if (save[0] != '/' && save[0] != '~')
-    save = Strnew_m_charp(CurrentDir, "/", save, NULL)->ptr;
+    save = Strnew_m_charp(app_currentdir(), "/", save, NULL)->ptr;
   d->save = expandPath(save);
   d->lock = lock;
   d->size = size;

@@ -250,12 +250,9 @@ int main(int argc, char **argv) {
   url_stream_init();
   app_init();
 
-
   char **load_argv = New_N(char *, argc - 1);
   int load_argc = 0;
 
-  CurrentDir = currentdir();
-  CurrentPid = (int)getpid();
   BookmarkFile = NULL;
   config_file = NULL;
 

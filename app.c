@@ -2,6 +2,14 @@
 #include "textlist.h"
 #include "indep.h"
 
+#ifdef _WIN32
+#include <process.h>
+#else
+#endif
+
+const char *CurrentDir = nullptr;
+const char *app_currentdir() { return CurrentDir; }
+
 int CurrentPid = -1;
 const char *tmp_dir = nullptr;
 void app_set_tmpdir(const char *dir) { tmp_dir = dir; }
@@ -13,7 +21,12 @@ static char *tmpf_base[MAX_TMPF_TYPE] = {
 
 struct TextList *fileToDelete = nullptr;
 
-void app_init() { fileToDelete = newTextList(); }
+void app_init() {
+
+  CurrentDir = currentdir();
+  CurrentPid = (int)getpid();
+  fileToDelete = newTextList();
+}
 
 void app_no_rcdir(const char *rcdir) {
   if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') &&

@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "app.h"
 #include "fm.h"
 #include "buffer.h"
 #include "tty.h"
@@ -683,8 +684,8 @@ void add_auth_user_passwd(struct Url *pu, char *realm, Str uname, Str pwd,
   add_auth_pass_entry(&ent, 0, 1);
 }
 
-void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname, Str pwd,
-                                 int is_proxy) {
+void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname,
+                                 Str pwd, int is_proxy) {
   struct auth_pass *ent;
   ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
   if (ent) {
@@ -1024,50 +1025,22 @@ int is_localhost(const char *host) {
 }
 
 char *file_to_url(char *file) {
-  Str tmp;
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
   char *drive = NULL;
-#endif
-#ifdef SUPPORT_NETBIOS_SHARE
-  char *host = NULL;
-#endif
-
   file = expandPath(file);
-#ifdef SUPPORT_NETBIOS_SHARE
-  if (file[0] == '/' && file[1] == '/') {
-    char *p;
-    file += 2;
-    if (*file) {
-      p = strchr(file, '/');
-      if (p != NULL && p != file) {
-        host = allocStr(file, (p - file));
-        file = p;
-      }
-    }
-  }
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
   if (IS_ALPHA(file[0]) && file[1] == ':') {
     drive = allocStr(file, 2);
     file += 2;
-  } else
-#endif
-      if (file[0] != '/') {
-    tmp = Strnew_charp(CurrentDir);
+  } else if (file[0] != '/') {
+    auto tmp = Strnew_charp(app_currentdir());
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, file);
     file = tmp->ptr;
   }
-  tmp = Strnew_charp("file://");
-#ifdef SUPPORT_NETBIOS_SHARE
-  if (host)
-    Strcat_charp(tmp, host);
-#endif
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-  if (drive)
+  auto tmp = Strnew_charp("file://");
+  if (drive) {
     Strcat_charp(tmp, drive);
-#endif
+  }
   Strcat_charp(tmp, file_quote(cleanupName(file)));
   return tmp->ptr;
 }

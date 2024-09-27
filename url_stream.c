@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "app.h"
 #include "textlist.h"
 #include "etc.h"
 #include "html.h"
@@ -968,14 +969,12 @@ void parseURL2(char *url, struct Url *pu, struct Url *current) {
   }
   if (pu->scheme == SCM_LOCAL) {
     char *q = expandName(file_unquote(pu->file));
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
     Str drive;
     if (IS_ALPHA(q[0]) && q[1] == ':') {
       drive = Strnew_charp_n(q, 2);
       Strcat_charp(drive, file_quote(q + 2));
       pu->file = drive->ptr;
     } else
-#endif
       pu->file = file_quote(q);
   }
 
@@ -990,12 +989,9 @@ void parseURL2(char *url, struct Url *pu, struct Url *current) {
     pu->host = current->host;
     pu->port = current->port;
     if (pu->file && *pu->file) {
-      if (pu->file[0] != '/'
-#ifdef SUPPORT_DOS_DRIVE_PREFIX
-          && !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0]) &&
-               pu->file[1] == ':')
-#endif
-      ) {
+      if (pu->file[0] != '/' &&
+          !(pu->scheme == SCM_LOCAL && IS_ALPHA(pu->file[0]) &&
+            pu->file[1] == ':')) {
         /* file is relative [process 1] */
         p = pu->file;
         if (current->file) {
@@ -1020,12 +1016,10 @@ void parseURL2(char *url, struct Url *pu, struct Url *current) {
   }
   if (pu->file) {
     if (pu->scheme == SCM_LOCAL && pu->file[0] != '/' &&
-#ifdef SUPPORT_DOS_DRIVE_PREFIX /* for 'drive:' */
         !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':') &&
-#endif
         strcmp(pu->file, "-")) {
       /* local file, relative path */
-      tmp = Strnew_charp(CurrentDir);
+      tmp = Strnew_charp(app_currentdir());
       if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
       Strcat_charp(tmp, file_unquote(pu->file));
