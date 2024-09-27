@@ -244,20 +244,17 @@ static char *auxbinFile(char *base) {
 }
 
 void uncompress_stream(struct URLFile *uf, char **src) {
-  pid_t pid1;
-  FILE *f1;
-  char *expand_cmd = GUNZIP_CMDNAME;
-  char *expand_name = GUNZIP_NAME;
-  char *tmpf = NULL;
-  char *ext = NULL;
-  struct compression_decoder *d;
-  int use_d_arg = 0;
 
   if (IStype(uf->stream) != IST_ENCODED) {
     uf->stream = newEncodedStream(uf->stream, uf->encoding);
     uf->encoding = ENC_7BIT;
   }
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+
+  char *expand_cmd = GUNZIP_CMDNAME;
+  char *expand_name = GUNZIP_NAME;
+  char *ext = NULL;
+  int use_d_arg = 0;
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
     if (uf->compression == d->type) {
       if (d->auxbin_p)
         expand_cmd = auxbinFile(d->cmd);
@@ -271,23 +268,24 @@ void uncompress_stream(struct URLFile *uf, char **src) {
   }
   uf->compression = CMP_NOCOMPRESS;
 
+  char *tmpf = NULL;
   if (uf->scheme != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_DFL, ext)->ptr;
   }
 
   /* child1 -- stdout|f1=uf -> parent */
-  pid1 = open_pipe_rw(&f1, NULL);
+  FILE *f1;
+  auto pid1 = open_pipe_rw(&f1, NULL);
   if (pid1 < 0) {
     UFclose(uf);
     return;
   }
   if (pid1 == 0) {
     /* child */
-    pid_t pid2;
-    FILE *f2 = stdin;
 
     /* uf -> child2 -- stdout|stdin -> child1 */
-    pid2 = open_pipe_rw(&f2, NULL);
+    FILE *f2 = stdin;
+    auto pid2 = open_pipe_rw(&f2, NULL);
     if (pid2 < 0) {
       UFclose(uf);
       exit(1);
