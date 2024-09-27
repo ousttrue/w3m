@@ -5,6 +5,7 @@
 #ifdef _WIN32
 #include <process.h>
 #else
+#include <unistd.h>
 #endif
 
 const char *CurrentDir = nullptr;
@@ -36,7 +37,7 @@ void app_no_rcdir(const char *rcdir) {
 #ifndef _WIN32
   tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
   if (tmp_dir == NULL)
-    tmp_dir = rc_dir;
+    tmp_dir = rcdir;
 #endif
 }
 

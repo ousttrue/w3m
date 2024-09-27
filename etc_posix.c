@@ -1,13 +1,15 @@
+#include "etc.h"
+#include "indep.h"
+#include "tty.h"
+#include "myctype.h"
+#include "fm.h"
 #include <pwd.h>
 #include <sys/wait.h>
 #ifdef INET6
 #include <sys/socket.h>
 #endif /* INET6 */
 #include <netdb.h>
-#include "indep.h"
-#include "tty.h"
-#include "myctype.h"
-#include "fm.h"
+#include <unistd.h>
 
 pid_t open_pipe_rw(FILE **fr, FILE **fw) {
   int fdr[2];
@@ -101,3 +103,5 @@ char *expandName(char *name) {
 rest:
   return name;
 }
+
+void sleepSeconds(uint32_t seconds) { sleep(seconds); }

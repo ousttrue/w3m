@@ -1,4 +1,5 @@
 #include "os.h"
+#include "app.h"
 #include "html.h"
 #include "linein.h"
 #include "ctrlcode.h"
