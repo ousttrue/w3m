@@ -226,14 +226,6 @@ typedef int wc_ces; /* XXX: not used */
  * Macros.
  */
 
-#define inputLineHist(p, d, f, h) inputLineHistSearch(p, d, f, h, NULL)
-#define inputLine(p, d, f) inputLineHist(p, d, f, NULL)
-#define inputStr(p, d) inputLine(p, d, IN_STRING)
-#define inputStrHist(p, d, h) inputLineHist(p, d, IN_STRING, h)
-#define inputFilename(p, d) inputLine(p, d, IN_FILENAME)
-#define inputFilenameHist(p, d, h) inputLineHist(p, d, IN_FILENAME, h)
-#define inputChar(p) inputLine(p, "", IN_CHAR)
-
 #define SKIP_BLANKS(p)                                                         \
   {                                                                            \
     while (*(p) && IS_SPACE(*(p)))                                             \
@@ -650,11 +642,11 @@ global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
 global TextList *fileToDelete;
 
-extern Hist *LoadHist;
-extern Hist *SaveHist;
-extern Hist *URLHist;
-extern Hist *ShellHist;
-extern Hist *TextHist;
+extern struct Hist *LoadHist;
+extern struct Hist *SaveHist;
+extern struct Hist *URLHist;
+extern struct Hist *ShellHist;
+extern struct Hist *TextHist;
 global int UseHistory init(TRUE);
 global int URLHistSize init(100);
 global int SaveURLHist init(TRUE);

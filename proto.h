@@ -253,13 +253,10 @@ extern void escmap(void);
 extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
-extern char *
-inputLineHistSearch(const char *prompt, const char *def_str, int flag, Hist *hist,
-                    int (*incfunc)(int ch, Str buf, Lineprop *prop));
 extern Str unescape_spaces(Str s);
-extern struct Buffer *historyBuffer(Hist *hist);
-extern void loadHistory(Hist *hist);
-extern void saveHistory(Hist *hist, size_t size);
+extern struct Buffer *historyBuffer(struct Hist *hist);
+extern void loadHistory(struct Hist *hist);
+extern void saveHistory(struct Hist *hist, size_t size);
 extern void ldHist(void);
 extern double log_like(int x);
 extern struct table *newTable(void);

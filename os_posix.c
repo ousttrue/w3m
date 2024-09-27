@@ -1,4 +1,5 @@
 #include "os.h"
+#include "linein.h"
 #include "readbuffer.h"
 #include "buffer.h"
 #include "tabbuffer.h"

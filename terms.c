@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "linein.h"
 #include "buffer.h"
 #include "tabbuffer.h"
 #include "termsize.h"

@@ -1,10 +1,12 @@
-#include "fm.h"
+#include "linein.h"
 #include "tabbuffer.h"
 #include "terms.h"
 #include "termsize.h"
 #include "tty.h"
 #include "scr.h"
 #include "localcgi.h"
+#include "fm.h"
+#include <dirent.h>
 
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
@@ -105,12 +107,12 @@ static int cm_mode, cm_next, cm_clear, cm_disp_next, cm_disp_clear;
 static int need_redraw, is_passwd;
 static int move_word;
 
-static Hist *CurrentHist;
+static struct Hist *CurrentHist;
 static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(char c);
 
-char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, Hist *hist,
+char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, struct Hist *hist,
                           int (*incrfunc)(int ch, Str str, Lineprop *prop)) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
@@ -688,7 +690,6 @@ static Str doComplete(Str ifn, int *status, int next) {
   int fl, i;
   char *fn, *p;
   DIR *d;
-  Directory *dir;
   struct stat st;
 
   if (!cm_next) {
@@ -731,7 +732,7 @@ static Str doComplete(Str ifn, int *status, int next) {
     fl = strlen(fn);
     CFileName = Strnew();
     for (;;) {
-      dir = readdir(d);
+      auto dir = readdir(d);
       if (dir == NULL)
         break;
       if (fl == 0 && (!strcmp(dir->d_name, ".") || !strcmp(dir->d_name, "..")))
@@ -794,11 +795,11 @@ static Str doComplete(Str ifn, int *status, int next) {
 }
 
 static void _prev(int) {
-  Hist *hist = CurrentHist;
-  char *p;
-
   if (!use_hist)
     return;
+
+  struct Hist *hist = CurrentHist;
+  char *p;
   if (strCurrentBuf) {
     p = prevHist(hist);
     if (p == NULL)
@@ -817,11 +818,11 @@ static void _prev(int) {
 }
 
 static void _next(int) {
-  Hist *hist = CurrentHist;
-  char *p;
-
   if (!use_hist)
     return;
+
+  struct Hist *hist = CurrentHist;
+  char *p;
   if (strCurrentBuf == NULL)
     return;
   p = nextHist(hist);

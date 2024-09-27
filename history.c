@@ -2,7 +2,7 @@
 #include "terms.h"
 #include "readbuffer.h"
 
-struct Buffer *historyBuffer(Hist *hist) {
+struct Buffer *historyBuffer(struct Hist *hist) {
   Str src = Strnew();
   HistItem *item;
   char *p, *q;
@@ -29,7 +29,7 @@ struct Buffer *historyBuffer(Hist *hist) {
   return loadHTMLString(src);
 }
 
-void loadHistory(Hist *hist) {
+void loadHistory(struct Hist *hist) {
   FILE *f;
   Str line;
 
@@ -50,7 +50,7 @@ void loadHistory(Hist *hist) {
   fclose(f);
 }
 
-void saveHistory(Hist *hist, size_t size) {
+void saveHistory(struct Hist *hist, size_t size) {
   FILE *f;
   HistItem *item;
   char *tmpf;
@@ -81,18 +81,18 @@ void saveHistory(Hist *hist, size_t size) {
   }
 }
 
-Hist *newHist() {
-  Hist *hist;
+struct Hist *newHist() {
+  struct Hist *hist;
 
-  hist = New(Hist);
+  hist = New(struct Hist);
   hist->list = (HistList *)newGeneralList();
   hist->current = NULL;
   hist->hash = NULL;
   return hist;
 }
 
-Hist *copyHist(Hist *hist) {
-  Hist *new;
+struct Hist *copyHist(struct Hist *hist) {
+  struct Hist *new;
   HistItem *item;
 
   if (hist == NULL)
@@ -103,7 +103,7 @@ Hist *copyHist(Hist *hist) {
   return new;
 }
 
-HistItem *unshiftHist(Hist *hist, char *ptr) {
+HistItem *unshiftHist(struct Hist *hist, char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -119,7 +119,7 @@ HistItem *unshiftHist(Hist *hist, char *ptr) {
   return item;
 }
 
-HistItem *pushHist(Hist *hist, char *ptr) {
+HistItem *pushHist(struct Hist *hist, char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -137,7 +137,7 @@ HistItem *pushHist(Hist *hist, char *ptr) {
 
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
-HistItem *pushHashHist(Hist *hist, char *ptr) {
+HistItem *pushHashHist(struct Hist *hist, char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -159,7 +159,7 @@ HistItem *pushHashHist(Hist *hist, char *ptr) {
   return item;
 }
 
-HistItem *getHashHist(Hist *hist, char *ptr) {
+HistItem *getHashHist(struct Hist *hist, char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL)
@@ -172,7 +172,7 @@ HistItem *getHashHist(Hist *hist, char *ptr) {
   return (HistItem *)getHash_sv(hist->hash, ptr, NULL);
 }
 
-char *lastHist(Hist *hist) {
+char *lastHist(struct Hist *hist) {
   if (hist == NULL || hist->list == NULL)
     return NULL;
   if (hist->list->last) {
@@ -182,7 +182,7 @@ char *lastHist(Hist *hist) {
   return NULL;
 }
 
-char *nextHist(Hist *hist) {
+char *nextHist(struct Hist *hist) {
   if (hist == NULL || hist->list == NULL)
     return NULL;
   if (hist->current && hist->current->next) {
@@ -192,7 +192,7 @@ char *nextHist(Hist *hist) {
   return NULL;
 }
 
-char *prevHist(Hist *hist) {
+char *prevHist(struct Hist *hist) {
   if (hist == NULL || hist->list == NULL)
     return NULL;
   if (hist->current && hist->current->prev) {
