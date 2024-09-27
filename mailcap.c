@@ -11,7 +11,7 @@ static struct mailcap DefaultMailcap[] = {
     {"audio/basic", DEF_AUDIO_PLAYER " %s", 0, NULL, NULL, NULL},
     {NULL, NULL, 0, NULL, NULL, NULL}};
 
-static TextList *mailcap_list;
+static struct TextList *mailcap_list;
 static struct mailcap **UserMailcap;
 
 int mailcapMatch(struct mailcap *mcap, char *type) {
@@ -208,8 +208,8 @@ void initMailcap() {
   if (non_null(mailcap_files))
     mailcap_list = make_domain_list(mailcap_files);
   else
-    mailcap_list = NULL;
-  if (mailcap_list == NULL)
+    mailcap_list = nullptr;
+  if (mailcap_list == nullptr)
     return;
   UserMailcap = New_N(struct mailcap *, mailcap_list->nitem);
   for (i = 0, tl = mailcap_list->first; tl; i++, tl = tl->next)
@@ -217,30 +217,26 @@ void initMailcap() {
 }
 
 char *acceptableMimeTypes() {
-  static Str types = NULL;
-  TextList *l;
-  Hash_si *mhash;
-  char *p;
-  int i;
+  static Str types = nullptr;
 
-  if (types != NULL)
+  if (types != nullptr)
     return types->ptr;
 
   /* generate acceptable media types */
-  l = newTextList();
-  mhash = newHash_si(16); /* XXX */
+  struct TextList *l = newTextList();
+  Hash_si *mhash = newHash_si(16); /* XXX */
   /* pushText(l, "text"); */
   putHash_si(mhash, "text", 1);
   pushText(l, "image");
   putHash_si(mhash, "image", 1);
-  for (i = 0; i < mailcap_list->nitem; i++) {
+  for (int i = 0; i < mailcap_list->nitem; i++) {
     struct mailcap *mp = UserMailcap[i];
     char *mt;
-    if (mp == NULL)
+    if (mp == nullptr)
       continue;
     for (; mp->type; mp++) {
-      p = strchr(mp->type, '/');
-      if (p == NULL)
+      char *p = strchr(mp->type, '/');
+      if (p == nullptr)
         continue;
       mt = allocStr(mp->type, p - mp->type);
       if (getHash_si(mhash, mt, 0) == 0) {
@@ -251,7 +247,8 @@ char *acceptableMimeTypes() {
   }
   types = Strnew();
   Strcat_charp(types, "text/html, text/*;q=0.5");
-  while ((p = popText(l)) != NULL) {
+  char *p;
+  while ((p = popText(l)) != nullptr) {
     Strcat_charp(types, ", ");
     Strcat_charp(types, p);
     Strcat_charp(types, "/*");

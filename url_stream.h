@@ -1,6 +1,11 @@
 #pragma once
 #include <time.h>
 
+extern struct TextList *NO_proxy_domains;
+#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
+
+void url_stream_init();
+
 union input_stream;
 struct URLFile {
   unsigned char scheme;

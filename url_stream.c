@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "textlist.h"
 #include "etc.h"
 #include "html.h"
 #include "http_request.h"
@@ -52,6 +53,9 @@ int ai_family_order_table[7][3] = {
     {PF_INET6, PF_UNSPEC, PF_UNSPEC},  /* 6:inet6 */
 };
 #endif /* INET6 */
+
+struct TextList *NO_proxy_domains = nullptr;
+void url_stream_init() { NO_proxy_domains = newTextList(); }
 
 static JMP_BUF AbortLoading;
 
@@ -127,7 +131,7 @@ static void sock_log(char *message, ...) {
 
 #endif
 
-static TextList *mimetypes_list;
+static struct TextList *mimetypes_list;
 static struct table2 **UserMimeTypes;
 
 static struct table2 *loadMimeTypes(char *filename) {
@@ -1292,7 +1296,7 @@ Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr) {
 }
 
 static Str HTTPrequest(struct Url *pu, struct Url *current,
-                       struct HttpRequest *hr, TextList *extra) {
+                       struct HttpRequest *hr, struct TextList *extra) {
   Str tmp;
   TextListItem *i;
   Str cookie;
@@ -1373,7 +1377,7 @@ void init_stream(struct URLFile *uf, int scheme, InputStream stream) {
 
 struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                        struct URLOption *option, struct FormList *request,
-                       TextList *extra_header, struct URLFile *ouf,
+                       struct TextList *extra_header, struct URLFile *ouf,
                        struct HttpRequest *hr, unsigned char *status) {
   Str tmp;
   int sock, scheme;
@@ -1638,7 +1642,7 @@ retry:
 /* add index_file if exists */
 static void add_index_file(struct Url *pu, struct URLFile *uf) {
   char *p, *q;
-  TextList *index_file_list = NULL;
+  struct TextList *index_file_list = NULL;
   TextListItem *ti;
 
   if (non_null(index_file))
@@ -1700,10 +1704,10 @@ no_user_mimetypes:
   return guessContentTypeFromTable(DefaultGuess, filename);
 }
 
-TextList *make_domain_list(char *domain_list) {
+struct TextList *make_domain_list(char *domain_list) {
   char *p;
   Str tmp;
-  TextList *domains = NULL;
+  struct TextList *domains = NULL;
 
   p = domain_list;
   tmp = Strnew_size(64);

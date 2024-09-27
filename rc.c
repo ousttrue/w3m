@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "url.h"
+#include "url_stream.h"
 #include "localcgi.h"
 #include "myctype.h"
 #include "proto.h"

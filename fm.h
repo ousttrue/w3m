@@ -383,7 +383,6 @@ struct portlist {
 #define TMPF_COOKIE 4
 #define MAX_TMPF_TYPE 5
 
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 
 /*
  * Globals.
@@ -445,7 +444,6 @@ global int NOproxy_netaddr init(TRUE);
 global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
 #endif                                  /* INET6 */
-global TextList *NO_proxy_domains;
 global char NoCache init(FALSE);
 global char use_proxy init(TRUE);
 #define Do_not_use_proxy (!use_proxy)
@@ -556,7 +554,7 @@ global struct cookie *First_cookie init(NULL);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
-global TextList *fileToDelete;
+global struct TextList *fileToDelete;
 
 extern struct Hist *LoadHist;
 extern struct Hist *SaveHist;
@@ -606,9 +604,9 @@ global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
 global char *cookie_reject_domains init(NULL);
 global char *cookie_accept_domains init(NULL);
 global char *cookie_avoid_wrong_number_of_dots init(NULL);
-global TextList *Cookie_reject_domains;
-global TextList *Cookie_accept_domains;
-global TextList *Cookie_avoid_wrong_number_of_dots_domains;
+global struct TextList *Cookie_reject_domains;
+global struct TextList *Cookie_accept_domains;
+global struct TextList *Cookie_avoid_wrong_number_of_dots_domains;
 
 global int view_unseenobject init(TRUE);
 

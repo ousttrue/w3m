@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "url_stream.h"
 #include "history.h"
 #include "downloadlist.h"
 #include "ctrlcode.h"
@@ -220,6 +221,17 @@ int main(int argc, char **argv) {
   }
 #endif
 
+  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
+    set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
+  }
+  GC_INIT();
+#if (GC_VERSION_MAJOR > 7) ||                                                  \
+    ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
+  GC_set_oom_fn(die_oom);
+#else
+  GC_oom_fn = die_oom;
+#endif
+
   struct Buffer *newbuf = NULL;
   char *p;
   int c, i;
@@ -235,24 +247,9 @@ int main(int argc, char **argv) {
   char *default_type = NULL;
   char *post_file = NULL;
   Str err_msg;
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-  char **getimage_args = NULL;
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-  if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
-    set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
-  }
-  GC_INIT();
-#if (GC_VERSION_MAJOR > 7) ||                                                  \
-    ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
-  GC_set_oom_fn(die_oom);
-#else
-  GC_oom_fn = die_oom;
-#endif
-#if defined(ENABLE_NLS) || (defined(USE_M17N) && defined(HAVE_LANGINFO_CODESET))
-  setlocale(LC_ALL, "");
-#endif
 
-  NO_proxy_domains = newTextList();
+  url_stream_init();
+
   fileToDelete = newTextList();
 
   load_argv = New_N(char *, argc - 1);
@@ -585,6 +582,7 @@ int main(int argc, char **argv) {
   } else {
     i = 0;
   }
+
   for (; i < load_argc; i++) {
     if (i >= 0) {
       SearchHeader = search_header;
@@ -642,6 +640,7 @@ int main(int argc, char **argv) {
     if ((newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
          newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
       newbuf->search_header = search_header;
+
     if (CurrentTab == NULL) {
       FirstTab = LastTab = CurrentTab = newTab();
       nTab = 1;

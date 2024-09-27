@@ -328,7 +328,7 @@ struct HttpRequest;
 struct URLOption;
 extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                        struct URLOption *option, struct FormList *request,
-                       TextList *extra_header, struct URLFile *ouf, struct HttpRequest *hr,
+                       struct TextList *extra_header, struct URLFile *ouf, struct HttpRequest *hr,
                        unsigned char *status);
 struct mailcap;
 extern int mailcapMatch(struct mailcap *mcap, char *type);
@@ -339,7 +339,7 @@ extern struct mailcap *searchExtViewer(char *type);
 extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
                            int *mc_stat);
 extern char *guessContentType(char *filename);
-extern TextList *make_domain_list(char *domain_list);
+extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
 extern InputStream openFTPStream(struct Url *pu, struct URLFile *uf);
 extern Str loadFTPDir0(struct Url *pu);

@@ -35,20 +35,20 @@ typedef struct _textlistitem {
   struct _textlistitem *prev;
 } TextListItem;
 
-typedef struct _textlist {
+struct TextList {
   TextListItem *first;
   TextListItem *last;
   int nitem;
-} TextList;
+};
 
-#define newTextList() ((TextList *)newGeneralList())
+#define newTextList() ((struct TextList *)newGeneralList())
 #define pushText(tl, s)                                                        \
   pushValue((GeneralList *)(tl), (void *)allocStr((s), -1))
 #define popText(tl) ((char *)popValue((GeneralList *)(tl)))
 #define rpopText(tl) ((char *)rpopValue((GeneralList *)(tl)))
 #define delText(tl, i) delValue((GeneralList *)(tl), (void *)(i))
 #define appendTextList(tl, tl2)                                                \
-  ((TextList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
+  ((struct TextList *)appendGeneralList((GeneralList *)(tl), (GeneralList *)(tl2)))
 
 /* Line text list */
 

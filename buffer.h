@@ -78,7 +78,7 @@ struct Buffer {
   int *clone;
   size_t trbyte;
   char check_url;
-  TextList *document_header;
+  struct TextList *document_header;
   struct FormItemList *form_submit;
   char *savecache;
   char *edit;

@@ -295,21 +295,19 @@ int check_command(char *cmd, int auxbin_p) {
 }
 
 char *acceptableEncoding() {
-  static Str encodings = NULL;
-  struct compression_decoder *d;
-  TextList *l;
-  char *p;
-
-  if (encodings != NULL)
+  static Str encodings = nullptr;
+  if (encodings != nullptr)
     return encodings->ptr;
-  l = newTextList();
-  for (d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
+
+  struct TextList *l = newTextList();
+  for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
     if (check_command(d->cmd, d->auxbin_p)) {
       pushText(l, d->encoding);
     }
   }
   encodings = Strnew();
-  while ((p = popText(l)) != NULL) {
+  char *p;
+  while ((p = popText(l)) != nullptr) {
     if (encodings->length)
       Strcat_charp(encodings, ", ");
     Strcat_charp(encodings, p);
@@ -363,28 +361,27 @@ int matchattr(char *p, char *attr, int len, Str *value) {
 
 void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
                 struct Url *pu) {
-  char *p, *q;
-  char *emsg;
-  char c;
-  Str lineBuf2 = NULL;
-  Str tmp;
-  TextList *headerlist;
-  char *tmpf;
-  FILE *src = NULL;
-  Lineprop *propBuffer;
 
-  headerlist = newBuf->document_header = newTextList();
+  struct TextList *headerlist = newBuf->document_header = newTextList();
   if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS)
     http_response_code = -1;
   else
     http_response_code = 0;
 
+  FILE *src = nullptr;
   if (thru && !newBuf->header_source) {
-    tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+    char *tmpf = tmpfname(TMPF_DFL, nullptr)->ptr;
     src = fopen(tmpf, "w");
     if (src)
       newBuf->header_source = tmpf;
   }
+
+  char *p, *q;
+  char *emsg;
+  char c;
+  Str lineBuf2 = nullptr;
+  Str tmp;
+  Lineprop *propBuffer;
   while ((tmp = StrmyUFgets(uf))->length) {
     if (w3m_reqlog) {
       FILE *ff;
@@ -882,7 +879,7 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
 }
 
 static void getAuthCookie(struct http_auth *hauth, char *auth_header,
-                          TextList *extra_header, struct Url *pu,
+                          struct TextList *extra_header, struct Url *pu,
                           struct HttpRequest *hr, struct FormList *request,
                           Str *uname, Str *pwd) {
   Str ss = NULL;
@@ -1009,7 +1006,7 @@ struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
   int searchHeader = SearchHeader;
   int searchHeader_through = TRUE;
   MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-  TextList *extra_header = newTextList();
+  struct TextList *extra_header = newTextList();
   Str uname = NULL;
   Str pwd = NULL;
   Str realm = NULL;
