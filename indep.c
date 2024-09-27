@@ -1,4 +1,3 @@
-/* $Id: indep.c,v 1.38 2007/05/23 15:06:05 inu Exp $ */
 #include "fm.h"
 #include "indep.h"
 #include "Str.h"
@@ -9,10 +8,6 @@
 #include <sys/types.h>
 #include <stdlib.h>
 #include <gc.h>
-
-#ifndef _WIN32
-#include <pwd.h>
-#endif
 
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
@@ -926,47 +921,23 @@ char *w3m_etc_dir() { return w3m_dir("W3M_ETC_DIR", ETC_DIR); }
 char *w3m_conf_dir() { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }
 
 char *w3m_help_dir() { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }
-/* Local Variables:    */
-/* c-basic-offset: 4   */
-/* tab-width: 8        */
-/* End:                */
 
 char *expandPath(char *name) {
   if (!name) {
     return nullptr;
   }
 
-  // , *getpwnam(const char *);
-
-  auto p = name;
-  if (*p != '~') {
+  if (name[0] != '~') {
     return name;
   }
-  p++;
 
-  Str extpath = NULL;
-#ifndef _WIN32
-  if (!IS_ALPHA(*p)) {
-    char *q = strchr(p, '/');
-    struct passwd *passent;
-    if (q) { /* ~user/dir... */
-      passent = getpwnam(allocStr(p, q - p));
-      p = q;
-    } else { /* ~user */
-      passent = getpwnam(p);
-      p = "";
-    }
-    if (!passent) {
-      return name;
-    }
-    extpath = Strnew_charp(passent->pw_dir);
-  } else
-#endif
-      if (*p == '/' || *p == '\0') { /* ~/dir... or ~ */
-    extpath = Strnew_charp(getenv("HOME"));
-  } else {
+  auto p = name + 1;
+  if (*p != '/' && *p != '\0') {
     return name;
   }
+
+  /* ~/dir... or ~ */
+  auto extpath = Strnew_charp(getenv("HOME"));
   if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
     p++;
   Strcat_charp(extpath, p);
