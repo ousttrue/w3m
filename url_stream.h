@@ -1,5 +1,8 @@
 #pragma once
 #include <time.h>
+#include "url.h"
+#include "compression.h"
+#include "encoding_type.h"
 
 extern struct TextList *NO_proxy_domains;
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
@@ -8,14 +11,14 @@ void url_stream_init();
 
 union input_stream;
 struct URLFile {
-  unsigned char scheme;
+  enum URL_SCHEME_TYPE scheme;
   char is_cgi;
-  char encoding;
+  enum ENCODING_TYPE encoding;
   union input_stream *stream;
   char *ext;
-  int compression;
+  enum COMPRESSION_TYPE compression;
   int content_encoding;
-  char *guess_type;
+  const char *guess_type;
   char *ssl_certificate;
   char *url;
   time_t modtime;
@@ -30,3 +33,6 @@ struct URLFile {
     (f)->stream = NULL;                                                        \
   }
 #define UFfileno(f) ISfileno((f)->stream)
+
+char *guessContentType(char *filename);
+void UFhalfclose(struct URLFile *f);

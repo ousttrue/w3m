@@ -49,7 +49,7 @@ struct Buffer {
   short width;
   short height;
   char *type;
-  char *real_type;
+  const char *real_type;
   int allLine;
   short bufferprop;
   int currentColumn;

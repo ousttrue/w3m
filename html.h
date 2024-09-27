@@ -40,18 +40,6 @@ struct URLOption {
   int flag;
 };
 
-#define CMP_NOCOMPRESS 0
-#define CMP_COMPRESS 1
-#define CMP_GZIP 2
-#define CMP_BZIP2 3
-#define CMP_DEFLATE 4
-#define CMP_BROTLI 5
-
-#define ENC_7BIT 0
-#define ENC_BASE64 1
-#define ENC_QUOTE 2
-#define ENC_UUENCODE 3
-
 #define HTML_UNKNOWN 0
 #define HTML_A 1
 #define HTML_N_A 2

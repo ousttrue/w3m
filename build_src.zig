@@ -1,5 +1,6 @@
 pub const SRCS = [_][]const u8{
     "keybind.c",
+    "compression.c",
 
     "app.c",
 

@@ -134,16 +134,13 @@ extern void cursorBottom(void);
 struct Buffer;
 extern int currentLn(struct Buffer *buf);
 extern void tmpClearBuffer(struct Buffer *buf);
-extern char *filename_extension(char *patch, int is_url);
 extern struct Url *schemeToProxy(int scheme);
 #define url_encode(url, base, cs) url_quote(url)
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
 struct URLFile;
 extern void examineFile(char *path, struct URLFile *uf);
-extern char *acceptableEncoding();
 extern int dir_exist(char *path);
-extern int is_html_type(char *type);
 extern char **get_symbol(void);
 extern Str convertLine0(struct URLFile *uf, Str line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
@@ -338,7 +335,6 @@ extern char *acceptableMimeTypes();
 extern struct mailcap *searchExtViewer(char *type);
 extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
                            int *mc_stat);
-extern char *guessContentType(char *filename);
 extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
 extern InputStream openFTPStream(struct Url *pu, struct URLFile *uf);
@@ -395,7 +391,6 @@ extern void sync_with_option(void);
 extern char *rcFile(char *base);
 extern char *etcFile(char *base);
 extern char *confFile(char *base);
-extern char *auxbinFile(char *base);
 extern char *libFile(char *base);
 extern char *helpFile(char *base);
 extern const void *querySiteconf(const struct Url *query_pu, int field);

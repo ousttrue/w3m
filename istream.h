@@ -1,8 +1,7 @@
-/* $Id: istream.h,v 1.12 2003/10/20 16:41:56 ukai Exp $ */
-#ifndef IO_STREAM_H
-#define IO_STREAM_H
+#pragma once
 
 #include "indep.h"
+#include "encoding_type.h"
 #include <stdio.h>
 #include <openssl/bio.h>
 #include <openssl/x509.h>
@@ -105,7 +104,8 @@ extern InputStream newInputStream(int des);
 extern InputStream newFileStream(FILE *f, void (*closep)());
 extern InputStream newStrStream(Str s);
 extern InputStream newSSLStream(SSL *ssl, int sock);
-extern InputStream newEncodedStream(InputStream is, char encoding);
+extern InputStream newEncodedStream(InputStream is,
+                                    enum ENCODING_TYPE encoding);
 extern int ISclose(InputStream stream);
 extern int ISgetc(InputStream stream);
 extern int ISundogetc(InputStream stream);
@@ -140,4 +140,3 @@ extern Str ssl_get_certificate(SSL *ssl, char *hostname);
 #define ssl_of(stream) ((stream)->ssl.handle->ssl)
 
 #define openIS(path) newInputStream(open((path), O_RDONLY))
-#endif

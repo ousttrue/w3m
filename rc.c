@@ -969,10 +969,6 @@ char *rcFile(char *base) {
   return expandPath(Strnew_m_charp(rc_dir, "/", base, NULL)->ptr);
 }
 
-char *auxbinFile(char *base) {
-  return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
-}
-
 #if 0 /* not used */
 char *
 libFile(char *base)

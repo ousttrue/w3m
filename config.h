@@ -184,20 +184,11 @@ typedef RETSIGTYPE MySignalHandler;
 #define DEFAULT_TERM 0 /* XXX */
 #endif
 
-#define GUNZIP_CMDNAME "gunzip"
-#define BUNZIP2_CMDNAME "bunzip2"
-#define INFLATE_CMDNAME "inflate"
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
 #define DEV_NULL_PATH "/dev/null"
 #define CGI_EXTENSION ".cgi"
 
-#define BROTLI_CMDNAME "brotli"
-
 #define PATH_SEPARATOR ':'
-#define GUNZIP_NAME "gunzip"
-#define BUNZIP2_NAME "bunzip2"
-#define INFLATE_NAME "inflate"
-#define BROTLI_NAME "brotli"
 
 #endif /* CONFIG_H_SEEN */

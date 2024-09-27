@@ -1,5 +1,5 @@
+#include "istream.h"
 #include "fm.h"
-#include "html.h"
 #include "myctype.h"
 #include "istream.h"
 #include "termsize.h"
@@ -135,7 +135,7 @@ InputStream newSSLStream(SSL *ssl, int sock) {
   return stream;
 }
 
-InputStream newEncodedStream(InputStream is, char encoding) {
+InputStream newEncodedStream(InputStream is, enum ENCODING_TYPE encoding) {
   InputStream stream;
   if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
                      encoding != ENC_UUENCODE))
