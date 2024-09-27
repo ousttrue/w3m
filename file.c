@@ -1,5 +1,8 @@
 #include "file.h"
+#include "cookie.h"
 #include "etc.h"
+#include "html.h"
+#include "ctrlcode.h"
 #include "os.h"
 #include "http_request.h"
 #include "url_stream.h"
@@ -1012,7 +1015,7 @@ struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
   Str realm = NULL;
   int add_auth_cookie_flag;
   unsigned char status = HTST_NORMAL;
-  URLOption url_option;
+  struct URLOption url_option;
   Str tmp;
   Str page = NULL;
   struct HttpRequest hr;

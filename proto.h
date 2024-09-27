@@ -149,12 +149,15 @@ extern Str convertLine0(struct URLFile *uf, Str line, int mode);
 #define convertLine(uf, line, mode, charset, dcharset)                         \
   convertLine0(uf, line, mode)
 extern void push_symbol(Str str, char symbol, int width, int n);
+struct FormList;
 extern struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
                                int flag, struct FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
+struct html_feed_environ;
 extern void push_render_image(Str str, int width, int limit,
                               struct html_feed_environ *h_env);
+struct readbuffer;
 extern void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
                       int indent, int force, int width);
 extern void do_blankline(struct html_feed_environ *h_env,
@@ -165,6 +168,7 @@ extern void save_fonteffect(struct html_feed_environ *h_env,
                             struct readbuffer *obuf);
 extern void restore_fonteffect(struct html_feed_environ *h_env,
                                struct readbuffer *obuf);
+struct parsed_tag;
 extern Str process_img(struct parsed_tag *tag, int width);
 extern Str process_anchor(struct parsed_tag *tag, char *tagbuf);
 extern Str process_input(struct parsed_tag *tag);
@@ -296,6 +300,7 @@ extern void do_internal(char *action, char *data);
 extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
 extern void form_write_from_file(FILE *f, char *boundary, char *name,
                                  char *filename, char *file);
+struct parsed_tagarg;
 extern void follow_map(struct parsed_tagarg *arg);
 extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(struct Buffer *buf);
@@ -320,10 +325,12 @@ extern Str parsedURL2RefererStr(struct Url *pu);
 extern int getURLScheme(char **url);
 extern void init_stream(struct URLFile *uf, int scheme, InputStream stream);
 struct HttpRequest;
+struct URLOption;
 extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
-                       URLOption *option, struct FormList *request,
+                       struct URLOption *option, struct FormList *request,
                        TextList *extra_header, struct URLFile *ouf, struct HttpRequest *hr,
                        unsigned char *status);
+struct mailcap;
 extern int mailcapMatch(struct mailcap *mcap, char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, char *type);
 extern void initMailcap();

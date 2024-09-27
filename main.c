@@ -1,5 +1,7 @@
 #include "fm.h"
+#include "history.h"
 #include "downloadlist.h"
+#include "ctrlcode.h"
 #include "http_request.h"
 #include "tabbuffer.h"
 #include "buffer.h"

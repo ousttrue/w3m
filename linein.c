@@ -1,4 +1,7 @@
 #include "linein.h"
+#include "ctrlcode.h"
+#include "history.h"
+#include "form.h"
 #include "tabbuffer.h"
 #include "terms.h"
 #include "termsize.h"

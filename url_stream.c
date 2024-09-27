@@ -1,5 +1,6 @@
 #include "url_stream.h"
 #include "etc.h"
+#include "html.h"
 #include "http_request.h"
 #include "localcgi.h"
 #include "fm.h"
@@ -1371,7 +1372,7 @@ void init_stream(struct URLFile *uf, int scheme, InputStream stream) {
 }
 
 struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
-                       URLOption *option, struct FormList *request,
+                       struct URLOption *option, struct FormList *request,
                        TextList *extra_header, struct URLFile *ouf,
                        struct HttpRequest *hr, unsigned char *status) {
   Str tmp;

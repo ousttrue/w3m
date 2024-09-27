@@ -1,3 +1,4 @@
+#include "history.h"
 #include "fm.h"
 #include "terms.h"
 #include "readbuffer.h"

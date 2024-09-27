@@ -8,16 +8,6 @@
 
 #include <time.h>
 
-#define StrUFgets(f) StrISgets((f)->stream)
-#define StrmyUFgets(f) StrmyISgets((f)->stream)
-#define UFgetc(f) ISgetc((f)->stream)
-#define UFundogetc(f) ISundogetc((f)->stream)
-#define UFclose(f)                                                             \
-  if (ISclose((f)->stream) == 0) {                                             \
-    (f)->stream = NULL;                                                        \
-  }
-#define UFfileno(f) ISfileno((f)->stream)
-
 struct cmdtable {
   char *cmdname;
   int cmd;
@@ -45,10 +35,10 @@ struct table2 {
   char *item2;
 };
 
-typedef struct {
+struct URLOption {
   char *referer;
   int flag;
-} URLOption;
+};
 
 #define CMP_NOCOMPRESS 0
 #define CMP_COMPRESS 1
@@ -369,22 +359,5 @@ struct environment {
 #define MAX_INDENT_LEVEL 10
 
 #define INDENT_INCR IndentIncr
-
-#define SCM_UNKNOWN 255
-#define SCM_MISSING 254
-#define SCM_HTTP 0
-#define SCM_GOPHER 1
-#define SCM_FTP 2
-#define SCM_FTPDIR 3
-#define SCM_LOCAL 4
-#define SCM_LOCAL_CGI 5
-#define SCM_EXEC 6
-#define SCM_NNTP 7
-#define SCM_NNTP_GROUP 8
-#define SCM_NEWS 9
-#define SCM_NEWS_GROUP 10
-#define SCM_DATA 11
-#define SCM_MAILTO 12
-#define SCM_HTTPS 13
 
 #endif /* _HTML_H */

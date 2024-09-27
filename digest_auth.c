@@ -1,4 +1,6 @@
 #include "digest_auth.h"
+#include "ctrlcode.h"
+#include "form.h"
 #include "http_request.h"
 #include <openssl/md5.h>
 

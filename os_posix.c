@@ -1,5 +1,7 @@
 #include "os.h"
+#include "html.h"
 #include "linein.h"
+#include "ctrlcode.h"
 #include "readbuffer.h"
 #include "buffer.h"
 #include "tabbuffer.h"

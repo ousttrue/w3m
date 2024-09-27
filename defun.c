@@ -1,5 +1,8 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "funcname1.h"
+#include "history.h"
+#include "parsetag.h"
 #include "os.h"
 #include "linein.h"
 #include "downloadlist.h"

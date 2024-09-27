@@ -1,14 +1,17 @@
+#include "ftp.h"
+#include "url.h"
+#include "fm.h"
+#include "url_stream.h"
+#include "html.h"
+#include "myctype.h"
+#include "terms.h"
+
 #include <stdio.h>
 #include <Str.h>
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
 
-#include "fm.h"
-#include "url_stream.h"
-#include "html.h"
-#include "myctype.h"
-#include "terms.h"
 
 #ifdef DEBUG
 #include <malloc.h>

@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "ctrlcode.h"
 #include "readbuffer.h"
 #include "tabbuffer.h"
 #include "buffer.h"

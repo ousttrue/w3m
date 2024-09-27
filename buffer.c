@@ -1,11 +1,16 @@
 #include "buffer.h"
+#include "url_stream.h"
 #include "readbuffer.h"
+#include "url.h"
+#include "ctrlcode.h"
 #include "url_stream.h"
 #include "fm.h"
 #include "tty.h"
 #include "scr.h"
 #include "termsize.h"
 #include "terms.h"
+#include <stdlib.h>
+#include <unistd.h>
 
 int REV_LB[MAX_LB] = {
     LB_N_INFO,

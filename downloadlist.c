@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "Str.h"
 #include "termsize.h"
+#include "parsetag.h"
 #include "fm.h"
 
 #ifdef _WIN32

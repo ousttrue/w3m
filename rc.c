@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "url.h"
 #include "localcgi.h"
 #include "myctype.h"
 #include "proto.h"
@@ -216,6 +217,10 @@ static char n_s[][2] = {
 };
 #define N_S(x) (x), n_s[(x)]
 #endif
+
+#define _(Text) Text
+#define N_(Text) Text
+#define gettext(Text) Text
 
 static struct sel_c defaulturls[] = {
     {N_S(DEFAULT_URL_EMPTY), N_("none")},
@@ -1259,5 +1264,3 @@ rc_dir_err:
   create_option_search_table();
   goto open_rc;
 }
-
-

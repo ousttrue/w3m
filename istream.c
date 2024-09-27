@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "html.h"
 #include "myctype.h"
 #include "istream.h"
 #include "termsize.h"

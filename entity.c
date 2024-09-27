@@ -7,6 +7,7 @@
 #else /* DUMMY */
 #include "fm.h"
 #endif /* DUMMY */
+#include "ctrlcode.h"
 
 /* *INDENT-OFF* */
 static char *alt_latin1[96] = {NBSP,  "!",   "-c-", "-L-", "CUR", "=Y=", "|",

@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include "fm.h"
+#include "ctrlcode.h"
 #include "func.h"
 #include "myctype.h"
 #include "regex.h"
