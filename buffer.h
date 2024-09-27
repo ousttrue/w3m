@@ -3,6 +3,7 @@
 #include "form.h"
 #include "url.h"
 #include "textlist.h"
+#include "line.h"
 
 /* Link Buffer */
 #define LB_NOLINK -1
@@ -95,4 +96,6 @@ struct Buffer {
 
 #define NO_BUFFER ((struct Buffer *)1)
 
-extern void chkURLBuffer(struct Buffer *buf);
+void chkURLBuffer(struct Buffer *buf);
+void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
+                int width, int nlines);

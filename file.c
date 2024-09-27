@@ -39,9 +39,6 @@ static int frame_source = 0;
 
 static char *guess_filename(char *file);
 static FILE *lessopen_stream(char *path);
-#define addnewline(a, b, c, d, e, f, g) _addnewline(a, b, c, e, f, g)
-static void addnewline(struct Buffer *buf, char *line, Lineprop *prop,
-                       Linecolor *color, int pos, int width, int nlines);
 static void addLink(struct Buffer *buf, struct parsed_tag *tag);
 
 static JMP_BUF AbortLoading;
@@ -523,7 +520,7 @@ void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
         lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer, NULL);
         Strcat(tmp, lineBuf2);
         if (thru)
-          addnewline(newBuf, lineBuf2->ptr, propBuffer, NULL, lineBuf2->length,
+          addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
                      FOLD_BUFFER_WIDTH, -1);
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
@@ -717,7 +714,7 @@ void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
     lineBuf2 = NULL;
   }
   if (thru)
-    addnewline(newBuf, "", propBuffer, NULL, 0, -1, -1);
+    addnewline(newBuf, "", propBuffer, 0, -1, -1);
   if (src)
     fclose(src);
 }
@@ -4585,7 +4582,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
     }
     /* end of processing for one line */
     if (!internal)
-      addnewline(buf, outc, outp, NULL, pos, -1, nlines);
+      addnewline(buf, outc, outp, pos, -1, nlines);
     if (internal == HTML_N_INTERNAL)
       internal = 0;
     if (str != endp) {
@@ -5039,80 +5036,7 @@ table_start:
 extern char *NullLine;
 extern Lineprop NullProp[];
 
-#define addnewline2(a, b, c, d, e, f) _addnewline2(a, b, c, e, f)
-static void addnewline2(struct Buffer *buf, char *line, Lineprop *prop,
-                        Linecolor *color, int pos, int nlines) {
-  Line *l;
-  l = New(Line);
-  l->next = NULL;
-  l->lineBuf = line;
-  l->propBuf = prop;
-  l->len = pos;
-  l->width = -1;
-  l->size = pos;
-  l->bpos = 0;
-  l->bwidth = 0;
-  l->prev = buf->currentLine;
-  if (buf->currentLine) {
-    l->next = buf->currentLine->next;
-    buf->currentLine->next = l;
-  } else
-    l->next = NULL;
-  if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
-    buf->lastLine = l;
-  buf->currentLine = l;
-  if (buf->firstLine == NULL)
-    buf->firstLine = l;
-  l->linenumber = ++buf->allLine;
-  if (nlines < 0) {
-    /*     l->real_linenumber = l->linenumber;     */
-    l->real_linenumber = 0;
-  } else {
-    l->real_linenumber = nlines;
-  }
-  l = NULL;
-}
 
-static void addnewline(struct Buffer *buf, char *line, Lineprop *prop,
-                       Linecolor *color, int pos, int width, int nlines) {
-  char *s;
-  Lineprop *p;
-  Line *l;
-  int i, bpos, bwidth;
-
-  if (pos > 0) {
-    s = allocStr(line, pos);
-    p = NewAtom_N(Lineprop, pos);
-    memcpy((void *)p, (const void *)prop, pos * sizeof(Lineprop));
-  } else {
-    s = NullLine;
-    p = NullProp;
-  }
-  addnewline2(buf, s, p, c, pos, nlines);
-  if (pos <= 0 || width <= 0)
-    return;
-  bpos = 0;
-  bwidth = 0;
-  while (1) {
-    l = buf->currentLine;
-    l->bpos = bpos;
-    l->bwidth = bwidth;
-    i = columnLen(l, width);
-    if (i == 0) {
-      i++;
-    }
-    l->len = i;
-    l->width = COLPOS(l, l->len);
-    if (pos <= i)
-      return;
-    bpos += l->len;
-    bwidth += l->width;
-    s += i;
-    p += i;
-    pos -= i;
-    addnewline2(buf, s, p, c, pos, nlines);
-  }
-}
 
 /*
  * loadHTMLBuffer: read file and make new buffer
@@ -5479,7 +5403,7 @@ struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
     ++nlines;
     Strchop(lineBuf2);
     lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
-    addnewline(newBuf, lineBuf2->ptr, propBuffer, colorBuffer, lineBuf2->length,
+    addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
                FOLD_BUFFER_WIDTH, nlines);
   }
 _end:
