@@ -46,6 +46,7 @@ pub const SRCS = [_][]const u8{
     "downloadlist.c",
     "localcgi.c",
     "ftp.c",
+    "readbuffer.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

@@ -50,3 +50,5 @@ struct readbuffer {
   short top_margin;
   short bottom_margin;
 };
+
+void push_link(int cmd, int offset, int pos);
