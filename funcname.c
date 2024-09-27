@@ -35,7 +35,7 @@ FuncList w3mFuncList[] = {
     /*33*/ {"EXIT", quitfm},
     /*34*/ {"EXTERN", extbrz},
     /*35*/ {"EXTERN_LINK", linkbrz},
-    /*36*/ {"FRAME", rFrame},
+    /*36*/ {"FRAME", nulcmd},
     /*37*/ {"GOTO", goURL},
     /*38*/ {"GOTO_HOME", goHome},
     /*39*/ {"GOTO_LINE", goLine},

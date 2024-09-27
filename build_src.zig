@@ -13,7 +13,6 @@ pub const SRCS = [_][]const u8{
     "table.c",
     "form.c",
     "map.c",
-    "frame.c",
     "rc.c",
     "menu.c",
     "mailcap.c",

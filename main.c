@@ -659,10 +659,6 @@ int main(int argc, char **argv) {
       Currentbuf = newbuf;
     }
     {
-      if (Currentbuf->frameset != NULL && RenderFrame)
-        rFrame();
-    }
-    {
       Currentbuf = newbuf;
       saveBufferInfo();
     }

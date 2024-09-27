@@ -6,13 +6,11 @@
 
 /* Link Buffer */
 #define LB_NOLINK -1
-#define LB_FRAME 0 /* rFrame() */
-#define LB_N_FRAME 1
-#define LB_INFO 2 /* pginfo() */
-#define LB_N_INFO 3
-#define LB_SOURCE 4 /* vwSrc() */
+#define LB_INFO 0 /* pginfo() */
+#define LB_N_INFO 1
+#define LB_SOURCE 2 /* vwSrc() */
 #define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 5
+#define MAX_LB 3
 extern int REV_LB[];
 
 enum LINK_TYPE {
@@ -76,8 +74,6 @@ struct Buffer {
   char *baseTarget;
   int real_scheme;
   char *sourcefile;
-  struct frameset *frameset;
-  struct frameset_queue *frameQ;
   int *clone;
   size_t trbyte;
   char check_url;

@@ -101,7 +101,7 @@ extern void reshape(void);
 extern void chkURL(void);
 extern void chkWORD(void);
 #define chkNMID nulcmd
-extern void rFrame(void);
+#define rFrame nulcmd;
 extern void extbrz(void);
 extern void linkbrz(void);
 extern void curlno(void);
@@ -314,21 +314,7 @@ extern void follow_map(struct parsed_tagarg *arg);
 extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);
 extern Anchor *retrieveCurrentMap(struct Buffer *buf);
 extern struct Buffer *page_info_panel(struct Buffer *buf);
-extern struct frame_body *newFrame(struct parsed_tag *tag, struct Buffer *buf);
-extern struct frameset *newFrameSet(struct parsed_tag *tag);
-extern void addFrameSetElement(struct frameset *f,
-                               union frameset_element element);
-extern void deleteFrame(struct frame_body *b);
-extern void deleteFrameSet(struct frameset *f);
-extern void deleteFrameSetElement(union frameset_element e);
-extern struct frameset *copyFrameSet(struct frameset *of);
-extern void pushFrameTree(struct frameset_queue **fqpp, struct frameset *fs,
-                          struct Buffer *buf);
-extern struct frameset *popFrameTree(struct frameset_queue **fqpp);
-extern void resetFrameElement(union frameset_element *f_element, struct Buffer *buf,
-                              char *referer, struct FormList *request);
-extern struct Buffer *renderFrame(struct Buffer *Cbuf, int force_reload);
-extern union frameset_element *search_frame(struct frameset *fset, char *name);
+
 extern char *ttyname_tty(void);
 extern MySignalHandler reset_exit(SIGNAL_ARG);
 extern MySignalHandler error_dump(SIGNAL_ARG);

@@ -4222,9 +4222,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
 #ifdef DEBUG
   FILE *debug = NULL;
 #endif
-  struct frameset *frameset_s[FRAMESTACK_SIZE];
   int frameset_sp = -1;
-  union frameset_element *idFrame = NULL;
   char *id = NULL;
   int hseq, form_id;
   Str line;
@@ -4340,14 +4338,6 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           ex_effect &= ~PE_EX_STRIKE;
           break;
         case HTML_A:
-          if (renderFrameSet && parsedtag_get_value(tag, ATTR_FRAMENAME, &p)) {
-            p = url_quote_conv(p, buf->document_charset);
-            if (!idFrame || strcmp(idFrame->body->name, p)) {
-              idFrame = search_frame(renderFrameSet, p);
-              if (idFrame && idFrame->body->attr != F_BODY)
-                idFrame = NULL;
-            }
-          }
           p = r = s = NULL;
           q = buf->baseTarget;
           t = "";
@@ -4379,10 +4369,6 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
               hseq = -hseq;
             }
           }
-          if (id && idFrame)
-            idFrame->body->nameList =
-                putAnchor(idFrame->body->nameList, id, NULL, (Anchor **)NULL,
-                          NULL, NULL, '\0', currentLn(buf), pos);
           if (p) {
             effect |= PE_ANCHOR;
             a_href = registerHref(buf, p, q, r, s, *t, currentLn(buf), pos);
@@ -4525,32 +4511,12 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           break;
         case HTML_FRAMESET:
           frameset_sp++;
-          if (frameset_sp >= FRAMESTACK_SIZE)
-            break;
-          frameset_s[frameset_sp] = newFrameSet(tag);
-          if (frameset_s[frameset_sp] == NULL)
-            break;
-          if (frameset_sp == 0) {
-            if (buf->frameset == NULL) {
-              buf->frameset = frameset_s[frameset_sp];
-            } else
-              pushFrameTree(&(buf->frameQ), frameset_s[frameset_sp], NULL);
-          } else
-            addFrameSetElement(
-                frameset_s[frameset_sp - 1],
-                *(union frameset_element *)&frameset_s[frameset_sp]);
           break;
         case HTML_N_FRAMESET:
           if (frameset_sp >= 0)
             frameset_sp--;
           break;
         case HTML_FRAME:
-          if (frameset_sp >= 0 && frameset_sp < FRAMESTACK_SIZE) {
-            union frameset_element element;
-
-            element.body = newFrame(tag, buf);
-            addFrameSetElement(frameset_s[frameset_sp], element);
-          }
           break;
         case HTML_BASE:
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
@@ -4664,7 +4630,7 @@ static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
       title = rev;
   }
 
-  struct LinkList* l = New(struct LinkList);
+  struct LinkList *l = New(struct LinkList);
   l->url = href;
   l->title = title;
   l->ctype = ctype;

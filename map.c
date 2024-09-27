@@ -165,51 +165,6 @@ static void append_link_info(struct Buffer *buf, Str html,
   Strcat_charp(html, "</table>\n");
 }
 
-/* append frame URL */
-static void append_frame_info(struct Buffer *buf, Str html,
-                              struct frameset *set, int level) {
-  char *p, *q;
-  int i, j;
-
-  if (!set)
-    return;
-
-  for (i = 0; i < set->col * set->row; i++) {
-    union frameset_element frame = set->frame[i];
-    if (frame.element != NULL) {
-      switch (frame.element->attr) {
-      case F_UNLOADED:
-      case F_BODY:
-        if (frame.body->url == NULL)
-          break;
-        Strcat_charp(html, "<pre_int>");
-        for (j = 0; j < level; j++)
-          Strcat_charp(html, "   ");
-        q = html_quote(frame.body->url);
-        Strcat_m_charp(html, "<a href=\"", q, "\">", NULL);
-        if (frame.body->name) {
-          p = html_quote(
-              url_unquote_conv(frame.body->name, buf->document_charset));
-          Strcat_charp(html, p);
-        }
-        if (DecodeURL)
-          p = html_quote(url_decode2(frame.body->url, buf));
-        else
-          p = q;
-        Strcat_m_charp(html, " ", p, "</a></pre_int><br>\n", NULL);
-        if (frame.body->ssl_certificate)
-          Strcat_m_charp(html, "<blockquote><h2>SSL certificate</h2><pre>\n",
-                         html_quote(frame.body->ssl_certificate),
-                         "</pre></blockquote>\n", NULL);
-        break;
-      case F_FRAMESET:
-        append_frame_info(buf, html, frame.set, level + 1);
-        break;
-      }
-    }
-  }
-}
-
 /*
  * information of current page and link
  */
@@ -218,7 +173,6 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   Anchor *a;
   struct Url pu;
   TextListItem *ti;
-  struct frameset *f_set = NULL;
   int all;
   char *p, *q;
   struct Buffer *newbuf;
@@ -295,16 +249,6 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
     Strcat_charp(tmp, "</pre>\n");
   }
 
-  if (buf->frameset != NULL)
-    f_set = buf->frameset;
-  else if (buf->bufferprop & BP_FRAME && buf->nextBuffer != NULL &&
-           buf->nextBuffer->frameset != NULL)
-    f_set = buf->nextBuffer->frameset;
-
-  if (f_set) {
-    Strcat_charp(tmp, "<hr width=50%><h1>Frame information</h1>\n");
-    append_frame_info(buf, tmp, f_set, 0);
-  }
   if (buf->ssl_certificate)
     Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
                    html_quote(buf->ssl_certificate), "</pre>\n", NULL);

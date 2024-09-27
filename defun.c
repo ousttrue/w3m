@@ -809,8 +809,6 @@ static void cmd_loadfile(char *fn) {
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
-    if (RenderFrame && Currentbuf->frameset != NULL)
-      rFrame();
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -1249,10 +1247,8 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static struct Buffer *loadNormalBuf(struct Buffer *buf, int renderframe) {
+static struct Buffer *loadNormalBuf(struct Buffer *buf) {
   pushBuffer(buf);
-  if (renderframe && RenderFrame && Currentbuf->frameset != NULL)
-    rFrame();
   return buf;
 }
 
@@ -1289,10 +1285,10 @@ static struct Buffer *loadLink(char *url, char *target, char *referer,
     return NULL;
   }
   if (!on_target) /* open link as an indivisual page */
-    return loadNormalBuf(buf, TRUE);
+    return loadNormalBuf(buf);
 
   if (do_download) /* download (thus no need to render frames) */
-    return loadNormalBuf(buf, FALSE);
+    return loadNormalBuf(buf);
 
   if (target == NULL || /* no target specified (that means this page is not a
                            frame page) */
@@ -1300,55 +1296,10 @@ static struct Buffer *loadLink(char *url, char *target, char *referer,
                                     indivisual * page */
       !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
   ) {
-    return loadNormalBuf(buf, TRUE);
+    return loadNormalBuf(buf);
   }
-  nfbuf = Currentbuf->linkBuffer[LB_N_FRAME];
-  if (nfbuf == NULL) {
-    /* original page (that contains <frameset> tag) doesn't exist */
-    return loadNormalBuf(buf, TRUE);
-  }
-
-  f_element = search_frame(nfbuf->frameset, target);
-  if (f_element == NULL) {
-    /* specified target doesn't exist in this frameset */
-    return loadNormalBuf(buf, TRUE);
-  }
-
-  /* frame page */
-
-  /* stack current frameset */
-  pushFrameTree(&(nfbuf->frameQ), copyFrameSet(nfbuf->frameset), Currentbuf);
-  /* delete frame view buffer */
-  delBuffer(Currentbuf);
-  Currentbuf = nfbuf;
-  /* nfbuf->frameset = copyFrameSet(nfbuf->frameset); */
-  resetFrameElement(f_element, buf, referer, request);
-  discardBuffer(buf);
-  rFrame();
-  {
-    Anchor *al = NULL;
-    char *label = pu.label;
-
-    if (label && f_element->element->attr == F_BODY) {
-      al = searchAnchor(f_element->body->nameList, label);
-    }
-    if (!al) {
-      label = Strnew_m_charp("_", target, NULL)->ptr;
-      al = searchURLLabel(Currentbuf, label);
-    }
-    if (al) {
-      gotoLine(Currentbuf, al->start.line);
-      if (label_topline)
-        Currentbuf->topLine = lineSkip(Currentbuf, Currentbuf->topLine,
-                                       Currentbuf->currentLine->linenumber -
-                                           Currentbuf->topLine->linenumber,
-                                       FALSE);
-      Currentbuf->pos = al->start.pos;
-      arrangeCursor(Currentbuf);
-    }
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-  return buf;
+  /* original page (that contains <frameset> tag) doesn't exist */
+  return loadNormalBuf(buf);
 }
 
 static void gotoLabel(char *label) {
@@ -2243,21 +2194,6 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer") {
 }
 
 static int checkBackBuffer(struct Buffer *buf) {
-  struct Buffer *fbuf = buf->linkBuffer[LB_N_FRAME];
-
-  if (fbuf) {
-    if (fbuf->frameQ)
-      return TRUE; /* Currentbuf has stacked frames */
-    /* when no frames stacked and next is frame source, try next's
-     * nextBuffer */
-    if (RenderFrame && fbuf == buf->nextBuffer) {
-      if (fbuf->nextBuffer != NULL)
-        return TRUE;
-      else
-        return FALSE;
-    }
-  }
-
   if (buf->nextBuffer)
     return TRUE;
 
@@ -2267,8 +2203,6 @@ static int checkBackBuffer(struct Buffer *buf) {
 /* delete current buffer and back to the previous buffer */
 DEFUN(backBf, BACK,
       "Close current buffer and return to the one below in stack") {
-  struct Buffer *buf = Currentbuf->linkBuffer[LB_N_FRAME];
-
   if (!checkBackBuffer(Currentbuf)) {
     if (close_tab_back && nTab >= 1) {
       deleteTab(CurrentTab);
@@ -2281,33 +2215,6 @@ DEFUN(backBf, BACK,
 
   delBuffer(Currentbuf);
 
-  if (buf) {
-    if (buf->frameQ) {
-      struct frameset *fs;
-      long linenumber = buf->frameQ->linenumber;
-      long top = buf->frameQ->top_linenumber;
-      int pos = buf->frameQ->pos;
-      int currentColumn = buf->frameQ->currentColumn;
-      AnchorList *formitem = buf->frameQ->formitem;
-
-      fs = popFrameTree(&(buf->frameQ));
-      deleteFrameSet(buf->frameset);
-      buf->frameset = fs;
-
-      if (buf == Currentbuf) {
-        rFrame();
-        Currentbuf->topLine =
-            lineSkip(Currentbuf, Currentbuf->firstLine, top - 1, FALSE);
-        gotoLine(Currentbuf, linenumber);
-        Currentbuf->pos = pos;
-        Currentbuf->currentColumn = currentColumn;
-        arrangeCursor(Currentbuf);
-        formResetBuffer(Currentbuf, formitem);
-      }
-    } else if (RenderFrame && buf == Currentbuf) {
-      delBuffer(Currentbuf);
-    }
-  }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
@@ -2333,8 +2240,6 @@ static void cmd_loadURL(char *url, struct Url *current, char *referer,
     disp_err_message(emsg, FALSE);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
-    if (RenderFrame && Currentbuf->frameset != NULL)
-      rFrame();
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2820,31 +2725,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
   copyBuffer(&sbuf, Currentbuf);
-  if (Currentbuf->bufferprop & BP_FRAME &&
-      (fbuf = Currentbuf->linkBuffer[LB_N_FRAME])) {
-    term_message("Rendering frame");
-    if (!(buf = renderFrame(fbuf, 1))) {
-      displayBuffer(Currentbuf, B_NORMAL);
-      return;
-    }
-    if (fbuf->linkBuffer[LB_FRAME]) {
-      if (buf->sourcefile && fbuf->linkBuffer[LB_FRAME]->sourcefile &&
-          !strcmp(buf->sourcefile, fbuf->linkBuffer[LB_FRAME]->sourcefile))
-        fbuf->linkBuffer[LB_FRAME]->sourcefile = NULL;
-      delBuffer(fbuf->linkBuffer[LB_FRAME]);
-    }
-    fbuf->linkBuffer[LB_FRAME] = buf;
-    buf->linkBuffer[LB_N_FRAME] = fbuf;
-    pushBuffer(buf);
-    Currentbuf = buf;
-    if (Currentbuf->firstLine) {
-      COPY_BUFROOT(Currentbuf, &sbuf);
-      restorePosition(Currentbuf, &sbuf);
-    }
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    return;
-  } else if (Currentbuf->frameset != NULL)
-    fbuf = Currentbuf->linkBuffer[LB_FRAME];
   multipart = 0;
   if (Currentbuf->form_submit) {
     request = Currentbuf->form_submit->parent;
@@ -2944,35 +2824,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
     return;
   reAnchorWord(Currentbuf, Currentbuf->currentLine, spos, epos);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-/* render frames */
-DEFUN(rFrame, FRAME, "Toggle rendering HTML frames") {
-  struct Buffer *buf;
-
-  if ((buf = Currentbuf->linkBuffer[LB_FRAME]) != NULL) {
-    Currentbuf = buf;
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  if (Currentbuf->frameset == NULL) {
-    if ((buf = Currentbuf->linkBuffer[LB_N_FRAME]) != NULL) {
-      Currentbuf = buf;
-      displayBuffer(Currentbuf, B_NORMAL);
-    }
-    return;
-  }
-  term_message("Rendering frame");
-  buf = renderFrame(Currentbuf, 0);
-  if (buf == NULL) {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  buf->linkBuffer[LB_N_FRAME] = Currentbuf;
-  Currentbuf->linkBuffer[LB_FRAME] = buf;
-  pushBuffer(buf);
-  if (display_ok)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* spawn external browser */

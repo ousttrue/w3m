@@ -7,7 +7,7 @@
 #include "terms.h"
 
 int REV_LB[MAX_LB] = {
-    LB_N_FRAME, LB_FRAME, LB_N_INFO, LB_INFO, LB_N_SOURCE,
+    LB_N_INFO, LB_INFO, LB_N_SOURCE,
 };
 char *NullLine = "";
 Lineprop NullProp[] = {0};
@@ -86,10 +86,6 @@ void discardBuffer(struct Buffer *buf) {
     unlink(buf->header_source);
   if (buf->mailcap_source)
     unlink(buf->mailcap_source);
-  while (buf->frameset) {
-    deleteFrameSet(buf->frameset);
-    buf->frameset = popFrameTree(&(buf->frameQ));
-  }
 }
 
 /*
@@ -434,10 +430,6 @@ void reshapeBuffer(struct Buffer *buf) {
     return;
   copyBuffer(&sbuf, buf);
   clearBuffer(buf);
-  while (buf->frameset) {
-    deleteFrameSet(buf->frameset);
-    buf->frameset = popFrameTree(&(buf->frameQ));
-  }
 
   buf->href = NULL;
   buf->name = NULL;
