@@ -1,8 +1,11 @@
 #pragma once
 #include <stdint.h>
 
+// pid_t
 #ifdef _WIN32
 #include <process.h>
+#else
+#include <unistd.h>
 #endif
 
 #define DOWNLOAD_LIST_TITLE "Download List Panel"
@@ -16,3 +19,4 @@ void stopDownload();
 bool checkDownloadList();
 struct parsed_tagarg;
 void download_action(struct parsed_tagarg *arg);
+void download_exit(pid_t pid, int err);

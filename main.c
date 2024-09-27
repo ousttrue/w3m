@@ -184,15 +184,8 @@ static void sig_chld(int signo) {
   if ((pid = wait(&p_stat)) > 0)
 #endif
   {
-    DownloadList *d;
-
     if (WIFEXITED(p_stat)) {
-      for (d = FirstDL; d != NULL; d = d->next) {
-        if (d->pid == pid) {
-          d->err = WEXITSTATUS(p_stat);
-          break;
-        }
-      }
+      download_exit(pid, WEXITSTATUS(p_stat));
     }
   }
   mySignal(SIGCHLD, sig_chld);

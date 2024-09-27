@@ -10,6 +10,10 @@
 #include <stdlib.h>
 #include <gc.h>
 
+#ifndef _WIN32
+#include <pwd.h>
+#endif
+
 unsigned char QUOTE_MAP[0x100] = {
     /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
     24,
@@ -441,15 +445,15 @@ int strncasecmp(const char *s1, const char *s2, size_t n) {
 }
 #endif /* not HAVE_STRCASECMP */
 
+#ifdef _WIN32
 /* string search using the simplest algorithm */
 char *strcasestr(const char *s1, const char *s2) {
-  int len1, len2;
   if (s2 == NULL)
     return (char *)s1;
   if (*s2 == '\0')
     return (char *)s1;
-  len1 = strlen(s1);
-  len2 = strlen(s2);
+  int len1 = strlen(s1);
+  int len2 = strlen(s2);
   while (*s1 && len1 >= len2) {
     if (strncasecmp(s1, s2, len2) == 0)
       return (char *)s1;
@@ -458,6 +462,7 @@ char *strcasestr(const char *s1, const char *s2) {
   }
   return 0;
 }
+#endif
 
 static int strcasematch(char *s1, char *s2) {
   int x;

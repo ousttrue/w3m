@@ -5,6 +5,8 @@
 #include "terms.h"
 #include "termsize.h"
 #include <stdio.h>
+#include <dirent.h>
+#include <errno.h>
 
 #ifdef _WIN32
 #include "rand48_win32.h"

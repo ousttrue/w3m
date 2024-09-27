@@ -95,7 +95,7 @@ static int forms_size = 0;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 static int form_sp = 0;
 
-static int64_t current_content_length;
+int64_t current_content_length;
 
 static int cur_hseq;
 
@@ -5759,19 +5759,7 @@ char *guess_save_name(struct Buffer *buf, char *path) {
   return guess_filename(path);
 }
 
-static int setModtime(char *path, time_t modtime) {
-  struct utimbuf t;
-  struct stat st;
-
-  if (stat(path, &st) == 0)
-    t.actime = st.st_atime;
-  else
-    t.actime = time(NULL);
-  t.modtime = modtime;
-  return utime(path, &t);
-}
-
-static int _MoveFile(char *path1, char *path2) {
+int _MoveFile(char *path1, char *path2) {
   InputStream f1;
   FILE *f2;
   int is_pipe;

@@ -1,15 +1,41 @@
 #include "os.h"
+#include "buffer.h"
+#include "tabbuffer.h"
+#include "tty.h"
+#include "terms.h"
+#include "file.h"
+#include "termsize.h"
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
+#include "config.h"
+#include "fm.h"
+#include "proto.h"
+#include "downloadlist.h"
+#include <utime.h>
 
 void mySystem(char *command, int background) {
   if (background) {
     tty_flush();
     if (!fork()) {
-      setup_child(FALSE, 0, -1);
+      setup_child(false, 0, -1);
       myExec(command);
     }
   } else {
     system(command);
   }
+}
+
+static int setModtime(char *path, time_t modtime) {
+  struct utimbuf t;
+  struct stat st;
+
+  if (stat(path, &st) == 0)
+    t.actime = st.st_atime;
+  else
+    t.actime = time(NULL);
+  t.modtime = modtime;
+  return utime(path, &t);
 }
 
 int _doFileCopy(char *tmpf, char *defstr, int download) {

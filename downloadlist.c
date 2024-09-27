@@ -247,3 +247,13 @@ void stopDownload(void) {
     unlink(d->lock);
   }
 }
+
+void download_exit(pid_t pid, int err) {
+
+  for (auto d = FirstDL; d != NULL; d = d->next) {
+    if (d->pid == pid) {
+      d->err = err;
+      break;
+    }
+  }
+}
