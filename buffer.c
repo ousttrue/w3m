@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "readbuffer.h"
 #include "url_stream.h"
 #include "fm.h"
 #include "tty.h"

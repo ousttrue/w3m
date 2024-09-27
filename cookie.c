@@ -17,6 +17,7 @@
 #include "localcgi.h"
 #include "regex.h"
 #include "myctype.h"
+#include "readbuffer.h"
 
 static int is_saved = 1;
 

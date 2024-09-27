@@ -108,7 +108,6 @@ static struct compression_decoder {
 
 #define SAVE_BUF_SIZE 1536
 
-
 static void UFhalfclose(struct URLFile *f) {
   switch (f->scheme) {
   case SCM_FTP:
@@ -126,31 +125,6 @@ int currentLn(struct Buffer *buf) {
     return buf->currentLine->linenumber + 1;
   else
     return 1;
-}
-
-static struct Buffer *loadSomething(struct URLFile *f,
-                                    struct Buffer *(*loadproc)(struct URLFile *,
-                                                               struct Buffer *),
-                                    struct Buffer *defaultbuf) {
-  struct Buffer *buf;
-
-  if ((buf = loadproc(f, defaultbuf)) == NULL)
-    return NULL;
-
-  if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-    buf->buffername = checkHeader(buf, "Subject:");
-    if (buf->buffername == NULL && buf->filename != NULL)
-      buf->buffername = conv_from_system(lastFileName(buf->filename));
-  }
-  if (buf->currentURL.scheme == SCM_UNKNOWN)
-    buf->currentURL.scheme = f->scheme;
-  if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
-    buf->sourcefile = buf->filename;
-  if (loadproc == loadHTMLBuffer)
-    buf->type = "text/html";
-  else
-    buf->type = "text/plain";
-  return buf;
 }
 
 int dir_exist(char *path) {
@@ -1614,104 +1588,6 @@ char *convert_size2(int64_t size1, int64_t size2, int usefloat) {
                  floor(size1 / factor * 100.0 + 0.5) / 100.0,
                  floor(size2 / factor * 100.0 + 0.5) / 100.0, sizes[sizepos])
       ->ptr;
-}
-
-// static void print_internal_information(struct html_feed_environ *henv) {
-//   int i;
-//   Str s;
-//   TextLineList *tl = newTextLineList();
-//
-//   s = Strnew_charp("<internal>");
-//   pushTextLine(tl, newTextLine(s, 0));
-//   if (henv->title) {
-//     s = Strnew_m_charp("<title_alt title=\"", html_quote(henv->title), "\">",
-//                        NULL);
-//     pushTextLine(tl, newTextLine(s, 0));
-//   }
-//   if (n_textarea > 0) {
-//     for (i = 0; i < n_textarea; i++) {
-//       s = Sprintf("<textarea_int textareanumber=%d>", i);
-//       pushTextLine(tl, newTextLine(s, 0));
-//       s = Strnew_charp(html_quote(textarea_str[i]->ptr));
-//       Strcat_charp(s, "</textarea_int>");
-//       pushTextLine(tl, newTextLine(s, 0));
-//     }
-//   }
-//   s = Strnew_charp("</internal>");
-//   pushTextLine(tl, newTextLine(s, 0));
-//
-//   if (henv->buf)
-//     appendTextLineList(henv->buf, tl);
-//   else if (henv->f) {
-//     TextLineListItem *p;
-//     for (p = tl->first; p; p = p->next)
-//       fprintf(henv->f, "%s\n", Str_conv_to_halfdump(p->ptr->line)->ptr);
-//   }
-// }
-
-
-
-/*
- * loadBuffer: read file and make new buffer
- */
-struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
-  FILE *src = NULL;
-  Str lineBuf2;
-  char pre_lbuf = '\0';
-  int nlines;
-  Str tmpf;
-  int64_t linelen = 0, trbyte = 0;
-  Lineprop *propBuffer = NULL;
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-
-  if (newBuf == NULL)
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
-
-  if (SETJMP(AbortLoading) != 0) {
-    goto _end;
-  }
-  TRAP_ON;
-
-  if (newBuf->sourcefile == NULL &&
-      (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
-    tmpf = tmpfname(TMPF_SRC, NULL);
-    src = fopen(tmpf->ptr, "w");
-    if (src)
-      newBuf->sourcefile = tmpf->ptr;
-  }
-
-  nlines = 0;
-  if (IStype(uf->stream) != IST_ENCODED)
-    uf->stream = newEncodedStream(uf->stream, uf->encoding);
-  while ((lineBuf2 = StrmyISgets(uf->stream))->length) {
-    if (src)
-      Strfputs(lineBuf2, src);
-    linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
-    if (squeezeBlankLine) {
-      if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
-        ++nlines;
-        continue;
-      }
-      pre_lbuf = lineBuf2->ptr[0];
-    }
-    ++nlines;
-    Strchop(lineBuf2);
-    lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
-    addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
-               FOLD_BUFFER_WIDTH, nlines);
-  }
-_end:
-  TRAP_OFF;
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
-  newBuf->trbyte = trbyte + linelen;
-  if (src)
-    fclose(src);
-
-  return newBuf;
 }
 
 static Str conv_symbol(Line *l) {

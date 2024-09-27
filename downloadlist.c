@@ -1,4 +1,5 @@
 #include "downloadlist.h"
+#include "readbuffer.h"
 #include "alloc.h"
 #include "Str.h"
 #include "termsize.h"

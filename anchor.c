@@ -5,6 +5,7 @@
 #include "myctype.h"
 #include "regex.h"
 #include "termsize.h"
+#include "readbuffer.h"
 
 #define FIRST_ANCHOR_SIZE 30
 

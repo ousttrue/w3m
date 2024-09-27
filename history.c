@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "terms.h"
+#include "readbuffer.h"
 
 struct Buffer *historyBuffer(Hist *hist) {
   Str src = Strnew();

@@ -180,21 +180,10 @@ extern void feed_textarea(char *str);
 extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
 extern int getMetaRefreshParam(char *q, Str *refresh_uri);
-extern int HTMLtagproc1(struct parsed_tag *tag,
-                        struct html_feed_environ *h_env);
-extern void HTMLlineproc2(struct Buffer *buf, TextLineList *tl);
-extern void HTMLlineproc0(char *istr, struct html_feed_environ *h_env,
-                          int internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
-extern struct Buffer *loadHTMLBuffer(struct URLFile *f, struct Buffer *newBuf);
+
 extern char *convert_size(int64_t size, int usefloat);
 extern char *convert_size2(int64_t size1, int64_t size2, int usefloat);
-extern void init_henv(struct html_feed_environ *, struct readbuffer *,
-                      struct environment *, int, TextLineList *, int, int);
-extern void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
-extern void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src, int internal);
-extern struct Buffer *loadHTMLString(Str page);
-extern struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf);
+
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 extern struct Buffer *getshell(char *cmd);

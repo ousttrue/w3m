@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "readbuffer.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "scr.h"

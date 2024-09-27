@@ -1,4 +1,5 @@
 #include "os.h"
+#include "readbuffer.h"
 #include "buffer.h"
 #include "tabbuffer.h"
 #include "tty.h"

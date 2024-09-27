@@ -8,6 +8,7 @@
 #include "termsize.h"
 #include "tty.h"
 #include "localcgi.h"
+#include "readbuffer.h"
 #include <signal.h>
 #ifdef _WIN32
 #else
