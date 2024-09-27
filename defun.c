@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "app.h"
 #include "funcname1.h"
 #include "history.h"
 #include "parsetag.h"
@@ -1231,11 +1232,8 @@ DEFUN(editBf, EDIT, "Edit local source") {
 
 /* Run editor on the current screen */
 DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
-  char *tmpf;
-  FILE *f;
-
-  tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  f = fopen(tmpf, "w");
+  auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+  auto f = fopen(tmpf, "w");
   if (f == NULL) {
     /* FIXME: gettextize? */
     disp_err_message(Sprintf("Can't open %s", tmpf)->ptr, TRUE);
@@ -3150,6 +3148,7 @@ void w3m_exit(int i) {
   free_ssl_ctx();
   disconnectFTP();
 #ifdef HAVE_MKDTEMP
+  auto tmp_dir = app_get_tmpdir();
   if (no_rc_dir && tmp_dir != rc_dir)
     if (rmdir(tmp_dir) != 0) {
       fprintf(stderr, "Can't remove temporary directory (%s)!\n", tmp_dir);

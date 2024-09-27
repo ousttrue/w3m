@@ -1,4 +1,5 @@
 #include "buffer.h"
+#include "app.h"
 #include "url_stream.h"
 #include "readbuffer.h"
 #include "url.h"

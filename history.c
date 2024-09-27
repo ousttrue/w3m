@@ -1,4 +1,5 @@
 #include "history.h"
+#include "app.h"
 #include "fm.h"
 #include "terms.h"
 #include "readbuffer.h"
@@ -54,12 +55,11 @@ void loadHistory(struct Hist *hist) {
 void saveHistory(struct Hist *hist, size_t size) {
   FILE *f;
   HistItem *item;
-  char *tmpf;
   int rename_ret;
 
   if (hist == NULL || hist->list == NULL)
     return;
-  tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
+  auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
   if ((f = fopen(tmpf, "w")) == NULL) {
     /* FIXME: gettextize? */
     disp_err_message("Can't open history", FALSE);

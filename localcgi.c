@@ -1,4 +1,5 @@
 #include "localcgi.h"
+#include "app.h"
 #include "form.h"
 #include "http_request.h"
 #include "fm.h"

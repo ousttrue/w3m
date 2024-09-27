@@ -1,4 +1,5 @@
 #include "file.h"
+#include "app.h"
 #include "cookie.h"
 #include "etc.h"
 #include "html.h"

@@ -376,13 +376,6 @@ struct portlist {
 #define HTST_NORMAL 0
 #define HTST_CONNECT 1
 
-#define TMPF_DFL 0
-#define TMPF_SRC 1
-#define TMPF_FRAME 2
-#define TMPF_CACHE 3
-#define TMPF_COOKIE 4
-#define MAX_TMPF_TYPE 5
-
 
 /*
  * Globals.
@@ -455,7 +448,6 @@ global char *cgi_bin init(NULL);
 global char *index_file init(NULL);
 
 global char *CurrentDir;
-global int CurrentPid;
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
@@ -554,7 +546,6 @@ global struct cookie *First_cookie init(NULL);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
-global struct TextList *fileToDelete;
 
 extern struct Hist *LoadHist;
 extern struct Hist *SaveHist;
@@ -590,7 +581,6 @@ extern int symbol_width0;
 #define SYMBOL_BASE 0x20
 global int no_rc_dir init(FALSE);
 global char *rc_dir init(NULL);
-global char *tmp_dir;
 global char *config_file init(NULL);
 
 global int default_use_cookie init(TRUE);

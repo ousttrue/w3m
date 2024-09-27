@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "app.h"
 #include "buffer.h"
 #include "html.h"
 #include "parsetagx.h"

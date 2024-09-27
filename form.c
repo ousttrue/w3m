@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "app.h"
 #include "downloadlist.h"
 #include "form.h"
 #include "buffer.h"

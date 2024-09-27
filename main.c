@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "app.h"
 #include "url_stream.h"
 #include "history.h"
 #include "downloadlist.h"
@@ -237,9 +238,7 @@ int main(int argc, char **argv) {
   int c, i;
   InputStream redin;
   char *line_str = NULL;
-  char **load_argv;
   struct FormList *request;
-  int load_argc = 0;
   int load_bookmark = FALSE;
   int visual_start = FALSE;
   int open_new_tab = FALSE;
@@ -249,18 +248,14 @@ int main(int argc, char **argv) {
   Str err_msg;
 
   url_stream_init();
+  app_init();
 
-  fileToDelete = newTextList();
 
-  load_argv = New_N(char *, argc - 1);
-  load_argc = 0;
+  char **load_argv = New_N(char *, argc - 1);
+  int load_argc = 0;
 
   CurrentDir = currentdir();
   CurrentPid = (int)getpid();
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-  if (argv[0] && *argv[0])
-    MyProgramName = argv[0];
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
   BookmarkFile = NULL;
   config_file = NULL;
 

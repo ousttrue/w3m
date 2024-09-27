@@ -1078,19 +1078,6 @@ char *url_unquote_conv0(char *url) {
   return tmp->ptr;
 }
 
-static char *tmpf_base[MAX_TMPF_TYPE] = {
-    "tmp", "src", "frame", "cache", "cookie",
-};
-static unsigned int tmpf_seq[MAX_TMPF_TYPE];
-
-Str tmpfname(int type, char *ext) {
-  Str tmpf;
-  tmpf = Sprintf("%s/w3m%s%d-%d%s", tmp_dir, tmpf_base[type], CurrentPid,
-                 tmpf_seq[type]++, (ext) ? ext : "");
-  pushText(fileToDelete, tmpf->ptr);
-  return tmpf;
-}
-
 static char *monthtbl[] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 

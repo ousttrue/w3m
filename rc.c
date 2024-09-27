@@ -2,6 +2,7 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "app.h"
 #include "url.h"
 #include "url_stream.h"
 #include "localcgi.h"
@@ -1242,7 +1243,7 @@ void init_rc(void) {
       goto rc_dir_err;
     }
     no_rc_dir = FALSE;
-    tmp_dir = rc_dir;
+    app_set_tmpdir(rc_dir);
 
     if (config_file == NULL)
       config_file = rcFile(CONFIG_FILE);
@@ -1255,15 +1256,7 @@ void init_rc(void) {
 
 rc_dir_err:
   no_rc_dir = TRUE;
-  if (((tmp_dir = getenv("TMPDIR")) == NULL || *tmp_dir == '\0') &&
-      ((tmp_dir = getenv("TMP")) == NULL || *tmp_dir == '\0') &&
-      ((tmp_dir = getenv("TEMP")) == NULL || *tmp_dir == '\0'))
-    tmp_dir = "/tmp";
-#ifndef _WIN32
-  tmp_dir = mkdtemp(Strnew_m_charp(tmp_dir, "/w3m-XXXXXX", NULL)->ptr);
-  if (tmp_dir == NULL)
-    tmp_dir = rc_dir;
-#endif
+  app_no_rcdir(rc_dir);
   create_option_search_table();
   open_rc();
 }
