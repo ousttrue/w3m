@@ -99,6 +99,12 @@ pub fn build(b: *std.Build) void {
         exe.addLibraryPath(ssl_dep.path("x64/lib"));
         exe.linkSystemLibrary("libcrypto");
         exe.linkSystemLibrary("libssl");
+        const installDirectory = b.addInstallDirectory(.{
+            .source_dir = ssl_dep.path("x64/bin"),
+            .install_dir = .{ .prefix = void{} },
+            .install_subdir = "bin",
+        });
+        exe.step.dependOn(&installDirectory.step);
 
         const gc_dep = b.dependency("gc", .{
             .target = target,

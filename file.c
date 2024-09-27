@@ -912,7 +912,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
      * Authorization: header is sent to the server.
      */
     term_message("Wrong username or password");
-    sleep(1);
+    sleepSeconds(1);
     /* delete Authenticate: header from extra_header */
     delText(extra_header, i);
     invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
@@ -927,7 +927,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
     if (QuietMessage)
       return;
     /* input username and password */
-    sleep(2);
+    sleepSeconds(2);
 
 #ifdef _WIN32
     return;

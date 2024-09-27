@@ -1,3 +1,4 @@
+#include "etc.h"
 #include "fm.h"
 #include "buffer.h"
 #include "tty.h"
@@ -819,7 +820,7 @@ FILE *openSecretFile(char *fname) {
     /* do nothing */;
   else if ((st.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
     term_message(Sprintf(FILE_IS_READABLE_MSG, fname)->ptr);
-    sleep(2);
+    sleepSeconds(2);
     return NULL;
   }
 

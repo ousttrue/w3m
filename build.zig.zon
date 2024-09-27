@@ -10,6 +10,7 @@
             .url = "git+https://github.com/allyourcodebase/openssl.git#cfb071de062624d8acbfad4c995e8092f4f6bc7a",
             .hash = "12207c40cefa38fe90e4230dfba2e5c76b37e1ee36602512cad8ff0501f892002a65",
         },
+        // https://kb.firedaemon.com/support/solutions/articles/4000121705
         .openssl_prebuilt = .{
             .path = "../openssl_prebuilt",
         },
