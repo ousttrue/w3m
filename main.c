@@ -208,6 +208,9 @@ WSADATA wsaData;
 #endif
 
 int main(int argc, char **argv) {
+  if (argc < 2) {
+    return 1;
+  }
 
 #ifdef _WIN32
   /* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
@@ -233,25 +236,23 @@ int main(int argc, char **argv) {
   GC_oom_fn = die_oom;
 #endif
 
-  struct Buffer *newbuf = NULL;
-  char *p;
-  int c, i;
-  InputStream redin;
-  char *line_str = NULL;
-  struct FormList *request;
-  int load_bookmark = FALSE;
-  int visual_start = FALSE;
-  int open_new_tab = FALSE;
-  char search_header = FALSE;
-  char *default_type = NULL;
-  char *post_file = NULL;
-  Str err_msg;
+  // struct Buffer *newbuf = NULL;
+  // char *p;
+  // int c, i;
+  // InputStream redin;
+  // int load_bookmark = FALSE;
+  // int visual_start = FALSE;
+  // int open_new_tab = FALSE;
+  // char search_header = FALSE;
+  // char *default_type = NULL;
+  // char *post_file = NULL;
+  // Str err_msg;
 
   url_stream_init();
   app_init();
 
-  char **load_argv = New_N(char *, argc - 1);
-  int load_argc = 0;
+  // char **load_argv = New_N(char *, argc - 1);
+  // int load_argc = 0;
 
   BookmarkFile = NULL;
   config_file = NULL;
@@ -268,24 +269,6 @@ int main(int argc, char **argv) {
     }
   }
 
-  /* argument search 1 */
-  for (i = 1; i < argc; i++) {
-    if (*argv[i] == '-') {
-      if (!strcmp("-config", argv[i])) {
-        argv[i] = "-dummy";
-        if (++i >= argc)
-          usage();
-        config_file = argv[i];
-        argv[i] = "-dummy";
-      } else if (!strcmp("-h", argv[i]) || !strcmp("-help", argv[i]))
-        help();
-      else if (!strcmp("-V", argv[i]) || !strcmp("-version", argv[i])) {
-        fversion(stdout);
-        exit(0);
-      }
-    }
-  }
-
   /* initializations */
   init_rc();
 
@@ -295,6 +278,7 @@ int main(int argc, char **argv) {
   TextHist = newHist();
   URLHist = newHist();
 
+  char *p;
   if (!non_null(HTTP_proxy) &&
       ((p = getenv("HTTP_PROXY")) || (p = getenv("http_proxy")) ||
        (p = getenv("HTTP_proxy"))))
@@ -319,163 +303,6 @@ int main(int argc, char **argv) {
   if (!non_null(Mailer) && (p = getenv("MAILER")) != NULL)
     Mailer = p;
 
-  /* argument search 2 */
-  i = 1;
-  while (i < argc) {
-    if (*argv[i] == '-') {
-      if (!strcmp("-t", argv[i])) {
-        if (++i >= argc)
-          usage();
-        if (atoi(argv[i]) > 0)
-          Tabstop = atoi(argv[i]);
-      } else if (!strcmp("-r", argv[i]))
-        ShowEffect = FALSE;
-      else if (!strcmp("-l", argv[i])) {
-        if (++i >= argc)
-          usage();
-        if (atoi(argv[i]) > 0)
-          PagerMax = atoi(argv[i]);
-      } else if (!strcmp("-graph", argv[i]))
-        UseGraphicChar = GRAPHIC_CHAR_DEC;
-      else if (!strcmp("-no-graph", argv[i]))
-        UseGraphicChar = GRAPHIC_CHAR_ASCII;
-      else if (!strcmp("-T", argv[i])) {
-        if (++i >= argc)
-          usage();
-        DefaultType = default_type = argv[i];
-      } else if (!strcmp("-m", argv[i]))
-        SearchHeader = search_header = TRUE;
-      else if (!strcmp("-v", argv[i]))
-        visual_start = TRUE;
-      else if (!strcmp("-N", argv[i]))
-        open_new_tab = TRUE;
-      else if (!strcmp("-B", argv[i]))
-        load_bookmark = TRUE;
-      else if (!strcmp("-bookmark", argv[i])) {
-        if (++i >= argc)
-          usage();
-        BookmarkFile = argv[i];
-        if (BookmarkFile[0] != '~' && BookmarkFile[0] != '/') {
-          Str tmp = Strnew_charp(CurrentDir);
-          if (Strlastchar(tmp) != '/')
-            Strcat_char(tmp, '/');
-          Strcat_charp(tmp, BookmarkFile);
-          BookmarkFile = cleanupName(tmp->ptr);
-        }
-      } else if (!strcmp("-F", argv[i]))
-        RenderFrame = TRUE;
-      else if (!strcmp("-W", argv[i])) {
-        if (WrapDefault)
-          WrapDefault = FALSE;
-        else
-          WrapDefault = TRUE;
-      } else if (!strcmp("-halfload", argv[i])) {
-        w3m_halfload = TRUE;
-        DefaultType = default_type = "text/html";
-      } else if (!strcmp("-ppc", argv[i])) {
-        double ppc;
-        if (++i >= argc)
-          usage();
-        ppc = atof(argv[i]);
-        if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR) {
-          pixel_per_char = ppc;
-          set_pixel_per_char = TRUE;
-        }
-      } else if (!strcmp("-ri", argv[i])) {
-        enable_inline_image = INLINE_IMG_OSC5379;
-      } else if (!strcmp("-sixel", argv[i])) {
-        enable_inline_image = INLINE_IMG_SIXEL;
-      } else if (!strcmp("-num", argv[i]))
-        showLineNum = TRUE;
-      else if (!strcmp("-no-proxy", argv[i]))
-        use_proxy = FALSE;
-#ifdef INET6
-      else if (!strcmp("-4", argv[i]) || !strcmp("-6", argv[i]))
-        set_param_option(Sprintf("dns_order=%c", argv[i][1])->ptr);
-#endif
-      else if (!strcmp("-post", argv[i])) {
-        if (++i >= argc)
-          usage();
-        post_file = argv[i];
-      } else if (!strcmp("-header", argv[i])) {
-        Str hs;
-        if (++i >= argc)
-          usage();
-        if ((hs = make_optional_header_string(argv[i])) != NULL) {
-          if (header_string == NULL)
-            header_string = hs;
-          else
-            Strcat(header_string, hs);
-        }
-        while (argv[i][0]) {
-          argv[i][0] = '\0';
-          argv[i]++;
-        }
-      } else if (!strcmp("-no-cookie", argv[i])) {
-        use_cookie = FALSE;
-        accept_cookie = FALSE;
-      } else if (!strcmp("-cookie", argv[i])) {
-        use_cookie = TRUE;
-        accept_cookie = TRUE;
-      } else if (!strcmp("-s", argv[i]))
-        squeezeBlankLine = TRUE;
-      else if (!strcmp("-X", argv[i]))
-        Do_not_use_ti_te = TRUE;
-      else if (!strcmp("-title", argv[i]))
-        displayTitleTerm = getenv("TERM");
-      else if (!strncmp("-title=", argv[i], 7))
-        displayTitleTerm = argv[i] + 7;
-      else if (!strcmp("-insecure", argv[i])) {
-#ifdef OPENSSL_TLS_SECURITY_LEVEL
-        set_param_option("ssl_cipher=ALL:eNULL:@SECLEVEL=0");
-#else
-        set_param_option("ssl_cipher=ALL:eNULL");
-#endif
-#ifdef SSL_CTX_set_min_proto_version
-        set_param_option("ssl_min_version=all");
-#endif
-        set_param_option("ssl_forbid_method=");
-        set_param_option("ssl_verify_server=0");
-      } else if (!strcmp("-o", argv[i]) || !strcmp("-show-option", argv[i])) {
-        if (!strcmp("-show-option", argv[i]) || ++i >= argc ||
-            !strcmp(argv[i], "?")) {
-          show_params(stdout);
-          exit(0);
-        }
-        if (!set_param_option(argv[i])) {
-          /* option set failed */
-          /* FIXME: gettextize? */
-          fprintf(stderr, "%s: bad option\n", argv[i]);
-          show_params_p = 1;
-          usage();
-        }
-      } else if (!strcmp("-", argv[i]) || !strcmp("-dummy", argv[i])) {
-        /* do nothing */
-      } else if (!strcmp("-debug", argv[i])) {
-        w3m_debug = TRUE;
-      } else if (!strcmp("-reqlog", argv[i])) {
-        w3m_reqlog = rcFile("request.log");
-      }
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-      else if (!strcmp("-$$getimage", argv[i])) {
-        ++i;
-        getimage_args = argv + i;
-        i += 4;
-        if (i > argc)
-          usage();
-      }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-      else {
-        usage();
-      }
-    } else if (*argv[i] == '+') {
-      line_str = argv[i] + 1;
-    } else {
-      load_argv[load_argc++] = argv[i];
-    }
-    i++;
-  }
-
   FirstTab = NULL;
   LastTab = NULL;
   nTab = 0;
@@ -494,31 +321,6 @@ int main(int argc, char **argv) {
   if (UseHistory)
     loadHistory(URLHist);
 
-#if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
-  if (getimage_args) {
-    char *image_url = conv_from_system(getimage_args[0]);
-    char *base_url = conv_from_system(getimage_args[1]);
-    struct Url base_pu;
-
-    parseURL2(base_url, &base_pu, NULL);
-    image_source = getimage_args[2];
-    newbuf = loadGeneralFile(image_url, &base_pu, NULL, 0, NULL);
-    if (!newbuf || !newbuf->real_type ||
-        strncasecmp(newbuf->real_type, "image/", 6))
-      unlink(getimage_args[2]);
-#if defined(HAVE_SYMLINK) && defined(HAVE_LSTAT)
-    symlink(getimage_args[2], getimage_args[3]);
-#else
-    {
-      FILE *f = fopen(getimage_args[3], "w");
-      if (f)
-        fclose(f);
-    }
-#endif
-    w3m_exit(0);
-  }
-#endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-
 #ifndef _WIN32
   mySignal(SIGCHLD, sig_chld);
   mySignal(SIGPIPE, SigPipe);
@@ -531,142 +333,150 @@ int main(int argc, char **argv) {
 #else
   orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
 #endif
-  err_msg = Strnew();
-  if (load_argc == 0) {
-    /* no URL specified */
-    if (load_bookmark) {
-      newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
-      if (newbuf == NULL)
-        Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
-    } else if (visual_start) {
-      /* FIXME: gettextize? */
-      Str s_page;
-      s_page =
-          Strnew_charp("<title>W3M startup page</title><center><b>Welcome to ");
-      Strcat_charp(s_page, "<a href='http://w3m.sourceforge.net/'>");
-      Strcat_m_charp(
-          s_page, "w3m</a>!<p><p>This is w3m version ", w3m_version,
-          "<br>Written by <a href='mailto:aito@fw.ipsj.or.jp'>Akinori Ito</a>",
-          NULL);
-      newbuf = loadHTMLString(s_page);
-      if (newbuf == NULL)
-        Strcat_charp(err_msg, "w3m: Can't load string.\n");
-      else if (newbuf != NO_BUFFER)
-        newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    } else if ((p = getenv("HTTP_HOME")) != NULL ||
-               (p = getenv("WWW_HOME")) != NULL) {
-      newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
-      if (newbuf == NULL)
-        Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
-      else if (newbuf != NO_BUFFER)
-        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
-    } else {
-      term_fmTerm();
-      usage();
-    }
-    if (newbuf == NULL) {
-      term_fmTerm();
-      if (err_msg->length)
-        fprintf(stderr, "%s", err_msg->ptr);
-      w3m_exit(2);
-    }
-    i = -1;
-  } else {
-    i = 0;
+  auto err_msg = Strnew();
+
+  // if (load_argc == 0) {
+  //   /* no URL specified */
+  //   if (load_bookmark) {
+  //     newbuf = loadGeneralFile(BookmarkFile, NULL, NO_REFERER, 0, NULL);
+  //     if (newbuf == NULL)
+  //       Strcat_charp(err_msg, "w3m: Can't load bookmark.\n");
+  //   } else if (visual_start) {
+  //     /* FIXME: gettextize? */
+  //     Str s_page;
+  //     s_page =
+  //         Strnew_charp("<title>W3M startup page</title><center><b>Welcome to
+  //         ");
+  //     Strcat_charp(s_page, "<a href='http://w3m.sourceforge.net/'>");
+  //     Strcat_m_charp(
+  //         s_page, "w3m</a>!<p><p>This is w3m version ", w3m_version,
+  //         "<br>Written by <a href='mailto:aito@fw.ipsj.or.jp'>Akinori
+  //         Ito</a>", NULL);
+  //     newbuf = loadHTMLString(s_page);
+  //     if (newbuf == NULL)
+  //       Strcat_charp(err_msg, "w3m: Can't load string.\n");
+  //     else if (newbuf != NO_BUFFER)
+  //       newbuf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+  //   } else if ((p = getenv("HTTP_HOME")) != NULL ||
+  //              (p = getenv("WWW_HOME")) != NULL) {
+  //     newbuf = loadGeneralFile(p, NULL, NO_REFERER, 0, NULL);
+  //     if (newbuf == NULL)
+  //       Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", p));
+  //     else if (newbuf != NO_BUFFER)
+  //       pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+  //   } else {
+  //     term_fmTerm();
+  //     usage();
+  //   }
+  //   if (newbuf == NULL) {
+  //     term_fmTerm();
+  //     if (err_msg->length)
+  //       fprintf(stderr, "%s", err_msg->ptr);
+  //     w3m_exit(2);
+  //   }
+  //   i = -1;
+  // }
+  // else {
+  //   i = 0;
+  // }
+
+  // for (; i < load_argc; i++) {
+  //   if (i >= 0) {
+  // SearchHeader = search_header;
+  // DefaultType = default_type;
+
+  auto url = argv[1];
+  if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
+    url = file_to_url(url);
+  else
+    url = url_encode(conv_from_system(url), NULL, 0);
+
+  // if (post_file && i == 0) {
+  //   FILE *fp;
+  //   Str body;
+  //   if (!strcmp(post_file, "-"))
+  //     fp = stdin;
+  //   else
+  //     fp = fopen(post_file, "r");
+  //   if (fp == NULL) {
+  //     /* FIXME: gettextize? */
+  //     Strcat(err_msg, Sprintf("w3m: Can't open %s.\n", post_file));
+  //     return 1;
+  //   }
+  //   body = Strfgetall(fp);
+  //   if (fp != stdin)
+  //     fclose(fp);
+  //   request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+  //   request->body = body->ptr;
+  //   request->boundary = NULL;
+  //   request->length = body->length;
+  // } else {
+  //   request = NULL;
+  // }
+
+  struct FormList *request = nullptr;
+  auto newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+
+  if (newbuf == NULL) {
+    /* FIXME: gettextize? */
+    Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", url));
+    return 1;
+  } else if (newbuf == NO_BUFFER) {
+    return 1;
   }
 
-  for (; i < load_argc; i++) {
-    if (i >= 0) {
-      SearchHeader = search_header;
-      DefaultType = default_type;
-      char *url;
-
-      url = load_argv[i];
-      if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
-        url = file_to_url(load_argv[i]);
-      else
-        url = url_encode(conv_from_system(load_argv[i]), NULL, 0);
-      {
-        if (post_file && i == 0) {
-          FILE *fp;
-          Str body;
-          if (!strcmp(post_file, "-"))
-            fp = stdin;
-          else
-            fp = fopen(post_file, "r");
-          if (fp == NULL) {
-            /* FIXME: gettextize? */
-            Strcat(err_msg, Sprintf("w3m: Can't open %s.\n", post_file));
-            continue;
-          }
-          body = Strfgetall(fp);
-          if (fp != stdin)
-            fclose(fp);
-          request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
-          request->body = body->ptr;
-          request->boundary = NULL;
-          request->length = body->length;
-        } else {
-          request = NULL;
-        }
-        newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
-      }
-      if (newbuf == NULL) {
-        /* FIXME: gettextize? */
-        Strcat(err_msg, Sprintf("w3m: Can't load %s.\n", load_argv[i]));
-        continue;
-      } else if (newbuf == NO_BUFFER)
-        continue;
-      switch (newbuf->real_scheme) {
-      case SCM_MAILTO:
-        break;
-      case SCM_LOCAL:
-      case SCM_LOCAL_CGI:
-        unshiftHist(LoadHist, url);
-      default:
-        pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
-        break;
-      }
-    } else if (newbuf == NO_BUFFER)
-      continue;
-    if ((newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
-         newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
-      newbuf->search_header = search_header;
-
-    if (CurrentTab == NULL) {
-      FirstTab = LastTab = CurrentTab = newTab();
-      nTab = 1;
-      Firstbuf = Currentbuf = newbuf;
-    } else if (open_new_tab) {
-      _newT();
-      Currentbuf->nextBuffer = newbuf;
-      delBuffer(Currentbuf);
-    } else {
-      Currentbuf->nextBuffer = newbuf;
-      Currentbuf = newbuf;
-    }
-    {
-      Currentbuf = newbuf;
-      saveBufferInfo();
-    }
+  switch (newbuf->real_scheme) {
+  case SCM_MAILTO:
+    break;
+  case SCM_LOCAL:
+  case SCM_LOCAL_CGI:
+    unshiftHist(LoadHist, url);
+  default:
+    pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+    break;
   }
 
-  if (do_add_download_list()) {
-    CurrentTab = LastTab;
-    if (!FirstTab) {
-      FirstTab = LastTab = CurrentTab = newTab();
-      nTab = 1;
-    }
-    if (!Firstbuf || Firstbuf == NO_BUFFER) {
-      Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
-      Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
-      Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
-    } else
-      Currentbuf = Firstbuf;
-    ldDL();
-  } else {
-    CurrentTab = FirstTab;
+  if (newbuf == NO_BUFFER)
+    return 1;
+
+  // if ((newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
+  //      newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
+  //   newbuf->search_header = search_header;
+
+  if (CurrentTab == NULL) {
+    FirstTab = LastTab = CurrentTab = newTab();
+    nTab = 1;
+    Firstbuf = Currentbuf = newbuf;
+  } 
+  // else if (open_new_tab) {
+  //   _newT();
+  //   Currentbuf->nextBuffer = newbuf;
+  //   delBuffer(Currentbuf);
+  // } 
+  else {
+    Currentbuf->nextBuffer = newbuf;
+    Currentbuf = newbuf;
   }
+  {
+    Currentbuf = newbuf;
+    saveBufferInfo();
+  }
+
+  // if (do_add_download_list()) {
+  //   CurrentTab = LastTab;
+  //   if (!FirstTab) {
+  //     FirstTab = LastTab = CurrentTab = newTab();
+  //     nTab = 1;
+  //   }
+  //   if (!Firstbuf || Firstbuf == NO_BUFFER) {
+  //     Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
+  //     Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
+  //     Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
+  //   } else
+  //     Currentbuf = Firstbuf;
+  //   ldDL();
+  // } else
+  { CurrentTab = FirstTab; }
 
   if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
     if (newbuf == NO_BUFFER) {
@@ -691,5 +501,6 @@ int main(int argc, char **argv) {
   Currentbuf = Firstbuf;
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 
+  char *line_str = NULL;
   mainloop(line_str);
 }
