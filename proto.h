@@ -319,8 +319,6 @@ extern void getTCstr(void);
 extern void initMimeTypes();
 extern void free_ssl_ctx();
 extern struct Url *baseURL(struct Buffer *buf);
-extern int openSocket(char *hostname, char *remoteport_name,
-                      unsigned short remoteport_num);
 extern void parseURL(char *url, struct Url *p_url, struct Url *current);
 extern void copyParsedURL(struct Url *p, const struct Url *q);
 extern void parseURL2(char *url, struct Url *pu, struct Url *current);

@@ -1,6 +1,7 @@
 #include "ftp.h"
 #include "istream.h"
 #include "indep.h"
+#include "isocket.h"
 #include "url.h"
 #include "fm.h"
 #include "url_stream.h"
@@ -8,6 +9,7 @@
 #include "myctype.h"
 #include "terms.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <Str.h>
 #include <signal.h>
@@ -116,12 +118,13 @@ static void ftp_close(FTP ftp) {
 }
 
 static int ftp_login(FTP ftp) {
-  int sock, status;
+  int status;
   int sock_wf;
 
-  sock = openSocket(ftp->host, "ftp", 21);
-  if (sock < 0)
+  SocketType sock;
+  if (!socketOpen(ftp->host, "ftp", 21, &sock)) {
     goto open_err;
+  }
   if (ftppass_hostnamegen && !strcmp(ftp->user, "anonymous")) {
     size_t n = strlen(ftp->pass);
 
@@ -236,7 +239,11 @@ static int ftp_pasv(FTP ftp) {
     if (getnameinfo((struct sockaddr *)&sockaddr, sockaddrlen, abuf,
                     sizeof(abuf), NULL, 0, NI_NUMERICHOST) != 0)
       return -1;
+#ifdef _WIN32
+    assert(false);
+#else
     data = openSocket(abuf, "", port);
+#endif
     break;
 #endif
   case AF_INET:
@@ -249,14 +256,22 @@ static int ftp_pasv(FTP ftp) {
       return -1;
     sscanf(p, "%d,%d,%d,%d,%d,%d", &n1, &n2, &n3, &n4, &p1, &p2);
     tmp = Sprintf("%d.%d.%d.%d", n1, n2, n3, n4);
+#ifdef _WIN32
+    assert(false);
+#else
     data = openSocket(tmp->ptr, "", p1 * 256 + p2);
+#endif
     break;
   default:
     return -1;
   }
+#ifdef _WIN32
+  assert(false);
+#else
   if (data < 0)
     return -1;
   ftp->data = fdopen(data, "rb");
+#endif
   return 0;
 }
 

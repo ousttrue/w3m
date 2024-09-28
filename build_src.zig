@@ -3,9 +3,7 @@ pub const SRCS = [_][]const u8{
     "compression.c",
     "growbuf.c",
     "alloc.c",
-
     "app.c",
-
     "main.c",
     "defun.c",
     "file.c",
@@ -60,6 +58,7 @@ pub const SRCS_POSIX = [_][]const u8{
     "localcgi_posix.c",
     "os_posix.c",
     "etc_posix.c",
+    "isocket_posix.c",
 };
 
 pub const SRCS_WIN32 = [_][]const u8{
@@ -68,6 +67,7 @@ pub const SRCS_WIN32 = [_][]const u8{
     "localcgi_win32.c",
     "os_win32.c",
     "etc_win32.c",
+    "isocket_win32.c",
     //
     "rand48_win32.c",
 };

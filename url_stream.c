@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "isocket.h"
 #include "istream.h"
 #include "alloc.h"
 #include "app.h"
@@ -62,6 +63,7 @@ struct TextList *NO_proxy_domains = nullptr;
 void url_stream_init() { NO_proxy_domains = newTextList(); }
 
 static JMP_BUF AbortLoading;
+static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 /* XXX: note html.h SCM_ */
 static int DefaultPort[] = {
@@ -214,8 +216,6 @@ static char *DefaultFile(int scheme) {
   }
   return NULL;
 }
-
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 SSL_CTX *ssl_ctx = NULL;
 
@@ -478,169 +478,6 @@ struct Url *baseURL(struct Buffer *buf) {
     return NULL;
   else
     return &buf->currentURL;
-}
-
-int openSocket(char *const hostname, char *remoteport_name,
-               unsigned short remoteport_num) {
-  volatile int sock = -1;
-#ifdef INET6
-  int *af;
-  struct addrinfo hints, *res0, *res;
-  int error;
-  char *hname;
-#else  /* not INET6 */
-  struct sockaddr_in hostaddr;
-  struct hostent *entry;
-  struct protoent *proto;
-  unsigned short s_port;
-  int a1, a2, a3, a4;
-  unsigned long adr;
-#endif /* not INET6 */
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
-
-  term_message(Sprintf("Opening socket...")->ptr);
-  if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: user abort\n");
-#endif
-    if (sock >= 0)
-      close(sock);
-    goto error;
-  }
-  TRAP_ON;
-  if (hostname == NULL) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
-#endif
-    goto error;
-  }
-
-#ifdef INET6
-  /* rfc2732 compliance */
-  hname = hostname;
-  if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
-    hname = allocStr(hostname + 1, -1);
-    hname[strlen(hname) - 1] = '\0';
-    if (strspn(hname, "0123456789abcdefABCDEF:.") != strlen(hname))
-      goto error;
-  }
-  for (af = ai_family_order_table[DNS_order];; af++) {
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = *af;
-    hints.ai_socktype = SOCK_STREAM;
-    if (remoteport_num != 0) {
-      Str portbuf = Sprintf("%d", remoteport_num);
-      error = getaddrinfo(hname, portbuf->ptr, &hints, &res0);
-    } else {
-      error = -1;
-    }
-    if (error && remoteport_name && remoteport_name[0] != '\0') {
-      /* try default port */
-      error = getaddrinfo(hname, remoteport_name, &hints, &res0);
-    }
-    if (error) {
-      if (*af == PF_UNSPEC) {
-        goto error;
-      }
-      /* try next ai family */
-      continue;
-    }
-    sock = -1;
-    for (res = res0; res; res = res->ai_next) {
-      sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-      if (sock < 0) {
-        continue;
-      }
-      if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-        close(sock);
-        sock = -1;
-        continue;
-      }
-      break;
-    }
-    if (sock < 0) {
-      freeaddrinfo(res0);
-      if (*af == PF_UNSPEC) {
-        goto error;
-      }
-      /* try next ai family */
-      continue;
-    }
-    freeaddrinfo(res0);
-    break;
-  }
-#else /* not INET6 */
-  s_port = htons(remoteport_num);
-  memset((char *)&hostaddr, 0, sizeof(struct sockaddr_in));
-  if ((proto = getprotobyname("tcp")) == NULL) {
-    /* protocol number of TCP is 6 */
-    proto = New(struct protoent);
-    proto->p_proto = 6;
-  }
-  if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
-    goto error;
-  }
-  regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-  if (regexMatch(hostname, -1, 1)) {
-    sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-    adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-    memcpy((void *)&hostaddr.sin_addr, (const void *)&adr, sizeof(long));
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    term_message(Sprintf("Connecting to %s", hostname)->ptr);
-    if (connect(sock, (struct sockaddr *)&hostaddr,
-                sizeof(struct sockaddr_in)) < 0) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-#endif
-      goto error;
-    }
-  } else {
-    char **h_addr_list;
-    int result = -1;
-    term_message(Sprintf("Performing hostname lookup on %s", hostname)->ptr);
-    if ((entry = gethostbyname(hostname)) == NULL) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-               strerror(errno));
-#endif
-      goto error;
-    }
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-      memcpy((void *)&hostaddr.sin_addr, (const void *)h_addr_list[0],
-             entry->h_length);
-#ifdef SOCK_DEBUG
-      adr = ntohl(*(long *)&hostaddr.sin_addr);
-      sock_log("openSocket: connecting %d.%d.%d.%d\n", (adr >> 24) & 0xff,
-               (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
-      term_message(Sprintf("Connecting to %s", hostname)->ptr);
-      if ((result = connect(sock, (struct sockaddr *)&hostaddr,
-                            sizeof(struct sockaddr_in))) == 0) {
-        break;
-      }
-#ifdef SOCK_DEBUG
-      else {
-        sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-      }
-#endif
-    }
-    if (result < 0) {
-      goto error;
-    }
-  }
-#endif /* not INET6 */
-
-  TRAP_OFF;
-  return sock;
-error:
-  TRAP_OFF;
-  return -1;
 }
 
 #define COPYPATH_SPC_ALLOW 0
@@ -1359,7 +1196,7 @@ static Str HTTPrequest(struct Url *pu, struct Url *current,
   return tmp;
 }
 
-void init_stream(struct URLFile *uf, int scheme, union input_stream* stream) {
+void init_stream(struct URLFile *uf, int scheme, union input_stream *stream) {
   memset(uf, 0, sizeof(struct URLFile));
   uf->stream = stream;
   uf->scheme = scheme;
@@ -1376,29 +1213,26 @@ struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                        struct URLOption *option, struct FormList *request,
                        struct TextList *extra_header, struct URLFile *ouf,
                        struct HttpRequest *hr, unsigned char *status) {
-  Str tmp;
-  int sock, scheme;
-  char *p, *q, *u;
-  struct URLFile uf;
   struct HttpRequest hr0;
-  SSL *sslh = NULL;
-
-  if (hr == NULL)
+  if (!hr) {
     hr = &hr0;
+  }
 
+  struct URLFile uf;
   if (ouf) {
     uf = *ouf;
   } else {
     init_stream(&uf, SCM_MISSING, NULL);
   }
 
-  u = url;
-  scheme = getURLScheme(&u);
-  if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL)
+  auto u = url;
+  auto scheme = getURLScheme(&u);
+  if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL) {
     u = file_to_url(url); /* force to local file */
-  else
+  } else {
     u = url;
-retry:
+  }
+
   parseURL2(u, pu, current);
   if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
     if (pu->label != NULL) {
@@ -1417,8 +1251,9 @@ retry:
     }
   }
 
-  if (LocalhostOnly && pu->host && !is_localhost(pu->host))
+  if (LocalhostOnly && pu->host && !is_localhost(pu->host)) {
     pu->host = NULL;
+  }
 
   uf.scheme = pu->scheme;
   uf.url = parsedURL2Str(pu)->ptr;
@@ -1448,6 +1283,7 @@ retry:
       uf.scheme = pu->scheme = SCM_LOCAL_CGI;
       return uf;
     }
+
     examineFile(pu->real_file, &uf);
     if (uf.stream == NULL) {
       if (dir_exist(pu->real_file)) {
@@ -1455,12 +1291,12 @@ retry:
         if (uf.stream == NULL)
           return uf;
       } else if (document_root != NULL) {
-        tmp = Strnew_charp(document_root);
+        auto tmp = Strnew_charp(document_root);
         if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
           Strcat_char(tmp, '/');
         Strcat_charp(tmp, pu->file);
-        p = cleanupName(tmp->ptr);
-        q = cleanupName(file_unquote(p));
+        auto p = cleanupName(tmp->ptr);
+        auto q = cleanupName(file_unquote(p));
         if (dir_exist(q)) {
           pu->file = p;
           pu->real_file = q;
@@ -1477,14 +1313,8 @@ retry:
         }
       }
     }
-    if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-      if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
-        /* retry it as "http://" */
-        u = Strnew_m_charp("http://", url, NULL)->ptr;
-        goto retry;
-      }
-    }
     return uf;
+
   case SCM_FTP:
   case SCM_FTPDIR:
     if (pu->file == NULL)
@@ -1492,28 +1322,35 @@ retry:
     if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL &&
         !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
-      sock = openSocket(FTP_proxy_parsed.host,
-                        schemeNumToName(FTP_proxy_parsed.scheme),
-                        FTP_proxy_parsed.port);
-      if (sock < 0)
+      SocketType sock;
+      if (!socketOpen(FTP_proxy_parsed.host,
+                      schemeNumToName(FTP_proxy_parsed.scheme),
+                      FTP_proxy_parsed.port, &sock)) {
         return uf;
+      }
+      uf.stream = newInputStream(sock);
       uf.scheme = SCM_HTTP;
-      tmp = HTTPrequest(pu, current, hr, extra_header);
-      write(sock, tmp->ptr, tmp->length);
+      auto tmp = HTTPrequest(pu, current, hr, extra_header);
+      socketWrite(sock, tmp->ptr, tmp->length);
     } else {
       uf.stream = openFTPStream(pu, &uf);
       uf.scheme = pu->scheme;
       return uf;
     }
     break;
+
   case SCM_HTTP:
-  case SCM_HTTPS:
+  case SCM_HTTPS: {
     if (pu->file == NULL)
       pu->file = allocStr("/", -1);
     if (request && request->method == FORM_METHOD_POST && request->body)
       hr->command = HR_COMMAND_POST;
     if (request && request->method == FORM_METHOD_HEAD)
       hr->command = HR_COMMAND_HEAD;
+
+    Str tmp = nullptr;
+    SocketType sock = socketInvalid();
+    SSL *sslh = NULL;
     if (((pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
         !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
@@ -1525,21 +1362,25 @@ retry:
           return uf;
         }
       } else if (pu->scheme == SCM_HTTPS) {
-        sock = openSocket(HTTPS_proxy_parsed.host,
-                          schemeNumToName(HTTPS_proxy_parsed.scheme),
-                          HTTPS_proxy_parsed.port);
+        if (!socketOpen(HTTPS_proxy_parsed.host,
+                        schemeNumToName(HTTPS_proxy_parsed.scheme),
+                        HTTPS_proxy_parsed.port, &sock)) {
+#ifdef SOCK_DEBUG
+          sock_log("Can't open socket\n");
+#endif
+          return uf;
+        }
         sslh = NULL;
       } else {
-        sock = openSocket(HTTP_proxy_parsed.host,
-                          schemeNumToName(HTTP_proxy_parsed.scheme),
-                          HTTP_proxy_parsed.port);
-        sslh = NULL;
-      }
-      if (sock < 0) {
+        if (!socketOpen(HTTP_proxy_parsed.host,
+                        schemeNumToName(HTTP_proxy_parsed.scheme),
+                        HTTP_proxy_parsed.port, &sock)) {
 #ifdef SOCK_DEBUG
-        sock_log("Can't open socket\n");
+          sock_log("Can't open socket\n");
 #endif
-        return uf;
+          return uf;
+        }
+        sslh = NULL;
       }
       if (pu->scheme == SCM_HTTPS) {
         if (*status == HTST_NORMAL) {
@@ -1556,8 +1397,7 @@ retry:
         *status = HTST_NORMAL;
       }
     } else {
-      sock = openSocket(pu->host, schemeNumToName(pu->scheme), pu->port);
-      if (sock < 0) {
+      if (!socketOpen(pu->host, schemeNumToName(pu->scheme), pu->port, &sock)) {
         *status = HTST_MISSING;
         return uf;
       }
@@ -1571,12 +1411,13 @@ retry:
       tmp = HTTPrequest(pu, current, hr, extra_header);
       *status = HTST_NORMAL;
     }
+    uf.stream = newInputStream(sock);
     if (pu->scheme == SCM_HTTPS) {
       uf.stream = newSSLStream(sslh, sock);
       if (sslh)
         SSL_write(sslh, tmp->ptr, tmp->length);
       else
-        write(sock, tmp->ptr, tmp->length);
+        socketWrite(sock, tmp->ptr, tmp->length);
       if (w3m_reqlog) {
         FILE *ff = fopen(w3m_reqlog, "a");
         if (ff == NULL)
@@ -1597,7 +1438,7 @@ retry:
       }
       return uf;
     } else {
-      write(sock, tmp->ptr, tmp->length);
+      socketWrite(sock, tmp->ptr, tmp->length);
       if (w3m_reqlog) {
         FILE *ff = fopen(w3m_reqlog, "a");
         if (ff == NULL)
@@ -1610,15 +1451,17 @@ retry:
         write_from_file(sock, request->body);
     }
     break;
-  case SCM_DATA:
+  }
+
+  case SCM_DATA: {
     if (pu->file == NULL)
       return uf;
-    p = Strnew_charp(pu->file)->ptr;
-    q = strchr(p, ',');
+    auto p = Strnew_charp(pu->file)->ptr;
+    auto q = strchr(p, ',');
     if (q == NULL)
       return uf;
     *q++ = '\0';
-    tmp = Strnew_charp(q);
+    auto tmp = Strnew_charp(q);
     q = strrchr(p, ';');
     if (q != NULL && !strcmp(q, ";base64")) {
       *q = '\0';
@@ -1628,11 +1471,11 @@ retry:
     uf.stream = newStrStream(tmp);
     uf.guess_type = (*p != '\0') ? p : "text/plain";
     return uf;
+  }
   case SCM_UNKNOWN:
   default:
     return uf;
   }
-  uf.stream = newInputStream(sock);
   return uf;
 }
 
