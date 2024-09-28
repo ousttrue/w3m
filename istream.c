@@ -86,6 +86,7 @@ static void init_buffer(struct base_stream *base, char *buf, int bufsize) {
     sb->next = 0;
   }
   base->iseos = false;
+  base->unclose = false;
 }
 
 static void init_base_stream(struct base_stream *base, int bufsize) {
