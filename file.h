@@ -1,7 +1,6 @@
 #pragma once
 #include "fm.h"
 
-extern int64_t current_content_length;
 
 struct Buffer *loadcmdout(char *cmd,
                           struct Buffer *(*loadproc)(struct URLFile *,

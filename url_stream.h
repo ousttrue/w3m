@@ -1,5 +1,6 @@
 #pragma once
 #include <time.h>
+#include <stdint.h>
 #include "Str.h"
 #include "url.h"
 #include "compression.h"
@@ -20,6 +21,7 @@ struct URLFile {
   char *ext;
   enum COMPRESSION_TYPE compression;
   int content_encoding;
+  int64_t current_content_length;
   const char *guess_type;
   char *ssl_certificate;
   char *url;

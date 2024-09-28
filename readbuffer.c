@@ -3563,7 +3563,7 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, current_content_length);
+    term_showProgress(&linelen, &trbyte, f->current_content_length);
     lineBuf2 = convertLine(lineBuf2, HTML_MODE);
     HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
   }
@@ -3765,7 +3765,7 @@ struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
     if (src)
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, current_content_length);
+    term_showProgress(&linelen, &trbyte, uf->current_content_length);
     lineBuf2 = convertLine(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {

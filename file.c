@@ -123,8 +123,6 @@ void examineFile(char *path, struct URLFile *uf) {
   }
 }
 
-
-
 char *checkHeader(struct Buffer *buf, char *field) {
   int len;
   struct TextListItem *i;
@@ -830,9 +828,9 @@ page_loaded:
     real_type = t;
   proc = loadBuffer;
 
-  current_content_length = 0;
+  f.current_content_length = 0;
   if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
-    current_content_length = strtoclen(p);
+    f.current_content_length = strtoclen(p);
   if (do_download) {
     /* download only */
     char *file;
@@ -1227,7 +1225,7 @@ int save2tmp(struct URLFile uf, char *tmpf) {
         goto _end;
       }
       linelen += count;
-      term_showProgress(&linelen, &trbyte, current_content_length);
+      term_showProgress(&linelen, &trbyte, uf.current_content_length);
     }
   }
 _end:
@@ -1235,7 +1233,6 @@ _end:
   TRAP_OFF;
   xfree(buf);
   fclose(ff);
-  current_content_length = 0;
   return retval;
 }
 
@@ -1360,16 +1357,12 @@ char *guess_save_name(struct Buffer *buf, char *path) {
 }
 
 int _MoveFile(char *path1, char *path2) {
-  union input_stream *f1;
-  FILE *f2;
-  int is_pipe;
-  int64_t linelen = 0, trbyte = 0;
-  char *buf = NULL;
-  int count;
-
-  f1 = openIS(path1);
-  if (f1 == NULL)
+  auto f1 = openIS(path1);
+  if (!f1)
     return -1;
+
+  FILE *f2;
+  bool is_pipe;
   if (*path2 == '|' && PermitSaveToPipe) {
     is_pipe = true;
     f2 = popen(path2 + 1, "w");
@@ -1377,17 +1370,22 @@ int _MoveFile(char *path1, char *path2) {
     is_pipe = false;
     f2 = fopen(path2, "wb");
   }
-  if (f2 == NULL) {
+  if (!f2) {
     ISclose(f1);
     return -1;
   }
-  current_content_length = 0;
-  buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+
+  int64_t linelen = 0;
+  int64_t trbyte = 0;
+  int count;
+  uint64_t current_content_length = 0;
+  auto buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
   while ((count = ISread_n(f1, buf, SAVE_BUF_SIZE)) > 0) {
     fwrite(buf, 1, count, f2);
     linelen += count;
     term_showProgress(&linelen, &trbyte, current_content_length);
   }
+
   xfree(buf);
   ISclose(f1);
   if (is_pipe)
