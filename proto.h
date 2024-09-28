@@ -7,6 +7,7 @@
  */
 #include "Str.h"
 #include <stdint.h>
+#include <time.h>
 
 extern void nulcmd(void);
 extern void pushEvent(int cmd, void *data);

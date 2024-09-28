@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "indep.h"
+#include "alloc.h"
 #include "tty.h"
 #include "myctype.h"
 #include "fm.h"

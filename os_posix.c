@@ -1,6 +1,8 @@
 #include "os.h"
 #include "compression.h"
 #include "app.h"
+#include "istream.h"
+#include "indep.h"
 #include "html.h"
 #include "linein.h"
 #include "ctrlcode.h"
@@ -19,6 +21,7 @@
 #include "proto.h"
 #include "downloadlist.h"
 #include <utime.h>
+#include <sys/stat.h>
 
 void mySystem(char *command, int background) {
   if (background) {
