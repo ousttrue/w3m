@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "loader.h"
 #include "mailcap.h"
 #include "cookie.h"
 #include "isocket.h"
@@ -1217,7 +1218,7 @@ void init_stream(struct URLFile *uf, int scheme, union input_stream *stream) {
 struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                        struct URLOption *option, struct FormList *request,
                        struct TextList *extra_header, struct URLFile *ouf,
-                       struct HttpRequest *hr, unsigned char *status) {
+                       struct HttpRequest *hr, enum HttpStatus *status) {
   struct HttpRequest hr0;
   if (!hr) {
     hr = &hr0;

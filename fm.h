@@ -277,11 +277,6 @@
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
 
-#define HTST_UNKNOWN 255
-#define HTST_MISSING 254
-#define HTST_NORMAL 0
-#define HTST_CONNECT 1
-
 
 /*
  * Globals.

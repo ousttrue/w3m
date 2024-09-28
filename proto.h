@@ -316,14 +316,6 @@ extern Str parsedURL2RefererStr(struct Url *pu);
 extern int getURLScheme(char **url);
 extern void init_stream(struct URLFile *uf, int scheme,
                         union input_stream *stream);
-struct HttpRequest;
-struct URLOption;
-extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
-                              struct URLOption *option,
-                              struct FormList *request,
-                              struct TextList *extra_header,
-                              struct URLFile *ouf, struct HttpRequest *hr,
-                              unsigned char *status);
 
 extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);

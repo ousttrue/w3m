@@ -28,16 +28,6 @@ struct URLFile {
   time_t modtime;
 };
 
-/* flags for loadGeneralFile */
-enum RG_FLAGS {
-  RG_NOCACHE = 1,
-};
-
-struct URLOption {
-  char *referer;
-  enum RG_FLAGS flag;
-};
-
 #define StrUFgets(f) StrISgets((f)->stream)
 #define StrmyUFgets(f) StrmyISgets((f)->stream)
 #define UFgetc(f) ISgetc((f)->stream)
@@ -55,3 +45,30 @@ bool is_html_type(const char *type);
 bool is_text_type(const char *type);
 bool is_dump_text_type(const char *type);
 bool is_plain_text_type(const char *type);
+
+enum HttpStatus {
+  HTST_UNKNOWN = 255,
+  HTST_MISSING = 254,
+  HTST_NORMAL = 0,
+  HTST_CONNECT = 1,
+};
+
+struct HttpRequest;
+
+/* flags for loadGeneralFile */
+enum RG_FLAGS {
+  RG_NOCACHE = 1,
+};
+
+struct URLOption {
+  char *referer;
+  enum RG_FLAGS flag;
+};
+
+struct FormList;
+extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
+                              struct URLOption *option,
+                              struct FormList *request,
+                              struct TextList *extra_header,
+                              struct URLFile *ouf, struct HttpRequest *hr,
+                              enum HttpStatus *status);

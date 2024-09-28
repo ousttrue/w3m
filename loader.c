@@ -218,57 +218,40 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   return b;
 }
 
-struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
-                               int flag, struct FormList *request) {
-  struct URLFile f, *of = NULL;
-  struct Url pu;
-  struct Buffer *b = NULL;
-  struct Buffer *(*proc)(struct URLFile *, struct Buffer *) = loadBuffer;
-  char *tpath;
-  const char *t = "text/plain";
-  char *p;
-  const char *real_type = NULL;
-  struct Buffer *t_buf = NULL;
-  int searchHeader = SearchHeader;
-  int searchHeader_through = true;
+struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
+                        struct Url pu, char *referer, enum RG_FLAGS flag,
+                        struct FormList *request, struct TextList *extra_header,
+                        struct URLFile *of, struct HttpRequest hr,
+                        enum HttpStatus status, bool add_auth_cookie_flag,
+                        struct Buffer *b, struct Buffer *t_buf,
+                        bool searchHeader, bool searchHeader_through, Str realm,
+                        Str uname, Str pwd) {
   MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-  struct TextList *extra_header = newTextList();
-  Str uname = NULL;
-  Str pwd = NULL;
-  Str realm = NULL;
-  int add_auth_cookie_flag;
-  unsigned char status = HTST_NORMAL;
-  struct URLOption url_option;
-  Str tmp;
-  Str page = NULL;
-  struct HttpRequest hr;
-  struct Url *auth_pu;
 
-  tpath = path;
-  prevtrap = NULL;
-  add_auth_cookie_flag = 0;
-
-  checkRedirection(NULL);
-
-load_doc: {
-  const char *sc_redirect;
-  parseURL2(tpath, &pu, current);
-  sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
-  if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
-    tpath = (char *)sc_redirect;
-    request = NULL;
-    add_auth_cookie_flag = 0;
-    current = New(struct Url);
-    *current = pu;
-    status = HTST_NORMAL;
-    goto load_doc;
+  {
+    const char *sc_redirect;
+    parseURL2(tpath, &pu, current);
+    sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+    if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
+      tpath = (char *)sc_redirect;
+      request = NULL;
+      add_auth_cookie_flag = 0;
+      current = New(struct Url);
+      *current = pu;
+      status = HTST_NORMAL;
+      return load_doc(path, tpath, current, pu, referer, flag, request,
+                      extra_header, of, hr, status, add_auth_cookie_flag, b,
+                      t_buf, searchHeader, searchHeader_through, realm, uname,
+                      pwd);
+    }
   }
-}
+
   TRAP_OFF;
+  struct URLOption url_option;
   url_option.referer = referer;
   url_option.flag = flag;
-  f = openURL(tpath, &pu, current, &url_option, request, extra_header, of, &hr,
-              &status);
+  auto f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
+                   &hr, &status);
   // if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
   //   if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
   //     /* retry it as "http://" */
@@ -277,7 +260,10 @@ load_doc: {
   //   }
   // }
 
+  Str page = nullptr;
   of = NULL;
+  const char *t = "text/plain";
+  const char *real_type = nullptr;
   if (f.stream == NULL) {
     switch (f.scheme) {
     case SCM_LOCAL: {
@@ -287,7 +273,7 @@ load_doc: {
       if (S_ISDIR(st.st_mode)) {
         if (UseExternalDirBuffer) {
           Str cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
-          b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0, NULL);
+          auto b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0, NULL);
           if (b != NULL && b != NO_BUFFER) {
             copyParsedURL(&b->currentURL, &pu);
             b->filename = b->currentURL.real_file;
@@ -359,6 +345,7 @@ load_doc: {
 	}
 #endif
     auto http_response_code = readHeader(&f, t_buf, false, &pu);
+    char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&
@@ -376,7 +363,10 @@ load_doc: {
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
-      goto load_doc;
+      return load_doc(path, tpath, current, pu, referer, flag, request,
+                      extra_header, of, hr, status, add_auth_cookie_flag, b,
+                      t_buf, searchHeader, searchHeader_through, realm, uname,
+                      pwd);
     }
     t = checkContentType(t_buf);
     if (t == NULL && pu.file != NULL) {
@@ -397,7 +387,7 @@ load_doc: {
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = &pu;
+        auto auth_pu = &pu;
         getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, &hr,
                       request, &uname, &pwd);
         if (uname == NULL) {
@@ -408,7 +398,10 @@ load_doc: {
         UFclose(&f);
         add_auth_cookie_flag = 1;
         status = HTST_NORMAL;
-        goto load_doc;
+        return load_doc(path, tpath, current, pu, referer, flag, request,
+                        extra_header, of, hr, status, add_auth_cookie_flag, b,
+                        t_buf, searchHeader, searchHeader_through, realm, uname,
+                        pwd);
       }
     }
     if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL &&
@@ -417,7 +410,7 @@ load_doc: {
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:") != NULL &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = schemeToProxy(pu.scheme);
+        auto auth_pu = schemeToProxy(pu.scheme);
         getAuthCookie(&hauth, "Proxy-Authorization:", extra_header, auth_pu,
                       &hr, request, &uname, &pwd);
         if (uname == NULL) {
@@ -429,14 +422,20 @@ load_doc: {
         add_auth_cookie_flag = 1;
         status = HTST_NORMAL;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
-        goto load_doc;
+        return load_doc(path, tpath, current, pu, referer, flag, request,
+                        extra_header, of, hr, status, add_auth_cookie_flag, b,
+                        t_buf, searchHeader, searchHeader_through, realm, uname,
+                        pwd);
       }
     }
     /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
     if (status == HTST_CONNECT) {
       of = &f;
-      goto load_doc;
+      return load_doc(path, tpath, current, pu, referer, flag, request,
+                      extra_header, of, hr, status, add_auth_cookie_flag, b,
+                      t_buf, searchHeader, searchHeader_through, realm, uname,
+                      pwd);
     }
 
     f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
@@ -462,6 +461,7 @@ load_doc: {
     if (t_buf == NULL)
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
     readHeader(&f, t_buf, searchHeader_through, &pu);
+    char *p;
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
@@ -474,29 +474,34 @@ load_doc: {
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
-      goto load_doc;
+      return load_doc(path, tpath, current, pu, referer, flag, request,
+                      extra_header, of, hr, status, add_auth_cookie_flag, b,
+                      t_buf, searchHeader, searchHeader_through, realm, uname,
+                      pwd);
     }
-#ifdef AUTH_DEBUG
-    if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL) {
-      /* Authentication needed */
-      struct http_auth hauth;
-      if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
-          (realm = get_auth_param(hauth.param, "realm")) != NULL) {
-        auth_pu = &pu;
-        getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, &hr,
-                      request, &uname, &pwd);
-        if (uname == NULL) {
-          /* abort */
-          TRAP_OFF;
-          goto page_loaded;
-        }
-        UFclose(&f);
-        add_auth_cookie_flag = 1;
-        status = HTST_NORMAL;
-        goto load_doc;
-      }
-    }
-#endif /* defined(AUTH_DEBUG) */
+    // #ifdef AUTH_DEBUG
+    //     if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL) {
+    //       /* Authentication needed */
+    //       struct http_auth hauth;
+    //       if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL
+    //       &&
+    //           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
+    //         auth_pu = &pu;
+    //         getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu,
+    //         &hr,
+    //                       request, &uname, &pwd);
+    //         if (uname == NULL) {
+    //           /* abort */
+    //           TRAP_OFF;
+    //           goto page_loaded;
+    //         }
+    //         UFclose(&f);
+    //         add_auth_cookie_flag = 1;
+    //         status = HTST_NORMAL;
+    //         goto load_doc;
+    //       }
+    //     }
+    // #endif /* defined(AUTH_DEBUG) */
     t = checkContentType(t_buf);
     if (t == NULL)
       t = "text/plain";
@@ -517,6 +522,28 @@ load_doc: {
   f.guess_type = t;
 
   return page_loaded(pu, f, page, t, real_type, t_buf);
+}
+
+struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
+                               enum RG_FLAGS flag, struct FormList *request) {
+  checkRedirection(NULL);
+
+  struct Url pu;
+  struct Buffer *b = NULL;
+  struct Buffer *t_buf = NULL;
+  int searchHeader = SearchHeader;
+  int searchHeader_through = true;
+  struct TextList *extra_header = newTextList();
+  Str uname = NULL;
+  Str pwd = NULL;
+  Str realm = NULL;
+  unsigned char status = HTST_NORMAL;
+  struct HttpRequest hr;
+  auto tpath = path;
+  bool add_auth_cookie_flag = 0;
+  return load_doc(path, tpath, current, pu, referer, flag, request,
+                  extra_header, nullptr, hr, status, add_auth_cookie_flag, b,
+                  t_buf, searchHeader, searchHeader_through, realm, uname, pwd);
 }
 
 struct Buffer *loadcmdout(char *cmd,
