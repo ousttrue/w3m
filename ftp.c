@@ -13,6 +13,7 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
+#include <fcntl.h>
 
 #ifdef DEBUG
 #include <malloc.h>
@@ -319,7 +320,7 @@ static void closeFTPdata(FILE *f) {
 
 void closeFTP(void) { ftp_close(&current_ftp); }
 
-InputStream openFTPStream(struct Url *pu, struct URLFile *uf) {
+union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf) {
   Str tmp;
   int status;
   char *user = NULL;

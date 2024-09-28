@@ -1,14 +1,7 @@
 #pragma once
-
-#include "growbuf.h"
+#include "Str.h"
 #include "encoding_type.h"
-#include <stdio.h>
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
+#include <openssl/types.h>
 
 enum IST_TYPE {
   IST_BASIC = 0,
@@ -27,9 +20,6 @@ struct stream_buffer {
 typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
 typedef void (*CloseFunc)(void *handle);
 
-///
-/// input_stream
-///
 struct base_stream {
   struct stream_buffer stream;
   void *handle;
@@ -89,44 +79,27 @@ union input_stream {
   struct encoded_stream ens;
 };
 
-typedef struct base_stream *BaseStream;
-typedef struct file_stream *FileStream;
-typedef struct str_stream *StrStream;
-typedef struct ssl_stream *SSLStream;
-typedef struct encoded_stream *EncodedStrStream;
+union input_stream *newInputStream(int des);
+union input_stream *newFileStream(FILE *f, void (*closep)());
+union input_stream *newStrStream(Str s);
+union input_stream *newSSLStream(SSL *ssl, int sock);
+union input_stream *newEncodedStream(union input_stream *is,
+                                     enum ENCODING_TYPE encoding);
+int ISclose(union input_stream *stream);
 
-typedef union input_stream *InputStream;
-
-extern InputStream newInputStream(int des);
-extern InputStream newFileStream(FILE *f, void (*closep)());
-extern InputStream newStrStream(Str s);
-extern InputStream newSSLStream(SSL *ssl, int sock);
-extern InputStream newEncodedStream(InputStream is,
-                                    enum ENCODING_TYPE encoding);
-extern int ISclose(InputStream stream);
-extern int ISgetc(InputStream stream);
-extern int ISundogetc(InputStream stream);
-extern Str StrISgets2(InputStream stream, char crnl);
+int ISgetc(union input_stream *stream);
+int ISundogetc(union input_stream *stream);
+Str StrISgets2(union input_stream *stream, char crnl);
 #define StrISgets(stream) StrISgets2(stream, false)
 #define StrmyISgets(stream) StrISgets2(stream, true)
-void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl);
-#ifdef unused
-extern int ISread(InputStream stream, Str buf, int count);
-#endif
-int ISread_n(InputStream stream, char *dst, int bufsize);
-extern int ISfileno(InputStream stream);
-extern int ISeos(InputStream stream);
-extern void ssl_accept_this_site(char *hostname);
-extern Str ssl_get_certificate(SSL *ssl, char *hostname);
-
+struct growbuf;
+void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
+                       char crnl);
+int ISread_n(union input_stream *stream, char *dst, int bufsize);
+int ISfileno(union input_stream *stream);
+int ISeos(union input_stream *stream);
+void ssl_accept_this_site(char *hostname);
+Str ssl_get_certificate(SSL *ssl, char *hostname);
 enum IST_TYPE IStype(union input_stream *stream);
-// #define is_eos(stream) ISeos(stream)
-// #define iseos(stream) ((stream)->base.iseos)
-// #define file_of(stream) ((stream)->file.handle->f)
-// #define set_close(stream, closep) \
-//   ((IStype(stream) == IST_FILE) ? ((stream)->file.handle->close = (closep)) :
-//   0)
-// #define str_of(stream) ((stream)->str.handle)
-
 int ssl_socket_of(union input_stream *stream);
 union input_stream *openIS(const char *path);

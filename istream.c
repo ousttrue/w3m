@@ -1,6 +1,5 @@
 #include "istream.h"
 #include "alloc.h"
-#include "indep.h"
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"
@@ -8,6 +7,9 @@
 #include "terms.h"
 #include <signal.h>
 #include <openssl/x509v3.h>
+#include <openssl/ssl.h>
+#include "growbuf.h"
+#include <fcntl.h>
 
 struct io_file_handle {
   FILE *f;
@@ -51,7 +53,7 @@ static void ens_close(void *handle);
 
 static void memchop(char *p, int *len);
 
-static void do_update(BaseStream base) {
+static void do_update(struct base_stream *base) {
   int len;
   base->stream.cur = base->stream.next = 0;
   len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
@@ -72,7 +74,7 @@ static int buffer_read(struct stream_buffer *sb, char *obuf, int count) {
   return len;
 }
 
-static void init_buffer(BaseStream base, char *buf, int bufsize) {
+static void init_buffer(struct base_stream *base, char *buf, int bufsize) {
   struct stream_buffer *sb = &base->stream;
   sb->size = bufsize;
   sb->cur = 0;
@@ -86,16 +88,16 @@ static void init_buffer(BaseStream base, char *buf, int bufsize) {
   base->iseos = false;
 }
 
-static void init_base_stream(BaseStream base, int bufsize) {
+static void init_base_stream(struct base_stream *base, int bufsize) {
   init_buffer(base, NULL, bufsize);
 }
 
-static void init_str_stream(BaseStream base, Str s) {
+static void init_str_stream(struct base_stream *base, Str s) {
   init_buffer(base, s->ptr, s->length);
 }
 
-InputStream newInputStream(int des) {
-  InputStream stream;
+union input_stream *newInputStream(int des) {
+  union input_stream *stream;
   if (des < 0)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -108,8 +110,8 @@ InputStream newInputStream(int des) {
   return stream;
 }
 
-InputStream newFileStream(FILE *f, void (*closep)()) {
-  InputStream stream;
+union input_stream *newFileStream(FILE *f, void (*closep)()) {
+  union input_stream *stream;
   if (f == NULL)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -126,8 +128,8 @@ InputStream newFileStream(FILE *f, void (*closep)()) {
   return stream;
 }
 
-InputStream newStrStream(Str s) {
-  InputStream stream;
+union input_stream *newStrStream(Str s) {
+  union input_stream *stream;
   if (s == NULL)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -139,8 +141,8 @@ InputStream newStrStream(Str s) {
   return stream;
 }
 
-InputStream newSSLStream(SSL *ssl, int sock) {
-  InputStream stream;
+union input_stream *newSSLStream(SSL *ssl, int sock) {
+  union input_stream *stream;
   if (sock < 0)
     return NULL;
   stream = NewWithoutGC(union input_stream);
@@ -154,8 +156,9 @@ InputStream newSSLStream(SSL *ssl, int sock) {
   return stream;
 }
 
-InputStream newEncodedStream(InputStream is, enum ENCODING_TYPE encoding) {
-  InputStream stream;
+union input_stream *newEncodedStream(union input_stream *is,
+                                     enum ENCODING_TYPE encoding) {
+  union input_stream *stream;
   if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
                      encoding != ENC_UUENCODE))
     return is;
@@ -172,7 +175,7 @@ InputStream newEncodedStream(InputStream is, enum ENCODING_TYPE encoding) {
   return stream;
 }
 
-int ISclose(InputStream stream) {
+int ISclose(union input_stream *stream) {
   if (stream == NULL)
     return -1;
   if (stream->base.close != NULL) {
@@ -188,8 +191,8 @@ int ISclose(InputStream stream) {
   return 0;
 }
 
-int ISgetc(InputStream stream) {
-  BaseStream base;
+int ISgetc(union input_stream *stream) {
+  struct base_stream *base;
   if (stream == NULL)
     return '\0';
   base = &stream->base;
@@ -198,7 +201,7 @@ int ISgetc(InputStream stream) {
   return POP_CHAR(base);
 }
 
-int ISundogetc(InputStream stream) {
+int ISundogetc(union input_stream *stream) {
   struct stream_buffer *sb;
   if (stream == NULL)
     return -1;
@@ -210,7 +213,7 @@ int ISundogetc(InputStream stream) {
   return -1;
 }
 
-Str StrISgets2(InputStream stream, char crnl) {
+Str StrISgets2(union input_stream *stream, char crnl) {
   struct growbuf gb;
 
   if (stream == NULL)
@@ -220,8 +223,9 @@ Str StrISgets2(InputStream stream, char crnl) {
   return growbuf_to_Str(&gb);
 }
 
-void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl) {
-  BaseStream base = &stream->base;
+void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
+                       char crnl) {
+  struct base_stream *base = &stream->base;
   struct stream_buffer *sb = &base->stream;
   int i;
 
@@ -257,7 +261,7 @@ void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl) {
 }
 
 #ifdef unused
-int ISread(InputStream stream, Str buf, int count) {
+int ISread(union input_stream *stream, Str buf, int count) {
   int len;
 
   if (count + 1 > buf->area_size) {
@@ -274,9 +278,9 @@ int ISread(InputStream stream, Str buf, int count) {
 }
 #endif
 
-int ISread_n(InputStream stream, char *dst, int count) {
+int ISread_n(union input_stream *stream, char *dst, int count) {
   int len, l;
-  BaseStream base;
+  struct base_stream *base;
 
   if (stream == NULL || count <= 0)
     return -1;
@@ -295,7 +299,7 @@ int ISread_n(InputStream stream, char *dst, int count) {
   return len;
 }
 
-int ISfileno(InputStream stream) {
+int ISfileno(union input_stream *stream) {
   if (stream == NULL)
     return -1;
   switch (IStype(stream)) {
@@ -312,8 +316,8 @@ int ISfileno(InputStream stream) {
   }
 }
 
-int ISeos(InputStream stream) {
-  BaseStream base = &stream->base;
+int ISeos(union input_stream *stream) {
+  struct base_stream *base = &stream->base;
   if (!base->iseos && MUST_BE_UPDATED(base))
     do_update(base);
   return base->iseos;

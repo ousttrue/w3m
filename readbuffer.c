@@ -3490,7 +3490,7 @@ static Str textlist_feed() {
   return NULL;
 }
 
-static InputStream _file_lp2;
+static union input_stream* _file_lp2;
 
 static Str file_feed() {
   Str s;
@@ -3507,7 +3507,7 @@ void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl) {
   HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-void HTMLlineproc3(struct Buffer *buf, InputStream stream) {
+void HTMLlineproc3(struct Buffer *buf, union input_stream* stream) {
   _file_lp2 = stream;
   HTMLlineproc2body(buf, file_feed, -1);
 }

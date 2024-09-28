@@ -1539,7 +1539,7 @@ int checkCopyFile(char *path1, char *path2) {
   return 0;
 }
 
-int checkSaveFile(InputStream stream, char *path2) {
+int checkSaveFile(union input_stream* stream, char *path2) {
   struct stat st1, st2;
   int des = ISfileno(stream);
 
@@ -1643,7 +1643,7 @@ char *guess_save_name(struct Buffer *buf, char *path) {
 }
 
 int _MoveFile(char *path1, char *path2) {
-  InputStream f1;
+  union input_stream* f1;
   FILE *f2;
   int is_pipe;
   int64_t linelen = 0, trbyte = 0;
