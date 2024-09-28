@@ -32,6 +32,8 @@
 
 #include "fm.h"
 
+bool QuietMessage = false;
+
 MySignalHandler reset_exit(SIGNAL_ARG);
 MySignalHandler reset_error_exit(SIGNAL_ARG);
 MySignalHandler error_dump(SIGNAL_ARG);
@@ -481,7 +483,7 @@ Str term_inputpwd() {
     pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
     pwd = Str_conv_to_system(pwd);
     tty_cbreak();
-  } 
+  }
 #ifndef _WIN32
   else {
     pwd = Strnew_charp((char *)getpass("Password: "));

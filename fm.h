@@ -306,7 +306,6 @@ global char MetaRefresh init(false);
 global char LocalhostOnly init(false);
 global char *HostName init(NULL);
 
-global char QuietMessage init(false);
 global char TrapSignal init(true);
 
 #define TRAP_ON                                                                \
@@ -408,8 +407,6 @@ global char *ExtBrowser7 init(NULL);
 global char *ExtBrowser8 init(NULL);
 global char *ExtBrowser9 init(NULL);
 global int BackgroundExtViewer init(true);
-global int disable_secret_security_check init(false);
-global char *passwd_file init(PASSWD_FILE);
 global char *pre_form_file init(PRE_FORM_FILE);
 global char *siteconf_file init(SITECONF_FILE);
 global char *ftppasswd init(NULL);

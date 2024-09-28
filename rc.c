@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "alloc.h"
+#include "http_auth.h"
 #include "mailcap.h"
 #include "buffer.h"
 #include "cookie.h"

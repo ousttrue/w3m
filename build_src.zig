@@ -1,5 +1,6 @@
 pub const SRCS = [_][]const u8{
     "keybind.c",
+
     "compression.c",
     "growbuf.c",
     "alloc.c",
@@ -7,7 +8,6 @@ pub const SRCS = [_][]const u8{
     "main.c",
     "defun.c",
     "file.c",
-    "digest_auth.c",
     "buffer.c",
     "display.c",
     "etc.c",
@@ -51,6 +51,8 @@ pub const SRCS = [_][]const u8{
     "ftp.c",
     "readbuffer.c",
     "http_response.c",
+    "http_auth.c",
+    "http_auth_digest.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

@@ -1,4 +1,4 @@
-#include "digest_auth.h"
+#include "http_auth_digest.h"
 #include "ctrlcode.h"
 #include "form.h"
 #include "http_request.h"
@@ -68,35 +68,6 @@ enum {
   QOP_AUTH,
   QOP_AUTH_INT,
 };
-
-Str qstr_unquote(Str s) {
-  char *p;
-
-  if (s == NULL)
-    return NULL;
-  p = s->ptr;
-  if (*p == '"') {
-    Str tmp = Strnew();
-    for (p++; *p != '\0'; p++) {
-      if (*p == '\\')
-        p++;
-      Strcat_char(tmp, *p);
-    }
-    if (Strlastchar(tmp) == '"')
-      Strshrink(tmp, 1);
-    return tmp;
-  } else
-    return s;
-}
-
-Str get_auth_param(struct auth_param *auth, char *name) {
-  struct auth_param *ap;
-  for (ap = auth; ap->name != NULL; ap++) {
-    if (strcasecmp(name, ap->name) == 0)
-      return ap->val;
-  }
-  return NULL;
-}
 
 Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
                    struct HttpRequest *hr, struct FormList *request) {

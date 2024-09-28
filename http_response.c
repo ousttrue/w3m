@@ -367,3 +367,32 @@ int readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
 
   return http_response_code;
 }
+
+char *checkHeader(struct Buffer *buf, char *field) {
+  int len;
+  struct TextListItem *i;
+  char *p;
+
+  if (buf == NULL || field == NULL || buf->document_header == NULL)
+    return NULL;
+  len = strlen(field);
+  for (i = buf->document_header->first; i != NULL; i = i->next) {
+    if (!strncasecmp(i->ptr, field, len)) {
+      p = i->ptr + len;
+      return remove_space(p);
+    }
+  }
+  return NULL;
+}
+
+char *checkContentType(struct Buffer *buf) {
+  char *p;
+  Str r;
+  p = checkHeader(buf, "Content-Type:");
+  if (p == NULL)
+    return NULL;
+  r = Strnew();
+  while (*p && *p != ';' && !IS_SPACE(*p))
+    Strcat_char(r, *p++);
+  return r->ptr;
+}

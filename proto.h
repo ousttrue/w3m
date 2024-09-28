@@ -193,7 +193,6 @@ extern int checkCopyFile(char *path1, char *path2);
 union input_stream;
 extern int checkSaveFile(union input_stream *stream, char *path);
 extern int checkOverWrite(char *path);
-extern char *checkHeader(struct Buffer *buf, char *field);
 
 extern struct Buffer *newBuffer(int width);
 extern struct Buffer *nullBuffer(void);
@@ -386,15 +385,12 @@ extern char *libFile(char *base);
 extern char *helpFile(char *base);
 extern const void *querySiteconf(const struct Url *query_pu, int field);
 extern Str loadLocalDir(char *dirname);
-extern FILE *openSecretFile(char *fname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
 extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                  Str pwd, int is_proxy);
-extern void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname,
-                                        Str pwd, int is_proxy);
 extern char *last_modified(struct Buffer *buf);
 extern Str romanNumeral(int n);
 extern Str romanAlphabet(int n);
@@ -456,4 +452,3 @@ void srand48(long);
 long lrand48(void);
 #endif
 
-extern Str base64_encode(const unsigned char *src, size_t len);

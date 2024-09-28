@@ -24,7 +24,6 @@
 #define COOKIE_FILE "cookie"
 #define HISTORY_FILE "history"
 
-#define PASSWD_FILE RC_DIR "/passwd"
 #define PRE_FORM_FILE RC_DIR "/pre_form"
 #define SITECONF_FILE RC_DIR "/siteconf"
 #define USER_MAILCAP RC_DIR "/mailcap"

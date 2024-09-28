@@ -3,6 +3,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+extern bool QuietMessage;
+
 void term_fmInit();
 bool term_is_initialized();
 void term_fmTerm();

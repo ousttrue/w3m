@@ -2,6 +2,7 @@
 #include "fm.h"
 #include "mailcap.h"
 #include "alloc.h"
+#include "http_response.h"
 #include "cookie.h"
 #include "file.h"
 #include "indep.h"
