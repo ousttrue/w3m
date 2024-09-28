@@ -1,17 +1,22 @@
 #pragma once
-#include "fm.h"
+#include "Str.h"
 
 struct auth_param {
   char *name;
   Str val;
 };
 
+struct Url;
+struct HttpRequest;
+struct http_auth;
+struct FormList;
+typedef Str (*CredFunc)(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
+                        struct HttpRequest *hr, struct FormList *request);
 struct http_auth {
   int pri;
   char *scheme;
   struct auth_param *param;
-  Str (*cred)(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
-              struct HttpRequest *hr, struct FormList *request);
+  CredFunc cred;
 };
 
 extern struct auth_param digest_auth_param[8];

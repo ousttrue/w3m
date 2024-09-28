@@ -3,6 +3,7 @@
 #include "form.h"
 #include "http_request.h"
 #include <openssl/md5.h>
+#include <stdlib.h>
 
 /* RFC2617: 3.2.1 The WWW-Authenticate Response Header
  * challenge        =  "Digest" digest-challenge
