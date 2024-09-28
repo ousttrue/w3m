@@ -3,6 +3,7 @@
 //
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 #ifdef _WIN32
 typedef uintptr_t SocketType;

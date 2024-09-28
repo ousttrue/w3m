@@ -242,7 +242,9 @@ static int ftp_pasv(FTP ftp) {
 #ifdef _WIN32
     assert(false);
 #else
-    data = openSocket(abuf, "", port);
+    if (!socketOpen(abuf, "", port, &data)) {
+      // ?
+    }
 #endif
     break;
 #endif
@@ -259,7 +261,9 @@ static int ftp_pasv(FTP ftp) {
 #ifdef _WIN32
     assert(false);
 #else
-    data = openSocket(tmp->ptr, "", p1 * 256 + p2);
+    if (!socketOpen(tmp->ptr, "", p1 * 256 + p2, &data)) {
+      // ?
+    }
 #endif
     break;
   default:

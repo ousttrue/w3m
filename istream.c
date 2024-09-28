@@ -148,6 +148,7 @@ static int ens_read(void *_handle, unsigned char *buf, int len) {
   return len;
 }
 
+#ifdef _WIN32
 static void ws_close(void *handle) {
   closesocket(*(SOCKET *)handle);
   xfree(handle);
@@ -156,6 +157,7 @@ static void ws_close(void *handle) {
 static int ws_read(void *handle, unsigned char *buf, int len) {
   return recv(*(SOCKET *)handle, (char *)buf, len, 0);
 }
+#endif
 
 // static void basic_close(void *handle);
 // static int basic_read(void *handle, unsigned char *buf, int len);
@@ -295,18 +297,20 @@ union input_stream *newEncodedStream(union input_stream *is,
   return stream;
 }
 
+#ifdef _WIN32
 union input_stream *newWinsockStream(SOCKET sock) {
   if (sock == INVALID_SOCKET)
     return NULL;
   union input_stream *stream = NewWithoutGC(union input_stream);
   init_base_stream(&stream->base, STREAM_BUF_SIZE);
-  stream->ws.type = IST_BASIC;
+  stream->ws.type = IST_WS;
   stream->ws.handle = NewWithoutGC(SOCKET);
   *(SOCKET *)stream->ws.handle = sock;
   stream->ws.read = ws_read;
   stream->ws.close = ws_close;
   return stream;
 }
+#endif
 
 int ISclose(union input_stream *stream) {
   if (stream == NULL)
@@ -392,24 +396,6 @@ void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
   gb->ptr[gb->length] = '\0';
   return;
 }
-
-#ifdef unused
-int ISread(union input_stream *stream, Str buf, int count) {
-  int len;
-
-  if (count + 1 > buf->area_size) {
-    char *newptr = GC_MALLOC_ATOMIC(count + 1);
-    memcpy(newptr, buf->ptr, buf->length);
-    newptr[buf->length] = '\0';
-    buf->ptr = newptr;
-    buf->area_size = count + 1;
-  }
-  len = ISread_n(stream, buf->ptr, count);
-  buf->length = (len > 0) ? len : 0;
-  buf->ptr[buf->length] = '\0';
-  return (len > 0) ? 1 : 0;
-}
-#endif
 
 int ISread_n(union input_stream *stream, char *dst, int count) {
   int len, l;

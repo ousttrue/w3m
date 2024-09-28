@@ -1,7 +1,21 @@
 #include "isocket.h"
+#include "fm.h"
+#include "terms.h"
+#include "alloc.h"
+#include <signal.h>
+#include <setjmp.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
-int openSocket(const char *const hostname, const char *remoteport_name,
-               unsigned short remoteport_num) {
+static JMP_BUF AbortLoading;
+static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
+
+SocketType socketInvalid() { return -1; }
+
+bool socketOpen(const char *hostname, const char *remoteport_name,
+                unsigned short remoteport_num, SocketType *pOut) {
   volatile int sock = -1;
 #ifdef INET6
   int *af;
@@ -37,7 +51,7 @@ int openSocket(const char *const hostname, const char *remoteport_name,
 
 #ifdef INET6
   /* rfc2732 compliance */
-  hname = hostname;
+  hname = allocStr(hostname, -1);
   if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
     hname = allocStr(hostname + 1, -1);
     hname[strlen(hname) - 1] = '\0';
@@ -157,8 +171,13 @@ int openSocket(const char *const hostname, const char *remoteport_name,
 #endif /* not INET6 */
 
   TRAP_OFF;
-  return sock;
+  *pOut = sock;
+  return true;
 error:
   TRAP_OFF;
-  return -1;
+  return false;
+}
+
+int socketWrite(SocketType sock, const char *buf, size_t len) {
+  return write(sock, buf, len);
 }

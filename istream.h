@@ -9,7 +9,9 @@ enum IST_TYPE {
   IST_STR = 2,
   IST_SSL = 3,
   IST_ENCODED = 4,
-  IST_SOCKET = 5,
+#ifdef _WIN32
+  IST_WS = 5,
+#endif
 };
 union input_stream;
 
@@ -74,6 +76,7 @@ struct encoded_stream {
   CloseFunc close;
 };
 
+#ifdef _WIN32
 struct winsock_stream {
   struct stream_buffer stream;
   uintptr_t *handle;
@@ -84,6 +87,7 @@ struct winsock_stream {
   ReadFunc read;
   CloseFunc close;
 };
+#endif
 
 union input_stream {
   struct base_stream base;
@@ -91,7 +95,9 @@ union input_stream {
   struct str_stream str;
   struct ssl_stream ssl;
   struct encoded_stream ens;
+#ifdef _WIN32
   struct winsock_stream ws;
+#endif
 };
 
 union input_stream *newInputStream(int des);
@@ -100,7 +106,9 @@ union input_stream *newStrStream(Str s);
 union input_stream *newSSLStream(SSL *ssl, int sock);
 union input_stream *newEncodedStream(union input_stream *is,
                                      enum ENCODING_TYPE encoding);
+#ifdef _WIN32
 union input_stream *newWinsockStream(uintptr_t sock);
+#endif
 int ISclose(union input_stream *stream);
 
 int ISgetc(union input_stream *stream);

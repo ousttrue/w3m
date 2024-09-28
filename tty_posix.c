@@ -239,7 +239,7 @@ static void skip_escseq(void) {
   }
 }
 
-int tty_sleep_till_anykey(int sec, int purge) {
+int tty_sleep_till_anykey(int sec, bool purge) {
   fd_set rfd;
   struct timeval tim;
   int er, c, ret;
