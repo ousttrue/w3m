@@ -13,15 +13,6 @@ struct cmdtable {
   int cmd;
 };
 
-struct mailcap {
-  char *type;
-  char *viewer;
-  int flags;
-  char *test;
-  char *nametemplate;
-  char *edit;
-};
-
 #define MAILCAP_NEEDSTERMINAL 0x01
 #define MAILCAP_COPIOUSOUTPUT 0x02
 #define MAILCAP_HTMLOUTPUT 0x04

@@ -1,4 +1,5 @@
 #include "file.h"
+#include "mailcap.h"
 #include "http_response.h"
 #include "url.h"
 #include "istream.h"
@@ -40,7 +41,6 @@ static JMP_BUF AbortLoading;
 static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 static char *guess_filename(char *file);
-static FILE *lessopen_stream(char *path);
 
 #define SAVE_BUF_SIZE 1536
 
@@ -62,66 +62,7 @@ int dir_exist(char *path) {
   return IS_DIRECTORY(stbuf.st_mode);
 }
 
-static int is_dump_text_type(char *type) {
-  struct mailcap *mcap;
-  return (type && (mcap = searchExtViewer(type)) &&
-          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
-}
 
-static int is_text_type(const char *type) {
-  return (type == NULL || type[0] == '\0' ||
-          strncasecmp(type, "text/", 5) == 0 ||
-          (strncasecmp(type, "application/", 12) == 0 &&
-           strstr(type, "xhtml") != NULL) ||
-          strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
-}
-
-static int is_plain_text_type(char *type) {
-  return ((type && strcasecmp(type, "text/plain") == 0) ||
-          (is_text_type(type) && !is_dump_text_type(type)));
-}
-
-bool is_html_type(const char *type) {
-  return (type && (strcasecmp(type, "text/html") == 0 ||
-                   strcasecmp(type, "application/xhtml+xml") == 0));
-}
-
-void examineFile(char *path, struct URLFile *uf) {
-  struct stat stbuf;
-
-  uf->guess_type = NULL;
-  if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 ||
-      NOT_REGULAR(stbuf.st_mode)) {
-    uf->stream = NULL;
-    return;
-  }
-  uf->stream = openIS(path);
-  if (!do_download) {
-    if (use_lessopen && getenv("LESSOPEN") != NULL) {
-      FILE *fp;
-      uf->guess_type = guessContentType(path);
-      if (uf->guess_type == NULL)
-        uf->guess_type = "text/plain";
-      if (is_html_type(uf->guess_type))
-        return;
-      if ((fp = lessopen_stream(path))) {
-        UFclose(uf);
-        uf->stream = newFileStream(fp, (void (*)())pclose);
-        uf->guess_type = "text/plain";
-        return;
-      }
-    }
-    check_compression(path, uf);
-    if (uf->compression != CMP_NOCOMPRESS) {
-      char *ext = uf->ext;
-      auto t0 = uncompressed_file_type(path, &ext);
-      uf->guess_type = t0;
-      uf->ext = ext;
-      uncompress_stream(uf, NULL);
-      return;
-    }
-  }
-}
 
 char *checkHeader(struct Buffer *buf, char *field) {
   int len;
@@ -867,9 +808,9 @@ page_loaded:
 
   if (is_html_type(t))
     proc = loadHTMLBuffer;
-  else if (is_plain_text_type((char *)t))
+  else if (is_plain_text_type(t))
     proc = loadBuffer;
-  else if (is_dump_text_type((char *)t)) {
+  else if (is_dump_text_type(t)) {
     if (!do_download && searchExtViewer((char *)t) != NULL) {
       proc = DO_EXTERNAL;
     } else {
@@ -1281,42 +1222,7 @@ int checkOverWrite(char *path) {
     return -1;
 }
 
-static FILE *lessopen_stream(char *path) {
-  char *lessopen;
-  FILE *fp;
 
-  lessopen = getenv("LESSOPEN");
-  if (lessopen == NULL) {
-    return NULL;
-  }
-  if (lessopen[0] == '\0') {
-    return NULL;
-  }
-
-  if (lessopen[0] == '|') {
-    /* pipe mode */
-    Str tmpf;
-    int c;
-
-    ++lessopen;
-    tmpf = Sprintf(lessopen, shell_quote(path));
-    fp = popen(tmpf->ptr, "r");
-    if (fp == NULL) {
-      return NULL;
-    }
-    c = getc(fp);
-    if (c == EOF) {
-      pclose(fp);
-      return NULL;
-    }
-    ungetc(c, fp);
-  } else {
-    /* filename mode */
-    /* not supported m(__)m */
-    fp = NULL;
-  }
-  return fp;
-}
 
 static char *guess_filename(char *file) {
   char *p = NULL, *s;

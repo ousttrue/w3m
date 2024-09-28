@@ -140,7 +140,6 @@ extern struct Url *schemeToProxy(int scheme);
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
 struct URLFile;
-extern void examineFile(char *path, struct URLFile *uf);
 extern int dir_exist(char *path);
 extern char **get_symbol(void);
 extern void push_symbol(Str str, char symbol, int width, int n);
@@ -331,14 +330,7 @@ extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                               struct TextList *extra_header,
                               struct URLFile *ouf, struct HttpRequest *hr,
                               unsigned char *status);
-struct mailcap;
-extern int mailcapMatch(struct mailcap *mcap, char *type);
-extern struct mailcap *searchMailcap(struct mailcap *table, char *type);
-extern void initMailcap();
-extern char *acceptableMimeTypes();
-extern struct mailcap *searchExtViewer(char *type);
-extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
-                           int *mc_stat);
+
 extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
 extern union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf);

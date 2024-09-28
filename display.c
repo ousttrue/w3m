@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "file.h"
 #include "ctrlcode.h"
+#include "url_stream.h"
 #include "readbuffer.h"
 #include "tabbuffer.h"
 #include "buffer.h"

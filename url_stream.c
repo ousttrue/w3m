@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "mailcap.h"
 #include "cookie.h"
 #include "isocket.h"
 #include "istream.h"
@@ -1516,29 +1517,28 @@ static void add_index_file(struct Url *pu, struct URLFile *uf) {
   }
 }
 
-static char *guessContentTypeFromTable(struct table2 *table, char *filename) {
-  struct table2 *t;
-  char *p;
-  if (table == NULL)
+static char *guessContentTypeFromTable(struct table2 *table,
+                                       const char *filename) {
+  if (!table)
     return NULL;
-  p = &filename[strlen(filename) - 1];
+  auto p = &filename[strlen(filename) - 1];
   while (filename < p && *p != '.')
     p--;
   if (p == filename)
     return NULL;
   p++;
-  for (t = table; t->item1; t++) {
+  for (auto t = table; t->item1; t++) {
     if (!strcmp(p, t->item1))
       return t->item2;
   }
-  for (t = table; t->item1; t++) {
+  for (auto t = table; t->item1; t++) {
     if (!strcasecmp(p, t->item1))
       return t->item2;
   }
   return NULL;
 }
 
-char *guessContentType(char *filename) {
+const char *guessContentType(const char *filename) {
   char *ret;
   int i;
 
@@ -1795,5 +1795,97 @@ void UFhalfclose(struct URLFile *f) {
   default:
     UFclose(f);
     break;
+  }
+}
+
+bool is_dump_text_type(const char *type) {
+  struct mailcap *mcap;
+  return (type && (mcap = searchExtViewer(type)) &&
+          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
+}
+
+bool is_text_type(const char *type) {
+  return (type == NULL || type[0] == '\0' ||
+          strncasecmp(type, "text/", 5) == 0 ||
+          (strncasecmp(type, "application/", 12) == 0 &&
+           strstr(type, "xhtml") != NULL) ||
+          strncasecmp(type, "message/", sizeof("message/") - 1) == 0);
+}
+
+bool is_plain_text_type(const char *type) {
+  return ((type && strcasecmp(type, "text/plain") == 0) ||
+          (is_text_type(type) && !is_dump_text_type(type)));
+}
+
+bool is_html_type(const char *type) {
+  return (type && (strcasecmp(type, "text/html") == 0 ||
+                   strcasecmp(type, "application/xhtml+xml") == 0));
+}
+
+static FILE *lessopen_stream(const char *path) {
+
+  auto lessopen = getenv("LESSOPEN");
+  if (lessopen == NULL) {
+    return NULL;
+  }
+  if (lessopen[0] == '\0') {
+    return NULL;
+  }
+
+  if (lessopen[0] != '|') {
+    /* filename mode */
+    /* not supported m(__)m */
+    return nullptr;
+  }
+
+  /* pipe mode */
+  ++lessopen;
+  auto tmpf = Sprintf(lessopen, shell_quote(path));
+  auto fp = popen(tmpf->ptr, "r");
+  if (fp == NULL) {
+    return NULL;
+  }
+  auto c = getc(fp);
+  if (c == EOF) {
+    pclose(fp);
+    return NULL;
+  }
+  ungetc(c, fp);
+  return fp;
+}
+
+void examineFile(const char *path, struct URLFile *uf) {
+  uf->guess_type = NULL;
+  struct stat stbuf;
+  if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 ||
+      NOT_REGULAR(stbuf.st_mode)) {
+    uf->stream = NULL;
+    return;
+  }
+  uf->stream = openIS(path);
+  if (!do_download) {
+    if (use_lessopen && getenv("LESSOPEN") != NULL) {
+      FILE *fp;
+      uf->guess_type = guessContentType(path);
+      if (uf->guess_type == NULL)
+        uf->guess_type = "text/plain";
+      if (is_html_type(uf->guess_type))
+        return;
+      if ((fp = lessopen_stream(path))) {
+        UFclose(uf);
+        uf->stream = newFileStream(fp, (void (*)())pclose);
+        uf->guess_type = "text/plain";
+        return;
+      }
+    }
+    check_compression(path, uf);
+    if (uf->compression != CMP_NOCOMPRESS) {
+      char *ext = uf->ext;
+      auto t0 = uncompressed_file_type(path, &ext);
+      uf->guess_type = t0;
+      uf->ext = ext;
+      uncompress_stream(uf, NULL);
+      return;
+    }
   }
 }

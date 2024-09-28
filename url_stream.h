@@ -38,5 +38,10 @@ struct URLFile {
   }
 #define UFfileno(f) ISfileno((f)->stream)
 
-char *guessContentType(char *filename);
 void UFhalfclose(struct URLFile *f);
+const char *guessContentType(const char *filename);
+void examineFile(const char *path, struct URLFile *uf);
+bool is_html_type(const char *type);
+bool is_text_type(const char *type);
+bool is_dump_text_type(const char *type);
+bool is_plain_text_type(const char *type);

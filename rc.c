@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "alloc.h"
+#include "mailcap.h"
 #include "buffer.h"
 #include "cookie.h"
 #include "app.h"

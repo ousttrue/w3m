@@ -295,14 +295,13 @@ char *acceptableMimeTypes() {
   return types->ptr;
 }
 
-struct mailcap *searchExtViewer(char *type) {
-  struct mailcap *p;
-  int i;
+struct mailcap *searchExtViewer(const char *type) {
 
   if (mailcap_list == NULL)
     goto no_user_mailcap;
 
-  for (i = 0; i < mailcap_list->nitem; i++) {
+  for (int i = 0; i < mailcap_list->nitem; i++) {
+    struct mailcap *p;
     if ((p = searchMailcap(UserMailcap[i], type)) != NULL)
       return p;
   }

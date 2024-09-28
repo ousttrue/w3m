@@ -9,4 +9,3 @@ struct Buffer *loadcmdout(char *cmd,
 
 int _MoveFile(char *path1, char *path2);
 
-bool is_html_type(const char *type);

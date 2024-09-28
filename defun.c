@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "mailcap.h"
 #include "alloc.h"
 #include "cookie.h"
 #include "file.h"
