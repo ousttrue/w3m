@@ -846,7 +846,7 @@ void fillline(struct readbuffer *obuf, int indent) {
 
 void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
                int indent, int force, int width) {
-  TextLineList *buf = h_env->buf;
+  struct TextLineList *buf = h_env->buf;
   FILE *f = h_env->f;
   Str line = obuf->line, pass = NULL;
   char *hidden_anchor = NULL, *hidden_img = NULL, *hidden_bold = NULL,
@@ -974,7 +974,7 @@ void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
   }
 
   if (force == 1 || obuf->flag & RB_NFLUSHED) {
-    TextLine *lbuf = newTextLine(line, obuf->pos);
+    struct TextLine *lbuf = newTextLine(line, obuf->pos);
     if (RB_GET_ALIGN(obuf) == RB_CENTER) {
       align(lbuf, width, ALIGN_CENTER);
     } else if (RB_GET_ALIGN(obuf) == RB_RIGHT) {
@@ -2958,7 +2958,7 @@ table_start:
 }
 
 void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
-               struct environment *envs, int nenv, TextLineList *buf, int limit,
+               struct environment *envs, int nenv, struct TextLineList *buf, int limit,
                int indent) {
   envs[0].indent = indent;
 
@@ -3475,10 +3475,10 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
     addMultirowsForm(buf, buf->formitem);
 }
 
-static TextLineListItem *_tl_lp2;
+static struct TextLineListItem *_tl_lp2;
 
 static Str textlist_feed() {
-  TextLine *p;
+  struct TextLine *p;
   if (_tl_lp2 != NULL) {
     p = _tl_lp2->ptr;
     _tl_lp2 = _tl_lp2->next;
@@ -3499,7 +3499,7 @@ static Str file_feed() {
   return s;
 }
 
-void HTMLlineproc2(struct Buffer *buf, TextLineList *tl) {
+void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl) {
   _tl_lp2 = tl->first;
   HTMLlineproc2body(buf, textlist_feed, -1);
 }

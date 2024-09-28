@@ -849,7 +849,7 @@ void loadPasswd(void) {
 
 /* get last modified time */
 char *last_modified(struct Buffer *buf) {
-  TextListItem *ti;
+  struct TextListItem *ti;
   struct stat st;
 
   if (buf->document_header) {

@@ -36,7 +36,7 @@ Anchor *retrieveCurrentMap(struct Buffer *buf) {
 struct MapArea *follow_map_menu(struct Buffer *buf, char *name, Anchor *a_img,
                                 int x, int y) {
   struct MapList *ml;
-  ListItem *al;
+  struct ListItem *al;
   int i, selected = -1;
   int initial = 0;
 
@@ -61,7 +61,7 @@ char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
   Str mappage;
   struct MapList *ml;
-  ListItem *al;
+  struct ListItem *al;
   struct MapArea *a;
   struct Url pu;
   char *p, *q;
@@ -107,7 +107,7 @@ struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 static void append_map_info(struct Buffer *buf, Str tmp,
                             struct FormItemList *fi) {
   struct MapList *ml;
-  ListItem *al;
+  struct ListItem *al;
   struct MapArea *a;
   struct Url pu;
   char *p, *q;
@@ -173,7 +173,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   Str tmp = Strnew_size(1024);
   Anchor *a;
   struct Url pu;
-  TextListItem *ti;
+  struct TextListItem *ti;
   int all;
   char *p, *q;
   struct Buffer *newbuf;

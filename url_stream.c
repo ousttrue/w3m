@@ -185,7 +185,7 @@ static struct table2 *loadMimeTypes(char *filename) {
 
 void initMimeTypes() {
   int i;
-  TextListItem *tl;
+  struct TextListItem *tl;
 
   if (non_null(mimetypes_files))
     mimetypes_list = make_domain_list(mimetypes_files);
@@ -1292,7 +1292,7 @@ Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr) {
 static Str HTTPrequest(struct Url *pu, struct Url *current,
                        struct HttpRequest *hr, struct TextList *extra) {
   Str tmp;
-  TextListItem *i;
+  struct TextListItem *i;
   Str cookie;
   tmp = HTTPrequestMethod(hr);
   Strcat_charp(tmp, " ");
@@ -1637,7 +1637,7 @@ retry:
 static void add_index_file(struct Url *pu, struct URLFile *uf) {
   char *p, *q;
   struct TextList *index_file_list = NULL;
-  TextListItem *ti;
+  struct TextListItem *ti;
 
   if (non_null(index_file))
     index_file_list = make_domain_list(index_file);
@@ -1740,7 +1740,7 @@ static int domain_match(char *pat, char *domain) {
 }
 
 int check_no_proxy(char *domain) {
-  TextListItem *tl;
+  struct TextListItem *tl;
   volatile int ret = 0;
   MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 

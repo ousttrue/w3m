@@ -202,7 +202,7 @@ static struct mailcap *loadMailcap(char *filename) {
 }
 
 void initMailcap() {
-  TextListItem *tl;
+  struct TextListItem *tl;
   int i;
 
   if (non_null(mailcap_files))

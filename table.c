@@ -193,7 +193,7 @@ struct table *newTable() {
 
   t = New(struct table);
   t->max_rowsize = MAXROW;
-  t->tabdata = New_N(GeneralList **, MAXROW);
+  t->tabdata = New_N(struct GeneralList **, MAXROW);
   t->tabattr = New_N(table_attr *, MAXROW);
   t->tabheight = NewAtom_N(int, MAXROW);
 
@@ -225,7 +225,7 @@ struct table *newTable() {
 
 static void check_row(struct table *t, int row) {
   int i, r;
-  GeneralList ***tabdata;
+  struct GeneralList ***tabdata;
   table_attr **tabattr;
   int *tabheight;
 
@@ -235,7 +235,7 @@ static void check_row(struct table *t, int row) {
     r = max(t->max_rowsize * 2, row + 1);
     if (r <= 0 || r > MAXROW_LIMIT)
       r = MAXROW_LIMIT;
-    tabdata = New_N(GeneralList **, r);
+    tabdata = New_N(struct GeneralList **, r);
     tabattr = New_N(table_attr *, r);
     tabheight = NewAtom_N(int, r);
     for (i = 0; i < t->max_rowsize; i++) {
@@ -255,7 +255,7 @@ static void check_row(struct table *t, int row) {
   }
 
   if (t->tabdata[row] == NULL) {
-    t->tabdata[row] = New_N(GeneralList *, MAXCOL);
+    t->tabdata[row] = New_N(struct GeneralList *, MAXCOL);
     t->tabattr[row] = NewAtom_N(table_attr, MAXCOL);
     for (i = 0; i < MAXCOL; i++) {
       t->tabdata[row][i] = NULL;
@@ -380,7 +380,7 @@ static int maximum_visible_length_plain(char *str, int offset) {
   return visible_length_plain(str);
 }
 
-void align(TextLine *lbuf, int width, int mode) {
+void align(struct TextLine *lbuf, int width, int mode) {
   int i, l, l1, l2;
   Str buf, line = lbuf->line;
 
@@ -422,7 +422,7 @@ void align(TextLine *lbuf, int width, int mode) {
 
 void print_item(struct table *t, int row, int col, int width, Str buf) {
   int alignment;
-  TextLine *lbuf;
+  struct TextLine *lbuf;
 
   if (t->tabdata[row])
     lbuf = popTextLine(t->tabdata[row][col]);
@@ -555,7 +555,7 @@ static int get_spec_cell_width(struct table *tbl, int row, int col) {
 
 void do_refill(struct table *tbl, int row, int col, int maxlimit) {
   struct TextList *orgdata;
-  TextListItem *l;
+  struct TextListItem *l;
   struct readbuffer obuf;
   struct html_feed_environ h_env;
   struct environment envs[MAX_ENV_LEVEL];
@@ -567,7 +567,7 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
   tbl->tabdata[row][col] = newGeneralList();
 
   init_henv(&h_env, &obuf, envs, MAX_ENV_LEVEL,
-            (TextLineList *)tbl->tabdata[row][col],
+            (struct TextLineList *)tbl->tabdata[row][col],
             get_spec_cell_width(tbl, row, col), 0);
   obuf.flag |= RB_INTABLE;
   if (h_env.limit > maxlimit)
@@ -583,7 +583,7 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
         parsedtag_get_value(tag, ATTR_TID, &id);
       if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
         int alignment;
-        TextLineListItem *ti;
+        struct TextLineListItem *ti;
         struct table *t = tbl->tables[id].ptr;
         int limit = tbl->tables[id].indent + t->total_width;
         tbl->tables[id].ptr = NULL;
@@ -1491,7 +1491,7 @@ void renderTable(struct table *t, int max_width,
 
   for (i = 0; i <= t->maxcol; i++) {
     for (j = 0; j <= t->maxrow; j++) {
-      TextLineList *l;
+      struct TextLineList *l;
       int k;
       if ((t->tabattr[j][i] & HTT_Y) || (t->tabattr[j][i] & HTT_TOP) ||
           (t->tabdata[j][i] == NULL))
@@ -1517,7 +1517,7 @@ void renderTable(struct table *t, int max_width,
       l = newTextLineList();
       for (k = 0; k < h; k++)
         pushTextLine(l, newTextLine(NULL, 0));
-      t->tabdata[j][i] = appendGeneralList((GeneralList *)l, t->tabdata[j][i]);
+      t->tabdata[j][i] = appendGeneralList((struct GeneralList *)l, t->tabdata[j][i]);
     }
   }
 
@@ -1816,7 +1816,7 @@ static void begin_cell(struct table *t, struct table_mode *mode) {
     if (t->tabdata[t->row][t->col] == NULL)
       t->tabdata[t->row][t->col] = newGeneralList();
     appendGeneralList(t->tabdata[t->row][t->col],
-                      (GeneralList *)t->suspended_data);
+                      (struct GeneralList *)t->suspended_data);
     t->suspended_data = NULL;
   }
 }

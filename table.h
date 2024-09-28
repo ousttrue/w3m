@@ -1,4 +1,3 @@
-/* $Id: table.h,v 1.12 2003/09/22 21:02:21 ukai Exp $ */
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */
@@ -10,6 +9,7 @@
 #endif /* not MESCHACH */
 
 #include "Str.h"
+#include "line.h"
 
 #define MAX_TABLE 20 /* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000
@@ -54,7 +54,7 @@ struct table_in {
   short row;
   short cell;
   short indent;
-  TextLineList *buf;
+  struct TextLineList *buf;
 };
 
 struct table_linfo {
@@ -84,7 +84,7 @@ struct table {
   int real_width;
 #endif /* TABLE_EXPAND */
   Str caption;
-  GeneralList ***tabdata;
+  struct GeneralList ***tabdata;
   table_attr **tabattr;
   table_attr trattr;
   short tabwidth[MAXCOL];

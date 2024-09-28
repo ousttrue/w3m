@@ -6,24 +6,24 @@
 
 /* General doubly linked list */
 
-ListItem *newListItem(void *s, ListItem *n, ListItem *p) {
-  ListItem *it;
-  it = New(ListItem);
+struct ListItem *newListItem(void *s, struct ListItem *n, struct ListItem *p) {
+  struct ListItem *it;
+  it = New(struct ListItem);
   it->ptr = s;
   it->next = n;
   it->prev = p;
   return it;
 }
 
-GeneralList *newGeneralList() {
-  GeneralList *tl = New(GeneralList);
+struct GeneralList *newGeneralList() {
+  struct GeneralList *tl = New(struct GeneralList);
   tl->first = tl->last = NULL;
   tl->nitem = 0;
   return tl;
 }
 
-void pushValue(GeneralList *tl, void *s) {
-  ListItem *it;
+void pushValue(struct GeneralList *tl, void *s) {
+  struct ListItem *it;
   if (s == NULL || tl == NULL || tl->nitem >= GENERAL_LIST_MAX)
     return;
   it = newListItem(s, NULL, tl->last);
@@ -38,8 +38,8 @@ void pushValue(GeneralList *tl, void *s) {
   }
 }
 
-void *popValue(GeneralList *tl) {
-  ListItem *f;
+void *popValue(struct GeneralList *tl) {
+  struct ListItem *f;
 
   if (tl == NULL || tl->first == NULL)
     return NULL;
@@ -53,8 +53,8 @@ void *popValue(GeneralList *tl) {
   return f->ptr;
 }
 
-void *rpopValue(GeneralList *tl) {
-  ListItem *f;
+void *rpopValue(struct GeneralList *tl) {
+  struct ListItem *f;
 
   if (tl == NULL || tl->last == NULL)
     return NULL;
@@ -68,7 +68,7 @@ void *rpopValue(GeneralList *tl) {
   return f->ptr;
 }
 
-void delValue(GeneralList *tl, ListItem *it) {
+void delValue(struct GeneralList *tl, struct ListItem *it) {
   if (it->prev)
     it->prev->next = it->next;
   else
@@ -80,7 +80,8 @@ void delValue(GeneralList *tl, ListItem *it) {
   tl->nitem--;
 }
 
-GeneralList *appendGeneralList(GeneralList *tl, GeneralList *tl2) {
+struct GeneralList *appendGeneralList(struct GeneralList *tl,
+                                      struct GeneralList *tl2) {
   if (tl && tl2) {
     if (tl2->first) {
       if (tl->last) {
@@ -106,8 +107,8 @@ GeneralList *appendGeneralList(GeneralList *tl, GeneralList *tl2) {
 
 /* Line text list */
 
-TextLine *newTextLine(Str line, int pos) {
-  TextLine *lbuf = New(TextLine);
+struct TextLine *newTextLine(Str line, int pos) {
+  struct TextLine *lbuf = New(struct TextLine);
   if (line)
     lbuf->line = line;
   else
@@ -116,8 +117,8 @@ TextLine *newTextLine(Str line, int pos) {
   return lbuf;
 }
 
-void appendTextLine(TextLineList *tl, Str line, int pos) {
-  TextLine *lbuf;
+void appendTextLine(struct TextLineList *tl, Str line, int pos) {
+  struct TextLine *lbuf;
 
   if (tl->last == NULL) {
     pushTextLine(tl, newTextLine(Strdup(line), pos));

@@ -10,7 +10,7 @@ struct MapArea {
 
 struct MapList {
   Str name;
-  GeneralList *area;
+  struct GeneralList *area;
   struct MapList *next;
 };
 

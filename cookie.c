@@ -229,7 +229,7 @@ Str find_cookie(struct Url *pu) {
 }
 
 int check_avoid_wrong_number_of_dots_domain(Str domain) {
-  TextListItem *tl;
+  struct TextListItem *tl;
   int avoid_wrong_number_of_dots_domain = FALSE;
 
   if (Cookie_avoid_wrong_number_of_dots_domains &&
@@ -639,7 +639,7 @@ void set_cookie_flag(struct parsed_tagarg *arg) {
 }
 
 int check_cookie_accept_domain(char *domain) {
-  TextListItem *tl;
+  struct TextListItem *tl;
 
   if (domain == NULL)
     return 0;

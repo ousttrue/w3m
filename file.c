@@ -431,7 +431,7 @@ void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
 
 char *checkHeader(struct Buffer *buf, char *field) {
   int len;
-  TextListItem *i;
+  struct TextListItem *i;
   char *p;
 
   if (buf == NULL || field == NULL || buf->document_header == NULL)
@@ -646,7 +646,7 @@ static struct http_auth *findAuthentication(struct http_auth *hauth,
                                             char *auth_field) {
   struct http_auth *ha;
   int len = strlen(auth_field), slen;
-  TextListItem *i;
+  struct TextListItem *i;
   char *p0, *p;
 
   memset(hauth, 0, sizeof(struct http_auth));
@@ -692,7 +692,7 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
                           Str *uname, Str *pwd) {
   Str ss = NULL;
   Str tmp;
-  TextListItem *i;
+  struct TextListItem *i;
   int a_found;
   int auth_header_len = strlen(auth_header);
   char *realm = NULL;

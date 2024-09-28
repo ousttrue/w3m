@@ -636,7 +636,7 @@ bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd) {
 }
 #endif
 
-static GeneralList *message_list = NULL;
+static struct GeneralList *message_list = NULL;
 
 void term_err_message(const char *s) {
   if (!message_list)

@@ -18,7 +18,6 @@
 #include "func.h"
 #include "istream.h"
 #include "anchor.h"
-#include "line.h"
 
 #ifdef MAINPROGRAM
 #define global
@@ -326,7 +325,7 @@
 
 struct html_feed_environ {
   struct readbuffer *obuf;
-  TextLineList *buf;
+  struct TextLineList *buf;
   FILE *f;
   Str tagbuf;
   int limit;

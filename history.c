@@ -110,7 +110,7 @@ HistItem *unshiftHist(struct Hist *hist, char *ptr) {
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
     return NULL;
   item = (HistItem *)newListItem((void *)allocStr(ptr, -1),
-                                 (ListItem *)hist->list->first, NULL);
+                                 (struct ListItem *)hist->list->first, NULL);
   if (hist->list->first)
     hist->list->first->prev = item;
   else
@@ -126,7 +126,7 @@ HistItem *pushHist(struct Hist *hist, char *ptr) {
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
     return NULL;
   item = (HistItem *)newListItem((void *)allocStr(ptr, -1), NULL,
-                                 (ListItem *)hist->list->last);
+                                 (struct ListItem *)hist->list->last);
   if (hist->list->last)
     hist->list->last->next = item;
   else
