@@ -10,40 +10,33 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+enum IST_TYPE {
+  IST_BASIC = 0,
+  IST_FILE = 1,
+  IST_STR = 2,
+  IST_SSL = 3,
+  IST_ENCODED = 4,
+};
+union input_stream;
+
 struct stream_buffer {
   unsigned char *buf;
   int size, cur, next;
 };
 
-typedef struct stream_buffer *StreamBuffer;
-
 typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
 typedef void (*CloseFunc)(void *handle);
 
-struct io_file_handle {
-  FILE *f;
-  CloseFunc close;
-};
-
-struct ssl_handle {
-  SSL *ssl;
-  int sock;
-};
-
-union input_stream;
-
-struct ens_handle {
-  union input_stream *is;
-  struct growbuf gb;
-  int pos;
-  char encoding;
-};
-
+///
+/// input_stream
+///
 struct base_stream {
   struct stream_buffer stream;
   void *handle;
-  char type;
-  char iseos;
+  enum IST_TYPE type;
+  // ftp ?
+  bool unclose;
+  bool iseos;
   ReadFunc read;
   CloseFunc close;
 };
@@ -51,8 +44,9 @@ struct base_stream {
 struct file_stream {
   struct stream_buffer stream;
   struct io_file_handle *handle;
-  char type;
-  char iseos;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
   ReadFunc read;
   CloseFunc close;
 };
@@ -60,8 +54,9 @@ struct file_stream {
 struct str_stream {
   struct stream_buffer stream;
   Str handle;
-  char type;
-  char iseos;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
   ReadFunc read;
   CloseFunc close;
 };
@@ -69,8 +64,9 @@ struct str_stream {
 struct ssl_stream {
   struct stream_buffer stream;
   struct ssl_handle *handle;
-  char type;
-  char iseos;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
   ReadFunc read;
   CloseFunc close;
 };
@@ -78,8 +74,9 @@ struct ssl_stream {
 struct encoded_stream {
   struct stream_buffer stream;
   struct ens_handle *handle;
-  char type;
-  char iseos;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
   ReadFunc read;
   CloseFunc close;
 };
@@ -122,21 +119,14 @@ extern int ISeos(InputStream stream);
 extern void ssl_accept_this_site(char *hostname);
 extern Str ssl_get_certificate(SSL *ssl, char *hostname);
 
-#define IST_BASIC 0
-#define IST_FILE 1
-#define IST_STR 2
-#define IST_SSL 3
-#define IST_ENCODED 4
-#define IST_UNCLOSE 0x10
+enum IST_TYPE IStype(union input_stream *stream);
+// #define is_eos(stream) ISeos(stream)
+// #define iseos(stream) ((stream)->base.iseos)
+// #define file_of(stream) ((stream)->file.handle->f)
+// #define set_close(stream, closep) \
+//   ((IStype(stream) == IST_FILE) ? ((stream)->file.handle->close = (closep)) :
+//   0)
+// #define str_of(stream) ((stream)->str.handle)
 
-#define IStype(stream) ((stream)->base.type)
-#define is_eos(stream) ISeos(stream)
-#define iseos(stream) ((stream)->base.iseos)
-#define file_of(stream) ((stream)->file.handle->f)
-#define set_close(stream, closep)                                              \
-  ((IStype(stream) == IST_FILE) ? ((stream)->file.handle->close = (closep)) : 0)
-#define str_of(stream) ((stream)->str.handle)
-#define ssl_socket_of(stream) ((stream)->ssl.handle->sock)
-#define ssl_of(stream) ((stream)->ssl.handle->ssl)
-
-#define openIS(path) newInputStream(open((path), O_RDONLY))
+int ssl_socket_of(union input_stream *stream);
+union input_stream *openIS(const char *path);

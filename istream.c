@@ -9,6 +9,23 @@
 #include <signal.h>
 #include <openssl/x509v3.h>
 
+struct io_file_handle {
+  FILE *f;
+  CloseFunc close;
+};
+
+struct ssl_handle {
+  SSL *ssl;
+  int sock;
+};
+
+struct ens_handle {
+  union input_stream *is;
+  struct growbuf gb;
+  int pos;
+  char encoding;
+};
+
 #define uchar unsigned char
 
 #define STREAM_BUF_SIZE 8192
@@ -44,7 +61,7 @@ static void do_update(BaseStream base) {
     base->stream.next += len;
 }
 
-static int buffer_read(StreamBuffer sb, char *obuf, int count) {
+static int buffer_read(struct stream_buffer *sb, char *obuf, int count) {
   int len = sb->next - sb->cur;
   if (len > 0) {
     if (len > count)
@@ -56,7 +73,7 @@ static int buffer_read(StreamBuffer sb, char *obuf, int count) {
 }
 
 static void init_buffer(BaseStream base, char *buf, int bufsize) {
-  StreamBuffer sb = &base->stream;
+  struct stream_buffer *sb = &base->stream;
   sb->size = bufsize;
   sb->cur = 0;
   sb->buf = NewWithoutGC_N(uchar, bufsize);
@@ -159,7 +176,7 @@ int ISclose(InputStream stream) {
   if (stream == NULL)
     return -1;
   if (stream->base.close != NULL) {
-    if (stream->base.type & IST_UNCLOSE) {
+    if (stream->base.unclose) {
       return -1;
     }
     auto prevtrap = mySignal(SIGINT, SIG_IGN);
@@ -182,7 +199,7 @@ int ISgetc(InputStream stream) {
 }
 
 int ISundogetc(InputStream stream) {
-  StreamBuffer sb;
+  struct stream_buffer *sb;
   if (stream == NULL)
     return -1;
   sb = &stream->base.stream;
@@ -205,7 +222,7 @@ Str StrISgets2(InputStream stream, char crnl) {
 
 void ISgets_to_growbuf(InputStream stream, struct growbuf *gb, char crnl) {
   BaseStream base = &stream->base;
-  StreamBuffer sb = &base->stream;
+  struct stream_buffer *sb = &base->stream;
   int i;
 
   gb->length = 0;
@@ -281,7 +298,7 @@ int ISread_n(InputStream stream, char *dst, int count) {
 int ISfileno(InputStream stream) {
   if (stream == NULL)
     return -1;
-  switch (IStype(stream) & ~IST_UNCLOSE) {
+  switch (IStype(stream)) {
   case IST_BASIC:
     return *(int *)stream->base.handle;
   case IST_FILE:
@@ -673,4 +690,14 @@ static void memchop(char *p, int *len) {
     *q = '\0';
   *len = q - p;
   return;
+}
+
+enum IST_TYPE IStype(union input_stream *stream) { return stream->base.type; }
+
+int ssl_socket_of(union input_stream *stream) {
+  return stream->ssl.handle->sock;
+}
+
+union input_stream *openIS(const char *path) {
+  return newInputStream(open(path, O_RDONLY));
 }
