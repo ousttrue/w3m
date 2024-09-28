@@ -51,7 +51,6 @@ typedef struct _FTP {
 static struct _FTP current_ftp = {NULL, 0, NULL, NULL, NULL, NULL, NULL};
 
 static JMP_BUF AbortLoading;
-
 static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 static Str ftp_command(FTP ftp, char *cmd, char *arg, int *status) {

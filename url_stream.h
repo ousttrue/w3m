@@ -28,6 +28,16 @@ struct URLFile {
   time_t modtime;
 };
 
+/* flags for loadGeneralFile */
+enum RG_FLAGS {
+  RG_NOCACHE = 1,
+};
+
+struct URLOption {
+  char *referer;
+  enum RG_FLAGS flag;
+};
+
 #define StrUFgets(f) StrISgets((f)->stream)
 #define StrmyUFgets(f) StrmyISgets((f)->stream)
 #define UFgetc(f) ISgetc((f)->stream)

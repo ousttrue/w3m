@@ -26,11 +26,6 @@ struct table2 {
   char *item2;
 };
 
-struct URLOption {
-  char *referer;
-  int flag;
-};
-
 #define HTML_UNKNOWN 0
 #define HTML_A 1
 #define HTML_N_A 2

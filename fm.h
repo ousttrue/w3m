@@ -264,9 +264,6 @@
   (IS_ALPHA(p[1]) || p[1] == '/' || p[1] == '!' || p[1] == '?' ||              \
    p[1] == '\0' || p[1] == '_')
 
-/* flags for loadGeneralFile */
-#define RG_NOCACHE 1
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0

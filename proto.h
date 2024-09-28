@@ -143,10 +143,6 @@ struct URLFile;
 extern int dir_exist(char *path);
 extern char **get_symbol(void);
 extern void push_symbol(Str str, char symbol, int width, int n);
-struct FormList;
-extern struct Buffer *loadGeneralFile(char *path, struct Url *current,
-                                      char *referer, int flag,
-                                      struct FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 struct html_feed_environ;
@@ -187,7 +183,6 @@ extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 extern struct Buffer *getshell(char *cmd);
 extern int save2tmp(struct URLFile uf, char *tmpf);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
 extern int doFileMove(char *tmpf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 union input_stream;
