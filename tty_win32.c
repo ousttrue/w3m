@@ -11,7 +11,27 @@ INPUT_RECORD g_irInBuf[128];
 DWORD g_cNumRead = 0;
 size_t g_current = 0;
 
-void tty_open() { g_hStdin = GetStdHandle(STD_INPUT_HANDLE); }
+// stream に対してANSIエスケープシーケンスを有効化
+// 成功すれば true, 失敗した場合は false を返す
+bool enable_virtual_terminal_processing() {
+  HANDLE handle = GetStdHandle(STD_OUTPUT_HANDLE);
+  DWORD mode = 0;
+  if (!GetConsoleMode(handle, &mode)) {
+    // 失敗
+    return false;
+  }
+  if (!SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+    // 失敗
+    // 古いWindowsコンソールの場合は GetLastError() == ERROR_INVALID_PARAMETER
+    return false;
+  }
+  return true;
+}
+
+void tty_open() {
+  g_hStdin = GetStdHandle(STD_INPUT_HANDLE);
+  enable_virtual_terminal_processing();
+}
 void tty_close() {}
 
 //
@@ -84,13 +104,14 @@ char tty_getch() {
   return 0;
 }
 
-int tty_sleep_till_anykey(int sec, int purge) { return tty_getch(); }
+int tty_sleep_till_anykey(int sec, bool purge) { return tty_getch(); }
+
 //
 // output
 //
 void tty_echo() {}
 void tty_noecho() {}
-void tty_flush() {}
+void tty_flush() { FlushFileBuffers(GetStdHandle(STD_OUTPUT_HANDLE)); }
 int tty_putc(int c) { putc(c, stdout); }
 void tty_printf(const char *fmt, ...) {
   va_list ap;

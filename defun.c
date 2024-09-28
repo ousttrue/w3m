@@ -116,13 +116,15 @@ void mainloop(char *line_str) {
     mySignal(SIGWINCH, resize_hook);
 #endif
     {
-      do {
-        if (need_resize_screen)
-          resize_screen();
-      } while (tty_sleep_till_anykey(1, 0) <= 0);
+      // do {
+      if (need_resize_screen) {
+        resize_screen();
+      }
+      // }
+      // while (tty_sleep_till_anykey(1, 0) <= 0);
     }
     char c = tty_getch();
-    if (IS_ASCII(c)) { /* Ascii */
+    if (c && IS_ASCII(c)) { /* Ascii */
       if (('0' <= c) && (c <= '9') &&
           (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
         prec_num = prec_num * 10 + (int)(c - '0');

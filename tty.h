@@ -16,4 +16,4 @@ int tty_putc(int c);
 void tty_printf(const char *fmt, ...);
 
 char tty_getch();
-int tty_sleep_till_anykey(int sec, int purge);
+int tty_sleep_till_anykey(int sec, bool purge);

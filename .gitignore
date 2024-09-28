@@ -40,6 +40,7 @@ Makefile
 /scripts/w3mman/w3mman2html.cgi
 /scripts/w3mman/w3mman*.1
 
+zig-cache
 .zig-cache
 zig-out
 # clangd
