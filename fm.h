@@ -41,16 +41,16 @@
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
 
-#ifdef FALSE
-#undef FALSE
+#ifdef false
+#undef false
 #endif
 
-#ifdef TRUE
-#undef TRUE
+#ifdef true
+#undef true
 #endif
 
-#define FALSE 0
-#define TRUE 1
+#define false 0
+#define true 1
 
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
@@ -362,24 +362,24 @@ struct html_feed_environ {
 
 global int Tabstop init(8);
 global int IndentIncr init(4);
-global int ShowEffect init(TRUE);
+global int ShowEffect init(true);
 global int PagerMax init(PAGER_MAX_LINE);
 
-global char SearchHeader init(FALSE);
+global char SearchHeader init(false);
 global char *DefaultType init(NULL);
-global char RenderFrame init(FALSE);
-global char TargetSelf init(FALSE);
-global char PermitSaveToPipe init(FALSE);
-global char DecodeCTE init(FALSE);
-global char AutoUncompress init(FALSE);
-global char PreserveTimestamp init(TRUE);
-global char ArgvIsURL init(TRUE);
-global char MetaRefresh init(FALSE);
-global char LocalhostOnly init(FALSE);
+global char RenderFrame init(false);
+global char TargetSelf init(false);
+global char PermitSaveToPipe init(false);
+global char DecodeCTE init(false);
+global char AutoUncompress init(false);
+global char PreserveTimestamp init(true);
+global char ArgvIsURL init(true);
+global char MetaRefresh init(false);
+global char LocalhostOnly init(false);
 global char *HostName init(NULL);
 
-global char QuietMessage init(FALSE);
-global char TrapSignal init(TRUE);
+global char QuietMessage init(false);
+global char TrapSignal init(true);
 
 #define TRAP_ON                                                                \
   if (TrapSignal) {                                                            \
@@ -406,7 +406,7 @@ global struct Url HTTP_proxy_parsed;
 global struct Url HTTPS_proxy_parsed;
 global struct Url FTP_proxy_parsed;
 global char *NO_proxy init(NULL);
-global int NOproxy_netaddr init(TRUE);
+global int NOproxy_netaddr init(true);
 #ifdef INET6
 #define DNS_ORDER_UNSPEC 0
 #define DNS_ORDER_INET_INET6 1
@@ -416,10 +416,10 @@ global int NOproxy_netaddr init(TRUE);
 global int DNS_order init(DNS_ORDER_UNSPEC);
 extern int ai_family_order_table[7][3]; /* XXX */
 #endif                                  /* INET6 */
-global char NoCache init(FALSE);
-global char use_proxy init(TRUE);
+global char NoCache init(false);
+global char use_proxy init(true);
 #define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(FALSE);
+global int Do_not_use_ti_te init(false);
 
 global char *document_root init(NULL);
 global char *personal_document_root init(NULL);
@@ -433,9 +433,9 @@ global char *MyProgramName init("w3m");
  * global Buffer *Currentbuf;
  * global Buffer *Firstbuf;
  */
-global int open_tab_blank init(FALSE);
-global int open_tab_dl_list init(FALSE);
-global int close_tab_back init(FALSE);
+global int open_tab_blank init(false);
+global int open_tab_dl_list init(false);
+global int close_tab_back init(false);
 global int nTab;
 global int TabCols init(10);
 global int CurrentKey;
@@ -447,27 +447,27 @@ extern int enable_inline_image;
 
 global int w3m_debug;
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global int w3m_halfload init(FALSE);
+global int w3m_halfload init(false);
 global Str header_string init(NULL);
-global int override_content_type init(FALSE);
-global int override_user_agent init(FALSE);
+global int override_content_type init(false);
+global int override_user_agent init(false);
 
-global int confirm_on_quit init(TRUE);
-global int emacs_like_lineedit init(FALSE);
-global int space_autocomplete init(FALSE);
-global int vi_prec_num init(FALSE);
-global int label_topline init(FALSE);
-global int nextpage_topline init(FALSE);
+global int confirm_on_quit init(true);
+global int emacs_like_lineedit init(false);
+global int space_autocomplete init(false);
+global int vi_prec_num init(false);
+global int label_topline init(false);
+global int nextpage_topline init(false);
 global char *displayTitleTerm init(NULL);
-global int displayLink init(FALSE);
-global int displayLinkNumber init(FALSE);
-global int displayLineInfo init(FALSE);
-global int DecodeURL init(FALSE);
-global int retryAsHttp init(TRUE);
-global int showLineNum init(FALSE);
-global int show_srch_str init(TRUE);
-global int displayImage init(FALSE); /* XXX: emacs-w3m use display_image=off */
-global int pseudoInlines init(TRUE);
+global int displayLink init(false);
+global int displayLinkNumber init(false);
+global int displayLineInfo init(false);
+global int DecodeURL init(false);
+global int retryAsHttp init(true);
+global int showLineNum init(false);
+global int show_srch_str init(true);
+global int displayImage init(false); /* XXX: emacs-w3m use display_image=off */
+global int pseudoInlines init(true);
 global char *Editor init(DEF_EDITOR);
 global char *Mailer init(DEF_MAILER);
 #define MAILTO_OPTIONS_IGNORE 1
@@ -482,41 +482,41 @@ global char *ExtBrowser6 init(NULL);
 global char *ExtBrowser7 init(NULL);
 global char *ExtBrowser8 init(NULL);
 global char *ExtBrowser9 init(NULL);
-global int BackgroundExtViewer init(TRUE);
-global int disable_secret_security_check init(FALSE);
+global int BackgroundExtViewer init(true);
+global int disable_secret_security_check init(false);
 global char *passwd_file init(PASSWD_FILE);
 global char *pre_form_file init(PRE_FORM_FILE);
 global char *siteconf_file init(SITECONF_FILE);
 global char *ftppasswd init(NULL);
-global int ftppass_hostnamegen init(TRUE);
-global int do_download init(FALSE);
+global int ftppass_hostnamegen init(true);
+global int do_download init(false);
 global char *UserAgent init(NULL);
-global int NoSendReferer init(FALSE);
-global int CrossOriginReferer init(TRUE);
+global int NoSendReferer init(false);
+global int CrossOriginReferer init(true);
 global char *AcceptLang init(NULL);
 global char *AcceptEncoding init(NULL);
 global char *AcceptMedia init(NULL);
-global int WrapDefault init(FALSE);
-global int IgnoreCase init(TRUE);
-global int WrapSearch init(FALSE);
-global int squeezeBlankLine init(FALSE);
+global int WrapDefault init(false);
+global int IgnoreCase init(true);
+global int WrapSearch init(false);
+global int squeezeBlankLine init(false);
 global char *BookmarkFile init(NULL);
-global int UseExternalDirBuffer init(TRUE);
+global int UseExternalDirBuffer init(true);
 global char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
-global int UseDictCommand init(TRUE);
+global int UseDictCommand init(true);
 global char *DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
-global int ignore_null_img_alt init(TRUE);
+global int ignore_null_img_alt init(true);
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
 #define DISPLAY_INS_DEL_FONTIFY 2
 global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
-global int FoldTextarea init(FALSE);
-global int FoldLine init(FALSE);
+global int FoldTextarea init(false);
+global int FoldLine init(false);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
-global int MarkAllPages init(FALSE);
+global int MarkAllPages init(false);
 
 global struct auth_cookie *Auth_cookie init(NULL);
 global struct cookie *First_cookie init(NULL);
@@ -530,10 +530,10 @@ extern struct Hist *SaveHist;
 extern struct Hist *URLHist;
 extern struct Hist *ShellHist;
 extern struct Hist *TextHist;
-global int UseHistory init(TRUE);
+global int UseHistory init(true);
 global int URLHistSize init(100);
-global int SaveURLHist init(TRUE);
-global int multicolList init(FALSE);
+global int SaveURLHist init(true);
+global int multicolList init(false);
 
 #define Str_conv_from_system(x) (x)
 #define Str_conv_to_system(x) (x)
@@ -543,13 +543,13 @@ global int multicolList init(FALSE);
 #define url_quote_conv(x, c) url_quote(x)
 #define wc_Str_conv(x, charset0, charset1) (x)
 #define wc_Str_conv_strict(x, charset0, charset1) (x)
-global char UseAltEntity init(FALSE);
+global char UseAltEntity init(false);
 #define GRAPHIC_CHAR_ASCII 2
 #define GRAPHIC_CHAR_DEC 1
 #define GRAPHIC_CHAR_CHARSET 0
 global char UseGraphicChar init(GRAPHIC_CHAR_CHARSET);
-global char DisplayBorders init(FALSE);
-global char DisableCenter init(FALSE);
+global char DisplayBorders init(false);
+global char DisableCenter init(false);
 extern char *graph_symbol[];
 extern char *graph2_symbol[];
 extern int symbol_width;
@@ -557,14 +557,14 @@ extern int symbol_width0;
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 #define SYMBOL_BASE 0x20
-global int no_rc_dir init(FALSE);
+global int no_rc_dir init(false);
 global char *rc_dir init(NULL);
 global char *config_file init(NULL);
 
-global int default_use_cookie init(TRUE);
-global int use_cookie init(TRUE);
-global int show_cookie init(FALSE);
-global int accept_cookie init(TRUE);
+global int default_use_cookie init(true);
+global int use_cookie init(true);
+global int show_cookie init(false);
+global int accept_cookie init(true);
 #define ACCEPT_BAD_COOKIE_DISCARD 0
 #define ACCEPT_BAD_COOKIE_ACCEPT 1
 #define ACCEPT_BAD_COOKIE_ASK 2
@@ -576,16 +576,16 @@ global struct TextList *Cookie_reject_domains;
 global struct TextList *Cookie_accept_domains;
 global struct TextList *Cookie_avoid_wrong_number_of_dots_domains;
 
-global int view_unseenobject init(TRUE);
+global int view_unseenobject init(true);
 
 #if defined(USE_SSL) && defined(USE_SSL_VERIFY)
-global int ssl_verify_server init(TRUE);
+global int ssl_verify_server init(true);
 global char *ssl_cert_file init(NULL);
 global char *ssl_key_file init(NULL);
 global char *ssl_ca_path init(NULL);
 global char *ssl_ca_file init(DEF_CAFILE);
-global int ssl_ca_default init(TRUE);
-global int ssl_path_modified init(FALSE);
+global int ssl_ca_default init(true);
+global int ssl_path_modified init(false);
 #endif /* defined(USE_SSL) &&                                                  \
         * defined(USE_SSL_VERIFY) */
 global char *ssl_forbid_method init("2, 3, t, 5");
@@ -598,12 +598,12 @@ global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 global char *ssl_cipher init(NULL);
 #endif
 
-global int is_redisplay init(FALSE);
-global int clear_buffer init(TRUE);
+global int is_redisplay init(false);
+global int clear_buffer init(true);
 global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
 global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
-global int set_pixel_per_char init(FALSE);
-global int use_lessopen init(FALSE);
+global int set_pixel_per_char init(false);
+global int use_lessopen init(false);
 
 global char *keymap_file init(KEYMAP_FILE);
 

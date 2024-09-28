@@ -810,7 +810,7 @@ void sync_with_option(void) {
   parse_cookie();
   initMailcap();
   initMimeTypes();
-  displayImage = FALSE; /* XXX */
+  displayImage = false; /* XXX */
   loadPasswd();
   loadPreForm();
   loadSiteconf();
@@ -828,7 +828,7 @@ void sync_with_option(void) {
   if (AcceptMedia == NULL || *AcceptMedia == '\0')
     AcceptMedia = acceptableMimeTypes();
 
-  initKeymap(FALSE);
+  initKeymap(false);
 }
 
 static char optionpanel_src1[] =
@@ -934,11 +934,11 @@ void panel_set_option(struct parsed_tagarg *arg) {
   Str s = Strnew(), tmp;
 
   if (config_file == NULL) {
-    disp_message("There's no config file... config not saved", FALSE);
+    disp_message("There's no config file... config not saved", false);
   } else {
     f = fopen(config_file, "wt");
     if (f == NULL) {
-      disp_message("Can't write option!", FALSE);
+      disp_message("Can't write option!", false);
     }
   }
   while (arg) {
@@ -1025,7 +1025,7 @@ static struct siteconf_rec *newSiteconfRec(void) {
   ent->next = NULL;
   ent->url = NULL;
   ent->re_url = NULL;
-  ent->url_exact = FALSE;
+  ent->url_exact = false;
   memset(ent->mask, 0, sizeof(ent->mask));
 
   ent->substitute_url = NULL;
@@ -1084,7 +1084,7 @@ static void loadSiteconf(void) {
       /* If we have an extra or unknown option, ignore this record
        * for future extensions. */
       if (strcmp(opt, "exact") == 0) {
-        newent->url_exact = TRUE;
+        newent->url_exact = true;
       } else if (*opt != 0)
         continue;
       if (*p)
@@ -1240,7 +1240,7 @@ void init_rc(void) {
       /* fprintf(stderr, "%s is not writable!\n", rc_dir); */
       goto rc_dir_err;
     }
-    no_rc_dir = FALSE;
+    no_rc_dir = false;
     app_set_tmpdir(rc_dir);
 
     if (config_file == NULL)
@@ -1253,7 +1253,7 @@ void init_rc(void) {
   return;
 
 rc_dir_err:
-  no_rc_dir = TRUE;
+  no_rc_dir = true;
   app_no_rcdir(rc_dir);
   create_option_search_table();
   open_rc();

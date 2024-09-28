@@ -1,16 +1,7 @@
-/* $Id: indep.h,v 1.16 2003/09/22 21:02:19 ukai Exp $ */
-#ifndef INDEP_H
-#define INDEP_H
+#pragma once
 #include "alloc.h"
 #include "Str.h"
 #include "config.h"
-
-#ifndef TRUE
-#define TRUE 1
-#endif /* TRUE */
-#ifndef FALSE
-#define FALSE 0
-#endif /* FALSE */
 
 extern unsigned char QUOTE_MAP[];
 extern char *HTML_QUOTE_MAP[];
@@ -71,7 +62,7 @@ extern char *file_unquote(char *str);
 extern char *url_quote(char *str);
 extern Str Str_url_unquote(Str x, int is_form, int safe);
 extern Str Str_form_quote(Str x);
-#define Str_form_unquote(x) Str_url_unquote((x), TRUE, FALSE)
+#define Str_form_unquote(x) Str_url_unquote((x), true, false)
 extern char *shell_quote(char *str);
 #define xmalloc(s) xrealloc(NULL, s)
 extern void *xrealloc(void *ptr, size_t size);
@@ -89,5 +80,3 @@ extern char *w3m_help_dir();
 #define NewWithoutGC_N(type, n) ((type *)xmalloc((n) * sizeof(type)))
 #define NewWithoutGC_Reuse(type, ptr, n)                                       \
   ((type *)xrealloc(ptr, (n) * sizeof(type)))
-
-#endif /* INDEP_H */

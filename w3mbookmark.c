@@ -40,10 +40,10 @@ static char *bkmark_src2 =
 </body>\n\
 </html>\n";
 
-#undef FALSE
-#define FALSE 0
-#undef TRUE
-#define TRUE 1
+#undef false
+#define false 0
+#undef true
+#define true 1
 
 static char end_section[] =
     "<!--End of section (do not delete this comment)-->\n";
@@ -86,7 +86,7 @@ static int create_new_bookmark(char *bmark, char *section, char *title,
   f = fopen(bmark, mode);
   if (f == NULL) {
     printf("\nCan't open bookmark %s\n", bmark);
-    return FALSE;
+    return false;
   } else {
     fprintf(f, "<html><head><title>Bookmarks</title></head>\n");
     fprintf(f, "<body>\n<h1>Bookmarks</h1>\n");
@@ -96,7 +96,7 @@ static int create_new_bookmark(char *bmark, char *section, char *title,
     fprintf(f, "</ul>\n</body>\n</html>\n");
     fclose(f);
   }
-  return TRUE;
+  return true;
 }
 
 int insert_bookmark(char *bmark, struct parsed_tagarg *data) {
@@ -117,7 +117,7 @@ int insert_bookmark(char *bmark, struct parsed_tagarg *data) {
 
   if (url == NULL || *url == '\0' || title == NULL || *title == '\0') {
     /* Bookmark not added */
-    return FALSE;
+    return false;
   }
   url = html_quote(url);
   title = html_quote(title);
@@ -158,13 +158,13 @@ int insert_bookmark(char *bmark, struct parsed_tagarg *data) {
   }
   if ((f = fopen(bmark, "w")) == NULL) {
     printf("\nCannot open bookmark %s\n", bmark);
-    return FALSE;
+    return false;
   }
   while (tl->nitem) {
     fputs(popText(tl), f);
   }
   fclose(f);
-  return TRUE;
+  return true;
 }
 
 int main(int argc, char *argv[], char **envp) {

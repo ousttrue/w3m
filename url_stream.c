@@ -432,7 +432,7 @@ eend:
       Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
               ERR_error_string(ERR_get_error(), NULL))
           ->ptr,
-      FALSE);
+      false);
   return NULL;
 }
 
@@ -934,7 +934,7 @@ void copyParsedURL(struct Url *p, const struct Url *q) {
 void parseURL2(char *url, struct Url *pu, struct Url *current) {
   char *p;
   Str tmp;
-  int relative_uri = FALSE;
+  int relative_uri = false;
 
   parseURL(url, pu, current);
   if (pu->scheme == SCM_MAILTO)
@@ -1004,7 +1004,7 @@ void parseURL2(char *url, struct Url *pu, struct Url *current) {
           }
           Strcat_charp(tmp, p);
           pu->file = tmp->ptr;
-          relative_uri = TRUE;
+          relative_uri = true;
         }
       }
     } else { /* scheme:[?query][#label] */
@@ -1136,7 +1136,7 @@ static Str _parsedURL2Str(struct Url *pu, int pass, int user, int label) {
 }
 
 Str parsedURL2Str(struct Url *pu) {
-  return _parsedURL2Str(pu, FALSE, TRUE, TRUE);
+  return _parsedURL2Str(pu, false, true, true);
 }
 
 static Str parsedURL2RefererOriginStr(struct Url *pu) {
@@ -1145,7 +1145,7 @@ static Str parsedURL2RefererOriginStr(struct Url *pu) {
 
   pu->file = NULL;
   pu->query = NULL;
-  s = _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+  s = _parsedURL2Str(pu, false, false, false);
   pu->file = f;
   pu->query = q;
 
@@ -1153,7 +1153,7 @@ static Str parsedURL2RefererOriginStr(struct Url *pu) {
 }
 
 Str parsedURL2RefererStr(struct Url *pu) {
-  return _parsedURL2Str(pu, FALSE, FALSE, FALSE);
+  return _parsedURL2Str(pu, false, false, false);
 }
 
 int getURLScheme(char **url) {
@@ -1225,12 +1225,12 @@ static char *otherinfo(struct Url *target, struct Url *current, char *referer) {
   no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
   if (!no_referer) {
-    int cross_origin = FALSE;
+    int cross_origin = false;
     if (CrossOriginReferer && current && current->host &&
         (!target || !target->host ||
          strcasecmp(current->host, target->host) != 0 ||
          current->port != target->port || current->scheme != target->scheme))
-      cross_origin = TRUE;
+      cross_origin = true;
     if (current && current->scheme == SCM_HTTPS &&
         target->scheme != SCM_HTTPS) {
       /* Don't send Referer: if https:// -> http:// */
@@ -1286,7 +1286,7 @@ Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr) {
       Strcat_charp(tmp, pu->query);
     }
   } else
-    Strcat(tmp, _parsedURL2Str(pu, TRUE, TRUE, FALSE));
+    Strcat(tmp, _parsedURL2Str(pu, true, true, false));
   return tmp;
 }
 
@@ -1362,7 +1362,7 @@ void init_stream(struct URLFile *uf, int scheme, InputStream stream) {
   uf->stream = stream;
   uf->scheme = scheme;
   uf->encoding = ENC_7BIT;
-  uf->is_cgi = FALSE;
+  uf->is_cgi = false;
   uf->compression = CMP_NOCOMPRESS;
   uf->content_encoding = CMP_NOCOMPRESS;
   uf->guess_type = NULL;
@@ -1442,7 +1442,7 @@ retry:
           newFileStream(localcgi_get(pu->real_file, pu->query, option->referer),
                         (void (*)())fclose);
     if (uf.stream) {
-      uf.is_cgi = TRUE;
+      uf.is_cgi = true;
       uf.scheme = pu->scheme = SCM_LOCAL_CGI;
       return uf;
     }
@@ -1622,7 +1622,7 @@ retry:
       *q = '\0';
       uf.encoding = ENC_BASE64;
     } else
-      tmp = Str_url_unquote(tmp, FALSE, FALSE);
+      tmp = Str_url_unquote(tmp, false, false);
     uf.stream = newStrStream(tmp);
     uf.guess_type = (*p != '\0') ? p : "text/plain";
     return uf;

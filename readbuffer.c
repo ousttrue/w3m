@@ -100,7 +100,7 @@ Str process_input(struct parsed_tag *tag) {
 
   if (cur_form_id < 0) {
     char *s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, TRUE));
+    tmp = process_form(parse_tag(&s, true));
   }
   if (tmp == NULL)
     tmp = Strnew();
@@ -283,7 +283,7 @@ Str process_button(struct parsed_tag *tag) {
 
   if (cur_form_id < 0) {
     char *s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, TRUE));
+    tmp = process_form(parse_tag(&s, true));
   }
   if (tmp == NULL)
     tmp = Strnew();
@@ -347,7 +347,7 @@ Str process_select(struct parsed_tag *tag) {
 
   if (cur_form_id < 0) {
     char *s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, TRUE));
+    tmp = process_form(parse_tag(&s, true));
   }
 
   p = "";
@@ -387,7 +387,7 @@ void feed_select(char *str) {
     if (tmp->ptr[0] == '<' && Strlastchar(tmp) == '>') {
       struct parsed_tag *tag;
       char *q;
-      if (!(tag = parse_tag(&p, FALSE)))
+      if (!(tag = parse_tag(&p, false)))
         continue;
       switch (tag->tagid) {
       case HTML_OPTION:
@@ -472,7 +472,7 @@ Str process_textarea(struct parsed_tag *tag, int width) {
 
   if (cur_form_id < 0) {
     char *s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, TRUE));
+    tmp = process_form(parse_tag(&s, true));
   }
 
   p = "";
@@ -504,7 +504,7 @@ Str process_textarea(struct parsed_tag *tag, int width) {
     textarea_str = New_Reuse(Str, textarea_str, max_textarea);
   }
   textarea_str[n_textarea] = Strnew();
-  ignore_nl_textarea = TRUE;
+  ignore_nl_textarea = true;
 
   return tmp;
 }
@@ -545,7 +545,7 @@ void feed_textarea(char *str) {
     if (*str == '\n')
       str++;
   }
-  ignore_nl_textarea = FALSE;
+  ignore_nl_textarea = false;
   while (*str) {
     if (*str == '&')
       Strcat_charp(textarea_str[n_textarea], getescapecmd(&str));
@@ -1415,7 +1415,7 @@ static void feed_title(char *str) {
 Str process_img(struct parsed_tag *tag, int width) {
   char *p, *q, *r, *r2 = NULL, *s, *t;
   int w, i, nw, n;
-  int pre_int = FALSE, ext_pre_int = FALSE;
+  int pre_int = false, ext_pre_int = false;
   Str tmp = Strnew();
 
   if (!parsedtag_get_value(tag, ATTR_SRC, &p))
@@ -1441,14 +1441,14 @@ Str process_img(struct parsed_tag *tag, int width) {
   r = NULL;
   parsedtag_get_value(tag, ATTR_USEMAP, &r);
   if (parsedtag_exists(tag, ATTR_PRE_INT))
-    ext_pre_int = TRUE;
+    ext_pre_int = true;
 
   tmp = Strnew_size(128);
   if (r) {
     Str tmp2;
     r2 = strchr(r, '#');
     s = "<form_int method=internal action=map>";
-    tmp2 = process_form(parse_tag(&s, TRUE));
+    tmp2 = process_form(parse_tag(&s, true));
     if (tmp2)
       Strcat(tmp, tmp2);
     Strcat(tmp, Sprintf("<input_alt fid=\"%d\" "
@@ -1465,7 +1465,7 @@ Str process_img(struct parsed_tag *tag, int width) {
     nw = w ? (int)((w - 1) / pixel_per_char + 1) : 1;
     if (r) {
       Strcat_charp(tmp, "<pre_int>");
-      pre_int = TRUE;
+      pre_int = true;
     }
     Strcat_charp(tmp, "<img_alt src=\"");
   }
@@ -1497,7 +1497,7 @@ Str process_img(struct parsed_tag *tag, int width) {
         else {
           if (!pre_int) {
             Strcat_charp(tmp, "<pre_int>");
-            pre_int = TRUE;
+            pre_int = true;
           }
           push_symbol(tmp, IMG_SYMBOL, symbol_width, 1);
           n = symbol_width;
@@ -1509,7 +1509,7 @@ Str process_img(struct parsed_tag *tag, int width) {
       /* must be a horizontal line */
       if (!pre_int) {
         Strcat_charp(tmp, "<pre_int>");
-        pre_int = TRUE;
+        pre_int = true;
       }
       w = w / pixel_per_char / symbol_width;
       if (w <= 0)
@@ -2355,7 +2355,7 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
         HTMLlineproc1(tmp->ptr, h_env);
         do_blankline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
         if (!is_redisplay && !((obuf->flag & RB_NOFRAMES) && RenderFrame)) {
-          tag->need_reconstruct = TRUE;
+          tag->need_reconstruct = true;
           return 0;
         }
       }
@@ -2685,7 +2685,7 @@ table_start:
 
   while (*line != '\0') {
     char *str, *p;
-    int is_tag = FALSE;
+    int is_tag = false;
     int pre_mode =
         (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
     int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag
@@ -2708,7 +2708,7 @@ table_start:
       str = Strdup(h_env->tagbuf)->ptr;
       if (*str == '<') {
         if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
-          is_tag = TRUE;
+          is_tag = true;
         else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
                                RB_STYLE | RB_TITLE))) {
           line = Strnew_m_charp(str + 1, line, NULL)->ptr;
@@ -2751,7 +2751,7 @@ table_start:
           str = Strnew_charp_n(str, p - str)->ptr;
           line = Strnew_m_charp(p, line, NULL)->ptr;
         }
-        is_tag = FALSE;
+        is_tag = false;
       }
       if (obuf->table_level >= 0)
         goto proc_normal;
@@ -2791,7 +2791,7 @@ table_start:
           tbl = tbl0;
           tbl_mode = &table_mode[obuf->table_level];
           tbl_width = table_width(h_env, obuf->table_level);
-          feed_table(tbl, str, tbl_mode, tbl_width, TRUE);
+          feed_table(tbl, str, tbl_mode, tbl_width, true);
           continue;
           /* continue to the next */
         }
@@ -3175,7 +3175,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
       } else {
         /* tag processing */
         struct parsed_tag *tag;
-        if (!(tag = parse_tag(&str, TRUE)))
+        if (!(tag = parse_tag(&str, true)))
           continue;
         switch (tag->tagid) {
         case HTML_B:
@@ -3244,7 +3244,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             effect |= PE_ANCHOR;
             a_href = registerHref(buf, p, q, r, s, *t, currentLn(buf), pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
-            a_href->slave = (hseq > 0) ? FALSE : TRUE;
+            a_href->slave = (hseq > 0) ? false : true;
           }
           break;
         case HTML_N_A:
@@ -3537,7 +3537,7 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
     newBuf->buffername = "---";
     max_textarea = 0;
     HTMLlineproc3(newBuf, f->stream);
-    w3m_halfload = FALSE;
+    w3m_halfload = false;
     return;
   }
 
@@ -3687,7 +3687,7 @@ struct Buffer *loadHTMLString(Str page) {
   }
   TRAP_ON;
 
-  loadHTMLstream(&f, newBuf, NULL, TRUE);
+  loadHTMLstream(&f, newBuf, NULL, true);
 
   TRAP_OFF;
   UFclose(&f);

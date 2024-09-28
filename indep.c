@@ -517,13 +517,13 @@ char *remove_space(char *str) {
 
 int non_null(char *s) {
   if (s == NULL)
-    return FALSE;
+    return false;
   while (*s) {
     if (!IS_SPACE(*s))
-      return TRUE;
+      return true;
     s++;
   }
-  return FALSE;
+  return false;
 }
 
 void cleanup_line(Str s, enum CLEANUP_LINE_MODE mode) {
@@ -556,7 +556,7 @@ Str convertLine(Str line, enum CLEANUP_LINE_MODE mode) {
 int getescapechar(char **str) {
   int dummy = -1;
   char *p = *str, *q;
-  int strict_entity = TRUE;
+  int strict_entity = true;
 
   if (*p == '&')
     p++;
@@ -604,7 +604,7 @@ int getescapechar(char **str) {
      * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
      * are not regarded as character entities.
      */
-    strict_entity = FALSE;
+    strict_entity = false;
   }
   if (*p == ';')
     p++;

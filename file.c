@@ -345,12 +345,12 @@ void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
         int err;
         if (show_cookie) {
           if (flag & COO_SECURE)
-            disp_message_nsec("Received a secured cookie", FALSE, 1, TRUE,
-                              FALSE);
+            disp_message_nsec("Received a secured cookie", false, 1, true,
+                              false);
           else
             disp_message_nsec(
                 Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
-                FALSE, 1, TRUE, FALSE);
+                false, 1, true, false);
         }
         err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
                          version, port, commentURL);
@@ -381,12 +381,12 @@ void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
               emsg = "This cookie was rejected to prevent security violation.";
             term_err_message(emsg);
             if (show_cookie)
-              disp_message_nsec(emsg, FALSE, 1, TRUE, FALSE);
+              disp_message_nsec(emsg, false, 1, true, false);
           } else if (show_cookie)
             disp_message_nsec(Sprintf("Accepting invalid cookie: %s=%s",
                                       name->ptr, value->ptr)
                                   ->ptr,
-                              FALSE, 1, TRUE, FALSE);
+                              false, 1, true, false);
         }
       }
     } else if (!strncasecmp(lineBuf2->ptr, "w3m-control:", 12) &&
@@ -505,7 +505,7 @@ static Str extract_auth_val(char **q) {
 
   SKIP_BLANKS(qq);
   if (*qq == '"') {
-    quoted = TRUE;
+    quoted = true;
     Strcat_char(val, *qq++);
   }
   while (*qq != '\0') {
@@ -692,10 +692,10 @@ static void getAuthCookie(struct http_auth *hauth, char *auth_header,
   if (!realm)
     return;
 
-  a_found = FALSE;
+  a_found = false;
   for (i = extra_header->first; i != NULL; i = i->next) {
     if (!strncasecmp(i->ptr, auth_header, auth_header_len)) {
-      a_found = TRUE;
+      a_found = true;
       break;
     }
   }
@@ -758,22 +758,22 @@ static int checkRedirection(struct Url *pu) {
     nredir = 0;
     nredir_size = 0;
     puv = NULL;
-    return TRUE;
+    return true;
   }
   if (nredir >= FollowRedirection) {
     /* FIXME: gettextize? */
     tmp = Sprintf("Number of redirections exceeded %d at %s", FollowRedirection,
                   parsedURL2Str(pu)->ptr);
-    disp_err_message(tmp->ptr, FALSE);
-    return FALSE;
+    disp_err_message(tmp->ptr, false);
+    return false;
   } else if (nredir_size > 0 &&
              (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) ||
               (!(nredir % 2) &&
                same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
     /* FIXME: gettextize? */
     tmp = Sprintf("Redirection loop detected (%s)", parsedURL2Str(pu)->ptr);
-    disp_err_message(tmp->ptr, FALSE);
-    return FALSE;
+    disp_err_message(tmp->ptr, false);
+    return false;
   }
   if (!puv) {
     nredir_size = FollowRedirection / 2 + 1;
@@ -782,7 +782,7 @@ static int checkRedirection(struct Url *pu) {
   }
   copyParsedURL(&puv[nredir % nredir_size], pu);
   nredir++;
-  return TRUE;
+  return true;
 }
 
 /*
@@ -802,7 +802,7 @@ struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
   const char *real_type = NULL;
   struct Buffer *t_buf = NULL;
   int searchHeader = SearchHeader;
-  int searchHeader_through = TRUE;
+  int searchHeader_through = true;
   MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   struct TextList *extra_header = newTextList();
   Str uname = NULL;
@@ -870,7 +870,7 @@ load_doc: {
     case SCM_UNKNOWN:
       /* FIXME: gettextize? */
       disp_err_message(Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr,
-                       FALSE);
+                       false);
       break;
     }
     if (page && page->length > 0)
@@ -897,8 +897,8 @@ load_doc: {
   b = NULL;
   if (f.is_cgi) {
     /* local CGI */
-    searchHeader = TRUE;
-    searchHeader_through = FALSE;
+    searchHeader = true;
+    searchHeader_through = false;
   }
   if (header_string)
     header_string = NULL;
@@ -919,7 +919,7 @@ load_doc: {
 		t_buf->ssl_certificate = s->ptr;
 	}
 #endif
-    readHeader(&f, t_buf, FALSE, &pu);
+    readHeader(&f, t_buf, false, &pu);
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&
@@ -1019,7 +1019,7 @@ load_doc: {
   } else if (pu.scheme == SCM_DATA) {
     t = f.guess_type;
   } else if (searchHeader) {
-    searchHeader = SearchHeader = FALSE;
+    searchHeader = SearchHeader = false;
     if (t_buf == NULL)
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
     readHeader(&f, t_buf, searchHeader_through, &pu);
@@ -1161,7 +1161,7 @@ page_loaded:
         UFclose(&f);
         _doFileCopy(pu.real_file,
                     conv_from_system(guess_save_name(NULL, pu.real_file)),
-                    TRUE);
+                    true);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
@@ -1199,7 +1199,7 @@ page_loaded:
           if (label_topline)
             b->topLine = lineSkip(
                 b, b->topLine,
-                b->currentLine->linenumber - b->topLine->linenumber, FALSE);
+                b->currentLine->linenumber - b->topLine->linenumber, false);
           b->pos = a->start.pos;
           arrangeCursor(b);
         }
@@ -1416,7 +1416,7 @@ static Str conv_symbol(Line *l) {
  */
 static void _saveBuffer(struct Buffer *buf, Line *l, FILE *f, int cont) {
   Str tmp;
-  int is_html = FALSE;
+  int is_html = false;
 
   is_html = is_html_type(buf->type);
 
@@ -1652,10 +1652,10 @@ int _MoveFile(char *path1, char *path2) {
   if (f1 == NULL)
     return -1;
   if (*path2 == '|' && PermitSaveToPipe) {
-    is_pipe = TRUE;
+    is_pipe = true;
     f2 = popen(path2 + 1, "w");
   } else {
-    is_pipe = FALSE;
+    is_pipe = false;
     f2 = fopen(path2, "wb");
   }
   if (f2 == NULL) {

@@ -122,15 +122,15 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
   unsigned char c;
   char *p;
 
-  is_passwd = FALSE;
-  move_word = TRUE;
+  is_passwd = false;
+  move_word = true;
 
   CurrentHist = hist;
   if (hist != NULL) {
-    use_hist = TRUE;
+    use_hist = true;
     strCurrentBuf = NULL;
   } else {
-    use_hist = FALSE;
+    use_hist = false;
   }
   if (flag & IN_URL) {
     cm_mode = CPL_ALWAYS | CPL_URL;
@@ -138,8 +138,8 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
     cm_mode = CPL_ALWAYS;
   } else if (flag & IN_PASSWORD) {
     cm_mode = CPL_NEVER;
-    is_passwd = TRUE;
-    move_word = FALSE;
+    is_passwd = true;
+    move_word = false;
   } else if (flag & IN_COMMAND)
     cm_mode = CPL_ON;
   else
@@ -160,12 +160,12 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
     CLen = CPos = 0;
   }
 
-  i_cont = TRUE;
-  i_broken = FALSE;
-  i_quote = FALSE;
-  cm_next = FALSE;
+  i_cont = true;
+  i_broken = false;
+  i_quote = false;
+  cm_next = false;
   cm_disp_next = -1;
-  need_redraw = FALSE;
+  need_redraw = false;
 
   do {
     x = calcPosition(strBuf->ptr, strProp, CLen, CPos, 0, CP_FORCE);
@@ -193,14 +193,14 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
 
   next_char:
     c = tty_getch();
-    cm_clear = TRUE;
-    cm_disp_clear = TRUE;
+    cm_clear = true;
+    cm_disp_clear = true;
     if (!i_quote && (((cm_mode & CPL_ALWAYS) &&
                       (c == CTRL_I || (space_autocomplete && c == ' '))) ||
                      ((cm_mode & CPL_ON) && (c == CTRL_I)))) {
       if (emacs_like_lineedit && cm_next) {
         _dcompl();
-        need_redraw = TRUE;
+        need_redraw = true;
       } else {
         _compl(-1);
         cm_disp_next = -1;
@@ -209,11 +209,11 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
                (cm_mode & CPL_ALWAYS || cm_mode & CPL_ON) && c == CTRL_D) {
       if (!emacs_like_lineedit) {
         _dcompl();
-        need_redraw = TRUE;
+        need_redraw = true;
       }
     } else if (!i_quote && c == DEL_CODE) {
       _bs(-1);
-      cm_next = FALSE;
+      cm_next = false;
       cm_disp_next = -1;
     } else if (!i_quote && c < 0x20) { /* Control code */
       if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20)
@@ -221,12 +221,12 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
       if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
         incrfunc(-1, strBuf, strProp);
       if (cm_clear)
-        cm_next = FALSE;
+        cm_next = false;
       if (cm_disp_clear)
         cm_disp_next = -1;
     } else {
-      i_quote = FALSE;
-      cm_next = FALSE;
+      i_quote = false;
+      cm_next = false;
       cm_disp_next = -1;
       if (CLen >= STR_LEN)
         goto next_char;
@@ -339,15 +339,15 @@ static void _esc(int) {
   case ' ':
     if (emacs_like_lineedit) {
       _rdcompl();
-      cm_clear = FALSE;
-      need_redraw = TRUE;
+      cm_clear = false;
+      need_redraw = true;
     } else
       _rcompl();
     break;
   case CTRL_D:
     if (!emacs_like_lineedit)
       _rdcompl();
-    need_redraw = TRUE;
+    need_redraw = true;
     break;
   case 'f':
     if (emacs_like_lineedit)
@@ -433,7 +433,7 @@ static void _bsw(int) {
   }
 }
 
-static void _enter(int) { i_cont = FALSE; }
+static void _enter(int) { i_cont = false; }
 
 static void insertself(int c) {
   if (CLen >= STR_LEN)
@@ -444,7 +444,7 @@ static void insertself(int c) {
   CPos++;
 }
 
-static void _quo(int) { i_quote = TRUE; }
+static void _quo(int) { i_quote = true; }
 
 static void _mvB(int) { CPos = 0; }
 
@@ -461,8 +461,8 @@ static void killb(int) {
 }
 
 static void _inbrk(int) {
-  i_cont = FALSE;
-  i_broken = TRUE;
+  i_cont = false;
+  i_broken = true;
 }
 
 static void _compl(int) { next_compl(1); }
@@ -484,7 +484,7 @@ static void next_compl(int next) {
 
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
-  cm_clear = FALSE;
+  cm_clear = false;
   if (!cm_next) {
     if (cm_mode & CPL_ALWAYS) {
       b = 0;
@@ -535,14 +535,14 @@ static void next_dcompl(int next) {
 
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
-  cm_disp_clear = FALSE;
+  cm_disp_clear = false;
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
   if (LASTLINE >= 3) {
-    comment = TRUE;
+    comment = true;
     nline = LASTLINE - 2;
   } else if (LASTLINE) {
-    comment = FALSE;
+    comment = false;
     nline = LASTLINE;
   } else {
     return;
@@ -562,7 +562,7 @@ static void next_dcompl(int next) {
     goto disp_next;
   }
 
-  cm_next = FALSE;
+  cm_next = false;
   next_compl(0);
   if (NCFileBuf == 0)
     return;
@@ -766,7 +766,7 @@ static Str doComplete(Str ifn, int *status, int next) {
     qsort(CFileBuf, NCFileBuf, sizeof(CFileBuf[0]), strCmp);
     NCFileOffset = 0;
     if (NCFileBuf >= 2) {
-      cm_next = TRUE;
+      cm_next = true;
       *status = CPL_AMBIG;
     } else {
       *status = CPL_OK;
@@ -881,7 +881,7 @@ static void _editor(int) {
   if (is_passwd)
     return;
 
-  fi.readonly = FALSE;
+  fi.readonly = false;
   fi.value = Strdup(strBuf);
   Strcat_char(fi.value, '\n');
 

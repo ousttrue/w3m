@@ -59,7 +59,7 @@ void push_link(int cmd, int offset, int pos);
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl);
 void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, TRUE)
+#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
 struct Buffer *loadHTMLBuffer(struct URLFile *f, struct Buffer *newBuf);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);

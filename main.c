@@ -164,9 +164,9 @@ Str make_optional_header_string(char *s) {
   hs = Strnew_size(strlen(s) + 3);
   Strcopy_charp_n(hs, s, p - s);
   if (!Strcasecmp_charp(hs, "content-type"))
-    override_content_type = TRUE;
+    override_content_type = true;
   if (!Strcasecmp_charp(hs, "user-agent"))
-    override_user_agent = TRUE;
+    override_user_agent = true;
   Strcat_charp(hs, ": ");
   if (*(++p)) {     /* not null header */
     SKIP_BLANKS(p); /* skip white spaces */
@@ -241,10 +241,10 @@ int main(int argc, char **argv) {
   // char *p;
   // int c, i;
   // InputStream redin;
-  // int load_bookmark = FALSE;
-  // int visual_start = FALSE;
-  // int open_new_tab = FALSE;
-  // char search_header = FALSE;
+  // int load_bookmark = false;
+  // int visual_start = false;
+  // int open_new_tab = false;
+  // char search_header = false;
   // char *default_type = NULL;
   // char *post_file = NULL;
   // Str err_msg;
@@ -494,9 +494,9 @@ int main(int argc, char **argv) {
     w3m_exit(2);
   }
   if (err_msg->length)
-    disp_message_nsec(err_msg->ptr, FALSE, 1, TRUE, FALSE);
+    disp_message_nsec(err_msg->ptr, false, 1, true, false);
 
-  SearchHeader = FALSE;
+  SearchHeader = false;
   DefaultType = NULL;
 
   Currentbuf = Firstbuf;

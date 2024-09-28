@@ -186,7 +186,7 @@ extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 extern struct Buffer *getshell(char *cmd);
 extern int save2tmp(struct URLFile uf, char *tmpf);
-#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, FALSE);
+#define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
 extern int doFileMove(char *tmpf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 extern int checkSaveFile(InputStream stream, char *path);

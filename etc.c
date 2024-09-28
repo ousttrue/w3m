@@ -136,7 +136,7 @@ Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor) {
   static Lineprop *prop_buffer = NULL;
   static int prop_size = 0;
   char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
-  int do_copy = FALSE;
+  int do_copy = false;
   int i;
   int plen = 0, clen;
 
@@ -151,7 +151,7 @@ Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor) {
     if ((bs != NULL)) {
       char *sp = str, *ep;
       s = Strnew_size(s->length);
-      do_copy = TRUE;
+      do_copy = true;
       ep = bs ? (bs - 2) : endp;
       for (; str < ep && IS_ASCII(*str); str++) {
         *(prop++) = PE_NORMAL | (IS_CNTRL(*str) ? PC_CTRL : PC_ASCII);
@@ -643,7 +643,7 @@ static struct auth_pass *find_auth_pass_entry(char *host, int port, char *realm,
                                               char *uname, int is_proxy) {
   struct auth_pass *ent;
   for (ent = passwords; ent != NULL; ent = ent->next) {
-    if (ent->is_proxy == is_proxy && (ent->bad != TRUE) &&
+    if (ent->is_proxy == is_proxy && (ent->bad != true) &&
         (!ent->host || !Strcasecmp_charp(ent->host, host)) &&
         (!ent->port || ent->port == port) &&
         (!ent->uname || !uname || !Strcmp_charp(ent->uname, uname)) &&
@@ -690,7 +690,7 @@ void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname,
   struct auth_pass *ent;
   ent = find_auth_pass_entry(pu->host, pu->port, realm, NULL, is_proxy);
   if (ent) {
-    ent->bad = TRUE;
+    ent->bad = true;
   }
   return;
 }
@@ -962,14 +962,14 @@ void myExec(char *command) {
 Str myExtCommand(char *cmd, char *arg, int redirect) {
   Str tmp = NULL;
   char *p;
-  int set_arg = FALSE;
+  int set_arg = false;
 
   for (p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_arg) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
       Strcat_charp(tmp, arg);
-      set_arg = TRUE;
+      set_arg = true;
       p++;
     } else {
       if (tmp)
@@ -988,20 +988,20 @@ Str myExtCommand(char *cmd, char *arg, int redirect) {
 Str myEditor(char *cmd, char *file, int line) {
   Str tmp = NULL;
   char *p;
-  int set_file = FALSE, set_line = FALSE;
+  int set_file = false, set_line = false;
 
   for (p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_file) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
       Strcat_charp(tmp, file);
-      set_file = TRUE;
+      set_file = true;
       p++;
     } else if (*p == '%' && *(p + 1) == 'd' && !set_line && line > 0) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));
       Strcat(tmp, Sprintf("%d", line));
-      set_line = TRUE;
+      set_line = true;
       p++;
     } else {
       if (tmp)
@@ -1021,8 +1021,8 @@ Str myEditor(char *cmd, char *file, int line) {
 int is_localhost(const char *host) {
   if (!host || !strcasecmp(host, "localhost") || !strcmp(host, "127.0.0.1") ||
       (HostName && !strcasecmp(host, HostName)) || !strcmp(host, "[::1]"))
-    return TRUE;
-  return FALSE;
+    return true;
+  return false;
 }
 
 char *file_to_url(char *file) {
@@ -1048,7 +1048,7 @@ char *file_to_url(char *file) {
 
 char *url_unquote_conv0(char *url) {
   Str tmp;
-  tmp = Str_url_unquote(Strnew_charp(url), FALSE, TRUE);
+  tmp = Str_url_unquote(Strnew_charp(url), false, true);
   return tmp->ptr;
 }
 

@@ -323,7 +323,7 @@ FILE *localcgi_post(char *uri, char *qstr, struct FormList *request,
       fclose(fw);
     return fr;
   }
-  setup_child(TRUE, 2, fw ? fileno(fw) : -1);
+  setup_child(true, 2, fw ? fileno(fw) : -1);
 
   set_cgi_environ(name, file, uri);
   if (path_info)

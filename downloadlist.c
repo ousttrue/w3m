@@ -36,14 +36,14 @@ static bool add_download_list = false;
 
 void download_update() {
   if (add_download_list) {
-    add_download_list = FALSE;
+    add_download_list = false;
     ldDL();
   }
 }
 
 bool do_add_download_list() {
   int ret = add_download_list;
-  add_download_list = FALSE;
+  add_download_list = false;
   return ret;
 }
 
@@ -58,7 +58,7 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
   d->lock = lock;
   d->size = size;
   d->time = time(0);
-  d->running = TRUE;
+  d->running = true;
   d->err = 0;
   d->next = NULL;
   d->prev = LastDL;
@@ -67,7 +67,7 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
   else
     FirstDL = d;
   LastDL = d;
-  add_download_list = TRUE;
+  add_download_list = true;
 }
 
 #ifdef _WIN32
@@ -76,14 +76,14 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
 
 bool checkDownloadList() {
   if (!FirstDL)
-    return FALSE;
+    return false;
 
   for (auto d = FirstDL; d != NULL; d = d->next) {
     struct stat st;
     if (d->running && !lstat(d->lock, &st))
-      return TRUE;
+      return true;
   }
-  return FALSE;
+  return false;
 }
 
 static char *convert_size3(int64_t size) {
@@ -116,7 +116,7 @@ static struct Buffer *DownloadListBuffer(void) {
       "<form method=internal action=download><hr>\n");
   for (d = LastDL; d != NULL; d = d->prev) {
     if (lstat(d->lock, &st))
-      d->running = FALSE;
+      d->running = false;
     Strcat_charp(src, "<pre>\n");
     Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url),
                         html_quote(conv_from_system(d->save))));
@@ -191,10 +191,10 @@ static struct Buffer *DownloadListBuffer(void) {
 #ifdef _WIN32
 BOOL kill(DWORD dwProcessId, UINT uExitCode) {
   DWORD dwDesiredAccess = PROCESS_TERMINATE;
-  BOOL bInheritHandle = FALSE;
+  BOOL bInheritHandle = false;
   HANDLE hProcess = OpenProcess(dwDesiredAccess, bInheritHandle, dwProcessId);
   if (hProcess == NULL)
-    return FALSE;
+    return false;
 
   BOOL result = TerminateProcess(hProcess, uExitCode);
 

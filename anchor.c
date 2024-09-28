@@ -51,7 +51,7 @@ struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
   a->referer = referer;
   a->title = title;
   a->accesskey = key;
-  a->slave = FALSE;
+  a->slave = false;
   a->start = bp;
   a->end = bp;
   al->nanchor++;

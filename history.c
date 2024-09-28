@@ -63,7 +63,7 @@ void saveHistory(struct Hist *hist, size_t size) {
   auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
   if ((f = fopen(tmpf, "w")) == NULL) {
     /* FIXME: gettextize? */
-    disp_err_message("Can't open history", FALSE);
+    disp_err_message("Can't open history", false);
     return;
   }
   for (item = hist->list->first; item && hist->list->nitem > size;
@@ -73,12 +73,12 @@ void saveHistory(struct Hist *hist, size_t size) {
     fprintf(f, "%s\n", (char *)item->ptr);
   if (fclose(f) == EOF) {
     /* FIXME: gettextize? */
-    disp_err_message("Can't save history", FALSE);
+    disp_err_message("Can't save history", false);
     return;
   }
   rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
   if (rename_ret != 0) {
-    disp_err_message("Can't save history", FALSE);
+    disp_err_message("Can't save history", false);
     return;
   }
 }

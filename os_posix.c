@@ -55,7 +55,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
 #endif
   struct stat st;
   int64_t size = 0;
-  int is_pipe = FALSE;
+  int is_pipe = false;
 
   if (term_is_initialized()) {
     p = searchKeyData();
@@ -64,11 +64,11 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
       q = inputLineHist("(Download)Save file to: ", defstr, IN_COMMAND,
                         SaveHist);
       if (q == NULL || *q == '\0')
-        return FALSE;
+        return false;
       p = conv_to_system(q);
     }
     if (*p == '|' && PermitSaveToPipe)
-      is_pipe = TRUE;
+      is_pipe = true;
     else {
       if (q) {
         p = unescape_spaces(Strnew_charp(q))->ptr;
@@ -82,14 +82,14 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
       /* FIXME: gettextize? */
       msg = Sprintf("Can't copy. %s and %s are identical.",
                     conv_from_system(tmpf), conv_from_system(p));
-      disp_err_message(msg->ptr, FALSE);
+      disp_err_message(msg->ptr, false);
       return -1;
     }
     if (!download) {
       if (_MoveFile(tmpf, p) < 0) {
         /* FIXME: gettextize? */
         msg = Sprintf("Can't save to %s", conv_from_system(p));
-        disp_err_message(msg->ptr, FALSE);
+        disp_err_message(msg->ptr, false);
       }
       return -1;
     }
@@ -104,7 +104,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
     tty_flush();
     pid = fork();
     if (!pid) {
-      setup_child(FALSE, 0, -1);
+      setup_child(false, 0, -1);
       if (!_MoveFile(tmpf, p) && PreserveTimestamp && !is_pipe &&
           !stat(tmpf, &st))
         setModtime(p, st.st_mtime);
@@ -132,7 +132,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
       return -1;
     p = q;
     if (*p == '|' && PermitSaveToPipe)
-      is_pipe = TRUE;
+      is_pipe = true;
     else {
       p = expandPath(p);
       if (checkOverWrite(p) < 0)
@@ -188,7 +188,7 @@ struct Buffer *doExternal(struct URLFile uf, char *type,
       !(mcap->flags & MAILCAP_NEEDSTERMINAL) && BackgroundExtViewer) {
     tty_flush();
     if (!fork()) {
-      setup_child(FALSE, 0, UFfileno(&uf));
+      setup_child(false, 0, UFfileno(&uf));
       if (save2tmp(uf, tmpf->ptr) < 0)
         exit(1);
       UFclose(&uf);
@@ -272,13 +272,13 @@ int doFileSave(struct URLFile uf, char *defstr) {
       /* FIXME: gettextize? */
       msg = Sprintf("Can't save. Load file and %s are identical.",
                     conv_from_system(p));
-      disp_err_message(msg->ptr, FALSE);
+      disp_err_message(msg->ptr, false);
       return -1;
     }
     /*
      * if (save2tmp(uf, p) < 0) {
      * msg = Sprintf("Can't save to %s", conv_from_system(p));
-     * disp_err_message(msg->ptr, FALSE);
+     * disp_err_message(msg->ptr, false);
      * }
      */
     lock = tmpfname(TMPF_DFL, ".lock")->ptr;
@@ -298,7 +298,7 @@ int doFileSave(struct URLFile uf, char *defstr) {
         if (tmpf)
           unlink(tmpf);
       }
-      setup_child(FALSE, 0, UFfileno(&uf));
+      setup_child(false, 0, UFfileno(&uf));
       err = save2tmp(uf, p);
       if (err == 0 && PreserveTimestamp && uf.modtime != -1)
         setModtime(p, uf.modtime);

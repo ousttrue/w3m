@@ -369,7 +369,7 @@ void term_fmInit() {
     tty_raw();
     tty_noecho();
   }
-  fmInitialized = TRUE;
+  fmInitialized = true;
 }
 
 bool term_is_initialized() { return fmInitialized; }
@@ -380,7 +380,7 @@ void term_fmTerm() {
     scr_clrtoeolx();
     term_refresh();
     term_reset();
-    fmInitialized = FALSE;
+    fmInitialized = false;
   }
 }
 
@@ -466,9 +466,9 @@ void setup_child(int child, int i, int f) {
    * in loadImage() and corrupt image data can be cached in ~/.w3m.
    */
   close_all_fds_except(i, f);
-  QuietMessage = TRUE;
-  fmInitialized = FALSE;
-  TrapSignal = FALSE;
+  QuietMessage = true;
+  fmInitialized = false;
+  TrapSignal = false;
 }
 
 Str term_inputpwd() {
@@ -689,7 +689,7 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
 }
 
 void disp_message(char *s, int redraw_current) {
-  disp_message_nsec(s, redraw_current, 10, FALSE, TRUE);
+  disp_message_nsec(s, redraw_current, 10, false, true);
 }
 
 static char *delayed_msg = NULL;
@@ -697,7 +697,7 @@ void set_delayed_message(char *s) { delayed_msg = allocStr(s, -1); }
 
 void term_show_delayed_message() {
   if (delayed_msg != NULL) {
-    disp_message(delayed_msg, FALSE);
+    disp_message(delayed_msg, false);
     delayed_msg = NULL;
     term_refresh();
   }

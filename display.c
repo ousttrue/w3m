@@ -150,7 +150,7 @@ void displayBuffer(struct Buffer *buf, int mode) {
   if ((buf->width != INIT_BUFFER_WIDTH &&
        (is_html_type(buf->type) || FoldLine)) ||
       buf->need_reshape) {
-    buf->need_reshape = TRUE;
+    buf->need_reshape = true;
     reshapeBuffer(buf);
   }
   if (showLineNum) {
@@ -397,48 +397,48 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
     rcol = ncol;
   }
   if (somode) {
-    somode = FALSE;
+    somode = false;
     scr_standend();
   }
   if (ulmode) {
-    ulmode = FALSE;
+    ulmode = false;
     scr_underlineend();
   }
   if (bomode) {
-    bomode = FALSE;
+    bomode = false;
     scr_boldend();
   }
   if (emph_mode) {
-    emph_mode = FALSE;
+    emph_mode = false;
     scr_boldend();
   }
 
   if (anch_mode) {
-    anch_mode = FALSE;
+    anch_mode = false;
     EFFECT_ANCHOR_END;
   }
   if (imag_mode) {
-    imag_mode = FALSE;
+    imag_mode = false;
     EFFECT_IMAGE_END;
   }
   if (form_mode) {
-    form_mode = FALSE;
+    form_mode = false;
     EFFECT_FORM_END;
   }
   if (visited_mode) {
-    visited_mode = FALSE;
+    visited_mode = false;
     EFFECT_VISITED_END;
   }
   if (active_mode) {
-    active_mode = FALSE;
+    active_mode = false;
     EFFECT_ACTIVE_END;
   }
   if (mark_mode) {
-    mark_mode = FALSE;
+    mark_mode = false;
     EFFECT_MARK_END;
   }
   if (graph_mode) {
-    graph_mode = FALSE;
+    graph_mode = false;
     scr_graphend();
   }
   if (rcol - column < buf->COLS)
@@ -484,48 +484,48 @@ static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
     rcol = ncol;
   }
   if (somode) {
-    somode = FALSE;
+    somode = false;
     scr_standend();
   }
   if (ulmode) {
-    ulmode = FALSE;
+    ulmode = false;
     scr_underlineend();
   }
   if (bomode) {
-    bomode = FALSE;
+    bomode = false;
     scr_boldend();
   }
   if (emph_mode) {
-    emph_mode = FALSE;
+    emph_mode = false;
     scr_boldend();
   }
 
   if (anch_mode) {
-    anch_mode = FALSE;
+    anch_mode = false;
     EFFECT_ANCHOR_END;
   }
   if (imag_mode) {
-    imag_mode = FALSE;
+    imag_mode = false;
     EFFECT_IMAGE_END;
   }
   if (form_mode) {
-    form_mode = FALSE;
+    form_mode = false;
     EFFECT_FORM_END;
   }
   if (visited_mode) {
-    visited_mode = FALSE;
+    visited_mode = false;
     EFFECT_VISITED_END;
   }
   if (active_mode) {
-    active_mode = FALSE;
+    active_mode = false;
     EFFECT_ACTIVE_END;
   }
   if (mark_mode) {
-    mark_mode = FALSE;
+    mark_mode = false;
     EFFECT_MARK_END;
   }
   if (graph_mode) {
-    graph_mode = FALSE;
+    graph_mode = false;
     scr_graphend();
   }
   return rcol - column;
@@ -535,14 +535,14 @@ static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
   if (m & effect) {                                                            \
     if (!modeflag) {                                                           \
       action_start;                                                            \
-      modeflag = TRUE;                                                         \
+      modeflag = true;                                                         \
     }                                                                          \
   }
 
 #define do_effect2(effect, modeflag, action_start, action_end)                 \
   if (modeflag) {                                                              \
     action_end;                                                                \
-    modeflag = FALSE;                                                          \
+    modeflag = false;                                                          \
   }
 
 static void do_effects(Lineprop m) {
@@ -560,7 +560,7 @@ static void do_effects(Lineprop m) {
   do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
   if (graph_mode) {
     scr_graphend();
-    graph_mode = FALSE;
+    graph_mode = false;
   }
 
   /* effect start */
@@ -586,7 +586,7 @@ void addChar(char c, Lineprop mode) {
     if (term_graph_ok() && c < N_GRAPH_SYMBOL) {
       if (!graph_mode) {
         scr_graphstart();
-        graph_mode = TRUE;
+        graph_mode = true;
       }
       scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
     } else {
@@ -638,7 +638,7 @@ void cursorUp0(struct Buffer *buf, int n) {
   if (buf->cursorY > 0)
     cursorUpDown(buf, -1);
   else {
-    buf->topLine = lineSkip(buf, buf->topLine, -n, FALSE);
+    buf->topLine = lineSkip(buf, buf->topLine, -n, false);
     if (buf->currentLine->prev != NULL)
       buf->currentLine = buf->currentLine->prev;
     arrangeLine(buf);
@@ -666,7 +666,7 @@ void cursorDown0(struct Buffer *buf, int n) {
   if (buf->cursorY < buf->LINES - 1)
     cursorUpDown(buf, 1);
   else {
-    buf->topLine = lineSkip(buf, buf->topLine, n, FALSE);
+    buf->topLine = lineSkip(buf, buf->topLine, n, false);
     if (buf->currentLine->next != NULL)
       buf->currentLine = buf->currentLine->next;
     arrangeLine(buf);
@@ -696,7 +696,7 @@ void cursorUpDown(struct Buffer *buf, int n) {
 
   if (buf->firstLine == NULL)
     return;
-  if ((buf->currentLine = currentLineSkip(buf, cl, n, FALSE)) == cl)
+  if ((buf->currentLine = currentLineSkip(buf, cl, n, false)) == cl)
     return;
   arrangeLine(buf);
 }
@@ -783,7 +783,7 @@ void arrangeCursor(struct Buffer *buf) {
     /*
      * buf->topLine = buf->currentLine;
      */
-    buf->topLine = lineSkip(buf, buf->currentLine, 0, FALSE);
+    buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
   }
   /* Arrange column */
   while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
@@ -872,7 +872,7 @@ void cursorXY(struct Buffer *buf, int x, int y) {
 }
 
 void restorePosition(struct Buffer *buf, struct Buffer *orig) {
-  buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1, FALSE);
+  buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1, false);
   gotoLine(buf, CUR_LINENUMBER(orig));
   buf->pos = orig->pos;
   if (buf->currentLine && orig->currentLine)

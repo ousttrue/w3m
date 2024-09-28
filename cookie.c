@@ -231,23 +231,23 @@ Str find_cookie(struct Url *pu) {
 
 int check_avoid_wrong_number_of_dots_domain(Str domain) {
   struct TextListItem *tl;
-  int avoid_wrong_number_of_dots_domain = FALSE;
+  int avoid_wrong_number_of_dots_domain = false;
 
   if (Cookie_avoid_wrong_number_of_dots_domains &&
       Cookie_avoid_wrong_number_of_dots_domains->nitem > 0) {
     for (tl = Cookie_avoid_wrong_number_of_dots_domains->first; tl != NULL;
          tl = tl->next) {
       if (domain_match(domain->ptr, tl->ptr)) {
-        avoid_wrong_number_of_dots_domain = TRUE;
+        avoid_wrong_number_of_dots_domain = true;
         break;
       }
     }
   }
 
-  if (avoid_wrong_number_of_dots_domain == TRUE) {
-    return TRUE;
+  if (avoid_wrong_number_of_dots_domain == true) {
+    return true;
   } else {
-    return FALSE;
+    return false;
   }
 }
 

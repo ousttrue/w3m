@@ -215,7 +215,7 @@
 	* terms.c (graph_ok): fix condition (UseGraphicChar != GRAPHIC_CHAR_DEC)
 	* symbol.c (get_symbol): fix condition (UseGraphicChar != GRAPHIC_CHAR_ASCII)
 	* rc.c (params1): type of graphic_char option is PI_SEL_C
-	* main.c (main): use GRAPHIC_CHAR_ASCII and GRAPHIC_CHAR_DEC instead of FALSE and TRUE
+	* main.c (main): use GRAPHIC_CHAR_ASCII and GRAPHIC_CHAR_DEC instead of false and true
 	* fm.h (GRAPHIC_CHAR_ASCII, GRAPHIC_CHAR_DEC, GRAPHIC_CHAR_CHARSET): added
 
 2010-08-03  d+w3m@vdr.jp
@@ -272,8 +272,8 @@
 
 	* [w3m-dev 04049] Ctrl-C safe resolver
 	* fm.h (GRAPHIC_CHAR_ASCII, GRAPHIC_CHAR_CHARSET, GRAPHIC_CHAR_ALL): removed.
-	* fm.h: UseGraphicChar is initialized as FALSE.
-	* main.c (sig_chld): use TRUE and FALSE instead of GRAPHIC_CHAR_ALL and GRAPHIC_CHAR_ASCII.
+	* fm.h: UseGraphicChar is initialized as false.
+	* main.c (sig_chld): use true and false instead of GRAPHIC_CHAR_ALL and GRAPHIC_CHAR_ASCII.
 	* merge ambiguous width patch ( http://www.j10n.org/files/w3m-cvs-1.914-ambwidth.patch ).
 
 2010-07-24  Ito Hiroyuki  <ZXB01226@nifty.com>
@@ -637,7 +637,7 @@
 2006-04-07  Dai Sato  <satodai@w3m.jp>
 
 	* [w3m-dev-en 01060] Some patches
-	* file.c, fm.h, rc.c: Introduce option show_cookie and set it TRUE by default. If set to FALSE received cookies will not be shown.
+	* file.c, fm.h, rc.c: Introduce option show_cookie and set it true by default. If set to false received cookies will not be shown.
 	* This fixes Debian bug #253547: w3m: Too slow receiving cookies.
 
 2006-04-07  Dai Sato  <satodai@w3m.jp>
@@ -1417,7 +1417,7 @@
 2003-07-09  ABE Yuji <cbo46560@pop12.odn.ne.jp>
 
 	* [w3m-dev 03934] Re: clear image
-	* w3mimg/x11/x11_w3mimg.c (x11_clear): s/FALSE/False/
+	* w3mimg/x11/x11_w3mimg.c (x11_clear): s/false/False/
 
 2003-07-09  Hironori SAKAMOTO <hsaka@mth.biglobe.ne.jp>
 
@@ -1666,9 +1666,9 @@
 	   main.c rc.c:
 	   delete EMACS_LIKE_LINEEDIT, VI_PREC_NUM, LABEL_TOPLINE, 
 		NEXTPAGE_TOPLINE, FTPPASS_HOSTNAMEGEN
-	   use_mark default FALSE
-	   emacs_like_lineedit default FALSE
-	   vi_prec_num default FALSE
+	   use_mark default false
+	   emacs_like_lineedit default false
+	   vi_prec_num default false
 	   add UseHistory, use_history
 	* NEWS: rc: use_history
 
@@ -2509,7 +2509,7 @@
 		(reAnchorWord): delete reseq_anchor()
 		(reAnchorAny): use l->size
 				delete reseq_anchor()
-	* backend.c (internal_get): pass TRUE to saveBuffer
+	* backend.c (internal_get): pass true to saveBuffer
 	* buffer.c (newBuffer): delete n->linelen
 		(reshapeBuffer): rewrite
 	* display.c (displayBuffer): FoldLine
@@ -2546,16 +2546,16 @@
 		(FOLD_BUFFER_WIDTH): added
 		(FoldLine): added
 	* funcname.tab (RESHAPE): added
-	* main.c (do_dump): pass FALSE to saveBuffer
+	* main.c (do_dump): pass false to saveBuffer
 		(nscroll): rewrite
 		(clear_mark): l->size
 		(shiftvisualpos): rewrite
-		(pipeBuf): pass TRUE to saveBuffer
+		(pipeBuf): pass true to saveBuffer
 		(linebeg): check line->prev && line->bpos
 		(linend): check line->next, line->next->bpos
-		(editScr): pass TRUE to saveBuffer
-		(svBuf): pass TRUE to saveBuffer
-		(vmSrc): pass TRUE to saveBuffer
+		(editScr): pass true to saveBuffer
+		(svBuf): pass true to saveBuffer
+		(vmSrc): pass true to saveBuffer
 		(reshape): added
 		(curlno): rewrite
 	* mimehead.c (LINELEN): deleted
@@ -3526,14 +3526,14 @@
 	* main.c (main): remove onA()
 		(keyPressEventProc): remove onA()
 		(disp_srchresult): static
-			disp_message TRUE
+			disp_message true
 		(isrch): remove onA()
 		(srch): displayBuffer
 			remove onA()
 		(srch_nxtprv): remove onA()
-		(pipeBuf): disp_message TRUE
-		(pipesh): disp_message TRUE
-		(readsh): disp_message TRUE
+		(pipeBuf): disp_message true
+		(pipesh): disp_message true
+		(readsh): disp_message true
 		(_mark): dispBuffer
 		(_followForm): break, always dispBuffer
 		(drawAnchorCursor0): deleted
@@ -3541,17 +3541,17 @@
 		(onA): deleted
 		(anchorMn): delete onA()
 		(svBuf): displayBuffer B_NORMAL
-		(reload): disp_err_message TRUE
+		(reload): disp_err_message true
 			displayBuffer
 		(rFrame): displayBuffer
 		(invoke_browser): displayBuffer
-		(extbrz): disp_err_message TRUE
+		(extbrz): disp_err_message true
 		(process_mouse): onA -> displayBuffer
 		(movMs): delete onA()
 		(menuMs): onA -> displayBuffer
-		(closeTMs): disp_message TRUE
-		(wrapToggle): disp_message TRUE
-		(execdict): disp_message TRUE
+		(closeTMs): disp_message true
+		(wrapToggle): disp_message true
+		(execdict): disp_message true
 		(SigAlarm): displayBuffer, delete onA
 		(reinit): displayBuffer
 	* map.c (getCurrentMapLabel): deleted
@@ -3926,7 +3926,7 @@
 2002-12-04  Hironori SAKAMOTO <hsaka@mth.biglobe.ne.jp>
 
 	* [w3m-dev 03516] Re: 2 stroke keybinding
-	* func.c (keymap_initialized): initialized to FALSE
+	* func.c (keymap_initialized): initialized to false
 		(setKeymap): push KeyData
 
 2002-12-04  Fumitoshi UKAI  <ukai@debian.or.jp>
@@ -4301,7 +4301,7 @@
 	* func.c (initMouseMenu): delete mouse_menu_map initialization
 			conv_from_system
 			mouse_menu->width
-	* main.c (main): mouse_menu->in_action = FALSE
+	* main.c (main): mouse_menu->in_action = false
 		(posTab): check mouse_menu
 		(mouse_menu_action): add y arg
 			mouse_menu_width check
@@ -5333,9 +5333,9 @@
 2002-10-26  Fumitoshi UKAI  <ukai@debian.or.jp>
 
 	* [w3m-dev-en 00788]
-	* fm.h (displayImage): FALSE ifndef USE_IMAGE
+	* fm.h (displayImage): false ifndef USE_IMAGE
 	* rc.c (displayImage): display_image even if USE_IMAGE undefined
-		(sync_with_options): display_image is forced to be FALSE 
+		(sync_with_options): display_image is forced to be false 
 				ifndef USE_IMAGE
 
 2002-10-26  Fumitoshi UKAI  <ukai@debian.or.jp>
@@ -5884,14 +5884,14 @@ a	* [w3m-dev 03276] compile error on EWS4800
 		(setKeymap): added
 		(initKeymap): rewrite to use setKeymap()
 	* funcname.tab (DEFINE_KEY): added
-	* main.c (MAIN): initKeymap(TRUE)
+	* main.c (MAIN): initKeymap(true)
 		(defKey): added
 	* proto.h (defKey): added
 		(setKeymap): added
 		(initKeymap): add force param
 	* rc.c (CMT_KEYMAP_FILE): added
 		(params3): add keymap_file
-		(sync_with_option): add initKeymap(FALSE)
+		(sync_with_option): add initKeymap(false)
 	* doc/README.func (DEFINE_KEY): added
 	* doc-jp/README.func: (DEFINE_KEY): added
 	* scripts/w3mhelp.cgi.in: add defKey
@@ -6450,7 +6450,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 2002-02-07  Hironori Sakamoto <hsaka@mth.biglobe.ne.jp>
 
 	* [emacs-w3m:02733] for emacs-w3m better rendering with inline image
-	* main.c (MAIN): activeImage = TRUE when -halfdump & display_image=1
+	* main.c (MAIN): activeImage = true when -halfdump & display_image=1
 
 2002-02-07  Hironori Sakamoto <hsaka@mth.biglobe.ne.jp>
 
@@ -6585,7 +6585,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 	* image.c (load_image_next): signal SIGUSR1
 	* image.c (loadImage): parallel image downloading
 	* image.c (getImage): initialize touch, pid
-	* image.c (getImageSize): return value is TRUE or FALSE
+	* image.c (getImageSize): return value is true or false
 			retry fscanf
 
 2002-02-03  Hironori Sakamoto <hsaka@mth.biglobe.ne.jp>
@@ -6720,7 +6720,7 @@ a	* [w3m-dev 03276] compile error on EWS4800
 	* display.c (image_touch): added
 	* display.c (draw_image_flag): added
 	* display.c (redrawLineImage): added
-	* display.c (displayBuffer): buf->need_reshape = TRUE
+	* display.c (displayBuffer): buf->need_reshape = true
 				mode == B_REDRAW_IMAGE
 				image flag checks
 				force redraw image in mode == B_REDRAW_IMAGE

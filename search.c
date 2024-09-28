@@ -14,7 +14,7 @@ static void set_mark(Line *l, int pos, int epos) {
 int forwardSearch(struct Buffer *buf, char *str) {
   char *p, *first, *last;
   Line *l, *begin;
-  int wrapped = FALSE;
+  int wrapped = false;
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -50,7 +50,7 @@ int forwardSearch(struct Buffer *buf, char *str) {
     if (l == NULL) {
       if (WrapSearch) {
         l = buf->firstLine;
-        wrapped = TRUE;
+        wrapped = true;
       } else {
         break;
       }
@@ -80,7 +80,7 @@ int forwardSearch(struct Buffer *buf, char *str) {
 int backwardSearch(struct Buffer *buf, char *str) {
   char *p, *q, *found, *found_last, *first, *last;
   Line *l, *begin;
-  int wrapped = FALSE;
+  int wrapped = false;
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -134,7 +134,7 @@ int backwardSearch(struct Buffer *buf, char *str) {
     if (l == NULL) {
       if (WrapSearch) {
         l = buf->lastLine;
-        wrapped = TRUE;
+        wrapped = true;
       } else {
         break;
       }
