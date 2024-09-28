@@ -37,21 +37,141 @@ struct ens_handle {
 
 #define POP_CHAR(bs) ((bs)->iseos ? '\0' : (bs)->stream.buf[(bs)->stream.cur++])
 
-static void basic_close(void *handle);
-static int basic_read(void *handle, unsigned char *buf, int len);
+/* Raw level input stream functions */
 
-static void file_close(void *handle);
-static int file_read(void *handle, unsigned char *buf, int len);
+static void basic_close(void *handle) {
+  close(*(int *)handle);
+  xfree(handle);
+}
 
-static int str_read(void *handle, unsigned char *buf, int len);
+static int basic_read(void *handle, unsigned char *buf, int len) {
+  return read(*(int *)handle, buf, len);
+}
 
-static void ssl_close(void *handle);
-static int ssl_read(void *handle, unsigned char *buf, int len);
+static void file_close(void *_handle) {
+  auto handle = (struct io_file_handle *)_handle;
+  handle->close(handle->f);
+  xfree(handle);
+}
 
-static int ens_read(void *handle, unsigned char *buf, int len);
-static void ens_close(void *handle);
+static int file_read(void *handle, unsigned char *buf, int len) {
+  return fread(buf, 1, len, ((struct io_file_handle *)handle)->f);
+}
 
-static void memchop(char *p, int *len);
+static int str_read(void *handle, unsigned char *buf, int len) { return 0; }
+
+static void ssl_close(void *_handle) {
+  auto handle = (struct ssl_handle *)_handle;
+  close(handle->sock);
+  if (handle->ssl)
+    SSL_free(handle->ssl);
+  xfree(handle);
+}
+
+static int ssl_read(void *_handle, unsigned char *buf, int len) {
+  int status;
+  auto handle = (struct ssl_handle *)_handle;
+  if (handle->ssl) {
+    for (;;) {
+      status = SSL_read(handle->ssl, buf, len);
+      if (status > 0)
+        break;
+      switch (SSL_get_error(handle->ssl, status)) {
+      case SSL_ERROR_WANT_READ:
+      case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see
+                                    SSL_get_error(3) */
+        continue;
+      default:
+        break;
+      }
+      break;
+    }
+  } else
+    status = read(handle->sock, buf, len);
+  return status;
+}
+
+static void ens_close(void *_handle) {
+  auto handle = (struct ens_handle *)_handle;
+  ISclose(handle->is);
+  growbuf_clear(&handle->gb);
+  xfree(handle);
+}
+
+static void memchop(char *p, int *len) {
+  char *q;
+
+  for (q = p + *len; q > p; --q) {
+    if (q[-1] != '\n' && q[-1] != '\r')
+      break;
+  }
+  if (q != p + *len)
+    *q = '\0';
+  *len = q - p;
+  return;
+}
+
+static int ens_read(void *_handle, unsigned char *buf, int len) {
+  auto handle = (struct ens_handle *)_handle;
+  if (handle->pos == handle->gb.length) {
+    char *p;
+    struct growbuf gbtmp;
+
+    ISgets_to_growbuf(handle->is, &handle->gb, true);
+    if (handle->gb.length == 0)
+      return 0;
+    if (handle->encoding == ENC_BASE64)
+      memchop(handle->gb.ptr, &handle->gb.length);
+    else if (handle->encoding == ENC_UUENCODE) {
+      if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
+        ISgets_to_growbuf(handle->is, &handle->gb, true);
+      memchop(handle->gb.ptr, &handle->gb.length);
+    }
+    growbuf_init_without_GC(&gbtmp);
+    p = handle->gb.ptr;
+    if (handle->encoding == ENC_QUOTE)
+      decodeQP_to_growbuf(&gbtmp, &p);
+    else if (handle->encoding == ENC_BASE64)
+      decodeB_to_growbuf(&gbtmp, &p);
+    else if (handle->encoding == ENC_UUENCODE)
+      decodeU_to_growbuf(&gbtmp, &p);
+    growbuf_clear(&handle->gb);
+    handle->gb = gbtmp;
+    handle->pos = 0;
+  }
+
+  if (len > handle->gb.length - handle->pos)
+    len = handle->gb.length - handle->pos;
+
+  memcpy(buf, &handle->gb.ptr[handle->pos], len);
+  handle->pos += len;
+  return len;
+}
+
+static void ws_close(void *handle) {
+  closesocket(*(SOCKET *)handle);
+  xfree(handle);
+}
+
+static int ws_read(void *handle, unsigned char *buf, int len) {
+  return recv(*(SOCKET *)handle, (char *)buf, len, 0);
+}
+
+// static void basic_close(void *handle);
+// static int basic_read(void *handle, unsigned char *buf, int len);
+//
+// static void file_close(void *handle);
+// static int file_read(void *handle, unsigned char *buf, int len);
+//
+// static int str_read(void *handle, unsigned char *buf, int len);
+//
+// static void ssl_close(void *handle);
+// static int ssl_read(void *handle, unsigned char *buf, int len);
+//
+// static int ens_read(void *handle, unsigned char *buf, int len);
+// static void ens_close(void *handle);
+
+// static void memchop(char *p, int *len);
 
 static void do_update(struct base_stream *base) {
   int len;
@@ -159,11 +279,10 @@ union input_stream *newSSLStream(SSL *ssl, int sock) {
 
 union input_stream *newEncodedStream(union input_stream *is,
                                      enum ENCODING_TYPE encoding) {
-  union input_stream *stream;
   if (is == NULL || (encoding != ENC_QUOTE && encoding != ENC_BASE64 &&
                      encoding != ENC_UUENCODE))
     return is;
-  stream = NewWithoutGC(union input_stream);
+  union input_stream *stream = NewWithoutGC(union input_stream);
   init_base_stream(&stream->base, STREAM_BUF_SIZE);
   stream->ens.type = IST_ENCODED;
   stream->ens.handle = NewWithoutGC(struct ens_handle);
@@ -173,6 +292,19 @@ union input_stream *newEncodedStream(union input_stream *is,
   growbuf_init_without_GC(&stream->ens.handle->gb);
   stream->ens.read = ens_read;
   stream->ens.close = ens_close;
+  return stream;
+}
+
+union input_stream *newWinsockStream(SOCKET sock) {
+  if (sock == INVALID_SOCKET)
+    return NULL;
+  union input_stream *stream = NewWithoutGC(union input_stream);
+  init_base_stream(&stream->base, STREAM_BUF_SIZE);
+  stream->ws.type = IST_BASIC;
+  stream->ws.handle = NewWithoutGC(SOCKET);
+  *(SOCKET *)stream->ws.handle = sock;
+  stream->ws.read = ws_read;
+  stream->ws.close = ws_close;
   return stream;
 }
 
@@ -584,117 +716,6 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
   BIO_free_all(bp);
   X509_free(x);
   return s;
-}
-
-/* Raw level input stream functions */
-
-static void basic_close(void *handle) {
-  close(*(int *)handle);
-  xfree(handle);
-}
-
-static int basic_read(void *handle, unsigned char *buf, int len) {
-  return read(*(int *)handle, buf, len);
-}
-
-static void file_close(void *_handle) {
-  auto handle = (struct io_file_handle *)_handle;
-  handle->close(handle->f);
-  xfree(handle);
-}
-
-static int file_read(void *handle, unsigned char *buf, int len) {
-  return fread(buf, 1, len, ((struct io_file_handle *)handle)->f);
-}
-
-static int str_read(void *handle, unsigned char *buf, int len) { return 0; }
-
-static void ssl_close(void *_handle) {
-  auto handle = (struct ssl_handle *)_handle;
-  close(handle->sock);
-  if (handle->ssl)
-    SSL_free(handle->ssl);
-  xfree(handle);
-}
-
-static int ssl_read(void *_handle, unsigned char *buf, int len) {
-  int status;
-  auto handle = (struct ssl_handle *)_handle;
-  if (handle->ssl) {
-    for (;;) {
-      status = SSL_read(handle->ssl, buf, len);
-      if (status > 0)
-        break;
-      switch (SSL_get_error(handle->ssl, status)) {
-      case SSL_ERROR_WANT_READ:
-      case SSL_ERROR_WANT_WRITE: /* reads can trigger write errors; see
-                                    SSL_get_error(3) */
-        continue;
-      default:
-        break;
-      }
-      break;
-    }
-  } else
-    status = read(handle->sock, buf, len);
-  return status;
-}
-
-static void ens_close(void *_handle) {
-  auto handle = (struct ens_handle *)_handle;
-  ISclose(handle->is);
-  growbuf_clear(&handle->gb);
-  xfree(handle);
-}
-
-static int ens_read(void *_handle, unsigned char *buf, int len) {
-  auto handle = (struct ens_handle *)_handle;
-  if (handle->pos == handle->gb.length) {
-    char *p;
-    struct growbuf gbtmp;
-
-    ISgets_to_growbuf(handle->is, &handle->gb, true);
-    if (handle->gb.length == 0)
-      return 0;
-    if (handle->encoding == ENC_BASE64)
-      memchop(handle->gb.ptr, &handle->gb.length);
-    else if (handle->encoding == ENC_UUENCODE) {
-      if (handle->gb.length >= 5 && !strncmp(handle->gb.ptr, "begin", 5))
-        ISgets_to_growbuf(handle->is, &handle->gb, true);
-      memchop(handle->gb.ptr, &handle->gb.length);
-    }
-    growbuf_init_without_GC(&gbtmp);
-    p = handle->gb.ptr;
-    if (handle->encoding == ENC_QUOTE)
-      decodeQP_to_growbuf(&gbtmp, &p);
-    else if (handle->encoding == ENC_BASE64)
-      decodeB_to_growbuf(&gbtmp, &p);
-    else if (handle->encoding == ENC_UUENCODE)
-      decodeU_to_growbuf(&gbtmp, &p);
-    growbuf_clear(&handle->gb);
-    handle->gb = gbtmp;
-    handle->pos = 0;
-  }
-
-  if (len > handle->gb.length - handle->pos)
-    len = handle->gb.length - handle->pos;
-
-  memcpy(buf, &handle->gb.ptr[handle->pos], len);
-  handle->pos += len;
-  return len;
-}
-
-static void memchop(char *p, int *len) {
-  char *q;
-
-  for (q = p + *len; q > p; --q) {
-    if (q[-1] != '\n' && q[-1] != '\r')
-      break;
-  }
-  if (q != p + *len)
-    *q = '\0';
-  *len = q - p;
-  return;
 }
 
 enum IST_TYPE IStype(union input_stream *stream) { return stream->base.type; }

@@ -16,6 +16,7 @@
 #include "tty.h"
 #include <unistd.h>
 #include <sys/types.h>
+#include <assert.h>
 
 #ifdef _WIN32
 #include "rand48_win32.h"
@@ -1328,7 +1329,11 @@ struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                       FTP_proxy_parsed.port, &sock)) {
         return uf;
       }
+#ifdef _WIN32
+      assert(false);
+#else
       uf.stream = newInputStream(sock);
+#endif
       uf.scheme = SCM_HTTP;
       auto tmp = HTTPrequest(pu, current, hr, extra_header);
       socketWrite(sock, tmp->ptr, tmp->length);
@@ -1411,7 +1416,11 @@ struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
       tmp = HTTPrequest(pu, current, hr, extra_header);
       *status = HTST_NORMAL;
     }
+#ifdef _WIN32
+    uf.stream = newWinsockStream(sock);
+#else
     uf.stream = newInputStream(sock);
+#endif
     if (pu->scheme == SCM_HTTPS) {
       uf.stream = newSSLStream(sslh, sock);
       if (sslh)

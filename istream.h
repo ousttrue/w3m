@@ -9,6 +9,7 @@ enum IST_TYPE {
   IST_STR = 2,
   IST_SSL = 3,
   IST_ENCODED = 4,
+  IST_SOCKET = 5,
 };
 union input_stream;
 
@@ -22,7 +23,8 @@ typedef void (*CloseFunc)(void *handle);
 
 struct base_stream {
   struct stream_buffer stream;
-  void *handle;
+  // file descriptor read/write
+  int *handle;
   enum IST_TYPE type;
   // ftp ?
   bool unclose;
@@ -33,6 +35,7 @@ struct base_stream {
 
 struct file_stream {
   struct stream_buffer stream;
+  // fread/fwrite
   struct io_file_handle *handle;
   enum IST_TYPE type;
   bool unclose;
@@ -71,12 +74,24 @@ struct encoded_stream {
   CloseFunc close;
 };
 
+struct winsock_stream {
+  struct stream_buffer stream;
+  uintptr_t *handle;
+  enum IST_TYPE type;
+  // ftp ?
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+
 union input_stream {
   struct base_stream base;
   struct file_stream file;
   struct str_stream str;
   struct ssl_stream ssl;
   struct encoded_stream ens;
+  struct winsock_stream ws;
 };
 
 union input_stream *newInputStream(int des);
@@ -85,6 +100,7 @@ union input_stream *newStrStream(Str s);
 union input_stream *newSSLStream(SSL *ssl, int sock);
 union input_stream *newEncodedStream(union input_stream *is,
                                      enum ENCODING_TYPE encoding);
+union input_stream *newWinsockStream(uintptr_t sock);
 int ISclose(union input_stream *stream);
 
 int ISgetc(union input_stream *stream);

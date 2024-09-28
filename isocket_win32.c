@@ -79,10 +79,10 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
       /* try next ai family */
       continue;
     }
-    sock = -1;
+    sock = INVALID_SOCKET;
     for (res = res0; res; res = res->ai_next) {
       sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-      if (sock < 0) {
+      if (sock == INVALID_SOCKET) {
         continue;
       }
       if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
@@ -92,7 +92,7 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
       }
       break;
     }
-    if (sock < 0) {
+    if (sock == INVALID_SOCKET) {
       freeaddrinfo(res0);
       if (*af == PF_UNSPEC) {
         goto error;
@@ -171,10 +171,11 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
 #endif /* not INET6 */
 
   TRAP_OFF;
-  return sock;
+  *pOut = sock;
+  return true;
 error:
   TRAP_OFF;
-  return -1;
+  return false;
 }
 
 int socketWrite(SocketType sock, const char *buf, size_t len) {
