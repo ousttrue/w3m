@@ -7,6 +7,8 @@
 #include "termsize.h"
 #include "parsetag.h"
 #include "fm.h"
+#include <time.h>
+#include <sys/stat.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

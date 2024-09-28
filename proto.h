@@ -6,6 +6,7 @@
  *   Created: Wed Feb 10 12:47:03 1999
  */
 #include "Str.h"
+#include <stdint.h>
 
 extern void nulcmd(void);
 extern void pushEvent(int cmd, void *data);
@@ -144,8 +145,9 @@ extern int dir_exist(char *path);
 extern char **get_symbol(void);
 extern void push_symbol(Str str, char symbol, int width, int n);
 struct FormList;
-extern struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
-                               int flag, struct FormList *request);
+extern struct Buffer *loadGeneralFile(char *path, struct Url *current,
+                                      char *referer, int flag,
+                                      struct FormList *request);
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 struct html_feed_environ;
@@ -189,10 +191,12 @@ extern int save2tmp(struct URLFile uf, char *tmpf);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
 extern int doFileMove(char *tmpf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
-extern int checkSaveFile(InputStream stream, char *path);
+union input_stream;
+extern int checkSaveFile(union input_stream *stream, char *path);
 extern int checkOverWrite(char *path);
 extern int matchattr(char *p, char *attr, int len, Str *value);
-extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru, struct Url *pu);
+extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
+                       struct Url *pu);
 extern char *checkHeader(struct Buffer *buf, char *field);
 
 extern struct Buffer *newBuffer(int width);
@@ -201,12 +205,13 @@ extern void clearBuffer(struct Buffer *buf);
 extern void discardBuffer(struct Buffer *buf);
 extern struct Buffer *namedBuffer(struct Buffer *first, char *name);
 extern struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
-extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf, struct Buffer *newbuf);
+extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
+                                    struct Buffer *newbuf);
 extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
 extern void gotoRealLine(struct Buffer *buf, int n);
 extern void gotoLine(struct Buffer *buf, int n);
-extern struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
-                            char *selectchar);
+extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
+                                   struct Buffer *currentbuf, char *selectchar);
 extern void reshapeBuffer(struct Buffer *buf);
 extern void copyBuffer(struct Buffer *a, struct Buffer *b);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
@@ -231,7 +236,8 @@ extern int columnSkip(struct Buffer *buf, int offset);
 extern int columnPos(Line *line, int column);
 extern int columnLen(Line *line, int column);
 extern Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last);
-extern Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last);
+extern Line *currentLineSkip(struct Buffer *buf, Line *line, int offset,
+                             int last);
 extern int gethtmlcmd(char **s);
 #define checkType(a, b, c) _checkType(a, b)
 extern Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor);
@@ -278,17 +284,19 @@ extern void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
                         int width);
 extern void pushTable(struct table *, struct table *);
 extern struct FormList *newFormList(char *action, char *method, char *charset,
-                                     char *enctype, char *target, char *name,
-                                     struct FormList *_next);
+                                    char *enctype, char *target, char *name,
+                                    struct FormList *_next);
 extern struct FormItemList *formList_addInput(struct FormList *fl,
-                                                struct parsed_tag *tag);
+                                              struct parsed_tag *tag);
 extern char *form2str(struct FormItemList *fi);
 extern int formtype(char *typestr);
 struct Anchor;
-extern void formRecheckRadio(struct Anchor *a, struct Buffer *buf, struct FormItemList *form);
+extern void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
+                             struct FormItemList *form);
 struct AnchorList;
 extern void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem);
-extern void formUpdateBuffer(struct Anchor *a, struct Buffer *buf, struct FormItemList *form);
+extern void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
+                             struct FormItemList *form);
 extern void preFormUpdateBuffer(struct Buffer *buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(struct FormItemList *fi);
@@ -319,13 +327,16 @@ extern void parseURL2(char *url, struct Url *pu, struct Url *current);
 extern Str parsedURL2Str(struct Url *pu);
 extern Str parsedURL2RefererStr(struct Url *pu);
 extern int getURLScheme(char **url);
-extern void init_stream(struct URLFile *uf, int scheme, InputStream stream);
+extern void init_stream(struct URLFile *uf, int scheme,
+                        union input_stream *stream);
 struct HttpRequest;
 struct URLOption;
 extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
-                       struct URLOption *option, struct FormList *request,
-                       struct TextList *extra_header, struct URLFile *ouf, struct HttpRequest *hr,
-                       unsigned char *status);
+                              struct URLOption *option,
+                              struct FormList *request,
+                              struct TextList *extra_header,
+                              struct URLFile *ouf, struct HttpRequest *hr,
+                              unsigned char *status);
 struct mailcap;
 extern int mailcapMatch(struct mailcap *mcap, char *type);
 extern struct mailcap *searchMailcap(struct mailcap *table, char *type);
@@ -336,21 +347,24 @@ extern Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
                            int *mc_stat);
 extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
-extern InputStream openFTPStream(struct Url *pu, struct URLFile *uf);
+extern union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf);
 extern Str loadFTPDir0(struct Url *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-extern struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
-                             struct Anchor **anchor_return, char *referer, char *title,
-                             unsigned char key, int line, int pos);
-extern struct Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *referer,
-                            char *title, unsigned char key, int line, int pos);
-extern struct Anchor *registerName(struct Buffer *buf, char *url, int line, int pos);
-extern struct Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
-                           int pos);
+extern struct AnchorList *putAnchor(struct AnchorList *al, char *url,
+                                    char *target, struct Anchor **anchor_return,
+                                    char *referer, char *title,
+                                    unsigned char key, int line, int pos);
+extern struct Anchor *registerHref(struct Buffer *buf, char *url, char *target,
+                                   char *referer, char *title,
+                                   unsigned char key, int line, int pos);
+extern struct Anchor *registerName(struct Buffer *buf, char *url, int line,
+                                   int pos);
+extern struct Anchor *registerImg(struct Buffer *buf, char *url, char *title,
+                                  int line, int pos);
 extern struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
-                            struct parsed_tag *tag, int line, int pos);
+                                   struct parsed_tag *tag, int line, int pos);
 extern int onAnchor(struct Anchor *a, int line, int pos);
 extern struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos);
 extern struct Anchor *retrieveCurrentAnchor(struct Buffer *buf);
@@ -361,21 +375,24 @@ extern struct Anchor *searchURLLabel(struct Buffer *buf, char *url);
 extern void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos);
 extern char *reAnchor(struct Buffer *buf, char *re);
 extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
-extern struct Anchor *closest_next_anchor(struct AnchorList *a, struct Anchor *an, int x, int y);
-extern struct Anchor *closest_prev_anchor(struct AnchorList *a, struct Anchor *an, int x, int y);
-extern struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl, int line,
-                                int pos, int shift);
-extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al, struct Anchor *a);
+extern struct Anchor *closest_next_anchor(struct AnchorList *a,
+                                          struct Anchor *an, int x, int y);
+extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
+                                          struct Anchor *an, int x, int y);
+extern struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
+                                      int seq);
+extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
+                                int line, int pos, int shift);
+extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
+                           struct Anchor *a);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
 
 extern Str decodeB(char **ww);
-extern void decodeB_to_growbuf(struct growbuf *gb, char **ww);
+
 extern Str decodeQ(char **ww);
 extern Str decodeQP(char **ww);
-extern void decodeQP_to_growbuf(struct growbuf *gb, char **ww);
 extern Str decodeU(char **ww);
-extern void decodeU_to_growbuf(struct growbuf *gb, char **ww);
+
 extern Str decodeWord0(char **ow);
 extern Str decodeMIME0(Str orgstr);
 #define decodeWord(ow, charset) decodeWord0(ow)
@@ -399,8 +416,8 @@ extern void loadPasswd(void);
 extern void loadPreForm(void);
 extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
-extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname, Str pwd,
-                                 int is_proxy);
+extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
+                                 Str pwd, int is_proxy);
 extern void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                         Str pwd, int is_proxy);
 extern char *last_modified(struct Buffer *buf);

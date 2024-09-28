@@ -12,13 +12,15 @@
 #include "tty.h"
 #include "scr.h"
 #include "termseq/termcap_interface.h"
+#include "config.h"
+
 #include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "config.h"
 #include <string.h>
+#include <time.h>
 #ifdef _WIN32
 #else
 #include <sys/time.h>

@@ -161,7 +161,8 @@ void pushEvent(int cmd, void *data) {
 }
 
 static int cmp_anchor_hseq(const void *a, const void *b) {
-  return (*((const struct Anchor **)a))->hseq - (*((const struct Anchor **)b))->hseq;
+  return (*((const struct Anchor **)a))->hseq -
+         (*((const struct Anchor **)b))->hseq;
 }
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */ }

@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "istream.h"
 #include "alloc.h"
 #include "app.h"
 #include "indep.h"

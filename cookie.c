@@ -18,6 +18,7 @@
 #include "myctype.h"
 #include "readbuffer.h"
 #include <time.h>
+#include <sys/stat.h>
 
 static int is_saved = 1;
 

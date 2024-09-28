@@ -19,3 +19,7 @@ extern void growbuf_append(struct growbuf *gb, const char *src, int len);
   ((((gb)->length >= (gb)->area_size) ? growbuf_reserve(gb, (gb)->length + 1)  \
                                       : (void)0),                              \
    (void)((gb)->ptr[(gb)->length++] = (ch)))
+
+extern void decodeB_to_growbuf(struct growbuf *gb, char **ww);
+extern void decodeQP_to_growbuf(struct growbuf *gb, char **ww);
+extern void decodeU_to_growbuf(struct growbuf *gb, char **ww);

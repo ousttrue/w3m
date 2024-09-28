@@ -1,4 +1,5 @@
 #include "file.h"
+#include "istream.h"
 #include "compression.h"
 #include "app.h"
 #include "indep.h"

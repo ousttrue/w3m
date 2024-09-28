@@ -13,6 +13,7 @@
 #include <sys/types.h>
 #include <time.h>
 #include <signal.h>
+#include <sys/stat.h>
 
 struct auth_pass {
   int bad;

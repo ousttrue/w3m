@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "istream.h"
 #include "alloc.h"
 #include "app.h"
 #include "buffer.h"
