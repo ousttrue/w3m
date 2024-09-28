@@ -1,6 +1,5 @@
 #pragma once
-#include "fm.h"
-#include "textlist.h"
+#include "Str.h"
 
 struct MapArea {
   char *url;
@@ -14,8 +13,10 @@ struct MapList {
   struct MapList *next;
 };
 
-struct MapArea *follow_map_menu(struct Buffer *buf, char *name, struct Anchor *a_img, int x,
-                                int y);
+struct Buffer;
+struct Anchor;
+struct MapArea *follow_map_menu(struct Buffer *buf, char *name,
+                                struct Anchor *a_img, int x, int y);
 
 struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
                            char *coords);

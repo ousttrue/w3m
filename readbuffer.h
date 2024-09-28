@@ -1,5 +1,8 @@
 #pragma once
 #include "fm.h"
+#include "Str.h"
+#include "anchor.h"
+#include "line.h"
 
 struct input_alt_attr {
   int hseq;

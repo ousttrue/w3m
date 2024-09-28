@@ -17,7 +17,6 @@
 #include "config.h"
 #include "func.h"
 #include "istream.h"
-#include "anchor.h"
 
 #ifdef MAINPROGRAM
 #define global

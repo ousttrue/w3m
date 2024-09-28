@@ -287,7 +287,9 @@ extern struct FormItemList *formList_addInput(struct FormList *fl,
                                                 struct parsed_tag *tag);
 extern char *form2str(struct FormItemList *fi);
 extern int formtype(char *typestr);
+struct Anchor;
 extern void formRecheckRadio(struct Anchor *a, struct Buffer *buf, struct FormItemList *form);
+struct AnchorList;
 extern void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem);
 extern void formUpdateBuffer(struct Anchor *a, struct Buffer *buf, struct FormItemList *form);
 extern void preFormUpdateBuffer(struct Buffer *buf);
@@ -304,8 +306,8 @@ extern struct Anchor *retrieveCurrentMap(struct Buffer *buf);
 extern struct Buffer *page_info_panel(struct Buffer *buf);
 
 extern char *ttyname_tty(void);
-extern MySignalHandler reset_exit(SIGNAL_ARG);
-extern MySignalHandler error_dump(SIGNAL_ARG);
+// extern MySignalHandler reset_exit(SIGNAL_ARG);
+// extern MySignalHandler error_dump(SIGNAL_ARG);
 extern void set_int(void);
 extern void getTCstr(void);
 
