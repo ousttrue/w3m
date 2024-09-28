@@ -1,6 +1,8 @@
 #include "app.h"
 #include "textlist.h"
 #include "indep.h"
+#include "alloc.h"
+#include <stdlib.h>
 
 #ifdef _WIN32
 #include <process.h>

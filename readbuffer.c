@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "alloc.h"
 #include "app.h"
 #include "buffer.h"
 #include "indep.h"

@@ -1,5 +1,5 @@
 #include "buffer.h"
-#include "indep.h"
+#include "alloc.h"
 #include "file.h"
 #include "app.h"
 #include "url_stream.h"

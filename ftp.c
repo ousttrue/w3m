@@ -3,7 +3,7 @@
 #include "url.h"
 #include "fm.h"
 #include "url_stream.h"
-#include "html.h"
+#include "alloc.h"
 #include "myctype.h"
 #include "terms.h"
 

@@ -2,6 +2,7 @@
 #include "compression.h"
 #include "app.h"
 #include "indep.h"
+#include "alloc.h"
 #include "cookie.h"
 #include "etc.h"
 #include "html.h"

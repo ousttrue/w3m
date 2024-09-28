@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "alloc.h"
 #include "indep.h"
 #include "readbuffer.h"
 #include "buffer.h"

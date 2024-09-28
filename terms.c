@@ -4,6 +4,7 @@
  */
 #include "terms.h"
 #include "linein.h"
+#include "alloc.h"
 #include "indep.h"
 #include "buffer.h"
 #include "tabbuffer.h"

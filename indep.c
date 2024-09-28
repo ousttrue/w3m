@@ -1,281 +1,12 @@
-#include "fm.h"
 #include "indep.h"
 #include "Str.h"
 #include "myctype.h"
 #include "entity.h"
+#include "alloc.h"
 #include <stdio.h>
 #include <sys/param.h>
 #include <sys/types.h>
 #include <stdlib.h>
-#include <gc.h>
-
-unsigned char QUOTE_MAP[0x100] = {
-    /* NUL SOH STX ETX EOT ENQ ACK BEL  BS  HT  LF  VT  FF  CR  SO  SI */
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    /* DLE DC1 DC2 DC3 DC4 NAK SYN ETB CAN  EM SUB ESC  FS  GS  RS  US */
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    24,
-    /* SPC   !   "   #   $   %   &   '   (   )   *   +   ,   -   .   / */
-    24,
-    72,
-    76,
-    40,
-    8,
-    40,
-    41,
-    77,
-    72,
-    72,
-    72,
-    40,
-    72,
-    8,
-    0,
-    64,
-    /*   0   1   2   3   4   5   6   7   8   9   :   ;   <   =   >   ? */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    32,
-    72,
-    74,
-    72,
-    75,
-    40,
-    /*   @   A   B   C   D   E   F   G   H   I   J   K   L   M   N   O */
-    72,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    /*   P   Q   R   S   T   U   V   W   X   Y   Z   [   \   ]   ^   _ */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    72,
-    72,
-    72,
-    72,
-    0,
-    /*   `   a   b   c   d   e   f   g   h   i   j   k   l   m   n   o */
-    72,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    /*   p   q   r   s   t   u   v   w   x   y   z   {   |   }   ~ DEL */
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    0,
-    72,
-    72,
-    72,
-    72,
-    24,
-
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-    16,
-};
 
 char *HTML_QUOTE_MAP[] = {
     NULL, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", NULL, NULL,
@@ -293,25 +24,6 @@ int64_t strtoclen(const char *s) {
 #else
   return atoi(s);
 #endif
-}
-
-char *allocStr(const char *s, int len) {
-  char *ptr;
-
-  if (s == NULL)
-    return NULL;
-  if (len < 0)
-    len = strlen(s);
-  if (len < 0 || len >= STR_SIZE_MAX)
-    len = STR_SIZE_MAX - 1;
-  ptr = NewAtom_N(char, len + 1);
-  if (ptr == NULL) {
-    fprintf(stderr, "fm: Can't allocate string. Give me more memory!\n");
-    exit(-1);
-  }
-  memcpy(ptr, s, len);
-  ptr[len] = '\0';
-  return ptr;
 }
 
 int strCmp(const void *s1, const void *s2) {
@@ -402,18 +114,35 @@ char *cleanupName(char *name) {
   return buf;
 }
 
-#ifndef HAVE_STRCHR
-char *strchr(const char *s, int c) {
-  while (*s) {
-    if ((unsigned char)*s == c)
-      return (char *)s;
-    s++;
-  }
-  return NULL;
-}
-#endif /* not HAVE_STRCHR */
+// #ifndef HAVE_STRCHR
+// char *strchr(const char *s, int c) {
+//   while (*s) {
+//     if ((unsigned char)*s == c)
+//       return (char *)s;
+//     s++;
+//   }
+//   return NULL;
+// }
+// #endif /* not HAVE_STRCHR */
 
-#ifndef HAVE_STRCASECMP
+#ifdef _WIN32
+/* string search using the simplest algorithm */
+char *strcasestr(const char *s1, const char *s2) {
+  if (s2 == NULL)
+    return (char *)s1;
+  if (*s2 == '\0')
+    return (char *)s1;
+  int len1 = strlen(s1);
+  int len2 = strlen(s2);
+  while (*s1 && len1 >= len2) {
+    if (strncasecmp(s1, s2, len2) == 0)
+      return (char *)s1;
+    s1++;
+    len1--;
+  }
+  return 0;
+}
+#else
 int strcasecmp(const char *s1, const char *s2) {
   int x;
   while (*s1) {
@@ -439,25 +168,6 @@ int strncasecmp(const char *s1, const char *s2, size_t n) {
   return n ? -TOLOWER(*s2) : 0;
 }
 #endif /* not HAVE_STRCASECMP */
-
-#ifdef _WIN32
-/* string search using the simplest algorithm */
-char *strcasestr(const char *s1, const char *s2) {
-  if (s2 == NULL)
-    return (char *)s1;
-  if (*s2 == '\0')
-    return (char *)s1;
-  int len1 = strlen(s1);
-  int len2 = strlen(s2);
-  while (*s1 && len1 >= len2) {
-    if (strncasecmp(s1, s2, len2) == 0)
-      return (char *)s1;
-    s1++;
-    len1--;
-  }
-  return 0;
-}
-#endif
 
 static int strcasematch(char *s1, char *s2) {
   int x;
@@ -835,78 +545,6 @@ void *xrealloc(void *ptr, size_t size) {
     exit(-1);
   }
   return newptr;
-}
-
-/* Define this as a separate function in case the free() has
- * an incompatible prototype. */
-void xfree(void *ptr) { free(ptr); }
-
-void *w3m_GC_realloc_atomic(void *ptr, size_t size) {
-  return ptr ? GC_REALLOC(ptr, size) : GC_MALLOC_ATOMIC(size);
-}
-
-void w3m_GC_free(void *ptr) { GC_FREE(ptr); }
-
-void growbuf_init(struct growbuf *gb) {
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-  gb->realloc_proc = &w3m_GC_realloc_atomic;
-  gb->free_proc = &w3m_GC_free;
-}
-
-void growbuf_init_without_GC(struct growbuf *gb) {
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-  gb->realloc_proc = &xrealloc;
-  gb->free_proc = &xfree;
-}
-
-void growbuf_clear(struct growbuf *gb) {
-  (*gb->free_proc)(gb->ptr);
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-}
-
-Str growbuf_to_Str(struct growbuf *gb) {
-  Str s;
-
-  if (gb->free_proc == &w3m_GC_free) {
-    growbuf_reserve(gb, gb->length + 1);
-    gb->ptr[gb->length] = '\0';
-    s = New(struct _Str);
-    s->ptr = gb->ptr;
-    s->length = gb->length;
-    s->area_size = gb->area_size;
-  } else {
-    s = Strnew_charp_n(gb->ptr, gb->length);
-    (*gb->free_proc)(gb->ptr);
-  }
-  gb->ptr = NULL;
-  gb->length = 0;
-  gb->area_size = 0;
-  return s;
-}
-
-void growbuf_reserve(struct growbuf *gb, int leastarea) {
-  int newarea;
-
-  if (gb->area_size < leastarea) {
-    newarea = gb->area_size * 3 / 2;
-    if (newarea < leastarea)
-      newarea = leastarea;
-    newarea += 16;
-    gb->ptr = (*gb->realloc_proc)(gb->ptr, newarea);
-    gb->area_size = newarea;
-  }
-}
-
-void growbuf_append(struct growbuf *gb, const char *src, int len) {
-  growbuf_reserve(gb, gb->length + len);
-  memcpy(&gb->ptr[gb->length], src, len);
-  gb->length += len;
 }
 
 static char *w3m_dir(const char *name, char *dft) {

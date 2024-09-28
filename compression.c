@@ -1,4 +1,5 @@
 #include "compression.h"
+#include "alloc.h"
 #include "terms.h"
 #include "etc.h"
 #include "app.h"
@@ -173,6 +174,12 @@ const char *uncompressed_file_type(const char *path, char **ext) {
 }
 
 #define S_IXANY (S_IXUSR | S_IXGRP | S_IXOTH)
+
+#ifdef _WIN32
+#define PATH_SEPARATOR ';'
+#else
+#define PATH_SEPARATOR ':'
+#endif
 
 static bool check_command(const char *cmd, int auxbin_p) {
   static char *path = NULL;

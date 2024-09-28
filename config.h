@@ -189,6 +189,5 @@ typedef RETSIGTYPE MySignalHandler;
 #define DEV_NULL_PATH "/dev/null"
 #define CGI_EXTENSION ".cgi"
 
-#define PATH_SEPARATOR ':'
 
 #endif /* CONFIG_H_SEEN */

@@ -12,13 +12,12 @@
 
 #include "cookie.h"
 #include "indep.h"
-#include "html.h"
+#include "alloc.h"
 #include "parsetag.h"
-#include <time.h>
-#include "localcgi.h"
 #include "regex.h"
 #include "myctype.h"
 #include "readbuffer.h"
+#include <time.h>
 
 static int is_saved = 1;
 

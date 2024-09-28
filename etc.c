@@ -1,4 +1,5 @@
 #include "etc.h"
+#include "alloc.h"
 #include "app.h"
 #include "indep.h"
 #include "fm.h"

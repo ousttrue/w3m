@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "alloc.h"
 #include "file.h"
 #include "indep.h"
 #include "app.h"

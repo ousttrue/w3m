@@ -1,6 +1,7 @@
 #include "fm.h"
 #include "app.h"
 #include "indep.h"
+#include "alloc.h"
 #include "url_stream.h"
 #include "history.h"
 #include "downloadlist.h"
