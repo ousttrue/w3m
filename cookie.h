@@ -3,6 +3,22 @@
 #include "Str.h"
 #include <time.h>
 
+#define ACCEPT_BAD_COOKIE_DISCARD 0
+#define ACCEPT_BAD_COOKIE_ACCEPT 1
+#define ACCEPT_BAD_COOKIE_ASK 2
+
+extern int default_use_cookie;
+extern int use_cookie;
+extern int show_cookie;
+extern int accept_cookie;
+extern int accept_bad_cookie;
+extern char *cookie_reject_domains;
+extern char *cookie_accept_domains;
+extern char *cookie_avoid_wrong_number_of_dots;
+extern struct TextList *Cookie_reject_domains;
+extern struct TextList *Cookie_accept_domains;
+extern struct TextList *Cookie_avoid_wrong_number_of_dots_domains;
+
 struct portlist {
   unsigned short port;
   struct portlist *next;
@@ -50,3 +66,16 @@ struct cookie {
    COO_OVERRIDE_OK)   /* dot in matched host name in FQDN (version 1 case 4) */
 #define COO_EPORT (9) /* Port match failed (version 1' case 5) */
 #define COO_EMAX COO_EPORT
+
+Str find_cookie(struct Url *pu);
+int add_cookie(struct Url *pu, Str name, Str value, time_t expires, Str domain,
+               Str path, int flag, Str comment, int version, Str port,
+               Str commentURL);
+void save_cookies(void);
+void load_cookies(void);
+void initCookie(void);
+void cooLst(void);
+struct Buffer *cookie_list_panel(void);
+struct parsed_tagarg;
+void set_cookie_flag(struct parsed_tagarg *arg);
+int check_cookie_accept_domain(char *domain);

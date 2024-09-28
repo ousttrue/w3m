@@ -16,6 +16,7 @@
 
 #include "config.h"
 #include "func.h"
+#include <stdio.h>
 
 #ifdef MAINPROGRAM
 #define global
@@ -30,8 +31,6 @@
 /*
  * Constants.
  */
-#define LINELEN 256          /* Initial line length */
-#define PAGER_MAX_LINE 10000 /* Maximum line kept as pager */
 
 #define MAXIMUM_COLS 1024
 #define DEFAULT_COLS 80
@@ -39,17 +38,6 @@
 #define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
 #define MINIMUM_PIXEL_PER_CHAR 4.0
 #define MAXIMUM_PIXEL_PER_CHAR 32.0
-
-#ifdef false
-#undef false
-#endif
-
-#ifdef true
-#undef true
-#endif
-
-#define false 0
-#define true 1
 
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
@@ -59,44 +47,6 @@
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
 #endif
-
-/*
- * Line Property
- */
-
-#define P_CHARTYPE 0x3f00
-#define PC_ASCII 0x0000
-#define PC_CTRL 0x0100
-#define PC_SYMBOL 0x8000
-
-/* Effect ( standout/underline ) */
-#define P_EFFECT 0x40ff
-#define PE_NORMAL 0x00
-#define PE_MARK 0x01
-#define PE_UNDER 0x02
-#define PE_STAND 0x04
-#define PE_BOLD 0x08
-#define PE_ANCHOR 0x10
-#define PE_EMPH 0x08
-#define PE_IMAGE 0x20
-#define PE_FORM 0x40
-#define PE_ACTIVE 0x80
-#define PE_VISITED 0x4000
-
-/* Extra effect */
-#define PE_EX_ITALIC 0x01
-#define PE_EX_INSERT 0x02
-#define PE_EX_STRIKE 0x04
-
-#define PE_EX_ITALIC_E PE_UNDER
-#define PE_EX_INSERT_E PE_UNDER
-#define PE_EX_STRIKE_E PE_STAND
-
-#define CharType(c) ((c) & P_CHARTYPE)
-#define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
-#define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
-
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
 /* Flags for displayBuffer() */
 #define B_NORMAL 0
@@ -234,10 +184,6 @@
 #define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
 
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
-#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
 #define in_bold fontstat[0]
 #define in_under fontstat[1]
 #define in_italic fontstat[2]
@@ -321,21 +267,6 @@
 /* flags for loadGeneralFile */
 #define RG_NOCACHE 1
 
-struct html_feed_environ {
-  struct readbuffer *obuf;
-  struct TextLineList *buf;
-  FILE *f;
-  Str tagbuf;
-  int limit;
-  int maxlimit;
-  struct environment *envs;
-  int nenv;
-  int envc;
-  int envc_real;
-  char *title;
-  int blank_lines;
-};
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0
@@ -361,8 +292,6 @@ struct html_feed_environ {
 
 global int Tabstop init(8);
 global int IndentIncr init(4);
-global int ShowEffect init(true);
-global int PagerMax init(PAGER_MAX_LINE);
 
 global char SearchHeader init(false);
 global char *DefaultType init(NULL);
@@ -440,14 +369,12 @@ global int TabCols init(10);
 global int CurrentKey;
 global char *CurrentKeyData;
 global char *CurrentCmdData;
-global char *w3m_reqlog;
 extern char *w3m_version;
 extern int enable_inline_image;
 
 global int w3m_debug;
 #define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
 global int w3m_halfload init(false);
-global Str header_string init(NULL);
 global int override_content_type init(false);
 global int override_user_agent init(false);
 
@@ -463,7 +390,6 @@ global int displayLinkNumber init(false);
 global int displayLineInfo init(false);
 global int DecodeURL init(false);
 global int retryAsHttp init(true);
-global int showLineNum init(false);
 global int show_srch_str init(true);
 global int displayImage init(false); /* XXX: emacs-w3m use display_image=off */
 global int pseudoInlines init(true);
@@ -510,7 +436,6 @@ global int ignore_null_img_alt init(true);
 #define DISPLAY_INS_DEL_FONTIFY 2
 global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(false);
-global int FoldLine init(false);
 #define DEFAULT_URL_EMPTY 0
 #define DEFAULT_URL_CURRENT 1
 #define DEFAULT_URL_LINK 2
@@ -560,21 +485,6 @@ global int no_rc_dir init(false);
 global char *rc_dir init(NULL);
 global char *config_file init(NULL);
 
-global int default_use_cookie init(true);
-global int use_cookie init(true);
-global int show_cookie init(false);
-global int accept_cookie init(true);
-#define ACCEPT_BAD_COOKIE_DISCARD 0
-#define ACCEPT_BAD_COOKIE_ACCEPT 1
-#define ACCEPT_BAD_COOKIE_ASK 2
-global int accept_bad_cookie init(ACCEPT_BAD_COOKIE_DISCARD);
-global char *cookie_reject_domains init(NULL);
-global char *cookie_accept_domains init(NULL);
-global char *cookie_avoid_wrong_number_of_dots init(NULL);
-global struct TextList *Cookie_reject_domains;
-global struct TextList *Cookie_accept_domains;
-global struct TextList *Cookie_avoid_wrong_number_of_dots_domains;
-
 global int view_unseenobject init(true);
 
 global int ssl_verify_server init(true);
@@ -600,12 +510,6 @@ global int set_pixel_per_char init(false);
 global int use_lessopen init(false);
 
 global char *keymap_file init(KEYMAP_FILE);
-
-#define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-#define get_mclen(c) 1
-#define get_mcwidth(c) 1
-#define get_strwidth(c) strlen(c)
-#define get_Str_strwidth(c) ((c)->length)
 
 global int FollowRedirection init(10);
 

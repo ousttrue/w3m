@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "alloc.h"
+#include "cookie.h"
 #include "url_stream.h"
 #include "indep.h"
 #include "app.h"

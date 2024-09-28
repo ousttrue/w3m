@@ -1,6 +1,7 @@
 #include "buffer.h"
 #include "istream.h"
 #include "url_stream.h"
+#include "http_response.h"
 #include "alloc.h"
 #include "file.h"
 #include "app.h"
@@ -14,6 +15,9 @@
 #include "terms.h"
 #include <stdlib.h>
 #include <unistd.h>
+
+int FoldLine = false;
+int showLineNum = false;
 
 int REV_LB[MAX_LB] = {
     LB_N_INFO,

@@ -12,6 +12,7 @@
 
 #include "cookie.h"
 #include "indep.h"
+#include "textlist.h"
 #include "alloc.h"
 #include "parsetag.h"
 #include "regex.h"
@@ -19,6 +20,18 @@
 #include "readbuffer.h"
 #include <time.h>
 #include <sys/stat.h>
+
+int default_use_cookie = true;
+int use_cookie = true;
+int show_cookie = false;
+int accept_cookie = true;
+int accept_bad_cookie = ACCEPT_BAD_COOKIE_DISCARD;
+char *cookie_reject_domains = NULL;
+char *cookie_accept_domains = NULL;
+char *cookie_avoid_wrong_number_of_dots = NULL;
+struct TextList *Cookie_reject_domains = nullptr;
+struct TextList *Cookie_accept_domains = nullptr;
+struct TextList *Cookie_avoid_wrong_number_of_dots_domains = nullptr;
 
 static int is_saved = 1;
 
@@ -261,7 +274,7 @@ int add_cookie(struct Url *pu, Str name, Str value, time_t expires, Str domain,
   int use_security = !(flag & COO_OVERRIDE);
 
 #define COOKIE_ERROR(err)                                                      \
-  if (!((err)&COO_OVERRIDE_OK) || use_security)                                \
+  if (!((err) & COO_OVERRIDE_OK) || use_security)                              \
   return (err)
 
 #ifdef DEBUG

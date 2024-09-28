@@ -54,6 +54,21 @@ struct readbuffer {
   short bottom_margin;
 };
 
+struct html_feed_environ {
+  struct readbuffer *obuf;
+  struct TextLineList *buf;
+  FILE *f;
+  Str tagbuf;
+  int limit;
+  int maxlimit;
+  struct environment *envs;
+  int nenv;
+  int envc;
+  int envc_real;
+  char *title;
+  int blank_lines;
+};
+
 void push_link(int cmd, int offset, int pos);
 
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);

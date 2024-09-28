@@ -1,6 +1,7 @@
 #include "readbuffer.h"
 #include "istream.h"
 #include "alloc.h"
+#include "http_response.h"
 #include "app.h"
 #include "buffer.h"
 #include "indep.h"
@@ -3490,7 +3491,7 @@ static Str textlist_feed() {
   return NULL;
 }
 
-static union input_stream* _file_lp2;
+static union input_stream *_file_lp2;
 
 static Str file_feed() {
   Str s;
@@ -3507,7 +3508,7 @@ void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl) {
   HTMLlineproc2body(buf, textlist_feed, -1);
 }
 
-void HTMLlineproc3(struct Buffer *buf, union input_stream* stream) {
+void HTMLlineproc3(struct Buffer *buf, union input_stream *stream) {
   _file_lp2 = stream;
   HTMLlineproc2body(buf, file_feed, -1);
 }
@@ -3775,7 +3776,7 @@ struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
     }
     ++nlines;
     Strchop(lineBuf2);
-    lineBuf2 = checkType(lineBuf2, &propBuffer, NULL);
+    lineBuf2 = checkType(lineBuf2, &propBuffer);
     addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
                FOLD_BUFFER_WIDTH, nlines);
   }

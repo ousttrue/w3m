@@ -1,3 +1,4 @@
+#pragma once
 #if (defined(MESCHACH) && !defined(MATRIX))
 #define MATRIX
 #endif /* (defined(MESCHACH) && !defined(MATRIX)) */

@@ -50,6 +50,7 @@ pub const SRCS = [_][]const u8{
     "localcgi.c",
     "ftp.c",
     "readbuffer.c",
+    "http_response.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

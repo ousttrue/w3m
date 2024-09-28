@@ -3,6 +3,8 @@
  */
 #include "fm.h"
 #include "alloc.h"
+#include "buffer.h"
+#include "cookie.h"
 #include "app.h"
 #include "indep.h"
 #include "url.h"
@@ -324,7 +326,6 @@ struct param_ptr params1[] = {
 };
 
 struct param_ptr params3[] = {
-    {"pagerline", P_NZINT, PI_TEXT, (void *)&PagerMax, CMT_PAGERLINE, NULL},
     {"use_history", P_INT, PI_ONOFF, (void *)&UseHistory, CMT_HISTORY, NULL},
     {"history", P_INT, PI_TEXT, (void *)&URLHistSize, CMT_HISTSIZE, NULL},
     {"save_hist", P_INT, PI_ONOFF, (void *)&SaveURLHist, CMT_SAVEHIST, NULL},
@@ -803,8 +804,6 @@ void parse_cookie() {
 static void loadSiteconf(void);
 
 void sync_with_option(void) {
-  if (PagerMax < LINES)
-    PagerMax = LINES;
   WrapSearch = WrapDefault;
   parse_proxy();
   parse_cookie();

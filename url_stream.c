@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "cookie.h"
 #include "isocket.h"
 #include "istream.h"
 #include "alloc.h"
@@ -46,6 +47,8 @@
 #include <openssl/crypto.h> /* SSLEAY_VERSION_NUMBER may be here */
 #endif
 #include <openssl/err.h>
+
+Str header_string = NULL;
 
 #ifdef INET6
 /* see rc.c, "dns_order" and dnsorders[] */

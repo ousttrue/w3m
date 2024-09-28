@@ -1,13 +1,6 @@
-/* $Id: func.h,v 1.4 2002/12/03 16:01:33 ukai Exp $ */
-/*
- * w3m func.h
- */
-
-#ifndef FUNC_H
-#define FUNC_H
-
-#include "textlist.h"
-#include "hash.h"
+#pragma once
+// #include "textlist.h"
+// #include "hash.h"
 
 #define KEY_HASH_SIZE 127
 
@@ -22,4 +15,4 @@ typedef struct _FuncList {
   void (*func)();
 } FuncList;
 
-#endif /* not FUNC_H */
+extern int getFuncList(char *id);

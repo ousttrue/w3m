@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "alloc.h"
+#include "cookie.h"
 #include "file.h"
 #include "indep.h"
 #include "app.h"
@@ -38,14 +39,6 @@ struct Hist *SaveHist;
 struct Hist *URLHist;
 struct Hist *ShellHist;
 struct Hist *TextHist;
-
-typedef struct _Event {
-  int cmd;
-  void *data;
-  struct _Event *next;
-} Event;
-static Event *CurrentEvent = NULL;
-static Event *LastEvent = NULL;
 
 static MySignalHandler SigAlarm(SIGNAL_ARG);
 
@@ -146,20 +139,6 @@ void mainloop(char *line_str) {
 static void keyPressEventProc(int c) {
   CurrentKey = c;
   w3mFuncList[(int)GlobalKeymap[c]].func();
-}
-
-void pushEvent(int cmd, void *data) {
-  Event *event;
-
-  event = New(Event);
-  event->cmd = cmd;
-  event->data = data;
-  event->next = NULL;
-  if (CurrentEvent)
-    LastEvent->next = event;
-  else
-    CurrentEvent = event;
-  LastEvent = event;
 }
 
 static int cmp_anchor_hseq(const void *a, const void *b) {

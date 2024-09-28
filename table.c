@@ -1,11 +1,9 @@
 /*
  * HTML table
  */
-#include <sys/types.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
+#include "table.h"
 #include "indep.h"
+#include "textlist.h"
 #include "fm.h"
 #include "readbuffer.h"
 #include "html.h"
@@ -13,6 +11,10 @@
 #include "Str.h"
 #include "myctype.h"
 #include "termsize.h"
+#include <sys/types.h>
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
 
 int symbol_width = 0;
 int symbol_width0 = 0;

@@ -1,12 +1,15 @@
+#include "mailcap.h"
 #include "fm.h"
 #include "alloc.h"
+#include "textlist.h"
 #include "myctype.h"
 #include "indep.h"
 #include "html.h"
-#include <stdio.h>
-#include <errno.h>
 #include "parsetag.h"
 #include "localcgi.h"
+#include "hash.h"
+#include <stdio.h>
+#include <errno.h>
 
 static struct mailcap DefaultMailcap[] = {
     {"image/*", DEF_IMAGE_VIEWER " %s", 0, NULL, NULL, NULL}, /* */
@@ -16,6 +19,40 @@ static struct mailcap DefaultMailcap[] = {
 static struct TextList *mailcap_list;
 static struct mailcap **UserMailcap;
 
+int matchattr(char *p, char *attr, int len, Str *value) {
+  int quoted;
+  char *q = NULL;
+
+  if (strncasecmp(p, attr, len) == 0) {
+    p += len;
+    SKIP_BLANKS(p);
+    if (value) {
+      *value = Strnew();
+      if (*p == '=') {
+        p++;
+        SKIP_BLANKS(p);
+        quoted = 0;
+        while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+          if (!IS_SPACE(*p))
+            q = p;
+          if (*p == '"')
+            quoted = (quoted) ? 0 : 1;
+          else
+            Strcat_char(*value, *p);
+          p++;
+        }
+        if (q)
+          Strshrink(*value, p - q - 1);
+      }
+      return 1;
+    } else {
+      if (IS_ENDT(*p)) {
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
 int mailcapMatch(struct mailcap *mcap, char *type) {
   char *cap = mcap->type, *p;
   int level;

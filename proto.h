@@ -10,7 +10,6 @@
 #include <time.h>
 
 extern void nulcmd(void);
-extern void pushEvent(int cmd, void *data);
 extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void pgFore(void);
 extern void pgBack(void);
@@ -195,9 +194,6 @@ extern int checkCopyFile(char *path1, char *path2);
 union input_stream;
 extern int checkSaveFile(union input_stream *stream, char *path);
 extern int checkOverWrite(char *path);
-extern int matchattr(char *p, char *attr, int len, Str *value);
-extern void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
-                       struct Url *pu);
 extern char *checkHeader(struct Buffer *buf, char *field);
 
 extern struct Buffer *newBuffer(int width);
@@ -240,8 +236,6 @@ extern Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(struct Buffer *buf, Line *line, int offset,
                              int last);
 extern int gethtmlcmd(char **s);
-#define checkType(a, b, c) _checkType(a, b)
-extern Str checkType(Str s, Lineprop **oprop, Linecolor **ocolor);
 extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
                         int mode);
 extern char *lastFileName(char *path);
@@ -267,6 +261,7 @@ extern double log_like(int x);
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
 extern int visible_length(char *str);
+struct TextLine;
 extern void align(struct TextLine *lbuf, int width, int mode);
 extern void print_item(struct table *t, int row, int col, int width, Str buf);
 extern void print_sep(struct table *t, int row, int type, int maxcol, Str buf);
@@ -386,17 +381,6 @@ extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
                            struct Anchor *a);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
 
-extern Str decodeB(char **ww);
-
-extern Str decodeQ(char **ww);
-extern Str decodeQP(char **ww);
-extern Str decodeU(char **ww);
-
-extern Str decodeWord0(char **ow);
-extern Str decodeMIME0(Str orgstr);
-#define decodeWord(ow, charset) decodeWord0(ow)
-#define decodeMIME(orgstr, charset) decodeMIME0(orgstr)
-extern Str encodeB(char *a);
 extern int set_param_option(char *option);
 extern char *get_param_option(char *name);
 extern void init_rc(void);
@@ -429,20 +413,10 @@ extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
-extern time_t mymktime(char *timestr);
 extern void (*mySignal(int signal_number, void (*action)(int)))(int);
+
 extern char *FQDN(char *host);
-extern Str find_cookie(struct Url *pu);
-extern int add_cookie(struct Url *pu, Str name, Str value, time_t expires,
-                      Str domain, Str path, int flag, Str comment, int version,
-                      Str port, Str commentURL);
-extern void save_cookies(void);
-extern void load_cookies(void);
-extern void initCookie(void);
-extern void cooLst(void);
-extern struct Buffer *cookie_list_panel(void);
-extern void set_cookie_flag(struct parsed_tagarg *arg);
-extern int check_cookie_accept_domain(char *domain);
+
 #define docCSet nulcmd
 #define defCSet nulcmd
 
@@ -463,7 +437,6 @@ extern char *searchKeyData(void);
 
 extern void setKeymap(char *p, int lineno, int verbose);
 extern void initKeymap(int force);
-extern int getFuncList(char *id);
 extern int getKey(char *s);
 extern char *getKeyData(int key);
 extern char *getWord(char **str);

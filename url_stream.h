@@ -1,11 +1,13 @@
 #pragma once
 #include <time.h>
+#include "Str.h"
 #include "url.h"
 #include "compression.h"
 #include "encoding_type.h"
 
 extern struct TextList *NO_proxy_domains;
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
+extern Str header_string;
 
 void url_stream_init();
 

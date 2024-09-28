@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "cookie.h"
 #include "app.h"
 #include "indep.h"
 #include "alloc.h"

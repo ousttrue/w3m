@@ -1,3 +1,5 @@
+#include "cookie.h"
+
 FuncList w3mFuncList[] = {
     /*0*/ {"@@@", nulcmd},
     /*1*/ {"ABORT", quitfm},

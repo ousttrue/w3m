@@ -12,11 +12,29 @@
 
 const char *CurrentDir = nullptr;
 const char *app_currentdir() { return CurrentDir; }
+const char *w3m_reqlog = nullptr;
 
 int CurrentPid = -1;
 const char *tmp_dir = nullptr;
 void app_set_tmpdir(const char *dir) { tmp_dir = dir; }
 const char *app_get_tmpdir() { return tmp_dir; }
+
+struct Event *CurrentEvent = NULL;
+static struct Event *LastEvent = NULL;
+
+void pushEvent(int cmd, void *data) {
+  struct Event *event;
+
+  event = New(struct Event);
+  event->cmd = cmd;
+  event->data = data;
+  event->next = NULL;
+  if (CurrentEvent)
+    LastEvent->next = event;
+  else
+    CurrentEvent = event;
+  LastEvent = event;
+}
 
 static char *tmpf_base[MAX_TMPF_TYPE] = {
     "tmp", "src", "frame", "cache", "cookie",
