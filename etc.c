@@ -1,5 +1,6 @@
 #include "etc.h"
 #include "app.h"
+#include "indep.h"
 #include "fm.h"
 #include "buffer.h"
 #include "tty.h"

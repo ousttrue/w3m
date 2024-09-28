@@ -1,6 +1,7 @@
 #include "readbuffer.h"
 #include "app.h"
 #include "buffer.h"
+#include "indep.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "map.h"
@@ -2958,8 +2959,8 @@ table_start:
 }
 
 void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
-               struct environment *envs, int nenv, struct TextLineList *buf, int limit,
-               int indent) {
+               struct environment *envs, int nenv, struct TextLineList *buf,
+               int limit, int indent) {
   envs[0].indent = indent;
 
   obuf->line = Strnew();
@@ -3560,11 +3561,7 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
     term_showProgress(&linelen, &trbyte, current_content_length);
-    /*
-     * if (frame_source)
-     * continue;
-     */
-    lineBuf2 = convertLine(f, lineBuf2, HTML_MODE, &charset, doc_charset);
+    lineBuf2 = convertLine(lineBuf2, HTML_MODE);
     HTMLlineproc0(lineBuf2->ptr, &htmlenv1, internal);
   }
   if (obuf.status != R_ST_NORMAL) {
@@ -3766,7 +3763,7 @@ struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
       Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
     term_showProgress(&linelen, &trbyte, current_content_length);
-    lineBuf2 = convertLine(uf, lineBuf2, PAGER_MODE, &charset, doc_charset);
+    lineBuf2 = convertLine(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
         ++nlines;

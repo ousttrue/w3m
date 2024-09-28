@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "myctype.h"
+#include "indep.h"
 #include "html.h"
 #include <stdio.h>
 #include <errno.h>

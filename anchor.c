@@ -1,4 +1,6 @@
 #include "map.h"
+#include "indep.h"
+#include "anchor.h"
 #include "http_request.h"
 #include "buffer.h"
 #include "fm.h"

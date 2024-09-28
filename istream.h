@@ -1,6 +1,6 @@
 #pragma once
 
-#include "indep.h"
+#include "growbuf.h"
 #include "encoding_type.h"
 #include <stdio.h>
 #include <openssl/bio.h>

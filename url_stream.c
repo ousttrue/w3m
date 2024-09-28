@@ -1,5 +1,6 @@
 #include "url_stream.h"
 #include "app.h"
+#include "indep.h"
 #include "textlist.h"
 #include "etc.h"
 #include "html.h"

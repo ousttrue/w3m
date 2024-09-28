@@ -1,6 +1,7 @@
 #include "linein.h"
 #include "ctrlcode.h"
 #include "history.h"
+#include "indep.h"
 #include "form.h"
 #include "tabbuffer.h"
 #include "terms.h"

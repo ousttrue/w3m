@@ -526,7 +526,7 @@ int non_null(char *s) {
   return FALSE;
 }
 
-void cleanup_line(Str s, int mode) {
+void cleanup_line(Str s, enum CLEANUP_LINE_MODE mode) {
   if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
       s->ptr[s->length - 1] == '\n') {
     Strshrink(s, 2);
@@ -542,6 +542,15 @@ void cleanup_line(Str s, int mode) {
         s->ptr[i] = ' ';
     }
   }
+}
+
+/*
+ * convert line
+ */
+Str convertLine(Str line, enum CLEANUP_LINE_MODE mode) {
+  if (mode != RAW_MODE)
+    cleanup_line(line, mode);
+  return line;
 }
 
 int getescapechar(char **str) {

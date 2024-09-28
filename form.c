@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "url_stream.h"
+#include "indep.h"
 #include "app.h"
 #include "downloadlist.h"
 #include "form.h"
@@ -160,7 +161,8 @@ int formtype(char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(struct Anchor *a, struct Buffer *buf, struct FormItemList *fi) {
+void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
+                      struct FormItemList *fi) {
   int i;
   struct Anchor *a2;
   struct FormItemList *f2;
@@ -482,7 +484,7 @@ void input_textarea(struct FormItemList *fi) {
       Strshrink(tmp, 1);
       Strcat_charp(tmp, "\r\n");
     }
-    tmp = convertLine(NULL, tmp, RAW_MODE, &charset, DisplayCharset);
+    tmp = convertLine(tmp, RAW_MODE);
     Strcat(fi->value, tmp);
   }
   fclose(f);

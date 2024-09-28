@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "indep.h"
 #include "fm.h"
 #include "readbuffer.h"
 #include "html.h"

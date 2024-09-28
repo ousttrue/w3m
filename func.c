@@ -5,6 +5,8 @@
 
 #include <stdio.h>
 #include "fm.h"
+#include "alloc.h"
+#include "indep.h"
 #include "ctrlcode.h"
 #include "func.h"
 #include "myctype.h"

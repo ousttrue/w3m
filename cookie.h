@@ -3,6 +3,11 @@
 #include "Str.h"
 #include <time.h>
 
+struct portlist {
+  unsigned short port;
+  struct portlist *next;
+};
+
 struct cookie {
   struct Url url;
   Str name;

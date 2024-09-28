@@ -1,4 +1,6 @@
 #include "istream.h"
+#include "alloc.h"
+#include "indep.h"
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"

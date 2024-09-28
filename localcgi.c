@@ -1,5 +1,7 @@
 #include "localcgi.h"
+#include "alloc.h"
 #include "app.h"
+#include "indep.h"
 #include "form.h"
 #include "http_request.h"
 #include "fm.h"

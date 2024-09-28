@@ -12,19 +12,6 @@
 #define FALSE 0
 #endif /* FALSE */
 
-struct growbuf {
-  char *ptr;
-  int length;
-  int area_size;
-  void *(*realloc_proc)(void *, size_t);
-  void (*free_proc)(void *);
-};
-
-#define RAW_MODE 0
-#define PAGER_MODE 1
-#define HTML_MODE 2
-#define HEADER_MODE 3
-
 extern unsigned char QUOTE_MAP[];
 extern char *HTML_QUOTE_MAP[];
 #define HTML_QUOTE_MASK 0x07   /* &, <, >, ", ' */
@@ -65,7 +52,18 @@ extern int strcasemstr(char *str, char *srch[], char **ret_ptr);
 int strmatchlen(const char *s1, const char *s2, int maxlen);
 extern char *remove_space(char *str);
 extern int non_null(char *s);
-extern void cleanup_line(Str s, int mode);
+
+enum CLEANUP_LINE_MODE {
+  RAW_MODE = 0,
+  PAGER_MODE = 1,
+  HTML_MODE = 2,
+  HEADER_MODE = 3,
+};
+extern void cleanup_line(Str s, enum CLEANUP_LINE_MODE mode);
+extern Str convertLine(Str line, enum CLEANUP_LINE_MODE mode);
+// #define convertLine(uf, line, mode, charset, dcharset)                         \
+//   convertLine0(uf, line, mode)
+
 extern char *html_quote(char *str);
 extern char *html_unquote(char *str);
 extern char *file_quote(char *str);
@@ -80,16 +78,6 @@ extern void *xrealloc(void *ptr, size_t size);
 extern void xfree(void *ptr);
 extern void *w3m_GC_realloc_atomic(void *ptr, size_t size);
 extern void w3m_GC_free(void *ptr);
-extern void growbuf_init(struct growbuf *gb);
-extern void growbuf_init_without_GC(struct growbuf *gb);
-extern void growbuf_clear(struct growbuf *gb);
-extern Str growbuf_to_Str(struct growbuf *gb);
-extern void growbuf_reserve(struct growbuf *gb, int leastarea);
-extern void growbuf_append(struct growbuf *gb, const char *src, int len);
-#define GROWBUF_ADD_CHAR(gb, ch)                                               \
-  ((((gb)->length >= (gb)->area_size) ? growbuf_reserve(gb, (gb)->length + 1)  \
-                                      : (void)0),                              \
-   (void)((gb)->ptr[(gb)->length++] = (ch)))
 
 extern char *w3m_auxbin_dir();
 extern char *w3m_lib_dir();

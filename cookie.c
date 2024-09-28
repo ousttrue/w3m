@@ -11,6 +11,7 @@
  */
 
 #include "cookie.h"
+#include "indep.h"
 #include "html.h"
 #include "parsetag.h"
 #include <time.h>

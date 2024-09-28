@@ -1,6 +1,7 @@
 #include "file.h"
 #include "compression.h"
 #include "app.h"
+#include "indep.h"
 #include "cookie.h"
 #include "etc.h"
 #include "html.h"
@@ -131,17 +132,6 @@ void examineFile(char *path, struct URLFile *uf) {
   }
 }
 
-
-
-/*
- * convert line
- */
-Str convertLine0(struct URLFile *uf, Str line, int mode) {
-  if (mode != RAW_MODE)
-    cleanup_line(line, mode);
-  return line;
-}
-
 int matchattr(char *p, char *attr, int len, Str *value) {
   int quoted;
   char *q = NULL;
@@ -229,9 +219,7 @@ void readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
         /* header line is continued */
         continue;
       lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-      lineBuf2 = convertLine(NULL, lineBuf2, RAW_MODE,
-                             mime_charset ? &mime_charset : &charset,
-                             mime_charset ? mime_charset : DocumentCharset);
+      lineBuf2 = convertLine(lineBuf2, RAW_MODE);
       /* separated with line and stored */
       tmp = Strnew_size(lineBuf2->length);
       for (p = lineBuf2->ptr; *p; p = q) {

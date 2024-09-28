@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "indep.h"
 #include "url.h"
 #include "fm.h"
 #include "url_stream.h"
@@ -11,7 +12,6 @@
 #include <signal.h>
 #include <setjmp.h>
 #include <time.h>
-
 
 #ifdef DEBUG
 #include <malloc.h>
@@ -29,7 +29,6 @@ typedef int socklen_t;
 #include <netdb.h>
 #include <arpa/inet.h>
 #endif
-
 
 #ifndef HAVE_SOCKLEN_T
 typedef int socklen_t;
@@ -374,8 +373,7 @@ InputStream openFTPStream(struct Url *pu, struct URLFile *uf) {
   } else if (ftppasswd != NULL && *ftppasswd != '\0')
     pass = ftppasswd;
 #ifndef _WIN32
-  else 
-  {
+  else {
     struct passwd *mypw = getpwuid(getuid());
     tmp = Strnew_charp(mypw ? mypw->pw_name : "anonymous");
     Strcat_char(tmp, '@');
@@ -461,8 +459,7 @@ Str loadFTPDir0(struct Url *pu) {
   if (Strlastchar(tmp) != '/')
     Strcat_char(tmp, '/');
   fn = html_quote(tmp->ptr);
-  tmp = convertLine(NULL, Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE,
-                    charset, doc_charset);
+  tmp = convertLine(Strnew_charp(file_unquote(tmp->ptr)), RAW_MODE);
   q = html_quote(tmp->ptr);
   FTPDIRtmp = Strnew_m_charp(
       "<html>\n<head>\n<base href=\"", fn, "\">\n<title>", q,
@@ -535,7 +532,7 @@ Str loadFTPDir0(struct Url *pu) {
         *(date - 1) = '\0';
       }
       date++;
-      tmp = convertLine(NULL, Strnew_charp(fn), RAW_MODE, charset, doc_charset);
+      tmp = convertLine(Strnew_charp(fn), RAW_MODE);
       if (ftype == FTPDIR_LINK)
         Strcat_char(tmp, '@');
       Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)), "\">",
@@ -546,8 +543,7 @@ Str loadFTPDir0(struct Url *pu) {
         else
           Strcat_char(FTPDIRtmp, ' ');
       }
-      tmp =
-          convertLine(NULL, Strnew_charp(date), RAW_MODE, charset, doc_charset);
+      tmp = convertLine(Strnew_charp(date), RAW_MODE);
       Strcat_m_charp(FTPDIRtmp, html_quote(tmp->ptr), "\n", NULL);
     }
     Strcat_charp(FTPDIRtmp, "</pre>\n");
@@ -563,7 +559,7 @@ Str loadFTPDir0(struct Url *pu) {
     qsort(flist, nfile, sizeof(char *), strCmp);
     for (i = 0; i < nfile; i++) {
       fn = flist[i];
-      tmp = convertLine(NULL, Strnew_charp(fn), RAW_MODE, charset, doc_charset);
+      tmp = convertLine(Strnew_charp(fn), RAW_MODE);
       Strcat_m_charp(FTPDIRtmp, "<li><a href=\"", html_quote(file_quote(fn)),
                      "\">", html_quote(tmp->ptr), "</a>\n", NULL);
     }

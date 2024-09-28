@@ -337,11 +337,6 @@ struct html_feed_environ {
   int blank_lines;
 };
 
-struct portlist {
-  unsigned short port;
-  struct portlist *next;
-};
-
 /* modes for align() */
 
 #define ALIGN_CENTER 0

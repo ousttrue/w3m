@@ -2,7 +2,9 @@
  * Initialization file etc.
  */
 #include "fm.h"
+#include "alloc.h"
 #include "app.h"
+#include "indep.h"
 #include "url.h"
 #include "url_stream.h"
 #include "localcgi.h"

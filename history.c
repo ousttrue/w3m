@@ -3,6 +3,7 @@
 #include "fm.h"
 #include "terms.h"
 #include "readbuffer.h"
+#include "indep.h"
 
 struct Buffer *historyBuffer(struct Hist *hist) {
   Str src = Strnew();

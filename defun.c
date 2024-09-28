@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "file.h"
+#include "indep.h"
 #include "app.h"
 #include "funcname1.h"
 #include "history.h"

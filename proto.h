@@ -142,9 +142,6 @@ struct URLFile;
 extern void examineFile(char *path, struct URLFile *uf);
 extern int dir_exist(char *path);
 extern char **get_symbol(void);
-extern Str convertLine0(struct URLFile *uf, Str line, int mode);
-#define convertLine(uf, line, mode, charset, dcharset)                         \
-  convertLine0(uf, line, mode)
 extern void push_symbol(Str str, char symbol, int width, int n);
 struct FormList;
 extern struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
