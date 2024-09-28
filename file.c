@@ -1204,7 +1204,7 @@ page_loaded:
     b->real_type = real_type;
     if (pu.label) {
       if (proc == loadHTMLBuffer) {
-        Anchor *a;
+        struct Anchor *a;
         a = searchURLLabel(b, pu.label);
         if (a != NULL) {
           gotoLine(b, a->start.line);

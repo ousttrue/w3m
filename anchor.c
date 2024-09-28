@@ -9,26 +9,26 @@
 
 #define FIRST_ANCHOR_SIZE 30
 
-AnchorList *putAnchor(AnchorList *al, char *url, char *target,
-                      Anchor **anchor_return, char *referer, char *title,
+struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
+                      struct Anchor **anchor_return, char *referer, char *title,
                       unsigned char key, int line, int pos) {
   int n, i, j;
-  Anchor *a;
-  BufferPoint bp = {0};
+  struct Anchor *a;
+  struct BufferPoint bp = {0};
   if (al == NULL) {
-    al = New(AnchorList);
+    al = New(struct AnchorList);
     al->anchors = NULL;
     al->nanchor = al->anchormax = 0;
     al->acache = -1;
   }
   if (al->anchormax == 0) {
     /* first time; allocate anchor buffer */
-    al->anchors = New_N(Anchor, FIRST_ANCHOR_SIZE);
+    al->anchors = New_N(struct Anchor, FIRST_ANCHOR_SIZE);
     al->anchormax = FIRST_ANCHOR_SIZE;
   }
   if (al->nanchor == al->anchormax) { /* need realloc */
     al->anchormax *= 2;
-    al->anchors = New_Reuse(Anchor, al->anchors, al->anchormax);
+    al->anchors = New_Reuse(struct Anchor, al->anchors, al->anchormax);
   }
   bp.line = line;
   bp.pos = pos;
@@ -58,30 +58,30 @@ AnchorList *putAnchor(AnchorList *al, char *url, char *target,
   return al;
 }
 
-Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *referer,
+struct Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *referer,
                      char *title, unsigned char key, int line, int pos) {
-  Anchor *a;
+  struct Anchor *a;
   buf->href =
       putAnchor(buf->href, url, target, &a, referer, title, key, line, pos);
   return a;
 }
 
-Anchor *registerName(struct Buffer *buf, char *url, int line, int pos) {
-  Anchor *a;
+struct Anchor *registerName(struct Buffer *buf, char *url, int line, int pos) {
+  struct Anchor *a;
   buf->name = putAnchor(buf->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
   return a;
 }
 
-Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
+struct Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
                     int pos) {
-  Anchor *a;
+  struct Anchor *a;
   buf->img = putAnchor(buf->img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
 }
 
-Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
+struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
                      struct parsed_tag *tag, int line, int pos) {
-  Anchor *a;
+  struct Anchor *a;
   struct FormItemList *fi;
 
   fi = formList_addInput(flist, tag);
@@ -92,8 +92,8 @@ Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
   return a;
 }
 
-int onAnchor(Anchor *a, int line, int pos) {
-  BufferPoint bp;
+int onAnchor(struct Anchor *a, int line, int pos) {
+  struct BufferPoint bp;
   bp.line = line;
   bp.pos = pos;
 
@@ -104,8 +104,8 @@ int onAnchor(Anchor *a, int line, int pos) {
   return 0;
 }
 
-Anchor *retrieveAnchor(AnchorList *al, int line, int pos) {
-  Anchor *a;
+struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos) {
+  struct Anchor *a;
   size_t b, e;
   int cmp;
 
@@ -130,27 +130,27 @@ Anchor *retrieveAnchor(AnchorList *al, int line, int pos) {
   return NULL;
 }
 
-Anchor *retrieveCurrentAnchor(struct Buffer *buf) {
+struct Anchor *retrieveCurrentAnchor(struct Buffer *buf) {
   if (buf->currentLine == NULL)
     return NULL;
   return retrieveAnchor(buf->href, buf->currentLine->linenumber, buf->pos);
 }
 
-Anchor *retrieveCurrentImg(struct Buffer *buf) {
+struct Anchor *retrieveCurrentImg(struct Buffer *buf) {
   if (buf->currentLine == NULL)
     return NULL;
   return retrieveAnchor(buf->img, buf->currentLine->linenumber, buf->pos);
 }
 
-Anchor *retrieveCurrentForm(struct Buffer *buf) {
+struct Anchor *retrieveCurrentForm(struct Buffer *buf) {
   if (buf->currentLine == NULL)
     return NULL;
   return retrieveAnchor(buf->formitem, buf->currentLine->linenumber, buf->pos);
 }
 
-Anchor *searchAnchor(AnchorList *al, char *str) {
+struct Anchor *searchAnchor(struct AnchorList *al, char *str) {
   int i;
-  Anchor *a;
+  struct Anchor *a;
   if (al == NULL)
     return NULL;
   for (i = 0; i < al->nanchor; i++) {
@@ -163,11 +163,11 @@ Anchor *searchAnchor(AnchorList *al, char *str) {
   return NULL;
 }
 
-Anchor *searchURLLabel(struct Buffer *buf, char *url) {
+struct Anchor *searchURLLabel(struct Buffer *buf, char *url) {
   return searchAnchor(buf->name, url);
 }
 
-static Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2, int line,
+static struct Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2, int line,
                                int pos) {
   Str tmp;
 
@@ -177,9 +177,9 @@ static Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2, int line,
                       NULL, NO_REFERER, NULL, '\0', line, pos);
 }
 
-static void reseq_anchor0(AnchorList *al, short *seqmap) {
+static void reseq_anchor0(struct AnchorList *al, short *seqmap) {
   int i;
-  Anchor *a;
+  struct Anchor *a;
 
   if (!al)
     return;
@@ -196,8 +196,8 @@ static void reseq_anchor0(AnchorList *al, short *seqmap) {
 static void reseq_anchor(struct Buffer *buf) {
   int i, j, n, nmark = (buf->hmarklist) ? buf->hmarklist->nmark : 0;
   short *seqmap;
-  Anchor *a, *a1;
-  HmarkerList *ml = NULL;
+  struct Anchor *a, *a1;
+  struct HmarkerList *ml = NULL;
 
   if (!buf->href)
     return;
@@ -245,9 +245,9 @@ static void reseq_anchor(struct Buffer *buf) {
 }
 
 static char *reAnchorPos(struct Buffer *buf, Line *l, char *p1, char *p2,
-                         Anchor *(*anchorproc)(struct Buffer *, char *, char *,
+                         struct Anchor *(*anchorproc)(struct Buffer *, char *, char *,
                                                int, int)) {
-  Anchor *a;
+  struct Anchor *a;
   int spos, epos;
   int i, hseq = -2;
 
@@ -292,7 +292,7 @@ void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos) {
 /* search regexp and register them as anchors */
 /* returns error message if any               */
 static char *reAnchorAny(struct Buffer *buf, char *re,
-                         Anchor *(*anchorproc)(struct Buffer *, char *, char *,
+                         struct Anchor *(*anchorproc)(struct Buffer *, char *, char *,
                                                int, int)) {
   Line *l;
   char *p = NULL, *p1, *p2;
@@ -327,9 +327,9 @@ char *reAnchor(struct Buffer *buf, char *re) {
 }
 
 #define FIRST_MARKER_SIZE 30
-HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq) {
+struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos, int seq) {
   if (ml == NULL) {
-    ml = New(HmarkerList);
+    ml = New(struct HmarkerList);
     ml->marks = NULL;
     ml->nmark = 0;
     ml->markmax = 0;
@@ -337,14 +337,14 @@ HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq) {
   }
   if (ml->markmax == 0) {
     ml->markmax = FIRST_MARKER_SIZE;
-    ml->marks = NewAtom_N(BufferPoint, ml->markmax);
-    memset(ml->marks, 0, sizeof(BufferPoint) * ml->markmax);
+    ml->marks = NewAtom_N(struct BufferPoint, ml->markmax);
+    memset(ml->marks, 0, sizeof(struct BufferPoint) * ml->markmax);
   }
   if (seq + 1 > ml->nmark)
     ml->nmark = seq + 1;
   if (ml->nmark >= ml->markmax) {
     ml->markmax = ml->nmark * 2;
-    ml->marks = New_Reuse(BufferPoint, ml->marks, ml->markmax);
+    ml->marks = New_Reuse(struct BufferPoint, ml->marks, ml->markmax);
   }
   ml->marks[seq].line = line;
   ml->marks[seq].pos = pos;
@@ -352,7 +352,7 @@ HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq) {
   return ml;
 }
 
-Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y) {
+struct Anchor *closest_next_anchor(struct AnchorList *a, struct Anchor *an, int x, int y) {
   int i;
 
   if (a == NULL || a->nanchor == 0)
@@ -371,7 +371,7 @@ Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y) {
   return an;
 }
 
-Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y) {
+struct Anchor *closest_prev_anchor(struct AnchorList *a, struct Anchor *an, int x, int y) {
   int i;
 
   if (a == NULL || a->nanchor == 0)
@@ -390,9 +390,9 @@ Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y) {
   return an;
 }
 
-void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
+void shiftAnchorPosition(struct AnchorList *al, struct HmarkerList *hl, int line, int pos,
                          int shift) {
-  Anchor *a;
+  struct Anchor *a;
   size_t b, e, s = 0;
   int cmp;
 
@@ -426,9 +426,9 @@ void shiftAnchorPosition(AnchorList *al, HmarkerList *hl, int line, int pos,
   }
 }
 
-void addMultirowsForm(struct Buffer *buf, AnchorList *al) {
+void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
   int i, j, k, col, ecol, pos;
-  Anchor a_form, *a;
+  struct Anchor a_form, *a;
   Line *l, *ls;
 
   if (al == NULL || al->nanchor == 0)
@@ -480,7 +480,7 @@ void addMultirowsForm(struct Buffer *buf, AnchorList *al) {
   }
 }
 
-char *getAnchorText(struct Buffer *buf, AnchorList *al, Anchor *a) {
+char *getAnchorText(struct Buffer *buf, struct AnchorList *al, struct Anchor *a) {
   int hseq, i;
   Line *l;
   Str tmp = NULL;

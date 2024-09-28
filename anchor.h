@@ -1,35 +1,35 @@
 #pragma once
 
-typedef struct {
+struct BufferPoint {
   int line;
   int pos;
   int invalid;
-} BufferPoint;
+};
 
-typedef struct Anchor {
+struct Anchor {
   char *url;
   char *target;
   char *referer;
   char *title;
   unsigned char accesskey;
-  BufferPoint start;
-  BufferPoint end;
+  struct BufferPoint start;
+  struct BufferPoint end;
   int hseq;
   char slave;
   short y;
   short rows;
-} Anchor;
+};
 
-typedef struct AnchorList {
-  Anchor *anchors;
+struct AnchorList {
+  struct Anchor *anchors;
   int nanchor;
   int anchormax;
   int acache;
-} AnchorList;
+};
 
-typedef struct {
-  BufferPoint *marks;
+struct HmarkerList {
+  struct BufferPoint *marks;
   int nmark;
   int markmax;
   int prevhseq;
-} HmarkerList;
+};

@@ -87,12 +87,12 @@ static Str make_lastline_message(struct Buffer *buf) {
 
   if (displayLink) {
     {
-      Anchor *a = retrieveCurrentAnchor(buf);
+      struct Anchor *a = retrieveCurrentAnchor(buf);
       char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        Anchor *a_img = retrieveCurrentImg(buf);
+        struct Anchor *a_img = retrieveCurrentImg(buf);
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
@@ -211,11 +211,11 @@ void displayBuffer(struct Buffer *buf, int mode) {
   }
 }
 
-static void drawAnchorCursor0(struct Buffer *buf, AnchorList *al, int hseq,
+static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al, int hseq,
                               int prevhseq, int tline, int eline, int active) {
   int i, j;
   Line *l;
-  Anchor *an;
+  struct Anchor *an;
 
   l = buf->topLine;
   for (j = 0; j < al->nanchor; j++) {
@@ -259,7 +259,7 @@ static void drawAnchorCursor0(struct Buffer *buf, AnchorList *al, int hseq,
 }
 
 static void drawAnchorCursor(struct Buffer *buf) {
-  Anchor *an;
+  struct Anchor *an;
   int hseq, prevhseq;
   int tline, eline;
 

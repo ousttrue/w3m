@@ -92,7 +92,7 @@ void mainloop(char *line_str) {
   for (;;) {
     download_update();
     if (Currentbuf->submit) {
-      Anchor *a = Currentbuf->submit;
+      struct Anchor *a = Currentbuf->submit;
       Currentbuf->submit = NULL;
       gotoLine(Currentbuf, a->start.line);
       Currentbuf->pos = a->start.pos;
@@ -159,7 +159,7 @@ void pushEvent(int cmd, void *data) {
 }
 
 static int cmp_anchor_hseq(const void *a, const void *b) {
-  return (*((const Anchor **)a))->hseq - (*((const Anchor **)b))->hseq;
+  return (*((const struct Anchor **)a))->hseq - (*((const struct Anchor **)b))->hseq;
 }
 
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */ }
@@ -1307,7 +1307,7 @@ static struct Buffer *loadLink(char *url, char *target, char *referer,
 
 static void gotoLabel(char *label) {
   struct Buffer *buf;
-  Anchor *al;
+  struct Anchor *al;
   int i;
 
   al = searchURLLabel(Currentbuf, label);
@@ -1366,7 +1366,7 @@ static int handleMailto(char *url) {
 
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
-  Anchor *a;
+  struct Anchor *a;
   struct Url u;
   char *url;
 
@@ -1426,7 +1426,7 @@ void bufferA(void) {
 
 /* view inline image */
 DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
-  Anchor *a;
+  struct Anchor *a;
   struct Buffer *buf;
 
   if (Currentbuf->firstLine == NULL)
@@ -1607,7 +1607,7 @@ DEFUN(submitForm, SUBMIT, "Submit form") { _followForm(TRUE); }
 void followForm(void) { _followForm(FALSE); }
 
 static void _followForm(int submit) {
-  Anchor *a, *a2;
+  struct Anchor *a, *a2;
   char *p;
   struct FormItemList *fi, *f2;
   Str tmp, tmp2;
@@ -1774,9 +1774,9 @@ static void _followForm(int submit) {
 
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  BufferPoint *po;
-  Anchor *an;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct BufferPoint *po;
+  struct Anchor *an;
   int hseq = 0;
 
   if (Currentbuf->firstLine == NULL)
@@ -1806,9 +1806,9 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
 
 /* go to the last anchor */
 DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  BufferPoint *po;
-  Anchor *an;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct BufferPoint *po;
+  struct Anchor *an;
   int hseq;
 
   if (Currentbuf->firstLine == NULL)
@@ -1840,9 +1840,9 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
 
 /* go to the nth anchor */
 DEFUN(nthA, LINK_N, "Go to the nth link") {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  BufferPoint *po;
-  Anchor *an;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct BufferPoint *po;
+  struct Anchor *an;
 
   int n = searchKeyNum();
   if (n < 0 || n > hl->nmark)
@@ -1884,9 +1884,9 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink") {
 
 /* go to the next [visited] anchor */
 static void _nextA(int visited) {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  BufferPoint *po;
-  Anchor *an, *pan;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct BufferPoint *po;
+  struct Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
   struct Url url;
 
@@ -1964,9 +1964,9 @@ _end:
 
 /* go to the previous anchor */
 static void _prevA(int visited) {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  BufferPoint *po;
-  Anchor *an, *pan;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct BufferPoint *po;
+  struct Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
   struct Url url;
 
@@ -2044,8 +2044,8 @@ _end:
 
 /* go to the next left/right anchor */
 static void nextX(int d, int dy) {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  Anchor *an, *pan;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct Anchor *an, *pan;
   Line *l;
   int i, x, y, n = searchKeyNum();
 
@@ -2098,8 +2098,8 @@ static void nextX(int d, int dy) {
 
 /* go to the next downward/upward anchor */
 static void nextY(int d) {
-  HmarkerList *hl = Currentbuf->hmarklist;
-  Anchor *an, *pan;
+  struct HmarkerList *hl = Currentbuf->hmarklist;
+  struct Anchor *an, *pan;
   int i, x, y, n = searchKeyNum();
   int hseq;
 
@@ -2257,7 +2257,7 @@ static void goURL0(char *prompt, int relative) {
   url = searchKeyData();
   if (url == NULL) {
     struct Hist *hist = copyHist(URLHist);
-    Anchor *a;
+    struct Anchor *a;
 
     current = baseURL(Currentbuf);
     if (current) {
@@ -2422,7 +2422,7 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
 void follow_map(struct parsed_tagarg *arg) {
   char *name = tag_get_value(arg, "link");
 #if defined(MENU_MAP) || defined(USE_IMAGE)
-  Anchor *an;
+  struct Anchor *an;
   struct MapArea *a;
   int x, y;
   struct Url p_url;
@@ -2573,7 +2573,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
 
 static void _peekURL(int only_img) {
 
-  Anchor *a;
+  struct Anchor *a;
   struct Url pu;
   static Str s = NULL;
   static int offset = 0, n;
@@ -2911,7 +2911,7 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
-  Anchor *a;
+  struct Anchor *a;
   struct Url pu;
 
   if (Currentbuf->firstLine == NULL)
@@ -3058,7 +3058,7 @@ void set_buffer_environ(struct Buffer *buf) {
   }
   l = buf->currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->pos != prev_pos)) {
-    Anchor *a;
+    struct Anchor *a;
     struct Url pu;
     char *s = GetWord(buf);
     set_environ("W3M_CURRENT_WORD", s ? s : "");
@@ -3434,7 +3434,7 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
 
 static void followTab(struct TabBuffer *tab) {
   struct Buffer *buf;
-  Anchor *a;
+  struct Anchor *a;
 
   a = retrieveCurrentAnchor(Currentbuf);
   if (a == NULL)

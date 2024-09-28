@@ -3084,7 +3084,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
-  Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
+  struct Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
   char *p, *q, *r, *s, *t, *str;
   Lineprop mode, effect, ex_effect;
   int pos;
@@ -3099,7 +3099,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
   char *endp;
   char symbol = '\0';
   int internal = 0;
-  Anchor **a_textarea = NULL;
+  struct Anchor **a_textarea = NULL;
 #if defined(USE_M17N) || defined(USE_IMAGE)
   struct Url *base = baseURL(buf);
 #endif
@@ -3114,7 +3114,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
   if (!max_textarea) { /* halfload */
     max_textarea = MAX_TEXTAREA;
     textarea_str = New_N(Str, max_textarea);
-    a_textarea = New_N(Anchor *, max_textarea);
+    a_textarea = New_N(struct Anchor *, max_textarea);
   }
 
 #ifdef DEBUG
@@ -3325,7 +3325,7 @@ static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             if (textareanumber >= max_textarea) {
               max_textarea = 2 * textareanumber;
               textarea_str = New_Reuse(Str, textarea_str, max_textarea);
-              a_textarea = New_Reuse(Anchor *, a_textarea, max_textarea);
+              a_textarea = New_Reuse(struct Anchor *, a_textarea, max_textarea);
             }
           }
           a_form = registerForm(buf, form, tag, currentLn(buf), pos);

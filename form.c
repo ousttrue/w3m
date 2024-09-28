@@ -160,9 +160,9 @@ int formtype(char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(Anchor *a, struct Buffer *buf, struct FormItemList *fi) {
+void formRecheckRadio(struct Anchor *a, struct Buffer *buf, struct FormItemList *fi) {
   int i;
-  Anchor *a2;
+  struct Anchor *a2;
   struct FormItemList *f2;
 
   for (i = 0; i < buf->formitem->nanchor; i++) {
@@ -178,9 +178,9 @@ void formRecheckRadio(Anchor *a, struct Buffer *buf, struct FormItemList *fi) {
   formUpdateBuffer(a, buf, fi);
 }
 
-void formResetBuffer(struct Buffer *buf, AnchorList *formitem) {
+void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem) {
   int i;
-  Anchor *a;
+  struct Anchor *a;
   struct FormItemList *f1, *f2;
 
   if (buf == NULL || buf->formitem == NULL || formitem == NULL)
@@ -305,7 +305,7 @@ static int form_update_line(Line *line, char **str, int spos, int epos,
   return pos;
 }
 
-void formUpdateBuffer(Anchor *a, struct Buffer *buf,
+void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
                       struct FormItemList *form) {
   struct Buffer save;
   char *p;
@@ -692,7 +692,7 @@ void preFormUpdateBuffer(struct Buffer *buf) {
   struct pre_form *pf;
   struct pre_form_item *pi;
   int i;
-  Anchor *a;
+  struct Anchor *a;
   struct FormList *fl;
   struct FormItemList *fi;
 

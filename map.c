@@ -18,8 +18,8 @@ struct MapList *searchMapList(struct Buffer *buf, char *name) {
   return ml;
 }
 
-Anchor *retrieveCurrentMap(struct Buffer *buf) {
-  Anchor *a;
+struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
+  struct Anchor *a;
   struct FormItemList *fi;
 
   a = retrieveCurrentForm(buf);
@@ -33,7 +33,7 @@ Anchor *retrieveCurrentMap(struct Buffer *buf) {
 }
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
-struct MapArea *follow_map_menu(struct Buffer *buf, char *name, Anchor *a_img,
+struct MapArea *follow_map_menu(struct Buffer *buf, char *name, struct Anchor *a_img,
                                 int x, int y) {
   struct MapList *ml;
   struct ListItem *al;
@@ -171,7 +171,7 @@ static void append_link_info(struct Buffer *buf, Str html,
  */
 struct Buffer *page_info_panel(struct Buffer *buf) {
   Str tmp = Strnew_size(1024);
-  Anchor *a;
+  struct Anchor *a;
   struct Url pu;
   struct TextListItem *ti;
   int all;

@@ -61,15 +61,15 @@ struct Buffer {
   short rootY;
   short COLS;
   short LINES;
-  AnchorList *href;
-  AnchorList *name;
-  AnchorList *img;
-  AnchorList *formitem;
+  struct AnchorList *href;
+  struct AnchorList *name;
+  struct AnchorList *img;
+  struct AnchorList *formitem;
   struct LinkList *linklist;
   struct FormList *formlist;
   struct MapList *maplist;
-  HmarkerList *hmarklist;
-  HmarkerList *imarklist;
+  struct HmarkerList *hmarklist;
+  struct HmarkerList *imarklist;
   struct Url currentURL;
   struct Url *baseURL;
   char *baseTarget;
@@ -90,7 +90,7 @@ struct Buffer {
   char image_flag;
   char image_loaded;
   char need_reshape;
-  Anchor *submit;
+  struct Anchor *submit;
   struct BufferPos *undo;
 };
 

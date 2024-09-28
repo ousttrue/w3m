@@ -13,7 +13,7 @@ typedef struct {
   int len;
   int tlen;
   long flag;
-  Anchor anchor;
+  struct Anchor anchor;
   Str img_alt;
   struct input_alt_attr input_alt;
   char fontstat[FONTSTAT_SIZE];
@@ -37,7 +37,7 @@ struct readbuffer {
   unsigned char q_level;
   short table_level;
   short nobr_level;
-  Anchor anchor;
+  struct Anchor anchor;
   Str img_alt;
   struct input_alt_attr input_alt;
   char fontstat[FONTSTAT_SIZE];

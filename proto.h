@@ -287,9 +287,9 @@ extern struct FormItemList *formList_addInput(struct FormList *fl,
                                                 struct parsed_tag *tag);
 extern char *form2str(struct FormItemList *fi);
 extern int formtype(char *typestr);
-extern void formRecheckRadio(Anchor *a, struct Buffer *buf, struct FormItemList *form);
-extern void formResetBuffer(struct Buffer *buf, AnchorList *formitem);
-extern void formUpdateBuffer(Anchor *a, struct Buffer *buf, struct FormItemList *form);
+extern void formRecheckRadio(struct Anchor *a, struct Buffer *buf, struct FormItemList *form);
+extern void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem);
+extern void formUpdateBuffer(struct Anchor *a, struct Buffer *buf, struct FormItemList *form);
 extern void preFormUpdateBuffer(struct Buffer *buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(struct FormItemList *fi);
@@ -300,7 +300,7 @@ extern void form_write_from_file(FILE *f, char *boundary, char *name,
 struct parsed_tagarg;
 extern void follow_map(struct parsed_tagarg *arg);
 extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);
-extern Anchor *retrieveCurrentMap(struct Buffer *buf);
+extern struct Anchor *retrieveCurrentMap(struct Buffer *buf);
 extern struct Buffer *page_info_panel(struct Buffer *buf);
 
 extern char *ttyname_tty(void);
@@ -342,32 +342,32 @@ extern Str loadFTPDir0(struct Url *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-extern AnchorList *putAnchor(AnchorList *al, char *url, char *target,
-                             Anchor **anchor_return, char *referer, char *title,
+extern struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
+                             struct Anchor **anchor_return, char *referer, char *title,
                              unsigned char key, int line, int pos);
-extern Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *referer,
+extern struct Anchor *registerHref(struct Buffer *buf, char *url, char *target, char *referer,
                             char *title, unsigned char key, int line, int pos);
-extern Anchor *registerName(struct Buffer *buf, char *url, int line, int pos);
-extern Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
+extern struct Anchor *registerName(struct Buffer *buf, char *url, int line, int pos);
+extern struct Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
                            int pos);
-extern Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
+extern struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
                             struct parsed_tag *tag, int line, int pos);
-extern int onAnchor(Anchor *a, int line, int pos);
-extern Anchor *retrieveAnchor(AnchorList *al, int line, int pos);
-extern Anchor *retrieveCurrentAnchor(struct Buffer *buf);
-extern Anchor *retrieveCurrentImg(struct Buffer *buf);
-extern Anchor *retrieveCurrentForm(struct Buffer *buf);
-extern Anchor *searchAnchor(AnchorList *al, char *str);
-extern Anchor *searchURLLabel(struct Buffer *buf, char *url);
+extern int onAnchor(struct Anchor *a, int line, int pos);
+extern struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos);
+extern struct Anchor *retrieveCurrentAnchor(struct Buffer *buf);
+extern struct Anchor *retrieveCurrentImg(struct Buffer *buf);
+extern struct Anchor *retrieveCurrentForm(struct Buffer *buf);
+extern struct Anchor *searchAnchor(struct AnchorList *al, char *str);
+extern struct Anchor *searchURLLabel(struct Buffer *buf, char *url);
 extern void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos);
 extern char *reAnchor(struct Buffer *buf, char *re);
-extern void addMultirowsForm(struct Buffer *buf, AnchorList *al);
-extern Anchor *closest_next_anchor(AnchorList *a, Anchor *an, int x, int y);
-extern Anchor *closest_prev_anchor(AnchorList *a, Anchor *an, int x, int y);
-extern HmarkerList *putHmarker(HmarkerList *ml, int line, int pos, int seq);
-extern void shiftAnchorPosition(AnchorList *a, HmarkerList *hl, int line,
+extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
+extern struct Anchor *closest_next_anchor(struct AnchorList *a, struct Anchor *an, int x, int y);
+extern struct Anchor *closest_prev_anchor(struct AnchorList *a, struct Anchor *an, int x, int y);
+extern struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos, int seq);
+extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl, int line,
                                 int pos, int shift);
-extern char *getAnchorText(struct Buffer *buf, AnchorList *al, Anchor *a);
+extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al, struct Anchor *a);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
 
 extern Str decodeB(char **ww);
