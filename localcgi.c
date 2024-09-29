@@ -9,6 +9,7 @@
 #include "etc.h"
 #include "terms.h"
 #include "termsize.h"
+#include "rand48.h"
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
@@ -17,7 +18,6 @@
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include "rand48_win32.h"
 #endif
 
 static char *Local_cookie_file = NULL;

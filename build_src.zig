@@ -57,6 +57,7 @@ pub const SRCS = [_][]const u8{
     "http_response.c",
     "http_auth.c",
     "http_auth_digest.c",
+    "rand48.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{
@@ -75,6 +76,4 @@ pub const SRCS_WIN32 = [_][]const u8{
     "os_win32.c",
     "etc_win32.c",
     "isocket_win32.c",
-    //
-    "rand48_win32.c",
 };

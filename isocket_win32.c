@@ -1,6 +1,6 @@
 #include "isocket.h"
 #include "alloc.h"
-#include "rand48_win32.h"
+#include "rand48.h"
 #include "terms.h"
 #include "fm.h"
 #include <winsock2.h>

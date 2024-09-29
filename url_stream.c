@@ -17,12 +17,13 @@
 #include "buffer.h"
 #include "terms.h"
 #include "tty.h"
+#include "rand48.h"
+
 #include <unistd.h>
 #include <sys/types.h>
 #include <assert.h>
 
 #ifdef _WIN32
-#include "rand48_win32.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
