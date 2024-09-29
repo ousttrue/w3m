@@ -15,6 +15,7 @@
 #include "terms.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 int FoldLine = false;
 int showLineNum = false;
@@ -751,4 +752,24 @@ Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last) {
     for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
       ;
   return l;
+}
+
+/* get last modified time */
+char *last_modified(struct Buffer *buf) {
+  struct TextListItem *ti;
+  struct stat st;
+
+  if (buf->document_header) {
+    for (ti = buf->document_header->first; ti; ti = ti->next) {
+      if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
+        return ti->ptr + 15;
+      }
+    }
+    return "unknown";
+  } else if (buf->currentURL.scheme == SCM_LOCAL) {
+    if (stat(buf->currentURL.file, &st) < 0)
+      return "unknown";
+    return ctime(&st.st_mtime);
+  }
+  return "unknown";
 }

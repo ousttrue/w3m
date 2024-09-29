@@ -60,6 +60,7 @@ pub const SRCS = [_][]const u8{
     "http_auth_digest.c",
     "rand48.c",
     "strcase.c",
+    "romannum.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

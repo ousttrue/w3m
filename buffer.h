@@ -109,3 +109,4 @@ void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
 int columnSkip(struct Buffer *buf, int offset);
 Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last);
 Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last);
+char *last_modified(struct Buffer *buf);

@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "romannum.h"
 #include "entity.h"
 #include "strcase.h"
 #include "html_parser.h"

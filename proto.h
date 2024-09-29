@@ -362,9 +362,6 @@ extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                  Str pwd, int is_proxy);
-extern char *last_modified(struct Buffer *buf);
-extern Str romanNumeral(int n);
-extern Str romanAlphabet(int n);
 extern void myExec(char *command);
 extern Str myExtCommand(char *cmd, char *arg, int redirect);
 extern Str myEditor(char *cmd, char *file, int line);
