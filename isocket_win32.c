@@ -1,4 +1,5 @@
 #include "isocket.h"
+#include "trap_jmp.h"
 #include "alloc.h"
 #include "rand48.h"
 #include "terms.h"

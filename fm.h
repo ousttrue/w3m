@@ -219,8 +219,6 @@ global char ArgvIsURL init(true);
 global char MetaRefresh init(false);
 global char LocalhostOnly init(false);
 
-global char TrapSignal init(true);
-
 #define TRAP_ON                                                                \
   if (TrapSignal) {                                                            \
     prevtrap = mySignal(SIGINT, KeyAbort);                                     \

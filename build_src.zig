@@ -4,6 +4,7 @@ pub const SRCS = [_][]const u8{
     "datetime.c",
     "line.c",
     "filepath.c",
+    "trap_jmp.c",
 
     "compression.c",
     "growbuf.c",
@@ -14,7 +15,6 @@ pub const SRCS = [_][]const u8{
     "file.c",
     "buffer.c",
     "display.c",
-    "etc.c",
     "search.c",
     "linein.c",
     "table.c",

@@ -1,6 +1,7 @@
 #include "readbuffer.h"
 #include "romannum.h"
 #include "entity.h"
+#include "trap_jmp.h"
 #include "strcase.h"
 #include "html_parser.h"
 #include "istream.h"

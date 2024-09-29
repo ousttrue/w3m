@@ -1,5 +1,6 @@
 #include "url_stream.h"
 #include "loader.h"
+#include "trap_jmp.h"
 #include "mailcap.h"
 #include "cookie.h"
 #include "isocket.h"

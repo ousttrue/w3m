@@ -1,5 +1,6 @@
 #include "ftp.h"
 #include "istream.h"
+#include "trap_jmp.h"
 #include "filepath.h"
 #include "indep.h"
 #include "isocket.h"

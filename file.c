@@ -1,5 +1,6 @@
 #include "file.h"
 #include "loader.h"
+#include "trap_jmp.h"
 #include "strcase.h"
 #include "filepath.h"
 #include "line.h"

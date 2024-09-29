@@ -1,4 +1,5 @@
 #include "loader.h"
+#include "trap_jmp.h"
 #include "filepath.h"
 #include "datetime.h"
 #include "mailcap.h"
@@ -24,9 +25,6 @@
 #include <setjmp.h>
 #include <sys/stat.h>
 #include <stdio.h>
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 static int same_url_p(struct Url *pu1, struct Url *pu2) {
   return (pu1->scheme == pu2->scheme && pu1->port == pu2->port &&
@@ -312,7 +310,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   }
 
   /* openURL() succeeded */
-  if (SETJMP(AbortLoading) != 0) {
+  if (from_jmp()) {
     /* transfer interrupted */
     TRAP_OFF;
     if (b)
@@ -329,7 +327,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   }
   if (header_string)
     header_string = NULL;
-  TRAP_ON;
+  trap_on();
   if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS ||
       (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy &&
        !check_no_proxy(pu.host))) {
