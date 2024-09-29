@@ -1,5 +1,6 @@
 #include "file.h"
 #include "loader.h"
+#include "filepath.h"
 #include "line.h"
 #include "os.h"
 #include "http_response.h"

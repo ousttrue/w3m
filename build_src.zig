@@ -3,6 +3,7 @@ pub const SRCS = [_][]const u8{
     "loader.c",
     "datetime.c",
     "line.c",
+    "filepath.c",
 
     "compression.c",
     "growbuf.c",

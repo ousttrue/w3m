@@ -1,5 +1,6 @@
 #include "localcgi.h"
 #include "alloc.h"
+#include "filepath.h"
 #include "app.h"
 #include "indep.h"
 #include "form.h"

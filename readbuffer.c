@@ -1,5 +1,6 @@
 #include "readbuffer.h"
 #include "istream.h"
+#include "filepath.h"
 #include "alloc.h"
 #include "http_response.h"
 #include "app.h"

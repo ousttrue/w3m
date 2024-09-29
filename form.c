@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "http_auth.h"
+#include "filepath.h"
 #include "alloc.h"
 #include "cookie.h"
 #include "url_stream.h"
