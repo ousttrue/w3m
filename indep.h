@@ -3,9 +3,6 @@
 #include <stdint.h>
 
 extern int64_t strtoclen(const char *s);
-extern char *conv_entity(unsigned int ch);
-extern int getescapechar(char **s);
-extern char *getescapecmd(char **s);
 extern int strCmp(const void *s1, const void *s2);
 extern char *currentdir(void);
 extern char *cleanupName(char *name);
@@ -14,15 +11,6 @@ extern char *expandPath(char *name);
 // extern char *strchr(const char *s, int c);
 // #endif /* not HAVE_STRCHR */
 
-#ifdef _WIN32
-extern char *strcasestr(const char *s1, const char *s2);
-#else
-extern int strcasecmp(const char *s1, const char *s2);
-extern int strncasecmp(const char *s1, const char *s2, size_t n);
-#endif
-
-extern int strcasemstr(char *str, char *srch[], char **ret_ptr);
-int strmatchlen(const char *s1, const char *s2, int maxlen);
 extern char *remove_space(char *str);
 extern int non_null(char *s);
 
@@ -38,7 +26,6 @@ extern Str convertLine(Str line, enum CLEANUP_LINE_MODE mode);
 //   convertLine0(uf, line, mode)
 
 extern char *html_quote(char *str);
-extern char *html_unquote(char *str);
 extern char *file_quote(char *str);
 extern char *file_unquote(char *str);
 extern char *url_quote(char *str);

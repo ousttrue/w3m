@@ -1,4 +1,5 @@
 #include "loader.h"
+#include "filepath.h"
 #include "datetime.h"
 #include "mailcap.h"
 #include "os.h"

@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "html_parser.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "indep.h"

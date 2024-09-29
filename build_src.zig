@@ -54,10 +54,12 @@ pub const SRCS = [_][]const u8{
     "localcgi.c",
     "ftp.c",
     "readbuffer.c",
+    "html_parser.c",
     "http_response.c",
     "http_auth.c",
     "http_auth_digest.c",
     "rand48.c",
+    "strcase.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

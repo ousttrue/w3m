@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "html_parser.h"
 #include "loader.h"
 #include "mailcap.h"
 #include "alloc.h"

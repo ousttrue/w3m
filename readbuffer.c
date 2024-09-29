@@ -1,4 +1,7 @@
 #include "readbuffer.h"
+#include "entity.h"
+#include "strcase.h"
+#include "html_parser.h"
 #include "istream.h"
 #include "filepath.h"
 #include "alloc.h"

@@ -125,79 +125,7 @@ char *cleanupName(char *name) {
 // }
 // #endif /* not HAVE_STRCHR */
 
-#ifdef _WIN32
-/* string search using the simplest algorithm */
-char *strcasestr(const char *s1, const char *s2) {
-  if (s2 == NULL)
-    return (char *)s1;
-  if (*s2 == '\0')
-    return (char *)s1;
-  int len1 = strlen(s1);
-  int len2 = strlen(s2);
-  while (*s1 && len1 >= len2) {
-    if (strncasecmp(s1, s2, len2) == 0)
-      return (char *)s1;
-    s1++;
-    len1--;
-  }
-  return 0;
-}
-#else
-int strcasecmp(const char *s1, const char *s2) {
-  int x;
-  while (*s1) {
-    x = TOLOWER(*s1) - TOLOWER(*s2);
-    if (x != 0)
-      return x;
-    s1++;
-    s2++;
-  }
-  return -TOLOWER(*s2);
-}
 
-int strncasecmp(const char *s1, const char *s2, size_t n) {
-  int x;
-  while (*s1 && n) {
-    x = TOLOWER(*s1) - TOLOWER(*s2);
-    if (x != 0)
-      return x;
-    s1++;
-    s2++;
-    n--;
-  }
-  return n ? -TOLOWER(*s2) : 0;
-}
-#endif /* not HAVE_STRCASECMP */
-
-static int strcasematch(char *s1, char *s2) {
-  int x;
-  while (*s1) {
-    if (*s2 == '\0')
-      return 1;
-    x = TOLOWER(*s1) - TOLOWER(*s2);
-    if (x != 0)
-      break;
-    s1++;
-    s2++;
-  }
-  return (*s2 == '\0');
-}
-
-/* search multiple strings */
-int strcasemstr(char *str, char *srch[], char **ret_ptr) {
-  int i;
-  while (*str) {
-    for (i = 0; srch[i]; i++) {
-      if (strcasematch(str, srch[i])) {
-        if (ret_ptr)
-          *ret_ptr = str;
-        return i;
-      }
-    }
-    str++;
-  }
-  return -1;
-}
 
 int strmatchlen(const char *s1, const char *s2, int maxlen) {
   int i;
@@ -263,84 +191,7 @@ Str convertLine(Str line, enum CLEANUP_LINE_MODE mode) {
   return line;
 }
 
-int getescapechar(char **str) {
-  int dummy = -1;
-  char *p = *str, *q;
-  int strict_entity = true;
 
-  if (*p == '&')
-    p++;
-  if (*p == '#') {
-    p++;
-    if (*p == 'x' || *p == 'X') {
-      p++;
-      if (!IS_XDIGIT(*p)) {
-        *str = p;
-        return -1;
-      }
-      for (dummy = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++)
-        dummy = dummy * 0x10 + GET_MYCDIGIT(*p);
-      if (*p == ';')
-        p++;
-      *str = p;
-      return dummy;
-    } else {
-      if (!IS_DIGIT(*p)) {
-        *str = p;
-        return -1;
-      }
-      for (dummy = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++)
-        dummy = dummy * 10 + GET_MYCDIGIT(*p);
-      if (*p == ';')
-        p++;
-      *str = p;
-      return dummy;
-    }
-  }
-  if (!IS_ALPHA(*p)) {
-    *str = p;
-    return -1;
-  }
-  q = p;
-  for (p++; IS_ALNUM(*p); p++)
-    ;
-  q = allocStr(q, p - q);
-  if (strcasestr("lt gt amp quot apos nbsp", q) && *p != '=') {
-    /* a character entity MUST be terminated with ";". However,
-     * there's MANY web pages which uses &lt , &gt or something
-     * like them as &lt;, &gt;, etc. Therefore, we treat the most
-     * popular character entities (including &#xxxx;) without
-     * the last ";" as character entities. If the trailing character
-     * is "=", it must be a part of query in an URL. So &lt=, &gt=, etc.
-     * are not regarded as character entities.
-     */
-    strict_entity = false;
-  }
-  if (*p == ';')
-    p++;
-  else if (strict_entity) {
-    *str = p;
-    return -1;
-  }
-  *str = p;
-  return getHash_si(&entity, q, -1);
-}
-
-char *getescapecmd(char **s) {
-  char *save = *s;
-  Str tmp;
-  int ch = getescapechar(s);
-
-  if (ch >= 0)
-    return conv_entity(ch);
-
-  if (*save != '&')
-    tmp = Strnew_charp("&");
-  else
-    tmp = Strnew();
-  Strcat_charp_n(tmp, save, *s - save);
-  return tmp->ptr;
-}
 
 char *html_quote(char *str) {
   Str tmp = NULL;
@@ -357,28 +208,6 @@ char *html_quote(char *str) {
         Strcat_char(tmp, *p);
     }
   }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
-
-char *html_unquote(char *str) {
-  Str tmp = NULL;
-  char *p, *q;
-
-  for (p = str; *p;) {
-    if (*p == '&') {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      q = getescapecmd(&p);
-      Strcat_charp(tmp, q);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-      p++;
-    }
-  }
-
   if (tmp)
     return tmp->ptr;
   return str;

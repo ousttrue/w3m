@@ -222,9 +222,6 @@ extern void arrangeCursor(struct Buffer *buf);
 extern void arrangeLine(struct Buffer *buf);
 extern void cursorXY(struct Buffer *buf, int x, int y);
 extern void restorePosition(struct Buffer *buf, struct Buffer *orig);
-extern int next_status(char c, int *status);
-extern int read_token(Str buf, char **instr, int *status, int pre, int append);
-extern Str correct_irrtag(int status);
 #define conv_search_string(str, f_ces) str
 extern int forwardSearch(struct Buffer *buf, char *str);
 extern int backwardSearch(struct Buffer *buf, char *str);
@@ -241,7 +238,6 @@ extern void ldHist(void);
 extern double log_like(int x);
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
-extern int visible_length(char *str);
 struct TextLine;
 extern void align(struct TextLine *lbuf, int width, int mode);
 extern void print_item(struct table *t, int row, int col, int width, Str buf);

@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "strcase.h"
 #include "fm.h"
 #include "alloc.h"
 #include "textlist.h"

@@ -1,5 +1,6 @@
 #include "file.h"
 #include "loader.h"
+#include "strcase.h"
 #include "filepath.h"
 #include "line.h"
 #include "os.h"
@@ -367,26 +368,6 @@ int checkOverWrite(char *path) {
     return 0;
   else
     return -1;
-}
-
-char *guess_filename(char *file) {
-  char *p = NULL, *s;
-
-  if (file != NULL)
-    p = mybasename(file);
-  if (p == NULL || *p == '\0')
-    return DEF_SAVE_FILE;
-  s = p;
-  if (*p == '#')
-    p++;
-  while (*p != '\0') {
-    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
-      *p = '\0';
-      break;
-    }
-    p++;
-  }
-  return s;
 }
 
 char *guess_save_name(struct Buffer *buf, char *path) {

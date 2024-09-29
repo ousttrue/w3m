@@ -44,3 +44,25 @@ const char *mydirname(const char *s) {
     p--;
   return allocStr(s, strlen(s) - strlen(p) + 1);
 }
+
+#define DEF_SAVE_FILE "index.html"
+
+char *guess_filename(const char *file) {
+  char *p = NULL;
+  if (file != NULL)
+    p = allocStr(mybasename(file), -1);
+  if (p == NULL || *p == '\0')
+    return DEF_SAVE_FILE;
+
+  auto s = p;
+  if (*p == '#')
+    p++;
+  while (*p != '\0') {
+    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+      *p = '\0';
+      break;
+    }
+    p++;
+  }
+  return s;
+}
