@@ -343,6 +343,62 @@ static void redrawNLine(struct Buffer *buf, int n) {
   }
 }
 
+void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
+  Lineprop m = CharEffect(mode);
+  char c = *p;
+
+  if (mode & PC_WCHAR2)
+    return;
+  do_effects(m);
+  if (mode & PC_SYMBOL) {
+    char **symbol;
+    int w = (mode & PC_KANJI) ? 2 : 1;
+
+    // c = ((char)wtf_get_code((wc_uchar *)p) & 0x7f) - SYMBOL_BASE;
+    if (term_graph_ok() && c < N_GRAPH_SYMBOL) {
+      if (!graph_mode) {
+        scr_graphstart();
+        graph_mode = true;
+      }
+      // if (w == 2 && WcOption.use_wide)
+      //   addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+      // else
+      scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
+    } else {
+      symbol = get_symbol();
+      scr_addstr(symbol[(unsigned char)c % N_SYMBOL]);
+    }
+  } else if (mode & PC_CTRL) {
+    switch (c) {
+    case '\t':
+      scr_addch(c);
+      break;
+    case '\n':
+      scr_addch(' ');
+      break;
+    case '\r':
+      break;
+    case DEL_CODE:
+      scr_addstr("^?");
+      break;
+    default:
+      scr_addch('^');
+      scr_addch(c + '@');
+      break;
+    }
+  }
+  // else if (mode & PC_UNKNOWN) {
+  //   char buf[5];
+  //   sprintf(buf, "[%.2X]", (unsigned char)wtf_get_code((wc_uchar *)p) |
+  //   0x80); scr_addstr(buf);
+  // }
+  else {
+    scr_addutf8(p);
+  }
+}
+
+void addChar(char c, Lineprop mode) { addMChar((const uint8_t *)&c, mode, 1); }
+
 static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->currentColumn;
@@ -385,6 +441,7 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   rcol = COLPOS(l, pos);
 
   for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+    delta = utf8sequence_len((const uint8_t *)&p[j]);
     ncol = COLPOS(l, pos + j + delta);
     if (ncol - column > buf->COLS)
       break;
@@ -397,7 +454,7 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
       for (; rcol < ncol; rcol++)
         addChar(' ', 0);
     } else {
-      addChar(p[j], pr[j]);
+      addMChar((const uint8_t *)&p[j], pr[j], delta);
     }
     rcol = ncol;
   }
@@ -580,46 +637,6 @@ static void do_effects(Lineprop m) {
              EFFECT_VISITED_END);
   do_effect1(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
   do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
-}
-
-void addChar(char c, Lineprop mode) {
-  Lineprop m = CharEffect(mode);
-  do_effects(m);
-  if (mode & PC_SYMBOL) {
-    char **symbol;
-    c -= SYMBOL_BASE;
-    if (term_graph_ok() && c < N_GRAPH_SYMBOL) {
-      if (!graph_mode) {
-        scr_graphstart();
-        graph_mode = true;
-      }
-      scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    } else {
-      symbol = get_symbol();
-      scr_addch(*symbol[(unsigned char)c % N_SYMBOL]);
-    }
-  } else if (mode & PC_CTRL) {
-    switch (c) {
-    case '\t':
-      scr_addch(c);
-      break;
-    case '\n':
-      scr_addch(' ');
-      break;
-    case '\r':
-      break;
-    case DEL_CODE:
-      scr_addstr("^?");
-      break;
-    default:
-      scr_addch('^');
-      scr_addch(c + '@');
-      break;
-    }
-  } else if (0x80 <= (unsigned char)c && (unsigned char)c <= NBSP_CODE)
-    scr_addch(' ');
-  else
-    scr_addch(c);
 }
 
 /*

@@ -222,15 +222,12 @@ static char *color_seq(int colmode) {
   (((unsigned)(c) >= ' ' && (unsigned)(c) < 128) ? gcmap[(c) - ' '] : (c))
 
 void term_refresh() {
-  int line, col, pcol;
-
   auto scr = scr_get();
-
+  int line, col, pcol;
   int pline = scr->CurLine;
   int moved = RF_NEED_TO_MOVE;
   struct Utf8 *pc;
-  l_prop *pr;
-  l_prop mode = 0;
+  l_prop *pr, mode = 0;
   l_prop color = COL_FTERM;
   short *dirty;
 
@@ -287,20 +284,18 @@ void term_refresh() {
         if (pr[col] & SCREEN_EOL)
           break;
 
-          /*
-           * some terminal emulators do linefeed when a
-           * character is put on COLS-th column. this behavior
-           * is different from one of vt100, but such terminal
-           * emulators are used as vt100-compatible
-           * emulators. This behaviour causes scroll when a
-           * character is drawn on (COLS-1,LINES-1) point.  To
-           * avoid the scroll, I prohibit to draw character on
-           * (COLS-1,LINES-1).
-           */
-#if !defined(USE_BG_COLOR)
+        /*
+         * some terminal emulators do linefeed when a
+         * character is put on COLS-th column. this behavior
+         * is different from one of vt100, but such terminal
+         * emulators are used as vt100-compatible
+         * emulators. This behaviour causes scroll when a
+         * character is drawn on (COLS-1,LINES-1) point.  To
+         * avoid the scroll, I prohibit to draw character on
+         * (COLS-1,LINES-1).
+         */
         if (line == LINES - 1 && col == COLS - 1)
           break;
-#endif /* !defined(USE_BG_COLOR)  */
         if ((!(pr[col] & SCREEN_STANDOUT) && (mode & SCREEN_STANDOUT)) ||
             (!(pr[col] & SCREEN_UNDERLINE) && (mode & SCREEN_UNDERLINE)) ||
             (!(pr[col] & SCREEN_BOLD) && (mode & SCREEN_BOLD)) ||
@@ -347,7 +342,8 @@ void term_refresh() {
             mode |= SCREEN_GRAPHICS;
           }
           tty_put_utf8(pc[col]);
-          pcol = col + 1;
+          auto w = utf8sequence_width(&pc[col].c0);
+          pcol = col + w;
         }
       }
       if (col == COLS)

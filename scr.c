@@ -31,7 +31,7 @@ void scr_setup(int LINES, int COLS) {
   if (COLS + 1 > max_COLS) {
     max_COLS = COLS + 1;
     for (int i = 0; i < max_LINES; i++) {
-      ScreenElem[i].lineimage = New_N(char, max_COLS);
+      ScreenElem[i].lineimage = New_N(struct Utf8, max_COLS);
       ScreenElem[i].lineprop = New_N(l_prop, max_COLS);
     }
   }
