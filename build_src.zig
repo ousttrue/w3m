@@ -61,6 +61,7 @@ pub const SRCS = [_][]const u8{
     "rand48.c",
     "strcase.c",
     "romannum.c",
+    "os.c",
 };
 
 pub const SRCS_POSIX = [_][]const u8{

@@ -362,9 +362,7 @@ extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                  Str pwd, int is_proxy);
-extern void myExec(char *command);
-extern Str myExtCommand(char *cmd, char *arg, int redirect);
-extern Str myEditor(char *cmd, char *file, int line);
+
 extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);

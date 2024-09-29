@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "os.h"
 #include "http_auth.h"
 #include "filepath.h"
 #include "alloc.h"
