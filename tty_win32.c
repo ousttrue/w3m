@@ -112,7 +112,14 @@ int tty_sleep_till_anykey(int sec, bool purge) { return tty_getch(); }
 void tty_echo() {}
 void tty_noecho() {}
 void tty_flush() { FlushFileBuffers(GetStdHandle(STD_OUTPUT_HANDLE)); }
-int tty_putc(int c) { putc(c, stdout); }
+int tty_putc(int c) { return putc(c, stdout); }
+int tty_put_utf8(struct Utf8 utf8) {
+  auto len = utf8sequence_len(&utf8.c0);
+  if (len > 0) {
+    fwrite(&utf8.c0, len, 1, stdout);
+  }
+  return len;
+}
 void tty_printf(const char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);

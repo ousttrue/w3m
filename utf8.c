@@ -22,3 +22,20 @@ int utf8str_width(const uint8_t *utf8) {
   }
   return w;
 }
+
+bool utf8is_equals(struct Utf8 l, struct Utf8 r) {
+  auto llen = utf8sequence_len(&l.c0);
+  auto rlen = utf8sequence_len(&r.c0);
+  if (llen != rlen) {
+    return false;
+  }
+  if (llen == 0) {
+    return false;
+  }
+  for (int i = 0; i < llen; ++i) {
+    if ((&l.c0)[i] != (&r.c0)[i]) {
+      return false;
+    }
+  }
+  return true;
+}

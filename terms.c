@@ -228,7 +228,7 @@ void term_refresh() {
 
   int pline = scr->CurLine;
   int moved = RF_NEED_TO_MOVE;
-  char *pc;
+  struct Utf8 *pc;
   l_prop *pr;
   l_prop mode = 0;
   l_prop color = COL_FTERM;
@@ -242,7 +242,8 @@ void term_refresh() {
       pr = scr->ScreenImage[line]->lineprop;
       for (col = 0; col < COLS && !(pr[col] & SCREEN_EOL); col++) {
         if (*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol) {
-          if (scr_need_redraw(pc[col], pr[col], SPACE, 0))
+          struct Utf8 space = {SPACE, 0, 0, 0};
+          if (scr_need_redraw(pc[col], pr[col], space, 0))
             break;
         } else {
           if (pr[col] & SCREEN_DIRTY)
@@ -313,8 +314,9 @@ void term_refresh() {
           term_puts(termcap_str_exit_attribute_mode());
           mode &= ~M_MEND;
         }
+        struct Utf8 space = {SPACE, 0, 0, 0};
         if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
-                ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
+                ? scr_need_redraw(pc[col], pr[col], space, 0)
                 : (pr[col] & SCREEN_DIRTY)) {
           if (pcol == col - 1)
             term_puts(termcap_str_cursor_right());
@@ -346,7 +348,7 @@ void term_refresh() {
             term_puts(termcap_str_enter_alt_charset_mode());
             mode |= SCREEN_GRAPHICS;
           }
-          tty_putc((pr[col] & SCREEN_GRAPHICS) ? graphchar(pc[col]) : pc[col]);
+          tty_put_utf8(pc[col]);
           pcol = col + 1;
         }
       }

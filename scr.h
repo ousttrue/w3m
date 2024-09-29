@@ -1,4 +1,5 @@
 #pragma once
+#include "utf8.h"
 
 #define SPACE ' '
 
@@ -48,21 +49,21 @@ enum ScreenProperties {
 
 typedef unsigned short l_prop;
 
-typedef struct scline {
-  char *lineimage;
+struct ScreenLine {
+  struct Utf8 *lineimage;
   l_prop *lineprop;
   short isdirty;
   short eol;
-} Screen;
+};
 
-typedef struct Scr {
-  Screen **ScreenImage;
+struct Screen {
+  struct ScreenLine **ScreenImage;
   int CurLine;
   int CurColumn;
   int graph_enabled;
-} Scr;
+};
 
-Scr *scr_get();
+struct Screen *scr_get();
 void scr_setup(int LINES, int COLS);
 void scr_clear();
 void scr_move(int line, int column);
@@ -73,7 +74,7 @@ void scr_clrtoeol(); /* conflicts with curs_clear(3)? */
 void scr_clrtoeolx();
 void scr_clrtobot();
 void scr_clrtobotx();
-int scr_need_redraw(char c1, l_prop pr1, char c2, l_prop pr2);
+bool scr_need_redraw(struct Utf8 c1, l_prop pr1, struct Utf8 c2, l_prop pr2);
 void scr_addch(char c);
 void scr_addstr(const char *s);
 void scr_addnstr(const char *s, int n);

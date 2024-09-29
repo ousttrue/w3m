@@ -7,7 +7,11 @@ static int tab_step = 8;
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-#define SETCH(var, ch, len) ((var) = (ch))
+
+void SETCH(struct Utf8 *var, int col, char ch) {
+  struct Utf8 utf8 = {ch, 0, 0, 0};
+  var[col] = utf8;
+}
 
 #define ISDIRTY(d) ((d) & L_DIRTY)
 #define ISUNUSED(d) ((d) & L_UNUSED)
@@ -15,19 +19,19 @@ static int tab_step = 8;
 
 static int max_LINES = 0;
 static int max_COLS = 0;
-static Screen *ScreenElem = NULL;
+static struct ScreenLine *ScreenElem = NULL;
 static l_prop CurrentMode = 0;
 
-static Scr g_scr;
-Scr *scr_get() { return &g_scr; }
+static struct Screen g_scr;
+struct Screen *scr_get() { return &g_scr; }
 
 void scr_setup(int LINES, int COLS) {
 
   if (LINES + 1 > max_LINES) {
     max_LINES = LINES + 1;
     max_COLS = 0;
-    ScreenElem = New_N(Screen, max_LINES);
-    g_scr.ScreenImage = New_N(Screen *, max_LINES);
+    ScreenElem = New_N(struct ScreenLine, max_LINES);
+    g_scr.ScreenImage = New_N(struct ScreenLine *, max_LINES);
   }
   if (COLS + 1 > max_COLS) {
     max_COLS = COLS + 1;
@@ -127,11 +131,11 @@ void scr_clrtoeolx(void) { scr_clrtoeol(); }
 void scr_clrtobot(void) { scr_clrtobot_eol(scr_clrtoeol); }
 void scr_clrtobotx(void) { scr_clrtobot_eol(scr_clrtoeolx); }
 
-int scr_need_redraw(char c1, l_prop pr1, char c2, l_prop pr2) {
-  if (c1 != c2) {
+bool scr_need_redraw(struct Utf8 c1, l_prop pr1, struct Utf8 c2, l_prop pr2) {
+  if (!utf8is_equals(c1, c2)) {
     return 1;
   }
-  if (c1 == ' ') {
+  if (c1.c0 == ' ') {
     return (pr1 ^ pr2) & M_SPACE & ~SCREEN_DIRTY;
   }
 
@@ -143,17 +147,14 @@ int scr_need_redraw(char c1, l_prop pr1, char c2, l_prop pr2) {
 }
 
 void scr_addch(char pc) {
-  l_prop *pr;
-  int dest, i;
-  char *p;
   char c = pc;
 
   if (g_scr.CurColumn == COLS)
     scr_wrap();
   if (g_scr.CurColumn >= COLS)
     return;
-  p = g_scr.ScreenImage[g_scr.CurLine]->lineimage;
-  pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
+  auto p = g_scr.ScreenImage[g_scr.CurLine]->lineimage;
+  auto pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
 
   /* Eliminate unprintables according to * iso-8859-*.
    * Particularly 0x96 messes up T.Dickey's * (xfree-)xterm */
@@ -165,12 +166,13 @@ void scr_addch(char pc) {
       g_scr.CurColumn++;
       return;
     }
-    for (i = g_scr.CurColumn; i >= 0 && (pr[i] & SCREEN_EOL); i--) {
-      SETCH(p[i], SPACE, 1);
+    for (int i = g_scr.CurColumn; i >= 0 && (pr[i] & SCREEN_EOL); i--) {
+      SETCH(p, i, SPACE);
       SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
     }
   }
 
+  int dest, i;
   if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
     SETCHMODE(CurrentMode, C_CTRL);
   else if (!IS_CNTRL(c))
@@ -181,25 +183,26 @@ void scr_addch(char pc) {
   /* Required to erase bold or underlined character for some * terminal
    * emulators. */
   i = g_scr.CurColumn;
+  struct Utf8 utf8 = {pc, 0, 0, 0};
   if (i < COLS &&
       (((pr[i] & SCREEN_BOLD) &&
-        scr_need_redraw(p[i], pr[i], pc, CurrentMode)) ||
+        scr_need_redraw(p[i], pr[i], utf8, CurrentMode)) ||
        ((pr[i] & SCREEN_UNDERLINE) && !(CurrentMode & SCREEN_UNDERLINE)))) {
     scr_touch_line();
     i++;
     if (i < COLS) {
       scr_touch_column(i);
       if (pr[i] & SCREEN_EOL) {
-        SETCH(p[i], SPACE, 1);
+        SETCH(p, i, SPACE);
         SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
       }
     }
   }
 
   if (CHMODE(CurrentMode) != C_CTRL) {
-    if (scr_need_redraw(p[g_scr.CurColumn], pr[g_scr.CurColumn], pc,
+    if (scr_need_redraw(p[g_scr.CurColumn], pr[g_scr.CurColumn], utf8,
                         CurrentMode)) {
-      SETCH(p[g_scr.CurColumn], pc, len);
+      SETCH(p, g_scr.CurColumn, pc);
       SETPROP(pr[g_scr.CurColumn], CurrentMode);
       scr_touch_line();
       scr_touch_column(g_scr.CurColumn);
@@ -215,8 +218,9 @@ void scr_addch(char pc) {
       pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
     }
     for (i = g_scr.CurColumn; i < dest; i++) {
-      if (scr_need_redraw(p[i], pr[i], SPACE, CurrentMode)) {
-        SETCH(p[i], SPACE, 1);
+      struct Utf8 utf8 = {SPACE, 0, 0, 0};
+      if (scr_need_redraw(p[i], pr[i], utf8, CurrentMode)) {
+        SETCH(p, i, SPACE);
         SETPROP(pr[i], CurrentMode);
         scr_touch_line();
         scr_touch_column(i);
