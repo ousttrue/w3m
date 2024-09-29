@@ -7,8 +7,9 @@ w3m を改造する(5週目くらいw)。
 
 - [x] zig cc で build する
 - [x] windows で動作する
-- [x] utf-8 が表示できる
-  - [ ] 文字のカラム幅
+- [WIP] utf-8 が表示できる
+  - [x] 文字のカラム幅
+  - [ ] SJIS
 - [ ] dom 入れたい
 
 ## dependencies
@@ -18,6 +19,7 @@ w3m を改造する(5週目くらいw)。
 - https://github.com/ivmai/bdwgc build.zig
 - https://github.com/allyourcodebase/openssl build.zig
   - https://kb.firedaemon.com/support/solutions/articles/4000121705 windows版はこちらの prebuilt
+- https://github.com/ridiculousfish/widecharwidth/tree/master
 
 ## 量を減らすため web browser のコア機能(独断)以外を削除
 

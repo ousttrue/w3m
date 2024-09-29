@@ -388,7 +388,8 @@ int visible_length(char *str) {
           max_len = len;
         len = 0;
       } else
-        len += get_strwidth(t) + get_strwidth(r2);
+        len += utf8str_width((const uint8_t *)t) +
+               utf8str_width((const uint8_t *)r2);
     } else if (status == R_ST_NORMAL && ST_IS_REAL_TAG(prev_status)) {
       ;
     } else if (*str == '\t') {
@@ -408,7 +409,8 @@ int visible_length(char *str) {
     r2 = tagbuf->ptr;
     t = getescapecmd(&r2);
     if (*t != '\r' && *t != '\n')
-      len += get_strwidth(t) + get_strwidth(r2);
+      len += utf8str_width((const uint8_t *)t) +
+             utf8str_width((const uint8_t *)r2);
   }
   return len > max_len ? len : max_len;
 }

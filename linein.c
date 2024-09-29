@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "utf8.h"
 #include "alloc.h"
 #include "display.h"
 #include "filepath.h"
@@ -119,7 +120,8 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(char c);
 
-char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, struct Hist *hist,
+char *inputLineHistSearch(const char *prompt, const char *def_str, int flag,
+                          struct Hist *hist,
                           int (*incrfunc)(int ch, Str str, Lineprop *prop)) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
@@ -147,7 +149,7 @@ char *inputLineHistSearch(const char *prompt, const char *def_str, int flag, str
     cm_mode = CPL_ON;
   else
     cm_mode = CPL_OFF;
-  opos = get_strwidth(prompt);
+  opos = utf8str_width((const uint8_t *)prompt);
   epos = CLEN - opos;
   if (epos < 0)
     epos = 0;

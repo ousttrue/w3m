@@ -2,6 +2,7 @@
  * HTML table
  */
 #include "table.h"
+#include "utf8.h"
 #include "indep.h"
 #include "html_renderer.h"
 #include "image.h"
@@ -1782,10 +1783,11 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
 
   while (*line) {
     char *save = line, *c = line;
-    int ec, len, wlen, plen;
+    int wlen, plen;
     ctype = get_mctype(line);
-    len = get_mcwidth(line);
-    wlen = plen = get_mclen(line);
+    int cwid = utf8sequence_width((const uint8_t *)line);
+    wlen = plen = utf8sequence_len((const uint8_t *)line);
+    char utf8[4];
 
     if (min < w)
       min = w;
@@ -1794,20 +1796,25 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
       s++;
     } else {
       if (*c == '&') {
-        ec = getescapechar(&line);
-        if (ec >= 0) {
-          c = conv_entity(ec);
+        auto ec = getescapechar(&line);
+        if (ec > 0) {
+          // c = conv_entity(ec);
+          if (utf8sequence_from_codepoint(ec, (uint8_t *)utf8)) {
+            c = utf8;
+          } else {
+            c = "�";
+          }
           ctype = get_mctype(c);
-          len = get_strwidth(c);
+          cwid = utf8str_width((const uint8_t *)c);
           wlen = line - save;
-          plen = get_mclen(c);
+          plen = utf8sequence_len((uint8_t *)c);
         }
       }
       if (prevchar->length &&
           is_boundary((unsigned char *)prevchar->ptr, (unsigned char *)c)) {
-        w = len;
+        w = cwid;
       } else {
-        w += len;
+        w += cwid;
       }
       if (s > 0) {
         skip += s - 1;
@@ -2680,7 +2687,7 @@ int feed_table(struct table *tbl, char *line, struct table_mode *mode,
           Strcat_char(tmp, *p);
           p++;
         } else {
-          int ec;
+          uint8_t ec;
           q = p;
           switch (ec = getescapechar(&p)) {
           case '<':
@@ -2696,9 +2703,11 @@ int feed_table(struct table *tbl, char *line, struct table_mode *mode,
             Strcat_char(tmp, '\n');
             break;
           default:
-            r = conv_entity(ec);
-            if (r != NULL && strlen(r) == 1 && ec == (unsigned char)*r) {
-              Strcat_char(tmp, *r);
+            // r = conv_entity(ec);
+            // if (r != NULL && strlen(r) == 1 && ec == (unsigned char)*r) {
+            char utf8[4];
+            if (utf8sequence_from_codepoint(ec, (uint8_t *)utf8)) {
+              Strcat_charp(tmp, utf8);
               break;
             }
           case -1:

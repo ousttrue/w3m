@@ -1,4 +1,5 @@
 #include "display.h"
+#include "utf8.h"
 #include "ctrlcode.h"
 #include "html_renderer.h"
 #include "url_stream.h"
@@ -56,7 +57,7 @@ static Str make_lastline_link(struct Buffer *buf, char *title, char *url) {
     }
     if (url)
       Strcat_charp(s, " ");
-    l -= get_Str_strwidth(s);
+    l -= utf8str_width((const uint8_t *)s);
     if (l <= 0)
       return s;
   }
@@ -66,7 +67,7 @@ static Str make_lastline_link(struct Buffer *buf, char *title, char *url) {
   u = parsedURL2Str(&pu);
   if (DecodeURL)
     u = Strnew_charp(url_decode2(u->ptr, buf));
-  if (l <= 4 || l >= get_Str_strwidth(u)) {
+  if (l <= 4 || l >= utf8str_width((const uint8_t *)u->ptr)) {
     if (!s)
       return u;
     Strcat(s, u);
@@ -77,7 +78,8 @@ static Str make_lastline_link(struct Buffer *buf, char *title, char *url) {
   i = (l - 2) / 2;
   Strcat_charp_n(s, u->ptr, i);
   Strcat_charp(s, "..");
-  i = get_Str_strwidth(u) - (COLS - 1 - get_Str_strwidth(s));
+  i = utf8str_width((const uint8_t *)u->ptr) -
+      (COLS - 1 - utf8str_width((const uint8_t *)s->ptr));
   Strcat_charp(s, &u->ptr[i]);
   return s;
 }
@@ -101,7 +103,7 @@ static Str make_lastline_message(struct Buffer *buf) {
         s = make_lastline_link(buf, p, a ? a->url : NULL);
     }
     if (s) {
-      sl = get_Str_strwidth(s);
+      sl = utf8str_width((const uint8_t *)s->ptr);
       if (sl >= COLS - 3)
         return s;
     }
@@ -123,7 +125,7 @@ static Str make_lastline_message(struct Buffer *buf) {
 
   if (s) {
     int l = COLS - 3 - sl;
-    if (get_Str_strwidth(msg) > l) {
+    if (utf8str_width((const uint8_t *)msg->ptr) > l) {
       Strtruncate(msg, l);
     }
     Strcat_charp(msg, "> ");
@@ -307,7 +309,8 @@ static void redrawNLine(struct Buffer *buf, int n) {
       if (t == CurrentTab)
         scr_bold();
       scr_addch('[');
-      l = t->x2 - t->x1 - 1 - get_strwidth(t->currentBuffer->buffername);
+      l = t->x2 - t->x1 - 1 -
+          utf8str_width((const uint8_t *)t->currentBuffer->buffername);
       if (l < 0)
         l = 0;
       if (l / 2 > 0)

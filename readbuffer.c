@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "utf8.h"
 #include "html_textarea.h"
 #include "html_renderer.h"
 #include "image.h"
@@ -151,7 +152,7 @@ Str process_input(struct parsed_tag *tag) {
     q = NULL;
   if (q) {
     qq = html_quote(q);
-    qlen = get_strwidth(q);
+    qlen = utf8str_width((const uint8_t *)q);
   }
 
   Strcat_charp(tmp, "<pre_int>");
@@ -618,13 +619,13 @@ static void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
                        char **str, Lineprop mode) {
   check_breakpoint(obuf, pre_mode, *str);
   obuf->pos += width;
-  Strcat_charp_n(obuf->line, *str, get_mclen(*str));
+  Strcat_charp_n(obuf->line, *str, utf8sequence_len((const uint8_t *)*str));
   if (width > 0) {
     set_prevchar(obuf->prevchar, *str, 1);
     if (**str != ' ')
       obuf->prev_ctype = mode;
   }
-  (*str) += get_mclen(*str);
+  (*str) += utf8sequence_len((const uint8_t *)*str);
   obuf->flag |= RB_NFLUSHED;
 }
 
@@ -894,7 +895,7 @@ void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
       int rest, rrest;
       int nspace, d, i;
 
-      rest = width - get_Str_strwidth(line);
+      rest = width - utf8str_width((const uint8_t *)line->ptr);
       if (rest > 1) {
         nspace = 0;
         for (p = line->ptr + indent; *p; p++) {
@@ -1387,7 +1388,7 @@ Str process_img(struct parsed_tag *tag, int width) {
   if (q != NULL && *q == '\0' && ignore_null_img_alt)
     q = NULL;
   if (q != NULL) {
-    n = get_strwidth(q);
+    n = utf8str_width((const uint8_t *)q);
     Strcat_charp(tmp, html_quote(q));
     goto img_end;
   }
@@ -1850,7 +1851,7 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
                HTML_A);
       if (r)
         q = html_quote(r);
-      push_charp(obuf, get_strwidth(q), q, PC_ASCII);
+      push_charp(obuf, utf8str_width((const uint8_t *)q), q, PC_ASCII);
       push_tag(obuf, "</a>", HTML_N_A);
     }
     flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
@@ -2467,20 +2468,26 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
 
 static void proc_escape(struct readbuffer *obuf, char **str_return) {
   char *str = *str_return, *estr;
-  int ech = getescapechar(str_return);
+  auto ech = getescapechar(str_return);
   int width, n_add = *str_return - str;
   Lineprop mode = PC_ASCII;
 
-  if (ech < 0) {
+  if (ech <= 0) {
     *str_return = str;
     proc_mchar(obuf, obuf->flag & RB_SPECIAL, 1, str_return, PC_ASCII);
     return;
   }
   mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
-  estr = conv_entity(ech);
+  // estr = conv_entity(ech);
+  char utf8[4];
+  if (utf8sequence_from_codepoint(ech, (uint8_t *)utf8)) {
+    estr = utf8;
+  } else {
+    estr = "�";
+  }
   check_breakpoint(obuf, obuf->flag & RB_SPECIAL, estr);
-  width = get_strwidth(estr);
+  width = utf8str_width((const uint8_t *)estr);
   if (width == 1 && ech == (unsigned char)*estr && ech != '&' && ech != '<' &&
       ech != '>') {
     if (IS_CNTRL(ech))
@@ -2755,12 +2762,12 @@ table_start:
       continue;
     while (*str) {
       mode = get_mctype(str);
-      delta = get_mcwidth(str);
+      delta = utf8sequence_width((const uint8_t *)str);
       if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
         char ch = *str;
         if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
           char *p = str;
-          int ech = getescapechar(&p);
+          auto ech = getescapechar(&p);
           if (ech == '\n' || ech == '\r') {
             ch = '\n';
             str = p - 1;

@@ -137,6 +137,7 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
     exe.linkLibrary(uv_dep.artifact("zig_uv"));
+
     const libuv_dep = uv_dep.builder.dependency(
         "zig_uv",
         .{},
@@ -145,6 +146,9 @@ pub fn build(b: *std.Build) void {
         .{},
     );
     exe.addIncludePath(libuv_dep.path("include"));
+
+    const widecharwidth_dep = b.dependency("widecharwidth", .{});
+    exe.addIncludePath(widecharwidth_dep.path(""));
 
     // run
     const run_cmd = b.addRunArtifact(exe);

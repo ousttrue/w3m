@@ -1,6 +1,8 @@
 #pragma once
+#include "Str.h"
 
 extern int Tabstop;
+extern int ShowEffect;
 
 #define LINELEN 256 /* Initial line length */
 
@@ -69,10 +71,12 @@ typedef struct Line {
 } Line;
 
 #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-#define get_mclen(c) 1
-#define get_mcwidth(c) 1
-#define get_strwidth(c) strlen(c)
-#define get_Str_strwidth(c) ((c)->length)
+// #define get_mclen(c) 1
+// #define get_mcwidth(c) 1
+// #define get_strwidth(c) strlen(c)
+// #define get_Str_strwidth(c) ((c)->length)
 
 int columnLen(Line *line, int column);
 int columnPos(Line *line, int column);
+
+Str checkType(Str s, Lineprop **oprop);

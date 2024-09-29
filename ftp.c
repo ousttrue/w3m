@@ -1,4 +1,5 @@
 #include "ftp.h"
+#include "utf8.h"
 #include "istream.h"
 #include "trap_jmp.h"
 #include "filepath.h"
@@ -559,7 +560,7 @@ Str loadFTPDir0(struct Url *pu) {
         Strcat_char(tmp, '@');
       Strcat_m_charp(FTPDIRtmp, "<a href=\"", html_quote(file_quote(fn)), "\">",
                      html_quote(tmp->ptr), "</a>", NULL);
-      for (i = get_Str_strwidth(tmp); i <= max_len; i++) {
+      for (i = utf8str_width((const uint8_t *)tmp->ptr); i <= max_len; i++) {
         if ((max_len % 2 + i) % 2)
           Strcat_char(FTPDIRtmp, '.');
         else
