@@ -15,68 +15,8 @@
 #include <signal.h>
 #include <sys/stat.h>
 
-Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
-  int i;
-  Line *l;
 
-  l = currentLineSkip(buf, line, offset, last);
-  if (!nextpage_topline)
-    for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
-         i > 0 && l->prev != NULL; i--, l = l->prev)
-      ;
-  return l;
-}
 
-Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last) {
-  Line *l = line;
-  if (offset == 0)
-    return l;
-  if (offset > 0)
-    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
-      ;
-  else
-    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-      ;
-  return l;
-}
-
-#define MAX_CMD_LEN 128
-
-int gethtmlcmd(char **s) {
-  extern Hash_si tagtable;
-  char cmdstr[MAX_CMD_LEN];
-  char *p = cmdstr;
-  char *save = *s;
-  int cmd;
-
-  (*s)++;
-  /* first character */
-  if (IS_ALNUM(**s) || **s == '_' || **s == '/') {
-    *(p++) = TOLOWER(**s);
-    (*s)++;
-  } else
-    return HTML_UNKNOWN;
-  if (p[-1] == '/')
-    SKIP_BLANKS(*s);
-  while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
-    *(p++) = TOLOWER(**s);
-    (*s)++;
-  }
-  if (p - cmdstr == MAX_CMD_LEN) {
-    /* buffer overflow: perhaps caused by bad HTML source */
-    *s = save + 1;
-    return HTML_UNKNOWN;
-  }
-  *p = '\0';
-
-  /* hash search */
-  cmd = getHash_si(&tagtable, cmdstr, HTML_UNKNOWN);
-  while (**s && **s != '>')
-    (*s)++;
-  if (**s == '>')
-    (*s)++;
-  return cmd;
-}
 
 char *lastFileName(char *path) {
   char *p, *q;

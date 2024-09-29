@@ -1,5 +1,6 @@
-/* $Id: html.c,v 1.33 2012/05/22 09:45:56 inu Exp $ */
 #include "html.h"
+#include "hash.h"
+#include "myctype.h"
 
 /* Define HTML Tag Infomation Table */
 
@@ -394,3 +395,41 @@ TagAttrInfo AttrMAP[MAX_TAGATTR] = {
     {"textareanumber", VTYPE_NUMBER, AFLG_INT}, /* 73 ATTR_TEXTAREANUMBER */
     {"pre_int", VTYPE_NONE, AFLG_INT},          /* 74 ATTR_PRE_INT      */
 };
+
+#define MAX_CMD_LEN 128
+
+enum HtmlTag gethtmlcmd(char **s) {
+  extern Hash_si tagtable;
+  char cmdstr[MAX_CMD_LEN];
+  char *p = cmdstr;
+  char *save = *s;
+  int cmd;
+
+  (*s)++;
+  /* first character */
+  if (IS_ALNUM(**s) || **s == '_' || **s == '/') {
+    *(p++) = TOLOWER(**s);
+    (*s)++;
+  } else
+    return HTML_UNKNOWN;
+  if (p[-1] == '/')
+    SKIP_BLANKS(*s);
+  while ((IS_ALNUM(**s) || **s == '_') && p - cmdstr < MAX_CMD_LEN) {
+    *(p++) = TOLOWER(**s);
+    (*s)++;
+  }
+  if (p - cmdstr == MAX_CMD_LEN) {
+    /* buffer overflow: perhaps caused by bad HTML source */
+    *s = save + 1;
+    return HTML_UNKNOWN;
+  }
+  *p = '\0';
+
+  /* hash search */
+  cmd = getHash_si(&tagtable, cmdstr, HTML_UNKNOWN);
+  while (**s && **s != '>')
+    (*s)++;
+  if (**s == '>')
+    (*s)++;
+  return cmd;
+}

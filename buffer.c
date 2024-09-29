@@ -728,3 +728,27 @@ int columnSkip(struct Buffer *buf, int offset) {
   return 1;
 }
 
+Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
+  int i;
+  Line *l;
+
+  l = currentLineSkip(buf, line, offset, last);
+  if (!nextpage_topline)
+    for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
+         i > 0 && l->prev != NULL; i--, l = l->prev)
+      ;
+  return l;
+}
+
+Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last) {
+  Line *l = line;
+  if (offset == 0)
+    return l;
+  if (offset > 0)
+    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
+      ;
+  else
+    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+      ;
+  return l;
+}

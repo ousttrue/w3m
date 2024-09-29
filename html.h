@@ -1,6 +1,4 @@
-/* $Id: html.h,v 1.31 2010/08/14 01:29:40 htrb Exp $ */
-#ifndef _HTML_H
-#define _HTML_H
+#pragma once
 #include "config.h"
 #include <openssl/bio.h>
 #include <openssl/x509.h>
@@ -26,184 +24,186 @@ struct table2 {
   char *item2;
 };
 
-#define HTML_UNKNOWN 0
-#define HTML_A 1
-#define HTML_N_A 2
-#define HTML_H 3
-#define HTML_N_H 4
-#define HTML_P 5
-#define HTML_BR 6
-#define HTML_B 7
-#define HTML_N_B 8
-#define HTML_UL 9
-#define HTML_N_UL 10
-#define HTML_LI 11
-#define HTML_OL 12
-#define HTML_N_OL 13
-#define HTML_TITLE 14
-#define HTML_N_TITLE 15
-#define HTML_HR 16
-#define HTML_DL 17
-#define HTML_N_DL 18
-#define HTML_DT 19
-#define HTML_DD 20
-#define HTML_PRE 21
-#define HTML_N_PRE 22
-#define HTML_BLQ 23
-#define HTML_N_BLQ 24
-#define HTML_IMG 25
-#define HTML_LISTING 26
-#define HTML_N_LISTING 27
-#define HTML_XMP 28
-#define HTML_N_XMP 29
-#define HTML_PLAINTEXT 30
-#define HTML_TABLE 31
-#define HTML_N_TABLE 32
-#define HTML_META 33
-#define HTML_N_P 34
-#define HTML_FRAME 35
-#define HTML_FRAMESET 36
-#define HTML_N_FRAMESET 37
-#define HTML_CENTER 38
-#define HTML_N_CENTER 39
-#define HTML_FONT 40
-#define HTML_N_FONT 41
-#define HTML_FORM 42
-#define HTML_N_FORM 43
-#define HTML_INPUT 44
-#define HTML_TEXTAREA 45
-#define HTML_N_TEXTAREA 46
-#define HTML_SELECT 47
-#define HTML_N_SELECT 48
-#define HTML_OPTION 49
-#define HTML_NOBR 50
-#define HTML_N_NOBR 51
-#define HTML_DIV 52
-#define HTML_N_DIV 53
-#define HTML_ISINDEX 54
-#define HTML_MAP 55
-#define HTML_N_MAP 56
-#define HTML_AREA 57
-#define HTML_SCRIPT 58
-#define HTML_N_SCRIPT 59
-#define HTML_BASE 60
-#define HTML_DEL 61
-#define HTML_N_DEL 62
-#define HTML_INS 63
-#define HTML_N_INS 64
-#define HTML_U 65
-#define HTML_N_U 66
-#define HTML_STYLE 67
-#define HTML_N_STYLE 68
-#define HTML_WBR 69
-#define HTML_EM 70
-#define HTML_N_EM 71
-#define HTML_BODY 72
-#define HTML_N_BODY 73
-#define HTML_TR 74
-#define HTML_N_TR 75
-#define HTML_TD 76
-#define HTML_N_TD 77
-#define HTML_CAPTION 78
-#define HTML_N_CAPTION 79
-#define HTML_TH 80
-#define HTML_N_TH 81
-#define HTML_THEAD 82
-#define HTML_N_THEAD 83
-#define HTML_TBODY 84
-#define HTML_N_TBODY 85
-#define HTML_TFOOT 86
-#define HTML_N_TFOOT 87
-#define HTML_COLGROUP 88
-#define HTML_N_COLGROUP 89
-#define HTML_COL 90
-#define HTML_BGSOUND 91
-#define HTML_APPLET 92
-#define HTML_EMBED 93
-#define HTML_N_OPTION 94
-#define HTML_HEAD 95
-#define HTML_N_HEAD 96
-#define HTML_DOCTYPE 97
-#define HTML_NOFRAMES 98
-#define HTML_N_NOFRAMES 99
-#define HTML_SUP 100
-#define HTML_N_SUP 101
-#define HTML_SUB 102
-#define HTML_N_SUB 103
-#define HTML_LINK 104
-#define HTML_S 105
-#define HTML_N_S 106
-#define HTML_Q 107
-#define HTML_N_Q 108
-#define HTML_I 109
-#define HTML_N_I 110
-#define HTML_STRONG 111
-#define HTML_N_STRONG 112
-#define HTML_SPAN 113
-#define HTML_N_SPAN 114
-#define HTML_ABBR 115
-#define HTML_N_ABBR 116
-#define HTML_ACRONYM 117
-#define HTML_N_ACRONYM 118
-#define HTML_BASEFONT 119
-#define HTML_BDO 120
-#define HTML_N_BDO 121
-#define HTML_BIG 122
-#define HTML_N_BIG 123
-#define HTML_BUTTON 124
-#define HTML_N_BUTTON 125
-#define HTML_FIELDSET 126
-#define HTML_N_FIELDSET 127
-#define HTML_IFRAME 128
-#define HTML_LABEL 129
-#define HTML_N_LABEL 130
-#define HTML_LEGEND 131
-#define HTML_N_LEGEND 132
-#define HTML_NOSCRIPT 133
-#define HTML_N_NOSCRIPT 134
-#define HTML_OBJECT 135
-#define HTML_OPTGROUP 136
-#define HTML_N_OPTGROUP 137
-#define HTML_PARAM 138
-#define HTML_SMALL 139
-#define HTML_N_SMALL 140
-#define HTML_FIGURE 141
-#define HTML_N_FIGURE 142
-#define HTML_FIGCAPTION 143
-#define HTML_N_FIGCAPTION 144
-#define HTML_SECTION 145
-#define HTML_N_SECTION 146
-#define HTML_N_DT 147
-#define HTML_N_DD 148
+enum HtmlTag {
+  HTML_UNKNOWN = 0,
+  HTML_A = 1,
+  HTML_N_A = 2,
+  HTML_H = 3,
+  HTML_N_H = 4,
+  HTML_P = 5,
+  HTML_BR = 6,
+  HTML_B = 7,
+  HTML_N_B = 8,
+  HTML_UL = 9,
+  HTML_N_UL = 10,
+  HTML_LI = 11,
+  HTML_OL = 12,
+  HTML_N_OL = 13,
+  HTML_TITLE = 14,
+  HTML_N_TITLE = 15,
+  HTML_HR = 16,
+  HTML_DL = 17,
+  HTML_N_DL = 18,
+  HTML_DT = 19,
+  HTML_DD = 20,
+  HTML_PRE = 21,
+  HTML_N_PRE = 22,
+  HTML_BLQ = 23,
+  HTML_N_BLQ = 24,
+  HTML_IMG = 25,
+  HTML_LISTING = 26,
+  HTML_N_LISTING = 27,
+  HTML_XMP = 28,
+  HTML_N_XMP = 29,
+  HTML_PLAINTEXT = 30,
+  HTML_TABLE = 31,
+  HTML_N_TABLE = 32,
+  HTML_META = 33,
+  HTML_N_P = 34,
+  HTML_FRAME = 35,
+  HTML_FRAMESET = 36,
+  HTML_N_FRAMESET = 37,
+  HTML_CENTER = 38,
+  HTML_N_CENTER = 39,
+  HTML_FONT = 40,
+  HTML_N_FONT = 41,
+  HTML_FORM = 42,
+  HTML_N_FORM = 43,
+  HTML_INPUT = 44,
+  HTML_TEXTAREA = 45,
+  HTML_N_TEXTAREA = 46,
+  HTML_SELECT = 47,
+  HTML_N_SELECT = 48,
+  HTML_OPTION = 49,
+  HTML_NOBR = 50,
+  HTML_N_NOBR = 51,
+  HTML_DIV = 52,
+  HTML_N_DIV = 53,
+  HTML_ISINDEX = 54,
+  HTML_MAP = 55,
+  HTML_N_MAP = 56,
+  HTML_AREA = 57,
+  HTML_SCRIPT = 58,
+  HTML_N_SCRIPT = 59,
+  HTML_BASE = 60,
+  HTML_DEL = 61,
+  HTML_N_DEL = 62,
+  HTML_INS = 63,
+  HTML_N_INS = 64,
+  HTML_U = 65,
+  HTML_N_U = 66,
+  HTML_STYLE = 67,
+  HTML_N_STYLE = 68,
+  HTML_WBR = 69,
+  HTML_EM = 70,
+  HTML_N_EM = 71,
+  HTML_BODY = 72,
+  HTML_N_BODY = 73,
+  HTML_TR = 74,
+  HTML_N_TR = 75,
+  HTML_TD = 76,
+  HTML_N_TD = 77,
+  HTML_CAPTION = 78,
+  HTML_N_CAPTION = 79,
+  HTML_TH = 80,
+  HTML_N_TH = 81,
+  HTML_THEAD = 82,
+  HTML_N_THEAD = 83,
+  HTML_TBODY = 84,
+  HTML_N_TBODY = 85,
+  HTML_TFOOT = 86,
+  HTML_N_TFOOT = 87,
+  HTML_COLGROUP = 88,
+  HTML_N_COLGROUP = 89,
+  HTML_COL = 90,
+  HTML_BGSOUND = 91,
+  HTML_APPLET = 92,
+  HTML_EMBED = 93,
+  HTML_N_OPTION = 94,
+  HTML_HEAD = 95,
+  HTML_N_HEAD = 96,
+  HTML_DOCTYPE = 97,
+  HTML_NOFRAMES = 98,
+  HTML_N_NOFRAMES = 99,
+  HTML_SUP = 100,
+  HTML_N_SUP = 101,
+  HTML_SUB = 102,
+  HTML_N_SUB = 103,
+  HTML_LINK = 104,
+  HTML_S = 105,
+  HTML_N_S = 106,
+  HTML_Q = 107,
+  HTML_N_Q = 108,
+  HTML_I = 109,
+  HTML_N_I = 110,
+  HTML_STRONG = 111,
+  HTML_N_STRONG = 112,
+  HTML_SPAN = 113,
+  HTML_N_SPAN = 114,
+  HTML_ABBR = 115,
+  HTML_N_ABBR = 116,
+  HTML_ACRONYM = 117,
+  HTML_N_ACRONYM = 118,
+  HTML_BASEFONT = 119,
+  HTML_BDO = 120,
+  HTML_N_BDO = 121,
+  HTML_BIG = 122,
+  HTML_N_BIG = 123,
+  HTML_BUTTON = 124,
+  HTML_N_BUTTON = 125,
+  HTML_FIELDSET = 126,
+  HTML_N_FIELDSET = 127,
+  HTML_IFRAME = 128,
+  HTML_LABEL = 129,
+  HTML_N_LABEL = 130,
+  HTML_LEGEND = 131,
+  HTML_N_LEGEND = 132,
+  HTML_NOSCRIPT = 133,
+  HTML_N_NOSCRIPT = 134,
+  HTML_OBJECT = 135,
+  HTML_OPTGROUP = 136,
+  HTML_N_OPTGROUP = 137,
+  HTML_PARAM = 138,
+  HTML_SMALL = 139,
+  HTML_N_SMALL = 140,
+  HTML_FIGURE = 141,
+  HTML_N_FIGURE = 142,
+  HTML_FIGCAPTION = 143,
+  HTML_N_FIGCAPTION = 144,
+  HTML_SECTION = 145,
+  HTML_N_SECTION = 146,
+  HTML_N_DT = 147,
+  HTML_N_DD = 148,
 
-/* pseudo tag */
-#define HTML_SELECT_INT 160
-#define HTML_N_SELECT_INT 161
-#define HTML_OPTION_INT 162
-#define HTML_TEXTAREA_INT 163
-#define HTML_N_TEXTAREA_INT 164
-#define HTML_TABLE_ALT 165
-#define HTML_SYMBOL 166
-#define HTML_N_SYMBOL 167
-#define HTML_PRE_INT 168
-#define HTML_N_PRE_INT 169
-#define HTML_TITLE_ALT 170
-#define HTML_FORM_INT 171
-#define HTML_N_FORM_INT 172
-#define HTML_DL_COMPACT 173
-#define HTML_INPUT_ALT 174
-#define HTML_N_INPUT_ALT 175
-#define HTML_IMG_ALT 176
-#define HTML_N_IMG_ALT 177
-#define HTML_NOP 178
-#define HTML_PRE_PLAIN 179
-#define HTML_N_PRE_PLAIN 180
-#define HTML_INTERNAL 181
-#define HTML_N_INTERNAL 182
-#define HTML_DIV_INT 183
-#define HTML_N_DIV_INT 184
+  /* pseudo tag */
+  HTML_SELECT_INT = 160,
+  HTML_N_SELECT_INT = 161,
+  HTML_OPTION_INT = 162,
+  HTML_TEXTAREA_INT = 163,
+  HTML_N_TEXTAREA_INT = 164,
+  HTML_TABLE_ALT = 165,
+  HTML_SYMBOL = 166,
+  HTML_N_SYMBOL = 167,
+  HTML_PRE_INT = 168,
+  HTML_N_PRE_INT = 169,
+  HTML_TITLE_ALT = 170,
+  HTML_FORM_INT = 171,
+  HTML_N_FORM_INT = 172,
+  HTML_DL_COMPACT = 173,
+  HTML_INPUT_ALT = 174,
+  HTML_N_INPUT_ALT = 175,
+  HTML_IMG_ALT = 176,
+  HTML_N_IMG_ALT = 177,
+  HTML_NOP = 178,
+  HTML_PRE_PLAIN = 179,
+  HTML_N_PRE_PLAIN = 180,
+  HTML_INTERNAL = 181,
+  HTML_N_INTERNAL = 182,
+  HTML_DIV_INT = 183,
+  HTML_N_DIV_INT = 184,
 
-#define MAX_HTMLTAG 185
+  MAX_HTMLTAG = 185,
+};
 
 /* Tag attribute */
 
@@ -334,4 +334,4 @@ struct environment {
 
 #define INDENT_INCR IndentIncr
 
-#endif /* _HTML_H */
+extern enum HtmlTag gethtmlcmd(char **s);

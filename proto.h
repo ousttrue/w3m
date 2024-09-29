@@ -222,11 +222,6 @@ extern void arrangeCursor(struct Buffer *buf);
 extern void arrangeLine(struct Buffer *buf);
 extern void cursorXY(struct Buffer *buf, int x, int y);
 extern void restorePosition(struct Buffer *buf, struct Buffer *orig);
-extern int columnSkip(struct Buffer *buf, int offset);
-extern Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last);
-extern Line *currentLineSkip(struct Buffer *buf, Line *line, int offset,
-                             int last);
-extern int gethtmlcmd(char **s);
 extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
 extern char *mydirname(char *s);
