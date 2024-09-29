@@ -242,8 +242,7 @@ void term_refresh() {
       pr = scr->ScreenImage[line]->lineprop;
       for (col = 0; col < COLS && !(pr[col] & SCREEN_EOL); col++) {
         if (*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol) {
-          struct Utf8 space = {SPACE, 0, 0, 0};
-          if (scr_need_redraw(pc[col], pr[col], space, 0))
+          if (scr_need_redraw(pc[col], pr[col], SPACE, 0))
             break;
         } else {
           if (pr[col] & SCREEN_DIRTY)
@@ -314,9 +313,8 @@ void term_refresh() {
           term_puts(termcap_str_exit_attribute_mode());
           mode &= ~M_MEND;
         }
-        struct Utf8 space = {SPACE, 0, 0, 0};
         if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
-                ? scr_need_redraw(pc[col], pr[col], space, 0)
+                ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
                 : (pr[col] & SCREEN_DIRTY)) {
           if (pcol == col - 1)
             term_puts(termcap_str_cursor_right());

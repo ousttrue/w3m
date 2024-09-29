@@ -1,17 +1,12 @@
 #include "scr.h"
+#include "Str.h"
 #include "alloc.h"
 #include "termsize.h"
 #include "myctype.h"
 
 static int tab_step = 8;
 
-#define CHMODE(c) ((c) & C_WHICHCHAR)
 #define SETCHMODE(var, mode) ((var) = (((var) & ~C_WHICHCHAR) | mode))
-
-void SETCH(struct Utf8 *var, int col, char ch) {
-  struct Utf8 utf8 = {ch, 0, 0, 0};
-  var[col] = utf8;
-}
 
 #define ISDIRTY(d) ((d) & L_DIRTY)
 #define ISUNUSED(d) ((d) & L_UNUSED)
@@ -146,8 +141,16 @@ bool scr_need_redraw(struct Utf8 c1, l_prop pr1, struct Utf8 c2, l_prop pr2) {
   return 0;
 }
 
-void scr_addch(char pc) {
-  char c = pc;
+void scr_addutf8(const uint8_t *utf8) {
+  char c = *utf8;
+  int width = utf8sequence_width(utf8);
+  struct Utf8 pc;
+  int len = utf8sequence_from_str(utf8, &pc);
+
+  static Str tmp = NULL;
+  if (tmp == NULL)
+    tmp = Strnew();
+  Strcopy_charp_n(tmp, (char *)utf8, len);
 
   if (g_scr.CurColumn == COLS)
     scr_wrap();
@@ -156,25 +159,21 @@ void scr_addch(char pc) {
   auto p = g_scr.ScreenImage[g_scr.CurLine]->lineimage;
   auto pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
 
-  /* Eliminate unprintables according to * iso-8859-*.
-   * Particularly 0x96 messes up T.Dickey's * (xfree-)xterm */
-  if (IS_INTSPACE(c))
-    c = ' ';
-
   if (pr[g_scr.CurColumn] & SCREEN_EOL) {
     if (c == ' ' && !(CurrentMode & M_SPACE)) {
       g_scr.CurColumn++;
       return;
     }
     for (int i = g_scr.CurColumn; i >= 0 && (pr[i] & SCREEN_EOL); i--) {
-      SETCH(p, i, SPACE);
+      p[i] = SPACE;
       SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
     }
   }
 
-  int dest, i;
   if (c == '\t' || c == '\n' || c == '\r' || c == '\b')
     SETCHMODE(CurrentMode, C_CTRL);
+  else if (len > 1)
+    SETCHMODE(CurrentMode, C_WCHAR1);
   else if (!IS_CNTRL(c))
     SETCHMODE(CurrentMode, C_ASCII);
   else
@@ -182,34 +181,71 @@ void scr_addch(char pc) {
 
   /* Required to erase bold or underlined character for some * terminal
    * emulators. */
-  i = g_scr.CurColumn;
-  struct Utf8 utf8 = {pc, 0, 0, 0};
+  int i = g_scr.CurColumn + width - 1;
   if (i < COLS &&
       (((pr[i] & SCREEN_BOLD) &&
-        scr_need_redraw(p[i], pr[i], utf8, CurrentMode)) ||
+        scr_need_redraw(p[i], pr[i], pc, CurrentMode)) ||
        ((pr[i] & SCREEN_UNDERLINE) && !(CurrentMode & SCREEN_UNDERLINE)))) {
     scr_touch_line();
     i++;
     if (i < COLS) {
       scr_touch_column(i);
       if (pr[i] & SCREEN_EOL) {
-        SETCH(p, i, SPACE);
+        p[i] = SPACE;
         SETPROP(pr[i], (pr[i] & M_CEOL) | C_ASCII);
+      } else {
+        for (i++; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++)
+          scr_touch_column(i);
       }
     }
   }
 
+  if (g_scr.CurColumn + width > COLS) {
+    scr_touch_line();
+    for (i = g_scr.CurColumn; i < COLS; i++) {
+      p[i] = SPACE;
+      SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+      scr_touch_column(i);
+    }
+    scr_wrap();
+    if (g_scr.CurColumn + width > COLS)
+      return;
+    p = g_scr.ScreenImage[g_scr.CurLine]->lineimage;
+    pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
+  }
+  if (CHMODE(pr[g_scr.CurColumn]) == C_WCHAR2) {
+    scr_touch_line();
+    for (i = g_scr.CurColumn - 1; i >= 0; i--) {
+      l_prop l = CHMODE(pr[i]);
+      p[i] = SPACE;
+      SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+      scr_touch_column(i);
+      if (l != C_WCHAR2)
+        break;
+    }
+  }
   if (CHMODE(CurrentMode) != C_CTRL) {
-    if (scr_need_redraw(p[g_scr.CurColumn], pr[g_scr.CurColumn], utf8,
+    if (scr_need_redraw(p[g_scr.CurColumn], pr[g_scr.CurColumn], pc,
                         CurrentMode)) {
-      SETCH(p, g_scr.CurColumn, pc);
+      p[g_scr.CurColumn] = pc;
       SETPROP(pr[g_scr.CurColumn], CurrentMode);
       scr_touch_line();
       scr_touch_column(g_scr.CurColumn);
+      SETCHMODE(CurrentMode, C_WCHAR2);
+      for (i = g_scr.CurColumn + 1; i < g_scr.CurColumn + width; i++) {
+        p[i] = SPACE;
+        SETPROP(pr[i], (pr[g_scr.CurColumn] & ~C_WHICHCHAR) | C_WCHAR2);
+        scr_touch_column(i);
+      }
+      for (; i < COLS && CHMODE(pr[i]) == C_WCHAR2; i++) {
+        p[i] = SPACE;
+        SETPROP(pr[i], (pr[i] & ~C_WHICHCHAR) | C_ASCII);
+        scr_touch_column(i);
+      }
     }
-    g_scr.CurColumn++;
+    g_scr.CurColumn += width;
   } else if (c == '\t') {
-    dest = (g_scr.CurColumn + tab_step) / tab_step * tab_step;
+    int dest = (g_scr.CurColumn + tab_step) / tab_step * tab_step;
     if (dest >= COLS) {
       scr_wrap();
       scr_touch_line();
@@ -218,9 +254,8 @@ void scr_addch(char pc) {
       pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
     }
     for (i = g_scr.CurColumn; i < dest; i++) {
-      struct Utf8 utf8 = {SPACE, 0, 0, 0};
-      if (scr_need_redraw(p[i], pr[i], utf8, CurrentMode)) {
-        SETCH(p, i, SPACE);
+      if (scr_need_redraw(p[i], pr[i], SPACE, CurrentMode)) {
+        p[i] = SPACE;
         SETPROP(pr[i], CurrentMode);
         scr_touch_line();
         scr_touch_column(i);
@@ -233,26 +268,55 @@ void scr_addch(char pc) {
     g_scr.CurColumn = 0;
   } else if (c == '\b' && g_scr.CurColumn > 0) { /* Backspace */
     g_scr.CurColumn--;
+    while (g_scr.CurColumn > 0 && CHMODE(pr[g_scr.CurColumn]) == C_WCHAR2)
+      g_scr.CurColumn--;
   }
 }
 
+void scr_addch(char pc) { scr_addutf8((const uint8_t *)&pc); }
+
 void scr_addstr(const char *s) {
-  while (*s != '\0')
-    scr_addch(*(s++));
+  auto p = s;
+  while (*p) {
+    auto len = utf8sequence_len((const uint8_t *)p);
+    if (len == 0) {
+      break;
+    }
+    scr_addutf8((const uint8_t *)p);
+    p += len;
+  }
 }
 
 void scr_addnstr(const char *s, int n) {
-  int i;
-  for (i = 0; i < n && *s != '\0'; i++)
-    scr_addch(*(s++));
+  for (int i = 0; i < n;) {
+    if (!s[i]) {
+      break;
+    }
+    auto len = utf8sequence_len((const uint8_t *)s + i);
+    if (len == 0) {
+      break;
+    }
+    scr_addutf8((const uint8_t *)s + i);
+    i += len;
+  }
 }
 
 void scr_addnstr_sup(const char *s, int n) {
   int i;
-  for (i = 0; i < n && *s != '\0'; i++)
-    scr_addch(*(s++));
-  for (; i < n; i++)
+  for (i = 0; i < n; i++) {
+    if (!s[i]) {
+      break;
+    }
+    auto len = utf8sequence_len((const uint8_t *)s + i);
+    if (len == 0) {
+      break;
+    }
+    scr_addutf8((const uint8_t *)s + i);
+    i += len;
+  }
+  for (; i < n; i++) {
     scr_addch(' ');
+  }
 }
 
 void scr_standout(void) { CurrentMode |= SCREEN_STANDOUT; }
@@ -275,12 +339,6 @@ void scr_underlineend(void) { CurrentMode &= ~SCREEN_UNDERLINE; }
 void scr_graphstart(void) { CurrentMode |= SCREEN_GRAPHICS; }
 
 void scr_graphend(void) { CurrentMode &= ~SCREEN_GRAPHICS; }
-
-// void setfcolor(int color) {
-//   CurrentMode &= ~COL_FCOLOR;
-//   if ((color & 0xf) <= 7)
-//     CurrentMode |= (((color & 7) | 8) << 8);
-// }
 
 void scr_message(const char *s, int return_x, int return_y) {
   scr_move(LASTLINE, 0);

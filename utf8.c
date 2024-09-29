@@ -1,6 +1,8 @@
 #include "utf8.h"
 #include <widechar_width_c.h>
 
+struct Utf8 SPACE = {' ', 0, 0, 0};
+
 int utf8codepoint_width(uint32_t codepoint) {
   return widechar_wcwidth(codepoint);
 }

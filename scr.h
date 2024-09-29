@@ -1,7 +1,7 @@
 #pragma once
 #include "utf8.h"
 
-#define SPACE ' '
+#define CHMODE(c) ((c) & C_WHICHCHAR)
 
 enum CharactorColor {
   COL_FCOLOR = 0xf00,
@@ -33,6 +33,8 @@ enum ScreenProperties {
 
   SCREEN_GRAPHICS = 0x10,
   SCREEN_DIRTY = 0x20,
+  C_WCHAR1 = 0x40,
+  C_WCHAR2 = 0x80,
   C_ASCII = 0x00,
   C_WHICHCHAR = 0xc0,
   C_CTRL = 0xc0,
@@ -75,6 +77,7 @@ void scr_clrtoeolx();
 void scr_clrtobot();
 void scr_clrtobotx();
 bool scr_need_redraw(struct Utf8 c1, l_prop pr1, struct Utf8 c2, l_prop pr2);
+void scr_addutf8(const uint8_t *utf8);
 void scr_addch(char c);
 void scr_addstr(const char *s);
 void scr_addnstr(const char *s, int n);
