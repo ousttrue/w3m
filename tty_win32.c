@@ -20,7 +20,8 @@ bool enable_virtual_terminal_processing() {
     // 失敗
     return false;
   }
-  if (!SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING)) {
+  if (!SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING |
+                                  ENABLE_PROCESSED_OUTPUT)) {
     // 失敗
     // 古いWindowsコンソールの場合は GetLastError() == ERROR_INVALID_PARAMETER
     return false;
@@ -111,12 +112,24 @@ int tty_sleep_till_anykey(int sec, bool purge) { return tty_getch(); }
 //
 void tty_echo() {}
 void tty_noecho() {}
-void tty_flush() { FlushFileBuffers(GetStdHandle(STD_OUTPUT_HANDLE)); }
-int tty_putc(int c) { return putc(c, stdout); }
+void tty_flush() {
+  // FlushFileBuffers(GetStdHandle(STD_OUTPUT_HANDLE));
+  fflush(stdout);
+}
+int tty_putc(int c) {
+  int ret = putc(c, stdout);
+  fflush(stdout);
+  return ret;
+}
 int tty_put_utf8(struct Utf8 utf8) {
   auto len = utf8sequence_len(&utf8.c0);
   if (len > 0) {
     fwrite(&utf8.c0, len, 1, stdout);
+    if (len > 1) {
+      auto p = &utf8.c0;
+      auto a = 0;
+    }
+    fflush(stdout);
   }
   return len;
 }
@@ -125,4 +138,5 @@ void tty_printf(const char *fmt, ...) {
   va_start(ap, fmt);
   vprintf(fmt, ap);
   va_end(ap);
+  fflush(stdout);
 }

@@ -19,6 +19,7 @@
 #include "localcgi.h"
 #include "readbuffer.h"
 #include <signal.h>
+#include <fcntl.h>
 #ifdef _WIN32
 #else
 #include <sys/wait.h>
@@ -213,6 +214,7 @@ static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winsock2.h>
+#include <locale.h>
 WSADATA wsaData;
 #endif
 
@@ -232,6 +234,17 @@ int main(int argc, char **argv) {
     printf("WSAStartup failed with error: %d\n", err);
     return 1;
   }
+
+  // utf-8
+  // https://learn.microsoft.com/ja-jp/cpp/c-runtime-library/reference/setlocale-wsetlocale?view=msvc-170#utf-8-support
+  // setlocale(LC_ALL, "ja_JP.Utf-8");
+  // setlocale(LC_ALL, ".931");
+  setlocale(LC_ALL, ".UTF-8");
+  // setlocale(LC_ALL, "");
+  // SetConsoleOutputCP(65001);
+  // setvbuf(stdout, nullptr, _IOFBF, 1000);
+  // _setmode(_fileno(stdout), _O_U8TEXT);;
+
 #endif
 
   if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
@@ -456,12 +469,12 @@ int main(int argc, char **argv) {
     FirstTab = LastTab = CurrentTab = newTab();
     nTab = 1;
     Firstbuf = Currentbuf = newbuf;
-  } 
+  }
   // else if (open_new_tab) {
   //   _newT();
   //   Currentbuf->nextBuffer = newbuf;
   //   delBuffer(Currentbuf);
-  // } 
+  // }
   else {
     Currentbuf->nextBuffer = newbuf;
     Currentbuf = newbuf;
