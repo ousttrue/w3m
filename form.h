@@ -33,10 +33,6 @@
 #define FORM_ENCTYPE_URLENCODED 0
 #define FORM_ENCTYPE_MULTIPART 1
 
-#define MAX_TEXTAREA                                                           \
-  10 /* max number of <textarea>..</textarea>                                  \
-      * within one document */
-
 struct FormItemList;
 struct FormList {
   struct FormItemList *item;

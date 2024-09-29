@@ -250,8 +250,7 @@ extern char *w3m_version;
 extern int enable_inline_image;
 
 global int w3m_debug;
-#define w3m_halfdump (w3m_dump & DUMP_HALFDUMP)
-global int w3m_halfload init(false);
+
 global int override_content_type init(false);
 global int override_user_agent init(false);
 
@@ -338,7 +337,7 @@ global int multicolList init(false);
 #define Str_conv_to_halfdump(x) (x)
 #define conv_from_system(x) (x)
 #define conv_to_system(x) (x)
-#define url_quote_conv(x, c) url_quote(x)
+
 #define wc_Str_conv(x, charset0, charset1) (x)
 #define wc_Str_conv_strict(x, charset0, charset1) (x)
 global char UseAltEntity init(false);
@@ -350,11 +349,8 @@ global char DisplayBorders init(false);
 global char DisableCenter init(false);
 extern char *graph_symbol[];
 extern char *graph2_symbol[];
-extern int symbol_width;
-extern int symbol_width0;
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
-#define SYMBOL_BASE 0x20
 global int no_rc_dir init(false);
 global char *rc_dir init(NULL);
 global char *config_file init(NULL);

@@ -1,4 +1,6 @@
 #include "readbuffer.h"
+#include "html_textarea.h"
+#include "html_renderer.h"
 #include "image.h"
 #include "romannum.h"
 #include "entity.h"
@@ -56,15 +58,14 @@ static struct link_stack *link_stack = NULL;
 #define FRAMESTACK_SIZE 10
 
 #define INITIAL_FORM_SIZE 10
-static struct FormList **forms;
-static int *form_stack;
-static int form_max = -1;
+struct FormList **forms;
+int *form_stack;
+int form_max = -1;
 static int forms_size = 0;
-#define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
-static int form_sp = 0;
+int form_sp = 0;
 #define MAX_INPUT_SIZE 80 /* TODO - max should be screen line length */
 
-static int cur_hseq;
+int cur_hseq;
 Str getLinkNumberStr(int correction) {
   return Sprintf("[%d]", cur_hseq + correction);
 }
@@ -88,15 +89,6 @@ static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
 static int cur_status;
-
-static Str cur_textarea;
-Str *textarea_str;
-static int cur_textarea_size;
-static int cur_textarea_rows;
-static int cur_textarea_readonly;
-static int n_textarea;
-static int ignore_nl_textarea;
-int max_textarea = MAX_TEXTAREA;
 
 static struct table *tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
@@ -474,102 +466,7 @@ void process_option(void) {
   n_selectitem++;
 }
 
-Str process_textarea(struct parsed_tag *tag, int width) {
-  Str tmp = NULL;
-  char *p;
-#define TEXTAREA_ATTR_COL_MAX 4096
-#define TEXTAREA_ATTR_ROWS_MAX 4096
-
-  if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, true));
-  }
-
-  p = "";
-  parsedtag_get_value(tag, ATTR_NAME, &p);
-  cur_textarea = Strnew_charp(p);
-  cur_textarea_size = 20;
-  if (parsedtag_get_value(tag, ATTR_COLS, &p)) {
-    cur_textarea_size = atoi(p);
-    if (strlen(p) > 0 && p[strlen(p) - 1] == '%')
-      cur_textarea_size = width * cur_textarea_size / 100 - 2;
-    if (cur_textarea_size <= 0) {
-      cur_textarea_size = 20;
-    } else if (cur_textarea_size > TEXTAREA_ATTR_COL_MAX) {
-      cur_textarea_size = TEXTAREA_ATTR_COL_MAX;
-    }
-  }
-  cur_textarea_rows = 1;
-  if (parsedtag_get_value(tag, ATTR_ROWS, &p)) {
-    cur_textarea_rows = atoi(p);
-    if (cur_textarea_rows <= 0) {
-      cur_textarea_rows = 1;
-    } else if (cur_textarea_rows > TEXTAREA_ATTR_ROWS_MAX) {
-      cur_textarea_rows = TEXTAREA_ATTR_ROWS_MAX;
-    }
-  }
-  cur_textarea_readonly = parsedtag_exists(tag, ATTR_READONLY);
-  if (n_textarea >= max_textarea) {
-    max_textarea *= 2;
-    textarea_str = New_Reuse(Str, textarea_str, max_textarea);
-  }
-  textarea_str[n_textarea] = Strnew();
-  ignore_nl_textarea = true;
-
-  return tmp;
-}
-
-Str process_n_textarea(void) {
-  Str tmp;
-  int i;
-
-  if (cur_textarea == NULL)
-    return NULL;
-
-  tmp = Strnew();
-  Strcat(tmp, Sprintf("<pre_int>[<input_alt hseq=\"%d\" fid=\"%d\" "
-                      "type=textarea name=\"%s\" size=%d rows=%d "
-                      "top_margin=%d textareanumber=%d",
-                      cur_hseq, cur_form_id, html_quote(cur_textarea->ptr),
-                      cur_textarea_size, cur_textarea_rows,
-                      cur_textarea_rows - 1, n_textarea));
-  if (cur_textarea_readonly)
-    Strcat_charp(tmp, " readonly");
-  Strcat_charp(tmp, "><u>");
-  for (i = 0; i < cur_textarea_size; i++)
-    Strcat_char(tmp, ' ');
-  Strcat_charp(tmp, "</u></input_alt>]</pre_int>\n");
-  cur_hseq++;
-  n_textarea++;
-  cur_textarea = NULL;
-
-  return tmp;
-}
-
-void feed_textarea(char *str) {
-  if (cur_textarea == NULL)
-    return;
-  if (ignore_nl_textarea) {
-    if (*str == '\r')
-      str++;
-    if (*str == '\n')
-      str++;
-  }
-  ignore_nl_textarea = false;
-  while (*str) {
-    if (*str == '&')
-      Strcat_charp(textarea_str[n_textarea], getescapecmd(&str));
-    else if (*str == '\n') {
-      Strcat_charp(textarea_str[n_textarea], "\r\n");
-      str++;
-    } else if (*str == '\r')
-      str++;
-    else
-      Strcat_char(textarea_str[n_textarea], *(str++));
-  }
-}
-
-static Str process_form_int(struct parsed_tag *tag, int fid) {
+Str process_form_int(struct parsed_tag *tag, int fid) {
   char *p, *q, *r, *s, *tg, *n;
 
   p = "get";
@@ -3019,473 +2916,6 @@ void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
   h_env->blank_lines = 0;
 }
 
-#define PPUSH(p, c)                                                            \
-  {                                                                            \
-    outp[pos] = (p);                                                           \
-    outc[pos] = (c);                                                           \
-    pos++;                                                                     \
-  }
-
-#define PSIZE                                                                  \
-  if (out_size <= pos + 1) {                                                   \
-    out_size = pos * 3 / 2;                                                    \
-    outc = New_Reuse(char, outc, out_size);                                    \
-    outp = New_Reuse(Lineprop, outp, out_size);                                \
-  }
-
-static int ex_efct(int ex) {
-  int effect = 0;
-
-  if (!ex)
-    return 0;
-
-  if (ex & PE_EX_ITALIC)
-    effect |= PE_EX_ITALIC_E;
-
-  if (ex & PE_EX_INSERT)
-    effect |= PE_EX_INSERT_E;
-
-  if (ex & PE_EX_STRIKE)
-    effect |= PE_EX_STRIKE_E;
-
-  return effect;
-}
-
-static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
-  char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
-
-  parsedtag_get_value(tag, ATTR_HREF, &href);
-  if (href)
-    href = url_encode(remove_space(href), baseURL(buf), buf->document_charset);
-  parsedtag_get_value(tag, ATTR_TITLE, &title);
-  parsedtag_get_value(tag, ATTR_TYPE, &ctype);
-  parsedtag_get_value(tag, ATTR_REL, &rel);
-
-  char type = LINK_TYPE_NONE;
-  if (rel != NULL) {
-    /* forward link type */
-    type = LINK_TYPE_REL;
-    if (title == NULL)
-      title = rel;
-  }
-  parsedtag_get_value(tag, ATTR_REV, &rev);
-  if (rev != NULL) {
-    /* reverse link type */
-    type = LINK_TYPE_REV;
-    if (title == NULL)
-      title = rev;
-  }
-
-  struct LinkList *l = New(struct LinkList);
-  l->url = href;
-  l->title = title;
-  l->ctype = ctype;
-  l->type = type;
-  l->next = NULL;
-  if (buf->linklist) {
-    struct LinkList *i;
-    for (i = buf->linklist; i->next; i = i->next)
-      ;
-    i->next = l;
-  } else
-    buf->linklist = l;
-}
-
-static void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
-  static char *outc = NULL;
-  static Lineprop *outp = NULL;
-  static int out_size = 0;
-  struct Anchor *a_href = NULL, *a_img = NULL, *a_form = NULL;
-  char *p, *q, *r, *s, *t, *str;
-  Lineprop mode, effect, ex_effect;
-  int pos;
-  int nlines;
-#ifdef DEBUG
-  FILE *debug = NULL;
-#endif
-  int frameset_sp = -1;
-  char *id = NULL;
-  int hseq, form_id;
-  Str line;
-  char *endp;
-  char symbol = '\0';
-  int internal = 0;
-  struct Anchor **a_textarea = NULL;
-#if defined(USE_M17N) || defined(USE_IMAGE)
-  struct Url *base = baseURL(buf);
-#endif
-
-  if (out_size == 0) {
-    out_size = LINELEN;
-    outc = NewAtom_N(char, out_size);
-    outp = NewAtom_N(Lineprop, out_size);
-  }
-
-  n_textarea = -1;
-  if (!max_textarea) { /* halfload */
-    max_textarea = MAX_TEXTAREA;
-    textarea_str = New_N(Str, max_textarea);
-    a_textarea = New_N(struct Anchor *, max_textarea);
-  }
-
-#ifdef DEBUG
-  if (w3m_debug)
-    debug = fopen("zzzerr", "a");
-#endif
-
-  effect = 0;
-  ex_effect = 0;
-  nlines = 0;
-  while ((line = feed()) != NULL) {
-#ifdef DEBUG
-    if (w3m_debug) {
-      Strfputs(line, debug);
-      fputc('\n', debug);
-    }
-#endif
-    if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
-      Strcat(textarea_str[n_textarea], line);
-      continue;
-    }
-  proc_again:
-    if (++nlines == llimit)
-      break;
-    pos = 0;
-#ifdef ENABLE_REMOVE_TRAILINGSPACES
-    Strremovetrailingspaces(line);
-#endif
-    str = line->ptr;
-    endp = str + line->length;
-    while (str < endp) {
-      PSIZE;
-      mode = get_mctype(str);
-      if ((effect | ex_efct(ex_effect)) & PC_SYMBOL && *str != '<') {
-        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), SYMBOL_BASE + symbol);
-        str += symbol_width;
-      } else if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-        PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
-        str++;
-      } else if (*str != '<' && *str != '&') {
-        PPUSH(mode | effect | ex_efct(ex_effect), *(str++));
-      } else if (*str == '&') {
-        /*
-         * & escape processing
-         */
-        p = getescapecmd(&str);
-        while (*p) {
-          PSIZE;
-          mode = get_mctype((unsigned char *)p);
-          if (mode == PC_CTRL || IS_INTSPACE(*str)) {
-            PPUSH(PC_ASCII | effect | ex_efct(ex_effect), ' ');
-            p++;
-          } else {
-            PPUSH(mode | effect | ex_efct(ex_effect), *(p++));
-          }
-        }
-      } else {
-        /* tag processing */
-        struct parsed_tag *tag;
-        if (!(tag = parse_tag(&str, true)))
-          continue;
-        switch (tag->tagid) {
-        case HTML_B:
-          effect |= PE_BOLD;
-          break;
-        case HTML_N_B:
-          effect &= ~PE_BOLD;
-          break;
-        case HTML_I:
-          ex_effect |= PE_EX_ITALIC;
-          break;
-        case HTML_N_I:
-          ex_effect &= ~PE_EX_ITALIC;
-          break;
-        case HTML_INS:
-          ex_effect |= PE_EX_INSERT;
-          break;
-        case HTML_N_INS:
-          ex_effect &= ~PE_EX_INSERT;
-          break;
-        case HTML_U:
-          effect |= PE_UNDER;
-          break;
-        case HTML_N_U:
-          effect &= ~PE_UNDER;
-          break;
-        case HTML_S:
-          ex_effect |= PE_EX_STRIKE;
-          break;
-        case HTML_N_S:
-          ex_effect &= ~PE_EX_STRIKE;
-          break;
-        case HTML_A:
-          p = r = s = NULL;
-          q = buf->baseTarget;
-          t = "";
-          hseq = 0;
-          id = NULL;
-          if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
-            id = url_quote_conv(id, name_charset);
-            registerName(buf, id, currentLn(buf), pos);
-          }
-          if (parsedtag_get_value(tag, ATTR_HREF, &p))
-            p = url_encode(remove_space(p), base, buf->document_charset);
-          if (parsedtag_get_value(tag, ATTR_TARGET, &q))
-            q = url_quote_conv(q, buf->document_charset);
-          if (parsedtag_get_value(tag, ATTR_REFERER, &r))
-            r = url_encode(r, base, buf->document_charset);
-          parsedtag_get_value(tag, ATTR_TITLE, &s);
-          parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
-          parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
-          if (hseq > 0)
-            buf->hmarklist =
-                putHmarker(buf->hmarklist, currentLn(buf), pos, hseq - 1);
-          else if (hseq < 0) {
-            int h = -hseq - 1;
-            if (buf->hmarklist && h < buf->hmarklist->nmark &&
-                buf->hmarklist->marks[h].invalid) {
-              buf->hmarklist->marks[h].pos = pos;
-              buf->hmarklist->marks[h].line = currentLn(buf);
-              buf->hmarklist->marks[h].invalid = 0;
-              hseq = -hseq;
-            }
-          }
-          if (p) {
-            effect |= PE_ANCHOR;
-            a_href = registerHref(buf, p, q, r, s, *t, currentLn(buf), pos);
-            a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
-            a_href->slave = (hseq > 0) ? false : true;
-          }
-          break;
-        case HTML_N_A:
-          effect &= ~PE_ANCHOR;
-          if (a_href) {
-            a_href->end.line = currentLn(buf);
-            a_href->end.pos = pos;
-            if (a_href->start.line == a_href->end.line &&
-                a_href->start.pos == a_href->end.pos) {
-              if (buf->hmarklist && a_href->hseq >= 0 &&
-                  a_href->hseq < buf->hmarklist->nmark)
-                buf->hmarklist->marks[a_href->hseq].invalid = 1;
-              a_href->hseq = -1;
-            }
-            a_href = NULL;
-          }
-          break;
-
-        case HTML_LINK:
-          addLink(buf, tag);
-          break;
-
-        case HTML_IMG_ALT:
-          if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
-            s = NULL;
-            parsedtag_get_value(tag, ATTR_TITLE, &s);
-            p = url_quote_conv(remove_space(p), buf->document_charset);
-            a_img = registerImg(buf, p, s, currentLn(buf), pos);
-          }
-          effect |= PE_IMAGE;
-          break;
-        case HTML_N_IMG_ALT:
-          effect &= ~PE_IMAGE;
-          if (a_img) {
-            a_img->end.line = currentLn(buf);
-            a_img->end.pos = pos;
-          }
-          a_img = NULL;
-          break;
-        case HTML_INPUT_ALT: {
-          struct FormList *form;
-          int top = 0, bottom = 0;
-          int textareanumber = -1;
-          hseq = 0;
-          form_id = -1;
-
-          parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
-          parsedtag_get_value(tag, ATTR_FID, &form_id);
-          parsedtag_get_value(tag, ATTR_TOP_MARGIN, &top);
-          parsedtag_get_value(tag, ATTR_BOTTOM_MARGIN, &bottom);
-          if (form_id < 0 || form_id > form_max || forms == NULL ||
-              forms[form_id] == NULL)
-            break; /* outside of <form>..</form> */
-          form = forms[form_id];
-          if (hseq > 0) {
-            int hpos = pos;
-            if (*str == '[')
-              hpos++;
-            buf->hmarklist =
-                putHmarker(buf->hmarklist, currentLn(buf), hpos, hseq - 1);
-          } else if (hseq < 0) {
-            int h = -hseq - 1;
-            int hpos = pos;
-            if (*str == '[')
-              hpos++;
-            if (buf->hmarklist && h < buf->hmarklist->nmark &&
-                buf->hmarklist->marks[h].invalid) {
-              buf->hmarklist->marks[h].pos = hpos;
-              buf->hmarklist->marks[h].line = currentLn(buf);
-              buf->hmarklist->marks[h].invalid = 0;
-              hseq = -hseq;
-            }
-          }
-
-          if (!form->target)
-            form->target = buf->baseTarget;
-          if (a_textarea &&
-              parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &textareanumber)) {
-            if (textareanumber >= max_textarea) {
-              max_textarea = 2 * textareanumber;
-              textarea_str = New_Reuse(Str, textarea_str, max_textarea);
-              a_textarea = New_Reuse(struct Anchor *, a_textarea, max_textarea);
-            }
-          }
-          a_form = registerForm(buf, form, tag, currentLn(buf), pos);
-          if (a_textarea && textareanumber >= 0)
-            a_textarea[textareanumber] = a_form;
-          if (a_form) {
-            a_form->hseq = hseq - 1;
-            a_form->y = currentLn(buf) - top;
-            a_form->rows = 1 + top + bottom;
-            if (!parsedtag_exists(tag, ATTR_NO_EFFECT))
-              effect |= PE_FORM;
-            break;
-          }
-        }
-        case HTML_N_INPUT_ALT:
-          effect &= ~PE_FORM;
-          if (a_form) {
-            a_form->end.line = currentLn(buf);
-            a_form->end.pos = pos;
-            if (a_form->start.line == a_form->end.line &&
-                a_form->start.pos == a_form->end.pos)
-              a_form->hseq = -1;
-          }
-          a_form = NULL;
-          break;
-        case HTML_MAP:
-          if (parsedtag_get_value(tag, ATTR_NAME, &p)) {
-            struct MapList *m = New(struct MapList);
-            m->name = Strnew_charp(p);
-            m->area = newGeneralList();
-            m->next = buf->maplist;
-            buf->maplist = m;
-          }
-          break;
-        case HTML_N_MAP:
-          /* nothing to do */
-          break;
-        case HTML_AREA:
-          if (buf->maplist == NULL) /* outside of <map>..</map> */
-            break;
-          if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            struct MapArea *a;
-            p = url_encode(remove_space(p), base, buf->document_charset);
-            t = NULL;
-            parsedtag_get_value(tag, ATTR_TARGET, &t);
-            q = "";
-            parsedtag_get_value(tag, ATTR_ALT, &q);
-            r = NULL;
-            s = NULL;
-            a = newMapArea(p, t, q, r, s);
-            pushValue(buf->maplist->area, (void *)a);
-          }
-          break;
-        case HTML_FRAMESET:
-          frameset_sp++;
-          break;
-        case HTML_N_FRAMESET:
-          if (frameset_sp >= 0)
-            frameset_sp--;
-          break;
-        case HTML_FRAME:
-          break;
-        case HTML_BASE:
-          if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            p = url_encode(remove_space(p), NULL, buf->document_charset);
-            if (!buf->baseURL)
-              buf->baseURL = New(struct Url);
-            parseURL2(p, buf->baseURL, &buf->currentURL);
-#if defined(USE_M17N) || defined(USE_IMAGE)
-            base = buf->baseURL;
-#endif
-          }
-          if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-            buf->baseTarget = url_quote_conv(p, buf->document_charset);
-          break;
-        case HTML_META:
-          p = q = NULL;
-          parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
-          parsedtag_get_value(tag, ATTR_CONTENT, &q);
-          if (p && q && !strcasecmp(p, "refresh") && MetaRefresh) {
-            Str tmp = NULL;
-            int refresh_interval = getMetaRefreshParam(q, &tmp);
-            if (tmp) {
-              p = url_encode(remove_space(tmp->ptr), base,
-                             buf->document_charset);
-            }
-          }
-          break;
-        case HTML_INTERNAL:
-          internal = HTML_INTERNAL;
-          break;
-        case HTML_N_INTERNAL:
-          internal = HTML_N_INTERNAL;
-          break;
-        case HTML_FORM_INT:
-          if (parsedtag_get_value(tag, ATTR_FID, &form_id))
-            process_form_int(tag, form_id);
-          break;
-        case HTML_TEXTAREA_INT:
-          if (parsedtag_get_value(tag, ATTR_TEXTAREANUMBER, &n_textarea) &&
-              n_textarea >= 0 && n_textarea < max_textarea) {
-            textarea_str[n_textarea] = Strnew();
-          } else
-            n_textarea = -1;
-          break;
-        case HTML_N_TEXTAREA_INT:
-          if (a_textarea && n_textarea >= 0) {
-            struct FormItemList *item =
-                (struct FormItemList *)a_textarea[n_textarea]->url;
-            item->init_value = item->value = textarea_str[n_textarea];
-          }
-          break;
-        case HTML_TITLE_ALT:
-          if (parsedtag_get_value(tag, ATTR_TITLE, &p))
-            buf->buffername = html_unquote(p);
-          break;
-        case HTML_SYMBOL:
-          effect |= PC_SYMBOL;
-          if (parsedtag_get_value(tag, ATTR_TYPE, &p))
-            symbol = (char)atoi(p);
-          break;
-        case HTML_N_SYMBOL:
-          effect &= ~PC_SYMBOL;
-          break;
-        }
-      }
-    }
-    /* end of processing for one line */
-    if (!internal)
-      addnewline(buf, outc, outp, pos, -1, nlines);
-    if (internal == HTML_N_INTERNAL)
-      internal = 0;
-    if (str != endp) {
-      line = Strsubstr(line, str - line->ptr, endp - str);
-      goto proc_again;
-    }
-  }
-#ifdef DEBUG
-  if (w3m_debug)
-    fclose(debug);
-#endif
-  for (form_id = 1; form_id <= form_max; form_id++)
-    if (forms[form_id])
-      forms[form_id]->next = forms[form_id - 1];
-  buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
-  if (n_textarea)
-    addMultirowsForm(buf, buf->formitem);
-}
-
 static struct TextLineListItem *_tl_lp2;
 
 static Str textlist_feed() {
@@ -3519,6 +2949,7 @@ void HTMLlineproc3(struct Buffer *buf, union input_stream *stream) {
   _file_lp2 = stream;
   HTMLlineproc2body(buf, file_feed, -1);
 }
+
 void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
                     int internal) {
   struct environment envs[MAX_ENV_LEVEL];
@@ -3532,24 +2963,13 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
   symbol_width = symbol_width0 = 1;
 
   cur_title = NULL;
-  n_textarea = 0;
-  cur_textarea = NULL;
-  max_textarea = MAX_TEXTAREA;
-  textarea_str = New_N(Str, max_textarea);
+  init_textarea();
   cur_select = NULL;
   form_sp = -1;
   form_max = -1;
   forms_size = 0;
   forms = NULL;
   cur_hseq = 1;
-
-  if (w3m_halfload) {
-    newBuf->buffername = "---";
-    max_textarea = 0;
-    HTMLlineproc3(newBuf, f->stream);
-    w3m_halfload = false;
-    return;
-  }
 
   init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
 
@@ -3590,6 +3010,7 @@ phase2:
   TRAP_OFF;
   HTMLlineproc2(newBuf, htmlenv1.buf);
 }
+
 void completeHTMLstream(struct html_feed_environ *h_env,
                         struct readbuffer *obuf) {
   close_anchor(h_env, obuf);

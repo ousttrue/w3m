@@ -133,10 +133,8 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 struct Buffer;
-extern int currentLn(struct Buffer *buf);
 extern void tmpClearBuffer(struct Buffer *buf);
 extern struct Url *schemeToProxy(int scheme);
-#define url_encode(url, base, cs) url_quote(url)
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
 struct URLFile;
@@ -290,7 +288,6 @@ extern void getTCstr(void);
 
 extern void initMimeTypes();
 extern void free_ssl_ctx();
-extern struct Url *baseURL(struct Buffer *buf);
 extern void parseURL(char *url, struct Url *p_url, struct Url *current);
 extern void copyParsedURL(struct Url *p, const struct Url *q);
 extern void parseURL2(char *url, struct Url *pu, struct Url *current);
@@ -307,19 +304,12 @@ extern Str loadFTPDir0(struct Url *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
+
 extern struct AnchorList *putAnchor(struct AnchorList *al, char *url,
                                     char *target, struct Anchor **anchor_return,
                                     char *referer, char *title,
                                     unsigned char key, int line, int pos);
-extern struct Anchor *registerHref(struct Buffer *buf, char *url, char *target,
-                                   char *referer, char *title,
-                                   unsigned char key, int line, int pos);
-extern struct Anchor *registerName(struct Buffer *buf, char *url, int line,
-                                   int pos);
-extern struct Anchor *registerImg(struct Buffer *buf, char *url, char *title,
-                                  int line, int pos);
-extern struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
-                                   struct parsed_tag *tag, int line, int pos);
+
 extern int onAnchor(struct Anchor *a, int line, int pos);
 extern struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos);
 extern struct Anchor *retrieveCurrentAnchor(struct Buffer *buf);
@@ -334,8 +324,7 @@ extern struct Anchor *closest_next_anchor(struct AnchorList *a,
                                           struct Anchor *an, int x, int y);
 extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
                                           struct Anchor *an, int x, int y);
-extern struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
-                                      int seq);
+struct HmarkerList;
 extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
                                 int line, int pos, int shift);
 extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,

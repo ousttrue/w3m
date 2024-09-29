@@ -125,8 +125,6 @@ char *cleanupName(char *name) {
 // }
 // #endif /* not HAVE_STRCHR */
 
-
-
 int strmatchlen(const char *s1, const char *s2, int maxlen) {
   int i;
 
@@ -190,8 +188,6 @@ Str convertLine(Str line, enum CLEANUP_LINE_MODE mode) {
     cleanup_line(line, mode);
   return line;
 }
-
-
 
 char *html_quote(char *str) {
   Str tmp = NULL;

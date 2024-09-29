@@ -3,6 +3,7 @@
  */
 #include "table.h"
 #include "indep.h"
+#include "html_renderer.h"
 #include "image.h"
 #include "entity.h"
 #include "textlist.h"
@@ -18,9 +19,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-
-int symbol_width = 0;
-int symbol_width0 = 0;
 
 #define RULE_WIDTH symbol_width
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))

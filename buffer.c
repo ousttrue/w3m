@@ -773,3 +773,11 @@ char *last_modified(struct Buffer *buf) {
   }
   return "unknown";
 }
+
+int currentLn(struct Buffer *buf) {
+  if (buf->currentLine)
+    /*     return buf->currentLine->real_linenumber + 1;      */
+    return buf->currentLine->linenumber + 1;
+  else
+    return 1;
+}

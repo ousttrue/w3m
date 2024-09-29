@@ -1,5 +1,6 @@
 #include "file.h"
 #include "loader.h"
+#include "html_renderer.h"
 #include "trap_jmp.h"
 #include "strcase.h"
 #include "filepath.h"
@@ -30,14 +31,6 @@ static JMP_BUF AbortLoading;
 static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 #define SAVE_BUF_SIZE 1536
-
-int currentLn(struct Buffer *buf) {
-  if (buf->currentLine)
-    /*     return buf->currentLine->real_linenumber + 1;      */
-    return buf->currentLine->linenumber + 1;
-  else
-    return 1;
-}
 
 int dir_exist(char *path) {
   struct stat stbuf;

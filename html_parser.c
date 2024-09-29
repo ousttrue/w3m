@@ -84,7 +84,7 @@ char *getescapecmd(char **s) {
     if (utf8_len) {
       return allocStr((char *)utf8, utf8_len);
     } else {
-      return "?";
+      return "�";
     }
   }
 
@@ -99,13 +99,11 @@ char *getescapecmd(char **s) {
 
 char *html_unquote(char *str) {
   Str tmp = NULL;
-  char *p, *q;
-
-  for (p = str; *p;) {
+  for (auto p = str; *p;) {
     if (*p == '&') {
       if (tmp == NULL)
         tmp = Strnew_charp_n(str, (int)(p - str));
-      q = getescapecmd(&p);
+      auto q = getescapecmd(&p);
       Strcat_charp(tmp, q);
     } else {
       if (tmp)
@@ -113,11 +111,9 @@ char *html_unquote(char *str) {
       p++;
     }
   }
-
-  if (tmp)
-    return tmp->ptr;
-  return str;
+  return tmp ? tmp->ptr : str;
 }
+
 int next_status(char c, int *status) {
   switch (*status) {
   case R_ST_NORMAL:

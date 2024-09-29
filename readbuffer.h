@@ -4,6 +4,13 @@
 #include "anchor.h"
 #include "line.h"
 
+extern struct FormList **forms;
+extern int *form_stack;
+extern int form_max;
+extern int form_sp;
+#define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
+extern int cur_hseq;
+
 #define RB_PRE 0x01
 #define RB_SCRIPT 0x02
 #define RB_STYLE 0x04
@@ -50,7 +57,6 @@
     if ((obuf)->flag_sp > 0)                                                   \
       RB_SET_ALIGN(obuf, (obuf)->flag_stack[--(obuf)->flag_sp]);               \
   }
-
 
 struct input_alt_attr {
   int hseq;
@@ -135,3 +141,5 @@ struct Buffer *loadSomething(struct URLFile *f,
                                                         struct Buffer *),
                              struct Buffer *defaultbuf);
 struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf);
+
+Str process_form_int(struct parsed_tag *tag, int fid);
