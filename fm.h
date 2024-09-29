@@ -218,7 +218,6 @@ global char PreserveTimestamp init(true);
 global char ArgvIsURL init(true);
 global char MetaRefresh init(false);
 global char LocalhostOnly init(false);
-global char *HostName init(NULL);
 
 global char TrapSignal init(true);
 

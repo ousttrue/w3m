@@ -1,4 +1,5 @@
 #include "localcgi.h"
+#include "url.h"
 #include "alloc.h"
 #include "filepath.h"
 #include "app.h"

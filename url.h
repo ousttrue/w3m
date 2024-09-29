@@ -1,5 +1,7 @@
 #pragma once
 
+extern const char *HostName;
+
 enum URL_SCHEME_TYPE {
   SCM_UNKNOWN = 255,
   SCM_MISSING = 254,
