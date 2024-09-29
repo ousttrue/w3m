@@ -8,10 +8,9 @@
 #include <string.h>
 #include <strings.h>
 
-int getescapechar(char **str) {
-  int dummy = -1;
-  char *p = *str, *q;
-  int strict_entity = true;
+uint32_t getescapechar(char **str) {
+  char *p = *str;
+  bool strict_entity = true;
 
   if (*p == '&')
     p++;
@@ -23,6 +22,7 @@ int getescapechar(char **str) {
         *str = p;
         return -1;
       }
+      uint32_t dummy = 0;
       for (dummy = GET_MYCDIGIT(*p), p++; IS_XDIGIT(*p); p++)
         dummy = dummy * 0x10 + GET_MYCDIGIT(*p);
       if (*p == ';')
@@ -34,6 +34,7 @@ int getescapechar(char **str) {
         *str = p;
         return -1;
       }
+      uint32_t dummy = 0;
       for (dummy = GET_MYCDIGIT(*p), p++; IS_DIGIT(*p); p++)
         dummy = dummy * 10 + GET_MYCDIGIT(*p);
       if (*p == ';')
@@ -44,9 +45,9 @@ int getescapechar(char **str) {
   }
   if (!IS_ALPHA(*p)) {
     *str = p;
-    return -1;
+    return 0;
   }
-  q = p;
+  auto q = p;
   for (p++; IS_ALNUM(*p); p++)
     ;
   q = allocStr(q, p - q);
@@ -65,20 +66,21 @@ int getescapechar(char **str) {
     p++;
   else if (strict_entity) {
     *str = p;
-    return -1;
+    return 0;
   }
   *str = p;
   return getHash_si(&entity, q, -1);
 }
 
 char *getescapecmd(char **s) {
-  char *save = *s;
-  Str tmp;
-  int ch = getescapechar(s);
+  auto save = *s;
 
-  if (ch >= 0)
+  auto ch = getescapechar(s);
+  if (ch > 0) {
     return conv_entity(ch);
+  }
 
+  Str tmp;
   if (*save != '&')
     tmp = Strnew_charp("&");
   else

@@ -1,5 +1,6 @@
 #pragma once
 #include "Str.h"
+#include <stdint.h>
 
 /* is this '<' really means the beginning of a tag? */
 #define REALLY_THE_BEGINNING_OF_A_TAG(p)                                       \
@@ -27,7 +28,7 @@
 #define ST_IS_REAL_TAG(s)                                                      \
   ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
 
-int getescapechar(char **str);
+uint32_t getescapechar(char **str);
 char *getescapecmd(char **s);
 char *html_unquote(char *str);
 int next_status(char c, int *status);
