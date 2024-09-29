@@ -61,7 +61,6 @@ void (*mySignal(int signal_number, void (*action)(int)))(int) {
 
 MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
 
-void trap_on() {
-  //
-  TRAP_ON;
-}
+void trap_on() { TRAP_ON; }
+
+void trap_off() { TRAP_OFF; }

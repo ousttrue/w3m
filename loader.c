@@ -18,11 +18,6 @@
 #include "http_response.h"
 #include "http_auth.h"
 #include "terms.h"
-#include "fm.h"
-#include "etc.h"
-#include "file.h"
-#include <signal.h>
-#include <setjmp.h>
 #include <sys/stat.h>
 #include <stdio.h>
 
@@ -114,10 +109,10 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     f.current_content_length = strtoclen(p);
   if (do_download) {
     /* download only */
-    char *file;
-    TRAP_OFF;
+    trap_off();
     if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
       f.stream = newEncodedStream(f.stream, f.encoding);
+    char *file;
     if (pu.scheme == SCM_LOCAL) {
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file, &st))
@@ -154,7 +149,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     if (!do_download && searchExtViewer((char *)t) != NULL) {
       proc = DO_EXTERNAL;
     } else {
-      TRAP_OFF;
+      trap_off();
       if (pu.scheme == SCM_LOCAL) {
         UFclose(&f);
         _doFileCopy(pu.real_file,
@@ -214,7 +209,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     header_string = NULL;
   if (b && b != NO_BUFFER)
     preFormUpdateBuffer(b);
-  TRAP_OFF;
+  trap_off();
   return b;
 }
 
@@ -246,19 +241,22 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
     }
   }
 
-  TRAP_OFF;
+  trap_off();
   struct URLOption url_option;
   url_option.referer = referer;
   url_option.flag = flag;
   auto f = openURL(tpath, &pu, current, &url_option, request, extra_header, of,
                    &hr, &status);
-  // if (uf.stream == NULL && retryAsHttp && url[0] != '/') {
-  //   if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
-  //     /* retry it as "http://" */
-  //     u = Strnew_m_charp("http://", url, NULL)->ptr;
-  //     goto retry;
-  //   }
-  // }
+  if (f.stream == NULL && retryAsHttp && tpath[0] != '/') {
+    auto u = tpath;
+    auto scheme = getURLScheme(&u);
+    if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
+      // retry it as "http://"
+      u = Strnew_m_charp("http://", tpath, NULL)->ptr;
+      auto f = openURL(u, &pu, current, &url_option, request, extra_header, of,
+                       &hr, &status);
+    }
+  }
 
   Str page = nullptr;
   of = NULL;
@@ -304,7 +302,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   }
 
   if (status == HTST_MISSING) {
-    TRAP_OFF;
+    trap_off();
     UFclose(&f);
     return NULL;
   }
@@ -312,7 +310,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   /* openURL() succeeded */
   if (from_jmp()) {
     /* transfer interrupted */
-    TRAP_OFF;
+    trap_off();
     if (b)
       discardBuffer(b);
     UFclose(&f);
@@ -335,15 +333,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
     term_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
     if (t_buf == NULL)
       t_buf = newBuffer(INIT_BUFFER_WIDTH);
-#if 0 /* USE_SSL */
-	if (IStype(f.stream) == IST_SSL) {
-	    Str s = ssl_get_certificate(f.stream, pu.host);
-	    if (s == NULL)
-		return NULL;
-	    else
-		t_buf->ssl_certificate = s->ptr;
-	}
-#endif
+
     auto http_response_code = readHeader(&f, t_buf, false, &pu);
     char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
@@ -392,7 +382,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
                       request, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
-          TRAP_OFF;
+          trap_off();
           return page_loaded(pu, f, page, t, real_type, t_buf);
         }
         UFclose(&f);
@@ -415,7 +405,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
                       &hr, request, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
-          TRAP_OFF;
+          trap_off();
           return page_loaded(pu, f, page, t, real_type, t_buf);
         }
         UFclose(&f);
