@@ -73,10 +73,6 @@
 #define CHK_URL 1
 #define CHK_NMID 2
 
-/* Flags for calcPosition() */
-#define CP_AUTO 0
-#define CP_FORCE 1
-
 /* Completion status. */
 #define CPL_OK 0
 #define CPL_AMBIG 1
@@ -282,7 +278,6 @@
  * Globals.
  */
 
-global int Tabstop init(8);
 global int IndentIncr init(4);
 
 global char SearchHeader init(false);

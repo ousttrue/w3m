@@ -702,3 +702,29 @@ void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
     addnewline2(buf, s, p, pos, nlines);
   }
 }
+
+int columnSkip(struct Buffer *buf, int offset) {
+  int i, maxColumn;
+  int column = buf->currentColumn + offset;
+  int nlines = buf->LINES + 1;
+  Line *l;
+
+  maxColumn = 0;
+  for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
+    if (l->width < 0)
+      l->width = COLPOS(l, l->len);
+    if (l->width - 1 > maxColumn)
+      maxColumn = l->width - 1;
+  }
+  maxColumn -= buf->COLS - 1;
+  if (column < maxColumn)
+    maxColumn = column;
+  if (maxColumn < 0)
+    maxColumn = 0;
+
+  if (buf->currentColumn == maxColumn)
+    return 0;
+  buf->currentColumn = maxColumn;
+  return 1;
+}
+

@@ -1,5 +1,7 @@
 #pragma once
 
+extern int Tabstop;
+
 #define LINELEN 256 /* Initial line length */
 
 /*
@@ -38,9 +40,18 @@
 #define CharEffect(c) ((c) & (P_EFFECT | PC_SYMBOL))
 #define SetCharType(v, c) ((v) = (((v) & ~P_CHARTYPE) | (c)))
 
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
-
 typedef unsigned short Lineprop;
+
+/* Flags for calcPosition() */
+enum ColumnPositionMode {
+  CP_AUTO = 0,
+  CP_FORCE = 1,
+};
+
+extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
+                        enum ColumnPositionMode mode);
+
+#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
 typedef struct Line {
   char *lineBuf;
@@ -63,4 +74,5 @@ typedef struct Line {
 #define get_strwidth(c) strlen(c)
 #define get_Str_strwidth(c) ((c)->length)
 
-
+int columnLen(Line *line, int column);
+int columnPos(Line *line, int column);

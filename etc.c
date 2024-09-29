@@ -15,41 +15,6 @@
 #include <signal.h>
 #include <sys/stat.h>
 
-int columnSkip(struct Buffer *buf, int offset) {
-  int i, maxColumn;
-  int column = buf->currentColumn + offset;
-  int nlines = buf->LINES + 1;
-  Line *l;
-
-  maxColumn = 0;
-  for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
-    if (l->width < 0)
-      l->width = COLPOS(l, l->len);
-    if (l->width - 1 > maxColumn)
-      maxColumn = l->width - 1;
-  }
-  maxColumn -= buf->COLS - 1;
-  if (column < maxColumn)
-    maxColumn = column;
-  if (maxColumn < 0)
-    maxColumn = 0;
-
-  if (buf->currentColumn == maxColumn)
-    return 0;
-  buf->currentColumn = maxColumn;
-  return 1;
-}
-
-int columnPos(Line *line, int column) {
-  int i;
-
-  for (i = 1; i < line->len; i++) {
-    if (COLPOS(line, i) > column)
-      break;
-  }
-  return i - 1;
-}
-
 Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
   int i;
   Line *l;
@@ -111,62 +76,6 @@ int gethtmlcmd(char **s) {
   if (**s == '>')
     (*s)++;
   return cmd;
-}
-
-static int nextColumn(int n, char *p, Lineprop *pr) {
-  if (*pr & PC_CTRL) {
-    if (*p == '\t')
-      return (n + Tabstop) / Tabstop * Tabstop;
-    else if (*p == '\n')
-      return n + 1;
-    else if (*p != '\r')
-      return n + 2;
-    return n;
-  }
-  return n + 1;
-}
-
-int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos, int mode) {
-  static int *realColumn = NULL;
-  static int size = 0;
-  static char *prevl = NULL;
-  int i, j;
-
-  if (l == NULL || len == 0 || pos < 0)
-    return bpos;
-  if (l == prevl && mode == CP_AUTO) {
-    if (pos <= len)
-      return realColumn[pos];
-  }
-  if (size < len + 1) {
-    size = (len + 1 > LINELEN) ? (len + 1) : LINELEN;
-    realColumn = New_N(int, size);
-  }
-  prevl = l;
-  i = 0;
-  j = bpos;
-  while (1) {
-    realColumn[i] = j;
-    if (i == len)
-      break;
-    j = nextColumn(j, &l[i], &pr[i]);
-    i++;
-  }
-  if (pos >= i)
-    return j;
-  return realColumn[pos];
-}
-
-int columnLen(Line *line, int column) {
-  int i, j;
-
-  for (i = 0, j = 0; i < line->len;) {
-    j = nextColumn(j, &line->lineBuf[i], &line->propBuf[i]);
-    if (j > column)
-      return i;
-    i++;
-  }
-  return line->len;
 }
 
 char *lastFileName(char *path) {
@@ -703,8 +612,6 @@ char *url_unquote_conv0(char *url) {
   tmp = Str_url_unquote(Strnew_charp(url), false, true);
   return tmp->ptr;
 }
-
-
 
 void (*mySignal(int signal_number, void (*action)(int)))(int) {
 #ifdef SA_RESTART

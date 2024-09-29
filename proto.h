@@ -223,14 +223,10 @@ extern void arrangeLine(struct Buffer *buf);
 extern void cursorXY(struct Buffer *buf, int x, int y);
 extern void restorePosition(struct Buffer *buf, struct Buffer *orig);
 extern int columnSkip(struct Buffer *buf, int offset);
-extern int columnPos(Line *line, int column);
-extern int columnLen(Line *line, int column);
 extern Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last);
 extern Line *currentLineSkip(struct Buffer *buf, Line *line, int offset,
                              int last);
 extern int gethtmlcmd(char **s);
-extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
-                        int mode);
 extern char *lastFileName(char *path);
 extern char *mybasename(char *s);
 extern char *mydirname(char *s);
