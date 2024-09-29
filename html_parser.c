@@ -5,6 +5,7 @@
 #include "myctype.h"
 #include "strcase.h"
 #include "hash.h"
+#include "utf8.h"
 #include <string.h>
 #include <strings.h>
 
@@ -77,7 +78,14 @@ char *getescapecmd(char **s) {
 
   auto ch = getescapechar(s);
   if (ch > 0) {
-    return conv_entity(ch);
+    // return conv_entity(ch);
+    uint8_t utf8[4];
+    int utf8_len = utf8sequence_from_codepoint(ch, utf8);
+    if (utf8_len) {
+      return allocStr((char *)utf8, utf8_len);
+    } else {
+      return "?";
+    }
   }
 
   Str tmp;
