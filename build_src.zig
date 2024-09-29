@@ -1,6 +1,7 @@
 pub const SRCS = [_][]const u8{
     "keybind.c",
     "loader.c",
+    "datetime.c",
 
     "compression.c",
     "growbuf.c",

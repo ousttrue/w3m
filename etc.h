@@ -14,5 +14,3 @@ pid_t open_pipe_rw(FILE **fr, FILE **fw);
 char *expandName(char *name);
 
 void sleepSeconds(uint32_t seconds);
-
-time_t mymktime(char *timestr);
