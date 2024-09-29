@@ -3,6 +3,7 @@
  */
 #include "table.h"
 #include "indep.h"
+#include "image.h"
 #include "entity.h"
 #include "textlist.h"
 #include "fm.h"

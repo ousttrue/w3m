@@ -3,6 +3,7 @@
  */
 #include "fm.h"
 #include "alloc.h"
+#include "image.h"
 #include "strcase.h"
 #include "http_auth.h"
 #include "mailcap.h"

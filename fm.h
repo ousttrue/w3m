@@ -32,12 +32,6 @@
  * Constants.
  */
 
-#define MAXIMUM_COLS 1024
-#define DEFAULT_COLS 80
-
-#define DEFAULT_PIXEL_PER_CHAR 8.0 /* arbitrary */
-#define MINIMUM_PIXEL_PER_CHAR 4.0
-#define MAXIMUM_PIXEL_PER_CHAR 32.0
 
 #define SHELLBUFFERNAME "*Shellout*"
 #define PIPEBUFFERNAME "*stream*"
@@ -412,9 +406,7 @@ global char *ssl_cipher init(NULL);
 
 global int is_redisplay init(false);
 global int clear_buffer init(true);
-global double pixel_per_char init(DEFAULT_PIXEL_PER_CHAR);
-global int pixel_per_char_i init(DEFAULT_PIXEL_PER_CHAR);
-global int set_pixel_per_char init(false);
+
 global int use_lessopen init(false);
 
 global char *keymap_file init(KEYMAP_FILE);

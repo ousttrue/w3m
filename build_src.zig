@@ -5,6 +5,7 @@ pub const SRCS = [_][]const u8{
     "line.c",
     "filepath.c",
     "trap_jmp.c",
+    "image.c",
 
     "compression.c",
     "growbuf.c",

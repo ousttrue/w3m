@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "image.h"
 #include "romannum.h"
 #include "entity.h"
 #include "trap_jmp.h"
