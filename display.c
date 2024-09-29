@@ -1,5 +1,6 @@
-#include "fm.h"
-#include "file.h"
+#include "display.h"
+// #include "fm.h"
+// #include "file.h"
 #include "ctrlcode.h"
 #include "url_stream.h"
 #include "readbuffer.h"
@@ -134,7 +135,7 @@ static Str make_lastline_message(struct Buffer *buf) {
   return msg;
 }
 
-void displayBuffer(struct Buffer *buf, int mode) {
+void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   Str msg;
   int ny = 0;
 
@@ -212,8 +213,9 @@ void displayBuffer(struct Buffer *buf, int mode) {
   }
 }
 
-static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al, int hseq,
-                              int prevhseq, int tline, int eline, int active) {
+static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
+                              int hseq, int prevhseq, int tline, int eline,
+                              int active) {
   int i, j;
   Line *l;
   struct Anchor *an;

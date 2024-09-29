@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "display.h"
 #include "html_parser.h"
 #include "loader.h"
 #include "mailcap.h"
@@ -36,6 +37,7 @@
 #include "myctype.h"
 #include "regex.h"
 
+#define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
 
 struct Hist *LoadHist;

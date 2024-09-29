@@ -32,32 +32,6 @@
  * Constants.
  */
 
-
-#define SHELLBUFFERNAME "*Shellout*"
-#define PIPEBUFFERNAME "*stream*"
-#define CPIPEBUFFERNAME "*stream(closed)*"
-#define DICTBUFFERNAME "*dictionary*"
-
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 255
-#endif
-
-/* Flags for displayBuffer() */
-#define B_NORMAL 0
-#define B_FORCE_REDRAW 1
-#define B_REDRAW 2
-#define B_SCROLL 3
-#define B_REDRAW_IMAGE 4
-
-/* Buffer Property */
-#define BP_NORMAL 0x0
-#define BP_PIPE 0x1
-#define BP_FRAME 0x2
-#define BP_INTERNAL 0x8
-#define BP_NO_URL 0x10
-#define BP_REDIRECTED 0x20
-#define BP_CLOSE 0x40
-
 /* Search Result */
 #define SR_FOUND 0x1
 #define SR_NOTFOUND 0x2
@@ -193,7 +167,6 @@
 #define VALIGN_MIDDLE 0
 #define VALIGN_TOP 1
 #define VALIGN_BOTTOM 2
-
 
 /*
  * Globals.
@@ -349,7 +322,6 @@ global struct cookie *First_cookie init(NULL);
 
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-
 
 extern struct Hist *LoadHist;
 extern struct Hist *SaveHist;

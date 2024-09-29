@@ -1,5 +1,6 @@
 #include "linein.h"
 #include "alloc.h"
+#include "display.h"
 #include "filepath.h"
 #include "ctrlcode.h"
 #include "history.h"

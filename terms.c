@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "display.h"
 #include "trap_jmp.h"
 #include "linein.h"
 #include "alloc.h"

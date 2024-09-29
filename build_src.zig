@@ -26,6 +26,7 @@ pub const SRCS = [_][]const u8{
     "mailcap.c",
     "symbol.c",
     "entity.c",
+    "entity_table.c",
 
     "scr.c",
     "terms.c",

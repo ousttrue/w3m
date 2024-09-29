@@ -1,4 +1,5 @@
 #include "fm.h"
+#include "display.h"
 #include "cookie.h"
 #include "loader.h"
 #include "app.h"
@@ -23,6 +24,10 @@
 #include <sys/wait.h>
 #endif
 #include <gc.h>
+
+#ifndef HOST_NAME_MAX
+#define HOST_NAME_MAX 255
+#endif
 
 struct TabBuffer *CurrentTab = nullptr;
 struct TabBuffer *FirstTab = nullptr;

@@ -207,7 +207,6 @@ extern void copyBuffer(struct Buffer *a, struct Buffer *b);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 extern int writeBufferCache(struct Buffer *buf);
 extern int readBufferCache(struct Buffer *buf);
-extern void displayBuffer(struct Buffer *buf, int mode);
 extern void addChar(char c, Lineprop mode);
 extern struct Buffer *message_list_panel(void);
 extern void cursorUp0(struct Buffer *buf, int n);

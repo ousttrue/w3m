@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 
+#define SHELLBUFFERNAME "*Shellout*"
+
 static JMP_BUF AbortLoading;
 static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
