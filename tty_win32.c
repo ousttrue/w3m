@@ -1,4 +1,5 @@
 #include "tty.h"
+#include "myctype.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <stdarg.h>
@@ -21,7 +22,9 @@ bool enable_virtual_terminal_processing() {
     return false;
   }
   if (!SetConsoleMode(handle, mode | ENABLE_VIRTUAL_TERMINAL_PROCESSING |
-                                  ENABLE_PROCESSED_OUTPUT)) {
+                                  ENABLE_PROCESSED_OUTPUT
+                      // | ENABLE_WRAP_AT_EOL_OUTPUT
+                      )) {
     // 失敗
     // 古いWindowsコンソールの場合は GetLastError() == ERROR_INVALID_PARAMETER
     return false;
@@ -31,7 +34,7 @@ bool enable_virtual_terminal_processing() {
 
 void tty_open() {
   g_hStdin = GetStdHandle(STD_INPUT_HANDLE);
-  enable_virtual_terminal_processing();
+  // enable_virtual_terminal_processing();
 }
 void tty_close() {}
 
@@ -121,17 +124,26 @@ int tty_putc(int c) {
   fflush(stdout);
   return ret;
 }
-int tty_put_utf8(struct Utf8 utf8) {
-  auto len = utf8sequence_len(&utf8.c0);
+int tty_puts(const char *s) {
+  int len = strlen(s);
   if (len > 0) {
-    fwrite(&utf8.c0, len, 1, stdout);
-    if (len > 1) {
-      auto p = &utf8.c0;
+    fwrite(s, len, 1, stdout);
+  }
+  return 0;
+}
+int tty_put_utf8(struct Utf8 utf8) {
+  auto len = utf8str_codepoint_count(&utf8.c0);
+  wchar_t buf[5] = {0};
+  int codepoint_count = utf8str_utf16str(&utf8.c0, buf, 4);
+  if (codepoint_count > 0) {
+    // fwrite(&utf8.c0, len, 1, stdout);
+    if (!IS_ASCII(utf8.c0)) {
       auto a = 0;
     }
+    fputws(buf, stdout);
     fflush(stdout);
   }
-  return len;
+  return codepoint_count / 2;
 }
 void tty_printf(const char *fmt, ...) {
   va_list ap;

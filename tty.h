@@ -14,6 +14,7 @@ void tty_cooked();
 
 void tty_flush();
 int tty_putc(int c);
+int tty_puts(const char *s);
 int tty_put_utf8(struct Utf8 utf8);
 void tty_printf(const char *fmt, ...);
 

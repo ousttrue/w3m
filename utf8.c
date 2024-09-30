@@ -1,7 +1,7 @@
 #include "utf8.h"
 #include <widechar_width_c.h>
 
-struct Utf8 SPACE = {' ', 0, 0, 0};
+struct Utf8 SPACE = {' ', 0, 0, 0, 0};
 
 int utf8codepoint_width(uint32_t codepoint) {
   return widechar_wcwidth(codepoint);
@@ -25,7 +25,7 @@ int utf8str_width(const uint8_t *utf8) {
   return w;
 }
 
-bool utf8is_equals(struct Utf8 l, struct Utf8 r) {
+bool utf8sequence_equals(struct Utf8 l, struct Utf8 r) {
   auto llen = utf8sequence_len(&l.c0);
   auto rlen = utf8sequence_len(&r.c0);
   if (llen != rlen) {

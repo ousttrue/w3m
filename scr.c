@@ -127,7 +127,7 @@ void scr_clrtobot(void) { scr_clrtobot_eol(scr_clrtoeol); }
 void scr_clrtobotx(void) { scr_clrtobot_eol(scr_clrtoeolx); }
 
 bool scr_need_redraw(struct Utf8 c1, l_prop pr1, struct Utf8 c2, l_prop pr2) {
-  if (!utf8is_equals(c1, c2)) {
+  if (!utf8sequence_equals(c1, c2)) {
     return 1;
   }
   if (c1.c0 == ' ') {
@@ -227,7 +227,9 @@ void scr_addutf8(const uint8_t *utf8) {
   if (CHMODE(CurrentMode) != C_CTRL) {
     if (scr_need_redraw(p[g_scr.CurColumn], pr[g_scr.CurColumn], pc,
                         CurrentMode)) {
+      //
       p[g_scr.CurColumn] = pc;
+      //
       SETPROP(pr[g_scr.CurColumn], CurrentMode);
       scr_touch_line();
       scr_touch_column(g_scr.CurColumn);
@@ -319,26 +321,50 @@ void scr_addnstr_sup(const char *s, int n) {
   }
 }
 
-void scr_standout(void) { CurrentMode |= SCREEN_STANDOUT; }
+void scr_standout(void) { 
+  //
+  // CurrentMode |= SCREEN_STANDOUT; 
+}
 
-void scr_standend(void) { CurrentMode &= ~SCREEN_STANDOUT; }
+void scr_standend(void) { 
+  //
+  CurrentMode &= ~SCREEN_STANDOUT; 
+}
 
 void scr_toggle_stand(void) {
   l_prop *pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
   pr[g_scr.CurColumn] ^= SCREEN_STANDOUT;
 }
 
-void scr_bold(void) { CurrentMode |= SCREEN_BOLD; }
+void scr_bold(void) {
+  //
+  CurrentMode |= SCREEN_BOLD;
+}
 
-void scr_boldend(void) { CurrentMode &= ~SCREEN_BOLD; }
+void scr_boldend(void) {
+  //
+  CurrentMode &= ~SCREEN_BOLD;
+}
 
-void scr_underline(void) { CurrentMode |= SCREEN_UNDERLINE; }
+void scr_underline(void) {
+  //
+  CurrentMode |= SCREEN_UNDERLINE;
+}
 
-void scr_underlineend(void) { CurrentMode &= ~SCREEN_UNDERLINE; }
+void scr_underlineend(void) {
+  //
+  CurrentMode &= ~SCREEN_UNDERLINE;
+}
 
-void scr_graphstart(void) { CurrentMode |= SCREEN_GRAPHICS; }
+void scr_graphstart(void) {
+  //
+  CurrentMode |= SCREEN_GRAPHICS;
+}
 
-void scr_graphend(void) { CurrentMode &= ~SCREEN_GRAPHICS; }
+void scr_graphend(void) {
+  //
+  CurrentMode &= ~SCREEN_GRAPHICS;
+}
 
 void scr_message(const char *s, int return_x, int return_y) {
   scr_move(LASTLINE, 0);

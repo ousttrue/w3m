@@ -47,9 +47,7 @@ MySignalHandler error_dump(SIGNAL_ARG);
 char gcmap[96];
 
 void term_puts(const char *s) {
-  for (auto p = s; *p; ++p) {
-    tty_putc(*p);
-  }
+  tty_puts(s);
 }
 
 #define W3M_TERM_INFO(name, title, mouse) name, title

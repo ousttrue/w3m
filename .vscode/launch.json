@@ -15,7 +15,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "console": "integratedTerminal"
+            "console": "externalTerminal"
         },
         {
             "name": "(gdb) Launch",
