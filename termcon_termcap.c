@@ -46,7 +46,7 @@ void termcon_standout_start() { tty_puts(termcap_str_enter_standout_mode()); }
 // void termcon_standout_end();
 void termcon_bold_start() { tty_puts(termcap_str_enter_bold_mode()); }
 // void termcon_bold_end();
-void termcon_underline_start() { tty_puts(termcap_str_enter_standout_mode()); }
+void termcon_underline_start() { tty_puts(termcap_str_enter_underline_mode()); }
 // void termcon_underline_end();
 
 bool termcon_acs_has() { return termcap_graph_ok(); }

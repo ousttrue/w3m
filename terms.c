@@ -14,7 +14,6 @@
 #include "termsize.h"
 #include "tty.h"
 #include "scr.h"
-#include "termseq/termcap_interface.h"
 #include "config.h"
 
 #include <stdio.h>
@@ -315,15 +314,15 @@ void term_refresh() {
             termcon_cursor_move(line, col);
 
           if ((pr[col] & SCREEN_STANDOUT) && !(mode & SCREEN_STANDOUT)) {
-            term_puts(termcap_str_enter_standout_mode());
+            termcon_standout_start();
             mode |= SCREEN_STANDOUT;
           }
           if ((pr[col] & SCREEN_UNDERLINE) && !(mode & SCREEN_UNDERLINE)) {
-            term_puts(termcap_str_enter_underline_mode());
+            termcon_underline_start();
             mode |= SCREEN_UNDERLINE;
           }
           if ((pr[col] & SCREEN_BOLD) && !(mode & SCREEN_BOLD)) {
-            term_puts(termcap_str_enter_bold_mode());
+            termcon_bold_start();
             mode |= SCREEN_BOLD;
           }
           if ((pr[col] & SCREEN_COLORED) && (pr[col] ^ mode) & COL_FCOLOR) {
@@ -334,9 +333,9 @@ void term_refresh() {
           if ((pr[col] & SCREEN_GRAPHICS) && !(mode & SCREEN_GRAPHICS)) {
             if (!scr->graph_enabled) {
               scr->graph_enabled = 1;
-              term_puts(termcap_str_ena_acs());
+              termcon_acs_enable();
             }
-            term_puts(termcap_str_enter_alt_charset_mode());
+            termcon_altchar_start();
             mode |= SCREEN_GRAPHICS;
           }
 
@@ -359,9 +358,9 @@ void term_refresh() {
       if (mode & (SCREEN_COLORED))
         termcon_color_default();
       if (mode & SCREEN_GRAPHICS) {
-        term_puts(termcap_str_exit_alt_charset_mode());
+        termcon_altchar_end();
       }
-      term_puts(termcap_str_exit_attribute_mode());
+      termcon_attribute_clear();
       mode &= ~M_MEND;
     }
   }
