@@ -43,7 +43,8 @@ static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
                             int epos);
 static void do_effects(Lineprop m);
 
-static Str make_lastline_link(struct Buffer *buf, const char *title, const char *url) {
+static Str make_lastline_link(struct Buffer *buf, const char *title,
+                              const char *url) {
   Str s = NULL, u;
   struct Url pu;
   char *p;
@@ -66,7 +67,7 @@ static Str make_lastline_link(struct Buffer *buf, const char *title, const char 
   parseURL2(url, &pu, baseURL(buf));
   u = parsedURL2Str(&pu);
   if (DecodeURL)
-    u = Strnew_charp(url_decode2(u->ptr, buf));
+    u = Strnew_charp(url_decode0(u->ptr));
   if (l <= 4 || l >= utf8str_width((const uint8_t *)u->ptr)) {
     if (!s)
       return u;
@@ -664,5 +665,3 @@ struct Buffer *message_list_panel(void) {
   Strcat_charp(tmp, "</table></body></html>");
   return loadHTMLString(tmp);
 }
-
-

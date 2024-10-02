@@ -72,3 +72,5 @@ extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                               struct TextList *extra_header,
                               struct URLFile *ouf, struct HttpRequest *hr,
                               enum HttpStatus *status);
+
+struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme);

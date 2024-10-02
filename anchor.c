@@ -540,7 +540,8 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
     return NULL;
   }
 
-  char *t, *u, *p;
+  const char *t;
+  const char *u, *p;
   if (buf->document.linklist) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
     for (auto l = buf->document.linklist; l; l = l->next) {
@@ -549,7 +550,7 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
         p = parsedURL2Str(&pu)->ptr;
         u = html_quote(p);
         if (DecodeURL)
-          p = html_quote(url_decode2(p, buf));
+          p = html_quote(url_decode0(p));
         else
           p = u;
       } else
@@ -579,7 +580,7 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
       p = parsedURL2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
-        p = html_quote(url_decode2(p, buf));
+        p = html_quote(url_decode0(p));
       else
         p = u;
       t = getAnchorText(buf, al, a);
@@ -601,13 +602,13 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
       p = parsedURL2Str(&pu)->ptr;
       u = html_quote(p);
       if (DecodeURL)
-        p = html_quote(url_decode2(p, buf));
+        p = html_quote(url_decode0(p));
       else
         p = u;
       if (a->title && *a->title)
         t = html_quote(a->title);
       else
-        t = html_quote(url_decode2(a->url, buf));
+        t = html_quote(url_decode0(a->url));
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
       a = retrieveAnchor(buf->document.formitem, a->start.line, a->start.pos);
@@ -631,13 +632,13 @@ struct Buffer *link_list_panel(struct Buffer *buf) {
           p = parsedURL2Str(&pu)->ptr;
           u = html_quote(p);
           if (DecodeURL)
-            p = html_quote(url_decode2(p, buf));
+            p = html_quote(url_decode0(p));
           else
             p = u;
           if (m->alt && *m->alt)
             t = html_quote(m->alt);
           else
-            t = html_quote(url_decode2(m->url, buf));
+            t = html_quote(url_decode0(m->url));
           Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
                          "\n", NULL);
         }

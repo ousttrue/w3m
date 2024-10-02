@@ -82,7 +82,7 @@ struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
-      p = html_quote(url_decode2(p, buf));
+      p = html_quote(url_decode0(p));
     else
       p = q;
     Strcat_m_charp(mappage, "<tr valign=top><td><a href=\"", q, "\">",
@@ -125,7 +125,7 @@ static void append_map_info(struct Buffer *buf, Str tmp,
       continue;
     parseURL2(a->url, &pu, baseURL(buf));
     const char *q = html_quote(parsedURL2Str(&pu)->ptr);
-    const char *p = html_quote(url_decode2(a->url, buf));
+    const char *p = html_quote(url_decode0(a->url));
     Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"", q,
                    "\">", html_quote(*a->alt ? a->alt : mybasename(a->url)),
                    "</a><td>", p, "\n", NULL);
@@ -158,7 +158,7 @@ static void append_link_info(struct Buffer *buf, Str html,
     if (!l->url)
       url = "(empty)";
     else
-      url = html_quote(url_decode2(l->url, buf));
+      url = html_quote(url_decode0(l->url));
     Strcat_m_charp(html, "<td>", url, NULL);
     if (l->ctype)
       Strcat_m_charp(html, " (", html_quote(l->ctype), ")", NULL);
@@ -189,7 +189,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
     all = buf->document.allLine;
     if (all == 0 && buf->document.lastLine)
       all = buf->document.lastLine->linenumber;
-    const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+    const char* p = url_decode0(parsedURL2Str(&buf->currentURL)->ptr);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
                    "<tr valign=top><td nowrap>Title<td>",
                    html_quote(buf->buffername),
@@ -210,7 +210,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
     const char* p = parsedURL2Str(&pu)->ptr;
     const char* q = html_quote(p);
     if (DecodeURL)
-      p = html_quote(url_decode2(p, buf));
+      p = html_quote(url_decode0(p));
     else
       p = q;
     Strcat_m_charp(
@@ -223,7 +223,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
     const char* p = parsedURL2Str(&pu)->ptr;
     const char* q = html_quote(p);
     if (DecodeURL)
-      p = html_quote(url_decode2(p, buf));
+      p = html_quote(url_decode0(p));
     else
       p = q;
     Strcat_m_charp(
@@ -234,7 +234,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   if (a != NULL) {
     struct FormItemList *fi = (struct FormItemList *)a->url;
     const char* p = form2str(fi);
-    p = html_quote(url_decode2(p, buf));
+    p = html_quote(url_decode0(p));
     Strcat_m_charp(
         tmp, "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
         p, NULL);

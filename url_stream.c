@@ -1695,7 +1695,7 @@ end:
   return ret;
 }
 
-struct Url *schemeToProxy(int scheme) {
+struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme) {
   struct Url *pu = NULL; /* for gcc */
   switch (scheme) {
   case SCM_HTTP:
@@ -1707,10 +1707,8 @@ struct Url *schemeToProxy(int scheme) {
   case SCM_FTP:
     pu = &FTP_proxy_parsed;
     break;
-#ifdef DEBUG
   default:
     abort();
-#endif
   }
   return pu;
 }
