@@ -356,7 +356,8 @@ end:
   return d;
 }
 
-static Str unquote_mailcap_loop(char *qstr, char *type, char *name, char *attr,
+static Str unquote_mailcap_loop(const char *qstr, const char *type,
+                                const char *name, const char *attr,
                                 int *mc_stat, int flag0) {
   Str str, tmp, test, then;
   char *p;
@@ -463,7 +464,7 @@ static Str unquote_mailcap_loop(char *qstr, char *type, char *name, char *attr,
   return str;
 }
 
-Str unquote_mailcap(char *qstr, char *type, char *name, char *attr,
-                    int *mc_stat) {
+Str unquote_mailcap(const char *qstr, const char *type, const char *name,
+                    const char *attr, int *mc_stat) {
   return unquote_mailcap_loop(qstr, type, name, attr, mc_stat, 0);
 }

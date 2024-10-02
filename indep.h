@@ -29,10 +29,8 @@ extern char *html_quote(char *str);
 extern char *file_quote(char *str);
 extern char *file_unquote(char *str);
 extern char *url_quote(char *str);
-#define url_quote_conv(x, c) url_quote(x)
-#define url_encode(url, base, cs) url_quote(url)
 
-extern Str Str_url_unquote(Str x, int is_form, int safe);
+extern Str Str_url_unquote(Str x, bool is_form, bool safe);
 extern Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), true, false)
 extern const char *shell_quote(const char *str);

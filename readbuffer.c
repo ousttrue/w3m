@@ -474,7 +474,7 @@ Str process_form_int(struct parsed_tag *tag, int fid) {
   parsedtag_get_value(tag, ATTR_METHOD, &p);
   q = "!CURRENT_URL!";
   parsedtag_get_value(tag, ATTR_ACTION, &q);
-  q = url_encode(remove_space(q), cur_baseURL, cur_document_charset);
+  q = url_quote(remove_space(q));
   r = NULL;
   s = NULL;
   parsedtag_get_value(tag, ATTR_ENCTYPE, &s);
@@ -1328,7 +1328,7 @@ Str process_img(struct parsed_tag *tag, int width) {
 
   if (!parsedtag_get_value(tag, ATTR_SRC, &p))
     return tmp;
-  p = url_encode(remove_space(p), cur_baseURL, cur_document_charset);
+  p = url_quote(remove_space(p));
   q = NULL;
   parsedtag_get_value(tag, ATTR_ALT, &q);
   if (!pseudoInlines && (q == NULL || (*q == '\0' && ignore_null_img_alt)))

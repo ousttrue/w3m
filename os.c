@@ -12,7 +12,7 @@ void myExec(char *command) {
   exit(127);
 }
 
-Str myExtCommand(char *cmd, char *arg, int redirect) {
+Str myExtCommand(const char *cmd, const char *arg, int redirect) {
   Str tmp = NULL;
   char *p;
   int set_arg = false;
@@ -38,12 +38,11 @@ Str myExtCommand(char *cmd, char *arg, int redirect) {
   return tmp;
 }
 
-Str myEditor(char *cmd, char *file, int line) {
+Str myEditor(const char *cmd, const char *file, int line) {
   Str tmp = NULL;
-  char *p;
-  int set_file = false, set_line = false;
-
-  for (p = cmd; *p; p++) {
+  bool set_file = false;
+  bool set_line = false;
+  for (auto p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_file) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));

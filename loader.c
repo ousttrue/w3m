@@ -345,7 +345,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
       /* 302: Found */
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
-      tpath = url_encode(p, NULL, 0);
+      tpath = url_quote(p);
       request = NULL;
       UFclose(&f);
       current = New(struct Url);
@@ -455,7 +455,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
-      tpath = url_encode(remove_space(p), NULL, 0);
+      tpath = url_quote(remove_space(p));
       request = NULL;
       UFclose(&f);
       add_auth_cookie_flag = 0;

@@ -51,7 +51,7 @@ static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
 
   parsedtag_get_value(tag, ATTR_HREF, &href);
   if (href)
-    href = url_encode(remove_space(href), baseURL(buf), buf->document_charset);
+    href = url_quote(remove_space(href));
   parsedtag_get_value(tag, ATTR_TITLE, &title);
   parsedtag_get_value(tag, ATTR_TYPE, &ctype);
   parsedtag_get_value(tag, ATTR_REL, &rel);
@@ -215,15 +215,15 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           hseq = 0;
           id = NULL;
           if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
-            id = url_quote_conv(id, name_charset);
+            id = url_quote(id);
             registerName(buf, id, currentLn(buf), pos);
           }
           if (parsedtag_get_value(tag, ATTR_HREF, &p))
-            p = url_encode(remove_space(p), base, buf->document_charset);
+            p = url_quote(remove_space(p));
           if (parsedtag_get_value(tag, ATTR_TARGET, &q))
-            q = url_quote_conv(q, buf->document_charset);
+            q = url_quote(q);
           if (parsedtag_get_value(tag, ATTR_REFERER, &r))
-            r = url_encode(r, base, buf->document_charset);
+            r = url_quote(r);
           parsedtag_get_value(tag, ATTR_TITLE, &s);
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
@@ -271,7 +271,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           if (parsedtag_get_value(tag, ATTR_SRC, &p)) {
             s = NULL;
             parsedtag_get_value(tag, ATTR_TITLE, &s);
-            p = url_quote_conv(remove_space(p), buf->document_charset);
+            p = url_quote(remove_space(p));
             a_img = registerImg(buf, p, s, currentLn(buf), pos);
           }
           effect |= PE_IMAGE;
@@ -369,7 +369,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             break;
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             struct MapArea *a;
-            p = url_encode(remove_space(p), base, buf->document_charset);
+            p = url_quote(remove_space(p));
             t = NULL;
             parsedtag_get_value(tag, ATTR_TARGET, &t);
             q = "";
@@ -391,7 +391,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           break;
         case HTML_BASE:
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
-            p = url_encode(remove_space(p), NULL, buf->document_charset);
+            p = url_quote(remove_space(p));
             if (!buf->baseURL)
               buf->baseURL = New(struct Url);
             parseURL2(p, buf->baseURL, &buf->currentURL);
@@ -400,7 +400,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
 #endif
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
-            buf->baseTarget = url_quote_conv(p, buf->document_charset);
+            buf->baseTarget = url_quote(p);
           break;
         case HTML_META:
           p = q = NULL;
@@ -410,8 +410,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             Str tmp = NULL;
             int refresh_interval = getMetaRefreshParam(q, &tmp);
             if (tmp) {
-              p = url_encode(remove_space(tmp->ptr), base,
-                             buf->document_charset);
+              p = url_quote(remove_space(tmp->ptr));
             }
           }
           break;

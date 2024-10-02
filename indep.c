@@ -1,7 +1,6 @@
 #include "indep.h"
 #include "Str.h"
 #include "myctype.h"
-#include "entity.h"
 #include "alloc.h"
 #include <stdio.h>
 #include <sys/param.h>
@@ -311,7 +310,7 @@ Str Str_form_quote(Str x) {
   return x;
 }
 
-Str Str_url_unquote(Str x, int is_form, int safe) {
+Str Str_url_unquote(Str x, bool is_form, bool safe) {
   Str tmp = NULL;
   char *p = x->ptr, *ep = x->ptr + x->length, *q;
   int c;

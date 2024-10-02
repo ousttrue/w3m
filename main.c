@@ -411,7 +411,7 @@ int main(int argc, char **argv) {
   if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
     url = file_to_url(url);
   else
-    url = url_encode(conv_from_system(argv[1]), NULL, 0);
+    url = url_quote(conv_from_system(argv[1]));
 
   // if (post_file && i == 0) {
   //   FILE *fp;

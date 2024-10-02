@@ -2280,11 +2280,11 @@ static void goURL0(char *prompt, int relative) {
       referer = NO_REFERER;
     else
       referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-    url = url_encode(url, current, Currentbuf->document_charset);
+    url = url_quote(url);
   } else {
     current = NULL;
     referer = NULL;
-    url = url_encode(url, NULL, 0);
+    url = url_quote(url);
   }
   if (url == NULL || *url == '\0') {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2312,7 +2312,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     struct Url p_url;
     struct Buffer *cur_buf = Currentbuf;
     SKIP_BLANKS(url);
-    url = url_encode(url, NULL, 0);
+    url = url_quote(url);
     parseURL2(url, &p_url, NULL);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, NULL, NULL, NULL);
