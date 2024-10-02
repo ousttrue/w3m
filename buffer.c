@@ -474,9 +474,9 @@ void reshapeBuffer(struct Buffer *buf) {
   }
 
   if (is_html_type(buf->type))
-    loadHTMLBuffer(&f, buf);
+    loadHTMLBuffer(&f, nullptr, buf);
   else
-    loadBuffer(&f, buf);
+    loadBuffer(&f, nullptr, buf);
   UFclose(&f);
 
   buf->height = LASTLINE + 1;

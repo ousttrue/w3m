@@ -157,7 +157,7 @@ int _doFileCopy(char *tmpf, char *defstr, int download) {
   return 0;
 }
 
-struct Buffer *doExternal(struct URLFile uf, char *type,
+struct Buffer *doExternal(struct URLFile *uf, const char *type,
                           struct Buffer *defaultbuf) {
   Str tmpf, command;
   struct mailcap *mcap;

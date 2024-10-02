@@ -2480,9 +2480,9 @@ static void proc_escape(struct readbuffer *obuf, char **str_return) {
   mode = IS_CNTRL(ech) ? PC_CTRL : PC_ASCII;
 
   // estr = conv_entity(ech);
-  char utf8[4];
-  if (utf8sequence_from_codepoint(ech, (uint8_t *)utf8)) {
-    estr = utf8;
+  struct Utf8 utf8;
+  if (utf8sequence_from_codepoint(ech, &utf8)) {
+    estr = (char *)&utf8.c0;
   } else {
     estr = "�";
   }
@@ -3079,7 +3079,8 @@ void completeHTMLstream(struct html_feed_environ *h_env,
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
-struct Buffer *loadHTMLBuffer(struct URLFile *f, struct Buffer *newBuf) {
+struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
+                              struct Buffer *newBuf) {
   FILE *src = NULL;
   Str tmp;
 
@@ -3139,13 +3140,11 @@ struct Buffer *loadHTMLString(Str page) {
   return newBuf;
 }
 
-struct Buffer *loadSomething(struct URLFile *f,
-                             struct Buffer *(*loadproc)(struct URLFile *,
-                                                        struct Buffer *),
-                             struct Buffer *defaultbuf) {
+struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
+                             const char *type, struct Buffer *defaultbuf) {
   struct Buffer *buf;
 
-  if ((buf = loadproc(f, defaultbuf)) == NULL)
+  if ((buf = loadproc(f, nullptr, defaultbuf)) == NULL)
     return NULL;
 
   if (buf->buffername == NULL || buf->buffername[0] == '\0') {
@@ -3167,7 +3166,8 @@ struct Buffer *loadSomething(struct URLFile *f,
 /*
  * loadBuffer: read file and make new buffer
  */
-struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf) {
+struct Buffer *loadBuffer(struct URLFile *uf, const char *,
+                          struct Buffer *newBuf) {
   FILE *src = NULL;
   Str lineBuf2;
   char pre_lbuf = '\0';

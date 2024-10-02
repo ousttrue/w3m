@@ -1,5 +1,6 @@
 #include "loader.h"
 #include "trap_jmp.h"
+#include "readbuffer.h"
 #include "filepath.h"
 #include "datetime.h"
 #include "mailcap.h"
@@ -64,9 +65,6 @@ static int checkRedirection(struct Url *pu) {
   return true;
 }
 
-#define DO_EXTERNAL                                                            \
-  ((struct Buffer * (*)(struct URLFile *, struct Buffer *)) doExternal)
-
 static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
                                   const char *t, const char *real_type,
                                   struct Buffer *t_buf) {
@@ -101,7 +99,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
 
   // if (real_type == NULL)
   //   real_type = t;
-  auto proc = loadBuffer;
+  LoadProc proc = loadBuffer;
 
   f.current_content_length = 0;
   char *p;
@@ -147,7 +145,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     proc = loadBuffer;
   else if (is_dump_text_type(t)) {
     if (!do_download && searchExtViewer((char *)t) != NULL) {
-      proc = DO_EXTERNAL;
+      proc = doExternal;
     } else {
       trap_off();
       if (pu.scheme == SCM_LOCAL) {
@@ -174,12 +172,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
                     : pu.file    ? conv_to_system(pu.file)
                                  : NULL;
   t_buf->ssl_certificate = f.ssl_certificate;
-  struct Buffer *b;
-  if (proc == DO_EXTERNAL) {
-    b = doExternal(f, (char *)t, t_buf);
-  } else {
-    b = loadSomething(&f, proc, t_buf);
-  }
+  auto b = loadSomething(&f, proc, t, t_buf);
   UFclose(&f);
   if (b && b != NO_BUFFER) {
     b->real_scheme = f.scheme;
@@ -536,9 +529,7 @@ struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
                   t_buf, searchHeader, searchHeader_through, realm, uname, pwd);
 }
 
-struct Buffer *loadcmdout(char *cmd,
-                          struct Buffer *(*loadproc)(struct URLFile *,
-                                                     struct Buffer *),
+struct Buffer *loadcmdout(char *cmd, LoadProc loadproc,
                           struct Buffer *defaultbuf) {
 
   if (cmd == NULL || *cmd == '\0')
@@ -550,7 +541,7 @@ struct Buffer *loadcmdout(char *cmd,
 
   struct URLFile uf;
   init_stream(&uf, SCM_UNKNOWN, newFileStream(f, (void (*)())pclose));
-  auto buf = loadproc(&uf, defaultbuf);
+  auto buf = loadproc(&uf, nullptr, defaultbuf);
   UFclose(&uf);
   return buf;
 }

@@ -3,6 +3,7 @@
 #include "Str.h"
 #include "anchor.h"
 #include "line.h"
+#include "loadproc.h"
 
 extern struct FormList **forms;
 extern int *form_stack;
@@ -64,6 +65,8 @@ struct input_alt_attr {
   int in;
   Str type, name, value;
 };
+
+struct URLFile;
 
 typedef struct {
   int pos;
@@ -129,17 +132,17 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl);
 void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
-struct Buffer *loadHTMLBuffer(struct URLFile *f, struct Buffer *newBuf);
+struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
+                              struct Buffer *newBuf);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
 void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
                     int internal);
 struct Buffer *loadHTMLString(Str page);
-struct Buffer *loadSomething(struct URLFile *f,
-                             struct Buffer *(*loadproc)(struct URLFile *,
-                                                        struct Buffer *),
-                             struct Buffer *defaultbuf);
-struct Buffer *loadBuffer(struct URLFile *uf, struct Buffer *newBuf);
+struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
+                             const char *type, struct Buffer *defaultbuf);
+struct Buffer *loadBuffer(struct URLFile *uf, const char *type,
+                          struct Buffer *newBuf);
 
 Str process_form_int(struct parsed_tag *tag, int fid);
