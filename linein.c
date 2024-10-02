@@ -120,9 +120,9 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(char c);
 
-char *inputLineHistSearch(const char *prompt, const char *def_str, int flag,
-                          struct Hist *hist,
-                          int (*incrfunc)(int ch, Str str, Lineprop *prop)) {
+const char *inputLineHistSearch(const char *prompt, const char *def_str,
+                                enum InputlineFlags flag, struct Hist *hist,
+                                IncFunc incrfunc) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
@@ -697,7 +697,8 @@ Str unescape_spaces(Str s) {
 
 static Str doComplete(Str ifn, int *status, int next) {
   int fl, i;
-  char *fn, *p;
+  const char *fn;
+  char *p;
   DIR *d;
   struct stat st;
 
@@ -902,3 +903,23 @@ static void _editor(int) {
   if (CurrentTab)
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
+
+const char *inputLineHist(const char *p, const char *d, enum InputlineFlags f,
+                          struct Hist *h) {
+  return inputLineHistSearch(p, d, f, h, NULL);
+}
+
+const char *inputLine(const char *p, const char *d, enum InputlineFlags f) {
+  return inputLineHist(p, d, f, NULL);
+}
+
+const char *inputStr(const char *p, const char *d) {
+  return inputLine(p, d, IN_STRING);
+}
+const char *inputStrHist(const char *p, const char *d, struct Hist *h) {
+  return inputLineHist(p, d, IN_STRING, h);
+}
+const char *inputFilenameHist(const char *p, const char *d, struct Hist *h) {
+  return inputLineHist(p, d, IN_FILENAME, h);
+}
+const char *inputChar(const char *p) { return inputLine(p, "", IN_CHAR); }

@@ -75,14 +75,6 @@
 #define CPL_ALWAYS 0x4
 #define CPL_URL 0x8
 
-/* Flags for inputLine() */
-#define IN_STRING 0x10
-#define IN_FILENAME 0x20
-#define IN_PASSWORD 0x40
-#define IN_COMMAND 0x80
-#define IN_URL 0x100
-#define IN_CHAR 0x200
-
 #define IMG_FLAG_SKIP 1
 #define IMG_FLAG_AUTO 2
 
@@ -136,31 +128,6 @@
 /*
  * Types.
  */
-
-#define COPY_BUFROOT(dstbuf, srcbuf)                                           \
-  {                                                                            \
-    (dstbuf)->document.rootX = (srcbuf)->document.rootX;                       \
-    (dstbuf)->document.rootY = (srcbuf)->document.rootY;                       \
-    (dstbuf)->document.COLS = (srcbuf)->document.COLS;                         \
-    (dstbuf)->document.LINES = (srcbuf)->document.LINES;                       \
-  }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
-  {                                                                            \
-    (dstbuf)->document.topLine = (srcbuf)->document.topLine;                   \
-    (dstbuf)->document.currentLine = (srcbuf)->document.currentLine;           \
-    (dstbuf)->document.pos = (srcbuf)->document.pos;                           \
-    (dstbuf)->document.cursorX = (srcbuf)->document.cursorX;                   \
-    (dstbuf)->document.cursorY = (srcbuf)->document.cursorY;                   \
-    (dstbuf)->document.visualpos = (srcbuf)->document.visualpos;               \
-    (dstbuf)->document.currentColumn = (srcbuf)->document.currentColumn;       \
-  }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf)                                                    \
-  ((buf)->document.topLine ? (buf)->document.topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf)                                                    \
-  ((buf)->document.currentLine ? (buf)->document.currentLine->linenumber : 1)
 
 #define RB_STACK_SIZE 10
 
@@ -332,11 +299,6 @@ global struct cookie *First_cookie init(NULL);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 
-extern struct Hist *LoadHist;
-extern struct Hist *SaveHist;
-extern struct Hist *URLHist;
-extern struct Hist *ShellHist;
-extern struct Hist *TextHist;
 global int UseHistory init(true);
 global int URLHistSize init(100);
 global int SaveURLHist init(true);

@@ -12,6 +12,11 @@ struct Hist {
   HistItem *current;
   Hash_sv *hash;
 };
+extern struct Hist *LoadHist;
+extern struct Hist *SaveHist;
+extern struct Hist *URLHist;
+extern struct Hist *ShellHist;
+extern struct Hist *TextHist;
 
 extern struct Hist *newHist();
 extern struct Hist *copyHist(struct Hist *hist);

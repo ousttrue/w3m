@@ -226,6 +226,7 @@ extern void escbmap(void);
 extern void escdmap(char c);
 extern void multimap(void);
 extern Str unescape_spaces(Str s);
+struct Hist;
 extern struct Buffer *historyBuffer(struct Hist *hist);
 extern void loadHistory(struct Hist *hist);
 extern void saveHistory(struct Hist *hist, size_t size);

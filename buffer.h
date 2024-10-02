@@ -104,3 +104,29 @@ struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
 int currentLn(struct Buffer *buf);
 struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
                                int seq);
+
+#define COPY_BUFROOT(dstbuf, srcbuf)                                           \
+  {                                                                            \
+    (dstbuf)->document.rootX = (srcbuf)->document.rootX;                       \
+    (dstbuf)->document.rootY = (srcbuf)->document.rootY;                       \
+    (dstbuf)->document.COLS = (srcbuf)->document.COLS;                         \
+    (dstbuf)->document.LINES = (srcbuf)->document.LINES;                       \
+  }
+
+#define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
+  {                                                                            \
+    (dstbuf)->document.topLine = (srcbuf)->document.topLine;                   \
+    (dstbuf)->document.currentLine = (srcbuf)->document.currentLine;           \
+    (dstbuf)->document.pos = (srcbuf)->document.pos;                           \
+    (dstbuf)->document.cursorX = (srcbuf)->document.cursorX;                   \
+    (dstbuf)->document.cursorY = (srcbuf)->document.cursorY;                   \
+    (dstbuf)->document.visualpos = (srcbuf)->document.visualpos;               \
+    (dstbuf)->document.currentColumn = (srcbuf)->document.currentColumn;       \
+  }
+#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
+#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
+#define TOP_LINENUMBER(buf)                                                    \
+  ((buf)->document.topLine ? (buf)->document.topLine->linenumber : 1)
+#define CUR_LINENUMBER(buf)                                                    \
+  ((buf)->document.currentLine ? (buf)->document.currentLine->linenumber : 1)
+
