@@ -6,11 +6,11 @@ enum SearchResult {
   SR_WRAPPED = 0x4,
 };
 
-struct Buffer;
+struct Document;
 
-typedef enum SearchResult (*SearchRoutine)(struct Buffer *, const char *);
-extern enum SearchResult forwardSearch(struct Buffer *buf, const char *str);
-extern enum SearchResult backwardSearch(struct Buffer *buf, const char *str);
+typedef enum SearchResult (*SearchRoutine)(struct Document *, const char *);
+extern enum SearchResult forwardSearch(struct Document *doc, const char *str);
+extern enum SearchResult backwardSearch(struct Document *doc, const char *str);
 
 void srch(SearchRoutine func, const char *prompt);
 void isrch(SearchRoutine func, const char *prompt);

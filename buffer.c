@@ -78,20 +78,19 @@ void clearBuffer(struct Buffer *buf) {
  */
 
 void discardBuffer(struct Buffer *buf) {
-  int i;
-  struct Buffer *b;
-
   clearBuffer(buf);
-  for (i = 0; i < MAX_LB; i++) {
-    b = buf->linkBuffer[i];
+  for (int i = 0; i < MAX_LB; i++) {
+    auto b = buf->linkBuffer[i];
     if (b == NULL)
       continue;
     b->linkBuffer[REV_LB[i]] = NULL;
   }
-  if (buf->savecache)
-    unlink(buf->savecache);
+
+  if (buf->document.savecache)
+    unlink(buf->document.savecache);
   if (--(*buf->clone))
     return;
+
   if (buf->sourcefile &&
       (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
     if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
@@ -478,148 +477,12 @@ void reshapeBuffer(struct Buffer *buf) {
   formResetBuffer(buf, sbuf.document.formitem);
 }
 
-/* shallow copy */
-void copyBuffer(struct Buffer *a, struct Buffer *b) {
-  readBufferCache(b);
-  memcpy((void *)a, (const void *)b, sizeof(struct Buffer));
-}
-
 struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf) {
   struct Buffer *b;
 
   for (b = first; b != NULL && b->nextBuffer != buf; b = b->nextBuffer)
     ;
   return b;
-}
-
-#define fwrite1(d, f) (fwrite(&d, sizeof(d), 1, f) == 0)
-#define fread1(d, f) (fread(&d, sizeof(d), 1, f) == 0)
-
-int writeBufferCache(struct Buffer *buf) {
-  Str tmp;
-  FILE *cache = NULL;
-  struct Line *l;
-
-  if (buf->savecache)
-    return -1;
-
-  if (buf->document.firstLine == NULL)
-    goto _error1;
-
-  tmp = tmpfname(TMPF_CACHE, NULL);
-  buf->savecache = tmp->ptr;
-  cache = fopen(buf->savecache, "w");
-  if (!cache)
-    goto _error1;
-
-  if (fwrite1(buf->document.currentLine->linenumber, cache) ||
-      fwrite1(buf->document.topLine->linenumber, cache))
-    goto _error;
-
-  for (l = buf->document.firstLine; l; l = l->next) {
-    if (fwrite1(l->real_linenumber, cache) || fwrite1(l->usrflags, cache) ||
-        fwrite1(l->width, cache) || fwrite1(l->len, cache) ||
-        fwrite1(l->size, cache) || fwrite1(l->bpos, cache) ||
-        fwrite1(l->bwidth, cache))
-      goto _error;
-    if (l->bpos == 0) {
-      if (fwrite(l->lineBuf, 1, l->size, cache) < l->size ||
-          fwrite(l->propBuf, sizeof(Lineprop), l->size, cache) < l->size)
-        goto _error;
-    }
-  }
-
-  fclose(cache);
-  return 0;
-_error:
-  fclose(cache);
-  unlink(buf->savecache);
-_error1:
-  buf->savecache = NULL;
-  return -1;
-}
-
-int readBufferCache(struct Buffer *buf) {
-  FILE *cache;
-  struct Line *l = NULL, *prevl = NULL, *basel = NULL;
-  long lnum = 0, clnum, tlnum;
-
-  if (buf->savecache == NULL)
-    return -1;
-
-  cache = fopen(buf->savecache, "r");
-  if (cache == NULL || fread1(clnum, cache) || fread1(tlnum, cache)) {
-    fclose(cache);
-    buf->savecache = NULL;
-    return -1;
-  }
-
-  while (!feof(cache)) {
-    lnum++;
-    prevl = l;
-    l = New(struct Line);
-    l->prev = prevl;
-    if (prevl)
-      prevl->next = l;
-    else
-      buf->document.firstLine = l;
-    l->linenumber = lnum;
-    if (lnum == clnum)
-      buf->document.currentLine = l;
-    if (lnum == tlnum)
-      buf->document.topLine = l;
-    if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) ||
-        fread1(l->width, cache) || fread1(l->len, cache) ||
-        fread1(l->size, cache) || fread1(l->bpos, cache) ||
-        fread1(l->bwidth, cache))
-      break;
-    if (l->bpos == 0) {
-      basel = l;
-      l->lineBuf = NewAtom_N(char, l->size + 1);
-      fread(l->lineBuf, 1, l->size, cache);
-      l->lineBuf[l->size] = '\0';
-      l->propBuf = NewAtom_N(Lineprop, l->size);
-      fread(l->propBuf, sizeof(Lineprop), l->size, cache);
-    } else if (basel) {
-      l->lineBuf = basel->lineBuf + l->bpos;
-      l->propBuf = basel->propBuf + l->bpos;
-    } else
-      break;
-  }
-  if (prevl) {
-    buf->document.lastLine = prevl;
-    buf->document.lastLine->next = NULL;
-  }
-  fclose(cache);
-  unlink(buf->savecache);
-  buf->savecache = NULL;
-  return 0;
-}
-
-int columnSkip(struct Buffer *buf, int offset) {
-  int i, maxColumn;
-  int column = buf->document.currentColumn + offset;
-  int nlines = buf->document.LINES + 1;
-  struct Line *l;
-
-  maxColumn = 0;
-  for (i = 0, l = buf->document.topLine; i < nlines && l != NULL;
-       i++, l = l->next) {
-    if (l->width < 0)
-      l->width = COLPOS(l, l->len);
-    if (l->width - 1 > maxColumn)
-      maxColumn = l->width - 1;
-  }
-  maxColumn -= buf->document.COLS - 1;
-  if (column < maxColumn)
-    maxColumn = column;
-  if (maxColumn < 0)
-    maxColumn = 0;
-
-  if (buf->document.currentColumn == maxColumn)
-    return 0;
-  buf->document.currentColumn = maxColumn;
-  return 1;
 }
 
 /* get last modified time */

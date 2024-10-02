@@ -23,7 +23,7 @@ static void set_mark(struct Line *l, int pos, int epos) {
     l->propBuf[pos] |= PE_MARK;
 }
 
-enum SearchResult forwardSearch(struct Buffer *buf, const char *str) {
+enum SearchResult forwardSearch(struct Document *doc, const char *str) {
   char *p, *first, *last;
   struct Line *l, *begin;
   bool wrapped = false;
@@ -33,11 +33,11 @@ enum SearchResult forwardSearch(struct Buffer *buf, const char *str) {
     scr_message(p, 0, 0);
     return SR_NOTFOUND;
   }
-  l = buf->document.currentLine;
+  l = doc->currentLine;
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = buf->document.pos;
+  pos = doc->pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -51,17 +51,17 @@ enum SearchResult forwardSearch(struct Buffer *buf, const char *str) {
       pos -= l->len;
       l = l->next;
     }
-    buf->document.pos = pos;
-    if (l != buf->document.currentLine)
-      gotoLine(&buf->document, l->linenumber);
-    arrangeCursor(buf);
+    doc->pos = pos;
+    if (l != doc->currentLine)
+      gotoLine(doc, l->linenumber);
+    arrangeCursor(doc);
     set_mark(l, pos, pos + last - first);
     return SR_FOUND;
   }
   for (l = l->next;; l = l->next) {
     if (l == NULL) {
       if (WrapSearch) {
-        l = buf->document.firstLine;
+        l = doc->firstLine;
         wrapped = true;
       } else {
         break;
@@ -76,10 +76,10 @@ enum SearchResult forwardSearch(struct Buffer *buf, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->document.pos = pos;
-      buf->document.currentLine = l;
-      gotoLine(&buf->document, l->linenumber);
-      arrangeCursor(buf);
+      doc->pos = pos;
+      doc->currentLine = l;
+      gotoLine(doc, l->linenumber);
+      arrangeCursor(doc);
       set_mark(l, pos, pos + last - first);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
@@ -89,7 +89,7 @@ enum SearchResult forwardSearch(struct Buffer *buf, const char *str) {
   return SR_NOTFOUND;
 }
 
-enum SearchResult backwardSearch(struct Buffer *buf, const char *str) {
+enum SearchResult backwardSearch(struct Document *doc, const char *str) {
   char *p, *q, *found, *found_last, *first, *last;
   struct Line *l, *begin;
   bool wrapped = false;
@@ -99,11 +99,11 @@ enum SearchResult backwardSearch(struct Buffer *buf, const char *str) {
     scr_message(p, 0, 0);
     return SR_NOTFOUND;
   }
-  l = buf->document.currentLine;
+  l = doc->currentLine;
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = buf->document.pos;
+  pos = doc->pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -134,10 +134,10 @@ enum SearchResult backwardSearch(struct Buffer *buf, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->document.pos = pos;
-      if (l != buf->document.currentLine)
-        gotoLine(&buf->document, l->linenumber);
-      arrangeCursor(buf);
+      doc->pos = pos;
+      if (l != doc->currentLine)
+        gotoLine(doc, l->linenumber);
+      arrangeCursor(doc);
       set_mark(l, pos, pos + found_last - found);
       return SR_FOUND;
     }
@@ -145,7 +145,7 @@ enum SearchResult backwardSearch(struct Buffer *buf, const char *str) {
   for (l = l->prev;; l = l->prev) {
     if (l == NULL) {
       if (WrapSearch) {
-        l = buf->document.lastLine;
+        l = doc->lastLine;
         wrapped = true;
       } else {
         break;
@@ -168,9 +168,9 @@ enum SearchResult backwardSearch(struct Buffer *buf, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->document.pos = pos;
-      gotoLine(&buf->document, l->linenumber);
-      arrangeCursor(buf);
+      doc->pos = pos;
+      gotoLine(doc, l->linenumber);
+      arrangeCursor(doc);
       set_mark(l, pos, pos + found_last - found);
       return SR_FOUND | (wrapped ? SR_WRAPPED : 0);
     }
@@ -192,7 +192,7 @@ static enum SearchResult srchcore(const char *str, SearchRoutine func) {
   str = SearchString;
   tty_crmode();
   if (from_jmp()) {
-    result = func(Currentbuf, str);
+    result = func(&Currentbuf->document, str);
     // if (i < PREC_NUM - 1 && result & SR_FOUND)
     //   clear_mark(Currentbuf->document.currentLine);
   }
@@ -212,16 +212,16 @@ static void disp_srchresult(int result, const char *prompt, const char *str) {
 }
 
 static int dispincsrch(int ch, Str buf, Lineprop *prop) {
-  static struct Buffer sbuf;
   static struct Line *currentLine;
   static int pos;
   char *str;
   int do_next_search = false;
 
+  static struct Document sbuf;
   if (ch == 0 && buf == NULL) {
     SAVE_BUFPOSITION(&sbuf); /* search starting point */
-    currentLine = sbuf.document.currentLine;
-    pos = sbuf.document.pos;
+    currentLine = sbuf.currentLine;
+    pos = sbuf.pos;
     return -1;
   }
 
@@ -251,7 +251,7 @@ static int dispincsrch(int ch, Str buf, Lineprop *prop) {
         Currentbuf->document.pos -= 1;
         SAVE_BUFPOSITION(&sbuf);
       }
-      arrangeCursor(Currentbuf);
+      arrangeCursor(&Currentbuf->document);
       displayBuffer(Currentbuf, B_FORCE_REDRAW);
       clear_mark(Currentbuf->document.currentLine);
       return -1;
@@ -259,9 +259,9 @@ static int dispincsrch(int ch, Str buf, Lineprop *prop) {
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
     RESTORE_BUFPOSITION(&sbuf);
-    arrangeCursor(Currentbuf);
+    arrangeCursor(&Currentbuf->document);
     srchcore(str, searchRoutine);
-    arrangeCursor(Currentbuf);
+    arrangeCursor(&Currentbuf->document);
     currentLine = Currentbuf->document.currentLine;
     pos = Currentbuf->document.pos;
   }
@@ -271,7 +271,7 @@ static int dispincsrch(int ch, Str buf, Lineprop *prop) {
 }
 
 void isrch(SearchRoutine func, const char *prompt) {
-  struct Buffer sbuf;
+  struct Document sbuf;
   SAVE_BUFPOSITION(&sbuf);
   dispincsrch(0, NULL, NULL); /* initialize incremental search state */
   searchRoutine = func;

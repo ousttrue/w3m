@@ -132,7 +132,6 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 struct Buffer;
-extern void tmpClearBuffer(struct Buffer *buf);
 extern struct Url *schemeToProxy(int scheme);
 extern char *url_decode0(const char *url);
 #define url_decode2(url, buf) url_decode0(url)
@@ -196,24 +195,10 @@ extern void gotoRealLine(struct Buffer *buf, int n);
 extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
                                    struct Buffer *currentbuf, char *selectchar);
 extern void reshapeBuffer(struct Buffer *buf);
-extern void copyBuffer(struct Buffer *a, struct Buffer *b);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
-extern int writeBufferCache(struct Buffer *buf);
-extern int readBufferCache(struct Buffer *buf);
 extern void addChar(char c, Lineprop mode);
 extern struct Buffer *message_list_panel(void);
-extern void cursorUp0(struct Buffer *buf, int n);
-extern void cursorUp(struct Buffer *buf, int n);
-extern void cursorDown0(struct Buffer *buf, int n);
-extern void cursorDown(struct Buffer *buf, int n);
-extern void cursorUpDown(struct Buffer *buf, int n);
-extern void cursorRight(struct Buffer *buf, int n);
-extern void cursorLeft(struct Buffer *buf, int n);
-extern void cursorHome(struct Buffer *buf);
-extern void arrangeCursor(struct Buffer *buf);
-extern void arrangeLine(struct Buffer *buf);
-extern void cursorXY(struct Buffer *buf, int x, int y);
-extern void restorePosition(struct Buffer *buf, struct Buffer *orig);
+
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);

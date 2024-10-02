@@ -35,16 +35,6 @@ struct LinkList {
   struct LinkList *next;
 };
 
-struct BufferPos {
-  long top_linenumber;
-  long cur_linenumber;
-  int currentColumn;
-  int pos;
-  int bpos;
-  struct BufferPos *next;
-  struct BufferPos *prev;
-};
-
 /* Buffer Property */
 enum BufferProperty {
   BP_NORMAL = 0x0,
@@ -75,7 +65,6 @@ struct Buffer {
   char check_url;
   struct TextList *document_header;
   struct FormItemList *form_submit;
-  const char *savecache;
   const char *edit;
   struct mailcap *mailcap;
   const char *mailcap_source;
@@ -86,14 +75,12 @@ struct Buffer {
   char image_loaded;
   char need_reshape;
   struct Anchor *submit;
-  struct BufferPos *undo;
 };
 
 #define NO_BUFFER ((struct Buffer *)1)
 
 struct Url *baseURL(struct Buffer *buf);
 void chkURLBuffer(struct Buffer *buf);
-int columnSkip(struct Buffer *buf, int offset);
 struct Line;
 char *last_modified(struct Buffer *buf);
 struct parsed_tag;
@@ -105,25 +92,22 @@ struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
 
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \
   {                                                                            \
-    (dstbuf)->document.rootX = (srcbuf)->document.rootX;                       \
-    (dstbuf)->document.rootY = (srcbuf)->document.rootY;                       \
-    (dstbuf)->document.COLS = (srcbuf)->document.COLS;                         \
-    (dstbuf)->document.LINES = (srcbuf)->document.LINES;                       \
+    (dstbuf)->rootX = (srcbuf)->rootX;                       \
+    (dstbuf)->rootY = (srcbuf)->rootY;                       \
+    (dstbuf)->COLS = (srcbuf)->COLS;                         \
+    (dstbuf)->LINES = (srcbuf)->LINES;                       \
   }
 
 #define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
   {                                                                            \
-    (dstbuf)->document.topLine = (srcbuf)->document.topLine;                   \
-    (dstbuf)->document.currentLine = (srcbuf)->document.currentLine;           \
-    (dstbuf)->document.pos = (srcbuf)->document.pos;                           \
-    (dstbuf)->document.cursorX = (srcbuf)->document.cursorX;                   \
-    (dstbuf)->document.cursorY = (srcbuf)->document.cursorY;                   \
-    (dstbuf)->document.visualpos = (srcbuf)->document.visualpos;               \
-    (dstbuf)->document.currentColumn = (srcbuf)->document.currentColumn;       \
+    (dstbuf)->topLine = (srcbuf)->topLine;                   \
+    (dstbuf)->currentLine = (srcbuf)->currentLine;           \
+    (dstbuf)->pos = (srcbuf)->pos;                           \
+    (dstbuf)->cursorX = (srcbuf)->cursorX;                   \
+    (dstbuf)->cursorY = (srcbuf)->cursorY;                   \
+    (dstbuf)->visualpos = (srcbuf)->visualpos;               \
+    (dstbuf)->currentColumn = (srcbuf)->currentColumn;       \
   }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf)                                                    \
-  ((buf)->document.topLine ? (buf)->document.topLine->linenumber : 1)
-#define CUR_LINENUMBER(buf)                                                    \
-  ((buf)->document.currentLine ? (buf)->document.currentLine->linenumber : 1)
+#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, &Currentbuf->document)
+#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(&Currentbuf->document, sbufp)
+
