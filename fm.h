@@ -216,8 +216,8 @@ global int close_tab_back init(false);
 global int nTab;
 global int TabCols init(10);
 global int CurrentKey;
-global char *CurrentKeyData;
-global char *CurrentCmdData;
+global const char *CurrentKeyData;
+global const char *CurrentCmdData;
 extern char *w3m_version;
 extern int enable_inline_image;
 
@@ -231,7 +231,6 @@ global int emacs_like_lineedit init(false);
 global int space_autocomplete init(false);
 global int vi_prec_num init(false);
 global int label_topline init(false);
-global int nextpage_topline init(false);
 global char *displayTitleTerm init(NULL);
 global int displayLink init(false);
 global int displayLinkNumber init(false);

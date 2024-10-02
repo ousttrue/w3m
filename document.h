@@ -2,6 +2,8 @@
 #pragma once
 #include "line.h"
 
+extern bool nextpage_topline;
+
 struct AnchorList;
 struct LinkList;
 struct FormList;
@@ -37,5 +39,9 @@ struct Document {
   struct HmarkerList *imarklist;
 };
 
-void addnewline(struct Document *buf, char *line, Lineprop *prop, int pos,
+void addnewline(struct Document *doc, char *line, Lineprop *prop, int pos,
                 int width, int nlines);
+struct Line *currentLineSkip(struct Line *line, int offset, int last);
+struct Line *lineSkip(struct Document *doc, struct Line *line, int offset,
+                      int last);
+void gotoLine(struct Document *doc, int n);

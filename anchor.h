@@ -7,10 +7,10 @@ struct BufferPoint {
 };
 
 struct Anchor {
-  char *url;
-  char *target;
-  char *referer;
-  char *title;
+  const char *url;
+  const char *target;
+  const char *referer;
+  const char *title;
   unsigned char accesskey;
   struct BufferPoint start;
   struct BufferPoint end;
@@ -35,14 +35,16 @@ struct HmarkerList {
 };
 
 struct Document;
-extern struct AnchorList *putAnchor(struct AnchorList *al, char *url,
-                                    char *target, struct Anchor **anchor_return,
-                                    char *referer, char *title,
+extern struct AnchorList *putAnchor(struct AnchorList *al, const char *url,
+                                    const char *target,
+                                    struct Anchor **anchor_return,
+                                    const char *referer, const char *title,
                                     unsigned char key, int line, int pos);
 
-struct Anchor *registerHref(struct Document *doc, char *url, char *target,
-                            char *referer, char *title, unsigned char key,
-                            int line, int pos);
+struct Anchor *registerHref(struct Document *doc, const char *url,
+                            const char *target, const char *referer,
+                            const char *title, unsigned char key, int line,
+                            int pos);
 struct Anchor *registerName(struct Document *doc, char *url, int line, int pos);
 struct Anchor *registerImg(struct Document *doc, char *url, char *title,
                            int line, int pos);

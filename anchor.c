@@ -1,5 +1,6 @@
 #include "anchor.h"
 #include "map.h"
+#include "url.h"
 #include "indep.h"
 #include "alloc.h"
 #include "http_request.h"
@@ -12,10 +13,10 @@
 
 #define FIRST_ANCHOR_SIZE 30
 
-struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
-                             struct Anchor **anchor_return, char *referer,
-                             char *title, unsigned char key, int line,
-                             int pos) {
+struct AnchorList *putAnchor(struct AnchorList *al, const char *url,
+                             const char *target, struct Anchor **anchor_return,
+                             const char *referer, const char *title,
+                             unsigned char key, int line, int pos) {
   int n, i, j;
   struct Anchor *a;
   struct BufferPoint bp = {0};
@@ -62,9 +63,10 @@ struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
   return al;
 }
 
-struct Anchor *registerHref(struct Document *doc, char *url, char *target,
-                            char *referer, char *title, unsigned char key,
-                            int line, int pos) {
+struct Anchor *registerHref(struct Document *doc, const char *url,
+                            const char *target, const char *referer,
+                            const char *title, unsigned char key, int line,
+                            int pos) {
   struct Anchor *a;
   doc->href =
       putAnchor(doc->href, url, target, &a, referer, title, key, line, pos);
@@ -174,11 +176,9 @@ struct Anchor *searchURLLabel(struct Document *doc, const char *url) {
 
 static struct Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2,
                                       int line, int pos) {
-  Str tmp;
-
-  tmp = Strnew_charp_n(p1, p2 - p1);
-  return registerHref(&buf->document, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0',
-                      line, pos);
+  auto tmp = Strnew_charp_n(p1, p2 - p1);
+  return registerHref(&buf->document, url_quote(tmp->ptr), NULL, NO_REFERER,
+                      NULL, '\0', line, pos);
 }
 
 static void reseq_anchor0(struct AnchorList *al, short *seqmap) {

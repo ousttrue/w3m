@@ -97,7 +97,7 @@ char *getescapecmd(char **s) {
   return tmp->ptr;
 }
 
-char *html_unquote(char *str) {
+const char *html_unquote(const char *str) {
   Str tmp = NULL;
   for (auto p = str; *p;) {
     if (*p == '&') {

@@ -177,13 +177,11 @@ extern char *convert_size2(int64_t size1, int64_t size2, int usefloat);
 
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
-extern struct Buffer *getshell(char *cmd);
 extern int save2tmp(struct URLFile uf, char *tmpf);
 extern int doFileMove(char *tmpf, char *defstr);
 extern int checkCopyFile(char *path1, char *path2);
 union input_stream;
 extern int checkSaveFile(union input_stream *stream, char *path);
-extern int checkOverWrite(char *path);
 
 extern struct Buffer *newBuffer(int width);
 extern struct Buffer *nullBuffer(void);
@@ -195,7 +193,6 @@ extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
                                     struct Buffer *newbuf);
 extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
 extern void gotoRealLine(struct Buffer *buf, int n);
-extern void gotoLine(struct Buffer *buf, int n);
 extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
                                    struct Buffer *currentbuf, char *selectchar);
 extern void reshapeBuffer(struct Buffer *buf);
@@ -284,7 +281,6 @@ extern void initMimeTypes();
 extern void free_ssl_ctx();
 extern void parseURL(char *url, struct Url *p_url, struct Url *current);
 extern void copyParsedURL(struct Url *p, const struct Url *q);
-extern void parseURL2(char *url, struct Url *pu, struct Url *current);
 extern Str parsedURL2Str(struct Url *pu);
 extern Str parsedURL2RefererStr(struct Url *pu);
 extern int getURLScheme(char **url);
@@ -314,8 +310,6 @@ extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
                            struct Anchor *a);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
 
-extern int set_param_option(char *option);
-extern char *get_param_option(char *name);
 extern void init_rc(void);
 extern struct Buffer *load_option_panel(void);
 extern void panel_set_option(struct parsed_tagarg *);
@@ -335,7 +329,6 @@ extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                  Str pwd, int is_proxy);
 
 extern int is_localhost(const char *host);
-extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
 
@@ -357,14 +350,9 @@ extern char *FQDN(char *host);
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-extern char *searchKeyData(void);
 
-extern void setKeymap(char *p, int lineno, int verbose);
 extern void initKeymap(int force);
-extern int getKey(char *s);
 extern char *getKeyData(int key);
-extern char *getWord(char **str);
-extern char *getQWord(char **str);
 struct regex;
 extern char *getRegexWord(const char **str, struct regex **regex_ret);
 

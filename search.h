@@ -1,10 +1,17 @@
 #pragma once
 
-/* Search Result */
-#define SR_FOUND 0x1
-#define SR_NOTFOUND 0x2
-#define SR_WRAPPED 0x4
+enum SearchResult {
+  SR_FOUND = 0x1,
+  SR_NOTFOUND = 0x2,
+  SR_WRAPPED = 0x4,
+};
 
 struct Buffer;
-extern int forwardSearch(struct Buffer *buf, char *str);
-extern int backwardSearch(struct Buffer *buf, char *str);
+
+typedef enum SearchResult (*SearchRoutine)(struct Buffer *, const char *);
+extern enum SearchResult forwardSearch(struct Buffer *buf, const char *str);
+extern enum SearchResult backwardSearch(struct Buffer *buf, const char *str);
+
+void srch(SearchRoutine func, const char *prompt);
+void isrch(SearchRoutine func, const char *prompt);
+void srch_nxtprv(bool reverse);

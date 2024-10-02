@@ -5,7 +5,7 @@ void mySystem(char *command, int background)
 {
 }
 
-int _doFileCopy(char *tmpf, char *defstr, int download)
+int _doFileCopy(const char *tmpf, const char *defstr, int download)
 {
   abort();
   return -1;

@@ -6,7 +6,7 @@ extern int64_t strtoclen(const char *s);
 extern int strCmp(const void *s1, const void *s2);
 extern char *currentdir(void);
 extern char *cleanupName(char *name);
-extern char *expandPath(char *name);
+const extern char *expandPath(const char *name);
 // #ifndef HAVE_STRCHR
 // extern char *strchr(const char *s, int c);
 // #endif /* not HAVE_STRCHR */
@@ -28,7 +28,7 @@ extern Str convertLine(Str line, enum CLEANUP_LINE_MODE mode);
 extern const char *html_quote(const char *str);
 extern char *file_quote(char *str);
 extern char *file_unquote(char *str);
-extern char *url_quote(char *str);
+extern const char *url_quote(const char *str);
 
 extern Str Str_url_unquote(Str x, bool is_form, bool safe);
 extern Str Str_form_quote(Str x);

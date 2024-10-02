@@ -30,7 +30,7 @@
 
 uint32_t getescapechar(char **str);
 char *getescapecmd(char **s);
-char *html_unquote(char *str);
+const char *html_unquote(const char *str);
 int next_status(char c, int *status);
 int read_token(Str buf, char **instr, int *status, int pre, int append);
 int visible_length(char *str);

@@ -159,3 +159,11 @@ Str checkType(Str s, Lineprop **oprop) {
   *oprop = prop_buffer;
   return s;
 }
+
+void clear_mark(struct Line *l) {
+  int pos;
+  if (!l)
+    return;
+  for (pos = 0; pos < l->size; pos++)
+    l->propBuf[pos] &= ~PE_MARK;
+}

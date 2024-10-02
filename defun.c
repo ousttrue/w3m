@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "rc.h"
 #include "search.h"
 #include "trap_jmp.h"
 #include "display.h"
@@ -42,12 +43,9 @@
 #define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
 
-static char *SearchString = NULL;
-int (*searchRoutine)(struct Buffer *, char *);
-
-static void cmd_loadfile(char *path);
-static void cmd_loadURL(char *url, struct Url *current, char *referer,
-                        struct FormList *request);
+static void cmd_loadfile(const char *path);
+static void cmd_loadURL(const char *url, struct Url *current,
+                        const char *referer, struct FormList *request);
 static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 
@@ -63,7 +61,7 @@ static void save_buffer_position(struct Buffer *buf);
 
 struct TabBuffer;
 static void _followForm(int);
-static void _goLine(char *);
+static void _goLine(const char *);
 static void followTab(struct TabBuffer *tab);
 static void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);
 static void _nextA(int);
@@ -84,7 +82,7 @@ void mainloop(char *line_str) {
     if (Currentbuf->submit) {
       struct Anchor *a = Currentbuf->submit;
       Currentbuf->submit = NULL;
-      gotoLine(Currentbuf, a->start.line);
+      gotoLine(&Currentbuf->document, a->start.line);
       Currentbuf->document.pos = a->start.pos;
       _followForm(true);
       continue;
@@ -269,7 +267,7 @@ static void nscroll(int n, int mode) {
   if (buf->document.firstLine == NULL)
     return;
   lnum = cur->linenumber;
-  buf->document.topLine = lineSkip(buf, top, n, false);
+  buf->document.topLine = lineSkip(&buf->document, top, n, false);
   if (buf->document.topLine == top) {
     lnum += n;
     if (lnum < buf->document.topLine->linenumber)
@@ -288,7 +286,7 @@ static void nscroll(int n, int mode) {
     if (lnum > llnum)
       lnum = llnum + diff_n;
   }
-  gotoLine(buf, lnum);
+  gotoLine(&buf->document, lnum);
   arrangeLine(buf);
   if (n > 0) {
     if (buf->document.currentLine->bpos &&
@@ -365,8 +363,8 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
     return;
   offsety = Currentbuf->document.LINES / 2 - Currentbuf->document.cursorY;
   if (offsety != 0) {
-    Currentbuf->document.topLine =
-        lineSkip(Currentbuf, Currentbuf->document.topLine, -offsety, false);
+    Currentbuf->document.topLine = lineSkip(
+        &Currentbuf->document, Currentbuf->document.topLine, -offsety, false);
     arrangeLine(Currentbuf);
     displayBuffer(Currentbuf, B_NORMAL);
   }
@@ -392,151 +390,6 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static void clear_mark(struct Line *l) {
-  int pos;
-  if (!l)
-    return;
-  for (pos = 0; pos < l->size; pos++)
-    l->propBuf[pos] &= ~PE_MARK;
-}
-
-/* search by regular expression */
-static int srchcore(char *volatile str, int (*func)(struct Buffer *, char *)) {
-  volatile int i, result = SR_NOTFOUND;
-
-  if (str != NULL && str != SearchString)
-    SearchString = str;
-  if (SearchString == NULL || *SearchString == '\0')
-    return SR_NOTFOUND;
-
-  str = SearchString;
-  tty_crmode();
-  if (from_jmp()) {
-    for (i = 0; i < PREC_NUM; i++) {
-      result = func(Currentbuf, str);
-      if (i < PREC_NUM - 1 && result & SR_FOUND)
-        clear_mark(Currentbuf->document.currentLine);
-    }
-  }
-  tty_raw();
-  return result;
-}
-
-static void disp_srchresult(int result, char *prompt, char *str) {
-  if (str == NULL)
-    str = "";
-  if (result & SR_NOTFOUND)
-    disp_message(Sprintf("Not found: %s", str)->ptr, true);
-  else if (result & SR_WRAPPED)
-    disp_message(Sprintf("Search wrapped: %s", str)->ptr, true);
-  else if (show_srch_str)
-    disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
-}
-
-static int dispincsrch(int ch, Str buf, Lineprop *prop) {
-  static struct Buffer sbuf;
-  static struct Line *currentLine;
-  static int pos;
-  char *str;
-  int do_next_search = false;
-
-  if (ch == 0 && buf == NULL) {
-    SAVE_BUFPOSITION(&sbuf); /* search starting point */
-    currentLine = sbuf.document.currentLine;
-    pos = sbuf.document.pos;
-    return -1;
-  }
-
-  str = buf->ptr;
-  switch (ch) {
-  case 022: /* C-r */
-    searchRoutine = backwardSearch;
-    do_next_search = true;
-    break;
-  case 023: /* C-s */
-    searchRoutine = forwardSearch;
-    do_next_search = true;
-    break;
-
-  default:
-    if (ch >= 0)
-      return ch; /* use InputKeymap */
-  }
-
-  if (do_next_search) {
-    if (*str) {
-      if (searchRoutine == forwardSearch)
-        Currentbuf->document.pos += 1;
-      SAVE_BUFPOSITION(&sbuf);
-      if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
-          searchRoutine == forwardSearch) {
-        Currentbuf->document.pos -= 1;
-        SAVE_BUFPOSITION(&sbuf);
-      }
-      arrangeCursor(Currentbuf);
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
-      clear_mark(Currentbuf->document.currentLine);
-      return -1;
-    } else
-      return 020; /* _prev completion for C-s C-s */
-  } else if (*str) {
-    RESTORE_BUFPOSITION(&sbuf);
-    arrangeCursor(Currentbuf);
-    srchcore(str, searchRoutine);
-    arrangeCursor(Currentbuf);
-    currentLine = Currentbuf->document.currentLine;
-    pos = Currentbuf->document.pos;
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-  clear_mark(Currentbuf->document.currentLine);
-  return -1;
-}
-
-void isrch(int (*func)(struct Buffer *, char *), char *prompt) {
-  char *str;
-  struct Buffer sbuf;
-  SAVE_BUFPOSITION(&sbuf);
-  dispincsrch(0, NULL, NULL); /* initialize incremental search state */
-
-  searchRoutine = func;
-  str = inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
-  if (str == NULL) {
-    RESTORE_BUFPOSITION(&sbuf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-void srch(int (*func)(struct Buffer *, char *), char *prompt) {
-  char *str;
-  int result;
-  int disp = false;
-  int pos;
-
-  str = searchKeyData();
-  if (str == NULL || *str == '\0') {
-    str = inputStrHist(prompt, NULL, TextHist);
-    if (str != NULL && *str == '\0')
-      str = SearchString;
-    if (str == NULL) {
-      displayBuffer(Currentbuf, B_NORMAL);
-      return;
-    }
-    disp = true;
-  }
-  pos = Currentbuf->document.pos;
-  if (func == forwardSearch)
-    Currentbuf->document.pos += 1;
-  result = srchcore(str, func);
-  if (result & SR_FOUND)
-    clear_mark(Currentbuf->document.currentLine);
-  else
-    Currentbuf->document.pos = pos;
-  displayBuffer(Currentbuf, B_NORMAL);
-  if (disp)
-    disp_srchresult(result, prompt, str);
-  searchRoutine = func;
-}
-
 /* Search regular expression forward */
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward") {
@@ -555,35 +408,6 @@ DEFUN(srchbak, SEARCH_BACK, "Search backward") {
 
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward") {
   isrch(backwardSearch, "I-search backward: ");
-}
-
-static void srch_nxtprv(int reverse) {
-  int result;
-  /* *INDENT-OFF* */
-  static int (*routine[2])(struct Buffer *, char *) = {forwardSearch,
-                                                       backwardSearch};
-  /* *INDENT-ON* */
-
-  if (searchRoutine == NULL) {
-    /* FIXME: gettextize? */
-    disp_message("No previous regular expression", true);
-    return;
-  }
-  if (reverse != 0)
-    reverse = 1;
-  if (searchRoutine == backwardSearch)
-    reverse ^= 1;
-  if (reverse == 0)
-    Currentbuf->document.pos += 1;
-  result = srchcore(SearchString, routine[reverse]);
-  if (result & SR_FOUND)
-    clear_mark(Currentbuf->document.currentLine);
-  else {
-    if (reverse == 0)
-      Currentbuf->document.pos -= 1;
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-  disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }
 
 /* Search next matching */
@@ -663,11 +487,8 @@ DEFUN(col1L, LEFT, "Shift screen one column left") {
 }
 
 DEFUN(setEnv, SETENV, "Set environment variable") {
-  char *env;
-  char *var, *value;
-
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  env = searchKeyData();
+  const char *env = searchKeyData();
   if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
     if (env != NULL && *env != '\0')
       env = Sprintf("%s=", env)->ptr;
@@ -677,8 +498,9 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
       return;
     }
   }
+  char *value;
   if ((value = strchr(env, '=')) != NULL && value > env) {
-    var = allocStr(env, value - env);
+    auto var = allocStr(env, value - env);
     value++;
     set_environ(var, value);
   }
@@ -687,11 +509,8 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
 
 /* Execute shell command and load entire output to buffer */
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
-  struct Buffer *buf;
-  char *cmd;
-
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  cmd = searchKeyData();
+  const char *cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
   }
@@ -703,7 +522,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   }
   // auto prevtrap = mySignal(SIGINT, intTrap);
   tty_crmode();
-  buf = getshell(cmd);
+  auto buf = getshell(cmd);
   // mySignal(SIGINT, prevtrap);
   tty_raw();
   if (buf == NULL) {
@@ -722,7 +541,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  char *cmd = searchKeyData();
+  const char *cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
   }
@@ -743,7 +562,7 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
 
 /* Load file */
 DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
-  char *fn = searchKeyData();
+  const char *fn = searchKeyData();
   if (fn == NULL || *fn == '\0') {
     /* FIXME: gettextize? */
     fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
@@ -768,7 +587,7 @@ DEFUN(ldhelp, HELP, "Show help panel") {
   cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
-static void cmd_loadfile(char *fn) {
+static void cmd_loadfile(const char *fn) {
   struct Buffer *buf =
       loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
@@ -997,7 +816,7 @@ end:
 }
 
 static void _quitfm(int confirm) {
-  char *ans = "y";
+  const char *ans = "y";
 
   if (checkDownloadList())
     /* FIXME: gettextize? */
@@ -1099,7 +918,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 }
 
 /* Go to specified line */
-static void _goLine(char *l) {
+static void _goLine(const char *l) {
   if (l == NULL || *l == '\0' || Currentbuf->document.currentLine == NULL) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
@@ -1112,7 +931,7 @@ static void _goLine(char *l) {
         Currentbuf->document.firstLine;
   } else if (*l == '$') {
     Currentbuf->document.topLine =
-        lineSkip(Currentbuf, Currentbuf->document.lastLine,
+        lineSkip(&Currentbuf->document, Currentbuf->document.lastLine,
                  -(Currentbuf->document.LINES + 1) / 2, true);
     Currentbuf->document.currentLine = Currentbuf->document.lastLine;
   } else
@@ -1122,8 +941,7 @@ static void _goLine(char *l) {
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
-
-  char *str = searchKeyData();
+  const char *str = searchKeyData();
   if (prec_num)
     _goLine("^");
   else if (str)
@@ -1178,7 +996,7 @@ static int cur_real_linenumber(struct Buffer *buf) {
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
-  char *fn = Currentbuf->filename;
+  const char *fn = Currentbuf->filename;
   Str cmd;
 
   if (fn == NULL ||
@@ -1227,8 +1045,8 @@ static struct Buffer *loadNormalBuf(struct Buffer *buf) {
   return buf;
 }
 
-static struct Buffer *loadLink(char *url, char *target, char *referer,
-                               struct FormList *request) {
+static struct Buffer *loadLink(const char *url, const char *target,
+                               const char *referer, struct FormList *request) {
   struct Buffer *buf, *nfbuf;
   union frameset_element *f_element = NULL;
   int flag = 0;
@@ -1277,7 +1095,7 @@ static struct Buffer *loadLink(char *url, char *target, char *referer,
   return loadNormalBuf(buf);
 }
 
-static void gotoLabel(char *label) {
+static void gotoLabel(const char *label) {
   auto al = searchURLLabel(&Currentbuf->document, label);
   if (al == NULL) {
     /* FIXME: gettextize? */
@@ -1293,10 +1111,10 @@ static void gotoLabel(char *label) {
   pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
   (*buf->clone)++;
   pushBuffer(buf);
-  gotoLine(Currentbuf, al->start.line);
+  gotoLine(&Currentbuf->document, al->start.line);
   if (label_topline)
     Currentbuf->document.topLine =
-        lineSkip(Currentbuf, Currentbuf->document.topLine,
+        lineSkip(&Currentbuf->document, Currentbuf->document.topLine,
                  Currentbuf->document.currentLine->linenumber -
                      Currentbuf->document.topLine->linenumber,
                  false);
@@ -1306,7 +1124,7 @@ static void gotoLabel(char *label) {
   return;
 }
 
-static int handleMailto(char *url) {
+static int handleMailto(const char *url) {
   Str to;
   char *pos;
 
@@ -1336,14 +1154,12 @@ static int handleMailto(char *url) {
 
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
-  struct Anchor *a;
   struct Url u;
-  char *url;
 
   if (Currentbuf->document.firstLine == NULL)
     return;
 
-  a = retrieveCurrentMap(Currentbuf);
+  auto a = retrieveCurrentMap(Currentbuf);
   if (a) {
     _followForm(false);
     return;
@@ -1367,7 +1183,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   }
   if (handleMailto(a->url))
     return;
-  url = a->url;
+  auto url = a->url;
 
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
@@ -1578,7 +1394,6 @@ void followForm(void) { _followForm(false); }
 
 static void _followForm(int submit) {
   struct Anchor *a, *a2;
-  char *p;
   struct FormItemList *fi, *f2;
   Str tmp, tmp2;
   int multipart = 0, i;
@@ -1590,6 +1405,8 @@ static void _followForm(int submit) {
   if (a == NULL)
     return;
   fi = (struct FormItemList *)a->url;
+
+  const char *p;
   switch (fi->type) {
   case FORM_INPUT_TEXT:
     if (submit)
@@ -1768,7 +1585,7 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
     hseq++;
   } while (an == NULL);
 
-  gotoLine(Currentbuf, po->line);
+  gotoLine(&Currentbuf->document, po->line);
   Currentbuf->document.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -1802,7 +1619,7 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
     hseq--;
   } while (an == NULL);
 
-  gotoLine(Currentbuf, po->line);
+  gotoLine(&Currentbuf->document, po->line);
   Currentbuf->document.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -1830,7 +1647,7 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   if (an == NULL)
     return;
 
-  gotoLine(Currentbuf, po->line);
+  gotoLine(&Currentbuf->document, po->line);
   Currentbuf->document.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -1926,7 +1743,7 @@ _end:
   if (an == NULL || an->hseq < 0)
     return;
   po = &hl->marks[an->hseq];
-  gotoLine(Currentbuf, po->line);
+  gotoLine(&Currentbuf->document, po->line);
   Currentbuf->document.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2006,7 +1823,7 @@ _end:
   if (an == NULL || an->hseq < 0)
     return;
   po = hl->marks + an->hseq;
-  gotoLine(Currentbuf, po->line);
+  gotoLine(&Currentbuf->document, po->line);
   Currentbuf->document.pos = po->pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2060,7 +1877,7 @@ static void nextX(int d, int dy) {
 
   if (pan == NULL)
     return;
-  gotoLine(Currentbuf, y);
+  gotoLine(&Currentbuf->document, y);
   Currentbuf->document.pos = pan->start.pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2105,7 +1922,7 @@ static void nextY(int d) {
 
   if (pan == NULL)
     return;
-  gotoLine(Currentbuf, pan->start.line);
+  gotoLine(&Currentbuf->document, pan->start.line);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2198,8 +2015,8 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
     delBuffer(buf);
 }
 
-static void cmd_loadURL(char *url, struct Url *current, char *referer,
-                        struct FormList *request) {
+static void cmd_loadURL(const char *url, struct Url *current,
+                        const char *referer, struct FormList *request) {
   struct Buffer *buf;
 
   if (handleMailto(url))
@@ -2219,7 +2036,7 @@ static void cmd_loadURL(char *url, struct Url *current, char *referer,
 
 /* go to specified URL */
 static void goURL0(char *prompt, int relative) {
-  char *url, *referer;
+  const char *url, *referer;
   struct Url p_url, *current;
   struct Buffer *cur_buf = Currentbuf;
   const int *no_referer_ptr;
@@ -2286,7 +2103,7 @@ DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
 }
 
 DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
-  char *url;
+  const char *url;
   if ((url = getenv("HTTP_HOME")) != NULL ||
       (url = getenv("WWW_HOME")) != NULL) {
     struct Url p_url;
@@ -2349,13 +2166,11 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
 
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option") {
-  char *opt;
-
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  opt = searchKeyData();
+  const char *opt = searchKeyData();
   if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
     if (opt != NULL && *opt != '\0') {
-      char *v = get_param_option(opt);
+      auto v = get_param_option(opt);
       opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
     }
     opt = inputStrHist("Set option: ", opt, TextHist);
@@ -2478,7 +2293,7 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image") {
 
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
-  char *qfile = NULL, *file;
+  const char *qfile = NULL, *file;
   FILE *f;
   int is_pipe;
 
@@ -2802,9 +2617,9 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
 /* spawn external browser */
 static void invoke_browser(char *url) {
   Str cmd;
-  char *browser = NULL;
   int bg = 0, len;
 
+  const char *browser = NULL;
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   browser = searchKeyData();
   if (browser == NULL || *browser == '\0') {
@@ -2974,22 +2789,19 @@ static char *GetWord(struct Buffer *buf) {
   return NULL;
 }
 
-static void execdict(char *word) {
-  char *w, *dictcmd;
-  struct Buffer *buf;
-
+static void execdict(const char *word) {
   if (!UseDictCommand || word == NULL || *word == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  w = conv_to_system(word);
+  const char *w = conv_to_system(word);
   if (*w == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  dictcmd =
+  auto dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
+  auto buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     disp_message("Execution failed", true);
     return;
@@ -3069,8 +2881,8 @@ void set_buffer_environ(struct Buffer *buf) {
   prev_pos = buf->document.pos;
 }
 
-char *searchKeyData(void) {
-  char *data = NULL;
+const char *searchKeyData(void) {
+  const char *data = NULL;
 
   if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
     data = CurrentKeyData;
@@ -3086,10 +2898,8 @@ char *searchKeyData(void) {
 }
 
 static int searchKeyNum(void) {
-  char *d;
   int n = 1;
-
-  d = searchKeyData();
+  const char *d = searchKeyData();
   if (d != NULL)
     n = atoi(d);
   return n * PREC_NUM;
@@ -3134,7 +2944,7 @@ void w3m_exit(int i) {
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
-  char *data, *p;
+  const char *data, *p;
   int cmd;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
@@ -3172,8 +2982,7 @@ DEFUN(setAlarm, ALARM, "Set alarm") {
 }
 
 DEFUN(reinit, REINIT, "Reload configuration file") {
-  char *resource = searchKeyData();
-
+  const char *resource = searchKeyData();
   if (resource == NULL) {
     init_rc();
     sync_with_option();
@@ -3215,10 +3024,8 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
 
 DEFUN(defKey, DEFINE_KEY,
       "Define a binding between a key stroke combination and a command") {
-  char *data;
-
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  data = searchKeyData();
+  const char *data = searchKeyData();
   if (data == NULL || *data == '\0') {
     data = inputStrHist("Key definition: ", "", TextHist);
     if (data == NULL || *data == '\0') {
@@ -3657,7 +3464,7 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
   if (Currentbuf->document.firstLine == NULL)
     return;
   Currentbuf->document.currentLine =
-      lineSkip(Currentbuf, Currentbuf->document.topLine, 0, false);
+      lineSkip(&Currentbuf->document, Currentbuf->document.topLine, 0, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -3668,7 +3475,7 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
     return;
   offsety = (Currentbuf->document.LINES - 1) / 2;
   Currentbuf->document.currentLine =
-      currentLineSkip(Currentbuf, Currentbuf->document.topLine, offsety, false);
+      currentLineSkip(Currentbuf->document.topLine, offsety, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -3679,7 +3486,7 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
     return;
   offsety = Currentbuf->document.LINES - 1;
   Currentbuf->document.currentLine =
-      currentLineSkip(Currentbuf, Currentbuf->document.topLine, offsety, false);
+      currentLineSkip(Currentbuf->document.topLine, offsety, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }

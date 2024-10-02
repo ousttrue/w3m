@@ -669,7 +669,8 @@ void cursorUp0(struct Buffer *buf, int n) {
   if (buf->document.cursorY > 0)
     cursorUpDown(buf, -1);
   else {
-    buf->document.topLine = lineSkip(buf, buf->document.topLine, -n, false);
+    buf->document.topLine =
+        lineSkip(&buf->document, buf->document.topLine, -n, false);
     if (buf->document.currentLine->prev != NULL)
       buf->document.currentLine = buf->document.currentLine->prev;
     arrangeLine(buf);
@@ -683,7 +684,7 @@ void cursorUp(struct Buffer *buf, int n) {
   while (buf->document.currentLine->prev && buf->document.currentLine->bpos)
     cursorUp0(buf, n);
   if (buf->document.currentLine == buf->document.firstLine) {
-    gotoLine(buf, l->linenumber);
+    gotoLine(&buf->document, l->linenumber);
     arrangeLine(buf);
     return;
   }
@@ -698,7 +699,8 @@ void cursorDown0(struct Buffer *buf, int n) {
   if (buf->document.cursorY < buf->document.LINES - 1)
     cursorUpDown(buf, 1);
   else {
-    buf->document.topLine = lineSkip(buf, buf->document.topLine, n, false);
+    buf->document.topLine =
+        lineSkip(&buf->document, buf->document.topLine, n, false);
     if (buf->document.currentLine->next != NULL)
       buf->document.currentLine = buf->document.currentLine->next;
     arrangeLine(buf);
@@ -713,7 +715,7 @@ void cursorDown(struct Buffer *buf, int n) {
          buf->document.currentLine->next->bpos)
     cursorDown0(buf, n);
   if (buf->document.currentLine == buf->document.lastLine) {
-    gotoLine(buf, l->linenumber);
+    gotoLine(&buf->document, l->linenumber);
     arrangeLine(buf);
     return;
   }
@@ -730,7 +732,7 @@ void cursorUpDown(struct Buffer *buf, int n) {
 
   if (buf->document.firstLine == NULL)
     return;
-  if ((buf->document.currentLine = currentLineSkip(buf, cl, n, false)) == cl)
+  if ((buf->document.currentLine = currentLineSkip(cl, n, false)) == cl)
     return;
   arrangeLine(buf);
 }
@@ -920,11 +922,13 @@ void cursorXY(struct Buffer *buf, int x, int y) {
 }
 
 void restorePosition(struct Buffer *buf, struct Buffer *orig) {
-  buf->document.topLine = lineSkip(buf, buf->document.firstLine, TOP_LINENUMBER(orig) - 1, false);
+  buf->document.topLine =
+      lineSkip(buf, buf->document.firstLine, TOP_LINENUMBER(orig) - 1, false);
   gotoLine(buf, CUR_LINENUMBER(orig));
   buf->document.pos = orig->document.pos;
   if (buf->document.currentLine && orig->document.currentLine)
-    buf->document.pos += orig->document.currentLine->bpos - buf->document.currentLine->bpos;
+    buf->document.pos +=
+        orig->document.currentLine->bpos - buf->document.currentLine->bpos;
   buf->document.currentColumn = orig->document.currentColumn;
   arrangeCursor(buf);
 }

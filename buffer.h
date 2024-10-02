@@ -57,31 +57,31 @@ enum BufferProperty {
 };
 
 struct Buffer {
-  char *filename;
-  char *buffername;
+  const char *filename;
+  const char *buffername;
   struct Buffer *nextBuffer;
   struct Buffer *linkBuffer[MAX_LB];
   struct Document document;
-  char *type;
+  const char *type;
   const char *real_type;
   enum BufferProperty bufferprop;
   struct Url currentURL;
   struct Url *baseURL;
-  char *baseTarget;
+  const char *baseTarget;
   int real_scheme;
-  char *sourcefile;
+  const char *sourcefile;
   int *clone;
   size_t trbyte;
   char check_url;
   struct TextList *document_header;
   struct FormItemList *form_submit;
-  char *savecache;
-  char *edit;
+  const char *savecache;
+  const char *edit;
   struct mailcap *mailcap;
-  char *mailcap_source;
-  char *header_source;
+  const char *mailcap_source;
+  const char *header_source;
   char search_header;
-  char *ssl_certificate;
+  const char *ssl_certificate;
   char image_flag;
   char image_loaded;
   char need_reshape;
@@ -95,8 +95,6 @@ struct Url *baseURL(struct Buffer *buf);
 void chkURLBuffer(struct Buffer *buf);
 int columnSkip(struct Buffer *buf, int offset);
 struct Line;
-struct Line *lineSkip(struct Buffer *buf, struct Line *line, int offset, int last);
-struct Line *currentLineSkip(struct Buffer *buf, struct Line *line, int offset, int last);
 char *last_modified(struct Buffer *buf);
 struct parsed_tag;
 struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
@@ -129,4 +127,3 @@ struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
   ((buf)->document.topLine ? (buf)->document.topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf)                                                    \
   ((buf)->document.currentLine ? (buf)->document.currentLine->linenumber : 1)
-

@@ -265,7 +265,7 @@ void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
 /*
  * getshell: execute shell command and get the result into a buffer
  */
-struct Buffer *getshell(char *cmd) {
+struct Buffer *getshell(const char *cmd) {
   auto buf = loadcmdout(cmd, loadBuffer, NULL);
   if (buf == NULL)
     return NULL;
@@ -345,7 +345,7 @@ int checkSaveFile(union input_stream *stream, char *path2) {
   return 0;
 }
 
-int checkOverWrite(char *path) {
+int checkOverWrite(const char *path) {
   struct stat st;
   char *ans;
 

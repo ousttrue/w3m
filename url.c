@@ -15,7 +15,7 @@ int is_localhost(const char *host) {
   return false;
 }
 
-char *file_to_url(char *file) {
+const char *file_to_url(const char *file) {
   char *drive = NULL;
   file = expandPath(file);
   if (IS_ALPHA(file[0]) && file[1] == ':') {

@@ -112,7 +112,7 @@ struct Hist *copyHist(struct Hist *hist) {
   return new;
 }
 
-HistItem *unshiftHist(struct Hist *hist, char *ptr) {
+HistItem *unshiftHist(struct Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -128,7 +128,7 @@ HistItem *unshiftHist(struct Hist *hist, char *ptr) {
   return item;
 }
 
-HistItem *pushHist(struct Hist *hist, char *ptr) {
+HistItem *pushHist(struct Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -146,7 +146,7 @@ HistItem *pushHist(struct Hist *hist, char *ptr) {
 
 /* Don't mix pushHashHist() and pushHist()/unshiftHist(). */
 
-HistItem *pushHashHist(struct Hist *hist, char *ptr) {
+HistItem *pushHashHist(struct Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL || hist->list->nitem >= HIST_LIST_MAX)
@@ -168,7 +168,7 @@ HistItem *pushHashHist(struct Hist *hist, char *ptr) {
   return item;
 }
 
-HistItem *getHashHist(struct Hist *hist, char *ptr) {
+HistItem *getHashHist(struct Hist *hist, const char *ptr) {
   HistItem *item;
 
   if (hist == NULL || hist->list == NULL)

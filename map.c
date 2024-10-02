@@ -2,11 +2,13 @@
  * client-side image maps
  */
 #include "map.h"
+#include "url.h"
 #include "filepath.h"
 #include "alloc.h"
 #include "indep.h"
 #include "readbuffer.h"
 #include "buffer.h"
+#include "url.h"
 #include <math.h>
 
 struct MapList *searchMapList(struct Buffer *buf, char *name) {
@@ -22,13 +24,11 @@ struct MapList *searchMapList(struct Buffer *buf, char *name) {
 }
 
 struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
-  struct Anchor *a;
-  struct FormItemList *fi;
-
-  a = retrieveCurrentForm(buf);
+  auto a = retrieveCurrentForm(&buf->document);
   if (!a || !a->url)
     return NULL;
-  fi = (struct FormItemList *)a->url;
+
+  auto fi = (struct FormItemList *)a->url;
   if (fi->parent->method == FORM_METHOD_INTERNAL &&
       !Strcmp_charp(fi->parent->action, "map"))
     return a;

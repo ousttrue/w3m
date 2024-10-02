@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include "fm.h"
+#include "rc.h"
 #include "alloc.h"
 #include "indep.h"
 #include "ctrlcode.h"
@@ -22,12 +23,12 @@ static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(char *p, int lineno, int verbose) {
+void setKeymap(const char *p, int lineno, int verbose) {
   unsigned char *map = NULL;
-  char *s, *emsg;
+  char *emsg;
   int c, f;
 
-  s = getQWord(&p);
+  const char *s = getQWord(&p);
   c = getKey(s);
   if (c < 0) { /* error */
     if (lineno > 0)
@@ -117,10 +118,9 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   int fd;
   struct stat kstat;
   Str line;
-  char *p, *s, *emsg;
+  const char *p, *s, *emsg;
   int lineno;
   int verbose = 1;
-  extern int str_to_bool(char *value, int old);
 
   if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) ||
       (!force && kstat.st_mtime == current->st_mtime &&
@@ -174,7 +174,7 @@ void initKeymap(int force) {
   keymap_initialized = true;
 }
 
-int getFuncList(char *id) { return getHash_si(&functable, id, -1); }
+int getFuncList(const char *id) { return getHash_si(&functable, id, -1); }
 
 char *getKeyData(int key) {
   if (keyData == NULL)
@@ -309,7 +309,7 @@ static int getKey2(char **str) {
     return -1;
 }
 
-int getKey(char *s) {
+int getKey(const char *s) {
   int c, c2;
 
   c = getKey2(&s);
@@ -326,23 +326,22 @@ int getKey(char *s) {
   return c;
 }
 
-char *getWord(char **str) {
-  char *p, *s;
+const char *getWord(const char **str) {
 
-  p = *str;
+  auto p = *str;
   SKIP_BLANKS(p);
+  const char *s;
   for (s = p; *p && !IS_SPACE(*p) && *p != ';'; p++)
     ;
   *str = p;
   return Strnew_charp_n(s, p - s)->ptr;
 }
 
-char *getQWord(char **str) {
+const char *getQWord(const char **str) {
   Str tmp = Strnew();
-  char *p;
   int in_q = 0, in_dq = 0, esc = 0;
 
-  p = *str;
+  const char *p = *str;
   SKIP_BLANKS(p);
   for (; *p; p++) {
     if (esc) {

@@ -504,7 +504,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   return page_loaded(pu, f, page, t, real_type, t_buf);
 }
 
-struct Buffer *loadGeneralFile(char *path, struct Url *current, char *referer,
+struct Buffer *loadGeneralFile(const char *path, struct Url *current, const char *referer,
                                enum RG_FLAGS flag, struct FormList *request) {
   checkRedirection(NULL);
 

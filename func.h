@@ -15,4 +15,8 @@ typedef struct _FuncList {
   void (*func)();
 } FuncList;
 
-extern int getFuncList(char *id);
+int getFuncList(const char *id);
+const char *getWord(const char **str);
+const char *getQWord(const char **str);
+void setKeymap(const char *p, int lineno, int verbose);
+int getKey(const char *s);

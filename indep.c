@@ -217,7 +217,7 @@ static char xdigit[0x10] = "0123456789ABCDEF";
           (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1]))    \
        : -1)
 
-char *url_quote(char *str) {
+const char *url_quote(const char *str) {
   Str tmp = NULL;
   char *p;
 
@@ -392,7 +392,7 @@ char *w3m_conf_dir() { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }
 
 char *w3m_help_dir() { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }
 
-char *expandPath(char *name) {
+const char *expandPath(const char *name) {
   if (!name) {
     return nullptr;
   }

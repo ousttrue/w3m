@@ -211,44 +211,6 @@ static void writeBufferName(struct Buffer *buf, int n) {
 }
 
 /*
- * gotoLine: go to line number
- */
-void gotoLine(struct Buffer *buf, int n) {
-  char msg[32];
-  struct Line *l = buf->document.firstLine;
-
-  if (l == NULL)
-    return;
-  if (l->linenumber > n) {
-    /* FIXME: gettextize? */
-    sprintf(msg, "First line is #%ld", l->linenumber);
-    set_delayed_message(msg);
-    buf->document.topLine = buf->document.currentLine = l;
-    return;
-  }
-  if (buf->document.lastLine->linenumber < n) {
-    l = buf->document.lastLine;
-    /* FIXME: gettextize? */
-    sprintf(msg, "Last line is #%ld", buf->document.lastLine->linenumber);
-    set_delayed_message(msg);
-    buf->document.currentLine = l;
-    buf->document.topLine = lineSkip(buf, buf->document.currentLine,
-                                     -(buf->document.LINES - 1), false);
-    return;
-  }
-  for (; l != NULL; l = l->next) {
-    if (l->linenumber >= n) {
-      buf->document.currentLine = l;
-      if (n < buf->document.topLine->linenumber ||
-          buf->document.topLine->linenumber + buf->document.LINES <= n)
-        buf->document.topLine =
-            lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
-      break;
-    }
-  }
-}
-
-/*
  * gotoRealLine: go to real line number
  */
 void gotoRealLine(struct Buffer *buf, int n) {
@@ -658,32 +620,6 @@ int columnSkip(struct Buffer *buf, int offset) {
     return 0;
   buf->document.currentColumn = maxColumn;
   return 1;
-}
-
-struct Line *lineSkip(struct Buffer *buf, struct Line *line, int offset, int last) {
-  int i;
-  struct Line *l;
-
-  l = currentLineSkip(buf, line, offset, last);
-  if (!nextpage_topline)
-    for (i = buf->document.LINES - 1 -
-             (buf->document.lastLine->linenumber - l->linenumber);
-         i > 0 && l->prev != NULL; i--, l = l->prev)
-      ;
-  return l;
-}
-
-struct Line *currentLineSkip(struct Buffer *buf, struct Line *line, int offset, int last) {
-  struct Line *l = line;
-  if (offset == 0)
-    return l;
-  if (offset > 0)
-    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
-      ;
-  else
-    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-      ;
-  return l;
 }
 
 /* get last modified time */

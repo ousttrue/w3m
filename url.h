@@ -33,3 +33,6 @@ struct Url {
   char *label;
   int is_nocache;
 };
+
+const char *file_to_url(const char *file);
+void parseURL2(const char *url, struct Url *pu, struct Url *current);
