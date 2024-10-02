@@ -18,7 +18,6 @@
 #include "tty.h"
 #include "localcgi.h"
 #include "readbuffer.h"
-#include <signal.h>
 #include <fcntl.h>
 #ifdef _WIN32
 #else

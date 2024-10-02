@@ -17,3 +17,11 @@ bool getWindowSize(int *rows, int *cols) {
 }
 
 void term_setlinescols() { getWindowSize(&LINES, &COLS); }
+
+void resize_screen_if_updated(void) {
+  // need_resize_screen = false;
+  // term_setlinescols();
+  // scr_setup(LINES, COLS);
+  // if (CurrentTab)
+  //   displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}

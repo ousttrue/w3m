@@ -1,13 +1,12 @@
 #include "os.h"
-#include "fm.h"
 #include "strcase.h"
-#include <signal.h>
+#include "trap_jmp.h"
 #include <stdlib.h>
 #include <unwind.h>
 #include <process.h>
 
 void myExec(char *command) {
-  mySignal(SIGINT, SIG_DFL);
+  signal_int_default();
   execl("/bin/sh", "sh", "-c", command, NULL);
   exit(127);
 }

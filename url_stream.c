@@ -34,8 +34,6 @@
 #include <netdb.h>
 #endif
 
-#include <signal.h>
-#include <setjmp.h>
 #include <errno.h>
 #include <sys/stat.h>
 #ifdef _WIN32
@@ -69,9 +67,6 @@ int ai_family_order_table[7][3] = {
 
 struct TextList *NO_proxy_domains = nullptr;
 void url_stream_init() { NO_proxy_domains = newTextList(); }
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 /* XXX: note html.h SCM_ */
 static int DefaultPort[] = {
@@ -1603,7 +1598,6 @@ static int domain_match(char *pat, char *domain) {
 int check_no_proxy(char *domain) {
   struct TextListItem *tl;
   volatile int ret = 0;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
   if (NO_proxy_domains == NULL || NO_proxy_domains->nitem == 0 ||
       domain == NULL)
@@ -1618,11 +1612,11 @@ int check_no_proxy(char *domain) {
   /*
    * to check noproxy by network addr
    */
-  if (SETJMP(AbortLoading) != 0) {
+  if (from_jmp()) {
     ret = 0;
     goto end;
   }
-  TRAP_ON;
+  trap_on();
   {
 #ifndef INET6
     struct hostent *he;
@@ -1697,7 +1691,7 @@ int check_no_proxy(char *domain) {
 #endif /* INET6 */
   }
 end:
-  TRAP_OFF;
+  trap_off();
   return ret;
 }
 

@@ -10,7 +10,6 @@
 #include <time.h>
 
 extern void nulcmd(void);
-extern MySignalHandler intTrap(SIGNAL_ARG);
 extern void pgFore(void);
 extern void pgBack(void);
 extern void hpgFore(void);
@@ -341,7 +340,6 @@ extern int is_localhost(const char *host);
 extern char *file_to_url(char *file);
 extern char *url_unquote_conv0(char *url);
 #define url_unquote_conv(url, charset) url_unquote_conv0(url)
-extern void (*mySignal(int signal_number, void (*action)(int)))(int);
 
 extern char *FQDN(char *host);
 

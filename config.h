@@ -148,21 +148,6 @@
 
 #define HAVE_SIGSETJMP 1
 
-#define RETSIGTYPE void
-typedef RETSIGTYPE MySignalHandler;
-#define SIGNAL_ARG int _dummy /* XXX */
-#define SIGNAL_ARGLIST 0      /* XXX */
-
-#ifdef _WIN32
-#define SETJMP(env) setjmp(env)
-#define LONGJMP(env, val) longjmp(env, val)
-#define JMP_BUF jmp_buf
-#else
-#define SETJMP(env) sigsetjmp(env, 1)
-#define LONGJMP(env, val) siglongjmp(env, val)
-#define JMP_BUF sigjmp_buf
-#endif
-
 #ifndef HAVE_SRAND48
 #ifdef HAVE_SRANDOM
 #define srand48 srandom
@@ -178,7 +163,6 @@ typedef RETSIGTYPE MySignalHandler;
 
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
-#define DEV_NULL_PATH "/dev/null"
 #define CGI_EXTENSION ".cgi"
 
 

@@ -38,7 +38,6 @@ pub const SRCS = [_][]const u8{
 
     "mimehead.c",
     "regex.c",
-    "news.c",
     "func.c",
     "cookie.c",
     "history.c",

@@ -1,4 +1,5 @@
 #include "compression.h"
+#include "trap_jmp.h"
 #include "alloc.h"
 #include "terms.h"
 #include "etc.h"
@@ -145,7 +146,6 @@ char *filename_extension(char *path, bool is_url) {
 const char *uncompressed_file_type(const char *path, char **ext) {
   int len, slen;
   Str fn;
-  char *t0;
   struct compression_decoder *d;
 
   if (path == NULL)
@@ -167,7 +167,7 @@ const char *uncompressed_file_type(const char *path, char **ext) {
   Strshrink(fn, slen);
   if (ext)
     *ext = filename_extension(fn->ptr, 0);
-  t0 = guessContentType(fn->ptr);
+  auto t0 = guessContentType(fn->ptr);
   if (t0 == NULL)
     t0 = "text/plain";
   return t0;

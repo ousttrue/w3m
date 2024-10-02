@@ -2,6 +2,8 @@
 #include <sys/ioctl.h>
 #include <stdlib.h>
 
+static int need_resize_screen = false;
+
 #define MAX_LINE 200
 #define MAX_COLUMN 400
 int LINES = -1;

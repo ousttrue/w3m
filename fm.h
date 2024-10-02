@@ -187,18 +187,6 @@ global char ArgvIsURL init(true);
 global char MetaRefresh init(false);
 global char LocalhostOnly init(false);
 
-#define TRAP_ON                                                                \
-  if (TrapSignal) {                                                            \
-    prevtrap = mySignal(SIGINT, KeyAbort);                                     \
-    term_cbreak();                                                             \
-  }
-#define TRAP_OFF                                                               \
-  if (TrapSignal) {                                                            \
-    term_raw();                                                                \
-    if (prevtrap)                                                              \
-      mySignal(SIGINT, prevtrap);                                              \
-  }
-
 extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];

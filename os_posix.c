@@ -15,7 +15,6 @@
 #include "termsize.h"
 #include <stdlib.h>
 #include <unistd.h>
-#include <signal.h>
 #include "config.h"
 #include "fm.h"
 #include "proto.h"

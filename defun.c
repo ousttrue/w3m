@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "trap_jmp.h"
 #include "display.h"
 #include "html_parser.h"
 #include "loader.h"
@@ -25,8 +26,6 @@
 #include "tty.h"
 #include "defun.h"
 #include <stdio.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -46,15 +45,8 @@ struct Hist *URLHist;
 struct Hist *ShellHist;
 struct Hist *TextHist;
 
-static MySignalHandler SigAlarm(SIGNAL_ARG);
-
-static int need_resize_screen = false;
-static void resize_screen(void);
-
 static char *SearchString = NULL;
 int (*searchRoutine)(struct Buffer *, char *);
-
-JMP_BUF IntReturn;
 
 static void cmd_loadfile(char *path);
 static void cmd_loadURL(char *url, struct Url *current, char *referer,
@@ -116,9 +108,7 @@ void mainloop(char *line_str) {
 #endif
     {
       // do {
-      if (need_resize_screen) {
-        resize_screen();
-      }
+      resize_screen_if_updated();
       // }
       // while (tty_sleep_till_anykey(1, 0) <= 0);
     }
@@ -268,25 +258,6 @@ void delBuffer(struct Buffer *buf) {
 static void repBuffer(struct Buffer *oldbuf, struct Buffer *buf) {
   Firstbuf = replaceBuffer(Firstbuf, oldbuf, buf);
   Currentbuf = buf;
-}
-
-MySignalHandler intTrap(SIGNAL_ARG) { /* Interrupt catcher */
-  LONGJMP(IntReturn, 0);
-}
-
-MySignalHandler resize_hook(SIGNAL_ARG) {
-  need_resize_screen = true;
-#ifndef _WIN32
-  mySignal(SIGWINCH, resize_hook);
-#endif
-}
-
-static void resize_screen(void) {
-  need_resize_screen = false;
-  term_setlinescols();
-  scr_setup(LINES, COLS);
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /*
@@ -442,16 +413,14 @@ static int srchcore(char *volatile str, int (*func)(struct Buffer *, char *)) {
     return SR_NOTFOUND;
 
   str = conv_search_string(SearchString, DisplayCharset);
-  auto prevtrap = mySignal(SIGINT, intTrap);
   tty_crmode();
-  if (SETJMP(IntReturn) == 0) {
+  if (from_jmp()) {
     for (i = 0; i < PREC_NUM; i++) {
       result = func(Currentbuf, str);
       if (i < PREC_NUM - 1 && result & SR_FOUND)
         clear_mark(Currentbuf->document.currentLine);
     }
   }
-  mySignal(SIGINT, prevtrap);
   tty_raw();
   return result;
 }
@@ -735,10 +704,10 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  auto prevtrap = mySignal(SIGINT, intTrap);
+  // auto prevtrap = mySignal(SIGINT, intTrap);
   tty_crmode();
   buf = getshell(cmd);
-  mySignal(SIGINT, prevtrap);
+  // mySignal(SIGINT, prevtrap);
   tty_raw();
   if (buf == NULL) {
     /* FIXME: gettextize? */
@@ -1142,10 +1111,12 @@ static void _goLine(char *l) {
   if (((*l == '^') || (*l == '$')) && prec_num) {
     gotoRealLine(Currentbuf, prec_num);
   } else if (*l == '^') {
-    Currentbuf->document.topLine = Currentbuf->document.currentLine = Currentbuf->document.firstLine;
+    Currentbuf->document.topLine = Currentbuf->document.currentLine =
+        Currentbuf->document.firstLine;
   } else if (*l == '$') {
-    Currentbuf->document.topLine = lineSkip(Currentbuf, Currentbuf->document.lastLine,
-                                   -(Currentbuf->document.LINES + 1) / 2, true);
+    Currentbuf->document.topLine =
+        lineSkip(Currentbuf, Currentbuf->document.lastLine,
+                 -(Currentbuf->document.LINES + 1) / 2, true);
     Currentbuf->document.currentLine = Currentbuf->document.lastLine;
   } else
     gotoRealLine(Currentbuf, atoi(l));
@@ -1173,7 +1144,8 @@ DEFUN(goLineL, END, "Go to the last line") { _goLine("$"); }
 DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
   if (Currentbuf->document.firstLine == NULL)
     return;
-  while (Currentbuf->document.currentLine->prev && Currentbuf->document.currentLine->bpos)
+  while (Currentbuf->document.currentLine->prev &&
+         Currentbuf->document.currentLine->bpos)
     cursorUp0(Currentbuf, 1);
   Currentbuf->document.pos = 0;
   arrangeCursor(Currentbuf);
@@ -1184,7 +1156,8 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
 DEFUN(linend, LINE_END, "Go to the end of the line") {
   if (Currentbuf->document.firstLine == NULL)
     return;
-  while (Currentbuf->document.currentLine->next && Currentbuf->document.currentLine->next->bpos)
+  while (Currentbuf->document.currentLine->next &&
+         Currentbuf->document.currentLine->next->bpos)
     cursorDown0(Currentbuf, 1);
   Currentbuf->document.pos = Currentbuf->document.currentLine->len - 1;
   arrangeCursor(Currentbuf);
@@ -1325,10 +1298,11 @@ static void gotoLabel(char *label) {
   pushBuffer(buf);
   gotoLine(Currentbuf, al->start.line);
   if (label_topline)
-    Currentbuf->document.topLine = lineSkip(Currentbuf, Currentbuf->document.topLine,
-                                   Currentbuf->document.currentLine->linenumber -
-                                       Currentbuf->document.topLine->linenumber,
-                                   false);
+    Currentbuf->document.topLine =
+        lineSkip(Currentbuf, Currentbuf->document.topLine,
+                 Currentbuf->document.currentLine->linenumber -
+                     Currentbuf->document.topLine->linenumber,
+                 false);
   Currentbuf->document.pos = al->start.pos;
   arrangeCursor(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2930,7 +2904,8 @@ DEFUN(curlno, LINE_INFO, "Display current position in document") {
 
   if (l != NULL) {
     cur = l->real_linenumber;
-    col = l->bwidth + Currentbuf->document.currentColumn + Currentbuf->document.cursorX + 1;
+    col = l->bwidth + Currentbuf->document.currentColumn +
+          Currentbuf->document.cursorX + 1;
     while (l->next && l->next->bpos)
       l = l->next;
     if (l->width < 0)
@@ -3056,7 +3031,8 @@ void set_buffer_environ(struct Buffer *buf) {
     set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
   }
   auto l = buf->document.currentLine;
-  if (l && (buf != prev_buf || l != prev_line || buf->document.pos != prev_pos)) {
+  if (l &&
+      (buf != prev_buf || l != prev_line || buf->document.pos != prev_pos)) {
     struct Anchor *a;
     struct Url pu;
     char *s = GetWord(buf);
@@ -3079,8 +3055,10 @@ void set_buffer_environ(struct Buffer *buf) {
     else
       set_environ("W3M_CURRENT_FORM", "");
     set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-    set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->document.currentColumn + buf->document.cursorX + 1)->ptr);
+    set_environ(
+        "W3M_CURRENT_COLUMN",
+        Sprintf("%d", buf->document.currentColumn + buf->document.cursorX + 1)
+            ->ptr);
   } else if (!l) {
     set_environ("W3M_CURRENT_WORD", "");
     set_environ("W3M_CURRENT_LINK", "");
@@ -3620,7 +3598,8 @@ static void save_buffer_position(struct Buffer *buf) {
     return;
   if (b && b->top_linenumber == TOP_LINENUMBER(buf) &&
       b->cur_linenumber == CUR_LINENUMBER(buf) &&
-      b->currentColumn == buf->document.currentColumn && b->pos == buf->document.pos)
+      b->currentColumn == buf->document.currentColumn &&
+      b->pos == buf->document.pos)
     return;
   b = New(struct BufferPos);
   b->top_linenumber = TOP_LINENUMBER(buf);
@@ -3680,7 +3659,8 @@ DEFUN(redoPos, REDO, "Cancel the last undo") {
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
   if (Currentbuf->document.firstLine == NULL)
     return;
-  Currentbuf->document.currentLine = lineSkip(Currentbuf, Currentbuf->document.topLine, 0, false);
+  Currentbuf->document.currentLine =
+      lineSkip(Currentbuf, Currentbuf->document.topLine, 0, false);
   arrangeLine(Currentbuf);
   displayBuffer(Currentbuf, B_NORMAL);
 }

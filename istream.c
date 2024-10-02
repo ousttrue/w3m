@@ -5,7 +5,6 @@
 #include "istream.h"
 #include "termsize.h"
 #include "terms.h"
-#include <signal.h>
 #include <openssl/x509v3.h>
 #include <openssl/ssl.h>
 #include "growbuf.h"
@@ -319,9 +318,9 @@ int ISclose(union input_stream *stream) {
     if (stream->base.unclose) {
       return -1;
     }
-    auto prevtrap = mySignal(SIGINT, SIG_IGN);
     stream->base.close(stream->base.handle);
-    mySignal(SIGINT, prevtrap);
+    // auto prevtrap = mySignal(SIGINT, SIG_IGN);
+    // mySignal(SIGINT, prevtrap);
   }
   xfree(stream->base.stream.buf);
   xfree(stream);

@@ -23,11 +23,6 @@
 #include "terms.h"
 #include "file.h"
 #include "termsize.h"
-#include <signal.h>
-#include <setjmp.h>
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
@@ -2968,7 +2963,6 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
   Str lineBuf2 = Strnew();
   struct html_feed_environ htmlenv1;
   struct readbuffer obuf;
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
 
   symbol_width = symbol_width0 = 1;
 
@@ -2989,11 +2983,11 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
   cur_baseURL = baseURL(newBuf);
 #endif
 
-  if (SETJMP(AbortLoading) != 0) {
+  if (from_jmp()) {
     HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
     goto phase2;
   }
-  TRAP_ON;
+  trap_on();
 
   if (IStype(f->stream) != IST_ENCODED)
     f->stream = newEncodedStream(f->stream, f->encoding);
@@ -3018,7 +3012,7 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
     newBuf->buffername = htmlenv1.title;
 phase2:
   newBuf->trbyte = trbyte + linelen;
-  TRAP_OFF;
+  trap_off();
   HTMLlineproc2(newBuf, htmlenv1.buf);
 }
 
@@ -3116,23 +3110,22 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
  */
 struct Buffer *loadHTMLString(Str page) {
   struct URLFile f;
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   struct Buffer *newBuf;
 
   init_stream(&f, SCM_LOCAL, newStrStream(page));
 
   newBuf = newBuffer(INIT_BUFFER_WIDTH);
-  if (SETJMP(AbortLoading) != 0) {
-    TRAP_OFF;
+  if (from_jmp() != 0) {
+    trap_off();
     discardBuffer(newBuf);
     UFclose(&f);
     return NULL;
   }
-  TRAP_ON;
+  trap_on();
 
   loadHTMLstream(&f, newBuf, NULL, true);
 
-  TRAP_OFF;
+  trap_off();
   UFclose(&f);
   newBuf->document.topLine = newBuf->document.firstLine;
   newBuf->document.lastLine = newBuf->document.currentLine;
@@ -3154,7 +3147,7 @@ struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
   if (buf->buffername == NULL || buf->buffername[0] == '\0') {
     buf->buffername = checkHeader(buf, "Subject:");
     if (buf->buffername == NULL && buf->filename != NULL)
-      buf->buffername = conv_from_system(lastFileName(buf->filename));
+      buf->buffername = (char *)conv_from_system(lastFileName(buf->filename));
   }
   if (buf->currentURL.scheme == SCM_UNKNOWN)
     buf->currentURL.scheme = f->scheme;
@@ -3179,15 +3172,14 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
   Str tmpf;
   int64_t linelen = 0, trbyte = 0;
   Lineprop *propBuffer = NULL;
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
 
   if (newBuf == NULL)
     newBuf = newBuffer(INIT_BUFFER_WIDTH);
 
-  if (SETJMP(AbortLoading) != 0) {
+  if (from_jmp() != 0) {
     goto _end;
   }
-  TRAP_ON;
+  trap_on();
 
   if (newBuf->sourcefile == NULL &&
       (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
@@ -3216,11 +3208,11 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
     ++nlines;
     Strchop(lineBuf2);
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
+    addnewline(&newBuf->document, lineBuf2->ptr, propBuffer, lineBuf2->length,
                FOLD_BUFFER_WIDTH, nlines);
   }
 _end:
-  TRAP_OFF;
+  trap_off();
   newBuf->document.topLine = newBuf->document.firstLine;
   newBuf->document.lastLine = newBuf->document.currentLine;
   newBuf->document.currentLine = newBuf->document.firstLine;

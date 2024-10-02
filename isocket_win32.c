@@ -6,11 +6,6 @@
 #include "fm.h"
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#include <signal.h>
-#include <setjmp.h>
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 SocketType socketInvalid() { return INVALID_SOCKET; }
 
@@ -30,23 +25,16 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
   int a1, a2, a3, a4;
   unsigned long adr;
 #endif /* not INET6 */
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
   term_message(Sprintf("Opening socket...")->ptr);
-  if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: user abort\n");
-#endif
+  if (from_jmp()) {
     if (sock != INVALID_SOCKET) {
       closesocket(sock);
     }
     goto error;
   }
-  TRAP_ON;
+  trap_on();
   if (hostname == NULL) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);
-#endif
     goto error;
   }
 
@@ -171,11 +159,11 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
   }
 #endif /* not INET6 */
 
-  TRAP_OFF;
+  trap_off();
   *pOut = sock;
   return true;
 error:
-  TRAP_OFF;
+  trap_off();
   return false;
 }
 

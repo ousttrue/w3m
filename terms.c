@@ -14,10 +14,8 @@
 #include "termsize.h"
 #include "tty.h"
 #include "scr.h"
-#include "config.h"
 
 #include <stdio.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -35,14 +33,6 @@
 #include "fm.h"
 
 bool QuietMessage = false;
-
-MySignalHandler reset_exit(SIGNAL_ARG);
-MySignalHandler reset_error_exit(SIGNAL_ARG);
-MySignalHandler error_dump(SIGNAL_ARG);
-
-#ifndef SIGIOT
-#define SIGIOT SIGABRT
-#endif /* not SIGIOT */
 
 char gcmap[96];
 
@@ -75,43 +65,7 @@ void term_reset() {
   tty_close();
 }
 
-static MySignalHandler reset_exit_with_value(SIGNAL_ARG, int rval) {
-  term_reset();
-  w3m_exit(rval);
-}
-
-MySignalHandler reset_error_exit(SIGNAL_ARG) {
-  reset_exit_with_value(SIGNAL_ARGLIST, 1);
-}
-
-MySignalHandler reset_exit(SIGNAL_ARG) {
-  reset_exit_with_value(SIGNAL_ARGLIST, 0);
-}
-
-MySignalHandler error_dump(SIGNAL_ARG) {
-  mySignal(SIGIOT, SIG_DFL);
-  term_reset();
-  abort();
-}
-
 bool fmInitialized = false;
-
-static void set_int() {
-#if _WIN32
-#else
-  mySignal(SIGHUP, reset_exit);
-  mySignal(SIGQUIT, reset_exit);
-#endif
-  mySignal(SIGINT, reset_exit);
-  mySignal(SIGTERM, reset_exit);
-  mySignal(SIGILL, error_dump);
-  mySignal(SIGIOT, error_dump);
-  mySignal(SIGFPE, error_dump);
-#ifdef SIGBUS
-  mySignal(SIGBUS, error_dump);
-#endif /* SIGBUS */
-       /* mySignal(SIGSEGV, error_dump); */
-}
 
 static void term_setgraphchar() {
   for (int c = 0; c < 96; c++) {
@@ -180,8 +134,8 @@ int term_init() {
     }
   }
 
-  set_int();
-  // getTCstr();
+  signals_init();
+
   term_setgraphchar();
   termcon_initialize();
 
@@ -407,73 +361,6 @@ void term_message(const char *msg) {
     fputs(msg, stderr);
     fputc('\n', stderr);
   }
-}
-
-static void reset_signals(void) {
-#ifdef SIGHUP
-  mySignal(SIGHUP, SIG_DFL); /* terminate process */
-#endif
-  mySignal(SIGINT, SIG_DFL); /* terminate process */
-#ifdef SIGQUIT
-  mySignal(SIGQUIT, SIG_DFL); /* terminate process */
-#endif
-  mySignal(SIGTERM, SIG_DFL); /* terminate process */
-  mySignal(SIGILL, SIG_DFL);  /* create core image */
-  mySignal(SIGIOT, SIG_DFL);  /* create core image */
-  mySignal(SIGFPE, SIG_DFL);  /* create core image */
-#ifdef SIGBUS
-  mySignal(SIGBUS, SIG_DFL); /* create core image */
-#endif                       /* SIGBUS */
-#ifndef _WIN32
-  mySignal(SIGCHLD, SIG_IGN);
-  mySignal(SIGPIPE, SIG_IGN);
-#endif
-}
-
-static void close_all_fds_except(int i, int f) {
-  switch (i) { /* fall through */
-  case 0:
-    dup2(open(DEV_NULL_PATH, O_RDONLY), 0);
-  case 1:
-    dup2(open(DEV_NULL_PATH, O_WRONLY), 1);
-  case 2:
-    dup2(open(DEV_NULL_PATH, O_WRONLY), 2);
-  }
-  /* close all other file descriptors (socket, ...) */
-  for (i = 3; i < FOPEN_MAX; i++) {
-    if (i != f)
-      close(i);
-  }
-}
-
-#define SETPGRP_VOID 1
-#ifdef _WIN32
-#define SETPGRP()
-#else
-#ifdef HAVE_SETPGRP
-#ifdef SETPGRP_VOID
-#define SETPGRP() setpgrp()
-#else
-#define SETPGRP() setpgrp(0, 0)
-#endif
-#else /* no HAVE_SETPGRP; OS/2 EMX */
-#define SETPGRP() setpgid(0, 0)
-#endif
-#endif
-
-void setup_child(int child, int i, int f) {
-  reset_signals();
-  mySignal(SIGINT, SIG_IGN);
-  if (!child)
-    SETPGRP();
-  /*
-   * I don't know why but close_tty() sometimes interrupts loadGeneralFile()
-   * in loadImage() and corrupt image data can be cached in ~/.w3m.
-   */
-  close_all_fds_except(i, f);
-  QuietMessage = true;
-  fmInitialized = false;
-  TrapSignal = false;
 }
 
 Str term_inputpwd() {

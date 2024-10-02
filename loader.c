@@ -68,7 +68,6 @@ static int checkRedirection(struct Url *pu) {
 static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
                                   const char *t, const char *real_type,
                                   struct Buffer *t_buf) {
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
   if (page) {
     auto tmp = tmpfname(TMPF_SRC, ".html");
     auto src = fopen(tmp->ptr, "w");
@@ -180,7 +179,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     if (pu.label) {
       if (proc == loadHTMLBuffer) {
         struct Anchor *a;
-        a = searchURLLabel(b, pu.label);
+        a = searchURLLabel(&b->document, pu.label);
         if (a != NULL) {
           gotoLine(b, a->start.line);
           if (label_topline)
@@ -214,8 +213,6 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
                         struct Buffer *b, struct Buffer *t_buf,
                         bool searchHeader, bool searchHeader_through, Str realm,
                         Str uname, Str pwd) {
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-
   {
     const char *sc_redirect;
     parseURL2(tpath, &pu, current);

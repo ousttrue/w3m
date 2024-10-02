@@ -26,7 +26,6 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
 bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd);
 #endif
 
-void setup_child(int child, int i, int f);
 
 void term_err_message(const char *s);
 const char *term_message_to_html();

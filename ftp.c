@@ -15,8 +15,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <Str.h>
-#include <signal.h>
-#include <setjmp.h>
 #include <time.h>
 #include <fcntl.h>
 
@@ -52,9 +50,6 @@ typedef struct _FTP {
 } *FTP;
 
 static struct _FTP current_ftp = {NULL, 0, NULL, NULL, NULL, NULL, NULL};
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 static Str ftp_command(FTP ftp, char *cmd, char *arg, int *status) {
   Str tmp;
@@ -444,10 +439,11 @@ Str loadFTPDir0(struct Url *pu) {
   Str tmp;
   int status;
   volatile int sv_type;
-  char *realpathname, *fn, *q;
+  char *realpathname;
+  const char *fn;
+  const char *q;
   char **flist;
   int i, nfile, nfile_max;
-  MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
   if (current_ftp.data == NULL)
     return NULL;
   tmp = ftp_command(&current_ftp, "SYST", NULL, &status);
@@ -488,7 +484,7 @@ Str loadFTPDir0(struct Url *pu) {
       "<html>\n<head>\n<base href=\"", fn, "\">\n<title>", q,
       "</title>\n</head>\n<body>\n<h1>Index of ", q, "</h1>\n", NULL);
 
-  if (SETJMP(AbortLoading) != 0) {
+  if (from_jmp()) {
     if (sv_type == UNIXLIKE_SERVER)
       Strcat_charp(FTPDIRtmp, "</a></pre>\n");
     else
@@ -496,7 +492,7 @@ Str loadFTPDir0(struct Url *pu) {
     Strcat_charp(FTPDIRtmp, "<p>Transfer Interrupted!\n");
     goto ftp_end;
   }
-  TRAP_ON;
+  trap_on();
 
   if (sv_type == UNIXLIKE_SERVER)
     Strcat_charp(FTPDIRtmp, "<pre>\n");
@@ -591,7 +587,7 @@ Str loadFTPDir0(struct Url *pu) {
 
 ftp_end:
   Strcat_charp(FTPDIRtmp, "</body>\n</html>\n");
-  TRAP_OFF;
+  trap_off();
   closeFTPdata(current_ftp.data);
   return FTPDIRtmp;
 }

@@ -2,15 +2,10 @@
 #include "fm.h"
 #include "terms.h"
 #include "alloc.h"
-#include <signal.h>
-#include <setjmp.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 SocketType socketInvalid() { return -1; }
 
@@ -33,15 +28,12 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
   MySignalHandler (*volatile prevtrap)(SIGNAL_ARG) = NULL;
 
   term_message(Sprintf("Opening socket...")->ptr);
-  if (SETJMP(AbortLoading) != 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket() failed. reason: user abort\n");
-#endif
+  if (from_jmp()) {
     if (sock >= 0)
       close(sock);
     goto error;
   }
-  TRAP_ON;
+  trap_on();
   if (hostname == NULL) {
 #ifdef SOCK_DEBUG
     sock_log("openSocket() failed. reason: Bad hostname \"%s\"\n", hostname);

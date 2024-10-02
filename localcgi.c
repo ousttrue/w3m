@@ -1,5 +1,6 @@
 #include "localcgi.h"
 #include "url.h"
+#include "trap_jmp.h"
 #include "alloc.h"
 #include "filepath.h"
 #include "app.h"
@@ -294,12 +295,8 @@ FILE *localcgi_post(char *uri, char *qstr, struct FormList *request,
                     char *referer) {
   FILE *fr = NULL, *fw = NULL;
   int status;
-  pid_t pid;
   char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
-#ifdef HAVE_CHDIR
-  char *cgi_dir;
-#endif
-  char *cgi_basename;
+  const char *cgi_dir;
 
   status = cgi_filename(uri, &file, &name, &path_info);
   if (check_local_cgi(file, status) < 0)
@@ -313,11 +310,9 @@ FILE *localcgi_post(char *uri, char *qstr, struct FormList *request,
   }
   if (qstr)
     uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
-#ifdef HAVE_CHDIR
   cgi_dir = mydirname(file);
-#endif
-  cgi_basename = mybasename(file);
-  pid = open_pipe_rw(&fr, NULL);
+  auto cgi_basename = mybasename(file);
+  auto pid = open_pipe_rw(&fr, NULL);
   /* Don't invoke gc after here, or the program might crash in some platforms */
   if (pid < 0) {
     if (fw)

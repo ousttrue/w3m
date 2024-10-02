@@ -19,16 +19,11 @@
 #include "myctype.h"
 #include "localcgi.h"
 #include "fm.h"
-#include <signal.h>
-#include <setjmp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 
 #define SHELLBUFFERNAME "*Shellout*"
-
-static JMP_BUF AbortLoading;
-static MySignalHandler KeyAbort(SIGNAL_ARG) { LONGJMP(AbortLoading, 1); }
 
 #define SAVE_BUF_SIZE 1536
 
@@ -281,24 +276,22 @@ struct Buffer *getshell(char *cmd) {
 }
 
 int save2tmp(struct URLFile uf, char *tmpf) {
-  FILE *ff;
   int check;
   int64_t linelen = 0, trbyte = 0;
-  MySignalHandler (*prevtrap)(SIGNAL_ARG) = NULL;
-  static JMP_BUF env_bak;
   int retval = 0;
   char *buf = NULL;
 
-  ff = fopen(tmpf, "wb");
+  auto ff = fopen(tmpf, "wb");
   if (ff == NULL) {
     /* fclose(f); */
     return -1;
   }
-  memcpy(env_bak, AbortLoading, sizeof(JMP_BUF));
-  if (SETJMP(AbortLoading) != 0) {
+
+  if (from_jmp()) {
     goto _end;
   }
-  TRAP_ON;
+  trap_on();
+
   check = 0;
   {
     int count;
@@ -313,9 +306,9 @@ int save2tmp(struct URLFile uf, char *tmpf) {
       term_showProgress(&linelen, &trbyte, uf.current_content_length);
     }
   }
+
 _end:
-  memcpy(AbortLoading, env_bak, sizeof(JMP_BUF));
-  TRAP_OFF;
+  trap_off();
   xfree(buf);
   fclose(ff);
   return retval;
