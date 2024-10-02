@@ -77,40 +77,6 @@ int getMetaRefreshParam(const char *q, Str *refresh_uri) {
 extern char *NullLine;
 extern Lineprop NullProp[];
 
-static char *_size_unit[] = {"b",  "kb", "Mb", "Gb", "Tb", "Pb",
-                             "Eb", "Zb", "Bb", "Yb", NULL};
-
-char *convert_size(int64_t size, int usefloat) {
-  float csize;
-  int sizepos = 0;
-  char **sizes = _size_unit;
-
-  csize = (float)size;
-  while (csize >= 999.495 && sizes[sizepos + 1]) {
-    csize = csize / 1024.0;
-    sizepos++;
-  }
-  return Sprintf(usefloat ? "%.3g%s" : "%.0f%s",
-                 floor(csize * 100.0 + 0.5) / 100.0, sizes[sizepos])
-      ->ptr;
-}
-
-char *convert_size2(int64_t size1, int64_t size2, int usefloat) {
-  char **sizes = _size_unit;
-  float csize, factor = 1;
-  int sizepos = 0;
-
-  csize = (float)((size1 > size2) ? size1 : size2);
-  while (csize / factor >= 999.495 && sizes[sizepos + 1]) {
-    factor *= 1024.0;
-    sizepos++;
-  }
-  return Sprintf(usefloat ? "%.3g/%.3g%s" : "%.0f/%.0f%s",
-                 floor(size1 / factor * 100.0 + 0.5) / 100.0,
-                 floor(size2 / factor * 100.0 + 0.5) / 100.0, sizes[sizepos])
-      ->ptr;
-}
-
 static Str conv_symbol(struct Line *l) {
   Str tmp = NULL;
   char *p = l->lineBuf, *ep = p + l->len;

@@ -19,7 +19,7 @@ void term_refresh();
 void term_message(const char *msg);
 Str term_inputpwd();
 void term_input(const char *msg);
-char *term_inputAnswer(char *prompt);
+const char *term_inputAnswer(const char *prompt);
 void term_showProgress(int64_t *linelen, int64_t *trbyte,
                        int64_t current_content_length);
 #ifndef _WIN32

@@ -134,28 +134,7 @@ struct URLFile;
 
 struct html_feed_environ;
 struct readbuffer;
-extern void save_fonteffect(struct html_feed_environ *h_env,
-                            struct readbuffer *obuf);
-extern void restore_fonteffect(struct html_feed_environ *h_env,
-                               struct readbuffer *obuf);
 struct parsed_tag;
-extern Str process_img(struct parsed_tag *tag, int width);
-extern Str process_anchor(struct parsed_tag *tag, char *tagbuf);
-extern Str process_input(struct parsed_tag *tag);
-extern Str process_button(struct parsed_tag *tag);
-extern Str process_n_button(void);
-extern Str process_select(struct parsed_tag *tag);
-extern Str process_n_select(void);
-extern void feed_select(char *str);
-extern void process_option(void);
-extern Str process_textarea(struct parsed_tag *tag, int width);
-extern Str process_n_textarea(void);
-extern void feed_textarea(char *str);
-extern Str process_form(struct parsed_tag *tag);
-extern Str process_n_form(void);
-
-extern char *convert_size(int64_t size, int usefloat);
-extern char *convert_size2(int64_t size1, int64_t size2, int usefloat);
 
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);

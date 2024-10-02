@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "text.h"
 #include "termcon.h"
 #include "display.h"
 #include "trap_jmp.h"
@@ -385,11 +386,12 @@ void term_input(const char *msg) {
   }
 }
 
-char *term_inputAnswer(char *prompt) {
-  char *ans;
+const char *term_inputAnswer(const char *prompt) {
 
   if (QuietMessage)
     return "n";
+
+  const char *ans;
   if (fmInitialized) {
     tty_raw();
     ans = inputChar(prompt);
