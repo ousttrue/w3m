@@ -176,12 +176,6 @@ typedef RETSIGTYPE MySignalHandler;
 #define lstat stat
 #endif
 
-#if defined(__DJGPP__)
-#define DEFAULT_TERM "dosansi"
-#else
-#define DEFAULT_TERM 0 /* XXX */
-#endif
-
 #define W3MBOOKMARK_CMDNAME "w3mbookmark"
 #define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
 #define DEV_NULL_PATH "/dev/null"

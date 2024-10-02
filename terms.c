@@ -46,9 +46,7 @@ MySignalHandler error_dump(SIGNAL_ARG);
 
 char gcmap[96];
 
-void term_puts(const char *s) {
-  tty_puts(s);
-}
+void term_puts(const char *s) { tty_puts(s); }
 
 #define W3M_TERM_INFO(name, title, mouse) name, title
 
@@ -100,7 +98,7 @@ MySignalHandler error_dump(SIGNAL_ARG) {
 
 bool fmInitialized = false;
 
-void set_int() {
+static void set_int() {
 #if _WIN32
 #else
   mySignal(SIGHUP, reset_exit);
@@ -134,7 +132,13 @@ static void term_setgraphchar() {
   }
 }
 
-void getTCstr() {
+#if defined(__DJGPP__)
+#define DEFAULT_TERM "dosansi"
+#else
+#define DEFAULT_TERM 0 /* XXX */
+#endif
+
+static void getTCstr() {
 
   auto ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
   if (ent == NULL) {

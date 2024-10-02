@@ -9,6 +9,7 @@ pub const SRCS = [_][]const u8{
     "html_renderer.c",
     "html_textarea.c",
     "utf8.c",
+    "termcon_termcap.c",
 
     "compression.c",
     "growbuf.c",
