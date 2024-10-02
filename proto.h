@@ -135,29 +135,8 @@ struct URLFile;
 struct html_feed_environ;
 struct readbuffer;
 struct parsed_tag;
-
-extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
-extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
-extern int save2tmp(struct URLFile uf, char *tmpf);
-extern int doFileMove(char *tmpf, char *defstr);
-extern int checkCopyFile(char *path1, char *path2);
 union input_stream;
-extern int checkSaveFile(union input_stream *stream, char *path);
 
-extern struct Buffer *newBuffer(int width);
-extern struct Buffer *nullBuffer(void);
-extern void clearBuffer(struct Buffer *buf);
-extern void discardBuffer(struct Buffer *buf);
-extern struct Buffer *namedBuffer(struct Buffer *first, char *name);
-extern struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
-extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
-                                    struct Buffer *newbuf);
-extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
-extern void gotoRealLine(struct Buffer *buf, int n);
-extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
-                                   struct Buffer *currentbuf, char *selectchar);
-extern void reshapeBuffer(struct Buffer *buf);
-extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 extern void addChar(char c, Lineprop mode);
 extern struct Buffer *message_list_panel(void);
 

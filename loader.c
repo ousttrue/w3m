@@ -65,6 +65,12 @@ static int checkRedirection(struct Url *pu) {
   return true;
 }
 
+static int doFileMove(char *tmpf, char *defstr) {
+  int ret = doFileCopy(tmpf, defstr);
+  unlink(tmpf);
+  return ret;
+}
+
 static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
                                   const char *t, const char *real_type,
                                   struct Buffer *t_buf) {
@@ -183,9 +189,10 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
         if (a != NULL) {
           gotoLine(b, a->start.line);
           if (label_topline)
-            b->document.topLine = lineSkip(
-                b, b->document.topLine,
-                b->document.currentLine->linenumber - b->document.topLine->linenumber, false);
+            b->document.topLine = lineSkip(b, b->document.topLine,
+                                           b->document.currentLine->linenumber -
+                                               b->document.topLine->linenumber,
+                                           false);
           b->document.pos = a->start.pos;
           arrangeCursor(b);
         }
@@ -504,8 +511,9 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   return page_loaded(pu, f, page, t, real_type, t_buf);
 }
 
-struct Buffer *loadGeneralFile(const char *path, struct Url *current, const char *referer,
-                               enum RG_FLAGS flag, struct FormList *request) {
+struct Buffer *loadGeneralFile(const char *path, struct Url *current,
+                               const char *referer, enum RG_FLAGS flag,
+                               struct FormList *request) {
   checkRedirection(NULL);
 
   struct Url pu;

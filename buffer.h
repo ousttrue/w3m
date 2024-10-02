@@ -111,3 +111,20 @@ struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, &Currentbuf->document)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(&Currentbuf->document, sbufp)
 
+extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
+extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
+extern struct Buffer *newBuffer(int width);
+extern struct Buffer *nullBuffer(void);
+extern void clearBuffer(struct Buffer *buf);
+extern void discardBuffer(struct Buffer *buf);
+extern struct Buffer *namedBuffer(struct Buffer *first, char *name);
+extern struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
+extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
+                                    struct Buffer *newbuf);
+extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
+extern void gotoRealLine(struct Buffer *buf, int n);
+extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
+                                   struct Buffer *currentbuf, char *selectchar);
+extern void reshapeBuffer(struct Buffer *buf);
+extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
+

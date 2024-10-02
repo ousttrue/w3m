@@ -74,3 +74,4 @@ extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
                               enum HttpStatus *status);
 
 struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme);
+extern int save2tmp(struct URLFile uf, char *tmpf);
