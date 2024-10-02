@@ -26,7 +26,7 @@
 /*
  * Display some lines.
  */
-static Line *cline = NULL;
+static struct Line *cline = NULL;
 static int ccolumn = -1;
 
 static int ulmode = 0, somode = 0, bomode = 0;
@@ -38,8 +38,8 @@ static struct Buffer *save_current_buf = NULL;
 static void drawAnchorCursor(struct Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(struct Buffer *buf, int n);
-static Line *redrawLine(struct Buffer *buf, Line *l, int i);
-static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
+static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i);
+static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
                             int epos);
 static void do_effects(Lineprop m);
 
@@ -90,12 +90,12 @@ static Str make_lastline_message(struct Buffer *buf) {
 
   if (displayLink) {
     {
-      struct Anchor *a = retrieveCurrentAnchor(buf);
+      struct Anchor *a = retrieveCurrentAnchor(&buf->document);
       char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        struct Anchor *a_img = retrieveCurrentImg(buf);
+        struct Anchor *a_img = retrieveCurrentImg(&buf->document);
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
@@ -222,13 +222,11 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
 static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
                               int hseq, int prevhseq, int tline, int eline,
                               int active) {
-  int i, j;
-  Line *l;
-  struct Anchor *an;
+  int i;
 
-  l = buf->document.topLine;
-  for (j = 0; j < al->nanchor; j++) {
-    an = &al->anchors[j];
+  auto l = buf->document.topLine;
+  for (int j = 0; j < al->nanchor; j++) {
+    auto an = &al->anchors[j];
     if (an->start.line < tline)
       continue;
     if (an->start.line >= eline)
@@ -242,7 +240,7 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
     if (hseq >= 0 && an->hseq == hseq) {
       int start_pos = an->start.pos;
       int end_pos = an->end.pos;
-      for (i = an->start.pos; i < an->end.pos; i++) {
+      for (int i = an->start.pos; i < an->end.pos; i++) {
         if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
           if (start_pos == i)
             start_pos = i + 1;
@@ -277,7 +275,7 @@ static void drawAnchorCursor(struct Buffer *buf) {
   if (!buf->document.href && !buf->document.formitem)
     return;
 
-  an = retrieveCurrentAnchor(buf);
+  an = retrieveCurrentAnchor(&buf->document);
   if (!an)
     an = retrieveCurrentMap(buf);
   if (an)
@@ -301,7 +299,7 @@ static void drawAnchorCursor(struct Buffer *buf) {
 }
 
 static void redrawNLine(struct Buffer *buf, int n) {
-  Line *l;
+  struct Line *l;
   int i;
 
   if (nTab > 1) {
@@ -406,7 +404,7 @@ void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
 
 void addChar(char c, Lineprop mode) { addMChar((const uint8_t *)&c, mode, 1); }
 
-static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
+static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->document.currentColumn;
   char *p;
@@ -518,7 +516,7 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   return l;
 }
 
-static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
+static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
                             int epos) {
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->document.currentColumn;
@@ -679,7 +677,7 @@ void cursorUp0(struct Buffer *buf, int n) {
 }
 
 void cursorUp(struct Buffer *buf, int n) {
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   if (buf->document.firstLine == NULL)
     return;
   while (buf->document.currentLine->prev && buf->document.currentLine->bpos)
@@ -708,7 +706,7 @@ void cursorDown0(struct Buffer *buf, int n) {
 }
 
 void cursorDown(struct Buffer *buf, int n) {
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   if (buf->document.firstLine == NULL)
     return;
   while (buf->document.currentLine->next &&
@@ -728,7 +726,7 @@ void cursorDown(struct Buffer *buf, int n) {
 }
 
 void cursorUpDown(struct Buffer *buf, int n) {
-  Line *cl = buf->document.currentLine;
+  struct Line *cl = buf->document.currentLine;
 
   if (buf->document.firstLine == NULL)
     return;
@@ -739,7 +737,7 @@ void cursorUpDown(struct Buffer *buf, int n) {
 
 void cursorRight(struct Buffer *buf, int n) {
   int i, delta = 1, cpos, vpos2;
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   Lineprop *p;
 
   if (buf->document.firstLine == NULL)
@@ -775,7 +773,7 @@ void cursorRight(struct Buffer *buf, int n) {
 
 void cursorLeft(struct Buffer *buf, int n) {
   int i, delta = 1, cpos;
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   Lineprop *p;
 
   if (buf->document.firstLine == NULL)

@@ -93,18 +93,11 @@ struct Buffer {
 
 struct Url *baseURL(struct Buffer *buf);
 void chkURLBuffer(struct Buffer *buf);
-void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
-                int width, int nlines);
 int columnSkip(struct Buffer *buf, int offset);
-Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last);
-Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last);
+struct Line;
+struct Line *lineSkip(struct Buffer *buf, struct Line *line, int offset, int last);
+struct Line *currentLineSkip(struct Buffer *buf, struct Line *line, int offset, int last);
 char *last_modified(struct Buffer *buf);
-struct Anchor *registerHref(struct Buffer *buf, char *url, char *target,
-                            char *referer, char *title, unsigned char key,
-                            int line, int pos);
-struct Anchor *registerName(struct Buffer *buf, char *url, int line, int pos);
-struct Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
-                           int pos);
 struct parsed_tag;
 struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
                             struct parsed_tag *tag, int line, int pos);

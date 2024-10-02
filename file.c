@@ -135,7 +135,7 @@ void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,
 
 int getMetaRefreshParam(const char *q, Str *refresh_uri) {
   int refresh_interval;
-  char *r;
+  // char *r;
   Str s_tmp = NULL;
 
   if (q == NULL || refresh_uri == NULL)
@@ -150,7 +150,7 @@ int getMetaRefreshParam(const char *q, Str *refresh_uri) {
       q += 4;
       if (*q == '\"' || *q == '\'') /* " or ' */
         q++;
-      r = q;
+      auto r = q;
       while (*r && !IS_SPACE(*r) && *r != ';')
         r++;
       s_tmp = Strnew_charp_n(q, r - q);
@@ -211,7 +211,7 @@ char *convert_size2(int64_t size1, int64_t size2, int usefloat) {
       ->ptr;
 }
 
-static Str conv_symbol(Line *l) {
+static Str conv_symbol(struct Line *l) {
   Str tmp = NULL;
   char *p = l->lineBuf, *ep = p + l->len;
   Lineprop *pr = l->propBuf;
@@ -237,7 +237,7 @@ static Str conv_symbol(Line *l) {
 /*
  * saveBuffer: write buffer to file
  */
-static void _saveBuffer(struct Buffer *buf, Line *l, FILE *f, int cont) {
+static void _saveBuffer(struct Buffer *buf, struct Line *l, FILE *f, int cont) {
   Str tmp;
   int is_html = false;
 
@@ -260,7 +260,7 @@ void saveBuffer(struct Buffer *buf, FILE *f, int cont) {
 }
 
 void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
-  Line *l = buf->document.firstLine;
+  struct Line *l = buf->document.firstLine;
 
   while (l != NULL && l->real_linenumber == 0)
     l = l->next;

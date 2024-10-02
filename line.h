@@ -11,20 +11,20 @@ extern int ShowEffect;
  */
 
 #define P_CHARTYPE 0x3f00
-#define WTF_TYPE_ASCII		0x0
-#define WTF_TYPE_CTRL		0x1
-#define WTF_TYPE_WCHAR1		0x2
-#define WTF_TYPE_WCHAR2		0x4
-#define WTF_TYPE_WIDE		0x8
-#define WTF_TYPE_UNKNOWN	0x10
-#define PC_ASCII	(WTF_TYPE_ASCII << 8)
-#define PC_CTRL		(WTF_TYPE_CTRL << 8)
-#define PC_WCHAR1	(WTF_TYPE_WCHAR1 << 8)
-#define PC_WCHAR2	(WTF_TYPE_WCHAR2 << 8)
-#define PC_KANJI	(WTF_TYPE_WIDE << 8)
-#define PC_KANJI1	(PC_WCHAR1 | PC_KANJI)
-#define PC_KANJI2	(PC_WCHAR2 | PC_KANJI)
-#define PC_UNKNOWN	(WTF_TYPE_UNKNOWN << 8)
+#define WTF_TYPE_ASCII 0x0
+#define WTF_TYPE_CTRL 0x1
+#define WTF_TYPE_WCHAR1 0x2
+#define WTF_TYPE_WCHAR2 0x4
+#define WTF_TYPE_WIDE 0x8
+#define WTF_TYPE_UNKNOWN 0x10
+#define PC_ASCII (WTF_TYPE_ASCII << 8)
+#define PC_CTRL (WTF_TYPE_CTRL << 8)
+#define PC_WCHAR1 (WTF_TYPE_WCHAR1 << 8)
+#define PC_WCHAR2 (WTF_TYPE_WCHAR2 << 8)
+#define PC_KANJI (WTF_TYPE_WIDE << 8)
+#define PC_KANJI1 (PC_WCHAR1 | PC_KANJI)
+#define PC_KANJI2 (PC_WCHAR2 | PC_KANJI)
+#define PC_UNKNOWN (WTF_TYPE_UNKNOWN << 8)
 // #define PC_UNDEF	(WTF_TYPE_UNDEF << 8)
 
 #define PC_SYMBOL 0x8000
@@ -69,7 +69,7 @@ extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
 
 #define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
 
-typedef struct Line {
+struct Line {
   char *lineBuf;
   Lineprop *propBuf;
   struct Line *next;
@@ -82,7 +82,7 @@ typedef struct Line {
   int size;
   int bpos;
   int bwidth;
-} Line;
+};
 
 #define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
 // #define get_mclen(c) 1
@@ -90,7 +90,7 @@ typedef struct Line {
 // #define get_strwidth(c) strlen(c)
 // #define get_Str_strwidth(c) ((c)->length)
 
-int columnLen(Line *line, int column);
-int columnPos(Line *line, int column);
+int columnLen(struct Line *line, int column);
+int columnPos(struct Line *line, int column);
 
 Str checkType(Str s, Lineprop **oprop);

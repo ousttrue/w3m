@@ -1,7 +1,7 @@
 // rendererd document
 #pragma once
+#include "line.h"
 
-struct Line;
 struct AnchorList;
 struct LinkList;
 struct FormList;
@@ -9,6 +9,7 @@ struct MapList;
 struct HmarkerList;
 
 struct Document {
+  const char *title;
   short width;
   short height;
   struct Line *firstLine;
@@ -35,3 +36,6 @@ struct Document {
   struct HmarkerList *hmarklist;
   struct HmarkerList *imarklist;
 };
+
+void addnewline(struct Document *buf, char *line, Lineprop *prop, int pos,
+                int width, int nlines);

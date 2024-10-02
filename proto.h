@@ -302,19 +302,8 @@ extern Str loadFTPDir0(struct Url *pu);
 extern void closeFTP(void);
 extern void disconnectFTP(void);
 
-extern struct AnchorList *putAnchor(struct AnchorList *al, char *url,
-                                    char *target, struct Anchor **anchor_return,
-                                    char *referer, char *title,
-                                    unsigned char key, int line, int pos);
-
 extern int onAnchor(struct Anchor *a, int line, int pos);
-extern struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos);
-extern struct Anchor *retrieveCurrentAnchor(struct Buffer *buf);
-extern struct Anchor *retrieveCurrentImg(struct Buffer *buf);
-extern struct Anchor *retrieveCurrentForm(struct Buffer *buf);
-extern struct Anchor *searchAnchor(struct AnchorList *al, char *str);
-extern struct Anchor *searchURLLabel(struct Buffer *buf, char *url);
-extern void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos);
+extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos, int epos);
 extern char *reAnchor(struct Buffer *buf, char *re);
 extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
 extern struct Anchor *closest_next_anchor(struct AnchorList *a,

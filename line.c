@@ -51,7 +51,7 @@ int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
   return realColumn[pos];
 }
 
-int columnLen(Line *line, int column) {
+int columnLen(struct Line *line, int column) {
   int i, j;
 
   for (i = 0, j = 0; i < line->len;) {
@@ -63,7 +63,7 @@ int columnLen(Line *line, int column) {
   return line->len;
 }
 
-int columnPos(Line *line, int column) {
+int columnPos(struct Line *line, int column) {
   int i;
 
   for (i = 1; i < line->len; i++) {
@@ -80,7 +80,7 @@ Str checkType(Str s, Lineprop **oprop) {
   static Lineprop *prop_buffer = NULL;
   static int prop_size = 0;
   char *str = s->ptr, *endp = &s->ptr[s->length], *bs = NULL;
-  int do_copy = false;
+  bool do_copy = false;
   int i;
   int plen = 0, clen;
 

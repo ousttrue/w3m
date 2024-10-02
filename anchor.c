@@ -62,27 +62,26 @@ struct AnchorList *putAnchor(struct AnchorList *al, char *url, char *target,
   return al;
 }
 
-struct Anchor *registerHref(struct Buffer *buf, char *url, char *target,
+struct Anchor *registerHref(struct Document *doc, char *url, char *target,
                             char *referer, char *title, unsigned char key,
                             int line, int pos) {
   struct Anchor *a;
-  buf->document.href = putAnchor(buf->document.href, url, target, &a, referer,
-                                 title, key, line, pos);
+  doc->href =
+      putAnchor(doc->href, url, target, &a, referer, title, key, line, pos);
   return a;
 }
 
-struct Anchor *registerName(struct Buffer *buf, char *url, int line, int pos) {
+struct Anchor *registerName(struct Document *doc, char *url, int line,
+                            int pos) {
   struct Anchor *a;
-  buf->document.name =
-      putAnchor(buf->document.name, url, NULL, &a, NULL, NULL, '\0', line, pos);
+  doc->name = putAnchor(doc->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
   return a;
 }
 
-struct Anchor *registerImg(struct Buffer *buf, char *url, char *title, int line,
-                           int pos) {
+struct Anchor *registerImg(struct Document *doc, char *url, char *title,
+                           int line, int pos) {
   struct Anchor *a;
-  buf->document.img =
-      putAnchor(buf->document.img, url, NULL, &a, NULL, title, '\0', line, pos);
+  doc->img = putAnchor(doc->img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
 }
 
@@ -138,37 +137,29 @@ struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos) {
   return NULL;
 }
 
-struct Anchor *retrieveCurrentAnchor(struct Buffer *buf) {
-  if (buf->document.currentLine == NULL)
+struct Anchor *retrieveCurrentAnchor(struct Document *doc) {
+  if (doc->currentLine == NULL)
     return NULL;
-  return retrieveAnchor(buf->document.href,
-                        buf->document.currentLine->linenumber,
-                        buf->document.pos);
+  return retrieveAnchor(doc->href, doc->currentLine->linenumber, doc->pos);
 }
 
-struct Anchor *retrieveCurrentImg(struct Buffer *buf) {
-  if (buf->document.currentLine == NULL)
+struct Anchor *retrieveCurrentImg(struct Document *doc) {
+  if (doc->currentLine == NULL)
     return NULL;
-  return retrieveAnchor(buf->document.img,
-                        buf->document.currentLine->linenumber,
-                        buf->document.pos);
+  return retrieveAnchor(doc->img, doc->currentLine->linenumber, doc->pos);
 }
 
-struct Anchor *retrieveCurrentForm(struct Buffer *buf) {
-  if (buf->document.currentLine == NULL)
+struct Anchor *retrieveCurrentForm(struct Document *doc) {
+  if (doc->currentLine == NULL)
     return NULL;
-  return retrieveAnchor(buf->document.formitem,
-                        buf->document.currentLine->linenumber,
-                        buf->document.pos);
+  return retrieveAnchor(doc->formitem, doc->currentLine->linenumber, doc->pos);
 }
 
-struct Anchor *searchAnchor(struct AnchorList *al, char *str) {
-  int i;
-  struct Anchor *a;
+struct Anchor *searchAnchor(struct AnchorList *al, const char *str) {
   if (al == NULL)
     return NULL;
-  for (i = 0; i < al->nanchor; i++) {
-    a = &al->anchors[i];
+  for (int i = 0; i < al->nanchor; i++) {
+    auto a = &al->anchors[i];
     if (a->hseq < 0)
       continue;
     if (!strcmp(a->url, str))
@@ -177,8 +168,8 @@ struct Anchor *searchAnchor(struct AnchorList *al, char *str) {
   return NULL;
 }
 
-struct Anchor *searchURLLabel(struct Buffer *buf, char *url) {
-  return searchAnchor(buf->document.name, url);
+struct Anchor *searchURLLabel(struct Document *doc, const char *url) {
+  return searchAnchor(doc->name, url);
 }
 
 static struct Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2,
@@ -186,7 +177,7 @@ static struct Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2,
   Str tmp;
 
   tmp = Strnew_charp_n(p1, p2 - p1);
-  return registerHref(buf, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0',
+  return registerHref(&buf->document, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0',
                       line, pos);
 }
 
@@ -260,7 +251,7 @@ static void reseq_anchor(struct Buffer *buf) {
   reseq_anchor0(buf->document.formitem, seqmap);
 }
 
-static char *reAnchorPos(struct Buffer *buf, Line *l, char *p1, char *p2,
+static char *reAnchorPos(struct Buffer *buf, struct Line *l, char *p1, char *p2,
                          struct Anchor *(*anchorproc)(struct Buffer *, char *,
                                                       char *, int, int)) {
   struct Anchor *a;
@@ -301,7 +292,7 @@ static char *reAnchorPos(struct Buffer *buf, Line *l, char *p1, char *p2,
   return p2;
 }
 
-void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos) {
+void reAnchorWord(struct Buffer *buf, struct Line *l, int spos, int epos) {
   reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
@@ -310,7 +301,7 @@ void reAnchorWord(struct Buffer *buf, Line *l, int spos, int epos) {
 static char *reAnchorAny(struct Buffer *buf, char *re,
                          struct Anchor *(*anchorproc)(struct Buffer *, char *,
                                                       char *, int, int)) {
-  Line *l;
+  struct Line *l;
   char *p = NULL, *p1, *p2;
 
   if (re == NULL || *re == '\0') {
@@ -449,7 +440,7 @@ void shiftAnchorPosition(struct AnchorList *al, struct HmarkerList *hl,
 void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
   int i, j, k, col, ecol, pos;
   struct Anchor a_form, *a;
-  Line *l, *ls;
+  struct Line *l, *ls;
 
   if (al == NULL || al->nanchor == 0)
     return;
@@ -504,7 +495,7 @@ void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
 char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
                     struct Anchor *a) {
   int hseq, i;
-  Line *l;
+  struct Line *l;
   Str tmp = NULL;
   char *p, *ep;
 

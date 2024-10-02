@@ -295,7 +295,7 @@ static void resize_screen(void) {
 
 static void nscroll(int n, int mode) {
   struct Buffer *buf = Currentbuf;
-  Line *top = buf->document.topLine, *cur = buf->document.currentLine;
+  struct Line *top = buf->document.topLine, *cur = buf->document.currentLine;
   int lnum, tlnum, llnum, diff_n;
 
   if (buf->document.firstLine == NULL)
@@ -424,7 +424,7 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-static void clear_mark(Line *l) {
+static void clear_mark(struct Line *l) {
   int pos;
   if (!l)
     return;
@@ -469,7 +469,7 @@ static void disp_srchresult(int result, char *prompt, char *str) {
 
 static int dispincsrch(int ch, Str buf, Lineprop *prop) {
   static struct Buffer sbuf;
-  static Line *currentLine;
+  static struct Line *currentLine;
   static int pos;
   char *str;
   int do_next_search = false;
@@ -627,7 +627,7 @@ DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward") { srch_nxtprv(0); }
 DEFUN(srchprv, SEARCH_PREV, "Continue search backward") { srch_nxtprv(1); }
 
 static void shiftvisualpos(struct Buffer *buf, int shift) {
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   buf->document.visualpos -= shift;
   if (buf->document.visualpos - l->bwidth >= buf->document.COLS)
     buf->document.visualpos = l->bwidth + buf->document.COLS - 1;
@@ -665,7 +665,7 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right") {
 
 DEFUN(col1R, RIGHT, "Shift screen one column right") {
   struct Buffer *buf = Currentbuf;
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   int j, column, n = searchKeyNum();
 
   if (l == NULL)
@@ -682,7 +682,7 @@ DEFUN(col1R, RIGHT, "Shift screen one column right") {
 
 DEFUN(col1L, LEFT, "Shift screen one column left") {
   struct Buffer *buf = Currentbuf;
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   int j, n = searchKeyNum();
 
   if (l == NULL)
@@ -907,8 +907,8 @@ static int is_wordchar(wc_uint32 c) { return wc_is_ucs_alnum(c); }
 static int is_wordchar(int c) { return IS_ALNUM(c); }
 #endif
 
-static int prev_nonnull_line(Line *line) {
-  Line *l;
+static int prev_nonnull_line(struct Line *line) {
+  struct Line *l;
 
   for (l = line; l != NULL && l->len == 0; l = l->prev)
     ;
@@ -923,7 +923,7 @@ static int prev_nonnull_line(Line *line) {
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word") {
   char *lb;
-  Line *pline, *l;
+  struct Line *pline, *l;
   int ppos;
   int i, n = searchKeyNum();
 
@@ -972,8 +972,8 @@ end:
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
-static int next_nonnull_line(Line *line) {
-  Line *l;
+static int next_nonnull_line(struct Line *line) {
+  struct Line *l;
 
   for (l = line; l != NULL && l->len == 0; l = l->next)
     ;
@@ -989,7 +989,7 @@ static int next_nonnull_line(Line *line) {
 
 DEFUN(movRW, NEXT_WORD, "Move to the next word") {
   char *lb;
-  Line *pline, *l;
+  struct Line *pline, *l;
   int ppos;
   int i, n = searchKeyNum();
 
@@ -1192,7 +1192,7 @@ DEFUN(linend, LINE_END, "Go to the end of the line") {
 }
 
 static int cur_real_linenumber(struct Buffer *buf) {
-  Line *l, *cur = buf->document.currentLine;
+  struct Line *l, *cur = buf->document.currentLine;
   int n;
 
   if (!cur)
@@ -1308,19 +1308,16 @@ static struct Buffer *loadLink(char *url, char *target, char *referer,
 }
 
 static void gotoLabel(char *label) {
-  struct Buffer *buf;
-  struct Anchor *al;
-  int i;
-
-  al = searchURLLabel(Currentbuf, label);
+  auto al = searchURLLabel(&Currentbuf->document, label);
   if (al == NULL) {
     /* FIXME: gettextize? */
     disp_message(Sprintf("%s is not found", label)->ptr, true);
     return;
   }
-  buf = newBuffer(Currentbuf->document.width);
+
+  auto buf = newBuffer(Currentbuf->document.width);
   copyBuffer(buf, Currentbuf);
-  for (i = 0; i < MAX_LB; i++)
+  for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
   buf->currentURL.label = allocStr(label, -1);
   pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
@@ -1380,7 +1377,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     _followForm(false);
     return;
   }
-  a = retrieveCurrentAnchor(Currentbuf);
+  a = retrieveCurrentAnchor(&Currentbuf->document);
   if (a == NULL) {
     _followForm(false);
     return;
@@ -1434,7 +1431,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   if (Currentbuf->document.firstLine == NULL)
     return;
 
-  a = retrieveCurrentImg(Currentbuf);
+  a = retrieveCurrentImg(&Currentbuf->document);
   if (a == NULL)
     return;
   /* FIXME: gettextize? */
@@ -1618,7 +1615,7 @@ static void _followForm(int submit) {
   if (Currentbuf->document.firstLine == NULL)
     return;
 
-  a = retrieveCurrentForm(Currentbuf);
+  a = retrieveCurrentForm(&Currentbuf->document);
   if (a == NULL)
     return;
   fi = (struct FormItemList *)a->url;
@@ -1897,9 +1894,9 @@ static void _nextA(int visited) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  an = retrieveCurrentAnchor(&Currentbuf->document);
   if (visited != true && an == NULL)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->document);
 
   y = Currentbuf->document.currentLine->linenumber;
   x = Currentbuf->document.pos;
@@ -1977,9 +1974,9 @@ static void _prevA(int visited) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  an = retrieveCurrentAnchor(&Currentbuf->document);
   if (visited != true && an == NULL)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->document);
 
   y = Currentbuf->document.currentLine->linenumber;
   x = Currentbuf->document.pos;
@@ -2048,7 +2045,7 @@ _end:
 static void nextX(int d, int dy) {
   struct HmarkerList *hl = Currentbuf->document.hmarklist;
   struct Anchor *an, *pan;
-  Line *l;
+  struct Line *l;
   int i, x, y, n = searchKeyNum();
 
   if (Currentbuf->document.firstLine == NULL)
@@ -2056,9 +2053,9 @@ static void nextX(int d, int dy) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  an = retrieveCurrentAnchor(&Currentbuf->document);
   if (an == NULL)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->document);
 
   l = Currentbuf->document.currentLine;
   x = Currentbuf->document.pos;
@@ -2110,9 +2107,9 @@ static void nextY(int d) {
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf);
+  an = retrieveCurrentAnchor(&Currentbuf->document);
   if (an == NULL)
-    an = retrieveCurrentForm(Currentbuf);
+    an = retrieveCurrentForm(&Currentbuf->document);
 
   x = Currentbuf->document.pos;
   y = Currentbuf->document.currentLine->linenumber + d;
@@ -2269,7 +2266,7 @@ static void goURL0(char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    a = retrieveCurrentAnchor(Currentbuf);
+    a = retrieveCurrentAnchor(&Currentbuf->document);
     if (a) {
       char *a_url;
       parseURL2(a->url, &p_url, current);
@@ -2429,7 +2426,7 @@ void follow_map(struct parsed_tagarg *arg) {
   int x, y;
   struct Url p_url;
 
-  an = retrieveCurrentImg(Currentbuf);
+  an = retrieveCurrentImg(&Currentbuf->document);
   x = Currentbuf->document.cursorX + Currentbuf->document.rootX;
   y = Currentbuf->document.cursorY + Currentbuf->document.rootY;
   a = follow_map_menu(Currentbuf, name, an, x, y);
@@ -2592,11 +2589,11 @@ static void _peekURL(int only_img) {
     offset = 0;
   }
   s = NULL;
-  a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf));
+  a = (only_img ? NULL : retrieveCurrentAnchor(&Currentbuf->document));
   if (a == NULL) {
-    a = (only_img ? NULL : retrieveCurrentForm(Currentbuf));
+    a = (only_img ? NULL : retrieveCurrentForm(&Currentbuf->document));
     if (a == NULL) {
-      a = retrieveCurrentImg(Currentbuf);
+      a = retrieveCurrentImg(&Currentbuf->document);
       if (a == NULL)
         return;
     } else
@@ -2918,7 +2915,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
 
   if (Currentbuf->document.firstLine == NULL)
     return;
-  a = retrieveCurrentAnchor(Currentbuf);
+  a = retrieveCurrentAnchor(&Currentbuf->document);
   if (a == NULL)
     return;
   parseURL2(a->url, &pu, baseURL(Currentbuf));
@@ -2927,7 +2924,7 @@ DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
 
 /* show current line number and number of lines in the entire document */
 DEFUN(curlno, LINE_INFO, "Display current position in document") {
-  Line *l = Currentbuf->document.currentLine;
+  struct Line *l = Currentbuf->document.currentLine;
   Str tmp;
   int cur = 0, all = 0, col = 0, len = 0;
 
@@ -2967,7 +2964,7 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
 
 static char *getCurWord(struct Buffer *buf, int *spos, int *epos) {
   char *p;
-  Line *l = buf->document.currentLine;
+  struct Line *l = buf->document.currentLine;
   int b, e;
 
   *spos = 0;
@@ -3045,12 +3042,12 @@ DEFUN(dictwordat, DICT_WORD_AT,
 
 void set_buffer_environ(struct Buffer *buf) {
   static struct Buffer *prev_buf = NULL;
-  static Line *prev_line = NULL;
+  static struct Line *prev_line = NULL;
   static int prev_pos = -1;
-  Line *l;
 
   if (buf == NULL)
     return;
+
   if (buf != prev_buf) {
     set_environ("W3M_SOURCEFILE", buf->sourcefile);
     set_environ("W3M_FILENAME", buf->filename);
@@ -3058,25 +3055,25 @@ void set_buffer_environ(struct Buffer *buf) {
     set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
     set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
   }
-  l = buf->document.currentLine;
+  auto l = buf->document.currentLine;
   if (l && (buf != prev_buf || l != prev_line || buf->document.pos != prev_pos)) {
     struct Anchor *a;
     struct Url pu;
     char *s = GetWord(buf);
     set_environ("W3M_CURRENT_WORD", s ? s : "");
-    a = retrieveCurrentAnchor(buf);
+    a = retrieveCurrentAnchor(&buf->document);
     if (a) {
       parseURL2(a->url, &pu, baseURL(buf));
       set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
-    a = retrieveCurrentImg(buf);
+    a = retrieveCurrentImg(&buf->document);
     if (a) {
       parseURL2(a->url, &pu, baseURL(buf));
       set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");
-    a = retrieveCurrentForm(buf);
+    a = retrieveCurrentForm(&buf->document);
     if (a)
       set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList *)a->url));
     else
@@ -3438,7 +3435,7 @@ static void followTab(struct TabBuffer *tab) {
   struct Buffer *buf;
   struct Anchor *a;
 
-  a = retrieveCurrentAnchor(Currentbuf);
+  a = retrieveCurrentAnchor(&Currentbuf->document);
   if (a == NULL)
     return;
 
@@ -3640,7 +3637,7 @@ static void save_buffer_position(struct Buffer *buf) {
 
 static void resetPos(struct BufferPos *b) {
   struct Buffer buf;
-  Line top, cur;
+  struct Line top, cur;
 
   top.linenumber = b->top_linenumber;
   cur.linenumber = b->cur_linenumber;

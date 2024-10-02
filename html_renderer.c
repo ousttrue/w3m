@@ -47,7 +47,7 @@ static int ex_efct(int ex) {
   return effect;
 }
 
-static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
+static void addLink(struct Document *doc, struct parsed_tag *tag) {
   char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL, *rev = NULL;
 
   parsedtag_get_value(tag, ATTR_HREF, &href);
@@ -78,15 +78,17 @@ static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
   l->ctype = ctype;
   l->type = type;
   l->next = NULL;
-  if (buf->document.linklist) {
+  if (doc->linklist) {
     struct LinkList *i;
-    for (i = buf->document.linklist; i->next; i = i->next)
+    for (i = doc->linklist; i->next; i = i->next)
       ;
     i->next = l;
-  } else
-    buf->document.linklist = l;
+  } else {
+    doc->linklist = l;
+  }
 }
-void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
+
+void HTMLlineproc2body(struct Buffer *buf, GetLineFunc feed, int llimit) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -217,7 +219,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           id = NULL;
           if (parsedtag_get_value(tag, ATTR_NAME, &id)) {
             id = url_quote(id);
-            registerName(buf, id, currentLn(buf), pos);
+            registerName(&buf->document, id, currentLn(buf), pos);
           }
           if (parsedtag_get_value(tag, ATTR_HREF, &p))
             p = url_quote(remove_space(p));
@@ -229,8 +231,8 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
           if (hseq > 0)
-            buf->document.hmarklist =
-                putHmarker(buf->document.hmarklist, currentLn(buf), pos, hseq - 1);
+            buf->document.hmarklist = putHmarker(buf->document.hmarklist,
+                                                 currentLn(buf), pos, hseq - 1);
           else if (hseq < 0) {
             int h = -hseq - 1;
             if (buf->document.hmarklist && h < buf->document.hmarklist->nmark &&
@@ -243,7 +245,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           }
           if (p) {
             effect |= PE_ANCHOR;
-            a_href = registerHref(buf, p, q, r, s, *t, currentLn(buf), pos);
+            a_href = registerHref(&buf->document, p, q, r, s, *t, currentLn(buf), pos);
             a_href->hseq = ((hseq > 0) ? hseq : -hseq) - 1;
             a_href->slave = (hseq > 0) ? false : true;
           }
@@ -265,7 +267,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           break;
 
         case HTML_LINK:
-          addLink(buf, tag);
+          addLink(&buf->document, tag);
           break;
 
         case HTML_IMG_ALT:
@@ -273,7 +275,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             s = NULL;
             parsedtag_get_value(tag, ATTR_TITLE, &s);
             p = url_quote(remove_space(p));
-            a_img = registerImg(buf, p, s, currentLn(buf), pos);
+            a_img = registerImg(&buf->document, p, s, currentLn(buf), pos);
           }
           effect |= PE_IMAGE;
           break;
@@ -304,8 +306,8 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            buf->document.hmarklist =
-                putHmarker(buf->document.hmarklist, currentLn(buf), hpos, hseq - 1);
+            buf->document.hmarklist = putHmarker(
+                buf->document.hmarklist, currentLn(buf), hpos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
@@ -396,9 +398,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             if (!buf->baseURL)
               buf->baseURL = New(struct Url);
             parseURL2(p, buf->baseURL, &buf->currentURL);
-#if defined(USE_M17N) || defined(USE_IMAGE)
             base = buf->baseURL;
-#endif
           }
           if (parsedtag_get_value(tag, ATTR_TARGET, &p))
             buf->baseTarget = url_quote(p);
@@ -441,7 +441,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           break;
         case HTML_TITLE_ALT:
           if (parsedtag_get_value(tag, ATTR_TITLE, &p))
-            buf->buffername = html_unquote(p);
+            buf->document.title = html_unquote(p);
           break;
         case HTML_SYMBOL:
           effect |= PC_SYMBOL;
@@ -456,7 +456,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
     }
     /* end of processing for one line */
     if (!internal)
-      addnewline(buf, outc, outp, pos, -1, nlines);
+      addnewline(&buf->document, outc, outp, pos, -1, nlines);
     if (internal == HTML_N_INTERNAL)
       internal = 0;
     if (str != endp) {

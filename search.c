@@ -6,15 +6,15 @@
 #include <errno.h>
 #include <unistd.h>
 
-static void set_mark(Line *l, int pos, int epos) {
+static void set_mark(struct Line *l, int pos, int epos) {
   for (; pos < epos && pos < l->size; pos++)
     l->propBuf[pos] |= PE_MARK;
 }
 
 int forwardSearch(struct Buffer *buf, char *str) {
   char *p, *first, *last;
-  Line *l, *begin;
-  int wrapped = false;
+  struct Line *l, *begin;
+  bool wrapped = false;
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {
@@ -79,8 +79,8 @@ int forwardSearch(struct Buffer *buf, char *str) {
 
 int backwardSearch(struct Buffer *buf, char *str) {
   char *p, *q, *found, *found_last, *first, *last;
-  Line *l, *begin;
-  int wrapped = false;
+  struct Line *l, *begin;
+  bool wrapped = false;
   int pos;
 
   if ((p = regexCompile(str, IgnoreCase)) != NULL) {

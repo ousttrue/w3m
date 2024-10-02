@@ -25,8 +25,6 @@ int REV_LB[MAX_LB] = {
     LB_INFO,
     LB_N_SOURCE,
 };
-char *NullLine = "";
-Lineprop NullProp[] = {0};
 
 /*
  * Buffer creation
@@ -70,7 +68,8 @@ struct Buffer *nullBuffer(void) {
  * clearBuffer: clear buffer content
  */
 void clearBuffer(struct Buffer *buf) {
-  buf->document.firstLine = buf->document.topLine = buf->document.currentLine = buf->document.lastLine = NULL;
+  buf->document.firstLine = buf->document.topLine = buf->document.currentLine =
+      buf->document.lastLine = NULL;
   buf->document.allLine = 0;
 }
 
@@ -216,7 +215,7 @@ static void writeBufferName(struct Buffer *buf, int n) {
  */
 void gotoLine(struct Buffer *buf, int n) {
   char msg[32];
-  Line *l = buf->document.firstLine;
+  struct Line *l = buf->document.firstLine;
 
   if (l == NULL)
     return;
@@ -233,7 +232,8 @@ void gotoLine(struct Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->document.lastLine->linenumber);
     set_delayed_message(msg);
     buf->document.currentLine = l;
-    buf->document.topLine = lineSkip(buf, buf->document.currentLine, -(buf->document.LINES - 1), false);
+    buf->document.topLine = lineSkip(buf, buf->document.currentLine,
+                                     -(buf->document.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
@@ -241,7 +241,8 @@ void gotoLine(struct Buffer *buf, int n) {
       buf->document.currentLine = l;
       if (n < buf->document.topLine->linenumber ||
           buf->document.topLine->linenumber + buf->document.LINES <= n)
-        buf->document.topLine = lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
+        buf->document.topLine =
+            lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
       break;
     }
   }
@@ -252,7 +253,7 @@ void gotoLine(struct Buffer *buf, int n) {
  */
 void gotoRealLine(struct Buffer *buf, int n) {
   char msg[32];
-  Line *l = buf->document.firstLine;
+  struct Line *l = buf->document.firstLine;
 
   if (l == NULL)
     return;
@@ -270,7 +271,8 @@ void gotoRealLine(struct Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->document.lastLine->real_linenumber);
     set_delayed_message(msg);
     buf->document.currentLine = l;
-    buf->document.topLine = lineSkip(buf, buf->document.currentLine, -(buf->document.LINES - 1), false);
+    buf->document.topLine = lineSkip(buf, buf->document.currentLine,
+                                     -(buf->document.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
@@ -278,7 +280,8 @@ void gotoRealLine(struct Buffer *buf, int n) {
       buf->document.currentLine = l;
       if (n < buf->document.topLine->real_linenumber ||
           buf->document.topLine->real_linenumber + buf->document.LINES <= n)
-        buf->document.topLine = lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
+        buf->document.topLine =
+            lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
       break;
     }
   }
@@ -481,7 +484,7 @@ void reshapeBuffer(struct Buffer *buf) {
 
   buf->document.height = LASTLINE + 1;
   if (buf->document.firstLine && sbuf.document.firstLine) {
-    Line *cur = sbuf.document.currentLine;
+    struct Line *cur = sbuf.document.currentLine;
     int n;
 
     buf->document.pos = sbuf.document.pos + cur->bpos;
@@ -491,7 +494,8 @@ void reshapeBuffer(struct Buffer *buf) {
       gotoRealLine(buf, cur->real_linenumber);
     else
       gotoLine(buf, cur->linenumber);
-    n = (buf->document.currentLine->linenumber - buf->document.topLine->linenumber) -
+    n = (buf->document.currentLine->linenumber -
+         buf->document.topLine->linenumber) -
         (cur->linenumber - sbuf.document.topLine->linenumber);
     if (n) {
       buf->document.topLine = lineSkip(buf, buf->document.topLine, n, false);
@@ -532,7 +536,7 @@ struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf) {
 int writeBufferCache(struct Buffer *buf) {
   Str tmp;
   FILE *cache = NULL;
-  Line *l;
+  struct Line *l;
 
   if (buf->savecache)
     return -1;
@@ -575,7 +579,7 @@ _error1:
 
 int readBufferCache(struct Buffer *buf) {
   FILE *cache;
-  Line *l = NULL, *prevl = NULL, *basel = NULL;
+  struct Line *l = NULL, *prevl = NULL, *basel = NULL;
   long lnum = 0, clnum, tlnum;
 
   if (buf->savecache == NULL)
@@ -591,7 +595,7 @@ int readBufferCache(struct Buffer *buf) {
   while (!feof(cache)) {
     lnum++;
     prevl = l;
-    l = New(Line);
+    l = New(struct Line);
     l->prev = prevl;
     if (prevl)
       prevl->next = l;
@@ -630,88 +634,15 @@ int readBufferCache(struct Buffer *buf) {
   return 0;
 }
 
-static void addnewline2(struct Buffer *buf, char *line, Lineprop *prop, int pos,
-                        int nlines) {
-  Line *l;
-  l = New(Line);
-  l->next = NULL;
-  l->lineBuf = line;
-  l->propBuf = prop;
-  l->len = pos;
-  l->width = -1;
-  l->size = pos;
-  l->bpos = 0;
-  l->bwidth = 0;
-  l->prev = buf->document.currentLine;
-  if (buf->document.currentLine) {
-    l->next = buf->document.currentLine->next;
-    buf->document.currentLine->next = l;
-  } else
-    l->next = NULL;
-  if (buf->document.lastLine == NULL || buf->document.lastLine == buf->document.currentLine)
-    buf->document.lastLine = l;
-  buf->document.currentLine = l;
-  if (buf->document.firstLine == NULL)
-    buf->document.firstLine = l;
-  l->linenumber = ++buf->document.allLine;
-  if (nlines < 0) {
-    /*     l->real_linenumber = l->linenumber;     */
-    l->real_linenumber = 0;
-  } else {
-    l->real_linenumber = nlines;
-  }
-  l = NULL;
-}
-
-void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
-                int width, int nlines) {
-  char *s;
-  Lineprop *p;
-  Line *l;
-  int i, bpos, bwidth;
-
-  if (pos > 0) {
-    s = allocStr(line, pos);
-    p = NewAtom_N(Lineprop, pos);
-    memcpy((void *)p, (const void *)prop, pos * sizeof(Lineprop));
-  } else {
-    s = NullLine;
-    p = NullProp;
-  }
-  addnewline2(buf, s, p, pos, nlines);
-  if (pos <= 0 || width <= 0)
-    return;
-  bpos = 0;
-  bwidth = 0;
-  while (1) {
-    l = buf->document.currentLine;
-    l->bpos = bpos;
-    l->bwidth = bwidth;
-    i = columnLen(l, width);
-    if (i == 0) {
-      i++;
-    }
-    l->len = i;
-    l->width = COLPOS(l, l->len);
-    if (pos <= i)
-      return;
-    bpos += l->len;
-    bwidth += l->width;
-    s += i;
-    p += i;
-    pos -= i;
-    addnewline2(buf, s, p, pos, nlines);
-  }
-}
-
 int columnSkip(struct Buffer *buf, int offset) {
   int i, maxColumn;
   int column = buf->document.currentColumn + offset;
   int nlines = buf->document.LINES + 1;
-  Line *l;
+  struct Line *l;
 
   maxColumn = 0;
-  for (i = 0, l = buf->document.topLine; i < nlines && l != NULL; i++, l = l->next) {
+  for (i = 0, l = buf->document.topLine; i < nlines && l != NULL;
+       i++, l = l->next) {
     if (l->width < 0)
       l->width = COLPOS(l, l->len);
     if (l->width - 1 > maxColumn)
@@ -729,20 +660,21 @@ int columnSkip(struct Buffer *buf, int offset) {
   return 1;
 }
 
-Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
+struct Line *lineSkip(struct Buffer *buf, struct Line *line, int offset, int last) {
   int i;
-  Line *l;
+  struct Line *l;
 
   l = currentLineSkip(buf, line, offset, last);
   if (!nextpage_topline)
-    for (i = buf->document.LINES - 1 - (buf->document.lastLine->linenumber - l->linenumber);
+    for (i = buf->document.LINES - 1 -
+             (buf->document.lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
       ;
   return l;
 }
 
-Line *currentLineSkip(struct Buffer *buf, Line *line, int offset, int last) {
-  Line *l = line;
+struct Line *currentLineSkip(struct Buffer *buf, struct Line *line, int offset, int last) {
+  struct Line *l = line;
   if (offset == 0)
     return l;
   if (offset > 0)
