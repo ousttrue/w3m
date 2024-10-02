@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "search.h"
 #include "trap_jmp.h"
 #include "display.h"
 #include "html_parser.h"
@@ -40,12 +41,6 @@
 
 #define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
-
-struct Hist *LoadHist;
-struct Hist *SaveHist;
-struct Hist *URLHist;
-struct Hist *ShellHist;
-struct Hist *TextHist;
 
 static char *SearchString = NULL;
 int (*searchRoutine)(struct Buffer *, char *);
@@ -414,7 +409,7 @@ static int srchcore(char *volatile str, int (*func)(struct Buffer *, char *)) {
   if (SearchString == NULL || *SearchString == '\0')
     return SR_NOTFOUND;
 
-  str = conv_search_string(SearchString, DisplayCharset);
+  str = SearchString;
   tty_crmode();
   if (from_jmp()) {
     for (i = 0; i < PREC_NUM; i++) {

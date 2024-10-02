@@ -6,6 +6,12 @@
 #include "readbuffer.h"
 #include "indep.h"
 
+struct Hist *LoadHist;
+struct Hist *SaveHist;
+struct Hist *URLHist;
+struct Hist *ShellHist;
+struct Hist *TextHist;
+
 struct Buffer *historyBuffer(struct Hist *hist) {
   Str src = Strnew();
   HistItem *item;

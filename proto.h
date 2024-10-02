@@ -217,9 +217,6 @@ extern void arrangeCursor(struct Buffer *buf);
 extern void arrangeLine(struct Buffer *buf);
 extern void cursorXY(struct Buffer *buf, int x, int y);
 extern void restorePosition(struct Buffer *buf, struct Buffer *orig);
-#define conv_search_string(str, f_ces) str
-extern int forwardSearch(struct Buffer *buf, char *str);
-extern int backwardSearch(struct Buffer *buf, char *str);
 extern void pcmap(void);
 extern void escmap(void);
 extern void escbmap(void);
