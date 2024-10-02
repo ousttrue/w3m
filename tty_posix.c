@@ -9,6 +9,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
+#define HAVE_TERMIOS_H 1
 #define DEV_TTY_PATH "/dev/tty"
 
 static int g_tty = -1;

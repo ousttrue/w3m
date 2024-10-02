@@ -36,6 +36,8 @@
 #include "myctype.h"
 #include "regex.h"
 
+#define HELP_CGI "w3mhelp"
+
 #define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
 

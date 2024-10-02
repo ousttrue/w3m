@@ -10,6 +10,28 @@
 #ifndef FM_H
 #define FM_H
 
+#define USE_IMAGE 1
+#define INET6 1
+
+#define KEYMAP_FILE "keymap"
+#define MENU_FILE "menu"
+#define MOUSE_FILE "mouse"
+#define COOKIE_FILE "cookie"
+#define HISTORY_FILE "history"
+#define PRE_FORM_FILE RC_DIR "/pre_form"
+#define SITECONF_FILE RC_DIR "/siteconf"
+#define USER_MAILCAP RC_DIR "/mailcap"
+#define SYS_MAILCAP CONF_DIR "/mailcap"
+#define USER_MIMETYPES "~/.mime.types"
+#define SYS_MIMETYPES ETC_DIR "/mime.types"
+#define USER_URIMETHODMAP RC_DIR "/urimethodmap"
+#define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
+#define DEF_EDITOR "/usr/bin/vi"
+#define DEF_MAILER "/usr/bin/mail"
+#define DEF_EXT_BROWSER "/usr/bin/firefox"
+#define DEF_IMAGE_VIEWER "display"
+#define DEF_AUDIO_PLAYER "showaudio"
+
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE /* strcasestr() */
 #endif
@@ -349,7 +371,7 @@ global int ssl_verify_server init(true);
 global char *ssl_cert_file init(NULL);
 global char *ssl_key_file init(NULL);
 global char *ssl_ca_path init(NULL);
-global char *ssl_ca_file init(DEF_CAFILE);
+global char *ssl_ca_file init("");
 global int ssl_ca_default init(true);
 global int ssl_path_modified init(false);
 global char *ssl_forbid_method init("2, 3, t, 5");

@@ -7,6 +7,9 @@
 #include <sys/types.h>
 #include <stdlib.h>
 
+#define HAVE_STRTOLL 1
+#define HAVE_ATOLL 1
+
 char *HTML_QUOTE_MAP[] = {
     NULL, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", NULL, NULL,
 };

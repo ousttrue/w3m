@@ -12,6 +12,8 @@
 #include "parsetagx.h"
 #include "indep.h"
 
+#define ENABLE_REMOVE_TRAILINGSPACES
+
 int symbol_width;
 int symbol_width0;
 

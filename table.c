@@ -21,6 +21,7 @@
 #include <string.h>
 #include <math.h>
 
+#define NOWRAP
 #define RULE_WIDTH symbol_width
 #define RULE(mode, n) (((mode) == BORDER_THICK) ? ((n) + 16) : (n))
 #define TK_VERTICALBAR(mode) RULE(mode, 5)

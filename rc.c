@@ -27,6 +27,9 @@
 #include <stddef.h>
 #include <sys/stat.h>
 
+#define W3MCONFIG "w3mconfig"
+#define CONFIG_FILE "config"
+
 struct param_ptr {
   char *name;
   int type;
@@ -54,9 +57,7 @@ static int RC_table_size;
 #define P_CHARINT 2
 #define P_CHAR 3
 #define P_STRING 4
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
 #define P_SSLPATH 5
-#endif
 #define P_PIXELS 8
 #define P_NZINT 9
 #define P_SCALE 10
@@ -612,11 +613,9 @@ void show_params(FILE *fp) {
       case P_STRING:
         t = "string";
         break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
       case P_SSLPATH:
         t = "path";
         break;
-#endif
       case P_PIXELS:
         t = "number";
         break;
@@ -696,7 +695,6 @@ static int set_param(char *name, char *value) {
   case P_STRING:
     *(char **)p->varptr = value;
     break;
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
   case P_SSLPATH:
     if (value != NULL && value[0] != '\0')
       *(char **)p->varptr = rcFile(value);
@@ -704,7 +702,6 @@ static int set_param(char *name, char *value) {
       *(char **)p->varptr = NULL;
     ssl_path_modified = 1;
     break;
-#endif
   case P_PIXELS:
     ppc = atof(value);
     if (ppc >= MINIMUM_PIXEL_PER_CHAR && ppc <= MAXIMUM_PIXEL_PER_CHAR * 2)
@@ -858,9 +855,7 @@ static Str to_str(struct param_ptr *p) {
   case P_CHAR:
     return Sprintf("%c", *(char *)p->varptr);
   case P_STRING:
-#if defined(USE_SSL) && defined(USE_SSL_VERIFY)
   case P_SSLPATH:
-#endif
     /*  SystemCharset -> InnerCharset */
     return Strnew_charp(conv_from_system(*(char **)p->varptr));
   case P_PIXELS:

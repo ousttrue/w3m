@@ -1,5 +1,10 @@
 #pragma once
 
+#define HAVE_STRCASECMP 1
+#define HAVE_STRCASESTR 1
+#define HAVE_STRCHR 1
+#define HAVE_STRERROR 1
+
 #ifdef _WIN32
 extern char *strcasestr(const char *s1, const char *s2);
 #else
