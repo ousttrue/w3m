@@ -132,7 +132,6 @@ extern void cursorBottom(void);
 struct Buffer;
 struct URLFile;
 
-extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 struct html_feed_environ;
 extern void push_render_image(Str str, int width, int limit,

@@ -1,4 +1,5 @@
 #include "table.h"
+#include "text.h"
 #include "symbol.h"
 #include "utf8.h"
 #include "indep.h"
@@ -1781,12 +1782,13 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
   }
 
   while (*line) {
-    char *save = line, *c = line;
+    char *save = line;
+    const char *c = line;
     int wlen, plen;
     ctype = get_mctype(line);
     int cwid = utf8sequence_width((const uint8_t *)line);
     wlen = plen = utf8sequence_len((const uint8_t *)line);
-    char utf8[4];
+    struct Utf8 utf8;
 
     if (min < w)
       min = w;
@@ -1798,8 +1800,8 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
         auto ec = getescapechar(&line);
         if (ec > 0) {
           // c = conv_entity(ec);
-          if (utf8sequence_from_codepoint(ec, (uint8_t *)utf8)) {
-            c = utf8;
+          if (utf8sequence_from_codepoint(ec, &utf8)) {
+            c = (const char *)&utf8.c0;
           } else {
             c = "�";
           }

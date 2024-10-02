@@ -11,6 +11,7 @@ pub const SRCS = [_][]const u8{
     "utf8.c",
     "termcon_termcap.c",
     "document.c",
+    "text.c",
 
     "compression.c",
     "growbuf.c",
