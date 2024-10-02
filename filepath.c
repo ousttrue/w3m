@@ -1,6 +1,9 @@
 #include "filepath.h"
 #include "alloc.h"
 #include <string.h>
+#include <sys/stat.h>
+
+#define IS_DIRECTORY(m) (((m) & S_IFMT) == S_IFDIR)
 
 const char *lastFileName(const char *path) {
   const char *p, *q;
@@ -65,4 +68,15 @@ char *guess_filename(const char *file) {
     p++;
   }
   return s;
+}
+
+bool dir_exist(const char *path) {
+  struct stat stbuf;
+
+  if (path == NULL || *path == '\0')
+    return false;
+  if (stat(path, &stbuf) == -1)
+    return false;
+
+  return IS_DIRECTORY(stbuf.st_mode);
 }

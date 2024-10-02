@@ -1,4 +1,5 @@
 #include "file.h"
+#include "symbol.h"
 #include "loader.h"
 #include "html_renderer.h"
 #include "trap_jmp.h"
@@ -26,16 +27,6 @@
 #define SHELLBUFFERNAME "*Shellout*"
 
 #define SAVE_BUF_SIZE 1536
-
-int dir_exist(char *path) {
-  struct stat stbuf;
-
-  if (path == NULL || *path == '\0')
-    return 0;
-  if (stat(path, &stbuf) == -1)
-    return 0;
-  return IS_DIRECTORY(stbuf.st_mode);
-}
 
 #define TAG_IS(s, tag, len)                                                    \
   (strncasecmp(s, tag, len) == 0 && (s[len] == '>' || IS_SPACE((int)s[len])))

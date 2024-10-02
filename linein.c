@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "url.h"
 #include "utf8.h"
 #include "alloc.h"
 #include "display.h"

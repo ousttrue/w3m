@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "filepath.h"
 #include "loader.h"
 #include "trap_jmp.h"
 #include "mailcap.h"
@@ -515,13 +516,13 @@ static char *copyPath(char *orgpath, int length, int option) {
   return tmp->ptr;
 }
 
-void parseURL(char *url, struct Url *p_url, struct Url *current) {
-  char *p, *q, *qq;
+void parseURL(char *_url, struct Url *p_url, struct Url *current) {
+  char *q, *qq;
   Str tmp;
 
-  url = url_quote(url); /* quote 0x01-0x20, 0x7F-0xFF */
+  auto url = url_quote(_url); /* quote 0x01-0x20, 0x7F-0xFF */
 
-  p = url;
+  auto p = url;
   copyParsedURL(p_url, NULL);
   p_url->scheme = SCM_MISSING;
 

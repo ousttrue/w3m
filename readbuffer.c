@@ -1,4 +1,5 @@
 #include "readbuffer.h"
+#include "symbol.h"
 #include "utf8.h"
 #include "html_textarea.h"
 #include "html_renderer.h"

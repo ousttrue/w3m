@@ -1,7 +1,5 @@
-/*
- * HTML table
- */
 #include "table.h"
+#include "symbol.h"
 #include "utf8.h"
 #include "indep.h"
 #include "html_renderer.h"

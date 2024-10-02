@@ -1,4 +1,5 @@
 #include "display.h"
+#include "symbol.h"
 #include "utf8.h"
 #include "ctrlcode.h"
 #include "html_renderer.h"

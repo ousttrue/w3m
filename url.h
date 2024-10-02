@@ -36,3 +36,5 @@ struct Url {
 
 const char *file_to_url(const char *file);
 void parseURL2(const char *url, struct Url *pu, struct Url *current);
+
+char *url_decode0(const char *url);

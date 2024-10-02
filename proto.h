@@ -130,11 +130,8 @@ extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
 struct Buffer;
-extern char *url_decode0(const char *url);
 struct URLFile;
-extern int dir_exist(char *path);
-extern char **get_symbol(void);
-extern void push_symbol(Str str, char symbol, int width, int n);
+
 extern int is_boundary(unsigned char *, unsigned char *);
 extern int is_blank_line(char *line, int indent);
 struct html_feed_environ;
