@@ -1,5 +1,6 @@
 #include "html_renderer.h"
 #include "map.h"
+#include "file.h"
 #include "readbuffer.h"
 #include "anchor.h"
 #include "buffer.h"
@@ -77,13 +78,13 @@ static void addLink(struct Buffer *buf, struct parsed_tag *tag) {
   l->ctype = ctype;
   l->type = type;
   l->next = NULL;
-  if (buf->linklist) {
+  if (buf->document.linklist) {
     struct LinkList *i;
-    for (i = buf->linklist; i->next; i = i->next)
+    for (i = buf->document.linklist; i->next; i = i->next)
       ;
     i->next = l;
   } else
-    buf->linklist = l;
+    buf->document.linklist = l;
 }
 void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
   static char *outc = NULL;
@@ -228,15 +229,15 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
           parsedtag_get_value(tag, ATTR_ACCESSKEY, &t);
           parsedtag_get_value(tag, ATTR_HSEQ, &hseq);
           if (hseq > 0)
-            buf->hmarklist =
-                putHmarker(buf->hmarklist, currentLn(buf), pos, hseq - 1);
+            buf->document.hmarklist =
+                putHmarker(buf->document.hmarklist, currentLn(buf), pos, hseq - 1);
           else if (hseq < 0) {
             int h = -hseq - 1;
-            if (buf->hmarklist && h < buf->hmarklist->nmark &&
-                buf->hmarklist->marks[h].invalid) {
-              buf->hmarklist->marks[h].pos = pos;
-              buf->hmarklist->marks[h].line = currentLn(buf);
-              buf->hmarklist->marks[h].invalid = 0;
+            if (buf->document.hmarklist && h < buf->document.hmarklist->nmark &&
+                buf->document.hmarklist->marks[h].invalid) {
+              buf->document.hmarklist->marks[h].pos = pos;
+              buf->document.hmarklist->marks[h].line = currentLn(buf);
+              buf->document.hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -254,9 +255,9 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             a_href->end.pos = pos;
             if (a_href->start.line == a_href->end.line &&
                 a_href->start.pos == a_href->end.pos) {
-              if (buf->hmarklist && a_href->hseq >= 0 &&
-                  a_href->hseq < buf->hmarklist->nmark)
-                buf->hmarklist->marks[a_href->hseq].invalid = 1;
+              if (buf->document.hmarklist && a_href->hseq >= 0 &&
+                  a_href->hseq < buf->document.hmarklist->nmark)
+                buf->document.hmarklist->marks[a_href->hseq].invalid = 1;
               a_href->hseq = -1;
             }
             a_href = NULL;
@@ -303,18 +304,18 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            buf->hmarklist =
-                putHmarker(buf->hmarklist, currentLn(buf), hpos, hseq - 1);
+            buf->document.hmarklist =
+                putHmarker(buf->document.hmarklist, currentLn(buf), hpos, hseq - 1);
           } else if (hseq < 0) {
             int h = -hseq - 1;
             int hpos = pos;
             if (*str == '[')
               hpos++;
-            if (buf->hmarklist && h < buf->hmarklist->nmark &&
-                buf->hmarklist->marks[h].invalid) {
-              buf->hmarklist->marks[h].pos = hpos;
-              buf->hmarklist->marks[h].line = currentLn(buf);
-              buf->hmarklist->marks[h].invalid = 0;
+            if (buf->document.hmarklist && h < buf->document.hmarklist->nmark &&
+                buf->document.hmarklist->marks[h].invalid) {
+              buf->document.hmarklist->marks[h].pos = hpos;
+              buf->document.hmarklist->marks[h].line = currentLn(buf);
+              buf->document.hmarklist->marks[h].invalid = 0;
               hseq = -hseq;
             }
           }
@@ -357,15 +358,15 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             struct MapList *m = New(struct MapList);
             m->name = Strnew_charp(p);
             m->area = newGeneralList();
-            m->next = buf->maplist;
-            buf->maplist = m;
+            m->next = buf->document.maplist;
+            buf->document.maplist = m;
           }
           break;
         case HTML_N_MAP:
           /* nothing to do */
           break;
         case HTML_AREA:
-          if (buf->maplist == NULL) /* outside of <map>..</map> */
+          if (buf->document.maplist == NULL) /* outside of <map>..</map> */
             break;
           if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
             struct MapArea *a;
@@ -377,7 +378,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
             r = NULL;
             s = NULL;
             a = newMapArea(p, t, q, r, s);
-            pushValue(buf->maplist->area, (void *)a);
+            pushValue(buf->document.maplist->area, (void *)a);
           }
           break;
         case HTML_FRAMESET:
@@ -470,7 +471,7 @@ void HTMLlineproc2body(struct Buffer *buf, Str (*feed)(), int llimit) {
   for (form_id = 1; form_id <= form_max; form_id++)
     if (forms[form_id])
       forms[form_id]->next = forms[form_id - 1];
-  buf->formlist = (form_max >= 0) ? forms[form_max] : NULL;
+  buf->document.formlist = (form_max >= 0) ? forms[form_max] : NULL;
   if (n_textarea)
-    addMultirowsForm(buf, buf->formitem);
+    addMultirowsForm(buf, buf->document.formitem);
 }

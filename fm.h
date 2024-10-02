@@ -117,27 +117,28 @@
 
 #define COPY_BUFROOT(dstbuf, srcbuf)                                           \
   {                                                                            \
-    (dstbuf)->rootX = (srcbuf)->rootX;                                         \
-    (dstbuf)->rootY = (srcbuf)->rootY;                                         \
-    (dstbuf)->COLS = (srcbuf)->COLS;                                           \
-    (dstbuf)->LINES = (srcbuf)->LINES;                                         \
+    (dstbuf)->document.rootX = (srcbuf)->document.rootX;                       \
+    (dstbuf)->document.rootY = (srcbuf)->document.rootY;                       \
+    (dstbuf)->document.COLS = (srcbuf)->document.COLS;                         \
+    (dstbuf)->document.LINES = (srcbuf)->document.LINES;                       \
   }
 
 #define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
   {                                                                            \
-    (dstbuf)->topLine = (srcbuf)->topLine;                                     \
-    (dstbuf)->currentLine = (srcbuf)->currentLine;                             \
-    (dstbuf)->pos = (srcbuf)->pos;                                             \
-    (dstbuf)->cursorX = (srcbuf)->cursorX;                                     \
-    (dstbuf)->cursorY = (srcbuf)->cursorY;                                     \
-    (dstbuf)->visualpos = (srcbuf)->visualpos;                                 \
-    (dstbuf)->currentColumn = (srcbuf)->currentColumn;                         \
+    (dstbuf)->document.topLine = (srcbuf)->document.topLine;                   \
+    (dstbuf)->document.currentLine = (srcbuf)->document.currentLine;           \
+    (dstbuf)->document.pos = (srcbuf)->document.pos;                           \
+    (dstbuf)->document.cursorX = (srcbuf)->document.cursorX;                   \
+    (dstbuf)->document.cursorY = (srcbuf)->document.cursorY;                   \
+    (dstbuf)->document.visualpos = (srcbuf)->document.visualpos;               \
+    (dstbuf)->document.currentColumn = (srcbuf)->document.currentColumn;       \
   }
 #define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, Currentbuf)
 #define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(Currentbuf, sbufp)
-#define TOP_LINENUMBER(buf) ((buf)->topLine ? (buf)->topLine->linenumber : 1)
+#define TOP_LINENUMBER(buf)                                                    \
+  ((buf)->document.topLine ? (buf)->document.topLine->linenumber : 1)
 #define CUR_LINENUMBER(buf)                                                    \
-  ((buf)->currentLine ? (buf)->currentLine->linenumber : 1)
+  ((buf)->document.currentLine ? (buf)->document.currentLine->linenumber : 1)
 
 #define RB_STACK_SIZE 10
 
@@ -175,7 +176,7 @@
 global int IndentIncr init(4);
 
 global char SearchHeader init(false);
-global char *DefaultType init(NULL);
+global const char *DefaultType init(NULL);
 global char RenderFrame init(false);
 global char TargetSelf init(false);
 global char PermitSaveToPipe init(false);

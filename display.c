@@ -110,9 +110,10 @@ static Str make_lastline_message(struct Buffer *buf) {
   }
 
   msg = Strnew();
-  if (displayLineInfo && buf->currentLine != NULL && buf->lastLine != NULL) {
-    int cl = buf->currentLine->real_linenumber;
-    int ll = buf->lastLine->real_linenumber;
+  if (displayLineInfo && buf->document.currentLine != NULL &&
+      buf->document.lastLine != NULL) {
+    int cl = buf->document.currentLine->real_linenumber;
+    int ll = buf->document.lastLine->real_linenumber;
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else
@@ -142,31 +143,33 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
 
   if (!buf)
     return;
-  if (buf->topLine == NULL && readBufferCache(buf) == 0) { /* clear_buffer */
+  if (buf->document.topLine == NULL &&
+      readBufferCache(buf) == 0) { /* clear_buffer */
     mode = B_FORCE_REDRAW;
   }
 
-  if (buf->width == 0)
-    buf->width = INIT_BUFFER_WIDTH;
-  if (buf->height == 0)
-    buf->height = LASTLINE + 1;
-  if ((buf->width != INIT_BUFFER_WIDTH &&
+  if (buf->document.width == 0)
+    buf->document.width = INIT_BUFFER_WIDTH;
+  if (buf->document.height == 0)
+    buf->document.height = LASTLINE + 1;
+  if ((buf->document.width != INIT_BUFFER_WIDTH &&
        (is_html_type(buf->type) || FoldLine)) ||
       buf->need_reshape) {
     buf->need_reshape = true;
     reshapeBuffer(buf);
   }
   if (showLineNum) {
-    if (buf->lastLine && buf->lastLine->real_linenumber > 0)
-      buf->rootX =
-          (int)(log(buf->lastLine->real_linenumber + 0.1) / log(10)) + 2;
-    if (buf->rootX < 5)
-      buf->rootX = 5;
-    if (buf->rootX > COLS)
-      buf->rootX = COLS;
+    if (buf->document.lastLine && buf->document.lastLine->real_linenumber > 0)
+      buf->document.rootX =
+          (int)(log(buf->document.lastLine->real_linenumber + 0.1) / log(10)) +
+          2;
+    if (buf->document.rootX < 5)
+      buf->document.rootX = 5;
+    if (buf->document.rootX > COLS)
+      buf->document.rootX = COLS;
   } else
-    buf->rootX = 0;
-  buf->COLS = COLS - buf->rootX;
+    buf->document.rootX = 0;
+  buf->document.COLS = COLS - buf->document.rootX;
   if (nTab > 1) {
     if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
       calcTabPos();
@@ -174,33 +177,35 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
     if (ny > LASTLINE)
       ny = LASTLINE;
   }
-  if (buf->rootY != ny || buf->LINES != LASTLINE - ny) {
-    buf->rootY = ny;
-    buf->LINES = LASTLINE - ny;
+  if (buf->document.rootY != ny || buf->document.LINES != LASTLINE - ny) {
+    buf->document.rootY = ny;
+    buf->document.LINES = LASTLINE - ny;
     arrangeCursor(buf);
     mode = B_REDRAW_IMAGE;
   }
   if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
-      cline != buf->topLine || ccolumn != buf->currentColumn) {
+      cline != buf->document.topLine ||
+      ccolumn != buf->document.currentColumn) {
     {
       redrawBuffer(buf);
     }
-    cline = buf->topLine;
-    ccolumn = buf->currentColumn;
+    cline = buf->document.topLine;
+    ccolumn = buf->document.currentColumn;
   }
-  if (buf->topLine == NULL)
-    buf->topLine = buf->firstLine;
+  if (buf->document.topLine == NULL)
+    buf->document.topLine = buf->document.firstLine;
 
   drawAnchorCursor(buf);
 
   msg = make_lastline_message(buf);
-  if (buf->firstLine == NULL) {
+  if (buf->document.firstLine == NULL) {
     /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
   }
   term_show_delayed_message();
   scr_standout();
-  scr_message(msg->ptr, buf->cursorX + buf->rootX, buf->cursorY + buf->rootY);
+  scr_message(msg->ptr, buf->document.cursorX + buf->document.rootX,
+              buf->document.cursorY + buf->document.rootY);
   scr_standend();
   term_title(conv_to_system(buf->buffername));
   term_refresh();
@@ -221,7 +226,7 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
   Line *l;
   struct Anchor *an;
 
-  l = buf->topLine;
+  l = buf->document.topLine;
   for (j = 0; j < al->nanchor; j++) {
     an = &al->anchors[j];
     if (an->start.line < tline)
@@ -252,11 +257,11 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
         }
       }
       if (active && start_pos < end_pos)
-        redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY, start_pos,
-                         end_pos);
+        redrawLineRegion(buf, l, l->linenumber - tline + buf->document.rootY,
+                         start_pos, end_pos);
     } else if (prevhseq >= 0 && an->hseq == prevhseq) {
       if (active)
-        redrawLineRegion(buf, l, l->linenumber - tline + buf->rootY,
+        redrawLineRegion(buf, l, l->linenumber - tline + buf->document.rootY,
                          an->start.pos, an->end.pos);
     }
   }
@@ -267,9 +272,9 @@ static void drawAnchorCursor(struct Buffer *buf) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (!buf->firstLine || !buf->hmarklist)
+  if (!buf->document.firstLine || !buf->document.hmarklist)
     return;
-  if (!buf->href && !buf->formitem)
+  if (!buf->document.href && !buf->document.formitem)
     return;
 
   an = retrieveCurrentAnchor(buf);
@@ -279,19 +284,20 @@ static void drawAnchorCursor(struct Buffer *buf) {
     hseq = an->hseq;
   else
     hseq = -1;
-  tline = buf->topLine->linenumber;
-  eline = tline + buf->LINES;
-  prevhseq = buf->hmarklist->prevhseq;
+  tline = buf->document.topLine->linenumber;
+  eline = tline + buf->document.LINES;
+  prevhseq = buf->document.hmarklist->prevhseq;
 
-  if (buf->href) {
-    drawAnchorCursor0(buf, buf->href, hseq, prevhseq, tline, eline, 1);
-    drawAnchorCursor0(buf, buf->href, hseq, -1, tline, eline, 0);
+  if (buf->document.href) {
+    drawAnchorCursor0(buf, buf->document.href, hseq, prevhseq, tline, eline, 1);
+    drawAnchorCursor0(buf, buf->document.href, hseq, -1, tline, eline, 0);
   }
-  if (buf->formitem) {
-    drawAnchorCursor0(buf, buf->formitem, hseq, prevhseq, tline, eline, 1);
-    drawAnchorCursor0(buf, buf->formitem, hseq, -1, tline, eline, 0);
+  if (buf->document.formitem) {
+    drawAnchorCursor0(buf, buf->document.formitem, hseq, prevhseq, tline, eline,
+                      1);
+    drawAnchorCursor0(buf, buf->document.formitem, hseq, -1, tline, eline, 0);
   }
-  buf->hmarklist->prevhseq = hseq;
+  buf->document.hmarklist->prevhseq = hseq;
 }
 
 static void redrawNLine(struct Buffer *buf, int n) {
@@ -331,14 +337,15 @@ static void redrawNLine(struct Buffer *buf, int n) {
     for (i = 0; i < COLS; i++)
       scr_addch('~');
   }
-  for (i = 0, l = buf->topLine; i < buf->LINES; i++, l = l->next) {
-    if (i >= buf->LINES - n || i < -n)
-      l = redrawLine(buf, l, i + buf->rootY);
+  for (i = 0, l = buf->document.topLine; i < buf->document.LINES;
+       i++, l = l->next) {
+    if (i >= buf->document.LINES - n || i < -n)
+      l = redrawLine(buf, l, i + buf->document.rootY);
     if (l == NULL)
       break;
   }
   if (n > 0) {
-    scr_move(i + buf->rootY, 0);
+    scr_move(i + buf->document.rootY, 0);
     scr_clrtobotx();
   }
 }
@@ -401,7 +408,7 @@ void addChar(char c, Lineprop mode) { addMChar((const uint8_t *)&c, mode, 1); }
 
 static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->currentColumn;
+  int column = buf->document.currentColumn;
   char *p;
   Lineprop *pr;
 
@@ -411,23 +418,25 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   scr_move(i, 0);
   if (showLineNum) {
     char tmp[16];
-    if (!buf->rootX) {
-      if (buf->lastLine->real_linenumber > 0)
-        buf->rootX =
-            (int)(log(buf->lastLine->real_linenumber + 0.1) / log(10)) + 2;
-      if (buf->rootX < 5)
-        buf->rootX = 5;
-      if (buf->rootX > COLS)
-        buf->rootX = COLS;
-      buf->COLS = COLS - buf->rootX;
+    if (!buf->document.rootX) {
+      if (buf->document.lastLine->real_linenumber > 0)
+        buf->document.rootX =
+            (int)(log(buf->document.lastLine->real_linenumber + 0.1) /
+                  log(10)) +
+            2;
+      if (buf->document.rootX < 5)
+        buf->document.rootX = 5;
+      if (buf->document.rootX > COLS)
+        buf->document.rootX = COLS;
+      buf->document.COLS = COLS - buf->document.rootX;
     }
     if (l->real_linenumber && !l->bpos)
-      sprintf(tmp, "%*ld:", buf->rootX - 1, l->real_linenumber);
+      sprintf(tmp, "%*ld:", buf->document.rootX - 1, l->real_linenumber);
     else
-      sprintf(tmp, "%*s ", buf->rootX - 1, "");
+      sprintf(tmp, "%*s ", buf->document.rootX - 1, "");
     scr_addstr(tmp);
   }
-  scr_move(i, buf->rootX);
+  scr_move(i, buf->document.rootX);
   if (l->width < 0)
     l->width = COLPOS(l, l->len);
   if (l->len == 0 || l->width - 1 < column) {
@@ -440,10 +449,11 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
   pr = &(l->propBuf[pos]);
   rcol = COLPOS(l, pos);
 
-  for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+  for (j = 0; rcol - column < buf->document.COLS && pos + j < l->len;
+       j += delta) {
     delta = utf8sequence_len((const uint8_t *)&p[j]);
     ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > buf->COLS)
+    if (ncol - column > buf->document.COLS)
       break;
     if (rcol < column) {
       for (rcol = column; rcol < ncol; rcol++)
@@ -503,7 +513,7 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
     graph_mode = false;
     scr_graphend();
   }
-  if (rcol - column < buf->COLS)
+  if (rcol - column < buf->document.COLS)
     scr_clrtoeolx();
   return l;
 }
@@ -511,7 +521,7 @@ static Line *redrawLine(struct Buffer *buf, Line *l, int i) {
 static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
                             int epos) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->currentColumn;
+  int column = buf->document.currentColumn;
   char *p;
   Lineprop *pr;
   int bcol, ecol;
@@ -525,18 +535,19 @@ static int redrawLineRegion(struct Buffer *buf, Line *l, int i, int bpos,
   bcol = bpos - pos;
   ecol = epos - pos;
 
-  for (j = 0; rcol - column < buf->COLS && pos + j < l->len; j += delta) {
+  for (j = 0; rcol - column < buf->document.COLS && pos + j < l->len;
+       j += delta) {
     ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > buf->COLS)
+    if (ncol - column > buf->document.COLS)
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        scr_move(i, buf->rootX);
+        scr_move(i, buf->document.rootX);
         for (rcol = column; rcol < ncol; rcol++)
           addChar(' ', 0);
         continue;
       }
-      scr_move(i, rcol - column + buf->rootX);
+      scr_move(i, rcol - column + buf->document.rootX);
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++)
           addChar(' ', 0);
@@ -657,137 +668,142 @@ struct Buffer *message_list_panel(void) {
 }
 
 void cursorUp0(struct Buffer *buf, int n) {
-  if (buf->cursorY > 0)
+  if (buf->document.cursorY > 0)
     cursorUpDown(buf, -1);
   else {
-    buf->topLine = lineSkip(buf, buf->topLine, -n, false);
-    if (buf->currentLine->prev != NULL)
-      buf->currentLine = buf->currentLine->prev;
+    buf->document.topLine = lineSkip(buf, buf->document.topLine, -n, false);
+    if (buf->document.currentLine->prev != NULL)
+      buf->document.currentLine = buf->document.currentLine->prev;
     arrangeLine(buf);
   }
 }
 
 void cursorUp(struct Buffer *buf, int n) {
-  Line *l = buf->currentLine;
-  if (buf->firstLine == NULL)
+  Line *l = buf->document.currentLine;
+  if (buf->document.firstLine == NULL)
     return;
-  while (buf->currentLine->prev && buf->currentLine->bpos)
+  while (buf->document.currentLine->prev && buf->document.currentLine->bpos)
     cursorUp0(buf, n);
-  if (buf->currentLine == buf->firstLine) {
+  if (buf->document.currentLine == buf->document.firstLine) {
     gotoLine(buf, l->linenumber);
     arrangeLine(buf);
     return;
   }
   cursorUp0(buf, n);
-  while (buf->currentLine->prev && buf->currentLine->bpos &&
-         buf->currentLine->bwidth >= buf->currentColumn + buf->visualpos)
+  while (buf->document.currentLine->prev && buf->document.currentLine->bpos &&
+         buf->document.currentLine->bwidth >=
+             buf->document.currentColumn + buf->document.visualpos)
     cursorUp0(buf, n);
 }
 
 void cursorDown0(struct Buffer *buf, int n) {
-  if (buf->cursorY < buf->LINES - 1)
+  if (buf->document.cursorY < buf->document.LINES - 1)
     cursorUpDown(buf, 1);
   else {
-    buf->topLine = lineSkip(buf, buf->topLine, n, false);
-    if (buf->currentLine->next != NULL)
-      buf->currentLine = buf->currentLine->next;
+    buf->document.topLine = lineSkip(buf, buf->document.topLine, n, false);
+    if (buf->document.currentLine->next != NULL)
+      buf->document.currentLine = buf->document.currentLine->next;
     arrangeLine(buf);
   }
 }
 
 void cursorDown(struct Buffer *buf, int n) {
-  Line *l = buf->currentLine;
-  if (buf->firstLine == NULL)
+  Line *l = buf->document.currentLine;
+  if (buf->document.firstLine == NULL)
     return;
-  while (buf->currentLine->next && buf->currentLine->next->bpos)
+  while (buf->document.currentLine->next &&
+         buf->document.currentLine->next->bpos)
     cursorDown0(buf, n);
-  if (buf->currentLine == buf->lastLine) {
+  if (buf->document.currentLine == buf->document.lastLine) {
     gotoLine(buf, l->linenumber);
     arrangeLine(buf);
     return;
   }
   cursorDown0(buf, n);
-  while (buf->currentLine->next && buf->currentLine->next->bpos &&
-         buf->currentLine->bwidth + buf->currentLine->width <
-             buf->currentColumn + buf->visualpos)
+  while (buf->document.currentLine->next &&
+         buf->document.currentLine->next->bpos &&
+         buf->document.currentLine->bwidth + buf->document.currentLine->width <
+             buf->document.currentColumn + buf->document.visualpos)
     cursorDown0(buf, n);
 }
 
 void cursorUpDown(struct Buffer *buf, int n) {
-  Line *cl = buf->currentLine;
+  Line *cl = buf->document.currentLine;
 
-  if (buf->firstLine == NULL)
+  if (buf->document.firstLine == NULL)
     return;
-  if ((buf->currentLine = currentLineSkip(buf, cl, n, false)) == cl)
+  if ((buf->document.currentLine = currentLineSkip(buf, cl, n, false)) == cl)
     return;
   arrangeLine(buf);
 }
 
 void cursorRight(struct Buffer *buf, int n) {
   int i, delta = 1, cpos, vpos2;
-  Line *l = buf->currentLine;
+  Line *l = buf->document.currentLine;
   Lineprop *p;
 
-  if (buf->firstLine == NULL)
+  if (buf->document.firstLine == NULL)
     return;
-  if (buf->pos == l->len && !(l->next && l->next->bpos))
+  if (buf->document.pos == l->len && !(l->next && l->next->bpos))
     return;
-  i = buf->pos;
+  i = buf->document.pos;
   p = l->propBuf;
   if (i + delta < l->len) {
-    buf->pos = i + delta;
+    buf->document.pos = i + delta;
   } else if (l->len == 0) {
-    buf->pos = 0;
+    buf->document.pos = 0;
   } else if (l->next && l->next->bpos) {
     cursorDown0(buf, 1);
-    buf->pos = 0;
+    buf->document.pos = 0;
     arrangeCursor(buf);
     return;
   } else {
-    buf->pos = l->len - 1;
+    buf->document.pos = l->len - 1;
   }
-  cpos = COLPOS(l, buf->pos);
-  buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+  cpos = COLPOS(l, buf->document.pos);
+  buf->document.visualpos = l->bwidth + cpos - buf->document.currentColumn;
   delta = 1;
-  vpos2 = COLPOS(l, buf->pos + delta) - buf->currentColumn - 1;
-  if (vpos2 >= buf->COLS && n) {
-    columnSkip(buf, n + (vpos2 - buf->COLS) - (vpos2 - buf->COLS) % n);
-    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+  vpos2 =
+      COLPOS(l, buf->document.pos + delta) - buf->document.currentColumn - 1;
+  if (vpos2 >= buf->document.COLS && n) {
+    columnSkip(buf, n + (vpos2 - buf->document.COLS) -
+                        (vpos2 - buf->document.COLS) % n);
+    buf->document.visualpos = l->bwidth + cpos - buf->document.currentColumn;
   }
-  buf->cursorX = buf->visualpos - l->bwidth;
+  buf->document.cursorX = buf->document.visualpos - l->bwidth;
 }
 
 void cursorLeft(struct Buffer *buf, int n) {
   int i, delta = 1, cpos;
-  Line *l = buf->currentLine;
+  Line *l = buf->document.currentLine;
   Lineprop *p;
 
-  if (buf->firstLine == NULL)
+  if (buf->document.firstLine == NULL)
     return;
-  i = buf->pos;
+  i = buf->document.pos;
   p = l->propBuf;
   if (i >= delta)
-    buf->pos = i - delta;
+    buf->document.pos = i - delta;
   else if (l->prev && l->bpos) {
     cursorUp0(buf, -1);
-    buf->pos = buf->currentLine->len - 1;
+    buf->document.pos = buf->document.currentLine->len - 1;
     arrangeCursor(buf);
     return;
   } else
-    buf->pos = 0;
-  cpos = COLPOS(l, buf->pos);
-  buf->visualpos = l->bwidth + cpos - buf->currentColumn;
-  if (buf->visualpos - l->bwidth < 0 && n) {
-    columnSkip(buf, -n + buf->visualpos - l->bwidth -
-                        (buf->visualpos - l->bwidth) % n);
-    buf->visualpos = l->bwidth + cpos - buf->currentColumn;
+    buf->document.pos = 0;
+  cpos = COLPOS(l, buf->document.pos);
+  buf->document.visualpos = l->bwidth + cpos - buf->document.currentColumn;
+  if (buf->document.visualpos - l->bwidth < 0 && n) {
+    columnSkip(buf, -n + buf->document.visualpos - l->bwidth -
+                        (buf->document.visualpos - l->bwidth) % n);
+    buf->document.visualpos = l->bwidth + cpos - buf->document.currentColumn;
   }
-  buf->cursorX = buf->visualpos - l->bwidth;
+  buf->document.cursorX = buf->document.visualpos - l->bwidth;
 }
 
 void cursorHome(struct Buffer *buf) {
-  buf->visualpos = 0;
-  buf->cursorX = buf->cursorY = 0;
+  buf->document.visualpos = 0;
+  buf->document.cursorX = buf->document.cursorY = 0;
 }
 
 /*
@@ -797,44 +813,54 @@ void cursorHome(struct Buffer *buf) {
 void arrangeCursor(struct Buffer *buf) {
   int col, col2, pos;
   int delta = 1;
-  if (buf == NULL || buf->currentLine == NULL)
+  if (buf == NULL || buf->document.currentLine == NULL)
     return;
   /* Arrange line */
-  if (buf->currentLine->linenumber - buf->topLine->linenumber >= buf->LINES ||
-      buf->currentLine->linenumber < buf->topLine->linenumber) {
+  if (buf->document.currentLine->linenumber -
+              buf->document.topLine->linenumber >=
+          buf->document.LINES ||
+      buf->document.currentLine->linenumber <
+          buf->document.topLine->linenumber) {
     /*
      * buf->topLine = buf->currentLine;
      */
-    buf->topLine = lineSkip(buf, buf->currentLine, 0, false);
+    buf->document.topLine = lineSkip(buf, buf->document.currentLine, 0, false);
   }
   /* Arrange column */
-  while (buf->pos < 0 && buf->currentLine->prev && buf->currentLine->bpos) {
-    pos = buf->pos + buf->currentLine->prev->len;
+  while (buf->document.pos < 0 && buf->document.currentLine->prev &&
+         buf->document.currentLine->bpos) {
+    pos = buf->document.pos + buf->document.currentLine->prev->len;
     cursorUp0(buf, 1);
-    buf->pos = pos;
+    buf->document.pos = pos;
   }
-  while (buf->pos >= buf->currentLine->len && buf->currentLine->next &&
-         buf->currentLine->next->bpos) {
-    pos = buf->pos - buf->currentLine->len;
+  while (buf->document.pos >= buf->document.currentLine->len &&
+         buf->document.currentLine->next &&
+         buf->document.currentLine->next->bpos) {
+    pos = buf->document.pos - buf->document.currentLine->len;
     cursorDown0(buf, 1);
-    buf->pos = pos;
+    buf->document.pos = pos;
   }
-  if (buf->currentLine->len == 0 || buf->pos < 0)
-    buf->pos = 0;
-  else if (buf->pos >= buf->currentLine->len)
-    buf->pos = buf->currentLine->len - 1;
-  col = COLPOS(buf->currentLine, buf->pos);
-  col2 = COLPOS(buf->currentLine, buf->pos + delta);
-  if (col < buf->currentColumn || col2 > buf->COLS + buf->currentColumn) {
-    buf->currentColumn = 0;
-    if (col2 > buf->COLS)
+  if (buf->document.currentLine->len == 0 || buf->document.pos < 0)
+    buf->document.pos = 0;
+  else if (buf->document.pos >= buf->document.currentLine->len)
+    buf->document.pos = buf->document.currentLine->len - 1;
+  col = COLPOS(buf->document.currentLine, buf->document.pos);
+  col2 = COLPOS(buf->document.currentLine, buf->document.pos + delta);
+  if (col < buf->document.currentColumn ||
+      col2 > buf->document.COLS + buf->document.currentColumn) {
+    buf->document.currentColumn = 0;
+    if (col2 > buf->document.COLS)
       columnSkip(buf, col);
   }
   /* Arrange cursor */
-  buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-  buf->visualpos = buf->currentLine->bwidth +
-                   COLPOS(buf->currentLine, buf->pos) - buf->currentColumn;
-  buf->cursorX = buf->visualpos - buf->currentLine->bwidth;
+  buf->document.cursorY =
+      buf->document.currentLine->linenumber - buf->document.topLine->linenumber;
+  buf->document.visualpos =
+      buf->document.currentLine->bwidth +
+      COLPOS(buf->document.currentLine, buf->document.pos) -
+      buf->document.currentColumn;
+  buf->document.cursorX =
+      buf->document.visualpos - buf->document.currentLine->bwidth;
 #ifdef DISPLAY_DEBUG
   fprintf(
       stderr,
@@ -847,21 +873,23 @@ void arrangeCursor(struct Buffer *buf) {
 void arrangeLine(struct Buffer *buf) {
   int i, cpos;
 
-  if (buf->firstLine == NULL)
+  if (buf->document.firstLine == NULL)
     return;
-  buf->cursorY = buf->currentLine->linenumber - buf->topLine->linenumber;
-  i = columnPos(buf->currentLine,
-                buf->currentColumn + buf->visualpos - buf->currentLine->bwidth);
-  cpos = COLPOS(buf->currentLine, i) - buf->currentColumn;
+  buf->document.cursorY =
+      buf->document.currentLine->linenumber - buf->document.topLine->linenumber;
+  i = columnPos(buf->document.currentLine,
+                buf->document.currentColumn + buf->document.visualpos -
+                    buf->document.currentLine->bwidth);
+  cpos = COLPOS(buf->document.currentLine, i) - buf->document.currentColumn;
   if (cpos >= 0) {
-    buf->cursorX = cpos;
-    buf->pos = i;
-  } else if (buf->currentLine->len > i) {
-    buf->cursorX = 0;
-    buf->pos = i + 1;
+    buf->document.cursorX = cpos;
+    buf->document.pos = i;
+  } else if (buf->document.currentLine->len > i) {
+    buf->document.cursorX = 0;
+    buf->document.pos = i + 1;
   } else {
-    buf->cursorX = 0;
-    buf->pos = 0;
+    buf->document.cursorX = 0;
+    buf->document.pos = 0;
   }
 #ifdef DISPLAY_DEBUG
   fprintf(stderr,
@@ -874,31 +902,31 @@ void arrangeLine(struct Buffer *buf) {
 void cursorXY(struct Buffer *buf, int x, int y) {
   int oldX;
 
-  cursorUpDown(buf, y - buf->cursorY);
+  cursorUpDown(buf, y - buf->document.cursorY);
 
-  if (buf->cursorX > x) {
-    while (buf->cursorX > x)
-      cursorLeft(buf, buf->COLS / 2);
-  } else if (buf->cursorX < x) {
-    while (buf->cursorX < x) {
-      oldX = buf->cursorX;
+  if (buf->document.cursorX > x) {
+    while (buf->document.cursorX > x)
+      cursorLeft(buf, buf->document.COLS / 2);
+  } else if (buf->document.cursorX < x) {
+    while (buf->document.cursorX < x) {
+      oldX = buf->document.cursorX;
 
-      cursorRight(buf, buf->COLS / 2);
+      cursorRight(buf, buf->document.COLS / 2);
 
-      if (oldX == buf->cursorX)
+      if (oldX == buf->document.cursorX)
         break;
     }
-    if (buf->cursorX > x)
-      cursorLeft(buf, buf->COLS / 2);
+    if (buf->document.cursorX > x)
+      cursorLeft(buf, buf->document.COLS / 2);
   }
 }
 
 void restorePosition(struct Buffer *buf, struct Buffer *orig) {
-  buf->topLine = lineSkip(buf, buf->firstLine, TOP_LINENUMBER(orig) - 1, false);
+  buf->document.topLine = lineSkip(buf, buf->document.firstLine, TOP_LINENUMBER(orig) - 1, false);
   gotoLine(buf, CUR_LINENUMBER(orig));
-  buf->pos = orig->pos;
-  if (buf->currentLine && orig->currentLine)
-    buf->pos += orig->currentLine->bpos - buf->currentLine->bpos;
-  buf->currentColumn = orig->currentColumn;
+  buf->document.pos = orig->document.pos;
+  if (buf->document.currentLine && orig->document.currentLine)
+    buf->document.pos += orig->document.currentLine->bpos - buf->document.currentLine->bpos;
+  buf->document.currentColumn = orig->document.currentColumn;
   arrangeCursor(buf);
 }

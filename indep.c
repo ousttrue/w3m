@@ -188,12 +188,10 @@ Str convertLine(Str line, enum CLEANUP_LINE_MODE mode) {
   return line;
 }
 
-char *html_quote(char *str) {
+const char *html_quote(const char *str) {
   Str tmp = NULL;
-  char *p, *q;
-
-  for (p = str; *p; p++) {
-    q = html_quote_char(*p);
+  for (auto p = str; *p; p++) {
+    auto q = html_quote_char(*p);
     if (q) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(str, (int)(p - str));

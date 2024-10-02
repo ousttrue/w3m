@@ -25,7 +25,7 @@ extern Str convertLine(Str line, enum CLEANUP_LINE_MODE mode);
 // #define convertLine(uf, line, mode, charset, dcharset)                         \
 //   convertLine0(uf, line, mode)
 
-extern char *html_quote(char *str);
+extern const char *html_quote(const char *str);
 extern char *file_quote(char *str);
 extern char *file_unquote(char *str);
 extern char *url_quote(char *str);

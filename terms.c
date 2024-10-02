@@ -676,8 +676,8 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
 
   if (term_is_initialized()) {
     if (CurrentTab != NULL && Currentbuf != NULL) {
-      scr_message(s, Currentbuf->cursorX + Currentbuf->rootX,
-                  Currentbuf->cursorY + Currentbuf->rootY);
+      scr_message(s, Currentbuf->document.cursorX + Currentbuf->document.rootX,
+                  Currentbuf->document.cursorY + Currentbuf->document.rootY);
     } else {
       scr_message(s, LASTLINE, 0);
     }

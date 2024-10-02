@@ -38,9 +38,9 @@ struct Buffer *newBuffer(int width) {
   if (n == NULL)
     return NULL;
   memset((void *)n, 0, sizeof(struct Buffer));
-  n->width = width;
-  n->COLS = COLS;
-  n->LINES = LASTLINE;
+  n->document.width = width;
+  n->document.COLS = COLS;
+  n->document.LINES = LASTLINE;
   n->currentURL.scheme = SCM_UNKNOWN;
   n->baseURL = NULL;
   n->baseTarget = NULL;
@@ -70,8 +70,8 @@ struct Buffer *nullBuffer(void) {
  * clearBuffer: clear buffer content
  */
 void clearBuffer(struct Buffer *buf) {
-  buf->firstLine = buf->topLine = buf->currentLine = buf->lastLine = NULL;
-  buf->allLine = 0;
+  buf->document.firstLine = buf->document.topLine = buf->document.currentLine = buf->document.lastLine = NULL;
+  buf->document.allLine = 0;
 }
 
 /*
@@ -184,9 +184,9 @@ static void writeBufferName(struct Buffer *buf, int n) {
   Str msg;
   int all;
 
-  all = buf->allLine;
-  if (all == 0 && buf->lastLine != NULL)
-    all = buf->lastLine->linenumber;
+  all = buf->document.allLine;
+  if (all == 0 && buf->document.lastLine != NULL)
+    all = buf->document.lastLine->linenumber;
   scr_move(n, 0);
   /* FIXME: gettextize? */
   msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
@@ -216,7 +216,7 @@ static void writeBufferName(struct Buffer *buf, int n) {
  */
 void gotoLine(struct Buffer *buf, int n) {
   char msg[32];
-  Line *l = buf->firstLine;
+  Line *l = buf->document.firstLine;
 
   if (l == NULL)
     return;
@@ -224,24 +224,24 @@ void gotoLine(struct Buffer *buf, int n) {
     /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->linenumber);
     set_delayed_message(msg);
-    buf->topLine = buf->currentLine = l;
+    buf->document.topLine = buf->document.currentLine = l;
     return;
   }
-  if (buf->lastLine->linenumber < n) {
-    l = buf->lastLine;
+  if (buf->document.lastLine->linenumber < n) {
+    l = buf->document.lastLine;
     /* FIXME: gettextize? */
-    sprintf(msg, "Last line is #%ld", buf->lastLine->linenumber);
+    sprintf(msg, "Last line is #%ld", buf->document.lastLine->linenumber);
     set_delayed_message(msg);
-    buf->currentLine = l;
-    buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), false);
+    buf->document.currentLine = l;
+    buf->document.topLine = lineSkip(buf, buf->document.currentLine, -(buf->document.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
     if (l->linenumber >= n) {
-      buf->currentLine = l;
-      if (n < buf->topLine->linenumber ||
-          buf->topLine->linenumber + buf->LINES <= n)
-        buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+      buf->document.currentLine = l;
+      if (n < buf->document.topLine->linenumber ||
+          buf->document.topLine->linenumber + buf->document.LINES <= n)
+        buf->document.topLine = lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
       break;
     }
   }
@@ -252,7 +252,7 @@ void gotoLine(struct Buffer *buf, int n) {
  */
 void gotoRealLine(struct Buffer *buf, int n) {
   char msg[32];
-  Line *l = buf->firstLine;
+  Line *l = buf->document.firstLine;
 
   if (l == NULL)
     return;
@@ -261,24 +261,24 @@ void gotoRealLine(struct Buffer *buf, int n) {
     /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->real_linenumber);
     set_delayed_message(msg);
-    buf->topLine = buf->currentLine = l;
+    buf->document.topLine = buf->document.currentLine = l;
     return;
   }
-  if (buf->lastLine->real_linenumber < n) {
-    l = buf->lastLine;
+  if (buf->document.lastLine->real_linenumber < n) {
+    l = buf->document.lastLine;
     /* FIXME: gettextize? */
-    sprintf(msg, "Last line is #%ld", buf->lastLine->real_linenumber);
+    sprintf(msg, "Last line is #%ld", buf->document.lastLine->real_linenumber);
     set_delayed_message(msg);
-    buf->currentLine = l;
-    buf->topLine = lineSkip(buf, buf->currentLine, -(buf->LINES - 1), false);
+    buf->document.currentLine = l;
+    buf->document.topLine = lineSkip(buf, buf->document.currentLine, -(buf->document.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
     if (l->real_linenumber >= n) {
-      buf->currentLine = l;
-      if (n < buf->topLine->real_linenumber ||
-          buf->topLine->real_linenumber + buf->LINES <= n)
-        buf->topLine = lineSkip(buf, l, -(buf->LINES + 1) / 2, false);
+      buf->document.currentLine = l;
+      if (n < buf->document.topLine->real_linenumber ||
+          buf->document.topLine->real_linenumber + buf->document.LINES <= n)
+        buf->document.topLine = lineSkip(buf, l, -(buf->document.LINES + 1) / 2, false);
       break;
     }
   }
@@ -437,7 +437,7 @@ void reshapeBuffer(struct Buffer *buf) {
   if (!buf->need_reshape)
     return;
   buf->need_reshape = false;
-  buf->width = INIT_BUFFER_WIDTH;
+  buf->document.width = INIT_BUFFER_WIDTH;
   if (buf->sourcefile == NULL)
     return;
   init_stream(&f, SCM_LOCAL, NULL);
@@ -447,17 +447,17 @@ void reshapeBuffer(struct Buffer *buf) {
   copyBuffer(&sbuf, buf);
   clearBuffer(buf);
 
-  buf->href = NULL;
-  buf->name = NULL;
-  buf->img = NULL;
-  buf->formitem = NULL;
-  buf->formlist = NULL;
-  buf->linklist = NULL;
-  buf->maplist = NULL;
-  if (buf->hmarklist)
-    buf->hmarklist->nmark = 0;
-  if (buf->imarklist)
-    buf->imarklist->nmark = 0;
+  buf->document.href = NULL;
+  buf->document.name = NULL;
+  buf->document.img = NULL;
+  buf->document.formitem = NULL;
+  buf->document.formlist = NULL;
+  buf->document.linklist = NULL;
+  buf->document.maplist = NULL;
+  if (buf->document.hmarklist)
+    buf->document.hmarklist->nmark = 0;
+  if (buf->document.imarklist)
+    buf->document.imarklist->nmark = 0;
 
   if (buf->header_source) {
     if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source ||
@@ -479,37 +479,37 @@ void reshapeBuffer(struct Buffer *buf) {
     loadBuffer(&f, nullptr, buf);
   UFclose(&f);
 
-  buf->height = LASTLINE + 1;
-  if (buf->firstLine && sbuf.firstLine) {
-    Line *cur = sbuf.currentLine;
+  buf->document.height = LASTLINE + 1;
+  if (buf->document.firstLine && sbuf.document.firstLine) {
+    Line *cur = sbuf.document.currentLine;
     int n;
 
-    buf->pos = sbuf.pos + cur->bpos;
+    buf->document.pos = sbuf.document.pos + cur->bpos;
     while (cur->bpos && cur->prev)
       cur = cur->prev;
     if (cur->real_linenumber > 0)
       gotoRealLine(buf, cur->real_linenumber);
     else
       gotoLine(buf, cur->linenumber);
-    n = (buf->currentLine->linenumber - buf->topLine->linenumber) -
-        (cur->linenumber - sbuf.topLine->linenumber);
+    n = (buf->document.currentLine->linenumber - buf->document.topLine->linenumber) -
+        (cur->linenumber - sbuf.document.topLine->linenumber);
     if (n) {
-      buf->topLine = lineSkip(buf, buf->topLine, n, false);
+      buf->document.topLine = lineSkip(buf, buf->document.topLine, n, false);
       if (cur->real_linenumber > 0)
         gotoRealLine(buf, cur->real_linenumber);
       else
         gotoLine(buf, cur->linenumber);
     }
-    buf->pos -= buf->currentLine->bpos;
+    buf->document.pos -= buf->document.currentLine->bpos;
     if (FoldLine && !is_html_type(buf->type))
-      buf->currentColumn = 0;
+      buf->document.currentColumn = 0;
     else
-      buf->currentColumn = sbuf.currentColumn;
+      buf->document.currentColumn = sbuf.document.currentColumn;
     arrangeCursor(buf);
   }
   if (buf->check_url & CHK_URL)
     chkURLBuffer(buf);
-  formResetBuffer(buf, sbuf.formitem);
+  formResetBuffer(buf, sbuf.document.formitem);
 }
 
 /* shallow copy */
@@ -537,7 +537,7 @@ int writeBufferCache(struct Buffer *buf) {
   if (buf->savecache)
     return -1;
 
-  if (buf->firstLine == NULL)
+  if (buf->document.firstLine == NULL)
     goto _error1;
 
   tmp = tmpfname(TMPF_CACHE, NULL);
@@ -546,11 +546,11 @@ int writeBufferCache(struct Buffer *buf) {
   if (!cache)
     goto _error1;
 
-  if (fwrite1(buf->currentLine->linenumber, cache) ||
-      fwrite1(buf->topLine->linenumber, cache))
+  if (fwrite1(buf->document.currentLine->linenumber, cache) ||
+      fwrite1(buf->document.topLine->linenumber, cache))
     goto _error;
 
-  for (l = buf->firstLine; l; l = l->next) {
+  for (l = buf->document.firstLine; l; l = l->next) {
     if (fwrite1(l->real_linenumber, cache) || fwrite1(l->usrflags, cache) ||
         fwrite1(l->width, cache) || fwrite1(l->len, cache) ||
         fwrite1(l->size, cache) || fwrite1(l->bpos, cache) ||
@@ -596,12 +596,12 @@ int readBufferCache(struct Buffer *buf) {
     if (prevl)
       prevl->next = l;
     else
-      buf->firstLine = l;
+      buf->document.firstLine = l;
     l->linenumber = lnum;
     if (lnum == clnum)
-      buf->currentLine = l;
+      buf->document.currentLine = l;
     if (lnum == tlnum)
-      buf->topLine = l;
+      buf->document.topLine = l;
     if (fread1(l->real_linenumber, cache) || fread1(l->usrflags, cache) ||
         fread1(l->width, cache) || fread1(l->len, cache) ||
         fread1(l->size, cache) || fread1(l->bpos, cache) ||
@@ -621,8 +621,8 @@ int readBufferCache(struct Buffer *buf) {
       break;
   }
   if (prevl) {
-    buf->lastLine = prevl;
-    buf->lastLine->next = NULL;
+    buf->document.lastLine = prevl;
+    buf->document.lastLine->next = NULL;
   }
   fclose(cache);
   unlink(buf->savecache);
@@ -642,18 +642,18 @@ static void addnewline2(struct Buffer *buf, char *line, Lineprop *prop, int pos,
   l->size = pos;
   l->bpos = 0;
   l->bwidth = 0;
-  l->prev = buf->currentLine;
-  if (buf->currentLine) {
-    l->next = buf->currentLine->next;
-    buf->currentLine->next = l;
+  l->prev = buf->document.currentLine;
+  if (buf->document.currentLine) {
+    l->next = buf->document.currentLine->next;
+    buf->document.currentLine->next = l;
   } else
     l->next = NULL;
-  if (buf->lastLine == NULL || buf->lastLine == buf->currentLine)
-    buf->lastLine = l;
-  buf->currentLine = l;
-  if (buf->firstLine == NULL)
-    buf->firstLine = l;
-  l->linenumber = ++buf->allLine;
+  if (buf->document.lastLine == NULL || buf->document.lastLine == buf->document.currentLine)
+    buf->document.lastLine = l;
+  buf->document.currentLine = l;
+  if (buf->document.firstLine == NULL)
+    buf->document.firstLine = l;
+  l->linenumber = ++buf->document.allLine;
   if (nlines < 0) {
     /*     l->real_linenumber = l->linenumber;     */
     l->real_linenumber = 0;
@@ -684,7 +684,7 @@ void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
   bpos = 0;
   bwidth = 0;
   while (1) {
-    l = buf->currentLine;
+    l = buf->document.currentLine;
     l->bpos = bpos;
     l->bwidth = bwidth;
     i = columnLen(l, width);
@@ -706,26 +706,26 @@ void addnewline(struct Buffer *buf, char *line, Lineprop *prop, int pos,
 
 int columnSkip(struct Buffer *buf, int offset) {
   int i, maxColumn;
-  int column = buf->currentColumn + offset;
-  int nlines = buf->LINES + 1;
+  int column = buf->document.currentColumn + offset;
+  int nlines = buf->document.LINES + 1;
   Line *l;
 
   maxColumn = 0;
-  for (i = 0, l = buf->topLine; i < nlines && l != NULL; i++, l = l->next) {
+  for (i = 0, l = buf->document.topLine; i < nlines && l != NULL; i++, l = l->next) {
     if (l->width < 0)
       l->width = COLPOS(l, l->len);
     if (l->width - 1 > maxColumn)
       maxColumn = l->width - 1;
   }
-  maxColumn -= buf->COLS - 1;
+  maxColumn -= buf->document.COLS - 1;
   if (column < maxColumn)
     maxColumn = column;
   if (maxColumn < 0)
     maxColumn = 0;
 
-  if (buf->currentColumn == maxColumn)
+  if (buf->document.currentColumn == maxColumn)
     return 0;
-  buf->currentColumn = maxColumn;
+  buf->document.currentColumn = maxColumn;
   return 1;
 }
 
@@ -735,7 +735,7 @@ Line *lineSkip(struct Buffer *buf, Line *line, int offset, int last) {
 
   l = currentLineSkip(buf, line, offset, last);
   if (!nextpage_topline)
-    for (i = buf->LINES - 1 - (buf->lastLine->linenumber - l->linenumber);
+    for (i = buf->document.LINES - 1 - (buf->document.lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
       ;
   return l;
@@ -775,9 +775,9 @@ char *last_modified(struct Buffer *buf) {
 }
 
 int currentLn(struct Buffer *buf) {
-  if (buf->currentLine)
+  if (buf->document.currentLine)
     /*     return buf->currentLine->real_linenumber + 1;      */
-    return buf->currentLine->linenumber + 1;
+    return buf->document.currentLine->linenumber + 1;
   else
     return 1;
 }

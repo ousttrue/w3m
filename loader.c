@@ -184,16 +184,16 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
         if (a != NULL) {
           gotoLine(b, a->start.line);
           if (label_topline)
-            b->topLine = lineSkip(
-                b, b->topLine,
-                b->currentLine->linenumber - b->topLine->linenumber, false);
-          b->pos = a->start.pos;
+            b->document.topLine = lineSkip(
+                b, b->document.topLine,
+                b->document.currentLine->linenumber - b->document.topLine->linenumber, false);
+          b->document.pos = a->start.pos;
           arrangeCursor(b);
         }
       } else { /* plain text */
         int l = atoi(pu.label);
         gotoRealLine(b, l);
-        b->pos = 0;
+        b->document.pos = 0;
         arrangeCursor(b);
       }
     }

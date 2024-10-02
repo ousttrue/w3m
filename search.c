@@ -21,11 +21,11 @@ int forwardSearch(struct Buffer *buf, char *str) {
     scr_message(p, 0, 0);
     return SR_NOTFOUND;
   }
-  l = buf->currentLine;
+  l = buf->document.currentLine;
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = buf->pos;
+  pos = buf->document.pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -39,8 +39,8 @@ int forwardSearch(struct Buffer *buf, char *str) {
       pos -= l->len;
       l = l->next;
     }
-    buf->pos = pos;
-    if (l != buf->currentLine)
+    buf->document.pos = pos;
+    if (l != buf->document.currentLine)
       gotoLine(buf, l->linenumber);
     arrangeCursor(buf);
     set_mark(l, pos, pos + last - first);
@@ -49,7 +49,7 @@ int forwardSearch(struct Buffer *buf, char *str) {
   for (l = l->next;; l = l->next) {
     if (l == NULL) {
       if (WrapSearch) {
-        l = buf->firstLine;
+        l = buf->document.firstLine;
         wrapped = true;
       } else {
         break;
@@ -64,8 +64,8 @@ int forwardSearch(struct Buffer *buf, char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->pos = pos;
-      buf->currentLine = l;
+      buf->document.pos = pos;
+      buf->document.currentLine = l;
       gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
       set_mark(l, pos, pos + last - first);
@@ -87,11 +87,11 @@ int backwardSearch(struct Buffer *buf, char *str) {
     scr_message(p, 0, 0);
     return SR_NOTFOUND;
   }
-  l = buf->currentLine;
+  l = buf->document.currentLine;
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = buf->pos;
+  pos = buf->document.pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -122,8 +122,8 @@ int backwardSearch(struct Buffer *buf, char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->pos = pos;
-      if (l != buf->currentLine)
+      buf->document.pos = pos;
+      if (l != buf->document.currentLine)
         gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
       set_mark(l, pos, pos + found_last - found);
@@ -133,7 +133,7 @@ int backwardSearch(struct Buffer *buf, char *str) {
   for (l = l->prev;; l = l->prev) {
     if (l == NULL) {
       if (WrapSearch) {
-        l = buf->lastLine;
+        l = buf->document.lastLine;
         wrapped = true;
       } else {
         break;
@@ -156,7 +156,7 @@ int backwardSearch(struct Buffer *buf, char *str) {
         pos -= l->len;
         l = l->next;
       }
-      buf->pos = pos;
+      buf->document.pos = pos;
       gotoLine(buf, l->linenumber);
       arrangeCursor(buf);
       set_mark(l, pos, pos + found_last - found);

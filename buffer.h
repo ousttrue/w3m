@@ -1,4 +1,5 @@
 #pragma once
+#include "document.h"
 #include "anchor.h"
 #include "form.h"
 #include "url.h"
@@ -58,36 +59,12 @@ enum BufferProperty {
 struct Buffer {
   char *filename;
   char *buffername;
-  struct Line *firstLine;
-  struct Line *topLine;
-  struct Line *currentLine;
-  struct Line *lastLine;
   struct Buffer *nextBuffer;
   struct Buffer *linkBuffer[MAX_LB];
-  short width;
-  short height;
+  struct Document document;
   char *type;
   const char *real_type;
-  int allLine;
   enum BufferProperty bufferprop;
-  int currentColumn;
-  short cursorX;
-  short cursorY;
-  int pos;
-  int visualpos;
-  short rootX;
-  short rootY;
-  short COLS;
-  short LINES;
-  struct AnchorList *href;
-  struct AnchorList *name;
-  struct AnchorList *img;
-  struct AnchorList *formitem;
-  struct LinkList *linklist;
-  struct FormList *formlist;
-  struct MapList *maplist;
-  struct HmarkerList *hmarklist;
-  struct HmarkerList *imarklist;
   struct Url currentURL;
   struct Url *baseURL;
   char *baseTarget;

@@ -172,7 +172,6 @@ extern Str process_n_textarea(void);
 extern void feed_textarea(char *str);
 extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
-extern int getMetaRefreshParam(char *q, Str *refresh_uri);
 
 extern char *convert_size(int64_t size, int usefloat);
 extern char *convert_size2(int64_t size1, int64_t size2, int usefloat);

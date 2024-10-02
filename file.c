@@ -133,7 +133,7 @@ void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,
     flushline(h_env, obuf, indent, 1, width);
 }
 
-int getMetaRefreshParam(char *q, Str *refresh_uri) {
+int getMetaRefreshParam(const char *q, Str *refresh_uri) {
   int refresh_interval;
   char *r;
   Str s_tmp = NULL;
@@ -256,11 +256,11 @@ static void _saveBuffer(struct Buffer *buf, Line *l, FILE *f, int cont) {
 }
 
 void saveBuffer(struct Buffer *buf, FILE *f, int cont) {
-  _saveBuffer(buf, buf->firstLine, f, cont);
+  _saveBuffer(buf, buf->document.firstLine, f, cont);
 }
 
 void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
-  Line *l = buf->firstLine;
+  Line *l = buf->document.firstLine;
 
   while (l != NULL && l->real_linenumber == 0)
     l = l->next;

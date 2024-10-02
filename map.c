@@ -14,7 +14,7 @@ struct MapList *searchMapList(struct Buffer *buf, char *name) {
 
   if (name == NULL)
     return NULL;
-  for (ml = buf->maplist; ml != NULL; ml = ml->next) {
+  for (ml = buf->document.maplist; ml != NULL; ml = ml->next) {
     if (!Strcmp_charp(ml->name, name))
       break;
   }
@@ -36,8 +36,8 @@ struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
 }
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
-struct MapArea *follow_map_menu(struct Buffer *buf, char *name, struct Anchor *a_img,
-                                int x, int y) {
+struct MapArea *follow_map_menu(struct Buffer *buf, char *name,
+                                struct Anchor *a_img, int x, int y) {
   struct MapList *ml;
   struct ListItem *al;
   int i, selected = -1;
@@ -67,7 +67,6 @@ struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
   struct ListItem *al;
   struct MapArea *a;
   struct Url pu;
-  char *p, *q;
   struct Buffer *newbuf;
 
   ml = searchMapList(buf, name);
@@ -80,8 +79,8 @@ struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
     if (!a)
       continue;
     parseURL2(a->url, &pu, baseURL(buf));
-    p = parsedURL2Str(&pu)->ptr;
-    q = html_quote(p);
+    const char *p = parsedURL2Str(&pu)->ptr;
+    const char *q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode2(p, buf));
     else
@@ -113,7 +112,6 @@ static void append_map_info(struct Buffer *buf, Str tmp,
   struct ListItem *al;
   struct MapArea *a;
   struct Url pu;
-  char *p, *q;
 
   ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
   if (ml == NULL)
@@ -126,8 +124,8 @@ static void append_map_info(struct Buffer *buf, Str tmp,
     if (!a)
       continue;
     parseURL2(a->url, &pu, baseURL(buf));
-    q = html_quote(parsedURL2Str(&pu)->ptr);
-    p = html_quote(url_decode2(a->url, buf));
+    const char *q = html_quote(parsedURL2Str(&pu)->ptr);
+    const char *p = html_quote(url_decode2(a->url, buf));
     Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"", q,
                    "\">", html_quote(*a->alt ? a->alt : mybasename(a->url)),
                    "</a><td>", p, "\n", NULL);
@@ -143,7 +141,7 @@ static void append_link_info(struct Buffer *buf, Str html,
 
   Strcat_charp(html, "<hr width=50%><h1>Link information</h1><table>\n");
   for (auto l = link; l; l = l->next) {
-    char *url;
+    const char *url;
     if (l->url) {
       struct Url pu;
       parseURL2(l->url, &pu, baseURL(buf));
@@ -178,7 +176,6 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   struct Url pu;
   struct TextListItem *ti;
   int all;
-  char *p, *q;
   struct Buffer *newbuf;
 
   Strcat_charp(tmp, "<html><head>\
@@ -187,27 +184,31 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
 <h1>Information about current page</h1>\n");
   if (buf == NULL)
     goto end;
-  all = buf->allLine;
-  if (all == 0 && buf->lastLine)
-    all = buf->lastLine->linenumber;
-  p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
-  Strcat_m_charp(
-      tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
-      html_quote(buf->buffername), "<tr valign=top><td nowrap>Current URL<td>",
-      html_quote(p), "<tr valign=top><td nowrap>Document Type<td>",
-      buf->real_type ? html_quote(buf->real_type) : "unknown",
-      "<tr valign=top><td nowrap>Last Modified<td>",
-      html_quote(last_modified(buf)), NULL);
-  Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
-                 Sprintf("%d", all)->ptr,
-                 "<tr valign=top><td nowrap>Transferred bytes<td>",
-                 Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
+
+  {
+    all = buf->document.allLine;
+    if (all == 0 && buf->document.lastLine)
+      all = buf->document.lastLine->linenumber;
+    const char* p = url_decode2(parsedURL2Str(&buf->currentURL)->ptr, NULL);
+    Strcat_m_charp(tmp, "<table cellpadding=0>",
+                   "<tr valign=top><td nowrap>Title<td>",
+                   html_quote(buf->buffername),
+                   "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
+                   "<tr valign=top><td nowrap>Document Type<td>",
+                   buf->real_type ? html_quote(buf->real_type) : "unknown",
+                   "<tr valign=top><td nowrap>Last Modified<td>",
+                   html_quote(last_modified(buf)), NULL);
+    Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
+                   Sprintf("%d", all)->ptr,
+                   "<tr valign=top><td nowrap>Transferred bytes<td>",
+                   Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
+  }
 
   a = retrieveCurrentAnchor(buf);
   if (a != NULL) {
     parseURL2(a->url, &pu, baseURL(buf));
-    p = parsedURL2Str(&pu)->ptr;
-    q = html_quote(p);
+    const char* p = parsedURL2Str(&pu)->ptr;
+    const char* q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode2(p, buf));
     else
@@ -219,8 +220,8 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   a = retrieveCurrentImg(buf);
   if (a != NULL) {
     parseURL2(a->url, &pu, baseURL(buf));
-    p = parsedURL2Str(&pu)->ptr;
-    q = html_quote(p);
+    const char* p = parsedURL2Str(&pu)->ptr;
+    const char* q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode2(p, buf));
     else
@@ -232,7 +233,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   a = retrieveCurrentForm(buf);
   if (a != NULL) {
     struct FormItemList *fi = (struct FormItemList *)a->url;
-    p = form2str(fi);
+    const char* p = form2str(fi);
     p = html_quote(url_decode2(p, buf));
     Strcat_m_charp(
         tmp, "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
@@ -243,7 +244,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   }
   Strcat_charp(tmp, "</table>\n");
 
-  append_link_info(buf, tmp, buf->linklist);
+  append_link_info(buf, tmp, buf->document.linklist);
 
   if (buf->document_header != NULL) {
     Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");

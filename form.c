@@ -173,8 +173,8 @@ void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
   struct Anchor *a2;
   struct FormItemList *f2;
 
-  for (i = 0; i < buf->formitem->nanchor; i++) {
-    a2 = &buf->formitem->anchors[i];
+  for (i = 0; i < buf->document.formitem->nanchor; i++) {
+    a2 = &buf->document.formitem->anchors[i];
     f2 = (struct FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
@@ -191,10 +191,11 @@ void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem) {
   struct Anchor *a;
   struct FormItemList *f1, *f2;
 
-  if (buf == NULL || buf->formitem == NULL || formitem == NULL)
+  if (buf == NULL || buf->document.formitem == NULL || formitem == NULL)
     return;
-  for (i = 0; i < buf->formitem->nanchor && i < formitem->nanchor; i++) {
-    a = &buf->formitem->anchors[i];
+  for (i = 0; i < buf->document.formitem->nanchor && i < formitem->nanchor;
+       i++) {
+    a = &buf->document.formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
     f1 = (struct FormItemList *)a->url;
@@ -339,12 +340,13 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
   switch (form->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
-    if (buf->currentLine == NULL || spos >= buf->currentLine->len || spos < 0)
+    if (buf->document.currentLine == NULL ||
+        spos >= buf->document.currentLine->len || spos < 0)
       break;
     if (form->checked)
-      buf->currentLine->lineBuf[spos] = '*';
+      buf->document.currentLine->lineBuf[spos] = '*';
     else
-      buf->currentLine->lineBuf[spos] = ' ';
+      buf->document.currentLine->lineBuf[spos] = ' ';
     break;
   case FORM_INPUT_TEXT:
   case FORM_INPUT_FILE:
@@ -354,11 +356,11 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
       break;
     p = form->value->ptr;
   }
-    l = buf->currentLine;
+    l = buf->document.currentLine;
     if (!l)
       break;
     if (form->type == FORM_TEXTAREA) {
-      int n = a->y - buf->currentLine->linenumber;
+      int n = a->y - buf->document.currentLine->linenumber;
       if (n > 0)
         for (; l && n; l = l->prev, n--)
           ;
@@ -375,7 +377,7 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
         break;
       if (rows > 1) {
         pos = columnPos(l, col);
-        a = retrieveAnchor(buf->formitem, l->linenumber, pos);
+        a = retrieveAnchor(buf->document.formitem, l->linenumber, pos);
         if (a == NULL)
           break;
         spos = a->start.pos;
@@ -387,14 +389,14 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
       pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col, rows > 1,
                              form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(buf->href, buf->hmarklist, a->start.line, spos,
-                            pos - epos);
-        shiftAnchorPosition(buf->name, buf->hmarklist, a->start.line, spos,
-                            pos - epos);
-        shiftAnchorPosition(buf->img, buf->hmarklist, a->start.line, spos,
-                            pos - epos);
-        shiftAnchorPosition(buf->formitem, buf->hmarklist, a->start.line, spos,
-                            pos - epos);
+        shiftAnchorPosition(buf->document.href, buf->document.hmarklist,
+                            a->start.line, spos, pos - epos);
+        shiftAnchorPosition(buf->document.name, buf->document.hmarklist,
+                            a->start.line, spos, pos - epos);
+        shiftAnchorPosition(buf->document.img, buf->document.hmarklist,
+                            a->start.line, spos, pos - epos);
+        shiftAnchorPosition(buf->document.formitem, buf->document.hmarklist,
+                            a->start.line, spos, pos - epos);
       }
     }
     break;
@@ -411,10 +413,10 @@ Str textfieldrep(Str s, int width) {
   j = 0;
   for (i = 0; i < s->length; i += c_len) {
     c_type = get_mctype((unsigned char *)&s->ptr[i]);
-    c_len = utf8sequence_len(&s->ptr[i]);
+    c_len = utf8sequence_len((const uint8_t*)&s->ptr[i]);
     if (s->ptr[i] == '\r')
       continue;
-    k = j + utf8sequence_width(&s->ptr[i]);
+    k = j + utf8sequence_width((const uint8_t*)&s->ptr[i]);
     if (k > width)
       break;
     if (c_type == PC_CTRL)
@@ -704,7 +706,7 @@ void preFormUpdateBuffer(struct Buffer *buf) {
   struct FormList *fl;
   struct FormItemList *fi;
 
-  if (!buf || !buf->formitem || !PreForm)
+  if (!buf || !buf->document.formitem || !PreForm)
     return;
 
   for (pf = PreForm; pf; pf = pf->next) {
@@ -717,8 +719,8 @@ void preFormUpdateBuffer(struct Buffer *buf) {
         continue;
     } else
       continue;
-    for (i = 0; i < buf->formitem->nanchor; i++) {
-      a = &buf->formitem->anchors[i];
+    for (i = 0; i < buf->document.formitem->nanchor; i++) {
+      a = &buf->document.formitem->anchors[i];
       fi = (struct FormItemList *)a->url;
       fl = fi->parent;
       if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))

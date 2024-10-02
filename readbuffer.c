@@ -98,7 +98,7 @@ Str process_input(struct parsed_tag *tag) {
   int i = 20, v, x, y, z, iw, ih, size = 20;
   char *q, *p, *r, *p2, *s;
   Str tmp = NULL;
-  char *qq = "";
+  const char *qq = "";
   int qlen = 0;
 
   if (cur_form_id < 0) {
@@ -281,7 +281,8 @@ Str process_input(struct parsed_tag *tag) {
 
 Str process_button(struct parsed_tag *tag) {
   Str tmp = NULL;
-  char *p, *q, *r, *qq = "";
+  char *p, *q, *r;
+  const char *qq = "";
   int qlen, v;
 
   if (cur_form_id < 0) {
@@ -648,8 +649,8 @@ static void push_tag(struct readbuffer *obuf, char *cmdname, int cmd) {
     append_tags(obuf);
 }
 
-static void push_nchars(struct readbuffer *obuf, int width, char *str, int len,
-                        Lineprop mode) {
+static void push_nchars(struct readbuffer *obuf, int width, const char *str,
+                        int len, Lineprop mode) {
   append_tags(obuf);
   Strcat_charp_n(obuf->line, str, len);
   obuf->pos += width;
@@ -1496,7 +1497,8 @@ Str process_hr(struct parsed_tag *tag, int width, int indent_width) {
 }
 
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
-  char *p, *q, *r;
+  char *p, *r;
+  const char *q;
   int i, w, x, y, z, count, width;
   struct readbuffer *obuf = h_env->obuf;
   struct environment *envs = h_env->envs;
@@ -2246,7 +2248,8 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
     }
     return 1;
   case HTML_META:
-    p = q = r = NULL;
+    p = r = NULL;
+    q = nullptr;
     parsedtag_get_value(tag, ATTR_HTTP_EQUIV, &p);
     parsedtag_get_value(tag, ATTR_CONTENT, &q);
     if (p && q && !strcasecmp(p, "refresh")) {
@@ -2978,7 +2981,8 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
   forms = NULL;
   cur_hseq = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->width, 0);
+  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->document.width,
+            0);
 
   htmlenv1.buf = newTextLineList();
 #if defined(USE_M17N) || defined(USE_IMAGE)
@@ -3096,11 +3100,11 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
 
   loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
 
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
+  newBuf->document.topLine = newBuf->document.firstLine;
+  newBuf->document.lastLine = newBuf->document.currentLine;
+  newBuf->document.currentLine = newBuf->document.firstLine;
   if (n_textarea)
-    formResetBuffer(newBuf, newBuf->formitem);
+    formResetBuffer(newBuf, newBuf->document.formitem);
   if (src)
     fclose(src);
 
@@ -3130,13 +3134,13 @@ struct Buffer *loadHTMLString(Str page) {
 
   TRAP_OFF;
   UFclose(&f);
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
+  newBuf->document.topLine = newBuf->document.firstLine;
+  newBuf->document.lastLine = newBuf->document.currentLine;
+  newBuf->document.currentLine = newBuf->document.firstLine;
   newBuf->type = "text/html";
   newBuf->real_type = newBuf->type;
   if (n_textarea)
-    formResetBuffer(newBuf, newBuf->formitem);
+    formResetBuffer(newBuf, newBuf->document.formitem);
   return newBuf;
 }
 
@@ -3217,9 +3221,9 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
   }
 _end:
   TRAP_OFF;
-  newBuf->topLine = newBuf->firstLine;
-  newBuf->lastLine = newBuf->currentLine;
-  newBuf->currentLine = newBuf->firstLine;
+  newBuf->document.topLine = newBuf->document.firstLine;
+  newBuf->document.lastLine = newBuf->document.currentLine;
+  newBuf->document.currentLine = newBuf->document.firstLine;
   newBuf->trbyte = trbyte + linelen;
   if (src)
     fclose(src);
