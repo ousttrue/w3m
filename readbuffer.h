@@ -146,3 +146,18 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *type,
                           struct Buffer *newBuf);
 
 Str process_form_int(struct parsed_tag *tag, int fid);
+void push_spaces(struct readbuffer *obuf, int pre_mode, int width);
+
+#define push_charp(obuf, width, str, mode)                                     \
+  push_nchars(obuf, width, str, strlen(str), mode)
+
+#define push_str(obuf, width, str, mode)                                       \
+  push_nchars(obuf, width, str->ptr, str->length, mode)
+void push_nchars(struct readbuffer *obuf, int width, const char *str, int len,
+                 Lineprop mode);
+void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
+               int indent, int force, int width);
+extern void do_blankline(struct html_feed_environ *h_env,
+                         struct readbuffer *obuf, int indent, int indent_incr,
+                         int width);
+extern void purgeline(struct html_feed_environ *h_env);

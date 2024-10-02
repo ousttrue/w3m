@@ -132,17 +132,8 @@ extern void cursorBottom(void);
 struct Buffer;
 struct URLFile;
 
-extern int is_blank_line(char *line, int indent);
 struct html_feed_environ;
-extern void push_render_image(Str str, int width, int limit,
-                              struct html_feed_environ *h_env);
 struct readbuffer;
-extern void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
-                      int indent, int force, int width);
-extern void do_blankline(struct html_feed_environ *h_env,
-                         struct readbuffer *obuf, int indent, int indent_incr,
-                         int width);
-extern void purgeline(struct html_feed_environ *h_env);
 extern void save_fonteffect(struct html_feed_environ *h_env,
                             struct readbuffer *obuf);
 extern void restore_fonteffect(struct html_feed_environ *h_env,

@@ -600,7 +600,7 @@ static void check_breakpoint(struct readbuffer *obuf, int pre_mode, char *ch) {
 #define set_prevchar(x, y, n) Strcopy_charp_n((x), (y), (n))
 #define set_space_to_prevchar(x) Strcopy_charp_n((x), " ", 1)
 
-static void push_spaces(struct readbuffer *obuf, int pre_mode, int width) {
+void push_spaces(struct readbuffer *obuf, int pre_mode, int width) {
   int i;
 
   if (width <= 0)
@@ -646,8 +646,8 @@ static void push_tag(struct readbuffer *obuf, char *cmdname, int cmd) {
     append_tags(obuf);
 }
 
-static void push_nchars(struct readbuffer *obuf, int width, const char *str,
-                        int len, Lineprop mode) {
+void push_nchars(struct readbuffer *obuf, int width, const char *str, int len,
+                 Lineprop mode) {
   append_tags(obuf);
   Strcat_charp_n(obuf->line, str, len);
   obuf->pos += width;
@@ -726,25 +726,7 @@ static char *has_hidden_link(struct readbuffer *obuf, int cmd) {
   return NULL;
 }
 
-#define push_charp(obuf, width, str, mode)                                     \
-  push_nchars(obuf, width, str, strlen(str), mode)
-
-#define push_str(obuf, width, str, mode)                                       \
-  push_nchars(obuf, width, str->ptr, str->length, mode)
-
 #define PUSH(c) push_char(obuf, obuf->flag &RB_SPECIAL, c)
-
-void push_render_image(Str str, int width, int limit,
-                       struct html_feed_environ *h_env) {
-  struct readbuffer *obuf = h_env->obuf;
-  int indent = h_env->envs[h_env->envc].indent;
-
-  push_spaces(obuf, 1, (limit - width) / 2);
-  push_str(obuf, width, str, PC_ASCII);
-  push_spaces(obuf, 1, (limit - width + 1) / 2);
-  if (width > 0)
-    flushline(h_env, obuf, indent, 0, h_env->limit);
-}
 
 void fillline(struct readbuffer *obuf, int indent) {
   push_spaces(obuf, 1, indent - obuf->pos);
@@ -3223,4 +3205,10 @@ _end:
     fclose(src);
 
   return newBuf;
+}
+
+void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,
+                  int indent, int indent_incr, int width) {
+  if (h_env->blank_lines == 0)
+    flushline(h_env, obuf, indent, 1, width);
 }
