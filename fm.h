@@ -224,7 +224,6 @@ extern int ai_family_order_table[7][3]; /* XXX */
 global char NoCache init(false);
 global char use_proxy init(true);
 #define Do_not_use_proxy (!use_proxy)
-global int Do_not_use_ti_te init(false);
 
 global char *document_root init(NULL);
 global char *personal_document_root init(NULL);

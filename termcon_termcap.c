@@ -20,10 +20,6 @@ static void reset_error_exit() {
 }
 
 void termcon_initialize() {
-  // ti
-  // auto ti = termcap_str_enter_ca_mode();
-  // term_puts(ti);
-
   auto ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
   if (ent == NULL) {
     fprintf(stderr, "TERM is not set\n");
@@ -35,9 +31,14 @@ void termcon_initialize() {
     fprintf(stderr, "Can't find termcap entry %s\n", ent);
     reset_error_exit();
   }
+
+  auto ti = termcap_str_enter_ca_mode();
+  if (ti) {
+    tty_puts(ti);
+  }
 }
 
-void termcon_finalize() {}
+void termcon_finalize() { tty_puts(termcap_str_te()); }
 void termcon_color_default() { tty_puts(termcap_str_orig_pair()); }
 void termcon_attribute_clear() { tty_puts(termcap_str_exit_attribute_mode()); }
 
@@ -46,9 +47,9 @@ void termcon_standout_start() { tty_puts(termcap_str_enter_standout_mode()); }
 void termcon_bold_start() { tty_puts(termcap_str_enter_bold_mode()); }
 // void termcon_bold_end();
 void termcon_underline_start() { tty_puts(termcap_str_enter_standout_mode()); }
-void termcon_underline_end();
+// void termcon_underline_end();
 
-bool termcon_acs_is_enable() { return termcap_graph_ok(); }
+bool termcon_acs_has() { return termcap_graph_ok(); }
 void termcon_acs_enable() { tty_puts(termcap_str_ena_acs()); }
 const char *termcon_acs_map() { return termcap_str_acs_chars(); }
 void termcon_altchar_end() { tty_puts(termcap_str_exit_alt_charset_mode()); }

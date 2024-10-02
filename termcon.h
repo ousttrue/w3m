@@ -11,7 +11,7 @@ void termcon_bold_start();
 void termcon_bold_end();
 void termcon_underline_start();
 void termcon_underline_end();
-bool termcon_acs_is_enable();
+bool termcon_acs_has();
 void termcon_acs_enable();
 const char *termcon_acs_map();
 void termcon_altchar_end();

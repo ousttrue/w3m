@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "termcon.h"
 #include "display.h"
 #include "trap_jmp.h"
 #include "linein.h"
@@ -67,12 +68,10 @@ static struct w3m_term_info {
 #undef W3M_TERM_INFO
 
 void term_reset() {
-  term_puts(termcap_str_orig_pair());
-  term_puts(termcap_str_exit_attribute_mode());
-  if (!Do_not_use_ti_te) {
-    term_puts(termcap_str_te());
-  }
-  term_puts(termcap_str_reset()); /* reset terminal */
+  termcon_color_default();
+  termcon_attribute_clear();
+  termcon_finalize();
+  termcon_clear();
   tty_flush();
   tty_close();
 }
@@ -120,7 +119,7 @@ static void term_setgraphchar() {
     gcmap[c] = (char)(c + ' ');
   }
 
-  auto acs = termcap_str_acs_chars();
+  auto acs = termcon_acs_map();
   if (acs) {
     int n = strlen(acs);
     for (int i = 0; i < n - 1; i += 2) {
@@ -138,24 +137,24 @@ static void term_setgraphchar() {
 #define DEFAULT_TERM 0 /* XXX */
 #endif
 
-static void getTCstr() {
-
-  auto ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
-  if (ent == NULL) {
-    fprintf(stderr, "TERM is not set\n");
-    reset_error_exit(SIGNAL_ARGLIST);
-  }
-
-  if (!termcap_interface_load(ent)) {
-    /* Can't find termcap entry */
-    fprintf(stderr, "Can't find termcap entry %s\n", ent);
-    reset_error_exit(SIGNAL_ARGLIST);
-  }
-
-  LINES = COLS = 0;
-  term_setlinescols();
-  term_setgraphchar();
-}
+// static void getTCstr() {
+//
+//   auto ent = getenv("TERM") ? getenv("TERM") : DEFAULT_TERM;
+//   if (ent == NULL) {
+//     fprintf(stderr, "TERM is not set\n");
+//     reset_error_exit(SIGNAL_ARGLIST);
+//   }
+//
+//   if (!termcap_interface_load(ent)) {
+//     /* Can't find termcap entry */
+//     fprintf(stderr, "Can't find termcap entry %s\n", ent);
+//     reset_error_exit(SIGNAL_ARGLIST);
+//   }
+//
+//   LINES = COLS = 0;
+//   term_setlinescols();
+//   term_setgraphchar();
+// }
 
 /*
  * Screen initialize
@@ -183,11 +182,12 @@ int term_init() {
   }
 
   set_int();
-  getTCstr();
-  auto ti = termcap_str_enter_ca_mode();
-  if (ti && !Do_not_use_ti_te) {
-    term_puts(ti);
-  }
+  // getTCstr();
+  term_setgraphchar();
+  termcon_initialize();
+
+  LINES = COLS = 0;
+  term_setlinescols();
   scr_setup(LINES, COLS);
   return 0;
 }
@@ -195,16 +195,12 @@ int term_init() {
 bool term_graph_ok() {
   if (UseGraphicChar != GRAPHIC_CHAR_DEC)
     return false;
-  return termcap_graph_ok();
+  return termcon_acs_has();
 }
 
-void term_clear() { term_puts(termcap_str_clear()); }
+void term_clear() { termcon_clear(); }
 
-extern char *tgoto(const char *cap, int col, int row);
-
-void term_move(int line, int column) {
-  term_puts(tgoto(termcap_str_cursor_mv(), column, line));
-}
+// void term_move(int line, int column) { termcon_cursor_move(line, column); }
 
 void term_bell() { tty_putc(7); }
 
@@ -260,7 +256,7 @@ void term_refresh() {
       if (line < LINES - 2 && pline == line - 1 && pcol == 0) {
         switch (moved) {
         case RF_NEED_TO_MOVE:
-          term_move(line, 0);
+          termcon_cursor_move(line, 0);
           moved = RF_CR_OK;
           break;
         case RF_CR_OK:
@@ -272,13 +268,13 @@ void term_refresh() {
           break;
         }
       } else {
-        term_move(line, pcol);
+        termcon_cursor_move(line, pcol);
         moved = RF_CR_OK;
       }
       if (*dirty & (L_NEED_CE | L_CLRTOEOL)) {
-        term_puts(termcap_str_clr_eol());
+        termcon_clear_eol();
         if (col != pcol)
-          term_move(line, col);
+          termcon_cursor_move(line, col);
       }
       pline = line;
       pcol = col;
@@ -304,19 +300,19 @@ void term_refresh() {
             (!(pr[col] & SCREEN_COLORED) && (mode & SCREEN_COLORED)) ||
             (!(pr[col] & SCREEN_GRAPHICS) && (mode & SCREEN_GRAPHICS))) {
           if ((mode & SCREEN_COLORED))
-            term_puts(termcap_str_orig_pair());
+            termcon_color_default();
           if (mode & SCREEN_GRAPHICS)
-            term_puts(termcap_str_exit_alt_charset_mode());
-          term_puts(termcap_str_exit_attribute_mode());
+            termcon_altchar_end();
+          termcon_attribute_clear();
           mode &= ~M_MEND;
         }
         if ((*dirty & L_NEED_CE && col >= scr->ScreenImage[line]->eol)
                 ? scr_need_redraw(pc[col], pr[col], SPACE, 0)
                 : (pr[col] & SCREEN_DIRTY)) {
           if (pcol == col - 1)
-            term_puts(termcap_str_cursor_right());
+            termcon_cursor_right();
           else if (pcol != col)
-            term_move(line, col);
+            termcon_cursor_move(line, col);
 
           if ((pr[col] & SCREEN_STANDOUT) && !(mode & SCREEN_STANDOUT)) {
             term_puts(termcap_str_enter_standout_mode());
@@ -343,9 +339,14 @@ void term_refresh() {
             term_puts(termcap_str_enter_alt_charset_mode());
             mode |= SCREEN_GRAPHICS;
           }
-          tty_put_utf8(pc[col]);
-          auto w = utf8sequence_width(&pc[col].c0);
-          pcol = col + w;
+
+          // if (pr[col] & S_GRAPHICS)
+          //   tty_putc(graphchar(*pc[col]));
+          // else
+          if (CHMODE(pr[col]) != C_WCHAR2)
+            tty_put_utf8(pc[col]);
+
+          pcol = col + 1;
         }
       }
       if (col == COLS)
@@ -356,7 +357,7 @@ void term_refresh() {
     *dirty &= ~(L_NEED_CE | L_CLRTOEOL);
     if (mode & M_MEND) {
       if (mode & (SCREEN_COLORED))
-        term_puts(termcap_str_orig_pair());
+        termcon_color_default();
       if (mode & SCREEN_GRAPHICS) {
         term_puts(termcap_str_exit_alt_charset_mode());
       }
@@ -364,7 +365,7 @@ void term_refresh() {
       mode &= ~M_MEND;
     }
   }
-  term_move(scr->CurLine, scr->CurColumn);
+  termcon_cursor_move(scr->CurLine, scr->CurColumn);
   tty_flush();
 }
 
