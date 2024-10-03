@@ -2,6 +2,7 @@
 #include "Str.h"
 
 extern const char *HostName;
+extern bool DecodeURL;
 
 enum URL_SCHEME_TYPE {
   SCM_UNKNOWN = 255,
@@ -40,7 +41,7 @@ struct Url {
 const char *file_to_url(const char *file);
 void parseURL2(const char *url, struct Url *pu, struct Url *current);
 
-char *url_decode0(const char *url);
+const char *url_decode0(const char *url);
 void parseURL(const char *url, struct Url *p_url, struct Url *current);
 void copyParsedURL(struct Url *p, const struct Url *q);
 Str parsedURL2Str(struct Url *pu);

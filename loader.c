@@ -89,14 +89,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       Strfputs(s, src);
       fclose(src);
     }
-    if (do_download) {
-      char *file;
-      if (!src)
-        return NULL;
-      file = guess_filename(pu.file);
-      doFileMove(tmp->ptr, file);
-      return NO_BUFFER;
-    }
+
     auto b = loadHTMLString(page);
     if (b) {
       copyParsedURL(&b->currentURL, &pu);
@@ -116,25 +109,6 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   const char *p;
   if ((p = httpGetHeader(t_buf->http_response, "Content-Length:")) != NULL)
     f.current_content_length = strtoclen(p);
-  if (do_download) {
-    /* download only */
-    trap_off();
-    if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-      f.stream = newEncodedStream(f.stream, f.encoding);
-    const char *file;
-    if (pu.scheme == SCM_LOCAL) {
-      struct stat st;
-      if (PreserveTimestamp && !stat(pu.real_file, &st))
-        f.modtime = st.st_mtime;
-      file = conv_from_system(guess_save_name(NULL, pu.real_file));
-    } else
-      file = guess_save_name(t_buf, pu.file);
-    if (doFileSave(f, file) == 0)
-      UFhalfclose(&f);
-    else
-      UFclose(&f);
-    return NO_BUFFER;
-  }
 
   if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
     uncompress_stream(&f, &pu.real_file);
@@ -155,7 +129,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   else if (is_plain_text_type(t))
     proc = loadBuffer;
   else if (is_dump_text_type(t)) {
-    if (!do_download && searchExtViewer((char *)t) != NULL) {
+    if (searchExtViewer((char *)t) != NULL) {
       proc = doExternal;
     } else {
       trap_off();
@@ -375,7 +349,8 @@ load_doc(const char *path, const char *tpath, struct Url *current,
       add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd, 0);
       add_auth_cookie_flag = 0;
     }
-    if ((p = httpGetHeader(t_buf->http_response, "WWW-Authenticate:")) != NULL &&
+    if ((p = httpGetHeader(t_buf->http_response, "WWW-Authenticate:")) !=
+            NULL &&
         t_buf->http_response->http_status_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
@@ -397,7 +372,8 @@ load_doc(const char *path, const char *tpath, struct Url *current,
                         t_buf, realm, uname, pwd);
       }
     }
-    if ((p = httpGetHeader(t_buf->http_response, "Proxy-Authenticate:")) != NULL &&
+    if ((p = httpGetHeader(t_buf->http_response, "Proxy-Authenticate:")) !=
+            NULL &&
         t_buf->http_response->http_status_code == 407) {
       /* Authentication needed */
       struct http_auth hauth;

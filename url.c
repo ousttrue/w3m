@@ -8,6 +8,7 @@
 #include "myctype.h"
 #include <string.h>
 
+bool DecodeURL = false;
 const char *HostName = nullptr;
 
 struct {
@@ -94,7 +95,7 @@ char *url_unquote_conv0(char *url) {
 }
 
 void parseURL2(const char *url, struct Url *pu, struct Url *current) {
-  char *p;
+  const char *p;
   Str tmp;
   int relative_uri = false;
 
@@ -219,4 +220,10 @@ void parseURL2(const char *url, struct Url *pu, struct Url *current) {
         pu->real_file = cleanupName(file_unquote(pu->file));
     }
   }
+}
+
+const char *url_decode0(const char *url) {
+  if (!DecodeURL)
+    return (char *)url;
+  return url_unquote_conv0(url);
 }

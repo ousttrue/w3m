@@ -1302,7 +1302,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
 
 /* add index_file if exists */
 static void add_index_file(struct Url *pu, struct URLFile *uf) {
-  char *p, *q;
+  const char *p, *q;
   struct TextList *index_file_list = NULL;
   struct TextListItem *ti;
 
@@ -1523,12 +1523,6 @@ struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme) {
   return pu;
 }
 
-char *url_decode0(const char *url) {
-  if (!DecodeURL)
-    return (char *)url;
-  return url_unquote_conv0(url);
-}
-
 void UFhalfclose(struct URLFile *f) {
   switch (f->scheme) {
   case SCM_FTP:
@@ -1605,29 +1599,28 @@ void examineFile(const char *path, struct URLFile *uf) {
     return;
   }
   uf->stream = openIS(path);
-  if (!do_download) {
-    if (use_lessopen && getenv("LESSOPEN") != NULL) {
-      FILE *fp;
-      uf->guess_type = guessContentType(path);
-      if (uf->guess_type == NULL)
-        uf->guess_type = "text/plain";
-      if (is_html_type(uf->guess_type))
-        return;
-      if ((fp = lessopen_stream(path))) {
-        UFclose(uf);
-        uf->stream = newFileStream(fp, (void (*)())pclose);
-        uf->guess_type = "text/plain";
-        return;
-      }
-    }
-    check_compression(path, uf);
-    if (uf->compression != CMP_NOCOMPRESS) {
-      char *ext = uf->ext;
-      auto t0 = uncompressed_file_type(path, &ext);
-      uf->guess_type = t0;
-      uf->ext = ext;
-      uncompress_stream(uf, NULL);
+
+  if (use_lessopen && getenv("LESSOPEN") != NULL) {
+    FILE *fp;
+    uf->guess_type = guessContentType(path);
+    if (uf->guess_type == NULL)
+      uf->guess_type = "text/plain";
+    if (is_html_type(uf->guess_type))
+      return;
+    if ((fp = lessopen_stream(path))) {
+      UFclose(uf);
+      uf->stream = newFileStream(fp, (void (*)())pclose);
+      uf->guess_type = "text/plain";
       return;
     }
+  }
+  check_compression(path, uf);
+  if (uf->compression != CMP_NOCOMPRESS) {
+    char *ext = uf->ext;
+    auto t0 = uncompressed_file_type(path, &ext);
+    uf->guess_type = t0;
+    uf->ext = ext;
+    uncompress_stream(uf, NULL);
+    return;
   }
 }

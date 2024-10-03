@@ -1085,9 +1085,6 @@ static struct Buffer *loadLink(const char *url, const char *target,
   if (!on_target) /* open link as an indivisual page */
     return loadNormalBuf(buf);
 
-  if (do_download) /* download (thus no need to render frames) */
-    return loadNormalBuf(buf);
-
   if (target == NULL || /* no target specified (that means this page is not a
                            frame page) */
       !strcmp(target, "_top") || /* this link is specified to be opened as an
@@ -2287,18 +2284,18 @@ DEFUN(ldHist, HISTORY, "Show browsing history") {
 
 /* download HREF link */
 DEFUN(svA, SAVE_LINK, "Save hyperlink target") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  do_download = true;
-  followA();
-  do_download = false;
+  // CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  // do_download = true;
+  // followA();
+  // do_download = false;
 }
 
 /* download IMG link */
 DEFUN(svI, SAVE_IMAGE, "Save inline image") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  do_download = true;
-  followI();
-  do_download = false;
+  // CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  // do_download = true;
+  // followI();
+  // do_download = false;
 }
 
 /* save buffer */

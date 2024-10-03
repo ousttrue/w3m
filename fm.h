@@ -213,7 +213,6 @@ global char *displayTitleTerm init(NULL);
 global int displayLink init(false);
 global int displayLinkNumber init(false);
 global int displayLineInfo init(false);
-global int DecodeURL init(false);
 global int retryAsHttp init(true);
 global int displayImage init(false); /* XXX: emacs-w3m use display_image=off */
 global int pseudoInlines init(true);
@@ -236,7 +235,6 @@ global char *pre_form_file init(PRE_FORM_FILE);
 global char *siteconf_file init(SITECONF_FILE);
 global char *ftppasswd init(NULL);
 global int ftppass_hostnamegen init(true);
-global int do_download init(false);
 global char *UserAgent init(NULL);
 global int NoSendReferer init(false);
 global int CrossOriginReferer init(true);
