@@ -25,7 +25,7 @@
 #include "regex.h"
 #include "terms.h"
 #include "termsize.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include <stdlib.h>
 #include <stddef.h>
 #include <sys/stat.h>

@@ -3,7 +3,7 @@
 #include "app.h"
 #include "proto.h"
 #include "indep.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "alloc.h"
 #include "Str.h"
 #include "termsize.h"

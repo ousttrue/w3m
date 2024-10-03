@@ -15,7 +15,7 @@
 #include "ctrlcode.h"
 #include "url_stream.h"
 #include "buffer.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "termsize.h"
 #include "terms.h"
 #include "myctype.h"

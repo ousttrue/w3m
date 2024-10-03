@@ -1616,7 +1616,7 @@ void examineFile(const char *path, struct URLFile *uf) {
   }
   check_compression(path, uf);
   if (uf->compression != CMP_NOCOMPRESS) {
-    char *ext = uf->ext;
+    const char *ext = uf->ext;
     auto t0 = uncompressed_file_type(path, &ext);
     uf->guess_type = t0;
     uf->ext = ext;

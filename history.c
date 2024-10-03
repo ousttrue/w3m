@@ -5,7 +5,7 @@
 #include "app.h"
 #include "fm.h"
 #include "terms.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "indep.h"
 
 struct Hist *LoadHist;

@@ -7,7 +7,7 @@
 #include "filepath.h"
 #include "alloc.h"
 #include "indep.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "document.h"
 #include "buffer.h"
 #include "url.h"

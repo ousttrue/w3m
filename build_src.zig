@@ -60,7 +60,7 @@ pub const SRCS = [_][]const u8{
     "downloadlist.c",
     "localcgi.c",
     "ftp.c",
-    "readbuffer.c",
+    "html_readbuffer.c",
     "html_parser.c",
     "http_cookie.c",
     "http_response.c",

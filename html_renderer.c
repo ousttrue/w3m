@@ -3,7 +3,7 @@
 #include "map.h"
 #include "text.h"
 #include "file.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "anchor.h"
 #include "buffer.h"
 #include "html_parser.h"

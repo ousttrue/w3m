@@ -10,7 +10,7 @@
 #include "alloc.h"
 #include "file.h"
 #include "app.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "url.h"
 #include "ctrlcode.h"
 #include "fm.h"

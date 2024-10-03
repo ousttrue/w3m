@@ -16,7 +16,7 @@
 #include "parsetag.h"
 #include "regex.h"
 #include "myctype.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "proto.h"
 #include <time.h>
 #include <sys/stat.h>

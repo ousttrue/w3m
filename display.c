@@ -7,7 +7,7 @@
 #include "ctrlcode.h"
 #include "html_renderer.h"
 #include "url_stream.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "tabbuffer.h"
 #include "buffer.h"
 #include "scr.h"

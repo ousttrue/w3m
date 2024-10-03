@@ -8,7 +8,7 @@
 #include "entity.h"
 #include "textlist.h"
 #include "fm.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include "html_parser.h"
 #include "html.h"
 #include "parsetagx.h"

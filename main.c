@@ -18,7 +18,7 @@
 #include "termsize.h"
 #include "tty.h"
 #include "localcgi.h"
-#include "readbuffer.h"
+#include "html_readbuffer.h"
 #include <fcntl.h>
 #ifdef _WIN32
 #else
