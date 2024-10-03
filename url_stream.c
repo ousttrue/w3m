@@ -856,7 +856,8 @@ Str parsedURL2RefererStr(struct Url *pu) {
   return _parsedURL2Str(pu, false, false, false);
 }
 
-static char *otherinfo(struct Url *target, struct Url *current, char *referer) {
+static char *otherinfo(struct Url *target, struct Url *current,
+                       const char *referer) {
   Str s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -1256,17 +1257,6 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
         SSL_write(sslh, tmp->ptr, tmp->length);
       else
         socketWrite(sock, tmp->ptr, tmp->length);
-      if (w3m_reqlog) {
-        FILE *ff = fopen(w3m_reqlog, "a");
-        if (ff == NULL)
-          return uf;
-        if (sslh)
-          fputs("HTTPS: request via SSL\n", ff);
-        else
-          fputs("HTTPS: request without SSL\n", ff);
-        fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
-        fclose(ff);
-      }
       if (hr->command == HR_COMMAND_POST &&
           request->enctype == FORM_ENCTYPE_MULTIPART) {
         if (sslh)
@@ -1277,13 +1267,6 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
       return uf;
     } else {
       socketWrite(sock, tmp->ptr, tmp->length);
-      if (w3m_reqlog) {
-        FILE *ff = fopen(w3m_reqlog, "a");
-        if (ff == NULL)
-          return uf;
-        fwrite(tmp->ptr, sizeof(char), tmp->length, ff);
-        fclose(ff);
-      }
       if (hr->command == HR_COMMAND_POST &&
           request->enctype == FORM_ENCTYPE_MULTIPART)
         write_from_file(sock, request->body);

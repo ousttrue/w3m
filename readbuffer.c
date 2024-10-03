@@ -3127,12 +3127,11 @@ struct Buffer *loadHTMLString(Str page) {
 struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
                              const char *type, struct Buffer *defaultbuf) {
   struct Buffer *buf;
-
   if ((buf = loadproc(f, nullptr, defaultbuf)) == NULL)
     return NULL;
 
   if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-    buf->buffername = checkHeader(buf, "Subject:");
+    buf->buffername = httpGetHeader(buf->http_response, "Subject:");
     if (buf->buffername == NULL && buf->filename != NULL)
       buf->buffername = (char *)conv_from_system(lastFileName(buf->filename));
   }

@@ -114,7 +114,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
 
   f.current_content_length = 0;
   const char *p;
-  if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
+  if ((p = httpGetHeader(t_buf->http_response, "Content-Length:")) != NULL)
     f.current_content_length = strtoclen(p);
   if (do_download) {
     /* download only */
@@ -334,11 +334,12 @@ load_doc(const char *path, const char *tpath, struct Url *current,
     if (t_buf == NULL)
       t_buf = newBuffer();
 
-    auto http_status_code = http_readHeader(&f, t_buf, &pu);
+    t_buf->http_response = httpReadHeader(&f, &pu);
     const char *p;
-    if (((http_status_code >= 301 && http_status_code <= 303) ||
-         http_status_code == 307) &&
-        (p = checkHeader(t_buf, "Location:")) != NULL &&
+    if (((t_buf->http_response->http_status_code >= 301 &&
+          t_buf->http_response->http_status_code <= 303) ||
+         t_buf->http_response->http_status_code == 307) &&
+        (p = httpGetHeader(t_buf->http_response, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
       /* 301: Moved Permanently */
@@ -357,10 +358,12 @@ load_doc(const char *path, const char *tpath, struct Url *current,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
-    t = checkContentType(t_buf);
+    t = httpGetContentType(t_buf->http_response);
     if (t == NULL && pu.file != NULL) {
-      if (!((http_status_code >= 400 && http_status_code <= 407) ||
-            (http_status_code >= 500 && http_status_code <= 505)))
+      if (!((t_buf->http_response->http_status_code >= 400 &&
+             t_buf->http_response->http_status_code <= 407) ||
+            (t_buf->http_response->http_status_code >= 500 &&
+             t_buf->http_response->http_status_code <= 505)))
         t = guessContentType(pu.file);
     }
     if (t == NULL)
@@ -370,8 +373,8 @@ load_doc(const char *path, const char *tpath, struct Url *current,
       add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd, 0);
       add_auth_cookie_flag = 0;
     }
-    if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL &&
-        http_status_code == 401) {
+    if ((p = httpGetHeader(t_buf->http_response, "WWW-Authenticate:")) != NULL &&
+        t_buf->http_response->http_status_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
@@ -392,8 +395,8 @@ load_doc(const char *path, const char *tpath, struct Url *current,
                         t_buf, realm, uname, pwd);
       }
     }
-    if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL &&
-        http_status_code == 407) {
+    if ((p = httpGetHeader(t_buf->http_response, "Proxy-Authenticate:")) != NULL &&
+        t_buf->http_response->http_status_code == 407) {
       /* Authentication needed */
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:") != NULL &&
@@ -424,7 +427,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
                       t_buf, realm, uname, pwd);
     }
 
-    f.modtime = mymktime(checkHeader(t_buf, "Last-Modified:"));
+    f.modtime = mymktime(httpGetHeader(t_buf->http_response, "Last-Modified:"));
   } else if (pu.scheme == SCM_FTP) {
     check_compression(path, &f);
     if (f.compression != CMP_NOCOMPRESS) {

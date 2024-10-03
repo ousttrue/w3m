@@ -1,4 +1,5 @@
 #include "http_auth.h"
+#include "http_response.h"
 #include "buffer.h"
 #include "myctype.h"
 #include "indep.h"
@@ -111,13 +112,11 @@ static void parsePasswd(FILE *fp, int netrc) {
 #define FILE_IS_READABLE_MSG                                                   \
   "SECURITY NOTE: file %s must not be accessible by others"
 
-FILE *openSecretFile(char *fname) {
-  char *efname;
-  struct stat st;
-
+FILE *openSecretFile(const char *fname) {
   if (fname == NULL)
     return NULL;
-  efname = expandPath(fname);
+  const char *efname = expandPath(fname);
+  struct stat st;
   if (stat(efname, &st) < 0)
     return NULL;
 
@@ -501,7 +500,8 @@ struct http_auth *findAuthentication(struct http_auth *hauth,
   char *p0, *p;
 
   memset(hauth, 0, sizeof(struct http_auth));
-  for (auto i = buf->document_header->first; i != NULL; i = i->next) {
+  for (auto i = buf->http_response->document_header->first; i != NULL;
+       i = i->next) {
     if (strncasecmp(i->ptr, auth_field, len) == 0) {
       for (p = i->ptr + len; p != NULL && *p != '\0';) {
         SKIP_BLANKS(p);

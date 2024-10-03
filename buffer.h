@@ -45,6 +45,7 @@ enum BufferProperty {
   BP_CLOSE = 0x40,
 };
 
+struct HttpResponse;
 struct Document;
 struct Buffer {
   const char *filename;
@@ -63,7 +64,7 @@ struct Buffer {
   int *clone;
   size_t trbyte;
   char check_url;
-  struct TextList *document_header;
+  struct HttpResponse *http_response;
   struct FormItemList *form_submit;
   const char *edit;
   struct mailcap *mailcap;

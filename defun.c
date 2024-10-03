@@ -1013,8 +1013,9 @@ DEFUN(editBf, EDIT, "Edit local source") {
     return;
   }
   if (Currentbuf->edit)
-    cmd = unquote_mailcap(Currentbuf->edit, Currentbuf->real_type, fn,
-                          checkHeader(Currentbuf, "Content-Type:"), NULL);
+    cmd = unquote_mailcap(
+        Currentbuf->edit, Currentbuf->real_type, fn,
+        httpGetHeader(Currentbuf->http_response, "Content-Type:"), NULL);
   else
     cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
   term_fmTerm();

@@ -1,11 +1,17 @@
 #pragma once
 #include "Str.h"
+#include <stdint.h>
 
 struct Url;
 struct URLFile;
-struct Buffer;
 
-int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu);
-bool http_matchattr(const char *p, const char *attr, int len, Str *value);
-const char *checkHeader(struct Buffer *buf, const char *field);
-char *checkContentType(struct Buffer *buf);
+struct HttpResponse {
+  int http_status_code;
+  struct TextList *document_header;
+  int64_t current_content_length;
+};
+
+struct HttpResponse *httpReadHeader(struct URLFile *uf, struct Url *pu);
+bool httpMatchattr(const char *p, const char *attr, int len, Str *value);
+const char *httpGetHeader(struct HttpResponse *res, const char *field);
+const char *httpGetContentType(struct HttpResponse *res);

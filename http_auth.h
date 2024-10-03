@@ -50,7 +50,7 @@ struct http_auth *findAuthentication(struct http_auth *hauth,
                                      struct Buffer *buf, char *auth_field);
 
 void add_auth_pass_entry(const struct auth_pass *ent, int netrc, int override);
-FILE *openSecretFile(char *fname);
+FILE *openSecretFile(const char *fname);
 extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,

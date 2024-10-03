@@ -553,12 +553,12 @@ const char *term_message_to_html() {
   return tmp->ptr;
 }
 
-void disp_err_message(char *s, int redraw_current) {
+void disp_err_message(const char *s, int redraw_current) {
   term_err_message(s);
   disp_message(s, redraw_current);
 }
 
-void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
+void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
                        int mouse) {
   if (QuietMessage)
     return;
@@ -583,12 +583,12 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
   }
 }
 
-void disp_message(char *s, int redraw_current) {
+void disp_message(const char *s, int redraw_current) {
   disp_message_nsec(s, redraw_current, 10, false, true);
 }
 
 static char *delayed_msg = NULL;
-void set_delayed_message(char *s) { delayed_msg = allocStr(s, -1); }
+void set_delayed_message(const char *s) { delayed_msg = allocStr(s, -1); }
 
 void term_show_delayed_message() {
   if (delayed_msg != NULL) {

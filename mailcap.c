@@ -416,7 +416,7 @@ static Str unquote_mailcap_loop(const char *qstr, const char *type,
         char *q;
         if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL &&
             (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-            http_matchattr(q, tmp->ptr, tmp->length, &tmp)) {
+            httpMatchattr(q, tmp->ptr, tmp->length, &tmp)) {
           Strcat_charp(str, quote_mailcap(tmp->ptr, flag)->ptr);
           if (mc_stat)
             *mc_stat |= MCSTAT_REPPARAM;

@@ -2,9 +2,9 @@
 #include "Str.h"
 
 struct MapArea {
-  char *url;
-  char *target;
-  char *alt;
+  const char *url;
+  const char *target;
+  const char *alt;
 };
 
 struct MapList {

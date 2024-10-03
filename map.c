@@ -3,6 +3,7 @@
  */
 #include "map.h"
 #include "url.h"
+#include "http_response.h"
 #include "filepath.h"
 #include "alloc.h"
 #include "indep.h"
@@ -242,9 +243,9 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
 
   append_link_info(buf, tmp, buf->document->linklist);
 
-  if (buf->document_header != NULL) {
+  if (buf->http_response->document_header != NULL) {
     Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-    for (ti = buf->document_header->first; ti != NULL; ti = ti->next)
+    for (ti = buf->http_response->document_header->first; ti != NULL; ti = ti->next)
       Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
                      NULL);
     Strcat_charp(tmp, "</pre>\n");

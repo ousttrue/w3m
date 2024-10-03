@@ -18,9 +18,6 @@
 #include "terms.h"
 #include <stdint.h>
 
-static int http_response_code;
-int64_t current_content_length;
-
 /* This array should be somewhere else */
 /* FIXME: gettextize? */
 const char *violations[COO_EMAX] = {
@@ -30,72 +27,68 @@ const char *violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"};
 
-int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
+struct HttpResponse *httpReadHeader(struct URLFile *uf, struct Url *pu) {
 
-  struct TextList *headerlist = newBuf->document_header = newTextList();
+  auto res = New(struct HttpResponse);
+  res->current_content_length = 0;
+  res->document_header = newTextList();
   if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS)
-    http_response_code = -1;
+    res->http_status_code = -1;
   else
-    http_response_code = 0;
+    res->http_status_code = 0;
 
-  char *p, *q;
-  char *emsg;
-  char c;
-  Str lineBuf2 = nullptr;
-  Str tmp;
   Lineprop *propBuffer;
-  while ((tmp = StrmyUFgets(uf))->length) {
-    if (w3m_reqlog) {
-      FILE *ff;
-      ff = fopen(w3m_reqlog, "a");
-      if (ff) {
-        Strfputs(tmp, ff);
-        fclose(ff);
-      }
-    }
-    cleanup_line(tmp, HEADER_MODE);
-    if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
+  Str lineBuf2 = nullptr;
+  Str line;
+  const char *q;
+  while ((line = StrmyUFgets(uf))->length) {
+    cleanup_line(line, HEADER_MODE);
+    if (line->ptr[0] == '\n' || line->ptr[0] == '\r' || line->ptr[0] == '\0') {
       if (!lineBuf2)
         /* there is no header */
         break;
       /* last header */
-    } else {
-      if (lineBuf2) {
-        Strcat(lineBuf2, tmp);
-      } else {
-        lineBuf2 = tmp;
-      }
-      c = UFgetc(uf);
-      UFundogetc(uf);
-      if (c == ' ' || c == '\t')
-        /* header line is continued */
-        continue;
-      lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
-      lineBuf2 = convertLine(lineBuf2, RAW_MODE);
-      /* separated with line and stored */
-      tmp = Strnew_size(lineBuf2->length);
-      for (p = lineBuf2->ptr; *p; p = q) {
-        for (q = p; *q && *q != '\r' && *q != '\n'; q++)
-          ;
-        lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
-        Strcat(tmp, lineBuf2);
-        for (; *q && (*q == '\r' || *q == '\n'); q++)
-          ;
-      }
-      lineBuf2 = tmp;
     }
+
+    if (lineBuf2) {
+      Strcat(lineBuf2, line);
+    } else {
+      lineBuf2 = line;
+    }
+    char c = UFgetc(uf);
+    UFundogetc(uf);
+    if (c == ' ' || c == '\t') {
+      /* header line is continued */
+      continue;
+    }
+
+    lineBuf2 = decodeMIME(lineBuf2, &mime_charset);
+    lineBuf2 = convertLine(lineBuf2, RAW_MODE);
+    /* separated with line and stored */
+    auto tmp = Strnew_size(lineBuf2->length);
+    for (const char *p = lineBuf2->ptr; *p; p = q) {
+      for (q = p; *q && *q != '\r' && *q != '\n'; q++)
+        ;
+      lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
+      Strcat(tmp, lineBuf2);
+      for (; *q && (*q == '\r' || *q == '\n'); q++)
+        ;
+    }
+    lineBuf2 = tmp;
+
     if ((uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS) &&
-        http_response_code == -1) {
-      p = lineBuf2->ptr;
+        res->http_status_code == -1) {
+      auto p = lineBuf2->ptr;
       while (*p && !IS_SPACE(*p))
         p++;
       while (*p && IS_SPACE(*p))
         p++;
-      http_response_code = atoi(p);
+      res->http_status_code = atoi(p);
       term_message(lineBuf2->ptr);
     }
+
     if (!strncasecmp(lineBuf2->ptr, "content-transfer-encoding:", 26)) {
-      p = lineBuf2->ptr + 26;
+      auto p = lineBuf2->ptr + 26;
       while (IS_SPACE(*p))
         p++;
       if (!strncasecmp(p, "base64", 6))
@@ -108,11 +101,10 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
       else
         uf->encoding = ENC_7BIT;
     } else if (!strncasecmp(lineBuf2->ptr, "content-encoding:", 17)) {
-      struct compression_decoder *d;
-      p = lineBuf2->ptr + 17;
-      while (IS_SPACE(*p))
+      auto p = lineBuf2->ptr + 17;
+      while (IS_SPACE(*p)) {
         p++;
-
+      }
       uf->compression = compressionFromEncoding(p);
       uf->content_encoding = uf->compression;
     } else if (use_cookie && accept_cookie && pu &&
@@ -125,6 +117,7 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
       time_t expires = (time_t)-1;
 
       q = NULL;
+      const char *p;
       if (lineBuf2->ptr[10] == '2') {
         p = lineBuf2->ptr + 12;
         version = 1;
@@ -132,9 +125,6 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
         p = lineBuf2->ptr + 11;
         version = 0;
       }
-#ifdef DEBUG
-      fprintf(stderr, "Set-Cookie: [%s]\n", p);
-#endif /* DEBUG */
       SKIP_BLANKS(p);
       while (*p != '=' && !IS_ENDT(*p))
         Strcat_char(name, *(p++));
@@ -156,30 +146,30 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
       while (*p == ';') {
         p++;
         SKIP_BLANKS(p);
-        if (http_matchattr(p, "expires", 7, &tmp2)) {
+        if (httpMatchattr(p, "expires", 7, &tmp2)) {
           /* version 0 */
           expires = mymktime(tmp2->ptr);
-        } else if (http_matchattr(p, "max-age", 7, &tmp2)) {
+        } else if (httpMatchattr(p, "max-age", 7, &tmp2)) {
           /* XXX Is there any problem with max-age=0? (RFC 2109 ss. 4.2.1, 4.2.2
            */
           expires = time(NULL) + atol(tmp2->ptr);
-        } else if (http_matchattr(p, "domain", 6, &tmp2)) {
+        } else if (httpMatchattr(p, "domain", 6, &tmp2)) {
           domain = tmp2;
-        } else if (http_matchattr(p, "path", 4, &tmp2)) {
+        } else if (httpMatchattr(p, "path", 4, &tmp2)) {
           path = tmp2;
-        } else if (http_matchattr(p, "secure", 6, NULL)) {
+        } else if (httpMatchattr(p, "secure", 6, NULL)) {
           flag |= COO_SECURE;
-        } else if (http_matchattr(p, "comment", 7, &tmp2)) {
+        } else if (httpMatchattr(p, "comment", 7, &tmp2)) {
           comment = tmp2;
-        } else if (http_matchattr(p, "version", 7, &tmp2)) {
+        } else if (httpMatchattr(p, "version", 7, &tmp2)) {
           version = atoi(tmp2->ptr);
-        } else if (http_matchattr(p, "port", 4, &tmp2)) {
+        } else if (httpMatchattr(p, "port", 4, &tmp2)) {
           /* version 1, Set-Cookie2 */
           port = tmp2;
-        } else if (http_matchattr(p, "commentURL", 10, &tmp2)) {
+        } else if (httpMatchattr(p, "commentURL", 10, &tmp2)) {
           /* version 1, Set-Cookie2 */
           commentURL = tmp2;
-        } else if (http_matchattr(p, "discard", 7, NULL)) {
+        } else if (httpMatchattr(p, "discard", 7, NULL)) {
           /* version 1, Set-Cookie2 */
           flag |= COO_DISCARD;
         }
@@ -221,6 +211,8 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
                                 flag | COO_OVERRIDE, comment, version, port,
                                 commentURL))) {
             err = (err & ~COO_OVERRIDE_OK) - 1;
+
+            const char *emsg;
             if (err >= 0 && err < COO_EMAX)
               emsg = Sprintf("This cookie was rejected "
                              "to prevent security violation. [%s]",
@@ -243,7 +235,7 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
       Str funcname = Strnew();
       int f;
 
-      p = lineBuf2->ptr + 12;
+      auto p = lineBuf2->ptr + 12;
       SKIP_BLANKS(p);
       while (*p && !IS_SPACE(*p))
         Strcat_char(funcname, *(p++));
@@ -255,21 +247,20 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
         pushEvent(f, tmp->ptr);
       }
     }
-    if (headerlist)
-      pushText(headerlist, lineBuf2->ptr);
+    pushText(res->document_header, lineBuf2->ptr);
     Strfree(lineBuf2);
     lineBuf2 = NULL;
   }
 
-  return http_response_code;
+  return res;
 }
 
-const char *checkHeader(struct Buffer *buf, const char *field) {
-  if (buf == NULL || field == NULL || buf->document_header == NULL)
+const char *httpGetHeader(struct HttpResponse *res, const char *field) {
+  if (res == NULL || field == NULL || res->document_header == NULL)
     return NULL;
 
   int len = strlen(field);
-  for (auto i = buf->document_header->first; i != NULL; i = i->next) {
+  for (auto i = res->document_header->first; i != NULL; i = i->next) {
     if (!strncasecmp(i->ptr, field, len)) {
       const char *p = i->ptr + len;
       return remove_space(p);
@@ -278,11 +269,12 @@ const char *checkHeader(struct Buffer *buf, const char *field) {
   return NULL;
 }
 
-char *checkContentType(struct Buffer *buf) {
-  const char *p = checkHeader(buf, "Content-Type:");
+const char *httpGetContentType(struct HttpResponse *buf) {
+  const char *p = httpGetHeader(buf, "Content-Type:");
   if (p == NULL)
     return NULL;
 
+  // text/html; charset=Shift_JIS
   auto r = Strnew();
   while (*p && *p != ';' && !IS_SPACE(*p))
     Strcat_char(r, *p++);
@@ -290,7 +282,7 @@ char *checkContentType(struct Buffer *buf) {
 }
 
 // {name}={value} ; {name} ;
-bool http_matchattr(const char *p, const char *attr, int len, Str *value) {
+bool httpMatchattr(const char *p, const char *attr, int len, Str *value) {
   if (strncasecmp(p, attr, len) == 0) {
     p += len;
     SKIP_BLANKS(p);

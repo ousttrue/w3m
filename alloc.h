@@ -13,7 +13,7 @@ static inline size_t z_mult_no_oflow_(size_t n, size_t size) {
   return n * size;
 }
 
-#define New(type) (GC_MALLOC(sizeof(type)))
+#define New(type) (type*)(GC_MALLOC(sizeof(type)))
 
 #define NewAtom(type) (GC_MALLOC_ATOMIC(sizeof(type)))
 

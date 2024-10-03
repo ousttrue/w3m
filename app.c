@@ -12,7 +12,6 @@
 
 const char *CurrentDir = nullptr;
 const char *app_currentdir() { return CurrentDir; }
-const char *w3m_reqlog = nullptr;
 
 int CurrentPid = -1;
 const char *tmp_dir = nullptr;

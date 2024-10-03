@@ -474,8 +474,8 @@ char *last_modified(struct Buffer *buf) {
   struct TextListItem *ti;
   struct stat st;
 
-  if (buf->document_header) {
-    for (ti = buf->document_header->first; ti; ti = ti->next) {
+  if (buf->http_response->document_header) {
+    for (ti = buf->http_response->document_header->first; ti; ti = ti->next) {
       if (strncasecmp(ti->ptr, "Last-modified: ", 15) == 0) {
         return ti->ptr + 15;
       }
@@ -498,18 +498,19 @@ int currentLn(struct Buffer *buf) {
 }
 
 const char *guess_save_name(struct Buffer *buf, const char *path) {
-  if (buf && buf->document_header) {
+  if (buf && buf->http_response->document_header) {
     Str name = NULL;
     const char *p, *q;
-    if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
+    if ((p = httpGetHeader(buf->http_response, "Content-Disposition:")) !=
+            NULL &&
         (q = strcasestr(p, "filename")) != NULL &&
         (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        http_matchattr(q, "filename", 8, &name))
+        httpMatchattr(q, "filename", 8, &name))
       path = name->ptr;
-    else if ((p = checkHeader(buf, "Content-Type:")) != NULL &&
+    else if ((p = httpGetHeader(buf->http_response, "Content-Type:")) != NULL &&
              (q = strcasestr(p, "name")) != NULL &&
              (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             http_matchattr(q, "name", 4, &name))
+             httpMatchattr(q, "name", 4, &name))
       path = name->ptr;
   }
   return guess_filename(path);

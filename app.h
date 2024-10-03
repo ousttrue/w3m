@@ -5,7 +5,6 @@ extern const char *CurrentDir;
 extern int CurrentPid;
 struct TextList;
 extern struct TextList *fileToDelete;
-extern const char *w3m_reqlog;
 
 struct Event {
   int cmd;
