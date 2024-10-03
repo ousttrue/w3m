@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "fm.h"
+#include "search.h"
 #include "alloc.h"
 #include "image.h"
 #include "strcase.h"

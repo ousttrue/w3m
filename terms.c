@@ -367,7 +367,7 @@ Str term_inputpwd() {
   Str pwd = nullptr;
   if (fmInitialized) {
     tty_raw();
-    pwd = Strnew_charp(inputLine("Password: ", NULL, IN_PASSWORD));
+    pwd = Strnew_charp(inputLine(nullptr, "Password: ", NULL, IN_PASSWORD));
     pwd = Str_conv_to_system(pwd);
     tty_cbreak();
   }
@@ -381,7 +381,7 @@ Str term_inputpwd() {
 
 void term_input(const char *msg) {
   if (fmInitialized) {
-    inputChar(msg);
+    inputChar(nullptr, msg);
   }
 }
 
@@ -393,7 +393,7 @@ const char *term_inputAnswer(const char *prompt) {
   const char *ans;
   if (fmInitialized) {
     tty_raw();
-    ans = inputChar(prompt);
+    ans = inputChar(nullptr, prompt);
   } else {
     printf("%s", prompt);
     fflush(stdout);

@@ -220,7 +220,6 @@ global int displayLinkNumber init(false);
 global int displayLineInfo init(false);
 global int DecodeURL init(false);
 global int retryAsHttp init(true);
-global int show_srch_str init(true);
 global int displayImage init(false); /* XXX: emacs-w3m use display_image=off */
 global int pseudoInlines init(true);
 global char *Editor init(DEF_EDITOR);
@@ -250,8 +249,6 @@ global char *AcceptLang init(NULL);
 global char *AcceptEncoding init(NULL);
 global char *AcceptMedia init(NULL);
 global int WrapDefault init(false);
-global int IgnoreCase init(true);
-global int WrapSearch init(false);
 global int squeezeBlankLine init(false);
 global char *BookmarkFile init(NULL);
 global int UseExternalDirBuffer init(true);

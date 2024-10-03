@@ -668,3 +668,5 @@ struct Buffer *message_list_panel(void) {
   Strcat_charp(tmp, "</table></body></html>");
   return loadHTMLString(tmp);
 }
+
+void displayInvalidate() { displayBuffer(Currentbuf, B_NORMAL); }

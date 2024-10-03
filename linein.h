@@ -4,7 +4,8 @@
 
 struct Hist;
 
-typedef int (*IncFunc)(int ch, Str buf, Lineprop *prop);
+struct Document;
+typedef int (*IncFunc)(struct Document *doc, int ch, Str buf, Lineprop *prop);
 
 /* Flags for inputLine() */
 enum InputlineFlags {
@@ -16,13 +17,16 @@ enum InputlineFlags {
   IN_CHAR = 0x200,
 };
 
-const char *inputLineHistSearch(const char *prompt, const char *def_str,
-                                enum InputlineFlags flag, struct Hist *hist,
-                                IncFunc incfunc);
-const char *inputLineHist(const char *p, const char *d, enum InputlineFlags f,
-                          struct Hist *h);
-const char *inputLine(const char *p, const char *d, enum InputlineFlags f);
-const char *inputStr(const char *p, const char *d);
-const char *inputStrHist(const char *p, const char *d, struct Hist *h);
-const char *inputFilenameHist(const char *p, const char *d, struct Hist *h);
-const char *inputChar(const char *p);
+const char *inputLineHistSearch(struct Document *doc, const char *prompt,
+                                const char *def_str, enum InputlineFlags flag,
+                                struct Hist *hist, IncFunc incfunc);
+const char *inputLineHist(struct Document *doc, const char *p, const char *d,
+                          enum InputlineFlags f, struct Hist *h);
+const char *inputLine(struct Document *doc, const char *p, const char *d,
+                      enum InputlineFlags f);
+const char *inputStr(struct Document *doc, const char *p, const char *d);
+const char *inputStrHist(struct Document *doc, const char *p, const char *d,
+                         struct Hist *h);
+const char *inputFilenameHist(struct Document *doc, const char *p,
+                              const char *d, struct Hist *h);
+const char *inputChar(struct Document *doc, const char *p);

@@ -1,5 +1,9 @@
 #pragma once
 
+extern bool IgnoreCase;
+extern bool WrapSearch;
+extern bool show_srch_str;
+
 enum SearchResult {
   SR_FOUND = 0x1,
   SR_NOTFOUND = 0x2,
@@ -12,6 +16,6 @@ typedef enum SearchResult (*SearchRoutine)(struct Document *, const char *);
 extern enum SearchResult forwardSearch(struct Document *doc, const char *str);
 extern enum SearchResult backwardSearch(struct Document *doc, const char *str);
 
-void srch(SearchRoutine func, const char *prompt);
-void isrch(SearchRoutine func, const char *prompt);
-void srch_nxtprv(bool reverse);
+void srch(struct Document *doc, SearchRoutine func, const char *prompt);
+void isrch(struct Document *doc, SearchRoutine func, const char *prompt);
+void srch_nxtprv(struct Document *doc, bool reverse);

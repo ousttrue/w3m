@@ -387,28 +387,32 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew") {
 /* Search regular expression forward */
 
 DEFUN(srchfor, SEARCH SEARCH_FORE WHEREIS, "Search forward") {
-  srch(forwardSearch, "Forward: ");
+  srch(&Currentbuf->document, forwardSearch, "Forward: ");
 }
 
 DEFUN(isrchfor, ISEARCH, "Incremental search forward") {
-  isrch(forwardSearch, "I-search: ");
+  isrch(&Currentbuf->document, forwardSearch, "I-search: ");
 }
 
 /* Search regular expression backward */
 
 DEFUN(srchbak, SEARCH_BACK, "Search backward") {
-  srch(backwardSearch, "Backward: ");
+  srch(&Currentbuf->document, backwardSearch, "Backward: ");
 }
 
 DEFUN(isrchbak, ISEARCH_BACK, "Incremental search backward") {
-  isrch(backwardSearch, "I-search backward: ");
+  isrch(&Currentbuf->document, backwardSearch, "I-search backward: ");
 }
 
 /* Search next matching */
-DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward") { srch_nxtprv(0); }
+DEFUN(srchnxt, SEARCH_NEXT, "Continue search forward") {
+  srch_nxtprv(&Currentbuf->document, 0);
+}
 
 /* Search previous matching */
-DEFUN(srchprv, SEARCH_PREV, "Continue search backward") { srch_nxtprv(1); }
+DEFUN(srchprv, SEARCH_PREV, "Continue search backward") {
+  srch_nxtprv(&Currentbuf->document, 1);
+}
 
 static void shiftvisualpos(struct Buffer *buf, int shift) {
   struct Line *l = buf->document.currentLine;
@@ -488,7 +492,7 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
   if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
     if (env != NULL && *env != '\0')
       env = Sprintf("%s=", env)->ptr;
-    env = inputStrHist("Set environ: ", env, TextHist);
+    env = inputStrHist(&Currentbuf->document, "Set environ: ", env, TextHist);
     if (env == NULL || *env == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -508,7 +512,8 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   const char *cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist("(read shell)!", "", IN_COMMAND, ShellHist);
+    cmd = inputLineHist(&Currentbuf->document, "(read shell)!", "", IN_COMMAND,
+                        ShellHist);
   }
   if (cmd != NULL)
     cmd = conv_to_system(cmd);
@@ -539,7 +544,8 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   const char *cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist("(exec shell)!", "", IN_COMMAND, ShellHist);
+    cmd = inputLineHist(&Currentbuf->document, "(exec shell)!", "", IN_COMMAND,
+                        ShellHist);
   }
   if (cmd != NULL)
     cmd = conv_to_system(cmd);
@@ -561,7 +567,8 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
   const char *fn = searchKeyData();
   if (fn == NULL || *fn == '\0') {
     /* FIXME: gettextize? */
-    fn = inputFilenameHist("(Load)Filename? ", NULL, LoadHist);
+    fn = inputFilenameHist(&Currentbuf->document, "(Load)Filename? ", NULL,
+                           LoadHist);
   }
   if (fn != NULL)
     fn = conv_to_system(fn);
@@ -813,14 +820,14 @@ end:
 
 static void _quitfm(int confirm) {
   const char *ans = "y";
-
   if (checkDownloadList())
     /* FIXME: gettextize? */
-    ans = inputChar("Download process retains. "
-                    "Do you want to exit w3m? (y/n)");
+    ans = inputChar(&Currentbuf->document, "Download process retains. "
+                                           "Do you want to exit w3m? (y/n)");
   else if (confirm)
     /* FIXME: gettextize? */
-    ans = inputChar("Do you want to exit w3m? (y/n)");
+    ans = inputChar(&Currentbuf->document, "Do you want to exit w3m? (y/n)");
+
   if (!(ans && TOLOWER(*ans) == 'y')) {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -944,7 +951,7 @@ DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
     _goLine(str);
   else
     /* FIXME: gettextize? */
-    _goLine(inputStr("Goto line: ", ""));
+    _goLine(inputStr(&Currentbuf->document, "Goto line: ", ""));
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line") { _goLine("^"); }
@@ -1411,7 +1418,8 @@ static void _followForm(int submit) {
       /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", false, 1, true, false);
     /* FIXME: gettextize? */
-    p = inputStrHist("TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+    p = inputStrHist(&Currentbuf->document,
+                     "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
@@ -1426,7 +1434,8 @@ static void _followForm(int submit) {
       /* FIXME: gettextize? */
       disp_message_nsec("Read only field!", false, 1, true, false);
     /* FIXME: gettextize? */
-    p = inputFilenameHist("Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+    p = inputFilenameHist(&Currentbuf->document,
+                          "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
@@ -1443,7 +1452,8 @@ static void _followForm(int submit) {
       break;
     }
     /* FIXME: gettextize? */
-    p = inputLine("Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
+    p = inputLine(&Currentbuf->document,
+                  "Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
     if (p == NULL)
       break;
     fi->value = Strnew_charp(p);
@@ -2060,7 +2070,7 @@ static void goURL0(char *prompt, int relative) {
       else
         pushHist(hist, a_url);
     }
-    url = inputLineHist(prompt, url, IN_URL, hist);
+    url = inputLineHist(&Currentbuf->document, prompt, url, IN_URL, hist);
     if (url != NULL)
       SKIP_BLANKS(url);
   }
@@ -2169,7 +2179,7 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
       auto v = get_param_option(opt);
       opt = Sprintf("%s=%s", opt, v ? v : "")->ptr;
     }
-    opt = inputStrHist("Set option: ", opt, TextHist);
+    opt = inputStrHist(&Currentbuf->document, "Set option: ", opt, TextHist);
     if (opt == NULL || *opt == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -2297,7 +2307,8 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
   file = searchKeyData();
   if (file == NULL || *file == '\0') {
     /* FIXME: gettextize? */
-    qfile = inputLineHist("Save buffer to: ", NULL, IN_COMMAND, SaveHist);
+    qfile = inputLineHist(&Currentbuf->document, "Save buffer to: ", NULL,
+                          IN_COMMAND, SaveHist);
     if (qfile == NULL || *qfile == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -2651,7 +2662,7 @@ static void invoke_browser(char *url) {
       break;
     }
     if (browser == NULL || *browser == '\0') {
-      browser = inputStr("Browse command: ", NULL);
+      browser = inputStr(&Currentbuf->document, "Browse command: ", NULL);
       if (browser != NULL)
         browser = conv_to_system(browser);
     }
@@ -2813,7 +2824,7 @@ static void execdict(const char *word) {
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
-  execdict(inputStr("(dictionary)!", ""));
+  execdict(inputStr(&Currentbuf->document, "(dictionary)!", ""));
 }
 
 DEFUN(dictwordat, DICT_WORD_AT,
@@ -2947,7 +2958,7 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   data = searchKeyData();
   if (data == NULL || *data == '\0') {
-    data = inputStrHist("command [; ...]: ", "", TextHist);
+    data = inputStrHist(nullptr, "command [; ...]: ", "", TextHist);
     if (data == NULL) {
       displayBuffer(Currentbuf, B_NORMAL);
       return;
@@ -3024,7 +3035,7 @@ DEFUN(defKey, DEFINE_KEY,
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   const char *data = searchKeyData();
   if (data == NULL || *data == '\0') {
-    data = inputStrHist("Key definition: ", "", TextHist);
+    data = inputStrHist(&Currentbuf->document, "Key definition: ", "", TextHist);
     if (data == NULL || *data == '\0') {
       displayBuffer(Currentbuf, B_NORMAL);
       return;

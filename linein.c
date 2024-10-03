@@ -122,9 +122,9 @@ static Str strCurrentBuf;
 static int use_hist;
 static void ins_char(char c);
 
-const char *inputLineHistSearch(const char *prompt, const char *def_str,
-                                enum InputlineFlags flag, struct Hist *hist,
-                                IncFunc incrfunc) {
+const char *inputLineHistSearch(struct Document *doc, const char *prompt,
+                                const char *def_str, enum InputlineFlags flag,
+                                struct Hist *hist, IncFunc incrfunc) {
   int opos, x, y, lpos, rpos, epos;
   unsigned char c;
   char *p;
@@ -223,10 +223,10 @@ const char *inputLineHistSearch(const char *prompt, const char *def_str,
       cm_next = false;
       cm_disp_next = -1;
     } else if (!i_quote && c < 0x20) { /* Control code */
-      if (incrfunc == NULL || (c = incrfunc((int)c, strBuf, strProp)) < 0x20)
+      if (incrfunc == NULL || (c = incrfunc(nullptr, (int)c, strBuf, strProp)) < 0x20)
         (*InputKeymap[(int)c])(c);
       if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
-        incrfunc(-1, strBuf, strProp);
+        incrfunc(nullptr, -1, strBuf, strProp);
       if (cm_clear)
         cm_next = false;
       if (cm_disp_clear)
@@ -245,7 +245,7 @@ const char *inputLineHistSearch(const char *prompt, const char *def_str,
         strProp[CPos] = PC_ASCII;
       CPos++;
       if (incrfunc)
-        incrfunc(-1, strBuf, strProp);
+        incrfunc(nullptr, -1, strBuf, strProp);
     }
     if (CLen && (flag & IN_CHAR))
       break;
@@ -886,22 +886,27 @@ static void _editor(int) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-const char *inputLineHist(const char *p, const char *d, enum InputlineFlags f,
-                          struct Hist *h) {
-  return inputLineHistSearch(p, d, f, h, NULL);
+const char *inputLineHist(struct Document *doc, const char *p, const char *d,
+                          enum InputlineFlags f, struct Hist *h) {
+  return inputLineHistSearch(doc, p, d, f, h, NULL);
 }
 
-const char *inputLine(const char *p, const char *d, enum InputlineFlags f) {
-  return inputLineHist(p, d, f, NULL);
+const char *inputLine(struct Document *doc, const char *p, const char *d,
+                      enum InputlineFlags f) {
+  return inputLineHist(doc, p, d, f, NULL);
 }
 
-const char *inputStr(const char *p, const char *d) {
-  return inputLine(p, d, IN_STRING);
+const char *inputStr(struct Document *doc, const char *p, const char *d) {
+  return inputLine(doc, p, d, IN_STRING);
 }
-const char *inputStrHist(const char *p, const char *d, struct Hist *h) {
-  return inputLineHist(p, d, IN_STRING, h);
+const char *inputStrHist(struct Document *doc, const char *p, const char *d,
+                         struct Hist *h) {
+  return inputLineHist(doc, p, d, IN_STRING, h);
 }
-const char *inputFilenameHist(const char *p, const char *d, struct Hist *h) {
-  return inputLineHist(p, d, IN_FILENAME, h);
+const char *inputFilenameHist(struct Document *doc, const char *p,
+                              const char *d, struct Hist *h) {
+  return inputLineHist(doc, p, d, IN_FILENAME, h);
 }
-const char *inputChar(const char *p) { return inputLine(p, "", IN_CHAR); }
+const char *inputChar(struct Document *doc, const char *p) {
+  return inputLine(doc, p, "", IN_CHAR);
+}

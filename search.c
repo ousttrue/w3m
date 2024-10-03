@@ -1,8 +1,6 @@
 #include "search.h"
 #include "defun.h"
-#include "fm.h"
 #include "regex.h"
-#include "buffer.h"
 #include "document.h"
 #include "scr.h"
 #include "tty.h"
@@ -17,6 +15,9 @@
 
 static const char *SearchString = NULL;
 SearchRoutine searchRoutine = nullptr;
+bool IgnoreCase = true;
+bool WrapSearch = false;
+bool show_srch_str = true;
 
 static void set_mark(struct Line *l, int pos, int epos) {
   for (; pos < epos && pos < l->size; pos++)
@@ -181,7 +182,8 @@ enum SearchResult backwardSearch(struct Document *doc, const char *str) {
 }
 
 /* search by regular expression */
-static enum SearchResult srchcore(const char *str, SearchRoutine func) {
+static enum SearchResult srchcore(struct Document *doc, const char *str,
+                                  SearchRoutine func) {
   if (str != NULL && str != SearchString)
     SearchString = str;
 
@@ -192,9 +194,9 @@ static enum SearchResult srchcore(const char *str, SearchRoutine func) {
   str = SearchString;
   tty_crmode();
   if (from_jmp()) {
-    result = func(&Currentbuf->document, str);
+    result = func(doc, str);
     // if (i < PREC_NUM - 1 && result & SR_FOUND)
-    //   clear_mark(Currentbuf->document.currentLine);
+    clear_mark(doc->currentLine);
   }
   tty_raw();
   return result;
@@ -211,7 +213,7 @@ static void disp_srchresult(int result, const char *prompt, const char *str) {
     disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
 }
 
-static int dispincsrch(int ch, Str buf, Lineprop *prop) {
+static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
   static struct Line *currentLine;
   static int pos;
   char *str;
@@ -244,74 +246,74 @@ static int dispincsrch(int ch, Str buf, Lineprop *prop) {
   if (do_next_search) {
     if (*str) {
       if (searchRoutine == forwardSearch)
-        Currentbuf->document.pos += 1;
+        doc->pos += 1;
       SAVE_BUFPOSITION(&sbuf);
-      if (srchcore(str, searchRoutine) == SR_NOTFOUND &&
+      if (srchcore(doc, str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
-        Currentbuf->document.pos -= 1;
+        doc->pos -= 1;
         SAVE_BUFPOSITION(&sbuf);
       }
-      arrangeCursor(&Currentbuf->document);
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
-      clear_mark(Currentbuf->document.currentLine);
+      arrangeCursor(doc);
+      displayInvalidate();
+      clear_mark(doc->currentLine);
       return -1;
     } else
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
     RESTORE_BUFPOSITION(&sbuf);
-    arrangeCursor(&Currentbuf->document);
-    srchcore(str, searchRoutine);
-    arrangeCursor(&Currentbuf->document);
-    currentLine = Currentbuf->document.currentLine;
-    pos = Currentbuf->document.pos;
+    arrangeCursor(doc);
+    srchcore(doc, str, searchRoutine);
+    arrangeCursor(doc);
+    currentLine = doc->currentLine;
+    pos = doc->pos;
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
-  clear_mark(Currentbuf->document.currentLine);
+  clear_mark(doc->currentLine);
   return -1;
 }
 
-void isrch(SearchRoutine func, const char *prompt) {
+void isrch(struct Document *doc, SearchRoutine func, const char *prompt) {
   struct Document sbuf;
   SAVE_BUFPOSITION(&sbuf);
-  dispincsrch(0, NULL, NULL); /* initialize incremental search state */
+  dispincsrch(doc, 0, NULL, NULL); /* initialize incremental search state */
   searchRoutine = func;
   auto str =
-      inputLineHistSearch(prompt, NULL, IN_STRING, TextHist, dispincsrch);
+      inputLineHistSearch(doc, prompt, NULL, IN_STRING, TextHist, dispincsrch);
   if (!str) {
     RESTORE_BUFPOSITION(&sbuf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-void srch(SearchRoutine func, const char *prompt) {
+void srch(struct Document *doc, SearchRoutine func, const char *prompt) {
   const char *str = searchKeyData();
 
   int disp = false;
   if (str == NULL || *str == '\0') {
-    str = inputStrHist(prompt, NULL, TextHist);
+    str = inputStrHist(doc, prompt, NULL, TextHist);
     if (str != NULL && *str == '\0')
       str = SearchString;
     if (str == NULL) {
-      displayBuffer(Currentbuf, B_NORMAL);
+      displayInvalidate();
       return;
     }
     disp = true;
   }
-  auto pos = Currentbuf->document.pos;
+  auto pos = doc->pos;
   if (func == forwardSearch)
-    Currentbuf->document.pos += 1;
-  auto result = srchcore(str, func);
+    doc->pos += 1;
+  auto result = srchcore(doc, str, func);
   if (result & SR_FOUND)
-    clear_mark(Currentbuf->document.currentLine);
+    clear_mark(doc->currentLine);
   else
-    Currentbuf->document.pos = pos;
-  displayBuffer(Currentbuf, B_NORMAL);
+    doc->pos = pos;
+  displayInvalidate();
   if (disp)
     disp_srchresult(result, prompt, str);
   searchRoutine = func;
 }
 
-void srch_nxtprv(bool reverse) {
+void srch_nxtprv(struct Document *doc, bool reverse) {
   static SearchRoutine routine[2] = {forwardSearch, backwardSearch};
 
   if (searchRoutine == NULL) {
@@ -325,13 +327,14 @@ void srch_nxtprv(bool reverse) {
   if (searchRoutine == backwardSearch)
     reverse ^= 1;
   if (reverse == 0)
-    Currentbuf->document.pos += 1;
-  auto result = srchcore(SearchString, routine[reverse]);
+    doc->pos += 1;
+  auto result = srchcore(doc, SearchString, routine[reverse]);
   if (result & SR_FOUND)
-    clear_mark(Currentbuf->document.currentLine);
+    clear_mark(doc->currentLine);
   else {
-    if (reverse == 0)
-      Currentbuf->document.pos -= 1;
+    if (reverse == 0) {
+      doc->pos -= 1;
+    }
   }
   displayBuffer(Currentbuf, B_NORMAL);
   disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
