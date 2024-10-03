@@ -39,14 +39,6 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
   else
     http_response_code = 0;
 
-  FILE *src = nullptr;
-  if (thru && !newBuf->header_source) {
-    char *tmpf = tmpfname(TMPF_DFL, nullptr)->ptr;
-    src = fopen(tmpf, "w");
-    if (src)
-      newBuf->header_source = tmpf;
-  }
-
   char *p, *q;
   char *emsg;
   char c;
@@ -62,8 +54,6 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
         fclose(ff);
       }
     }
-    if (src)
-      Strfputs(tmp, src);
     cleanup_line(tmp, HEADER_MODE);
     if (tmp->ptr[0] == '\n' || tmp->ptr[0] == '\r' || tmp->ptr[0] == '\0') {
       if (!lineBuf2)
@@ -276,8 +266,6 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
   }
   if (thru)
     addnewline(newBuf->document, "", propBuffer, 0, -1, -1);
-  if (src)
-    fclose(src);
 
   return http_response_code;
 }

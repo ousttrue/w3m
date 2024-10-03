@@ -93,8 +93,6 @@ void discardBuffer(struct Buffer *buf) {
     if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
       unlink(buf->sourcefile);
   }
-  if (buf->header_source)
-    unlink(buf->header_source);
   if (buf->mailcap_source)
     unlink(buf->mailcap_source);
 }
@@ -421,19 +419,6 @@ void reshapeBuffer(struct Buffer *buf) {
     buf->document->hmarklist->nmark = 0;
   if (buf->document->imarklist)
     buf->document->imarklist->nmark = 0;
-
-  if (buf->header_source) {
-    if (buf->currentURL.scheme != SCM_LOCAL || buf->mailcap_source ||
-        !strcmp(buf->currentURL.file, "-")) {
-      struct URLFile h;
-      init_stream(&h, SCM_LOCAL, NULL);
-      examineFile(buf->header_source, &h);
-      if (h.stream) {
-        http_readHeader(&h, buf, true, NULL);
-        UFclose(&h);
-      }
-    }
-  }
 
   if (is_html_type(buf->type))
     loadHTMLBuffer(&f, nullptr, buf);
