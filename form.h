@@ -1,10 +1,4 @@
-/* $Id: form.h,v 1.6 2003/09/22 21:02:18 ukai Exp $ */
-/*
- * HTML forms
- */
-#ifndef FORM_H
-#define FORM_H
-
+#pragma once
 #include "Str.h"
 
 #define FORM_UNKNOWN -1
@@ -63,4 +57,26 @@ struct FormItemList {
   struct FormItemList *next;
 };
 
-#endif /* not FORM_H */
+extern struct FormList *newFormList(char *action, char *method, char *charset,
+                                    char *enctype, char *target, char *name,
+                                    struct FormList *_next);
+struct parsed_tag;
+extern struct FormItemList *formList_addInput(struct FormList *fl,
+                                              struct parsed_tag *tag);
+extern char *form2str(struct FormItemList *fi);
+extern int formtype(char *typestr);
+struct Anchor;
+struct Buffer;
+extern void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
+                             struct FormItemList *form);
+struct AnchorList;
+extern void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem);
+extern void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
+                             struct FormItemList *form);
+extern void preFormUpdateBuffer(struct Buffer *buf);
+extern Str textfieldrep(Str s, int width);
+extern void input_textarea(struct FormItemList *fi);
+extern void do_internal(char *action, char *data);
+extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
+extern void form_write_from_file(FILE *f, char *boundary, char *name,
+                                 char *filename, char *file);

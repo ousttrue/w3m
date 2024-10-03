@@ -128,3 +128,4 @@ extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
 extern void reshapeBuffer(struct Buffer *buf);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
+extern struct Buffer *page_info_panel(struct Buffer *buf);

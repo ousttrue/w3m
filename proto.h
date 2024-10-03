@@ -136,54 +136,8 @@ struct readbuffer;
 struct parsed_tag;
 union input_stream;
 struct Hist;
-
-extern double log_like(int x);
-extern struct table *newTable(void);
-extern void pushdata(struct table *t, int row, int col, char *data);
-struct TextLine;
-extern void align(struct TextLine *lbuf, int width, int mode);
-extern void print_item(struct table *t, int row, int col, int width, Str buf);
-extern void print_sep(struct table *t, int row, int type, int maxcol, Str buf);
-extern void do_refill(struct table *tbl, int row, int col, int maxlimit);
-extern void initRenderTable(void);
-extern void renderTable(struct table *t, int max_width,
-                        struct html_feed_environ *h_env);
-extern struct table *begin_table(int border, int spacing, int padding,
-                                 int vspace);
-extern void end_table(struct table *tbl);
-extern void check_rowcol(struct table *tbl, struct table_mode *mode);
-extern int minimum_length(char *line);
-extern int feed_table(struct table *tbl, char *line, struct table_mode *mode,
-                      int width, int internal);
-extern void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
-                        int width);
-extern void pushTable(struct table *, struct table *);
-extern struct FormList *newFormList(char *action, char *method, char *charset,
-                                    char *enctype, char *target, char *name,
-                                    struct FormList *_next);
-extern struct FormItemList *formList_addInput(struct FormList *fl,
-                                              struct parsed_tag *tag);
-extern char *form2str(struct FormItemList *fi);
-extern int formtype(char *typestr);
-struct Anchor;
-extern void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
-                             struct FormItemList *form);
-struct AnchorList;
-extern void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem);
-extern void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
-                             struct FormItemList *form);
-extern void preFormUpdateBuffer(struct Buffer *buf);
-extern Str textfieldrep(Str s, int width);
-extern void input_textarea(struct FormItemList *fi);
-extern void do_internal(char *action, char *data);
-extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
-extern void form_write_from_file(FILE *f, char *boundary, char *name,
-                                 char *filename, char *file);
 struct parsed_tagarg;
-extern void follow_map(struct parsed_tagarg *arg);
-extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);
-extern struct Anchor *retrieveCurrentMap(struct Buffer *buf);
-extern struct Buffer *page_info_panel(struct Buffer *buf);
+
 
 extern char *ttyname_tty(void);
 // extern MySignalHandler reset_exit(SIGNAL_ARG);
@@ -191,6 +145,7 @@ extern char *ttyname_tty(void);
 
 extern void initMimeTypes();
 extern void free_ssl_ctx();
+struct Url;
 extern void parseURL(char *url, struct Url *p_url, struct Url *current);
 extern void copyParsedURL(struct Url *p, const struct Url *q);
 extern Str parsedURL2Str(struct Url *pu);
@@ -201,16 +156,19 @@ extern void init_stream(struct URLFile *uf, int scheme,
 
 extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
+struct Url;
 extern union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf);
 extern Str loadFTPDir0(struct Url *pu);
 #define loadFTPDir(pu, charset) loadFTPDir0(pu)
 extern void closeFTP(void);
 extern void disconnectFTP(void);
-
+struct Anchor;
 extern int onAnchor(struct Anchor *a, int line, int pos);
+struct Line;
 extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos,
                          int epos);
 extern char *reAnchor(struct Buffer *buf, char *re);
+struct AnchorList;
 extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
 extern struct Anchor *closest_next_anchor(struct AnchorList *a,
                                           struct Anchor *an, int x, int y);

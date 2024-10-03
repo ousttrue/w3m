@@ -1,4 +1,5 @@
 #include "display.h"
+#include "map.h"
 #include "symbol.h"
 #include "utf8.h"
 #include "ctrlcode.h"
@@ -146,7 +147,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   if (!buf)
     return;
   if (buf->document.topLine == NULL &&
-      readBufferCache(buf) == 0) { /* clear_buffer */
+      readBufferCache(&buf->document) == 0) { /* clear_buffer */
     mode = B_FORCE_REDRAW;
   }
 
@@ -279,7 +280,7 @@ static void drawAnchorCursor(struct Buffer *buf) {
 
   an = retrieveCurrentAnchor(&buf->document);
   if (!an)
-    an = retrieveCurrentMap(buf);
+    an = retrieveCurrentMap(&buf->document);
   if (an)
     hseq = an->hseq;
   else

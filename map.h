@@ -22,3 +22,7 @@ struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
                            char *coords);
 
 struct MapList *searchMapList(struct Buffer *buf, char *name);
+struct parsed_tagarg;
+extern void follow_map(struct parsed_tagarg *arg);
+extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);
+extern struct Anchor *retrieveCurrentMap(struct Buffer *buf);
