@@ -1,4 +1,5 @@
 #include "mailcap.h"
+#include "http_response.h"
 #include "strcase.h"
 #include "fm.h"
 #include "url_stream.h"
@@ -21,41 +22,7 @@ static struct mailcap DefaultMailcap[] = {
 static struct TextList *mailcap_list;
 static struct mailcap **UserMailcap;
 
-int matchattr(char *p, char *attr, int len, Str *value) {
-  int quoted;
-  char *q = NULL;
-
-  if (strncasecmp(p, attr, len) == 0) {
-    p += len;
-    SKIP_BLANKS(p);
-    if (value) {
-      *value = Strnew();
-      if (*p == '=') {
-        p++;
-        SKIP_BLANKS(p);
-        quoted = 0;
-        while (!IS_ENDL(*p) && (quoted || *p != ';')) {
-          if (!IS_SPACE(*p))
-            q = p;
-          if (*p == '"')
-            quoted = (quoted) ? 0 : 1;
-          else
-            Strcat_char(*value, *p);
-          p++;
-        }
-        if (q)
-          Strshrink(*value, p - q - 1);
-      }
-      return 1;
-    } else {
-      if (IS_ENDT(*p)) {
-        return 1;
-      }
-    }
-  }
-  return 0;
-}
-int mailcapMatch(struct mailcap *mcap, char *type) {
+int mailcapMatch(struct mailcap *mcap, const char *type) {
   char *cap = mcap->type, *p;
   int level;
   for (p = cap; *p != '/'; p++) {
@@ -84,15 +51,14 @@ int mailcapMatch(struct mailcap *mcap, char *type) {
   return 20 + level;
 }
 
-struct mailcap *searchMailcap(struct mailcap *table, char *type) {
-  int level = 0;
-  struct mailcap *mcap = NULL;
-  int i;
-
+struct mailcap *searchMailcap(struct mailcap *table, const char *type) {
   if (table == NULL)
     return NULL;
+
+  int level = 0;
+  struct mailcap *mcap = NULL;
   for (; table->type; table++) {
-    i = mailcapMatch(table, type);
+    int i = mailcapMatch(table, type);
     if (i > level) {
       if (table->test) {
         Str command = unquote_mailcap(table->test, type, NULL, NULL, NULL);
@@ -320,7 +286,7 @@ no_user_mailcap:
 #define MCF_SQUOTED (1 << 0)
 #define MCF_DQUOTED (1 << 1)
 
-Str quote_mailcap(char *s, int flag) {
+static Str quote_mailcap(const char *s, int flag) {
   Str d;
 
   d = Strnew();
@@ -361,7 +327,6 @@ static Str unquote_mailcap_loop(const char *qstr, const char *type,
                                 const char *name, const char *attr,
                                 int *mc_stat, int flag0) {
   Str str, tmp, test, then;
-  char *p;
   int status = MC_NORMAL, prev_status = MC_NORMAL, sp = 0, flag;
 
   if (mc_stat)
@@ -373,6 +338,7 @@ static Str unquote_mailcap_loop(const char *qstr, const char *type,
   str = Strnew();
   tmp = test = then = NULL;
 
+  const char *p;
   for (flag = flag0, p = qstr; *p; p++) {
     if (status == MC_QUOTED) {
       if (prev_status == MC_PREC2)
@@ -450,7 +416,7 @@ static Str unquote_mailcap_loop(const char *qstr, const char *type,
         char *q;
         if (attr && (q = strcasestr(attr, tmp->ptr)) != NULL &&
             (q == attr || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-            matchattr(q, tmp->ptr, tmp->length, &tmp)) {
+            http_matchattr(q, tmp->ptr, tmp->length, &tmp)) {
           Strcat_charp(str, quote_mailcap(tmp->ptr, flag)->ptr);
           if (mc_stat)
             *mc_stat |= MCSTAT_REPPARAM;

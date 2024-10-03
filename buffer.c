@@ -516,16 +516,16 @@ int currentLn(struct Buffer *buf) {
 const char *guess_save_name(struct Buffer *buf, const char *path) {
   if (buf && buf->document_header) {
     Str name = NULL;
-    char *p, *q;
+    const char *p, *q;
     if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
         (q = strcasestr(p, "filename")) != NULL &&
         (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        matchattr(q, "filename", 8, &name))
+        http_matchattr(q, "filename", 8, &name))
       path = name->ptr;
     else if ((p = checkHeader(buf, "Content-Type:")) != NULL &&
              (q = strcasestr(p, "name")) != NULL &&
              (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             matchattr(q, "name", 4, &name))
+             http_matchattr(q, "name", 4, &name))
       path = name->ptr;
   }
   return guess_filename(path);
