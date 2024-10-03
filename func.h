@@ -20,3 +20,10 @@ const char *getWord(const char **str);
 const char *getQWord(const char **str);
 void setKeymap(const char *p, int lineno, int verbose);
 int getKey(const char *s);
+
+void pcmap(void);
+void escmap(void);
+void escbmap(void);
+void escdmap(char c);
+void multimap(void);
+

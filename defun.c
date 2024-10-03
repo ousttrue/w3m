@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "text.h"
 #include "rc.h"
 #include "search.h"
 #include "trap_jmp.h"

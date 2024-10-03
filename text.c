@@ -119,3 +119,22 @@ const char *convert_size2(int64_t size1, int64_t size2, int usefloat) {
                  floor(size2 / factor * 100.0 + 0.5) / 100.0, sizes[sizepos])
       ->ptr;
 }
+
+Str unescape_spaces(Str s) {
+  if (s == NULL)
+    return s;
+
+  Str tmp = NULL;
+  for (auto p = s->ptr; *p; p++) {
+    if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp;
+  return s;
+}

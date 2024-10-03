@@ -1,4 +1,5 @@
 #pragma once
+#include "line.h"
 
 /* Flags for displayBuffer() */
 enum DisplayMode {
@@ -11,3 +12,6 @@ enum DisplayMode {
 
 struct Buffer;
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode);
+
+void addChar(char c, Lineprop mode);
+struct Buffer *message_list_panel();

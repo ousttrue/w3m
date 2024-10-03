@@ -13,8 +13,11 @@
 #include "myctype.h"
 #include "regex.h"
 #include "terms.h"
-#include "funcname.c"
-#include "functable.c"
+#include "history.h"
+
+#include "funcname.h"
+#include "functable.h"
+
 #include <sys/stat.h>
 
 #define KEYDATA_HASH_SIZE 16

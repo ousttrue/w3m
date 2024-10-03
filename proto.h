@@ -131,26 +131,12 @@ extern void cursorBottom(void);
 
 struct Buffer;
 struct URLFile;
-
 struct html_feed_environ;
 struct readbuffer;
 struct parsed_tag;
 union input_stream;
-
-extern void addChar(char c, Lineprop mode);
-extern struct Buffer *message_list_panel(void);
-
-extern void pcmap(void);
-extern void escmap(void);
-extern void escbmap(void);
-extern void escdmap(char c);
-extern void multimap(void);
-extern Str unescape_spaces(Str s);
 struct Hist;
-extern struct Buffer *historyBuffer(struct Hist *hist);
-extern void loadHistory(struct Hist *hist);
-extern void saveHistory(struct Hist *hist, size_t size);
-extern void ldHist(void);
+
 extern double log_like(int x);
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
@@ -222,14 +208,15 @@ extern void closeFTP(void);
 extern void disconnectFTP(void);
 
 extern int onAnchor(struct Anchor *a, int line, int pos);
-extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos, int epos);
+extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos,
+                         int epos);
 extern char *reAnchor(struct Buffer *buf, char *re);
 extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
 extern struct Anchor *closest_next_anchor(struct AnchorList *a,
                                           struct Anchor *an, int x, int y);
 extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
                                           struct Anchor *an, int x, int y);
-struct HmarkerList;
+struct HmarkerList;
 extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
                                 int line, int pos, int shift);
 extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
@@ -276,7 +263,6 @@ extern char *FQDN(char *host);
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-
 extern void initKeymap(int force);
 extern char *getKeyData(int key);
 struct regex;
@@ -301,4 +287,3 @@ extern void dispVer(void);
 void srand48(long);
 long lrand48(void);
 #endif
-

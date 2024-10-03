@@ -1,4 +1,5 @@
 #include "linein.h"
+#include "text.h"
 #include "url.h"
 #include "utf8.h"
 #include "alloc.h"
@@ -670,26 +671,6 @@ Str escape_spaces(Str s) {
     }
     if (tmp)
       Strcat_char(tmp, *p);
-  }
-  if (tmp)
-    return tmp;
-  return s;
-}
-
-Str unescape_spaces(Str s) {
-  Str tmp = NULL;
-  char *p;
-
-  if (s == NULL)
-    return s;
-  for (p = s->ptr; *p; p++) {
-    if (*p == '\\' && (*(p + 1) == ' ' || *(p + 1) == CTRL_I)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(s->ptr, (int)(p - s->ptr));
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
   }
   if (tmp)
     return tmp;
