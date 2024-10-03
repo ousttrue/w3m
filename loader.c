@@ -334,7 +334,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
     if (t_buf == NULL)
       t_buf = newBuffer();
 
-    auto http_status_code = http_readHeader(&f, t_buf, false, &pu);
+    auto http_status_code = http_readHeader(&f, t_buf, &pu);
     const char *p;
     if (((http_status_code >= 301 && http_status_code <= 303) ||
          http_status_code == 307) &&

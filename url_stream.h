@@ -61,7 +61,7 @@ enum RG_FLAGS {
 };
 
 struct URLOption {
-  char *referer;
+  const char *referer;
   enum RG_FLAGS flag;
 };
 

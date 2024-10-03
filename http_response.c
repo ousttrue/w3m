@@ -30,8 +30,7 @@ const char *violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"};
 
-int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
-                    struct Url *pu) {
+int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, struct Url *pu) {
 
   struct TextList *headerlist = newBuf->document_header = newTextList();
   if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS)
@@ -80,9 +79,6 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
           ;
         lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
         Strcat(tmp, lineBuf2);
-        if (thru)
-          addnewline(newBuf->document, lineBuf2->ptr, propBuffer,
-                     lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
       }
@@ -264,8 +260,6 @@ int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
     Strfree(lineBuf2);
     lineBuf2 = NULL;
   }
-  if (thru)
-    addnewline(newBuf->document, "", propBuffer, 0, -1, -1);
 
   return http_response_code;
 }
