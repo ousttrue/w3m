@@ -138,7 +138,7 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
-void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
+void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf, FILE *src,
                     int internal);
 struct Buffer *loadHTMLString(Str page);
 struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,

@@ -1,4 +1,5 @@
 #include "url_stream.h"
+#include "document.h"
 #include "filepath.h"
 #include "text.h"
 #include "rc.h"
@@ -460,9 +461,10 @@ struct Url *baseURL(struct Buffer *buf) {
     /* no URL is defined for the buffer */
     return NULL;
   }
-  if (buf->baseURL != NULL) {
+
+  if (buf->document->baseURL != NULL) {
     /* <BASE> tag is defined in the document */
-    return buf->baseURL;
+    return buf->document->baseURL;
   } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
     return NULL;
   else

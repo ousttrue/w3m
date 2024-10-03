@@ -8,6 +8,8 @@ bool nextpage_topline = false;
 
 struct Document *newDocument(int width) {
   struct Document *doc = New(struct Document);
+  doc->baseTarget = NULL;
+  doc->baseURL = NULL;
   doc->width = width;
   doc->height = 0;
   doc->COLS = COLS;
@@ -572,4 +574,12 @@ void COPY_BUFPOSITION(struct Document *dstbuf, const struct Document *srcbuf) {
   (dstbuf)->cursorY = (srcbuf)->cursorY;
   (dstbuf)->visualpos = (srcbuf)->visualpos;
   (dstbuf)->currentColumn = (srcbuf)->currentColumn;
+}
+
+int currentLn(struct Document *doc) {
+  if (doc->currentLine)
+    /*     return buf->currentLine->real_linenumber + 1;      */
+    return doc->currentLine->linenumber + 1;
+  else
+    return 1;
 }

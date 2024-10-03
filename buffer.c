@@ -39,8 +39,6 @@ struct Buffer *newBuffer() {
   memset((void *)n, 0, sizeof(struct Buffer));
   n->document = newDocument(INIT_BUFFER_WIDTH);
   n->currentURL.scheme = SCM_UNKNOWN;
-  n->baseURL = NULL;
-  n->baseTarget = NULL;
   n->buffername = "";
   n->bufferprop = BP_NORMAL;
   n->clone = New(int);
@@ -487,14 +485,6 @@ char *last_modified(struct Buffer *buf) {
     return ctime(&st.st_mtime);
   }
   return "unknown";
-}
-
-int currentLn(struct Buffer *buf) {
-  if (buf->document->currentLine)
-    /*     return buf->currentLine->real_linenumber + 1;      */
-    return buf->document->currentLine->linenumber + 1;
-  else
-    return 1;
 }
 
 const char *guess_save_name(struct Buffer *buf, const char *path) {

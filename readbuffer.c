@@ -1,4 +1,4 @@
-#include "html_readbuffer.h"
+#include "readbuffer.h"
 #include "text.h"
 #include "document.h"
 #include "table.h"
@@ -626,8 +626,8 @@ static void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
     if (**str != ' ')
       obuf->prev_ctype = mode;
   }
-  auto len = utf8sequence_len((const uint8_t *)*str);
-  if (len == 0) {
+  auto len=utf8sequence_len((const uint8_t *)*str);
+  if(len==0){
     len = 1;
   }
   (*str) += len;
@@ -2927,13 +2927,23 @@ static Str textlist_feed() {
 
 static union input_stream *_file_lp2;
 
-void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl) {
-  _tl_lp2 = tl->first;
-  buf->document = HTMLlineproc2body(buf->currentURL, baseURL(buf), textlist_feed, -1);
+static Str file_feed() {
+  Str s;
+  s = StrISgets(_file_lp2);
+  if (s->length == 0) {
+    ISclose(_file_lp2);
+    return NULL;
+  }
+  return s;
 }
 
-void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
-                    FILE *src, int internal) {
+void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl) {
+  _tl_lp2 = tl->first;
+  HTMLlineproc2body(buf, textlist_feed, -1);
+}
+
+void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
+                    int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   int64_t linelen = 0;
   int64_t trbyte = 0;
@@ -2956,7 +2966,9 @@ void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
             newBuf->document->width, 0);
 
   htmlenv1.buf = newTextLineList();
-  cur_baseURL = base;
+#if defined(USE_M17N) || defined(USE_IMAGE)
+  cur_baseURL = baseURL(newBuf);
+#endif
 
   if (from_jmp()) {
     HTMLlineproc1("<br>Transfer Interrupted!<br>", &htmlenv1);
@@ -2980,10 +2992,11 @@ void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
   obuf.status = R_ST_NORMAL;
   completeHTMLstream(&htmlenv1, &obuf);
   flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
+#if defined(USE_M17N) || defined(USE_IMAGE)
   cur_baseURL = NULL;
+#endif
   if (htmlenv1.title)
     newBuf->buffername = htmlenv1.title;
-
 phase2:
   newBuf->trbyte = trbyte + linelen;
   trap_off();
@@ -3066,8 +3079,7 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
       newBuf->sourcefile = tmp->ptr;
   }
 
-  loadHTMLstream(f, baseURL(newBuf), newBuf, src,
-                 newBuf->bufferprop & BP_FRAME);
+  loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
 
   newBuf->document->topLine = newBuf->document->firstLine;
   newBuf->document->lastLine = newBuf->document->currentLine;
@@ -3097,7 +3109,7 @@ struct Buffer *loadHTMLString(Str page) {
   }
   trap_on();
 
-  loadHTMLstream(&f, baseURL(newBuf), newBuf, NULL, true);
+  loadHTMLstream(&f, newBuf, NULL, true);
 
   trap_off();
   UFclose(&f);

@@ -8,10 +8,6 @@
 extern int FoldLine;
 extern int showLineNum;
 
-#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
-#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
-#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
-
 /* Link Buffer */
 #define LB_NOLINK -1
 #define LB_INFO 0 /* pginfo() */
@@ -57,8 +53,6 @@ struct Buffer {
   const char *real_type;
   enum BufferProperty bufferprop;
   struct Url currentURL;
-  struct Url *baseURL;
-  const char *baseTarget;
   int real_scheme;
   const char *sourcefile;
   int *clone;
@@ -83,7 +77,6 @@ void chkURLBuffer(struct Buffer *buf);
 struct Line;
 char *last_modified(struct Buffer *buf);
 struct parsed_tag;
-int currentLn(struct Buffer *buf);
 
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);

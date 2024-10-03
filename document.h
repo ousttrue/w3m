@@ -4,6 +4,10 @@
 
 extern bool nextpage_topline;
 
+#define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
+#define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
+#define FOLD_BUFFER_WIDTH (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1)
+
 struct AnchorList;
 struct LinkList;
 struct FormList;
@@ -23,6 +27,8 @@ struct BufferPos {
 struct Document {
   const char *savecache;
   const char *title;
+  const char *baseTarget;
+  struct Url *baseURL;
   short width;
   short height;
   struct Line *firstLine;
@@ -84,3 +90,4 @@ void COPY_BUFROOT(struct Document *dstbuf, const struct Document *srcbuf);
 void COPY_BUFPOSITION(struct Document *dstbuf, const struct Document *srcbuf);
 struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
                                int seq);
+int currentLn(struct Document *doc);
