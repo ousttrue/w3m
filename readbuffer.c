@@ -626,7 +626,11 @@ static void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
     if (**str != ' ')
       obuf->prev_ctype = mode;
   }
-  (*str) += utf8sequence_len((const uint8_t *)*str);
+  auto len=utf8sequence_len((const uint8_t *)*str);
+  if(len==0){
+    len = 1;
+  }
+  (*str) += len;
   obuf->flag |= RB_NFLUSHED;
 }
 
@@ -2553,7 +2557,7 @@ void HTMLlineproc0(const char *line, struct html_feed_environ *h_env,
   Lineprop mode;
   int cmd;
   struct readbuffer *obuf = h_env->obuf;
-  int indent, delta;
+  int indent, width;
   struct parsed_tag *tag;
   Str tokbuf;
   struct table *tbl = NULL;
@@ -2748,7 +2752,7 @@ table_start:
       continue;
     while (*str) {
       mode = get_mctype(str);
-      delta = utf8sequence_width((const uint8_t *)str);
+      width = utf8sequence_width((const uint8_t *)str);
       if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
         char ch = *str;
         if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
@@ -2787,13 +2791,13 @@ table_start:
             push_charp(obuf, 1, p, PC_ASCII);
             str++;
           } else {
-            proc_mchar(obuf, 1, delta, &str, mode);
+            proc_mchar(obuf, 1, width, &str, mode);
           }
         } else {
           if (*str == '&')
             proc_escape(obuf, &str);
           else
-            proc_mchar(obuf, 1, delta, &str, mode);
+            proc_mchar(obuf, 1, width, &str, mode);
         }
         if (obuf->flag & (RB_SPECIAL & ~RB_PRE_INT))
           continue;
@@ -2809,7 +2813,7 @@ table_start:
           if (*str == '&')
             proc_escape(obuf, &str);
           else
-            proc_mchar(obuf, obuf->flag & RB_SPECIAL, delta, &str, mode);
+            proc_mchar(obuf, obuf->flag & RB_SPECIAL, width, &str, mode);
         }
       }
       if (need_flushline(h_env, obuf, mode)) {

@@ -334,7 +334,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
     if (t_buf == NULL)
       t_buf = newBuffer();
 
-    t_buf->http_response = httpReadHeader(&f, &pu);
+    t_buf->http_response = httpReadResponse(&f, &pu);
     const char *p;
     if (((t_buf->http_response->http_status_code >= 301 &&
           t_buf->http_response->http_status_code <= 303) ||
@@ -358,6 +358,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
+
     t = httpGetContentType(t_buf->http_response);
     if (t == NULL && pu.file != NULL) {
       if (!((t_buf->http_response->http_status_code >= 400 &&
@@ -368,6 +369,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
     }
     if (t == NULL)
       t = "text/plain";
+
     if (add_auth_cookie_flag && realm && uname && pwd) {
       /* If authorization is required and passed */
       add_auth_user_passwd(&pu, qstr_unquote(realm)->ptr, uname, pwd, 0);

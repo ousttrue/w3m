@@ -4,6 +4,10 @@
 struct Utf8 SPACE = {' ', 0, 0, 0, 0};
 
 int utf8codepoint_width(uint32_t codepoint) {
+  if(codepoint==0){
+    // ?
+    return 0;
+  }
   return widechar_wcwidth(codepoint);
 }
 

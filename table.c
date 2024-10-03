@@ -1280,7 +1280,7 @@ static void make_caption(struct table *t, struct html_feed_environ *h_env) {
 }
 
 static void push_render_image(Str str, int width, int limit,
-                       struct html_feed_environ *h_env) {
+                              struct html_feed_environ *h_env) {
   struct readbuffer *obuf = h_env->obuf;
   int indent = h_env->envs[h_env->envc].indent;
 
@@ -1800,6 +1800,9 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
     ctype = get_mctype(line);
     int cwid = utf8sequence_width((const uint8_t *)line);
     wlen = plen = utf8sequence_len((const uint8_t *)line);
+    if (wlen == 0) {
+      wlen = 1;
+    }
     struct Utf8 utf8;
 
     if (min < w)
