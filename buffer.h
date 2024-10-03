@@ -129,3 +129,5 @@ extern void reshapeBuffer(struct Buffer *buf);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
 extern struct Buffer *page_info_panel(struct Buffer *buf);
+extern char *guess_save_name(struct Buffer *buf, char *file);
+extern void saveBufferInfo(void);

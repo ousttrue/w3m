@@ -17,6 +17,7 @@
 #include "regex.h"
 #include "myctype.h"
 #include "readbuffer.h"
+#include "proto.h"
 #include <time.h>
 #include <sys/stat.h>
 

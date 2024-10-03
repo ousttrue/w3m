@@ -15,6 +15,7 @@
 #include "terms.h"
 #include "history.h"
 
+#include "proto.h"
 #include "funcname.h"
 #include "functable.h"
 

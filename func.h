@@ -27,3 +27,9 @@ void escbmap(void);
 void escdmap(char c);
 void multimap(void);
 void initKeymap(int force);
+
+char *getKeyData(int key);
+struct regex;
+extern char *getRegexWord(const char **str, struct regex **regex_ret);
+
+

@@ -1,5 +1,6 @@
 #include "url_stream.h"
 #include "filepath.h"
+#include "rc.h"
 #include "loader.h"
 #include "ftp.h"
 #include "trap_jmp.h"

@@ -128,6 +128,7 @@ struct html_feed_environ {
 
 void push_link(int cmd, int offset, int pos);
 
+struct parsed_tag;
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl);
 void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
@@ -179,3 +180,4 @@ extern Str process_n_textarea(void);
 extern void feed_textarea(char *str);
 extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
+extern Str getLinkNumberStr(int correction);

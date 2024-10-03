@@ -318,13 +318,13 @@ static int form_update_line(struct Line *line, char **str, int spos, int epos,
 
 void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
                       struct FormItemList *form) {
-  struct Buffer save;
+  struct Document save;
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   struct Line *l;
 
-  copyBuffer(&save, buf);
-  gotoLine(buf, a->start.line);
+  copyBuffer(&save, &buf->document);
+  gotoLine(&buf->document, a->start.line);
   switch (form->type) {
   case FORM_TEXTAREA:
   case FORM_INPUT_TEXT:
@@ -403,8 +403,8 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
     }
     break;
   }
-  copyBuffer(buf, &save);
-  arrangeLine(buf);
+  copyBuffer(&buf->document, &save);
+  arrangeLine(&buf->document);
 }
 
 Str textfieldrep(Str s, int width) {

@@ -1,5 +1,5 @@
-#ifdef DUMMY
 #include "Str.h"
+#ifdef DUMMY
 #define NBSP " "
 #define UseAltEntity 1
 #undef USE_M17N

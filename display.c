@@ -1,5 +1,6 @@
 #include "display.h"
 #include "map.h"
+#include "table.h"
 #include "symbol.h"
 #include "utf8.h"
 #include "ctrlcode.h"

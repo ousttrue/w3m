@@ -141,10 +141,7 @@ struct Url;
 struct Url;
 
 extern void initMimeTypes();
-extern int check_no_proxy(char *domain);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
-extern const void *querySiteconf(const struct Url *query_pu, int field);
-extern Str loadLocalDir(char *dirname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
 extern char *FQDN(char *host);
@@ -165,26 +162,13 @@ extern char *FQDN(char *host);
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-extern char *getKeyData(int key);
-struct regex;
-extern char *getRegexWord(const char **str, struct regex **regex_ret);
-
 #define mainMn nulcmd
 #define selMn selBuf
 #define tabMn nulcmd
 
 extern void dictword(void);
 extern void dictwordat(void);
-extern char *guess_save_name(struct Buffer *buf, char *file);
 
 extern void wrapToggle(void);
-extern void saveBufferInfo(void);
-
-extern Str getLinkNumberStr(int correction);
 
 extern void dispVer(void);
-
-#ifdef USE_INCLUDED_SRAND48
-void srand48(long);
-long lrand48(void);
-#endif

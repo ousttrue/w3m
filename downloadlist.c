@@ -1,6 +1,7 @@
 #include "downloadlist.h"
 #include "text.h"
 #include "app.h"
+#include "proto.h"
 #include "indep.h"
 #include "readbuffer.h"
 #include "alloc.h"
