@@ -55,3 +55,4 @@ extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
                                  Str *pwd, int is_proxy);
 extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
                                  Str pwd, int is_proxy);
+extern void loadPasswd(void);

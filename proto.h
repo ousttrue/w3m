@@ -4,8 +4,6 @@
  *
  *   Created: Wed Feb 10 12:47:03 1999
  */
-#include "Str.h"
-#include <stdint.h>
 
 extern void nulcmd(void);
 extern void pgFore(void);
@@ -129,23 +127,6 @@ extern void cursorTop(void);
 extern void cursorMiddle(void);
 extern void cursorBottom(void);
 
-struct Buffer;
-struct URLFile;
-struct html_feed_environ;
-struct readbuffer;
-struct parsed_tag;
-union input_stream;
-struct Hist;
-struct parsed_tagarg;
-struct Url;
-struct Url;
-
-extern void initMimeTypes();
-extern struct Buffer *link_list_panel(struct Buffer *buf);
-extern void loadPasswd(void);
-extern void loadPreForm(void);
-extern char *FQDN(char *host);
-
 #define docCSet nulcmd
 #define defCSet nulcmd
 
@@ -168,7 +149,5 @@ extern char *FQDN(char *host);
 
 extern void dictword(void);
 extern void dictwordat(void);
-
 extern void wrapToggle(void);
-
 extern void dispVer(void);

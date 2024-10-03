@@ -1722,69 +1722,6 @@ char *url_decode0(const char *url) {
   return url_unquote_conv0(url);
 }
 
-char *FQDN(char *host) {
-  char *p;
-#ifndef INET6
-  struct hostent *entry;
-#else  /* INET6 */
-  int *af;
-#endif /* INET6 */
-
-  if (host == NULL)
-    return NULL;
-
-  if (strcasecmp(host, "localhost") == 0)
-    return host;
-
-  for (p = host; *p && *p != '.'; p++)
-    ;
-
-  if (*p == '.')
-    return host;
-
-#ifndef INET6
-  if (!(entry = gethostbyname(host)))
-    return NULL;
-
-  return allocStr(entry->h_name, -1);
-#else  /* INET6 */
-  for (af = ai_family_order_table[DNS_order];; af++) {
-    int error;
-    struct addrinfo hints;
-    struct addrinfo *res, *res0;
-    char *namebuf;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_flags = AI_CANONNAME;
-    hints.ai_family = *af;
-    hints.ai_socktype = SOCK_STREAM;
-    error = getaddrinfo(host, NULL, &hints, &res0);
-    if (error) {
-      if (*af == PF_UNSPEC) {
-        /* all done */
-        break;
-      }
-      /* try next address family */
-      continue;
-    }
-    for (res = res0; res != NULL; res = res->ai_next) {
-      if (res->ai_canonname) {
-        /* found */
-        namebuf = strdup(res->ai_canonname);
-        freeaddrinfo(res0);
-        return namebuf;
-      }
-    }
-    freeaddrinfo(res0);
-    if (*af == PF_UNSPEC) {
-      break;
-    }
-  }
-  /* all failed */
-  return NULL;
-#endif /* INET6 */
-}
-
 void UFhalfclose(struct URLFile *f) {
   switch (f->scheme) {
   case SCM_FTP:

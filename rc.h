@@ -34,3 +34,4 @@ char *libFile(char *base);
 char *helpFile(char *base);
 struct Url;
 const void *querySiteconf(const struct Url *query_pu, int field);
+extern void initMimeTypes();

@@ -80,3 +80,4 @@ extern void do_internal(char *action, char *data);
 extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
 extern void form_write_from_file(FILE *f, char *boundary, char *name,
                                  char *filename, char *file);
+extern void loadPreForm(void);
