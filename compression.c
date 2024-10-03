@@ -119,7 +119,7 @@ const char *compress_application_type(enum COMPRESSION_TYPE compression) {
   return nullptr;
 }
 
-char *filename_extension(char *path, bool is_url) {
+const char *filename_extension(const char *path, bool is_url) {
   char *last_dot = "", *p = path;
   int i;
 
@@ -250,7 +250,7 @@ static char *auxbinFile(char *base) {
   return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
-void uncompress_stream(struct URLFile *uf, char **src) {
+void uncompress_stream(struct URLFile *uf, const char **src) {
 
   if (IStype(uf->stream) != IST_ENCODED) {
     uf->stream = newEncodedStream(uf->stream, uf->encoding);

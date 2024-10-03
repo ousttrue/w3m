@@ -7,16 +7,17 @@
 #include "alloc.h"
 #include "indep.h"
 #include "readbuffer.h"
+#include "document.h"
 #include "buffer.h"
 #include "url.h"
 #include <math.h>
 
-struct MapList *searchMapList(struct Buffer *buf, char *name) {
-  struct MapList *ml;
-
+struct MapList *searchMapList(struct Document *doc, char *name) {
   if (name == NULL)
     return NULL;
-  for (ml = buf->document.maplist; ml != NULL; ml = ml->next) {
+
+  auto ml = doc->maplist;
+  for (; ml != NULL; ml = ml->next) {
     if (!Strcmp_charp(ml->name, name))
       break;
   }
@@ -24,7 +25,7 @@ struct MapList *searchMapList(struct Buffer *buf, char *name) {
 }
 
 struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
-  auto a = retrieveCurrentForm(&buf->document);
+  auto a = retrieveCurrentForm(buf->document);
   if (!a || !a->url)
     return NULL;
 
@@ -36,14 +37,14 @@ struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
 }
 
 #if defined(USE_IMAGE) || defined(MENU_MAP)
-struct MapArea *follow_map_menu(struct Buffer *buf, char *name,
+struct MapArea *follow_map_menu(struct Document *doc, char *name,
                                 struct Anchor *a_img, int x, int y) {
   struct MapList *ml;
   struct ListItem *al;
   int i, selected = -1;
   int initial = 0;
 
-  ml = searchMapList(buf, name);
+  ml = searchMapList(doc, name);
   if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
     return NULL;
 
@@ -63,13 +64,12 @@ char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 
 struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
   Str mappage;
-  struct MapList *ml;
   struct ListItem *al;
   struct MapArea *a;
   struct Url pu;
   struct Buffer *newbuf;
 
-  ml = searchMapList(buf, name);
+  auto ml = searchMapList(buf->document, name);
   if (ml == NULL)
     return NULL;
 
@@ -95,8 +95,8 @@ struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
   return newbuf;
 }
 
-struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
-                           char *coords) {
+struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
+                           const char *shape, const char *coords) {
   struct MapArea *a = New(struct MapArea);
 
   a->url = url;
@@ -108,21 +108,17 @@ struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
 /* append image map links */
 static void append_map_info(struct Buffer *buf, Str tmp,
                             struct FormItemList *fi) {
-  struct MapList *ml;
-  struct ListItem *al;
-  struct MapArea *a;
-  struct Url pu;
-
-  ml = searchMapList(buf, fi->value ? fi->value->ptr : NULL);
+  auto ml = searchMapList(buf->document, fi->value ? fi->value->ptr : NULL);
   if (ml == NULL)
     return;
 
   Strcat_m_charp(tmp, "<tr valign=top><td colspan=2>Links of current image map",
                  "<tr valign=top><td colspan=2><table>", NULL);
-  for (al = ml->area->first; al != NULL; al = al->next) {
-    a = (struct MapArea *)al->ptr;
+  for (auto al = ml->area->first; al != NULL; al = al->next) {
+    auto a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
+    struct Url pu;
     parseURL2(a->url, &pu, baseURL(buf));
     const char *q = html_quote(parsedURL2Str(&pu)->ptr);
     const char *p = html_quote(url_decode0(a->url));
@@ -186,10 +182,10 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
     goto end;
 
   {
-    all = buf->document.allLine;
-    if (all == 0 && buf->document.lastLine)
-      all = buf->document.lastLine->linenumber;
-    const char* p = url_decode0(parsedURL2Str(&buf->currentURL)->ptr);
+    all = buf->document->allLine;
+    if (all == 0 && buf->document->lastLine)
+      all = buf->document->lastLine->linenumber;
+    const char *p = url_decode0(parsedURL2Str(&buf->currentURL)->ptr);
     Strcat_m_charp(tmp, "<table cellpadding=0>",
                    "<tr valign=top><td nowrap>Title<td>",
                    html_quote(buf->buffername),
@@ -204,11 +200,11 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
                    Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
   }
 
-  a = retrieveCurrentAnchor(buf);
+  a = retrieveCurrentAnchor(buf->document);
   if (a != NULL) {
     parseURL2(a->url, &pu, baseURL(buf));
-    const char* p = parsedURL2Str(&pu)->ptr;
-    const char* q = html_quote(p);
+    const char *p = parsedURL2Str(&pu)->ptr;
+    const char *q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode0(p));
     else
@@ -217,11 +213,11 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
         tmp, "<tr valign=top><td nowrap>URL of current anchor<td><a href=\"", q,
         "\">", p, "</a>", NULL);
   }
-  a = retrieveCurrentImg(buf);
+  a = retrieveCurrentImg(buf->document);
   if (a != NULL) {
     parseURL2(a->url, &pu, baseURL(buf));
-    const char* p = parsedURL2Str(&pu)->ptr;
-    const char* q = html_quote(p);
+    const char *p = parsedURL2Str(&pu)->ptr;
+    const char *q = html_quote(p);
     if (DecodeURL)
       p = html_quote(url_decode0(p));
     else
@@ -230,10 +226,10 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
         tmp, "<tr valign=top><td nowrap>URL of current image<td><a href=\"", q,
         "\">", p, "</a>", NULL);
   }
-  a = retrieveCurrentForm(buf);
+  a = retrieveCurrentForm(buf->document);
   if (a != NULL) {
     struct FormItemList *fi = (struct FormItemList *)a->url;
-    const char* p = form2str(fi);
+    const char *p = form2str(fi);
     p = html_quote(url_decode0(p));
     Strcat_m_charp(
         tmp, "<tr valign=top><td nowrap>Method/type of current form&nbsp;<td>",
@@ -244,7 +240,7 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
   }
   Strcat_charp(tmp, "</table>\n");
 
-  append_link_info(buf, tmp, buf->document.linklist);
+  append_link_info(buf, tmp, buf->document->linklist);
 
   if (buf->document_header != NULL) {
     Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");

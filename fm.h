@@ -32,10 +32,6 @@
 #define DEF_IMAGE_VIEWER "display"
 #define DEF_AUDIO_PLAYER "showaudio"
 
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE /* strcasestr() */
-#endif
-
 #include "config.h"
 #include "func.h"
 #include <stdio.h>

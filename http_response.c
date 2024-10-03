@@ -1,5 +1,7 @@
 #include "http_response.h"
+#include "text.h"
 #include "datetime.h"
+#include "document.h"
 #include "func.h"
 #include "http_cookie.h"
 #include "buffer.h"
@@ -89,8 +91,8 @@ int readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
         lineBuf2 = checkType(Strnew_charp_n(p, q - p), &propBuffer);
         Strcat(tmp, lineBuf2);
         if (thru)
-          addnewline(newBuf, lineBuf2->ptr, propBuffer, lineBuf2->length,
-                     FOLD_BUFFER_WIDTH, -1);
+          addnewline(newBuf->document, lineBuf2->ptr, propBuffer,
+                     lineBuf2->length, FOLD_BUFFER_WIDTH, -1);
         for (; *q && (*q == '\r' || *q == '\n'); q++)
           ;
       }
@@ -216,7 +218,7 @@ int readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
         err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
                          version, port, commentURL);
         if (err) {
-          char *ans =
+          const char *ans =
               (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
           if ((err & COO_OVERRIDE_OK) &&
               accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
@@ -273,24 +275,21 @@ int readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
     lineBuf2 = NULL;
   }
   if (thru)
-    addnewline(newBuf, "", propBuffer, 0, -1, -1);
+    addnewline(newBuf->document, "", propBuffer, 0, -1, -1);
   if (src)
     fclose(src);
 
   return http_response_code;
 }
 
-char *checkHeader(struct Buffer *buf, char *field) {
-  int len;
-  struct TextListItem *i;
-  char *p;
-
+const char *checkHeader(struct Buffer *buf, const char *field) {
   if (buf == NULL || field == NULL || buf->document_header == NULL)
     return NULL;
-  len = strlen(field);
-  for (i = buf->document_header->first; i != NULL; i = i->next) {
+
+  int len = strlen(field);
+  for (auto i = buf->document_header->first; i != NULL; i = i->next) {
     if (!strncasecmp(i->ptr, field, len)) {
-      p = i->ptr + len;
+      const char *p = i->ptr + len;
       return remove_space(p);
     }
   }
@@ -298,12 +297,11 @@ char *checkHeader(struct Buffer *buf, char *field) {
 }
 
 char *checkContentType(struct Buffer *buf) {
-  char *p;
-  Str r;
-  p = checkHeader(buf, "Content-Type:");
+  const char *p = checkHeader(buf, "Content-Type:");
   if (p == NULL)
     return NULL;
-  r = Strnew();
+
+  auto r = Strnew();
   while (*p && *p != ';' && !IS_SPACE(*p))
     Strcat_char(r, *p++);
   return r->ptr;

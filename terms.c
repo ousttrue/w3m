@@ -3,6 +3,7 @@
  * revised by Akinori ITO, January 1995
  */
 #include "terms.h"
+#include "document.h"
 #include "text.h"
 #include "termcon.h"
 #include "display.h"
@@ -408,7 +409,7 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
   static time_t last_time, start_time;
   time_t cur_time;
   Str messages;
-  char *fmtrbyte, *fmrate;
+  const char *fmtrbyte, *fmrate;
 
   if (!fmInitialized)
     return;
@@ -564,8 +565,9 @@ void disp_message_nsec(char *s, int redraw_current, int sec, int purge,
 
   if (term_is_initialized()) {
     if (CurrentTab != NULL && Currentbuf != NULL) {
-      scr_message(s, Currentbuf->document.cursorX + Currentbuf->document.rootX,
-                  Currentbuf->document.cursorY + Currentbuf->document.rootY);
+      scr_message(s,
+                  Currentbuf->document->cursorX + Currentbuf->document->rootX,
+                  Currentbuf->document->cursorY + Currentbuf->document->rootY);
     } else {
       scr_message(s, LASTLINE, 0);
     }

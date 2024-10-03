@@ -9,7 +9,7 @@
 #include <string.h>
 #include <strings.h>
 
-uint32_t getescapechar(char **str) {
+uint32_t getescapechar(const char **str) {
   char *p = *str;
   bool strict_entity = true;
 
@@ -73,7 +73,7 @@ uint32_t getescapechar(char **str) {
   return getHash_si(&entity, q, -1);
 }
 
-char *getescapecmd(char **s) {
+const char *getescapecmd(const char **s) {
   auto save = *s;
 
   auto ch = getescapechar(s);
@@ -255,7 +255,7 @@ int next_status(char c, int *status) {
   return 0;
 }
 
-int read_token(Str buf, char **instr, int *status, int pre, int append) {
+int read_token(Str buf, const char **instr, int *status, int pre, int append) {
   char *p;
   int prev_status;
 

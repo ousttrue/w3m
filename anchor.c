@@ -1,10 +1,11 @@
 #include "anchor.h"
+#include "document.h"
+#include "form.h"
 #include "map.h"
 #include "url.h"
 #include "indep.h"
 #include "alloc.h"
 #include "http_request.h"
-#include "buffer.h"
 #include "fm.h"
 #include "myctype.h"
 #include "regex.h"
@@ -73,31 +74,29 @@ struct Anchor *registerHref(struct Document *doc, const char *url,
   return a;
 }
 
-struct Anchor *registerName(struct Document *doc, char *url, int line,
+struct Anchor *registerName(struct Document *doc, const char *url, int line,
                             int pos) {
   struct Anchor *a;
   doc->name = putAnchor(doc->name, url, NULL, &a, NULL, NULL, '\0', line, pos);
   return a;
 }
 
-struct Anchor *registerImg(struct Document *doc, char *url, char *title,
-                           int line, int pos) {
+struct Anchor *registerImg(struct Document *doc, const char *url,
+                           const char *title, int line, int pos) {
   struct Anchor *a;
   doc->img = putAnchor(doc->img, url, NULL, &a, NULL, title, '\0', line, pos);
   return a;
 }
 
-struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
+struct Anchor *registerForm(struct Document *doc, struct FormList *flist,
                             struct parsed_tag *tag, int line, int pos) {
-  struct Anchor *a;
-  struct FormItemList *fi;
-
-  fi = formList_addInput(flist, tag);
+  auto fi = formList_addInput(flist, tag);
   if (fi == NULL)
     return NULL;
-  buf->document.formitem =
-      putAnchor(buf->document.formitem, (char *)fi, flist->target, &a, NULL,
-                NULL, '\0', line, pos);
+
+  struct Anchor *a;
+  doc->formitem = putAnchor(doc->formitem, (const char *)fi, flist->target, &a,
+                            NULL, NULL, '\0', line, pos);
   return a;
 }
 
@@ -174,11 +173,11 @@ struct Anchor *searchURLLabel(struct Document *doc, const char *url) {
   return searchAnchor(doc->name, url);
 }
 
-static struct Anchor *_put_anchor_all(struct Buffer *buf, char *p1, char *p2,
+static struct Anchor *_put_anchor_all(struct Document *doc, char *p1, char *p2,
                                       int line, int pos) {
   auto tmp = Strnew_charp_n(p1, p2 - p1);
-  return registerHref(&buf->document, url_quote(tmp->ptr), NULL, NO_REFERER,
-                      NULL, '\0', line, pos);
+  return registerHref(doc, url_quote(tmp->ptr), NULL, NO_REFERER, NULL, '\0',
+                      line, pos);
 }
 
 static void reseq_anchor0(struct AnchorList *al, short *seqmap) {
@@ -197,19 +196,17 @@ static void reseq_anchor0(struct AnchorList *al, short *seqmap) {
 }
 
 /* renumber anchor */
-static void reseq_anchor(struct Buffer *buf) {
-  int i, j, n,
-      nmark = (buf->document.hmarklist) ? buf->document.hmarklist->nmark : 0;
-  short *seqmap;
-  struct Anchor *a, *a1;
+static void reseq_anchor(struct Document *doc) {
+  int nmark = (doc->hmarklist) ? doc->hmarklist->nmark : 0;
+  struct Anchor *a1;
   struct HmarkerList *ml = NULL;
 
-  if (!buf->document.href)
+  if (!doc->href)
     return;
 
-  n = nmark;
-  for (i = 0; i < buf->document.href->nanchor; i++) {
-    a = &buf->document.href->anchors[i];
+  auto n = nmark;
+  for (int i = 0; i < doc->href->nanchor; i++) {
+    auto a = &doc->href->anchors[i];
     if (a->hseq == -2)
       n++;
   }
@@ -217,23 +214,21 @@ static void reseq_anchor(struct Buffer *buf) {
   if (n == nmark)
     return;
 
-  seqmap = NewAtom_N(short, n);
+  short *seqmap = NewAtom_N(short, n);
 
-  for (i = 0; i < n; i++)
+  for (int i = 0; i < n; i++)
     seqmap[i] = i;
 
   n = nmark;
-  for (i = 0; i < buf->document.href->nanchor; i++) {
-    a = &buf->document.href->anchors[i];
+  for (int i = 0; i < doc->href->nanchor; i++) {
+    auto a = &doc->href->anchors[i];
     if (a->hseq == -2) {
       a->hseq = n;
-      a1 = closest_next_anchor(buf->document.href, NULL, a->start.pos,
-                               a->start.line);
-      a1 = closest_next_anchor(buf->document.formitem, a1, a->start.pos,
-                               a->start.line);
+      a1 = closest_next_anchor(doc->href, NULL, a->start.pos, a->start.line);
+      a1 = closest_next_anchor(doc->formitem, a1, a->start.pos, a->start.line);
       if (a1 && a1->hseq >= 0) {
         seqmap[n] = seqmap[a1->hseq];
-        for (j = a1->hseq; j < nmark; j++)
+        for (int j = a1->hseq; j < nmark; j++)
           seqmap[j]++;
       }
       ml = putHmarker(ml, a->start.line, a->start.pos, seqmap[n]);
@@ -241,18 +236,19 @@ static void reseq_anchor(struct Buffer *buf) {
     }
   }
 
-  for (i = 0; i < nmark; i++) {
-    ml = putHmarker(ml, buf->document.hmarklist->marks[i].line,
-                    buf->document.hmarklist->marks[i].pos, seqmap[i]);
+  for (int i = 0; i < nmark; i++) {
+    ml = putHmarker(ml, doc->hmarklist->marks[i].line,
+                    doc->hmarklist->marks[i].pos, seqmap[i]);
   }
-  buf->document.hmarklist = ml;
+  doc->hmarklist = ml;
 
-  reseq_anchor0(buf->document.href, seqmap);
-  reseq_anchor0(buf->document.formitem, seqmap);
+  reseq_anchor0(doc->href, seqmap);
+  reseq_anchor0(doc->formitem, seqmap);
 }
 
-static char *reAnchorPos(struct Buffer *buf, struct Line *l, char *p1, char *p2,
-                         struct Anchor *(*anchorproc)(struct Buffer *, char *,
+static char *reAnchorPos(struct Document *doc, struct Line *l, char *p1,
+                         char *p2,
+                         struct Anchor *(*anchorproc)(struct Document *, char *,
                                                       char *, int, int)) {
   struct Anchor *a;
   int spos, epos;
@@ -272,10 +268,10 @@ static char *reAnchorPos(struct Buffer *buf, struct Line *l, char *p1, char *p2,
     l = l->next;
   }
   while (1) {
-    a = anchorproc(buf, p1, p2, l->linenumber, spos);
+    a = anchorproc(doc, p1, p2, l->linenumber, spos);
     a->hseq = hseq;
     if (hseq == -2) {
-      reseq_anchor(buf);
+      reseq_anchor(doc);
       hseq = a->hseq;
     }
     a->end.line = l->linenumber;
@@ -292,28 +288,27 @@ static char *reAnchorPos(struct Buffer *buf, struct Line *l, char *p1, char *p2,
   return p2;
 }
 
-void reAnchorWord(struct Buffer *buf, struct Line *l, int spos, int epos) {
-  reAnchorPos(buf, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
+void reAnchorWord(struct Document *doc, struct Line *l, int spos, int epos) {
+  reAnchorPos(doc, l, &l->lineBuf[spos], &l->lineBuf[epos], _put_anchor_all);
 }
 
 /* search regexp and register them as anchors */
 /* returns error message if any               */
-static char *reAnchorAny(struct Buffer *buf, char *re,
-                         struct Anchor *(*anchorproc)(struct Buffer *, char *,
+static char *reAnchorAny(struct Document *doc, char *re,
+                         struct Anchor *(*anchorproc)(struct Document *, char *,
                                                       char *, int, int)) {
-  struct Line *l;
-  char *p = NULL, *p1, *p2;
-
   if (re == NULL || *re == '\0') {
     return NULL;
   }
+
   if ((re = regexCompile(re, 1)) != NULL) {
     return re;
   }
-  for (l = MarkAllPages ? buf->document.firstLine : buf->document.topLine;
+
+  char *p = nullptr;
+  for (auto l = MarkAllPages ? doc->firstLine : doc->topLine;
        l != NULL &&
-       (MarkAllPages ||
-        l->linenumber < buf->document.topLine->linenumber + LASTLINE);
+       (MarkAllPages || l->linenumber < doc->topLine->linenumber + LASTLINE);
        l = l->next) {
     if (p && l->bpos) {
       continue;
@@ -321,8 +316,9 @@ static char *reAnchorAny(struct Buffer *buf, char *re,
     p = l->lineBuf;
     for (;;) {
       if (regexMatch(p, &l->lineBuf[l->size] - p, p == l->lineBuf) == 1) {
+        char *p1, *p2;
         matchedPosition(&p1, &p2);
-        p = reAnchorPos(buf, l, p1, p2, anchorproc);
+        p = reAnchorPos(doc, l, p1, p2, anchorproc);
       } else
         break;
     }
@@ -330,8 +326,8 @@ static char *reAnchorAny(struct Buffer *buf, char *re,
   return NULL;
 }
 
-char *reAnchor(struct Buffer *buf, char *re) {
-  return reAnchorAny(buf, re, _put_anchor_all);
+char *reAnchor(struct Document *doc, char *re) {
+  return reAnchorAny(doc, re, _put_anchor_all);
 }
 
 #define FIRST_MARKER_SIZE 30
@@ -437,7 +433,7 @@ void shiftAnchorPosition(struct AnchorList *al, struct HmarkerList *hl,
   }
 }
 
-void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
+void addMultirowsForm(struct Document *doc, struct AnchorList *al) {
   int i, j, k, col, ecol, pos;
   struct Anchor a_form, *a;
   struct Line *l, *ls;
@@ -449,7 +445,7 @@ void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
     al->anchors[i].rows = 1;
     if (a_form.hseq < 0 || a_form.rows <= 1)
       continue;
-    for (l = buf->document.firstLine; l != NULL; l = l->next) {
+    for (l = doc->firstLine; l != NULL; l = l->next) {
       if (l->linenumber == a_form.y)
         break;
     }
@@ -471,14 +467,13 @@ void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
     for (j = 0; l && j < a_form.rows; l = l->next, j++) {
       pos = columnPos(l, col);
       if (j == 0) {
-        buf->document.hmarklist->marks[a_form.hseq].line = l->linenumber;
-        buf->document.hmarklist->marks[a_form.hseq].pos = pos;
+        doc->hmarklist->marks[a_form.hseq].line = l->linenumber;
+        doc->hmarklist->marks[a_form.hseq].pos = pos;
       }
       if (a_form.start.line == l->linenumber)
         continue;
-      buf->document.formitem =
-          putAnchor(buf->document.formitem, a_form.url, a_form.target, &a, NULL,
-                    NULL, '\0', l->linenumber, pos);
+      doc->formitem = putAnchor(doc->formitem, a_form.url, a_form.target, &a,
+                                NULL, NULL, '\0', l->linenumber, pos);
       a->hseq = a_form.hseq;
       a->y = a_form.y;
       a->end.pos = pos + ecol - col;
@@ -492,7 +487,7 @@ void addMultirowsForm(struct Buffer *buf, struct AnchorList *al) {
   }
 }
 
-char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
+char *getAnchorText(struct Document *doc, struct AnchorList *al,
                     struct Anchor *a) {
   int hseq, i;
   struct Line *l;
@@ -502,7 +497,7 @@ char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
   if (!a || a->hseq < 0)
     return NULL;
   hseq = a->hseq;
-  l = buf->document.firstLine;
+  l = doc->firstLine;
   for (i = 0; i < al->nanchor; i++) {
     a = &al->anchors[i];
     if (a->hseq != hseq)
@@ -526,127 +521,4 @@ char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
     Strcat_charp_n(tmp, p, ep - p);
   }
   return tmp ? tmp->ptr : NULL;
-}
-
-struct Buffer *link_list_panel(struct Buffer *buf) {
-  struct Url pu;
-  /* FIXME: gettextize? */
-  Str tmp =
-      Strnew_charp("<title>Link List</title><h1 align=center>Link List</h1>\n");
-
-  if (buf->bufferprop & BP_INTERNAL ||
-      (buf->document.linklist == NULL && buf->document.href == NULL &&
-       buf->document.img == NULL)) {
-    return NULL;
-  }
-
-  const char *t;
-  const char *u, *p;
-  if (buf->document.linklist) {
-    Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
-    for (auto l = buf->document.linklist; l; l = l->next) {
-      if (l->url) {
-        parseURL2(l->url, &pu, baseURL(buf));
-        p = parsedURL2Str(&pu)->ptr;
-        u = html_quote(p);
-        if (DecodeURL)
-          p = html_quote(url_decode0(p));
-        else
-          p = u;
-      } else
-        u = p = "";
-      if (l->type == LINK_TYPE_REL)
-        t = " [Rel]";
-      else if (l->type == LINK_TYPE_REV)
-        t = " [Rev]";
-      else
-        t = "";
-      t = Sprintf("%s%s\n", l->title ? l->title : "", t)->ptr;
-      t = html_quote(t);
-      Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
-                     NULL);
-    }
-    Strcat_charp(tmp, "</ol>\n");
-  }
-
-  if (buf->document.href) {
-    Strcat_charp(tmp, "<hr><h2>Anchors</h2>\n<ol>\n");
-    auto al = buf->document.href;
-    for (int i = 0; i < al->nanchor; i++) {
-      auto a = &al->anchors[i];
-      if (a->hseq < 0 || a->slave)
-        continue;
-      parseURL2(a->url, &pu, baseURL(buf));
-      p = parsedURL2Str(&pu)->ptr;
-      u = html_quote(p);
-      if (DecodeURL)
-        p = html_quote(url_decode0(p));
-      else
-        p = u;
-      t = getAnchorText(buf, al, a);
-      t = t ? html_quote(t) : "";
-      Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
-                     NULL);
-    }
-    Strcat_charp(tmp, "</ol>\n");
-  }
-
-  if (buf->document.img) {
-    Strcat_charp(tmp, "<hr><h2>Images</h2>\n<ol>\n");
-    auto al = buf->document.img;
-    for (int i = 0; i < al->nanchor; i++) {
-      auto a = &al->anchors[i];
-      if (a->slave)
-        continue;
-      parseURL2(a->url, &pu, baseURL(buf));
-      p = parsedURL2Str(&pu)->ptr;
-      u = html_quote(p);
-      if (DecodeURL)
-        p = html_quote(url_decode0(p));
-      else
-        p = u;
-      if (a->title && *a->title)
-        t = html_quote(a->title);
-      else
-        t = html_quote(url_decode0(a->url));
-      Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
-                     NULL);
-      a = retrieveAnchor(buf->document.formitem, a->start.line, a->start.pos);
-      if (!a)
-        continue;
-      auto fi = (struct FormItemList *)a->url;
-      fi = fi->parent->item;
-      if (fi->parent->method == FORM_METHOD_INTERNAL &&
-          !Strcmp_charp(fi->parent->action, "map") && fi->value) {
-        struct MapList *ml = searchMapList(buf, fi->value->ptr);
-        struct ListItem *mi;
-        struct MapArea *m;
-        if (!ml)
-          continue;
-        Strcat_charp(tmp, "<br>\n<b>Image map</b>\n<ol>\n");
-        for (mi = ml->area->first; mi != NULL; mi = mi->next) {
-          m = (struct MapArea *)mi->ptr;
-          if (!m)
-            continue;
-          parseURL2(m->url, &pu, baseURL(buf));
-          p = parsedURL2Str(&pu)->ptr;
-          u = html_quote(p);
-          if (DecodeURL)
-            p = html_quote(url_decode0(p));
-          else
-            p = u;
-          if (m->alt && *m->alt)
-            t = html_quote(m->alt);
-          else
-            t = html_quote(url_decode0(m->url));
-          Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p,
-                         "\n", NULL);
-        }
-        Strcat_charp(tmp, "</ol>\n");
-      }
-    }
-    Strcat_charp(tmp, "</ol>\n");
-  }
-
-  return loadHTMLString(tmp);
 }

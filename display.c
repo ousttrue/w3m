@@ -1,5 +1,6 @@
 #include "display.h"
 #include "map.h"
+#include "document.h"
 #include "table.h"
 #include "symbol.h"
 #include "utf8.h"
@@ -93,12 +94,12 @@ static Str make_lastline_message(struct Buffer *buf) {
   int sl = 0;
   if (displayLink) {
     {
-      struct Anchor *a = retrieveCurrentAnchor(&buf->document);
+      struct Anchor *a = retrieveCurrentAnchor(buf->document);
       const char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        struct Anchor *a_img = retrieveCurrentImg(&buf->document);
+        struct Anchor *a_img = retrieveCurrentImg(buf->document);
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
@@ -113,10 +114,10 @@ static Str make_lastline_message(struct Buffer *buf) {
   }
 
   auto msg = Strnew();
-  if (displayLineInfo && buf->document.currentLine != NULL &&
-      buf->document.lastLine != NULL) {
-    int cl = buf->document.currentLine->real_linenumber;
-    int ll = buf->document.lastLine->real_linenumber;
+  if (displayLineInfo && buf->document->currentLine != NULL &&
+      buf->document->lastLine != NULL) {
+    int cl = buf->document->currentLine->real_linenumber;
+    int ll = buf->document->lastLine->real_linenumber;
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else
@@ -146,33 +147,33 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
 
   if (!buf)
     return;
-  if (buf->document.topLine == NULL &&
-      readBufferCache(&buf->document) == 0) { /* clear_buffer */
+  if (buf->document->topLine == NULL &&
+      readBufferCache(buf->document) == 0) { /* clear_buffer */
     mode = B_FORCE_REDRAW;
   }
 
-  if (buf->document.width == 0)
-    buf->document.width = INIT_BUFFER_WIDTH;
-  if (buf->document.height == 0)
-    buf->document.height = LASTLINE + 1;
-  if ((buf->document.width != INIT_BUFFER_WIDTH &&
+  if (buf->document->width == 0)
+    buf->document->width = INIT_BUFFER_WIDTH;
+  if (buf->document->height == 0)
+    buf->document->height = LASTLINE + 1;
+  if ((buf->document->width != INIT_BUFFER_WIDTH &&
        (is_html_type(buf->type) || FoldLine)) ||
       buf->need_reshape) {
     buf->need_reshape = true;
     reshapeBuffer(buf);
   }
   if (showLineNum) {
-    if (buf->document.lastLine && buf->document.lastLine->real_linenumber > 0)
-      buf->document.rootX =
-          (int)(log(buf->document.lastLine->real_linenumber + 0.1) / log(10)) +
+    if (buf->document->lastLine && buf->document->lastLine->real_linenumber > 0)
+      buf->document->rootX =
+          (int)(log(buf->document->lastLine->real_linenumber + 0.1) / log(10)) +
           2;
-    if (buf->document.rootX < 5)
-      buf->document.rootX = 5;
-    if (buf->document.rootX > COLS)
-      buf->document.rootX = COLS;
+    if (buf->document->rootX < 5)
+      buf->document->rootX = 5;
+    if (buf->document->rootX > COLS)
+      buf->document->rootX = COLS;
   } else
-    buf->document.rootX = 0;
-  buf->document.COLS = COLS - buf->document.rootX;
+    buf->document->rootX = 0;
+  buf->document->COLS = COLS - buf->document->rootX;
   if (nTab > 1) {
     if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
       calcTabPos();
@@ -180,35 +181,35 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
     if (ny > LASTLINE)
       ny = LASTLINE;
   }
-  if (buf->document.rootY != ny || buf->document.LINES != LASTLINE - ny) {
-    buf->document.rootY = ny;
-    buf->document.LINES = LASTLINE - ny;
-    arrangeCursor(&buf->document);
+  if (buf->document->rootY != ny || buf->document->LINES != LASTLINE - ny) {
+    buf->document->rootY = ny;
+    buf->document->LINES = LASTLINE - ny;
+    arrangeCursor(buf->document);
     mode = B_REDRAW_IMAGE;
   }
   if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
-      cline != buf->document.topLine ||
-      ccolumn != buf->document.currentColumn) {
+      cline != buf->document->topLine ||
+      ccolumn != buf->document->currentColumn) {
     {
       redrawBuffer(buf);
     }
-    cline = buf->document.topLine;
-    ccolumn = buf->document.currentColumn;
+    cline = buf->document->topLine;
+    ccolumn = buf->document->currentColumn;
   }
-  if (buf->document.topLine == NULL)
-    buf->document.topLine = buf->document.firstLine;
+  if (buf->document->topLine == NULL)
+    buf->document->topLine = buf->document->firstLine;
 
   drawAnchorCursor(buf);
 
   msg = make_lastline_message(buf);
-  if (buf->document.firstLine == NULL) {
+  if (buf->document->firstLine == NULL) {
     /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
   }
   term_show_delayed_message();
   scr_standout();
-  scr_message(msg->ptr, buf->document.cursorX + buf->document.rootX,
-              buf->document.cursorY + buf->document.rootY);
+  scr_message(msg->ptr, buf->document->cursorX + buf->document->rootX,
+              buf->document->cursorY + buf->document->rootY);
   scr_standend();
   term_title(conv_to_system(buf->buffername));
   term_refresh();
@@ -227,7 +228,7 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
                               int active) {
   int i;
 
-  auto l = buf->document.topLine;
+  auto l = buf->document->topLine;
   for (int j = 0; j < al->nanchor; j++) {
     auto an = &al->anchors[j];
     if (an->start.line < tline)
@@ -258,11 +259,11 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
         }
       }
       if (active && start_pos < end_pos)
-        redrawLineRegion(buf, l, l->linenumber - tline + buf->document.rootY,
+        redrawLineRegion(buf, l, l->linenumber - tline + buf->document->rootY,
                          start_pos, end_pos);
     } else if (prevhseq >= 0 && an->hseq == prevhseq) {
       if (active)
-        redrawLineRegion(buf, l, l->linenumber - tline + buf->document.rootY,
+        redrawLineRegion(buf, l, l->linenumber - tline + buf->document->rootY,
                          an->start.pos, an->end.pos);
     }
   }
@@ -273,32 +274,32 @@ static void drawAnchorCursor(struct Buffer *buf) {
   int hseq, prevhseq;
   int tline, eline;
 
-  if (!buf->document.firstLine || !buf->document.hmarklist)
+  if (!buf->document->firstLine || !buf->document->hmarklist)
     return;
-  if (!buf->document.href && !buf->document.formitem)
+  if (!buf->document->href && !buf->document->formitem)
     return;
 
-  an = retrieveCurrentAnchor(&buf->document);
+  an = retrieveCurrentAnchor(buf->document);
   if (!an)
-    an = retrieveCurrentMap(&buf->document);
+    an = retrieveCurrentMap(buf);
   if (an)
     hseq = an->hseq;
   else
     hseq = -1;
-  tline = buf->document.topLine->linenumber;
-  eline = tline + buf->document.LINES;
-  prevhseq = buf->document.hmarklist->prevhseq;
+  tline = buf->document->topLine->linenumber;
+  eline = tline + buf->document->LINES;
+  prevhseq = buf->document->hmarklist->prevhseq;
 
-  if (buf->document.href) {
-    drawAnchorCursor0(buf, buf->document.href, hseq, prevhseq, tline, eline, 1);
-    drawAnchorCursor0(buf, buf->document.href, hseq, -1, tline, eline, 0);
+  if (buf->document->href) {
+    drawAnchorCursor0(buf, buf->document->href, hseq, prevhseq, tline, eline, 1);
+    drawAnchorCursor0(buf, buf->document->href, hseq, -1, tline, eline, 0);
   }
-  if (buf->document.formitem) {
-    drawAnchorCursor0(buf, buf->document.formitem, hseq, prevhseq, tline, eline,
+  if (buf->document->formitem) {
+    drawAnchorCursor0(buf, buf->document->formitem, hseq, prevhseq, tline, eline,
                       1);
-    drawAnchorCursor0(buf, buf->document.formitem, hseq, -1, tline, eline, 0);
+    drawAnchorCursor0(buf, buf->document->formitem, hseq, -1, tline, eline, 0);
   }
-  buf->document.hmarklist->prevhseq = hseq;
+  buf->document->hmarklist->prevhseq = hseq;
 }
 
 static void redrawNLine(struct Buffer *buf, int n) {
@@ -338,15 +339,15 @@ static void redrawNLine(struct Buffer *buf, int n) {
     for (i = 0; i < COLS; i++)
       scr_addch('~');
   }
-  for (i = 0, l = buf->document.topLine; i < buf->document.LINES;
+  for (i = 0, l = buf->document->topLine; i < buf->document->LINES;
        i++, l = l->next) {
-    if (i >= buf->document.LINES - n || i < -n)
-      l = redrawLine(buf, l, i + buf->document.rootY);
+    if (i >= buf->document->LINES - n || i < -n)
+      l = redrawLine(buf, l, i + buf->document->rootY);
     if (l == NULL)
       break;
   }
   if (n > 0) {
-    scr_move(i + buf->document.rootY, 0);
+    scr_move(i + buf->document->rootY, 0);
     scr_clrtobotx();
   }
 }
@@ -409,7 +410,7 @@ void addChar(char c, Lineprop mode) { addMChar((const uint8_t *)&c, mode, 1); }
 
 static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->document.currentColumn;
+  int column = buf->document->currentColumn;
   char *p;
   Lineprop *pr;
 
@@ -419,25 +420,25 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
   scr_move(i, 0);
   if (showLineNum) {
     char tmp[16];
-    if (!buf->document.rootX) {
-      if (buf->document.lastLine->real_linenumber > 0)
-        buf->document.rootX =
-            (int)(log(buf->document.lastLine->real_linenumber + 0.1) /
+    if (!buf->document->rootX) {
+      if (buf->document->lastLine->real_linenumber > 0)
+        buf->document->rootX =
+            (int)(log(buf->document->lastLine->real_linenumber + 0.1) /
                   log(10)) +
             2;
-      if (buf->document.rootX < 5)
-        buf->document.rootX = 5;
-      if (buf->document.rootX > COLS)
-        buf->document.rootX = COLS;
-      buf->document.COLS = COLS - buf->document.rootX;
+      if (buf->document->rootX < 5)
+        buf->document->rootX = 5;
+      if (buf->document->rootX > COLS)
+        buf->document->rootX = COLS;
+      buf->document->COLS = COLS - buf->document->rootX;
     }
     if (l->real_linenumber && !l->bpos)
-      sprintf(tmp, "%*ld:", buf->document.rootX - 1, l->real_linenumber);
+      sprintf(tmp, "%*ld:", buf->document->rootX - 1, l->real_linenumber);
     else
-      sprintf(tmp, "%*s ", buf->document.rootX - 1, "");
+      sprintf(tmp, "%*s ", buf->document->rootX - 1, "");
     scr_addstr(tmp);
   }
-  scr_move(i, buf->document.rootX);
+  scr_move(i, buf->document->rootX);
   if (l->width < 0)
     l->width = COLPOS(l, l->len);
   if (l->len == 0 || l->width - 1 < column) {
@@ -450,11 +451,11 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
   pr = &(l->propBuf[pos]);
   rcol = COLPOS(l, pos);
 
-  for (j = 0; rcol - column < buf->document.COLS && pos + j < l->len;
+  for (j = 0; rcol - column < buf->document->COLS && pos + j < l->len;
        j += delta) {
     delta = utf8sequence_len((const uint8_t *)&p[j]);
     ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > buf->document.COLS)
+    if (ncol - column > buf->document->COLS)
       break;
     if (rcol < column) {
       for (rcol = column; rcol < ncol; rcol++)
@@ -514,7 +515,7 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
     graph_mode = false;
     scr_graphend();
   }
-  if (rcol - column < buf->document.COLS)
+  if (rcol - column < buf->document->COLS)
     scr_clrtoeolx();
   return l;
 }
@@ -522,7 +523,7 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
 static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
                             int epos) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->document.currentColumn;
+  int column = buf->document->currentColumn;
   char *p;
   Lineprop *pr;
   int bcol, ecol;
@@ -536,19 +537,19 @@ static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
   bcol = bpos - pos;
   ecol = epos - pos;
 
-  for (j = 0; rcol - column < buf->document.COLS && pos + j < l->len;
+  for (j = 0; rcol - column < buf->document->COLS && pos + j < l->len;
        j += delta) {
     ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > buf->document.COLS)
+    if (ncol - column > buf->document->COLS)
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        scr_move(i, buf->document.rootX);
+        scr_move(i, buf->document->rootX);
         for (rcol = column; rcol < ncol; rcol++)
           addChar(' ', 0);
         continue;
       }
-      scr_move(i, rcol - column + buf->document.rootX);
+      scr_move(i, rcol - column + buf->document->rootX);
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++)
           addChar(' ', 0);

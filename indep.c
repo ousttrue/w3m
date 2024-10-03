@@ -62,59 +62,7 @@ char *currentdir() {
   return path;
 }
 
-char *cleanupName(char *name) {
-  char *buf, *p, *q;
 
-  buf = allocStr(name, -1);
-  p = buf;
-  q = name;
-  while (*q != '\0') {
-    if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
-      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-        /* ../../       */
-        p += 3;
-        q += 3;
-      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-        /* ../../../    */
-        p += 3;
-        q += 3;
-      } else {
-        while (p != buf && *--p != '/')
-          ; /* ->foo/FOO */
-        *p = '\0';
-        q += 3;
-        strcat(buf, q);
-      }
-    } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
-      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
-        /* ../..        */
-      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
-        /* ../../..     */
-      } else {
-        while (p != buf && *--p != '/')
-          ; /* ->foo/ */
-        *++p = '\0';
-      }
-      break;
-    } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
-      *p = '\0';                            /* -> foo/bar           */
-      q += 2;
-      strcat(buf, q);
-    } else if (strcmp(p, "/.") == 0) { /* foo/. */
-      *++p = '\0';                     /* -> foo/              */
-      break;
-    } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
-      /* -> foo/bar           */
-      *p = '\0';
-      q++;
-      strcat(buf, q);
-    } else {
-      p++;
-      q++;
-    }
-  }
-  return buf;
-}
 
 // #ifndef HAVE_STRCHR
 // char *strchr(const char *s, int c) {
@@ -137,20 +85,6 @@ int strmatchlen(const char *s1, const char *s2, int maxlen) {
       break;
   }
   return i;
-}
-
-char *remove_space(char *str) {
-  char *p, *q;
-
-  for (p = str; *p && IS_SPACE(*p); p++)
-    ;
-  for (q = p; *q; q++)
-    ;
-  for (; q > p && IS_SPACE(*(q - 1)); q--)
-    ;
-  if (*q != '\0')
-    return Strnew_charp_n(p, q - p)->ptr;
-  return p;
 }
 
 int non_null(char *s) {
@@ -238,7 +172,7 @@ const char *url_quote(const char *str) {
   return str;
 }
 
-char *file_quote(char *str) {
+const char *file_quote(const char *str) {
   Str tmp = NULL;
   char *p;
   char buf[4];
@@ -259,7 +193,7 @@ char *file_quote(char *str) {
   return str;
 }
 
-char *file_unquote(char *str) {
+const char *file_unquote(const char *str) {
   Str tmp = NULL;
   char *p, *q;
   int c;

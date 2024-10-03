@@ -1,5 +1,7 @@
 #include "loader.h"
 #include "localcgi.h"
+#include "text.h"
+#include "document.h"
 #include "trap_jmp.h"
 #include "rc.h"
 #include "ftp.h"
@@ -111,7 +113,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   LoadProc proc = loadBuffer;
 
   f.current_content_length = 0;
-  char *p;
+  const char *p;
   if ((p = checkHeader(t_buf, "Content-Length:")) != NULL)
     f.current_content_length = strtoclen(p);
   if (do_download) {
@@ -119,7 +121,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     trap_off();
     if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
       f.stream = newEncodedStream(f.stream, f.encoding);
-    char *file;
+    const char *file;
     if (pu.scheme == SCM_LOCAL) {
       struct stat st;
       if (PreserveTimestamp && !stat(pu.real_file, &st))
@@ -139,7 +141,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   } else if (f.compression != CMP_NOCOMPRESS) {
     if (is_text_type(t) || searchExtViewer((char *)t)) {
       if (t_buf == NULL)
-        t_buf = newBuffer(INIT_BUFFER_WIDTH);
+        t_buf = newBuffer();
       uncompress_stream(&f, &t_buf->sourcefile);
       uncompressed_file_type(pu.file, &f.ext);
     } else {
@@ -175,7 +177,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   }
 
   if (t_buf == NULL)
-    t_buf = newBuffer(INIT_BUFFER_WIDTH);
+    t_buf = newBuffer();
   copyParsedURL(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file
                     : pu.file    ? conv_to_system(pu.file)
@@ -189,22 +191,23 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     if (pu.label) {
       if (proc == loadHTMLBuffer) {
         struct Anchor *a;
-        a = searchURLLabel(&b->document, pu.label);
+        a = searchURLLabel(b->document, pu.label);
         if (a != NULL) {
-          gotoLine(b, a->start.line);
+          gotoLine(b->document, a->start.line);
           if (label_topline)
-            b->document.topLine = lineSkip(b, b->document.topLine,
-                                           b->document.currentLine->linenumber -
-                                               b->document.topLine->linenumber,
-                                           false);
-          b->document.pos = a->start.pos;
-          arrangeCursor(b);
+            b->document->topLine =
+                lineSkip(b->document, b->document->topLine,
+                         b->document->currentLine->linenumber -
+                             b->document->topLine->linenumber,
+                         false);
+          b->document->pos = a->start.pos;
+          arrangeCursor(b->document);
         }
       } else { /* plain text */
         int l = atoi(pu.label);
         gotoRealLine(b, l);
-        b->document.pos = 0;
-        arrangeCursor(b);
+        b->document->pos = 0;
+        arrangeCursor(b->document);
       }
     }
   }
@@ -216,7 +219,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   return b;
 }
 
-struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
+static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *current,
                         struct Url pu, char *referer, enum RG_FLAGS flag,
                         struct FormList *request, struct TextList *extra_header,
                         struct URLFile *of, struct HttpRequest hr,
@@ -333,10 +336,10 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
 
     term_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
     if (t_buf == NULL)
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = newBuffer();
 
     auto http_response_code = readHeader(&f, t_buf, false, &pu);
-    char *p;
+    const char *p;
     if (((http_response_code >= 301 && http_response_code <= 303) ||
          http_response_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&
@@ -351,7 +354,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
       UFclose(&f);
       current = New(struct Url);
       copyParsedURL(current, &pu);
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = newBuffer();
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
       return load_doc(path, tpath, current, pu, referer, flag, request,
@@ -450,9 +453,9 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
   } else if (searchHeader) {
     searchHeader = SearchHeader = false;
     if (t_buf == NULL)
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = newBuffer();
     readHeader(&f, t_buf, searchHeader_through, &pu);
-    char *p;
+    const char *p;
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
@@ -462,7 +465,7 @@ struct Buffer *load_doc(char *path, char *tpath, struct Url *current,
       add_auth_cookie_flag = 0;
       current = New(struct Url);
       copyParsedURL(current, &pu);
-      t_buf = newBuffer(INIT_BUFFER_WIDTH);
+      t_buf = newBuffer();
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
       return load_doc(path, tpath, current, pu, referer, flag, request,
@@ -538,7 +541,7 @@ struct Buffer *loadGeneralFile(const char *path, struct Url *current,
                   t_buf, searchHeader, searchHeader_through, realm, uname, pwd);
 }
 
-struct Buffer *loadcmdout(char *cmd, LoadProc loadproc,
+struct Buffer *loadcmdout(const char *cmd, LoadProc loadproc,
                           struct Buffer *defaultbuf) {
 
   if (cmd == NULL || *cmd == '\0')

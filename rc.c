@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "fm.h"
+#include "document.h"
 #include "search.h"
 #include "alloc.h"
 #include "image.h"
@@ -32,12 +33,30 @@
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
 
+enum ParamType {
+  P_INT = 0,
+  P_SHORT = 1,
+  P_CHARINT = 2,
+  P_CHAR = 3,
+  P_STRING = 4,
+  P_SSLPATH = 5,
+  P_PIXELS = 8,
+  P_NZINT = 9,
+  P_SCALE = 10,
+};
+
+enum ParamInputType {
+  PI_TEXT = 0,
+  PI_ONOFF = 1,
+  PI_SEL_C = 2,
+};
+
 struct param_ptr {
-  char *name;
-  int type;
-  int inputtype;
+  const char *name;
+  enum ParamType type;
+  enum ParamInputType inputtype;
   void *varptr;
-  char *comment;
+  const char *comment;
   void *select;
 };
 
@@ -53,16 +72,6 @@ struct rc_search_table {
 
 static struct rc_search_table *RC_search_table;
 static int RC_table_size;
-
-#define P_INT 0
-#define P_SHORT 1
-#define P_CHARINT 2
-#define P_CHAR 3
-#define P_STRING 4
-#define P_SSLPATH 5
-#define P_PIXELS 8
-#define P_NZINT 9
-#define P_SCALE 10
 
 /* FIXME: gettextize here */
 
@@ -208,10 +217,6 @@ static int RC_table_size;
 #define CMT_LOCALHOST_ONLY N_("Restrict connections only to localhost")
 
 #define CMT_KEYMAP_FILE N_("keymap file")
-
-#define PI_TEXT 0
-#define PI_ONOFF 1
-#define PI_SEL_C 2
 
 struct sel_c {
   int value;
@@ -672,10 +677,16 @@ static int set_param(const char *name, const char *value) {
     return 0;
   switch (p->type) {
   case P_INT:
-    if (atoi(value) >= 0)
-      *(int *)p->varptr = (p->inputtype == PI_ONOFF)
-                              ? str_to_bool(value, *(int *)p->varptr)
-                              : atoi(value);
+    if (atoi(value) >= 0) {
+      if (p->inputtype == PI_ONOFF) {
+        if (strcmp("show_srch_str", name) == 0) {
+          auto a = 0;
+        }
+        *((bool *)p->varptr) = str_to_bool(value, *(bool *)p->varptr);
+      } else {
+        *(int *)p->varptr = atoi(value);
+      }
+    }
     break;
   case P_NZINT:
     if (atoi(value) > 0)

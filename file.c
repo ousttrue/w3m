@@ -1,5 +1,6 @@
 #include "file.h"
 #include "symbol.h"
+#include "document.h"
 #include "loader.h"
 #include "html_renderer.h"
 #include "trap_jmp.h"
@@ -30,8 +31,6 @@
 
 #define TAG_IS(s, tag, len)                                                    \
   (strncasecmp(s, tag, len) == 0 && (s[len] == '>' || IS_SPACE((int)s[len])))
-
-
 
 int getMetaRefreshParam(const char *q, Str *refresh_uri) {
   int refresh_interval;
@@ -122,11 +121,11 @@ static void _saveBuffer(struct Buffer *buf, struct Line *l, FILE *f, int cont) {
 }
 
 void saveBuffer(struct Buffer *buf, FILE *f, int cont) {
-  _saveBuffer(buf, buf->document.firstLine, f, cont);
+  _saveBuffer(buf, buf->document->firstLine, f, cont);
 }
 
 void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
-  struct Line *l = buf->document.firstLine;
+  struct Line *l = buf->document->firstLine;
 
   while (l != NULL && l->real_linenumber == 0)
     l = l->next;
@@ -197,24 +196,6 @@ int checkOverWrite(const char *path) {
     return 0;
   else
     return -1;
-}
-
-char *guess_save_name(struct Buffer *buf, char *path) {
-  if (buf && buf->document_header) {
-    Str name = NULL;
-    char *p, *q;
-    if ((p = checkHeader(buf, "Content-Disposition:")) != NULL &&
-        (q = strcasestr(p, "filename")) != NULL &&
-        (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        matchattr(q, "filename", 8, &name))
-      path = name->ptr;
-    else if ((p = checkHeader(buf, "Content-Type:")) != NULL &&
-             (q = strcasestr(p, "name")) != NULL &&
-             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             matchattr(q, "name", 4, &name))
-      path = name->ptr;
-  }
-  return guess_filename(path);
 }
 
 int _MoveFile(char *path1, char *path2) {

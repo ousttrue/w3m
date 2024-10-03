@@ -122,7 +122,7 @@ struct html_feed_environ {
   int nenv;
   int envc;
   int envc_real;
-  char *title;
+  const char *title;
   int blank_lines;
 };
 
@@ -131,7 +131,7 @@ void push_link(int cmd, int offset, int pos);
 struct parsed_tag;
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl);
-void HTMLlineproc0(char *istr, struct html_feed_environ *h_env, int internal);
+void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env, int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
 struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
                               struct Buffer *newBuf);
@@ -173,11 +173,11 @@ extern Str process_button(struct parsed_tag *tag);
 extern Str process_n_button(void);
 extern Str process_select(struct parsed_tag *tag);
 extern Str process_n_select(void);
-extern void feed_select(char *str);
+extern void feed_select(const char *str);
 extern void process_option(void);
 extern Str process_textarea(struct parsed_tag *tag, int width);
 extern Str process_n_textarea(void);
-extern void feed_textarea(char *str);
+extern void feed_textarea(const char *str);
 extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);

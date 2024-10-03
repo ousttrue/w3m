@@ -50,6 +50,9 @@ struct Document {
   struct HmarkerList *imarklist;
   struct BufferPos *undo;
 };
+
+struct Document *newDocument(int width);
+
 #define TOP_LINENUMBER(doc) (doc->topLine ? doc->topLine->linenumber : 1)
 #define CUR_LINENUMBER(doc)                                                    \
   (doc->currentLine ? doc->currentLine->linenumber : 1)
@@ -76,6 +79,8 @@ void restorePosition(struct Document *doc, struct Document *orig);
 int writeBufferCache(struct Document *doc);
 int readBufferCache(struct Document *doc);
 void tmpClearBuffer(struct Document *doc);
-void copyBuffer(struct Document *a, struct Document *b);
+void copyBuffer(struct Document *a, const struct Document *b);
 void COPY_BUFROOT(struct Document *dstbuf, const struct Document *srcbuf);
 void COPY_BUFPOSITION(struct Document *dstbuf, const struct Document *srcbuf);
+struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
+                               int seq);

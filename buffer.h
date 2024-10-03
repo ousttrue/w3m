@@ -1,5 +1,4 @@
 #pragma once
-#include "document.h"
 #include "anchor.h"
 #include "form.h"
 #include "url.h"
@@ -28,9 +27,9 @@ enum LINK_TYPE {
   LINK_TYPE_REV = 2,
 };
 struct LinkList {
-  char *url;
-  char *title;         /* Next, Contents, ... */
-  char *ctype;         /* Content-Type */
+  const char *url;
+  const char *title;         /* Next, Contents, ... */
+  const char *ctype;         /* Content-Type */
   enum LINK_TYPE type; /* Rel, Rev */
   struct LinkList *next;
 };
@@ -46,12 +45,13 @@ enum BufferProperty {
   BP_CLOSE = 0x40,
 };
 
+struct Document;
 struct Buffer {
   const char *filename;
   const char *buffername;
   struct Buffer *nextBuffer;
   struct Buffer *linkBuffer[MAX_LB];
-  struct Document document;
+  struct Document *document;
   const char *type;
   const char *real_type;
   enum BufferProperty bufferprop;
@@ -84,15 +84,11 @@ void chkURLBuffer(struct Buffer *buf);
 struct Line;
 char *last_modified(struct Buffer *buf);
 struct parsed_tag;
-struct Anchor *registerForm(struct Buffer *buf, struct FormList *flist,
-                            struct parsed_tag *tag, int line, int pos);
 int currentLn(struct Buffer *buf);
-struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
-                               int seq);
 
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
-extern struct Buffer *newBuffer(int width);
+extern struct Buffer *newBuffer();
 extern struct Buffer *nullBuffer(void);
 extern void clearBuffer(struct Buffer *buf);
 extern void discardBuffer(struct Buffer *buf);
@@ -108,6 +104,6 @@ extern void reshapeBuffer(struct Buffer *buf);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
 extern struct Buffer *page_info_panel(struct Buffer *buf);
-extern char *guess_save_name(struct Buffer *buf, char *file);
+extern const char *guess_save_name(struct Buffer *buf, const char *file);
 extern void saveBufferInfo(void);
 extern struct Buffer *link_list_panel(struct Buffer *buf);

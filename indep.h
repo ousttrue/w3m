@@ -5,13 +5,11 @@
 extern int64_t strtoclen(const char *s);
 extern int strCmp(const void *s1, const void *s2);
 extern char *currentdir(void);
-extern char *cleanupName(char *name);
 const extern char *expandPath(const char *name);
 // #ifndef HAVE_STRCHR
 // extern char *strchr(const char *s, int c);
 // #endif /* not HAVE_STRCHR */
 
-extern char *remove_space(char *str);
 extern int non_null(char *s);
 
 enum CLEANUP_LINE_MODE {
@@ -26,8 +24,8 @@ extern Str convertLine(Str line, enum CLEANUP_LINE_MODE mode);
 //   convertLine0(uf, line, mode)
 
 extern const char *html_quote(const char *str);
-extern char *file_quote(char *str);
-extern char *file_unquote(char *str);
+extern const char *file_quote(const char *str);
+extern const char *file_unquote(const char *str);
 extern const char *url_quote(const char *str);
 
 extern Str Str_url_unquote(Str x, bool is_form, bool safe);

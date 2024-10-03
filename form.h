@@ -33,7 +33,7 @@ struct FormList {
   struct FormItemList *lastitem;
   int method;
   Str action;
-  char *target;
+  const char *target;
   char *name;
   int enctype;
   struct FormList *next;
@@ -57,8 +57,9 @@ struct FormItemList {
   struct FormItemList *next;
 };
 
-extern struct FormList *newFormList(char *action, char *method, char *charset,
-                                    char *enctype, char *target, char *name,
+extern struct FormList *newFormList(const char *action, const char *method,
+                                    const char *charset, const char *enctype,
+                                    const char *target, const char *name,
                                     struct FormList *_next);
 struct parsed_tag;
 extern struct FormItemList *formList_addInput(struct FormList *fl,

@@ -18,7 +18,7 @@ struct URLFile {
   char is_cgi;
   enum ENCODING_TYPE encoding;
   union input_stream *stream;
-  char *ext;
+  const char *ext;
   enum COMPRESSION_TYPE compression;
   int content_encoding;
   int64_t current_content_length;
@@ -66,7 +66,7 @@ struct URLOption {
 };
 
 struct FormList;
-extern struct URLFile openURL(char *url, struct Url *pu, struct Url *current,
+extern struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
                               struct URLOption *option,
                               struct FormList *request,
                               struct TextList *extra_header,

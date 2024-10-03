@@ -14,14 +14,15 @@ struct MapList {
 };
 
 struct Buffer;
+struct Document;
 struct Anchor;
-struct MapArea *follow_map_menu(struct Buffer *buf, char *name,
+struct MapArea *follow_map_menu(struct Document *doc, char *name,
                                 struct Anchor *a_img, int x, int y);
 
-struct MapArea *newMapArea(char *url, char *target, char *alt, char *shape,
-                           char *coords);
+struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
+                           const char *shape, const char *coords);
 
-struct MapList *searchMapList(struct Buffer *buf, char *name);
+struct MapList *searchMapList(struct Document *doc, char *name);
 struct parsed_tagarg;
 extern void follow_map(struct parsed_tagarg *arg);
 extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);

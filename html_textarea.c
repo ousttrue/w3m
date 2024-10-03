@@ -107,7 +107,7 @@ Str process_n_textarea(void) {
   return tmp;
 }
 
-void feed_textarea(char *str) {
+void feed_textarea(const char *str) {
   if (cur_textarea == NULL)
     return;
   if (ignore_nl_textarea) {

@@ -22,15 +22,17 @@ enum URL_SCHEME_TYPE {
   SCM_HTTPS = 13,
 };
 
+const char *schemeNumToName(enum URL_SCHEME_TYPE scheme);
+
 struct Url {
   enum URL_SCHEME_TYPE scheme;
   char *user;
   char *pass;
   char *host;
   int port;
-  char *file;
-  char *real_file;
-  char *query;
+  const char *file;
+  const char *real_file;
+  const char *query;
   char *label;
   int is_nocache;
 };
@@ -39,10 +41,10 @@ const char *file_to_url(const char *file);
 void parseURL2(const char *url, struct Url *pu, struct Url *current);
 
 char *url_decode0(const char *url);
-void parseURL(char *url, struct Url *p_url, struct Url *current);
+void parseURL(const char *url, struct Url *p_url, struct Url *current);
 void copyParsedURL(struct Url *p, const struct Url *q);
 Str parsedURL2Str(struct Url *pu);
 Str parsedURL2RefererStr(struct Url *pu);
-int getURLScheme(char **url);
+int getURLScheme(const char **url);
 extern int is_localhost(const char *host);
 extern char *url_unquote_conv0(char *url);

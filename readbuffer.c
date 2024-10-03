@@ -1,5 +1,6 @@
 #include "readbuffer.h"
 #include "text.h"
+#include "document.h"
 #include "table.h"
 #include "symbol.h"
 #include "utf8.h"
@@ -100,7 +101,7 @@ Str process_input(struct parsed_tag *tag) {
   int qlen = 0;
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    const char *s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, true));
   }
   if (tmp == NULL)
@@ -284,7 +285,7 @@ Str process_button(struct parsed_tag *tag) {
   int qlen, v;
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    const char *s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, true));
   }
   if (tmp == NULL)
@@ -348,7 +349,7 @@ Str process_select(struct parsed_tag *tag) {
   char *p;
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    const char *s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, true));
   }
 
@@ -374,11 +375,11 @@ Str process_n_select(void) {
   return select_str;
 }
 
-void feed_select(char *str) {
+void feed_select(const char *str) {
   Str tmp = Strnew();
   int prev_status = cur_status;
   static int prev_spaces = -1;
-  char *p;
+  const char *p;
 
   if (cur_select == NULL)
     return;
@@ -467,7 +468,7 @@ void process_option(void) {
 }
 
 Str process_form_int(struct parsed_tag *tag, int fid) {
-  char *p, *q, *r, *s, *tg, *n;
+  const char *p, *q, *r, *s, *tg, *n;
 
   p = "get";
   parsedtag_get_value(tag, ATTR_METHOD, &p);
@@ -586,7 +587,8 @@ static void append_tags(struct readbuffer *obuf) {
     set_breakpoint(obuf, obuf->line->length - len);
 }
 
-static void check_breakpoint(struct readbuffer *obuf, int pre_mode, char *ch) {
+static void check_breakpoint(struct readbuffer *obuf, int pre_mode,
+                             const char *ch) {
   int tlen, len = obuf->line->length;
 
   append_tags(obuf);
@@ -615,7 +617,7 @@ void push_spaces(struct readbuffer *obuf, int pre_mode, int width) {
 }
 
 static void proc_mchar(struct readbuffer *obuf, int pre_mode, int width,
-                       char **str, Lineprop mode) {
+                       const char **str, Lineprop mode) {
   check_breakpoint(obuf, pre_mode, *str);
   obuf->pos += width;
   Strcat_charp_n(obuf->line, *str, utf8sequence_len((const uint8_t *)*str));
@@ -1287,7 +1289,7 @@ static Str process_n_title(struct parsed_tag *tag) {
   return tmp;
 }
 
-static void feed_title(char *str) {
+static void feed_title(const char *str) {
   if (!cur_title)
     return;
   while (*str) {
@@ -1302,7 +1304,7 @@ static void feed_title(char *str) {
 }
 
 Str process_img(struct parsed_tag *tag, int width) {
-  char *p, *q, *r, *r2 = NULL, *s, *t;
+  const char *p, *q, *r, *r2 = NULL, *s, *t;
   int w, i, nw, n;
   int pre_int = false, ext_pre_int = false;
   Str tmp = Strnew();
@@ -2449,8 +2451,8 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
   return 0;
 }
 
-static void proc_escape(struct readbuffer *obuf, char **str_return) {
-  char *str = *str_return, *estr;
+static void proc_escape(struct readbuffer *obuf, const char **str_return) {
+  const char *str = *str_return, *estr;
   auto ech = getescapechar(str_return);
   int width, n_add = *str_return - str;
   Lineprop mode = PC_ASCII;
@@ -2546,7 +2548,8 @@ static void back_to_breakpoint(struct readbuffer *obuf) {
 }
 
 /* HTML processing first pass */
-void HTMLlineproc0(char *line, struct html_feed_environ *h_env, int internal) {
+void HTMLlineproc0(const char *line, struct html_feed_environ *h_env,
+                   int internal) {
   Lineprop mode;
   int cmd;
   struct readbuffer *obuf = h_env->obuf;
@@ -2581,7 +2584,7 @@ table_start:
   }
 
   while (*line != '\0') {
-    char *str, *p;
+    const char *str, *p;
     int is_tag = false;
     int pre_mode =
         (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
@@ -2749,7 +2752,7 @@ table_start:
       if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
         char ch = *str;
         if (!(obuf->flag & RB_PLAIN) && (*str == '&')) {
-          char *p = str;
+          const char *p = str;
           auto ech = getescapechar(&p);
           if (ech == '\n' || ech == '\r') {
             ch = '\n';
@@ -2960,8 +2963,8 @@ void loadHTMLstream(struct URLFile *f, struct Buffer *newBuf, FILE *src,
   forms = NULL;
   cur_hseq = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, newBuf->document.width,
-            0);
+  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL,
+            newBuf->document->width, 0);
 
   htmlenv1.buf = newTextLineList();
 #if defined(USE_M17N) || defined(USE_IMAGE)
@@ -3068,7 +3071,7 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
   Str tmp;
 
   if (newBuf == NULL)
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    newBuf = newBuffer();
   if (newBuf->sourcefile == NULL &&
       (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
     tmp = tmpfname(TMPF_SRC, ".html");
@@ -3079,11 +3082,11 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
 
   loadHTMLstream(f, newBuf, src, newBuf->bufferprop & BP_FRAME);
 
-  newBuf->document.topLine = newBuf->document.firstLine;
-  newBuf->document.lastLine = newBuf->document.currentLine;
-  newBuf->document.currentLine = newBuf->document.firstLine;
+  newBuf->document->topLine = newBuf->document->firstLine;
+  newBuf->document->lastLine = newBuf->document->currentLine;
+  newBuf->document->currentLine = newBuf->document->firstLine;
   if (n_textarea)
-    formResetBuffer(newBuf, newBuf->document.formitem);
+    formResetBuffer(newBuf, newBuf->document->formitem);
   if (src)
     fclose(src);
 
@@ -3095,11 +3098,10 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
  */
 struct Buffer *loadHTMLString(Str page) {
   struct URLFile f;
-  struct Buffer *newBuf;
 
   init_stream(&f, SCM_LOCAL, newStrStream(page));
 
-  newBuf = newBuffer(INIT_BUFFER_WIDTH);
+  auto newBuf = newBuffer();
   if (from_jmp() != 0) {
     trap_off();
     discardBuffer(newBuf);
@@ -3112,13 +3114,13 @@ struct Buffer *loadHTMLString(Str page) {
 
   trap_off();
   UFclose(&f);
-  newBuf->document.topLine = newBuf->document.firstLine;
-  newBuf->document.lastLine = newBuf->document.currentLine;
-  newBuf->document.currentLine = newBuf->document.firstLine;
+  newBuf->document->topLine = newBuf->document->firstLine;
+  newBuf->document->lastLine = newBuf->document->currentLine;
+  newBuf->document->currentLine = newBuf->document->firstLine;
   newBuf->type = "text/html";
   newBuf->real_type = newBuf->type;
   if (n_textarea)
-    formResetBuffer(newBuf, newBuf->document.formitem);
+    formResetBuffer(newBuf, newBuf->document->formitem);
   return newBuf;
 }
 
@@ -3159,7 +3161,7 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
   Lineprop *propBuffer = NULL;
 
   if (newBuf == NULL)
-    newBuf = newBuffer(INIT_BUFFER_WIDTH);
+    newBuf = newBuffer();
 
   if (from_jmp() != 0) {
     goto _end;
@@ -3198,9 +3200,9 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
   }
 _end:
   trap_off();
-  newBuf->document.topLine = newBuf->document.firstLine;
-  newBuf->document.lastLine = newBuf->document.currentLine;
-  newBuf->document.currentLine = newBuf->document.firstLine;
+  newBuf->document->topLine = newBuf->document->firstLine;
+  newBuf->document->lastLine = newBuf->document->currentLine;
+  newBuf->document->currentLine = newBuf->document->firstLine;
   newBuf->trbyte = trbyte + linelen;
   if (src)
     fclose(src);

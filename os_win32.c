@@ -16,7 +16,7 @@ struct Buffer *doExternal(struct URLFile *uf, const char *type,
   return nullptr;
 }
 
-int doFileSave(struct URLFile uf, char *defstr)
+int doFileSave(struct URLFile uf, const char *defstr)
 {
   abort();
   return -1;

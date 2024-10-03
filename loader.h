@@ -13,5 +13,5 @@ struct Buffer *loadGeneralFile(const char *path, struct Url *current,
                                const char *referer, enum RG_FLAGS flag,
                                struct FormList *request);
 
-struct Buffer *loadcmdout(char *cmd, LoadProc loadproc,
+struct Buffer *loadcmdout(const char *cmd, LoadProc loadproc,
                           struct Buffer *defaultbuf);

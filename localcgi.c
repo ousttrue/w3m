@@ -57,7 +57,7 @@ Str localCookie() {
 #define CGIFN_LIBDIR 1
 #define CGIFN_CGIBIN 2
 
-Str loadLocalDir(char *dname) {
+Str loadLocalDir(const char *dname) {
   Directory *dir;
   struct stat st;
   char *p;
@@ -291,8 +291,8 @@ static void set_cgi_environ(char *name, char *fn, char *req_uri) {
   set_environ("REQUEST_URI", req_uri);
 }
 
-FILE *localcgi_post(char *uri, char *qstr, struct FormList *request,
-                    char *referer) {
+FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *request,
+                    const char *referer) {
   FILE *fr = NULL, *fw = NULL;
   int status;
   char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
@@ -364,6 +364,6 @@ FILE *localcgi_post(char *uri, char *qstr, struct FormList *request,
   exit(1);
 }
 
-FILE *localcgi_get(char *u, char *q, char *r) {
+FILE *localcgi_get(const char *u, const char *q, const char *r) {
   return localcgi_post((u), (q), NULL, (r));
 }

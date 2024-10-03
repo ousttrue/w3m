@@ -1,9 +1,43 @@
 #include "document.h"
 #include "alloc.h"
 #include "terms.h"
+#include "termsize.h"
 #include "app.h"
 
 bool nextpage_topline = false;
+
+struct Document *newDocument(int width) {
+  struct Document *doc = New(struct Document);
+  doc->width = width;
+  doc->height = 0;
+  doc->COLS = COLS;
+  doc->LINES = LASTLINE;
+  doc->savecache = nullptr;
+  doc->title = nullptr;
+  doc->firstLine = nullptr;
+  doc->topLine = nullptr;
+  doc->currentLine = nullptr;
+  doc->lastLine = nullptr;
+  doc->allLine = 0;
+  doc->currentColumn = 0;
+  doc->cursorX = 0;
+  doc->cursorY = 0;
+  doc->pos = 0;
+  doc->visualpos = 0;
+  doc->rootX = 0;
+  doc->rootY = 0;
+  doc->href = nullptr;
+  doc->name = nullptr;
+  doc->img = nullptr;
+  doc->formitem = nullptr;
+  doc->linklist = nullptr;
+  doc->formlist = nullptr;
+  doc->maplist = nullptr;
+  doc->hmarklist = nullptr;
+  doc->imarklist = nullptr;
+  doc->undo = nullptr;
+  return doc;
+}
 
 static void addnewline2(struct Document *doc, char *line, Lineprop *prop,
                         int pos, int nlines) {
@@ -518,7 +552,7 @@ void tmpClearBuffer(struct Document *doc) {
 }
 
 /* shallow copy */
-void copyBuffer(struct Document *a, struct Document *b) {
+void copyBuffer(struct Document *a, const struct Document *b) {
   readBufferCache(b);
   memcpy((void *)a, (const void *)b, sizeof(struct Document));
 }

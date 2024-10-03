@@ -28,11 +28,11 @@
 #define ST_IS_REAL_TAG(s)                                                      \
   ((s) == R_ST_TAG || (s) == R_ST_TAG0 || (s) == R_ST_EQL || (s) == R_ST_VALUE)
 
-uint32_t getescapechar(char **str);
-char *getescapecmd(char **s);
+uint32_t getescapechar(const char **str);
+const char *getescapecmd(const char **s);
 const char *html_unquote(const char *str);
 int next_status(char c, int *status);
-int read_token(Str buf, char **instr, int *status, int pre, int append);
+int read_token(Str buf, const char **instr, int *status, int pre, int append);
 int visible_length(char *str);
 int visible_length_plain(char *str);
 int maximum_visible_length(char *str, int offset);

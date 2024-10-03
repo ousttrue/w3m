@@ -1,4 +1,5 @@
 #include "text.h"
+#include "alloc.h"
 #include "line.h"
 #include "myctype.h"
 #include "ctrlcode.h"
@@ -120,6 +121,20 @@ const char *convert_size2(int64_t size1, int64_t size2, int usefloat) {
       ->ptr;
 }
 
+const char *remove_space(const char *str) {
+  const char *p;
+  for (p = str; *p && IS_SPACE(*p); p++)
+    ;
+  const char *q;
+  for (q = p; *q; q++)
+    ;
+  for (; q > p && IS_SPACE(*(q - 1)); q--)
+    ;
+  if (*q != '\0')
+    return Strnew_charp_n(p, q - p)->ptr;
+  return p;
+}
+
 Str unescape_spaces(Str s) {
   if (s == NULL)
     return s;
@@ -137,4 +152,56 @@ Str unescape_spaces(Str s) {
   if (tmp)
     return tmp;
   return s;
+}
+
+const char *cleanupName(const char *name) {
+  char* buf = allocStr(name, -1);
+  auto p = buf;
+  auto q = name;
+  while (*q != '\0') {
+    if (strncmp(p, "/../", 4) == 0) { /* foo/bar/../FOO */
+      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+        /* ../../       */
+        p += 3;
+        q += 3;
+      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+        /* ../../../    */
+        p += 3;
+        q += 3;
+      } else {
+        while (p != buf && *--p != '/')
+          ; /* ->foo/FOO */
+        *p = '\0';
+        q += 3;
+        strcat(buf, q);
+      }
+    } else if (strcmp(p, "/..") == 0) { /* foo/bar/..   */
+      if (p - 2 == buf && strncmp(p - 2, "..", 2) == 0) {
+        /* ../..        */
+      } else if (p - 3 >= buf && strncmp(p - 3, "/..", 3) == 0) {
+        /* ../../..     */
+      } else {
+        while (p != buf && *--p != '/')
+          ; /* ->foo/ */
+        *++p = '\0';
+      }
+      break;
+    } else if (strncmp(p, "/./", 3) == 0) { /* foo/./bar */
+      *p = '\0';                            /* -> foo/bar           */
+      q += 2;
+      strcat(buf, q);
+    } else if (strcmp(p, "/.") == 0) { /* foo/. */
+      *++p = '\0';                     /* -> foo/              */
+      break;
+    } else if (strncmp(p, "//", 2) == 0) { /* foo//bar */
+      /* -> foo/bar           */
+      *p = '\0';
+      q++;
+      strcat(buf, q);
+    } else {
+      p++;
+      q++;
+    }
+  }
+  return buf;
 }

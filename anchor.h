@@ -45,9 +45,10 @@ struct Anchor *registerHref(struct Document *doc, const char *url,
                             const char *target, const char *referer,
                             const char *title, unsigned char key, int line,
                             int pos);
-struct Anchor *registerName(struct Document *doc, char *url, int line, int pos);
-struct Anchor *registerImg(struct Document *doc, char *url, char *title,
-                           int line, int pos);
+struct Anchor *registerName(struct Document *doc, const char *url, int line,
+                            int pos);
+struct Anchor *registerImg(struct Document *doc, const char *url,
+                           const char *title, int line, int pos);
 struct Anchor *searchURLLabel(struct Document *doc, const char *url);
 struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos);
 struct Anchor *retrieveCurrentAnchor(struct Document *doc);
@@ -57,12 +58,11 @@ struct Anchor *searchAnchor(struct AnchorList *al, const char *str);
 struct Anchor;
 extern int onAnchor(struct Anchor *a, int line, int pos);
 struct Line;
-struct Buffer;
-extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos,
+extern void reAnchorWord(struct Document *buf, struct Line *l, int spos,
                          int epos);
-extern char *reAnchor(struct Buffer *buf, char *re);
+extern char *reAnchor(struct Document *buf, char *re);
 struct AnchorList;
-extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
+extern void addMultirowsForm(struct Document *doc, struct AnchorList *al);
 extern struct Anchor *closest_next_anchor(struct AnchorList *a,
                                           struct Anchor *an, int x, int y);
 extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
@@ -70,7 +70,9 @@ extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
 struct HmarkerList;
 extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
                                 int line, int pos, int shift);
-extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
+extern char *getAnchorText(struct Document *doc, struct AnchorList *al,
                            struct Anchor *a);
-
-
+struct parsed_tag;
+struct FormList;
+struct Anchor *registerForm(struct Document *doc, struct FormList *flist,
+                            struct parsed_tag *tag, int line, int pos);
