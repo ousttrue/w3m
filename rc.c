@@ -9,7 +9,7 @@
 #include "http_auth.h"
 #include "mailcap.h"
 #include "buffer.h"
-#include "cookie.h"
+#include "http_cookie.h"
 #include "app.h"
 #include "indep.h"
 #include "url.h"

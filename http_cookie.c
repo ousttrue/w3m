@@ -8,7 +8,7 @@
  * http://www.ics.uci.edu/pub/ietf/http/draft-ietf-http-state-man-mec-12.txt
  */
 
-#include "cookie.h"
+#include "http_cookie.h"
 #include "indep.h"
 #include "rc.h"
 #include "textlist.h"

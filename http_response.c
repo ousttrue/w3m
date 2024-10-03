@@ -1,7 +1,7 @@
 #include "http_response.h"
 #include "datetime.h"
 #include "func.h"
-#include "cookie.h"
+#include "http_cookie.h"
 #include "buffer.h"
 #include "termsize.h"
 #include "istream.h"

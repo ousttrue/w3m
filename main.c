@@ -1,7 +1,7 @@
 #include "fm.h"
 #include "display.h"
 #include "rc.h"
-#include "cookie.h"
+#include "http_cookie.h"
 #include "loader.h"
 #include "app.h"
 #include "indep.h"

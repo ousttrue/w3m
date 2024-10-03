@@ -40,7 +40,6 @@ pub const SRCS = [_][]const u8{
     "mimehead.c",
     "regex.c",
     "func.c",
-    "cookie.c",
     "history.c",
 
     "anchor.c",
@@ -62,6 +61,7 @@ pub const SRCS = [_][]const u8{
     "ftp.c",
     "readbuffer.c",
     "html_parser.c",
+    "http_cookie.c",
     "http_response.c",
     "http_auth.c",
     "http_auth_digest.c",

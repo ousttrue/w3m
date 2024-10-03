@@ -6,7 +6,7 @@
 #include "http_auth.h"
 #include "filepath.h"
 #include "alloc.h"
-#include "cookie.h"
+#include "http_cookie.h"
 #include "url_stream.h"
 #include "indep.h"
 #include "app.h"
