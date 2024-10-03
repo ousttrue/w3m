@@ -46,7 +46,7 @@ static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
                             int epos);
 static void do_effects(Lineprop m);
 
-static Str make_lastline_link(struct Buffer *buf, const char *title,
+static Str make_lastline_link(struct Url *base, const char *title,
                               const char *url) {
   Str s = NULL, u;
   struct Url pu;
@@ -67,7 +67,7 @@ static Str make_lastline_link(struct Buffer *buf, const char *title,
   }
   if (!url)
     return s;
-  parseURL2(url, &pu, baseURL(buf));
+  parseURL2(url, &pu, base);
   u = parsedURL2Str(&pu);
   if (DecodeURL)
     u = Strnew_charp(url_decode0(u->ptr));
@@ -89,9 +89,8 @@ static Str make_lastline_link(struct Buffer *buf, const char *title,
 }
 
 static Str make_lastline_message(struct Buffer *buf) {
-  Str msg, s = NULL;
+  Str s = NULL;
   int sl = 0;
-
   if (displayLink) {
     {
       struct Anchor *a = retrieveCurrentAnchor(&buf->document);
@@ -104,7 +103,7 @@ static Str make_lastline_message(struct Buffer *buf) {
           p = a_img->title;
       }
       if (p || a)
-        s = make_lastline_link(buf, p, a ? a->url : NULL);
+        s = make_lastline_link(baseURL(buf), p, a ? a->url : NULL);
     }
     if (s) {
       sl = utf8str_width((const uint8_t *)s->ptr);
@@ -113,7 +112,7 @@ static Str make_lastline_message(struct Buffer *buf) {
     }
   }
 
-  msg = Strnew();
+  auto msg = Strnew();
   if (displayLineInfo && buf->document.currentLine != NULL &&
       buf->document.lastLine != NULL) {
     int cl = buf->document.currentLine->real_linenumber;
