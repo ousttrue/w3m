@@ -69,7 +69,6 @@ struct Buffer {
   struct mailcap *mailcap;
   const char *mailcap_source;
   const char *header_source;
-  char search_header;
   const char *ssl_certificate;
   char image_flag;
   char image_loaded;

@@ -2489,7 +2489,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->filename = Currentbuf->filename;
   buf->sourcefile = Currentbuf->sourcefile;
   buf->header_source = Currentbuf->header_source;
-  buf->search_header = Currentbuf->search_header;
   buf->clone = Currentbuf->clone;
   (*buf->clone)++;
 
@@ -2543,10 +2542,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   /* FIXME: gettextize? */
   scr_message("Reloading...", 0, 0);
   term_refresh();
-  SearchHeader = Currentbuf->search_header;
   DefaultType = Currentbuf->real_type;
   buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
-  SearchHeader = false;
   DefaultType = NULL;
 
   if (multipart)
@@ -2621,7 +2618,8 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
   p = getCurWord(Currentbuf, &spos, &epos);
   if (p == NULL)
     return;
-  reAnchorWord(Currentbuf->document, Currentbuf->document->currentLine, spos, epos);
+  reAnchorWord(Currentbuf->document, Currentbuf->document->currentLine, spos,
+               epos);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 

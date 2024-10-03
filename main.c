@@ -407,7 +407,7 @@ int main(int argc, char **argv) {
   // SearchHeader = search_header;
   // DefaultType = default_type;
 
-  auto url = argv[1];
+  const char* url = argv[1];
   if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
     url = file_to_url(url);
   else
@@ -517,7 +517,6 @@ int main(int argc, char **argv) {
   if (err_msg->length)
     disp_message_nsec(err_msg->ptr, false, 1, true, false);
 
-  SearchHeader = false;
   DefaultType = NULL;
 
   Currentbuf = Firstbuf;

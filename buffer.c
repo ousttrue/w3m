@@ -432,9 +432,6 @@ void reshapeBuffer(struct Buffer *buf) {
         http_readHeader(&h, buf, true, NULL);
         UFclose(&h);
       }
-    } else if (buf->search_header) {
-      /* -m option */
-      http_readHeader(&f, buf, true, NULL);
     }
   }
 

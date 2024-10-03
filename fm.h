@@ -138,7 +138,6 @@
 
 global int IndentIncr init(4);
 
-global char SearchHeader init(false);
 global const char *DefaultType init(NULL);
 global char RenderFrame init(false);
 global char TargetSelf init(false);
