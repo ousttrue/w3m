@@ -181,15 +181,6 @@ extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
                            struct Anchor *a);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
 
-extern void init_rc(void);
-extern struct Buffer *load_option_panel(void);
-extern void panel_set_option(struct parsed_tagarg *);
-extern void sync_with_option(void);
-extern char *rcFile(char *base);
-extern char *etcFile(char *base);
-extern char *confFile(char *base);
-extern char *libFile(char *base);
-extern char *helpFile(char *base);
 extern const void *querySiteconf(const struct Url *query_pu, int field);
 extern Str loadLocalDir(char *dirname);
 extern void loadPasswd(void);
@@ -221,7 +212,6 @@ extern char *FQDN(char *host);
 #define tabMs nulcmd
 #define closeTMs nulcmd
 
-extern void initKeymap(int force);
 extern char *getKeyData(int key);
 struct regex;
 extern char *getRegexWord(const char **str, struct regex **regex_ret);

@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "map.h"
+#include "rc.h"
 #include "utf8.h"
 #include "os.h"
 #include "http_auth.h"

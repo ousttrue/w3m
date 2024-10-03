@@ -1,5 +1,6 @@
 #include "history.h"
 #include "url.h"
+#include "rc.h"
 #include "alloc.h"
 #include "app.h"
 #include "fm.h"

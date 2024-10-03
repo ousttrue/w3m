@@ -26,4 +26,4 @@ void escmap(void);
 void escbmap(void);
 void escdmap(char c);
 void multimap(void);
-
+void initKeymap(int force);

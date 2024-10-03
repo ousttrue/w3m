@@ -1,6 +1,7 @@
 /*
  * Initialization file etc.
  */
+#include "rc.h"
 #include "fm.h"
 #include "alloc.h"
 #include "image.h"

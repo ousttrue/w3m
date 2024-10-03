@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "display.h"
+#include "rc.h"
 #include "cookie.h"
 #include "loader.h"
 #include "app.h"

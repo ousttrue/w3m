@@ -1,5 +1,3 @@
-/* $Id: cookie.c,v 1.11 2010/07/26 11:38:53 htrb Exp $ */
-
 /*
  * References for version 0 cookie:
  *   [NETACAPE] http://www.netscape.com/newsref/std/cookie_spec.html
@@ -12,6 +10,7 @@
 
 #include "cookie.h"
 #include "indep.h"
+#include "rc.h"
 #include "textlist.h"
 #include "alloc.h"
 #include "parsetag.h"
