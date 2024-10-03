@@ -1,5 +1,6 @@
 #include "loader.h"
 #include "trap_jmp.h"
+#include "ftp.h"
 #include "readbuffer.h"
 #include "filepath.h"
 #include "datetime.h"

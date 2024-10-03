@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "ftp.h"
 #include "text.h"
 #include "rc.h"
 #include "search.h"

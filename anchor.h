@@ -54,3 +54,23 @@ struct Anchor *retrieveCurrentAnchor(struct Document *doc);
 struct Anchor *retrieveCurrentImg(struct Document *doc);
 struct Anchor *retrieveCurrentForm(struct Document *doc);
 struct Anchor *searchAnchor(struct AnchorList *al, const char *str);
+struct Anchor;
+extern int onAnchor(struct Anchor *a, int line, int pos);
+struct Line;
+struct Buffer;
+extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos,
+                         int epos);
+extern char *reAnchor(struct Buffer *buf, char *re);
+struct AnchorList;
+extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
+extern struct Anchor *closest_next_anchor(struct AnchorList *a,
+                                          struct Anchor *an, int x, int y);
+extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
+                                          struct Anchor *an, int x, int y);
+struct HmarkerList;
+extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
+                                int line, int pos, int shift);
+extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
+                           struct Anchor *a);
+
+

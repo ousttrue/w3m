@@ -1,6 +1,7 @@
 #include "url_stream.h"
 #include "filepath.h"
 #include "loader.h"
+#include "ftp.h"
 #include "trap_jmp.h"
 #include "mailcap.h"
 #include "cookie.h"
@@ -1717,7 +1718,7 @@ struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme) {
 char *url_decode0(const char *url) {
   if (!DecodeURL)
     return (char *)url;
-  return url_unquote_conv((char *)url, 0);
+  return url_unquote_conv0(url);
 }
 
 char *FQDN(char *host) {

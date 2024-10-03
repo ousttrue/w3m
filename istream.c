@@ -1,5 +1,6 @@
 #include "istream.h"
 #include "alloc.h"
+#include "url_stream.h"
 #include "fm.h"
 #include "myctype.h"
 #include "istream.h"

@@ -1,6 +1,7 @@
 #include "mailcap.h"
 #include "strcase.h"
 #include "fm.h"
+#include "url_stream.h"
 #include "alloc.h"
 #include "textlist.h"
 #include "myctype.h"

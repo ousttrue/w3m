@@ -1,5 +1,6 @@
 #include "ftp.h"
 #include "utf8.h"
+#include "http_auth.h"
 #include "istream.h"
 #include "trap_jmp.h"
 #include "filepath.h"

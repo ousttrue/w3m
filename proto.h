@@ -137,63 +137,16 @@ struct parsed_tag;
 union input_stream;
 struct Hist;
 struct parsed_tagarg;
-
-
-extern char *ttyname_tty(void);
-// extern MySignalHandler reset_exit(SIGNAL_ARG);
-// extern MySignalHandler error_dump(SIGNAL_ARG);
+struct Url;
+struct Url;
 
 extern void initMimeTypes();
-extern void free_ssl_ctx();
-struct Url;
-extern void parseURL(char *url, struct Url *p_url, struct Url *current);
-extern void copyParsedURL(struct Url *p, const struct Url *q);
-extern Str parsedURL2Str(struct Url *pu);
-extern Str parsedURL2RefererStr(struct Url *pu);
-extern int getURLScheme(char **url);
-extern void init_stream(struct URLFile *uf, int scheme,
-                        union input_stream *stream);
-
-extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);
-struct Url;
-extern union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf);
-extern Str loadFTPDir0(struct Url *pu);
-#define loadFTPDir(pu, charset) loadFTPDir0(pu)
-extern void closeFTP(void);
-extern void disconnectFTP(void);
-struct Anchor;
-extern int onAnchor(struct Anchor *a, int line, int pos);
-struct Line;
-extern void reAnchorWord(struct Buffer *buf, struct Line *l, int spos,
-                         int epos);
-extern char *reAnchor(struct Buffer *buf, char *re);
-struct AnchorList;
-extern void addMultirowsForm(struct Buffer *buf, struct AnchorList *al);
-extern struct Anchor *closest_next_anchor(struct AnchorList *a,
-                                          struct Anchor *an, int x, int y);
-extern struct Anchor *closest_prev_anchor(struct AnchorList *a,
-                                          struct Anchor *an, int x, int y);
-struct HmarkerList;
-extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
-                                int line, int pos, int shift);
-extern char *getAnchorText(struct Buffer *buf, struct AnchorList *al,
-                           struct Anchor *a);
 extern struct Buffer *link_list_panel(struct Buffer *buf);
-
 extern const void *querySiteconf(const struct Url *query_pu, int field);
 extern Str loadLocalDir(char *dirname);
 extern void loadPasswd(void);
 extern void loadPreForm(void);
-extern int find_auth_user_passwd(struct Url *pu, char *realm, Str *uname,
-                                 Str *pwd, int is_proxy);
-extern void add_auth_user_passwd(struct Url *pu, char *realm, Str uname,
-                                 Str pwd, int is_proxy);
-
-extern int is_localhost(const char *host);
-extern char *url_unquote_conv0(char *url);
-#define url_unquote_conv(url, charset) url_unquote_conv0(url)
-
 extern char *FQDN(char *host);
 
 #define docCSet nulcmd
