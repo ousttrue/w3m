@@ -429,11 +429,13 @@ void reshapeBuffer(struct Buffer *buf) {
       init_stream(&h, SCM_LOCAL, NULL);
       examineFile(buf->header_source, &h);
       if (h.stream) {
-        readHeader(&h, buf, true, NULL);
+        http_readHeader(&h, buf, true, NULL);
         UFclose(&h);
       }
-    } else if (buf->search_header) /* -m option */
-      readHeader(&f, buf, true, NULL);
+    } else if (buf->search_header) {
+      /* -m option */
+      http_readHeader(&f, buf, true, NULL);
+    }
   }
 
   if (is_html_type(buf->type))

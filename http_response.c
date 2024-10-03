@@ -30,8 +30,8 @@ const char *violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"};
 
-int readHeader(struct URLFile *uf, struct Buffer *newBuf, int thru,
-               struct Url *pu) {
+int http_readHeader(struct URLFile *uf, struct Buffer *newBuf, bool thru,
+                    struct Url *pu) {
 
   struct TextList *headerlist = newBuf->document_header = newTextList();
   if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS)

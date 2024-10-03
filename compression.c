@@ -143,7 +143,7 @@ const char *filename_extension(const char *path, bool is_url) {
     return last_dot;
 }
 
-const char *uncompressed_file_type(const char *path, char **ext) {
+const char *uncompressed_file_type(const char *path, const char **ext) {
   int len, slen;
   Str fn;
   struct compression_decoder *d;

@@ -219,14 +219,14 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   return b;
 }
 
-static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *current,
-                        struct Url pu, char *referer, enum RG_FLAGS flag,
-                        struct FormList *request, struct TextList *extra_header,
-                        struct URLFile *of, struct HttpRequest hr,
-                        enum HttpStatus status, bool add_auth_cookie_flag,
-                        struct Buffer *b, struct Buffer *t_buf,
-                        bool searchHeader, bool searchHeader_through, Str realm,
-                        Str uname, Str pwd) {
+static struct Buffer *
+load_doc(const char *path, const char *tpath, struct Url *current,
+         struct Url pu, char *referer, enum RG_FLAGS flag,
+         struct FormList *request, struct TextList *extra_header,
+         struct URLFile *of, struct HttpRequest hr, enum HttpStatus status,
+         bool add_auth_cookie_flag, struct Buffer *b, struct Buffer *t_buf,
+         bool searchHeader, bool searchHeader_through, Str realm, Str uname,
+         Str pwd) {
   {
     const char *sc_redirect;
     parseURL2(tpath, &pu, current);
@@ -338,10 +338,10 @@ static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *
     if (t_buf == NULL)
       t_buf = newBuffer();
 
-    auto http_response_code = readHeader(&f, t_buf, false, &pu);
+    auto http_status_code = http_readHeader(&f, t_buf, false, &pu);
     const char *p;
-    if (((http_response_code >= 301 && http_response_code <= 303) ||
-         http_response_code == 307) &&
+    if (((http_status_code >= 301 && http_status_code <= 303) ||
+         http_status_code == 307) &&
         (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
       /* document moved */
@@ -364,8 +364,8 @@ static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *
     }
     t = checkContentType(t_buf);
     if (t == NULL && pu.file != NULL) {
-      if (!((http_response_code >= 400 && http_response_code <= 407) ||
-            (http_response_code >= 500 && http_response_code <= 505)))
+      if (!((http_status_code >= 400 && http_status_code <= 407) ||
+            (http_status_code >= 500 && http_status_code <= 505)))
         t = guessContentType(pu.file);
     }
     if (t == NULL)
@@ -376,7 +376,7 @@ static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *
       add_auth_cookie_flag = 0;
     }
     if ((p = checkHeader(t_buf, "WWW-Authenticate:")) != NULL &&
-        http_response_code == 401) {
+        http_status_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
@@ -399,7 +399,7 @@ static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *
       }
     }
     if ((p = checkHeader(t_buf, "Proxy-Authenticate:")) != NULL &&
-        http_response_code == 407) {
+        http_status_code == 407) {
       /* Authentication needed */
       struct http_auth hauth;
       if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:") != NULL &&
@@ -454,7 +454,7 @@ static struct Buffer *load_doc(const char *path, const char *tpath, struct Url *
     searchHeader = SearchHeader = false;
     if (t_buf == NULL)
       t_buf = newBuffer();
-    readHeader(&f, t_buf, searchHeader_through, &pu);
+    http_readHeader(&f, t_buf, searchHeader_through, &pu);
     const char *p;
     if (f.is_cgi && (p = checkHeader(t_buf, "Location:")) != NULL &&
         checkRedirection(&pu)) {
