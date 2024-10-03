@@ -94,8 +94,8 @@ static void addLink(struct Document *doc, struct parsed_tag *tag) {
   }
 }
 
-struct Document* HTMLlineproc2body(struct Url currentURL, struct Url *base,
-                       GetLineFunc feed, int llimit) {
+struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *base,
+                                   GetLineFunc feed) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -134,8 +134,6 @@ struct Document* HTMLlineproc2body(struct Url currentURL, struct Url *base,
       continue;
     }
   proc_again:
-    if (++nlines == llimit)
-      break;
     pos = 0;
 #ifdef ENABLE_REMOVE_TRAILINGSPACES
     Strremovetrailingspaces(line);

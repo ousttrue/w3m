@@ -2927,11 +2927,6 @@ static Str textlist_feed() {
 
 static union input_stream *_file_lp2;
 
-void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl) {
-  _tl_lp2 = tl->first;
-  buf->document = HTMLlineproc2body(buf->currentURL, baseURL(buf), textlist_feed, -1);
-}
-
 void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
                     FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
@@ -2987,7 +2982,10 @@ void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
 phase2:
   newBuf->trbyte = trbyte + linelen;
   trap_off();
-  HTMLlineproc2(newBuf, htmlenv1.buf);
+
+  _tl_lp2 = htmlenv1.buf->first;
+  newBuf->document =
+      HTMLlineproc2body(newBuf->currentURL, baseURL(newBuf), textlist_feed);
 }
 
 void completeHTMLstream(struct html_feed_environ *h_env,

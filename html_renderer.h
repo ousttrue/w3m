@@ -8,4 +8,4 @@ extern int symbol_width0;
 typedef Str (*GetLineFunc)();
 struct Url;
 struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *url,
-                                   GetLineFunc feed, int llimit);
+                                   GetLineFunc feed);
