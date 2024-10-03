@@ -2927,8 +2927,8 @@ static Str textlist_feed() {
 
 static union input_stream *_file_lp2;
 
-void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
-                    FILE *src, int internal) {
+struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
+                                struct Url *base, FILE *src, int internal) {
   struct environment envs[MAX_ENV_LEVEL];
   int64_t linelen = 0;
   int64_t trbyte = 0;
@@ -2947,8 +2947,7 @@ void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
   forms = NULL;
   cur_hseq = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL,
-            newBuf->document->width, 0);
+  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, INIT_BUFFER_WIDTH, 0);
 
   htmlenv1.buf = newTextLineList();
   cur_baseURL = base;
@@ -2976,16 +2975,15 @@ void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf,
   completeHTMLstream(&htmlenv1, &obuf);
   flushline(&htmlenv1, &obuf, 0, 2, htmlenv1.limit);
   cur_baseURL = NULL;
-  if (htmlenv1.title)
-    newBuf->buffername = htmlenv1.title;
+  // if (htmlenv1.title)
+  //   newBuf->buffername = htmlenv1.title;
 
 phase2:
-  newBuf->trbyte = trbyte + linelen;
+  // newBuf->trbyte = trbyte + linelen;
   trap_off();
 
   _tl_lp2 = htmlenv1.buf->first;
-  newBuf->document =
-      HTMLlineproc2body(newBuf->currentURL, baseURL(newBuf), textlist_feed);
+  return HTMLlineproc2body(currentURL, base, textlist_feed);
 }
 
 void completeHTMLstream(struct html_feed_environ *h_env,
@@ -3064,8 +3062,8 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
       newBuf->sourcefile = tmp->ptr;
   }
 
-  loadHTMLstream(f, baseURL(newBuf), newBuf, src,
-                 newBuf->bufferprop & BP_FRAME);
+  newBuf->document = loadHTMLstream(f, newBuf->currentURL, baseURL(newBuf), src,
+                                    newBuf->bufferprop & BP_FRAME);
 
   newBuf->document->topLine = newBuf->document->firstLine;
   newBuf->document->lastLine = newBuf->document->currentLine;
@@ -3083,7 +3081,6 @@ struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
  */
 struct Buffer *loadHTMLString(Str page) {
   struct URLFile f;
-
   init_stream(&f, SCM_LOCAL, newStrStream(page));
 
   auto newBuf = newBuffer();
@@ -3095,7 +3092,8 @@ struct Buffer *loadHTMLString(Str page) {
   }
   trap_on();
 
-  loadHTMLstream(&f, baseURL(newBuf), newBuf, NULL, true);
+  newBuf->document =
+      loadHTMLstream(&f, newBuf->currentURL, baseURL(newBuf), NULL, true);
 
   trap_off();
   UFclose(&f);

@@ -131,15 +131,16 @@ void push_link(int cmd, int offset, int pos);
 struct parsed_tag;
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl);
-void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env, int internal);
+void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
+                   int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
 struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
                               struct Buffer *newBuf);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
-void loadHTMLstream(struct URLFile *f, struct Url *base, struct Buffer *newBuf, FILE *src,
-                    int internal);
+struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
+                                struct Url *base, FILE *src, int internal);
 struct Buffer *loadHTMLString(Str page);
 struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
                              const char *type, struct Buffer *defaultbuf);
