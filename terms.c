@@ -294,10 +294,9 @@ void term_refresh() {
             mode |= SCREEN_GRAPHICS;
           }
 
-          // if (pr[col] & S_GRAPHICS)
-          //   tty_putc(graphchar(*pc[col]));
-          // else
-          if (CHMODE(pr[col]) != C_WCHAR2)
+          if (pr[col] & SCREEN_GRAPHICS)
+            tty_putc(graphchar(pc[col].c0));
+          else if (CHMODE(pr[col]) != C_WCHAR2)
             tty_put_utf8(pc[col]);
 
           pcol = col + 1;
