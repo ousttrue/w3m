@@ -77,3 +77,5 @@ int writeBufferCache(struct Document *doc);
 int readBufferCache(struct Document *doc);
 void tmpClearBuffer(struct Document *doc);
 void copyBuffer(struct Document *a, struct Document *b);
+void COPY_BUFROOT(struct Document *dstbuf, const struct Document *srcbuf);
+void COPY_BUFPOSITION(struct Document *dstbuf, const struct Document *srcbuf);

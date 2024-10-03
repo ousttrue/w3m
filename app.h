@@ -31,3 +31,4 @@ Str tmpfname(enum TMPF_TYPE type, const char *ext);
 const char *app_currentdir();
 
 void pushEvent(int cmd, void *data);
+

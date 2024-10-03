@@ -90,27 +90,6 @@ int currentLn(struct Buffer *buf);
 struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
                                int seq);
 
-#define COPY_BUFROOT(dstbuf, srcbuf)                                           \
-  {                                                                            \
-    (dstbuf)->rootX = (srcbuf)->rootX;                       \
-    (dstbuf)->rootY = (srcbuf)->rootY;                       \
-    (dstbuf)->COLS = (srcbuf)->COLS;                         \
-    (dstbuf)->LINES = (srcbuf)->LINES;                       \
-  }
-
-#define COPY_BUFPOSITION(dstbuf, srcbuf)                                       \
-  {                                                                            \
-    (dstbuf)->topLine = (srcbuf)->topLine;                   \
-    (dstbuf)->currentLine = (srcbuf)->currentLine;           \
-    (dstbuf)->pos = (srcbuf)->pos;                           \
-    (dstbuf)->cursorX = (srcbuf)->cursorX;                   \
-    (dstbuf)->cursorY = (srcbuf)->cursorY;                   \
-    (dstbuf)->visualpos = (srcbuf)->visualpos;               \
-    (dstbuf)->currentColumn = (srcbuf)->currentColumn;       \
-  }
-#define SAVE_BUFPOSITION(sbufp) COPY_BUFPOSITION(sbufp, &Currentbuf->document)
-#define RESTORE_BUFPOSITION(sbufp) COPY_BUFPOSITION(&Currentbuf->document, sbufp)
-
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 extern struct Buffer *newBuffer(int width);

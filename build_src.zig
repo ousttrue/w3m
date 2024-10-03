@@ -53,6 +53,7 @@ pub const SRCS = [_][]const u8{
     "parsetag.c",
     "myctype.c",
     "hash.c",
+    "tabbuffer.c",
 
     "version.c",
     "url_stream.c",

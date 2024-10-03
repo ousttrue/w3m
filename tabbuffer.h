@@ -21,3 +21,7 @@ extern struct TabBuffer *LastTab;
 extern struct TabBuffer *newTab();
 extern void calcTabPos();
 extern struct TabBuffer *deleteTab(struct TabBuffer *tab);
+
+struct Document;
+void SAVE_BUFPOSITION(struct Document *sbufp);
+void RESTORE_BUFPOSITION(struct Document *sbufp);
