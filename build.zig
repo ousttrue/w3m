@@ -150,6 +150,12 @@ pub fn build(b: *std.Build) void {
     const widecharwidth_dep = b.dependency("widecharwidth", .{});
     exe.addIncludePath(widecharwidth_dep.path(""));
 
+    const nkf_dep = b.dependency("nkf", .{});
+    exe.addIncludePath(nkf_dep.path(""));
+    exe.addCSourceFiles(.{
+        .files = &.{"libnkf.c"},
+    });
+
     // run
     const run_cmd = b.addRunArtifact(exe);
     run_cmd.step.dependOn(b.getInstallStep());

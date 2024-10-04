@@ -26,6 +26,10 @@
             .url = "git+https://github.com/ridiculousfish/widecharwidth.git#533e50efb0b9b122a08f2273337dbf6b44b03cc7",
             .hash = "1220fb131f149a48cc9e7183fbf95b7351d9b50b4fd67f75afc66feccda25f689510",
         },
+        .nkf = .{
+            .url = "git+https://github.com/nurse/nkf.git#96c33713fc32f160597eb792d97694cda082afc7",
+            .hash = "1220ea047fde19f71b5d8549d482ce7a0cbc4e1814aee1168652574a97b1496f6489",
+        },
     },
     .paths = .{
         "build.zig",
