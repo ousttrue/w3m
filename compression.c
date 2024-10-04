@@ -3,6 +3,7 @@
 #include "alloc.h"
 #include "terms.h"
 #include "etc.h"
+#include "file.h"
 #include "app.h"
 #include "istream.h"
 #include "textlist.h"
@@ -120,7 +121,8 @@ const char *compress_application_type(enum COMPRESSION_TYPE compression) {
 }
 
 const char *filename_extension(const char *path, bool is_url) {
-  char *last_dot = "", *p = path;
+  const char *last_dot = "";
+  const char *p = path;
   int i;
 
   if (path == NULL)

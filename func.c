@@ -1,10 +1,9 @@
-/* $Id: func.c,v 1.27 2003/09/26 17:59:51 ukai Exp $ */
 /*
  * w3m func.c
  */
-
 #include <stdio.h>
 #include "fm.h"
+#include "file.h"
 #include "rc.h"
 #include "alloc.h"
 #include "indep.h"
@@ -14,6 +13,7 @@
 #include "regex.h"
 #include "terms.h"
 #include "history.h"
+#include "text.h"
 
 #include "proto.h"
 #include "funcname.h"
@@ -330,17 +330,6 @@ int getKey(const char *s) {
   return c;
 }
 
-const char *getWord(const char **str) {
-
-  auto p = *str;
-  SKIP_BLANKS(p);
-  const char *s;
-  for (s = p; *p && !IS_SPACE(*p) && *p != ';'; p++)
-    ;
-  *str = p;
-  return Strnew_charp_n(s, p - s)->ptr;
-}
-
 const char *getQWord(const char **str) {
   Str tmp = Strnew();
   int in_q = 0, in_dq = 0, esc = 0;
@@ -397,7 +386,7 @@ const char *getQWord(const char **str) {
  *
  * XXX: Actually this is unrelated to func.c.
  */
-char *getRegexWord(const char **str, Regex **regex_ret) {
+const char *getRegexWord(const char **str, Regex **regex_ret) {
   char *word = NULL;
   const char *p, *headp, *bodyp, *tailp;
   char delimiter;

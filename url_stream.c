@@ -1,4 +1,6 @@
 #include "url_stream.h"
+#include "file.h"
+#include "siteconf.h"
 #include "document.h"
 #include "filepath.h"
 #include "text.h"
@@ -131,13 +133,12 @@ static struct TextList *mimetypes_list;
 static struct table2 **UserMimeTypes;
 
 static struct table2 *loadMimeTypes(char *filename) {
-  FILE *f;
   char *d, *type;
   int i, n;
   Str tmp;
   struct table2 *mtypes;
 
-  f = fopen(expandPath(filename), "r");
+  auto f = fopen(expandPath(filename), "r");
   if (f == NULL)
     return NULL;
   n = 0;

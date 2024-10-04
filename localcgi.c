@@ -1,5 +1,6 @@
 #include "localcgi.h"
 #include "url.h"
+#include "file.h"
 #include "trap_jmp.h"
 #include "alloc.h"
 #include "filepath.h"

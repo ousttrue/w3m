@@ -1,6 +1,7 @@
 #include "http_auth.h"
 #include "http_response.h"
 #include "buffer.h"
+#include "file.h"
 #include "myctype.h"
 #include "indep.h"
 #include "alloc.h"

@@ -155,7 +155,7 @@ Str unescape_spaces(Str s) {
 }
 
 const char *cleanupName(const char *name) {
-  char* buf = allocStr(name, -1);
+  char *buf = allocStr(name, -1);
   auto p = buf;
   auto q = name;
   while (*q != '\0') {
@@ -204,4 +204,14 @@ const char *cleanupName(const char *name) {
     }
   }
   return buf;
+}
+
+const char *getWord(const char **str) {
+  auto p = *str;
+  SKIP_BLANKS(p);
+  const char *s;
+  for (s = p; *p && !IS_SPACE(*p) && *p != ';'; p++)
+    ;
+  *str = p;
+  return Strnew_charp_n(s, p - s)->ptr;
 }

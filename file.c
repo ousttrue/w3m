@@ -32,6 +32,49 @@
 #define TAG_IS(s, tag, len)                                                    \
   (strncasecmp(s, tag, len) == 0 && (s[len] == '>' || IS_SPACE((int)s[len])))
 
+static char *w3m_dir(const char *name, char *dft) {
+#ifdef USE_PATH_ENVVAR
+  char *value = getenv(name);
+  return value ? value : dft;
+#else
+  return dft;
+#endif
+}
+
+const char *w3m_auxbin_dir() { return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR); }
+
+const char *w3m_lib_dir() {
+  /* FIXME: use W3M_CGIBIN_DIR? */
+  return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR);
+}
+
+const char *w3m_etc_dir() { return w3m_dir("W3M_ETC_DIR", ETC_DIR); }
+
+const char *w3m_conf_dir() { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }
+
+const char *w3m_help_dir() { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }
+
+const char *expandPath(const char *name) {
+  if (!name) {
+    return nullptr;
+  }
+
+  if (name[0] != '~') {
+    return name;
+  }
+
+  auto p = name + 1;
+  if (*p != '/' && *p != '\0') {
+    return name;
+  }
+
+  /* ~/dir... or ~ */
+  auto extpath = Strnew_charp(getenv("HOME"));
+  if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
+    p++;
+  Strcat_charp(extpath, p);
+  return extpath->ptr;
+}
 int getMetaRefreshParam(const char *q, Str *refresh_uri) {
   int refresh_interval;
   // char *r;
@@ -235,4 +278,12 @@ int _MoveFile(char *path1, char *path2) {
   else
     fclose(f2);
   return 0;
+}
+
+const char *etcFile(const char *base) {
+  return expandPath(Strnew_m_charp(w3m_etc_dir(), "/", base, NULL)->ptr);
+}
+
+const char *confFile(const char *base) {
+  return expandPath(Strnew_m_charp(w3m_conf_dir(), "/", base, NULL)->ptr);
 }

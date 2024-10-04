@@ -64,29 +64,6 @@ char *currentdir() {
 
 
 
-// #ifndef HAVE_STRCHR
-// char *strchr(const char *s, int c) {
-//   while (*s) {
-//     if ((unsigned char)*s == c)
-//       return (char *)s;
-//     s++;
-//   }
-//   return NULL;
-// }
-// #endif /* not HAVE_STRCHR */
-
-int strmatchlen(const char *s1, const char *s2, int maxlen) {
-  int i;
-
-  /* To allow the maxlen to be negatie (infinity),
-   * compare by "!=" instead of "<=". */
-  for (i = 0; i != maxlen; ++i) {
-    if (!s1[i] || !s2[i] || s1[i] != s2[i])
-      break;
-  }
-  return i;
-}
-
 int non_null(char *s) {
   if (s == NULL)
     return false;
@@ -304,46 +281,4 @@ void *xrealloc(void *ptr, size_t size) {
   return newptr;
 }
 
-static char *w3m_dir(const char *name, char *dft) {
-#ifdef USE_PATH_ENVVAR
-  char *value = getenv(name);
-  return value ? value : dft;
-#else
-  return dft;
-#endif
-}
 
-char *w3m_auxbin_dir() { return w3m_dir("W3M_AUXBIN_DIR", AUXBIN_DIR); }
-
-char *w3m_lib_dir() {
-  /* FIXME: use W3M_CGIBIN_DIR? */
-  return w3m_dir("W3M_LIB_DIR", CGIBIN_DIR);
-}
-
-char *w3m_etc_dir() { return w3m_dir("W3M_ETC_DIR", ETC_DIR); }
-
-char *w3m_conf_dir() { return w3m_dir("W3M_CONF_DIR", CONF_DIR); }
-
-char *w3m_help_dir() { return w3m_dir("W3M_HELP_DIR", HELP_DIR); }
-
-const char *expandPath(const char *name) {
-  if (!name) {
-    return nullptr;
-  }
-
-  if (name[0] != '~') {
-    return name;
-  }
-
-  auto p = name + 1;
-  if (*p != '/' && *p != '\0') {
-    return name;
-  }
-
-  /* ~/dir... or ~ */
-  auto extpath = Strnew_charp(getenv("HOME"));
-  if (Strcmp_charp(extpath, "/") == 0 && *p == '/')
-    p++;
-  Strcat_charp(extpath, p);
-  return extpath->ptr;
-}

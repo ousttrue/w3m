@@ -19,7 +19,6 @@
 #define COOKIE_FILE "cookie"
 #define HISTORY_FILE "history"
 #define PRE_FORM_FILE RC_DIR "/pre_form"
-#define SITECONF_FILE RC_DIR "/siteconf"
 #define USER_MAILCAP RC_DIR "/mailcap"
 #define SYS_MAILCAP CONF_DIR "/mailcap"
 #define USER_MIMETYPES "~/.mime.types"
@@ -77,8 +76,6 @@
 #define IMG_FLAG_LOADED 1
 #define IMG_FLAG_ERROR 2
 #define IMG_FLAG_DONT_REMOVE 4
-
-#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
 /*
  * Macros.
@@ -232,7 +229,6 @@ global char *ExtBrowser8 init(NULL);
 global char *ExtBrowser9 init(NULL);
 global int BackgroundExtViewer init(true);
 global char *pre_form_file init(PRE_FORM_FILE);
-global char *siteconf_file init(SITECONF_FILE);
 global char *ftppasswd init(NULL);
 global int ftppass_hostnamegen init(true);
 global char *UserAgent init(NULL);

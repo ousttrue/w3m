@@ -1,5 +1,6 @@
 #include "mailcap.h"
 #include "http_response.h"
+#include "file.h"
 #include "strcase.h"
 #include "fm.h"
 #include "url_stream.h"
@@ -171,22 +172,20 @@ static int extractMailcapEntry(char *mcap_entry, struct mailcap *mcap) {
 }
 
 static struct mailcap *loadMailcap(char *filename) {
-  FILE *f;
-  int i, n;
-  Str tmp;
-  struct mailcap *mcap;
-
-  f = fopen(expandPath(filename), "r");
+  auto f = fopen(expandPath(filename), "r");
   if (f == NULL)
     return NULL;
-  i = 0;
+
+  int i = 0;
+  Str tmp;
   while (tmp = Strfgets(f), tmp->length > 0) {
     if (tmp->ptr[0] != '#')
       i++;
   }
   fseek(f, 0, 0);
-  n = i;
-  mcap = New_N(struct mailcap, n + 1);
+
+  int n = i;
+  auto mcap = New_N(struct mailcap, n + 1);
   i = 0;
   while (tmp = Strfgets(f), tmp->length > 0) {
     if (tmp->ptr[0] == '#')

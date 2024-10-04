@@ -1,5 +1,6 @@
 #include "downloadlist.h"
 #include "text.h"
+#include "file.h"
 #include "app.h"
 #include "proto.h"
 #include "indep.h"

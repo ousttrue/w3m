@@ -11,3 +11,6 @@ const char *remove_space(const char *str);
 Str unescape_spaces(Str s);
 
 const char *cleanupName(const char *name);
+
+const char *getWord(const char **str);
+

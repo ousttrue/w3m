@@ -1,6 +1,7 @@
 #include "linein.h"
 #include "text.h"
 #include "url.h"
+#include "file.h"
 #include "utf8.h"
 #include "alloc.h"
 #include "display.h"

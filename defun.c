@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "siteconf.h"
 #include "document.h"
 #include "ftp.h"
 #include "proto.h"

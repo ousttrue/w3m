@@ -34,12 +34,12 @@ struct FormList {
   int method;
   Str action;
   const char *target;
-  char *name;
+  const char *name;
   int enctype;
   struct FormList *next;
   int nitems;
-  char *body;
-  char *boundary;
+  const char *body;
+  const char *boundary;
   unsigned long length;
 };
 

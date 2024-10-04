@@ -16,7 +16,6 @@ typedef struct _FuncList {
 } FuncList;
 
 int getFuncList(const char *id);
-const char *getWord(const char **str);
 const char *getQWord(const char **str);
 void setKeymap(const char *p, int lineno, int verbose);
 int getKey(const char *s);
@@ -30,6 +29,6 @@ void initKeymap(int force);
 
 char *getKeyData(int key);
 struct regex;
-extern char *getRegexWord(const char **str, struct regex **regex_ret);
+const char *getRegexWord(const char **str, struct regex **regex_ret);
 
 

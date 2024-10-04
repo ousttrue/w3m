@@ -37,6 +37,7 @@ struct Url {
   char *label;
   int is_nocache;
 };
+#define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
 const char *file_to_url(const char *file);
 void parseURL2(const char *url, struct Url *pu, struct Url *current);

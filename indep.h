@@ -5,10 +5,6 @@
 extern int64_t strtoclen(const char *s);
 extern int strCmp(const void *s1, const void *s2);
 extern char *currentdir(void);
-const extern char *expandPath(const char *name);
-// #ifndef HAVE_STRCHR
-// extern char *strchr(const char *s, int c);
-// #endif /* not HAVE_STRCHR */
 
 extern int non_null(char *s);
 
@@ -33,8 +29,4 @@ extern Str Str_form_quote(Str x);
 #define Str_form_unquote(x) Str_url_unquote((x), true, false)
 extern const char *shell_quote(const char *str);
 
-extern char *w3m_auxbin_dir();
-extern char *w3m_lib_dir();
-extern char *w3m_etc_dir();
-extern char *w3m_conf_dir();
-extern char *w3m_help_dir();
+

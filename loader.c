@@ -1,4 +1,5 @@
 #include "loader.h"
+#include "siteconf.h"
 #include "localcgi.h"
 #include "text.h"
 #include "document.h"
@@ -200,9 +201,8 @@ load_doc(const char *path, const char *tpath, struct Url *current,
          bool add_auth_cookie_flag, struct Buffer *b, struct Buffer *t_buf,
          Str realm, Str uname, Str pwd) {
   {
-    const char *sc_redirect;
     parseURL2(tpath, &pu, current);
-    sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
+    auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
     if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
       tpath = (char *)sc_redirect;
       request = NULL;
