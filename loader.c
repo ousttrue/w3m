@@ -121,11 +121,6 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     }
   }
 
-  if (is_html_type(t))
-    proc = loadHTMLBuffer;
-  else if (is_plain_text_type(t))
-    proc = loadBuffer;
-
   if (t_buf == NULL)
     t_buf = newBuffer();
   copyParsedURL(&t_buf->currentURL, &pu);
@@ -133,6 +128,11 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   t_buf->ssl_certificate = f.ssl_certificate;
   // auto b = loadSomething(&f, proc, t, t_buf);
 
+  if (is_html_type(t)) {
+    proc = loadHTMLBuffer;
+  } else if (is_plain_text_type(t)) {
+    proc = loadBuffer;
+  }
   struct Buffer *b = proc(&f, nullptr, t_buf);
   if (b != NULL) {
     if (b->buffername == NULL || b->buffername[0] == '\0') {

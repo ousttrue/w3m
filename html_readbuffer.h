@@ -3,7 +3,6 @@
 #include "Str.h"
 #include "anchor.h"
 #include "line.h"
-#include "loadproc.h"
 
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10
