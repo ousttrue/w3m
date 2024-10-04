@@ -11,11 +11,6 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download)
   return -1;
 }
 
-struct Buffer *doExternal(struct URLFile *uf, const char *type,
-                          struct Buffer *defaultbuf) {
-  return nullptr;
-}
-
 int doFileSave(struct URLFile uf, const char *defstr)
 {
   abort();

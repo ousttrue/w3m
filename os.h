@@ -10,6 +10,4 @@ Str myEditor(const char *cmd, const char *file, int line);
 void mySystem(char *command, int background);
 int _doFileCopy(const char *tmpf, const char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
-struct Buffer *doExternal(struct URLFile *uf, const char *type,
-                          struct Buffer *defaultbuf);
 int doFileSave(struct URLFile uf, const char *defstr);

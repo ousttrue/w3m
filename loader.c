@@ -99,7 +99,6 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
 
   // if (real_type == NULL)
   //   real_type = t;
-  LoadProc proc = loadBuffer;
 
   f.current_content_length = 0;
   const char *p;
@@ -127,12 +126,12 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   t_buf->ssl_certificate = f.ssl_certificate;
   // auto b = loadSomething(&f, proc, t, t_buf);
 
+  struct Buffer *b;
   if (is_html_type(t)) {
-    proc = loadHTMLBuffer;
-  } else if (is_plain_text_type(t)) {
-    proc = loadBuffer;
+    b = loadHTMLBuffer(&f, nullptr, t_buf);
+  } else {
+    b = loadBuffer(&f, nullptr, t_buf);
   }
-  struct Buffer *b = proc(&f, nullptr, t_buf);
   if (b != NULL) {
     if (b->buffername == NULL || b->buffername[0] == '\0') {
       b->buffername = httpGetHeader(b->http_response, "Subject:");
@@ -143,7 +142,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       b->currentURL.scheme = f.scheme;
     if (f.scheme == SCM_LOCAL && b->sourcefile == NULL)
       b->sourcefile = b->filename;
-    if (proc == loadHTMLBuffer)
+    if (is_html_type(t))
       b->type = "text/html";
     else
       b->type = "text/plain";
@@ -154,7 +153,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     b->real_scheme = f.scheme;
     b->real_type = real_type;
     if (pu.label) {
-      if (proc == loadHTMLBuffer) {
+      if (is_html_type(t)) {
         struct Anchor *a;
         a = searchURLLabel(b->document, pu.label);
         if (a != NULL) {
