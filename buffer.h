@@ -5,9 +5,6 @@
 #include "textlist.h"
 #include "line.h"
 
-extern int FoldLine;
-extern int showLineNum;
-
 /* Link Buffer */
 #define LB_NOLINK -1
 #define LB_INFO 0 /* pginfo() */

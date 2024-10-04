@@ -21,9 +21,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 
-int FoldLine = false;
-int showLineNum = false;
-
 int REV_LB[MAX_LB] = {
     LB_N_INFO,
     LB_INFO,

@@ -1,4 +1,6 @@
 #include "html_readbuffer.h"
+#include "document.h"
+#include "textlist.h"
 #include "text.h"
 #include "document.h"
 #include "html_text.h"
@@ -15,8 +17,6 @@
 #include "file.h"
 #include "alloc.h"
 #include "http_response.h"
-#include "tmpfile.h"
-#include "buffer.h"
 #include "html.h"
 #include "parsetagx.h"
 #include "map.h"
@@ -25,6 +25,7 @@
 #include "terms.h"
 #include "file.h"
 #include "termsize.h"
+#include "form.h"
 
 int displayInsDel = DISPLAY_INS_DEL_NORMAL;
 

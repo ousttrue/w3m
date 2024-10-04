@@ -5,6 +5,8 @@
 #include "tmpfile.h"
 
 bool nextpage_topline = false;
+bool showLineNum = false;
+bool FoldLine = false;
 
 struct Document *newDocument(int width) {
   struct Document *doc = New(struct Document);
