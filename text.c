@@ -5,6 +5,31 @@
 #include "ctrlcode.h"
 #include <math.h>
 
+int64_t strtoclen(const char *s) {
+#ifdef HAVE_STRTOLL
+  return strtoll(s, NULL, 10);
+#elif defined(HAVE_STRTOQ)
+  return strtoq(s, NULL, 10);
+#elif defined(HAVE_ATOLL)
+  return atoll(s);
+#elif defined(HAVE_ATOQ)
+  return atoq(s);
+#else
+  return atoi(s);
+#endif
+}
+
+bool non_null(const char *s) {
+  if (s == NULL)
+    return false;
+  while (*s) {
+    if (!IS_SPACE(*s))
+      return true;
+    s++;
+  }
+  return false;
+}
+
 static bool is_period_char(const unsigned char *ch) {
   switch (*ch) {
   case ',':

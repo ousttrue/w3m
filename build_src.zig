@@ -3,7 +3,6 @@ pub const SRCS = [_][]const u8{
     "loader.c",
     "datetime.c",
     "line.c",
-    "filepath.c",
     "trap_jmp.c",
     "image.c",
     "html_renderer.c",

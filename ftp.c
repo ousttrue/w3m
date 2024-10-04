@@ -3,7 +3,7 @@
 #include "http_auth.h"
 #include "istream.h"
 #include "trap_jmp.h"
-#include "filepath.h"
+#include "file.h"
 #include "indep.h"
 #include "isocket.h"
 #include "url.h"
@@ -54,7 +54,7 @@ typedef struct _FTP {
 
 static struct _FTP current_ftp = {NULL, 0, NULL, NULL, NULL, NULL, NULL};
 
-static Str ftp_command(FTP ftp, char *cmd, char *arg, int *status) {
+static Str ftp_command(FTP ftp, const char *cmd, const char *arg, int *status) {
   Str tmp;
 
   if (!ftp->host)
@@ -279,7 +279,7 @@ static int ftp_pasv(FTP ftp) {
   return 0;
 }
 
-static time_t ftp_modtime(FTP ftp, char *path) {
+static time_t ftp_modtime(FTP ftp, const char *path) {
   int status;
   Str tmp;
   char *p;
@@ -347,7 +347,7 @@ union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf) {
   Str uname = NULL;
   Str pwd = NULL;
   int add_auth_cookie_flag = false;
-  char *realpathname = NULL;
+  const char *realpathname = NULL;
 
   if (!pu->host)
     return NULL;
@@ -442,7 +442,7 @@ Str loadFTPDir0(struct Url *pu) {
   Str tmp;
   int status;
   volatile int sv_type;
-  char *realpathname;
+  const char *realpathname;
   const char *fn;
   const char *q;
   char **flist;

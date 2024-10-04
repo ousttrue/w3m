@@ -50,3 +50,4 @@ Str parsedURL2RefererStr(struct Url *pu);
 int getURLScheme(const char **url);
 extern int is_localhost(const char *host);
 extern char *url_unquote_conv0(char *url);
+extern const char *url_quote(const char *str);

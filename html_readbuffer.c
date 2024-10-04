@@ -13,7 +13,7 @@
 #include "strcase.h"
 #include "html_parser.h"
 #include "istream.h"
-#include "filepath.h"
+#include "file.h"
 #include "alloc.h"
 #include "http_response.h"
 #include "app.h"

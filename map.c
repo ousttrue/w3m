@@ -4,7 +4,7 @@
 #include "map.h"
 #include "url.h"
 #include "http_response.h"
-#include "filepath.h"
+#include "file.h"
 #include "alloc.h"
 #include "indep.h"
 #include "html_readbuffer.h"

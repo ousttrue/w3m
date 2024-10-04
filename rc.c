@@ -2,6 +2,8 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "loader.h"
+#include "text.h"
 #include "w3mhelperpanel.h"
 #include "isocket.h"
 #include "fm.h"
@@ -40,7 +42,6 @@ int DefaultURLString = DEFAULT_URL_CURRENT;
 
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
-const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 
 enum ParamType {

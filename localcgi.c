@@ -3,7 +3,7 @@
 #include "file.h"
 #include "trap_jmp.h"
 #include "alloc.h"
-#include "filepath.h"
+#include "file.h"
 #include "app.h"
 #include "indep.h"
 #include "form.h"

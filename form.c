@@ -7,7 +7,7 @@
 #include "utf8.h"
 #include "os.h"
 #include "http_auth.h"
-#include "filepath.h"
+#include "file.h"
 #include "alloc.h"
 #include "http_cookie.h"
 #include "url_stream.h"

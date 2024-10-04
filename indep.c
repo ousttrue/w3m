@@ -14,20 +14,6 @@ char *HTML_QUOTE_MAP[] = {
     NULL, "&amp;", "&lt;", "&gt;", "&quot;", "&apos;", NULL, NULL,
 };
 
-int64_t strtoclen(const char *s) {
-#ifdef HAVE_STRTOLL
-  return strtoll(s, NULL, 10);
-#elif defined(HAVE_STRTOQ)
-  return strtoq(s, NULL, 10);
-#elif defined(HAVE_ATOLL)
-  return atoll(s);
-#elif defined(HAVE_ATOQ)
-  return atoq(s);
-#else
-  return atoi(s);
-#endif
-}
-
 int strCmp(const void *s1, const void *s2) {
   return strcmp(*(const char **)s1, *(const char **)s2);
 }
@@ -60,19 +46,6 @@ char *currentdir() {
 #endif /* not HAVE_GETWD */
 #endif /* not HAVE_GETCWD */
   return path;
-}
-
-
-
-int non_null(char *s) {
-  if (s == NULL)
-    return false;
-  while (*s) {
-    if (!IS_SPACE(*s))
-      return true;
-    s++;
-  }
-  return false;
 }
 
 void cleanup_line(Str s, enum CLEANUP_LINE_MODE mode) {
@@ -280,5 +253,3 @@ void *xrealloc(void *ptr, size_t size) {
   }
   return newptr;
 }
-
-

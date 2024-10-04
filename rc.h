@@ -2,7 +2,6 @@
 
 #define CGI_EXTENSION ".cgi"
 
-extern const char *DirBufferCommand;
 extern const char *DictCommand;
 
 #define MAILTO_OPTIONS_IGNORE 1

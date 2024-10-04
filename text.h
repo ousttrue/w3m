@@ -2,6 +2,8 @@
 #include "Str.h"
 #include <stdint.h>
 
+int64_t strtoclen(const char *s);
+bool non_null(const char *s);
 bool is_boundary(const unsigned char *ch1, const unsigned char *ch2);
 
 const char *convert_size(int64_t size, int usefloat);

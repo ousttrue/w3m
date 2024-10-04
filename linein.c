@@ -5,7 +5,7 @@
 #include "utf8.h"
 #include "alloc.h"
 #include "display.h"
-#include "filepath.h"
+#include "file.h"
 #include "ctrlcode.h"
 #include "history.h"
 #include "indep.h"

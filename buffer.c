@@ -2,7 +2,7 @@
 #include "istream.h"
 #include "map.h"
 #include "document.h"
-#include "filepath.h"
+#include "file.h"
 #include "indep.h"
 #include "url_stream.h"
 #include "strcase.h"

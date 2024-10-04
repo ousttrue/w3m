@@ -152,4 +152,3 @@ global int is_redisplay init(false);
 global int clear_buffer init(true);
 global int use_lessopen init(false);
 global char *keymap_file init(KEYMAP_FILE);
-global int FollowRedirection init(10);

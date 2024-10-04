@@ -2,23 +2,24 @@
 #include "siteconf.h"
 #include "localcgi.h"
 #include "text.h"
+#include "file.h"
 #include "document.h"
 #include "trap_jmp.h"
 #include "rc.h"
 #include "ftp.h"
 #include "html_readbuffer.h"
-#include "strcase.h"
-#include "filepath.h"
+// #include "strcase.h"
+// #include "filepath.h"
 #include "datetime.h"
 #include "os.h"
 #include "app.h"
-#include "termsize.h"
+// #include "termsize.h"
 #include "istream.h"
-#include "indep.h"
+// #include "indep.h"
 #include "alloc.h"
-#include "url.h"
+// #include "url.h"
 #include "url_stream.h"
-#include "form.h"
+// #include "form.h"
 #include "buffer.h"
 #include "http_request.h"
 #include "http_response.h"
@@ -26,6 +27,9 @@
 #include "terms.h"
 #include <sys/stat.h>
 #include <stdio.h>
+
+int FollowRedirection = 10;
+const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 
 static int same_url_p(struct Url *pu1, struct Url *pu2) {
   return (pu1->scheme == pu2->scheme && pu1->port == pu2->port &&

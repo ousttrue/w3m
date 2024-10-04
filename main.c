@@ -1,5 +1,6 @@
 #include "fm.h"
 #include "display.h"
+#include "text.h"
 #include "rc.h"
 #include "http_cookie.h"
 #include "loader.h"

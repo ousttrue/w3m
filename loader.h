@@ -1,6 +1,9 @@
 #pragma once
 #include "url_stream.h"
 
+extern int FollowRedirection;
+extern const char *DirBufferCommand;
+
 struct Url;
 struct FormList;
 struct Buffer;

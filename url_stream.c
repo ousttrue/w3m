@@ -2,7 +2,7 @@
 #include "file.h"
 #include "siteconf.h"
 #include "document.h"
-#include "filepath.h"
+#include "file.h"
 #include "text.h"
 #include "rc.h"
 #include "loader.h"
