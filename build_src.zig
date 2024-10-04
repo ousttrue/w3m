@@ -31,7 +31,6 @@ pub const SRCS = [_][]const u8{
     "map.c",
     "rc.c",
     "menu.c",
-    "mailcap.c",
     "symbol.c",
     "entity.c",
     "entity_table.c",

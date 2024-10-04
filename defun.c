@@ -13,7 +13,6 @@
 #include "display.h"
 #include "html_parser.h"
 #include "loader.h"
-#include "mailcap.h"
 #include "alloc.h"
 #include "http_response.h"
 #include "http_cookie.h"
@@ -1004,7 +1003,6 @@ static int cur_real_linenumber(struct Buffer *buf) {
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
   const char *fn = Currentbuf->filename;
-  Str cmd;
 
   if (fn == NULL ||
       (Currentbuf->type == NULL &&
@@ -1015,14 +1013,15 @@ DEFUN(editBf, EDIT, "Edit local source") {
     disp_err_message("Can't edit other than local file", true);
     return;
   }
-  if (Currentbuf->edit)
-    cmd = unquote_mailcap(
-        Currentbuf->edit, Currentbuf->real_type, fn,
-        httpGetHeader(Currentbuf->http_response, "Content-Type:"), NULL);
-  else
-    cmd = myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf));
+
+  const char *cmd;
+  if (Currentbuf->edit) {
+    cmd = Currentbuf->edit;
+  } else
+    cmd =
+        myEditor(Editor, shell_quote(fn), cur_real_linenumber(Currentbuf))->ptr;
   term_fmTerm();
-  system(cmd->ptr);
+  system(cmd);
   term_fmInit();
 
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -3008,11 +3007,6 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
 
   if (!strcasecmp(resource, "KEYMAP")) {
     initKeymap(true);
-    return;
-  }
-
-  if (!strcasecmp(resource, "MAILCAP")) {
-    initMailcap();
     return;
   }
 

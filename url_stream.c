@@ -8,7 +8,6 @@
 #include "loader.h"
 #include "ftp.h"
 #include "trap_jmp.h"
-#include "mailcap.h"
 #include "http_cookie.h"
 #include "isocket.h"
 #include "istream.h"
@@ -1529,12 +1528,6 @@ void UFhalfclose(struct URLFile *f) {
   }
 }
 
-bool is_dump_text_type(const char *type) {
-  struct mailcap *mcap;
-  return (type && (mcap = searchExtViewer(type)) &&
-          (mcap->flags & (MAILCAP_HTMLOUTPUT | MAILCAP_COPIOUSOUTPUT)));
-}
-
 bool is_text_type(const char *type) {
   return (type == NULL || type[0] == '\0' ||
           strncasecmp(type, "text/", 5) == 0 ||
@@ -1545,7 +1538,7 @@ bool is_text_type(const char *type) {
 
 bool is_plain_text_type(const char *type) {
   return ((type && strcasecmp(type, "text/plain") == 0) ||
-          (is_text_type(type) && !is_dump_text_type(type)));
+          (is_text_type(type)));
 }
 
 bool is_html_type(const char *type) {

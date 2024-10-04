@@ -10,7 +10,6 @@
 #include "strcase.h"
 #include "filepath.h"
 #include "datetime.h"
-#include "mailcap.h"
 #include "os.h"
 #include "app.h"
 #include "termsize.h"
@@ -111,7 +110,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
     uncompress_stream(&f, &pu.real_file);
   } else if (f.compression != CMP_NOCOMPRESS) {
-    if (is_text_type(t) || searchExtViewer((char *)t)) {
+    if (is_text_type(t)) {
       if (t_buf == NULL)
         t_buf = newBuffer();
       uncompress_stream(&f, &t_buf->sourcefile);
@@ -126,25 +125,6 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     proc = loadHTMLBuffer;
   else if (is_plain_text_type(t))
     proc = loadBuffer;
-  else if (is_dump_text_type(t)) {
-    if (searchExtViewer((char *)t) != NULL) {
-      proc = doExternal;
-    } else {
-      trap_off();
-      if (pu.scheme == SCM_LOCAL) {
-        UFclose(&f);
-        _doFileCopy(pu.real_file, guess_save_name(NULL, pu.real_file), true);
-      } else {
-        if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
-          f.stream = newEncodedStream(f.stream, f.encoding);
-        if (doFileSave(f, guess_save_name(t_buf, pu.file)) == 0)
-          UFhalfclose(&f);
-        else
-          UFclose(&f);
-      }
-      return NO_BUFFER;
-    }
-  }
 
   if (t_buf == NULL)
     t_buf = newBuffer();

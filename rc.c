@@ -14,7 +14,6 @@
 #include "image.h"
 #include "strcase.h"
 #include "http_auth.h"
-#include "mailcap.h"
 #include "buffer.h"
 #include "http_cookie.h"
 #include "app.h"
@@ -829,7 +828,6 @@ void sync_with_option(void) {
   WrapSearch = WrapDefault;
   parse_proxy();
   parse_cookie();
-  initMailcap();
   initMimeTypes();
   displayImage = false; /* XXX */
   loadPasswd();
@@ -846,8 +844,6 @@ void sync_with_option(void) {
   }
   if (AcceptEncoding == NULL || *AcceptEncoding == '\0')
     AcceptEncoding = acceptableEncoding();
-  if (AcceptMedia == NULL || *AcceptMedia == '\0')
-    AcceptMedia = acceptableMimeTypes();
 
   initKeymap(false);
 }

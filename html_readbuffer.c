@@ -3061,14 +3061,12 @@ void completeHTMLstream(struct html_feed_environ *h_env,
  */
 struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
                               struct Buffer *newBuf) {
-  FILE *src = NULL;
-  Str tmp;
-
   if (newBuf == NULL)
     newBuf = newBuffer();
-  if (newBuf->sourcefile == NULL &&
-      (f->scheme != SCM_LOCAL || newBuf->mailcap)) {
-    tmp = tmpfname(TMPF_SRC, ".html");
+
+  FILE *src = NULL;
+  if (newBuf->sourcefile == NULL && f->scheme != SCM_LOCAL) {
+    auto tmp = tmpfname(TMPF_SRC, ".html");
     src = fopen(tmp->ptr, "w");
     if (src)
       newBuf->sourcefile = tmp->ptr;
@@ -3162,8 +3160,7 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
   }
   trap_on();
 
-  if (newBuf->sourcefile == NULL &&
-      (uf->scheme != SCM_LOCAL || newBuf->mailcap)) {
+  if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_SRC, NULL);
     src = fopen(tmpf->ptr, "w");
     if (src)
