@@ -287,7 +287,7 @@ void suspend_or_pushdata(struct table *tbl, char *line) {
   }
 }
 
-void align(struct TextLine *lbuf, int width, int mode) {
+void align(struct TextLine *lbuf, int width, enum AlignMode mode) {
   int i, l, l1, l2;
   Str buf, line = lbuf->line;
 

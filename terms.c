@@ -372,7 +372,6 @@ Str term_inputpwd() {
   if (fmInitialized) {
     tty_raw();
     pwd = Strnew_charp(inputLine(nullptr, "Password: ", NULL, IN_PASSWORD));
-    pwd = Str_conv_to_system(pwd);
     tty_cbreak();
   }
 #ifndef _WIN32

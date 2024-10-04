@@ -28,6 +28,13 @@
 #include "file.h"
 #include "termsize.h"
 
+#define in_bold fontstat[0]
+#define in_under fontstat[1]
+#define in_italic fontstat[2]
+#define in_strike fontstat[3]
+#define in_ins fontstat[4]
+#define in_stand fontstat[5]
+
 #define REAL_WIDTH(w, limit)                                                   \
   (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
 

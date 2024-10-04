@@ -9,7 +9,6 @@
 
 #define USE_IMAGE 1
 #define INET6 1
-
 #define KEYMAP_FILE "keymap"
 #define MENU_FILE "menu"
 #define MOUSE_FILE "mouse"
@@ -38,49 +37,7 @@
 
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
 
-/*
- * Macros.
- */
-
-/*
- * Types.
- */
-
-#define RB_STACK_SIZE 10
-
-#define TAG_STACK_SIZE 10
-
-#define FONT_STACK_SIZE 5
-
-#define FONTSTAT_SIZE 7
-#define FONTSTAT_MAX 127
-
-#define in_bold fontstat[0]
-#define in_under fontstat[1]
-#define in_italic fontstat[2]
-#define in_strike fontstat[3]
-#define in_ins fontstat[4]
-#define in_stand fontstat[5]
-
-/* modes for align() */
-
-#define ALIGN_CENTER 0
-#define ALIGN_LEFT 1
-#define ALIGN_RIGHT 2
-#define ALIGN_MIDDLE 4
-#define ALIGN_TOP 5
-#define ALIGN_BOTTOM 6
-
-#define VALIGN_MIDDLE 0
-#define VALIGN_TOP 1
-#define VALIGN_BOTTOM 2
-
-/*
- * Globals.
- */
-
 global int IndentIncr init(4);
-
 global const char *DefaultType init(nullptr);
 global char RenderFrame init(false);
 global char TargetSelf init(false);
@@ -91,12 +48,6 @@ global char PreserveTimestamp init(true);
 global char ArgvIsURL init(true);
 global char MetaRefresh init(false);
 global char LocalhostOnly init(false);
-
-extern unsigned char GlobalKeymap[];
-extern unsigned char EscKeymap[];
-extern unsigned char EscBKeymap[];
-extern unsigned char EscDKeymap[];
-
 global char *HTTP_proxy init(nullptr);
 global char *HTTPS_proxy init(nullptr);
 global char *FTP_proxy init(nullptr);
@@ -105,15 +56,7 @@ global struct Url HTTPS_proxy_parsed;
 global struct Url FTP_proxy_parsed;
 global char *NO_proxy init(nullptr);
 global int NOproxy_netaddr init(true);
-#ifdef INET6
-#define DNS_ORDER_UNSPEC 0
-#define DNS_ORDER_INET_INET6 1
-#define DNS_ORDER_INET6_INET 2
-#define DNS_ORDER_INET_ONLY 4
-#define DNS_ORDER_INET6_ONLY 6
-global int DNS_order init(DNS_ORDER_UNSPEC);
-extern int ai_family_order_table[7][3]; /* XXX */
-#endif                                  /* INET6 */
+
 global char NoCache init(false);
 global char use_proxy init(true);
 #define Do_not_use_proxy (!use_proxy)
@@ -210,8 +153,6 @@ global int URLHistSize init(100);
 global int SaveURLHist init(true);
 global int multicolList init(false);
 
-#define Str_conv_from_system(x) (x)
-#define Str_conv_to_system(x) (x)
 #define Str_conv_to_halfdump(x) (x)
 #define conv_from_system(x) (x)
 #define conv_to_system(x) (x)

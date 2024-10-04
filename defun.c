@@ -1352,7 +1352,7 @@ static void query_from_followform(Str *query, struct FormItemList *fi,
           form_write_from_file(
               body, fi->parent->boundary,
               conv_form_encoding(f2->name, fi, Currentbuf)->ptr, (*query)->ptr,
-              Str_conv_to_system(f2->value)->ptr);
+              f2->value->ptr);
         else
           form_write_data(body, fi->parent->boundary,
                           conv_form_encoding(f2->name, fi, Currentbuf)->ptr,

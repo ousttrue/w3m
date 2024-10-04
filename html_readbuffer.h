@@ -5,6 +5,15 @@
 #include "line.h"
 #include "loadproc.h"
 
+#define RB_STACK_SIZE 10
+
+#define TAG_STACK_SIZE 10
+
+#define FONT_STACK_SIZE 5
+
+#define FONTSTAT_SIZE 7
+#define FONTSTAT_MAX 127
+
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
 extern struct FormList **forms;

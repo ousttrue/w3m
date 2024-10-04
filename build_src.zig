@@ -13,6 +13,7 @@ pub const SRCS = [_][]const u8{
     "document.c",
     "text.c",
     "siteconf.c",
+    "isocket.c",
 
     "compression.c",
     "growbuf.c",

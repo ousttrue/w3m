@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "w3mhelperpanel.h"
+#include "isocket.h"
 #include "fm.h"
 #include "func.h"
 #include "file.h"

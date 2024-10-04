@@ -10,6 +10,7 @@
 
 #include "http_cookie.h"
 #include "indep.h"
+#include "isocket.h"
 #include "rc.h"
 #include "textlist.h"
 #include "alloc.h"

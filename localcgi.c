@@ -85,7 +85,7 @@ Str loadLocalDir(const char *dname) {
   if (Strlastchar(dirname) != '/')
     Strcat_char(dirname, '/');
 
-  auto qdir = html_quote(Str_conv_from_system(dirname)->ptr);
+  auto qdir = html_quote(dirname->ptr);
   /* FIXME: gettextize? */
   auto tmp = Strnew_m_charp("<HTML>\n<HEAD>\n<BASE HREF=\"file://",
                             html_quote(file_quote(dirname->ptr)),

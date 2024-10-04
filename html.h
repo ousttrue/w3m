@@ -1,11 +1,4 @@
 #pragma once
-#include "config.h"
-#include <openssl/bio.h>
-#include <openssl/x509.h>
-#include <openssl/ssl.h>
-
-#include <time.h>
-
 struct cmdtable {
   char *cmdname;
   int cmd;

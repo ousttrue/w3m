@@ -41,7 +41,10 @@
 #include <netdb.h>
 #endif
 
-#include <errno.h>
+#include <openssl/bio.h>
+#include <openssl/x509.h>
+#include <openssl/ssl.h>
+
 #include <sys/stat.h>
 #ifdef _WIN32
 #else
@@ -58,19 +61,6 @@
 #include <openssl/err.h>
 
 Str header_string = NULL;
-
-#ifdef INET6
-/* see rc.c, "dns_order" and dnsorders[] */
-int ai_family_order_table[7][3] = {
-    {PF_UNSPEC, PF_UNSPEC, PF_UNSPEC}, /* 0:unspec */
-    {PF_INET, PF_INET6, PF_UNSPEC},    /* 1:inet inet6 */
-    {PF_INET6, PF_INET, PF_UNSPEC},    /* 2:inet6 inet */
-    {PF_UNSPEC, PF_UNSPEC, PF_UNSPEC}, /* 3: --- */
-    {PF_INET, PF_UNSPEC, PF_UNSPEC},   /* 4:inet */
-    {PF_UNSPEC, PF_UNSPEC, PF_UNSPEC}, /* 5: --- */
-    {PF_INET6, PF_UNSPEC, PF_UNSPEC},  /* 6:inet6 */
-};
-#endif /* INET6 */
 
 struct TextList *NO_proxy_domains = nullptr;
 void url_stream_init() { NO_proxy_domains = newTextList(); }
@@ -801,7 +791,9 @@ static Str _parsedURL2Str(struct Url *pu, int pass, int user, int label) {
     Strcat_charp(tmp, pu->file);
     return tmp;
   }
-  { Strcat_charp(tmp, "//"); }
+  {
+    Strcat_charp(tmp, "//");
+  }
   if (user && pu->user) {
     Strcat_charp(tmp, pu->user);
     if (pass && pu->pass) {

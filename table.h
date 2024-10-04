@@ -1,4 +1,5 @@
 #pragma once
+#include "html_types.h"
 
 #define MATRIX
 #if (defined(MESCHACH) && !defined(MATRIX))
@@ -136,7 +137,7 @@ struct table_mode {
 extern struct table *newTable(void);
 extern void pushdata(struct table *t, int row, int col, char *data);
 struct TextLine;
-extern void align(struct TextLine *lbuf, int width, int mode);
+extern void align(struct TextLine *lbuf, int width, enum AlignMode mode);
 extern void print_item(struct table *t, int row, int col, int width, Str buf);
 extern void print_sep(struct table *t, int row, int type, int maxcol, Str buf);
 extern void do_refill(struct table *tbl, int row, int col, int maxlimit);

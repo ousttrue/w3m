@@ -1,6 +1,4 @@
 #pragma once
-// #include "textlist.h"
-// #include "hash.h"
 
 #define KEY_HASH_SIZE 127
 
@@ -16,6 +14,11 @@ typedef struct _FuncList {
 } FuncList;
 extern FuncList w3mFuncList[];
 
+extern unsigned char GlobalKeymap[];
+extern unsigned char EscKeymap[];
+extern unsigned char EscBKeymap[];
+extern unsigned char EscDKeymap[];
+
 int getFuncList(const char *id);
 void setKeymap(const char *p, int lineno, int verbose);
 int getKey(const char *s);
@@ -28,5 +31,3 @@ void multimap(void);
 void initKeymap(int force);
 
 char *getKeyData(int key);
-
-

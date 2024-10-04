@@ -1,10 +1,11 @@
+#include "parsetagx.h"
+#include "html_types.h"
 #include "fm.h"
 #include "html_parser.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "indep.h"
 #include "Str.h"
-#include "parsetagx.h"
 #include "hash.h"
 
 #include "html.c"
@@ -14,7 +15,25 @@
 static int noConv(char *, char **);
 static int toNumber(char *, int *);
 static int toLength(char *, int *);
-static int toAlign(char *, int *);
+
+static int toAlign(char *oval, enum AlignMode *align) {
+  if (strcasecmp(oval, "left") == 0)
+    *align = ALIGN_LEFT;
+  else if (strcasecmp(oval, "right") == 0)
+    *align = ALIGN_RIGHT;
+  else if (strcasecmp(oval, "center") == 0)
+    *align = ALIGN_CENTER;
+  else if (strcasecmp(oval, "top") == 0)
+    *align = ALIGN_TOP;
+  else if (strcasecmp(oval, "bottom") == 0)
+    *align = ALIGN_BOTTOM;
+  else if (strcasecmp(oval, "middle") == 0)
+    *align = ALIGN_MIDDLE;
+  else
+    return 0;
+  return 1;
+}
+
 static int toVAlign(char *, int *);
 
 typedef int (*ToValFunc)(char *, void *);
@@ -63,24 +82,6 @@ static int toLength(char *oval, int *len) {
     *len = -w;
   else
     *len = w;
-  return 1;
-}
-
-static int toAlign(char *oval, int *align) {
-  if (strcasecmp(oval, "left") == 0)
-    *align = ALIGN_LEFT;
-  else if (strcasecmp(oval, "right") == 0)
-    *align = ALIGN_RIGHT;
-  else if (strcasecmp(oval, "center") == 0)
-    *align = ALIGN_CENTER;
-  else if (strcasecmp(oval, "top") == 0)
-    *align = ALIGN_TOP;
-  else if (strcasecmp(oval, "bottom") == 0)
-    *align = ALIGN_BOTTOM;
-  else if (strcasecmp(oval, "middle") == 0)
-    *align = ALIGN_MIDDLE;
-  else
-    return 0;
   return 1;
 }
 
