@@ -6,6 +6,7 @@
 #include "alloc.h"
 #include "file.h"
 #include "app.h"
+#include "tmpfile.h"
 #include "form.h"
 #include "http_request.h"
 #include "fm.h"

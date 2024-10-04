@@ -3,7 +3,7 @@
 #include "html_text.h"
 #include "rc.h"
 #include "alloc.h"
-#include "app.h"
+#include "tmpfile.h"
 #include "fm.h"
 #include "terms.h"
 #include "html_readbuffer.h"
@@ -17,7 +17,7 @@ struct Hist *TextHist;
 struct Buffer *historyBuffer(struct Hist *hist) {
   Str src = Strnew();
   HistItem *item;
-  char *p;
+  const char *p;
 
   /* FIXME: gettextize? */
   Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");

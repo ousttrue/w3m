@@ -131,7 +131,6 @@ global char UseAltEntity init(false);
 global char DisplayBorders init(false);
 global char DisableCenter init(false);
 global int no_rc_dir init(false);
-global char *rc_dir init(nullptr);
 global char *config_file init(nullptr);
 global int view_unseenobject init(true);
 global int ssl_verify_server init(true);

@@ -11,7 +11,7 @@
 #include "alloc.h"
 #include "http_cookie.h"
 #include "url_stream.h"
-#include "app.h"
+#include "tmpfile.h"
 #include "downloadlist.h"
 #include "buffer.h"
 #include "parsetag.h"
@@ -457,11 +457,9 @@ static void form_fputs_decode(Str s, FILE *f) {
 }
 
 void input_textarea(struct FormItemList *fi) {
-  char *tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
-  Str tmp;
-  FILE *f;
+  auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
 
-  f = fopen(tmpf, "w");
+  auto f = fopen(tmpf, "w");
   if (f == NULL) {
     /* FIXME: gettextize? */
     disp_err_message("Can't open temporary file", false);
@@ -484,6 +482,8 @@ void input_textarea(struct FormItemList *fi) {
     goto input_end;
   }
   fi->value = Strnew();
+
+  Str tmp;
   while (tmp = Strfgets(f), tmp->length > 0) {
     if (tmp->length == 1 && tmp->ptr[tmp->length - 1] == '\n') {
       /* null line with bare LF */

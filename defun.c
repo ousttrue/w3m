@@ -10,6 +10,7 @@
 #include "text.h"
 #include "rc.h"
 #include "search.h"
+#include "tmpfile.h"
 #include "trap_jmp.h"
 #include "display.h"
 #include "html_parser.h"
@@ -43,12 +44,6 @@
 #include "termsize.h"
 #include "myctype.h"
 #include "regex.h"
-
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
 
 #define HELP_CGI "w3mhelp"
 
@@ -2908,25 +2903,15 @@ static int searchKeyNum(void) {
 }
 
 void deleteFiles() {
-  struct Buffer *buf;
-  char *f;
-
   for (CurrentTab = FirstTab; CurrentTab; CurrentTab = CurrentTab->nextTab) {
     while (Firstbuf && Firstbuf != NO_BUFFER) {
-      buf = Firstbuf->nextBuffer;
+      auto buf = Firstbuf->nextBuffer;
       discardBuffer(Firstbuf);
       Firstbuf = buf;
     }
   }
-  while ((f = popText(fileToDelete)) != NULL) {
-    unlink(f);
-    if (enable_inline_image == INLINE_IMG_SIXEL &&
-        strcmp(f + strlen(f) - 4, ".gif") == 0) {
-      Str firstframe = Strnew_charp(f);
-      Strcat_charp(firstframe, "-1");
-      unlink(firstframe->ptr);
-    }
-  }
+
+  tmpfile_deletefiles();
 }
 
 void w3m_exit(int i) {

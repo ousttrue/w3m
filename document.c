@@ -2,7 +2,7 @@
 #include "alloc.h"
 #include "terms.h"
 #include "termsize.h"
-#include "app.h"
+#include "tmpfile.h"
 
 bool nextpage_topline = false;
 

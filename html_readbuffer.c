@@ -9,7 +9,6 @@
 #include "html_renderer.h"
 #include "image.h"
 #include "romannum.h"
-#include "entity.h"
 #include "trap_jmp.h"
 #include "strcase.h"
 #include "html_parser.h"
@@ -17,7 +16,7 @@
 #include "file.h"
 #include "alloc.h"
 #include "http_response.h"
-#include "app.h"
+#include "tmpfile.h"
 #include "buffer.h"
 #include "html.h"
 #include "parsetagx.h"
@@ -1035,7 +1034,7 @@ void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
       Strcat_charp(tmp, html_quote(obuf->anchor.title));
     }
     if (obuf->anchor.accesskey) {
-      char *c = html_quote_char(obuf->anchor.accesskey);
+      auto c = html_quote_char(obuf->anchor.accesskey);
       Strcat_charp(tmp, "\" ACCESSKEY=\"");
       if (c)
         Strcat_charp(tmp, c);
@@ -2798,7 +2797,7 @@ table_start:
                    0);
           str++;
         } else if (obuf->flag & RB_PLAIN) {
-          char *p = html_quote_char(*str);
+          auto p = html_quote_char(*str);
           if (p) {
             push_charp(obuf, 1, p, PC_ASCII);
             str++;

@@ -1,10 +1,11 @@
 #include "compression.h"
 #include "trap_jmp.h"
 #include "alloc.h"
-#include "terms.h"
+// #include "terms.h"
 #include "etc.h"
-#include "file.h"
+// #include "file.h"
 #include "app.h"
+#include "tmpfile.h"
 #include "istream.h"
 #include "textlist.h"
 #include "Str.h"
@@ -247,7 +248,7 @@ enum COMPRESSION_TYPE compressionFromEncoding(const char *p) {
   return compression;
 }
 
-static char *auxbinFile(char *base) {
+static const char *auxbinFile(const char *base) {
   return expandPath(Strnew_m_charp(w3m_auxbin_dir(), "/", base, NULL)->ptr);
 }
 
@@ -258,9 +259,9 @@ void uncompress_stream(struct URLFile *uf, const char **src) {
     uf->encoding = ENC_7BIT;
   }
 
-  char *expand_cmd = GUNZIP_CMDNAME;
-  char *expand_name = GUNZIP_NAME;
-  char *ext = NULL;
+  const char *expand_cmd = GUNZIP_CMDNAME;
+  const char *expand_name = GUNZIP_NAME;
+  const char *ext = NULL;
   int use_d_arg = 0;
   for (auto d = compression_decoders; d->type != CMP_NOCOMPRESS; d++) {
     if (uf->compression == d->type) {
@@ -276,7 +277,7 @@ void uncompress_stream(struct URLFile *uf, const char **src) {
   }
   uf->compression = CMP_NOCOMPRESS;
 
-  char *tmpf = NULL;
+  const char *tmpf = NULL;
   if (uf->scheme != SCM_LOCAL) {
     tmpf = tmpfname(TMPF_DFL, ext)->ptr;
   }

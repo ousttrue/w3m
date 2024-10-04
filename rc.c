@@ -20,6 +20,7 @@
 #include "buffer.h"
 #include "http_cookie.h"
 #include "app.h"
+#include "tmpfile.h"
 #include "url.h"
 #include "url_stream.h"
 #include "localcgi.h"
@@ -35,6 +36,8 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <sys/stat.h>
+
+const char *rc_dir = nullptr;
 
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
 
@@ -1012,10 +1015,12 @@ void open_rc() {
 void init_rc(void) {
   if (!rc_dir) {
 
-    rc_dir = expandPath(RC_DIR);
-    int i = strlen(rc_dir);
-    if (i > 1 && rc_dir[i - 1] == '/')
-      rc_dir[i - 1] = '\0';
+    auto _rc_dir = allocStr(expandPath(RC_DIR), -1);
+    int i = strlen(_rc_dir);
+    if (i > 1 && _rc_dir[i - 1] == '/') {
+      _rc_dir[i - 1] = '\0';
+    }
+    rc_dir = _rc_dir;
 
     struct stat st;
     if (stat(rc_dir, &st) < 0) {
@@ -1042,7 +1047,7 @@ void init_rc(void) {
       goto rc_dir_err;
     }
     no_rc_dir = false;
-    app_set_tmpdir(rc_dir);
+    set_tmpdir(rc_dir);
 
     if (config_file == NULL)
       config_file = rcFile(CONFIG_FILE);
@@ -1055,7 +1060,7 @@ void init_rc(void) {
 
 rc_dir_err:
   no_rc_dir = true;
-  app_no_rcdir(rc_dir);
+  tmpfile_init_no_rcdir(rc_dir);
   create_option_search_table();
   open_rc();
 }
