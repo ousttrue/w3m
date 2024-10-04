@@ -90,8 +90,6 @@ static void *die_oom(size_t bytes) {
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
 
-int enable_inline_image;
-
 static void fversion(FILE *f) {
   fprintf(f, "w3m version %s, options %s\n", w3m_version,
 #if LANG == JA
@@ -411,7 +409,7 @@ int main(int argc, char **argv) {
   if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
     url = file_to_url(url);
   else
-    url = url_quote(conv_from_system(argv[1]));
+    url = url_quote(argv[1]);
 
   // if (post_file && i == 0) {
   //   FILE *fp;

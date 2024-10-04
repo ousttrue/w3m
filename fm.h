@@ -56,23 +56,16 @@ global struct Url HTTPS_proxy_parsed;
 global struct Url FTP_proxy_parsed;
 global char *NO_proxy init(nullptr);
 global int NOproxy_netaddr init(true);
-
 global char NoCache init(false);
 global char use_proxy init(true);
 #define Do_not_use_proxy (!use_proxy)
-
 global char *document_root init(nullptr);
 global char *personal_document_root init(nullptr);
 global char *cgi_bin init(nullptr);
 global char *index_file init(nullptr);
-
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
-/*
- * global Buffer *Currentbuf;
- * global Buffer *Firstbuf;
- */
 global int open_tab_blank init(false);
 global int open_tab_dl_list init(false);
 global int close_tab_back init(false);
@@ -82,13 +75,9 @@ global int CurrentKey;
 global const char *CurrentKeyData;
 global const char *CurrentCmdData;
 extern char *w3m_version;
-extern int enable_inline_image;
-
 global int w3m_debug;
-
 global int override_content_type init(false);
 global int override_user_agent init(false);
-
 global int confirm_on_quit init(true);
 global int emacs_like_lineedit init(false);
 global int space_autocomplete init(false);
@@ -103,9 +92,6 @@ global int displayImage init(false); /* XXX: emacs-w3m use display_image=off */
 global int pseudoInlines init(true);
 global char *Editor init(DEF_EDITOR);
 global char *Mailer init(DEF_MAILER);
-#define MAILTO_OPTIONS_IGNORE 1
-#define MAILTO_OPTIONS_USE_MAILTO_URL 2
-global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
 global char *ExtBrowser init(DEF_EXT_BROWSER);
 global char *ExtBrowser2 init(nullptr);
 global char *ExtBrowser3 init(nullptr);
@@ -127,44 +113,23 @@ global char *AcceptEncoding init(nullptr);
 global char *AcceptMedia init(nullptr);
 global int WrapDefault init(false);
 global int squeezeBlankLine init(false);
-global char *BookmarkFile init(nullptr);
+global const char *BookmarkFile init(nullptr);
 global int UseExternalDirBuffer init(true);
 global int UseDictCommand init(true);
 global int ignore_null_img_alt init(true);
-#define DISPLAY_INS_DEL_SIMPLE 0
-#define DISPLAY_INS_DEL_NORMAL 1
-#define DISPLAY_INS_DEL_FONTIFY 2
-global int displayInsDel init(DISPLAY_INS_DEL_NORMAL);
 global int FoldTextarea init(false);
-#define DEFAULT_URL_EMPTY 0
-#define DEFAULT_URL_CURRENT 1
-#define DEFAULT_URL_LINK 2
-global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(false);
-
 global struct auth_cookie *Auth_cookie init(nullptr);
 global struct cookie *First_cookie init(nullptr);
-
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
-
 global int UseHistory init(true);
 global int URLHistSize init(100);
 global int SaveURLHist init(true);
 global int multicolList init(false);
-
-#define Str_conv_to_halfdump(x) (x)
-#define conv_from_system(x) (x)
-#define conv_to_system(x) (x)
-#define wc_Str_conv(x, charset0, charset1) (x)
-#define wc_Str_conv_strict(x, charset0, charset1) (x)
 global char UseAltEntity init(false);
 global char DisplayBorders init(false);
 global char DisableCenter init(false);
-extern char *graph_symbol[];
-extern char *graph2_symbol[];
-#define N_GRAPH_SYMBOL 32
-#define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 global int no_rc_dir init(false);
 global char *rc_dir init(nullptr);
 global char *config_file init(nullptr);

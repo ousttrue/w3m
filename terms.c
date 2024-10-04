@@ -581,7 +581,7 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
       displayBuffer(Currentbuf, B_NORMAL);
     }
   } else {
-    fprintf(stderr, "%s\n", conv_to_system(s));
+    fprintf(stderr, "%s\n", s);
   }
 }
 

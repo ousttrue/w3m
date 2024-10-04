@@ -1,6 +1,8 @@
 #pragma once
 #include "line.h"
 
+extern int enable_inline_image;
+
 /* Flags for displayBuffer() */
 enum DisplayMode {
   B_NORMAL = 0,

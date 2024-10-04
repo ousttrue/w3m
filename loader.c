@@ -84,9 +84,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     auto tmp = tmpfname(TMPF_SRC, ".html");
     auto src = fopen(tmp->ptr, "w");
     if (src) {
-      Str s;
-      s = wc_Str_conv_strict(page, InnerCharset, charset);
-      Strfputs(s, src);
+      Strfputs(page, src);
       fclose(src);
     }
 
@@ -135,9 +133,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       trap_off();
       if (pu.scheme == SCM_LOCAL) {
         UFclose(&f);
-        _doFileCopy(pu.real_file,
-                    conv_from_system(guess_save_name(NULL, pu.real_file)),
-                    true);
+        _doFileCopy(pu.real_file, guess_save_name(NULL, pu.real_file), true);
       } else {
         if (DecodeCTE && IStype(f.stream) != IST_ENCODED)
           f.stream = newEncodedStream(f.stream, f.encoding);
@@ -153,9 +149,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   if (t_buf == NULL)
     t_buf = newBuffer();
   copyParsedURL(&t_buf->currentURL, &pu);
-  t_buf->filename = pu.real_file ? pu.real_file
-                    : pu.file    ? conv_to_system(pu.file)
-                                 : NULL;
+  t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = f.ssl_certificate;
   auto b = loadSomething(&f, proc, t, t_buf);
   UFclose(&f);

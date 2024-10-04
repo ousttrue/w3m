@@ -28,6 +28,8 @@
 #include "file.h"
 #include "termsize.h"
 
+int displayInsDel = DISPLAY_INS_DEL_NORMAL;
+
 #define in_bold fontstat[0]
 #define in_under fontstat[1]
 #define in_italic fontstat[2]
@@ -939,7 +941,7 @@ void flushline(struct html_feed_environ *h_env, struct readbuffer *obuf,
     if (buf)
       pushTextLine(buf, lbuf);
     else if (f) {
-      Strfputs(Str_conv_to_halfdump(lbuf->line), f);
+      Strfputs(lbuf->line, f);
       fputc('\n', f);
     }
     if (obuf->flag & RB_SPECIAL || obuf->flag & RB_NFLUSHED)
@@ -3126,7 +3128,7 @@ struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
   if (buf->buffername == NULL || buf->buffername[0] == '\0') {
     buf->buffername = httpGetHeader(buf->http_response, "Subject:");
     if (buf->buffername == NULL && buf->filename != NULL)
-      buf->buffername = (char *)conv_from_system(lastFileName(buf->filename));
+      buf->buffername = lastFileName(buf->filename);
   }
   if (buf->currentURL.scheme == SCM_UNKNOWN)
     buf->currentURL.scheme = f->scheme;

@@ -14,6 +14,8 @@
 #include "termsize.h"
 #include "terms.h"
 
+int enable_inline_image;
+
 #define EFFECT_ANCHOR_START scr_underline()
 #define EFFECT_ANCHOR_END scr_underlineend()
 #define EFFECT_IMAGE_START scr_standout()
@@ -211,7 +213,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   scr_message(msg->ptr, buf->document->cursorX + buf->document->rootX,
               buf->document->cursorY + buf->document->rootY);
   scr_standend();
-  term_title(conv_to_system(buf->buffername));
+  term_title(buf->buffername);
   term_refresh();
   if (buf != save_current_buf) {
     saveBufferInfo();

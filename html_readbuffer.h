@@ -6,13 +6,14 @@
 #include "loadproc.h"
 
 #define RB_STACK_SIZE 10
-
 #define TAG_STACK_SIZE 10
-
 #define FONT_STACK_SIZE 5
-
 #define FONTSTAT_SIZE 7
 #define FONTSTAT_MAX 127
+
+#define DISPLAY_INS_DEL_SIMPLE 0
+#define DISPLAY_INS_DEL_NORMAL 1
+#define DISPLAY_INS_DEL_FONTIFY 2
 
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
@@ -22,6 +23,7 @@ extern int form_max;
 extern int form_sp;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 extern int cur_hseq;
+extern int displayInsDel;
 
 #define RB_PRE 0x01
 #define RB_SCRIPT 0x02

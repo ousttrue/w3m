@@ -651,7 +651,7 @@ disp_next:
       scr_clrtoeolx();
       f = Strdup(d);
       Strcat_charp(f, CFileBuf[n]);
-      scr_addstr(conv_from_system(CFileBuf[n]));
+      scr_addstr(CFileBuf[n]);
       if (stat(expandPath(f->ptr), &st) != -1 && S_ISDIR(st.st_mode))
         scr_addstr("/");
     }

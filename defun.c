@@ -45,7 +45,6 @@
 #include "myctype.h"
 #include "regex.h"
 
-
 #define INLINE_IMG_NONE 0
 #define INLINE_IMG_OSC5379 1
 #define INLINE_IMG_SIXEL 2
@@ -526,8 +525,6 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
     cmd = inputLineHist(Currentbuf->document, "(read shell)!", "", IN_COMMAND,
                         ShellHist);
   }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
   if (cmd == NULL || *cmd == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -558,8 +555,6 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
     cmd = inputLineHist(Currentbuf->document, "(exec shell)!", "", IN_COMMAND,
                         ShellHist);
   }
-  if (cmd != NULL)
-    cmd = conv_to_system(cmd);
   if (cmd != NULL && *cmd != '\0') {
     term_fmTerm();
     printf("\n");
@@ -581,8 +576,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
     fn = inputFilenameHist(Currentbuf->document, "(Load)Filename? ", NULL,
                            LoadHist);
   }
-  if (fn != NULL)
-    fn = conv_to_system(fn);
   if (fn == NULL || *fn == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
@@ -606,7 +599,7 @@ static void cmd_loadfile(const char *fn) {
       loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
-    char *emsg = Sprintf("%s not found", conv_from_system(fn))->ptr;
+    const char *emsg = Sprintf("%s not found", fn)->ptr;
     disp_err_message(emsg, false);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
@@ -2043,7 +2036,7 @@ static void cmd_loadURL(const char *url, struct Url *current,
   buf = loadGeneralFile(url, current, referer, 0, request);
   if (buf == NULL) {
     /* FIXME: gettextize? */
-    char *emsg = Sprintf("Can't load %s", conv_from_system(url))->ptr;
+    const char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
   } else if (buf != NO_BUFFER) {
     pushBuffer(buf);
@@ -2325,14 +2318,13 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
       return;
     }
   }
-  file = conv_to_system(qfile ? qfile : file);
+  file = qfile ? qfile : file;
   if (*file == '|') {
     is_pipe = true;
     f = popen(file + 1, "w");
   } else {
     if (qfile) {
       file = unescape_spaces(Strnew_charp(qfile))->ptr;
-      file = conv_to_system(file);
     }
     file = expandPath(file);
     if (checkOverWrite(file) < 0) {
@@ -2344,7 +2336,7 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
   }
   if (f == NULL) {
     /* FIXME: gettextize? */
-    char *emsg = Sprintf("Can't open %s", conv_from_system(file))->ptr;
+    const char *emsg = Sprintf("Can't open %s", file)->ptr;
     disp_err_message(emsg, true);
     return;
   }
@@ -2365,8 +2357,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   PermitSaveToPipe = true;
   const char *file;
   if (Currentbuf->real_scheme == SCM_LOCAL)
-    file = conv_from_system(
-        guess_save_name(NULL, Currentbuf->currentURL.real_file));
+    file = guess_save_name(NULL, Currentbuf->currentURL.real_file);
   else
     file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
   doFileCopy(Currentbuf->sourcefile, file);
@@ -2671,11 +2662,7 @@ static void invoke_browser(char *url) {
     }
     if (browser == NULL || *browser == '\0') {
       browser = inputStr(Currentbuf->document, "Browse command: ", NULL);
-      if (browser != NULL)
-        browser = conv_to_system(browser);
     }
-  } else {
-    browser = conv_to_system(browser);
   }
   if (browser == NULL || *browser == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
@@ -2810,7 +2797,7 @@ static void execdict(const char *word) {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  const char *w = conv_to_system(word);
+  const char *w = word;
   if (*w == '\0') {
     displayBuffer(Currentbuf, B_NORMAL);
     return;

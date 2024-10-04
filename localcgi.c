@@ -160,7 +160,7 @@ Str loadLocalDir(const char *dname) {
     Strcat_m_charp(tmp, "<A HREF=\"", html_quote(file_quote(p)), NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
-    Strcat_m_charp(tmp, "\">", html_quote(conv_from_system(p)), NULL);
+    Strcat_m_charp(tmp, "\">", p, NULL);
     if (S_ISDIR(st.st_mode))
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, "</A>");

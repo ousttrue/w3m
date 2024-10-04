@@ -156,7 +156,6 @@ static void _saveBuffer(struct Buffer *buf, struct Line *l, FILE *f, int cont) {
       tmp = conv_symbol(l);
     else
       tmp = Strnew_charp_n(l->lineBuf, l->len);
-    tmp = wc_Str_conv(tmp, InnerCharset, charset);
     Strfputs(tmp, f);
     if (Strlastchar(tmp) != '\n' && !(cont && l->next && l->next->bpos))
       putc('\n', f);
@@ -183,8 +182,7 @@ struct Buffer *getshell(const char *cmd) {
   if (buf == NULL)
     return NULL;
   buf->filename = cmd;
-  buf->buffername =
-      Sprintf("%s %s", SHELLBUFFERNAME, conv_from_system(cmd))->ptr;
+  buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
   return buf;
 }
 
@@ -229,12 +227,10 @@ _end:
 
 int checkOverWrite(const char *path) {
   struct stat st;
-  char *ans;
-
   if (stat(path, &st) < 0)
     return 0;
-  /* FIXME: gettextize? */
-  ans = term_inputAnswer("File exists. Overwrite? (y/n)");
+
+  auto ans = term_inputAnswer("File exists. Overwrite? (y/n)");
   if (ans && TOLOWER(*ans) == 'y')
     return 0;
   else
