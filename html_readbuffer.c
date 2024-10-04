@@ -28,6 +28,9 @@
 #include "file.h"
 #include "termsize.h"
 
+#define REAL_WIDTH(w, limit)                                                   \
+  (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
+
 #ifndef max
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #endif /* not max */

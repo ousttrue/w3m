@@ -14,9 +14,9 @@ typedef struct _FuncList {
   char *id;
   void (*func)();
 } FuncList;
+extern FuncList w3mFuncList[];
 
 int getFuncList(const char *id);
-const char *getQWord(const char **str);
 void setKeymap(const char *p, int lineno, int verbose);
 int getKey(const char *s);
 
@@ -28,7 +28,5 @@ void multimap(void);
 void initKeymap(int force);
 
 char *getKeyData(int key);
-struct regex;
-const char *getRegexWord(const char **str, struct regex **regex_ret);
 
 

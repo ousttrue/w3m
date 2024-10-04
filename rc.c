@@ -2,7 +2,9 @@
  * Initialization file etc.
  */
 #include "rc.h"
+#include "w3mhelperpanel.h"
 #include "fm.h"
+#include "func.h"
 #include "file.h"
 #include "siteconf.h"
 #include "document.h"
@@ -34,6 +36,8 @@
 
 #define W3MCONFIG "w3mconfig"
 #define CONFIG_FILE "config"
+const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
+const char *DictCommand = "file:///$LIB/w3mdict" CGI_EXTENSION;
 
 enum ParamType {
   P_INT = 0,

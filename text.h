@@ -13,4 +13,4 @@ Str unescape_spaces(Str s);
 const char *cleanupName(const char *name);
 
 const char *getWord(const char **str);
-
+const char *getQWord(const char **str);

@@ -4,6 +4,7 @@
  */
 #include "terms.h"
 #include "document.h"
+#include "rc.h"
 #include "text.h"
 #include "termcon.h"
 #include "display.h"
@@ -33,6 +34,8 @@
 #endif
 
 #include "fm.h"
+
+enum GraphicCharType UseGraphicChar = GRAPHIC_CHAR_CHARSET;
 
 bool QuietMessage = false;
 

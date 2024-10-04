@@ -14,6 +14,9 @@
 
 #define FIRST_ANCHOR_SIZE 30
 
+#define bpcmp(a, b)                                                            \
+  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
+
 struct AnchorList *putAnchor(struct AnchorList *al, const char *url,
                              const char *target, struct Anchor **anchor_return,
                              const char *referer, const char *title,

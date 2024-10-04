@@ -1,4 +1,3 @@
-/* $Id: fm.h,v 1.149 2010/08/20 09:47:09 htrb Exp $ */
 /*
  * w3m: WWW wo Miru utility
  *
@@ -6,9 +5,7 @@
  *
  * You can use,copy,modify and distribute this program without any permission.
  */
-
-#ifndef FM_H
-#define FM_H
+#pragma once
 
 #define USE_IMAGE 1
 #define INET6 1
@@ -31,10 +28,6 @@
 #define DEF_IMAGE_VIEWER "display"
 #define DEF_AUDIO_PLAYER "showaudio"
 
-#include "config.h"
-#include "func.h"
-#include <stdio.h>
-
 #ifdef MAINPROGRAM
 #define global
 #define init(x) = (x)
@@ -46,55 +39,8 @@
 #define DEFUN(funcname, macroname, docstring) void funcname(void)
 
 /*
- * Constants.
- */
-
-/* mark URL, Message-ID */
-#define CHK_URL 1
-#define CHK_NMID 2
-
-/* Completion status. */
-#define CPL_OK 0
-#define CPL_AMBIG 1
-#define CPL_FAIL 2
-#define CPL_MENU 3
-
-#define CPL_NEVER 0x0
-#define CPL_OFF 0x1
-#define CPL_ON 0x2
-#define CPL_ALWAYS 0x4
-#define CPL_URL 0x8
-
-#define IMG_FLAG_SKIP 1
-#define IMG_FLAG_AUTO 2
-
-#define IMG_FLAG_START 0
-#define IMG_FLAG_STOP 1
-#define IMG_FLAG_NEXT 2
-
-#define IMG_FLAG_UNLOADED 0
-#define IMG_FLAG_LOADED 1
-#define IMG_FLAG_ERROR 2
-#define IMG_FLAG_DONT_REMOVE 4
-
-/*
  * Macros.
  */
-#define bpcmp(a, b)                                                            \
-  (((a).line - (b).line) ? ((a).line - (b).line) : ((a).pos - (b).pos))
-
-#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
-#define REAL_WIDTH(w, limit)                                                   \
-  (((w) >= 0) ? (int)((w) / pixel_per_char) : -(w) * (limit) / 100)
-
-#define EOL(l) (&(l)->ptr[(l)->length])
-#define IS_EOL(p, l) ((p) == &(l)->ptr[(l)->length])
-
-#define INLINE_IMG_NONE 0
-#define INLINE_IMG_OSC5379 1
-#define INLINE_IMG_SIXEL 2
-#define INLINE_IMG_ITERM2 3
-#define INLINE_IMG_KITTY 4
 
 /*
  * Types.
@@ -135,7 +81,7 @@
 
 global int IndentIncr init(4);
 
-global const char *DefaultType init(NULL);
+global const char *DefaultType init(nullptr);
 global char RenderFrame init(false);
 global char TargetSelf init(false);
 global char PermitSaveToPipe init(false);
@@ -150,15 +96,14 @@ extern unsigned char GlobalKeymap[];
 extern unsigned char EscKeymap[];
 extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
-extern FuncList w3mFuncList[];
 
-global char *HTTP_proxy init(NULL);
-global char *HTTPS_proxy init(NULL);
-global char *FTP_proxy init(NULL);
+global char *HTTP_proxy init(nullptr);
+global char *HTTPS_proxy init(nullptr);
+global char *FTP_proxy init(nullptr);
 global struct Url HTTP_proxy_parsed;
 global struct Url HTTPS_proxy_parsed;
 global struct Url FTP_proxy_parsed;
-global char *NO_proxy init(NULL);
+global char *NO_proxy init(nullptr);
 global int NOproxy_netaddr init(true);
 #ifdef INET6
 #define DNS_ORDER_UNSPEC 0
@@ -173,10 +118,10 @@ global char NoCache init(false);
 global char use_proxy init(true);
 #define Do_not_use_proxy (!use_proxy)
 
-global char *document_root init(NULL);
-global char *personal_document_root init(NULL);
-global char *cgi_bin init(NULL);
-global char *index_file init(NULL);
+global char *document_root init(nullptr);
+global char *personal_document_root init(nullptr);
+global char *cgi_bin init(nullptr);
+global char *index_file init(nullptr);
 
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
@@ -206,7 +151,7 @@ global int emacs_like_lineedit init(false);
 global int space_autocomplete init(false);
 global int vi_prec_num init(false);
 global int label_topline init(false);
-global char *displayTitleTerm init(NULL);
+global char *displayTitleTerm init(nullptr);
 global int displayLink init(false);
 global int displayLinkNumber init(false);
 global int displayLineInfo init(false);
@@ -219,31 +164,29 @@ global char *Mailer init(DEF_MAILER);
 #define MAILTO_OPTIONS_USE_MAILTO_URL 2
 global int MailtoOptions init(MAILTO_OPTIONS_IGNORE);
 global char *ExtBrowser init(DEF_EXT_BROWSER);
-global char *ExtBrowser2 init(NULL);
-global char *ExtBrowser3 init(NULL);
-global char *ExtBrowser4 init(NULL);
-global char *ExtBrowser5 init(NULL);
-global char *ExtBrowser6 init(NULL);
-global char *ExtBrowser7 init(NULL);
-global char *ExtBrowser8 init(NULL);
-global char *ExtBrowser9 init(NULL);
+global char *ExtBrowser2 init(nullptr);
+global char *ExtBrowser3 init(nullptr);
+global char *ExtBrowser4 init(nullptr);
+global char *ExtBrowser5 init(nullptr);
+global char *ExtBrowser6 init(nullptr);
+global char *ExtBrowser7 init(nullptr);
+global char *ExtBrowser8 init(nullptr);
+global char *ExtBrowser9 init(nullptr);
 global int BackgroundExtViewer init(true);
 global char *pre_form_file init(PRE_FORM_FILE);
-global char *ftppasswd init(NULL);
+global char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(true);
-global char *UserAgent init(NULL);
+global char *UserAgent init(nullptr);
 global int NoSendReferer init(false);
 global int CrossOriginReferer init(true);
-global char *AcceptLang init(NULL);
-global char *AcceptEncoding init(NULL);
-global char *AcceptMedia init(NULL);
+global char *AcceptLang init(nullptr);
+global char *AcceptEncoding init(nullptr);
+global char *AcceptMedia init(nullptr);
 global int WrapDefault init(false);
 global int squeezeBlankLine init(false);
-global char *BookmarkFile init(NULL);
+global char *BookmarkFile init(nullptr);
 global int UseExternalDirBuffer init(true);
-global char *DirBufferCommand init("file:///$LIB/dirlist" CGI_EXTENSION);
 global int UseDictCommand init(true);
-global char *DictCommand init("file:///$LIB/w3mdict" CGI_EXTENSION);
 global int ignore_null_img_alt init(true);
 #define DISPLAY_INS_DEL_SIMPLE 0
 #define DISPLAY_INS_DEL_NORMAL 1
@@ -256,8 +199,8 @@ global int FoldTextarea init(false);
 global int DefaultURLString init(DEFAULT_URL_CURRENT);
 global int MarkAllPages init(false);
 
-global struct auth_cookie *Auth_cookie init(NULL);
-global struct cookie *First_cookie init(NULL);
+global struct auth_cookie *Auth_cookie init(nullptr);
+global struct cookie *First_cookie init(nullptr);
 
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
@@ -272,14 +215,9 @@ global int multicolList init(false);
 #define Str_conv_to_halfdump(x) (x)
 #define conv_from_system(x) (x)
 #define conv_to_system(x) (x)
-
 #define wc_Str_conv(x, charset0, charset1) (x)
 #define wc_Str_conv_strict(x, charset0, charset1) (x)
 global char UseAltEntity init(false);
-#define GRAPHIC_CHAR_ASCII 2
-#define GRAPHIC_CHAR_DEC 1
-#define GRAPHIC_CHAR_CHARSET 0
-global char UseGraphicChar init(GRAPHIC_CHAR_CHARSET);
 global char DisplayBorders init(false);
 global char DisableCenter init(false);
 extern char *graph_symbol[];
@@ -287,36 +225,25 @@ extern char *graph2_symbol[];
 #define N_GRAPH_SYMBOL 32
 #define N_SYMBOL (N_GRAPH_SYMBOL + 14)
 global int no_rc_dir init(false);
-global char *rc_dir init(NULL);
-global char *config_file init(NULL);
-
+global char *rc_dir init(nullptr);
+global char *config_file init(nullptr);
 global int view_unseenobject init(true);
-
 global int ssl_verify_server init(true);
-global char *ssl_cert_file init(NULL);
-global char *ssl_key_file init(NULL);
-global char *ssl_ca_path init(NULL);
+global char *ssl_cert_file init(nullptr);
+global char *ssl_key_file init(nullptr);
+global char *ssl_ca_path init(nullptr);
 global char *ssl_ca_file init("");
 global int ssl_ca_default init(true);
 global int ssl_path_modified init(false);
 global char *ssl_forbid_method init("2, 3, t, 5");
-global char *ssl_min_version init(NULL);
+global char *ssl_min_version init(nullptr);
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
 global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else
-global char *ssl_cipher init(NULL);
+global char *ssl_cipher init(nullptr);
 #endif
-
 global int is_redisplay init(false);
 global int clear_buffer init(true);
-
 global int use_lessopen init(false);
-
 global char *keymap_file init(KEYMAP_FILE);
-
 global int FollowRedirection init(10);
-
-extern void deleteFiles(void);
-void w3m_exit(int i);
-
-#endif /* not FM_H */

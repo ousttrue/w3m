@@ -24,8 +24,8 @@ enum LINK_TYPE {
 };
 struct LinkList {
   const char *url;
-  const char *title;         /* Next, Contents, ... */
-  const char *ctype;         /* Content-Type */
+  const char *title;   /* Next, Contents, ... */
+  const char *ctype;   /* Content-Type */
   enum LINK_TYPE type; /* Rel, Rev */
   struct LinkList *next;
 };
@@ -39,6 +39,12 @@ enum BufferProperty {
   BP_NO_URL = 0x10,
   BP_REDIRECTED = 0x20,
   BP_CLOSE = 0x40,
+};
+
+/* mark URL, Message-ID */
+enum CheckUrlFlags {
+  CHK_URL = 1,
+  CHK_NMID = 2,
 };
 
 struct HttpResponse;
@@ -57,7 +63,7 @@ struct Buffer {
   const char *sourcefile;
   int *clone;
   size_t trbyte;
-  char check_url;
+  enum CheckUrlFlags check_url;
   struct HttpResponse *http_response;
   struct FormItemList *form_submit;
   const char *edit;

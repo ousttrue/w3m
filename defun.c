@@ -1,8 +1,10 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "w3mbookmark.h"
 #include "siteconf.h"
 #include "document.h"
 #include "ftp.h"
+#include "func.h"
 #include "proto.h"
 #include "text.h"
 #include "rc.h"
@@ -42,6 +44,13 @@
 #include "termsize.h"
 #include "myctype.h"
 #include "regex.h"
+
+
+#define INLINE_IMG_NONE 0
+#define INLINE_IMG_OSC5379 1
+#define INLINE_IMG_SIXEL 2
+#define INLINE_IMG_ITERM2 3
+#define INLINE_IMG_KITTY 4
 
 #define HELP_CGI "w3mhelp"
 

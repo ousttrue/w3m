@@ -5,6 +5,8 @@
 #include "line.h"
 #include "loadproc.h"
 
+#define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
+
 extern struct FormList **forms;
 extern int *form_stack;
 extern int form_max;

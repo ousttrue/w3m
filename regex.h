@@ -35,3 +35,5 @@ char *regexCompile(char *ex, int igncase);
 int regexMatch(char *str, int len, int firstp);
 
 void matchedPosition(char **first, char **last);
+
+const char *getRegexWord(const char **str, struct regex **regex_ret);

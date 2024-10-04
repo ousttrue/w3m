@@ -22,6 +22,3 @@
 #ifndef HAVE_LSTAT
 #define lstat stat
 #endif
-#define W3MBOOKMARK_CMDNAME "w3mbookmark"
-#define W3MHELPERPANEL_CMDNAME "w3mhelperpanel"
-#define CGI_EXTENSION ".cgi"

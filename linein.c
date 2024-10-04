@@ -19,6 +19,18 @@
 #include "fm.h"
 #include <dirent.h>
 
+/* Completion status. */
+#define CPL_OK 0
+#define CPL_AMBIG 1
+#define CPL_FAIL 2
+#define CPL_MENU 3
+
+#define CPL_NEVER 0x0
+#define CPL_OFF 0x1
+#define CPL_ON 0x2
+#define CPL_ALWAYS 0x4
+#define CPL_URL 0x8
+
 #define STR_LEN 1024
 #define CLEN (COLS - 2)
 
@@ -224,7 +236,8 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
       cm_next = false;
       cm_disp_next = -1;
     } else if (!i_quote && c < 0x20) { /* Control code */
-      if (incrfunc == NULL || (c = incrfunc(nullptr, (int)c, strBuf, strProp)) < 0x20)
+      if (incrfunc == NULL ||
+          (c = incrfunc(nullptr, (int)c, strBuf, strProp)) < 0x20)
         (*InputKeymap[(int)c])(c);
       if (incrfunc && c != (unsigned char)-1 && c != CTRL_J)
         incrfunc(nullptr, -1, strBuf, strProp);

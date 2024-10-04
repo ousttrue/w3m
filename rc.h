@@ -1,5 +1,10 @@
 #pragma once
 
+#define CGI_EXTENSION ".cgi"
+
+extern const char *DirBufferCommand;
+extern const char *DictCommand;
+
 const char *get_param_option(const char *name);
 int set_param_option(const char *option);
 bool str_to_bool(const char *value, bool old);

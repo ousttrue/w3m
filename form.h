@@ -78,7 +78,9 @@ extern void preFormUpdateBuffer(struct Buffer *buf);
 extern Str textfieldrep(Str s, int width);
 extern void input_textarea(struct FormItemList *fi);
 extern void do_internal(char *action, char *data);
-extern void form_write_data(FILE *f, char *boundary, char *name, char *value);
-extern void form_write_from_file(FILE *f, char *boundary, char *name,
-                                 char *filename, char *file);
+extern void form_write_data(FILE *f, const char *boundary, const char *name,
+                            const char *value);
+extern void form_write_from_file(FILE *f, const char *boundary,
+                                 const char *name, const char *filename,
+                                 const char *file);
 extern void loadPreForm(void);

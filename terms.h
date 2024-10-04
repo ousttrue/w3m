@@ -3,6 +3,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+enum GraphicCharType {
+  GRAPHIC_CHAR_ASCII = 2,
+  GRAPHIC_CHAR_DEC = 1,
+  GRAPHIC_CHAR_CHARSET = 0,
+};
+extern enum GraphicCharType UseGraphicChar;
+
 extern bool QuietMessage;
 
 void term_fmInit();
