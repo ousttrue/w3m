@@ -2993,7 +2993,11 @@ phase2:
   trap_off();
 
   _tl_lp2 = htmlenv1.buf->first;
-  return HTMLlineproc2body(currentURL, base, textlist_feed);
+  auto doc = HTMLlineproc2body(currentURL, base, textlist_feed);
+  doc->topLine = doc->firstLine;
+  doc->lastLine = doc->currentLine;
+  doc->currentLine = doc->firstLine;
+  return doc;
 }
 
 void completeHTMLstream(struct html_feed_environ *h_env,
@@ -3057,31 +3061,33 @@ void completeHTMLstream(struct html_feed_environ *h_env,
 /*
  * loadHTMLBuffer: read file and make new buffer
  */
-struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *,
-                              struct Buffer *newBuf) {
-  if (newBuf == NULL)
-    newBuf = newBuffer();
+struct Document *loadHTML(Str html, struct Url currentURL, struct Url *base) {
+  // if (newBuf == NULL)
+  //   newBuf = newBuffer();
+  //
+  // FILE *src = NULL;
+  // if (newBuf->sourcefile == NULL && f->scheme != SCM_LOCAL) {
+  //   auto tmp = tmpfname(TMPF_SRC, ".html");
+  //   src = fopen(tmp->ptr, "w");
+  //   if (src)
+  //     newBuf->sourcefile = tmp->ptr;
+  // }
+  // newBuf->currentURL
+  // baseURL(newBuf)
+  // newBuf->bufferprop & BP_FRAME);
 
-  FILE *src = NULL;
-  if (newBuf->sourcefile == NULL && f->scheme != SCM_LOCAL) {
-    auto tmp = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmp->ptr, "w");
-    if (src)
-      newBuf->sourcefile = tmp->ptr;
-  }
+  struct URLFile f;
+  init_stream(&f, SCM_LOCAL, newStrStream(html));
+  auto doc = loadHTMLstream(&f, currentURL, base, nullptr, false);
+  UFclose(&f);
+  return doc;
 
-  newBuf->document = loadHTMLstream(f, newBuf->currentURL, baseURL(newBuf), src,
-                                    newBuf->bufferprop & BP_FRAME);
-
-  newBuf->document->topLine = newBuf->document->firstLine;
-  newBuf->document->lastLine = newBuf->document->currentLine;
-  newBuf->document->currentLine = newBuf->document->firstLine;
-  if (n_textarea)
-    formResetBuffer(newBuf, newBuf->document->formitem);
-  if (src)
-    fclose(src);
-
-  return newBuf;
+  // if (n_textarea)
+  //   formResetBuffer(newBuf, newBuf->document->formitem);
+  // if (src)
+  //   fclose(src);
+  //
+  // return newBuf;
 }
 
 /*

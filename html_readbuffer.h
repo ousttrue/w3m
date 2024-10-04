@@ -3,6 +3,7 @@
 #include "Str.h"
 #include "anchor.h"
 #include "line.h"
+#include "url.h"
 
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10
@@ -147,8 +148,6 @@ void HTMLlineproc2(struct Buffer *buf, struct TextLineList *tl);
 void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
                    int internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
-struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
-                              struct Buffer *newBuf);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
@@ -193,3 +192,8 @@ extern void feed_textarea(const char *str);
 extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);
+
+// struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
+//                               struct Buffer *newBuf);
+struct Document *loadHTML(Str html, struct Url currentURL,
+                          struct Url *base);

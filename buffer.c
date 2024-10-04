@@ -399,6 +399,12 @@ void reshapeBuffer(struct Buffer *buf) {
   if (f.stream == NULL)
     return;
 
+  Str html = Strnew();
+  Str line;
+  while ((line = StrmyUFgets(&f))->length) {
+    Strcat(html, line);
+  }
+
   struct Document sbuf;
   copyBuffer(&sbuf, buf->document);
   clearBuffer(buf);
@@ -415,9 +421,9 @@ void reshapeBuffer(struct Buffer *buf) {
   if (buf->document->imarklist)
     buf->document->imarklist->nmark = 0;
 
-  if (is_html_type(buf->type))
-    loadHTMLBuffer(&f, nullptr, buf);
-  else
+  if (is_html_type(buf->type)) {
+    buf->document = loadHTML(html, buf->currentURL, baseURL(buf));
+  } else
     loadBuffer(&f, nullptr, buf);
   UFclose(&f);
 

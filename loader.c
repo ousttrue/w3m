@@ -128,7 +128,25 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
 
   struct Buffer *b;
   if (is_html_type(t)) {
-    b = loadHTMLBuffer(&f, nullptr, t_buf);
+    FILE *src = NULL;
+    if (f.scheme != SCM_LOCAL) {
+      auto tmp = tmpfname(TMPF_SRC, ".html");
+      src = fopen(tmp->ptr, "w");
+      if (src) {
+        t_buf->sourcefile = tmp->ptr;
+      }
+    }
+    Str html = Strnew();
+    Str line;
+    while ((line = StrmyUFgets(&f))->length) {
+      if (src)
+        Strfputs(line, src);
+      Strcat(html, line);
+    }
+    if (src)
+      fclose(src);
+    b = t_buf;
+    b->document = loadHTML(html, t_buf->currentURL, baseURL(t_buf));
   } else {
     b = loadBuffer(&f, nullptr, t_buf);
   }
