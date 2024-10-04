@@ -513,32 +513,33 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
 
 /* Execute shell command and load entire output to buffer */
 DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  const char *cmd = searchKeyData();
-  if (cmd == NULL || *cmd == '\0') {
-    cmd = inputLineHist(Currentbuf->document, "(read shell)!", "", IN_COMMAND,
-                        ShellHist);
-  }
-  if (cmd == NULL || *cmd == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
-    return;
-  }
-  // auto prevtrap = mySignal(SIGINT, intTrap);
-  tty_crmode();
-  auto buf = getshell(cmd);
-  // mySignal(SIGINT, prevtrap);
-  tty_raw();
-  if (buf == NULL) {
-    /* FIXME: gettextize? */
-    disp_message("Execution failed", true);
-    return;
-  } else {
-    buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
-    if (buf->type == NULL)
-      buf->type = "text/plain";
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  // CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  // const char *cmd = searchKeyData();
+  // if (cmd == NULL || *cmd == '\0') {
+  //   cmd = inputLineHist(Currentbuf->document, "(read shell)!", "",
+  //   IN_COMMAND,
+  //                       ShellHist);
+  // }
+  // if (cmd == NULL || *cmd == '\0') {
+  //   displayBuffer(Currentbuf, B_NORMAL);
+  //   return;
+  // }
+  // // auto prevtrap = mySignal(SIGINT, intTrap);
+  // tty_crmode();
+  // auto buf = getshell(cmd);
+  // // mySignal(SIGINT, prevtrap);
+  // tty_raw();
+  // if (buf == NULL) {
+  //   /* FIXME: gettextize? */
+  //   disp_message("Execution failed", true);
+  //   return;
+  // } else {
+  //   buf->bufferprop |= (BP_INTERNAL | BP_NO_URL);
+  //   if (buf->type == NULL)
+  //     buf->type = "text/plain";
+  //   pushBuffer(buf);
+  // }
+  // displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Execute shell command */

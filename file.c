@@ -172,18 +172,6 @@ void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
   _saveBuffer(buf, l, f, cont);
 }
 
-/*
- * getshell: execute shell command and get the result into a buffer
- */
-struct Buffer *getshell(const char *cmd) {
-  auto buf = loadcmdout(cmd, loadBuffer, NULL);
-  if (buf == NULL)
-    return NULL;
-  buf->filename = cmd;
-  buf->buffername = Sprintf("%s %s", SHELLBUFFERNAME, cmd)->ptr;
-  return buf;
-}
-
 int save2tmp(struct URLFile uf, char *tmpf) {
   int check;
   int64_t linelen = 0, trbyte = 0;

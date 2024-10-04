@@ -3093,70 +3093,74 @@ struct Document *loadHTML(Str html, struct Url currentURL, struct Url *base) {
 /*
  * loadHTMLString: read string and make new buffer
  */
-struct Buffer *loadHTMLString(Str page) {
+struct Document *loadHTMLString(Str page) {
   struct URLFile f;
   init_stream(&f, SCM_LOCAL, newStrStream(page));
 
-  auto newBuf = newBuffer();
+  // auto newBuf = newBuffer();
   if (from_jmp() != 0) {
     trap_off();
-    discardBuffer(newBuf);
+    // discardBuffer(newBuf);
     UFclose(&f);
     return NULL;
   }
   trap_on();
 
-  newBuf->document =
-      loadHTMLstream(&f, newBuf->currentURL, baseURL(newBuf), NULL, true);
+  struct Url url;
+  auto doc = loadHTMLstream(&f, url, nullptr, NULL, true);
 
   trap_off();
   UFclose(&f);
-  newBuf->document->topLine = newBuf->document->firstLine;
-  newBuf->document->lastLine = newBuf->document->currentLine;
-  newBuf->document->currentLine = newBuf->document->firstLine;
-  newBuf->type = "text/html";
-  newBuf->real_type = newBuf->type;
-  if (n_textarea)
-    formResetBuffer(newBuf, newBuf->document->formitem);
-  return newBuf;
+  doc->topLine = doc->firstLine;
+  doc->lastLine = doc->currentLine;
+  doc->currentLine = doc->firstLine;
+  // newBuf->type = "text/html";
+  // newBuf->real_type = newBuf->type;
+  // if (n_textarea)
+  //   formResetBuffer(newBuf, newBuf->document->formitem);
+  return doc;
 }
 
 /*
  * loadBuffer: read file and make new buffer
  */
-struct Buffer *loadBuffer(struct URLFile *uf, const char *,
-                          struct Buffer *newBuf) {
-  FILE *src = NULL;
+struct Document *loadText(Str text) {
+  // FILE *src = NULL;
+  // Str lineBuf2;
+  // int nlines;
+  // Str tmpf;
+  //
+  // if (newBuf == NULL)
+  //   newBuf = newBuffer();
+  //
+  // if (from_jmp() != 0) {
+  //   goto _end;
+  // }
+  // trap_on();
+
+  // if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL) {
+  //   tmpf = tmpfname(TMPF_SRC, NULL);
+  //   src = fopen(tmpf->ptr, "w");
+  //   if (src)
+  //     newBuf->sourcefile = tmpf->ptr;
+  // }
+
+  struct URLFile f;
+  init_stream(&f, SCM_LOCAL, newStrStream(text));
+
+  auto doc = newDocument(INIT_BUFFER_WIDTH);
+  int nlines = 0;
+  int64_t linelen = 0;
+  int64_t trbyte = 0;
+  if (IStype(f.stream) != IST_ENCODED)
+    f.stream = newEncodedStream(f.stream, f.encoding);
   Str lineBuf2;
   char pre_lbuf = '\0';
-  int nlines;
-  Str tmpf;
-  int64_t linelen = 0, trbyte = 0;
-  Lineprop *propBuffer = NULL;
-
-  if (newBuf == NULL)
-    newBuf = newBuffer();
-
-  if (from_jmp() != 0) {
-    goto _end;
-  }
-  trap_on();
-
-  if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL) {
-    tmpf = tmpfname(TMPF_SRC, NULL);
-    src = fopen(tmpf->ptr, "w");
-    if (src)
-      newBuf->sourcefile = tmpf->ptr;
-  }
-
-  nlines = 0;
-  if (IStype(uf->stream) != IST_ENCODED)
-    uf->stream = newEncodedStream(uf->stream, uf->encoding);
-  while ((lineBuf2 = StrmyISgets(uf->stream))->length) {
-    if (src)
-      Strfputs(lineBuf2, src);
+  while ((lineBuf2 = StrmyISgets(f.stream))->length) {
+    // if (src)
+    //   Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, uf->current_content_length);
+    term_showProgress(&linelen, &trbyte, f.current_content_length);
     lineBuf2 = convertLine(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
@@ -3167,20 +3171,22 @@ struct Buffer *loadBuffer(struct URLFile *uf, const char *,
     }
     ++nlines;
     Strchop(lineBuf2);
+    Lineprop *propBuffer = NULL;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
-    addnewline(&newBuf->document, lineBuf2->ptr, propBuffer, lineBuf2->length,
+    addnewline(doc, lineBuf2->ptr, propBuffer, lineBuf2->length,
                FOLD_BUFFER_WIDTH, nlines);
   }
+
 _end:
   trap_off();
-  newBuf->document->topLine = newBuf->document->firstLine;
-  newBuf->document->lastLine = newBuf->document->currentLine;
-  newBuf->document->currentLine = newBuf->document->firstLine;
-  newBuf->trbyte = trbyte + linelen;
-  if (src)
-    fclose(src);
+  doc->topLine = doc->firstLine;
+  doc->lastLine = doc->currentLine;
+  doc->currentLine = doc->firstLine;
+  // newBuf->trbyte = trbyte + linelen;
+  // if (src)
+  //   fclose(src);
 
-  return newBuf;
+  return doc;
 }
 
 void do_blankline(struct html_feed_environ *h_env, struct readbuffer *obuf,

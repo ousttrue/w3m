@@ -87,14 +87,18 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       fclose(src);
     }
 
-    auto b = loadHTMLString(page);
-    if (b) {
-      copyParsedURL(&b->currentURL, &pu);
-      b->real_scheme = pu.scheme;
-      b->real_type = real_type;
-      if (src)
-        b->sourcefile = tmp->ptr;
+    auto doc = loadHTMLString(page);
+    if (!doc) {
+      return nullptr;
     }
+
+    // copyParsedURL(&b->currentURL, &pu);
+    // b->real_scheme = pu.scheme;
+    // b->real_type = real_type;
+    // if (src)
+    //   b->sourcefile = tmp->ptr;
+    auto b = newBuffer();
+    b->document = doc;
     return b;
   }
 
@@ -126,42 +130,41 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = f.ssl_certificate;
 
+  FILE *src = NULL;
+  if (f.scheme != SCM_LOCAL) {
+    auto tmp = tmpfname(TMPF_SRC, ".html");
+    src = fopen(tmp->ptr, "w");
+    if (src) {
+      t_buf->sourcefile = tmp->ptr;
+    }
+  }
+  Str content = Strnew();
+  Str line;
+  while ((line = StrmyUFgets(&f))->length) {
+    Strcat(content, line);
+  }
+  if (t_buf->http_response->content_charset == CHARSET_SJIS) {
+    // sjis to utf8
+    auto opts = "-S -w";
+    auto utf8 = nkf_convert((unsigned char *)content->ptr, content->length,
+                            opts, strlen(opts));
+    content = Strnew_charp((const char *)utf8);
+    free(utf8);
+  }
+  if (src) {
+    Strfputs(content, src);
+    fclose(src);
+  }
+
   struct Buffer *b;
   if (is_html_type(t)) {
-    //
-    // html
-    //
-    FILE *src = NULL;
-    if (f.scheme != SCM_LOCAL) {
-      auto tmp = tmpfname(TMPF_SRC, ".html");
-      src = fopen(tmp->ptr, "w");
-      if (src) {
-        t_buf->sourcefile = tmp->ptr;
-      }
-    }
-    Str html = Strnew();
-    Str line;
-    while ((line = StrmyUFgets(&f))->length) {
-      Strcat(html, line);
-    }
-    if (t_buf->http_response->content_charset == CHARSET_SJIS) {
-      // sjis to utf8
-      auto opts = "-S -w";
-      auto utf8 = nkf_convert((unsigned char *)html->ptr, html->length, opts,
-                              strlen(opts));
-      html = Strnew_charp((const char *)utf8);
-      free(utf8);
-    }
-    if (src) {
-      Strfputs(html, src);
-      fclose(src);
-    }
     b = t_buf;
-    b->document = loadHTML(html, t_buf->currentURL, baseURL(t_buf));
+    b->document = loadHTML(content, t_buf->currentURL, baseURL(t_buf));
   } else {
-    // text
-    b = loadBuffer(&f, nullptr, t_buf);
+    b = t_buf;
+    b->document = loadText(content);
   }
+
   if (b != NULL) {
     if (b->buffername == NULL || b->buffername[0] == '\0') {
       b->buffername = httpGetHeader(b->http_response, "Subject:");
