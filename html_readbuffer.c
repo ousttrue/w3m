@@ -3117,28 +3117,6 @@ struct Buffer *loadHTMLString(Str page) {
   return newBuf;
 }
 
-struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
-                             const char *type, struct Buffer *defaultbuf) {
-  struct Buffer *buf;
-  if ((buf = loadproc(f, nullptr, defaultbuf)) == NULL)
-    return NULL;
-
-  if (buf->buffername == NULL || buf->buffername[0] == '\0') {
-    buf->buffername = httpGetHeader(buf->http_response, "Subject:");
-    if (buf->buffername == NULL && buf->filename != NULL)
-      buf->buffername = lastFileName(buf->filename);
-  }
-  if (buf->currentURL.scheme == SCM_UNKNOWN)
-    buf->currentURL.scheme = f->scheme;
-  if (f->scheme == SCM_LOCAL && buf->sourcefile == NULL)
-    buf->sourcefile = buf->filename;
-  if (loadproc == loadHTMLBuffer)
-    buf->type = "text/html";
-  else
-    buf->type = "text/plain";
-  return buf;
-}
-
 /*
  * loadBuffer: read file and make new buffer
  */

@@ -131,7 +131,25 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   copyParsedURL(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = f.ssl_certificate;
-  auto b = loadSomething(&f, proc, t, t_buf);
+  // auto b = loadSomething(&f, proc, t, t_buf);
+
+  struct Buffer *b = proc(&f, nullptr, t_buf);
+  if (b != NULL) {
+    if (b->buffername == NULL || b->buffername[0] == '\0') {
+      b->buffername = httpGetHeader(b->http_response, "Subject:");
+      if (b->buffername == NULL && b->filename != NULL)
+        b->buffername = lastFileName(b->filename);
+    }
+    if (b->currentURL.scheme == SCM_UNKNOWN)
+      b->currentURL.scheme = f.scheme;
+    if (f.scheme == SCM_LOCAL && b->sourcefile == NULL)
+      b->sourcefile = b->filename;
+    if (proc == loadHTMLBuffer)
+      b->type = "text/html";
+    else
+      b->type = "text/plain";
+  }
+
   UFclose(&f);
   if (b && b != NO_BUFFER) {
     b->real_scheme = f.scheme;

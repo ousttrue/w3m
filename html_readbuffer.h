@@ -155,8 +155,6 @@ void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
 struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
                                 struct Url *base, FILE *src, int internal);
 struct Buffer *loadHTMLString(Str page);
-struct Buffer *loadSomething(struct URLFile *f, LoadProc loadproc,
-                             const char *type, struct Buffer *defaultbuf);
 struct Buffer *loadBuffer(struct URLFile *uf, const char *type,
                           struct Buffer *newBuf);
 
