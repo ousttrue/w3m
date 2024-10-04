@@ -10,7 +10,7 @@
 #include "html_readbuffer.h"
 #include "datetime.h"
 #include "os.h"
-#include "app.h"
+#include "core.h"
 #include "tmpfile.h"
 #include "istream.h"
 #include "alloc.h"

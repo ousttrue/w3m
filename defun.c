@@ -1,5 +1,6 @@
 #define MAINPROGRAM
 #include "fm.h"
+#include "core.h"
 #include "w3mbookmark.h"
 #include "shell.h"
 #include "siteconf.h"
@@ -19,7 +20,6 @@
 #include "http_response.h"
 #include "http_cookie.h"
 #include "file.h"
-#include "app.h"
 #include "funcname1.h"
 #include "history.h"
 #include "parsetag.h"
@@ -1296,7 +1296,7 @@ static void query_from_followform(Str *query, struct FormItemList *fi,
     }
     fi->parent->body = (*query)->ptr;
     fi->parent->boundary =
-        Sprintf("------------------------------%d%ld%ld%ld", CurrentPid,
+        Sprintf("------------------------------%d%ld%ld%ld", getCurrentPid(),
                 fi->parent, fi->parent->body, fi->parent->boundary)
             ->ptr;
   }

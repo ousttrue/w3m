@@ -3,7 +3,6 @@
  */
 #include <stdio.h>
 #include "fm.h"
-#include "app.h"
 #include "rc.h"
 #include "alloc.h"
 #include "ctrlcode.h"
@@ -13,7 +12,7 @@
 #include "terms.h"
 #include "history.h"
 #include "text.h"
-
+#include "core.h"
 #include "proto.h"
 #include "funcname.h"
 #include "functable.h"

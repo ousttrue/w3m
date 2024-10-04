@@ -10,7 +10,6 @@
 #include "image.h"
 #include "romannum.h"
 #include "trap_jmp.h"
-#include "strcase.h"
 #include "html_parser.h"
 #include "istream.h"
 #include "file.h"

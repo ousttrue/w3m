@@ -2,15 +2,15 @@
 #include "line.h"
 #include "entity.h"
 #include "alloc.h"
+#include "text.h"
 #include "myctype.h"
-#include "strcase.h"
 #include "hash.h"
 #include "utf8.h"
 #include <string.h>
 #include <strings.h>
 
 uint32_t getescapechar(const char **str) {
-  char *p = *str;
+  auto p = *str;
   bool strict_entity = true;
 
   if (*p == '&')

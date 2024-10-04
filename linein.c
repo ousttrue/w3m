@@ -1,6 +1,6 @@
 #include "linein.h"
 #include "text.h"
-#include "app.h"
+#include "core.h"
 #include "url.h"
 #include "file.h"
 #include "utf8.h"

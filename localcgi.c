@@ -5,7 +5,7 @@
 #include "trap_jmp.h"
 #include "alloc.h"
 #include "file.h"
-#include "app.h"
+#include "core.h"
 #include "tmpfile.h"
 #include "form.h"
 #include "http_request.h"

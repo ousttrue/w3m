@@ -4,7 +4,6 @@
 #include "loader.h"
 #include "html_renderer.h"
 #include "trap_jmp.h"
-#include "strcase.h"
 #include "file.h"
 #include "line.h"
 #include "os.h"

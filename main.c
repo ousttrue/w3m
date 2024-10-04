@@ -1,10 +1,10 @@
 #include "fm.h"
 #include "display.h"
+#include "core.h"
 #include "text.h"
 #include "rc.h"
 #include "http_cookie.h"
 #include "loader.h"
-#include "app.h"
 #include "alloc.h"
 #include "url_stream.h"
 #include "history.h"
@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
   // Str err_msg;
 
   url_stream_init();
-  app_init();
+  initialize();
 
   // char **load_argv = New_N(char *, argc - 1);
   // int load_argc = 0;

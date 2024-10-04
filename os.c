@@ -1,5 +1,5 @@
 #include "os.h"
-#include "strcase.h"
+#include "text.h"
 #include "trap_jmp.h"
 #include <stdlib.h>
 #include <unwind.h>
@@ -13,10 +13,9 @@ void myExec(char *command) {
 
 Str myExtCommand(const char *cmd, const char *arg, int redirect) {
   Str tmp = NULL;
-  char *p;
   int set_arg = false;
 
-  for (p = cmd; *p; p++) {
+  for (auto p = cmd; *p; p++) {
     if (*p == '%' && *(p + 1) == 's' && !set_arg) {
       if (tmp == NULL)
         tmp = Strnew_charp_n(cmd, (int)(p - cmd));

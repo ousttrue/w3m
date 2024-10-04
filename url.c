@@ -1,10 +1,9 @@
 #include "url.h"
 #include "file.h"
-#include "app.h"
+#include "core.h"
 #include "text.h"
 #include "etc.h"
 #include "alloc.h"
-#include "strcase.h"
 #include "myctype.h"
 #include <string.h>
 
@@ -74,7 +73,7 @@ const char *file_to_url(const char *file) {
     drive = allocStr(file, 2);
     file += 2;
   } else if (file[0] != '/') {
-    auto tmp = Strnew_charp(app_currentdir());
+    auto tmp = Strnew_charp(getCurrentDir());
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, file);
@@ -181,7 +180,7 @@ void parseURL2(const char *url, struct Url *pu, struct Url *current) {
         !(IS_ALPHA(pu->file[0]) && pu->file[1] == ':') &&
         strcmp(pu->file, "-")) {
       /* local file, relative path */
-      tmp = Strnew_charp(app_currentdir());
+      tmp = Strnew_charp(getCurrentDir());
       if (Strlastchar(tmp) != '/')
         Strcat_char(tmp, '/');
       Strcat_charp(tmp, file_unquote(pu->file));

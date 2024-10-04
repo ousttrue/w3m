@@ -1,4 +1,4 @@
-#include "app.h"
+#include "core.h"
 #include "tmpfile.h"
 #include "file.h"
 #include "alloc.h"
@@ -6,18 +6,19 @@
 
 #ifdef _WIN32
 #include <process.h>
+#include <processthreadsapi.h>
 #else
 #include <unistd.h>
 #endif
 
 const char *CurrentDir = nullptr;
-const char *app_currentdir() { return CurrentDir; }
+const char *getCurrentDir() { return CurrentDir; }
 
-int CurrentPid = -1;
+uint32_t CurrentPid = 0;
+uint32_t getCurrentPid() { return CurrentPid; }
 
 struct Event *CurrentEvent = NULL;
 static struct Event *LastEvent = NULL;
-
 void pushEvent(int cmd, void *data) {
   struct Event *event;
 
@@ -32,10 +33,12 @@ void pushEvent(int cmd, void *data) {
   LastEvent = event;
 }
 
-void app_init() {
-
+void initialize() {
   CurrentDir = currentdir();
+#ifdef _WIN32
+  CurrentPid = GetCurrentProcessId();
+#else
   CurrentPid = (int)getpid();
-
+#endif
   tmpfile_init();
 }

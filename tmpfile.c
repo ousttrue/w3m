@@ -1,8 +1,8 @@
 #include "tmpfile.h"
 #include "alloc.h"
-#include "app.h"
 #include "textlist.h"
 #include "display.h"
+#include "core.h"
 
 static struct TextList *fileToDelete = nullptr;
 void tmpfile_init() { fileToDelete = newTextList(); }
@@ -30,7 +30,7 @@ static char *tmpf_base[MAX_TMPF_TYPE] = {
 static unsigned int tmpf_seq[MAX_TMPF_TYPE];
 
 Str tmpfname(enum TMPF_TYPE type, const char *ext) {
-  auto tmpf = Sprintf("%s/w3m%s%d-%d%s", tmp_dir, tmpf_base[type], CurrentPid,
+  auto tmpf = Sprintf("%s/w3m%s%d-%d%s", tmp_dir, tmpf_base[type], getCurrentPid(),
                       tmpf_seq[type]++, (ext) ? ext : "");
   pushText(fileToDelete, tmpf->ptr);
   return tmpf;

@@ -1,11 +1,11 @@
 #include "http_auth.h"
 #include "http_response.h"
-#include "app.h"
 #include "buffer.h"
 #include "myctype.h"
 #include "alloc.h"
 #include "terms.h"
 #include "etc.h"
+#include "core.h"
 #include <sys/stat.h>
 
 #define PASSWD_FILE RC_DIR "/passwd"
