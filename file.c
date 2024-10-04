@@ -10,7 +10,6 @@
 #include "os.h"
 #include "http_response.h"
 #include "istream.h"
-#include "indep.h"
 #include "alloc.h"
 #include "ctrlcode.h"
 #include "url_stream.h"

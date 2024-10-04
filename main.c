@@ -5,7 +5,6 @@
 #include "http_cookie.h"
 #include "loader.h"
 #include "app.h"
-#include "indep.h"
 #include "alloc.h"
 #include "url_stream.h"
 #include "history.h"

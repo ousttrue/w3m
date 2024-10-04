@@ -50,7 +50,6 @@ pub const SRCS = [_][]const u8{
     "istream.c",
 
     "Str.c",
-    "indep.c",
     "textlist.c",
     "parsetag.c",
     "myctype.c",

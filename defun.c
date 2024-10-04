@@ -1,6 +1,7 @@
 #define MAINPROGRAM
 #include "fm.h"
 #include "w3mbookmark.h"
+#include "shell.h"
 #include "siteconf.h"
 #include "document.h"
 #include "ftp.h"
@@ -17,7 +18,6 @@
 #include "http_response.h"
 #include "http_cookie.h"
 #include "file.h"
-#include "indep.h"
 #include "app.h"
 #include "funcname1.h"
 #include "history.h"

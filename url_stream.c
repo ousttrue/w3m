@@ -1,5 +1,6 @@
 #include "url_stream.h"
 #include "file.h"
+#include "shell.h"
 #include "siteconf.h"
 #include "document.h"
 #include "file.h"
@@ -13,17 +14,13 @@
 #include "istream.h"
 #include "alloc.h"
 #include "app.h"
-#include "indep.h"
 #include "textlist.h"
-#include "etc.h"
 #include "html.h"
 #include "http_request.h"
 #include "localcgi.h"
 #include "fm.h"
-#include "scr.h"
 #include "buffer.h"
 #include "terms.h"
-#include "tty.h"
 #include "rand48.h"
 
 #include <unistd.h>
@@ -418,13 +415,12 @@ eend:
   return NULL;
 }
 
-static void SSL_write_from_file(SSL *ssl, char *file) {
-  FILE *fd;
-  int c;
-  char buf[1];
-  fd = fopen(file, "r");
+static void SSL_write_from_file(SSL *ssl, const char *file) {
+  auto fd = fopen(file, "r");
   if (fd != NULL) {
+    int c;
     while ((c = fgetc(fd)) != EOF) {
+      char buf[1];
       buf[0] = c;
       SSL_write(ssl, buf, 1);
     }
@@ -432,13 +428,12 @@ static void SSL_write_from_file(SSL *ssl, char *file) {
   }
 }
 
-static void write_from_file(int sock, char *file) {
-  FILE *fd;
-  int c;
-  char buf[1];
-  fd = fopen(file, "r");
+static void write_from_file(int sock, const char *file) {
+  auto fd = fopen(file, "r");
   if (fd != NULL) {
+    int c;
     while ((c = fgetc(fd)) != EOF) {
+      char buf[1];
       buf[0] = c;
       write(sock, buf, 1);
     }
@@ -790,9 +785,7 @@ static Str _parsedURL2Str(struct Url *pu, int pass, int user, int label) {
     Strcat_charp(tmp, pu->file);
     return tmp;
   }
-  {
-    Strcat_charp(tmp, "//");
-  }
+  { Strcat_charp(tmp, "//"); }
   if (user && pu->user) {
     Strcat_charp(tmp, pu->user);
     if (pass && pu->pass) {

@@ -3,7 +3,6 @@
 #include "form.h"
 #include "map.h"
 #include "url.h"
-#include "indep.h"
 #include "alloc.h"
 #include "http_request.h"
 #include "fm.h"

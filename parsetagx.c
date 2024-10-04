@@ -4,7 +4,6 @@
 #include "html_text.h"
 #include "alloc.h"
 #include "myctype.h"
-#include "indep.h"
 #include "Str.h"
 #include "hash.h"
 

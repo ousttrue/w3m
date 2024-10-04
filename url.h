@@ -49,7 +49,9 @@ Str parsedURL2Str(struct Url *pu);
 Str parsedURL2RefererStr(struct Url *pu);
 int getURLScheme(const char **url);
 extern int is_localhost(const char *host);
-extern char *url_unquote_conv0(char *url);
+extern const char *url_unquote_conv0(const char *url);
 extern const char *url_quote(const char *str);
 extern Str Str_url_unquote(Str x, bool is_form, bool safe);
 #define Str_form_unquote(x) Str_url_unquote((x), true, false)
+const char *file_quote(const char *str);
+const char *file_unquote(const char *str);

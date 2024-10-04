@@ -5,6 +5,8 @@
 #include "ctrlcode.h"
 #include <math.h>
 
+#define HAVE_STRTOLL 1
+#define HAVE_ATOLL 1
 int64_t strtoclen(const char *s) {
 #ifdef HAVE_STRTOLL
   return strtoll(s, NULL, 10);

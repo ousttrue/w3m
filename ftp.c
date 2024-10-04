@@ -6,7 +6,6 @@
 #include "istream.h"
 #include "trap_jmp.h"
 #include "file.h"
-#include "indep.h"
 #include "isocket.h"
 #include "url.h"
 #include "fm.h"

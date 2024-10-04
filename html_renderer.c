@@ -13,7 +13,6 @@
 #include "html_textarea.h"
 #include "myctype.h"
 #include "parsetagx.h"
-#include "indep.h"
 
 #define ENABLE_REMOVE_TRAILINGSPACES
 

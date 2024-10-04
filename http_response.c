@@ -9,7 +9,6 @@
 #include "termsize.h"
 #include "istream.h"
 #include "mimehead.h"
-#include "indep.h"
 #include "alloc.h"
 #include "app.h"
 #include "url.h"

@@ -10,7 +10,6 @@
 #include "Str.h"
 #include "url_stream.h"
 #include "myctype.h"
-#include "indep.h"
 #include <string.h>
 #include <sys/stat.h>
 

@@ -11,7 +11,6 @@
 #include "alloc.h"
 #include "http_cookie.h"
 #include "url_stream.h"
-#include "indep.h"
 #include "app.h"
 #include "downloadlist.h"
 #include "buffer.h"
@@ -796,4 +795,29 @@ void form_write_from_file(FILE *f, const char *boundary, const char *name,
   }
 write_end:
   fprintf(f, "\r\n");
+}
+
+Str Str_form_quote(Str x) {
+  Str tmp = NULL;
+  char *p = x->ptr, *ep = x->ptr + x->length;
+  char buf[4];
+
+  for (; p < ep; p++) {
+    if (*p == ' ') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, '+');
+    } else if (is_url_unsafe(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      sprintf(buf, "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp;
+  return x;
 }

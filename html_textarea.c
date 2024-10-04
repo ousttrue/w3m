@@ -4,7 +4,6 @@
 #include "alloc.h"
 #include "html_readbuffer.h"
 #include "parsetagx.h"
-#include "indep.h"
 #include "html_parser.h"
 
 #define MAX_TEXTAREA                                                           \

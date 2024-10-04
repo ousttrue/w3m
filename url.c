@@ -5,7 +5,6 @@
 #include "etc.h"
 #include "alloc.h"
 #include "strcase.h"
-#include "indep.h"
 #include "myctype.h"
 #include <string.h>
 
@@ -89,10 +88,8 @@ const char *file_to_url(const char *file) {
   return tmp->ptr;
 }
 
-char *url_unquote_conv0(char *url) {
-  Str tmp;
-  tmp = Str_url_unquote(Strnew_charp(url), false, true);
-  return tmp->ptr;
+const char *url_unquote_conv0(const char *url) {
+  return Str_url_unquote(Strnew_charp(url), false, true)->ptr;
 }
 
 void parseURL2(const char *url, struct Url *pu, struct Url *current) {
@@ -225,6 +222,110 @@ void parseURL2(const char *url, struct Url *pu, struct Url *current) {
 
 const char *url_decode0(const char *url) {
   if (!DecodeURL)
-    return (char *)url;
+    return url;
   return url_unquote_conv0(url);
+}
+
+static char xdigit[0x10] = "0123456789ABCDEF";
+
+const char *url_quote(const char *str) {
+  Str tmp = NULL;
+  for (auto p = str; *p; p++) {
+    if (is_url_quote(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      Strcat_char(tmp, '%');
+      Strcat_char(tmp, xdigit[((unsigned char)*p >> 4) & 0xF]);
+      Strcat_char(tmp, xdigit[(unsigned char)*p & 0xF]);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}
+
+#define url_unquote_char(pstr)                                                 \
+  ((IS_XDIGIT((*(pstr))[1]) && IS_XDIGIT((*(pstr))[2]))                        \
+       ? (*(pstr) += 3,                                                        \
+          (GET_MYCDIGIT((*(pstr))[-2]) << 4) | GET_MYCDIGIT((*(pstr))[-1]))    \
+       : -1)
+
+const char *file_unquote(const char *str) {
+  Str tmp = NULL;
+  for (auto p = str; *p;) {
+    if (*p == '%') {
+      auto q = p;
+      int c = url_unquote_char(&q);
+      if (c >= 0) {
+        if (tmp == NULL)
+          tmp = Strnew_charp_n(str, (int)(p - str));
+        if (c != '\0' && c != '\n' && c != '\r')
+          Strcat_char(tmp, (char)c);
+        p = q;
+        continue;
+      }
+    }
+    if (tmp)
+      Strcat_char(tmp, *p);
+    p++;
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
+}
+
+Str Str_url_unquote(Str x, bool is_form, bool safe) {
+  Str tmp = NULL;
+  char *p = x->ptr, *ep = x->ptr + x->length, *q;
+  int c;
+
+  for (; p < ep;) {
+    if (is_form && *p == '+') {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+      Strcat_char(tmp, ' ');
+      p++;
+      continue;
+    } else if (*p == '%') {
+      q = p;
+      c = url_unquote_char(&q);
+      if (c >= 0 && (!safe || !IS_ASCII(c) || !is_file_quote(c))) {
+        if (tmp == NULL)
+          tmp = Strnew_charp_n(x->ptr, (int)(p - x->ptr));
+        Strcat_char(tmp, (char)c);
+        p = q;
+        continue;
+      }
+    }
+    if (tmp)
+      Strcat_char(tmp, *p);
+    p++;
+  }
+  if (tmp)
+    return tmp;
+  return x;
+}
+
+const char *file_quote(const char *str) {
+  Str tmp = NULL;
+  char *p;
+  char buf[4];
+
+  for (p = str; *p; p++) {
+    if (is_file_quote(*p)) {
+      if (tmp == NULL)
+        tmp = Strnew_charp_n(str, (int)(p - str));
+      sprintf(buf, "%%%02X", (unsigned char)*p);
+      Strcat_charp(tmp, buf);
+    } else {
+      if (tmp)
+        Strcat_char(tmp, *p);
+    }
+  }
+  if (tmp)
+    return tmp->ptr;
+  return str;
 }

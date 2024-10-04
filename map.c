@@ -7,7 +7,6 @@
 #include "http_response.h"
 #include "file.h"
 #include "alloc.h"
-#include "indep.h"
 #include "html_readbuffer.h"
 #include "document.h"
 #include "buffer.h"

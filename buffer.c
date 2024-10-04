@@ -4,7 +4,6 @@
 #include "html_text.h"
 #include "document.h"
 #include "file.h"
-#include "indep.h"
 #include "url_stream.h"
 #include "strcase.h"
 #include "http_response.h"

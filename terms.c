@@ -12,7 +12,6 @@
 #include "trap_jmp.h"
 #include "linein.h"
 #include "alloc.h"
-#include "indep.h"
 #include "buffer.h"
 #include "tabbuffer.h"
 #include "termsize.h"

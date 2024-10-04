@@ -6,14 +6,12 @@
 #include "alloc.h"
 #include "file.h"
 #include "app.h"
-#include "indep.h"
 #include "form.h"
 #include "http_request.h"
 #include "fm.h"
-#include "etc.h"
-#include "terms.h"
 #include "termsize.h"
 #include "rand48.h"
+#include "etc.h"
 #include <stdio.h>
 #include <dirent.h>
 #include <errno.h>
@@ -62,7 +60,6 @@ Str localCookie() {
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
 #define CGIFN_CGIBIN 2
-
 
 Str loadLocalDir(const char *dname) {
   Directory *dir;
@@ -199,16 +196,14 @@ Str loadLocalDir(const char *dname) {
   return tmp;
 }
 
-static Str checkPath(char *fn, char *path) {
-  char *p;
-  Str tmp;
-  struct stat st;
+static Str checkPath(const char *fn, const char *path) {
   while (*path) {
-    p = strchr(path, ':');
-    tmp = Strnew_charp(expandPath(p ? allocStr(path, p - path) : path));
+    auto p = strchr(path, ':');
+    auto tmp = Strnew_charp(expandPath(p ? allocStr(path, p - path) : path));
     if (Strlastchar(tmp) != '/')
       Strcat_char(tmp, '/');
     Strcat_charp(tmp, fn);
+    struct stat st;
     if (stat(tmp->ptr, &st) == 0)
       return tmp;
     if (!p)
@@ -220,26 +215,24 @@ static Str checkPath(char *fn, char *path) {
   return NULL;
 }
 
-static int cgi_filename(char *uri, char **fn, char **name, char **path_info) {
-  Str tmp;
-  int offset;
-
+static int cgi_filename(const char *uri, const char **fn, const char **name,
+                        const char **path_info) {
   *fn = uri;
   *name = uri;
   *path_info = NULL;
-
+  int offset;
   if (cgi_bin != NULL && strncmp(uri, "/cgi-bin/", 9) == 0) {
     offset = 9;
     if ((*path_info = strchr(uri + offset, '/')))
       *name = allocStr(uri, *path_info - uri);
-    tmp = checkPath(*name + offset, cgi_bin);
+    auto tmp = checkPath(*name + offset, cgi_bin);
     if (tmp == NULL)
       return CGIFN_NORMAL;
     *fn = tmp->ptr;
     return CGIFN_CGIBIN;
   }
 
-  tmp = Strnew_charp(w3m_lib_dir());
+  auto tmp = Strnew_charp(w3m_lib_dir());
   if (Strlastchar(tmp) != '/')
     Strcat_char(tmp, '/');
   if (strncmp(uri, "/$LIB/", 6) == 0)
@@ -265,7 +258,7 @@ static int cgi_filename(char *uri, char **fn, char **name, char **path_info) {
   return CGIFN_LIBDIR;
 }
 
-static int check_local_cgi(char *file, int status) {
+static int check_local_cgi(const char *file, int status) {
 #ifdef _WIN32
   return 0;
 #else
@@ -300,15 +293,18 @@ static void set_cgi_environ(char *name, char *fn, char *req_uri) {
 
 FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *request,
                     const char *referer) {
-  FILE *fr = NULL, *fw = NULL;
-  int status;
-  char *file = uri, *name = uri, *path_info = NULL, *tmpf = NULL;
+  auto file = uri;
+  auto name = uri;
+  const char *path_info = NULL;
+  const char *tmpf = NULL;
   const char *cgi_dir;
 
-  status = cgi_filename(uri, &file, &name, &path_info);
+  int status = cgi_filename(uri, &file, &name, &path_info);
   if (check_local_cgi(file, status) < 0)
     return NULL;
   writeLocalCookie();
+
+  FILE *fr = NULL, *fw = NULL;
   if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
     tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     fw = fopen(tmpf, "w");

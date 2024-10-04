@@ -2,7 +2,6 @@
 #include "text.h"
 #include "symbol.h"
 #include "utf8.h"
-#include "indep.h"
 #include "html_renderer.h"
 #include "image.h"
 #include "entity.h"
