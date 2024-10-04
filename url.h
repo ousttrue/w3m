@@ -51,3 +51,5 @@ int getURLScheme(const char **url);
 extern int is_localhost(const char *host);
 extern char *url_unquote_conv0(char *url);
 extern const char *url_quote(const char *str);
+extern Str Str_url_unquote(Str x, bool is_form, bool safe);
+#define Str_form_unquote(x) Str_url_unquote((x), true, false)

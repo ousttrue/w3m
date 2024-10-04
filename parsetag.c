@@ -1,6 +1,5 @@
 #include "parsetag.h"
-#include "myctype.h"
-#include "indep.h"
+#include "url.h"
 #include "Str.h"
 #include "alloc.h"
 

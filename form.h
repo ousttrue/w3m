@@ -84,3 +84,4 @@ extern void form_write_from_file(FILE *f, const char *boundary,
                                  const char *name, const char *filename,
                                  const char *file);
 extern void loadPreForm(void);
+extern Str Str_form_quote(Str x);

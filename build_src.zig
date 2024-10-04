@@ -19,6 +19,7 @@ pub const SRCS = [_][]const u8{
     "growbuf.c",
     "alloc.c",
     "app.c",
+    "shell.c",
     "main.c",
     "defun.c",
     "file.c",

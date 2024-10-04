@@ -144,24 +144,6 @@ Str Str_url_unquote(Str x, bool is_form, bool safe) {
   return x;
 }
 
-const char *shell_quote(const char *str) {
-  Str tmp = NULL;
-  for (auto p = str; *p; p++) {
-    if (is_shell_unsafe(*p)) {
-      if (tmp == NULL)
-        tmp = Strnew_charp_n(str, (int)(p - str));
-      Strcat_char(tmp, '\\');
-      Strcat_char(tmp, *p);
-    } else {
-      if (tmp)
-        Strcat_char(tmp, *p);
-    }
-  }
-  if (tmp)
-    return tmp->ptr;
-  return str;
-}
-
 void *xrealloc(void *ptr, size_t size) {
   void *newptr = realloc(ptr, size);
   if (newptr == NULL) {
