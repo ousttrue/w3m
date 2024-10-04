@@ -1,6 +1,6 @@
 #include "app.h"
 #include "textlist.h"
-#include "indep.h"
+#include "file.h"
 #include "alloc.h"
 #include <stdlib.h>
 

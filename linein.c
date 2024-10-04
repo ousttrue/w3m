@@ -1,5 +1,6 @@
 #include "linein.h"
 #include "text.h"
+#include "app.h"
 #include "url.h"
 #include "file.h"
 #include "utf8.h"
@@ -689,6 +690,10 @@ Str escape_spaces(Str s) {
   if (tmp)
     return tmp;
   return s;
+}
+
+static int strCmp(const void *s1, const void *s2) {
+  return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
 static Str doComplete(Str ifn, int *status, int next) {

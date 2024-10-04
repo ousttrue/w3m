@@ -287,3 +287,27 @@ const char *getQWord(const char **str) {
   *str = p;
   return tmp->ptr;
 }
+
+void cleanup_line(Str s, enum CLEANUP_LINE_MODE mode) {
+  if (s->length >= 2 && s->ptr[s->length - 2] == '\r' &&
+      s->ptr[s->length - 1] == '\n') {
+    Strshrink(s, 2);
+    Strcat_char(s, '\n');
+  } else if (Strlastchar(s) == '\r')
+    s->ptr[s->length - 1] = '\n';
+  else if (Strlastchar(s) != '\n')
+    Strcat_char(s, '\n');
+  if (mode != PAGER_MODE) {
+    int i;
+    for (i = 0; i < s->length; i++) {
+      if (s->ptr[i] == '\0')
+        s->ptr[i] = ' ';
+    }
+  }
+}
+
+Str convertLine(Str line, enum CLEANUP_LINE_MODE mode) {
+  if (mode != RAW_MODE)
+    cleanup_line(line, mode);
+  return line;
+}

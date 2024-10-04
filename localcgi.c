@@ -1,5 +1,6 @@
 #include "localcgi.h"
 #include "url.h"
+#include "html_text.h"
 #include "file.h"
 #include "trap_jmp.h"
 #include "alloc.h"
@@ -44,6 +45,10 @@ static void writeLocalCookie() {
   chmod(Local_cookie_file, S_IRUSR | S_IWUSR);
 }
 
+static int strCmp(const void *s1, const void *s2) {
+  return strcmp(*(const char **)s1, *(const char **)s2);
+}
+
 /* setup cookie for local CGI */
 Str localCookie() {
   if (Local_cookie)
@@ -57,6 +62,7 @@ Str localCookie() {
 #define CGIFN_NORMAL 0
 #define CGIFN_LIBDIR 1
 #define CGIFN_CGIBIN 2
+
 
 Str loadLocalDir(const char *dname) {
   Directory *dir;

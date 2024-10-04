@@ -1,6 +1,7 @@
 #include "buffer.h"
 #include "istream.h"
 #include "map.h"
+#include "html_text.h"
 #include "document.h"
 #include "file.h"
 #include "indep.h"

@@ -352,12 +352,40 @@ char *guess_filename(const char *file) {
 }
 
 bool dir_exist(const char *path) {
-  struct stat stbuf;
-
   if (path == NULL || *path == '\0')
     return false;
+  struct stat stbuf;
   if (stat(path, &stbuf) == -1)
     return false;
-
   return IS_DIRECTORY(stbuf.st_mode);
+}
+
+const char *currentdir() {
+  char *path;
+#ifdef HAVE_GETCWD
+#ifdef MAXPATHLEN
+  path = NewAtom_N(char, MAXPATHLEN);
+  getcwd(path, MAXPATHLEN);
+#else
+  path = getcwd(NULL, 0);
+#endif
+#else /* not HAVE_GETCWD */
+#ifdef HAVE_GETWD
+  path = NewAtom_N(char, 1024);
+  getwd(path);
+#else  /* not HAVE_GETWD */
+  FILE *f;
+  char *p;
+  path = NewAtom_N(char, 1024);
+  f = popen("pwd", "r");
+  fgets(path, 1024, f);
+  pclose(f);
+  for (p = path; *p; p++)
+    if (*p == '\n') {
+      *p = '\0';
+      break;
+    }
+#endif /* not HAVE_GETWD */
+#endif /* not HAVE_GETCWD */
+  return path;
 }

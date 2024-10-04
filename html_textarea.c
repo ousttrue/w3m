@@ -1,5 +1,6 @@
 #include "html_textarea.h"
 #include "parsetag.h"
+#include "html_text.h"
 #include "alloc.h"
 #include "html_readbuffer.h"
 #include "parsetagx.h"
@@ -42,7 +43,7 @@ Str process_textarea(struct parsed_tag *tag, int width) {
 #define TEXTAREA_ATTR_ROWS_MAX 4096
 
   if (cur_form_id < 0) {
-    char *s = "<form_int method=internal action=none>";
+    const char *s = "<form_int method=internal action=none>";
     tmp = process_form(parse_tag(&s, true));
   }
 

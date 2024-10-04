@@ -9,8 +9,8 @@
  */
 
 #include "http_cookie.h"
-#include "indep.h"
 #include "isocket.h"
+#include "html_text.h"
 #include "rc.h"
 #include "textlist.h"
 #include "alloc.h"
@@ -481,20 +481,18 @@ struct cookie *nth_cookie(int n) {
 #define str2charp(str) ((str) ? (str)->ptr : "")
 
 void save_cookies(void) {
-  struct cookie *p;
-  char *cookie_file;
-  FILE *fp;
-
   check_expired_cookies();
 
   if (!First_cookie || is_saved || no_rc_dir)
     return;
 
-  cookie_file = rcFile(COOKIE_FILE);
+  auto cookie_file = rcFile(COOKIE_FILE);
+
+  FILE *fp;
   if (!(fp = fopen(cookie_file, "w")))
     return;
 
-  for (p = First_cookie; p; p = p->next) {
+  for (auto p = First_cookie; p; p = p->next) {
     if (!(p->flag & COO_USE) || p->flag & COO_DISCARD)
       continue;
     fprintf(fp, "%s\t%s\t%s\t%ld\t%s\t%s\t%d\t%d\t%s\t%s\t%s\n",

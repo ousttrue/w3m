@@ -1,6 +1,7 @@
 #include "html_readbuffer.h"
 #include "text.h"
 #include "document.h"
+#include "html_text.h"
 #include "table.h"
 #include "symbol.h"
 #include "utf8.h"

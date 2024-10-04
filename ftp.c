@@ -1,5 +1,7 @@
 #include "ftp.h"
 #include "utf8.h"
+#include "text.h"
+#include "html_text.h"
 #include "http_auth.h"
 #include "istream.h"
 #include "trap_jmp.h"
@@ -435,6 +437,10 @@ ftp_read:
 ftp_dir:
   pu->scheme = SCM_FTPDIR;
   return NULL;
+}
+
+static int strCmp(const void *s1, const void *s2) {
+  return strcmp(*(const char **)s1, *(const char **)s2);
 }
 
 Str loadFTPDir0(struct Url *pu) {

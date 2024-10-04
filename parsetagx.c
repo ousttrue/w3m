@@ -1,7 +1,7 @@
 #include "parsetagx.h"
 #include "html_types.h"
-#include "fm.h"
 #include "html_parser.h"
+#include "html_text.h"
 #include "alloc.h"
 #include "myctype.h"
 #include "indep.h"
@@ -104,13 +104,12 @@ struct parsed_tag *parse_tag(const char **s, int internal) {
   struct parsed_tag *tag = NULL;
   int tag_id;
   char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
-  char *p, *q;
   int i, attr_id = 0, nattr;
 
   /* Parse tag name */
   tagname[0] = '\0';
-  q = (*s) + 1;
-  p = tagname;
+  auto q = (*s) + 1;
+  auto p = tagname;
   if (*q == '/') {
     *(p++) = *(q++);
     SKIP_BLANKS(q);

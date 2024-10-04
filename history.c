@@ -1,5 +1,6 @@
 #include "history.h"
 #include "url.h"
+#include "html_text.h"
 #include "rc.h"
 #include "alloc.h"
 #include "app.h"
@@ -17,7 +18,7 @@ struct Hist *TextHist;
 struct Buffer *historyBuffer(struct Hist *hist) {
   Str src = Strnew();
   HistItem *item;
-  char *p, *q;
+  char *p;
 
   /* FIXME: gettextize? */
   Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
@@ -25,7 +26,7 @@ struct Buffer *historyBuffer(struct Hist *hist) {
   Strcat_charp(src, "<ol>\n");
   if (hist && hist->list) {
     for (item = hist->list->last; item; item = item->prev) {
-      q = html_quote((char *)item->ptr);
+      auto q = html_quote((char *)item->ptr);
       if (DecodeURL)
         p = html_quote(url_decode0(item->ptr));
       else

@@ -3,10 +3,9 @@
  */
 #include <stdio.h>
 #include "fm.h"
-#include "file.h"
+#include "app.h"
 #include "rc.h"
 #include "alloc.h"
-#include "indep.h"
 #include "ctrlcode.h"
 #include "func.h"
 #include "myctype.h"

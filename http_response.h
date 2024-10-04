@@ -25,3 +25,4 @@ struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu);
 bool httpMatchattr(const char *p, const char *attr, int len, Str *value);
 const char *httpGetHeader(struct HttpResponse *res, const char *field);
 const char *httpGetContentType(struct HttpResponse *res);
+

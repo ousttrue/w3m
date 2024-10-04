@@ -4,6 +4,7 @@
  */
 #include "terms.h"
 #include "document.h"
+#include "html_text.h"
 #include "rc.h"
 #include "text.h"
 #include "termcon.h"

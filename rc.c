@@ -3,6 +3,7 @@
  */
 #include "rc.h"
 #include "loader.h"
+#include "html_text.h"
 #include "text.h"
 #include "w3mhelperpanel.h"
 #include "isocket.h"

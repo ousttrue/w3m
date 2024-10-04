@@ -2,6 +2,7 @@
  * client-side image maps
  */
 #include "map.h"
+#include "html_text.h"
 #include "url.h"
 #include "http_response.h"
 #include "file.h"
