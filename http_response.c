@@ -30,12 +30,14 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
                     const char *key, const char *p, struct Url *pu) {
   if (!strcasecmp(key, "content-type")) {
     // text/html; charset=Shift_JIS
-    auto comma = strchr(p, ';');
-    if (comma) {
+    auto semi = strchr(p, ';');
+    if (semi) {
       // check charse
-      comma[0] = 0;
+      semi[0] = 0;
+      auto q = semi + 1;
+      SKIP_BLANKS(q);
       auto charset = Strnew();
-      if (httpMatchattr(comma + 1, "charset", 7, &charset)) {
+      if (httpMatchattr(q, "charset", 7, &charset)) {
         if (!strcasecmp(charset->ptr, "shift_jis")) {
           res->content_charset = CHARSET_SJIS;
         }

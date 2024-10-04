@@ -9,7 +9,7 @@ w3m を改造する(5週目くらいw)。
 - [x] windows で動作する
 - [x] utf-8 が表示できる
   - [x] 文字のカラム幅
-  - [ ] SJIS
+  - [WIP] SJIS
 - [ ] dom 入れたい
 
 ## dependencies

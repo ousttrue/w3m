@@ -20,6 +20,7 @@
 #include "http_response.h"
 #include "http_auth.h"
 #include "terms.h"
+#include <libnkf.h>
 #include <sys/stat.h>
 #include <stdio.h>
 
@@ -124,10 +125,12 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   copyParsedURL(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
   t_buf->ssl_certificate = f.ssl_certificate;
-  // auto b = loadSomething(&f, proc, t, t_buf);
 
   struct Buffer *b;
   if (is_html_type(t)) {
+    //
+    // html
+    //
     FILE *src = NULL;
     if (f.scheme != SCM_LOCAL) {
       auto tmp = tmpfname(TMPF_SRC, ".html");
@@ -139,15 +142,24 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
     Str html = Strnew();
     Str line;
     while ((line = StrmyUFgets(&f))->length) {
-      if (src)
-        Strfputs(line, src);
       Strcat(html, line);
     }
-    if (src)
+    if (t_buf->http_response->content_charset == CHARSET_SJIS) {
+      // sjis to utf8
+      auto opts = "-S -w";
+      auto utf8 = nkf_convert((unsigned char *)html->ptr, html->length, opts,
+                              strlen(opts));
+      html = Strnew_charp((const char *)utf8);
+      free(utf8);
+    }
+    if (src) {
+      Strfputs(html, src);
       fclose(src);
+    }
     b = t_buf;
     b->document = loadHTML(html, t_buf->currentURL, baseURL(t_buf));
   } else {
+    // text
     b = loadBuffer(&f, nullptr, t_buf);
   }
   if (b != NULL) {
