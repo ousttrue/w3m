@@ -1,5 +1,5 @@
 #pragma once
-#include "utf8.h"
+#include "text/utf8.h"
 
 void tty_open();
 void tty_close();

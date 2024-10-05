@@ -1,14 +1,14 @@
-#include "compression.h"
-#include "trap_jmp.h"
+#include "input/compression.h"
 #include "alloc.h"
-#include "etc.h"
 #include "core.h"
-#include "tmpfile.h"
-#include "istream.h"
+#include "etc.h"
+#include "file/tmpfile.h"
+#include "input/istream.h"
+#include "input/url_stream.h"
+#include "text/Str.h"
+#include "text/myctype.h"
 #include "textlist.h"
-#include "Str.h"
-#include "url_stream.h"
-#include "myctype.h"
+#include "trap_jmp.h"
 #include <string.h>
 #include <sys/stat.h>
 

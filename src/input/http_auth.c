@@ -2,7 +2,7 @@
 #include "input/http_response.h"
 #include "buffer/buffer.h"
 #include "term/terms.h"
-#include "myctype.h"
+#include "text/myctype.h"
 #include "alloc.h"
 #include "etc.h"
 #include "core.h"

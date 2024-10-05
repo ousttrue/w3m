@@ -1,9 +1,8 @@
 #pragma once
-#include "fm.h"
-#include "Str.h"
-#include "html/anchor.h"
 #include "buffer/line.h"
+#include "html/anchor.h"
 #include "input/url.h"
+#include "text/Str.h"
 
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10
@@ -17,6 +16,11 @@
 
 #define RELATIVE_WIDTH(w) (((w) >= 0) ? (int)((w) / pixel_per_char) : (w))
 
+extern bool squeezeBlankLine;
+extern bool view_unseenobject;
+extern bool is_redisplay;
+extern bool DisplayBorders;
+extern int IndentIncr;
 extern struct FormList **forms;
 extern int *form_stack;
 extern int form_max;
@@ -24,6 +28,10 @@ extern int form_sp;
 #define cur_form_id ((form_sp >= 0) ? form_stack[form_sp] : -1)
 extern int cur_hseq;
 extern int displayInsDel;
+extern bool displayLinkNumber;
+extern bool DisableCenter;
+extern bool pseudoInlines;
+extern bool ignore_null_img_alt;
 
 #define RB_PRE 0x01
 #define RB_SCRIPT 0x02
@@ -42,7 +50,7 @@ extern int displayInsDel;
 #define RB_IGNORE_P 0x2000
 #define RB_TITLE 0x4000
 #define RB_NFLUSHED 0x8000
-#define RB_NOFRAMES 0x10000
+// #define RB_NOFRAMES 0x10000
 #define RB_INTABLE 0x20000
 #define RB_PREMODE                                                             \
   (RB_PRE | RB_PRE_INT | RB_SCRIPT | RB_STYLE | RB_PLAIN | RB_INTXTA)

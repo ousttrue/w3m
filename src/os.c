@@ -1,9 +1,9 @@
 #include "os.h"
-#include "text.h"
+#include "text/text.h"
 #include "trap_jmp.h"
+#include <process.h>
 #include <stdlib.h>
 #include <unwind.h>
-#include <process.h>
 
 void myExec(char *command) {
   signal_int_default();

@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 struct growbuf {
   char *ptr;

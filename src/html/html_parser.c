@@ -1,11 +1,11 @@
 #include "html/html_parser.h"
-#include "buffer/line.h"
-#include "entity.h"
 #include "alloc.h"
-#include "text.h"
-#include "myctype.h"
+#include "buffer/line.h"
 #include "hash.h"
-#include "utf8.h"
+#include "text/entity.h"
+#include "text/myctype.h"
+#include "text/text.h"
+#include "text/utf8.h"
 #include <string.h>
 #include <strings.h>
 

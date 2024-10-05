@@ -1,4 +1,5 @@
-#include "input/http_cookie.h"
+#include "func.h"
+#include "proto.h"
 
 FuncList w3mFuncList[] = {
     /*0*/ {"@@@", nulcmd},

@@ -1,21 +1,22 @@
 #include "html/html_renderer.h"
-#include "html/map.h"
-#include "html/html_parser.h"
-#include "html/html_textarea.h"
-#include "html/parsetagx.h"
-#include "html/html_readbuffer.h"
-#include "html/anchor.h"
+#include "alloc.h"
+#include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/line.h"
-#include "buffer/buffer.h"
+#include "file/file.h"
+#include "html/anchor.h"
+#include "html/html_parser.h"
+#include "html/html_readbuffer.h"
+#include "html/html_textarea.h"
+#include "html/map.h"
+#include "html/parsetagx.h"
 #include "term/termsize.h"
-#include "text.h"
-#include "file.h"
-#include "alloc.h"
-#include "myctype.h"
+#include "text/myctype.h"
+#include "text/text.h"
 
 #define ENABLE_REMOVE_TRAILINGSPACES
 
+bool MetaRefresh = false;
 int symbol_width;
 int symbol_width0;
 

@@ -1,12 +1,12 @@
 #include "history.h"
-#include "input/url.h"
-#include "html/html_text.h"
-#include "rc.h"
 #include "alloc.h"
-#include "tmpfile.h"
+#include "file/tmpfile.h"
 #include "fm.h"
-#include "term/terms.h"
 #include "html/html_readbuffer.h"
+#include "html/html_text.h"
+#include "input/url.h"
+#include "rc.h"
+#include "term/terms.h"
 
 struct Hist *LoadHist;
 struct Hist *SaveHist;

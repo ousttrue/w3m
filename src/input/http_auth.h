@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 extern bool disable_secret_security_check;
 extern const char *passwd_file;

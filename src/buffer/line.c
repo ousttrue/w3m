@@ -1,7 +1,7 @@
-#include "line.h"
+#include "buffer/line.h"
 #include "alloc.h"
-#include "myctype.h"
-#include "utf8.h"
+#include "text/myctype.h"
+#include "text/utf8.h"
 
 int Tabstop = 8;
 int ShowEffect = true;

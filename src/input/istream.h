@@ -1,6 +1,6 @@
 #pragma once
-#include "Str.h"
-#include "encoding_type.h"
+#include "input/encoding_type.h"
+#include "text/Str.h"
 #include <openssl/types.h>
 
 enum IST_TYPE {

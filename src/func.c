@@ -1,21 +1,21 @@
 /*
  * w3m func.c
  */
-#include <stdio.h>
-#include "fm.h"
-#include "rc.h"
-#include "alloc.h"
-#include "ctrlcode.h"
 #include "func.h"
-#include "myctype.h"
-#include "regex.h"
-#include "term/terms.h"
-#include "history.h"
-#include "text.h"
+#include "alloc.h"
 #include "core.h"
-#include "proto.h"
+#include "fm.h"
 #include "funcname.h"
 #include "functable.h"
+#include "history.h"
+#include "proto.h"
+#include "rc.h"
+#include "term/terms.h"
+#include "text/ctrlcode.h"
+#include "text/myctype.h"
+#include "text/regex.h"
+#include "text/text.h"
+#include <stdio.h>
 
 #include <sys/stat.h>
 
@@ -327,5 +327,3 @@ int getKey(const char *s) {
   }
   return c;
 }
-
-

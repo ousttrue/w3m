@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 #define NO_REFERER ((char *)-1)
 

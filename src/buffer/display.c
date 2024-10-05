@@ -1,20 +1,23 @@
 #include "buffer/display.h"
-#include "html/map.h"
-#include "buffer/document.h"
-#include "html/table.h"
-#include "symbol.h"
-#include "utf8.h"
-#include "ctrlcode.h"
-#include "html/html_renderer.h"
-#include "input/url_stream.h"
-#include "html/html_readbuffer.h"
-#include "buffer/tabbuffer.h"
 #include "buffer/buffer.h"
+#include "buffer/document.h"
+#include "buffer/tabbuffer.h"
+#include "html/html_readbuffer.h"
+#include "html/html_renderer.h"
+#include "html/map.h"
+#include "html/table.h"
+#include "input/url_stream.h"
 #include "term/scr.h"
-#include "term/termsize.h"
 #include "term/terms.h"
+#include "term/termsize.h"
+#include "text/ctrlcode.h"
+#include "text/symbol.h"
+#include "text/utf8.h"
 
+int nTab = 0;
 int enable_inline_image;
+bool displayLink = false;
+bool displayLineInfo = false;
 
 #define EFFECT_ANCHOR_START scr_underline()
 #define EFFECT_ANCHOR_END scr_underlineend()
@@ -293,12 +296,13 @@ static void drawAnchorCursor(struct Buffer *buf) {
   prevhseq = buf->document->hmarklist->prevhseq;
 
   if (buf->document->href) {
-    drawAnchorCursor0(buf, buf->document->href, hseq, prevhseq, tline, eline, 1);
+    drawAnchorCursor0(buf, buf->document->href, hseq, prevhseq, tline, eline,
+                      1);
     drawAnchorCursor0(buf, buf->document->href, hseq, -1, tline, eline, 0);
   }
   if (buf->document->formitem) {
-    drawAnchorCursor0(buf, buf->document->formitem, hseq, prevhseq, tline, eline,
-                      1);
+    drawAnchorCursor0(buf, buf->document->formitem, hseq, prevhseq, tline,
+                      eline, 1);
     drawAnchorCursor0(buf, buf->document->formitem, hseq, -1, tline, eline, 0);
   }
   buf->document->hmarklist->prevhseq = hseq;

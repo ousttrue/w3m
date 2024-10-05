@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 extern int Tabstop;
 extern int ShowEffect;

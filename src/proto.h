@@ -151,3 +151,5 @@ extern void dictword(void);
 extern void dictwordat(void);
 extern void wrapToggle(void);
 extern void dispVer(void);
+void cooLst(void);
+extern void ldHist(void);

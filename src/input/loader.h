@@ -1,6 +1,13 @@
 #pragma once
 #include "url_stream.h"
 
+extern const char *DefaultType;
+extern bool use_proxy;
+extern const char *FTP_proxy;
+extern bool UseExternalDirBuffer;
+extern bool label_topline;
+extern bool retryAsHttp;
+extern bool AutoUncompress;
 extern int FollowRedirection;
 extern const char *DirBufferCommand;
 

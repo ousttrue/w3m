@@ -1,8 +1,8 @@
-#include "scr.h"
-#include "Str.h"
+#include "term/scr.h"
 #include "alloc.h"
-#include "termsize.h"
-#include "myctype.h"
+#include "term/termsize.h"
+#include "text/Str.h"
+#include "text/myctype.h"
 
 static int tab_step = 8;
 
@@ -321,14 +321,14 @@ void scr_addnstr_sup(const char *s, int n) {
   }
 }
 
-void scr_standout(void) { 
+void scr_standout(void) {
   //
-  // CurrentMode |= SCREEN_STANDOUT; 
+  // CurrentMode |= SCREEN_STANDOUT;
 }
 
-void scr_standend(void) { 
+void scr_standend(void) {
   //
-  CurrentMode &= ~SCREEN_STANDOUT; 
+  CurrentMode &= ~SCREEN_STANDOUT;
 }
 
 void scr_toggle_stand(void) {

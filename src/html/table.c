@@ -1,23 +1,23 @@
 #include "html/table.h"
-#include "text.h"
-#include "symbol.h"
-#include "utf8.h"
-#include "html/html_renderer.h"
 #include "buffer/image.h"
-#include "entity.h"
-#include "textlist.h"
 #include "fm.h"
-#include "html/html_readbuffer.h"
-#include "html/html_parser.h"
 #include "html/html.h"
+#include "html/html_parser.h"
+#include "html/html_readbuffer.h"
+#include "html/html_renderer.h"
 #include "html/parsetagx.h"
-#include "Str.h"
-#include "myctype.h"
 #include "term/termsize.h"
-#include <sys/types.h>
+#include "text/Str.h"
+#include "text/entity.h"
+#include "text/myctype.h"
+#include "text/symbol.h"
+#include "text/text.h"
+#include "text/utf8.h"
+#include "textlist.h"
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
+#include <sys/types.h>
 
 #define NOWRAP
 #define RULE_WIDTH symbol_width

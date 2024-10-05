@@ -128,6 +128,7 @@ pub fn build(b: *std.Build) void {
         exe.linkLibrary(gc_dep.artifact("gc"));
     }
     exe.addIncludePath(b.path("src"));
+    exe.addIncludePath(b.path("."));
 
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");

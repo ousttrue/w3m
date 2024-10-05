@@ -3,34 +3,34 @@
  * revised by Akinori ITO, January 1995
  */
 #include "term/terms.h"
-#include "buffer/document.h"
-#include "html/html_text.h"
-#include "rc.h"
-#include "text.h"
-#include "term/termcon.h"
-#include "buffer/display.h"
-#include "trap_jmp.h"
-#include "linein.h"
 #include "alloc.h"
 #include "buffer/buffer.h"
+#include "buffer/display.h"
+#include "buffer/document.h"
 #include "buffer/tabbuffer.h"
+#include "html/html_text.h"
+#include "linein.h"
+#include "rc.h"
+#include "term/scr.h"
+#include "term/termcon.h"
 #include "term/termsize.h"
 #include "term/tty.h"
-#include "term/scr.h"
+#include "text/text.h"
+#include "trap_jmp.h"
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <time.h>
 #ifdef _WIN32
 #else
-#include <sys/time.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <sys/select.h>
 #include <sys/ioctl.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 #include "fm.h"

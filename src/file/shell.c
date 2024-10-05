@@ -1,6 +1,6 @@
-#include "shell.h"
-#include "Str.h"
-#include "myctype.h"
+#include "file/shell.h"
+#include "text/Str.h"
+#include "text/myctype.h"
 
 #define is_shell_unsafe(c) (GET_QUOTE_TYPE(c) & SHELL_UNSAFE_MASK)
 

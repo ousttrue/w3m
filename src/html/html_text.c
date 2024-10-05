@@ -1,6 +1,6 @@
-#include "html_text.h"
-#include "Str.h"
-#include "myctype.h"
+#include "html/html_text.h"
+#include "text/Str.h"
+#include "text/myctype.h"
 
 bool is_html_quote(char c) { return (GET_QUOTE_TYPE(c) & HTML_QUOTE_MASK); }
 

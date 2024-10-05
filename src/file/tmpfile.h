@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 enum TMPF_TYPE {
   TMPF_DFL = 0,

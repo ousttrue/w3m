@@ -1,10 +1,10 @@
 #pragma once
 #include <time.h>
 #include <stdint.h>
-#include "Str.h"
-#include "url.h"
-#include "compression.h"
-#include "encoding_type.h"
+#include "text/Str.h"
+#include "input/url.h"
+#include "input/compression.h"
+#include "input/encoding_type.h"
 
 extern struct TextList *NO_proxy_domains;
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))

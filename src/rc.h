@@ -2,6 +2,7 @@
 
 #define CGI_EXTENSION ".cgi"
 
+extern bool no_rc_dir;
 extern const char *rc_dir;
 extern const char *DictCommand;
 

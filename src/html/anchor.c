@@ -1,15 +1,15 @@
 #include "html/anchor.h"
-#include "html/html_readbuffer.h"
-#include "html/form.h"
-#include "html/map.h"
-#include "input/url.h"
-#include "input/http_request.h"
-#include "buffer/document.h"
 #include "alloc.h"
+#include "buffer/document.h"
 #include "fm.h"
-#include "myctype.h"
-#include "regex.h"
+#include "html/form.h"
+#include "html/html_readbuffer.h"
+#include "html/map.h"
+#include "input/http_request.h"
+#include "input/url.h"
 #include "term/termsize.h"
+#include "text/myctype.h"
+#include "text/regex.h"
 
 #define FIRST_ANCHOR_SIZE 30
 

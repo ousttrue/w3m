@@ -1,6 +1,6 @@
-#include "html.h"
+#include "html/html.h"
 #include "hash.h"
-#include "myctype.h"
+#include "text/myctype.h"
 
 /* Define HTML Tag Infomation Table */
 

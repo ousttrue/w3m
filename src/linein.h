@@ -1,6 +1,6 @@
 #pragma once
-#include "Str.h"
 #include "buffer/line.h"
+#include "text/Str.h"
 
 struct Hist;
 

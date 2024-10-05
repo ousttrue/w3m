@@ -1,6 +1,6 @@
 #pragma once
-#include "url.h"
-#include "Str.h"
+#include "input/url.h"
+#include "text/Str.h"
 #include <time.h>
 
 #define ACCEPT_BAD_COOKIE_DISCARD 0
@@ -74,7 +74,6 @@ int add_cookie(struct Url *pu, Str name, Str value, time_t expires, Str domain,
 void save_cookies(void);
 void load_cookies(void);
 void initCookie(void);
-void cooLst(void);
 struct Buffer *cookie_list_panel(void);
 struct parsed_tagarg;
 void set_cookie_flag(struct parsed_tagarg *arg);

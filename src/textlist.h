@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 #include <limits.h>
 #define GENERAL_LIST_MAX (INT_MAX / 32)
 

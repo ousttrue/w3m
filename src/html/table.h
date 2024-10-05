@@ -1,5 +1,7 @@
 #pragma once
+#include "buffer/line.h"
 #include "html/html_types.h"
+#include "text/Str.h"
 
 #define MATRIX
 #if (defined(MESCHACH) && !defined(MATRIX))
@@ -9,11 +11,8 @@
 #ifdef MESCHACH
 #include <matrix2.h>
 #else /* not MESCHACH */
-#include "matrix.h"
+#include "html/matrix.h"
 #endif /* not MESCHACH */
-
-#include "Str.h"
-#include "buffer/line.h"
 
 #define MAX_TABLE 20 /* maximum nest level of table */
 #define MAX_TABLE_N_LIMIT 2000

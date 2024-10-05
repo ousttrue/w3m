@@ -1,17 +1,17 @@
 #include "buffer/downloadlist.h"
-#include "text.h"
-#include "file.h"
-#include "core.h"
-#include "html/html_text.h"
-#include "proto.h"
-#include "html/html_readbuffer.h"
 #include "alloc.h"
-#include "Str.h"
-#include "term/termsize.h"
-#include "html/parsetag.h"
+#include "core.h"
+#include "file/file.h"
 #include "fm.h"
-#include <time.h>
+#include "html/html_readbuffer.h"
+#include "html/html_text.h"
+#include "html/parsetag.h"
+#include "proto.h"
+#include "term/termsize.h"
+#include "text/Str.h"
+#include "text/text.h"
 #include <sys/stat.h>
+#include <time.h>
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

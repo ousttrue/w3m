@@ -1,7 +1,7 @@
 #include "html/parsetag.h"
-#include "input/url.h"
-#include "Str.h"
 #include "alloc.h"
+#include "input/url.h"
+#include "text/Str.h"
 
 char *tag_get_value(struct parsed_tagarg *t, char *arg) {
   for (; t; t = t->next) {

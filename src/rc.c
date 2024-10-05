@@ -2,40 +2,43 @@
  * Initialization file etc.
  */
 #include "rc.h"
-#include "input/loader.h"
-#include "html/html_text.h"
-#include "text.h"
+#include "alloc.h"
+#include "buffer/buffer.h"
+#include "buffer/display.h"
+#include "buffer/document.h"
+#include "buffer/image.h"
+#include "buffer/search.h"
+#include "buffer/w3mhelperpanel.h"
 #include "core.h"
-#include "w3mhelperpanel.h"
-#include "input/isocket.h"
+#include "file/file.h"
+#include "file/tmpfile.h"
 #include "fm.h"
 #include "func.h"
-#include "file.h"
-#include "siteconf.h"
-#include "buffer/document.h"
-#include "buffer/search.h"
-#include "alloc.h"
-#include "buffer/image.h"
+#include "html/html_readbuffer.h"
+#include "html/html_renderer.h"
+#include "html/html_text.h"
+#include "html/parsetag.h"
 #include "input/http_auth.h"
-#include "buffer/buffer.h"
 #include "input/http_cookie.h"
-#include "tmpfile.h"
+#include "input/isocket.h"
+#include "input/loader.h"
+#include "input/localcgi.h"
 #include "input/url.h"
 #include "input/url_stream.h"
-#include "input/localcgi.h"
-#include "myctype.h"
 #include "proto.h"
-#include "html/parsetag.h"
-#include "regex.h"
+#include "siteconf.h"
 #include "term/terms.h"
 #include "term/termsize.h"
-#include "html/html_readbuffer.h"
-#include <stdio.h>
+#include "text/myctype.h"
+#include "text/regex.h"
+#include "text/text.h"
 #include <errno.h>
-#include <stdlib.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <sys/stat.h>
 
+bool no_rc_dir = false;
 const char *rc_dir = nullptr;
 
 int MailtoOptions = MAILTO_OPTIONS_IGNORE;
@@ -297,7 +300,7 @@ struct param_ptr params1[] = {
      NULL},
     {"pixel_per_char", P_PIXELS, PI_TEXT, (void *)&pixel_per_char,
      CMT_PIXEL_PER_CHAR, NULL},
-    {"frame", P_CHARINT, PI_ONOFF, (void *)&RenderFrame, CMT_FRAME, NULL},
+    // {"frame", P_CHARINT, PI_ONOFF, (void *)&RenderFrame, CMT_FRAME, NULL},
     {"target_self", P_CHARINT, PI_ONOFF, (void *)&TargetSelf, CMT_TSELF, NULL},
     {"open_tab_blank", P_INT, PI_ONOFF, (void *)&open_tab_blank,
      CMT_OPEN_TAB_BLANK, NULL},
@@ -504,8 +507,8 @@ struct param_ptr params9[] = {
      (void *)defaulturls},
     {"follow_redirection", P_INT, PI_TEXT, &FollowRedirection,
      CMT_FOLLOW_REDIRECTION, NULL},
-    {"meta_refresh", P_CHARINT, PI_ONOFF, (void *)&MetaRefresh,
-     CMT_META_REFRESH, NULL},
+    {"meta_refresh", P_INT, PI_ONOFF, (void *)&MetaRefresh, CMT_META_REFRESH,
+     NULL},
     {"localhost_only", P_CHARINT, PI_ONOFF, (void *)&LocalhostOnly,
      CMT_LOCALHOST_ONLY, NULL},
 #ifdef INET6

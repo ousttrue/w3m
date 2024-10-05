@@ -1,33 +1,40 @@
 #include "html/html_readbuffer.h"
-#include "buffer/document.h"
-#include "textlist.h"
-#include "text.h"
-#include "buffer/document.h"
-#include "html/html_text.h"
-#include "html/table.h"
-#include "symbol.h"
-#include "utf8.h"
-#include "html/html_textarea.h"
-#include "html/html_renderer.h"
-#include "buffer/image.h"
-#include "romannum.h"
-#include "trap_jmp.h"
-#include "html/html_parser.h"
-#include "input/istream.h"
-#include "file.h"
 #include "alloc.h"
-#include "input/http_response.h"
+#include "buffer/document.h"
+#include "buffer/image.h"
+#include "file/file.h"
+#include "html/form.h"
 #include "html/html.h"
-#include "html/parsetagx.h"
+#include "html/html_parser.h"
+#include "html/html_renderer.h"
+#include "html/html_text.h"
+#include "html/html_textarea.h"
 #include "html/map.h"
-#include "ctrlcode.h"
+#include "html/parsetagx.h"
+#include "html/table.h"
+#include "input/http_response.h"
+#include "input/istream.h"
 #include "input/url_stream.h"
 #include "term/terms.h"
-#include "file.h"
 #include "term/termsize.h"
-#include "html/form.h"
+#include "text/ctrlcode.h"
+#include "text/romannum.h"
+#include "text/symbol.h"
+#include "text/text.h"
+#include "text/utf8.h"
+#include "textlist.h"
+#include "trap_jmp.h"
 
+bool squeezeBlankLine = false;
 int displayInsDel = DISPLAY_INS_DEL_NORMAL;
+bool displayLinkNumber = false;
+bool DisableCenter = false;
+bool pseudoInlines = true;
+bool ignore_null_img_alt = true;
+bool DisplayBorders = false;
+bool is_redisplay = false;
+int IndentIncr = 4;
+bool view_unseenobject = true;
 
 #define in_bold fontstat[0]
 #define in_under fontstat[1]
@@ -1832,13 +1839,13 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
   case HTML_NOFRAMES:
     CLOSE_A;
     flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
-    obuf->flag |= (RB_NOFRAMES | RB_IGNORE_P);
+    // obuf->flag |= (RB_NOFRAMES | RB_IGNORE_P);
     /* istr = str; */
     return 1;
   case HTML_N_NOFRAMES:
     CLOSE_A;
     flushline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
-    obuf->flag &= ~RB_NOFRAMES;
+    // obuf->flag &= ~RB_NOFRAMES;
     return 1;
   case HTML_FRAME:
     q = r = NULL;
@@ -2262,7 +2269,7 @@ int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env) {
       if (tmp) {
         HTMLlineproc1(tmp->ptr, h_env);
         do_blankline(h_env, obuf, envs[h_env->envc].indent, 0, h_env->limit);
-        if (!is_redisplay && !((obuf->flag & RB_NOFRAMES) && RenderFrame)) {
+        if (!is_redisplay) {
           tag->need_reconstruct = true;
           return 0;
         }

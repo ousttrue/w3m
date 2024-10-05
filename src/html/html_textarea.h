@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 extern int n_textarea;
 extern int max_textarea;

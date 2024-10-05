@@ -1,29 +1,36 @@
 #include "input/loader.h"
-#include "siteconf.h"
-#include "input/localcgi.h"
-#include "text.h"
-#include "file.h"
-#include "buffer/document.h"
-#include "trap_jmp.h"
-#include "rc.h"
-#include "input/ftp.h"
-#include "html/html_readbuffer.h"
-#include "datetime.h"
-#include "os.h"
-#include "core.h"
-#include "tmpfile.h"
-#include "input/istream.h"
 #include "alloc.h"
-#include "input/url_stream.h"
 #include "buffer/buffer.h"
+#include "buffer/document.h"
+#include "core.h"
+#include "file/file.h"
+#include "file/tmpfile.h"
+#include "html/html_readbuffer.h"
+#include "input/ftp.h"
+#include "input/http_auth.h"
 #include "input/http_request.h"
 #include "input/http_response.h"
-#include "input/http_auth.h"
+#include "input/istream.h"
+#include "input/localcgi.h"
+#include "input/url_stream.h"
+#include "os.h"
+#include "rc.h"
+#include "siteconf.h"
 #include "term/terms.h"
-#include <libnkf.h>
-#include <sys/stat.h>
+#include "text/datetime.h"
+#include "text/libnkf.h"
+#include "text/text.h"
+#include "trap_jmp.h"
 #include <stdio.h>
+#include <sys/stat.h>
 
+const char *DefaultType = nullptr;
+bool use_proxy = true;
+const char *FTP_proxy = nullptr;
+bool UseExternalDirBuffer = true;
+bool label_topline = false;
+bool retryAsHttp = true;
+bool AutoUncompress = false;
 int FollowRedirection = 10;
 const char *DirBufferCommand = "file:///$LIB/dirlist" CGI_EXTENSION;
 
@@ -323,7 +330,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
     header_string = NULL;
   trap_on();
   if (pu.scheme == SCM_HTTP || pu.scheme == SCM_HTTPS ||
-      (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && !Do_not_use_proxy &&
+      (((pu.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
        !check_no_proxy(pu.host))) {
 
     term_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);

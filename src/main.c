@@ -1,24 +1,24 @@
-#include "fm.h"
-#include "buffer/display.h"
-#include "core.h"
-#include "text.h"
-#include "rc.h"
-#include "input/http_cookie.h"
-#include "input/loader.h"
 #include "alloc.h"
-#include "input/url_stream.h"
-#include "history.h"
-#include "buffer/downloadlist.h"
-#include "ctrlcode.h"
-#include "input/http_request.h"
-#include "buffer/tabbuffer.h"
 #include "buffer/buffer.h"
+#include "buffer/display.h"
+#include "buffer/downloadlist.h"
+#include "buffer/tabbuffer.h"
+#include "core.h"
 #include "defun.h"
+#include "fm.h"
+#include "history.h"
+#include "html/html_readbuffer.h"
+#include "input/http_cookie.h"
+#include "input/http_request.h"
+#include "input/loader.h"
+#include "input/localcgi.h"
+#include "input/url_stream.h"
+#include "rc.h"
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "term/tty.h"
-#include "input/localcgi.h"
-#include "html/html_readbuffer.h"
+#include "text/ctrlcode.h"
+#include "text/text.h"
 #include <fcntl.h>
 #ifdef _WIN32
 #else
@@ -210,9 +210,9 @@ static MySignalHandler SigPipe(SIGNAL_ARG) { mySignal(SIGPIPE, SigPipe); }
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
+#include <locale.h>
 #include <windows.h>
 #include <winsock2.h>
-#include <locale.h>
 WSADATA wsaData;
 #endif
 
@@ -405,7 +405,7 @@ int main(int argc, char **argv) {
   // SearchHeader = search_header;
   // DefaultType = default_type;
 
-  const char* url = argv[1];
+  const char *url = argv[1];
   if (getURLScheme(&url) == SCM_MISSING && !ArgvIsURL)
     url = file_to_url(url);
   else

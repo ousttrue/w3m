@@ -1,5 +1,5 @@
 #include "alloc.h"
-#include "Str.h"
+#include "text/Str.h"
 #include <stdlib.h>
 #include <string.h>
 

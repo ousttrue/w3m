@@ -2,14 +2,13 @@
  * client-side image maps
  */
 #include "html/map.h"
-#include "html/html_text.h"
-#include "input/url.h"
-#include "input/http_response.h"
-#include "file.h"
 #include "alloc.h"
-#include "html/html_readbuffer.h"
-#include "buffer/document.h"
 #include "buffer/buffer.h"
+#include "buffer/document.h"
+#include "file/file.h"
+#include "html/html_readbuffer.h"
+#include "html/html_text.h"
+#include "input/http_response.h"
 #include "input/url.h"
 #include <math.h>
 
@@ -37,7 +36,6 @@ struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
   return NULL;
 }
 
-#if defined(USE_IMAGE) || defined(MENU_MAP)
 struct MapArea *follow_map_menu(struct Document *doc, char *name,
                                 struct Anchor *a_img, int x, int y) {
   struct MapList *ml;
@@ -57,7 +55,6 @@ struct MapArea *follow_map_menu(struct Document *doc, char *name,
   }
   return NULL;
 }
-#endif
 
 char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
@@ -245,7 +242,8 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
 
   if (buf->http_response->document_header != NULL) {
     Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-    for (ti = buf->http_response->document_header->first; ti != NULL; ti = ti->next)
+    for (ti = buf->http_response->document_header->first; ti != NULL;
+         ti = ti->next)
       Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
                      NULL);
     Strcat_charp(tmp, "</pre>\n");

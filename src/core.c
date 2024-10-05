@@ -1,7 +1,7 @@
 #include "core.h"
-#include "tmpfile.h"
-#include "file.h"
 #include "alloc.h"
+#include "file/file.h"
+#include "file/tmpfile.h"
 #include <stdlib.h>
 
 #ifdef _WIN32

@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 int _MoveFile(char *path1, char *path2);
 int getMetaRefreshParam(const char *q, Str *refresh_uri);

@@ -1,8 +1,8 @@
 #include "buffer/document.h"
 #include "alloc.h"
+#include "file/tmpfile.h"
 #include "term/terms.h"
 #include "term/termsize.h"
-#include "tmpfile.h"
 
 bool nextpage_topline = false;
 bool showLineNum = false;

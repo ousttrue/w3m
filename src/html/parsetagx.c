@@ -1,11 +1,11 @@
-#include "parsetagx.h"
-#include "html_types.h"
-#include "html_parser.h"
-#include "html_text.h"
+#include "html/parsetagx.h"
 #include "alloc.h"
-#include "myctype.h"
-#include "Str.h"
 #include "hash.h"
+#include "html/html_parser.h"
+#include "html/html_text.h"
+#include "html/html_types.h"
+#include "text/Str.h"
+#include "text/myctype.h"
 
 #include "html.c"
 

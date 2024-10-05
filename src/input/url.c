@@ -1,10 +1,10 @@
-#include "url.h"
-#include "file.h"
-#include "core.h"
-#include "text.h"
-#include "etc.h"
+#include "input/url.h"
 #include "alloc.h"
-#include "myctype.h"
+#include "core.h"
+#include "etc.h"
+#include "file/file.h"
+#include "text/myctype.h"
+#include "text/text.h"
 #include <string.h>
 
 bool DecodeURL = false;

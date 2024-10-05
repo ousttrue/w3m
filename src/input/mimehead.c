@@ -1,8 +1,7 @@
-#include "mimehead.h"
-// #include "fm.h"
-#include "myctype.h"
-#include "Str.h"
+#include "input/mimehead.h"
 #include "input/growbuf.h"
+#include "text/Str.h"
+#include "text/myctype.h"
 #include <sys/types.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80

@@ -1,15 +1,15 @@
 #include "input/istream.h"
 #include "alloc.h"
-#include "input/url_stream.h"
 #include "fm.h"
-#include "myctype.h"
-#include "input/istream.h"
-#include "term/termsize.h"
-#include "term/terms.h"
 #include "input/growbuf.h"
-#include <openssl/x509v3.h>
-#include <openssl/ssl.h>
+#include "input/istream.h"
+#include "input/url_stream.h"
+#include "term/terms.h"
+#include "term/termsize.h"
+#include "text/myctype.h"
 #include <fcntl.h>
+#include <openssl/ssl.h>
+#include <openssl/x509v3.h>
 
 struct io_file_handle {
   FILE *f;

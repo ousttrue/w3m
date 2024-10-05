@@ -1,24 +1,24 @@
 #include "input/ftp.h"
-#include "utf8.h"
-#include "text.h"
+#include "alloc.h"
+#include "file/file.h"
+#include "fm.h"
 #include "html/html_text.h"
 #include "input/http_auth.h"
+#include "input/isocket.h"
 #include "input/istream.h"
-#include "trap_jmp.h"
-#include "file.h"
-#include "isocket.h"
 #include "input/url.h"
-#include "fm.h"
 #include "input/url_stream.h"
-#include "alloc.h"
-#include "myctype.h"
 #include "term/terms.h"
+#include "text/Str.h"
+#include "text/myctype.h"
+#include "text/text.h"
+#include "text/utf8.h"
+#include "trap_jmp.h"
 
 #include <assert.h>
-#include <stdio.h>
-#include <Str.h>
-#include <time.h>
 #include <fcntl.h>
+#include <stdio.h>
+#include <time.h>
 
 #ifdef DEBUG
 #include <malloc.h>
@@ -32,11 +32,11 @@
 #include <ws2tcpip.h>
 typedef int socklen_t;
 #else
+#include <arpa/inet.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <pwd.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <arpa/inet.h>
 #endif
 
 #ifndef HAVE_SOCKLEN_T

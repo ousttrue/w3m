@@ -1,5 +1,5 @@
-#include "tty.h"
-#include "myctype.h"
+#include "term/tty.h"
+#include "text/myctype.h"
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <stdarg.h>

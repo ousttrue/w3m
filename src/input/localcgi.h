@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 #define HAVE_DIRENT_H 1
 #include <sys/types.h>

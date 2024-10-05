@@ -1,25 +1,24 @@
 #include "buffer/buffer.h"
-#include "input/istream.h"
-#include "html/map.h"
-#include "html/html_text.h"
-#include "buffer/document.h"
-#include "file.h"
-#include "text.h"
-#include "input/url_stream.h"
-#include "input/http_response.h"
 #include "alloc.h"
-#include "file.h"
-#include "html/html_readbuffer.h"
-#include "input/url.h"
-#include "ctrlcode.h"
+#include "buffer/document.h"
+#include "file/file.h"
 #include "fm.h"
-#include "term/tty.h"
+#include "html/html_readbuffer.h"
+#include "html/html_text.h"
+#include "html/map.h"
+#include "input/http_response.h"
+#include "input/istream.h"
+#include "input/url.h"
+#include "input/url_stream.h"
 #include "term/scr.h"
-#include "term/termsize.h"
 #include "term/terms.h"
+#include "term/termsize.h"
+#include "term/tty.h"
+#include "text/ctrlcode.h"
+#include "text/text.h"
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 int REV_LB[MAX_LB] = {
     LB_N_INFO,

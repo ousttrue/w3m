@@ -9,28 +9,31 @@
  */
 
 #include "input/http_cookie.h"
-#include "input/isocket.h"
-#include "html/html_text.h"
-#include "rc.h"
-#include "textlist.h"
 #include "alloc.h"
-#include "html/parsetag.h"
-#include "regex.h"
-#include "myctype.h"
 #include "html/html_readbuffer.h"
+#include "html/html_text.h"
+#include "html/parsetag.h"
+#include "input/isocket.h"
 #include "proto.h"
-#include <time.h>
+#include "rc.h"
+#include "text/myctype.h"
+#include "text/regex.h"
+#include "textlist.h"
 #include <sys/stat.h>
+#include <time.h>
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
+#define COOKIE_FILE "cookie"
+
+struct cookie *First_cookie = nullptr;
 int default_use_cookie = true;
 int use_cookie = true;
 int show_cookie = false;

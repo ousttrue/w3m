@@ -1,6 +1,6 @@
 #include "textlist.h"
 #include "alloc.h"
-#include "Str.h"
+#include "text/Str.h"
 #include <gc.h>
 
 /* General doubly linked list */

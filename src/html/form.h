@@ -1,5 +1,5 @@
 #pragma once
-#include "Str.h"
+#include "text/Str.h"
 
 #define FORM_UNKNOWN -1
 #define FORM_INPUT_TEXT 0

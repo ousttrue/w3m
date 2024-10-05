@@ -1,49 +1,47 @@
 #include "input/url_stream.h"
-#include "file.h"
-#include "shell.h"
-#include "siteconf.h"
-#include "core.h"
+#include "alloc.h"
+#include "buffer/buffer.h"
 #include "buffer/document.h"
-#include "file.h"
-#include "text.h"
-#include "rc.h"
-#include "input/loader.h"
+#include "core.h"
+#include "file/file.h"
+#include "file/shell.h"
+#include "fm.h"
+#include "html/html.h"
 #include "input/ftp.h"
-#include "trap_jmp.h"
 #include "input/http_cookie.h"
+#include "input/http_request.h"
 #include "input/isocket.h"
 #include "input/istream.h"
-#include "alloc.h"
-#include "textlist.h"
-#include "html/html.h"
-#include "input/http_request.h"
+#include "input/loader.h"
 #include "input/localcgi.h"
-#include "fm.h"
-#include "buffer/buffer.h"
-#include "term/terms.h"
 #include "rand48.h"
-#include "html/html.h"
-#include "Str.h"
-#include "myctype.h"
-#include "regex.h"
+#include "rc.h"
+#include "siteconf.h"
+#include "term/terms.h"
+#include "text/Str.h"
+#include "text/myctype.h"
+#include "text/regex.h"
+#include "text/text.h"
+#include "textlist.h"
+#include "trap_jmp.h"
 
-#include <unistd.h>
-#include <sys/types.h>
 #include <assert.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #else
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #endif
 
 #include <openssl/bio.h>
-#include <openssl/x509.h>
 #include <openssl/ssl.h>
+#include <openssl/x509.h>
 
 #include <sys/stat.h>
 #ifdef _WIN32
@@ -1136,7 +1134,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
   case SCM_FTPDIR:
     if (pu->file == NULL)
       pu->file = allocStr("/", -1);
-    if (non_null(FTP_proxy) && !Do_not_use_proxy && pu->host != NULL &&
+    if (non_null(FTP_proxy) && use_proxy && pu->host != NULL &&
         !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
       SocketType sock;
@@ -1174,7 +1172,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
     SSL *sslh = NULL;
     if (((pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
-        !Do_not_use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+        use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
       if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
         sock = ssl_socket_of(ouf->stream);
