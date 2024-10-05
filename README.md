@@ -7,9 +7,11 @@ w3m を改造する(5週目くらいw)。
 
 - [x] zig cc で build する
 - [x] windows で動作する
+- [ ] 前処理、to utf8, entity decode, script & style 除去
+  - https://github.com/lexbor/lexbor
 - [x] utf-8 が表示できる
   - [x] 文字のカラム幅
-  - [WIP] SJIS
+  - [WIP] SJIS, entity
 - [ ] dom 入れたい
 
 ## dependencies
