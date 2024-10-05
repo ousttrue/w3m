@@ -28,7 +28,7 @@
 //
 const std = @import("std");
 const build_mktable = @import("build_mktable.zig");
-const build_src = @import("build_src.zig");
+const build_src = @import("src/build_src.zig");
 
 pub fn build(b: *std.Build) void {
     var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
@@ -89,6 +89,7 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("termseq/termseq.zig"),
     });
     exe.linkLibrary(lib);
+    exe.addIncludePath(b.path("termseq"));
     if (target.result.os.tag == .windows) {
         exe.addCSourceFiles(.{
             .files = &(build_src.SRCS ++ build_src.SRCS_WIN32),
@@ -126,7 +127,7 @@ pub fn build(b: *std.Build) void {
         const gc_dep = b.dependency("gc", .{ .target = target, .optimize = optimize });
         exe.linkLibrary(gc_dep.artifact("gc"));
     }
-    exe.addIncludePath(b.path("."));
+    exe.addIncludePath(b.path("src"));
 
     b.installArtifact(exe);
     targets.append(exe) catch @panic("OOM");
@@ -152,9 +153,6 @@ pub fn build(b: *std.Build) void {
 
     const nkf_dep = b.dependency("nkf", .{});
     exe.addIncludePath(nkf_dep.path(""));
-    exe.addCSourceFiles(.{
-        .files = &.{"libnkf.c"},
-    });
 
     // run
     const run_cmd = b.addRunArtifact(exe);
