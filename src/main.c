@@ -24,7 +24,6 @@
 #else
 #include <sys/wait.h>
 #endif
-#include <gc.h>
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 255
@@ -36,56 +35,6 @@ struct TabBuffer *LastTab = nullptr;
 
 void show_params(FILE *fp);
 static int show_params_p = 0;
-
-#define GC_WARN_KEEP_MAX (20)
-static GC_warn_proc orig_GC_warn_proc = NULL;
-
-static void wrap_GC_warn_proc(const char *msg, GC_word arg) {
-
-  /* *INDENT-OFF* */
-  static struct {
-    const char *msg;
-    GC_word arg;
-  } msg_ring[GC_WARN_KEEP_MAX];
-  /* *INDENT-ON* */
-  static int i = 0;
-  static int n = 0;
-  static int lock = 0;
-  int j;
-
-  j = (i + n) % (sizeof(msg_ring) / sizeof(msg_ring[0]));
-  msg_ring[j].msg = msg;
-  msg_ring[j].arg = arg;
-
-  if (n < sizeof(msg_ring) / sizeof(msg_ring[0]))
-    ++n;
-  else
-    ++i;
-
-  if (!lock) {
-    lock = 1;
-
-    for (; n > 0; --n, ++i) {
-      i %= sizeof(msg_ring) / sizeof(msg_ring[0]);
-
-      printf(msg_ring[i].msg, (unsigned long)msg_ring[i].arg);
-      tty_sleep_till_anykey(1, 1);
-    }
-
-    lock = 0;
-  }
-
-  // else if (orig_GC_warn_proc)
-  //   orig_GC_warn_proc(msg, arg);
-  // else
-  //   fprintf(stderr, msg, (unsigned long)arg);
-}
-
-static void *die_oom(size_t bytes) {
-  fprintf(stderr, "Out of memory: %lu bytes unavailable!\n",
-          (unsigned long)bytes);
-  exit(1);
-}
 
 #define help() fusage(stdout, 0)
 #define usage() fusage(stderr, 1)
@@ -248,13 +197,8 @@ int main(int argc, char **argv) {
   if (!getenv("GC_LARGE_ALLOC_WARN_INTERVAL")) {
     set_environ("GC_LARGE_ALLOC_WARN_INTERVAL", "30000");
   }
-  GC_INIT();
-#if (GC_VERSION_MAJOR > 7) ||                                                  \
-    ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
-  GC_set_oom_fn(die_oom);
-#else
-  GC_oom_fn = die_oom;
-#endif
+
+  _GC_INIT();
 
   // struct Buffer *newbuf = NULL;
   // char *p;
@@ -346,13 +290,6 @@ int main(int argc, char **argv) {
   mySignal(SIGPIPE, SigPipe);
 #endif
 
-#if (GC_VERSION_MAJOR > 7) ||                                                  \
-    ((GC_VERSION_MAJOR == 7) && (GC_VERSION_MINOR >= 2))
-  orig_GC_warn_proc = GC_get_warn_proc();
-  GC_set_warn_proc(wrap_GC_warn_proc);
-#else
-  orig_GC_warn_proc = GC_set_warn_proc(wrap_GC_warn_proc);
-#endif
   auto err_msg = Strnew();
 
   // if (load_argc == 0) {

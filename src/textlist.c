@@ -1,13 +1,11 @@
 #include "textlist.h"
 #include "alloc.h"
 #include "text/Str.h"
-#include <gc.h>
 
 /* General doubly linked list */
 
 struct ListItem *newListItem(void *s, struct ListItem *n, struct ListItem *p) {
-  struct ListItem *it;
-  it = New(struct ListItem);
+  auto it = New(struct ListItem);
   it->ptr = s;
   it->next = n;
   it->prev = p;

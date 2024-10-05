@@ -398,17 +398,16 @@ void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
 }
 
 int ISread_n(union input_stream *stream, char *dst, int count) {
-  int len, l;
-  struct base_stream *base;
-
   if (stream == NULL || count <= 0)
     return -1;
+
+  struct base_stream *base;
   if ((base = &stream->base)->iseos)
     return 0;
 
-  len = buffer_read(&base->stream, dst, count);
+  auto len = buffer_read(&base->stream, dst, count);
   if (MUST_BE_UPDATED(base)) {
-    l = (*base->read)(base->handle, &dst[len], count - len);
+    auto l = (*base->read)(base->handle, (unsigned char*)&dst[len], count - len);
     if (l <= 0) {
       base->iseos = true;
     } else {
@@ -522,7 +521,7 @@ static Str ssl_check_cert_ident(X509 *x, char *hostname) {
            * be null terminated. Ensure we have a null terminated
            * string that we can modify.
            */
-          char *asn = GC_MALLOC(sl + 1);
+          char *asn = _GC_MALLOC(sl + 1);
           if (!asn)
             exit(1);
           memcpy(asn, sn, sl);

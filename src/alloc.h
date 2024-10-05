@@ -1,8 +1,14 @@
 #pragma once
-#include <gc.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void _GC_INIT();
+void *_GC_MALLOC(size_t n);
+void *_GC_MALLOC_ATOMIC(size_t n);
+void *_GC_REALLOC(void *ptr, size_t n);
+void *_GC_ALLOC_OR_REALLOC(void *ptr, size_t size);
+void _GC_FREE(void *ptr);
 
 static inline size_t z_mult_no_oflow_(size_t n, size_t size) {
   if (size != 0 && n > ULONG_MAX / size) {
@@ -13,17 +19,14 @@ static inline size_t z_mult_no_oflow_(size_t n, size_t size) {
   return n * size;
 }
 
-#define New(type) (type*)(GC_MALLOC(sizeof(type)))
-
-#define NewAtom(type) (type*)(GC_MALLOC_ATOMIC(sizeof(type)))
-
-#define New_N(type, n) (type*)(GC_MALLOC(z_mult_no_oflow_((n), sizeof(type))))
-
+#define New(type) (type *)(_GC_MALLOC(sizeof(type)))
+#define NewAtom(type) (type *)(_GC_MALLOC_ATOMIC(sizeof(type)))
+#define New_N(type, n) (type *)(_GC_MALLOC(z_mult_no_oflow_((n), sizeof(type))))
 #define NewAtom_N(type, n)                                                     \
-  (GC_MALLOC_ATOMIC(z_mult_no_oflow_((n), sizeof(type))))
+  (_GC_MALLOC_ATOMIC(z_mult_no_oflow_((n), sizeof(type))))
 
 #define New_Reuse(type, ptr, n)                                                \
-  (GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
+  (_GC_REALLOC((ptr), z_mult_no_oflow_((n), sizeof(type))))
 
 extern void *xrealloc(void *ptr, size_t size);
 extern void xfree(void *ptr);

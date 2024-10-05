@@ -38,17 +38,16 @@ struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
 
 struct MapArea *follow_map_menu(struct Document *doc, char *name,
                                 struct Anchor *a_img, int x, int y) {
-  struct MapList *ml;
-  struct ListItem *al;
-  int i, selected = -1;
+  int selected = -1;
   int initial = 0;
 
-  ml = searchMapList(doc, name);
+  auto ml = searchMapList(doc, name);
   if (ml == NULL || ml->area == NULL || ml->area->nitem == 0)
     return NULL;
 
   if (selected >= 0) {
-    for (i = 0, al = ml->area->first; al != NULL; i++, al = al->next) {
+    int i = 0;
+    for (auto al = ml->area->first; al != NULL; i++, al = al->next) {
       if (al->ptr && i == selected)
         return (struct MapArea *)al->ptr;
     }
@@ -56,7 +55,7 @@ struct MapArea *follow_map_menu(struct Document *doc, char *name,
   return NULL;
 }
 
-char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
+const char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
 
