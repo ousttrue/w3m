@@ -29,6 +29,7 @@
 const std = @import("std");
 const build_mktable = @import("build_mktable.zig");
 const build_src = @import("src/build_src.zig");
+const build_lexbor = @import("build_lexbor.zig");
 
 pub fn build(b: *std.Build) void {
     var targets = std.ArrayList(*std.Build.Step.Compile).init(b.allocator);
@@ -154,6 +155,10 @@ pub fn build(b: *std.Build) void {
 
     const nkf_dep = b.dependency("nkf", .{});
     exe.addIncludePath(nkf_dep.path(""));
+
+    const lexbor = build_lexbor.build(b, target, optimize);
+    exe.linkLibrary(lexbor.lib);
+    exe.addIncludePath(lexbor.include);
 
     // run
     const run_cmd = b.addRunArtifact(exe);

@@ -30,6 +30,10 @@
             .url = "git+https://github.com/nurse/nkf.git#96c33713fc32f160597eb792d97694cda082afc7",
             .hash = "1220ea047fde19f71b5d8549d482ce7a0cbc4e1814aee1168652574a97b1496f6489",
         },
+        .lexbor = .{
+            .url = "git+https://github.com/lexbor/lexbor.git#c36ba1b93e457d872f5891c8ba75d8296a78bc0e",
+            .hash = "1220e70a7d87e44d037246cafe59af54d90305d18f73d0276923674a12ea7386416c",
+        },
     },
     .paths = .{
         "build.zig",

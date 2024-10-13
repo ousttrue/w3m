@@ -7,12 +7,10 @@ w3m を改造する(5週目くらいw)。
 
 - [x] zig cc で build する
 - [x] windows で動作する
-- [ ] 前処理、to utf8, entity decode, script & style 除去
-  - https://github.com/lexbor/lexbor
+- [ ] 前処理、dom(lexbor), to utf8, entity decode, script & style 除去
 - [x] utf-8 が表示できる
   - [x] 文字のカラム幅
   - [WIP] SJIS, entity
-- [ ] dom 入れたい
 
 ## dependencies
 
@@ -24,6 +22,7 @@ w3m を改造する(5週目くらいw)。
 - https://github.com/ridiculousfish/widecharwidth/tree/master
 - https://github.com/nurse/nkf
   - https://www.servernote.net/article.php?id=make-libnkf-for-c-cpp
+- https://github.com/lexbor/lexbor
 
 ## 量を減らすため web browser のコア機能(独断)以外を削除
 
