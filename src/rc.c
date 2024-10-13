@@ -941,7 +941,8 @@ struct Document *load_option_panel() {
     Strcat_charp(src, "</table><hr width=50%>");
   }
   Strcat_charp(src, "</table></form></body></html>");
-  return loadHTMLString(src);
+  struct Url url;
+  return loadHTML(src->ptr, url, nullptr);
 }
 
 void panel_set_option(struct LocalCgiHtml *arg) {

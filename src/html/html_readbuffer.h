@@ -167,9 +167,7 @@ void push_link(int cmd, int offset, int pos);
 
 struct HtmlTag;
 int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env);
-void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
-                   bool internal);
-#define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
+void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env);
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
@@ -195,7 +193,7 @@ extern void save_fonteffect(struct html_feed_environ *h_env,
 extern void restore_fonteffect(struct html_feed_environ *h_env,
                                struct readbuffer *obuf);
 extern Str process_img(struct HtmlTag *tag, int width);
-extern Str process_anchor(struct HtmlTag *tag, char *tagbuf);
+extern Str process_anchor(struct HtmlTag *tag, const char *tagbuf);
 extern Str process_input(struct HtmlTag *tag);
 extern Str process_button(struct HtmlTag *tag);
 extern Str process_n_button(void);
@@ -210,8 +208,6 @@ extern Str process_form(struct HtmlTag *tag);
 extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);
 
-struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
-                                struct Url *base, bool internal);
-struct Document *loadHTML(Str html, struct Url currentURL, struct Url *base);
-struct Document *loadHTMLString(Str page);
+struct Document *loadHTML(const char *html, struct Url currentURL,
+                          struct Url *base);
 struct Document *loadText(Str text);

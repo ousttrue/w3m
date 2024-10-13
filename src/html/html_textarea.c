@@ -42,7 +42,7 @@ Str process_textarea(struct HtmlTag *tag, int width) {
 
   if (cur_form_id < 0) {
     const char *s = "<form_int method=internal action=none>";
-    tmp = process_form(parse_tag(&s, true));
+    tmp = process_form(parse_tag(&s));
   }
 
   p = "";

@@ -1,6 +1,6 @@
 #pragma once
-#include "textlist.h"
 #include "hash.h"
+#include "textlist.h"
 
 #define HIST_LIST_MAX GENERAL_LIST_MAX
 #define HIST_HASH_SIZE 127
@@ -27,8 +27,6 @@ extern HistItem *getHashHist(struct Hist *hist, const char *ptr);
 extern char *lastHist(struct Hist *hist);
 extern char *nextHist(struct Hist *hist);
 extern char *prevHist(struct Hist *hist);
-extern struct Buffer *historyBuffer(struct Hist *hist);
+extern struct Document *historyBuffer(struct Hist *hist);
 extern void loadHistory(struct Hist *hist);
 extern void saveHistory(struct Hist *hist, size_t size);
-
-

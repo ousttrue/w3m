@@ -25,5 +25,5 @@ struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
 struct MapList *searchMapList(struct Document *doc, char *name);
 struct LocalCgiHtml;
 extern void follow_map(struct LocalCgiHtml *arg);
-extern struct Buffer *follow_map_panel(struct Buffer *buf, char *name);
+extern struct Document *follow_map_panel(struct Buffer *buf, char *name);
 extern struct Anchor *retrieveCurrentMap(struct Buffer *buf);

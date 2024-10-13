@@ -700,7 +700,8 @@ struct Document *cookie_list_panel(void) {
         src, "</td></tr><tr><td><input type=submit value=\"OK\"></table><p>");
   }
   Strcat_charp(src, "</ol></form></body></html>");
-  return loadHTMLString(src);
+  struct Url url;
+  return loadHTML(src->ptr, url, nullptr);
 }
 
 void set_cookie_flag(struct LocalCgiHtml *arg) {

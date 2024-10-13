@@ -170,7 +170,7 @@ struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *base,
       } else {
         /* tag processing */
         struct HtmlTag *tag;
-        if (!(tag = parse_tag(&str, true)))
+        if (!(tag = parse_tag(&str)))
           continue;
         switch (tag->tagid) {
         case HTML_B:

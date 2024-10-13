@@ -10,7 +10,7 @@ struct HtmlTag {
   bool need_reconstruct;
 };
 
-struct HtmlTag *parse_tag(const char **s, bool internal);
+struct HtmlTag *parse_tag(const char **s);
 bool parsedtag_accepts(struct HtmlTag *tag, enum HtmlTagAttributeType id);
 bool parsedtag_exists(struct HtmlTag *tag, enum HtmlTagAttributeType id);
 bool parsedtag_get_value(struct HtmlTag *tag, enum HtmlTagAttributeType id,

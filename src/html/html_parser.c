@@ -48,7 +48,7 @@ uint32_t getescapechar(const char **str) {
     *str = p;
     return 0;
   }
-  auto q = p;
+  const char *q = p;
   for (p++; IS_ALNUM(*p); p++)
     ;
   q = allocStr(q, p - q);
@@ -79,10 +79,10 @@ const char *getescapecmd(const char **s) {
   auto ch = getescapechar(s);
   if (ch > 0) {
     // return conv_entity(ch);
-    uint8_t utf8[4];
-    int utf8_len = utf8sequence_from_codepoint(ch, utf8);
+    struct Utf8 utf8;
+    int utf8_len = utf8sequence_from_codepoint(ch, &utf8);
     if (utf8_len) {
-      return allocStr((char *)utf8, utf8_len);
+      return allocStr((char *)&utf8.c0, utf8_len);
     } else {
       return "�";
     }
@@ -256,15 +256,14 @@ int next_status(char c, int *status) {
 }
 
 int read_token(Str buf, const char **instr, int *status, int pre, int append) {
-  char *p;
-  int prev_status;
-
   if (!append)
     Strclear(buf);
   if (**instr == '\0')
     return 0;
-  for (p = *instr; *p; p++) {
-    prev_status = *status;
+
+  auto p = *instr;
+  for (; *p; p++) {
+    int prev_status = *status;
     next_status(*p, status);
     switch (*status) {
     case R_ST_NORMAL:
@@ -340,17 +339,17 @@ proc_end:
 #define PUSH_TAG(str, n) Strcat_char(tagbuf, *str)
 int visible_length_offset = 0;
 
-int maximum_visible_length(char *str, int offset) {
+int maximum_visible_length(const char *str, int offset) {
   visible_length_offset = offset;
   return visible_length(str);
 }
 
-int maximum_visible_length_plain(char *str, int offset) {
+int maximum_visible_length_plain(const char *str, int offset) {
   visible_length_offset = offset;
   return visible_length_plain(str);
 }
 
-int visible_length(char *str) {
+int visible_length(const char *str) {
   int len = 0, n, max_len = 0;
   int status = R_ST_NORMAL;
   int prev_status = status;
@@ -415,7 +414,7 @@ int visible_length(char *str) {
   return len > max_len ? len : max_len;
 }
 
-int visible_length_plain(char *str) {
+int visible_length_plain(const char *str) {
   int len = 0, max_len = 0;
 
   while (*str) {

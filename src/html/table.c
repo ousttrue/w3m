@@ -267,7 +267,7 @@ static void check_row(struct table *t, int row) {
   }
 }
 
-void pushdata(struct table *t, int row, int col, char *data) {
+void pushdata(struct table *t, int row, int col, const char *data) {
   check_row(t, row);
   if (t->tabdata[row][col] == NULL)
     t->tabdata[row][col] = newGeneralList();
@@ -275,7 +275,7 @@ void pushdata(struct table *t, int row, int col, char *data) {
   pushText(t->tabdata[row][col], data ? data : "");
 }
 
-void suspend_or_pushdata(struct table *tbl, char *line) {
+void suspend_or_pushdata(struct table *tbl, const char *line) {
   if (tbl->flag & TBL_IN_COL)
     pushdata(tbl, tbl->row, tbl->col, line);
   else {
@@ -482,9 +482,9 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
   for (l = orgdata->first; l != NULL; l = l->next) {
     if (TAG_IS(l->ptr, "<table_alt", 10)) {
       int id = -1;
-      char *p = l->ptr;
+      const char *p = l->ptr;
       struct HtmlTag *tag;
-      if ((tag = parse_tag(&p, true)) != NULL)
+      if ((tag = parse_tag(&p)) != NULL)
         parsedtag_get_value(tag, ATTR_TID, &id);
       if (id >= 0 && id < tbl->ntable && tbl->tables[id].ptr) {
         int alignment;
@@ -519,11 +519,11 @@ void do_refill(struct table *tbl, int row, int col, int maxlimit) {
         }
       }
     } else
-      HTMLlineproc1(l->ptr, &h_env);
+      HTMLlineproc0(l->ptr, &h_env);
   }
   if (obuf.status != R_ST_NORMAL) {
     obuf.status = R_ST_EOL;
-    HTMLlineproc1("\n", &h_env);
+    HTMLlineproc0("\n", &h_env);
   }
   completeHTMLstream(&h_env, &obuf);
   flushline(&h_env, &obuf, 0, 2, h_env.limit);
@@ -1263,17 +1263,17 @@ static void make_caption(struct table *t, struct html_feed_environ *h_env) {
     limit = h_env->limit;
   init_henv(&henv, &obuf, envs, MAX_ENV_LEVEL, newTextLineList(), limit,
             h_env->envs[h_env->envc].indent);
-  HTMLlineproc1("<center>", &henv);
-  HTMLlineproc0(t->caption->ptr, &henv, false);
-  HTMLlineproc1("</center>", &henv);
+  HTMLlineproc0("<center>", &henv);
+  HTMLlineproc0(t->caption->ptr, &henv);
+  HTMLlineproc0("</center>", &henv);
 
   if (t->total_width < henv.maxlimit)
     t->total_width = henv.maxlimit;
   limit = h_env->limit;
   h_env->limit = t->total_width;
-  HTMLlineproc1("<center>", h_env);
-  HTMLlineproc0(t->caption->ptr, h_env, false);
-  HTMLlineproc1("</center>", h_env);
+  HTMLlineproc0("<center>", h_env);
+  HTMLlineproc0(t->caption->ptr, h_env);
+  HTMLlineproc0("</center>", h_env);
   h_env->limit = limit;
 }
 
@@ -1444,7 +1444,7 @@ void renderTable(struct table *t, int max_width,
 
   make_caption(t, h_env);
 
-  HTMLlineproc1("<pre for_table>", h_env);
+  HTMLlineproc0("<pre for_table>", h_env);
   switch (t->border_mode) {
   case BORDER_THIN:
   case BORDER_THICK:
@@ -1530,7 +1530,7 @@ void renderTable(struct table *t, int max_width,
     t->total_width = 1;
     push_render_image(renderbuf, 1, t->total_width, h_env);
   }
-  HTMLlineproc1("</pre>", h_env);
+  HTMLlineproc0("</pre>", h_env);
 }
 
 #ifdef TABLE_NO_COMPACT
@@ -1777,7 +1777,7 @@ void check_rowcol(struct table *tbl, struct table_mode *mode) {
   tbl->flag |= TBL_IN_COL;
 }
 
-int skip_space(struct table *t, char *line, struct table_linfo *linfo,
+int skip_space(struct table *t, const char *line, struct table_linfo *linfo,
                int checkminimum) {
   int skip = 0, s = linfo->prev_spaces;
   Lineprop ctype, prev_ctype = linfo->prev_ctype;
@@ -1792,7 +1792,7 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
   }
 
   while (*line) {
-    char *save = line;
+    const char *save = line;
     const char *c = line;
     int wlen, plen;
     ctype = get_mctype(line);
@@ -1857,7 +1857,7 @@ int skip_space(struct table *t, char *line, struct table_linfo *linfo,
   return skip;
 }
 
-static void feed_table_inline_tag(struct table *tbl, char *line,
+static void feed_table_inline_tag(struct table *tbl, const char *line,
                                   struct table_mode *mode, int width) {
   check_rowcol(tbl, mode);
   pushdata(tbl, tbl->row, tbl->col, line);
@@ -1868,7 +1868,7 @@ static void feed_table_inline_tag(struct table *tbl, char *line,
   }
 }
 
-static void feed_table_block_tag(struct table *tbl, char *line,
+static void feed_table_block_tag(struct table *tbl, const char *line,
                                  struct table_mode *mode, int indent, int cmd) {
   int offset;
   if (mode->indent_level <= 0 && indent == -1)
@@ -1960,7 +1960,7 @@ static void table_close_anchor0(struct table *tbl, struct table_mode *mode) {
 
 #define ATTR_ROWSPAN_MAX 32766
 
-static int feed_table_tag(struct table *tbl, char *line,
+static int feed_table_tag(struct table *tbl, const char *line,
                           struct table_mode *mode, int width,
                           struct HtmlTag *tag) {
   int cmd;
@@ -2638,16 +2638,15 @@ static int feed_table_tag(struct table *tbl, char *line,
 }
 
 int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
-               int width, int internal) {
+               int width) {
   int i;
-  char *p;
   Str tmp;
   struct table_linfo *linfo = &tbl->linfo;
 
   if (*line == '<' && line[1] && REALLY_THE_BEGINNING_OF_A_TAG(line)) {
     struct HtmlTag *tag;
-    p = line;
-    tag = parse_tag(&p, internal);
+    auto p = line;
+    tag = parse_tag(&p);
     if (tag) {
       switch (feed_table_tag(tbl, line, mode, width, tag)) {
       case TAG_ACTION_NONE:
@@ -2692,8 +2691,8 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
       !(*line == '<' && line[strlen(line) - 1] == '>') &&
       strchr(line, '&') != NULL) {
     tmp = Strnew();
-    for (p = line; *p;) {
-      char *q, *r;
+    for (auto p = line; *p;) {
+      const char *q, *r;
       if (*p == '&') {
         if (!strncasecmp(p, "&amp;", 5) || !strncasecmp(p, "&gt;", 4) ||
             !strncasecmp(p, "&lt;", 4)) {
@@ -2719,9 +2718,9 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
           default:
             // r = conv_entity(ec);
             // if (r != NULL && strlen(r) == 1 && ec == (unsigned char)*r) {
-            char utf8[4];
-            if (utf8sequence_from_codepoint(ec, (uint8_t *)utf8)) {
-              Strcat_charp(tmp, utf8);
+            struct Utf8 utf8;
+            if (utf8sequence_from_codepoint(ec, &utf8)) {
+              Strcat_charp(tmp, (const char *)&utf8.c0);
               break;
             }
           case -1:
@@ -2764,6 +2763,7 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
     check_rowcol(tbl, mode);
     while (*line) {
       int nl = false;
+      const char *p;
       if ((p = strchr(line, '\r')) || (p = strchr(line, '\n'))) {
         if (*p == '\r' && p[1] == '\n')
           p++;
@@ -2797,16 +2797,13 @@ int feed_table(struct table *tbl, const char *line, struct table_mode *mode,
 
 void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
                  int width) {
-  Str tokbuf;
-  int status;
-  char *line;
   if (!tok)
     return;
-  tokbuf = Strnew();
-  status = R_ST_NORMAL;
-  line = tok->ptr;
+  auto tokbuf = Strnew();
+  int status = R_ST_NORMAL;
+  const char* line = tok->ptr;
   while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
-    feed_table(tbl, tokbuf->ptr, mode, width, true);
+    feed_table(tbl, tokbuf->ptr, mode, width);
 }
 
 void pushTable(struct table *tbl, struct table *tbl1) {

@@ -184,7 +184,8 @@ static struct Document *DownloadListBuffer(void) {
     Strcat_charp(src, "\n</pre><hr>\n");
   }
   Strcat_charp(src, "</form></body></html>");
-  return loadHTMLString(src);
+  struct Url url;
+  return loadHTML(src->ptr, url, nullptr);
 }
 
 #ifdef _WIN32

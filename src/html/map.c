@@ -59,7 +59,7 @@ const char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
 
-struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
+struct Document *follow_map_panel(struct Buffer *buf, char *name) {
   Str mappage;
   struct ListItem *al;
   struct MapArea *a;
@@ -88,8 +88,8 @@ struct Buffer *follow_map_panel(struct Buffer *buf, char *name) {
   }
   Strcat_charp(mappage, "</table></body></html>");
 
-  newbuf = loadHTMLString(mappage);
-  return newbuf;
+  struct Url url;
+  return loadHTML(mappage->ptr, url, nullptr);
 }
 
 struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
@@ -163,7 +163,7 @@ static void append_link_info(struct Buffer *buf, Str html,
 /*
  * information of current page and link
  */
-struct Buffer *page_info_panel(struct Buffer *buf) {
+struct Document *page_info_panel(struct Buffer *buf) {
   Str tmp = Strnew_size(1024);
   struct Anchor *a;
   struct Url pu;
@@ -253,6 +253,6 @@ struct Buffer *page_info_panel(struct Buffer *buf) {
                    html_quote(buf->ssl_certificate), "</pre>\n", NULL);
 end:
   Strcat_charp(tmp, "</body></html>");
-  newbuf = loadHTMLString(tmp);
-  return newbuf;
+  struct Url url;
+  return loadHTML(tmp->ptr, url, nullptr);
 }

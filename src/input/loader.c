@@ -94,7 +94,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       fclose(src);
     }
 
-    auto doc = loadHTMLString(page);
+    auto doc = loadHTML(page->ptr, pu, nullptr);
     if (!doc) {
       return nullptr;
     }
@@ -166,7 +166,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   struct Buffer *b;
   if (is_html_type(t)) {
     b = t_buf;
-    b->document = loadHTML(content, t_buf->currentURL, baseURL(t_buf));
+    b->document = loadHTML(content->ptr, t_buf->currentURL, baseURL(t_buf));
   } else {
     b = t_buf;
     b->document = loadText(content);
