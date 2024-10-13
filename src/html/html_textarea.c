@@ -1,5 +1,4 @@
 #include "html_textarea.h"
-#include "parsetag.h"
 #include "html_text.h"
 #include "alloc.h"
 #include "html_readbuffer.h"

@@ -16,8 +16,8 @@
 #include "func.h"
 #include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
+#include "html/html_tag.h"
 #include "html/html_text.h"
-#include "html/parsetag.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
 #include "input/isocket.h"
@@ -889,23 +889,17 @@ static Str to_str(struct param_ptr *p) {
   return NULL;
 }
 
-struct Buffer *load_option_panel(void) {
-  Str src;
-  struct param_ptr *p;
-  struct sel_c *s;
-  int x, i;
-  Str tmp;
-  struct Buffer *buf;
-
-  if (optionpanel_str == NULL)
+struct Document *load_option_panel() {
+  if (optionpanel_str == NULL) {
     optionpanel_str = Sprintf(optionpanel_src1, w3m_version,
                               html_quote(localCookie()->ptr), _(CMT_HELPER));
-  src = Strdup(optionpanel_str);
+  }
+  auto src = Strdup(optionpanel_str);
 
   Strcat_charp(src, "<table><tr><td>");
-  for (i = 0; sections[i].name != NULL; i++) {
+  for (int i = 0; sections[i].name != NULL; i++) {
     Strcat_m_charp(src, "<h1>", sections[i].name, "</h1>", NULL);
-    p = sections[i].params;
+    auto p = sections[i].params;
     Strcat_charp(src, "<table width=100% cellpadding=0>");
     while (p->name) {
       Strcat_m_charp(src, "<tr><td>", p->comment, NULL);
@@ -915,17 +909,18 @@ struct Buffer *load_option_panel(void) {
         Strcat_m_charp(src, "<input type=text name=", p->name, " value=\"",
                        html_quote(to_str(p)->ptr), "\">", NULL);
         break;
-      case PI_ONOFF:
-        x = atoi(to_str(p)->ptr);
+      case PI_ONOFF: {
+        auto x = atoi(to_str(p)->ptr);
         Strcat_m_charp(src, "<input type=radio name=", p->name, " value=1",
                        (x ? " checked" : ""),
                        ">YES&nbsp;&nbsp;<input type=radio name=", p->name,
                        " value=0", (x ? "" : " checked"), ">NO", NULL);
         break;
-      case PI_SEL_C:
-        tmp = to_str(p);
+      }
+      case PI_SEL_C: {
+        auto tmp = to_str(p);
         Strcat_m_charp(src, "<select name=", p->name, ">", NULL);
-        for (s = (struct sel_c *)p->select; s->text != NULL; s++) {
+        for (auto s = (struct sel_c *)p->select; s->text != NULL; s++) {
           Strcat_charp(src, "<option value=");
           Strcat(src, Sprintf("%s\n", s->cvalue));
           if ((p->type != P_CHAR && s->value == atoi(tmp->ptr)) ||
@@ -937,6 +932,7 @@ struct Buffer *load_option_panel(void) {
         Strcat_charp(src, "</select>");
         break;
       }
+      }
       Strcat_charp(src, "</td></tr>\n");
       p++;
     }
@@ -945,15 +941,12 @@ struct Buffer *load_option_panel(void) {
     Strcat_charp(src, "</table><hr width=50%>");
   }
   Strcat_charp(src, "</table></form></body></html>");
-  buf = loadHTMLString(src);
-  return buf;
+  return loadHTMLString(src);
 }
 
-void panel_set_option(struct parsed_tagarg *arg) {
-  FILE *f = NULL;
-  char *p;
-  Str s = Strnew(), tmp;
+void panel_set_option(struct HtmlTag *arg) {
 
+  FILE *f = NULL;
   if (config_file == NULL) {
     disp_message("There's no config file... config not saved", false);
   } else {
@@ -962,12 +955,14 @@ void panel_set_option(struct parsed_tagarg *arg) {
       disp_message("Can't write option!", false);
     }
   }
+
+  Str s = Strnew();
   while (arg) {
     /*  InnerCharset -> SystemCharset */
     if (arg->value) {
-      p = arg->value;
+      auto p = arg->value;
       if (set_param(arg->arg, p)) {
-        tmp = Sprintf("%s %s\n", arg->arg, p);
+        auto tmp = Sprintf("%s %s\n", arg->arg, p);
         Strcat(tmp, s);
         s = tmp;
       }

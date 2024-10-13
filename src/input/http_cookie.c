@@ -11,8 +11,8 @@
 #include "input/http_cookie.h"
 #include "alloc.h"
 #include "html/html_readbuffer.h"
+#include "html/html_tag.h"
 #include "html/html_text.h"
-#include "html/parsetag.h"
 #include "input/isocket.h"
 #include "proto.h"
 #include "rc.h"
@@ -598,21 +598,20 @@ void initCookie(void) {
   check_expired_cookies();
 }
 
-struct Buffer *cookie_list_panel(void) {
+struct Document *cookie_list_panel(void) {
   /* FIXME: gettextize? */
   Str src = Strnew_charp("<html><head><title>Cookies</title></head>"
                          "<body><center><b>Cookies</b></center>"
                          "<p><form method=internal action=cookie>");
-  struct cookie *p;
-  int i;
-  char *tmp, tmp2[80];
 
   if (!use_cookie || !First_cookie)
     return NULL;
 
   Strcat_charp(src, "<ol>");
-  for (p = First_cookie, i = 0; p; p = p->next, i++) {
-    tmp = html_quote(parsedURL2Str(&p->url)->ptr);
+  int i = 0;
+  for (auto p = First_cookie; p; p = p->next, i++) {
+    auto tmp = html_quote(parsedURL2Str(&p->url)->ptr);
+    char tmp2[80];
     if (p->expires != (time_t)-1) {
 #ifdef HAVE_STRFTIME
       strftime(tmp2, 80, "%a, %d %b %Y %H:%M:%S GMT", gmtime(&p->expires));
@@ -704,7 +703,7 @@ struct Buffer *cookie_list_panel(void) {
   return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct parsed_tagarg *arg) {
+void set_cookie_flag(struct HtmlTag *arg) {
   int n, v;
   struct cookie *p;
 

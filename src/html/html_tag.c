@@ -1,9 +1,9 @@
-#include "html/parsetag.h"
+#include "html/html_tag.h"
 #include "alloc.h"
 #include "input/url.h"
 #include "text/Str.h"
 
-char *tag_get_value(struct parsed_tagarg *t, char *arg) {
+const char *tag_get_value(struct HtmlTag *t, const char *arg) {
   for (; t; t = t->next) {
     if (!strcasecmp(t->arg, arg))
       return t->value;
@@ -11,7 +11,7 @@ char *tag_get_value(struct parsed_tagarg *t, char *arg) {
   return NULL;
 }
 
-int tag_exists(struct parsed_tagarg *t, char *arg) {
+bool tag_exists(struct HtmlTag *t, const char *arg) {
   for (; t; t = t->next) {
     if (!strcasecmp(t->arg, arg))
       return 1;
@@ -19,14 +19,14 @@ int tag_exists(struct parsed_tagarg *t, char *arg) {
   return 0;
 }
 
-struct parsed_tagarg *cgistr2tagarg(char *cgistr) {
+struct HtmlTag *cgistr2tagarg(const char *cgistr) {
   Str tag;
   Str value;
-  struct parsed_tagarg *t0, *t;
+  struct HtmlTag *t0, *t;
 
   t = t0 = NULL;
   do {
-    t = New(struct parsed_tagarg);
+    t = New(struct HtmlTag);
     t->next = t0;
     t0 = t;
     tag = Strnew();

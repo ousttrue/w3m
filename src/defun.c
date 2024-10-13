@@ -17,8 +17,8 @@
 #include "funcname1.h"
 #include "history.h"
 #include "html/html_parser.h"
+#include "html/html_tag.h"
 #include "html/map.h"
-#include "html/parsetag.h"
 #include "input/ftp.h"
 #include "input/http_cookie.h"
 #include "input/http_request.h"
@@ -2209,8 +2209,8 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
   cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
 }
 
-void follow_map(struct parsed_tagarg *arg) {
-  char *name = tag_get_value(arg, "link");
+void follow_map(struct HtmlTag *arg) {
+  auto name = tag_get_value(arg, "link");
 #if defined(MENU_MAP) || defined(USE_IMAGE)
   struct Anchor *an;
   struct MapArea *a;

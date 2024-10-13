@@ -7,8 +7,8 @@
 #include "file/tmpfile.h"
 #include "fm.h"
 #include "html/map.h"
-#include "html/parsetag.h"
 #include "html/parsetagx.h"
+#include "html/html_tag.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
 #include "input/localcgi.h"
@@ -27,7 +27,7 @@ extern int max_textarea;
 /* *INDENT-OFF* */
 struct {
   char *action;
-  void (*rout)(struct parsed_tagarg *);
+  void (*rout)(struct HtmlTag *);
 } internal_action[] = {
     {"map", follow_map},
     {"option", panel_set_option},

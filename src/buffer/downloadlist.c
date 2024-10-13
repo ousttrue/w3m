@@ -5,7 +5,7 @@
 #include "fm.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
-#include "html/parsetag.h"
+#include "html/html_tag.h"
 #include "proto.h"
 #include "term/termsize.h"
 #include "text/Str.h"
@@ -103,29 +103,24 @@ static char *convert_size3(int64_t size) {
   return tmp->ptr;
 }
 
-static struct Buffer *DownloadListBuffer(void) {
-  struct DownloadList *d;
-  Str src = NULL;
-  struct stat st;
-  time_t cur_time;
-  int duration, rate, eta;
-  size_t size;
-
+static struct Document *DownloadListBuffer(void) {
   if (!FirstDL)
     return NULL;
-  cur_time = time(0);
-  /* FIXME: gettextize? */
-  src = Strnew_charp(
+
+  auto cur_time = time(0);
+  auto src = Strnew_charp(
       "<html><head><title>" DOWNLOAD_LIST_TITLE
       "</title></head>\n<body><h1 align=center>" DOWNLOAD_LIST_TITLE "</h1>\n"
       "<form method=internal action=download><hr>\n");
-  for (d = LastDL; d != NULL; d = d->prev) {
+  for (auto d = LastDL; d != NULL; d = d->prev) {
+    struct stat st;
     if (lstat(d->lock, &st))
       d->running = false;
     Strcat_charp(src, "<pre>\n");
     Strcat(src, Sprintf("%s\n  --&gt; %s\n  ", html_quote(d->url),
                         html_quote(d->save)));
-    duration = cur_time - d->time;
+    auto duration = cur_time - d->time;
+    size_t size = 0;
     if (!stat(d->save, &st)) {
       size = st.st_size;
       if (!d->running) {
@@ -133,8 +128,7 @@ static struct Buffer *DownloadListBuffer(void) {
           d->size = size;
         duration = st.st_mtime - d->time;
       }
-    } else
-      size = 0;
+    }
     if (d->size) {
       int i, l = COLS - 6;
       if (size < d->size)
@@ -155,12 +149,12 @@ static struct Buffer *DownloadListBuffer(void) {
     else
       Strcat(src, Sprintf("  %s bytes loaded", convert_size3(size)));
     if (duration > 0) {
-      rate = size / duration;
+      auto rate = size / duration;
       Strcat(src, Sprintf("  %02d:%02d:%02d  rate %s/sec", duration / (60 * 60),
                           (duration / 60) % 60, duration % 60,
                           convert_size(rate, 1)));
       if (d->running && size < d->size && rate) {
-        eta = (d->size - size) / rate;
+        auto eta = (d->size - size) / rate;
         Strcat(src, Sprintf("  eta %02d:%02d:%02d", eta / (60 * 60),
                             (eta / 60) % 60, eta % 60));
       }
@@ -209,7 +203,7 @@ BOOL kill(DWORD dwProcessId, UINT uExitCode) {
 }
 #endif
 
-void download_action(struct parsed_tagarg *arg) {
+void download_action(struct HtmlTag *arg) {
 
   for (; arg; arg = arg->next) {
     pid_t pid;

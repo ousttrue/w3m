@@ -69,7 +69,7 @@ pub const SRCS = [_][]const u8{
     "src/html/anchor.c",
     "src/html/parsetagx.c",
     "src/html/html_tagtable.c",
-    "src/html/parsetag.c",
+    "src/html/html_tag.c",
     "src/html/html_readbuffer.c",
     "src/html/html_parser.c",
     "src/html/html_types.c",
