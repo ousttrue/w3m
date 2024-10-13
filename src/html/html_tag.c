@@ -14,6 +14,15 @@ static int noConv(char *, char **);
 static int toNumber(char *, int *);
 static int toLength(char *, int *);
 
+bool parsedtag_accepts(struct HtmlTag *tag, enum HtmlTagAttributeType id) {
+  return ((tag)->map && (tag)->map[id] != MAX_TAGATTR);
+}
+
+bool parsedtag_exists(struct HtmlTag *tag, enum HtmlTagAttributeType id) {
+  return (parsedtag_accepts(tag, id) &&
+          ((tag)->attrid[(tag)->map[id]] != ATTR_UNKNOWN));
+}
+
 static int toAlign(char *oval, enum AlignMode *align) {
   if (strcasecmp(oval, "left") == 0)
     *align = ALIGN_LEFT;
@@ -99,12 +108,8 @@ extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
 struct HtmlTag *parse_tag(const char **s, bool internal) {
-  struct HtmlTag *tag = NULL;
-  int tag_id;
-  char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
-  int i, attr_id = 0, nattr;
-
   /* Parse tag name */
+  char tagname[MAX_TAG_LEN];
   tagname[0] = '\0';
   auto q = (*s) + 1;
   auto p = tagname;
@@ -121,27 +126,29 @@ struct HtmlTag *parse_tag(const char **s, bool internal) {
   while (*q && !IS_SPACE(*q) && !(tagname[0] != '/' && *q == '/') && *q != '>')
     q++;
 
-  tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
+  enum HtmlTagType tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
 
   if (tag_id == HTML_UNKNOWN || (!internal && TagMAP[tag_id].flag & TFLG_INT))
     goto skip_parse_tagarg;
 
-  tag = New(struct HtmlTag);
+  auto tag = New(struct HtmlTag);
   memset(tag, 0, sizeof(struct HtmlTag));
   tag->tagid = tag_id;
 
+  int nattr;
   if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
     tag->attrid = NewAtom_N(unsigned char, nattr);
     tag->value = New_N(const char *, nattr);
     tag->map = NewAtom_N(unsigned char, MAX_TAGATTR);
     memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
     memset(tag->attrid, ATTR_UNKNOWN, nattr);
-    for (i = 0; i < nattr; i++)
+    for (int i = 0; i < nattr; i++)
       tag->map[TagMAP[tag_id].accept_attribute[i]] = i;
   }
 
   /* Parse tag arguments */
   SKIP_BLANKS(q);
+  char attrname[MAX_TAG_LEN];
   while (1) {
     Str value = NULL, value_tmp = NULL;
     if (*q == '>' || *q == '\0')
@@ -190,7 +197,9 @@ struct HtmlTag *parse_tag(const char **s, bool internal) {
         }
       }
     }
-    for (i = 0; i < nattr; i++) {
+    int i = 0;
+    auto attr_id = ATTR_UNKNOWN;
+    for (; i < nattr; i++) {
       if ((tag)->attrid[i] == ATTR_UNKNOWN &&
           strcmp(AttrMAP[TagMAP[tag_id].accept_attribute[i]].name, attrname) ==
               0) {
