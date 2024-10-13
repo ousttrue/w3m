@@ -99,7 +99,7 @@ static int toVAlign(char *oval, int *valign) {
 extern Hash_si tagtable;
 #define MAX_TAG_LEN 64
 
-struct parsed_tag *parse_tag(const char **s, int internal) {
+struct parsed_tag *parse_tag(const char **s, bool internal) {
   struct parsed_tag *tag = NULL;
   int tag_id;
   char tagname[MAX_TAG_LEN], attrname[MAX_TAG_LEN];
@@ -133,7 +133,7 @@ struct parsed_tag *parse_tag(const char **s, int internal) {
 
   if ((nattr = TagMAP[tag_id].max_attribute) > 0) {
     tag->attrid = NewAtom_N(unsigned char, nattr);
-    tag->value = New_N(char *, nattr);
+    tag->value = New_N(const char *, nattr);
     tag->map = NewAtom_N(unsigned char, MAX_TAGATTR);
     memset(tag->map, MAX_TAGATTR, MAX_TAGATTR);
     memset(tag->attrid, ATTR_UNKNOWN, nattr);

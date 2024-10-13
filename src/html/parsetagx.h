@@ -7,7 +7,7 @@
 struct parsed_tag {
   unsigned char tagid;
   unsigned char *attrid;
-  char **value;
+  const char **value;
   unsigned char *map;
   char need_reconstruct;
 };
@@ -21,7 +21,7 @@ struct parsed_tag {
 #define parsedtag_need_reconstruct(tag) ((tag)->need_reconstruct)
 #define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
 
-extern struct parsed_tag *parse_tag(const char **s, int internal);
+extern struct parsed_tag *parse_tag(const char **s, bool internal);
 extern int parsedtag_get_value(struct parsed_tag *tag, int id, void *value);
 extern int parsedtag_set_value(struct parsed_tag *tag, int id, char *value);
 extern Str parsedtag2str(struct parsed_tag *tag);

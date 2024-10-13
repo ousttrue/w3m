@@ -116,7 +116,7 @@ unsigned char ALST_IMG_ALT[] = {
 unsigned char ALST_NOP[] = {ATTR_CORE};
 #define MAXA_NOP MAXA_CORE
 
-TagInfo TagMAP[MAX_HTMLTAG] = {
+struct TagInfo TagMAP[MAX_HTMLTAG] = {
     {NULL, NULL, 0, 0},                            /*   0 HTML_UNKNOWN    */
     {"a", ALST_A, MAXA_A, 0},                      /*   1 HTML_A          */
     {"/a", NULL, 0, TFLG_END},                     /*   2 HTML_N_A        */
@@ -316,7 +316,7 @@ TagInfo TagMAP[MAX_HTMLTAG] = {
     {"/div_int", NULL, 0, TFLG_INT | TFLG_END},   /*  184 HTML_N_DIV_INT  */
 };
 
-TagAttrInfo AttrMAP[MAX_TAGATTR] = {
+struct TagAttrInfo AttrMAP[MAX_TAGATTR] = {
     {NULL, VTYPE_NONE, 0},            /*  0 ATTR_UNKNOWN        */
     {"accept", VTYPE_NONE, 0},        /*  1 ATTR_ACCEPT         */
     {"accept-charset", VTYPE_STR, 0}, /*  2 ATTR_ACCEPT_CHARSET */

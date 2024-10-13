@@ -152,13 +152,11 @@ void push_link(int cmd, int offset, int pos);
 struct parsed_tag;
 int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
-                   int internal);
+                   bool internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
 void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
-struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
-                                struct Url *base, FILE *src, int internal);
 
 Str process_form_int(struct parsed_tag *tag, int fid);
 void push_spaces(struct readbuffer *obuf, int pre_mode, int width);
@@ -196,10 +194,8 @@ extern Str process_form(struct parsed_tag *tag);
 extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);
 
-// struct Buffer *loadHTMLBuffer(struct URLFile *f, const char *type,
-//                               struct Buffer *newBuf);
+struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
+                                struct Url *base, bool internal);
 struct Document *loadHTML(Str html, struct Url currentURL, struct Url *base);
 struct Document *loadHTMLString(Str page);
-// struct Buffer *loadBuffer(struct URLFile *uf, const char *type,
-//                           struct Buffer *newBuf);
 struct Document *loadText(Str text);

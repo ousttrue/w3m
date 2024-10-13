@@ -270,23 +270,25 @@ enum HtmlTag {
 
 /* HTML Tag Information Table */
 
-typedef struct html_tag_info {
-  char *name;
+enum TagFlags {
+  TFLG_NONE = 0,
+  TFLG_END = 1,
+  TFLG_INT = 2,
+};
+struct TagInfo {
+  const char *name;
   unsigned char *accept_attribute;
   unsigned char max_attribute;
-  unsigned char flag;
-} TagInfo;
-
-#define TFLG_END 1
-#define TFLG_INT 2
+  enum TagFlags flag;
+};
 
 /* HTML Tag Attribute Information Table */
 
-typedef struct tag_attribute_info {
-  char *name;
+struct TagAttrInfo {
+  const char *name;
   unsigned char vtype;
   unsigned char flag;
-} TagAttrInfo;
+};
 
 #define AFLG_INT 1
 
@@ -308,8 +310,8 @@ typedef struct tag_attribute_info {
 #define SHAPE_CIRCLE 3
 #define SHAPE_POLY 4
 
-extern TagInfo TagMAP[];
-extern TagAttrInfo AttrMAP[];
+extern struct TagInfo TagMAP[];
+extern struct TagAttrInfo AttrMAP[];
 
 struct environment {
   unsigned char env;

@@ -2571,7 +2571,7 @@ static void back_to_breakpoint(struct readbuffer *obuf) {
 
 /* HTML processing first pass */
 void HTMLlineproc0(const char *line, struct html_feed_environ *h_env,
-                   int internal) {
+                   bool internal) {
   Lineprop mode;
   int cmd;
   struct readbuffer *obuf = h_env->obuf;
@@ -2946,7 +2946,7 @@ static Str textlist_feed() {
 static union input_stream *_file_lp2;
 
 struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
-                                struct Url *base, FILE *src, int internal) {
+                                struct Url *base, bool internal) {
   struct environment envs[MAX_ENV_LEVEL];
   int64_t linelen = 0;
   int64_t trbyte = 0;
@@ -2979,8 +2979,6 @@ struct Document *loadHTMLstream(struct URLFile *f, struct Url currentURL,
   if (IStype(f->stream) != IST_ENCODED)
     f->stream = newEncodedStream(f->stream, f->encoding);
   while ((lineBuf2 = StrmyUFgets(f))->length) {
-    if (src)
-      Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
     term_showProgress(&linelen, &trbyte, f->current_content_length);
     lineBuf2 = convertLine(lineBuf2, HTML_MODE);
@@ -3086,7 +3084,7 @@ struct Document *loadHTML(Str html, struct Url currentURL, struct Url *base) {
 
   struct URLFile f;
   init_stream(&f, SCM_LOCAL, newStrStream(html));
-  auto doc = loadHTMLstream(&f, currentURL, base, nullptr, false);
+  auto doc = loadHTMLstream(&f, currentURL, base, false);
   UFclose(&f);
   return doc;
 
@@ -3115,7 +3113,7 @@ struct Document *loadHTMLString(Str page) {
   trap_on();
 
   struct Url url;
-  auto doc = loadHTMLstream(&f, url, nullptr, NULL, true);
+  auto doc = loadHTMLstream(&f, url, nullptr, true);
 
   trap_off();
   UFclose(&f);
