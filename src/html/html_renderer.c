@@ -53,7 +53,7 @@ static int ex_efct(int ex) {
   return effect;
 }
 
-static void addLink(struct Document *doc, struct parsed_tag *tag) {
+static void addLink(struct Document *doc, struct HtmlTag *tag) {
   const char *href = NULL, *title = NULL, *ctype = NULL, *rel = NULL,
              *rev = NULL;
 
@@ -169,7 +169,7 @@ struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *base,
         }
       } else {
         /* tag processing */
-        struct parsed_tag *tag;
+        struct HtmlTag *tag;
         if (!(tag = parse_tag(&str, true)))
           continue;
         switch (tag->tagid) {

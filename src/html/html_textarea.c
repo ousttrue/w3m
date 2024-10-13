@@ -33,8 +33,8 @@ void prerender_textarea() {
   }
 }
 
-struct parsed_tag;
-Str process_textarea(struct parsed_tag *tag, int width) {
+struct HtmlTag;
+Str process_textarea(struct HtmlTag *tag, int width) {
   Str tmp = NULL;
   char *p;
 #define TEXTAREA_ATTR_COL_MAX 4096

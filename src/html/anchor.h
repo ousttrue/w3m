@@ -72,7 +72,7 @@ extern void shiftAnchorPosition(struct AnchorList *a, struct HmarkerList *hl,
                                 int line, int pos, int shift);
 extern char *getAnchorText(struct Document *doc, struct AnchorList *al,
                            struct Anchor *a);
-struct parsed_tag;
+struct HtmlTag;
 struct FormList;
 struct Anchor *registerForm(struct Document *doc, struct FormList *flist,
-                            struct parsed_tag *tag, int line, int pos);
+                            struct HtmlTag *tag, int line, int pos);

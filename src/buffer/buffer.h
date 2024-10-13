@@ -77,7 +77,7 @@ struct Url *baseURL(struct Buffer *buf);
 void chkURLBuffer(struct Buffer *buf);
 struct Line;
 char *last_modified(struct Buffer *buf);
-struct parsed_tag;
+struct HtmlTag;
 
 extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);

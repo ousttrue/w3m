@@ -165,8 +165,8 @@ struct html_feed_environ {
 
 void push_link(int cmd, int offset, int pos);
 
-struct parsed_tag;
-int HTMLtagproc1(struct parsed_tag *tag, struct html_feed_environ *h_env);
+struct HtmlTag;
+int HTMLtagproc1(struct HtmlTag *tag, struct html_feed_environ *h_env);
 void HTMLlineproc0(const char *istr, struct html_feed_environ *h_env,
                    bool internal);
 #define HTMLlineproc1(x, y) HTMLlineproc0(x, y, true)
@@ -174,7 +174,7 @@ void init_henv(struct html_feed_environ *, struct readbuffer *,
                struct environment *, int, struct TextLineList *, int, int);
 void completeHTMLstream(struct html_feed_environ *, struct readbuffer *);
 
-Str process_form_int(struct parsed_tag *tag, int fid);
+Str process_form_int(struct HtmlTag *tag, int fid);
 void push_spaces(struct readbuffer *obuf, int pre_mode, int width);
 
 #define push_charp(obuf, width, str, mode)                                     \
@@ -194,19 +194,19 @@ extern void save_fonteffect(struct html_feed_environ *h_env,
                             struct readbuffer *obuf);
 extern void restore_fonteffect(struct html_feed_environ *h_env,
                                struct readbuffer *obuf);
-extern Str process_img(struct parsed_tag *tag, int width);
-extern Str process_anchor(struct parsed_tag *tag, char *tagbuf);
-extern Str process_input(struct parsed_tag *tag);
-extern Str process_button(struct parsed_tag *tag);
+extern Str process_img(struct HtmlTag *tag, int width);
+extern Str process_anchor(struct HtmlTag *tag, char *tagbuf);
+extern Str process_input(struct HtmlTag *tag);
+extern Str process_button(struct HtmlTag *tag);
 extern Str process_n_button(void);
-extern Str process_select(struct parsed_tag *tag);
+extern Str process_select(struct HtmlTag *tag);
 extern Str process_n_select(void);
 extern void feed_select(const char *str);
 extern void process_option(void);
-extern Str process_textarea(struct parsed_tag *tag, int width);
+extern Str process_textarea(struct HtmlTag *tag, int width);
 extern Str process_n_textarea(void);
 extern void feed_textarea(const char *str);
-extern Str process_form(struct parsed_tag *tag);
+extern Str process_form(struct HtmlTag *tag);
 extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);
 

@@ -91,7 +91,7 @@ struct Anchor *registerImg(struct Document *doc, const char *url,
 }
 
 struct Anchor *registerForm(struct Document *doc, struct FormList *flist,
-                            struct parsed_tag *tag, int line, int pos) {
+                            struct HtmlTag *tag, int line, int pos) {
   auto fi = formList_addInput(flist, tag);
   if (fi == NULL)
     return NULL;

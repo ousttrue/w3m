@@ -61,9 +61,9 @@ extern struct FormList *newFormList(const char *action, const char *method,
                                     const char *charset, const char *enctype,
                                     const char *target, const char *name,
                                     struct FormList *_next);
-struct parsed_tag;
+struct HtmlTag;
 extern struct FormItemList *formList_addInput(struct FormList *fl,
-                                              struct parsed_tag *tag);
+                                              struct HtmlTag *tag);
 extern char *form2str(struct FormItemList *fi);
 extern int formtype(char *typestr);
 struct Anchor;

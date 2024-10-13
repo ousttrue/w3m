@@ -77,7 +77,7 @@ struct FormList *newFormList(const char *action, const char *method,
  * add <input> element to FormList
  */
 struct FormItemList *formList_addInput(struct FormList *fl,
-                                       struct parsed_tag *tag) {
+                                       struct HtmlTag *tag) {
   struct FormItemList *item;
   char *p;
   int i;
