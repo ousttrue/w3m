@@ -45,3 +45,16 @@ FILE *localcgi_post(const char *, const char *, struct FormList *,
                     const char *);
 FILE *localcgi_get(const char *u, const char *q, const char *r);
 extern Str loadLocalDir(const char *dirname);
+
+struct LocalCgiHtml {
+  const char *arg;
+  const char *value;
+  struct LocalCgiHtml *next;
+};
+
+const char *tag_get_value(struct LocalCgiHtml *t, const char *arg);
+bool tag_exists(struct LocalCgiHtml *t, const char *arg);
+struct LocalCgiHtml *cgistr2tagarg(const char *cgistr);
+
+
+

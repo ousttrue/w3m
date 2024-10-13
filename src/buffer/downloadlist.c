@@ -5,7 +5,7 @@
 #include "fm.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
-#include "html/html_tag.h"
+#include "input/localcgi.h"
 #include "proto.h"
 #include "term/termsize.h"
 #include "text/Str.h"
@@ -203,7 +203,7 @@ BOOL kill(DWORD dwProcessId, UINT uExitCode) {
 }
 #endif
 
-void download_action(struct HtmlTag *arg) {
+void download_action(struct LocalCgiHtml *arg) {
 
   for (; arg; arg = arg->next) {
     pid_t pid;

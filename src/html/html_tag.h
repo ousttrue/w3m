@@ -1,11 +1,28 @@
 #pragma once
+#include "html_types.h"
+#include "text/Str.h"
 
-struct HtmlTag {
-  const char *arg;
-  const char *value;
-  struct HtmlTag *next;
+struct parsed_tag {
+  unsigned char tagid;
+  unsigned char *attrid;
+  const char **value;
+  unsigned char *map;
+  bool need_reconstruct;
 };
 
-const char *tag_get_value(struct HtmlTag *t, const char *arg);
-bool tag_exists(struct HtmlTag *t, const char *arg);
-struct HtmlTag *cgistr2tagarg(const char *cgistr);
+#define parsedtag_accepts(tag, id) ((tag)->map && (tag)->map[id] != MAX_TAGATTR)
+#define parsedtag_exists(tag, id)                                              \
+  (parsedtag_accepts(tag, id) &&                                               \
+   ((tag)->attrid[(tag)->map[id]] != ATTR_UNKNOWN))
+#define parsedtag_delete(tag, id)                                              \
+  (parsedtag_accepts(tag, id) && ((tag)->attrid[(tag)->map[id]] = ATTR_UNKNOWN))
+#define parsedtag_need_reconstruct(tag) ((tag)->need_reconstruct)
+#define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
+
+extern struct parsed_tag *parse_tag(const char **s, bool internal);
+extern bool parsedtag_get_value(struct parsed_tag *tag,
+                                enum HtmlTagAttributeType id, void *value);
+extern bool parsedtag_set_value(struct parsed_tag *tag,
+                                enum HtmlTagAttributeType id,
+                                const char *value);
+extern Str parsedtag2str(struct parsed_tag *tag);

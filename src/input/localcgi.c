@@ -371,3 +371,45 @@ FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *request,
 FILE *localcgi_get(const char *u, const char *q, const char *r) {
   return localcgi_post((u), (q), NULL, (r));
 }
+
+const char *tag_get_value(struct LocalCgiHtml *t, const char *arg) {
+  for (; t; t = t->next) {
+    if (!strcasecmp(t->arg, arg))
+      return t->value;
+  }
+  return NULL;
+}
+
+bool tag_exists(struct LocalCgiHtml *t, const char *arg) {
+  for (; t; t = t->next) {
+    if (!strcasecmp(t->arg, arg))
+      return 1;
+  }
+  return 0;
+}
+
+struct LocalCgiHtml *cgistr2tagarg(const char *cgistr) {
+  struct LocalCgiHtml *t0 = nullptr;
+  struct LocalCgiHtml *t = nullptr;
+  do {
+    t = New(struct LocalCgiHtml);
+    t->next = t0;
+    t0 = t;
+    auto tag = Strnew();
+    while (*cgistr && *cgistr != '=' && *cgistr != '&')
+      Strcat_char(tag, *cgistr++);
+    t->arg = Str_form_unquote(tag)->ptr;
+    t->value = NULL;
+    if (*cgistr == '\0')
+      return t;
+    else if (*cgistr == '=') {
+      cgistr++;
+      auto value = Strnew();
+      while (*cgistr && *cgistr != '&')
+        Strcat_char(value, *cgistr++);
+      t->value = Str_form_unquote(value)->ptr;
+    } else if (*cgistr == '&')
+      cgistr++;
+  } while (*cgistr);
+  return t;
+}

@@ -21,8 +21,8 @@ bool str_to_bool(const char *value, bool old);
 
 void init_rc(void);
 struct Document *load_option_panel(void);
-struct HtmlTag;
-void panel_set_option(struct HtmlTag *);
+struct LocalCgiHtml;
+void panel_set_option(struct LocalCgiHtml *);
 void sync_with_option(void);
 struct Url;
 extern void initMimeTypes();

@@ -75,6 +75,6 @@ void save_cookies(void);
 void load_cookies(void);
 void initCookie(void);
 struct Document *cookie_list_panel(void);
-struct HtmlTag;
-void set_cookie_flag(struct HtmlTag *arg);
+struct LocalCgiHtml;
+void set_cookie_flag(struct LocalCgiHtml *arg);
 int check_cookie_accept_domain(char *domain);

@@ -11,9 +11,9 @@
 #include "input/http_cookie.h"
 #include "alloc.h"
 #include "html/html_readbuffer.h"
-#include "html/html_tag.h"
 #include "html/html_text.h"
 #include "input/isocket.h"
+#include "input/localcgi.h"
 #include "proto.h"
 #include "rc.h"
 #include "text/myctype.h"
@@ -703,7 +703,7 @@ struct Document *cookie_list_panel(void) {
   return loadHTMLString(src);
 }
 
-void set_cookie_flag(struct HtmlTag *arg) {
+void set_cookie_flag(struct LocalCgiHtml *arg) {
   int n, v;
   struct cookie *p;
 

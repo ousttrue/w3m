@@ -4,7 +4,7 @@
 #include "html/html_parser.h"
 #include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
-#include "html/parsetagx.h"
+#include "html/html_tag.h"
 #include "term/termsize.h"
 #include "text/Str.h"
 #include "text/entity.h"

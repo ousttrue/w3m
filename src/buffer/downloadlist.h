@@ -17,6 +17,6 @@ void addDownloadList(pid_t pid, char *url, char *save, char *lock,
 bool do_add_download_list();
 void stopDownload();
 bool checkDownloadList();
-struct HtmlTag;
-void download_action(struct HtmlTag *arg);
+struct LocalCgiHtml;
+void download_action(struct LocalCgiHtml *arg);
 void download_exit(pid_t pid, int err);

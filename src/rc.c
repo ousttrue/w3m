@@ -944,7 +944,7 @@ struct Document *load_option_panel() {
   return loadHTMLString(src);
 }
 
-void panel_set_option(struct HtmlTag *arg) {
+void panel_set_option(struct LocalCgiHtml *arg) {
 
   FILE *f = NULL;
   if (config_file == NULL) {

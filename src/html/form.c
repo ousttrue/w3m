@@ -7,7 +7,6 @@
 #include "file/tmpfile.h"
 #include "fm.h"
 #include "html/map.h"
-#include "html/parsetagx.h"
 #include "html/html_tag.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
@@ -27,7 +26,7 @@ extern int max_textarea;
 /* *INDENT-OFF* */
 struct {
   char *action;
-  void (*rout)(struct HtmlTag *);
+  void (*rout)(struct LocalCgiHtml *);
 } internal_action[] = {
     {"map", follow_map},
     {"option", panel_set_option},

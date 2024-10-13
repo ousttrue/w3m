@@ -1,9 +1,9 @@
-#include "html_textarea.h"
-#include "html_text.h"
+#include "html/html_textarea.h"
 #include "alloc.h"
-#include "html_readbuffer.h"
-#include "parsetagx.h"
-#include "html_parser.h"
+#include "html/html_parser.h"
+#include "html/html_readbuffer.h"
+#include "html/html_tag.h"
+#include "html/html_text.h"
 
 #define MAX_TEXTAREA                                                           \
   10 /* max number of <textarea>..</textarea>                                  \

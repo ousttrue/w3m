@@ -2209,7 +2209,7 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
   cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
 }
 
-void follow_map(struct HtmlTag *arg) {
+void follow_map(struct LocalCgiHtml *arg) {
   auto name = tag_get_value(arg, "link");
 #if defined(MENU_MAP) || defined(USE_IMAGE)
   struct Anchor *an;
