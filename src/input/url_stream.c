@@ -6,7 +6,7 @@
 #include "file/file.h"
 #include "file/shell.h"
 #include "fm.h"
-#include "html/html.h"
+// #include "html/html.h"
 #include "input/ftp.h"
 #include "input/http_cookie.h"
 #include "input/http_request.h"
@@ -76,7 +76,10 @@ static int DefaultPort[] = {
     443, /* https */
 };
 
-static struct table2 DefaultGuess[] = {
+static struct {
+  const char *ext;
+  const char *mime;
+} DefaultGuess[] = {
     {"html", "text/html"},         {"htm", "text/html"},
     {"shtml", "text/html"},        {"xhtml", "application/xhtml+xml"},
     {"gif", "image/gif"},          {"jpeg", "image/jpeg"},
@@ -112,39 +115,42 @@ static void sock_log(char *message, ...) {
 
 #endif
 
-static struct TextList *mimetypes_list;
-static struct table2 **UserMimeTypes;
+static struct TextList *mimetypes_list = nullptr;
+struct table2 {
+  const char* item1;
+  const char* item2;
+};
+static struct table2 **UserMimeTypes = nullptr;
 
 static struct table2 *loadMimeTypes(char *filename) {
-  char *d, *type;
-  int i, n;
-  Str tmp;
-  struct table2 *mtypes;
-
   auto f = fopen(expandPath(filename), "r");
   if (f == NULL)
     return NULL;
-  n = 0;
+
+  int n = 0;
+  Str tmp;
   while (tmp = Strfgets(f), tmp->length > 0) {
-    d = tmp->ptr;
+    auto d = tmp->ptr;
     if (d[0] != '#') {
       d = strtok(d, " \t\n\r");
       if (d != NULL) {
         d = strtok(NULL, " \t\n\r");
-        for (i = 0; d != NULL; i++)
+        int i = 0;
+        for (; d != NULL; i++)
           d = strtok(NULL, " \t\n\r");
         n += i;
       }
     }
   }
+
   fseek(f, 0, 0);
-  mtypes = New_N(struct table2, n + 1);
-  i = 0;
+  auto mtypes = New_N(struct table2, n + 1);
+  int i = 0;
   while (tmp = Strfgets(f), tmp->length > 0) {
-    d = tmp->ptr;
+    auto d = tmp->ptr;
     if (d[0] == '#')
       continue;
-    type = strtok(d, " \t\n\r");
+    auto type = strtok(d, " \t\n\r");
     if (type == NULL)
       continue;
     while (1) {
@@ -156,6 +162,7 @@ static struct table2 *loadMimeTypes(char *filename) {
       i++;
     }
   }
+
   mtypes[i].item1 = NULL;
   mtypes[i].item2 = NULL;
   fclose(f);

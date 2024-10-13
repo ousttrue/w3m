@@ -7,8 +7,6 @@
 #include "text/Str.h"
 #include "text/myctype.h"
 
-#include "html.c"
-
 /* parse HTML tag */
 
 static int noConv(char *, char **);
@@ -33,9 +31,9 @@ static int toAlign(char *oval, enum AlignMode *align) {
   return 1;
 }
 
-static int toVAlign(char *, int *);
+static int toVAlign(const char *, int *);
 
-typedef int (*ToValFunc)(char *, void *);
+typedef int (*ToValFunc)(const char *, void *);
 static ToValFunc toValFunc[] = {
     (ToValFunc)noConv,   /* VTYPE_NONE    */
     (ToValFunc)noConv,   /* VTYPE_STR     */
@@ -84,7 +82,7 @@ static int toLength(char *oval, int *len) {
   return 1;
 }
 
-static int toVAlign(char *oval, int *valign) {
+static int toVAlign(const char *oval, int *valign) {
   if (strcasecmp(oval, "top") == 0 || strcasecmp(oval, "baseline") == 0)
     *valign = VALIGN_TOP;
   else if (strcasecmp(oval, "bottom") == 0)
@@ -249,13 +247,12 @@ done_parse_tag:
   return tag;
 }
 
-int parsedtag_set_value(struct parsed_tag *tag, int id, char *value) {
-  int i;
-
+bool parsedtag_set_value(struct parsed_tag *tag, enum HtmlTagAttributeType id,
+                         const char *value) {
   if (!parsedtag_accepts(tag, id))
     return 0;
 
-  i = tag->map[id];
+  int i = tag->map[id];
   tag->attrid[i] = id;
   if (value)
     tag->value[i] = allocStr(value, -1);
@@ -265,7 +262,8 @@ int parsedtag_set_value(struct parsed_tag *tag, int id, char *value) {
   return 1;
 }
 
-int parsedtag_get_value(struct parsed_tag *tag, int id, void *value) {
+bool parsedtag_get_value(struct parsed_tag *tag, enum HtmlTagAttributeType id,
+                         void *value) {
   int i;
   if (!parsedtag_exists(tag, id) || !tag->value[i = tag->map[id]])
     return 0;

@@ -8,6 +8,7 @@
 #include "html/html_parser.h"
 #include "html/html_readbuffer.h"
 #include "html/html_textarea.h"
+#include "html/html_types.h"
 #include "html/map.h"
 #include "html/parsetagx.h"
 #include "term/termsize.h"

@@ -4,6 +4,10 @@
 #include "input/url.h"
 #include "text/Str.h"
 
+#define MAX_ENV_LEVEL 20
+#define MAX_INDENT_LEVEL 10
+#define INDENT_INCR IndentIncr
+
 #define RB_STACK_SIZE 10
 #define TAG_STACK_SIZE 10
 #define FONT_STACK_SIZE 5
@@ -105,6 +109,11 @@ typedef struct {
   short bottom_margin;
 } Breakpoint;
 
+struct cmdtable {
+  const char *cmdname;
+  int cmd;
+};
+
 struct readbuffer {
   Str line;
   Lineprop cprop;
@@ -130,6 +139,13 @@ struct readbuffer {
   int tag_sp;
   short top_margin;
   short bottom_margin;
+};
+
+struct environment {
+  unsigned char env;
+  int type;
+  int count;
+  char indent;
 };
 
 struct html_feed_environ {

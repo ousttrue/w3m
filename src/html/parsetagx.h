@@ -1,5 +1,5 @@
 #pragma once
-#include "html/html.h"
+#include "html/html_types.h"
 #include "text/Str.h"
 
 /* Parsed Tag structure */
@@ -22,6 +22,8 @@ struct parsed_tag {
 #define parsedtag_attname(tag, i) (AttrMAP[(tag)->attrid[i]].name)
 
 extern struct parsed_tag *parse_tag(const char **s, bool internal);
-extern int parsedtag_get_value(struct parsed_tag *tag, int id, void *value);
-extern int parsedtag_set_value(struct parsed_tag *tag, int id, char *value);
+extern bool parsedtag_get_value(struct parsed_tag *tag, enum HtmlTagAttributeType id,
+                               void *value);
+extern bool parsedtag_set_value(struct parsed_tag *tag, enum HtmlTagAttributeType id,
+                               const char *value);
 extern Str parsedtag2str(struct parsed_tag *tag);
