@@ -10,7 +10,9 @@ enum ContentType {
   CONTENTTYPE_TextHTml,
 };
 enum CharSet {
-  CHARSET_ISO_8859_1,
+  CHARSET_UNKONWN,
+  CHARSET_UTF8,
+  // CHARSET_ISO_8859_1, 1byte subset of UTF8
   CHARSET_SJIS,
 };
 struct HttpResponse {
@@ -25,4 +27,3 @@ struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu);
 bool httpMatchattr(const char *p, const char *attr, int len, Str *value);
 const char *httpGetHeader(struct HttpResponse *res, const char *field);
 const char *httpGetContentType(struct HttpResponse *res);
-

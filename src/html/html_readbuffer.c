@@ -18,6 +18,7 @@
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
+#include "text/libnkf.h"
 #include "text/romannum.h"
 #include "text/symbol.h"
 #include "text/text.h"
@@ -2982,7 +2983,16 @@ static Str textlist_feed() {
 static union input_stream *_file_lp2;
 
 struct Document *loadHTML(const char *html, struct Url currentURL,
-                          struct Url *base) {
+                          struct Url *base, enum CharSet content_charset) {
+  if (content_charset == CHARSET_SJIS) {
+    // sjis to utf8
+    auto opts = "-S -w";
+    auto utf8 =
+        nkf_convert((unsigned char *)html, strlen(html), opts, strlen(opts));
+    html = Strnew_charp((const char *)utf8)->ptr;
+    free(utf8);
+  }
+
   struct environment envs[MAX_ENV_LEVEL];
   int64_t linelen = 0;
   int64_t trbyte = 0;

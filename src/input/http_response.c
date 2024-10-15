@@ -201,7 +201,7 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
 struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu) {
   auto res = New(struct HttpResponse);
   res->content_type = CONTENTTYPE_TextPlane;
-  res->content_charset = CHARSET_ISO_8859_1;
+  res->content_charset = CHARSET_UTF8;
   res->content_length = 0;
   res->document_header = newTextList();
   res->http_status_code = -1;

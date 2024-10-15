@@ -89,7 +89,7 @@ struct Document *follow_map_panel(struct Buffer *buf, char *name) {
   Strcat_charp(mappage, "</table></body></html>");
 
   struct Url url;
-  return loadHTML(mappage->ptr, url, nullptr);
+  return loadHTML(mappage->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
@@ -254,5 +254,5 @@ struct Document *page_info_panel(struct Buffer *buf) {
 end:
   Strcat_charp(tmp, "</body></html>");
   struct Url url;
-  return loadHTML(tmp->ptr, url, nullptr);
+  return loadHTML(tmp->ptr, url, nullptr, CHARSET_UTF8);
 }

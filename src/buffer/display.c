@@ -673,7 +673,7 @@ struct Document *message_list_panel(void) {
 
   Strcat_charp(tmp, "</table></body></html>");
   struct Url url;
-  return loadHTML(tmp->ptr, url, nullptr);
+  return loadHTML(tmp->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 void displayInvalidate() { displayBuffer(Currentbuf, B_NORMAL); }

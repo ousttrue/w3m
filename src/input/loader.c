@@ -18,7 +18,6 @@
 #include "siteconf.h"
 #include "term/terms.h"
 #include "text/datetime.h"
-#include "text/libnkf.h"
 #include "text/text.h"
 #include "trap_jmp.h"
 #include <stdio.h>
@@ -94,7 +93,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       fclose(src);
     }
 
-    auto doc = loadHTML(page->ptr, pu, nullptr);
+    auto doc = loadHTML(page->ptr, pu, nullptr, CHARSET_UNKONWN);
     if (!doc) {
       return nullptr;
     }
@@ -150,14 +149,6 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   while ((line = StrmyUFgets(&f))->length) {
     Strcat(content, line);
   }
-  if (t_buf->http_response->content_charset == CHARSET_SJIS) {
-    // sjis to utf8
-    auto opts = "-S -w";
-    auto utf8 = nkf_convert((unsigned char *)content->ptr, content->length,
-                            opts, strlen(opts));
-    content = Strnew_charp((const char *)utf8);
-    free(utf8);
-  }
   if (src) {
     Strfputs(content, src);
     fclose(src);
@@ -166,7 +157,8 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   struct Buffer *b;
   if (is_html_type(t)) {
     b = t_buf;
-    b->document = loadHTML(content->ptr, t_buf->currentURL, baseURL(t_buf));
+    b->document = loadHTML(content->ptr, t_buf->currentURL, baseURL(t_buf),
+                           t_buf->http_response->content_charset);
   } else {
     b = t_buf;
     b->document = loadText(content);

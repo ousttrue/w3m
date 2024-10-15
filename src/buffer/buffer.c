@@ -418,7 +418,8 @@ void reshapeBuffer(struct Buffer *buf) {
     buf->document->imarklist->nmark = 0;
 
   if (is_html_type(buf->type)) {
-    buf->document = loadHTML(html->ptr, buf->currentURL, baseURL(buf));
+    buf->document = loadHTML(html->ptr, buf->currentURL, baseURL(buf),
+                             buf->http_response->content_charset);
   } else {
     buf->document = loadText(html);
   }
@@ -627,5 +628,5 @@ struct Document *link_list_panel(struct Buffer *buf) {
   }
 
   struct Url url;
-  return loadHTML(tmp->ptr, url, nullptr);
+  return loadHTML(tmp->ptr, url, nullptr, CHARSET_UTF8);
 }

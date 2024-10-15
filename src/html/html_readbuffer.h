@@ -1,6 +1,7 @@
 #pragma once
 #include "buffer/line.h"
 #include "html/anchor.h"
+#include "input/http_response.h"
 #include "input/url.h"
 #include "text/Str.h"
 
@@ -209,5 +210,5 @@ extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);
 
 struct Document *loadHTML(const char *html, struct Url currentURL,
-                          struct Url *base);
+                          struct Url *base, enum CharSet content_charset);
 struct Document *loadText(Str text);
