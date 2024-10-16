@@ -381,8 +381,9 @@ struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
  * Reshape HTML buffer
  */
 void reshapeBuffer(struct Buffer *buf) {
-  if (!buf->need_reshape)
+  if (!buf->need_reshape){
     return;
+  }
   buf->need_reshape = false;
 
   buf->document->width = INIT_BUFFER_WIDTH;
@@ -392,8 +393,9 @@ void reshapeBuffer(struct Buffer *buf) {
   struct URLFile f;
   init_stream(&f, SCM_LOCAL, NULL);
   examineFile(buf->sourcefile, &f);
-  if (f.stream == NULL)
+  if (f.stream == NULL){
     return;
+  }
 
   Str html = Strnew();
   Str line;

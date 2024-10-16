@@ -3048,7 +3048,7 @@ phase2:
   trap_off();
 
   _tl_lp2 = htmlenv1.buf->first;
-  auto doc = HTMLlineproc2body(currentURL, base, textlist_feed);
+  auto doc = HTMLlineproc2body(cols, currentURL, base, textlist_feed);
   doc->topLine = doc->firstLine;
   doc->lastLine = doc->currentLine;
   doc->currentLine = doc->firstLine;
@@ -3176,6 +3176,15 @@ void completeHTMLstream(struct html_feed_environ *h_env,
  * loadBuffer: read file and make new buffer
  */
 struct Document *loadText(int cols, const char *text) {
+  {
+    // to utf8
+    auto opts = "-w";
+    auto utf8 =
+        nkf_convert((unsigned char *)text, strlen(text), opts, strlen(opts));
+    text = Strnew_charp((const char *)utf8)->ptr;
+    free(utf8);
+  }
+
   struct URLFile f;
   init_stream(&f, SCM_LOCAL, newStrStream(Strnew_charp(text)));
 

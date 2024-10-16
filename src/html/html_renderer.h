@@ -8,5 +8,5 @@ extern bool MetaRefresh;
 
 typedef Str (*GetLineFunc)();
 struct Url;
-struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *url,
-                                   GetLineFunc feed);
+struct Document *HTMLlineproc2body(int cols, struct Url currentURL,
+                                   struct Url *url, GetLineFunc feed);

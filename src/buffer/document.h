@@ -32,6 +32,8 @@ struct Document {
   struct Url *baseURL;
   short width;
   short height;
+  short COLS;
+  short LINES;
   struct Line *firstLine;
   struct Line *topLine;
   struct Line *currentLine;
@@ -44,8 +46,6 @@ struct Document {
   int visualpos;
   short rootX;
   short rootY;
-  short COLS;
-  short LINES;
   struct AnchorList *href;
   struct AnchorList *name;
   struct AnchorList *img;

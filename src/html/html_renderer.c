@@ -11,7 +11,6 @@
 #include "html/html_textarea.h"
 #include "html/html_types.h"
 #include "html/map.h"
-#include "term/termsize.h"
 #include "text/myctype.h"
 #include "text/text.h"
 
@@ -95,8 +94,8 @@ static void addLink(struct Document *doc, struct HtmlTag *tag) {
   }
 }
 
-struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *base,
-                                   GetLineFunc feed) {
+struct Document *HTMLlineproc2body(int cols, struct Url currentURL,
+                                   struct Url *base, GetLineFunc feed) {
   static char *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -121,7 +120,7 @@ struct Document *HTMLlineproc2body(struct Url currentURL, struct Url *base,
     outp = NewAtom_N(Lineprop, out_size);
   }
 
-  auto doc = newDocument(INIT_BUFFER_WIDTH);
+  auto doc = newDocument(cols);
 
   prerender_textarea();
   a_textarea = New_N(struct Anchor *, max_textarea);
