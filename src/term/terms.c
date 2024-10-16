@@ -568,8 +568,10 @@ void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
   if (term_is_initialized()) {
     if (CurrentTab != NULL && Currentbuf != NULL) {
       scr_message(s,
-                  Currentbuf->document->cursorX + Currentbuf->document->rootX,
-                  Currentbuf->document->cursorY + Currentbuf->document->rootY);
+                  Currentbuf->document->viewport.cursorX +
+                      Currentbuf->document->viewport.rootX,
+                  Currentbuf->document->viewport.cursorY +
+                      Currentbuf->document->viewport.rootY);
     } else {
       scr_message(s, LASTLINE, 0);
     }

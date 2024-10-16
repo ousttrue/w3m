@@ -196,13 +196,13 @@ static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f, Str
                          b->document->currentLine->linenumber -
                              b->document->topLine->linenumber,
                          false);
-          b->document->pos = a->start.pos;
+          b->document->viewport.pos = a->start.pos;
           arrangeCursor(b->document);
         }
       } else { /* plain text */
         int l = atoi(pu.label);
         gotoRealLine(b, l);
-        b->document->pos = 0;
+        b->document->viewport.pos = 0;
         arrangeCursor(b->document);
       }
     }

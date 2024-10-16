@@ -22,7 +22,7 @@ struct MapArea *follow_map_menu(struct Document *doc, const char *name,
 struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
                            const char *shape, const char *coords);
 
-struct MapList *searchMapList(struct Document *doc, char *name);
+struct MapList *searchMapList(struct Document *doc, const char *name);
 struct LocalCgiHtml;
 extern void follow_map(struct LocalCgiHtml *arg);
 extern struct Document *follow_map_panel(struct Buffer *buf, const char *name);

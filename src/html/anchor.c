@@ -143,19 +143,19 @@ struct Anchor *retrieveAnchor(struct AnchorList *al, int line, int pos) {
 struct Anchor *retrieveCurrentAnchor(struct Document *doc) {
   if (doc->currentLine == NULL)
     return NULL;
-  return retrieveAnchor(doc->href, doc->currentLine->linenumber, doc->pos);
+  return retrieveAnchor(doc->href, doc->currentLine->linenumber, doc->viewport.pos);
 }
 
 struct Anchor *retrieveCurrentImg(struct Document *doc) {
   if (doc->currentLine == NULL)
     return NULL;
-  return retrieveAnchor(doc->img, doc->currentLine->linenumber, doc->pos);
+  return retrieveAnchor(doc->img, doc->currentLine->linenumber, doc->viewport.pos);
 }
 
 struct Anchor *retrieveCurrentForm(struct Document *doc) {
   if (doc->currentLine == NULL)
     return NULL;
-  return retrieveAnchor(doc->formitem, doc->currentLine->linenumber, doc->pos);
+  return retrieveAnchor(doc->formitem, doc->currentLine->linenumber, doc->viewport.pos);
 }
 
 struct Anchor *searchAnchor(struct AnchorList *al, const char *str) {

@@ -28,7 +28,6 @@ enum SearchResult forwardSearch(struct Document *doc, const char *str) {
   char *p, *first, *last;
   struct Line *l, *begin;
   bool wrapped = false;
-  int pos;
 
   if ((p = regexCompile((char *)str, IgnoreCase)) != NULL) {
     scr_message(p, 0, 0);
@@ -38,7 +37,8 @@ enum SearchResult forwardSearch(struct Document *doc, const char *str) {
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = doc->pos;
+
+  int pos = doc->viewport.pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -52,7 +52,7 @@ enum SearchResult forwardSearch(struct Document *doc, const char *str) {
       pos -= l->len;
       l = l->next;
     }
-    doc->pos = pos;
+    doc->viewport.pos = pos;
     if (l != doc->currentLine)
       gotoLine(doc, l->linenumber);
     arrangeCursor(doc);
@@ -77,7 +77,7 @@ enum SearchResult forwardSearch(struct Document *doc, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      doc->pos = pos;
+      doc->viewport.pos = pos;
       doc->currentLine = l;
       gotoLine(doc, l->linenumber);
       arrangeCursor(doc);
@@ -94,7 +94,6 @@ enum SearchResult backwardSearch(struct Document *doc, const char *str) {
   char *p, *q, *found, *found_last, *first, *last;
   struct Line *l, *begin;
   bool wrapped = false;
-  int pos;
 
   if ((p = regexCompile((char *)str, IgnoreCase)) != NULL) {
     scr_message(p, 0, 0);
@@ -104,7 +103,8 @@ enum SearchResult backwardSearch(struct Document *doc, const char *str) {
   if (l == NULL) {
     return SR_NOTFOUND;
   }
-  pos = doc->pos;
+
+  int pos = doc->viewport.pos;
   if (l->bpos) {
     pos += l->bpos;
     while (l->bpos && l->prev)
@@ -135,7 +135,7 @@ enum SearchResult backwardSearch(struct Document *doc, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      doc->pos = pos;
+      doc->viewport.pos = pos;
       if (l != doc->currentLine)
         gotoLine(doc, l->linenumber);
       arrangeCursor(doc);
@@ -169,7 +169,7 @@ enum SearchResult backwardSearch(struct Document *doc, const char *str) {
         pos -= l->len;
         l = l->next;
       }
-      doc->pos = pos;
+      doc->viewport.pos = pos;
       gotoLine(doc, l->linenumber);
       arrangeCursor(doc);
       set_mark(l, pos, pos + found_last - found);
@@ -223,7 +223,7 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
   if (ch == 0 && buf == NULL) {
     SAVE_BUFPOSITION(&sbuf); /* search starting point */
     currentLine = sbuf.currentLine;
-    pos = sbuf.pos;
+    pos = sbuf.viewport.pos;
     return -1;
   }
 
@@ -246,11 +246,11 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
   if (do_next_search) {
     if (*str) {
       if (searchRoutine == forwardSearch)
-        doc->pos += 1;
+        doc->viewport.pos += 1;
       SAVE_BUFPOSITION(&sbuf);
       if (srchcore(doc, str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
-        doc->pos -= 1;
+        doc->viewport.pos -= 1;
         SAVE_BUFPOSITION(&sbuf);
       }
       arrangeCursor(doc);
@@ -265,7 +265,7 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
     srchcore(doc, str, searchRoutine);
     arrangeCursor(doc);
     currentLine = doc->currentLine;
-    pos = doc->pos;
+    pos = doc->viewport.pos;
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   clear_mark(doc->currentLine);
@@ -299,14 +299,14 @@ void srch(struct Document *doc, SearchRoutine func, const char *prompt) {
     }
     disp = true;
   }
-  auto pos = doc->pos;
+  auto pos = doc->viewport.pos;
   if (func == forwardSearch)
-    doc->pos += 1;
+    doc->viewport.pos += 1;
   auto result = srchcore(doc, str, func);
   if (result & SR_FOUND)
     clear_mark(doc->currentLine);
   else
-    doc->pos = pos;
+    doc->viewport.pos = pos;
   displayInvalidate();
   if (disp)
     disp_srchresult(result, prompt, str);
@@ -327,13 +327,13 @@ void srch_nxtprv(struct Document *doc, bool reverse) {
   if (searchRoutine == backwardSearch)
     reverse ^= 1;
   if (reverse == 0)
-    doc->pos += 1;
+    doc->viewport.pos += 1;
   auto result = srchcore(doc, SearchString, routine[reverse]);
   if (result & SR_FOUND)
     clear_mark(doc->currentLine);
   else {
     if (reverse == 0) {
-      doc->pos -= 1;
+      doc->viewport.pos -= 1;
     }
   }
   displayBuffer(Currentbuf, B_NORMAL);

@@ -12,7 +12,7 @@
 #include "input/url.h"
 #include <math.h>
 
-struct MapList *searchMapList(struct Document *doc, char *name) {
+struct MapList *searchMapList(struct Document *doc, const char *name) {
   if (name == NULL)
     return NULL;
 
@@ -89,7 +89,7 @@ struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
   Strcat_charp(mappage, "</table></body></html>");
 
   struct Url url;
-  return loadHTML(buf->document->COLS, mappage->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(buf->document->viewport.COLS, mappage->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
@@ -254,5 +254,5 @@ struct Document *page_info_panel(struct Buffer *buf) {
 end:
   Strcat_charp(tmp, "</body></html>");
   struct Url url;
-  return loadHTML(buf->document->COLS, tmp->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(buf->document->viewport.COLS, tmp->ptr, url, nullptr, CHARSET_UTF8);
 }

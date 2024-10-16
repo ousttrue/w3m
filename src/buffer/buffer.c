@@ -218,17 +218,20 @@ void gotoRealLine(struct Buffer *buf, int n) {
     sprintf(msg, "Last line is #%ld", buf->document->lastLine->real_linenumber);
     set_delayed_message(msg);
     buf->document->currentLine = l;
-    buf->document->topLine = lineSkip(buf->document, buf->document->currentLine,
-                                      -(buf->document->LINES - 1), false);
+    buf->document->topLine =
+        lineSkip(buf->document, buf->document->currentLine,
+                 -(buf->document->viewport.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
     if (l->real_linenumber >= n) {
       buf->document->currentLine = l;
       if (n < buf->document->topLine->real_linenumber ||
-          buf->document->topLine->real_linenumber + buf->document->LINES <= n)
-        buf->document->topLine =
-            lineSkip(buf->document, l, -(buf->document->LINES + 1) / 2, false);
+          buf->document->topLine->real_linenumber +
+                  buf->document->viewport.LINES <=
+              n)
+        buf->document->topLine = lineSkip(
+            buf->document, l, -(buf->document->viewport.LINES + 1) / 2, false);
       break;
     }
   }
@@ -381,7 +384,7 @@ struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
  * Reshape HTML buffer
  */
 void reshapeBuffer(struct Buffer *buf) {
-  if (!buf->need_reshape){
+  if (!buf->need_reshape) {
     return;
   }
   buf->need_reshape = false;
@@ -393,7 +396,7 @@ void reshapeBuffer(struct Buffer *buf) {
   struct URLFile f;
   init_stream(&f, SCM_LOCAL, NULL);
   examineFile(buf->sourcefile, &f);
-  if (f.stream == NULL){
+  if (f.stream == NULL) {
     return;
   }
 
@@ -420,10 +423,10 @@ void reshapeBuffer(struct Buffer *buf) {
     buf->document->imarklist->nmark = 0;
 
   if (is_html_type(buf->type)) {
-    buf->document = loadHTML(buf->document->COLS, html->ptr, buf->currentURL,
+    buf->document = loadHTML(buf->document->viewport.COLS, html->ptr, buf->currentURL,
                              baseURL(buf), buf->http_response->content_charset);
   } else {
-    buf->document = loadText(buf->document->COLS, html->ptr);
+    buf->document = loadText(buf->document->viewport.COLS, html->ptr);
   }
   UFclose(&f);
 
@@ -432,7 +435,7 @@ void reshapeBuffer(struct Buffer *buf) {
     struct Line *cur = sbuf.currentLine;
     int n;
 
-    buf->document->pos = sbuf.pos + cur->bpos;
+    buf->document->viewport.pos = sbuf.viewport.pos + cur->bpos;
     while (cur->bpos && cur->prev)
       cur = cur->prev;
     if (cur->real_linenumber > 0)
@@ -450,11 +453,11 @@ void reshapeBuffer(struct Buffer *buf) {
       else
         gotoLine(buf->document, cur->linenumber);
     }
-    buf->document->pos -= buf->document->currentLine->bpos;
+    buf->document->viewport.pos -= buf->document->currentLine->bpos;
     if (FoldLine && !is_html_type(buf->type))
-      buf->document->currentColumn = 0;
+      buf->document->viewport.currentColumn = 0;
     else
-      buf->document->currentColumn = sbuf.currentColumn;
+      buf->document->viewport.currentColumn = sbuf.viewport.currentColumn;
     arrangeCursor(buf->document);
   }
   if (buf->check_url & CHK_URL)

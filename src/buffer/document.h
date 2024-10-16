@@ -25,20 +25,9 @@ struct BufferPos {
   struct BufferPos *prev;
 };
 
-struct Document {
-  const char *savecache;
-  const char *title;
-  const char *baseTarget;
-  struct Url *baseURL;
-  short width;
-  short height;
+struct Viewport {
   short COLS;
   short LINES;
-  struct Line *firstLine;
-  struct Line *topLine;
-  struct Line *currentLine;
-  struct Line *lastLine;
-  int allLine;
   int currentColumn;
   short cursorX;
   short cursorY;
@@ -46,6 +35,21 @@ struct Document {
   int visualpos;
   short rootX;
   short rootY;
+  struct BufferPos *undo;
+};
+
+struct Document {
+  const char *savecache;
+  const char *title;
+  const char *baseTarget;
+  struct Url *baseURL;
+  short width;
+  short height;
+  struct Line *firstLine;
+  struct Line *topLine;
+  struct Line *currentLine;
+  struct Line *lastLine;
+  int allLine;
   struct AnchorList *href;
   struct AnchorList *name;
   struct AnchorList *img;
@@ -55,7 +59,7 @@ struct Document {
   struct MapList *maplist;
   struct HmarkerList *hmarklist;
   struct HmarkerList *imarklist;
-  struct BufferPos *undo;
+  struct Viewport viewport;
 };
 
 struct Document *newDocument(int width);

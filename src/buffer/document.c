@@ -15,8 +15,6 @@ struct Document *newDocument(int width) {
   doc->baseURL = NULL;
   doc->width = width;
   doc->height = 0;
-  doc->COLS = COLS;
-  doc->LINES = LASTLINE;
   doc->savecache = nullptr;
   doc->title = nullptr;
   doc->firstLine = nullptr;
@@ -24,13 +22,6 @@ struct Document *newDocument(int width) {
   doc->currentLine = nullptr;
   doc->lastLine = nullptr;
   doc->allLine = 0;
-  doc->currentColumn = 0;
-  doc->cursorX = 0;
-  doc->cursorY = 0;
-  doc->pos = 0;
-  doc->visualpos = 0;
-  doc->rootX = 0;
-  doc->rootY = 0;
   doc->href = nullptr;
   doc->name = nullptr;
   doc->img = nullptr;
@@ -40,7 +31,18 @@ struct Document *newDocument(int width) {
   doc->maplist = nullptr;
   doc->hmarklist = nullptr;
   doc->imarklist = nullptr;
-  doc->undo = nullptr;
+
+  doc->viewport.COLS = COLS;
+  doc->viewport.LINES = LASTLINE;
+  doc->viewport.currentColumn = 0;
+  doc->viewport.cursorX = 0;
+  doc->viewport.cursorY = 0;
+  doc->viewport.pos = 0;
+  doc->viewport.visualpos = 0;
+  doc->viewport.rootX = 0;
+  doc->viewport.rootY = 0;
+  doc->viewport.undo = nullptr;
+
   return doc;
 }
 
@@ -136,7 +138,8 @@ struct Line *lineSkip(struct Document *doc, struct Line *line, int offset,
                       int last) {
   auto l = currentLineSkip(line, offset, last);
   if (!nextpage_topline)
-    for (int i = doc->LINES - 1 - (doc->lastLine->linenumber - l->linenumber);
+    for (int i = doc->viewport.LINES - 1 -
+                 (doc->lastLine->linenumber - l->linenumber);
          i > 0 && l->prev != NULL; i--, l = l->prev)
       ;
   return l;
@@ -164,15 +167,16 @@ void gotoLine(struct Document *doc, int n) {
     sprintf(msg, "Last line is #%ld", doc->lastLine->linenumber);
     set_delayed_message(msg);
     doc->currentLine = l;
-    doc->topLine = lineSkip(doc, doc->currentLine, -(doc->LINES - 1), false);
+    doc->topLine =
+        lineSkip(doc, doc->currentLine, -(doc->viewport.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
     if (l->linenumber >= n) {
       doc->currentLine = l;
       if (n < doc->topLine->linenumber ||
-          doc->topLine->linenumber + doc->LINES <= n)
-        doc->topLine = lineSkip(doc, l, -(doc->LINES + 1) / 2, false);
+          doc->topLine->linenumber + doc->viewport.LINES <= n)
+        doc->topLine = lineSkip(doc, l, -(doc->viewport.LINES + 1) / 2, false);
       break;
     }
   }
@@ -188,7 +192,8 @@ void arrangeCursor(struct Document *doc) {
   if (doc == NULL || doc->currentLine == NULL)
     return;
   /* Arrange line */
-  if (doc->currentLine->linenumber - doc->topLine->linenumber >= doc->LINES ||
+  if (doc->currentLine->linenumber - doc->topLine->linenumber >=
+          doc->viewport.LINES ||
       doc->currentLine->linenumber < doc->topLine->linenumber) {
     /*
      * doc->topLine = doc->currentLine;
@@ -196,33 +201,37 @@ void arrangeCursor(struct Document *doc) {
     doc->topLine = lineSkip(doc, doc->currentLine, 0, false);
   }
   /* Arrange column */
-  while (doc->pos < 0 && doc->currentLine->prev && doc->currentLine->bpos) {
-    pos = doc->pos + doc->currentLine->prev->len;
+  while (doc->viewport.pos < 0 && doc->currentLine->prev &&
+         doc->currentLine->bpos) {
+    pos = doc->viewport.pos + doc->currentLine->prev->len;
     cursorUp0(doc, 1);
-    doc->pos = pos;
+    doc->viewport.pos = pos;
   }
-  while (doc->pos >= doc->currentLine->len && doc->currentLine->next &&
+  while (doc->viewport.pos >= doc->currentLine->len && doc->currentLine->next &&
          doc->currentLine->next->bpos) {
-    pos = doc->pos - doc->currentLine->len;
+    pos = doc->viewport.pos - doc->currentLine->len;
     cursorDown0(doc, 1);
-    doc->pos = pos;
+    doc->viewport.pos = pos;
   }
-  if (doc->currentLine->len == 0 || doc->pos < 0)
-    doc->pos = 0;
-  else if (doc->pos >= doc->currentLine->len)
-    doc->pos = doc->currentLine->len - 1;
-  col = COLPOS(doc->currentLine, doc->pos);
-  col2 = COLPOS(doc->currentLine, doc->pos + delta);
-  if (col < doc->currentColumn || col2 > doc->COLS + doc->currentColumn) {
-    doc->currentColumn = 0;
-    if (col2 > doc->COLS)
+  if (doc->currentLine->len == 0 || doc->viewport.pos < 0)
+    doc->viewport.pos = 0;
+  else if (doc->viewport.pos >= doc->currentLine->len)
+    doc->viewport.pos = doc->currentLine->len - 1;
+  col = COLPOS(doc->currentLine, doc->viewport.pos);
+  col2 = COLPOS(doc->currentLine, doc->viewport.pos + delta);
+  if (col < doc->viewport.currentColumn ||
+      col2 > doc->viewport.COLS + doc->viewport.currentColumn) {
+    doc->viewport.currentColumn = 0;
+    if (col2 > doc->viewport.COLS)
       columnSkip(doc, col);
   }
   /* Arrange cursor */
-  doc->cursorY = doc->currentLine->linenumber - doc->topLine->linenumber;
-  doc->visualpos = doc->currentLine->bwidth +
-                   COLPOS(doc->currentLine, doc->pos) - doc->currentColumn;
-  doc->cursorX = doc->visualpos - doc->currentLine->bwidth;
+  doc->viewport.cursorY =
+      doc->currentLine->linenumber - doc->topLine->linenumber;
+  doc->viewport.visualpos = doc->currentLine->bwidth +
+                            COLPOS(doc->currentLine, doc->viewport.pos) -
+                            doc->viewport.currentColumn;
+  doc->viewport.cursorX = doc->viewport.visualpos - doc->currentLine->bwidth;
 #ifdef DISPLAY_DEBUG
   fprintf(
       stderr,
@@ -233,7 +242,7 @@ void arrangeCursor(struct Document *doc) {
 }
 
 void cursorUp0(struct Document *doc, int n) {
-  if (doc->cursorY > 0)
+  if (doc->viewport.cursorY > 0)
     cursorUpDown(doc, -1);
   else {
     doc->topLine = lineSkip(doc, doc->topLine, -n, false);
@@ -256,12 +265,13 @@ void cursorUp(struct Document *doc, int n) {
   }
   cursorUp0(doc, n);
   while (doc->currentLine->prev && doc->currentLine->bpos &&
-         doc->currentLine->bwidth >= doc->currentColumn + doc->visualpos)
+         doc->currentLine->bwidth >=
+             doc->viewport.currentColumn + doc->viewport.visualpos)
     cursorUp0(doc, n);
 }
 
 void cursorDown0(struct Document *doc, int n) {
-  if (doc->cursorY < doc->LINES - 1)
+  if (doc->viewport.cursorY < doc->viewport.LINES - 1)
     cursorUpDown(doc, 1);
   else {
     doc->topLine = lineSkip(doc, doc->topLine, n, false);
@@ -285,7 +295,7 @@ void cursorDown(struct Document *doc, int n) {
   cursorDown0(doc, n);
   while (doc->currentLine->next && doc->currentLine->next->bpos &&
          doc->currentLine->bwidth + doc->currentLine->width <
-             doc->currentColumn + doc->visualpos)
+             doc->viewport.currentColumn + doc->viewport.visualpos)
     cursorDown0(doc, n);
 }
 
@@ -305,31 +315,33 @@ void cursorRight(struct Document *doc, int n) {
 
   if (doc->firstLine == NULL)
     return;
-  if (doc->pos == l->len && !(l->next && l->next->bpos))
+  if (doc->viewport.pos == l->len && !(l->next && l->next->bpos))
     return;
-  i = doc->pos;
+  i = doc->viewport.pos;
   p = l->propBuf;
   if (i + delta < l->len) {
-    doc->pos = i + delta;
+    doc->viewport.pos = i + delta;
   } else if (l->len == 0) {
-    doc->pos = 0;
+    doc->viewport.pos = 0;
   } else if (l->next && l->next->bpos) {
     cursorDown0(doc, 1);
-    doc->pos = 0;
+    doc->viewport.pos = 0;
     arrangeCursor(doc);
     return;
   } else {
-    doc->pos = l->len - 1;
+    doc->viewport.pos = l->len - 1;
   }
-  cpos = COLPOS(l, doc->pos);
-  doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+  cpos = COLPOS(l, doc->viewport.pos);
+  doc->viewport.visualpos = l->bwidth + cpos - doc->viewport.currentColumn;
   delta = 1;
-  vpos2 = COLPOS(l, doc->pos + delta) - doc->currentColumn - 1;
-  if (vpos2 >= doc->COLS && n) {
-    columnSkip(doc, n + (vpos2 - doc->COLS) - (vpos2 - doc->COLS) % n);
-    doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+  vpos2 =
+      COLPOS(l, doc->viewport.pos + delta) - doc->viewport.currentColumn - 1;
+  if (vpos2 >= doc->viewport.COLS && n) {
+    columnSkip(doc, n + (vpos2 - doc->viewport.COLS) -
+                        (vpos2 - doc->viewport.COLS) % n);
+    doc->viewport.visualpos = l->bwidth + cpos - doc->viewport.currentColumn;
   }
-  doc->cursorX = doc->visualpos - l->bwidth;
+  doc->viewport.cursorX = doc->viewport.visualpos - l->bwidth;
 }
 
 void cursorLeft(struct Document *doc, int n) {
@@ -339,30 +351,30 @@ void cursorLeft(struct Document *doc, int n) {
 
   if (doc->firstLine == NULL)
     return;
-  i = doc->pos;
+  i = doc->viewport.pos;
   p = l->propBuf;
   if (i >= delta)
-    doc->pos = i - delta;
+    doc->viewport.pos = i - delta;
   else if (l->prev && l->bpos) {
     cursorUp0(doc, -1);
-    doc->pos = doc->currentLine->len - 1;
+    doc->viewport.pos = doc->currentLine->len - 1;
     arrangeCursor(doc);
     return;
   } else
-    doc->pos = 0;
-  cpos = COLPOS(l, doc->pos);
-  doc->visualpos = l->bwidth + cpos - doc->currentColumn;
-  if (doc->visualpos - l->bwidth < 0 && n) {
-    columnSkip(doc, -n + doc->visualpos - l->bwidth -
-                        (doc->visualpos - l->bwidth) % n);
-    doc->visualpos = l->bwidth + cpos - doc->currentColumn;
+    doc->viewport.pos = 0;
+  cpos = COLPOS(l, doc->viewport.pos);
+  doc->viewport.visualpos = l->bwidth + cpos - doc->viewport.currentColumn;
+  if (doc->viewport.visualpos - l->bwidth < 0 && n) {
+    columnSkip(doc, -n + doc->viewport.visualpos - l->bwidth -
+                        (doc->viewport.visualpos - l->bwidth) % n);
+    doc->viewport.visualpos = l->bwidth + cpos - doc->viewport.currentColumn;
   }
-  doc->cursorX = doc->visualpos - l->bwidth;
+  doc->viewport.cursorX = doc->viewport.visualpos - l->bwidth;
 }
 
 void cursorHome(struct Document *doc) {
-  doc->visualpos = 0;
-  doc->cursorX = doc->cursorY = 0;
+  doc->viewport.visualpos = 0;
+  doc->viewport.cursorX = doc->viewport.cursorY = 0;
 }
 
 void arrangeLine(struct Document *doc) {
@@ -370,19 +382,21 @@ void arrangeLine(struct Document *doc) {
 
   if (doc->firstLine == NULL)
     return;
-  doc->cursorY = doc->currentLine->linenumber - doc->topLine->linenumber;
-  i = columnPos(doc->currentLine,
-                doc->currentColumn + doc->visualpos - doc->currentLine->bwidth);
-  cpos = COLPOS(doc->currentLine, i) - doc->currentColumn;
+  doc->viewport.cursorY =
+      doc->currentLine->linenumber - doc->topLine->linenumber;
+  i = columnPos(doc->currentLine, doc->viewport.currentColumn +
+                                      doc->viewport.visualpos -
+                                      doc->currentLine->bwidth);
+  cpos = COLPOS(doc->currentLine, i) - doc->viewport.currentColumn;
   if (cpos >= 0) {
-    doc->cursorX = cpos;
-    doc->pos = i;
+    doc->viewport.cursorX = cpos;
+    doc->viewport.pos = i;
   } else if (doc->currentLine->len > i) {
-    doc->cursorX = 0;
-    doc->pos = i + 1;
+    doc->viewport.cursorX = 0;
+    doc->viewport.pos = i + 1;
   } else {
-    doc->cursorX = 0;
-    doc->pos = 0;
+    doc->viewport.cursorX = 0;
+    doc->viewport.pos = 0;
   }
 #ifdef DISPLAY_DEBUG
   fprintf(stderr,
@@ -395,29 +409,29 @@ void arrangeLine(struct Document *doc) {
 void cursorXY(struct Document *doc, int x, int y) {
   int oldX;
 
-  cursorUpDown(doc, y - doc->cursorY);
+  cursorUpDown(doc, y - doc->viewport.cursorY);
 
-  if (doc->cursorX > x) {
-    while (doc->cursorX > x)
-      cursorLeft(doc, doc->COLS / 2);
-  } else if (doc->cursorX < x) {
-    while (doc->cursorX < x) {
-      oldX = doc->cursorX;
+  if (doc->viewport.cursorX > x) {
+    while (doc->viewport.cursorX > x)
+      cursorLeft(doc, doc->viewport.COLS / 2);
+  } else if (doc->viewport.cursorX < x) {
+    while (doc->viewport.cursorX < x) {
+      oldX = doc->viewport.cursorX;
 
-      cursorRight(doc, doc->COLS / 2);
+      cursorRight(doc, doc->viewport.COLS / 2);
 
-      if (oldX == doc->cursorX)
+      if (oldX == doc->viewport.cursorX)
         break;
     }
-    if (doc->cursorX > x)
-      cursorLeft(doc, doc->COLS / 2);
+    if (doc->viewport.cursorX > x)
+      cursorLeft(doc, doc->viewport.COLS / 2);
   }
 }
 
 int columnSkip(struct Document *doc, int offset) {
   int i, maxColumn;
-  int column = doc->currentColumn + offset;
-  int nlines = doc->LINES + 1;
+  int column = doc->viewport.currentColumn + offset;
+  int nlines = doc->viewport.LINES + 1;
   struct Line *l;
 
   maxColumn = 0;
@@ -427,25 +441,25 @@ int columnSkip(struct Document *doc, int offset) {
     if (l->width - 1 > maxColumn)
       maxColumn = l->width - 1;
   }
-  maxColumn -= doc->COLS - 1;
+  maxColumn -= doc->viewport.COLS - 1;
   if (column < maxColumn)
     maxColumn = column;
   if (maxColumn < 0)
     maxColumn = 0;
 
-  if (doc->currentColumn == maxColumn)
+  if (doc->viewport.currentColumn == maxColumn)
     return 0;
-  doc->currentColumn = maxColumn;
+  doc->viewport.currentColumn = maxColumn;
   return 1;
 }
 
 void restorePosition(struct Document *doc, struct Document *orig) {
   doc->topLine = lineSkip(doc, doc->firstLine, TOP_LINENUMBER(orig) - 1, false);
   gotoLine(doc, CUR_LINENUMBER(orig));
-  doc->pos = orig->pos;
+  doc->viewport.pos = orig->viewport.pos;
   if (doc->currentLine && orig->currentLine)
-    doc->pos += orig->currentLine->bpos - doc->currentLine->bpos;
-  doc->currentColumn = orig->currentColumn;
+    doc->viewport.pos += orig->currentLine->bpos - doc->currentLine->bpos;
+  doc->viewport.currentColumn = orig->viewport.currentColumn;
   arrangeCursor(doc);
 }
 
@@ -563,20 +577,20 @@ void copyBuffer(struct Document *a, const struct Document *b) {
 }
 
 void COPY_BUFROOT(struct Document *dstbuf, const struct Document *srcbuf) {
-  (dstbuf)->rootX = (srcbuf)->rootX;
-  (dstbuf)->rootY = (srcbuf)->rootY;
-  (dstbuf)->COLS = (srcbuf)->COLS;
-  (dstbuf)->LINES = (srcbuf)->LINES;
+  (dstbuf)->viewport.rootX = (srcbuf)->viewport.rootX;
+  (dstbuf)->viewport.rootY = (srcbuf)->viewport.rootY;
+  (dstbuf)->viewport.COLS = (srcbuf)->viewport.COLS;
+  (dstbuf)->viewport.LINES = (srcbuf)->viewport.LINES;
 }
 
 void COPY_BUFPOSITION(struct Document *dstbuf, const struct Document *srcbuf) {
   (dstbuf)->topLine = (srcbuf)->topLine;
   (dstbuf)->currentLine = (srcbuf)->currentLine;
-  (dstbuf)->pos = (srcbuf)->pos;
-  (dstbuf)->cursorX = (srcbuf)->cursorX;
-  (dstbuf)->cursorY = (srcbuf)->cursorY;
-  (dstbuf)->visualpos = (srcbuf)->visualpos;
-  (dstbuf)->currentColumn = (srcbuf)->currentColumn;
+  (dstbuf)->viewport.pos = (srcbuf)->viewport.pos;
+  (dstbuf)->viewport.cursorX = (srcbuf)->viewport.cursorX;
+  (dstbuf)->viewport.cursorY = (srcbuf)->viewport.cursorY;
+  (dstbuf)->viewport.visualpos = (srcbuf)->viewport.visualpos;
+  (dstbuf)->viewport.currentColumn = (srcbuf)->viewport.currentColumn;
 }
 
 int currentLn(struct Document *doc) {
