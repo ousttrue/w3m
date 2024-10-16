@@ -1,6 +1,7 @@
 // rendererd document
 #pragma once
 #include "line.h"
+#include "viewport.h"
 
 extern bool nextpage_topline;
 extern bool showLineNum;
@@ -14,29 +15,6 @@ struct LinkList;
 struct FormList;
 struct MapList;
 struct HmarkerList;
-
-struct BufferPos {
-  long top_linenumber;
-  long cur_linenumber;
-  int currentColumn;
-  int pos;
-  int bpos;
-  struct BufferPos *next;
-  struct BufferPos *prev;
-};
-
-struct Viewport {
-  short COLS;
-  short LINES;
-  int currentColumn;
-  short cursorX;
-  short cursorY;
-  int pos;
-  int visualpos;
-  short rootX;
-  short rootY;
-  struct BufferPos *undo;
-};
 
 struct Document {
   const char *savecache;
