@@ -661,7 +661,7 @@ static void do_effects(Lineprop m) {
 /*
  * List of error messages
  */
-struct Document *message_list_panel(void) {
+struct Document *message_list_panel(int cols) {
   Str tmp = Strnew_size(LINES * COLS);
 
   /* FIXME: gettextize? */
@@ -673,7 +673,7 @@ struct Document *message_list_panel(void) {
 
   Strcat_charp(tmp, "</table></body></html>");
   struct Url url;
-  return loadHTML(tmp->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(cols, tmp->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 void displayInvalidate() { displayBuffer(Currentbuf, B_NORMAL); }

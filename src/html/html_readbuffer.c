@@ -16,7 +16,6 @@
 #include "input/istream.h"
 #include "input/url_stream.h"
 #include "term/terms.h"
-#include "term/termsize.h"
 #include "text/ctrlcode.h"
 #include "text/libnkf.h"
 #include "text/romannum.h"
@@ -2982,7 +2981,7 @@ static Str textlist_feed() {
 
 static union input_stream *_file_lp2;
 
-struct Document *loadHTML(const char *html, struct Url currentURL,
+struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
                           struct Url *base, enum CharSet content_charset) {
   if (content_charset == CHARSET_SJIS) {
     // sjis to utf8
@@ -3011,7 +3010,7 @@ struct Document *loadHTML(const char *html, struct Url currentURL,
   forms = NULL;
   cur_hseq = 1;
 
-  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, INIT_BUFFER_WIDTH, 0);
+  init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, cols, 0);
 
   htmlenv1.buf = newTextLineList();
   cur_baseURL = base;
@@ -3176,31 +3175,11 @@ void completeHTMLstream(struct html_feed_environ *h_env,
 /*
  * loadBuffer: read file and make new buffer
  */
-struct Document *loadText(Str text) {
-  // FILE *src = NULL;
-  // Str lineBuf2;
-  // int nlines;
-  // Str tmpf;
-  //
-  // if (newBuf == NULL)
-  //   newBuf = newBuffer();
-  //
-  // if (from_jmp() != 0) {
-  //   goto _end;
-  // }
-  // trap_on();
-
-  // if (newBuf->sourcefile == NULL && uf->scheme != SCM_LOCAL) {
-  //   tmpf = tmpfname(TMPF_SRC, NULL);
-  //   src = fopen(tmpf->ptr, "w");
-  //   if (src)
-  //     newBuf->sourcefile = tmpf->ptr;
-  // }
-
+struct Document *loadText(int cols, const char *text) {
   struct URLFile f;
-  init_stream(&f, SCM_LOCAL, newStrStream(text));
+  init_stream(&f, SCM_LOCAL, newStrStream(Strnew_charp(text)));
 
-  auto doc = newDocument(INIT_BUFFER_WIDTH);
+  auto doc = newDocument(cols);
   int nlines = 0;
   int64_t linelen = 0;
   int64_t trbyte = 0;
@@ -3226,7 +3205,7 @@ struct Document *loadText(Str text) {
     Lineprop *propBuffer = NULL;
     lineBuf2 = checkType(lineBuf2, &propBuffer);
     addnewline(doc, lineBuf2->ptr, propBuffer, lineBuf2->length,
-               FOLD_BUFFER_WIDTH, nlines);
+               FOLD_BUFFER_WIDTH(), nlines);
   }
 
 _end:

@@ -50,10 +50,8 @@
 #define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
 
-static void cmd_loadfile(const char *path);
 static void cmd_loadURL(const char *url, struct Url *current,
                         const char *referer, struct FormList *request);
-static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid);
 static void keyPressEventProc(int c);
 
 static char *getCurWord(struct Buffer *buf, int *spos, int *epos);
@@ -563,6 +561,19 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
+static void cmd_loadfile(int cols, const char *fn) {
+  struct Buffer *buf =
+      loadGeneralFile(cols, file_to_url(fn), NULL, NO_REFERER, 0, NULL);
+  if (buf == NULL) {
+    /* FIXME: gettextize? */
+    const char *emsg = Sprintf("%s not found", fn)->ptr;
+    disp_err_message(emsg, false);
+  } else if (buf != NO_BUFFER) {
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_NORMAL);
+}
+
 /* Load file */
 DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
   const char *fn = searchKeyData();
@@ -575,7 +586,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  cmd_loadfile(fn);
+  cmd_loadfile(INIT_BUFFER_WIDTH, fn);
 }
 
 /* Load help file */
@@ -587,19 +598,6 @@ DEFUN(ldhelp, HELP, "Show help panel") {
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
   cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
-}
-
-static void cmd_loadfile(const char *fn) {
-  struct Buffer *buf =
-      loadGeneralFile(file_to_url(fn), NULL, NO_REFERER, 0, NULL);
-  if (buf == NULL) {
-    /* FIXME: gettextize? */
-    const char *emsg = Sprintf("%s not found", fn)->ptr;
-    disp_err_message(emsg, false);
-  } else if (buf != NO_BUFFER) {
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Move cursor left */
@@ -1067,7 +1065,8 @@ static struct Buffer *loadLink(const char *url, const char *target,
     referer = NO_REFERER;
   if (referer == NULL)
     referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
-  buf = loadGeneralFile(url, baseURL(Currentbuf), referer, flag, request);
+  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf), referer,
+                        flag, request);
   if (buf == NULL) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     disp_err_message(emsg, false);
@@ -1224,7 +1223,8 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
   /* FIXME: gettextize? */
   scr_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   term_refresh();
-  buf = loadGeneralFile(a->url, baseURL(Currentbuf), NULL, 0, NULL);
+  buf = loadGeneralFile(INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf), NULL, 0,
+                        NULL);
   if (buf == NULL) {
     /* FIXME: gettextize? */
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
@@ -2028,7 +2028,7 @@ static void cmd_loadURL(const char *url, struct Url *current,
     return;
 
   term_refresh();
-  buf = loadGeneralFile(url, current, referer, 0, request);
+  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, 0, request);
   if (buf == NULL) {
     /* FIXME: gettextize? */
     const char *emsg = Sprintf("Can't load %s", url)->ptr;
@@ -2127,22 +2127,6 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address") {
   goURL0("Goto relative URL: ", true);
 }
 
-static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
-  if (buf == NULL) {
-    disp_err_message("Can't load string", false);
-  } else if (buf != NO_BUFFER) {
-    buf->bufferprop |= (BP_INTERNAL | prop);
-    if (!(buf->bufferprop & BP_NO_URL))
-      copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
-    if (linkid != LB_NOLINK) {
-      buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
-      Currentbuf->linkBuffer[linkid] = buf;
-    }
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
   cmd_loadURL(BookmarkFile, NULL, NO_REFERER, NULL);
@@ -2164,9 +2148,31 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, request);
 }
 
+static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
+  if (buf == NULL) {
+    disp_err_message("Can't load string", false);
+  } else if (buf != NO_BUFFER) {
+    buf->bufferprop |= (BP_INTERNAL | prop);
+    if (!(buf->bufferprop & BP_NO_URL))
+      copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
+    if (linkid != LB_NOLINK) {
+      buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
+      Currentbuf->linkBuffer[linkid] = buf;
+    }
+    pushBuffer(buf);
+  }
+  displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+static void cmd_loadDocument(struct Document *doc, int prop, int linkid) {
+  auto buf = newBuffer();
+  buf->document = doc;
+  return cmd_loadBuffer(buf, prop, linkid);
+}
+
 /* option setting */
 DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
-  cmd_loadBuffer(load_option_panel(), BP_NO_URL, LB_NOLINK);
+  cmd_loadDocument(load_option_panel(), BP_NO_URL, LB_NOLINK);
 }
 
 /* set an option */
@@ -2191,26 +2197,29 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
 
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages") {
-  cmd_loadBuffer(message_list_panel(), BP_NO_URL, LB_NOLINK);
+  cmd_loadDocument(message_list_panel(INIT_BUFFER_WIDTH), BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */
 DEFUN(pginfo, INFO, "Display information about the current document") {
-  struct Buffer *buf;
-
-  if ((buf = Currentbuf->linkBuffer[LB_N_INFO]) != NULL) {
+  struct Buffer *buf = Currentbuf->linkBuffer[LB_N_INFO];
+  if (buf) {
     Currentbuf = buf;
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if ((buf = Currentbuf->linkBuffer[LB_INFO]) != NULL)
+
+  buf = Currentbuf->linkBuffer[LB_INFO];
+  if (buf) {
     delBuffer(buf);
-  buf = page_info_panel(Currentbuf);
-  cmd_loadBuffer(buf, BP_NORMAL, LB_INFO);
+  }
+  auto doc = page_info_panel(Currentbuf);
+  cmd_loadDocument(doc, BP_NORMAL, LB_INFO);
 }
 
 void follow_map(struct LocalCgiHtml *arg) {
   auto name = tag_get_value(arg, "link");
+
 #if defined(MENU_MAP) || defined(USE_IMAGE)
   struct Anchor *an;
   struct MapArea *a;
@@ -2223,10 +2232,11 @@ void follow_map(struct LocalCgiHtml *arg) {
   a = follow_map_menu(Currentbuf->document, name, an, x, y);
   if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 #endif
-    struct Buffer *buf = follow_map_panel(Currentbuf, name);
+    auto doc = follow_map_panel(Currentbuf, name);
+    if (doc) {
+      cmd_loadDocument(doc, BP_NORMAL, LB_NOLINK);
+    }
 
-    if (buf != NULL)
-      cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
 #if defined(MENU_MAP) || defined(USE_IMAGE)
     return;
   }
@@ -2258,26 +2268,24 @@ void follow_map(struct LocalCgiHtml *arg) {
 
 /* link,anchor,image list */
 DEFUN(linkLst, LIST, "Show all URLs referenced") {
-  struct Buffer *buf;
-
-  buf = link_list_panel(Currentbuf);
-  if (buf != NULL) {
-    cmd_loadBuffer(buf, BP_NORMAL, LB_NOLINK);
+  auto doc = link_list_panel(Currentbuf);
+  if (doc) {
+    cmd_loadDocument(doc, BP_NORMAL, LB_NOLINK);
   }
 }
 
 /* cookie list */
 DEFUN(cooLst, COOKIE, "View cookie list") {
-  struct Buffer *buf;
-
-  buf = cookie_list_panel();
-  if (buf != NULL)
-    cmd_loadBuffer(buf, BP_NO_URL, LB_NOLINK);
+  auto doc = cookie_list_panel(INIT_BUFFER_WIDTH);
+  if (doc) {
+    cmd_loadDocument(doc, BP_NO_URL, LB_NOLINK);
+  }
 }
 
 /* History page */
 DEFUN(ldHist, HISTORY, "Show browsing history") {
-  cmd_loadBuffer(historyBuffer(URLHist), BP_NO_URL, LB_NOLINK);
+  cmd_loadDocument(historyDocument(INIT_BUFFER_WIDTH, URLHist), BP_NO_URL,
+                   LB_NOLINK);
 }
 
 /* download HREF link */
@@ -2493,11 +2501,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew") {
-  struct Buffer *buf, *fbuf = NULL;
-  Str url;
-  struct FormList *request;
-  int multipart;
-
   if (Currentbuf->bufferprop & BP_INTERNAL) {
     if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
       ldDL();
@@ -2507,6 +2510,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     disp_err_message("Can't reload...", true);
     return;
   }
+
   if (Currentbuf->currentURL.scheme == SCM_LOCAL &&
       !strcmp(Currentbuf->currentURL.file, "-")) {
     /* file is std input */
@@ -2516,6 +2520,11 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   }
   struct Document sbuf;
   copyBuffer(&sbuf, Currentbuf->document);
+
+  struct Buffer *buf, *fbuf = NULL;
+  Str url;
+  struct FormList *request;
+  int multipart;
   multipart = 0;
   if (Currentbuf->form_submit) {
     request = Currentbuf->form_submit->parent;
@@ -2536,7 +2545,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   scr_message("Reloading...", 0, 0);
   term_refresh();
   DefaultType = Currentbuf->real_type;
-  buf = loadGeneralFile(url->ptr, NULL, NO_REFERER, RG_NOCACHE, request);
+  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER,
+                        RG_NOCACHE, request);
   DefaultType = NULL;
 
   if (multipart)
@@ -2799,7 +2809,8 @@ static void execdict(const char *word) {
   }
   auto dictcmd =
       Sprintf("%s?%s", DictCommand, Str_form_quote(Strnew_charp(w))->ptr)->ptr;
-  auto buf = loadGeneralFile(dictcmd, NULL, NO_REFERER, 0, NULL);
+  auto buf =
+      loadGeneralFile(INIT_BUFFER_WIDTH, dictcmd, NULL, NO_REFERER, 0, NULL);
   if (buf == NULL) {
     disp_message("Execution failed", true);
     return;

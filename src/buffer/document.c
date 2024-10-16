@@ -7,6 +7,7 @@
 bool nextpage_topline = false;
 bool showLineNum = false;
 bool FoldLine = false;
+int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1); }
 
 struct Document *newDocument(int width) {
   struct Document *doc = New(struct Document);

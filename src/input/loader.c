@@ -82,7 +82,7 @@ static int doFileMove(char *tmpf, char *defstr) {
   return ret;
 }
 
-static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
+static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f, Str page,
                                   const char *t, const char *real_type,
                                   struct Buffer *t_buf) {
   if (page) {
@@ -93,7 +93,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
       fclose(src);
     }
 
-    auto doc = loadHTML(page->ptr, pu, nullptr, CHARSET_UNKONWN);
+    auto doc = loadHTML(cols, page->ptr, pu, nullptr, CHARSET_UNKONWN);
     if (!doc) {
       return nullptr;
     }
@@ -157,11 +157,11 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
   struct Buffer *b;
   if (is_html_type(t)) {
     b = t_buf;
-    b->document = loadHTML(content->ptr, t_buf->currentURL, baseURL(t_buf),
+    b->document = loadHTML(cols, content->ptr, t_buf->currentURL, baseURL(t_buf),
                            t_buf->http_response->content_charset);
   } else {
     b = t_buf;
-    b->document = loadText(content);
+    b->document = loadText(cols, content->ptr);
   }
 
   if (b != NULL) {
@@ -216,7 +216,7 @@ static struct Buffer *page_loaded(struct Url pu, struct URLFile f, Str page,
 }
 
 static struct Buffer *
-load_doc(const char *path, const char *tpath, struct Url *current,
+load_doc(int cols, const char *path, const char *tpath, struct Url *current,
          struct Url pu, const char *referer, enum RG_FLAGS flag,
          struct FormList *request, struct TextList *extra_header,
          struct URLFile *of, struct HttpRequest hr, enum HttpStatus status,
@@ -232,7 +232,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
       current = New(struct Url);
       *current = pu;
       status = HTST_NORMAL;
-      return load_doc(path, tpath, current, pu, referer, flag, request,
+      return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
@@ -268,7 +268,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
       if (S_ISDIR(st.st_mode)) {
         if (UseExternalDirBuffer) {
           Str cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
-          auto b = loadGeneralFile(cmd->ptr, NULL, NO_REFERER, 0, NULL);
+          auto b = loadGeneralFile(cols, cmd->ptr, NULL, NO_REFERER, 0, NULL);
           if (b != NULL && b != NO_BUFFER) {
             copyParsedURL(&b->currentURL, &pu);
             b->filename = b->currentURL.real_file;
@@ -294,7 +294,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
       break;
     }
     if (page && page->length > 0)
-      return page_loaded(pu, f, page, t, real_type, t_buf);
+      return page_loaded(cols, pu, f, page, t, real_type, t_buf);
     return NULL;
   }
 
@@ -349,7 +349,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
       t_buf = newBuffer();
       t_buf->bufferprop |= BP_REDIRECTED;
       status = HTST_NORMAL;
-      return load_doc(path, tpath, current, pu, referer, flag, request,
+      return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
@@ -383,12 +383,12 @@ load_doc(const char *path, const char *tpath, struct Url *current,
         if (uname == NULL) {
           /* abort */
           trap_off();
-          return page_loaded(pu, f, page, t, real_type, t_buf);
+          return page_loaded(cols, pu, f, page, t, real_type, t_buf);
         }
         UFclose(&f);
         add_auth_cookie_flag = 1;
         status = HTST_NORMAL;
-        return load_doc(path, tpath, current, pu, referer, flag, request,
+        return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                         extra_header, of, hr, status, add_auth_cookie_flag, b,
                         t_buf, realm, uname, pwd);
       }
@@ -406,13 +406,13 @@ load_doc(const char *path, const char *tpath, struct Url *current,
         if (uname == NULL) {
           /* abort */
           trap_off();
-          return page_loaded(pu, f, page, t, real_type, t_buf);
+          return page_loaded(cols, pu, f, page, t, real_type, t_buf);
         }
         UFclose(&f);
         add_auth_cookie_flag = 1;
         status = HTST_NORMAL;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
-        return load_doc(path, tpath, current, pu, referer, flag, request,
+        return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                         extra_header, of, hr, status, add_auth_cookie_flag, b,
                         t_buf, realm, uname, pwd);
       }
@@ -421,7 +421,7 @@ load_doc(const char *path, const char *tpath, struct Url *current,
 
     if (status == HTST_CONNECT) {
       of = &f;
-      return load_doc(path, tpath, current, pu, referer, flag, request,
+      return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
@@ -460,10 +460,10 @@ load_doc(const char *path, const char *tpath, struct Url *current,
    *      to support default utf8 encoding for XHTML here? */
   f.guess_type = t;
 
-  return page_loaded(pu, f, page, t, real_type, t_buf);
+  return page_loaded(cols, pu, f, page, t, real_type, t_buf);
 }
 
-struct Buffer *loadGeneralFile(const char *path, struct Url *current,
+struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
                                const char *referer, enum RG_FLAGS flag,
                                struct FormList *request) {
   checkRedirection(NULL);
@@ -479,7 +479,7 @@ struct Buffer *loadGeneralFile(const char *path, struct Url *current,
   struct HttpRequest hr;
   auto tpath = path;
   bool add_auth_cookie_flag = 0;
-  return load_doc(path, tpath, current, pu, referer, flag, request,
+  return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                   extra_header, nullptr, hr, status, add_auth_cookie_flag, b,
                   t_buf, realm, uname, pwd);
 }

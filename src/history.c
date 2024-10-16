@@ -14,18 +14,15 @@ struct Hist *URLHist;
 struct Hist *ShellHist;
 struct Hist *TextHist;
 
-struct Document *historyBuffer(struct Hist *hist) {
+struct Document *historyDocument(int cols, struct Hist *hist) {
   Str src = Strnew();
-  HistItem *item;
-  const char *p;
-
-  /* FIXME: gettextize? */
   Strcat_charp(src, "<html>\n<head><title>History Page</title></head>\n");
   Strcat_charp(src, "<body>\n<h1>History Page</h1>\n<hr>\n");
   Strcat_charp(src, "<ol>\n");
   if (hist && hist->list) {
-    for (item = hist->list->last; item; item = item->prev) {
+    for (auto item = hist->list->last; item; item = item->prev) {
       auto q = html_quote((char *)item->ptr);
+      const char *p;
       if (DecodeURL)
         p = html_quote(url_decode0(item->ptr));
       else
@@ -39,7 +36,7 @@ struct Document *historyBuffer(struct Hist *hist) {
   }
   Strcat_charp(src, "</ol>\n</body>\n</html>");
   struct Url url;
-  return loadHTML(src->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(cols, src->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 void loadHistory(struct Hist *hist) {

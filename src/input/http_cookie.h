@@ -74,7 +74,7 @@ int add_cookie(struct Url *pu, Str name, Str value, time_t expires, Str domain,
 void save_cookies(void);
 void load_cookies(void);
 void initCookie(void);
-struct Document *cookie_list_panel(void);
+struct Document *cookie_list_panel(int cols);
 struct LocalCgiHtml;
 void set_cookie_flag(struct LocalCgiHtml *arg);
 int check_cookie_accept_domain(char *domain);

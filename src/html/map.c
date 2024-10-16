@@ -36,7 +36,7 @@ struct Anchor *retrieveCurrentMap(struct Buffer *buf) {
   return NULL;
 }
 
-struct MapArea *follow_map_menu(struct Document *doc, char *name,
+struct MapArea *follow_map_menu(struct Document *doc, const char *name,
                                 struct Anchor *a_img, int x, int y) {
   int selected = -1;
   int initial = 0;
@@ -59,7 +59,7 @@ const char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <BODY><H1>Image map links</H1>\
 <table>";
 
-struct Document *follow_map_panel(struct Buffer *buf, char *name) {
+struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
   Str mappage;
   struct ListItem *al;
   struct MapArea *a;
@@ -89,7 +89,7 @@ struct Document *follow_map_panel(struct Buffer *buf, char *name) {
   Strcat_charp(mappage, "</table></body></html>");
 
   struct Url url;
-  return loadHTML(mappage->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(buf->document->COLS, mappage->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 struct MapArea *newMapArea(const char *url, const char *target, const char *alt,
@@ -254,5 +254,5 @@ struct Document *page_info_panel(struct Buffer *buf) {
 end:
   Strcat_charp(tmp, "</body></html>");
   struct Url url;
-  return loadHTML(tmp->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(buf->document->COLS, tmp->ptr, url, nullptr, CHARSET_UTF8);
 }

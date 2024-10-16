@@ -1,6 +1,7 @@
 #include "alloc.h"
 #include "buffer/buffer.h"
 #include "buffer/display.h"
+#include "buffer/document.h"
 #include "buffer/downloadlist.h"
 #include "buffer/tabbuffer.h"
 #include "core.h"
@@ -372,7 +373,8 @@ int main(int argc, char **argv) {
   // }
 
   struct FormList *request = nullptr;
-  auto newbuf = loadGeneralFile(url, NULL, NO_REFERER, 0, request);
+  auto newbuf =
+      loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NO_REFERER, 0, request);
 
   if (newbuf == NULL) {
     /* FIXME: gettextize? */

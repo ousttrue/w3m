@@ -103,7 +103,7 @@ static char *convert_size3(int64_t size) {
   return tmp->ptr;
 }
 
-static struct Document *DownloadListBuffer(void) {
+static struct Document *DownloadListBuffer(int cols) {
   if (!FirstDL)
     return NULL;
 
@@ -185,7 +185,7 @@ static struct Document *DownloadListBuffer(void) {
   }
   Strcat_charp(src, "</form></body></html>");
   struct Url url;
-  return loadHTML(src->ptr, url, nullptr, CHARSET_UTF8);
+  return loadHTML(cols, src->ptr, url, nullptr, CHARSET_UTF8);
 }
 
 #ifdef _WIN32

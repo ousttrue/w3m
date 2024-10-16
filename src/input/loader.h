@@ -18,7 +18,7 @@ struct Buffer;
 /*
  * loadGeneralFile: load file to buffer
  */
-struct Buffer *loadGeneralFile(const char *path, struct Url *current,
+struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
                                const char *referer, enum RG_FLAGS flag,
                                struct FormList *request);
 

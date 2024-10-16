@@ -27,6 +27,6 @@ extern HistItem *getHashHist(struct Hist *hist, const char *ptr);
 extern char *lastHist(struct Hist *hist);
 extern char *nextHist(struct Hist *hist);
 extern char *prevHist(struct Hist *hist);
-extern struct Document *historyBuffer(struct Hist *hist);
+extern struct Document *historyDocument(int cols, struct Hist *hist);
 extern void loadHistory(struct Hist *hist);
 extern void saveHistory(struct Hist *hist, size_t size);
