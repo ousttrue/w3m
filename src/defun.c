@@ -945,7 +945,7 @@ static void _goLine(const char *l) {
   }
   Currentbuf->document->viewport.pos = 0;
   if (((*l == '^') || (*l == '$')) && prec_num) {
-    gotoRealLine(Currentbuf, prec_num);
+    gotoRealLine(Currentbuf->document, prec_num);
   } else if (*l == '^') {
     Currentbuf->document->topLine = Currentbuf->document->currentLine =
         Currentbuf->document->firstLine;
@@ -955,7 +955,7 @@ static void _goLine(const char *l) {
                  -(Currentbuf->document->viewport.LINES + 1) / 2, true);
     Currentbuf->document->currentLine = Currentbuf->document->lastLine;
   } else
-    gotoRealLine(Currentbuf, atoi(l));
+    gotoRealLine(Currentbuf->document, atoi(l));
   arrangeCursor(Currentbuf->document);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

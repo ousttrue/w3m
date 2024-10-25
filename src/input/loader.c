@@ -201,7 +201,7 @@ static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f, Str
         }
       } else { /* plain text */
         int l = atoi(pu.label);
-        gotoRealLine(b, l);
+        gotoRealLine(b->document, l);
         b->document->viewport.pos = 0;
         arrangeCursor(b->document);
       }

@@ -195,48 +195,6 @@ static void writeBufferName(struct Buffer *buf, int n) {
   scr_addnstr_sup(msg->ptr, COLS - 1);
 }
 
-/*
- * gotoRealLine: go to real line number
- */
-void gotoRealLine(struct Buffer *buf, int n) {
-  char msg[32];
-  struct Line *l = buf->document->firstLine;
-
-  if (l == NULL)
-    return;
-
-  if (l->real_linenumber > n) {
-    /* FIXME: gettextize? */
-    sprintf(msg, "First line is #%ld", l->real_linenumber);
-    set_delayed_message(msg);
-    buf->document->topLine = buf->document->currentLine = l;
-    return;
-  }
-  if (buf->document->lastLine->real_linenumber < n) {
-    l = buf->document->lastLine;
-    /* FIXME: gettextize? */
-    sprintf(msg, "Last line is #%ld", buf->document->lastLine->real_linenumber);
-    set_delayed_message(msg);
-    buf->document->currentLine = l;
-    buf->document->topLine =
-        lineSkip(buf->document, buf->document->currentLine,
-                 -(buf->document->viewport.LINES - 1), false);
-    return;
-  }
-  for (; l != NULL; l = l->next) {
-    if (l->real_linenumber >= n) {
-      buf->document->currentLine = l;
-      if (n < buf->document->topLine->real_linenumber ||
-          buf->document->topLine->real_linenumber +
-                  buf->document->viewport.LINES <=
-              n)
-        buf->document->topLine = lineSkip(
-            buf->document, l, -(buf->document->viewport.LINES + 1) / 2, false);
-      break;
-    }
-  }
-}
-
 static struct Buffer *listBuffer(struct Buffer *top, struct Buffer *current) {
   int i, c = 0;
   struct Buffer *buf = top;
@@ -439,7 +397,7 @@ void reshapeBuffer(struct Buffer *buf) {
     while (cur->bpos && cur->prev)
       cur = cur->prev;
     if (cur->real_linenumber > 0)
-      gotoRealLine(buf, cur->real_linenumber);
+      gotoRealLine(buf->document, cur->real_linenumber);
     else
       gotoLine(buf->document, cur->linenumber);
     n = (buf->document->currentLine->linenumber -
@@ -449,7 +407,7 @@ void reshapeBuffer(struct Buffer *buf) {
       buf->document->topLine =
           lineSkip(buf->document, buf->document->topLine, n, false);
       if (cur->real_linenumber > 0)
-        gotoRealLine(buf, cur->real_linenumber);
+        gotoRealLine(buf->document, cur->real_linenumber);
       else
         gotoLine(buf->document, cur->linenumber);
     }

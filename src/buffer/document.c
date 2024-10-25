@@ -600,3 +600,42 @@ int currentLn(struct Document *doc) {
   else
     return 1;
 }
+
+/*
+ * gotoRealLine: go to real line number
+ */
+void gotoRealLine(struct Document *doc, int n) {
+  auto l = doc->firstLine;
+  if (!l)
+    return;
+
+  char msg[32];
+  if (l->real_linenumber > n) {
+    /* FIXME: gettextize? */
+    sprintf(msg, "First line is #%ld", l->real_linenumber);
+    set_delayed_message(msg);
+    doc->topLine = doc->currentLine = l;
+    return;
+  }
+
+  if (doc->lastLine->real_linenumber < n) {
+    l = doc->lastLine;
+    /* FIXME: gettextize? */
+    sprintf(msg, "Last line is #%ld", doc->lastLine->real_linenumber);
+    set_delayed_message(msg);
+    doc->currentLine = l;
+    doc->topLine =
+        lineSkip(doc, doc->currentLine, -(doc->viewport.LINES - 1), false);
+    return;
+  }
+
+  for (; l; l = l->next) {
+    if (l->real_linenumber >= n) {
+      doc->currentLine = l;
+      if (n < doc->topLine->real_linenumber ||
+          doc->topLine->real_linenumber + doc->viewport.LINES <= n)
+        doc->topLine = lineSkip(doc, l, -(doc->viewport.LINES + 1) / 2, false);
+      break;
+    }
+  }
+}

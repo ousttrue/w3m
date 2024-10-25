@@ -74,3 +74,4 @@ void COPY_BUFPOSITION(struct Document *dstbuf, const struct Document *srcbuf);
 struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
                                int seq);
 int currentLn(struct Document *doc);
+void gotoRealLine(struct Document *buf, int n);

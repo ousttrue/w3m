@@ -90,7 +90,6 @@ extern struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);
 extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
                                     struct Buffer *newbuf);
 extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
-extern void gotoRealLine(struct Buffer *buf, int n);
 extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
                                    struct Buffer *currentbuf, char *selectchar);
 extern void reshapeBuffer(struct Buffer *buf);
