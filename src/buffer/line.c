@@ -19,26 +19,28 @@ static int nextColumn(int n, char *p, Lineprop *pr) {
   return n + 1;
 }
 
-int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
+int calcPosition(char *l, Lineprop *pr, int len, int pos,
                  enum ColumnPositionMode mode) {
   static int *realColumn = nullptr;
   static int size = 0;
   static char *prevl = nullptr;
-  int i, j;
-
-  if (l == nullptr || len == 0 || pos < 0)
-    return bpos;
-  if (l == prevl && mode == CP_AUTO) {
-    if (pos <= len)
-      return realColumn[pos];
+  if (l == nullptr || len == 0 || pos < 0) {
+    return 0;
   }
+  if (l == prevl && mode == CP_AUTO) {
+    // cache
+    if (pos <= len) {
+      return realColumn[pos];
+    }
+  }
+
   if (size < len + 1) {
     size = (len + 1 > LINELEN) ? (len + 1) : LINELEN;
     realColumn = New_N(int, size);
   }
   prevl = l;
-  i = 0;
-  j = bpos;
+  int i = 0;
+  int j = 0;
   while (1) {
     realColumn[i] = j;
     if (i == len)
@@ -46,8 +48,9 @@ int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
     j = nextColumn(j, &l[i], &pr[i]);
     i++;
   }
-  if (pos >= i)
+  if (pos >= i) {
     return j;
+  }
   return realColumn[pos];
 }
 

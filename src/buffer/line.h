@@ -64,10 +64,10 @@ enum ColumnPositionMode {
   CP_FORCE = 1,
 };
 
-extern int calcPosition(char *l, Lineprop *pr, int len, int pos, int bpos,
+extern int calcPosition(char *l, Lineprop *pr, int len, int pos,
                         enum ColumnPositionMode mode);
 
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, 0, CP_AUTO)
+#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, CP_AUTO)
 
 struct Line {
   char *lineBuf;
