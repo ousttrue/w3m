@@ -1,5 +1,6 @@
 #pragma once
 #include "text/Str.h"
+#include <stdint.h>
 
 extern int Tabstop;
 extern int ShowEffect;
@@ -58,17 +59,6 @@ extern int ShowEffect;
 
 typedef unsigned short Lineprop;
 
-/* Flags for calcPosition() */
-enum ColumnPositionMode {
-  CP_AUTO = 0,
-  CP_FORCE = 1,
-};
-
-extern int calcPosition(char *l, Lineprop *pr, int len, int pos,
-                        enum ColumnPositionMode mode);
-
-#define COLPOS(l, c) calcPosition(l->lineBuf, l->propBuf, l->len, c, CP_AUTO)
-
 struct Line {
   char *lineBuf;
   Lineprop *propBuf;
@@ -84,15 +74,17 @@ struct Line {
   int bwidth;
 };
 
-#define get_mctype(c) (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII)
-// #define get_mclen(c) 1
-// #define get_mcwidth(c) 1
-// #define get_strwidth(c) strlen(c)
-// #define get_Str_strwidth(c) ((c)->length)
+/* Flags for calcPosition() */
+enum ColumnPositionMode {
+  CP_AUTO = 0,
+  CP_FORCE = 1,
+};
 
+int calcPosition(char *l, Lineprop *pr, int len, int pos,
+                 enum ColumnPositionMode mode);
+int COLPOS(struct Line *l, int c);
+int get_mctype(const uint8_t *c);
 int columnLen(struct Line *line, int column);
 int columnPos(struct Line *line, int column);
-
 Str checkType(Str s, Lineprop **oprop);
-
 void clear_mark(struct Line *l);

@@ -6,6 +6,14 @@
 int Tabstop = 8;
 int ShowEffect = true;
 
+int get_mctype(const uint8_t *c) {
+  return (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII);
+}
+
+int COLPOS(struct Line *l, int c) {
+  return calcPosition(l->lineBuf, l->propBuf, l->len, c, CP_AUTO);
+}
+
 static int nextColumn(int n, char *p, Lineprop *pr) {
   if (*pr & PC_CTRL) {
     if (*p == '\t')
