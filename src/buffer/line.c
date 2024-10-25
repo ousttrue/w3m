@@ -67,13 +67,18 @@ int columnLen(struct Line *line, int column) {
 }
 
 int columnPos(struct Line *line, int column) {
-  int i;
-
-  for (i = 1; i < line->len; i++) {
-    if (COLPOS(line, i) > column)
+  int i = 0;
+  int j = 0;
+  for (; i < line->len;) {
+    auto len = utf8sequence_len(&line->lineBuf[i]);
+    auto col = utf8sequence_width(&line->lineBuf[i]);
+    if (j + col > column) {
       break;
+    }
+    i += len;
+    j += col;
   }
-  return i - 1;
+  return i;
 }
 
 Str checkType(Str s, Lineprop **oprop) {
