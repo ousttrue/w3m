@@ -4,7 +4,6 @@
 extern bool displayLineInfo;
 extern bool displayLink;
 extern int enable_inline_image;
-extern int nTab;
 
 /* Flags for displayBuffer() */
 enum DisplayMode {

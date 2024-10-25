@@ -60,7 +60,6 @@ global char *MyProgramName init("w3m");
 global int open_tab_blank init(false);
 global int open_tab_dl_list init(false);
 global int close_tab_back init(false);
-global int TabCols init(10);
 global int CurrentKey;
 global const char *CurrentKeyData;
 global const char *CurrentCmdData;

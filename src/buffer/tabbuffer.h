@@ -1,5 +1,8 @@
 #pragma once
 
+extern int nTab;
+extern int TabCols;
+
 struct TabBuffer {
   struct TabBuffer *nextTab;
   struct TabBuffer *prevTab;
@@ -18,10 +21,8 @@ extern struct TabBuffer *CurrentTab;
 extern struct TabBuffer *FirstTab;
 extern struct TabBuffer *LastTab;
 
-extern struct TabBuffer *newTab();
-extern void calcTabPos();
-extern struct TabBuffer *deleteTab(struct TabBuffer *tab);
-
-struct Document;
-void SAVE_BUFPOSITION(struct Document *sbufp);
-void RESTORE_BUFPOSITION(struct Document *sbufp);
+void tabInitialize(struct Buffer *newbuf);
+void _newT();
+struct TabBuffer *numTab(int n);
+void calcTabPos();
+struct TabBuffer *deleteTab(struct TabBuffer *tab);

@@ -1,4 +1,5 @@
 #include "buffer/search.h"
+#include "buffer/buffer.h"
 #include "buffer/display.h"
 #include "buffer/document.h"
 #include "buffer/tabbuffer.h"
@@ -221,7 +222,7 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
 
   static struct Document sbuf;
   if (ch == 0 && buf == NULL) {
-    SAVE_BUFPOSITION(&sbuf); /* search starting point */
+    COPY_BUFPOSITION(&sbuf, Currentbuf->document); /* search starting point */
     currentLine = sbuf.currentLine;
     pos = sbuf.viewport.pos;
     return -1;
@@ -247,11 +248,11 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
     if (*str) {
       if (searchRoutine == forwardSearch)
         doc->viewport.pos += 1;
-      SAVE_BUFPOSITION(&sbuf);
+      COPY_BUFPOSITION(&sbuf, Currentbuf->document);
       if (srchcore(doc, str, searchRoutine) == SR_NOTFOUND &&
           searchRoutine == forwardSearch) {
         doc->viewport.pos -= 1;
-        SAVE_BUFPOSITION(&sbuf);
+        COPY_BUFPOSITION(&sbuf, Currentbuf->document);
       }
       arrangeCursor(doc);
       displayInvalidate();
@@ -260,7 +261,7 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
     } else
       return 020; /* _prev completion for C-s C-s */
   } else if (*str) {
-    RESTORE_BUFPOSITION(&sbuf);
+    COPY_BUFPOSITION(Currentbuf->document, &sbuf);
     arrangeCursor(doc);
     srchcore(doc, str, searchRoutine);
     arrangeCursor(doc);
@@ -274,13 +275,13 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
 
 void isrch(struct Document *doc, SearchRoutine func, const char *prompt) {
   struct Document sbuf;
-  SAVE_BUFPOSITION(&sbuf);
+  COPY_BUFPOSITION(&sbuf, Currentbuf->document);
   dispincsrch(doc, 0, NULL, NULL); /* initialize incremental search state */
   searchRoutine = func;
   auto str =
       inputLineHistSearch(doc, prompt, NULL, IN_STRING, TextHist, dispincsrch);
   if (!str) {
-    RESTORE_BUFPOSITION(&sbuf);
+    COPY_BUFPOSITION(Currentbuf->document, &sbuf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }

@@ -14,7 +14,6 @@
 #include "text/symbol.h"
 #include "text/utf8.h"
 
-int nTab = 0;
 int enable_inline_image;
 bool displayLink = false;
 bool displayLineInfo = false;

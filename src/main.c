@@ -398,44 +398,10 @@ int main(int argc, char **argv) {
   if (newbuf == NO_BUFFER)
     return 1;
 
-  // if ((newbuf->real_scheme == SCM_LOCAL && newbuf->header_source &&
-  //      newbuf->currentURL.file && strcmp(newbuf->currentURL.file, "-")))
-  //   newbuf->search_header = search_header;
-
-  if (CurrentTab == NULL) {
-    FirstTab = LastTab = CurrentTab = newTab();
-    nTab = 1;
-    Firstbuf = Currentbuf = newbuf;
-  }
-  // else if (open_new_tab) {
-  //   _newT();
-  //   Currentbuf->nextBuffer = newbuf;
-  //   delBuffer(Currentbuf);
-  // }
-  else {
-    Currentbuf->nextBuffer = newbuf;
-    Currentbuf = newbuf;
-  }
-  {
-    Currentbuf = newbuf;
-    saveBufferInfo();
-  }
-
-  // if (do_add_download_list()) {
-  //   CurrentTab = LastTab;
-  //   if (!FirstTab) {
-  //     FirstTab = LastTab = CurrentTab = newTab();
-  //     nTab = 1;
-  //   }
-  //   if (!Firstbuf || Firstbuf == NO_BUFFER) {
-  //     Firstbuf = Currentbuf = newBuffer(INIT_BUFFER_WIDTH);
-  //     Currentbuf->bufferprop = BP_INTERNAL | BP_NO_URL;
-  //     Currentbuf->buffername = DOWNLOAD_LIST_TITLE;
-  //   } else
-  //     Currentbuf = Firstbuf;
-  //   ldDL();
-  // } else
-  { CurrentTab = FirstTab; }
+  tabInitialize(newbuf);
+  Currentbuf = newbuf;
+  saveBufferInfo();
+  CurrentTab = FirstTab;
 
   if (!FirstTab || !Firstbuf || Firstbuf == NO_BUFFER) {
     if (newbuf == NO_BUFFER) {
