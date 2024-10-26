@@ -2634,6 +2634,44 @@ static void back_to_breakpoint(struct readbuffer *obuf) {
     obuf->nobr_level = obuf->bp.nobr_level;
 }
 
+const char *proc_tag(Str tokbuf, struct html_feed_environ *h_env,
+                     struct readbuffer *obuf, int pre_mode, const char **line,
+                     bool *is_tag) {
+  if (**line == '<' || obuf->status != R_ST_NORMAL) {
+    /*
+     * Tag processing
+     */
+    if (obuf->status == R_ST_EOL)
+      obuf->status = R_ST_NORMAL;
+    else {
+      read_token(h_env->tagbuf, line, &obuf->status, pre_mode & RB_PREMODE,
+                 obuf->status != R_ST_NORMAL);
+      if (obuf->status != R_ST_NORMAL) {
+        return nullptr;
+      }
+    }
+    if (h_env->tagbuf->length == 0) {
+      return nullptr;
+    }
+    auto str = Strdup(h_env->tagbuf)->ptr;
+    if (*str == '<') {
+      if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str)) {
+        *is_tag = true;
+        return str;
+      } else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
+                               RB_STYLE | RB_TITLE))) {
+        *line = Strnew_m_charp(str + 1, *line, NULL)->ptr;
+        return "&lt;";
+      }
+    }
+  } else {
+    read_token(tokbuf, line, &obuf->status, pre_mode & RB_PREMODE, 0);
+    if (obuf->status != R_ST_NORMAL) /* R_ST_AMP ? */
+      obuf->status = R_ST_NORMAL;
+    return tokbuf->ptr;
+  }
+}
+
 /* HTML processing first pass */
 void HTMLlineproc0(const char *line, struct html_feed_environ *h_env) {
   Lineprop mode;
@@ -2670,48 +2708,28 @@ table_start:
   }
 
   while (*line != '\0') {
-    const char *str, *p;
-    int is_tag = false;
+    // const char *str;
     int pre_mode =
         (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->pre_mode : obuf->flag;
     int end_tag = (obuf->table_level >= 0 && tbl_mode) ? tbl_mode->end_tag
                                                        : obuf->end_tag;
-
-    if (*line == '<' || obuf->status != R_ST_NORMAL) {
-      /*
-       * Tag processing
-       */
-      if (obuf->status == R_ST_EOL)
-        obuf->status = R_ST_NORMAL;
-      else {
-        read_token(h_env->tagbuf, &line, &obuf->status, pre_mode & RB_PREMODE,
-                   obuf->status != R_ST_NORMAL);
-        if (obuf->status != R_ST_NORMAL)
-          return;
+    bool is_tag = false;
+    auto str = proc_tag(tokbuf, h_env, obuf, pre_mode, &line, &is_tag);
+    if (!str) {
+      if (obuf->status != R_ST_NORMAL) {
+        return;
       }
-      if (h_env->tagbuf->length == 0)
-        continue;
-      str = Strdup(h_env->tagbuf)->ptr;
-      if (*str == '<') {
-        if (str[1] && REALLY_THE_BEGINNING_OF_A_TAG(str))
-          is_tag = true;
-        else if (!(pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT |
-                               RB_STYLE | RB_TITLE))) {
-          line = Strnew_m_charp(str + 1, line, NULL)->ptr;
-          str = "&lt;";
-        }
-      }
-    } else {
-      read_token(tokbuf, &line, &obuf->status, pre_mode & RB_PREMODE, 0);
-      if (obuf->status != R_ST_NORMAL) /* R_ST_AMP ? */
-        obuf->status = R_ST_NORMAL;
-      str = tokbuf->ptr;
     }
 
+    if (str && str[0] != ' ') {
+      if (strstr(str, "&q")) {
+        auto a = 0;
+      }
+    }
     if (pre_mode & (RB_PLAIN | RB_INTXTA | RB_INSELECT | RB_SCRIPT | RB_STYLE |
                     RB_TITLE)) {
       if (is_tag) {
-        p = str;
+        auto p = str;
         if ((tag = parse_tag(&p))) {
           if (tag->tagid == end_tag ||
               (pre_mode & RB_INSELECT && tag->tagid == HTML_N_FORM) ||
@@ -2733,6 +2751,7 @@ table_start:
         continue;
       }
       if (is_tag) {
+        const char *p;
         if (strncmp(str, "<!--", 4) && (p = strchr(str + 1, '<'))) {
           str = Strnew_charp_n(str, p - str)->ptr;
           line = Strnew_m_charp(p, line, NULL)->ptr;
@@ -2832,8 +2851,9 @@ table_start:
 
     if (obuf->flag & (RB_DEL | RB_S))
       continue;
-    while (*str) {
-      mode = get_mctype(str);
+    while (str && *str) {
+      auto backup = str;
+      mode = get_mctype((const uint8_t *)str);
       width = utf8sequence_width((const uint8_t *)str);
       if (obuf->flag & (RB_SPECIAL & ~RB_NOBR)) {
         char ch = *str;

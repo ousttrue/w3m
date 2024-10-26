@@ -128,12 +128,12 @@ struct HtmlTag *parse_tag(const char **s) {
 
   enum HtmlTagType tag_id = getHash_si(&tagtable, tagname, HTML_UNKNOWN);
 
-  if (tag_id == HTML_UNKNOWN)
-    goto skip_parse_tagarg;
-
   auto tag = New(struct HtmlTag);
   memset(tag, 0, sizeof(struct HtmlTag));
   tag->tagid = tag_id;
+
+  if (tag_id == HTML_UNKNOWN)
+    goto skip_parse_tagarg;
 
   auto nattr = TagMAP[tag_id].max_attribute;
   if (nattr > 0) {
@@ -239,7 +239,7 @@ struct HtmlTag *parse_tag(const char **s) {
       // }
       tag->attrid[i] = attr_id;
       if (value)
-        tag->value[i] = html_unquote(value->ptr);
+        tag->value[i] = url_unquote_conv0(value->ptr);
       else
         tag->value[i] = NULL;
     } else {

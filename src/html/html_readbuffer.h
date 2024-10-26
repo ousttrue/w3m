@@ -1,6 +1,7 @@
 #pragma once
 #include "buffer/line.h"
 #include "html/anchor.h"
+#include "html/html_parser.h"
 #include "input/http_response.h"
 #include "input/url.h"
 #include "text/Str.h"
@@ -123,7 +124,7 @@ struct readbuffer {
   long flag;
   long flag_stack[RB_STACK_SIZE];
   int flag_sp;
-  int status;
+  enum ReadStatus status;
   unsigned char end_tag;
   unsigned char q_level;
   short table_level;

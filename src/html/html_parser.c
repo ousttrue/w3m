@@ -70,7 +70,7 @@ uint32_t getescapechar(const char **str) {
     return 0;
   }
   *str = p;
-  return getHash_si(&entity, q, -1);
+  return getHash_si(&entity, q, 0);
 }
 
 const char *getescapecmd(const char **s) {
