@@ -263,7 +263,8 @@ static void nscroll(int n, int mode) {
   if (buf->document->firstLine == NULL)
     return;
   lnum = cur->linenumber;
-  buf->document->topLine = lineSkip(buf->document, top, n, false);
+  buf->document->topLine = lineSkip(&buf->document->viewport, top,
+                                    buf->document->lastLine, n, false);
   if (buf->document->topLine == top) {
     lnum += n;
     if (lnum < buf->document->topLine->linenumber)
@@ -371,8 +372,9 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
   offsety = Currentbuf->document->viewport.LINES / 2 -
             Currentbuf->document->viewport.cursorY;
   if (offsety != 0) {
-    Currentbuf->document->topLine = lineSkip(
-        Currentbuf->document, Currentbuf->document->topLine, -offsety, false);
+    Currentbuf->document->topLine =
+        lineSkip(&Currentbuf->document->viewport, Currentbuf->document->topLine,
+                 Currentbuf->document->lastLine, -offsety, false);
     arrangeLine(Currentbuf->document);
     displayBuffer(Currentbuf, B_NORMAL);
   }
@@ -951,7 +953,8 @@ static void _goLine(const char *l) {
         Currentbuf->document->firstLine;
   } else if (*l == '$') {
     Currentbuf->document->topLine =
-        lineSkip(Currentbuf->document, Currentbuf->document->lastLine,
+        lineSkip(&Currentbuf->document->viewport,
+                 Currentbuf->document->lastLine, Currentbuf->document->lastLine,
                  -(Currentbuf->document->viewport.LINES + 1) / 2, true);
     Currentbuf->document->currentLine = Currentbuf->document->lastLine;
   } else
@@ -1134,7 +1137,8 @@ static void gotoLabel(const char *label) {
   gotoLine(Currentbuf->document, al->start.line);
   if (label_topline)
     Currentbuf->document->topLine =
-        lineSkip(Currentbuf->document, Currentbuf->document->topLine,
+        lineSkip(&Currentbuf->document->viewport, Currentbuf->document->topLine,
+                 Currentbuf->document->lastLine,
                  Currentbuf->document->currentLine->linenumber -
                      Currentbuf->document->topLine->linenumber,
                  false);
@@ -1342,6 +1346,8 @@ static void query_from_followform(Str *query, struct FormItemList *fi,
     case FORM_INPUT_CHECKBOX:
       if (!f2->checked)
         continue;
+    default:
+      break;
     }
     if (multipart) {
       if (f2->type == FORM_INPUT_IMAGE) {
@@ -3348,7 +3354,8 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
   if (Currentbuf->document->firstLine == NULL)
     return;
   Currentbuf->document->currentLine =
-      lineSkip(Currentbuf->document, Currentbuf->document->topLine, 0, false);
+      lineSkip(&Currentbuf->document->viewport, Currentbuf->document->topLine,
+               Currentbuf->document->lastLine, 0, false);
   arrangeLine(Currentbuf->document);
   displayBuffer(Currentbuf, B_NORMAL);
 }

@@ -183,3 +183,17 @@ void clear_mark(struct Line *l) {
   for (pos = 0; pos < l->size; pos++)
     l->propBuf[pos] &= ~PE_MARK;
 }
+
+struct Line *currentLineSkip(struct Line *line, int offset, int last) {
+  struct Line *l = line;
+  if (offset == 0)
+    return l;
+
+  if (offset > 0)
+    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
+      ;
+  else
+    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
+      ;
+  return l;
+}

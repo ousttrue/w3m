@@ -88,3 +88,4 @@ int columnLen(struct Line *line, int column);
 int columnPos(struct Line *line, int column);
 Str checkType(Str s, Lineprop **oprop);
 void clear_mark(struct Line *l);
+struct Line *currentLineSkip(struct Line *line, int offset, int last);

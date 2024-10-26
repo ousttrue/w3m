@@ -82,9 +82,9 @@ static int doFileMove(char *tmpf, char *defstr) {
   return ret;
 }
 
-static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f, Str page,
-                                  const char *t, const char *real_type,
-                                  struct Buffer *t_buf) {
+static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f,
+                                  Str page, const char *t,
+                                  const char *real_type, struct Buffer *t_buf) {
   if (page) {
     auto tmp = tmpfname(TMPF_SRC, ".html");
     auto src = fopen(tmp->ptr, "w");
@@ -157,8 +157,9 @@ static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f, Str
   struct Buffer *b;
   if (is_html_type(t)) {
     b = t_buf;
-    b->document = loadHTML(cols, content->ptr, t_buf->currentURL, baseURL(t_buf),
-                           t_buf->http_response->content_charset);
+    b->document =
+        loadHTML(cols, content->ptr, t_buf->currentURL, baseURL(t_buf),
+                 t_buf->http_response->content_charset);
   } else {
     b = t_buf;
     b->document = loadText(cols, content->ptr);
@@ -192,7 +193,8 @@ static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f, Str
           gotoLine(b->document, a->start.line);
           if (label_topline)
             b->document->topLine =
-                lineSkip(b->document, b->document->topLine,
+                lineSkip(&b->document->viewport, b->document->topLine,
+                         b->document->lastLine,
                          b->document->currentLine->linenumber -
                              b->document->topLine->linenumber,
                          false);

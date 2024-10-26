@@ -4,7 +4,6 @@
 #include "term/terms.h"
 #include "term/termsize.h"
 
-bool nextpage_topline = false;
 bool showLineNum = false;
 bool FoldLine = false;
 int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1); }
@@ -121,30 +120,6 @@ void addnewline(struct Document *doc, char *line, Lineprop *prop, int pos,
   }
 }
 
-struct Line *currentLineSkip(struct Line *line, int offset, int last) {
-  struct Line *l = line;
-  if (offset == 0)
-    return l;
-  if (offset > 0)
-    for (int i = 0; i < offset && l->next != NULL; i++, l = l->next)
-      ;
-  else
-    for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
-      ;
-  return l;
-}
-
-struct Line *lineSkip(struct Document *doc, struct Line *line, int offset,
-                      int last) {
-  auto l = currentLineSkip(line, offset, last);
-  if (!nextpage_topline)
-    for (int i = doc->viewport.LINES - 1 -
-                 (doc->lastLine->linenumber - l->linenumber);
-         i > 0 && l->prev != NULL; i--, l = l->prev)
-      ;
-  return l;
-}
-
 /*
  * gotoLine: go to line number
  */
@@ -167,8 +142,8 @@ void gotoLine(struct Document *doc, int n) {
     sprintf(msg, "Last line is #%ld", doc->lastLine->linenumber);
     set_delayed_message(msg);
     doc->currentLine = l;
-    doc->topLine =
-        lineSkip(doc, doc->currentLine, -(doc->viewport.LINES - 1), false);
+    doc->topLine = lineSkip(&doc->viewport, doc->currentLine, doc->lastLine,
+                            -(doc->viewport.LINES - 1), false);
     return;
   }
   for (; l != NULL; l = l->next) {
@@ -176,7 +151,8 @@ void gotoLine(struct Document *doc, int n) {
       doc->currentLine = l;
       if (n < doc->topLine->linenumber ||
           doc->topLine->linenumber + doc->viewport.LINES <= n)
-        doc->topLine = lineSkip(doc, l, -(doc->viewport.LINES + 1) / 2, false);
+        doc->topLine = lineSkip(&doc->viewport, l, doc->lastLine,
+                                -(doc->viewport.LINES + 1) / 2, false);
       break;
     }
   }
@@ -198,7 +174,8 @@ void arrangeCursor(struct Document *doc) {
     /*
      * doc->topLine = doc->currentLine;
      */
-    doc->topLine = lineSkip(doc, doc->currentLine, 0, false);
+    doc->topLine =
+        lineSkip(&doc->viewport, doc->currentLine, doc->lastLine, 0, false);
   }
   /* Arrange column */
   while (doc->viewport.pos < 0 && doc->currentLine->prev &&
@@ -245,7 +222,8 @@ void cursorUp0(struct Document *doc, int n) {
   if (doc->viewport.cursorY > 0)
     cursorUpDown(doc, -1);
   else {
-    doc->topLine = lineSkip(doc, doc->topLine, -n, false);
+    doc->topLine =
+        lineSkip(&doc->viewport, doc->topLine, doc->lastLine, -n, false);
     if (doc->currentLine->prev != NULL)
       doc->currentLine = doc->currentLine->prev;
     arrangeLine(doc);
@@ -274,7 +252,8 @@ void cursorDown0(struct Document *doc, int n) {
   if (doc->viewport.cursorY < doc->viewport.LINES - 1)
     cursorUpDown(doc, 1);
   else {
-    doc->topLine = lineSkip(doc, doc->topLine, n, false);
+    doc->topLine =
+        lineSkip(&doc->viewport, doc->topLine, doc->lastLine, n, false);
     if (doc->currentLine->next != NULL)
       doc->currentLine = doc->currentLine->next;
     arrangeLine(doc);
@@ -454,7 +433,8 @@ int columnSkip(struct Document *doc, int offset) {
 }
 
 void restorePosition(struct Document *doc, struct Document *orig) {
-  doc->topLine = lineSkip(doc, doc->firstLine, TOP_LINENUMBER(orig) - 1, false);
+  doc->topLine = lineSkip(&doc->viewport, doc->firstLine, doc->lastLine,
+                          TOP_LINENUMBER(orig) - 1, false);
   gotoLine(doc, CUR_LINENUMBER(orig));
   doc->viewport.pos = orig->viewport.pos;
   if (doc->currentLine && orig->currentLine)
@@ -572,7 +552,7 @@ void tmpClearBuffer(struct Document *doc) {
 
 /* shallow copy */
 void copyBuffer(struct Document *a, const struct Document *b) {
-  readBufferCache(b);
+  readBufferCache((struct Document *)b);
   memcpy((void *)a, (const void *)b, sizeof(struct Document));
 }
 
@@ -624,8 +604,8 @@ void gotoRealLine(struct Document *doc, int n) {
     sprintf(msg, "Last line is #%ld", doc->lastLine->real_linenumber);
     set_delayed_message(msg);
     doc->currentLine = l;
-    doc->topLine =
-        lineSkip(doc, doc->currentLine, -(doc->viewport.LINES - 1), false);
+    doc->topLine = lineSkip(&doc->viewport, doc->currentLine, doc->lastLine,
+                            -(doc->viewport.LINES - 1), false);
     return;
   }
 
@@ -634,7 +614,8 @@ void gotoRealLine(struct Document *doc, int n) {
       doc->currentLine = l;
       if (n < doc->topLine->real_linenumber ||
           doc->topLine->real_linenumber + doc->viewport.LINES <= n)
-        doc->topLine = lineSkip(doc, l, -(doc->viewport.LINES + 1) / 2, false);
+        doc->topLine = lineSkip(&doc->viewport, l, doc->lastLine,
+                                -(doc->viewport.LINES + 1) / 2, false);
       break;
     }
   }

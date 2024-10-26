@@ -3,7 +3,6 @@
 #include "line.h"
 #include "viewport.h"
 
-extern bool nextpage_topline;
 extern bool showLineNum;
 #define _INIT_BUFFER_WIDTH (COLS - (showLineNum ? 6 : 1))
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
@@ -48,9 +47,6 @@ struct Document *newDocument(int width);
 
 void addnewline(struct Document *doc, char *line, Lineprop *prop, int pos,
                 int width, int nlines);
-struct Line *currentLineSkip(struct Line *line, int offset, int last);
-struct Line *lineSkip(struct Document *doc, struct Line *line, int offset,
-                      int last);
 void gotoLine(struct Document *doc, int n);
 void arrangeCursor(struct Document *doc);
 void cursorUp0(struct Document *doc, int n);

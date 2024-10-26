@@ -1,5 +1,7 @@
 #pragma once
 
+extern bool nextpage_topline;
+
 struct BufferPos {
   long top_linenumber;
   long cur_linenumber;
@@ -22,3 +24,6 @@ struct Viewport {
   short rootY;
   struct BufferPos *undo;
 };
+
+struct Line *lineSkip(struct Viewport *doc, struct Line *line,
+                      struct Line *lastLine, int offset, int last);

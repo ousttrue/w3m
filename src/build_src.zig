@@ -35,6 +35,7 @@ pub const SRCS = [_][]const u8{
     "src/buffer/downloadlist.c",
     "src/buffer/image.c",
     "src/buffer/document.c",
+    "src/buffer/viewport.c",
     "src/buffer/buffer.c",
     "src/buffer/display.c",
     "src/buffer/tabbuffer.c",

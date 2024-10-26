@@ -381,8 +381,9 @@ void reshapeBuffer(struct Buffer *buf) {
     buf->document->imarklist->nmark = 0;
 
   if (is_html_type(buf->type)) {
-    buf->document = loadHTML(buf->document->viewport.COLS, html->ptr, buf->currentURL,
-                             baseURL(buf), buf->http_response->content_charset);
+    buf->document =
+        loadHTML(buf->document->viewport.COLS, html->ptr, buf->currentURL,
+                 baseURL(buf), buf->http_response->content_charset);
   } else {
     buf->document = loadText(buf->document->viewport.COLS, html->ptr);
   }
@@ -405,7 +406,8 @@ void reshapeBuffer(struct Buffer *buf) {
         (cur->linenumber - sbuf.topLine->linenumber);
     if (n) {
       buf->document->topLine =
-          lineSkip(buf->document, buf->document->topLine, n, false);
+          lineSkip(&buf->document->viewport, buf->document->topLine,
+                   buf->document->lastLine, n, false);
       if (cur->real_linenumber > 0)
         gotoRealLine(buf->document, cur->real_linenumber);
       else
