@@ -18,11 +18,13 @@ int enable_inline_image;
 bool displayLink = false;
 bool displayLineInfo = false;
 
-/*
- * Display some lines.
- */
 static struct Line *cline = nullptr;
 static int ccolumn = -1;
+static struct Buffer *save_current_buf = nullptr;
+
+/*
+ * effects
+ */
 static int ulmode = 0;
 static int somode = 0;
 static int bomode = 0;
@@ -34,22 +36,58 @@ static int active_mode = 0;
 static int visited_mode = 0;
 static int mark_mode = 0;
 static int graph_mode = 0;
-static struct Buffer *save_current_buf = nullptr;
 
-#define do_effect1(effect, modeflag, action_start, action_end)                 \
-  if (m & effect) {                                                            \
-    if (!modeflag) {                                                           \
-      action_start;                                                            \
-      modeflag = true;                                                         \
-    }                                                                          \
+static void do_effect1(Lineprop m, enum CharEffects effect, bool modeflag,
+                void (*action_start)(), void (*action_end)()) {
+  if (m & effect) {
+    if (!modeflag) {
+      if (action_start) {
+        action_start();
+      }
+      modeflag = true;
+    }
+  }
+}
+
+static void do_effect2(Lineprop m, enum CharEffects effect, bool modeflag,
+                void (*action_start)(), void (*action_end)()) {
+  if (modeflag) {
+    if (action_end) {
+      action_end();
+    }
+    modeflag = false;
+  }
+}
+
+static void do_effects(Lineprop m) {
+  /* effect end */
+  do_effect2(m, PE_UNDER, ulmode, scr_underline, scr_underlineend);
+  do_effect2(m, PE_STAND, somode, scr_standout, scr_standend);
+  do_effect2(m, PE_BOLD, bomode, scr_bold, scr_boldend);
+  do_effect2(m, PE_EMPH, emph_mode, scr_bold, scr_boldend);
+  do_effect2(m, PE_ANCHOR, anch_mode, scr_underline, scr_underlineend);
+  do_effect2(m, PE_IMAGE, imag_mode, scr_standout, scr_standend);
+  do_effect2(m, PE_FORM, form_mode, scr_standout, scr_standend);
+  do_effect2(m, PE_VISITED, visited_mode, nullptr, nullptr);
+  do_effect2(m, PE_ACTIVE, active_mode, scr_bold, scr_boldend);
+  do_effect2(m, PE_MARK, mark_mode, scr_standout, scr_standend);
+  if (graph_mode) {
+    scr_graphend();
+    graph_mode = false;
   }
 
-#define do_effect2(effect, modeflag, action_start, action_end)                 \
-  if (modeflag) {                                                              \
-    action_end;                                                                \
-    modeflag = false;                                                          \
-  }
-
+  /* effect start */
+  do_effect1(m, PE_UNDER, ulmode, scr_underline, scr_underlineend);
+  do_effect1(m, PE_STAND, somode, scr_standout, scr_standend);
+  do_effect1(m, PE_BOLD, bomode, scr_bold, scr_boldend);
+  do_effect1(m, PE_EMPH, emph_mode, scr_bold, scr_boldend);
+  do_effect1(m, PE_ANCHOR, anch_mode, scr_underline, scr_underlineend);
+  do_effect1(m, PE_IMAGE, imag_mode, scr_standout, scr_standend);
+  do_effect1(m, PE_FORM, form_mode, scr_standout, scr_standend);
+  do_effect1(m, PE_VISITED, visited_mode, nullptr, nullptr);
+  do_effect1(m, PE_ACTIVE, active_mode, scr_bold, scr_boldend);
+  do_effect1(m, PE_MARK, mark_mode, scr_standout, scr_standend);
+}
 
 static Str make_lastline_link(struct Url *base, const char *title,
                               const char *url) {
@@ -145,16 +183,17 @@ static Str make_lastline_message(struct Buffer *buf) {
   return msg;
 }
 
-static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
+static void redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
                             int epos) {
+  if (l == NULL)
+    return;
+
   int j, pos, rcol, ncol, delta = 1;
   int column = buf->document->viewport.currentColumn;
   char *p;
   Lineprop *pr;
   int bcol, ecol;
 
-  if (l == NULL)
-    return 0;
   pos = columnPos(l, column);
   p = &(l->lineBuf[pos]);
   pr = &(l->propBuf[pos]);
@@ -227,7 +266,6 @@ static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
     graph_mode = false;
     scr_graphend();
   }
-  return rcol - column;
 }
 
 static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
@@ -277,6 +315,7 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
     }
   }
 }
+
 static void drawAnchorCursor(struct Buffer *buf) {
   struct Anchor *an;
   int hseq, prevhseq;
@@ -311,36 +350,6 @@ static void drawAnchorCursor(struct Buffer *buf) {
   buf->document->hmarklist->prevhseq = hseq;
 }
 
-static void do_effects(Lineprop m) {
-  /* effect end */
-  do_effect2(PE_UNDER, ulmode, underline(), scr_underlineend());
-  do_effect2(PE_STAND, somode, standout(), scr_standend());
-  do_effect2(PE_BOLD, bomode, bold(), scr_boldend());
-  do_effect2(PE_EMPH, emph_mode, bold(), scr_boldend());
-  do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, scr_underlineend());
-  do_effect2(PE_IMAGE, imag_mode, scr_standout(), scr_standend());
-  do_effect2(PE_FORM, form_mode, scr_standout(), scr_standend());
-  do_effect2(PE_VISITED, visited_mode, /**/, );
-  do_effect2(PE_ACTIVE, active_mode, scr_bold(), scr_boldend());
-  do_effect2(PE_MARK, mark_mode, scr_standout(), scr_standend());
-  if (graph_mode) {
-    scr_graphend();
-    graph_mode = false;
-  }
-
-  /* effect start */
-  do_effect1(PE_UNDER, ulmode, scr_underline(), underlineend());
-  do_effect1(PE_STAND, somode, scr_standout(), standend());
-  do_effect1(PE_BOLD, bomode, scr_bold(), boldend());
-  do_effect1(PE_EMPH, emph_mode, scr_bold(), boldend());
-
-  do_effect1(PE_ANCHOR, anch_mode, scr_underline(), scr_underlineend());
-  do_effect1(PE_IMAGE, imag_mode, scr_standout(), scr_standend());
-  do_effect1(PE_FORM, form_mode, scr_standout(), scr_standend());
-  do_effect1(PE_VISITED, visited_mode, /**/, );
-  do_effect1(PE_ACTIVE, active_mode, scr_bold(), scr_boldend());
-  do_effect1(PE_MARK, mark_mode, scr_standout(), scr_standend());
-}
 void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
   Lineprop m = CharEffect(mode);
   char c = *p;
@@ -397,9 +406,9 @@ void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
 
 void addChar(char c, Lineprop mode) { addMChar((const uint8_t *)&c, mode, 1); }
 
-static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
+static struct Line *redrawLine(struct Document *doc, struct Line *l, int i) {
   int j, pos, rcol, ncol, delta = 1;
-  int column = buf->document->viewport.currentColumn;
+  int column = doc->viewport.currentColumn;
   char *p;
   Lineprop *pr;
 
@@ -409,26 +418,26 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
   scr_move(i, 0);
   if (showLineNum) {
     char tmp[16];
-    if (!buf->document->viewport.rootX) {
-      if (buf->document->lastLine->real_linenumber > 0)
-        buf->document->viewport.rootX =
-            (int)(log(buf->document->lastLine->real_linenumber + 0.1) /
+    if (!doc->viewport.rootX) {
+      if (doc->lastLine->real_linenumber > 0)
+        doc->viewport.rootX =
+            (int)(log(doc->lastLine->real_linenumber + 0.1) /
                   log(10)) +
             2;
-      if (buf->document->viewport.rootX < 5)
-        buf->document->viewport.rootX = 5;
-      if (buf->document->viewport.rootX > COLS)
-        buf->document->viewport.rootX = COLS;
-      buf->document->viewport.COLS = COLS - buf->document->viewport.rootX;
+      if (doc->viewport.rootX < 5)
+        doc->viewport.rootX = 5;
+      if (doc->viewport.rootX > COLS)
+        doc->viewport.rootX = COLS;
+      doc->viewport.COLS = COLS - doc->viewport.rootX;
     }
     if (l->real_linenumber && !l->bpos)
-      sprintf(tmp, "%*ld:", buf->document->viewport.rootX - 1,
+      sprintf(tmp, "%*ld:", doc->viewport.rootX - 1,
               l->real_linenumber);
     else
-      sprintf(tmp, "%*s ", buf->document->viewport.rootX - 1, "");
+      sprintf(tmp, "%*s ", doc->viewport.rootX - 1, "");
     scr_addstr(tmp);
   }
-  scr_move(i, buf->document->viewport.rootX);
+  scr_move(i, doc->viewport.rootX);
   if (l->width < 0)
     l->width = COLPOS(l, l->len);
   if (l->len == 0 || l->width - 1 < column) {
@@ -441,11 +450,11 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
   pr = &(l->propBuf[pos]);
   rcol = COLPOS(l, pos);
 
-  for (j = 0; rcol - column < buf->document->viewport.COLS && pos + j < l->len;
+  for (j = 0; rcol - column < doc->viewport.COLS && pos + j < l->len;
        j += delta) {
     delta = utf8sequence_len((const uint8_t *)&p[j]);
     ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > buf->document->viewport.COLS)
+    if (ncol - column > doc->viewport.COLS)
       break;
     if (rcol < column) {
       for (rcol = column; rcol < ncol; rcol++)
@@ -504,12 +513,12 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
     graph_mode = false;
     scr_graphend();
   }
-  if (rcol - column < buf->document->viewport.COLS)
+  if (rcol - column < doc->viewport.COLS)
     scr_clrtoeolx();
   return l;
 }
 
-static void redrawNLine(struct Buffer *buf, int n) {
+static void redrawNLine(struct Document *doc, int n) {
   struct Line *l;
   int i;
 
@@ -546,25 +555,23 @@ static void redrawNLine(struct Buffer *buf, int n) {
     for (i = 0; i < COLS; i++)
       scr_addch('~');
   }
-  for (i = 0, l = buf->document->topLine; i < buf->document->viewport.LINES;
+  for (i = 0, l = doc->topLine; i < doc->viewport.LINES;
        i++, l = l->next) {
-    if (i >= buf->document->viewport.LINES - n || i < -n)
-      l = redrawLine(buf, l, i + buf->document->viewport.rootY);
+    if (i >= doc->viewport.LINES - n || i < -n)
+      l = redrawLine(doc, l, i + doc->viewport.rootY);
     if (l == NULL)
       break;
   }
   if (n > 0) {
-    scr_move(i + buf->document->viewport.rootY, 0);
+    scr_move(i + doc->viewport.rootY, 0);
     scr_clrtobotx();
   }
 }
 
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
-  Str msg;
-  int ny = 0;
-
   if (!buf)
     return;
+
   if (buf->document->topLine == NULL &&
       readBufferCache(buf->document) == 0) { /* clear_buffer */
     mode = B_FORCE_REDRAW;
@@ -592,6 +599,8 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   } else
     buf->document->viewport.rootX = 0;
   buf->document->viewport.COLS = COLS - buf->document->viewport.rootX;
+
+  int ny = 0;
   if (nTab > 1) {
     if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
       calcTabPos();
@@ -610,7 +619,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
       cline != buf->document->topLine ||
       ccolumn != buf->document->viewport.currentColumn) {
     {
-      redrawNLine(buf, LASTLINE);
+      redrawNLine(buf->document, LASTLINE);
     }
     cline = buf->document->topLine;
     ccolumn = buf->document->viewport.currentColumn;
@@ -620,7 +629,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
 
   drawAnchorCursor(buf);
 
-  msg = make_lastline_message(buf);
+  auto msg = make_lastline_message(buf);
   if (buf->document->firstLine == NULL) {
     /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
