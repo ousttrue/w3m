@@ -18,32 +18,24 @@ int enable_inline_image;
 bool displayLink = false;
 bool displayLineInfo = false;
 
-#define EFFECT_ANCHOR_START scr_underline()
-#define EFFECT_ANCHOR_END scr_underlineend()
-#define EFFECT_IMAGE_START scr_standout()
-#define EFFECT_IMAGE_END scr_standend()
-#define EFFECT_FORM_START scr_standout()
-#define EFFECT_FORM_END scr_standend()
-#define EFFECT_ACTIVE_START scr_bold()
-#define EFFECT_ACTIVE_END scr_boldend()
-#define EFFECT_VISITED_START /**/
-#define EFFECT_VISITED_END   /**/
-#define EFFECT_MARK_START scr_standout()
-#define EFFECT_MARK_END scr_standend()
-
 /*
  * Display some lines.
  */
-static struct Line *cline = NULL;
+static struct Line *cline = nullptr;
 static int ccolumn = -1;
+static int ulmode = 0;
+static int somode = 0;
+static int bomode = 0;
+static int anch_mode = 0;
+static int emph_mode = 0;
+static int imag_mode = 0;
+static int form_mode = 0;
+static int active_mode = 0;
+static int visited_mode = 0;
+static int mark_mode = 0;
+static int graph_mode = 0;
+static struct Buffer *save_current_buf = nullptr;
 
-static int ulmode = 0, somode = 0, bomode = 0;
-static int anch_mode = 0, emph_mode = 0, imag_mode = 0, form_mode = 0,
-           active_mode = 0, visited_mode = 0, mark_mode = 0, graph_mode = 0;
-
-static struct Buffer *save_current_buf = NULL;
-
-static void drawAnchorCursor(struct Buffer *buf);
 #define redrawBuffer(buf) redrawNLine(buf, LASTLINE)
 static void redrawNLine(struct Buffer *buf, int n);
 static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i);
@@ -145,6 +137,86 @@ static Str make_lastline_message(struct Buffer *buf) {
   return msg;
 }
 
+static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
+                              int hseq, int prevhseq, int tline, int eline,
+                              int active) {
+  int i;
+
+  auto l = buf->document->topLine;
+  for (int j = 0; j < al->nanchor; j++) {
+    auto an = &al->anchors[j];
+    if (an->start.line < tline)
+      continue;
+    if (an->start.line >= eline)
+      return;
+    for (;; l = l->next) {
+      if (l == NULL)
+        return;
+      if (l->linenumber == an->start.line)
+        break;
+    }
+    if (hseq >= 0 && an->hseq == hseq) {
+      int start_pos = an->start.pos;
+      int end_pos = an->end.pos;
+      for (int i = an->start.pos; i < an->end.pos; i++) {
+        if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
+          if (start_pos == i)
+            start_pos = i + 1;
+          else if (end_pos == an->end.pos)
+            end_pos = i - 1;
+        }
+        if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
+          if (active)
+            l->propBuf[i] |= PE_ACTIVE;
+          else
+            l->propBuf[i] &= ~PE_ACTIVE;
+        }
+      }
+      if (active && start_pos < end_pos)
+        redrawLineRegion(buf, l,
+                         l->linenumber - tline + buf->document->viewport.rootY,
+                         start_pos, end_pos);
+    } else if (prevhseq >= 0 && an->hseq == prevhseq) {
+      if (active)
+        redrawLineRegion(buf, l,
+                         l->linenumber - tline + buf->document->viewport.rootY,
+                         an->start.pos, an->end.pos);
+    }
+  }
+}
+static void drawAnchorCursor(struct Buffer *buf) {
+  struct Anchor *an;
+  int hseq, prevhseq;
+  int tline, eline;
+
+  if (!buf->document->firstLine || !buf->document->hmarklist)
+    return;
+  if (!buf->document->href && !buf->document->formitem)
+    return;
+
+  an = retrieveCurrentAnchor(buf->document);
+  if (!an)
+    an = retrieveCurrentMap(buf);
+  if (an)
+    hseq = an->hseq;
+  else
+    hseq = -1;
+  tline = buf->document->topLine->linenumber;
+  eline = tline + buf->document->viewport.LINES;
+  prevhseq = buf->document->hmarklist->prevhseq;
+
+  if (buf->document->href) {
+    drawAnchorCursor0(buf, buf->document->href, hseq, prevhseq, tline, eline,
+                      1);
+    drawAnchorCursor0(buf, buf->document->href, hseq, -1, tline, eline, 0);
+  }
+  if (buf->document->formitem) {
+    drawAnchorCursor0(buf, buf->document->formitem, hseq, prevhseq, tline,
+                      eline, 1);
+    drawAnchorCursor0(buf, buf->document->formitem, hseq, -1, tline, eline, 0);
+  }
+  buf->document->hmarklist->prevhseq = hseq;
+}
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   Str msg;
   int ny = 0;
@@ -229,86 +301,6 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   }
 }
 
-static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
-                              int hseq, int prevhseq, int tline, int eline,
-                              int active) {
-  int i;
-
-  auto l = buf->document->topLine;
-  for (int j = 0; j < al->nanchor; j++) {
-    auto an = &al->anchors[j];
-    if (an->start.line < tline)
-      continue;
-    if (an->start.line >= eline)
-      return;
-    for (;; l = l->next) {
-      if (l == NULL)
-        return;
-      if (l->linenumber == an->start.line)
-        break;
-    }
-    if (hseq >= 0 && an->hseq == hseq) {
-      int start_pos = an->start.pos;
-      int end_pos = an->end.pos;
-      for (int i = an->start.pos; i < an->end.pos; i++) {
-        if (enable_inline_image && (l->propBuf[i] & PE_IMAGE)) {
-          if (start_pos == i)
-            start_pos = i + 1;
-          else if (end_pos == an->end.pos)
-            end_pos = i - 1;
-        }
-        if (l->propBuf[i] & (PE_IMAGE | PE_ANCHOR | PE_FORM)) {
-          if (active)
-            l->propBuf[i] |= PE_ACTIVE;
-          else
-            l->propBuf[i] &= ~PE_ACTIVE;
-        }
-      }
-      if (active && start_pos < end_pos)
-        redrawLineRegion(buf, l, l->linenumber - tline + buf->document->viewport.rootY,
-                         start_pos, end_pos);
-    } else if (prevhseq >= 0 && an->hseq == prevhseq) {
-      if (active)
-        redrawLineRegion(buf, l, l->linenumber - tline + buf->document->viewport.rootY,
-                         an->start.pos, an->end.pos);
-    }
-  }
-}
-
-static void drawAnchorCursor(struct Buffer *buf) {
-  struct Anchor *an;
-  int hseq, prevhseq;
-  int tline, eline;
-
-  if (!buf->document->firstLine || !buf->document->hmarklist)
-    return;
-  if (!buf->document->href && !buf->document->formitem)
-    return;
-
-  an = retrieveCurrentAnchor(buf->document);
-  if (!an)
-    an = retrieveCurrentMap(buf);
-  if (an)
-    hseq = an->hseq;
-  else
-    hseq = -1;
-  tline = buf->document->topLine->linenumber;
-  eline = tline + buf->document->viewport.LINES;
-  prevhseq = buf->document->hmarklist->prevhseq;
-
-  if (buf->document->href) {
-    drawAnchorCursor0(buf, buf->document->href, hseq, prevhseq, tline, eline,
-                      1);
-    drawAnchorCursor0(buf, buf->document->href, hseq, -1, tline, eline, 0);
-  }
-  if (buf->document->formitem) {
-    drawAnchorCursor0(buf, buf->document->formitem, hseq, prevhseq, tline,
-                      eline, 1);
-    drawAnchorCursor0(buf, buf->document->formitem, hseq, -1, tline, eline, 0);
-  }
-  buf->document->hmarklist->prevhseq = hseq;
-}
-
 static void redrawNLine(struct Buffer *buf, int n) {
   struct Line *l;
   int i;
@@ -331,10 +323,10 @@ static void redrawNLine(struct Buffer *buf, int n) {
       if (l / 2 > 0)
         scr_addnstr_sup(" ", l / 2);
       if (t == CurrentTab)
-        EFFECT_ACTIVE_START;
+        scr_bold();
       scr_addnstr(t->currentBuffer->buffername, t->x2 - t->x1 - l);
       if (t == CurrentTab)
-        EFFECT_ACTIVE_END;
+        scr_boldend();
       if ((l + 1) / 2 > 0)
         scr_addnstr_sup(" ", (l + 1) / 2);
       scr_move(t->y, t->x2);
@@ -440,7 +432,8 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
       buf->document->viewport.COLS = COLS - buf->document->viewport.rootX;
     }
     if (l->real_linenumber && !l->bpos)
-      sprintf(tmp, "%*ld:", buf->document->viewport.rootX - 1, l->real_linenumber);
+      sprintf(tmp, "%*ld:", buf->document->viewport.rootX - 1,
+              l->real_linenumber);
     else
       sprintf(tmp, "%*s ", buf->document->viewport.rootX - 1, "");
     scr_addstr(tmp);
@@ -496,27 +489,26 @@ static struct Line *redrawLine(struct Buffer *buf, struct Line *l, int i) {
 
   if (anch_mode) {
     anch_mode = false;
-    EFFECT_ANCHOR_END;
+    scr_underlineend();
   }
   if (imag_mode) {
     imag_mode = false;
-    EFFECT_IMAGE_END;
+    scr_standend();
   }
   if (form_mode) {
     form_mode = false;
-    EFFECT_FORM_END;
+    scr_standend();
   }
   if (visited_mode) {
     visited_mode = false;
-    EFFECT_VISITED_END;
   }
   if (active_mode) {
     active_mode = false;
-    EFFECT_ACTIVE_END;
+    scr_boldend();
   }
   if (mark_mode) {
     mark_mode = false;
-    EFFECT_MARK_END;
+    scr_standend();
   }
   if (graph_mode) {
     graph_mode = false;
@@ -584,27 +576,26 @@ static int redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
 
   if (anch_mode) {
     anch_mode = false;
-    EFFECT_ANCHOR_END;
+    scr_underlineend();
   }
   if (imag_mode) {
     imag_mode = false;
-    EFFECT_IMAGE_END;
+    scr_standend();
   }
   if (form_mode) {
     form_mode = false;
-    EFFECT_FORM_END;
+    scr_standend();
   }
   if (visited_mode) {
     visited_mode = false;
-    EFFECT_VISITED_END;
   }
   if (active_mode) {
     active_mode = false;
-    EFFECT_ACTIVE_END;
+    scr_boldend();
   }
   if (mark_mode) {
     mark_mode = false;
-    EFFECT_MARK_END;
+    scr_standend();
   }
   if (graph_mode) {
     graph_mode = false;
@@ -633,13 +624,12 @@ static void do_effects(Lineprop m) {
   do_effect2(PE_STAND, somode, standout(), scr_standend());
   do_effect2(PE_BOLD, bomode, bold(), scr_boldend());
   do_effect2(PE_EMPH, emph_mode, bold(), scr_boldend());
-  do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
-  do_effect2(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-  do_effect2(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
-  do_effect2(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-             EFFECT_VISITED_END);
-  do_effect2(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
-  do_effect2(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
+  do_effect2(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, scr_underlineend());
+  do_effect2(PE_IMAGE, imag_mode, scr_standout(), scr_standend());
+  do_effect2(PE_FORM, form_mode, scr_standout(), scr_standend());
+  do_effect2(PE_VISITED, visited_mode, /**/, );
+  do_effect2(PE_ACTIVE, active_mode, scr_bold(), scr_boldend());
+  do_effect2(PE_MARK, mark_mode, scr_standout(), scr_standend());
   if (graph_mode) {
     scr_graphend();
     graph_mode = false;
@@ -650,13 +640,13 @@ static void do_effects(Lineprop m) {
   do_effect1(PE_STAND, somode, scr_standout(), standend());
   do_effect1(PE_BOLD, bomode, scr_bold(), boldend());
   do_effect1(PE_EMPH, emph_mode, scr_bold(), boldend());
-  do_effect1(PE_ANCHOR, anch_mode, EFFECT_ANCHOR_START, EFFECT_ANCHOR_END);
-  do_effect1(PE_IMAGE, imag_mode, EFFECT_IMAGE_START, EFFECT_IMAGE_END);
-  do_effect1(PE_FORM, form_mode, EFFECT_FORM_START, EFFECT_FORM_END);
-  do_effect1(PE_VISITED, visited_mode, EFFECT_VISITED_START,
-             EFFECT_VISITED_END);
-  do_effect1(PE_ACTIVE, active_mode, EFFECT_ACTIVE_START, EFFECT_ACTIVE_END);
-  do_effect1(PE_MARK, mark_mode, EFFECT_MARK_START, EFFECT_MARK_END);
+
+  do_effect1(PE_ANCHOR, anch_mode, scr_underline(), scr_underlineend());
+  do_effect1(PE_IMAGE, imag_mode, scr_standout(), scr_standend());
+  do_effect1(PE_FORM, form_mode, scr_standout(), scr_standend());
+  do_effect1(PE_VISITED, visited_mode, /**/, );
+  do_effect1(PE_ACTIVE, active_mode, scr_bold(), scr_boldend());
+  do_effect1(PE_MARK, mark_mode, scr_standout(), scr_standend());
 }
 
 /*
