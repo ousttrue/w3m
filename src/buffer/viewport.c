@@ -211,6 +211,9 @@ struct Line *render_line(struct Line *l, const struct Viewport *viewport,
   for (int j = 0; rcol - column < viewport->COLS && pos + j < l->len;
        j += delta) {
     delta = utf8sequence_len((const uint8_t *)&p[j]);
+    if(delta==0){
+      break;
+    }
     int ncol = COLPOS(l, pos + j + delta);
     if (ncol - column > viewport->COLS)
       break;

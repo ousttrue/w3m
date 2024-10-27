@@ -249,20 +249,21 @@ void Strcat_m_charp(Str x, ...) {
 }
 
 void Strgrow(Str x) {
-  int newlen, addlen;
-
+  int addlen;
   if (x->area_size < 8192)
     addlen = x->area_size;
   else
     addlen = x->area_size / 2;
   if (addlen < INITIAL_STR_SIZE)
     addlen = INITIAL_STR_SIZE;
-  newlen = x->area_size + addlen;
+
+  int newlen = x->area_size + addlen;
   if (newlen <= 0 || newlen > STR_SIZE_MAX) {
     newlen = STR_SIZE_MAX;
     if (x->length + 1 >= newlen)
       x->length = newlen - 2;
   }
+
   if (x->area_size < newlen) {
     x->ptr = _GC_REALLOC(x->ptr, newlen);
     if (x->ptr == NULL)

@@ -118,7 +118,7 @@ void PPUSH(struct LineProcStatus *st, int *pos, Lineprop p, char c) {
   (*pos)++;
 }
 
-void PPUSH_utf8(struct LineProcStatus *st, int *pos, Lineprop prop,
+int PPUSH_utf8(struct LineProcStatus *st, int *pos, Lineprop prop,
                 const uint8_t **utf8) {
   int len = utf8sequence_len((const uint8_t *)*utf8);
   Lineprop *p = st->outp + *pos;
@@ -127,6 +127,7 @@ void PPUSH_utf8(struct LineProcStatus *st, int *pos, Lineprop prop,
     p[0] = prop;
     c[0] = **utf8;
   }
+  return len;
 }
 
 void _proc_tag(struct LineProcStatus *st, struct Url currentURL,
@@ -458,6 +459,7 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
   Strremovetrailingspaces(line);
   const char *str = line->ptr;
   auto endp = str + line->length;
+  bool error = false;
   while (str < endp) {
     PSIZE(st, pos);
     auto mode = get_mctype((const uint8_t *)str);
@@ -469,7 +471,11 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
       PPUSH(st, &pos, PC_ASCII | st->effect | ex_efct(st->ex_effect), ' ');
       str++;
     } else if (*str != '<' && *str != '&') {
-      PPUSH_utf8(st, &pos, mode | st->effect | ex_efct(st->ex_effect), &str);
+      if(!PPUSH_utf8(st, &pos, mode | st->effect | ex_efct(st->ex_effect), &str))
+      {
+        error = true;
+        break;
+      }
     } else if (*str == '&') {
       /*
        * & escape processing
@@ -502,7 +508,7 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
   if (st->internal == HTML_N_INTERNAL) {
     st->internal = 0;
   }
-  if (str != endp) {
+  if (!error && str != endp) {
     line = Strsubstr(line, str - line->ptr, endp - str);
     proc_wrapped_line(st, currentURL, line);
   }
