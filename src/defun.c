@@ -252,27 +252,25 @@ static void repBuffer(struct Buffer *oldbuf, struct Buffer *buf) {
 /*
  * Command functions: These functions are called with a keystroke.
  */
-
-static void nscroll(int n, int mode) {
-  struct Buffer *buf = Currentbuf;
-  struct Line *top = buf->document->topLine, *cur = buf->document->currentLine;
-  int lnum, tlnum, llnum, diff_n;
-
-  if (buf->document->firstLine == NULL)
+void document_scroll(struct Document *doc, int n) {
+  if (doc->firstLine == NULL)
     return;
-  lnum = cur->linenumber;
-  buf->document->topLine = lineSkip(&buf->document->viewport, top,
-                                    buf->document->lastLine, n, false);
-  if (buf->document->topLine == top) {
+
+  struct Line *top = doc->topLine;
+  struct Line *cur = doc->currentLine;
+  // int tlnum, llnum, diff_n;
+  int lnum = cur->linenumber;
+  doc->topLine = lineSkip(&doc->viewport, top, doc->lastLine, n, false);
+  if (doc->topLine == top) {
     lnum += n;
-    if (lnum < buf->document->topLine->linenumber)
-      lnum = buf->document->topLine->linenumber;
-    else if (lnum > buf->document->lastLine->linenumber)
-      lnum = buf->document->lastLine->linenumber;
+    if (lnum < doc->topLine->linenumber)
+      lnum = doc->topLine->linenumber;
+    else if (lnum > doc->lastLine->linenumber)
+      lnum = doc->lastLine->linenumber;
   } else {
-    tlnum = buf->document->topLine->linenumber;
-    llnum =
-        buf->document->topLine->linenumber + buf->document->viewport.LINES - 1;
+    int tlnum = doc->topLine->linenumber;
+    int llnum = doc->topLine->linenumber + doc->viewport.LINES - 1;
+    int diff_n;
     if (nextpage_topline)
       diff_n = 0;
     else
@@ -282,37 +280,35 @@ static void nscroll(int n, int mode) {
     if (lnum > llnum)
       lnum = llnum + diff_n;
   }
-  gotoLine(buf->document, lnum);
-  arrangeLine(buf->document);
+  gotoLine(doc, lnum);
+  arrangeLine(doc);
   if (n > 0) {
-    if (buf->document->currentLine->bpos &&
-        buf->document->currentLine->bwidth >=
-            buf->document->viewport.currentColumn +
-                buf->document->viewport.visualpos)
-      cursorDown(buf->document, 1);
+    if (doc->currentLine->bpos &&
+        doc->currentLine->bwidth >=
+            doc->viewport.currentColumn + doc->viewport.visualpos)
+      cursorDown(doc, 1);
     else {
-      while (buf->document->currentLine->next &&
-             buf->document->currentLine->next->bpos &&
-             buf->document->currentLine->bwidth +
-                     buf->document->currentLine->width <
-                 buf->document->viewport.currentColumn +
-                     buf->document->viewport.visualpos)
-        cursorDown0(buf->document, 1);
+      while (doc->currentLine->next && doc->currentLine->next->bpos &&
+             doc->currentLine->bwidth + doc->currentLine->width <
+                 doc->viewport.currentColumn + doc->viewport.visualpos)
+        cursorDown0(doc, 1);
     }
   } else {
-    if (buf->document->currentLine->bwidth + buf->document->currentLine->width <
-        buf->document->viewport.currentColumn +
-            buf->document->viewport.visualpos)
-      cursorUp(buf->document, 1);
+    if (doc->currentLine->bwidth + doc->currentLine->width <
+        doc->viewport.currentColumn + doc->viewport.visualpos)
+      cursorUp(doc, 1);
     else {
-      while (buf->document->currentLine->prev &&
-             buf->document->currentLine->bpos &&
-             buf->document->currentLine->bwidth >=
-                 buf->document->viewport.currentColumn +
-                     buf->document->viewport.visualpos)
-        cursorUp0(buf->document, 1);
+      while (doc->currentLine->prev && doc->currentLine->bpos &&
+             doc->currentLine->bwidth >=
+                 doc->viewport.currentColumn + doc->viewport.visualpos)
+        cursorUp0(doc, 1);
     }
   }
+}
+
+static void nscroll(int n, enum DisplayMode mode) {
+  struct Buffer *buf = Currentbuf;
+  document_scroll(buf->document, n);
   displayBuffer(buf, mode);
 }
 
