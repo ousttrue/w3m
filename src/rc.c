@@ -528,7 +528,7 @@ struct param_section sections[] = {{N_("Display Settings"), params1},
                                    {N_("Cookie Settings"), params8},
                                    {NULL, NULL}};
 
-static Str to_str(struct param_ptr *p);
+static const char *to_str(struct param_ptr *p);
 
 static int compare_table(struct rc_search_table *a, struct rc_search_table *b) {
   return strcmp(a->param->name, b->param->name);
@@ -780,7 +780,7 @@ option_assigned:
 const char *get_param_option(const char *name) {
   struct param_ptr *p;
   p = search_param(name);
-  return p ? to_str(p)->ptr : NULL;
+  return p ? to_str(p) : NULL;
 }
 
 static void interpret_rc(FILE *f) {
@@ -866,24 +866,28 @@ static char optionpanel_src1[] =
 
 static Str optionpanel_str = NULL;
 
-static Str to_str(struct param_ptr *p) {
+static const char *to_str(struct param_ptr *p) {
   switch (p->type) {
   case P_INT:
   case P_NZINT:
-    return Sprintf("%d", *(int *)p->varptr);
+    if (p->inputtype == PI_ONOFF) {
+      return *(bool *)p->varptr ? "true" : "false";
+    } else {
+      return Sprintf("%d", *(int *)p->varptr)->ptr;
+    }
   case P_SHORT:
-    return Sprintf("%d", *(short *)p->varptr);
+    return Sprintf("%d", *(short *)p->varptr)->ptr;
   case P_CHARINT:
-    return Sprintf("%d", *(char *)p->varptr);
+    return Sprintf("%d", *(char *)p->varptr)->ptr;
   case P_CHAR:
-    return Sprintf("%c", *(char *)p->varptr);
+    return Sprintf("%c", *(char *)p->varptr)->ptr;
   case P_STRING:
   case P_SSLPATH:
     /*  SystemCharset -> InnerCharset */
-    return Strnew_charp(*(char **)p->varptr);
+    return Strnew_charp(*(char **)p->varptr)->ptr;
   case P_PIXELS:
   case P_SCALE:
-    return Sprintf("%g", *(double *)p->varptr);
+    return Sprintf("%g", *(double *)p->varptr)->ptr;
   }
   /* not reached */
   return NULL;
@@ -907,10 +911,10 @@ struct Document *load_option_panel() {
       switch (p->inputtype) {
       case PI_TEXT:
         Strcat_m_charp(src, "<input type=text name=", p->name, " value=\"",
-                       html_quote(to_str(p)->ptr), "\">", NULL);
+                       html_quote(to_str(p)), "\">", NULL);
         break;
       case PI_ONOFF: {
-        auto x = atoi(to_str(p)->ptr);
+        auto x = atoi(to_str(p));
         Strcat_m_charp(src, "<input type=radio name=", p->name, " value=1",
                        (x ? " checked" : ""),
                        ">YES&nbsp;&nbsp;<input type=radio name=", p->name,
@@ -923,8 +927,8 @@ struct Document *load_option_panel() {
         for (auto s = (struct sel_c *)p->select; s->text != NULL; s++) {
           Strcat_charp(src, "<option value=");
           Strcat(src, Sprintf("%s\n", s->cvalue));
-          if ((p->type != P_CHAR && s->value == atoi(tmp->ptr)) ||
-              (p->type == P_CHAR && (char)s->value == *(tmp->ptr)))
+          if ((p->type != P_CHAR && s->value == atoi(tmp)) ||
+              (p->type == P_CHAR && (char)s->value == *(tmp)))
             Strcat_charp(src, " selected");
           Strcat_char(src, '>');
           Strcat_charp(src, s->text);
