@@ -20,7 +20,7 @@ extern unsigned char EscBKeymap[];
 extern unsigned char EscDKeymap[];
 
 int getFuncList(const char *id);
-void setKeymap(const char *p, int lineno, int verbose);
+void setKeymap(const char *p, int lineno);
 int getKey(const char *s);
 
 void pcmap(void);

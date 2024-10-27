@@ -3,11 +3,12 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/downloadlist.h"
+#include "buffer/message.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
 #include "fm.h"
-#include "html/map.h"
 #include "html/html_tag.h"
+#include "html/map.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
 #include "input/localcgi.h"
@@ -404,6 +405,9 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
       }
     }
     break;
+
+  default:
+    break;
   }
   copyBuffer(buf->document, &save);
   arrangeLine(buf->document);
@@ -464,8 +468,7 @@ void input_textarea(struct FormItemList *fi) {
 
   auto f = fopen(tmpf, "w");
   if (f == NULL) {
-    /* FIXME: gettextize? */
-    disp_err_message("Can't open temporary file", false);
+    message_push("Can't open temporary file");
     return;
   }
   if (fi->value)
@@ -480,8 +483,7 @@ void input_textarea(struct FormItemList *fi) {
     goto input_end;
   f = fopen(tmpf, "r");
   if (f == NULL) {
-    /* FIXME: gettextize? */
-    disp_err_message("Can't open temporary file", false);
+    message_push("Can't open temporary file");
     goto input_end;
   }
   fi->value = Strnew();

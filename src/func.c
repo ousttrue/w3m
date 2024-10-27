@@ -3,6 +3,7 @@
  */
 #include "func.h"
 #include "alloc.h"
+#include "buffer/message.h"
 #include "core.h"
 #include "fm.h"
 #include "funcname.h"
@@ -25,7 +26,7 @@ static char keymap_initialized = false;
 static struct stat sys_current_keymap_file;
 static struct stat current_keymap_file;
 
-void setKeymap(const char *p, int lineno, int verbose) {
+void setKeymap(const char *p, int lineno) {
   unsigned char *map = NULL;
   char *emsg;
   int c, f;
@@ -39,9 +40,7 @@ void setKeymap(const char *p, int lineno, int verbose) {
     else
       /* FIXME: gettextize? */
       emsg = Sprintf("defkey: unknown key '%s'", s)->ptr;
-    term_err_message(emsg);
-    if (verbose)
-      disp_message_nsec(emsg, false, 1, true, false);
+    message_push(emsg);
     return;
   }
   s = getWord(&p);
@@ -53,9 +52,7 @@ void setKeymap(const char *p, int lineno, int verbose) {
     else
       /* FIXME: gettextize? */
       emsg = Sprintf("defkey: invalid command '%s'", s)->ptr;
-    term_err_message(emsg);
-    if (verbose)
-      disp_message_nsec(emsg, false, 1, true, false);
+    message_push(emsg);
     return;
   }
   if (c & K_MULTI) {
@@ -122,7 +119,6 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
   Str line;
   const char *p, *s, *emsg;
   int lineno;
-  int verbose = 1;
 
   if ((fd = fileno(kf)) < 0 || fstat(fd, &kstat) ||
       (!force && kstat.st_mtime == current->st_mtime &&
@@ -145,19 +141,12 @@ static void interpret_keymap(FILE *kf, struct stat *current, int force) {
       continue;
     if (!strcmp(s, "keymap"))
       ;
-    else if (!strcmp(s, "verbose")) {
-      s = getWord(&p);
-      if (*s)
-        verbose = str_to_bool(s, verbose);
-      continue;
-    } else { /* error */
+    else { /* error */
       emsg = Sprintf("line %d: syntax error '%s'", lineno, s)->ptr;
-      term_err_message(emsg);
-      if (verbose)
-        disp_message_nsec(emsg, false, 1, true, false);
+      message_push(emsg);
       continue;
     }
-    setKeymap(p, lineno, verbose);
+    setKeymap(p, lineno);
   }
 }
 

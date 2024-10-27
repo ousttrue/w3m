@@ -3,6 +3,7 @@
 #include "buffer/display.h"
 #include "buffer/document.h"
 #include "buffer/downloadlist.h"
+#include "buffer/message.h"
 #include "buffer/tabbuffer.h"
 #include "core.h"
 #include "defun.h"
@@ -417,8 +418,10 @@ int main(int argc, char **argv) {
     }
     w3m_exit(2);
   }
-  if (err_msg->length)
-    disp_message_nsec(err_msg->ptr, false, 1, true, false);
+
+  if (err_msg->length) {
+    message_push(err_msg->ptr);
+  }
 
   DefaultType = NULL;
 

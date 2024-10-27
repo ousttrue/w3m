@@ -9,6 +9,7 @@
 #include "buffer/image.h"
 #include "buffer/search.h"
 #include "buffer/w3mhelperpanel.h"
+#include "buffer/message.h"
 #include "core.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
@@ -953,11 +954,11 @@ void panel_set_option(struct LocalCgiHtml *arg) {
 
   FILE *f = NULL;
   if (config_file == NULL) {
-    disp_message("There's no config file... config not saved", false);
+    message_push("There's no config file... config not saved");
   } else {
     f = fopen(config_file, "wt");
     if (f == NULL) {
-      disp_message("Can't write option!", false);
+      message_push("Can't write option!");
     }
   }
 

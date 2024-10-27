@@ -330,7 +330,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   if (buf->document->firstLine == NULL) {
     Strcat_charp(msg, "\tNo Line");
   }
-  term_show_delayed_message();
+  // term_show_delayed_message();
   scr_standout();
   scr_message(msg->ptr,
               buf->document->viewport.cursorX + buf->document->viewport.rootX,

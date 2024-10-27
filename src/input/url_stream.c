@@ -2,11 +2,11 @@
 #include "alloc.h"
 #include "buffer/buffer.h"
 #include "buffer/document.h"
+#include "buffer/message.h"
 #include "core.h"
 #include "file/file.h"
 #include "file/shell.h"
 #include "fm.h"
-// #include "html/html.h"
 #include "input/ftp.h"
 #include "input/http_cookie.h"
 #include "input/http_request.h"
@@ -117,8 +117,8 @@ static void sock_log(char *message, ...) {
 
 static struct TextList *mimetypes_list = nullptr;
 struct table2 {
-  const char* item1;
-  const char* item2;
+  const char *item1;
+  const char *item2;
 };
 static struct table2 **UserMimeTypes = nullptr;
 
@@ -358,9 +358,9 @@ static SSL *openSSLHandle(int sock, char *hostname, char **p_cert) {
       int ng = 1;
       if (SSL_CTX_use_certificate_file(ssl_ctx, ssl_cert_file,
                                        SSL_FILETYPE_PEM) > 0) {
-        char *key_file = (ssl_key_file == NULL || *ssl_key_file == '\0')
-                             ? ssl_cert_file
-                             : ssl_key_file;
+        const char *key_file = (ssl_key_file == NULL || *ssl_key_file == '\0')
+                                   ? ssl_cert_file
+                                   : ssl_key_file;
         if (SSL_CTX_use_PrivateKey_file(ssl_ctx, key_file, SSL_FILETYPE_PEM) >
             0)
           if (SSL_CTX_check_private_key(ssl_ctx))
@@ -372,7 +372,7 @@ static SSL *openSSLHandle(int sock, char *hostname, char **p_cert) {
       }
     }
     if (ssl_verify_server) {
-      char *file = NULL, *path = NULL;
+      const char *file = NULL, *path = NULL;
       if (ssl_ca_file && *ssl_ca_file != '\0')
         file = ssl_ca_file;
       if (ssl_ca_path && *ssl_ca_path != '\0')
@@ -410,12 +410,9 @@ eend:
   close(sock);
   if (handle)
     SSL_free(handle);
-  /* FIXME: gettextize? */
-  disp_err_message(
-      Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
-              ERR_error_string(ERR_get_error(), NULL))
-          ->ptr,
-      false);
+  message_push(Sprintf("SSL error: %s, a workaround might be: w3m -insecure",
+                       ERR_error_string(ERR_get_error(), NULL))
+                   ->ptr);
   return NULL;
 }
 

@@ -1,5 +1,6 @@
 #include "buffer/document.h"
 #include "alloc.h"
+#include "buffer/message.h"
 #include "file/tmpfile.h"
 #include "term/terms.h"
 #include "term/termsize.h"
@@ -130,17 +131,15 @@ void gotoLine(struct Document *doc, int n) {
   if (l == NULL)
     return;
   if (l->linenumber > n) {
-    /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->linenumber);
-    set_delayed_message(msg);
+    message_push(msg);
     doc->topLine = doc->currentLine = l;
     return;
   }
   if (doc->lastLine->linenumber < n) {
     l = doc->lastLine;
-    /* FIXME: gettextize? */
     sprintf(msg, "Last line is #%ld", doc->lastLine->linenumber);
-    set_delayed_message(msg);
+    message_push(msg);
     doc->currentLine = l;
     doc->topLine = lineSkip(&doc->viewport, doc->currentLine, doc->lastLine,
                             -(doc->viewport.LINES - 1), false);
@@ -591,18 +590,16 @@ void gotoRealLine(struct Document *doc, int n) {
 
   char msg[32];
   if (l->real_linenumber > n) {
-    /* FIXME: gettextize? */
     sprintf(msg, "First line is #%ld", l->real_linenumber);
-    set_delayed_message(msg);
+    message_push(msg);
     doc->topLine = doc->currentLine = l;
     return;
   }
 
   if (doc->lastLine->real_linenumber < n) {
     l = doc->lastLine;
-    /* FIXME: gettextize? */
     sprintf(msg, "Last line is #%ld", doc->lastLine->real_linenumber);
-    set_delayed_message(msg);
+    message_push(msg);
     doc->currentLine = l;
     doc->topLine = lineSkip(&doc->viewport, doc->currentLine, doc->lastLine,
                             -(doc->viewport.LINES - 1), false);

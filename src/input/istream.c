@@ -1,5 +1,6 @@
 #include "input/istream.h"
 #include "alloc.h"
+#include "buffer/message.h"
 #include "fm.h"
 #include "input/growbuf.h"
 #include "input/istream.h"
@@ -407,7 +408,8 @@ int ISread_n(union input_stream *stream, char *dst, int count) {
 
   auto len = buffer_read(&base->stream, dst, count);
   if (MUST_BE_UPDATED(base)) {
-    auto l = (*base->read)(base->handle, (unsigned char*)&dst[len], count - len);
+    auto l =
+        (*base->read)(base->handle, (unsigned char *)&dst[len], count - len);
     if (l <= 0) {
       base->iseos = true;
     } else {
@@ -502,7 +504,6 @@ static Str ssl_check_cert_ident(X509 *x, char *hostname) {
     if (alt) {
       int n;
       GENERAL_NAME *gn;
-      X509V3_EXT_METHOD *method;
       Str seen_dnsname = NULL;
 
       n = sk_GENERAL_NAME_num(alt);
@@ -543,7 +544,8 @@ static Str ssl_check_cert_ident(X509 *x, char *hostname) {
             break;
         }
       }
-      method = X509V3_EXT_get(ex);
+
+      auto method = X509V3_EXT_get(ex);
       sk_GENERAL_NAME_free(alt);
       if (i < n) /* Found a match */
         match_ident = true;
@@ -592,12 +594,12 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
   char buf[2048];
   Str amsg = NULL;
   Str emsg;
-  char *ans;
 
   if (ssl == NULL)
     return NULL;
   x = SSL_get_peer_certificate(ssl);
   if (x == NULL) {
+    const char *ans;
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
@@ -612,12 +614,12 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
       /* FIXME: gettextize? */
       char *e = "This SSL session was rejected "
                 "to prevent security violation: no peer certificate";
-      disp_err_message(e, false);
+      message_push(e);
       free_ssl_ctx();
       return NULL;
     }
     if (amsg)
-      disp_err_message(amsg->ptr, false);
+      message_push(amsg->ptr);
     ssl_accept_this_site(hostname);
     /* FIXME: gettextize? */
     s = amsg ? amsg : Strnew_charp("valid certificate");
@@ -631,6 +633,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
     long verr;
     if ((verr = SSL_get_verify_result(ssl)) != X509_V_OK) {
       const char *em = X509_verify_cert_error_string(verr);
+      const char *ans;
       if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
         ans = "y";
       else {
@@ -646,7 +649,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
       } else {
         /* FIXME: gettextize? */
         char *e = Sprintf("This SSL session was rejected: %s", em)->ptr;
-        disp_err_message(e, false);
+        message_push(e);
         free_ssl_ctx();
         return NULL;
       }
@@ -654,6 +657,7 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
   }
   emsg = ssl_check_cert_ident(x, hostname);
   if (emsg != NULL) {
+    const char *ans;
     if (accept_this_site && strcasecmp(accept_this_site->ptr, hostname) == 0)
       ans = "y";
     else {
@@ -671,13 +675,14 @@ Str ssl_get_certificate(SSL *ssl, char *hostname) {
       /* FIXME: gettextize? */
       char *e = "This SSL session was rejected "
                 "to prevent security violation";
-      disp_err_message(e, false);
+      message_push(e);
       free_ssl_ctx();
       return NULL;
     }
   }
-  if (amsg)
-    disp_err_message(amsg->ptr, false);
+  if (amsg) {
+    message_push(amsg->ptr);
+  }
   ssl_accept_this_site(hostname);
   /* FIXME: gettextize? */
   s = amsg ? amsg : Strnew_charp("valid certificate");

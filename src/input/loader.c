@@ -2,6 +2,7 @@
 #include "alloc.h"
 #include "buffer/buffer.h"
 #include "buffer/document.h"
+#include "buffer/message.h"
 #include "core.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
@@ -55,7 +56,7 @@ static int checkRedirection(struct Url *pu) {
     /* FIXME: gettextize? */
     tmp = Sprintf("Number of redirections exceeded %d at %s", FollowRedirection,
                   parsedURL2Str(pu)->ptr);
-    disp_err_message(tmp->ptr, false);
+    message_push(tmp->ptr);
     return false;
   } else if (nredir_size > 0 &&
              (same_url_p(pu, &puv[(nredir - 1) % nredir_size]) ||
@@ -63,7 +64,7 @@ static int checkRedirection(struct Url *pu) {
                same_url_p(pu, &puv[(nredir / 2) % nredir_size])))) {
     /* FIXME: gettextize? */
     tmp = Sprintf("Redirection loop detected (%s)", parsedURL2Str(pu)->ptr);
-    disp_err_message(tmp->ptr, false);
+    message_push(tmp->ptr);
     return false;
   }
   if (!puv) {
@@ -287,9 +288,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
       t = "ftp:directory";
       break;
     case SCM_UNKNOWN:
-      /* FIXME: gettextize? */
-      disp_err_message(Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr,
-                       false);
+      message_push(Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
       break;
 
     default:

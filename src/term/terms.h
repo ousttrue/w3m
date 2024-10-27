@@ -32,13 +32,3 @@ void term_showProgress(int64_t *linelen, int64_t *trbyte,
 #ifndef _WIN32
 bool term_inputAuth(const char *realm, bool proxy, Str *uname, Str *pwd);
 #endif
-
-void term_err_message(const char *s);
-const char *term_message_to_html();
-void disp_err_message(const char *s, int redraw_current);
-void disp_message_nsec(const char *s, int redraw_current, int sec, int purge,
-                       int mouse);
-void disp_message(const char *s, int redraw_current);
-#define disp_message_nomouse disp_message
-void set_delayed_message(const char *s);
-void term_show_delayed_message();

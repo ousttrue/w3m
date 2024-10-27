@@ -2,6 +2,7 @@
 #include "buffer/buffer.h"
 #include "buffer/display.h"
 #include "buffer/document.h"
+#include "buffer/message.h"
 #include "buffer/tabbuffer.h"
 #include "defun.h"
 #include "history.h"
@@ -207,11 +208,11 @@ static void disp_srchresult(int result, const char *prompt, const char *str) {
   if (str == NULL)
     str = "";
   if (result & SR_NOTFOUND)
-    disp_message(Sprintf("Not found: %s", str)->ptr, true);
+    message_push(Sprintf("Not found: %s", str)->ptr);
   else if (result & SR_WRAPPED)
-    disp_message(Sprintf("Search wrapped: %s", str)->ptr, true);
+    message_push(Sprintf("Search wrapped: %s", str)->ptr);
   else if (show_srch_str)
-    disp_message(Sprintf("%s%s", prompt, str)->ptr, true);
+    message_push(Sprintf("%s%s", prompt, str)->ptr);
 }
 
 static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
@@ -318,8 +319,7 @@ void srch_nxtprv(struct Document *doc, bool reverse) {
   static SearchRoutine routine[2] = {forwardSearch, backwardSearch};
 
   if (searchRoutine == NULL) {
-    /* FIXME: gettextize? */
-    disp_message("No previous regular expression", true);
+    message_push("No previous regular expression");
     return;
   }
 

@@ -1,6 +1,7 @@
 #include "input/http_response.h"
 #include "alloc.h"
 #include "buffer/buffer.h"
+#include "buffer/message.h"
 #include "core.h"
 #include "func.h"
 #include "input/http_cookie.h"
@@ -138,11 +139,10 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
       int err;
       if (show_cookie) {
         if (flag & COO_SECURE)
-          disp_message_nsec("Received a secured cookie", false, 1, true, false);
+          message_push("Received a secured cookie");
         else
-          disp_message_nsec(
-              Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr,
-              false, 1, true, false);
+          message_push(
+              Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
       }
       err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
                        version, port, commentURL);
@@ -173,14 +173,15 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
                        ->ptr;
           else
             emsg = "This cookie was rejected to prevent security violation.";
-          term_err_message(emsg);
-          if (show_cookie)
-            disp_message_nsec(emsg, false, 1, true, false);
-        } else if (show_cookie)
-          disp_message_nsec(
+          message_push(emsg);
+          if (show_cookie) {
+            message_push(emsg);
+          }
+        } else if (show_cookie) {
+          message_push(
               Sprintf("Accepting invalid cookie: %s=%s", name->ptr, value->ptr)
-                  ->ptr,
-              false, 1, true, false);
+                  ->ptr);
+        }
       }
     }
   } else if (!strcasecmp(key, "w3m-control") && uf->scheme == SCM_LOCAL_CGI) {

@@ -1,12 +1,13 @@
 #include "history.h"
 #include "alloc.h"
+#include "buffer/message.h"
 #include "file/tmpfile.h"
 #include "fm.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "input/url.h"
 #include "rc.h"
-#include "term/terms.h"
+// #include "term/terms.h"
 
 struct Hist *LoadHist;
 struct Hist *SaveHist;
@@ -70,7 +71,7 @@ void saveHistory(struct Hist *hist, size_t size) {
   auto tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
   if ((f = fopen(tmpf, "w")) == NULL) {
     /* FIXME: gettextize? */
-    disp_err_message("Can't open history", false);
+    message_push("Can't open history");
     return;
   }
   for (item = hist->list->first; item && hist->list->nitem > size;
@@ -80,12 +81,12 @@ void saveHistory(struct Hist *hist, size_t size) {
     fprintf(f, "%s\n", (char *)item->ptr);
   if (fclose(f) == EOF) {
     /* FIXME: gettextize? */
-    disp_err_message("Can't save history", false);
+    message_push("Can't save history");
     return;
   }
   rename_ret = rename(tmpf, rcFile(HISTORY_FILE));
   if (rename_ret != 0) {
-    disp_err_message("Can't save history", false);
+    message_push("Can't save history");
     return;
   }
 }
