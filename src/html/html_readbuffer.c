@@ -3096,7 +3096,7 @@ phase2:
   trap_off();
 
   _tl_lp2 = htmlenv1.buf->first;
-  auto doc = HTMLlineproc2body(cols, currentURL, base, textlist_feed);
+  auto doc = render_to_lines(cols, currentURL, base, textlist_feed);
   doc->topLine = doc->firstLine;
   doc->lastLine = doc->currentLine;
   doc->currentLine = doc->firstLine;
