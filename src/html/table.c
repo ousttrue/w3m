@@ -841,10 +841,11 @@ static double recalc_width(double old, double swidth, int cwidth, double sxx,
   return old;
 }
 
-static int check_compressible_cell(struct table *t, MAT *minv, double *newwidth,
-                                   double *swidth, short *cwidth,
-                                   double totalwidth, double *Sxx, int icol,
-                                   int icell, double sxx, int corr) {
+static int check_compressible_cell(struct table *t, struct matrix *minv,
+                                   double *newwidth, double *swidth,
+                                   short *cwidth, double totalwidth,
+                                   double *Sxx, int icol, int icell, double sxx,
+                                   int corr) {
   struct table_cell *cell = &t->cell;
   int i, j, k, m, bcol, ecol, span;
   double delta, owidth;
@@ -931,7 +932,8 @@ _end:
 }
 
 #define MAX_ITERATION 10
-int check_table_width(struct table *t, double *newwidth, MAT *minv, int itr) {
+int check_table_width(struct table *t, double *newwidth, struct matrix *minv,
+                      int itr) {
   int i, j, k, m, bcol, ecol;
   int corr = 0;
   struct table_cell *cell = &t->cell;
@@ -1295,8 +1297,8 @@ void renderTable(struct table *t, int max_width,
   Str renderbuf;
   short new_tabwidth[MAXCOL] = {0};
   int itr;
-  VEC *newwidth;
-  MAT *mat, *minv;
+  struct vector *newwidth;
+  struct matrix *mat, *minv;
   PERM *pivot;
   int width;
   int rulewidth;
@@ -2801,7 +2803,7 @@ void feed_table1(struct table *tbl, Str tok, struct table_mode *mode,
     return;
   auto tokbuf = Strnew();
   int status = R_ST_NORMAL;
-  const char* line = tok->ptr;
+  const char *line = tok->ptr;
   while (read_token(tokbuf, &line, &status, mode->pre_mode & TBLM_PREMODE, 0))
     feed_table(tbl, tokbuf->ptr, mode, width);
 }

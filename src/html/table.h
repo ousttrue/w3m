@@ -101,8 +101,8 @@ struct table {
   struct TextList *suspended_data;
   /* use for counting skipped spaces */
   struct table_linfo linfo;
-  MAT *matrix;
-  VEC *vector;
+  struct matrix *matrix;
+  struct vector *vector;
   int sloppy_width;
 };
 

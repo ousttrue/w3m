@@ -5,7 +5,6 @@
 #include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
 #include "html/map.h"
-#include "html/table.h"
 #include "input/url_stream.h"
 #include "term/scr.h"
 #include "term/terms.h"
@@ -13,6 +12,7 @@
 #include "text/ctrlcode.h"
 #include "text/symbol.h"
 #include "text/utf8.h"
+#include <math.h>
 
 int enable_inline_image;
 bool displayLink = false;

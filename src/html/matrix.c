@@ -32,9 +32,53 @@
 **
 ***************************************************************************/
 
-#include "config.h"
 #include "matrix.h"
 #include "alloc.h"
+#include "config.h"
+
+/*
+ * Types.
+ */
+
+typedef struct matrix *Matrix;
+typedef struct vector *Vector;
+
+int LUfactor(Matrix, int *);
+Matrix m_inverse(Matrix, Matrix);
+Matrix LUinverse(Matrix, int *, Matrix);
+int LUsolve(Matrix, int *, Vector, Vector);
+int Lsolve(Matrix, Vector, Vector, double);
+int Usolve(Matrix, Vector, Vector, double);
+Matrix new_matrix(int);
+Vector new_vector(int);
+
+/*
+ * Macros.
+ */
+
+#define M_VAL(m, i, j) ((m)->me[(i) * (m)->dim + (j)])
+#define V_VAL(v, i) ((v)->ve[i])
+
+/*
+ * Compatible macros with those in Meschach Library.
+ */
+
+#define m_entry(m, i, j) (M_VAL(m, i, j))
+#define v_entry(v, i) (V_VAL(v, i))
+#define m_copy(m1, m2)                                                         \
+  (memcpy((m2)->me, (m1)->me, (m1)->dim * (m1)->dim * sizeof(double)))
+#define v_free(v) ((v) = NULL)
+#define m_free(m) ((m) = NULL)
+#define px_free(px) ((px) = NULL)
+#define m_set_val(m, i, j, x) (M_VAL(m, i, j) = (x))
+#define m_add_val(m, i, j, x) (M_VAL(m, i, j) += (x))
+#define v_set_val(v, i, x) (V_VAL(v, i) = (x))
+#define v_add_val(v, i, x) (V_VAL(v, i) += (x))
+#define m_get(r, c) (new_matrix(r))
+#define v_get(n) (new_vector(n))
+#define px_get(n) (New_N(int, n))
+typedef int PERM;
+
 
 /*
  * Macros from "fm.h".
