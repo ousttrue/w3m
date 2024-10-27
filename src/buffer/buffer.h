@@ -1,17 +1,19 @@
 #pragma once
+#include "buffer/line.h"
 #include "html/anchor.h"
 #include "html/form.h"
 #include "input/url.h"
 #include "textlist.h"
-#include "buffer/line.h"
 
 /* Link Buffer */
-#define LB_NOLINK -1
-#define LB_INFO 0 /* pginfo() */
-#define LB_N_INFO 1
-#define LB_SOURCE 2 /* vwSrc() */
-#define LB_N_SOURCE LB_SOURCE
-#define MAX_LB 3
+enum LinkBuffer {
+  LB_NOLINK = -1,
+  LB_INFO = 0, /* pginfo() */
+  LB_N_INFO = 1,
+  LB_SOURCE = 2, /* vwSrc() */
+  LB_N_SOURCE = LB_SOURCE,
+  MAX_LB = 3,
+};
 extern int REV_LB[];
 
 enum LINK_TYPE {

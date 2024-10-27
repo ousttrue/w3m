@@ -351,22 +351,4 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   }
 }
 
-/*
- * List of error messages
- */
-struct Document *message_list_panel(int cols) {
-  Str tmp = Strnew_size(LINES * COLS);
-
-  /* FIXME: gettextize? */
-  Strcat_charp(tmp,
-               "<html><head><title>List of error messages</title></head><body>"
-               "<h1>List of error messages</h1><table cellpadding=0>\n");
-
-  Strcat_m_charp(tmp, term_message_to_html());
-
-  Strcat_charp(tmp, "</table></body></html>");
-  struct Url url;
-  return loadHTML(cols, tmp->ptr, url, nullptr, CHARSET_UTF8);
-}
-
 void displayInvalidate() { displayBuffer(Currentbuf, B_NORMAL); }

@@ -5,6 +5,7 @@
 #include "buffer/display.h"
 #include "buffer/document.h"
 #include "buffer/downloadlist.h"
+#include "buffer/message.h"
 #include "buffer/search.h"
 #include "buffer/tabbuffer.h"
 #include "buffer/w3mbookmark.h"
@@ -17,6 +18,7 @@
 #include "funcname1.h"
 #include "history.h"
 #include "html/html_parser.h"
+#include "html/html_readbuffer.h"
 #include "html/html_tag.h"
 #include "html/map.h"
 #include "input/ftp.h"
@@ -1177,7 +1179,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
   if (Currentbuf->document->firstLine == NULL)
     return;
 
-  auto a = retrieveCurrentMap(Currentbuf);
+  auto a = retrieveCurrentMap(Currentbuf->document);
   if (a) {
     _followForm(false);
     return;
@@ -2188,7 +2190,15 @@ static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
 static void cmd_loadDocument(struct Document *doc, int prop, int linkid) {
   auto buf = newBuffer();
   buf->document = doc;
-  return cmd_loadBuffer(buf, prop, linkid);
+  cmd_loadBuffer(buf, prop, linkid);
+}
+
+static void cmd_loadHtml(const char *html, int cols, enum BufferProperty prop,
+                         enum LinkBuffer linkid) {
+  auto buf = newBuffer();
+  struct Url url;
+  buf->document = loadHTML(cols, html, url, nullptr, CHARSET_UTF8);
+  cmd_loadBuffer(buf, prop, linkid);
 }
 
 /* option setting */
@@ -2218,7 +2228,8 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
 
 /* error message list */
 DEFUN(msgs, MSGS, "Display error messages") {
-  cmd_loadDocument(message_list_panel(INIT_BUFFER_WIDTH), BP_NO_URL, LB_NOLINK);
+  auto html = message_list_panel(INIT_BUFFER_WIDTH);
+  cmd_loadHtml(html, INIT_BUFFER_WIDTH, BP_NO_URL, LB_NOLINK);
 }
 
 /* page info */

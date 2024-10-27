@@ -18,6 +18,5 @@ struct Buffer;
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode);
 
 void addChar(char c, Lineprop mode);
-struct Document *message_list_panel(int cols);
 
 void displayInvalidate();
