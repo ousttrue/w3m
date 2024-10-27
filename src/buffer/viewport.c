@@ -9,68 +9,115 @@ bool nextpage_topline = false;
 /*
  * effects
  */
-static int ulmode = 0;
-static int somode = 0;
-static int bomode = 0;
-static int anch_mode = 0;
-static int emph_mode = 0;
-static int imag_mode = 0;
-static int form_mode = 0;
-static int active_mode = 0;
-static int visited_mode = 0;
-static int mark_mode = 0;
-static int graph_mode = 0;
+static bool ulmode = false;
+static bool somode = false;
+static bool bomode = false;
+static bool anch_mode = false;
+static bool emph_mode = false;
+static bool imag_mode = false;
+static bool form_mode = false;
+static bool active_mode = false;
+static bool visited_mode = false;
+static bool mark_mode = false;
+static bool graph_mode = false;
 
-static void do_effect1(Lineprop m, enum CharEffects effect, bool modeflag,
+static void clear_effects() {
+  if (somode) {
+    somode = false;
+    scr_standend();
+  }
+  if (ulmode) {
+    ulmode = false;
+    scr_underlineend();
+  }
+  if (bomode) {
+    bomode = false;
+    scr_boldend();
+  }
+  if (emph_mode) {
+    emph_mode = false;
+    scr_boldend();
+  }
+
+  if (anch_mode) {
+    anch_mode = false;
+    scr_underlineend();
+  }
+  if (imag_mode) {
+    imag_mode = false;
+    scr_standend();
+  }
+  if (form_mode) {
+    form_mode = false;
+    scr_standend();
+  }
+  if (visited_mode) {
+    visited_mode = false;
+  }
+  if (active_mode) {
+    active_mode = false;
+    scr_boldend();
+  }
+  if (mark_mode) {
+    mark_mode = false;
+    scr_standend();
+  }
+  if (graph_mode) {
+    graph_mode = false;
+    scr_graphend();
+  }
+}
+
+static void do_effect1(Lineprop m, enum CharEffects effect, bool *modeflag,
                        void (*action_start)(), void (*action_end)()) {
   if (m & effect) {
-    if (!modeflag) {
+    if (!*modeflag) {
       if (action_start) {
         action_start();
       }
-      modeflag = true;
+      *modeflag = true;
     }
   }
 }
 
-static void do_effect2(Lineprop m, enum CharEffects effect, bool modeflag,
+static void do_effect2(Lineprop m, enum CharEffects effect, bool *modeflag,
                        void (*action_start)(), void (*action_end)()) {
-  if (modeflag) {
+  if (*modeflag) {
     if (action_end) {
       action_end();
     }
-    modeflag = false;
+    *modeflag = false;
   }
 }
 
 static void do_effects(Lineprop m) {
   /* effect end */
-  do_effect2(m, PE_UNDER, ulmode, scr_underline, scr_underlineend);
-  do_effect2(m, PE_STAND, somode, scr_standout, scr_standend);
-  do_effect2(m, PE_BOLD, bomode, scr_bold, scr_boldend);
-  do_effect2(m, PE_EMPH, emph_mode, scr_bold, scr_boldend);
-  do_effect2(m, PE_ANCHOR, anch_mode, scr_underline, scr_underlineend);
-  do_effect2(m, PE_IMAGE, imag_mode, scr_standout, scr_standend);
-  do_effect2(m, PE_FORM, form_mode, scr_standout, scr_standend);
-  do_effect2(m, PE_VISITED, visited_mode, nullptr, nullptr);
-  do_effect2(m, PE_ACTIVE, active_mode, scr_bold, scr_boldend);
-  do_effect2(m, PE_MARK, mark_mode, scr_standout, scr_standend);
+  do_effect2(m, PE_UNDER, &ulmode, scr_underline, scr_underlineend);
+  do_effect2(m, PE_STAND, &somode, scr_standout, scr_standend);
+  do_effect2(m, PE_BOLD, &bomode, scr_bold, scr_boldend);
+  do_effect2(m, PE_EMPH, &emph_mode, scr_bold, scr_boldend);
+  do_effect2(m, PE_ANCHOR, &anch_mode, scr_underline, scr_underlineend);
+  do_effect2(m, PE_IMAGE, &imag_mode, scr_standout, scr_standend);
+  do_effect2(m, PE_FORM, &form_mode, scr_standout, scr_standend);
+  do_effect2(m, PE_VISITED, &visited_mode, nullptr, nullptr);
+  do_effect2(m, PE_ACTIVE, &active_mode, scr_bold, scr_boldend);
+  do_effect2(m, PE_MARK, &mark_mode, scr_standout, scr_standend);
   if (graph_mode) {
     scr_graphend();
     graph_mode = false;
   }
 
   /* effect start */
-  do_effect1(m, PE_UNDER, ulmode, scr_underline, scr_underlineend);
-  do_effect1(m, PE_STAND, somode, scr_standout, scr_standend);
-  do_effect1(m, PE_BOLD, bomode, scr_bold, scr_boldend);
-  do_effect1(m, PE_EMPH, emph_mode, scr_bold, scr_boldend);
-  do_effect1(m, PE_ANCHOR, anch_mode, scr_underline, scr_underlineend);
-  do_effect1(m, PE_IMAGE, imag_mode, scr_standout, scr_standend);
-  do_effect1(m, PE_FORM, form_mode, scr_standout, scr_standend);
-  do_effect1(m, PE_VISITED, visited_mode, nullptr, nullptr);
-  do_effect1(m, PE_ACTIVE, active_mode, scr_bold, scr_boldend);
-  do_effect1(m, PE_MARK, mark_mode, scr_standout, scr_standend);
+  do_effect1(m, PE_UNDER, &ulmode, scr_underline, scr_underlineend);
+  do_effect1(m, PE_STAND, &somode, scr_standout, scr_standend);
+  do_effect1(m, PE_BOLD, &bomode, scr_bold, scr_boldend);
+  do_effect1(m, PE_EMPH, &emph_mode, scr_bold, scr_boldend);
+  do_effect1(m, PE_ANCHOR, &anch_mode, scr_underline, scr_underlineend);
+  do_effect1(m, PE_IMAGE, &imag_mode, scr_standout, scr_standend);
+  do_effect1(m, PE_FORM, &form_mode, scr_standout, scr_standend);
+  do_effect1(m, PE_VISITED, &visited_mode, nullptr, nullptr);
+  do_effect1(m, PE_ACTIVE, &active_mode, scr_bold, scr_boldend);
+  do_effect1(m, PE_MARK, &mark_mode, scr_standout, scr_standend);
 }
 
 struct Line *lineSkip(struct Viewport *viewport, struct Line *line,
@@ -90,6 +137,7 @@ void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
 
   if (mode & PC_WCHAR2)
     return;
+
   do_effects(m);
   if (mode & PC_SYMBOL) {
     char **symbol;
@@ -105,7 +153,7 @@ void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
     //   //   addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
     //   // else
     //   scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    // } else 
+    // } else
     {
       symbol = get_symbol();
       scr_addstr(symbol[(unsigned char)c % N_SYMBOL]);
@@ -154,15 +202,11 @@ struct Line *render_line(struct Line *l, const struct Viewport *viewport,
     return l;
   }
 
-  // char *p;
-  // Lineprop *pr;
-
   /* need_clrtoeol(); */
   int pos = columnPos(l, column);
   auto p = &(l->lineBuf[pos]);
   auto pr = &(l->propBuf[pos]);
   int rcol = COLPOS(l, pos);
-
   int delta = 1;
   for (int j = 0; rcol - column < viewport->COLS && pos + j < l->len;
        j += delta) {
@@ -183,135 +227,47 @@ struct Line *render_line(struct Line *l, const struct Viewport *viewport,
     }
     rcol = ncol;
   }
-  if (somode) {
-    somode = false;
-    scr_standend();
-  }
-  if (ulmode) {
-    ulmode = false;
-    scr_underlineend();
-  }
-  if (bomode) {
-    bomode = false;
-    scr_boldend();
-  }
-  if (emph_mode) {
-    emph_mode = false;
-    scr_boldend();
-  }
-
-  if (anch_mode) {
-    anch_mode = false;
-    scr_underlineend();
-  }
-  if (imag_mode) {
-    imag_mode = false;
-    scr_standend();
-  }
-  if (form_mode) {
-    form_mode = false;
-    scr_standend();
-  }
-  if (visited_mode) {
-    visited_mode = false;
-  }
-  if (active_mode) {
-    active_mode = false;
-    scr_boldend();
-  }
-  if (mark_mode) {
-    mark_mode = false;
-    scr_standend();
-  }
-  if (graph_mode) {
-    graph_mode = false;
-    scr_graphend();
-  }
+  clear_effects();
   if (rcol - column < viewport->COLS)
     scr_clrtoeolx();
   return l;
 }
 
 void render_line_region(struct Viewport *viewport, struct Line *l, int i,
-                             int bpos, int epos) {
+                        int bpos, int epos) {
   if (l == NULL)
     return;
 
-  int j, pos, rcol, ncol, delta = 1;
   int column = viewport->currentColumn;
-  char *p;
-  Lineprop *pr;
-  int bcol, ecol;
-
-  pos = columnPos(l, column);
-  p = &(l->lineBuf[pos]);
-  pr = &(l->propBuf[pos]);
-  rcol = COLPOS(l, pos);
-  bcol = bpos - pos;
-  ecol = epos - pos;
-
-  for (j = 0; rcol - column < viewport->COLS && pos + j < l->len; j += delta) {
-    ncol = COLPOS(l, pos + j + delta);
+  int pos = columnPos(l, column);
+  auto p = &(l->lineBuf[pos]);
+  auto pr = &(l->propBuf[pos]);
+  int rcol = COLPOS(l, pos);
+  int delta = 1;
+  int bcol = bpos - pos;
+  int ecol = epos - pos;
+  for (int j = 0; rcol - column < viewport->COLS && pos + j < l->len;
+       j += delta) {
+    delta = utf8sequence_len((const uint8_t *)&p[j]);
+    int ncol = COLPOS(l, pos + j + delta);
     if (ncol - column > viewport->COLS)
       break;
     if (j >= bcol && j < ecol) {
       if (rcol < column) {
-        scr_move(i, viewport->rootX);
+        // scr_move(i, viewport->rootX);
         for (rcol = column; rcol < ncol; rcol++)
           addChar(' ', 0);
         continue;
       }
-      scr_move(i, rcol - column + viewport->rootX);
+      // scr_move(i, rcol - column + viewport->rootX);
       if (p[j] == '\t') {
         for (; rcol < ncol; rcol++)
           addChar(' ', 0);
-      } else
-        addChar(p[j], pr[j]);
+      } else {
+        addMChar((const uint8_t *)&p[j], pr[j], delta);
+      }
     }
     rcol = ncol;
   }
-  if (somode) {
-    somode = false;
-    scr_standend();
-  }
-  if (ulmode) {
-    ulmode = false;
-    scr_underlineend();
-  }
-  if (bomode) {
-    bomode = false;
-    scr_boldend();
-  }
-  if (emph_mode) {
-    emph_mode = false;
-    scr_boldend();
-  }
-
-  if (anch_mode) {
-    anch_mode = false;
-    scr_underlineend();
-  }
-  if (imag_mode) {
-    imag_mode = false;
-    scr_standend();
-  }
-  if (form_mode) {
-    form_mode = false;
-    scr_standend();
-  }
-  if (visited_mode) {
-    visited_mode = false;
-  }
-  if (active_mode) {
-    active_mode = false;
-    scr_boldend();
-  }
-  if (mark_mode) {
-    mark_mode = false;
-    scr_standend();
-  }
-  if (graph_mode) {
-    graph_mode = false;
-    scr_graphend();
-  }
+  clear_effects();
 }

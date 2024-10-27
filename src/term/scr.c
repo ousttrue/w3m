@@ -321,6 +321,11 @@ void scr_addnstr_sup(const char *s, int n) {
   }
 }
 
+void scr_toggle_stand(void) {
+  l_prop *pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
+  pr[g_scr.CurColumn] ^= SCREEN_STANDOUT;
+}
+
 void scr_standout(void) {
   //
   // CurrentMode |= SCREEN_STANDOUT;
@@ -328,12 +333,7 @@ void scr_standout(void) {
 
 void scr_standend(void) {
   //
-  CurrentMode &= ~SCREEN_STANDOUT;
-}
-
-void scr_toggle_stand(void) {
-  l_prop *pr = g_scr.ScreenImage[g_scr.CurLine]->lineprop;
-  pr[g_scr.CurColumn] ^= SCREEN_STANDOUT;
+  // CurrentMode &= ~SCREEN_STANDOUT;
 }
 
 void scr_bold(void) {
@@ -358,12 +358,12 @@ void scr_underlineend(void) {
 
 void scr_graphstart(void) {
   //
-  CurrentMode |= SCREEN_GRAPHICS;
+  // CurrentMode |= SCREEN_GRAPHICS;
 }
 
 void scr_graphend(void) {
   //
-  CurrentMode &= ~SCREEN_GRAPHICS;
+  // CurrentMode &= ~SCREEN_GRAPHICS;
 }
 
 void scr_message(const char *s, int return_x, int return_y) {

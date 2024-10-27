@@ -115,10 +115,10 @@ static Str make_lastline_message(struct Buffer *buf) {
   return msg;
 }
 
-static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
+static void drawAnchorCursor0(struct Document *doc, struct AnchorList *al,
                               int hseq, int prevhseq, int tline, int eline,
                               int active) {
-  auto l = buf->document->topLine;
+  auto l = doc->topLine;
   for (int j = 0; j < al->nanchor; j++) {
     auto an = &al->anchors[j];
     if (an->start.line < tline)
@@ -132,6 +132,7 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
         break;
     }
     if (hseq >= 0 && an->hseq == hseq) {
+      // clear
       int start_pos = an->start.pos;
       int end_pos = an->end.pos;
       for (int i = an->start.pos; i < an->end.pos; i++) {
@@ -149,52 +150,47 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
         }
       }
       if (active && start_pos < end_pos)
-        render_line_region(&buf->document->viewport, l,
-                           l->linenumber - tline +
-                               buf->document->viewport.rootY,
+        render_line_region(&doc->viewport, l,
+                           l->linenumber - tline + doc->viewport.rootY,
                            start_pos, end_pos);
     } else if (prevhseq >= 0 && an->hseq == prevhseq) {
       if (active)
-        render_line_region(&buf->document->viewport, l,
-                           l->linenumber - tline +
-                               buf->document->viewport.rootY,
+        // highlight
+        render_line_region(&doc->viewport, l,
+                           l->linenumber - tline + doc->viewport.rootY,
                            an->start.pos, an->end.pos);
     }
   }
 }
 
-static void drawAnchorCursor(struct Buffer *buf) {
-  struct Anchor *an;
-  int hseq, prevhseq;
-  int tline, eline;
-
-  if (!buf->document->firstLine || !buf->document->hmarklist)
+static void drawAnchorCursor(struct Document *doc) {
+  if (!doc->firstLine || !doc->hmarklist)
     return;
-  if (!buf->document->href && !buf->document->formitem)
+  if (!doc->href && !doc->formitem)
     return;
 
-  an = retrieveCurrentAnchor(buf->document);
+  auto an = retrieveCurrentAnchor(doc);
   if (!an)
-    an = retrieveCurrentMap(buf);
+    an = retrieveCurrentMap(doc);
+
+  int hseq;
   if (an)
     hseq = an->hseq;
   else
     hseq = -1;
-  tline = buf->document->topLine->linenumber;
-  eline = tline + buf->document->viewport.LINES;
-  prevhseq = buf->document->hmarklist->prevhseq;
 
-  if (buf->document->href) {
-    drawAnchorCursor0(buf, buf->document->href, hseq, prevhseq, tline, eline,
-                      1);
-    drawAnchorCursor0(buf, buf->document->href, hseq, -1, tline, eline, 0);
-  }
-  if (buf->document->formitem) {
-    drawAnchorCursor0(buf, buf->document->formitem, hseq, prevhseq, tline,
-                      eline, 1);
-    drawAnchorCursor0(buf, buf->document->formitem, hseq, -1, tline, eline, 0);
-  }
-  buf->document->hmarklist->prevhseq = hseq;
+  auto tline = doc->topLine->linenumber;
+  auto eline = tline + doc->viewport.LINES;
+  auto prevhseq = doc->hmarklist->prevhseq;
+  // if (doc->href) {
+  //   drawAnchorCursor0(doc, doc->href, hseq, prevhseq, tline, eline, 1);
+  //   drawAnchorCursor0(doc, doc->href, hseq, -1, tline, eline, 0);
+  // }
+  // if (doc->formitem) {
+  //   drawAnchorCursor0(doc, doc->formitem, hseq, prevhseq, tline, eline, 1);
+  //   drawAnchorCursor0(doc, doc->formitem, hseq, -1, tline, eline, 0);
+  // }
+  doc->hmarklist->prevhseq = hseq;
 }
 
 static void render_document(struct Document *doc) {
@@ -327,7 +323,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
     buf->document->topLine = buf->document->firstLine;
   }
 
-  drawAnchorCursor(buf);
+  drawAnchorCursor(buf->document);
 
   // message
   auto msg = make_lastline_message(buf);
