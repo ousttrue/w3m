@@ -27,3 +27,7 @@ struct Viewport {
 
 struct Line *lineSkip(struct Viewport *doc, struct Line *line,
                       struct Line *lastLine, int offset, int last);
+struct Line *render_line(struct Line *l, const struct Viewport *viewport,
+                         int row);
+void render_line_region(struct Viewport *viewport, struct Line *l, int i,
+                        int bpos, int epos);

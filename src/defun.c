@@ -211,13 +211,11 @@ DEFUN(multimap, MULTIMAP, "multimap") {
 static Str currentURL(void);
 
 void saveBufferInfo() {
-  FILE *fp;
-
-  if ((fp = fopen(rcFile("bufinfo"), "w")) == NULL) {
-    return;
+  FILE *fp = fopen(rcFile("bufinfo"), "w");
+  if (fp) {
+    fprintf(fp, "%s\n", currentURL()->ptr);
+    fclose(fp);
   }
-  fprintf(fp, "%s\n", currentURL()->ptr);
-  fclose(fp);
 }
 
 static void pushBuffer(struct Buffer *buf) {

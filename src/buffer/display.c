@@ -10,7 +10,6 @@
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
-#include "text/symbol.h"
 #include "text/utf8.h"
 #include <math.h>
 
@@ -21,73 +20,6 @@ bool displayLineInfo = false;
 static struct Line *cline = nullptr;
 static int ccolumn = -1;
 static struct Buffer *save_current_buf = nullptr;
-
-/*
- * effects
- */
-static int ulmode = 0;
-static int somode = 0;
-static int bomode = 0;
-static int anch_mode = 0;
-static int emph_mode = 0;
-static int imag_mode = 0;
-static int form_mode = 0;
-static int active_mode = 0;
-static int visited_mode = 0;
-static int mark_mode = 0;
-static int graph_mode = 0;
-
-static void do_effect1(Lineprop m, enum CharEffects effect, bool modeflag,
-                void (*action_start)(), void (*action_end)()) {
-  if (m & effect) {
-    if (!modeflag) {
-      if (action_start) {
-        action_start();
-      }
-      modeflag = true;
-    }
-  }
-}
-
-static void do_effect2(Lineprop m, enum CharEffects effect, bool modeflag,
-                void (*action_start)(), void (*action_end)()) {
-  if (modeflag) {
-    if (action_end) {
-      action_end();
-    }
-    modeflag = false;
-  }
-}
-
-static void do_effects(Lineprop m) {
-  /* effect end */
-  do_effect2(m, PE_UNDER, ulmode, scr_underline, scr_underlineend);
-  do_effect2(m, PE_STAND, somode, scr_standout, scr_standend);
-  do_effect2(m, PE_BOLD, bomode, scr_bold, scr_boldend);
-  do_effect2(m, PE_EMPH, emph_mode, scr_bold, scr_boldend);
-  do_effect2(m, PE_ANCHOR, anch_mode, scr_underline, scr_underlineend);
-  do_effect2(m, PE_IMAGE, imag_mode, scr_standout, scr_standend);
-  do_effect2(m, PE_FORM, form_mode, scr_standout, scr_standend);
-  do_effect2(m, PE_VISITED, visited_mode, nullptr, nullptr);
-  do_effect2(m, PE_ACTIVE, active_mode, scr_bold, scr_boldend);
-  do_effect2(m, PE_MARK, mark_mode, scr_standout, scr_standend);
-  if (graph_mode) {
-    scr_graphend();
-    graph_mode = false;
-  }
-
-  /* effect start */
-  do_effect1(m, PE_UNDER, ulmode, scr_underline, scr_underlineend);
-  do_effect1(m, PE_STAND, somode, scr_standout, scr_standend);
-  do_effect1(m, PE_BOLD, bomode, scr_bold, scr_boldend);
-  do_effect1(m, PE_EMPH, emph_mode, scr_bold, scr_boldend);
-  do_effect1(m, PE_ANCHOR, anch_mode, scr_underline, scr_underlineend);
-  do_effect1(m, PE_IMAGE, imag_mode, scr_standout, scr_standend);
-  do_effect1(m, PE_FORM, form_mode, scr_standout, scr_standend);
-  do_effect1(m, PE_VISITED, visited_mode, nullptr, nullptr);
-  do_effect1(m, PE_ACTIVE, active_mode, scr_bold, scr_boldend);
-  do_effect1(m, PE_MARK, mark_mode, scr_standout, scr_standend);
-}
 
 static Str make_lastline_link(struct Url *base, const char *title,
                               const char *url) {
@@ -183,96 +115,9 @@ static Str make_lastline_message(struct Buffer *buf) {
   return msg;
 }
 
-static void redrawLineRegion(struct Buffer *buf, struct Line *l, int i, int bpos,
-                            int epos) {
-  if (l == NULL)
-    return;
-
-  int j, pos, rcol, ncol, delta = 1;
-  int column = buf->document->viewport.currentColumn;
-  char *p;
-  Lineprop *pr;
-  int bcol, ecol;
-
-  pos = columnPos(l, column);
-  p = &(l->lineBuf[pos]);
-  pr = &(l->propBuf[pos]);
-  rcol = COLPOS(l, pos);
-  bcol = bpos - pos;
-  ecol = epos - pos;
-
-  for (j = 0; rcol - column < buf->document->viewport.COLS && pos + j < l->len;
-       j += delta) {
-    ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > buf->document->viewport.COLS)
-      break;
-    if (j >= bcol && j < ecol) {
-      if (rcol < column) {
-        scr_move(i, buf->document->viewport.rootX);
-        for (rcol = column; rcol < ncol; rcol++)
-          addChar(' ', 0);
-        continue;
-      }
-      scr_move(i, rcol - column + buf->document->viewport.rootX);
-      if (p[j] == '\t') {
-        for (; rcol < ncol; rcol++)
-          addChar(' ', 0);
-      } else
-        addChar(p[j], pr[j]);
-    }
-    rcol = ncol;
-  }
-  if (somode) {
-    somode = false;
-    scr_standend();
-  }
-  if (ulmode) {
-    ulmode = false;
-    scr_underlineend();
-  }
-  if (bomode) {
-    bomode = false;
-    scr_boldend();
-  }
-  if (emph_mode) {
-    emph_mode = false;
-    scr_boldend();
-  }
-
-  if (anch_mode) {
-    anch_mode = false;
-    scr_underlineend();
-  }
-  if (imag_mode) {
-    imag_mode = false;
-    scr_standend();
-  }
-  if (form_mode) {
-    form_mode = false;
-    scr_standend();
-  }
-  if (visited_mode) {
-    visited_mode = false;
-  }
-  if (active_mode) {
-    active_mode = false;
-    scr_boldend();
-  }
-  if (mark_mode) {
-    mark_mode = false;
-    scr_standend();
-  }
-  if (graph_mode) {
-    graph_mode = false;
-    scr_graphend();
-  }
-}
-
 static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
                               int hseq, int prevhseq, int tline, int eline,
                               int active) {
-  int i;
-
   auto l = buf->document->topLine;
   for (int j = 0; j < al->nanchor; j++) {
     auto an = &al->anchors[j];
@@ -304,14 +149,16 @@ static void drawAnchorCursor0(struct Buffer *buf, struct AnchorList *al,
         }
       }
       if (active && start_pos < end_pos)
-        redrawLineRegion(buf, l,
-                         l->linenumber - tline + buf->document->viewport.rootY,
-                         start_pos, end_pos);
+        render_line_region(&buf->document->viewport, l,
+                           l->linenumber - tline +
+                               buf->document->viewport.rootY,
+                           start_pos, end_pos);
     } else if (prevhseq >= 0 && an->hseq == prevhseq) {
       if (active)
-        redrawLineRegion(buf, l,
-                         l->linenumber - tline + buf->document->viewport.rootY,
-                         an->start.pos, an->end.pos);
+        render_line_region(&buf->document->viewport, l,
+                           l->linenumber - tline +
+                               buf->document->viewport.rootY,
+                           an->start.pos, an->end.pos);
     }
   }
 }
@@ -350,191 +197,17 @@ static void drawAnchorCursor(struct Buffer *buf) {
   buf->document->hmarklist->prevhseq = hseq;
 }
 
-void addMChar(const uint8_t *p, Lineprop mode, size_t len) {
-  Lineprop m = CharEffect(mode);
-  char c = *p;
-
-  if (mode & PC_WCHAR2)
-    return;
-  do_effects(m);
-  if (mode & PC_SYMBOL) {
-    char **symbol;
-    int w = (mode & PC_KANJI) ? 2 : 1;
-
-    // c = ((char)wtf_get_code((wc_uchar *)p) & 0x7f) - SYMBOL_BASE;
-    if (term_graph_ok() && c < N_GRAPH_SYMBOL) {
-      if (!graph_mode) {
-        scr_graphstart();
-        graph_mode = true;
-      }
-      // if (w == 2 && WcOption.use_wide)
-      //   addstr(graph2_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-      // else
-      scr_addch(*graph_symbol[(unsigned char)c % N_GRAPH_SYMBOL]);
-    } else {
-      symbol = get_symbol();
-      scr_addstr(symbol[(unsigned char)c % N_SYMBOL]);
-    }
-  } else if (mode & PC_CTRL) {
-    switch (c) {
-    case '\t':
-      scr_addch(c);
-      break;
-    case '\n':
-      scr_addch(' ');
-      break;
-    case '\r':
-      break;
-    case DEL_CODE:
-      scr_addstr("^?");
-      break;
-    default:
-      scr_addch('^');
-      scr_addch(c + '@');
-      break;
-    }
-  }
-  // else if (mode & PC_UNKNOWN) {
-  //   char buf[5];
-  //   sprintf(buf, "[%.2X]", (unsigned char)wtf_get_code((wc_uchar *)p) |
-  //   0x80); scr_addstr(buf);
-  // }
-  else {
-    scr_addutf8(p);
-  }
-}
-
-void addChar(char c, Lineprop mode) { addMChar((const uint8_t *)&c, mode, 1); }
-
-static struct Line *redrawLine(struct Document *doc, struct Line *l, int i) {
-  int j, pos, rcol, ncol, delta = 1;
-  int column = doc->viewport.currentColumn;
-  char *p;
-  Lineprop *pr;
-
-  if (l == NULL) {
-    return NULL;
-  }
-  scr_move(i, 0);
-  if (showLineNum) {
-    char tmp[16];
-    if (!doc->viewport.rootX) {
-      if (doc->lastLine->real_linenumber > 0)
-        doc->viewport.rootX =
-            (int)(log(doc->lastLine->real_linenumber + 0.1) /
-                  log(10)) +
-            2;
-      if (doc->viewport.rootX < 5)
-        doc->viewport.rootX = 5;
-      if (doc->viewport.rootX > COLS)
-        doc->viewport.rootX = COLS;
-      doc->viewport.COLS = COLS - doc->viewport.rootX;
-    }
-    if (l->real_linenumber && !l->bpos)
-      sprintf(tmp, "%*ld:", doc->viewport.rootX - 1,
-              l->real_linenumber);
-    else
-      sprintf(tmp, "%*s ", doc->viewport.rootX - 1, "");
-    scr_addstr(tmp);
-  }
-  scr_move(i, doc->viewport.rootX);
-  if (l->width < 0)
-    l->width = COLPOS(l, l->len);
-  if (l->len == 0 || l->width - 1 < column) {
-    scr_clrtoeolx();
-    return l;
-  }
-  /* need_clrtoeol(); */
-  pos = columnPos(l, column);
-  p = &(l->lineBuf[pos]);
-  pr = &(l->propBuf[pos]);
-  rcol = COLPOS(l, pos);
-
-  for (j = 0; rcol - column < doc->viewport.COLS && pos + j < l->len;
-       j += delta) {
-    delta = utf8sequence_len((const uint8_t *)&p[j]);
-    ncol = COLPOS(l, pos + j + delta);
-    if (ncol - column > doc->viewport.COLS)
-      break;
-    if (rcol < column) {
-      for (rcol = column; rcol < ncol; rcol++)
-        addChar(' ', 0);
-      continue;
-    }
-    if (p[j] == '\t') {
-      for (; rcol < ncol; rcol++)
-        addChar(' ', 0);
-    } else {
-      addMChar((const uint8_t *)&p[j], pr[j], delta);
-    }
-    rcol = ncol;
-  }
-  if (somode) {
-    somode = false;
-    scr_standend();
-  }
-  if (ulmode) {
-    ulmode = false;
-    scr_underlineend();
-  }
-  if (bomode) {
-    bomode = false;
-    scr_boldend();
-  }
-  if (emph_mode) {
-    emph_mode = false;
-    scr_boldend();
-  }
-
-  if (anch_mode) {
-    anch_mode = false;
-    scr_underlineend();
-  }
-  if (imag_mode) {
-    imag_mode = false;
-    scr_standend();
-  }
-  if (form_mode) {
-    form_mode = false;
-    scr_standend();
-  }
-  if (visited_mode) {
-    visited_mode = false;
-  }
-  if (active_mode) {
-    active_mode = false;
-    scr_boldend();
-  }
-  if (mark_mode) {
-    mark_mode = false;
-    scr_standend();
-  }
-  if (graph_mode) {
-    graph_mode = false;
-    scr_graphend();
-  }
-  if (rcol - column < doc->viewport.COLS)
-    scr_clrtoeolx();
-  return l;
-}
-
-static void redrawNLine(struct Document *doc, int n) {
-  struct Line *l;
-  int i;
-
+static void render_document(struct Document *doc) {
   if (nTab > 1) {
-    struct TabBuffer *t;
-    int l;
-
     scr_move(0, 0);
     scr_clrtoeolx();
-    for (t = FirstTab; t; t = t->nextTab) {
+    for (auto t = FirstTab; t; t = t->nextTab) {
       scr_move(t->y, t->x1);
       if (t == CurrentTab)
         scr_bold();
       scr_addch('[');
-      l = t->x2 - t->x1 - 1 -
-          utf8str_width((const uint8_t *)t->currentBuffer->buffername);
+      int l = t->x2 - t->x1 - 1 -
+              utf8str_width((const uint8_t *)t->currentBuffer->buffername);
       if (l < 0)
         l = 0;
       if (l / 2 > 0)
@@ -552,17 +225,43 @@ static void redrawNLine(struct Document *doc, int n) {
         scr_boldend();
     }
     scr_move(LastTab->y + 1, 0);
-    for (i = 0; i < COLS; i++)
+    for (int i = 0; i < COLS; i++)
       scr_addch('~');
   }
-  for (i = 0, l = doc->topLine; i < doc->viewport.LINES;
-       i++, l = l->next) {
-    if (i >= doc->viewport.LINES - n || i < -n)
-      l = redrawLine(doc, l, i + doc->viewport.rootY);
+
+  struct Line *l = doc->topLine;
+  int i = 0;
+  for (; i < doc->viewport.LINES; i++, l = l->next) {
+    if (i >= doc->viewport.LINES - LASTLINE || i < -LASTLINE) {
+      // l = redrawLine(doc, l, i + doc->viewport.rootY);
+      if (l) {
+        scr_move(i, 0);
+        if (showLineNum) {
+          char tmp[16];
+          if (!doc->viewport.rootX) {
+            if (doc->lastLine->real_linenumber > 0)
+              doc->viewport.rootX =
+                  (int)(log(doc->lastLine->real_linenumber + 0.1) / log(10)) +
+                  2;
+            if (doc->viewport.rootX < 5)
+              doc->viewport.rootX = 5;
+            if (doc->viewport.rootX > COLS)
+              doc->viewport.rootX = COLS;
+            doc->viewport.COLS = COLS - doc->viewport.rootX;
+          }
+          if (l->real_linenumber && !l->bpos)
+            sprintf(tmp, "%*ld:", doc->viewport.rootX - 1, l->real_linenumber);
+          else
+            sprintf(tmp, "%*s ", doc->viewport.rootX - 1, "");
+          scr_addstr(tmp);
+        }
+        l = render_line(l, &doc->viewport, i);
+      }
+    }
     if (l == NULL)
       break;
   }
-  if (n > 0) {
+  if (LASTLINE > 0) {
     scr_move(i + doc->viewport.rootY, 0);
     scr_clrtobotx();
   }
@@ -619,19 +318,20 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
       cline != buf->document->topLine ||
       ccolumn != buf->document->viewport.currentColumn) {
     {
-      redrawNLine(buf->document, LASTLINE);
+      render_document(buf->document);
     }
     cline = buf->document->topLine;
     ccolumn = buf->document->viewport.currentColumn;
   }
-  if (buf->document->topLine == NULL)
+  if (buf->document->topLine == NULL) {
     buf->document->topLine = buf->document->firstLine;
+  }
 
   drawAnchorCursor(buf);
 
+  // message
   auto msg = make_lastline_message(buf);
   if (buf->document->firstLine == NULL) {
-    /* FIXME: gettextize? */
     Strcat_charp(msg, "\tNo Line");
   }
   term_show_delayed_message();
@@ -640,12 +340,15 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
               buf->document->viewport.cursorX + buf->document->viewport.rootX,
               buf->document->viewport.cursorY + buf->document->viewport.rootY);
   scr_standend();
+
   term_title(buf->buffername);
   term_refresh();
+
   if (buf != save_current_buf) {
     saveBufferInfo();
     save_current_buf = buf;
   }
+
   if (mode == B_FORCE_REDRAW && (buf->check_url & CHK_URL)) {
     chkURLBuffer(buf);
     displayBuffer(buf, B_NORMAL);
