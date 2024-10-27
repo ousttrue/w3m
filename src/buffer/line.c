@@ -6,6 +6,12 @@
 int Tabstop = 8;
 int ShowEffect = true;
 
+enum CharTypes CharType(Lineprop c) { return (enum CharTypes)((c)&P_CHARTYPE); }
+enum CharEffects CharEffect(Lineprop c) {
+  return (enum CharEffects)((c) & (P_EFFECT | PC_SYMBOL));
+}
+// void SetCharType(Lineprop *v, enum CharTypes c) { *v = (*v & ~P_CHARTYPE) | c; }
+
 int get_mctype(const uint8_t *c) {
   return (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII);
 }
