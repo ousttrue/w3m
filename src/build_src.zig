@@ -60,6 +60,7 @@ pub const SRCS = [_][]const u8{
     "src/input/http_auth.c",
     "src/input/http_auth_digest.c",
     "src/input/url.c",
+    "src/input/stream_buffer.c",
 
     "src/html/html_renderer.c",
     "src/html/html_textarea.c",

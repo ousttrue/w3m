@@ -101,8 +101,7 @@ static void ftp_close(FTP ftp) {
   if (!ftp->host)
     return;
   if (ftp->rf) {
-    ftp->rf->base.unclose = false;
-    ISclose(ftp->rf);
+    close_for_ftp(ftp->rf);
     ftp->rf = NULL;
   }
   if (ftp->wf) {
@@ -163,14 +162,13 @@ static int ftp_login(FTP ftp) {
       }
     }
   }
-  ftp->rf = newInputStream(sock);
+  ftp->rf = newInputFtp(sock);
   if ((sock_wf = dup(sock)) >= 0)
     ftp->wf = fdopen(sock_wf, "wb");
   else
     goto open_err;
   if (!ftp->rf || !ftp->wf)
     goto open_err;
-  ftp->rf->base.unclose = true;
   ftp_command(ftp, NULL, NULL, &status);
   if (status != 220)
     goto open_err;

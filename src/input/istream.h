@@ -1,6 +1,7 @@
 #pragma once
 #include "input/compression.h"
 #include "input/encoding_type.h"
+#include "input/stream_buffer.h"
 #include "input/url.h"
 #include "text/Str.h"
 #include <stdint.h>
@@ -16,11 +17,6 @@ enum IST_TYPE {
 #endif
 };
 union input_stream;
-
-struct stream_buffer {
-  unsigned char *buf;
-  int size, cur, next;
-};
 
 typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
 typedef void (*CloseFunc)(void *handle);
@@ -90,17 +86,6 @@ struct winsock_stream {
   CloseFunc close;
 };
 #endif
-
-union input_stream {
-  struct base_stream base;
-  struct file_stream file;
-  struct str_stream str;
-  struct ssl_stream ssl;
-  struct encoded_stream ens;
-#ifdef _WIN32
-  struct winsock_stream ws;
-#endif
-};
 
 union input_stream *newInputStream(int des);
 union input_stream *newFileStream(FILE *f, void (*closep)());
@@ -194,3 +179,6 @@ extern void free_ssl_ctx();
 extern void init_stream(struct URLFile *uf, int scheme,
                         union input_stream *stream);
 extern int check_no_proxy(char *domain);
+
+void close_for_ftp(union input_stream *is);
+union input_stream *newInputFtp(int sock);

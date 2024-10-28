@@ -12,9 +12,9 @@
 #include "input/http_cookie.h"
 #include "input/http_request.h"
 #include "input/isocket.h"
-#include "input/istream.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
+#include "input/stream_buffer.h"
 #include "rand48.h"
 #include "rc.h"
 #include "siteconf.h"
@@ -47,6 +47,17 @@
 #include <sys/socket.h>
 #endif
 
+union input_stream {
+  struct base_stream base;
+  struct file_stream file;
+  struct str_stream str;
+  struct ssl_stream ssl;
+  struct encoded_stream ens;
+#ifdef _WIN32
+  struct winsock_stream ws;
+#endif
+};
+
 struct io_file_handle {
   FILE *f;
   CloseFunc close;
@@ -66,7 +77,6 @@ struct ens_handle {
 
 #define uchar unsigned char
 
-#define STREAM_BUF_SIZE 8192
 #define SSL_BUF_SIZE 1536
 
 #define MUST_BE_UPDATED(bs) ((bs)->stream.cur == (bs)->stream.next)
@@ -219,17 +229,6 @@ static void do_update(struct base_stream *base) {
     base->iseos = true;
   else
     base->stream.next += len;
-}
-
-static int buffer_read(struct stream_buffer *sb, char *obuf, int count) {
-  int len = sb->next - sb->cur;
-  if (len > 0) {
-    if (len > count)
-      len = count;
-    memcpy(obuf, (const void *)&sb->buf[sb->cur], len);
-    sb->cur += len;
-  }
-  return len;
 }
 
 static void init_buffer(struct base_stream *base, char *buf, int bufsize) {
@@ -2261,4 +2260,15 @@ void examineFile(const char *path, struct URLFile *uf) {
     uncompress_stream(uf, NULL);
     return;
   }
+}
+
+void close_for_ftp(union input_stream *is) {
+  is->base.unclose = false;
+  ISclose(is);
+}
+
+union input_stream *newInputFtp(int sock) {
+  auto rf = newInputStream(sock);
+  rf->base.unclose = true;
+  return rf;
 }
