@@ -1,4 +1,5 @@
 #pragma once
+#include "input/url.h"
 #include "text/textlist.h"
 
 extern bool use_proxy;
@@ -14,3 +15,5 @@ extern bool NOproxy_netaddr;
 
 void parse_proxy();
 void set_no_proxy(const char *domains);
+int check_no_proxy(const char *domain);
+struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme);

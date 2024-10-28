@@ -11,6 +11,7 @@
 #include "input/http_response.h"
 #include "input/url.h"
 #include <math.h>
+#include <string.h>
 
 struct MapList *searchMapList(struct Document *doc, const char *name) {
   if (name == NULL)

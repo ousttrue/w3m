@@ -16,7 +16,6 @@
 #ifndef GC_STR_H
 #define GC_STR_H
 #include <stdio.h>
-#include <string.h>
 #include <limits.h>
 
 typedef struct _Str {

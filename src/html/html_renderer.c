@@ -14,6 +14,7 @@
 #include "text/myctype.h"
 #include "text/text.h"
 #include "text/utf8.h"
+#include <string.h>
 
 bool MetaRefresh = false;
 int symbol_width;

@@ -4,6 +4,7 @@
 #include "file/tmpfile.h"
 #include "term/terms.h"
 #include "term/termsize.h"
+#include <string.h>
 
 bool showLineNum = false;
 bool FoldLine = false;

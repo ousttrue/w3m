@@ -32,6 +32,7 @@ const char *cleanupName(const char *name);
 
 #ifdef _WIN32
 extern char *strcasestr(const char *s1, const char *s2);
+#define strcasecmp _stricmp
 #else
 extern int strcasecmp(const char *s1, const char *s2);
 extern int strncasecmp(const char *s1, const char *s2, size_t n);

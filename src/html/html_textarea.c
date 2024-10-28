@@ -4,6 +4,7 @@
 #include "html/html_readbuffer.h"
 #include "html/html_tag.h"
 #include "html/html_text.h"
+#include <string.h>
 
 #define MAX_TEXTAREA                                                           \
   10 /* max number of <textarea>..</textarea>                                  \

@@ -3,6 +3,7 @@
 #include "text/Str.h"
 #include "text/myctype.h"
 #include <sys/types.h>
+#include <string.h>
 
 #define MIME_ENCODED_LINE_LIMIT 80
 #define MIME_ENCODED_WORD_LENGTH_OFFSET 18

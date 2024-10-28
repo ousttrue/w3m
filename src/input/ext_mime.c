@@ -5,6 +5,7 @@
 #include "text/text.h"
 #include "text/textlist.h"
 #include <stdio.h>
+#include <string.h>
 
 #define USER_MIMETYPES "~/.mime.types"
 #define SYS_MIMETYPES ETC_DIR "/mime.types"

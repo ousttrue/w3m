@@ -4,6 +4,7 @@
 #include "myctype.h"
 #include "ctrlcode.h"
 #include <math.h>
+#include <string.h>
 
 #define HAVE_STRTOLL 1
 #define HAVE_ATOLL 1

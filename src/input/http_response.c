@@ -14,6 +14,7 @@
 #include "text/myctype.h"
 #include "text/text.h"
 #include <stdint.h>
+#include <string.h>
 
 /* This array should be somewhere else */
 /* FIXME: gettextize? */

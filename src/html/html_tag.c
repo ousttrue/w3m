@@ -1,12 +1,12 @@
 #include "html/html_tag.h"
 #include "alloc.h"
 #include "hash.h"
-#include "html/html_parser.h"
 #include "html/html_text.h"
 #include "html/html_types.h"
 #include "input/url.h"
 #include "text/Str.h"
 #include "text/myctype.h"
+#include <string.h>
 
 /* parse HTML tag */
 

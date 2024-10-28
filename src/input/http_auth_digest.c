@@ -4,6 +4,7 @@
 #include "text/ctrlcode.h"
 #include <openssl/md5.h>
 #include <stdlib.h>
+#include <string.h>
 
 /* RFC2617: 3.2.1 The WWW-Authenticate Response Header
  * challenge        =  "Digest" digest-challenge

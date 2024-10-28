@@ -77,21 +77,16 @@ enum HttpStatus {
   HTST_NORMAL = 0,
   HTST_CONNECT = 1,
 };
-
-struct HttpRequest;
-
-/* flags for loadGeneralFile */
 enum RG_FLAGS {
   RG_NOCACHE = 1,
 };
-
 struct URLOption {
   const char *referer;
   enum RG_FLAGS flag;
 };
-
 struct FormList;
 struct TextList;
+struct HttpRequest;
 extern struct URLFile openURL(const char *url, struct Url *pu,
                               struct Url *current, struct URLOption *option,
                               struct FormList *request,
@@ -99,12 +94,9 @@ extern struct URLFile openURL(const char *url, struct Url *pu,
                               struct URLFile *ouf, struct HttpRequest *hr,
                               enum HttpStatus *status);
 
-struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme);
 extern int save2tmp(struct URLFile uf, char *tmpf);
 extern void free_ssl_ctx();
 extern void init_stream(struct URLFile *uf, int scheme,
                         union input_stream *stream);
-extern int check_no_proxy(char *domain);
-
 void close_for_ftp(union input_stream *is);
 union input_stream *newInputFtp(int sock);

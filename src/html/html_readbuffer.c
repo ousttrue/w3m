@@ -23,6 +23,7 @@
 #include "text/textlist.h"
 #include "text/utf8.h"
 #include "trap_jmp.h"
+#include <string.h>
 
 bool squeezeBlankLine = false;
 int displayInsDel = DISPLAY_INS_DEL_NORMAL;

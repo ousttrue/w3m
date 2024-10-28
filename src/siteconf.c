@@ -1,13 +1,13 @@
 #include "siteconf.h"
 #include "alloc.h"
 #include "core.h"
-#include "file/file.h"
 #include "input/url.h"
 #include "rc.h"
 #include "text/Str.h"
 #include "text/myctype.h"
 #include "text/regex.h"
 #include "text/text.h"
+#include <string.h>
 
 #define SITECONF_FILE RC_DIR "/siteconf"
 const char *siteconf_file = SITECONF_FILE;

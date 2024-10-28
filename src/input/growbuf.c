@@ -1,5 +1,6 @@
 #include "growbuf.h"
 #include "alloc.h"
+#include <string.h>
 
 void growbuf_init(struct growbuf *gb) {
   gb->ptr = NULL;

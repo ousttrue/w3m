@@ -2,6 +2,7 @@
 #include "alloc.h"
 #include "text/myctype.h"
 #include "text/utf8.h"
+#include <string.h>
 
 #define LINELEN 256 /* Initial line length */
 
@@ -86,8 +87,8 @@ int columnPos(struct Line *line, int column) {
   int i = 0;
   int j = 0;
   for (; i < line->len;) {
-    auto len = utf8sequence_len(&line->lineBuf[i]);
-    auto col = utf8sequence_width(&line->lineBuf[i]);
+    auto len = utf8sequence_len((const uint8_t*)&line->lineBuf[i]);
+    auto col = utf8sequence_width((const uint8_t*)&line->lineBuf[i]);
     if (j + col > column) {
       break;
     }

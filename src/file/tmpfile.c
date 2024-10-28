@@ -3,6 +3,7 @@
 #include "buffer/display.h"
 #include "core.h"
 #include <stdlib.h>
+#include <string.h>
 
 static struct TextList *fileToDelete = nullptr;
 void tmpfile_init() { fileToDelete = newTextList(); }
