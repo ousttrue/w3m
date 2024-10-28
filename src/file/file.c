@@ -172,45 +172,6 @@ void saveBufferBody(struct Buffer *buf, FILE *f, int cont) {
   _saveBuffer(buf, l, f, cont);
 }
 
-int save2tmp(struct URLFile uf, char *tmpf) {
-  int check;
-  int64_t linelen = 0, trbyte = 0;
-  int retval = 0;
-  char *buf = NULL;
-
-  auto ff = fopen(tmpf, "wb");
-  if (ff == NULL) {
-    /* fclose(f); */
-    return -1;
-  }
-
-  if (from_jmp()) {
-    goto _end;
-  }
-  trap_on();
-
-  check = 0;
-  {
-    int count;
-
-    buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
-    while ((count = ISread_n(uf.stream, buf, SAVE_BUF_SIZE)) > 0) {
-      if (fwrite(buf, 1, count, ff) != count) {
-        retval = -2;
-        goto _end;
-      }
-      linelen += count;
-      // term_showProgress(&linelen, &trbyte, uf.current_content_length);
-    }
-  }
-
-_end:
-  trap_off();
-  xfree(buf);
-  fclose(ff);
-  return retval;
-}
-
 int checkOverWrite(const char *path) {
   struct stat st;
   if (stat(path, &st) < 0)

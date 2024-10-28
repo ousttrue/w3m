@@ -3053,8 +3053,7 @@ struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
   htmlenv1.buf = newTextLineList();
   cur_baseURL = base;
 
-  struct URLFile f;
-  init_stream(&f, SCM_LOCAL, newStrStream(Strnew_charp(html)));
+  auto stream = newStrStream(Strnew_charp(html));
   if (from_jmp()) {
     HTMLlineproc0("<br>Transfer Interrupted!<br>", &htmlenv1);
     goto phase2;
@@ -3063,7 +3062,7 @@ struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
 
   // if (IStype(f.stream) != IST_ENCODED)
   //   f.stream = newEncodedStream(f.stream, f.encoding);
-  while ((lineBuf2 = StrmyUFgets(&f))->length) {
+  while ((lineBuf2 = StrmyISgets(stream))->length) {
     linelen += lineBuf2->length;
     // term_showProgress(&linelen, &trbyte, f.current_content_length);
     lineBuf2 = convertLine(lineBuf2, HTML_MODE);
@@ -3081,7 +3080,7 @@ struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
   //   newBuf->buffername = htmlenv1.title;
 
 phase2:
-  UFclose(&f);
+  ISclose(stream);
   // newBuf->trbyte = trbyte + linelen;
   trap_off();
 
@@ -3222,8 +3221,7 @@ struct Document *loadText(int cols, const char *text) {
     free(utf8);
   }
 
-  struct URLFile f;
-  init_stream(&f, SCM_LOCAL, newStrStream(Strnew_charp(text)));
+  auto stream = newStrStream(Strnew_charp(text));
 
   auto doc = newDocument(cols);
   int nlines = 0;
@@ -3233,7 +3231,7 @@ struct Document *loadText(int cols, const char *text) {
   //   f.stream = newEncodedStream(f.stream, f.encoding);
   Str lineBuf2;
   char pre_lbuf = '\0';
-  while ((lineBuf2 = StrmyISgets(f.stream))->length) {
+  while ((lineBuf2 = StrmyISgets(stream))->length) {
     // if (src)
     //   Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;

@@ -211,7 +211,6 @@ int main(int argc, char **argv) {
   // char *post_file = NULL;
   // Str err_msg;
 
-  url_stream_init();
   initialize();
 
   // char **load_argv = New_N(char *, argc - 1);

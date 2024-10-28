@@ -337,7 +337,7 @@ static void closeFTPdata(FILE *f) {
 
 void closeFTP(void) { ftp_close(&current_ftp); }
 
-union input_stream *openFTPStream(struct Url *pu, struct URLFile *uf) {
+union input_stream *openFTPStream(struct Url *pu) {
   Str tmp;
   int status;
   char *user = NULL;

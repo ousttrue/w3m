@@ -2,9 +2,6 @@
 #include "text/Str.h"
 #include <stdint.h>
 
-struct Url;
-struct URLFile;
-
 enum ContentType {
   CONTENTTYPE_TextPlane,
   CONTENTTYPE_TextHTml,
@@ -23,7 +20,10 @@ struct HttpResponse {
   int64_t content_length;
 };
 
-struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu);
+union input_stream;
+struct Url;
+struct HttpResponse *httpReadResponse(union input_stream *stream,
+                                      struct Url *pu);
 bool httpMatchattr(const char *p, const char *attr, int len, Str *value);
 const char *httpGetHeader(struct HttpResponse *res, const char *field);
 const char *httpGetContentType(struct HttpResponse *res);

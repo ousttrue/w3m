@@ -25,8 +25,8 @@ const char *violations[COO_EMAX] = {
     "RFC 2109 4.3.2 rule 3",   "RFC 2109 4.3.2 rule 4",
     "RFC XXXX 4.3.2 rule 5"};
 
-void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
-                    const char *key, const char *p, struct Url *pu) {
+static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
+                           const char *key, const char *p, struct Url *pu) {
   if (!strcasecmp(key, "content-type")) {
     // text/html; charset=Shift_JIS
     auto semi = strchr(p, ';');
@@ -47,7 +47,7 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
     }
   } else if (!strcasecmp(key, "content-length")) {
     res->content_length = atoi(p);
-  } 
+  }
   // else if (!strcasecmp(key, "content-transfer-encoding")) {
   //   while (IS_SPACE(*p))
   //     p++;
@@ -60,7 +60,7 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
   //     uf->encoding = ENC_UUENCODE;
   //   else
   //     uf->encoding = ENC_7BIT;
-  // } 
+  // }
   else if (!strcasecmp(key, "content-encoding")) {
     while (IS_SPACE(*p)) {
       p++;
@@ -186,7 +186,7 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
         }
       }
     }
-  } else if (!strcasecmp(key, "w3m-control") && uf->scheme == SCM_LOCAL_CGI) {
+  } else if (!strcasecmp(key, "w3m-control") && pu->scheme == SCM_LOCAL_CGI) {
     Str funcname = Strnew();
     SKIP_BLANKS(p);
     while (*p && !IS_SPACE(*p))
@@ -201,7 +201,8 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
   }
 }
 
-struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu) {
+struct HttpResponse *httpReadResponse(union input_stream *stream,
+                                      struct Url *pu) {
   auto res = New(struct HttpResponse);
   res->content_type = CONTENTTYPE_TextPlane;
   res->content_charset = CHARSET_UTF8;
@@ -210,9 +211,9 @@ struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu) {
   res->http_status_code = -1;
 
   Str line;
-  if (uf->scheme == SCM_HTTP || uf->scheme == SCM_HTTPS) {
+  if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS) {
     // HTTP/1.1 404 Not Found
-    line = StrmyUFgets(uf);
+    line = StrmyISgets(stream);
     auto p = line->ptr;
     // http version
     while (*p && !IS_SPACE(*p))
@@ -229,7 +230,7 @@ struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu) {
 
   Str lineBuf2 = nullptr;
   const char *q;
-  while ((line = StrmyUFgets(uf))->length) {
+  while ((line = StrmyISgets(stream))->length) {
     cleanup_line(line, HEADER_MODE);
     if (line->ptr[0] == '\n' || line->ptr[0] == '\r' || line->ptr[0] == '\0') {
       if (!lineBuf2)
@@ -243,8 +244,8 @@ struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu) {
     } else {
       lineBuf2 = line;
     }
-    char c = UFgetc(uf);
-    UFundogetc(uf);
+    char c = ISgetc(stream);
+    ISundogetc(stream);
     if (c == ' ' || c == '\t') {
       /* header line is continued */
       continue;
@@ -274,7 +275,7 @@ struct HttpResponse *httpReadResponse(struct URLFile *uf, struct Url *pu) {
       auto value = colon + 1;
       SKIP_BLANKS(value);
 
-      httpReadHeader(res, uf, lineBuf2->ptr, value, pu);
+      httpReadHeader(res, stream, lineBuf2->ptr, value, pu);
     }
 
     Strfree(lineBuf2);

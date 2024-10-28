@@ -37,7 +37,7 @@ const char *schemeNumToName(enum URL_SCHEME_TYPE scheme) {
   return NULL;
 }
 
-int getURLScheme(const char **url) {
+enum URL_SCHEME_TYPE getURLScheme(const char **url) {
   const char *p = *url, *q;
   int i;
   int scheme = SCM_MISSING;

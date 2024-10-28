@@ -9,7 +9,7 @@ int _doFileCopy(const char *tmpf, const char *defstr, int download) {
   return -1;
 }
 
-int doFileSave(struct URLFile uf, const char *defstr) {
+int doFileSave(union input_stream *stream, const char *defstr) {
   abort();
   return -1;
 }

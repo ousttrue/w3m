@@ -351,16 +351,14 @@ void reshapeBuffer(struct Buffer *buf) {
   if (buf->sourcefile == NULL)
     return;
 
-  struct URLFile f;
-  init_stream(&f, SCM_LOCAL, NULL);
-  examineFile(buf->sourcefile, &f);
-  if (f.stream == NULL) {
+  auto stream = examineFile(buf->sourcefile);
+  if (stream == NULL) {
     return;
   }
 
   Str html = Strnew();
   Str line;
-  while ((line = StrmyUFgets(&f))->length) {
+  while ((line = StrmyISgets(stream))->length) {
     Strcat(html, line);
   }
 
@@ -387,7 +385,7 @@ void reshapeBuffer(struct Buffer *buf) {
   } else {
     buf->document = loadText(buf->document->viewport.COLS, html->ptr);
   }
-  UFclose(&f);
+  ISclose(stream);
 
   buf->document->height = LASTLINE + 1;
   if (buf->document->firstLine && sbuf.firstLine) {

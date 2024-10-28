@@ -47,7 +47,7 @@ void parseURL(const char *url, struct Url *p_url, struct Url *current);
 void copyParsedURL(struct Url *p, const struct Url *q);
 Str parsedURL2Str(struct Url *pu);
 Str parsedURL2RefererStr(struct Url *pu);
-int getURLScheme(const char **url);
+enum URL_SCHEME_TYPE getURLScheme(const char **url);
 extern int is_localhost(const char *host);
 extern const char *url_unquote_conv0(const char *url);
 extern const char *url_quote(const char *str);

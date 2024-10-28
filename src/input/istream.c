@@ -6,6 +6,7 @@
 #include "file/file.h"
 #include "file/shell.h"
 #include "fm.h"
+#include "input/encoding_type.h"
 #include "input/ftp.h"
 #include "input/growbuf.h"
 #include "input/http_cookie.h"
@@ -840,8 +841,6 @@ static int DefaultPort[] = {
     0,   /* mailto - not defined */
     443, /* https */
 };
-
-static void add_index_file(struct Url *pu, struct URLFile *uf);
 
 /* #define HTTP_DEFAULT_FILE    "/index.html" */
 
@@ -1698,38 +1697,48 @@ static Str HTTPrequest(struct Url *pu, struct Url *current,
   return tmp;
 }
 
-void init_stream(struct URLFile *uf, int scheme, union input_stream *stream) {
-  memset(uf, 0, sizeof(struct URLFile));
-  uf->stream = stream;
-  uf->scheme = scheme;
-  // uf->encoding = ENC_7BIT;
-  // uf->is_cgi = false;
-  // uf->compression = CMP_NOCOMPRESS;
-  // uf->content_encoding = CMP_NOCOMPRESS;
-  // uf->guess_type = NULL;
-  // uf->ext = NULL;
-  // uf->modtime = -1;
+/* add index_file if exists */
+union input_stream *add_index_file(struct Url *pu, union input_stream *stream) {
+  struct TextList *index_file_list = NULL;
+  if (non_null(index_file))
+    index_file_list = make_domain_list(index_file);
+  if (index_file_list == NULL) {
+    return NULL;
+  }
+
+  for (auto ti = index_file_list->first; ti; ti = ti->next) {
+    const char *p =
+        Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
+    p = cleanupName(p);
+    auto q = cleanupName(file_unquote(p));
+    auto index = examineFile(q);
+    if (index != NULL) {
+      pu->file = p;
+      pu->real_file = q;
+      return index;
+    }
+  }
+
+  return stream;
 }
 
-struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
-                       struct URLOption *option, struct FormList *request,
-                       struct TextList *extra_header, struct URLFile *ouf,
-                       struct HttpRequest *hr, enum HttpStatus *status) {
+union input_stream *openURL(const char *url, struct Url *pu,
+                            struct Url *current, struct URLOption *option,
+                            struct FormList *request,
+                            struct TextList *extra_header,
+                            union input_stream *ouf, struct HttpRequest *hr,
+                            enum StreamStatus *status,
+                            enum URL_SCHEME_TYPE *scheme) {
   struct HttpRequest hr0;
   if (!hr) {
     hr = &hr0;
   }
 
-  struct URLFile uf;
-  if (ouf) {
-    uf = *ouf;
-  } else {
-    init_stream(&uf, SCM_MISSING, NULL);
-  }
+  union input_stream *stream = ouf;
 
   auto u = url;
-  auto scheme = getURLScheme(&u);
-  if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL) {
+  *scheme = getURLScheme(&u);
+  if (current == NULL && *scheme == SCM_MISSING && !ArgvIsURL) {
     u = file_to_url(url); /* force to local file */
   } else {
     u = url;
@@ -1749,7 +1758,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
 #ifdef SOCK_DEBUG
       sock_log("given URL must be null string\n");
 #endif
-      return uf;
+      return stream;
     }
   }
 
@@ -1757,8 +1766,8 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
     pu->host = NULL;
   }
 
-  uf.scheme = pu->scheme;
-  uf.url = parsedURL2Str(pu)->ptr;
+  *scheme = pu->scheme;
+  // uf.url = parsedURL2Str(pu)->ptr;
   pu->is_nocache = (option->flag & RG_NOCACHE);
   // uf.ext = filename_extension(pu->file, 1);
 
@@ -1772,26 +1781,26 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
   case SCM_LOCAL_CGI:
     if (request && request->body)
       /* local CGI: POST */
-      uf.stream = newFileStream(
+      stream = newFileStream(
           localcgi_post(pu->real_file, pu->query, request, option->referer),
           (void (*)())fclose);
     else
       /* lodal CGI: GET */
-      uf.stream =
+      stream =
           newFileStream(localcgi_get(pu->real_file, pu->query, option->referer),
                         (void (*)())fclose);
-    if (uf.stream) {
+    if (stream) {
       // uf.is_cgi = true;
-      uf.scheme = pu->scheme = SCM_LOCAL_CGI;
-      return uf;
+      *scheme = pu->scheme = SCM_LOCAL_CGI;
+      return stream;
     }
 
-    examineFile(pu->real_file, &uf);
-    if (uf.stream == NULL) {
+    stream = examineFile(pu->real_file);
+    if (!stream) {
       if (dir_exist(pu->real_file)) {
-        add_index_file(pu, &uf);
-        if (uf.stream == NULL)
-          return uf;
+        add_index_file(pu, stream);
+        if (!stream)
+          return nullptr;
       } else if (document_root != NULL) {
         auto tmp = Strnew_charp(document_root);
         if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
@@ -1802,20 +1811,20 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
         if (dir_exist(q)) {
           pu->file = p;
           pu->real_file = q;
-          add_index_file(pu, &uf);
-          if (uf.stream == NULL) {
-            return uf;
+          stream = add_index_file(pu, stream);
+          if (!stream) {
+            return nullptr;
           }
         } else {
-          examineFile(q, &uf);
-          if (uf.stream) {
+          stream = examineFile(q);
+          if (stream) {
             pu->file = p;
             pu->real_file = q;
           }
         }
       }
     }
-    return uf;
+    return stream;
 
   case SCM_FTP:
   case SCM_FTPDIR:
@@ -1828,20 +1837,20 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
       if (!socketOpen(FTP_proxy_parsed.host,
                       schemeNumToName(FTP_proxy_parsed.scheme),
                       FTP_proxy_parsed.port, &sock)) {
-        return uf;
+        return stream;
       }
 #ifdef _WIN32
       assert(false);
 #else
-      uf.stream = newInputStream(sock);
+      stream = newInputStream(sock);
 #endif
-      uf.scheme = SCM_HTTP;
+      *scheme = SCM_HTTP;
       auto tmp = HTTPrequest(pu, current, hr, extra_header);
       socketWrite(sock, tmp->ptr, tmp->length);
     } else {
-      uf.stream = openFTPStream(pu, &uf);
-      uf.scheme = pu->scheme;
-      return uf;
+      stream = openFTPStream(pu);
+      *scheme = pu->scheme;
+      return stream;
     }
     break;
 
@@ -1862,12 +1871,12 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
                                    : non_null(HTTP_proxy)) &&
         use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
-      if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
-        sock = ssl_socket_of(ouf->stream);
+      if (pu->scheme == SCM_HTTPS && *status == STREAM_CONNECT) {
+        sock = ssl_socket_of(ouf);
         char *ssl_certificate;
         if (!(sslh = openSSLHandle(sock, pu->host, &ssl_certificate))) {
-          *status = HTST_MISSING;
-          return uf;
+          *status = STREAM_MISSING;
+          return nullptr;
         }
       } else if (pu->scheme == SCM_HTTPS) {
         if (!socketOpen(HTTPS_proxy_parsed.host,
@@ -1876,7 +1885,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
 #ifdef SOCK_DEBUG
           sock_log("Can't open socket\n");
 #endif
-          return uf;
+          return nullptr;
         }
         sslh = NULL;
       } else {
@@ -1886,48 +1895,48 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
 #ifdef SOCK_DEBUG
           sock_log("Can't open socket\n");
 #endif
-          return uf;
+          return nullptr;
         }
         sslh = NULL;
       }
       if (pu->scheme == SCM_HTTPS) {
-        if (*status == HTST_NORMAL) {
+        if (*status == STREAM_NORMAL) {
           hr->command = HR_COMMAND_CONNECT;
           tmp = HTTPrequest(pu, current, hr, extra_header);
-          *status = HTST_CONNECT;
+          *status = STREAM_CONNECT;
         } else {
           hr->flag |= HR_FLAG_LOCAL;
           tmp = HTTPrequest(pu, current, hr, extra_header);
-          *status = HTST_NORMAL;
+          *status = STREAM_NORMAL;
         }
       } else {
         tmp = HTTPrequest(pu, current, hr, extra_header);
-        *status = HTST_NORMAL;
+        *status = STREAM_NORMAL;
       }
     } else {
       if (!socketOpen(pu->host, schemeNumToName(pu->scheme), pu->port, &sock)) {
-        *status = HTST_MISSING;
-        return uf;
+        *status = STREAM_MISSING;
+        return nullptr;
       }
       if (pu->scheme == SCM_HTTPS) {
         if (!(sslh = openSSLHandle(sock, pu->host, &ssl_certificate))) {
-          *status = HTST_MISSING;
-          return uf;
+          *status = STREAM_MISSING;
+          return nullptr;
         }
       }
       hr->flag |= HR_FLAG_LOCAL;
       tmp = HTTPrequest(pu, current, hr, extra_header);
-      *status = HTST_NORMAL;
+      *status = STREAM_NORMAL;
     }
 #ifdef _WIN32
-    uf.stream = newWinsockStream(sock);
+    stream = newWinsockStream(sock);
 #else
-    uf.stream = newInputStream(sock);
+    stream = newInputStream(sock);
 #endif
-    ssl_set_certificate(uf.stream, ssl_certificate);
 
     if (pu->scheme == SCM_HTTPS) {
-      uf.stream = newSSLStream(sslh, sock);
+      stream = newSSLStream(sslh, sock);
+      ssl_set_certificate(stream, ssl_certificate);
       if (sslh)
         SSL_write(sslh, tmp->ptr, tmp->length);
       else
@@ -1939,7 +1948,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
         else
           write_from_file(sock, request->body);
       }
-      return uf;
+      return stream;
     } else {
       socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
@@ -1951,11 +1960,11 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
 
   case SCM_DATA: {
     if (pu->file == NULL)
-      return uf;
+      return nullptr;
     auto p = Strnew_charp(pu->file)->ptr;
     auto q = strchr(p, ',');
     if (q == NULL)
-      return uf;
+      return nullptr;
     *q++ = '\0';
     auto tmp = Strnew_charp(q);
     q = strrchr(p, ';');
@@ -1964,40 +1973,15 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
       // uf.encoding = ENC_BASE64;
     } else
       tmp = Str_url_unquote(tmp, false, false);
-    uf.stream = newStrStream(tmp);
+    stream = newStrStream(tmp);
     // uf.guess_type = (*p != '\0') ? p : "text/plain";
-    return uf;
+    return stream;
   }
   case SCM_UNKNOWN:
   default:
-    return uf;
+    return nullptr;
   }
-  return uf;
-}
-
-/* add index_file if exists */
-static void add_index_file(struct Url *pu, struct URLFile *uf) {
-  const char *p, *q;
-  struct TextList *index_file_list = NULL;
-  struct TextListItem *ti;
-
-  if (non_null(index_file))
-    index_file_list = make_domain_list(index_file);
-  if (index_file_list == NULL) {
-    uf->stream = NULL;
-    return;
-  }
-  for (ti = index_file_list->first; ti; ti = ti->next) {
-    p = Strnew_m_charp(pu->file, "/", file_quote(ti->ptr), NULL)->ptr;
-    p = cleanupName(p);
-    q = cleanupName(file_unquote(p));
-    examineFile(q, uf);
-    if (uf->stream != NULL) {
-      pu->file = p;
-      pu->real_file = q;
-      return;
-    }
-  }
+  return nullptr;
 }
 
 struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme) {
@@ -2019,14 +2003,14 @@ struct Url *schemeToProxy(enum URL_SCHEME_TYPE scheme) {
 }
 
 void UFhalfclose(struct URLFile *f) {
-  switch (f->scheme) {
-  case SCM_FTP:
-    closeFTP();
-    break;
-  default:
-    UFclose(f);
-    break;
-  }
+  // switch (f->scheme) {
+  // case SCM_FTP:
+  //   closeFTP();
+  //   break;
+  // default:
+  //   ISclose(f->stream);
+  //   break;
+  // }
 }
 
 static FILE *lessopen_stream(const char *path) {
@@ -2061,15 +2045,15 @@ static FILE *lessopen_stream(const char *path) {
   return fp;
 }
 
-void examineFile(const char *path, struct URLFile *uf) {
+union input_stream *examineFile(const char *path) {
   // uf->guess_type = NULL;
   struct stat stbuf;
   if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 ||
       NOT_REGULAR(stbuf.st_mode)) {
-    uf->stream = NULL;
-    return;
+    return nullptr;
   }
-  uf->stream = openIS(path);
+
+  auto stream = openIS(path);
 
   // if (use_lessopen && getenv("LESSOPEN") != NULL) {
   //   uf->guess_type = guessContentType(path);
@@ -2095,6 +2079,8 @@ void examineFile(const char *path, struct URLFile *uf) {
   //   uncompress_stream(uf, NULL);
   //   return;
   // }
+
+  return stream;
 }
 
 void close_for_ftp(union input_stream *is) {
@@ -2108,12 +2094,49 @@ union input_stream *newInputFtp(int sock) {
   return rf;
 }
 
-Str StrmyUFgets(struct URLFile *f) { return StrmyISgets(f->stream); }
-int UFgetc(struct URLFile *f) { return ISgetc(f->stream); }
-void UFundogetc(struct URLFile *f) { ISundogetc((f)->stream); }
-void UFclose(struct URLFile *f) {
-  if (ISclose((f)->stream) == 0) {
-    (f)->stream = NULL;
+// Str StrmyUFgets(struct URLFile *f) { return StrmyISgets(f->stream); }
+// int UFgetc(struct URLFile *f) { return ISgetc(f->stream); }
+// void UFundogetc(struct URLFile *f) { ISundogetc((f)->stream); }
+// void UFclose(struct URLFile *f) {
+//   if (ISclose((f)->stream) == 0) {
+//     (f)->stream = NULL;
+//   }
+// }
+// int UFfileno(struct URLFile *f) { return ISfileno((f)->stream); }
+
+#define SAVE_BUF_SIZE 1536
+
+int save2tmp(union input_stream *stream, const char *tmpf) {
+  auto ff = fopen(tmpf, "wb");
+  if (ff == NULL) {
+    /* fclose(f); */
+    return -1;
   }
+
+  int retval = 0;
+  char *buf = nullptr;
+  if (from_jmp()) {
+    goto _end;
+  }
+  trap_on();
+
+  {
+    int count;
+
+    buf = NewWithoutGC_N(char, SAVE_BUF_SIZE);
+    while ((count = ISread_n(stream, buf, SAVE_BUF_SIZE)) > 0) {
+      if (fwrite(buf, 1, count, ff) != count) {
+        retval = -2;
+        goto _end;
+      }
+      // linelen += count;
+      // term_showProgress(&linelen, &trbyte, uf.current_content_length);
+    }
+  }
+
+_end:
+  trap_off();
+  xfree(buf);
+  fclose(ff);
+  return retval;
 }
-int UFfileno(struct URLFile *f) { return ISfileno((f)->stream); }

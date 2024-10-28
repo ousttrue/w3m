@@ -19,7 +19,7 @@ Str myEditor(const char *cmd, const char *file, int line);
 void mySystem(char *command, int background);
 int _doFileCopy(const char *tmpf, const char *defstr, int download);
 #define doFileCopy(tmpf, defstr) _doFileCopy(tmpf, defstr, false);
-int doFileSave(struct URLFile uf, const char *defstr);
+int doFileSave(union input_stream *stream, const char *defstr);
 pid_t open_pipe_rw(FILE **fr, FILE **fw);
 const char *expandName(const char *name);
 void sleepSeconds(uint32_t seconds);
