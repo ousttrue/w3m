@@ -2091,3 +2091,13 @@ union input_stream *newInputFtp(int sock) {
   rf->base.unclose = true;
   return rf;
 }
+
+Str StrmyUFgets(struct URLFile *f) { return StrmyISgets(f->stream); }
+int UFgetc(struct URLFile *f) { return ISgetc(f->stream); }
+void UFundogetc(struct URLFile *f) { ISundogetc((f)->stream); }
+void UFclose(struct URLFile *f) {
+  if (ISclose((f)->stream) == 0) {
+    (f)->stream = NULL;
+  }
+}
+int UFfileno(struct URLFile *f) { return ISfileno((f)->stream); }

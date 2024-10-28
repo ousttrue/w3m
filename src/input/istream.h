@@ -5,6 +5,8 @@
 #include "text/Str.h"
 #include <stdint.h>
 
+extern Str header_string;
+
 enum IST_TYPE {
   IST_BASIC = 0,
   IST_FILE = 1,
@@ -33,12 +35,8 @@ int ISfileno(union input_stream *stream);
 int ISeos(union input_stream *stream);
 enum IST_TYPE IStype(union input_stream *stream);
 union input_stream *openIS(const char *path);
-
 void ssl_accept_this_site(const char *hostname);
 int ssl_socket_of(union input_stream *stream);
-
-extern Str header_string;
-
 void url_stream_init();
 
 union input_stream;
@@ -57,16 +55,11 @@ struct URLFile {
   time_t modtime;
 };
 
-#define StrUFgets(f) StrISgets((f)->stream)
-#define StrmyUFgets(f) StrmyISgets((f)->stream)
-#define UFgetc(f) ISgetc((f)->stream)
-#define UFundogetc(f) ISundogetc((f)->stream)
-#define UFclose(f)                                                             \
-  if (ISclose((f)->stream) == 0) {                                             \
-    (f)->stream = NULL;                                                        \
-  }
-#define UFfileno(f) ISfileno((f)->stream)
-
+Str StrmyUFgets(struct URLFile *f);
+int UFgetc(struct URLFile *f);
+void UFundogetc(struct URLFile *f);
+void UFclose(struct URLFile *f);
+int UFfileno(struct URLFile *f);
 void UFhalfclose(struct URLFile *f);
 const char *guessContentType(const char *filename);
 void examineFile(const char *path, struct URLFile *uf);
@@ -87,16 +80,13 @@ struct URLOption {
 struct FormList;
 struct TextList;
 struct HttpRequest;
-extern struct URLFile openURL(const char *url, struct Url *pu,
-                              struct Url *current, struct URLOption *option,
-                              struct FormList *request,
-                              struct TextList *extra_header,
-                              struct URLFile *ouf, struct HttpRequest *hr,
-                              enum HttpStatus *status);
+struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
+                       struct URLOption *option, struct FormList *request,
+                       struct TextList *extra_header, struct URLFile *ouf,
+                       struct HttpRequest *hr, enum HttpStatus *status);
 
-extern int save2tmp(struct URLFile uf, char *tmpf);
-extern void free_ssl_ctx();
-extern void init_stream(struct URLFile *uf, int scheme,
-                        union input_stream *stream);
+int save2tmp(struct URLFile uf, char *tmpf);
+void free_ssl_ctx();
+void init_stream(struct URLFile *uf, int scheme, union input_stream *stream);
 void close_for_ftp(union input_stream *is);
 union input_stream *newInputFtp(int sock);
