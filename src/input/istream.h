@@ -3,7 +3,7 @@
 #include "input/encoding_type.h"
 #include "input/url.h"
 #include "text/Str.h"
-#include <openssl/types.h>
+#include <stdint.h>
 
 enum IST_TYPE {
   IST_BASIC = 0,
@@ -105,13 +105,8 @@ union input_stream {
 union input_stream *newInputStream(int des);
 union input_stream *newFileStream(FILE *f, void (*closep)());
 union input_stream *newStrStream(Str s);
-union input_stream *newSSLStream(SSL *ssl, int sock);
 union input_stream *newEncodedStream(union input_stream *is,
                                      enum ENCODING_TYPE encoding);
-#ifdef _WIN32
-union input_stream *newWinsockStream(uintptr_t sock);
-#endif
-
 int ISclose(union input_stream *stream);
 int ISgetc(union input_stream *stream);
 int ISundogetc(union input_stream *stream);
@@ -125,7 +120,7 @@ int ISread_n(union input_stream *stream, char *dst, int bufsize);
 int ISfileno(union input_stream *stream);
 int ISeos(union input_stream *stream);
 void ssl_accept_this_site(char *hostname);
-Str ssl_get_certificate(SSL *ssl, char *hostname);
+
 enum IST_TYPE IStype(union input_stream *stream);
 int ssl_socket_of(union input_stream *stream);
 union input_stream *openIS(const char *path);
