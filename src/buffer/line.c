@@ -3,6 +3,8 @@
 #include "text/myctype.h"
 #include "text/utf8.h"
 
+#define LINELEN 256 /* Initial line length */
+
 int Tabstop = 8;
 int ShowEffect = true;
 

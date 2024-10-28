@@ -5,8 +5,6 @@
 extern int Tabstop;
 extern int ShowEffect;
 
-#define LINELEN 256 /* Initial line length */
-
 /*
  * Line Property
  */

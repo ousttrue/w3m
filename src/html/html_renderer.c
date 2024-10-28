@@ -119,7 +119,7 @@ void PPUSH(struct LineProcStatus *st, int *pos, Lineprop p, char c) {
 }
 
 int PPUSH_utf8(struct LineProcStatus *st, int *pos, Lineprop prop,
-                const uint8_t **utf8) {
+               const uint8_t **utf8) {
   int len = utf8sequence_len((const uint8_t *)*utf8);
   Lineprop *p = st->outp + *pos;
   uint8_t *c = st->outc + *pos;
@@ -471,8 +471,8 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
       PPUSH(st, &pos, PC_ASCII | st->effect | ex_efct(st->ex_effect), ' ');
       str++;
     } else if (*str != '<' && *str != '&') {
-      if(!PPUSH_utf8(st, &pos, mode | st->effect | ex_efct(st->ex_effect), &str))
-      {
+      if (!PPUSH_utf8(st, &pos, mode | st->effect | ex_efct(st->ex_effect),
+                      &str)) {
         error = true;
         break;
       }
@@ -515,7 +515,7 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
 }
 
 struct Document *render_to_lines(int cols, struct Url currentURL,
-                                 struct Url *base, GetLineFunc feed) {
+                                 struct Url *base, struct TextLineList *lines) {
   static uint8_t *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -524,7 +524,7 @@ struct Document *render_to_lines(int cols, struct Url currentURL,
   memset(&st, 0, sizeof(struct LineProcStatus));
 
   if (!out_size) {
-    out_size = LINELEN;
+    out_size = 1024;
     outc = NewAtom_N(char, out_size);
     outp = NewAtom_N(Lineprop, out_size);
   }
@@ -539,8 +539,8 @@ struct Document *render_to_lines(int cols, struct Url currentURL,
   prerender_textarea();
 
   st.a_textarea = New_N(struct Anchor *, max_textarea);
-  Str line;
-  while ((line = feed()) != NULL) {
+  for (auto item = lines->first; item; item = item->next) {
+    auto line = item->ptr->line;
     if (n_textarea >= 0 && *(line->ptr) != '<') { /* halfload */
       Strcat(textarea_str[n_textarea], line);
       continue;

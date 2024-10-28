@@ -3015,18 +3015,6 @@ void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
   h_env->blank_lines = 0;
 }
 
-static struct TextLineListItem *_tl_lp2;
-
-static Str textlist_feed() {
-  struct TextLine *p;
-  if (_tl_lp2 != NULL) {
-    p = _tl_lp2->ptr;
-    _tl_lp2 = _tl_lp2->next;
-    return p->line;
-  }
-  return NULL;
-}
-
 static union input_stream *_file_lp2;
 
 struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
@@ -3095,8 +3083,7 @@ phase2:
   // newBuf->trbyte = trbyte + linelen;
   trap_off();
 
-  _tl_lp2 = htmlenv1.buf->first;
-  auto doc = render_to_lines(cols, currentURL, base, textlist_feed);
+  auto doc = render_to_lines(cols, currentURL, base, htmlenv1.buf);
   doc->topLine = doc->firstLine;
   doc->lastLine = doc->currentLine;
   doc->currentLine = doc->firstLine;
