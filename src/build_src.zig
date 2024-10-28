@@ -47,6 +47,7 @@ pub const SRCS = [_][]const u8{
     "src/term/terms.c",
     "src/term/termcon_termcap.c",
 
+    "src/input/ext_mime.c",
     "src/input/mimehead.c",
     "src/input/localcgi.c",
     "src/input/loader.c",

@@ -16,8 +16,6 @@
 #define PRE_FORM_FILE RC_DIR "/pre_form"
 #define USER_MAILCAP RC_DIR "/mailcap"
 #define SYS_MAILCAP CONF_DIR "/mailcap"
-#define USER_MIMETYPES "~/.mime.types"
-#define SYS_MIMETYPES ETC_DIR "/mime.types"
 #define USER_URIMETHODMAP RC_DIR "/urimethodmap"
 #define SYS_URIMETHODMAP CONF_DIR "/urimethodmap"
 #define DEF_EDITOR "/usr/bin/vi"
@@ -101,7 +99,6 @@ global int FoldTextarea init(false);
 global int MarkAllPages init(false);
 global struct auth_cookie *Auth_cookie init(nullptr);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
-global char *mimetypes_files init(USER_MIMETYPES ", " SYS_MIMETYPES);
 global int UseHistory init(true);
 global int URLHistSize init(100);
 global int SaveURLHist init(true);

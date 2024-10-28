@@ -130,7 +130,7 @@ void appendTextLine(struct TextLineList *tl, Str line, int pos) {
   }
 }
 
-struct TextList *make_domain_list(char *domain_list) {
+struct TextList *make_domain_list(const char *domain_list) {
   struct TextList *domains = nullptr;
   auto p = domain_list;
   auto tmp = Strnew_size(64);

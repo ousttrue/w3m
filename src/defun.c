@@ -27,6 +27,7 @@
 #include "input/http_response.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
+#include "input/ext_mime.h"
 #include "linein.h"
 #include "os.h"
 #include "proto.h"

@@ -24,6 +24,7 @@
 #include "input/isocket.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
+#include "input/ext_mime.h"
 #include "input/url.h"
 #include "proto.h"
 #include "siteconf.h"

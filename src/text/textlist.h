@@ -48,7 +48,7 @@ const char *popText(struct TextList *tl);
 const char *rpopText(struct TextList *tl);
 void delText(struct TextList *tl, void *i);
 struct TextList *appendTextList(struct TextList *tl, struct TextList *tl2);
-struct TextList *make_domain_list(char *domain_list);
+struct TextList *make_domain_list(const char *domain_list);
 
 /* Line text list */
 

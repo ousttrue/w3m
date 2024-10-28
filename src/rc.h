@@ -25,5 +25,4 @@ struct LocalCgiHtml;
 void panel_set_option(struct LocalCgiHtml *);
 void sync_with_option(void);
 struct Url;
-extern void initMimeTypes();
 const char *rcFile(const char *base);
