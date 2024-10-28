@@ -255,7 +255,7 @@ int next_status(char c, int *status) {
   return 0;
 }
 
-int read_token(Str buf, const char **instr, int *status, int pre, int append) {
+int read_token(Str buf, const char **instr, enum ReadStatus *status, int pre, int append) {
   if (!append)
     Strclear(buf);
   if (**instr == '\0')

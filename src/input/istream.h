@@ -1,5 +1,4 @@
 #pragma once
-#include "input/compression.h"
 #include "input/encoding_type.h"
 #include "input/url.h"
 #include "text/Str.h"
@@ -42,17 +41,17 @@ void url_stream_init();
 union input_stream;
 struct URLFile {
   enum URL_SCHEME_TYPE scheme;
-  char is_cgi;
-  enum ENCODING_TYPE encoding;
+  // char is_cgi;
+  // enum ENCODING_TYPE encoding;
   union input_stream *stream;
-  const char *ext;
-  enum COMPRESSION_TYPE compression;
-  int content_encoding;
-  int64_t current_content_length;
-  const char *guess_type;
+  // const char *ext;
+  // enum COMPRESSION_TYPE compression;
+  // int content_encoding;
+  // int64_t current_content_length;
+  // const char *guess_type;
   char *ssl_certificate;
   char *url;
-  time_t modtime;
+  // time_t modtime;
 };
 
 Str StrmyUFgets(struct URLFile *f);

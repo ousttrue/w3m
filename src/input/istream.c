@@ -1691,13 +1691,13 @@ void init_stream(struct URLFile *uf, int scheme, union input_stream *stream) {
   memset(uf, 0, sizeof(struct URLFile));
   uf->stream = stream;
   uf->scheme = scheme;
-  uf->encoding = ENC_7BIT;
-  uf->is_cgi = false;
-  uf->compression = CMP_NOCOMPRESS;
-  uf->content_encoding = CMP_NOCOMPRESS;
-  uf->guess_type = NULL;
-  uf->ext = NULL;
-  uf->modtime = -1;
+  // uf->encoding = ENC_7BIT;
+  // uf->is_cgi = false;
+  // uf->compression = CMP_NOCOMPRESS;
+  // uf->content_encoding = CMP_NOCOMPRESS;
+  // uf->guess_type = NULL;
+  // uf->ext = NULL;
+  // uf->modtime = -1;
 }
 
 struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
@@ -1749,7 +1749,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
   uf.scheme = pu->scheme;
   uf.url = parsedURL2Str(pu)->ptr;
   pu->is_nocache = (option->flag & RG_NOCACHE);
-  uf.ext = filename_extension(pu->file, 1);
+  // uf.ext = filename_extension(pu->file, 1);
 
   hr->command = HR_COMMAND_GET;
   hr->flag = 0;
@@ -1770,7 +1770,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
           newFileStream(localcgi_get(pu->real_file, pu->query, option->referer),
                         (void (*)())fclose);
     if (uf.stream) {
-      uf.is_cgi = true;
+      // uf.is_cgi = true;
       uf.scheme = pu->scheme = SCM_LOCAL_CGI;
       return uf;
     }
@@ -1946,11 +1946,11 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
     q = strrchr(p, ';');
     if (q != NULL && !strcmp(q, ";base64")) {
       *q = '\0';
-      uf.encoding = ENC_BASE64;
+      // uf.encoding = ENC_BASE64;
     } else
       tmp = Str_url_unquote(tmp, false, false);
     uf.stream = newStrStream(tmp);
-    uf.guess_type = (*p != '\0') ? p : "text/plain";
+    // uf.guess_type = (*p != '\0') ? p : "text/plain";
     return uf;
   }
   case SCM_UNKNOWN:
@@ -2047,7 +2047,7 @@ static FILE *lessopen_stream(const char *path) {
 }
 
 void examineFile(const char *path, struct URLFile *uf) {
-  uf->guess_type = NULL;
+  // uf->guess_type = NULL;
   struct stat stbuf;
   if (path == NULL || *path == '\0' || stat(path, &stbuf) == -1 ||
       NOT_REGULAR(stbuf.st_mode)) {
@@ -2056,29 +2056,30 @@ void examineFile(const char *path, struct URLFile *uf) {
   }
   uf->stream = openIS(path);
 
-  if (use_lessopen && getenv("LESSOPEN") != NULL) {
-    FILE *fp;
-    uf->guess_type = guessContentType(path);
-    if (uf->guess_type == NULL)
-      uf->guess_type = "text/plain";
-    if (is_html_type(uf->guess_type))
-      return;
-    if ((fp = lessopen_stream(path))) {
-      UFclose(uf);
-      uf->stream = newFileStream(fp, (void (*)())pclose);
-      uf->guess_type = "text/plain";
-      return;
-    }
-  }
-  check_compression(path, uf);
-  if (uf->compression != CMP_NOCOMPRESS) {
-    const char *ext = uf->ext;
-    auto t0 = uncompressed_file_type(path, &ext);
-    uf->guess_type = t0;
-    uf->ext = ext;
-    uncompress_stream(uf, NULL);
-    return;
-  }
+  // if (use_lessopen && getenv("LESSOPEN") != NULL) {
+  //   uf->guess_type = guessContentType(path);
+  //   if (uf->guess_type == NULL)
+  //     uf->guess_type = "text/plain";
+  //   if (is_html_type(uf->guess_type))
+  //     return;
+  //
+  //   FILE *fp;
+  //   if ((fp = lessopen_stream(path))) {
+  //     UFclose(uf);
+  //     uf->stream = newFileStream(fp, (void (*)())pclose);
+  //     uf->guess_type = "text/plain";
+  //     return;
+  //   }
+  // }
+  // uf->compression = check_compression(path, &uf->guess_type);
+  // if (uf->compression != CMP_NOCOMPRESS) {
+  //   const char *ext = uf->ext;
+  //   auto t0 = uncompressed_file_type(path, &ext);
+  //   uf->guess_type = t0;
+  //   uf->ext = ext;
+  //   uncompress_stream(uf, NULL);
+  //   return;
+  // }
 }
 
 void close_for_ftp(union input_stream *is) {

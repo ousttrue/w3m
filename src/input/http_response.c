@@ -47,24 +47,26 @@ void httpReadHeader(struct HttpResponse *res, struct URLFile *uf,
     }
   } else if (!strcasecmp(key, "content-length")) {
     res->content_length = atoi(p);
-  } else if (!strcasecmp(key, "content-transfer-encoding")) {
-    while (IS_SPACE(*p))
-      p++;
-    if (!strncasecmp(p, "base64", 6))
-      uf->encoding = ENC_BASE64;
-    else if (!strncasecmp(p, "quoted-printable", 16))
-      uf->encoding = ENC_QUOTE;
-    else if (!strncasecmp(p, "uuencode", 8) ||
-             !strncasecmp(p, "x-uuencode", 10))
-      uf->encoding = ENC_UUENCODE;
-    else
-      uf->encoding = ENC_7BIT;
-  } else if (!strcasecmp(key, "content-encoding")) {
+  } 
+  // else if (!strcasecmp(key, "content-transfer-encoding")) {
+  //   while (IS_SPACE(*p))
+  //     p++;
+  //   if (!strncasecmp(p, "base64", 6))
+  //     uf->encoding = ENC_BASE64;
+  //   else if (!strncasecmp(p, "quoted-printable", 16))
+  //     uf->encoding = ENC_QUOTE;
+  //   else if (!strncasecmp(p, "uuencode", 8) ||
+  //            !strncasecmp(p, "x-uuencode", 10))
+  //     uf->encoding = ENC_UUENCODE;
+  //   else
+  //     uf->encoding = ENC_7BIT;
+  // } 
+  else if (!strcasecmp(key, "content-encoding")) {
     while (IS_SPACE(*p)) {
       p++;
     }
-    uf->compression = compressionFromEncoding(p);
-    uf->content_encoding = uf->compression;
+    // uf->compression = compressionFromEncoding(p);
+    // uf->content_encoding = uf->compression;
   } else if (use_cookie && accept_cookie && pu &&
              check_cookie_accept_domain(pu->host) &&
              (!strcasecmp(key, "Set-Cookie") ||

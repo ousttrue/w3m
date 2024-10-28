@@ -839,8 +839,9 @@ void sync_with_option(void) {
      */
     AcceptLang = _("en;q=1.0");
   }
-  if (AcceptEncoding == NULL || *AcceptEncoding == '\0')
-    AcceptEncoding = acceptableEncoding();
+  // if (AcceptEncoding == NULL || *AcceptEncoding == '\0'){
+  //   AcceptEncoding = acceptableEncoding();
+  // }
 
   initKeymap(false);
 }

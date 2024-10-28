@@ -9,11 +9,12 @@ enum COMPRESSION_TYPE {
   CMP_BROTLI = 5,
 };
 
-struct URLFile;
-void check_compression(const char *path, struct URLFile *uf);
+enum COMPRESSION_TYPE check_compression(const char *path,
+                                        const char **guess_type);
 const char *filename_extension(const char *patch, bool is_url);
 const char *uncompressed_file_type(const char *path, const char **ext);
 char *acceptableEncoding();
 enum COMPRESSION_TYPE compressionFromEncoding(const char *encoding);
 const char *compress_application_type(enum COMPRESSION_TYPE compression);
-void uncompress_stream(struct URLFile *uf, const char **src);
+// struct URLFile;
+// void uncompress_stream(struct URLFile *uf, const char **src);

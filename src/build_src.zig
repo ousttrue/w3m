@@ -52,7 +52,7 @@ pub const SRCS = [_][]const u8{
     "src/input/localcgi.c",
     "src/input/loader.c",
     "src/input/isocket.c",
-    "src/input/compression.c",
+    // "src/input/compression.c",
     "src/input/growbuf.c",
     "src/input/istream.c",
     "src/input/ftp.c",

@@ -109,24 +109,24 @@ static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f,
   // if (real_type == NULL)
   //   real_type = t;
 
-  f.current_content_length = 0;
-  const char *p;
-  if ((p = httpGetHeader(t_buf->http_response, "Content-Length:")) != NULL)
-    f.current_content_length = strtoclen(p);
+  // f.current_content_length = 0;
+  // const char *p;
+  // if ((p = httpGetHeader(t_buf->http_response, "Content-Length:")) != NULL)
+  //   f.current_content_length = strtoclen(p);
 
-  if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
-    uncompress_stream(&f, &pu.real_file);
-  } else if (f.compression != CMP_NOCOMPRESS) {
-    if (is_text_type(t)) {
-      if (t_buf == NULL)
-        t_buf = newBuffer();
-      uncompress_stream(&f, &t_buf->sourcefile);
-      uncompressed_file_type(pu.file, &f.ext);
-    } else {
-      t = compress_application_type(f.compression);
-      f.compression = CMP_NOCOMPRESS;
-    }
-  }
+  // if ((f.content_encoding != CMP_NOCOMPRESS) && AutoUncompress) {
+  //   uncompress_stream(&f, &pu.real_file);
+  // } else if (f.compression != CMP_NOCOMPRESS) {
+  //   if (is_text_type(t)) {
+  //     if (t_buf == NULL)
+  //       t_buf = newBuffer();
+  //     uncompress_stream(&f, &t_buf->sourcefile);
+  //     uncompressed_file_type(pu.file, &f.ext);
+  //   } else {
+  //     t = compress_application_type(f.compression);
+  //     f.compression = CMP_NOCOMPRESS;
+  //   }
+  // }
 
   if (t_buf == NULL)
     t_buf = newBuffer();
@@ -313,9 +313,9 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
   }
 
   b = NULL;
-  if (f.is_cgi) {
-    /* local CGI */
-  }
+  // if (f.is_cgi) {
+  //   /* local CGI */
+  // }
   if (header_string)
     header_string = NULL;
   trap_on();
@@ -424,24 +424,25 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
                       t_buf, realm, uname, pwd);
     }
 
-    f.modtime = mymktime(httpGetHeader(t_buf->http_response, "Last-Modified:"));
+    // f.modtime = mymktime(httpGetHeader(t_buf->http_response, "Last-Modified:"));
   } else if (pu.scheme == SCM_FTP) {
-    check_compression(path, &f);
-    if (f.compression != CMP_NOCOMPRESS) {
-      auto t1 = uncompressed_file_type(pu.file, NULL);
-      real_type = f.guess_type;
-      if (t1)
-        t = t1;
-      else
-        t = real_type;
-    } else {
+    // f.compression = check_compression(path, &f.guess_type);
+    // if (f.compression != CMP_NOCOMPRESS) {
+    //   auto t1 = uncompressed_file_type(pu.file, NULL);
+    //   real_type = f.guess_type;
+    //   if (t1)
+    //     t = t1;
+    //   else
+    //     t = real_type;
+    // } else 
+    {
       real_type = guessContentType(pu.file);
       if (real_type == NULL)
         real_type = "text/plain";
       t = real_type;
     }
   } else if (pu.scheme == SCM_DATA) {
-    t = f.guess_type;
+    // t = f.guess_type;
   } else if (DefaultType) {
     t = DefaultType;
     DefaultType = NULL;
@@ -450,13 +451,13 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
     if (t == NULL)
       t = "text/plain";
     real_type = t;
-    if (f.guess_type)
-      t = f.guess_type;
+    // if (f.guess_type)
+    //   t = f.guess_type;
   }
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
-  f.guess_type = t;
+  // f.guess_type = t;
 
   return page_loaded(cols, pu, f, page, t, real_type, t_buf);
 }

@@ -34,7 +34,7 @@ uint32_t getescapechar(const char **str);
 const char *getescapecmd(const char **s);
 const char *html_unquote(const char *str);
 int next_status(char c, int *status);
-int read_token(Str buf, const char **instr, int *status, int pre, int append);
+int read_token(Str buf, const char **instr, enum ReadStatus *status, int pre, int append);
 int visible_length(const char *str);
 int visible_length_plain(const char *str);
 int maximum_visible_length(const char *str, int offset);

@@ -200,7 +200,7 @@ int save2tmp(struct URLFile uf, char *tmpf) {
         goto _end;
       }
       linelen += count;
-      term_showProgress(&linelen, &trbyte, uf.current_content_length);
+      // term_showProgress(&linelen, &trbyte, uf.current_content_length);
     }
   }
 

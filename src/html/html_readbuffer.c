@@ -106,7 +106,7 @@ static Str cur_option;
 static Str cur_option_value;
 static Str cur_option_label;
 static int cur_option_selected;
-static int cur_status;
+static enum ReadStatus cur_status;
 
 static struct table *tables[MAX_TABLE];
 static struct table_mode table_mode[MAX_TABLE];
@@ -395,7 +395,7 @@ Str process_n_select(void) {
 
 void feed_select(const char *str) {
   Str tmp = Strnew();
-  int prev_status = cur_status;
+  auto prev_status = cur_status;
   static int prev_spaces = -1;
   const char *p;
 
@@ -2670,6 +2670,8 @@ const char *proc_tag(Str tokbuf, struct html_feed_environ *h_env,
       obuf->status = R_ST_NORMAL;
     return tokbuf->ptr;
   }
+
+  return nullptr;
 }
 
 /* HTML processing first pass */
@@ -3059,11 +3061,11 @@ struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
   }
   trap_on();
 
-  if (IStype(f.stream) != IST_ENCODED)
-    f.stream = newEncodedStream(f.stream, f.encoding);
+  // if (IStype(f.stream) != IST_ENCODED)
+  //   f.stream = newEncodedStream(f.stream, f.encoding);
   while ((lineBuf2 = StrmyUFgets(&f))->length) {
     linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, f.current_content_length);
+    // term_showProgress(&linelen, &trbyte, f.current_content_length);
     lineBuf2 = convertLine(lineBuf2, HTML_MODE);
     HTMLlineproc0(lineBuf2->ptr, &htmlenv1);
   }
@@ -3227,15 +3229,15 @@ struct Document *loadText(int cols, const char *text) {
   int nlines = 0;
   int64_t linelen = 0;
   int64_t trbyte = 0;
-  if (IStype(f.stream) != IST_ENCODED)
-    f.stream = newEncodedStream(f.stream, f.encoding);
+  // if (IStype(f.stream) != IST_ENCODED)
+  //   f.stream = newEncodedStream(f.stream, f.encoding);
   Str lineBuf2;
   char pre_lbuf = '\0';
   while ((lineBuf2 = StrmyISgets(f.stream))->length) {
     // if (src)
     //   Strfputs(lineBuf2, src);
     linelen += lineBuf2->length;
-    term_showProgress(&linelen, &trbyte, f.current_content_length);
+    // term_showProgress(&linelen, &trbyte, f.current_content_length);
     lineBuf2 = convertLine(lineBuf2, PAGER_MODE);
     if (squeezeBlankLine) {
       if (lineBuf2->ptr[0] == '\n' && pre_lbuf == '\n') {
