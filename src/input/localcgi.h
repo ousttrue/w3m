@@ -1,10 +1,10 @@
 #pragma once
 #include "text/Str.h"
 
-#define HAVE_DIRENT_H 1
+// #define HAVE_DIRENT_H 1
 #include <sys/types.h>
-#ifdef HAVE_DIRENT_H
-#include <dirent.h>
+#ifdef _WIN32
+// #include <dirent.h>
 typedef struct dirent Directory;
 #else  /* not HAVE_DIRENT_H */
 // #include <sys/dir.h>

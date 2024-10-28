@@ -83,7 +83,6 @@ pub const SRCS_POSIX = [_][]const u8{
     "src/term/termsize_posix.c",
     "src/input/localcgi_posix.c",
     "src/os_posix.c",
-    "src/etc_posix.c",
     "src/input/isocket_posix.c",
 };
 
@@ -92,6 +91,5 @@ pub const SRCS_WIN32 = [_][]const u8{
     "src/term/termsize_win32.c",
     "src/input/localcgi_win32.c",
     "src/os_win32.c",
-    "src/etc_win32.c",
     "src/input/isocket_win32.c",
 };

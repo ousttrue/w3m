@@ -1,8 +1,6 @@
 #include "input/localcgi.h"
-#include "rc.h"
 #include "alloc.h"
 #include "core.h"
-#include "etc.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
 #include "fm.h"
@@ -10,7 +8,9 @@
 #include "html/html_text.h"
 #include "input/http_request.h"
 #include "input/url.h"
+#include "os.h"
 #include "rand48.h"
+#include "rc.h"
 #include "term/termsize.h"
 #include "trap_jmp.h"
 #include <dirent.h>

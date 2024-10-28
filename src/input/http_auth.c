@@ -4,8 +4,8 @@
 #include "term/terms.h"
 #include "text/myctype.h"
 #include "alloc.h"
-#include "etc.h"
 #include "core.h"
+#include "os.h"
 #include <sys/stat.h>
 
 #define PASSWD_FILE RC_DIR "/passwd"

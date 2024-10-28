@@ -1,8 +1,7 @@
 #include "input/url.h"
 #include "alloc.h"
 #include "core.h"
-#include "etc.h"
-#include "file/file.h"
+#include "os.h"
 #include "text/myctype.h"
 #include "text/text.h"
 #include <string.h>
