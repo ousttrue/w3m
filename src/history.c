@@ -7,7 +7,9 @@
 #include "html/html_text.h"
 #include "input/url.h"
 #include "rc.h"
-// #include "term/terms.h"
+
+#define HIST_LIST_MAX GENERAL_LIST_MAX
+#define HIST_HASH_SIZE 127
 
 struct Hist *LoadHist;
 struct Hist *SaveHist;

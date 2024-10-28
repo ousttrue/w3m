@@ -77,5 +77,4 @@ extern int save2tmp(struct URLFile uf, char *tmpf);
 extern void free_ssl_ctx();
 extern void init_stream(struct URLFile *uf, int scheme,
                         union input_stream *stream);
-extern struct TextList *make_domain_list(char *domain_list);
 extern int check_no_proxy(char *domain);

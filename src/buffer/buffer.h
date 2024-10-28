@@ -3,7 +3,7 @@
 #include "html/anchor.h"
 #include "html/form.h"
 #include "input/url.h"
-#include "textlist.h"
+#include "text/textlist.h"
 
 /* Link Buffer */
 enum LinkBuffer {

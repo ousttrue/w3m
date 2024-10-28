@@ -3,7 +3,7 @@
 #include "html/html_text.h"
 #include "term/termsize.h"
 #include "text/Str.h"
-#include "textlist.h"
+#include "text/textlist.h"
 
 static struct GeneralList *message_list = NULL;
 

@@ -87,7 +87,7 @@ struct table {
   int real_width;
 #endif /* TABLE_EXPAND */
   Str caption;
-  struct GeneralList ***tabdata;
+  struct TextList ***tabdata;
   table_attr **tabattr;
   table_attr trattr;
   short tabwidth[MAXCOL];

@@ -1,6 +1,7 @@
 #include "textlist.h"
 #include "alloc.h"
 #include "text/Str.h"
+#include "text/myctype.h"
 
 /* General doubly linked list */
 
@@ -127,4 +128,63 @@ void appendTextLine(struct TextLineList *tl, Str line, int pos) {
       lbuf->line = line;
     lbuf->pos += pos;
   }
+}
+
+struct TextList *make_domain_list(char *domain_list) {
+  struct TextList *domains = nullptr;
+  auto p = domain_list;
+  auto tmp = Strnew_size(64);
+  while (*p) {
+    while (*p && IS_SPACE(*p))
+      p++;
+    Strclear(tmp);
+    while (*p && !IS_SPACE(*p) && *p != ',')
+      Strcat_char(tmp, *p++);
+    if (tmp->length > 0) {
+      if (domains == NULL)
+        domains = newTextList();
+      pushText(domains, tmp->ptr);
+    }
+    while (*p && IS_SPACE(*p))
+      p++;
+    if (*p == ',')
+      p++;
+  }
+  return domains;
+}
+
+struct TextList *newTextList() { return ((struct TextList *)newGeneralList()); }
+void pushText(struct TextList *tl, const char *s) {
+  pushValue((struct GeneralList *)(tl), (void *)allocStr((s), -1));
+}
+const char *popText(struct TextList *tl) {
+  return (const char *)popValue((struct GeneralList *)(tl));
+}
+const char *rpopText(struct TextList *tl) {
+  return (const char *)rpopValue((struct GeneralList *)(tl));
+}
+void delText(struct TextList *tl, void *i) {
+  delValue((struct GeneralList *)(tl), i);
+}
+struct TextList *appendTextList(struct TextList *tl, struct TextList *tl2) {
+  return ((struct TextList *)appendGeneralList((struct GeneralList *)(tl),
+                                               (struct GeneralList *)(tl2)));
+}
+
+struct TextLineList *newTextLineList() {
+  return ((struct TextLineList *)newGeneralList());
+}
+void pushTextLine(struct TextLineList *tl, struct TextLine *lbuf) {
+  pushValue((struct GeneralList *)(tl), (void *)(lbuf));
+}
+struct TextLine *popTextLine(struct TextLineList *tl) {
+  return ((struct TextLine *)popValue((struct GeneralList *)(tl)));
+}
+struct TextLine *rpopTextLine(struct TextLineList *tl) {
+  return ((struct TextLine *)rpopValue((struct GeneralList *)(tl)));
+}
+struct TextLineList *appendTextLineList(struct TextLineList *tl,
+                                        struct TextLineList *tl2) {
+  return ((struct TextLineList *)appendGeneralList(
+      (struct GeneralList *)(tl), (struct GeneralList *)(tl2)));
 }

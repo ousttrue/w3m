@@ -1,8 +1,8 @@
 #include "tmpfile.h"
-#include "alloc.h"
-#include "textlist.h"
+#include "text/textlist.h"
 #include "buffer/display.h"
 #include "core.h"
+#include <stdlib.h>
 
 static struct TextList *fileToDelete = nullptr;
 void tmpfile_init() { fileToDelete = newTextList(); }

@@ -17,12 +17,11 @@
 #include "rand48.h"
 #include "rc.h"
 #include "siteconf.h"
-#include "term/terms.h"
 #include "text/Str.h"
 #include "text/myctype.h"
 #include "text/regex.h"
 #include "text/text.h"
-#include "textlist.h"
+#include "text/textlist.h"
 #include "trap_jmp.h"
 
 #include <assert.h>
@@ -1350,32 +1349,6 @@ const char *guessContentType(const char *filename) {
 
 no_user_mimetypes:
   return guessContentTypeFromTable(DefaultGuess, filename);
-}
-
-struct TextList *make_domain_list(char *domain_list) {
-  char *p;
-  Str tmp;
-  struct TextList *domains = NULL;
-
-  p = domain_list;
-  tmp = Strnew_size(64);
-  while (*p) {
-    while (*p && IS_SPACE(*p))
-      p++;
-    Strclear(tmp);
-    while (*p && !IS_SPACE(*p) && *p != ',')
-      Strcat_char(tmp, *p++);
-    if (tmp->length > 0) {
-      if (domains == NULL)
-        domains = newTextList();
-      pushText(domains, tmp->ptr);
-    }
-    while (*p && IS_SPACE(*p))
-      p++;
-    if (*p == ',')
-      p++;
-  }
-  return domains;
 }
 
 static int domain_match(char *pat, char *domain) {

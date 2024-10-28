@@ -108,6 +108,7 @@ global int SaveURLHist init(true);
 global int multicolList init(false);
 global char UseAltEntity init(false);
 global const char *config_file init(nullptr);
+
 global int ssl_verify_server init(true);
 global const char *ssl_cert_file init(nullptr);
 global const char *ssl_key_file init(nullptr);
@@ -122,6 +123,7 @@ global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
 #else
 global char *ssl_cipher init(nullptr);
 #endif
+
 global int clear_buffer init(true);
 global int use_lessopen init(false);
 global char *keymap_file init(KEYMAP_FILE);

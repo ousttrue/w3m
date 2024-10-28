@@ -21,8 +21,8 @@
 #include "text/romannum.h"
 #include "text/symbol.h"
 #include "text/text.h"
+#include "text/textlist.h"
 #include "text/utf8.h"
-#include "textlist.h"
 #include "trap_jmp.h"
 
 bool squeezeBlankLine = false;

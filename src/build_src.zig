@@ -10,7 +10,6 @@ pub const SRCS = [_][]const u8{
     "src/rc.c",
     "src/func.c",
     "src/history.c",
-    "src/textlist.c",
     "src/hash.c",
     "src/version.c",
     "src/rand48.c",
@@ -31,6 +30,7 @@ pub const SRCS = [_][]const u8{
     "src/text/regex.c",
     "src/text/utf8.c",
     "src/text/datetime.c",
+    "src/text/textlist.c",
 
     "src/buffer/downloadlist.c",
     "src/buffer/image.c",

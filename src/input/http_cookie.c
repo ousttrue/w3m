@@ -12,13 +12,12 @@
 #include "alloc.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
-#include "input/isocket.h"
 #include "input/localcgi.h"
 #include "proto.h"
 #include "rc.h"
 #include "text/myctype.h"
 #include "text/regex.h"
-#include "textlist.h"
+#include "text/textlist.h"
 #include <sys/stat.h>
 #include <time.h>
 #ifdef _WIN32

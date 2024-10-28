@@ -11,8 +11,8 @@
 #include "text/myctype.h"
 #include "text/symbol.h"
 #include "text/text.h"
+#include "text/textlist.h"
 #include "text/utf8.h"
-#include "textlist.h"
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -196,7 +196,7 @@ struct table *newTable() {
 
   t = New(struct table);
   t->max_rowsize = MAXROW;
-  t->tabdata = New_N(struct GeneralList **, MAXROW);
+  t->tabdata = New_N(struct TextList **, MAXROW);
   t->tabattr = New_N(table_attr *, MAXROW);
   t->tabheight = NewAtom_N(int, MAXROW);
 

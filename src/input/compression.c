@@ -7,7 +7,7 @@
 #include "input/url_stream.h"
 #include "text/Str.h"
 #include "text/myctype.h"
-#include "textlist.h"
+#include "text/textlist.h"
 #include "trap_jmp.h"
 #include <string.h>
 #include <sys/stat.h>
