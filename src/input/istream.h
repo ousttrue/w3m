@@ -36,6 +36,8 @@ enum IST_TYPE IStype(union input_stream *stream);
 union input_stream *openIS(const char *path);
 void ssl_accept_this_site(const char *hostname);
 int ssl_socket_of(union input_stream *stream);
+const char* ssl_certificate(union input_stream *stream);
+void ssl_set_certificate(union input_stream *stream, const char *ssl_certificate);
 void url_stream_init();
 
 union input_stream;
@@ -49,7 +51,6 @@ struct URLFile {
   // int content_encoding;
   // int64_t current_content_length;
   // const char *guess_type;
-  char *ssl_certificate;
   char *url;
   // time_t modtime;
 };

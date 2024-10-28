@@ -91,6 +91,7 @@ struct ssl_stream {
   bool iseos;
   ReadFunc read;
   CloseFunc close;
+  const char *ssl_certificate;
 };
 
 struct encoded_stream {
@@ -126,6 +127,16 @@ union input_stream {
   struct winsock_stream ws;
 #endif
 };
+
+const char *ssl_certificate(union input_stream *stream) {
+  return stream->ssl.ssl_certificate;
+}
+void ssl_set_certificate(union input_stream *stream,
+                         const char *ssl_certificate) {
+  if (ssl_certificate && IStype(stream) == IST_SSL) {
+    stream->ssl.ssl_certificate = ssl_certificate;
+  }
+}
 
 struct io_file_handle {
   FILE *f;
@@ -1846,13 +1857,15 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
     Str tmp = nullptr;
     SocketType sock = socketInvalid();
     SSL *sslh = NULL;
+    char *ssl_certificate = nullptr;
     if (((pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
                                    : non_null(HTTP_proxy)) &&
         use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
       hr->flag |= HR_FLAG_PROXY;
       if (pu->scheme == SCM_HTTPS && *status == HTST_CONNECT) {
         sock = ssl_socket_of(ouf->stream);
-        if (!(sslh = openSSLHandle(sock, pu->host, &uf.ssl_certificate))) {
+        char *ssl_certificate;
+        if (!(sslh = openSSLHandle(sock, pu->host, &ssl_certificate))) {
           *status = HTST_MISSING;
           return uf;
         }
@@ -1897,7 +1910,7 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
         return uf;
       }
       if (pu->scheme == SCM_HTTPS) {
-        if (!(sslh = openSSLHandle(sock, pu->host, &uf.ssl_certificate))) {
+        if (!(sslh = openSSLHandle(sock, pu->host, &ssl_certificate))) {
           *status = HTST_MISSING;
           return uf;
         }
@@ -1911,6 +1924,8 @@ struct URLFile openURL(const char *url, struct Url *pu, struct Url *current,
 #else
     uf.stream = newInputStream(sock);
 #endif
+    ssl_set_certificate(uf.stream, ssl_certificate);
+
     if (pu->scheme == SCM_HTTPS) {
       uf.stream = newSSLStream(sslh, sock);
       if (sslh)

@@ -132,7 +132,7 @@ static struct Buffer *page_loaded(int cols, struct Url pu, struct URLFile f,
     t_buf = newBuffer();
   copyParsedURL(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
-  t_buf->ssl_certificate = f.ssl_certificate;
+  t_buf->ssl_certificate = ssl_certificate(f.stream);
 
   FILE *src = NULL;
   if (f.scheme != SCM_LOCAL) {
@@ -424,7 +424,8 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
                       t_buf, realm, uname, pwd);
     }
 
-    // f.modtime = mymktime(httpGetHeader(t_buf->http_response, "Last-Modified:"));
+    // f.modtime = mymktime(httpGetHeader(t_buf->http_response,
+    // "Last-Modified:"));
   } else if (pu.scheme == SCM_FTP) {
     // f.compression = check_compression(path, &f.guess_type);
     // if (f.compression != CMP_NOCOMPRESS) {
@@ -434,7 +435,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
     //     t = t1;
     //   else
     //     t = real_type;
-    // } else 
+    // } else
     {
       real_type = guessContentType(pu.file);
       if (real_type == NULL)
