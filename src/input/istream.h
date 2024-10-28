@@ -1,7 +1,6 @@
 #pragma once
 #include "input/compression.h"
 #include "input/encoding_type.h"
-#include "input/stream_buffer.h"
 #include "input/url.h"
 #include "text/Str.h"
 #include <stdint.h>
@@ -16,77 +15,8 @@ enum IST_TYPE {
   IST_WS = 5,
 #endif
 };
+
 union input_stream;
-
-typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
-typedef void (*CloseFunc)(void *handle);
-
-struct base_stream {
-  struct stream_buffer stream;
-  // file descriptor read/write
-  int *handle;
-  enum IST_TYPE type;
-  // ftp ?
-  bool unclose;
-  bool iseos;
-  ReadFunc read;
-  CloseFunc close;
-};
-
-struct file_stream {
-  struct stream_buffer stream;
-  // fread/fwrite
-  struct io_file_handle *handle;
-  enum IST_TYPE type;
-  bool unclose;
-  bool iseos;
-  ReadFunc read;
-  CloseFunc close;
-};
-
-struct str_stream {
-  struct stream_buffer stream;
-  Str handle;
-  enum IST_TYPE type;
-  bool unclose;
-  bool iseos;
-  ReadFunc read;
-  CloseFunc close;
-};
-
-struct ssl_stream {
-  struct stream_buffer stream;
-  struct ssl_handle *handle;
-  enum IST_TYPE type;
-  bool unclose;
-  bool iseos;
-  ReadFunc read;
-  CloseFunc close;
-};
-
-struct encoded_stream {
-  struct stream_buffer stream;
-  struct ens_handle *handle;
-  enum IST_TYPE type;
-  bool unclose;
-  bool iseos;
-  ReadFunc read;
-  CloseFunc close;
-};
-
-#ifdef _WIN32
-struct winsock_stream {
-  struct stream_buffer stream;
-  uintptr_t *handle;
-  enum IST_TYPE type;
-  // ftp ?
-  bool unclose;
-  bool iseos;
-  ReadFunc read;
-  CloseFunc close;
-};
-#endif
-
 union input_stream *newInputStream(int des);
 union input_stream *newFileStream(FILE *f, void (*closep)());
 union input_stream *newStrStream(Str s);
@@ -96,19 +26,16 @@ int ISclose(union input_stream *stream);
 int ISgetc(union input_stream *stream);
 int ISundogetc(union input_stream *stream);
 Str StrISgets2(union input_stream *stream, char crnl);
-#define StrISgets(stream) StrISgets2(stream, false)
-#define StrmyISgets(stream) StrISgets2(stream, true)
-struct growbuf;
-void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
-                       char crnl);
+Str StrISgets(union input_stream *stream);
+Str StrmyISgets(union input_stream *stream);
 int ISread_n(union input_stream *stream, char *dst, int bufsize);
 int ISfileno(union input_stream *stream);
 int ISeos(union input_stream *stream);
-void ssl_accept_this_site(char *hostname);
-
 enum IST_TYPE IStype(union input_stream *stream);
-int ssl_socket_of(union input_stream *stream);
 union input_stream *openIS(const char *path);
+
+void ssl_accept_this_site(const char *hostname);
+int ssl_socket_of(union input_stream *stream);
 
 extern struct TextList *NO_proxy_domains;
 #define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))

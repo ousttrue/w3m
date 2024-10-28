@@ -46,6 +46,75 @@
 #include <sys/socket.h>
 #endif
 
+typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
+typedef void (*CloseFunc)(void *handle);
+
+struct base_stream {
+  struct stream_buffer stream;
+  // file descriptor read/write
+  int *handle;
+  enum IST_TYPE type;
+  // ftp ?
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+
+struct file_stream {
+  struct stream_buffer stream;
+  // fread/fwrite
+  struct io_file_handle *handle;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+
+struct str_stream {
+  struct stream_buffer stream;
+  Str handle;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+
+struct ssl_stream {
+  struct stream_buffer stream;
+  struct ssl_handle *handle;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+
+struct encoded_stream {
+  struct stream_buffer stream;
+  struct ens_handle *handle;
+  enum IST_TYPE type;
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+
+#ifdef _WIN32
+struct winsock_stream {
+  struct stream_buffer stream;
+  uintptr_t *handle;
+  enum IST_TYPE type;
+  // ftp ?
+  bool unclose;
+  bool iseos;
+  ReadFunc read;
+  CloseFunc close;
+};
+#endif
+
 union input_stream {
   struct base_stream base;
   struct file_stream file;
@@ -73,6 +142,9 @@ struct ens_handle {
   int pos;
   char encoding;
 };
+
+Str StrISgets(union input_stream *stream) { return StrISgets2(stream, false); }
+Str StrmyISgets(union input_stream *stream) { return StrISgets2(stream, true); }
 
 #define uchar unsigned char
 
@@ -156,6 +228,52 @@ static void memchop(char *p, int *len) {
   return;
 }
 
+static void do_update(struct base_stream *base) {
+  int len;
+  base->stream.cur = base->stream.next = 0;
+  len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
+  if (len <= 0)
+    base->iseos = true;
+  else
+    base->stream.next += len;
+}
+
+static void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
+                              char crnl) {
+  struct base_stream *base = &stream->base;
+  struct stream_buffer *sb = &base->stream;
+  int i;
+
+  gb->length = 0;
+
+  while (!base->iseos) {
+    if (MUST_BE_UPDATED(base)) {
+      do_update(base);
+      continue;
+    }
+    if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
+      if (sb->buf[sb->cur] == '\n') {
+        GROWBUF_ADD_CHAR(gb, '\n');
+        ++sb->cur;
+      }
+      break;
+    }
+    for (i = sb->cur; i < sb->next; ++i) {
+      if (sb->buf[i] == '\n' || (crnl && sb->buf[i] == '\r')) {
+        ++i;
+        break;
+      }
+    }
+    growbuf_append(gb, &sb->buf[sb->cur], i - sb->cur);
+    sb->cur = i;
+    if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
+      break;
+  }
+
+  growbuf_reserve(gb, gb->length + 1);
+  gb->ptr[gb->length] = '\0';
+  return;
+}
 static int ens_read(void *_handle, unsigned char *buf, int len) {
   auto handle = (struct ens_handle *)_handle;
   if (handle->pos == handle->gb.length) {
@@ -203,32 +321,6 @@ static int ws_read(void *handle, unsigned char *buf, int len) {
   return recv(*(SOCKET *)handle, (char *)buf, len, 0);
 }
 #endif
-
-// static void basic_close(void *handle);
-// static int basic_read(void *handle, unsigned char *buf, int len);
-//
-// static void file_close(void *handle);
-// static int file_read(void *handle, unsigned char *buf, int len);
-//
-// static int str_read(void *handle, unsigned char *buf, int len);
-//
-// static void ssl_close(void *handle);
-// static int ssl_read(void *handle, unsigned char *buf, int len);
-//
-// static int ens_read(void *handle, unsigned char *buf, int len);
-// static void ens_close(void *handle);
-
-// static void memchop(char *p, int *len);
-
-static void do_update(struct base_stream *base) {
-  int len;
-  base->stream.cur = base->stream.next = 0;
-  len = (*base->read)(base->handle, base->stream.buf, base->stream.size);
-  if (len <= 0)
-    base->iseos = true;
-  else
-    base->stream.next += len;
-}
 
 static void init_buffer(struct base_stream *base, char *buf, int bufsize) {
   struct stream_buffer *sb = &base->stream;
@@ -394,43 +486,6 @@ Str StrISgets2(union input_stream *stream, char crnl) {
   return growbuf_to_Str(&gb);
 }
 
-void ISgets_to_growbuf(union input_stream *stream, struct growbuf *gb,
-                       char crnl) {
-  struct base_stream *base = &stream->base;
-  struct stream_buffer *sb = &base->stream;
-  int i;
-
-  gb->length = 0;
-
-  while (!base->iseos) {
-    if (MUST_BE_UPDATED(base)) {
-      do_update(base);
-      continue;
-    }
-    if (crnl && gb->length > 0 && gb->ptr[gb->length - 1] == '\r') {
-      if (sb->buf[sb->cur] == '\n') {
-        GROWBUF_ADD_CHAR(gb, '\n');
-        ++sb->cur;
-      }
-      break;
-    }
-    for (i = sb->cur; i < sb->next; ++i) {
-      if (sb->buf[i] == '\n' || (crnl && sb->buf[i] == '\r')) {
-        ++i;
-        break;
-      }
-    }
-    growbuf_append(gb, &sb->buf[sb->cur], i - sb->cur);
-    sb->cur = i;
-    if (gb->length > 0 && gb->ptr[gb->length - 1] == '\n')
-      break;
-  }
-
-  growbuf_reserve(gb, gb->length + 1);
-  gb->ptr[gb->length] = '\0';
-  return;
-}
-
 int ISread_n(union input_stream *stream, char *dst, int count) {
   if (stream == NULL || count <= 0)
     return -1;
@@ -478,7 +533,7 @@ int ISeos(union input_stream *stream) {
 
 static Str accept_this_site;
 
-void ssl_accept_this_site(char *hostname) {
+void ssl_accept_this_site(const char *hostname) {
   if (hostname)
     accept_this_site = Strnew_charp(hostname);
   else
