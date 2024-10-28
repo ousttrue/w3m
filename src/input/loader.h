@@ -19,8 +19,3 @@ struct Buffer;
 struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
                                const char *referer, enum RG_FLAGS flag,
                                struct FormList *request);
-
-typedef struct Buffer *(*LoadProc)(union input_stream *, const char *,
-                                   struct Buffer *);
-struct Buffer *loadcmdout(const char *cmd, LoadProc loadproc,
-                          struct Buffer *defaultbuf);

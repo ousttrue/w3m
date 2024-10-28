@@ -17,9 +17,10 @@
 #include "rc.h"
 #include "siteconf.h"
 #include "term/terms.h"
-#include "text/datetime.h"
+// #include "text/datetime.h"
 #include "text/text.h"
 #include "trap_jmp.h"
+#include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>
 
@@ -143,11 +144,9 @@ static struct Buffer *page_loaded(int cols, struct Url pu,
       t_buf->sourcefile = tmp->ptr;
     }
   }
-  Str content = Strnew();
-  Str line;
-  while ((line = StrmyISgets(stream))->length) {
-    Strcat(content, line);
-  }
+
+  Str content = StrISreadAll(stream);
+
   if (src) {
     Strfputs(content, src);
     fclose(src);
@@ -220,14 +219,14 @@ static struct Buffer *
 load_doc(int cols, const char *path, const char *tpath, struct Url *current,
          struct Url pu, const char *referer, enum RG_FLAGS flag,
          struct FormList *request, struct TextList *extra_header,
-         union input_stream *of, struct HttpRequest hr, enum StreamStatus status,
-         bool add_auth_cookie_flag, struct Buffer *b, struct Buffer *t_buf,
-         Str realm, Str uname, Str pwd) {
+         union input_stream *of, struct HttpRequest hr,
+         enum StreamStatus status, bool add_auth_cookie_flag, struct Buffer *b,
+         struct Buffer *t_buf, Str realm, Str uname, Str pwd) {
   {
     parseURL2(tpath, &pu, current);
     auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
     if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
-      tpath = (char *)sc_redirect;
+      tpath = sc_redirect;
       request = NULL;
       add_auth_cookie_flag = 0;
       current = New(struct Url);
@@ -261,42 +260,6 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
   of = NULL;
   const char *t = "text/plain";
   const char *real_type = nullptr;
-  if (stream == NULL) {
-    switch (scheme) {
-    case SCM_LOCAL: {
-      struct stat st;
-      if (stat(pu.real_file, &st) < 0)
-        return NULL;
-      if (S_ISDIR(st.st_mode)) {
-        if (UseExternalDirBuffer) {
-          Str cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
-          auto b = loadGeneralFile(cols, cmd->ptr, NULL, NO_REFERER, 0, NULL);
-          if (b != NULL && b != NO_BUFFER) {
-            copyParsedURL(&b->currentURL, &pu);
-            b->filename = b->currentURL.real_file;
-          }
-          return b;
-        } else {
-          page = loadLocalDir(pu.real_file);
-          t = "local:directory";
-        }
-      }
-    } break;
-    case SCM_FTPDIR:
-      page = loadFTPDir(&pu, &charset);
-      t = "ftp:directory";
-      break;
-    case SCM_UNKNOWN:
-      message_push(Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
-      break;
-
-    default:
-      break;
-    }
-    if (page && page->length > 0)
-      return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
-    return NULL;
-  }
 
   if (status == STREAM_MISSING) {
     trap_off();
@@ -481,23 +444,50 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
   struct HttpRequest hr;
   auto tpath = path;
   bool add_auth_cookie_flag = 0;
-  return load_doc(cols, path, tpath, current, pu, referer, flag, request,
-                  extra_header, nullptr, hr, status, add_auth_cookie_flag, b,
-                  t_buf, realm, uname, pwd);
-}
 
-struct Buffer *loadcmdout(const char *cmd, LoadProc loadproc,
-                          struct Buffer *defaultbuf) {
+  switch (pu.scheme) {
+  case SCM_LOCAL: {
+    struct stat st;
+    if (stat(pu.real_file, &st) < 0) {
+      return nullptr;
+    }
+    if (S_ISDIR(st.st_mode)) {
+      if (UseExternalDirBuffer) {
+        Str cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, pu.file);
+        auto b = loadGeneralFile(cols, cmd->ptr, NULL, NO_REFERER, 0, NULL);
+        if (b != NULL && b != NO_BUFFER) {
+          copyParsedURL(&b->currentURL, &pu);
+          b->filename = b->currentURL.real_file;
+        }
+        return b;
+      } else {
+        auto page = loadLocalDir(pu.real_file);
+        auto t = "local:directory";
+        // if (page && page->length > 0) {
+        //   return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
+        // }
+      }
+    }
+    return nullptr;
+  }
 
-  if (cmd == NULL || *cmd == '\0')
+  case SCM_FTPDIR: {
+    auto page = loadFTPDir(&pu, &charset);
+    auto t = "ftp:directory";
+    // if (page && page->length > 0) {
+    //   return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
+    // }
+    assert(false);
+    return nullptr;
+  }
+
+  case SCM_UNKNOWN:
+    message_push(Sprintf("Unknown URI: %s", parsedURL2Str(&pu)->ptr)->ptr);
     return NULL;
 
-  auto f = popen(cmd, "r");
-  if (!f)
-    return NULL;
-
-  auto stream = newFileStream(f, (void (*)())pclose);
-  auto buf = loadproc(stream, nullptr, defaultbuf);
-  ISclose(stream);
-  return buf;
+  default:
+    return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+                    extra_header, nullptr, hr, status, add_auth_cookie_flag, b,
+                    t_buf, realm, uname, pwd);
+  }
 }

@@ -29,6 +29,7 @@ int ISundogetc(union input_stream *stream);
 Str StrISgets2(union input_stream *stream, char crnl);
 Str StrISgets(union input_stream *stream);
 Str StrmyISgets(union input_stream *stream);
+Str StrISreadAll(union input_stream *stream);
 int ISread_n(union input_stream *stream, char *dst, int bufsize);
 int ISfileno(union input_stream *stream);
 int ISeos(union input_stream *stream);

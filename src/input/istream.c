@@ -1466,9 +1466,7 @@ static Str _parsedURL2Str(struct Url *pu, int pass, int user, int label) {
     Strcat_charp(tmp, pu->file);
     return tmp;
   }
-  {
-    Strcat_charp(tmp, "//");
-  }
+  { Strcat_charp(tmp, "//"); }
   if (user && pu->user) {
     Strcat_charp(tmp, pu->user);
     if (pass && pu->pass) {
@@ -2139,4 +2137,16 @@ _end:
   xfree(buf);
   fclose(ff);
   return retval;
+}
+
+Str StrISreadAll(union input_stream *stream) {
+  Str content = Strnew();
+  while (true) {
+    auto line = StrmyISgets(stream);
+    if (line->length == 0) {
+      break;
+    }
+    Strcat(content, line);
+  }
+  return content;
 }
