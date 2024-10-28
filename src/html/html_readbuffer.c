@@ -14,7 +14,6 @@
 #include "html/table.h"
 #include "input/http_response.h"
 #include "input/istream.h"
-#include "input/url_stream.h"
 #include "term/terms.h"
 #include "text/ctrlcode.h"
 #include "text/libnkf.h"

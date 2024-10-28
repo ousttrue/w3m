@@ -9,7 +9,6 @@
 #include "input/http_response.h"
 #include "input/istream.h"
 #include "input/url.h"
-#include "input/url_stream.h"
 #include "term/scr.h"
 #include "term/terms.h"
 #include "term/termsize.h"
@@ -19,6 +18,7 @@
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <time.h>
 
 int REV_LB[MAX_LB] = {
     LB_N_INFO,

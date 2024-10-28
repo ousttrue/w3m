@@ -5,12 +5,12 @@
 #include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
 #include "html/map.h"
-#include "input/url_stream.h"
 #include "term/scr.h"
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
 #include "text/utf8.h"
+#include "text/text.h"
 #include <math.h>
 
 int enable_inline_image;

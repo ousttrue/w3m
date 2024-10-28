@@ -14,7 +14,6 @@
 #include "input/http_request.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
-#include "input/url_stream.h"
 #include "rc.h"
 #include "term/terms.h"
 #include "term/termsize.h"

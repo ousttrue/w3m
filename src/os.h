@@ -1,5 +1,5 @@
 #pragma once
-#include "input/url_stream.h"
+#include "input/istream.h"
 
 struct Buffer;
 struct URLFile;

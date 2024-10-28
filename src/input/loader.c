@@ -13,7 +13,6 @@
 #include "input/http_response.h"
 #include "input/istream.h"
 #include "input/localcgi.h"
-#include "input/url_stream.h"
 #include "os.h"
 #include "rc.h"
 #include "siteconf.h"

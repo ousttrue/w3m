@@ -7,7 +7,6 @@
 #include "input/isocket.h"
 #include "input/istream.h"
 #include "input/url.h"
-#include "input/url_stream.h"
 #include "term/terms.h"
 #include "text/Str.h"
 #include "text/myctype.h"

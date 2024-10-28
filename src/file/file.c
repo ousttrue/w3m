@@ -11,13 +11,13 @@
 #include "input/istream.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
-#include "input/url_stream.h"
 #include "os.h"
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
 #include "text/myctype.h"
 #include "text/symbol.h"
+#include "text/text.h"
 #include "trap_jmp.h"
 #include <stdio.h>
 #include <stdlib.h>

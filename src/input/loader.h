@@ -1,5 +1,5 @@
 #pragma once
-#include "url_stream.h"
+#include "istream.h"
 
 extern const char *DefaultType;
 extern bool use_proxy;

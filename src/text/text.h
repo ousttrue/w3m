@@ -37,3 +37,7 @@ extern int strcasecmp(const char *s1, const char *s2);
 extern int strncasecmp(const char *s1, const char *s2, size_t n);
 #endif
 extern int strcasemstr(char *str, char *srch[], char **ret_ptr);
+
+bool is_html_type(const char *type);
+bool is_text_type(const char *type);
+bool is_plain_text_type(const char *type);

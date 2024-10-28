@@ -54,7 +54,6 @@ pub const SRCS = [_][]const u8{
     "src/input/compression.c",
     "src/input/growbuf.c",
     "src/input/istream.c",
-    "src/input/url_stream.c",
     "src/input/ftp.c",
     "src/input/http_cookie.c",
     "src/input/http_response.c",

@@ -8,7 +8,6 @@
 #include "input/istream.h"
 #include "input/mimehead.h"
 #include "input/url.h"
-#include "input/url_stream.h"
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/datetime.h"

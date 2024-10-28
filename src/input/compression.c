@@ -4,7 +4,6 @@
 #include "etc.h"
 #include "file/tmpfile.h"
 #include "input/istream.h"
-#include "input/url_stream.h"
 #include "text/Str.h"
 #include "text/myctype.h"
 #include "text/textlist.h"
@@ -220,7 +219,7 @@ char *acceptableEncoding() {
     }
   }
   encodings = Strnew();
-  char *p;
+  const char *p;
   while ((p = popText(l)) != nullptr) {
     if (encodings->length)
       Strcat_charp(encodings, ", ");

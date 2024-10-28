@@ -25,7 +25,6 @@
 #include "input/loader.h"
 #include "input/localcgi.h"
 #include "input/url.h"
-#include "input/url_stream.h"
 #include "proto.h"
 #include "siteconf.h"
 #include "term/terms.h"

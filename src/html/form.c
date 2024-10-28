@@ -12,7 +12,6 @@
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
 #include "input/localcgi.h"
-#include "input/url_stream.h"
 #include "os.h"
 #include "rc.h"
 #include "term/terms.h"
