@@ -3,7 +3,6 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/message.h"
-#include "core.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
 #include "html/html_readbuffer.h"
@@ -13,6 +12,7 @@
 #include "input/http_response.h"
 #include "input/istream.h"
 #include "input/localcgi.h"
+#include "input/proxy.h"
 #include "os.h"
 #include "rc.h"
 #include "siteconf.h"
@@ -24,8 +24,6 @@
 #include <sys/stat.h>
 
 const char *DefaultType = nullptr;
-bool use_proxy = true;
-const char *FTP_proxy = nullptr;
 bool UseExternalDirBuffer = true;
 bool label_topline = false;
 bool retryAsHttp = true;

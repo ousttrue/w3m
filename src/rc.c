@@ -7,24 +7,25 @@
 #include "buffer/display.h"
 #include "buffer/document.h"
 #include "buffer/image.h"
+#include "buffer/message.h"
 #include "buffer/search.h"
 #include "buffer/w3mhelperpanel.h"
-#include "buffer/message.h"
 #include "core.h"
-#include "file/file.h"
+// #include "file/file.h"
 #include "file/tmpfile.h"
 #include "fm.h"
 #include "func.h"
 #include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
-#include "html/html_tag.h"
+// #include "html/html_tag.h"
 #include "html/html_text.h"
+#include "input/ext_mime.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
 #include "input/isocket.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
-#include "input/ext_mime.h"
+#include "input/proxy.h"
 #include "input/url.h"
 #include "proto.h"
 #include "siteconf.h"
@@ -808,17 +809,6 @@ static void interpret_rc(FILE *f) {
     Strlower(tmp);
     set_param(tmp->ptr, p);
   }
-}
-
-void parse_proxy() {
-  if (non_null(HTTP_proxy))
-    parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
-  if (non_null(HTTPS_proxy))
-    parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
-  if (non_null(FTP_proxy))
-    parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
-  if (non_null(NO_proxy))
-    set_no_proxy(NO_proxy);
 }
 
 void parse_cookie() {

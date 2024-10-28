@@ -13,6 +13,7 @@
 #include "input/isocket.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
+#include "input/proxy.h"
 #include "input/stream_buffer.h"
 #include "rand48.h"
 #include "rc.h"

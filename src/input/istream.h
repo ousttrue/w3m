@@ -37,8 +37,6 @@ union input_stream *openIS(const char *path);
 void ssl_accept_this_site(const char *hostname);
 int ssl_socket_of(union input_stream *stream);
 
-extern struct TextList *NO_proxy_domains;
-#define set_no_proxy(domains) (NO_proxy_domains = make_domain_list(domains))
 extern Str header_string;
 
 void url_stream_init();
@@ -93,6 +91,7 @@ struct URLOption {
 };
 
 struct FormList;
+struct TextList;
 extern struct URLFile openURL(const char *url, struct Url *pu,
                               struct Url *current, struct URLOption *option,
                               struct FormList *request,
