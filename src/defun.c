@@ -87,9 +87,9 @@ void mainloop(char *line_str) {
 
   for (;;) {
     download_update();
-    if (Currentbuf->submit) {
-      struct Anchor *a = Currentbuf->submit;
-      Currentbuf->submit = NULL;
+    if (Currentbuf->document->submit) {
+      struct Anchor *a = Currentbuf->document->submit;
+      Currentbuf->document->submit = NULL;
       gotoLine(Currentbuf->document, a->start.line);
       Currentbuf->document->viewport.pos = a->start.pos;
       _followForm(true);
@@ -1010,14 +1010,14 @@ static int cur_real_linenumber(struct Buffer *buf) {
 
 /* Run editor on the current buffer */
 DEFUN(editBf, EDIT, "Edit local source") {
-  const char *fn = Currentbuf->filename;
+  const char *fn = Currentbuf->document->filename;
 
   if (fn == NULL ||
-      (Currentbuf->type == NULL &&
+      (Currentbuf->document->type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
-      Currentbuf->real_scheme != SCM_LOCAL ||
-      !strcmp(Currentbuf->currentURL.file, "-") || /* file is std input  */
-      Currentbuf->bufferprop & BP_FRAME) {         /* Frame */
+      Currentbuf->document->real_scheme != SCM_LOCAL ||
+      !strcmp(Currentbuf->document->url.file, "-") ||   /* file is std input  */
+      Currentbuf->document->bufferprop & BP_FRAME) { /* Frame */
     message_push("Can't edit other than local file");
     return;
   }
@@ -1070,14 +1070,14 @@ static struct Buffer *loadLink(const char *url, const char *target,
   scr_message(Sprintf("loading %s", url)->ptr, 0, 0);
   term_refresh();
 
-  no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+  no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
   base = baseURL(Currentbuf);
   if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
       base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
       base->scheme == SCM_DATA)
     referer = NO_REFERER;
   if (referer == NULL)
-    referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
+    referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
   buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf), referer,
                         flag, form);
   if (buf == NULL) {
@@ -1099,7 +1099,8 @@ static struct Buffer *loadLink(const char *url, const char *target,
                            frame page) */
       !strcmp(target, "_top") || /* this link is specified to be opened as an
                                     indivisual * page */
-      !(Currentbuf->bufferprop & BP_FRAME) /* This page is not a frame page */
+      !(Currentbuf->document->bufferprop &
+        BP_FRAME) /* This page is not a frame page */
   ) {
     return loadNormalBuf(buf);
   }
@@ -1118,8 +1119,8 @@ static void gotoLabel(const char *label) {
   copyBuffer(buf->document, Currentbuf->document);
   for (int i = 0; i < MAX_LB; i++)
     buf->linkBuffer[i] = NULL;
-  buf->currentURL.label = allocStr(label, -1);
-  pushHashHist(URLHist, parsedURL2Str(&buf->currentURL)->ptr);
+  buf->document->url.label = allocStr(label, -1);
+  pushHashHist(URLHist, parsedURL2Str(&buf->document->url)->ptr);
   (*buf->clone)++;
   pushBuffer(buf);
   gotoLine(Currentbuf->document, al->start.line);
@@ -1184,7 +1185,7 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     return;
   }
   parseURL2(a->url, &u, baseURL(Currentbuf));
-  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->currentURL)) == 0) {
+  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->document->url)) == 0) {
     /* index within this buffer */
     if (u.label) {
       gotoLabel(u.label);
@@ -1505,7 +1506,7 @@ static void _followForm(int submit) {
     auto tmp2 = Strdup(fi->parent->action);
     if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
       /* It means "current URL" */
-      tmp2 = parsedURL2Str(&Currentbuf->currentURL);
+      tmp2 = parsedURL2Str(&Currentbuf->document->url);
       char *p;
       if ((p = strchr(tmp2->ptr, '?')) != NULL)
         Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
@@ -1532,18 +1533,18 @@ static void _followForm(int submit) {
       if (multipart) {
         unlink(fi->parent->body);
       }
-      if (buf &&
-          !(buf->bufferprop & BP_REDIRECTED)) { /* buf must be Currentbuf */
+      if (buf && !(buf->document->bufferprop &
+                   BP_REDIRECTED)) { /* buf must be Currentbuf */
         /* BP_REDIRECTED means that the buffer is obtained through
          * Location: header. In this case, buf->form_submit must not be set
          * because the page is not loaded by POST method but GET method.
          */
-        buf->form_submit = save_submit_formlist(fi);
+        buf->document->form_submit = save_submit_formlist(fi);
       }
     } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
                 (!Strcmp_charp(fi->parent->action, "map") ||
                  !Strcmp_charp(fi->parent->action, "none"))) ||
-               Currentbuf->bufferprop & BP_INTERNAL) { /* internal */
+               Currentbuf->document->bufferprop & BP_INTERNAL) { /* internal */
       do_internal(tmp2->ptr, tmp->ptr);
     } else {
       message_push("Can't send form because of illegal method.");
@@ -2079,14 +2080,14 @@ static void goURL0(char *prompt, int relative) {
       SKIP_BLANKS(url);
   }
   if (relative) {
-    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->currentURL);
+    no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
     current = baseURL(Currentbuf);
     if ((no_referer_ptr && *no_referer_ptr) || current == NULL ||
         current->scheme == SCM_LOCAL || current->scheme == SCM_LOCAL_CGI ||
         current->scheme == SCM_DATA)
       referer = NO_REFERER;
     else
-      referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
+      referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
     url = url_quote(url);
   } else {
     current = NULL;
@@ -2105,7 +2106,7 @@ static void goURL0(char *prompt, int relative) {
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
   cmd_loadURL(url, current, referer, NULL);
   if (Currentbuf != cur_buf) /* success */
-    pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+    pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
 }
 
 DEFUN(goURL, GOTO, "Open specified document in a new buffer") {
@@ -2124,7 +2125,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, NULL, NULL, NULL);
     if (Currentbuf != cur_buf) /* success */
-      pushHashHist(URLHist, parsedURL2Str(&Currentbuf->currentURL)->ptr);
+      pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
   }
 }
 
@@ -2143,7 +2144,7 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
       Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
               (Str_form_quote(localCookie()))->ptr,
               (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-              (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
+              (Str_form_quote(parsedURL2Str(&Currentbuf->document->url)))->ptr,
               (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
   auto form = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
   form->body = tmp->ptr;
@@ -2155,9 +2156,9 @@ static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
   if (buf == NULL) {
     message_push("Can't load string");
   } else if (buf != NO_BUFFER) {
-    buf->bufferprop |= (BP_INTERNAL | prop);
-    if (!(buf->bufferprop & BP_NO_URL))
-      copyParsedURL(&buf->currentURL, &Currentbuf->currentURL);
+    buf->document->bufferprop |= (BP_INTERNAL | prop);
+    if (!(buf->document->bufferprop & BP_NO_URL))
+      copyParsedURL(&buf->document->url, &Currentbuf->document->url);
     if (linkid != LB_NOLINK) {
       buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;
@@ -2267,7 +2268,7 @@ void follow_map(struct LocalCgiHtml *arg) {
     _newT();
     buf = Currentbuf;
     cmd_loadURL(a->url, baseURL(Currentbuf),
-                parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
+                parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
     if (buf != Currentbuf)
       delBuffer(buf);
     else
@@ -2276,7 +2277,7 @@ void follow_map(struct LocalCgiHtml *arg) {
     return;
   }
   cmd_loadURL(a->url, baseURL(Currentbuf),
-              parsedURL2Str(&Currentbuf->currentURL)->ptr, NULL);
+              parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
 #endif
 }
 
@@ -2365,18 +2366,18 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
 
 /* save source */
 DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
-  if (Currentbuf->sourcefile == NULL)
+  if (Currentbuf->document->sourcefile == NULL)
     return;
 
   CurrentKeyData = NULL; /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
   const char *file;
-  if (Currentbuf->real_scheme == SCM_LOCAL)
-    file = guess_save_name(NULL, Currentbuf->currentURL.real_file);
+  if (Currentbuf->document->real_scheme == SCM_LOCAL)
+    file = guess_save_name(NULL, Currentbuf->document->url.real_file);
   else
     file =
-        guess_save_name(Currentbuf->http_response, Currentbuf->currentURL.file);
-  doFileCopy(Currentbuf->sourcefile, file);
+        guess_save_name(Currentbuf->http_response, Currentbuf->document->url.file);
+  doFileCopy(Currentbuf->document->sourcefile, file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2431,16 +2432,16 @@ DEFUN(peekIMG, PEEK_IMG, "Show image address") { _peekURL(1); }
 
 /* show current URL */
 static Str currentURL(void) {
-  if (Currentbuf->bufferprop & BP_INTERNAL)
+  if (Currentbuf->document->bufferprop & BP_INTERNAL)
     return Strnew_size(0);
-  return parsedURL2Str(&Currentbuf->currentURL);
+  return parsedURL2Str(&Currentbuf->document->url);
 }
 
 DEFUN(curURL, PEEK, "Show current address") {
   static Str s = NULL;
   static int offset = 0, n;
 
-  if (Currentbuf->bufferprop & BP_INTERNAL)
+  if (Currentbuf->document->bufferprop & BP_INTERNAL)
     return;
   if (CurrentKey == prev_key && s != NULL) {
     if (s->length - offset >= COLS)
@@ -2463,7 +2464,8 @@ DEFUN(curURL, PEEK, "Show current address") {
 DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   struct Buffer *buf;
 
-  if (Currentbuf->type == NULL || Currentbuf->bufferprop & BP_FRAME)
+  if (Currentbuf->document->type == NULL ||
+      Currentbuf->document->bufferprop & BP_FRAME)
     return;
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL ||
       (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
@@ -2471,42 +2473,43 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
     displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
-  if (Currentbuf->sourcefile == NULL) {
+  if (Currentbuf->document->sourcefile == NULL) {
     return;
   }
 
   buf = newBuffer();
 
-  if (is_html_type(Currentbuf->type)) {
-    buf->type = "text/plain";
-    if (Currentbuf->real_type && is_html_type(Currentbuf->real_type))
-      buf->real_type = "text/plain";
+  if (is_html_type(Currentbuf->document->type)) {
+    buf->document->type = "text/plain";
+    if (Currentbuf->document->real_type &&
+        is_html_type(Currentbuf->document->real_type))
+      buf->document->real_type = "text/plain";
     else
-      buf->real_type = Currentbuf->real_type;
+      buf->document->real_type = Currentbuf->document->real_type;
     buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
-  } else if (!strcasecmp(Currentbuf->type, "text/plain")) {
-    buf->type = "text/html";
-    if (Currentbuf->real_type &&
-        !strcasecmp(Currentbuf->real_type, "text/plain"))
-      buf->real_type = "text/html";
+  } else if (!strcasecmp(Currentbuf->document->type, "text/plain")) {
+    buf->document->type = "text/html";
+    if (Currentbuf->document->real_type &&
+        !strcasecmp(Currentbuf->document->real_type, "text/plain"))
+      buf->document->real_type = "text/html";
     else
-      buf->real_type = Currentbuf->real_type;
+      buf->document->real_type = Currentbuf->document->real_type;
     buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
   } else {
     return;
   }
-  buf->currentURL = Currentbuf->currentURL;
-  buf->real_scheme = Currentbuf->real_scheme;
-  buf->filename = Currentbuf->filename;
-  buf->sourcefile = Currentbuf->sourcefile;
+  buf->document->url = Currentbuf->document->url;
+  buf->document->real_scheme = Currentbuf->document->real_scheme;
+  buf->document->filename = Currentbuf->document->filename;
+  buf->document->sourcefile = Currentbuf->document->sourcefile;
   buf->clone = Currentbuf->clone;
   (*buf->clone)++;
 
-  buf->need_reshape = true;
+  buf->document->need_reshape = true;
   reshapeBuffer(buf);
   pushBuffer(buf);
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2514,7 +2517,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
 /* reload */
 DEFUN(reload, RELOAD, "Load current document anew") {
-  if (Currentbuf->bufferprop & BP_INTERNAL) {
+  if (Currentbuf->document->bufferprop & BP_INTERNAL) {
     if (!strcmp(Currentbuf->buffername, DOWNLOAD_LIST_TITLE)) {
       ldDL();
       return;
@@ -2523,8 +2526,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     return;
   }
 
-  if (Currentbuf->currentURL.scheme == SCM_LOCAL &&
-      !strcmp(Currentbuf->currentURL.file, "-")) {
+  if (Currentbuf->document->url.scheme == SCM_LOCAL &&
+      !strcmp(Currentbuf->document->url.file, "-")) {
     /* file is std input */
     message_push("Can't reload stdin");
     return;
@@ -2536,24 +2539,24 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   Str url;
   struct FormList *form;
   bool multipart = 0;
-  if (Currentbuf->form_submit) {
-    form = Currentbuf->form_submit->parent;
+  if (Currentbuf->document->form_submit) {
+    form = Currentbuf->document->form_submit->parent;
     if (form->method == FORM_METHOD_POST &&
         form->enctype == FORM_ENCTYPE_MULTIPART) {
       Str query;
       struct stat st;
       multipart = 1;
-      query_from_followform(&query, Currentbuf->form_submit, multipart);
+      query_from_followform(&query, Currentbuf->document->form_submit, multipart);
       stat(form->body, &st);
       form->length = st.st_size;
     }
   } else {
     form = NULL;
   }
-  url = parsedURL2Str(&Currentbuf->currentURL);
+  url = parsedURL2Str(&Currentbuf->document->url);
   scr_message("Reloading...", 0, 0);
   term_refresh();
-  DefaultType = Currentbuf->real_type;
+  DefaultType = Currentbuf->document->real_type;
   buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER, true,
                         form);
   DefaultType = NULL;
@@ -2588,7 +2591,7 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document") {
-  Currentbuf->need_reshape = true;
+  Currentbuf->document->need_reshape = true;
   reshapeBuffer(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -2694,17 +2697,17 @@ static void invoke_browser(char *url) {
 }
 
 DEFUN(extbrz, EXTERN, "Display using an external browser") {
-  if (Currentbuf->bufferprop & BP_INTERNAL) {
+  if (Currentbuf->document->bufferprop & BP_INTERNAL) {
     message_push("Can't browse...");
     return;
   }
-  if (Currentbuf->currentURL.scheme == SCM_LOCAL &&
-      !strcmp(Currentbuf->currentURL.file, "-")) {
+  if (Currentbuf->document->url.scheme == SCM_LOCAL &&
+      !strcmp(Currentbuf->document->url.file, "-")) {
     /* file is std input */
     message_push("Can't browse stdin");
     return;
   }
-  invoke_browser(parsedURL2Str(&Currentbuf->currentURL)->ptr);
+  invoke_browser(parsedURL2Str(&Currentbuf->document->url)->ptr);
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
@@ -2817,10 +2820,10 @@ static void execdict(const char *word) {
     message_push("Execution failed");
     return;
   } else if (buf != NO_BUFFER) {
-    buf->filename = w;
+    buf->document->filename = w;
     buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
-    if (buf->type == NULL)
-      buf->type = "text/plain";
+    if (buf->document->type == NULL)
+      buf->document->type = "text/plain";
     pushBuffer(buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -2844,11 +2847,12 @@ void set_buffer_environ(struct Buffer *buf) {
     return;
 
   if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->sourcefile);
-    set_environ("W3M_FILENAME", buf->filename);
+    set_environ("W3M_SOURCEFILE", buf->document->sourcefile);
+    set_environ("W3M_FILENAME", buf->document->filename);
     set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", parsedURL2Str(&buf->currentURL)->ptr);
-    set_environ("W3M_TYPE", buf->real_type ? buf->real_type : "unknown");
+    set_environ("W3M_URL", parsedURL2Str(&buf->document->url)->ptr);
+    set_environ("W3M_TYPE", buf->document->real_type ? buf->document->real_type
+                                                     : "unknown");
   }
   auto l = buf->document->currentLine;
   if (l && (buf != prev_buf || l != prev_line ||

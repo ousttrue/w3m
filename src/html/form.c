@@ -717,11 +717,11 @@ void preFormUpdateBuffer(struct Buffer *buf) {
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      Str url = parsedURL2Str(&buf->currentURL);
+      Str url = parsedURL2Str(&buf->document->url);
       if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
         continue;
     } else if (pf->url) {
-      if (Strcmp_charp(parsedURL2Str(&buf->currentURL), pf->url))
+      if (Strcmp_charp(parsedURL2Str(&buf->document->url), pf->url))
         continue;
     } else
       continue;
@@ -741,7 +741,7 @@ void preFormUpdateBuffer(struct Buffer *buf) {
                (fi->name && !Strcmp_charp(fi->name, pi->name))) &&
               (!pi->value || !*pi->value ||
                (fi->value && !Strcmp_charp(fi->value, pi->value))))
-            buf->submit = a;
+            buf->document->submit = a;
           continue;
         }
         if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))

@@ -279,9 +279,9 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   if (buf->document->height == 0)
     buf->document->height = LASTLINE + 1;
   if ((buf->document->width != INIT_BUFFER_WIDTH &&
-       (is_html_type(buf->type) || FoldLine)) ||
-      buf->need_reshape) {
-    buf->need_reshape = true;
+       (is_html_type(buf->document->type) || FoldLine)) ||
+      buf->document->need_reshape) {
+    buf->document->need_reshape = true;
     reshapeBuffer(buf);
   }
   if (showLineNum) {

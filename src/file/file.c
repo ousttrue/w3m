@@ -144,7 +144,7 @@ static void _saveBuffer(struct Buffer *buf, struct Line *l, FILE *f, int cont) {
   Str tmp;
   int is_html = false;
 
-  is_html = is_html_type(buf->type);
+  is_html = is_html_type(buf->document->type);
 
   for (; l != NULL; l = l->next) {
     if (is_html)

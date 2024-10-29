@@ -185,19 +185,16 @@ struct Document *page_info_panel(struct Buffer *buf) {
     all = buf->document->allLine;
     if (all == 0 && buf->document->lastLine)
       all = buf->document->lastLine->linenumber;
-    const char *p = url_decode0(parsedURL2Str(&buf->currentURL)->ptr);
-    Strcat_m_charp(tmp, "<table cellpadding=0>",
-                   "<tr valign=top><td nowrap>Title<td>",
-                   html_quote(buf->buffername),
-                   "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
-                   "<tr valign=top><td nowrap>Document Type<td>",
-                   buf->real_type ? html_quote(buf->real_type) : "unknown",
-                   "<tr valign=top><td nowrap>Last Modified<td>",
-                   html_quote(last_modified(buf)), NULL);
-    Strcat_m_charp(tmp, "<tr valign=top><td nowrap>Number of lines<td>",
-                   Sprintf("%d", all)->ptr,
-                   "<tr valign=top><td nowrap>Transferred bytes<td>",
-                   Sprintf("%lu", (unsigned long)buf->trbyte)->ptr, NULL);
+    const char *p = url_decode0(parsedURL2Str(&buf->document->url)->ptr);
+    Strcat_m_charp(
+        tmp, "<table cellpadding=0>", "<tr valign=top><td nowrap>Title<td>",
+        html_quote(buf->buffername),
+        "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
+        "<tr valign=top><td nowrap>Document Type<td>",
+        buf->document->real_type ? html_quote(buf->document->real_type)
+                                 : "unknown",
+        "<tr valign=top><td nowrap>Last Modified<td>",
+        html_quote(last_modified(buf)), NULL);
   }
 
   a = retrieveCurrentAnchor(buf->document);

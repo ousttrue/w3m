@@ -82,8 +82,8 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
         Str cmd = Sprintf("%s?dir=%s#current", DirBufferCommand, url.file);
         auto b = loadGeneralFile(cols, cmd->ptr, NULL, NO_REFERER, 0, NULL);
         if (b != NULL && b != NO_BUFFER) {
-          copyParsedURL(&b->currentURL, &url);
-          b->filename = b->currentURL.real_file;
+          copyParsedURL(&b->document->url, &url);
+          b->document->filename = b->document->url.real_file;
         }
         return b;
       } else {
@@ -149,15 +149,15 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     auto b = newBuffer();
     b->http_response = res;
     auto url = res->request->url;
-    copyParsedURL(&b->currentURL, &res->request->url);
-    b->filename = url.real_file ? url.real_file : url.file;
+    copyParsedURL(&b->document->url, &res->request->url);
+    b->document->filename = url.real_file ? url.real_file : url.file;
     if (content) {
       FILE *src = NULL;
       if (url.scheme != SCM_LOCAL) {
         auto tmp = tmpfname(TMPF_SRC, ".html");
         src = fopen(tmp->ptr, "w");
         if (src) {
-          b->sourcefile = tmp->ptr;
+          b->document->sourcefile = tmp->ptr;
           Strfputs(content, src);
           fclose(src);
         }
@@ -223,24 +223,24 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     DefaultType = NULL;
     // }
 
-    b->real_type = guessContentType(res->request->url.file);
-    if (b->real_type == NULL) {
-      b->real_type = "text/plain";
+    b->document->real_type = guessContentType(res->request->url.file);
+    if (b->document->real_type == NULL) {
+      b->document->real_type = "text/plain";
     }
-    b->type = httpGetContentType(res);
-    if (!b->type && res->request->url.file) {
+    b->document->type = httpGetContentType(res);
+    if (!b->document->type && res->request->url.file) {
       if (!((res->http_status_code >= 400 && res->http_status_code <= 407) ||
             (res->http_status_code >= 500 && res->http_status_code <= 505)))
-        b->type = guessContentType(res->request->url.file);
+        b->document->type = guessContentType(res->request->url.file);
     }
-    if (!b->type) {
-      b->type = "text/plain";
+    if (!b->document->type) {
+      b->document->type = "text/plain";
     }
-    if (!b->real_type) {
-      b->real_type = b->type;
+    if (!b->document->real_type) {
+      b->document->real_type = b->document->type;
     }
 
-    b->document = get_document(cols, res, current, content, b->type);
+    b->document = get_document(cols, res, current, content, b->document->type);
     return b;
   }
   }

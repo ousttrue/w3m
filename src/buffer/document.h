@@ -1,5 +1,6 @@
 // rendererd document
 #pragma once
+#include "input/url.h"
 #include "line.h"
 #include "viewport.h"
 
@@ -15,7 +16,28 @@ struct FormList;
 struct MapList;
 struct HmarkerList;
 
+/* Buffer Property */
+enum BufferProperty {
+  BP_NORMAL = 0x0,
+  BP_PIPE = 0x1,
+  BP_FRAME = 0x2,
+  BP_INTERNAL = 0x8,
+  BP_NO_URL = 0x10,
+  BP_REDIRECTED = 0x20,
+  BP_CLOSE = 0x40,
+};
+
 struct Document {
+  struct FormItemList *form_submit;
+  struct Anchor *submit;
+  bool need_reshape;
+  const char *sourcefile;
+  struct Url url;
+  enum URL_SCHEME_TYPE real_scheme;
+  const char *type;
+  const char *real_type;
+  const char *filename;
+  enum BufferProperty bufferprop;
   const char *savecache;
   const char *title;
   const char *baseTarget;

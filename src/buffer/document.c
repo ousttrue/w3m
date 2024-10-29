@@ -12,6 +12,9 @@ int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1); }
 
 struct Document *newDocument(int width) {
   struct Document *doc = New(struct Document);
+  doc->url.scheme = SCM_UNKNOWN;
+  doc->need_reshape = true; /* always reshape new buffers to mark URLs */
+  doc->bufferprop = BP_NORMAL;
   doc->baseTarget = NULL;
   doc->baseURL = NULL;
   doc->width = width;

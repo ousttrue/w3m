@@ -510,7 +510,7 @@ static void sock_log(char *message, ...) {
 #endif
 
 struct Url *baseURL(struct Buffer *buf) {
-  if (buf->bufferprop & BP_NO_URL) {
+  if (buf->document->bufferprop & BP_NO_URL) {
     /* no URL is defined for the buffer */
     return NULL;
   }
@@ -518,10 +518,10 @@ struct Url *baseURL(struct Buffer *buf) {
   if (buf->document->baseURL != NULL) {
     /* <BASE> tag is defined in the document */
     return buf->document->baseURL;
-  } else if (IS_EMPTY_PARSED_URL(&buf->currentURL))
+  } else if (IS_EMPTY_PARSED_URL(&buf->document->url))
     return NULL;
   else
-    return &buf->currentURL;
+    return &buf->document->url;
 }
 
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))

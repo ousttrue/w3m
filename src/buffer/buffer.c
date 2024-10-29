@@ -33,14 +33,10 @@ struct Buffer *newBuffer() {
   struct Buffer *n = New(struct Buffer);
   memset((void *)n, 0, sizeof(struct Buffer));
   n->document = newDocument(INIT_BUFFER_WIDTH);
-  n->currentURL.scheme = SCM_UNKNOWN;
   n->buffername = "";
-  n->bufferprop = BP_NORMAL;
   n->clone = New(int);
   *n->clone = 1;
-  n->trbyte = 0;
   n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
-  n->need_reshape = 1;         /* always reshape new buffers to mark URLs */
   return n;
 }
 
@@ -80,10 +76,10 @@ void discardBuffer(struct Buffer *buf) {
   if (--(*buf->clone))
     return;
 
-  if (buf->sourcefile &&
-      (!buf->real_type || strncasecmp(buf->real_type, "image/", 6))) {
-    if (buf->real_scheme != SCM_LOCAL || buf->bufferprop & BP_FRAME)
-      unlink(buf->sourcefile);
+  if (buf->document->sourcefile &&
+      (!buf->document->real_type || strncasecmp(buf->document->real_type, "image/", 6))) {
+    if (buf->document->real_scheme != SCM_LOCAL || buf->document->bufferprop & BP_FRAME)
+      unlink(buf->document->sourcefile);
   }
 }
 
@@ -164,22 +160,18 @@ struct Buffer *nthBuffer(struct Buffer *firstbuf, int n) {
 }
 
 static void writeBufferName(struct Buffer *buf, int n) {
-  Str msg;
-  int all;
-
-  all = buf->document->allLine;
+  auto all = buf->document->allLine;
   if (all == 0 && buf->document->lastLine != NULL)
     all = buf->document->lastLine->linenumber;
   scr_move(n, 0);
-  /* FIXME: gettextize? */
-  msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
-  if (buf->filename != NULL) {
-    switch (buf->currentURL.scheme) {
+  auto msg = Sprintf("<%s> [%d lines]", buf->buffername, all);
+  if (buf->document->filename != NULL) {
+    switch (buf->document->url.scheme) {
     case SCM_LOCAL:
     case SCM_LOCAL_CGI:
-      if (strcmp(buf->currentURL.file, "-")) {
+      if (strcmp(buf->document->url.file, "-")) {
         Strcat_char(msg, ' ');
-        Strcat_charp(msg, buf->currentURL.real_file);
+        Strcat_charp(msg, buf->document->url.real_file);
       }
       break;
     case SCM_UNKNOWN:
@@ -187,7 +179,7 @@ static void writeBufferName(struct Buffer *buf, int n) {
       break;
     default:
       Strcat_char(msg, ' ');
-      Strcat(msg, parsedURL2Str(&buf->currentURL));
+      Strcat(msg, parsedURL2Str(&buf->document->url));
       break;
     }
   }
@@ -341,16 +333,16 @@ struct Buffer *selectBuffer(struct Buffer *firstbuf, struct Buffer *currentbuf,
  * Reshape HTML buffer
  */
 void reshapeBuffer(struct Buffer *buf) {
-  if (!buf->need_reshape) {
+  if (!buf->document->need_reshape) {
     return;
   }
-  buf->need_reshape = false;
+  buf->document->need_reshape = false;
 
   buf->document->width = INIT_BUFFER_WIDTH;
-  if (buf->sourcefile == NULL)
+  if (buf->document->sourcefile == NULL)
     return;
 
-  auto stream = examineFile(buf->sourcefile);
+  auto stream = examineFile(buf->document->sourcefile);
   if (stream == NULL) {
     return;
   }
@@ -377,9 +369,9 @@ void reshapeBuffer(struct Buffer *buf) {
   if (buf->document->imarklist)
     buf->document->imarklist->nmark = 0;
 
-  if (is_html_type(buf->type)) {
+  if (is_html_type(buf->document->type)) {
     buf->document =
-        loadHTML(buf->document->viewport.COLS, html->ptr, buf->currentURL,
+        loadHTML(buf->document->viewport.COLS, html->ptr, buf->document->url,
                  baseURL(buf), buf->http_response->content_charset);
   } else {
     buf->document = loadText(buf->document->viewport.COLS, html->ptr);
@@ -411,7 +403,7 @@ void reshapeBuffer(struct Buffer *buf) {
         gotoLine(buf->document, cur->linenumber);
     }
     buf->document->viewport.pos -= buf->document->currentLine->bpos;
-    if (FoldLine && !is_html_type(buf->type))
+    if (FoldLine && !is_html_type(buf->document->type))
       buf->document->viewport.currentColumn = 0;
     else
       buf->document->viewport.currentColumn = sbuf.viewport.currentColumn;
@@ -442,8 +434,8 @@ char *last_modified(struct Buffer *buf) {
       }
     }
     return "unknown";
-  } else if (buf->currentURL.scheme == SCM_LOCAL) {
-    if (stat(buf->currentURL.file, &st) < 0)
+  } else if (buf->document->url.scheme == SCM_LOCAL) {
+    if (stat(buf->document->url.file, &st) < 0)
       return "unknown";
     return ctime(&st.st_mtime);
   }
@@ -456,7 +448,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
   Str tmp =
       Strnew_charp("<title>Link List</title><h1 align=center>Link List</h1>\n");
 
-  if (buf->bufferprop & BP_INTERNAL ||
+  if (buf->document->bufferprop & BP_INTERNAL ||
       (buf->document->linklist == NULL && buf->document->href == NULL &&
        buf->document->img == NULL)) {
     return NULL;

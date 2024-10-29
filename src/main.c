@@ -378,14 +378,14 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  switch (newbuf->real_scheme) {
+  switch (newbuf->document->real_scheme) {
   case SCM_MAILTO:
     break;
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
     unshiftHist(LoadHist, url);
   default:
-    pushHashHist(URLHist, parsedURL2Str(&newbuf->currentURL)->ptr);
+    pushHashHist(URLHist, parsedURL2Str(&newbuf->document->url)->ptr);
     break;
   }
 
