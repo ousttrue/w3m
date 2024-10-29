@@ -2,6 +2,9 @@
 #include "input/url.h"
 #include <stdint.h>
 
+extern int FollowRedirection;
+extern bool retryAsHttp;
+
 #define NO_REFERER ((char *)-1)
 
 enum HttpRequestMethod {
@@ -71,3 +74,9 @@ void httpReadResponse(struct HttpResponse *res);
 const char *httpGetHeader(struct HttpResponse *res, const char *field);
 const char *httpGetContentType(struct HttpResponse *res);
 const char *guess_save_name(struct HttpResponse *buf, const char *file);
+
+void clearRedirection();
+struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
+                                     union input_stream *of,
+                                     bool add_auth_cookie_flag, Str realm,
+                                     Str uname, Str pwd);

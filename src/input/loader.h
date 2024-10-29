@@ -3,9 +3,7 @@
 extern const char *DefaultType;
 extern bool UseExternalDirBuffer;
 extern bool label_topline;
-extern bool retryAsHttp;
 extern bool AutoUncompress;
-extern int FollowRedirection;
 extern const char *DirBufferCommand;
 
 struct Url;
