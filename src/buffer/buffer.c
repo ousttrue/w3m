@@ -6,7 +6,7 @@
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "html/map.h"
-#include "input/http_response.h"
+#include "input/http.h"
 #include "input/istream.h"
 #include "input/url.h"
 #include "term/scr.h"
@@ -17,8 +17,8 @@
 #include "text/text.h"
 #include <stdlib.h>
 #include <sys/stat.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 int REV_LB[MAX_LB] = {
     LB_N_INFO,

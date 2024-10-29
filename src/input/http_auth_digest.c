@@ -1,6 +1,6 @@
 #include "input/http_auth_digest.h"
 #include "html/form.h"
-#include "input/http_request.h"
+#include "input/http.h"
 #include "text/ctrlcode.h"
 #include <openssl/md5.h>
 #include <stdlib.h>

@@ -5,12 +5,10 @@
 #include "buffer/line.h"
 #include "file/file.h"
 #include "fm.h"
-#include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
-#include "input/http_response.h"
+#include "input/http.h"
 #include "input/istream.h"
 #include "input/loader.h"
-#include "input/localcgi.h"
 #include "os.h"
 #include "term/terms.h"
 #include "term/termsize.h"
@@ -18,7 +16,6 @@
 #include "text/myctype.h"
 #include "text/symbol.h"
 #include "text/text.h"
-#include "trap_jmp.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>

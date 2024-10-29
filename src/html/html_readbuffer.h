@@ -2,7 +2,7 @@
 #include "buffer/line.h"
 #include "html/anchor.h"
 #include "html/html_parser.h"
-#include "input/http_response.h"
+#include "input/http.h"
 #include "input/url.h"
 #include "text/Str.h"
 

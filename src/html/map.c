@@ -8,7 +8,7 @@
 #include "file/file.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
-#include "input/http_response.h"
+#include "input/http.h"
 #include "input/istream.h"
 #include "input/url.h"
 #include <math.h>

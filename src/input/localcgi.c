@@ -6,7 +6,7 @@
 #include "fm.h"
 #include "html/form.h"
 #include "html/html_text.h"
-#include "input/http_request.h"
+#include "input/http.h"
 #include "input/url.h"
 #include "os.h"
 #include "rand48.h"
@@ -278,7 +278,8 @@ static int check_local_cgi(const char *file, int status) {
 #endif
 }
 
-static void set_cgi_environ(const char *name, const char *fn, const char *req_uri) {
+static void set_cgi_environ(const char *name, const char *fn,
+                            const char *req_uri) {
   set_environ("SERVER_SOFTWARE", w3m_version);
   set_environ("SERVER_PROTOCOL", "HTTP/1.0");
   set_environ("SERVER_NAME", "localhost");
@@ -292,7 +293,8 @@ static void set_cgi_environ(const char *name, const char *fn, const char *req_ur
   set_environ("REQUEST_URI", req_uri);
 }
 
-// -FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
+// -FILE *localcgi_post(const char *uri, const char *qstr, struct FormList
+// *form,
 // -                    const char *referer) {
 FILE *localcgi_request(struct HttpRequest *hr) {
   auto uri = hr->url.real_file;
