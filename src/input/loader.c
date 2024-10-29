@@ -3,7 +3,6 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/message.h"
-#include "file/file.h"
 #include "file/tmpfile.h"
 #include "html/html_readbuffer.h"
 #include "input/ftp.h"
@@ -17,9 +16,7 @@
 #include "rc.h"
 #include "siteconf.h"
 #include "term/terms.h"
-// #include "text/datetime.h"
 #include "text/text.h"
-#include "trap_jmp.h"
 #include <assert.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -121,18 +118,15 @@ static struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
                                             bool add_auth_cookie_flag,
                                             Str realm, Str uname, Str pwd) {
   auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&req->url);
-  if (sc_redirect) {
-    if (*sc_redirect && checkRedirection(&req->url)) {
-      struct Url url;
-      parseURL2(sc_redirect, &url, &req->url);
-      add_auth_cookie_flag = 0;
-      req = newHttpRequest(url, nullptr, req->referer, req->no_cache,
-                           req->extra_header);
-      return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname, pwd);
-    }
+  if (sc_redirect && *sc_redirect && checkRedirection(&req->url)) {
+    struct Url url;
+    parseURL2(sc_redirect, &url, &req->url);
+    add_auth_cookie_flag = 0;
+    req = newHttpRequest(url, nullptr, req->referer, req->no_cache,
+                         req->extra_header);
+    return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname, pwd);
   }
 
-  trap_off();
   auto http_response = openURL(req, of);
   if ((!http_response || http_response->stream == NULL) && retryAsHttp &&
       req->url.file[0] != '/') {
@@ -148,24 +142,16 @@ static struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
   }
 
   if (http_response && http_response->stream_status == STREAM_MISSING) {
-    trap_off();
     ISclose(http_response->stream);
     return NULL;
   }
 
   /* openURL() succeeded */
   of = NULL;
-  if (from_jmp()) {
-    /* transfer interrupted */
-    trap_off();
-    ISclose(http_response->stream);
-    return NULL;
-  }
-
   if (header_string) {
     header_string = NULL;
   }
-  trap_on();
+
   if (req->url.scheme == SCM_HTTP || req->url.scheme == SCM_HTTPS ||
       (((req->url.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
        !check_no_proxy(req->url.host))) {
@@ -213,7 +199,6 @@ static struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
         getAuthCookie(&hauth, "Authorization:", req, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
-          trap_off();
           return http_response;
         }
         ISclose(http_response->stream);
@@ -233,7 +218,6 @@ static struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
         getAuthCookie(&hauth, "Proxy-Authorization:", req, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
-          trap_off();
           return http_response;
         }
 
@@ -421,7 +405,6 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
       header_string = NULL;
     if (b && b != NO_BUFFER)
       preFormUpdateBuffer(b);
-    trap_off();
 
     // t = guessContentType(req->url.file);
     // if (t == NULL)
