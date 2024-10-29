@@ -491,7 +491,6 @@ void parseURL(const char *_url, struct Url *p_url, struct Url *current) {
   /*          ^p is here  */
 analyze_url:
   q = p;
-#ifdef INET6
   if (*q == '[') { /* rfc2732,rfc2373 compliance */
     p++;
     while (IS_XDIGIT(*p) || *p == ':' || *p == '.')
@@ -499,7 +498,6 @@ analyze_url:
     if (*p != ']' || (*(p + 1) && strchr(":/?#", *(p + 1)) == NULL))
       p = q;
   }
-#endif
   while (*p && strchr(":/@?#", *p) == NULL)
     p++;
   switch (*p) {

@@ -5,23 +5,34 @@
 #include "core.h"
 #include "file/file.h"
 #include "func.h"
-#include "input/http_cookie.h"
 #include "input/http_auth.h"
+#include "input/http_cookie.h"
+#include "input/http_stream.h"
 #include "input/istream.h"
 #include "input/mimehead.h"
-#include "input/url.h"
 #include "input/proxy.h"
+#include "input/url.h"
 #include "siteconf.h"
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/datetime.h"
 #include "text/myctype.h"
 #include "text/text.h"
+#include "version.h"
 #include <stdint.h>
 #include <string.h>
 
 int FollowRedirection = 10;
 bool retryAsHttp = true;
+bool override_user_agent = false;
+const char *UserAgent = nullptr;
+const char *AcceptLang = nullptr;
+const char *AcceptEncoding = nullptr;
+const char *AcceptMedia = nullptr;
+bool NoCache = false;
+bool NoSendReferer = false;
+bool CrossOriginReferer = true;
+bool override_content_type = false;
 
 static bool same_url_p(struct Url *pu1, struct Url *pu2) {
   return (pu1->scheme == pu2->scheme && pu1->port == pu2->port &&
@@ -150,6 +161,156 @@ bool httpMatchattr(const char *p, const char *attr, int len, Str *value) {
   return 0;
 }
 
+static Str parsedURL2RefererOriginStr(struct Url *pu) {
+  auto f = pu->file;
+  auto q = pu->query;
+  pu->file = NULL;
+  pu->query = NULL;
+  auto s = _parsedURL2Str(pu, false, false, false);
+  pu->file = f;
+  pu->query = q;
+  return s;
+}
+
+// if (hr->referer == NO_REFERER)
+// else
+// Strcat_charp(tmp, otherinfo(pu, NULL, NULL, no_cache));
+// Strcat_charp(tmp, otherinfo(pu, current, hr->referer, no_cache));
+static char *
+otherinfo(struct HttpRequest *hr
+          // struct Url *target, struct Url *current,
+          //                      const char *referer, bool is_nocache
+) {
+  Str s = Strnew();
+  const int *no_referer_ptr;
+  int no_referer;
+  const char *url_user_agent = query_SCONF_USER_AGENT(&hr->url);
+
+  if (!override_user_agent) {
+    Strcat_charp(s, "User-Agent: ");
+    if (url_user_agent)
+      Strcat_charp(s, url_user_agent);
+    else if (UserAgent == NULL || *UserAgent == '\0')
+      Strcat_charp(s, w3m_version);
+    else
+      Strcat_charp(s, UserAgent);
+    Strcat_charp(s, "\r\n");
+  }
+
+  Strcat_m_charp(s, "Accept: ", AcceptMedia, "\r\n", NULL);
+  Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding, "\r\n", NULL);
+  Strcat_m_charp(s, "Accept-Language: ", AcceptLang, "\r\n", NULL);
+
+  if (hr->url.host) {
+    Strcat_charp(s, "Host: ");
+    Strcat_charp(s, hr->url.host);
+    if (hr->url.port != DefaultPort[hr->url.scheme])
+      Strcat(s, Sprintf(":%d", hr->url.port));
+    Strcat_charp(s, "\r\n");
+  }
+  if (hr->no_cache || NoCache) {
+    Strcat_charp(s, "Pragma: no-cache\r\n");
+    Strcat_charp(s, "Cache-control: no-cache\r\n");
+  }
+
+  auto current = hr->referer == NO_REFERER ? nullptr : hr->current;
+  auto referer = hr->referer == NO_REFERER ? nullptr : hr->referer;
+  no_referer = NoSendReferer;
+  no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
+  no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
+  no_referer_ptr = query_SCONF_NO_REFERER_TO(&hr->url);
+  no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
+  if (!no_referer) {
+    int cross_origin = false;
+    if (CrossOriginReferer && current && current->host &&
+        (!hr->url.host || strcasecmp(current->host, hr->url.host) != 0 ||
+         current->port != hr->url.port || current->scheme != hr->url.scheme))
+      cross_origin = true;
+    if (current && current->scheme == SCM_HTTPS &&
+        hr->url.scheme != SCM_HTTPS) {
+      /* Don't send Referer: if https:// -> http:// */
+    } else if (referer == NULL && current && current->scheme != SCM_LOCAL &&
+               current->scheme != SCM_LOCAL_CGI &&
+               current->scheme != SCM_DATA &&
+               (current->scheme != SCM_FTP ||
+                (current->user == NULL && current->pass == NULL))) {
+      Strcat_charp(s, "Referer: ");
+      if (cross_origin)
+        Strcat(s, parsedURL2RefererOriginStr(current));
+      else
+        Strcat(s, parsedURL2RefererStr(current));
+      Strcat_charp(s, "\r\n");
+    } else if (referer != NULL && referer != NO_REFERER) {
+      Strcat_charp(s, "Referer: ");
+      if (cross_origin)
+        Strcat(s, parsedURL2RefererOriginStr(current));
+      else
+        Strcat_charp(s, referer);
+      Strcat_charp(s, "\r\n");
+    }
+  }
+  return s->ptr;
+}
+
+Str HTTPrequestToStr(struct HttpRequest *hr) {
+  struct TextListItem *i;
+  Str cookie;
+  auto tmp = HTTPrequestMethod(hr);
+  Strcat_charp(tmp, " ");
+  Strcat_charp(tmp, HTTPrequestURI(hr)->ptr);
+  Strcat_charp(tmp, " HTTP/1.0\r\n");
+  Strcat_charp(tmp, otherinfo(hr));
+  if (hr->extra_header)
+    for (i = hr->extra_header->first; i != NULL; i = i->next) {
+      if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
+          0) {
+        if (hr->command == HR_COMMAND_CONNECT)
+          continue;
+      }
+      if (strncasecmp(i->ptr, "Proxy-Authorization:",
+                      sizeof("Proxy-Authorization:") - 1) == 0) {
+        if (hr->url.scheme == SCM_HTTPS && hr->command != HR_COMMAND_CONNECT)
+          continue;
+      }
+      Strcat_charp(tmp, i->ptr);
+    }
+
+  if (hr->command != HR_COMMAND_CONNECT && use_cookie &&
+      (cookie = find_cookie(&hr->url))) {
+    Strcat_charp(tmp, "Cookie: ");
+    Strcat(tmp, cookie);
+    Strcat_charp(tmp, "\r\n");
+    /* [DRAFT 12] s. 10.1 */
+    if (cookie->ptr[0] != '$')
+      Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
+  }
+  if (hr->command == HR_COMMAND_POST) {
+    if (hr->form->enctype == FORM_ENCTYPE_MULTIPART) {
+      Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
+      Strcat_charp(tmp, hr->form->boundary);
+      Strcat_charp(tmp, "\r\n");
+      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->form->length));
+      Strcat_charp(tmp, "\r\n");
+    } else {
+      if (!override_content_type) {
+        Strcat_charp(tmp,
+                     "Content-Type: application/x-www-form-urlencoded\r\n");
+      }
+      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->form->length));
+      if (header_string)
+        Strcat(tmp, header_string);
+      Strcat_charp(tmp, "\r\n");
+      Strcat_charp_n(tmp, hr->form->body, hr->form->length);
+      Strcat_charp(tmp, "\r\n");
+    }
+  } else {
+    if (header_string)
+      Strcat(tmp, header_string);
+    Strcat_charp(tmp, "\r\n");
+  }
+  return tmp;
+}
+
 struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
                                      union input_stream *of,
                                      bool add_auth_cookie_flag, Str realm,
@@ -164,7 +325,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
     return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname, pwd);
   }
 
-  auto http_response = openURL(req, of);
+  auto http_response = openHttpStream(req, of);
   if ((!http_response || http_response->stream == NULL) && retryAsHttp &&
       req->url.file[0] != '/') {
     if (req->url.scheme == SCM_MISSING || req->url.scheme == SCM_UNKNOWN) {
@@ -174,7 +335,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
       parseURL2(u, &url, req->current);
       req = newHttpRequest(url, req->form, req->referer, req->no_cache,
                            req->extra_header);
-      http_response = openURL(req, of);
+      http_response = openHttpStream(req, of);
     }
   }
 
@@ -183,8 +344,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
     return NULL;
   }
 
-  /* openURL() succeeded */
-  of = NULL;
+  // succeeded
   if (header_string) {
     header_string = NULL;
   }
@@ -217,7 +377,8 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
                            req->extra_header);
       ISclose(http_response->stream);
       // t_buf->bufferprop |= BP_REDIRECTED;
-      return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname, pwd);
+      return sendHttpRequest(req, nullptr, add_auth_cookie_flag, realm, uname,
+                             pwd);
     }
 
     if (add_auth_cookie_flag && realm && uname && pwd) {
@@ -240,7 +401,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
         }
         ISclose(http_response->stream);
         add_auth_cookie_flag = 1;
-        return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname,
+        return sendHttpRequest(req, nullptr, add_auth_cookie_flag, realm, uname,
                                pwd);
       }
     }
@@ -261,7 +422,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
         ISclose(http_response->stream);
         add_auth_cookie_flag = 1;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
-        return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname,
+        return sendHttpRequest(req, nullptr, add_auth_cookie_flag, realm, uname,
                                pwd);
       }
     }

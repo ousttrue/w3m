@@ -7,12 +7,14 @@
 #include "html/form.h"
 #include "html/html_text.h"
 #include "input/http.h"
+#include "input/http_stream.h"
 #include "input/url.h"
 #include "os.h"
 #include "rand48.h"
 #include "rc.h"
 #include "term/termsize.h"
 #include "trap_jmp.h"
+#include "version.h"
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>

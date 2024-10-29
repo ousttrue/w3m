@@ -1,4 +1,5 @@
 #include "proxy.h"
+#include "input/isocket.h"
 #include "input/url.h"
 #include "text/text.h"
 #include "trap_jmp.h"
@@ -78,38 +79,12 @@ int check_no_proxy(const char *domain) {
   }
   trap_on();
   {
-#ifndef INET6
-    int n;
-    unsigned char **h_addr_list;
-    char addr[4 * 16], buf[5];
-
-    auto he = gethostbyname(domain);
-    if (!he) {
-      ret = 0;
-      goto end;
-    }
-    for (h_addr_list = (unsigned char **)he->h_addr_list; *h_addr_list;
-         h_addr_list++) {
-      sprintf(addr, "%d", h_addr_list[0][0]);
-      for (n = 1; n < he->h_length; n++) {
-        sprintf(buf, ".%d", h_addr_list[0][n]);
-        strcat(addr, buf);
-      }
-      for (auto tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
-        if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
-          ret = 1;
-          goto end;
-        }
-      }
-    }
-#else  /* INET6 */
     int error;
     struct addrinfo hints;
     struct addrinfo *res, *res0;
     char addr[4 * 16];
-    int *af;
 
-    for (af = ai_family_order_table[DNS_order];; af++) {
+    for (auto af = ai_family_order_table[DNS_order];; af++) {
       memset(&hints, 0, sizeof(hints));
       hints.ai_family = *af;
       error = getaddrinfo(domain, NULL, &hints, &res0);
@@ -134,7 +109,7 @@ int check_no_proxy(const char *domain) {
           /* unknown */
           continue;
         }
-        for (tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
+        for (auto tl = NO_proxy_domains->first; tl != NULL; tl = tl->next) {
           if (strncmp(tl->ptr, addr, strlen(tl->ptr)) == 0) {
             freeaddrinfo(res0);
             ret = 1;
@@ -147,7 +122,6 @@ int check_no_proxy(const char *domain) {
         break;
       }
     }
-#endif /* INET6 */
   }
 end:
   trap_off();

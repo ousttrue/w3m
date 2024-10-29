@@ -11,6 +11,7 @@
 #include "buffer/search.h"
 #include "buffer/w3mhelperpanel.h"
 #include "core.h"
+#include "version.h"
 // #include "file/file.h"
 #include "file/tmpfile.h"
 #include "fm.h"
@@ -22,6 +23,8 @@
 #include "input/ext_mime.h"
 #include "input/http_auth.h"
 #include "input/http_cookie.h"
+#include "input/http_stream.h"
+#include "input/https.h"
 #include "input/isocket.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
@@ -270,7 +273,6 @@ static struct sel_c displayinsdel[] = {
     {N_S(DISPLAY_INS_DEL_FONTIFY), N_("fontify")},
     {0, NULL, NULL}};
 
-#ifdef INET6
 static struct sel_c dnsorders[] = {
     {N_S(DNS_ORDER_UNSPEC), N_("unspecified")},
     {N_S(DNS_ORDER_INET_INET6), N_("inet inet6")},
@@ -278,7 +280,6 @@ static struct sel_c dnsorders[] = {
     {N_S(DNS_ORDER_INET_ONLY), N_("inet only")},
     {N_S(DNS_ORDER_INET6_ONLY), N_("inet6 only")},
     {0, NULL, NULL}};
-#endif /* INET6 */
 
 static struct sel_c badcookiestr[] = {
     {N_S(ACCEPT_BAD_COOKIE_DISCARD), N_("discard")},
@@ -513,10 +514,8 @@ struct param_ptr params9[] = {
      NULL},
     {"localhost_only", P_CHARINT, PI_ONOFF, (void *)&LocalhostOnly,
      CMT_LOCALHOST_ONLY, NULL},
-#ifdef INET6
     {"dns_order", P_INT, PI_SEL_C, (void *)&DNS_order, CMT_DNS_ORDER,
      (void *)dnsorders},
-#endif /* INET6 */
     {NULL, 0, 0, NULL, NULL, NULL},
 };
 

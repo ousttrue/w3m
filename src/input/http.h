@@ -4,6 +4,15 @@
 
 extern int FollowRedirection;
 extern bool retryAsHttp;
+extern bool override_user_agent;
+extern const char *UserAgent;
+extern const char *AcceptLang;
+extern const char *AcceptEncoding;
+extern const char *AcceptMedia;
+extern bool NoCache;
+extern bool NoSendReferer;
+extern bool CrossOriginReferer;
+extern bool override_content_type;
 
 #define NO_REFERER ((char *)-1)
 
@@ -68,6 +77,7 @@ struct HttpRequest *newHttpRequest(struct Url url, struct FormList *form,
                                    struct TextList *extra_header);
 Str HTTPrequestMethod(struct HttpRequest *hr);
 Str HTTPrequestURI(struct HttpRequest *hr);
+Str HTTPrequestToStr(struct HttpRequest *hr);
 // HttpResponse
 struct HttpResponse *newHttpResponse(struct HttpRequest *req);
 void httpReadResponse(struct HttpResponse *res);

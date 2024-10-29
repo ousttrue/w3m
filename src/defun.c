@@ -24,6 +24,7 @@
 #include "input/ftp.h"
 #include "input/http.h"
 #include "input/http_cookie.h"
+#include "input/https.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
 #include "linein.h"
@@ -39,6 +40,7 @@
 #include "text/regex.h"
 #include "text/text.h"
 #include "trap_jmp.h"
+#include "version.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -601,7 +603,7 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
 
 /* Load help file */
 DEFUN(ldhelp, HELP, "Show help panel") {
-  char *lang = AcceptLang;
+  auto lang = AcceptLang;
   int n = strcspn(lang, ";, \t");
   Str tmp =
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
@@ -2372,7 +2374,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   if (Currentbuf->real_scheme == SCM_LOCAL)
     file = guess_save_name(NULL, Currentbuf->currentURL.real_file);
   else
-    file = guess_save_name(Currentbuf, Currentbuf->currentURL.file);
+    file =
+        guess_save_name(Currentbuf->http_response, Currentbuf->currentURL.file);
   doFileCopy(Currentbuf->sourcefile, file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2600,13 +2603,11 @@ void chkURLBuffer(struct Buffer *buf) {
 #ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
       "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
 #endif
-#ifdef INET6
       "https?://[a-zA-Z0-9:%\\-\\./"
       "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
       "?=~_\\&+@#,\\$;]*",
       "ftp://[a-zA-Z0-9:%\\-\\./"
       "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-#endif /* INET6 */
       NULL};
   int i;
   for (i = 0; url_like_pat[i]; i++) {

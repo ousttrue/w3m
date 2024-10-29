@@ -16,6 +16,7 @@
 #include "rc.h"
 #include "term/terms.h"
 #include "term/termsize.h"
+#include "version.h"
 #include "text/ctrlcode.h"
 #include "text/text.h"
 #include <fcntl.h>
@@ -48,9 +49,7 @@ static void fversion(FILE *f) {
           ",cookie"
           ",ssl"
           ",ssl-verify"
-#ifdef INET6
           ",ipv6"
-#endif
           ",alarm");
 }
 
@@ -75,10 +74,8 @@ static void fusage(FILE *f, int err) {
   fprintf(f, "    +<num>           goto <num> line\n");
   fprintf(f, "    -num             show line number\n");
   fprintf(f, "    -no-proxy        don't use proxy\n");
-#ifdef INET6
   fprintf(f, "    -4               IPv4 only (-o dns_order=4)\n");
   fprintf(f, "    -6               IPv6 only (-o dns_order=6)\n");
-#endif
   fprintf(f, "    -insecure        use insecure SSL config options\n");
   fprintf(f,
           "    -cookie          use cookie (-no-cookie: don't use cookie)\n");

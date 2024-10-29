@@ -12,19 +12,10 @@ SocketType socketInvalid() { return INVALID_SOCKET; }
 bool socketOpen(const char *hostname, const char *remoteport_name,
                 unsigned short remoteport_num, SocketType *pOut) {
   SOCKET sock = INVALID_SOCKET;
-#ifdef INET6
   int *af;
   struct addrinfo hints, *res0, *res;
   int error;
   char *hname;
-#else  /* not INET6 */
-  struct sockaddr_in hostaddr;
-  struct hostent *entry;
-  struct protoent *proto;
-  unsigned short s_port;
-  int a1, a2, a3, a4;
-  unsigned long adr;
-#endif /* not INET6 */
 
   term_message(Sprintf("Opening socket...")->ptr);
   if (from_jmp()) {
@@ -38,7 +29,6 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
     goto error;
   }
 
-#ifdef INET6
   /* rfc2732 compliance */
   hname = allocStr(hostname, -1);
   if (hname != NULL && hname[0] == '[' && hname[strlen(hname) - 1] == ']') {
@@ -92,72 +82,6 @@ bool socketOpen(const char *hostname, const char *remoteport_name,
     freeaddrinfo(res0);
     break;
   }
-#else /* not INET6 */
-  s_port = htons(remoteport_num);
-  memset((char *)&hostaddr, 0, sizeof(struct sockaddr_in));
-  if ((proto = getprotobyname("tcp")) == NULL) {
-    /* protocol number of TCP is 6 */
-    proto = New(struct protoent);
-    proto->p_proto = 6;
-  }
-  if ((sock = socket(AF_INET, SOCK_STREAM, proto->p_proto)) < 0) {
-#ifdef SOCK_DEBUG
-    sock_log("openSocket: socket() failed. reason: %s\n", strerror(errno));
-#endif
-    goto error;
-  }
-  regexCompile("^[0-9]+\\.[0-9]+\\.[0-9]+\\.[0-9]+$", 0);
-  if (regexMatch(hostname, -1, 1)) {
-    sscanf(hostname, "%d.%d.%d.%d", &a1, &a2, &a3, &a4);
-    adr = htonl((a1 << 24) | (a2 << 16) | (a3 << 8) | a4);
-    memcpy((void *)&hostaddr.sin_addr, (const void *)&adr, sizeof(long));
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    term_message(Sprintf("Connecting to %s", hostname)->ptr);
-    if (connect(sock, (struct sockaddr *)&hostaddr,
-                sizeof(struct sockaddr_in)) < 0) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-#endif
-      goto error;
-    }
-  } else {
-    char **h_addr_list;
-    int result = -1;
-    term_message(Sprintf("Performing hostname lookup on %s", hostname)->ptr);
-    if ((entry = gethostbyname(hostname)) == NULL) {
-#ifdef SOCK_DEBUG
-      sock_log("openSocket: gethostbyname() failed. reason: %s\n",
-               strerror(errno));
-#endif
-      goto error;
-    }
-    hostaddr.sin_family = AF_INET;
-    hostaddr.sin_port = s_port;
-    for (h_addr_list = entry->h_addr_list; *h_addr_list; h_addr_list++) {
-      memcpy((void *)&hostaddr.sin_addr, (const void *)h_addr_list[0],
-             entry->h_length);
-#ifdef SOCK_DEBUG
-      adr = ntohl(*(long *)&hostaddr.sin_addr);
-      sock_log("openSocket: connecting %d.%d.%d.%d\n", (adr >> 24) & 0xff,
-               (adr >> 16) & 0xff, (adr >> 8) & 0xff, adr & 0xff);
-#endif
-      term_message(Sprintf("Connecting to %s", hostname)->ptr);
-      if ((result = connect(sock, (struct sockaddr *)&hostaddr,
-                            sizeof(struct sockaddr_in))) == 0) {
-        break;
-      }
-#ifdef SOCK_DEBUG
-      else {
-        sock_log("openSocket: connect() failed. reason: %s\n", strerror(errno));
-      }
-#endif
-    }
-    if (result < 0) {
-      goto error;
-    }
-  }
-#endif /* not INET6 */
 
   trap_off();
   *pOut = sock;

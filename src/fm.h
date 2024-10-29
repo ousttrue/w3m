@@ -8,7 +8,6 @@
 #pragma once
 
 #define USE_IMAGE 1
-#define INET6 1
 #define KEYMAP_FILE "keymap"
 #define MENU_FILE "menu"
 #define MOUSE_FILE "mouse"
@@ -39,12 +38,8 @@ global char PermitSaveToPipe init(false);
 global char DecodeCTE init(false);
 global char PreserveTimestamp init(true);
 global char ArgvIsURL init(true);
-global char LocalhostOnly init(false);
-global char NoCache init(false);
-global char *document_root init(nullptr);
 global char *personal_document_root init(nullptr);
 global char *cgi_bin init(nullptr);
-global char *index_file init(nullptr);
 #if defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE)
 global char *MyProgramName init("w3m");
 #endif /* defined(DONT_CALL_GC_AFTER_FORK) && defined(USE_IMAGE) */
@@ -54,10 +49,7 @@ global int close_tab_back init(false);
 global int CurrentKey;
 global const char *CurrentKeyData;
 global const char *CurrentCmdData;
-extern char *w3m_version;
 global int w3m_debug;
-global int override_content_type init(false);
-global int override_user_agent init(false);
 global int confirm_on_quit init(true);
 global int emacs_like_lineedit init(false);
 global int space_autocomplete init(false);
@@ -79,12 +71,6 @@ global int BackgroundExtViewer init(true);
 global char *pre_form_file init(PRE_FORM_FILE);
 global char *ftppasswd init(nullptr);
 global int ftppass_hostnamegen init(true);
-global char *UserAgent init(nullptr);
-global int NoSendReferer init(false);
-global int CrossOriginReferer init(true);
-global char *AcceptLang init(nullptr);
-global char *AcceptEncoding init(nullptr);
-global char *AcceptMedia init(nullptr);
 global int WrapDefault init(false);
 global const char *BookmarkFile init(nullptr);
 global int UseDictCommand init(true);
@@ -98,21 +84,6 @@ global int SaveURLHist init(true);
 global int multicolList init(false);
 global char UseAltEntity init(false);
 global const char *config_file init(nullptr);
-
-global int ssl_verify_server init(true);
-global const char *ssl_cert_file init(nullptr);
-global const char *ssl_key_file init(nullptr);
-global const char *ssl_ca_path init(nullptr);
-global const char *ssl_ca_file init("");
-global int ssl_ca_default init(true);
-global int ssl_path_modified init(false);
-global char *ssl_forbid_method init("2, 3, t, 5");
-global char *ssl_min_version init(nullptr);
-#if (OPENSSL_VERSION_NUMBER < 0x10100000L) || defined(LIBRESSL_VERSION_NUMBER)
-global char *ssl_cipher init("DEFAULT:!LOW:!RC4:!EXP");
-#else
-global char *ssl_cipher init(nullptr);
-#endif
 
 global int clear_buffer init(true);
 global int use_lessopen init(false);

@@ -1,7 +1,6 @@
 #pragma once
-// #include "input/encoding_type.h"
-#include "input/url.h"
 #include "text/Str.h"
+#include <openssl/types.h>
 #include <stdint.h>
 
 extern Str header_string;
@@ -17,12 +16,19 @@ enum IST_TYPE {
 #endif
 };
 
+typedef int (*ReadFunc)(void *handle, unsigned char *buf, int size);
+typedef void (*CloseFunc)(void *handle);
+
 union input_stream;
 union input_stream *newInputStream(int des);
 union input_stream *newFileStream(FILE *f, int (*closep)(FILE *));
 union input_stream *newStrStream(Str s);
-// union input_stream *newEncodedStream(union input_stream *is,
-//                                      enum ENCODING_TYPE encoding);
+#ifdef _WIN32
+#include <winsock2.h>
+union input_stream *newWinsockStream(SOCKET sock);
+#endif
+union input_stream *newSSLStream(SSL *ssl, int sock);
+
 int ISclose(union input_stream *stream);
 int ISgetc(union input_stream *stream);
 int ISundogetc(union input_stream *stream);
@@ -44,17 +50,6 @@ union input_stream;
 const char *guessContentType(const char *filename);
 union input_stream *examineFile(const char *path);
 
-struct FormList;
-struct TextList;
-struct HttpRequest;
-struct HttpResponse *
-openURL(struct HttpRequest *hr, 
-        // const char *url, struct Url *pu,
-        // struct Url *current, const char *referer, bool no_cache,
-        // struct FormList *form, struct TextList *extra_header,
-        union input_stream *ouf);
-
 int save2tmp(union input_stream *stream, const char *tmpf);
-void free_ssl_ctx();
 void close_for_ftp(union input_stream *is);
 union input_stream *newInputFtp(int sock);

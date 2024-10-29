@@ -12,6 +12,7 @@
 #include "alloc.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
+#include "input/isocket.h"
 #include "input/localcgi.h"
 #include "proto.h"
 #include "rc.h"
@@ -209,11 +210,7 @@ struct cookie *get_cookie_info(Str domain, Str path, Str name) {
 
 char *FQDN(char *host) {
   char *p;
-#ifndef INET6
-  struct hostent *entry;
-#else  /* INET6 */
   int *af;
-#endif /* INET6 */
 
   if (host == NULL)
     return NULL;
@@ -227,13 +224,7 @@ char *FQDN(char *host) {
   if (*p == '.')
     return host;
 
-#ifndef INET6
-  if (!(entry = gethostbyname(host)))
-    return NULL;
-
-  return allocStr(entry->h_name, -1);
-#else  /* INET6 */
-  for (af = ai_family_order_table[DNS_order];; af++) {
+  for (auto af = ai_family_order_table[DNS_order];; af++) {
     int error;
     struct addrinfo hints;
     struct addrinfo *res, *res0;
@@ -267,7 +258,6 @@ char *FQDN(char *host) {
   }
   /* all failed */
   return NULL;
-#endif /* INET6 */
 }
 
 Str find_cookie(struct Url *pu) {
