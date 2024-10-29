@@ -62,7 +62,7 @@ struct TextList;
 struct HttpRequest;
 struct HttpResponse *openURL(const char *url, struct Url *pu,
                             struct Url *current, struct URLOption *option,
-                            struct FormList *request,
+                            struct FormList *form,
                             struct TextList *extra_header,
                             union input_stream *ouf, struct HttpRequest *hr,
                             enum StreamStatus *status);

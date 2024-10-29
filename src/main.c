@@ -369,9 +369,9 @@ int main(int argc, char **argv) {
   //   request = NULL;
   // }
 
-  struct FormList *request = nullptr;
+  struct FormList *form = nullptr;
   auto newbuf =
-      loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NO_REFERER, 0, request);
+      loadGeneralFile(INIT_BUFFER_WIDTH, url, NULL, NO_REFERER, 0, form);
 
   if (newbuf == NULL) {
     /* FIXME: gettextize? */

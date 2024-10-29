@@ -217,7 +217,7 @@ static struct Buffer *page_loaded(int cols, struct Url pu, Str page,
 static struct Buffer *
 load_doc(int cols, const char *path, const char *tpath, struct Url *current,
          struct Url pu, const char *referer, enum RG_FLAGS flag,
-         struct FormList *request, struct TextList *extra_header,
+         struct FormList *form, struct TextList *extra_header,
          union input_stream *of, struct HttpRequest hr,
          enum StreamStatus status, bool add_auth_cookie_flag, struct Buffer *b,
          struct Buffer *t_buf, Str realm, Str uname, Str pwd) {
@@ -226,12 +226,12 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
     auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&pu);
     if (sc_redirect && *sc_redirect && checkRedirection(&pu)) {
       tpath = sc_redirect;
-      request = NULL;
+      form = NULL;
       add_auth_cookie_flag = 0;
       current = New(struct Url);
       *current = pu;
       status = STREAM_NORMAL;
-      return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+      return load_doc(cols, path, tpath, current, pu, referer, flag, form,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
@@ -243,7 +243,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
   url_option.flag = flag;
   if (t_buf == NULL)
     t_buf = newBuffer();
-  t_buf->http_response = openURL(tpath, &pu, current, &url_option, request,
+  t_buf->http_response = openURL(tpath, &pu, current, &url_option, form,
                                  extra_header, of, &hr, &status);
   if (t_buf->http_response->stream == NULL && retryAsHttp && tpath[0] != '/') {
     auto u = tpath;
@@ -251,7 +251,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
     if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
       // retry it as "http://"
       u = Strnew_m_charp("http://", tpath, NULL)->ptr;
-      t_buf->http_response = openURL(u, &pu, current, &url_option, request,
+      t_buf->http_response = openURL(u, &pu, current, &url_option, form,
                                      extra_header, of, &hr, &status);
     }
   }
@@ -303,14 +303,14 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
       tpath = url_quote(p);
-      request = NULL;
+      form = NULL;
       ISclose(t_buf->http_response->stream);
       current = New(struct Url);
       copyParsedURL(current, &pu);
       t_buf = newBuffer();
       t_buf->bufferprop |= BP_REDIRECTED;
       status = STREAM_NORMAL;
-      return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+      return load_doc(cols, path, tpath, current, pu, referer, flag, form,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
@@ -340,7 +340,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
         auto auth_pu = &pu;
         getAuthCookie(&hauth, "Authorization:", extra_header, auth_pu, &hr,
-                      request, &uname, &pwd);
+                      form, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
           trap_off();
@@ -349,7 +349,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
         ISclose(t_buf->http_response->stream);
         add_auth_cookie_flag = 1;
         status = STREAM_NORMAL;
-        return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+        return load_doc(cols, path, tpath, current, pu, referer, flag, form,
                         extra_header, of, hr, status, add_auth_cookie_flag, b,
                         t_buf, realm, uname, pwd);
       }
@@ -363,7 +363,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
         auto auth_pu = schemeToProxy(pu.scheme);
         getAuthCookie(&hauth, "Proxy-Authorization:", extra_header, auth_pu,
-                      &hr, request, &uname, &pwd);
+                      &hr, form, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
           trap_off();
@@ -373,7 +373,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
         add_auth_cookie_flag = 1;
         status = STREAM_NORMAL;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
-        return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+        return load_doc(cols, path, tpath, current, pu, referer, flag, form,
                         extra_header, of, hr, status, add_auth_cookie_flag, b,
                         t_buf, realm, uname, pwd);
       }
@@ -382,7 +382,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
 
     if (status == STREAM_CONNECT) {
       of = t_buf->http_response->stream;
-      return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+      return load_doc(cols, path, tpath, current, pu, referer, flag, form,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
     }
@@ -428,7 +428,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
 
 struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
                                const char *referer, enum RG_FLAGS flag,
-                               struct FormList *request) {
+                               struct FormList *form) {
   checkRedirection(NULL);
 
   struct Url pu;
@@ -484,7 +484,7 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     return NULL;
 
   default:
-    return load_doc(cols, path, tpath, current, pu, referer, flag, request,
+    return load_doc(cols, path, tpath, current, pu, referer, flag, form,
                     extra_header, nullptr, hr, status, add_auth_cookie_flag, b,
                     t_buf, realm, uname, pwd);
   }

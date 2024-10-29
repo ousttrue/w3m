@@ -1100,10 +1100,6 @@ struct Url *baseURL(struct Buffer *buf) {
     return &buf->currentURL;
 }
 
-
-
-
-
 #define ALLOC_STR(s) ((s) == NULL ? NULL : allocStr(s, -1))
 
 void copyParsedURL(struct Url *p, const struct Url *q) {
@@ -1122,8 +1118,6 @@ void copyParsedURL(struct Url *p, const struct Url *q) {
   p->label = ALLOC_STR(q->label);
   p->query = ALLOC_STR(q->query);
 }
-
-
 
 Str parsedURL2Str(struct Url *pu) {
   return _parsedURL2Str(pu, false, true, true);
@@ -1256,22 +1250,22 @@ static Str HTTPrequest(struct Url *pu, struct Url *current,
       Strcat_charp(tmp, "Cookie2: $Version=\"1\"\r\n");
   }
   if (hr->command == HR_COMMAND_POST) {
-    if (hr->request->enctype == FORM_ENCTYPE_MULTIPART) {
+    if (hr->form->enctype == FORM_ENCTYPE_MULTIPART) {
       Strcat_charp(tmp, "Content-Type: multipart/form-data; boundary=");
-      Strcat_charp(tmp, hr->request->boundary);
+      Strcat_charp(tmp, hr->form->boundary);
       Strcat_charp(tmp, "\r\n");
-      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->request->length));
+      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->form->length));
       Strcat_charp(tmp, "\r\n");
     } else {
       if (!override_content_type) {
         Strcat_charp(tmp,
                      "Content-Type: application/x-www-form-urlencoded\r\n");
       }
-      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->request->length));
+      Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->form->length));
       if (header_string)
         Strcat(tmp, header_string);
       Strcat_charp(tmp, "\r\n");
-      Strcat_charp_n(tmp, hr->request->body, hr->request->length);
+      Strcat_charp_n(tmp, hr->form->body, hr->form->length);
       Strcat_charp(tmp, "\r\n");
     }
   } else {
@@ -1312,7 +1306,7 @@ union input_stream *add_index_file(struct Url *pu, union input_stream *stream) {
 
 struct HttpResponse *openURL(const char *url, struct Url *pu,
                              struct Url *current, struct URLOption *option,
-                             struct FormList *request,
+                             struct FormList *form,
                              struct TextList *extra_header,
                              union input_stream *ouf, struct HttpRequest *hr,
                              enum StreamStatus *status) {
@@ -1359,15 +1353,15 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
   hr->command = HR_COMMAND_GET;
   hr->flag = 0;
   hr->referer = option->referer;
-  hr->request = request;
+  hr->form = form;
 
   switch (pu->scheme) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    if (request && request->body)
+    if (form && form->body)
       /* local CGI: POST */
       res->stream = newFileStream(
-          localcgi_post(pu->real_file, pu->query, request, option->referer),
+          localcgi_post(pu->real_file, pu->query, form, option->referer),
           (void (*)())fclose);
     else
       /* lodal CGI: GET */
@@ -1443,9 +1437,9 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
   case SCM_HTTPS: {
     if (pu->file == NULL)
       pu->file = allocStr("/", -1);
-    if (request && request->method == FORM_METHOD_POST && request->body)
+    if (form && form->method == FORM_METHOD_POST && form->body)
       hr->command = HR_COMMAND_POST;
-    if (request && request->method == FORM_METHOD_HEAD)
+    if (form && form->method == FORM_METHOD_HEAD)
       hr->command = HR_COMMAND_HEAD;
 
     Str tmp = nullptr;
@@ -1521,18 +1515,18 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
       else
         socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
-          request->enctype == FORM_ENCTYPE_MULTIPART) {
+          form->enctype == FORM_ENCTYPE_MULTIPART) {
         if (sslh)
-          SSL_write_from_file(sslh, request->body);
+          SSL_write_from_file(sslh, form->body);
         else
-          write_from_file(sock, request->body);
+          write_from_file(sock, form->body);
       }
       return res;
     } else {
       socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
-          request->enctype == FORM_ENCTYPE_MULTIPART)
-        write_from_file(sock, request->body);
+          form->enctype == FORM_ENCTYPE_MULTIPART)
+        write_from_file(sock, form->body);
     }
     break;
   }

@@ -21,13 +21,13 @@
 #include "html/html_readbuffer.h"
 #include "html/html_tag.h"
 #include "html/map.h"
+#include "input/ext_mime.h"
 #include "input/ftp.h"
 #include "input/http_cookie.h"
 #include "input/http_request.h"
 #include "input/http_response.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
-#include "input/ext_mime.h"
 #include "linein.h"
 #include "os.h"
 #include "proto.h"
@@ -54,7 +54,7 @@
 #define DSTR_LEN 256
 
 static void cmd_loadURL(const char *url, struct Url *current,
-                        const char *referer, struct FormList *request);
+                        const char *referer, struct FormList *form);
 static void keyPressEventProc(int c);
 
 static char *getCurWord(struct Buffer *buf, int *spos, int *epos);
@@ -1060,7 +1060,7 @@ static struct Buffer *loadNormalBuf(struct Buffer *buf) {
 }
 
 static struct Buffer *loadLink(const char *url, const char *target,
-                               const char *referer, struct FormList *request) {
+                               const char *referer, struct FormList *form) {
   struct Buffer *buf, *nfbuf;
   union frameset_element *f_element = NULL;
   int flag = 0;
@@ -1079,7 +1079,7 @@ static struct Buffer *loadLink(const char *url, const char *target,
   if (referer == NULL)
     referer = parsedURL2RefererStr(&Currentbuf->currentURL)->ptr;
   buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf), referer,
-                        flag, request);
+                        flag, form);
   if (buf == NULL) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     message_push(emsg);
@@ -2029,13 +2029,12 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
 }
 
 static void cmd_loadURL(const char *url, struct Url *current,
-                        const char *referer, struct FormList *request) {
+                        const char *referer, struct FormList *form) {
   if (handleMailto(url))
     return;
 
   term_refresh();
-  auto buf =
-      loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, 0, request);
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, 0, form);
   if (buf == NULL) {
     const char *emsg = Sprintf("Can't load %s", url)->ptr;
     message_push(emsg);
@@ -2140,18 +2139,16 @@ DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
 
 /* Add current to bookmark */
 DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
-  Str tmp;
-  struct FormList *request;
-
-  tmp = Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
-                (Str_form_quote(localCookie()))->ptr,
-                (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
-                (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
-                (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
-  request = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
-  request->body = tmp->ptr;
-  request->length = tmp->length;
-  cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, request);
+  auto tmp =
+      Sprintf("mode=panel&cookie=%s&bmark=%s&url=%s&title=%s",
+              (Str_form_quote(localCookie()))->ptr,
+              (Str_form_quote(Strnew_charp(BookmarkFile)))->ptr,
+              (Str_form_quote(parsedURL2Str(&Currentbuf->currentURL)))->ptr,
+              (Str_form_quote(Strnew_charp(Currentbuf->buffername)))->ptr);
+  auto form = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
+  form->body = tmp->ptr;
+  form->length = tmp->length;
+  cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, form);
 }
 
 static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
@@ -2536,33 +2533,32 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 
   struct Buffer *buf, *fbuf = NULL;
   Str url;
-  struct FormList *request;
-  int multipart;
-  multipart = 0;
+  struct FormList *form;
+  bool multipart = 0;
   if (Currentbuf->form_submit) {
-    request = Currentbuf->form_submit->parent;
-    if (request->method == FORM_METHOD_POST &&
-        request->enctype == FORM_ENCTYPE_MULTIPART) {
+    form = Currentbuf->form_submit->parent;
+    if (form->method == FORM_METHOD_POST &&
+        form->enctype == FORM_ENCTYPE_MULTIPART) {
       Str query;
       struct stat st;
       multipart = 1;
       query_from_followform(&query, Currentbuf->form_submit, multipart);
-      stat(request->body, &st);
-      request->length = st.st_size;
+      stat(form->body, &st);
+      form->length = st.st_size;
     }
   } else {
-    request = NULL;
+    form = NULL;
   }
   url = parsedURL2Str(&Currentbuf->currentURL);
   scr_message("Reloading...", 0, 0);
   term_refresh();
   DefaultType = Currentbuf->real_type;
   buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER,
-                        RG_NOCACHE, request);
+                        RG_NOCACHE, form);
   DefaultType = NULL;
 
   if (multipart)
-    unlink(request->body);
+    unlink(form->body);
   if (buf == NULL) {
     message_push("Can't reload...");
     return;

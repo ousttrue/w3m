@@ -292,7 +292,7 @@ static void set_cgi_environ(char *name, char *fn, char *req_uri) {
   set_environ("REQUEST_URI", req_uri);
 }
 
-FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *request,
+FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
                     const char *referer) {
   auto file = uri;
   auto name = uri;
@@ -306,7 +306,7 @@ FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *request,
   writeLocalCookie();
 
   FILE *fr = NULL, *fw = NULL;
-  if (request && request->enctype != FORM_ENCTYPE_MULTIPART) {
+  if (form && form->enctype != FORM_ENCTYPE_MULTIPART) {
     tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     fw = fopen(tmpf, "w");
     if (!fw)
@@ -334,19 +334,19 @@ FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *request,
     set_environ("PATH_INFO", path_info);
   if (referer && referer != NO_REFERER)
     set_environ("HTTP_REFERER", referer);
-  if (request) {
+  if (form) {
     set_environ("REQUEST_METHOD", "POST");
     if (qstr)
       set_environ("QUERY_STRING", qstr);
-    set_environ("CONTENT_LENGTH", Sprintf("%d", request->length)->ptr);
-    if (request->enctype == FORM_ENCTYPE_MULTIPART) {
+    set_environ("CONTENT_LENGTH", Sprintf("%d", form->length)->ptr);
+    if (form->enctype == FORM_ENCTYPE_MULTIPART) {
       set_environ(
           "CONTENT_TYPE",
-          Sprintf("multipart/form-data; boundary=%s", request->boundary)->ptr);
-      freopen(request->body, "r", stdin);
+          Sprintf("multipart/form-data; boundary=%s", form->boundary)->ptr);
+      freopen(form->body, "r", stdin);
     } else {
       set_environ("CONTENT_TYPE", "application/x-www-form-urlencoded");
-      fwrite(request->body, sizeof(char), request->length, fw);
+      fwrite(form->body, sizeof(char), form->length, fw);
       fclose(fw);
       freopen(tmpf, "r", stdin);
     }

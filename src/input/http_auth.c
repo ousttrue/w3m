@@ -320,7 +320,7 @@ Str base64_encode(const unsigned char *src, size_t len) {
 
 static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw,
                          struct Url *pu, struct HttpRequest *hr,
-                         struct FormList *request) {
+                         struct FormList *form) {
   Str s = Strdup(uname);
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -566,7 +566,7 @@ Str get_auth_param(struct auth_param *auth, char *name) {
 
 void getAuthCookie(struct http_auth *hauth, char *auth_header,
                    struct TextList *extra_header, struct Url *pu,
-                   struct HttpRequest *hr, struct FormList *request, Str *uname,
+                   struct HttpRequest *hr, struct FormList *form, Str *uname,
                    Str *pwd) {
   Str ss = NULL;
   Str tmp;
@@ -620,7 +620,7 @@ void getAuthCookie(struct http_auth *hauth, char *auth_header,
     }
 #endif
   }
-  ss = hauth->cred(hauth, *uname, *pwd, pu, hr, request);
+  ss = hauth->cred(hauth, *uname, *pwd, pu, hr, form);
   if (ss) {
     tmp = Strnew_charp(auth_header);
     Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
