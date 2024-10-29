@@ -35,7 +35,6 @@ struct Url {
   const char *real_file;
   const char *query;
   char *label;
-  int is_nocache;
 };
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 

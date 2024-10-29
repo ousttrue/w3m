@@ -1417,7 +1417,6 @@ void copyParsedURL(struct Url *p, const struct Url *q) {
   }
   p->scheme = q->scheme;
   p->port = q->port;
-  p->is_nocache = q->is_nocache;
   p->user = ALLOC_STR(q->user);
   p->pass = ALLOC_STR(q->pass);
   p->host = ALLOC_STR(q->host);
@@ -1525,7 +1524,7 @@ Str parsedURL2RefererStr(struct Url *pu) {
 }
 
 static char *otherinfo(struct Url *target, struct Url *current,
-                       const char *referer) {
+                       const char *referer, bool is_nocache) {
   Str s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
@@ -1553,7 +1552,7 @@ static char *otherinfo(struct Url *target, struct Url *current,
       Strcat(s, Sprintf(":%d", target->port));
     Strcat_charp(s, "\r\n");
   }
-  if (target->is_nocache || NoCache) {
+  if (is_nocache || NoCache) {
     Strcat_charp(s, "Pragma: no-cache\r\n");
     Strcat_charp(s, "Cache-control: no-cache\r\n");
   }
@@ -1629,7 +1628,8 @@ Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr) {
 }
 
 static Str HTTPrequest(struct Url *pu, struct Url *current,
-                       struct HttpRequest *hr, struct TextList *extra) {
+                       struct HttpRequest *hr, struct TextList *extra,
+                       bool is_nocache) {
   Str tmp;
   struct TextListItem *i;
   Str cookie;
@@ -1638,9 +1638,9 @@ static Str HTTPrequest(struct Url *pu, struct Url *current,
   Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
   if (hr->referer == NO_REFERER)
-    Strcat_charp(tmp, otherinfo(pu, NULL, NULL));
+    Strcat_charp(tmp, otherinfo(pu, NULL, NULL, is_nocache));
   else
-    Strcat_charp(tmp, otherinfo(pu, current, hr->referer));
+    Strcat_charp(tmp, otherinfo(pu, current, hr->referer, is_nocache));
   if (extra != NULL)
     for (i = extra->first; i != NULL; i = i->next) {
       if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
@@ -1766,7 +1766,7 @@ union input_stream *openURL(const char *url, struct Url *pu,
 
   *scheme = pu->scheme;
   // uf.url = parsedURL2Str(pu)->ptr;
-  pu->is_nocache = (option->flag & RG_NOCACHE);
+  bool is_nocache = (option->flag & RG_NOCACHE);
   // uf.ext = filename_extension(pu->file, 1);
 
   hr->command = HR_COMMAND_GET;
@@ -1843,7 +1843,7 @@ union input_stream *openURL(const char *url, struct Url *pu,
       stream = newInputStream(sock);
 #endif
       *scheme = SCM_HTTP;
-      auto tmp = HTTPrequest(pu, current, hr, extra_header);
+      auto tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
       socketWrite(sock, tmp->ptr, tmp->length);
     } else {
       stream = openFTPStream(pu);
@@ -1900,15 +1900,15 @@ union input_stream *openURL(const char *url, struct Url *pu,
       if (pu->scheme == SCM_HTTPS) {
         if (*status == STREAM_NORMAL) {
           hr->command = HR_COMMAND_CONNECT;
-          tmp = HTTPrequest(pu, current, hr, extra_header);
+          tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
           *status = STREAM_CONNECT;
         } else {
           hr->flag |= HR_FLAG_LOCAL;
-          tmp = HTTPrequest(pu, current, hr, extra_header);
+          tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
           *status = STREAM_NORMAL;
         }
       } else {
-        tmp = HTTPrequest(pu, current, hr, extra_header);
+        tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
         *status = STREAM_NORMAL;
       }
     } else {
@@ -1923,7 +1923,7 @@ union input_stream *openURL(const char *url, struct Url *pu,
         }
       }
       hr->flag |= HR_FLAG_LOCAL;
-      tmp = HTTPrequest(pu, current, hr, extra_header);
+      tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
       *status = STREAM_NORMAL;
     }
 #ifdef _WIN32
