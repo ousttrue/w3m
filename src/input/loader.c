@@ -81,8 +81,7 @@ static int doFileMove(char *tmpf, char *defstr) {
   return ret;
 }
 
-static struct Buffer *page_loaded(int cols, struct Url pu,
-                                  union input_stream *stream, Str page,
+static struct Buffer *page_loaded(int cols, struct Url pu, Str page,
                                   const char *t, const char *real_type,
                                   struct Buffer *t_buf) {
   if (page) {
@@ -134,7 +133,6 @@ static struct Buffer *page_loaded(int cols, struct Url pu,
     t_buf = newBuffer();
   copyParsedURL(&t_buf->currentURL, &pu);
   t_buf->filename = pu.real_file ? pu.real_file : pu.file;
-  t_buf->ssl_certificate = ssl_certificate(stream);
 
   FILE *src = NULL;
   if (pu.scheme != SCM_LOCAL) {
@@ -145,7 +143,8 @@ static struct Buffer *page_loaded(int cols, struct Url pu,
     }
   }
 
-  Str content = StrISreadAll(stream);
+  // body
+  Str content = StrISreadAll(t_buf->http_response->stream);
 
   if (src) {
     Strfputs(content, src);
@@ -179,7 +178,7 @@ static struct Buffer *page_loaded(int cols, struct Url pu,
       b->type = "text/plain";
   }
 
-  ISclose(stream);
+  ISclose(t_buf->http_response->stream);
   if (b && b != NO_BUFFER) {
     b->real_scheme = pu.scheme;
     b->real_type = real_type;
@@ -242,17 +241,18 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
   struct URLOption url_option;
   url_option.referer = referer;
   url_option.flag = flag;
-  enum URL_SCHEME_TYPE scheme;
-  auto stream = openURL(tpath, &pu, current, &url_option, request, extra_header,
-                        of, &hr, &status, &scheme);
-  if (stream == NULL && retryAsHttp && tpath[0] != '/') {
+  if (t_buf == NULL)
+    t_buf = newBuffer();
+  t_buf->http_response = openURL(tpath, &pu, current, &url_option, request,
+                                 extra_header, of, &hr, &status);
+  if (t_buf->http_response->stream == NULL && retryAsHttp && tpath[0] != '/') {
     auto u = tpath;
     auto scheme = getURLScheme(&u);
     if (scheme == SCM_MISSING || scheme == SCM_UNKNOWN) {
       // retry it as "http://"
       u = Strnew_m_charp("http://", tpath, NULL)->ptr;
-      auto f = openURL(u, &pu, current, &url_option, request, extra_header, of,
-                       &hr, &status, &scheme);
+      t_buf->http_response = openURL(u, &pu, current, &url_option, request,
+                                     extra_header, of, &hr, &status);
     }
   }
 
@@ -263,7 +263,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
 
   if (status == STREAM_MISSING) {
     trap_off();
-    ISclose(stream);
+    ISclose(t_buf->http_response->stream);
     return NULL;
   }
 
@@ -273,7 +273,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
     trap_off();
     if (b)
       discardBuffer(b);
-    ISclose(stream);
+    ISclose(t_buf->http_response->stream);
     return NULL;
   }
 
@@ -289,10 +289,8 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
        !check_no_proxy(pu.host))) {
 
     term_message(Sprintf("%s contacted. Waiting for reply...", pu.host)->ptr);
-    if (t_buf == NULL)
-      t_buf = newBuffer();
+    httpReadResponse(t_buf->http_response);
 
-    t_buf->http_response = httpReadResponse(stream, &pu);
     const char *p;
     if (((t_buf->http_response->http_status_code >= 301 &&
           t_buf->http_response->http_status_code <= 303) ||
@@ -306,7 +304,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
       /* 307: Temporary Redirect (HTTP/1.1) */
       tpath = url_quote(p);
       request = NULL;
-      ISclose(stream);
+      ISclose(t_buf->http_response->stream);
       current = New(struct Url);
       copyParsedURL(current, &pu);
       t_buf = newBuffer();
@@ -346,9 +344,9 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
         if (uname == NULL) {
           /* abort */
           trap_off();
-          return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
+          return page_loaded(cols, pu, page, t, real_type, t_buf);
         }
-        ISclose(stream);
+        ISclose(t_buf->http_response->stream);
         add_auth_cookie_flag = 1;
         status = STREAM_NORMAL;
         return load_doc(cols, path, tpath, current, pu, referer, flag, request,
@@ -369,9 +367,9 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
         if (uname == NULL) {
           /* abort */
           trap_off();
-          return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
+          return page_loaded(cols, pu, page, t, real_type, t_buf);
         }
-        ISclose(stream);
+        ISclose(t_buf->http_response->stream);
         add_auth_cookie_flag = 1;
         status = STREAM_NORMAL;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
@@ -383,7 +381,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
     /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
     if (status == STREAM_CONNECT) {
-      of = stream;
+      of = t_buf->http_response->stream;
       return load_doc(cols, path, tpath, current, pu, referer, flag, request,
                       extra_header, of, hr, status, add_auth_cookie_flag, b,
                       t_buf, realm, uname, pwd);
@@ -425,7 +423,7 @@ load_doc(int cols, const char *path, const char *tpath, struct Url *current,
    *      to support default utf8 encoding for XHTML here? */
   // f.guess_type = t;
 
-  return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
+  return page_loaded(cols, pu, page, t, real_type, t_buf);
 }
 
 struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,

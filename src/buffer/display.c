@@ -9,8 +9,9 @@
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
-#include "text/utf8.h"
 #include "text/text.h"
+#include "text/utf8.h"
+#include "input/istream.h"
 #include <math.h>
 
 int enable_inline_image;
@@ -97,8 +98,9 @@ static Str make_lastline_message(struct Buffer *buf) {
   } else
     /* FIXME: gettextize? */
     Strcat_charp(msg, "Viewing");
-  if (buf->ssl_certificate)
+  if (ssl_certificate(buf->http_response->stream)) {
     Strcat_charp(msg, "[SSL]");
+  }
   Strcat_charp(msg, " <");
   Strcat_charp(msg, buf->buffername);
 

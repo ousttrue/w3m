@@ -11,6 +11,7 @@
 #include "input/growbuf.h"
 #include "input/http_cookie.h"
 #include "input/http_request.h"
+#include "input/http_response.h"
 #include "input/isocket.h"
 #include "input/loader.h"
 #include "input/localcgi.h"
@@ -130,7 +131,7 @@ union input_stream {
 };
 
 const char *ssl_certificate(union input_stream *stream) {
-  return stream->ssl.ssl_certificate;
+  return stream ? stream->ssl.ssl_certificate : nullptr;
 }
 void ssl_set_certificate(union input_stream *stream,
                          const char *ssl_certificate) {
@@ -1720,29 +1721,28 @@ union input_stream *add_index_file(struct Url *pu, union input_stream *stream) {
   return stream;
 }
 
-union input_stream *openURL(const char *url, struct Url *pu,
-                            struct Url *current, struct URLOption *option,
-                            struct FormList *request,
-                            struct TextList *extra_header,
-                            union input_stream *ouf, struct HttpRequest *hr,
-                            enum StreamStatus *status,
-                            enum URL_SCHEME_TYPE *scheme) {
+struct HttpResponse *openURL(const char *url, struct Url *pu,
+                             struct Url *current, struct URLOption *option,
+                             struct FormList *request,
+                             struct TextList *extra_header,
+                             union input_stream *ouf, struct HttpRequest *hr,
+                             enum StreamStatus *status) {
   struct HttpRequest hr0;
   if (!hr) {
     hr = &hr0;
   }
 
-  union input_stream *stream = ouf;
-
   auto u = url;
-  *scheme = getURLScheme(&u);
-  if (current == NULL && *scheme == SCM_MISSING && !ArgvIsURL) {
+  auto scheme = getURLScheme(&u);
+  if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL) {
     u = file_to_url(url); /* force to local file */
   } else {
     u = url;
   }
-
   parseURL2(u, pu, current);
+  auto res = newHttpResponse(*pu);
+  res->stream = ouf;
+
   if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
     if (pu->label != NULL) {
       /* #hogege is not a label but a filename */
@@ -1756,7 +1756,7 @@ union input_stream *openURL(const char *url, struct Url *pu,
 #ifdef SOCK_DEBUG
       sock_log("given URL must be null string\n");
 #endif
-      return stream;
+      return res;
     }
   }
 
@@ -1764,10 +1764,8 @@ union input_stream *openURL(const char *url, struct Url *pu,
     pu->host = NULL;
   }
 
-  *scheme = pu->scheme;
-  // uf.url = parsedURL2Str(pu)->ptr;
+  scheme = pu->scheme;
   bool is_nocache = (option->flag & RG_NOCACHE);
-  // uf.ext = filename_extension(pu->file, 1);
 
   hr->command = HR_COMMAND_GET;
   hr->flag = 0;
@@ -1779,25 +1777,25 @@ union input_stream *openURL(const char *url, struct Url *pu,
   case SCM_LOCAL_CGI:
     if (request && request->body)
       /* local CGI: POST */
-      stream = newFileStream(
+      res->stream = newFileStream(
           localcgi_post(pu->real_file, pu->query, request, option->referer),
           (void (*)())fclose);
     else
       /* lodal CGI: GET */
-      stream =
+      res->stream =
           newFileStream(localcgi_get(pu->real_file, pu->query, option->referer),
                         (void (*)())fclose);
-    if (stream) {
+    if (res->stream) {
       // uf.is_cgi = true;
-      *scheme = pu->scheme = SCM_LOCAL_CGI;
-      return stream;
+      res->url.scheme = pu->scheme = SCM_LOCAL_CGI;
+      return res;
     }
 
-    stream = examineFile(pu->real_file);
-    if (!stream) {
+    res->stream = examineFile(pu->real_file);
+    if (!res->stream) {
       if (dir_exist(pu->real_file)) {
-        add_index_file(pu, stream);
-        if (!stream)
+        add_index_file(pu, res->stream);
+        if (!res->stream)
           return nullptr;
       } else if (document_root != NULL) {
         auto tmp = Strnew_charp(document_root);
@@ -1809,20 +1807,20 @@ union input_stream *openURL(const char *url, struct Url *pu,
         if (dir_exist(q)) {
           pu->file = p;
           pu->real_file = q;
-          stream = add_index_file(pu, stream);
-          if (!stream) {
+          res->stream = add_index_file(pu, res->stream);
+          if (!res->stream) {
             return nullptr;
           }
         } else {
-          stream = examineFile(q);
-          if (stream) {
+          res->stream = examineFile(q);
+          if (res->stream) {
             pu->file = p;
             pu->real_file = q;
           }
         }
       }
     }
-    return stream;
+    return res;
 
   case SCM_FTP:
   case SCM_FTPDIR:
@@ -1835,20 +1833,20 @@ union input_stream *openURL(const char *url, struct Url *pu,
       if (!socketOpen(FTP_proxy_parsed.host,
                       schemeNumToName(FTP_proxy_parsed.scheme),
                       FTP_proxy_parsed.port, &sock)) {
-        return stream;
+        return res;
       }
 #ifdef _WIN32
       assert(false);
 #else
       stream = newInputStream(sock);
 #endif
-      *scheme = SCM_HTTP;
+      res->url.scheme = SCM_HTTP;
       auto tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
       socketWrite(sock, tmp->ptr, tmp->length);
     } else {
-      stream = openFTPStream(pu);
-      *scheme = pu->scheme;
-      return stream;
+      res->stream = openFTPStream(pu);
+      res->url.scheme = pu->scheme;
+      return res;
     }
     break;
 
@@ -1880,9 +1878,6 @@ union input_stream *openURL(const char *url, struct Url *pu,
         if (!socketOpen(HTTPS_proxy_parsed.host,
                         schemeNumToName(HTTPS_proxy_parsed.scheme),
                         HTTPS_proxy_parsed.port, &sock)) {
-#ifdef SOCK_DEBUG
-          sock_log("Can't open socket\n");
-#endif
           return nullptr;
         }
         sslh = NULL;
@@ -1890,9 +1885,6 @@ union input_stream *openURL(const char *url, struct Url *pu,
         if (!socketOpen(HTTP_proxy_parsed.host,
                         schemeNumToName(HTTP_proxy_parsed.scheme),
                         HTTP_proxy_parsed.port, &sock)) {
-#ifdef SOCK_DEBUG
-          sock_log("Can't open socket\n");
-#endif
           return nullptr;
         }
         sslh = NULL;
@@ -1927,14 +1919,14 @@ union input_stream *openURL(const char *url, struct Url *pu,
       *status = STREAM_NORMAL;
     }
 #ifdef _WIN32
-    stream = newWinsockStream(sock);
+    res->stream = newWinsockStream(sock);
 #else
-    stream = newInputStream(sock);
+    res->stream = newInputStream(sock);
 #endif
 
     if (pu->scheme == SCM_HTTPS) {
-      stream = newSSLStream(sslh, sock);
-      ssl_set_certificate(stream, ssl_certificate);
+      res->stream = newSSLStream(sslh, sock);
+      ssl_set_certificate(res->stream, ssl_certificate);
       if (sslh)
         SSL_write(sslh, tmp->ptr, tmp->length);
       else
@@ -1946,7 +1938,7 @@ union input_stream *openURL(const char *url, struct Url *pu,
         else
           write_from_file(sock, request->body);
       }
-      return stream;
+      return res;
     } else {
       socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
@@ -1971,13 +1963,13 @@ union input_stream *openURL(const char *url, struct Url *pu,
       // uf.encoding = ENC_BASE64;
     } else
       tmp = Str_url_unquote(tmp, false, false);
-    stream = newStrStream(tmp);
+    res->stream = newStrStream(tmp);
     // uf.guess_type = (*p != '\0') ? p : "text/plain";
-    return stream;
+    return res;
   }
-  case SCM_UNKNOWN:
+
   default:
-    return nullptr;
+    break;
   }
   return nullptr;
 }

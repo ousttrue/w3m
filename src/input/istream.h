@@ -60,13 +60,12 @@ struct URLOption {
 struct FormList;
 struct TextList;
 struct HttpRequest;
-union input_stream *openURL(const char *url, struct Url *pu,
+struct HttpResponse *openURL(const char *url, struct Url *pu,
                             struct Url *current, struct URLOption *option,
                             struct FormList *request,
                             struct TextList *extra_header,
                             union input_stream *ouf, struct HttpRequest *hr,
-                            enum StreamStatus *status,
-                            enum URL_SCHEME_TYPE *scheme);
+                            enum StreamStatus *status);
 
 int save2tmp(union input_stream *stream, const char *tmpf);
 void free_ssl_ctx();

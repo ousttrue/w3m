@@ -9,6 +9,7 @@
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "input/http_response.h"
+#include "input/istream.h"
 #include "input/url.h"
 #include <math.h>
 #include <string.h>
@@ -250,9 +251,11 @@ struct Document *page_info_panel(struct Buffer *buf) {
     Strcat_charp(tmp, "</pre>\n");
   }
 
-  if (buf->ssl_certificate)
+  auto certificate = ssl_certificate(buf->http_response->stream);
+  if (certificate) {
     Strcat_m_charp(tmp, "<h1>SSL certificate</h1><pre>\n",
-                   html_quote(buf->ssl_certificate), "</pre>\n", NULL);
+                   html_quote(certificate), "</pre>\n", NULL);
+  }
 end:
   Strcat_charp(tmp, "</body></html>");
   struct Url url;

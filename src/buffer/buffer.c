@@ -39,7 +39,6 @@ struct Buffer *newBuffer() {
   n->clone = New(int);
   *n->clone = 1;
   n->trbyte = 0;
-  n->ssl_certificate = NULL;
   n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
   n->need_reshape = 1;         /* always reshape new buffers to mark URLs */
   return n;

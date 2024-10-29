@@ -66,7 +66,6 @@ struct Buffer {
   struct HttpResponse *http_response;
   struct FormItemList *form_submit;
   const char *edit;
-  const char *ssl_certificate;
   char image_flag;
   char image_loaded;
   char need_reshape;

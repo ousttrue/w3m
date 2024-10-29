@@ -26,7 +26,7 @@ const char *violations[COO_EMAX] = {
     "RFC XXXX 4.3.2 rule 5"};
 
 static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
-                           const char *key, const char *p, struct Url *pu) {
+                           const char *key, const char *p) {
   if (!strcasecmp(key, "content-type")) {
     // text/html; charset=Shift_JIS
     auto semi = strchr(p, ';');
@@ -67,8 +67,8 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
     }
     // uf->compression = compressionFromEncoding(p);
     // uf->content_encoding = uf->compression;
-  } else if (use_cookie && accept_cookie && pu &&
-             check_cookie_accept_domain(pu->host) &&
+  } else if (use_cookie && accept_cookie &&
+             check_cookie_accept_domain(res->url.host) &&
              (!strcasecmp(key, "Set-Cookie") ||
               !strcasecmp(key, "Set-Cookie2"))) {
     Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
@@ -137,7 +137,7 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
         p++;
       }
     }
-    if (pu && name->length > 0) {
+    if (name->length > 0) {
       int err;
       if (show_cookie) {
         if (flag & COO_SECURE)
@@ -146,15 +146,15 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
           message_push(
               Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
       }
-      err = add_cookie(pu, name, value, expires, domain, path, flag, comment,
-                       version, port, commentURL);
+      err = add_cookie(&res->url, name, value, expires, domain, path, flag,
+                       comment, version, port, commentURL);
       if (err) {
         const char *ans =
             (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
         if ((err & COO_OVERRIDE_OK) &&
             accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
           Str msg = Sprintf(
-              "Accept bad cookie from %s for %s?", pu->host,
+              "Accept bad cookie from %s for %s?", res->url.host,
               ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
           if (msg->length > COLS - 10)
             Strshrink(msg, msg->length - (COLS - 10));
@@ -162,7 +162,7 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
           ans = term_inputAnswer(msg->ptr);
         }
         if (ans == NULL || TOLOWER(*ans) != 'y' ||
-            (err = add_cookie(pu, name, value, expires, domain, path,
+            (err = add_cookie(&res->url, name, value, expires, domain, path,
                               flag | COO_OVERRIDE, comment, version, port,
                               commentURL))) {
           err = (err & ~COO_OVERRIDE_OK) - 1;
@@ -186,7 +186,8 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
         }
       }
     }
-  } else if (!strcasecmp(key, "w3m-control") && pu->scheme == SCM_LOCAL_CGI) {
+  } else if (!strcasecmp(key, "w3m-control") &&
+             res->url.scheme == SCM_LOCAL_CGI) {
     Str funcname = Strnew();
     SKIP_BLANKS(p);
     while (*p && !IS_SPACE(*p))
@@ -201,19 +202,21 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
   }
 }
 
-struct HttpResponse *httpReadResponse(union input_stream *stream,
-                                      struct Url *pu) {
+struct HttpResponse *newHttpResponse(struct Url url) {
   auto res = New(struct HttpResponse);
+  res->url = url;
+  res->http_status_code = -1;
   res->content_type = CONTENTTYPE_TextPlane;
   res->content_charset = CHARSET_UTF8;
   res->content_length = 0;
   res->document_header = newTextList();
-  res->http_status_code = -1;
+  return res;
+}
 
-  Str line;
-  if (pu->scheme == SCM_HTTP || pu->scheme == SCM_HTTPS) {
+void httpReadResponse(struct HttpResponse *res) {
+  if (res->url.scheme == SCM_HTTP || res->url.scheme == SCM_HTTPS) {
     // HTTP/1.1 404 Not Found
-    line = StrmyISgets(stream);
+    auto line = StrmyISgets(res->stream);
     auto p = line->ptr;
     // http version
     while (*p && !IS_SPACE(*p))
@@ -230,7 +233,11 @@ struct HttpResponse *httpReadResponse(union input_stream *stream,
 
   Str lineBuf2 = nullptr;
   const char *q;
-  while ((line = StrmyISgets(stream))->length) {
+  while (true) {
+    auto line = StrmyISgets(res->stream);
+    if (line->length == 0) {
+      break;
+    }
     cleanup_line(line, HEADER_MODE);
     if (line->ptr[0] == '\n' || line->ptr[0] == '\r' || line->ptr[0] == '\0') {
       if (!lineBuf2)
@@ -244,8 +251,8 @@ struct HttpResponse *httpReadResponse(union input_stream *stream,
     } else {
       lineBuf2 = line;
     }
-    char c = ISgetc(stream);
-    ISundogetc(stream);
+    char c = ISgetc(res->stream);
+    ISundogetc(res->stream);
     if (c == ' ' || c == '\t') {
       /* header line is continued */
       continue;
@@ -275,14 +282,12 @@ struct HttpResponse *httpReadResponse(union input_stream *stream,
       auto value = colon + 1;
       SKIP_BLANKS(value);
 
-      httpReadHeader(res, stream, lineBuf2->ptr, value, pu);
+      httpReadHeader(res, res->stream, lineBuf2->ptr, value);
     }
 
     Strfree(lineBuf2);
     lineBuf2 = NULL;
   }
-
-  return res;
 }
 
 const char *httpGetHeader(struct HttpResponse *res, const char *field) {
