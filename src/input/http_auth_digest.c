@@ -70,11 +70,11 @@ enum {
   QOP_AUTH_INT,
 };
 
-Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
-                   struct HttpRequest *hr, struct FormList *form) {
+Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw,
+                   struct HttpRequest *hr) {
   Str tmp, a1buf, a2buf, rd, s;
   unsigned char md5[MD5_DIGEST_LENGTH + 1];
-  Str uri = HTTPrequestURI(pu, hr);
+  Str uri = HTTPrequestURI(hr);
   char nc[] = "00000001";
   FILE *fp;
 
@@ -155,10 +155,10 @@ Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
   tmp = Strnew_m_charp(HTTPrequestMethod(hr)->ptr, ":", uri->ptr, NULL);
   if (qop_i == QOP_AUTH_INT) {
     /*  A2 = Method ":" digest-uri-value ":" H(entity-body) */
-    if (form && form->body) {
-      if (form->method == FORM_METHOD_POST &&
-          form->enctype == FORM_ENCTYPE_MULTIPART) {
-        fp = fopen(form->body, "r");
+    if (hr->form && hr->form->body) {
+      if (hr->form->method == FORM_METHOD_POST &&
+          hr->form->enctype == FORM_ENCTYPE_MULTIPART) {
+        fp = fopen(hr->form->body, "r");
         if (fp != NULL) {
           Str ebody;
           ebody = Strfgetall(fp);
@@ -168,7 +168,7 @@ Str AuthDigestCred(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
           MD5("", 0, md5);
         }
       } else {
-        MD5(form->body, form->length, md5);
+        MD5(hr->form->body, hr->form->length, md5);
       }
     } else {
       MD5("", 0, md5);

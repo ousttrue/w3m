@@ -278,7 +278,7 @@ static int check_local_cgi(const char *file, int status) {
 #endif
 }
 
-static void set_cgi_environ(char *name, char *fn, char *req_uri) {
+static void set_cgi_environ(const char *name, const char *fn, const char *req_uri) {
   set_environ("SERVER_SOFTWARE", w3m_version);
   set_environ("SERVER_PROTOCOL", "HTTP/1.0");
   set_environ("SERVER_NAME", "localhost");
@@ -292,8 +292,10 @@ static void set_cgi_environ(char *name, char *fn, char *req_uri) {
   set_environ("REQUEST_URI", req_uri);
 }
 
-FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
-                    const char *referer) {
+// -FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
+// -                    const char *referer) {
+FILE *localcgi_request(struct HttpRequest *hr) {
+  auto uri = hr->url.real_file;
   auto file = uri;
   auto name = uri;
   const char *path_info = NULL;
@@ -306,14 +308,14 @@ FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
   writeLocalCookie();
 
   FILE *fr = NULL, *fw = NULL;
-  if (form && form->enctype != FORM_ENCTYPE_MULTIPART) {
+  if (hr->form && hr->form->enctype != FORM_ENCTYPE_MULTIPART) {
     tmpf = tmpfname(TMPF_DFL, NULL)->ptr;
     fw = fopen(tmpf, "w");
     if (!fw)
       return NULL;
   }
-  if (qstr)
-    uri = Strnew_m_charp(uri, "?", qstr, NULL)->ptr;
+  if (hr->url.query)
+    uri = Strnew_m_charp(uri, "?", hr->url.query, NULL)->ptr;
   cgi_dir = mydirname(file);
   auto cgi_basename = mybasename(file);
   auto pid = open_pipe_rw(&fr, NULL);
@@ -332,27 +334,27 @@ FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
   set_cgi_environ(name, file, uri);
   if (path_info)
     set_environ("PATH_INFO", path_info);
-  if (referer && referer != NO_REFERER)
-    set_environ("HTTP_REFERER", referer);
-  if (form) {
+  if (hr->referer && hr->referer != NO_REFERER)
+    set_environ("HTTP_REFERER", hr->referer);
+  if (hr->form) {
     set_environ("REQUEST_METHOD", "POST");
-    if (qstr)
-      set_environ("QUERY_STRING", qstr);
-    set_environ("CONTENT_LENGTH", Sprintf("%d", form->length)->ptr);
-    if (form->enctype == FORM_ENCTYPE_MULTIPART) {
+    if (hr->url.query)
+      set_environ("QUERY_STRING", hr->url.query);
+    set_environ("CONTENT_LENGTH", Sprintf("%d", hr->form->length)->ptr);
+    if (hr->form->enctype == FORM_ENCTYPE_MULTIPART) {
       set_environ(
           "CONTENT_TYPE",
-          Sprintf("multipart/form-data; boundary=%s", form->boundary)->ptr);
-      freopen(form->body, "r", stdin);
+          Sprintf("multipart/form-data; boundary=%s", hr->form->boundary)->ptr);
+      freopen(hr->form->body, "r", stdin);
     } else {
       set_environ("CONTENT_TYPE", "application/x-www-form-urlencoded");
-      fwrite(form->body, sizeof(char), form->length, fw);
+      fwrite(hr->form->body, sizeof(char), hr->form->length, fw);
       fclose(fw);
       freopen(tmpf, "r", stdin);
     }
   } else {
     set_environ("REQUEST_METHOD", "GET");
-    set_environ("QUERY_STRING", qstr ? qstr : "");
+    set_environ("QUERY_STRING", hr->url.query ? hr->url.query : "");
     freopen(DEV_NULL_PATH, "r", stdin);
   }
 
@@ -366,10 +368,6 @@ FILE *localcgi_post(const char *uri, const char *qstr, struct FormList *form,
   fprintf(stderr, "execl(\"%s\", \"%s\", NULL): %s\n", file, cgi_basename,
           strerror(errno));
   exit(1);
-}
-
-FILE *localcgi_get(const char *u, const char *q, const char *r) {
-  return localcgi_post((u), (q), NULL, (r));
 }
 
 const char *tag_get_value(struct LocalCgiHtml *t, const char *arg) {

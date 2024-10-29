@@ -1,6 +1,5 @@
 #pragma once
-#include "input/istream.h"
-#include "text/Str.h"
+#include "input/http_request.h"
 #include <stdint.h>
 
 enum ContentType {
@@ -15,8 +14,15 @@ enum CharSet {
   CHARSET_SJIS,
 };
 
+enum StreamStatus {
+  STREAM_UNKNOWN = 255,
+  STREAM_MISSING = 254,
+  STREAM_NORMAL = 0,
+  STREAM_CONNECT = 1,
+};
+
 struct HttpResponse {
-  struct Url url;
+  struct HttpRequest *request;
 
   enum StreamStatus stream_status;
   union input_stream *stream;
@@ -28,7 +34,7 @@ struct HttpResponse {
   int64_t content_length;
 };
 
-struct HttpResponse *newHttpResponse(struct Url url);
+struct HttpResponse *newHttpResponse(struct HttpRequest *req);
 void httpReadResponse(struct HttpResponse *res);
 bool httpMatchattr(const char *p, const char *attr, int len, Str *value);
 const char *httpGetHeader(struct HttpResponse *res, const char *field);

@@ -68,7 +68,7 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
     // uf->compression = compressionFromEncoding(p);
     // uf->content_encoding = uf->compression;
   } else if (use_cookie && accept_cookie &&
-             check_cookie_accept_domain(res->url.host) &&
+             check_cookie_accept_domain(res->request->url.host) &&
              (!strcasecmp(key, "Set-Cookie") ||
               !strcasecmp(key, "Set-Cookie2"))) {
     Str name = Strnew(), value = Strnew(), domain = NULL, path = NULL,
@@ -146,15 +146,15 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
           message_push(
               Sprintf("Received cookie: %s=%s", name->ptr, value->ptr)->ptr);
       }
-      err = add_cookie(&res->url, name, value, expires, domain, path, flag,
-                       comment, version, port, commentURL);
+      err = add_cookie(&res->request->url, name, value, expires, domain, path,
+                       flag, comment, version, port, commentURL);
       if (err) {
         const char *ans =
             (accept_bad_cookie == ACCEPT_BAD_COOKIE_ACCEPT) ? "y" : NULL;
         if ((err & COO_OVERRIDE_OK) &&
             accept_bad_cookie == ACCEPT_BAD_COOKIE_ASK) {
           Str msg = Sprintf(
-              "Accept bad cookie from %s for %s?", res->url.host,
+              "Accept bad cookie from %s for %s?", res->request->url.host,
               ((domain && domain->ptr) ? domain->ptr : "<localdomain>"));
           if (msg->length > COLS - 10)
             Strshrink(msg, msg->length - (COLS - 10));
@@ -162,8 +162,8 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
           ans = term_inputAnswer(msg->ptr);
         }
         if (ans == NULL || TOLOWER(*ans) != 'y' ||
-            (err = add_cookie(&res->url, name, value, expires, domain, path,
-                              flag | COO_OVERRIDE, comment, version, port,
+            (err = add_cookie(&res->request->url, name, value, expires, domain,
+                              path, flag | COO_OVERRIDE, comment, version, port,
                               commentURL))) {
           err = (err & ~COO_OVERRIDE_OK) - 1;
 
@@ -187,7 +187,7 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
       }
     }
   } else if (!strcasecmp(key, "w3m-control") &&
-             res->url.scheme == SCM_LOCAL_CGI) {
+             res->request->url.scheme == SCM_LOCAL_CGI) {
     Str funcname = Strnew();
     SKIP_BLANKS(p);
     while (*p && !IS_SPACE(*p))
@@ -202,9 +202,9 @@ static void httpReadHeader(struct HttpResponse *res, union input_stream *stream,
   }
 }
 
-struct HttpResponse *newHttpResponse(struct Url url) {
+struct HttpResponse *newHttpResponse(struct HttpRequest *req) {
   auto res = New(struct HttpResponse);
-  res->url = url;
+  res->request = req;
   res->http_status_code = -1;
   res->content_type = CONTENTTYPE_TextPlane;
   res->content_charset = CHARSET_UTF8;
@@ -214,7 +214,8 @@ struct HttpResponse *newHttpResponse(struct Url url) {
 }
 
 void httpReadResponse(struct HttpResponse *res) {
-  if (res->url.scheme == SCM_HTTP || res->url.scheme == SCM_HTTPS) {
+  if (res->request->url.scheme == SCM_HTTP ||
+      res->request->url.scheme == SCM_HTTPS) {
     // HTTP/1.1 404 Not Found
     auto line = StrmyISgets(res->stream);
     auto p = line->ptr;

@@ -1,11 +1,12 @@
 #include "input/http_auth.h"
-#include "input/http_response.h"
+#include "alloc.h"
 #include "buffer/buffer.h"
+#include "core.h"
+#include "input/http_request.h"
+#include "input/http_response.h"
+#include "os.h"
 #include "term/terms.h"
 #include "text/myctype.h"
-#include "alloc.h"
-#include "core.h"
-#include "os.h"
 #include <sys/stat.h>
 
 #define PASSWD_FILE RC_DIR "/passwd"
@@ -318,9 +319,8 @@ Str base64_encode(const unsigned char *src, size_t len) {
   return dest;
 }
 
-static Str AuthBasicCred(struct http_auth *ha, Str uname, Str pw,
-                         struct Url *pu, struct HttpRequest *hr,
-                         struct FormList *form) {
+static Str AuthBasicCred(struct http_auth *ha, struct HttpRequest *hr,
+                         Str uname, Str pw) {
   Str s = Strdup(uname);
   Strcat_char(s, ':');
   Strcat(s, pw);
@@ -565,9 +565,7 @@ Str get_auth_param(struct auth_param *auth, char *name) {
 }
 
 void getAuthCookie(struct http_auth *hauth, char *auth_header,
-                   struct TextList *extra_header, struct Url *pu,
-                   struct HttpRequest *hr, struct FormList *form, Str *uname,
-                   Str *pwd) {
+                   struct HttpRequest *hr, Str *uname, Str *pwd) {
   Str ss = NULL;
   Str tmp;
   struct TextListItem *i;
@@ -583,7 +581,7 @@ void getAuthCookie(struct http_auth *hauth, char *auth_header,
     return;
 
   a_found = false;
-  for (i = extra_header->first; i != NULL; i = i->next) {
+  for (auto i = hr->extra_header->first; i != NULL; i = i->next) {
     if (!strncasecmp(i->ptr, auth_header, auth_header_len)) {
       a_found = true;
       break;
@@ -597,14 +595,14 @@ void getAuthCookie(struct http_auth *hauth, char *auth_header,
     term_message("Wrong username or password");
     sleepSeconds(1);
     /* delete Authenticate: header from extra_header */
-    delText(extra_header, i);
-    invalidate_auth_user_passwd(pu, realm, *uname, *pwd, proxy);
+    delText(hr->extra_header, i);
+    invalidate_auth_user_passwd(&hr->url, realm, *uname, *pwd, proxy);
   }
   *uname = NULL;
   *pwd = NULL;
 
   if (!a_found &&
-      find_auth_user_passwd(pu, realm, (Str *)uname, (Str *)pwd, proxy)) {
+      find_auth_user_passwd(&hr->url, realm, (Str *)uname, (Str *)pwd, proxy)) {
     /* found username & password in passwd file */;
   } else {
     if (QuietMessage)
@@ -620,11 +618,11 @@ void getAuthCookie(struct http_auth *hauth, char *auth_header,
     }
 #endif
   }
-  ss = hauth->cred(hauth, *uname, *pwd, pu, hr, form);
+  ss = hauth->cred(hauth, hr, *uname, *pwd);
   if (ss) {
     tmp = Strnew_charp(auth_header);
     Strcat_m_charp(tmp, " ", ss->ptr, "\r\n", NULL);
-    pushText(extra_header, tmp->ptr);
+    pushText(hr->extra_header, tmp->ptr);
   } else {
     *uname = NULL;
     *pwd = NULL;

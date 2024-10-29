@@ -19,7 +19,7 @@ enum IST_TYPE {
 
 union input_stream;
 union input_stream *newInputStream(int des);
-union input_stream *newFileStream(FILE *f, void (*closep)());
+union input_stream *newFileStream(FILE *f, int (*closep)(FILE *));
 union input_stream *newStrStream(Str s);
 // union input_stream *newEncodedStream(union input_stream *is,
 //                                      enum ENCODING_TYPE encoding);
@@ -44,28 +44,15 @@ union input_stream;
 const char *guessContentType(const char *filename);
 union input_stream *examineFile(const char *path);
 
-enum StreamStatus {
-  STREAM_UNKNOWN = 255,
-  STREAM_MISSING = 254,
-  STREAM_NORMAL = 0,
-  STREAM_CONNECT = 1,
-};
-enum RG_FLAGS {
-  RG_NOCACHE = 1,
-};
-struct URLOption {
-  const char *referer;
-  enum RG_FLAGS flag;
-};
 struct FormList;
 struct TextList;
 struct HttpRequest;
-struct HttpResponse *openURL(const char *url, struct Url *pu,
-                            struct Url *current, struct URLOption *option,
-                            struct FormList *form,
-                            struct TextList *extra_header,
-                            union input_stream *ouf, struct HttpRequest *hr,
-                            enum StreamStatus *status);
+struct HttpResponse *
+openURL(struct HttpRequest *hr, 
+        // const char *url, struct Url *pu,
+        // struct Url *current, const char *referer, bool no_cache,
+        // struct FormList *form, struct TextList *extra_header,
+        union input_stream *ouf);
 
 int save2tmp(union input_stream *stream, const char *tmpf);
 void free_ssl_ctx();

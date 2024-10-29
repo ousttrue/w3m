@@ -40,10 +40,8 @@ typedef struct direct Directory;
 void set_environ(const char *var, const char *value);
 Str localCookie(void);
 
-struct FormList;
-FILE *localcgi_post(const char *, const char *, struct FormList *,
-                    const char *);
-FILE *localcgi_get(const char *u, const char *q, const char *r);
+struct HttpRequest;
+FILE *localcgi_request(struct HttpRequest *hr);
 extern Str loadLocalDir(const char *dirname);
 
 struct LocalCgiHtml {
@@ -55,6 +53,3 @@ struct LocalCgiHtml {
 const char *tag_get_value(struct LocalCgiHtml *t, const char *arg);
 bool tag_exists(struct LocalCgiHtml *t, const char *arg);
 struct LocalCgiHtml *cgistr2tagarg(const char *cgistr);
-
-
-

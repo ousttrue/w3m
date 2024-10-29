@@ -373,7 +373,7 @@ union input_stream *newInputStream(int des) {
   return stream;
 }
 
-union input_stream *newFileStream(FILE *f, void (*closep)()) {
+union input_stream *newFileStream(FILE *f, int (*closep)(FILE *)) {
   union input_stream *stream;
   if (f == NULL)
     return NULL;
@@ -1140,12 +1140,19 @@ Str parsedURL2RefererStr(struct Url *pu) {
   return _parsedURL2Str(pu, false, false, false);
 }
 
-static char *otherinfo(struct Url *target, struct Url *current,
-                       const char *referer, bool is_nocache) {
+// if (hr->referer == NO_REFERER)
+// else
+// Strcat_charp(tmp, otherinfo(pu, NULL, NULL, no_cache));
+// Strcat_charp(tmp, otherinfo(pu, current, hr->referer, no_cache));
+static char *
+otherinfo(struct HttpRequest *hr
+          // struct Url *target, struct Url *current,
+          //                      const char *referer, bool is_nocache
+) {
   Str s = Strnew();
   const int *no_referer_ptr;
   int no_referer;
-  const char *url_user_agent = query_SCONF_USER_AGENT(target);
+  const char *url_user_agent = query_SCONF_USER_AGENT(&hr->url);
 
   if (!override_user_agent) {
     Strcat_charp(s, "User-Agent: ");
@@ -1162,31 +1169,33 @@ static char *otherinfo(struct Url *target, struct Url *current,
   Strcat_m_charp(s, "Accept-Encoding: ", AcceptEncoding, "\r\n", NULL);
   Strcat_m_charp(s, "Accept-Language: ", AcceptLang, "\r\n", NULL);
 
-  if (target->host) {
+  if (hr->url.host) {
     Strcat_charp(s, "Host: ");
-    Strcat_charp(s, target->host);
-    if (target->port != DefaultPort[target->scheme])
-      Strcat(s, Sprintf(":%d", target->port));
+    Strcat_charp(s, hr->url.host);
+    if (hr->url.port != DefaultPort[hr->url.scheme])
+      Strcat(s, Sprintf(":%d", hr->url.port));
     Strcat_charp(s, "\r\n");
   }
-  if (is_nocache || NoCache) {
+  if (hr->no_cache || NoCache) {
     Strcat_charp(s, "Pragma: no-cache\r\n");
     Strcat_charp(s, "Cache-control: no-cache\r\n");
   }
+
+  auto current = hr->referer == NO_REFERER ? nullptr : hr->current;
+  auto referer = hr->referer == NO_REFERER ? nullptr : hr->referer;
   no_referer = NoSendReferer;
   no_referer_ptr = query_SCONF_NO_REFERER_FROM(current);
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
-  no_referer_ptr = query_SCONF_NO_REFERER_TO(target);
+  no_referer_ptr = query_SCONF_NO_REFERER_TO(&hr->url);
   no_referer = no_referer || (no_referer_ptr && *no_referer_ptr);
   if (!no_referer) {
     int cross_origin = false;
     if (CrossOriginReferer && current && current->host &&
-        (!target || !target->host ||
-         strcasecmp(current->host, target->host) != 0 ||
-         current->port != target->port || current->scheme != target->scheme))
+        (!hr->url.host || strcasecmp(current->host, hr->url.host) != 0 ||
+         current->port != hr->url.port || current->scheme != hr->url.scheme))
       cross_origin = true;
     if (current && current->scheme == SCM_HTTPS &&
-        target->scheme != SCM_HTTPS) {
+        hr->url.scheme != SCM_HTTPS) {
       /* Don't send Referer: if https:// -> http:// */
     } else if (referer == NULL && current && current->scheme != SCM_LOCAL &&
                current->scheme != SCM_LOCAL_CGI &&
@@ -1211,22 +1220,17 @@ static char *otherinfo(struct Url *target, struct Url *current,
   return s->ptr;
 }
 
-static Str HTTPrequest(struct Url *pu, struct Url *current,
-                       struct HttpRequest *hr, struct TextList *extra,
-                       bool is_nocache) {
+static Str HTTPrequestToStr(struct HttpRequest *hr) {
   Str tmp;
   struct TextListItem *i;
   Str cookie;
   tmp = HTTPrequestMethod(hr);
   Strcat_charp(tmp, " ");
-  Strcat_charp(tmp, HTTPrequestURI(pu, hr)->ptr);
+  Strcat_charp(tmp, HTTPrequestURI(hr)->ptr);
   Strcat_charp(tmp, " HTTP/1.0\r\n");
-  if (hr->referer == NO_REFERER)
-    Strcat_charp(tmp, otherinfo(pu, NULL, NULL, is_nocache));
-  else
-    Strcat_charp(tmp, otherinfo(pu, current, hr->referer, is_nocache));
-  if (extra != NULL)
-    for (i = extra->first; i != NULL; i = i->next) {
+  Strcat_charp(tmp, otherinfo(hr));
+  if (hr->extra_header)
+    for (i = hr->extra_header->first; i != NULL; i = i->next) {
       if (strncasecmp(i->ptr, "Authorization:", sizeof("Authorization:") - 1) ==
           0) {
         if (hr->command == HR_COMMAND_CONNECT)
@@ -1234,14 +1238,14 @@ static Str HTTPrequest(struct Url *pu, struct Url *current,
       }
       if (strncasecmp(i->ptr, "Proxy-Authorization:",
                       sizeof("Proxy-Authorization:") - 1) == 0) {
-        if (pu->scheme == SCM_HTTPS && hr->command != HR_COMMAND_CONNECT)
+        if (hr->url.scheme == SCM_HTTPS && hr->command != HR_COMMAND_CONNECT)
           continue;
       }
       Strcat_charp(tmp, i->ptr);
     }
 
   if (hr->command != HR_COMMAND_CONNECT && use_cookie &&
-      (cookie = find_cookie(pu))) {
+      (cookie = find_cookie(&hr->url))) {
     Strcat_charp(tmp, "Cookie: ");
     Strcat(tmp, cookie);
     Strcat_charp(tmp, "\r\n");
@@ -1304,36 +1308,38 @@ union input_stream *add_index_file(struct Url *pu, union input_stream *stream) {
   return stream;
 }
 
-struct HttpResponse *openURL(const char *url, struct Url *pu,
-                             struct Url *current, struct URLOption *option,
-                             struct FormList *form,
-                             struct TextList *extra_header,
-                             union input_stream *ouf, struct HttpRequest *hr,
-                             enum StreamStatus *status) {
-  struct HttpRequest hr0;
-  if (!hr) {
-    hr = &hr0;
-  }
+struct HttpResponse *
+openURL(struct HttpRequest *hr,
+        // const char *url, struct Url *pu,
+        // struct Url *current, const char *referer, bool no_cache,
+        // struct FormList *form, struct TextList *extra_header,
+        union input_stream *ouf) {
+  assert(hr);
+  // struct HttpRequest hr0;
+  // if (!hr) {
+  //   hr = &hr0;
+  // }
 
-  auto u = url;
-  auto scheme = getURLScheme(&u);
-  if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL) {
-    u = file_to_url(url); /* force to local file */
-  } else {
-    u = url;
-  }
-  parseURL2(u, pu, current);
-  auto res = newHttpResponse(*pu);
+  // auto u = url;
+  // auto scheme = getURLScheme(&u);
+  // if (current == NULL && scheme == SCM_MISSING && !ArgvIsURL) {
+  //   u = file_to_url(url); /* force to local file */
+  // } else {
+  //   u = url;
+  // }
+  // parseURL2(u, pu, current);
+
+  auto res = newHttpResponse(hr);
   res->stream = ouf;
 
-  if (pu->scheme == SCM_LOCAL && pu->file == NULL) {
-    if (pu->label != NULL) {
+  if (hr->url.scheme == SCM_LOCAL && hr->url.file == NULL) {
+    if (hr->url.label != NULL) {
       /* #hogege is not a label but a filename */
       Str tmp2 = Strnew_charp("#");
-      Strcat_charp(tmp2, pu->label);
-      pu->file = tmp2->ptr;
-      pu->real_file = cleanupName(file_unquote(pu->file));
-      pu->label = NULL;
+      Strcat_charp(tmp2, hr->url.label);
+      hr->url.file = tmp2->ptr;
+      hr->url.real_file = cleanupName(file_unquote(hr->url.file));
+      hr->url.label = NULL;
     } else {
       /* given URL must be null string */
 #ifdef SOCK_DEBUG
@@ -1343,62 +1349,51 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
     }
   }
 
-  if (LocalhostOnly && pu->host && !is_localhost(pu->host)) {
-    pu->host = NULL;
+  if (LocalhostOnly && hr->url.host && !is_localhost(hr->url.host)) {
+    hr->url.host = NULL;
   }
 
-  scheme = pu->scheme;
-  bool is_nocache = (option->flag & RG_NOCACHE);
-
-  hr->command = HR_COMMAND_GET;
-  hr->flag = 0;
-  hr->referer = option->referer;
-  hr->form = form;
-
-  switch (pu->scheme) {
+  switch (hr->url.scheme) {
   case SCM_LOCAL:
   case SCM_LOCAL_CGI:
-    if (form && form->body)
-      /* local CGI: POST */
-      res->stream = newFileStream(
-          localcgi_post(pu->real_file, pu->query, form, option->referer),
-          (void (*)())fclose);
-    else
-      /* lodal CGI: GET */
-      res->stream =
-          newFileStream(localcgi_get(pu->real_file, pu->query, option->referer),
-                        (void (*)())fclose);
+    // if (hr->form && hr->form->body)
+    //   /* local CGI: POST */
+    res->stream = newFileStream(localcgi_request(hr), fclose);
+    // else
+    //   /* lodal CGI: GET */
+    //   res->stream = newFileStream(
+    //       localcgi_get(pu->real_file, pu->query, referer), fclose);
     if (res->stream) {
       // uf.is_cgi = true;
-      res->url.scheme = pu->scheme = SCM_LOCAL_CGI;
+      hr->url.scheme = SCM_LOCAL_CGI;
       return res;
     }
 
-    res->stream = examineFile(pu->real_file);
+    res->stream = examineFile(hr->url.real_file);
     if (!res->stream) {
-      if (dir_exist(pu->real_file)) {
-        add_index_file(pu, res->stream);
+      if (dir_exist(hr->url.real_file)) {
+        add_index_file(&hr->url, res->stream);
         if (!res->stream)
           return nullptr;
       } else if (document_root != NULL) {
         auto tmp = Strnew_charp(document_root);
-        if (Strlastchar(tmp) != '/' && pu->file[0] != '/')
+        if (Strlastchar(tmp) != '/' && hr->url.file[0] != '/')
           Strcat_char(tmp, '/');
-        Strcat_charp(tmp, pu->file);
+        Strcat_charp(tmp, hr->url.file);
         auto p = cleanupName(tmp->ptr);
         auto q = cleanupName(file_unquote(p));
         if (dir_exist(q)) {
-          pu->file = p;
-          pu->real_file = q;
-          res->stream = add_index_file(pu, res->stream);
+          hr->url.file = p;
+          hr->url.real_file = q;
+          res->stream = add_index_file(&hr->url, res->stream);
           if (!res->stream) {
             return nullptr;
           }
         } else {
           res->stream = examineFile(q);
           if (res->stream) {
-            pu->file = p;
-            pu->real_file = q;
+            hr->url.file = p;
+            hr->url.real_file = q;
           }
         }
       }
@@ -1407,10 +1402,10 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
 
   case SCM_FTP:
   case SCM_FTPDIR:
-    if (pu->file == NULL)
-      pu->file = allocStr("/", -1);
-    if (non_null(FTP_proxy) && use_proxy && pu->host != NULL &&
-        !check_no_proxy(pu->host)) {
+    if (hr->url.file == NULL)
+      hr->url.file = allocStr("/", -1);
+    if (non_null(FTP_proxy) && use_proxy && hr->url.host != NULL &&
+        !check_no_proxy(hr->url.host)) {
       hr->flag |= HR_FLAG_PROXY;
       SocketType sock;
       if (!socketOpen(FTP_proxy_parsed.host,
@@ -1423,41 +1418,40 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
 #else
       stream = newInputStream(sock);
 #endif
-      res->url.scheme = SCM_HTTP;
-      auto tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
+      hr->url.scheme = SCM_HTTP;
+      auto tmp = HTTPrequestToStr(hr);
       socketWrite(sock, tmp->ptr, tmp->length);
     } else {
-      res->stream = openFTPStream(pu);
-      res->url.scheme = pu->scheme;
+      res->stream = openFTPStream(&hr->url);
       return res;
     }
     break;
 
   case SCM_HTTP:
   case SCM_HTTPS: {
-    if (pu->file == NULL)
-      pu->file = allocStr("/", -1);
-    if (form && form->method == FORM_METHOD_POST && form->body)
+    if (hr->url.file == NULL)
+      hr->url.file = allocStr("/", -1);
+    if (hr->form && hr->form->method == FORM_METHOD_POST && hr->form->body)
       hr->command = HR_COMMAND_POST;
-    if (form && form->method == FORM_METHOD_HEAD)
+    if (hr->form && hr->form->method == FORM_METHOD_HEAD)
       hr->command = HR_COMMAND_HEAD;
 
     Str tmp = nullptr;
     SocketType sock = socketInvalid();
     SSL *sslh = NULL;
     char *ssl_certificate = nullptr;
-    if (((pu->scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
-                                   : non_null(HTTP_proxy)) &&
-        use_proxy && pu->host != NULL && !check_no_proxy(pu->host)) {
+    if (((hr->url.scheme == SCM_HTTPS) ? non_null(HTTPS_proxy)
+                                       : non_null(HTTP_proxy)) &&
+        use_proxy && hr->url.host != NULL && !check_no_proxy(hr->url.host)) {
       hr->flag |= HR_FLAG_PROXY;
-      if (pu->scheme == SCM_HTTPS && *status == STREAM_CONNECT) {
+      if (hr->url.scheme == SCM_HTTPS && res->stream_status == STREAM_CONNECT) {
         sock = ssl_socket_of(ouf);
         char *ssl_certificate;
-        if (!(sslh = openSSLHandle(sock, pu->host, &ssl_certificate))) {
-          *status = STREAM_MISSING;
+        if (!(sslh = openSSLHandle(sock, hr->url.host, &ssl_certificate))) {
+          res->stream_status = STREAM_MISSING;
           return nullptr;
         }
-      } else if (pu->scheme == SCM_HTTPS) {
+      } else if (hr->url.scheme == SCM_HTTPS) {
         if (!socketOpen(HTTPS_proxy_parsed.host,
                         schemeNumToName(HTTPS_proxy_parsed.scheme),
                         HTTPS_proxy_parsed.port, &sock)) {
@@ -1472,34 +1466,35 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
         }
         sslh = NULL;
       }
-      if (pu->scheme == SCM_HTTPS) {
-        if (*status == STREAM_NORMAL) {
+      if (hr->url.scheme == SCM_HTTPS) {
+        if (res->stream_status == STREAM_NORMAL) {
           hr->command = HR_COMMAND_CONNECT;
-          tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
-          *status = STREAM_CONNECT;
+          tmp = HTTPrequestToStr(hr);
+          res->stream_status = STREAM_CONNECT;
         } else {
           hr->flag |= HR_FLAG_LOCAL;
-          tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
-          *status = STREAM_NORMAL;
+          tmp = HTTPrequestToStr(hr);
+          res->stream_status = STREAM_NORMAL;
         }
       } else {
-        tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
-        *status = STREAM_NORMAL;
+        tmp = HTTPrequestToStr(hr);
+        res->stream_status = STREAM_NORMAL;
       }
     } else {
-      if (!socketOpen(pu->host, schemeNumToName(pu->scheme), pu->port, &sock)) {
-        *status = STREAM_MISSING;
+      if (!socketOpen(hr->url.host, schemeNumToName(hr->url.scheme),
+                      hr->url.port, &sock)) {
+        res->stream_status = STREAM_MISSING;
         return nullptr;
       }
-      if (pu->scheme == SCM_HTTPS) {
-        if (!(sslh = openSSLHandle(sock, pu->host, &ssl_certificate))) {
-          *status = STREAM_MISSING;
+      if (hr->url.scheme == SCM_HTTPS) {
+        if (!(sslh = openSSLHandle(sock, hr->url.host, &ssl_certificate))) {
+          res->stream_status = STREAM_MISSING;
           return nullptr;
         }
       }
       hr->flag |= HR_FLAG_LOCAL;
-      tmp = HTTPrequest(pu, current, hr, extra_header, is_nocache);
-      *status = STREAM_NORMAL;
+      tmp = HTTPrequestToStr(hr);
+      res->stream_status = STREAM_NORMAL;
     }
 #ifdef _WIN32
     res->stream = newWinsockStream(sock);
@@ -1507,7 +1502,7 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
     res->stream = newInputStream(sock);
 #endif
 
-    if (pu->scheme == SCM_HTTPS) {
+    if (hr->url.scheme == SCM_HTTPS) {
       res->stream = newSSLStream(sslh, sock);
       ssl_set_certificate(res->stream, ssl_certificate);
       if (sslh)
@@ -1515,26 +1510,26 @@ struct HttpResponse *openURL(const char *url, struct Url *pu,
       else
         socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
-          form->enctype == FORM_ENCTYPE_MULTIPART) {
+          hr->form->enctype == FORM_ENCTYPE_MULTIPART) {
         if (sslh)
-          SSL_write_from_file(sslh, form->body);
+          SSL_write_from_file(sslh, hr->form->body);
         else
-          write_from_file(sock, form->body);
+          write_from_file(sock, hr->form->body);
       }
       return res;
     } else {
       socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
-          form->enctype == FORM_ENCTYPE_MULTIPART)
-        write_from_file(sock, form->body);
+          hr->form->enctype == FORM_ENCTYPE_MULTIPART)
+        write_from_file(sock, hr->form->body);
     }
     break;
   }
 
   case SCM_DATA: {
-    if (pu->file == NULL)
+    if (hr->url.file == NULL)
       return nullptr;
-    auto p = Strnew_charp(pu->file)->ptr;
+    auto p = Strnew_charp(hr->url.file)->ptr;
     auto q = strchr(p, ',');
     if (q == NULL)
       return nullptr;

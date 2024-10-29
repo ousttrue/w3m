@@ -2553,8 +2553,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   scr_message("Reloading...", 0, 0);
   term_refresh();
   DefaultType = Currentbuf->real_type;
-  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER,
-                        RG_NOCACHE, form);
+  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER, true,
+                        form);
   DefaultType = NULL;
 
   if (multipart)

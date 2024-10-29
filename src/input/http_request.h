@@ -1,4 +1,5 @@
 #pragma once
+#include "input/url.h"
 #include "text/Str.h"
 
 #define NO_REFERER ((char *)-1)
@@ -16,12 +17,19 @@ enum HttpRequestFlags {
 };
 
 struct HttpRequest {
-  enum HttpRequestMethod command;
+  struct Url url;
   enum HttpRequestFlags flag;
-  const char *referer;
+  enum HttpRequestMethod command;
   struct FormList *form;
+  struct TextList *extra_header;
+  const char *referer;
+  struct Url *current;
+  bool no_cache;
 };
 
+struct HttpRequest *newHttpRequest(struct Url url, struct FormList *form,
+                                   const char *referer, bool no_cache,
+                                   struct TextList *extra_header);
 Str HTTPrequestMethod(struct HttpRequest *hr);
 struct Url;
-Str HTTPrequestURI(struct Url *pu, struct HttpRequest *hr);
+Str HTTPrequestURI(struct HttpRequest *hr);

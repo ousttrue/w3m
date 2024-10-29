@@ -16,8 +16,8 @@ struct auth_param {
   Str val;
 };
 
-typedef Str (*CredFunc)(struct http_auth *ha, Str uname, Str pw, struct Url *pu,
-                        struct HttpRequest *hr, struct FormList *form);
+typedef Str (*CredFunc)(struct http_auth *ha, struct HttpRequest *hr, Str uname,
+                        Str pw);
 
 struct http_auth {
   int pri;
@@ -43,9 +43,7 @@ void invalidate_auth_user_passwd(struct Url *pu, char *realm, Str uname,
 Str qstr_unquote(Str s);
 Str get_auth_param(struct auth_param *auth, char *name);
 void getAuthCookie(struct http_auth *hauth, char *auth_header,
-                   struct TextList *extra_header, struct Url *pu,
-                   struct HttpRequest *hr, struct FormList *form, Str *uname,
-                   Str *pwd);
+                   struct HttpRequest *hr, Str *uname, Str *pwd);
 struct http_auth *findAuthentication(struct http_auth *hauth,
                                      struct Buffer *buf, char *auth_field);
 
