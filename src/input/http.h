@@ -27,13 +27,6 @@ struct HttpRequest {
   bool no_cache;
 };
 
-struct HttpRequest *newHttpRequest(struct Url url, struct FormList *form,
-                                   const char *referer, bool no_cache,
-                                   struct TextList *extra_header);
-Str HTTPrequestMethod(struct HttpRequest *hr);
-struct Url;
-Str HTTPrequestURI(struct HttpRequest *hr);
-
 enum ContentType {
   CONTENTTYPE_TextPlane,
   CONTENTTYPE_TextHTml,
@@ -66,8 +59,15 @@ struct HttpResponse {
   int64_t content_length;
 };
 
+// HttpRequest
+struct HttpRequest *newHttpRequest(struct Url url, struct FormList *form,
+                                   const char *referer, bool no_cache,
+                                   struct TextList *extra_header);
+Str HTTPrequestMethod(struct HttpRequest *hr);
+Str HTTPrequestURI(struct HttpRequest *hr);
+// HttpResponse
 struct HttpResponse *newHttpResponse(struct HttpRequest *req);
 void httpReadResponse(struct HttpResponse *res);
-bool httpMatchattr(const char *p, const char *attr, int len, Str *value);
 const char *httpGetHeader(struct HttpResponse *res, const char *field);
 const char *httpGetContentType(struct HttpResponse *res);
+const char *guess_save_name(struct HttpResponse *buf, const char *file);

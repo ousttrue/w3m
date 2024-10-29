@@ -450,25 +450,6 @@ char *last_modified(struct Buffer *buf) {
   return "unknown";
 }
 
-const char *guess_save_name(struct Buffer *buf, const char *path) {
-  if (buf && buf->http_response->document_header) {
-    Str name = NULL;
-    const char *p, *q;
-    if ((p = httpGetHeader(buf->http_response, "Content-Disposition:")) !=
-            NULL &&
-        (q = strcasestr(p, "filename")) != NULL &&
-        (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-        httpMatchattr(q, "filename", 8, &name))
-      path = name->ptr;
-    else if ((p = httpGetHeader(buf->http_response, "Content-Type:")) != NULL &&
-             (q = strcasestr(p, "name")) != NULL &&
-             (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
-             httpMatchattr(q, "name", 4, &name))
-      path = name->ptr;
-  }
-  return guess_filename(path);
-}
-
 struct Document *link_list_panel(struct Buffer *buf) {
   struct Url pu;
   /* FIXME: gettextize? */

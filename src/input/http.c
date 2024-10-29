@@ -3,6 +3,7 @@
 #include "buffer/buffer.h"
 #include "buffer/message.h"
 #include "core.h"
+#include "file/file.h"
 #include "func.h"
 #include "input/http_cookie.h"
 #include "input/istream.h"
@@ -62,6 +63,40 @@ Str HTTPrequestURI(struct HttpRequest *hr) {
   } else
     Strcat(tmp, _parsedURL2Str(&hr->url, true, true, false));
   return tmp;
+}
+
+// {name}={value} ; {name} ;
+bool httpMatchattr(const char *p, const char *attr, int len, Str *value) {
+  if (strncasecmp(p, attr, len) == 0) {
+    p += len;
+    SKIP_BLANKS(p);
+    if (value) {
+      *value = Strnew();
+      if (*p == '=') {
+        p++;
+        SKIP_BLANKS(p);
+        bool quoted = 0;
+        const char *q = NULL;
+        while (!IS_ENDL(*p) && (quoted || *p != ';')) {
+          if (!IS_SPACE(*p))
+            q = p;
+          if (*p == '"')
+            quoted = (quoted) ? 0 : 1;
+          else
+            Strcat_char(*value, *p);
+          p++;
+        }
+        if (q)
+          Strshrink(*value, p - q - 1);
+      }
+      return 1;
+    } else {
+      if (IS_ENDT(*p)) {
+        return 1;
+      }
+    }
+  }
+  return 0;
 }
 
 /* This array should be somewhere else */
@@ -365,36 +400,41 @@ const char *httpGetContentType(struct HttpResponse *buf) {
   return r->ptr;
 }
 
-// {name}={value} ; {name} ;
-bool httpMatchattr(const char *p, const char *attr, int len, Str *value) {
-  if (strncasecmp(p, attr, len) == 0) {
-    p += len;
-    SKIP_BLANKS(p);
-    if (value) {
-      *value = Strnew();
-      if (*p == '=') {
-        p++;
-        SKIP_BLANKS(p);
-        bool quoted = 0;
-        const char *q = NULL;
-        while (!IS_ENDL(*p) && (quoted || *p != ';')) {
-          if (!IS_SPACE(*p))
-            q = p;
-          if (*p == '"')
-            quoted = (quoted) ? 0 : 1;
-          else
-            Strcat_char(*value, *p);
-          p++;
-        }
-        if (q)
-          Strshrink(*value, p - q - 1);
-      }
-      return 1;
-    } else {
-      if (IS_ENDT(*p)) {
-        return 1;
-      }
+#define DEF_SAVE_FILE "index.html"
+
+char *guess_filename(const char *file) {
+  char *p = NULL;
+  if (file != NULL)
+    p = allocStr(mybasename(file), -1);
+  if (p == NULL || *p == '\0')
+    return DEF_SAVE_FILE;
+
+  auto s = p;
+  if (*p == '#')
+    p++;
+  while (*p != '\0') {
+    if ((*p == '#' && *(p + 1) != '\0') || *p == '?') {
+      *p = '\0';
+      break;
     }
+    p++;
   }
-  return 0;
+  return s;
+}
+
+const char *guess_save_name(struct HttpResponse *http_response,
+                            const char *path) {
+  Str name = NULL;
+  const char *p, *q;
+  if ((p = httpGetHeader(http_response, "Content-Disposition:")) != NULL &&
+      (q = strcasestr(p, "filename")) != NULL &&
+      (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+      httpMatchattr(q, "filename", 8, &name))
+    path = name->ptr;
+  else if ((p = httpGetHeader(http_response, "Content-Type:")) != NULL &&
+           (q = strcasestr(p, "name")) != NULL &&
+           (q == p || IS_SPACE(*(q - 1)) || *(q - 1) == ';') &&
+           httpMatchattr(q, "name", 4, &name))
+    path = name->ptr;
+  return guess_filename(path);
 }
