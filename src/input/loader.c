@@ -81,35 +81,10 @@ static int doFileMove(char *tmpf, char *defstr) {
   return ret;
 }
 
-static struct Buffer *page_loaded(int cols,
-                                  // Str page,
-                                  const char *t, const char *real_type,
-                                  struct Buffer *t_buf) {
-  // if (page) {
-  //   auto tmp = tmpfname(TMPF_SRC, ".html");
-  //   auto src = fopen(tmp->ptr, "w");
-  //   if (src) {
-  //     Strfputs(page, src);
-  //     fclose(src);
-  //   }
-  //
-  //   auto doc = loadHTML(cols, page->ptr, pu, nullptr, CHARSET_UNKONWN);
-  //   if (!doc) {
-  //     return nullptr;
-  //   }
-  //
-  //   // copyParsedURL(&b->currentURL, &pu);
-  //   // b->real_scheme = pu.scheme;
-  //   // b->real_type = real_type;
-  //   // if (src)
-  //   //   b->sourcefile = tmp->ptr;
-  //   auto b = newBuffer();
-  //   b->document = doc;
-  //   return b;
-  // }
-
-  // if (real_type == NULL)
-  //   real_type = t;
+static struct Document *get_document(int cols,
+                                     struct HttpResponse *http_response,
+                                     struct Url *currentURL, Str content,
+                                     const char *t) {
 
   // f.current_content_length = 0;
   // const char *p;
@@ -130,131 +105,37 @@ static struct Buffer *page_loaded(int cols,
   //   }
   // }
 
-  if (t_buf == NULL)
-    t_buf = newBuffer();
-
-  auto pu = t_buf->http_response->request->url;
-  copyParsedURL(&t_buf->currentURL, &pu);
-  t_buf->filename = pu.real_file ? pu.real_file : pu.file;
-
-  FILE *src = NULL;
-  if (pu.scheme != SCM_LOCAL) {
-    auto tmp = tmpfname(TMPF_SRC, ".html");
-    src = fopen(tmp->ptr, "w");
-    if (src) {
-      t_buf->sourcefile = tmp->ptr;
-    }
-  }
-
-  // body
-  Str content = StrISreadAll(t_buf->http_response->stream);
-
-  if (src) {
-    Strfputs(content, src);
-    fclose(src);
-  }
-
-  struct Buffer *b;
+  struct Document *document;
   if (is_html_type(t)) {
-    b = t_buf;
-    b->document =
-        loadHTML(cols, content->ptr, t_buf->currentURL, baseURL(t_buf),
-                 t_buf->http_response->content_charset);
+    document = loadHTML(cols, content->ptr, http_response->request->url,
+                        currentURL, http_response->content_charset);
   } else {
-    b = t_buf;
-    b->document = loadText(cols, content->ptr);
+    document = loadText(cols, content->ptr);
   }
 
-  if (b != NULL) {
-    if (b->buffername == NULL || b->buffername[0] == '\0') {
-      b->buffername = httpGetHeader(b->http_response, "Subject:");
-      if (b->buffername == NULL && b->filename != NULL)
-        b->buffername = lastFileName(b->filename);
-    }
-    if (b->currentURL.scheme == SCM_UNKNOWN)
-      b->currentURL.scheme = pu.scheme;
-    if (pu.scheme == SCM_LOCAL && b->sourcefile == NULL)
-      b->sourcefile = b->filename;
-    if (is_html_type(t))
-      b->type = "text/html";
-    else
-      b->type = "text/plain";
-  }
-
-  ISclose(t_buf->http_response->stream);
-  if (b && b != NO_BUFFER) {
-    b->real_scheme = pu.scheme;
-    b->real_type = real_type;
-    if (pu.label) {
-      if (is_html_type(t)) {
-        struct Anchor *a;
-        a = searchURLLabel(b->document, pu.label);
-        if (a != NULL) {
-          gotoLine(b->document, a->start.line);
-          if (label_topline)
-            b->document->topLine =
-                lineSkip(&b->document->viewport, b->document->topLine,
-                         b->document->lastLine,
-                         b->document->currentLine->linenumber -
-                             b->document->topLine->linenumber,
-                         false);
-          b->document->viewport.pos = a->start.pos;
-          arrangeCursor(b->document);
-        }
-      } else { /* plain text */
-        int l = atoi(pu.label);
-        gotoRealLine(b->document, l);
-        b->document->viewport.pos = 0;
-        arrangeCursor(b->document);
-      }
-    }
-  }
-  if (header_string)
-    header_string = NULL;
-  if (b && b != NO_BUFFER)
-    preFormUpdateBuffer(b);
-  trap_off();
-  return b;
+  return document;
 }
 
-static struct Buffer *
-load_doc(int cols, struct HttpRequest *req,
-         // const char *path, const char *tpath, struct Url *current,
-         // struct Url pu, const char *referer, bool no_cahce,
-         // struct FormList *form, struct TextList *extra_header,
-         union input_stream *of, bool add_auth_cookie_flag, struct Buffer *b,
-         struct Buffer *t_buf, Str realm, Str uname, Str pwd) {
-  {
-    auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&req->url);
-    if (sc_redirect && *sc_redirect && checkRedirection(&req->url)) {
+static struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
+                                            union input_stream *of,
+                                            bool add_auth_cookie_flag,
+                                            Str realm, Str uname, Str pwd) {
+  auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&req->url);
+  if (sc_redirect) {
+    if (*sc_redirect && checkRedirection(&req->url)) {
       struct Url url;
-      // tpath = sc_redirect;
-      // current = New(struct Url);
-      // *current = pu;
       parseURL2(sc_redirect, &url, &req->url);
       add_auth_cookie_flag = 0;
-      // status = STREAM_NORMAL;
-      // form = NULL;
       req = newHttpRequest(url, nullptr, req->referer, req->no_cache,
                            req->extra_header);
-      return load_doc(cols, req,
-                      // path, tpath, current, pu, referer, no_cahce, form,
-                      // extra_header,
-                      of, add_auth_cookie_flag, b, t_buf, realm, uname, pwd);
+      return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname, pwd);
     }
   }
 
   trap_off();
-  if (t_buf == NULL)
-    t_buf = newBuffer();
-  t_buf->http_response =
-      openURL(req,
-              // tpath, &pu, current, referer, no_cahce, form, extra_header,
-              of);
-  if (t_buf->http_response->stream == NULL && retryAsHttp &&
+  auto http_response = openURL(req, of);
+  if ((!http_response || http_response->stream == NULL) && retryAsHttp &&
       req->url.file[0] != '/') {
-    // auto u = tpath;
-    // auto scheme = getURLScheme(&u);
     if (req->url.scheme == SCM_MISSING || req->url.scheme == SCM_UNKNOWN) {
       // retry it as "http://"
       auto u = Strnew_m_charp("http://", req->url.file, NULL)->ptr;
@@ -262,43 +143,28 @@ load_doc(int cols, struct HttpRequest *req,
       parseURL2(u, &url, req->current);
       req = newHttpRequest(url, req->form, req->referer, req->no_cache,
                            req->extra_header);
-      t_buf->http_response =
-          openURL(req, // u, &pu, current, referer, no_cahce, form,
-                       //  extra_header,
-                  of
-                  // &hr, &status
-          );
+      http_response = openURL(req, of);
     }
   }
 
-  // Str page = nullptr;
-  of = NULL;
-  const char *t = "text/plain";
-  const char *real_type = nullptr;
-
-  if (t_buf->http_response &&
-      t_buf->http_response->stream_status == STREAM_MISSING) {
+  if (http_response && http_response->stream_status == STREAM_MISSING) {
     trap_off();
-    ISclose(t_buf->http_response->stream);
+    ISclose(http_response->stream);
     return NULL;
   }
 
   /* openURL() succeeded */
+  of = NULL;
   if (from_jmp()) {
     /* transfer interrupted */
     trap_off();
-    if (b)
-      discardBuffer(b);
-    ISclose(t_buf->http_response->stream);
+    ISclose(http_response->stream);
     return NULL;
   }
 
-  b = NULL;
-  // if (f.is_cgi) {
-  //   /* local CGI */
-  // }
-  if (header_string)
+  if (header_string) {
     header_string = NULL;
+  }
   trap_on();
   if (req->url.scheme == SCM_HTTP || req->url.scheme == SCM_HTTPS ||
       (((req->url.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
@@ -306,12 +172,12 @@ load_doc(int cols, struct HttpRequest *req,
 
     term_message(
         Sprintf("%s contacted. Waiting for reply...", req->url.host)->ptr);
-    httpReadResponse(t_buf->http_response);
+    httpReadResponse(http_response);
 
-    const char *p = httpGetHeader(t_buf->http_response, "Location:");
-    if (((t_buf->http_response->http_status_code >= 301 &&
-          t_buf->http_response->http_status_code <= 303) ||
-         t_buf->http_response->http_status_code == 307) &&
+    const char *p = httpGetHeader(http_response, "Location:");
+    if (((http_response->http_status_code >= 301 &&
+          http_response->http_status_code <= 303) ||
+         http_response->http_status_code == 307) &&
         p && checkRedirection(&req->url)) {
       /* document moved */
       /* 301: Moved Permanently */
@@ -326,94 +192,63 @@ load_doc(int cols, struct HttpRequest *req,
       // form = NULL;
       req = newHttpRequest(url, nullptr, req->referer, req->no_cache,
                            req->extra_header);
-      ISclose(t_buf->http_response->stream);
-      t_buf = newBuffer();
-      t_buf->bufferprop |= BP_REDIRECTED;
-      // status = STREAM_NORMAL;
-      return load_doc(cols, req,
-                      // path, tpath, current, pu, referer, no_cahce, form,
-                      // extra_header,
-                      of,
-                      // hr, status,
-                      add_auth_cookie_flag, b, t_buf, realm, uname, pwd);
+      ISclose(http_response->stream);
+      // t_buf->bufferprop |= BP_REDIRECTED;
+      return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname, pwd);
     }
-
-    t = httpGetContentType(t_buf->http_response);
-    if (t == NULL && req->url.file) {
-      if (!((t_buf->http_response->http_status_code >= 400 &&
-             t_buf->http_response->http_status_code <= 407) ||
-            (t_buf->http_response->http_status_code >= 500 &&
-             t_buf->http_response->http_status_code <= 505)))
-        t = guessContentType(req->url.file);
-    }
-    if (t == NULL)
-      t = "text/plain";
 
     if (add_auth_cookie_flag && realm && uname && pwd) {
       /* If authorization is required and passed */
       add_auth_user_passwd(&req->url, qstr_unquote(realm)->ptr, uname, pwd, 0);
       add_auth_cookie_flag = 0;
     }
-    if ((p = httpGetHeader(t_buf->http_response, "WWW-Authenticate:")) !=
-            NULL &&
-        t_buf->http_response->http_status_code == 401) {
+
+    p = httpGetHeader(http_response, "WWW-Authenticate:");
+    if (p && http_response->http_status_code == 401) {
       /* Authentication needed */
       struct http_auth hauth;
-      if (findAuthentication(&hauth, t_buf, "WWW-Authenticate:") != NULL &&
+      if (findAuthentication(&hauth, http_response, "WWW-Authenticate:") !=
+              NULL &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
         getAuthCookie(&hauth, "Authorization:", req, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
           trap_off();
-          return page_loaded(cols, t, real_type, t_buf);
+          return http_response;
         }
-        ISclose(t_buf->http_response->stream);
+        ISclose(http_response->stream);
         add_auth_cookie_flag = 1;
-        // status = STREAM_NORMAL;
-        return load_doc(cols, req,
-                        // path, tpath, current, pu, referer, no_cahce, form,
-                        // extra_header,
-                        of,
-                        // hr, status,
-                        add_auth_cookie_flag, b, t_buf, realm, uname, pwd);
+        return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname,
+                               pwd);
       }
     }
-    if ((p = httpGetHeader(t_buf->http_response, "Proxy-Authenticate:")) !=
-            NULL &&
-        t_buf->http_response->http_status_code == 407) {
+
+    p = httpGetHeader(http_response, "Proxy-Authenticate:");
+    if (p && http_response->http_status_code == 407) {
       /* Authentication needed */
       struct http_auth hauth;
-      if (findAuthentication(&hauth, t_buf, "Proxy-Authenticate:") != NULL &&
+      if (findAuthentication(&hauth, http_response, "Proxy-Authenticate:") &&
           (realm = get_auth_param(hauth.param, "realm")) != NULL) {
         auto auth_pu = schemeToProxy(req->url.scheme);
         getAuthCookie(&hauth, "Proxy-Authorization:", req, &uname, &pwd);
         if (uname == NULL) {
           /* abort */
           trap_off();
-          return page_loaded(cols, t, real_type, t_buf);
+          return http_response;
         }
-        ISclose(t_buf->http_response->stream);
+
+        ISclose(http_response->stream);
         add_auth_cookie_flag = 1;
-        // status = STREAM_NORMAL;
         add_auth_user_passwd(auth_pu, qstr_unquote(realm)->ptr, uname, pwd, 1);
-        return load_doc(cols, req,
-                        // path, tpath, current, pu, referer, no_cahce, form,
-                        // extra_header,
-                        of,
-                        // hr, status,
-                        add_auth_cookie_flag, b, t_buf, realm, uname, pwd);
+        return sendHttpRequest(req, of, add_auth_cookie_flag, realm, uname,
+                               pwd);
       }
     }
-    /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
 
-    if (t_buf->http_response->stream_status == STREAM_CONNECT) {
-      of = t_buf->http_response->stream;
-      return load_doc(cols, req,
-                      // path, tpath, current, pu, referer, no_cahce, form,
-                      // extra_header,
-                      of,
-                      // hr, status,
-                      add_auth_cookie_flag, b, t_buf, realm, uname, pwd);
+    /* XXX: RFC2617 3.2.3 Authentication-Info: ? */
+    if (http_response->stream_status == STREAM_CONNECT) {
+      return sendHttpRequest(req, http_response->stream, add_auth_cookie_flag,
+                             realm, uname, pwd);
     }
 
     // f.modtime = mymktime(httpGetHeader(t_buf->http_response,
@@ -428,31 +263,15 @@ load_doc(int cols, struct HttpRequest *req,
     //   else
     //     t = real_type;
     // } else
-    {
-      real_type = guessContentType(req->url.file);
-      if (real_type == NULL)
-        real_type = "text/plain";
-      t = real_type;
-    }
   } else if (req->url.scheme == SCM_DATA) {
     // t = f.guess_type;
-  } else if (DefaultType) {
-    t = DefaultType;
-    DefaultType = NULL;
-  } else {
-    t = guessContentType(req->url.file);
-    if (t == NULL)
-      t = "text/plain";
-    real_type = t;
-    // if (f.guess_type)
-    //   t = f.guess_type;
   }
 
   /* XXX: can we use guess_type to give the type to loadHTMLstream
    *      to support default utf8 encoding for XHTML here? */
   // f.guess_type = t;
 
-  return page_loaded(cols, t, real_type, t_buf);
+  return http_response;
 }
 
 struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
@@ -481,7 +300,7 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
         auto page = loadLocalDir(url.real_file);
         auto t = "local:directory";
         // if (page && page->length > 0) {
-        //   return page_loaded(cols, pu, stream, page, t, real_type, t_buf);
+        //   return get_document(cols, pu, stream, page, t, real_type, t_buf);
         // }
       }
     }
@@ -492,8 +311,31 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     auto page = loadFTPDir(&url, &charset);
     auto t = "ftp:directory";
     // if (page && page->length > 0) {
-    //   return page_loaded(cols, url, stream, page, t, real_type, t_buf);
+    //   return get_document(cols, url, stream, page, t, real_type, t_buf);
     // }
+    // if (page) {
+    //   auto tmp = tmpfname(TMPF_SRC, ".html");
+    //   auto src = fopen(tmp->ptr, "w");
+    //   if (src) {
+    //     Strfputs(page, src);
+    //     fclose(src);
+    //   }
+    //
+    //   auto doc = loadHTML(cols, page->ptr, pu, nullptr, CHARSET_UNKONWN);
+    //   if (!doc) {
+    //     return nullptr;
+    //   }
+    //
+    //   // copyParsedURL(&b->currentURL, &pu);
+    //   // b->real_scheme = pu.scheme;
+    //   // b->real_type = real_type;
+    //   // if (src)
+    //   //   b->sourcefile = tmp->ptr;
+    //   auto b = newBuffer();
+    //   b->document = doc;
+    //   return b;
+    // }
+
     assert(false);
     return nullptr;
   }
@@ -503,23 +345,114 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     return NULL;
 
   default: {
-    struct Buffer *b = NULL;
-    struct Buffer *t_buf = NULL;
     struct TextList *extra_header = newTextList();
     Str uname = NULL;
     Str pwd = NULL;
     Str realm = NULL;
-    // unsigned char status = STREAM_NORMAL;
-    struct HttpRequest hr;
-    auto tpath = path;
-    bool add_auth_cookie_flag = 0;
-
+    bool add_auth_cookie_flag = false;
     auto req = newHttpRequest(url, form, referer, no_cahce, extra_header);
-    return load_doc(cols, req,
-                    // path, tpath, current, pu, referer, no_cahce,
-                    // form, extra_header, nullptr, hr,
-                    // status,
-                    nullptr, add_auth_cookie_flag, b, t_buf, realm, uname, pwd);
+    auto res =
+        sendHttpRequest(req, nullptr, add_auth_cookie_flag, realm, uname, pwd);
+    Str content = StrISreadAll(res->stream);
+    ISclose(res->stream);
+
+    auto b = newBuffer();
+    b->http_response = res;
+    auto url = res->request->url;
+    copyParsedURL(&b->currentURL, &res->request->url);
+    b->filename = url.real_file ? url.real_file : url.file;
+    if (content) {
+      FILE *src = NULL;
+      if (url.scheme != SCM_LOCAL) {
+        auto tmp = tmpfname(TMPF_SRC, ".html");
+        src = fopen(tmp->ptr, "w");
+        if (src) {
+          b->sourcefile = tmp->ptr;
+          Strfputs(content, src);
+          fclose(src);
+        }
+      }
+    }
+
+    // if (b != NULL) {
+    //   if (b->buffername == NULL || b->buffername[0] == '\0') {
+    //     b->buffername = httpGetHeader(b->http_response, "Subject:");
+    //     if (b->buffername == NULL && b->filename != NULL)
+    //       b->buffername = lastFileName(b->filename);
+    //   }
+    //   if (b->currentURL.scheme == SCM_UNKNOWN)
+    //     b->currentURL.scheme = url.scheme;
+    //   if (url.scheme == SCM_LOCAL && b->sourcefile == NULL)
+    //     b->sourcefile = b->filename;
+    //   if (is_html_type(t))
+    //     b->type = "text/html";
+    //   else
+    //     b->type = "text/plain";
+    // }
+    //
+    // if (b && b != NO_BUFFER) {
+    //   b->real_scheme = url.scheme;
+    //   b->real_type = real_type;
+    //   if (url.label) {
+    //     if (is_html_type(t)) {
+    //       struct Anchor *a;
+    //       a = searchURLLabel(b->document, url.label);
+    //       if (a != NULL) {
+    //         gotoLine(b->document, a->start.line);
+    //         if (label_topline)
+    //           b->document->topLine =
+    //               lineSkip(&b->document->viewport, b->document->topLine,
+    //                        b->document->lastLine,
+    //                        b->document->currentLine->linenumber -
+    //                            b->document->topLine->linenumber,
+    //                        false);
+    //         b->document->viewport.pos = a->start.pos;
+    //         arrangeCursor(b->document);
+    //       }
+    //     } else { /* plain text */
+    //       int l = atoi(url.label);
+    //       gotoRealLine(b->document, l);
+    //       b->document->viewport.pos = 0;
+    //       arrangeCursor(b->document);
+    //     }
+    //   }
+    // }
+    if (header_string)
+      header_string = NULL;
+    if (b && b != NO_BUFFER)
+      preFormUpdateBuffer(b);
+    trap_off();
+
+    // t = guessContentType(req->url.file);
+    // if (t == NULL)
+    //   t = "text/plain";
+    // real_type = t;
+    // if (f.guess_type)
+    //   t = f.guess_type;
+    // else if (DefaultType) {
+    //   // t = DefaultType;
+    DefaultType = NULL;
+    // }
+
+    b->real_type = guessContentType(res->request->url.file);
+    if (b->real_type == NULL) {
+      b->real_type = "text/plain";
+    }
+    b->type = httpGetContentType(res);
+    if (!b->type && res->request->url.file) {
+      if (!((res->http_status_code >= 400 && res->http_status_code <= 407) ||
+            (res->http_status_code >= 500 && res->http_status_code <= 505)))
+        b->type = guessContentType(res->request->url.file);
+    }
+    if (!b->type) {
+      b->type = "text/plain";
+    }
+    if (!b->real_type) {
+      b->real_type = b->type;
+    }
+
+    b->document = get_document(cols, res, current, content, b->type);
+    return b;
   }
   }
 }

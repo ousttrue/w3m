@@ -494,20 +494,17 @@ static char *extract_auth_param(char *q, struct auth_param *auth) {
 }
 
 struct http_auth *findAuthentication(struct http_auth *hauth,
-                                     struct Buffer *buf, char *auth_field) {
-  struct http_auth *ha;
-  int len = strlen(auth_field), slen;
-  char *p0, *p;
-
+                                     struct HttpResponse *http_response,
+                                     char *auth_field) {
+  int len = strlen(auth_field);
   memset(hauth, 0, sizeof(struct http_auth));
-  for (auto i = buf->http_response->document_header->first; i != NULL;
-       i = i->next) {
+  for (auto i = http_response->document_header->first; i != NULL; i = i->next) {
     if (strncasecmp(i->ptr, auth_field, len) == 0) {
-      for (p = i->ptr + len; p != NULL && *p != '\0';) {
+      for (auto p = i->ptr + len; p != NULL && *p != '\0';) {
         SKIP_BLANKS(p);
-        p0 = p;
-        for (ha = &www_auth[0]; ha->scheme != NULL; ha++) {
-          slen = strlen(ha->scheme);
+        auto p0 = p;
+        for (auto ha = &www_auth[0]; ha->scheme != NULL; ha++) {
+          auto slen = strlen(ha->scheme);
           if (strncasecmp(p, ha->scheme, slen) == 0) {
             p += slen;
             SKIP_BLANKS(p);
@@ -532,7 +529,7 @@ struct http_auth *findAuthentication(struct http_auth *hauth,
       }
     }
   }
-  return hauth->scheme ? hauth : NULL;
+  return hauth->scheme ? hauth : nullptr;
 }
 
 Str qstr_unquote(Str s) {

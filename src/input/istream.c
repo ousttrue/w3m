@@ -1516,14 +1516,13 @@ openURL(struct HttpRequest *hr,
         else
           write_from_file(sock, hr->form->body);
       }
-      return res;
     } else {
       socketWrite(sock, tmp->ptr, tmp->length);
       if (hr->command == HR_COMMAND_POST &&
           hr->form->enctype == FORM_ENCTYPE_MULTIPART)
         write_from_file(sock, hr->form->body);
     }
-    break;
+    return res;
   }
 
   case SCM_DATA: {
