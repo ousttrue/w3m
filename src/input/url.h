@@ -22,6 +22,7 @@ enum URL_SCHEME_TYPE {
   SCM_MAILTO = 12,
   SCM_HTTPS = 13,
 };
+extern int DefaultPort[];
 
 const char *schemeNumToName(enum URL_SCHEME_TYPE scheme);
 
@@ -54,3 +55,4 @@ extern Str Str_url_unquote(Str x, bool is_form, bool safe);
 #define Str_form_unquote(x) Str_url_unquote((x), true, false)
 const char *file_quote(const char *str);
 const char *file_unquote(const char *str);
+Str _parsedURL2Str(struct Url *pu, int pass, int user, int label);
