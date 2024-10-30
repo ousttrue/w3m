@@ -9,6 +9,7 @@
 #include "buffer/image.h"
 #include "buffer/message.h"
 #include "buffer/search.h"
+#include "buffer/tabbuffer.h"
 #include "buffer/w3mhelperpanel.h"
 #include "core.h"
 #include "version.h"

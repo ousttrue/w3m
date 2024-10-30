@@ -106,3 +106,6 @@ void clearBuffer(struct Document *buf);
 void chkURLBuffer(struct Document *buf);
 struct Document *reshapeBuffer(struct Document *buf,
                                enum CharSet content_charset);
+void _goLine(struct Document *doc, const char *l);
+void save_buffer_position(struct Document *doc);
+void resetPos(struct Document *doc, struct BufferPos *b);

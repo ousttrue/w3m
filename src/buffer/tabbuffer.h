@@ -1,5 +1,7 @@
 #pragma once
 
+extern bool clear_buffer;
+
 extern int nTab;
 extern int TabCols;
 
@@ -26,3 +28,9 @@ void _newT();
 struct TabBuffer *numTab(int n);
 void calcTabPos();
 struct TabBuffer *deleteTab(struct TabBuffer *tab);
+void pushBuffer(struct TabBuffer *tab, struct Buffer *buf);
+struct FormList;
+struct Url;
+void cmd_loadURL(struct TabBuffer *tab, const char *url, struct Url *current,
+                 const char *referer, struct FormList *form);
+bool handleMailto(const char *url);

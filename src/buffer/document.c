@@ -742,3 +742,66 @@ struct Document *reshapeBuffer(struct Document *doc,
   formResetBuffer(newDoc, sbuf.formitem);
   return newDoc;
 }
+
+/* Go to specified line */
+void _goLine(struct Document *doc, const char *l) {
+  if (l == NULL || *l == '\0' || doc->currentLine == NULL) {
+    // displayBuffer(Currentbuf, B_FORCE_REDRAW);
+    return;
+  }
+
+  doc->viewport.pos = 0;
+  // if (((*l == '^') || (*l == '$')) && prec_num) {
+  //   gotoRealLine(doc, prec_num);
+  // } else
+  if (*l == '^') {
+    doc->topLine = doc->currentLine = doc->firstLine;
+  } else if (*l == '$') {
+    doc->topLine = lineSkip(&doc->viewport, doc->lastLine, doc->lastLine,
+                            -(doc->viewport.LINES + 1) / 2, true);
+    doc->currentLine = doc->lastLine;
+  } else
+    gotoRealLine(doc, atoi(l));
+  arrangeCursor(doc);
+  // displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}
+
+void save_buffer_position(struct Document *doc) {
+  if (!doc->firstLine)
+    return;
+
+  struct BufferPos *b = doc->viewport.undo;
+  if (b && b->top_linenumber == TOP_LINENUMBER(doc) &&
+      b->cur_linenumber == CUR_LINENUMBER(doc) &&
+      b->currentColumn == doc->viewport.currentColumn &&
+      b->pos == doc->viewport.pos)
+    return;
+
+  b = New(struct BufferPos);
+  b->top_linenumber = TOP_LINENUMBER(doc);
+  b->cur_linenumber = CUR_LINENUMBER(doc);
+  b->currentColumn = doc->viewport.currentColumn;
+  b->pos = doc->viewport.pos;
+  b->bpos = doc->currentLine ? doc->currentLine->bpos : 0;
+  b->next = NULL;
+  b->prev = doc->viewport.undo;
+  if (doc->viewport.undo)
+    doc->viewport.undo->next = b;
+  doc->viewport.undo = b;
+}
+
+void resetPos(struct Document *doc, struct BufferPos *b) {
+  struct Line top;
+  top.linenumber = b->top_linenumber;
+  struct Line cur;
+  cur.linenumber = b->cur_linenumber;
+  cur.bpos = b->bpos;
+  struct Document _doc;
+  _doc.topLine = &top;
+  _doc.currentLine = &cur;
+  _doc.viewport.pos = b->pos;
+  _doc.viewport.currentColumn = b->currentColumn;
+  restorePosition(doc, &_doc);
+  doc->viewport.undo = b;
+  // displayBuffer(Currentbuf, B_FORCE_REDRAW);
+}

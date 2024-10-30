@@ -1,8 +1,12 @@
 #include "tabbuffer.h"
 #include "alloc.h"
 #include "buffer.h"
+#include "buffer/message.h"
 #include "document.h"
+#include "input/loader.h"
 #include "term/termsize.h"
+
+bool clear_buffer = true;
 
 int nTab = 0;
 int TabCols = 10;
@@ -137,4 +141,64 @@ struct TabBuffer *deleteTab(struct TabBuffer *tab) {
     buf = next;
   }
   return FirstTab;
+}
+
+void pushBuffer(struct TabBuffer *tab, struct Buffer *buf) {
+  if (clear_buffer)
+    tmpClearBuffer(tab->currentBuffer->document);
+
+  struct Buffer *b;
+  if (tab->firstBuffer == tab->currentBuffer) {
+    buf->nextBuffer = tab->firstBuffer;
+    tab->firstBuffer = tab->currentBuffer = buf;
+  } else if ((b = prevBuffer(tab->firstBuffer, tab->currentBuffer)) != NULL) {
+    b->nextBuffer = buf;
+    buf->nextBuffer = tab->currentBuffer;
+    tab->currentBuffer = buf;
+  }
+  saveBufferInfo();
+}
+
+bool handleMailto(const char *url) {
+  return false;
+  // if (strncasecmp(url, "mailto:", 7))
+  //   return 0;
+  // if (!non_null(Mailer)) {
+  //   message_push("no mailer is specified");
+  //   return 1;
+  // }
+  //
+  // /* invoke external mailer */
+  // Str to;
+  // if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
+  //   to = Strnew_charp(html_unquote(url));
+  // } else {
+  //   to = Strnew_charp(url + 7);
+  //   char *pos;
+  //   if ((pos = strchr(to->ptr, '?')) != NULL)
+  //     Strtruncate(to, pos - to->ptr);
+  // }
+  // term_fmTerm();
+  // system(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)),
+  // false)->ptr); term_fmInit(); displayBuffer(Currentbuf, B_FORCE_REDRAW);
+  // pushHashHist(URLHist, url);
+  // return 1;
+}
+
+void cmd_loadURL(struct TabBuffer *tab, const char *url, struct Url *current,
+                 const char *referer, struct FormList *form) {
+  if (handleMailto(url))
+    return;
+
+  // term_refresh();
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, 0, form);
+  if (buf == NULL) {
+    const char *emsg = Sprintf("Can't load %s", url)->ptr;
+    message_push(emsg);
+    return;
+  }
+
+  if (buf != NO_BUFFER) {
+    pushBuffer(tab, buf);
+  }
 }

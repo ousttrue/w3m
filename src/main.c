@@ -420,5 +420,9 @@ int main(int argc, char **argv) {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 
   char *line_str = NULL;
-  mainloop(line_str);
+  if (line_str) {
+    _goLine(Currentbuf->document, line_str);
+  }
+
+  mainloop();
 }

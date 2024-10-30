@@ -84,6 +84,5 @@ global int multicolList init(false);
 global char UseAltEntity init(false);
 global const char *config_file init(nullptr);
 
-global int clear_buffer init(true);
 global int use_lessopen init(false);
 global char *keymap_file init(KEYMAP_FILE);

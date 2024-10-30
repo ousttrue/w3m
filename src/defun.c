@@ -52,8 +52,6 @@
 #define DICTBUFFERNAME "*dictionary*"
 #define DSTR_LEN 256
 
-static void cmd_loadURL(const char *url, struct Url *current,
-                        const char *referer, struct FormList *form);
 static void keyPressEventProc(int c);
 
 static char *getCurWord(struct Buffer *buf, int *spos, int *epos);
@@ -64,11 +62,9 @@ int prev_key = -1;
 int on_target = 1;
 
 void set_buffer_environ(struct Buffer *);
-static void save_buffer_position(struct Document *buf);
 
 struct TabBuffer;
 static void _followForm(int);
-static void _goLine(const char *);
 static void followTab(struct TabBuffer *tab);
 static void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);
 static void _nextA(int);
@@ -78,11 +74,7 @@ static int check_target = true;
 #define PREC_LIMIT 10000
 static int searchKeyNum(void);
 
-void mainloop(char *line_str) {
-
-  if (line_str) {
-    _goLine(line_str);
-  }
+void mainloop() {
 
   for (;;) {
     download_update();
@@ -218,22 +210,6 @@ void saveBufferInfo() {
     fprintf(fp, "%s\n", currentURL()->ptr);
     fclose(fp);
   }
-}
-
-static void pushBuffer(struct Buffer *buf) {
-  if (clear_buffer)
-    tmpClearBuffer(Currentbuf->document);
-
-  struct Buffer *b;
-  if (Firstbuf == Currentbuf) {
-    buf->nextBuffer = Firstbuf;
-    Firstbuf = Currentbuf = buf;
-  } else if ((b = prevBuffer(Firstbuf, Currentbuf)) != NULL) {
-    b->nextBuffer = buf;
-    buf->nextBuffer = Currentbuf;
-    Currentbuf = buf;
-  }
-  saveBufferInfo();
 }
 
 void delBuffer(struct Buffer *buf) {
@@ -581,7 +557,7 @@ static void cmd_loadfile(int cols, const char *fn) {
     const char *emsg = Sprintf("%s not found", fn)->ptr;
     message_push(emsg);
   } else if (buf != NO_BUFFER) {
-    pushBuffer(buf);
+    pushBuffer(CurrentTab, buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -608,7 +584,7 @@ DEFUN(ldhelp, HELP, "Show help panel") {
       Sprintf("file:///$LIB/" HELP_CGI CGI_EXTENSION "?version=%s&lang=%s",
               Str_form_quote(Strnew_charp(w3m_version))->ptr,
               Str_form_quote(Strnew_charp_n(lang, n))->ptr);
-  cmd_loadURL(tmp->ptr, NULL, NO_REFERER, NULL);
+  cmd_loadURL(CurrentTab, tmp->ptr, NULL, NO_REFERER, NULL);
 }
 
 /* Move cursor left */
@@ -929,43 +905,24 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-/* Go to specified line */
-static void _goLine(const char *l) {
-  if (l == NULL || *l == '\0' || Currentbuf->document->currentLine == NULL) {
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
-    return;
-  }
-  Currentbuf->document->viewport.pos = 0;
-  if (((*l == '^') || (*l == '$')) && prec_num) {
-    gotoRealLine(Currentbuf->document, prec_num);
-  } else if (*l == '^') {
-    Currentbuf->document->topLine = Currentbuf->document->currentLine =
-        Currentbuf->document->firstLine;
-  } else if (*l == '$') {
-    Currentbuf->document->topLine =
-        lineSkip(&Currentbuf->document->viewport,
-                 Currentbuf->document->lastLine, Currentbuf->document->lastLine,
-                 -(Currentbuf->document->viewport.LINES + 1) / 2, true);
-    Currentbuf->document->currentLine = Currentbuf->document->lastLine;
-  } else
-    gotoRealLine(Currentbuf->document, atoi(l));
-  arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
 DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
   const char *str = searchKeyData();
   if (prec_num)
-    _goLine("^");
+    _goLine(Currentbuf->document, "^");
   else if (str)
-    _goLine(str);
+    _goLine(Currentbuf->document, str);
   else
-    _goLine(inputStr(Currentbuf->document, "Goto line: ", ""));
+    _goLine(Currentbuf->document,
+            inputStr(Currentbuf->document, "Goto line: ", ""));
 }
 
-DEFUN(goLineF, BEGIN, "Go to the first line") { _goLine("^"); }
+DEFUN(goLineF, BEGIN, "Go to the first line") {
+  _goLine(Currentbuf->document, "^");
+}
 
-DEFUN(goLineL, END, "Go to the last line") { _goLine("$"); }
+DEFUN(goLineL, END, "Go to the last line") {
+  _goLine(Currentbuf->document, "$");
+}
 
 /* Go to the beginning of the line */
 DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
@@ -1054,7 +1011,7 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
 }
 
 static struct Buffer *loadNormalBuf(struct Buffer *buf) {
-  pushBuffer(buf);
+  pushBuffer(CurrentTab, buf);
   return buf;
 }
 
@@ -1116,7 +1073,7 @@ static void gotoLabel(const char *label) {
   buf->document->url.label = allocStr(label, -1);
   pushHashHist(URLHist, parsedURL2Str(&buf->document->url)->ptr);
   (*buf->clone)++;
-  pushBuffer(buf);
+  pushBuffer(CurrentTab, buf);
   gotoLine(Currentbuf->document, al->start.line);
   if (label_topline)
     Currentbuf->document->topLine =
@@ -1129,32 +1086,6 @@ static void gotoLabel(const char *label) {
   arrangeCursor(Currentbuf->document);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
   return;
-}
-
-static int handleMailto(const char *url) {
-  if (strncasecmp(url, "mailto:", 7))
-    return 0;
-  if (!non_null(Mailer)) {
-    message_push("no mailer is specified");
-    return 1;
-  }
-
-  /* invoke external mailer */
-  Str to;
-  if (MailtoOptions == MAILTO_OPTIONS_USE_MAILTO_URL) {
-    to = Strnew_charp(html_unquote(url));
-  } else {
-    to = Strnew_charp(url + 7);
-    char *pos;
-    if ((pos = strchr(to->ptr, '?')) != NULL)
-      Strtruncate(to, pos - to->ptr);
-  }
-  term_fmTerm();
-  system(myExtCommand(Mailer, shell_quote(file_unquote(to->ptr)), false)->ptr);
-  term_fmInit();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
-  pushHashHist(URLHist, url);
-  return 1;
 }
 
 /* follow HREF link */
@@ -1233,7 +1164,7 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     message_push(emsg);
   } else if (buf != NO_BUFFER) {
-    pushBuffer(buf);
+    pushBuffer(CurrentTab, buf);
   }
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2019,22 +1950,6 @@ DEFUN(deletePrevBuf, DELETE_PREVBUF,
     delBuffer(buf);
 }
 
-static void cmd_loadURL(const char *url, struct Url *current,
-                        const char *referer, struct FormList *form) {
-  if (handleMailto(url))
-    return;
-
-  term_refresh();
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, current, referer, 0, form);
-  if (buf == NULL) {
-    const char *emsg = Sprintf("Can't load %s", url)->ptr;
-    message_push(emsg);
-  } else if (buf != NO_BUFFER) {
-    pushBuffer(buf);
-  }
-  displayBuffer(Currentbuf, B_NORMAL);
-}
-
 /* go to specified URL */
 static void goURL0(char *prompt, int relative) {
   const char *url, *referer;
@@ -2091,7 +2006,7 @@ static void goURL0(char *prompt, int relative) {
   }
   auto p_url = parseURL2(url, current);
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-  cmd_loadURL(url, current, referer, NULL);
+  cmd_loadURL(CurrentTab, url, current, referer, NULL);
   if (Currentbuf != cur_buf) /* success */
     pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
 }
@@ -2109,7 +2024,7 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
     url = url_quote(url);
     auto p_url = parseURL2(url, NULL);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
-    cmd_loadURL(url, NULL, NULL, NULL);
+    cmd_loadURL(CurrentTab, url, NULL, NULL, NULL);
     if (Currentbuf != cur_buf) /* success */
       pushHashHist(URLHist, parsedURL2Str(&Currentbuf->document->url)->ptr);
   }
@@ -2121,7 +2036,7 @@ DEFUN(gorURL, GOTO_RELATIVE, "Go to relative address") {
 
 /* load bookmark */
 DEFUN(ldBmark, BOOKMARK VIEW_BOOKMARK, "View bookmarks") {
-  cmd_loadURL(BookmarkFile, NULL, NO_REFERER, NULL);
+  cmd_loadURL(CurrentTab, BookmarkFile, NULL, NO_REFERER, NULL);
 }
 
 /* Add current to bookmark */
@@ -2135,7 +2050,8 @@ DEFUN(adBmark, ADD_BOOKMARK, "Add current page to bookmarks") {
   auto form = newFormList(NULL, "post", NULL, NULL, NULL, NULL, NULL);
   form->body = tmp->ptr;
   form->length = tmp->length;
-  cmd_loadURL("file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER, form);
+  cmd_loadURL(CurrentTab, "file:///$LIB/" W3MBOOKMARK_CMDNAME, NULL, NO_REFERER,
+              form);
 }
 
 static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
@@ -2149,7 +2065,7 @@ static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
       buf->linkBuffer[REV_LB[linkid]] = Currentbuf;
       Currentbuf->linkBuffer[linkid] = buf;
     }
-    pushBuffer(buf);
+    pushBuffer(CurrentTab, buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -2248,7 +2164,7 @@ void follow_map(struct LocalCgiHtml *arg) {
 
     _newT();
     buf = Currentbuf;
-    cmd_loadURL(a->url, baseURL(Currentbuf),
+    cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf),
                 parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
     if (buf != Currentbuf)
       delBuffer(buf);
@@ -2257,7 +2173,7 @@ void follow_map(struct LocalCgiHtml *arg) {
     displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
-  cmd_loadURL(a->url, baseURL(Currentbuf),
+  cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf),
               parsedURL2Str(&Currentbuf->document->url)->ptr, NULL);
 #endif
 }
@@ -2490,7 +2406,7 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->document->need_reshape = true;
   buf->document =
       reshapeBuffer(buf->document, buf->http_response->content_charset);
-  pushBuffer(buf);
+  pushBuffer(CurrentTab, buf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
 
@@ -2777,7 +2693,7 @@ static void execdict(const char *word) {
     buf->buffername = Sprintf("%s %s", DICTBUFFERNAME, word)->ptr;
     if (buf->document->type == NULL)
       buf->document->type = "text/plain";
-    pushBuffer(buf);
+    pushBuffer(CurrentTab, buf);
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
@@ -3070,7 +2986,7 @@ static void followTab(struct TabBuffer *tab) {
     CurrentTab = tab;
     for (buf = p; buf; buf = p) {
       p = prevBuffer(c, buf);
-      pushBuffer(buf);
+      pushBuffer(CurrentTab, buf);
     }
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -3107,7 +3023,7 @@ static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
     CurrentTab = tab;
     for (buf = p; buf; buf = p) {
       p = prevBuffer(c, buf);
-      pushBuffer(buf);
+      pushBuffer(CurrentTab, buf);
     }
   }
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
@@ -3210,49 +3126,10 @@ DEFUN(ldDL, DOWNLOAD_LIST, "Display downloads panel") {
   //   _newT();
   //   new_tab = true;
   // }
-  // pushBuffer(buf);
+  // pushBuffer(CurrentTab, buf);
   // if (replace || new_tab)
   //   deletePrevBuf();
   // displayBuffer(Currentbuf, B_FORCE_REDRAW);
-}
-
-static void save_buffer_position(struct Document *doc) {
-  struct BufferPos *b = doc->viewport.undo;
-
-  if (!doc->firstLine)
-    return;
-  if (b && b->top_linenumber == TOP_LINENUMBER(doc) &&
-      b->cur_linenumber == CUR_LINENUMBER(doc) &&
-      b->currentColumn == doc->viewport.currentColumn &&
-      b->pos == doc->viewport.pos)
-    return;
-  b = New(struct BufferPos);
-  b->top_linenumber = TOP_LINENUMBER(doc);
-  b->cur_linenumber = CUR_LINENUMBER(doc);
-  b->currentColumn = doc->viewport.currentColumn;
-  b->pos = doc->viewport.pos;
-  b->bpos = doc->currentLine ? doc->currentLine->bpos : 0;
-  b->next = NULL;
-  b->prev = doc->viewport.undo;
-  if (doc->viewport.undo)
-    doc->viewport.undo->next = b;
-  doc->viewport.undo = b;
-}
-
-static void resetPos(struct BufferPos *b) {
-  struct Line top;
-  top.linenumber = b->top_linenumber;
-  struct Line cur;
-  cur.linenumber = b->cur_linenumber;
-  cur.bpos = b->bpos;
-  struct Document doc;
-  doc.topLine = &top;
-  doc.currentLine = &cur;
-  doc.viewport.pos = b->pos;
-  doc.viewport.currentColumn = b->currentColumn;
-  restorePosition(Currentbuf->document, &doc);
-  Currentbuf->document->viewport.undo = b;
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
@@ -3263,7 +3140,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
     return;
   for (int i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
     ;
-  resetPos(b);
+  resetPos(Currentbuf->document, b);
 }
 
 DEFUN(redoPos, REDO, "Cancel the last undo") {
@@ -3274,7 +3151,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo") {
     return;
   for (int i = 0; i < PREC_NUM && b->next; i++, b = b->next)
     ;
-  resetPos(b);
+  resetPos(Currentbuf->document, b);
 }
 
 DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
