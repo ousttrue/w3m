@@ -2,6 +2,7 @@
 #include "alloc.h"
 #include "buffer/display.h"
 #include "buffer/tabbuffer.h"
+#include "buffer/viewport.h"
 #include "core.h"
 #include "file/file.h"
 #include "fm.h"
@@ -290,11 +291,12 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
 }
 
 static void addPasswd(char *p, Lineprop *pr, int len, int offset, int limit) {
-  int rcol = 0, ncol;
 
-  ncol = calcPosition(p, pr, len, len, CP_AUTO);
+  int ncol = calcPosition(p, pr, len, len, CP_AUTO);
   if (ncol > offset + limit)
     ncol = offset + limit;
+
+  int rcol = 0;
   if (offset) {
     addChar('{', 0);
     rcol = offset + 1;

@@ -1,4 +1,5 @@
 #pragma once
+#include "line.h"
 
 extern bool nextpage_topline;
 

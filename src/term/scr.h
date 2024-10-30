@@ -1,4 +1,5 @@
 #pragma once
+#include "buffer/line.h"
 #include "text/utf8.h"
 
 #define CHMODE(c) ((c) & C_WHICHCHAR)
@@ -92,3 +93,7 @@ void scr_underlineend();
 void scr_graphend();
 void scr_graphstart();
 void scr_message(const char *s, int return_x, int return_y);
+
+void clear_effects();
+void addMChar(const uint8_t *p, Lineprop mode, size_t len);
+void addChar(char c, Lineprop mode);

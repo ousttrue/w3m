@@ -1,5 +1,4 @@
 #pragma once
-#include "line.h"
 
 extern bool displayLineInfo;
 extern bool displayLink;
@@ -16,7 +15,4 @@ enum DisplayMode {
 
 struct Buffer;
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode);
-
-void addChar(char c, Lineprop mode);
-
 void displayInvalidate();
