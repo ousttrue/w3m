@@ -35,7 +35,6 @@ struct Document {
   struct Url url;
   enum URL_SCHEME_TYPE real_scheme;
   const char *type;
-  const char *real_type;
   const char *filename;
   enum BufferProperty bufferprop;
   const char *savecache;

@@ -191,8 +191,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
         html_quote(buf->buffername),
         "<tr valign=top><td nowrap>Current URL<td>", html_quote(p),
         "<tr valign=top><td nowrap>Document Type<td>",
-        buf->document->real_type ? html_quote(buf->document->real_type)
-                                 : "unknown",
+        buf->document->type ? html_quote(buf->document->type) : "unknown",
         "<tr valign=top><td nowrap>Last Modified<td>",
         html_quote(last_modified(buf)), NULL);
   }

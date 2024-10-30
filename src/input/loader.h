@@ -1,6 +1,5 @@
 #pragma once
 
-extern const char *DefaultType;
 extern bool UseExternalDirBuffer;
 extern bool label_topline;
 extern bool AutoUncompress;

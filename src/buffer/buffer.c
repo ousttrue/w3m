@@ -67,8 +67,7 @@ void discardBuffer(struct Buffer *buf) {
     return;
 
   if (buf->document->sourcefile &&
-      (!buf->document->real_type ||
-       strncasecmp(buf->document->real_type, "image/", 6))) {
+      (!buf->document->type || strncasecmp(buf->document->type, "image/", 6))) {
     if (buf->document->real_scheme != SCM_LOCAL ||
         buf->document->bufferprop & BP_FRAME)
       unlink(buf->document->sourcefile);

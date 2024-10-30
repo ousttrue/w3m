@@ -1016,8 +1016,8 @@ DEFUN(editBf, EDIT, "Edit local source") {
       (Currentbuf->document->type == NULL &&
        Currentbuf->edit == NULL) || /* Reading shell */
       Currentbuf->document->real_scheme != SCM_LOCAL ||
-      !strcmp(Currentbuf->document->url.file, "-") ||   /* file is std input  */
-      Currentbuf->document->bufferprop & BP_FRAME) { /* Frame */
+      !strcmp(Currentbuf->document->url.file, "-") || /* file is std input  */
+      Currentbuf->document->bufferprop & BP_FRAME) {  /* Frame */
     message_push("Can't edit other than local file");
     return;
   }
@@ -1185,7 +1185,8 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     return;
   }
   parseURL2(a->url, &u, baseURL(Currentbuf));
-  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->document->url)) == 0) {
+  if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->document->url)) ==
+      0) {
     /* index within this buffer */
     if (u.label) {
       gotoLabel(u.label);
@@ -2375,8 +2376,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   if (Currentbuf->document->real_scheme == SCM_LOCAL)
     file = guess_save_name(NULL, Currentbuf->document->url.real_file);
   else
-    file =
-        guess_save_name(Currentbuf->http_response, Currentbuf->document->url.file);
+    file = guess_save_name(Currentbuf->http_response,
+                           Currentbuf->document->url.file);
   doFileCopy(Currentbuf->document->sourcefile, file);
   PermitSaveToPipe = false;
   displayBuffer(Currentbuf, B_NORMAL);
@@ -2481,21 +2482,21 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
 
   if (is_html_type(Currentbuf->document->type)) {
     buf->document->type = "text/plain";
-    if (Currentbuf->document->real_type &&
-        is_html_type(Currentbuf->document->real_type))
-      buf->document->real_type = "text/plain";
-    else
-      buf->document->real_type = Currentbuf->document->real_type;
+    // if (Currentbuf->document->real_type &&
+    //     is_html_type(Currentbuf->document->real_type))
+    //   buf->document->real_type = "text/plain";
+    // else
+    //   buf->document->real_type = Currentbuf->document->real_type;
     buf->buffername = Sprintf("source of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_N_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_SOURCE] = buf;
   } else if (!strcasecmp(Currentbuf->document->type, "text/plain")) {
     buf->document->type = "text/html";
-    if (Currentbuf->document->real_type &&
-        !strcasecmp(Currentbuf->document->real_type, "text/plain"))
-      buf->document->real_type = "text/html";
-    else
-      buf->document->real_type = Currentbuf->document->real_type;
+    // if (Currentbuf->document->real_type &&
+    //     !strcasecmp(Currentbuf->document->real_type, "text/plain"))
+    //   buf->document->real_type = "text/html";
+    // else
+    //   buf->document->real_type = Currentbuf->document->real_type;
     buf->buffername = Sprintf("HTML view of %s", Currentbuf->buffername)->ptr;
     buf->linkBuffer[LB_SOURCE] = Currentbuf;
     Currentbuf->linkBuffer[LB_N_SOURCE] = buf;
@@ -2546,7 +2547,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
       Str query;
       struct stat st;
       multipart = 1;
-      query_from_followform(&query, Currentbuf->document->form_submit, multipart);
+      query_from_followform(&query, Currentbuf->document->form_submit,
+                            multipart);
       stat(form->body, &st);
       form->length = st.st_size;
     }
@@ -2556,10 +2558,8 @@ DEFUN(reload, RELOAD, "Load current document anew") {
   url = parsedURL2Str(&Currentbuf->document->url);
   scr_message("Reloading...", 0, 0);
   term_refresh();
-  DefaultType = Currentbuf->document->real_type;
   buf = loadGeneralFile(INIT_BUFFER_WIDTH, url->ptr, NULL, NO_REFERER, true,
                         form);
-  DefaultType = NULL;
 
   if (multipart)
     unlink(form->body);
@@ -2851,8 +2851,8 @@ void set_buffer_environ(struct Buffer *buf) {
     set_environ("W3M_FILENAME", buf->document->filename);
     set_environ("W3M_TITLE", buf->buffername);
     set_environ("W3M_URL", parsedURL2Str(&buf->document->url)->ptr);
-    set_environ("W3M_TYPE", buf->document->real_type ? buf->document->real_type
-                                                     : "unknown");
+    set_environ("W3M_TYPE",
+                buf->document->type ? buf->document->type : "unknown");
   }
   auto l = buf->document->currentLine;
   if (l && (buf != prev_buf || l != prev_line ||

@@ -416,8 +416,6 @@ int main(int argc, char **argv) {
     message_push(err_msg->ptr);
   }
 
-  DefaultType = NULL;
-
   Currentbuf = Firstbuf;
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 

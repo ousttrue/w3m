@@ -17,7 +17,6 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
-const char *DefaultType = nullptr;
 bool UseExternalDirBuffer = true;
 bool label_topline = false;
 bool AutoUncompress = false;
@@ -212,21 +211,6 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     if (b && b != NO_BUFFER)
       preFormUpdateBuffer(b);
 
-    // t = guessContentType(req->url.file);
-    // if (t == NULL)
-    //   t = "text/plain";
-    // real_type = t;
-    // if (f.guess_type)
-    //   t = f.guess_type;
-    // else if (DefaultType) {
-    //   // t = DefaultType;
-    DefaultType = NULL;
-    // }
-
-    b->document->real_type = guessContentType(res->request->url.file);
-    if (b->document->real_type == NULL) {
-      b->document->real_type = "text/plain";
-    }
     b->document->type = httpGetContentType(res);
     if (!b->document->type && res->request->url.file) {
       if (!((res->http_status_code >= 400 && res->http_status_code <= 407) ||
@@ -235,9 +219,6 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     }
     if (!b->document->type) {
       b->document->type = "text/plain";
-    }
-    if (!b->document->real_type) {
-      b->document->real_type = b->document->type;
     }
 
     b->document = get_document(cols, res, current, content, b->document->type);
