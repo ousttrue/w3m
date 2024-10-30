@@ -62,7 +62,6 @@ extern void saveBuffer(struct Buffer *buf, FILE *f, int cont);
 extern void saveBufferBody(struct Buffer *buf, FILE *f, int cont);
 extern struct Buffer *newBuffer();
 extern struct Buffer *nullBuffer(void);
-extern void clearBuffer(struct Buffer *buf);
 extern void discardBuffer(struct Buffer *buf);
 extern struct Buffer *namedBuffer(struct Buffer *first, char *name);
 extern struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf);

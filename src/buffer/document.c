@@ -621,3 +621,11 @@ void gotoRealLine(struct Document *doc, int n) {
     }
   }
 }
+
+/*
+ * clearBuffer: clear buffer content
+ */
+void clearBuffer(struct Document *doc) {
+  doc->firstLine = doc->topLine = doc->currentLine = doc->lastLine = NULL;
+  doc->allLine = 0;
+}

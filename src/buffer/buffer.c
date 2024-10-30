@@ -50,20 +50,10 @@ struct Buffer *nullBuffer(void) {
 }
 
 /*
- * clearBuffer: clear buffer content
- */
-void clearBuffer(struct Buffer *buf) {
-  buf->document->firstLine = buf->document->topLine =
-      buf->document->currentLine = buf->document->lastLine = NULL;
-  buf->document->allLine = 0;
-}
-
-/*
  * discardBuffer: free buffer structure
  */
-
 void discardBuffer(struct Buffer *buf) {
-  clearBuffer(buf);
+  clearBuffer(buf->document);
   for (int i = 0; i < MAX_LB; i++) {
     auto b = buf->linkBuffer[i];
     if (b == NULL)
@@ -77,8 +67,10 @@ void discardBuffer(struct Buffer *buf) {
     return;
 
   if (buf->document->sourcefile &&
-      (!buf->document->real_type || strncasecmp(buf->document->real_type, "image/", 6))) {
-    if (buf->document->real_scheme != SCM_LOCAL || buf->document->bufferprop & BP_FRAME)
+      (!buf->document->real_type ||
+       strncasecmp(buf->document->real_type, "image/", 6))) {
+    if (buf->document->real_scheme != SCM_LOCAL ||
+        buf->document->bufferprop & BP_FRAME)
       unlink(buf->document->sourcefile);
   }
 }
@@ -87,12 +79,10 @@ void discardBuffer(struct Buffer *buf) {
  * namedBuffer: Select buffer which have specified name
  */
 struct Buffer *namedBuffer(struct Buffer *first, char *name) {
-  struct Buffer *buf;
-
   if (!strcmp(first->buffername, name)) {
     return first;
   }
-  for (buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
+  for (auto buf = first; buf->nextBuffer != NULL; buf = buf->nextBuffer) {
     if (!strcmp(buf->nextBuffer->buffername, name)) {
       return buf->nextBuffer;
     }
@@ -104,15 +94,16 @@ struct Buffer *namedBuffer(struct Buffer *first, char *name) {
  * deleteBuffer: delete buffer
  */
 struct Buffer *deleteBuffer(struct Buffer *first, struct Buffer *delbuf) {
-  struct Buffer *buf, *b;
 
   if (first == delbuf && first->nextBuffer != NULL) {
-    buf = first->nextBuffer;
+    auto buf = first->nextBuffer;
     discardBuffer(first);
     return buf;
   }
-  if ((buf = prevBuffer(first, delbuf)) != NULL) {
-    b = buf->nextBuffer;
+
+  struct Buffer *buf = prevBuffer(first, delbuf);
+  if (buf) {
+    auto b = buf->nextBuffer;
     buf->nextBuffer = b->nextBuffer;
     discardBuffer(b);
   }
@@ -146,12 +137,11 @@ struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
 }
 
 struct Buffer *nthBuffer(struct Buffer *firstbuf, int n) {
-  int i;
-  struct Buffer *buf = firstbuf;
-
   if (n < 0)
     return firstbuf;
-  for (i = 0; i < n; i++) {
+
+  struct Buffer *buf = firstbuf;
+  for (int i = 0; i < n; i++) {
     if (buf == NULL)
       return NULL;
     buf = buf->nextBuffer;
@@ -355,7 +345,7 @@ void reshapeBuffer(struct Buffer *buf) {
 
   struct Document sbuf;
   copyBuffer(&sbuf, buf->document);
-  clearBuffer(buf);
+  clearBuffer(buf->document);
 
   buf->document->href = NULL;
   buf->document->name = NULL;

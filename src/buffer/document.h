@@ -93,3 +93,4 @@ struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
                                int seq);
 int currentLn(struct Document *doc);
 void gotoRealLine(struct Document *buf, int n);
+void clearBuffer(struct Document *buf);
