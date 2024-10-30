@@ -9,6 +9,7 @@ extern bool showLineNum;
 #define INIT_BUFFER_WIDTH ((_INIT_BUFFER_WIDTH > 0) ? _INIT_BUFFER_WIDTH : 0)
 extern bool FoldLine;
 int FOLD_BUFFER_WIDTH();
+extern bool MarkAllPages;
 
 struct AnchorList;
 struct LinkList;
@@ -25,6 +26,12 @@ enum BufferProperty {
   BP_NO_URL = 0x10,
   BP_REDIRECTED = 0x20,
   BP_CLOSE = 0x40,
+};
+
+/* mark URL, Message-ID */
+enum CheckUrlFlags {
+  CHK_URL = 1,
+  CHK_NMID = 2,
 };
 
 struct Document {
@@ -59,6 +66,7 @@ struct Document {
   struct HmarkerList *hmarklist;
   struct HmarkerList *imarklist;
   struct Viewport viewport;
+  enum CheckUrlFlags check_url;
 };
 
 struct Document *newDocument(int width);
@@ -94,3 +102,4 @@ struct HmarkerList *putHmarker(struct HmarkerList *ml, int line, int pos,
 int currentLn(struct Document *doc);
 void gotoRealLine(struct Document *buf, int n);
 void clearBuffer(struct Document *buf);
+void chkURLBuffer(struct Document *buf);

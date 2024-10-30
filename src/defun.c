@@ -2574,29 +2574,6 @@ DEFUN(reshape, RESHAPE, "Re-render document") {
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
-/* mark URL-like patterns as anchors */
-void chkURLBuffer(struct Buffer *buf) {
-  static char *url_like_pat[] = {
-      "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
-      "=\\-]",
-      "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
-      "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
-#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
-      "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
-#endif
-      "https?://[a-zA-Z0-9:%\\-\\./"
-      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
-      "?=~_\\&+@#,\\$;]*",
-      "ftp://[a-zA-Z0-9:%\\-\\./"
-      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
-      NULL};
-  int i;
-  for (i = 0; url_like_pat[i]; i++) {
-    reAnchor(buf->document, url_like_pat[i]);
-  }
-  buf->check_url |= CHK_URL;
-}
-
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
   chkURLBuffer(Currentbuf);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);

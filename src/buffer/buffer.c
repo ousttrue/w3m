@@ -36,7 +36,6 @@ struct Buffer *newBuffer() {
   n->buffername = "";
   n->clone = New(int);
   *n->clone = 1;
-  n->check_url = MarkAllPages; /* use default from -o mark_all_pages */
   return n;
 }
 
@@ -398,8 +397,8 @@ void reshapeBuffer(struct Buffer *buf) {
       buf->document->viewport.currentColumn = sbuf.viewport.currentColumn;
     arrangeCursor(buf->document);
   }
-  if (buf->check_url & CHK_URL)
-    chkURLBuffer(buf);
+  if (buf->document->check_url & CHK_URL)
+    chkURLBuffer(buf->document);
   formResetBuffer(buf, sbuf.formitem);
 }
 

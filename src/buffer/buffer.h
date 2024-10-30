@@ -29,12 +29,6 @@ struct LinkList {
   struct LinkList *next;
 };
 
-/* mark URL, Message-ID */
-enum CheckUrlFlags {
-  CHK_URL = 1,
-  CHK_NMID = 2,
-};
-
 struct HttpResponse;
 struct Document;
 struct Buffer {
@@ -43,7 +37,6 @@ struct Buffer {
   struct Buffer *linkBuffer[MAX_LB];
   struct Document *document;
   int *clone;
-  enum CheckUrlFlags check_url;
   struct HttpResponse *http_response;
   const char *edit;
   char image_flag;
@@ -53,7 +46,6 @@ struct Buffer {
 #define NO_BUFFER ((struct Buffer *)1)
 
 struct Url *baseURL(struct Buffer *buf);
-void chkURLBuffer(struct Buffer *buf);
 struct Line;
 char *last_modified(struct Buffer *buf);
 struct HtmlTag;

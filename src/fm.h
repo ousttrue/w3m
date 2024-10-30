@@ -75,7 +75,6 @@ global int WrapDefault init(false);
 global const char *BookmarkFile init(nullptr);
 global int UseDictCommand init(true);
 global int FoldTextarea init(false);
-global int MarkAllPages init(false);
 global struct auth_cookie *Auth_cookie init(nullptr);
 global char *mailcap_files init(USER_MAILCAP ", " SYS_MAILCAP);
 global int UseHistory init(true);

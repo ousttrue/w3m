@@ -2,12 +2,14 @@
 #include "alloc.h"
 #include "buffer/message.h"
 #include "file/tmpfile.h"
+#include "html/anchor.h"
 #include "term/termsize.h"
 #include <string.h>
 
 bool showLineNum = false;
 bool FoldLine = false;
 int FOLD_BUFFER_WIDTH() { return (FoldLine ? (INIT_BUFFER_WIDTH + 1) : -1); }
+bool MarkAllPages = false;
 
 struct Document *newDocument(int width) {
   struct Document *doc = New(struct Document);
@@ -33,7 +35,6 @@ struct Document *newDocument(int width) {
   doc->maplist = nullptr;
   doc->hmarklist = nullptr;
   doc->imarklist = nullptr;
-
   doc->viewport.COLS = COLS;
   doc->viewport.LINES = LASTLINE;
   doc->viewport.currentColumn = 0;
@@ -44,6 +45,7 @@ struct Document *newDocument(int width) {
   doc->viewport.rootX = 0;
   doc->viewport.rootY = 0;
   doc->viewport.undo = nullptr;
+  doc->check_url = MarkAllPages; /* use default from -o mark_all_pages */
 
   return doc;
 }
@@ -626,4 +628,27 @@ void gotoRealLine(struct Document *doc, int n) {
 void clearBuffer(struct Document *doc) {
   doc->firstLine = doc->topLine = doc->currentLine = doc->lastLine = NULL;
   doc->allLine = 0;
+}
+
+/* mark URL-like patterns as anchors */
+void chkURLBuffer(struct Document *doc) {
+  static char *url_like_pat[] = {
+      "https?://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./?=~_\\&+@#,\\$;]*[a-zA-Z0-9_/"
+      "=\\-]",
+      "file:/[a-zA-Z0-9:%\\-\\./=_\\+@#,\\$;]*",
+      "ftp://[a-zA-Z0-9][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*[a-zA-Z0-9_/]",
+#ifndef USE_W3MMAILER /* see also chkExternalURIBuffer() */
+      "mailto:[^<> 	][^<> 	]*@[a-zA-Z0-9][a-zA-Z0-9\\-\\._]*[a-zA-Z0-9]",
+#endif
+      "https?://[a-zA-Z0-9:%\\-\\./"
+      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./"
+      "?=~_\\&+@#,\\$;]*",
+      "ftp://[a-zA-Z0-9:%\\-\\./"
+      "_@]*\\[[a-fA-F0-9:][a-fA-F0-9:\\.]*\\][a-zA-Z0-9:%\\-\\./=_+@#,\\$]*",
+      NULL};
+  int i;
+  for (i = 0; url_like_pat[i]; i++) {
+    reAnchor(doc, url_like_pat[i]);
+  }
+  doc->check_url |= CHK_URL;
 }
