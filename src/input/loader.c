@@ -54,8 +54,8 @@ static struct Document *get_document(int cols,
 
   struct Document *document;
   if (is_html_type(t)) {
-    document = loadHTML(cols, content->ptr, http_response->request->url,
-                        currentURL, http_response->content_charset);
+    document = renderHTML(cols, content->ptr, http_response->request->url,
+                          http_response->content_charset);
   } else {
     document = loadText(cols, content->ptr);
   }

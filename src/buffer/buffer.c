@@ -360,8 +360,8 @@ void reshapeBuffer(struct Buffer *buf) {
 
   if (is_html_type(buf->document->type)) {
     buf->document =
-        loadHTML(buf->document->viewport.COLS, html->ptr, buf->document->url,
-                 baseURL(buf), buf->http_response->content_charset);
+        renderHTML(buf->document->viewport.COLS, html->ptr, buf->document->url,
+                   buf->http_response->content_charset);
   } else {
     buf->document = loadText(buf->document->viewport.COLS, html->ptr);
   }
@@ -552,5 +552,5 @@ struct Document *link_list_panel(struct Buffer *buf) {
   }
 
   struct Url url;
-  return loadHTML(INIT_BUFFER_WIDTH, tmp->ptr, url, nullptr, CHARSET_UTF8);
+  return renderHTML(INIT_BUFFER_WIDTH, tmp->ptr, url, CHARSET_UTF8);
 }

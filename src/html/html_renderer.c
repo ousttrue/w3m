@@ -473,7 +473,7 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
       str++;
     } else if (*str != '<' && *str != '&') {
       if (!PPUSH_utf8(st, &pos, mode | st->effect | ex_efct(st->ex_effect),
-                      &str)) {
+                      (const uint8_t **)&str)) {
         error = true;
         break;
       }
@@ -504,7 +504,7 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
 
   /* end of processing for one line */
   if (!st->internal) {
-    addnewline(st->doc, st->outc, st->outp, pos, -1, st->nlines);
+    addnewline(st->doc, (char *)st->outc, st->outp, pos, -1, st->nlines);
   }
   if (st->internal == HTML_N_INTERNAL) {
     st->internal = 0;
@@ -515,8 +515,8 @@ void proc_wrapped_line(struct LineProcStatus *st, struct Url currentURL,
   }
 }
 
-struct Document *render_to_lines(int cols, struct Url currentURL,
-                                 struct Url *base, struct TextLineList *lines) {
+struct Document *render_to_lines(int cols, struct Url url,
+                                 struct TextLineList *lines) {
   static uint8_t *outc = NULL;
   static Lineprop *outp = NULL;
   static int out_size = 0;
@@ -546,7 +546,7 @@ struct Document *render_to_lines(int cols, struct Url currentURL,
       Strcat(textarea_str[n_textarea], line);
       continue;
     }
-    proc_wrapped_line(&st, currentURL, line);
+    proc_wrapped_line(&st, url, line);
   }
 
   for (int form_id = 1; form_id <= form_max; form_id++)

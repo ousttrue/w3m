@@ -6,5 +6,5 @@ extern bool MetaRefresh;
 
 struct Url;
 struct TextLineList;
-struct Document *render_to_lines(int cols, struct Url currentURL,
-                                 struct Url *url, struct TextLineList *lines);
+struct Document *render_to_lines(int cols, struct Url url,
+                                 struct TextLineList *lines);

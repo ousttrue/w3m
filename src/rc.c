@@ -937,7 +937,7 @@ struct Document *load_option_panel() {
   }
   Strcat_charp(src, "</table></form></body></html>");
   struct Url url;
-  return loadHTML(INIT_BUFFER_WIDTH, src->ptr, url, nullptr, CHARSET_UTF8);
+  return renderHTML(INIT_BUFFER_WIDTH, src->ptr, url, CHARSET_UTF8);
 }
 
 void panel_set_option(struct LocalCgiHtml *arg) {

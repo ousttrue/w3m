@@ -185,7 +185,7 @@ static struct Document *DownloadListBuffer(int cols) {
   }
   Strcat_charp(src, "</form></body></html>");
   struct Url url;
-  return loadHTML(cols, src->ptr, url, nullptr, CHARSET_UTF8);
+  return renderHTML(cols, src->ptr, url, CHARSET_UTF8);
 }
 
 #ifdef _WIN32

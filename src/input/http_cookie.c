@@ -690,7 +690,7 @@ struct Document *cookie_list_panel(int cols) {
   }
   Strcat_charp(src, "</ol></form></body></html>");
   struct Url url;
-  return loadHTML(cols, src->ptr, url, nullptr, CHARSET_UTF8);
+  return renderHTML(cols, src->ptr, url, CHARSET_UTF8);
 }
 
 void set_cookie_flag(struct LocalCgiHtml *arg) {

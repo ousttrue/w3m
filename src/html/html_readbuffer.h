@@ -210,6 +210,6 @@ extern Str process_form(struct HtmlTag *tag);
 extern Str process_n_form(void);
 extern Str getLinkNumberStr(int correction);
 
-struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
-                          struct Url *base, enum CharSet content_charset);
+struct Document *renderHTML(int cols, const char *html, struct Url currentURL,
+                          enum CharSet content_charset);
 struct Document *loadText(int cols, const char *text);

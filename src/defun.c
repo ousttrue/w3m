@@ -2179,7 +2179,7 @@ static void cmd_loadHtml(const char *html, int cols, enum BufferProperty prop,
                          enum LinkBuffer linkid) {
   auto buf = newBuffer();
   struct Url url;
-  buf->document = loadHTML(cols, html, url, nullptr, CHARSET_UTF8);
+  buf->document = renderHTML(cols, html, url, CHARSET_UTF8);
   cmd_loadBuffer(buf, prop, linkid);
 }
 

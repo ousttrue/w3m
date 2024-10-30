@@ -3018,8 +3018,10 @@ void init_henv(struct html_feed_environ *h_env, struct readbuffer *obuf,
 
 static union input_stream *_file_lp2;
 
-struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
-                          struct Url *base, enum CharSet content_charset) {
+struct Document *renderHTML(int cols, const char *html, struct Url currentURL,
+                            enum CharSet content_charset) {
+  // cur_baseURL = base;
+
   if (content_charset == CHARSET_SJIS) {
     // sjis to utf8
     auto opts = "-S -w";
@@ -3050,7 +3052,6 @@ struct Document *loadHTML(int cols, const char *html, struct Url currentURL,
   init_henv(&htmlenv1, &obuf, envs, MAX_ENV_LEVEL, NULL, cols, 0);
 
   htmlenv1.buf = newTextLineList();
-  cur_baseURL = base;
 
   auto stream = newStrStream(Strnew_charp(html));
   if (from_jmp()) {
@@ -3083,7 +3084,7 @@ phase2:
   // newBuf->trbyte = trbyte + linelen;
   trap_off();
 
-  auto doc = render_to_lines(cols, currentURL, base, htmlenv1.buf);
+  auto doc = render_to_lines(cols, currentURL, htmlenv1.buf);
   doc->topLine = doc->firstLine;
   doc->lastLine = doc->currentLine;
   doc->currentLine = doc->firstLine;

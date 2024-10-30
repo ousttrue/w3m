@@ -39,7 +39,7 @@ struct Document *historyDocument(int cols, struct Hist *hist) {
   }
   Strcat_charp(src, "</ol>\n</body>\n</html>");
   struct Url url;
-  return loadHTML(cols, src->ptr, url, nullptr, CHARSET_UTF8);
+  return renderHTML(cols, src->ptr, url, CHARSET_UTF8);
 }
 
 void loadHistory(struct Hist *hist) {
