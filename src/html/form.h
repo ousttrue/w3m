@@ -60,25 +60,24 @@ struct FormList {
   unsigned long length;
 };
 
+struct HtmlTag;
+struct Anchor;
+struct AnchorList;
+struct Document;
 struct FormList *newFormList(const char *action, const char *method,
                              const char *charset, const char *enctype,
                              const char *target, const char *name,
                              struct FormList *_next);
-struct HtmlTag;
 struct FormItemList *formList_addInput(struct FormList *fl,
                                        struct HtmlTag *tag);
 char *form2str(struct FormItemList *fi);
 int formtype(char *typestr);
-struct Anchor;
-struct Buffer;
-void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
+void formRecheckRadio(struct Document *doc, struct Anchor *a,
                       struct FormItemList *form);
-struct AnchorList;
-struct Document;
 void formResetBuffer(struct Document *doc, struct AnchorList *formitem);
 void formUpdateBuffer(struct Document *doc, struct Anchor *a,
                       struct FormItemList *form);
-void preFormUpdateBuffer(struct Buffer *buf);
+void preFormUpdateBuffer(struct Document *doc);
 Str textfieldrep(Str s, int width);
 void input_textarea(struct FormItemList *fi);
 void do_internal(char *action, char *data);

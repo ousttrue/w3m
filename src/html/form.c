@@ -174,23 +174,23 @@ int formtype(char *typestr) {
   return FORM_INPUT_TEXT;
 }
 
-void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
+void formRecheckRadio(struct Document *doc, struct Anchor *a,
                       struct FormItemList *fi) {
   int i;
   struct Anchor *a2;
   struct FormItemList *f2;
 
-  for (i = 0; i < buf->document->formitem->nanchor; i++) {
-    a2 = &buf->document->formitem->anchors[i];
+  for (i = 0; i < doc->formitem->nanchor; i++) {
+    a2 = &doc->formitem->anchors[i];
     f2 = (struct FormItemList *)a2->url;
     if (f2->parent == fi->parent && f2 != fi && f2->type == FORM_INPUT_RADIO &&
         Strcmp(f2->name, fi->name) == 0) {
       f2->checked = 0;
-      formUpdateBuffer(a2, buf, f2);
+      formUpdateBuffer(doc, a2, f2);
     }
   }
   fi->checked = 1;
-  formUpdateBuffer(a, buf, fi);
+  formUpdateBuffer(doc, a, fi);
 }
 
 void formResetBuffer(struct Document *doc, struct AnchorList *formitem) {
@@ -225,7 +225,7 @@ void formResetBuffer(struct Document *doc, struct AnchorList *formitem) {
     default:
       continue;
     }
-    formUpdateBuffer(a, doc, f1);
+    formUpdateBuffer(doc, a, f1);
   }
 }
 
@@ -343,8 +343,7 @@ void formUpdateBuffer(struct Document *doc, struct Anchor *a,
   switch (form->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
-    if (doc->currentLine == NULL ||
-        spos >= doc->currentLine->len || spos < 0)
+    if (doc->currentLine == NULL || spos >= doc->currentLine->len || spos < 0)
       break;
     if (form->checked)
       doc->currentLine->lineBuf[spos] = '*';
@@ -392,14 +391,14 @@ void formUpdateBuffer(struct Document *doc, struct Anchor *a,
       pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col, rows > 1,
                              form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(doc->href, doc->hmarklist,
-                            a->start.line, spos, pos - epos);
-        shiftAnchorPosition(doc->name, doc->hmarklist,
-                            a->start.line, spos, pos - epos);
-        shiftAnchorPosition(doc->img, doc->hmarklist,
-                            a->start.line, spos, pos - epos);
-        shiftAnchorPosition(doc->formitem, doc->hmarklist,
-                            a->start.line, spos, pos - epos);
+        shiftAnchorPosition(doc->href, doc->hmarklist, a->start.line, spos,
+                            pos - epos);
+        shiftAnchorPosition(doc->name, doc->hmarklist, a->start.line, spos,
+                            pos - epos);
+        shiftAnchorPosition(doc->img, doc->hmarklist, a->start.line, spos,
+                            pos - epos);
+        shiftAnchorPosition(doc->formitem, doc->hmarklist, a->start.line, spos,
+                            pos - epos);
       }
     }
     break;
@@ -704,7 +703,7 @@ void loadPreForm(void) {
   fclose(fp);
 }
 
-void preFormUpdateBuffer(struct Buffer *buf) {
+void preFormUpdateBuffer(struct Document *doc) {
   struct pre_form *pf;
   struct pre_form_item *pi;
   int i;
@@ -712,21 +711,21 @@ void preFormUpdateBuffer(struct Buffer *buf) {
   struct FormList *fl;
   struct FormItemList *fi;
 
-  if (!buf || !buf->document->formitem || !PreForm)
+  if (!doc || !doc->formitem || !PreForm)
     return;
 
   for (pf = PreForm; pf; pf = pf->next) {
     if (pf->re_url) {
-      Str url = parsedURL2Str(&buf->document->url);
+      Str url = parsedURL2Str(&doc->url);
       if (!RegexMatch(pf->re_url, url->ptr, url->length, 1))
         continue;
     } else if (pf->url) {
-      if (Strcmp_charp(parsedURL2Str(&buf->document->url), pf->url))
+      if (Strcmp_charp(parsedURL2Str(&doc->url), pf->url))
         continue;
     } else
       continue;
-    for (i = 0; i < buf->document->formitem->nanchor; i++) {
-      a = &buf->document->formitem->anchors[i];
+    for (i = 0; i < doc->formitem->nanchor; i++) {
+      a = &doc->formitem->anchors[i];
       fi = (struct FormItemList *)a->url;
       fl = fi->parent;
       if (pf->name && (!fl->name || strcmp(fl->name, pf->name)))
@@ -741,7 +740,7 @@ void preFormUpdateBuffer(struct Buffer *buf) {
                (fi->name && !Strcmp_charp(fi->name, pi->name))) &&
               (!pi->value || !*pi->value ||
                (fi->value && !Strcmp_charp(fi->value, pi->value))))
-            buf->document->submit = a;
+            doc->submit = a;
           continue;
         }
         if (!pi->name || !fi->name || Strcmp_charp(fi->name, pi->name))
@@ -752,17 +751,17 @@ void preFormUpdateBuffer(struct Buffer *buf) {
         case FORM_INPUT_PASSWORD:
         case FORM_TEXTAREA:
           fi->value = Strnew_charp(pi->value);
-          formUpdateBuffer(a, buf, fi);
+          formUpdateBuffer(doc, a, fi);
           break;
         case FORM_INPUT_CHECKBOX:
           if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value)) {
             fi->checked = pi->checked;
-            formUpdateBuffer(a, buf, fi);
+            formUpdateBuffer(doc, a, fi);
           }
           break;
         case FORM_INPUT_RADIO:
           if (pi->value && fi->value && !Strcmp_charp(fi->value, pi->value))
-            formRecheckRadio(a, buf, fi);
+            formRecheckRadio(doc, a, fi);
           break;
         }
       }

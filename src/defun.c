@@ -39,7 +39,6 @@
 #include "text/myctype.h"
 #include "text/regex.h"
 #include "text/text.h"
-#include "trap_jmp.h"
 #include "version.h"
 #include <fcntl.h>
 #include <stdio.h>
@@ -1419,7 +1418,7 @@ static void _followForm(int submit) {
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(Currentbuf->document, a, fi);
     if (fi->accept || fi->parent->nitems == 1)
       goto do_submit;
     break;
@@ -1436,7 +1435,7 @@ static void _followForm(int submit) {
     if (p == NULL || fi->readonly)
       break;
     fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(Currentbuf->document, a, fi);
     if (fi->accept || fi->parent->nitems == 1)
       goto do_submit;
     break;
@@ -1455,7 +1454,7 @@ static void _followForm(int submit) {
     if (p == NULL)
       break;
     fi->value = Strnew_charp(p);
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(Currentbuf->document, a, fi);
     if (fi->accept)
       goto do_submit;
     break;
@@ -1467,7 +1466,7 @@ static void _followForm(int submit) {
     if (fi->readonly)
       message_push("Read only field!");
     input_textarea(fi);
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(Currentbuf->document, a, fi);
     break;
 
   case FORM_INPUT_RADIO:
@@ -1477,7 +1476,7 @@ static void _followForm(int submit) {
       message_push("Read only field!");
       break;
     }
-    formRecheckRadio(a, Currentbuf, fi);
+    formRecheckRadio(Currentbuf->document, a, fi);
     break;
 
   case FORM_INPUT_CHECKBOX:
@@ -1488,7 +1487,7 @@ static void _followForm(int submit) {
       break;
     }
     fi->checked = !fi->checked;
-    formUpdateBuffer(a, Currentbuf, fi);
+    formUpdateBuffer(Currentbuf->document, a, fi);
     break;
 
   case FORM_INPUT_IMAGE:
@@ -1558,7 +1557,7 @@ static void _followForm(int submit) {
           f2->type != FORM_INPUT_RESET) {
         f2->value = f2->init_value;
         f2->checked = f2->init_checked;
-        formUpdateBuffer(a2, Currentbuf, f2);
+        formUpdateBuffer(Currentbuf->document, a2, f2);
       }
     }
     break;
