@@ -13,7 +13,8 @@ enum CharTypes CharType(Lineprop c) { return (enum CharTypes)((c)&P_CHARTYPE); }
 enum CharEffects CharEffect(Lineprop c) {
   return (enum CharEffects)((c) & (P_EFFECT | PC_SYMBOL));
 }
-// void SetCharType(Lineprop *v, enum CharTypes c) { *v = (*v & ~P_CHARTYPE) | c; }
+// void SetCharType(Lineprop *v, enum CharTypes c) { *v = (*v & ~P_CHARTYPE) |
+// c; }
 
 int get_mctype(const uint8_t *c) {
   return (IS_CNTRL(*(c)) ? PC_CTRL : PC_ASCII);
@@ -87,8 +88,8 @@ int columnPos(struct Line *line, int column) {
   int i = 0;
   int j = 0;
   for (; i < line->len;) {
-    auto len = utf8sequence_len((const uint8_t*)&line->lineBuf[i]);
-    auto col = utf8sequence_width((const uint8_t*)&line->lineBuf[i]);
+    auto len = utf8sequence_len((const uint8_t *)&line->lineBuf[i]);
+    auto col = utf8sequence_width((const uint8_t *)&line->lineBuf[i]);
     if (j + col > column) {
       break;
     }
@@ -205,4 +206,18 @@ struct Line *currentLineSkip(struct Line *line, int offset, int last) {
     for (int i = 0; i < -offset && l->prev != NULL; i++, l = l->prev)
       ;
   return l;
+}
+
+void nextChar(int *s, struct Line *l) {
+  int len = utf8sequence_len((const uint8_t *)&l->lineBuf[*s]);
+  *s += len;
+}
+void prevChar(int *s, struct Line *l) {
+  for (int i = *s - 1; i >= 0; --i) {
+    int len = utf8sequence_len((const uint8_t *)&l->lineBuf[i]);
+    if (len) {
+      *s = i;
+      return;
+    }
+  }
 }

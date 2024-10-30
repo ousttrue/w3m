@@ -109,3 +109,4 @@ struct Document *reshapeBuffer(struct Document *buf,
 void _goLine(struct Document *doc, const char *l);
 void save_buffer_position(struct Document *doc);
 void resetPos(struct Document *doc, struct BufferPos *b);
+int prev_nonnull_line(struct Document *doc, struct Line *line);

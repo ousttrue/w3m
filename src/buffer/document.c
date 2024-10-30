@@ -805,3 +805,16 @@ void resetPos(struct Document *doc, struct BufferPos *b) {
   doc->viewport.undo = b;
   // displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
+
+int prev_nonnull_line(struct Document *doc, struct Line *line) {
+  struct Line *l;
+  for (l = line; l != NULL && l->len == 0; l = l->prev)
+    ;
+  if (l == NULL || l->len == 0)
+    return -1;
+
+  doc->currentLine = l;
+  if (l != line)
+    doc->viewport.pos = doc->currentLine->len;
+  return 0;
+}

@@ -17,7 +17,6 @@
 #include "func.h"
 #include "funcname1.h"
 #include "history.h"
-#include "html/html_parser.h"
 #include "html/html_readbuffer.h"
 #include "html/map.h"
 #include "input/ext_mime.h"
@@ -658,72 +657,37 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide") {
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#if defined(USE_M17N) && defined(USE_UNICODE)
-#define nextChar(s, l)                                                         \
-  do {                                                                         \
-    (s)++;                                                                     \
-  } while ((s) < (l)->len && (l)->propBuf[s] & PC_WCHAR2)
-#define prevChar(s, l)                                                         \
-  do {                                                                         \
-    (s)--;                                                                     \
-  } while ((s) > 0 && (l)->propBuf[s] & PC_WCHAR2)
-
-static wc_uint32 getChar(char *p) {
-  return wc_any_to_ucs(wtf_parse1((wc_uchar **)&p));
-}
-
-static int is_wordchar(wc_uint32 c) { return wc_is_ucs_alnum(c); }
-#else
-#define nextChar(s, l) (s)++
-#define prevChar(s, l) (s)--
 #define getChar(p) ((int)*(p))
 
 static int is_wordchar(int c) { return IS_ALNUM(c); }
-#endif
-
-static int prev_nonnull_line(struct Line *line) {
-  struct Line *l;
-
-  for (l = line; l != NULL && l->len == 0; l = l->prev)
-    ;
-  if (l == NULL || l->len == 0)
-    return -1;
-
-  Currentbuf->document->currentLine = l;
-  if (l != line)
-    Currentbuf->document->viewport.pos = Currentbuf->document->currentLine->len;
-  return 0;
-}
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word") {
-  char *lb;
-  struct Line *pline, *l;
-  int ppos;
-  int i, n = searchKeyNum();
-
   if (Currentbuf->document->firstLine == NULL)
     return;
 
-  for (i = 0; i < n; i++) {
-    pline = Currentbuf->document->currentLine;
-    ppos = Currentbuf->document->viewport.pos;
+  int n = searchKeyNum();
+  for (int i = 0; i < n; i++) {
+    auto pline = Currentbuf->document->currentLine;
+    int ppos = Currentbuf->document->viewport.pos;
 
-    if (prev_nonnull_line(Currentbuf->document->currentLine) < 0)
+    if (prev_nonnull_line(Currentbuf->document,
+                          Currentbuf->document->currentLine) < 0)
       goto end;
 
     while (1) {
-      l = Currentbuf->document->currentLine;
-      lb = l->lineBuf;
+      auto l = Currentbuf->document->currentLine;
+      auto lb = l->lineBuf;
       while (Currentbuf->document->viewport.pos > 0) {
         int tmp = Currentbuf->document->viewport.pos;
-        prevChar(tmp, l);
+        prevChar(&tmp, l);
         if (is_wordchar(getChar(&lb[tmp])))
           break;
         Currentbuf->document->viewport.pos = tmp;
       }
       if (Currentbuf->document->viewport.pos > 0)
         break;
-      if (prev_nonnull_line(Currentbuf->document->currentLine->prev) < 0) {
+      if (prev_nonnull_line(Currentbuf->document,
+                            Currentbuf->document->currentLine->prev) < 0) {
         Currentbuf->document->currentLine = pline;
         Currentbuf->document->viewport.pos = ppos;
         goto end;
@@ -732,11 +696,11 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
           Currentbuf->document->currentLine->len;
     }
 
-    l = Currentbuf->document->currentLine;
-    lb = l->lineBuf;
+    auto l = Currentbuf->document->currentLine;
+    auto lb = l->lineBuf;
     while (Currentbuf->document->viewport.pos > 0) {
       int tmp = Currentbuf->document->viewport.pos;
-      prevChar(tmp, l);
+      prevChar(&tmp, l);
       if (!is_wordchar(getChar(&lb[tmp])))
         break;
       Currentbuf->document->viewport.pos = tmp;
@@ -782,12 +746,12 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
     lb = l->lineBuf;
     while (Currentbuf->document->viewport.pos < l->len &&
            is_wordchar(getChar(&lb[Currentbuf->document->viewport.pos])))
-      nextChar(Currentbuf->document->viewport.pos, l);
+      nextChar(&Currentbuf->document->viewport.pos, l);
 
     while (1) {
       while (Currentbuf->document->viewport.pos < l->len &&
              !is_wordchar(getChar(&lb[Currentbuf->document->viewport.pos])))
-        nextChar(Currentbuf->document->viewport.pos, l);
+        nextChar(&Currentbuf->document->viewport.pos, l);
       if (Currentbuf->document->viewport.pos < l->len)
         break;
       if (next_nonnull_line(Currentbuf->document->currentLine->next) < 0) {
@@ -2632,30 +2596,28 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
 }
 
 static char *getCurWord(struct Buffer *buf, int *spos, int *epos) {
-  char *p;
   struct Line *l = buf->document->currentLine;
-  int b, e;
+  if (l == NULL)
+    return NULL;
 
   *spos = 0;
   *epos = 0;
-  if (l == NULL)
-    return NULL;
-  p = l->lineBuf;
-  e = buf->document->viewport.pos;
+  auto p = l->lineBuf;
+  int e = buf->document->viewport.pos;
   while (e > 0 && !is_wordchar(getChar(&p[e])))
-    prevChar(e, l);
+    prevChar(&e, l);
   if (!is_wordchar(getChar(&p[e])))
     return NULL;
-  b = e;
+  int b = e;
   while (b > 0) {
     int tmp = b;
-    prevChar(tmp, l);
+    prevChar(&tmp, l);
     if (!is_wordchar(getChar(&p[tmp])))
       break;
     b = tmp;
   }
   while (e < l->len && is_wordchar(getChar(&p[e])))
-    nextChar(e, l);
+    nextChar(&e, l);
   *spos = b;
   *epos = e;
   return &p[b];
