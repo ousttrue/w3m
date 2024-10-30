@@ -285,7 +285,8 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
        (is_html_type(buf->document->type) || FoldLine)) ||
       buf->document->need_reshape) {
     buf->document->need_reshape = true;
-    reshapeBuffer(buf);
+    buf->document =
+        reshapeBuffer(buf->document, buf->http_response->content_charset);
   }
   if (showLineNum) {
     if (buf->document->lastLine && buf->document->lastLine->real_linenumber > 0)

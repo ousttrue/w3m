@@ -1,5 +1,6 @@
 // rendererd document
 #pragma once
+#include "input/charset.h"
 #include "input/url.h"
 #include "line.h"
 #include "viewport.h"
@@ -103,3 +104,5 @@ int currentLn(struct Document *doc);
 void gotoRealLine(struct Document *buf, int n);
 void clearBuffer(struct Document *buf);
 void chkURLBuffer(struct Document *buf);
+struct Document *reshapeBuffer(struct Document *buf,
+                               enum CharSet content_charset);

@@ -1,4 +1,5 @@
 #pragma once
+#include "input/charset.h"
 #include "input/url.h"
 #include <stdint.h>
 
@@ -42,13 +43,6 @@ struct HttpRequest {
 enum ContentType {
   CONTENTTYPE_TextPlane,
   CONTENTTYPE_TextHTml,
-};
-
-enum CharSet {
-  CHARSET_UNKONWN,
-  CHARSET_UTF8,
-  // CHARSET_ISO_8859_1, 1byte subset of UTF8
-  CHARSET_SJIS,
 };
 
 enum StreamStatus {

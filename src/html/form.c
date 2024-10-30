@@ -193,13 +193,12 @@ void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
   formUpdateBuffer(a, buf, fi);
 }
 
-void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem) {
-  if (buf == NULL || buf->document->formitem == NULL || formitem == NULL)
+void formResetBuffer(struct Document *doc, struct AnchorList *formitem) {
+  if (doc == NULL || doc->formitem == NULL || formitem == NULL)
     return;
 
-  for (int i = 0; i < buf->document->formitem->nanchor && i < formitem->nanchor;
-       i++) {
-    auto a = &buf->document->formitem->anchors[i];
+  for (int i = 0; i < doc->formitem->nanchor && i < formitem->nanchor; i++) {
+    auto a = &doc->formitem->anchors[i];
     if (a->y != a->start.line)
       continue;
     auto f1 = (struct FormItemList *)a->url;
@@ -226,7 +225,7 @@ void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem) {
     default:
       continue;
     }
-    formUpdateBuffer(a, buf, f1);
+    formUpdateBuffer(a, doc, f1);
   }
 }
 
@@ -318,15 +317,15 @@ static int form_update_line(struct Line *line, char **str, int spos, int epos,
   return pos;
 }
 
-void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
+void formUpdateBuffer(struct Document *doc, struct Anchor *a,
                       struct FormItemList *form) {
   struct Document save;
   char *p;
   int spos, epos, rows, c_rows, pos, col = 0;
   struct Line *l;
 
-  copyBuffer(&save, buf->document);
-  gotoLine(buf->document, a->start.line);
+  copyBuffer(&save, doc);
+  gotoLine(doc, a->start.line);
   switch (form->type) {
   case FORM_TEXTAREA:
   case FORM_INPUT_TEXT:
@@ -344,13 +343,13 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
   switch (form->type) {
   case FORM_INPUT_CHECKBOX:
   case FORM_INPUT_RADIO:
-    if (buf->document->currentLine == NULL ||
-        spos >= buf->document->currentLine->len || spos < 0)
+    if (doc->currentLine == NULL ||
+        spos >= doc->currentLine->len || spos < 0)
       break;
     if (form->checked)
-      buf->document->currentLine->lineBuf[spos] = '*';
+      doc->currentLine->lineBuf[spos] = '*';
     else
-      buf->document->currentLine->lineBuf[spos] = ' ';
+      doc->currentLine->lineBuf[spos] = ' ';
     break;
   case FORM_INPUT_TEXT:
   case FORM_INPUT_FILE:
@@ -360,11 +359,11 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
       break;
     p = form->value->ptr;
   }
-    l = buf->document->currentLine;
+    l = doc->currentLine;
     if (!l)
       break;
     if (form->type == FORM_TEXTAREA) {
-      int n = a->y - buf->document->currentLine->linenumber;
+      int n = a->y - doc->currentLine->linenumber;
       if (n > 0)
         for (; l && n; l = l->prev, n--)
           ;
@@ -381,7 +380,7 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
         break;
       if (rows > 1) {
         pos = columnPos(l, col);
-        a = retrieveAnchor(buf->document->formitem, l->linenumber, pos);
+        a = retrieveAnchor(doc->formitem, l->linenumber, pos);
         if (a == NULL)
           break;
         spos = a->start.pos;
@@ -393,13 +392,13 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
       pos = form_update_line(l, &p, spos, epos, COLPOS(l, epos) - col, rows > 1,
                              form->type == FORM_INPUT_PASSWORD);
       if (pos != epos) {
-        shiftAnchorPosition(buf->document->href, buf->document->hmarklist,
+        shiftAnchorPosition(doc->href, doc->hmarklist,
                             a->start.line, spos, pos - epos);
-        shiftAnchorPosition(buf->document->name, buf->document->hmarklist,
+        shiftAnchorPosition(doc->name, doc->hmarklist,
                             a->start.line, spos, pos - epos);
-        shiftAnchorPosition(buf->document->img, buf->document->hmarklist,
+        shiftAnchorPosition(doc->img, doc->hmarklist,
                             a->start.line, spos, pos - epos);
-        shiftAnchorPosition(buf->document->formitem, buf->document->hmarklist,
+        shiftAnchorPosition(doc->formitem, doc->hmarklist,
                             a->start.line, spos, pos - epos);
       }
     }
@@ -408,8 +407,8 @@ void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
   default:
     break;
   }
-  copyBuffer(buf->document, &save);
-  arrangeLine(buf->document);
+  copyBuffer(doc, &save);
+  arrangeLine(doc);
 }
 
 Str textfieldrep(Str s, int width) {

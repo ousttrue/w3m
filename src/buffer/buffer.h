@@ -62,7 +62,6 @@ extern struct Buffer *replaceBuffer(struct Buffer *first, struct Buffer *delbuf,
 extern struct Buffer *nthBuffer(struct Buffer *firstbuf, int n);
 extern struct Buffer *selectBuffer(struct Buffer *firstbuf,
                                    struct Buffer *currentbuf, char *selectchar);
-extern void reshapeBuffer(struct Buffer *buf);
 extern struct Buffer *prevBuffer(struct Buffer *first, struct Buffer *buf);
 
 extern struct Document *page_info_panel(struct Buffer *buf);

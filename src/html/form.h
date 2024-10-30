@@ -74,8 +74,9 @@ struct Buffer;
 void formRecheckRadio(struct Anchor *a, struct Buffer *buf,
                       struct FormItemList *form);
 struct AnchorList;
-void formResetBuffer(struct Buffer *buf, struct AnchorList *formitem);
-void formUpdateBuffer(struct Anchor *a, struct Buffer *buf,
+struct Document;
+void formResetBuffer(struct Document *doc, struct AnchorList *formitem);
+void formUpdateBuffer(struct Document *doc, struct Anchor *a,
                       struct FormItemList *form);
 void preFormUpdateBuffer(struct Buffer *buf);
 Str textfieldrep(Str s, int width);

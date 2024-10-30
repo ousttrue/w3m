@@ -3,7 +3,11 @@
 #include "buffer/message.h"
 #include "file/tmpfile.h"
 #include "html/anchor.h"
+#include "html/form.h"
+#include "html/html_readbuffer.h"
+#include "input/istream.h"
 #include "term/termsize.h"
+#include "text/text.h"
 #include <string.h>
 
 bool showLineNum = false;
@@ -651,4 +655,90 @@ void chkURLBuffer(struct Document *doc) {
     reAnchor(doc, url_like_pat[i]);
   }
   doc->check_url |= CHK_URL;
+}
+
+/*
+ * Reshape HTML buffer
+ */
+struct Document *reshapeBuffer(struct Document *doc,
+                               enum CharSet content_charset) {
+  if (!doc->need_reshape) {
+    return doc;
+  }
+  doc->need_reshape = false;
+
+  doc->width = INIT_BUFFER_WIDTH;
+  if (doc->sourcefile == NULL) {
+    return doc;
+  }
+
+  auto stream = examineFile(doc->sourcefile);
+  if (stream == NULL) {
+    return doc;
+  }
+
+  Str html = Strnew();
+  Str line;
+  while ((line = StrmyISgets(stream))->length) {
+    Strcat(html, line);
+  }
+
+  struct Document sbuf;
+  copyBuffer(&sbuf, doc);
+  clearBuffer(doc);
+
+  doc->href = NULL;
+  doc->name = NULL;
+  doc->img = NULL;
+  doc->formitem = NULL;
+  doc->formlist = NULL;
+  doc->linklist = NULL;
+  doc->maplist = NULL;
+  if (doc->hmarklist)
+    doc->hmarklist->nmark = 0;
+  if (doc->imarklist)
+    doc->imarklist->nmark = 0;
+
+  struct Document *newDoc;
+  if (is_html_type(doc->type)) {
+    newDoc =
+        renderHTML(doc->viewport.COLS, html->ptr, doc->url, content_charset);
+  } else {
+    newDoc = loadText(doc->viewport.COLS, html->ptr);
+  }
+  ISclose(stream);
+
+  newDoc->height = LASTLINE + 1;
+  if (newDoc->firstLine && sbuf.firstLine) {
+    struct Line *cur = sbuf.currentLine;
+    int n;
+
+    newDoc->viewport.pos = sbuf.viewport.pos + cur->bpos;
+    while (cur->bpos && cur->prev)
+      cur = cur->prev;
+    if (cur->real_linenumber > 0)
+      gotoRealLine(newDoc, cur->real_linenumber);
+    else
+      gotoLine(newDoc, cur->linenumber);
+    n = (newDoc->currentLine->linenumber - newDoc->topLine->linenumber) -
+        (cur->linenumber - sbuf.topLine->linenumber);
+    if (n) {
+      newDoc->topLine = lineSkip(&newDoc->viewport, newDoc->topLine,
+                                 newDoc->lastLine, n, false);
+      if (cur->real_linenumber > 0)
+        gotoRealLine(newDoc, cur->real_linenumber);
+      else
+        gotoLine(newDoc, cur->linenumber);
+    }
+    newDoc->viewport.pos -= newDoc->currentLine->bpos;
+    if (FoldLine && !is_html_type(newDoc->type))
+      newDoc->viewport.currentColumn = 0;
+    else
+      newDoc->viewport.currentColumn = sbuf.viewport.currentColumn;
+    arrangeCursor(newDoc);
+  }
+  if (newDoc->check_url & CHK_URL)
+    chkURLBuffer(newDoc);
+  formResetBuffer(newDoc, sbuf.formitem);
+  return newDoc;
 }

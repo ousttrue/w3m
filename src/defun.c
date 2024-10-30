@@ -2489,7 +2489,8 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   (*buf->clone)++;
 
   buf->document->need_reshape = true;
-  reshapeBuffer(buf);
+  buf->document =
+      reshapeBuffer(buf->document, buf->http_response->content_charset);
   pushBuffer(buf);
   displayBuffer(Currentbuf, B_NORMAL);
 }
@@ -2570,12 +2571,13 @@ DEFUN(reload, RELOAD, "Load current document anew") {
 /* reshape */
 DEFUN(reshape, RESHAPE, "Re-render document") {
   Currentbuf->document->need_reshape = true;
-  reshapeBuffer(Currentbuf);
+  Currentbuf->document = reshapeBuffer(
+      Currentbuf->document, Currentbuf->http_response->content_charset);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
-  chkURLBuffer(Currentbuf);
+  chkURLBuffer(Currentbuf->document);
   displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
