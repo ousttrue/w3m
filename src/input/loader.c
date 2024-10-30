@@ -68,8 +68,7 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
                                struct FormList *form) {
   clearRedirection();
 
-  struct Url url;
-  parseURL2(path, &url, current);
+  struct Url url = parseURL2(path, current);
   switch (url.scheme) {
   case SCM_LOCAL: {
     struct stat st;

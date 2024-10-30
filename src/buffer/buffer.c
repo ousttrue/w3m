@@ -432,8 +432,6 @@ char *last_modified(struct Buffer *buf) {
 }
 
 struct Document *link_list_panel(struct Buffer *buf) {
-  struct Url pu;
-  /* FIXME: gettextize? */
   Str tmp =
       Strnew_charp("<title>Link List</title><h1 align=center>Link List</h1>\n");
 
@@ -443,21 +441,23 @@ struct Document *link_list_panel(struct Buffer *buf) {
     return NULL;
   }
 
-  const char *t;
-  const char *u, *p;
   if (buf->document->linklist) {
     Strcat_charp(tmp, "<hr><h2>Links</h2>\n<ol>\n");
     for (auto l = buf->document->linklist; l; l = l->next) {
+      const char *p;
+      const char *u;
       if (l->url) {
-        parseURL2(l->url, &pu, baseURL(buf));
+        auto pu = parseURL2(l->url, baseURL(buf));
         p = parsedURL2Str(&pu)->ptr;
         u = html_quote(p);
         if (DecodeURL)
           p = html_quote(url_decode0(p));
         else
           p = u;
-      } else
+      } else {
         u = p = "";
+      }
+      const char *t;
       if (l->type == LINK_TYPE_REL)
         t = " [Rel]";
       else if (l->type == LINK_TYPE_REV)
@@ -479,14 +479,14 @@ struct Document *link_list_panel(struct Buffer *buf) {
       auto a = &al->anchors[i];
       if (a->hseq < 0 || a->slave)
         continue;
-      parseURL2(a->url, &pu, baseURL(buf));
-      p = parsedURL2Str(&pu)->ptr;
-      u = html_quote(p);
+      auto pu = parseURL2(a->url, baseURL(buf));
+      const char *p = parsedURL2Str(&pu)->ptr;
+      auto u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));
       else
         p = u;
-      t = getAnchorText(buf->document, al, a);
+      const char *t = getAnchorText(buf->document, al, a);
       t = t ? html_quote(t) : "";
       Strcat_m_charp(tmp, "<li><a href=\"", u, "\">", t, "</a><br>", p, "\n",
                      NULL);
@@ -501,13 +501,14 @@ struct Document *link_list_panel(struct Buffer *buf) {
       auto a = &al->anchors[i];
       if (a->slave)
         continue;
-      parseURL2(a->url, &pu, baseURL(buf));
-      p = parsedURL2Str(&pu)->ptr;
-      u = html_quote(p);
+      auto pu = parseURL2(a->url, baseURL(buf));
+      const char *p = parsedURL2Str(&pu)->ptr;
+      auto u = html_quote(p);
       if (DecodeURL)
         p = html_quote(url_decode0(p));
       else
         p = u;
+      const char *t;
       if (a->title && *a->title)
         t = html_quote(a->title);
       else
@@ -531,7 +532,7 @@ struct Document *link_list_panel(struct Buffer *buf) {
           m = (struct MapArea *)mi->ptr;
           if (!m)
             continue;
-          parseURL2(m->url, &pu, baseURL(buf));
+          pu = parseURL2(m->url, baseURL(buf));
           p = parsedURL2Str(&pu)->ptr;
           u = html_quote(p);
           if (DecodeURL)

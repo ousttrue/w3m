@@ -2,16 +2,16 @@
 #include "buffer/buffer.h"
 #include "buffer/document.h"
 #include "buffer/tabbuffer.h"
-#include "html/html_readbuffer.h"
 #include "html/html_renderer.h"
 #include "html/map.h"
+#include "input/http.h"
+#include "input/istream.h"
 #include "term/scr.h"
 #include "term/terms.h"
 #include "term/termsize.h"
 #include "text/ctrlcode.h"
 #include "text/text.h"
 #include "text/utf8.h"
-#include "input/istream.h"
 #include <math.h>
 
 int enable_inline_image;
@@ -24,14 +24,11 @@ static struct Buffer *save_current_buf = nullptr;
 
 static Str make_lastline_link(struct Url *base, const char *title,
                               const char *url) {
-  Str s = NULL, u;
-  struct Url pu;
-  char *p;
-  int l = COLS - 1, i;
-
+  int l = COLS - 1;
+  Str s = NULL;
   if (title && *title) {
     s = Strnew_m_charp("[", title, "]", NULL);
-    for (p = s->ptr; *p; p++) {
+    for (auto p = s->ptr; *p; p++) {
       if (IS_CNTRL(*p) || IS_SPACE(*p))
         *p = ' ';
     }
@@ -43,8 +40,8 @@ static Str make_lastline_link(struct Url *base, const char *title,
   }
   if (!url)
     return s;
-  parseURL2(url, &pu, base);
-  u = parsedURL2Str(&pu);
+  auto pu = parseURL2(url, base);
+  auto u = parsedURL2Str(&pu);
   if (DecodeURL)
     u = Strnew_charp(url_decode0(u->ptr));
   if (l <= 4 || l >= utf8str_width((const uint8_t *)u->ptr)) {
@@ -55,7 +52,7 @@ static Str make_lastline_link(struct Url *base, const char *title,
   }
   if (!s)
     s = Strnew_size(COLS);
-  i = (l - 2) / 2;
+  int i = (l - 2) / 2;
   Strcat_charp_n(s, u->ptr, i);
   Strcat_charp(s, "..");
   i = utf8str_width((const uint8_t *)u->ptr) -
@@ -265,6 +262,12 @@ static void render_document(struct Document *doc) {
   }
 }
 
+// tabs/standout
+// addressbar(url)
+// title/standout
+// document
+// status(standout)
+// msg
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   if (!buf)
     return;

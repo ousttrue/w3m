@@ -544,18 +544,19 @@ static struct pre_form *PreForm = NULL;
 static struct pre_form *add_pre_form(struct pre_form *prev, const char *url,
                                      Regex *re_url, const char *name,
                                      const char *action) {
-  struct Url pu;
   struct pre_form *new;
-
   if (prev)
     new = prev->next = New(struct pre_form);
   else
     new = PreForm = New(struct pre_form);
+
   if (url && !re_url) {
-    parseURL2(url, &pu, NULL);
+    auto pu = parseURL2(url, NULL);
     new->url = parsedURL2Str(&pu)->ptr;
-  } else
+  } else {
     new->url = url;
+  }
+
   new->re_url = re_url;
   new->name = (name && *name) ? name : NULL;
   new->action = (action && *action) ? action : NULL;

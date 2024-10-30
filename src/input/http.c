@@ -317,8 +317,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
                                      Str uname, Str pwd) {
   auto sc_redirect = query_SCONF_SUBSTITUTE_URL(&req->url);
   if (sc_redirect && *sc_redirect && checkRedirection(&req->url)) {
-    struct Url url;
-    parseURL2(sc_redirect, &url, &req->url);
+    struct Url url = parseURL2(sc_redirect, &req->url);
     add_auth_cookie_flag = 0;
     req = newHttpRequest(url, nullptr, req->referer, req->no_cache,
                          req->extra_header);
@@ -331,8 +330,7 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
     if (req->url.scheme == SCM_MISSING || req->url.scheme == SCM_UNKNOWN) {
       // retry it as "http://"
       auto u = Strnew_m_charp("http://", req->url.file, NULL)->ptr;
-      struct Url url;
-      parseURL2(u, &url, req->current);
+      struct Url url = parseURL2(u, req->current);
       req = newHttpRequest(url, req->form, req->referer, req->no_cache,
                            req->extra_header);
       http_response = openHttpStream(req, of);
@@ -368,10 +366,9 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
       /* 303: See Other */
       /* 307: Temporary Redirect (HTTP/1.1) */
       auto tpath = url_quote(p);
-      struct Url url;
       // current = New(struct Url);
       // copyParsedURL(current, &pu);
-      parseURL2(tpath, &url, &req->url);
+      struct Url url = parseURL2(tpath, &req->url);
       // form = NULL;
       req = newHttpRequest(url, nullptr, req->referer, req->no_cache,
                            req->extra_header);

@@ -26,11 +26,11 @@ bool NOproxy_netaddr = true;
 
 void parse_proxy() {
   if (non_null(HTTP_proxy))
-    parseURL(HTTP_proxy, &HTTP_proxy_parsed, NULL);
+    HTTP_proxy_parsed = parseURL(HTTP_proxy, NULL);
   if (non_null(HTTPS_proxy))
-    parseURL(HTTPS_proxy, &HTTPS_proxy_parsed, NULL);
+    HTTPS_proxy_parsed = parseURL(HTTPS_proxy, NULL);
   if (non_null(FTP_proxy))
-    parseURL(FTP_proxy, &FTP_proxy_parsed, NULL);
+    FTP_proxy_parsed = parseURL(FTP_proxy, NULL);
   if (non_null(NO_proxy))
     set_no_proxy(NO_proxy);
 }

@@ -1061,32 +1061,27 @@ static struct Buffer *loadNormalBuf(struct Buffer *buf) {
 
 static struct Buffer *loadLink(const char *url, const char *target,
                                const char *referer, struct FormList *form) {
-  struct Buffer *buf, *nfbuf;
-  union frameset_element *f_element = NULL;
-  int flag = 0;
-  struct Url *base, pu;
-  const int *no_referer_ptr;
-
   scr_message(Sprintf("loading %s", url)->ptr, 0, 0);
   term_refresh();
 
-  no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
-  base = baseURL(Currentbuf);
+  auto no_referer_ptr = query_SCONF_NO_REFERER_FROM(&Currentbuf->document->url);
+  auto base = baseURL(Currentbuf);
   if ((no_referer_ptr && *no_referer_ptr) || base == NULL ||
       base->scheme == SCM_LOCAL || base->scheme == SCM_LOCAL_CGI ||
       base->scheme == SCM_DATA)
     referer = NO_REFERER;
   if (referer == NULL)
     referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
-  buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf), referer,
-                        flag, form);
+  int flag = 0;
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf),
+                             referer, flag, form);
   if (buf == NULL) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     message_push(emsg);
     return NULL;
   }
 
-  parseURL2(url, &pu, base);
+  auto pu = parseURL2(url, base);
   pushHashHist(URLHist, parsedURL2Str(&pu)->ptr);
 
   if (buf == NO_BUFFER) {
@@ -1165,8 +1160,6 @@ static int handleMailto(const char *url) {
 
 /* follow HREF link */
 DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
-  struct Url u;
-
   if (Currentbuf->document->firstLine == NULL)
     return;
 
@@ -1175,16 +1168,19 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
     _followForm(false);
     return;
   }
+
   a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL) {
     _followForm(false);
     return;
   }
+
   if (*a->url == '#') { /* index within this buffer */
     gotoLabel(a->url + 1);
     return;
   }
-  parseURL2(a->url, &u, baseURL(Currentbuf));
+
+  auto u = parseURL2(a->url, baseURL(Currentbuf));
   if (Strcmp(parsedURL2Str(&u), parsedURL2Str(&Currentbuf->document->url)) ==
       0) {
     /* index within this buffer */
@@ -1686,29 +1682,26 @@ DEFUN(prevVA, PREV_VISITED, "Move to the previous visited hyperlink") {
 /* go to the next [visited] anchor */
 static void _nextA(int visited) {
   struct HmarkerList *hl = Currentbuf->document->hmarklist;
-  struct BufferPoint *po;
-  struct Anchor *an, *pan;
-  int i, x, y, n = searchKeyNum();
-  struct Url url;
 
   if (Currentbuf->document->firstLine == NULL)
     return;
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf->document);
+  auto an = retrieveCurrentAnchor(Currentbuf->document);
   if (visited != true && an == NULL)
     an = retrieveCurrentForm(Currentbuf->document);
 
-  y = Currentbuf->document->currentLine->linenumber;
-  x = Currentbuf->document->viewport.pos;
+  auto y = Currentbuf->document->currentLine->linenumber;
+  auto x = Currentbuf->document->viewport.pos;
 
+  int n = searchKeyNum();
   if (visited == true) {
     n = hl->nmark;
   }
 
-  for (i = 0; i < n; i++) {
-    pan = an;
+  for (auto i = 0; i < n; i++) {
+    auto pan = an;
     if (an && an->hseq >= 0) {
       int hseq = an->hseq + 1;
       do {
@@ -1718,14 +1711,14 @@ static void _nextA(int visited) {
           an = pan;
           goto _end;
         }
-        po = &hl->marks[hseq];
+        auto po = &hl->marks[hseq];
         an = retrieveAnchor(Currentbuf->document->href, po->line, po->pos);
         if (visited != true && an == NULL)
           an =
               retrieveAnchor(Currentbuf->document->formitem, po->line, po->pos);
         hseq++;
         if (visited == true && an) {
-          parseURL2(an->url, &url, baseURL(Currentbuf));
+          auto url = parseURL2(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -1744,7 +1737,7 @@ static void _nextA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true) {
-        parseURL2(an->url, &url, baseURL(Currentbuf));
+        auto url = parseURL2(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -1757,7 +1750,7 @@ static void _nextA(int visited) {
 _end:
   if (an == NULL || an->hseq < 0)
     return;
-  po = &hl->marks[an->hseq];
+  auto po = &hl->marks[an->hseq];
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
@@ -1767,29 +1760,26 @@ _end:
 /* go to the previous anchor */
 static void _prevA(int visited) {
   struct HmarkerList *hl = Currentbuf->document->hmarklist;
-  struct BufferPoint *po;
-  struct Anchor *an, *pan;
-  int i, x, y, n = searchKeyNum();
-  struct Url url;
 
   if (Currentbuf->document->firstLine == NULL)
     return;
   if (!hl || hl->nmark == 0)
     return;
 
-  an = retrieveCurrentAnchor(Currentbuf->document);
+  auto an = retrieveCurrentAnchor(Currentbuf->document);
   if (visited != true && an == NULL)
     an = retrieveCurrentForm(Currentbuf->document);
 
-  y = Currentbuf->document->currentLine->linenumber;
-  x = Currentbuf->document->viewport.pos;
+  auto y = Currentbuf->document->currentLine->linenumber;
+  auto x = Currentbuf->document->viewport.pos;
 
+  int n = searchKeyNum();
   if (visited == true) {
     n = hl->nmark;
   }
 
-  for (i = 0; i < n; i++) {
-    pan = an;
+  for (int i = 0; i < n; i++) {
+    auto pan = an;
     if (an && an->hseq >= 0) {
       int hseq = an->hseq - 1;
       do {
@@ -1799,14 +1789,14 @@ static void _prevA(int visited) {
           an = pan;
           goto _end;
         }
-        po = hl->marks + hseq;
+        auto po = hl->marks + hseq;
         an = retrieveAnchor(Currentbuf->document->href, po->line, po->pos);
         if (visited != true && an == NULL)
           an =
               retrieveAnchor(Currentbuf->document->formitem, po->line, po->pos);
         hseq--;
         if (visited == true && an) {
-          parseURL2(an->url, &url, baseURL(Currentbuf));
+          auto url = parseURL2(an->url, baseURL(Currentbuf));
           if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
             goto _end;
           }
@@ -1825,7 +1815,7 @@ static void _prevA(int visited) {
       x = an->start.pos;
       y = an->start.line;
       if (visited == true && an) {
-        parseURL2(an->url, &url, baseURL(Currentbuf));
+        auto url = parseURL2(an->url, baseURL(Currentbuf));
         if (getHashHist(URLHist, parsedURL2Str(&url)->ptr)) {
           goto _end;
         }
@@ -1838,7 +1828,7 @@ static void _prevA(int visited) {
 _end:
   if (an == NULL || an->hseq < 0)
     return;
-  po = hl->marks + an->hseq;
+  auto po = hl->marks + an->hseq;
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
@@ -2049,15 +2039,13 @@ static void cmd_loadURL(const char *url, struct Url *current,
 /* go to specified URL */
 static void goURL0(char *prompt, int relative) {
   const char *url, *referer;
-  struct Url p_url, *current;
+  struct Url *current;
   struct Buffer *cur_buf = Currentbuf;
   const int *no_referer_ptr;
 
   url = searchKeyData();
   if (url == NULL) {
     struct Hist *hist = copyHist(URLHist);
-    struct Anchor *a;
-
     current = baseURL(Currentbuf);
     if (current) {
       char *c_url = parsedURL2Str(current)->ptr;
@@ -2066,11 +2054,10 @@ static void goURL0(char *prompt, int relative) {
       else
         pushHist(hist, c_url);
     }
-    a = retrieveCurrentAnchor(Currentbuf->document);
+    auto a = retrieveCurrentAnchor(Currentbuf->document);
     if (a) {
-      char *a_url;
-      parseURL2(a->url, &p_url, current);
-      a_url = parsedURL2Str(&p_url)->ptr;
+      auto tmp = parseURL2(a->url, current);
+      auto a_url = parsedURL2Str(&tmp)->ptr;
       if (DefaultURLString == DEFAULT_URL_LINK)
         url = url_decode0(a_url);
       else
@@ -2103,7 +2090,7 @@ static void goURL0(char *prompt, int relative) {
     gotoLabel(url + 1);
     return;
   }
-  parseURL2(url, &p_url, current);
+  auto p_url = parseURL2(url, current);
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
   cmd_loadURL(url, current, referer, NULL);
   if (Currentbuf != cur_buf) /* success */
@@ -2118,11 +2105,10 @@ DEFUN(goHome, GOTO_HOME, "Open home page in a new buffer") {
   const char *url;
   if ((url = getenv("HTTP_HOME")) != NULL ||
       (url = getenv("WWW_HOME")) != NULL) {
-    struct Url p_url;
     struct Buffer *cur_buf = Currentbuf;
     SKIP_BLANKS(url);
     url = url_quote(url);
-    parseURL2(url, &p_url, NULL);
+    auto p_url = parseURL2(url, NULL);
     pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
     cmd_loadURL(url, NULL, NULL, NULL);
     if (Currentbuf != cur_buf) /* success */
@@ -2235,17 +2221,12 @@ void follow_map(struct LocalCgiHtml *arg) {
   auto name = tag_get_value(arg, "link");
 
 #if defined(MENU_MAP) || defined(USE_IMAGE)
-  struct Anchor *an;
-  struct MapArea *a;
-  int x, y;
-  struct Url p_url;
-
-  an = retrieveCurrentImg(Currentbuf->document);
-  x = Currentbuf->document->viewport.cursorX +
-      Currentbuf->document->viewport.rootX;
-  y = Currentbuf->document->viewport.cursorY +
-      Currentbuf->document->viewport.rootY;
-  a = follow_map_menu(Currentbuf->document, name, an, x, y);
+  auto an = retrieveCurrentImg(Currentbuf->document);
+  auto x = Currentbuf->document->viewport.cursorX +
+           Currentbuf->document->viewport.rootX;
+  auto y = Currentbuf->document->viewport.cursorY +
+           Currentbuf->document->viewport.rootY;
+  auto a = follow_map_menu(Currentbuf->document, name, an, x, y);
   if (a == NULL || a->url == NULL || *(a->url) == '\0') {
 #endif
     auto doc = follow_map_panel(Currentbuf, name);
@@ -2260,7 +2241,7 @@ void follow_map(struct LocalCgiHtml *arg) {
     gotoLabel(a->url + 1);
     return;
   }
-  parseURL2(a->url, &p_url, baseURL(Currentbuf));
+  auto p_url = parseURL2(a->url, baseURL(Currentbuf));
   pushHashHist(URLHist, parsedURL2Str(&p_url)->ptr);
   if (check_target && open_tab_blank && a->target &&
       (!strcasecmp(a->target, "_new") || !strcasecmp(a->target, "_blank"))) {
@@ -2384,11 +2365,8 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
 }
 
 static void _peekURL(int only_img) {
-
-  struct Anchor *a;
-  struct Url pu;
   static Str s = NULL;
-  static int offset = 0, n;
+  static int offset = 0;
 
   if (Currentbuf->document->firstLine == NULL)
     return;
@@ -2402,7 +2380,7 @@ static void _peekURL(int only_img) {
     offset = 0;
   }
   s = NULL;
-  a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf->document));
+  auto a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf->document));
   if (a == NULL) {
     a = (only_img ? NULL : retrieveCurrentForm(Currentbuf->document));
     if (a == NULL) {
@@ -2413,13 +2391,13 @@ static void _peekURL(int only_img) {
       s = Strnew_charp(form2str((struct FormItemList *)a->url));
   }
   if (s == NULL) {
-    parseURL2(a->url, &pu, baseURL(Currentbuf));
+    auto pu = parseURL2(a->url, baseURL(Currentbuf));
     s = parsedURL2Str(&pu);
   }
   if (DecodeURL)
     s = Strnew_charp(url_decode0(s->ptr));
 disp:
-  n = searchKeyNum();
+  int n = searchKeyNum();
   if (n > 1 && s->length > (n - 1) * (COLS - 1))
     offset = (n - 1) * (COLS - 1);
   message_push(&s->ptr[offset]);
@@ -2711,15 +2689,12 @@ DEFUN(extbrz, EXTERN, "Display using an external browser") {
 }
 
 DEFUN(linkbrz, EXTERN_LINK, "Display target using an external browser") {
-  struct Anchor *a;
-  struct Url pu;
-
   if (Currentbuf->document->firstLine == NULL)
     return;
-  a = retrieveCurrentAnchor(Currentbuf->document);
+  auto a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL)
     return;
-  parseURL2(a->url, &pu, baseURL(Currentbuf));
+  auto pu = parseURL2(a->url, baseURL(Currentbuf));
   invoke_browser(parsedURL2Str(&pu)->ptr);
 }
 
@@ -2857,19 +2832,17 @@ void set_buffer_environ(struct Buffer *buf) {
   auto l = buf->document->currentLine;
   if (l && (buf != prev_buf || l != prev_line ||
             buf->document->viewport.pos != prev_pos)) {
-    struct Anchor *a;
-    struct Url pu;
     char *s = GetWord(buf);
     set_environ("W3M_CURRENT_WORD", s ? s : "");
-    a = retrieveCurrentAnchor(buf->document);
+    auto a = retrieveCurrentAnchor(buf->document);
     if (a) {
-      parseURL2(a->url, &pu, baseURL(buf));
+      auto pu = parseURL2(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_LINK", "");
     a = retrieveCurrentImg(buf->document);
     if (a) {
-      parseURL2(a->url, &pu, baseURL(buf));
+      auto pu = parseURL2(a->url, baseURL(buf));
       set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
     } else
       set_environ("W3M_CURRENT_IMG", "");

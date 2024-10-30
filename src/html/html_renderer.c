@@ -374,10 +374,7 @@ void _proc_tag(struct LineProcStatus *st, struct Url currentURL,
     const char *p;
     if (parsedtag_get_value(tag, ATTR_HREF, &p)) {
       p = url_quote(remove_space(p));
-      if (!st->doc->baseURL)
-        st->doc->baseURL = New(struct Url);
-      parseURL2(p, st->doc->baseURL, &currentURL);
-      // base = baseURL;
+      // st->doc->baseURL = parseURL2(p, &currentURL);
     }
     if (parsedtag_get_value(tag, ATTR_TARGET, &p))
       st->doc->baseTarget = url_quote(p);

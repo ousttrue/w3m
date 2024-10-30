@@ -62,22 +62,17 @@ const char *map1 = "<HTML><HEAD><TITLE>Image map links</TITLE></HEAD>\
 <table>";
 
 struct Document *follow_map_panel(struct Buffer *buf, const char *name) {
-  Str mappage;
-  struct ListItem *al;
-  struct MapArea *a;
-  struct Url pu;
-  struct Buffer *newbuf;
-
   auto ml = searchMapList(buf->document, name);
   if (ml == NULL)
     return NULL;
 
-  mappage = Strnew_charp(map1);
-  for (al = ml->area->first; al != NULL; al = al->next) {
-    a = (struct MapArea *)al->ptr;
+  auto mappage = Strnew_charp(map1);
+  for (auto al = ml->area->first; al != NULL; al = al->next) {
+    auto a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
-    parseURL2(a->url, &pu, baseURL(buf));
+
+    auto pu = parseURL2(a->url, baseURL(buf));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -118,8 +113,7 @@ static void append_map_info(struct Buffer *buf, Str tmp,
     auto a = (struct MapArea *)al->ptr;
     if (!a)
       continue;
-    struct Url pu;
-    parseURL2(a->url, &pu, baseURL(buf));
+    struct Url pu = parseURL2(a->url, baseURL(buf));
     const char *q = html_quote(parsedURL2Str(&pu)->ptr);
     const char *p = html_quote(url_decode0(a->url));
     Strcat_m_charp(tmp, "<tr valign=top><td>&nbsp;&nbsp;<td><a href=\"", q,
@@ -139,11 +133,11 @@ static void append_link_info(struct Buffer *buf, Str html,
   for (auto l = link; l; l = l->next) {
     const char *url;
     if (l->url) {
-      struct Url pu;
-      parseURL2(l->url, &pu, baseURL(buf));
+      struct Url pu = parseURL2(l->url, baseURL(buf));
       url = html_quote(parsedURL2Str(&pu)->ptr);
-    } else
+    } else {
       url = "(empty)";
+    }
     Strcat_m_charp(html, "<tr valign=top><td><a href=\"", url, "\">",
                    l->title ? html_quote(l->title) : "(empty)", "</a><td>",
                    NULL);
@@ -168,12 +162,6 @@ static void append_link_info(struct Buffer *buf, Str html,
  */
 struct Document *page_info_panel(struct Buffer *buf) {
   Str tmp = Strnew_size(1024);
-  struct Anchor *a;
-  struct Url pu;
-  struct TextListItem *ti;
-  int all;
-  struct Buffer *newbuf;
-
   Strcat_charp(tmp, "<html><head>\
 <title>Information about current page</title>\
 </head><body>\
@@ -182,7 +170,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
     goto end;
 
   {
-    all = buf->document->allLine;
+    auto all = buf->document->allLine;
     if (all == 0 && buf->document->lastLine)
       all = buf->document->lastLine->linenumber;
     const char *p = url_decode0(parsedURL2Str(&buf->document->url)->ptr);
@@ -196,9 +184,9 @@ struct Document *page_info_panel(struct Buffer *buf) {
         html_quote(last_modified(buf)), NULL);
   }
 
-  a = retrieveCurrentAnchor(buf->document);
+  auto a = retrieveCurrentAnchor(buf->document);
   if (a != NULL) {
-    parseURL2(a->url, &pu, baseURL(buf));
+    auto pu = parseURL2(a->url, baseURL(buf));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -211,7 +199,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
   }
   a = retrieveCurrentImg(buf->document);
   if (a != NULL) {
-    parseURL2(a->url, &pu, baseURL(buf));
+    auto pu = parseURL2(a->url, baseURL(buf));
     const char *p = parsedURL2Str(&pu)->ptr;
     const char *q = html_quote(p);
     if (DecodeURL)
@@ -240,7 +228,7 @@ struct Document *page_info_panel(struct Buffer *buf) {
 
   if (buf->http_response->document_header != NULL) {
     Strcat_charp(tmp, "<hr width=50%><h1>Header information</h1><pre>\n");
-    for (ti = buf->http_response->document_header->first; ti != NULL;
+    for (auto ti = buf->http_response->document_header->first; ti != NULL;
          ti = ti->next)
       Strcat_m_charp(tmp, "<pre_int>", html_quote(ti->ptr), "</pre_int>\n",
                      NULL);

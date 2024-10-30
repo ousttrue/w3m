@@ -10,8 +10,8 @@
             "request": "launch",
             "program": "${workspaceFolder}/zig-out/bin/w3m.exe",
             "args": [
-                "http://www.google.com",
-                // "https://wiki.archlinux.jp/index.php/W3m",
+                // "http://www.google.com",
+                "https://wiki.archlinux.jp/index.php/W3m",
                 // "https://hymd3a.hatenablog.com/entry/2021/05/09/210025",
             ],
             "stopAtEntry": false,

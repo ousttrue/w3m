@@ -40,7 +40,8 @@ struct Document {
   const char *savecache;
   const char *title;
   const char *baseTarget;
-  struct Url *baseURL;
+  // <base>
+  // struct Url baseURL;
   short width;
   short height;
   struct Line *firstLine;

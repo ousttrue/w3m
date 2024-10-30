@@ -515,10 +515,11 @@ struct Url *baseURL(struct Buffer *buf) {
     return NULL;
   }
 
-  if (buf->document->baseURL != NULL) {
-    /* <BASE> tag is defined in the document */
-    return buf->document->baseURL;
-  } else if (IS_EMPTY_PARSED_URL(&buf->document->url))
+  // if (buf->document->baseURL != NULL) {
+  //   /* <BASE> tag is defined in the document */
+  //   return buf->document->baseURL;
+  // } else 
+  if (IS_EMPTY_PARSED_URL(&buf->document->url))
     return NULL;
   else
     return &buf->document->url;

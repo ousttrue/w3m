@@ -100,10 +100,9 @@ void loadSiteconf(void) {
       opt = getWord(&p);
       SKIP_BLANKS(p);
       if (!newent->re_url) {
-        struct Url pu;
         if (!url || !*url)
           continue;
-        parseURL2(url, &pu, NULL);
+        auto pu = parseURL2(url, NULL);
         newent->url = parsedURL2Str(&pu)->ptr;
       }
       /* If we have an extra or unknown option, ignore this record

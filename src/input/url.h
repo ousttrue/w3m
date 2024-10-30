@@ -39,11 +39,11 @@ struct Url {
 };
 #define IS_EMPTY_PARSED_URL(pu) ((pu)->scheme == SCM_UNKNOWN && !(pu)->file)
 
-const char *file_to_url(const char *file);
-void parseURL2(const char *url, struct Url *pu, struct Url *current);
+struct Url parseURL(const char *url, struct Url *base);
+struct Url parseURL2(const char *url, struct Url *base);
 
+const char *file_to_url(const char *file);
 const char *url_decode0(const char *url);
-void parseURL(const char *url, struct Url *p_url, struct Url *current);
 void copyParsedURL(struct Url *p, const struct Url *q);
 Str parsedURL2Str(struct Url *pu);
 Str parsedURL2RefererStr(struct Url *pu);

@@ -2,7 +2,6 @@
 #include "alloc.h"
 #include "buffer/message.h"
 #include "file/tmpfile.h"
-#include "term/terms.h"
 #include "term/termsize.h"
 #include <string.h>
 
@@ -16,7 +15,6 @@ struct Document *newDocument(int width) {
   doc->need_reshape = true; /* always reshape new buffers to mark URLs */
   doc->bufferprop = BP_NORMAL;
   doc->baseTarget = NULL;
-  doc->baseURL = NULL;
   doc->width = width;
   doc->height = 0;
   doc->savecache = nullptr;
