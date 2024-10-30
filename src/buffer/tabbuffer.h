@@ -34,3 +34,4 @@ struct Url;
 void cmd_loadURL(struct TabBuffer *tab, const char *url, struct Url *current,
                  const char *referer, struct FormList *form);
 bool handleMailto(const char *url);
+void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right) ;

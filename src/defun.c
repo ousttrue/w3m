@@ -65,7 +65,6 @@ void set_buffer_environ(struct Buffer *);
 struct TabBuffer;
 static void _followForm(int);
 static void followTab(struct TabBuffer *tab);
-static void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = true;
@@ -2998,41 +2997,6 @@ DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {
 DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab") {
   tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
           "Goto relative URL on new tab: ", true);
-}
-
-static void moveTab(struct TabBuffer *t, struct TabBuffer *t2, int right) {
-  if (t2 == NO_TABBUFFER)
-    t2 = FirstTab;
-  if (!t || !t2 || t == t2 || t == NO_TABBUFFER)
-    return;
-  if (t->prevTab) {
-    if (t->nextTab)
-      t->nextTab->prevTab = t->prevTab;
-    else
-      LastTab = t->prevTab;
-    t->prevTab->nextTab = t->nextTab;
-  } else {
-    t->nextTab->prevTab = NULL;
-    FirstTab = t->nextTab;
-  }
-  if (right) {
-    t->nextTab = t2->nextTab;
-    t->prevTab = t2;
-    if (t2->nextTab)
-      t2->nextTab->prevTab = t;
-    else
-      LastTab = t;
-    t2->nextTab = t;
-  } else {
-    t->prevTab = t2->prevTab;
-    t->nextTab = t2;
-    if (t2->prevTab)
-      t2->prevTab->nextTab = t;
-    else
-      FirstTab = t;
-    t2->prevTab = t;
-  }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar") {

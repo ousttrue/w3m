@@ -95,7 +95,7 @@ static Str make_lastline_message(struct Buffer *buf) {
   } else
     /* FIXME: gettextize? */
     Strcat_charp(msg, "Viewing");
-  if (ssl_certificate(buf->http_response->stream)) {
+  if (buf->http_response && ssl_certificate(buf->http_response->stream)) {
     Strcat_charp(msg, "[SSL]");
   }
   Strcat_charp(msg, " <");
@@ -286,7 +286,7 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
       buf->document->need_reshape) {
     buf->document->need_reshape = true;
     buf->document =
-        reshapeBuffer(buf->document, buf->http_response->content_charset);
+        reshapeBuffer(buf->document, buf->http_response ? buf->http_response->content_charset : CHARSET_UTF8);
   }
   if (showLineNum) {
     if (buf->document->lastLine && buf->document->lastLine->real_linenumber > 0)

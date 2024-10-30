@@ -297,15 +297,15 @@ Str HTTPrequestToStr(struct HttpRequest *hr) {
                      "Content-Type: application/x-www-form-urlencoded\r\n");
       }
       Strcat(tmp, Sprintf("Content-Length: %ld\r\n", hr->form->length));
-      if (header_string)
-        Strcat(tmp, header_string);
+      // if (header_string)
+      //   Strcat(tmp, header_string);
       Strcat_charp(tmp, "\r\n");
       Strcat_charp_n(tmp, hr->form->body, hr->form->length);
       Strcat_charp(tmp, "\r\n");
     }
   } else {
-    if (header_string)
-      Strcat(tmp, header_string);
+    // if (header_string)
+    //   Strcat(tmp, header_string);
     Strcat_charp(tmp, "\r\n");
   }
   return tmp;
@@ -343,10 +343,6 @@ struct HttpResponse *sendHttpRequest(struct HttpRequest *req,
   }
 
   // succeeded
-  if (header_string) {
-    header_string = NULL;
-  }
-
   if (req->url.scheme == SCM_HTTP || req->url.scheme == SCM_HTTPS ||
       (((req->url.scheme == SCM_FTP && non_null(FTP_proxy))) && use_proxy &&
        !check_no_proxy(req->url.host))) {

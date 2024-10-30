@@ -60,6 +60,7 @@ static struct Document *get_document(int cols,
     document = loadText(cols, content->ptr);
   }
 
+  document->type = t;
   return document;
 }
 
@@ -144,24 +145,6 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     Str content = StrISreadAll(res->stream);
     ISclose(res->stream);
 
-    auto b = newBuffer();
-    b->http_response = res;
-    auto url = res->request->url;
-    copyParsedURL(&b->document->url, &res->request->url);
-    b->document->filename = url.real_file ? url.real_file : url.file;
-    if (content) {
-      FILE *src = NULL;
-      if (url.scheme != SCM_LOCAL) {
-        auto tmp = tmpfname(TMPF_SRC, ".html");
-        src = fopen(tmp->ptr, "w");
-        if (src) {
-          b->document->sourcefile = tmp->ptr;
-          Strfputs(content, src);
-          fclose(src);
-        }
-      }
-    }
-
     // if (b != NULL) {
     //   if (b->buffername == NULL || b->buffername[0] == '\0') {
     //     b->buffername = httpGetHeader(b->http_response, "Subject:");
@@ -205,22 +188,38 @@ struct Buffer *loadGeneralFile(int cols, const char *path, struct Url *current,
     //     }
     //   }
     // }
-    if (header_string)
-      header_string = NULL;
-    if (b && b != NO_BUFFER)
-      preFormUpdateBuffer(b);
+    // if (b && b != NO_BUFFER)
+    //   preFormUpdateBuffer(b);
 
-    b->document->type = httpGetContentType(res);
-    if (!b->document->type && res->request->url.file) {
+    auto type = httpGetContentType(res);
+    if (!type && res->request->url.file) {
       if (!((res->http_status_code >= 400 && res->http_status_code <= 407) ||
             (res->http_status_code >= 500 && res->http_status_code <= 505)))
-        b->document->type = guessContentType(res->request->url.file);
+        type = guessContentType(res->request->url.file);
     }
-    if (!b->document->type) {
-      b->document->type = "text/plain";
+    if (!type) {
+      type = "text/plain";
     }
 
-    b->document = get_document(cols, res, current, content, b->document->type);
+    auto b = newBuffer();
+    b->http_response = res;
+    if (content) {
+      FILE *src = NULL;
+      if (url.scheme != SCM_LOCAL) {
+        auto tmp = tmpfname(TMPF_SRC, ".html");
+        src = fopen(tmp->ptr, "w");
+        if (src) {
+          b->document->sourcefile = tmp->ptr;
+          Strfputs(content, src);
+          fclose(src);
+        }
+      }
+      b->document = get_document(cols, res, current, content, type);
+    }
+    auto url = res->request->url;
+    copyParsedURL(&b->document->url, &res->request->url);
+    b->document->filename = url.real_file ? url.real_file : url.file;
+
     return b;
   }
   }

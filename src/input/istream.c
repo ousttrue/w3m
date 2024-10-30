@@ -488,8 +488,6 @@ union input_stream *openIS(const char *path) {
   return newInputStream(open(path, O_RDONLY));
 }
 
-Str header_string = NULL;
-
 struct TextList *NO_proxy_domains = nullptr;
 void url_stream_init() { NO_proxy_domains = newTextList(); }
 
@@ -518,7 +516,7 @@ struct Url *baseURL(struct Buffer *buf) {
   // if (buf->document->baseURL != NULL) {
   //   /* <BASE> tag is defined in the document */
   //   return buf->document->baseURL;
-  // } else 
+  // } else
   if (IS_EMPTY_PARSED_URL(&buf->document->url))
     return NULL;
   else

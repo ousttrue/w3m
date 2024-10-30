@@ -3,8 +3,6 @@
 #include <openssl/types.h>
 #include <stdint.h>
 
-extern Str header_string;
-
 enum IST_TYPE {
   IST_BASIC = 0,
   IST_FILE = 1,
