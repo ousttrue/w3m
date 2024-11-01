@@ -256,7 +256,6 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
         COPY_BUFPOSITION(&sbuf, Currentbuf->document);
       }
       arrangeCursor(doc);
-      displayInvalidate();
       clear_mark(doc->currentLine);
       return -1;
     } else
@@ -296,7 +295,6 @@ void srch(struct Document *doc, SearchRoutine func, const char *prompt) {
     if (str != NULL && *str == '\0')
       str = SearchString;
     if (str == NULL) {
-      displayInvalidate();
       return;
     }
     disp = true;
@@ -309,7 +307,6 @@ void srch(struct Document *doc, SearchRoutine func, const char *prompt) {
     clear_mark(doc->currentLine);
   else
     doc->viewport.pos = pos;
-  displayInvalidate();
   if (disp)
     disp_srchresult(result, prompt, str);
   searchRoutine = func;

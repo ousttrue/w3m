@@ -15,4 +15,3 @@ enum DisplayMode {
 
 struct Buffer;
 void displayBuffer(struct Buffer *buf, enum DisplayMode mode);
-void displayInvalidate();

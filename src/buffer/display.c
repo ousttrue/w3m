@@ -357,4 +357,3 @@ void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
   }
 }
 
-void displayInvalidate() { displayBuffer(Currentbuf, B_NORMAL); }
