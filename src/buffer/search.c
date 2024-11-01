@@ -268,7 +268,6 @@ static int dispincsrch(struct Document *doc, int ch, Str buf, Lineprop *prop) {
     currentLine = doc->currentLine;
     pos = doc->viewport.pos;
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
   clear_mark(doc->currentLine);
   return -1;
 }
@@ -283,7 +282,6 @@ void isrch(struct Document *doc, SearchRoutine func, const char *prompt) {
   if (!str) {
     COPY_BUFPOSITION(Currentbuf->document, &sbuf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 void srch(struct Document *doc, SearchRoutine func, const char *prompt) {
@@ -334,6 +332,5 @@ void srch_nxtprv(struct Document *doc, bool reverse) {
       doc->viewport.pos -= 1;
     }
   }
-  displayBuffer(Currentbuf, B_NORMAL);
   disp_srchresult(result, (reverse ? "Backward: " : "Forward: "), SearchString);
 }

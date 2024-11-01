@@ -20,7 +20,6 @@ bool displayLineInfo = false;
 
 static struct Line *cline = nullptr;
 static int ccolumn = -1;
-static struct Buffer *save_current_buf = nullptr;
 
 static Str make_lastline_link(struct Url *base, const char *title,
                               const char *url) {
@@ -61,22 +60,22 @@ static Str make_lastline_link(struct Url *base, const char *title,
   return s;
 }
 
-static Str make_lastline_message(struct Buffer *buf) {
+static Str make_lastline_message(struct Document *doc) {
   Str s = NULL;
   int sl = 0;
   if (displayLink) {
     {
-      struct Anchor *a = retrieveCurrentAnchor(buf->document);
+      struct Anchor *a = retrieveCurrentAnchor(doc);
       const char *p = NULL;
       if (a && a->title && *a->title)
         p = a->title;
       else {
-        struct Anchor *a_img = retrieveCurrentImg(buf->document);
+        struct Anchor *a_img = retrieveCurrentImg(doc);
         if (a_img && a_img->title && *a_img->title)
           p = a_img->title;
       }
       if (p || a)
-        s = make_lastline_link(baseURL(buf->document), p, a ? a->url : NULL);
+        s = make_lastline_link(baseURL(doc), p, a ? a->url : NULL);
     }
     if (s) {
       sl = utf8str_width((const uint8_t *)s->ptr);
@@ -86,20 +85,20 @@ static Str make_lastline_message(struct Buffer *buf) {
   }
 
   auto msg = Strnew();
-  if (displayLineInfo && buf->document->currentLine != NULL &&
-      buf->document->lastLine != NULL) {
-    int cl = buf->document->currentLine->real_linenumber;
-    int ll = buf->document->lastLine->real_linenumber;
+  if (displayLineInfo && doc->currentLine != NULL &&
+      doc->lastLine != NULL) {
+    int cl = doc->currentLine->real_linenumber;
+    int ll = doc->lastLine->real_linenumber;
     int r = (int)((double)cl * 100.0 / (double)(ll ? ll : 1) + 0.5);
     Strcat(msg, Sprintf("%d/%d (%d%%)", cl, ll, r));
   } else
     /* FIXME: gettextize? */
     Strcat_charp(msg, "Viewing");
-  if (buf->http_response && ssl_certificate(buf->http_response->stream)) {
-    Strcat_charp(msg, "[SSL]");
-  }
+  // if (buf->http_response && ssl_certificate(buf->http_response->stream)) {
+  //   Strcat_charp(msg, "[SSL]");
+  // }
   Strcat_charp(msg, " <");
-  Strcat_charp(msg, buf->buffername);
+  // Strcat_charp(msg, buf->buffername);
 
   if (s) {
     int l = COLS - 3 - sl;
@@ -268,92 +267,74 @@ static void render_document(struct Document *doc) {
 // document
 // status(standout)
 // msg
-void displayBuffer(struct Buffer *buf, enum DisplayMode mode) {
-  if (!buf)
+void display(struct Document *doc) {
+  if (!doc)
     return;
 
-  if (buf->document->topLine == NULL &&
-      readBufferCache(buf->document) == 0) { /* clear_buffer */
-    mode = B_FORCE_REDRAW;
+  if (doc->topLine == NULL && readBufferCache(doc) == 0) { /* clear_buffer */
   }
 
-  if (buf->document->width == 0)
-    buf->document->width = INIT_BUFFER_WIDTH;
-  if (buf->document->height == 0)
-    buf->document->height = LASTLINE + 1;
-  if ((buf->document->width != INIT_BUFFER_WIDTH &&
-       (is_html_type(buf->document->type) || FoldLine)) ||
-      buf->document->need_reshape) {
-    buf->document->need_reshape = true;
-    buf->document =
-        reshapeBuffer(buf->document, buf->http_response ? buf->http_response->content_charset : CHARSET_UTF8);
-  }
+  if (doc->width == 0)
+    doc->width = INIT_BUFFER_WIDTH;
+  if (doc->height == 0)
+    doc->height = LASTLINE + 1;
+  // if ((buf->document->width != INIT_BUFFER_WIDTH &&
+  //      (is_html_type(buf->document->type) || FoldLine)) ||
+  //     buf->document->need_reshape) {
+  //   buf->document->need_reshape = true;
+  //   buf->document =
+  //       reshapeBuffer(buf->document, buf->http_response ?
+  //       buf->http_response->content_charset : CHARSET_UTF8);
+  // }
   if (showLineNum) {
-    if (buf->document->lastLine && buf->document->lastLine->real_linenumber > 0)
-      buf->document->viewport.rootX =
-          (int)(log(buf->document->lastLine->real_linenumber + 0.1) / log(10)) +
-          2;
-    if (buf->document->viewport.rootX < 5)
-      buf->document->viewport.rootX = 5;
-    if (buf->document->viewport.rootX > COLS)
-      buf->document->viewport.rootX = COLS;
+    if (doc->lastLine && doc->lastLine->real_linenumber > 0)
+      doc->viewport.rootX =
+          (int)(log(doc->lastLine->real_linenumber + 0.1) / log(10)) + 2;
+    if (doc->viewport.rootX < 5)
+      doc->viewport.rootX = 5;
+    if (doc->viewport.rootX > COLS)
+      doc->viewport.rootX = COLS;
   } else
-    buf->document->viewport.rootX = 0;
-  buf->document->viewport.COLS = COLS - buf->document->viewport.rootX;
+    doc->viewport.rootX = 0;
+  doc->viewport.COLS = COLS - doc->viewport.rootX;
 
   int ny = 0;
   if (nTab > 1) {
-    if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
+    // if (mode == B_FORCE_REDRAW || mode == B_REDRAW_IMAGE)
       calcTabPos();
     ny = LastTab->y + 2;
     if (ny > LASTLINE)
       ny = LASTLINE;
   }
-  if (buf->document->viewport.rootY != ny ||
-      buf->document->viewport.LINES != LASTLINE - ny) {
-    buf->document->viewport.rootY = ny;
-    buf->document->viewport.LINES = LASTLINE - ny;
-    arrangeCursor(buf->document);
-    mode = B_REDRAW_IMAGE;
+  if (doc->viewport.rootY != ny || doc->viewport.LINES != LASTLINE - ny) {
+    doc->viewport.rootY = ny;
+    doc->viewport.LINES = LASTLINE - ny;
+    arrangeCursor(doc);
+    // mode = B_REDRAW_IMAGE;
   }
-  if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
-      cline != buf->document->topLine ||
-      ccolumn != buf->document->viewport.currentColumn) {
+  // if (mode == B_FORCE_REDRAW || mode == B_SCROLL || mode == B_REDRAW_IMAGE ||
+  //     cline != doc->topLine || ccolumn != doc->viewport.currentColumn) 
+  {
     {
-      render_document(buf->document);
+      render_document(doc);
     }
-    cline = buf->document->topLine;
-    ccolumn = buf->document->viewport.currentColumn;
+    cline = doc->topLine;
+    ccolumn = doc->viewport.currentColumn;
   }
-  if (buf->document->topLine == NULL) {
-    buf->document->topLine = buf->document->firstLine;
+  if (doc->topLine == NULL) {
+    doc->topLine = doc->firstLine;
   }
 
-  drawAnchorCursor(buf->document);
+  drawAnchorCursor(doc);
 
   // message
-  auto msg = make_lastline_message(buf);
-  if (buf->document->firstLine == NULL) {
+  auto msg = make_lastline_message(doc);
+  if (doc->firstLine == NULL) {
     Strcat_charp(msg, "\tNo Line");
   }
   // term_show_delayed_message();
   scr_standout();
-  scr_message(msg->ptr,
-              buf->document->viewport.cursorX + buf->document->viewport.rootX,
-              buf->document->viewport.cursorY + buf->document->viewport.rootY);
+  scr_message(msg->ptr, doc->viewport.cursorX + doc->viewport.rootX,
+              doc->viewport.cursorY + doc->viewport.rootY);
   scr_standend();
-
-  term_title(buf->buffername);
-  term_refresh();
-
-  if (buf != save_current_buf) {
-    saveBufferInfo();
-    save_current_buf = buf;
-  }
-
-  if (mode == B_FORCE_REDRAW && (buf->document->check_url & CHK_URL)) {
-    chkURLBuffer(buf->document);
-    displayBuffer(buf, B_NORMAL);
-  }
 }
-

@@ -265,11 +265,6 @@ const char *inputLineHistSearch(struct Document *doc, const char *prompt,
       break;
   } while (i_cont);
 
-  if (CurrentTab) {
-    if (need_redraw)
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
-  }
-
   if (i_broken)
     return NULL;
 
@@ -558,8 +553,6 @@ static void next_dcompl(int next) {
   if (cm_mode == CPL_NEVER || cm_mode & CPL_OFF)
     return;
   cm_disp_clear = false;
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
   if (LASTLINE >= 3) {
     comment = true;
     nline = LASTLINE - 2;
@@ -809,7 +802,7 @@ static void _prev(int) {
     return;
 
   struct Hist *hist = CurrentHist;
-  char *p;
+  const char *p;
   if (strCurrentBuf) {
     p = prevHist(hist);
     if (p == NULL)
@@ -832,7 +825,7 @@ static void _next(int) {
     return;
 
   struct Hist *hist = CurrentHist;
-  char *p;
+  const char *p;
   if (strCurrentBuf == NULL)
     return;
   p = nextHist(hist);
@@ -849,14 +842,13 @@ static void _next(int) {
 }
 
 static int setStrType(Str str, Lineprop *prop) {
-  Lineprop ctype;
-  char *p = str->ptr, *ep = p + str->length;
+  const char *p = str->ptr;
+  const char *ep = p + str->length;
   int i, len = 1;
-
   for (i = 0; p < ep;) {
     if (i + len > STR_LEN)
       break;
-    ctype = get_mctype(p);
+    auto ctype = get_mctype((const uint8_t *)p);
     if (is_passwd) {
       if (ctype & PC_CTRL)
         ctype = PC_ASCII;
@@ -900,8 +892,6 @@ static void _editor(int) {
     Strcat_char(strBuf, *p);
   }
   CLen = CPos = setStrType(strBuf, strProp);
-  if (CurrentTab)
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 const char *inputLineHist(struct Document *doc, const char *p, const char *d,

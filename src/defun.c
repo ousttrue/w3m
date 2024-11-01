@@ -121,6 +121,8 @@ void mainloop() {
     prev_key = CurrentKey;
     CurrentKey = -1;
     CurrentKeyData = NULL;
+    display(Currentbuf->document);
+    term_refresh();
   }
 }
 
@@ -282,56 +284,57 @@ void document_scroll(struct Document *doc, int n) {
   }
 }
 
-static void nscroll(int n, enum DisplayMode mode) {
-  struct Buffer *buf = Currentbuf;
-  document_scroll(buf->document, n);
-  displayBuffer(buf, mode);
-}
-
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page") {
-  if (vi_prec_num)
-    nscroll(searchKeyNum() * (Currentbuf->document->viewport.LINES - 1),
-            B_NORMAL);
-  else
-    nscroll(prec_num
-                ? searchKeyNum()
-                : searchKeyNum() * (Currentbuf->document->viewport.LINES - 1),
-            prec_num ? B_SCROLL : B_NORMAL);
+  if (vi_prec_num) {
+    document_scroll(Currentbuf->document,
+                    searchKeyNum() *
+                        (Currentbuf->document->viewport.LINES - 1));
+  } else {
+    document_scroll(Currentbuf->document,
+                    prec_num ? searchKeyNum()
+                             : searchKeyNum() *
+                                   (Currentbuf->document->viewport.LINES - 1));
+  }
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page") {
-  if (vi_prec_num)
-    nscroll(-searchKeyNum() * (Currentbuf->document->viewport.LINES - 1),
-            B_NORMAL);
-  else
-    nscroll(-(prec_num ? searchKeyNum()
-                       : searchKeyNum() *
-                             (Currentbuf->document->viewport.LINES - 1)),
-            prec_num ? B_SCROLL : B_NORMAL);
+  if (vi_prec_num) {
+    document_scroll(Currentbuf->document,
+                    -searchKeyNum() *
+                        (Currentbuf->document->viewport.LINES - 1));
+  } else {
+    document_scroll(
+        Currentbuf->document,
+        -(prec_num
+              ? searchKeyNum()
+              : searchKeyNum() * (Currentbuf->document->viewport.LINES - 1)));
+  }
 }
 
 /* Move half page forward */
 DEFUN(hpgFore, NEXT_HALF_PAGE, "Scroll down half a page") {
-  nscroll(searchKeyNum() * (Currentbuf->document->viewport.LINES / 2 - 1),
-          B_NORMAL);
+  document_scroll(Currentbuf->document,
+                  searchKeyNum() *
+                      (Currentbuf->document->viewport.LINES / 2 - 1));
 }
 
 /* Move half page backward */
 DEFUN(hpgBack, PREV_HALF_PAGE, "Scroll up half a page") {
-  nscroll(-searchKeyNum() * (Currentbuf->document->viewport.LINES / 2 - 1),
-          B_NORMAL);
+  document_scroll(Currentbuf->document,
+                  -searchKeyNum() *
+                      (Currentbuf->document->viewport.LINES / 2 - 1));
 }
 
 /* 1 line up */
 DEFUN(lup1, UP, "Scroll the screen up one line") {
-  nscroll(searchKeyNum(), B_SCROLL);
+  document_scroll(Currentbuf->document, searchKeyNum());
 }
 
 /* 1 line down */
 DEFUN(ldown1, DOWN, "Scroll the screen down one line") {
-  nscroll(-searchKeyNum(), B_SCROLL);
+  document_scroll(Currentbuf->document, -searchKeyNum());
 }
 
 /* move cursor position to the center of screen */
@@ -346,7 +349,6 @@ DEFUN(ctrCsrV, CENTER_V, "Center on cursor line") {
         lineSkip(&Currentbuf->document->viewport, Currentbuf->document->topLine,
                  Currentbuf->document->lastLine, -offsety, false);
     arrangeLine(Currentbuf->document);
-    displayBuffer(Currentbuf, B_NORMAL);
   }
 }
 
@@ -359,7 +361,6 @@ DEFUN(ctrCsrH, CENTER_H, "Center on cursor column") {
   if (offsetx != 0) {
     columnSkip(Currentbuf->document, offsetx);
     arrangeCursor(Currentbuf->document);
-    displayBuffer(Currentbuf, B_NORMAL);
   }
 }
 
@@ -368,7 +369,6 @@ DEFUN(rdrwSc, REDRAW, "Draw the screen anew") {
   scr_clear();
   term_clear();
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Search regular expression forward */
@@ -427,7 +427,6 @@ DEFUN(shiftl, SHIFT_LEFT, "Shift screen left") {
              searchKeyNum() * (-Currentbuf->document->viewport.COLS + 1) + 1);
   shiftvisualpos(Currentbuf,
                  Currentbuf->document->viewport.currentColumn - column);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Shift screen right */
@@ -441,7 +440,6 @@ DEFUN(shiftr, SHIFT_RIGHT, "Shift screen right") {
              searchKeyNum() * (Currentbuf->document->viewport.COLS - 1) - 1);
   shiftvisualpos(Currentbuf,
                  Currentbuf->document->viewport.currentColumn - column);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(col1R, RIGHT, "Shift screen one column right") {
@@ -458,7 +456,6 @@ DEFUN(col1R, RIGHT, "Shift screen one column right") {
       break;
     shiftvisualpos(Currentbuf, 1);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(col1L, LEFT, "Shift screen one column left") {
@@ -474,7 +471,6 @@ DEFUN(col1L, LEFT, "Shift screen one column left") {
     columnSkip(Currentbuf->document, -1);
     shiftvisualpos(Currentbuf, -1);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(setEnv, SETENV, "Set environment variable") {
@@ -485,7 +481,6 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
       env = Sprintf("%s=", env)->ptr;
     env = inputStrHist(Currentbuf->document, "Set environ: ", env, TextHist);
     if (env == NULL || *env == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
       return;
     }
   }
@@ -495,7 +490,6 @@ DEFUN(setEnv, SETENV, "Set environment variable") {
     value++;
     set_environ(var, value);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Execute shell command and load entire output to buffer */
@@ -545,7 +539,6 @@ DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
     term_fmInit();
     tty_getch();
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 static void cmd_loadfile(int cols, const char *fn) {
@@ -557,7 +550,6 @@ static void cmd_loadfile(int cols, const char *fn) {
   } else if (buf != NO_BUFFER) {
     pushBuffer(CurrentTab, buf);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Load file */
@@ -568,7 +560,6 @@ DEFUN(ldfile, LOAD, "Open local file in a new buffer") {
                            LoadHist);
   }
   if (fn == NULL || *fn == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
   cmd_loadfile(INIT_BUFFER_WIDTH, fn);
@@ -592,7 +583,6 @@ static void _movL(int n) {
     return;
   for (int i = 0; i < m; i++)
     cursorLeft(Currentbuf->document, n);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(movL, MOVE_LEFT, "Cursor left") {
@@ -608,7 +598,6 @@ static void _movD(int n) {
     return;
   for (i = 0; i < m; i++)
     cursorDown(Currentbuf->document, n);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(movD, MOVE_DOWN, "Cursor down") {
@@ -624,7 +613,6 @@ static void _movU(int n) {
     return;
   for (i = 0; i < m; i++)
     cursorUp(Currentbuf->document, n);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(movU, MOVE_UP, "Cursor up") {
@@ -640,7 +628,6 @@ static void _movR(int n) {
     return;
   for (i = 0; i < m; i++)
     cursorRight(Currentbuf->document, n);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(movR, MOVE_RIGHT, "Cursor right") {
@@ -707,7 +694,6 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
   }
 end:
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 static int next_nonnull_line(struct Line *line) {
@@ -765,7 +751,6 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
   }
 end:
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 static void _quitfm(int confirm) {
@@ -777,7 +762,6 @@ static void _quitfm(int confirm) {
     ans = inputChar(Currentbuf->document, "Do you want to exit w3m? (y/n)");
 
   if (!(ans && TOLOWER(*ans) == 'y')) {
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
 
@@ -838,7 +822,6 @@ DEFUN(selBuf, SELECT, "Display buffer-stack panel") {
     if (clear_buffer)
       tmpClearBuffer(buf->document);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* Suspend (on BSD), or run interactive shell (on SysV) */
@@ -865,7 +848,6 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
   kill(0, SIGTSTP); /* stop whole job, not a single process */
 #endif /* SIGSTOP */
   term_fmInit();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
@@ -896,7 +878,6 @@ DEFUN(linbeg, LINE_BEGIN, "Go to the beginning of the line") {
     cursorUp0(Currentbuf->document, 1);
   Currentbuf->document->viewport.pos = 0;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* Go to the bottom of the line */
@@ -909,7 +890,6 @@ DEFUN(linend, LINE_END, "Go to the end of the line") {
   Currentbuf->document->viewport.pos =
       Currentbuf->document->currentLine->len - 1;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 static int cur_real_linenumber(struct Buffer *buf) {
@@ -951,7 +931,6 @@ DEFUN(editBf, EDIT, "Edit local source") {
   system(cmd);
   term_fmInit();
 
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
   reload();
 }
 
@@ -970,7 +949,6 @@ DEFUN(editScr, EDIT_SCREEN, "Edit rendered copy of document") {
              ->ptr);
   term_fmInit();
   unlink(tmpf);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 static struct Buffer *loadNormalBuf(struct Buffer *buf) {
@@ -992,8 +970,9 @@ static struct Buffer *loadLink(const char *url, const char *target,
   if (referer == NULL)
     referer = parsedURL2RefererStr(&Currentbuf->document->url)->ptr;
   int flag = 0;
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf->document),
-                             referer, flag, form);
+  auto buf =
+      loadGeneralFile(INIT_BUFFER_WIDTH, url, baseURL(Currentbuf->document),
+                      referer, flag, form);
   if (buf == NULL) {
     char *emsg = Sprintf("Can't load %s", url)->ptr;
     message_push(emsg);
@@ -1047,7 +1026,6 @@ static void gotoLabel(const char *label) {
                  false);
   Currentbuf->document->viewport.pos = al->start.pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
   return;
 }
 
@@ -1097,11 +1075,9 @@ DEFUN(followA, GOTO_LINK, "Follow current hyperlink in a new buffer") {
       delBuffer(buf);
     else
       deleteTab(CurrentTab);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
   loadLink(url, a->target, a->referer, NULL);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* follow HREF link in the buffer */
@@ -1121,15 +1097,14 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
     return;
   scr_message(Sprintf("loading %s", a->url)->ptr, 0, 0);
   term_refresh();
-  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, a->url, baseURL(Currentbuf->document),
-                             NULL, 0, NULL);
+  auto buf = loadGeneralFile(INIT_BUFFER_WIDTH, a->url,
+                             baseURL(Currentbuf->document), NULL, 0, NULL);
   if (!buf) {
     char *emsg = Sprintf("Can't load %s", a->url)->ptr;
     message_push(emsg);
   } else if (buf != NO_BUFFER) {
     pushBuffer(CurrentTab, buf);
   }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
@@ -1459,7 +1434,6 @@ static void _followForm(int submit) {
   default:
     break;
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* go to the top anchor */
@@ -1491,7 +1465,6 @@ DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the last anchor */
@@ -1525,7 +1498,6 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the nth anchor */
@@ -1553,7 +1525,6 @@ DEFUN(nthA, LINK_N, "Go to the nth link") {
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the next anchor */
@@ -1647,7 +1618,6 @@ _end:
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the previous anchor */
@@ -1725,7 +1695,6 @@ _end:
   gotoLine(Currentbuf->document, po->line);
   Currentbuf->document->viewport.pos = po->pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the next left/right anchor */
@@ -1779,7 +1748,6 @@ static void nextX(int d, int dy) {
   gotoLine(Currentbuf->document, y);
   Currentbuf->document->viewport.pos = pan->start.pos;
   arrangeCursor(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the next downward/upward anchor */
@@ -1823,7 +1791,6 @@ static void nextY(int d) {
     return;
   gotoLine(Currentbuf->document, pan->start.line);
   arrangeLine(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* go to the next left anchor */
@@ -1862,7 +1829,6 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer") {
     }
     Currentbuf = buf;
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* go to the previous bufferr */
@@ -1879,7 +1845,6 @@ DEFUN(prevBf, PREV, "Switch to the previous buffer") {
     }
     Currentbuf = buf;
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 static int checkBackBuffer(struct Buffer *buf) {
@@ -1895,15 +1860,12 @@ DEFUN(backBf, BACK,
   if (!checkBackBuffer(Currentbuf)) {
     if (close_tab_back && nTab >= 1) {
       deleteTab(CurrentTab);
-      displayBuffer(Currentbuf, B_FORCE_REDRAW);
     } else
       message_push("Can't go back...");
     return;
   }
 
   delBuffer(Currentbuf);
-
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(deletePrevBuf, DELETE_PREVBUF,
@@ -1960,7 +1922,6 @@ static void goURL0(char *prompt, int relative) {
     url = url_quote(url);
   }
   if (url == NULL || *url == '\0') {
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
   if (*url == '#') {
@@ -2030,7 +1991,6 @@ static void cmd_loadBuffer(struct Buffer *buf, int prop, int linkid) {
     }
     pushBuffer(CurrentTab, buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 static void cmd_loadDocument(struct Document *doc, int prop, int linkid) {
@@ -2063,13 +2023,11 @@ DEFUN(setOpt, SET_OPTION, "Set option") {
     }
     opt = inputStrHist(Currentbuf->document, "Set option: ", opt, TextHist);
     if (opt == NULL || *opt == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
       return;
     }
   }
   if (set_param_option(opt))
     sync_with_option();
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
 /* error message list */
@@ -2083,7 +2041,6 @@ DEFUN(pginfo, INFO, "Display information about the current document") {
   struct Buffer *buf = Currentbuf->linkBuffer[LB_N_INFO];
   if (buf) {
     Currentbuf = buf;
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
 
@@ -2133,7 +2090,6 @@ void follow_map(struct LocalCgiHtml *arg) {
       delBuffer(buf);
     else
       deleteTab(CurrentTab);
-    displayBuffer(Currentbuf, B_FORCE_REDRAW);
     return;
   }
   cmd_loadURL(CurrentTab, a->url, baseURL(Currentbuf->document),
@@ -2191,7 +2147,6 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
     qfile = inputLineHist(Currentbuf->document, "Save buffer to: ", NULL,
                           IN_COMMAND, SaveHist);
     if (qfile == NULL || *qfile == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
       return;
     }
   }
@@ -2205,7 +2160,6 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
     }
     file = expandPath(file);
     if (checkOverWrite(file) < 0) {
-      displayBuffer(Currentbuf, B_NORMAL);
       return;
     }
     f = fopen(file, "w");
@@ -2221,7 +2175,6 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
     pclose(f);
   else
     fclose(f);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* save source */
@@ -2239,7 +2192,6 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
                            Currentbuf->document->url.file);
   doFileCopy(Currentbuf->document->sourcefile, file);
   PermitSaveToPipe = false;
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 static void _peekURL(int only_img) {
@@ -2327,7 +2279,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   if ((buf = Currentbuf->linkBuffer[LB_SOURCE]) != NULL ||
       (buf = Currentbuf->linkBuffer[LB_N_SOURCE]) != NULL) {
     Currentbuf = buf;
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
   if (Currentbuf->document->sourcefile == NULL) {
@@ -2370,7 +2321,6 @@ DEFUN(vwSrc, SOURCE VIEW, "Toggle between HTML shown or processed") {
   buf->document =
       reshapeBuffer(buf->document, buf->http_response->content_charset);
   pushBuffer(CurrentTab, buf);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 /* reload */
@@ -2424,7 +2374,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     message_push("Can't reload...");
     return;
   } else if (buf == NO_BUFFER) {
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
   if (fbuf != NULL)
@@ -2443,7 +2392,6 @@ DEFUN(reload, RELOAD, "Load current document anew") {
     COPY_BUFROOT(Currentbuf->document, &sbuf);
     restorePosition(Currentbuf->document, &sbuf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* reshape */
@@ -2451,12 +2399,10 @@ DEFUN(reshape, RESHAPE, "Re-render document") {
   Currentbuf->document->need_reshape = true;
   Currentbuf->document = reshapeBuffer(
       Currentbuf->document, Currentbuf->http_response->content_charset);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
   chkURLBuffer(Currentbuf->document);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
@@ -2467,7 +2413,6 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
     return;
   reAnchorWord(Currentbuf->document, Currentbuf->document->currentLine, spos,
                epos);
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 /* spawn external browser */
@@ -2514,7 +2459,6 @@ static void invoke_browser(char *url) {
     }
   }
   if (browser == NULL || *browser == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
 
@@ -2528,7 +2472,6 @@ static void invoke_browser(char *url) {
   term_fmTerm();
   mySystem(cmd->ptr, bg);
   term_fmInit();
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(extbrz, EXTERN, "Display using an external browser") {
@@ -2634,12 +2577,10 @@ static char *GetWord(struct Buffer *buf) {
 
 static void execdict(const char *word) {
   if (!UseDictCommand || word == NULL || *word == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
   const char *w = word;
   if (*w == '\0') {
-    displayBuffer(Currentbuf, B_NORMAL);
     return;
   }
   auto dictcmd =
@@ -2656,7 +2597,6 @@ static void execdict(const char *word) {
       buf->document->type = "text/plain";
     pushBuffer(CurrentTab, buf);
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
@@ -2785,7 +2725,6 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
   if (data == NULL || *data == '\0') {
     data = inputStrHist(nullptr, "command [; ...]: ", "", TextHist);
     if (data == NULL) {
-      displayBuffer(Currentbuf, B_NORMAL);
       return;
     }
   }
@@ -2807,7 +2746,6 @@ DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
     w3mFuncList[cmd].func();
     CurrentCmdData = NULL;
   }
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(setAlarm, ALARM, "Set alarm") {
@@ -2820,14 +2758,12 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
     init_rc();
     sync_with_option();
     initCookie();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
     return;
   }
 
   if (!strcasecmp(resource, "CONFIG") || !strcasecmp(resource, "RC")) {
     init_rc();
     sync_with_option();
-    displayBuffer(Currentbuf, B_REDRAW_IMAGE);
     return;
   }
 
@@ -2856,18 +2792,13 @@ DEFUN(defKey, DEFINE_KEY,
   if (data == NULL || *data == '\0') {
     data = inputStrHist(Currentbuf->document, "Key definition: ", "", TextHist);
     if (data == NULL || *data == '\0') {
-      displayBuffer(Currentbuf, B_NORMAL);
       return;
     }
   }
   setKeymap(allocStr(data, -1), -1);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
-DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
-  _newT();
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
-}
+DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") { _newT(); }
 
 DEFUN(closeT, CLOSE_TAB, "Close tab") {
   struct TabBuffer *tab;
@@ -2880,7 +2811,6 @@ DEFUN(closeT, CLOSE_TAB, "Close tab") {
     tab = CurrentTab;
   if (tab)
     deleteTab(tab);
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
 DEFUN(nextT, NEXT_TAB, "Switch to the next tab") {
@@ -2894,7 +2824,6 @@ DEFUN(nextT, NEXT_TAB, "Switch to the next tab") {
     else
       CurrentTab = FirstTab;
   }
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
 DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
@@ -2908,7 +2837,6 @@ DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
     else
       CurrentTab = LastTab;
   }
-  displayBuffer(Currentbuf, B_REDRAW_IMAGE);
 }
 
 static void followTab(struct TabBuffer *tab) {
@@ -2950,7 +2878,6 @@ static void followTab(struct TabBuffer *tab) {
       pushBuffer(CurrentTab, buf);
     }
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
@@ -2987,7 +2914,6 @@ static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
       pushBuffer(CurrentTab, buf);
     }
   }
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 }
 
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {
@@ -3087,7 +3013,6 @@ DEFUN(cursorTop, CURSOR_TOP, "Move cursor to the top of the screen") {
       lineSkip(&Currentbuf->document->viewport, Currentbuf->document->topLine,
                Currentbuf->document->lastLine, 0, false);
   arrangeLine(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
@@ -3097,7 +3022,6 @@ DEFUN(cursorMiddle, CURSOR_MIDDLE, "Move cursor to the middle of the screen") {
   Currentbuf->document->currentLine =
       currentLineSkip(Currentbuf->document->topLine, offsety, false);
   arrangeLine(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }
 
 DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
@@ -3107,5 +3031,4 @@ DEFUN(cursorBottom, CURSOR_BOTTOM, "Move cursor to the bottom of the screen") {
   Currentbuf->document->currentLine =
       currentLineSkip(Currentbuf->document->topLine, offsety, false);
   arrangeLine(Currentbuf->document);
-  displayBuffer(Currentbuf, B_NORMAL);
 }

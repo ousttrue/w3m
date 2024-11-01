@@ -417,7 +417,6 @@ int main(int argc, char **argv) {
   }
 
   Currentbuf = Firstbuf;
-  displayBuffer(Currentbuf, B_FORCE_REDRAW);
 
   char *line_str = NULL;
   if (line_str) {
