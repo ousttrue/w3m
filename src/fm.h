@@ -46,14 +46,10 @@ global char *MyProgramName init("w3m");
 global int open_tab_blank init(false);
 global int open_tab_dl_list init(false);
 global int close_tab_back init(false);
-global int CurrentKey;
-global const char *CurrentKeyData;
-global const char *CurrentCmdData;
 global int w3m_debug;
 global int confirm_on_quit init(true);
 global int emacs_like_lineedit init(false);
 global int space_autocomplete init(false);
-global int vi_prec_num init(false);
 global char *displayTitleTerm init(nullptr);
 global int displayImage init(false); /* XXX: emacs-w3m use display_image=off */
 global char *Editor init(DEF_EDITOR);

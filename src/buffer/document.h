@@ -111,3 +111,6 @@ void save_buffer_position(struct Document *doc);
 void resetPos(struct Document *doc, struct BufferPos *b);
 int prev_nonnull_line(struct Document *doc, struct Line *line);
 struct Url *baseURL(struct Document *buf);
+const char *getCurWord(struct Document *doc, int *spos, int *epos);
+bool is_wordchar(int c);
+char *GetWord(struct Document *doc);

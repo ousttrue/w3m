@@ -87,3 +87,4 @@ void form_write_from_file(FILE *f, const char *boundary, const char *name,
                           const char *filename, const char *file);
 void loadPreForm(void);
 Str Str_form_quote(Str x);
+void query_from_followform(Str *query, struct FormItemList *fi, int multipart);

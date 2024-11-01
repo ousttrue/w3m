@@ -12,6 +12,7 @@
 #include "buffer/tabbuffer.h"
 #include "buffer/w3mhelperpanel.h"
 #include "core.h"
+#include "mainloop.h"
 #include "version.h"
 // #include "file/file.h"
 #include "file/tmpfile.h"

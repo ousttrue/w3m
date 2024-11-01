@@ -10,6 +10,7 @@
 #include "input/loader.h"
 #include "siteconf.h"
 #include "term/termsize.h"
+#include "text/myctype.h"
 #include "text/text.h"
 #include <string.h>
 
@@ -836,4 +837,43 @@ struct Url *baseURL(struct Document *doc) {
     return NULL;
   else
     return &doc->url;
+}
+
+bool is_wordchar(int c) { return IS_ALNUM(c); }
+
+const char *getCurWord(struct Document *doc, int *spos, int *epos) {
+  struct Line *l = doc->currentLine;
+  if (l == NULL)
+    return NULL;
+
+  *spos = 0;
+  *epos = 0;
+  auto p = l->lineBuf;
+  int e = doc->viewport.pos;
+  while (e > 0 && !is_wordchar(p[e]))
+    prevChar(&e, l);
+  if (!is_wordchar(p[e]))
+    return NULL;
+  int b = e;
+  while (b > 0) {
+    int tmp = b;
+    prevChar(&tmp, l);
+    if (!is_wordchar(p[tmp]))
+      break;
+    b = tmp;
+  }
+  while (e < l->len && is_wordchar(p[e]))
+    nextChar(&e, l);
+  *spos = b;
+  *epos = e;
+  return &p[b];
+}
+
+char *GetWord(struct Document *doc) {
+  int b, e;
+  auto p = getCurWord(doc, &b, &e);
+  if (p) {
+    return Strnew_charp_n(p, e - b)->ptr;
+  }
+  return NULL;
 }

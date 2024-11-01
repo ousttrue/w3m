@@ -27,6 +27,7 @@
 #include "input/loader.h"
 #include "input/localcgi.h"
 #include "linein.h"
+#include "mainloop.h"
 #include "os.h"
 #include "proto.h"
 #include "rc.h"
@@ -53,400 +54,14 @@
 
 static void keyPressEventProc(int c);
 
-static char *getCurWord(struct Buffer *buf, int *spos, int *epos);
-
 static int display_ok = false;
-int prec_num = 0;
-int prev_key = -1;
 int on_target = 1;
-
-void set_buffer_environ(struct Buffer *);
 
 struct TabBuffer;
 static void followTab(struct TabBuffer *tab);
 static void _nextA(int);
 static void _prevA(int);
 static int check_target = true;
-#define PREC_NUM (prec_num ? prec_num : 1)
-#define PREC_LIMIT 10000
-static int searchKeyNum(void);
-
-static void query_from_followform(Str *query, struct FormItemList *fi,
-                                  int multipart) {
-  struct FormItemList *f2;
-  FILE *body = NULL;
-
-  if (multipart) {
-    *query = tmpfname(TMPF_DFL, NULL);
-    body = fopen((*query)->ptr, "w");
-    if (body == NULL) {
-      return;
-    }
-    fi->parent->body = (*query)->ptr;
-    fi->parent->boundary =
-        Sprintf("------------------------------%d%ld%ld%ld", getCurrentPid(),
-                fi->parent, fi->parent->body, fi->parent->boundary)
-            ->ptr;
-  }
-  *query = Strnew();
-  for (f2 = fi->parent->item; f2; f2 = f2->next) {
-    if (f2->name == NULL)
-      continue;
-    /* <ISINDEX> is translated into single text form */
-    if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
-      continue;
-    switch (f2->type) {
-    case FORM_INPUT_RESET:
-      /* do nothing */
-      continue;
-    case FORM_INPUT_SUBMIT:
-    case FORM_INPUT_IMAGE:
-      if (f2 != fi || f2->value == NULL)
-        continue;
-      break;
-    case FORM_INPUT_RADIO:
-    case FORM_INPUT_CHECKBOX:
-      if (!f2->checked)
-        continue;
-    default:
-      break;
-    }
-    if (multipart) {
-      if (f2->type == FORM_INPUT_IMAGE) {
-        int x = 0, y = 0;
-        *query = Strdup(f2->name);
-        Strcat_charp(*query, ".x");
-        form_write_data(body, fi->parent->boundary, (*query)->ptr,
-                        Sprintf("%d", x)->ptr);
-        *query = Strdup(f2->name);
-        Strcat_charp(*query, ".y");
-        form_write_data(body, fi->parent->boundary, (*query)->ptr,
-                        Sprintf("%d", y)->ptr);
-      } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
-        /* not IMAGE */
-        *query = f2->value;
-        if (f2->type == FORM_INPUT_FILE)
-          form_write_from_file(body, fi->parent->boundary, f2->name->ptr,
-                               (*query)->ptr, f2->value->ptr);
-        else
-          form_write_data(body, fi->parent->boundary, f2->name->ptr,
-                          (*query)->ptr);
-      }
-    } else {
-      /* not multipart */
-      if (f2->type == FORM_INPUT_IMAGE) {
-        int x = 0, y = 0;
-        Strcat(*query, Str_form_quote(f2->name));
-        Strcat(*query, Sprintf(".x=%d&", x));
-        Strcat(*query, Str_form_quote(f2->name));
-        Strcat(*query, Sprintf(".y=%d", y));
-      } else {
-        /* not IMAGE */
-        if (f2->name && f2->name->length > 0) {
-          Strcat(*query, Str_form_quote(f2->name));
-          Strcat_char(*query, '=');
-        }
-        if (f2->value != NULL) {
-          if (fi->parent->method == FORM_METHOD_INTERNAL)
-            Strcat(*query, Str_form_quote(f2->value));
-          else {
-            Strcat(*query, Str_form_quote(f2->value));
-          }
-        }
-      }
-      if (f2->next)
-        Strcat_char(*query, '&');
-    }
-  }
-  if (multipart) {
-    fprintf(body, "--%s--\r\n", fi->parent->boundary);
-    fclose(body);
-  } else {
-    /* remove trailing & */
-    while (Strlastchar(*query) == '&')
-      Strshrink(*query, 1);
-  }
-}
-
-static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
-  struct FormList *list;
-  struct FormList *srclist;
-  struct FormItemList *srcitem;
-  struct FormItemList *item;
-  struct FormItemList *ret = NULL;
-
-  if (src == NULL)
-    return NULL;
-  srclist = src->parent;
-  list = New(struct FormList);
-  list->method = srclist->method;
-  list->action = Strdup(srclist->action);
-  list->enctype = srclist->enctype;
-  list->nitems = srclist->nitems;
-  list->body = srclist->body;
-  list->boundary = srclist->boundary;
-  list->length = srclist->length;
-
-  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
-    item = New(struct FormItemList);
-    item->type = srcitem->type;
-    item->name = Strdup(srcitem->name);
-    item->value = Strdup(srcitem->value);
-    item->checked = srcitem->checked;
-    item->accept = srcitem->accept;
-    item->size = srcitem->size;
-    item->rows = srcitem->rows;
-    item->maxlength = srcitem->maxlength;
-    item->readonly = srcitem->readonly;
-    item->parent = list;
-    item->next = NULL;
-
-    if (list->lastitem == NULL) {
-      list->item = list->lastitem = item;
-    } else {
-      list->lastitem->next = item;
-      list->lastitem = item;
-    }
-
-    if (srcitem == src)
-      ret = item;
-  }
-
-  return ret;
-}
-
-static struct Buffer *_followForm(bool submit) {
-  if (Currentbuf->document->firstLine == NULL)
-    return nullptr;
-
-  auto a = retrieveCurrentForm(Currentbuf->document);
-  if (a == NULL)
-    return nullptr;
-
-  auto fi = (struct FormItemList *)a->url;
-
-  switch (fi->type) {
-  case FORM_INPUT_TEXT: {
-    if (submit)
-      goto do_submit;
-    if (fi->readonly)
-      message_push("Read only field!");
-    auto p = inputStrHist(Currentbuf->document,
-                          "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
-    if (p == NULL || fi->readonly)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    if (fi->accept || fi->parent->nitems == 1)
-      goto do_submit;
-    break;
-  }
-
-  case FORM_INPUT_FILE: {
-    if (submit)
-      goto do_submit;
-    if (fi->readonly)
-      message_push("Read only field!");
-    auto p =
-        inputFilenameHist(Currentbuf->document,
-                          "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
-    if (p == NULL || fi->readonly)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    if (fi->accept || fi->parent->nitems == 1)
-      goto do_submit;
-    break;
-  }
-
-  case FORM_INPUT_PASSWORD: {
-    if (submit)
-      goto do_submit;
-    if (fi->readonly) {
-      message_push("Read only field!");
-      break;
-    }
-    auto p =
-        inputLine(Currentbuf->document,
-                  "Password:", fi->value ? fi->value->ptr : NULL, IN_PASSWORD);
-    if (p == NULL)
-      break;
-    fi->value = Strnew_charp(p);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    if (fi->accept)
-      goto do_submit;
-    break;
-  }
-
-  case FORM_TEXTAREA:
-    if (submit)
-      goto do_submit;
-    if (fi->readonly)
-      message_push("Read only field!");
-    input_textarea(fi);
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    break;
-
-  case FORM_INPUT_RADIO:
-    if (submit)
-      goto do_submit;
-    if (fi->readonly) {
-      message_push("Read only field!");
-      break;
-    }
-    formRecheckRadio(Currentbuf->document, a, fi);
-    break;
-
-  case FORM_INPUT_CHECKBOX:
-    if (submit)
-      goto do_submit;
-    if (fi->readonly) {
-      message_push("Read only field!");
-      break;
-    }
-    fi->checked = !fi->checked;
-    formUpdateBuffer(Currentbuf->document, a, fi);
-    break;
-
-  case FORM_INPUT_IMAGE:
-  case FORM_INPUT_SUBMIT:
-  case FORM_INPUT_BUTTON: {
-  do_submit:
-    auto tmp = Strnew();
-    auto multipart = (fi->parent->method == FORM_METHOD_POST &&
-                      fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
-    query_from_followform(&tmp, fi, multipart);
-
-    auto tmp2 = Strdup(fi->parent->action);
-    if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
-      /* It means "current URL" */
-      tmp2 = parsedURL2Str(&Currentbuf->document->url);
-      char *p;
-      if ((p = strchr(tmp2->ptr, '?')) != NULL)
-        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-    }
-
-    if (fi->parent->method == FORM_METHOD_GET) {
-      char *p;
-      if ((p = strchr(tmp2->ptr, '?')) != NULL)
-        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
-      Strcat_charp(tmp2, "?");
-      Strcat(tmp2, tmp);
-      return loadLink(Currentbuf->document, tmp2->ptr, a->target, NULL, NULL);
-    } else if (fi->parent->method == FORM_METHOD_POST) {
-      if (multipart) {
-        struct stat st;
-        stat(fi->parent->body, &st);
-        fi->parent->length = st.st_size;
-      } else {
-        fi->parent->body = tmp->ptr;
-        fi->parent->length = tmp->length;
-      }
-      auto buf = loadLink(Currentbuf->document, tmp2->ptr, a->target, NULL,
-                          fi->parent);
-      if (multipart) {
-        unlink(fi->parent->body);
-      }
-      if (buf && !(buf->document->bufferprop &
-                   BP_REDIRECTED)) { /* buf must be Currentbuf */
-        /* BP_REDIRECTED means that the buffer is obtained through
-         * Location: header. In this case, buf->form_submit must not be set
-         * because the page is not loaded by POST method but GET method.
-         */
-        buf->document->form_submit = save_submit_formlist(fi);
-      }
-
-      return buf;
-    } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
-                (!Strcmp_charp(fi->parent->action, "map") ||
-                 !Strcmp_charp(fi->parent->action, "none"))) ||
-               Currentbuf->document->bufferprop & BP_INTERNAL) { /* internal */
-      do_internal(tmp2->ptr, tmp->ptr);
-    } else {
-      message_push("Can't send form because of illegal method.");
-    }
-    break;
-  }
-
-  case FORM_INPUT_RESET:
-    for (int i = 0; i < Currentbuf->document->formitem->nanchor; i++) {
-      auto a2 = &Currentbuf->document->formitem->anchors[i];
-      auto f2 = (struct FormItemList *)a2->url;
-      if (f2->parent == fi->parent && f2->name && f2->value &&
-          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
-          f2->type != FORM_INPUT_RESET) {
-        f2->value = f2->init_value;
-        f2->checked = f2->init_checked;
-        formUpdateBuffer(Currentbuf->document, a2, f2);
-      }
-    }
-    break;
-  case FORM_INPUT_HIDDEN:
-  default:
-    break;
-  }
-
-  return nullptr;
-}
-
-void mainloop() {
-
-  for (;;) {
-    download_update();
-    if (Currentbuf->document->submit) {
-      struct Anchor *a = Currentbuf->document->submit;
-      Currentbuf->document->submit = NULL;
-      gotoLine(Currentbuf->document, a->start.line);
-      Currentbuf->document->viewport.pos = a->start.pos;
-      _followForm(true);
-      continue;
-    }
-    /* event processing */
-    if (CurrentEvent) {
-      CurrentKey = -1;
-      CurrentKeyData = NULL;
-      CurrentCmdData = (char *)CurrentEvent->data;
-      w3mFuncList[CurrentEvent->cmd].func();
-      CurrentCmdData = NULL;
-      CurrentEvent = CurrentEvent->next;
-      continue;
-    }
-#ifndef _WIN32
-    /* get keypress event */
-    mySignal(SIGWINCH, resize_hook);
-#endif
-    {
-      // do {
-      resize_screen_if_updated();
-      // }
-      // while (tty_sleep_till_anykey(1, 0) <= 0);
-    }
-    char c = tty_getch();
-    if (c && IS_ASCII(c)) { /* Ascii */
-      if (('0' <= c) && (c <= '9') &&
-          (prec_num || (GlobalKeymap[c] == FUNCNAME_nulcmd))) {
-        prec_num = prec_num * 10 + (int)(c - '0');
-        if (prec_num > PREC_LIMIT)
-          prec_num = PREC_LIMIT;
-      } else {
-        set_buffer_environ(Currentbuf);
-        save_buffer_position(Currentbuf->document);
-        keyPressEventProc((int)c);
-        prec_num = 0;
-      }
-    }
-    prev_key = CurrentKey;
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-    display(Currentbuf->document);
-    term_refresh();
-  }
-}
-
-static void keyPressEventProc(int c) {
-  CurrentKey = c;
-  w3mFuncList[(int)GlobalKeymap[c]].func();
-}
 
 static int cmp_anchor_hseq(const void *a, const void *b) {
   return (*((const struct Anchor **)a))->hseq -
@@ -456,32 +71,6 @@ static int cmp_anchor_hseq(const void *a, const void *b) {
 DEFUN(nulcmd, NOTHING NULL @ @ @, "Do nothing") { /* do nothing */ }
 
 void pcmap(void) {}
-
-static void escKeyProc(int c, int esc, unsigned char *map) {
-  if (CurrentKey >= 0 && CurrentKey & K_MULTI) {
-    unsigned char **mmap;
-    mmap = (unsigned char **)getKeyData(MULTI_KEY(CurrentKey));
-    if (!mmap)
-      return;
-    switch (esc) {
-    case K_ESCD:
-      map = mmap[3];
-      break;
-    case K_ESCB:
-      map = mmap[2];
-      break;
-    case K_ESC:
-      map = mmap[1];
-      break;
-    default:
-      map = mmap[0];
-      break;
-    }
-    esc |= (CurrentKey & ~0xFFFF);
-  }
-  CurrentKey = esc | c;
-  w3mFuncList[(int)map[c]].func();
-}
 
 DEFUN(escmap, ESCMAP, "ESC map") {
   char c = tty_getch();
@@ -499,10 +88,9 @@ DEFUN(escbmap, ESCBMAP, "ESC [ map") {
     escKeyProc((int)c, K_ESCB, EscBKeymap);
 }
 
-void escdmap(char c) {
-  int d;
-  d = (int)c - (int)'0';
-  c = tty_getch();
+void escdmap(char _c) {
+  int d = (int)_c - (int)'0';
+  auto c = tty_getch();
   if (IS_DIGIT(c)) {
     d = d * 10 + (int)c - (int)'0';
     c = tty_getch();
@@ -511,13 +99,7 @@ void escdmap(char c) {
     escKeyProc((int)d, K_ESCD, EscDKeymap);
 }
 
-DEFUN(multimap, MULTIMAP, "multimap") {
-  char c = tty_getch();
-  if (IS_ASCII(c)) {
-    CurrentKey = K_MULTI | (CurrentKey << 16) | c;
-    escKeyProc((int)c, 0, NULL);
-  }
-}
+DEFUN(multimap, MULTIMAP, "multimap") { multiKeyProc(); }
 
 static Str currentURL(void);
 
@@ -603,31 +185,12 @@ void document_scroll(struct Document *doc, int n) {
 
 /* Move page forward */
 DEFUN(pgFore, NEXT_PAGE, "Scroll down one page") {
-  if (vi_prec_num) {
-    document_scroll(Currentbuf->document,
-                    searchKeyNum() *
-                        (Currentbuf->document->viewport.LINES - 1));
-  } else {
-    document_scroll(Currentbuf->document,
-                    prec_num ? searchKeyNum()
-                             : searchKeyNum() *
-                                   (Currentbuf->document->viewport.LINES - 1));
-  }
+  document_scroll(Currentbuf->document, scrollNum());
 }
 
 /* Move page backward */
 DEFUN(pgBack, PREV_PAGE, "Scroll up one page") {
-  if (vi_prec_num) {
-    document_scroll(Currentbuf->document,
-                    -searchKeyNum() *
-                        (Currentbuf->document->viewport.LINES - 1));
-  } else {
-    document_scroll(
-        Currentbuf->document,
-        -(prec_num
-              ? searchKeyNum()
-              : searchKeyNum() * (Currentbuf->document->viewport.LINES - 1)));
-  }
+  document_scroll(Currentbuf->document, -scrollNum());
 }
 
 /* Move half page forward */
@@ -791,7 +354,7 @@ DEFUN(col1L, LEFT, "Shift screen one column left") {
 }
 
 DEFUN(setEnv, SETENV, "Set environment variable") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  clearKeyData();
   const char *env = searchKeyData();
   if (env == NULL || *env == '\0' || strchr(env, '=') == NULL) {
     if (env != NULL && *env != '\0')
@@ -841,7 +404,7 @@ DEFUN(readsh, READ_SHELL, "Execute shell command and display output") {
 
 /* Execute shell command */
 DEFUN(execsh, EXEC_SHELL SHELL, "Execute shell command and display output") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  clearKeyData(); /* not allowed in w3m-control: */
   const char *cmd = searchKeyData();
   if (cmd == NULL || *cmd == '\0') {
     cmd = inputLineHist(Currentbuf->document, "(exec shell)!", "", IN_COMMAND,
@@ -962,9 +525,6 @@ DEFUN(movR1, MOVE_RIGHT1, "Cursor right. With edge touched, slide") {
  * From: Takashi Nishimoto <g96p0935@mse.waseda.ac.jp> Date: Mon, 14 Jun
  * 1999 09:29:56 +0900
  */
-#define getChar(p) ((int)*(p))
-
-static int is_wordchar(int c) { return IS_ALNUM(c); }
 
 DEFUN(movLW, PREV_WORD, "Move to the previous word") {
   if (Currentbuf->document->firstLine == NULL)
@@ -985,7 +545,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
       while (Currentbuf->document->viewport.pos > 0) {
         int tmp = Currentbuf->document->viewport.pos;
         prevChar(&tmp, l);
-        if (is_wordchar(getChar(&lb[tmp])))
+        if (is_wordchar(lb[tmp]))
           break;
         Currentbuf->document->viewport.pos = tmp;
       }
@@ -1006,7 +566,7 @@ DEFUN(movLW, PREV_WORD, "Move to the previous word") {
     while (Currentbuf->document->viewport.pos > 0) {
       int tmp = Currentbuf->document->viewport.pos;
       prevChar(&tmp, l);
-      if (!is_wordchar(getChar(&lb[tmp])))
+      if (!is_wordchar(lb[tmp]))
         break;
       Currentbuf->document->viewport.pos = tmp;
     }
@@ -1049,12 +609,12 @@ DEFUN(movRW, NEXT_WORD, "Move to the next word") {
     l = Currentbuf->document->currentLine;
     lb = l->lineBuf;
     while (Currentbuf->document->viewport.pos < l->len &&
-           is_wordchar(getChar(&lb[Currentbuf->document->viewport.pos])))
+           is_wordchar(lb[Currentbuf->document->viewport.pos]))
       nextChar(&Currentbuf->document->viewport.pos, l);
 
     while (1) {
       while (Currentbuf->document->viewport.pos < l->len &&
-             !is_wordchar(getChar(&lb[Currentbuf->document->viewport.pos])))
+             !is_wordchar(lb[Currentbuf->document->viewport.pos]))
         nextChar(&Currentbuf->document->viewport.pos, l);
       if (Currentbuf->document->viewport.pos < l->len)
         break;
@@ -1170,14 +730,7 @@ DEFUN(susp, INTERRUPT SUSPEND, "Suspend w3m to background") {
 }
 
 DEFUN(goLine, GOTO_LINE, "Go to the specified line") {
-  const char *str = searchKeyData();
-  if (prec_num)
-    _goLine(Currentbuf->document, "^");
-  else if (str)
-    _goLine(Currentbuf->document, str);
-  else
-    _goLine(Currentbuf->document,
-            inputStr(Currentbuf->document, "Goto line: ", ""));
+  _goLine(Currentbuf->document, goLineStr());
 }
 
 DEFUN(goLineF, BEGIN, "Go to the first line") {
@@ -1309,12 +862,12 @@ struct Buffer *_followA() {
 
   auto a = retrieveCurrentMap(Currentbuf->document);
   if (a) {
-    return _followForm(false);
+    return _followForm(Currentbuf->document, false);
   }
 
   a = retrieveCurrentAnchor(Currentbuf->document);
   if (a == NULL) {
-    return _followForm(false);
+    return _followForm(Currentbuf->document, false);
   }
 
   if (*a->url == '#') { /* index within this buffer */
@@ -1381,32 +934,29 @@ DEFUN(followI, VIEW_IMAGE, "Display image in viewer") {
 
 /* submit form */
 DEFUN(submitForm, SUBMIT, "Submit form") {
-  auto buf = _followForm(true);
+  auto buf = _followForm(Currentbuf->document, true);
   pushBuffer(CurrentTab, buf);
 }
 
 /* process form */
 void followForm(void) {
-  auto buf = _followForm(false);
+  auto buf = _followForm(Currentbuf->document, false);
   pushBuffer(CurrentTab, buf);
 }
 
 /* go to the top anchor */
 DEFUN(topA, LINK_BEGIN, "Move to the first hyperlink") {
-  struct HmarkerList *hl = Currentbuf->document->hmarklist;
-  struct BufferPoint *po;
-  struct Anchor *an;
-  int hseq = 0;
 
   if (Currentbuf->document->firstLine == NULL)
     return;
+
+  struct HmarkerList *hl = Currentbuf->document->hmarklist;
   if (!hl || hl->nmark == 0)
     return;
 
-  if (prec_num > hl->nmark)
-    hseq = hl->nmark - 1;
-  else if (prec_num > 0)
-    hseq = prec_num - 1;
+  int hseq = getHseq(hl->nmark);
+  struct BufferPoint *po;
+  struct Anchor *an;
   do {
     if (hseq >= hl->nmark)
       return;
@@ -1427,19 +977,13 @@ DEFUN(lastA, LINK_END, "Move to the last hyperlink") {
   struct HmarkerList *hl = Currentbuf->document->hmarklist;
   struct BufferPoint *po;
   struct Anchor *an;
-  int hseq;
 
   if (Currentbuf->document->firstLine == NULL)
     return;
   if (!hl || hl->nmark == 0)
     return;
 
-  if (prec_num >= hl->nmark)
-    hseq = 0;
-  else if (prec_num > 0)
-    hseq = hl->nmark - prec_num;
-  else
-    hseq = hl->nmark - 1;
+  int hseq = getLastHseq(hl->nmark);
   do {
     if (hseq < 0)
       return;
@@ -1772,11 +1316,8 @@ DEFUN(nextU, NEXT_UP, "Move upward to the next hyperlink") { nextY(-1); }
 
 /* go to the next bufferr */
 DEFUN(nextBf, NEXT, "Switch to the next buffer") {
-  struct Buffer *buf;
-  int i;
-
-  for (i = 0; i < PREC_NUM; i++) {
-    buf = prevBuffer(Firstbuf, Currentbuf);
+  for (int i = 0; i < precNum(); i++) {
+    auto buf = prevBuffer(Firstbuf, Currentbuf);
     if (!buf) {
       if (i == 0)
         return;
@@ -1788,11 +1329,8 @@ DEFUN(nextBf, NEXT, "Switch to the next buffer") {
 
 /* go to the previous bufferr */
 DEFUN(prevBf, PREV, "Switch to the previous buffer") {
-  struct Buffer *buf;
-  int i;
-
-  for (i = 0; i < PREC_NUM; i++) {
-    buf = Currentbuf->nextBuffer;
+  for (int i = 0; i < precNum(); i++) {
+    auto buf = Currentbuf->nextBuffer;
     if (!buf) {
       if (i == 0)
         return;
@@ -1979,7 +1517,7 @@ DEFUN(ldOpt, OPTIONS, "Display options setting panel") {
 
 /* set an option */
 DEFUN(setOpt, SET_OPTION, "Set option") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  clearKeyData(); /* not allowed in w3m-control: */
   const char *opt = searchKeyData();
   if (opt == NULL || *opt == '\0' || strchr(opt, '=') == NULL) {
     if (opt != NULL && *opt != '\0') {
@@ -2096,12 +1634,10 @@ DEFUN(svI, SAVE_IMAGE, "Save inline image") {
 
 /* save buffer */
 DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
-  const char *qfile = NULL, *file;
-  FILE *f;
-  int is_pipe;
+  const char *qfile = NULL;
 
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  file = searchKeyData();
+  clearKeyData(); /* not allowed in w3m-control: */
+  auto file = searchKeyData();
   if (file == NULL || *file == '\0') {
     qfile = inputLineHist(Currentbuf->document, "Save buffer to: ", NULL,
                           IN_COMMAND, SaveHist);
@@ -2110,6 +1646,9 @@ DEFUN(svBuf, PRINT SAVE_SCREEN, "Save rendered document") {
     }
   }
   file = qfile ? qfile : file;
+
+  FILE *f = nullptr;
+  bool is_pipe = false;
   if (*file == '|') {
     is_pipe = true;
     f = popen(file + 1, "w");
@@ -2141,7 +1680,7 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
   if (Currentbuf->document->sourcefile == NULL)
     return;
 
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  clearKeyData(); /* not allowed in w3m-control: */
   PermitSaveToPipe = true;
   const char *file;
   if (Currentbuf->document->real_scheme == SCM_LOCAL)
@@ -2154,42 +1693,42 @@ DEFUN(svSrc, DOWNLOAD SAVE, "Save document source") {
 }
 
 static void _peekURL(int only_img) {
-  static Str s = NULL;
-  static int offset = 0;
-
-  if (Currentbuf->document->firstLine == NULL)
-    return;
-  if (CurrentKey == prev_key && s != NULL) {
-    if (s->length - offset >= COLS)
-      offset++;
-    else if (s->length <= offset) /* bug ? */
-      offset = 0;
-    goto disp;
-  } else {
-    offset = 0;
-  }
-  s = NULL;
-  auto a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf->document));
-  if (a == NULL) {
-    a = (only_img ? NULL : retrieveCurrentForm(Currentbuf->document));
-    if (a == NULL) {
-      a = retrieveCurrentImg(Currentbuf->document);
-      if (a == NULL)
-        return;
-    } else
-      s = Strnew_charp(form2str((struct FormItemList *)a->url));
-  }
-  if (s == NULL) {
-    auto pu = parseURL2(a->url, baseURL(Currentbuf->document));
-    s = parsedURL2Str(&pu);
-  }
-  if (DecodeURL)
-    s = Strnew_charp(url_decode0(s->ptr));
-disp:
-  int n = searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS - 1))
-    offset = (n - 1) * (COLS - 1);
-  message_push(&s->ptr[offset]);
+  //   static Str s = NULL;
+  //   static int offset = 0;
+  //
+  //   if (Currentbuf->document->firstLine == NULL)
+  //     return;
+  //   if (CurrentKey == prev_key && s != NULL) {
+  //     if (s->length - offset >= COLS)
+  //       offset++;
+  //     else if (s->length <= offset) /* bug ? */
+  //       offset = 0;
+  //     goto disp;
+  //   } else {
+  //     offset = 0;
+  //   }
+  //   s = NULL;
+  //   auto a = (only_img ? NULL : retrieveCurrentAnchor(Currentbuf->document));
+  //   if (a == NULL) {
+  //     a = (only_img ? NULL : retrieveCurrentForm(Currentbuf->document));
+  //     if (a == NULL) {
+  //       a = retrieveCurrentImg(Currentbuf->document);
+  //       if (a == NULL)
+  //         return;
+  //     } else
+  //       s = Strnew_charp(form2str((struct FormItemList *)a->url));
+  //   }
+  //   if (s == NULL) {
+  //     auto pu = parseURL2(a->url, baseURL(Currentbuf->document));
+  //     s = parsedURL2Str(&pu);
+  //   }
+  //   if (DecodeURL)
+  //     s = Strnew_charp(url_decode0(s->ptr));
+  // disp:
+  //   int n = searchKeyNum();
+  //   if (n > 1 && s->length > (n - 1) * (COLS - 1))
+  //     offset = (n - 1) * (COLS - 1);
+  //   message_push(&s->ptr[offset]);
 }
 
 /* peek URL */
@@ -2206,26 +1745,26 @@ static Str currentURL(void) {
 }
 
 DEFUN(curURL, PEEK, "Show current address") {
-  static Str s = NULL;
-  static int offset = 0, n;
-
-  if (Currentbuf->document->bufferprop & BP_INTERNAL)
-    return;
-  if (CurrentKey == prev_key && s != NULL) {
-    if (s->length - offset >= COLS)
-      offset++;
-    else if (s->length <= offset) /* bug ? */
-      offset = 0;
-  } else {
-    offset = 0;
-    s = currentURL();
-    if (DecodeURL)
-      s = Strnew_charp(url_decode0(s->ptr));
-  }
-  n = searchKeyNum();
-  if (n > 1 && s->length > (n - 1) * (COLS - 1))
-    offset = (n - 1) * (COLS - 1);
-  message_push(&s->ptr[offset]);
+  // static Str s = NULL;
+  // static int offset = 0, n;
+  //
+  // if (Currentbuf->document->bufferprop & BP_INTERNAL)
+  //   return;
+  // if (CurrentKey == prev_key && s != NULL) {
+  //   if (s->length - offset >= COLS)
+  //     offset++;
+  //   else if (s->length <= offset) /* bug ? */
+  //     offset = 0;
+  // } else {
+  //   offset = 0;
+  //   s = currentURL();
+  //   if (DecodeURL)
+  //     s = Strnew_charp(url_decode0(s->ptr));
+  // }
+  // n = searchKeyNum();
+  // if (n > 1 && s->length > (n - 1) * (COLS - 1))
+  //   offset = (n - 1) * (COLS - 1);
+  // message_push(&s->ptr[offset]);
 }
 /* view HTML source */
 
@@ -2365,10 +1904,9 @@ DEFUN(chkURL, MARK_URL, "Turn URL-like strings into hyperlinks") {
 }
 
 DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
-  char *p;
   int spos, epos;
-  p = getCurWord(Currentbuf, &spos, &epos);
-  if (p == NULL)
+  auto p = getCurWord(Currentbuf->document, &spos, &epos);
+  if (!p)
     return;
   reAnchorWord(Currentbuf->document, Currentbuf->document->currentLine, spos,
                epos);
@@ -2376,61 +1914,61 @@ DEFUN(chkWORD, MARK_WORD, "Turn current word into hyperlink") {
 
 /* spawn external browser */
 static void invoke_browser(char *url) {
-  Str cmd;
-  int bg = 0, len;
-
-  const char *browser = NULL;
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  browser = searchKeyData();
-  if (browser == NULL || *browser == '\0') {
-    switch (prec_num) {
-    case 0:
-    case 1:
-      browser = ExtBrowser;
-      break;
-    case 2:
-      browser = ExtBrowser2;
-      break;
-    case 3:
-      browser = ExtBrowser3;
-      break;
-    case 4:
-      browser = ExtBrowser4;
-      break;
-    case 5:
-      browser = ExtBrowser5;
-      break;
-    case 6:
-      browser = ExtBrowser6;
-      break;
-    case 7:
-      browser = ExtBrowser7;
-      break;
-    case 8:
-      browser = ExtBrowser8;
-      break;
-    case 9:
-      browser = ExtBrowser9;
-      break;
-    }
-    if (browser == NULL || *browser == '\0') {
-      browser = inputStr(Currentbuf->document, "Browse command: ", NULL);
-    }
-  }
-  if (browser == NULL || *browser == '\0') {
-    return;
-  }
-
-  if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' &&
-      browser[len - 2] != '\\') {
-    browser = allocStr(browser, len - 2);
-    bg = 1;
-  }
-  cmd = myExtCommand(browser, shell_quote(url), false);
-  Strremovetrailingspaces(cmd);
-  term_fmTerm();
-  mySystem(cmd->ptr, bg);
-  term_fmInit();
+  // Str cmd;
+  // int bg = 0, len;
+  //
+  // const char *browser = NULL;
+  // clearKeyData(); /* not allowed in w3m-control: */
+  // browser = searchKeyData();
+  // if (browser == NULL || *browser == '\0') {
+  //   switch (prec_num) {
+  //   case 0:
+  //   case 1:
+  //     browser = ExtBrowser;
+  //     break;
+  //   case 2:
+  //     browser = ExtBrowser2;
+  //     break;
+  //   case 3:
+  //     browser = ExtBrowser3;
+  //     break;
+  //   case 4:
+  //     browser = ExtBrowser4;
+  //     break;
+  //   case 5:
+  //     browser = ExtBrowser5;
+  //     break;
+  //   case 6:
+  //     browser = ExtBrowser6;
+  //     break;
+  //   case 7:
+  //     browser = ExtBrowser7;
+  //     break;
+  //   case 8:
+  //     browser = ExtBrowser8;
+  //     break;
+  //   case 9:
+  //     browser = ExtBrowser9;
+  //     break;
+  //   }
+  //   if (browser == NULL || *browser == '\0') {
+  //     browser = inputStr(Currentbuf->document, "Browse command: ", NULL);
+  //   }
+  // }
+  // if (browser == NULL || *browser == '\0') {
+  //   return;
+  // }
+  //
+  // if ((len = strlen(browser)) >= 2 && browser[len - 1] == '&' &&
+  //     browser[len - 2] != '\\') {
+  //   browser = allocStr(browser, len - 2);
+  //   bg = 1;
+  // }
+  // cmd = myExtCommand(browser, shell_quote(url), false);
+  // Strremovetrailingspaces(cmd);
+  // term_fmTerm();
+  // mySystem(cmd->ptr, bg);
+  // term_fmInit();
 }
 
 DEFUN(extbrz, EXTERN, "Display using an external browser") {
@@ -2496,44 +2034,6 @@ DEFUN(wrapToggle, WRAP_TOGGLE, "Toggle wrapping mode in searches") {
   }
 }
 
-static char *getCurWord(struct Buffer *buf, int *spos, int *epos) {
-  struct Line *l = buf->document->currentLine;
-  if (l == NULL)
-    return NULL;
-
-  *spos = 0;
-  *epos = 0;
-  auto p = l->lineBuf;
-  int e = buf->document->viewport.pos;
-  while (e > 0 && !is_wordchar(getChar(&p[e])))
-    prevChar(&e, l);
-  if (!is_wordchar(getChar(&p[e])))
-    return NULL;
-  int b = e;
-  while (b > 0) {
-    int tmp = b;
-    prevChar(&tmp, l);
-    if (!is_wordchar(getChar(&p[tmp])))
-      break;
-    b = tmp;
-  }
-  while (e < l->len && is_wordchar(getChar(&p[e])))
-    nextChar(&e, l);
-  *spos = b;
-  *epos = e;
-  return &p[b];
-}
-
-static char *GetWord(struct Buffer *buf) {
-  int b, e;
-  char *p;
-
-  if ((p = getCurWord(buf, &b, &e)) != NULL) {
-    return Strnew_charp_n(p, e - b)->ptr;
-  }
-  return NULL;
-}
-
 static void execdict(const char *word) {
   if (!UseDictCommand || word == NULL || *word == '\0') {
     return;
@@ -2564,87 +2064,7 @@ DEFUN(dictword, DICT_WORD, "Execute dictionary command (see README.dict)") {
 
 DEFUN(dictwordat, DICT_WORD_AT,
       "Execute dictionary command for word at cursor") {
-  execdict(GetWord(Currentbuf));
-}
-
-void set_buffer_environ(struct Buffer *buf) {
-  static struct Buffer *prev_buf = NULL;
-  static struct Line *prev_line = NULL;
-  static int prev_pos = -1;
-
-  if (buf == NULL)
-    return;
-
-  if (buf != prev_buf) {
-    set_environ("W3M_SOURCEFILE", buf->document->sourcefile);
-    set_environ("W3M_FILENAME", buf->document->filename);
-    set_environ("W3M_TITLE", buf->buffername);
-    set_environ("W3M_URL", parsedURL2Str(&buf->document->url)->ptr);
-    set_environ("W3M_TYPE",
-                buf->document->type ? buf->document->type : "unknown");
-  }
-  auto l = buf->document->currentLine;
-  if (l && (buf != prev_buf || l != prev_line ||
-            buf->document->viewport.pos != prev_pos)) {
-    char *s = GetWord(buf);
-    set_environ("W3M_CURRENT_WORD", s ? s : "");
-    auto a = retrieveCurrentAnchor(buf->document);
-    if (a) {
-      auto pu = parseURL2(a->url, baseURL(buf->document));
-      set_environ("W3M_CURRENT_LINK", parsedURL2Str(&pu)->ptr);
-    } else
-      set_environ("W3M_CURRENT_LINK", "");
-    a = retrieveCurrentImg(buf->document);
-    if (a) {
-      auto pu = parseURL2(a->url, baseURL(buf->document));
-      set_environ("W3M_CURRENT_IMG", parsedURL2Str(&pu)->ptr);
-    } else
-      set_environ("W3M_CURRENT_IMG", "");
-    a = retrieveCurrentForm(buf->document);
-    if (a)
-      set_environ("W3M_CURRENT_FORM", form2str((struct FormItemList *)a->url));
-    else
-      set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", Sprintf("%ld", l->real_linenumber)->ptr);
-    set_environ("W3M_CURRENT_COLUMN",
-                Sprintf("%d", buf->document->viewport.currentColumn +
-                                  buf->document->viewport.cursorX + 1)
-                    ->ptr);
-  } else if (!l) {
-    set_environ("W3M_CURRENT_WORD", "");
-    set_environ("W3M_CURRENT_LINK", "");
-    set_environ("W3M_CURRENT_IMG", "");
-    set_environ("W3M_CURRENT_FORM", "");
-    set_environ("W3M_CURRENT_LINE", "0");
-    set_environ("W3M_CURRENT_COLUMN", "0");
-  }
-  prev_buf = buf;
-  prev_line = l;
-  prev_pos = buf->document->viewport.pos;
-}
-
-const char *searchKeyData(void) {
-  const char *data = NULL;
-
-  if (CurrentKeyData != NULL && *CurrentKeyData != '\0')
-    data = CurrentKeyData;
-  else if (CurrentCmdData != NULL && *CurrentCmdData != '\0')
-    data = CurrentCmdData;
-  else if (CurrentKey >= 0)
-    data = getKeyData(CurrentKey);
-  CurrentKeyData = NULL;
-  CurrentCmdData = NULL;
-  if (data == NULL || *data == '\0')
-    return NULL;
-  return allocStr(data, -1);
-}
-
-static int searchKeyNum(void) {
-  int n = 1;
-  const char *d = searchKeyData();
-  if (d != NULL)
-    n = atoi(d);
-  return n * PREC_NUM;
+  execdict(GetWord(Currentbuf->document));
 }
 
 void deleteFiles() {
@@ -2676,35 +2096,33 @@ void w3m_exit(int i) {
 }
 
 DEFUN(execCmd, COMMAND, "Invoke w3m function(s)") {
-  const char *data, *p;
-  int cmd;
-
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
-  data = searchKeyData();
+  clearKeyData(); /* not allowed in w3m-control: */
+  auto data = searchKeyData();
   if (data == NULL || *data == '\0') {
     data = inputStrHist(nullptr, "command [; ...]: ", "", TextHist);
     if (data == NULL) {
       return;
     }
   }
-  /* data: FUNC [DATA] [; FUNC [DATA] ...] */
-  while (*data) {
-    SKIP_BLANKS(data);
-    if (*data == ';') {
-      data++;
-      continue;
-    }
-    p = getWord(&data);
-    cmd = getFuncList(p);
-    if (cmd < 0)
-      break;
-    p = getQWord(&data);
-    CurrentKey = -1;
-    CurrentKeyData = NULL;
-    CurrentCmdData = *p ? p : NULL;
-    w3mFuncList[cmd].func();
-    CurrentCmdData = NULL;
-  }
+
+  // /* data: FUNC [DATA] [; FUNC [DATA] ...] */
+  // while (*data) {
+  //   SKIP_BLANKS(data);
+  //   if (*data == ';') {
+  //     data++;
+  //     continue;
+  //   }
+  //   auto p = getWord(&data);
+  //   auto cmd = getFuncList(p);
+  //   if (cmd < 0)
+  //     break;
+  //   p = getQWord(&data);
+  //   CurrentKey = -1;
+  //   CurrentKeyData = NULL;
+  //   CurrentCmdData = *p ? p : NULL;
+  //   w3mFuncList[cmd].func();
+  //   CurrentCmdData = NULL;
+  // }
 }
 
 DEFUN(setAlarm, ALARM, "Set alarm") {
@@ -2746,7 +2164,7 @@ DEFUN(reinit, REINIT, "Reload configuration file") {
 
 DEFUN(defKey, DEFINE_KEY,
       "Define a binding between a key stroke combination and a command") {
-  CurrentKeyData = NULL; /* not allowed in w3m-control: */
+  clearKeyData(); /* not allowed in w3m-control: */
   const char *data = searchKeyData();
   if (data == NULL || *data == '\0') {
     data = inputStrHist(Currentbuf->document, "Key definition: ", "", TextHist);
@@ -2764,24 +2182,16 @@ DEFUN(newT, NEW_TAB, "Open a new tab (with current document)") {
 }
 
 DEFUN(closeT, CLOSE_TAB, "Close tab") {
-  struct TabBuffer *tab;
-
   if (nTab <= 1)
     return;
-  if (prec_num)
-    tab = numTab(PREC_NUM);
-  else
-    tab = CurrentTab;
-  if (tab)
-    deleteTab(tab);
+
+  deleteTab(CurrentTab);
 }
 
 DEFUN(nextT, NEXT_TAB, "Switch to the next tab") {
-  int i;
-
   if (nTab <= 1)
     return;
-  for (i = 0; i < PREC_NUM; i++) {
+  for (int i = 0; i < precNum(); i++) {
     if (CurrentTab->nextTab)
       CurrentTab = CurrentTab->nextTab;
     else
@@ -2790,11 +2200,9 @@ DEFUN(nextT, NEXT_TAB, "Switch to the next tab") {
 }
 
 DEFUN(prevT, PREV_TAB, "Switch to the previous tab") {
-  int i;
-
   if (nTab <= 1)
     return;
-  for (i = 0; i < PREC_NUM; i++) {
+  for (int i = 0; i < precNum(); i++) {
     if (CurrentTab->prevTab)
       CurrentTab = CurrentTab->prevTab;
     else
@@ -2819,7 +2227,7 @@ static void followTab(struct TabBuffer *tab) {
 }
 
 DEFUN(tabA, TAB_LINK, "Follow current hyperlink in a new tab") {
-  followTab(prec_num ? numTab(PREC_NUM) : NULL);
+  // followTab(prec_num ? numTab(PREC_NUM) : NULL);
 }
 
 static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
@@ -2828,19 +2236,20 @@ static void tabURL0(struct TabBuffer *tab, char *prompt, int relative) {
 }
 
 DEFUN(tabURL, TAB_GOTO, "Open specified document in a new tab") {
-  tabURL0(prec_num ? numTab(PREC_NUM) : NULL, "Goto URL on new tab: ", false);
+  // tabURL0(prec_num ? numTab(PREC_NUM) : NULL, "Goto URL on new tab: ",
+  // false);
 }
 
 DEFUN(tabrURL, TAB_GOTO_RELATIVE, "Open relative address in a new tab") {
-  tabURL0(prec_num ? numTab(PREC_NUM) : NULL,
-          "Goto relative URL on new tab: ", true);
+  // tabURL0(prec_num ? numTab(PREC_NUM) : NULL, "Goto relative URL on new tab:
+  // ", true);
 }
 
 DEFUN(tabR, TAB_RIGHT, "Move right along the tab bar") {
   struct TabBuffer *tab;
   int i;
 
-  for (tab = CurrentTab, i = 0; tab && i < PREC_NUM; tab = tab->nextTab, i++)
+  for (tab = CurrentTab, i = 0; tab && i < precNum(); tab = tab->nextTab, i++)
     ;
   moveTab(CurrentTab, tab ? tab : LastTab, true);
 }
@@ -2849,7 +2258,7 @@ DEFUN(tabL, TAB_LEFT, "Move left along the tab bar") {
   struct TabBuffer *tab;
   int i;
 
-  for (tab = CurrentTab, i = 0; tab && i < PREC_NUM; tab = tab->prevTab, i++)
+  for (tab = CurrentTab, i = 0; tab && i < precNum(); tab = tab->prevTab, i++)
     ;
   moveTab(CurrentTab, tab ? tab : FirstTab, false);
 }
@@ -2901,7 +2310,7 @@ DEFUN(undoPos, UNDO, "Cancel the last cursor movement") {
   struct BufferPos *b = Currentbuf->document->viewport.undo;
   if (!b || !b->prev)
     return;
-  for (int i = 0; i < PREC_NUM && b->prev; i++, b = b->prev)
+  for (int i = 0; i < precNum() && b->prev; i++, b = b->prev)
     ;
   resetPos(Currentbuf->document, b);
 }
@@ -2912,7 +2321,7 @@ DEFUN(redoPos, REDO, "Cancel the last undo") {
   struct BufferPos *b = Currentbuf->document->viewport.undo;
   if (!b || !b->next)
     return;
-  for (int i = 0; i < PREC_NUM && b->next; i++, b = b->next)
+  for (int i = 0; i < precNum() && b->next; i++, b = b->next)
     ;
   resetPos(Currentbuf->document, b);
 }

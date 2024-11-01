@@ -1,9 +1,9 @@
 #include "buffer/buffer.h"
-#include "history.h"
 #include "alloc.h"
 #include "buffer/document.h"
 #include "file/file.h"
 #include "fm.h"
+#include "history.h"
 #include "html/html_readbuffer.h"
 #include "html/html_text.h"
 #include "html/map.h"
@@ -11,6 +11,8 @@
 #include "input/istream.h"
 #include "input/loader.h"
 #include "input/url.h"
+#include "linein.h"
+#include "message.h"
 #include "siteconf.h"
 #include "term/scr.h"
 #include "term/terms.h"
@@ -507,7 +509,8 @@ struct Buffer *loadLink(struct Document *doc, const char *url,
 
   // if (target == NULL || /* no target specified (that means this page is not a
   //                          frame page) */
-  //     !strcmp(target, "_top") ||    /* this link is specified to be opened as an
+  //     !strcmp(target, "_top") ||    /* this link is specified to be opened as
+  //     an
   //                                      indivisual * page */
   //     !(doc->bufferprop & BP_FRAME) /* This page is not a frame page */
   // ) {
@@ -515,4 +518,222 @@ struct Buffer *loadLink(struct Document *doc, const char *url,
   // }
   // /* original page (that contains <frameset> tag) doesn't exist */
   // return loadNormalBuf(buf);
+}
+
+static struct FormItemList *save_submit_formlist(struct FormItemList *src) {
+  struct FormList *list;
+  struct FormList *srclist;
+  struct FormItemList *srcitem;
+  struct FormItemList *item;
+  struct FormItemList *ret = NULL;
+
+  if (src == NULL)
+    return NULL;
+  srclist = src->parent;
+  list = New(struct FormList);
+  list->method = srclist->method;
+  list->action = Strdup(srclist->action);
+  list->enctype = srclist->enctype;
+  list->nitems = srclist->nitems;
+  list->body = srclist->body;
+  list->boundary = srclist->boundary;
+  list->length = srclist->length;
+
+  for (srcitem = srclist->item; srcitem; srcitem = srcitem->next) {
+    item = New(struct FormItemList);
+    item->type = srcitem->type;
+    item->name = Strdup(srcitem->name);
+    item->value = Strdup(srcitem->value);
+    item->checked = srcitem->checked;
+    item->accept = srcitem->accept;
+    item->size = srcitem->size;
+    item->rows = srcitem->rows;
+    item->maxlength = srcitem->maxlength;
+    item->readonly = srcitem->readonly;
+    item->parent = list;
+    item->next = NULL;
+
+    if (list->lastitem == NULL) {
+      list->item = list->lastitem = item;
+    } else {
+      list->lastitem->next = item;
+      list->lastitem = item;
+    }
+
+    if (srcitem == src)
+      ret = item;
+  }
+
+  return ret;
+}
+struct Buffer *_followForm(struct Document *doc, bool submit) {
+  if (doc->firstLine == NULL)
+    return nullptr;
+
+  auto a = retrieveCurrentForm(doc);
+  if (a == NULL)
+    return nullptr;
+
+  auto fi = (struct FormItemList *)a->url;
+
+  switch (fi->type) {
+  case FORM_INPUT_TEXT: {
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+    }
+    auto p =
+        inputStrHist(doc, "TEXT:", fi->value ? fi->value->ptr : NULL, TextHist);
+    if (p == NULL || fi->readonly)
+      break;
+    fi->value = Strnew_charp(p);
+    formUpdateBuffer(doc, a, fi);
+    if (fi->accept || fi->parent->nitems == 1)
+      goto do_submit;
+    break;
+  }
+
+  case FORM_INPUT_FILE: {
+    if (submit)
+      goto do_submit;
+    if (fi->readonly)
+      message_push("Read only field!");
+    auto p = inputFilenameHist(
+        doc, "Filename:", fi->value ? fi->value->ptr : NULL, NULL);
+    if (p == NULL || fi->readonly)
+      break;
+    fi->value = Strnew_charp(p);
+    formUpdateBuffer(doc, a, fi);
+    if (fi->accept || fi->parent->nitems == 1)
+      goto do_submit;
+    break;
+  }
+
+  case FORM_INPUT_PASSWORD: {
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+      break;
+    }
+    auto p = inputLine(doc, "Password:", fi->value ? fi->value->ptr : NULL,
+                       IN_PASSWORD);
+    if (p == NULL)
+      break;
+    fi->value = Strnew_charp(p);
+    formUpdateBuffer(doc, a, fi);
+    if (fi->accept)
+      goto do_submit;
+    break;
+  }
+
+  case FORM_TEXTAREA:
+    if (submit)
+      goto do_submit;
+    if (fi->readonly)
+      message_push("Read only field!");
+    input_textarea(fi);
+    formUpdateBuffer(doc, a, fi);
+    break;
+
+  case FORM_INPUT_RADIO:
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+      break;
+    }
+    formRecheckRadio(doc, a, fi);
+    break;
+
+  case FORM_INPUT_CHECKBOX:
+    if (submit)
+      goto do_submit;
+    if (fi->readonly) {
+      message_push("Read only field!");
+      break;
+    }
+    fi->checked = !fi->checked;
+    formUpdateBuffer(doc, a, fi);
+    break;
+
+  case FORM_INPUT_IMAGE:
+  case FORM_INPUT_SUBMIT:
+  case FORM_INPUT_BUTTON: {
+  do_submit:
+    auto tmp = Strnew();
+    auto multipart = (fi->parent->method == FORM_METHOD_POST &&
+                      fi->parent->enctype == FORM_ENCTYPE_MULTIPART);
+    query_from_followform(&tmp, fi, multipart);
+
+    auto tmp2 = Strdup(fi->parent->action);
+    if (!Strcmp_charp(tmp2, "!CURRENT_URL!")) {
+      /* It means "current URL" */
+      tmp2 = parsedURL2Str(&doc->url);
+      char *p;
+      if ((p = strchr(tmp2->ptr, '?')) != NULL)
+        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+    }
+
+    if (fi->parent->method == FORM_METHOD_GET) {
+      char *p;
+      if ((p = strchr(tmp2->ptr, '?')) != NULL)
+        Strshrink(tmp2, (tmp2->ptr + tmp2->length) - p);
+      Strcat_charp(tmp2, "?");
+      Strcat(tmp2, tmp);
+      return loadLink(doc, tmp2->ptr, a->target, NULL, NULL);
+    } else if (fi->parent->method == FORM_METHOD_POST) {
+      if (multipart) {
+        struct stat st;
+        stat(fi->parent->body, &st);
+        fi->parent->length = st.st_size;
+      } else {
+        fi->parent->body = tmp->ptr;
+        fi->parent->length = tmp->length;
+      }
+      auto buf = loadLink(doc, tmp2->ptr, a->target, NULL, fi->parent);
+      if (multipart) {
+        unlink(fi->parent->body);
+      }
+      if (buf && !(buf->document->bufferprop &
+                   BP_REDIRECTED)) { /* buf must be Currentbuf */
+        /* BP_REDIRECTED means that the buffer is obtained through
+         * Location: header. In this case, buf->form_submit must not be set
+         * because the page is not loaded by POST method but GET method.
+         */
+        buf->document->form_submit = save_submit_formlist(fi);
+      }
+
+      return buf;
+    } else if ((fi->parent->method == FORM_METHOD_INTERNAL &&
+                (!Strcmp_charp(fi->parent->action, "map") ||
+                 !Strcmp_charp(fi->parent->action, "none"))) ||
+               doc->bufferprop & BP_INTERNAL) { /* internal */
+      do_internal(tmp2->ptr, tmp->ptr);
+    } else {
+      message_push("Can't send form because of illegal method.");
+    }
+    break;
+  }
+
+  case FORM_INPUT_RESET:
+    for (int i = 0; i < doc->formitem->nanchor; i++) {
+      auto a2 = &doc->formitem->anchors[i];
+      auto f2 = (struct FormItemList *)a2->url;
+      if (f2->parent == fi->parent && f2->name && f2->value &&
+          f2->type != FORM_INPUT_SUBMIT && f2->type != FORM_INPUT_HIDDEN &&
+          f2->type != FORM_INPUT_RESET) {
+        f2->value = f2->init_value;
+        f2->checked = f2->init_checked;
+        formUpdateBuffer(doc, a2, f2);
+      }
+    }
+    break;
+  case FORM_INPUT_HIDDEN:
+  default:
+    break;
+  }
+
+  return nullptr;
 }

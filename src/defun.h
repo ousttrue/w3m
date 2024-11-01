@@ -4,6 +4,5 @@
 
 struct Buffer;
 void delBuffer(struct Buffer *buf);
-void mainloop();
 const char *searchKeyData();
 void w3m_exit(int i);

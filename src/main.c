@@ -13,12 +13,13 @@
 #include "input/loader.h"
 #include "input/localcgi.h"
 #include "input/proxy.h"
+#include "mainloop.h"
 #include "rc.h"
 #include "term/terms.h"
 #include "term/termsize.h"
-#include "version.h"
 #include "text/ctrlcode.h"
 #include "text/text.h"
+#include "version.h"
 #include <fcntl.h>
 #ifdef _WIN32
 #else
@@ -266,7 +267,6 @@ int main(int argc, char **argv) {
   LastTab = NULL;
   nTab = 0;
   CurrentTab = NULL;
-  CurrentKey = -1;
   if (BookmarkFile == NULL)
     BookmarkFile = rcFile(BOOKMARK);
 

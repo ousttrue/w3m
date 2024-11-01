@@ -69,3 +69,4 @@ struct Document *link_list_panel(struct Buffer *buf);
 struct Buffer *loadLink(struct Document *doc, const char *url,
                         const char *target, const char *referer,
                         struct FormList *form);
+struct Buffer *_followForm(struct Document *doc, bool submit);

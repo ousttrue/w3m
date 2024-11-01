@@ -4,6 +4,7 @@
 #include "buffer/document.h"
 #include "buffer/downloadlist.h"
 #include "buffer/message.h"
+#include "core.h"
 #include "file/file.h"
 #include "file/tmpfile.h"
 #include "fm.h"
@@ -823,4 +824,98 @@ Str Str_form_quote(Str x) {
   if (tmp)
     return tmp;
   return x;
+}
+
+void query_from_followform(Str *query, struct FormItemList *fi, int multipart) {
+  FILE *body = NULL;
+  if (multipart) {
+    *query = tmpfname(TMPF_DFL, NULL);
+    body = fopen((*query)->ptr, "w");
+    if (body == NULL) {
+      return;
+    }
+    fi->parent->body = (*query)->ptr;
+    fi->parent->boundary =
+        Sprintf("------------------------------%d%ld%ld%ld", getCurrentPid(),
+                fi->parent, fi->parent->body, fi->parent->boundary)
+            ->ptr;
+  }
+  *query = Strnew();
+  for (auto f2 = fi->parent->item; f2; f2 = f2->next) {
+    if (f2->name == NULL)
+      continue;
+    /* <ISINDEX> is translated into single text form */
+    if (f2->name->length == 0 && (multipart || f2->type != FORM_INPUT_TEXT))
+      continue;
+    switch (f2->type) {
+    case FORM_INPUT_RESET:
+      /* do nothing */
+      continue;
+    case FORM_INPUT_SUBMIT:
+    case FORM_INPUT_IMAGE:
+      if (f2 != fi || f2->value == NULL)
+        continue;
+      break;
+    case FORM_INPUT_RADIO:
+    case FORM_INPUT_CHECKBOX:
+      if (!f2->checked)
+        continue;
+    default:
+      break;
+    }
+    if (multipart) {
+      if (f2->type == FORM_INPUT_IMAGE) {
+        int x = 0, y = 0;
+        *query = Strdup(f2->name);
+        Strcat_charp(*query, ".x");
+        form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                        Sprintf("%d", x)->ptr);
+        *query = Strdup(f2->name);
+        Strcat_charp(*query, ".y");
+        form_write_data(body, fi->parent->boundary, (*query)->ptr,
+                        Sprintf("%d", y)->ptr);
+      } else if (f2->name && f2->name->length > 0 && f2->value != NULL) {
+        /* not IMAGE */
+        *query = f2->value;
+        if (f2->type == FORM_INPUT_FILE)
+          form_write_from_file(body, fi->parent->boundary, f2->name->ptr,
+                               (*query)->ptr, f2->value->ptr);
+        else
+          form_write_data(body, fi->parent->boundary, f2->name->ptr,
+                          (*query)->ptr);
+      }
+    } else {
+      /* not multipart */
+      if (f2->type == FORM_INPUT_IMAGE) {
+        int x = 0, y = 0;
+        Strcat(*query, Str_form_quote(f2->name));
+        Strcat(*query, Sprintf(".x=%d&", x));
+        Strcat(*query, Str_form_quote(f2->name));
+        Strcat(*query, Sprintf(".y=%d", y));
+      } else {
+        /* not IMAGE */
+        if (f2->name && f2->name->length > 0) {
+          Strcat(*query, Str_form_quote(f2->name));
+          Strcat_char(*query, '=');
+        }
+        if (f2->value != NULL) {
+          if (fi->parent->method == FORM_METHOD_INTERNAL)
+            Strcat(*query, Str_form_quote(f2->value));
+          else {
+            Strcat(*query, Str_form_quote(f2->value));
+          }
+        }
+      }
+      if (f2->next)
+        Strcat_char(*query, '&');
+    }
+  }
+  if (multipart) {
+    fprintf(body, "--%s--\r\n", fi->parent->boundary);
+    fclose(body);
+  } else {
+    /* remove trailing & */
+    while (Strlastchar(*query) == '&')
+      Strshrink(*query, 1);
+  }
 }
